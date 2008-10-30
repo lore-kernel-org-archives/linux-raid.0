@@ -1,28 +1,28 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: diskspotting (how to tell the dead one?)
-Date: Thu, 30 Oct 2008 07:19:40 +0100
-Message-ID: <200810300719.40816.Dexter.Filmore@gmx.de>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: diskspotting (how to tell the dead one?)
+Date: Thu, 30 Oct 2008 19:36:13 +1300
+Message-ID: <490955DD.1030607@sauce.co.nz>
+References: <200810300719.40816.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <200810300719.40816.Dexter.Filmore@gmx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Dexter Filmore <Dexter.Filmore@gmx.de>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Assuming one has 6 disks on two controllers and one dies, how does one tell 
-the dead one? Which controller/port?
+Dexter Filmore wrote:
+> Assuming one has 6 disks on two controllers and one dies, how does one tell 
+> the dead one? Which controller/port?
 
-Dex
+There are probably more elegant ways, but I use smartctl -a on the 
+failed drive to find it's serial number and use this to find the 
+location based on where I installed the drives initially, which I note 
+in a text file or a label attached to the exterior of the case on 
+machines with removable drive trays.
 
--- 
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@ 
-b++(+++) DI+++ D- G++ e* h>++ r* y?
-------END GEEK CODE BLOCK------
+Regards,
 
-http://www.vorratsdatenspeicherung.de
+Richard
