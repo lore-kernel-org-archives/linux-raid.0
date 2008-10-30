@@ -1,67 +1,70 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [Patch mdadm-2.6.7.1 0/3] Misc fixes for mdadm-2.6.7.1
-Date: Thu, 30 Oct 2008 12:46:12 +1100
-Message-ID: <18697.4580.911971.968652@notabene.brown>
-References: <cover.1225306892.git.dledford@redhat.com>
-	<18696.59934.872875.299706@notabene.brown>
-	<1225322045.26510.86.camel@firewall.xsintricity.com>
+Subject: Re: [mdadm git pull] "--assemble --scan" support for imsm
+Date: Thu, 30 Oct 2008 14:42:34 +1100
+Message-ID: <18697.11562.810718.957829@notabene.brown>
+References: <1225230241.5778.26.camel@dwillia2-linux.ch.intel.com>
+	<18696.10925.969583.445231@notabene.brown>
+	<e9c3a7c20810290912k6530790dv5cf7f6db8ff40389@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Doug Ledford on Wednesday October 29
+In-Reply-To: message from Dan Williams on Wednesday October 29
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wednesday October 29, dledford@redhat.com wrote:
-> On Thu, 2008-10-30 at 09:56 +1100, Neil Brown wrote:
-> > That leaves a largish slab of your code that I wasn't really sure
-> > what it was adding.
+On Wednesday October 29, dan.j.williams@intel.com wrote:
 > 
-> It was dealing with the fact that is_standard() has more than just two
-> return values.  It has -1, 0, and 1 (and 2 in my patch, but you've
-> changed yours in such a way that it's not necessary any more).  That
-> makes this test fail for certain ARRAY lines:
-> 
-> > +	if (match && (rv = is_standard(match->devname, &devnum))) {
-> > +		devnum = (rv > 0) ? (-1-devnum) : devnum;
-> 
-> As an example, create an array that doesn't use standard syntax, in my
-> case I was testing with /dev/md/root as a partitioned array.  The array
-> line in my mdadm.conf looked like this:
-> 
-> ARRAY /dev/md/root level=raid1 num-devices=2 metadata=0.90 auto=mdp4
-> UUID=e38b03c0:444d484e:910e8462:063f083e
-> 
-> Given a command invocation of mdadm -I <device>, and that device's uuid
-> matches the above array line, you really want to use the information in
-> the ARRAY line whether is_standard returns -1, 0, or 1.  So, that big
-> multiswitch statement was the possible invocations of mdadm -I with a
-> device that matches the array UUID in the config file but uses a
-> non-standard name, eg someone did a create on /dev/md0, then a -Eb >>
-> mdadm.conf, then vi mdadm.conf and add auto=mdp4 to the ARRAY /dev/md0
-> line.  Obviously, we would have refused to create the array with that
-> name and that auto setting, so I was preserving that behavior at run
-> time too.  Hence the size of that section of code.
+> What about container=<container uuid> as we can never really discern
+> with certainty the name of the container device at
+> ->brief_examine_super() time?
 
-Ok..... I think I see what you are getting at.
+Yes, could do that.  It feels a bit ugly, but it probably makes sense.
 
-So if the name "/dev/md0" is given in mdadm.conf, we can only create a
-non-partitioned array.  But what do we do if 'autof' suggests that a
-partitioned array should be created (auto=mdp4)?
+But I've had another look at your 'provisional' thing and understand it
+better and want to suggest some enhancements (Which might look like a
+complete rewrite, but the important part of noticing the problem is
+still yours :-)
 
-I think that if the "auto=mdp4" was on the ARRAY line, then we want to
-reject that as a config error.  But if the auto=mdp4 was on the
-command line or the CREATE line, then the device name over-rides.
-Does that seem reasonable?
-That makes me wonder if we have the precedence order of auto= right.
-Maybe the ARRAY line should override as it is specific to the array.
-Then the command line is next important.  Then the CREATE is the last
-default.   I think that is different to the order that you had.
-Is there some particular reason that you though the command line
-should override in the --incremental case?
+You call Incremental_container from Assemble and that really isn't
+right.  Each call to 'Assemble'  should assemble just one array, but
+Incremental_container might assemble several.
+
+Assemble() has the following basic structure:
+
+ 1/ walk through list of available devices determining which ones
+    match the 'identity' of the required array.
+ 2/ Check the set of devices for consistency and make any updates that
+    have been requested
+ 3/ Assemble the array from the selected devices, and start it.
+
+With a slight variation for the 'auto-assemble' case wherein the
+'identity' to match is taken from the first device that is found to be
+part of an array that is not already assembled.
+
+To fit the assembly of a specific member of a container into this
+model, we need to have the 'container' in the list of available
+devices.
+If the identity specifies 'container=whatever' then we clearly select
+all devices which match that.  You would expect at exactly one - the
+container.  You would then need to call ->container_content on that
+container and find the correct member array which matches the
+'member=' specifier (or any other specifier there might be?)
+
+Exactly how updates and "--force" are passed though would need to be
+sorted out.
+Then the devices in the selected array from ->container_content could
+be passed to sysfs_add_disk and the array started.
+
+Auto-assembly would discover that the first unused-so-far device was a
+container, and would need to load the list of arrays and assemble the
+first one that was not yet assembled.
+
+I think that is the 'right' thing to do, but it seems like a lot of
+work just for now, so I might leave it for a while and see if
+something else occurs to me.
 
 Thanks,
 NeilBrown
