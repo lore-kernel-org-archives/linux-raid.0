@@ -1,42 +1,37 @@
-From: "David Lethe" <david@santools.com>
+From: Wolfgang Denk <wd@denx.de>
 Subject: Re: Adaptec raid congtrollers for SATA disks under software raid
-Date: Fri, 31 Oct 2008 0:21:00 -0500
-Message-ID: <0cbb01c93b18$993ffb16$0501a8c0@exchange.rackspace.com>
+Date: Fri, 31 Oct 2008 11:50:50 +0100
+Message-ID: <20081031105050.3B27281122D2@gemini.denx.de>
+References: <47751.64665.qm@web30802.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-reply-to: <47751.64665.qm@web30802.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Myers <mikesm559@yahoo.com>, linux-raid@vger.kernel.org
+To: Mike Myers <mikesm559@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-so you are basically asking if manufacturer A is faster than manufacturer L?   
+Dear Mike Myers,
 
------Original Message-----
+In message <47751.64665.qm@web30802.mail.mud.yahoo.com> you wrote:
+>
+> I'm curious as to what people think the best SATA controller is
+> these days that has 8 or 16 ports per card driving software raid?
 
-From:  "Mike Myers" <mikesm559@yahoo.com>
-Subj:  Adaptec raid congtrollers for SATA disks under software raid
-Date:  Thu Oct 30, 2008 11:45 pm
-Size:  1K
-To:  "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+The "best" obviously depends on your set of requirements. If you don;t
+care about the price the result may be different than when you try to
+find a cost-effective solution.
 
-Hi.  I'm moving my NAS to a new motherboard and disk controller to increase the number of ports.  Right now I feed a couple PMP's worth of SATA disks with a marvell '7042 based controller, but am migrating to a supermicro 775 motherboard that has a few PCI-X slots.  I can get a couple adaptec 16 port SATA  PCI-X controllers on the cheap, but want to migrate my existing software raid arrays to the new ports, so I don't want to use the adaptec RAID software (software raid should be faster in any case). 
- 
-I believe if I configure the adaptec's BIOS to use JBOD mode instead of the card's RAID that each of the attached disks looks like a normal SATA port in linux that will allow them to be used with software raid in the normal way.  The question I have for the group is how good is the performance of these controllers when used as "dumb" ports in software raid mode?   
- 
-Are the LSI megaraid cards better? 
- 
-I'm curious as to what people think the best SATA controller is these days that has 8 or 16 ports per card driving software raid? 
- 
-thanks much! 
-mike 
- 
- 
-       
+We made really good experience with the Supermicro AOC-SAT2-MV8 cards.
+
+Best regards,
+
+Wolfgang Denk
+
 -- 
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in 
-the body of a message to majordomo@vger.kernel.org 
-More majordomo info at  http://vger.kernel.org/majordomo-info.html 
- 
-
-
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+Backed up the system lately?
