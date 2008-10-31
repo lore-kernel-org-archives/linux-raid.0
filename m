@@ -1,16 +1,31 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Mike Myers <mikesm559@yahoo.com>
 Subject: Re: Adaptec raid congtrollers for SATA disks under software raid
-Date: Fri, 31 Oct 2008 14:48:58 -0400 (EDT)
-Message-ID: <alpine.DEB.1.10.0810311446510.7167@p34.internal.lan>
-References: <39398.82011.qm@web30802.mail.mud.yahoo.com>
+Date: Fri, 31 Oct 2008 12:23:14 -0700 (PDT)
+Message-ID: <824650.16419.qm@web30807.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <39398.82011.qm@web30802.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Myers <mikesm559@yahoo.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: David Lethe <david@santools.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Well, sometimes the onboard ports run a lot faster than a card because the card is hooked through a PCI bus that may be doing a lot of other things.
+
+I have heard from various reports that the jbod performance of the card is fine, but that the RAID performance sucks (because of the hardware raid controller slowing things down).  But that is why I am asking folks here if they have any experience with these things in jbod mode vs raid mode.  Remember that I have no interest in using the hardware raid part of the card.  The 66 Mhz 64 bit PCI-X bus should limit things much.
+
+thx
+mike
+
+
+
+
+----- Original Message ----
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Mike Myers <mikesm559@yahoo.com>
+Cc: David Lethe <david@santools.com>; linux-raid@vger.kernel.org
+Sent: Friday, October 31, 2008 11:48:58 AM
+Subject: Re: Adaptec raid congtrollers for SATA disks under software raid
 
 
 On Fri, 31 Oct 2008, Mike Myers wrote:
@@ -35,3 +50,4 @@ connected to a regular sata controller was closer to 70-80MiB/s (74GiB raptor).
 Justin.
 
 
+      
