@@ -1,58 +1,62 @@
 From: Mike Myers <mikesm559@yahoo.com>
 Subject: Re: Adaptec raid congtrollers for SATA disks under software raid
-Date: Fri, 31 Oct 2008 11:07:23 -0700 (PDT)
-Message-ID: <430424.80078.qm@web30802.mail.mud.yahoo.com>
+Date: Fri, 31 Oct 2008 11:09:23 -0700 (PDT)
+Message-ID: <39398.82011.qm@web30802.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>, Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org
+To: David Lethe <david@santools.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Well, I can get the 16 port adaptecs for the same price ($100) from a local shop disposing of servers from failed companies. So the price isn't an issue.  It's density.  I'd like to be able to hang 24+ drives off one system, so I can't get there by using 4 port PCI-E cards.   Not enough slots, and the 4 port cards cost almost as much as the 16 port port adaptecs I can get.
+Well, actually if the chips that manufacturer A uses are faster in software raid than manufacturer L...  :-)  
 
-What I am asking about is the comparative performance of 8 and 16 port SATA controllers being used in software raid.  It makes no sense to do this if you are paying retail prices for them I know...  
-
-So, back to the question at hand - what is the best performing 8 or 16 port SATA controller (hardware raid on board or not) available?
-
-Thx
-Mike
+thx
+mike
 
 
 
 
 ----- Original Message ----
-From: Wolfgang Denk <wd@denx.de>
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Mike Myers <mikesm559@yahoo.com>; linux-raid@vger.kernel.org
-Sent: Friday, October 31, 2008 5:19:46 AM
+From: David Lethe <david@santools.com>
+To: Mike Myers <mikesm559@yahoo.com>; linux-raid@vger.kernel.org
+Sent: Thursday, October 30, 2008 10:21:00 PM
 Subject: Re: Adaptec raid congtrollers for SATA disks under software raid
 
-Dear Justin Piszcz,
+so you are basically asking if manufacturer A is faster than manufacturer L?  
 
-In message <alpine.DEB.1.10.0810310813240.468@p34.internal.lan> you wrote:
-> 
-> > We made really good experience with the Supermicro AOC-SAT2-MV8 cards.
-...
-> Lets be frank- almost all(?) RAID controllers you must export the disks 
-> via JBOD and they cost hundreds to thousands of dollars.  Doing SW RAID 
-> via JBOD IMO is not a great idea-- I'd use individual 2 or 4 port SATA 
-> controllers on PCI-e.
+-----Original Message-----
 
-Right. The AOC-SAT2-MV8 is a 8 port PCI-X controller without any RAID
-support - and costs just around $ 100. That's why I like it.
+From:  "Mike Myers" <mikesm559@yahoo.com>
+Subj:  Adaptec raid congtrollers for SATA disks under software raid
+Date:  Thu Oct 30, 2008 11:45 pm
+Size:  1K
+To:  "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 
-Best regards,
+Hi.  I'm moving my NAS to a new motherboard and disk controller to increase the number of ports.  Right now I feed a couple PMP's worth of SATA disks with a marvell '7042 based controller, but am migrating to a supermicro 775 motherboard that has a few PCI-X slots.  I can get a couple adaptec 16 port SATA  PCI-X controllers on the cheap, but want to migrate my existing software raid arrays to the new ports, so I don't want to use the adaptec RAID software (software raid should be faster in any case). 
 
-Wolfgang Denk
+I believe if I configure the adaptec's BIOS to use JBOD mode instead of the card's RAID that each of the attached disks looks like a normal SATA port in linux that will allow them to be used with software raid in the normal way.  The question I have for the group is how good is the performance of these controllers when used as "dumb" ports in software raid mode?  
 
+Are the LSI megaraid cards better? 
+
+I'm curious as to what people think the best SATA controller is these days that has 8 or 16 ports per card driving software raid? 
+
+thanks much! 
+mike 
+
+
+      
 -- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-The optimum committee has no members.
-                                                   - Norman Augustine
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in 
+the body of a message to majordomo@vger.kernel.org 
+More majordomo info at  http://vger.kernel.org/majordomo-info.html 
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
 
