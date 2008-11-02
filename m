@@ -1,54 +1,59 @@
 From: Luca Berra <bluca@comedia.it>
 Subject: Re: RFC - device names and mdadm with some reference to udev.
-Date: Sun, 2 Nov 2008 14:47:07 +0100
-Message-ID: <20081102134707.GA21279@maude.comedia.it>
-References: <18692.62860.863118.727187@notabene.brown> <1225387127.26510.155.camel@firewall.xsintricity.com>
+Date: Sun, 2 Nov 2008 14:52:16 +0100
+Message-ID: <20081102135216.GB21279@maude.comedia.it>
+References: <dledford@redhat.com> <200810310102.m9V1236S025014@wind.enjellic.com> <18698.52568.828963.755364@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1225387127.26510.155.camel@firewall.xsintricity.com>
+In-Reply-To: <18698.52568.828963.755364@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Oct 30, 2008 at 01:18:47PM -0400, Doug Ledford wrote:
->>  4/ auto-assembly needs to do the right thing on a SAN where multiple
->>     hosts can each see multiple arrays.  Clearly only one host should
->>     write to any one array at one time (until I get some
->>     cluster-awareness going, which I had hoped to work on this year,
->>     but it doesn't look like I will).
->>     In this case, I don't think read-auto is enough.  We either need
->>     to not assemble arrays when aren't known to belong to us, or we
->>     need to assemble them read-only and require and explicit
->>     read-write setting.
+On Fri, Oct 31, 2008 at 08:18:16PM +1100, Neil Brown wrote:
+>On Thursday October 30, greg@enjellic.com wrote:
+>> On Oct 27, 11:13am, Doug Ledford wrote:
+>> } Subject: Re: RFC - device names and mdadm with some reference to udev.
 >> 
->>     So we need some way to know which devices could be visible to
->>     other hosts.
->>     I could have a global flag in mdadm.conf "Options SAN"
->>     I could have a SAN-DEVICES to match "DEVICES", but as just about
->>     everything is "/dev/sd*" these days, I don't know if that would
->>     work.
+>> Good evening to everyone, hope the week has gone well.
 >> 
->>     Any suggestions concerning this would be welcome.
->
->The scariest suggestion, but probably the most complete and automated,
->would be to have mdadm do a search on any constituent devices to find
->out what the eventual low level driver is.  If it's a fiber channel
->driver, or iSCSI, then don't auto assemble.  If it's sata/e-sata, or
->local SAS, then it's more likely auto assemble is fine.  But, that level
->of mucking around in /sys for each device would probably be quite ugly.
->
+>> > > I would really like to have a clear separation of competencies.
+>> > > Ideally, mdadm never creates any devices but leaves it all to udev,
+>> > > and all configuration about alternate names ("symlinks") is done in
+>> > > the udev rules file.
+>> 
+>> > This would then require that we have a working udev in our initrd
+>> > images.  It would greatly increase the complexity of early booting
+>> > as a result.
+>> 
+>> Whatever we do please do not make use of mdadm or startup of arrays
+>> dependent on udev.  I do SAN's for a living and have had far too many
+>> phone calls and have spent too much time trying to get boxes messed up
+>> by udev back on the fabric to want to add any more complication to the
+>> mix.
 
-unfortunately this will not work out correctly
-1) it is fairly possible for an host to boot from fiber-channel, and to
-run md over it (it is a fairly common setup here).
-2) scsi supports shared storage, and i believe SAS does too.
++1
+
+>I had intended to continue to support the no-udev installations, but
+>thank you the encouragement that it really is needed and will be used.
+>
+>Just a clarification:  are you envisaging an installation without udev
+>at all, or one with udev installed and active, but you don't wont
+>mdadm to depend on it?  That latter option may be more awkward (I
+>currently support an environment variable which says "just create the
+>devices, even if udev appears to be installed").
+
+i have no objections in letting udev create my device files.
+what i dislike is when udev sees a device appearing, and decides it
+knows better than me, so it starts using it right away, no matter if it
+is an usb key or a multi-tb shared storage.
+I could never have tought of something so stupid as the incremental
+assembly of md arrays,
+0 advantages gained for lot of trouble.
 
 L.
-
-
-
 
 -- 
 Luca Berra -- bluca@comedia.it
