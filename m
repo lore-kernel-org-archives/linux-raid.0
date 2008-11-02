@@ -1,99 +1,59 @@
-From: Bas van Schaik <bas@tuxes.nl>
-Subject: Re: Initial degraded RAID6 sync doesn't occur? Kernel reports it
- as RAID5?
-Date: Sun, 02 Nov 2008 14:06:35 +0100
-Message-ID: <490DA5DB.8000103@tuxes.nl>
-References: <490C5E1D.6050604@tuxes.nl>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: RFC - device names and mdadm with some reference to udev.
+Date: Sun, 2 Nov 2008 14:47:07 +0100
+Message-ID: <20081102134707.GA21279@maude.comedia.it>
+References: <18692.62860.863118.727187@notabene.brown> <1225387127.26510.155.camel@firewall.xsintricity.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <490C5E1D.6050604@tuxes.nl>
+Content-Disposition: inline
+In-Reply-To: <1225387127.26510.155.camel@firewall.xsintricity.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear all,
+On Thu, Oct 30, 2008 at 01:18:47PM -0400, Doug Ledford wrote:
+>>  4/ auto-assembly needs to do the right thing on a SAN where multiple
+>>     hosts can each see multiple arrays.  Clearly only one host should
+>>     write to any one array at one time (until I get some
+>>     cluster-awareness going, which I had hoped to work on this year,
+>>     but it doesn't look like I will).
+>>     In this case, I don't think read-auto is enough.  We either need
+>>     to not assemble arrays when aren't known to belong to us, or we
+>>     need to assemble them read-only and require and explicit
+>>     read-write setting.
+>> 
+>>     So we need some way to know which devices could be visible to
+>>     other hosts.
+>>     I could have a global flag in mdadm.conf "Options SAN"
+>>     I could have a SAN-DEVICES to match "DEVICES", but as just about
+>>     everything is "/dev/sd*" these days, I don't know if that would
+>>     work.
+>> 
+>>     Any suggestions concerning this would be welcome.
+>
+>The scariest suggestion, but probably the most complete and automated,
+>would be to have mdadm do a search on any constituent devices to find
+>out what the eventual low level driver is.  If it's a fiber channel
+>driver, or iSCSI, then don't auto assemble.  If it's sata/e-sata, or
+>local SAS, then it's more likely auto assemble is fine.  But, that level
+>of mucking around in /sys for each device would probably be quite ugly.
+>
 
-Bas van Schaik wrote:
-> Dear all,
->
-> A while ago I created a RAID6 array of 5 devices of which one was
-> 'missing'. The last disk just didn't arrive in time, so I decided to
-> create a degraded RAID6 array, actually being equal to a RAID5 in terms
-> of risks (correct me if I'm wrong).
->   
-I'm sorry for self-replying this post, but I forgot to mention the
-kernel version I'm using. I was somehow convinced of the fact that I was
-running a recent kernel, but it turns out to be 2.6.24 (from Ubuntu
-Hardy). Unfortunately I cannot upgrade this kernel to the latest version
-to check if my questions/observations still hold.
+unfortunately this will not work out correctly
+1) it is fairly possible for an host to boot from fiber-channel, and to
+run md over it (it is a fairly common setup here).
+2) scsi supports shared storage, and i believe SAS does too.
 
-  -- Bas
+L.
 
 
-> When creating the device, md refused to start it. I'm very sorry not to
-> be able to provide the exact output, because it is already a few weeks
-> ago and I didn't pay that much attention to it by then. The command I
-> used to create the array was:
->   
->> mdadm --create /dev/md5 --level raid6 --raid-devices 5
->> /dev/sd{a,b,c,d}5 missing
->>     
->
-> After that, I had to force assembly to be able to actually use the array:
->   
->> mdadm --assemble --force /dev/md5 /dev/sd{a,b,c,d}5
->>     
->
-> This did work, but it didn't trigger an initial sync of the RAID6 array.
-> Correct me if I'm wrong, but that initial sync should be performed for
-> the single redundancy block, shouldn't it?
->
-> We're a few weeks later now, and the missing disk has arrived. When
-> adding it to the array, the value in /sys/block/md5/md/mismatch_cnt
-> obviously explodes: the syndromes P and/or Q were never computed and
-> thus mismatch on a large part of the disk. After performing an repair
-> (echo repair > sync_action) these syndromes are back in sync and the
-> problem of mismatching blocks disappears. A e2fsck on the filesystem on
-> top of the array does not indicate any problems at all.
->
-> Summarizing the above: shouldn't mdadm perform an initial sync on a
-> degraded RAID6 array (missing 1 drive)?
->
-> The second observation I have made in this process: the kernel reports
-> my RAID6 array as being a RAID5 array on some places. For example, a
-> piece of `dmesg` output after adding the 5th disk and rebooting:
->   
->> [   68.526355] raid5: raid level 6 set md5 active with 4 out of 5
->> devices, algorithm 2
->> [   68.526404] RAID5 conf printout:
->> [   68.526405]  --- rd:5 wd:4
->> [   68.526406]  disk 0, o:1, dev:sdc5
->> [   68.526407]  disk 1, o:1, dev:sdd5
->> [   68.526409]  disk 2, o:1, dev:sde5
->> [   68.526410]  disk 3, o:1, dev:sdf5
->> [   68.526677] RAID5 conf printout:
->> [   68.526678]  --- rd:5 wd:4
->> [   68.526680]  disk 0, o:1, dev:sdc5
->> [   68.526681]  disk 1, o:1, dev:sdd5
->> [   68.526682]  disk 2, o:1, dev:sde5
->> [   68.526683]  disk 3, o:1, dev:sdf5
->> [   68.526684]  disk 4, o:1, dev:sda5
->>     
->
-> /proc/mdstat does show the correct output. From the output of `ps aux` I
-> can derive that RAID6 is actually managed by a kernel process named
-> "md5_raid5". I assume RAID6 is implemented as a special case of RAID5
-> (or theoretically the other way around, of course), but I think it is a
-> little bit confusing that md reports the array as being of type RAID5.
->
-> Regards,
->
->   Bas
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->   
 
+
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
