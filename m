@@ -1,78 +1,61 @@
-From: Thomas Backlund <tmb@mandriva.org>
-Subject: Re: md raid10 regression in 2.6.27.4 (possibly earlier)
-Date: Sun, 02 Nov 2008 19:37:35 +0200
-Message-ID: <490DE55F.6080600@mandriva.org>
-References: <490D8EBF.8050400@rabbit.us>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Linux RAID & XFS Question - Multiple levels of concurrency =
+	faster I/O on md/RAID 5?
+Date: Mon, 3 Nov 2008 09:03:13 +1100
+Message-ID: <20081102220313.GF19509@disturbed>
+References: <alpine.DEB.1.10.0811010424270.16517@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <490D8EBF.8050400@rabbit.us>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.1.10.0811010424270.16517@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-Peter Rabbitson skrev:
-> Hi,
-> 
-> Some weeks ago I upgraded from 2.6.23 to 2.6.27.4. After a failed hard
-> drive I realized that re-adding drives to a degraded raid10 no longer
-> works (it adds the drive as a spare and never starts a resync). Booting
-> back into the old .23 kernel allowed me to complete and resync the array
-> as usual. Attached find a test case reliably failing on vanilla 2.6.27.4
-> with no patches.
-> 
+On Sat, Nov 01, 2008 at 04:29:18AM -0400, Justin Piszcz wrote:
+> Overall the raw speed according to vmstat seems to increase as you add more
+> load to the server.  So I decided to time running three jobs on two parts 
+> of data and compare it with a single job that proceses them all.
+>
+> Three jobs run con-currently: (2 parts/each):
+>
+> 1- 59.99user 18.25system 2:02.07elapsed 64%CPU (0avgtext+0avgdata 0maxresident)k
+>    0inputs+0outputs (0major+21000minor)pagefaults 0swaps
+>
+> 2- 59.86user 17.78system 1:59.96elapsed 64%CPU (0avgtext+0avgdata 0maxresident)k
+>    0inputs+0outputs (21major+20958minor)pagefaults 0swaps
+>
+> 3- 74.77user 22.83system 2:13.30elapsed 73%CPU (0avgtext+0avgdata 0maxresident)k
+>    0inputs+0outputs (36major+21827minor)pagefaults 0swaps
+>
+> One job with (6 parts):
+>
+> 1 188.66user 56.84system 4:38.52elapsed 88%CPU (0avgtext+0avgdata 0maxresident)k
+>   0inputs+0outputs (71major+43245minor)pagefaults 0swaps
+>
+> Why is running 3 jobs con-currently that take care of two parts each more than
+> twice as fast than running one job for six parts?
 
-I've just been hit with the same problem...
+Usually this is because the workload is I/O latency sensitive and so
+can't keep the disk fully busy because it is serialising on I/O.  By
+running jobs concurrently you are reducing the impact of serialising
+on an I/O because there are still two other concurrent jobs issuing
+I/O instead of none...
 
-I have a brand new server setup with 2.6.27.4 x86_64 kernel and a mix of
-raid0, raid1, raid5 & raid10 partitions like this:
-$ cat /proc/mdstat
-Personalities : [raid10] [raid6] [raid5] [raid4] [raid1] [raid0]
-md6 : active raid5 sdc8[2] sdb8[1] sda8[0] sdd8[3]
-       2491319616 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
-       bitmap: 0/198 pages [0KB], 2048KB chunk
+> I am using XFS and md/RAID-5, the CFQ scheduler and kernel 2.6.27.4.
+> Is this more of an md/raid issue ( I am guessing ) than XFS? I remember  
+> reading of some RAID acceleration patches awhile back that were supposed  
+> to boost performance quite a bit, what happened to them?
 
-md5 : active raid1 sda7[1] sdb7[0] sdd7[2]
-       530048 blocks [4/4] [UUUU]
+Without further information, I'd say a pure application issue - the
+disk subsystem is clearly fast enough to handle much higher load
+than the single job is capable of issuing.
 
-md3 : active raid10 sda5[4](S) sdb5[1] sdc5[2] sdd5[5](S)
-       20980608 blocks 64K chunks 2 near-copies [4/2] [_UU_]
+Cheers,
 
-md1 : active raid0 sda2[0] sdb2[1] sdc2[2] sdd2[3]
-       419456512 blocks 128k chunks
-
-md2 : active raid10 sda3[4](S) sdc3[5](S) sdb3[1] sdd3[3]
-       41961600 blocks 64K chunks 2 near-copies [4/2] [_U_U]
-
-md0 : active raid10 sda1[0] sdd1[3] sdc1[2] sdb1[1]
-       8401792 blocks 64K chunks 2 near-copies [4/4] [UUUU]
-
-md4 : active raid10 sda6[0] sdd6[3] sdc6[2] sdb6[1]
-       10506240 blocks 64K chunks 2 near-copies [4/4] [UUUU]
-
-
-
-I have mdadm 2.6.7 with the following fixes:
-d7ee65c960fa8a6886df7416307f57545ddc4460 "Fix bad metadata formatting"
-43aaf431f66270080368d4b33378bd3dc0fa1c96 "Fix NULL pointer oops"
-
-I was hitting the NULL pointer oops, wich prevented my md's to start 
-fully, but with the patches above I can (re)boot the system without
-beeing dropped into maintenance mode...
-
-but I cant bring theese raid10 back fully online:
-
-md3 : active raid10 sda5[4](S) sdb5[1] sdc5[2] sdd5[5](S)
-       20980608 blocks 64K chunks 2 near-copies [4/2] [_UU_]
-
-md2 : active raid10 sda3[4](S) sdc3[5](S) sdb3[1] sdd3[3]
-       41961600 blocks 64K chunks 2 near-copies [4/2] [_U_U]
-
-I can remove and add the missing disks, but they only end up as spares,
-they dont get back online...
-
-Any Pointers?
-
---
-Thomas
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
