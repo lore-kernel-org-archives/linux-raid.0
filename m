@@ -1,39 +1,43 @@
-From: Thomas Backlund <tmb@mandriva.org>
-Subject: Re: md raid10 regression in 2.6.27.4 (possibly earlier)
-Date: Mon, 03 Nov 2008 01:51:21 +0200
-Message-ID: <490E3CF9.20208@mandriva.org>
-References: <490D8EBF.8050400@rabbit.us> <490DE55F.6080600@mandriva.org>
+From: "George Spelvin" <linux@horizon.com>
+Subject: Re: mdraid10 regression in 2.6.27.4 (possibly earlier)
+Date: Mon, 03 Nov 2008 03:30:09 -0500
+Message-ID: <20081103083009.11625.qmail@science.horizon.com>
+References: <20081102173346.1685.qmail@science.horizon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <490DE55F.6080600@mandriva.org>
+In-Reply-To: <20081102173346.1685.qmail@science.horizon.com>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: tmb@mandriva.org, linux@horizon.com
 List-Id: linux-raid.ids
 
-Thomas Backlund skrev:
-> Peter Rabbitson skrev:
->> Hi,
->>
->> Some weeks ago I upgraded from 2.6.23 to 2.6.27.4. After a failed hard
->> drive I realized that re-adding drives to a degraded raid10 no longer
->> works (it adds the drive as a spare and never starts a resync). Booting
->> back into the old .23 kernel allowed me to complete and resync the array
->> as usual. Attached find a test case reliably failing on vanilla 2.6.27.4
->> with no patches.
->>
-> 
-> I've just been hit with the same problem...
-> 
-> I have a brand new server setup with 2.6.27.4 x86_64 kernel and a mix of
-> raid0, raid1, raid5 & raid10 partitions like this:
+> And an extra datapoint.
+>
+> Booting into 2.6.26.5 triggers an instant resync of the spare disks, so 
+> it means we have a regression between 2.6.26.5 and 2.6.27.4
 
-And an extra datapoint.
+Likewise, 2.6.26.6 fixed the problem for me.  And I can confirm that it's
+broken in plain 2.6.27.
 
-Booting into 2.6.26.5 triggers an instant resync of the spare disks, so 
-it means we have a regression between 2.6.26.5 and 2.6.27.4
+There are 8 commits to drivers/md/raid10.c in that interval.
+commit 0310fa216decc3ecfab41f327638fa48a81f3735
+    Allow raid10 resync to happening in larger chunks.
+commit 1e24b15b267293567a8d752721c7ae63f281325a
+    Merge branch 'for-linus' of git://neil.brown.name/md
+commit 388667bed591b2359713bb17d5de0cf56e961447
+    md: raid10: wake up frozen array
+commit 8a392625b665c676a77c62f8608d10ff430bcb83
+    Merge branch 'for-linus' of git://neil.brown.name/md
+commit f233ea5c9e0d8b95e4283bf6a3436b88f6fd3586
+    md: Make mddev->array_size sector-based.
+commit cc371e66e340f35eed8dc4651c7c18e754c7fb26
+    Add bvec_merge_data to handle stacked devices and ->merge_bvec()
+commit 199050ea1ff2270174ee525b73bc4c3323098897
+    rationalise return value for ->hot_add_disk method.
+commit 6c2fce2ef6b4821c21b5c42c7207cb9cf8c87eda
+    Support adding a spare to a live md array with external metadata.
 
-If no-one have a good suggestion to try, I'll start bisecting tomorrow...
---
-Thomas
+It's not obvious which of these is the problem; they mostly look pretty simple
+and safe, at least as far as raid10 ic concerned.
