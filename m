@@ -1,101 +1,67 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: flagging a disk faulty during raid-5 reshape/grow operation
-Date: Mon, 03 Nov 2008 16:47:09 +0000
-Message-ID: <490F2B0D.8060009@dgreaves.com>
-References: <e6c4d5060811030748n4f612d8bme2d8d8c05509a7b7@mail.gmail.com>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: linear : divide error: 0000
+Date: Mon, 3 Nov 2008 17:43:10 +0100
+Message-ID: <20081103164310.GL17966@skl-net.de>
+References: <1346d4690811020803p47f62b3ak9868832969040759@mail.gmail.com> <20081103103221.GJ17966@skl-net.de> <1346d4690811030437t259c4f60rac29acd746c2acff@mail.gmail.com> <20081103141501.GK17966@skl-net.de> <1346d4690811030653s566d17a7mc6c31fadb0f533d1@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="9/GiYV45wF7IL3Iq"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e6c4d5060811030748n4f612d8bme2d8d8c05509a7b7@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1346d4690811030653s566d17a7mc6c31fadb0f533d1@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: max power <zouookmoetenwerken@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Wei Yongquan <weiyqlq@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi avoozl ;)
 
-From a message from Alex on 6/2/08:
+--9/GiYV45wF7IL3Iq
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-If a drive failes during reshape the reshape will just continue.
-The blocks which were on the failed drive are calculated from the the other
-disks and writes to the failed disk are simply omitted.
-The result is a raid5 with a failed drive.
-You should get a new drive asap to restore the redundancy.
-Also it's kinda important that you don't run 2.6.23 because it has a nasty bug
-which would be triggered in this scenario.
-The reshape probably increased in speed after the system was no longer actively
-used and io bandwidth freed up.
+On 22:53, Wei Yongquan wrote:
+> >> the code linear.c :
+> >>
+> >> 158              min_spacing =3D conf->array_sectors / 2;
+> >> 159              sector_div(min_spacing, PAGE_SIZE/sizeof(struct dev_i=
+nfo *));
+> >>
+> >> if the array size is less then 1024K and the system is 32 based,
+> >> min_spacing will be ZERO.
+> >
+> > nope, array_sectors in in 512 byte units. So the array size has to
 
+s/in in/ is in
 
-So mark it as faulty and add a new RMA'd disk ASAP.
+> > be smaller than 1024 _bytes_ for min_spacing to become zero.
+> Thanks.
+> er,  "array_sectors in in 512 byte units" means  when array_sectors =3D
+> 2048, the array size is actually 2048 * 512 =3D 1024K. Is that right?
 
-David
+Exactly.
 
-max power wrote:
-> Hi list,
-> 
-> This morning, I tried to resize our raid-5 array from 3 to 4 disks.
-> Immediately after issuing the 'mdadm --grow -n 4' command, I found out
-> that the new disk is actually 'faulty'.  There are no unrecoverable
-> errors yet, but my smartctl shows a lot of hardware ECC and seek
-> errors going on. The read errors are causing the whole array to
-> perform very poorly, and the resize is said to take another 2-3 days
-> (according to mdstat).
-> 
-> Is it safe to mark the new drive as faulty before the reshape
-> operation finishes, or is there a risk that this will corrupt the
-> raid?
-> 
-> I'm using kernel version 2.6.24-21-generic #1 SMP Mon Aug 25 17:32:09
-> UTC 2008 i686 GNU/Linux (Ubuntu Intrepid), and mdadm version mdadm -
-> v2.6.7 - 6th June 2008.
-> 
-> output from mdadm  --detail:
-> 
-> /dev/md2:
->         Version : 00.91
->   Creation Time : Mon Nov 19 14:04:02 2007
->      Raid Level : raid5
->      Array Size : 535173120 (510.38 GiB 548.02 GB)
->   Used Dev Size : 267586560 (255.19 GiB 274.01 GB)
->    Raid Devices : 4
->   Total Devices : 4
-> Preferred Minor : 2
->     Persistence : Superblock is persistent
-> 
->     Update Time : Mon Nov  3 16:34:08 2008
->           State : clean, recovering
->  Active Devices : 4
-> Working Devices : 4
->  Failed Devices : 0
->   Spare Devices : 0
-> 
->          Layout : left-symmetric
->      Chunk Size : 64K
-> 
->  Reshape Status : 1% complete
->   Delta Devices : 1, (3->4)
-> 
->            UUID : 36b972e8:26bae0a4:de6b0f36:
-> 485dee50
->          Events : 0.6496
-> 
->     Number   Major   Minor   RaidDevice State
->        0       8        7        0      active sync   /dev/sda7
->        1       8       39        1      active sync   /dev/sdc7
->        2       8       55        2      active sync   /dev/sdd7
->        3       8       23        3      active sync   /dev/sdb7
-> 
-> 
-> 
-> Thanks in advance,
-> Jorik
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> when min_spacing < 1024 at line 158, it becomes zero at line 159. is that=
+ right?
 
+Yes, that's true, provided that PAGE_SIZE is 4096 and sizeof(struct
+dev_info *) is 4.
 
--- 
-"Don't worry, you'll be fine; I saw it work in a cartoon once..."
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--9/GiYV45wF7IL3Iq
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFJDyoeWto1QDEAkw8RAlDpAJ4lze5NjUorxGk81NlWCJgIvUt43gCgqCZb
+K9g5VryMRZ0osGtIaq4e9UM=
+=JO5g
+-----END PGP SIGNATURE-----
+
+--9/GiYV45wF7IL3Iq--
