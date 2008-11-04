@@ -1,605 +1,636 @@
-From: "Steve Evans" <jeeping@gmail.com>
-Subject: Re: mdadm degraded RAID5 failure
-Date: Tue, 4 Nov 2008 14:35:36 -0700
-Message-ID: <6cc8e9ed0811041335u1aeac632xafdae1892c418d95@mail.gmail.com>
-References: <6cc8e9ed0810221350o2b8b3aedm3d1c229fe7e66163@mail.gmail.com>
-	 <6cc8e9ed0810221352y7427cb7dmfc7c3fcefd495bb9@mail.gmail.com>
-	 <18690.48372.369694.309381@notabene.brown>
-	 <6cc8e9ed0810291516p46cb24a7pdd230e222797d06e@mail.gmail.com>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Time to ask for help. Raid-5 Dual drive failure
+Date: Wed, 05 Nov 2008 01:18:06 +0400
+Message-ID: <4910BC0E.9000307@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6cc8e9ed0810291516p46cb24a7pdd230e222797d06e@mail.gmail.com>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Neil and others,
+Ok, so it finally died.
 
-Just a couple of questions, I know you're busy -
+I was doing a large copy to an ext3 filesystem on md0 when one drive dropped out (SATA error). 3 
+minutes later a second drive dropped out (SATA error).
 
-Do you recommend that I attempt to upgrade mdadm to a more recent
-version before any other recovery attempts? If so, which version?
+I've tried to re-assemble the array with
+mdadm --assemble --force /dev/md0 but it errors out with
 
-I noted my replacement drive (sdc1) got a smart error (during the
-rebuild?), would you recommend replacing it or removing it altogether
-until I get the other 2 drives back online (if I even can)?
+mdadm: failed to RUN_ARRAY /dev/md0: Input/output error
 
-Is there a way to correct the drive names -
+I'm guessing that I'll have to re-create the array with --assume-clean and the 9 freshest drives and 
+hope for the best. I've included pretty much all the information I guess might be relevant. Please 
+let me know if I've forgotten something. I'm not sure of the best action to take next to ensure I do 
+the least amount of damage.
 
-> /dev/sdb1:
-> this     2       8       49        2      active sync   /dev/sdd1
+None of the data on there is really unrecoverable, but it would be a significant effort to 
+re-compile it from its various sources. If I can get most or all of it back (and I was doing a very 
+large sequential write at the time which ext3 seems to cope with quite well in cases of drive 
+b0rkage) I'd be pretty happy.
+
+I've tried absolutely nothing other than --assemble --force. (Several times after reboots)
+
+root@srv:~# uname -a
+Linux srv 2.6.27.4 #10 SMP Mon Oct 27 08:59:56 GST 2008 x86_64 GNU/Linux
+
+root@srv:~# cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md0 : inactive sdk1[1] sdg[9] sdf1[8] sdi1[7] sdh1[6] sdn1[5] sdo1[4] sdm1[3] sdl[2]
+       2204177664 blocks
+
+md2 : active raid5 sdc[0] sde[2] sdd[1]
+       1465148928 blocks level 5, 128k chunk, algorithm 2 [3/3] [UUU]
+
+md5 : active raid1 sda4[0] sdb4[1]
+       200217984 blocks [2/2] [UU]
+
+md4 : active (auto-read-only) raid1 sda3[0] sdb3[1]
+       4891712 blocks [2/2] [UU]
+
+md3 : active raid1 sda2[0] sdb2[1]
+       19542976 blocks [2/2] [UU]
+
+md1 : active raid1 sdb1[0] sda1[1]
+       19542976 blocks [2/2] [UU]
+       bitmap: 1/150 pages [4KB], 64KB chunk
+
+unused devices: <none>
+
+(Tried with both)
+
+root@srv:~# mdadm --version
+mdadm - v2.6.4 - 19th October 2007
+root@srv:~# ./mdadm --version
+mdadm - v2.6.7 - 6th June 2008
 
 
-> /dev/sdc1:
-> this     3       8       33        3      spare   /dev/sdc1
+root@srv:~# ./mdadm -Av --force /dev/md0
+mdadm: looking for devices for /dev/md0
+mdadm: cannot open device /dev/md2: Device or resource busy
+mdadm: /dev/md2 has wrong uuid.
+mdadm: cannot open device /dev/md5: Device or resource busy
+mdadm: /dev/md5 has wrong uuid.
+mdadm: cannot open device /dev/md4: Device or resource busy
+mdadm: /dev/md4 has wrong uuid.
+mdadm: cannot open device /dev/md3: Device or resource busy
+mdadm: /dev/md3 has wrong uuid.
+mdadm: cannot open device /dev/md1: Device or resource busy
+mdadm: /dev/md1 has wrong uuid.
+mdadm: no RAID superblock on /dev/sdo
+mdadm: /dev/sdo has wrong uuid.
+mdadm: no RAID superblock on /dev/sdn
+mdadm: /dev/sdn has wrong uuid.
+mdadm: no RAID superblock on /dev/sdm
+mdadm: /dev/sdm has wrong uuid.
+mdadm: no RAID superblock on /dev/sdk
+mdadm: /dev/sdk has wrong uuid.
+mdadm: no RAID superblock on /dev/sdj
+mdadm: /dev/sdj has wrong uuid.
+mdadm: no RAID superblock on /dev/sdi
+mdadm: /dev/sdi has wrong uuid.
+mdadm: no RAID superblock on /dev/sdh
+mdadm: /dev/sdh has wrong uuid.
+mdadm: no RAID superblock on /dev/sdf
+mdadm: /dev/sdf has wrong uuid.
+mdadm: cannot open device /dev/sde: Device or resource busy
+mdadm: /dev/sde has wrong uuid.
+mdadm: cannot open device /dev/sdd: Device or resource busy
+mdadm: /dev/sdd has wrong uuid.
+mdadm: cannot open device /dev/sdc: Device or resource busy
+mdadm: /dev/sdc has wrong uuid.
+mdadm: cannot open device /dev/sdb4: Device or resource busy
+mdadm: /dev/sdb4 has wrong uuid.
+mdadm: cannot open device /dev/sdb3: Device or resource busy
+mdadm: /dev/sdb3 has wrong uuid.
+mdadm: cannot open device /dev/sdb2: Device or resource busy
+mdadm: /dev/sdb2 has wrong uuid.
+mdadm: cannot open device /dev/sdb1: Device or resource busy
+mdadm: /dev/sdb1 has wrong uuid.
+mdadm: cannot open device /dev/sdb: Device or resource busy
+mdadm: /dev/sdb has wrong uuid.
+mdadm: cannot open device /dev/sda4: Device or resource busy
+mdadm: /dev/sda4 has wrong uuid.
+mdadm: cannot open device /dev/sda3: Device or resource busy
+mdadm: /dev/sda3 has wrong uuid.
+mdadm: cannot open device /dev/sda2: Device or resource busy
+mdadm: /dev/sda2 has wrong uuid.
+mdadm: cannot open device /dev/sda1: Device or resource busy
+mdadm: /dev/sda1 has wrong uuid.
+mdadm: cannot open device /dev/sda: Device or resource busy
+mdadm: /dev/sda has wrong uuid.
+mdadm: /dev/sdo1 is identified as a member of /dev/md0, slot 4.
+mdadm: /dev/sdn1 is identified as a member of /dev/md0, slot 5.
+mdadm: /dev/sdm1 is identified as a member of /dev/md0, slot 3.
+mdadm: /dev/sdl is identified as a member of /dev/md0, slot 2.
+mdadm: /dev/sdk1 is identified as a member of /dev/md0, slot 1.
+mdadm: /dev/sdj1 is identified as a member of /dev/md0, slot 0.
+mdadm: /dev/sdi1 is identified as a member of /dev/md0, slot 7.
+mdadm: /dev/sdh1 is identified as a member of /dev/md0, slot 6.
+mdadm: /dev/sdg is identified as a member of /dev/md0, slot 9.
+mdadm: /dev/sdf1 is identified as a member of /dev/md0, slot 8.
+mdadm: added /dev/sdj1 to /dev/md0 as 0
+mdadm: added /dev/sdl to /dev/md0 as 2
+mdadm: added /dev/sdm1 to /dev/md0 as 3
+mdadm: added /dev/sdo1 to /dev/md0 as 4
+mdadm: added /dev/sdn1 to /dev/md0 as 5
+mdadm: added /dev/sdh1 to /dev/md0 as 6
+mdadm: added /dev/sdi1 to /dev/md0 as 7
+mdadm: added /dev/sdf1 to /dev/md0 as 8
+mdadm: added /dev/sdg to /dev/md0 as 9
+mdadm: added /dev/sdk1 to /dev/md0 as 1
+mdadm: failed to RUN_ARRAY /dev/md0: Input/output error
+
+for i in sdj1 sdl sdm1 sdo1 sdn1 sdh1 sdi1 sdf1 sdg sdk1 ; do mdadm --examine /dev/$i ; done
+
+/dev/sdj1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 05cc3f43:de1ecfa4:83a51293:78015f1e
+   Creation Time : Sun May  2 18:02:14 2004
+      Raid Level : raid5
+   Used Dev Size : 244198400 (232.89 GiB 250.06 GB)
+      Array Size : 2197785600 (2095.97 GiB 2250.53 GB)
+    Raid Devices : 10
+   Total Devices : 10
+Preferred Minor : 0
+
+     Update Time : Tue Nov  4 22:23:33 2008
+           State : active
+  Active Devices : 10
+Working Devices : 10
+  Failed Devices : 0
+   Spare Devices : 0
+        Checksum : 210701c1 - correct
+          Events : 0.1338267
+
+          Layout : left-asymmetric
+      Chunk Size : 128K
+
+       Number   Major   Minor   RaidDevice State
+this     0       8      145        0      active sync   /dev/sdj1
+
+    0     0       8      145        0      active sync   /dev/sdj1
+    1     1       8      161        1      active sync   /dev/sdk1
+    2     2       8      176        2      active sync   /dev/sdl
+    3     3       8      193        3      active sync   /dev/sdm1
+    4     4       8      225        4      active sync   /dev/sdo1
+    5     5       8      209        5      active sync   /dev/sdn1
+    6     6       8      113        6      active sync   /dev/sdh1
+    7     7       8      129        7      active sync   /dev/sdi1
+    8     8       8       81        8      active sync   /dev/sdf1
+    9     9       8       96        9      active sync   /dev/sdg
+/dev/sdl:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 05cc3f43:de1ecfa4:83a51293:78015f1e
+   Creation Time : Sun May  2 18:02:14 2004
+      Raid Level : raid5
+   Used Dev Size : 244198400 (232.89 GiB 250.06 GB)
+      Array Size : 2197785600 (2095.97 GiB 2250.53 GB)
+    Raid Devices : 10
+   Total Devices : 10
+Preferred Minor : 0
+
+     Update Time : Tue Nov  4 22:32:56 2008
+           State : clean
+  Active Devices : 8
+Working Devices : 8
+  Failed Devices : 1
+   Spare Devices : 0
+        Checksum : 211b6ffb - correct
+          Events : 0.1338280
+
+          Layout : left-asymmetric
+      Chunk Size : 128K
+
+       Number   Major   Minor   RaidDevice State
+this     2       8      176        2      active sync   /dev/sdl
+
+    0     0       0        0        0      removed
+    1     1       0        0        1      faulty removed
+    2     2       8      176        2      active sync   /dev/sdl
+    3     3       8      193        3      active sync   /dev/sdm1
+    4     4       8      225        4      active sync   /dev/sdo1
+    5     5       8      209        5      active sync   /dev/sdn1
+    6     6       8      113        6      active sync   /dev/sdh1
+    7     7       8      129        7      active sync   /dev/sdi1
+    8     8       8       81        8      active sync   /dev/sdf1
+    9     9       8       96        9      active sync   /dev/sdg
+/dev/sdm1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 05cc3f43:de1ecfa4:83a51293:78015f1e
+   Creation Time : Sun May  2 18:02:14 2004
+      Raid Level : raid5
+   Used Dev Size : 244198400 (232.89 GiB 250.06 GB)
+      Array Size : 2197785600 (2095.97 GiB 2250.53 GB)
+    Raid Devices : 10
+   Total Devices : 10
+Preferred Minor : 0
+
+     Update Time : Tue Nov  4 22:32:56 2008
+           State : clean
+  Active Devices : 8
+Working Devices : 8
+  Failed Devices : 1
+   Spare Devices : 0
+        Checksum : 211b700e - correct
+          Events : 0.1338280
+
+          Layout : left-asymmetric
+      Chunk Size : 128K
+
+       Number   Major   Minor   RaidDevice State
+this     3       8      193        3      active sync   /dev/sdm1
+
+    0     0       0        0        0      removed
+    1     1       0        0        1      faulty removed
+    2     2       8      176        2      active sync   /dev/sdl
+    3     3       8      193        3      active sync   /dev/sdm1
+    4     4       8      225        4      active sync   /dev/sdo1
+    5     5       8      209        5      active sync   /dev/sdn1
+    6     6       8      113        6      active sync   /dev/sdh1
+    7     7       8      129        7      active sync   /dev/sdi1
+    8     8       8       81        8      active sync   /dev/sdf1
+    9     9       8       96        9      active sync   /dev/sdg
+/dev/sdo1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 05cc3f43:de1ecfa4:83a51293:78015f1e
+   Creation Time : Sun May  2 18:02:14 2004
+      Raid Level : raid5
+   Used Dev Size : 244198400 (232.89 GiB 250.06 GB)
+      Array Size : 2197785600 (2095.97 GiB 2250.53 GB)
+    Raid Devices : 10
+   Total Devices : 10
+Preferred Minor : 0
+
+     Update Time : Tue Nov  4 22:32:56 2008
+           State : clean
+  Active Devices : 8
+Working Devices : 8
+  Failed Devices : 1
+   Spare Devices : 0
+        Checksum : 211b7030 - correct
+          Events : 0.1338280
+
+          Layout : left-asymmetric
+      Chunk Size : 128K
+
+       Number   Major   Minor   RaidDevice State
+this     4       8      225        4      active sync   /dev/sdo1
+
+    0     0       0        0        0      removed
+    1     1       0        0        1      faulty removed
+    2     2       8      176        2      active sync   /dev/sdl
+    3     3       8      193        3      active sync   /dev/sdm1
+    4     4       8      225        4      active sync   /dev/sdo1
+    5     5       8      209        5      active sync   /dev/sdn1
+    6     6       8      113        6      active sync   /dev/sdh1
+    7     7       8      129        7      active sync   /dev/sdi1
+    8     8       8       81        8      active sync   /dev/sdf1
+    9     9       8       96        9      active sync   /dev/sdg
+/dev/sdn1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 05cc3f43:de1ecfa4:83a51293:78015f1e
+   Creation Time : Sun May  2 18:02:14 2004
+      Raid Level : raid5
+   Used Dev Size : 244198400 (232.89 GiB 250.06 GB)
+      Array Size : 2197785600 (2095.97 GiB 2250.53 GB)
+    Raid Devices : 10
+   Total Devices : 10
+Preferred Minor : 0
+
+     Update Time : Tue Nov  4 22:32:56 2008
+           State : clean
+  Active Devices : 8
+Working Devices : 8
+  Failed Devices : 1
+   Spare Devices : 0
+        Checksum : 211b7022 - correct
+          Events : 0.1338280
+
+          Layout : left-asymmetric
+      Chunk Size : 128K
+
+       Number   Major   Minor   RaidDevice State
+this     5       8      209        5      active sync   /dev/sdn1
+
+    0     0       0        0        0      removed
+    1     1       0        0        1      faulty removed
+    2     2       8      176        2      active sync   /dev/sdl
+    3     3       8      193        3      active sync   /dev/sdm1
+    4     4       8      225        4      active sync   /dev/sdo1
+    5     5       8      209        5      active sync   /dev/sdn1
+    6     6       8      113        6      active sync   /dev/sdh1
+    7     7       8      129        7      active sync   /dev/sdi1
+    8     8       8       81        8      active sync   /dev/sdf1
+    9     9       8       96        9      active sync   /dev/sdg
+/dev/sdh1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 05cc3f43:de1ecfa4:83a51293:78015f1e
+   Creation Time : Sun May  2 18:02:14 2004
+      Raid Level : raid5
+   Used Dev Size : 244198400 (232.89 GiB 250.06 GB)
+      Array Size : 2197785600 (2095.97 GiB 2250.53 GB)
+    Raid Devices : 10
+   Total Devices : 10
+Preferred Minor : 0
+
+     Update Time : Tue Nov  4 22:32:56 2008
+           State : clean
+  Active Devices : 8
+Working Devices : 8
+  Failed Devices : 1
+   Spare Devices : 0
+        Checksum : 211b6fc4 - correct
+          Events : 0.1338280
+
+          Layout : left-asymmetric
+      Chunk Size : 128K
+
+       Number   Major   Minor   RaidDevice State
+this     6       8      113        6      active sync   /dev/sdh1
+
+    0     0       0        0        0      removed
+    1     1       0        0        1      faulty removed
+    2     2       8      176        2      active sync   /dev/sdl
+    3     3       8      193        3      active sync   /dev/sdm1
+    4     4       8      225        4      active sync   /dev/sdo1
+    5     5       8      209        5      active sync   /dev/sdn1
+    6     6       8      113        6      active sync   /dev/sdh1
+    7     7       8      129        7      active sync   /dev/sdi1
+    8     8       8       81        8      active sync   /dev/sdf1
+    9     9       8       96        9      active sync   /dev/sdg
+/dev/sdi1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 05cc3f43:de1ecfa4:83a51293:78015f1e
+   Creation Time : Sun May  2 18:02:14 2004
+      Raid Level : raid5
+   Used Dev Size : 244198400 (232.89 GiB 250.06 GB)
+      Array Size : 2197785600 (2095.97 GiB 2250.53 GB)
+    Raid Devices : 10
+   Total Devices : 10
+Preferred Minor : 0
+
+     Update Time : Tue Nov  4 22:32:56 2008
+           State : clean
+  Active Devices : 8
+Working Devices : 8
+  Failed Devices : 1
+   Spare Devices : 0
+        Checksum : 211b6fd6 - correct
+          Events : 0.1338280
+
+          Layout : left-asymmetric
+      Chunk Size : 128K
+
+       Number   Major   Minor   RaidDevice State
+this     7       8      129        7      active sync   /dev/sdi1
+
+    0     0       0        0        0      removed
+    1     1       0        0        1      faulty removed
+    2     2       8      176        2      active sync   /dev/sdl
+    3     3       8      193        3      active sync   /dev/sdm1
+    4     4       8      225        4      active sync   /dev/sdo1
+    5     5       8      209        5      active sync   /dev/sdn1
+    6     6       8      113        6      active sync   /dev/sdh1
+    7     7       8      129        7      active sync   /dev/sdi1
+    8     8       8       81        8      active sync   /dev/sdf1
+    9     9       8       96        9      active sync   /dev/sdg
+/dev/sdf1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 05cc3f43:de1ecfa4:83a51293:78015f1e
+   Creation Time : Sun May  2 18:02:14 2004
+      Raid Level : raid5
+   Used Dev Size : 244198400 (232.89 GiB 250.06 GB)
+      Array Size : 2197785600 (2095.97 GiB 2250.53 GB)
+    Raid Devices : 10
+   Total Devices : 10
+Preferred Minor : 0
+
+     Update Time : Tue Nov  4 22:32:56 2008
+           State : clean
+  Active Devices : 8
+Working Devices : 8
+  Failed Devices : 1
+   Spare Devices : 0
+        Checksum : 211b6fa8 - correct
+          Events : 0.1338280
+
+          Layout : left-asymmetric
+      Chunk Size : 128K
+
+       Number   Major   Minor   RaidDevice State
+this     8       8       81        8      active sync   /dev/sdf1
+
+    0     0       0        0        0      removed
+    1     1       0        0        1      faulty removed
+    2     2       8      176        2      active sync   /dev/sdl
+    3     3       8      193        3      active sync   /dev/sdm1
+    4     4       8      225        4      active sync   /dev/sdo1
+    5     5       8      209        5      active sync   /dev/sdn1
+    6     6       8      113        6      active sync   /dev/sdh1
+    7     7       8      129        7      active sync   /dev/sdi1
+    8     8       8       81        8      active sync   /dev/sdf1
+    9     9       8       96        9      active sync   /dev/sdg
+/dev/sdg:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 05cc3f43:de1ecfa4:83a51293:78015f1e
+   Creation Time : Sun May  2 18:02:14 2004
+      Raid Level : raid5
+   Used Dev Size : 244198400 (232.89 GiB 250.06 GB)
+      Array Size : 2197785600 (2095.97 GiB 2250.53 GB)
+    Raid Devices : 10
+   Total Devices : 10
+Preferred Minor : 0
+
+     Update Time : Tue Nov  4 22:32:56 2008
+           State : clean
+  Active Devices : 8
+Working Devices : 8
+  Failed Devices : 1
+   Spare Devices : 0
+        Checksum : 211b6fb9 - correct
+          Events : 0.1338280
+
+          Layout : left-asymmetric
+      Chunk Size : 128K
+
+       Number   Major   Minor   RaidDevice State
+this     9       8       96        9      active sync   /dev/sdg
+
+    0     0       0        0        0      removed
+    1     1       0        0        1      faulty removed
+    2     2       8      176        2      active sync   /dev/sdl
+    3     3       8      193        3      active sync   /dev/sdm1
+    4     4       8      225        4      active sync   /dev/sdo1
+    5     5       8      209        5      active sync   /dev/sdn1
+    6     6       8      113        6      active sync   /dev/sdh1
+    7     7       8      129        7      active sync   /dev/sdi1
+    8     8       8       81        8      active sync   /dev/sdf1
+    9     9       8       96        9      active sync   /dev/sdg
+/dev/sdk1:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : 05cc3f43:de1ecfa4:83a51293:78015f1e
+   Creation Time : Sun May  2 18:02:14 2004
+      Raid Level : raid5
+   Used Dev Size : 244198400 (232.89 GiB 250.06 GB)
+      Array Size : 2197785600 (2095.97 GiB 2250.53 GB)
+    Raid Devices : 10
+   Total Devices : 10
+Preferred Minor : 0
+
+     Update Time : Tue Nov  4 22:27:34 2008
+           State : active
+  Active Devices : 9
+Working Devices : 9
+  Failed Devices : 0
+   Spare Devices : 0
+        Checksum : 210702e6 - correct
+          Events : 0.1338280
+
+          Layout : left-asymmetric
+      Chunk Size : 128K
+
+       Number   Major   Minor   RaidDevice State
+this     1       8      161        1      active sync   /dev/sdk1
+
+    0     0       0        0        0      removed
+    1     1       8      161        1      active sync   /dev/sdk1
+    2     2       8      176        2      active sync   /dev/sdl
+    3     3       8      193        3      active sync   /dev/sdm1
+    4     4       8      225        4      active sync   /dev/sdo1
+    5     5       8      209        5      active sync   /dev/sdn1
+    6     6       8      113        6      active sync   /dev/sdh1
+    7     7       8      129        7      active sync   /dev/sdi1
+    8     8       8       81        8      active sync   /dev/sdf1
+    9     9       8       96        9      active sync   /dev/sdg
 
 
-> /dev/sdd1:
-> this     3       8       33        3      spare   /dev/sdc1
+< mdadm failure E-mail 1 >
 
-I'm inclined to believe (but am not sure at all) that -
+This is an automatically generated mail message from mdadm
+running on srv
 
-sdb1 should be sdd1
-sdc1 is correct
-sdd1 should be sdb1
+A Fail event had been detected on md device /dev/md0.
 
-Thanks!
-Steve..
+It could be related to component device /dev/sdj1.
 
-On Wed, Oct 29, 2008 at 3:16 PM, Steve Evans <jeeping@gmail.com> wrote:
-> On Sat, Oct 25, 2008 at 12:30 AM, Neil Brown <neilb@suse.de> wrote:
->> On Wednesday October 22, jeeping@gmail.com wrote:
->>> Hi all..
->>
->> Hi.
->> You need to get a mail client that doesn't destroy the formatting of
->> the text that you paste in.  But while it is an inconvenience, we
->> should be able to persevere...
->>
->
-> Sorry, I attempted a plain text email through gmail.. I probably
-> messed it up :(  Hopefully this one is better..
->
->>>
->>> I had one of the disks in my 3 disk RAID5 die on me this week. When
->>> attempting to replace the disk via a hot swap (USB), the RAID didn't
->>> like it. It decided to mark one of my remaining 2 disks as faulty.
->>
->> It would be interesting to see the kernel logs at this time.  Maybe
->> the USB bus glitched while you were plugging the device in.
->>
->
-> Here are some of what I thought were the more relevent entries in the
-> logs, let me know if you'd like all of them and I can email them
-> directly to you as attachments -
->
-> Oct 18 20:40:27 sjev kernel: usb 4-3.2: USB disconnect, address 4
-> Oct 18 20:40:27 sjev kernel: usb 4-3.2: new high speed USB device
-> using address 12
-> Oct 18 20:40:27 sjev kernel: scsi8 : SCSI emulation for USB Mass Storage devices
-> Oct 18 20:40:28 sjev kernel:   Vendor: ST330063  Model: 1A
->   Rev: 0000
-> Oct 18 20:40:28 sjev kernel:   Type:   Direct-Access
->   ANSI SCSI revision: 02
-> Oct 18 20:40:28 sjev kernel: SCSI device sdc: 586072368 512-byte hdwr
-> sectors (300069 MB)
-> Oct 18 20:40:28 sjev kernel: sdc: assuming drive cache: write through
-> Oct 18 20:40:28 sjev kernel:  /dev/scsi/host8/bus0/target0/lun0: p1
-> Oct 18 20:40:28 sjev kernel: Attached scsi disk sdc at scsi8, channel
-> 0, id 0, lun 0
-> Oct 18 20:40:28 sjev kernel: Attached scsi generic sg1 at scsi8,
-> channel 0, id 0, lun 0,  type 0
-> Oct 18 20:40:28 sjev kernel: USB Mass Storage device found at 12
-> Oct 18 20:40:28 sjev usb.agent[8548]:      usb-storage: already loaded
-> Oct 18 20:40:29 sjev scsi.agent[8571]:      sd_mod: loaded sucessfully
-> (for disk)
-> Oct 18 20:40:29 sjev kernel: scsi1 (0:0): rejecting I/O to dead device
-> Oct 18 20:40:29 sjev kernel: md: write_disk_sb failed for device sdb1
-> Oct 18 20:40:29 sjev kernel: md: errors occurred during superblock
-> update, repeating
-> Oct 18 20:40:29 sjev kernel: scsi1 (0:0): rejecting I/O to dead device
-> Oct 18 20:40:29 sjev kernel: md: write_disk_sb failed for device sdb1
-> Oct 18 20:40:29 sjev kernel: md: errors occurred during superblock
-> update, repeating
-> Oct 18 20:40:29 sjev kernel: scsi1 (0:0): rejecting I/O to dead device
-> Oct 18 20:40:29 sjev kernel: md: write_disk_sb failed for device sdb1
-> Oct 18 20:40:29 sjev kernel: md: errors occurred during superblock
-> update, repeating
-> Oct 18 20:40:29 sjev kernel: scsi1 (0:0): rejecting I/O to dead device
->
-> etc..
->
-> Oct 18 20:40:34 sjev kernel: md: errors occurred during superblock
-> update, repeating
-> Oct 18 20:40:34 sjev kernel: scsi1 (0:0): rejecting I/O to dead device
-> Oct 18 20:40:34 sjev kernel: md: write_disk_sb failed for device sdb1
-> Oct 18 20:40:34 sjev kernel: md: errors occurred during superblock
-> update, repeating
-> Oct 18 20:40:34 sjev kernel: scsi1 (0:0): rejecting I/O to dead device
-> Oct 18 20:40:34 sjev kernel: md: write_disk_sb failed for device sdb1
-> Oct 18 20:40:34 sjev kernel: md: excessive errors occurred during
-> superblock update, exiting
-> Oct 18 20:40:34 sjev kernel: scsi1 (0:0): rejecting I/O to dead device
-> Oct 18 20:40:34 sjev kernel: raid5: Disk failure on sdb1, disabling
-> device. Operation continuing on 0 devices
-> Oct 18 20:40:34 sjev kernel: RAID5 conf printout:
-> Oct 18 20:40:34 sjev kernel:  --- rd:3 wd:0 fd:2
-> Oct 18 20:40:34 sjev kernel:  disk 0, o:0, dev:sdb1
-> Oct 18 20:40:34 sjev kernel:  disk 2, o:1, dev:sdd1
-> Oct 18 20:40:34 sjev kernel: RAID5 conf printout:
-> Oct 18 20:40:34 sjev kernel:  --- rd:3 wd:0 fd:2
-> Oct 18 20:40:34 sjev kernel:  disk 2, o:1, dev:sdd1
-> Oct 18 20:40:34 sjev kernel: Buffer I/O error on device md1, logical block 3601
-> Oct 18 20:40:34 sjev kernel: lost page write due to I/O error on md1
-> Oct 18 20:40:34 sjev kernel: Aborting journal on device md1.
-> Oct 18 20:40:35 sjev kernel: ext3_abort called.
-> Oct 18 20:40:35 sjev kernel: EXT3-fs abort (device md1):
-> ext3_journal_start: Detected aborted journal
-> Oct 18 20:40:35 sjev kernel: Remounting filesystem read-only
-> Oct 18 20:40:38 sjev kernel: Buffer I/O error on device md1, logical
-> block 103252006
-> Oct 18 20:40:38 sjev kernel: lost page write due to I/O error on md1
-> Oct 18 20:40:38 sjev kernel: Buffer I/O error on device md1, logical
-> block 103252007
-> Oct 18 20:40:38 sjev kernel: lost page write due to I/O error on md1
-> Oct 18 20:40:38 sjev kernel: Buffer I/O error on device md1, logical
-> block 103252008
-> Oct 18 20:40:38 sjev kernel: lost page write due to I/O error on md1
-> Oct 18 20:40:38 sjev kernel: Buffer I/O error on device md1, logical
-> block 103252009
-> Oct 18 20:40:38 sjev kernel: lost page write due to I/O error on md1
-> Oct 18 20:40:38 sjev kernel: Buffer I/O error on device md1, logical
-> block 103252010
-> Oct 18 20:40:38 sjev kernel: lost page write due to I/O error on md1
-> Oct 18 20:40:38 sjev kernel: Buffer I/O error on device md1, logical
-> block 103252011
-> Oct 18 20:40:38 sjev kernel: lost page write due to I/O error on md1
-> Oct 18 20:40:38 sjev kernel: Buffer I/O error on device md1, logical
-> block 103252012
-> Oct 18 20:40:38 sjev kernel: lost page write due to I/O error on md1
-> Oct 18 20:40:38 sjev kernel: Buffer I/O error on device md1, logical
-> block 103252013
-> Oct 18 20:40:38 sjev kernel: lost page write due to I/O error on md1
-> Oct 18 20:40:38 sjev kernel: Buffer I/O error on device md1, logical
-> block 103252014
-> Oct 18 20:40:38 sjev kernel: lost page write due to I/O error on md1
-> Oct 18 20:40:52 sjev kernel: printk: 35 messages suppressed.
->
->
-> later ..
->
-> Oct 18 22:12:39 sjev kernel: usb 4-3.3: new high speed USB device
-> using address 13
-> Oct 18 22:12:40 sjev usb.agent[21323]:      usb-storage: already loaded
-> Oct 18 22:12:40 sjev kernel: scsi9 : SCSI emulation for USB Mass Storage devices
-> Oct 18 22:12:40 sjev kernel:   Vendor: MAXTOR S  Model: TM3320620A
->   Rev: 0000
-> Oct 18 22:12:40 sjev kernel:   Type:   Direct-Access
->   ANSI SCSI revision: 02
-> Oct 18 22:12:40 sjev kernel: SCSI device sde: 625142448 512-byte hdwr
-> sectors (320073 MB)
-> Oct 18 22:12:40 sjev kernel: sde: assuming drive cache: write through
-> Oct 18 22:12:40 sjev kernel:  /dev/scsi/host9/bus0/target0/lun0: p1
-> Oct 18 22:12:40 sjev kernel: Attached scsi disk sde at scsi9, channel
-> 0, id 0, lun 0
-> Oct 18 22:12:40 sjev kernel: Attached scsi generic sg2 at scsi9,
-> channel 0, id 0, lun 0,  type 0
-> Oct 18 22:12:40 sjev kernel: USB Mass Storage device found at 13
-> Oct 18 22:12:41 sjev scsi.agent[21357]:      sd_mod: loaded
-> sucessfully (for disk)
-> Oct 18 22:13:00 sjev kernel: md: trying to hot-add unknown-block(8,33)
-> to md1 ...
-> Oct 18 22:13:00 sjev kernel: md: bind<sdc1>
-> Oct 18 22:13:00 sjev kernel: RAID5 conf printout:
-> Oct 18 22:13:00 sjev kernel:  --- rd:3 wd:0 fd:2
-> Oct 18 22:13:00 sjev kernel:  disk 0, o:1, dev:sdc1
-> Oct 18 22:13:00 sjev kernel:  disk 2, o:1, dev:sdd1
-> Oct 18 22:13:00 sjev kernel: md: syncing RAID array md1
-> Oct 18 22:13:00 sjev kernel: md: minimum _guaranteed_ reconstruction
-> speed: 1000 KB/sec/disc.
-> Oct 18 22:13:00 sjev kernel: md: using maximum available idle IO
-> bandwith (but not more than 200000 KB/sec) for reconstruction.
-> Oct 18 22:13:00 sjev kernel: md: using 128k window, over a total of
-> 293033536 blocks.
-> Oct 18 22:13:00 sjev kernel: md: md1: sync done.
-> Oct 18 22:13:00 sjev kernel: md: syncing RAID array md1
-> Oct 18 22:13:00 sjev kernel: md: minimum _guaranteed_ reconstruction
-> speed: 1000 KB/sec/disc.
-> Oct 18 22:13:00 sjev kernel: md: using maximum available idle IO
-> bandwith (but not more than 200000 KB/sec) for reconstruction.
-> Oct 18 22:13:00 sjev kernel: md: using 128k window, over a total of
-> 293033536 blocks.
-> Oct 18 22:13:00 sjev kernel: md: md1: sync done.
-> Oct 18 22:13:01 sjev kernel: md: syncing RAID array md1
->
-> repeats until..
->
-> Oct 18 22:14:48 sjev kernel: md: syncing RAID array md1
-> Oct 18 22:14:48 sjev kernel: md: minimum _guaranteed_ reconstruction
-> speed: 1000 KB/sec/disc.
-> Oct 18 22:14:48 sjev kernel: md: using maximum available idle IO
-> bandwith (but not more than 200000 KB/sec) for reconstruction.
-> Oct 18 22:14:48 sjev kernel: md: using 128k window, over a total of
-> 293033536 blocks.
-> Oct 18 22:14:48 sjev kernel: md: md1: sync done.
-> Oct 18 22:14:48 sjev kernel: Unable to handle kernel NULL pointer
-> dereference at virtual address 000000a4
-> Oct 18 22:14:48 sjev kernel:  printing eip:
-> Oct 18 22:14:48 sjev kernel: c0124d89
-> Oct 18 22:14:48 sjev kernel: *pde = 00000000
-> Oct 18 22:14:48 sjev kernel: Oops: 0000 [#1]
-> Oct 18 22:14:48 sjev kernel: PREEMPT
-> Oct 18 22:14:48 sjev kernel: Modules linked in: ipv6 smbfs
-> snd_intel8x0m snd_intel8x0 snd_ac97_codec snd_pcm snd_timer
-> snd_page_alloc gameport snd_mpu401_uart snd_rawmidi snd_seq_device snd
-> capability commoncap raid5 xor sr_mod tsdev mousedev joydev evdev
-> pcspkr pci_hotplug intel_agp agpgart ide_scsi ide_generic sg font
-> vesafb cfbcopyarea cfbimgblt cfbfillrect appletalk af_packet hw_random
-> i810_audio soundcore ac97_codec b44 mii yenta_socket rtc piix unix ds
-> pcmcia_core usb_storage ext3 mbcache raid1 md jbd ehci_hcd ohci_hcd
-> uhci_hcd usbcore reiserfs psmouse ide_disk ide_cd ide_core cdrom
-> sd_mod scsi_mod
-> Oct 18 22:14:48 sjev kernel: CPU:    0
-> Oct 18 22:14:48 sjev kernel: EIP:    0060:[sig_ignored+73/112]    Not tainted
-> Oct 18 22:14:48 sjev kernel: EFLAGS: 00010006   (2.6.8-3-686)
-> Oct 18 22:14:48 sjev kernel: EIP is at sig_ignored+0x49/0x70
-> Oct 18 22:14:48 sjev kernel: eax: 000000b4   ebx: 00000000   ecx:
-> 00000008   edx: 00000000
-> Oct 18 22:14:48 sjev kernel: esi: 00000009   edi: 00000009   ebp:
-> 00000000   esp: cedf3ec0
-> Oct 18 22:14:48 sjev kernel: ds: 007b   es: 007b   ss: 0068
-> Oct 18 22:14:48 sjev kernel: Process md1_raid5 (pid: 685,
-> threadinfo=cedf2000 task=cedef3e0)
-> Oct 18 22:14:48 sjev kernel: Stack: cf10e1b0 00000001 c01259f3
-> cf10e1b0 00000009 c86194a0 cf99771c 00000202
-> Oct 18 22:14:48 sjev kernel:        cedf2000 cf997680 cf222c00
-> c0126565 00000009 00000001 cf10e1b0 c86194a0
-> Oct 18 22:14:48 sjev kernel:        cedf3f30 cf997680 d093eb7d
-> 00000009 00000001 cf10e1b0 d093ebcd c86194a0
-> Oct 18 22:14:48 sjev kernel: Call Trace:
-> Oct 18 22:14:48 sjev kernel:  [specific_send_sig_info+83/224]
-> specific_send_sig_info+0x53/0xe0
-> Oct 18 22:14:48 sjev kernel:  [send_sig_info+69/128] send_sig_info+0x45/0x80
-> Oct 18 22:14:48 sjev kernel:  [__crc_sb_min_blocksize+815035/1015327]
-> md_interrupt_thread+0x4d/0x60 [md]
-> Oct 18 22:14:48 sjev kernel:  [__crc_sb_min_blocksize+815115/1015327]
-> md_unregister_thread+0x3d/0x60 [md]
-> Oct 18 22:14:48 sjev kernel:  [recalc_task_prio+168/416]
-> recalc_task_prio+0xa8/0x1a0
-> Oct 18 22:14:48 sjev kernel:  [__crc_sb_min_blocksize+821862/1015327]
-> md_check_recovery+0x288/0x300 [md]
-> Oct 18 22:14:48 sjev kernel:  [__crc_fb_pan_display+1312520/2923165]
-> raid5d+0x19/0x150 [raid5]
-> Oct 18 22:14:48 sjev kernel:  [__crc_sb_min_blocksize+814642/1015327]
-> md_thread+0x164/0x1d0 [md]
-> Oct 18 22:14:48 sjev kernel:  [autoremove_wake_function+0/96]
-> autoremove_wake_function+0x0/0x60
-> Oct 18 22:14:48 sjev kernel:  [ret_from_fork+6/20] ret_from_fork+0x6/0x14
-> Oct 18 22:14:48 sjev kernel:  [autoremove_wake_function+0/96]
-> autoremove_wake_function+0x0/0x60
-> Oct 18 22:14:48 sjev kernel:  [__crc_sb_min_blocksize+814286/1015327]
-> md_thread+0x0/0x1d0 [md]
-> Oct 18 22:14:48 sjev kernel:  [kernel_thread_helper+5/24]
-> kernel_thread_helper+0x5/0x18
-> Oct 18 22:14:48 sjev kernel: Code: 8b 40 f0 83 f8 01 74 18 85 c0 74 04
-> 89 d3 eb c1 83 fe 1f 7f
-> Oct 18 22:14:48 sjev kernel:  <6>note: md1_raid5[685] exited with
-> preempt_count 2
->
->
->>
->>>
->>> Can someone *please* help me get the raid back!?
->>
->> Probably.
->>
->
-> I like the optimism! Thanks!
->
->>>
->>> More details -
->>>
->>> Drives are /dev/sdb1, /dev/sdc1 & /dev/sdd1
->>
->> ... or were.  USB device names can change every time you plug them in.
->>
->>>
->>> sdc1 was the one that died earlier this week
->>> sdb1 appears to be the one that was marked as faulty
->>>
->>> mdadm detail before sdc1 was plugged in -
->>>
->>> root@imp[~]:11 # mdadm --detail /dev/md1
->>> /dev/md1:
->> ...
->>>
->>> Number Major Minor RaidDevice State
->>> 0 8 17 0 active sync /dev/sdb1
->>> 1 0 0 - removed
->>> 2 8 49 2 active sync /dev/sdd1
->>
->> So the array thinks the 2nd of 3 is missing.  That is consistent with
->> your description.
->>
->>>
->>>
->>> then after plugging in the replacement sdc1 -
->>>
->>> root@imp[~]:13 # mdadm --add /dev/md1 /dev/sdc1
->>> mdadm: hot added /dev/sdc1
->>> root@imp[~]:14 #
->>> root@imp[~]:14 #
->>> root@imp[~]:14 # mdadm --detail /dev/md1
->>> /dev/md1:
->> ...
->>>
->>> Number Major Minor RaidDevice State
->>> 0 0 0 - removed
->>> 1 0 0 - removed
->>> 2 8 49 2 active sync /dev/sdd1
->>>
->>> 3 8 33 0 spare rebuilding /dev/sdc1
->>> 4 8 17 - faulty /dev/sdb1
->>
->> Yes, sdb must have got an error and failed while sdc was rebuilding.
->> Sad.  That suggests that it didn't fail at the moment of USB
->> insertion, but a little later.  Not conclusively though.
->>
->>>
->>> Shortly after this, subsequent mdadm --details stopped responding.. So
->>> I rebooted in the hope I could reset and problems with the hot add..
->>>
->>> Now, I'm unable to assemble the raid with the 2 working drives -
->>>
->>> mdadm --assemble /dev/md1 /dev/sdb1 /dev/sdd1
->>>
->>> doesn't work -
->>>
->>> mdadm: /dev/md1 assembled from 1 drive and 1 spare - not enough to
->>> start the array.
->>
->> You have rebooted so device names may have changed.
->> If it thought you had named a good drive and a spare, it probably saw
->> the device that was originally sdb (and possibly still is)
->> and the device that was originally sdc (and now might be sdd).
->>
->>>
->>> mdadm --assemble --force /dev/md1 /dev/sdb1 /dev/sdd1
->>>
->>> doesn't' work either
->>
->> What error messages?  Always best to be explicit.
->> Adding "-v" to the --assemble line would help too.
->>
->>>
->>> This -
->>>
->>> mdadm --assemble --force --run /dev/md1 /dev/sdb1 /dev/sdd1
->>>
->>> Did work partially -
->>>
->> Hmm.. That really shouldn't have worked.  The kernel should have
->> rejected the array...
->>
->>>
->>> Here's the output from mdadm -E on each of the 2 drives -
->>
->> Uhm... There should be 3 drives?
->> The 'good' one, the 'new' one, and the one that seemed to fail
->> immediately after you plugged in the 'new' one.
->>
->
-> Sorry, here are all 3 -
->
-> root@imp[~]:3 # mdadm -E /dev/sd[bcd]1
-> /dev/sdb1:
->          Magic : a92b4efc
->        Version : 00.90.00
->           UUID : bed40ee2:98523fdd:e4d010fb:894c0966
->  Creation Time : Fri Nov 17 21:28:44 2006
->     Raid Level : raid5
->   Raid Devices : 3
->  Total Devices : 3
-> Preferred Minor : 1
->
->    Update Time : Sat Oct 18 22:14:48 2008
->          State : clean
->  Active Devices : 1
-> Working Devices : 2
->  Failed Devices : 2
->  Spare Devices : 1
->       Checksum : e6dbf86 - correct
->         Events : 0.1521614
->
->         Layout : left-symmetric
->     Chunk Size : 64K
->
->      Number   Major   Minor   RaidDevice State
-> this     2       8       49        2      active sync   /dev/sdd1
->
->   0     0       0        0        0      removed
->   1     1       0        0        1      faulty removed
->   2     2       8       49        2      active sync   /dev/sdd1
->   3     3       8       33        0      spare   /dev/sdc1
-> /dev/sdc1:
->          Magic : a92b4efc
->        Version : 00.90.00
->           UUID : bed40ee2:98523fdd:e4d010fb:894c0966
->  Creation Time : Fri Nov 17 21:28:44 2006
->     Raid Level : raid5
->   Raid Devices : 3
->  Total Devices : 3
-> Preferred Minor : 1
->
->    Update Time : Fri Oct 17 22:30:49 2008
->          State : clean
->  Active Devices : 2
-> Working Devices : 3
->  Failed Devices : 1
->  Spare Devices : 1
->       Checksum : e6ae9ea - correct
->         Events : 0.1471469
->
->         Layout : left-symmetric
->     Chunk Size : 64K
->
->      Number   Major   Minor   RaidDevice State
-> this     3       8       33        3      spare   /dev/sdc1
->
->   0     0       8       17        0      active sync   /dev/sdb1
->   1     1       0        0        1      faulty removed
->   2     2       8       49        2      active sync   /dev/sdd1
->   3     3       8       33        3      spare   /dev/sdc1
-> /dev/sdd1:
->          Magic : a92b4efc
->        Version : 00.90.00
->           UUID : bed40ee2:98523fdd:e4d010fb:894c0966
->  Creation Time : Fri Nov 17 21:28:44 2006
->     Raid Level : raid5
->   Raid Devices : 3
->  Total Devices : 3
-> Preferred Minor : 1
->
->    Update Time : Sat Oct 18 22:14:48 2008
->          State : clean
->  Active Devices : 1
-> Working Devices : 2
->  Failed Devices : 2
->  Spare Devices : 1
->       Checksum : e6dbf75 - correct
->         Events : 0.1521614
->
->         Layout : left-symmetric
->     Chunk Size : 64K
->
->      Number   Major   Minor   RaidDevice State
-> this     3       8       33        3      spare   /dev/sdc1
->
->   0     0       0        0        0      removed
->   1     1       0        0        1      faulty removed
->   2     2       8       49        2      active sync   /dev/sdd1
->   3     3       8       33        3      spare   /dev/sdc1
->
-> fdisk details too -
->
-> root@imp[~]:7 # fdisk -l /dev/sd[bcd]
->
-> Disk /dev/sdb: 300.0 GB, 300069052416 bytes
-> 255 heads, 63 sectors/track, 36481 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
->
->   Device Boot      Start         End      Blocks   Id  System
-> /dev/sdb1               1       36481   293033601   fd  Linux raid autodetect
->
-> Disk /dev/sdc: 320.0 GB, 320072933376 bytes
-> 255 heads, 63 sectors/track, 38913 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
->
->   Device Boot      Start         End      Blocks   Id  System
-> /dev/sdc1               1       36481   293033601   fd  Linux raid autodetect
->
-> Disk /dev/sdd: 300.0 GB, 300069052416 bytes
-> 255 heads, 63 sectors/track, 36481 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
->
->   Device Boot      Start         End      Blocks   Id  System
-> /dev/sdd1               1       36481   293033601   fd  Linux raid autodetect
->
->
->>>
->>> /dev/sdb1:
->> ..
->>> Number Major Minor RaidDevice State
->>> this 3 8 33 3 spare /dev/sdc1
->>>
->>> 0 0 0 0 0 removed
->>> 1 1 0 0 1 faulty removed
->>> 2 2 8 49 2 active sync /dev/sdd1
->>> 3 3 8 33 3 spare /dev/sdc1
->>
->> sdb looks like the new one.
->>
->>> /dev/sdd1:
->> ...
->>>
->>> Number Major Minor RaidDevice State
->>> this 2 8 49 2 active sync /dev/sdd1
->>>
->>> 0 0 0 0 0 removed
->>> 1 1 0 0 1 faulty removed
->>> 2 2 8 49 2 active sync /dev/sdd1
->>> 3 3 8 33 0 spare /dev/sdc1
->>
->> sdd looks like the good one.
->>
->> Where is the "one that seemed to fail" which was once called sdb ??
->>>
->>> Is all the data lost, or can I recover from this?
->>
->> Try
->>
->>  mdadm --examine --brief --verbose /dev/sd*
->>
->
-> ARRAY /dev/md1 level=raid5 num-devices=3
-> UUID=bed40ee2:98523fdd:e4d010fb:894c0966
->   devices=/dev/sdb1,/dev/sdc1,/dev/sdd1
-> ARRAY /dev/md4 level=raid1 num-devices=2
-> UUID=6fded12b:6ecdca8a:18400b9a:df6a2ffc
->   devices=/dev/sda5
-> ARRAY /dev/md0 level=raid1 num-devices=2
-> UUID=c94d0631:20f0db42:9c6ab972:19acc617
->   devices=/dev/sda1
->
->>
->> Then
->>
->>  mdadm --assemble --force --verbose /dev/md1 /dev/sd....
->>
->> where you list all the devices in the device= section for the array
->> you want to try to start.
->>
->> Report the output of that command and whether it was successful.
->
-> root@imp[~]:9 # mdadm --assemble --force --verbose /dev/md1 /dev/sdb1
-> /dev/sdc1 /dev/sdd1
-> mdadm: looking for devices for /dev/md1
-> mdadm: /dev/sdb1 is identified as a member of /dev/md1, slot 2.
-> mdadm: /dev/sdc1 is identified as a member of /dev/md1, slot 3.
-> mdadm: /dev/sdd1 is identified as a member of /dev/md1, slot 3.
-> mdadm: no uptodate device for slot 0 of /dev/md1
-> mdadm: no uptodate device for slot 1 of /dev/md1
-> mdadm: added /dev/sdd1 to /dev/md1 as 3
-> mdadm: added /dev/sdb1 to /dev/md1 as 2
-> mdadm: /dev/md1 assembled from 1 drive and 1 spare - not enough to
-> start the array.
-> root@imp[~]:10 #
->
-> Oct 29 14:52:41 sjev kernel: md: md1 stopped.
-> Oct 29 14:52:41 sjev kernel: md: unbind<sdb1>
-> Oct 29 14:52:41 sjev kernel: md: export_rdev(sdb1)
-> Oct 29 14:52:41 sjev kernel: md: unbind<sdd1>
-> Oct 29 14:52:41 sjev kernel: md: export_rdev(sdd1)
-> Oct 29 14:52:41 sjev kernel: md: bind<sdd1>
-> Oct 29 14:52:41 sjev kernel: md: bind<sdb1>
-> Oct 29 14:58:07 sjev smartd[2302]: Device: /dev/hdc, SMART Usage
-> Attribute: 190 Unknown_Attribute changed from 49 to 48
-> Oct 29 14:58:07 sjev smartd[2302]: Device: /dev/hdc, SMART Usage
-> Attribute: 194 Temperature_Celsius changed from 51 to 52
->
-> I've held off upgrading mdadm to the latest version until I know it's
-> the best option (vs recovering the raid 1st before upgrading), so you
-> agree?
->
->>
->> NeilBrown
->>
->
-> Thanks for your patience and help!
-> Regards,
-> Steve..
->
+Faithfully yours, etc.
+
+P.S. The /proc/mdstat file currently contains the following:
+
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md0 : active raid5 sdm1[3] sdj1[10](F) sdg[9] sdf1[8] sdi1[7] sdh1[6] sdn1[5] sdo1[4] sdl[2] sdk1[1]
+       2197785600 blocks level 5, 128k chunk, algorithm 0 [10/9] [_UUUUUUUUU]
+
+md2 : active raid5 sdc[0] sde[2] sdd[1]
+       1465148928 blocks level 5, 128k chunk, algorithm 2 [3/3] [UUU]
+
+md5 : active raid1 sda4[0] sdb4[1]
+       200217984 blocks [2/2] [UU]
+
+md4 : active raid1 sda3[0] sdb3[1]
+       4891712 blocks [2/2] [UU]
+
+md3 : active raid1 sda2[0] sdb2[1]
+       19542976 blocks [2/2] [UU]
+
+md1 : active raid1 sdb1[0] sda1[1]
+       19542976 blocks [2/2] [UU]
+       bitmap: 9/150 pages [36KB], 64KB chunk
+
+unused devices: <none>
+
+
+< mdadm failure E-mail 2 >
+
+This is an automatically generated mail message from mdadm
+running on srv
+
+A Fail event had been detected on md device /dev/md0.
+
+It could be related to component device /dev/sdj1.
+
+Faithfully yours, etc.
+
+P.S. The /proc/mdstat file currently contains the following:
+
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+md0 : active raid5 sdm1[3] sdj1[10](F) sdg[9] sdf1[8] sdi1[7] sdh1[6] sdn1[5] sdo1[4] sdl[2] sdk1[1]
+       2197785600 blocks level 5, 128k chunk, algorithm 0 [10/9] [_UUUUUUUUU]
+
+md2 : active raid5 sdc[0] sde[2] sdd[1]
+       1465148928 blocks level 5, 128k chunk, algorithm 2 [3/3] [UUU]
+
+md5 : active raid1 sda4[0] sdb4[1]
+       200217984 blocks [2/2] [UU]
+
+md4 : active raid1 sda3[0] sdb3[1]
+       4891712 blocks [2/2] [UU]
+
+md3 : active raid1 sda2[0] sdb2[1]
+       19542976 blocks [2/2] [UU]
+
+md1 : active raid1 sdb1[0] sda1[1]
+       19542976 blocks [2/2] [UU]
+       bitmap: 9/150 pages [36KB], 64KB chunk
+
+unused devices: <none>
+
+< Dmesg from a latter attempt at  --assemble --force >
+
+[  611.436668] md: md0 still in use.
+[  611.495356] md: bind<sdj1>
+[  611.495983] md: bind<sdl>
+[  611.496452] md: bind<sdm1>
+[  611.496977] md: bind<sdo1>
+[  611.497394] md: bind<sdn1>
+[  611.497883] md: bind<sdh1>
+[  611.498340] md: bind<sdi1>
+[  611.498792] md: bind<sdf1>
+[  611.499204] md: bind<sdg>
+[  611.499671] md: bind<sdk1>
+[  611.499982] md: kicking non-fresh sdj1 from array!
+[  611.500068] md: unbind<sdj1>
+[  611.522556] md: export_rdev(sdj1)
+[  611.522631] md: md0: raid array is not clean -- starting background reconstruction
+[  611.529874] raid5: device sdk1 operational as raid disk 1
+[  611.529926] raid5: device sdg operational as raid disk 9
+[  611.529967] raid5: device sdf1 operational as raid disk 8
+[  611.530008] raid5: device sdi1 operational as raid disk 7
+[  611.530048] raid5: device sdh1 operational as raid disk 6
+[  611.530087] raid5: device sdn1 operational as raid disk 5
+[  611.530126] raid5: device sdo1 operational as raid disk 4
+[  611.530165] raid5: device sdm1 operational as raid disk 3
+[  611.530203] raid5: device sdl operational as raid disk 2
+[  611.530242] raid5: cannot start dirty degraded array for md0
+[  611.530282] RAID5 conf printout:
+[  611.530311]  --- rd:10 wd:9
+[  611.530339]  disk 1, o:1, dev:sdk1
+[  611.530370]  disk 2, o:1, dev:sdl
+[  611.530404]  disk 3, o:1, dev:sdm1
+[  611.530435]  disk 4, o:1, dev:sdo1
+[  611.530465]  disk 5, o:1, dev:sdn1
+[  611.530496]  disk 6, o:1, dev:sdh1
+[  611.530526]  disk 7, o:1, dev:sdi1
+[  611.530557]  disk 8, o:1, dev:sdf1
+[  611.530587]  disk 9, o:1, dev:sdg
+[  611.530617] raid5: failed to run raid set md0
+[  611.530651] md: pers->run() failed ...
+
+Regards,
+Brad
+-- 
+Dolphins are so intelligent that within a few weeks they can
+train Americans to stand at the edge of the pool and throw them
+fish.
