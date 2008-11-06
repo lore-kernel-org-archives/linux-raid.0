@@ -1,77 +1,102 @@
-From: Thomas Backlund <tmb@mandriva.org>
-Subject: Re: md raid10 regression in 2.6.27.4 (possibly earlier) BISECTED
-Date: Thu, 06 Nov 2008 01:30:16 +0200
-Message-ID: <49122C88.5000102@mandriva.org>
-References: <490D8EBF.8050400@rabbit.us> <490DE55F.6080600@mandriva.org> <490E3CF9.20208@mandriva.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: mdadm degraded RAID5 failure
+Date: Thu, 6 Nov 2008 16:41:55 +1100
+Message-ID: <18706.33699.188905.82732@notabene.brown>
+References: <6cc8e9ed0810221350o2b8b3aedm3d1c229fe7e66163@mail.gmail.com>
+	<6cc8e9ed0810221352y7427cb7dmfc7c3fcefd495bb9@mail.gmail.com>
+	<18690.48372.369694.309381@notabene.brown>
+	<6cc8e9ed0810291516p46cb24a7pdd230e222797d06e@mail.gmail.com>
+	<6cc8e9ed0811041335u1aeac632xafdae1892c418d95@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <490E3CF9.20208@mandriva.org>
+In-Reply-To: message from Steve Evans on Tuesday November 4
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Steve Evans <jeeping@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thomas Backlund skrev:
-> Thomas Backlund skrev:
->> Peter Rabbitson skrev:
->>> Hi,
->>>
->>> Some weeks ago I upgraded from 2.6.23 to 2.6.27.4. After a failed hard
->>> drive I realized that re-adding drives to a degraded raid10 no longer
->>> works (it adds the drive as a spare and never starts a resync). Booting
->>> back into the old .23 kernel allowed me to complete and resync the array
->>> as usual. Attached find a test case reliably failing on vanilla 2.6.27.4
->>> with no patches.
->>>
->>
->> I've just been hit with the same problem...
->>
->> I have a brand new server setup with 2.6.27.4 x86_64 kernel and a mix of
->> raid0, raid1, raid5 & raid10 partitions like this:
+On Tuesday November 4, jeeping@gmail.com wrote:
+> Hi Neil and others,
 > 
-> And an extra datapoint.
+> Just a couple of questions, I know you're busy -
 > 
-> Booting into 2.6.26.5 triggers an instant resync of the spare disks, so 
-> it means we have a regression between 2.6.26.5 and 2.6.27.4
+> Do you recommend that I attempt to upgrade mdadm to a more recent
+> version before any other recovery attempts? If so, which version?
+
+Yes.  2.6.7.1 (the latest).
+
 > 
-> If no-one have a good suggestion to try, I'll start bisecting tomorrow...
+> I noted my replacement drive (sdc1) got a smart error (during the
+> rebuild?), would you recommend replacing it or removing it altogether
+> until I get the other 2 drives back online (if I even can)?
 
-Ok,
-so it was a pita to bisect as the testkernels oopsed from time to time
-triggering a full rebuild of my 2.5 TiB raid5 wich takes ~4-5 hours to
-complete... and since I wanted to wait for all raids to be fully up and 
-synced between reboots, I hat to wait a lot...
+There seem to be different opinion on how much weight to put on SMART
+errors.   So I make no recommendations based on them.
 
-But anyway...
+> 
+> Is there a way to correct the drive names -
 
-This is the commit that breaks the raid10 rebuild/resync:
+When you assemble the array again, it will update the device names to
+what they are at the time.
 
---- cut ---
-6c2fce2ef6b4821c21b5c42c7207cb9cf8c87eda is first bad commit
-commit 6c2fce2ef6b4821c21b5c42c7207cb9cf8c87eda
-Author: Neil Brown <neilb@notabene.brown>
-Date:   Sat Jun 28 08:31:31 2008 +1000
+As you have 2 devices that think they are 'spare', you won't be able
+to assemble a working array using "--assemble".
 
-     Support adding a spare to a live md array with external metadata.
+What you will need to do is recreate the array over just two devices
+and make sure you get them in the right order.
 
-     i.e. extend the 'md/dev-XXX/slot' attribute so that you can
-     tell a device to fill an vacant slot in an and md array.
+The one that claims to be device '2' (sdb1 below) certainly is device
+2 (i.e. the last device: they are numbered 0,1,2).  The others I can
+not be so sure of.
 
-     Signed-off-by: Neil Brown <neilb@suse.de>
---- cut ---
+So I would recreate the array with e.g.
 
-I have verified that adding this patch to a working 2.6.26 kernel breaks
-the rebuild/resync
+  mdadm -C /dev/md0 -l5 -n2 /dev/sdc1 missing /dev/sdb1
 
-I have not verified if reverting it on a 2.6.27 kernel restores the 
-rebuild/resync as it does not revert cleanly...
+And check it with e.g.
+  fsck -n -f /dev/md0
 
-So...
+If fsck is happy: good.  If not, try again with a different
+arrangement:
 
-Any suggestions of what to try next ?
+   mdadm -C /dev/md0 -l5 -n2 missing /dev/sdc1 /dev/sdb1
 
---
-Thomas
+etc.  I don't know which of c1 and d1 is more likely to have good
+data.   Keep going until you get a good 'fsck'.
+
+Make very sure to use the "-n" option to fsck to ensure it doesn't try
+to 'fix' the mess it finds.
+
+Also, before doing the above, run "mdadm --examine /dev/sdb1" and keep
+a record of that.  Check the 'chunksize'.  If it isn't 64, you will
+need to explicitly give then number to "mdadm -C".  Also check the
+layout and possibly set that explicitly when doing "mdadm -C".
+
+good luck.
+
+NeilBrown
 
 
+> 
+> > /dev/sdb1:
+> > this     2       8       49        2      active sync   /dev/sdd1
+> 
+> 
+> > /dev/sdc1:
+> > this     3       8       33        3      spare   /dev/sdc1
+> 
+> 
+> > /dev/sdd1:
+> > this     3       8       33        3      spare   /dev/sdc1
+> 
+> I'm inclined to believe (but am not sure at all) that -
+> 
+> sdb1 should be sdd1
+> sdc1 is correct
+> sdd1 should be sdb1
+> 
+> Thanks!
+> Steve..
+> 
