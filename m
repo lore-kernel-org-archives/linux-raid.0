@@ -1,96 +1,67 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: md raid10 regression in 2.6.27.4 (possibly earlier) BISECTED
-Date: Thu, 6 Nov 2008 17:18:28 +1100
-Message-ID: <18706.35892.143554.833998@notabene.brown>
-References: <490D8EBF.8050400@rabbit.us>
-	<490DE55F.6080600@mandriva.org>
-	<490E3CF9.20208@mandriva.org>
-	<49122C88.5000102@mandriva.org>
+Subject: Re: linear : divide error: 0000
+Date: Thu, 6 Nov 2008 17:44:24 +1100
+Message-ID: <18706.37448.38431.286111@notabene.brown>
+References: <20081103103221.GJ17966@skl-net.de>
+	<20081103182818.GM17966@skl-net.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Thomas Backlund on Thursday November 6
+In-Reply-To: message from Andre Noll on Monday November 3
 Sender: linux-raid-owner@vger.kernel.org
-To: Thomas Backlund <tmb@mandriva.org>
-Cc: linux-raid@vger.kernel.org
+To: Andre Noll <maan@systemlinux.org>
+Cc: Wei Yongquan <weiyqlq@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thursday November 6, tmb@mandriva.org wrote:
+On Monday November 3, maan@systemlinux.org wrote:
+> > This sector_div() is in linear_conf() while the call trace indicates
+> > the bug happens in mddev_put(). I'll have a deeper look later today.
 > 
-> But anyway...
-> 
-> This is the commit that breaks the raid10 rebuild/resync:
+> Indeed, this sector_div() is responsible for the bug. The following
+> patch (against Neil's for-next tree) should fix this. Please give it a
+> try.
 
-Awesome. Thanks!
+Thanks Andre.  This is definitely a bug, since 2.6.14!!
 
-> 
-> --- cut ---
-> 6c2fce2ef6b4821c21b5c42c7207cb9cf8c87eda is first bad commit
-> commit 6c2fce2ef6b4821c21b5c42c7207cb9cf8c87eda
-> Author: Neil Brown <neilb@notabene.brown>
-                      ^^^^^^^^^^^^^^^^^^^^
-Grown.  I hadn't noticed that.  Fixed now I hope.
+I'll queue that patch for mainline and -stable.
 
-> Date:   Sat Jun 28 08:31:31 2008 +1000
-> 
->      Support adding a spare to a live md array with external metadata.
-> 
->      i.e. extend the 'md/dev-XXX/slot' attribute so that you can
->      tell a device to fill an vacant slot in an and md array.
-> 
->      Signed-off-by: Neil Brown <neilb@suse.de>
-> --- cut ---
-> 
-> I have verified that adding this patch to a working 2.6.26 kernel breaks
-> the rebuild/resync
-> 
-> I have not verified if reverting it on a 2.6.27 kernel restores the 
-> rebuild/resync as it does not revert cleanly...
-> 
-> So...
-> 
-> Any suggestions of what to try next ?
-
-You mean apart from hitting Neil with a clue-bat?
-
-Maybe try this patch.  I haven't even compile tested it, but I'm
-certain it'll fix your problem.
-
-Thanks again,
-
+Thanks,
 NeilBrown
 
-----------------------------------------------
-From: NeilBrown <neilb@suse.de>
-Date: Thu, 6 Nov 2008 17:14:31 +1100
-Subject: [PATCH] md: fix bug in raid10 recovery.
-
-Adding a spare to a raid10 doesn't cause recovery to start.
-This is due to an silly type in
-  commit 6c2fce2ef6b4821c21b5c42c7207cb9cf8c87eda
-and so is a bug in 2.6.27 and .28-rc.
-
-Thanks to Thomas Backlund for bisecting to find this.
-
-Cc: Thomas Backlund <tmb@mandriva.org>
-Cc: stable@kernel.org
-
-Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index da5129a..970a96e 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1137,7 +1137,7 @@ static int raid10_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
- 	if (!enough(conf))
- 		return -EINVAL;
- 
--	if (rdev->raid_disk)
-+	if (rdev->raid_disk >= 0)
- 		first = last = rdev->raid_disk;
- 
- 	if (rdev->saved_raid_disk >= 0 &&
--- 
-1.5.6.5
-
+> 
+> Andre
+> 
+> commit 284b3e2a37c8790d0e9315aed03d594165a85455
+> Author: Andre Noll <maan@systemlinux.org>
+> Date:   Mon Nov 3 19:39:22 2008 +0100
+> 
+>     md: linear: Fix a division by zero bug for very small arrays.
+>     
+>     We currently oops with a divide error on starting a linear software
+>     raid array consisting of at least two very small (< 500K) devices.
+>     
+>     The bug is caused by the calculation of the hash table size which
+>     tries to compute sector_div(sz, base) with "base" being zero due to
+>     the small size of the component devices of the array.
+>     
+>     Fix this by requiring the hash spacing to be at least one which
+>     implies that also "base" is non-zero.
+>     
+>     Signed-off-by: Andre Noll <maan@systemlinux.org>
+> 
+> diff --git a/drivers/md/linear.c b/drivers/md/linear.c
+> index 190147c..3b90c5c 100644
+> --- a/drivers/md/linear.c
+> +++ b/drivers/md/linear.c
+> @@ -148,6 +148,8 @@ static linear_conf_t *linear_conf(mddev_t *mddev, int raid_disks)
+>  
+>  	min_sectors = conf->array_sectors;
+>  	sector_div(min_sectors, PAGE_SIZE/sizeof(struct dev_info *));
+> +	if (min_sectors == 0)
+> +		min_sectors = 1;
+>  
+>  	/* min_sectors is the minimum spacing that will fit the hash
+>  	 * table in one PAGE.  This may be much smaller than needed.
+> -- 
+> The only person who always got his work done by Friday was Robinson Crusoe
