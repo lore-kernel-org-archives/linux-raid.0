@@ -1,102 +1,96 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm degraded RAID5 failure
-Date: Thu, 6 Nov 2008 16:41:55 +1100
-Message-ID: <18706.33699.188905.82732@notabene.brown>
-References: <6cc8e9ed0810221350o2b8b3aedm3d1c229fe7e66163@mail.gmail.com>
-	<6cc8e9ed0810221352y7427cb7dmfc7c3fcefd495bb9@mail.gmail.com>
-	<18690.48372.369694.309381@notabene.brown>
-	<6cc8e9ed0810291516p46cb24a7pdd230e222797d06e@mail.gmail.com>
-	<6cc8e9ed0811041335u1aeac632xafdae1892c418d95@mail.gmail.com>
+Subject: Re: md raid10 regression in 2.6.27.4 (possibly earlier) BISECTED
+Date: Thu, 6 Nov 2008 17:18:28 +1100
+Message-ID: <18706.35892.143554.833998@notabene.brown>
+References: <490D8EBF.8050400@rabbit.us>
+	<490DE55F.6080600@mandriva.org>
+	<490E3CF9.20208@mandriva.org>
+	<49122C88.5000102@mandriva.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Steve Evans on Tuesday November 4
+In-Reply-To: message from Thomas Backlund on Thursday November 6
 Sender: linux-raid-owner@vger.kernel.org
-To: Steve Evans <jeeping@gmail.com>
+To: Thomas Backlund <tmb@mandriva.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday November 4, jeeping@gmail.com wrote:
-> Hi Neil and others,
+On Thursday November 6, tmb@mandriva.org wrote:
 > 
-> Just a couple of questions, I know you're busy -
+> But anyway...
 > 
-> Do you recommend that I attempt to upgrade mdadm to a more recent
-> version before any other recovery attempts? If so, which version?
+> This is the commit that breaks the raid10 rebuild/resync:
 
-Yes.  2.6.7.1 (the latest).
+Awesome. Thanks!
 
 > 
-> I noted my replacement drive (sdc1) got a smart error (during the
-> rebuild?), would you recommend replacing it or removing it altogether
-> until I get the other 2 drives back online (if I even can)?
+> --- cut ---
+> 6c2fce2ef6b4821c21b5c42c7207cb9cf8c87eda is first bad commit
+> commit 6c2fce2ef6b4821c21b5c42c7207cb9cf8c87eda
+> Author: Neil Brown <neilb@notabene.brown>
+                      ^^^^^^^^^^^^^^^^^^^^
+Grown.  I hadn't noticed that.  Fixed now I hope.
 
-There seem to be different opinion on how much weight to put on SMART
-errors.   So I make no recommendations based on them.
-
+> Date:   Sat Jun 28 08:31:31 2008 +1000
 > 
-> Is there a way to correct the drive names -
+>      Support adding a spare to a live md array with external metadata.
+> 
+>      i.e. extend the 'md/dev-XXX/slot' attribute so that you can
+>      tell a device to fill an vacant slot in an and md array.
+> 
+>      Signed-off-by: Neil Brown <neilb@suse.de>
+> --- cut ---
+> 
+> I have verified that adding this patch to a working 2.6.26 kernel breaks
+> the rebuild/resync
+> 
+> I have not verified if reverting it on a 2.6.27 kernel restores the 
+> rebuild/resync as it does not revert cleanly...
+> 
+> So...
+> 
+> Any suggestions of what to try next ?
 
-When you assemble the array again, it will update the device names to
-what they are at the time.
+You mean apart from hitting Neil with a clue-bat?
 
-As you have 2 devices that think they are 'spare', you won't be able
-to assemble a working array using "--assemble".
+Maybe try this patch.  I haven't even compile tested it, but I'm
+certain it'll fix your problem.
 
-What you will need to do is recreate the array over just two devices
-and make sure you get them in the right order.
-
-The one that claims to be device '2' (sdb1 below) certainly is device
-2 (i.e. the last device: they are numbered 0,1,2).  The others I can
-not be so sure of.
-
-So I would recreate the array with e.g.
-
-  mdadm -C /dev/md0 -l5 -n2 /dev/sdc1 missing /dev/sdb1
-
-And check it with e.g.
-  fsck -n -f /dev/md0
-
-If fsck is happy: good.  If not, try again with a different
-arrangement:
-
-   mdadm -C /dev/md0 -l5 -n2 missing /dev/sdc1 /dev/sdb1
-
-etc.  I don't know which of c1 and d1 is more likely to have good
-data.   Keep going until you get a good 'fsck'.
-
-Make very sure to use the "-n" option to fsck to ensure it doesn't try
-to 'fix' the mess it finds.
-
-Also, before doing the above, run "mdadm --examine /dev/sdb1" and keep
-a record of that.  Check the 'chunksize'.  If it isn't 64, you will
-need to explicitly give then number to "mdadm -C".  Also check the
-layout and possibly set that explicitly when doing "mdadm -C".
-
-good luck.
+Thanks again,
 
 NeilBrown
 
+----------------------------------------------
+From: NeilBrown <neilb@suse.de>
+Date: Thu, 6 Nov 2008 17:14:31 +1100
+Subject: [PATCH] md: fix bug in raid10 recovery.
 
-> 
-> > /dev/sdb1:
-> > this     2       8       49        2      active sync   /dev/sdd1
-> 
-> 
-> > /dev/sdc1:
-> > this     3       8       33        3      spare   /dev/sdc1
-> 
-> 
-> > /dev/sdd1:
-> > this     3       8       33        3      spare   /dev/sdc1
-> 
-> I'm inclined to believe (but am not sure at all) that -
-> 
-> sdb1 should be sdd1
-> sdc1 is correct
-> sdd1 should be sdb1
-> 
-> Thanks!
-> Steve..
-> 
+Adding a spare to a raid10 doesn't cause recovery to start.
+This is due to an silly type in
+  commit 6c2fce2ef6b4821c21b5c42c7207cb9cf8c87eda
+and so is a bug in 2.6.27 and .28-rc.
+
+Thanks to Thomas Backlund for bisecting to find this.
+
+Cc: Thomas Backlund <tmb@mandriva.org>
+Cc: stable@kernel.org
+
+Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index da5129a..970a96e 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1137,7 +1137,7 @@ static int raid10_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
+ 	if (!enough(conf))
+ 		return -EINVAL;
+ 
+-	if (rdev->raid_disk)
++	if (rdev->raid_disk >= 0)
+ 		first = last = rdev->raid_disk;
+ 
+ 	if (rdev->saved_raid_disk >= 0 &&
+-- 
+1.5.6.5
+
