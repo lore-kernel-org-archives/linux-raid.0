@@ -1,14 +1,12 @@
 From: "Igor Podlesny" <for.poige+linux@gmail.com>
-Subject: Re: Hi! I wonder wouldn't it be efficient to select ALGORITHM_?type?_ASYMMETRIC ...
-Date: Wed, 12 Nov 2008 01:35:46 +0700
-Message-ID: <43d009740811111035s393c21f6mc4de28b06ec4c741@mail.gmail.com>
-References: <43d009740811051103o504cfb2exef4a5afd1c789801@mail.gmail.com>
+Subject: How about reversed (or offset) disk components?
+Date: Wed, 12 Nov 2008 01:40:52 +0700
+Message-ID: <43d009740811111040x5e610582n9f9bd4354682ca16@mail.gmail.com>
 Reply-To: for.poige+linux@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43d009740811051103o504cfb2exef4a5afd1c789801@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
@@ -17,17 +15,27 @@ List-Id: linux-raid.ids
 
 	Hi!
 
-	This letter is re-post primarily for Neil Brown, because no one on
-the list had answered that message and Neil's blog says: "If you think
-it really needs my attention, Cc me, but still send it to
-linux-raid.".
+	And I have one more idea: How about reversed (or offset) disk
+components? -- It's known that linear read speed is decreasing when
+reading from the beginning to end of HDD, thus leading to situation
+when reading from RAID is good at its beginning and rather poor at its
+ending. My suggestion (possibly) would make that speed almost constant
+in despite of reading position. Examples:
+	
+	RAID5:
 
-2008/11/6 Igor Podlesny <for.poige+linux@gmail.com>:
-> ... depending on, for e. g., chunk number? My assumption is that this
-> can address FS meta-data issue, can't it?
->
-> (I'm not subscribed to the list, so please CC:.)
->
+	disk1: 0123456789
+	disk2: 3456789012
+	disk3: 6789012345
+
+	i. .e, the disk1's chunks aren't offseted at all, and disks' 2 and 3 are.
+	
+	RAID0:
+	
+	disk1: 0123456789
+	disk2: 9876543210
+
+	Any drawbacks?
 
 -- 
 End of message. Next message?
