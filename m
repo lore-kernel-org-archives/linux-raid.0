@@ -1,21 +1,32 @@
-From: Doug Ledford <dledford@redhat.com>
+From: Mike Myers <mikesm559@yahoo.com>
 Subject: Re: Swapping a disk in a raid5 array
-Date: Tue, 11 Nov 2008 16:21:30 -0500
-Message-ID: <1226438490.4765.58.camel@firewall.xsintricity.com>
-References: <994670.29528.qm@web30807.mail.mud.yahoo.com>
+Date: Tue, 11 Nov 2008 13:37:42 -0800 (PST)
+Message-ID: <565033.56273.qm@web30806.mail.mud.yahoo.com>
+References: <994670.29528.qm@web30807.mail.mud.yahoo.com> <1226438490.4765.58.camel@firewall.xsintricity.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-PdFn5lx/Fl72ELoh46p3"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <994670.29528.qm@web30807.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Myers <mikesm559@yahoo.com>
+To: Doug Ledford <dledford@redhat.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Thanks.  I hadn't heard of the "check" technique.  Is that described somewhere?  It should be in the software raid howto.
 
---=-PdFn5lx/Fl72ELoh46p3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I just initiated a "check" on the array, so we'll see how that goes....  
+
+thx
+mike
+
+
+
+
+----- Original Message ----
+From: Doug Ledford <dledford@redhat.com>
+To: Mike Myers <mikesm559@yahoo.com>
+Cc: linux-raid@vger.kernel.org
+Sent: Tuesday, November 11, 2008 1:21:30 PM
+Subject: Re: Swapping a disk in a raid5 array
 
 On Tue, 2008-11-11 at 10:33 -0800, Mike Myers wrote:
 > Hi.  I have a 6 members raid5 set using software raid under linux.
@@ -25,12 +36,12 @@ On Tue, 2008-11-11 at 10:33 -0800, Mike Myers wrote:
 > 1 TB drives.  It has been working very reliably, but performance seems
 > a little lackluster, and I have 2 new 1 TB drives of the same make and
 > model that I would like to substitute.
->=20
+> 
 > I have always been taught that if you wanted to replace a disk in a
 > raid5 array, you add the new disk as a member, and the fail the old
 > disk and then remove it, which will cause the array to rebuild around
-> the new disk. =20
->=20
+> the new disk.  
+> 
 > But since all of the members are healthy, I was wondering if there was
 > a way to replace the disk so I would not be running without redundancy
 > during the rebuild process.  That is, is there a way to swap the disk
@@ -69,7 +80,7 @@ include the check pass, I think you are going to need to do three passes
 of the array to replace the raid set and grow it.  But, I could be
 wrong.
 
---=20
+-- 
 Doug Ledford <dledford@redhat.com>
               GPG KeyID: CFBFF194
               http://people.redhat.com/dledford
@@ -78,17 +89,4 @@ Infiniband specific RPMs available at
               http://people.redhat.com/dledford/Infiniband
 
 
---=-PdFn5lx/Fl72ELoh46p3
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkkZ91oACgkQTzP9PM7pjw+BFwCeIzBgOspdcYCdZZzrEj1nSPtL
-4LYAn3t92T9MyhCbWFawhQ4PmEu1D+V4
-=05t4
------END PGP SIGNATURE-----
-
---=-PdFn5lx/Fl72ELoh46p3--
-
+      
