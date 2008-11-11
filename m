@@ -1,52 +1,53 @@
 From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Hi! I wonder wouldn't it be efficient to select
-     ALGORITHM_?type?_ASYMMETRIC ...
-Date: Wed, 12 Nov 2008 07:27:45 +1100 (EST)
-Message-ID: <d98bd1f189f4572777d8563b5a0426ba.squirrel@neil.brown.name>
-References: <43d009740811051103o504cfb2exef4a5afd1c789801@mail.gmail.com>
-    <43d009740811111035s393c21f6mc4de28b06ec4c741@mail.gmail.com>
+Subject: Re: How about reversed (or offset) disk components?
+Date: Wed, 12 Nov 2008 07:32:18 +1100 (EST)
+Message-ID: <62a7356ceb508b25c3951da7fc7d10b5.squirrel@neil.brown.name>
+References: <43d009740811111040x5e610582n9f9bd4354682ca16@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43d009740811111035s393c21f6mc4de28b06ec4c741@mail.gmail.com>
+In-Reply-To: <43d009740811111040x5e610582n9f9bd4354682ca16@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: for.poige+linux@gmail.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, November 12, 2008 5:35 am, Igor Podlesny wrote:
+On Wed, November 12, 2008 5:40 am, Igor Podlesny wrote:
 > 	Hi!
 >
-> 	This letter is re-post primarily for Neil Brown, because no one on
-> the list had answered that message and Neil's blog says: "If you think
-> it really needs my attention, Cc me, but still send it to
-> linux-raid.".
-
-:-)
-
+> 	And I have one more idea: How about reversed (or offset) disk
+> components? -- It's known that linear read speed is decreasing when
+> reading from the beginning to end of HDD, thus leading to situation
+> when reading from RAID is good at its beginning and rather poor at its
+> ending. My suggestion (possibly) would make that speed almost constant
+> in despite of reading position. Examples:
 >
-> 2008/11/6 Igor Podlesny <for.poige+linux@gmail.com>:
->> ... depending on, for e. g., chunk number? My assumption is that this
->> can address FS meta-data issue, can't it?
->>
+> 	RAID5:
+>
+> 	disk1: 0123456789
+> 	disk2: 3456789012
+> 	disk3: 6789012345
+>
+> 	i. .e, the disk1's chunks aren't offseted at all, and disks' 2 and 3 are.
+>
+> 	RAID0:
+>
+> 	disk1: 0123456789
+> 	disk2: 9876543210
+>
+> 	Any drawbacks?
 
-I think the problem here is that your question is too brief so it is
-not at all clear how to answer it.
+It is hard to be really sure without implementing the layout and making
+measurements.
+You could probably do this by partitioning each device into three partitions,
+combining those together with a linear array so they are in a different
+order, then combining the three linear arrays into a raid5.
 
-Exactly how are you suggesting that the layout be dependant on chunk number,
-what is the "FS meta-data issue", and why do you assume that the one
-can be addressed by the other.
-
-If you can explain what you are thinking, it would be easier to comment
-on whether the thoughts are good or not.
-
-
-
->> (I'm not subscribed to the list, so please CC:.)
-
-Always.
-
+However:  the common understanding (which could be wrong) is that the
+speed of a RAID is often limited by the slowest device.  Your arrangement
+not only puts fast cylinders at each offset, but also slow cylinders.
+I would expect the net result to be slower than normal, not faster.
 
 NeilBrown
 
