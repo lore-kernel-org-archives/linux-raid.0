@@ -1,46 +1,40 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: md.txt, preread_bypass_threshold and raid5: corrected error
-Date: Wed, 12 Nov 2008 11:49:12 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0811121144250.12675@p34.internal.lan>
+From: "David Rees" <drees76@gmail.com>
+Subject: Re: Fedora 9 install using md RAID
+Date: Wed, 12 Nov 2008 10:26:56 -0800
+Message-ID: <72dbd3150811121026k21ee2c01g12dcfe263e3ca383@mail.gmail.com>
+References: <491A5165.5080004@sauce.co.nz>
+	 <1226505384.4765.70.camel@firewall.xsintricity.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1226505384.4765.70.camel@firewall.xsintricity.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: Richard Scobie <richard@sauce.co.nz>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Read through md.txt from 2.6.27.5, noticed this at the end:
+On Wed, Nov 12, 2008 at 7:56 AM, Doug Ledford <dledford@redhat.com> wrote:
+> On Wed, 2008-11-12 at 16:45 +1300, Richard Scobie wrote:
+>> Slightly off topic, but I was wondering if anyone knew how I could do an
+>> install of Fedora 9 WITHOUT it using dm RAID.
+>>
+>> I have done a number of md RAID installs of Fedora 9, but this
+>> particular machine has a Silicon Image controller that the Redhat
+>> installer obviously recognises and automatically proceeds to install
+>> using dmraid and I would prefer to use md.
+>
+> At the boot prompt, pass the nodmraid option.  There are a number of
+> options available, you can get the entire list by installing anaconda,
+> then running anaconda --help on a working system.  Any options the
+> kernel doesn't know just get passed on to anaconda.
 
-   preread_bypass_threshold (currently raid5 only)
-       number of times a stripe requiring preread will be bypassed by
-       a stripe that does not require preread.  For fairness defaults
-       to 1.  Setting this to 0 disables bypass accounting and
-       requires preread stripes to wait until all full-width stripe-
-       writes are complete.  Valid values are 0 to stripe_cache_size.
+Is nodmraid enough? For some reason on a recent system I installed F10
+Preview on I seemed to have to specify both nodmraid and nompath to
+get multipath from taking over...
 
-In terms of performance for raid5/raid6 - what does this mean?
+It would be a lot easier if you could choose which you wanted during
+install time instead of having to figure out boot parameters.
 
-Also in md.txt there is a lot of outdated information, (e.g. you can only 
-grow raid5, etc).
-
-e.g.:
-
-   raid_disks
-      a text file with a simple number indicating the number of devices
-      in a fully functional array.  If this is not yet known, the file
-      will be empty.  If an array is being resized (not currently
-                                                   ^^^^^^^^^^^^^^
-      possible) this will contain the larger of the old and new sizes.
-      ^^^^^^^^^
-      Some raid level (RAID1) allow this value to be set while the
-      array is active.  This will reconfigure the array.   Otherwise
-      it can only be set while assembling an array.
-
-
-BTW, I did read the URL on correcting sectors etc on RAID5 from yesterday, 
-it was quite nice, but is there anyway that-- it can happen automatically 
-like a traditional HW raid controller does during a scrubbing or must one 
-perform those tasks in the document in order to make it force-reallocate 
-the sectors etc?
-
-Justin.
+-Dave
