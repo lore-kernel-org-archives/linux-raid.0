@@ -1,56 +1,46 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Fedora 9 install using md RAID
-Date: Wed, 12 Nov 2008 10:56:24 -0500
-Message-ID: <1226505384.4765.70.camel@firewall.xsintricity.com>
-References: <491A5165.5080004@sauce.co.nz>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: md.txt, preread_bypass_threshold and raid5: corrected error
+Date: Wed, 12 Nov 2008 11:49:12 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0811121144250.12675@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-RUn+ttRNR5Dp62msTKfT"
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <491A5165.5080004@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Read through md.txt from 2.6.27.5, noticed this at the end:
 
---=-RUn+ttRNR5Dp62msTKfT
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+   preread_bypass_threshold (currently raid5 only)
+       number of times a stripe requiring preread will be bypassed by
+       a stripe that does not require preread.  For fairness defaults
+       to 1.  Setting this to 0 disables bypass accounting and
+       requires preread stripes to wait until all full-width stripe-
+       writes are complete.  Valid values are 0 to stripe_cache_size.
 
-On Wed, 2008-11-12 at 16:45 +1300, Richard Scobie wrote:
-> Slightly off topic, but I was wondering if anyone knew how I could do an=20
-> install of Fedora 9 WITHOUT it using dm RAID.
->=20
-> I have done a number of md RAID installs of Fedora 9, but this=20
-> particular machine has a Silicon Image controller that the Redhat=20
-> installer obviously recognises and automatically proceeds to install=20
-> using dmraid and I would prefer to use md.
+In terms of performance for raid5/raid6 - what does this mean?
 
-At the boot prompt, pass the nodmraid option.  There are a number of
-options available, you can get the entire list by installing anaconda,
-then running anaconda --help on a working system.  Any options the
-kernel doesn't know just get passed on to anaconda.
+Also in md.txt there is a lot of outdated information, (e.g. you can only 
+grow raid5, etc).
 
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-              http://people.redhat.com/dledford
+e.g.:
 
-Infiniband specific RPMs available at
-              http://people.redhat.com/dledford/Infiniband
+   raid_disks
+      a text file with a simple number indicating the number of devices
+      in a fully functional array.  If this is not yet known, the file
+      will be empty.  If an array is being resized (not currently
+                                                   ^^^^^^^^^^^^^^
+      possible) this will contain the larger of the old and new sizes.
+      ^^^^^^^^^
+      Some raid level (RAID1) allow this value to be set while the
+      array is active.  This will reconfigure the array.   Otherwise
+      it can only be set while assembling an array.
 
 
---=-RUn+ttRNR5Dp62msTKfT
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+BTW, I did read the URL on correcting sectors etc on RAID5 from yesterday, 
+it was quite nice, but is there anyway that-- it can happen automatically 
+like a traditional HW raid controller does during a scrubbing or must one 
+perform those tasks in the document in order to make it force-reallocate 
+the sectors etc?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkka/KgACgkQTzP9PM7pjw+1ZACdH+Sa+02++WzTkwpo3vqbsL7z
-cukAn2/wGrZF7Z8ZWNRMMQ9UQZYjQag9
-=2Bh0
------END PGP SIGNATURE-----
-
---=-RUn+ttRNR5Dp62msTKfT--
-
+Justin.
