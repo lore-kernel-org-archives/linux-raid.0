@@ -1,40 +1,60 @@
-From: "Ryan Wagoner" <rswagoner@gmail.com>
-Subject: Re: OT: Tips for good hard drives for a home server
-Date: Wed, 12 Nov 2008 09:19:20 -0500
-Message-ID: <7d86ddb90811120619vca13676tb0192676ece0cb93@mail.gmail.com>
+From: "David Lethe" <david@santools.com>
+Subject: RE: Tips for good hard drives for a home server
+Date: Wed, 12 Nov 2008 08:22:33 -0600
+Message-ID: <A20315AE59B5C34585629E258D76A97C02A43936@34093-C3-EVS3.exchange.rackspace.com>
 References: <3ECBDC05781B3D48ABD520A01ABF2F9B299C974A5A@SE-EX008.groupinfra.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
 In-Reply-To: <3ECBDC05781B3D48ABD520A01ABF2F9B299C974A5A@SE-EX008.groupinfra.com>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: "Henry, Andrew" <andrew.henry@logica.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I used to buy Seagate drives for their 5 year warranty. However with
-the capacities increasing like they are the 5 vs 3 years doesn't
-really matter as much. Out of the 4 Seagate drives (2 160GB and 2
-320GB) in my server that are 2.5 years old, the one is already showing
-13 reallocated sectors. This might be due to non Barracuda drives
-being certified for only 8 hours a day.
-
-Recently I added have 5 Hitachi Deskstar TB drives in two different
-machines which have been working great with mdadm in RAID 1 and 5. I
-actually bought these after using 6 Hitachi Ultrastar TB drives in my
-work's new Dell 2950 server. The server is setup in a 2 drive RAID 1
-and a 4 drive RAID 5 for data archival and has worked flawlessly.
-
-The Hitachi's are in the same price range as the Seagate Barracuda's
-and offer 24/7 runtime and a 1 in 10^15 error rate vs 10^14 for
-Seagate.
-
-Any reason you are using RAID 0 for your server? Normally when I think
-of a server reliability comes to mind and RAID 0 doesn't offer any.
-I'm assumming you make nightly or weekly backups?
-
-Ryan
-
-On Wed, Nov 12, 2008 at 8:12 AM, Henry, Andrew <andrew.henry@logica.com> wrote:
->
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtcmFpZC1vd25l
+ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1yYWlkLQ0KPiBvd25lckB2Z2VyLmtlcm5l
+bC5vcmddIE9uIEJlaGFsZiBPZiBIZW5yeSwgQW5kcmV3DQo+IFNlbnQ6IFdlZG5lc2RheSwgTm92
+ZW1iZXIgMTIsIDIwMDggNzoxMiBBTQ0KPiBUbzogbGludXgtcmFpZEB2Z2VyLmtlcm5lbC5vcmcN
+Cj4gU3ViamVjdDogT1Q6IFRpcHMgZm9yIGdvb2QgaGFyZCBkcml2ZXMgZm9yIGEgaG9tZSBzZXJ2
+ZXINCj4gDQo+IEkga25vdyB0aGlzIGlzIG5vdCBtZCByZWxhdGVkIGF0IGFsbCwgYnV0IHRoaXMg
+bGlzdCBpcyByZWFkIGJ5IG1hbnkNCj4gdGhhdCBhcmUgdmVyeSBmYW1pbGlhciB3aXRoIGhhcmQg
+ZHJpdmUgdGVjaG5vbG9neSwgc28gaXQncyBwcm9iYWJseSB0aGUNCj4gYmVzdCBwbGFjZSB0byBh
+c2suLi5ob3BlIHlvdSBhbGwgZG9uJ3QgbWluZC4uLg0KPiANCj4gSSd2ZSBiZWVuIHVzaW5nIGFu
+IG9sZCBsYXB0b3AgYXMgYSBzZXJ2ZXIgd2l0aCBleHRlcm5hbCBVU0IgV2VzdGVybg0KPiBEaWdp
+dGFsIE15Qm9va3MgYXMgbXkgZmlsZSBzeXN0ZW06IFJBSUQtMCBvbiAyIDUwMEdCIE15Qm9va3Mu
+ICBJJ3ZlIGhhZA0KPiBxdWl0ZSBhIGZldyBwcm9ibGVtcyB3aXRoIHRoZW0gYW5kIG9uZSBwZXJz
+b24gb24gdGhpcyBsaXN0IGV2ZW4NCj4gc3VnZ2VzdGVkIHNpbXBseSBnZXR0aW5nIHJpZCBvZiB0
+aGVtIGFzIHRoZXkgYXJlIHJlYWxseSBjcipwIGFjY29yZGluZw0KPiB0byBoaXMgcGVyc29uYWwg
+ZXhwZXJpZW5jZS4gIFRoZXkgYXJlLCBzbyBJIGFtLiAgUnVubmluZyBhICdzZXJ2ZXInIG9uDQo+
+IGEgbGFwdG9wIHR1cm5lZCBvdXQgdG8gbm90IGJlIHRoZSBncmVhdCBpZGVhIEkgdGhvdWdodCBp
+dCB3YXMgKGFsdGhvdWdoDQo+IGluYnVpbHQgbW9uaXRvci9rZXlib2FyZCBhbmQgJ3VwcycgYXMg
+d2VsbCBhcyBzbWFsbCBmb290cHJpbnQvbGVzcyBoZWF0DQo+IHdhcyBhIGRlZmluaXRlIHBsdXMp
+DQo+IA0KPiBTbyBJJ20gYnVpbGRpbmcgYSBuZXcgdG93ZXIgc2VydmVyIG5vdyBhcyBteSBob21l
+IHNlcnZlciBhbmQgZG9uJ3Qgd2FudA0KPiB0byBtYWtlIGFub3RoZXIgcG9vciBwdXJjaGFzaW5n
+IGRlY2lzaW9uLiAgVGhlIHByb2JsZW0gaXMgdGhhdCBtb3N0IEhERA0KPiBtYW51ZmFjdHVyZXJz
+IGRvIG5vdCBzcGVjaWZ5IHNwaW5kbGUgY291bnQgYW5kIGNvbmN1cnJlbnQNCj4gdHJhbnNhY3Rp
+b25zL2lvcHMgb24gdGhlaXIgZGF0YSBzaGVldHMuDQo+IA0KPiBTbyBpZiBJIHdhcyBpbiB0aGUg
+bWFya2V0IGZvciBhICdzdGFuZGFyZCcgZGVza3RvcCBpbnRlcm5hbCAzLjUiIFNBVEENCj4gZGlz
+Yywgd2hpY2ggaXMgdGhlICdiZXN0JyBvcHRpb24/ICBJJ20gbG9va2luZyBmb3IgNTAwR0IgaW4g
+UkFJRC0wIHdpdGgNCj4gcG9zc2liaWxpdHkgb2YgYWRkaW5nIGFub3RoZXIgNTAwR0IgYXJyYXkg
+YXQgYSBsYXRlciBkYXRlIGZvciBSQUlEIDArMS4NCj4gDQo+IFRoZSBwcmljZSBvZiB1bHRyYS1w
+ZXJmb3JtYW5jZSBkZXNrdG9wIGRyaXZlcyBpcyBhIGJpdCB0b28gc3RlZXAgZm9yIG15DQo+IHRh
+c3Rlcywgc28gV0QgVmVsb2NpcmFwdG9yIG9yIEhpdGFjaGkgVWx0cmFTdGFycyBhcmUgbm90IHJl
+YWxseSB3aGF0IEkNCj4gYW0gYWZ0ZXIsIHVubGVzcyBvZiBjb3Vyc2UgdGhlcmUgYXJlIG5vIG90
+aGVyIG9wdGlvbnMgaW4gdGVybXMgb2YNCj4gcGVyZm9ybWFuY2UgaW4gdGhlIHN0YW5kYXJkIGRl
+c2t0b3AgbWFya2V0Lg0KPiANCj4gQW55IHRpcHMgYXBwcmVjaWF0ZWQuDQo+IA0KPiAgLS1hbmRy
+ZXcNCkFuZHJldyAtLSBSZWFkIHRoZSBmdWxsIHNwZWNzLCB0aGUgb25lcyBub3QgdHlwaWNhbGx5
+IHB1dCBvbiB0aGUgb3V0c2lkZSBvZiB0aGUgYm94LiAgDQpEaWQgeW91IGtub3cgdGhhdCB0aG9z
+ZSAnc3RhbmRhcmQnIGRlc2t0b3AgU0FUQSBkaXNrcyBhcmUgdHlwaWNhbGx5IHJhdGVkIGZvciAy
+NDAwDQpocnMgdXNlIHBlciB5ZWFyPw0KDQpHcmFudGVkIHRoYXQgZG9lc24ndCBtZWFuIHRob3Nl
+IGNoZWFwIGRpc2tzIGFyZSBnb2luZyB0byBkaWUgYXQgdGhlIGVuZCBvZiB0aGUgMTAwdGgNCmRh
+eSBvZiB1c2UgaW4gYW55IGdpdmVuIHllYXIsIGJ1dCB5b3UgY2FuJ3QgaWdub3JlIHRoZSBmYWN0
+IHRoYXQgc2VydmVyIGNsYXNzIGRyaXZlcw0KYXJlIG5vdCBqdXN0IHVsdHJhLXBlcmZvcm1hbmNl
+IGRpc2tzIC4uIHRob3NlIGRyaXZlcyBhcmUgZGVzaWduZWQgZm9yIDI0eDd4MzY1IHVzZS4NCg0K
+U28gaWYgeW91J3JlIHRyeWluZyB0byBhdm9pZCBtYWtpbmcgYW5vdGhlciBwb29yIHB1cmNoYXNp
+bmcgZGVjaXNpb24sIHRoZW4gRE9OJ1QgYmUgDQpzdWNoIGEgY2hlYXBza2F0ZSwgZXNwZWNpYWxs
+eSBzaW5jZSB5b3UgYXJlIHJ1bm5pbmcgUkFJRDAuICBCdXkgdGhlIG1vcmUgZXhwZW5zaXZlIGRp
+c2tzLg0KDQo=
