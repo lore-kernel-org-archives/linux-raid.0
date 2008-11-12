@@ -1,30 +1,23 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Swapping a disk in a raid5 array
-Date: Tue, 11 Nov 2008 22:49:21 +0100 (CET)
-Message-ID: <alpine.DEB.1.10.0811112247050.10993@uplift.swm.pp.se>
-References: <994670.29528.qm@web30807.mail.mud.yahoo.com> <1226438490.4765.58.camel@firewall.xsintricity.com> <565033.56273.qm@web30806.mail.mud.yahoo.com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Fedora 9 install using md RAID
+Date: Wed, 12 Nov 2008 16:45:41 +1300
+Message-ID: <491A5165.5080004@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <565033.56273.qm@web30806.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 11 Nov 2008, Mike Myers wrote:
+Slightly off topic, but I was wondering if anyone knew how I could do an 
+install of Fedora 9 WITHOUT it using dm RAID.
 
-> Thanks.  I hadn't heard of the "check" technique.  Is that described somewhere?  It should be in the software raid howto.
+I have done a number of md RAID installs of Fedora 9, but this 
+particular machine has a Silicon Image controller that the Redhat 
+installer obviously recognises and automatically proceeds to install 
+using dmraid and I would prefer to use md.
 
-<http://linux-raid.osdl.org/index.php/RAID_Administration>
+Regards,
 
-Debian/Ubuntu has this:
-
-:/etc/cron.d$ grep check mdadm
-# cron.d/mdadm -- schedules periodic redundancy checks of MD devices
-57 0 * * 0 root [ -x /usr/share/mdadm/checkarray ] && [ $(date +\%d) -le 7 
-] && /usr/share/mdadm/checkarray --cron --all --quiet
-
-This will do the same thing once a month.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+Richard
