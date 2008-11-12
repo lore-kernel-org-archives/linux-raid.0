@@ -1,23 +1,39 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Fedora 9 install using md RAID
-Date: Wed, 12 Nov 2008 16:45:41 +1300
-Message-ID: <491A5165.5080004@sauce.co.nz>
+From: "Henry, Andrew" <andrew.henry@logica.com>
+Subject: OT: Tips for good hard drives for a home server
+Date: Wed, 12 Nov 2008 14:12:10 +0100
+Message-ID: <3ECBDC05781B3D48ABD520A01ABF2F9B299C974A5A@SE-EX008.groupinfra.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Slightly off topic, but I was wondering if anyone knew how I could do an 
-install of Fedora 9 WITHOUT it using dm RAID.
-
-I have done a number of md RAID installs of Fedora 9, but this 
-particular machine has a Silicon Image controller that the Redhat 
-installer obviously recognises and automatically proceeds to install 
-using dmraid and I would prefer to use md.
-
-Regards,
-
-Richard
+SSBrbm93IHRoaXMgaXMgbm90IG1kIHJlbGF0ZWQgYXQgYWxsLCBidXQgdGhpcyBsaXN0IGlzIHJl
+YWQgYnkgbWFueSB0aGF0IGFyZSB2ZXJ5IGZhbWlsaWFyIHdpdGggaGFyZCBkcml2ZSB0ZWNobm9s
+b2d5LCBzbyBpdCdzIHByb2JhYmx5IHRoZSBiZXN0IHBsYWNlIHRvIGFzay4uLmhvcGUgeW91IGFs
+bCBkb24ndCBtaW5kLi4uDQoNCkkndmUgYmVlbiB1c2luZyBhbiBvbGQgbGFwdG9wIGFzIGEgc2Vy
+dmVyIHdpdGggZXh0ZXJuYWwgVVNCIFdlc3Rlcm4gRGlnaXRhbCBNeUJvb2tzIGFzIG15IGZpbGUg
+c3lzdGVtOiBSQUlELTAgb24gMiA1MDBHQiBNeUJvb2tzLiAgSSd2ZSBoYWQgcXVpdGUgYSBmZXcg
+cHJvYmxlbXMgd2l0aCB0aGVtIGFuZCBvbmUgcGVyc29uIG9uIHRoaXMgbGlzdCBldmVuIHN1Z2dl
+c3RlZCBzaW1wbHkgZ2V0dGluZyByaWQgb2YgdGhlbSBhcyB0aGV5IGFyZSByZWFsbHkgY3IqcCBh
+Y2NvcmRpbmcgdG8gaGlzIHBlcnNvbmFsIGV4cGVyaWVuY2UuICBUaGV5IGFyZSwgc28gSSBhbS4g
+IFJ1bm5pbmcgYSAnc2VydmVyJyBvbiBhIGxhcHRvcCB0dXJuZWQgb3V0IHRvIG5vdCBiZSB0aGUg
+Z3JlYXQgaWRlYSBJIHRob3VnaHQgaXQgd2FzIChhbHRob3VnaCBpbmJ1aWx0IG1vbml0b3Iva2V5
+Ym9hcmQgYW5kICd1cHMnIGFzIHdlbGwgYXMgc21hbGwgZm9vdHByaW50L2xlc3MgaGVhdCB3YXMg
+YSBkZWZpbml0ZSBwbHVzKQ0KDQpTbyBJJ20gYnVpbGRpbmcgYSBuZXcgdG93ZXIgc2VydmVyIG5v
+dyBhcyBteSBob21lIHNlcnZlciBhbmQgZG9uJ3Qgd2FudCB0byBtYWtlIGFub3RoZXIgcG9vciBw
+dXJjaGFzaW5nIGRlY2lzaW9uLiAgVGhlIHByb2JsZW0gaXMgdGhhdCBtb3N0IEhERCBtYW51ZmFj
+dHVyZXJzIGRvIG5vdCBzcGVjaWZ5IHNwaW5kbGUgY291bnQgYW5kIGNvbmN1cnJlbnQgdHJhbnNh
+Y3Rpb25zL2lvcHMgb24gdGhlaXIgZGF0YSBzaGVldHMuDQoNClNvIGlmIEkgd2FzIGluIHRoZSBt
+YXJrZXQgZm9yIGEgJ3N0YW5kYXJkJyBkZXNrdG9wIGludGVybmFsIDMuNSIgU0FUQSBkaXNjLCB3
+aGljaCBpcyB0aGUgJ2Jlc3QnIG9wdGlvbj8gIEknbSBsb29raW5nIGZvciA1MDBHQiBpbiBSQUlE
+LTAgd2l0aCBwb3NzaWJpbGl0eSBvZiBhZGRpbmcgYW5vdGhlciA1MDBHQiBhcnJheSBhdCBhIGxh
+dGVyIGRhdGUgZm9yIFJBSUQgMCsxLg0KDQpUaGUgcHJpY2Ugb2YgdWx0cmEtcGVyZm9ybWFuY2Ug
+ZGVza3RvcCBkcml2ZXMgaXMgYSBiaXQgdG9vIHN0ZWVwIGZvciBteSB0YXN0ZXMsIHNvIFdEIFZl
+bG9jaXJhcHRvciBvciBIaXRhY2hpIFVsdHJhU3RhcnMgYXJlIG5vdCByZWFsbHkgd2hhdCBJIGFt
+IGFmdGVyLCB1bmxlc3Mgb2YgY291cnNlIHRoZXJlIGFyZSBubyBvdGhlciBvcHRpb25zIGluIHRl
+cm1zIG9mIHBlcmZvcm1hbmNlIGluIHRoZSBzdGFuZGFyZCBkZXNrdG9wIG1hcmtldC4NCg0KQW55
+IHRpcHMgYXBwcmVjaWF0ZWQuDQoNCiAtLWFuZHJldw0K
