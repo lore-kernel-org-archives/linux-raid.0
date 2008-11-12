@@ -1,72 +1,59 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Fedora 9 install using md RAID
-Date: Wed, 12 Nov 2008 13:30:48 -0500
-Message-ID: <1226514649.4765.108.camel@firewall.xsintricity.com>
-References: <491A5165.5080004@sauce.co.nz>
-	 <1226505384.4765.70.camel@firewall.xsintricity.com>
-	 <72dbd3150811121026k21ee2c01g12dcfe263e3ca383@mail.gmail.com>
+From: "Billy Crook" <billycrook@gmail.com>
+Subject: Re: OT: Tips for good hard drives for a home server
+Date: Wed, 12 Nov 2008 12:36:02 -0600
+Message-ID: <a43edf1b0811121036t7198be59r50b061c90f8798eb@mail.gmail.com>
+References: <3ECBDC05781B3D48ABD520A01ABF2F9B299C974A5A@SE-EX008.groupinfra.com>
+	 <7d86ddb90811120619vca13676tb0192676ece0cb93@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-rUBkglcZIA5zyxL3jvXA"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <72dbd3150811121026k21ee2c01g12dcfe263e3ca383@mail.gmail.com>
+In-Reply-To: <7d86ddb90811120619vca13676tb0192676ece0cb93@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: David Rees <drees76@gmail.com>
-Cc: Richard Scobie <richard@sauce.co.nz>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Ryan Wagoner <rswagoner@gmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Someone just shared this with me and I thought this might be relevant:
+http://techreport.com/discussions.x/15863
 
---=-rUBkglcZIA5zyxL3jvXA
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+If it's a home server, a little hassle might not be the end of the
+world.  Personally I always try to buy the largest available drives
+for mass storage, so I can go longer between upgrades, move my data
+around less, and have fewer oldies sitting around.  I also wanted the
+5yr warranty.  So that's lately meant Seagate.  If it needs to be no
+fuss, make sure your seller will take them back for a refund if they
+lock up like this.
 
-On Wed, 2008-11-12 at 10:26 -0800, David Rees wrote:
-> On Wed, Nov 12, 2008 at 7:56 AM, Doug Ledford <dledford@redhat.com> wrote=
-:
-> > On Wed, 2008-11-12 at 16:45 +1300, Richard Scobie wrote:
-> >> Slightly off topic, but I was wondering if anyone knew how I could do =
-an
-> >> install of Fedora 9 WITHOUT it using dm RAID.
-> >>
-> >> I have done a number of md RAID installs of Fedora 9, but this
-> >> particular machine has a Silicon Image controller that the Redhat
-> >> installer obviously recognises and automatically proceeds to install
-> >> using dmraid and I would prefer to use md.
-> >
-> > At the boot prompt, pass the nodmraid option.  There are a number of
-> > options available, you can get the entire list by installing anaconda,
-> > then running anaconda --help on a working system.  Any options the
-> > kernel doesn't know just get passed on to anaconda.
->=20
-> Is nodmraid enough? For some reason on a recent system I installed F10
-> Preview on I seemed to have to specify both nodmraid and nompath to
-> get multipath from taking over...
->=20
-> It would be a lot easier if you could choose which you wanted during
-> install time instead of having to figure out boot parameters.
-
-That's a valid point.  Feel free to file an RFE against Anaconda in
-Fedora's bugzilla (bugzilla.redhat.com).
-
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-              http://people.redhat.com/dledford
-
-Infiniband specific RPMs available at
-              http://people.redhat.com/dledford/Infiniband
-
-
---=-rUBkglcZIA5zyxL3jvXA
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkkbINgACgkQTzP9PM7pjw/T2gCfQR+GGZQajuW5Muy6tGTWJXQB
-36EAn3DLsutjC6fM32ME370Ihat/hGr7
-=Gncg
------END PGP SIGNATURE-----
-
---=-rUBkglcZIA5zyxL3jvXA--
-
+On Wed, Nov 12, 2008 at 08:19, Ryan Wagoner <rswagoner@gmail.com> wrote:
+> I used to buy Seagate drives for their 5 year warranty. However with
+> the capacities increasing like they are the 5 vs 3 years doesn't
+> really matter as much. Out of the 4 Seagate drives (2 160GB and 2
+> 320GB) in my server that are 2.5 years old, the one is already showing
+> 13 reallocated sectors. This might be due to non Barracuda drives
+> being certified for only 8 hours a day.
+>
+> Recently I added have 5 Hitachi Deskstar TB drives in two different
+> machines which have been working great with mdadm in RAID 1 and 5. I
+> actually bought these after using 6 Hitachi Ultrastar TB drives in my
+> work's new Dell 2950 server. The server is setup in a 2 drive RAID 1
+> and a 4 drive RAID 5 for data archival and has worked flawlessly.
+>
+> The Hitachi's are in the same price range as the Seagate Barracuda's
+> and offer 24/7 runtime and a 1 in 10^15 error rate vs 10^14 for
+> Seagate.
+>
+> Any reason you are using RAID 0 for your server? Normally when I think
+> of a server reliability comes to mind and RAID 0 doesn't offer any.
+> I'm assumming you make nightly or weekly backups?
+>
+> Ryan
+>
+> On Wed, Nov 12, 2008 at 8:12 AM, Henry, Andrew <andrew.henry@logica.com> wrote:
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
