@@ -1,36 +1,97 @@
-From: "Henry, Andrew" <andrew.henry@logica.com>
-Subject: RE: Tips for good hard drives for a home server
-Date: Thu, 13 Nov 2008 13:11:45 +0100
-Message-ID: <3ECBDC05781B3D48ABD520A01ABF2F9B299C9ECE78@SE-EX008.groupinfra.com>
-References: <3ECBDC05781B3D48ABD520A01ABF2F9B299C974A5A@SE-EX008.groupinfra.com>
-	 <A20315AE59B5C34585629E258D76A97C02A43936@34093-C3-EVS3.exchange.rackspace.com>
- <837a927a0811120631j4bf074d1s5eab70142a7173b2@mail.gmail.com>
+From: Jan Wagner <jwagner@kurp.hut.fi>
+Subject: partitionable md partition size caps at 0.4TB
+Date: Thu, 13 Nov 2008 14:00:18 +0200 (EET)
+Message-ID: <alpine.DEB.2.00.0811131350410.20263@kurp.hut.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <837a927a0811120631j4bf074d1s5eab70142a7173b2@mail.gmail.com>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Any reason you are using RAID 0 for your server? Normally when I think of a server reliability  comes to mind and RAID 0 doesn't offer any.
-> I'm assumming you make nightly or weekly backups?
+Hello,
 
+is it possible to create md partitions larger than 0.4TB?
 
-Im using RAID 0 because I am not willing to shell out for several drives.  2 at once is my breaking point.  This is only a *home* server, and in my opinion, I think im already being way more conscious of reliability by choosing RAID 0 compared to average Joe that goes for a Windows Home Server with a single hard drive
+We have >=9TB RAID-0 systems, and I tried to create a partitionable 
+two-partition md with mdadm --auto=mdp2 and partition it into for example 
+16MB and ~9TB. For partitioning /dev/md_d0 I have tried sfdisk, fdisk, 
+cfdisk, parted, ... Regardless of the partitioning tool, the ~9TB 
+partition always ends up as 455780.07MB i.e. 0.4TB.
 
-I do not currently have backups of my RAID 0 array: it is being used *for* my backup sets.  My data is stored on my desktop PC at the moment and im doing incremental tar backups to my RAID 0 disk.  There are other data on the array that I do not have on my desktop, but I have original media for these (music/movie library) and loss of this would be more inconvenience of having to rip the discs to hard drive again (very time consuming).
+There is no problem to create a large 9TB single partition on a 
+non-partitionable /dev/md0. Is the 445097720 blocks (0.4TB) "cropping" a 
+bug or a real limitation with mdp partitionable raid?
 
+Further infos below.
 
-> i recently bought the 2 of the WD RE3 750GB and using them with linux
-> raid level 1. time will only tell how these hard drives hold up. but
-> aside from the Velociraptos (which only go up to 300GB) these seem to
-> be top quality in their line.
+root@abidal:~# uname -a
+Linux abidal 2.6.27-7-generic #1 SMP Tue Nov 4 19:33:06 UTC 2008 x86_64 GNU/Linux
 
-I've looked at the specs of the WD RE3, the Seagate ES.2, the Hitachi Ultrastar and Samsung Spinpoint F1, and the RE3 does seem to have the edge.  It is double the cost of the drive I was considering but thanks to all the tips I received, I think I will go with the RE3.
+root@abidal:~# cat /etc/lsb-release
+DISTRIB_ID=Ubuntu
+DISTRIB_RELEASE=8.10
+DISTRIB_CODENAME=intrepid
+DISTRIB_DESCRIPTION="Ubuntu 8.10"
 
-One thing im not sure of: Is load/unload cycle equivalent to start/stop count?  WD has load cycle of 300.000 but Hitach/Samsung only 50.000 for 'start/stop count'.
+root@abidal:~# cat /proc/partitions|grep md
+  254     0 9035047936 md_d0
+  254     1      15622 md_d0p1
+  254     2  445097720 md_d0p2
 
---andrew
+root@abidal:~# sfdisk /dev/md_d0
+Checking that no-one is using this disk right now ...
+OK
+
+Disk /dev/md_d0: 2258761984 cylinders, 2 heads, 4 sectors/track
+Old situation:
+Units = cylinders of 4096 bytes, blocks of 1024 bytes, counting from 0
+
+    Device Boot Start     End   #cyls    #blocks   Id  System
+/dev/md_d0p1          0+   3905    3906-     15622   83  Linux
+/dev/md_d0p2       3906  111278335  111274430  445097720   83  Linux
+/dev/md_d0p3          0       -       0          0    0  Empty
+/dev/md_d0p4          0       -       0          0    0  Empty
+
+root@abidal:~# mdadm -D /dev/md0
+mdadm: md device /dev/md0 does not appear to be active.
+root@abidal:~# mdadm -D /dev/md_d0
+/dev/md_d0:
+         Version : 00.90
+   Creation Time : Thu Nov 13 11:58:59 2008
+      Raid Level : raid0
+      Array Size : 9035047936 (8616.49 GiB 9251.89 GB)
+    Raid Devices : 12
+   Total Devices : 12
+Preferred Minor : 0
+     Persistence : Superblock is persistent
+
+     Update Time : Thu Nov 13 11:58:59 2008
+           State : clean
+  Active Devices : 12
+Working Devices : 12
+  Failed Devices : 0
+   Spare Devices : 0
+
+      Chunk Size : 1024K
+
+            UUID : f1945a73:83d2bea9:b96e9208:11a3b9ec (local to host 
+abidal)
+          Events : 0.1
+
+     Number   Major   Minor   RaidDevice State
+        0       8       17        0      active sync   /dev/sdb1
+        1       8       33        1      active sync   /dev/sdc1
+        2       8       49        2      active sync   /dev/sdd1
+        3       8       65        3      active sync   /dev/sde1
+        4       8       81        4      active sync   /dev/sdf1
+        5       8       97        5      active sync   /dev/sdg1
+        6       8      113        6      active sync   /dev/sdh1
+        7       8      129        7      active sync   /dev/sdi1
+        8       8      145        8      active sync   /dev/sdj1
+        9       8      161        9      active sync   /dev/sdk1
+       10       8      177       10      active sync   /dev/sdl1
+       11       8      193       11      active sync   /dev/sdm1
+
+thanks,
+  - Jan
