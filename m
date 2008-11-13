@@ -1,59 +1,37 @@
-From: Josh Boyer <jwboyer@linux.vnet.ibm.com>
-Subject: Re: [PATCH 11/11] ppc440spe-adma: ADMA driver for PPC440SP(e)
- systems
-Date: Thu, 13 Nov 2008 12:54:51 -0500
-Message-ID: <20081113125451.4a7bd7d9@zod.rchland.ibm.com>
-References: <1226589364-5619-1-git-send-email-yanok@emcraft.com>
-	<1226589364-5619-12-git-send-email-yanok@emcraft.com>
-	<20081113160307.GB2299@yoda.jdub.homelinux.org>
-	<491C68F3.3030102@emcraft.com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: Superblock limits / conversion
+Date: Fri, 14 Nov 2008 07:17:23 +1300
+Message-ID: <491C6F33.1040904@sauce.co.nz>
+References: <7d86ddb90811130646k440676aakecc62defc8d42b7a@mail.gmail.com> <20081113151206.GB25751@cthulhu.home.robinhill.me.uk> <alpine.DEB.1.10.0811131019350.7992@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <491C68F3.3030102@emcraft.com>
+In-Reply-To: <alpine.DEB.1.10.0811131019350.7992@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ilya Yanok <yanok@emcraft.com>
-Cc: linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, dzu@denx.de, wd@denx.de
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Robin Hill <robin@robinhill.me.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 13 Nov 2008 20:50:43 +0300
-Ilya Yanok <yanok@emcraft.com> wrote:
-
-> Josh Boyer wrote:
-> > On Thu, Nov 13, 2008 at 06:16:04PM +0300, Ilya Yanok wrote:
-> >   
-> >> Adds the platform device definitions and the architecture specific support
-> >> routines for the ppc440spe adma driver.
-> >>
-> >> Any board equipped with PPC440SP(e) controller may utilize this driver.
-> >>
-> >> Signed-off-by: Yuri Tikhonov <yur@emcraft.com>
-> >> Signed-off-by: Ilya Yanok <yanok@emcraft.com>
-> >>     
-> >
-> > Before I really dig into reviewing this driver, I'm going to ask you as simple
-> > question.  This looks like a 1/2 completed port of an arch/ppc driver that uses
-> > the device tree (incorrectly) to get the interrupt resources and that's about it.
-> > Otherwise, it's just a straight up platform device driver.  Is that correct?
-> >   
+Justin Piszcz wrote:
 > 
-> Yep, that's correct.
-
-OK.
-
-> > If that is the case, I think the driver needs more work before it can be merged.
-> > It should get the DCR and MMIO resources from the device tree as well.  It should
-> > be binding on compatible properties and not based on device tree paths.  And it
-> > should probably be an of_platform device driver.
-> >   
 > 
-> Surely, you're right. I agree with you in that this driver isn't ready
-> for merging. But it works so we'd like to publish it so interested
-> people could use it and test it.
+> On Thu, 13 Nov 2008, Robin Hill wrote:
+> 
+>> On Thu Nov 13, 2008 at 09:46:23AM -0500, Ryan Wagoner wrote:
+>>
+>>> I have a RAID 5 array with 3 TB drives. When reading through the list
+>>> I realized that the v0.90 superblock doesn't support arrays over 2TB.
+>>> This means I can never grow this array to 4 drives?
+>>>
+>> That's my understanding, yes.
+> 
+> I grew 400GiB drives in a raid5 configuration  from 1.8TiB to 3.3TiB one 
+> at a time with the 0.90 superblock (I believe), is that limit correct?
 
-And that's fine.  I just wanted to see where you were headed with this
-one for now.  I'll try to do a review in the next few days.  Thanks for
-posting.
+My understanding is that the 2TB limit on 0.90 superblocks, is for md 
+component size, not md device size.
 
-josh
+Regards,
+
+Richard
