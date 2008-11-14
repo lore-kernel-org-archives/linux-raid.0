@@ -1,25 +1,32 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: OT: Tips for good hard drives for a home server
-Date: Fri, 14 Nov 2008 16:41:28 +0100 (CET)
-Message-ID: <alpine.DEB.1.10.0811141640140.10993@uplift.swm.pp.se>
-References: <3ECBDC05781B3D48ABD520A01ABF2F9B299C974A5A@SE-EX008.groupinfra.com>  <7d86ddb90811120619vca13676tb0192676ece0cb93@mail.gmail.com>  <491CA255.4070402@tmr.com>  <alpine.DEB.1.10.0811132357390.10993@uplift.swm.pp.se>
- <a43edf1b0811140528h5f8446b7i62ae9b2496fb1632@mail.gmail.com>  <alpine.DEB.1.10.0811141437100.10993@uplift.swm.pp.se> <87f94c370811140722kf90ed6av9a3b43a8f9af82e7@mail.gmail.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: mail notification of raid problems on 2.6.12
+Date: Fri, 14 Nov 2008 16:47:42 +0100
+Message-ID: <20081114154741.GA20271@rap.rap.dk>
+References: <20081023133959.GA29695@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87f94c370811140722kf90ed6av9a3b43a8f9af82e7@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20081023133959.GA29695@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 14 Nov 2008, Greg Freemyer wrote:
+On Thu, Oct 23, 2008 at 03:40:00PM +0200, Keld J=F8rn Simonsen wrote:
+> Hi list
+>=20
+> how do I get mail notification on kernel 2.6.12, mdadm v1.12.0?
+> I have looked in the man pages and tried various ways, but
+> without luck till now.
 
-> Does it also do background scans looking for unreadable sectors, or does 
-> it just wait for it to occur naturally?
+I got no answers for this. Is it really not possible, or is this
+irrelevant to this list?
 
-As far as I know, you have to issue/schedule a full scan for it to find 
-the errors, it won't do continous background scanning like some hw 
-controllers out there.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+Best regards
+keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
