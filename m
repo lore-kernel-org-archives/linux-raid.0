@@ -1,97 +1,100 @@
-From: greg@enjellic.com
-Subject: Should we be trying re-write on write errors?
-Date: Fri, 14 Nov 2008 15:30:06 -0600
-Message-ID: <200811142130.mAELU6Io009544@wind.enjellic.com>
-Reply-To: greg@enjellic.com
+From: Peter Rabbitson <rabbit+list@rabbit.us>
+Subject: Re: And again help on deciphering an error (continued)
+Date: Fri, 14 Nov 2008 22:33:43 +0100
+Message-ID: <491DEEB7.2000200@rabbit.us>
+References: <4907A5FA.7050903@rabbit.us> <491DC218.9010301@rabbit.us> <alpine.DEB.1.10.0811141456550.22161@p34.internal.lan>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.0811141456550.22161@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil, hope the week is ending well for you and the rest of the
-denizens on the linux-raid list.
+Justin Piszcz wrote:
+> 
+> 
+> On Fri, 14 Nov 2008, Peter Rabbitson wrote:
+> 
+>> Peter Rabbitson wrote:
+>>> Hello,
+>>>
+>>> I need help with understanding what is going on here
+>>> (full log):
+>>>
+>>>
+>>> Oct 27 11:33:41 Arzamas kernel: ata6.00: exception Emask 0x10 SAct 0x0
+>>> SErr 0x80000 action 0xe frozen
+>>> Oct 27 11:33:41 Arzamas kernel: ata6.00: irq_stat 0x01100010, PHY RDY
+>>> changed
+>>> Oct 27 11:33:41 Arzamas kernel: ata6: SError: { 10B8B }
+>>> Oct 27 11:33:41 Arzamas kernel: ata6.00: cmd
+>>> ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+>>> Oct 27 11:33:41 Arzamas kernel: res 06/37:00:00:00:00/00:00:00:00:06/00
+>>> Emask 0x12 (ATA bus error)
+>>> Oct 27 11:33:41 Arzamas kernel: ata6.00: error: { IDNF ABRT }
+>>> Oct 27 11:33:41 Arzamas kernel: ata6: hard resetting link
+>>> Oct 27 11:33:46 Arzamas kernel: ata6: SATA link up 3.0 Gbps (SStatus 123
+>>> SControl 0)
+>>> Oct 27 11:33:46 Arzamas kernel: ata6.00: configured for UDMA/100
+>>> Oct 27 11:33:46 Arzamas kernel: ata6: EH complete
+>>> Oct 27 11:33:46 Arzamas kernel: sd 6:0:0:0: [sde] 488397168 512-byte
+>>> hardware sectors (250059 MB)
+>>> Oct 27 11:33:46 Arzamas kernel: sd 6:0:0:0: [sde] Write Protect is off
+>>> Oct 27 11:33:46 Arzamas kernel: sd 6:0:0:0: [sde] Mode Sense: 00 3a
+>>> 00 00
+>>> Oct 27 11:33:46 Arzamas kernel: sd 6:0:0:0: [sde] Write cache: enabled,
+>>> read cache: enabled, doesn't support DPO or FUA
+>>> Oct 27 11:33:46 Arzamas kernel: end_request: I/O error, dev sde, sector
+>>> 488166955
+>>
+>> The saga continues. After replacing the drive (and I didn't make a
+>> mistake as the serial numbers don't match) I got _exaclty_ the same
+>> error a week later. I have replaced the cable for the drive in question,
+>> will see what happens. The controller is:
+>>
+>> 02:03.0 Mass storage controller: Silicon Image, Inc. SiI 3124 PCI-X
+>> Serial ATA Controller (rev 02)
+>>     Subsystem: Silicon Image, Inc. SiI 3124 PCI-X Serial ATA Controller
+>>     Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV+ VGASnoop- ParErr+
+>> Stepping+ SERR+ FastB2B- DisINTx-
+>>     Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
+>> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>     Latency: 64, Cache Line Size: 64 bytes
+>>     Interrupt: pin A routed to IRQ 25
+>>     Region 0: Memory at fc5fd800 (64-bit, non-prefetchable) [size=128]
+>>     Region 2: Memory at fc5f0000 (64-bit, non-prefetchable) [size=32K]
+>>     Region 4: I/O ports at b000 [size=16]
+>>     Expansion ROM at fc480000 [disabled] [size=512K]
+>>     Capabilities: [64] Power Management version 2
+>>         Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA
+>> PME(D0-,D1-,D2-,D3hot-,D3cold-)
+>>         Status: D0 PME-Enable- DSel=0 DScale=1 PME-
+>>     Capabilities: [40] PCI-X non-bridge device
+>>         Command: DPERE- ERO+ RBC=512 OST=12
+>>         Status: Dev=ff:1f.0 64bit+ 133MHz+ SCD- USC- DC=simple
+>> DMMRBC=2048
+>> DMOST=12 DMCRS=128 RSCEM- 266MHz- 533MHz-
+>>     Capabilities: [54] Message Signalled Interrupts: Mask- 64bit+
+>> Queue=0/0
+>> Enable-
+>>         Address: 0000000000000000  Data: 0000
+>>     Kernel driver in use: sata_sil24
+>>
+>>
+>> Anyone has any bright ideas?
+> 
+> Hm, someone else also has similar problems, maybe we ought to buy new hw or
+> something, I have the same/similar issue as you.
+> 
+> BTW, after that error, if you re-run a short/long test, do they succeed or
+> hang (never complete)?
+> 
 
-Somewhat of a Gedanken question for you.
+They succeed with flying colors. Moreover I had badblocks -svw running
+at the same time (so the drive was really loaded). And I did this
+repeatedly with the first one - no issues.
 
-We currently attempt a re-write on read error for volumes which have
-redundancy, ie. RAID[156] etc, on the bet that we can force a bad
-sector remap.  Should we be attempting that (or do we) on a write
-error as well?
-
-We ran into the following on one of our many Linux storage boxes this
-week:
-
-
-/var/log/messages:
-Nov 13 01:47:36 MACHINE kernel: sd 1:0:1:0: [sdb] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
-Nov 13 01:47:44 MACHINE kernel: sd 1:0:1:0: [sdb] Sense Key : Hardware Error [current]
-Nov 13 01:47:44 MACHINE kernel: sd 1:0:1:0: [sdb] Add. Sense: Defect list error
-
-/var/log/syslog:
-Nov 13 01:47:44 MACHINE kernel: end_request: I/O error, dev sdb, sector 3484469
-Nov 13 01:47:44 MACHINE kernel: raid1: Disk failure on sdb3, disabling device.
-Nov 13 01:47:44 MACHINE kernel: ^IOperation continuing on 1 devices
-Nov 13 01:47:44 MACHINE kernel: RAID1 conf printout:
-etc....
-
-
-The sdb device is a high-end SCSI SCA drive.  I gave the machine a
-thorough go over before certifying it back into service.
-
-SMART reports that two sectors have been added to the defect list on
-that drive.  Otherwise things are normal, usual collection of ECC
-corrected errors etc.
-
-I forced a full physical read of the drive without provoking any
-problems.  That was followed by a CHECK run on the MD devices based on
-that disk and no issues were noted.  I added the drive back into its
-MD devices, resynchronization went without event and things have been
-trundling along fine since then.
-
-My analysis of this is that the drive spit a write error back to the
-RAID1 driver which kicked the device after following up with a
-successful write to its sibling.  The drive's firmware picked up on
-the bad write and re-mapped the sector to one of its spares in the
-badblock pool on the drive.
-
-In fact the:
-
-Nov 13 01:47:44 MACHINE kernel: sd 1:0:1:0: [sdb] Add. Sense: Defect
-list error
-
-Would seem to indicate that the device driver (aic79xx) even knew
-what ended up happening on the drive.
-
-It seems to me the RAID1 code could have attempted and probably
-succeeded with a sector re-write thus avoiding a situation of dropping
-the RAID1 device from full redundancy levels.
-
-Correct analysis or are the realities of the block driver/MD interface
-such that this makes a good story with little hope of implementation?
-
-Could the fly in all this be the fact the above error message isn't
-telling us about the addition of the defect but rather a problem
-adding the block to the remap list?  But if that were the case I would
-assume the drive would be problematic and we not be able to get it
-back into service.
-
-Thanks much for any enlightenment you can toss to the list on this.
-
-BTW much thanks for the existing re-write code.  Countless mornings
-I have said 'gee that Neil Brown was clever' when I see that one of
-our machines cleaned up a potential problem before it became a bigger
-one.
-
-Best wishes for a pleasant weekend.
-
-As always,
-Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
-4206 N. 19th Ave.           Specializing in information infra-structure
-Fargo, ND  58102            development.
-PH: 701-281-1686
-FAX: 701-281-3949           EMAIL: greg@enjellic.com
-------------------------------------------------------------------------------
-"If you think nobody cares if you're alive, try missing a couple of car
- payments."
-                                -- Earl Wilson
+Peter
