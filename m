@@ -1,43 +1,62 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: OT: Tips for good hard drives for a home server
-Date: Thu, 13 Nov 2008 16:55:33 -0500
-Message-ID: <491CA255.4070402@tmr.com>
-References: <3ECBDC05781B3D48ABD520A01ABF2F9B299C974A5A@SE-EX008.groupinfra.com> <7d86ddb90811120619vca13676tb0192676ece0cb93@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [mdadm git pull] random fixes and compatibility updates for imsm
+Date: Fri, 14 Nov 2008 15:40:17 +1100
+Message-ID: <18717.305.290917.564021@notabene.brown>
+References: <1226341252.23442.13.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7d86ddb90811120619vca13676tb0192676ece0cb93@mail.gmail.com>
+In-Reply-To: message from Dan Williams on Monday November 10
 Sender: linux-raid-owner@vger.kernel.org
-To: Ryan Wagoner <rswagoner@gmail.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Ryan Wagoner wrote:
-> I used to buy Seagate drives for their 5 year warranty. However with
-> the capacities increasing like they are the 5 vs 3 years doesn't
-> really matter as much. Out of the 4 Seagate drives (2 160GB and 2
-> 320GB) in my server that are 2.5 years old, the one is already showing
-> 13 reallocated sectors. This might be due to non Barracuda drives
-> being certified for only 8 hours a day.
->   
-Note that Seagate makes two similar but not quite drives in many 
-capacities. As example the drives ending with "AS" or "A" are desktop, 
-and those ending with "NS" are for server use. Now the recent "ES" line 
-shows 7x24 for the duty cycle, and 1.2M hours MTBF. I doubt you will 
-have a problem with longevity.
+On Monday November 10, dan.j.williams@intel.com wrote:
+> Hi Neil,
+> 
+> This release updates support for creating imsm arrays to use the lowest
+> possible metadata version based on the contents of the container.  For
+> example all versions of the option-ROM support raid0 so when creating a
+> raid0 array tag the metadata as version "1.0.00" even if the platform
+> supports a higher version.
+> 
+> There are also a couple fixes for fallout from the device name rework.
+> 
+> Please have a look.
 
-The 500GB runs <$100, the TB ~ $210.
+Excellent.  Thanks.
+Pulled and pushed.
 
-These are probably a good fit with your budget and reliability needs.
-
-Anyone who has a pointer to information on the "write same" command for 
-raid which Seagate mentions, or what the "SV" line of drives actually 
-offer could enlighten us.
-
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
+NeilBrown
 
 
+> 
+> Thanks,
+> Dan
+> 
+> 
+> The following changes since commit 01cbfcc854c031a18cf7542c5430734e69ef33fb:
+>   NeilBrown (1):
+>         Create: don't wait for device to appear if we didn't actually start the array
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/djbw/mdadm.git devel
+> 
+> Dan Williams (8):
+>       imsm: cleanup ->match_home and comment on return value
+>       imsm: cleanup migration definitions and usage
+>       imsm: add definitions for recent imsm versions
+>       imsm: fixup disk status definition endianess
+>       imsm: compatibility fixes for creating imsm arrays
+>       imsm: fix uuid_from_super given 'signature' is not constant
+>       fix remove_devices()
+>       fix add_dev() handling of broken links
+> 
+>  Manage.c      |   10 ++-
+>  super-intel.c |  244 +++++++++++++++++++++++++++++++++++++++------------------
+>  util.c        |    4 +-
+>  3 files changed, 175 insertions(+), 83 deletions(-)
+> 
