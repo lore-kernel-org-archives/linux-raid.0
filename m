@@ -1,29 +1,41 @@
-From: " Robin Hill" <robin@robinhill.me.uk>
+From: "Greg Freemyer" <greg.freemyer@gmail.com>
 Subject: Re: OT: Tips for good hard drives for a home server
-Date: Fri, 14 Nov 2008 05:34:53 -0800
-Message-ID: <20081114053453.9372C520@resin11.mta.everyone.net>
-Reply-To: <robin@robinhill.me.uk>
+Date: Fri, 14 Nov 2008 10:22:54 -0500
+Message-ID: <87f94c370811140722kf90ed6av9a3b43a8f9af82e7@mail.gmail.com>
+References: <3ECBDC05781B3D48ABD520A01ABF2F9B299C974A5A@SE-EX008.groupinfra.com>
+	 <7d86ddb90811120619vca13676tb0192676ece0cb93@mail.gmail.com>
+	 <491CA255.4070402@tmr.com>
+	 <alpine.DEB.1.10.0811132357390.10993@uplift.swm.pp.se>
+	 <a43edf1b0811140528h5f8446b7i62ae9b2496fb1632@mail.gmail.com>
+	 <alpine.DEB.1.10.0811141437100.10993@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.0811141437100.10993@uplift.swm.pp.se>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---- billycrook@gmail.com wrote:
+On Fri, Nov 14, 2008 at 8:40 AM, Mikael Abrahamsson <swmike@swm.pp.se> wrote:
+<snip>
+> So as long as md can re-write a faulty block (which it can from 2.6.15 (or
+> .16 or .17, I don't remember), you should have raid firmware in your drives
+> for best performance.
 
-> Obviously RAID-class drives benefit in hardware raid (with hardware
-> raid controllers).  But do RAID-class drives benefit when used on a
-> non-raid hardware controller, with linux software raid (mdadm)?  What
-> about a hardware raid controller in JBOD mode?
-> 
-> Are the raid-class drives supposed to be used:
->  - in a raid fashion
-> or
->  - on a hardware raid controller
-> or both?
-> 
-From what I can tell, modern RAID-class drives are just certified for 24x7 operation.  Some may also have some features tweaked for hardware RAID (e.g. disabling write caching) but I've not seen this on any I've bought.  I'd recommend using them in any situation where you're going to be running the system full-time, whether they're standalone or in software or hardware RAID.
+Does it also do background scans looking for unreadable sectors, or
+does it just wait for it to occur naturally?
 
-Cheers,
-    Robin
+Greg
+-- 
+Greg Freemyer
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+First 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
