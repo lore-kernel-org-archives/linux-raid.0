@@ -1,100 +1,63 @@
-From: Peter Rabbitson <rabbit+list@rabbit.us>
-Subject: Re: And again help on deciphering an error (continued)
-Date: Fri, 14 Nov 2008 22:33:43 +0100
-Message-ID: <491DEEB7.2000200@rabbit.us>
-References: <4907A5FA.7050903@rabbit.us> <491DC218.9010301@rabbit.us> <alpine.DEB.1.10.0811141456550.22161@p34.internal.lan>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Should we be trying re-write on write errors?
+Date: Sat, 15 Nov 2008 08:58:46 +1100
+Message-ID: <18717.62614.341600.906790@notabene.brown>
+References: <200811142130.mAELU6Io009544@wind.enjellic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0811141456550.22161@p34.internal.lan>
+In-Reply-To: message from greg@enjellic.com on Friday November 14
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, linux-ide@vger.kernel.org
+To: greg@enjellic.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Justin Piszcz wrote:
+On Friday November 14, greg@enjellic.com wrote:
+> Hi Neil, hope the week is ending well for you and the rest of the
+> denizens on the linux-raid list.
 > 
+> Somewhat of a Gedanken question for you.
 > 
-> On Fri, 14 Nov 2008, Peter Rabbitson wrote:
-> 
->> Peter Rabbitson wrote:
->>> Hello,
->>>
->>> I need help with understanding what is going on here
->>> (full log):
->>>
->>>
->>> Oct 27 11:33:41 Arzamas kernel: ata6.00: exception Emask 0x10 SAct 0x0
->>> SErr 0x80000 action 0xe frozen
->>> Oct 27 11:33:41 Arzamas kernel: ata6.00: irq_stat 0x01100010, PHY RDY
->>> changed
->>> Oct 27 11:33:41 Arzamas kernel: ata6: SError: { 10B8B }
->>> Oct 27 11:33:41 Arzamas kernel: ata6.00: cmd
->>> ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
->>> Oct 27 11:33:41 Arzamas kernel: res 06/37:00:00:00:00/00:00:00:00:06/00
->>> Emask 0x12 (ATA bus error)
->>> Oct 27 11:33:41 Arzamas kernel: ata6.00: error: { IDNF ABRT }
->>> Oct 27 11:33:41 Arzamas kernel: ata6: hard resetting link
->>> Oct 27 11:33:46 Arzamas kernel: ata6: SATA link up 3.0 Gbps (SStatus 123
->>> SControl 0)
->>> Oct 27 11:33:46 Arzamas kernel: ata6.00: configured for UDMA/100
->>> Oct 27 11:33:46 Arzamas kernel: ata6: EH complete
->>> Oct 27 11:33:46 Arzamas kernel: sd 6:0:0:0: [sde] 488397168 512-byte
->>> hardware sectors (250059 MB)
->>> Oct 27 11:33:46 Arzamas kernel: sd 6:0:0:0: [sde] Write Protect is off
->>> Oct 27 11:33:46 Arzamas kernel: sd 6:0:0:0: [sde] Mode Sense: 00 3a
->>> 00 00
->>> Oct 27 11:33:46 Arzamas kernel: sd 6:0:0:0: [sde] Write cache: enabled,
->>> read cache: enabled, doesn't support DPO or FUA
->>> Oct 27 11:33:46 Arzamas kernel: end_request: I/O error, dev sde, sector
->>> 488166955
->>
->> The saga continues. After replacing the drive (and I didn't make a
->> mistake as the serial numbers don't match) I got _exaclty_ the same
->> error a week later. I have replaced the cable for the drive in question,
->> will see what happens. The controller is:
->>
->> 02:03.0 Mass storage controller: Silicon Image, Inc. SiI 3124 PCI-X
->> Serial ATA Controller (rev 02)
->>     Subsystem: Silicon Image, Inc. SiI 3124 PCI-X Serial ATA Controller
->>     Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV+ VGASnoop- ParErr+
->> Stepping+ SERR+ FastB2B- DisINTx-
->>     Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>     Latency: 64, Cache Line Size: 64 bytes
->>     Interrupt: pin A routed to IRQ 25
->>     Region 0: Memory at fc5fd800 (64-bit, non-prefetchable) [size=128]
->>     Region 2: Memory at fc5f0000 (64-bit, non-prefetchable) [size=32K]
->>     Region 4: I/O ports at b000 [size=16]
->>     Expansion ROM at fc480000 [disabled] [size=512K]
->>     Capabilities: [64] Power Management version 2
->>         Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA
->> PME(D0-,D1-,D2-,D3hot-,D3cold-)
->>         Status: D0 PME-Enable- DSel=0 DScale=1 PME-
->>     Capabilities: [40] PCI-X non-bridge device
->>         Command: DPERE- ERO+ RBC=512 OST=12
->>         Status: Dev=ff:1f.0 64bit+ 133MHz+ SCD- USC- DC=simple
->> DMMRBC=2048
->> DMOST=12 DMCRS=128 RSCEM- 266MHz- 533MHz-
->>     Capabilities: [54] Message Signalled Interrupts: Mask- 64bit+
->> Queue=0/0
->> Enable-
->>         Address: 0000000000000000  Data: 0000
->>     Kernel driver in use: sata_sil24
->>
->>
->> Anyone has any bright ideas?
-> 
-> Hm, someone else also has similar problems, maybe we ought to buy new hw or
-> something, I have the same/similar issue as you.
-> 
-> BTW, after that error, if you re-run a short/long test, do they succeed or
-> hang (never complete)?
-> 
+> We currently attempt a re-write on read error for volumes which have
+> redundancy, ie. RAID[156] etc, on the bet that we can force a bad
+> sector remap.  Should we be attempting that (or do we) on a write
+> error as well?
 
-They succeed with flying colors. Moreover I had badblocks -svw running
-at the same time (so the drive was really loaded). And I did this
-repeatedly with the first one - no issues.
+I don't think so.
+By the time md/raid gets an error status, lower levels (Whether driver
+or firmware) should have retried as much as in appropriate.  Doing
+further retries at the md level should be pointless.
 
-Peter
+For reads, we do retry.  But the purpose is to find out exactly which
+block failed so that we can just re-write that block.  There is no
+expectation that a block which previously failed a read will now
+succeed.
+
+Similarly there is no reason to expect that a block which previously
+failed a write will now succeed.
+
+I suggest that you might like to discuss your particular case with the
+author of the driver for the device.  Maybe the driver should be
+retrying.  Maybe the firmware is doing the wrong thing.
+
+After all, you wouldn't expect every different filesystem to retry all
+failed writes, would you?
+
+
+> 
+> BTW much thanks for the existing re-write code.  Countless mornings
+> I have said 'gee that Neil Brown was clever' when I see that one of
+> our machines cleaned up a potential problem before it became a bigger
+> one.
+:-)
+To be honest, that code was largely because people kept complaining
+about read errors being too fatal and wanted something done.  The only
+way to stop the flood of complaints was to fix something :-)
+
+> 
+> Best wishes for a pleasant weekend.
+
+And for you!
+
+NeilBrown
