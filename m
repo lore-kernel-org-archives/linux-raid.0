@@ -1,104 +1,100 @@
-From: Andre Noll <maan@systemlinux.org>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
 Subject: Re: typo in raid[456] kernel code/no change based on type?
-Date: Fri, 14 Nov 2008 13:19:42 +0100
-Message-ID: <20081114121942.GN17966@skl-net.de>
-References: <alpine.DEB.1.10.0811121855470.10512@p34.internal.lan> <alpine.DEB.1.10.0811121858300.10512@p34.internal.lan>
+Date: Fri, 14 Nov 2008 08:05:38 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0811140743050.20662@p34.internal.lan>
+References: <alpine.DEB.1.10.0811121855470.10512@p34.internal.lan> <alpine.DEB.1.10.0811121858300.10512@p34.internal.lan> <20081114121942.GN17966@skl-net.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="kK1uqZGE6pgsGNyR"
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.1.10.0811121858300.10512@p34.internal.lan>
+In-Reply-To: <20081114121942.GN17966@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Andre Noll <maan@systemlinux.org>
 Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---kK1uqZGE6pgsGNyR
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On 18:58, Justin Piszcz wrote:
+On Fri, 14 Nov 2008, Andre Noll wrote:
 
-> >md3 : active raid6 sdj1[10] sdc1[4] sdl1[8] sdk1[1] sdi1[9] sdh1[7]=20
+> On 18:58, Justin Piszcz wrote:
+>
+> Please try the patch below which fixes this inconsistency.
+>
+> Andre
+>
+> commit 6c2f32376c59f08a893cd4736d92f000618dd88f
+> Author: Andre Noll <maan@systemlinux.org>
+> Date:   Fri Nov 14 13:31:56 2008 +0100
+>
+>    Improve raid printout for raid levels 4 and 6.
+>
+>    As noted by Justin Piszcz we currently log a "RAID5 conf printout:" message
+>    also for raid4 and raid6 arrays. This trivial patch prints the correct raid
+>    level, adds KERN_INFO to all printk's in print_raid5_conf() and fixes a minor
+>    coding style issue.
+>
+>    Signed-off-by: Andre Noll <maan@systemlinux.org>
 
-[snip]
+[ patch ]
 
-> >[ 6982.273208] RAID5 conf printout:
-> >              ^^^^^
+# patch -p1 < /home/jpiszcz/patch 
+patching file drivers/md/raid5.c
+Hunk #1 succeeded at 4302 (offset -41 lines).
 
-Please try the patch below which fixes this inconsistency.
+Ok, fixed some of them but not all:
 
-Andre
+before (vanilla 2.6.27.5/6):
 
-commit 6c2f32376c59f08a893cd4736d92f000618dd88f
-Author: Andre Noll <maan@systemlinux.org>
-Date:   Fri Nov 14 13:31:56 2008 +0100
+[   21.404744] raid5: allocated 10568kB for md3
+[   21.406935] raid5: raid level 6 set md3 active with 8 out of 10 devices, algo
+rithm 2
+[   21.409239] RAID5 conf printout:
+                ^^^^^
+[   21.411544]  --- rd:10 wd:8
+[   21.413812]  disk 0, o:1, dev:sdd1
+[   21.416068]  disk 1, o:1, dev:sdk1
+[   21.418345]  disk 2, o:1, dev:sde1
+[   21.420621]  disk 3, o:1, dev:sdf1
+[   21.422836]  disk 6, o:1, dev:sdg1
+[   21.424941]  disk 7, o:1, dev:sdh1
+[   21.426926]  disk 8, o:1, dev:sdl1
+[   21.428824]  disk 9, o:1, dev:sdi1
 
-    Improve raid printout for raid levels 4 and 6.
-   =20
-    As noted by Justin Piszcz we currently log a "RAID5 conf printout:" mes=
-sage
-    also for raid4 and raid6 arrays. This trivial patch prints the correct =
-raid
-    level, adds KERN_INFO to all printk's in print_raid5_conf() and fixes a=
- minor
-    coding style issue.
-   =20
-    Signed-off-by: Andre Noll <maan@systemlinux.org>
+after: (with your patch):
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index a36a743..7920b26 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4343,24 +4343,24 @@ static void status(struct seq_file *seq, mddev_t *m=
-ddev)
- #endif
- }
-=20
--static void print_raid5_conf (raid5_conf_t *conf)
-+static void print_raid5_conf(raid5_conf_t *conf)
- {
- 	int i;
- 	struct disk_info *tmp;
-=20
--	printk("RAID5 conf printout:\n");
- 	if (!conf) {
--		printk("(conf=3D=3DNULL)\n");
-+		printk(KERN_INFO "RAID 4/5/6: (conf=3D=3DNULL)\n");
- 		return;
- 	}
--	printk(" --- rd:%d wd:%d\n", conf->raid_disks,
--		 conf->raid_disks - conf->mddev->degraded);
-+	printk(KERN_INFO "RAID%d printout:\n", conf->level);
-+	printk(KERN_INFO " --- rd:%d wd:%d\n", conf->raid_disks,
-+		conf->raid_disks - conf->mddev->degraded);
-=20
- 	for (i =3D 0; i < conf->raid_disks; i++) {
- 		char b[BDEVNAME_SIZE];
- 		tmp =3D conf->disks + i;
- 		if (tmp->rdev)
--		printk(" disk %d, o:%d, dev:%s\n",
-+		printk(KERN_INFO " disk %d, o:%d, dev:%s\n",
- 			i, !test_bit(Faulty, &tmp->rdev->flags),
- 			bdevname(tmp->rdev->bdev,b));
- 	}
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
+[   21.430884] raid5: allocated 10568kB for md3
+[   21.433023] raid5: raid level 6 set md3 active with 10 out of 10 devices, algorithm 2
+[   21.435236] RAID6 printout:
+                ^^^^^ patch fixed this one, but it still says raid5 in other
+                      parts of the code
+[   21.437316]  --- rd:10 wd:10
+[   21.439291]  disk 0, o:1, dev:sdd1
+[   21.441204]  disk 1, o:1, dev:sdk1
+[   21.443013]  disk 2, o:1, dev:sde1
+[   21.444749]  disk 3, o:1, dev:sdf1
+[   21.446383]  disk 4, o:1, dev:sdc1
+[   21.447937]  disk 5, o:1, dev:sdj1
+[   21.449444]  disk 6, o:1, dev:sdg1
+[   21.450873]  disk 7, o:1, dev:sdh1
+[   21.452276]  disk 8, o:1, dev:sdl1
+[   21.453618]  disk 9, o:1, dev:sdi1
 
---kK1uqZGE6pgsGNyR
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+Here is the current output that still contains 'raid5':
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
+$ dmesg | grep -i raid5
+[   19.881548] md: raid5 personality registered for level 5
+[   21.408354] raid5: device sdl1 operational as raid disk 8
+[   21.410583] raid5: device sdk1 operational as raid disk 1
+[   21.412789] raid5: device sdj1 operational as raid disk 5
+[   21.414994] raid5: device sdi1 operational as raid disk 9
+[   21.417217] raid5: device sdh1 operational as raid disk 7
+[   21.419420] raid5: device sdg1 operational as raid disk 6
+[   21.421622] raid5: device sdf1 operational as raid disk 3
+[   21.423810] raid5: device sde1 operational as raid disk 2
+[   21.425970] raid5: device sdd1 operational as raid disk 0
+[   21.428090] raid5: device sdc1 operational as raid disk 4
+[   21.430884] raid5: allocated 10568kB for md3
+[   21.433023] raid5: raid level 6 set md3 active with 10 out of 10 devices, algorithm 2
 
-iD8DBQFJHWzdWto1QDEAkw8RAg1XAJ9Hzh4T0Wj8Uko482nXJib0Dx6AqQCfXveI
-yZrKbZqc2td6tYVYpCAuGBc=
-=B/SQ
------END PGP SIGNATURE-----
 
---kK1uqZGE6pgsGNyR--
+Justin.
