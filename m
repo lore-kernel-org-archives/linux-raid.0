@@ -1,42 +1,53 @@
-From: John Robinson <john.robinson@yuiop.co.uk>
-Subject: Re: mail notification of raid problems on 2.6.12
-Date: Fri, 14 Nov 2008 16:23:01 +0000
-Message-ID: <491DA5E5.9060507@yuiop.co.uk>
-References: <20081023133959.GA29695@rap.rap.dk> <20081114154741.GA20271@rap.rap.dk>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: OT: Tips for good hard drives for a home server
+Date: Sat, 15 Nov 2008 06:47:16 +1300
+Message-ID: <491DB9A4.7080308@sauce.co.nz>
+References: <3ECBDC05781B3D48ABD520A01ABF2F9B299C974A5A@SE-EX008.groupinfra.com>  <7d86ddb90811120619vca13676tb0192676ece0cb93@mail.gmail.com>  <491CA255.4070402@tmr.com>  <alpine.DEB.1.10.0811132357390.10993@uplift.swm.pp.se> <a43edf1b0811140528h5f8446b7i62ae9b2496fb1632@mail.gmail.com> <alpine.DEB.1.10.0811141437100.10993@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20081114154741.GA20271@rap.rap.dk>
+In-Reply-To: <alpine.DEB.1.10.0811141437100.10993@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
-Cc: linux-raid@vger.kernel.org
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 14/11/2008 15:47, Keld J=F8rn Simonsen wrote:
-> On Thu, Oct 23, 2008 at 03:40:00PM +0200, Keld J=F8rn Simonsen wrote:
->> Hi list
->>
->> how do I get mail notification on kernel 2.6.12, mdadm v1.12.0?
->> I have looked in the man pages and tried various ways, but
->> without luck till now.
->=20
-> I got no answers for this. Is it really not possible, or is this
-> irrelevant to this list?
+Mikael Abrahamsson wrote:
+> On Fri, 14 Nov 2008, Billy Crook wrote:
+> 
+>> Obviously RAID-class drives benefit in hardware raid (with hardware
+>> raid controllers).  But do RAID-class drives benefit when used on a
+>> non-raid hardware controller, with linux software raid (mdadm)?  What
+>> about a hardware raid controller in JBOD mode?
+> 
+> This is not a HW vs SW issue, it has to to with the behaviour of the 
+> drives in conjunction with the OS when a certain thing happens.
+> 
+> In a non-raid environment, you want to read the data at any cost, so 
+> waiting 2 seconds for it to read is no real problem, you just want the 
+> data.
+> 
+> In a raid environment you can reproduce the block by way of mirror or 
+> parity, so you want the read to fail after a short time so it won't delay
+> the reading of the data.
 
-Your distro should set it up for you, otherwise set MAILADDR in your=20
-mdadm.conf and run `mdadm --monitor`.
+Here is a paper about the Western  Digital feature "TLER", which is used 
+in all their RE series RAID drives.
 
-Cheers,
+http://www.wdc.com/en/library/sata/2579-001098.pdf
 
-John.
---=20
-John Robinson, yuiop IT services
-0131 557 9577 / 07771 784 058
-46/12 Broughton Road, Edinburgh EH7 4EE
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+In addition, these drives are better able to cope with the problem of 
+mechanical vibration/resonance that occurs when multiple drives are 
+mounted in close proximity:
+
+http://www.wdc.com/en/library/sata/2579-001079.pdf
+
+These features will benefit HW and SW RAID implementations.
+
+I have no association with Western Digital, other than as a satisfied user.
+
+Regards,
+
+Richard
+
