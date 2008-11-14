@@ -1,35 +1,43 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: 2.6.27.6 question: ata_sff_hsm_move: ata15 (why always ata15)?
-Date: Sun, 16 Nov 2008 15:14:01 +0900
-Message-ID: <491FBA29.3000803@kernel.org>
-References: <alpine.DEB.1.10.0811141850590.6217@p34.internal.lan>	<491E4092.5030804@shaw.ca> <20081115103424.34f01370@lxorguk.ukuu.org.uk>
+From: mastercard <mastercard@redprol.com>
+Subject: How to celebrate New Year
+Date: Fri, 14 Nov 2008 19:36:13 +0300
+Message-ID: <d26d9dc6ec5348031a15d40377a7f503@www.tabletes.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20081115103424.34f01370@lxorguk.ukuu.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Robert Hancock <hancockr@shaw.ca>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: pdh@netcom.com, trejoy@hotmail.com, soaps-cbs@grafex.sbay.org, majordomo@sodre.net, part4_921503940@rtfm.mit.edu, amydane@harwood.iii.net, jmin@sunny.cs.byu.edu
 List-Id: linux-raid.ids
 
-Alan Cox wrote:
-> On Fri, 14 Nov 2008 21:22:58 -0600
-> Robert Hancock <hancockr@shaw.ca> wrote:
-> 
->> Justin Piszcz wrote:
->>> I am trying to find out what the root cause of this error/problem is:
->>> https://bugzilla.redhat.com/show_bug.cgi?id=462425
->> The problem is that people assume that timeouts with DRDY like that bug 
->> refers to must be the same problem when it is often not
-> 
-> The first stopping point is to apply the DRQ drain patch I sent to the
-> list some time ago and is hopefully lined up for 2.6.29. After that point
-> you can begin to look at the remaining cases, until then its hardly worth
-> it.
 
-Is it really?  For many SATA controllers, DRQ draining isn't really
-necessary.  PATA might be a completely different story tho.
+Hydrocod...
+Oxycod...
+Phenter...
+Xan...
+Vali...
+Codein...
 
--- 
-tejun
+Find all possible controlled & non-controlled medicines at 
+http://oxyco.net
+
+Our prices are low, save up to 30% of the regular price worldwide.
+http://oxyco.net
+
+
+
+
+
+
+
+
+uroven igry golovoy na urovne igry golovoy u nas ne ochen vysokiy
+schastlivye trusov ne nadevaut
+na sorok pervoy minute napadauschiy udaril golovoy v perekladinu
+bolshoy programme - blshie gluki
+i serost stanovitsya zametnoy esli unichtozhit ves cvet
+v shtrafnoy naturalnaya myasorubka izvinite za eti sportivnye terminy
+myach popal v kochku k tomu zhe golovko ottolknul sopernika
+gimmler vyzyvaet svoego sotrudnika - nazovite dvuznachnoe chislo - 45 - a pochemu ne 54 - potomu chto 45 gimmler  pishet  harakteristiku  harakter nordicheskiy i vyzyvaet sleduuschego - nazovite dvuznachnoe chislo - 28 - a pochemu ne  82 - mozhno konechno i 82 no luchshe 28 gimmler  pishet  harakteristiku harakter blizok k nordicheskomu i vyzyvaet sleduuschego - nazovite dvuznachnoe chislo - 33 - a pochemu ne a eto vy shtirlic  
+v polnoch k domu shtirlica podehali dve mashiny s sotrudnikami  ss  dvoe  podoshli  k dveri i postuchali  ostalnye ocepili chernyy hod i okna    - shtirlic otkroyte -    shtirlic podoshel k dveri i tiho proiznes    - nikogo net doma -    - a kto govorit -    - govorit berlinskoe radio berlinskoe vremya 15 chasov esesovcy seli v mashiny i uehali    golos za kadrom    - vot tak opytnyy sovetskiy razvedchik vodil za nos sotrudnikov ss  
+
