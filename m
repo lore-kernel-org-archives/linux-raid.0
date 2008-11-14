@@ -1,63 +1,74 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: OT: Tips for good hard drives for a home server
-Date: Fri, 14 Nov 2008 12:51:09 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0811141250040.16928@p34.internal.lan>
-References: <3ECBDC05781B3D48ABD520A01ABF2F9B299C974A5A@SE-EX008.groupinfra.com>  <7d86ddb90811120619vca13676tb0192676ece0cb93@mail.gmail.com>  <491CA255.4070402@tmr.com>  <alpine.DEB.1.10.0811132357390.10993@uplift.swm.pp.se>
- <a43edf1b0811140528h5f8446b7i62ae9b2496fb1632@mail.gmail.com> <alpine.DEB.1.10.0811141437100.10993@uplift.swm.pp.se> <491DB9A4.7080308@sauce.co.nz>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: typo in raid[456] kernel code/no change based on type?
+Date: Fri, 14 Nov 2008 18:53:42 +0100
+Message-ID: <20081114175342.GK17300@skl-net.de>
+References: <alpine.DEB.1.10.0811121855470.10512@p34.internal.lan> <alpine.DEB.1.10.0811121858300.10512@p34.internal.lan> <20081114121942.GN17966@skl-net.de> <alpine.DEB.1.10.0811140743050.20662@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Cy+5HEalSgyXkpVS"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <491DB9A4.7080308@sauce.co.nz>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.1.10.0811140743050.20662@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
+--Cy+5HEalSgyXkpVS
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Sat, 15 Nov 2008, Richard Scobie wrote:
+On 08:05, Justin Piszcz wrote:
+> [ patch ]
+>=20
+> # patch -p1 < /home/jpiszcz/patch=20
+> patching file drivers/md/raid5.c
+> Hunk #1 succeeded at 4302 (offset -41 lines).
+>=20
+> Ok, fixed some of them but not all:
 
-> Mikael Abrahamsson wrote:
->> On Fri, 14 Nov 2008, Billy Crook wrote:
->> 
->>> Obviously RAID-class drives benefit in hardware raid (with hardware
->>> raid controllers).  But do RAID-class drives benefit when used on a
->>> non-raid hardware controller, with linux software raid (mdadm)?  What
->>> about a hardware raid controller in JBOD mode?
->> 
->> This is not a HW vs SW issue, it has to to with the behaviour of the drives 
->> in conjunction with the OS when a certain thing happens.
->> 
->> In a non-raid environment, you want to read the data at any cost, so 
->> waiting 2 seconds for it to read is no real problem, you just want the 
->> data.
->> 
->> In a raid environment you can reproduce the block by way of mirror or 
->> parity, so you want the read to fail after a short time so it won't delay
->> the reading of the data.
->
-> Here is a paper about the Western  Digital feature "TLER", which is used in 
-> all their RE series RAID drives.
->
-> http://www.wdc.com/en/library/sata/2579-001098.pdf
->
-> In addition, these drives are better able to cope with the problem of 
-> mechanical vibration/resonance that occurs when multiple drives are mounted 
-> in close proximity:
->
-> http://www.wdc.com/en/library/sata/2579-001079.pdf
->
-> These features will benefit HW and SW RAID implementations.
->
-> I have no association with Western Digital, other than as a satisfied user.
->
+Sure. The main part of the raid 4/5/6 code is in the single file raid5.c
+which frequently calls all its supported raid levels "raid5". The patch
+I've posted only cleans up one function in that file.
 
-I have enabled TLER on all of my Velociraptors, we will see if they 'hang'
-up anymore and drop out of the raid or just throw bad sector errors right
-away, however, I am not sure md(Linux) can handle this, where as a 3ware card
-remaps the bad sector, the kernel does not (or at least I have never seen it
-do it on my system), instead the drive shows an Uncorrectable_Sector or 
-similar..
+> Here is the current output that still contains 'raid5':
+>=20
+> $ dmesg | grep -i raid5
+> [   19.881548] md: raid5 personality registered for level 5
+> [   21.408354] raid5: device sdl1 operational as raid disk 8
+> [   21.410583] raid5: device sdk1 operational as raid disk 1
+> [   21.412789] raid5: device sdj1 operational as raid disk 5
+> [   21.414994] raid5: device sdi1 operational as raid disk 9
+> [   21.417217] raid5: device sdh1 operational as raid disk 7
+> [   21.419420] raid5: device sdg1 operational as raid disk 6
+> [   21.421622] raid5: device sdf1 operational as raid disk 3
+> [   21.423810] raid5: device sde1 operational as raid disk 2
+> [   21.425970] raid5: device sdd1 operational as raid disk 0
+> [   21.428090] raid5: device sdc1 operational as raid disk 4
+> [   21.430884] raid5: allocated 10568kB for md3
+> [   21.433023] raid5: raid level 6 set md3 active with 10 out of 10=20
+> devices, algorithm 2
 
-Justin.
+Of course these can also be fixed easily. But let's first see whether
+Neil wants to take such trivial stuff ATM.
 
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--Cy+5HEalSgyXkpVS
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFJHbsmWto1QDEAkw8RAiuuAJ0YCThKJcBibv+C3H0e51elcgkcawCcDFGQ
+pnDsCI+yxn+3GxrtK28AIgQ=
+=Y+Lb
+-----END PGP SIGNATURE-----
+
+--Cy+5HEalSgyXkpVS--
