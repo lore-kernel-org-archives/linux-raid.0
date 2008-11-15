@@ -1,85 +1,33 @@
-From: Peter Rabbitson <rabbit+list@rabbit.us>
-Subject: Re: And again help on deciphering an error (continued)
-Date: Sat, 15 Nov 2008 09:37:51 +0100
-Message-ID: <491E8A5F.407@rabbit.us>
-References: <4907A5FA.7050903@rabbit.us> <491DC218.9010301@rabbit.us> <alpine.DEB.1.10.0811141456550.22161@p34.internal.lan> <491DDA43.4030600@sauce.co.nz> <alpine.DEB.1.10.0811141505400.22451@p34.internal.lan> <alpine.DEB.1.10.0811141510470.22451@p34.internal.lan> <491E47BA.1060204@shaw.ca>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: 2.6.27.6 question: ata_sff_hsm_move: ata15 (why always ata15)?
+Date: Sat, 15 Nov 2008 10:34:24 +0000
+Message-ID: <20081115103424.34f01370@lxorguk.ukuu.org.uk>
+References: <alpine.DEB.1.10.0811141850590.6217@p34.internal.lan>
+	<491E4092.5030804@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <491E47BA.1060204@shaw.ca>
-Sender: linux-raid-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <491E4092.5030804@shaw.ca>
+Sender: linux-ide-owner@vger.kernel.org
 To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Robert Hancock wrote:
+On Fri, 14 Nov 2008 21:22:58 -0600
+Robert Hancock <hancockr@shaw.ca> wrote:
+
 > Justin Piszcz wrote:
->> Here are some more:
->>
->> Jul 14 05:54:55 p34 kernel: [478107.751877] ata4.00: exception Emask
->> 0x0 SAct 0x0 SErr 0x0 action 0x0
->> Jul 14 05:54:55 p34 kernel: [478107.751883] ata4.00: irq_stat 0x40000001
->> Jul 14 05:54:55 p34 kernel: [478107.751889] ata4.00: cmd
->> 25/00:f8:08:b0:ee/00:00:22:00:00/e0 tag 0 dma 126976 in
->> Jul 14 05:54:55 p34 kernel: [478107.751890]          res
->> 51/40:f8:47:b0:ee/00:00:22:00:00/e0 Emask 0x9 (media error)
->> Jul 14 05:54:55 p34 kernel: [478107.751895] ata4.00: status: { DRDY ERR }
->> Jul 14 05:54:55 p34 kernel: [478107.751898] ata4.00: error: { UNC }
+> > I am trying to find out what the root cause of this error/problem is:
+> > https://bugzilla.redhat.com/show_bug.cgi?id=462425
 > 
-> Drive reporting an uncorrectable error on a read command.
-> 
->> Nov  9 09:25:19 p34 kernel: [ 3686.460568] ata4.00: exception Emask
->> 0x0 SAct 0x0 SErr 0x0 action 0x0
->> Nov  9 09:25:19 p34 kernel: [ 3686.460574] ata4.00: irq_stat 0x40000001
->> Nov  9 09:25:19 p34 kernel: [ 3686.460579] ata4.00: cmd
->> ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
->> Nov  9 09:25:19 p34 kernel: [ 3686.460580]          res
->> 51/10:00:34:cf:f3/00:00:00:f3:40/a3 Emask 0x81 (invalid argument)
->> Nov  9 09:25:19 p34 kernel: [ 3686.460585] ata4.00: status: { DRDY ERR }
->> Nov  9 09:25:19 p34 kernel: [ 3686.460589] ata4.00: error: { IDNF }
-> 
-> Flush cache returned ID not found (drive couldn't find a sector)
-> 
->> Nov  9 09:25:24 p34 kernel: [ 3691.461173] ata4.00: qc timeout (cmd 0xec)
->> Nov  9 09:25:24 p34 kernel: [ 3691.461183] ata4.00: failed to IDENTIFY
->> (I/O error, err_mask=0x5)
->> Nov  9 09:25:24 p34 kernel: [ 3691.461187] ata4.00: revalidation
->> failed (errno=-5)
->> Nov  9 09:25:24 p34 kernel: [ 3691.461192] ata4: hard resetting link
->> Nov  9 09:25:24 p34 kernel: [ 3691.766178] ata4: SATA link up 3.0 Gbps
->> (SStatus 123 SControl 300)
->> Nov  9 09:25:24 p34 kernel: [ 3691.803834] ata4.00: configured for
->> UDMA/133
->> Nov  9 09:25:24 p34 kernel: [ 3691.803846] end_request: I/O error, dev
->> sdd, sector 586067135
->> Nov  9 09:25:24 p34 kernel: [ 3691.803849] md: super_written gets
->> error=-5, uptodate=0
->> Nov  9 09:25:24 p34 kernel: [ 3691.803853] raid5: Disk failure on
->> sdd1, disabling device.
->> Nov  9 09:25:24 p34 kernel: [ 3691.803854] raid5: Operation continuing
->> on 8 devices.
->>
->> Nov 12 01:22:28 p34 kernel: [64894.610696] ata9.00: exception Emask
->> 0x0 SAct 0x0 SErr 0x0 action 0x0
->> Nov 12 01:22:28 p34 kernel: [64894.610703] ata9.00: irq_stat
->> 0x00020002, device error via D2H FIS
->> Nov 12 01:22:28 p34 kernel: [64894.610708] ata9.00: cmd
->> ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
->> Nov 12 01:22:28 p34 kernel: [64894.610709]          res
->> 51/04:00:34:cf:f3/00:00:00:f3:40/a3 Emask 0x1 (device error)
->> Nov 12 01:22:28 p34 kernel: [64894.610714] ata9.00: status: { DRDY ERR }
->> Nov 12 01:22:28 p34 kernel: [64894.610718] ata9.00: error: { ABRT }
-> 
-> Flush cache returned command aborted, presumably because the write to
-> media failed.
-> 
-> Looks like some sick drives, or some other more global problem (power,
-> temperature, etc.) to me..
-> 
+> The problem is that people assume that timeouts with DRDY like that bug 
+> refers to must be the same problem when it is often not
 
-But an _identical_ sector number? Looks too unlikely... I might try to
-crank open hexedit and write repeatedly to this place. Sectors are still
-512 bytes right?
+The first stopping point is to apply the DRQ drain patch I sent to the
+list some time ago and is hopefully lined up for 2.6.29. After that point
+you can begin to look at the remaining cases, until then its hardly worth
+it.
 
-Peter
+Alan
+
