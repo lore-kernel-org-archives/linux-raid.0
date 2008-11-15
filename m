@@ -1,33 +1,49 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: 2.6.27.6 question: ata_sff_hsm_move: ata15 (why always ata15)?
-Date: Sat, 15 Nov 2008 10:34:24 +0000
-Message-ID: <20081115103424.34f01370@lxorguk.ukuu.org.uk>
-References: <alpine.DEB.1.10.0811141850590.6217@p34.internal.lan>
-	<491E4092.5030804@shaw.ca>
+From: berk walker <berk@panix.com>
+Subject: Re: mail notification of raid problems on 2.6.12
+Date: Sat, 15 Nov 2008 09:54:13 -0500
+Message-ID: <491EE295.6060101@panix.com>
+References: <20081023133959.GA29695@rap.rap.dk> <20081114154741.GA20271@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <491E4092.5030804@shaw.ca>
-Sender: linux-ide-owner@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20081114154741.GA20271@rap.rap.dk>
+Sender: linux-raid-owner@vger.kernel.org
+To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 14 Nov 2008 21:22:58 -0600
-Robert Hancock <hancockr@shaw.ca> wrote:
+Keld J=F8rn Simonsen wrote:
+> On Thu, Oct 23, 2008 at 03:40:00PM +0200, Keld J=F8rn Simonsen wrote:
+>  =20
+>> Hi list
+>>
+>> how do I get mail notification on kernel 2.6.12, mdadm v1.12.0?
+>> I have looked in the man pages and tried various ways, but
+>> without luck till now.
+>>    =20
+>
+> I got no answers for this. Is it really not possible, or is this
+> irrelevant to this list?
+>
+> Best regards
+> keld
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>  =20
 
-> Justin Piszcz wrote:
-> > I am trying to find out what the root cause of this error/problem is:
-> > https://bugzilla.redhat.com/show_bug.cgi?id=462425
-> 
-> The problem is that people assume that timeouts with DRDY like that bug 
-> refers to must be the same problem when it is often not
+Look a bit deeper into mdadm manage -m (mail)  the delivery of the mail=
+, sound effects, etc need to be excecuted by your system.
 
-The first stopping point is to apply the DRQ drain patch I sent to the
-list some time ago and is hopefully lined up for 2.6.29. After that point
-you can begin to look at the remaining cases, until then its hardly worth
-it.
+Berk
 
-Alan
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
