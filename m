@@ -1,47 +1,35 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.27.6 question: ata_sff_hsm_move: ata15 (why always ata15)?
-Date: Sat, 15 Nov 2008 17:00:32 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0811151659300.27937@p34.internal.lan>
-References: <alpine.DEB.1.10.0811141850590.6217@p34.internal.lan> <slrnghu29r.6oa.Mario.Holbe@darkside.dyn.samba-tng.org>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: md.txt, preread_bypass_threshold and raid5: corrected error
+Date: Sat, 15 Nov 2008 15:52:06 -0700
+Message-ID: <e9c3a7c20811151452p4ba18eaai89962572579c0891@mail.gmail.com>
+References: <alpine.DEB.1.10.0811121144250.12675@p34.internal.lan>
+	 <e9c3a7c20811141700v736d7a3ep4362a96fc5afe90b@mail.gmail.com>
+	 <491F0C44.9070403@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <slrnghu29r.6oa.Mario.Holbe@darkside.dyn.samba-tng.org>
+In-Reply-To: <491F0C44.9070403@sauce.co.nz>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.orglinux-ide@vger.kernel.org
+To: Richard Scobie <richard@sauce.co.nz>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-
-
-On Sat, 15 Nov 2008, Mario 'BitKoenig' Holbe wrote:
-
-> Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
->> I have enabled debugging in the libata.h file and I find that ata15 is
->> constantly being accessed for some reason, why is this?
-> ...
->> Host: scsi14 Channel: 00 Id: 00 Lun: 00
->>    Vendor: _NEC     Model: DVD_RW ND-3520A  Rev: 1.04
->>    Type:   CD-ROM                           ANSI  SCSI revision: 05
+On Sat, Nov 15, 2008 at 10:52 AM, Richard Scobie <richard@sauce.co.nz> wrote:
+> Dan Williams wrote:
 >
-> Well, if ata15 really is the CD-ROM, hal is likely to poll it :/
+>> By default MD tries to be fair and allow partially written stripes the
+>> same access to the disk as fully written stripes to prevent starvation
+>> for little writers.  However, you can sometimes eek out more streaming
+>> performance at the cost of fairness by increasing this value (where 0
+>> == never let a preread pass a full-stripe-write).
 >
+> I believe XFS optimises for full stripe writes, so perhaps this setting is
+> of more benefit for other file systems?
 >
-> regards
->   Mario
-> -- 
-> Evidently men are more intelligent than women. Every woman on earth
-> believes that men should be able to read minds. Every man knows this
-> is impossible. Ergo, we are more intelligent.
 
-Yes, for this -specific- issue, it was HAL polling the DVD drive multiple 
-times a second, this fixed that:
+Not really.  XFS was used when benchmarking this change [1] and was
+able to measure a performance gain.
 
-# hal-disable-polling --device /dev/sr0 
-Following symlink from /dev/sr0 to /dev/scd0.
-Polling for drive /dev/sr0 have been disabled. The fdi file written was
-   /etc/hal/fdi/information/media-check-disable-storage_model_DVD_RW_ND_3520A.fdi
-
-#
-
-Justin.
+[1] http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=8b3e6cdc53b7f29f7026955d6cb6902a49322a15
