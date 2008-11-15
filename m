@@ -1,41 +1,35 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.27.6 question: ata_sff_hsm_move: ata15 (why always ata15)?
-Date: Fri, 14 Nov 2008 19:12:45 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0811141912190.6297@p34.internal.lan>
-References: <alpine.DEB.1.10.0811141850590.6217@p34.internal.lan>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: [PATCH 01/11] async_tx: don't use src_list argument of async_xor() for dma addresses
+Date: Fri, 14 Nov 2008 17:42:27 -0700
+Message-ID: <e9c3a7c20811141642q7608e642sd14b3021223a2d3c@mail.gmail.com>
+References: <1226589364-5619-1-git-send-email-yanok@emcraft.com>
+	 <1226589364-5619-2-git-send-email-yanok@emcraft.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0811141850590.6217@p34.internal.lan>
+In-Reply-To: <1226589364-5619-2-git-send-email-yanok@emcraft.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+To: Ilya Yanok <yanok@emcraft.com>
+Cc: linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, yur@emcraft.com, wd@denx.de, dzu@denx.de
 List-Id: linux-raid.ids
 
-
-On Fri, 14 Nov 2008, Justin Piszcz wrote:
-
-> I am trying to find out what the root cause of this error/problem is:
-> https://bugzilla.redhat.com/show_bug.cgi?id=462425
+On Thu, Nov 13, 2008 at 8:15 AM, Ilya Yanok <yanok@emcraft.com> wrote:
+> Using src_list argument of async_xor() as a storage for dma addresses
+> implies sizeof(dma_addr_t) <= sizeof(struct page *) restriction which is
+> not always true.
 >
-> It seems like every week or other week someone else reports this on the 
-> linux-raid mailing list.
->
-> I have enabled debugging in the libata.h file and I find that ata15 is 
-> constantly being accessed for some reason, why is this?
->
-> The first two disks are md/RAID1, the other volume is not being written to or 
-> read:
->
+> Signed-off-by: Ilya Yanok <yanok@emcraft.com>
+> ---
 
-In messages:
+I don't like the stack space implications of this change.  Especially
+for large arrays we will be carrying two 'src_cnt' size arrays on the
+stack, one from MD and one from async_tx.  However, I think the
+current scheme of overwriting input parameters is pretty ugly.  So, I
+want to benchmark the performance implications of adding a GFP_NOIO
+allocation here, with the idea being that if the allocation fails we
+can still fallback to the synchronous code path.
 
-Nov 14 19:12:01 p34 kernel: [ 2485.558898] ata15: ata_dev_select: ENTER, device 0, wait 1
-Nov 14 19:12:01 p34 kernel: [ 2485.559318] ata15: ata_dev_select: ENTER, device 0, wait 1
-Nov 14 19:12:03 p34 kernel: [ 2487.554449] ata15: ata_dev_select: ENTER, device 0, wait 1
-Nov 14 19:12:03 p34 kernel: [ 2487.554725] ata15: ata_dev_select: ENTER, device 0, wait 1
-Nov 14 19:12:03 p34 kernel: [ 2487.555399] ata15: ata_dev_select: ENTER, device 0, wait 1
-Nov 14 19:12:03 p34 kernel: [ 2487.555746] ata15: ata_dev_select: ENTER, device 0, wait 1
-Nov 14 19:12:03 p34 kernel: [ 2487.556194] ata15: ata_dev_select: ENTER, device 0, wait 1
-Nov 14 19:12:03 p34 kernel: [ 2487.556449] ata15: ata_dev_select: ENTER, device 0, wait 1
-
+--
+Dan
