@@ -1,48 +1,83 @@
-From: Twigathy <twigathy@gmail.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
 Subject: Re: mail notification of raid problems on 2.6.12
-Date: Sat, 15 Nov 2008 15:41:43 +0000
-Message-ID: <1f0f1a960811150741s5a44210cw2867f41444b33081@mail.gmail.com>
-References: <20081023133959.GA29695@rap.rap.dk>
-	 <20081114154741.GA20271@rap.rap.dk> <491EE295.6060101@panix.com>
-	 <20081115152343.GA7822@rap.rap.dk>
+Date: Sat, 15 Nov 2008 17:06:35 +0100
+Message-ID: <20081115160635.GA8176@rap.rap.dk>
+References: <20081023133959.GA29695@rap.rap.dk> <20081114154741.GA20271@rap.rap.dk> <491EE295.6060101@panix.com> <20081115152343.GA7822@rap.rap.dk> <1f0f1a960811150741s5a44210cw2867f41444b33081@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20081115152343.GA7822@rap.rap.dk>
 Content-Disposition: inline
+In-Reply-To: <1f0f1a960811150741s5a44210cw2867f41444b33081@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?Q?Keld_J=C3=B8rn_Simonsen?= <keld@dkuug.dk>
+To: Twigathy <twigathy@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-RnJvbSB0aGUgbWRhZG0gbWFucGFnZSwgeW91IG5lZWQgdG8gZG8gIm1kYWRtIC0tbW9uaXRvciAt
-LXRlc3QgLS1zY2FuIgooT3IgcG9zc2libGUgYW4gbWQgZGV2aWNlIG5hbWUpIHRvIGdldCBpdCB0
-byBzZW5kIHlvdSBzb21lIHRlc3QgbWFpbHMuCkkganVzdCBjaGVja2VkIGl0IG9uIG15IHVidW50
-dSBzZXJ2ZXIgbWFjaGluZSBhbmQgaXQgcGVyZm9ybXMgYXMKZXhwZWN0ZWQgd2l0aCB0aGUgZm9s
-bG93aW5nIHNvZnR3YXJlOgprZXJuZWwgMi42LjI0LTIxLWdlbmVyaWMKbWRhZG0gLSB2Mi42LjMg
-LSAyMHRoIEF1Z3VzdCAyMDA3IChZaWtlcyEgVGhhdCdzIHByZXR0eSBvbGQuIEkgcmVhbGx5Cm91
-Z2h0IHRvIGRpc3QtdXBncmFkZSEpCgpUb20KCjIwMDgvMTEvMTUgS2VsZCBKw7hybiBTaW1vbnNl
-biA8a2VsZEBka3V1Zy5kaz46Cj4gT24gU2F0LCBOb3YgMTUsIDIwMDggYXQgMDk6NTQ6MTNBTSAt
-MDUwMCwgYmVyayB3YWxrZXIgd3JvdGU6Cj4+IEtlbGQgSsO4cm4gU2ltb25zZW4gd3JvdGU6Cj4+
-ID5PbiBUaHUsIE9jdCAyMywgMjAwOCBhdCAwMzo0MDowMFBNICswMjAwLCBLZWxkIErDuHJuIFNp
-bW9uc2VuIHdyb3RlOgo+PiA+Cj4+ID4+SGkgbGlzdAo+PiA+Pgo+PiA+PmhvdyBkbyBJIGdldCBt
-YWlsIG5vdGlmaWNhdGlvbiBvbiBrZXJuZWwgMi42LjEyLCBtZGFkbSB2MS4xMi4wPwo+PiA+Pkkg
-aGF2ZSBsb29rZWQgaW4gdGhlIG1hbiBwYWdlcyBhbmQgdHJpZWQgdmFyaW91cyB3YXlzLCBidXQK
-Pj4gPj53aXRob3V0IGx1Y2sgdGlsbCBub3cuCj4+ID4+Cj4+ID4KPj4gPkkgZ290IG5vIGFuc3dl
-cnMgZm9yIHRoaXMuIElzIGl0IHJlYWxseSBub3QgcG9zc2libGUsIG9yIGlzIHRoaXMKPj4gPmly
-cmVsZXZhbnQgdG8gdGhpcyBsaXN0Pwo+PiA+Cj4+Cj4+IExvb2sgYSBiaXQgZGVlcGVyIGludG8g
-bWRhZG0gbWFuYWdlIC1tIChtYWlsKSAgdGhlIGRlbGl2ZXJ5IG9mIHRoZSBtYWlsLAo+PiBzb3Vu
-ZCBlZmZlY3RzLCBldGMgbmVlZCB0byBiZSBleGNlY3V0ZWQgYnkgeW91ciBzeXN0ZW0uCj4KPiBX
-ZWxsLCAtLW1hbmFnZSAtbSBkaWQgbm90IHdvcmssIG1kYWRtIHNheXM6Cj4KPiBtZGFkbTogb3B0
-aW9uIG0gbm90IHZhbGlkIGluIG1hbmFnZSBtb2RlCj4KPiBtZGFkbSAtIHYxLjEyLjAgLSAxNCBK
-dW5lIDIwMDUKPiBUaGF0IGlzIHRoZSB2ZXJzaW9uIEkgcnVuIGFzIHRoaXMgaXMgbWFpbnRhaW5l
-ZCBieSBteSBPUyB2ZW5kb3IuCj4KPiBBbmQgSSBkaWQgdGVzdCBtZGFkbSAtLW1hbmFnZSAtbSBi
-ZWZvcmUgYXNraW5nIG15IGZpcnN0IHF1ZXN0aW9uLgo+Cj4gTm93IG1kYWRtIC0tbW9uaXRvciAt
-LXNjYW4gZGlkIG5vdCBjb21wbGFpbiBhYm91dCBteSBNQUlMQUREUgo+IGxpbmUgaW4gL2V0Yy9t
-ZGFkbS5jb25mIC4gQnV0IEkgd291bGQgbGlrZSB0byB0ZXN0IGl0LCBhbmQKPiBtZGFkbSAtLW1h
-bmFnZSAtdCBpcyBub3QgYWxsb3dlZC4gSG93IGRvIEkgdHJpZ2dlciBhIG1lc3NhZ2U/Cj4KPiBC
-ZXN0IHJlZ2FyZHMKPiBrZWxkCj4gLS0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDog
-c2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtcmFpZCIgaW4KPiB0aGUgYm9keSBvZiBh
-IG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZwo+IE1vcmUgbWFqb3Jkb21vIGlu
-Zm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbAo+Cg==
+On Sat, Nov 15, 2008 at 03:41:43PM +0000, Twigathy wrote:
+> >From the mdadm manpage, you need to do "mdadm --monitor --test --sca=
+n"
+> (Or possible an md device name) to get it to send you some test mails=
+=2E
+> I just checked it on my ubuntu server machine and it performs as
+> expected with the following software:
+> kernel 2.6.24-21-generic
+> mdadm - v2.6.3 - 20th August 2007 (Yikes! That's pretty old. I really
+> ought to dist-upgrade!)
+
+Thanks, that worked, even on my old old setup.
+
+I will add info on this on the wiki.
+
+Best regards
+keld
+
+> Tom
+>=20
+> 2008/11/15 Keld J=F8rn Simonsen <keld@dkuug.dk>:
+> > On Sat, Nov 15, 2008 at 09:54:13AM -0500, berk walker wrote:
+> >> Keld J=F8rn Simonsen wrote:
+> >> >On Thu, Oct 23, 2008 at 03:40:00PM +0200, Keld J=F8rn Simonsen wr=
+ote:
+> >> >
+> >> >>Hi list
+> >> >>
+> >> >>how do I get mail notification on kernel 2.6.12, mdadm v1.12.0?
+> >> >>I have looked in the man pages and tried various ways, but
+> >> >>without luck till now.
+> >> >>
+> >> >
+> >> >I got no answers for this. Is it really not possible, or is this
+> >> >irrelevant to this list?
+> >> >
+> >>
+> >> Look a bit deeper into mdadm manage -m (mail)  the delivery of the=
+ mail,
+> >> sound effects, etc need to be excecuted by your system.
+> >
+> > Well, --manage -m did not work, mdadm says:
+> >
+> > mdadm: option m not valid in manage mode
+> >
+> > mdadm - v1.12.0 - 14 June 2005
+> > That is the version I run as this is maintained by my OS vendor.
+> >
+> > And I did test mdadm --manage -m before asking my first question.
+> >
+> > Now mdadm --monitor --scan did not complain about my MAILADDR
+> > line in /etc/mdadm.conf . But I would like to test it, and
+> > mdadm --manage -t is not allowed. How do I trigger a message?
+> >
+> > Best regards
+> > keld
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-rai=
+d" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
