@@ -1,42 +1,71 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: raid6's using not the best bandwidth method && raid6 algo is
- significantly slower in x86_64.
-Date: Sun, 16 Nov 2008 16:36:07 -0800
-Message-ID: <4920BC77.9010709@zytor.com>
-References: <43d009740811160818v49c530b1r9e01b79c1d9dcfdd@mail.gmail.com>
+From: "Wesley Leggette" <wleggette@kaylix.net>
+Subject: Calculate logical RAID-6 position from physical position
+Date: Sun, 16 Nov 2008 18:35:06 -0600 (CST)
+Message-ID: <64146.71.201.40.108.1226882106.squirrel@www.kaylix.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43d009740811160818v49c530b1r9e01b79c1d9dcfdd@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: for.poige+linux@gmail.com
-Cc: linux-raid@vger.kernel.org, neilb@suse.de
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Igor Podlesny wrote:
-> 
-> So, there're 2 strange things in those dmesgs. The first one might be
-> unrelated to Linux RAID but affects it -- have you noticed that in
-> x86_64, raid6 algorithm is ~ 50 % slower, than in x86_32? Is that due
-> to not too optimized code for x86_64 mode? And the second -- why is
-> raid6 using algorithm sse2x4 (3175 MB/s), whereas int64x2 gives
-> slightly better (~ 15 %) throughput -- 3660 MB/s?
-> 
-> Has anyone on the list similar observations? Can gcc's version
-> difference affect so much? I doubt that, but I can try build x86_32
-> with gcc 4.3.1 (as x86_64 was).
-> 
+I have had a three-disk failure on a RAID 6 array. On the third disk, I
+can mostly recover it with dd_rescue, from which I know exactly which
+blocks were affected. From this, how can I calculate the logical positions
+that will be affected when I reassemble the RAID?
 
-The SSE modes have nicer cache behaviours and are therefore preferred
-even if they are slower.
+This is 2.6.26-bpo.1-686-bigmem (Debian 2.6.26-4~bpo40+1)
 
-It is very odd that your SSE2 modes are that much slower in 64-bit mode.
- It could just be an artifact of the may the test is done (cache
-anomalies?), but I kind of suspect there is something more fishy going on.
+I'm looking for a general formula, but my specific scenario is:
 
-The sse2 code in the x1 and x2 case is actually identical between x86-32
-and -64 (the x4 case is only available for -64) so it is very strange
-that you're seeing this kind of effect.
+/dev/md0:
+       Version : 01.00.03
+ Creation Time : Sun Sep 30 09:14:07 2007
+    Raid Level : raid6
+    Array Size : 6349009472 (6054.89 GiB 6501.39 GB)
+   Device Size : 976770688 (465.76 GiB 500.11 GB)
+  Raid Devices : 15
+ Total Devices : 13
+Preferred Minor : 0
+   Persistence : Superblock is persistent
 
-	-hpa
+   Update Time : Sat Nov 15 02:32:54 2008
+         State : clean, degraded
+Active Devices : 13
+Working Devices : 13
+Failed Devices : 0
+ Spare Devices : 0
+
+    Chunk Size : 64K
+
+          Name : 'fargo':0
+          UUID : 64107957:2bad471d:603d9582:796e97f5
+        Events : 3279764
+
+   Number   Major   Minor   RaidDevice State
+      0       8      128        0      active sync   /dev/sdi
+      1       8      240        1      active sync   /dev/sdp
+      2       8       80        2      active sync   /dev/sdf
+      3       8      160        3      active sync   /dev/sdk
+      4       0        0        4      removed
+      5       8      176        5      active sync   /dev/sdl
+     15       8      224        6      active sync   /dev/sdo
+      7       8       96        7      active sync   /dev/sdg
+      8       8       64        8      active sync   /dev/sde
+      9       8      192        9      active sync   /dev/sdm
+     18       8       48       10      active sync   /dev/sdd
+     16       8       32       11      active sync   /dev/sdc
+     12       0        0       12      removed
+     13       8      112       13      active sync   /dev/sdh
+     17       8      208       14      active sync   /dev/sdn
+
+
+After some time, position 17 (/dev/sdn) was the disk that failed. The
+failure is 152 blocks from  5741236.0k to  5741311.5k. This is what I want
+to map to the logical layout.
+
+
+Wesley Leggette
+
+
