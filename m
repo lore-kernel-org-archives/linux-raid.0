@@ -1,35 +1,39 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: RAID-6 question.
-Date: Mon, 17 Nov 2008 08:09:50 -0800
-Message-ID: <4921974E.8050508@zytor.com>
-References: <alpine.DEB.1.10.0811100653060.21263@p34.internal.lan> <alpine.DEB.1.10.0811101101530.25411@p34.internal.lan> <4920BB05.3050206@zytor.com> <alpine.DEB.1.10.0811170440001.26146@p34.internal.lan>
+From: "Bin Guo" <bguo@starentnetworks.com>
+Subject: [PATCH] Manage: kernel 2.6.18 can re-add v1 superblocks.
+Date: Mon, 17 Nov 2008 14:37:55 -0500
+Message-ID: <1226950675.9688.88.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0811170440001.26146@p34.internal.lan>
+Content-Class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Linux-Raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Justin Piszcz wrote:
-> 
-> Yeah, one core was pegged at 100% for the resync, another (md_raidX)
-> process
-> was at ~35% on the second core.  The third and fourth core were unused
-> but immediately when I start the resync it definitley slowed down the
-> system quite a bit and hurt interactivity and as I mentioned before
-> *without* specifying a lower rebuild speed than the system's maximum I/O
-> the system is unusable until the rebuild completes, perhaps its a
-> combination of using all of the one core for the resync where raid5 may
-> not?  I recall w/raid5 I did not have to specify a lower limit for
-> max_rebuild KiB/s..
-> 
 
-RAID-5 recovery can use the normal accelerated functions, whereas RAID-6
-recovery can't (only a handful of CPUs have the operations needed to
-accelerate dual-disk recovery, and even for those it is not implemented
-at this point.)
+Commit 7eae7080 seems to exclude 2.6.18.
+---
+ Manage.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-	-hpa
+diff --git a/Manage.c b/Manage.c
+index 160778e..611d0a2 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -397,7 +397,7 @@ int Manage_subdevs(char *devname, int fd,
+ 				 * before 2.6.18 :-(
+ 				 */
+ 				if (array.major_version == 1 &&
+-				    get_linux_version() <= 2006018)
++				    get_linux_version() < 2006018)
+ 					;
+ 				else if (st->sb) {
+ 					st->ss->uuid_from_super(st, ouuid);
+-- 
+1.5.6.5
+
+
+
+This email and any attachments may contain legally privileged and/or confidential information of Starent Networks, Corp. and is intended only for the individual or entity named in the message.  The information transmitted may not be used to create or change any contractual obligations of Starent Networks, Corp.  Any review, retransmission, dissemination or other use of, or taking of any action in reliance upon this e-mail and its attachments by persons or entities other than the intended recipient is prohibited. If you are not the intended recipient, please notify the sender immediately -- by replying to this message or by sending an email to postmaster@starentnetworks.com -- and destroy all copies of this message and any attachments without reading or disclosing their contents. Thank you.
+ 
