@@ -1,46 +1,29 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: RE: raid6's using not the best bandwidth method && raid6 algo is
- significantly slower in x86_64.
-Date: Mon, 17 Nov 2008 14:35:28 -0800
-Message-ID: <200811172235.mAHMZAQt032187@terminus.zytor.com>
+From: "Igor Podlesny" <for.poige+linux@gmail.com>
+Subject: Re: raid6's using not the best bandwidth method && raid6 algo is significantly slower in x86_64.
+Date: Tue, 18 Nov 2008 19:03:12 +0700
+Message-ID: <43d009740811180403v6308dbc0y8ba093524700bb72@mail.gmail.com>
+References: <200811172235.mAHMZAQt032187@terminus.zytor.com>
+Reply-To: for.poige+linux@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-content-class: 
+In-Reply-To: <200811172235.mAHMZAQt032187@terminus.zytor.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: for.poige+linux@gmail.com
-Cc: linux-raid@vger.kernel.org, neilb@suse.de
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Interesting... Perhaps you could send me your "bad" kernel vmlinux or raid456.ko file; preferrably compiled with CONFIG_DEBUG_INFO.
+2008/11/18 H. Peter Anvin <hpa@zytor.com>:
+> Interesting... Perhaps you could send me your "bad" kernel vmlinux or raid456.ko file;
+
+	Mine raid456 isn't a module, it's built-in into kernel. Will be .o
+enough? Or would it be better to re-compile as module?
+
+> preferrably compiled with CONFIG_DEBUG_INFO.
+
+	ok.
 
 -- 
-Sent from my mobile phone (pardon any lack of formatting)
-
-
------Original Message-----
-From: Igor Podlesny <for.poige+linux@gmail.com>
-Sent: Monday, November 17, 2008 12:56
-To: H. Peter Anvin <hpa@zytor.com>
-Cc: linux-raid@vger.kernel.org; neilb@suse.de
-Subject: Re: raid6's using not the best bandwidth method && raid6 algo is significantly slower in x86_64.
-
-2008/11/17 H. Peter Anvin <hpa@zytor.com>:
-> Igor Podlesny wrote:
->>
-[...]
->> Has anyone on the list similar observations? Can gcc's version
->> difference affect so much? I doubt that, but I can try build x86_32
->> with gcc 4.3.1 (as x86_64 was).
->>
->
-> The SSE modes have nicer cache behaviours and are therefore preferred
-> even if they are slower.
->
-That was my guess that they're preferable (but I wasn't aware of exact
-reason, thanks!). :-)
->
-> It is very odd that your SSE2 modes are that much slower in 64-bit mode.
->  It could just be an artifact of the may the test is done (cache
-> anomalies?), but I kind of suspect there is something more fishy going on
+End of message. Next message?
