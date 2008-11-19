@@ -1,29 +1,67 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: raid6's using not the best bandwidth method && raid6 algo is
- significantly slower in x86_64.
-Date: Tue, 18 Nov 2008 07:47:13 -0800
-Message-ID: <4922E381.20501@zytor.com>
-References: <200811172235.mAHMZAQt032187@terminus.zytor.com> <43d009740811180403v6308dbc0y8ba093524700bb72@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH] md: fix multipath oops
+Date: Thu, 20 Nov 2008 08:57:50 +1100
+Message-ID: <18724.35806.320253.868473@notabene.brown>
+References: <20081117103203.GL17300@skl-net.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43d009740811180403v6308dbc0y8ba093524700bb72@mail.gmail.com>
+In-Reply-To: message from Andre Noll on Monday November 17
 Sender: linux-raid-owner@vger.kernel.org
-To: for.poige+linux@gmail.com
-Cc: linux-raid@vger.kernel.org
+To: Andre Noll <maan@systemlinux.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Igor Podlesny wrote:
-> 2008/11/18 H. Peter Anvin <hpa@zytor.com>:
->> Interesting... Perhaps you could send me your "bad" kernel vmlinux or raid456.ko file;
+On Monday November 17, maan@systemlinux.org wrote:
+> Hi
 > 
-> 	Mine raid456 isn't a module, it's built-in into kernel. Will be .o
-> enough? Or would it be better to re-compile as module?
-> 
->> preferrably compiled with CONFIG_DEBUG_INFO.
-> 
+> the current for-next kernel oopses on the 00multipath test of the
+> mdadm test suite. I'm not sure if the patch below is the best way to
+> fix this problem, but it avoids the oops and makes the 00multipath
+> test succeed. In the long run it might be preferable to use a wrapper
+> for sysfs_notify_dirent() that checks for NULL pointers, or even teach
+> sysfs_notify_dirent() to return early if it gets passed a NULL pointer.
 
-Built-in is fine.  I need the vmlinux file, though, not bzImage.
+Hi Andre,
+ Thanks for this.
+ I thought I had fixed that already, but maybe I hadn't pushed the
+ tree out.  I have now.
 
-	-hpa
+
+ BTW, I have two problems with your patch as it stands.
+> @@ -6233,8 +6233,8 @@ void md_check_recovery(mddev_t *mddev)
+>  	unlock:
+>  		if (!mddev->sync_thread) {
+>  			clear_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+> -			if (test_and_clear_bit(MD_RECOVERY_RECOVER,
+> -					       &mddev->recovery))
+> +			if (mddev->sysfs_action && test_and_clear_bit(
+> +				MD_RECOVERY_RECOVER, &mddev->recovery))
+>  				sysfs_notify_dirent(mddev->sysfs_action);
+>  		}
+
+1/ The indenting is not what I like.  Having the arguments to a
+function further left than the function name makes is hard to read.
+I would prefer
+
+			if (mddev->sysfs_action &&
+			    test_and_clear_bit(MD_RECOVERY_RECOVER,
+					       &mddev->recovery))
+				sysfs_notify_dirent(mddev->sysfs_action);
+
+which is one more line, but worth it.
+
+2/ You have introduced a subtle semantic change.  If ->sys_action is
+   NULL, we no longer clear MD_RECOVERY_RECOVER.  I suspect this isn't
+   actually an error in practice, but I think it is still the wrong
+   way around to do the tests.
+   I have
+			if (test_and_clear_bit(MD_RECOVERY_RECOVER,
+					       &mddev->recovery))
+				if (mddev->sysfs_action)
+					sysfs_notify_dirent(mddev->sysfs_action);
+
+
+Thanks,
+NeilBrown
