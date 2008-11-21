@@ -1,46 +1,59 @@
-From: Wolfgang Denk <wd@denx.de>
-Subject: Re: [OT] If RAID's not backup... what do you use?
-Date: Fri, 21 Nov 2008 12:56:53 +0100
-Message-ID: <20081121115653.554A5832E89D@gemini.denx.de>
-References: <49267F25.4080806@anonymous.org.uk>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Ninth(?) Velociraptor replacement or md(RAID)/smartmontools(?)
+ bug?
+Date: Fri, 21 Nov 2008 07:08:31 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0811210657110.5577@p34.internal.lan>
+References: <alpine.DEB.1.10.0811210600310.5577@p34.internal.lan> <49269BCF.8060300@rabbit.us> <20081121115415.6c872f11@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <49267F25.4080806@anonymous.org.uk>
+In-Reply-To: <20081121115415.6c872f11@lxorguk.ukuu.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Peter Rabbitson <rabbit+list@rabbit.us>, linux-raid <linux-raid@vger.kernel.org>, linux-kernel@vger.kernel.org, martmontools-support@lists.sourceforge.net, Bruce Allen <ballen@gravity.phys.uwm.edu>, westerndigital@custhelp.com, Alan Piszcz <ap@solarrain.com>
 List-Id: linux-raid.ids
 
-Dear John,
 
-In message <49267F25.4080806@anonymous.org.uk> you wrote:
-> I currently have a 3x1TB RAID-5 array. It contains backups of my other 
-> machines, taken with rsync. It's my central filestore, rsync'ed locally 
-> so I have previous editions. It also holds my media archive, and in 
-> particular my music collection that I really don't want to have to rip 
-> again. So while part of it is backup for other systems, part of it needs 
-> backed up. I'd like some means of coping with fire or theft of the 
-> server. I want something with some room to expand, which can do the 
-> whole job unattended. So what would the storage professionals here 
-> recommend? Tape autoloaders big enough to cope with >2TB seem stunningly 
-> expensive to me; even the tapes are as expensive per GB as hard drives...
 
-If price maters, buy the previous-to-current technology used on eBay
-or similar - say, some LTO2 autoloader/
+On Fri, 21 Nov 2008, Alan Cox wrote:
 
-Tapes can be stored savely for several years. Ever tried to  start  a
-disk that has been stored (afther having been used for some time) for
-- say - 5 years?
+>> Oct 27 11:33:41 Arzamas kernel: ata6.00: error: { IDNF ABRT }
+>
+> Different error. IDNF -> ID not found
+>
 
-Best regards,
+So the only thing in common is WD disks.  I don't know at this point.. NCQ with
+WD disks (at least raptor150s/300s) is completely broken and I have to disable
+it to use the disks without NCQ errors and dropping out of arrays (on 3 diff)
+systems with different chipsets, p35, 965.
 
-Wolfgang Denk
+This guy has the same errors I do when I enable NCQ.  It seems like WD raptors
+should be blacklisted from using NCQ in the kernel.
 
--- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-"Most people would like to be delivered  from  temptation  but  would
-like it to keep in touch."                             - Robert Orben
+NCQ: http://lkml.org/lkml/2007/10/17/380
+
+Concerning my error specifically:
+
+How much time have you spent replacing and RMA'ing disks?  Personally for me
+I spent $3600 on new velociraptors but after having spend hours, days with
+doing testing, replacing, I have spent much more in time than the drives are
+worth.  I am really getting sick and tired of it, every few days or every week
+its another drive failure (or more). What are you plans, just keep RMA'ing 
+and hopefully they'll find the bug and fix it or just give up and build a new 
+system for production and the RMA'ing can be a hobby in another system?
+
+What I meant when I asked did you buy them new, was, did you buy them recently,
+because with the raptor150s I have in another system, all 1+ year old, bought
+new but I wonder if they changed something in their firmware to cause this
+problem, when I opened a case with WD about the issue and spoke with someone
+in India they are only setup to answer basic questions and anything complicated
+you will get canned answer: "RMA."
+
+Time to dump WD raptor drives?
+
+I will note I am using several 750GiB drives without any issue whether
+NCQ is enabled or disabled in various raid and non-raid configurations.
+
+Comments--buggy raptors?
+
+Justin.
