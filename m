@@ -1,35 +1,54 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: [OT] If RAID's not backup... what do you use?
-Date: Fri, 21 Nov 2008 04:33:06 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0811210432350.1317@p34.internal.lan>
-References: <49267F25.4080806@anonymous.org.uk>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [PATCH] md: fix multipath oops
+Date: Fri, 21 Nov 2008 11:29:10 +0100
+Message-ID: <20081121102910.GM17300@skl-net.de>
+References: <20081117103203.GL17300@skl-net.de> <18724.35806.320253.868473@notabene.brown>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="egxrhndXibJAPJ54"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49267F25.4080806@anonymous.org.uk>
+Content-Disposition: inline
+In-Reply-To: <18724.35806.320253.868473@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
+--egxrhndXibJAPJ54
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, 21 Nov 2008, John Robinson wrote:
+On 08:57, Neil Brown wrote:
+> 2/ You have introduced a subtle semantic change.  If ->sys_action is
+>    NULL, we no longer clear MD_RECOVERY_RECOVER.  I suspect this isn't
+>    actually an error in practice, but I think it is still the wrong
+>    way around to do the tests.
+>    I have
+> 			if (test_and_clear_bit(MD_RECOVERY_RECOVER,
+> 					       &mddev->recovery))
+> 				if (mddev->sysfs_action)
+> 					sysfs_notify_dirent(mddev->sysfs_action);
 
-> I currently have a 3x1TB RAID-5 array. It contains backups of my other 
-> machines, taken with rsync. It's my central filestore, rsync'ed locally so I 
-> have previous editions. It also holds my media archive, and in particular my 
-> music collection that I really don't want to have to rip again. So while part 
-> of it is backup for other systems, part of it needs backed up. I'd like some 
-> means of coping with fire or theft of the server. I want something with some 
-> room to expand, which can do the whole job unattended. So what would the 
-> storage professionals here recommend? Tape autoloaders big enough to cope 
-> with >2TB seem stunningly expensive to me; even the tapes are as expensive 
-> per GB as hard drives...
+Yes, I agree that's more reasonable.
 
-The cheapest method?
+Thanks
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
 
-Create another host, rsync + tar daily to the other host with the same 
-configuration.
+--egxrhndXibJAPJ54
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
-Justin.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFJJo12Wto1QDEAkw8RAnAsAJ9fFrQIxi9RnvNQx6TJf4z2mo5X1QCggb7S
+KGLSpkAW3gIBF5xyVWN11wM=
+=w6QS
+-----END PGP SIGNATURE-----
+
+--egxrhndXibJAPJ54--
