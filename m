@@ -1,43 +1,34 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Ninth(?) Velociraptor replacement or md(RAID)/smartmontools(?)
-  bug?
-Date: Fri, 21 Nov 2008 16:30:53 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0811211629450.6615@p34.internal.lan>
-References: <alpine.DEB.1.10.0811210600310.5577@p34.internal.lan> <49269BCF.8060300@rabbit.us> <20081121115415.6c872f11@lxorguk.ukuu.org.uk> <alpine.DEB.1.10.0811210657110.5577@p34.internal.lan> <4926F60E.6040104@tmr.com> <4926FB63.8080802@sauce.co.nz>
+From: "Igor Podlesny" <for.poige+linux@gmail.com>
+Subject: Re: raid6's using not the best bandwidth method && raid6 algo is significantly slower in x86_64.
+Date: Sat, 22 Nov 2008 12:40:19 +0700
+Message-ID: <43d009740811212140l3ac2298ch512aca0e3631d269@mail.gmail.com>
+References: <200811172235.mAHMZAQt032187@terminus.zytor.com>
+	 <43d009740811180403v6308dbc0y8ba093524700bb72@mail.gmail.com>
+	 <4922E381.20501@zytor.com>
+	 <43d009740811211122m36809523mff9521ca8af95a1e@mail.gmail.com>
+	 <49270CA5.2090508@zytor.com>
+	 <43d009740811211133p7321bc39q1a1eccd9c53d6ca0@mail.gmail.com>
+	 <492716CE.8040900@zytor.com>
+Reply-To: for.poige+linux@gmail.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4926FB63.8080802@sauce.co.nz>
+In-Reply-To: <492716CE.8040900@zytor.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
-Cc: Bill Davidsen <davidsen@tmr.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+2008/11/22 H. Peter Anvin <hpa@zytor.com>:
+[...]
+> I just tested a version using gcc intrinsics with gcc 4.3, and it is
+> almost 20% faster than the inline assembly version.  That, plus the fact
+> that the code is actually readable, makes me really want to figure out
+> how best to deploy this.
 
+	Please let us know when commiting the patch -- 20 % is valuable. ;-)
 
-On Sat, 22 Nov 2008, Richard Scobie wrote:
-
-> Bill Davidsen wrote:
->
->
->> Well I guess I will have some data points after the weekend... I just got a 
->> new WD 1TB on sale from Newegg, and I'm going to be using it raid10 with a 
->> raid0 of a pair of Seagate 500GB, and expect to beat it somewhat severely 
->> moving data from place to place.
->
-> Hi Bill,
->
-> Justin's having trouble with the Raptor (10,000 RPM) models.
->
-> I have been running md RAID on > 50 WD RE/RE2/RE3 7200 500/750GB for some 
-> years now without trouble.
->
-> Justin, have you tried contacting WD support via email? I had good 
-> technically knowledgable support from them  a while back.
-Yeah, I tried it in the past, I am giving it another try now.
-
-The 750s seem to be rock solid drives, agree with you there, have another system
-here that has quite a few of them, no problems with it.
-
-Justin.
-
+-- 
+End of message. Next message?
