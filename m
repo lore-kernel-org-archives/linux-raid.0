@@ -1,34 +1,37 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: raid6's using not the best bandwidth method && raid6 algo is
- significantly slower in x86_64.
-Date: Sun, 23 Nov 2008 01:12:57 +0000
-Message-ID: <4928AE19.7030601@anonymous.org.uk>
-References: <200811172235.mAHMZAQt032187@terminus.zytor.com>	 <43d009740811180403v6308dbc0y8ba093524700bb72@mail.gmail.com>	 <4922E381.20501@zytor.com>	 <43d009740811211122m36809523mff9521ca8af95a1e@mail.gmail.com>	 <49270CA5.2090508@zytor.com>	 <43d009740811211133p7321bc39q1a1eccd9c53d6ca0@mail.gmail.com>	 <492716CE.8040900@zytor.com>	 <43d009740811212140l3ac2298ch512aca0e3631d269@mail.gmail.com>	 <49279BC5.8080106@zytor.com> <43d009740811212145x13d2e353l7d9fee3d912c89c0@mail.gmail.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: Velociraptor biting the dust (9th disk, continued to use it,
+   and..)
+Date: Sat, 22 Nov 2008 19:38:18 -0600
+Message-ID: <4928B40A.6020508@shaw.ca>
+References: <alpine.DEB.1.10.0811221638360.707@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43d009740811212145x13d2e353l7d9fee3d912c89c0@mail.gmail.com>
+In-Reply-To: <alpine.DEB.1.10.0811221638360.707@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, smartmontools-support@lists.sourceforge.net
 List-Id: linux-raid.ids
 
-On 22/11/2008 05:45, Igor Podlesny wrote:
-> 2008/11/22 H. Peter Anvin <hpa@zytor.com>:
-> [...]
->>>        Please let us know when commiting the patch -- 20 % is valuable.
->>> ;-)
->>>
->> Looks like I was a bit too optimistic.  The 20% was because of the missed
->> prefetchnta, which means polluting the cache.
+Justin Piszcz wrote:
+> I have several questions, to make things more clear I have segmented this
+> e-mail a bit-- any help with this issue would be greatly appreciated, 
+> thank you.
+> ================================================================================ 
 > 
-> 	Well, whatever it gives unless it's a regression. :-)
+> So I continued to use the disk and it started failing again:
+> A Fail event had been detected on md device /dev/md2.
+> It could be related to component device /dev/sda3.
+> This is as it happened according to the kernel/dmesg:
 
-Not sure I agree with that - if the 20% improvement were to have a heavy 
-impact on the rest of system performance when the system is already 
-going to be underperforming, it may not worth having (though it might be 
-an option for people who can afford the CPU or whatever).
+(snip)
 
-Cheers,
+> BTW: I have already submitted an RMA for this disk (9th RMA!) I just 
+> cannot get
+> over how many of these are failing.
 
-John.
+That many bad drives in a row seems unlikely. I would tend to suspect 
+some kind of other cause such as power issues, etc. though maybe it's 
+some kind of design flaw..
+
