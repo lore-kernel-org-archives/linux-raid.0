@@ -1,47 +1,34 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: Re: Why does the md/raid subsystem does not remap bad sectors in a raid array?
-Date: Sat, 22 Nov 2008 18:13:35 -0600
-Message-ID: <cccedfc60811221613x5f58e149ra13e4fc646e11212@mail.gmail.com>
-References: <alpine.DEB.1.10.0811221859210.14817@p34.internal.lan>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: raid6's using not the best bandwidth method && raid6 algo is
+ significantly slower in x86_64.
+Date: Sun, 23 Nov 2008 01:12:57 +0000
+Message-ID: <4928AE19.7030601@anonymous.org.uk>
+References: <200811172235.mAHMZAQt032187@terminus.zytor.com>	 <43d009740811180403v6308dbc0y8ba093524700bb72@mail.gmail.com>	 <4922E381.20501@zytor.com>	 <43d009740811211122m36809523mff9521ca8af95a1e@mail.gmail.com>	 <49270CA5.2090508@zytor.com>	 <43d009740811211133p7321bc39q1a1eccd9c53d6ca0@mail.gmail.com>	 <492716CE.8040900@zytor.com>	 <43d009740811212140l3ac2298ch512aca0e3631d269@mail.gmail.com>	 <49279BC5.8080106@zytor.com> <43d009740811212145x13d2e353l7d9fee3d912c89c0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0811221859210.14817@p34.internal.lan>
-Content-Disposition: inline
+In-Reply-To: <43d009740811212145x13d2e353l7d9fee3d912c89c0@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-There are a few reasons but my guess is this: md tries to use the
-entire available storage (of the smallest element) in a given set of
-devices, which means there is no room for remappery.
+On 22/11/2008 05:45, Igor Podlesny wrote:
+> 2008/11/22 H. Peter Anvin <hpa@zytor.com>:
+> [...]
+>>>        Please let us know when commiting the patch -- 20 % is valuable.
+>>> ;-)
+>>>
+>> Looks like I was a bit too optimistic.  The 20% was because of the missed
+>> prefetchnta, which means polluting the cache.
+> 
+> 	Well, whatever it gives unless it's a regression. :-)
 
-However, if MD could be told to set aside some percentage of this
-value, or some fixed amount (like, say, 10MB) then the *possibility*
-of remapping blocks becomes possible.
+Not sure I agree with that - if the 20% improvement were to have a heavy 
+impact on the rest of system performance when the system is already 
+going to be underperforming, it may not worth having (though it might be 
+an option for people who can afford the CPU or whatever).
 
-However, to add this functionality one would have to consider the following:
+Cheers,
 
-1. how much to set aside?
-2. where? beginning, end, middle, staggered in chunks?
-3. how to tell MD that block A maps to block B on device C? Should it
-be done as an exception list (all blocks not in list X refer to their
-actual block, otherwise they refer to a redirected block)? or as a
-direct map (or something else)?
-
-Perhaps an alternative would be to add a new block layer which takes
-an existing block device X and exposes a new, automatic block
-remapper-y block device Y (bad reads might continue to return errors
-but writes to a previous bad read might go to a new block and so would
-subsequent reads) and so on.
-
-Perhaps the easiest way to test this would be to hack NBD or AoE and
-build a raid out of such devices.
-
-Just ramblin' here.
-
-
--- 
-Jon
+John.
