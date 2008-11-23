@@ -1,37 +1,57 @@
 From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: Velociraptor biting the dust (9th disk, continued to use it,
-   and..)
-Date: Sat, 22 Nov 2008 19:38:18 -0600
-Message-ID: <4928B40A.6020508@shaw.ca>
-References: <alpine.DEB.1.10.0811221638360.707@p34.internal.lan>
+Subject: Re: Why does the md/raid subsystem does not remap bad sectors in
+ a raid   array?
+Date: Sat, 22 Nov 2008 19:44:32 -0600
+Message-ID: <4928B580.5040800@shaw.ca>
+References: <alpine.DEB.1.10.0811221859210.14817@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0811221638360.707@p34.internal.lan>
+In-Reply-To: <alpine.DEB.1.10.0811221859210.14817@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, smartmontools-support@lists.sourceforge.net
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
 Justin Piszcz wrote:
-> I have several questions, to make things more clear I have segmented this
-> e-mail a bit-- any help with this issue would be greatly appreciated, 
-> thank you.
-> ================================================================================ 
+> I asked before but it was kind of clobbered in the velociraptor mess:
 > 
-> So I continued to use the disk and it started failing again:
-> A Fail event had been detected on md device /dev/md2.
-> It could be related to component device /dev/sda3.
-> This is as it happened according to the kernel/dmesg:
+> On a colleague's box:
+> 
+> Aug 02, 2008 12:15.30AM(0x04:0x0023): Sector repair completed: port=7, 
+> LBA=0x4A0387F5
+> 
+> SMART Self-test log structure revision number 0
+> Warning: ATA Specification requires self-test log structure revision 
+> number = 1
+> Num  Test_Description    Status                  Remaining 
+> LifeTime(hours)  LBA_of_first_error
+> # 1  Extended offline    Completed: read failure       90%       305 
+> 1241745397
+> 
+> Even though this disk has a bad sector:
+> 198 Offline_Uncorrectable   0x0030   100   100   000    Old_age   
+> Offline -       1
+> 
+> The controller does not drop the drive from the array when it hits an 
+> error, the 3ware card "takes care of it" and the user need not worry 
+> about it, whereas with md/raid every time it hits a bad sector, it 
+> breaks the raid and it goes degraded, is this correct?  Will/can 
+> something like what 3ware does be possible in a sw-raid based 
+> configuration or is a HW raid card required?
 
-(snip)
+Presumably all it's doing is writing that sector's contents back from 
+the other drive(s) in the array when the read error is detected, this is 
+something that software could do just as well. Drives only remap bad 
+sectors when they are written over, as a read failure doesn't 
+necessarily mean that the sector is entirely unreadable, but could be 
+due to environmental factors such as high temperature, vibration, etc.
 
-> BTW: I have already submitted an RMA for this disk (9th RMA!) I just 
-> cannot get
-> over how many of these are failing.
+Just rewriting the sector seems a bit questionable though, as if a drive 
+in your array is growing read errors that's not really a good thing..
 
-That many bad drives in a row seems unlikely. I would tend to suspect 
-some kind of other cause such as power issues, etc. though maybe it's 
-some kind of design flaw..
+> 
+> Justin.
+> 
 
