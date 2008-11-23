@@ -1,35 +1,40 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Velociraptor biting the dust (9th disk, continued to use it,
- and..)
-Date: Sat, 22 Nov 2008 21:55:29 +0000
-Message-ID: <20081122215529.1973f820@lxorguk.ukuu.org.uk>
-References: <alpine.DEB.1.10.0811221638360.707@p34.internal.lan>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Why does the md/raid subsystem does not remap bad sectors in a raid
+ array?
+Date: Sat, 22 Nov 2008 19:02:39 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0811221859210.14817@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0811221638360.707@p34.internal.lan>
-Sender: linux-ide-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, smartmontools-support@lists.sourceforge.net, Alan Piszcz <ap@solarrain.com>
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757268AbYKWACu@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-> [625188.381125]          res 51/40:a8:7b:57:8a/00:01:1c:00:00/e0 Emask 0x9 (medi
-> a error)
-> [625188.381130] ata1.00: status: { DRDY ERR }
-> [625188.381133] ata1.00: error: { UNC }
+I asked before but it was kind of clobbered in the velociraptor mess:
 
-UNC - uncorrectable error (eg a bad block)
+On a colleague's box:
 
-> [631340.401912] ata1.00: status: { DRDY ERR }
-> [631340.401914] ata1.00: error: { ABRT }
+Aug 02, 2008 12:15.30AM(0x04:0x0023): Sector repair completed: port=7, 
+LBA=0x4A0387F5
 
-ABRT - usually unsupported command
+SMART Self-test log structure revision number 0
+Warning: ATA Specification requires self-test log structure revision 
+number = 1
+Num  Test_Description    Status                  Remaining 
+LifeTime(hours)  LBA_of_first_error
+# 1  Extended offline    Completed: read failure       90%       305 
+1241745397
 
-> [632714.975844] ata1.00: status: { DRDY ERR }
-> [632714.975847] ata1.00: error: { IDNF }
+Even though this disk has a bad sector:
+198 Offline_Uncorrectable   0x0030   100   100   000    Old_age   Offline 
+-       1
 
-IDNF - ID not found, usually these days means 'asked for a sector out of
-range'
+The controller does not drop the drive from the array when it hits an 
+error, the 3ware card "takes care of it" and the user need not worry about 
+it, whereas with md/raid every time it hits a bad sector, it breaks the 
+raid and it goes degraded, is this correct?  Will/can something like what 
+3ware does be possible in a sw-raid based configuration or is a HW raid 
+card required?
 
-Alan
+Justin.
