@@ -1,109 +1,44 @@
-From: Alex Lilley <alex@redwax.co.uk>
-Subject: Re: Raid 5 --grow to fewer, larger drivers
-Date: Mon, 24 Nov 2008 18:28:16 +0000
-Message-ID: <492AF240.9020608@redwax.co.uk>
-References: <492AA493.6080605@redwax.co.uk> <1f0f1a960811240621j619701aboc32c2da9765cd7a1@mail.gmail.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: 2.6.27.6 question: ata_sff_hsm_move: ata15 (why always ata15)?
+Date: Mon, 24 Nov 2008 13:20:26 -0500
+Message-ID: <492AF06A.8020004@rtr.ca>
+References: <alpine.DEB.1.10.0811141850590.6217@p34.internal.lan>	<491E4092.5030804@shaw.ca>	<20081115103424.34f01370@lxorguk.ukuu.org.uk>	<491FBA29.3000803@kernel.org> <20081116112511.3913123a@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1f0f1a960811240621j619701aboc32c2da9765cd7a1@mail.gmail.com>
+In-Reply-To: <20081116112511.3913123a@lxorguk.ukuu.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Twigathy <twigathy@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Tejun Heo <tj@kernel.org>, Robert Hancock <hancockr@shaw.ca>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-That is an interesting work around T, though it does have its own=20
-issues, namely the need to take the data off-line for the time of the=20
-copy over the network besides the hassle.
+Alan Cox wrote:
+> On Sun, 16 Nov 2008 15:14:01 +0900
+> Tejun Heo <tj@kernel.org> wrote:
+> 
+>> Alan Cox wrote:
+>>> On Fri, 14 Nov 2008 21:22:58 -0600
+>>> Robert Hancock <hancockr@shaw.ca> wrote:
+>>>
+>>>> Justin Piszcz wrote:
+>>>>> I am trying to find out what the root cause of this error/problem is:
+>>>>> https://bugzilla.redhat.com/show_bug.cgi?id=462425
+>>>> The problem is that people assume that timeouts with DRDY like that bug 
+>>>> refers to must be the same problem when it is often not
+>>> The first stopping point is to apply the DRQ drain patch I sent to the
+>>> list some time ago and is hopefully lined up for 2.6.29. After that point
+>>> you can begin to look at the remaining cases, until then its hardly worth
+>>> it.
+>> Is it really?  For many SATA controllers, DRQ draining isn't really
+>> necessary.  PATA might be a completely different story tho.
+> 
+> It seems to be needed for various devices and some controllers. Given we
+> don't know which it seems to be the sensible starting point for almost any
+> failure involving a DRQ being left on. It won't fix them all but it is
+> the one case that can easily be eliminated.
+..
 
-I would be interested to know why there would be any greater=20
-difficulty/risk in growing to fewer, larger disks than simply growing t=
-o=20
-more disks of the same size.  The problem is that if you have a number=20
-of disks and need more space, you add another disk of the same size and=
-=20
-lots of disks will eventually bite you on the bum, so being able to=20
-consolidate in the way I set out would be a real bonus and nice and=20
-straight forward (or maybe not!?)
+Well ata_piix for starters.  Verified here by me.
 
-Regarding the risk factor during any array resync, I should hope we all=
-=20
-have a precious data backed up anyway!
-
-Thanks for you =C2=A30.02 though :-)
-
-Alex
-
-Twigathy wrote:
-> In that situation, I think I'd be happier to hook all the disks up (I=
-f
-> not on the same machine, on two machines on the same [gigE] network,
-> make a new raid5 on the new set of disks, rsync stuff to the new arra=
-y
-> and then retire the old array (Swapping in the array you just
-> created)... messing around resizing disks for this job just sounds
-> like mess and risk to me!
->
-> Just my =C2=A30.02 ;-)
->
-> T
->
-> 2008/11/24 Alex Lilley <alex@redwax.co.uk>:
->  =20
->> Senario:  raid5 with  4 x 120gb.
->>
->> aim:  raid5 with 3 x 250gb
->>
->> 3 x 120gb disks replaced with 3 x 250gb, array has been rebuilt/resy=
-nc'd at
->> original size. Can we remove the remaining 120gb drive and reshape t=
-he array
->> over the remaining 3 drives using all the new space.
->>
->> I guessed --grow --raid-devices=3D3 --size-max would work but return=
-s "can
->> change at most one of size, raiddisks, bitmap and layout"
->>
->> I then --failed and --remove the remaining 120gb drive and tried --g=
-row
->> --raid-devices=3D3 but receive "Cannot reduce number of data disks (=
-yet)".
->>
->> I am therefore slightly stumped!
->>
->> Is this something that is actually possible or something that is pla=
-nned for
->> because as the size of disk drives multiplies and the desire to keep=
- tabs of
->> power usage increases it is likely that we will want to reduce the n=
-umber of
->> disk, besides the obvious increased risk of failure introduced by ha=
-ving a
->> greater number of drives.
->>
->> Regards
->>
->> Alex
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>    =20
-> N=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDr=EF=BF=BD=EF=BF=BDy=EF=
-=BF=BD=EF=BF=BD=EF=BF=BDb=EF=BF=BDX=EF=BF=BD=EF=BF=BD=C7=A7v=EF=BF=BD^=EF=
-=BF=BD)=DE=BA{.n=EF=BF=BD+=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD{=EF=BF=BD=
-=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD{ay=EF=BF=BD=1D=CA=87=DA=99=EF=BF=BD=
-,j=07=EF=BF=BD=EF=BF=BDf=EF=BF=BD=EF=BF=BD=EF=BF=BDh=EF=BF=BD=EF=BF=BD=EF=
-=BF=BDz=EF=BF=BD=1E=EF=BF=BDw=EF=BF=BD=EF=BF=BD=EF=BF=BD=0C=EF=BF=BD=EF=
-=BF=BD=EF=BF=BDj:+v=EF=BF=BD=EF=BF=BD=EF=BF=BDw=EF=BF=BDj=EF=BF=BDm=EF=BF=
-=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=07=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDzZ=
-+=EF=BF=BD=EF=BF=BD=DD=A2j"=EF=BF=BD=EF=BF=BD!tml=3D
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers
