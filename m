@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 1/2] md: make devices disappear when they are no longer needed.
-Date: Mon, 24 Nov 2008 14:55:30 +1100
-Message-ID: <20081124035530.3465.26724.stgit@notabene.brown>
+Subject: [PATCH 2/2] Allow md devices to be created by name.
+Date: Mon, 24 Nov 2008 14:55:31 +1100
+Message-ID: <20081124035530.3465.78537.stgit@notabene.brown>
 References: <20081124035516.3465.66413.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,259 +13,250 @@ To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 Cc: Tejun Heo <tj@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Doug Ledford <dledford@redhat.com>, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Currently md devices, once created, never disappear until the module
-is unloaded.  This is essentially because the gendisk holds a
-reference to the mddev, and the mddev holds a reference to the
-gendisk, this a circular reference.
+Using sequential numbers to identify md devices is somewhat artificial.
+Using names can be a lot more user-friendly.
 
-If we drop the reference from mddev to gendisk, then we need to ensure
-that the mddev is destroyed when the gendisk is destroyed.  However it
-is not possible to hook into the gendisk destruction process to enable
-this.
+Also, creating md devices by opening the device special file is a bit
+awkward.
 
-So we drop the reference from the gendisk to the mddev and destroy the
-gendisk when the mddev gets destroyed.  However this has a
-complication.
-Between the call
-   __blkdev_get->get_gendisk->kobj_lookup->md_probe
-and the call
-   __blkdev_get->md_open
+So this patch provides a new option for creating and naming devices.
 
-there is no obvious way to hold a reference on the mddev any more, so
-unless something is done, it will disappear and gendisk will be
-destroyed prematurely.
+Writing a name such as "md_home" to
+    /sys/modules/md_mod/parameters/new_array
+will cause an array with that name to be created.  It will appear in
+/sys/block/ /proc/partitions and /proc/mdstat as 'md_home'.
+It will have an arbitrary minor number allocated.
 
-Also, once we decide to destroy the mddev, there will be an unlockable
-moment before the gendisk is unlinked (blk_unregister_region) during
-which a new reference to the gendisk can be created.  We need to
-ensure that this reference can not be used.  i.e. the ->open must
-fail.
+md devices that a created by an open are destroyed on the last
+close when the device is inactive.
+For names md devices, they will not be destroyed until the array
+is explicitly stopped, either with the STOP_ARRAY ioctl or by
+writing 'clear' to /sys/block/md_XXXX/md/array_state.
 
-So:
- 1/  in md_probe we set a flag in the mddev (hold_active) which
-     indicates that the array should be treated as active, even
-     though there are no references, and no appearance of activity.
-     This is cleared by md_release when the device is closed.
-     This ensure that the gendisk will survive between md_probe and
-     md_open.
-
- 2/  In md_open we check if the mddev we expect to open matches
-     the gendisk that we did open.
-     If there is a mismatch we return -ERESTARTSYS and modify
-     __blkdev_get to retry from the top in that case.
-     In the -ERESTARTSYS sys case we make sure to wait until
-     the old gendisk (that we succeeded in opening) is really gone so
-     we loop at most once.
-
-If an inactive md device is opened and closed in quick succession, a
-gendisk will be created and destroyed repeatedly.  If this happens
-often, udev can easily get a backlog of ADD/DELETE requests.  However
-this is not normally the case (and it does work, just slowly).
-Normally the first open of an MD device will involve initialising it
-(SET_ARRAY_INFO / NEW_DISK) which will cause it to appear active and
-not be destroyed.
-
-When an array is stopped, the gendisk will remain around until the
-last open is closed, then it will disappear.
-
-As an array can be stopped by writing to a sysfs attribute
-  echo clear > /sys/block/mdXXX/md/array_state
-we need to use scheduled work for deleting the gendisk and other
-kobjects.  This allows us to wait for any pending gendisk deletion to
-complete by simply calling flush_scheduled_work().
-
-
+The name of the array must start 'md_' to avoid conflict with
+other devices.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/md.c           |   57 ++++++++++++++++++++++++++++++++++++---------
- fs/block_dev.c            |   14 +++++++++++
- include/linux/raid/md_k.h |    4 +++
- 3 files changed, 63 insertions(+), 12 deletions(-)
+ drivers/md/md.c           |  122 ++++++++++++++++++++++++++++++++++++++-------
+ include/linux/raid/md_k.h |    1 
+ 2 files changed, 104 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index cad0825..5ebda55 100644
+index 5ebda55..89700b5 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -214,16 +214,33 @@ static inline mddev_t *mddev_get(mddev_t *mddev)
- 	return mddev;
- }
+@@ -249,17 +249,51 @@ static mddev_t * mddev_find(dev_t unit)
  
-+static void mddev_delayed_delete(struct work_struct *ws)
-+{
-+	mddev_t *mddev = container_of(ws, mddev_t, del_work);
-+	kobject_del(&mddev->kobj);
-+	kobject_put(&mddev->kobj);
-+}
+  retry:
+ 	spin_lock(&all_mddevs_lock);
+-	list_for_each_entry(mddev, &all_mddevs, all_mddevs)
+-		if (mddev->unit == unit) {
+-			mddev_get(mddev);
 +
- static void mddev_put(mddev_t *mddev)
- {
- 	if (!atomic_dec_and_lock(&mddev->active, &all_mddevs_lock))
- 		return;
--	if (!mddev->raid_disks && list_empty(&mddev->disks)) {
-+	if (!mddev->raid_disks && list_empty(&mddev->disks) &&
-+	    !mddev->hold_active) {
- 		list_del(&mddev->all_mddevs);
--		spin_unlock(&all_mddevs_lock);
--		kobject_put(&mddev->kobj);
--	} else
--		spin_unlock(&all_mddevs_lock);
-+		if (mddev->gendisk) {
-+			/* we did a probe so need to clean up.
-+			 * Call schedule_work inside the spinlock
-+			 * so that flush_scheduled_work() after
-+			 * mddev_find will succeed in waiting for the
-+			 * work to be done.
-+			 */
-+			INIT_WORK(&mddev->del_work, mddev_delayed_delete);
-+			schedule_work(&mddev->del_work);
-+		} else
-+			kfree(mddev);
-+	}
-+	spin_unlock(&all_mddevs_lock);
- }
- 
- static mddev_t * mddev_find(dev_t unit)
-@@ -242,6 +259,7 @@ static mddev_t * mddev_find(dev_t unit)
- 
- 	if (new) {
++	if (unit) {
++		list_for_each_entry(mddev, &all_mddevs, all_mddevs)
++			if (mddev->unit == unit) {
++				mddev_get(mddev);
++				spin_unlock(&all_mddevs_lock);
++				kfree(new);
++				return mddev;
++			}
++
++		if (new) {
++			list_add(&new->all_mddevs, &all_mddevs);
+ 			spin_unlock(&all_mddevs_lock);
+-			kfree(new);
+-			return mddev;
++			new->hold_active = UNTIL_CLOSE;
++			return new;
+ 		}
+-
+-	if (new) {
++	} else if (new) {
++		/* find an unused unit number */
++		static int next_minor = 512;
++		int start = next_minor;
++		int is_free = 0;
++		int dev = 0;
++		while (!is_free) {
++			dev = MKDEV(MD_MAJOR, next_minor);
++			next_minor++;
++			if (next_minor > MINORMASK)
++				next_minor = 0;
++			if (next_minor == start) {
++				/* Oh dear, all in use. */
++				spin_unlock(&all_mddevs_lock);
++				kfree(new);
++				return NULL;
++			}
++				
++			is_free = 1;
++			list_for_each_entry(mddev, &all_mddevs, all_mddevs)
++				if (mddev->unit == dev) {
++					is_free = 0;
++					break;
++				}
++		}
++		new->unit = dev;
++		new->md_minor = MINOR(dev);
++		new->hold_active = UNTIL_STOP;
  		list_add(&new->all_mddevs, &all_mddevs);
-+		mddev->hold_active = UNTIL_CLOSE;
+-		mddev->hold_active = UNTIL_CLOSE;
  		spin_unlock(&all_mddevs_lock);
  		return new;
  	}
-@@ -3484,6 +3502,11 @@ static struct kobject *md_probe(dev_t dev, int *part, void *data)
- 	if (!mddev)
- 		return NULL;
+@@ -3489,18 +3523,22 @@ static struct kobj_type md_ktype = {
  
-+	/* wait for any previous instance if this device
-+	 * to be completed removed (mddev_delayed_delete).
-+	 */
-+	flush_scheduled_work();
+ int mdp_major = 0;
+ 
+-static struct kobject *md_probe(dev_t dev, int *part, void *data)
++static int md_alloc(dev_t dev, char *name)
+ {
+ 	static DEFINE_MUTEX(disks_mutex);
+ 	mddev_t *mddev = mddev_find(dev);
+ 	struct gendisk *disk;
+-	int partitioned = (MAJOR(dev) != MD_MAJOR);
+-	int shift = partitioned ? MdpMinorShift : 0;
+-	int unit = MINOR(dev) >> shift;
++	int partitioned;
++	int shift;
++	int unit;
+ 	int error;
+ 
+ 	if (!mddev)
+-		return NULL;
++		return -ENODEV;
 +
- 	mutex_lock(&disks_mutex);
++	partitioned = (MAJOR(mddev->unit) != MD_MAJOR);
++	shift = partitioned ? MdpMinorShift : 0;
++	unit = MINOR(mddev->unit) >> shift;
+ 
+ 	/* wait for any previous instance if this device
+ 	 * to be completed removed (mddev_delayed_delete).
+@@ -3511,14 +3549,29 @@ static struct kobject *md_probe(dev_t dev, int *part, void *data)
  	if (mddev->gendisk) {
  		mutex_unlock(&disks_mutex);
-@@ -3520,7 +3543,7 @@ static struct kobject *md_probe(dev_t dev, int *part, void *data)
- 	disk->private_data = mddev;
- 	disk->queue = mddev->queue;
- 	/* Allow extended partitions.  This makes the
--	 * 'mdp' device redundant, but we can really
-+	 * 'mdp' device redundant, but we can't really
- 	 * remove it now.
- 	 */
- 	disk->flags |= GENHD_FL_EXT_DEVT;
-@@ -3536,6 +3559,7 @@ static struct kobject *md_probe(dev_t dev, int *part, void *data)
- 		kobject_uevent(&mddev->kobj, KOBJ_ADD);
+ 		mddev_put(mddev);
+-		return NULL;
++		return -EEXIST;
++	}
++
++	if (name) {
++		/* Need to ensure that 'name' is not a duplicate.
++		 */
++		mddev_t *mddev2;
++		spin_lock(&all_mddevs_lock);
++
++		list_for_each_entry(mddev2, &all_mddevs, all_mddevs)
++			if (mddev2->gendisk &&
++			    strcmp(mddev2->gendisk->disk_name, name) == 0) {
++				spin_unlock(&all_mddevs_lock);
++				return -EEXIST;
++			}
++		spin_unlock(&all_mddevs_lock);
+ 	}
+ 
+ 	mddev->queue = blk_alloc_queue(GFP_KERNEL);
+ 	if (!mddev->queue) {
+ 		mutex_unlock(&disks_mutex);
+ 		mddev_put(mddev);
+-		return NULL;
++		return -ENOMEM;
+ 	}
+ 	/* Can be unlocked because the queue is new: no concurrency */
+ 	queue_flag_set_unlocked(QUEUE_FLAG_CLUSTER, mddev->queue);
+@@ -3531,11 +3584,13 @@ static struct kobject *md_probe(dev_t dev, int *part, void *data)
+ 		blk_cleanup_queue(mddev->queue);
+ 		mddev->queue = NULL;
+ 		mddev_put(mddev);
+-		return NULL;
++		return -ENOMEM;
+ 	}
+-	disk->major = MAJOR(dev);
++	disk->major = MAJOR(mddev->unit);
+ 	disk->first_minor = unit << shift;
+-	if (partitioned)
++	if (name)
++		strcpy(disk->disk_name, name);
++	else if (partitioned)
+ 		sprintf(disk->disk_name, "md_d%d", unit);
+ 	else
+ 		sprintf(disk->disk_name, "md%d", unit);
+@@ -3560,9 +3615,34 @@ static struct kobject *md_probe(dev_t dev, int *part, void *data)
  		mddev->sysfs_state = sysfs_get_dirent(mddev->kobj.sd, "array_state");
  	}
-+	mddev_put(mddev);
+ 	mddev_put(mddev);
++	return 0;
++}
++
++static struct kobject *md_probe(dev_t dev, int *part, void *data)
++{
++	md_alloc(dev, NULL);
  	return NULL;
  }
  
-@@ -5070,14 +5094,25 @@ static int md_open(struct block_device *bdev, fmode_t mode)
- 	 * Succeed if we can lock the mddev, which confirms that
- 	 * it isn't being stopped right now.
- 	 */
--	mddev_t *mddev = bdev->bd_disk->private_data;
-+	mddev_t *mddev = mddev_find(bdev->bd_dev);
- 	int err;
- 
-+	if (mddev->gendisk != bdev->bd_disk) {
-+		/* we are racing with mddev_put which is discarding this
-+		 * bd_disk.
-+		 */
-+		mddev_put(mddev);
-+		/* Wait until bdev->bd_disk is definitely gone */
-+		flush_scheduled_work();
-+		/* Then retry the open from the top */
-+		return -ERESTARTSYS;
-+	}
-+	BUG_ON(mddev != bdev->bd_disk->private_data);
++static int add_named_array(const char *val, struct kernel_param *kp)
++{
++	/* val must be "md_*" where * is not all digits.
++	 * We allocate an array with a large free minor number, and
++	 * set the name to val.  val must not already be an active name.
++	 */
++	int len = strlen(val);
++	char buf[DISK_NAME_LEN];
 +
- 	if ((err = mutex_lock_interruptible_nested(&mddev->reconfig_mutex, 1)))
- 		goto out;
++	while (len && val[len-1] == '\n')
++		len--;
++	if (len >= DISK_NAME_LEN)
++		return -E2BIG;
++	strlcpy(buf, val, len+1);
++	if (strncmp(buf, "md_", 3) != 0)
++		return -EINVAL;
++	return md_alloc(0, buf);
++}
++
+ static void md_safemode_timeout(unsigned long data)
+ {
+ 	mddev_t *mddev = (mddev_t *) data;
+@@ -4023,6 +4103,8 @@ static int do_md_stop(mddev_t * mddev, int mode, int is_open)
+ 		mddev->barriers_work = 0;
+ 		mddev->safemode = 0;
+ 		kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE);
++		if (mddev->hold_active == UNTIL_STOP)
++			mddev->hold_active = 0;
  
- 	err = 0;
--	mddev_get(mddev);
- 	atomic_inc(&mddev->openers);
- 	mddev_unlock(mddev);
- 
-@@ -5092,6 +5127,7 @@ static int md_release(struct gendisk *disk, fmode_t mode)
+ 	} else if (mddev->pers)
+ 		printk(KERN_INFO "md: %s switched to read-only mode.\n",
+@@ -5127,7 +5209,8 @@ static int md_release(struct gendisk *disk, fmode_t mode)
  
  	BUG_ON(!mddev);
  	atomic_dec(&mddev->openers);
-+	mddev->hold_active = 0;
+-	mddev->hold_active = 0;
++	if (mddev->hold_active == UNTIL_CLOSE)
++		mddev->hold_active = 0;
  	mddev_put(mddev);
  
  	return 0;
-@@ -6436,11 +6472,8 @@ static __exit void md_exit(void)
- 	unregister_sysctl_table(raid_table_header);
- 	remove_proc_entry("mdstat", NULL);
- 	for_each_mddev(mddev, tmp) {
--		struct gendisk *disk = mddev->gendisk;
--		if (!disk)
--			continue;
- 		export_array(mddev);
--		mddev_put(mddev);
-+		mddev->hold_active = 0;
- 	}
- }
+@@ -6498,6 +6581,7 @@ static int set_ro(const char *val, struct kernel_param *kp)
+ module_param_call(start_ro, set_ro, get_ro, NULL, S_IRUSR|S_IWUSR);
+ module_param(start_dirty_degraded, int, S_IRUGO|S_IWUSR);
  
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index db831ef..30b88b9 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -1004,6 +1004,7 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
- 	}
++module_param_call(new_array, add_named_array, NULL, NULL, S_IWUSR);
  
- 	lock_kernel();
-+ restart:
- 
- 	ret = -ENXIO;
- 	disk = get_gendisk(bdev->bd_dev, &partno);
-@@ -1024,6 +1025,19 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
- 
- 			if (disk->fops->open) {
- 				ret = disk->fops->open(bdev, mode);
-+				if (ret == -ERESTARTSYS) {
-+					/* Lost a race with 'disk' being
-+					 * deleted, try again.
-+					 * See md.c
-+					 */
-+					disk_put_part(bdev->bd_part);
-+					bdev->bd_part = NULL;
-+					module_put(disk->fops->owner);
-+					put_disk(disk);
-+					bdev->bd_disk = NULL;
-+					mutex_unlock(&bdev->bd_mutex);
-+					goto restart;
-+				}
- 				if (ret)
- 					goto out_clear;
- 			}
+ EXPORT_SYMBOL(register_md_personality);
+ EXPORT_SYMBOL(unregister_md_personality);
 diff --git a/include/linux/raid/md_k.h b/include/linux/raid/md_k.h
-index 8f9a54c..7b6029b 100644
+index 7b6029b..19756d7 100644
 --- a/include/linux/raid/md_k.h
 +++ b/include/linux/raid/md_k.h
-@@ -137,6 +137,8 @@ struct mddev_s
- 	struct gendisk			*gendisk;
- 
+@@ -139,6 +139,7 @@ struct mddev_s
  	struct kobject			kobj;
-+	int				hold_active;
-+#define	UNTIL_CLOSE	1
+ 	int				hold_active;
+ #define	UNTIL_CLOSE	1
++#define	UNTIL_STOP	2
  
  	/* Superblock information */
  	int				major_version,
-@@ -246,6 +248,8 @@ struct mddev_s
- 							 */
- 	struct sysfs_dirent		*sysfs_action;  /* handle for 'sync_action' */
- 
-+	struct work_struct del_work;	/* used for delayed sysfs removal */
-+
- 	spinlock_t			write_lock;
- 	wait_queue_head_t		sb_wait;	/* for waiting on superblock updates */
- 	atomic_t			pending_writes;	/* number of active superblock writes */
 
 
