@@ -1,48 +1,44 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/2] md: make devices disappear when they are no longer
- needed.
-Date: Mon, 24 Nov 2008 23:04:48 +0900
-Message-ID: <492AB480.5060207@kernel.org>
-References: <20081124035516.3465.66413.stgit@notabene.brown> <20081124035530.3465.26724.stgit@notabene.brown> <492A2B2B.7030606@kernel.org> <18730.14324.830648.449469@notabene.brown> <492A3CE6.4010206@kernel.org> <20081124062417.GZ28946@ZenIV.linux.org.uk> <492A500C.9090200@kernel.org> <20081124133124.GB28946@ZenIV.linux.org.uk>
+From: Twigathy <twigathy@gmail.com>
+Subject: Re: Raid 5 --grow to fewer, larger drivers
+Date: Mon, 24 Nov 2008 14:21:46 +0000
+Message-ID: <1f0f1a960811240621j619701aboc32c2da9765cd7a1@mail.gmail.com>
+References: <492AA493.6080605@redwax.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20081124133124.GB28946@ZenIV.linux.org.uk>
+In-Reply-To: <492AA493.6080605@redwax.co.uk>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Doug Ledford <dledford@redhat.com>, Greg KH <greg@kroah.com>, Jens Axboe <jens.axboe@oracle.com>
+To: Alex Lilley <alex@redwax.co.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Al Viro wrote:
-> On Mon, Nov 24, 2008 at 03:56:12PM +0900, Tejun Heo wrote:
-> 
->> mddev holds module reference and till the gendisk is gone mddev won't
->> be gone, so as long as gendisk is around the respective mddev and
->> md.ko are around.
-> 
-> It doesn't and it *could* *not* - you can't drop the final reference to
-> module from within that module, period.
-
-Yeap, right, I was confused.  Referencing self doesn't make any sense.
-Got confused with holding sub modules and the days when there was no
-preemption inside kernel.  I think there still might be some remnants
-of those in SCSI but I need to look again.
-
->> I don't think it's necessary to allow modules to unload while devices
->> are hot.
-> 
-> gendisk may stay referenced past the point when everything got closed
-> and unregistered.
-
-Can we then make gendisk hold owner module till it gets released?  It
-would be much nicer to write code to if we can keep the regular object
-reference counting across module boundaries and being able to taking
-down a module while devices are active isn't a too important
-requirement.  For vast majoerity (ide, scsi, md) one way or the other
-doesn't even matter at all.
-
-Thanks.
-
--- 
-tejun
+SW4gdGhhdCBzaXR1YXRpb24sIEkgdGhpbmsgSSdkIGJlIGhhcHBpZXIgdG8gaG9vayBhbGwgdGhl
+IGRpc2tzIHVwIChJZgpub3Qgb24gdGhlIHNhbWUgbWFjaGluZSwgb24gdHdvIG1hY2hpbmVzIG9u
+IHRoZSBzYW1lIFtnaWdFXSBuZXR3b3JrLAptYWtlIGEgbmV3IHJhaWQ1IG9uIHRoZSBuZXcgc2V0
+IG9mIGRpc2tzLCByc3luYyBzdHVmZiB0byB0aGUgbmV3IGFycmF5CmFuZCB0aGVuIHJldGlyZSB0
+aGUgb2xkIGFycmF5IChTd2FwcGluZyBpbiB0aGUgYXJyYXkgeW91IGp1c3QKY3JlYXRlZCkuLi4g
+bWVzc2luZyBhcm91bmQgcmVzaXppbmcgZGlza3MgZm9yIHRoaXMgam9iIGp1c3Qgc291bmRzCmxp
+a2UgbWVzcyBhbmQgcmlzayB0byBtZSEKCkp1c3QgbXkgwqMwLjAyIDstKQoKVAoKMjAwOC8xMS8y
+NCBBbGV4IExpbGxleSA8YWxleEByZWR3YXguY28udWs+Ogo+IFNlbmFyaW86ICByYWlkNSB3aXRo
+ICA0IHggMTIwZ2IuCj4KPiBhaW06ICByYWlkNSB3aXRoIDMgeCAyNTBnYgo+Cj4gMyB4IDEyMGdi
+IGRpc2tzIHJlcGxhY2VkIHdpdGggMyB4IDI1MGdiLCBhcnJheSBoYXMgYmVlbiByZWJ1aWx0L3Jl
+c3luYydkIGF0Cj4gb3JpZ2luYWwgc2l6ZS4gQ2FuIHdlIHJlbW92ZSB0aGUgcmVtYWluaW5nIDEy
+MGdiIGRyaXZlIGFuZCByZXNoYXBlIHRoZSBhcnJheQo+IG92ZXIgdGhlIHJlbWFpbmluZyAzIGRy
+aXZlcyB1c2luZyBhbGwgdGhlIG5ldyBzcGFjZS4KPgo+IEkgZ3Vlc3NlZCAtLWdyb3cgLS1yYWlk
+LWRldmljZXM9MyAtLXNpemUtbWF4IHdvdWxkIHdvcmsgYnV0IHJldHVybnMgImNhbgo+IGNoYW5n
+ZSBhdCBtb3N0IG9uZSBvZiBzaXplLCByYWlkZGlza3MsIGJpdG1hcCBhbmQgbGF5b3V0Igo+Cj4g
+SSB0aGVuIC0tZmFpbGVkIGFuZCAtLXJlbW92ZSB0aGUgcmVtYWluaW5nIDEyMGdiIGRyaXZlIGFu
+ZCB0cmllZCAtLWdyb3cKPiAtLXJhaWQtZGV2aWNlcz0zIGJ1dCByZWNlaXZlICJDYW5ub3QgcmVk
+dWNlIG51bWJlciBvZiBkYXRhIGRpc2tzICh5ZXQpIi4KPgo+IEkgYW0gdGhlcmVmb3JlIHNsaWdo
+dGx5IHN0dW1wZWQhCj4KPiBJcyB0aGlzIHNvbWV0aGluZyB0aGF0IGlzIGFjdHVhbGx5IHBvc3Np
+YmxlIG9yIHNvbWV0aGluZyB0aGF0IGlzIHBsYW5uZWQgZm9yCj4gYmVjYXVzZSBhcyB0aGUgc2l6
+ZSBvZiBkaXNrIGRyaXZlcyBtdWx0aXBsaWVzIGFuZCB0aGUgZGVzaXJlIHRvIGtlZXAgdGFicyBv
+Zgo+IHBvd2VyIHVzYWdlIGluY3JlYXNlcyBpdCBpcyBsaWtlbHkgdGhhdCB3ZSB3aWxsIHdhbnQg
+dG8gcmVkdWNlIHRoZSBudW1iZXIgb2YKPiBkaXNrLCBiZXNpZGVzIHRoZSBvYnZpb3VzIGluY3Jl
+YXNlZCByaXNrIG9mIGZhaWx1cmUgaW50cm9kdWNlZCBieSBoYXZpbmcgYQo+IGdyZWF0ZXIgbnVt
+YmVyIG9mIGRyaXZlcy4KPgo+IFJlZ2FyZHMKPgo+IEFsZXgKPiAtLQo+IFRvIHVuc3Vic2NyaWJl
+IGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1yYWlkIiBp
+bgo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnCj4g
+TW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8t
+aW5mby5odG1sCj4K
