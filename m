@@ -1,39 +1,58 @@
-From: Al Viro <viro@ZenIV.linux.org.uk>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 1/2] md: make devices disappear when they are no longer
-	needed.
-Date: Mon, 24 Nov 2008 06:38:06 +0000
-Message-ID: <20081124063806.GA28946@ZenIV.linux.org.uk>
-References: <20081124035516.3465.66413.stgit@notabene.brown> <20081124035530.3465.26724.stgit@notabene.brown> <20081124042421.GY28946@ZenIV.linux.org.uk> <18730.12791.348848.849033@notabene.brown>
+ needed.
+Date: Mon, 24 Nov 2008 15:56:12 +0900
+Message-ID: <492A500C.9090200@kernel.org>
+References: <20081124035516.3465.66413.stgit@notabene.brown> <20081124035530.3465.26724.stgit@notabene.brown> <492A2B2B.7030606@kernel.org> <18730.14324.830648.449469@notabene.brown> <492A3CE6.4010206@kernel.org> <20081124062417.GZ28946@ZenIV.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <18730.12791.348848.849033@notabene.brown>
+In-Reply-To: <20081124062417.GZ28946@ZenIV.linux.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Tejun Heo <tj@kernel.org>, Doug Ledford <dledford@redhat.com>
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Doug Ledford <dledford@redhat.com>, Greg KH <greg@kroah.com>, Jens Axboe <jens.axboe@oracle.com>
 List-Id: linux-raid.ids
 
-On Mon, Nov 24, 2008 at 03:47:51PM +1100, Neil Brown wrote:
-
-> > What lifetime rules do you really want?  I never liked the tricks pulled
-> > by md wrt gendisk lifetimes and that might be a good time to sort that
-> > out for good...
+Al Viro wrote:
+>> I suppose so.  Maybe just void (*release)(struct gendisk *) but Jens is
+>> the maintainer.  Jens, what do you think?
 > 
-> I'm not sure what 'tricks' you are referring to.  Can you elaborate?
-> 
-> I want the gendisk to appear as soon as it is needed (not because I
-> think that is necessarily a good idea, but it is legacy functionality that I
-> don't think we can easily discard).  And I want them to disappear when
-> they contain no information and have nothing referring to them.
+> First of all, release is already taken (with exactly that argument, BTW).
 
-"Tricks" are about md_probe() and weird allocation time for these suckers.
-But OK, legacy API is a good argument.
+Right.  :-(
 
-So you want the rules of the same nature as for module refcount?  Then
-the natural place to do that would be in failure exit of __blkdev_get()
-and in normal path in blkdev_put() (for the final opener going away).
+> And doing that at freeing gendisk is a bad idea - md.ko might have been
+> long gone by the time you've got there, not to mention anything else...
+> IOW, it's too late; once the damn thing is not opened anymore (and nobody
+> is the middle of trying to open it), the module might be dead and gone,
+> so all uses of ->private_data and ->fops are illegal aftenr that point.
 
-However, let's try to do it right - there's a *lot* of drivers where
-we do no work in ->release() until it's the final one.  It would be
-nice to accomodate them as well while we are at it...
+mddev holds module reference and till the gendisk is gone mddev won't
+be gone, so as long as gendisk is around the respective mddev and
+md.ko are around.
+
+This is because creation and deletion of md devices are managed by
+userland and the module is kept referenced as long as there are active
+devices.  The current block interface only verifies ops availability
+before open and asks drivers to verify object validity separately in
+->open, which makes sense if the intention is to allow rmmod while
+devices are hot, but it also requires the low level driver to
+implement index of all active devices and look them up atomically
+during ->open, which sometimes is unnatural to implement as it's
+unnecesary for any other purpose and can create subtle races as shown
+by md.
+
+I don't think it's necessary to allow modules to unload while devices
+are hot.  SCSI doesn't follow it (at least not at the block layer),
+nor does md.  It's seldom necessary to unload those modules in the
+first place and when necessary active devices can be killed via sysfs
+or mdadm (which BTW makes more sense to me - kill the users before
+unloading the module).  Without such requirement, both block and
+character devices can stick with more regular reference counting like
+the rest of the kernel.
+
+Thanks.
+
+-- 
+tejun
