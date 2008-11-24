@@ -1,31 +1,37 @@
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [PATCH 1/2] md: make devices disappear when they are no longer
-	needed.
-Date: Mon, 24 Nov 2008 13:31:24 +0000
-Message-ID: <20081124133124.GB28946@ZenIV.linux.org.uk>
-References: <20081124035516.3465.66413.stgit@notabene.brown> <20081124035530.3465.26724.stgit@notabene.brown> <492A2B2B.7030606@kernel.org> <18730.14324.830648.449469@notabene.brown> <492A3CE6.4010206@kernel.org> <20081124062417.GZ28946@ZenIV.linux.org.uk> <492A500C.9090200@kernel.org>
+From: Alex Lilley <alex@redwax.co.uk>
+Subject: Raid 5 --grow to fewer, larger drivers
+Date: Mon, 24 Nov 2008 12:56:51 +0000
+Message-ID: <492AA493.6080605@redwax.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <492A500C.9090200@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Doug Ledford <dledford@redhat.com>, Greg KH <greg@kroah.com>, Jens Axboe <jens.axboe@oracle.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Nov 24, 2008 at 03:56:12PM +0900, Tejun Heo wrote:
+Senario:  raid5 with  4 x 120gb.
 
-> mddev holds module reference and till the gendisk is gone mddev won't
-> be gone, so as long as gendisk is around the respective mddev and
-> md.ko are around.
+aim:  raid5 with 3 x 250gb
 
-It doesn't and it *could* *not* - you can't drop the final reference to
-module from within that module, period.
+3 x 120gb disks replaced with 3 x 250gb, array has been rebuilt/resync'd 
+at original size. Can we remove the remaining 120gb drive and reshape 
+the array over the remaining 3 drives using all the new space.
 
-> I don't think it's necessary to allow modules to unload while devices
-> are hot.
+I guessed --grow --raid-devices=3 --size-max would work but returns "can 
+change at most one of size, raiddisks, bitmap and layout"
 
-gendisk may stay referenced past the point when everything got closed
-and unregistered.
+I then --failed and --remove the remaining 120gb drive and tried --grow 
+--raid-devices=3 but receive "Cannot reduce number of data disks (yet)".
 
+I am therefore slightly stumped!
+
+Is this something that is actually possible or something that is planned 
+for because as the size of disk drives multiplies and the desire to keep 
+tabs of power usage increases it is likely that we will want to reduce 
+the number of disk, besides the obvious increased risk of failure 
+introduced by having a greater number of drives.
+
+Regards
+
+Alex
