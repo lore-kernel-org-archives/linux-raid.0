@@ -1,23 +1,38 @@
 From: Neil Brown <neilb@suse.de>
 Subject: Re: [PATCH 1/2] md: make devices disappear when they are no longer
-	needed.
-Date: Mon, 24 Nov 2008 15:47:51 +1100
-Message-ID: <18730.12791.348848.849033@notabene.brown>
+ needed.
+Date: Mon, 24 Nov 2008 16:13:24 +1100
+Message-ID: <18730.14324.830648.449469@notabene.brown>
 References: <20081124035516.3465.66413.stgit@notabene.brown>
 	<20081124035530.3465.26724.stgit@notabene.brown>
-	<20081124042421.GY28946@ZenIV.linux.org.uk>
+	<492A2B2B.7030606@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Al Viro on Monday November 24
+In-Reply-To: message from Tejun Heo on Monday November 24
 Sender: linux-raid-owner@vger.kernel.org
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Tejun Heo <tj@kernel.org>, Doug Ledford <dledford@redhat.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Doug Ledford <dledford@redhat.com>, Greg KH <greg@kroah.com>
 List-Id: linux-raid.ids
 
-On Monday November 24, viro@ZenIV.linux.org.uk wrote:
-> On Mon, Nov 24, 2008 at 02:55:30PM +1100, NeilBrown wrote:
+On Monday November 24, tj@kernel.org wrote:
+> (cc'ing Greg)
+> 
+> NeilBrown wrote:
+> > Currently md devices, once created, never disappear until the module
+> > is unloaded.  This is essentially because the gendisk holds a
+> > reference to the mddev, and the mddev holds a reference to the
+> > gendisk, this a circular reference.
+> > 
+> > If we drop the reference from mddev to gendisk, then we need to ensure
+> > that the mddev is destroyed when the gendisk is destroyed.  However it
+> > is not possible to hook into the gendisk destruction process to enable
+> > this.
+> > 
+> > So we drop the reference from the gendisk to the mddev and destroy the
+> > gendisk when the mddev gets destroyed.  However this has a
+> > complication.
 > > Between the call
 > >    __blkdev_get->get_gendisk->kobj_lookup->md_probe
 > > and the call
@@ -32,48 +47,31 @@ On Monday November 24, viro@ZenIV.linux.org.uk wrote:
 > > which a new reference to the gendisk can be created.  We need to
 > > ensure that this reference can not be used.  i.e. the ->open must
 > > fail.
-> > 
-> > So:
-> >  1/  in md_probe we set a flag in the mddev (hold_active) which
-> >      indicates that the array should be treated as active, even
-> >      though there are no references, and no appearance of activity.
-> >      This is cleared by md_release when the device is closed.
-> >      This ensure that the gendisk will survive between md_probe and
-> >      md_open.
-
-Thanks for the reply.
-
 > 
-> That won't work.  Note that you are not guaranteed that md_release() will be
-> called after md_probe(); there are failure exits in __blkdev_get() that do
-> not reach ->open() at all.
+> Ah... I'm not really sure I'm following all of this correctly but would
+> it be possible to just add ->release to genhd and do regular reference
+> counting rather than this complex dancing?  ->release was recently added
+> to cdev so it'll be nicely parallel.
 
-I thought about those failure exits and concluded that they are the
-sort the almost never happen in practice (I think -ENOMEM is the only
-credible error) and the consequence is only that the gendisk will hang
-around a until some future open/close, so it is no worse that the
-current situation.
-Resolving that would be nice but I didn't feel up to any major surgery.
+Maybe...
 
-> 
-> What lifetime rules do you really want?  I never liked the tricks pulled
-> by md wrt gendisk lifetimes and that might be a good time to sort that
-> out for good...
+If genhd.c:disk_release called e.g.
+	disk->fops->final_put(disk)
 
-I'm not sure what 'tricks' you are referring to.  Can you elaborate?
+then I could possibly link in to that to destroy the md state when the
+gendisk finally disappears.
 
-I want the gendisk to appear as soon as it is needed (not because I
-think that is necessarily a good idea, but it is legacy functionality that I
-don't think we can easily discard).  And I want them to disappear when
-they contain no information and have nothing referring to them.
+When I want to kill the gendisk I would call blk_unregister_region
+directly (not through del_gendisk) to allow it to disappear.
+If md_probe then gets called before the final_put, I'd need to
+call blk_register_region again to re-install it.
 
-> 
-> What should happen to things like pending IO, etc. on array destruction?
-> AFAICS, that's the real question...
+I think that would work.
 
-Pending IO should not be a possibility thanks to the sync_blockdev call
-in __blkdev_put.
-During that last close, nothing can generate new IO, and any old IO
-will be flushed (won't it?).
+Would 'block_device_operations' be the right place for this
+'final_put' or 'final_release' ??
+
+Thanks.
+
 
 NeilBrown
