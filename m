@@ -1,35 +1,20 @@
-From: Tejun Heo <tj@kernel.org>
+From: Al Viro <viro@ZenIV.linux.org.uk>
 Subject: Re: [PATCH 1/2] md: make devices disappear when they are no longer
- needed.
-Date: Mon, 24 Nov 2008 13:18:51 +0900
-Message-ID: <492A2B2B.7030606@kernel.org>
+	needed.
+Date: Mon, 24 Nov 2008 04:24:21 +0000
+Message-ID: <20081124042421.GY28946@ZenIV.linux.org.uk>
 References: <20081124035516.3465.66413.stgit@notabene.brown> <20081124035530.3465.26724.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <20081124035530.3465.26724.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Doug Ledford <dledford@redhat.com>, Greg KH <greg@kroah.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Tejun Heo <tj@kernel.org>, Doug Ledford <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-(cc'ing Greg)
-
-NeilBrown wrote:
-> Currently md devices, once created, never disappear until the module
-> is unloaded.  This is essentially because the gendisk holds a
-> reference to the mddev, and the mddev holds a reference to the
-> gendisk, this a circular reference.
-> 
-> If we drop the reference from mddev to gendisk, then we need to ensure
-> that the mddev is destroyed when the gendisk is destroyed.  However it
-> is not possible to hook into the gendisk destruction process to enable
-> this.
-> 
-> So we drop the reference from the gendisk to the mddev and destroy the
-> gendisk when the mddev gets destroyed.  However this has a
-> complication.
+On Mon, Nov 24, 2008 at 02:55:30PM +1100, NeilBrown wrote:
 > Between the call
 >    __blkdev_get->get_gendisk->kobj_lookup->md_probe
 > and the call
@@ -44,13 +29,22 @@ NeilBrown wrote:
 > which a new reference to the gendisk can be created.  We need to
 > ensure that this reference can not be used.  i.e. the ->open must
 > fail.
+> 
+> So:
+>  1/  in md_probe we set a flag in the mddev (hold_active) which
+>      indicates that the array should be treated as active, even
+>      though there are no references, and no appearance of activity.
+>      This is cleared by md_release when the device is closed.
+>      This ensure that the gendisk will survive between md_probe and
+>      md_open.
 
-Ah... I'm not really sure I'm following all of this correctly but would
-it be possible to just add ->release to genhd and do regular reference
-counting rather than this complex dancing?  ->release was recently added
-to cdev so it'll be nicely parallel.
+That won't work.  Note that you are not guaranteed that md_release() will be
+called after md_probe(); there are failure exits in __blkdev_get() that do
+not reach ->open() at all.
 
-Thanks.
+What lifetime rules do you really want?  I never liked the tricks pulled
+by md wrt gendisk lifetimes and that might be a good time to sort that
+out for good...
 
--- 
-tejun
+What should happen to things like pending IO, etc. on array destruction?
+AFAICS, that's the real question...
