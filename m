@@ -1,44 +1,39 @@
 From: Al Viro <viro@ZenIV.linux.org.uk>
 Subject: Re: [PATCH 1/2] md: make devices disappear when they are no longer
 	needed.
-Date: Mon, 24 Nov 2008 06:24:17 +0000
-Message-ID: <20081124062417.GZ28946@ZenIV.linux.org.uk>
-References: <20081124035516.3465.66413.stgit@notabene.brown> <20081124035530.3465.26724.stgit@notabene.brown> <492A2B2B.7030606@kernel.org> <18730.14324.830648.449469@notabene.brown> <492A3CE6.4010206@kernel.org>
+Date: Mon, 24 Nov 2008 06:38:06 +0000
+Message-ID: <20081124063806.GA28946@ZenIV.linux.org.uk>
+References: <20081124035516.3465.66413.stgit@notabene.brown> <20081124035530.3465.26724.stgit@notabene.brown> <20081124042421.GY28946@ZenIV.linux.org.uk> <18730.12791.348848.849033@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <492A3CE6.4010206@kernel.org>
+In-Reply-To: <18730.12791.348848.849033@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Doug Ledford <dledford@redhat.com>, Greg KH <greg@kroah.com>, Jens Axboe <jens.axboe@oracle.com>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Tejun Heo <tj@kernel.org>, Doug Ledford <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-On Mon, Nov 24, 2008 at 02:34:30PM +0900, Tejun Heo wrote:
-> > Maybe...
-> > 
-> > If genhd.c:disk_release called e.g.
-> > 	disk->fops->final_put(disk)
-> > 
-> > then I could possibly link in to that to destroy the md state when the
-> > gendisk finally disappears.
-> > 
-> > When I want to kill the gendisk I would call blk_unregister_region
-> > directly (not through del_gendisk) to allow it to disappear.
-> > If md_probe then gets called before the final_put, I'd need to
-> > call blk_register_region again to re-install it.
-> > 
-> > I think that would work.
-> > 
-> > Would 'block_device_operations' be the right place for this
-> > 'final_put' or 'final_release' ??
-> 
-> I suppose so.  Maybe just void (*release)(struct gendisk *) but Jens is
-> the maintainer.  Jens, what do you think?
+On Mon, Nov 24, 2008 at 03:47:51PM +1100, Neil Brown wrote:
 
-First of all, release is already taken (with exactly that argument, BTW).
-And doing that at freeing gendisk is a bad idea - md.ko might have been
-long gone by the time you've got there, not to mention anything else...
-IOW, it's too late; once the damn thing is not opened anymore (and nobody
-is the middle of trying to open it), the module might be dead and gone,
-so all uses of ->private_data and ->fops are illegal after that point.
+> > What lifetime rules do you really want?  I never liked the tricks pulled
+> > by md wrt gendisk lifetimes and that might be a good time to sort that
+> > out for good...
+> 
+> I'm not sure what 'tricks' you are referring to.  Can you elaborate?
+> 
+> I want the gendisk to appear as soon as it is needed (not because I
+> think that is necessarily a good idea, but it is legacy functionality that I
+> don't think we can easily discard).  And I want them to disappear when
+> they contain no information and have nothing referring to them.
+
+"Tricks" are about md_probe() and weird allocation time for these suckers.
+But OK, legacy API is a good argument.
+
+So you want the rules of the same nature as for module refcount?  Then
+the natural place to do that would be in failure exit of __blkdev_get()
+and in normal path in blkdev_put() (for the final opener going away).
+
+However, let's try to do it right - there's a *lot* of drivers where
+we do no work in ->release() until it's the final one.  It would be
+nice to accomodate them as well while we are at it...
