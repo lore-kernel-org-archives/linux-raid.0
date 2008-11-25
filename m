@@ -1,25 +1,25 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: 2.6.27.6 question: ata_sff_hsm_move: ata15 (why always ata15)?
-Date: Mon, 24 Nov 2008 18:32:04 +0000
-Message-ID: <20081124183204.2d3734e3@lxorguk.ukuu.org.uk>
-References: <alpine.DEB.1.10.0811141850590.6217@p34.internal.lan>
-	<491E4092.5030804@shaw.ca>
-	<20081115103424.34f01370@lxorguk.ukuu.org.uk>
-	<491FBA29.3000803@kernel.org>
-	<20081116112511.3913123a@lxorguk.ukuu.org.uk>
-	<492AF06A.8020004@rtr.ca>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Why does the md/raid subsystem does not remap bad sectors in a
+	raid array?
+Date: Tue, 25 Nov 2008 09:17:56 +0100
+Message-ID: <20081125081756.GC4610@maude.comedia.it>
+References: <alpine.DEB.1.10.0811221859210.14817@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <492AF06A.8020004@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <tj@kernel.org>, Robert Hancock <hancockr@shaw.ca>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.1.10.0811221859210.14817@p34.internal.lan>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Well ata_piix for starters.  Verified here by me.
+Cause all modern hard drives have sector remapping capabilities in
+firmware.
 
-Some piix are fine (mine are) so maybe its a device property in part.
-Certainly it is needed for some combinations including current stuff like
-jmicron PATA ports.
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
