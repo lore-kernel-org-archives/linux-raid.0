@@ -1,35 +1,41 @@
-From: Gabor Gombas <gombasg@sztaki.hu>
+From: Jody McIntyre <scjody@sun.com>
 Subject: Re: [RFC patch 1/1] Track raid5/6 statistics.
-Date: Thu, 27 Nov 2008 12:47:48 +0100
-Message-ID: <20081127114748.GE14570@boogie.lpds.sztaki.hu>
-References: <20081126190452.775333692@sun.com> <20081126190854.813151413@sun.com>
+Date: Thu, 27 Nov 2008 08:45:03 -0500
+Message-ID: <20081127134503.GC29919@clouds>
+References: <20081126190452.775333692@sun.com>
+ <20081126190854.813151413@sun.com>
+ <e9c3a7c20811261350n57fb3881if443969b27079543@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20081126190854.813151413@sun.com>
+In-reply-to: <e9c3a7c20811261350n57fb3881if443969b27079543@mail.gmail.com>
+Content-disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: scjody@sun.com
+To: Dan Williams <dan.j.williams@intel.com>
 Cc: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-On Wed, Nov 26, 2008 at 02:04:53PM -0500, scjody@sun.com wrote:
+Hi Dan,
 
-> I realize that the format of the statistics may not be the best, and
-> there may be a better location than /proc/mdstat, so I welcome suggestions
-> on where to put them.
+On Wed, Nov 26, 2008 at 02:50:18PM -0700, Dan Williams wrote:
 
-Are these values useful for mere mortals trying to create a RAID array
-best suited for a specific workload, or are these only useful for people
-hacking on the RAID code? If the former, then I'd suggest to use sysfs
-(something like /sys/block/<dev>/md/statistics, similar to
-/sys/class/net/<dev>/statistics). If the latter, then debugfs would be
-better.
+> I have done some work in this area too 
 
-Gabor
+Got any preliminary patches you can share?
 
--- 
-     ---------------------------------------------------------
-     MTA SZTAKI Computer and Automation Research Institute
-                Hungarian Academy of Sciences
-     ---------------------------------------------------------
+> and have a lingering desire to hook MD up to the tracing
+> infrastructure du jour.  Have you considered using tracepoints [1]?
+> This would save the overhead of atomic operations when we're not
+> profiling.
+
+Thanks for the suggestion, I'll look into that.
+
+Cheers,
+Jody
+
+> 
+> Regards,
+> Dan
+> 
+> [1]: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=Documentation/tracepoints.txt;h=5d354e16749447c667934ecd4c8f4fe5ee3da36c;hb=HEAD
