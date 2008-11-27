@@ -1,78 +1,35 @@
-From: "Kay Sievers" <kay.sievers@vrfy.org>
-Subject: Re: [mdadm git pull] support for detecting platform raid capabilities and some fixes
-Date: Thu, 27 Nov 2008 07:24:12 +0100
-Message-ID: <ac3eb2510811262224h65d5b774j502c8a635328fe7c@mail.gmail.com>
-References: <1227743100.31146.41.camel@dwillia2-linux.ch.intel.com>
-	 <ac3eb2510811261613ja5bc80ag4fc011d76d95e961@mail.gmail.com>
-	 <e9c3a7c20811261925r36a304a6taaca2b6a8a146799@mail.gmail.com>
+From: Gabor Gombas <gombasg@sztaki.hu>
+Subject: Re: [RFC patch 1/1] Track raid5/6 statistics.
+Date: Thu, 27 Nov 2008 12:47:48 +0100
+Message-ID: <20081127114748.GE14570@boogie.lpds.sztaki.hu>
+References: <20081126190452.775333692@sun.com> <20081126190854.813151413@sun.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e9c3a7c20811261925r36a304a6taaca2b6a8a146799@mail.gmail.com>
 Content-Disposition: inline
+In-Reply-To: <20081126190854.813151413@sun.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+To: scjody@sun.com
+Cc: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-On Thu, Nov 27, 2008 at 04:25, Dan Williams <dan.j.williams@intel.com> wrote:
-> On Wed, Nov 26, 2008 at 5:13 PM, Kay Sievers <kay.sievers@vrfy.org> wrote:
->> On Thu, Nov 27, 2008 at 00:45, Dan Williams <dan.j.williams@intel.com> wrote:
->>> This implementation crawls through sysfs to put this information
->>> together, I believe it is crawling in a future proof fashion, but here
->>> are my assumptions:
->>> 1/ /sys/bus/pci/drivers/ahci/<x>/device will identify a pci ahci device
->>
->> Why "device"? You just check for the "device" attribute file of the PCI device?
->>
->
-> $ ls /sys/bus/pci/drivers/ahci/
-> 0000:00:1f.2/   module/ uevent
-> bind                    new_id  unbind
->
-> I look for the 'device' file to disambiguate '0000:00:1f.2' from
-> 'module' or some other object that appears in the future.  The other
-> attributes are discarded because they are not directories.
+On Wed, Nov 26, 2008 at 02:04:53PM -0500, scjody@sun.com wrote:
 
-But only devices of the bus "pci" have this attribute. The code looks
-like it it should be able to handle some other buses to, at least the
-bus values is passed around, but the pci-device attribute "device" is
-hard coded. That's why I asked.
-It's fine if you want to do it that way. If you just look for a
-"struct device" of that <bus>, resolving "subsystem" and checking if
-the tail of the string matches "/<bus>" should be fine.
+> I realize that the format of the statistics may not be the best, and
+> there may be a better location than /proc/mdstat, so I welcome suggestions
+> on where to put them.
 
->>> 1/ An attempt to cover the delay between mdadm creating an array and the
->>> friendly-named device node showing up in /dev/md/ by calling 'udevadm
->>> settle' before starting starting Incremental assembly.  This
->>> specifically fixes scripts that do:
->>> mdadm -A /dev/md/<container>
->>> mdadm -I /dev/md/<container>
->>> There is a good chance there is a better place to put this call, but
->>> putting it in create_mddev didn't work, and moving it up in main()
->>> resulted in a hang.  I didn't want to hold up the other patches for this
->>> debug.
->>
->> If mdadm calls "udevadm settle", we can not call mdadm (which we do
->> already) from udev rules because it will just deadlock.
->>
->> We need to make "udevadm settle" smarter and not to wait for its own
->> event, or make it wait for something specific and not just "all"
->> events, or find a different way for mdadm to sync with udev.
->>
->
-> It just sounds like we need to be careful that the path that udev
-> triggers when it calls mdadm does not result in another call to
-> "udevadm settle" which should be ok because udev should never be
-> creating md devices, right?
+Are these values useful for mere mortals trying to create a RAID array
+best suited for a specific workload, or are these only useful for people
+hacking on the RAID code? If the former, then I'd suggest to use sysfs
+(something like /sys/block/<dev>/md/statistics, similar to
+/sys/class/net/<dev>/statistics). If the latter, then debugfs would be
+better.
 
-Udev calls mdadm also for the md devices, but with different options I
-guess. In the future, udev will also create the device nodes instead
-of mdadm.
-This needs to be handled very careful, because _any_ call to udevadm
-from mdadm will deadlock if called from udev. Something we need to
-make sure, it can't happen, on udev's or mdadm's side.
+Gabor
 
-Thanks,
-Kay
+-- 
+     ---------------------------------------------------------
+     MTA SZTAKI Computer and Automation Research Institute
+                Hungarian Academy of Sciences
+     ---------------------------------------------------------
