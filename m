@@ -1,52 +1,53 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [RFC patch 1/1] Track raid5/6 statistics.
-Date: Fri, 28 Nov 2008 12:21:10 -0500
-Message-ID: <49302886.4040609@tmr.com>
-References: <20081126190452.775333692@sun.com> <20081126190854.813151413@sun.com> <20081127114748.GE14570@boogie.lpds.sztaki.hu> <20081127135248.GD29919@clouds> <20081127171535.GL14570@boogie.lpds.sztaki.hu> <20081127182912.GE29919@clouds>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: [mdadm git pull] support for detecting platform raid capabilities and some fixes
+Date: Fri, 28 Nov 2008 10:24:24 -0700
+Message-ID: <e9c3a7c20811280924je623664s5d3b2fe9e990c06e@mail.gmail.com>
+References: <1227743100.31146.41.camel@dwillia2-linux.ch.intel.com>
+	 <ac3eb2510811261613ja5bc80ag4fc011d76d95e961@mail.gmail.com>
+	 <e9c3a7c20811261925r36a304a6taaca2b6a8a146799@mail.gmail.com>
+	 <ac3eb2510811262224h65d5b774j502c8a635328fe7c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20081127182912.GE29919@clouds>
+In-Reply-To: <ac3eb2510811262224h65d5b774j502c8a635328fe7c@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Jody McIntyre <scjody@sun.com>
-Cc: Gabor Gombas <gombasg@sztaki.hu>, linux-raid@vger.kernel.org, neilb@suse.de
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Jody McIntyre wrote:
-> On Thu, Nov 27, 2008 at 06:15:35PM +0100, Gabor Gombas wrote:
+On Wed, Nov 26, 2008 at 11:24 PM, Kay Sievers <kay.sievers@vrfy.org> wrote:
+> On Thu, Nov 27, 2008 at 04:25, Dan Williams <dan.j.williams@intel.com> wrote:
+>> On Wed, Nov 26, 2008 at 5:13 PM, Kay Sievers <kay.sievers@vrfy.org> wrote:
+>>> On Thu, Nov 27, 2008 at 00:45, Dan Williams <dan.j.williams@intel.com> wrote:
+>>>> This implementation crawls through sysfs to put this information
+>>>> together, I believe it is crawling in a future proof fashion, but here
+>>>> are my assumptions:
+>>>> 1/ /sys/bus/pci/drivers/ahci/<x>/device will identify a pci ahci device
+>>>
+>>> Why "device"? You just check for the "device" attribute file of the PCI device?
+>>>
+>>
+>> $ ls /sys/bus/pci/drivers/ahci/
+>> 0000:00:1f.2/   module/ uevent
+>> bind                    new_id  unbind
+>>
+>> I look for the 'device' file to disambiguate '0000:00:1f.2' from
+>> 'module' or some other object that appears in the future.  The other
+>> attributes are discarded because they are not directories.
 >
->   
->> /proc contains a lot of legacy junk but nowadays the trend is that you
->> should not add new files under /proc that are not process-related.
->>     
->
-> Agreed.  I'm not proposing that at all.
->
->   
->> Changing /proc/mdstat is IMHO out of question since it is part of the
->> user visible ABI and breaking that is a big no-no. So if you want all
->> info in a single file that pretty much leaves only debugfs.
->>     
->
-> AFAICT it was last changed on 2005-09-09 (appearing in 2.6.14).  This
-> suggests we can change it given a sufficiently good reason.
->   
+> But only devices of the bus "pci" have this attribute. The code looks
+> like it it should be able to handle some other buses to, at least the
+> bus values is passed around, but the pci-device attribute "device" is
+> hard coded. That's why I asked.
+> It's fine if you want to do it that way. If you just look for a
+> "struct device" of that <bus>, resolving "subsystem" and checking if
+> the tail of the string matches "/<bus>" should be fine.
 
-I have to think that providing information useful to a subset of users, 
-while possibly breaking existing tools, is going to be a hard sell and 
-probably indefensible, since your new stuff could as well go in a new 
-file in /sys or even debugfs. I would rather not see you mix policy with 
-the technical features of these patches. I'd rather not see you do 
-anything which makes my fragile perl scripts break, either. ;-)
+gah, I was confusing the 'device' I find here "/sys/block/sda/device"
+with the pci device id.  Yes, checking on 'subsystem' seems to be
+exactly what I want.
 
-I think this is a step in the right direction, tuning an array is always 
-time consuming, and I suspect that many of us settle for "better" rather 
-than "optimal" just for that reason.
-
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
-
-
+Thanks,
+Dan
