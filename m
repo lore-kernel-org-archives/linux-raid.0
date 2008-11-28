@@ -1,58 +1,39 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Uncorrectable errors: how do I fix it?
-Date: Fri, 28 Nov 2008 16:03:29 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0811281600560.10901@p34.internal.lan>
-References: <493036A0.10707@anonymous.org.uk>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: [RFC patch 1/1] Track raid5/6 statistics.
+Date: Fri, 28 Nov 2008 14:14:42 -0700
+Message-ID: <e9c3a7c20811281314g7be33d97x838720b5e49a56e3@mail.gmail.com>
+References: <20081126190452.775333692@sun.com>
+	 <20081126190854.813151413@sun.com>
+	 <e9c3a7c20811261350n57fb3881if443969b27079543@mail.gmail.com>
+	 <20081127134503.GC29919@clouds>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <493036A0.10707@anonymous.org.uk>
+In-Reply-To: <20081127134503.GC29919@clouds>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Jody McIntyre <scjody@sun.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-
-
-On Fri, 28 Nov 2008, John Robinson wrote:
-
-> One of the drives in my RAID-5 array is showing uncorrectable errors:
+On Thu, Nov 27, 2008 at 6:45 AM, Jody McIntyre <scjody@sun.com> wrote:
+> Hi Dan,
 >
-> I tried:
-> [root@beast md]# mdadm /dev/md1 --fail /dev/sdc2
-> mdadm: set /dev/sdc2 faulty in /dev/md1
-> [root@beast md]# mdadm /dev/md1 --remove /dev/sdc2
-> mdadm: hot removed /dev/sdc2
-> [root@beast md]# mdadm /dev/md1 --add /dev/sdc2
-> mdadm: re-added /dev/sdc2
+> On Wed, Nov 26, 2008 at 02:50:18PM -0700, Dan Williams wrote:
 >
-> but that finished instantly. I guess it would since the array has a 
-> write-intent bitmap and it's noticed that sdc2 is being re-added. I could 
-> tell the system to do a complete resync with:
-> # echo repair > /sys/block/md1/md/sync_action
+>> I have done some work in this area too
 >
-> but really I want to tell the system to rebuild entirely from sda2 and sdb2, 
-> onto sdc2. At least I think I do. I've a feeling the answer is to zero the 
-> superblock, but I'm not confident about doing that because I'm not sure if 
-> re-adding the thing without a superblock will either work or do the Right 
-> Thing[tm].
+> Got any preliminary patches you can share?
+>
 
-Before you do this you should backup your data elsewhere just incase you 
-cannot rebuild the array later.
+A patch for streaming write performance.  The get_priority_stripe [1]
+patch was the end result of a discussion and initial investigation of
+raid5 write performance [2] started by Raz Ben-Jehuda(caro).  It
+helps, but is not a panacea...
 
-You may be able to fix it using the hdparm --write-sector command if you 
-know what you are doing, otherwise, the quickest way is to fail it from 
-the array as you did before, remove it from the raid set.
+--
+Dan
 
-zero the disk:
-dd if=/dev/zero of=/dev/disk
-
-run badblocks on it a few times:
-run short+long test when its all done:
-
-re-check smart statistics and they should complete successfully.
-
-then sfdisk -d /dev/sda | sfdisk /dev/sdc
-then pop it back into the array with mdadm /dev/md1 -a /dev/sdc2
-
-Justin.
+[1]: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=8b3e6cdc53b7f29f7026955d6cb6902a49322a15
+[2]: http://marc.info/?l=linux-raid&m=117697457216290&w=2
