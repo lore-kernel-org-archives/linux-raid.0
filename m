@@ -1,7 +1,7 @@
-From: Tom Walsh <tomw@openhardware.net>
+From: Tom Walsh <tom@openhardware.net>
 Subject: test
-Date: Sat, 29 Nov 2008 16:16:53 -0500
-Message-ID: <4931B145.1090405@openhardware.net>
+Date: Sat, 29 Nov 2008 16:17:40 -0500
+Message-ID: <4931B174.9020800@openhardware.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -10,7 +10,6 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-ignore
 
 -- 
 Tom Walsh - WN3L - Embedded Systems Consultant
