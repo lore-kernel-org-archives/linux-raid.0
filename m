@@ -1,70 +1,91 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Uncorrectable errors: how do I fix it?
-Date: Sat, 29 Nov 2008 08:53:23 +1100 (EST)
-Message-ID: <f7aa19cbda5aee2fc3af5e24296b78f7.squirrel@neil.brown.name>
-References: <493036A0.10707@anonymous.org.uk>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: sd takes drive offline but md does not know
+Date: Sat, 29 Nov 2008 21:19:45 +1300
+Message-ID: <4930FB21.2070108@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <493036A0.10707@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, November 29, 2008 5:21 am, John Robinson wrote:
-> One of the drives in my RAID-5 array is showing uncorrectable errors:
-> Nov 28 17:52:36 beast smartd[8184]: Device: /dev/sdc, 1 Currently
-> unreadable (pending) sectors
-> Nov 28 17:52:36 beast smartd[8184]: Device: /dev/sdc, 1 Offline
-> uncorrectable sectors
->
-> And it fails a self-test:
-> SMART Self-test log structure revision number 0
-> Warning: ATA Specification requires self-test log structure revision
-> number = 1
-> Num  Test_Description    Status                  Remaining
-> LifeTime(hours)  LBA_of_first_error
-> # 1  Short offline       Completed: read failure       20%       931
->    1953520763
->
-> Now that's not good but it's probably not bad enough to get the drive
-> replaced. (Opinions?) Anyway, rewriting the sector ought to "cure" it,
-> so how do I do that?
-..
-> I tried:
-> [root@beast md]# mdadm /dev/md1 --fail /dev/sdc2
-> mdadm: set /dev/sdc2 faulty in /dev/md1
-> [root@beast md]# mdadm /dev/md1 --remove /dev/sdc2
-> mdadm: hot removed /dev/sdc2
-> [root@beast md]# mdadm /dev/md1 --add /dev/sdc2
-> mdadm: re-added /dev/sdc2
->
-> but that finished instantly. I guess it would since the array has a
-> write-intent bitmap and it's noticed that sdc2 is being re-added. I
-> could tell the system to do a complete resync with:
-> # echo repair > /sys/block/md1/md/sync_action
->
-> but really I want to tell the system to rebuild entirely from sda2 and
-> sdb2, onto sdc2. At least I think I do. I've a feeling the answer is to
-> zero the superblock, but I'm not confident about doing that because I'm
-> not sure if re-adding the thing without a superblock will either work or
-> do the Right Thing[tm].
+I have system running 2.6.26.6-79.fc9.x86_64 using a 16 SATA drive md 
+RAID6 behind an LSI 1068 SAS controller.
 
-I would recommend the "echo repair" approach.  It won't write every block
-on sdc, but you don't really need that.
-And if you hit a bad block on some other drive, it will cope much better
-than removing a drive and adding it back in.
+The current stable version of smartmontools cannot be started at boot 
+time if samba is also started at the same time - see:
 
-However if you really want to write all of sdc and you are willing to
-risk the possibility of a bad block on sda or sdb, then zeroing the
-superblock on sdc before adding it back in will do what you expect.
+http://marc.info/?l=smartmontools-support&m=122518510306493&w=2
 
-The suggestion made by Justin of always having backups is, of course,
-a good one.
+Up until today, about 1 month, I have been able to run smartd and issue 
+smrtctl commands without problem.
+
+Today I smartctl'ed a drive (sdr) in the array and the drive was reset 
+and finally offlined.
+
+Is it to be expected that in this scenario, md was ignorant of this and 
+/proc/mdstat showed this drive as being present still?
+
+Only when the array is unmounted and possibly if filesystem activity 
+occurs do thing fall over badly - in this case external ssh and console 
+access hung and a reset was required. The log shows nothing of note 
+after the following until the machine reboots:
+
+Nov 29 13:12:56 avidstorage kernel: mptscsih: ioc0: attempting task 
+abort! (sc=ffff810226524dc0)
+Nov 29 13:12:56 avidstorage kernel: sd 8:0:15:0: [sdr] CDB: ATA command 
+pass through(16): 85 08 0e 00 d5 00 01 00 09 00 4f 00 c2 00 b0 00
+Nov 29 13:12:58 avidstorage kernel: mptbase: ioc0: LogInfo(0x31140000): 
+Originator={PL}, Code={IO Executed}, SubCode(0x0000)
+Nov 29 13:12:58 avidstorage kernel: mptscsih: ioc0: task abort: SUCCESS 
+(sc=ffff810226524dc0)
+Nov 29 13:13:08 avidstorage kernel: mptscsih: ioc0: attempting task 
+abort! (sc=ffff810226524dc0)
+Nov 29 13:13:08 avidstorage kernel: sd 8:0:15:0: [sdr] CDB: Test Unit 
+Ready: 00 00 00 00 00 00
+Nov 29 13:13:10 avidstorage kernel: mptbase: ioc0: LogInfo(0x31140000): 
+Originator={PL}, Code={IO Executed}, SubCode(0x0000)
+Nov 29 13:13:10 avidstorage kernel: mptscsih: ioc0: task abort: SUCCESS 
+(sc=ffff810226524dc0)
+Nov 29 13:13:10 avidstorage kernel: mptscsih: ioc0: attempting target 
+reset! (sc=ffff810226524dc0)
+Nov 29 13:13:10 avidstorage kernel: sd 8:0:15:0: [sdr] CDB: ATA command 
+pass through(16): 85 08 0e 00 d5 00 01 00 09 00 4f 00 c2 00 b0 00
+Nov 29 13:13:12 avidstorage kernel: mptscsih: ioc0: Issue of TaskMgmt 
+failed!
+Nov 29 13:13:12 avidstorage kernel: mptscsih: ioc0: target reset: FAILED 
+(sc=ffff810226524dc0)
+Nov 29 13:13:12 avidstorage kernel: mptscsih: ioc0: attempting bus 
+reset! (sc=ffff810226524dc0)
+Nov 29 13:13:12 avidstorage kernel: sd 8:0:15:0: [sdr] CDB: ATA command 
+pass through(16): 85 08 0e 00 d5 00 01 00 09 00 4f 00 c2 00 b0 00
+Nov 29 13:13:20 avidstorage kernel: mptscsih: ioc0: bus reset: SUCCESS 
+(sc=ffff810226524dc0)
+Nov 29 13:13:40 avidstorage kernel: mptscsih: ioc0: attempting task 
+abort! (sc=ffff810226524dc0)
+Nov 29 13:13:40 avidstorage kernel: sd 8:0:15:0: [sdr] CDB: Test Unit 
+Ready: 00 00 00 00 00 00
+Nov 29 13:13:42 avidstorage kernel: mptbase: ioc0: LogInfo(0x31130000): 
+Originator={PL}, Code={IO Not Yet Executed}, SubCode(0x0000)
+Nov 29 13:13:42 avidstorage kernel: mptscsih: ioc0: task abort: SUCCESS 
+(sc=ffff810226524dc0)
+Nov 29 13:13:42 avidstorage kernel: mptscsih: ioc0: attempting host 
+reset! (sc=ffff810226524dc0)
+Nov 29 13:13:42 avidstorage kernel: mptbase: ioc0: Initiating recovery
+Nov 29 13:13:57 avidstorage kernel: mptscsih: ioc0: host reset: SUCCESS 
+(sc=ffff810226524dc0)
+Nov 29 13:13:57 avidstorage kernel: sd 8:0:15:0: Device offlined - not 
+ready after error recovery
+Nov 29 13:18:05 avidstorage ntpd[3101]: kernel time sync status change 4001
+Nov 29 13:26:40 avidstorage smartd[3468]: Device: /dev/sdr, No such 
+device or address, open() failed
+Nov 29 13:26:40 avidstorage smartd[3468]: Sending warning via mail to 
+root@sauce.co.nz ...
+Nov 29 13:26:40 avidstorage smartd[3468]: Warning via mail to 
+root@sauce.co.nz: successful
 
 
-NeilBrown
+Regards,
 
-
+Richard
