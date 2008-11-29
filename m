@@ -1,91 +1,60 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: sd takes drive offline but md does not know
-Date: Sat, 29 Nov 2008 21:19:45 +1300
-Message-ID: <4930FB21.2070108@sauce.co.nz>
+From: Tom Walsh <tom@openhardware.net>
+Subject: array always resyncs on boot
+Date: Sat, 29 Nov 2008 16:23:17 -0500
+Message-ID: <4931B2C5.5060403@openhardware.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have system running 2.6.26.6-79.fc9.x86_64 using a 16 SATA drive md 
-RAID6 behind an LSI 1068 SAS controller.
+<sigh> I need help!
 
-The current stable version of smartmontools cannot be started at boot 
-time if samba is also started at the same time - see:
+It  is not like I haven't build a raid array before, I've got three
+systems using a mix of raid1 and raid5 that have been running for
+about two years.  Those systems are okay.  It is problems that
+developed with this fourth system.
 
-http://marc.info/?l=smartmontools-support&m=122518510306493&w=2
+This system was constructed about 10 months ago using six 320G drives
+(4 Seagage ST3320620AS and 2 Western Digital WD3200AAKS-0).  The
+system ran fine until two months ago when I had to shutdown the system
+for a few weeks.  When I powered up the system, it declared that the
+raid5 array needed to undergo a resync.  Subsequent reboots of that
+system persistently resulted in a resync!
 
-Up until today, about 1 month, I have been able to run smartd and issue 
-smrtctl commands without problem.
+In the past few weeks of chasing the problem down, I have replaced
+*EVERYTHING*!  RAM, Motheboard, cables, Q6600 CPU, power supply,
+switched from PCI-16e video card to a PCI video, removed all non-
+essential cards and USB devices.  The only thing that has not been
+changed in this system is the CPU fan.  And still, the raid array
+insists upon resyncing.
 
-Today I smartctl'ed a drive (sdr) in the array and the drive was reset 
-and finally offlined.
+I've overhauled the software, replaced the operating system
+innumerable times with several Mandriva distros: 2008, 2008.1, 2009.
+Removed the Mandriva kernel and compiled a stock 2.6.27.7 from
+ftp.kernel.org.  Ran the Seagate SeaTools on all four drives, no
+errors.  Ran the Western Digital Date Lifeguard on the two drives, no
+errors.  Changed from raid5 to raid10, still resyncs on boot.
 
-Is it to be expected that in this scenario, md was ignorant of this and 
-/proc/mdstat showed this drive as being present still?
+What am I doing wrong!?
 
-Only when the array is unmounted and possibly if filesystem activity 
-occurs do thing fall over badly - in this case external ssh and console 
-access hung and a reset was required. The log shows nothing of note 
-after the following until the machine reboots:
+mdadm --create /dev/md0 --level=10 --raid-devices=6 /dev/sd[a-f]5
+mke2fs -j /dev/md0
+mdadm -Eb /dev/sda5 >> /etc/mdadm
+# edit mdadm.conf
+blkid /dev/md0 >> /etc/fstab
+# edit fstab
 
-Nov 29 13:12:56 avidstorage kernel: mptscsih: ioc0: attempting task 
-abort! (sc=ffff810226524dc0)
-Nov 29 13:12:56 avidstorage kernel: sd 8:0:15:0: [sdr] CDB: ATA command 
-pass through(16): 85 08 0e 00 d5 00 01 00 09 00 4f 00 c2 00 b0 00
-Nov 29 13:12:58 avidstorage kernel: mptbase: ioc0: LogInfo(0x31140000): 
-Originator={PL}, Code={IO Executed}, SubCode(0x0000)
-Nov 29 13:12:58 avidstorage kernel: mptscsih: ioc0: task abort: SUCCESS 
-(sc=ffff810226524dc0)
-Nov 29 13:13:08 avidstorage kernel: mptscsih: ioc0: attempting task 
-abort! (sc=ffff810226524dc0)
-Nov 29 13:13:08 avidstorage kernel: sd 8:0:15:0: [sdr] CDB: Test Unit 
-Ready: 00 00 00 00 00 00
-Nov 29 13:13:10 avidstorage kernel: mptbase: ioc0: LogInfo(0x31140000): 
-Originator={PL}, Code={IO Executed}, SubCode(0x0000)
-Nov 29 13:13:10 avidstorage kernel: mptscsih: ioc0: task abort: SUCCESS 
-(sc=ffff810226524dc0)
-Nov 29 13:13:10 avidstorage kernel: mptscsih: ioc0: attempting target 
-reset! (sc=ffff810226524dc0)
-Nov 29 13:13:10 avidstorage kernel: sd 8:0:15:0: [sdr] CDB: ATA command 
-pass through(16): 85 08 0e 00 d5 00 01 00 09 00 4f 00 c2 00 b0 00
-Nov 29 13:13:12 avidstorage kernel: mptscsih: ioc0: Issue of TaskMgmt 
-failed!
-Nov 29 13:13:12 avidstorage kernel: mptscsih: ioc0: target reset: FAILED 
-(sc=ffff810226524dc0)
-Nov 29 13:13:12 avidstorage kernel: mptscsih: ioc0: attempting bus 
-reset! (sc=ffff810226524dc0)
-Nov 29 13:13:12 avidstorage kernel: sd 8:0:15:0: [sdr] CDB: ATA command 
-pass through(16): 85 08 0e 00 d5 00 01 00 09 00 4f 00 c2 00 b0 00
-Nov 29 13:13:20 avidstorage kernel: mptscsih: ioc0: bus reset: SUCCESS 
-(sc=ffff810226524dc0)
-Nov 29 13:13:40 avidstorage kernel: mptscsih: ioc0: attempting task 
-abort! (sc=ffff810226524dc0)
-Nov 29 13:13:40 avidstorage kernel: sd 8:0:15:0: [sdr] CDB: Test Unit 
-Ready: 00 00 00 00 00 00
-Nov 29 13:13:42 avidstorage kernel: mptbase: ioc0: LogInfo(0x31130000): 
-Originator={PL}, Code={IO Not Yet Executed}, SubCode(0x0000)
-Nov 29 13:13:42 avidstorage kernel: mptscsih: ioc0: task abort: SUCCESS 
-(sc=ffff810226524dc0)
-Nov 29 13:13:42 avidstorage kernel: mptscsih: ioc0: attempting host 
-reset! (sc=ffff810226524dc0)
-Nov 29 13:13:42 avidstorage kernel: mptbase: ioc0: Initiating recovery
-Nov 29 13:13:57 avidstorage kernel: mptscsih: ioc0: host reset: SUCCESS 
-(sc=ffff810226524dc0)
-Nov 29 13:13:57 avidstorage kernel: sd 8:0:15:0: Device offlined - not 
-ready after error recovery
-Nov 29 13:18:05 avidstorage ntpd[3101]: kernel time sync status change 4001
-Nov 29 13:26:40 avidstorage smartd[3468]: Device: /dev/sdr, No such 
-device or address, open() failed
-Nov 29 13:26:40 avidstorage smartd[3468]: Sending warning via mail to 
-root@sauce.co.nz ...
-Nov 29 13:26:40 avidstorage smartd[3468]: Warning via mail to 
-root@sauce.co.nz: successful
+I just cannot keep the system from resyncing on every boot.  I've
+gotten to the point that I'm thinking that I may have been root'ed and
+the boot flash of the drives has been reflashed...  Ok, that is
+reaching for an answer, I know.  This is time to ask for help.  help!
 
+-- 
+Tom Walsh - WN3L - Embedded Systems Consultant
+http://openhardware.net http://cyberiansoftware.com http://openzipit.org
+"Windows? No thanks, I have work to do..."
+----------------------------------------------------
 
-Regards,
-
-Richard
