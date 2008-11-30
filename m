@@ -1,151 +1,110 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: sd takes drive offline but md does not know
-Date: Sat, 29 Nov 2008 19:57:09 -0600
-Message-ID: <A20315AE59B5C34585629E258D76A97C02D77A42@34093-C3-EVS3.exchange.rackspace.com>
-References: <4930FB21.2070108@sauce.co.nz>
+From: Tom Walsh <tom@openhardware.net>
+Subject: Re: array always resyncs on boot
+Date: Sat, 29 Nov 2008 21:21:03 -0500
+Message-ID: <4931F88F.9000300@openhardware.net>
+References: <4931B2C5.5060403@openhardware.net> <alpine.DEB.1.10.0811291633140.1796@p34.internal.lan> <4931E75D.5080905@openhardware.net> <alpine.DEB.1.10.0811292015010.7720@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <4930FB21.2070108@sauce.co.nz>
+In-Reply-To: <alpine.DEB.1.10.0811292015010.7720@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Richard Scobie
-> Sent: Saturday, November 29, 2008 2:20 AM
-> To: Linux RAID Mailing List
-> Subject: sd takes drive offline but md does not know
-> 
-> I have system running 2.6.26.6-79.fc9.x86_64 using a 16 SATA drive md
-> RAID6 behind an LSI 1068 SAS controller.
-> 
-> The current stable version of smartmontools cannot be started at boot
-> time if samba is also started at the same time - see:
-> 
-> http://marc.info/?l=smartmontools-support&m=122518510306493&w=2
-> 
-> Up until today, about 1 month, I have been able to run smartd and
-issue
-> smrtctl commands without problem.
-> 
-> Today I smartctl'ed a drive (sdr) in the array and the drive was reset
-> and finally offlined.
-> 
-> Is it to be expected that in this scenario, md was ignorant of this
-and
-> /proc/mdstat showed this drive as being present still?
-> 
-> Only when the array is unmounted and possibly if filesystem activity
-> occurs do thing fall over badly - in this case external ssh and
-console
-> access hung and a reset was required. The log shows nothing of note
-> after the following until the machine reboots:
-> 
-> Nov 29 13:12:56 avidstorage kernel: mptscsih: ioc0: attempting task
-> abort! (sc=ffff810226524dc0)
-> Nov 29 13:12:56 avidstorage kernel: sd 8:0:15:0: [sdr] CDB: ATA
-command
-> pass through(16): 85 08 0e 00 d5 00 01 00 09 00 4f 00 c2 00 b0 00
-> Nov 29 13:12:58 avidstorage kernel: mptbase: ioc0:
-LogInfo(0x31140000):
-> Originator={PL}, Code={IO Executed}, SubCode(0x0000)
-> Nov 29 13:12:58 avidstorage kernel: mptscsih: ioc0: task abort:
-SUCCESS
-> (sc=ffff810226524dc0)
-> Nov 29 13:13:08 avidstorage kernel: mptscsih: ioc0: attempting task
-> abort! (sc=ffff810226524dc0)
-> Nov 29 13:13:08 avidstorage kernel: sd 8:0:15:0: [sdr] CDB: Test Unit
-> Ready: 00 00 00 00 00 00
-> Nov 29 13:13:10 avidstorage kernel: mptbase: ioc0:
-LogInfo(0x31140000):
-> Originator={PL}, Code={IO Executed}, SubCode(0x0000)
-> Nov 29 13:13:10 avidstorage kernel: mptscsih: ioc0: task abort:
-SUCCESS
-> (sc=ffff810226524dc0)
-> Nov 29 13:13:10 avidstorage kernel: mptscsih: ioc0: attempting target
-> reset! (sc=ffff810226524dc0)
-> Nov 29 13:13:10 avidstorage kernel: sd 8:0:15:0: [sdr] CDB: ATA
-command
-> pass through(16): 85 08 0e 00 d5 00 01 00 09 00 4f 00 c2 00 b0 00
-> Nov 29 13:13:12 avidstorage kernel: mptscsih: ioc0: Issue of TaskMgmt
-> failed!
-> Nov 29 13:13:12 avidstorage kernel: mptscsih: ioc0: target reset:
-> FAILED
-> (sc=ffff810226524dc0)
-> Nov 29 13:13:12 avidstorage kernel: mptscsih: ioc0: attempting bus
-> reset! (sc=ffff810226524dc0)
-> Nov 29 13:13:12 avidstorage kernel: sd 8:0:15:0: [sdr] CDB: ATA
-command
-> pass through(16): 85 08 0e 00 d5 00 01 00 09 00 4f 00 c2 00 b0 00
-> Nov 29 13:13:20 avidstorage kernel: mptscsih: ioc0: bus reset: SUCCESS
-> (sc=ffff810226524dc0)
-> Nov 29 13:13:40 avidstorage kernel: mptscsih: ioc0: attempting task
-> abort! (sc=ffff810226524dc0)
-> Nov 29 13:13:40 avidstorage kernel: sd 8:0:15:0: [sdr] CDB: Test Unit
-> Ready: 00 00 00 00 00 00
-> Nov 29 13:13:42 avidstorage kernel: mptbase: ioc0:
-LogInfo(0x31130000):
-> Originator={PL}, Code={IO Not Yet Executed}, SubCode(0x0000)
-> Nov 29 13:13:42 avidstorage kernel: mptscsih: ioc0: task abort:
-SUCCESS
-> (sc=ffff810226524dc0)
-> Nov 29 13:13:42 avidstorage kernel: mptscsih: ioc0: attempting host
-> reset! (sc=ffff810226524dc0)
-> Nov 29 13:13:42 avidstorage kernel: mptbase: ioc0: Initiating recovery
-> Nov 29 13:13:57 avidstorage kernel: mptscsih: ioc0: host reset:
-SUCCESS
-> (sc=ffff810226524dc0)
-> Nov 29 13:13:57 avidstorage kernel: sd 8:0:15:0: Device offlined - not
-> ready after error recovery
-> Nov 29 13:18:05 avidstorage ntpd[3101]: kernel time sync status change
-> 4001
-> Nov 29 13:26:40 avidstorage smartd[3468]: Device: /dev/sdr, No such
-> device or address, open() failed
-> Nov 29 13:26:40 avidstorage smartd[3468]: Sending warning via mail to
-> root@sauce.co.nz ...
-> Nov 29 13:26:40 avidstorage smartd[3468]: Warning via mail to
-> root@sauce.co.nz: successful
+Justin Piszcz wrote:
 > 
 > 
-> Regards,
+> On Sat, 29 Nov 2008, Tom Walsh wrote:
 > 
-> Richard
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-What firmware, drivers & BIOS is the LSI controller running, and what is
-exact model number?
+>> Justin Piszcz wrote:
+>>>
+> 
+> [ .. snip .. ]
+> 
+>> From your dmesg, you need to figure out why it is assembling only 5
+> out of the 6 disks, is it kicking a non-fresh one out of the array, or..?
+> 
 
-Several things to consider
- - if you enabled SMART rather than telling the controller to enable
-SMART for the individual drives, then this will cause a problem
-depending on specifics of what you have .. especially if the controller
-is running the RAID firmware.
- - There are firmware issues with some LSI chipsets and
-driver/bios/MPT-library revision logic which can cause bus resets.   In
-this case, the bus reset made the controller think the disk timed out to
-whatever I/O operations the LSI controller told it to perform ... so the
-controller took disk to offline state.
+[...]
+> 
+> 1. Remove quiet from the boot options (in lilo.conf or grub.conf)
+> 2. Send an updated e-mail with the boot message.
+> 3. Try to capture all of the dmesg/syslog when you shutdown and send 
+> that as well.
+> 
+> 
+> Also see below, are all of these drives on the -SAME- controller?
+> http://www.newegg.com/Product/Product.aspx?Item=N82E16813128347
+> 
 
-My suggestion is to go to the MPT BIOS screen and enable SMART for all
-disks, and let the controller manage it.  
-Although you didn't comment on what firmware you have, let me also tell
-you if the LSI controller is running the RAID version of the firmware,
-rather than the -IT (non-RAID) version, then flash the IT firmware.
-You'll get better performance.
+Yes, they are.  Something keeps nagging at me.  I think that about 3 
+months ago I did a urpmi update and it replaced the kernel, or I allowed 
+it to.  The system that I had back then, that was working with the ICH10 
+chip was a 2.6.22 kernel (Mandriva customized).
 
-Note, don't change firmware from RAID to non-RAID or vise-versa with
-live data.  The number of blocks and location of metadata for the RAID
-firmware is somewhat dependent of what you have and what you are going
-to.
+I've noticed in the dmesg output that the 'md:' does not finish scanning 
+the sata drives before the raid10 module starts, as evidenced here in 
+this dmesg snippet:
 
-David @ santools.com
 
+ACPI: Processor [CPU2] (supports 8 throttling states)
+ACPI: SSDT 7FEE8700, 0152 (r1  PmRef  Cpu3Ist     3000 INTL 20040311)
+ACPI: CPU3 (power states: C1[C1] C2[C2])
+processor ACPI0007:03: registered as cooling_device3
+ACPI: Processor [CPU3] (supports 8 throttling states)
+md: bind<sdf5>
+md: bind<sde5>
+md: bind<sdb5>
+HDA Intel 0000:00:1b.0: PCI INT A -> GSI 22 (level, low) -> IRQ 22
+HDA Intel 0000:00:1b.0: setting latency timer to 64
+md: bind<sda5>
+md: bind<sdc5>
+md: raid10 personality registered for level 10
+raid10: raid set md0 active with 5 out of 6 devices
+md: bind<sdd5>
+RAID10 conf printout:
+  --- wd:5 rd:6
+  disk 0, wo:0, o:1, dev:sda5
+  disk 1, wo:0, o:1, dev:sdb5
+  disk 2, wo:0, o:1, dev:sdc5
+  disk 3, wo:1, o:1, dev:sdd5
+  disk 4, wo:0, o:1, dev:sde5
+  disk 5, wo:0, o:1, dev:sdf5
+md: recovery of RAID array md0
+
+================================================
+
+
+If you notice, '^raid10: ...' announcement preceeds the '^md: 
+bind<sdd5>' announcement?  Then, the raid10 conf printout shows that a 
+different status for the dev:sdd5 ??  I googled this message and it 
+seems to tie in with what may be happening here, see:
+
+http://archive.netbsd.se/?ml=linux-ide&a=2008-08&t=8302899
+
+In that message, he talks about "hard resetting link" problems and 
+failing to properly assemble the array.
+
+In all this madness of mine in these past 5..6 days, I'd forgotten that 
+I put the drive array onto an old AMD Sempron system here and installed 
+Mandriva 2008 onto it.  That seemed to work without a problem.  That is 
+a 2.6.22 kernel.
+
+I'm going to focus briefly on the kernel version as I see sometime 
+around either 2.6.24 or 2.6.26 that some work on the ICH10 driver was 
+being done.  Prior to that version, the ide_generic was used with the 
+ICH10 and you had to enable the AHCI Bios on the motherboard.
+
+I'll let you know...  This may be a driver issue.
+
+TomW
+
+
+-- 
+Tom Walsh - WN3L - Embedded Systems Consultant
+http://openhardware.net http://cyberiansoftware.com http://openzipit.org
+"Windows? No thanks, I have work to do..."
+----------------------------------------------------
 
