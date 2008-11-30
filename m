@@ -1,48 +1,36 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: sd takes drive offline but md does not know
-Date: Sun, 30 Nov 2008 20:34:05 +1300
-Message-ID: <493241ED.70402@sauce.co.nz>
-References: <4930FB21.2070108@sauce.co.nz> <A20315AE59B5C34585629E258D76A97C02D77A42@34093-C3-EVS3.exchange.rackspace.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: array always resyncs on boot
+Date: Sun, 30 Nov 2008 09:07:53 +0100
+Message-ID: <20081130080752.GA19919@maude.comedia.it>
+References: <4931B2C5.5060403@openhardware.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A20315AE59B5C34585629E258D76A97C02D77A42@34093-C3-EVS3.exchange.rackspace.com>
+Content-Disposition: inline
+In-Reply-To: <4931B2C5.5060403@openhardware.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Lethe <david@santools.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-David Lethe wrote:
+On Sat, Nov 29, 2008 at 04:23:17PM -0500, Tom Walsh wrote:
+> <sigh> I need help!
 
-> What firmware, drivers & BIOS is the LSI controller running, and what is
-> exact model number?
+i'll try :(
+> I've overhauled the software, replaced the operating system
+> innumerable times with several Mandriva distros: 2008, 2008.1, 2009.
+> Removed the Mandriva kernel and compiled a stock 2.6.27.7 from
+> ftp.kernel.org.  Ran the Seagate SeaTools on all four drives, no
+> errors.  Ran the Western Digital Date Lifeguard on the two drives, no
+> errors.  Changed from raid5 to raid10, still resyncs on boot.
 
-The card is the  SAS3442E-R using the B3 version of the 1068 controller 
-and has the latest public versions of BIOS and IT version of the firmware.
+https://qa.mandriva.com/show_bug.cgi?id=40023
 
-> Several things to consider
->  - if you enabled SMART rather than telling the controller to enable
-> SMART for the individual drives, then this will cause a problem
-> depending on specifics of what you have .. especially if the controller
-> is running the RAID firmware.
->  - There are firmware issues with some LSI chipsets and
-> driver/bios/MPT-library revision logic which can cause bus resets.   In
-> this case, the bus reset made the controller think the disk timed out to
-> whatever I/O operations the LSI controller told it to perform ... so the
-> controller took disk to offline state.
+read the whole of it.
 
-
-At this stage I am no longer concerned about using smartmontools - the 
-card has performed flawlessly in all other respects, so I will avoid it 
-in future.
-
-I am concerned that when the drive was offlined, md was not made aware 
-of it. Perhaps this is to be expected?
-
-Unfortunately this machine is in production now, so I cannot really 
-participate in any more testing/debugging.
-
-Regards,
-
-Richard
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
