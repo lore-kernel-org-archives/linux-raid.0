@@ -1,37 +1,34 @@
-From: Holger Mauermann <mauermann@gmail.com>
-Subject: LVM on raid10,f2 performance issues
-Date: Mon, 01 Dec 2008 01:00:32 +0100
-Message-ID: <49332920.5010503@gmail.com>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: mdadm --incremental and different config file
+Date: Mon, 1 Dec 2008 11:24:08 +1100 (EST)
+Message-ID: <4844862be26c89d648e57bf90aae498d.squirrel@neil.brown.name>
+References: <200811301551.08646.wilhelm.meier@fh-kl.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200811301551.08646.wilhelm.meier@fh-kl.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Wilhelm Meier <wilhelm.meier@fh-kl.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When I setup LVM on top of a 4 disk RAID 10 with f2 layout read/write
-performance is really worse - it's far below single drive speed...
+On Mon, December 1, 2008 1:51 am, Wilhelm Meier wrote:
+> Hi,
+>
+> how can I use a different config file for the incremental mode: -c is
+> not working in this mode?
 
-I did some testing with dd and hexdump and I noticed that after writing
-a 128k file (with 64k "X" and 64k "Y") to the lvol the data on the raw
-disks looks somewhat weird:
+Unfortunately you cannot without modifying the code.
+If you
 
-sda:  sdb:  sdc:  sdd:
-----------------------
-YYYY  ....  ....  XXXX
-....  ....  ....  ....
-XXXX  YYYY  ....  ....
-....  ....  ....  ....
+  git clone git://neil.brown.name/mdadm
+  cd mdadm
+  make install
 
-Any hints how to tune this? With LVM on a standard RAID 10 (n2) the data
-appears as expected on the disks:
+then you will be able to do this.
 
-sda:  sdb:  sdc:  sdd:
-----------------------
-YYYY  YYYY  XXXX  XXXX
-....  ....  ....  ....
-....  ....  ....  ....
-....  ....  ....  ....
+(i.e. I have just committed a fix).
 
+NeilBrown
 
