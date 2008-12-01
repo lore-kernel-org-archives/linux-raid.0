@@ -1,43 +1,60 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: mdadm and automatic re-add / incremental mode with usb-disk
-Date: Mon, 1 Dec 2008 16:21:47 +0100
-Message-ID: <slrngj808b.6ov.Mario.Holbe@darkside.dyn.samba-tng.org>
-References: <200811301231.58180.wilhelm.meier@fh-kl.de>
- <alpine.DEB.1.10.0811300646440.29266@p34.internal.lan>
- <200811301403.29920.wilhelm.meier@fh-kl.de>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: LVM on raid10,f2 performance issues
+Date: Mon, 1 Dec 2008 17:42:45 +0100
+Message-ID: <20081201164244.GB23899@rap.rap.dk>
+References: <49332920.5010503@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <49332920.5010503@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Holger Mauermann <mauermann@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Wilhelm Meier <wilhelm.meier@fh-kl.de> wrote:
-> That might be, but what is the difference between doing the re-add and 
-> re-sync on boot (that's what happens!)
+On Mon, Dec 01, 2008 at 01:00:32AM +0100, Holger Mauermann wrote:
+> When I setup LVM on top of a 4 disk RAID 10 with f2 layout read/write
+> performance is really worse - it's far below single drive speed...
 
-Nope, that's not what happens. What happens is a re-sync, not a re-add.
-Drives are never automagically re-added to an array. Once arrays are so
-far out of sync that a re-add is needed, you always have to do it
-manually, reboot or not.
-
-> or if the drive comes back on a running system.
-
-The drive could be buggy, could have a buggy connection, whatever. The
-reason for a drive disappearing and re-appearing is not always a user
-plugging it out and in.
-
-> So, my thought was to do this as part of a udev-rule. 
-
-Of course, you can do this yourself via some scripting. And if you think
-it is safe for you, move on. But then you have no reason to cry once
-those automatisms broke your system :)
+How is it if you use the raid10,f2 without lvm?
 
 
-regards
-   Mario
--- 
-The problem in the world today is communication. Too much communication.
-                                                     -- Homer J. Simpson
+What are the numbers?
 
+Did you use it with a live file system, or with just the raw raid?
+
+Live fs performance is much better than raw fs, in practice the raw fs
+performance is not really related to real life for raid10,f2.
+This because the elevator enhances operation quite a lot.
+
+best regards
+keld
+
+
+> I did some testing with dd and hexdump and I noticed that after writing
+> a 128k file (with 64k "X" and 64k "Y") to the lvol the data on the raw
+> disks looks somewhat weird:
+> 
+> sda:  sdb:  sdc:  sdd:
+> ----------------------
+> YYYY  ....  ....  XXXX
+> ....  ....  ....  ....
+> XXXX  YYYY  ....  ....
+> ....  ....  ....  ....
+> 
+> Any hints how to tune this? With LVM on a standard RAID 10 (n2) the data
+> appears as expected on the disks:
+> 
+> sda:  sdb:  sdc:  sdd:
+> ----------------------
+> YYYY  YYYY  XXXX  XXXX
+> ....  ....  ....  ....
+> ....  ....  ....  ....
+> ....  ....  ....  ....
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
