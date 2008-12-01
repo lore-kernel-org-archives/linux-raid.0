@@ -1,7 +1,7 @@
 From: junk@non-creative.com
-Subject: failed raid5, how to reconstruct?
-Date: Mon, 1 Dec 2008 17:05:06 -0500
-Message-ID: <3784296.11228169106138.JavaMail.root@wombat.diezmil.com>
+Subject: raid5 system degraded and on boot can no longer log on
+Date: Mon, 1 Dec 2008 17:03:40 -0500
+Message-ID: <16874657.01228169020059.JavaMail.root@wombat.diezmil.com>
 Reply-To: junk@non-creative.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
