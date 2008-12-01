@@ -1,49 +1,71 @@
-From: Wilhelm Meier <wilhelm.meier@fh-kl.de>
-Subject: Re: mdadm --incremental and different config file
-Date: Mon, 1 Dec 2008 08:02:23 +0100
-Message-ID: <200812010802.23907.wilhelm.meier@fh-kl.de>
-References: <200811301551.08646.wilhelm.meier@fh-kl.de> <4844862be26c89d648e57bf90aae498d.squirrel@neil.brown.name>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: array always resyncs on boot
+Date: Mon, 1 Dec 2008 08:47:23 +0100
+Message-ID: <20081201074723.GA18651@maude.comedia.it>
+References: <4931B2C5.5060403@openhardware.net> <20081130080752.GA19919@maude.comedia.it> <493261C9.8090208@openhardware.net> <493327F5.5010704@openhardware.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4844862be26c89d648e57bf90aae498d.squirrel@neil.brown.name>
 Content-Disposition: inline
+In-Reply-To: <493327F5.5010704@openhardware.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Am Montag 01 Dezember 2008 schrieb NeilBrown:
-> On Mon, December 1, 2008 1:51 am, Wilhelm Meier wrote:
-> > Hi,
-> >
-> > how can I use a different config file for the incremental mode:
-> > -c is not working in this mode?
->
-> Unfortunately you cannot without modifying the code.
-> If you
->
->   git clone git://neil.brown.name/mdadm
->   cd mdadm
->   make install
->
-> then you will be able to do this.
->
-> (i.e. I have just committed a fix).
+On Sun, Nov 30, 2008 at 06:55:33PM -0500, Tom Walsh wrote:
+> Tom Walsh wrote:
+>> Luca Berra wrote:
+>>> On Sat, Nov 29, 2008 at 04:23:17PM -0500, Tom Walsh wrote:
+>>>> <sigh> I need help!
+>>>
+>>> i'll try :(
+>>>> I've overhauled the software, replaced the operating system
+>>>> innumerable times with several Mandriva distros: 2008, 2008.1, 2009.
+>>>> Removed the Mandriva kernel and compiled a stock 2.6.27.7 from
+>>>> ftp.kernel.org.  Ran the Seagate SeaTools on all four drives, no
+>>>> errors.  Ran the Western Digital Date Lifeguard on the two drives, no
+>>>> errors.  Changed from raid5 to raid10, still resyncs on boot.
+>>>
+>>> https://qa.mandriva.com/show_bug.cgi?id=40023
+>>>
+>>> read the whole of it.
+>>>
+>>
+>> Ahhh, yes!  Thank you!
+>>
+>>
+>> I was reverting back to the 2008.0 distro and building a 2.6.27.7 kernel 
+>> when I saw your reply.  Reading the bugzilla makes a whole lot of sense of 
+>> what I was seeing in the dmesg (re: md not finishing before the raid10 
+>> module started).  Finishing out that build, I found that the 2.6.27.7 
+>> stock kernel would boot and NOT resync the array.  That proves, to me, 
+>> something is wrong with the overall Mandriva 2009.0 system (as well as 
+>> 2008.1 which also fails miserably).
 
-ok, thanks. I will try this later on
+It is not limited to mandriva, redhat has the same 'feature' and afair
+ubuntu was also the first to implement it.
 
+> Just a follow-up.  Add the internal bitmap to the arrays has cured the 
+> problem (mdadm --grow --bitmap=internal <mdX>).  This is definitely a 
+> feature that I will consider adding to the existing raid5 arrays that I 
+> maintain out in the wild.
 >
-> NeilBrown
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-raid" in the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Is this a non-destructive thing to do to a working array?  Grow it with 
+> adding the bitmap?  I did not make each member partition of the arrays 
+> consume the remainder of the drives, but left 50..150 blocks unused in them 
+> (found various 250Meg drives do not all have the same block counts between 
+> manufacturers).
 
+It is a non destructive operation, it actually uses the space between
+end of data and start of superblock. it does not care about 'free' space
+on the drive.
 
+L.
 
 -- 
-Wilhelm
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
