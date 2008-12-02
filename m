@@ -1,30 +1,36 @@
-From: junk@non-creative.com
-Subject: raid5 system degraded and on boot can no longer log on
-Date: Mon, 1 Dec 2008 17:03:40 -0500
-Message-ID: <16874657.01228169020059.JavaMail.root@wombat.diezmil.com>
-Reply-To: junk@non-creative.com
+From: Neil Brown <neilb@suse.de>
+Subject: Re: mdadm --incremental /dev/md?? instead of /dev/md/d??
+Date: Tue, 2 Dec 2008 16:22:10 +1100
+Message-ID: <18740.50690.3253.790188@notabene.brown>
+References: <200811301543.47003.wilhelm.meier@fh-kl.de>
+	<5733f4fe1f2b309195c0c2a328942eff.squirrel@neil.brown.name>
+	<200812010757.31539.wilhelm.meier@fh-kl.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Wilhelm Meier on Monday December 1
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Wilhelm Meier <wilhelm.meier@fh-kl.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi everybody,
+On Monday December 1, wilhelm.meier@fh-kl.de wrote:
+> Am Montag 01 Dezember 2008 schrieb NeilBrown:
+> > On Mon, December 1, 2008 1:43 am, Wilhelm Meier wrote:
+> > > How can I switch the naming scheme for the mdadm incremental-mode
+> > > using /dev/md42 instead of /dev/md/d42 for adding a device or
+> > > constructing an array with a minor-number 42?
+> >
+> > I thought it did default to /dev/md42
+> > Do you have something like
+> >   CREATE auto=mdp
+> > in /etc/mdadm.conf?? 
+> 
+> no. auto=yes
 
-to begin with: I can create raids in linux but that is about it. I am quite inexperienced.
+Hmm.
+Can you show me "mdadm --examine" on one of the drives that you are
+adding with --incremental ??
 
-I had created a raid5 setup of which one drive failed. This resulted in a degraded setup. After this happend it continued to work for a while afterwards (not recommended but no possiblity to replace the drive)
-
-After a while the whole md0 stopped working and upon rebooting I get an error that I cannot mount md0 because there is something wrong with the superblock.
-
-I tried to reconstruct the raid by building a new raid5, this didn't help very much. I did not recreate the filesystem as I thought this would destroy the information on that disk. Using some software I did see that most data was still available on the disk, but not in the right way (windows system with a raid recovery tool on another disk)
-
-How can I reconstruct the raid5 in such a way that I can copy all information off the disk? Can anyone please tell me how? or point me to a beginners tutorial / wiki? 
-
-thanks!
-
---
-This message was sent on behalf of junk@non-creative.com at openSubscriber.com
-http://www.opensubscriber.com/messages/linux-raid@vger.kernel.org/topic.html
+NeilBrown
