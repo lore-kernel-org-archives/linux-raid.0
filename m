@@ -1,52 +1,33 @@
-From: "Sean Hildebrand" <silverwraithii@gmail.com>
-Subject: Re: Crash while increasing RAID5 from 3 disks to 5, array won't build.
-Date: Wed, 3 Dec 2008 15:45:50 -0500
-Message-ID: <fa037c550812031245u594ffd56q4d0b701456d81f1b@mail.gmail.com>
-References: <fa037c550812030743i70236951g964b444163425d39@mail.gmail.com>
-	 <06bc99a2784b75f8d7c2a4e563f576c4.squirrel@neil.brown.name>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Paul Schriever <paul@non-creative.com>
+Subject: raid5 failed logical and physically; how to reconstruct?
+Date: Wed, 3 Dec 2008 21:51:50 +0100
+Message-ID: <06FA127F-E560-4D16-BF86-560F9ED82006@non-creative.com>
+Mime-Version: 1.0 (Apple Message framework v926)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <06bc99a2784b75f8d7c2a4e563f576c4.squirrel@neil.brown.name>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Dec 3, 2008 at 3:21 PM, NeilBrown <neilb@suse.de> wrote:
-> On Thu, December 4, 2008 2:43 am, Sean Hildebrand wrote:
->> blkid reports that all five disks have the same UUID.
->>
->> Specifying disks by UUID results in "mdadm: no devices found for
->> /dev/md0".
->>
->> Specifying disks based on their positions, /dev/sd[abcef]1 in this
->> case, results in "mdadm: superblock on /dev/sda1 doesn't match others
->> - assembly aborted" and it'll continue doing that with [bcef]1 if a is
->> removed.
->>
->> mdadm --detail --scan outputs nothing.
->>
->> I've tried assembling the original three disks sans the two new ones
->> to no avail.
->
-> Please:
->   git clone git://neil.brown.name/mdadm
->   cd mdadm
->   make
->
-> and try the 'mdadm' that creates.
-> If that still doesn't work, please report the output of
->   mdadm -E /dev/sd[abcdef]1
-> and
->   mdadm -Avv /dev/md0 /dev/sd[abcdef]1
->
-> NeilBrown
->
->
+Hi all,
 
-That did it. Built, mounted and back to rebuilding.
+having used mdadm and linux for slightly over a year now to great  
+pleasure I came to face a problem. My raid5 got degraded due to hard  
+disc failure. After this some form of logical damage also occurred.
 
-Thanks.
+Everytime I wish to mount md0 I get an error from the system telling  
+it's unable to mount, something wrong with the superblock.
+
+I tried to rebuild the array, without formatting the discs, and using  
+a windows based tool I can still see that data is available, but  
+garbled.
+
+Is there any way of recovering the array, and to recover my data? I am  
+not a big linux guru and any tutorial / steps to take would be very  
+much appreciated!
+
+yours
+
+Paul
+
