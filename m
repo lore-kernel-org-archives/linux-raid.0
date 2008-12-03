@@ -1,95 +1,83 @@
-From: Michal Soltys <soltys@ziu.info>
-Subject: Re: LVM on raid10,f2 performance issues
-Date: Wed, 03 Dec 2008 10:43:35 +0100
-Message-ID: <493654C7.2090909@ziu.info>
-References: <49332920.5010503@gmail.com> <20081201164244.GB23899@rap.rap.dk> <4935C4B3.2060404@gmail.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: 3ware 9650SE-16ML w/XFS & RAID6: first impressions
+Date: Wed, 3 Dec 2008 09:34:04 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0812030930450.22299@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4935C4B3.2060404@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Holger Mauermann <mauermann@gmail.com>
-Cc: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>, linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-Holger Mauermann wrote:
-> Keld J=F8rn Simonsen schrieb:
->> How is it if you use the raid10,f2 without lvm?
->> What are the numbers?
->=20
-> After a fresh installation LVM performance is now somewhat better. I
-> don't know what was wrong before. However, it is still not as fast as
-> the raid10...
->=20
-> dd on raw devices
-> -----------------
->=20
-> raid10,f2:
->   read : 409 MB/s
->   write: 212 MB/s
->=20
-> raid10,f2 + lvm:
->   read : 249 MB/s
->   write: 158 MB/s
->=20
->=20
-> sda:  sdb:  sdc:  sdd:
-> ----------------------
-> YYYY  ....  ....  XXXX
-> ....  ....  ....  ....
-> XXXX  YYYY  ....  ....
-> ....  ....  ....  ....
+For read speed, it appears that there is some overhead (2x). With software 
+raid6 I used to get 1.0Gbyte/sec read speed, or at least 800MiB/s across the 
+entire array, now I only get 538MiB/s across the entire array. However, 
+write speed is improved. Before it was in the mid 400s for RAID6 and peaking at
+502MiB/s at the outer edge of the drives. For the write speed now, its around 
+620-640MiB/s at the end of the array and 580-620MiB/s going in further and 
+502MiB/s across the entire array. I always heard all of the horror stories with 3ware cards, it turns out they're not so bad after all.
 
+Here is the STR across a RAID6 array of 10 velociraptors configured as RAID6 with storsave=perform and blockdev --setra 65536 and using the XFS filesystem.
 
+p34:/t# /usr/bin/time dd if=/dev/zero of=really_big_file bs=1M
+dd: writing `really_big_file': No space left on device
+2288604+0 records in
+2288603+0 records out
+2399774998528 bytes (2.4 TB) copied, 4777.22 s, 502 MB/s
+Command exited with non-zero status 1
+1.47user 3322.83system 1:19:37elapsed 69%CPU (0avgtext+0avgdata 0maxresident)k
+0inputs+0outputs (1major+506minor)pagefaults 0swaps
 
-Regarding the layout from your first mail - this is how it's supposed t=
-o=20
-be. LVM's header took 3*64KB (you can control that with --metadatasize,=
-=20
-and verify with e.g. pvs -o+pe_start), and then the first 4MB extent=20
-(controlled with --physicalextentsize) of the first logical volume=20
-started - on sdd and continued on sda. Mirrored data was set "far" from=
-=20
-that, and shifted one disk to the right - as expected from raid10,f2.
+p34:/t# /usr/bin/time dd if=really_big_file of=/dev/null bs=1M
+2288603+1 records in
+2288603+1 records out
+2399774998528 bytes (2.4 TB) copied, 4457.55 s, 538 MB/s
+1.66user 1538.87system 1:14:17elapsed 34%CPU (0avgtext+0avgdata 0maxresident)k
+0inputs+0outputs (4major+498minor)pagefaults 0swaps
+p34:/t#
 
-As for performance, hmmm. Overally - there're few things to consider=20
-when doing lvm on top of the raid:
+So what is the difference between protect, balance and perform?
 
-- stripe vs. extent alignment
-- stride vs. stripe vs. extent size
-- filesystem's awareness that there's also raid a layer below
-- lvm's readahead (iirc, only uppermost layer matters - functioning as =
-a=20
-hint for the filesystem)
+Protect
+p34:~# /opt/3ware/9500/tw_cli /c0/u1 set storsave=protect
+Setting Command Storsave Policy for unit /c0/u1 to [protect] ... Done.
 
-But this is particulary important for raid with parities. Here=20
-everything is aligned already, and parity doesn't exist.
+p34:/t# dd if=/dev/zero of=bigfile bs=1M count=20480
+20480+0 records in
+20480+0 records out
+21474836480 bytes (21 GB) copied, 60.6041 s, 354 MB/s
 
-But the last point can be relevant - and you did test with filesystem=20
-after all. Try setting readahead with blockdev or lvchange (the latter=20
-will be permananet across lv activations). E.g.
+Balance:
+p34:~# /opt/3ware/9500/tw_cli /c0/u1 set storsave=balance
+Setting Command Storsave Policy for unit /c0/u1 to [balance] ... Done.
 
-#lvchange -r 2048 /dev/mapper...
+# dd if=/dev/zero of=bigfile bs=1M count=20480
+20480+0 records in
+20480+0 records out
+21474836480 bytes (21 GB) copied, 60.4287 s, 355 MB/s
 
-and compare to raw raid10:
+Perform
+p34:~# /opt/3ware/9500/tw_cli /c0/u1 set storsave=perform
+Warning: Unit /c0/u1 storsave policy is set to Performance which may cause data loss in the event of power failure.
+Do you want to continue ? Y|N [N]: Y
+Setting Command Storsave Policy for unit /c0/u1 to [perform] ... Done.
 
-#blockedv --setra 2048 /dev/md...
-
-If you did your tests with ext2/3, also try to create it with -E stride=
-=3D=20
-stripe-width=3D option in both cases. Similary to sunit/swidth if you u=
-sed=20
-xfs.
-
-You might also create volume group with larger extent - such as 512MB=20
-(as 4MB granularity is often an overkill). Performance wise it shouldn'=
-t=20
-matter in this case though.
+p34:/t# dd if=/dev/zero of=bigfile bs=1M count=20480
+20480+0 records in
+20480+0 records out
+21474836480 bytes (21 GB) copied, 34.4955 s, 623 MB/s
 
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+And yes, I have a BBU attached to this card and everything is on a UPS.
+Something I do not like though is 3ware states "TwinStor" "TwinStor" etc
+etc if you read a file it will read from both drives, maybe it does this but
+I have the I/O results to prove it-- it never breaks the barrier of a 
+single drive's STR. Whereas with SW RAID, you can read 2 or more files
+concurrently and you will get the bandwidth of both drives. I have a lot
+more testing to do, RAID0, RAID5, RAID6, RAID10, not sure when I will get
+to it but just thought I'd post this to show that 3ware cards aren't as
+slow as everyone says, at least not when attached to Velociraptors, a BBU
+and XFS as the filesystem.
+
+Justin.
