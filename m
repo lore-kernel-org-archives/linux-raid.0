@@ -1,61 +1,54 @@
-From: Tom Walsh <tom@openhardware.net>
-Subject: Re: array always resyncs on boot
-Date: Wed, 03 Dec 2008 00:14:31 -0500
-Message-ID: <493615B7.1010503@openhardware.net>
-References: <4931B2C5.5060403@openhardware.net> <alpine.DEB.1.10.0811291633140.1796@p34.internal.lan> <4931E75D.5080905@openhardware.net> <493422E1.8080207@tmr.com> <493426FD.4060201@openhardware.net> <49357372.5030304@tmr.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: LVM on raid10,f2 performance issues
+Date: Wed, 3 Dec 2008 08:15:04 +0100
+Message-ID: <20081203071504.GA8161@rap.rap.dk>
+References: <49332920.5010503@gmail.com> <20081201164244.GB23899@rap.rap.dk> <4935C4B3.2060404@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49357372.5030304@tmr.com>
+Content-Disposition: inline
+In-Reply-To: <4935C4B3.2060404@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
+To: Holger Mauermann <mauermann@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
-> Tom Walsh wrote:
->> Bill Davidsen wrote:
->>>
-> 
->>> Just for grins, could you post the partition table for each disk? 
->>> Maybe just the output of "fdisk -l" to show everything? I always 
->>> worry when using drives of "almost" the same size.
->>>
->>
->> Sure, identical tables for all six drives:
->> Disk /dev/sda: 320.0 GB, 320071851520 bytes
->> 255 heads, 63 sectors/track, 38913 cylinders
->> Units = cylinders of 16065 * 512 = 8225280 bytes
->> Disk identifier: 0x733f1de9
->>
->>    Device Boot      Start         End      Blocks   Id  System
->> /dev/sda1   *           1        2433    19543041   fd  Linux raid 
->> autodetect
->> /dev/sda2            2434        2677     1959930   82  Linux swap / 
->> Solaris
->> /dev/sda3            2678       38900   290961247+   5  Extended
->> /dev/sda5            2678       38900   290961216   fd  Linux raid 
->> autodetect
->>
-> Okay, I was just looking at the sizes of the drives, since they are not 
-> the same, and wondering if the HPA used to make them look the same was 
-> in any way leaking and making the HPA area visible. Looks like the 
-> "assembled at the wrong time" is the issue, and any of the fixes will 
-> probably solve the issue.
->>
+On Wed, Dec 03, 2008 at 12:28:51AM +0100, Holger Mauermann wrote:
+> Keld J=F8rn Simonsen schrieb:
+> > How is it if you use the raid10,f2 without lvm?
+> > What are the numbers?
+>=20
+> After a fresh installation LVM performance is now somewhat better. I
+> don't know what was wrong before. However, it is still not as fast as
+> the raid10...
+>=20
+> dd on raw devices
+> -----------------
+>=20
+> raid10,f2:
+>   read : 409 MB/s
+>   write: 212 MB/s
+>=20
+> raid10,f2 + lvm:
+>   read : 249 MB/s
+>   write: 158 MB/s
 
 
-Oh yes, the addition of the bitmap cured the resync problems.  I am so 
-happy that you guys helped resolving this!  This box is to become a 
-primary work machine for me and the problem with the array was driving 
-me crazy. I hate having computers doing bad things without an 
-explanation. Reason #73 that I don't use the Brand-M O/S...  ;-)
+What is the performance with raid0?
 
+What is the performance with a filesystem?
 
--- 
-Tom Walsh - WN3L - Embedded Systems Consultant
-http://openhardware.net http://cyberiansoftware.com http://openzipit.org
-"Windows? No thanks, I have work to do..."
-----------------------------------------------------
+Did you try=20
 
+blockdev --setra 65536 /dev/md3
+
+How many disks are you using?
+
+best regards
+keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
