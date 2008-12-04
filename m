@@ -1,134 +1,55 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: raid5 failed logical and physically; how to reconstruct?
-Date: Wed, 3 Dec 2008 18:16:16 -0600
-Message-ID: <A20315AE59B5C34585629E258D76A97C02E38888@34093-C3-EVS3.exchange.rackspace.com>
-References: <06FA127F-E560-4D16-BF86-560F9ED82006@non-creative.com> <A20315AE59B5C34585629E258D76A97C02E38658@34093-C3-EVS3.exchange.rackspace.com> <87f94c370812031605m5c3f735cxb0e49a4cfa97a436@mail.gmail.com>
+From: Chris Webb <chris@arachsys.com>
+Subject: Re: Synchronous vs asynchonous mdadm operations
+Date: Thu, 4 Dec 2008 10:59:53 +0000
+Message-ID: <20081204105953.GL32420@arachsys.com>
+References: <20081128162703.GA22404@arachsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <87f94c370812031605m5c3f735cxb0e49a4cfa97a436@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20081128162703.GA22404@arachsys.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Paul Schriever <paul@non-creative.com>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: Greg Freemyer [mailto:greg.freemyer@gmail.com]
-> Sent: Wednesday, December 03, 2008 6:06 PM
-> To: David Lethe
-> Cc: Paul Schriever; linux-raid
-> Subject: Re: raid5 failed logical and physically; how to reconstruct?
-> 
-> On Wed, Dec 3, 2008 at 4:26 PM, David Lethe <david@santools.com>
-wrote:
-> >> -----Original Message-----
-> >> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> >> owner@vger.kernel.org] On Behalf Of Paul Schriever
-> >> Sent: Wednesday, December 03, 2008 2:52 PM
-> >> To: linux-raid
-> >> Subject: raid5 failed logical and physically; how to reconstruct?
-> >>
-> >> Hi all,
-> >>
-> >> having used mdadm and linux for slightly over a year now to great
-> >> pleasure I came to face a problem. My raid5 got degraded due to
-hard
-> >> disc failure. After this some form of logical damage also occurred.
-> >>
-> >> Everytime I wish to mount md0 I get an error from the system
-telling
-> >> it's unable to mount, something wrong with the superblock.
-> >>
-> >> I tried to rebuild the array, without formatting the discs, and
-> using
-> >> a windows based tool I can still see that data is available, but
-> >> garbled.
-> >>
-> >> Is there any way of recovering the array, and to recover my data? I
-> am
-> >> not a big linux guru and any tutorial / steps to take would be very
-> >> much appreciated!
-> >>
-> >> yours
-> >>
-> >> Paul
-> >>
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-
-> raid"
-> >> in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> > Well, there are ways to recover it, but it comes down to how much
-> damage
-> > you started out with;  what damage (if any), the windows-based tool
-> > might have done; whether or not you have unreadable blocks on
-> surviving
-> > disks.   If you just force a rebuild onto the new disk drive, then
-> you
-> > will absolutely make it worse.
-> >
-> > If data loss could be in the thousands of dollars range, then I
-> wouldn't
-> > use a cookbook recovery.  Somebody who knows what they are doing and
-> who
-> > is directly involved will get more of your data back, and can look
-at
-> > the raw blocks to see what is going on.  They may also look at the
-> disk
-> > that "failed" and perhaps get data from that disk.
-> >
-> > I would immediately make raw copies of each physical device before
-> going
-> > further.  Hopefully you can pick up a cheap 1TB SATA disk and dd
-> > everything onto it.  Not only can you play with a copy of the data,
-> but
-> > since you just lost a disk drive, then odds are high that another
-> disk
-> > in the RAID set will die.   Just one more drive failure and you have
-> > 100% data loss.
-> >
-> > David
-> 
-> Assuming the gurus here can't help you --
-> 
-> If you put the above dd images onto a NTFS based partition, then you
-> can buy Raid Reconstructor from RunTime Software for about $100 and
-> try to rebuild your via it. There is a free trial that you can test
-> with I believe.  I've forgotten if you can actually attempt a rebuild
-> via the trial product.
-> 
-> It runs in Windows thus the need for NTFS to hold the dd images of the
-> physical drives.
-> 
-> Good Luck
-> Greg
-> --
-> Greg Freemyer
-> Litigation Triage Solutions Specialist
-> http://www.linkedin.com/in/gregfreemyer
-> First 99 Days Litigation White Paper -
->
-http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.p
-> df
-> 
-> The Norcross Group
-> The Intersection of Evidence & Technology
-> http://www.norcrossgroup.com
+Chris Webb <chris@arachsys.com> writes:
 
-It will not let you do a rebuild for free .. I can verify that.  This is
-a good product, BTW, and I use it myself at times.  
-One gotcha.  Since you have a dead disk drive, then the reconstructor
-won't be of any help when it comes to corruption.   That is because you
-have no parity to do XOR testing against.   Depending on the amount of
-damage, it may have problems figuring out the sequencing of the disks;
-and if you have more than one partition on each disk, then the software
-can't handle it.  
+[Re: mdadm --stop being potentially asynchronous]
+> The reason for the question is that I'm seeing occasional cases of arrays which
+> won't reassemble following such an operation. dmesg alleges there is an invalid
+> superblock for all of the six slots which were originally part of the array.
 
-David
+I tracked this one down to my scripts, which were failing to adjust the
+available space on the rdevs in a particularly rare case. However, I'm still
+wondering about the best way to do a fail/remove combination, given
+that fail appears to be asynchronous. The shell fragment I give below seems
+way over the top, but I can't see any simpler route....
 
+> I notice that some mdadm operations appear to be asynchronous. For instance,
+> 
+>   mdadm --fail /dev/md/shelf.51000 /dev/mapper/slot.51000.1
+>   mdadm --remove /dev/md/shelf.51000 /dev/mapper/slot.51000.1
+> 
+> will always fail at the --remove stage with
+> 
+>   mdadm: hot remove failed for /dev/mapper/slot.51000.1: Device or resource busy
+> 
+> whereas adding a short sleep in between will make it successful.
+> 
+> Is there a 'standard' way to wait for this operation to complete or to
+> perform both steps in one go, other than something horrible like:
+> 
+>   mdadm --fail /dev/md/shelf.51000 /dev/mapper/slot.51000.1
+>   MD=$((`stat -c '%#T' -L /dev/md/shelf.51000`))
+>   MAJOR=$((`stat -c '%#t' -L /dev/mapper/slot.51000.1`))
+>   MINOR=$((`stat -c '%#T' -L /dev/mapper/slot.51000.1`))
+>   for RD in /sys/block/md$MD/md/rd*; do
+>     [ -f $RD/block/dev ] || continue
+>     [ "`<$RD/block/dev`" = "$MAJOR:$MINOR" ] || continue
+>     while [ "< $RD/state" != "faulty ]; do sleep 0.1; done
+>   done
+>   mdadm --remove /dev/md/shelf.51000 /dev/mapper/slot.51000.1
 
+Cheers,
+
+Chris.
