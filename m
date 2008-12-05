@@ -1,58 +1,99 @@
-From: Bob Bell <b_linuxraid@thebellsplace.com>
-Subject: Data loss on MD RAID5 reshape?
-Date: Fri, 5 Dec 2008 17:21:32 -0500
-Message-ID: <20081205222131.GD8219@newbie.thebellsplace.net>
+From: "Greg Freemyer" <greg.freemyer@gmail.com>
+Subject: Re: detection/correction of corruption with raid6
+Date: Fri, 5 Dec 2008 17:43:55 -0500
+Message-ID: <87f94c370812051443nd154992kfb61f3b6f0f5625d@mail.gmail.com>
+References: <1228510833.16555.76.camel@localhost>
+	 <alpine.DEB.1.10.0812051602110.17806@p34.internal.lan>
+	 <1228511195.16555.78.camel@localhost>
+	 <alpine.DEB.1.10.0812051607100.17806@p34.internal.lan>
+	 <1228511558.16555.84.camel@localhost>
+	 <6c4602af0812051330o4220cbf1g8b969cd4b9843d3a@mail.gmail.com>
+	 <4939A75C.6050705@rabbit.us>
+	 <6c4602af0812051426t2f7c1834w8e7478597b82d175@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <6c4602af0812051426t2f7c1834w8e7478597b82d175@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: =?ISO-8859-2?Q?Micha=B3_Przy=B3uski?= <mikylie@gmail.com>
+Cc: Peter Rabbitson <rabbit+list@rabbit.us>, Redeeman <redeeman@metanurb.dk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've experienced apparent data loss, and hoping someone out there can 
-help rescue my data, or at least tell me what went wrong so that I don't 
-have a repeat event.  I first asked this question on linux-lvm, but the 
-folks there seemed to think it pertained more to RAID than to LVM.
-
-I was setting up a new server running Ubuntu's Hardy Heron release.  
-`uname -a` reports:
-  Linux sherwood 2.6.24-16-server #1 SMP Thu Apr 10 13:58:00 UTC 2008 i686 GNU/Linux
-
-I initially created an md RAID5 device with only two components 
-(matching 320 GB SATA HDDs).  I created a single LVM Physical Volume 
-using the entirety of that md device (320 GB), and then created several 
-LVM Logical Volumes for different filesystems (all ext3).  This was done 
-using the Ubuntu installer.  After installing I used lvresize to 
-increase the size of a few of the Logical Volumes.  These filesystems 
-hold data that is not a critical part of the system (mail, music, video, 
-etc.), but still important to me.
-
-I then copied data onto one of those filesystems (the original source of 
-the data is no longer available).  I then added a third drive to the md 
-device, which brought the total to 2 active devices and 1 spare device.  
-I then grew the number of devices to 3 and waited for the reshape to 
-finish (increasing the capacity to 640 GB).  I bumped the values in 
-/proc/sys/dev/raid/ so that I wouldn't have to wait as long.
-
-Now that the reshaping has completed, LVM can't find the physical volume 
-on that device anymore.  I tried rebooting the system, but the problem 
-remained.  Checking /proc/mdstat shows that the md device is up and 
-healthy.  The pvdisplay command only shows my other Physical Volume (for 
-the IDE drives).  I found the pvck command and ran that on the md 
-device, and it states that there is no LVM label on the device.
-
-It is my understanding that the steps I outlined should have worked.  
-I planned to follow them with pvresize, then lvresize, then umount, 
-resize2fs, and mount again.  I've seen this procedure outlined a few 
-different places, including at 
-http://gentoo-wiki.info/Resize_LVM2_on_RAID5.
-
-Did I do something wrong?  Is there anyway to rescue my data?  If 
-there's no way of saving the data, I'd at least like to figure out what 
-happened in the first place.
-
-Thank you.  Your thoughtfulness and help is appreciated.
-
--- 
-Bob Bell
+MjAwOC8xMi81IE1pY2hhsyBQcnp5s3Vza2kgPG1pa3lsaWVAZ21haWwuY29tPjoKPiAyMDA4LzEy
+LzUgUGV0ZXIgUmFiYml0c29uIDxyYWJiaXQrbGlzdEByYWJiaXQudXM+Ogo+PiBNaWNoYbMgUHJ6
+ebN1c2tpIHdyb3RlOgo+Pj4gSGksCj4+Pgo+Pj4gMjAwOC8xMi81IFJlZGVlbWFuIDxyZWRlZW1h
+bkBtZXRhbnVyYi5kaz46Cj4+Pj4gT24gRnJpLCAyMDA4LTEyLTA1IGF0IDE2OjA5IC0wNTAwLCBK
+dXN0aW4gUGlzemN6IHdyb3RlOgo+Pj4+PiBPbiBGcmksIDUgRGVjIDIwMDgsIFJlZGVlbWFuIHdy
+b3RlOgo+Pj4+Pgo+Pj4+Pj4gT24gRnJpLCAyMDA4LTEyLTA1IGF0IDE2OjAyIC0wNTAwLCBKdXN0
+aW4gUGlzemN6IHdyb3RlOgo+Pj4+Pj4+IE9uIEZyaSwgNSBEZWMgMjAwOCwgUmVkZWVtYW4gd3Jv
+dGU6Cj4+Pj4+Pj4KPj4+Pj4+Pj4gSGVsbG8uCj4+Pj4+Pj4+Cj4+Pj4+Pj4+IEkgd2FzIGxvb2tp
+bmcgYXQgdGhlIFBERnMgbGlua2VkIHRvIGZyb20gdGhlIHdpa2ksIGFuZCBmb3VuZCB0aGlzOgo+
+Pj4+Pj4+PiBodHRwOi8va2VybmVsLm9yZy9wdWIvbGludXgva2VybmVsL3Blb3BsZS9ocGEvcmFp
+ZDYucGRmCj4+Pj4+Pj4KPj4+Pj4+Pj4gTW9yZSBzcGVjaWZpY2FsbHksIHNlY3Rpb24gNCwgc3Rh
+cnRpbmcgb24gcGFnZSA4Lgo+Pj4+Pj4+Pgo+Pj4+Pj4+PiBBbSBJIHVuZGVyc3RhbmRpbmcgdGhp
+cyBjb3JyZWN0bHksIGluIHRoYXQgd2l0aCByYWlkNiwgbGludXggaXMgY2FwYWJsZQo+Pj4+Pj4+
+PiBvZiBkZXRlY3RpbmcgaWYgdGhlIGNvbnRlbnQgb24gMSBkaXNrIGlzIGNvcnJ1cHRlZCwgYW5k
+IHJlY29uc3RydWN0IGl0Cj4+Pj4+Pj4+IGZyb20gdGhlIHJlbWFpbmluZyBkaXNrcz8KPj4+Pj4+
+PiBJIHJhbiBtZC9yYWlkNiBmb3IgYXdoaWxlLCBkbyB5b3UgbWVhbiByZW1hcCB0aGUgYmFkIHNl
+Y3RvciBvbiB0aGUgZmx5Pwo+Pj4+Pj4+IExpbnV4L21kIHJhaWQgZG9lcyBub3QgZG8gdGhpcyBh
+ZmFpay4KPj4+Pj4+IE5vLCBpIG1lYW4sIGlmIG9uZSBkaXNrIGRvZXMgc2lsZW50IGNvcnJ1cHRp
+b24KPj4+Pj4gV2hhdCB3b3VsZCB0aGUgZXJyb3IgbG9vayBsaWtlPyAgQm90aCBtZC9MaW51eCAm
+IGluIHRoZSAzd2FyZSBtYW51YWwKPj4+Pj4gcmVjb21tZW5kIHlvdSBydW4gYSAnY2hlY2snIGFj
+cm9zcyB0aGUgcmFpZCBhdCBsZWFzdCBvbmNlIGEgd2Vlawo+Pj4+PiAoM3dhcmUvcmFpZC12ZXJp
+ZnkpIGFuZCBtZC9MaW51eCBpbiBEZWJpYW4gcnVucyBhIGNoZWNrIG9uY2UgYSBtb250aCBJCj4+
+Pj4+IGJlbGlldmUgdG8gZWxpbWluYXRlIHRoZXNlIGlzc3Vlcy4KPj4+Pj4KPj4+Pj4gSWYgeW91
+IGFyZSBhc2tpbmcgd2hldGhlciBhIHJlYWQgZXJyb3Igb2YgYSBsYXRlbnQgc2VjdG9yIGZyb20g
+dGhlIG9uZQo+Pj4+PiBkaXNrIHdpbGwgcmVzdWx0IGl0IHJlYWRpbmcgdGhlIGRhdGEgZnJvbSB0
+aGUgc2Vjb25kIGRpc2sgdGhhdCBpcyBhIGdvb2QKPj4+Pj4gcXVlc3Rpb24uCj4+Pj4gaW0gYXNr
+aW5nLCBpZiBvbmUgZGlzayBpbiBhIHJhaWQ2IHNldHVwIHN1ZGRlbmx5IGRlY2lkZXMgdG8gZmxp
+cCBhIGZldwo+Pj4+IGJpdHMgaW4gc29tZSBieXRlcywgd2lsbCBpdCBiZSBhYmxlIHRvIGRldGVj
+dCB0aGF0IGluIGEgc2NhbiwgYW5kCj4+Pj4gY29ycmVjdCBpdD8gaSBjYW50IHNlZSBob3cgaXQg
+Y2FuIGRvIGl0IG9uIHJhaWQ1LCBidXQgbWF5YmUgcmFpZDY/Cj4+Pgo+Pj4gTm8sIG5vdCByZWFs
+bHkuCj4+PiBJJ3ZlIGJlZW4gaW52ZXN0aWdhdGluZyBzaWxlbnQgY29ycnVwdGlvbiBmb3IgYSBx
+dWl0ZSBhIHdoaWxlIG5vdywgYW5kCj4+PiBpdCBsb29rcyBtb3JlIG9yIGxlc3MgbGlrZSB0aGlz
+Lgo+Pj4gRHVyaW5nIGEgImNoZWNrIiBhY3Rpb24gaXQnbGwgYmUgZGV0ZWN0ZWQuIER1cmluZyBu
+b3JtYWwgb3BlcmF0aW9uIC0KPj4+IGl0IHdvbid0IGJlIGRldGVjdGVkLgo+Pj4gTm9ybWFsIChu
+b24tZGVncmFkZWQpIHJhaWQ1LzYgcmVhZHMgZG9uJ3QgcmVhZCBwYXJpdHkgKG9yIFEgc3luZHJv
+bWUpLAo+Pj4gdGhleSBqdXN0IHJlYWQgZGF0YS4gU28gdGhleSBoYXZlIG5vIGlkZWEgdGhhdCBz
+b21ldGhpbmcgd2VudCBiYWQuCj4+PiBOb3csIHdvcnNlIG5ld3MgaXMgdGhhdCB5b3UgY2Fubm90
+IHJlYWxseSBmaXggaXQgYXV0b21hZ2ljYWxseSwgZXZlbgo+Pj4gYWZ0ZXIgZGV0ZWN0aW5nIGJ5
+IGEgImNoZWNrIiBwcm9jZWR1cmUuIEEgInJlcGFpciIgd2lsbCBvdmVyd3JpdGUKPj4+IHBhcml0
+eSBhbmQgUSBzeW5kcm9tZSwgd2l0aCBuZXcgdmFsdWVzIChuZXcgPSBjYWxjdWxhdGVkIGZyb20g
+d2hhdCBpdAo+Pj4gc2VlbXMgdG8gYmUgZGF0YSBibG9ja3MpLgo+Pj4KPj4+IEl0IGlzIHBvc3Np
+YmxlIChieSB0aGUgdGhlb3J5IG9mIFEgc3luZHJvbWUsIHBlciB0aGUgYXJ0aWNsZSB5b3UKPj4+
+IGxpbmtlZCkgdG8gZGV0ZWN0IHdoaWNoIGRyaXZlIGlzIGRvaW5nIGEgc2lsZW50IGNvcnJ1cHRp
+b24gd2l0aCByYWlkNgo+Pj4gKGFuZCB3aXRoIHNvbWUgZXh0cmEgYXNzdW1wdGlvbiwgdGhhdCBq
+dXN0IG9uZSBkcml2ZSBpcyBkb2luZyB0aGF0KS4KPj4+IEJ1dCBpdCdzIG5vdCBpbXBsZW1lbnRl
+ZC4KPj4+Cj4+Cj4+IEknZCBsaWtlIHRvIHNoYW1lbGVzc2x5IGJyaW5nIGluIGFuIG9sZGVyIHJl
+bGF0ZWQgdGhyZWFkOgo+PiBodHRwOi8vbWFyYy5pbmZvLz9sPWxpbnV4LXJhaWQmbT0xMjA2MDU0
+NTgzMDk4MjUKPj4gaHR0cDovL21hcmMuaW5mby8/bD1saW51eC1yYWlkJm09MTIwNjE4MDIwODE3
+MDU3Cj4+Cj4+IE1heWJlIHNvbWVvbmUgd2lsbCBnZXQgaW5zcGlyZWQsIGFuZCB3aWxsIGFjdHVh
+bGx5IHdyaXRlIHRoZSBkYW1uZWQgdGhpbmcgOikKPgo+IEkgY29uY3VyLiBFdmVuIHdpdGhvdXQg
+YSAiZml4IiwganVzdCBwcmludGluZyBpbmZvcm1hdGlvbiB3aGljaCBkaXNrCj4gaXMgc3VzcGVj
+dGVkIG9mIGRvaW5nIHNpbGVudCBjb3JydXB0aW9uIHdpbGwgYmUgaGVscGZ1bC4gT25lIGNhbiBh
+dAo+IGxlYXN0LCBmYWlsIHRoZSBkaXNrLCBhbmQgZ2V0IHJpZCBvZiBpdC4gU3RpbGwgYmV0dGVy
+IHRoYW4gdGFraW5nIHdpbGQKPiBndWVzc2VzIHdoYXQgd2VudCB3cm9uZy4gSSdtIGEgc2lsZW50
+IGNvcnJ1cHRpb24gbWFuaWFjIG15c2VsZiwKPiBrZWVwaW5nIG1kNSdzIG9mIG1vc3QgYmlnZ2Vy
+L21vcmUgaW1wb3J0YW50IGZpbGVzLCBzbyBteSBqdWRnbWVudAo+IG1pZ2h0IG5vdCBiZSBmYWly
+Lgo+Cj4gQWxzbywgaXQgc2VlbXMgdGhlIGZlYXR1cmUgaXMgYmVpbmcgYXNrZWQgYWJvdXQgYWJv
+dXQgMy00IHRpbWVzIGEKPiB5ZWFyLCB3aGljaCBpcyBwcm9iYWJseSB0aGUgc2Vjb25kIG1vc3Qg
+cmVxdWVzdGVkIGZlYXR1cmUgYWZ0ZXIKPiBudW1lcm91cyByZXNoYXBlIHZhcmlhdGlvbnMuCj4g
+UmVnYXJkcywKPiBNaWtlCj4KCkknbSBhbHNvIHZlcnkgY29uY2VybmVkIGFib3V0IHNpbGVudCBj
+b3JydXB0aW9uIGFuZCB3ZSBvZnRlbiAidmVyaWZ5IgpvdXIgY3JpdGljYWwgbGFyZ2UgZmlsZXMg
+YnkgIHBlcmZvcm1pbmcgTUQ1IHZlcmlmaWVzIGFnYWluc3QgYSBrbm93bgpnb29kIHZhbHVlLiAg
+RXNwZWNpYWxseSB3aGVuIHdlIG1ha2UgY29waWVzIG9yIG1vdmUgdGhlbSBmcm9tIG9uZQptZWRp
+YSB0byBhbm90aGVyLgoKQnV0IGluIGFsbCB0aGUgY2FzZXMgb2Ygc2lsZW50IGNvcnJ1cHRpb24g
+SSd2ZSBzZWVuLCBpdCB3YXMgbmV2ZXIgdGhlCmRpc2suICBJbnN0ZWFkIEkndmUgc2VlbiBpdCBi
+ZSB0aGUgY2FibGUsIHRoZSBjb250cm9sbGVyLCBiYWQgbWVtb3J5LApiYWQgcG93ZXIgc3VwcGx5
+LCBidXQgbmV2ZXIgdGhlIGRpc2sgaXRzZWxmLiAgTm90IHRvIHNheSB0aGUgZGlzawpjb250cm9s
+bGVyIGNvdWxkIG5vdCBiZSB0aGUgY2F1c2UsIGp1c3QgdGhhdCBJIGhhdmUgbm90IHNlZW4gaXQu
+CgpJIGRpZCBub3QgcmVhZCB0aGUgcmVsZXZhbnQgdGhyZWFkcywgYnV0IGRvIHRoZXkgY292ZXIg
+YWxsIG9mIHRoZXNlCnNvdXJjZXMgb2Ygc2lsZW50IGNvcnJ1cHRpb24sIG9yIGp1c3QgaWYgYSBk
+aXNrIGlzIHRoZSBzb3VyY2U/CgpUaGFua3MKR3JlZwotLSAKR3JlZyBGcmVlbXllcgpMaXRpZ2F0
+aW9uIFRyaWFnZSBTb2x1dGlvbnMgU3BlY2lhbGlzdApodHRwOi8vd3d3LmxpbmtlZGluLmNvbS9p
+bi9ncmVnZnJlZW15ZXIKRmlyc3QgOTkgRGF5cyBMaXRpZ2F0aW9uIFdoaXRlIFBhcGVyIC0KaHR0
+cDovL3d3dy5ub3Jjcm9zc2dyb3VwLmNvbS9mb3Jtcy93aGl0ZXBhcGVycy85OSUyMERheXMlMjB3
+aGl0ZXBhcGVyLnBkZgoKVGhlIE5vcmNyb3NzIEdyb3VwClRoZSBJbnRlcnNlY3Rpb24gb2YgRXZp
+ZGVuY2UgJiBUZWNobm9sb2d5Cmh0dHA6Ly93d3cubm9yY3Jvc3Nncm91cC5jb20K
