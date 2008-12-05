@@ -1,57 +1,72 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Velociraptor drive related to the use of NCQ.
-Date: Fri, 5 Dec 2008 08:59:54 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0812050855140.4713@p34.internal.lan>
-References: <alpine.DEB.1.10.0812050602400.3188@p34.internal.lan>
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+Subject: raid1 and write-mostly
+Date: Fri, 5 Dec 2008 10:40:56 -0600
+Message-ID: <cccedfc60812050840g70dcf94vd3740c5ff863b678@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0812050602400.3188@p34.internal.lan>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, smartmontools-support@lists.sourceforge.net
-Cc: Alan Piszcz <ap@solarrain.com>
+To: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+I built a level1 raid using a real local device and a network block device.
+I specified --bitmap=internal and --write-mostly, --write-behind for
+the network block device.
+However, when stracing the nbd-server process for this network block
+device, I see *reads* more than periodically. One way to get lots of
+reads sent to the nbd0 is to fsck /dev/md10.
+
+Why? I know it's called write *mostly* but still it's doing more reads
+that I expected (more than 0).
+
+kernel: 2.6.25.18-0.2-default on x86_64, openSUSE 11.0 fully up-to-date.
+
+Here is my --detail:
+
+/dev/md10:
+        Version : 00.90.03
+  Creation Time : Fri Dec  5 07:44:41 2008
+     Raid Level : raid1
+     Array Size : 78123968 (74.50 GiB 80.00 GB)
+  Used Dev Size : 78123968 (74.50 GiB 80.00 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 10
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Fri Dec  5 10:20:49 2008
+          State : active
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+
+           UUID : 542a0986:dd465da6:b224af07:ed28e4e5
+         Events : 0.378
+
+    Number   Major   Minor   RaidDevice State
+       0       8       49        0      active sync   /dev/sdd1
+       1      43        0        1      active sync   /dev/nbd0
+
+and the result of mdadm --examine-bitmap /dev/nbd0
+
+        Filename : /dev/nbd0
+           Magic : 6d746962
+         Version : 4
+            UUID : 542a0986:dd465da6:b224af07:ed28e4e5
+          Events : 378
+  Events Cleared : 378
+           State : OK
+       Chunksize : 256 KB
+          Daemon : 5s flush period
+      Write Mode : Allow write behind, max 256
+       Sync Size : 78123968 (74.50 GiB 80.00 GB)
+          Bitmap : 305172 bits (chunks), 0 dirty (0.0%)
 
 
-On Fri, 5 Dec 2008, Justin Piszcz wrote:
-
-> I swapped out my power supply, changed ALL cables and bought a $1000 raid
-> controller with BBU, the drives are still having problems, when writing to
-> them in a RAID10 configuration, it locks up the card:
->
-> SMART shows the same thing on many of the disks in the RAID10:
->
-> Error 1 occurred at disk power-on lifetime: 3708 hours (154 days + 12 hours)
->  When the command that caused the error occurred, the device was active or 
-> idle.
-
-I spoke to soon, turning off NCQ helped dramatically, it worked three times!
-
-writing to raid10
-dd: writing `file2': No space left on device
-1430328+0 records in
-1430327+0 records out
-1499806973952 bytes (1.5 TB) copied, 3914.51 s, 383 MB/s
-Fri Dec  5 06:00:25 EST 2008
-writing to raid10
-dd: writing `file2': No space left on device
-1430328+0 records in
-1430327+0 records out
-1499806973952 bytes (1.5 TB) copied, 4063.25 s, 369 MB/s
-Fri Dec  5 07:08:11 EST 2008
-writing to raid10
-dd: writing `file2': No space left on device
-1430328+0 records in
-1430327+0 records out
-1499806973952 bytes (1.5 TB) copied, 3926.71 s, 382 MB/s
-Fri Dec  5 08:13:41 EST 2008
-
-Then it crashed again, with NCQ enabled, it would not even complete one test,
-So basically a new system, new PSU, new cables, its on a new APC UPS and the 
-problem persists even when all disks are on a RAID card, SW raid, it does not 
-matter, Velociraptors have problems, I think its time for me to get regular
-1TiB disks and be done with it.
-
-Justin.
-
+-- 
+Jon
