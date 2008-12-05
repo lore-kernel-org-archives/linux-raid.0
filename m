@@ -1,44 +1,57 @@
-From: "Igor Podlesny" <for.poige+linux@gmail.com>
-Subject: Re: raid6's using not the best bandwidth method && raid6 algo is significantly slower in x86_64.
-Date: Fri, 5 Dec 2008 20:36:32 +0700
-Message-ID: <43d009740812050536k2e03826gb308021273e69896@mail.gmail.com>
-References: <200811172235.mAHMZAQt032187@terminus.zytor.com>
-	 <43d009740811180403v6308dbc0y8ba093524700bb72@mail.gmail.com>
-	 <4922E381.20501@zytor.com>
-	 <43d009740811211122m36809523mff9521ca8af95a1e@mail.gmail.com>
-	 <49270CA5.2090508@zytor.com>
-	 <43d009740811211133p7321bc39q1a1eccd9c53d6ca0@mail.gmail.com>
-	 <492716CE.8040900@zytor.com>
-	 <43d009740811212140l3ac2298ch512aca0e3631d269@mail.gmail.com>
-	 <49279BC5.8080106@zytor.com>
-	 <43d009740811212145x13d2e353l7d9fee3d912c89c0@mail.gmail.com>
-Reply-To: for.poige+linux@gmail.com
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Velociraptor drive related to the use of NCQ.
+Date: Fri, 5 Dec 2008 08:59:54 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0812050855140.4713@p34.internal.lan>
+References: <alpine.DEB.1.10.0812050602400.3188@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43d009740811212145x13d2e353l7d9fee3d912c89c0@mail.gmail.com>
-Content-Disposition: inline
+In-Reply-To: <alpine.DEB.1.10.0812050602400.3188@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, smartmontools-support@lists.sourceforge.net
+Cc: Alan Piszcz <ap@solarrain.com>
 List-Id: linux-raid.ids
 
-2008/11/22 Igor Podlesny <for.poige+linux@gmail.com>:
-> 2008/11/22 H. Peter Anvin <hpa@zytor.com>:
-> [...]
->>>        Please let us know when commiting the patch -- 20 % is valuable.
->>> ;-)
->>>
->>
->> Looks like I was a bit too optimistic.  The 20% was because of the missed
->> prefetchnta, which means polluting the cache.
->>
->>        -hpa
+
+
+On Fri, 5 Dec 2008, Justin Piszcz wrote:
+
+> I swapped out my power supply, changed ALL cables and bought a $1000 raid
+> controller with BBU, the drives are still having problems, when writing to
+> them in a RAID10 configuration, it locks up the card:
 >
->        Well, whatever it gives unless it's a regression. :-)
+> SMART shows the same thing on many of the disks in the RAID10:
+>
+> Error 1 occurred at disk power-on lifetime: 3708 hours (154 days + 12 hours)
+>  When the command that caused the error occurred, the device was active or 
+> idle.
 
-	Hi! Any news?
+I spoke to soon, turning off NCQ helped dramatically, it worked three times!
 
--- 
-End of message. Next message?
+writing to raid10
+dd: writing `file2': No space left on device
+1430328+0 records in
+1430327+0 records out
+1499806973952 bytes (1.5 TB) copied, 3914.51 s, 383 MB/s
+Fri Dec  5 06:00:25 EST 2008
+writing to raid10
+dd: writing `file2': No space left on device
+1430328+0 records in
+1430327+0 records out
+1499806973952 bytes (1.5 TB) copied, 4063.25 s, 369 MB/s
+Fri Dec  5 07:08:11 EST 2008
+writing to raid10
+dd: writing `file2': No space left on device
+1430328+0 records in
+1430327+0 records out
+1499806973952 bytes (1.5 TB) copied, 3926.71 s, 382 MB/s
+Fri Dec  5 08:13:41 EST 2008
+
+Then it crashed again, with NCQ enabled, it would not even complete one test,
+So basically a new system, new PSU, new cables, its on a new APC UPS and the 
+problem persists even when all disks are on a RAID card, SW raid, it does not 
+matter, Velociraptors have problems, I think its time for me to get regular
+1TiB disks and be done with it.
+
+Justin.
+
