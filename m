@@ -1,72 +1,26 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: raid1 and write-mostly
-Date: Fri, 5 Dec 2008 10:40:56 -0600
-Message-ID: <cccedfc60812050840g70dcf94vd3740c5ff863b678@mail.gmail.com>
+From: Mike Myers <mikesm559@yahoo.com>
+Subject: Need urgent help in fixing raid5 array
+Date: Fri, 5 Dec 2008 09:03:22 -0800 (PST)
+Message-ID: <936691.74609.qm@web30806.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I built a level1 raid using a real local device and a network block device.
-I specified --bitmap=internal and --write-mostly, --write-behind for
-the network block device.
-However, when stracing the nbd-server process for this network block
-device, I see *reads* more than periodically. One way to get lots of
-reads sent to the nbd0 is to fsck /dev/md10.
+I have a problem with repairing a raid5 array I really need some help with.  I must be missing something here.
 
-Why? I know it's called write *mostly* but still it's doing more reads
-that I expected (more than 0).
+I have 2 raid5 arrays combined with LVM into a common logical volume and then running XFS on top of that.  Both arrays have 7 1 TB disks in them.  I moved a controller card around so that I could install a new Intel GB ethernet card in one of the PCI-E slots.  That went fine except one of the SATA cables got knocked loose so one of the disks in /dev/md2 wen't offline.  Linux booted fine, started the md2 with 6 elements in it and everything was fine with md2 in a degraded state.  I fixed the cable problem and hot added that drive to the array, but since it was now out of sync, md began a rebuild.  No problem.
 
-kernel: 2.6.25.18-0.2-default on x86_64, openSUSE 11.0 fully up-to-date.
+Around 60% through the resync, smartd started reporting problems with one of the other drives in the array.  Then that drive ejected from the degraded array, caused the raid to stop and the LVm volume to go offline.  Ugh...
 
-Here is my --detail:
+Ok, so it looks from the smart data that that disk had been having a lot of problems and was failing.  As it happens, I had a new 1 TB disk arrive the same day, and I pressed it to service here.  I used sfdisk -d olddisk | sfdisk newdisk to copy the partition table from the old drive to the new one, and then used ddrescue to copy the data from the old partition (/dev/sdo1) to the new one (/dev/sdp1). That worked pretty well, just 12kB couldn't be recovered.
 
-/dev/md10:
-        Version : 00.90.03
-  Creation Time : Fri Dec  5 07:44:41 2008
-     Raid Level : raid1
-     Array Size : 78123968 (74.50 GiB 80.00 GB)
-  Used Dev Size : 78123968 (74.50 GiB 80.00 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 10
-    Persistence : Superblock is persistent
+So I remove the old disk,  re-add the new disk, and attempt to start the array with new (cloned) 1 Tb disk in the old disks stead.  Even though the UUID's, magic numbers and events fields are all the same, md thinks the cloned disk is a spare, and doesn't start the array.  What am I missing here?  Why doesn't it view it as the old disk as a member and just start it?
 
-  Intent Bitmap : Internal
-
-    Update Time : Fri Dec  5 10:20:49 2008
-          State : active
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-
-           UUID : 542a0986:dd465da6:b224af07:ed28e4e5
-         Events : 0.378
-
-    Number   Major   Minor   RaidDevice State
-       0       8       49        0      active sync   /dev/sdd1
-       1      43        0        1      active sync   /dev/nbd0
-
-and the result of mdadm --examine-bitmap /dev/nbd0
-
-        Filename : /dev/nbd0
-           Magic : 6d746962
-         Version : 4
-            UUID : 542a0986:dd465da6:b224af07:ed28e4e5
-          Events : 378
-  Events Cleared : 378
-           State : OK
-       Chunksize : 256 KB
-          Daemon : 5s flush period
-      Write Mode : Allow write behind, max 256
-       Sync Size : 78123968 (74.50 GiB 80.00 GB)
-          Bitmap : 305172 bits (chunks), 0 dirty (0.0%)
+thx
+mike
 
 
--- 
-Jon
+      
