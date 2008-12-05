@@ -1,35 +1,32 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: raid6's using not the best bandwidth method && raid6 algo is
- significantly slower in x86_64.
-Date: Fri, 05 Dec 2008 09:34:06 -0800
-Message-ID: <4939660E.90803@zytor.com>
-References: <200811172235.mAHMZAQt032187@terminus.zytor.com>	 <43d009740811180403v6308dbc0y8ba093524700bb72@mail.gmail.com>	 <4922E381.20501@zytor.com>	 <43d009740811211122m36809523mff9521ca8af95a1e@mail.gmail.com>	 <49270CA5.2090508@zytor.com>	 <43d009740811211133p7321bc39q1a1eccd9c53d6ca0@mail.gmail.com>	 <492716CE.8040900@zytor.com>	 <43d009740811212140l3ac2298ch512aca0e3631d269@mail.gmail.com>	 <49279BC5.8080106@zytor.com>	 <43d009740811212145x13d2e353l7d9fee3d912c89c0@mail.gmail.com> <43d009740812050536k2e03826gb308021273e69896@mail.gmail.com>
+From: Redeeman <redeeman@metanurb.dk>
+Subject: time limited error recovery and md raid
+Date: Fri, 05 Dec 2008 21:57:26 +0100
+Message-ID: <1228510646.16555.73.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43d009740812050536k2e03826gb308021273e69896@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: for.poige+linux@gmail.com
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Igor Podlesny wrote:
-> 2008/11/22 Igor Podlesny <for.poige+linux@gmail.com>:
->> 2008/11/22 H. Peter Anvin <hpa@zytor.com>:
->> [...]
->>>>        Please let us know when commiting the patch -- 20 % is valuable.
->>>> ;-)
->>>>
->>> Looks like I was a bit too optimistic.  The 20% was because of the missed
->>> prefetchnta, which means polluting the cache.
->>>
->>>        -hpa
->>        Well, whatever it gives unless it's a regression. :-)
-> 
-> 	Hi! Any news?
-> 
+Hello..
 
-No.
+Im going to be building a software raid6 setup with probably 8 disks,
+and i've been looking at the wd gp disks, which comes in both standard
+and raid edition, with the raid edition being much more expensive.
 
-	-hpa
+I have searched around, and found that it is indeed possible to activate
+tler on the "normal" disks, however, the setting has a parameter, more
+specifically, how many seconds it should be limited to. Default is 7.
+
+So i was wondering, what should that be set to, to be optimal for linux
+md raid? i havent been able to find any information about this.
+
+
+Thanks.
+
+
+mvh.
+Kasper Sandberg
+
