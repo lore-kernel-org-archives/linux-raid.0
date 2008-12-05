@@ -1,94 +1,79 @@
-From: Peter Rabbitson <rabbit+list@rabbit.us>
+From: "=?ISO-8859-2?Q?Micha=B3_Przy=B3uski?=" <mikylie@gmail.com>
 Subject: Re: detection/correction of corruption with raid6
-Date: Fri, 05 Dec 2008 23:12:44 +0100
-Message-ID: <4939A75C.6050705@rabbit.us>
-References: <1228510833.16555.76.camel@localhost>	 <alpine.DEB.1.10.0812051602110.17806@p34.internal.lan>	 <1228511195.16555.78.camel@localhost>	 <alpine.DEB.1.10.0812051607100.17806@p34.internal.lan>	 <1228511558.16555.84.camel@localhost> <6c4602af0812051330o4220cbf1g8b969cd4b9843d3a@mail.gmail.com>
+Date: Fri, 5 Dec 2008 23:26:30 +0100
+Message-ID: <6c4602af0812051426t2f7c1834w8e7478597b82d175@mail.gmail.com>
+References: <1228510833.16555.76.camel@localhost>
+	 <alpine.DEB.1.10.0812051602110.17806@p34.internal.lan>
+	 <1228511195.16555.78.camel@localhost>
+	 <alpine.DEB.1.10.0812051607100.17806@p34.internal.lan>
+	 <1228511558.16555.84.camel@localhost>
+	 <6c4602af0812051330o4220cbf1g8b969cd4b9843d3a@mail.gmail.com>
+	 <4939A75C.6050705@rabbit.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6c4602af0812051330o4220cbf1g8b969cd4b9843d3a@mail.gmail.com>
+In-Reply-To: <4939A75C.6050705@rabbit.us>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?TWljaGHFgiBQcnp5xYJ1c2tp?= <mikylie@gmail.com>
+To: Peter Rabbitson <rabbit+list@rabbit.us>
 Cc: Redeeman <redeeman@metanurb.dk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Micha=C5=82 Przy=C5=82uski wrote:
-> Hi,
->=20
-> 2008/12/5 Redeeman <redeeman@metanurb.dk>:
->> On Fri, 2008-12-05 at 16:09 -0500, Justin Piszcz wrote:
->>> On Fri, 5 Dec 2008, Redeeman wrote:
->>>
->>>> On Fri, 2008-12-05 at 16:02 -0500, Justin Piszcz wrote:
->>>>> On Fri, 5 Dec 2008, Redeeman wrote:
->>>>>
->>>>>> Hello.
->>>>>>
->>>>>> I was looking at the PDFs linked to from the wiki, and found thi=
-s:
->>>>>> http://kernel.org/pub/linux/kernel/people/hpa/raid6.pdf
->>>>>>
->>>>>> More specifically, section 4, starting on page 8.
->>>>>>
->>>>>> Am I understanding this correctly, in that with raid6, linux is =
-capable
->>>>>> of detecting if the content on 1 disk is corrupted, and reconstr=
-uct it
->>>>>> from the remaining disks?
->>>>> I ran md/raid6 for awhile, do you mean remap the bad sector on th=
-e fly?
->>>>> Linux/md raid does not do this afaik.
->>>> No, i mean, if one disk does silent corruption
->>> What would the error look like?  Both md/Linux & in the 3ware manua=
-l
->>> recommend you run a 'check' across the raid at least once a week
->>> (3ware/raid-verify) and md/Linux in Debian runs a check once a mont=
-h I
->>> believe to eliminate these issues.
->>>
->>> If you are asking whether a read error of a latent sector from the =
-one
->>> disk will result it reading the data from the second disk that is a=
- good
->>> question.
->> im asking, if one disk in a raid6 setup suddenly decides to flip a f=
-ew
->> bits in some bytes, will it be able to detect that in a scan, and
->> correct it? i cant see how it can do it on raid5, but maybe raid6?
->=20
-> No, not really.
-> I've been investigating silent corruption for a quite a while now, an=
-d
-> it looks more or less like this.
-> During a "check" action it'll be detected. During normal operation -
-> it won't be detected.
-> Normal (non-degraded) raid5/6 reads don't read parity (or Q syndrome)=
-,
-> they just read data. So they have no idea that something went bad.
-> Now, worse news is that you cannot really fix it automagically, even
-> after detecting by a "check" procedure. A "repair" will overwrite
-> parity and Q syndrome, with new values (new =3D calculated from what =
-it
-> seems to be data blocks).
->=20
-> It is possible (by the theory of Q syndrome, per the article you
-> linked) to detect which drive is doing a silent corruption with raid6
-> (and with some extra assumption, that just one drive is doing that).
-> But it's not implemented.
->=20
-
-I'd like to shamelessly bring in an older related thread:
-http://marc.info/?l=3Dlinux-raid&m=3D120605458309825
-http://marc.info/?l=3Dlinux-raid&m=3D120618020817057
-
-Maybe someone will get inspired, and will actually write the damned thi=
-ng :)
-
-Cheers
-Peter
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+MjAwOC8xMi81IFBldGVyIFJhYmJpdHNvbiA8cmFiYml0K2xpc3RAcmFiYml0LnVzPjoKPiBNaWNo
+YbMgUHJ6ebN1c2tpIHdyb3RlOgo+PiBIaSwKPj4KPj4gMjAwOC8xMi81IFJlZGVlbWFuIDxyZWRl
+ZW1hbkBtZXRhbnVyYi5kaz46Cj4+PiBPbiBGcmksIDIwMDgtMTItMDUgYXQgMTY6MDkgLTA1MDAs
+IEp1c3RpbiBQaXN6Y3ogd3JvdGU6Cj4+Pj4gT24gRnJpLCA1IERlYyAyMDA4LCBSZWRlZW1hbiB3
+cm90ZToKPj4+Pgo+Pj4+PiBPbiBGcmksIDIwMDgtMTItMDUgYXQgMTY6MDIgLTA1MDAsIEp1c3Rp
+biBQaXN6Y3ogd3JvdGU6Cj4+Pj4+PiBPbiBGcmksIDUgRGVjIDIwMDgsIFJlZGVlbWFuIHdyb3Rl
+Ogo+Pj4+Pj4KPj4+Pj4+PiBIZWxsby4KPj4+Pj4+Pgo+Pj4+Pj4+IEkgd2FzIGxvb2tpbmcgYXQg
+dGhlIFBERnMgbGlua2VkIHRvIGZyb20gdGhlIHdpa2ksIGFuZCBmb3VuZCB0aGlzOgo+Pj4+Pj4+
+IGh0dHA6Ly9rZXJuZWwub3JnL3B1Yi9saW51eC9rZXJuZWwvcGVvcGxlL2hwYS9yYWlkNi5wZGYK
+Pj4+Pj4+Cj4+Pj4+Pj4gTW9yZSBzcGVjaWZpY2FsbHksIHNlY3Rpb24gNCwgc3RhcnRpbmcgb24g
+cGFnZSA4Lgo+Pj4+Pj4+Cj4+Pj4+Pj4gQW0gSSB1bmRlcnN0YW5kaW5nIHRoaXMgY29ycmVjdGx5
+LCBpbiB0aGF0IHdpdGggcmFpZDYsIGxpbnV4IGlzIGNhcGFibGUKPj4+Pj4+PiBvZiBkZXRlY3Rp
+bmcgaWYgdGhlIGNvbnRlbnQgb24gMSBkaXNrIGlzIGNvcnJ1cHRlZCwgYW5kIHJlY29uc3RydWN0
+IGl0Cj4+Pj4+Pj4gZnJvbSB0aGUgcmVtYWluaW5nIGRpc2tzPwo+Pj4+Pj4gSSByYW4gbWQvcmFp
+ZDYgZm9yIGF3aGlsZSwgZG8geW91IG1lYW4gcmVtYXAgdGhlIGJhZCBzZWN0b3Igb24gdGhlIGZs
+eT8KPj4+Pj4+IExpbnV4L21kIHJhaWQgZG9lcyBub3QgZG8gdGhpcyBhZmFpay4KPj4+Pj4gTm8s
+IGkgbWVhbiwgaWYgb25lIGRpc2sgZG9lcyBzaWxlbnQgY29ycnVwdGlvbgo+Pj4+IFdoYXQgd291
+bGQgdGhlIGVycm9yIGxvb2sgbGlrZT8gIEJvdGggbWQvTGludXggJiBpbiB0aGUgM3dhcmUgbWFu
+dWFsCj4+Pj4gcmVjb21tZW5kIHlvdSBydW4gYSAnY2hlY2snIGFjcm9zcyB0aGUgcmFpZCBhdCBs
+ZWFzdCBvbmNlIGEgd2Vlawo+Pj4+ICgzd2FyZS9yYWlkLXZlcmlmeSkgYW5kIG1kL0xpbnV4IGlu
+IERlYmlhbiBydW5zIGEgY2hlY2sgb25jZSBhIG1vbnRoIEkKPj4+PiBiZWxpZXZlIHRvIGVsaW1p
+bmF0ZSB0aGVzZSBpc3N1ZXMuCj4+Pj4KPj4+PiBJZiB5b3UgYXJlIGFza2luZyB3aGV0aGVyIGEg
+cmVhZCBlcnJvciBvZiBhIGxhdGVudCBzZWN0b3IgZnJvbSB0aGUgb25lCj4+Pj4gZGlzayB3aWxs
+IHJlc3VsdCBpdCByZWFkaW5nIHRoZSBkYXRhIGZyb20gdGhlIHNlY29uZCBkaXNrIHRoYXQgaXMg
+YSBnb29kCj4+Pj4gcXVlc3Rpb24uCj4+PiBpbSBhc2tpbmcsIGlmIG9uZSBkaXNrIGluIGEgcmFp
+ZDYgc2V0dXAgc3VkZGVubHkgZGVjaWRlcyB0byBmbGlwIGEgZmV3Cj4+PiBiaXRzIGluIHNvbWUg
+Ynl0ZXMsIHdpbGwgaXQgYmUgYWJsZSB0byBkZXRlY3QgdGhhdCBpbiBhIHNjYW4sIGFuZAo+Pj4g
+Y29ycmVjdCBpdD8gaSBjYW50IHNlZSBob3cgaXQgY2FuIGRvIGl0IG9uIHJhaWQ1LCBidXQgbWF5
+YmUgcmFpZDY/Cj4+Cj4+IE5vLCBub3QgcmVhbGx5Lgo+PiBJJ3ZlIGJlZW4gaW52ZXN0aWdhdGlu
+ZyBzaWxlbnQgY29ycnVwdGlvbiBmb3IgYSBxdWl0ZSBhIHdoaWxlIG5vdywgYW5kCj4+IGl0IGxv
+b2tzIG1vcmUgb3IgbGVzcyBsaWtlIHRoaXMuCj4+IER1cmluZyBhICJjaGVjayIgYWN0aW9uIGl0
+J2xsIGJlIGRldGVjdGVkLiBEdXJpbmcgbm9ybWFsIG9wZXJhdGlvbiAtCj4+IGl0IHdvbid0IGJl
+IGRldGVjdGVkLgo+PiBOb3JtYWwgKG5vbi1kZWdyYWRlZCkgcmFpZDUvNiByZWFkcyBkb24ndCBy
+ZWFkIHBhcml0eSAob3IgUSBzeW5kcm9tZSksCj4+IHRoZXkganVzdCByZWFkIGRhdGEuIFNvIHRo
+ZXkgaGF2ZSBubyBpZGVhIHRoYXQgc29tZXRoaW5nIHdlbnQgYmFkLgo+PiBOb3csIHdvcnNlIG5l
+d3MgaXMgdGhhdCB5b3UgY2Fubm90IHJlYWxseSBmaXggaXQgYXV0b21hZ2ljYWxseSwgZXZlbgo+
+PiBhZnRlciBkZXRlY3RpbmcgYnkgYSAiY2hlY2siIHByb2NlZHVyZS4gQSAicmVwYWlyIiB3aWxs
+IG92ZXJ3cml0ZQo+PiBwYXJpdHkgYW5kIFEgc3luZHJvbWUsIHdpdGggbmV3IHZhbHVlcyAobmV3
+ID0gY2FsY3VsYXRlZCBmcm9tIHdoYXQgaXQKPj4gc2VlbXMgdG8gYmUgZGF0YSBibG9ja3MpLgo+
+Pgo+PiBJdCBpcyBwb3NzaWJsZSAoYnkgdGhlIHRoZW9yeSBvZiBRIHN5bmRyb21lLCBwZXIgdGhl
+IGFydGljbGUgeW91Cj4+IGxpbmtlZCkgdG8gZGV0ZWN0IHdoaWNoIGRyaXZlIGlzIGRvaW5nIGEg
+c2lsZW50IGNvcnJ1cHRpb24gd2l0aCByYWlkNgo+PiAoYW5kIHdpdGggc29tZSBleHRyYSBhc3N1
+bXB0aW9uLCB0aGF0IGp1c3Qgb25lIGRyaXZlIGlzIGRvaW5nIHRoYXQpLgo+PiBCdXQgaXQncyBu
+b3QgaW1wbGVtZW50ZWQuCj4+Cj4KPiBJJ2QgbGlrZSB0byBzaGFtZWxlc3NseSBicmluZyBpbiBh
+biBvbGRlciByZWxhdGVkIHRocmVhZDoKPiBodHRwOi8vbWFyYy5pbmZvLz9sPWxpbnV4LXJhaWQm
+bT0xMjA2MDU0NTgzMDk4MjUKPiBodHRwOi8vbWFyYy5pbmZvLz9sPWxpbnV4LXJhaWQmbT0xMjA2
+MTgwMjA4MTcwNTcKPgo+IE1heWJlIHNvbWVvbmUgd2lsbCBnZXQgaW5zcGlyZWQsIGFuZCB3aWxs
+IGFjdHVhbGx5IHdyaXRlIHRoZSBkYW1uZWQgdGhpbmcgOikKCkkgY29uY3VyLiBFdmVuIHdpdGhv
+dXQgYSAiZml4IiwganVzdCBwcmludGluZyBpbmZvcm1hdGlvbiB3aGljaCBkaXNrCmlzIHN1c3Bl
+Y3RlZCBvZiBkb2luZyBzaWxlbnQgY29ycnVwdGlvbiB3aWxsIGJlIGhlbHBmdWwuIE9uZSBjYW4g
+YXQKbGVhc3QsIGZhaWwgdGhlIGRpc2ssIGFuZCBnZXQgcmlkIG9mIGl0LiBTdGlsbCBiZXR0ZXIg
+dGhhbiB0YWtpbmcgd2lsZApndWVzc2VzIHdoYXQgd2VudCB3cm9uZy4gSSdtIGEgc2lsZW50IGNv
+cnJ1cHRpb24gbWFuaWFjIG15c2VsZiwKa2VlcGluZyBtZDUncyBvZiBtb3N0IGJpZ2dlci9tb3Jl
+IGltcG9ydGFudCBmaWxlcywgc28gbXkganVkZ21lbnQKbWlnaHQgbm90IGJlIGZhaXIuCgpBbHNv
+LCBpdCBzZWVtcyB0aGUgZmVhdHVyZSBpcyBiZWluZyBhc2tlZCBhYm91dCBhYm91dCAzLTQgdGlt
+ZXMgYQp5ZWFyLCB3aGljaCBpcyBwcm9iYWJseSB0aGUgc2Vjb25kIG1vc3QgcmVxdWVzdGVkIGZl
+YXR1cmUgYWZ0ZXIKbnVtZXJvdXMgcmVzaGFwZSB2YXJpYXRpb25zLgpSZWdhcmRzLApNaWtlCg==
