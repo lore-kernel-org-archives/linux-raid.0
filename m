@@ -1,72 +1,94 @@
-From: Redeeman <redeeman@metanurb.dk>
-Subject: Re: time limited error recovery and md raid
-Date: Fri, 05 Dec 2008 23:09:02 +0100
-Message-ID: <1228514942.16555.95.camel@localhost>
-References: <1228510646.16555.73.camel@localhost>
-	 <alpine.DEB.1.10.0812051600410.17806@p34.internal.lan>
-	 <1228511266.16555.81.camel@localhost>
-	 <alpine.DEB.1.10.0812051609070.17806@p34.internal.lan>
-	 <1228511880.16555.87.camel@localhost>
-	 <alpine.DEB.1.10.0812051618340.17806@p34.internal.lan>
-	 <1228512684.16555.91.camel@localhost>
-	 <alpine.DEB.1.10.0812051637360.17806@p34.internal.lan>
+From: Peter Rabbitson <rabbit+list@rabbit.us>
+Subject: Re: detection/correction of corruption with raid6
+Date: Fri, 05 Dec 2008 23:12:44 +0100
+Message-ID: <4939A75C.6050705@rabbit.us>
+References: <1228510833.16555.76.camel@localhost>	 <alpine.DEB.1.10.0812051602110.17806@p34.internal.lan>	 <1228511195.16555.78.camel@localhost>	 <alpine.DEB.1.10.0812051607100.17806@p34.internal.lan>	 <1228511558.16555.84.camel@localhost> <6c4602af0812051330o4220cbf1g8b969cd4b9843d3a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0812051637360.17806@p34.internal.lan>
+In-Reply-To: <6c4602af0812051330o4220cbf1g8b969cd4b9843d3a@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org
+To: =?UTF-8?B?TWljaGHFgiBQcnp5xYJ1c2tp?= <mikylie@gmail.com>
+Cc: Redeeman <redeeman@metanurb.dk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 2008-12-05 at 16:42 -0500, Justin Piszcz wrote:
-> 
-> On Fri, 5 Dec 2008, Redeeman wrote:
-> 
-> > On Fri, 2008-12-05 at 16:21 -0500, Justin Piszcz wrote:
-> >>
-> >> On Fri, 5 Dec 2008, Redeeman wrote:
-> >>
-> >>> On Fri, 2008-12-05 at 16:12 -0500, Justin Piszcz wrote:
-> >>>>
-> >>>> On Fri, 5 Dec 2008, Redeeman wrote:
-> >>>>
-> >>>>> On Fri, 2008-12-05 at 16:01 -0500, Justin Piszcz wrote:
-> >>>>>>
-> >>>>>> On Fri, 5 Dec 2008, Redeeman wrote:
-> >>>>>>
-> > Okay, you happen to have any knowledge to pass on about current 1tb
-> > disks?
-> I am still looking for some good 1TiB drives myself.  I know one user who 
-> has 12 of these, 11 in a RAID-5 array and 1 as a spare on a 12-port 3ware
-> PCI-X card:
-> SAMSUNG Spinpoint F1 HD103UJ 1TB 7200 RPM 32MB Cache SATA 3.0Gb/s Hard Drive
-I guess those look pretty good.
+Micha=C5=82 Przy=C5=82uski wrote:
+> Hi,
+>=20
+> 2008/12/5 Redeeman <redeeman@metanurb.dk>:
+>> On Fri, 2008-12-05 at 16:09 -0500, Justin Piszcz wrote:
+>>> On Fri, 5 Dec 2008, Redeeman wrote:
+>>>
+>>>> On Fri, 2008-12-05 at 16:02 -0500, Justin Piszcz wrote:
+>>>>> On Fri, 5 Dec 2008, Redeeman wrote:
+>>>>>
+>>>>>> Hello.
+>>>>>>
+>>>>>> I was looking at the PDFs linked to from the wiki, and found thi=
+s:
+>>>>>> http://kernel.org/pub/linux/kernel/people/hpa/raid6.pdf
+>>>>>>
+>>>>>> More specifically, section 4, starting on page 8.
+>>>>>>
+>>>>>> Am I understanding this correctly, in that with raid6, linux is =
+capable
+>>>>>> of detecting if the content on 1 disk is corrupted, and reconstr=
+uct it
+>>>>>> from the remaining disks?
+>>>>> I ran md/raid6 for awhile, do you mean remap the bad sector on th=
+e fly?
+>>>>> Linux/md raid does not do this afaik.
+>>>> No, i mean, if one disk does silent corruption
+>>> What would the error look like?  Both md/Linux & in the 3ware manua=
+l
+>>> recommend you run a 'check' across the raid at least once a week
+>>> (3ware/raid-verify) and md/Linux in Debian runs a check once a mont=
+h I
+>>> believe to eliminate these issues.
+>>>
+>>> If you are asking whether a read error of a latent sector from the =
+one
+>>> disk will result it reading the data from the second disk that is a=
+ good
+>>> question.
+>> im asking, if one disk in a raid6 setup suddenly decides to flip a f=
+ew
+>> bits in some bytes, will it be able to detect that in a scan, and
+>> correct it? i cant see how it can do it on raid5, but maybe raid6?
+>=20
+> No, not really.
+> I've been investigating silent corruption for a quite a while now, an=
+d
+> it looks more or less like this.
+> During a "check" action it'll be detected. During normal operation -
+> it won't be detected.
+> Normal (non-degraded) raid5/6 reads don't read parity (or Q syndrome)=
+,
+> they just read data. So they have no idea that something went bad.
+> Now, worse news is that you cannot really fix it automagically, even
+> after detecting by a "check" procedure. A "repair" will overwrite
+> parity and Q syndrome, with new values (new =3D calculated from what =
+it
+> seems to be data blocks).
+>=20
+> It is possible (by the theory of Q syndrome, per the article you
+> linked) to detect which drive is doing a silent corruption with raid6
+> (and with some extra assumption, that just one drive is doing that).
+> But it's not implemented.
+>=20
 
-i personally am running WD RE2 and Seagate ES.2 in raids without issues
-at all, raid1, but hmm..
+I'd like to shamelessly bring in an older related thread:
+http://marc.info/?l=3Dlinux-raid&m=3D120605458309825
+http://marc.info/?l=3Dlinux-raid&m=3D120618020817057
 
-> 
-> I really would like to find a disk with a working NCQ implementation in 
-> Linux and 3ware and one that works well.  In a single disk configuration, 
-> the WD 750G that I have used for ~1 year+ now has been fine, the problem 
-> is finding good, reliable disks when used in a raid configuration, that is
-> when everything changes.
-> 
-> > sorry to ask so much, but by "this process", do you mean the drive
-> > internally doing it rewriting, avoiding the kickout, or do you mean the
-> > raid system discovering the disk as faulty, and kicking it? :)
-> The process being check or repair as noted by mikylie who also responded to
-> this thread, see his response regarding check vs. repair.  There is a
-> difference, with check/mdraid see mikylie's note, with RAID VERIFY on a 3ware
-> controller it will remap bad sectors to others parts of the array as it comes
-> across them both during RAID VERIFY and while the array is running live.
-> 
-> Justin.
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Maybe someone will get inspired, and will actually write the damned thi=
+ng :)
 
+Cheers
+Peter
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
