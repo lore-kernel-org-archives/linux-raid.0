@@ -1,66 +1,80 @@
-From: "Sean Hildebrand" <silverwraithii@gmail.com>
-Subject: Re: Crash while increasing RAID5 from 3 disks to 5, array won't build.
-Date: Thu, 4 Dec 2008 18:49:02 -0500
-Message-ID: <fa037c550812041549w2f93239se43d39150fe2dd47@mail.gmail.com>
-References: <fa037c550812030743i70236951g964b444163425d39@mail.gmail.com>
-	 <06bc99a2784b75f8d7c2a4e563f576c4.squirrel@neil.brown.name>
-	 <fa037c550812031245u594ffd56q4d0b701456d81f1b@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Synchronous vs asynchonous mdadm operations
+Date: Fri, 5 Dec 2008 15:45:07 +1100
+Message-ID: <18744.45523.151734.277212@notabene.brown>
+References: <20081128162703.GA22404@arachsys.com>
+	<20081204105953.GL32420@arachsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <fa037c550812031245u594ffd56q4d0b701456d81f1b@mail.gmail.com>
-Content-Disposition: inline
+In-Reply-To: message from Chris Webb on Thursday December 4
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Chris Webb <chris@arachsys.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Dec 3, 2008 at 3:45 PM, Sean Hildebrand
-<silverwraithii@gmail.com> wrote:
-> On Wed, Dec 3, 2008 at 3:21 PM, NeilBrown <neilb@suse.de> wrote:
->> On Thu, December 4, 2008 2:43 am, Sean Hildebrand wrote:
->>> blkid reports that all five disks have the same UUID.
->>>
->>> Specifying disks by UUID results in "mdadm: no devices found for
->>> /dev/md0".
->>>
->>> Specifying disks based on their positions, /dev/sd[abcef]1 in this
->>> case, results in "mdadm: superblock on /dev/sda1 doesn't match others
->>> - assembly aborted" and it'll continue doing that with [bcef]1 if a is
->>> removed.
->>>
->>> mdadm --detail --scan outputs nothing.
->>>
->>> I've tried assembling the original three disks sans the two new ones
->>> to no avail.
->>
->> Please:
->>   git clone git://neil.brown.name/mdadm
->>   cd mdadm
->>   make
->>
->> and try the 'mdadm' that creates.
->> If that still doesn't work, please report the output of
->>   mdadm -E /dev/sd[abcdef]1
->> and
->>   mdadm -Avv /dev/md0 /dev/sd[abcdef]1
->>
->> NeilBrown
->>
->>
->
-> That did it. Built, mounted and back to rebuilding.
->
-> Thanks.
->
+On Thursday December 4, chris@arachsys.com wrote:
+> Chris Webb <chris@arachsys.com> writes:
+> 
+> [Re: mdadm --stop being potentially asynchronous]
+> > The reason for the question is that I'm seeing occasional cases of arrays which
+> > won't reassemble following such an operation. dmesg alleges there is an invalid
+> > superblock for all of the six slots which were originally part of the array.
+> 
+> I tracked this one down to my scripts, which were failing to adjust the
+> available space on the rdevs in a particularly rare case. However, I'm still
+> wondering about the best way to do a fail/remove combination, given
+> that fail appears to be asynchronous. The shell fragment I give below seems
+> way over the top, but I can't see any simpler route....
 
-Having an issue right now, I am unsure of what's going on. When I
-resized my array from 5 disks to 3 some months ago, the filesystem was
-automatically made smaller.
+Yes, --fail is asynchronous and I suspect it will remain that way.  It
+is up to the raid array to decide when to let go of the device and it
+might never do say: if you fail the last working drive on a raid1, you
+still cannot remove it.
 
-I'd assume the same happens when growing the array. However, conky and
-my file manager report that the partition is 1.35TB. fdisk and gparted
-output the correct 2.73 TB.
 
-Does mdadm automatically resize the partition when increasing the
-number of disks?
+> 
+> > I notice that some mdadm operations appear to be asynchronous. For instance,
+> > 
+> >   mdadm --fail /dev/md/shelf.51000 /dev/mapper/slot.51000.1
+> >   mdadm --remove /dev/md/shelf.51000 /dev/mapper/slot.51000.1
+> > 
+> > will always fail at the --remove stage with
+> > 
+> >   mdadm: hot remove failed for /dev/mapper/slot.51000.1: Device or resource busy
+> > 
+> > whereas adding a short sleep in between will make it successful.
+> > 
+> > Is there a 'standard' way to wait for this operation to complete or to
+> > perform both steps in one go, other than something horrible like:
+> > 
+> >   mdadm --fail /dev/md/shelf.51000 /dev/mapper/slot.51000.1
+> >   MD=$((`stat -c '%#T' -L /dev/md/shelf.51000`))
+> >   MAJOR=$((`stat -c '%#t' -L /dev/mapper/slot.51000.1`))
+> >   MINOR=$((`stat -c '%#T' -L /dev/mapper/slot.51000.1`))
+> >   for RD in /sys/block/md$MD/md/rd*; do
+> >     [ -f $RD/block/dev ] || continue
+> >     [ "`<$RD/block/dev`" = "$MAJOR:$MINOR" ] || continue
+> >     while [ "< $RD/state" != "faulty ]; do sleep 0.1; done
+> >   done
+> >   mdadm --remove /dev/md/shelf.51000 /dev/mapper/slot.51000.1
+
+I suspect
+  until mdadm --remove /dev/md/shelf.51000 /dev/mapper/slot.51000.1
+  do sleep 0.1
+  done
+
+might be slightly simpler.
+
+NeilBrown
+
+
+> 
+> Cheers,
+> 
+> Chris.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
