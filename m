@@ -1,12 +1,12 @@
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: detection/correction of corruption with raid6
-Date: Fri, 5 Dec 2008 16:09:00 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0812051607100.17806@p34.internal.lan>
-References: <1228510833.16555.76.camel@localhost>  <alpine.DEB.1.10.0812051602110.17806@p34.internal.lan> <1228511195.16555.78.camel@localhost>
+Subject: Re: time limited error recovery and md raid
+Date: Fri, 5 Dec 2008 16:12:28 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0812051609070.17806@p34.internal.lan>
+References: <1228510646.16555.73.camel@localhost>  <alpine.DEB.1.10.0812051600410.17806@p34.internal.lan> <1228511266.16555.81.camel@localhost>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1228511195.16555.78.camel@localhost>
+In-Reply-To: <1228511266.16555.81.camel@localhost>
 Sender: linux-raid-owner@vger.kernel.org
 To: Redeeman <redeeman@metanurb.dk>
 Cc: linux-raid@vger.kernel.org
@@ -16,33 +16,62 @@ List-Id: linux-raid.ids
 
 On Fri, 5 Dec 2008, Redeeman wrote:
 
-> On Fri, 2008-12-05 at 16:02 -0500, Justin Piszcz wrote:
+> On Fri, 2008-12-05 at 16:01 -0500, Justin Piszcz wrote:
 >>
 >> On Fri, 5 Dec 2008, Redeeman wrote:
 >>
->>> Hello.
+>>> Hello..
 >>>
->>> I was looking at the PDFs linked to from the wiki, and found this:
->>> http://kernel.org/pub/linux/kernel/people/hpa/raid6.pdf
+>>> Im going to be building a software raid6 setup with probably 8 disks,
+>>> and i've been looking at the wd gp disks, which comes in both standard
+>>> and raid edition, with the raid edition being much more expensive.
 >>>
->>> More specifically, section 4, starting on page 8.
+>>> I have searched around, and found that it is indeed possible to activate
+>>> tler on the "normal" disks, however, the setting has a parameter, more
+>>> specifically, how many seconds it should be limited to. Default is 7.
 >>>
->>> Am I understanding this correctly, in that with raid6, linux is capable
->>> of detecting if the content on 1 disk is corrupted, and reconstruct it
->>> from the remaining disks?
+>>> So i was wondering, what should that be set to, to be optimal for linux
+>>> md raid? i havent been able to find any information about this.
+>>>
+>>>
+>>> Thanks.
+>>>
+>>>
+>>> mvh.
+>>> Kasper Sandberg
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
 >>
->> I ran md/raid6 for awhile, do you mean remap the bad sector on the fly?
->> Linux/md raid does not do this afaik.
+>> The exact time is a good question.
+>>
+>> Something I have noticed is when TLER is off, the drives hang up when they
+>> hit a bad sector and when TLER is on, the drives is kicked out of the
+>> array immediately when it reports a bad sector.
 >
-> No, i mean, if one disk does silent corruption
+> First.. Does this happen with a degree of frequency on these disks? you
+> recommend other disks?
+The disks I have are velociraptors, I will be reverting back to my old 
+raptor150s shortly to ensure everything is fine with them before I go 
+buying new hard drives, etc.  It happened every week or two with 
+velociraptors, bad drives or drives getting kicked out of the array over 
+and over again.
 
-What would the error look like?  Both md/Linux & in the 3ware manual 
-recommend you run a 'check' across the raid at least once a week 
-(3ware/raid-verify) and md/Linux in Debian runs a check once a month I 
-believe to eliminate these issues.
+> second, when tler is off, it hangs FOREVER? or just until it gives up?
+When TLER is off it hangs for 1-2 minutes and then you will see a timeout 
+in the dmesg/kernel log and it (sometimes) kicks the drive out of the 
+array, othertimes it 'hard' resets the drive the array is able to continue 
+operating normally.
 
-If you are asking whether a read error of a latent sector from the one 
-disk will result it reading the data from the second disk that is a good
-question.
+> when tler is on, why does linux not attempt to remap the sector?
+See my earlier posts on this question from last week.  It would need a 
+metadata section on each HDD to keep track of the bad sectors before it 
+writes to the drives, a 3ware card will do this for you-- however, 
+typically, (having run md/linux) for a number of years is not 
+super-necessary if you run checks on your disks once a week *AND* you have 
+good drives that don't have problems.
 
 Justin.
