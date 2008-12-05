@@ -1,79 +1,58 @@
-From: "=?ISO-8859-2?Q?Micha=B3_Przy=B3uski?=" <mikylie@gmail.com>
-Subject: Re: detection/correction of corruption with raid6
-Date: Fri, 5 Dec 2008 23:26:30 +0100
-Message-ID: <6c4602af0812051426t2f7c1834w8e7478597b82d175@mail.gmail.com>
-References: <1228510833.16555.76.camel@localhost>
-	 <alpine.DEB.1.10.0812051602110.17806@p34.internal.lan>
-	 <1228511195.16555.78.camel@localhost>
-	 <alpine.DEB.1.10.0812051607100.17806@p34.internal.lan>
-	 <1228511558.16555.84.camel@localhost>
-	 <6c4602af0812051330o4220cbf1g8b969cd4b9843d3a@mail.gmail.com>
-	 <4939A75C.6050705@rabbit.us>
+From: Bob Bell <b_linuxraid@thebellsplace.com>
+Subject: Data loss on MD RAID5 reshape?
+Date: Fri, 5 Dec 2008 17:21:32 -0500
+Message-ID: <20081205222131.GD8219@newbie.thebellsplace.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4939A75C.6050705@rabbit.us>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Rabbitson <rabbit+list@rabbit.us>
-Cc: Redeeman <redeeman@metanurb.dk>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-MjAwOC8xMi81IFBldGVyIFJhYmJpdHNvbiA8cmFiYml0K2xpc3RAcmFiYml0LnVzPjoKPiBNaWNo
-YbMgUHJ6ebN1c2tpIHdyb3RlOgo+PiBIaSwKPj4KPj4gMjAwOC8xMi81IFJlZGVlbWFuIDxyZWRl
-ZW1hbkBtZXRhbnVyYi5kaz46Cj4+PiBPbiBGcmksIDIwMDgtMTItMDUgYXQgMTY6MDkgLTA1MDAs
-IEp1c3RpbiBQaXN6Y3ogd3JvdGU6Cj4+Pj4gT24gRnJpLCA1IERlYyAyMDA4LCBSZWRlZW1hbiB3
-cm90ZToKPj4+Pgo+Pj4+PiBPbiBGcmksIDIwMDgtMTItMDUgYXQgMTY6MDIgLTA1MDAsIEp1c3Rp
-biBQaXN6Y3ogd3JvdGU6Cj4+Pj4+PiBPbiBGcmksIDUgRGVjIDIwMDgsIFJlZGVlbWFuIHdyb3Rl
-Ogo+Pj4+Pj4KPj4+Pj4+PiBIZWxsby4KPj4+Pj4+Pgo+Pj4+Pj4+IEkgd2FzIGxvb2tpbmcgYXQg
-dGhlIFBERnMgbGlua2VkIHRvIGZyb20gdGhlIHdpa2ksIGFuZCBmb3VuZCB0aGlzOgo+Pj4+Pj4+
-IGh0dHA6Ly9rZXJuZWwub3JnL3B1Yi9saW51eC9rZXJuZWwvcGVvcGxlL2hwYS9yYWlkNi5wZGYK
-Pj4+Pj4+Cj4+Pj4+Pj4gTW9yZSBzcGVjaWZpY2FsbHksIHNlY3Rpb24gNCwgc3RhcnRpbmcgb24g
-cGFnZSA4Lgo+Pj4+Pj4+Cj4+Pj4+Pj4gQW0gSSB1bmRlcnN0YW5kaW5nIHRoaXMgY29ycmVjdGx5
-LCBpbiB0aGF0IHdpdGggcmFpZDYsIGxpbnV4IGlzIGNhcGFibGUKPj4+Pj4+PiBvZiBkZXRlY3Rp
-bmcgaWYgdGhlIGNvbnRlbnQgb24gMSBkaXNrIGlzIGNvcnJ1cHRlZCwgYW5kIHJlY29uc3RydWN0
-IGl0Cj4+Pj4+Pj4gZnJvbSB0aGUgcmVtYWluaW5nIGRpc2tzPwo+Pj4+Pj4gSSByYW4gbWQvcmFp
-ZDYgZm9yIGF3aGlsZSwgZG8geW91IG1lYW4gcmVtYXAgdGhlIGJhZCBzZWN0b3Igb24gdGhlIGZs
-eT8KPj4+Pj4+IExpbnV4L21kIHJhaWQgZG9lcyBub3QgZG8gdGhpcyBhZmFpay4KPj4+Pj4gTm8s
-IGkgbWVhbiwgaWYgb25lIGRpc2sgZG9lcyBzaWxlbnQgY29ycnVwdGlvbgo+Pj4+IFdoYXQgd291
-bGQgdGhlIGVycm9yIGxvb2sgbGlrZT8gIEJvdGggbWQvTGludXggJiBpbiB0aGUgM3dhcmUgbWFu
-dWFsCj4+Pj4gcmVjb21tZW5kIHlvdSBydW4gYSAnY2hlY2snIGFjcm9zcyB0aGUgcmFpZCBhdCBs
-ZWFzdCBvbmNlIGEgd2Vlawo+Pj4+ICgzd2FyZS9yYWlkLXZlcmlmeSkgYW5kIG1kL0xpbnV4IGlu
-IERlYmlhbiBydW5zIGEgY2hlY2sgb25jZSBhIG1vbnRoIEkKPj4+PiBiZWxpZXZlIHRvIGVsaW1p
-bmF0ZSB0aGVzZSBpc3N1ZXMuCj4+Pj4KPj4+PiBJZiB5b3UgYXJlIGFza2luZyB3aGV0aGVyIGEg
-cmVhZCBlcnJvciBvZiBhIGxhdGVudCBzZWN0b3IgZnJvbSB0aGUgb25lCj4+Pj4gZGlzayB3aWxs
-IHJlc3VsdCBpdCByZWFkaW5nIHRoZSBkYXRhIGZyb20gdGhlIHNlY29uZCBkaXNrIHRoYXQgaXMg
-YSBnb29kCj4+Pj4gcXVlc3Rpb24uCj4+PiBpbSBhc2tpbmcsIGlmIG9uZSBkaXNrIGluIGEgcmFp
-ZDYgc2V0dXAgc3VkZGVubHkgZGVjaWRlcyB0byBmbGlwIGEgZmV3Cj4+PiBiaXRzIGluIHNvbWUg
-Ynl0ZXMsIHdpbGwgaXQgYmUgYWJsZSB0byBkZXRlY3QgdGhhdCBpbiBhIHNjYW4sIGFuZAo+Pj4g
-Y29ycmVjdCBpdD8gaSBjYW50IHNlZSBob3cgaXQgY2FuIGRvIGl0IG9uIHJhaWQ1LCBidXQgbWF5
-YmUgcmFpZDY/Cj4+Cj4+IE5vLCBub3QgcmVhbGx5Lgo+PiBJJ3ZlIGJlZW4gaW52ZXN0aWdhdGlu
-ZyBzaWxlbnQgY29ycnVwdGlvbiBmb3IgYSBxdWl0ZSBhIHdoaWxlIG5vdywgYW5kCj4+IGl0IGxv
-b2tzIG1vcmUgb3IgbGVzcyBsaWtlIHRoaXMuCj4+IER1cmluZyBhICJjaGVjayIgYWN0aW9uIGl0
-J2xsIGJlIGRldGVjdGVkLiBEdXJpbmcgbm9ybWFsIG9wZXJhdGlvbiAtCj4+IGl0IHdvbid0IGJl
-IGRldGVjdGVkLgo+PiBOb3JtYWwgKG5vbi1kZWdyYWRlZCkgcmFpZDUvNiByZWFkcyBkb24ndCBy
-ZWFkIHBhcml0eSAob3IgUSBzeW5kcm9tZSksCj4+IHRoZXkganVzdCByZWFkIGRhdGEuIFNvIHRo
-ZXkgaGF2ZSBubyBpZGVhIHRoYXQgc29tZXRoaW5nIHdlbnQgYmFkLgo+PiBOb3csIHdvcnNlIG5l
-d3MgaXMgdGhhdCB5b3UgY2Fubm90IHJlYWxseSBmaXggaXQgYXV0b21hZ2ljYWxseSwgZXZlbgo+
-PiBhZnRlciBkZXRlY3RpbmcgYnkgYSAiY2hlY2siIHByb2NlZHVyZS4gQSAicmVwYWlyIiB3aWxs
-IG92ZXJ3cml0ZQo+PiBwYXJpdHkgYW5kIFEgc3luZHJvbWUsIHdpdGggbmV3IHZhbHVlcyAobmV3
-ID0gY2FsY3VsYXRlZCBmcm9tIHdoYXQgaXQKPj4gc2VlbXMgdG8gYmUgZGF0YSBibG9ja3MpLgo+
-Pgo+PiBJdCBpcyBwb3NzaWJsZSAoYnkgdGhlIHRoZW9yeSBvZiBRIHN5bmRyb21lLCBwZXIgdGhl
-IGFydGljbGUgeW91Cj4+IGxpbmtlZCkgdG8gZGV0ZWN0IHdoaWNoIGRyaXZlIGlzIGRvaW5nIGEg
-c2lsZW50IGNvcnJ1cHRpb24gd2l0aCByYWlkNgo+PiAoYW5kIHdpdGggc29tZSBleHRyYSBhc3N1
-bXB0aW9uLCB0aGF0IGp1c3Qgb25lIGRyaXZlIGlzIGRvaW5nIHRoYXQpLgo+PiBCdXQgaXQncyBu
-b3QgaW1wbGVtZW50ZWQuCj4+Cj4KPiBJJ2QgbGlrZSB0byBzaGFtZWxlc3NseSBicmluZyBpbiBh
-biBvbGRlciByZWxhdGVkIHRocmVhZDoKPiBodHRwOi8vbWFyYy5pbmZvLz9sPWxpbnV4LXJhaWQm
-bT0xMjA2MDU0NTgzMDk4MjUKPiBodHRwOi8vbWFyYy5pbmZvLz9sPWxpbnV4LXJhaWQmbT0xMjA2
-MTgwMjA4MTcwNTcKPgo+IE1heWJlIHNvbWVvbmUgd2lsbCBnZXQgaW5zcGlyZWQsIGFuZCB3aWxs
-IGFjdHVhbGx5IHdyaXRlIHRoZSBkYW1uZWQgdGhpbmcgOikKCkkgY29uY3VyLiBFdmVuIHdpdGhv
-dXQgYSAiZml4IiwganVzdCBwcmludGluZyBpbmZvcm1hdGlvbiB3aGljaCBkaXNrCmlzIHN1c3Bl
-Y3RlZCBvZiBkb2luZyBzaWxlbnQgY29ycnVwdGlvbiB3aWxsIGJlIGhlbHBmdWwuIE9uZSBjYW4g
-YXQKbGVhc3QsIGZhaWwgdGhlIGRpc2ssIGFuZCBnZXQgcmlkIG9mIGl0LiBTdGlsbCBiZXR0ZXIg
-dGhhbiB0YWtpbmcgd2lsZApndWVzc2VzIHdoYXQgd2VudCB3cm9uZy4gSSdtIGEgc2lsZW50IGNv
-cnJ1cHRpb24gbWFuaWFjIG15c2VsZiwKa2VlcGluZyBtZDUncyBvZiBtb3N0IGJpZ2dlci9tb3Jl
-IGltcG9ydGFudCBmaWxlcywgc28gbXkganVkZ21lbnQKbWlnaHQgbm90IGJlIGZhaXIuCgpBbHNv
-LCBpdCBzZWVtcyB0aGUgZmVhdHVyZSBpcyBiZWluZyBhc2tlZCBhYm91dCBhYm91dCAzLTQgdGlt
-ZXMgYQp5ZWFyLCB3aGljaCBpcyBwcm9iYWJseSB0aGUgc2Vjb25kIG1vc3QgcmVxdWVzdGVkIGZl
-YXR1cmUgYWZ0ZXIKbnVtZXJvdXMgcmVzaGFwZSB2YXJpYXRpb25zLgpSZWdhcmRzLApNaWtlCg==
+I've experienced apparent data loss, and hoping someone out there can 
+help rescue my data, or at least tell me what went wrong so that I don't 
+have a repeat event.  I first asked this question on linux-lvm, but the 
+folks there seemed to think it pertained more to RAID than to LVM.
+
+I was setting up a new server running Ubuntu's Hardy Heron release.  
+`uname -a` reports:
+  Linux sherwood 2.6.24-16-server #1 SMP Thu Apr 10 13:58:00 UTC 2008 i686 GNU/Linux
+
+I initially created an md RAID5 device with only two components 
+(matching 320 GB SATA HDDs).  I created a single LVM Physical Volume 
+using the entirety of that md device (320 GB), and then created several 
+LVM Logical Volumes for different filesystems (all ext3).  This was done 
+using the Ubuntu installer.  After installing I used lvresize to 
+increase the size of a few of the Logical Volumes.  These filesystems 
+hold data that is not a critical part of the system (mail, music, video, 
+etc.), but still important to me.
+
+I then copied data onto one of those filesystems (the original source of 
+the data is no longer available).  I then added a third drive to the md 
+device, which brought the total to 2 active devices and 1 spare device.  
+I then grew the number of devices to 3 and waited for the reshape to 
+finish (increasing the capacity to 640 GB).  I bumped the values in 
+/proc/sys/dev/raid/ so that I wouldn't have to wait as long.
+
+Now that the reshaping has completed, LVM can't find the physical volume 
+on that device anymore.  I tried rebooting the system, but the problem 
+remained.  Checking /proc/mdstat shows that the md device is up and 
+healthy.  The pvdisplay command only shows my other Physical Volume (for 
+the IDE drives).  I found the pvck command and ran that on the md 
+device, and it states that there is no LVM label on the device.
+
+It is my understanding that the steps I outlined should have worked.  
+I planned to follow them with pvresize, then lvresize, then umount, 
+resize2fs, and mount again.  I've seen this procedure outlined a few 
+different places, including at 
+http://gentoo-wiki.info/Resize_LVM2_on_RAID5.
+
+Did I do something wrong?  Is there anyway to rescue my data?  If 
+there's no way of saving the data, I'd at least like to figure out what 
+happened in the first place.
+
+Thank you.  Your thoughtfulness and help is appreciated.
+
+-- 
+Bob Bell
