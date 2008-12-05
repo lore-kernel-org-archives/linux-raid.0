@@ -1,26 +1,35 @@
-From: Mike Myers <mikesm559@yahoo.com>
-Subject: Need urgent help in fixing raid5 array
-Date: Fri, 5 Dec 2008 09:03:22 -0800 (PST)
-Message-ID: <936691.74609.qm@web30806.mail.mud.yahoo.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: raid6's using not the best bandwidth method && raid6 algo is
+ significantly slower in x86_64.
+Date: Fri, 05 Dec 2008 09:34:06 -0800
+Message-ID: <4939660E.90803@zytor.com>
+References: <200811172235.mAHMZAQt032187@terminus.zytor.com>	 <43d009740811180403v6308dbc0y8ba093524700bb72@mail.gmail.com>	 <4922E381.20501@zytor.com>	 <43d009740811211122m36809523mff9521ca8af95a1e@mail.gmail.com>	 <49270CA5.2090508@zytor.com>	 <43d009740811211133p7321bc39q1a1eccd9c53d6ca0@mail.gmail.com>	 <492716CE.8040900@zytor.com>	 <43d009740811212140l3ac2298ch512aca0e3631d269@mail.gmail.com>	 <49279BC5.8080106@zytor.com>	 <43d009740811212145x13d2e353l7d9fee3d912c89c0@mail.gmail.com> <43d009740812050536k2e03826gb308021273e69896@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <43d009740812050536k2e03826gb308021273e69896@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: for.poige+linux@gmail.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have a problem with repairing a raid5 array I really need some help with.  I must be missing something here.
+Igor Podlesny wrote:
+> 2008/11/22 Igor Podlesny <for.poige+linux@gmail.com>:
+>> 2008/11/22 H. Peter Anvin <hpa@zytor.com>:
+>> [...]
+>>>>        Please let us know when commiting the patch -- 20 % is valuable.
+>>>> ;-)
+>>>>
+>>> Looks like I was a bit too optimistic.  The 20% was because of the missed
+>>> prefetchnta, which means polluting the cache.
+>>>
+>>>        -hpa
+>>        Well, whatever it gives unless it's a regression. :-)
+> 
+> 	Hi! Any news?
+> 
 
-I have 2 raid5 arrays combined with LVM into a common logical volume and then running XFS on top of that.  Both arrays have 7 1 TB disks in them.  I moved a controller card around so that I could install a new Intel GB ethernet card in one of the PCI-E slots.  That went fine except one of the SATA cables got knocked loose so one of the disks in /dev/md2 wen't offline.  Linux booted fine, started the md2 with 6 elements in it and everything was fine with md2 in a degraded state.  I fixed the cable problem and hot added that drive to the array, but since it was now out of sync, md began a rebuild.  No problem.
+No.
 
-Around 60% through the resync, smartd started reporting problems with one of the other drives in the array.  Then that drive ejected from the degraded array, caused the raid to stop and the LVm volume to go offline.  Ugh...
-
-Ok, so it looks from the smart data that that disk had been having a lot of problems and was failing.  As it happens, I had a new 1 TB disk arrive the same day, and I pressed it to service here.  I used sfdisk -d olddisk | sfdisk newdisk to copy the partition table from the old drive to the new one, and then used ddrescue to copy the data from the old partition (/dev/sdo1) to the new one (/dev/sdp1). That worked pretty well, just 12kB couldn't be recovered.
-
-So I remove the old disk,  re-add the new disk, and attempt to start the array with new (cloned) 1 Tb disk in the old disks stead.  Even though the UUID's, magic numbers and events fields are all the same, md thinks the cloned disk is a spare, and doesn't start the array.  What am I missing here?  Why doesn't it view it as the old disk as a member and just start it?
-
-thx
-mike
-
-
-      
+	-hpa
