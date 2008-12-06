@@ -1,36 +1,41 @@
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: weird issues with raid1
-Date: Sat, 6 Dec 2008 07:16:36 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0812060715380.8516@p34.internal.lan>
-References: <cccedfc60812051810q3c44ae28x514072cb870ac390@mail.gmail.com> <cccedfc60812051846l3352a5f3medc9e921e29c7434@mail.gmail.com>
+Subject: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
+Date: Sat, 6 Dec 2008 09:28:50 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cccedfc60812051846l3352a5f3medc9e921e29c7434@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org, xfs@oss.sgi.com
+Cc: Alan Piszcz <ap@solarrain.com>
 List-Id: linux-raid.ids
 
+Someone should write a document with XFS and barrier support, if I recall,
+in the past, they never worked right on raid1 or raid5 devices, but it
+appears now they they work on RAID1, which slows down performance ~12 times!!
 
+l1:~# /usr/bin/time tar xf linux-2.6.27.7.tar 
+0.15user 1.54system 0:13.18elapsed 12%CPU (0avgtext+0avgdata 0maxresident)k
+0inputs+0outputs (0major+325minor)pagefaults 0swaps
+l1:~#
 
-On Fri, 5 Dec 2008, Jon Nelson wrote:
+l1:~# /usr/bin/time tar xf linux-2.6.27.7.tar
+0.14user 1.66system 2:39.68elapsed 1%CPU (0avgtext+0avgdata 0maxresident)k
+0inputs+0outputs (0major+324minor)pagefaults 0swaps
+l1:~#
 
-> More info:
->
-> according to /dev/mdstat (and /var/log/messages) the rebuild is complete:
->
-> md10 : active raid1 sda[0] nbd0[1]
->      78123968 blocks [2/2] [UU]
->      bitmap: 0/150 pages [0KB], 256KB chunk
+Before:
+/dev/md2        /               xfs     defaults,noatime  0       1
 
-I have not tried using network block devices or the write-behind option;
-however, Neil et. all will want to know:
+After:
+/dev/md2        /               xfs     defaults,noatime,nobarrier,logbufs=8,logbsize=262144 0 1
 
-- kernel version used
-- mdadm version
+There is some mention of it here:
+http://oss.sgi.com/projects/xfs/faq.html#wcache_persistent
 
-In order to help better track the issues.
+But basically I believe it should be noted in the kernel logs, FAQ or somewhere
+because just through the process of upgrading the kernel, not changing fstab
+or any other part of the system, performance can drop 12x just because the
+newer kernels implement barriers.
 
 Justin.
-
