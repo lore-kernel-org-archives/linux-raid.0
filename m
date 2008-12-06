@@ -1,118 +1,155 @@
-From: Mike Myers <mikesm559@yahoo.com>
-Subject: Re: Need urgent help in fixing raid5 array
-Date: Fri, 5 Dec 2008 16:58:59 -0800 (PST)
-Message-ID: <590849.18955.qm@web30808.mail.mud.yahoo.com>
-References: <936691.74609.qm@web30806.mail.mud.yahoo.com> <447802.83994.qm@web30807.mail.mud.yahoo.com> <alpine.DEB.1.10.0812051922530.4906@p34.internal.lan> <616202.13446.qm@web30804.mail.mud.yahoo.com> <alpine.DEB.1.10.0812051950550.12295@p34.internal.lan>
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+Subject: weird issues with raid1
+Date: Fri, 5 Dec 2008 20:10:11 -0600
+Message-ID: <cccedfc60812051810q3c44ae28x514072cb870ac390@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org
+To: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Ok, I'll wait some more before doing that and see if Neil or someone else pipes in.  I am really trying to avoid recreating the superblock structures, though it's pretty clear what the sequence of devices is from doing examines on them.
+I set up a raid1 between some devices, and have been futzing with it.
+I've been encountering all kinds of weird problems, including one
+which required me to reboot my machine.
 
-thx
-mike
+This is long, sorry.
 
+First, this is how I built the raid:
 
+mdadm --create /dev/md10 --level=1 --raid-devices=2 --bitmap=internal
+/dev/sdd1 --write-mostly --write-behind missing
 
+then I added /dev/nbd0:
 
------ Original Message ----
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: Mike Myers <mikesm559@yahoo.com>
-Cc: linux-raid@vger.kernel.org
-Sent: Friday, December 5, 2008 4:51:26 PM
-Subject: Re: Need urgent help in fixing raid5 array
+mdadm /dev/md10 --add /dev/nbd0
 
-Only use it as A LAST resort, check the mailing list or wait for 
-Neil/someone else with/whose had a similar issue who can maybe help more 
-here.
+and it rebuilt just fine.
 
-On Fri, 5 Dec 2008, Mike Myers wrote:
+Then I failed and removed /dev/sdd1, and added /dev/sda:
 
-> Thanks very much.  All the disks I am trying to assemble have the same event count and UUID, which is why I don't understand why it's not assembling.  I'll try the assume-clean option and see if that helps.
->
-> It would be great to understand how md determines if the drives are in sync with each other.  I thought the uuid and event count was all you needed...
->
-> thx
-> mike
->
->
->
->
-> ----- Original Message ----
-> From: Justin Piszcz <jpiszcz@lucidpixels.com>
-> To: Mike Myers <mikesm559@yahoo.com>
-> Cc: linux-raid@vger.kernel.org
-> Sent: Friday, December 5, 2008 4:24:46 PM
-> Subject: Re: Need urgent help in fixing raid5 array
->
->
-> You can try this as a last resort:
-> http://www.mail-archive.com/linux-raid@vger.kernel.org/msg07815.html
->
-> (mdadm w/create and assume-clean) but only use this as a last resort, when
-> I had two disk failures, I was able to see some of the data but ultimately
-> it was lost, bottom line? i dont use raid5 anymore, raid6 only, in the
-> 3ware docs they recommend if you use more than 4 disks you should use
-> raid6 if you have the capability, i agree
->
-> some others on the list may have more . less intrusive ideas . only  use
-> the above method as a LAST RESORT, i was able to assemble the array but I
-> had problems getting xfs_repair to fix the filesystem
->
-> On Fri, 5 Dec 2008, Mike Myers wrote:
->
->> Anyone?  What am I missing here?
->>
->> thx
->> mike
->>
->>
->>
->>
->> ----- Original Message ----
->> From: Mike Myers <mikesm559@yahoo.com>
->> To: linux-raid@vger.kernel.org
->> Sent: Friday, December 5, 2008 9:03:22 AM
->> Subject: Need urgent help in fixing raid5 array
->>
->> I have a problem with repairing a raid5 array I really need some help with.  I must be missing something here.
->>
->> I have 2 raid5 arrays combined with LVM into a common logical volume and then running XFS on top of that.  Both arrays have 7 1 TB disks in them.  I moved a controller card around so that I could install a new Intel GB ethernet card in one of the PCI-E slots.  That went fine except one of the SATA cables got knocked loose so one of the disks in /dev/md2 wen't offline.  Linux booted fine, started the md2 with 6 elements in it and everything was fine with md2 in a degraded state.  I fixed the cable problem and hot added that drive to the array, but since it was now out of sync, md began a rebuild.  No problem.
->>
->> Around 60% through the resync, smartd started reporting problems with one of the other drives in the array.  Then that drive ejected from the degraded array, caused the raid to stop and the LVm volume to go offline.  Ugh...
->>
->> Ok, so it looks from the smart data that that disk had been having a lot of problems and was failing.  As it happens, I had a new 1 TB disk arrive the same day, and I pressed it to service here.  I used sfdisk -d olddisk | sfdisk newdisk to copy the partition table from the old drive to the new one, and then used ddrescue to copy the data from the old partition (/dev/sdo1) to the new one (/dev/sdp1). That worked pretty well, just 12kB couldn't be recovered.
->>
->> So I remove the old disk,  re-add the new disk, and attempt to start the array with new (cloned) 1 Tb disk in the old disks stead.  Even though the UUID's, magic numbers and events fields are all the same, md thinks the cloned disk is a spare, and doesn't start the array.  What am I missing here?  Why doesn't it view it as the old disk as a member and just start it?
->>
->> thx
->> mike
->>
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
->
->
->
->
+mdadm /dev/md10 --fail /dev/sdd1 --remove /dev/sdd1
+mdadm /dev/md10 --add /dev/sda
+
+I let it rebuild.
+
+Then I failed, and removed it:
+
+The --fail worked, but the --remove did not.
+
+mdadm /dev/md10 --fail /dev/sda --remove /dev/sda
+mdadm: set /dev/sda faulty in /dev/md10
+mdadm: hot remove failed for /dev/sda: Device or resource busy
+
+Whaaa?
+So I tried again:
+
+mdadm /dev/md10 --remove /dev/sda
+mdadm: hot removed /dev/sda
+
+OK. Better, but weird.
+Since I'm using bitmaps, I would expect --re-add to allow the rebuild
+to pick up where it left off. It was 78% done.
+
+mdadm /dev/md10 --re-add /dev/sda
+
+cat /dev/mdstat
+
+md10 : active raid1 sda[2] nbd0[1]
+      78123968 blocks [2/1] [_U]
+      [>....................]  recovery =  1.2% (959168/78123968)
+finish=30.8min speed=41702K/sec
+      bitmap: 0/150 pages [0KB], 256KB chunk
 
 
+******
+Question 1:
+I'm using a bitmap. Why does the rebuild start completely over?
 
-      
+4% into the rebuild, this is what --examine-bitmap looks like for both
+components:
+
+        Filename : /dev/sda
+           Magic : 6d746962
+         Version : 4
+            UUID : 542a0986:dd465da6:b224af07:ed28e4e5
+          Events : 500
+  Events Cleared : 496
+           State : OK
+       Chunksize : 256 KB
+          Daemon : 5s flush period
+      Write Mode : Allow write behind, max 256
+       Sync Size : 78123968 (74.50 GiB 80.00 GB)
+          Bitmap : 305172 bits (chunks), 305172 dirty (100.0%)
+
+turnip:~ # mdadm --examine-bitmap /dev/nbd0
+        Filename : /dev/nbd0
+           Magic : 6d746962
+         Version : 4
+            UUID : 542a0986:dd465da6:b224af07:ed28e4e5
+          Events : 524
+  Events Cleared : 496
+           State : OK
+       Chunksize : 256 KB
+          Daemon : 5s flush period
+      Write Mode : Allow write behind, max 256
+       Sync Size : 78123968 (74.50 GiB 80.00 GB)
+          Bitmap : 305172 bits (chunks), 0 dirty (0.0%)
+
+
+No matter how long I wait, until it is rebuilt, the bitmap on /dev/sda
+is always 100% dirty.
+If I --fail, --remove (twice) /dev/sda, and I re-add /dev/sdd1, it
+clearly uses the bitmap and re-syncs in under 1 second.
+
+
+***************
+Question 2: mdadm --detail and cat /proc/mdstat do not agree:
+
+NOTE: mdadm --detail says the rebuild status is 0% complete, but cat
+/proc/mdstat shows it as 7%.
+A bit later, I check again and they both agree - 14%.
+Below, from when the rebuild was 7% according to /proc/mdstat
+
+/dev/md10:
+        Version : 00.90.03
+  Creation Time : Fri Dec  5 07:44:41 2008
+     Raid Level : raid1
+     Array Size : 78123968 (74.50 GiB 80.00 GB)
+  Used Dev Size : 78123968 (74.50 GiB 80.00 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 10
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Fri Dec  5 20:04:30 2008
+          State : active, degraded, recovering
+ Active Devices : 1
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 1
+
+ Rebuild Status : 0% complete
+
+           UUID : 542a0986:dd465da6:b224af07:ed28e4e5
+         Events : 0.544
+
+    Number   Major   Minor   RaidDevice State
+       2       8        0        0      spare rebuilding   /dev/sda
+       1      43        0        1      active sync   /dev/nbd0
+
+
+md10 : active raid1 sda[2] nbd0[1]
+      78123968 blocks [2/1] [_U]
+      [==>..................]  recovery = 13.1% (10283392/78123968)
+finish=27.3min speed=41367K/sec
+      bitmap: 0/150 pages [0KB], 256KB chunk
+
+
+
+-- 
+Jon
