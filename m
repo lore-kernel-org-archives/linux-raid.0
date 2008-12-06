@@ -1,300 +1,95 @@
-From: Mike Myers <mikesm559@yahoo.com>
-Subject: Re: Need urgent help in fixing raid5 array
-Date: Sat, 6 Dec 2008 12:14:09 -0800 (PST)
-Message-ID: <666977.22612.qm@web30804.mail.mud.yahoo.com>
-References: <936691.74609.qm@web30806.mail.mud.yahoo.com> <447802.83994.qm@web30807.mail.mud.yahoo.com> <alpine.DEB.1.10.0812051922530.4906@p34.internal.lan> <616202.13446.qm@web30804.mail.mud.yahoo.com> <alpine.DEB.1.10.0812051950550.12295@p34.internal.lan> <638620.91235.qm@web30807.mail.mud.yahoo.com> <36036.96129.qm@web30803.mail.mud.yahoo.com>
+From: Redeeman <redeeman@metanurb.dk>
+Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
+Date: Sat, 06 Dec 2008 21:35:40 +0100
+Message-ID: <1228595740.16555.105.camel@localhost>
+References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan>
+	 <493A9BE7.3090001@sandeen.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <493A9BE7.3090001@sandeen.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Myers <mikesm559@yahoo.com>, Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
 List-Id: linux-raid.ids
 
-Ok, I seem to have recovered...  Once I realized that event though the event number on sdk1 was slightly different than the rest, but that I could confirm it was the new drive that had the cloned data from the original failing drive, I did an assemble with a --force option, and then the array came up just fine.  I rebooted for good measure and lvm and xfs came up fine on boot, and all the files are there and perfectly accessible.  There was about 12kb of data that couldn't be recovered, but since this storage volume stores mostly large TV recordings, I think it will be Ok.  It would have bene very hard to track down which file those sectors were in any case.
-
-I then added the spare again and the system is now rebuilding just fine (should be done in abt 5 hrs)...
-
-Thanks for all the advice everyone.
-
-Thx
-mike
-
-
-
-
------ Original Message ----
-From: Mike Myers <mikesm559@yahoo.com>
-To: Mike Myers <mikesm559@yahoo.com>; Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org
-Sent: Saturday, December 6, 2008 11:30:00 AM
-Subject: Re: Need urgent help in fixing raid5 array
-
-/dev/sdk1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : e70e0697:a10a5b75:941dd76f:196d9e4e
-  Creation Time : Tue Aug 19 21:31:10 2008
-     Raid Level : raid5
-  Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
-     Array Size : 5860559616 (5589.07 GiB 6001.21 GB)
-   Raid Devices : 7
-  Total Devices : 7
-Preferred Minor : 2
-
-    Update Time : Thu Dec  4 15:32:09 2008
-          State : clean
-Active Devices : 6
-Working Devices : 7
-Failed Devices : 0
-  Spare Devices : 1
-       Checksum : ab1934d5 - correct
-         Events : 0.1436484
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-      Number   Major   Minor   RaidDevice State
-this     6       8      161        6      active sync   /dev/sdk1
-
-   0     0       0        0        0      removed
-   1     1       8       81        1      active sync   /dev/sdf1
-   2     2       8      145        2      active sync   /dev/sdj1
-   3     3       8       17        3      active sync   /dev/sdb1
-   4     4       8       33        4      active sync   /dev/sdc1
-   5     5       8      129        5      active sync   /dev/sdi1
-   6     6       8      161        6      active sync   /dev/sdk1
-   7     7       8      113        7      spare   /dev/sdh1
-
-
-Here is the examine from sdh1 (which I thought was the the disk being replaced by now appears to be the spare):
-
-/dev/sdh1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : e70e0697:a10a5b75:941dd76f:196d9e4e
-  Creation Time : Tue Aug 19 21:31:10 2008
-     Raid Level : raid5
-  Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
-     Array Size : 5860559616 (5589.07 GiB 6001.21 GB)
-   Raid Devices : 7
-  Total Devices : 8
-Preferred Minor : 2
-
-    Update Time : Fri Dec  5 08:15:16 2008
-          State : clean
-Active Devices : 5
-Working Devices : 7
-Failed Devices : 1
-  Spare Devices : 2
-       Checksum : ab1a2d37 - correct
-         Events : 0.1438064
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-      Number   Major   Minor   RaidDevice State
-this     8       8      113        8      spare   /dev/sdh1
-
-   0     0       0        0        0      removed
-   1     1       8       81        1      active sync   /dev/sdf1
-   2     2       8      145        2      active sync   /dev/sdj1
-   3     3       8       17        3      active sync   /dev/sdb1
-   4     4       8       33        4      active sync   /dev/sdc1
-   5     5       8      129        5      active sync   /dev/sdi1
-   6     6       0        0        6      faulty removed
-   7     7       8      241        7      spare   /dev/sdp1
-   8     8       8      113        8      spare   /dev/sdh1
+On Sat, 2008-12-06 at 09:36 -0600, Eric Sandeen wrote:
+> Justin Piszcz wrote:
+> > Someone should write a document with XFS and barrier support, if I recall,
+> > in the past, they never worked right on raid1 or raid5 devices, but it
+> > appears now they they work on RAID1, which slows down performance ~12 times!!
+> 
+> What sort of document do you propose?  xfs will enable barriers on any
+> block device which will support them, and after:
+> 
+> deeb5912db12e8b7ccf3f4b1afaad60bc29abed9
+> 
+> [XFS] Disable queue flag test in barrier check.
+> 
+> xfs is able to determine, via a test IO, that md raid1 does pass
+> barriers through properly even though it doesn't set an ordered flag on
+> the queue.
+> 
+> > l1:~# /usr/bin/time tar xf linux-2.6.27.7.tar 
+> > 0.15user 1.54system 0:13.18elapsed 12%CPU (0avgtext+0avgdata 0maxresident)k
+> > 0inputs+0outputs (0major+325minor)pagefaults 0swaps
+> > l1:~#
+> > 
+> > l1:~# /usr/bin/time tar xf linux-2.6.27.7.tar
+> > 0.14user 1.66system 2:39.68elapsed 1%CPU (0avgtext+0avgdata 0maxresident)k
+> > 0inputs+0outputs (0major+324minor)pagefaults 0swaps
+> > l1:~#
+> > 
+> > Before:
+> > /dev/md2        /               xfs     defaults,noatime  0       1
+> > 
+> > After:
+> > /dev/md2        /               xfs     defaults,noatime,nobarrier,logbufs=8,logbsize=262144 0 1
+> 
+> Well, if you're investigating barriers can you do a test with just the
+> barrier option change; though I expect you'll still find it to have a
+> substantial impact.
+> 
+> > There is some mention of it here:
+> > http://oss.sgi.com/projects/xfs/faq.html#wcache_persistent
+> > 
+> > But basically I believe it should be noted in the kernel logs, FAQ or somewhere
+> > because just through the process of upgrading the kernel, not changing fstab
+> > or any other part of the system, performance can drop 12x just because the
+> > newer kernels implement barriers.
+> 
+> Perhaps:
+> 
+> printk(KERN_ALERT "XFS is now looking after your metadata very
+> carefully; if you prefer the old, fast, dangerous way, mount with -o
+> nobarrier\n");
+> 
+> :)
+> 
+> Really, this just gets xfs on md raid1 in line with how it behaves on
+> most other devices.
+> 
+> But I agree, some documentation/education is probably in order; if you
+> choose to disable write caches or you have faith in the battery backup
+> of your write cache, turning off barriers would be a good idea.  Justin,
+> it might be interesting to do some tests with:
+> 
+> barrier,   write cache enabled
+> nobarrier, write cache enabled
+> nobarrier, write cache disabled
+> 
+> a 12x hit does hurt though...  If you're really motivated, try the same
+> scenarios on ext3 and ext4 to see what the barrier hit is on those as well.
+I have tested with ext3/xfs, and barriers have considerably more impact
+on xfs than ext3. this is ~4 months old test, I do not have any precise
+data anymore.
 
 
-And here is the output of the examine of a known good member sdb1:
+> 
+> -Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-
-/dev/sdb1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : e70e0697:a10a5b75:941dd76f:196d9e4e
-  Creation Time : Tue Aug 19 21:31:10 2008
-     Raid Level : raid5
-  Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
-     Array Size : 5860559616 (5589.07 GiB 6001.21 GB)
-   Raid Devices : 7
-  Total Devices : 8
-Preferred Minor : 2
-
-    Update Time : Fri Dec  5 08:15:16 2008
-          State : clean
-Active Devices : 5
-Working Devices : 7
-Failed Devices : 1
-  Spare Devices : 2
-       Checksum : ab1a2cd3 - correct
-         Events : 0.1438064
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-      Number   Major   Minor   RaidDevice State
-this     3       8       17        3      active sync   /dev/sdb1
-
-   0     0       0        0        0      removed
-   1     1       8       81        1      active sync   /dev/sdf1
-   2     2       8      145        2      active sync   /dev/sdj1
-   3     3       8       17        3      active sync   /dev/sdb1
-   4     4       8       33        4      active sync   /dev/sdc1
-   5     5       8      129        5      active sync   /dev/sdi1
-   6     6       0        0        6      faulty removed
-   7     7       8      241        7      spare   /dev/sdp1
-   8     8       8      113        8      spare   /dev/sdh1
-
-
-Any more ideas as to what's going on?
-
-Thanks,
-Mike
-
-
-
-
------ Original Message ----
-From: Mike Myers <mikesm559@yahoo.com>
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org
-Sent: Saturday, December 6, 2008 11:02:39 AM
-Subject: Re: Need urgent help in fixing raid5 array
-
-Ok, here is some more info on this odd problem.
-
-I have seven 1 TB drives in raid5 array.  sdb1 sdc1 sdf1 sdh1 sdi1 sdj1 sdk1
-
-They all have the same uuid, and events is the same for each except sdk1, which I think was the disk being resynced.  As I understand it, when the array is being resynced, the events counter on the newly added drive is different than the others.  The other drives have the same events and uuid, and all show clean.  When I try and assemble the array of the 7 drives, it tells me there are 5 drives and 1 spare, not enough to start the array.  If I remove sdk1 (the drive with the different event number on it), I get the same exact same message.  
-
-By removing one drive at a time from the assemble command, I determined that md thinks that sdh1 is the spare, even though events are the same and the the UUID is the same, the checksum says it's ok.  Why does it think this drive is a spare and not a data drive?  
-
-I had cloned the data drive that had failed and got almost everything copied over, all but 12kb.  So I think it's fine and is not being a problem.
-
-How does md decide which drive is a spare and which is an active synced drive, etc... ?  I can't seem to find a document that outlines all this.
-
-Thx
-mike
-
-
-
-
------ Original Message ----
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: Mike Myers <mikesm559@yahoo.com>
-Cc: linux-raid@vger.kernel.org
-Sent: Friday, December 5, 2008 4:51:26 PM
-Subject: Re: Need urgent help in fixing raid5 array
-
-Only use it as A LAST resort, check the mailing list or wait for 
-Neil/someone else with/whose had a similar issue who can maybe help more 
-here.
-
-On Fri, 5 Dec 2008, Mike Myers wrote:
-
-> Thanks very much.  All the disks I am trying to assemble have the same event count and UUID, which is why I don't understand why it's not assembling.  I'll try the assume-clean option and see if that helps.
->
-> It would be great to understand how md determines if the drives are in sync with each other.  I thought the uuid and event count was all you needed...
->
-> thx
-> mike
->
->
->
->
-> ----- Original Message ----
-> From: Justin Piszcz <jpiszcz@lucidpixels.com>
-> To: Mike Myers <mikesm559@yahoo.com>
-> Cc: linux-raid@vger.kernel.org
-> Sent: Friday, December 5, 2008 4:24:46 PM
-> Subject: Re: Need urgent help in fixing raid5 array
->
->
-> You can try this as a last resort:
-> http://www.mail-archive.com/linux-raid@vger.kernel.org/msg07815.html
->
-> (mdadm w/create and assume-clean) but only use this as a last resort, when
-> I had two disk failures, I was able to see some of the data but ultimately
-> it was lost, bottom line? i dont use raid5 anymore, raid6 only, in the
-> 3ware docs they recommend if you use more than 4 disks you should use
-> raid6 if you have the capability, i agree
->
-> some others on the list may have more . less intrusive ideas . only  use
-> the above method as a LAST RESORT, i was able to assemble the array but I
-> had problems getting xfs_repair to fix the filesystem
->
-> On Fri, 5 Dec 2008, Mike Myers wrote:
->
->> Anyone?  What am I missing here?
->>
->> thx
->> mike
->>
->>
->>
->>
->> ----- Original Message ----
->> From: Mike Myers <mikesm559@yahoo.com>
->> To: linux-raid@vger.kernel.org
->> Sent: Friday, December 5, 2008 9:03:22 AM
->> Subject: Need urgent help in fixing raid5 array
->>
->> I have a problem with repairing a raid5 array I really need some help with.  I must be missing something here.
->>
->> I have 2 raid5 arrays combined with LVM into a common logical volume and then running XFS on top of that.  Both arrays have 7 1 TB disks in them.  I moved a controller card around so that I could install a new Intel GB ethernet card in one of the PCI-E slots.  That went fine except one of the SATA cables got knocked loose so one of the disks in /dev/md2 wen't offline.  Linux booted fine, started the md2 with 6 elements in it and everything was fine with md2 in a degraded state.  I fixed the cable problem and hot added that drive to the array, but since it was now out of sync, md began a rebuild.  No problem.
->>
->> Around 60% through the resync, smartd started reporting problems with one of the other drives in the array.  Then that drive ejected from the degraded array, caused the raid to stop and the LVm volume to go offline.  Ugh...
->>
->> Ok, so it looks from the smart data that that disk had been having a lot of problems and was failing.  As it happens, I had a new 1 TB disk arrive the same day, and I pressed it to service here.  I used sfdisk -d olddisk | sfdisk newdisk to copy the partition table from the old drive to the new one, and then used ddrescue to copy the data from the old partition (/dev/sdo1) to the new one (/dev/sdp1). That worked pretty well, just 12kB couldn't be recovered.
->>
->> So I remove the old disk,  re-add the new disk, and attempt to start the array with new (cloned) 1 Tb disk in the old disks stead.  Even though the UUID's, magic numbers and events fields are all the same, md thinks the cloned disk is a spare, and doesn't start the array.  What am I missing here?  Why doesn't it view it as the old disk as a member and just start it?
->>
->> thx
->> mike
->>
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
->
->
->
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
-      
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
-      
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
-      
