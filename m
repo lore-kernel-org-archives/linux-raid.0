@@ -1,72 +1,62 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Need urgent help in fixing raid5 array
-Date: Fri, 5 Dec 2008 19:24:46 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0812051922530.4906@p34.internal.lan>
-References: <936691.74609.qm@web30806.mail.mud.yahoo.com> <447802.83994.qm@web30807.mail.mud.yahoo.com>
+From: Roger Heflin <rogerheflin@gmail.com>
+Subject: Re: detection/correction of corruption with raid6
+Date: Fri, 05 Dec 2008 18:39:18 -0600
+Message-ID: <4939C9B6.30600@gmail.com>
+References: <1228510833.16555.76.camel@localhost>	 <alpine.DEB.1.10.0812051602110.17806@p34.internal.lan>	 <1228511195.16555.78.camel@localhost>	 <alpine.DEB.1.10.0812051607100.17806@p34.internal.lan>	 <1228511558.16555.84.camel@localhost>	 <6c4602af0812051330o4220cbf1g8b969cd4b9843d3a@mail.gmail.com>	 <4939A75C.6050705@rabbit.us>	 <6c4602af0812051426t2f7c1834w8e7478597b82d175@mail.gmail.com> <87f94c370812051443nd154992kfb61f3b6f0f5625d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <447802.83994.qm@web30807.mail.mud.yahoo.com>
+In-Reply-To: <87f94c370812051443nd154992kfb61f3b6f0f5625d@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Myers <mikesm559@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: =?ISO-8859-2?Q?Micha=B3_Przy=B3uski?= <mikylie@gmail.com>, Peter Rabbitson <rabbit+list@rabbit.us>, Redeeman <redeeman@metanurb.dk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Greg Freemyer wrote:
 
-You can try this as a last resort:
-http://www.mail-archive.com/linux-raid@vger.kernel.org/msg07815.html
+> I'm also very concerned about silent corruption and we often "verify"
+> our critical large files by  performing MD5 verifies against a known
+> good value.  Especially when we make copies or move them from one
+> media to another.
+> 
+> But in all the cases of silent corruption I've seen, it was never the
+> disk.  Instead I've seen it be the cable, the controller, bad memory,
+> bad power supply, but never the disk itself.  Not to say the disk
+> controller could not be the cause, just that I have not seen it.
+> 
+> I did not read the relevant threads, but do they cover all of these
+> sources of silent corruption, or just if a disk is the source?
+> 
+> Thanks
+> Greg
 
-(mdadm w/create and assume-clean) but only use this as a last resort, when 
-I had two disk failures, I was able to see some of the data but ultimately 
-it was lost, bottom line? i dont use raid5 anymore, raid6 only, in the 
-3ware docs they recommend if you use more than 4 disks you should use 
-raid6 if you have the capability, i agree
+I will second what Greg says, I have debugged a number of corruptions 
+related to filesystems.    I have never seen it be the disk, I have 
+seen 3-4 different controllers corrupt (bad PCI/MB interaction-2 
+different manufacturers controllers, and a bad controller).
 
-some others on the list may have more . less intrusive ideas . only  use 
-the above method as a LAST RESORT, i was able to assemble the array but I 
-had problems getting xfs_repair to fix the filesystem
+And then the #1 issue is actual bad memory or bad power supply in the 
+machine.   None of the actual cases I saw actually affected *ONLY* a 
+single disk=they affected all of the disks on the controller, so 
+whatever has to be done would almost have to be done a the filesystem 
+level or the application level.    The typical corruption is not data 
+off of the disk, the platters themselves (and the internals of the 
+disk) appear to have very very good corruption detection and 
+correction, it is really really unlikely for a bad sector read to not 
+get caught.   The PCI bus only has parity (and likely parity errors on 
+the PCI bus are not being monitored-unless you installed the edac_mc 
+module) so 50% of the errors that happen get missed.    This was one 
+of the bad PCI/MB interactions, one of the slots on a certain MB (all 
+of the specific MB with a couple of different companies card) *HAD* to 
+be throttled to not produce corrupt data every 1GB of reads or so.
 
-On Fri, 5 Dec 2008, Mike Myers wrote:
+And internally the controllers often have poor checking, and will miss 
+things if the controller goes bad.   The disks themselves appear to 
+have very good internal controls-I have never seen disk electronics 
+screw up and corrupt data either.
 
-> Anyone?  What am I missing here?
->
-> thx
-> mike
->
->
->
->
-> ----- Original Message ----
-> From: Mike Myers <mikesm559@yahoo.com>
-> To: linux-raid@vger.kernel.org
-> Sent: Friday, December 5, 2008 9:03:22 AM
-> Subject: Need urgent help in fixing raid5 array
->
-> I have a problem with repairing a raid5 array I really need some help with.  I must be missing something here.
->
-> I have 2 raid5 arrays combined with LVM into a common logical volume and then running XFS on top of that.  Both arrays have 7 1 TB disks in them.  I moved a controller card around so that I could install a new Intel GB ethernet card in one of the PCI-E slots.  That went fine except one of the SATA cables got knocked loose so one of the disks in /dev/md2 wen't offline.  Linux booted fine, started the md2 with 6 elements in it and everything was fine with md2 in a degraded state.  I fixed the cable problem and hot added that drive to the array, but since it was now out of sync, md began a rebuild.  No problem.
->
-> Around 60% through the resync, smartd started reporting problems with one of the other drives in the array.  Then that drive ejected from the degraded array, caused the raid to stop and the LVm volume to go offline.  Ugh...
->
-> Ok, so it looks from the smart data that that disk had been having a lot of problems and was failing.  As it happens, I had a new 1 TB disk arrive the same day, and I pressed it to service here.  I used sfdisk -d olddisk | sfdisk newdisk to copy the partition table from the old drive to the new one, and then used ddrescue to copy the data from the old partition (/dev/sdo1) to the new one (/dev/sdp1). That worked pretty well, just 12kB couldn't be recovered.
->
-> So I remove the old disk,  re-add the new disk, and attempt to start the array with new (cloned) 1 Tb disk in the old disks stead.  Even though the UUID's, magic numbers and events fields are all the same, md thinks the cloned disk is a spare, and doesn't start the array.  What am I missing here?  Why doesn't it view it as the old disk as a member and just start it?
->
-> thx
-> mike
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Basically don't waste time worrying about the single disk corrupting 
+data silently, worry about everything after the disk first as that is 
+the weakest link of everything and is far far more likely to bite you.
+
