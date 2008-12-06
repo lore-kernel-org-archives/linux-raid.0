@@ -1,15 +1,148 @@
 From: Mike Myers <mikesm559@yahoo.com>
 Subject: Re: Need urgent help in fixing raid5 array
-Date: Sat, 6 Dec 2008 11:02:39 -0800 (PST)
-Message-ID: <638620.91235.qm@web30807.mail.mud.yahoo.com>
-References: <936691.74609.qm@web30806.mail.mud.yahoo.com> <447802.83994.qm@web30807.mail.mud.yahoo.com> <alpine.DEB.1.10.0812051922530.4906@p34.internal.lan> <616202.13446.qm@web30804.mail.mud.yahoo.com> <alpine.DEB.1.10.0812051950550.12295@p34.internal.lan>
+Date: Sat, 6 Dec 2008 11:30:00 -0800 (PST)
+Message-ID: <36036.96129.qm@web30803.mail.mud.yahoo.com>
+References: <936691.74609.qm@web30806.mail.mud.yahoo.com> <447802.83994.qm@web30807.mail.mud.yahoo.com> <alpine.DEB.1.10.0812051922530.4906@p34.internal.lan> <616202.13446.qm@web30804.mail.mud.yahoo.com> <alpine.DEB.1.10.0812051950550.12295@p34.internal.lan> <638620.91235.qm@web30807.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Mike Myers <mikesm559@yahoo.com>, Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+/dev/sdk1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : e70e0697:a10a5b75:941dd76f:196d9e4e
+  Creation Time : Tue Aug 19 21:31:10 2008
+     Raid Level : raid5
+  Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
+     Array Size : 5860559616 (5589.07 GiB 6001.21 GB)
+   Raid Devices : 7
+  Total Devices : 7
+Preferred Minor : 2
+
+    Update Time : Thu Dec  4 15:32:09 2008
+          State : clean
+ Active Devices : 6
+Working Devices : 7
+ Failed Devices : 0
+  Spare Devices : 1
+       Checksum : ab1934d5 - correct
+         Events : 0.1436484
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     6       8      161        6      active sync   /dev/sdk1
+
+   0     0       0        0        0      removed
+   1     1       8       81        1      active sync   /dev/sdf1
+   2     2       8      145        2      active sync   /dev/sdj1
+   3     3       8       17        3      active sync   /dev/sdb1
+   4     4       8       33        4      active sync   /dev/sdc1
+   5     5       8      129        5      active sync   /dev/sdi1
+   6     6       8      161        6      active sync   /dev/sdk1
+   7     7       8      113        7      spare   /dev/sdh1
+
+
+Here is the examine from sdh1 (which I thought was the the disk being replaced by now appears to be the spare):
+
+/dev/sdh1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : e70e0697:a10a5b75:941dd76f:196d9e4e
+  Creation Time : Tue Aug 19 21:31:10 2008
+     Raid Level : raid5
+  Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
+     Array Size : 5860559616 (5589.07 GiB 6001.21 GB)
+   Raid Devices : 7
+  Total Devices : 8
+Preferred Minor : 2
+
+    Update Time : Fri Dec  5 08:15:16 2008
+          State : clean
+ Active Devices : 5
+Working Devices : 7
+ Failed Devices : 1
+  Spare Devices : 2
+       Checksum : ab1a2d37 - correct
+         Events : 0.1438064
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     8       8      113        8      spare   /dev/sdh1
+
+   0     0       0        0        0      removed
+   1     1       8       81        1      active sync   /dev/sdf1
+   2     2       8      145        2      active sync   /dev/sdj1
+   3     3       8       17        3      active sync   /dev/sdb1
+   4     4       8       33        4      active sync   /dev/sdc1
+   5     5       8      129        5      active sync   /dev/sdi1
+   6     6       0        0        6      faulty removed
+   7     7       8      241        7      spare   /dev/sdp1
+   8     8       8      113        8      spare   /dev/sdh1
+
+
+And here is the output of the examine of a known good member sdb1:
+
+
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : e70e0697:a10a5b75:941dd76f:196d9e4e
+  Creation Time : Tue Aug 19 21:31:10 2008
+     Raid Level : raid5
+  Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
+     Array Size : 5860559616 (5589.07 GiB 6001.21 GB)
+   Raid Devices : 7
+  Total Devices : 8
+Preferred Minor : 2
+
+    Update Time : Fri Dec  5 08:15:16 2008
+          State : clean
+ Active Devices : 5
+Working Devices : 7
+ Failed Devices : 1
+  Spare Devices : 2
+       Checksum : ab1a2cd3 - correct
+         Events : 0.1438064
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     3       8       17        3      active sync   /dev/sdb1
+
+   0     0       0        0        0      removed
+   1     1       8       81        1      active sync   /dev/sdf1
+   2     2       8      145        2      active sync   /dev/sdj1
+   3     3       8       17        3      active sync   /dev/sdb1
+   4     4       8       33        4      active sync   /dev/sdc1
+   5     5       8      129        5      active sync   /dev/sdi1
+   6     6       0        0        6      faulty removed
+   7     7       8      241        7      spare   /dev/sdp1
+   8     8       8      113        8      spare   /dev/sdh1
+
+
+Any more ideas as to what's going on?
+
+Thanks,
+Mike
+
+
+
+
+----- Original Message ----
+From: Mike Myers <mikesm559@yahoo.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-raid@vger.kernel.org
+Sent: Saturday, December 6, 2008 11:02:39 AM
+Subject: Re: Need urgent help in fixing raid5 array
 
 Ok, here is some more info on this odd problem.
 
@@ -122,6 +255,14 @@ On Fri, 5 Dec 2008, Mike Myers wrote:
 >
 >
 >
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+      
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 the body of a message to majordomo@vger.kernel.org
