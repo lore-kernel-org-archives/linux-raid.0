@@ -1,108 +1,59 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Have the velociraptors in a test system now, checkout the
- errors.
-Date: Sat, 6 Dec 2008 12:32:36 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0812061224460.21825@p34.internal.lan>
-References: <alpine.DEB.1.10.0812060426280.3494@p34.internal.lan> <493A5E62.1020508@msgid.tls.msk.ru> <alpine.DEB.1.10.0812060709280.8516@p34.internal.lan> <493AAE8D.8070607@yuiop.co.uk>
+From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
+Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
+Date: Sat, 6 Dec 2008 18:42:30 +0000
+Message-ID: <18746.51094.473042.389299@tree.ty.sabi.co.uk>
+References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463747160-271602853-1228584756=:21825"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <493AAE8D.8070607@yuiop.co.uk>
-Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@yuiop.co.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <xfs-bounces@oss.sgi.com>
+In-Reply-To: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan>
+List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Sender: xfs-bounces@oss.sgi.com
+Errors-To: xfs-bounces@oss.sgi.com
+To: Linux XFS <xfs@oss.sgi.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
 
----1463747160-271602853-1228584756=:21825
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+> Someone should write a document with XFS and barrier support,
+> if I recall, in the past, they never worked right on raid1 or
+> raid5 devices, but it appears now they they work on RAID1,
+> which slows down performance ~12 times!!
 
+Of the many poorly misunderstood, misleading posts to the XFS
+and RAID mailing lists this comparison is particularly bad:
 
+> l1:~# /usr/bin/time tar xf linux-2.6.27.7.tar 
+> 0.15user 1.54system 0:13.18elapsed 12%CPU (0avgtext+0avgdata 0maxresident)k
+> 0inputs+0outputs (0major+325minor)pagefaults 0swaps
+> l1:~#
 
-On Sat, 6 Dec 2008, John Robinson wrote:
+> l1:~# /usr/bin/time tar xf linux-2.6.27.7.tar
+> 0.14user 1.66system 2:39.68elapsed 1%CPU (0avgtext+0avgdata 0maxresident)k
+> 0inputs+0outputs (0major+324minor)pagefaults 0swaps
+> l1:~#
 
-> On 06/12/2008 12:11, Justin Piszcz wrote:
->> As far the PSU, just btw/FYI, Velociraptors consume ~4-5 watts a piece,=
-=20
->
-> These are the 2.5" drives, yes?
-Yup.
+In the first case 'linux-2.6.27.7.tar' is in effect being
+extracted to volatile memory (depending on memory size, flusher
+parameters, etc., which are gleefully unreported), in the second
+to persistent disk; even worse in the particular case it is a
+fairly metadata intensive test (25k inodes), and writing lots of
+metadata to disk (twice as in RAID1) as opposed to memory of
+course is going to be slow.
 
-> Even then, I think that's very unlikely; they=20
-> don't even claim any better than 6W operating, I think 8-10W is more like=
-ly.=20
-http://www.wdc.com/en/products/Products.asp?DriveID=3D494
+Comparing the two makes no sense and imparts no useful
+information. It would be more interesting to see an analysis
+with data and argument as to whether the metadata layout of XFS
+is good or bad or how it could be improved; the issue here is
+metadata policies, not barriers.
 
- =09Power Dissipation
- =09Read/Write=096.08 Watts
- =09Idle=094.53 Watts
-
-Independent reviews (anandtech etc) also seem to confirm this finding.
-
-They are roughly half a regular raptor150, my system uses 200-210 watts now
-that I went back with the raptor150s in my main server.  Before it used
-around 100-120.
-
-> Even if they are running as low as 5-6W, they're so much smaller than 3.5=
-"=20
-> drives that heat could still cause problems. Can you check what temps the=
-=20
-> drives have reached, using smartctl?
-The temps were always between 20-30c.
-
-Nov 25 13:00:02 p34 hddtemp[9588]: /dev/sda: WDC WD3000HLFS-01G6U0: 27=B0C
-Nov 25 13:00:02 p34 hddtemp[9588]: /dev/sdb: WDC WD3000HLFS-01G6U0: 24=B0C
-Nov 25 13:00:02 p34 hddtemp[9588]: /dev/sdc: WDC WD3000GLFS-01F8U0: 24=B0C
-Nov 25 13:00:02 p34 hddtemp[9588]: /dev/sdd: WDC WD3000GLFS-01F8U0: 22=B0C
-Nov 25 13:00:02 p34 hddtemp[9588]: /dev/sde: WDC WD3000GLFS-01F8U0: 22=B0C
-Nov 25 13:00:02 p34 hddtemp[9588]: /dev/sdf: WDC WD3000GLFS-01F8U0: 24=B0C
-Nov 25 13:00:02 p34 hddtemp[9588]: /dev/sdg: WDC WD3000GLFS-01F8U0: 25=B0C
-Nov 25 13:00:02 p34 hddtemp[9588]: /dev/sdh: WDC WD3000GLFS-01F8U0: 25=B0C
-Nov 25 13:00:02 p34 hddtemp[9588]: /dev/sdi: WDC WD3000GLFS-01F8U0: 25=B0C
-Nov 25 13:00:02 p34 hddtemp[9588]: /dev/sdj: WDC WD3000GLFS-01F8U0: 22=B0C
-Nov 25 13:00:02 p34 hddtemp[9588]: /dev/sdk: WDC WD3000GLFS-01F8U0: 22=B0C
-Nov 25 13:00:02 p34 hddtemp[9588]: /dev/sdl: WDC WD3000GLFS-01F8U0: 23=B0C
-
->
->> my entire system used ~100-120watts with all 12 velociraptors on a 650 w=
-att=20
->> PSU (now moved into a test system).
->
-> Do you have your dozen drives on a staggered start or all at power-on?
-All of them start at the same time, I do not use staggered start.
-
-> I could see 12 drives starting at once causing damage to almost any 650W =
-PSU=20
-> unless it's designed specifically for hard drive enclosures, due to the=
-=20
-> relatively enormous current draw at startup - called inrush current.
-I wonder if this is a thing of the past, I have several PSUs, all 550+
-and a number of systems have 12 drives+ in them, they all surge up to 500-5=
-50
-watts or so on startup but no drive and no system has any problems whatsoev=
-er,
-except the velociraptors.
-
-BTW:
-
-Latest update is I removed the velociraptors from my main system, replaced =
-them
-with Raptor150s and yeah it does use 500+ watts at startup according to the=
- LCD
-on the UPS and also a using Kill-A-Watt but all my problems are gone, I hav=
-e
-been writing to the disks, running smart tests, running RAID VERIFY over th=
-e
-array, writing nearly continuously and not a single error of any kind.
-
-I think there is something wrong with Velociraptors + Linux, at some point =
-I
-suppose it would be worth trying to use them in Windows and see if I can
-reproduce the problems.
-
-Justin.
-
----1463747160-271602853-1228584756=:21825--
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
