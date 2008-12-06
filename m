@@ -1,8 +1,8 @@
 From: Mike Myers <mikesm559@yahoo.com>
 Subject: Re: Need urgent help in fixing raid5 array
-Date: Sat, 6 Dec 2008 11:30:00 -0800 (PST)
-Message-ID: <36036.96129.qm@web30803.mail.mud.yahoo.com>
-References: <936691.74609.qm@web30806.mail.mud.yahoo.com> <447802.83994.qm@web30807.mail.mud.yahoo.com> <alpine.DEB.1.10.0812051922530.4906@p34.internal.lan> <616202.13446.qm@web30804.mail.mud.yahoo.com> <alpine.DEB.1.10.0812051950550.12295@p34.internal.lan> <638620.91235.qm@web30807.mail.mud.yahoo.com>
+Date: Sat, 6 Dec 2008 12:14:09 -0800 (PST)
+Message-ID: <666977.22612.qm@web30804.mail.mud.yahoo.com>
+References: <936691.74609.qm@web30806.mail.mud.yahoo.com> <447802.83994.qm@web30807.mail.mud.yahoo.com> <alpine.DEB.1.10.0812051922530.4906@p34.internal.lan> <616202.13446.qm@web30804.mail.mud.yahoo.com> <alpine.DEB.1.10.0812051950550.12295@p34.internal.lan> <638620.91235.qm@web30807.mail.mud.yahoo.com> <36036.96129.qm@web30803.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -10,6 +10,25 @@ Sender: linux-raid-owner@vger.kernel.org
 To: Mike Myers <mikesm559@yahoo.com>, Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Ok, I seem to have recovered...  Once I realized that event though the event number on sdk1 was slightly different than the rest, but that I could confirm it was the new drive that had the cloned data from the original failing drive, I did an assemble with a --force option, and then the array came up just fine.  I rebooted for good measure and lvm and xfs came up fine on boot, and all the files are there and perfectly accessible.  There was about 12kb of data that couldn't be recovered, but since this storage volume stores mostly large TV recordings, I think it will be Ok.  It would have bene very hard to track down which file those sectors were in any case.
+
+I then added the spare again and the system is now rebuilding just fine (should be done in abt 5 hrs)...
+
+Thanks for all the advice everyone.
+
+Thx
+mike
+
+
+
+
+----- Original Message ----
+From: Mike Myers <mikesm559@yahoo.com>
+To: Mike Myers <mikesm559@yahoo.com>; Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-raid@vger.kernel.org
+Sent: Saturday, December 6, 2008 11:30:00 AM
+Subject: Re: Need urgent help in fixing raid5 array
 
 /dev/sdk1:
           Magic : a92b4efc
@@ -25,9 +44,9 @@ Preferred Minor : 2
 
     Update Time : Thu Dec  4 15:32:09 2008
           State : clean
- Active Devices : 6
+Active Devices : 6
 Working Devices : 7
- Failed Devices : 0
+Failed Devices : 0
   Spare Devices : 1
        Checksum : ab1934d5 - correct
          Events : 0.1436484
@@ -64,9 +83,9 @@ Preferred Minor : 2
 
     Update Time : Fri Dec  5 08:15:16 2008
           State : clean
- Active Devices : 5
+Active Devices : 5
 Working Devices : 7
- Failed Devices : 1
+Failed Devices : 1
   Spare Devices : 2
        Checksum : ab1a2d37 - correct
          Events : 0.1438064
@@ -105,9 +124,9 @@ Preferred Minor : 2
 
     Update Time : Fri Dec  5 08:15:16 2008
           State : clean
- Active Devices : 5
+Active Devices : 5
 Working Devices : 7
- Failed Devices : 1
+Failed Devices : 1
   Spare Devices : 2
        Checksum : ab1a2cd3 - correct
          Events : 0.1438064
@@ -255,6 +274,14 @@ On Fri, 5 Dec 2008, Mike Myers wrote:
 >
 >
 >
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+      
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 the body of a message to majordomo@vger.kernel.org
