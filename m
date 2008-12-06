@@ -1,59 +1,132 @@
-From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
-Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
-Date: Sat, 6 Dec 2008 18:42:30 +0000
-Message-ID: <18746.51094.473042.389299@tree.ty.sabi.co.uk>
-References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan>
+From: Mike Myers <mikesm559@yahoo.com>
+Subject: Re: Need urgent help in fixing raid5 array
+Date: Sat, 6 Dec 2008 11:02:39 -0800 (PST)
+Message-ID: <638620.91235.qm@web30807.mail.mud.yahoo.com>
+References: <936691.74609.qm@web30806.mail.mud.yahoo.com> <447802.83994.qm@web30807.mail.mud.yahoo.com> <alpine.DEB.1.10.0812051922530.4906@p34.internal.lan> <616202.13446.qm@web30804.mail.mud.yahoo.com> <alpine.DEB.1.10.0812051950550.12295@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
-In-Reply-To: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan>
-List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Sender: xfs-bounces@oss.sgi.com
-Errors-To: xfs-bounces@oss.sgi.com
-To: Linux XFS <xfs@oss.sgi.com>, Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Ok, here is some more info on this odd problem.
 
-> Someone should write a document with XFS and barrier support,
-> if I recall, in the past, they never worked right on raid1 or
-> raid5 devices, but it appears now they they work on RAID1,
-> which slows down performance ~12 times!!
+I have seven 1 TB drives in raid5 array.  sdb1 sdc1 sdf1 sdh1 sdi1 sdj1 sdk1
 
-Of the many poorly misunderstood, misleading posts to the XFS
-and RAID mailing lists this comparison is particularly bad:
+They all have the same uuid, and events is the same for each except sdk1, which I think was the disk being resynced.  As I understand it, when the array is being resynced, the events counter on the newly added drive is different than the others.  The other drives have the same events and uuid, and all show clean.  When I try and assemble the array of the 7 drives, it tells me there are 5 drives and 1 spare, not enough to start the array.  If I remove sdk1 (the drive with the different event number on it), I get the same exact same message.  
 
-> l1:~# /usr/bin/time tar xf linux-2.6.27.7.tar 
-> 0.15user 1.54system 0:13.18elapsed 12%CPU (0avgtext+0avgdata 0maxresident)k
-> 0inputs+0outputs (0major+325minor)pagefaults 0swaps
-> l1:~#
+By removing one drive at a time from the assemble command, I determined that md thinks that sdh1 is the spare, even though events are the same and the the UUID is the same, the checksum says it's ok.  Why does it think this drive is a spare and not a data drive?  
 
-> l1:~# /usr/bin/time tar xf linux-2.6.27.7.tar
-> 0.14user 1.66system 2:39.68elapsed 1%CPU (0avgtext+0avgdata 0maxresident)k
-> 0inputs+0outputs (0major+324minor)pagefaults 0swaps
-> l1:~#
+I had cloned the data drive that had failed and got almost everything copied over, all but 12kb.  So I think it's fine and is not being a problem.
 
-In the first case 'linux-2.6.27.7.tar' is in effect being
-extracted to volatile memory (depending on memory size, flusher
-parameters, etc., which are gleefully unreported), in the second
-to persistent disk; even worse in the particular case it is a
-fairly metadata intensive test (25k inodes), and writing lots of
-metadata to disk (twice as in RAID1) as opposed to memory of
-course is going to be slow.
+How does md decide which drive is a spare and which is an active synced drive, etc... ?  I can't seem to find a document that outlines all this.
 
-Comparing the two makes no sense and imparts no useful
-information. It would be more interesting to see an analysis
-with data and argument as to whether the metadata layout of XFS
-is good or bad or how it could be improved; the issue here is
-metadata policies, not barriers.
+Thx
+mike
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+
+
+
+----- Original Message ----
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Mike Myers <mikesm559@yahoo.com>
+Cc: linux-raid@vger.kernel.org
+Sent: Friday, December 5, 2008 4:51:26 PM
+Subject: Re: Need urgent help in fixing raid5 array
+
+Only use it as A LAST resort, check the mailing list or wait for 
+Neil/someone else with/whose had a similar issue who can maybe help more 
+here.
+
+On Fri, 5 Dec 2008, Mike Myers wrote:
+
+> Thanks very much.  All the disks I am trying to assemble have the same event count and UUID, which is why I don't understand why it's not assembling.  I'll try the assume-clean option and see if that helps.
+>
+> It would be great to understand how md determines if the drives are in sync with each other.  I thought the uuid and event count was all you needed...
+>
+> thx
+> mike
+>
+>
+>
+>
+> ----- Original Message ----
+> From: Justin Piszcz <jpiszcz@lucidpixels.com>
+> To: Mike Myers <mikesm559@yahoo.com>
+> Cc: linux-raid@vger.kernel.org
+> Sent: Friday, December 5, 2008 4:24:46 PM
+> Subject: Re: Need urgent help in fixing raid5 array
+>
+>
+> You can try this as a last resort:
+> http://www.mail-archive.com/linux-raid@vger.kernel.org/msg07815.html
+>
+> (mdadm w/create and assume-clean) but only use this as a last resort, when
+> I had two disk failures, I was able to see some of the data but ultimately
+> it was lost, bottom line? i dont use raid5 anymore, raid6 only, in the
+> 3ware docs they recommend if you use more than 4 disks you should use
+> raid6 if you have the capability, i agree
+>
+> some others on the list may have more . less intrusive ideas . only  use
+> the above method as a LAST RESORT, i was able to assemble the array but I
+> had problems getting xfs_repair to fix the filesystem
+>
+> On Fri, 5 Dec 2008, Mike Myers wrote:
+>
+>> Anyone?  What am I missing here?
+>>
+>> thx
+>> mike
+>>
+>>
+>>
+>>
+>> ----- Original Message ----
+>> From: Mike Myers <mikesm559@yahoo.com>
+>> To: linux-raid@vger.kernel.org
+>> Sent: Friday, December 5, 2008 9:03:22 AM
+>> Subject: Need urgent help in fixing raid5 array
+>>
+>> I have a problem with repairing a raid5 array I really need some help with.  I must be missing something here.
+>>
+>> I have 2 raid5 arrays combined with LVM into a common logical volume and then running XFS on top of that.  Both arrays have 7 1 TB disks in them.  I moved a controller card around so that I could install a new Intel GB ethernet card in one of the PCI-E slots.  That went fine except one of the SATA cables got knocked loose so one of the disks in /dev/md2 wen't offline.  Linux booted fine, started the md2 with 6 elements in it and everything was fine with md2 in a degraded state.  I fixed the cable problem and hot added that drive to the array, but since it was now out of sync, md began a rebuild.  No problem.
+>>
+>> Around 60% through the resync, smartd started reporting problems with one of the other drives in the array.  Then that drive ejected from the degraded array, caused the raid to stop and the LVm volume to go offline.  Ugh...
+>>
+>> Ok, so it looks from the smart data that that disk had been having a lot of problems and was failing.  As it happens, I had a new 1 TB disk arrive the same day, and I pressed it to service here.  I used sfdisk -d olddisk | sfdisk newdisk to copy the partition table from the old drive to the new one, and then used ddrescue to copy the data from the old partition (/dev/sdo1) to the new one (/dev/sdp1). That worked pretty well, just 12kB couldn't be recovered.
+>>
+>> So I remove the old disk,  re-add the new disk, and attempt to start the array with new (cloned) 1 Tb disk in the old disks stead.  Even though the UUID's, magic numbers and events fields are all the same, md thinks the cloned disk is a spare, and doesn't start the array.  What am I missing here?  Why doesn't it view it as the old disk as a member and just start it?
+>>
+>> thx
+>> mike
+>>
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+>
+>
+>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+      
