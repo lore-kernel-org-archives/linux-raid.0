@@ -1,54 +1,47 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: Have the velociraptors in a test system now, checkout the errors.
-Date: Sun, 07 Dec 2008 02:22:10 +0300
-Message-ID: <493B0922.2080606@msgid.tls.msk.ru>
-References: <alpine.DEB.1.10.0812060426280.3494@p34.internal.lan> <493A5E62.1020508@msgid.tls.msk.ru> <alpine.DEB.1.10.0812060709280.8516@p34.internal.lan>
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+Subject: JFS + RAID issue?
+Date: Sat, 6 Dec 2008 17:44:08 -0600
+Message-ID: <cccedfc60812061544x3beb3e4fsfa4c58cf340c8fb7@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0812060709280.8516@p34.internal.lan>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, smartmontools-support@lists.sourceforge.net
+To: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Justin Piszcz wrote:
+I'm not quite sure whom to get ahold of here, but I just had to reboot
+my server because it went off into never never land and never came
+back. What did I do? I created a level1 raid out of two loopbacked
+files on the same filesystem for testing purposes.
 
-[big skip..]
-> Very interesting story there, what OS(') were you using at the time?
-> Windows? Linux? UNIX?
+# $CWD is on a freshly-formatted JFS partition
+for i in 1 2; do dd if=/dev/zero of=raid.${i} bs=1k seek=$( echo
+1024*1024*20 | bc ) count=0 conv=sync; done
+losetup /dev/loop4 $PWD/raid.1
+losetup /dev/loop5 $PWD/raid.2
+mdadm --create /dev/md99 --level=1 --bitmap=internal --raid-devices=2
+/dev/loop4 --write-mostly /dev/loop5
 
-It is linux.  Since 2.2 or 2.0, I don't remember for sure.
-With software raid since the day one (was an external patch
-in a few first years).
+Shortly after the above command, I saw /proc/mdstat rebuild speed drop
+quite rapidly below 10MB/s and then the entire machine became
+completely unresponsive. Oh, the disk was making plenty of noise but I
+gave it 5 minutes and only the console responded, by echoing back my
+characters.
 
-> As far the PSU, just btw/FYI, Velociraptors consume ~4-5 watts a piece,
-> my entire system used ~100-120watts with all 12 velociraptors on a 650
-> watt PSU (now moved into a test system).
+Otherwise, even to magic sys-rq, it appeared completely unresponsive
+although not "dead".
+Any ideas?
 
-Well.  Others already commented on this, -- different rail can draw
-different max power.  But it's a bit more complex still.  Those 4..5
-watts is a sustained power consumption, not peak.  When moving heads,
-starting/stopping the motor etc, the drive briefly consumes much more
-power.  From my choice of cheap PSUs, not all of them can do the work
-even when theoretical load is below the capacity.  I.e., the voltage
-becomes.. unstable (insufficient filtering/capacitors, bad output
-cirquits, too thin wires etc yadda).  And some parts of the system
-may "translate" those instabilities into ones and zeros..
+I've tried the same using the *same* disk/partition but formatted
+using ext3 and did not have the same issue.
 
-It's more: when the drives are in some RAID configuration (esp. raid1
-and the like), usually more than one drive works in parallel, at exactly
-the same moment (think writes to a raid1).  So it is more possible to
-have bad results in raid config than without...
+openSUSE 11.0, fully up-to-date, kernel 2.6.25.18-0.2-default on x86_64.
 
-But again: I'm not at all suggesting your problem is in PSU.  It
-*might* be here, but I hope your PSU can do the work fine.  And
-in my case there were other failures too, more "mysterious".
+I've generally had pretty good luck with ext3 and jfs over the years,
+but increasingly I'm worried that jfs is no longer under development.
+:-(
 
-And by the way, some modern PSUs, especially more powerful ones,
-has more than one separate rails for 12v and sometimes 5v.  I.e.
-two or more independent (to some extent anyway) 12v circuits.
-With obvious advantages.
-
-/mjt
+-- 
+Jon
