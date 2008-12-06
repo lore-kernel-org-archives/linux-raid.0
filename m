@@ -1,57 +1,41 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Michal Soltys <soltys@ziu.info>
 Subject: Re: time limited error recovery and md raid
-Date: Sat, 6 Dec 2008 04:59:53 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0812060459140.12917@p34.internal.lan>
-References: <1228510646.16555.73.camel@localhost>  <alpine.DEB.1.10.0812051600410.17806@p34.internal.lan>  <1228511266.16555.81.camel@localhost>  <alpine.DEB.1.10.0812051609070.17806@p34.internal.lan>  <1228511880.16555.87.camel@localhost>
- <alpine.DEB.1.10.0812051618340.17806@p34.internal.lan> <1228512684.16555.91.camel@localhost> <alpine.DEB.1.10.0812051637360.17806@p34.internal.lan> <493A4276.9090508@dgreaves.com>
+Date: Sat, 06 Dec 2008 11:32:23 +0100
+Message-ID: <493A54B7.7070805@ziu.info>
+References: <1228510646.16555.73.camel@localhost>  <alpine.DEB.1.10.0812051600410.17806@p34.internal.lan> <1228511266.16555.81.camel@localhost> <alpine.DEB.1.10.0812051609070.17806@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <493A4276.9090508@dgreaves.com>
+In-Reply-To: <alpine.DEB.1.10.0812051609070.17806@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: Redeeman <redeeman@metanurb.dk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Justin Piszcz wrote:
+> 
+>> when tler is on, why does linux not attempt to remap the sector?
+> See my earlier posts on this question from last week.  It would need a 
+> metadata section on each HDD to keep track of the bad sectors before it 
+> writes to the drives, a 3ware card will do this for you-- however, 
+> typically, (having run md/linux) for a number of years is not 
+> super-necessary if you run checks on your disks once a week *AND* you 
+> have good drives that don't have problems.
+> 
 
+ From what I know, md does attempt to repair read errors (but not other 
+ones though) with rewrite, and only if it fails, it will kick the drive 
+out of the array. In case of 1.x superblocks, the count of repaired (+ 
+ones not causing drive to be kicked off) sectors will be preserved 
+across reboots as well (check Documentation/md.txt). Peeking over the 
+code seems to confirm it as well.
 
-On Sat, 6 Dec 2008, David Greaves wrote:
+It was on Neil's todo list, and it got implemented a while ago, afaik. 
+There was a short discussion on smartmon mailing list recently:
 
-> Justin Piszcz wrote:
->>
->>
->> On Fri, 5 Dec 2008, Redeeman wrote:
->>
->>> On Fri, 2008-12-05 at 16:21 -0500, Justin Piszcz wrote:
->>>>
->>>> On Fri, 5 Dec 2008, Redeeman wrote:
->>>>
->>>>> On Fri, 2008-12-05 at 16:12 -0500, Justin Piszcz wrote:
->>>>>>
->>>>>> On Fri, 5 Dec 2008, Redeeman wrote:
->>>>>>
->>>>>>> On Fri, 2008-12-05 at 16:01 -0500, Justin Piszcz wrote:
->>>>>>>>
->>>>>>>> On Fri, 5 Dec 2008, Redeeman wrote:
->>>>>>>>
->>> Okay, you happen to have any knowledge to pass on about current 1tb
->>> disks?
->> I am still looking for some good 1TiB drives myself.  I know one user
->> who has 12 of these, 11 in a RAID-5 array and 1 as a spare on a 12-port
->> 3ware
->> PCI-X card:
->> SAMSUNG Spinpoint F1 HD103UJ 1TB 7200 RPM 32MB Cache SATA 3.0Gb/s Hard
->> Drive
-> I wouldn't.
->
-> I had 9 of these in 2 Dell SOHO servers; I RMA'd about 13 (yes 13) over a few
-> months before exchanging them.
+http://sourceforge.net/mailarchive/forum.php?thread_name=VA.00003465.16ed4a93%40news.conactive.com&forum_name=smartmontools-support
 
-Ouch!  How did they fail/what kind of workload was imposed on them?  Yeah 
-I see the enterprise disks as well for 2x the cost, 'slightly' better, I 
-take it they fail quite often as well?
+There was no 100% answer there either though.
 
->
-> The HE ones are slightly better.
->
-> David
+Neil ?
