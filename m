@@ -1,48 +1,30 @@
-From: Yuri Tikhonov <yur@emcraft.com>
-Subject: [PATCH] ASYNC_TX: async_xor mapping fix
-Date: Mon, 8 Dec 2008 22:14:26 +0300
-Message-ID: <200812082214.26811.yur@emcraft.com>
+From: Michael Brancato <mike@mikebrancato.com>
+Subject: status of raid 4/5 disk reduce
+Date: Mon, 08 Dec 2008 15:59:01 -0500
+Message-ID: <493D8A95.2020700@mikebrancato.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: linuxppc-dev@ozlabs.org, Dan Williams <dan.j.williams@intel.com>, dzu@denx.de, wd@denx.de, Ilya Yanok <yanok@emcraft.com>
 List-Id: linux-raid.ids
 
- The destination address may be present in the source list, so we should
-map the addresses from the source list first.
- Otherwise, if page corresponding to destination is not marked as write-
-through (with regards to CPU cache), then mapping it with DMA_FROM_DEVICE
-may lead to data loss, and finally to an incorrect result of calculations.
+I'm curious as to the status of the ability to reduce the number of 
+disks in a RAID 4/5 array.  I would like the ability to reshape a 4 disk 
+raid4/5 to a 3 disk raid4/5 for flexibility.
 
-Signed-off-by: Yuri Tikhonov <yur@emcraft.com>
----
- crypto/async_tx/async_xor.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+here is what I want to do....
+$ sudo mdadm /dev/md0 --fail /dev/disk4 --remove /dev/disk4
+mdadm: set /dev/disk4 faulty in /dev/md0
+mdadm: hot removed /dev/disk4
+$ sudo mdadm --grow /dev/md0 -n3
+mdadm: /dev/md0: Cannot reduce number of data disks (yet).
 
-diff --git a/crypto/async_tx/async_xor.c b/crypto/async_tx/async_xor.c
-index 91dbf07..291f517 100644
---- a/crypto/async_tx/async_xor.c
-+++ b/crypto/async_tx/async_xor.c
-@@ -53,10 +53,10 @@ do_async_xor(struct dma_chan *chan, struct page *dest, struct page **src_list,
- 	int xor_src_cnt;
- 	dma_addr_t dma_dest;
- 
--	dma_dest = dma_map_page(dma->dev, dest, offset, len, DMA_FROM_DEVICE);
- 	for (i = 0; i < src_cnt; i++)
- 		dma_src[i] = dma_map_page(dma->dev, src_list[i], offset,
- 					  len, DMA_TO_DEVICE);
-+	dma_dest = dma_map_page(dma->dev, dest, offset, len, DMA_FROM_DEVICE);
- 
- 	while (src_cnt) {
- 		async_flags = flags;
--- 
-1.5.6.1
+I know this capability is missing in the md driver.  What is needed to 
+make it work and is anyone currently working on it?
+
+Regards,
 
 -- 
-Yuri Tikhonov, Senior Software Engineer
-Emcraft Systems, www.emcraft.com
+Mike Brancato, CISSP
