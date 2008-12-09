@@ -1,96 +1,40 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [mdadm git pull] platform support v2 and other fixes
-Date: Mon, 08 Dec 2008 18:29:17 -0700
-Message-ID: <1228786157.9780.19.camel@dwillia2-linux.ch.intel.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Data integrity and RAID
+Date: Tue, 9 Dec 2008 09:06:48 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0812090905290.29505@p34.internal.lan>
+References: <20841008.post@talk.nabble.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20841008.post@talk.nabble.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: "peter.stevens" <Peter.Stevens@gtech.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
-
-So here is a second attempt at platform support.  I asked around about
-scanning for the option-rom and the solution I settled on was to port
-the kernel's "Adapter ROM" detection code to userspace (probe_roms.c
-from arch/x86/kernel/probe_roms_32.c).  This at least makes mdadm bug
-compatible with the kernel, and avoids scanning the entire region
-indiscriminately.
-
-Create support got two major fixes:
-1/ calculating a common start offset by merging get_extents() results
-2/ explicitly passing the target member disks in the metadata update
-message
-
-Despite the platform support and these fixes I am still investigating
-whether mdadm can create configurations that the option-rom does not
-understand.  Stay tuned...
-
-Lastly I added a regression test to stress the overlapping create case,
-it adds some infrastructure for tests to define their own environment.
-
-As always, please have a look.
-
-Thanks,
-Dan
-
-The following changes since commit 5a52a340905d1a9d0a268ce2621f55db6b3fd423:
-  NeilBrown (1):
-        Merge branch 'master' into devel-3.0
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/mdadm.git devel
-
-Dan Williams (17):
-      fix ->metadata_version checking in Wait()
-      wait_for container assembly
-      imsm: fix setting of device size for raid1
-      imsm: correct start offset handling at create time
-      imsm: pass disk info in create message
-      port arch/x86/kernel/probe_roms_32.c for use in 'platform' support
-      imsm: detect option-rom capabilities
-      imsm: sysfs support routines for determining device connectivity
-      imsm: validate arrays being created against firmware capabilities
-      introduce --detail-platform to display platform raid capabilities
-      imsm: provide a detail_platform method
-      imsm: convert dev_tbl to devlist
-      imsm: reverse swapped arguments to posix_memalign in imsm_prepare_update
-      imsm: don't take chunk_size into account for raid1
-      test: enable per-test custom environment setup/teardown
-      workaround a hald interaction and quiet cleanup
-      imsm: test overlapping creates
-
- Assemble.c               |    1 +
- Detail.c                 |   41 +++
- Makefile                 |   13 +-
- Monitor.c                |    2 +-
- ReadMe.c                 |    2 +
- mdadm.8                  |   35 ++-
- mdadm.c                  |    4 +
- mdadm.h                  |    6 +
- platform-intel.c         |  239 +++++++++++++
- platform-intel.h         |  129 +++++++
- probe_roms.c             |  279 +++++++++++++++
- probe_roms.h             |   24 ++
- super-ddf.c              |    1 +
- super-intel.c            |  845 ++++++++++++++++++++++++++++++++++++++++------
- super0.c                 |    1 +
- super1.c                 |    1 +
- test                     |   21 ++-
- tests/08imsm-overlap     |   25 ++
- tests/env-08imsm-overlap |    1 +
- tests/env-imsm           |   68 ++++
- 20 files changed, 1620 insertions(+), 118 deletions(-)
- create mode 100644 platform-intel.c
- create mode 100644 platform-intel.h
- create mode 100644 probe_roms.c
- create mode 100644 probe_roms.h
- create mode 100644 tests/08imsm-overlap
- create mode 120000 tests/env-08imsm-overlap
- create mode 100644 tests/env-imsm
 
 
+On Tue, 9 Dec 2008, peter.stevens wrote:
+
+>
+> I'm looking for a software solution to help replace my existing raid hardware
+> setup. The hardware mimics RAID-1 (in that it has 3 mirrors), except for the
+> fact that on read all 3 mirrors are compared and possibly error corrected
+> before data is returned. I don't neccessarily need a RAID-1 solution, it
+> just seems closer to what I already have and also that it also can recover
+> from 2 simulateous disk failures.
+>
+> So far I've played with a software RAID-1 array of USB flash drives. My
+> issue is that software RAID-1 does not check for or recover from data
+> corruption unless a read or write to disk actually fails. Integrity is a
+> major concern for me, I need to know that all data going to and from disk is
+> correct at all times.
+>
+> All advice and comments are welcomed.
+Well USB flash isn't a traditional disk that remaps bad sectors etc.. 
+AFAIK md/raid will try and correct read-errors, but for write errors you 
+have to trust the disks to do this for you, otherwise the bad disk will be 
+kicked out of the array.  If you need the bad write to be re-mapped 
+elsewhere in the array you need a hw raid controller, 3ware, etc..
+
+Justin.
