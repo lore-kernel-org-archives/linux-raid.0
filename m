@@ -1,35 +1,46 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Data integrity and RAID
-Date: Tue, 9 Dec 2008 11:28:38 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0812091128090.29505@p34.internal.lan>
-References: <20841008.post@talk.nabble.com>  <alpine.DEB.1.10.0812090905290.29505@p34.internal.lan> <7d86ddb90812090630p7f916751s821e50f7b1e3138@mail.gmail.com>
+From: Alex Lilley <alex@redwax.co.uk>
+Subject: Re: status of raid 4/5 disk reduce
+Date: Tue, 09 Dec 2008 21:11:30 +0000
+Message-ID: <493EDF02.5090500@redwax.co.uk>
+References: <493D8A95.2020700@mikebrancato.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7d86ddb90812090630p7f916751s821e50f7b1e3138@mail.gmail.com>
+In-Reply-To: <493D8A95.2020700@mikebrancato.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ryan Wagoner <rswagoner@gmail.com>
-Cc: "peter.stevens" <Peter.Stevens@gtech.com>, linux-raid@vger.kernel.org
+To: Michael Brancato <mike@mikebrancato.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi Michael
 
+I posed this a few weeks back but haven't seen any activity on it yet or 
+any suggestion as to when this might be possible.
 
-On Tue, 9 Dec 2008, Ryan Wagoner wrote:
+For reference, my thread started here: 
+http://marc.info/?l=linux-raid&m=122753511309332&w=2
 
-> The issue I've had with RAID 1 using mdadm is the disk's aren't
-> consistent. I've noticed that unlike RAID 5 when a write is aborted
-> mdadm doesn't completely write the data.
+Cross fingers for this because I think it is a real killer feature.
+
+Regards
+
+Alex
+
+Michael Brancato wrote:
+> I'm curious as to the status of the ability to reduce the number of 
+> disks in a RAID 4/5 array.  I would like the ability to reshape a 4 
+> disk raid4/5 to a 3 disk raid4/5 for flexibility.
 >
-> When I run a check on the RAID 1 I always have inconsistencies where I
-> have never had one on a RAID 5. The issue here is you never know if
-> the inconsistencies can be ignored or are signs of a failing disk,
-> etc.
+> here is what I want to do....
+> $ sudo mdadm /dev/md0 --fail /dev/disk4 --remove /dev/disk4
+> mdadm: set /dev/disk4 faulty in /dev/md0
+> mdadm: hot removed /dev/disk4
+> $ sudo mdadm --grow /dev/md0 -n3
+> mdadm: /dev/md0: Cannot reduce number of data disks (yet).
 >
-> I sent an email to the list previously on this with no response.
+> I know this capability is missing in the md driver.  What is needed to 
+> make it work and is anyone currently working on it?
 >
-> http://marc.info/?l=linux-raid&m=122572326107399&w=2
-I have asked about this before as well, do you have your swap on raid1? I 
-recall someone replying that it was normal if that is the case.
-
-Justin.
-
+> Regards,
+>
