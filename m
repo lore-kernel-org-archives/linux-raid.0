@@ -1,51 +1,50 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Data integrity and RAID
-Date: Tue, 9 Dec 2008 18:33:04 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0812091832450.28450@p34.internal.lan>
-References: <20841008.post@talk.nabble.com>  <alpine.DEB.1.10.0812090905290.29505@p34.internal.lan>  <7d86ddb90812090630p7f916751s821e50f7b1e3138@mail.gmail.com>  <alpine.DEB.1.10.0812091128090.29505@p34.internal.lan>
- <7d86ddb90812091527q7afecaci12e5ba08db3d18d6@mail.gmail.com>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: Re[2]: [PATCH 01/11] async_tx: don't use src_list argument of async_xor() for dma addresses
+Date: Tue, 9 Dec 2008 18:08:29 -0700
+Message-ID: <e9c3a7c20812091708n5e5daf2ane9c7fb927782c771@mail.gmail.com>
+References: <200812090055.26721.yur@emcraft.com>
+	 <e9c3a7c20812081631i1e0efff2j953b2e81f6dc6e0e@mail.gmail.com>
+	 <1195158776.20081209034136@emcraft.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7d86ddb90812091527q7afecaci12e5ba08db3d18d6@mail.gmail.com>
+In-Reply-To: <1195158776.20081209034136@emcraft.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Ryan Wagoner <rswagoner@gmail.com>
-Cc: "peter.stevens" <Peter.Stevens@gtech.com>, linux-raid@vger.kernel.org
+To: Yuri Tikhonov <yur@emcraft.com>
+Cc: linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, dzu@denx.de, wd@denx.de, yanok@emcraft.com, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-What kind of disks? Does it go away after a 'repair'?
-Show smartctl -a of both disks in the raid?
+On Mon, Dec 8, 2008 at 5:41 PM, Yuri Tikhonov <yur@emcraft.com> wrote:
+> On Tuesday, December 9, 2008 you wrote:
+>
+>> On Mon, Dec 8, 2008 at 2:55 PM, Yuri Tikhonov <yur@emcraft.com> wrote:
+>>> Using src_list argument of async_xor() as a storage for dma addresses
+>>> implies sizeof(dma_addr_t) <= sizeof(struct page *) restriction which is
+>>> not always true (e.g. ppc440spe).
+>>>
+>
+>> ppc440spe runs with CONFIG_PHYS_64BIT?
+>
+>  Yep. It uses 36-bit addressing, so this CONFIG is turned on.
+>
+>> If we do this then we need to also change md to limit the number of
+>> allowed disks based on the kernel stack size.  Because with 256 disks
+>> a 4K stack can be consumed by one call to async_pq ((256 sources in
+>> raid5.c + 256 sources async_pq.c) * 8 bytes per source on 64-bit).
+>
+>  On ppc440spe we have 8KB stack, so the things are not worse than on
+> 32-bit archs with 4KB stack. Thus, I guess no changes to md are
+> required because of this patch. Right?
 
-On Tue, 9 Dec 2008, Ryan Wagoner wrote:
+8K stacks do make this less of an issue *provided* handle_stripe()
+remains only called from raid5d.  We used to share some stripe
+handling work with the requester's process context where the stack is
+much more crowded.  So, we would now be more strongly tied to the
+raid5d-only approach... maybe that is not enough to deny this change.
+Neil what do you think of the async_{xor,pq,etc} apis allocating
+'src_cnt' sized arrays on the stack?
 
-> My swap is on a different RAID 1, but my other RAID 1 with the root
-> partition was showing inconsistencies as well. It does it on both my
-> servers.
->
-> Ryan
->
-> On Tue, Dec 9, 2008 at 11:28 AM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
->>
->>
->> On Tue, 9 Dec 2008, Ryan Wagoner wrote:
->>
->>> The issue I've had with RAID 1 using mdadm is the disk's aren't
->>> consistent. I've noticed that unlike RAID 5 when a write is aborted
->>> mdadm doesn't completely write the data.
->>>
->>> When I run a check on the RAID 1 I always have inconsistencies where I
->>> have never had one on a RAID 5. The issue here is you never know if
->>> the inconsistencies can be ignored or are signs of a failing disk,
->>> etc.
->>>
->>> I sent an email to the list previously on this with no response.
->>>
->>> http://marc.info/?l=linux-raid&m=122572326107399&w=2
->>
->> I have asked about this before as well, do you have your swap on raid1? I
->> recall someone replying that it was normal if that is the case.
->>
->> Justin.
->>
->>
->
+Thanks,
+Dan
