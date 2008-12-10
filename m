@@ -1,175 +1,77 @@
-From: Yuri Tikhonov <yur@emcraft.com>
-Subject: Re[2]: [PATCH] ASYNC_TX: async_xor mapping fix
-Date: Wed, 10 Dec 2008 22:07:18 +0300
-Message-ID: <724394867.20081210220718@emcraft.com>
-References: <200812082214.26811.yur@emcraft.com> <1228770496.26373.3.camel@dwillia2-linux.ch.intel.com> <1228934826.1224.5.camel@dwillia2-linux.ch.intel.com>
+From: Bob Bell <b_linuxraid@thebellsplace.com>
+Subject: Re: Data loss on MD RAID5 reshape?
+Date: Wed, 10 Dec 2008 14:26:16 -0500
+Message-ID: <20081210192613.GC8354@newbie.thebellsplace.net>
+References: <20081205222131.GD8219@newbie.thebellsplace.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1228934826.1224.5.camel@dwillia2-linux.ch.intel.com>
+Content-Disposition: inline
+In-Reply-To: <20081205222131.GD8219@newbie.thebellsplace.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linuxppc-dev@ozlabs.org" <linuxppc-dev@ozlabs.org>, "dzu@denx.de" <dzu@denx.de>, "wd@denx.de" <wd@denx.de>, Ilya Yanok <yanok@emcraft.com>, Saeed Bishara <saeed@marvell.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Anyone have anything to add regarding the email below, before I tear the 
+drives apart and start over?
 
+On Fri, Dec 05, 2008 at 05:21:32PM -0500, Bob Bell wrote:
+>I've experienced apparent data loss, and hoping someone out there can 
+>help rescue my data, or at least tell me what went wrong so that I don't 
+>have a repeat event.  I first asked this question on linux-lvm, but the 
+>folks there seemed to think it pertained more to RAID than to LVM.
+>
+>I was setting up a new server running Ubuntu's Hardy Heron release.  
+>`uname -a` reports:
+>  Linux sherwood 2.6.24-16-server #1 SMP Thu Apr 10 13:58:00 UTC 2008 i686 
+>  GNU/Linux
+>
+>I initially created an md RAID5 device with only two components 
+>(matching 320 GB SATA HDDs).  I created a single LVM Physical Volume 
+>using the entirety of that md device (320 GB), and then created several 
+>LVM Logical Volumes for different filesystems (all ext3).  This was done 
+>using the Ubuntu installer.  After installing I used lvresize to 
+>increase the size of a few of the Logical Volumes.  These filesystems 
+>hold data that is not a critical part of the system (mail, music, video, 
+>etc.), but still important to me.
+>
+>I then copied data onto one of those filesystems (the original source of 
+>the data is no longer available).  I then added a third drive to the md 
+>device, which brought the total to 2 active devices and 1 spare device.  
+>I then grew the number of devices to 3 and waited for the reshape to 
+>finish (increasing the capacity to 640 GB).  I bumped the values in 
+>/proc/sys/dev/raid/ so that I wouldn't have to wait as long.
+>
+>Now that the reshaping has completed, LVM can't find the physical volume 
+>on that device anymore.  I tried rebooting the system, but the problem 
+>remained.  Checking /proc/mdstat shows that the md device is up and 
+>healthy.  The pvdisplay command only shows my other Physical Volume (for 
+>the IDE drives).  I found the pvck command and ran that on the md 
+>device, and it states that there is no LVM label on the device.
+>
+>It is my understanding that the steps I outlined should have worked.  
+>I planned to follow them with pvresize, then lvresize, then umount, 
+>resize2fs, and mount again.  I've seen this procedure outlined a few 
+>different places, including at 
+>http://gentoo-wiki.info/Resize_LVM2_on_RAID5.
+>
+>Did I do something wrong?  Is there anyway to rescue my data?  If 
+>there's no way of saving the data, I'd at least like to figure out what 
+>happened in the first place.
+>
+>Thank you.  Your thoughtfulness and help is appreciated.
+>
+>-- 
+>Bob Bell
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
- Hello Dan,
-
-On Wednesday, December 10, 2008 you wrote:
-
-> On Mon, 2008-12-08 at 14:08 -0700, Dan Williams wrote:
->> On Mon, 2008-12-08 at 12:14 -0700, Yuri Tikhonov wrote:
->> > The destination address may be present in the source list, so we should
->> > map the addresses from the source list first.
->> >  Otherwise, if page corresponding to destination is not marked as write-
->> > through (with regards to CPU cache), then mapping it with DMA_FROM_DEVICE
->> > may lead to data loss, and finally to an incorrect result of calculations.
->> > 
->> 
->> Thanks Yuri.  I think we should avoid mapping the destination twice
->> altogether, and for simplicity just always map it bidirectionally.
-
-> Yuri, Saeed, can I get your acked-by's for the following 2.6.28 patch:
-
- I would do the "src_list[i] == dest" check with unlikely(), since we 
-a-priori aware that only one of all src_cnt addresses is the possible 
-destination.
-
- As for the rest:
-
-Acked-by: Yuri Tikhonov <yur@emcraft.com>
-
-> Thanks,
-> Dan
-
-
-----snip---->>
-> async_xor: dma_map destination DMA_BIDIRECTIONAL
-
-> From: Dan Williams <dan.j.williams@intel.com>
-
-> Mapping the destination multiple times is a misuse of the dma-api.
-> Since the destination may be reused as a source, ensure that it is only
-> mapped once and that it is mapped bidirectionally.  This appears to add
-> ugliness on the unmap side in that it always reads back the destination
-> address from the descriptor, but gcc can determine that dma_unmap is a
-> nop and not emit the code that calculates its arguments.
-
-> Cc: <stable@kernel.org>
-> Cc: Saeed Bishara <saeed@marvell.com>
-> Reported-by: Yuri Tikhonov <yur@emcraft.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  crypto/async_tx/async_xor.c |   11 +++++++++--
->  drivers/dma/iop-adma.c      |   16 +++++++++++++---
->  drivers/dma/mv_xor.c        |   15 ++++++++++++---
->  3 files changed, 34 insertions(+), 8 deletions(-)
-
-> diff --git a/crypto/async_tx/async_xor.c b/crypto/async_tx/async_xor.c
-> index c029d3e..a6faa90 100644
-> --- a/crypto/async_tx/async_xor.c
-> +++ b/crypto/async_tx/async_xor.c
-> @@ -53,10 +53,17 @@ do_async_xor(struct dma_chan *chan, struct page *dest, struct page **src_list,
->         int xor_src_cnt;
->         dma_addr_t dma_dest;
->  
-> -       dma_dest = dma_map_page(dma->dev, dest, offset, len, DMA_FROM_DEVICE);
-> -       for (i = 0; i < src_cnt; i++)
-> +       /* map the dest bidrectional in case it is re-used as a source */
-> +       dma_dest = dma_map_page(dma->dev, dest, offset, len, DMA_BIDIRECTIONAL);
-> +       for (i = 0; i < src_cnt; i++) {
-> +               /* only map the dest once */
-> +               if (src_list[i] == dest) {
-> +                       dma_src[i] = dma_dest;
-> +                       continue;
-> +               }
->                 dma_src[i] = dma_map_page(dma->dev, src_list[i], offset,
->                                           len, DMA_TO_DEVICE);
-> +       }
->  
->         while (src_cnt) {
->                 async_flags = flags;
-> diff --git a/drivers/dma/iop-adma.c b/drivers/dma/iop-adma.c
-> index c7a9306..6be3172 100644
-> --- a/drivers/dma/iop-adma.c
-> +++ b/drivers/dma/iop-adma.c
-> @@ -85,18 +85,28 @@ iop_adma_run_tx_complete_actions(struct iop_adma_desc_slot *desc,
->                         enum dma_ctrl_flags flags = desc->async_tx.flags;
->                         u32 src_cnt;
->                         dma_addr_t addr;
-> +                       dma_addr_t dest;
->  
-> +                       src_cnt = unmap->unmap_src_cnt;
-> +                       dest = iop_desc_get_dest_addr(unmap, iop_chan);
->                         if (!(flags & DMA_COMPL_SKIP_DEST_UNMAP)) {
-> -                               addr =
-> iop_desc_get_dest_addr(unmap, iop_chan);
-> -                               dma_unmap_page(dev, addr, len, DMA_FROM_DEVICE);
-> +                               enum dma_data_direction dir;
-> +
-> +                               if (src_cnt > 1) /* is xor? */
-> +                                       dir = DMA_BIDIRECTIONAL;
-> +                               else
-> +                                       dir = DMA_FROM_DEVICE;
-> +
-> +                               dma_unmap_page(dev, dest, len, dir);
->                         }
->  
->                         if (!(flags & DMA_COMPL_SKIP_SRC_UNMAP)) {
-> -                               src_cnt = unmap->unmap_src_cnt;
->                                 while (src_cnt--) {
->                                         addr = iop_desc_get_src_addr(unmap,
->                                                                     iop_chan,
->                                                                     src_cnt);
-> +                                       if (addr == dest)
-> +                                               continue;
->                                         dma_unmap_page(dev, addr, len,
->                                                        DMA_TO_DEVICE);
->                                 }
-> diff --git a/drivers/dma/mv_xor.c b/drivers/dma/mv_xor.c
-> index 0328da0..bcda174 100644
-> --- a/drivers/dma/mv_xor.c
-> +++ b/drivers/dma/mv_xor.c
-> @@ -311,17 +311,26 @@ mv_xor_run_tx_complete_actions(struct mv_xor_desc_slot *desc,
->                         enum dma_ctrl_flags flags = desc->async_tx.flags;
->                         u32 src_cnt;
->                         dma_addr_t addr;
-> +                       dma_addr_t dest;
->  
-> +                       src_cnt = unmap->unmap_src_cnt;
-> +                       dest = mv_desc_get_dest_addr(unmap);
->                         if (!(flags & DMA_COMPL_SKIP_DEST_UNMAP)) {
-> -                               addr = mv_desc_get_dest_addr(unmap);
-> -                               dma_unmap_page(dev, addr, len, DMA_FROM_DEVICE);
-> +                               enum dma_data_direction dir;
-> +
-> +                               if (src_cnt > 1) /* is xor ? */
-> +                                       dir = DMA_BIDIRECTIONAL;
-> +                               else
-> +                                       dir = DMA_FROM_DEVICE;
-> +                               dma_unmap_page(dev, dest, len, dir);
->                         }
->  
->                         if (!(flags & DMA_COMPL_SKIP_SRC_UNMAP)) {
-> -                               src_cnt = unmap->unmap_src_cnt;
->                                 while (src_cnt--) {
->                                         addr = mv_desc_get_src_addr(unmap,
->                                                                     src_cnt);
-> +                                       if (addr == dest)
-> +                                               continue;
->                                         dma_unmap_page(dev, addr, len,
->                                                        DMA_TO_DEVICE);
->                                 }
-
-
-
-
-
- Regards, Yuri
-
- --
- Yuri Tikhonov, Senior Software Engineer
- Emcraft Systems, www.emcraft.com
-
+-- 
+Bob Bell
+-------------------------------------------------------------------------
+ "Linux is like living in a teepee. No Windows, no Gates,
+  Apache in house."
+   -- Usenet signature, author unknown
