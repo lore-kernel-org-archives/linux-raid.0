@@ -1,39 +1,42 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: MD: Feature Request: Estimate of blocks necessary to complete sync
-Date: Thu, 11 Dec 2008 09:27:11 -0600
-Message-ID: <cccedfc60812110727p18abcf49v909cb0860c2d4c02@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Michael Brancato <mike@mikebrancato.com>
+Subject: Re: status of raid 4/5 disk reduce
+Date: Thu, 11 Dec 2008 10:27:22 -0500
+Message-ID: <6E7F7089-9630-4A54-8E92-65B399E92D4B@mikebrancato.com>
+References: <493D8A95.2020700@mikebrancato.com> <493EDF02.5090500@redwax.co.uk>  <A20315AE59B5C34585629E258D76A97C02F476F7@34093-C3-EVS3.exchange.rackspace.com>  <20081209215149.GA21523@cthulhu.home.robinhill.me.uk> <7d86ddb90812091515m1e0ee2f9w95a86ca2b56a98fe@mail.gmail.com> <493FB2AC.7000902@redwax.co.uk> <494059A4.8050702@mikebrancato.com> <A20315AE59B5C34585629E258D76A97C02FA1D78@34093-C3-EVS3.exchange.rackspace.com> <4940FCCA.1060703@anonymous.org.uk> <alpine.DEB.1.10.0812111544480.7856@uplift.swm.pp.se>
+Mime-Version: 1.0 (iPhone Mail 5G77)
+Content-Type: text/plain;
+	charset=us-ascii;
+	format=flowed;
+	delsp=yes
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <alpine.DEB.1.10.0812111544480.7856@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: LinuxRaid <linux-raid@vger.kernel.org>
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: John Robinson <john.robinson@anonymous.org.uk>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-When one is using a bitmap-enabled raid1 (or raid5 or whatever), MD
-prints messages like this to the kernel log when a previously-used
-device is re-added:
 
+On Dec 11, 2008, at 9:46 AM, Mikael Abrahamsson <swmike@swm.pp.se>  
+wrote:
 
-Dec 11 08:59:40 turnip kernel: md: recovery of RAID array md10
-Dec 11 08:59:40 turnip kernel: md: minimum _guaranteed_  speed: 1000
-KB/sec/disk.
-Dec 11 08:59:40 turnip kernel: md: using maximum available idle IO
-bandwidth (but not more than 200000 KB/sec) for recovery.
-Dec 11 08:59:40 turnip kernel: md: using 128k window, over a total of
-78123968 blocks.
-Dec 11 08:59:41 turnip nbd0-frank: mdadm: /dev/nbd0 attached to
-/dev/md10 which is already active.
-Dec 11 09:00:22 turnip kernel: md: md10: recovery done.
+> On Thu, 11 Dec 2008, John Robinson wrote:
+>
+>> But my 1U server only physically has room for 4 drives. It doesn't  
+>> matter how many extra controllers I buy, I can't attach more drives.
+>
+> You can use a temporary external eSATA enclosure, pvmove the data if  
+> you're using LVM, then take downtime when you exchange your new  
+> drives into the internal drive bays (or you could even move them one  
+> by one by hotremoving one drive from the eSATA enclosure into the  
+> internal drive bays.
 
-What would be nice is the addition of something like this:
-Dec 11 08:59:40 turnip kernel: md: bitmap shows 27 128K blocks requiring sync
-or
-Dec 11 08:59:40 turnip kernel: md: bitmap shows 3456K blocks requiring sync
-or some other analogue.
+What about on a Friday, one of his drives fails, but he doesn't have  
+spare hardware? If he has enough freespace he can shrink the FS and  
+array size, then reshape from 4 to 3 drives to regain parity for  
+protection over the weekend.
 
-Seem reasonable?
+If degrading an array multiple times to support expansion by replacing  
+one drive at a time is acceptable practice, why is degrading once for  
+array contraction frowned upon?
 
--- 
-Jon
