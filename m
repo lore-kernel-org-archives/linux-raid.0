@@ -1,39 +1,34 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers
- [xfs]
-Date: Thu, 11 Dec 2008 04:24:58 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0812110422380.14590@p34.internal.lan>
-References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan> <49405CD5.4070704@tmr.com> <alpine.DEB.1.10.0812110416550.14590@p34.internal.lan>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Basic RAID5/6 reshape question
+Date: Thu, 11 Dec 2008 13:55:03 +0400
+Message-ID: <4940E377.7070907@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0812110416550.14590@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-raid@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
+To: RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+G'day all,
 
+I'm just doing some system upgrades and shuffling some arrays around as part of the process.
+All my other current questions have been answered by experimentation, but one.
 
-On Thu, 11 Dec 2008, Justin Piszcz wrote:
+I'm going to start with a RAID 6 comprised of 7 x 1TB drives, and reshaping to 10 x 1TB.
+I'm doing an experiment right now with re-shaping a RAID-5 of 2 drives into 3 drives which is taking 
+about 20 hours, from that I'm assuming that a nice big re-shape will take a considerable amount of 
+time. I have a reliable UPS, I'm more concerned about a drive or cable flaking out.
 
->
->
-> On Wed, 10 Dec 2008, Bill Davidsen wrote:
->
->> Justin Piszcz wrote:
->>> Someone should write a document with XFS and barrier support, if I recall,
->
->
+What happens if I'm in the middle of a reshape of a RAID 5 or 6 and lose a drive?
 
-Best not to do things in a rush, here is the correct benchmark:
+Will the array be able to continue to reshape in a degraded state?
 
-# rm -rf linux*7
-# sync
-# echo 1 > /proc/sys/vm/drop_caches
-# /usr/bin/time bash -c 'tar xf linux-2.6.27.7.tar; sync'
-0.13user 1.62system 0:46.67elapsed 3%CPU (0avgtext+0avgdata 0maxresident)k
-0inputs+0outputs (17major+955minor)pagefaults 0swaps
+Hoping of course that this does not occur, but just trying to plan ahead in case.
 
-Justin.
-
+Regards,
+Brad
+-- 
+Dolphins are so intelligent that within a few weeks they can
+train Americans to stand at the edge of the pool and throw them
+fish.
