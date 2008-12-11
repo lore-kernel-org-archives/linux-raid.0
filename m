@@ -1,79 +1,81 @@
-From: =?ISO-8859-1?Q?Tor_Arne_Vestb=F8?= <torarnv@gmail.com>
-Subject: Linux RAID autodetect partitions go missing from /dev, but fdisk
- can see them
-Date: Wed, 10 Dec 2008 21:56:30 +0100
-Message-ID: <49402CFE.3080708@gmail.com>
+From: Michael Brancato <mike@mikebrancato.com>
+Subject: Re: status of raid 4/5 disk reduce
+Date: Wed, 10 Dec 2008 19:07:00 -0500
+Message-ID: <494059A4.8050702@mikebrancato.com>
+References: <493D8A95.2020700@mikebrancato.com> <493EDF02.5090500@redwax.co.uk>	 <A20315AE59B5C34585629E258D76A97C02F476F7@34093-C3-EVS3.exchange.rackspace.com>	 <20081209215149.GA21523@cthulhu.home.robinhill.me.uk> <7d86ddb90812091515m1e0ee2f9w95a86ca2b56a98fe@mail.gmail.com> <493FB2AC.7000902@redwax.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <493FB2AC.7000902@redwax.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Alex Lilley <alex@redwax.co.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
 
-I have a very strange problem that I've been trying to debug for days
-now. I'm hoping someone on this list may have ran into this before, or
-have any tips on how I can continue debugging this, because I have to
-admit I'm a little lost...
+> There is the very obvious use to reduce the number of drives but
+> ultimately have a larger array if the drives are all larger. And there
+> should be no issue with file system/lvm resizing as these can generally
+> grow on-line anyway.
+> 
+> I appreciate that shrinking the size of the array and doing so onto less
+> disks is both an unlikely requirement and fraught with danger.   Growing
+> the size of the array but to less disks is very useful indeed, which is
+> what I was getting at.
 
-I had a RAID5 with four drives and one spare, /dev/sd[bcde]1 +
-/dev/sdf1, and everything was working fine, until one day one of the
-drives in the array (sdb) no longer had a partition (sdb1). Letting the
-spare take over I ignored this for a few days, but then it happened
-again, this time with sdc. Kernel is 2.6.22.17, and I've compiled all
-raid support in. The symptoms are:
+Hardware limitations is a good use case.  When I say reduce, I mean 
+--grow -nX and not necessarily reducing the size of the array in the end.
 
-  - The kernel seems to detect the partitions (lines 396 and 407 in the
-dmesg [1])
+>>>> This is a lot to ask for in terms of development, and creates extreme
+>>>> risk of data loss.
+>>>> First, you degrade /dev/md0, so any bad blocks or drive failures will
+>>>> cause catastrophic
+>>>> data loss, unless /dev/disk4 is used for mirroring in the interim.
 
-  - But once the boot process finishes and the RAID is started, there i=
-s
-no longer any sdc1 or sdb1, so the RAID fails to start (lines 550-576 i=
-n
-dmesg [1])
+This is a standard fact of RAID45.  Any RAID45 with a failed drive is 
+subject to these same concerns.  Isn't this true today with grow if 
+replacing a 4x100GB array with 4x200GB by replacing one drive at a time?
 
-  - Running fdisk -l shows that the drives in question (sdb and sdc) do
-have similar partitions as the other working drives, namely one Linux
-RAID autodetect partition each (see command output [2])
+>>>> Secondly, by removing that disk (for sake of argument, say each disk is
+>>>> 1TB. You go from 3TB usable data
+>>>> to 2TB.  Most likely, you need to resize the file system in place so it
+>>>> fits into 2TB.  You're probably booted
+>>>> onto md0 also, which makes it difficult.  Resizing a hot filesystem
+>>>> without scratch space??  If your file system
+>>>> can't be dynamically reduced, then no point worrying about md raid.
 
-  - But, the partitions are missing from /proc/partitions (see [3])
+There are a lot of assumptions here about how the array is used, 
+filesystem support, etc.  I'm not saying that in every situation this is 
+ideal.  There are many situations where md0 is not the boot device, md0 
+is not the device to be contracted, and the filesystem supports either 
+online or offline resizing.  Concerns about filesystem expansion or 
+contraction (online or not) and array shrinking are mutually exclusive 
+of one another and shrinking the size of the array is already possible.
 
-  - Manually adding device nodes using mknod works, but doing file -sL
-on the device gives "writable, no read permission", even though
-permissions are the same as the other sd* nodes in /dev
+Neil Brown has previously responded to a comment on the topic at 
+http://neil.brown.name/blog/20050727143147 in regards to a --shrink option.
 
-  - Running 'partprobe -s' successfully finds the two missing partition=
-s
-and adds device nodes, and the nodes can be 'file -sL'ed, but when
-trying to assemble the array again with these new nodes in the system,
-I'm told that sdc1 is not found, and after the --assemble is done, the
-device nodes are once again missing (!) see [4]
+Here are a few use cases:
 
-  - I've tried using the 'dmraid' command to look for fakeraid
-partitions or meta data on the drives, which I was told could mess up
-the auto-detection of Linux software ride partitions, but could not fin=
-d
-any issues.
+Hardware limitations - Replacing 4x120GB size drives with 3x500GB 
+drives.  This would involve replacing each 120GB disk with a 500GB one 
+at a time and rebuilding each before reshaping the array to 3 drives and 
+growing to use all space on the new drives.  This is especially useful 
+on a system which cannot increase the number if drives it has (4 max), 
+only capacity.
 
+Drive failure - A developer, home user or SMB has a drive failure in an 
+array.  Due to money, time, shipping delays, etc, the user cannot 
+replace the drive immediately and the drive is in a degraded state.  The 
+user shrinks the filesystem by 1 drive amount and shrinks the array to 
+return to a optimal state in the array.  The array would return to a 
+protected state in hours not days if waiting on a drive.
 
-As you can tell I've exhausted all my current options, so any help on
-what I could try next would be very much appreciated. I am especially
-curious as to why I lose the partitions when mdadm tries to assemble th=
-e
-array?
+Flexibility - A user wishes to free a disk in an array which is 
+oversized to use that disk elsewhere.
 
-Thanks!
-
-Tor Arne Vestb=F8
-
-[1] http://pastebin.com/m15b9c275   dmesg
-[2] http://pastebin.com/f50fb323a   fdisk -l
-[3] http://pastebin.com/f4547c2ca   cat /proc/partitions
-[4] http://pastebin.com/m4475c9ae   partprobe + mdadm --assemble
+I hope this give a better understanding of the usefulness of reducing 
+the amount of disks in a RAID45 array.
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Mike Brancato, CISSP
