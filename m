@@ -1,31 +1,39 @@
-From: Michael Brancato <mike@mikebrancato.com>
-Subject: Re: status of raid 4/5 disk reduce
-Date: Thu, 11 Dec 2008 10:13:25 -0500
-Message-ID: <1AEE30BB-8547-4EAA-8335-C133F1E50865@mikebrancato.com>
-References: <493D8A95.2020700@mikebrancato.com> <493EDF02.5090500@redwax.co.uk> <A20315AE59B5C34585629E258D76A97C02F476F7@34093-C3-EVS3.exchange.rackspace.com> <20081209215149.GA21523@cthulhu.home.robinhill.me.uk> <7d86ddb90812091515m1e0ee2f9w95a86ca2b56a98fe@mail.gmail.com> <493FB2AC.7000902@redwax.co.uk> <494059A4.8050702@mikebrancato.com> <A20315AE59B5C34585629E258D76A97C02FA1D78@34093-C3-EVS3.exchange.rackspace.com> <4940B44F.9000000@mikebrancato.com> <20081211135252.GA23891@apartia.fr>
-Mime-Version: 1.0 (iPhone Mail 5G77)
-Content-Type: text/plain;
-	charset=us-ascii;
-	format=flowed;
-	delsp=yes
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+Subject: MD: Feature Request: Estimate of blocks necessary to complete sync
+Date: Thu, 11 Dec 2008 09:27:11 -0600
+Message-ID: <cccedfc60812110727p18abcf49v909cb0860c2d4c02@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20081211135252.GA23891@apartia.fr>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+When one is using a bitmap-enabled raid1 (or raid5 or whatever), MD
+prints messages like this to the kernel log when a previously-used
+device is re-added:
 
-On Dec 11, 2008, at 8:52 AM, Louis-David Mitterrand <vindex+lists-linux-raid@apartia.org 
- > wrote:
->>
->>
->
-> Not for xfs.
 
-Nor can JFS2 (jfs) as implemented on Linux, ufs or reiser4.
+Dec 11 08:59:40 turnip kernel: md: recovery of RAID array md10
+Dec 11 08:59:40 turnip kernel: md: minimum _guaranteed_  speed: 1000
+KB/sec/disk.
+Dec 11 08:59:40 turnip kernel: md: using maximum available idle IO
+bandwidth (but not more than 200000 KB/sec) for recovery.
+Dec 11 08:59:40 turnip kernel: md: using 128k window, over a total of
+78123968 blocks.
+Dec 11 08:59:41 turnip nbd0-frank: mdadm: /dev/nbd0 attached to
+/dev/md10 which is already active.
+Dec 11 09:00:22 turnip kernel: md: md10: recovery done.
 
-http://gparted.sourceforge.net/features.php
+What would be nice is the addition of something like this:
+Dec 11 08:59:40 turnip kernel: md: bitmap shows 27 128K blocks requiring sync
+or
+Dec 11 08:59:40 turnip kernel: md: bitmap shows 3456K blocks requiring sync
+or some other analogue.
 
-Again, reshape is exclusive from the higher-level filesystem.
+Seem reasonable?
+
+-- 
+Jon
