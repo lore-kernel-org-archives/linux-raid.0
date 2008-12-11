@@ -1,42 +1,68 @@
-From: Michael Brancato <mike@mikebrancato.com>
-Subject: Re: status of raid 4/5 disk reduce
-Date: Thu, 11 Dec 2008 10:27:22 -0500
-Message-ID: <6E7F7089-9630-4A54-8E92-65B399E92D4B@mikebrancato.com>
+From: "David Lethe" <david@santools.com>
+Subject: RE: status of raid 4/5 disk reduce
+Date: Thu, 11 Dec 2008 09:24:08 -0600
+Message-ID: <A20315AE59B5C34585629E258D76A97C02FA211E@34093-C3-EVS3.exchange.rackspace.com>
 References: <493D8A95.2020700@mikebrancato.com> <493EDF02.5090500@redwax.co.uk>  <A20315AE59B5C34585629E258D76A97C02F476F7@34093-C3-EVS3.exchange.rackspace.com>  <20081209215149.GA21523@cthulhu.home.robinhill.me.uk> <7d86ddb90812091515m1e0ee2f9w95a86ca2b56a98fe@mail.gmail.com> <493FB2AC.7000902@redwax.co.uk> <494059A4.8050702@mikebrancato.com> <A20315AE59B5C34585629E258D76A97C02FA1D78@34093-C3-EVS3.exchange.rackspace.com> <4940FCCA.1060703@anonymous.org.uk> <alpine.DEB.1.10.0812111544480.7856@uplift.swm.pp.se>
-Mime-Version: 1.0 (iPhone Mail 5G77)
+Mime-Version: 1.0
 Content-Type: text/plain;
-	charset=us-ascii;
-	format=flowed;
-	delsp=yes
-Content-Transfer-Encoding: 7bit
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
 In-Reply-To: <alpine.DEB.1.10.0812111544480.7856@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: John Robinson <john.robinson@anonymous.org.uk>, Linux RAID <linux-raid@vger.kernel.org>
+To: Mikael Abrahamsson <swmike@swm.pp.se>, John Robinson <john.robinson@anonymous.org.uk>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-
-On Dec 11, 2008, at 9:46 AM, Mikael Abrahamsson <swmike@swm.pp.se>  
-wrote:
-
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Mikael Abrahamsson
+> Sent: Thursday, December 11, 2008 8:47 AM
+> To: John Robinson
+> Cc: Linux RAID
+> Subject: Re: status of raid 4/5 disk reduce
+> 
 > On Thu, 11 Dec 2008, John Robinson wrote:
->
->> But my 1U server only physically has room for 4 drives. It doesn't  
->> matter how many extra controllers I buy, I can't attach more drives.
->
-> You can use a temporary external eSATA enclosure, pvmove the data if  
-> you're using LVM, then take downtime when you exchange your new  
-> drives into the internal drive bays (or you could even move them one  
-> by one by hotremoving one drive from the eSATA enclosure into the  
-> internal drive bays.
+> 
+> > But my 1U server only physically has room for 4 drives. It doesn't
+> > matter how many extra controllers I buy, I can't attach more drives.
+> 
+> You can use a temporary external eSATA enclosure, pvmove the data if
+> you're using LVM, then take downtime when you exchange your new drives
+> into the internal drive bays (or you could even move them one by one
+by
+> hotremoving one drive from the eSATA enclosure into the internal drive
+> bays.
+> 
+> --
+> Mikael Abrahamsson    email: swmike@swm.pp.se
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-What about on a Friday, one of his drives fails, but he doesn't have  
-spare hardware? If he has enough freespace he can shrink the FS and  
-array size, then reshape from 4 to 3 drives to regain parity for  
-protection over the weekend.
 
-If degrading an array multiple times to support expansion by replacing  
-one drive at a time is acceptable practice, why is degrading once for  
-array contraction frowned upon?
+Or you can crack open another PC and get power from that via long power
+cables. Since you have a rack-mounted system, chances are good you have
+more rack-mounted systems.   Of course this is still all moot, because
+John insists that the RAID reduce function doesn't need to address
+reducing mounted file systems  ... and your 1U system is booted to the
+very file system that needs to be reduced.
+
+So we have come full circle.  A md reduce isn't practical unless it
+includes on-line file system support, which is a deal-killer as it not
+only requires massive development efforts outside of the LINUX RAID
+group, but has to be done in conjunction with the developers in this
+group.  
+
+Just suck it up and mount all the disks somehow (or use backup).  Either
+give up on resizing, or install Solaris with ZFS boot, then you can
+resize all  you want.
+
+
+David
+
+
 
