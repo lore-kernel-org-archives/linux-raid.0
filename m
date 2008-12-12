@@ -1,30 +1,39 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.27.8: OOM killer: [swapper: page allocation failure]
-Date: Fri, 12 Dec 2008 12:12:27 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0812121211580.5119@p34.internal.lan>
-References: <alpine.DEB.1.10.0812120708080.9826@p34.internal.lan>
+From: Pavel Machek <pavel@suse.cz>
+Subject: Re: Intel X25-E running Linux using XFS
+Date: Fri, 12 Dec 2008 19:58:03 +0100
+Message-ID: <20081212185803.GE11974@elf.ucw.cz>
+References: <alpine.DEB.1.10.0811271257470.2233@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0812120708080.9826@p34.internal.lan>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
-Cc: Alan Piszcz <ap@solarrain.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.1.10.0811271257470.2233@p34.internal.lan>
+Sender: linux-ide-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: smartmontools-support@lists.sourceforge.net, smartmontools-database-owner@lists.sourceforge.net, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
 List-Id: linux-raid.ids
 
 
+Hi!
 
-On Fri, 12 Dec 2008, Justin Piszcz wrote:
-
-> Kernel: 2.6.27.8
+> Due to the 100k write cycle lifetime, I will not be performing any more 
+> benchmarks on the SSD itself, such benchmarks are available on  
+> techreport.com but just wanted to send out the smart data for the  
+> smartmontools list and point out it is working with linux+ich7+xfs.
 >
-> I have a RAID-6 volume with 6 disks:
-> mdadm --create -v /dev/md0 --level=6 -n 6 -e 0.90 /dev/sd[e-j]1
+> Overall, whenever I do anything now its just like the entire machine is
+> sitting in a ramdisk (similar when you boot knoppix and load to ramdisk).
 >
-> While it is building...
+> The techreport benchmarks are here:
+> http://techreport.com/articles.x/15931
 
-Removed the extra disks, put them in another host but thought it was an
-interesting bug.? so sent it to the list.
+Actually I'd like to know... how does it behave during powerfails
+while it is being written to?
 
-Justin.
-
+Flashes I seen (USB / SD) developed bad sectors in that case, and
+ext2/ext3 can't handle that. (And I don't think xfs can handle that
+either).
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
