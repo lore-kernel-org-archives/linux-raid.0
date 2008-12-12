@@ -1,39 +1,53 @@
-From: Pavel Machek <pavel@suse.cz>
-Subject: Re: Intel X25-E running Linux using XFS
-Date: Fri, 12 Dec 2008 19:58:03 +0100
-Message-ID: <20081212185803.GE11974@elf.ucw.cz>
-References: <alpine.DEB.1.10.0811271257470.2233@p34.internal.lan>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: Basic RAID5/6 reshape question
+Date: Fri, 12 Dec 2008 23:17:49 +0400
+Message-ID: <4942B8DD.8090809@wasp.net.au>
+References: <4940E377.7070907@wasp.net.au> <7d86ddb90812111706t14e7fbdar6bf31a22d510a6b6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.1.10.0811271257470.2233@p34.internal.lan>
-Sender: linux-ide-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: smartmontools-support@lists.sourceforge.net, smartmontools-database-owner@lists.sourceforge.net, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <7d86ddb90812111706t14e7fbdar6bf31a22d510a6b6@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Ryan Wagoner <rswagoner@gmail.com>
+Cc: RAID Linux <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-
-Hi!
-
-> Due to the 100k write cycle lifetime, I will not be performing any more 
-> benchmarks on the SSD itself, such benchmarks are available on  
-> techreport.com but just wanted to send out the smart data for the  
-> smartmontools list and point out it is working with linux+ich7+xfs.
+Ryan Wagoner wrote:
+> It takes 3 hours to resync my 3 x 1 TB drive RAID 5 array at a rate of
+> 85MB/s. It shouldn't take 20 hours to write 3 x 1 TB drives. How fast
+> is it progressing? You might consider a PCI-X or PCI Express SATA or
+> SAS controller card. I have my drives connected to an Supermicro LSI
+> 1068 PCI Express SAS card, which performs great.
 >
-> Overall, whenever I do anything now its just like the entire machine is
-> sitting in a ramdisk (similar when you boot knoppix and load to ramdisk).
->
-> The techreport benchmarks are here:
-> http://techreport.com/articles.x/15931
 
-Actually I'd like to know... how does it behave during powerfails
-while it is being written to?
+I'm using 2 x Marvell 7042 based PCI-E x4 controllers and a SIL 3xxx (I don't recall but its PCI-E 
+x1 and 2 ports). Bandwidth is not an issue.
 
-Flashes I seen (USB / SD) developed bad sectors in that case, and
-ext2/ext3 can't handle that. (And I don't think xfs can handle that
-either).
-									Pavel
+A resync appears to be a completely different kettle of fish to a reshape. With re-shape it appears 
+to write status data to the raid superblocks periodically. This appears to thrash the heads from the 
+current position to the end of the disk and back. At the start of the reshape I was running about 
+15-20MB/s to each drive. As the reshape progressed to the end of the disks I was looking at closer 
+to 40MB/s. So obviously the final figure was less than the initial 20 hours, but a hell of a lot 
+slower than a straight resync.
+
+This blind stab at reshape behaviour is absolutely pure conjecture based on a gross guess at what 
+was happening, however it does seem to bear out scrutiny.
+
+> The other option would be to create 2 RAID 5 arrays of 5 drives each.
+> Create the first array and use LVM with the filesystem of your choice.
+> Add the second array later and expand the LVM volume.
+
+Mmm thanks, but no.. to use a car analogy, "I'd like something I can fix with a screwdriver and a 
+hammer". LVM is overcomplicating things way past what I require. In addition, I really like RAID-6. 
+Over the last 4 years with my 15 drive RAID-6 I have had two double drive failures. Both times one 
+drive died in a not so nice fashion, and one developed a grown defect during the rebuild. Raid-5 
+just does not cut the mustard with me anymore.
+
+
+Regards,
+Brad
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Dolphins are so intelligent that within a few weeks they can
+train Americans to stand at the edge of the pool and throw them
+fish.
