@@ -1,208 +1,126 @@
-From: nterry <nigel@nigelterry.net>
-Subject: Raid 5 Problem
-Date: Sun, 14 Dec 2008 08:41:24 -0500
-Message-ID: <49450D04.8060703@nigelterry.net>
+From: xf2@xf2.for.sabi.co.UK (Peter Grandi)
+Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
+Date: Sun, 14 Dec 2008 14:02:38 +0000
+Message-ID: <18757.4606.966139.10342@tree.ty.sabi.co.uk>
+References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan>
+	<493A9BE7.3090001@sandeen.net>
+	<alpine.DEB.1.10.0812130724340.18746@p34.internal.lan>
+	<200812131826.25280.Martin@lichtvoll.de>
+	<4943F37B.8080405@sandeen.net>
+	<1229225480.16555.152.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1229225480.16555.152.camel@localhost>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux XFS <linux-xfs@oss.sgi.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi.  I hope someone can tell me what I have done wrong.  I have a 4 disk 
-Raid 5 array running on Fedora9.  I've run this array for 2.5 years with 
-no issues.  I recently rebooted after upgrading to Kernel 2.6.27.7.  
-When I did this I found that only 3 of my disks were in the array.  When 
-I examine the three active elements of the array (/dev/sdd1, /dev/sde1, 
-/dev/sdc1) they all show that the array has 3 drives and one missing.  
-When I examine the missing drive it shows that all members of the array 
-are present, which I don't understand! When I try to add the missing 
-drive back is says the device is busy.  Please see below and let me know 
-what I need to do to get this working again.  Thanks Nigel:
+=46irst of all, why are you people sending TWO copies to the XFS
+mailing list? (to both linux-xfs@oss.sgi.com and xfs@oss.sgi.com).
 
-==================================================================
-[root@homepc ~]# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md0 : active raid5 sdd1[0] sdc1[3] sde1[1]
-      735334656 blocks level 5, 128k chunk, algorithm 2 [4/3] [UU_U]
-     
-md_d0 : inactive sdb[2](S)
-      245117312 blocks
-      
-unused devices: <none>
-[root@homepc ~]#
-==================================================================
-[root@homepc ~]# cat /etc/mdadm.conf
+>>> At the moment it appears to me that disabling write cache
+>>> may often give more performance than using barriers. And
+>>> this doesn't match my expectation of write barriers as a
+>>> feature that enhances performance.
 
-# mdadm.conf written out by anaconda
-# DEVICE partitions
-MAILADDR nigel@nigelterry.net
-ARRAY /dev/md0 level=raid5 num-devices=4 
-devices=/dev/sdb1,/dev/sdc1,/dev/sdd1,/dev/sde1
+>> Why do you have that expectation?  I've never seen barriers
+>> advertised as enhancing performance.  :)
 
-[root@homepc ~]#
+This entire discussion is based on the usual misleading and
+pointless avoidance of the substance, in particular because of
+stupid, shallow diregard for the particular nature of the
+"benchmark" used.
 
-==================================================================
-[root@homepc ~]# mdadm --detail /dev/md0
-/dev/md0:
-        Version : 0.90
-  Creation Time : Tue Apr 18 17:44:34 2006
-     Raid Level : raid5
-     Array Size : 735334656 (701.27 GiB 752.98 GB)
-  Used Dev Size : 245111552 (233.76 GiB 250.99 GB)
-   Raid Devices : 4
-  Total Devices : 3
-Preferred Minor : 0
-    Persistence : Superblock is persistent
+Barriers can be used to create atomic storage transaction for
+metadata or data. For data, they mean that 'fsync' does what is
+expected to do. It is up to the application to issue 'fsync' as
+often or as rarely as appropriate.
 
-    Update Time : Fri Dec 12 17:48:12 2008
-          State : clean, degraded
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 0
+=46or metadata, it is the file system code itself that uses
+barriers to do something like 'fsync' for metadata updates, and
+enforce POSIX or whatever guarantees.
 
-         Layout : left-symmetric
-     Chunk Size : 128K
+The "benchmark" used involves 290MB of data in around 26k files
+and directories, that is the average inode size is around 11KB.
 
-           UUID : 50e3173e:b5d2bdb6:7db3576b:644409bb
-         Events : 0.6485812
+That means that an inode is created and flushed to disk every
+11KB written; a metadata write barrier happens every 11KB.
 
-    Number   Major   Minor   RaidDevice State
-       0       8       49        0      active sync   /dev/sdd1
-       1       8       65        1      active sync   /dev/sde1
-       2       0        0        2      removed
-       3       8       33        3      active sync   /dev/sdc1
-[root@homepc ~]# mdadm --examine  /dev/sdd1
-/dev/sdd1:
-          Magic : a92b4efc
-        Version : 0.90.03
-           UUID : 50e3173e:b5d2bdb6:7db3576b:644409bb
-  Creation Time : Tue Apr 18 17:44:34 2006
-     Raid Level : raid5
-  Used Dev Size : 245111552 (233.76 GiB 250.99 GB)
-     Array Size : 735334656 (701.27 GiB 752.98 GB)
-   Raid Devices : 4
-  Total Devices : 3
-Preferred Minor : 0
+A synchronization every 11KB is a very high rate, and it will
+(unless the disk host adapter or the disk controller are clever
+mor have battery backed memory for queues) involve a lot of
+waiting for the barrier to complete, and presumably break the
+smooth flow of data to the disk with pauses.
 
-    Update Time : Fri Dec 12 17:48:22 2008
-          State : clean
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 1
-  Spare Devices : 0
-       Checksum : 2ec4d801 - correct
-         Events : 6485814
+Also whether or not the host adapter or the conroller write
+cache are disabled, 290MB will fit inside most recent hosts' RAM
+entirely, and even adding 'sync' at the end will not help that
+much as to helping with a meaningful comparison.
 
-         Layout : left-symmetric
-     Chunk Size : 128K
+> My initial thoughts were that write barriers would enhance
+> performance, in that, you could have write cache on.
 
-      Number   Major   Minor   RaidDevice State
-this     0       8       49        0      active sync   /dev/sdd1
+Well, that all depends on whether the write caches (in the host
+adapter or the controller) are persistent and how frequently
+barriers are issued.
 
-   0     0       8       49        0      active sync   /dev/sdd1
-   1     1       8       65        1      active sync   /dev/sde1
-   2     2       0        0        2      faulty removed
-   3     3       8       33        3      active sync   /dev/sdc1
-[root@homepc ~]# mdadm --examine  /dev/sde1
-/dev/sde1:
-          Magic : a92b4efc
-        Version : 0.90.03
-           UUID : 50e3173e:b5d2bdb6:7db3576b:644409bb
-  Creation Time : Tue Apr 18 17:44:34 2006
-     Raid Level : raid5
-  Used Dev Size : 245111552 (233.76 GiB 250.99 GB)
-     Array Size : 735334656 (701.27 GiB 752.98 GB)
-   Raid Devices : 4
-  Total Devices : 3
-Preferred Minor : 0
+If the write caches are not persistent (at least for a while),
+the hard disk controller or the host adapter cannot have more
+than one barrier completion request in flight at a time, and if
+a barrier completion is requested every 11KB that will be pretty
+constraining.
 
-    Update Time : Fri Dec 12 17:48:22 2008
-          State : clean
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 1
-  Spare Devices : 0
-       Checksum : 2ec4d813 - correct
-         Events : 6485814
+Barriers are much more useful when the host adapter or the disk
+controller can cache multiple transactions and then execute them
+in the order in which barriers have been issued, so that the
+host can pipeline transactions down to the last stage in the
+chain, instead of operating the last stages synchronously or
+semi-synchronously.
 
-         Layout : left-symmetric
-     Chunk Size : 128K
+But talking about barriers in the context of metadata, and for a
+"benchmark" which has a metadata barrier every 11KB, and without
+knowing whether the storage subsystem can queue multiple barrier
+operations seems to be pretty crass and meangingless, if not
+misleading. A waste of time at best.
 
-      Number   Major   Minor   RaidDevice State
-this     1       8       65        1      active sync   /dev/sde1
+> So its really more of an expectation that wc+barriers on,
+> performs better than wc+barriers off :)
 
-   0     0       8       49        0      active sync   /dev/sdd1
-   1     1       8       65        1      active sync   /dev/sde1
-   2     2       0        0        2      faulty removed
-   3     3       8       33        3      active sync   /dev/sdc1
-[root@homepc ~]# mdadm --examine  /dev/sdc1
-/dev/sdc1:
-          Magic : a92b4efc
-        Version : 0.90.03
-           UUID : 50e3173e:b5d2bdb6:7db3576b:644409bb
-  Creation Time : Tue Apr 18 17:44:34 2006
-     Raid Level : raid5
-  Used Dev Size : 245111552 (233.76 GiB 250.99 GB)
-     Array Size : 735334656 (701.27 GiB 752.98 GB)
-   Raid Devices : 4
-  Total Devices : 3
-Preferred Minor : 0
+This is of course a misstatement: perhaps you intended to write
+that ''wc on+barriers on'' would perform better than ''wc off +
+barriers off'.
 
-    Update Time : Fri Dec 12 17:48:22 2008
-          State : clean
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 1
-  Spare Devices : 0
-       Checksum : 2ec4d7f7 - correct
-         Events : 6485814
+As to this apparent anomaly, I am only mildly surprised, as
+there are plenty of similar anomalies (why ever should have a
+very large block device readahead to get decent performance from
+MD block devices?), due to poorly ill conceived schemes in all
+sorts of stages of the storage chain, from the sometimes
+comically misguided misdesigns in the Linux block cache or
+elevators or storage drivers, to the often even worse
+"optimizations" embedded in the firmware of host adapters and
+hard disk controllers.
 
-         Layout : left-symmetric
-     Chunk Size : 128K
+Consider for example (and also as a hint towards less futile and
+meaningless "benchmarks") the 'no-fsync' option of 'star', the
+reasons for its existence and for the Linux related advice:
 
-      Number   Major   Minor   RaidDevice State
-this     3       8       33        3      active sync   /dev/sdc1
+  http://gd.tuwien.ac.at/utils/schilling/man/star.html
 
-   0     0       8       49        0      active sync   /dev/sdd1
-   1     1       8       65        1      active sync   /dev/sde1
-   2     2       0        0        2      faulty removed
-   3     3       8       33        3      active sync   /dev/sdc1
-[root@homepc ~]# mdadm --examine  /dev/sdb1
-/dev/sdb1:
-          Magic : a92b4efc
-        Version : 0.90.03
-           UUID : 50e3173e:b5d2bdb6:7db3576b:644409bb
-  Creation Time : Tue Apr 18 17:44:34 2006
-     Raid Level : raid5
-  Used Dev Size : 245111552 (233.76 GiB 250.99 GB)
-     Array Size : 735334656 (701.27 GiB 752.98 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 0
+    =AB-no-fsync
+          Do not call  fsync(2)  for  each  file  that  has  been
+          extracted  from  the archive. Using -no-fsync may speed
+          up extraction on operating systems with slow  file  I/O
+          (such  as  Linux),  but includes the risk that star may
+          not be able to detect extraction  problems  that  occur
+          after  the  call to close(2).=BB
 
-    Update Time : Fri Dec 12 17:29:15 2008
-          State : clean
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : 2ec4d1d6 - correct
-         Events : 6485600
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-      Number   Major   Minor   RaidDevice State
-this     2       8       17        2      active sync   /dev/sdb1
-
-   0     0       8       49        0      active sync   /dev/sdd1
-   1     1       8       65        1      active sync   /dev/sde1
-   2     2       8       17        2      active sync   /dev/sdb1
-   3     3       8       33        3      active sync   /dev/sdc1
-[root@homepc ~]# mdadm /dev/md0 --add /dev/sdb1
-mdadm: Cannot open /dev/sdb1: Device or resource busy
-[root@homepc ~]#
-
+Now ask yourself if you know whether GNU tar does 'fsync' or not
+(a rather interesting detail, and the reasons why may also be
+interesting...).
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
