@@ -1,30 +1,37 @@
-From: Michal Soltys <soltys@ziu.info>
-Subject: Re: Raid 5 Problem
-Date: Sun, 14 Dec 2008 23:55:19 +0100
-Message-ID: <49458ED7.1030005@ziu.info>
-References: <49450D04.8060703@nigelterry.net> <4945276E.1010405@ziu.info> <49456F94.8020100@nigelterry.net> <alpine.DEB.1.10.0812141552380.27065@p34.internal.lan> <4945735A.6030909@nigelterry.net> <alpine.DEB.1.10.0812141600430.27065@p34.internal.lan>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
+Date: Mon, 15 Dec 2008 10:36:17 +1100
+Message-ID: <20081214233617.GD32301@disturbed>
+References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan> <493A9BE7.3090001@sandeen.net> <alpine.DEB.1.10.0812130724340.18746@p34.internal.lan> <200812131826.25280.Martin@lichtvoll.de> <4943F37B.8080405@sandeen.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0812141600430.27065@p34.internal.lan>
+Content-Disposition: inline
+In-Reply-To: <4943F37B.8080405@sandeen.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: nterry <nigel@nigelterry.net>, linux-raid@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Martin Steigerwald <Martin@lichtvoll.de>, linux-xfs@oss.sgi.com, linux-raid@vger.kernel.org, Alan Piszcz <ap@solarrain.com>xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-Justin Piszcz wrote:
+On Sat, Dec 13, 2008 at 11:40:11AM -0600, Eric Sandeen wrote:
+> Martin Steigerwald wrote:
 > 
-> You have another issue here though, it looks like your "few" attempts have
-> lead to multiple RAID superblocks.  I have always wondered how one can 
-> clean
-> this up without dd if=/dev/zero of=/dev/dsk & (for each disk, wipe it) 
-> to get
-> rid of them all, you should only have [1] /dev/md0 for your raid 5, not 3.
+> > At the moment it appears to me that disabling write cache may often give 
+> > more performance than using barriers. And this doesn't match my 
+> > expectation of write barriers as a feature that enhances performance. 
+> 
+> Why do you have that expectation?  I've never seen barriers advertised
+> as enhancing performance.  :)
+> 
+> I do wonder why barriers on, write cache off is so slow; I'd have
+> thought the barriers were a no-op.  Maybe I'm missing something.
 
-Well - 0.9 superblock is 4K at 64K boundary, at least 64K from the end 
-of the device, but less 128K (man 4 md). If a filesystem on some 
-partition taking up that space *didn't* overwrite this space with its 
-[meta]data (check with debugfs, xfs_db, etc.), just clean it up 
-*carefully* with dd or hexeditor.
+Barriers still enforce ordering in this case, so it affects the
+elevator algorithm....
 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
