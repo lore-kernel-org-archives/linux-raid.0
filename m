@@ -1,82 +1,75 @@
-From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
-Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
-Date: Sun, 14 Dec 2008 22:02:05 +0000
-Message-ID: <18757.33373.744917.457587@tree.ty.sabi.co.uk>
-References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan>
-	<1229225480.16555.152.camel@localhost>
-	<18757.4606.966139.10342@tree.ty.sabi.co.uk>
-	<200812141912.59649.Martin@lichtvoll.de>
+From: Michal Soltys <soltys@ziu.info>
+Subject: Re: Raid 5 Problem
+Date: Sun, 14 Dec 2008 23:02:46 +0100
+Message-ID: <49458286.7060802@ziu.info>
+References: <49450D04.8060703@nigelterry.net> <4945276E.1010405@ziu.info> <49456F94.8020100@nigelterry.net> <49457719.4000009@ziu.info> <49457BE3.4090200@nigelterry.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200812141912.59649.Martin@lichtvoll.de>
+In-Reply-To: <49457BE3.4090200@nigelterry.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux XFS <xfs@OSS.SGI.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: nterry <nigel@nigelterry.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-[ ... ]
+nterry wrote:
+> [root@homepc ~]# mdadm -Esvv /dev/sdb
+> /dev/sdb:
+>          Magic : a92b4efc
+>        Version : 0.90.02
+>           UUID : c57d50aa:1b3bcabd:ab04d342:6049b3f1
+>  Creation Time : Thu Dec 15 15:29:36 2005
+>     Raid Level : raid5
 
-> But - as far as I understood - the filesystem doesn't have to
-> wait for barriers to complete, but could continue issuing IO
-> requests happily. A barrier only means, any request prior to
-> that have to land before and any after it after it.
+Yup - that's leftover block from one of your earlier arrays/attempts. It 
+just happens to sit in unused area of /dev/sdb1, but is picked as valid 
+/dev/sdb superblock
 
-> It doesn't mean that the barrier has to land immediately and
-> the filesystem has to wait for this. At least that always was
-> the whole point of barriers for me. If thats not the case I
-> misunderstood the purpose of barriers to the maximum extent
-> possible.
+> 
+> I added the DEVICE /dev/sd[bcde]1 to mdadm.conf and that apepars to have 
+> fixed the problem.  2 reboots and it worked both times.
+> 
+> I also note now that:
+> [root@homepc ~]# mdadm --examine --scan
+> ARRAY /dev/md0 level=raid5 num-devices=4 
+> UUID=50e3173e:b5d2bdb6:7db3576b:644409bb
+>   spares=1
+> [root@homepc ~]#
 
-Unfortunately that seems the case.
+That DEVICE line limits mdadm to only look at sd[bcde]1 as potential 
+array members, so examine shows only current array. If you plan to add 
+more raid arrays later, be sure to change it. Also read below.
 
-The purpose of barriers is to guarantee that relevant data is
-known to be on persistent storage (kind of hardware 'fsync').
+> Frankly I don't know enough about the workings of udev and the boot 
+> process to be able to get into that.  However these two files might mean 
+> something to you:
+> 
+> [...]
+> 
+> AND...
+> 
+> [root@homepc ~]# cat /etc/udev/rules.d/70-mdadm.rules
+> # This file causes block devices with Linux RAID (mdadm) signatures to
+> # automatically cause mdadm to be run.
+> # See udev(8) for syntax
+> 
+> SUBSYSTEM=="block", ACTION=="add|change", ENV{ID_FS_TYPE}=="linux_raid*", \
+>    RUN+="/sbin/mdadm -I --auto=yes $root/%k"
+> [root@homepc ~]#
+> 
 
-In effect write barrier means "tell me when relevant data is on
-persistent storage", or less precisely "flush/sync writes now
-and tell me when it is done". Properties as to ordering are just
-a side effect.
+That's the part of the problem. In human language it means, that during 
+udev event related to device add or change, any device detected as being 
+part of linux raid, will be incrementally assembled. ID_FS_TYPE is 
+exported in one of the earlier rules by vol_id helper tool. So during 
+initial udev run, /dev/sdb is picked up, and forces mdadm later to drop 
+/dev/sdb1 from array during every boot.
 
-That is, the application (file system in the case of metadata,
-user process in the case of data) knows that a barrier operation
-is complete, it knows that all data involved in the barrier
-operation are on persistent storage. In case of serially
-dependent transactions, applications do wait until the previous
-transaction is completed before starting the next one (e.g.
-creating potentially many files in the same directory, something
-that 'tar' does).
+You can comment it out safely (or just remove whole 70-mdadm.rules 
+file). Then you can remove DEVICE line from mdadm.conf
 
-  "all data involved" is usually all previous writes, but in
-  more sophisticated cases it can be just specific writes.
+> Thanks for getting me working
+> 
 
-When an applications at transaction end points (for a file
-system, metadata updates) issues a write barrier and then waits
-for its completion.
-
-If the host adapter/disk controllers don't have persistent
-storage, then completion (should) only happen when the data
-involved is actually on disk; if they do have it, then multiple
-barriers can be outstanding, if the host adapter/disk controller
-does support multiple outstanding operations (e.g. thanks to
-tagged queueing).
-
-The best case is when the IO subsystem supports all of these:
-
-* tagged queueing: multiple write barriers can be outstanding;
-
-* fine granule (specific writes, not all writes) barriers: just
-  metadata writes need to be flushed to persistent storage, not
-  any intervening data writes too;
-
-* the host adapter and/or disk controller have persistent
-  caches: as long as those caches have space, barriers can
-  complete immediately, without waiting a write to disk.
-
-It just happens that typical contemporary PC IO subsystems (at
-the hardware level, not the Linux level) have none of those
-features, except sometimes for NCQ which is a reduced form of
-TCQ, and apparently is not that useful.
-
-Write barriers are also useful without persistent caches, if
-there is proper tagged queueing and fine granularity.
+np :)
