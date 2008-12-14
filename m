@@ -1,60 +1,74 @@
-From: Redeeman <redeeman@metanurb.dk>
-Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
-Date: Sun, 14 Dec 2008 04:31:20 +0100
-Message-ID: <1229225480.16555.152.camel@localhost>
-References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan>
-	 <493A9BE7.3090001@sandeen.net>
-	 <alpine.DEB.1.10.0812130724340.18746@p34.internal.lan>
-	 (sfid-20081213_171213_704814_AA9856DD) <200812131826.25280.Martin@lichtvoll.de>
-	 <4943F37B.8080405@sandeen.net>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Have the velociraptors in a test system now, checkout the
+ errors.
+Date: Sun, 14 Dec 2008 04:05:11 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0812140404090.28949@p34.internal.lan>
+References: <alpine.DEB.1.10.0812060426280.3494@p34.internal.lan>  <49405A94.8080601@tmr.com> <1229225303.16555.149.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4943F37B.8080405@sandeen.net>
-Sender: linux-raid-owner@vger.kernel.org
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Martin Steigerwald <Martin@lichtvoll.de>, linux-xfs@oss.sgi.com, linux-raid@vger.kernel.org, Alan Piszcz <ap@solarrain.com>xfs@oss.sgi.com
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754482AbYLNJFm@vger.kernel.org>
+In-Reply-To: <1229225303.16555.149.camel@localhost>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Redeeman <redeeman@metanurb.dk>
+Cc: Bill Davidsen <davidsen@tmr.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, smartmontools-support@lists.sourceforge.net
 List-Id: linux-raid.ids
 
-On Sat, 2008-12-13 at 11:40 -0600, Eric Sandeen wrote:
-> Martin Steigerwald wrote:
-> 
-> > At the moment it appears to me that disabling write cache may often give 
-> > more performance than using barriers. And this doesn't match my 
-> > expectation of write barriers as a feature that enhances performance. 
-> 
-> Why do you have that expectation?  I've never seen barriers advertised
-> as enhancing performance.  :)
 
-My initial thoughts were that write barriers would enhance performance,
-in that, you could have write cache on. So its really more of an
-expectation that wc+barriers on, performs better than wc+barriers off :)
 
-> 
-> I do wonder why barriers on, write cache off is so slow; I'd have
-> thought the barriers were a no-op.  Maybe I'm missing something.
-> 
-> > Right now a "nowcache" option and having this as default appears to make 
-> > more sense than defaulting to barriers. 
-> 
-> I don't think that turning off write cache is something the filesystem
-> can do; you have to take that as an administrative step on your block
-> devices.
-> 
-> > But I think this needs more 
-> > testing than just those simple high meta data load tests. Anyway I am 
-> > happy cause I have a way to speed up XFS ;-).
-> 
-> My only hand-wavy concern is whether this has any adverse physical
-> effect on the drive (no cache == lots more head movement etc?) but then
-> barriers are constantly flushing/invalidating that cache, so it's
-> probably a wash.  And really, I have no idea.  :)
-> 
-> -Eric
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Sun, 14 Dec 2008, Redeeman wrote:
 
+> On Wed, 2008-12-10 at 19:11 -0500, Bill Davidsen wrote:
+>> Justin Piszcz wrote:
+>>> Point of thread: Two problems, mentioned in detail below, NCQ in Linux
+>>> when used in a RAID configuration and two, something with how Linux
+>>> interacts with the drives causes lots of problems as when I run the WD
+>>> tools on the disks, they do not show any errors.
+>>>
+>>> If anyone has/would like me to run any debugging/patches/etc on this
+>>> system feel free to suggest/send me things to try out.  After I put
+>>> the VR's in a test system, I left NCQ enabled and I made a 10 disk
+>>> raid5 to see how fast I could get it to fail, I ran bonnie++ shown
+>>> below as a disk benchmark/stress test:
+>>>
+>>> For the next test I will repeat this one but with NCQ disabled, having
+>>> NCQ enabled makes it fail very easily.  Then I want to re-run the test
+>>> with RAID6.
+>>>
+>>> bonnie++ -d /r1/test -s 1000G -m p63 -n 16:100000:16:64
+>>>
+>>> $ df -h
+>>> /dev/md3              2.5T  5.5M  2.5T   1% /r1
+>>>
+>>> And the results?  Two disk "failures" according to md/Linux within a
+>>> few hours as shown below:
+>>>
+>>> Note, the NCQ-related errors are what I talk about all of the time, if
+>>> you use
+>>> NCQ and Linux in a RAID environment with WD drives, well-- good luck.
+>>>
+>>> Two-disks failed out of the RAID5 and I currentlty cannot even 'see'
+>>> one of the drives with smartctl, will reboot the host and check sde
+>>> again.
+>>>
+>>> After a reboot, it comes up and has no errors, really makes one wonder
+>>> where/what the bugs is/are, there are two I can see:
+>>> 1. NCQ issue on at least WD drives in Linux in SW md/RAID
+>>> 2. Velociraptor/other disks reporting all kinds of sector errors etc,
+>>> but when you use the WD 11.x disk tools program and run all of their
+>>> tests it says the disks have no problems whatsoever!  The smart
+>>> statistics do confirm this.  Currently, TLER is on for all disks, for
+>>> the duration of these tests.
+>>
+>> Just a few comments on this, I have several RAID arrays built on Seagate
+>> using NCQ, and yet to have a problem. I have NCQ on with my WD drives,
+>> non-RAID, and haven't had an issue with them either. The WDs run a lot
+>> cooler than the SG, but they are probably getting less use, as well. If
+>> the WD are still on sale after the holiday I may grab a few more and run
+>> RAID, by then I will have some small sense of trusting them.
+> Velociraptors, or which WD?
+Velociraptors or Raptors or 750GiB disks (in Linux SW Raid) the NCQ issue 
+does not appear to occur on Raptors on a 3ware card though, only in 
+Linux+SW_raid.  The regular raptor/750gib also run just fine as standalone 
+with NCQ.
+
+Justin.
