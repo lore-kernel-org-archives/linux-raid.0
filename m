@@ -1,144 +1,82 @@
-From: nterry <nigel@nigelterry.net>
-Subject: Re: Raid 5 Problem
-Date: Sun, 14 Dec 2008 16:34:27 -0500
-Message-ID: <49457BE3.4090200@nigelterry.net>
-References: <49450D04.8060703@nigelterry.net> <4945276E.1010405@ziu.info> <49456F94.8020100@nigelterry.net> <49457719.4000009@ziu.info>
+From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
+Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
+Date: Sun, 14 Dec 2008 22:02:05 +0000
+Message-ID: <18757.33373.744917.457587@tree.ty.sabi.co.uk>
+References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan>
+	<1229225480.16555.152.camel@localhost>
+	<18757.4606.966139.10342@tree.ty.sabi.co.uk>
+	<200812141912.59649.Martin@lichtvoll.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49457719.4000009@ziu.info>
+In-Reply-To: <200812141912.59649.Martin@lichtvoll.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michal Soltys <soltys@ziu.info>
-Cc: linux-raid@vger.kernel.org
+To: Linux XFS <xfs@OSS.SGI.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Michal Soltys wrote:
-> nterry wrote:
->>
->> Great - All working.  Then I rebooted and was back to square one with 
->> only 3 drives in /dev/md0 and /dev/sdb in /dev/md_d0
->>                                   So I am still not understanding 
->> where /dev/md_d0 is coming from and although I know how to get things 
->> working after a reboot, clearly this is not a long term solution...
->>
->
-> My blind shot is that udev rules of your distro are doing mdadm 
-> --incremental assembly and picking sdb as a part of nonexisting array 
-> from the long ago (leftover after old experimentations ?). Or 
-> something else is doing so.
->
-> What does mdadm -Esvv /dev/sdb show ?
->
-> Add
->
-> DEVICE /dev/sd[bcde]1
->
-> on top of your mdadm.conf - it should stop --incremental from picking 
-> up sdb. Assuming that's the cause of the problem.
->
-> Also note, that FC9 might be trying to assemble the array during 
-> initramfs stage (assuming it uses one) and having problems there. I've 
-> never used Fedora so hard to tell for me - but definitely peek there, 
-> particulary at udev and mdadm part of things.
->
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-[root@homepc ~]# mdadm -Esvv /dev/sdb
-/dev/sdb:
-          Magic : a92b4efc
-        Version : 0.90.02
-           UUID : c57d50aa:1b3bcabd:ab04d342:6049b3f1
-  Creation Time : Thu Dec 15 15:29:36 2005
-     Raid Level : raid5
-  Used Dev Size : 245111552 (233.76 GiB 250.99 GB)
-     Array Size : 245111552 (233.76 GiB 250.99 GB)
-   Raid Devices : 2
-  Total Devices : 3
-Preferred Minor : 0
+[ ... ]
 
-    Update Time : Wed Apr  5 13:43:20 2006
-          State : clean
- Active Devices : 2
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 1
-       Checksum : 2bd59790 - correct
-         Events : 1530654
+> But - as far as I understood - the filesystem doesn't have to
+> wait for barriers to complete, but could continue issuing IO
+> requests happily. A barrier only means, any request prior to
+> that have to land before and any after it after it.
 
-         Layout : left-symmetric
-     Chunk Size : 128K
+> It doesn't mean that the barrier has to land immediately and
+> the filesystem has to wait for this. At least that always was
+> the whole point of barriers for me. If thats not the case I
+> misunderstood the purpose of barriers to the maximum extent
+> possible.
 
-      Number   Major   Minor   RaidDevice State
-this     2      22        0        2      spare
+Unfortunately that seems the case.
 
-   0     0       8        1        0      active sync   /dev/sda1
-   1     1       8       17        1      active sync   /dev/sdb1
-   2     2      22        0        2      spare
-[root@homepc ~]#
+The purpose of barriers is to guarantee that relevant data is
+known to be on persistent storage (kind of hardware 'fsync').
 
-I added the DEVICE /dev/sd[bcde]1 to mdadm.conf and that apepars to have 
-fixed the problem.  2 reboots and it worked both times.
+In effect write barrier means "tell me when relevant data is on
+persistent storage", or less precisely "flush/sync writes now
+and tell me when it is done". Properties as to ordering are just
+a side effect.
 
-I also note now that:
-[root@homepc ~]# mdadm --examine --scan
-ARRAY /dev/md0 level=raid5 num-devices=4 
-UUID=50e3173e:b5d2bdb6:7db3576b:644409bb
-   spares=1
-[root@homepc ~]#
+That is, the application (file system in the case of metadata,
+user process in the case of data) knows that a barrier operation
+is complete, it knows that all data involved in the barrier
+operation are on persistent storage. In case of serially
+dependent transactions, applications do wait until the previous
+transaction is completed before starting the next one (e.g.
+creating potentially many files in the same directory, something
+that 'tar' does).
 
-Frankly I don't know enough about the workings of udev and the boot 
-process to be able to get into that.  However these two files might mean 
-something to you:
+  "all data involved" is usually all previous writes, but in
+  more sophisticated cases it can be just specific writes.
 
-[root@homepc ~]# cat /etc/udev/rules.d/64-md-raid.rules
-# do not edit this file, it will be overwritten on update
+When an applications at transaction end points (for a file
+system, metadata updates) issues a write barrier and then waits
+for its completion.
 
-SUBSYSTEM!="block", GOTO="md_end"
-ACTION!="add|change", GOTO="md_end"
+If the host adapter/disk controllers don't have persistent
+storage, then completion (should) only happen when the data
+involved is actually on disk; if they do have it, then multiple
+barriers can be outstanding, if the host adapter/disk controller
+does support multiple outstanding operations (e.g. thanks to
+tagged queueing).
 
-# import data from a raid member and activate it
-#ENV{ID_FS_TYPE}=="linux_raid_member", IMPORT{program}="/sbin/mdadm 
---examine --export $tempnode", RUN+="/sbin/mdadm --incremental 
-$env{DEVNAME}"
-# import data from a raid set
-KERNEL!="md*", GOTO="md_end"
+The best case is when the IO subsystem supports all of these:
 
-ATTR{md/array_state}=="|clear|inactive", GOTO="md_end"
+* tagged queueing: multiple write barriers can be outstanding;
 
-IMPORT{program}="/sbin/mdadm --detail --export $tempnode"
-ENV{MD_NAME}=="?*", SYMLINK+="disk/by-id/md-name-$env{MD_NAME}"
-ENV{MD_UUID}=="?*", SYMLINK+="disk/by-id/md-uuid-$env{MD_UUID}"
+* fine granule (specific writes, not all writes) barriers: just
+  metadata writes need to be flushed to persistent storage, not
+  any intervening data writes too;
 
-IMPORT{program}="vol_id --export $tempnode"
-OPTIONS="link_priority=100"
-ENV{ID_FS_USAGE}=="filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=="?*", 
-SYMLINK+="disk/by-uuid/$env{ID_FS_UUID_ENC}"
-ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_FS_LABEL_ENC}=="?*", 
-SYMLINK+="disk/by-label/$env{ID_FS_LABEL_ENC}"
+* the host adapter and/or disk controller have persistent
+  caches: as long as those caches have space, barriers can
+  complete immediately, without waiting a write to disk.
 
-LABEL="md_end"
-[root@homepc ~]#
+It just happens that typical contemporary PC IO subsystems (at
+the hardware level, not the Linux level) have none of those
+features, except sometimes for NCQ which is a reduced form of
+TCQ, and apparently is not that useful.
 
-AND...
-
-[root@homepc ~]# cat /etc/udev/rules.d/70-mdadm.rules
-# This file causes block devices with Linux RAID (mdadm) signatures to
-# automatically cause mdadm to be run.
-# See udev(8) for syntax
-
-SUBSYSTEM=="block", ACTION=="add|change", ENV{ID_FS_TYPE}=="linux_raid*", \
-    RUN+="/sbin/mdadm -I --auto=yes $root/%k"
-[root@homepc ~]#
-
-Thanks for getting me working
-
-Nigel
-
-
-
-
-
+Write barriers are also useful without persistent caches, if
+there is proper tagged queueing and fine granularity.
