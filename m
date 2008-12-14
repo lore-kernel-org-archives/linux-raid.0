@@ -1,59 +1,66 @@
-From: Michal Soltys <soltys@ziu.info>
-Subject: Re: Raid 5 Problem
-Date: Sun, 14 Dec 2008 16:34:06 +0100
-Message-ID: <4945276E.1010405@ziu.info>
-References: <49450D04.8060703@nigelterry.net>
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
+Date: Sun, 14 Dec 2008 18:49:32 +0100
+Message-ID: <200812141849.33534.Martin@lichtvoll.de>
+References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan> <4943F37B.8080405@sandeen.net> <1229225480.16555.152.camel@localhost> (sfid-20081214_183451_158861_5E7EF8DA)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49450D04.8060703@nigelterry.net>
+In-Reply-To: <1229225480.16555.152.camel@localhost>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: nterry <nigel@nigelterry.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-xfs@oss.sgi.com
+Cc: Redeeman <redeeman@metanurb.dk>, Eric Sandeen <sandeen@sandeen.net>, linux-raid@vger.kernel.org, Alan Piszcz <ap@solarrain.com>, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-nterry wrote:
-> Hi.  I hope someone can tell me what I have done wrong.  I have a 4 disk 
-> Raid 5 array running on Fedora9.  I've run this array for 2.5 years with 
-> no issues.  I recently rebooted after upgrading to Kernel 2.6.27.7.  
-> When I did this I found that only 3 of my disks were in the array.  When 
-> I examine the three active elements of the array (/dev/sdd1, /dev/sde1, 
-> /dev/sdc1) they all show that the array has 3 drives and one missing.  
-> When I examine the missing drive it shows that all members of the array 
-> are present, which I don't understand! When I try to add the missing 
-> drive back is says the device is busy.  Please see below and let me know 
-> what I need to do to get this working again.  Thanks Nigel:
-> 
-> ==================================================================
-> [root@homepc ~]# cat /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4]
-> md0 : active raid5 sdd1[0] sdc1[3] sde1[1]
->      735334656 blocks level 5, 128k chunk, algorithm 2 [4/3] [UU_U]
->     md_d0 : inactive sdb[2](S)
->      245117312 blocks
->      unused devices: <none>
-> [root@homepc ~]#
+Am Sonntag 14 Dezember 2008 schrieb Redeeman:
+> On Sat, 2008-12-13 at 11:40 -0600, Eric Sandeen wrote:
+> > Martin Steigerwald wrote:
+> > > At the moment it appears to me that disabling write cache may often
+> > > give more performance than using barriers. And this doesn't match
+> > > my expectation of write barriers as a feature that enhances
+> > > performance.
+> >
+> > Why do you have that expectation?  I've never seen barriers
+> > advertised as enhancing performance.  :)
+>
+> My initial thoughts were that write barriers would enhance performance,
+> in that, you could have write cache on. So its really more of an
+> expectation that wc+barriers on, performs better than wc+barriers off
+> :)
 
-For some reason, it looks like you have 2 raid arrays visible - md0 and 
-md_d0. The latter took sdb (not sdb1) as its component.
+Exactly that. My expectation from my technical understanding of the write 
+barrier feature is from most performant to least performant:
 
-sd{c,d,e}1 is in assembeld array (with appropriately updated 
-superblocks), thus mdadm --examine calls show one device as removed, but 
-sdb is part of another inactive array, and the superblock is untouched 
-and shows "old" situation. Note that 0.9 superblock is stored at the end 
-  of the device (see md(4) for details), so its position could be valid 
-for both sdb and sdb1.
+1) Write cache + no barrier, but NVRAM ;)
+2) Write cache + barrier
+3) No write cache, where is shouldn't matter whether barrier was enabled 
+or not
 
-This might be an effect of --incremental assembly mode. Hard to tell 
-more without seeing startup scripts, mdadm.conf, udev rules, partition 
-layout... Did upgrade involve anything more besides kernel ?
+With 1 write requests are unordered, thus meta data changes could be 
+applied in place before landing into the journal for example, thus NVRAM 
+is a must. With 2 write requests are unordered except for certain 
+markers, the barriers that say: Anything before the barrier goes before 
+and anything after the barrier goes after it. This leaves room for 
+optimizing the write requests before and after - either in-kernel by an 
+IO scheduler or in firmware by NCQ, TCQ, FUA. And with 3 write requests 
+would always be ordered... and if the filesystems places a marker - a 
+sync in this case - any write requests that are in flight till then have 
+to land on disk before the filesystem can proceed.
 
-Stop both arrays, check mdadm.conf, assemble md0 manually (mdadm -A 
-/dev/md0 /dev/sd{c,d,e}1 ), verify situation with mdadm -D. If 
-everything looks sane, add /dev/sdb1 to the array. Still, w/o checking 
-out startup stuff, it might happen again after reboot. Adding DEVICE 
-/dev/sd[bcde]1 to mdadm.conf might help though.
+From that understanding, which I explained in detail in my Linux-Magazin 
+article[1] I always thought that write cache + barrier has to be faster 
+than no write cache.
 
-Wait a bit for other suggestions as well.
+Well I am ready to learn more. But for me until now that was the whole 
+point of the effort with write barriers. Seems I completely misunderstood 
+their purpose if thats not what they where meant for.
 
+[1] Only in german, it had een translated to english but never published: 
+http://www.linux-magazin.de/online_artikel/beschraenktes_schreiben
+
+Ciao,
+-- 
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
