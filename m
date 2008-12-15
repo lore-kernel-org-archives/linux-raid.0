@@ -1,77 +1,60 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: Re: behavior different from mdadm 2.6.4 and 3.0?
-Date: Mon, 15 Dec 2008 15:35:58 -0600
-Message-ID: <cccedfc60812151335u3d08dc6bid79bae8c88a62133@mail.gmail.com>
-References: <cccedfc60812150654u2e841bf8na517a75820d0c463@mail.gmail.com>
-	 <18758.51222.370545.686154@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Awful Raid10,f2 performance
+Date: Tue, 16 Dec 2008 08:38:31 +1100
+Message-ID: <18758.52823.375213.963854@notabene.brown>
+References: <cccedfc60806020711o39ccd321h5e410c963d8bf3b1@mail.gmail.com>
+	<48440953.3040004@wpkg.org>
+	<cccedfc60806020809t73794ce6w539c6b0d247a264f@mail.gmail.com>
+	<cccedfc60812150533p31974f4bye490958dbc974212@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18758.51222.370545.686154@notabene.brown>
-Content-Disposition: inline
+In-Reply-To: message from Jon Nelson on Monday December 15
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Cc: Linux-Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Dec 15, 2008 at 3:11 PM, Neil Brown <neilb@suse.de> wrote:
-> On Monday December 15, jnelson-linux-raid@jamponi.net wrote:
->> mdadm --incremental seems to behave differently for me between mdadm
->> 2.6.4 and 3.0
->>
->> With 2.6.4, mdadm --incremental /dev/nbd0 does this:
->>
->> mdadm: /dev/nbd0 attached to /dev/md10 which is already active.
->>
->> With 3.0, it does this:
->>
->> mdadm: /dev/md10 is already in use.
->>
->> and does *not* add it to the array.
->
-> Sounds like /var/run/mdadm/map is not correctly up-to-date.
-> Does running
->   mdadm -Ir
->
-> make "mdadm -I /dev/nbd0" work properly again?
->
-> Can you provide a sequence of steps which leads to the error message
-> that you report?
+On Monday December 15, jnelson-linux-raid@jamponi.net wrote:
+> A follow-up to an earlier post about weird slowness with RAID10,f2 and
+> 3 drives. This morning's "check" operation is proceeding very slowly,
+> for some reason.
+> 
+> dstat is showing 14-15MB/s worth of read I/O (0 or negligible write
+> I/O) on each of the 3 drives which comprise the raid10,f2.
+> 
+> According to /proc/mdstat this is the current rate:
+> 
+>       [================>....]  check = 82.9% (381575040/460057152)
+> finish=60.6min speed=21554K/sec
+> 
+> The sync_speed_min is 40000, sync_speed_max is 200000, and there is no
+> other I/O on the system to speak of.
+> 
+> blockdev shows:
+> 
+> blockdev --getra /dev/sdb /dev/sdc /dev/sde
+> 256
+> 256
+> 256
+> 
+> I just now tried setting it to 64K (65536) on each device and that did
+> not seem to make much difference.
+> 
+> As you may recall from earlier posts, these drives are easily capable
+> of twice or even three times this rate or more even at the inner
+> tracks (70-80MB/s each on the outer tracks, 35-40MB/s on the inner
+> tracks).
+> 
+> What might be going on here?
 
-I have to reboot to make this happen. There is probably a less
-invasive way.... but it's what I know works.
+If you think about exactly which blocks of which drives md will have
+to read, and in which order, you will see that each drive is seeking
+half the size of the disk very often.  Exactly how often would depend
+on chunk size and the depth of the queue in the elevator, but it would
+probably read several hundred K from early in the disk, then several
+hundred from half-way in, then back to start etc.  This would be
+expected to be slow.
 
-First, an strace of mdadm --incremental (3.0):
-
-turnip:~ # strace -f -e trace=open mdadm --incremental /dev/nbd0
-open("/etc/ld.so.cache", O_RDONLY)      = 3
-open("/lib64/libc.so.6", O_RDONLY)      = 3
-open("/dev/urandom", O_RDONLY)          = 3
-open("/etc/mdadm.conf", O_RDONLY)       = 3
-open("/dev/nbd0", O_RDONLY|O_EXCL|O_DIRECT) = 3
-open("/var/run/mdadm/map.lock", O_RDWR|O_CREAT, 0600) = 3
-open("/var/run/mdadm/map", O_RDONLY)    = -1 ENOENT (No such file or directory)
-open("/var/run/mdadm.map", O_RDONLY)    = -1 ENOENT (No such file or directory)
-open("/var/run/mdadm/map", O_RDONLY)    = -1 ENOENT (No such file or directory)
-open("/var/run/mdadm.map", O_RDONLY)    = -1 ENOENT (No such file or directory)
-open("/proc/mdstat", O_RDONLY)          = 4
-mdadm: /dev/md11 is already in use.
-turnip:~ #
-
-
-Running (again, v3.0) mdadm --incremental --rebuild-map works rebuilds the map.
-
-Then using --incremental /dev/nbd0 works (but it's resyncing **again**).
-
-Does that help?
-
->
-> Thanks,
-> NeilBrown
->
-
-
-
--- 
-Jon
+NeilBrown
