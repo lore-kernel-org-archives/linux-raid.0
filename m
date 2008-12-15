@@ -1,122 +1,76 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: raid1 + writemostly
-Date: Mon, 15 Dec 2008 12:30:31 -0600
-Message-ID: <cccedfc60812151030y630bb6c3g40a926bced2b1c09@mail.gmail.com>
+From: Bin Guo <bguo@starentnetworks.com>
+Subject: md looping on recovery of raid1 array
+Date: Mon, 15 Dec 2008 16:01:53 -0500
+Message-ID: <20081215210153.GA13505@bguogx620.starentnetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: Ryan_MichaelS@emc.com
 List-Id: linux-raid.ids
 
-According to the manpage for mdadm, --write-mostly can only be used
-add build, create, or add time.  How does one set write-mostly devices
-*after* they've been added?
+Hi,
 
-mdadm /dev/mdX --write-mostly /dev/someDevice
-succeeds but does nothing.
+  I had similar errors to the problem reported in
 
-According to Documentation/md.txt, writing writemostly into
-/sys/block/mdX/md/dev-someDevice/state
-should do it, and it sort of appears to:
+http://marc.info/?l=linux-raid&m=118385063014256&w=2
 
-turnip:~ # mdadm --detail /dev/md11
-/dev/md11:
-        Version : 01.00.03
-  Creation Time : Mon Dec 15 07:06:13 2008
-     Raid Level : raid1
-     Array Size : 78123988 (74.50 GiB 80.00 GB)
-  Used Dev Size : 156247976 (149.01 GiB 160.00 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 11
-    Persistence : Superblock is persistent
+Using manually coded patch similar to scsi fault injection
+tests, I can reproduce the problem:
 
-  Intent Bitmap : Internal
+  1. create degraded raid1 with only disk "sda1"
+  2. inject permanent I/O error on a block on "sda1"
+  3. try to add spare disk "sdb1" to the raid
 
-    Update Time : Mon Dec 15 12:21:20 2008
-          State : active
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
+Now raid code would loop to sync:
 
-           Name : turnip:11
-           UUID : cf24d099:9e174a79:2a2f6797:dcff1420
-         Events : 3840
+[  295.837203] sd 0:0:0:0: SCSI error: return code = 0x08000002
+[  295.842869] sda: Current: sense key=0x3
+[  295.846725]     ASC=0x11 ASCQ=0x4
+[  295.850081] Info fld=0x1e240
+[  295.852958] end_request: I/O error, dev sda, sector 123456
+[  295.858454] raid1: sda: unrecoverable I/O read error for block 123136
+[  295.864986] md: md0: sync done.
+[  295.903715] RAID1 conf printout:
+[  295.906939]  --- wd:1 rd:2
+[  295.909649]  disk 0, wo:0, o:1, dev:sda1
+[  295.913573]  disk 1, wo:1, o:1, dev:sdb1
+[  295.920686] RAID1 conf printout:
+[  295.923914]  --- wd:1 rd:2
+[  295.926634]  disk 0, wo:0, o:1, dev:sda1
+[  295.930570] RAID1 conf printout:
+[  295.933815]  --- wd:1 rd:2
+[  295.936518]  disk 0, wo:0, o:1, dev:sda1
+[  295.940442]  disk 1, wo:1, o:1, dev:sdb1
+[  295.944419] md: syncing RAID array md0
+[  295.948199] md: minimum _guaranteed_ reconstruction speed: 1000 KB/sec/disc.
+[  295.955262] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for reconstruction.
+[  295.965369] md: using 128k window, over a total of 71289063 blocks.
 
-    Number   Major   Minor   RaidDevice State
-       2      43        0        0      active sync   /dev/nbd0
-       3       8        0        1      active sync   /dev/sda
-turnip:~ # echo writemostly > /sys/block/md11/md/dev-nbd0/state
-turnip:~ # mdadm --detail /dev/md11
-/dev/md11:
-        Version : 01.00.03
-  Creation Time : Mon Dec 15 07:06:13 2008
-     Raid Level : raid1
-     Array Size : 78123988 (74.50 GiB 80.00 GB)
-  Used Dev Size : 156247976 (149.01 GiB 160.00 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 11
-    Persistence : Superblock is persistent
+It seems to be caused by raid1.c:error() doing nothing in this fatal error
+case:
 
-  Intent Bitmap : Internal
+       /*
+         * If it is not operational, then we have already marked it as dead
+         * else if it is the last working disks, ignore the error, let the
+         * next level up know.
+         * else mark the drive as failed
+         */
+        if (test_bit(In_sync, &rdev->flags)
+            && conf->working_disks == 1)
+                /*
+                 * Don't fail the drive, act as though we were just a
+                 * normal single drive
+                 */
+                return;
 
-    Update Time : Mon Dec 15 12:23:05 2008
-          State : active
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
+Where is the code in "next level up" handling this? I'm using ancient 2.6.18,
+can someone test whether this is the case for newer kernel?
 
-           Name : turnip:11
-           UUID : cf24d099:9e174a79:2a2f6797:dcff1420
-         Events : 3840
-
-    Number   Major   Minor   RaidDevice State
-       2      43        0        0      active sync writemostly   /dev/nbd0
-       3       8        0        1      active sync   /dev/sda
-turnip:~ # mdadm --examine-bitmap /dev/nbd0
-        Filename : /dev/nbd0
-           Magic : 6d746962
-         Version : 4
-            UUID : cf24d099:9e174a79:2a2f6797:dcff1420
-          Events : 3840
-  Events Cleared : 3840
-           State : OK
-       Chunksize : 4 MB
-          Daemon : 5s flush period
-      Write Mode : Normal
-       Sync Size : 78123988 (74.50 GiB 80.00 GB)
-          Bitmap : 19074 bits (chunks), 0 dirty (0.0%)
-turnip:~ #
-
-
-Why doesn't --examine-bitmap show the right mode?
-
-Also, removing the bitmap from the array does not zero out the bitmap
-on the actual device. Shouldn't it do that?
-turnip:~ # mdadm --grow /dev/md11 --bitmap=none
-turnip:~ # mdadm --examine-bitmap /dev/nbd0
-        Filename : /dev/nbd0
-           Magic : 6d746962
-         Version : 4
-            UUID : cf24d099:9e174a79:2a2f6797:dcff1420
-          Events : 3841
-  Events Cleared : 3841
-           State : OK
-       Chunksize : 4 MB
-          Daemon : 5s flush period
-      Write Mode : Normal
-       Sync Size : 78123988 (74.50 GiB 80.00 GB)
-          Bitmap : 19074 bits (chunks), 0 dirty (0.0%)
-turnip:~ #
-
-This is with mdadm 2.6.4 on 2.6.25.18-0.2-default
-I can try mdadm 3.0 if you like.
+I tested by commenting out those lines, but ends up with a raid1 consisting
+of "sdb1" instead of total failure.
 
 -- 
-Jon
+Bin
