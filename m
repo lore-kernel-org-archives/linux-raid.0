@@ -1,8 +1,8 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: behavior different from mdadm 2.6.4 and 3.0?
-Date: Tue, 16 Dec 2008 08:11:50 +1100
-Message-ID: <18758.51222.370545.686154@notabene.brown>
-References: <cccedfc60812150654u2e841bf8na517a75820d0c463@mail.gmail.com>
+Subject: Re: raid1 + writemostly
+Date: Tue, 16 Dec 2008 08:26:41 +1100
+Message-ID: <18758.52113.251622.783466@notabene.brown>
+References: <cccedfc60812151030y630bb6c3g40a926bced2b1c09@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -14,27 +14,89 @@ Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 On Monday December 15, jnelson-linux-raid@jamponi.net wrote:
-> mdadm --incremental seems to behave differently for me between mdadm
-> 2.6.4 and 3.0
-> 
-> With 2.6.4, mdadm --incremental /dev/nbd0 does this:
-> 
-> mdadm: /dev/nbd0 attached to /dev/md10 which is already active.
-> 
-> With 3.0, it does this:
-> 
-> mdadm: /dev/md10 is already in use.
-> 
-> and does *not* add it to the array.
+> According to the manpage for mdadm, --write-mostly can only be used
+> add build, create, or add time.  How does one set write-mostly devices
+> *after* they've been added?
 
-Sounds like /var/run/mdadm/map is not correctly up-to-date.
-Does running
-   mdadm -Ir
+You cannot.
+The easiest approach is to remove it and re-add it with the
+write-mostly flag.
 
-make "mdadm -I /dev/nbd0" work properly again?
+> 
+> mdadm /dev/mdX --write-mostly /dev/someDevice
+> succeeds but does nothing.
+> 
+> According to Documentation/md.txt, writing writemostly into
+> /sys/block/mdX/md/dev-someDevice/state
+> should do it, and it sort of appears to:
+> 
+> turnip:~ # mdadm --detail /dev/md11
+> /dev/md11:
+...
+>     Number   Major   Minor   RaidDevice State
+>        2      43        0        0      active sync   /dev/nbd0
+>        3       8        0        1      active sync   /dev/sda
+> turnip:~ # echo writemostly > /sys/block/md11/md/dev-nbd0/state
+> turnip:~ # mdadm --detail /dev/md11
+> /dev/md11:
+..
+>     Number   Major   Minor   RaidDevice State
+>        2      43        0        0      active sync writemostly   /dev/nbd0
+>        3       8        0        1      active sync   /dev/sda
+> turnip:~ # mdadm --examine-bitmap /dev/nbd0
+>         Filename : /dev/nbd0
+>            Magic : 6d746962
+>          Version : 4
+>             UUID : cf24d099:9e174a79:2a2f6797:dcff1420
+>           Events : 3840
+>   Events Cleared : 3840
+>            State : OK
+>        Chunksize : 4 MB
+>           Daemon : 5s flush period
+>       Write Mode : Normal
+>        Sync Size : 78123988 (74.50 GiB 80.00 GB)
+>           Bitmap : 19074 bits (chunks), 0 dirty (0.0%)
+> turnip:~ #
+> 
+> 
+> Why doesn't --examine-bitmap show the right mode?
 
-Can you provide a sequence of steps which leads to the error message
-that you report?
+What were you expecting?  The bitmap never reports anything about
+writemostly, only write-behind.
 
-Thanks,
+> 
+> Also, removing the bitmap from the array does not zero out the bitmap
+> on the actual device. Shouldn't it do that?
+
+No.  It simply records in the array metadata that there is no bitmap.
+It might be sensible to get "--examine-bitmap" to report that the
+bitmap is not active in some way.
+
 NeilBrown
+
+
+> turnip:~ # mdadm --grow /dev/md11 --bitmap=none
+> turnip:~ # mdadm --examine-bitmap /dev/nbd0
+>         Filename : /dev/nbd0
+>            Magic : 6d746962
+>          Version : 4
+>             UUID : cf24d099:9e174a79:2a2f6797:dcff1420
+>           Events : 3841
+>   Events Cleared : 3841
+>            State : OK
+>        Chunksize : 4 MB
+>           Daemon : 5s flush period
+>       Write Mode : Normal
+>        Sync Size : 78123988 (74.50 GiB 80.00 GB)
+>           Bitmap : 19074 bits (chunks), 0 dirty (0.0%)
+> turnip:~ #
+> 
+> This is with mdadm 2.6.4 on 2.6.25.18-0.2-default
+> I can try mdadm 3.0 if you like.
+> 
+> -- 
+> Jon
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
