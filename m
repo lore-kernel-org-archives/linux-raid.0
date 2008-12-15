@@ -1,88 +1,427 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Data loss on MD RAID5 reshape?
-Date: Tue, 16 Dec 2008 09:11:21 +1100
-Message-ID: <18758.54793.5172.117590@notabene.brown>
-References: <20081205222131.GD8219@newbie.thebellsplace.net>
+Subject: Re: Help recovering RAID6 failure
+Date: Tue, 16 Dec 2008 09:15:17 +1100
+Message-ID: <18758.55029.597319.376426@notabene.brown>
+References: <20081215220307.GE1749@cubit>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bob Bell on Friday December 5
+In-Reply-To: message from Kevin Shanahan on Tuesday December 16
 Sender: linux-raid-owner@vger.kernel.org
-To: Bob Bell <b_linuxraid@thebellsplace.com>
+To: Kevin Shanahan <kmshanah@disenchant.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday December 5, b_linuxraid@thebellsplace.com wrote:
-> I've experienced apparent data loss, and hoping someone out there can 
-> help rescue my data, or at least tell me what went wrong so that I don't 
-> have a repeat event.  I first asked this question on linux-lvm, but the 
-> folks there seemed to think it pertained more to RAID than to LVM.
+On Tuesday December 16, kmshanah@disenchant.net wrote:
+> Hi,
+> 
+> My server seems to have had a bad night, and so I'm not having the
+> best morning. Overnight three drives failed in my RAID6 array. Worse,
+> that's on top of one failure I already knew about, so 4 drives in
+> total.
+> 
+> I put this down to problems with the controller - I had been using
+> 3ware 9650 controllers (in JBOD mode). This morning I've loaded the
+> drives into another server connected to the on board Intel AHCI SATA
+> ports and an extra Sil3132 controller.
+> 
+> My first naive attempt was to try re-assembling the array from the
+> eight most up-to-date member devices:
+> 
+> hermes:~# mdadm -A /dev/md5 /dev/sd[cefghijk]1
+> mdadm: failed to RUN_ARRAY /dev/md5: Input/output error
 
-I probably pertains to both.
-However I suspect someone who knows a lot about LVM would be most
-likely to be able to help you.
-
-Presumably the LVM metadata at the start of the raid5 has been
-corrupted someone.  Restoring that is needed, and an LVM expert would
-be in the best position.
-
-Of course it may not be possible, depending on the exact nature of the
-corruption. 
-
-If it were me, I would hunt around at the start of the raid5 too see
-if anything looked recognisable.  To do that, you would need to know
-what LVM metadata and filesystem metadata looked like, and that would
-not be easy.
-
-I wish I could help, but I really don't know the insides of LVM well
-enough to try to stitch something like that together by remote control
+Try adding --force to over-ride apparent errors, and --verbose to help
+you see what is happening.
 
 NeilBrown
 
 
 > 
-> I was setting up a new server running Ubuntu's Hardy Heron release.  
-> `uname -a` reports:
->   Linux sherwood 2.6.24-16-server #1 SMP Thu Apr 10 13:58:00 UTC 2008 i686 GNU/Linux
+> I assume that's not an I/O error with the underlying device? I can't
+> see anything indicating that dmesg/syslog.
 > 
-> I initially created an md RAID5 device with only two components 
-> (matching 320 GB SATA HDDs).  I created a single LVM Physical Volume 
-> using the entirety of that md device (320 GB), and then created several 
-> LVM Logical Volumes for different filesystems (all ext3).  This was done 
-> using the Ubuntu installer.  After installing I used lvresize to 
-> increase the size of a few of the Logical Volumes.  These filesystems 
-> hold data that is not a critical part of the system (mail, music, video, 
-> etc.), but still important to me.
+> Output from "mdadm -E /dev/sd[cdefghijkl]1" included below.
 > 
-> I then copied data onto one of those filesystems (the original source of 
-> the data is no longer available).  I then added a third drive to the md 
-> device, which brought the total to 2 active devices and 1 spare device.  
-> I then grew the number of devices to 3 and waited for the reshape to 
-> finish (increasing the capacity to 640 GB).  I bumped the values in 
-> /proc/sys/dev/raid/ so that I wouldn't have to wait as long.
+> Any advice would be much appreciated.
 > 
-> Now that the reshaping has completed, LVM can't find the physical volume 
-> on that device anymore.  I tried rebooting the system, but the problem 
-> remained.  Checking /proc/mdstat shows that the md device is up and 
-> healthy.  The pvdisplay command only shows my other Physical Volume (for 
-> the IDE drives).  I found the pvck command and ran that on the md 
-> device, and it states that there is no LVM label on the device.
+> (and now, back to scouring the mail archives for clues).
 > 
-> It is my understanding that the steps I outlined should have worked.  
-> I planned to follow them with pvresize, then lvresize, then umount, 
-> resize2fs, and mount again.  I've seen this procedure outlined a few 
-> different places, including at 
-> http://gentoo-wiki.info/Resize_LVM2_on_RAID5.
+> Cheers,
+> Kevin.
+> --
 > 
-> Did I do something wrong?  Is there anyway to rescue my data?  If 
-> there's no way of saving the data, I'd at least like to figure out what 
-> happened in the first place.
+> /dev/sdc1:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 77fa8675:444efef0:12f8dff0:9f609eb4
+>   Creation Time : Sun Jul 27 15:03:44 2008
+>      Raid Level : raid6
+>   Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
+>      Array Size : 7814079488 (7452.09 GiB 8001.62 GB)
+>    Raid Devices : 10
+>   Total Devices : 10
+> Preferred Minor : 5
 > 
-> Thank you.  Your thoughtfulness and help is appreciated.
+>     Update Time : Tue Dec 16 05:35:46 2008
+>           State : clean
+> Internal Bitmap : present
+>  Active Devices : 6
+> Working Devices : 6
+>  Failed Devices : 3
+>   Spare Devices : 0
+>        Checksum : e3df9eea - correct
+>          Events : 176870
 > 
-> -- 
-> Bob Bell
+>      Chunk Size : 64K
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     8       8      129        8      active sync   /dev/sdi1
+> 
+>    0     0       0        0        0      removed
+>    1     1       0        0        1      faulty removed
+>    2     2       8       33        2      active sync   /dev/sdc1
+>    3     3       8       49        3      active sync   /dev/sdd1
+>    4     4       8       65        4      active sync   /dev/sde1
+>    5     5       8       81        5      active sync   /dev/sdf1
+>    6     6       8       97        6      active sync   /dev/sdg1
+>    7     7       0        0        7      faulty removed
+>    8     8       8      129        8      active sync   /dev/sdi1
+>    9     9       0        0        9      faulty removed
+> /dev/sdd1:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 77fa8675:444efef0:12f8dff0:9f609eb4
+>   Creation Time : Sun Jul 27 15:03:44 2008
+>      Raid Level : raid6
+>   Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
+>      Array Size : 7814079488 (7452.09 GiB 8001.62 GB)
+>    Raid Devices : 10
+>   Total Devices : 10
+> Preferred Minor : 5
+> 
+>     Update Time : Thu Nov 27 09:20:39 2008
+>           State : clean
+> Internal Bitmap : present
+>  Active Devices : 10
+> Working Devices : 10
+>  Failed Devices : 0
+>   Spare Devices : 0
+>        Checksum : e3c42f8b - correct
+>          Events : 91974
+> 
+>      Chunk Size : 64K
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     9       8      145        9      active sync   /dev/sdj1
+> 
+>    0     0       8        1        0      active sync   /dev/sda1
+>    1     1       8       17        1      active sync   /dev/sdb1
+>    2     2       8       33        2      active sync   /dev/sdc1
+>    3     3       8       49        3      active sync   /dev/sdd1
+>    4     4       8       65        4      active sync   /dev/sde1
+>    5     5       8       81        5      active sync   /dev/sdf1
+>    6     6       8       97        6      active sync   /dev/sdg1
+>    7     7       8      113        7      active sync   /dev/sdh1
+>    8     8       8      129        8      active sync   /dev/sdi1
+>    9     9       8      145        9      active sync   /dev/sdj1
+> /dev/sde1:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 77fa8675:444efef0:12f8dff0:9f609eb4
+>   Creation Time : Sun Jul 27 15:03:44 2008
+>      Raid Level : raid6
+>   Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
+>      Array Size : 7814079488 (7452.09 GiB 8001.62 GB)
+>    Raid Devices : 10
+>   Total Devices : 10
+> Preferred Minor : 5
+> 
+>     Update Time : Tue Dec 16 00:28:14 2008
+>           State : active
+> Internal Bitmap : present
+>  Active Devices : 8
+> Working Devices : 8
+>  Failed Devices : 2
+>   Spare Devices : 0
+>        Checksum : e3dca329 - correct
+>          Events : 176870
+> 
+>      Chunk Size : 64K
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     0       8        1        0      active sync   /dev/sda1
+> 
+>    0     0       8        1        0      active sync   /dev/sda1
+>    1     1       8       17        1      active sync   /dev/sdb1
+>    2     2       8       33        2      active sync   /dev/sdc1
+>    3     3       8       49        3      active sync   /dev/sdd1
+>    4     4       8       65        4      active sync   /dev/sde1
+>    5     5       8       81        5      active sync   /dev/sdf1
+>    6     6       8       97        6      active sync   /dev/sdg1
+>    7     7       0        0        7      faulty removed
+>    8     8       8      129        8      active sync   /dev/sdi1
+>    9     9       0        0        9      faulty removed
+> /dev/sdf1:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 77fa8675:444efef0:12f8dff0:9f609eb4
+>   Creation Time : Sun Jul 27 15:03:44 2008
+>      Raid Level : raid6
+>   Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
+>      Array Size : 7814079488 (7452.09 GiB 8001.62 GB)
+>    Raid Devices : 10
+>   Total Devices : 10
+> Preferred Minor : 5
+> 
+>     Update Time : Tue Dec 16 00:29:00 2008
+>           State : active
+> Internal Bitmap : present
+>  Active Devices : 7
+> Working Devices : 7
+>  Failed Devices : 2
+>   Spare Devices : 0
+>        Checksum : e3dca382 - correct
+>          Events : 176870
+> 
+>      Chunk Size : 64K
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     1       8       17        1      active sync   /dev/sdb1
+> 
+>    0     0       0        0        0      removed
+>    1     1       8       17        1      active sync   /dev/sdb1
+>    2     2       8       33        2      active sync   /dev/sdc1
+>    3     3       8       49        3      active sync   /dev/sdd1
+>    4     4       8       65        4      active sync   /dev/sde1
+>    5     5       8       81        5      active sync   /dev/sdf1
+>    6     6       8       97        6      active sync   /dev/sdg1
+>    7     7       0        0        7      faulty removed
+>    8     8       8      129        8      active sync   /dev/sdi1
+>    9     9       0        0        9      faulty removed
+> /dev/sdg1:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 77fa8675:444efef0:12f8dff0:9f609eb4
+>   Creation Time : Sun Jul 27 15:03:44 2008
+>      Raid Level : raid6
+>   Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
+>      Array Size : 7814079488 (7452.09 GiB 8001.62 GB)
+>    Raid Devices : 10
+>   Total Devices : 10
+> Preferred Minor : 5
+> 
+>     Update Time : Tue Dec 16 05:35:46 2008
+>           State : clean
+> Internal Bitmap : present
+>  Active Devices : 6
+> Working Devices : 6
+>  Failed Devices : 3
+>   Spare Devices : 0
+>        Checksum : e3df9e7e - correct
+>          Events : 176870
+> 
+>      Chunk Size : 64K
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     2       8       33        2      active sync   /dev/sdc1
+> 
+>    0     0       0        0        0      removed
+>    1     1       0        0        1      faulty removed
+>    2     2       8       33        2      active sync   /dev/sdc1
+>    3     3       8       49        3      active sync   /dev/sdd1
+>    4     4       8       65        4      active sync   /dev/sde1
+>    5     5       8       81        5      active sync   /dev/sdf1
+>    6     6       8       97        6      active sync   /dev/sdg1
+>    7     7       0        0        7      faulty removed
+>    8     8       8      129        8      active sync   /dev/sdi1
+>    9     9       0        0        9      faulty removed
+> /dev/sdh1:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 77fa8675:444efef0:12f8dff0:9f609eb4
+>   Creation Time : Sun Jul 27 15:03:44 2008
+>      Raid Level : raid6
+>   Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
+>      Array Size : 7814079488 (7452.09 GiB 8001.62 GB)
+>    Raid Devices : 10
+>   Total Devices : 10
+> Preferred Minor : 5
+> 
+>     Update Time : Tue Dec 16 05:35:46 2008
+>           State : clean
+> Internal Bitmap : present
+>  Active Devices : 6
+> Working Devices : 6
+>  Failed Devices : 3
+>   Spare Devices : 0
+>        Checksum : e3df9ec6 - correct
+>          Events : 176870
+> 
+>      Chunk Size : 64K
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     6       8       97        6      active sync   /dev/sdg1
+> 
+>    0     0       0        0        0      removed
+>    1     1       0        0        1      faulty removed
+>    2     2       8       33        2      active sync   /dev/sdc1
+>    3     3       8       49        3      active sync   /dev/sdd1
+>    4     4       8       65        4      active sync   /dev/sde1
+>    5     5       8       81        5      active sync   /dev/sdf1
+>    6     6       8       97        6      active sync   /dev/sdg1
+>    7     7       0        0        7      faulty removed
+>    8     8       8      129        8      active sync   /dev/sdi1
+>    9     9       0        0        9      faulty removed
+> /dev/sdi1:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 77fa8675:444efef0:12f8dff0:9f609eb4
+>   Creation Time : Sun Jul 27 15:03:44 2008
+>      Raid Level : raid6
+>   Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
+>      Array Size : 7814079488 (7452.09 GiB 8001.62 GB)
+>    Raid Devices : 10
+>   Total Devices : 10
+> Preferred Minor : 5
+> 
+>     Update Time : Tue Dec 16 05:35:46 2008
+>           State : clean
+> Internal Bitmap : present
+>  Active Devices : 6
+> Working Devices : 6
+>  Failed Devices : 3
+>   Spare Devices : 0
+>        Checksum : e3df9eb4 - correct
+>          Events : 176870
+> 
+>      Chunk Size : 64K
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     5       8       81        5      active sync   /dev/sdf1
+> 
+>    0     0       0        0        0      removed
+>    1     1       0        0        1      faulty removed
+>    2     2       8       33        2      active sync   /dev/sdc1
+>    3     3       8       49        3      active sync   /dev/sdd1
+>    4     4       8       65        4      active sync   /dev/sde1
+>    5     5       8       81        5      active sync   /dev/sdf1
+>    6     6       8       97        6      active sync   /dev/sdg1
+>    7     7       0        0        7      faulty removed
+>    8     8       8      129        8      active sync   /dev/sdi1
+>    9     9       0        0        9      faulty removed
+> /dev/sdj1:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 77fa8675:444efef0:12f8dff0:9f609eb4
+>   Creation Time : Sun Jul 27 15:03:44 2008
+>      Raid Level : raid6
+>   Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
+>      Array Size : 7814079488 (7452.09 GiB 8001.62 GB)
+>    Raid Devices : 10
+>   Total Devices : 10
+> Preferred Minor : 5
+> 
+>     Update Time : Tue Dec 16 05:35:46 2008
+>           State : clean
+> Internal Bitmap : present
+>  Active Devices : 6
+> Working Devices : 6
+>  Failed Devices : 3
+>   Spare Devices : 0
+>        Checksum : e3df9ea2 - correct
+>          Events : 176870
+> 
+>      Chunk Size : 64K
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     4       8       65        4      active sync   /dev/sde1
+> 
+>    0     0       0        0        0      removed
+>    1     1       0        0        1      faulty removed
+>    2     2       8       33        2      active sync   /dev/sdc1
+>    3     3       8       49        3      active sync   /dev/sdd1
+>    4     4       8       65        4      active sync   /dev/sde1
+>    5     5       8       81        5      active sync   /dev/sdf1
+>    6     6       8       97        6      active sync   /dev/sdg1
+>    7     7       0        0        7      faulty removed
+>    8     8       8      129        8      active sync   /dev/sdi1
+>    9     9       0        0        9      faulty removed
+> /dev/sdk1:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 77fa8675:444efef0:12f8dff0:9f609eb4
+>   Creation Time : Sun Jul 27 15:03:44 2008
+>      Raid Level : raid6
+>   Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
+>      Array Size : 7814079488 (7452.09 GiB 8001.62 GB)
+>    Raid Devices : 10
+>   Total Devices : 10
+> Preferred Minor : 5
+> 
+>     Update Time : Tue Dec 16 05:35:46 2008
+>           State : clean
+> Internal Bitmap : present
+>  Active Devices : 6
+> Working Devices : 6
+>  Failed Devices : 3
+>   Spare Devices : 0
+>        Checksum : e3df9e90 - correct
+>          Events : 176870
+> 
+>      Chunk Size : 64K
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     3       8       49        3      active sync   /dev/sdd1
+> 
+>    0     0       0        0        0      removed
+>    1     1       0        0        1      faulty removed
+>    2     2       8       33        2      active sync   /dev/sdc1
+>    3     3       8       49        3      active sync   /dev/sdd1
+>    4     4       8       65        4      active sync   /dev/sde1
+>    5     5       8       81        5      active sync   /dev/sdf1
+>    6     6       8       97        6      active sync   /dev/sdg1
+>    7     7       0        0        7      faulty removed
+>    8     8       8      129        8      active sync   /dev/sdi1
+>    9     9       0        0        9      faulty removed
+> /dev/sdl1:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 77fa8675:444efef0:12f8dff0:9f609eb4
+>   Creation Time : Sun Jul 27 15:03:44 2008
+>      Raid Level : raid6
+>   Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
+>      Array Size : 7814079488 (7452.09 GiB 8001.62 GB)
+>    Raid Devices : 10
+>   Total Devices : 10
+> Preferred Minor : 5
+> 
+>     Update Time : Mon Dec 15 22:36:32 2008
+>           State : active
+> Internal Bitmap : present
+>  Active Devices : 9
+> Working Devices : 9
+>  Failed Devices : 1
+>   Spare Devices : 0
+>        Checksum : e3dc8525 - correct
+>          Events : 175787
+> 
+>      Chunk Size : 64K
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     7       8      113        7      active sync   /dev/sdh1
+> 
+>    0     0       8        1        0      active sync   /dev/sda1
+>    1     1       8       17        1      active sync   /dev/sdb1
+>    2     2       8       33        2      active sync   /dev/sdc1
+>    3     3       8       49        3      active sync   /dev/sdd1
+>    4     4       8       65        4      active sync   /dev/sde1
+>    5     5       8       81        5      active sync   /dev/sdf1
+>    6     6       8       97        6      active sync   /dev/sdg1
+>    7     7       8      113        7      active sync   /dev/sdh1
+>    8     8       8      129        8      active sync   /dev/sdi1
+>    9     9       0        0        9      faulty removed
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
