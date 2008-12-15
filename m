@@ -1,58 +1,77 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: weird issues with raid1
-Date: Tue, 16 Dec 2008 08:33:44 +1100
-Message-ID: <18758.52536.345145.238926@notabene.brown>
-References: <cccedfc60812051810q3c44ae28x514072cb870ac390@mail.gmail.com>
-	<18757.62097.166706.244330@notabene.brown>
-	<cccedfc60812150542y5607d168q94c09d8dc3438226@mail.gmail.com>
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+Subject: Re: behavior different from mdadm 2.6.4 and 3.0?
+Date: Mon, 15 Dec 2008 15:35:58 -0600
+Message-ID: <cccedfc60812151335u3d08dc6bid79bae8c88a62133@mail.gmail.com>
+References: <cccedfc60812150654u2e841bf8na517a75820d0c463@mail.gmail.com>
+	 <18758.51222.370545.686154@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jon Nelson on Monday December 15
+In-Reply-To: <18758.51222.370545.686154@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
+To: Neil Brown <neilb@suse.de>
 Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Monday December 15, jnelson-linux-raid@jamponi.net wrote:
-> 
-> However, it raises a question: bitmaps are about 'resync' not
-> 'recovery'?  How do they differ?
+On Mon, Dec 15, 2008 at 3:11 PM, Neil Brown <neilb@suse.de> wrote:
+> On Monday December 15, jnelson-linux-raid@jamponi.net wrote:
+>> mdadm --incremental seems to behave differently for me between mdadm
+>> 2.6.4 and 3.0
+>>
+>> With 2.6.4, mdadm --incremental /dev/nbd0 does this:
+>>
+>> mdadm: /dev/nbd0 attached to /dev/md10 which is already active.
+>>
+>> With 3.0, it does this:
+>>
+>> mdadm: /dev/md10 is already in use.
+>>
+>> and does *not* add it to the array.
+>
+> Sounds like /var/run/mdadm/map is not correctly up-to-date.
+> Does running
+>   mdadm -Ir
+>
+> make "mdadm -I /dev/nbd0" work properly again?
+>
+> Can you provide a sequence of steps which leads to the error message
+> that you report?
 
-With resync, the expectation is that most of the device is correct.
-The bitmap tells us which sectors aren't, and we just resync those.
+I have to reboot to make this happen. There is probably a less
+invasive way.... but it's what I know works.
 
-With recover, the expectation is that the entire drive contains
-garbage and it has to be recovered from beginning to end.
+First, an strace of mdadm --incremental (3.0):
 
-Each device has a flag to say where the device is in sync write the
-array.  The bit map records which sectors of "in-sync" devices may not
-actually in in-sync at the moment.
-'resync' synchronises the 'in-sync' devices.
-'recovery' synchronises a 'not-in-sync' device.b
+turnip:~ # strace -f -e trace=open mdadm --incremental /dev/nbd0
+open("/etc/ld.so.cache", O_RDONLY)      = 3
+open("/lib64/libc.so.6", O_RDONLY)      = 3
+open("/dev/urandom", O_RDONLY)          = 3
+open("/etc/mdadm.conf", O_RDONLY)       = 3
+open("/dev/nbd0", O_RDONLY|O_EXCL|O_DIRECT) = 3
+open("/var/run/mdadm/map.lock", O_RDWR|O_CREAT, 0600) = 3
+open("/var/run/mdadm/map", O_RDONLY)    = -1 ENOENT (No such file or directory)
+open("/var/run/mdadm.map", O_RDONLY)    = -1 ENOENT (No such file or directory)
+open("/var/run/mdadm/map", O_RDONLY)    = -1 ENOENT (No such file or directory)
+open("/var/run/mdadm.map", O_RDONLY)    = -1 ENOENT (No such file or directory)
+open("/proc/mdstat", O_RDONLY)          = 4
+mdadm: /dev/md11 is already in use.
+turnip:~ #
 
 
-> 
-> >> Question 1:
-> >> I'm using a bitmap. Why does the rebuild start completely over?
-> >
-> > Because the bitmap isn't used to guide a rebuild, only a resync.
-> >
-> > The effect of --re-add is to make md do a resync rather than a rebuild
-> > if the device was previously a fully active member of the array.
-> 
-> Aha!  This explains a question I raised in another email. What
-> happened there is a previously fully active member of the raid got
-> added, somehow, as a spare, via --incremental. That's when the entire
-> raid thought it needed to be rebuilt. How did that (the device being
-> treated as a spare instead of as a previously fully active member)
-> happen?
+Running (again, v3.0) mdadm --incremental --rebuild-map works rebuilds the map.
 
-It is hard to guess without details, and they might be hard to collect
-after the fact.
-Maybe if you have the kernel logs of when the server rebooted and the
-recovery started, that might contain some hints.
+Then using --incremental /dev/nbd0 works (but it's resyncing **again**).
 
-Thanks,
-NeilBrown
+Does that help?
+
+>
+> Thanks,
+> NeilBrown
+>
+
+
+
+-- 
+Jon
