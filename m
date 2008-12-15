@@ -1,85 +1,63 @@
-From: Kevin Shanahan <kmshanah@disenchant.net>
-Subject: Re: Help recovering RAID6 failure
-Date: Tue, 16 Dec 2008 09:07:53 +1030
-Message-ID: <20081215223753.GG1749@cubit>
-References: <20081215220307.GE1749@cubit> <18758.55029.597319.376426@notabene.brown> <20081215222522.GF1749@cubit>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
+Date: Tue, 16 Dec 2008 09:38:57 +1100
+Message-ID: <20081215223857.GF32301@disturbed>
+References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan> <1229225480.16555.152.camel@localhost> <18757.4606.966139.10342@tree.ty.sabi.co.uk> <200812141912.59649.Martin@lichtvoll.de> <18757.33373.744917.457587@tree.ty.sabi.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20081215222522.GF1749@cubit>
+In-Reply-To: <18757.33373.744917.457587@tree.ty.sabi.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>
+Cc: Linux XFS <xfs@oss.sgi.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Dec 16, 2008 at 08:55:22AM +1030, Kevin Shanahan wrote:
-> On Tue, Dec 16, 2008 at 09:15:17AM +1100, Neil Brown wrote:
-> > On Tuesday December 16, kmshanah@disenchant.net wrote:
-> > > hermes:~# mdadm -A /dev/md5 /dev/sd[cefghijk]1
-> > > mdadm: failed to RUN_ARRAY /dev/md5: Input/output error
-> > 
-> > Try adding --force to over-ride apparent errors, and --verbose to help
-> > you see what is happening.
-> 
-> Hrm, force doesn't seem to help. Here's the verbose output:
-> 
-> hermes:~# mdadm -A --force --verbose /dev/md5 /dev/sd[cefghijk]1
-> mdadm: looking for devices for /dev/md5
-> mdadm: /dev/sdc1 is identified as a member of /dev/md5, slot 8.
-> mdadm: /dev/sde1 is identified as a member of /dev/md5, slot 0.
-> mdadm: /dev/sdf1 is identified as a member of /dev/md5, slot 1.
-> mdadm: /dev/sdg1 is identified as a member of /dev/md5, slot 2.
-> mdadm: /dev/sdh1 is identified as a member of /dev/md5, slot 6.
-> mdadm: /dev/sdi1 is identified as a member of /dev/md5, slot 5.
-> mdadm: /dev/sdj1 is identified as a member of /dev/md5, slot 4.
-> mdadm: /dev/sdk1 is identified as a member of /dev/md5, slot 3.
-> mdadm: added /dev/sdf1 to /dev/md5 as 1
-> mdadm: added /dev/sdg1 to /dev/md5 as 2
-> mdadm: added /dev/sdk1 to /dev/md5 as 3
-> mdadm: added /dev/sdj1 to /dev/md5 as 4
-> mdadm: added /dev/sdi1 to /dev/md5 as 5
-> mdadm: added /dev/sdh1 to /dev/md5 as 6
-> mdadm: no uptodate device for slot 7 of /dev/md5
-> mdadm: added /dev/sdc1 to /dev/md5 as 8
-> mdadm: no uptodate device for slot 9 of /dev/md5
-> mdadm: added /dev/sde1 to /dev/md5 as 0
-> mdadm: failed to RUN_ARRAY /dev/md5: Input/output error
+On Sun, Dec 14, 2008 at 10:02:05PM +0000, Peter Grandi wrote:
+> [ ... ]
+>=20
+> > But - as far as I understood - the filesystem doesn't have to
+> > wait for barriers to complete, but could continue issuing IO
+> > requests happily. A barrier only means, any request prior to
+> > that have to land before and any after it after it.
+>=20
+> > It doesn't mean that the barrier has to land immediately and
+> > the filesystem has to wait for this. At least that always was
+> > the whole point of barriers for me. If thats not the case I
+> > misunderstood the purpose of barriers to the maximum extent
+> > possible.
+>=20
+> Unfortunately that seems the case.
+>=20
+> The purpose of barriers is to guarantee that relevant data is
+> known to be on persistent storage (kind of hardware 'fsync').
+>=20
+> In effect write barrier means "tell me when relevant data is on
+> persistent storage", or less precisely "flush/sync writes now
+> and tell me when it is done". Properties as to ordering are just
+> a side effect.
 
-Oh, and here's what gets added to dmesg after running that command:
+No, that is incorrect.
 
-md: bind<sdf1>
-md: bind<sdg1>
-md: bind<sdk1>
-md: bind<sdj1>
-md: bind<sdi1>
-md: bind<sdh1>
-md: bind<sdc1>
-md: bind<sde1>
-md: md5: raid array is not clean -- starting background reconstruction
-raid5: device sde1 operational as raid disk 0
-raid5: device sdc1 operational as raid disk 8
-raid5: device sdh1 operational as raid disk 6
-raid5: device sdi1 operational as raid disk 5
-raid5: device sdj1 operational as raid disk 4
-raid5: device sdk1 operational as raid disk 3
-raid5: device sdg1 operational as raid disk 2
-raid5: device sdf1 operational as raid disk 1
-raid5: cannot start dirty degraded array for md5
-RAID5 conf printout:
- --- rd:10 wd:8
- disk 0, o:1, dev:sde1
- disk 1, o:1, dev:sdf1
- disk 2, o:1, dev:sdg1
- disk 3, o:1, dev:sdk1
- disk 4, o:1, dev:sdj1
- disk 5, o:1, dev:sdi1
- disk 6, o:1, dev:sdh1
- disk 8, o:1, dev:sdc1
-raid5: failed to run raid set md5
-md: pers->run() failed ...
+Barriers provide strong ordering semantics.  I/Os issued before the
+barrier must be completed before the barrier I/O, and I/Os issued
+after the barrier write must not be started before the barrier write
+completes. The elevators are not allowed to re-=D0=BErder I/Os around
+barriers.
 
-This is run on Linux 2.6.26.9, mdadm 2.6.7.1 (Debian)
+This is all documented in Documentation/block/barrier.txt. Please
+read it because most of what you are saying appears to be based on
+incorrect assumptions about what barriers do.
 
 Cheers,
-Kevin.
+
+Dave.
+--=20
+Dave Chinner
+david@fromorbit.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
