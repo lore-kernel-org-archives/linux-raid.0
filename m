@@ -1,56 +1,35 @@
-From: Lars Schimmer <l.schimmer@cgv.tugraz.at>
-Subject: Re: MD Feature Request: non-degraded component replacement
-Date: Tue, 16 Dec 2008 11:55:32 +0100
-Message-ID: <49478924.9010004@cgv.tugraz.at>
-References: <49477689.2010208@dgreaves.com> <alpine.DEB.1.10.0812160450080.28063@p34.internal.lan>
+From: "Max Waterman" <davidmaxwaterman@fastmail.co.uk>
+Subject: upgrade advice
+Date: Tue, 16 Dec 2008 13:10:21 +0200
+Message-ID: <d5fe39840812160310t45e822c1geb633f805cf5388e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0812160450080.28063@p34.internal.lan>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Hi,
 
-Justin Piszcz wrote:
->=20
->=20
-> On Tue, 16 Dec 2008, David Greaves wrote:
->=20
->> Personally I think this feature is more important than the reshaping
->> requests;
->> of course that's just one opinion after replacing about 20 flaky 1Tb
->> drives in
->> the past 6 months :)
-> What were the make/model of those drives, how did they fail?
+I have a 8x200GB RAID5 array - 4 SATA and 4 EIDE. It has 2 spare, so
+that's only 6 drives actually in the array, making 1TB of space (I
+think that's right).
 
-=46ar more important: how much do you have in production?
-AS I got roughly 15 Seagate 1 GB HDs here and not one of them failed fo=
-r
-the last year.
-And 20 of 30 running is really bad, but 20 from 500 running is not as
-bad as it seems ;-)
+The drives are quite old now, and people are asking what I want for
+Christmas...so I'm wondering how to upgrade this setup. Clearly I
+don't want to retire my existing drives prematurely, since they've
+shown no sign of problem.
 
-MfG,
-Lars Schimmer
-- --
-- -------------------------------------------------------------
-TU Graz, Institut f=FCr ComputerGraphik & WissensVisualisierung
-Tel: +43 316 873-5405       E-Mail: l.schimmer@cgv.tugraz.at
-=46ax: +43 316 873-5402       PGP-Key-ID: 0x4A9B1723
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+My initial thought was to make a RAID1 out of a new 1TB disk and my
+existing RAID5 array, but perhaps that doesn't make much sense...
 
-iEUEARECAAYFAklHiSQACgkQmWhuE0qbFyMQfACghCdF9JYcdULXjLfaxZPv01mu
-GHEAmJ4x4Dyk0py+a2Bxi+BfOTkkfAg=3D
-=3DFdYo
------END PGP SIGNATURE-----
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Perhaps I could get a 400GB drive (or more likely 500GB) and make a
+RAID1 with a couple of the existing 200GBs?
+
+...but I'm just guessing and the purpose of this email is to get advice.
+
+What do you guys think?
+
+Max.
