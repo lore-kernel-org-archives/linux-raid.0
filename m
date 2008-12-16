@@ -1,64 +1,40 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: MD: Feature Request: Estimate of blocks necessary to complete sync
-Date: Tue, 16 Dec 2008 11:58:17 +0100
-Message-ID: <20081216105817.GC17966@skl-net.de>
-References: <cccedfc60812110727p18abcf49v909cb0860c2d4c02@mail.gmail.com> <18759.7048.623851.9550@notabene.brown>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: MD Feature Request: non-degraded component replacement
+Date: Tue, 16 Dec 2008 06:37:16 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0812160636390.725@p34.internal.lan>
+References: <49477689.2010208@dgreaves.com> <alpine.DEB.1.10.0812160450080.28063@p34.internal.lan> <49478924.9010004@cgv.tugraz.at>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="v4PrGfol6wGsg/Ra"
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <18759.7048.623851.9550@notabene.brown>
+In-Reply-To: <49478924.9010004@cgv.tugraz.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Jon Nelson <jnelson-linux-raid@jamponi.net>, LinuxRaid <linux-raid@vger.kernel.org>
+To: Lars Schimmer <l.schimmer@cgv.tugraz.at>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
---v4PrGfol6wGsg/Ra
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On 14:07, Neil Brown wrote:
-> > What would be nice is the addition of something like this:
-> > Dec 11 08:59:40 turnip kernel: md: bitmap shows 27 128K blocks requirin=
-g sync
-> > or
-> > Dec 11 08:59:40 turnip kernel: md: bitmap shows 3456K blocks requiring =
-sync
-> > or some other analogue.
-> >=20
-> > Seem reasonable?
->=20
-> Probably.  I wouldn't be too hard to could the number of bits that are
-> set.  I guess it could be useful.
->=20
-> I'll put it on my list :-)
+On Tue, 16 Dec 2008, Lars Schimmer wrote:
 
-We already have
-
-	printk(KERN_INFO "%s: bitmap initialized from disk: "
-		"read %lu/%lu pages, set %lu bits\n",
-		bmname(bitmap), bitmap->file_pages, num_pages, bit_cnt);
-
-in bitmap.c. Shouldn't that do the trick?
-
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---v4PrGfol6wGsg/Ra
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFJR4nJWto1QDEAkw8RAoAMAJ0fJxWsGaea+P3s7Z9Zaektm+OeeACfXzbv
-oLO7nXcFIPgDzTK4H8jCgBU=
-=Prp9
------END PGP SIGNATURE-----
-
---v4PrGfol6wGsg/Ra--
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+>
+> Justin Piszcz wrote:
+>>
+>>
+>> On Tue, 16 Dec 2008, David Greaves wrote:
+>>
+>>> Personally I think this feature is more important than the reshaping
+>>> requests;
+>>> of course that's just one opinion after replacing about 20 flaky 1Tb
+>>> drives in
+>>> the past 6 months :)
+>> What were the make/model of those drives, how did they fail?
+>
+> Far more important: how much do you have in production?
+> AS I got roughly 15 Seagate 1 GB HDs here and not one of them failed for
+> the last year.
+> And 20 of 30 running is really bad, but 20 from 500 running is not as
+> bad as it seems ;-)
+Agree, but I would still be interested in the make/model and what 
+controller they were attached to and how they failed?
