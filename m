@@ -1,12 +1,10 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: weird issues with raid1
-Date: Tue, 16 Dec 2008 12:21:42 +1100
-Message-ID: <18759.678.74091.236787@notabene.brown>
-References: <cccedfc60812051810q3c44ae28x514072cb870ac390@mail.gmail.com>
-	<18757.62097.166706.244330@notabene.brown>
-	<cccedfc60812150542y5607d168q94c09d8dc3438226@mail.gmail.com>
-	<18758.52536.345145.238926@notabene.brown>
-	<cccedfc60812151347j659112c5na3aa8cd0eb044669@mail.gmail.com>
+Subject: Re: behavior different from mdadm 2.6.4 and 3.0?
+Date: Tue, 16 Dec 2008 12:27:39 +1100
+Message-ID: <18759.1035.627538.450310@notabene.brown>
+References: <cccedfc60812150654u2e841bf8na517a75820d0c463@mail.gmail.com>
+	<18758.51222.370545.686154@notabene.brown>
+	<cccedfc60812151335u3d08dc6bid79bae8c88a62133@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -18,66 +16,67 @@ Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 On Monday December 15, jnelson-linux-raid@jamponi.net wrote:
-> On Mon, Dec 15, 2008 at 3:33 PM, Neil Brown <neilb@suse.de> wrote:
+> On Mon, Dec 15, 2008 at 3:11 PM, Neil Brown <neilb@suse.de> wrote:
 > > On Monday December 15, jnelson-linux-raid@jamponi.net wrote:
+> >> mdadm --incremental seems to behave differently for me between mdadm
+> >> 2.6.4 and 3.0
 > >>
-> >> Aha!  This explains a question I raised in another email. What
-> >> happened there is a previously fully active member of the raid got
-> >> added, somehow, as a spare, via --incremental. That's when the entire
-> >> raid thought it needed to be rebuilt. How did that (the device being
-> >> treated as a spare instead of as a previously fully active member)
-> >> happen?
+> >> With 2.6.4, mdadm --incremental /dev/nbd0 does this:
+> >>
+> >> mdadm: /dev/nbd0 attached to /dev/md10 which is already active.
+> >>
+> >> With 3.0, it does this:
+> >>
+> >> mdadm: /dev/md10 is already in use.
+> >>
+> >> and does *not* add it to the array.
 > >
-> > It is hard to guess without details, and they might be hard to collect
-> > after the fact.
-> > Maybe if you have the kernel logs of when the server rebooted and the
-> > recovery started, that might contain some hints.
+> > Sounds like /var/run/mdadm/map is not correctly up-to-date.
+> > Does running
+> >   mdadm -Ir
+> >
+> > make "mdadm -I /dev/nbd0" work properly again?
+> >
+> > Can you provide a sequence of steps which leads to the error message
+> > that you report?
 > 
-> I hope this helps.
+> I have to reboot to make this happen. There is probably a less
+> invasive way.... but it's what I know works.
+> 
+> First, an strace of mdadm --incremental (3.0):
+> 
+> turnip:~ # strace -f -e trace=open mdadm --incremental /dev/nbd0
+> open("/etc/ld.so.cache", O_RDONLY)      = 3
+> open("/lib64/libc.so.6", O_RDONLY)      = 3
+> open("/dev/urandom", O_RDONLY)          = 3
+> open("/etc/mdadm.conf", O_RDONLY)       = 3
+> open("/dev/nbd0", O_RDONLY|O_EXCL|O_DIRECT) = 3
+> open("/var/run/mdadm/map.lock", O_RDWR|O_CREAT, 0600) = 3
+> open("/var/run/mdadm/map", O_RDONLY)    = -1 ENOENT (No such file or directory)
+> open("/var/run/mdadm.map", O_RDONLY)    = -1 ENOENT (No such file or directory)
 
-Yes it does, though I generally prefer to get more complete logs.  If
-I get the surrounding log lines then I know what isn't there as well
-as what is - and it isn't always clear at first which bits will be
-important. 
+That's the problem then.
+The array was started from initrd and any mdadm/map that was created
+would have got lost.
+Now it needs one to continue with assembly and cannot find one.
+I'll have to get it to do the "-Ir" thing automagically if mdadm/map
+does not exist.
 
-The problem here is that --incremental doesn't provide the --re-add
-functionality that you are depending on.  That was an oversight on my
-part.  I'll see if I can get it fixed.
-In the mean time, you'll need to use --re-add (or --add, it does the
-same thing in your situation) to add nbd0 to the array.
+> open("/var/run/mdadm/map", O_RDONLY)    = -1 ENOENT (No such file or directory)
+> open("/var/run/mdadm.map", O_RDONLY)    = -1 ENOENT (No such file or directory)
+> open("/proc/mdstat", O_RDONLY)          = 4
+> mdadm: /dev/md11 is already in use.
+> turnip:~ #
+> 
+> 
+> Running (again, v3.0) mdadm --incremental --rebuild-map works rebuilds the map.
+> 
+> Then using --incremental /dev/nbd0 works (but it's resyncing **again**).
+> 
+> Does that help?
+
+So: yes it does - thanks.
+
+I've got some coding to do ;-)
 
 NeilBrown
-
-
-> 
-> Prior to the reboot:
-> 
-> Dec 15 15:19:39 turnip kernel: md: md11: recovery done.
-> Dec 15 15:19:39 turnip kernel: RAID1 conf printout:
-> Dec 15 15:19:39 turnip kernel:  --- wd:2 rd:2
-> Dec 15 15:19:39 turnip kernel:  disk 0, wo:0, o:1, dev:nbd0
-> Dec 15 15:19:39 turnip kernel:  disk 1, wo:0, o:1, dev:sda
-> 
-> During booting:
-> 
-> <6>raid1: raid set md11 active with 1 out of 2 mirrors
-> <6>md11: bitmap initialized from disk: read 1/1 pages, set 1 bits
-> <6>created bitmap (10 pages) for device md11
-> 
-> After boot:
-> 
-> Dec 15 15:34:38 turnip kernel: md: bind<nbd0>
-> Dec 15 15:34:38 turnip kernel: RAID1 conf printout:
-> Dec 15 15:34:38 turnip kernel:  --- wd:1 rd:2
-> Dec 15 15:34:38 turnip kernel:  disk 0, wo:1, o:1, dev:nbd0
-> Dec 15 15:34:38 turnip kernel:  disk 1, wo:0, o:1, dev:sda
-> Dec 15 15:34:38 turnip kernel: md: recovery of RAID array md11
-> Dec 15 15:34:38 turnip kernel: md: minimum _guaranteed_  speed: 1000
-> KB/sec/disk.
-> Dec 15 15:34:38 turnip kernel: md: using maximum available idle IO
-> bandwidth (but not more than 200000 KB/sec) for recovery.
-> Dec 15 15:34:38 turnip kernel: md: using 128k window, over a total of
-> 78123988 blocks.
-> 
-> /dev/nbd0 was added via --incremental (mdadm 3.0)
-> 
