@@ -1,99 +1,55 @@
-From: Kevin Shanahan <kmshanah@disenchant.net>
-Subject: Re: Help recovering RAID6 failure
-Date: Tue, 16 Dec 2008 09:48:08 +1030
-Message-ID: <20081215231808.GI1749@cubit>
-References: <20081215220307.GE1749@cubit> <18758.55029.597319.376426@notabene.brown> <20081215222522.GF1749@cubit> <20081215223753.GG1749@cubit> <18758.58031.230346.101105@notabene.brown>
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+Subject: Re: raid1 + writemostly
+Date: Mon, 15 Dec 2008 18:14:28 -0600
+Message-ID: <cccedfc60812151614m55c59891p52fd80ed62e0c504@mail.gmail.com>
+References: <cccedfc60812151030y630bb6c3g40a926bced2b1c09@mail.gmail.com>
+	 <18758.52113.251622.783466@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <18758.52113.251622.783466@notabene.brown>
 Content-Disposition: inline
-In-Reply-To: <18758.58031.230346.101105@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Dec 16, 2008 at 10:05:19AM +1100, Neil Brown wrote:
-> On Tuesday December 16, kmshanah@disenchant.net wrote:
-> > 
-> > Oh, and here's what gets added to dmesg after running that command:
-> > 
-> 
-> > raid5: cannot start dirty degraded array for md5
-> 
-> I thought that might be the case.  --force is meant to fix that -
-> remove the 'dirty' flag from the array.
-> > 
-> > This is run on Linux 2.6.26.9, mdadm 2.6.7.1 (Debian)
-> 
-> Hmm.. and there goes that theory.  There was a bug in mdadm prior to
-> 2.6 which caused --force not to work for raid6 with 2 drives missing.
-> 
-> It looks like some of your devices are marks 'clean' and some are
-> 'active'.  mdadm is noticing one that is 'clean' and not bothering to
-> mark the others as 'clean'.  The kernel is seeing one that is 'active'
-> and complaining.
-> 
-> The devices that are 'active' are sd[efl]1.  Maybe if you list one of
-> those last it will work.
-> e.g.
-> 
->   mdadm -A --force --verbose /dev/md5 /dev/sd[cfghijk]1 /dev/sde1
-> 
-> If not, try listing it first.
+On Mon, Dec 15, 2008 at 3:26 PM, Neil Brown <neilb@suse.de> wrote:
+> On Monday December 15, jnelson-linux-raid@jamponi.net wrote:
+>> According to the manpage for mdadm, --write-mostly can only be used
+>> add build, create, or add time.  How does one set write-mostly devices
+>> *after* they've been added?
+>
+> You cannot.
+> The easiest approach is to remove it and re-add it with the
+> write-mostly flag.
 
-Aha, you're a life saver Neil:
+OK. However, why does fiddling with the
+/sys/block/mdX/dev-someDevice/state seem to do it?
 
-hermes:~# mdadm -A --force --verbose /dev/md5 /dev/sd[cfghijk]1 /dev/sde1
-mdadm: looking for devices for /dev/md5
-mdadm: /dev/sdc1 is identified as a member of /dev/md5, slot 8.
-mdadm: /dev/sdf1 is identified as a member of /dev/md5, slot 1.
-mdadm: /dev/sdg1 is identified as a member of /dev/md5, slot 2.
-mdadm: /dev/sdh1 is identified as a member of /dev/md5, slot 6.
-mdadm: /dev/sdi1 is identified as a member of /dev/md5, slot 5.
-mdadm: /dev/sdj1 is identified as a member of /dev/md5, slot 4.
-mdadm: /dev/sdk1 is identified as a member of /dev/md5, slot 3.
-mdadm: /dev/sde1 is identified as a member of /dev/md5, slot 0.
-mdadm: added /dev/sdf1 to /dev/md5 as 1
-mdadm: added /dev/sdg1 to /dev/md5 as 2
-mdadm: added /dev/sdk1 to /dev/md5 as 3
-mdadm: added /dev/sdj1 to /dev/md5 as 4
-mdadm: added /dev/sdi1 to /dev/md5 as 5
-mdadm: added /dev/sdh1 to /dev/md5 as 6
-mdadm: no uptodate device for slot 7 of /dev/md5
-mdadm: added /dev/sdc1 to /dev/md5 as 8
-mdadm: no uptodate device for slot 9 of /dev/md5
-mdadm: added /dev/sde1 to /dev/md5 as 0
-mdadm: failed to RUN_ARRAY /dev/md5: Input/output error
-hermes:~# mdadm -S /dev/md5
-mdadm: stopped /dev/md5
-hermes:~# mdadm -A --force --verbose /dev/md5 /dev/sde1 /dev/sd[cfghijk]1
-mdadm: looking for devices for /dev/md5
-mdadm: /dev/sde1 is identified as a member of /dev/md5, slot 0.
-mdadm: /dev/sdc1 is identified as a member of /dev/md5, slot 8.
-mdadm: /dev/sdf1 is identified as a member of /dev/md5, slot 1.
-mdadm: /dev/sdg1 is identified as a member of /dev/md5, slot 2.
-mdadm: /dev/sdh1 is identified as a member of /dev/md5, slot 6.
-mdadm: /dev/sdi1 is identified as a member of /dev/md5, slot 5.
-mdadm: /dev/sdj1 is identified as a member of /dev/md5, slot 4.
-mdadm: /dev/sdk1 is identified as a member of /dev/md5, slot 3.
-mdadm: added /dev/sdf1 to /dev/md5 as 1
-mdadm: added /dev/sdg1 to /dev/md5 as 2
-mdadm: added /dev/sdk1 to /dev/md5 as 3
-mdadm: added /dev/sdj1 to /dev/md5 as 4
-mdadm: added /dev/sdi1 to /dev/md5 as 5
-mdadm: added /dev/sdh1 to /dev/md5 as 6
-mdadm: no uptodate device for slot 7 of /dev/md5
-mdadm: added /dev/sdc1 to /dev/md5 as 8
-mdadm: no uptodate device for slot 9 of /dev/md5
-mdadm: added /dev/sde1 to /dev/md5 as 0
-mdadm: /dev/md5 has been started with 8 drives (out of 10).
 
-Now to check my data is still okay.
+>> Why doesn't --examine-bitmap show the right mode?
+>
+> What were you expecting?  The bitmap never reports anything about
+> writemostly, only write-behind.
 
-> I'll try to fix mdadm so that it gets this right.
+Yes, I was expecting write-behind. D'oh!
 
-Cool - glad it wasn't just a lack of coffee on my part ;)
+>> Also, removing the bitmap from the array does not zero out the bitmap
+>> on the actual device. Shouldn't it do that?
+>
+> No.  It simply records in the array metadata that there is no bitmap.
+> It might be sensible to get "--examine-bitmap" to report that the
+> bitmap is not active in some way.
 
-Cheers,
-Kevin.
+I'd like to offer my perspective on that - I feel as though when
+bitmaps are removed from arrays that the actual bitmap data should be
+zeroed (or marked as invalid somehow). What we have is a situation
+wherein a device that has never had a bitmap will say more or less
+just that when queried. However, a device that has had a bitmap at
+*any* point in the past (provided it's not been overwritten) will
+display that bitmap, no matter how crazy it is.
+
+-- 
+Jon
