@@ -1,50 +1,68 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: Re: raid1 recovery: reads and writes
-Date: Mon, 15 Dec 2008 20:40:24 -0600
-Message-ID: <cccedfc60812151840g8febe5ayfda29ae609bca9df@mail.gmail.com>
-References: <cccedfc60812150545s7159f0a2x2fa7f36ecf8d9c60@mail.gmail.com>
-	 <18758.51053.866819.442495@notabene.brown>
-	 <e9c3a7c20812151654u5d644ccbv2c925a2fe2bc1c7e@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: raid5 reshape stuck
+Date: Tue, 16 Dec 2008 13:43:41 +1100
+Message-ID: <18759.5597.253477.398427@notabene.brown>
+References: <22F91D3D67E34C95B66F6AA0739F22DB@waptak.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e9c3a7c20812151654u5d644ccbv2c925a2fe2bc1c7e@mail.gmail.com>
-Content-Disposition: inline
+In-Reply-To: message from Yuriy Shkandybin on Friday December 12
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Neil Brown <neilb@suse.de>, LinuxRaid <linux-raid@vger.kernel.org>
+To: Yuriy Shkandybin <jura@netams.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Dec 15, 2008 at 6:54 PM, Dan Williams <dan.j.williams@intel.com> wrote:
-> On Mon, Dec 15, 2008 at 2:09 PM, Neil Brown <neilb@suse.de> wrote:
->> On Monday December 15, jnelson-linux-raid@jamponi.net wrote:
->>> I have a software raid1 which underwent a recovery recently.
->>> While it was recovering, I could not understand why I was seeing an
->>> equal amount of *read* I/O as write I/O to the device the raid1 was
->>> recovering to. That's to say, the raid1 was rebuilding on to a spare
->>> but instead of just writing I was seeing (nearly exactly) the same
->>> amount of read I/O as write I/O. The non-spare device was getting
->>> almost exclusively read I/O as expected. Why was the spare getting any
->>> read I/O at all?
+On Friday December 12, jura@netams.com wrote:
+> Hello.
+> 
+> I've run into next problem:
+> 
+> there was raid5  md11( 3 of 3) from sdb4,sdg1,sdd1
+> i've run
+> mdadm /dev/md11 -a /dev/sdc1
+> mdadm /dev/md11 -a /dev/sde1
+> mdadm /dev/md11 -a /dev/sdf1
+> mdadm --grow /dev/md11 --raid-devices=6
+> reshape started
+> shortly after i realized that sdd1 was too slow , and removed it 
+> mdadm /dev/md1 -f /dev/sdd1 -r /dev/sdd1
+> and rebooted  in hope to fix sdd speed 
+> 
+> after that md11_reshape stalled and md11 unaccessible 
+> and programms tried to access md11 stuck in D state too
+> also strange to see 
+>   Delta Devices : 2, (4->6)
 
-..
+Why is this strange?  You are reshaping an array from 4 drives to 6
+devices.  The difference (delta) between those numbers is 2.  Hence
+the message.
 
-> Yes it is hard to guess what is happening here; however, should not
-> the following commit go to -stable?
->
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=56ac36d722d0d27c03599d1245ac0ab59e474e5c
+> 
+> Any chance get to complete reshape or receive access to md11 at least read-only?
+> 
+> 
+> 
+> Below different outputs that might help to identify problem.
+> cat /proc/mdstat
+> md11 : active raid5 sdb4[0] sde1[5] sdf1[3] sdg1[2] sdc1[1]
+>       586073088 blocks super 0.91 level 5, 1024k chunk, algorithm 2 [6/5] [UUUU_U]
+                                             ^^^^^
 
-Is it possible this commit is (partially) responsible for what I was
-seeing? Under what conditions would it trigger?
+That is a useful clue, together with the stack traces.
+To reshape an array, md needs to cache at least 4 full stripes.  With
+a chunk size of 1024K, that is 1024 4K pages.
+The stripe_cache_size defaults to 256 which is too small.
+When you start a reshape, mdadm increases the size of the stripe_cache
+to whatever you need.  However when you assemble the array after
+a reboot in the middle of a reshape, mdadm doesn't fix the 
+stripe_cache_size.  I need to fix that.
 
-For me, it was a thoroughly unexpected recovery - I had expected to
---re-add the device and have it resync up very quickly - this normally
-takes a few seconds, but instead for some reason it went into a full
-recovery. I was stracing the nbd-server process responsible for the
-block device and it was definitely getting read and write requests in
-equal measure. However, later when I actually did rebuild the array
-the recovery was (almost) 100% write.
+You can do it by hand with the command
 
--- 
-Jon
+  echo 1024 > /sys/block/md11/md/stripe_cache_size
+
+That should cause the reshape to start running smoothly.
+
+Thanks,
+NeilBrown
