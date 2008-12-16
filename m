@@ -1,39 +1,37 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: Re: can I freeze I/O for some time to a given disk / md / dm	device?
-Date: Tue, 16 Dec 2008 17:19:21 +0100
-Message-ID: <4947D509.6080005@wpkg.org>
-References: <49479897.1080500@wpkg.org> <20081216161312.GI18423@boogie.lpds.sztaki.hu>
+From: Redeeman <redeeman@metanurb.dk>
+Subject: Re: upgrade advice
+Date: Tue, 16 Dec 2008 17:27:30 +0100
+Message-ID: <1229444850.22331.53.camel@localhost>
+References: <d5fe39840812160310t45e822c1geb633f805cf5388e@mail.gmail.com>
+	 <alpine.DEB.1.10.0812160641130.725@p34.internal.lan>
+	 <1229428184.22331.43.camel@localhost>
+	 <alpine.DEB.1.10.0812160807200.725@p34.internal.lan>
+	 <1229436950.22331.45.camel@localhost>
+	 <cccedfc60812160757x2af73afbv4a69eac31d212062@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20081216161312.GI18423@boogie.lpds.sztaki.hu>
+In-Reply-To: <cccedfc60812160757x2af73afbv4a69eac31d212062@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gabor Gombas <gombasg@sztaki.hu>
-Cc: Linux IDE <linux-ide@vger.kernel.org>, Linux-Raid <linux-raid@vger.kernel.org>, LVM general discussion and development <linux-lvm@redhat.com>
+To: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Gabor Gombas schrieb:
-> On Tue, Dec 16, 2008 at 01:01:27PM +0100, Tomasz Chmielewski wrote:
+On Tue, 2008-12-16 at 09:57 -0600, Jon Nelson wrote:
+> What about Hitachi?
 > 
->> Is it possible to "freeze I/O" for some time to a given disk / md / dm  
->> device?
->>
->> Say, "freeze I/O" so that userspace waits for any response for 30, 60  
->> seconds or more?
+> Samsung has been my go-to drive for the better part of a decade, and
+Well.. i had seriously considered the 1tb samsung, however, it appears
+some people here havent had too good experience with it.. but i guess
+there will always be some unlucky people. But the western digitals
+appears to be the ones consuming lowest amount of power by far.
+
+> Seagate hasn't won any favor with me, so I've been relying on Samsung
+i have some 500 and 1000gb seagates in raid which works excellently.
+> and Hitachi with great results - so far.
+No experiences there, but looking at the power consumptions, i'd rather
+not go there :)
 > 
-> For real disks you can use /sys/block/sdX/device/unload_heads to achieve
-> something similar (see Documentation/laptops/disk-shock-protection.txt
-> in the kernel source about how to use it). That won't work for md/dm
-> devices though.
+> 
 
-Thanks, I think I have enough hints now.
-
-Bryn M. Reeves on linux-lvm list suggested using dmsetup's 
-suspend/resume, which seems to be the easiest way for this purpose 
-(requires device mapper / LVM).
-
-
--- 
-Tomasz Chmielewski
-http://wpkg.org
