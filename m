@@ -1,52 +1,41 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: can I freeze I/O for some time to a given disk / md /
-	dm device?
-Date: Tue, 16 Dec 2008 13:01:27 +0100
-Message-ID: <49479897.1080500@wpkg.org>
-Reply-To: LVM general discussion and development <linux-lvm@redhat.com>
+From: Bruce Allen <ballen@gravity.phys.uwm.edu>
+Subject: Re: [smartmontools-support] Velociraptor biting the dust (9th disk,
+ continued to use it, and..)
+Date: Tue, 16 Dec 2008 06:31:00 -0600 (CST)
+Message-ID: <Pine.LNX.4.64.0812160625150.8812@gc.phys.uwm.edu>
+References: <alpine.DEB.1.10.0811221638360.707@p34.internal.lan>
+ <20081122215529.1973f820@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-lvm-bounces@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/linux-lvm>,
-	<mailto:linux-lvm-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/linux-lvm>
-List-Post: <mailto:linux-lvm@redhat.com>
-List-Help: <mailto:linux-lvm-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/linux-lvm>,
-	<mailto:linux-lvm-request@redhat.com?subject=subscribe>
-Sender: linux-lvm-bounces@redhat.com
-Errors-To: linux-lvm-bounces@redhat.com
-To: Linux IDE <linux-ide@vger.kernel.org>, Linux-Raid <linux-raid@vger.kernel.org>, LVM general discussion and development <linux-lvm@redhat.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20081122215529.1973f820@lxorguk.ukuu.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, Smartmontools Mailing List <smartmontools-support@lists.sourceforge.net>, Alan Piszcz <ap@solarrain.com>
 List-Id: linux-raid.ids
 
-Is it possible to "freeze I/O" for some time to a given disk / md / dm 
-device?
+Hi Alan, Hi Justin,
 
-Say, "freeze I/O" so that userspace waits for any response for 30, 60 
-seconds or more?
+Sorry, following up on old emails... I am behind as usual.
 
-If not, is it possible to reset a link repeatedly, like ATA does when it 
-hits certain disk problems? I.e., can I do the below manually?
+>> [632714.975844] ata1.00: status: { DRDY ERR }
+>> [632714.975847] ata1.00: error: { IDNF }
 
-ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
-ata4.00: cmd 25/00:08:b8:c2:78/00:00:21:00:00/e0 tag 0 dma 4096 in
-          res 40/00:00:bb:c2:78/40:00:21:00:00/e0 Emask 0x4 (timeout)
-ata4.00: status: { DRDY }
-ata4: hard resetting link
+> IDNF - ID not found, usually these days means 'asked for a sector out of
+> range'
 
+Justin, was this error provoked for example by you using a 'dd' command to 
+try and read stuff past the end of the disk?  Because the md device driver 
+should not try and do something like that.  The md device driver knows how 
+many LBAs are available on the disk and should never issue a read or write 
+past the end of the device.
 
-I need this to trace a problem with a userspace application which 
-segfaults when ATA resets the link repeatedly (i.e. one broken drive in 
-a RAID array).
+Justin, I have the impression that this IDNF error was NOT due to you 
+issuing dd commands or similar, but was part of 'normal' md operation.
 
+Alan, am I overlooking something?  (One feature that might provide such 
+errors is the 'host reserved address' set of commands that allow you to 
+'clip' the disk capacity.)
 
--- 
-Tomasz Chmielewski
-http://wpkg.org
-
-_______________________________________________
-linux-lvm mailing list
-linux-lvm@redhat.com
-https://www.redhat.com/mailman/listinfo/linux-lvm
-read the LVM HOW-TO at http://tldp.org/HOWTO/LVM-HOWTO/
+Cheers,
+     Bruce
