@@ -1,94 +1,116 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
-Date: Wed, 17 Dec 2008 10:14:11 +1100
-Message-ID: <20081216231411.GG32301@disturbed>
-References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan> <18757.33373.744917.457587@tree.ty.sabi.co.uk> <20081215223857.GF32301@disturbed> <200812161039.07700.Martin@lichtvoll.de>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: MD Feature Request: non-degraded component replacement
+Date: Tue, 16 Dec 2008 18:25:28 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0812161824040.31132@p34.internal.lan>
+References: <49477689.2010208@dgreaves.com> <alpine.DEB.1.10.0812160450080.28063@p34.internal.lan> <49478924.9010004@cgv.tugraz.at> <alpine.DEB.1.10.0812160636390.725@p34.internal.lan> <4947A585.4030203@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200812161039.07700.Martin@lichtvoll.de>
+In-Reply-To: <4947A585.4030203@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Martin Steigerwald <Martin@lichtvoll.de>
-Cc: linux-xfs@oss.sgi.com, Peter Grandi <pg_xf2@xf2.for.sabi.co.uk>, Linux RAID <linux-raid@vger.kernel.org>Linux XFS <xfs@oss.sgi.com>
+To: David Greaves <david@dgreaves.com>
+Cc: Lars Schimmer <l.schimmer@cgv.tugraz.at>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Dec 16, 2008 at 10:39:07AM +0100, Martin Steigerwald wrote:
-> Am Montag 15 Dezember 2008 schrieb Dave Chinner:
-> > On Sun, Dec 14, 2008 at 10:02:05PM +0000, Peter Grandi wrote:
-> > > The purpose of barriers is to guarantee that relevant data is
-> > > known to be on persistent storage (kind of hardware 'fsync').
-> > >
-> > > In effect write barrier means "tell me when relevant data is on
-> > > persistent storage", or less precisely "flush/sync writes now
-> > > and tell me when it is done". Properties as to ordering are just
-> > > a side effect.
-> >
-> > No, that is incorrect.
-> >
-> > Barriers provide strong ordering semantics.  I/Os issued before the
-> > barrier must be completed before the barrier I/O, and I/Os issued
-> > after the barrier write must not be started before the barrier writ=
-e
-> > completes. The elevators are not allowed to re-=D0=BErder I/Os arou=
-nd
-> > barriers.
-> >
-> > This is all documented in Documentation/block/barrier.txt. Please
-> > read it because most of what you are saying appears to be based on
-> > incorrect assumptions about what barriers do.
->=20
-> Hmmm, so I am not completely off track it seems ;-).
->=20
-> What I still do not understand then is: How can write barriers + writ=
-e=20
-> cache be slower than no write barriers + no cache?
-
-Because frequent write barriers cause ordering constraints on I/O.
-=46or example, in XFS log I/Os are sequential. With barriers enabled
-they cannot be merged by the elevator, whereas without barriers
-they can be merged and issued as a single I/O.
-
-=46urther, if you have no barrier I/os queued in the elevator, sorting
-and merging occurs across the entire queue of I/Os, not just the
-I/Os that have been issued after the last barrier I/O.
-
-Effectively the ordering constraints of barriers introduce more
-seeks by reducing the efficiency of the elevator due to constraining
-sorting and merging ranges.
-
-In many cases, the ordering constraints impose a higher seek penalty
-than the write cache can mitigate - the whole purpose of the barrier
-IOs is to force the cache to be flushed - so write caching does not
-improve performance when frequent barriers are issued. In this case,
-barriers are the problem and hence turning of the cache and barriers
-will result in higher performance.
 
 
+On Tue, 16 Dec 2008, David Greaves wrote:
 
-> I still would expect=20
-> write barriers + write cache be in between no barriers + write cache =
-and=20
-> no barriers + no cache performance wise.
+> Justin Piszcz wrote:
+>> On Tue, 16 Dec 2008, Lars Schimmer wrote:
+>>> Justin Piszcz wrote:
+>>>> On Tue, 16 Dec 2008, David Greaves wrote:
+>>>>> of course that's just one opinion after replacing about 20 flaky 1Tb
+>>>>> drives in
+>>>>> the past 6 months :)
+>>>> What were the make/model of those drives, how did they fail?
+>>>
+>>> Far more important: how much do you have in production?
+>>> AS I got roughly 15 Seagate 1 GB HDs here and not one of them failed for
+>>> the last year.
+>>> And 20 of 30 running is really bad, but 20 from 500 running is not as
+>>> bad as it seems ;-)
+>> Agree, but I would still be interested in the make/model and what
+>> controller they were attached to and how they failed?
+>
+> This is a home environment; (MythTV doncha know).
+>
+> I bought 9 Samsung HD103UJ 1Tb drives in June 2008.
+>
+> Since June I have RMAed 5 of the original 9.
+> I have then RMAed 3 of the 5 replacements.
+> I have then RMAed 2 of the 3 re-replacements.
+> And finally I RMAed 1 of the 2 re-re-replacements. (I think - I was confused at
+> this point - I have a list of 18+ serial numbers anyway)
+>
+> In November (ish) Samsung did the decent thing and replaced all 9 with HE103UJ
+> (enterprise) drives; no 'moaning' about using them in RAID etc.
+>
+> This weekend I replaced 3 of the HE models that were displaying essentially the
+> same problems (all on the same machine - the vast majority of the problems were
+> in this machine and, as it happens, the 3 in the md array).
+> During the replication I got a real media failures.
+>
+> Anyhow...
+>
+> I am using Dell SC420 chassis (SOHO class).
+> I am running 2.6.18-xen on one system, 2.6.25.4 on another. The controllers are
+> cheap dual-channel Sil24 PCIe cards and the Dell onboard controller.
+>
+> When I found smartctl -l scttempsts I can see that peak temperature is 44C
+> They are running in Dell servers in a cool environment; and previously these
+> servers supported many more drives.
+>
+> I had one smart DMA error which I'll attribute to a transient problem with a cable.
+>
+> All the other 'problems' are when SMART long self tests show eg:
+> 21 # 1  Extended offline    Completed: read failure       90%       424         4239
+> and
+>  1 Raw_Read_Error_Rate     0x000f   100   100   051    Pre-fail  Always       -
+>      62
+>
+> I'm not aware of any OS level issues but I have had some; I've not recorded them
+> as I'm taking the SMART self-test to be enough to indicate dodgy disks.
+>
+> I've never had any with Reallocated_Sector_Ct != 0
+>
+> I also note that the smart self test log does indeed show inconsistent summary
+> messages:
+> # 1  Short offline       Completed: read failure       20%      1236
+> 1953517887
+> # 2  Short offline       Aborted by host               20%      1212         -
+> # 3  Short offline       Aborted by host               10%      1188         -
+> # 4  Short offline       Aborted by host               10%      1164         -
+>
+> In fact each log shows "Completed: read failure" until the next log pushes it
+> down the stack; at that point it shows "Aborted by host". The % remaining is
+> key. Discussion on the smart list suggests that this is a firmware bug. (Indeed
+> this is now fixed on some newer RMA replacements).
+>
+> Also note that the LBA failure has been different (but very similar) for each
+> drive but consistent once it occurs. It often but not always goes away if I
+> force (dd) a read/write of the reported sector.
+>
+> I am in touch with a guy at Samsung who is interested in the problem but I've
+> not had any tech feedback.
+>
+> David
+> PS Thanks to Samsungs excellent advance replacement RMA service I have been able
+> to deal with these problems. No other drive maker offers this service in the UK
+> AFAIK. Of course I have spent *days* just ddrescue-ing disks. But I've not had
+> to use a backup yet despite *loads* of dual-drive+ failures.
 
-Depends entirely on the disk and the workload. Some disks are faster
-with wcache and barriers (e.g. laptop drives), some are faster with
-no wcache and no barriers (e.g. server drives)....
+Very thanks for this information, have you run other disks in the system 
+without issue?  BTW: I have seen this with the Velociraptors as well:
 
-> And would see anything else as a=20
-> regression basically.
+> In fact each log shows "Completed: read failure" until the next log pushes it
+> down the stack; at that point it shows "Aborted by host". The % remaining is
+> key. Discussion on the smart list suggests that this is a firmware bug. (Inde$
+> this is now fixed on some newer RMA replacements).
 
-No, just your usual "pick the right hardware" problem.
+When a drive is about to crap out it will start doing that, it will abort 
+the test or run forever..
 
-Cheers,
+I take it you are running at RAID6 with these disks?
 
-Dave.
---=20
-Dave Chinner
-david@fromorbit.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Justin.
