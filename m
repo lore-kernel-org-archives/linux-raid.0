@@ -1,37 +1,48 @@
-From: Redeeman <redeeman@metanurb.dk>
-Subject: Re: upgrade advice
-Date: Tue, 16 Dec 2008 17:27:30 +0100
-Message-ID: <1229444850.22331.53.camel@localhost>
-References: <d5fe39840812160310t45e822c1geb633f805cf5388e@mail.gmail.com>
-	 <alpine.DEB.1.10.0812160641130.725@p34.internal.lan>
-	 <1229428184.22331.43.camel@localhost>
-	 <alpine.DEB.1.10.0812160807200.725@p34.internal.lan>
-	 <1229436950.22331.45.camel@localhost>
-	 <cccedfc60812160757x2af73afbv4a69eac31d212062@mail.gmail.com>
+From: John Hendrikx <hjohn@xs4all.nl>
+Subject: Resync dropping drive with read-errors
+Date: Tue, 16 Dec 2008 18:39:22 +0100
+Message-ID: <4947E7CA.9000504@xs4all.nl>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cccedfc60812160757x2af73afbv4a69eac31d212062@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 2008-12-16 at 09:57 -0600, Jon Nelson wrote:
-> What about Hitachi?
-> 
-> Samsung has been my go-to drive for the better part of a decade, and
-Well.. i had seriously considered the 1tb samsung, however, it appears
-some people here havent had too good experience with it.. but i guess
-there will always be some unlucky people. But the western digitals
-appears to be the ones consuming lowest amount of power by far.
+Hi, I'm writing to tell about an experience I recently had with my raid 
+5 array.  No data was lost, but the way I had to recover my data seemed 
+a bit overly complicated.
 
-> Seagate hasn't won any favor with me, so I've been relying on Samsung
-i have some 500 and 1000gb seagates in raid which works excellently.
-> and Hitachi with great results - so far.
-No experiences there, but looking at the power consumptions, i'd rather
-not go there :)
-> 
-> 
+Here's what happened:
+
+1) 6 drive raid 5 array
+2) one drive failed
+3) I add a spare drive to the array, resync process starts
+4) Resync process bugs out at 90% orso because one of the other drives 
+had developed a read-error (since the array is big, such things are 
+easily unnoticed).
+5) Raid array drops out the drive with read-errors and is left in a 
+broken state, the new drive was not fully resynced yet...
+
+How I recovered it:
+
+6) Re-add the drive with read-errors (need to stop array, re-assemble it 
+with --force option, can't do it directly)
+7) Copy everything on the array to some other array
+8) When it bugged out again, I noted the file that caused problems, 
+repeated step 6 and copied all the rest.
+
+This seems to be a bit of a round-about way to do it.  I would much have 
+preferred if I could force the resync process to continue despite some 
+block being unreadable (and just log which blocks were causing problems 
+if forced in such a way).  I could then proceed to figure out which 
+files were affected, and replace the drive with read errors as well.
+
+Perhaps I missed something... I was considering just using dd to 
+overwrite the block causing problems (and hopefully get it to be 
+remapped), but I'm not 100% sure how LBA block numbers reported by 
+S.M.A.R.T. would related to block numbers dd uses.
+
+If I could have handled it better, let me know :)
 
