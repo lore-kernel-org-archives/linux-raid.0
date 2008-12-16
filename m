@@ -1,37 +1,68 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: raid1 recovery: reads and writes
-Date: Tue, 16 Dec 2008 14:04:58 -0700
-Message-ID: <494817FA.5040108@intel.com>
-References: <cccedfc60812150545s7159f0a2x2fa7f36ecf8d9c60@mail.gmail.com>	 <18758.51053.866819.442495@notabene.brown>	 <e9c3a7c20812151654u5d644ccbv2c925a2fe2bc1c7e@mail.gmail.com> <cccedfc60812151840g8febe5ayfda29ae609bca9df@mail.gmail.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: detection/correction of corruption with raid6
+Date: Tue, 16 Dec 2008 22:58:33 +0100
+Message-ID: <1229464713.6159.16.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cccedfc60812151840g8febe5ayfda29ae609bca9df@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: Neil Brown <neilb@suse.de>, LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jon Nelson wrote:
-> ..
-> 
->> Yes it is hard to guess what is happening here; however, should not
->> the following commit go to -stable?
->>
->> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=56ac36d722d0d27c03599d1245ac0ab59e474e5c
-> 
-> Is it possible this commit is (partially) responsible for what I was
-> seeing? Under what conditions would it trigger?
+Hi all,
 
-I don't think this commit is responsible, it's a fix for a case where 
-the kernel was asked to do a repair but a recovery is pending.
+while I do agree that the issue needs more in deep thinking,
+I would like to tell a recent story that happened to me.
 
-This commit addressed a bug in external-metadata support when adding a 
-spare disk via sysfs.  It would be fairly difficult to trigger this in 
-the non-external-metadata case.   It would require a check/repair 
-request to come in immediately after the disk was (re-)added, but before 
-the kernel started the resync.
+I was testing a RAID-6 array, with 7, small, HDs.
+Intention was to get used to different situations, repair,
+grow, fail, remove, etc.
 
---
-Dan
+After some playing, I started to check the files on the array
+and I found out that they were not (always) correct.
+So I started a check of the array, which returned some 1000 or
+more mismatches.
+
+After some investigation, I found out that one HD had a "flaky"
+interface, data was correctly written, but sometimes, randomly,
+reading returned some "wrong" bits (re-cabling solved the issue).
+
+To check this with RAID-6, I could run the check with 6 disks,
+for 7 times, each with a different disk removed, until one run
+returned no mismatches.
+At this point, I knew which "data path" was defective.
+
+It would have saved a lot of time, if the check could have
+done this automatically...
+
+So, my RFE, would be, if possible, to try, during RAID-6 check,
+to find out if and which HD has the mismatch.
+Ideally, at the end of the check, the system log should show
+how many mismatches, if any, are likely to belong to which HD
+or are undetermined.
+This would help to diagnose the full data path and reduce
+testing time in case of problems.
+In case only one HD results problematic, this one could be
+failed, removed and the complete cabling, I/F and so on checked.
+Of course, this goes beyond the simple "HD failure protection"
+scope of RAID, nevertheless I do not see why this possibility
+should be neglected, unless it is too complex/difficult to
+implement and maintain.
+
+Regarding the possibility of recovery, I have one question:
+
+Why a RAID system might have inconsistencies?
+Why do we have a "check" command at all, to run weekly or monthly?
+
+Thanks,
+
+bye,
+
+
+-- 
+
+piergiorgio sartor
+
+
+
