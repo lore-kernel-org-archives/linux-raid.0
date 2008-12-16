@@ -1,22 +1,37 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: MD Feature Request: non-degraded component replacement
-Date: Tue, 16 Dec 2008 04:51:23 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0812160450080.28063@p34.internal.lan>
-References: <49477689.2010208@dgreaves.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: Awful Raid10,f2 performance
+Date: Tue, 16 Dec 2008 11:10:20 +0100
+Message-ID: <20081216101020.GA17410@rap.rap.dk>
+References: <cccedfc60806020711o39ccd321h5e410c963d8bf3b1@mail.gmail.com> <48440953.3040004@wpkg.org> <cccedfc60806020809t73794ce6w539c6b0d247a264f@mail.gmail.com> <cccedfc60812150533p31974f4bye490958dbc974212@mail.gmail.com> <18758.52823.375213.963854@notabene.brown> <cccedfc60812151847u6e69a44jc50b3f58da5b9171@mail.gmail.com> <20081216040349.GA15389@rap.rap.dk> <cccedfc60812152028g5d5e88c5r23d5d8f873fe8538@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49477689.2010208@dgreaves.com>
+Content-Disposition: inline
+In-Reply-To: <cccedfc60812152028g5d5e88c5r23d5d8f873fe8538@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: Neil Brown <neilb@suse.de>, LinuxRaid <linux-raid@vger.kernel.org>
+To: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Cc: Neil Brown <neilb@suse.de>, Linux-Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Mon, Dec 15, 2008 at 10:28:30PM -0600, Jon Nelson wrote:
+> On Mon, Dec 15, 2008 at 10:03 PM, Keld J=F8rn Simonsen <keld@dkuug.dk=
+> wrote:
+>=20
+> > there was a pach to speed up raid10,f2 check in a recent kernel,
+> > something like 2.6.27. It did improve thruput from something
+> > like 40 % to about 90 %. What kernel are you using?
+>=20
+> 2.6.25.18-0.2-default
 
+I believe the patch arrived in a later kernel. If you can try it out
+with a vanilla kernel and report, I think it would be quite interesting=
+=2E
 
-On Tue, 16 Dec 2008, David Greaves wrote:
-
-> Personally I think this feature is more important than the reshaping requests;
-> of course that's just one opinion after replacing about 20 flaky 1Tb drives in
-> the past 6 months :)
-What were the make/model of those drives, how did they fail?
+best regards
+keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
