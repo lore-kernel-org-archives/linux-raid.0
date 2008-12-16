@@ -1,72 +1,49 @@
-From: "Dan Williams" <dan.j.williams@gmail.com>
-Subject: Re: 2.6.27.8: OOM killer: [swapper: page allocation failure]
-Date: Mon, 15 Dec 2008 17:44:55 -0700
-Message-ID: <e9c3a7c20812151644p7c1038cajd7254a963f9038a2@mail.gmail.com>
-References: <alpine.DEB.1.10.0812120708080.9826@p34.internal.lan>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: raid1 recovery: reads and writes
+Date: Mon, 15 Dec 2008 17:54:01 -0700
+Message-ID: <e9c3a7c20812151654u5d644ccbv2c925a2fe2bc1c7e@mail.gmail.com>
+References: <cccedfc60812150545s7159f0a2x2fa7f36ecf8d9c60@mail.gmail.com>
+	 <18758.51053.866819.442495@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0812120708080.9826@p34.internal.lan>
+In-Reply-To: <18758.51053.866819.442495@notabene.brown>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
+To: Neil Brown <neilb@suse.de>
+Cc: Jon Nelson <jnelson-linux-raid@jamponi.net>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Dec 12, 2008 at 5:14 AM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> Kernel: 2.6.27.8
+On Mon, Dec 15, 2008 at 2:09 PM, Neil Brown <neilb@suse.de> wrote:
+> On Monday December 15, jnelson-linux-raid@jamponi.net wrote:
+>> I have a software raid1 which underwent a recovery recently.
+>> While it was recovering, I could not understand why I was seeing an
+>> equal amount of *read* I/O as write I/O to the device the raid1 was
+>> recovering to. That's to say, the raid1 was rebuilding on to a spare
+>> but instead of just writing I was seeing (nearly exactly) the same
+>> amount of read I/O as write I/O. The non-spare device was getting
+>> almost exclusively read I/O as expected. Why was the spare getting any
+>> read I/O at all?
 >
-> I have a RAID-6 volume with 6 disks:
-> mdadm --create -v /dev/md0 --level=6 -n 6 -e 0.90 /dev/sd[e-j]1
+> It sounds like it is doing a 'repair' rather than a 'recover'.
+> 'repair' happens when you write the word 'repair' to
+> /sys/block/mdX/md/sync_action.
 >
-> While it is building...
+> In situations like this it is always best to provide lots of detail.
+> e.g. kernel logs of the time when things were happening, "mdadm -E" or
+> all devices.  The exact data you looked at to make you think there was
+> something going wrong (in this case, whatever statistics you found
+> that suggested lots of read requests).
 >
-> # cat /proc/mdstat
-> Personalities : [raid1] [raid6] [raid5] [raid4]
-> md0 : active raid6 sdj1[5] sdi1[4] sdh1[3] sdg1[2] sdf1[1] sde1[0]
->      1562834944 blocks level 6, 64k chunk, algorithm 2 [6/6] [UUUUUU]
->      [===>.................]  resync = 19.0% (74237440/390708736)
-> finish=346.7min speed=15208K/sec
->
-> unused devices: <none>
->
-> During this time, I am copying files to it at ~60-100MiB/s using 2 rsyncs
-> over NFS from 2 separate machines => this one [over the network] (on a pci-e
-> x1 / built-in to the motherboard).
->
-> top output:
-> top - 07:10:06 up 12:32, 30 users,  load average: 3.46, 4.49, 4.39
-> Tasks: 316 total,   2 running, 313 sleeping,   1 stopped,   0 zombie
-> Cpu(s): 12.1%us,  3.7%sy,  0.0%ni, 32.5%id, 49.2%wa,  1.1%hi,  1.2%si,
->  0.0%st
-> Mem:   8100836k total,  8057480k used,    43356k free,        0k buffers
-> Swap: 16787884k total,      144k used, 16787740k free,  6609412k cached
->
->  PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
->  5349 root      15  -5     0    0    0 R   10  0.0  11:59.94 md0_raid5
->    1 root      20   0 10312  748  620 S    0  0.0   0:02.14 init
->
-> I see this over and over in the kernel log (maybe it will stop when the
-> RAID6
-> rebuild is completed)?  So far, my rsyncs are continuing just fine and
-> nothing except klogd/swapper processes have been killed.
->
-> [44893.846532] swapper: page allocation failure. order:0, mode:0x20
-[..]
->
-> Raid optimizations used:
->
-> # cat oraid.sh |grep -v ^#|grep .
-> . /etc/profile
-> echo "Optimizing RAID Arrays..."
-> cd /sys/block
-> DISKS=$(/bin/ls -1d sd[e-j])
-> echo "Setting read-ahead to 32 MiB for /dev/md0"
-> blockdev --setra 65536 /dev/md0
-> echo "Setting stripe_cache_size to 16 MiB for /dev/md0"
-> echo 16384 > /sys/block/md0/md/stripe_cache_size
+> Without those specifics it is hard to try to reproduce, and hard to
+> guess what was actually happening.
 >
 
-If you set the stripe_cache_size high enough you can strangle the
-system.  Do you really need 384MiB of raid cache?
+Yes it is hard to guess what is happening here; however, should not
+the following commit go to -stable?
+
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=56ac36d722d0d27c03599d1245ac0ab59e474e5c
+
+Regards,
+Dan
