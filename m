@@ -1,55 +1,45 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: Re: Awful Raid10,f2 performance
-Date: Mon, 15 Dec 2008 20:47:24 -0600
-Message-ID: <cccedfc60812151847u6e69a44jc50b3f58da5b9171@mail.gmail.com>
-References: <cccedfc60806020711o39ccd321h5e410c963d8bf3b1@mail.gmail.com>
-	 <48440953.3040004@wpkg.org>
-	 <cccedfc60806020809t73794ce6w539c6b0d247a264f@mail.gmail.com>
-	 <cccedfc60812150533p31974f4bye490958dbc974212@mail.gmail.com>
-	 <18758.52823.375213.963854@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: MD: Feature Request: Estimate of blocks necessary to complete sync
+Date: Tue, 16 Dec 2008 14:07:52 +1100
+Message-ID: <18759.7048.623851.9550@notabene.brown>
+References: <cccedfc60812110727p18abcf49v909cb0860c2d4c02@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18758.52823.375213.963854@notabene.brown>
-Content-Disposition: inline
+In-Reply-To: message from Jon Nelson on Thursday December 11
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Linux-Raid <linux-raid@vger.kernel.org>
+To: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Dec 15, 2008 at 3:38 PM, Neil Brown <neilb@suse.de> wrote:
-> On Monday December 15, jnelson-linux-raid@jamponi.net wrote:
->> A follow-up to an earlier post about weird slowness with RAID10,f2 and
->> 3 drives. This morning's "check" operation is proceeding very slowly,
->> for some reason.
+On Thursday December 11, jnelson-linux-raid@jamponi.net wrote:
+> When one is using a bitmap-enabled raid1 (or raid5 or whatever), MD
+> prints messages like this to the kernel log when a previously-used
+> device is re-added:
+> 
+> 
+> Dec 11 08:59:40 turnip kernel: md: recovery of RAID array md10
+> Dec 11 08:59:40 turnip kernel: md: minimum _guaranteed_  speed: 1000
+> KB/sec/disk.
+> Dec 11 08:59:40 turnip kernel: md: using maximum available idle IO
+> bandwidth (but not more than 200000 KB/sec) for recovery.
+> Dec 11 08:59:40 turnip kernel: md: using 128k window, over a total of
+> 78123968 blocks.
+> Dec 11 08:59:41 turnip nbd0-frank: mdadm: /dev/nbd0 attached to
+> /dev/md10 which is already active.
+> Dec 11 09:00:22 turnip kernel: md: md10: recovery done.
+> 
+> What would be nice is the addition of something like this:
+> Dec 11 08:59:40 turnip kernel: md: bitmap shows 27 128K blocks requiring sync
+> or
+> Dec 11 08:59:40 turnip kernel: md: bitmap shows 3456K blocks requiring sync
+> or some other analogue.
+> 
+> Seem reasonable?
 
-...
+Probably.  I wouldn't be too hard to could the number of bits that are
+set.  I guess it could be useful.
 
->> What might be going on here?
->
-> If you think about exactly which blocks of which drives md will have
-> to read, and in which order, you will see that each drive is seeking
-> half the size of the disk very often.  Exactly how often would depend
-> on chunk size and the depth of the queue in the elevator, but it would
-> probably read several hundred K from early in the disk, then several
-> hundred from half-way in, then back to start etc.  This would be
-> expected to be slow.
-
-An excellent explanation, I think.
-
-However, not to add fuel to the fire, but would an alternate 'check'
-(and resync and recover) algorithm possibly work better?
-
-Instead of reading each logical block from start to finish (and
-comparing it against the N copies), one *could* start with device 0
-and read all of the non-mirror chunks (in order) but only from that
-device, comparing against other copies. Then md could proceed to the
-next device and so on until all devices have been iterated through.
-The advantage to this algorithm is that unless you have > 1 copy of
-the data on the *same* device the seeking will be minimized and you
-could get substantially higher sustained read rates (and less wear and
-tear).
-
--- 
-Jon
+I'll put it on my list :-)
+NeilBrown
