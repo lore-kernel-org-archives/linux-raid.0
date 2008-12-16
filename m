@@ -1,35 +1,54 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: Awful Raid10,f2 performance
-Date: Tue, 16 Dec 2008 11:10:20 +0100
-Message-ID: <20081216101020.GA17410@rap.rap.dk>
-References: <cccedfc60806020711o39ccd321h5e410c963d8bf3b1@mail.gmail.com> <48440953.3040004@wpkg.org> <cccedfc60806020809t73794ce6w539c6b0d247a264f@mail.gmail.com> <cccedfc60812150533p31974f4bye490958dbc974212@mail.gmail.com> <18758.52823.375213.963854@notabene.brown> <cccedfc60812151847u6e69a44jc50b3f58da5b9171@mail.gmail.com> <20081216040349.GA15389@rap.rap.dk> <cccedfc60812152028g5d5e88c5r23d5d8f873fe8538@mail.gmail.com>
+From: Lars Schimmer <l.schimmer@cgv.tugraz.at>
+Subject: Re: MD Feature Request: non-degraded component replacement
+Date: Tue, 16 Dec 2008 11:55:32 +0100
+Message-ID: <49478924.9010004@cgv.tugraz.at>
+References: <49477689.2010208@dgreaves.com> <alpine.DEB.1.10.0812160450080.28063@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <cccedfc60812152028g5d5e88c5r23d5d8f873fe8538@mail.gmail.com>
+In-Reply-To: <alpine.DEB.1.10.0812160450080.28063@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: Neil Brown <neilb@suse.de>, Linux-Raid <linux-raid@vger.kernel.org>
+To: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Dec 15, 2008 at 10:28:30PM -0600, Jon Nelson wrote:
-> On Mon, Dec 15, 2008 at 10:03 PM, Keld J=F8rn Simonsen <keld@dkuug.dk=
-> wrote:
->=20
-> > there was a pach to speed up raid10,f2 check in a recent kernel,
-> > something like 2.6.27. It did improve thruput from something
-> > like 40 % to about 90 %. What kernel are you using?
->=20
-> 2.6.25.18-0.2-default
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-I believe the patch arrived in a later kernel. If you can try it out
-with a vanilla kernel and report, I think it would be quite interesting=
-=2E
+Justin Piszcz wrote:
+>=20
+>=20
+> On Tue, 16 Dec 2008, David Greaves wrote:
+>=20
+>> Personally I think this feature is more important than the reshaping
+>> requests;
+>> of course that's just one opinion after replacing about 20 flaky 1Tb
+>> drives in
+>> the past 6 months :)
+> What were the make/model of those drives, how did they fail?
 
-best regards
-keld
+=46ar more important: how much do you have in production?
+AS I got roughly 15 Seagate 1 GB HDs here and not one of them failed fo=
+r
+the last year.
+And 20 of 30 running is really bad, but 20 from 500 running is not as
+bad as it seems ;-)
+
+MfG,
+Lars Schimmer
+- --
+- -------------------------------------------------------------
+TU Graz, Institut f=FCr ComputerGraphik & WissensVisualisierung
+Tel: +43 316 873-5405       E-Mail: l.schimmer@cgv.tugraz.at
+=46ax: +43 316 873-5402       PGP-Key-ID: 0x4A9B1723
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iEUEARECAAYFAklHiSQACgkQmWhuE0qbFyMQfACghCdF9JYcdULXjLfaxZPv01mu
+GHEAmJ4x4Dyk0py+a2Bxi+BfOTkkfAg=3D
+=3DFdYo
+-----END PGP SIGNATURE-----
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
