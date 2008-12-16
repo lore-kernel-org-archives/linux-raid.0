@@ -1,72 +1,39 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: detection/correction of corruption with raid6
-Date: Tue, 16 Dec 2008 13:33:26 +1100
-Message-ID: <18759.4982.86181.792757@notabene.brown>
-References: <1228510833.16555.76.camel@localhost>
-	<alpine.DEB.1.10.0812051602110.17806@p34.internal.lan>
-	<1228511195.16555.78.camel@localhost>
-	<alpine.DEB.1.10.0812051607100.17806@p34.internal.lan>
-	<1228511558.16555.84.camel@localhost>
-	<6c4602af0812051330o4220cbf1g8b969cd4b9843d3a@mail.gmail.com>
-	<1229095884.16555.144.camel@localhost>
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+Subject: Re: behavior different from mdadm 2.6.4 and 3.0?
+Date: Mon, 15 Dec 2008 20:35:08 -0600
+Message-ID: <cccedfc60812151835xb3a1442u4f344c26df075888@mail.gmail.com>
+References: <cccedfc60812150654u2e841bf8na517a75820d0c463@mail.gmail.com>
+	 <18758.51222.370545.686154@notabene.brown>
+	 <cccedfc60812151335u3d08dc6bid79bae8c88a62133@mail.gmail.com>
+	 <18759.1035.627538.450310@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Redeeman on Friday December 12
+In-Reply-To: <18759.1035.627538.450310@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Redeeman <redeeman@metanurb.dk>
-Cc: =?iso-8859-2?Q?Micha=B3_Przy=B3uski?= <mikylie@gmail.com>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Friday December 12, redeeman@metanurb.dk wrote:
-> > 
-> > It is possible (by the theory of Q syndrome, per the article you
-> > linked) to detect which drive is doing a silent corruption with raid6
-> > (and with some extra assumption, that just one drive is doing that).
-> > But it's not implemented.
-> 
-> thats a shame, it seems like a KILLER feature, but i guess its not too
-> simple to do, or it would have been done already :)
+On Mon, Dec 15, 2008 at 7:27 PM, Neil Brown
+> That's the problem then.
+> The array was started from initrd and any mdadm/map that was created
+> would have got lost.
+> Now it needs one to continue with assembly and cannot find one.
+> I'll have to get it to do the "-Ir" thing automagically if mdadm/map
+> does not exist.
 
-The reason that it hasn't been done is not that it is difficult.
-Certainly it is not trivial, but more complicated things have been
-implemented.
+>> Does that help?
+>
+> So: yes it does - thanks.
 
-The reason that it is not even on my TODO list is that I don't think
-it is justifiable.
+Awesome!
 
-As has been said elsewhere in this thread, silent corruption is rarely
-if ever caused by the storage device.  They tend to have strong CRCs
-etc which detect bit-flips with greater reliability than the RAID6
-algorithm would detect them.
+> I've got some coding to do ;-)
 
-If the silent corruption comes from anywhere else in the system, it is
-not clear what if anything should be done.
-e.g. if the corruption was due to bad memory, there is no behaviour
-that will reliably do the "right" thing.
+I'm sorry to be causing you more work.
 
-In that case, the best that can be done is simply to log any error
-that is found and let some human figure it out.  That is part of the
-motivation for a monthly 'check'.
-
-I like to think about raid in a similar way to thinking about security
-issues (after all, we are dealing with data security).
-
-So before implementing any mechanism that might enhance security, I
-need to have a clear understanding of what the threat model is.  In
-this case, what is the source of corruption.
-Then I need a clear understanding on how the enhancement neutralises
-or logs the threat, and a credible explanation of why it won't increase
-the risk from some other threat.
-
-If silent corruption is an issue for you then you really need to be
-doing checks at a much higher level than the md level.  A filesystem
-that does checksums on all blocks (e.g. btrfs), or an application that
-does them an all files (tripwire) are much more likely to be
-beneficial than trying to leverage a side-effect of raid6.
-
-I have a similar attitude to 3-way raid1 and voting on the result.  I
-simply don't think it is the right solution.
-
-NeilBrown
+-- 
+Jon
