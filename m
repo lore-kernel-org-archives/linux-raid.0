@@ -1,68 +1,55 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid5 reshape stuck
-Date: Tue, 16 Dec 2008 13:43:41 +1100
-Message-ID: <18759.5597.253477.398427@notabene.brown>
-References: <22F91D3D67E34C95B66F6AA0739F22DB@waptak.ru>
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+Subject: Re: Awful Raid10,f2 performance
+Date: Mon, 15 Dec 2008 20:47:24 -0600
+Message-ID: <cccedfc60812151847u6e69a44jc50b3f58da5b9171@mail.gmail.com>
+References: <cccedfc60806020711o39ccd321h5e410c963d8bf3b1@mail.gmail.com>
+	 <48440953.3040004@wpkg.org>
+	 <cccedfc60806020809t73794ce6w539c6b0d247a264f@mail.gmail.com>
+	 <cccedfc60812150533p31974f4bye490958dbc974212@mail.gmail.com>
+	 <18758.52823.375213.963854@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Yuriy Shkandybin on Friday December 12
+In-Reply-To: <18758.52823.375213.963854@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Yuriy Shkandybin <jura@netams.com>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Linux-Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Friday December 12, jura@netams.com wrote:
-> Hello.
-> 
-> I've run into next problem:
-> 
-> there was raid5  md11( 3 of 3) from sdb4,sdg1,sdd1
-> i've run
-> mdadm /dev/md11 -a /dev/sdc1
-> mdadm /dev/md11 -a /dev/sde1
-> mdadm /dev/md11 -a /dev/sdf1
-> mdadm --grow /dev/md11 --raid-devices=6
-> reshape started
-> shortly after i realized that sdd1 was too slow , and removed it 
-> mdadm /dev/md1 -f /dev/sdd1 -r /dev/sdd1
-> and rebooted  in hope to fix sdd speed 
-> 
-> after that md11_reshape stalled and md11 unaccessible 
-> and programms tried to access md11 stuck in D state too
-> also strange to see 
->   Delta Devices : 2, (4->6)
+On Mon, Dec 15, 2008 at 3:38 PM, Neil Brown <neilb@suse.de> wrote:
+> On Monday December 15, jnelson-linux-raid@jamponi.net wrote:
+>> A follow-up to an earlier post about weird slowness with RAID10,f2 and
+>> 3 drives. This morning's "check" operation is proceeding very slowly,
+>> for some reason.
 
-Why is this strange?  You are reshaping an array from 4 drives to 6
-devices.  The difference (delta) between those numbers is 2.  Hence
-the message.
+...
 
-> 
-> Any chance get to complete reshape or receive access to md11 at least read-only?
-> 
-> 
-> 
-> Below different outputs that might help to identify problem.
-> cat /proc/mdstat
-> md11 : active raid5 sdb4[0] sde1[5] sdf1[3] sdg1[2] sdc1[1]
->       586073088 blocks super 0.91 level 5, 1024k chunk, algorithm 2 [6/5] [UUUU_U]
-                                             ^^^^^
+>> What might be going on here?
+>
+> If you think about exactly which blocks of which drives md will have
+> to read, and in which order, you will see that each drive is seeking
+> half the size of the disk very often.  Exactly how often would depend
+> on chunk size and the depth of the queue in the elevator, but it would
+> probably read several hundred K from early in the disk, then several
+> hundred from half-way in, then back to start etc.  This would be
+> expected to be slow.
 
-That is a useful clue, together with the stack traces.
-To reshape an array, md needs to cache at least 4 full stripes.  With
-a chunk size of 1024K, that is 1024 4K pages.
-The stripe_cache_size defaults to 256 which is too small.
-When you start a reshape, mdadm increases the size of the stripe_cache
-to whatever you need.  However when you assemble the array after
-a reboot in the middle of a reshape, mdadm doesn't fix the 
-stripe_cache_size.  I need to fix that.
+An excellent explanation, I think.
 
-You can do it by hand with the command
+However, not to add fuel to the fire, but would an alternate 'check'
+(and resync and recover) algorithm possibly work better?
 
-  echo 1024 > /sys/block/md11/md/stripe_cache_size
+Instead of reading each logical block from start to finish (and
+comparing it against the N copies), one *could* start with device 0
+and read all of the non-mirror chunks (in order) but only from that
+device, comparing against other copies. Then md could proceed to the
+next device and so on until all devices have been iterated through.
+The advantage to this algorithm is that unless you have > 1 copy of
+the data on the *same* device the seeking will be minimized and you
+could get substantially higher sustained read rates (and less wear and
+tear).
 
-That should cause the reshape to start running smoothly.
-
-Thanks,
-NeilBrown
+-- 
+Jon
