@@ -1,66 +1,70 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: upgrade advice
-Date: Wed, 17 Dec 2008 08:28:20 -0600
-Message-ID: <A20315AE59B5C34585629E258D76A97C030D4837@34093-C3-EVS3.exchange.rackspace.com>
-References: <d5fe39840812160310t45e822c1geb633f805cf5388e@mail.gmail.com> <alpine.DEB.1.10.0812160641130.725@p34.internal.lan> <1229428184.22331.43.camel@localhost> <alpine.DEB.1.10.0812160807200.725@p34.internal.lan> <1229436950.22331.45.camel@localhost> <cccedfc60812160757x2af73afbv4a69eac31d212062@mail.gmail.com> <alpine.DEB.1.10.0812161829490.31132@p34.internal.lan> <cccedfc60812161608y29e6c645n6ff7df5c87292374@mail.gmail.com> <1229497160.22331.73.camel@localhost> <cccedfc60812170526l43c661ddgff95c99ea883f362@mail.gmail.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: raid10 far layout outperforms offset at writing? (was: Help with chunksize on raid10 -p o3 array)
+Date: Wed, 17 Dec 2008 15:34:43 +0100
+Message-ID: <20081217143443.GA6467@rap.rap.dk>
+References: <20081217124154.GA5406@rap.rap.dk> <4948F590.2050007@rabbit.us>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <cccedfc60812170526l43c661ddgff95c99ea883f362@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <4948F590.2050007@rabbit.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>, Redeeman <redeeman@metanurb.dk>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
+To: Peter Rabbitson <rabbit+list@rabbit.us>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Jon Nelson
-> Sent: Wednesday, December 17, 2008 7:27 AM
-> To: Redeeman
-> Cc: Justin Piszcz; linux-raid@vger.kernel.org
-> Subject: Re: upgrade advice
-> 
-> > What sort of volume of disks are you using, and what loads? (24/7
-> with
-> > high load?)
-> 
-> It's a home server. It's up 24/7. Load probably 80% of the time is
-> low, the rest of the time it's bursty.
-> 
-> --
-> Jon
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Wed, Dec 17, 2008 at 01:50:24PM +0100, Peter Rabbitson wrote:
+> Keld J=F8rn Simonsen wrote:
+> > I found this old message:
+> >=20
+> >> Peter Rabbitson
+> >> Mon, 19 Mar 2007 06:14:38 -0800
+> >>
+> >=20
+> > The links were not valid anymore. I wanted to see the results and=20
+> > possibly include the results in the performance wiki page
+> > I would appreciate some new links here.
+>=20
+> I apologize, I don't have the data available anymore.
+'
+OK.
 
-Read the specs on the disks.  Most consumer class drives are rated for
-only 2400 hours annual duty cycle ... so I guess you turn the computer
-off in April? :)
+> > Furthermore some comments to the post: My take on o3 vs f3 is that =
+both
+> > in theory and practice f3 should be much faster for sequential read=
+ing,
+> > as the layout is equivalent to raid0. For random reading and sequen=
+tial
+> > and random writing f3 and o3 (and the same goes for the more normal=
+ f2
+> > vs o2) should be about the same, especially when a filesystem and
+> > its associated elevator algorithm is employed.
+>=20
+> Yes, this is what I also concluded since I wrote this email. I am in =
+the
+> process of upgrading my raid setup, and while I am at it I am leaving
+> 5GB blank partitions at the start of all my workstations spindles, so=
+ I
+> can get some real testing at night. I will share my methodology with =
+the
+> list before I commence testing (which should take about 20 days the w=
+ay
+> I am planing it).
 
-Other differences include number of ECC correction bits, so you will
-absolutely get more grown bad blocks with cheap drives.
+I have tried to persuade Neil to change the description for MD to
+reflect the above, but until now with no luck.
 
-Consider also how many people complain about botched rebuilds due to
-multiple drive failures on rebuilds and bad blocks on surviving disks.
-I can't remember anybody who bought enterprise class disks asking for
-such help recently, it always seems to be people who buy consumer
-drives.   No wonder several fail within days of each other, they all
-have same model, I/O load, and generally same manufacturing batch.
+I look forward to see your new tests!
 
-If you are hell-bent on getting cheap drives, then at least factor in
-cost of an additional drive so you can implement RAID6, and automate a
-daemon to check/repair consistency often.
+> But first comes the vacation - happy holidays to you too guys.
 
-Life is short.  Spend the extra money and get disks designed to run in
-servers, not PCs. Unless, of course, you have a rather large autochanger
-and love to use it.
+Yes, happy holidays to all!
 
-
-David
- 
-
+Best regards
+Keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
