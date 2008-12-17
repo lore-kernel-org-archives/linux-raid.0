@@ -1,8 +1,9 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: Re: upgrade advice
-Date: Wed, 17 Dec 2008 08:37:32 -0600
-Message-ID: <cccedfc60812170637j7eab2c4cyac88fc110b51755f@mail.gmail.com>
+From: Redeeman <redeeman@metanurb.dk>
+Subject: RE: upgrade advice
+Date: Wed, 17 Dec 2008 15:46:06 +0100
+Message-ID: <1229525166.22331.79.camel@localhost>
 References: <d5fe39840812160310t45e822c1geb633f805cf5388e@mail.gmail.com>
+	 <alpine.DEB.1.10.0812160641130.725@p34.internal.lan>
 	 <1229428184.22331.43.camel@localhost>
 	 <alpine.DEB.1.10.0812160807200.725@p34.internal.lan>
 	 <1229436950.22331.45.camel@localhost>
@@ -13,63 +14,77 @@ References: <d5fe39840812160310t45e822c1geb633f805cf5388e@mail.gmail.com>
 	 <cccedfc60812170526l43c661ddgff95c99ea883f362@mail.gmail.com>
 	 <A20315AE59B5C34585629E258D76A97C030D4837@34093-C3-EVS3.exchange.rackspace.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <A20315AE59B5C34585629E258D76A97C030D4837@34093-C3-EVS3.exchange.rackspace.com>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: David Lethe <david@santools.com>
-Cc: Redeeman <redeeman@metanurb.dk>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
+Cc: Jon Nelson <jnelson-linux-raid@jamponi.net>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Dec 17, 2008 at 8:28 AM, David Lethe <david@santools.com> wrote:
->> -----Original Message-----
->> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
->> owner@vger.kernel.org] On Behalf Of Jon Nelson
->> Sent: Wednesday, December 17, 2008 7:27 AM
->> To: Redeeman
->> Cc: Justin Piszcz; linux-raid@vger.kernel.org
->> Subject: Re: upgrade advice
->>
->> > What sort of volume of disks are you using, and what loads? (24/7
->> with
->> > high load?)
->>
->> It's a home server. It's up 24/7. Load probably 80% of the time is
->> low, the rest of the time it's bursty.
->>
-
+On Wed, 2008-12-17 at 08:28 -0600, David Lethe wrote:
+> > -----Original Message-----
+> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> > owner@vger.kernel.org] On Behalf Of Jon Nelson
+> > Sent: Wednesday, December 17, 2008 7:27 AM
+> > To: Redeeman
+> > Cc: Justin Piszcz; linux-raid@vger.kernel.org
+> > Subject: Re: upgrade advice
+> > 
+> > > What sort of volume of disks are you using, and what loads? (24/7
+> > with
+> > > high load?)
+> > 
+> > It's a home server. It's up 24/7. Load probably 80% of the time is
+> > low, the rest of the time it's bursty.
+> > 
+> > --
+> > Jon
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
+> > in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 > Read the specs on the disks.  Most consumer class drives are rated for
 > only 2400 hours annual duty cycle ... so I guess you turn the computer
 > off in April? :)
-
-Yeah. Right. I typically get > 5 years out of the disks. I got almost
-9 years once, before bad sectors started showing up. Actually, I've
-either gotten less than a week or more than 4 years out of every
-single drive I've ever had, except a really bad batch of seagates I
-got 8-10 years ago.
-
-The current temp of the drives varies between 28C and 33C (the Hitach
-is warmer by +4C than any other drive).
-
+> 
 > Other differences include number of ECC correction bits, so you will
 > absolutely get more grown bad blocks with cheap drives.
-
-That's good to know.
-
+> 
+> Consider also how many people complain about botched rebuilds due to
+> multiple drive failures on rebuilds and bad blocks on surviving disks.
+> I can't remember anybody who bought enterprise class disks asking for
+> such help recently, it always seems to be people who buy consumer
 > drives.   No wonder several fail within days of each other, they all
 > have same model, I/O load, and generally same manufacturing batch.
 
-I never have more than 1 of the same manuf. / model in a raid at a
-time. I have a 3 drive raid10f2 with 3 different manuf.
+Did you ever split open the consumer and "enterprise" versions of the
+drives and observe?
 
+While i do believe they do some more testing/quality control on the
+enterprise disks, they are almost all identical excepting firmware.. so
+to be fair, i'd say the mistake is not properly stress testing the
+disks, and for instance just buying a huge batch of disks and putting to
+use..
+
+> 
 > If you are hell-bent on getting cheap drives, then at least factor in
 > cost of an additional drive so you can implement RAID6, and automate a
 > daemon to check/repair consistency often.
+> 
+> Life is short.  Spend the extra money and get disks designed to run in
+> servers, not PCs. Unless, of course, you have a rather large autochanger
+> and love to use it.
+> 
+> 
+> David
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I will likely move to raid6 eventually.
-Thanks for the advice.
-
--- 
-Jon
