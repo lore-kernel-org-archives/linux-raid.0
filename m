@@ -1,56 +1,56 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: Re: upgrade advice
-Date: Tue, 16 Dec 2008 18:08:42 -0600
-Message-ID: <cccedfc60812161608y29e6c645n6ff7df5c87292374@mail.gmail.com>
-References: <d5fe39840812160310t45e822c1geb633f805cf5388e@mail.gmail.com>
-	 <alpine.DEB.1.10.0812160641130.725@p34.internal.lan>
-	 <1229428184.22331.43.camel@localhost>
-	 <alpine.DEB.1.10.0812160807200.725@p34.internal.lan>
-	 <1229436950.22331.45.camel@localhost>
-	 <cccedfc60812160757x2af73afbv4a69eac31d212062@mail.gmail.com>
-	 <alpine.DEB.1.10.0812161829490.31132@p34.internal.lan>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: MD Feature Request: non-degraded component replacement
+Date: Wed, 17 Dec 2008 00:20:14 +0000
+Message-ID: <494845BE.2090807@dgreaves.com>
+References: <49477689.2010208@dgreaves.com> <alpine.DEB.1.10.0812160450080.28063@p34.internal.lan> <49478924.9010004@cgv.tugraz.at> <alpine.DEB.1.10.0812160636390.725@p34.internal.lan> <4947A585.4030203@dgreaves.com> <alpine.DEB.1.10.0812161824040.31132@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0812161829490.31132@p34.internal.lan>
-Content-Disposition: inline
+In-Reply-To: <alpine.DEB.1.10.0812161824040.31132@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
 To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org
+Cc: Lars Schimmer <l.schimmer@cgv.tugraz.at>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Dec 16, 2008 at 5:29 PM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
->
->
-> On Tue, 16 Dec 2008, Jon Nelson wrote:
->
->> What about Hitachi?
->>
->> Samsung has been my go-to drive for the better part of a decade, and
->> Seagate hasn't won any favor with me, so I've been relying on Samsung
->> and Hitachi with great results - so far.
+Justin Piszcz wrote:
+> Very thanks for this information, have you run other disks in the system
+> without issue?  BTW: I have seen this with the Velociraptors as well:
 
-> Enterprise or 'desktop' disks Jon?
+NP
 
-Desktop. This is what I've got:
+Yes. Historically I had more smaller disks in there. The system disks have also
+been fine throughout.
 
-Hitachi Deskstar T7K500 (HDT725032VLA360)
-SAMSUNG SpinPoint T166 series (HD321KJ)
-Seagate Barracuda 7200.10 family (ST3320620AS)*
-WDC WD3200AAKS-75VYA0
 
-* the seagate has the infamous 3.AAK firmware.
+FWIW, do you agree with my assessment of the feature request that started this
+thread?
+(Especially now you understand why I feel it's of value).
 
-I've almost always used Hitachi or Samsung, although I often
-"repurpose" drives from friends and I've had quite a few Maxtor and
-Seagate. The Hitachi does seem to run a bit hotter but it is probably
-my favorite drive of the bunch. The Samsung is nice and quiet,
-vibration-free, like the Hitachi and WD.  The Seagate vibrates and is
-the second after the first died within the first few hours.
+>> In fact each log shows "Completed: read failure" until the next log
+>> pushes it
+>> down the stack; at that point it shows "Aborted by host". The %
+>> remaining is
+>> key. Discussion on the smart list suggests that this is a firmware
+>> bug. (Inde$
+>> this is now fixed on some newer RMA replacements).
+> 
+> When a drive is about to crap out it will start doing that, it will
+> abort the test or run forever..
 
-If I were to buy replacement drives, I almost always look at Hitachi
-and Samsung first.
+Yes, this was just a FW bug though as it turned out.
+
+
+> I take it you are running at RAID6 with these disks?
+No :( .... but I'm *very* good at recovering RAID5 now ;)
+
+I'm loathe to buy anymore disks - the Samsungs aren't something I want to spend
+money on yet and if anything goes wrong with another brand of drive I can't get
+advance RMA.
+
+
+David
+
 
 -- 
-Jon
+"Don't worry, you'll be fine; I saw it work in a cartoon once..."
