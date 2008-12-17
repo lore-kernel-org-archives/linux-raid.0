@@ -1,60 +1,60 @@
-From: Redeeman <redeeman@metanurb.dk>
-Subject: Re: upgrade advice
-Date: Wed, 17 Dec 2008 07:59:20 +0100
-Message-ID: <1229497160.22331.73.camel@localhost>
-References: <d5fe39840812160310t45e822c1geb633f805cf5388e@mail.gmail.com>
-	 <alpine.DEB.1.10.0812160641130.725@p34.internal.lan>
-	 <1229428184.22331.43.camel@localhost>
-	 <alpine.DEB.1.10.0812160807200.725@p34.internal.lan>
-	 <1229436950.22331.45.camel@localhost>
-	 <cccedfc60812160757x2af73afbv4a69eac31d212062@mail.gmail.com>
-	 <alpine.DEB.1.10.0812161829490.31132@p34.internal.lan>
-	 <cccedfc60812161608y29e6c645n6ff7df5c87292374@mail.gmail.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: raid10 far layout outperforms offset at writing? (was: Help with chunksize on raid10 -p o3 array)
+Date: Wed, 17 Dec 2008 13:41:54 +0100
+Message-ID: <20081217124154.GA5406@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cccedfc60812161608y29e6c645n6ff7df5c87292374@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 2008-12-16 at 18:08 -0600, Jon Nelson wrote:
-> On Tue, Dec 16, 2008 at 5:29 PM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> >
-> >
-> > On Tue, 16 Dec 2008, Jon Nelson wrote:
-> >
-> >> What about Hitachi?
-> >>
-> >> Samsung has been my go-to drive for the better part of a decade, and
-> >> Seagate hasn't won any favor with me, so I've been relying on Samsung
-> >> and Hitachi with great results - so far.
-> 
-> > Enterprise or 'desktop' disks Jon?
-> 
-> Desktop. This is what I've got:
-> 
-> Hitachi Deskstar T7K500 (HDT725032VLA360)
-> SAMSUNG SpinPoint T166 series (HD321KJ)
-> Seagate Barracuda 7200.10 family (ST3320620AS)*
-> WDC WD3200AAKS-75VYA0
-> 
-> * the seagate has the infamous 3.AAK firmware.
-> 
-> I've almost always used Hitachi or Samsung, although I often
-> "repurpose" drives from friends and I've had quite a few Maxtor and
-> Seagate. The Hitachi does seem to run a bit hotter but it is probably
-> my favorite drive of the bunch. The Samsung is nice and quiet,
-> vibration-free, like the Hitachi and WD.  The Seagate vibrates and is
-> the second after the first died within the first few hours.
-> 
-> If I were to buy replacement drives, I almost always look at Hitachi
-> and Samsung first.
+I found this old message:
 
-What sort of volume of disks are you using, and what loads? (24/7 with
-high load?)
-
+> Peter Rabbitson
+> Mon, 19 Mar 2007 06:14:38 -0800
 > 
+> Peter Rabbitson wrote:
+> 
+>     I have been trying to figure out the best chunk size for raid10
+> before migrating my server to it (currently raid1). I am looking at 3
+> offset stripes, as I want to have two drive failure redundancy, and
+> offset striping is said to have the best write performance, with read
+> performance equal to far. 
+> 
+> Incorporating suggestions from previous posts (thank you everyone), I
+> used this modified script at http://rabbit.us/pool/misc/raid_test2.txt
+> To negate effects of caching memory was jammed below 200mb free by using
+> a full tmpfs mount with no swap. Here is what I got with far layout (-p
+> f3): http://rabbit.us/pool/misc/raid_far.html The clear winner is 1M
+> chunks, and is very consistent at any block size. I was surprised even
+> more to see that my read speed was identical to that of a raid0 getting
+> near the _maximum_ physical speed of 4 drives (roughly 55MB sustained
+> across 1.2G). Unlike offset layout, far really shines at reading stuff
+> back. The write speed did not suffer noticeably compared to offset
+> striping. Here are the results (-p o3) for comparison:
+> http://rabbit.us/pool/misc/raid_offset.html, and they roughly seem to
+> correlate with my earlier testing using dd.
+> 
+> So I guess the way to go for this system will be f3, although the md(4)
+> says that offset layout should be more beneficial. Is there anything I
+> missed while setting my o3 array, so that I got worse performance for
+> both read and write compared to f3?
+> 
+> Once again thanks everyone for the help.
+> Peter
 
+The links were not valid anymore. I wanted to see the results and 
+possibly include the results in the performance wiki page
+I would appreciate some new links here.
+
+Furthermore some comments to the post: My take on o3 vs f3 is that both
+in theory and practice f3 should be much faster for sequential reading,
+as the layout is equivalent to raid0. For random reading and sequential
+and random writing f3 and o3 (and the same goes for the more normal f2
+vs o2) should be about the same, especially when a filesystem and
+its associated elevator algorithm is employed.
+
+Best regards
+keld
