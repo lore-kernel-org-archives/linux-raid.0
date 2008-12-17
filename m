@@ -1,90 +1,34 @@
-From: Redeeman <redeeman@metanurb.dk>
-Subject: RE: upgrade advice
-Date: Wed, 17 Dec 2008 15:46:06 +0100
-Message-ID: <1229525166.22331.79.camel@localhost>
-References: <d5fe39840812160310t45e822c1geb633f805cf5388e@mail.gmail.com>
-	 <alpine.DEB.1.10.0812160641130.725@p34.internal.lan>
-	 <1229428184.22331.43.camel@localhost>
-	 <alpine.DEB.1.10.0812160807200.725@p34.internal.lan>
-	 <1229436950.22331.45.camel@localhost>
-	 <cccedfc60812160757x2af73afbv4a69eac31d212062@mail.gmail.com>
-	 <alpine.DEB.1.10.0812161829490.31132@p34.internal.lan>
-	 <cccedfc60812161608y29e6c645n6ff7df5c87292374@mail.gmail.com>
-	 <1229497160.22331.73.camel@localhost>
-	 <cccedfc60812170526l43c661ddgff95c99ea883f362@mail.gmail.com>
-	 <A20315AE59B5C34585629E258D76A97C030D4837@34093-C3-EVS3.exchange.rackspace.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: detection/correction of corruption with raid6
+Date: Wed, 17 Dec 2008 09:48:55 -0500
+Message-ID: <49491157.9060805@tmr.com>
+References: <1229464713.6159.16.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A20315AE59B5C34585629E258D76A97C030D4837@34093-C3-EVS3.exchange.rackspace.com>
+In-Reply-To: <1229464713.6159.16.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Lethe <david@santools.com>
-Cc: Jon Nelson <jnelson-linux-raid@jamponi.net>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2008-12-17 at 08:28 -0600, David Lethe wrote:
-> > -----Original Message-----
-> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> > owner@vger.kernel.org] On Behalf Of Jon Nelson
-> > Sent: Wednesday, December 17, 2008 7:27 AM
-> > To: Redeeman
-> > Cc: Justin Piszcz; linux-raid@vger.kernel.org
-> > Subject: Re: upgrade advice
-> > 
-> > > What sort of volume of disks are you using, and what loads? (24/7
-> > with
-> > > high load?)
-> > 
-> > It's a home server. It's up 24/7. Load probably 80% of the time is
-> > low, the rest of the time it's bursty.
-> > 
-> > --
-> > Jon
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> > in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> Read the specs on the disks.  Most consumer class drives are rated for
-> only 2400 hours annual duty cycle ... so I guess you turn the computer
-> off in April? :)
-> 
-> Other differences include number of ECC correction bits, so you will
-> absolutely get more grown bad blocks with cheap drives.
-> 
-> Consider also how many people complain about botched rebuilds due to
-> multiple drive failures on rebuilds and bad blocks on surviving disks.
-> I can't remember anybody who bought enterprise class disks asking for
-> such help recently, it always seems to be people who buy consumer
-> drives.   No wonder several fail within days of each other, they all
-> have same model, I/O load, and generally same manufacturing batch.
+Piergiorgio Sartor wrote:
+> Why a RAID system might have inconsistencies?
+> Why do we have a "check" command at all, to run weekly or monthly?
+>   
 
-Did you ever split open the consumer and "enterprise" versions of the
-drives and observe?
+Because alpha particles fly by, most systems don't have ECC memory, a 
+passing truck and noisy jet create a beat frequency that causes a once 
+in a century bit flip on a good cable connection, power line noise 
+creeps in, or maybe an angel farts.
 
-While i do believe they do some more testing/quality control on the
-enterprise disks, they are almost all identical excepting firmware.. so
-to be fair, i'd say the mistake is not properly stress testing the
-disks, and for instance just buying a huge batch of disks and putting to
-use..
+My question is why we don't use available techniques to fix this since 
+we have the software to find it for us.
 
-> 
-> If you are hell-bent on getting cheap drives, then at least factor in
-> cost of an additional drive so you can implement RAID6, and automate a
-> daemon to check/repair consistency often.
-> 
-> Life is short.  Spend the extra money and get disks designed to run in
-> servers, not PCs. Unless, of course, you have a rather large autochanger
-> and love to use it.
-> 
-> 
-> David
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
+
 
