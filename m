@@ -1,60 +1,56 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: raid10 far layout outperforms offset at writing? (was: Help with chunksize on raid10 -p o3 array)
-Date: Wed, 17 Dec 2008 13:41:54 +0100
-Message-ID: <20081217124154.GA5406@rap.rap.dk>
+From: Peter Rabbitson <rabbit+list@rabbit.us>
+Subject: Re: raid10 far layout outperforms offset at writing? (was: Help with
+ chunksize on raid10 -p o3 array)
+Date: Wed, 17 Dec 2008 13:50:24 +0100
+Message-ID: <4948F590.2050007@rabbit.us>
+References: <20081217124154.GA5406@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20081217124154.GA5406@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: =?UTF-8?B?S2VsZCBKw7hybiBTaW1vbnNlbg==?= <keld@dkuug.dk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I found this old message:
+Keld J=C3=B8rn Simonsen wrote:
+> I found this old message:
+>=20
+>> Peter Rabbitson
+>> Mon, 19 Mar 2007 06:14:38 -0800
+>>
+>=20
+> The links were not valid anymore. I wanted to see the results and=20
+> possibly include the results in the performance wiki page
+> I would appreciate some new links here.
 
-> Peter Rabbitson
-> Mon, 19 Mar 2007 06:14:38 -0800
-> 
-> Peter Rabbitson wrote:
-> 
->     I have been trying to figure out the best chunk size for raid10
-> before migrating my server to it (currently raid1). I am looking at 3
-> offset stripes, as I want to have two drive failure redundancy, and
-> offset striping is said to have the best write performance, with read
-> performance equal to far. 
-> 
-> Incorporating suggestions from previous posts (thank you everyone), I
-> used this modified script at http://rabbit.us/pool/misc/raid_test2.txt
-> To negate effects of caching memory was jammed below 200mb free by using
-> a full tmpfs mount with no swap. Here is what I got with far layout (-p
-> f3): http://rabbit.us/pool/misc/raid_far.html The clear winner is 1M
-> chunks, and is very consistent at any block size. I was surprised even
-> more to see that my read speed was identical to that of a raid0 getting
-> near the _maximum_ physical speed of 4 drives (roughly 55MB sustained
-> across 1.2G). Unlike offset layout, far really shines at reading stuff
-> back. The write speed did not suffer noticeably compared to offset
-> striping. Here are the results (-p o3) for comparison:
-> http://rabbit.us/pool/misc/raid_offset.html, and they roughly seem to
-> correlate with my earlier testing using dd.
-> 
-> So I guess the way to go for this system will be f3, although the md(4)
-> says that offset layout should be more beneficial. Is there anything I
-> missed while setting my o3 array, so that I got worse performance for
-> both read and write compared to f3?
-> 
-> Once again thanks everyone for the help.
-> Peter
+I apologize, I don't have the data available anymore.
 
-The links were not valid anymore. I wanted to see the results and 
-possibly include the results in the performance wiki page
-I would appreciate some new links here.
 
-Furthermore some comments to the post: My take on o3 vs f3 is that both
-in theory and practice f3 should be much faster for sequential reading,
-as the layout is equivalent to raid0. For random reading and sequential
-and random writing f3 and o3 (and the same goes for the more normal f2
-vs o2) should be about the same, especially when a filesystem and
-its associated elevator algorithm is employed.
+> Furthermore some comments to the post: My take on o3 vs f3 is that bo=
+th
+> in theory and practice f3 should be much faster for sequential readin=
+g,
+> as the layout is equivalent to raid0. For random reading and sequenti=
+al
+> and random writing f3 and o3 (and the same goes for the more normal f=
+2
+> vs o2) should be about the same, especially when a filesystem and
+> its associated elevator algorithm is employed.
 
-Best regards
-keld
+Yes, this is what I also concluded since I wrote this email. I am in th=
+e
+process of upgrading my raid setup, and while I am at it I am leaving
+5GB blank partitions at the start of all my workstations spindles, so I
+can get some real testing at night. I will share my methodology with th=
+e
+list before I commence testing (which should take about 20 days the way
+I am planing it).
+
+But first comes the vacation - happy holidays to you too guys.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
