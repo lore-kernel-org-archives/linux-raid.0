@@ -1,49 +1,124 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
-Date: Wed, 17 Dec 2008 16:40:02 -0500
-Message-ID: <494971B2.1000103@tmr.com>
-References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan>	<1229225480.16555.152.camel@localhost>	<18757.4606.966139.10342@tree.ty.sabi.co.uk>	<200812141912.59649.Martin@lichtvoll.de> <18757.33373.744917.457587@tree.ty.sabi.co.uk>
+From: "David Lethe" <david@santools.com>
+Subject: RE: detection/correction of corruption with raid6
+Date: Wed, 17 Dec 2008 15:47:50 -0600
+Message-ID: <A20315AE59B5C34585629E258D76A97C0314B70C@34093-C3-EVS3.exchange.rackspace.com>
+References: <1229464713.6159.16.camel@localhost.localdomain> <49491157.9060805@tmr.com> <A20315AE59B5C34585629E258D76A97C030D4913@34093-C3-EVS3.exchange.rackspace.com> <494960E8.8020407@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18757.33373.744917.457587@tree.ty.sabi.co.uk>
+Content-class: urn:content-classes:message
+In-Reply-To: <494960E8.8020407@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>
-Cc: Linux XFS <xfs@OSS.SGI.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Peter Grandi wrote:
-> Unfortunately that seems the case.
->
-> The purpose of barriers is to guarantee that relevant data is
-> known to be on persistent storage (kind of hardware 'fsync').
->
-> In effect write barrier means "tell me when relevant data is on
-> persistent storage", or less precisely "flush/sync writes now
-> and tell me when it is done". Properties as to ordering are just
-> a side effect.
->   
+From: Bill Davidsen [mailto:davidsen@tmr.com] 
+Sent: Wednesday, December 17, 2008 2:28 PM
+To: David Lethe
+Cc: Piergiorgio Sartor; linux-raid@vger.kernel.org
+Subject: Re: detection/correction of corruption with raid6
 
-I don't get that sense from the barriers stuff in Documentation, in fact 
-I think it's essentially a pure ordering thing, I don't even see that it 
-has an effect of forcing the data to be written to the device, other 
-than by preventing other writes until the drive writes everything. So we 
-read the intended use differently.
+David Lethe wrote: 
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+owner@vger.kernel.org] On Behalf Of Bill Davidsen
+Sent: Wednesday, December 17, 2008 8:49 AM
+To: Piergiorgio Sartor
+Cc: linux-raid@vger.kernel.org
+Subject: Re: detection/correction of corruption with raid6
 
-What really bothers me is that there's no obvious need for barriers at 
-the device level if the file system is just a bit smarter and does it's 
-own async io (like aio_*), because you can track writes outstanding on a 
-per-fd basis, so instead of stopping the flow of data to the drive, you 
-can just block a file descriptor and wait for the count of outstanding 
-i/o to drop to zero. That provides the order semantics of barriers as 
-far as I can see, having tirelessly thought about it for ten minutes or 
-so. Oh, and did something very similar decades ago in a long-gone 
-mainframe OS.
+Piergiorgio Sartor wrote:
+    
+Why a RAID system might have inconsistencies?
+Why do we have a "check" command at all, to run weekly or monthly?
+
+      
+Because alpha particles fly by, most systems don't have ECC memory, a
+passing truck and noisy jet create a beat frequency that causes a once
+in a century bit flip on a good cable connection, power line noise
+creeps in, or maybe an angel farts.
+
+My question is why we don't use available techniques to fix this since
+we have the software to find it for us.
+
+--
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will
+still
+  be valid when the war is over..." Otto von Bismark
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid"
+in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+    
+
+EEtimes published results from a 10-year IBM study.  They found that
+alpha particles created  a bit flip once a month per 256 MB of DRAM
+alone at sea level.  I can't remember what it was in high altitude, but
+I think it was twice as bad. If you have 4GB of RAM in your computer,
+then even if you have parity memory, then you are going to have
+undetectable bit flips several times a month.
+  
+
+Why undetectable with parity? Even with Hamming Code, not the most
+modern, you could correct all one bit errors and detect all two bit
+errors, using 1+log2(N) parity bits, for 2^N data bits. Last I checked
+parity memory had 8d+1p, and you have 8 parity bits available on a 64
+bit fetch, more than enough. You would have to get three flips in a
+fetch before you wouldn't see it, and using some of the better ECC
+schemes I bet you would see three as well.
+
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
   "Woe unto the statesman who makes war without a reason that will still
   be valid when the war is over..." Otto von Bismark 
+
+There is much more to it than that..   Your analysis doesn't factor in
+that DRAM must refresh and it never gets read.  
+
+Here is a great paper that explains everything, and gets into details,
+and it avoids the calculus. 
+
+http://www.tezzaron.com/about/papers/soft_errors_1_1_secure.pdf
+
+To take a few quotes from it
+"Memory errors occur mostly during read/write activity, so the SER rises
+with memory speed and with the intensity of memory use; "memory cycling
+at 100 nanoseconds can give soft error rates 100 times that of memory
+idling in refresh mode (15 microseconds). Error rates rise with
+altitude: SER is 5 times as high at 2600 feet as at sea level, and 10
+times as high in Denver (5280 feet) as at sea level. SRAM tested at
+10,000 feet above sea level will record SERs that are 14 times the rate
+tested at sea level"
+
+Quite aside from soft errors, particles with high energies can cause
+permanent damage to memory cells. These "hard" errors exhibit error
+rates that are strongly related to soft error rates, variously estimated
+at 2% of total errors ...
+
+Conclusions
+Soft errors are a matter of increasing concern as memories get larger
+and memory technologies get smaller. Even using a relatively
+conservative error rate (500 FIT/Mbit), a system with 1 GByte of RAM can
+expect an error every two weeks; a hypothetical Terabyte system would
+experience a soft error every few minutes. Existing ECC technologies can
+greatly reduce the error rate, but they may have unacceptable tradeoffs
+in power, speed, price, or size. 
+
+Soft errors can be disastrous for systems with large memories, critical
+applications, or high altitude locations. Some type of error
+detection/correction is mandatory in these cases, in spite of the cost
+in price and/or performance."
+
+David
+
+
 
 
