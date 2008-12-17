@@ -1,750 +1,106 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: Re: [PATCH 02/11][v2] async_tx: add support for asynchronous GF multiplication
-Date: Wed, 17 Dec 2008 11:34:19 -0700
-Message-ID: <e9c3a7c20812171034l7403c788y9fd1e7ce217cb41b@mail.gmail.com>
-References: <200812090055.42334.yur@emcraft.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Have the velociraptors in a test system now, checkout the	errors.
+Date: Wed, 17 Dec 2008 15:43:11 -0500
+Message-ID: <4949645F.4030407@tmr.com>
+References: <alpine.DEB.1.10.0812060426280.3494@p34.internal.lan>	
+	<49405A94.8080601@tmr.com> <1229225303.16555.149.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200812090055.42334.yur@emcraft.com>
+Return-path: <xfs-bounces@oss.sgi.com>
+In-Reply-To: <1229225303.16555.149.camel@localhost>
 Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: Yuri Tikhonov <yur@emcraft.com>
-Cc: linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, dzu@denx.de, wd@denx.de, yanok@emcraft.com
+List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Sender: xfs-bounces@oss.sgi.com
+Errors-To: xfs-bounces@oss.sgi.com
+To: Redeeman <redeeman@metanurb.dk>
+Cc: linux-raid@vger.kernel.org, smartmontools-support@lists.sourceforge.net, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Yuri,
+Redeeman wrote:
+> On Wed, 2008-12-10 at 19:11 -0500, Bill Davidsen wrote:
+>   
+>> Justin Piszcz wrote:
+>>     
+>>> Point of thread: Two problems, mentioned in detail below, NCQ in Linux 
+>>> when used in a RAID configuration and two, something with how Linux 
+>>> interacts with the drives causes lots of problems as when I run the WD 
+>>> tools on the disks, they do not show any errors.
+>>>
+>>> If anyone has/would like me to run any debugging/patches/etc on this 
+>>> system feel free to suggest/send me things to try out.  After I put 
+>>> the VR's in a test system, I left NCQ enabled and I made a 10 disk 
+>>> raid5 to see how fast I could get it to fail, I ran bonnie++ shown 
+>>> below as a disk benchmark/stress test:
+>>>
+>>> For the next test I will repeat this one but with NCQ disabled, having 
+>>> NCQ enabled makes it fail very easily.  Then I want to re-run the test 
+>>> with RAID6.
+>>>
+>>> bonnie++ -d /r1/test -s 1000G -m p63 -n 16:100000:16:64
+>>>
+>>> $ df -h
+>>> /dev/md3              2.5T  5.5M  2.5T   1% /r1
+>>>
+>>> And the results?  Two disk "failures" according to md/Linux within a 
+>>> few hours as shown below:
+>>>
+>>> Note, the NCQ-related errors are what I talk about all of the time, if 
+>>> you use
+>>> NCQ and Linux in a RAID environment with WD drives, well-- good luck.
+>>>
+>>> Two-disks failed out of the RAID5 and I currentlty cannot even 'see' 
+>>> one of the drives with smartctl, will reboot the host and check sde 
+>>> again.
+>>>
+>>> After a reboot, it comes up and has no errors, really makes one wonder 
+>>> where/what the bugs is/are, there are two I can see:
+>>> 1. NCQ issue on at least WD drives in Linux in SW md/RAID
+>>> 2. Velociraptor/other disks reporting all kinds of sector errors etc, 
+>>> but when you use the WD 11.x disk tools program and run all of their 
+>>> tests it says the disks have no problems whatsoever!  The smart 
+>>> statistics do confirm this.  Currently, TLER is on for all disks, for 
+>>> the duration of these tests.
+>>>       
+>> Just a few comments on this, I have several RAID arrays built on Seagate 
+>> using NCQ, and yet to have a problem. I have NCQ on with my WD drives, 
+>> non-RAID, and haven't had an issue with them either. The WDs run a lot 
+>> cooler than the SG, but they are probably getting less use, as well. If 
+>> the WD are still on sale after the holiday I may grab a few more and run 
+>> RAID, by then I will have some small sense of trusting them.
+>>     
+> Velociraptors, or which WD?
+>   
 
-On Mon, Dec 8, 2008 at 2:55 PM, Yuri Tikhonov <yur@emcraft.com> wrote:
-> This adds support for doing asynchronous GF multiplication by adding
-> four additional functions to async_tx API:
->
->  async_pq() does simultaneous XOR of sources and XOR of sources
->  GF-multiplied by given coefficients.
->
->  async_pq_zero_sum() checks if results of calculations match given
->  ones.
->
->  async_gen_syndrome() does sumultaneous XOR and R/S syndrome of sources.
->
->  async_syndrome_zerosum() checks if results of XOR/syndrome calculation
->  matches given ones.
->
-> Latter two functions just use async_pq() with the approprite coefficients
-> in asynchronous case but have significant optimizations if synchronous
-> case.
->
+Calls itself "WDC WD10EACS-00D" in /sys if that helps. I could dig out 
+the packing slip if it matters. Runs nicely so far, and if the SMART 
+temperature probe is correct, very cool:
 
-I like this separation of gen_syndrome and generic pq.
+/dev/sda: ST3750640AS: 43 C
+/dev/sdb: WDC WD10EACS-00D6B1: 31 C
+/dev/sdc: ST3750640AS: 44 C
+/dev/sdd: ST3750640AS: 46 C
 
-[..]
-> +       /* DMAs use destinations as sources, so use BIDIRECTIONAL mapping */
-> +       dma_dest[0] = !blocks[src_cnt] ? 0 :
-> +                               dma_map_page(dma->dev, blocks[src_cnt],
-> +                                            offset, len, DMA_BIDIRECTIONAL);
+I don't totally trust the temps, there is a LOT of 18C air going into 
+that box, because it has a lot coming out the back and side.
 
-"0" could be a valid dma address on some architectures.
-DMA_ERROR_CODE looks like the closest fit for what we are trying to do
-here, but that only exists on sparc and powerpc.  We could add a
-"dest_mask" parameter to device_prep_dma_pq where the mask is  1 =
-p-only, 2 = q-only, and 3 = p and q.
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
-> +       dma_dest[1] = !blocks[src_cnt+1] ? 0 :
-> +                               dma_map_page(dma->dev, blocks[src_cnt+1],
-> +                                            offset, len, DMA_BIDIRECTIONAL);
-> +
-> +       for (i = 0; i < src_cnt; i++)
-> +               dma_src[i] = dma_map_page(dma->dev, blocks[i],
-> +                                         offset, len, DMA_TO_DEVICE);
-> +
-> +       while (src_cnt) {
-> +               async_flags = flags;
-> +               pq_src_cnt = min(src_cnt, dma->max_pq);
-> +               /* if we are submitting additional pqs, leave the chain open,
-> +                * clear the callback parameters, and leave the destination
-> +                * buffers mapped
-> +                */
-> +               if (src_cnt > pq_src_cnt) {
-> +                       async_flags &= ~ASYNC_TX_ACK;
-> +                       dma_flags |= DMA_COMPL_SKIP_DEST_UNMAP;
-> +                       _cb_fn = NULL;
-> +                       _cb_param = NULL;
-> +               } else {
-> +                       _cb_fn = cb_fn;
-> +                       _cb_param = cb_param;
-> +               }
-> +               if (_cb_fn)
-> +                       dma_flags |= DMA_PREP_INTERRUPT;
-> +
-> +               /* Since we have clobbered the src_list we are committed
-> +                * to doing this asynchronously.  Drivers force forward
-> +                * progress in case they can not provide a descriptor
-> +                */
-> +               tx = dma->device_prep_dma_pq(chan, dma_dest,
-> +                                            &dma_src[src_off], pq_src_cnt,
-> +                                            scf_list ? &scf_list[src_off] :
-> +                                                       NULL,
-> +                                            len, dma_flags);
 
-...one nit for readability can we replace these ternary conditionals
-with proper if-else statements?  i.e.
 
-                if (scf_list)
-                        scf = &scf_list[src_off];
-                else
-                        scf = NULL;
-                tx = dma->device_prep_dma_pq(chan, dma_dest,
-                                             &dma_src[src_off], pq_src_cnt,
-                                             scf, len, dma_flags);
 
-> +               if (unlikely(!tx))
-> +                       async_tx_quiesce(&depend_tx);
-> +
-> +               /* spin wait for the preceeding transactions to complete */
-> +               while (unlikely(!tx)) {
-> +                       dma_async_issue_pending(chan);
-> +                       tx = dma->device_prep_dma_pq(chan, dma_dest,
-> +                                       &dma_src[src_off], pq_src_cnt,
-> +                                       scf_list ? &scf_list[src_off] : NULL,
-> +                                       len, dma_flags);
-> +               }
-> +
-> +               async_tx_submit(chan, tx, async_flags, depend_tx,
-> +                               _cb_fn, _cb_param);
-> +
-> +               depend_tx = tx;
-> +               flags |= ASYNC_TX_DEP_ACK;
-> +
-> +               if (src_cnt > pq_src_cnt) {
-> +                       /* drop completed sources */
-> +                       src_cnt -= pq_src_cnt;
-> +                       src_off += pq_src_cnt;
-> +
-> +                       /* use the intermediate result as a source; we
-> +                        * clear DMA_PREP_ZERO, so prep_dma_pq will
-> +                        * include destination(s) into calculations
-> +                        */
-> +                       dma_flags = 0;
-> +               } else
-> +                       break;
-> +       }
-> +
-> +       return tx;
-> +}
-> +
-> +/**
-> + * do_sync_pq - synchronously calculate P and Q
-> + */
-> +static void
-> +do_sync_pq(struct page **blocks, unsigned char *scf, unsigned int offset,
-> +       int src_cnt, size_t len, enum async_tx_flags flags,
-> +       struct dma_async_tx_descriptor *depend_tx,
-> +       dma_async_tx_callback cb_fn, void *cb_param)
-> +{
-> +       int i, pos;
-> +       uint8_t *p, *q, *src;
-> +
-> +       /* set destination addresses */
-> +       p = blocks[src_cnt] ?
-> +               (uint8_t *)(page_address(blocks[src_cnt]) + offset) :
-> +               NULL;
-> +       q = blocks[src_cnt+1] ?
-> +               (uint8_t *)(page_address(blocks[src_cnt+1]) + offset) :
-> +               NULL;
-> +
+[[HTML alternate version deleted]]
 
-...more ternary conditional to if-else conversion
-
-> +       if (flags & ASYNC_TX_PQ_ZERO_P) {
-> +               BUG_ON(!p);
-> +               memset(p, 0, len);
-> +       }
-> +
-> +       if (flags & ASYNC_TX_PQ_ZERO_Q) {
-> +               BUG_ON(!q);
-> +               memset(q, 0, len);
-> +       }
-> +
-> +       for (i = 0; i < src_cnt; i++) {
-> +               src = (uint8_t *)(page_address(blocks[i]) + offset);
-> +               for (pos = 0; pos < len; pos++) {
-> +                       if (p)
-> +                               p[pos] ^= src[pos];
-> +                       if (q)
-> +                               q[pos] ^= raid6_gfmul[scf[i]][src[pos]];
-> +               }
-> +       }
-> +       async_tx_sync_epilog(cb_fn, cb_param);
-> +}
-> +
-> +/**
-> + * async_pq - attempt to do XOR and Galois calculations in parallel using
-> + *     a dma engine.
-> + * @blocks: source block array from 0 to (src_cnt-1) with the p destination
-> + *     at blocks[src_cnt] and q at blocks[src_cnt + 1]. Only one of two
-> + *     destinations may be present (another then has to be set to NULL).
-> + *     By default, the result of calculations is XOR-ed with the initial
-> + *     content of the destinationa buffers. Use ASYNC_TX_PQ_ZERO_x flags
-> + *     to avoid this.
-> + *     NOTE: client code must assume the contents of this array are destroyed
-> + * @scf: array of source coefficients used in GF-multiplication
-> + * @offset: offset in pages to start transaction
-> + * @src_cnt: number of source pages
-> + * @len: length in bytes
-> + * @flags: ASYNC_TX_PQ_ZERO_P, ASYNC_TX_PQ_ZERO_Q, ASYNC_TX_ASSUME_COHERENT,
-> + *     ASYNC_TX_ACK, ASYNC_TX_DEP_ACK, ASYNC_TX_ASYNC_ONLY
-> + * @depend_tx: depends on the result of this transaction.
-> + * @cb_fn: function to call when the operation completes
-> + * @cb_param: parameter to pass to the callback routine
-> + */
-> +struct dma_async_tx_descriptor *
-> +async_pq(struct page **blocks, unsigned char *scf,
-> +       unsigned int offset, int src_cnt, size_t len,
-> +       enum async_tx_flags flags,
-> +       struct dma_async_tx_descriptor *depend_tx,
-> +       dma_async_tx_callback cb_fn, void *cb_param)
-> +{
-> +       struct dma_chan *chan = async_tx_find_channel(depend_tx, DMA_PQ,
-> +                                       &blocks[src_cnt], 2,
-> +                                       blocks, src_cnt, len);
-> +       struct dma_device *device = chan ? chan->device : NULL;
-> +       struct dma_async_tx_descriptor *tx = NULL;
-> +
-> +       if (!device && (flags & ASYNC_TX_ASYNC_ONLY))
-> +               return NULL;
-> +
-> +       if (device) {
-> +               /* run pq asynchronously */
-> +               tx = do_async_pq(chan, blocks, scf, offset, src_cnt,
-> +                       len, flags, depend_tx, cb_fn,cb_param);
-> +       } else {
-> +               /* run pq synchronously */
-> +               if (!blocks[src_cnt+1]) {
-> +                       struct page *pdst = blocks[src_cnt];
-> +                       int i;
-> +
-> +                       /* Calculate P-parity only.
-> +                        * As opposite to async_xor(), async_pq() assumes
-> +                        * that destinations are included into calculations,
-> +                        * so we should re-arrange the xor src list to
-> +                        * achieve the similar behavior.
-> +                        */
-> +                       if (!(flags & ASYNC_TX_PQ_ZERO_P)) {
-> +                               /* If async_pq() user doesn't set ZERO flag,
-> +                                * it's assumed that destination has some
-> +                                * reasonable data to include in calculations.
-> +                                * The destination must be at position 0, so
-> +                                * shift the sources and put pdst at the
-> +                                * beginning of the list.
-> +                                */
-> +                               for (i = src_cnt - 1; i >= 0; i--)
-> +                                       blocks[i+1] = blocks[i];
-> +                               blocks[0] = pdst;
-> +                               src_cnt++;
-> +                               flags |= ASYNC_TX_XOR_DROP_DST;
-> +                       } else {
-> +                               /* If async_pq() user want to clear P, then
-> +                                * this will be done automatically in async
-> +                                * case, and with the help of ZERO_DST in
-> +                                * the sync one.
-> +                                */
-> +                               flags &= ~ASYNC_TX_PQ_ZERO_P;
-> +                               flags |= ASYNC_TX_XOR_ZERO_DST;
-> +                       }
-> +
-> +
-> +                       return async_xor(pdst, blocks, offset,
-> +                                        src_cnt, len, flags, depend_tx,
-> +                                        cb_fn, cb_param);
-> +               }
-> +
-> +               /* wait for any prerequisite operations */
-> +               async_tx_quiesce(&depend_tx);
-> +
-> +               do_sync_pq(blocks, scf, offset, src_cnt, len, flags,
-> +                       depend_tx, cb_fn, cb_param);
-> +       }
-> +
-> +       return tx;
-> +}
-> +EXPORT_SYMBOL_GPL(async_pq);
-> +
-> +/**
-> + * do_sync_gen_syndrome - synchronously calculate P (xor) and Q (Reed-Solomon
-> + *     code)
-> + */
-> +static void
-> +do_sync_gen_syndrome(struct page **blocks, unsigned int offset,
-> +       int src_cnt, size_t len, enum async_tx_flags flags,
-> +       struct dma_async_tx_descriptor *depend_tx,
-> +       dma_async_tx_callback cb_fn, void *cb_param)
-> +{
-> +       int i;
-> +       void *tsrc[src_cnt+2];
-> +
-> +       for (i = 0; i < src_cnt + 2; i++)
-> +               tsrc[i] = page_address(blocks[i]) + offset;
-> +
-> +       raid6_call.gen_syndrome(i, len, tsrc);
-> +
-> +       async_tx_sync_epilog(cb_fn, cb_param);
-> +}
-> +
-> +/**
-> + * async_gen_syndrome - attempt to generate P (xor) and Q (Reed-Solomon code)
-> + *     with a dma engine for a given set of blocks.  This routine assumes a
-> + *     field of GF(2^8) with a primitive polynomial of 0x11d and a generator
-> + *     of {02}.
-> + * @blocks: source block array ordered from 0..src_cnt-1 with the P destination
-> + *     at blocks[src_cnt] and Q at blocks[src_cnt + 1]. Only one of two
-> + *     destinations may be present (another then has to be set to NULL).
-> + *     NOTE: client code must assume the contents of this array are destroyed
-> + * @offset: offset in pages to start transaction
-> + * @src_cnt: number of source pages: 2 < src_cnt <= 255
-> + * @len: length of blocks in bytes
-> + * @flags: ASYNC_TX_ACK, ASYNC_TX_DEP_ACK, ASYNC_TX_ASYNC_ONLY
-> + * @depend_tx: P+Q operation depends on the result of this transaction.
-> + * @cb_fn: function to call when P+Q generation completes
-> + * @cb_param: parameter to pass to the callback routine
-> + */
-> +struct dma_async_tx_descriptor *
-> +async_gen_syndrome(struct page **blocks, unsigned int offset, int src_cnt,
-> +       size_t len, enum async_tx_flags flags,
-> +       struct dma_async_tx_descriptor *depend_tx,
-> +       dma_async_tx_callback cb_fn, void *cb_param)
-> +{
-> +       struct dma_chan *chan = async_tx_find_channel(depend_tx, DMA_PQ,
-> +                                                    &blocks[src_cnt], 2,
-> +                                                    blocks, src_cnt, len);
-> +       struct dma_device *device = chan ? chan->device : NULL;
-> +       struct dma_async_tx_descriptor *tx = NULL;
-> +
-> +       BUG_ON(src_cnt > 255 || (!blocks[src_cnt] && !blocks[src_cnt+1]));
-> +
-> +       if (!device && (flags & ASYNC_TX_ASYNC_ONLY))
-> +               return NULL;
-> +
-> +       /* Synchronous gen_syndrome() doesn't take care of destinations,
-> +        * but asynchronous implies them as sources; so, when generating
-> +        * syndromes - command to clear destinations up explicitly
-> +        */
-> +       if (blocks[src_cnt])
-> +               flags |= ASYNC_TX_PQ_ZERO_P;
-> +       if (blocks[src_cnt+1])
-> +               flags |= ASYNC_TX_PQ_ZERO_Q;
-> +
-> +       if (device) {
-> +               /* run the xor asynchronously */
-> +               tx = do_async_pq(chan, blocks, (uint8_t *)raid6_gfexp,
-> +                                offset, src_cnt, len, flags, depend_tx,
-> +                                cb_fn, cb_param);
-> +       } else {
-> +               /* run the pq synchronously */
-> +               /* wait for any prerequisite operations */
-> +               async_tx_quiesce(&depend_tx);
-> +
-> +               if (!blocks[src_cnt])
-> +                       blocks[src_cnt] = spare_pages[2];
-> +               if (!blocks[src_cnt+1])
-> +                       blocks[src_cnt+1] = spare_pages[2];
-> +               do_sync_gen_syndrome(blocks, offset, src_cnt, len, flags,
-> +                                    depend_tx, cb_fn, cb_param);
-> +       }
-> +
-> +       return tx;
-> +}
-> +EXPORT_SYMBOL_GPL(async_gen_syndrome);
-> +
-> +/**
-> + * async_pq_zero_sum - attempt a PQ parities check with a dma engine.
-> + * @blocks: array of source pages. The 0..src_cnt-1 are the sources, the
-> + *     src_cnt and src_cnt+1 are the P and Q destinations to check, resp.
-> + *     Only one of two destinations may be present.
-> + *     NOTE: client code must assume the contents of this array are destroyed
-> + * @scf: coefficients to use in GF-multiplications
-> + * @offset: offset in pages to start transaction
-> + * @src_cnt: number of source pages
-> + * @len: length in bytes
-> + * @presult: where to store the result of P-ckeck, which is 0 if P-parity
-> + *     OK, and non-zero otherwise.
-> + * @qresult: where to store the result of P-ckeck, which is 0 if Q-parity
-> + *     OK, and non-zero otherwise.
-> + * @flags: ASYNC_TX_ASSUME_COHERENT, ASYNC_TX_ACK, ASYNC_TX_DEP_ACK
-> + * @depend_tx: depends on the result of this transaction.
-> + * @cb_fn: function to call when the xor completes
-> + * @cb_param: parameter to pass to the callback routine
-> + */
-> +struct dma_async_tx_descriptor *
-> +async_pq_zero_sum(struct page **blocks, unsigned char *scf,
-> +       unsigned int offset, int src_cnt, size_t len,
-> +       u32 *presult, u32 *qresult, enum async_tx_flags flags,
-> +       struct dma_async_tx_descriptor *depend_tx,
-> +       dma_async_tx_callback cb_fn, void *cb_param)
-> +{
-> +       struct dma_chan *chan = async_tx_find_channel(depend_tx,
-> +                                                     DMA_PQ_ZERO_SUM,
-> +                                                     &blocks[src_cnt], 2,
-> +                                                     blocks, src_cnt, len);
-> +       struct dma_device *device = chan ? chan->device : NULL;
-> +       struct dma_async_tx_descriptor *tx = NULL;
-> +
-> +       BUG_ON(src_cnt < 2);
-> +
-> +       if (device && src_cnt <= device->max_pq) {
-> +               dma_addr_t dma_src[src_cnt + 2];
-> +               enum dma_ctrl_flags dma_flags = cb_fn ? DMA_PREP_INTERRUPT : 0;
-> +               int i;
-> +
-> +               for (i = 0; i < src_cnt + 2; i++)
-> +                       dma_src[i] = blocks[i] ? dma_map_page(device->dev,
-> +                                       blocks[i], offset, len,
-> +                                       DMA_TO_DEVICE) : 0;
-
-If we go with the "dest_mask" approach to specifying p and q then we
-need to separate them into their own parameter here... although in
-this case it would be a "src_mask" to select p or q.
-
-> +
-> +               tx = device->device_prep_dma_pqzero_sum(chan, dma_src, src_cnt,
-> +                                                     scf, len,
-> +                                                     presult, qresult,
-> +                                                     dma_flags);
-> +
-> +               if (unlikely(!tx)) {
-> +                       async_tx_quiesce(&depend_tx);
-> +
-> +                       while (unlikely(!tx)) {
-> +                               dma_async_issue_pending(chan);
-> +                               tx = device->device_prep_dma_pqzero_sum(chan,
-> +                                               dma_src, src_cnt, scf, len,
-> +                                               presult, qresult,
-> +                                               dma_flags);
-> +                       }
-> +               }
-> +
-> +               async_tx_submit(chan, tx, flags, depend_tx, cb_fn, cb_param);
-> +       } else {
-> +               struct page *pdest = blocks[src_cnt];
-> +               struct page *qdest = blocks[src_cnt + 1];
-> +               enum async_tx_flags lflags = flags;
-> +
-> +               lflags &= ~ASYNC_TX_ACK;
-> +               lflags |= ASYNC_TX_PQ_ZERO_P | ASYNC_TX_PQ_ZERO_Q;
-> +
-> +               spin_lock(&spare_lock);
-> +               blocks[src_cnt] = spare_pages[0];
-> +               blocks[src_cnt + 1] = spare_pages[1];
-> +               tx = async_pq(blocks, scf, offset, src_cnt, len, lflags,
-> +                             depend_tx, NULL, NULL);
-> +
-> +               async_tx_quiesce(&tx);
-> +
-> +               if (presult && pdest)
-> +                       *presult = memcmp(page_address(pdest) + offset,
-> +                                         page_address(spare_pages[0]) +
-> +                                                  offset, len) == 0 ? 0 : 1;
-> +               if (qresult && qdest)
-> +                       *qresult = memcmp(page_address(qdest) + offset,
-> +                                         page_address(spare_pages[1]) +
-> +                                                  offset, len) == 0 ? 0 : 1;
-> +               spin_unlock(&spare_lock);
-> +       }
-> +
-> +       return tx;
-> +}
-> +EXPORT_SYMBOL_GPL(async_pq_zero_sum);
-> +
-> +/**
-> + * async_syndrome_zero_sum - attempt a P (xor) and Q (Reed-Solomon code)
-> + *     parities check with a dma engine. This routine assumes a field of
-> + *     GF(2^8) with a primitive polynomial of 0x11d and a generator of {02}.
-> + * @blocks: array of source pages. The 0..src_cnt-1 are the sources, the
-> + *     src_cnt and src_cnt+1 are the P and Q destinations to check, resp.
-> + *     Only one of two destinations may be present.
-> + *     NOTE: client code must assume the contents of this array are destroyed
-> + * @offset: offset in pages to start transaction
-> + * @src_cnt: number of source pages
-> + * @len: length in bytes
-> + * @presult: where to store the result of P-ckeck: 0 if P-parity is OK,
-> + *     and non-zero otherwise.
-> + * @qresult: where to store the result of P-ckeck: 0 if Q-parity is OK.
-> + *     and non-zero otherwise.
-> + * @flags: ASYNC_TX_ASSUME_COHERENT, ASYNC_TX_ACK, ASYNC_TX_DEP_ACK
-> + * @depend_tx: depends on the result of this transaction.
-> + * @cb_fn: function to call when the xor completes
-> + * @cb_param: parameter to pass to the callback routine
-> + */
-> +struct dma_async_tx_descriptor *
-> +async_syndrome_zero_sum(struct page **blocks, unsigned int offset,
-> +       int src_cnt, size_t len, u32 *presult, u32 *qresult,
-> +       enum async_tx_flags flags, struct dma_async_tx_descriptor *depend_tx,
-> +       dma_async_tx_callback cb_fn, void *cb_param)
-> +{
-> +       struct dma_chan *chan = async_tx_find_channel(depend_tx,
-> +                                                     DMA_PQ_ZERO_SUM,
-> +                                                     &blocks[src_cnt], 2,
-> +                                                     blocks, src_cnt, len);
-> +       struct dma_device *device = chan ? chan->device : NULL;
-> +       struct dma_async_tx_descriptor *tx = NULL;
-> +
-> +       BUG_ON(src_cnt < 2);
-> +
-> +       if (device && src_cnt <= device->max_pq) {
-> +               dma_addr_t dma_src[src_cnt + 2];
-> +               enum dma_ctrl_flags dma_flags = cb_fn ? DMA_PREP_INTERRUPT : 0;
-> +               int i;
-> +
-> +               for (i = 0; i < src_cnt + 2; i++)
-> +                       dma_src[i] = blocks[i] ? dma_map_page(device->dev,
-> +                                       blocks[i], offset, len,
-> +                                       DMA_TO_DEVICE) : 0;
-> +
-> +               tx = device->device_prep_dma_pqzero_sum(chan, dma_src, src_cnt,
-> +                                                     (uint8_t *)raid6_gfexp,
-> +                                                     len, presult, qresult,
-> +                                                     dma_flags);
-> +
-> +               if (unlikely(!tx)) {
-> +                       async_tx_quiesce(&depend_tx);
-> +                       while (unlikely(!tx)) {
-> +                               dma_async_issue_pending(chan);
-> +                               tx = device->device_prep_dma_pqzero_sum(chan,
-> +                                               dma_src, src_cnt,
-> +                                               (uint8_t *)raid6_gfexp, len,
-> +                                               presult, qresult,
-> +                                               dma_flags);
-> +                       }
-> +               }
-> +
-> +               async_tx_submit(chan, tx, flags, depend_tx, cb_fn, cb_param);
-> +       } else {
-> +               struct page *pdest = blocks[src_cnt];
-> +               struct page *qdest = blocks[src_cnt + 1];
-> +               enum async_tx_flags lflags = flags;
-> +
-> +               lflags &= ~ASYNC_TX_ACK;
-> +
-> +               spin_lock(&spare_lock);
-> +               blocks[src_cnt] = spare_pages[0];
-> +               blocks[src_cnt + 1] = spare_pages[1];
-> +               tx = async_gen_syndrome(blocks, offset,
-> +                                       src_cnt, len, lflags,
-> +                                       depend_tx, NULL, NULL);
-> +               async_tx_quiesce(&tx);
-> +
-> +               if (presult && pdest)
-> +                       *presult = memcmp(page_address(pdest) + offset,
-> +                                         page_address(spare_pages[0]) +
-> +                                                  offset, len) == 0 ? 0 : 1;
-> +               if (qresult && qdest)
-> +                       *qresult = memcmp(page_address(qdest) + offset,
-> +                                         page_address(spare_pages[1]) +
-> +                                                  offset, len) == 0 ? 0 : 1;
-> +               spin_unlock(&spare_lock);
-> +       }
-> +
-> +       return tx;
-> +}
-> +EXPORT_SYMBOL_GPL(async_syndrome_zero_sum);
-> +
-> +static int __init async_pq_init(void)
-> +{
-> +       spin_lock_init(&spare_lock);
-> +
-> +       spare_pages[0] = alloc_page(GFP_KERNEL);
-> +       if (!spare_pages[0])
-> +               goto abort;
-> +       spare_pages[1] = alloc_page(GFP_KERNEL);
-> +       if (!spare_pages[1])
-> +               goto abort;
-> +       spare_pages[2] = alloc_page(GFP_KERNEL);
-> +       if (!spare_pages[2])
-> +               goto abort;
-> +       return 0;
-> +abort:
-> +       safe_put_page(spare_pages[2]);
-> +       safe_put_page(spare_pages[1]);
-> +       safe_put_page(spare_pages[0]);
-> +       printk(KERN_ERR "%s: cannot allocate spare!\n", __func__);
-> +       return -ENOMEM;
-> +}
-> +
-> +static void __exit async_pq_exit(void)
-> +{
-> +       safe_put_page(spare_pages[2]);
-> +       safe_put_page(spare_pages[1]);
-> +       safe_put_page(spare_pages[0]);
-> +}
-> +
-> +module_init(async_pq_init);
-> +module_exit(async_pq_exit);
-> +
-> +MODULE_AUTHOR("Yuri Tikhonov <yur@emcraft.com>");
-> +MODULE_DESCRIPTION("asynchronous pq/pq-zero-sum api");
-> +MODULE_LICENSE("GPL");
-> diff --git a/include/linux/async_tx.h b/include/linux/async_tx.h
-> index 0f50d4c..5d6b639 100644
-> --- a/include/linux/async_tx.h
-> +++ b/include/linux/async_tx.h
-> @@ -42,6 +42,12 @@ struct dma_chan_ref {
->  * @ASYNC_TX_XOR_ZERO_DST: this flag must be used for xor operations where the
->  * the destination address is not a source.  The asynchronous case handles this
->  * implicitly, the synchronous case needs to zero the destination block.
-> + * @ASYNC_TX_PQ_ZERO_P: this flag must be used for async_pq operations since the
-> + * destination there is always the source (the result of P after async_pq is
-> + * xor-ed with the previous content of P block if this flag isn't set).
-> + * @ASYNC_TX_PQ_ZERO_Q: this flag must be used for async_pq operations since the
-> + * destination there is always the source (the result of Q after async_pq is
-> + * xor-ed with the previous content of Q block if this flag isn't set).
->  * @ASYNC_TX_XOR_DROP_DST: this flag must be used if the destination address is
->  * also one of the source addresses.  In the synchronous case the destination
->  * address is an implied source, whereas the asynchronous case it must be listed
-> @@ -50,12 +56,17 @@ struct dma_chan_ref {
->  * @ASYNC_TX_ACK: immediately ack the descriptor, precludes setting up a
->  * dependency chain
->  * @ASYNC_TX_DEP_ACK: ack the dependency descriptor.  Useful for chaining.
-> + * @ASYNC_TX_ASYNC_ONLY: if set then try to perform operation requested only in
-> + * the asynchronous mode.
->  */
->  enum async_tx_flags {
->        ASYNC_TX_XOR_ZERO_DST    = (1 << 0),
-> -       ASYNC_TX_XOR_DROP_DST    = (1 << 1),
-> -       ASYNC_TX_ACK             = (1 << 3),
-> -       ASYNC_TX_DEP_ACK         = (1 << 4),
-> +       ASYNC_TX_PQ_ZERO_P       = (1 << 1),
-> +       ASYNC_TX_PQ_ZERO_Q       = (1 << 2),
-> +       ASYNC_TX_XOR_DROP_DST    = (1 << 3),
-> +       ASYNC_TX_ACK             = (1 << 4),
-> +       ASYNC_TX_DEP_ACK         = (1 << 5),
-> +       ASYNC_TX_ASYNC_ONLY      = (1 << 6),
->  };
->
->  #ifdef CONFIG_DMA_ENGINE
-> @@ -146,5 +157,33 @@ async_trigger_callback(enum async_tx_flags flags,
->        struct dma_async_tx_descriptor *depend_tx,
->        dma_async_tx_callback cb_fn, void *cb_fn_param);
->
-> +struct dma_async_tx_descriptor *
-> +async_pqxor(struct page *pdest, struct page *qdest,
-> +       struct page **src_list, unsigned char *scoef_list,
-> +       unsigned int offset, int src_cnt, size_t len, enum async_tx_flags flags,
-> +       struct dma_async_tx_descriptor *depend_tx,
-> +       dma_async_tx_callback callback, void *callback_param);
-> +
-
-...forgot to update the declartion.
-
-In this case async_pq() can be declared static since nothing outside
-of async_pq.c calls it.
-
-> +struct dma_async_tx_descriptor *
-> +async_gen_syndrome(struct page *pdest, struct page *qdest,
-> +       struct page **src_list, unsigned int offset, int src_cnt, size_t len,
-> +       enum async_tx_flags flags, struct dma_async_tx_descriptor *depend_tx,
-> +       dma_async_tx_callback callback, void *callback_param);
-> +
-
-...forgot to update the declartion.
-
-> +struct dma_async_tx_descriptor *
-> +async_pqxor_zero_sum(struct page *pdest, struct page *qdest,
-> +       struct page **src_list, unsigned char *scoef_list,
-> +       unsigned int offset, int src_cnt, size_t len,
-> +       u32 *presult, u32 *qresult, enum async_tx_flags flags,
-> +       struct dma_async_tx_descriptor *depend_tx,
-> +       dma_async_tx_callback callback, void *callback_param);
-> +
-
-...ditto
-
-> +struct dma_async_tx_descriptor *
-> +async_syndrome_zero_sum(struct page *pdest, struct page *qdest,
-> +       struct page **src_list, unsigned int offset, int src_cnt, size_t len,
-> +       u32 *presult, u32 *qresult, enum async_tx_flags flags,
-> +       struct dma_async_tx_descriptor *depend_tx,
-> +       dma_async_tx_callback callback, void *callback_param);
-> +
-
-...ditto again.
-
->  void async_tx_quiesce(struct dma_async_tx_descriptor **tx);
->  #endif /* _ASYNC_TX_H_ */
-> diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
-> index adb0b08..84525c3 100644
-> --- a/include/linux/dmaengine.h
-> +++ b/include/linux/dmaengine.h
-> @@ -81,7 +81,7 @@ enum dma_status {
->  enum dma_transaction_type {
->        DMA_MEMCPY,
->        DMA_XOR,
-> -       DMA_PQ_XOR,
-> +       DMA_PQ,
->        DMA_DUAL_XOR,
->        DMA_PQ_UPDATE,
->        DMA_ZERO_SUM,
-> @@ -123,6 +123,8 @@ enum dma_ctrl_flags {
->        DMA_CTRL_ACK = (1 << 1),
->        DMA_COMPL_SKIP_SRC_UNMAP = (1 << 2),
->        DMA_COMPL_SKIP_DEST_UNMAP = (1 << 3),
-> +       DMA_PREP_ZERO_P = (1 << 4),
-> +       DMA_PREP_ZERO_Q = (1 << 5),
->  };
-
-I would rather not add operation-type-specific flags to
-dma_ctrl_flags.  In this case can we set up a dependency chain with
-async_memset()?
-
->
->  /**
-> @@ -299,6 +301,7 @@ struct dma_async_tx_descriptor {
->  * @global_node: list_head for global dma_device_list
->  * @cap_mask: one or more dma_capability flags
->  * @max_xor: maximum number of xor sources, 0 if no capability
-> + * @max_pq: maximum number of PQ sources, 0 if no capability
->  * @refcount: reference count
->  * @done: IO completion struct
->  * @dev_id: unique device ID
-> @@ -308,7 +311,9 @@ struct dma_async_tx_descriptor {
->  * @device_free_chan_resources: release DMA channel's resources
->  * @device_prep_dma_memcpy: prepares a memcpy operation
->  * @device_prep_dma_xor: prepares a xor operation
-> + * @device_prep_dma_pq: prepares a pq operation
->  * @device_prep_dma_zero_sum: prepares a zero_sum operation
-> + * @device_prep_dma_pqzero_sum: prepares a pqzero_sum operation
->  * @device_prep_dma_memset: prepares a memset operation
->  * @device_prep_dma_interrupt: prepares an end of chain interrupt operation
->  * @device_prep_slave_sg: prepares a slave dma operation
-> @@ -322,6 +327,7 @@ struct dma_device {
->        struct list_head global_node;
->        dma_cap_mask_t  cap_mask;
->        int max_xor;
-> +       int max_pq;
->
-
-max_xor and max_pq can be changed to unsigned shorts to keep the size
-of the struct the same.
-
->        struct kref refcount;
->        struct completion done;
-> @@ -339,9 +345,17 @@ struct dma_device {
->        struct dma_async_tx_descriptor *(*device_prep_dma_xor)(
->                struct dma_chan *chan, dma_addr_t dest, dma_addr_t *src,
->                unsigned int src_cnt, size_t len, unsigned long flags);
-> +       struct dma_async_tx_descriptor *(*device_prep_dma_pq)(
-> +               struct dma_chan *chan, dma_addr_t *dst, dma_addr_t *src,
-> +               unsigned int src_cnt, unsigned char *scf,
-> +               size_t len, unsigned long flags);
->        struct dma_async_tx_descriptor *(*device_prep_dma_zero_sum)(
->                struct dma_chan *chan, dma_addr_t *src, unsigned int src_cnt,
->                size_t len, u32 *result, unsigned long flags);
-> +       struct dma_async_tx_descriptor *(*device_prep_dma_pqzero_sum)(
-> +               struct dma_chan *chan, dma_addr_t *src, unsigned int src_cnt,
-> +               unsigned char *scf,
-> +               size_t len, u32 *presult, u32 *qresult, unsigned long flags);
-
-I would rather we turn the 'result' parameter into a pointer to flags
-where bit 0 is the xor/p result and bit1 is the q result.
-
-Thanks,
-Dan
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
