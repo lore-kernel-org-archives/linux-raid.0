@@ -1,73 +1,56 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: Re: RAID 6 recovery (it's not looking good)
-Date: Wed, 17 Dec 2008 00:59:57 +0100
-Message-ID: <20081216235957.GA458@lanczos.q-leap.de>
-References: <20081216191843.GA25097@lanczos.q-leap.de> <C56DC08C.B981%groups@email.iain.rauch.co.uk>
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+Subject: Re: upgrade advice
+Date: Tue, 16 Dec 2008 18:08:42 -0600
+Message-ID: <cccedfc60812161608y29e6c645n6ff7df5c87292374@mail.gmail.com>
+References: <d5fe39840812160310t45e822c1geb633f805cf5388e@mail.gmail.com>
+	 <alpine.DEB.1.10.0812160641130.725@p34.internal.lan>
+	 <1229428184.22331.43.camel@localhost>
+	 <alpine.DEB.1.10.0812160807200.725@p34.internal.lan>
+	 <1229436950.22331.45.camel@localhost>
+	 <cccedfc60812160757x2af73afbv4a69eac31d212062@mail.gmail.com>
+	 <alpine.DEB.1.10.0812161829490.31132@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.0812161829490.31132@p34.internal.lan>
 Content-Disposition: inline
-In-Reply-To: <C56DC08C.B981%groups@email.iain.rauch.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Iain Rauch <groups@email.iain.rauch.co.uk>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Dec 16, 2008 at 08:31:08PM +0000, Iain Rauch wrote:
-> > Hello Iain,
-> > 
-> > can you please describe what is the *present* status?
-> > 
-> >> /dev/md0 has been started with 22 drives (out of 24) and 1 spare
-> > 
-> > So in short, you had failure of 3 drives, reassembled it with 22 drives and
-> > while you rebuild it again a drive failed?
-> > 
-> > If so, take this last failed drive, clone it to a new drive (e.g. dd_rescue)
-> > and continue.
-> > 
-> > (Sorry, but this is by far too much output below for my tired eyes.
-> > Sometimes a short description is more helpful).
-> > 
-> 
-> I'll see if I can do that.
-> 
-> If I can't get anything useful off sdu (the latest to fail) can I change sdw
-> from spare to active sync? sds is the spare drive it's trying to recover to
-> and was the one that became out of sync as it ran in degraded mode.
-> 
-> I think sdw maybe sdw was only set to faulty because it was the last one to
-> be recognised and the array got assembled without it. (The system won't boot
-> with all the drives on together).
-> 
-> Here is what mdadm -E has to say about each disk:
-> 
-> http://iain.rauch.co.uk/stuff/skinner-2008-12-16/
-> 
+On Tue, Dec 16, 2008 at 5:29 PM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+>
+>
+> On Tue, 16 Dec 2008, Jon Nelson wrote:
+>
+>> What about Hitachi?
+>>
+>> Samsung has been my go-to drive for the better part of a decade, and
+>> Seagate hasn't won any favor with me, so I've been relying on Samsung
+>> and Hitachi with great results - so far.
 
-I'm still tired (now even more ;-) ). Just check again if /dev/sdu really 
-was the latest to fail and if so, clone this one. 
-I also suggest to reassemble it without an immediate raid-rebuild. 
-First check your data and only then add a new drives to the raid.  
-Once you start a raid-rebuild.
-there is no way to go back. We recently also had the problem of three
-failed disks  but we only could get back the data by not assembling the 
-array with the latest failed disk, but with the 2nd latest (don't ask why).
+> Enterprise or 'desktop' disks Jon?
 
-So in short
+Desktop. This is what I've got:
 
-1) clone disk
+Hitachi Deskstar T7K500 (HDT725032VLA360)
+SAMSUNG SpinPoint T166 series (HD321KJ)
+Seagate Barracuda 7200.10 family (ST3320620AS)*
+WDC WD3200AAKS-75VYA0
 
-2) mdadm --assemble --force /dev/mdX /dev/sda1 /dev/sdb1 ... /dev/sdx1
+* the seagate has the infamous 3.AAK firmware.
 
-===> Use only **22** devices here.
+I've almost always used Hitachi or Samsung, although I often
+"repurpose" drives from friends and I've had quite a few Maxtor and
+Seagate. The Hitachi does seem to run a bit hotter but it is probably
+my favorite drive of the bunch. The Samsung is nice and quiet,
+vibration-free, like the Hitachi and WD.  The Seagate vibrates and is
+the second after the first died within the first few hours.
 
-3) Mount and check data, maybe even a read-only fsck
+If I were to buy replacement drives, I almost always look at Hitachi
+and Samsung first.
 
-4) Add two new disks.
-
-
-Hope it helps,
-Bernd
-
-
+-- 
+Jon
