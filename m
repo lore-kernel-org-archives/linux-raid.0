@@ -1,60 +1,32 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: detection/correction of corruption with raid6
-Date: Wed, 17 Dec 2008 09:50:02 -0600
-Message-ID: <A20315AE59B5C34585629E258D76A97C030D4913@34093-C3-EVS3.exchange.rackspace.com>
-References: <1229464713.6159.16.camel@localhost.localdomain> <49491157.9060805@tmr.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: linux raid faq
+Date: Wed, 17 Dec 2008 19:22:34 +0100
+Message-ID: <20081217182234.GA8354@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <49491157.9060805@tmr.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Bill Davidsen
-> Sent: Wednesday, December 17, 2008 8:49 AM
-> To: Piergiorgio Sartor
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: detection/correction of corruption with raid6
-> 
-> Piergiorgio Sartor wrote:
-> > Why a RAID system might have inconsistencies?
-> > Why do we have a "check" command at all, to run weekly or monthly?
-> >
-> 
-> Because alpha particles fly by, most systems don't have ECC memory, a
-> passing truck and noisy jet create a beat frequency that causes a once
-> in a century bit flip on a good cable connection, power line noise
-> creeps in, or maybe an angel farts.
-> 
-> My question is why we don't use available techniques to fix this since
-> we have the software to find it for us.
-> 
-> --
-> Bill Davidsen <davidsen@tmr.com>
->   "Woe unto the statesman who makes war without a reason that will
-> still
->   be valid when the war is over..." Otto von Bismark
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+from the description of our mailing list at vger:
 
-EEtimes published results from a 10-year IBM study.  They found that
-alpha particles created  a bit flip once a month per 256 MB of DRAM
-alone at sea level.  I can't remember what it was in high altitude, but
-I think it was twice as bad. If you have 4GB of RAM in your computer,
-then even if you have parity memory, then you are going to have
-undetectable bit flips several times a month.
+> List: linux-raid;     ( subscribe / unsubscribe )
+> Info:
+> 
+> Welcome to the linux-raid mailing list, hosted on  vger.kernel.org.
+> Discussions on this list should be relevant to using RAID technologies
+> with Linux.  Please read the FAQ for this mailing list before posting.
+> The FAQ is available from   http://www.LinuxDoc.org/FAQ/
 
+What is this site? The link does not provide a faq on linux raid.
+Why is it linked, then?
 
+And the link provides dubious ads on having won something.
+Is this site for real?
 
+Should we have it removed from our list description?
+
+best regards
+Keld
