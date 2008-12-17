@@ -1,56 +1,32 @@
-From: Peter Rabbitson <rabbit+list@rabbit.us>
-Subject: Re: raid10 far layout outperforms offset at writing? (was: Help with
- chunksize on raid10 -p o3 array)
-Date: Wed, 17 Dec 2008 13:50:24 +0100
-Message-ID: <4948F590.2050007@rabbit.us>
-References: <20081217124154.GA5406@rap.rap.dk>
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+Subject: Re: upgrade advice
+Date: Wed, 17 Dec 2008 07:26:38 -0600
+Message-ID: <cccedfc60812170526l43c661ddgff95c99ea883f362@mail.gmail.com>
+References: <d5fe39840812160310t45e822c1geb633f805cf5388e@mail.gmail.com>
+	 <alpine.DEB.1.10.0812160641130.725@p34.internal.lan>
+	 <1229428184.22331.43.camel@localhost>
+	 <alpine.DEB.1.10.0812160807200.725@p34.internal.lan>
+	 <1229436950.22331.45.camel@localhost>
+	 <cccedfc60812160757x2af73afbv4a69eac31d212062@mail.gmail.com>
+	 <alpine.DEB.1.10.0812161829490.31132@p34.internal.lan>
+	 <cccedfc60812161608y29e6c645n6ff7df5c87292374@mail.gmail.com>
+	 <1229497160.22331.73.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20081217124154.GA5406@rap.rap.dk>
+In-Reply-To: <1229497160.22331.73.camel@localhost>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?S2VsZCBKw7hybiBTaW1vbnNlbg==?= <keld@dkuug.dk>
-Cc: linux-raid@vger.kernel.org
+To: Redeeman <redeeman@metanurb.dk>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Keld J=C3=B8rn Simonsen wrote:
-> I found this old message:
->=20
->> Peter Rabbitson
->> Mon, 19 Mar 2007 06:14:38 -0800
->>
->=20
-> The links were not valid anymore. I wanted to see the results and=20
-> possibly include the results in the performance wiki page
-> I would appreciate some new links here.
+> What sort of volume of disks are you using, and what loads? (24/7 with
+> high load?)
 
-I apologize, I don't have the data available anymore.
+It's a home server. It's up 24/7. Load probably 80% of the time is
+low, the rest of the time it's bursty.
 
-
-> Furthermore some comments to the post: My take on o3 vs f3 is that bo=
-th
-> in theory and practice f3 should be much faster for sequential readin=
-g,
-> as the layout is equivalent to raid0. For random reading and sequenti=
-al
-> and random writing f3 and o3 (and the same goes for the more normal f=
-2
-> vs o2) should be about the same, especially when a filesystem and
-> its associated elevator algorithm is employed.
-
-Yes, this is what I also concluded since I wrote this email. I am in th=
-e
-process of upgrading my raid setup, and while I am at it I am leaving
-5GB blank partitions at the start of all my workstations spindles, so I
-can get some real testing at night. I will share my methodology with th=
-e
-list before I commence testing (which should take about 20 days the way
-I am planing it).
-
-But first comes the vacation - happy holidays to you too guys.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jon
