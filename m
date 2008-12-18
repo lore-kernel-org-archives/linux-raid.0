@@ -1,53 +1,58 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
-Date: Fri, 19 Dec 2008 09:26:21 +1100
-Message-ID: <20081218222621.GA17177@disturbed>
-References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan> <1229225480.16555.152.camel@localhost> <18757.4606.966139.10342@tree.ty.sabi.co.uk> <200812141912.59649.Martin@lichtvoll.de> <18757.33373.744917.457587@tree.ty.sabi.co.uk> <494971B2.1000103@tmr.com>
+From: "Max Waterman" <davidmaxwaterman@fastmail.co.uk>
+Subject: RE: upgrade advice / Disk drive failure rates - real world
+Date: Thu, 18 Dec 2008 22:51:53 +0000
+Message-ID: <1229640713.29109.1290832315@webmail.messagingengine.com>
+References: <d5fe39840812160310t45e822c1geb633f805cf5388e@mail.gmail.com>
+ <1229428184.22331.43.camel@localhost>
+ <alpine.DEB.1.10.0812160807200.725@p34.internal.lan>
+ <1229436950.22331.45.camel@localhost>
+ <cccedfc60812160757x2af73afbv4a69eac31d212062@mail.gmail.com>
+ <alpine.DEB.1.10.0812161829490.31132@p34.internal.lan>
+ <cccedfc60812161608y29e6c645n6ff7df5c87292374@mail.gmail.com>
+ <1229497160.22331.73.camel@localhost>
+ <cccedfc60812170526l43c661ddgff95c99ea883f362@mail.gmail.com>
+ <A20315AE59B5C34585629E258D76A97C030D4837@34093-C3-EVS3.exchange.rackspace.com>
+ <cccedfc60812170637j7eab2c4cyac88fc110b51755f@mail.gmail.com>
+ <A20315AE59B5C34585629E258D76A97C030D48CC@34093-C3-EVS3.exchange.rackspace.com>
+ <494A7C61.6080805@anonymous.org.uk>
+ <alpine.DEB.1.10.0812181140260.28725@p34.internal.lan>
+ <A20315AE59B5C34585629E258D76A97C0314BCDA@34093-C3-EVS3.exchange.rackspace.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <494971B2.1000103@tmr.com>
+In-Reply-To: <A20315AE59B5C34585629E258D76A97C0314BCDA@34093-C3-EVS3.exchange.rackspace.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>, Linux RAID <linux-raid@vger.kernel.org>, Linux XFS <xfs@oss.sgi.com>
+To: David Lethe <david@santools.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, John Robinson <john.robinson@anonymous.org.uk>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Dec 17, 2008 at 04:40:02PM -0500, Bill Davidsen wrote:
-> What really bothers me is that there's no obvious need for
-> barriers at the device level if the file system is just a bit
-> smarter and does it's own async io (like aio_*), because you can
-> track writes outstanding on a per-fd basis, so instead of stopping
-> the flow of data to the drive, you can just block a file
-> descriptor and wait for the count of outstanding i/o to drop to
-> zero. That provides the order semantics of barriers as far as I
-> can see, having tirelessly thought about it for ten minutes or so.
 
-Well, you've pretty much described the algorithm XFS uses in it's
-transaction system - it's entirely asynchronous - and it's been
-clear for many, many years that this model is broken when you have
-devices with volatile write caches and internal re-ordering.  I/O
-completion on such devices does not guarantee data is safe on stable
-storage.
+On Thu, 18 Dec 2008 13:14:27 -0600, "David Lethe" <david@santools.com>
+said:
+snip
+>
+> So aggregate walk-away
+>  - Keep disks in 36-42 degrees C for maximum life up to year 2, where
+> they should be run cooler.
+>  - New disks are 5x more likely to die in first 3 months with high vs.
+> low workload.
 
-If the device does not commit writes to stable storage in the same
-order they are signalled as complete (i.e. internal device
-re-ordering occurred after completion), then the device violates
-fundamental assumptions about I/O completion that the above model
-relies on.
+I wonder if you can use this fact to make drive which are more likely to
+fail later, actually fail sooner.
 
-XFS uses barriers to guarantee that the devices don't lie about the
-completion order of critical I/O, not that the I/Os are on stable
-storage. The fact that this causes cache flushes to stable storage
-is result of the implementation of that guarantee of ordering. I'm
-sure the linux barrier implementation could be smarter and faster
-(for some hardware), but for an operation that is used to guarantee
-integrity I'll take conservative and safe over smart and fast any
-day of the week....
+I'm thinking that I could run my new drives in a fridge for a month or
+two or three - if they fail, I'll return them, else I can be more sure
+they'll last their expected life and not give me any trouble.
 
-Cheers,
+Does that make any sense?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Also, I see people recommending enterprise disks, which makes me think
+that those same people have forgotten what the 'I' stands for in 'RAID'.
+Of course, 'inexpensive' is relative - probably to one's income and it
+seems some people are paid more than others....it almost suggests we
+should have another acronym - RADCD - redundant array of dirt cheap
+disks. :)
+
+Max.
