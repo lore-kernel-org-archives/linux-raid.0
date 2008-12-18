@@ -1,53 +1,30 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: linux raid faq
-Date: Thu, 18 Dec 2008 10:16:27 +0000
-Message-ID: <494A22FB.6060507@dgreaves.com>
-References: <20081217182234.GA8354@rap.rap.dk>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: upgrade advice
+Date: Thu, 18 Dec 2008 16:37:53 +0000
+Message-ID: <494A7C61.6080805@anonymous.org.uk>
+References: <d5fe39840812160310t45e822c1geb633f805cf5388e@mail.gmail.com> <1229428184.22331.43.camel@localhost> <alpine.DEB.1.10.0812160807200.725@p34.internal.lan> <1229436950.22331.45.camel@localhost> <cccedfc60812160757x2af73afbv4a69eac31d212062@mail.gmail.com> <alpine.DEB.1.10.0812161829490.31132@p34.internal.lan> <cccedfc60812161608y29e6c645n6ff7df5c87292374@mail.gmail.com> <1229497160.22331.73.camel@localhost> <cccedfc60812170526l43c661ddgff95c99ea883f362@mail.gmail.com> <A20315AE59B5C34585629E258D76A97C030D4837@34093-C3-EVS3.exchange.rackspace.com> <cccedfc60812170637j7eab2c4cyac88fc110b51755f@mail.gmail.com> <A20315AE59B5C34585629E258D76A97C030D48CC@34093-C3-EVS3.exchange.rackspace.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20081217182234.GA8354@rap.rap.dk>
+In-Reply-To: <A20315AE59B5C34585629E258D76A97C030D48CC@34093-C3-EVS3.exchange.rackspace.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
-Cc: linux-raid@vger.kernel.org
+To: David Lethe <david@santools.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Keld J=F8rn Simonsen wrote:
-> from the description of our mailing list at vger:
->=20
->> List: linux-raid;     ( subscribe / unsubscribe )
->> Info:
->>
->> Welcome to the linux-raid mailing list, hosted on  vger.kernel.org.
->> Discussions on this list should be relevant to using RAID technologi=
-es
->> with Linux.  Please read the FAQ for this mailing list before postin=
-g.
->> The FAQ is available from   http://www.LinuxDoc.org/FAQ/
->=20
-> What is this site? The link does not provide a faq on linux raid.
-> Why is it linked, then?
+On 17/12/2008 15:30, David Lethe wrote:
+> The duty cycle makes a difference now, but wasn't a design point until
+[...]
+> OK, off my soapbox ... back to work writing disk diagnostic software for
+> my OEM customers 
 
-It used to be the LDP site - it got hijacked.
+I am going to print that message, frame it and hang it on the wall. 
+(Including the bit I elided with ...)
 
-IMO The wiki is the most relevant link to put there now.
+I'll probably keep using desktop drives for domestic NAS, though.
 
->=20
-> And the link provides dubious ads on having won something.
-> Is this site for real?
-It is a real 'exploit old hyperlinks' commercial bottom feeding site, y=
-es.
+Cheers,
 
-> Should we have it removed from our list description?
-Yes!
+John.
 
-David
-
---=20
-"Don't worry, you'll be fine; I saw it work in a cartoon once..."
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
