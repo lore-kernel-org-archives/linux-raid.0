@@ -1,114 +1,118 @@
-From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
-Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
-Date: Tue, 16 Dec 2008 20:57:24 +0000
-Message-ID: <18760.5684.997874.673460@tree.ty.sabi.co.uk>
-References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan>
-	<18757.33373.744917.457587@tree.ty.sabi.co.uk>
-	<20081215223857.GF32301@disturbed>
-	<200812161039.07700.Martin@lichtvoll.de>
+From: "David Lethe" <david@santools.com>
+Subject: RE: upgrade advice / Disk drive failure rates - real world
+Date: Thu, 18 Dec 2008 13:14:27 -0600
+Message-ID: <A20315AE59B5C34585629E258D76A97C0314BCDA@34093-C3-EVS3.exchange.rackspace.com>
+References: <d5fe39840812160310t45e822c1geb633f805cf5388e@mail.gmail.com> <1229428184.22331.43.camel@localhost> <alpine.DEB.1.10.0812160807200.725@p34.internal.lan> <1229436950.22331.45.camel@localhost> <cccedfc60812160757x2af73afbv4a69eac31d212062@mail.gmail.com> <alpine.DEB.1.10.0812161829490.31132@p34.internal.lan> <cccedfc60812161608y29e6c645n6ff7df5c87292374@mail.gmail.com> <1229497160.22331.73.camel@localhost> <cccedfc60812170526l43c661ddgff95c99ea883f362@mail.gmail.com> <A20315AE59B5C34585629E258D76A97C030D4837@34093-C3-EVS3.exchange.rackspace.com> <cccedfc60812170637j7eab2c4cyac88fc110b51755f@mail.gmail.com> <A20315AE59B5C34585629E258D76A97C030D48CC@34093-C3-EVS3.exchange.rackspace.com> <494A7C61.6080805@anonymous.org.uk> <alpine.DEB.1.10.0812181140260.28725@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
-In-Reply-To: <200812161039.07700.Martin@lichtvoll.de>
-List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Sender: xfs-bounces@oss.sgi.com
-Errors-To: xfs-bounces@oss.sgi.com
-To: Linux RAID <linux-raid@vger.kernel.org>, Linux XFS <xfs@oss.sgi.com>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <alpine.DEB.1.10.0812181140260.28725@p34.internal.lan>
+Sender: linux-raid-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>, John Robinson <john.robinson@anonymous.org.uk>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-[ ... ]
+> -----Original Message-----
+> From: Justin Piszcz [mailto:jpiszcz@lucidpixels.com]
+> Sent: Thursday, December 18, 2008 10:43 AM
+> To: John Robinson
+> Cc: David Lethe; Linux RAID
+> Subject: Re: upgrade advice
+> 
+> 
+> 
+> On Thu, 18 Dec 2008, John Robinson wrote:
+> 
+> > On 17/12/2008 15:30, David Lethe wrote:
+> >> The duty cycle makes a difference now, but wasn't a design point
+> until
+> > [...]
+> >> OK, off my soapbox ... back to work writing disk diagnostic
+software
+> for
+> >> my OEM customers
+> >
+> > I am going to print that message, frame it and hang it on the wall.
+> > (Including the bit I elided with ...)
+> >
+> > I'll probably keep using desktop drives for domestic NAS, though.
+> I think it also depends on how often drives are used and what type of
+> workloads they are exposed to, for a domestic NAS for mainly
+sequential
+> file writes/reads, they will probably be OK-- I have a few SW RAID5's
+> on
+> desktop drives but I use them primarily as storage via rsync, once a
+> week
+> or month I am not constantly read/writing on them-- on a daily basis.
+> Is
+> that how you use your NAS as well?  Or?
+> 
 
->>>> It doesn't mean that the barrier has to land immediately and
->>>> the filesystem has to wait for this. At least that always was
->>>> the whole point of barriers for me. If thats not the case I
->>>> misunderstood the purpose of barriers to the maximum extent
->>>> possible.
+Surprisingly, the failure rates for consumer class ATA disks are
+counterintuitive.
+Breaking down into raw low,medium,high utilization ... this is what the
+study of 100,000 disks
+Revealed over 5 year period. (Rounded results, all in percentage)
 
->>> The purpose of barriers is to guarantee that relevant data is
->>> known to be on persistent storage (kind of hardware 'fsync').
+DISK AGE      LOW   MED  HIGH (utilization)
+ 3 months      4     2    10
+ 6 mos         2     1     4
+12 mos         .5    1     2
+2  years       2     2     2
+4  years       3    4      4
+5  years       1    1      5
 
->> Barriers provide strong ordering semantics. [ ... ]This is all
->> documented in Documentation/block/barrier.txt. Please read it
->> because most of what you are saying appears to be based on
->> incorrect assumptions about what barriers do.
+So, if you pound a disk with I/O then it is 5x more likely to die in
+first 3 months then
+if it has light duty load.   If a disk survives the first year, then
+load doesn't make much of
+a statistical difference ... until it approaches the 5 year mark.
 
-No, it is based on the assumption that we are discussing the
-"whole point of barriers" and "the purpose of barriers".
+Note, these are for consumer class disks, that were better products back
+in 2000 when the study began.
+There are no long-term studies for real-world drive life for the (SATA)
+consumer vs. enterprise disk drives that are made today.   The study
+involved 9 different disks, Seagate, Hitachi, WD, etc.   that were
+typical of what you got with a personal computer from manufacturer, or
+you bought at a PC store.   The test is as real-world as they come.
 
-Those are the ability to do atomic, serially dependent transactions
-*to stable storage*. Some people may be interested in integrity
-only, with potentially unbounded data loss, but most people who
-care about barriers are interested in reliable commit to stable
-storage.
+As for drive temperature vs. failure rate, this will blow you away.
 
-Then there are different types of barriers, from XFS barriers to
-host adapter/drive controller barriers, and even the Linux block
-layer "barrier" mechanism, which is arguably misdesigned, because
-what it does is not what it should be doing to achieve "the whole
-point" and "the purpose" of a barrier system, and achieving that
-can be quite difficult.
+The probability density curve is logarithmic in nature, so disks at 20
+degrees C are 3X more likely to fail for any given load then disks at 26
+degrees C.   Once you hit 26 degrees then the curve really flattens out.
+Not much of a difference between 30-45 degrees.   Sweet spot is 36-42
+degrees.  Colder disks are 6x more likely to fail then ones running
+around 40 deg.
 
-This is somewhat controversial, and to further the understanding
-of the whole point of barriers and their purpose I have provided
-in a previous post a pointer to two very relevant discussion
-threads, which to me seem pretty clear.
+So don't throw money away on disk drive coolers/fans, unless temp
+without them is in the 45 deg C range!
 
-> Hmmm, so I am not completely off track it seems ;-).
+There is more correlation between failure rates of drives when both age
+and temperature are considered.   The highlight that disks running
+colder than the sweet spot are 2-3x more likely to die in first 3 months
+then ones running near 40 deg.  (AFR is 9% for coldest disks, 3% for
+warmest disks).
 
-Well, your description seems to be based on the actual properties
-of the flawed implementation of barriers in current Linux, but not
-about the "whole point" and "purpose" that should be served by such
-a mechanism.
 
-The documentation of barriers in the Linux kernel makes the mess
-worse, because it does talk about committing to stable storage, but
-then gives the impression that the point and purpose is indeed
-ordering, which it should not be. That an ordering is imposed
-should be consequence of the committment of serially dependent
-transactions to stable storage in a consistent way, not a goal in
-itself.
+From 6 mos to 2 years, drive temp becomes less of a factor, with AFR of
+cold disks around 4%, sweet-spot disks 2%.
+Year 3, however is the killer, where everything changes...
+AFR of cold-warm disks approx 6 %, AFR of the disks from 35-40 deg is
+11%.
 
-The discussion threads I mentioned previously show that the big
-issue is indeed having a reliable mechanism to commit transactions
-to stable storage, rather than provide just the transaction
-dependency part of that mechanism.
+So aggregate walk-away
+ - Keep disks in 36-42 degrees C for maximum life up to year 2, where
+they should be run cooler.
+ - New disks are 5x more likely to die in first 3 months with high vs.
+low workload.
+ - AFR and temperature become less important after the 3-month burn-in,
+but this all changes in year 3.
 
-Quite a few people think that just transaction property is too
-weak a purpose or point for barriers. Which point or purpose is
-precisely to offer the application (file system or user process
-like a DBMS instance) the ability to definitely commit to stable
-storage:
+David @ santools.com
 
-  > When should be a choice of the user on how much data she /
-  > he risks to loose in case of a sudden interruption of
-  > writing out requests.
 
-Unfortunately as I have already remarked this area, which should be
-crystal clear as it is important to people who need transaction
-persistence guarantees, is messy, with various file systems or
-DBMSes doing bad, dirty things because the point and purpose of
-barriers has been misunderstood so often (arguably even by the
-POSIX committee with 'fsync'/'fdatasync').
 
-The rapid escalation of complexity of the levels and types of
-nonpersistent caching in current storage subsystem is so bad that
-reminding people that the whole point and purpose of barriers is to
-provide stable storage commits rather than merely ordering seems
-quite important to me.
-
-The way Linux block layer barriers currently work, like other
-aspects of that block layer (for example the absurd rationale
-behind the plugging/unplugging mechanism), is so misguided that it
-should not be confused with the whole point and purpose of barriers.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
