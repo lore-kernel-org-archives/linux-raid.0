@@ -1,104 +1,59 @@
 From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
 Subject: Re: weird issues with raid1
-Date: Wed, 17 Dec 2008 23:47:49 -0600
-Message-ID: <cccedfc60812172147q240466a8w53c5bd2540edf6a4@mail.gmail.com>
+Date: Wed, 17 Dec 2008 23:54:13 -0600
+Message-ID: <cccedfc60812172154n46ce8c48l5a8e2060ceaaeeef@mail.gmail.com>
 References: <cccedfc60812051810q3c44ae28x514072cb870ac390@mail.gmail.com>
 	 <18757.62097.166706.244330@notabene.brown>
-	 <cccedfc60812150542y5607d168q94c09d8dc3438226@mail.gmail.com>
-	 <18758.52536.345145.238926@notabene.brown>
-	 <cccedfc60812151347j659112c5na3aa8cd0eb044669@mail.gmail.com>
-	 <18759.678.74091.236787@notabene.brown>
-	 <18761.54425.725696.255055@notabene.brown>
-	 <cccedfc60812172050h58697665y975a18550842aebb@mail.gmail.com>
-	 <cccedfc60812172055n58181ad4lcdff8f172c6a496c@mail.gmail.com>
-	 <18761.56537.935250.561921@notabene.brown>
+	 <18761.58089.682224.315110@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18761.56537.935250.561921@notabene.brown>
+In-Reply-To: <18761.58089.682224.315110@notabene.brown>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
 Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Dec 17, 2008 at 11:17 PM, Neil Brown <neilb@suse.de> wrote:
-> On Wednesday December 17, jnelson-linux-raid@jamponi.net wrote:
+On Wed, Dec 17, 2008 at 11:43 PM, Neil Brown <neilb@suse.de> wrote:
+> On Monday December 15, neilb@suse.de wrote:
 >> >
->> >> It could be that you are hitting the bug fixed by
->> >>  commit a0da84f35b25875870270d16b6eccda4884d61a7
->> >
->> > That sure sounds like it. I'd have to log to see what happened,
->> > exactly, but I've added substantial logging around the device
->> > discovery and addition section which manages this particular raid.
->> >
->> >> You would need 2.6.26 or later to have that fixed.
->> >> Can you try with a newer kernel???
->> >
->> > I hope to be giving opensuse 11.1 a try soon, which uses 2.6.27.X
->> > afaik.  I suspect I can also backport that patch to 2.6.25 easily.
+>> > No matter how long I wait, until it is rebuilt, the bitmap on /dev/sda
+>> > is always 100% dirty.
+>> > If I --fail, --remove (twice) /dev/sda, and I re-add /dev/sdd1, it
+>> > clearly uses the bitmap and re-syncs in under 1 second.
 >>
->> The kernel source for 2.6.25.18-0.2 (from suse) has this patch
->> already, so I was already using it.
+>> Yes, there is a bug here.
+>> When an array recovers on to a hot space it doesn't copy the bitmap
+>> across.  That will only happen lazily as bits are updated.
+>> I'm surprised I hadn't noticed that before, so they might be more to
+>> this than I'm seeing at the moment.   But I definitely cannot find
+>> code to copy the bitmap across.  I'll have to have a think about
+>> that.
 >
-> Are you sure?  I just looked in the openSUSE-11.0 kernel tree and I
-> cannot see it there....
+> There isn't a bug here, I was wrong.
 >
-> NeilBrown
->
->
->>
->> Perhaps this weekend or some night this week I'll find time to try to
->> break things again.
->>
->> --
->> Jon
->
+> We don't update the bitmap on recovery until the recovery is
+> complete.  Once it is complete we do (as you notice) update it all at
+> once.
+> This is correct behaviour because until the recovery is complete, the
+> new device isn't really part of the array so the bitmap on it doesn't
+> mean anything.  As soon as the array is flagged as 'InSync' we update
+> the bitmap on it.
 
-jnelson@turnip:~/kernels> rpm -qf /usr/src/linux-2.6.25.18-0.2
-kernel-source-2.6.25.18-0.2
-jnelson@turnip:~/kernels> rpm -V kernel-source-2.6.25.18-0.2
-jnelson@turnip:~/kernels> (cd linux-2.6 && git diff
-a0da84f35b25875870270d16b6eccda4884d61a7
-a0da84f35b25875870270d16b6eccda4884d61a7^ ) > d.diff
-jnelson@turnip:~/kernels> head d.diff
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index dedba16..b26927c 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -454,11 +454,8 @@ void bitmap_update_sb(struct bitmap *bitmap)
-        spin_unlock_irqrestore(&bitmap->lock, flags);
-        sb = (bitmap_super_t *)kmap_atomic(bitmap->sb_page, KM_USER0);
-        sb->events = cpu_to_le64(bitmap->mddev->events);
--       if (bitmap->mddev->events < bitmap->events_cleared) {
--               /* rocking back to read-only */
-jnelson@turnip:~/kernels> cp -r /usr/src/linux-2.6.25.18-0.2 .
-jnelson@turnip:~/kernels/linux-2.6.25.18-0.2> tail -n +454
-drivers/md/bitmap.c | head -n 20
-{
-        bitmap_super_t *sb;
-        unsigned long flags;
+OK. Fair enough, except for some issues I've had with the bitmap /not/
+getting updated at all, ever, on the replacement device. That's a
+whole 'nother thread, though.
 
-        if (!bitmap || !bitmap->mddev) /* no bitmap for this array */
-                return;
-        spin_lock_irqsave(&bitmap->lock, flags);
-        if (!bitmap->sb_page) { /* no superblock */
-                spin_unlock_irqrestore(&bitmap->lock, flags);
-                return;
-        }
-        spin_unlock_irqrestore(&bitmap->lock, flags);
-        sb = (bitmap_super_t *)kmap_atomic(bitmap->sb_page, KM_USER0);
-        sb->events = cpu_to_le64(bitmap->mddev->events);
-        if (!bitmap->mddev->degraded)
-                sb->events_cleared = cpu_to_le64(bitmap->mddev->events);
-        kunmap_atomic(sb, KM_USER0);
-        write_page(bitmap, bitmap->sb_page, 1);
-}
+However, I would argue that it's *kinda* part of the array.
 
+If I were rebuilding some huge array, and it was 99% done and some
+issue developed (and was resolved), I would not want to start over.
 
-
-When I view the diff and the source they appear to agree.
+How do you feel about copying over the bitmap right away and marking
+all of the bits out-of-date, then letting the normal bitmappy stuff
+work to our advantage?
 
 -- 
 Jon
