@@ -1,59 +1,47 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: Re: weird issues with raid1
-Date: Wed, 17 Dec 2008 23:54:13 -0600
-Message-ID: <cccedfc60812172154n46ce8c48l5a8e2060ceaaeeef@mail.gmail.com>
-References: <cccedfc60812051810q3c44ae28x514072cb870ac390@mail.gmail.com>
-	 <18757.62097.166706.244330@notabene.brown>
-	 <18761.58089.682224.315110@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [mdadm git pull] platform support v2 and other fixes
+Date: Thu, 18 Dec 2008 17:07:20 +1100
+Message-ID: <18761.59544.163344.177425@notabene.brown>
+References: <1228786157.9780.19.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18761.58089.682224.315110@notabene.brown>
-Content-Disposition: inline
+In-Reply-To: message from Dan Williams on Monday December 8
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Dec 17, 2008 at 11:43 PM, Neil Brown <neilb@suse.de> wrote:
-> On Monday December 15, neilb@suse.de wrote:
->> >
->> > No matter how long I wait, until it is rebuilt, the bitmap on /dev/sda
->> > is always 100% dirty.
->> > If I --fail, --remove (twice) /dev/sda, and I re-add /dev/sdd1, it
->> > clearly uses the bitmap and re-syncs in under 1 second.
->>
->> Yes, there is a bug here.
->> When an array recovers on to a hot space it doesn't copy the bitmap
->> across.  That will only happen lazily as bits are updated.
->> I'm surprised I hadn't noticed that before, so they might be more to
->> this than I'm seeing at the moment.   But I definitely cannot find
->> code to copy the bitmap across.  I'll have to have a think about
->> that.
->
-> There isn't a bug here, I was wrong.
->
-> We don't update the bitmap on recovery until the recovery is
-> complete.  Once it is complete we do (as you notice) update it all at
-> once.
-> This is correct behaviour because until the recovery is complete, the
-> new device isn't really part of the array so the bitmap on it doesn't
-> mean anything.  As soon as the array is flagged as 'InSync' we update
-> the bitmap on it.
+On Monday December 8, dan.j.williams@intel.com wrote:
+> Hi Neil,
+> 
+> So here is a second attempt at platform support.  I asked around about
+> scanning for the option-rom and the solution I settled on was to port
+> the kernel's "Adapter ROM" detection code to userspace (probe_roms.c
+> from arch/x86/kernel/probe_roms_32.c).  This at least makes mdadm bug
+> compatible with the kernel, and avoids scanning the entire region
+> indiscriminately.
+> 
+> Create support got two major fixes:
+> 1/ calculating a common start offset by merging get_extents() results
+> 2/ explicitly passing the target member disks in the metadata update
+> message
+> 
+> Despite the platform support and these fixes I am still investigating
+> whether mdadm can create configurations that the option-rom does not
+> understand.  Stay tuned...
+> 
+> Lastly I added a regression test to stress the overlapping create case,
+> it adds some infrastructure for tests to define their own environment.
+> 
+> As always, please have a look.
 
-OK. Fair enough, except for some issues I've had with the bitmap /not/
-getting updated at all, ever, on the replacement device. That's a
-whole 'nother thread, though.
+Thanks.
+I confess I haven't read all of the details, but I've looked at the
+"interesting" parts (for some value of 'interesting') and they seem to
+make sense.
+Pulled and pushed.
 
-However, I would argue that it's *kinda* part of the array.
-
-If I were rebuilding some huge array, and it was 99% done and some
-issue developed (and was resolved), I would not want to start over.
-
-How do you feel about copying over the bitmap right away and marking
-all of the bits out-of-date, then letting the normal bitmappy stuff
-work to our advantage?
-
--- 
-Jon
+Thanks.
+NeilBrown
