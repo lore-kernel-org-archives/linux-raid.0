@@ -1,93 +1,53 @@
-From: Leon Woestenberg <leonw@mailcan.com>
-Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
-Date: Thu, 18 Dec 2008 09:20:10 +0100
-Message-ID: <494A07BA.1080008@mailcan.com>
-References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan>	<1229225480.16555.152.camel@localhost>	<18757.4606.966139.10342@tree.ty.sabi.co.uk>	<200812141912.59649.Martin@lichtvoll.de>	<18757.33373.744917.457587@tree.ty.sabi.co.uk>
-	<494971B2.1000103@tmr.com>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: linux raid faq
+Date: Thu, 18 Dec 2008 10:16:27 +0000
+Message-ID: <494A22FB.6060507@dgreaves.com>
+References: <20081217182234.GA8354@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
-In-Reply-To: <494971B2.1000103@tmr.com>
-Content-Disposition: inline
-List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Sender: xfs-bounces@oss.sgi.com
-Errors-To: xfs-bounces@oss.sgi.com
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>, Linux XFS <xfs@oss.sgi.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20081217182234.GA8354@rap.rap.dk>
+Sender: linux-raid-owner@vger.kernel.org
+To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello all,
-
-Bill Davidsen wrote:
-> Peter Grandi wrote:
->   
->> Unfortunately that seems the case.
+Keld J=F8rn Simonsen wrote:
+> from the description of our mailing list at vger:
+>=20
+>> List: linux-raid;     ( subscribe / unsubscribe )
+>> Info:
 >>
->> The purpose of barriers is to guarantee that relevant data is
->> known to be on persistent storage (kind of hardware 'fsync').
->>
->> In effect write barrier means "tell me when relevant data is on
->> persistent storage", or less precisely "flush/sync writes now
->> and tell me when it is done". Properties as to ordering are just
->> a side effect.
->>   
->>     
->
-> I don't get that sense from the barriers stuff in Documentation, in fact 
-> I think it's essentially a pure ordering thing, I don't even see that it 
-> has an effect of forcing the data to be written to the device, other 
-> than by preventing other writes until the drive writes everything. So we 
-> read the intended use differently.
->
-> What really bothers me is that there's no obvious need for barriers at 
-> the device level if the file system is just a bit smarter and does it's 
-> own async io (like aio_*), because you can track writes outstanding on a 
-> per-fd basis, so instead of stopping the flow of data to the drive, you 
-> can just block a file descriptor and wait for the count of outstanding 
-> i/o to drop to zero. That provides the order semantics of barriers as 
-> far as I can see, having tirelessly thought about it for ten minutes or 
-> so. Oh, and did something very similar decades ago in a long-gone 
-> mainframe OS.
->   
-Did that mainframe OS have re-ordering devices? If it did, you'ld still 
-need barriers all the way down:
+>> Welcome to the linux-raid mailing list, hosted on  vger.kernel.org.
+>> Discussions on this list should be relevant to using RAID technologi=
+es
+>> with Linux.  Please read the FAQ for this mailing list before postin=
+g.
+>> The FAQ is available from   http://www.LinuxDoc.org/FAQ/
+>=20
+> What is this site? The link does not provide a faq on linux raid.
+> Why is it linked, then?
 
-The drive itself may still re-order writes, thus can cause corruption if 
-halfway the power goes down.
- From my understanding, disabling write-caches simply forces the drive 
-to operate in-order.
+It used to be the LDP site - it got hijacked.
 
-Barriers need to travel all the way down to the point where-after 
-everything remains in-order.
-Devices with write-cache enabled will still re-order, but not across 
-barriers (which are implemented as
-either a single cache flush with forced unit access, or a double cache 
-flush around the barrier write).
+IMO The wiki is the most relevant link to put there now.
 
-Whether the data has made it to the drive platters is not really 
-important from a barrier point of view, however,
-iff part of the data made it to the platters, then we want to be sure it 
-was in-order.
+>=20
+> And the link provides dubious ads on having won something.
+> Is this site for real?
+It is a real 'exploit old hyperlinks' commercial bottom feeding site, y=
+es.
 
-Because only in this way can we ensure that the data that is on the 
-platters is consistent.
+> Should we have it removed from our list description?
+Yes!
 
-Regards,
+David
 
-Leon.
-
-
-
-[[HTML alternate version deleted]]
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+--=20
+"Don't worry, you'll be fine; I saw it work in a cartoon once..."
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
