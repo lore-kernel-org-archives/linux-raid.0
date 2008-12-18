@@ -1,44 +1,61 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Have the velociraptors in a test system now, checkout the
- errors.
-Date: Wed, 17 Dec 2008 18:21:22 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0812171820200.26527@p34.internal.lan>
-References: <alpine.DEB.1.10.0812060426280.3494@p34.internal.lan>  <49405A94.8080601@tmr.com> <1229225303.16555.149.camel@localhost> <4949645F.4030407@tmr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: weird issues with raid1
+Date: Thu, 18 Dec 2008 15:42:01 +1100
+Message-ID: <18761.54425.725696.255055@notabene.brown>
+References: <cccedfc60812051810q3c44ae28x514072cb870ac390@mail.gmail.com>
+	<18757.62097.166706.244330@notabene.brown>
+	<cccedfc60812150542y5607d168q94c09d8dc3438226@mail.gmail.com>
+	<18758.52536.345145.238926@notabene.brown>
+	<cccedfc60812151347j659112c5na3aa8cd0eb044669@mail.gmail.com>
+	<18759.678.74091.236787@notabene.brown>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4949645F.4030407@tmr.com>
+In-Reply-To: message from Neil Brown on Tuesday December 16
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Redeeman <redeeman@metanurb.dk>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, smartmontools-support@lists.sourceforge.net
+To: Jon Nelson <jnelson-linux-raid@jamponi.net>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Tuesday December 16, neilb@suse.de wrote:
+> On Monday December 15, jnelson-linux-raid@jamponi.net wrote:
+> > On Mon, Dec 15, 2008 at 3:33 PM, Neil Brown <neilb@suse.de> wrote:
+> > > On Monday December 15, jnelson-linux-raid@jamponi.net wrote:
+> > >>
+> > >> Aha!  This explains a question I raised in another email. What
+> > >> happened there is a previously fully active member of the raid got
+> > >> added, somehow, as a spare, via --incremental. That's when the entire
+> > >> raid thought it needed to be rebuilt. How did that (the device being
+> > >> treated as a spare instead of as a previously fully active member)
+> > >> happen?
+> > >
+> > > It is hard to guess without details, and they might be hard to collect
+> > > after the fact.
+> > > Maybe if you have the kernel logs of when the server rebooted and the
+> > > recovery started, that might contain some hints.
+> > 
+> > I hope this helps.
+> 
+> Yes it does, though I generally prefer to get more complete logs.  If
+> I get the surrounding log lines then I know what isn't there as well
+> as what is - and it isn't always clear at first which bits will be
+> important. 
+> 
+> The problem here is that --incremental doesn't provide the --re-add
+> functionality that you are depending on.  That was an oversight on my
+> part.  I'll see if I can get it fixed.
+> In the mean time, you'll need to use --re-add (or --add, it does the
+> same thing in your situation) to add nbd0 to the array.
 
+Actually, I'm wrong.
+--incremental does do the right thing w.r.t. --re-add.
+I couldn't reproduce your symptoms.
 
-On Wed, 17 Dec 2008, Bill Davidsen wrote:
+It could be that you are hitting the bug fixed by 
+  commit a0da84f35b25875870270d16b6eccda4884d61a7
 
-> Redeeman wrote:
->> On Wed, 2008-12-10 at 19:11 -0500, Bill Davidsen wrote:
->> 
->>> Justin Piszcz wrote:
->>> 
->
-> Calls itself "WDC WD10EACS-00D" in /sys if that helps. I could dig out the 
-> packing slip if it matters. Runs nicely so far, and if the SMART temperature 
-> probe is correct, very cool:
->
-> /dev/sda: ST3750640AS: 43 C
-> /dev/sdb: WDC WD10EACS-00D6B1: 31 C
-> /dev/sdc: ST3750640AS: 44 C
-> /dev/sdd: ST3750640AS: 46 C
->
-> I don't totally trust the temps, there is a LOT of 18C air going into that 
-> box, because it has a lot coming out the back and side.
+You would need 2.6.26 or later to have that fixed.
+Can you try with a newer kernel???
 
-Hmm do you have a picture of those seagates? Seems like a lack of airflow there
-or do they just run really hot?  Also, how many head unload/loads has the
-1.0TB GP drive performed, that was one of my concerns when I was looking at
-disks.
-
-Justin.
+NeilBrown
 
