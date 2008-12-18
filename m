@@ -1,35 +1,53 @@
-From: =?ISO-8859-1?Q?Tor_Arne_Vestb=F8?= <torarnv@gmail.com>
-Subject: Re: Linux RAID autodetect partitions go missing from /dev, but fdisk
- can see them
-Date: Thu, 18 Dec 2008 23:22:30 +0100
-Message-ID: <494ACD26.2040809@gmail.com>
-References: <49402CFE.3080708@gmail.com> <18759.8246.568849.244513@notabene.brown>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
+Date: Fri, 19 Dec 2008 09:26:21 +1100
+Message-ID: <20081218222621.GA17177@disturbed>
+References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan> <1229225480.16555.152.camel@localhost> <18757.4606.966139.10342@tree.ty.sabi.co.uk> <200812141912.59649.Martin@lichtvoll.de> <18757.33373.744917.457587@tree.ty.sabi.co.uk> <494971B2.1000103@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18759.8246.568849.244513@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <494971B2.1000103@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>, Linux RAID <linux-raid@vger.kernel.org>, Linux XFS <xfs@oss.sgi.com>
 List-Id: linux-raid.ids
 
->> On Wednesday December 10, torarnv@gmail.com wrote:
->>> Running 'partprobe -s' successfully finds the two missing partitions
->>> and adds device nodes, and the nodes can be 'file -sL'ed, but when
->>> trying to assemble the array again with these new nodes in the system,
->>> I'm told that sdc1 is not found, and after the --assemble is done, the
->>> device nodes are once again missing (!) see [4]
+On Wed, Dec 17, 2008 at 04:40:02PM -0500, Bill Davidsen wrote:
+> What really bothers me is that there's no obvious need for
+> barriers at the device level if the file system is just a bit
+> smarter and does it's own async io (like aio_*), because you can
+> track writes outstanding on a per-fd basis, so instead of stopping
+> the flow of data to the drive, you can just block a file
+> descriptor and wait for the count of outstanding i/o to drop to
+> zero. That provides the order semantics of barriers as far as I
+> can see, having tirelessly thought about it for ten minutes or so.
 
-Neil Brown wrote:
-> Can you:
->   strace -o /tmp/str -s 200 mdadm --assemble --scan --verbose /dev/md0
+Well, you've pretty much described the algorithm XFS uses in it's
+transaction system - it's entirely asynchronous - and it's been
+clear for many, many years that this model is broken when you have
+devices with volatile write caches and internal re-ordering.  I/O
+completion on such devices does not guarantee data is safe on stable
+storage.
 
-Should I try this after doing partprobe first? In that case /dev/sdb1
-and /dev/sdc1 exist, and we might see from the trace what causes them to
-disappear?
+If the device does not commit writes to stable storage in the same
+order they are signalled as complete (i.e. internal device
+re-ordering occurred after completion), then the device violates
+fundamental assumptions about I/O completion that the above model
+relies on.
 
->> [4] http://pastebin.com/m4475c9ae   partprobe + mdadm --assemble
+XFS uses barriers to guarantee that the devices don't lie about the
+completion order of critical I/O, not that the I/Os are on stable
+storage. The fact that this causes cache flushes to stable storage
+is result of the implementation of that guarantee of ordering. I'm
+sure the linux barrier implementation could be smarter and faster
+(for some hardware), but for an operation that is used to guarantee
+integrity I'll take conservative and safe over smart and fast any
+day of the week....
 
-Tor Arne
+Cheers,
 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
