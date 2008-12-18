@@ -1,58 +1,68 @@
-From: "Max Waterman" <davidmaxwaterman@fastmail.co.uk>
-Subject: RE: upgrade advice / Disk drive failure rates - real world
-Date: Thu, 18 Dec 2008 22:51:53 +0000
-Message-ID: <1229640713.29109.1290832315@webmail.messagingengine.com>
-References: <d5fe39840812160310t45e822c1geb633f805cf5388e@mail.gmail.com>
- <1229428184.22331.43.camel@localhost>
- <alpine.DEB.1.10.0812160807200.725@p34.internal.lan>
- <1229436950.22331.45.camel@localhost>
- <cccedfc60812160757x2af73afbv4a69eac31d212062@mail.gmail.com>
- <alpine.DEB.1.10.0812161829490.31132@p34.internal.lan>
- <cccedfc60812161608y29e6c645n6ff7df5c87292374@mail.gmail.com>
- <1229497160.22331.73.camel@localhost>
- <cccedfc60812170526l43c661ddgff95c99ea883f362@mail.gmail.com>
- <A20315AE59B5C34585629E258D76A97C030D4837@34093-C3-EVS3.exchange.rackspace.com>
- <cccedfc60812170637j7eab2c4cyac88fc110b51755f@mail.gmail.com>
- <A20315AE59B5C34585629E258D76A97C030D48CC@34093-C3-EVS3.exchange.rackspace.com>
- <494A7C61.6080805@anonymous.org.uk>
- <alpine.DEB.1.10.0812181140260.28725@p34.internal.lan>
- <A20315AE59B5C34585629E258D76A97C0314BCDA@34093-C3-EVS3.exchange.rackspace.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Have the velociraptors in a test system now, checkout the errors.
+Date: Thu, 18 Dec 2008 18:14:24 -0500
+Message-ID: <494AD950.3030802@tmr.com>
+References: <alpine.DEB.1.10.0812060426280.3494@p34.internal.lan>  <49405A94.8080601@tmr.com> <1229225303.16555.149.camel@localhost> <4949645F.4030407@tmr.com> <alpine.DEB.1.10.0812171820200.26527@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <A20315AE59B5C34585629E258D76A97C0314BCDA@34093-C3-EVS3.exchange.rackspace.com>
+In-Reply-To: <alpine.DEB.1.10.0812171820200.26527@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Lethe <david@santools.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Redeeman <redeeman@metanurb.dk>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, smartmontools-support@lists.sourceforge.net
 List-Id: linux-raid.ids
 
-
-On Thu, 18 Dec 2008 13:14:27 -0600, "David Lethe" <david@santools.com>
-said:
-snip
+Justin Piszcz wrote:
+>>
+>> Calls itself "WDC WD10EACS-00D" in /sys if that helps. I could dig 
+>> out the packing slip if it matters. Runs nicely so far, and if the 
+>> SMART temperature probe is correct, very cool:
+>>
+>> /dev/sda: ST3750640AS: 43 C
+>> /dev/sdb: WDC WD10EACS-00D6B1: 31 C
+>> /dev/sdc: ST3750640AS: 44 C
+>> /dev/sdd: ST3750640AS: 46 C
+>>
+>> I don't totally trust the temps, there is a LOT of 18C air going into 
+>> that box, because it has a lot coming out the back and side.
 >
-> So aggregate walk-away
->  - Keep disks in 36-42 degrees C for maximum life up to year 2, where
-> they should be run cooler.
->  - New disks are 5x more likely to die in first 3 months with high vs.
-> low workload.
+> Hmm do you have a picture of those seagates? Seems like a lack of 
+> airflow there
+> or do they just run really hot?  Also, how many head unload/loads has the
+> 1.0TB GP drive performed, that was one of my concerns when I was 
+> looking at
+> disks.
 
-I wonder if you can use this fact to make drive which are more likely to
-fail later, actually fail sooner.
+How about a diagram:
 
-I'm thinking that I could run my new drives in a fridge for a month or
-two or three - if they fail, I'll return them, else I can be more sure
-they'll last their expected life and not give me any trouble.
+__________________________________________________
+                                                  |
+                                                  |
+                                                  |
+                                                  |
+                                                  |
+                                                  |
+                                                  |
+                                                  |
+                                                  |
+                                                  |
+                                                  |
+                                 --empty--        |
+                                 (seagate)        |
+                                 (WD)             |
+                                 (seagate)        | <--- case
+                                 (seagate)        |
+                                 --empty--        |
+__________________________________________________|
 
-Does that make any sense?
 
-Also, I see people recommending enterprise disks, which makes me think
-that those same people have forgotten what the 'I' stands for in 'RAID'.
-Of course, 'inexpensive' is relative - probably to one's income and it
-seems some people are paid more than others....it almost suggests we
-should have another acronym - RADCD - redundant array of dirt cheap
-disks. :)
+That's about how the drives sit in the case, air vents are in the front 
+of the case, fans in back pulling air out.
 
-Max.
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
+
+
