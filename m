@@ -1,116 +1,75 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Roadmap for md/raid ???
-Date: Fri, 19 Dec 2008 15:10:49 +1100
-Message-ID: <18763.7881.300921.177207@notabene.brown>
+Subject: Re: MD Feature Request: non-degraded component replacement
+Date: Fri, 19 Dec 2008 15:11:47 +1100
+Message-ID: <18763.7939.549010.518201@notabene.brown>
+References: <49477689.2010208@dgreaves.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from David Greaves on Tuesday December 16
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: David Greaves <david@dgreaves.com>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Tuesday December 16, david@dgreaves.com wrote:
+> Hi Neil
+> 
+> I brought this up in October but got no response - since you seem to be on a
+> roll I thought I'd try again...
+> 
+> Summary: Add a spare and 'mirror-fail' a device. The spare is synced with the
+> to-be-removed device and any read errors are corrected from the remaining raid
+> devices. Once synced, the  to-be-removed device is failed and the spare takes
+> its place. At no point is the array degraded.
 
+Yes, I've come to the conclusion that this probably is a good idea.
 
-Not really a roadmap, more a few tourist attractions that you might
-see on the way if you stick around (and if I stick around)...
+See my 'road-map' that I just posted.
 
-Comments welcome.
-
+Thanks,
 NeilBrown
 
 
-- Bad block list
-  The idea here is to maintain and store on each device a list of
-  blocks that are known to be 'bad'.  This effectively allows us to
-  fail a single block rather than a whole device when we get a media
-  write error.  Of course if updating the bad-block-list gives an
-  error we then have to fail the device.
-
-  We would also record a bad block if we get a read error on a degraded
-  array.  This would e.g. allow recovery for a degraded raid1 where the
-  sole remaining device has a bad block.
-
-  An array could have multiple errors on different devices and just
-  those stripes would be considered to be "degraded".  As long a no
-  single stripe had too many bad blocks, the data would still be safe.
-  Naturally as soon as you get one bad block, the array becomes
-  susceptible to data loss on a single device failure, so it wouldn't
-  be advisable to run with non-empty badblock lists for an extended
-  length of time,  However it might provide breathing space until
-  drive replacement can be achieved.
-
-- hot-device-replace
-  This is probably the most asked for feature of late.  It would allow
-  a device to be 'recovered' while the original was still in service. 
-  So instead of failing out a device and adding a spare, you can add
-  the spare, build the data onto it, then fail out the device.
-
-  This meshes well with the bad block list.  When we find a bad block,
-  we start a hot-replace onto a spare (if one exists).  If sleeping
-  bad blocks are discovered during the hot-replace process, we don't
-  lose the data unless we find two bad blocks in the same stripe.
-  And then we just lose data in that stripe.
-
-  Recording in the metadata that a hot-replace was happening might be
-  a little tricky, so it could be that if you reboot in the middle,
-  you would have to restart from the beginning.  Similarly there would
-  be no 'intent' bitmap involved for this resync.
-
-  Each personality would have to implement much of this independently,
-  effectively providing a mini raid1 implementation.  It would be very
-  minimal without e.g. read balancing or write-behind etc.
-
-  There would be no point implementing this in raid1.  Just
-  raid456 and raid10.
-  It could conceivably make sense for raid0 and linear, but that is
-  very unlikely to be implemented.
-
-- split-mirror
-  This is really a function of mdadm rather than md.  It is already
-  quite possible to break a mirror into two separate single-device
-  arrays.  However it is a sufficiently common operation that it is
-  probably making it very easy to do with mdadm.
-  I'm thinking something like
-      mdadm --create /dev/md/new --split /dev/md/old
-
-  will create a new raid1 by taking one device off /dev/md/old (which
-  must be a raid1) and making an array with exactly the right metadata
-  and size.
-
-- raid5->raid6 conversion.
-   This is also a fairly commonly asked for feature.
-   The first step would be to define a raid6 layout where the Q block
-   was not rotated around the devices but was always on the last
-   device.  Then we could change a raid5 to a singly-degraded raid6
-   without moving any data.
-
-   The next step would be to implement in-place restriping. 
-   This involves 
-      - freezing a section of the array (all IO blocks)
-      - copying the data out to a safe backup
-      - copying it back in with the new layout
-      - updating the metadata to indicate that the restripe has
-        progressed.
-      - repeat.
-
-   This would probably be quite slow but it would achieve the desired
-   result. 
-
-   Once we have in-place restriping we could change chunksize as
-   well.
-
-- raid5 reduce number of devices.
-   We can currently restripe a raid5 (or 6) over a larger number of
-   devices but not over a smaller number of devices.  That means you
-   cannot undo an increase that you didn't want.
-
-   It might be nice to allow this to happen at the same time as
-   increasing --size (if the devices are big enough) to allow the
-   array to be restriped without changing the available space.
-
-- cluster raid1
-   Allow a raid1 to be assembled on multiple hosts that share some
-   drives, so a cluster filesystem (e.g. ocfs2) can be run over it.
-   It requires co-ordination to handle failure events and
-   resync/recovery.  Most of this would probably be done in userspace.
+> 
+> IMHO This one should be high on the todo list. Especially if it's a
+> pre-requisite for other improvements to resilience.
+> 
+> Right now, if a drive fails or shows signs of going bad then you get into a very
+>  risky situation.
+> 
+> I'm sure most here know that the risk is because removing the failing drive and
+> installing a good one to re-sync puts you in a very vulnerable position; if
+> another drive fails (even one bad block) then you lose data.
+> 
+> The solution involves raid1 - but it needs a twist of raid5/6 and it was
+> discussed ages ago; see:
+>   http://arctic.org/~dean/proactive-raid5-disk-replacement.txt
+> 
+> 
+> I think this is what was discussed:
+> 
+> Assume md0 has drives A B C D
+> D is failing
+> E is new
+> 
+> * add E as spare
+> * set E to mirror 'failing' drive D (with bitmap?)
+> * subsequent writes go to both D+E
+> * recover 99+% of data from D to E by simple mirroring
+> * any read failures on D when reading from md0 or mirroring D->E are recovered
+> from reading ABC not E unless E is in sync. D is not failed out. (and it's these
+> tricks that stops users from doing all this manually)
+> * any md0 sector read failure on ABC can still (hopefully) be read from D even
+> if not yet mirrored to E (also not possible if done manually)
+> * once E is mirrored, D is removed and  the job is done
+> 
+> Personally I think this feature is more important than the reshaping requests;
+> of course that's just one opinion after replacing about 20 flaky 1Tb drives in
+> the past 6 months :)
+> 
+> David
+> 
+> -- 
+> "Don't worry, you'll be fine; I saw it work in a cartoon once..."
