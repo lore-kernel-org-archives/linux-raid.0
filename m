@@ -1,108 +1,110 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Growing RAID1 array with bitmaps enabled
-Date: Fri, 19 Dec 2008 15:54:33 +1100
-Message-ID: <18763.10505.701483.494901@notabene.brown>
-References: <20081219040730.GA6402@atlantis.cc.ndsu.NoDak.edu>
+From: Redeeman <redeeman@metanurb.dk>
+Subject: Re: detection/correction of corruption with raid6
+Date: Fri, 19 Dec 2008 06:38:36 +0100
+Message-ID: <1229665116.22331.131.camel@localhost>
+References: <1229464713.6159.16.camel@localhost.localdomain>
+	 <1229466317.22331.71.camel@localhost>
+	 <1229550771.13544.20.camel@localhost.localdomain>
+	 <18763.9611.939807.824130@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bryan Mesich on Thursday December 18
+In-Reply-To: <18763.9611.939807.824130@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bryan Mesich <bryan.mesich@ndsu.edu>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday December 18, bryan.mesich@ndsu.edu wrote:
-> Good evening to all,
+On Fri, 2008-12-19 at 15:39 +1100, Neil Brown wrote:
+> On Wednesday December 17, piergiorgio.sartor@nexgo.de wrote:
+> > On Tue, 2008-12-16 at 23:25 +0100, Redeeman wrote:
+> > [...]
+> > > > Why a RAID system might have inconsistencies?
+> > > > Why do we have a "check" command at all, to run weekly or monthly?
+> > > As previously stated in discussion, while most bitflips etc does not
+> > > happen on disk(apparently), they do happen, whether its in ram, pci,
+> > > controller etc...
+> > 
+> > Ah! You spoiled it! :-)
+> > 
+> > Actually I was waiting for an answer from Neil Brown.
+> > 
+> > Because I'm under the impression that if it is not the HD,
+> > it does not count... See below...
 > 
-> I'm looking at growing a RAID1 array from 40GB to 100GB.  The
-> array has a write-intent bitmap enabled, but an email from Neil 
-> in August suggests that I should disable the bitmap when 
-> growing the array. Here's a bit of the email Neil sent to the 
-> list:
+> Suppose we agree that bit flips don't happen (undetected) on drive
+> media.  But that bit flips can happen elsewhere (memory.  IO Buss
+> etc).
 > 
-> >We cannot currently change the size of a write-intent bitmap.
-> >So if we change the size of an array which has such a bitmap, it
-> >tries to set bits beyond the end of the bitmap.
-> >
-> >For now, simply reject any request to change the size of an array
-> >which has a bitmap.  mdadm can remove the bitmap and add a new
-> >one after the array has changed size.
-> >
-> [snip...]
+> And then suppose we discover that a bit-flip has happened.  What does
+> that tell us?
+> Maybe it tells us that our hardware is dodgey.  So it cannot be
+> trusted to reliably do anything we tell it.  So maybe we shouldn't
+> tell it to do anything. ??
 > 
-> A couple questions I have:
+> And when we find a corruption, we clear cannot know if it is corrupt
+> on disk (a previous write went bad) or just in memory (e.g. a recent
+> read was bad).
+> In the latter case, writing anything to disk is probably the wrong
+> thing to do.  In the former case it might be a good thing to do - if
+> we can be fairly sure that the error happens very rarely.
+> And of course we cannot know if it was due to a bad read or a bad
+> write.  So the safe course is to not write anything to disk.
 > 
-> 1) Does the superblock increase in size when the array is grown 
-> to make room for a larger bitmap?  (This doesn't seem possible 
-> to me, particularly if using a v1.1 or v1.2 superblock).
-
-The bitmap does not live in the superblock.  It lives near the
-superblock.
-For 0.90, the superblock is 4K in size, and lives at least 60K from
-the end of the device.  The bitmap lives in that 60K.
-
-For 1.0, the superblock is 1K in size and lives between 8K and 12K
-from the end of the device.  There is usually some space reserved
-before the superblock which is not used for data.  The bitmap lives in
-one of these spaces.
-
-For 1.1 and 1.2, the superblock is 1K in size and lives near the start
-of the device.  There is usually some space reserved after the
-superblock and before the data.  The bitmap is stored there.
-
-
+> Where does that leave us?
 > 
-> or...
+> About the only thing that makes sense is to always read all the blocks
+> in a stripe, and to perform a consistency test before responding to
+> any read request.  If an inconsistency is found, we log what we know,
+> and only return data if we have some reason to believe something is
+> still valid (e.g. a majority vote for raid1).
 > 
-> 2) Is the problem mentioned in Neil's email in regard to a
-> "restructuring" of the bitmap to accommodate a larger array (i.e. 
-> We only have "x" amount of room on the superblock, so re-divide 
-> the array into chucks that we can fit into the superblock)?
-
-Yes.  Sometimes.
-
-When you add a bitmap to an array, mdadm has a look to see what space
-is available and uses the space the best it can.  So when you grow an
-array, the bitmap that gets added afterwards might use a different
-chunk-size than the bitmap that you had before.
-
-So the size of the bitmap will probably change and the chunksize of
-the bitmap will possibly change.
-
+> And for raid5/6, a write would require:
+>   read whole stripe
+>   check consistency
+>   copy in new data
+>   update parity
+>   write out changed blocks
 > 
-> In my use case, the block devices that compose the RAID1 array
-> are fibre channel SAN volumes.  When I grow them to 100GB on the 
-> FC target, the additional 60GB is appended to the end of the
-> exported block device.  My out-of-sync data will still be present 
-> on the first 40GB.
+> This is going to be a substantial slowdown.
 > 
-> With this in mind (and the adage that patches are welcome), has there 
-> been any interest in being able to use a write-intent bitmap for this 
-> kind of use case?  The benefit of this functionality would keep me 
-> from eating two _full_ re-syncs on the array when growing the block 
-> devices.
+> And does it really increase your data security?  or is it like putting
+> a lock on your front door but not on your back door?
+> 
+> I guess it would provide some protection against low-frequency errors
+> in the controller/cable/drive.
+> 
+> But given the high cost and the fairly low value, I wonder how many
+> people would really use it....
 
-I think you misunderstand.  There is no need for a full resync.
-You simply
+I was suggesting that we only go through all the hoops on user request..
+e.g. the addition of "resync_majorityvote" or something..
 
-  mdadm --grow /dev/md0 --bitmap none
-  mdadm --grow /dev/md0 --size max
-  mdadm --wait /dev/md0
-  mdadm --grow /dev/md0 --bitmap internal
-
-The "--wait" will wait while the array syncs the data from 40GB to
-100GB.
-
-This does leave you with a window when there is no bitmap, so a crash
-will require a resync.  So it is not ideal.
-But it certainly isn't as bad as two full resyncs.
-
-NeilBrown
+I can see the wisdom in just doing normal read/writes as now, for speed,
+and only do the additional logic on request.
 
 > 
+> > 
+> > Final point. More or less one year ago the same topic popped up,
+> > with similar discussion.
+> > At the end of the thread someone was asking if patches are
+> > accepted in order to implement this feature.
+> > I could not find any answer to that question in the archive.
+> > 
+> > What is the idea? Are patches accepted? Rejected by default?
 > 
-> Thanks in advance,
+> By default, patches are reviewed and discussed.  If they then get
+> revised and tested and appear to be sensible and useful they will
+> probably get accepted eventually.
 > 
-> Bryan
+> A change of this magnitude would almost certainly need to go through
+> several iterations of revision and have substantial testing before
+> being accepted.
+> 
+> NeilBrown
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
