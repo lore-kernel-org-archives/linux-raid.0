@@ -1,117 +1,80 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
-Date: Thu, 18 Dec 2008 18:33:14 -0500
-Message-ID: <494ADDBA.6010105@tmr.com>
-References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan>	<1229225480.16555.152.camel@localhost>	<18757.4606.966139.10342@tree.ty.sabi.co.uk>	<200812141912.59649.Martin@lichtvoll.de>	<18757.33373.744917.457587@tree.ty.sabi.co.uk>
-	<494971B2.1000103@tmr.com> <494A07BA.1080008@mailcan.com>
+From: "Dylan Taft" <d13f00l@gmail.com>
+Subject: Re: MDADM Software Raid Woes
+Date: Thu, 18 Dec 2008 19:03:49 -0500
+Message-ID: <47ed01bd0812181603t53a500adgadab6884a7a4a586@mail.gmail.com>
+References: <47ed01bd0812172033p1065b472t62491e4f2eed901@mail.gmail.com>
+	 <20081218065603.GA21265@mail.local.tull.net>
+	 <47ed01bd0812180508t89d1aecr13d2b9e8402ed885@mail.gmail.com>
+	 <44f470466dcf22c47f6700502caf9cbd.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
-In-Reply-To: <494A07BA.1080008@mailcan.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754833AbYLSAEP@vger.kernel.org>
+In-Reply-To: <44f470466dcf22c47f6700502caf9cbd.squirrel@neil.brown.name>
 Content-Disposition: inline
-List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Sender: xfs-bounces@oss.sgi.com
-Errors-To: xfs-bounces@oss.sgi.com
-To: Leon Woestenberg <leonw@mailcan.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>, Linux XFS <xfs@oss.sgi.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Nick Andrew <nick@nick-andrew.net>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Leon Woestenberg wrote:
-> Hello all,
->
-> Bill Davidsen wrote:
->> Peter Grandi wrote:
->>   
->>> Unfortunately that seems the case.
->>>
->>> The purpose of barriers is to guarantee that relevant data is
->>> known to be on persistent storage (kind of hardware 'fsync').
->>>
->>> In effect write barrier means "tell me when relevant data is on
->>> persistent storage", or less precisely "flush/sync writes now
->>> and tell me when it is done". Properties as to ordering are just
->>> a side effect.
->>>   
->>>     
+I'm running gentoo, udev 124-r1
+I cleared all superblocks on all devices I raided, and undid all the
+partition tables, and started from scratch, putting the filesystem on
+the raid devices themselves instead of partitioning the raid devices.
+
+Everything is working now, I think it's probably best to keep it
+simple, or use LVM
+MD is referenced in the udev config files, but everything is working now.
+
+Sorry, I think it was user error. :)
+Thanks
+Dylan
+
+On Thu, Dec 18, 2008 at 3:06 PM, NeilBrown <neilb@suse.de> wrote:
+> On Fri, December 19, 2008 12:08 am, Dylan Taft wrote:
+>> I may give that a shot.
 >>
->> I don't get that sense from the barriers stuff in Documentation, in fact 
->> I think it's essentially a pure ordering thing, I don't even see that it 
->> has an effect of forcing the data to be written to the device, other 
->> than by preventing other writes until the drive writes everything. So we 
->> read the intended use differently.
+>> But it also looks like my major numbers are wrong on the actual device
+>> nodes?
+>> brw-r-----  1 root disk   9, 0 Dec 17 19:13 0
+>> brw-r-----  1 root disk 259, 0 Dec 17 19:13 1
+>> brw-r-----  1 root disk 259, 1 Dec 17 19:13 2
+>> brw-r-----  1 root disk 259, 2 Dec 17 19:13 3
 >>
->> What really bothers me is that there's no obvious need for barriers at 
->> the device level if the file system is just a bit smarter and does it's 
->> own async io (like aio_*), because you can track writes outstanding on a 
->> per-fd basis, so instead of stopping the flow of data to the drive, you 
->> can just block a file descriptor and wait for the count of outstanding 
->> i/o to drop to zero. That provides the order semantics of barriers as 
->> far as I can see, having tirelessly thought about it for ten minutes or 
->> so. Oh, and did something very similar decades ago in a long-gone 
->> mainframe OS.
->>   
-> Did that mainframe OS have re-ordering devices? If it did, you'ld 
-> still need barriers all the way down:
+>> Shouldn't this be 9,something, not 259?
+>>
+>> If I change the partition type from fd to something else, and don't
+>> allow the kernel to auto assemble, then assemble manually via mdadm,
+>> things work right.
+>> Any idea what could cause thee major numbers to be wrong?
 >
-Why? As long as you can tell when all the writes before the barrier are 
-physically on the drive (this is on a per fd basis, remember) you don't 
-care about the order of physical writes, you serialize either one fd, or 
-one thread, or one application, but you don't have to kill performance 
-for the rest of the system to the drive. So you can fsync() one fd or 
-several, then write another thread. Or you can wait until the 
-outstanding write could for a whole process reaches zero. And the 
-application satisfies the needs, not the kernel, which reduces impact on 
-other applications.
-> The drive itself may still re-order writes, thus can cause corruption 
-> if halfway the power goes down.
-> >From my understanding, disabling write-caches simply forces the drive 
-> to operate in-order.
+> Almost certainly some udev configuration going wrong.
+> What distro are you running?
+> Is there are file in /lib/udev/rules.d or /etc/udev/rules.d with 'md'
+> in the name?  What is in that file?
 >
-If you ordering logic is 'write A, B, and C, then barrier, then write D' 
-I don't see that the physical order of A, B, or C matters, as long as 
-they are all complete before you write D. That's what I see in the 
-barrier description, let previous writes finish.
-> Barriers need to travel all the way down to the point where-after 
-> everything remains in-order.
-> Devices with write-cache enabled will still re-order, but not across 
-> barriers (which are implemented as
-> either a single cache flush with forced unit access, or a double cache 
-> flush around the barrier write).
+> Prior to 2.6.28, normal md devices (major number 9) could not be
+> partitioned. You needed to use "mdp" devices (major number close to 254).
+> To get autodetect to create these use the kernel parameter
+> "raid=partitionable".
 >
-> Whether the data has made it to the drive platters is not really 
-> important from a barrier point of view, however,
-> iff part of the data made it to the platters, then we want to be sure 
-> it was in-order.
+> In 2.6.28, partitions don't have to have the same major number as the
+> base device.
+> In you case,
+>  md0 is 9,0
+>  md1 is 9,1
 >
-And you could use a barrier after every write (some DB setups do fsync() 
-after each). Perhaps you mean parts like the journal entry before a 
-change is made, then the change, then the journal entry for transaction 
-complete?
-> Because only in this way can we ensure that the data that is on the 
-> platters is consistent.
-
-I think we mean the same thing, but I'm not totally sure. As long a 
-logical operations are completed in order, the physical writes don't 
-matter, because a journal rollback would reset things to consistent anyway.
-
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
-
-
-
-
-[[HTML alternate version deleted]]
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+>  md1p1 is 259,0
+>  md1p2 is 259.1
+>  md1p3 is 259,2
+>
+> as you can see, the device nodes have been created with the wrong
+> name.  In each case the name used is md followed by the last digit
+> of what should have been used.  udev is the only thing that could have
+> done that.
+>
+> Hence my questions about your distro and udev configuration.
+>
+> NeilBrown
+>
+>
