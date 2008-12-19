@@ -1,43 +1,55 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: MDADM Software Raid Woes
-Date: Fri, 19 Dec 2008 11:26:12 +1100 (EST)
-Message-ID: <14ab805319e6bb1c0353ac078f41b21f.squirrel@neil.brown.name>
-References: <47ed01bd0812172033p1065b472t62491e4f2eed901@mail.gmail.com>
-    <20081218065603.GA21265@mail.local.tull.net>
-    <47ed01bd0812180508t89d1aecr13d2b9e8402ed885@mail.gmail.com>
-    <44f470466dcf22c47f6700502caf9cbd.squirrel@neil.brown.name>
-    <47ed01bd0812181603t53a500adgadab6884a7a4a586@mail.gmail.com>
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+Subject: Re: weird issues with raid1
+Date: Thu, 18 Dec 2008 20:15:51 -0600
+Message-ID: <cccedfc60812181815oa63b526tb51c3bee558fbdf@mail.gmail.com>
+References: <cccedfc60812051810q3c44ae28x514072cb870ac390@mail.gmail.com>
+	 <18758.52536.345145.238926@notabene.brown>
+	 <cccedfc60812151347j659112c5na3aa8cd0eb044669@mail.gmail.com>
+	 <18759.678.74091.236787@notabene.brown>
+	 <18761.54425.725696.255055@notabene.brown>
+	 <cccedfc60812172050h58697665y975a18550842aebb@mail.gmail.com>
+	 <cccedfc60812172055n58181ad4lcdff8f172c6a496c@mail.gmail.com>
+	 <18761.56537.935250.561921@notabene.brown>
+	 <cccedfc60812172147q240466a8w53c5bd2540edf6a4@mail.gmail.com>
+	 <18761.60380.938542.26851@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47ed01bd0812181603t53a500adgadab6884a7a4a586@mail.gmail.com>
+In-Reply-To: <18761.60380.938542.26851@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Dylan Taft <d13f00l@gmail.com>
-Cc: Nick Andrew <nick@nick-andrew.net>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, December 19, 2008 11:03 am, Dylan Taft wrote:
-> I'm running gentoo, udev 124-r1
-> I cleared all superblocks on all devices I raided, and undid all the
-> partition tables, and started from scratch, putting the filesystem on
-> the raid devices themselves instead of partitioning the raid devices.
+>> jnelson@turnip:~/kernels> (cd linux-2.6 && git diff
+>> a0da84f35b25875870270d16b6eccda4884d61a7
+>> a0da84f35b25875870270d16b6eccda4884d61a7^ ) > d.diff
 >
-> Everything is working now, I think it's probably best to keep it
-> simple, or use LVM
-> MD is referenced in the udev config files, but everything is working now.
->
-> Sorry, I think it was user error. :)
-> Thanks
-> Dylan
+> This is requesting the diff between a given version, and the previous
+> version.  So it will be a reversed diff.
 
-Only broken systems allow users to make errors like that.
+*sigh*
 
-I'd still like to see the relevant udev config files if you
-wouldn't mind.  I'd like to see if I can stop other people from
-suffering the same misfortunes as you.
+> i.e. these two lines are *added* by the patch.
+> I usually use e.g.
+>   git log -p a0da84f35b25875870270d16b6eccda4884d61a7
+> to look at diffs.  Less room for confusion. (or gitk).
 
+I will remember that one!
 
-Thanks.
-NeilBrown
+> and as those two lines are not present here, the patch as not been
+> applied.
 
+I'll apply and get back to you. My raid rebuilt 3 times today, quite
+possibly because of this.
+
+Obviously, I'm abusing the code in ways it was not intended to be
+used. Sometimes that's good for finding corner-case-y kinds of issues,
+though.
+
+Thanks again for your patience.
+
+-- 
+Jon
