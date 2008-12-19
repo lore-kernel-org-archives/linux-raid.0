@@ -1,55 +1,116 @@
-From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
-Subject: Re: weird issues with raid1
-Date: Thu, 18 Dec 2008 20:15:51 -0600
-Message-ID: <cccedfc60812181815oa63b526tb51c3bee558fbdf@mail.gmail.com>
-References: <cccedfc60812051810q3c44ae28x514072cb870ac390@mail.gmail.com>
-	 <18758.52536.345145.238926@notabene.brown>
-	 <cccedfc60812151347j659112c5na3aa8cd0eb044669@mail.gmail.com>
-	 <18759.678.74091.236787@notabene.brown>
-	 <18761.54425.725696.255055@notabene.brown>
-	 <cccedfc60812172050h58697665y975a18550842aebb@mail.gmail.com>
-	 <cccedfc60812172055n58181ad4lcdff8f172c6a496c@mail.gmail.com>
-	 <18761.56537.935250.561921@notabene.brown>
-	 <cccedfc60812172147q240466a8w53c5bd2540edf6a4@mail.gmail.com>
-	 <18761.60380.938542.26851@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Roadmap for md/raid ???
+Date: Fri, 19 Dec 2008 15:10:49 +1100
+Message-ID: <18763.7881.300921.177207@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18761.60380.938542.26851@notabene.brown>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->> jnelson@turnip:~/kernels> (cd linux-2.6 && git diff
->> a0da84f35b25875870270d16b6eccda4884d61a7
->> a0da84f35b25875870270d16b6eccda4884d61a7^ ) > d.diff
->
-> This is requesting the diff between a given version, and the previous
-> version.  So it will be a reversed diff.
 
-*sigh*
 
-> i.e. these two lines are *added* by the patch.
-> I usually use e.g.
->   git log -p a0da84f35b25875870270d16b6eccda4884d61a7
-> to look at diffs.  Less room for confusion. (or gitk).
+Not really a roadmap, more a few tourist attractions that you might
+see on the way if you stick around (and if I stick around)...
 
-I will remember that one!
+Comments welcome.
 
-> and as those two lines are not present here, the patch as not been
-> applied.
+NeilBrown
 
-I'll apply and get back to you. My raid rebuilt 3 times today, quite
-possibly because of this.
 
-Obviously, I'm abusing the code in ways it was not intended to be
-used. Sometimes that's good for finding corner-case-y kinds of issues,
-though.
+- Bad block list
+  The idea here is to maintain and store on each device a list of
+  blocks that are known to be 'bad'.  This effectively allows us to
+  fail a single block rather than a whole device when we get a media
+  write error.  Of course if updating the bad-block-list gives an
+  error we then have to fail the device.
 
-Thanks again for your patience.
+  We would also record a bad block if we get a read error on a degraded
+  array.  This would e.g. allow recovery for a degraded raid1 where the
+  sole remaining device has a bad block.
 
--- 
-Jon
+  An array could have multiple errors on different devices and just
+  those stripes would be considered to be "degraded".  As long a no
+  single stripe had too many bad blocks, the data would still be safe.
+  Naturally as soon as you get one bad block, the array becomes
+  susceptible to data loss on a single device failure, so it wouldn't
+  be advisable to run with non-empty badblock lists for an extended
+  length of time,  However it might provide breathing space until
+  drive replacement can be achieved.
+
+- hot-device-replace
+  This is probably the most asked for feature of late.  It would allow
+  a device to be 'recovered' while the original was still in service. 
+  So instead of failing out a device and adding a spare, you can add
+  the spare, build the data onto it, then fail out the device.
+
+  This meshes well with the bad block list.  When we find a bad block,
+  we start a hot-replace onto a spare (if one exists).  If sleeping
+  bad blocks are discovered during the hot-replace process, we don't
+  lose the data unless we find two bad blocks in the same stripe.
+  And then we just lose data in that stripe.
+
+  Recording in the metadata that a hot-replace was happening might be
+  a little tricky, so it could be that if you reboot in the middle,
+  you would have to restart from the beginning.  Similarly there would
+  be no 'intent' bitmap involved for this resync.
+
+  Each personality would have to implement much of this independently,
+  effectively providing a mini raid1 implementation.  It would be very
+  minimal without e.g. read balancing or write-behind etc.
+
+  There would be no point implementing this in raid1.  Just
+  raid456 and raid10.
+  It could conceivably make sense for raid0 and linear, but that is
+  very unlikely to be implemented.
+
+- split-mirror
+  This is really a function of mdadm rather than md.  It is already
+  quite possible to break a mirror into two separate single-device
+  arrays.  However it is a sufficiently common operation that it is
+  probably making it very easy to do with mdadm.
+  I'm thinking something like
+      mdadm --create /dev/md/new --split /dev/md/old
+
+  will create a new raid1 by taking one device off /dev/md/old (which
+  must be a raid1) and making an array with exactly the right metadata
+  and size.
+
+- raid5->raid6 conversion.
+   This is also a fairly commonly asked for feature.
+   The first step would be to define a raid6 layout where the Q block
+   was not rotated around the devices but was always on the last
+   device.  Then we could change a raid5 to a singly-degraded raid6
+   without moving any data.
+
+   The next step would be to implement in-place restriping. 
+   This involves 
+      - freezing a section of the array (all IO blocks)
+      - copying the data out to a safe backup
+      - copying it back in with the new layout
+      - updating the metadata to indicate that the restripe has
+        progressed.
+      - repeat.
+
+   This would probably be quite slow but it would achieve the desired
+   result. 
+
+   Once we have in-place restriping we could change chunksize as
+   well.
+
+- raid5 reduce number of devices.
+   We can currently restripe a raid5 (or 6) over a larger number of
+   devices but not over a smaller number of devices.  That means you
+   cannot undo an increase that you didn't want.
+
+   It might be nice to allow this to happen at the same time as
+   increasing --size (if the devices are big enough) to allow the
+   array to be restriped without changing the available space.
+
+- cluster raid1
+   Allow a raid1 to be assembled on multiple hosts that share some
+   drives, so a cluster filesystem (e.g. ocfs2) can be run over it.
+   It requires co-ordination to handle failure events and
+   resync/recovery.  Most of this would probably be done in userspace.
