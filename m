@@ -1,81 +1,75 @@
-From: Bryan Mesich <bryan.mesich@ndsu.edu>
-Subject: Growing RAID1 array with bitmaps enabled
-Date: Thu, 18 Dec 2008 22:07:30 -0600
-Message-ID: <20081219040730.GA6402@atlantis.cc.ndsu.NoDak.edu>
-Reply-To: Bryan Mesich <bryan.mesich@ndsu.edu>
+From: "David Lethe" <david@santools.com>
+Subject: RE: upgrade advice / Disk drive failure rates - real world
+Date: Thu, 18 Dec 2008 22:28:02 -0600
+Message-ID: <A20315AE59B5C34585629E258D76A97C0314BF61@34093-C3-EVS3.exchange.rackspace.com>
+References: <d5fe39840812160310t45e822c1geb633f805cf5388e@mail.gmail.com> <1229428184.22331.43.camel@localhost> <alpine.DEB.1.10.0812160807200.725@p34.internal.lan> <1229436950.22331.45.camel@localhost> <cccedfc60812160757x2af73afbv4a69eac31d212062@mail.gmail.com> <alpine.DEB.1.10.0812161829490.31132@p34.internal.lan> <cccedfc60812161608y29e6c645n6ff7df5c87292374@mail.gmail.com> <1229497160.22331.73.camel@localhost> <cccedfc60812170526l43c661ddgff95c99ea883f362@mail.gmail.com> <A20315AE59B5C34585629E258D76A97C030D4837@34093-C3-EVS3.exchange.rackspace.com> <cccedfc60812170637j7eab2c4cyac88fc110b51755f@mail.gmail.com> <A20315AE59B5C34585629E258D76A97C030D48CC@34093-C3-EVS3.exchange.rackspace.com> <494A7C61.6080805@anonymous.org.uk> <alpine.DEB.1.10.0812181140260.28725@p34.internal.lan> <A203
+ 15AE59B5C34585629E258D76A97C0314BCDA@34093-C3-EVS3.exchange.rackspace.com> <1229640713.29109.1290832315@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="7JfCtLOvnd9MIVvH"
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+Content-class: urn:content-classes:message
+In-Reply-To: <1229640713.29109.1290832315@webmail.messagingengine.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Max Waterman <davidmaxwaterman@fastmail.co.uk>, Justin Piszcz <jpiszcz@lucidpixels.com>, John Robinson <john.robinson@anonymous.org.uk>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-
---7JfCtLOvnd9MIVvH
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Good evening to all,
-
-I'm looking at growing a RAID1 array from 40GB to 100GB.  The
-array has a write-intent bitmap enabled, but an email from Neil=20
-in August suggests that I should disable the bitmap when=20
-growing the array. Here's a bit of the email Neil sent to the=20
-list:
-
->We cannot currently change the size of a write-intent bitmap.
->So if we change the size of an array which has such a bitmap, it
->tries to set bits beyond the end of the bitmap.
->
->For now, simply reject any request to change the size of an array
->which has a bitmap.  mdadm can remove the bitmap and add a new
->one after the array has changed size.
->
-[snip...]
-
-A couple questions I have:
-
-1) Does the superblock increase in size when the array is grown=20
-to make room for a larger bitmap?  (This doesn't seem possible=20
-to me, particularly if using a v1.1 or v1.2 superblock).
-
-or...
-
-2) Is the problem mentioned in Neil's email in regard to a
-"restructuring" of the bitmap to accommodate a larger array (i.e.=20
-We only have "x" amount of room on the superblock, so re-divide=20
-the array into chucks that we can fit into the superblock)?
-
-In my use case, the block devices that compose the RAID1 array
-are fibre channel SAN volumes.  When I grow them to 100GB on the=20
-FC target, the additional 60GB is appended to the end of the
-exported block device.  My out-of-sync data will still be present=20
-on the first 40GB.
-
-With this in mind (and the adage that patches are welcome), has there=20
-been any interest in being able to use a write-intent bitmap for this=20
-kind of use case?  The benefit of this functionality would keep me=20
-=66rom eating two _full_ re-syncs on the array when growing the block=20
-devices.
-
-
-Thanks in advance,
-
-Bryan
-
---7JfCtLOvnd9MIVvH
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQFJSx4ClSl3SAlkhEcRAl9TAKCVvcLSXDpM4CDHvdcmwbNB6IrgFgCgtn7/
-GwZ4ZIWFvYXQRvqkSJU8mL8=
-=evP8
------END PGP SIGNATURE-----
-
---7JfCtLOvnd9MIVvH--
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBNYXggV2F0ZXJtYW4gW21haWx0
+bzpkYXZpZG1heHdhdGVybWFuQGZhc3RtYWlsLmNvLnVrXQ0KPiBTZW50OiBUaHVyc2RheSwgRGVj
+ZW1iZXIgMTgsIDIwMDggNDo1MiBQTQ0KPiBUbzogRGF2aWQgTGV0aGU7IEp1c3RpbiBQaXN6Y3o7
+IEpvaG4gUm9iaW5zb24NCj4gQ2M6IExpbnV4IFJBSUQNCj4gU3ViamVjdDogUkU6IHVwZ3JhZGUg
+YWR2aWNlIC8gRGlzayBkcml2ZSBmYWlsdXJlIHJhdGVzIC0gcmVhbCB3b3JsZA0KPiANCj4gDQo+
+IE9uIFRodSwgMTggRGVjIDIwMDggMTM6MTQ6MjcgLTA2MDAsICJEYXZpZCBMZXRoZSIgPGRhdmlk
+QHNhbnRvb2xzLmNvbT4NCj4gc2FpZDoNCj4gc25pcA0KPiA+DQo+ID4gU28gYWdncmVnYXRlIHdh
+bGstYXdheQ0KPiA+ICAtIEtlZXAgZGlza3MgaW4gMzYtNDIgZGVncmVlcyBDIGZvciBtYXhpbXVt
+IGxpZmUgdXAgdG8geWVhciAyLCB3aGVyZQ0KPiA+IHRoZXkgc2hvdWxkIGJlIHJ1biBjb29sZXIu
+DQo+ID4gIC0gTmV3IGRpc2tzIGFyZSA1eCBtb3JlIGxpa2VseSB0byBkaWUgaW4gZmlyc3QgMyBt
+b250aHMgd2l0aCBoaWdoDQo+IHZzLg0KPiA+IGxvdyB3b3JrbG9hZC4NCj4gDQo+IEkgd29uZGVy
+IGlmIHlvdSBjYW4gdXNlIHRoaXMgZmFjdCB0byBtYWtlIGRyaXZlIHdoaWNoIGFyZSBtb3JlIGxp
+a2VseQ0KPiB0bw0KPiBmYWlsIGxhdGVyLCBhY3R1YWxseSBmYWlsIHNvb25lci4NCj4gDQo+IEkn
+bSB0aGlua2luZyB0aGF0IEkgY291bGQgcnVuIG15IG5ldyBkcml2ZXMgaW4gYSBmcmlkZ2UgZm9y
+IGEgbW9udGggb3INCj4gdHdvIG9yIHRocmVlIC0gaWYgdGhleSBmYWlsLCBJJ2xsIHJldHVybiB0
+aGVtLCBlbHNlIEkgY2FuIGJlIG1vcmUgc3VyZQ0KPiB0aGV5J2xsIGxhc3QgdGhlaXIgZXhwZWN0
+ZWQgbGlmZSBhbmQgbm90IGdpdmUgbWUgYW55IHRyb3VibGUuDQo+IA0KPiBEb2VzIHRoYXQgbWFr
+ZSBhbnkgc2Vuc2U/DQo+IA0KPiBBbHNvLCBJIHNlZSBwZW9wbGUgcmVjb21tZW5kaW5nIGVudGVy
+cHJpc2UgZGlza3MsIHdoaWNoIG1ha2VzIG1lIHRoaW5rDQo+IHRoYXQgdGhvc2Ugc2FtZSBwZW9w
+bGUgaGF2ZSBmb3Jnb3R0ZW4gd2hhdCB0aGUgJ0knIHN0YW5kcyBmb3IgaW4NCj4gJ1JBSUQnLg0K
+PiBPZiBjb3Vyc2UsICdpbmV4cGVuc2l2ZScgaXMgcmVsYXRpdmUgLSBwcm9iYWJseSB0byBvbmUn
+cyBpbmNvbWUgYW5kIGl0DQo+IHNlZW1zIHNvbWUgcGVvcGxlIGFyZSBwYWlkIG1vcmUgdGhhbiBv
+dGhlcnMuLi4uaXQgYWxtb3N0IHN1Z2dlc3RzIHdlDQo+IHNob3VsZCBoYXZlIGFub3RoZXIgYWNy
+b255bSAtIFJBRENEIC0gcmVkdW5kYW50IGFycmF5IG9mIGRpcnQgY2hlYXANCj4gZGlza3MuIDop
+DQo+IA0KPiBNYXguDQoNCklmIGl0IGlzIHlvdXIgZGVzaXJlIHRvIGZhaWwgdGhlIGRyaXZlIGFz
+IHF1aWNrbHkgYXMgcG9zc2libGUsIHlvdSBkZWZpbml0ZWx5IG5lZWQgdGhhdCBlbnZpcm9ubWVu
+dGFsIGNoYW1iZXIsIGJ1dCBtb3JlIGltcG9ydGFudGx5IHRoZSByaWdodCBzb2Z0d2FyZSB0ZXN0
+IHN1aXRlLiBUaGUgYmlnLWJveCBSQUlEIHZlbmRvcnMgc3BlbmQgYSBsb3Qgb2YgbW9uZXkgZGV2
+ZWxvcGluZyANCnN0cmVzcyBlbnZpcm9ubWVudHMgc28gdGhleSB3ZWVkIG91dCB0aGUgb25lcyB0
+aGF0IGFyZSBsaWtlbHkgdG8gZmFpbCBiZWZvcmUgdGhleSBzaGlwLCBhbmQgdGhlDQpjb2RlIHRo
+ZXkgdXNlIGlzIGEgYmlnIHRyYWRlIHNlY3JldCBiZWNhdXNlIHRoaXMgZGlmZmVyZW50aWF0ZXMg
+dGhlIHRpZXItMXMgKEVNQywgTmV0QXBwLCBldGMuLikgZnJvbSANCmV2ZXJ5Ym9keSBlbHNlIHdo
+byBkb2Vzbid0IGhhdmUgZW5jbG9zdXJlcyB0aGF0IGNhbiBzdXJ2aXZlIGEgc2hvdGd1biBibGFz
+dCBvciBhIGRyb3AgdGVzdC4gIFRoDQoNCkl0IGlzIHB1YmxpYyBrbm93bGVkZ2UgdGhhdCBzdWRk
+ZW4gY2hhbmdlcyBpbiB0ZW1wZXJhdHVyZSB1bmRlciBoaWdoIElPUHMgJiBzZWVrcyBpcyBhIHJl
+YXNvbmFibGUgcGFydCBvZiANCmEgdGVzdCBzdWl0ZS4gIExhcmdlIGJsb2NrIGNvcGllcyBpc24n
+dCBzdHJlc3NmdWwuICBZb3Ugd2lsbCB3YW50IHRvIGNoYW5nZSBzb21lIG9mIHRoZSBwcm9ncmFt
+bWFibGUgZHJpdmUNCnNldHRpbmdzLCBidXQgd29uJ3QgdGVsbCB5b3Ugc3BlY2lmaWNzIGJlY2F1
+c2UgSSBhbSBub3QgYXQgbGliZXJ0eSB0byB0ZWxsIHlvdSB3aGF0IGFueSBwYXJ0aWN1bGFyIHZl
+bmRvciBkb2VzLg0KKEJ1dCBzb21lIHNldHRpbmdzIG1ha2UgYSBsb3Qgb2Ygc2Vuc2UgaWYgeW91
+IHJlYWQgdGhlIEFOU0kgc3BlY3MgYW5kIGRyaXZlIHZlbmRvcidzIHByb2R1Y3QgbWFudWFscyBh
+bmQgeW91IHB1dCAyKzINClRvZ2V0aGVyKS4NCg0KVmlicmF0aW9uIGlzIGdvb2QgdG9vLiAgRG9u
+J3QgdXNlIHlvdXIgZnJlZXplciBob3dldmVyLCB0aGVyZSBhcmUgYmV0dGVyIHdheXMgdG8gZ28u
+ICAgRm9yIGluc3RhbmNlLCBpZiB5b3Ugd2VyZSBsdWNreSBlbm91Z2ggdG8gZ2V0IGFuIE9tYWhh
+IHN0ZWFrcyBnaWZ0IHBhY2thZ2UgbGlrZSBtZSB5ZXN0ZXJkYXksIHRoZW4geW91IGhhdmUgYSAx
+MDAlIFN0eXJvZm9hbSBjaGVzdCB0aGF0IGlzIHBlcmZlY3QgZm9yIHlvdXIgbmVlZHMuICBZb3Ug
+Y2FuIHN0aWNrIGluIHNvbWUgZHJ5IGljZSwgY2FydmUgb3V0IGEgaG9sZSBmb3IgYSBoYWlyIGRy
+eWVyIHRvIGZpdCBpbnRvLCBhbmQgcHV0IGluIGEgZmFuIGluIHRoZSBib3R0b20gc28geW91IGNh
+biBlcXVhbGl6ZSBwcmVzc3VyZS4gICAgWW91IHdpbGwgd2FudCB0byBjcmVhdGUgc29tZSB2aWJy
+YXRpb25zLiAgTWF5YmUgdXNlIGEgbWFzc2FnZSBwYWQsIG9yIHlvdSBjYW4gZWFzaWx5IGNyZWF0
+ZSBlbm91Z2ggc29uaWMgcHJlc3N1cmUgaWYgeW91IGhhdmUgYSB0ZWVuYWdlIGRhdWdodGVyIHdp
+dGggYSBjZWxsIHBob25lLg0KDQpJdCB3b24ndCBiZSBuZWFybHkgYXMgZ29vZCBhcyBhIHRpZXIt
+MS4gIFRoZXkganVzdCBuZWVkIDQ4IGhvdXJzIHdpdGggdGhlaXIgZXF1aXBtZW50IHRvIGRvIGJl
+dHRlciB0aGFuIHdoYXQgeW91IGNhbiBnZXQgd2l0aCBhIDMgbW9udGhzIHdvcnRoIG9mIHVzYWdl
+LiAgICBTdGlsbCBwZXJoYXBzIGEgd2VlayBpbiB0aGUgU3R5cm9mb2FtIGljZSBjaGVzdCB3aXRo
+IHJhbmRvbSBzbWFsbCBibG9jayBJL08NCldpbGwgZ2V0IHlvdSBjbG9zZSBlbm91Z2guICAgDQoN
+CkRhdmlkDQoNCg==
