@@ -1,75 +1,57 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: MD Feature Request: non-degraded component replacement
-Date: Fri, 19 Dec 2008 15:11:47 +1100
-Message-ID: <18763.7939.549010.518201@notabene.brown>
-References: <49477689.2010208@dgreaves.com>
+Subject: Re: MD: Feature Request: Estimate of blocks necessary to complete sync
+Date: Fri, 19 Dec 2008 15:15:04 +1100
+Message-ID: <18763.8136.613030.474356@notabene.brown>
+References: <cccedfc60812110727p18abcf49v909cb0860c2d4c02@mail.gmail.com>
+	<18759.7048.623851.9550@notabene.brown>
+	<20081216105817.GC17966@skl-net.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from David Greaves on Tuesday December 16
+In-Reply-To: message from Andre Noll on Tuesday December 16
 Sender: linux-raid-owner@vger.kernel.org
-To: David Greaves <david@dgreaves.com>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: Andre Noll <maan@systemlinux.org>
+Cc: Jon Nelson <jnelson-linux-raid@jamponi.net>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tuesday December 16, david@dgreaves.com wrote:
-> Hi Neil
+On Tuesday December 16, maan@systemlinux.org wrote:
+> On 14:07, Neil Brown wrote:
+> > > What would be nice is the addition of something like this:
+> > > Dec 11 08:59:40 turnip kernel: md: bitmap shows 27 128K blocks requiring sync
+> > > or
+> > > Dec 11 08:59:40 turnip kernel: md: bitmap shows 3456K blocks requiring sync
+> > > or some other analogue.
+> > > 
+> > > Seem reasonable?
+> > 
+> > Probably.  I wouldn't be too hard to could the number of bits that are
+> > set.  I guess it could be useful.
+> > 
+> > I'll put it on my list :-)
 > 
-> I brought this up in October but got no response - since you seem to be on a
-> roll I thought I'd try again...
+> We already have
 > 
-> Summary: Add a spare and 'mirror-fail' a device. The spare is synced with the
-> to-be-removed device and any read errors are corrected from the remaining raid
-> devices. Once synced, the  to-be-removed device is failed and the spare takes
-> its place. At no point is the array degraded.
+> 	printk(KERN_INFO "%s: bitmap initialized from disk: "
+> 		"read %lu/%lu pages, set %lu bits\n",
+> 		bmname(bitmap), bitmap->file_pages, num_pages, bit_cnt);
+> 
+> in bitmap.c. Shouldn't that do the trick?
 
-Yes, I've come to the conclusion that this probably is a good idea.
+Not entirely.  That is only printed when the array is assembled.
 
-See my 'road-map' that I just posted.
+But you might have an active array from which you fail a drive.  Then
+subsequent IO causes the bitmap to grow and grow.  Then you
+--re-add the drive and start a bitmap-based recovery.  There would be
+no info in the logs about how many bits were involved.
 
-Thanks,
+I had a look at coding this and decided against it.  At the place
+where you would want to print this, you don't have enough information
+to know if the resync/recovery will be guided by the bitmap or not.
+Only the personality knows that, and it isn't in a good position to
+print the message.
+
+If you really want to know, you can use "--examine-bitmap" to see how
+many bits are involved I guess....
+
 NeilBrown
-
-
-> 
-> IMHO This one should be high on the todo list. Especially if it's a
-> pre-requisite for other improvements to resilience.
-> 
-> Right now, if a drive fails or shows signs of going bad then you get into a very
->  risky situation.
-> 
-> I'm sure most here know that the risk is because removing the failing drive and
-> installing a good one to re-sync puts you in a very vulnerable position; if
-> another drive fails (even one bad block) then you lose data.
-> 
-> The solution involves raid1 - but it needs a twist of raid5/6 and it was
-> discussed ages ago; see:
->   http://arctic.org/~dean/proactive-raid5-disk-replacement.txt
-> 
-> 
-> I think this is what was discussed:
-> 
-> Assume md0 has drives A B C D
-> D is failing
-> E is new
-> 
-> * add E as spare
-> * set E to mirror 'failing' drive D (with bitmap?)
-> * subsequent writes go to both D+E
-> * recover 99+% of data from D to E by simple mirroring
-> * any read failures on D when reading from md0 or mirroring D->E are recovered
-> from reading ABC not E unless E is in sync. D is not failed out. (and it's these
-> tricks that stops users from doing all this manually)
-> * any md0 sector read failure on ABC can still (hopefully) be read from D even
-> if not yet mirrored to E (also not possible if done manually)
-> * once E is mirrored, D is removed and  the job is done
-> 
-> Personally I think this feature is more important than the reshaping requests;
-> of course that's just one opinion after replacing about 20 flaky 1Tb drives in
-> the past 6 months :)
-> 
-> David
-> 
-> -- 
-> "Don't worry, you'll be fine; I saw it work in a cartoon once..."
