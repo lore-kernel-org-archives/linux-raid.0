@@ -1,75 +1,96 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: upgrade advice / Disk drive failure rates - real world
-Date: Thu, 18 Dec 2008 22:28:02 -0600
-Message-ID: <A20315AE59B5C34585629E258D76A97C0314BF61@34093-C3-EVS3.exchange.rackspace.com>
-References: <d5fe39840812160310t45e822c1geb633f805cf5388e@mail.gmail.com> <1229428184.22331.43.camel@localhost> <alpine.DEB.1.10.0812160807200.725@p34.internal.lan> <1229436950.22331.45.camel@localhost> <cccedfc60812160757x2af73afbv4a69eac31d212062@mail.gmail.com> <alpine.DEB.1.10.0812161829490.31132@p34.internal.lan> <cccedfc60812161608y29e6c645n6ff7df5c87292374@mail.gmail.com> <1229497160.22331.73.camel@localhost> <cccedfc60812170526l43c661ddgff95c99ea883f362@mail.gmail.com> <A20315AE59B5C34585629E258D76A97C030D4837@34093-C3-EVS3.exchange.rackspace.com> <cccedfc60812170637j7eab2c4cyac88fc110b51755f@mail.gmail.com> <A20315AE59B5C34585629E258D76A97C030D48CC@34093-C3-EVS3.exchange.rackspace.com> <494A7C61.6080805@anonymous.org.uk> <alpine.DEB.1.10.0812181140260.28725@p34.internal.lan> <A203
- 15AE59B5C34585629E258D76A97C0314BCDA@34093-C3-EVS3.exchange.rackspace.com> <1229640713.29109.1290832315@webmail.messagingengine.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: detection/correction of corruption with raid6
+Date: Fri, 19 Dec 2008 15:39:39 +1100
+Message-ID: <18763.9611.939807.824130@notabene.brown>
+References: <1229464713.6159.16.camel@localhost.localdomain>
+	<1229466317.22331.71.camel@localhost>
+	<1229550771.13544.20.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <1229640713.29109.1290832315@webmail.messagingengine.com>
+In-Reply-To: message from Piergiorgio Sartor on Wednesday December 17
 Sender: linux-raid-owner@vger.kernel.org
-To: Max Waterman <davidmaxwaterman@fastmail.co.uk>, Justin Piszcz <jpiszcz@lucidpixels.com>, John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBNYXggV2F0ZXJtYW4gW21haWx0
-bzpkYXZpZG1heHdhdGVybWFuQGZhc3RtYWlsLmNvLnVrXQ0KPiBTZW50OiBUaHVyc2RheSwgRGVj
-ZW1iZXIgMTgsIDIwMDggNDo1MiBQTQ0KPiBUbzogRGF2aWQgTGV0aGU7IEp1c3RpbiBQaXN6Y3o7
-IEpvaG4gUm9iaW5zb24NCj4gQ2M6IExpbnV4IFJBSUQNCj4gU3ViamVjdDogUkU6IHVwZ3JhZGUg
-YWR2aWNlIC8gRGlzayBkcml2ZSBmYWlsdXJlIHJhdGVzIC0gcmVhbCB3b3JsZA0KPiANCj4gDQo+
-IE9uIFRodSwgMTggRGVjIDIwMDggMTM6MTQ6MjcgLTA2MDAsICJEYXZpZCBMZXRoZSIgPGRhdmlk
-QHNhbnRvb2xzLmNvbT4NCj4gc2FpZDoNCj4gc25pcA0KPiA+DQo+ID4gU28gYWdncmVnYXRlIHdh
-bGstYXdheQ0KPiA+ICAtIEtlZXAgZGlza3MgaW4gMzYtNDIgZGVncmVlcyBDIGZvciBtYXhpbXVt
-IGxpZmUgdXAgdG8geWVhciAyLCB3aGVyZQ0KPiA+IHRoZXkgc2hvdWxkIGJlIHJ1biBjb29sZXIu
-DQo+ID4gIC0gTmV3IGRpc2tzIGFyZSA1eCBtb3JlIGxpa2VseSB0byBkaWUgaW4gZmlyc3QgMyBt
-b250aHMgd2l0aCBoaWdoDQo+IHZzLg0KPiA+IGxvdyB3b3JrbG9hZC4NCj4gDQo+IEkgd29uZGVy
-IGlmIHlvdSBjYW4gdXNlIHRoaXMgZmFjdCB0byBtYWtlIGRyaXZlIHdoaWNoIGFyZSBtb3JlIGxp
-a2VseQ0KPiB0bw0KPiBmYWlsIGxhdGVyLCBhY3R1YWxseSBmYWlsIHNvb25lci4NCj4gDQo+IEkn
-bSB0aGlua2luZyB0aGF0IEkgY291bGQgcnVuIG15IG5ldyBkcml2ZXMgaW4gYSBmcmlkZ2UgZm9y
-IGEgbW9udGggb3INCj4gdHdvIG9yIHRocmVlIC0gaWYgdGhleSBmYWlsLCBJJ2xsIHJldHVybiB0
-aGVtLCBlbHNlIEkgY2FuIGJlIG1vcmUgc3VyZQ0KPiB0aGV5J2xsIGxhc3QgdGhlaXIgZXhwZWN0
-ZWQgbGlmZSBhbmQgbm90IGdpdmUgbWUgYW55IHRyb3VibGUuDQo+IA0KPiBEb2VzIHRoYXQgbWFr
-ZSBhbnkgc2Vuc2U/DQo+IA0KPiBBbHNvLCBJIHNlZSBwZW9wbGUgcmVjb21tZW5kaW5nIGVudGVy
-cHJpc2UgZGlza3MsIHdoaWNoIG1ha2VzIG1lIHRoaW5rDQo+IHRoYXQgdGhvc2Ugc2FtZSBwZW9w
-bGUgaGF2ZSBmb3Jnb3R0ZW4gd2hhdCB0aGUgJ0knIHN0YW5kcyBmb3IgaW4NCj4gJ1JBSUQnLg0K
-PiBPZiBjb3Vyc2UsICdpbmV4cGVuc2l2ZScgaXMgcmVsYXRpdmUgLSBwcm9iYWJseSB0byBvbmUn
-cyBpbmNvbWUgYW5kIGl0DQo+IHNlZW1zIHNvbWUgcGVvcGxlIGFyZSBwYWlkIG1vcmUgdGhhbiBv
-dGhlcnMuLi4uaXQgYWxtb3N0IHN1Z2dlc3RzIHdlDQo+IHNob3VsZCBoYXZlIGFub3RoZXIgYWNy
-b255bSAtIFJBRENEIC0gcmVkdW5kYW50IGFycmF5IG9mIGRpcnQgY2hlYXANCj4gZGlza3MuIDop
-DQo+IA0KPiBNYXguDQoNCklmIGl0IGlzIHlvdXIgZGVzaXJlIHRvIGZhaWwgdGhlIGRyaXZlIGFz
-IHF1aWNrbHkgYXMgcG9zc2libGUsIHlvdSBkZWZpbml0ZWx5IG5lZWQgdGhhdCBlbnZpcm9ubWVu
-dGFsIGNoYW1iZXIsIGJ1dCBtb3JlIGltcG9ydGFudGx5IHRoZSByaWdodCBzb2Z0d2FyZSB0ZXN0
-IHN1aXRlLiBUaGUgYmlnLWJveCBSQUlEIHZlbmRvcnMgc3BlbmQgYSBsb3Qgb2YgbW9uZXkgZGV2
-ZWxvcGluZyANCnN0cmVzcyBlbnZpcm9ubWVudHMgc28gdGhleSB3ZWVkIG91dCB0aGUgb25lcyB0
-aGF0IGFyZSBsaWtlbHkgdG8gZmFpbCBiZWZvcmUgdGhleSBzaGlwLCBhbmQgdGhlDQpjb2RlIHRo
-ZXkgdXNlIGlzIGEgYmlnIHRyYWRlIHNlY3JldCBiZWNhdXNlIHRoaXMgZGlmZmVyZW50aWF0ZXMg
-dGhlIHRpZXItMXMgKEVNQywgTmV0QXBwLCBldGMuLikgZnJvbSANCmV2ZXJ5Ym9keSBlbHNlIHdo
-byBkb2Vzbid0IGhhdmUgZW5jbG9zdXJlcyB0aGF0IGNhbiBzdXJ2aXZlIGEgc2hvdGd1biBibGFz
-dCBvciBhIGRyb3AgdGVzdC4gIFRoDQoNCkl0IGlzIHB1YmxpYyBrbm93bGVkZ2UgdGhhdCBzdWRk
-ZW4gY2hhbmdlcyBpbiB0ZW1wZXJhdHVyZSB1bmRlciBoaWdoIElPUHMgJiBzZWVrcyBpcyBhIHJl
-YXNvbmFibGUgcGFydCBvZiANCmEgdGVzdCBzdWl0ZS4gIExhcmdlIGJsb2NrIGNvcGllcyBpc24n
-dCBzdHJlc3NmdWwuICBZb3Ugd2lsbCB3YW50IHRvIGNoYW5nZSBzb21lIG9mIHRoZSBwcm9ncmFt
-bWFibGUgZHJpdmUNCnNldHRpbmdzLCBidXQgd29uJ3QgdGVsbCB5b3Ugc3BlY2lmaWNzIGJlY2F1
-c2UgSSBhbSBub3QgYXQgbGliZXJ0eSB0byB0ZWxsIHlvdSB3aGF0IGFueSBwYXJ0aWN1bGFyIHZl
-bmRvciBkb2VzLg0KKEJ1dCBzb21lIHNldHRpbmdzIG1ha2UgYSBsb3Qgb2Ygc2Vuc2UgaWYgeW91
-IHJlYWQgdGhlIEFOU0kgc3BlY3MgYW5kIGRyaXZlIHZlbmRvcidzIHByb2R1Y3QgbWFudWFscyBh
-bmQgeW91IHB1dCAyKzINClRvZ2V0aGVyKS4NCg0KVmlicmF0aW9uIGlzIGdvb2QgdG9vLiAgRG9u
-J3QgdXNlIHlvdXIgZnJlZXplciBob3dldmVyLCB0aGVyZSBhcmUgYmV0dGVyIHdheXMgdG8gZ28u
-ICAgRm9yIGluc3RhbmNlLCBpZiB5b3Ugd2VyZSBsdWNreSBlbm91Z2ggdG8gZ2V0IGFuIE9tYWhh
-IHN0ZWFrcyBnaWZ0IHBhY2thZ2UgbGlrZSBtZSB5ZXN0ZXJkYXksIHRoZW4geW91IGhhdmUgYSAx
-MDAlIFN0eXJvZm9hbSBjaGVzdCB0aGF0IGlzIHBlcmZlY3QgZm9yIHlvdXIgbmVlZHMuICBZb3Ug
-Y2FuIHN0aWNrIGluIHNvbWUgZHJ5IGljZSwgY2FydmUgb3V0IGEgaG9sZSBmb3IgYSBoYWlyIGRy
-eWVyIHRvIGZpdCBpbnRvLCBhbmQgcHV0IGluIGEgZmFuIGluIHRoZSBib3R0b20gc28geW91IGNh
-biBlcXVhbGl6ZSBwcmVzc3VyZS4gICAgWW91IHdpbGwgd2FudCB0byBjcmVhdGUgc29tZSB2aWJy
-YXRpb25zLiAgTWF5YmUgdXNlIGEgbWFzc2FnZSBwYWQsIG9yIHlvdSBjYW4gZWFzaWx5IGNyZWF0
-ZSBlbm91Z2ggc29uaWMgcHJlc3N1cmUgaWYgeW91IGhhdmUgYSB0ZWVuYWdlIGRhdWdodGVyIHdp
-dGggYSBjZWxsIHBob25lLg0KDQpJdCB3b24ndCBiZSBuZWFybHkgYXMgZ29vZCBhcyBhIHRpZXIt
-MS4gIFRoZXkganVzdCBuZWVkIDQ4IGhvdXJzIHdpdGggdGhlaXIgZXF1aXBtZW50IHRvIGRvIGJl
-dHRlciB0aGFuIHdoYXQgeW91IGNhbiBnZXQgd2l0aCBhIDMgbW9udGhzIHdvcnRoIG9mIHVzYWdl
-LiAgICBTdGlsbCBwZXJoYXBzIGEgd2VlayBpbiB0aGUgU3R5cm9mb2FtIGljZSBjaGVzdCB3aXRo
-IHJhbmRvbSBzbWFsbCBibG9jayBJL08NCldpbGwgZ2V0IHlvdSBjbG9zZSBlbm91Z2guICAgDQoN
-CkRhdmlkDQoNCg==
+On Wednesday December 17, piergiorgio.sartor@nexgo.de wrote:
+> On Tue, 2008-12-16 at 23:25 +0100, Redeeman wrote:
+> [...]
+> > > Why a RAID system might have inconsistencies?
+> > > Why do we have a "check" command at all, to run weekly or monthly?
+> > As previously stated in discussion, while most bitflips etc does not
+> > happen on disk(apparently), they do happen, whether its in ram, pci,
+> > controller etc...
+> 
+> Ah! You spoiled it! :-)
+> 
+> Actually I was waiting for an answer from Neil Brown.
+> 
+> Because I'm under the impression that if it is not the HD,
+> it does not count... See below...
+
+Suppose we agree that bit flips don't happen (undetected) on drive
+media.  But that bit flips can happen elsewhere (memory.  IO Buss
+etc).
+
+And then suppose we discover that a bit-flip has happened.  What does
+that tell us?
+Maybe it tells us that our hardware is dodgey.  So it cannot be
+trusted to reliably do anything we tell it.  So maybe we shouldn't
+tell it to do anything. ??
+
+And when we find a corruption, we clear cannot know if it is corrupt
+on disk (a previous write went bad) or just in memory (e.g. a recent
+read was bad).
+In the latter case, writing anything to disk is probably the wrong
+thing to do.  In the former case it might be a good thing to do - if
+we can be fairly sure that the error happens very rarely.
+And of course we cannot know if it was due to a bad read or a bad
+write.  So the safe course is to not write anything to disk.
+
+Where does that leave us?
+
+About the only thing that makes sense is to always read all the blocks
+in a stripe, and to perform a consistency test before responding to
+any read request.  If an inconsistency is found, we log what we know,
+and only return data if we have some reason to believe something is
+still valid (e.g. a majority vote for raid1).
+
+And for raid5/6, a write would require:
+  read whole stripe
+  check consistency
+  copy in new data
+  update parity
+  write out changed blocks
+
+This is going to be a substantial slowdown.
+
+And does it really increase your data security?  or is it like putting
+a lock on your front door but not on your back door?
+
+I guess it would provide some protection against low-frequency errors
+in the controller/cable/drive.
+
+But given the high cost and the fairly low value, I wonder how many
+people would really use it....
+
+> 
+> Final point. More or less one year ago the same topic popped up,
+> with similar discussion.
+> At the end of the thread someone was asking if patches are
+> accepted in order to implement this feature.
+> I could not find any answer to that question in the archive.
+> 
+> What is the idea? Are patches accepted? Rejected by default?
+
+By default, patches are reviewed and discussed.  If they then get
+revised and tested and appear to be sensible and useful they will
+probably get accepted eventually.
+
+A change of this magnitude would almost certainly need to go through
+several iterations of revision and have substantial testing before
+being accepted.
+
+NeilBrown
