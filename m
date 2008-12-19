@@ -1,63 +1,81 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: Re: RAID 6 recovery (it's not looking good)
-Date: Fri, 19 Dec 2008 13:36:33 +0100
-Message-ID: <20081219123633.GA19688@lanczos.q-leap.de>
-References: <20081216235957.GA458@lanczos.q-leap.de> <C571442A.BA18%groups@email.iain.rauch.co.uk>
+From: Redeeman <redeeman@metanurb.dk>
+Subject: Re: detection/correction of corruption with raid6
+Date: Fri, 19 Dec 2008 14:10:35 +0100
+Message-ID: <1229692235.22331.134.camel@localhost>
+References: <33141855.1229676046422.JavaMail.ngmail@webmail11.arcor-online.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <C571442A.BA18%groups@email.iain.rauch.co.uk>
+In-Reply-To: <33141855.1229676046422.JavaMail.ngmail@webmail11.arcor-online.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Iain Rauch <groups@email.iain.rauch.co.uk>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: piergiorgio.sartor@nexgo.de
+Cc: neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Dec 19, 2008 at 12:29:30PM +0000, Iain Rauch wrote:
-> > I'm still tired (now even more ;-) ). Just check again if /dev/sdu really
-> > was the latest to fail and if so, clone this one.
-> > I also suggest to reassemble it without an immediate raid-rebuild.
-> > First check your data and only then add a new drives to the raid.
-> > Once you start a raid-rebuild.
-> > there is no way to go back. We recently also had the problem of three
-> > failed disks  but we only could get back the data by not assembling the
-> > array with the latest failed disk, but with the 2nd latest (don't ask why).
-> > 
-> > So in short
-> > 
-> > 1) clone disk
-> > 
-> > 2) mdadm --assemble --force /dev/mdX /dev/sda1 /dev/sdb1 ... /dev/sdx1
-> > 
-> > ===> Use only **22** devices here.
-> > 
-> > 3) Mount and check data, maybe even a read-only fsck
-> > 
-> > 4) Add two new disks.
-> > 
-> > 
-> > Hope it helps,
-> > Bernd
+On Fri, 2008-12-19 at 09:40 +0100, piergiorgio.sartor@nexgo.de wrote:
+> Hi,
 > 
-> Well I cloned the disk and force started the array with 22 drives. I mounted
-> the file system read-only and it did appear to be intact :)
+> thanks for the answer.
+> I've still some comments on the topic, see below.
+> 
+> > Suppose we agree that bit flips don't happen (undetected) on drive
+> > media.  But that bit flips can happen elsewhere (memory.  IO Buss
+> > etc).
+> > 
+> > And then suppose we discover that a bit-flip has happened.  What does
+> > that tell us?
+> > Maybe it tells us that our hardware is dodgey.  So it cannot be
+> > trusted to reliably do anything we tell it.  So maybe we shouldn't
+> > tell it to do anything. ??
+> 
+> Maybe I should try to clarify the concept.
+> There are *two* use cases.
+> One is the "check" and one is the "repair".
+> As I already wrote, I do agree that "repair" needs some deeper
+> thinking. It is easy to see cases where it could produce more
+> damages.
+> The "check" case is another story.
+> In case of RAID-6 I would like, as RFE, to have in the logs some
+> report on which "drive" or "data path" the mismatch occurs, when
+> detectable.
+> So, if the mismatch count says there are 1024 mismatches, then
+> would be nice to know if they belong all to the same drive or not.
+> In this case, it would be possible to fail/remove that one and
+> check the hardware (change drive/cable/connector/etc.).
+> 
+> Ideally, at the end of the "check", the log should report how
+> many mismatches, how many are "undeterminable" (multiple
+> drive), how many could belong to a specific drive.
+> This will help to to diagnose a problem, maybe reported by
+> the CRC in the filesystem.
 
-I'm glad to hear that.
+Agreed :)
+
+> This is for the "check", about the "repair", the only possible
+> change I could see is to offer the user, and we could check
+> in this mailing list how many would like to have the possibility,
+> the option to "reset the parity" of the array or "recalculate the
+> data", with the warning that the second one can do more
+> damage than already has.
+Yes, there is ofcourse the possibility to do damage, but i think if its
+2 vs 1, thats something most people would bet on, atleast if its
+multiple occourances all with the same "1".
+
+:)
 
 > 
-> The problem is I cloned the failed drive to a 1.5TB Seagate, and it has the
-> freezing issue. After 12h of rebuilding (out of 50) that drive got kicked.
-> I'm gonna see if updating the FW on the drive helps, but otherwise I'll just
-> have to get another decent drive.
+> Conclusion, for me, is that the "check" should be more
+> clever, with RAID-6, and "repair/resync" *might* be more
+> flexible (with warnings).
+
+
 > 
-> Is there any way to have mdadm be more patient and not kick the drive, or
-> let me put it back in and continue the rebuild of another drive? I don't
-> believe the drive will operate for 50h straight.
+> I take the opportunity to wish you all Merry Christmas
+> and Happy New Year.
 
-I think this would continue the rebuild if you would use bitmaps. You may
-add bitmaps by using "mdadm --grow --bitmap=internal /dev/mdX", but I'm not 
-sure if it will work on a degrade md device. At least it won't work during
-rebuild phase.
+And to you too!
+> 
+> bye,
+> 
 
-Cheers,
-Bernd
