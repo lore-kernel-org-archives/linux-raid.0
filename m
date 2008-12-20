@@ -1,40 +1,30 @@
-From: Wolfgang Denk <wd@denx.de>
-Subject: Re: Supermicro AOC-SAT2-MV8
-Date: Sat, 20 Dec 2008 00:10:57 +0100
-Message-ID: <20081219231057.08160834B04E@gemini.denx.de>
-References: <C571C6FB.BA32%groups@email.iain.rauch.co.uk>
+From: "Jon Nelson" <jnelson-linux-raid@jamponi.net>
+Subject: can you help explain some --examine output to me?
+Date: Fri, 19 Dec 2008 18:34:10 -0600
+Message-ID: <cccedfc60812191634s74d77322pae0def691388c36e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <C571C6FB.BA32%groups@email.iain.rauch.co.uk>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Iain Rauch <groups@email.iain.rauch.co.uk>
-Cc: Max Waterman <davidmaxwaterman@fastmail.co.uk>, LinuxRaid <linux-raid@vger.kernel.org>
+To: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Dear Iain Rauch,
+As part of the output from --explain (on a raid1 with a 1.0 metadata),
+I see this:
 
-In message <C571C6FB.BA32%groups@email.iain.rauch.co.uk> you wrote:
->
-> If you have PCIe slots (which is likely if the board is less than a couple
+    Array Slot : 3 (failed, failed, 0, 1)
+   Array State : uU 2 failed
 
-But the Supermicro card is a PCI-X card - AFAIK there are no PCIe
-versions available (yet?).
+I read the first line as "This device is using slot 3. slot 0 is
+failed, slot 1 is failed, slot 2 is RaidDevice 0, slot 3 is RaidDevice
+1" where RaidDevice is the same as in the output for --detail. Is that
+correct?
 
-> of years old), you are better to use them as they are faster than PCI/PCI-X.
+The second line is more opaque. What to little-u and big-u mean? Does
+"2 failed" mean the raid thinks two devices have failed?
 
-Ummm. It depends. Throughput can be hight, but I think latencies  are
-higher,  too.  So the actual performance depends on your system load.
-If you have enough small requests PCI-X may even be faster.
-
-Best regards,
-
-Wolfgang Denk
 
 -- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-Living on Earth may be expensive, but it includes an annual free trip
-around the Sun.
+Jon
