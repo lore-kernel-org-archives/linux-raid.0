@@ -1,70 +1,64 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: can you help explain some --examine output to me?
-Date: Sat, 20 Dec 2008 16:15:40 +0100
-Message-ID: <20081220151540.GA4109@rap.rap.dk>
-References: <cccedfc60812191634s74d77322pae0def691388c36e@mail.gmail.com> <05e7e5a941b9af88462a85af4d4efc33.squirrel@neil.brown.name>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Read errors and SMART tests
+Date: Sat, 20 Dec 2008 21:46:20 +0000
+Message-ID: <494D67AC.3060008@dgreaves.com>
+References: <20081220013043.GM1749@cubit> <A20315AE59B5C34585629E258D76A97C031B1B62@34093-C3-EVS3.exchange.rackspace.com> <20081220052244.GN1749@cubit> <A20315AE59B5C34585629E258D76A97C031B1B64@34093-C3-EVS3.exchange.rackspace.com> <20081220090909.GO1749@cubit>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <05e7e5a941b9af88462a85af4d4efc33.squirrel@neil.brown.name>
+In-Reply-To: <20081220090909.GO1749@cubit>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Jon Nelson <jnelson-linux-raid@jamponi.net>, LinuxRaid <linux-raid@vger.kernel.org>
+To: Kevin Shanahan <kmshanah@disenchant.net>
+Cc: David Lethe <david@santools.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Dec 20, 2008 at 12:16:01PM +1100, NeilBrown wrote:
-> On Sat, December 20, 2008 11:34 am, Jon Nelson wrote:
-> > As part of the output from --explain (on a raid1 with a 1.0 metadata),
-> > I see this:
-> >
-> >     Array Slot : 3 (failed, failed, 0, 1)
-> >    Array State : uU 2 failed
-> >
-> > I read the first line as "This device is using slot 3. slot 0 is
-> > failed, slot 1 is failed, slot 2 is RaidDevice 0, slot 3 is RaidDevice
-> > 1" where RaidDevice is the same as in the output for --detail. Is that
-> > correct?
-> >
-> > The second line is more opaque. What to little-u and big-u mean? Does
-> > "2 failed" mean the raid thinks two devices have failed?
-> >
+Kevin Shanahan wrote:
+> Of the remaining drives, SMART attributes for /dev/sd[cghijkl] all show:
 > 
-> Yes, it is rather cryptic...
+>   196 Reallocated_Event_Count 0x0032   100   100   000    Old_age   Always       -       0
+>   197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always       -       0
 > 
-> Every device in a 1.x array is assigned a 'slot' number.  This number is
-> stable - it never changes.
+> /dev/sde shows:
 > 
-> Each device in the array also has a 'role' number indicating its current
-> role in the array, which is either to be a spare or to have a position
-> (0, 1, ...) in the array.
+>   196 Reallocated_Event_Count 0x0032   100   100   000    Old_age   Always       -       0
+>   197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always       -       3
 > 
-> The output you produces says that this device occupies slot 3.
-> It then notes that:
->   the device which occupied slot 0 has failed
->   the device which occupied slot 1 has failed
->   the device which occupies slot 2 has role 0
->   the device which occupies slot 3 has role 1
+> /dev/sdf shows:
 > 
-> Then it shows you the state which indicated how the different
-> roles are going.
->    uU
-> means that both roles are 'up', and the 'this' device has the second
-> role (capital U for 'this' device).
-> Two devices have previously failed.
+>   196 Reallocated_Event_Count 0x0032   100   100   000    Old_age   Always       -       2
+>   197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always       -       0
 > 
-> I should probably get rid of that '2 failed' bit, it isn't helpful.
-> I should probably report 'empty' rather than 'failed' in the 'Array Slot'
-> line.
+> Unfortunately the original /dev/sdd isn't currently attached, but I'll
+> hook that up on Monday and check. I'd expect to see some high numbers
+> there.
 > 
-> Note that if you fail a devices, remove it, then add it back in such that
-> it doesn't appear to be a re-add, it will be treated like a new
-> device and get a new slot number.  (after all the old device was faulty,
-> this one isn't so it must be a new device ?).
-> I should probably get it to re-use the slot number in that case.
+>> These errors could be
+>> Result of something relatively benign, like unexpected power loss.
 > 
-> And I should probably document some of this.
+> Sorry, are you saying that about the errors from libata layer or just
+> the errors from the md layer?
 
-Oh, well, you just did :-). I added this to the mdadm FAQ wiki page.
+I wouldn't dream of contradicting David and I'm sure you've got nothing to worry
+about. What's a few bad blocks between friends anyway :)
 
-keld
+I will say that I have had very similar problems.
+
+I used ddrescue to read the area around the block until it read without error,
+and then re-wrote it. A subsequent smartctl -tlong /dev/sdX would then show no
+errors.
+
+In my experience the bad blocks returned regularly and I became very familiar
+indeed with forced rebuilds of arrays, array re-creation and other mdadm
+incantations as the errors hit the system.
+
+I will say that I've returned a *lot* of these under RMA (after discussions with
+Samsung engineers).
+
+Any drive that returns *fail* for a built-in self-test now gets 1 chance and is
+then RMAed.
+
+David
+
+-- 
+"Don't worry, you'll be fine; I saw it work in a cartoon once..."
