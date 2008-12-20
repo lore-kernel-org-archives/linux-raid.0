@@ -1,102 +1,62 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: Read errors and SMART tests
-Date: Fri, 19 Dec 2008 22:13:14 -0600
-Message-ID: <A20315AE59B5C34585629E258D76A97C031B1B62@34093-C3-EVS3.exchange.rackspace.com>
-References: <20081220013043.GM1749@cubit>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: Supermicro AOC-SAT2-MV8
+Date: Sat, 20 Dec 2008 09:17:42 +0400
+Message-ID: <494C7FF6.6050100@wasp.net.au>
+References: <C571CD8F.BA37%groups@email.iain.rauch.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <20081220013043.GM1749@cubit>
+In-Reply-To: <C571CD8F.BA37%groups@email.iain.rauch.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kevin Shanahan <kmshanah@disenchant.net>, linux-raid@vger.kernel.org
+To: Iain Rauch <groups@email.iain.rauch.co.uk>
+Cc: Max Waterman <davidmaxwaterman@fastmail.co.uk>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Kevin Shanahan
-> Sent: Friday, December 19, 2008 7:31 PM
-> To: linux-raid@vger.kernel.org
-> Subject: Read errors and SMART tests
+Iain Rauch wrote:
+>> OK, so it sounds like my suspicions were correct - I have PCI/PCIe.
+>>
+>> You say I would be better to use PCIe, but the card is PCI-X. Can I use
+>> PCI-X in a PCIe slot?
 > 
-> Hi,
-> 
-> Just a quick question about SMART tests :-
-> 
-> I have a Samsung drive returning read errors, e.g.:
-> 
-> Dec 20 08:59:24 hermes kernel: ata4.00: exception Emask 0x0 SAct 0x1
-> SErr 0x0 action 0x0
-> Dec 20 08:59:24 hermes kernel: ata4.00: irq_stat 0x40000008
-> Dec 20 08:59:24 hermes kernel: ata4.00: cmd
-> 60/80:00:3f:0e:50/00:00:24:00:00/40 tag 0 ncq 65536 in
-> Dec 20 08:59:24 hermes kernel:          res
-> 41/40:00:61:0e:50/00:00:24:00:00/40 Emask 0x409 (media error) <F>
-> Dec 20 08:59:24 hermes kernel: ata4.00: status: { DRDY ERR }
-> Dec 20 08:59:24 hermes kernel: ata4.00: error: { UNC }
-> Dec 20 08:59:24 hermes kernel: ata4.00: configured for UDMA/133
-> Dec 20 08:59:24 hermes kernel: ata4: EH complete
-> Dec 20 08:59:24 hermes kernel: sd 3:0:0:0: [sdd] 1953525168 512-byte
-> hardware sectors (1000205 MB)
-> Dec 20 08:59:24 hermes kernel: sd 3:0:0:0: [sdd] Write Protect is off
-> Dec 20 08:59:24 hermes kernel: sd 3:0:0:0: [sdd] Mode Sense: 00 3a 00
-> 00
-> Dec 20 08:59:24 hermes kernel: sd 3:0:0:0: [sdd] Write cache: enabled,
-> read cache: enabled, doesn't support DPO or FUA
-> 
-> So, I ran the short (and long) selftest and it showed read
-> failures. Then I put in a new drive to replace it and ran the short
-> selftest again - this one is showing read errors also:
-> 
-> === START OF READ SMART DATA SECTION ===
-> SMART Self-test log structure revision number 0
-> Warning: ATA Specification requires self-test log structure revision
-> number = 1
-> Num  Test_Description    Status                  Remaining
-> LifeTime(hours)  LBA_of_first_error
-> # 1  Short offline       Completed: read failure       20%      2572
-> 294961
-> # 2  Short offline       Aborted by host               20%      2572
-> -
-> 
-> I'm guessing this is just bad luck, i.e. drives from the same bad
-> batch. Erm, so my question - Am I right in assuming that the SMART
-> self test is not influenced in any way by bad cables, etc.? If the
-> drive returns read errors on it's self-test the error is within the
-> drive itself, right?
-> 
-> Thanks,
-> Kevin.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> No, but if you would like better performance (and can afford it), a PCIe
+> card is the better option. Depending on your usage and requirements, PCI-X
+> will be fine, but as mentioned it may not physically fit in your particular
+> motherboard. You need to check what slots you do have as PCIe come in a
+> variety of sizes also.
 
-This shows nothing more than you having a single bad block.  You have a
-1TB drive, for crying
-out loud, they can't all stay perfect ;)
+That is painfully true. I have a board with a pair of 16x and a pair of 1x slots.
+It also has 2 PCI-X slots and I was about to purchase the board you mention in the subject line, but 
+after a bit of digging I came up with these little beauties instead.
 
-This is no reason to assume the disk is bad, or that it has anything to
-do with cabling.   When you wrote you have 
-read "errors" .. does that mean you have dozens, hundreds of individual
-unreadable blocks, or 
-could you just have just this one bad block.
+http://www.startech.com/item/PEXSATA24E-4-Port-PCI-Express-x4-SATA-II-Card.aspx
 
-Why not use dd to do raw reads from /dev/sdd, send output to /dev/null,
-and start at the next LBA, if dd
-has another read error, it will tell you, then repeat process and go on.
-I am assuming you aren't using
-any software RAID1/5/6, so just fix the bad blocks by using dd to write
-/dev/zero to the bad block(s).
+I'm using them in a server, so I used a PCI graphics card to free up both PCIe 16x slots and popped 
+two of these in. They appear to be nicely supported and go like stink.
 
-When you write to the block the disk will either map a reserved block to
-it, or just correct the ECC w/o remapping. It depends on root cause and
-more details that you can't get without running some more sophisticated
-software.
+I also used a dual port SIL-3132 board in one of the PCIe 1x slots to fill out my 10 ports. It to is 
+extremely well supported.
 
-David
+After I placed the order with Startech, I located identical boards under a "fujitech" branding 
+(Cheap far-eastern supplier) which were/are *identical* in every respect excepting they only cost 
+about $90 each. Cheap and reliable (I picked up a couple of extras as spares).
 
+I was replacing 3 x Promise SATA150-TX cards (4 port) which are just flaky in multi-card 
+configurations on anything other than an old PCI 33Mhz bus and I've been very happy with the results.
 
+Sonnet also make a 4 port PCIe card using the same chip, but its almost twice the price and uses 
+pretty much the same hardware.
+
+These Marvell 7042 chips are great. Cheers Mark!!
+
+You can use a PCI-X card in a PCI slot, but I believe you'll be disappointed with the results.
+
+If you only need a couple of ports and have a PCIe 1x slot available, the SIL-3132 cards are 
+available everywhere and are really pretty good.
+
+Regards,
+Brad
+-- 
+Dolphins are so intelligent that within a few weeks they can
+train Americans to stand at the edge of the pool and throw them
+fish.
