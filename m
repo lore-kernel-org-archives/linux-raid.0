@@ -1,64 +1,63 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: Read errors and SMART tests
-Date: Sat, 20 Dec 2008 21:46:20 +0000
-Message-ID: <494D67AC.3060008@dgreaves.com>
-References: <20081220013043.GM1749@cubit> <A20315AE59B5C34585629E258D76A97C031B1B62@34093-C3-EVS3.exchange.rackspace.com> <20081220052244.GN1749@cubit> <A20315AE59B5C34585629E258D76A97C031B1B64@34093-C3-EVS3.exchange.rackspace.com> <20081220090909.GO1749@cubit>
+From: pg_mh@sabi.co.UK (Peter Grandi)
+Subject: Re: 12x performance drop on md/linux+sw raid1 due to barriers [xfs]
+Date: Sun, 21 Dec 2008 19:16:32 +0000
+Message-ID: <18766.38416.161254.375311@tree.ty.sabi.co.uk>
+References: <alpine.DEB.1.10.0812060928030.14215@p34.internal.lan>
+	<1229225480.16555.152.camel@localhost>
+	<18757.4606.966139.10342@tree.ty.sabi.co.uk>
+	<200812141912.59649.Martin@lichtvoll.de>
+	<18757.33373.744917.457587@tree.ty.sabi.co.uk>
+	<494971B2.1000103@tmr.com> <494A07BA.1080008@mailcan.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20081220090909.GO1749@cubit>
-Sender: linux-raid-owner@vger.kernel.org
-To: Kevin Shanahan <kmshanah@disenchant.net>
-Cc: David Lethe <david@santools.com>, linux-raid@vger.kernel.org
+Return-path: <xfs-bounces@oss.sgi.com>
+In-Reply-To: <494A07BA.1080008@mailcan.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Sender: xfs-bounces@oss.sgi.com
+Errors-To: xfs-bounces@oss.sgi.com
+To: Linux RAID <linux-raid@vger.kernel.org>, Linux XFS <xfs@oss.sgi.com>
 List-Id: linux-raid.ids
 
-Kevin Shanahan wrote:
-> Of the remaining drives, SMART attributes for /dev/sd[cghijkl] all show:
-> 
->   196 Reallocated_Event_Count 0x0032   100   100   000    Old_age   Always       -       0
->   197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always       -       0
-> 
-> /dev/sde shows:
-> 
->   196 Reallocated_Event_Count 0x0032   100   100   000    Old_age   Always       -       0
->   197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always       -       3
-> 
-> /dev/sdf shows:
-> 
->   196 Reallocated_Event_Count 0x0032   100   100   000    Old_age   Always       -       2
->   197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always       -       0
-> 
-> Unfortunately the original /dev/sdd isn't currently attached, but I'll
-> hook that up on Monday and check. I'd expect to see some high numbers
-> there.
-> 
->> These errors could be
->> Result of something relatively benign, like unexpected power loss.
-> 
-> Sorry, are you saying that about the errors from libata layer or just
-> the errors from the md layer?
+[ ... ]
 
-I wouldn't dream of contradicting David and I'm sure you've got nothing to worry
-about. What's a few bad blocks between friends anyway :)
+>> What really bothers me is that there's no obvious need for
+>> barriers at the device level if the file system is just a bit
+>> smarter and does it's own async io (like aio_*), because you
+>> can track writes outstanding on a per-fd basis,
 
-I will say that I have had very similar problems.
+> The drive itself may still re-order writes, thus can cause
+> corruption if halfway the power goes down. [ ... ] Barriers need
+> to travel all the way down to the point where-after everything
+> remains in-order. [ ... ] Whether the data has made it to the
+> drive platters is not really important from a barrier point of
+> view, however, iff part of the data made it to the platters, then
+> we want to be sure it was in-order. [ ... ]
 
-I used ddrescue to read the area around the block until it read without error,
-and then re-wrote it. A subsequent smartctl -tlong /dev/sdX would then show no
-errors.
+But this discussion is backwards, as usual: the *purpose* of any
+kind of barriers cannot be just to guarantee consistency, but also
+stability, because ordered commits are not that useful without
+commit to stable storage.
 
-In my experience the bad blocks returned regularly and I became very familiar
-indeed with forced rebuilds of arrays, array re-creation and other mdadm
-incantations as the errors hit the system.
+If barriers guarantee transaction stability, then consistency is
+also a consequence of serial dependencies among transactions (and
+as to that per-device barriers are a coarse and very underoptimal
+design).
 
-I will say that I've returned a *lot* of these under RMA (after discussions with
-Samsung engineers).
+Anyhow, barriers for ordering only have been astutely patented
+quite recently:
 
-Any drive that returns *fail* for a built-in self-test now gets 1 chance and is
-then RMAed.
+  http://www.freshpatents.com/Transforming-flush-queue-command-to-memory-barrier-command-in-disk-drive-dt20070719ptan20070168626.php
 
-David
+Amazing new from the patent office.y
 
--- 
-"Don't worry, you'll be fine; I saw it work in a cartoon once..."
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
