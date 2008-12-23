@@ -1,36 +1,45 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 2.6.27.10: cannot mount xfs filesystem partition (12TiB) after
-	reboot
-Date: Tue, 23 Dec 2008 09:54:31 -0500
-Message-ID: <20081223145431.GA31057@infradead.org>
-References: <alpine.DEB.1.10.0812230829420.4817@p34.internal.lan> <20081223134247.GA17750@infradead.org> <alpine.DEB.1.10.0812230950120.7572@p34.internal.lan>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: WD GreenPower & Load_Cycle_Count
+Date: Tue, 23 Dec 2008 16:49:04 +0100 (CET)
+Message-ID: <alpine.DEB.1.10.0812231642390.17215@uplift.swm.pp.se>
+References: <20081223145334.GA17496@sewage.raw-sewage.fake>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.1.10.0812230950120.7572@p34.internal.lan>
+In-Reply-To: <20081223145334.GA17496@sewage.raw-sewage.fake>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-raid@vger.kernel.org, bug-parted@gnu.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Matt Garman <matthew.garman@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Dec 23, 2008 at 09:50:26AM -0500, Justin Piszcz wrote:
-> 
-> 
-> On Tue, 23 Dec 2008, Christoph Hellwig wrote:
-> 
-> > On Tue, Dec 23, 2008 at 08:36:17AM -0500, Justin Piszcz wrote:
-> >> Kernel = 2.6.27.10
-> >> Parted = 1.8.8.git.2008.03.24-11.1
-> >>
-> >> Can anyone help explain the problem here?
-> >
-> > Can you post your kernel .config file?
-> >
-> 
-> http://home.comcast.net/~jpiszcz/20081223/config-2.6.27.10.txt
+On Tue, 23 Dec 2008, Matt Garman wrote:
 
-Without CONFIG_EFI_PARTITION the kernel won't find your gpt labels.  See 
+> Anyway, I haven't been able to find a conclusive answer to this on the 
+> web.  Just wondering if anyone on the list has any more info.
 
-	http://xfs.org/index.php/XFS_FAQ#Q:_Why_does_my_.3E_2TB_XFS_partition_disappear_when_I_reboot_.3F
+I bought a couple of drives ~8 months ago. They started racking up 
+Load_Cycle_Counts, so I used wdidle3.exe to shut it off (I think they were 
+up to 8k load cycle counts in the first couple of days).
 
+I then purchased two new drives 1-2 months ago. Didn't do anything to 
+them, but they seem to have different factory settings:
+
+$ sudo smartctl -a /dev/sdb | egrep 'Power_On|Load_Cycle'
+   9 Power_On_Hours          0x0032   099   099   000    Old_age   Always       -       1031
+193 Load_Cycle_Count        0x0032   197   197   000    Old_age   Always       -       11184
+$ sudo smartctl -a /dev/sdc | egrep 'Power_On|Load_Cycle'
+   9 Power_On_Hours          0x0032   093   093   000    Old_age   Always       -       5329
+193 Load_Cycle_Count        0x0032   188   188   000    Old_age   Always       -       38070
+
+sdb is one of the newer drives, sdc is one of the older ones.
+
+So wdidle3.exe seems to shut off the mechanism that causes 
+Load_Cycle_Count to rise quickly, more agressively than the new factory 
+defaults, but the new factory defaults at least mean the drive gets an 
+estimated life time of 3 years before they reach 300k Load_Cycle_Counts, 
+in my environment.
+
+Both drives show same firmware and model numbers.
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
