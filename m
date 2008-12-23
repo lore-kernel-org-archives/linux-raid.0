@@ -1,28 +1,26 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 2.6.27.10: cannot mount xfs filesystem partition (12TiB) after
-	reboot
-Date: Tue, 23 Dec 2008 11:21:54 -0500
-Message-ID: <20081223162154.GA30287@infradead.org>
-References: <alpine.DEB.1.10.0812230829420.4817@p34.internal.lan> <20081223134247.GA17750@infradead.org> <alpine.DEB.1.10.0812230950120.7572@p34.internal.lan> <20081223145431.GA31057@infradead.org> <alpine.DEB.1.10.0812231043540.9812@p34.internal.lan> <49510BEF.2090209@sandeen.net>
+From: "David Rees" <drees76@gmail.com>
+Subject: Re: WD GreenPower & Load_Cycle_Count
+Date: Tue, 23 Dec 2008 11:14:26 -0800
+Message-ID: <72dbd3150812231114u3a310eccm5b35309b9910170c@mail.gmail.com>
+References: <20081223145334.GA17496@sewage.raw-sewage.fake>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20081223145334.GA17496@sewage.raw-sewage.fake>
 Content-Disposition: inline
-In-Reply-To: <49510BEF.2090209@sandeen.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Christoph Hellwig <hch@infradead.org>, linux-raid@vger.kernel.org, bug-parted@gnu.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Matt Garman <matthew.garman@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Dec 23, 2008 at 10:03:59AM -0600, Eric Sandeen wrote:
-> Justin Piszcz wrote:
-> 
-> 
-> > Better question as well, need to find out if KNOPPIX or distro-CDs support 
-> > this option, if one to boot into recovery and this option was not 
-> > enabled.. that would not be fun.
-> 
-> I'd think most do... Fedora does, at least.
+On Tue, Dec 23, 2008 at 6:53 AM, Matt Garman <matthew.garman@gmail.com> wrote:
+> The gist is that if you look at the SMART attributes on these
+> drives, chances are you'll see a really high Load_Cycle_Count.  I do
+> for my WD GP drives.
 
-It might be time to have gpt partition support in the x86 defconfig, and
-without CONFIG_PARTITION_ADVANCED.
+FWIW, the two WD5000AACS drives I just bought don't exhibit this
+behavior. After 20 days of operation, they are only showing 9-10 load
+cycles.
+
+-Dave
