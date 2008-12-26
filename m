@@ -1,60 +1,58 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: RE: mismatch_cnt, random bitflips, silent corruption(?), mdadm/sw
- raid[156]
-Date: Fri, 26 Dec 2008 04:07:19 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0812260401550.24520@p34.internal.lan>
-References: <alpine.DEB.1.10.0812250435260.12329@p34.internal.lan> <A20315AE59B5C34585629E258D76A97C031B2765@34093-C3-EVS3.exchange.rackspace.com>
+From: "Greg Freemyer" <greg.freemyer@gmail.com>
+Subject: RFC: detection of silent corruption via ATA long sector reads
+Date: Fri, 26 Dec 2008 16:44:57 -0500
+Message-ID: <87f94c370812261344s3f70de25r4d132101d2247e00@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A20315AE59B5C34585629E258D76A97C031B2765@34093-C3-EVS3.exchange.rackspace.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: David Lethe <david@santools.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, smartmontools-support@lists.sourceforge.net, Alan Piszcz <ap@solarrain.com>
+To: Redeeman <redeeman@metanurb.dk>
+Cc: piergiorgio.sartor@nexgo.de, neilb@suse.de, linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Mark Lord <liml@rtr.ca>
 List-Id: linux-raid.ids
 
+All,
 
+On the mdraid list, there was a recent thread about using raid
+functionality to detect / repair silent corruption.
 
-On Thu, 25 Dec 2008, David Lethe wrote:
+The issues brought up were that a lot of silent data corruption occurs
+when cables, controllers, power supplies, ram, cache, etc. goes bad.
 
->> -----Original Message-----
->> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
->>
->> Other options?
->>
->> How do others maintain data integrity?  Just not worry about it until
->> you have
->> to, rely on backups.. or?
->>
->> Justin.
->
-> 4GB files using gpg and tar in the '90s?
-Sorry, to clarify they were ~650-700MiB tars but combined to around a ~4GiB
-file later on (from the late 90s), CD's were cheap and yeah 2GiB limit.  But
-later on to consolidate I moved them to 4GiB DVDs and thus tarred them together
-and then gpg on top of that.
+It made me think about another option for detecting silent corruption
+I have not seen discussed, but maybe I missed it.
 
-> I know gpg had 2GB file-related bugs as late as 2005 that caused corruption, and
-> there was a heck of a lot of 2GB-related bugs in 2.2 and 2.4 kernels which you
-> must have been running back then.  You are also using later versions of these
-> programs on the new systems, and I'd be willing to bet they compound the problem by
-> assuming there was no corruption to begin with.
-Once I restored the data from DVDs, I was able to restore *all* data 
-successfully.
+Aiui, the ATA spec allows for the reading of a long sector as well as
+the normal 512 byte sector.  When you get a long sector you also get
+the CRC (or whatever checksum data there is on the disk that allows
+the drive itself to detect media errors).
 
->
-> I use:
-> - gzipped tar archives, but I gzip the individual files, rather than the tarball. That way
-> any compression-related bugs are limited to a single file. I copy them to DVDs.
-That works as well, but are they your regular files gzipped, no encryption?
+I don't have any idea how easy or hard it would be to do, but I would
+like to see the entire block subsystem enhanced to optionally allow
+long sector reads to be used in a "paranoid" fashion.
 
->
-> - For online/nearline, I now use a ZFS, but on a native Solaris system that functions as my primary
-> NFS/CIFS/iSCSI server with and a ZFS software-RAID based file system.   I am profoundly impressed with
-> it, and when they release the deduplication enhancement for ZFS, I'll adopt it and won't have to buy
-> any more DVDs, except for offsite archiving purposes.
-Wow, I did not know ZFS had plans for de-dupe!! I will have to look into this,
-thanks for the info.
+Effectively it would be:
 
-Justin.
+1) Read long sector from drive:  verify CRC in kernel.  This tests
+most everything on the i/o path.
 
+2) maintain CRC type information in block subsystem.  Verify no
+corruption just before handing off to userspace.  This would
+potentially identify CPU/cache/RAM failures.
+
+Mark Lord has implemented long sector reads via hdparm.  Mark can you
+comment on the feasibility of this idea?
+
+Thanks
+Greg
+-- 
+Greg Freemyer
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+First 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
