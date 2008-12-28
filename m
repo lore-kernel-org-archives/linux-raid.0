@@ -1,55 +1,59 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Raid 5 Recovery
-Date: Sun, 28 Dec 2008 17:15:33 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0812281714080.23996@p34.internal.lan>
-References: <125ed8800812272221y44e77849l886a80f32cbcfbec@mail.gmail.com> <3513de790812280753k5c46799cj92a0e9566227fadc@mail.gmail.com> <125ed8800812281002t6eecb5cbu2173efab36418c92@mail.gmail.com> <125ed8800812281004o4d179064r735e46315481775a@mail.gmail.com>
- <125ed8800812281013t59a3dc8cte44091d262cb8905@mail.gmail.com> <20081228183921.GA5815@csy.ca>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: RFC: detection of silent corruption via ATA long sector reads
+Date: Sun, 28 Dec 2008 17:26:07 -0500
+Message-ID: <4957FCFF.20606@rtr.ca>
+References: <87f94c370812261344s3f70de25r4d132101d2247e00@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20081228183921.GA5815@csy.ca>
+In-Reply-To: <87f94c370812261344s3f70de25r4d132101d2247e00@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shane W <shane-kernel@csy.ca>
-Cc: linux-raid@vger.kernel.org
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: Redeeman <redeeman@metanurb.dk>, piergiorgio.sartor@nexgo.de, neilb@suse.de, linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Greg Freemyer wrote:
+> All,
+> 
+> On the mdraid list, there was a recent thread about using raid
+> functionality to detect / repair silent corruption.
+> 
+> The issues brought up were that a lot of silent data corruption occurs
+> when cables, controllers, power supplies, ram, cache, etc. goes bad.
+> 
+> It made me think about another option for detecting silent corruption
+> I have not seen discussed, but maybe I missed it.
+> 
+> Aiui, the ATA spec allows for the reading of a long sector as well as
+> the normal 512 byte sector.  When you get a long sector you also get
+> the CRC (or whatever checksum data there is on the disk that allows
+> the drive itself to detect media errors).
+> 
+> I don't have any idea how easy or hard it would be to do, but I would
+> like to see the entire block subsystem enhanced to optionally allow
+> long sector reads to be used in a "paranoid" fashion.
+> 
+> Effectively it would be:
+> 
+> 1) Read long sector from drive:  verify CRC in kernel.  This tests
+> most everything on the i/o path.
+> 
+> 2) maintain CRC type information in block subsystem.  Verify no
+> corruption just before handing off to userspace.  This would
+> potentially identify CPU/cache/RAM failures.
+> 
+> Mark Lord has implemented long sector reads via hdparm.  Mark can you
+> comment on the feasibility of this idea?
+..
 
+The ATA READ/WRITE LONG commands have been obsoleted in the past few ATA specs,
+even though most drives continue to implement them.
 
-On Sun, 28 Dec 2008, Shane W wrote:
+But not a good avenue.
 
-> Hi,
->
-> On Sun, Dec 28, 2008 at 01:13:15PM -0500, Erik Boettcher wrote:
->> I guess I should specify how it complains: the exact same error
->> message but sde3 instead.
->
-> As others have said, definitely wait for a more
-> knowledgable person to post here but if I am working on a
-> machine and accidentally jar the SATA cables, mdadm
-> sometimes kicks two drives from my raid5 causing it to
-> display similar problems.  What works for me is a mdadm -E
-> /dev/sdnx where the dev is one of the drives it kicked as
-> that represents the "good" state of the array.  Then
-> /recreate with one drive missing:
-> mdadm --create /dev/mdx --assume-clean --level 5 /dev/sda3
-> //dev/sdb3 missing /dev/sdc3 etc. with the device order
-> //being the same as that listed in mdadm -E component
-> //device list. and missing for the first device which was
-> //kicked.  The number of devices, spares, chunk size etc
-> //has to match the array of course, then verify the
-> //filesystem readonly and once you're sure the order is
-> //right and the FS is good, re-add the last device and let
-> //the resync do its thing.
->
-> I am curious as to whether there is another way to recover
-> from the multiple drive nonfailure condition though because
-> recreating can raise the heart rate a little.
+There's a separate effort, involving drive vendors and kernel hackers,
+to provide end-to-end CRC protection of data.  I forget what it was called,
+but that's the future of this stuff for high-reliability requirements.
 
-I was also going to suggest this; however this should be marked as the 
-option of last resort, I did this with an array once and used the exact same 
-options and much of the FS was corrupted.  If all other options are 
-exhausted and you have confirmed that, then it is your last hope I 
-believe.
-
-Justin.
-
+Cheers
