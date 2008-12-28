@@ -1,118 +1,55 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: mdadm cannot open devices
-Date: Mon, 29 Dec 2008 08:35:10 +1100 (EST)
-Message-ID: <f1ba3787cda05ba24f9f60e7b058cb5d.squirrel@neil.brown.name>
-References: <4956CBB2.7030805@sauce.co.nz>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Raid 5 Recovery
+Date: Sun, 28 Dec 2008 17:15:33 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0812281714080.23996@p34.internal.lan>
+References: <125ed8800812272221y44e77849l886a80f32cbcfbec@mail.gmail.com> <3513de790812280753k5c46799cj92a0e9566227fadc@mail.gmail.com> <125ed8800812281002t6eecb5cbu2173efab36418c92@mail.gmail.com> <125ed8800812281004o4d179064r735e46315481775a@mail.gmail.com>
+ <125ed8800812281013t59a3dc8cte44091d262cb8905@mail.gmail.com> <20081228183921.GA5815@csy.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4956CBB2.7030805@sauce.co.nz>
+In-Reply-To: <20081228183921.GA5815@csy.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Shane W <shane-kernel@csy.ca>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, December 28, 2008 11:43 am, Richard Scobie wrote:
-> Just assembled a new Fedora 9 machine - md1-5 created OK, but am having
-> trouble putting md6 together - machine rebooted after partitioning):
->
-> [root@hugo2 ~]# mdadm -C /dev/md6 -l 1 -n 2 /dev/sda1 /dev/sdb1
-> mdadm: Cannot open /dev/sda1: No such device or address
-> mdadm: Cannot open /dev/sdb1: No such device or address
-> mdadm: create aborted
->
-
-This typically happens because /dev/sda and /dev/sdb have md superblocks
-on them and mdadm attempts to assemble an array from those and in the
-process tell the kernel to forget about the partitions.
-Can you:
-
-  blockdev --rereadpt /dev/sda
-  blockdev --rereadpt /dev/sdb
-  mdadm -E /dev/sda* /dev/sdb*
-
-and report the result?
-
-Thanks,
-NeilBrown
 
 
-> dmesg:
+On Sun, 28 Dec 2008, Shane W wrote:
+
+> Hi,
 >
-> ------------------------------------------------
+> On Sun, Dec 28, 2008 at 01:13:15PM -0500, Erik Boettcher wrote:
+>> I guess I should specify how it complains: the exact same error
+>> message but sde3 instead.
 >
-> scsi0 : sata_sil
-> scsi1 : sata_sil
-> ata1: SATA max UDMA/100 mmio m512@0xf0401000 tf 0xf0401080 irq 21
-> ata2: SATA max UDMA/100 mmio m512@0xf0401000 tf 0xf04010c0 irq 21
-> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> ata1.00: ATA-8: ST31000340NS, SN05, max UDMA/133
-> ata1.00: 1953525168 sectors, multi 0: LBA48 NCQ (depth 0/32)
-> ata1.00: configured for UDMA/100
-> ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> ata2.00: ATA-8: ST31000340NS, SN05, max UDMA/133
-> ata2.00: 1953525168 sectors, multi 0: LBA48 NCQ (depth 0/32)
-> ata2.00: configured for UDMA/100
-> scsi 0:0:0:0: Direct-Access     ATA      ST31000340NS     SN05 PQ: 0 ANSI:
-> 5
-> sd 0:0:0:0: [sda] 1953525168 512-byte hardware sectors (1000205 MB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
-> support DPO or FUA
-> sd 0:0:0:0: [sda] 1953525168 512-byte hardware sectors (1000205 MB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
-> support DPO or FUA
->   sda: sda1
-> sd 0:0:0:0: [sda] Attached SCSI disk
-> scsi 1:0:0:0: Direct-Access     ATA      ST31000340NS     SN05 PQ: 0 ANSI:
-> 5
-> sd 1:0:0:0: [sdb] 1953525168 512-byte hardware sectors (1000205 MB)
-> sd 1:0:0:0: [sdb] Write Protect is off
-> sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-> sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't
-> support DPO or FUA
-> sd 1:0:0:0: [sdb] 1953525168 512-byte hardware sectors (1000205 MB)
-> sd 1:0:0:0: [sdb] Write Protect is off
-> sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-> sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't
-> support DPO or FUA
->   sdb: sdb1
-> sd 1:0:0:0: [sdb] Attached SCSI disk
+> As others have said, definitely wait for a more
+> knowledgable person to post here but if I am working on a
+> machine and accidentally jar the SATA cables, mdadm
+> sometimes kicks two drives from my raid5 causing it to
+> display similar problems.  What works for me is a mdadm -E
+> /dev/sdnx where the dev is one of the drives it kicked as
+> that represents the "good" state of the array.  Then
+> /recreate with one drive missing:
+> mdadm --create /dev/mdx --assume-clean --level 5 /dev/sda3
+> //dev/sdb3 missing /dev/sdc3 etc. with the device order
+> //being the same as that listed in mdadm -E component
+> //device list. and missing for the first device which was
+> //kicked.  The number of devices, spares, chunk size etc
+> //has to match the array of course, then verify the
+> //filesystem readonly and once you're sure the order is
+> //right and the FS is good, re-add the last device and let
+> //the resync do its thing.
 >
-> --------------------------------------------------
->
-> [root@hugo2 ~]# fdisk /dev/sda
->
-> The number of cylinders for this disk is set to 121601.
-> There is nothing wrong with that, but this is larger than 1024,
-> and could in certain setups cause problems with:
-> 1) software that runs at boot time (e.g., old versions of LILO)
-> 2) booting and partitioning software from other OSs
->     (e.g., DOS FDISK, OS/2 FDISK)
->
-> Command (m for help): p
->
-> Disk /dev/sda: 1000.2 GB, 1000204886016 bytes
-> 255 heads, 63 sectors/track, 121601 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
-> Disk identifier: 0x2ef7934e
->
->     Device Boot      Start         End      Blocks   Id  System
-> /dev/sda1               1      121585   976631481   83  Linux
->
->
-> Kernel is 2.6.25-14.fc9.i686 and mdadm is mdadm-2.6.4-4.fc9.i386.
->
-> Thanks,
->
-> Richard
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> I am curious as to whether there is another way to recover
+> from the multiple drive nonfailure condition though because
+> recreating can raise the heart rate a little.
+
+I was also going to suggest this; however this should be marked as the 
+option of last resort, I did this with an array once and used the exact same 
+options and much of the FS was corrupted.  If all other options are 
+exhausted and you have confirmed that, then it is your last hope I 
+believe.
+
+Justin.
 
