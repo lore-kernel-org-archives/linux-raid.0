@@ -1,57 +1,218 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: mdadm cannot open devices
-Date: Mon, 29 Dec 2008 12:35:15 +1300
-Message-ID: <49580D33.9010600@sauce.co.nz>
-References: <4956CBB2.7030805@sauce.co.nz> <f1ba3787cda05ba24f9f60e7b058cb5d.squirrel@neil.brown.name>
+From: "Erik Boettcher" <tehfoo@gmail.com>
+Subject: Re: Raid 5 Recovery
+Date: Sun, 28 Dec 2008 18:53:11 -0500
+Message-ID: <125ed8800812281553gc75cadfv91ea1cda46de96f9@mail.gmail.com>
+References: <125ed8800812272221y44e77849l886a80f32cbcfbec@mail.gmail.com>
+	 <3513de790812280753k5c46799cj92a0e9566227fadc@mail.gmail.com>
+	 <125ed8800812281002t6eecb5cbu2173efab36418c92@mail.gmail.com>
+	 <125ed8800812281004o4d179064r735e46315481775a@mail.gmail.com>
+	 <125ed8800812281013t59a3dc8cte44091d262cb8905@mail.gmail.com>
+	 <0751481ab32bd9084154902b6ca31e9f.squirrel@neil.brown.name>
+	 <125ed8800812281359r3050d001g5936a65e2fa27d21@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f1ba3787cda05ba24f9f60e7b058cb5d.squirrel@neil.brown.name>
+In-Reply-To: <125ed8800812281359r3050d001g5936a65e2fa27d21@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown wrote:
+oops, forgot to send it here...
 
-> This typically happens because /dev/sda and /dev/sdb have md superblocks
-> on them and mdadm attempts to assemble an array from those and in the
-> process tell the kernel to forget about the partitions.
-> Can you:
-> 
->   blockdev --rereadpt /dev/sda
->   blockdev --rereadpt /dev/sdb
->   mdadm -E /dev/sda* /dev/sdb*
-> 
-> and report the result?
 
-Hi Neil,
+---------- Forwarded message ----------
+From: Erik Boettcher <tehfoo@gmail.com>
+Date: Sun, Dec 28, 2008 at 4:59 PM
+Subject: Re: Raid 5 Recovery
+To: NeilBrown <neilb@suse.de>
 
-Thanks for the reply, but due to time constraints I have had to abandon 
-this, although I would be interested in your comments on what I found 
-after this my mail and before giving up.
 
-The 2 1TB Seagate drives were taken directly from a 4 drive Windows 
-Vista striped (RAID0) array - they have never had md RAID installed.
+>
+> Yes, specifics are good.  I'm afraid I need a few more though.
+>  mdadm -Esvvv
 
-I discovered that for whatever reason /proc/partitions, although it 
-showed entries for sda and sdb, it did not have entries for the 
-partitions sda1 and sda2 and I guess this is why mdadm had trouble.
+livecd ~ # mdadm -Esvvv
+/dev/sde3:
+         Magic : a92b4efc
+       Version : 00.90.00
+          UUID : b2cca5f0:59a04cfc:a3bbe707:108124a2
+ Creation Time : Thu Jan 18 02:29:09 2007
+    Raid Level : raid5
+ Used Dev Size : 195093248 (186.06 GiB 199.78 GB)
+    Array Size : 780372992 (744.22 GiB 799.10 GB)
+  Raid Devices : 5
+ Total Devices : 5
+Preferred Minor : 0
 
-Thinking it might have been an fdisk limitation, I tried partitioning 
-using parted - same result.
+   Update Time : Tue Dec  9 02:11:56 2008
+         State : clean
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+ Spare Devices : 0
+      Checksum : 46384ff - correct
+        Events : 0.4508
 
-I then tried building using sda and sdb, instead of partitions and this 
-time the mdadm errors were along the lines of "device busy" for both 
-drives - even after rebooting.
+        Layout : left-asymmetric
+    Chunk Size : 32K
 
-At this point I gave up. The drives were attached to an Adaptec PCI SATA 
-card, which along with 2 SATA drives on the onboard controller and a 
-PCI-X SCSI adapter with 2 drives attached, seemed to cause much 
-shuffling of sd devices during bootup, so I am wondering if this 
-contributed.
+     Number   Major   Minor   RaidDevice State
+this     2       8       67        2      active sync   /dev/sde3
 
-Regards,
+  0     0       8       35        0      active sync   /dev/sdc3
+  1     1       8       51        1      active sync   /dev/sdd3
+  2     2       8       67        2      active sync   /dev/sde3
+  3     3       8       19        3      active sync   /dev/sdb3
+  4     4       8        3        4      active sync   /dev/sda3
+mdadm: No md superblock detected on /dev/sde2.
+mdadm: No md superblock detected on /dev/sde1.
+mdadm: No md superblock detected on /dev/sde.
+/dev/sdd3:
+         Magic : a92b4efc
+       Version : 00.90.00
+          UUID : b2cca5f0:59a04cfc:a3bbe707:108124a2
+ Creation Time : Thu Jan 18 02:29:09 2007
+    Raid Level : raid5
+ Used Dev Size : 195093248 (186.06 GiB 199.78 GB)
+    Array Size : 780372992 (744.22 GiB 799.10 GB)
+  Raid Devices : 5
+ Total Devices : 5
+Preferred Minor : 0
 
-Richard
+   Update Time : Tue Dec  9 02:11:56 2008
+         State : clean
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+ Spare Devices : 0
+      Checksum : 46384ed - correct
+        Events : 0.4508
+
+        Layout : left-asymmetric
+    Chunk Size : 32K
+
+     Number   Major   Minor   RaidDevice State
+this     1       8       51        1      active sync   /dev/sdd3
+
+  0     0       8       35        0      active sync   /dev/sdc3
+  1     1       8       51        1      active sync   /dev/sdd3
+  2     2       8       67        2      active sync   /dev/sde3
+  3     3       8       19        3      active sync   /dev/sdb3
+  4     4       8        3        4      active sync   /dev/sda3
+mdadm: No md superblock detected on /dev/sdd2.
+mdadm: No md superblock detected on /dev/sdd1.
+mdadm: No md superblock detected on /dev/sdd.
+/dev/sdc3:
+         Magic : a92b4efc
+       Version : 00.88.00
+          UUID : b2cca5f0
+ Creation Time : Thu Jan 18 02:29:09 2007
+    Raid Level : raid5
+ Used Dev Size : 195093248 (186.06 GiB 199.78 GB)
+    Array Size : 780372992 (744.22 GiB 799.10 GB)
+  Raid Devices : 5
+ Total Devices : 5
+Preferred Minor : 0
+
+   Update Time : Tue Dec  9 02:11:56 2008
+         State : clean
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+ Spare Devices : 0
+      Checksum : 46384b9 - correct
+        Events : 0.4508
+
+        Layout : left-asymmetric
+    Chunk Size : 32K
+
+     Number   Major   Minor   RaidDevice State
+this     0       8       33        0      sync   /dev/sdc1
+
+  0     0       8       33        0      active sync   /dev/sdc1
+  1     1       8       49        1      active sync   /dev/sdd1
+  2     0       8       65        0      sync   /dev/sde1
+  3     1       8       17        1      sync   /dev/sdb1
+  4     4       8        1        4      active sync   /dev/sda1
+mdadm: No md superblock detected on /dev/sdc2.
+mdadm: No md superblock detected on /dev/sdc1.
+mdadm: No md superblock detected on /dev/sdc.
+/dev/sdb3:
+         Magic : a92b4efc
+       Version : 00.88.00
+          UUID : b2cca5f0
+ Creation Time : Thu Jan 18 02:29:09 2007
+    Raid Level : raid5
+ Used Dev Size : 195093248 (186.06 GiB 199.78 GB)
+    Array Size : 780372992 (744.22 GiB 799.10 GB)
+  Raid Devices : 5
+ Total Devices : 5
+Preferred Minor : 0
+
+   Update Time : Tue Dec  9 02:11:56 2008
+         State : clean
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+ Spare Devices : 0
+      Checksum : 46384d1 - expected 46384a5
+        Events : 0.4508
+
+        Layout : left-asymmetric
+    Chunk Size : 32K
+
+     Number   Major   Minor   RaidDevice State
+this     1       8       17        1      sync   /dev/sdb1
+
+  0     0       8       33        0      sync   /dev/sdc1
+  1     1       8       49        1      sync   /dev/sdd1
+  2     0       8       65        0      sync   /dev/sde1
+  3     1       8       17        1      sync   /dev/sdb1
+  4     4       8        1        4      sync   /dev/sda1
+mdadm: No md superblock detected on /dev/sdb2.
+mdadm: No md superblock detected on /dev/sdb1.
+mdadm: No md superblock detected on /dev/sdb.
+/dev/sda3:
+         Magic : a92b4efc
+       Version : 00.88.00
+          UUID : b2cca5f0
+ Creation Time : Thu Jan 18 02:29:09 2007
+    Raid Level : raid5
+ Used Dev Size : 195093248 (186.06 GiB 199.78 GB)
+    Array Size : 780372992 (744.22 GiB 799.10 GB)
+  Raid Devices : 5
+ Total Devices : 5
+Preferred Minor : 0
+
+   Update Time : Tue Dec  9 02:11:56 2008
+         State : clean
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+ Spare Devices : 0
+      Checksum : 46384c1 - expected 463849b
+        Events : 0.4508
+
+        Layout : left-asymmetric
+    Chunk Size : 32K
+
+     Number   Major   Minor   RaidDevice State
+this     4       8        1        4      sync   /dev/sda1
+
+  0     0       8       33        0      sync   /dev/sdc1
+  1     1       8       49        1      sync   /dev/sdd1
+  2     0       8       65        0      sync   /dev/sde1
+  3     1       8       17        1      sync   /dev/sdb1
+  4     4       8        1        4      sync   /dev/sda1
+mdadm: No md superblock detected on /dev/sda2.
+mdadm: No md superblock detected on /dev/sda1.
+mdadm: No md superblock detected on /dev/sda.
+mdadm: No md superblock detected on /dev/loop0.
+
+> and
+>  dmesg | tail -20
+dmesg only reports what's shown in the first message and this after
+each assemble attempt:
+md: md0 stopped.
