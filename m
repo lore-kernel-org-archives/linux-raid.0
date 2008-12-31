@@ -1,34 +1,30 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: mismatch_cnt, random bitflips, silent corruption(?), mdadm/sw
- raid[156]
-Date: Wed, 31 Dec 2008 12:39:16 +0100
-Message-ID: <slrnglmmf7.agm.Mario.Holbe@darkside.dyn.samba-tng.org>
-References: <alpine.DEB.1.10.0812250435260.12329@p34.internal.lan>
+From: "Suresh Vishnu" <Vishnu@freescale.com>
+Subject: fsldma fails on latest async/next
+Date: Wed, 31 Dec 2008 18:01:19 +0530
+Message-ID: <E585710C42F48B4AB2836DA395185DE3644F@zin33exm21.fsl.freescale.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756596AbYLaLjl@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-raid@vger.kernel.org, smartmontools-support@lists.sourceforge.net
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> Options/alternatives for maintaining data integrity?
-> 3. Keep an md5sum for each file on the filesystem and run daily checks?
+Hi all,
 
-I'm doing this since about 6 years now with all of my files and I never
-experienced any silent corruption.
-I also regularly experience MD mismatch_cnt effects on RAID1 with ext2/3
-filesystems with heavy file removal/creation load (even before MD
-implemented its self-check features - I cmp-ed and corrected them
-manually before) and they all seem to have been related to metadata,
-i.e. inodes.
+I was testing the fsldma driver on the next branch of
+git://git.kernel.org/pub/scm/linux/kernel/git/djbw/async_tx tree.
+The driver fails to work.
 
+Initially the driver was failing because alloc_chan_resource was
+returning the number of allocated descriptors on success (instead of 0).
 
-regards
-   Mario
--- 
-[mod_nessus for iauth]
-<delta> "scanning your system...found depreciated OS...found
-        hole...installing new OS...please reboot and reconnect now"
+This has been rectified. Even after this correction, the driver does not
+work.
+
+What are the logical changes to the async layer from the master branch?
+
+--
+Vishnu Suresh 
