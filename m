@@ -1,16 +1,32 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
+From: Mike Myers <mikesm559@yahoo.com>
 Subject: Re: Need urgent help in fixing raid5 array
-Date: Thu, 1 Jan 2009 10:40:21 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0901011039110.9903@p34.internal.lan>
-References: <451872.61166.qm@web30802.mail.mud.yahoo.com>
+Date: Thu, 1 Jan 2009 09:51:44 -0800 (PST)
+Message-ID: <467705.96388.qm@web30807.mail.mud.yahoo.com>
+References: <451872.61166.qm@web30802.mail.mud.yahoo.com> <alpine.DEB.1.10.0901011039110.9903@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <451872.61166.qm@web30802.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Myers <mikesm559@yahoo.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
 Cc: linux-raid@vger.kernel.org, john lists <john4lists@gmail.com>
 List-Id: linux-raid.ids
+
+The disks that are problematic are still online as far as the OS can tell.  I can do a dd from them and pull off data at the normal speeds, so I don't understand if that's the case why the backplane would be a problem here.  I can try and move them to another slot however (I have a 20 slot SATA backplane in there) and see if that changes how md deals with it.
+
+The OS sees the drive, it inits fine, but md shows it as removed and won't let me add it back to the array because of the "device being busy".  I don't understand the criteria that md uses to add a drive I guess.  The uuid looks fine, and if the events is off, then the -f flag should take care of that.  I've never seen a "device busy" failure on an add before.
+
+thx
+mike
+
+
+
+
+----- Original Message ----
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Mike Myers <mikesm559@yahoo.com>
+Cc: linux-raid@vger.kernel.org; john lists <john4lists@gmail.com>
+Sent: Thursday, January 1, 2009 7:40:21 AM
+Subject: Re: Need urgent help in fixing raid5 array
 
 
 
@@ -96,3 +112,7 @@ sata-backplane.  I have seen backplanes go bad in the past, that would be
 my first replacement.
 
 Justin.
+
+
+
+      
