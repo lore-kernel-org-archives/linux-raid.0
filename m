@@ -1,60 +1,81 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: 2.6.28: md0: unknown partition table
-Date: Thu, 1 Jan 2009 10:26:27 +0100
-Message-ID: <20090101092627.GA32138@maude.comedia.it>
-References: <alpine.DEB.1.10.0812300610190.11356@p34.internal.lan>
+From: Mike Myers <mikesm559@yahoo.com>
+Subject: Re: Need urgent help in fixing raid5 array
+Date: Thu, 1 Jan 2009 07:31:15 -0800 (PST)
+Message-ID: <440018.91092.qm@web30803.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.1.10.0812300610190.11356@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Dec 30, 2008 at 07:25:08AM -0500, Justin Piszcz wrote:
-> Had a question about the new option in 2.6.28:
->
-> [    7.655297] usb 6-2: configuration #1 chosen from 1 choice
-> [    7.663280] hub 6-2:1.0: USB hub found
-> [    7.666533] hub 6-2:1.0: 3 ports detected
-> [    7.698008] udev: renamed network interface eth0_rename to eth1
-> [    7.824538]  md1:<6> md0: unknown partition table
-> [    7.835978] [    7.950237] usb 6-2.1: new full speed USB device using 
-> uhci_hcd and address 3
-> [    8.081335] usb 6-2.1: configuration #1 chosen from 1 choice
->
-> See line:
-> [    7.824538]  md1:<6> md0: unknown partition table
->
-> This is swap, I do not recall seeing this error in kernels < 2.6.28, should
-> the kernel not scan for partitions on a swap-based parititon? [1]
+Well, thanks for all your help last month.  As i posted, things came
+back up and I survived the failure.  Now, I have yet another problem.
+:(  After 5 years of running a linux server as a dedicated NAS, I am
+hitting some very weird problems.  This server started as an single
+processor AMD system with 4 320GB drives, and has been upgraded
+multiple times so that it is now a quad core Intel rackmounted 4U
+system with 14 1 TB drives and I have never lost data in any of the
+upgrades of CPU, motherboard and disk controller hardware and disk
+drives.  Now after last month's near death experience I am faced with
+another serious problem in less than a month.  Any help you guys could
+give me would be most appreciated.  This is a sucky way to start the
+new year.
 
-this is probably due to the fact that now /dev/md* are partitionable.
+The array I had problems with last month (md2 comprised of 7 1 TB drives in a RAID5 config) is running just fine. 
+md1, which is built of 7 1 TB hitachi 7K1000 drives is now having
+problems.  We returned from a 10 day family visit with everything
+running just fine.  There ws a brief power outage today, abt 3 mins,
+but I can't see how that could be related as the server is on a high
+quality rackmount 3U APC UPS that handled the outage just fine.  I was
+working on the system getting X to work again after a nvidia driver
+update, and when that was working fine, checked the disks to discover
+that md1 was in a degraded state, with /dev/sdl1 kicked out of the
+array (removed).  I tried to do a dd from the drive to verify it's
+location in the rack, but I got an i/o error.  This was most odd, and
+so went to the rack and pulled the disk and reinserted it.  No system
+log entries recorded the device being pulled or re-installed.  So I am
+thinking that a cable somehow
+has come loose.  I power the system
+down, pull it out of the rack, look at the cable that goes to the
+drive, everything looks fine.  
 
-> [2] partitions for mdadm/raid are usually md0_p1 md1_p2 why would it scan for
-> partitions on /dev/md0, /dev/md1, /dev/md2 as they are 'block devices' e.g.,
-> similar to /dev/sda, /dev/sdb, /dev/sdc
->
-> I do have the option checked off:
-> [*]     Autodetect RAID arrays during kernel boot
->
-> As I compile everything in statically, no modules are used.
->
-> If I disable that option, would my system still boot/that would get rid of 
-> the error/so it does not try to scan for partitions on swap?
-no
-if you want to get rid of that you can disable kernel partition
-detection, but you have to do it manually in initrd/init scripts/udev
-rules then(*)
+So I reboot the system, and now the array won't come online because now in addition to the drive that
+shows as (removed), one of the other drives shows as a faulty spare. 
+Well, learning from the last go around, I reassemble the array with the
+--force option, and the array comes back up.  But LVM won't come back
+up because it sees the physical volume that maps to md1 as missing. 
+Now I am very concerned.  After trying a bunch of things, I do a
+pvcreate with the missing UUID on md1, restart the vg and the logical
+volume comes back up.  I was thinking I may have told lvm to use an
+array of bad data, but to my surprise, I mounted the filesystem and
+everything looked intact!  Ok, sometimes you win.  So I do one more
+reboot to get the system back up in multiuser so I can back up some of
+the more important media stored on the volume (it's got about 10 Tb
+used, but most of that is PVR recordings, but there is a lot of ripped
+music and DVD's that I really don't
+want to rerip) on a another server that has some space on it while I figure out what has been happening.
 
-(*) i still firmly believe that partition detection does not belong to
-the kernel any more than raid/lvm.
+The reboot again fails because of a problem with md1.  This time, another
+one of the drives shows as removed (/dev/sdm1), and I can't reassemble
+the array with a --force option.  It is acting like /dev/sdl1 (the
+other removed unit), and even though I can read from the drives fine,
+their UUID is fine, etc..., md does not consider them as part of the
+array.  /dev/sdo1 (which was the drive that looked like a faulty spare)
+seems OK when trying to do the assemble.  sdm1 seemed just fine before
+the reboot, and was showing no problems before.  They are not hooked up
+on the same controller cable ( a SAS to SATA fanout), and the LSI MPT
+controller card seems to talk to the other disks just fine.  
 
--- 
-Luca Berra -- bluca@comedia.it
-         Communication Media & Services S.r.l.
-  /"\
-  \ /     ASCII RIBBON CAMPAIGN
-   X        AGAINST HTML MAIL
-  / \
+Anyways,I have no idea as to what's going on.  When I try to add sdm1 or sdl1
+back into the array, md complains the device is busy, which is very odd
+because it's not part of another array or doing anything else in the
+system.
+
+Any idea as to what could be happening here?  I am beyond frustrated.
+
+thanks,
+Mike
+
+
+      
