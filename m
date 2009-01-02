@@ -1,104 +1,94 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: Re: Corrupt data - RAID sata_sil 3114 chip
-Date: Fri, 2 Jan 2009 22:30:07 +0100
-Message-ID: <20090102213007.GA4349@lanczos.q-leap.de>
-References: <495E01E3.9060903@sm7jqb.se> <alpine.DEB.1.10.0901020741200.11852@p34.internal.lan>
+From: Mike Myers <mikesm559@yahoo.com>
+Subject: Re: Need urgent help in fixing raid5 array
+Date: Fri, 2 Jan 2009 13:37:53 -0800 (PST)
+Message-ID: <972681.54986.qm@web30808.mail.mud.yahoo.com>
+References: <451872.61166.qm@web30802.mail.mud.yahoo.com> <alpine.DEB.1.10.0901011039110.9903@p34.internal.lan> <467705.96388.qm@web30807.mail.mud.yahoo.com> <alpine.DEB.1.10.0901011328380.17888@p34.internal.lan> <344038.60917.qm@web30808.mail.mud.yahoo.com> <alpine.DEB.1.10.0901020708210.3858@p34.internal.lan> <17665.11566.qm@web30804.mail.mud.yahoo.com> <alpine.DEB.1.10.0901021319330.26159@p34.internal.lan> <746863.34803.qm@web30803.mail.mud.yahoo.com> <alpine.DEB.1.10.0901021355370.3485@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.1.10.0901020741200.11852@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
 To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: bengt@remove.sm7jqb.se, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, john lists <john4lists@gmail.com>
 List-Id: linux-raid.ids
 
-Hello Bengt,
+BTW, here is the smart error listing for one of the devices that md seems to refuse to add:
 
-sil3114 is known to cause data corruption with some disks. So far I onl=
-y know
-about Seagate, but maybe there issues with newer Samsungs as well?
+ smartctl -l error  /dev/sdb1
+smartctl 5.39 2008-05-08 21:56 [x86_64-unknown-linux-gnu] (local build)
+Copyright (C) 2002-8 by Bruce Allen, http://smartmontools.sourceforge.net
 
-http://lkml.indiana.edu/hypermail/linux/kernel/0710.2/2035.html
+=== START OF READ SMART DATA SECTION ===
+SMART Error Log Version: 1
+ATA Error Count: 1
+        CR = Command Register [HEX]
+        FR = Features Register [HEX]
+        SC = Sector Count Register [HEX]
+        SN = Sector Number Register [HEX]
+        CL = Cylinder Low Register [HEX]
+        CH = Cylinder High Register [HEX]
+        DH = Device/Head Register [HEX]
+        DC = Device Command Register [HEX]
+        ER = Error register [HEX]
+        ST = Status register [HEX]
+Powered_Up_Time is measured from power on, and printed as
+DDd+hh:mm:SS.sss where DD=days, hh=hours, mm=minutes,
+SS=sec, and sss=millisec. It "wraps" after 49.710 days.
 
-Unfortuntely this issue has been simply ignored by the SATA developers =
-:(
-So if you want to be on the safe side, go an get another controller.=20
+Error 1 occurred at disk power-on lifetime: 6388 hours (266 days + 4 hours)
+  When the command that caused the error occurred, the device was active or idle.
 
-I hope I won't frighten you too much, but it also might be possible one=
- of=20
-your disks has a problem,  I have also seen a few broken disks, which d=
-on't=20
-return what you write to it...
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  84 51 00 00 00 00 a0
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  ec 00 00 00 00 00 a0 08   6d+23:19:44.200  IDENTIFY DEVICE
+  25 00 01 01 00 00 00 04   6d+23:19:44.000  READ DMA EXT
+  25 00 80 be 1b ba ef ff   6d+23:19:42.500  READ DMA EXT
+  25 00 c0 7f 1b ba e0 08   6d+23:19:42.500  READ DMA EXT
+  25 00 40 3f 1b ba e0 08   6d+23:19:30.300  READ DMA EXT
 
 
-Cheers,
-Bernd
+It looks like a good disk.
+
+thx
+mike
 
 
-On Fri, Jan 02, 2009 at 07:42:30AM -0500, Justin Piszcz wrote:
->
->
-> On Fri, 2 Jan 2009, Bengt Samuelsson wrote:
->
->>
->> Hi,
->>
->> I need some support for this soft-raid system.
->>
->> I am running it as RAID5 with 4 samsung spinpoint 500G SATA300 tot 1=
-=2E3T byte
->>
->> And it runs in http://sm7jqb.dnsalias.com
->> I use mdadm sytem in a Debian Linux
->> CPU 1.2Mhz 1G memory ( my older 433Mhz / 512M dont work at all )
->>
->> I have 'some courrupt' data. And I don't understand whay and how to =
-fix it.
->> Mybee slow it down more, but how slow it down?
->>
->> Any with experents from this cheep way of RAID systems.
->>
->> Ask for more information and I can get it, logs, setup files and wha=
-t=20
->> you want
->> to know.
->>
->> --=20
->> Bengt Samuelsson
->> Nydalav=C3=A4gen 30 A
->> 352 48 V=C3=A4xj=C3=B6
->>
->> +46(0)703686441
->>
->> http://sm7jqb.se
->>
->>
->> --=20
->> To UNSUBSCRIBE, email to debian-user-REQUEST@lists.debian.org with a=
-=20
->> subject of "unsubscribe". Trouble? Contact listmaster@lists.debian.o=
-rg
->>
->
-> If this is an mdadm-related raid (not dmraid) please show all relevan=
-t md=20
-> info, mdadm -D /dev/md0, I have cc'd linux-raid on this thread for yo=
-u.
->
-> You'll want to read md.txt in /usr/src/linux/Documentation and read o=
-n=20
-> the check and repair commands.
->
-> In addition, have you run memtest86 on your system first to make sure=
- its=20
-> not memory related?
->
-> Justin.
+
+
+----- Original Message ----
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Mike Myers <mikesm559@yahoo.com>
+Cc: linux-raid@vger.kernel.org; john lists <john4lists@gmail.com>
+Sent: Friday, January 2, 2009 10:57:13 AM
+Subject: Re: Need urgent help in fixing raid5 array
+
+
+
+On Fri, 2 Jan 2009, Mike Myers wrote:
+
+> Well, I can read from sdg1 just fine.  It seems to work ok, at least for a few GB of data.   I'll try this on some of the other disks, but it is possible for to pull the disks out of the backplane and run the SFF-8087 fanout cables direct to each drive and bypass the backplane completely.  It certainly would be easy to do this for the at least the sdo1 drive and see if I can get better results going direct to the disk.  I have moved the disks around the backplane a bit to deal with the issues of the controller failure, so I am pretty sure it's not just one bad slot or the like.
+> 
+> So you've seen a backplane fail in away that the disks come up fine at boot but have corrupted data transfers across them?  I wonder about the sata cables in that case as well.  I could hook up a pair of PMP's to my SI3132's and bypass the 8077 cables as well.
+
+1. Try by-passing the backplane.
+2. Bad cables will usually cause smart identifier UDMA_CRC_Error_Count to
+   increase quite high, if it is 0 or close to it, the cable is unlikely the
+   issue.
+3. I have seem all kinds of weirdness with bad backplanes, drives dropping out
+   of the array, drives producing I/O errors, etc.
+
+Justin.
 
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+      
