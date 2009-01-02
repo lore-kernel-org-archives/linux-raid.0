@@ -1,94 +1,70 @@
-From: Mike Myers <mikesm559@yahoo.com>
-Subject: Re: Need urgent help in fixing raid5 array
-Date: Fri, 2 Jan 2009 13:37:53 -0800 (PST)
-Message-ID: <972681.54986.qm@web30808.mail.mud.yahoo.com>
-References: <451872.61166.qm@web30802.mail.mud.yahoo.com> <alpine.DEB.1.10.0901011039110.9903@p34.internal.lan> <467705.96388.qm@web30807.mail.mud.yahoo.com> <alpine.DEB.1.10.0901011328380.17888@p34.internal.lan> <344038.60917.qm@web30808.mail.mud.yahoo.com> <alpine.DEB.1.10.0901020708210.3858@p34.internal.lan> <17665.11566.qm@web30804.mail.mud.yahoo.com> <alpine.DEB.1.10.0901021319330.26159@p34.internal.lan> <746863.34803.qm@web30803.mail.mud.yahoo.com> <alpine.DEB.1.10.0901021355370.3485@p34.internal.lan>
+From: Twigathy <twigathy@gmail.com>
+Subject: Re: Corrupt data - RAID sata_sil 3114 chip
+Date: Fri, 2 Jan 2009 21:47:29 +0000
+Message-ID: <1f0f1a960901021347ja5da16dgb0d42ddbdfb6853b@mail.gmail.com>
+References: <495E01E3.9060903@sm7jqb.se>
+	 <alpine.DEB.1.10.0901020741200.11852@p34.internal.lan>
+	 <20090102213007.GA4349@lanczos.q-leap.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org, john lists <john4lists@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20090102213007.GA4349@lanczos.q-leap.de>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: Bernd Schubert <bs@q-leap.de>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, bengt@remove.sm7jqb.se, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
-BTW, here is the smart error listing for one of the devices that md seems to refuse to add:
-
- smartctl -l error  /dev/sdb1
-smartctl 5.39 2008-05-08 21:56 [x86_64-unknown-linux-gnu] (local build)
-Copyright (C) 2002-8 by Bruce Allen, http://smartmontools.sourceforge.net
-
-=== START OF READ SMART DATA SECTION ===
-SMART Error Log Version: 1
-ATA Error Count: 1
-        CR = Command Register [HEX]
-        FR = Features Register [HEX]
-        SC = Sector Count Register [HEX]
-        SN = Sector Number Register [HEX]
-        CL = Cylinder Low Register [HEX]
-        CH = Cylinder High Register [HEX]
-        DH = Device/Head Register [HEX]
-        DC = Device Command Register [HEX]
-        ER = Error register [HEX]
-        ST = Status register [HEX]
-Powered_Up_Time is measured from power on, and printed as
-DDd+hh:mm:SS.sss where DD=days, hh=hours, mm=minutes,
-SS=sec, and sss=millisec. It "wraps" after 49.710 days.
-
-Error 1 occurred at disk power-on lifetime: 6388 hours (266 days + 4 hours)
-  When the command that caused the error occurred, the device was active or idle.
-
-  After command completion occurred, registers were:
-  ER ST SC SN CL CH DH
-  -- -- -- -- -- -- --
-  84 51 00 00 00 00 a0
-
-  Commands leading to the command that caused the error were:
-  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
-  -- -- -- -- -- -- -- --  ----------------  --------------------
-  ec 00 00 00 00 00 a0 08   6d+23:19:44.200  IDENTIFY DEVICE
-  25 00 01 01 00 00 00 04   6d+23:19:44.000  READ DMA EXT
-  25 00 80 be 1b ba ef ff   6d+23:19:42.500  READ DMA EXT
-  25 00 c0 7f 1b ba e0 08   6d+23:19:42.500  READ DMA EXT
-  25 00 40 3f 1b ba e0 08   6d+23:19:30.300  READ DMA EXT
-
-
-It looks like a good disk.
-
-thx
-mike
-
-
-
-
------ Original Message ----
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: Mike Myers <mikesm559@yahoo.com>
-Cc: linux-raid@vger.kernel.org; john lists <john4lists@gmail.com>
-Sent: Friday, January 2, 2009 10:57:13 AM
-Subject: Re: Need urgent help in fixing raid5 array
-
-
-
-On Fri, 2 Jan 2009, Mike Myers wrote:
-
-> Well, I can read from sdg1 just fine.  It seems to work ok, at least for a few GB of data.   I'll try this on some of the other disks, but it is possible for to pull the disks out of the backplane and run the SFF-8087 fanout cables direct to each drive and bypass the backplane completely.  It certainly would be easy to do this for the at least the sdo1 drive and see if I can get better results going direct to the disk.  I have moved the disks around the backplane a bit to deal with the issues of the controller failure, so I am pretty sure it's not just one bad slot or the like.
-> 
-> So you've seen a backplane fail in away that the disks come up fine at boot but have corrupted data transfers across them?  I wonder about the sata cables in that case as well.  I could hook up a pair of PMP's to my SI3132's and bypass the 8077 cables as well.
-
-1. Try by-passing the backplane.
-2. Bad cables will usually cause smart identifier UDMA_CRC_Error_Count to
-   increase quite high, if it is 0 or close to it, the cable is unlikely the
-   issue.
-3. I have seem all kinds of weirdness with bad backplanes, drives dropping out
-   of the array, drives producing I/O errors, etc.
-
-Justin.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
-      
+SGksCgpJIGFsc28gaGFkIHByb2JsZW1zIHdpdGggdGhlIHNhdGFfc2lsIGRyaXZlciB3aXRoIG1v
+cmUgdGhhbiBvbmUKc2lsaWNvbiBpbWFnZSBjYXJkIGluIHRoZSBzYW1lIG1hY2hpbmUgYWJvdXQg
+YSB5ZWFyIG9yIHR3byBiYWNrLiBEb24ndApyZW1lbWJlciB0aGUgc3BlY2lmaWNzLCBidXQgYmFz
+aWNhbGx5IHRoZSBjYXJkcyB3b3VsZCBvY2Nhc2lvbmFsbHkKZHJvcCB0aGUgU0FUQSBsaW5rLiBU
+aGlzIHdhcyB3aXRoIFdlc3Rlcm4gRGlnaXRhbCBkcml2ZXMuIFdpdGggYQpTYW1zdW5nIDc1MEdC
+IGRpc2sgdGhlIGRpc2sgYW5kIGNvbnRyb2xsZXIgYWJzb2x1dGVseSByZWZ1c2VkIHRvIHRhbGsK
+dG8gZWFjaCBvdGhlci4KCkkndmUgc2luY2UgZ290IHJpZCBvZiBhbGwgYnV0IG9uZSBzaWxpY29u
+IGltYWdlIGNhcmQgYW5kIGhhdmVuJ3QgaGFkCnByb2JsZW1zIHNpbmNlIGFuZCBzd2FwcGVkIG91
+dCBjYWJsZXMuIENvaW5jaWRlbmNlPyBObyBpZGVhLgoKMDQ6MDEuMCBSQUlEIGJ1cyBjb250cm9s
+bGVyOiBTaWxpY29uIEltYWdlLCBJbmMuIFNpSSAzNTEyCltTQVRBTGluay9TQVRBUmFpZF0gU2Vy
+aWFsIEFUQSBDb250cm9sbGVyIChyZXYgMDEpCkN1cnJlbnRseSBydW5uaW5nIGtlcm5lbCAyLjYu
+MjQtMjEKCk5vdCBtdWNoIGZ1biB3aGVuIGRpc2tzIGRvbid0IHdvcmsgcHJvcGVybHksIGlzIGl0
+PyA6LSgKClQKCjIwMDkvMS8yIEJlcm5kIFNjaHViZXJ0IDxic0BxLWxlYXAuZGU+Ogo+IEhlbGxv
+IEJlbmd0LAo+Cj4gc2lsMzExNCBpcyBrbm93biB0byBjYXVzZSBkYXRhIGNvcnJ1cHRpb24gd2l0
+aCBzb21lIGRpc2tzLiBTbyBmYXIgSSBvbmx5IGtub3cKPiBhYm91dCBTZWFnYXRlLCBidXQgbWF5
+YmUgdGhlcmUgaXNzdWVzIHdpdGggbmV3ZXIgU2Ftc3VuZ3MgYXMgd2VsbD8KPgo+IGh0dHA6Ly9s
+a21sLmluZGlhbmEuZWR1L2h5cGVybWFpbC9saW51eC9rZXJuZWwvMDcxMC4yLzIwMzUuaHRtbAo+
+Cj4gVW5mb3J0dW50ZWx5IHRoaXMgaXNzdWUgaGFzIGJlZW4gc2ltcGx5IGlnbm9yZWQgYnkgdGhl
+IFNBVEEgZGV2ZWxvcGVycyA6KAo+IFNvIGlmIHlvdSB3YW50IHRvIGJlIG9uIHRoZSBzYWZlIHNp
+ZGUsIGdvIGFuIGdldCBhbm90aGVyIGNvbnRyb2xsZXIuCj4KPiBJIGhvcGUgSSB3b24ndCBmcmln
+aHRlbiB5b3UgdG9vIG11Y2gsIGJ1dCBpdCBhbHNvIG1pZ2h0IGJlIHBvc3NpYmxlIG9uZSBvZgo+
+IHlvdXIgZGlza3MgaGFzIGEgcHJvYmxlbSwgIEkgaGF2ZSBhbHNvIHNlZW4gYSBmZXcgYnJva2Vu
+IGRpc2tzLCB3aGljaCBkb24ndAo+IHJldHVybiB3aGF0IHlvdSB3cml0ZSB0byBpdC4uLgo+Cj4K
+PiBDaGVlcnMsCj4gQmVybmQKPgo+Cj4gT24gRnJpLCBKYW4gMDIsIDIwMDkgYXQgMDc6NDI6MzBB
+TSAtMDUwMCwgSnVzdGluIFBpc3pjeiB3cm90ZToKPj4KPj4KPj4gT24gRnJpLCAyIEphbiAyMDA5
+LCBCZW5ndCBTYW11ZWxzc29uIHdyb3RlOgo+Pgo+Pj4KPj4+IEhpLAo+Pj4KPj4+IEkgbmVlZCBz
+b21lIHN1cHBvcnQgZm9yIHRoaXMgc29mdC1yYWlkIHN5c3RlbS4KPj4+Cj4+PiBJIGFtIHJ1bm5p
+bmcgaXQgYXMgUkFJRDUgd2l0aCA0IHNhbXN1bmcgc3BpbnBvaW50IDUwMEcgU0FUQTMwMCB0b3Qg
+MS4zVCBieXRlCj4+Pgo+Pj4gQW5kIGl0IHJ1bnMgaW4gaHR0cDovL3NtN2pxYi5kbnNhbGlhcy5j
+b20KPj4+IEkgdXNlIG1kYWRtIHN5dGVtIGluIGEgRGViaWFuIExpbnV4Cj4+PiBDUFUgMS4yTWh6
+IDFHIG1lbW9yeSAoIG15IG9sZGVyIDQzM01oeiAvIDUxMk0gZG9udCB3b3JrIGF0IGFsbCApCj4+
+Pgo+Pj4gSSBoYXZlICdzb21lIGNvdXJydXB0JyBkYXRhLiBBbmQgSSBkb24ndCB1bmRlcnN0YW5k
+IHdoYXkgYW5kIGhvdyB0byBmaXggaXQuCj4+PiBNeWJlZSBzbG93IGl0IGRvd24gbW9yZSwgYnV0
+IGhvdyBzbG93IGl0IGRvd24/Cj4+Pgo+Pj4gQW55IHdpdGggZXhwZXJlbnRzIGZyb20gdGhpcyBj
+aGVlcCB3YXkgb2YgUkFJRCBzeXN0ZW1zLgo+Pj4KPj4+IEFzayBmb3IgbW9yZSBpbmZvcm1hdGlv
+biBhbmQgSSBjYW4gZ2V0IGl0LCBsb2dzLCBzZXR1cCBmaWxlcyBhbmQgd2hhdAo+Pj4geW91IHdh
+bnQKPj4+IHRvIGtub3cuCj4+Pgo+Pj4gLS0KPj4+IEJlbmd0IFNhbXVlbHNzb24KPj4+IE55ZGFs
+YXbDpGdlbiAzMCBBCj4+PiAzNTIgNDggVsOkeGrDtgo+Pj4KPj4+ICs0NigwKTcwMzY4NjQ0MQo+
+Pj4KPj4+IGh0dHA6Ly9zbTdqcWIuc2UKPj4+Cj4+Pgo+Pj4gLS0KPj4+IFRvIFVOU1VCU0NSSUJF
+LCBlbWFpbCB0byBkZWJpYW4tdXNlci1SRVFVRVNUQGxpc3RzLmRlYmlhbi5vcmcgd2l0aCBhCj4+
+PiBzdWJqZWN0IG9mICJ1bnN1YnNjcmliZSIuIFRyb3VibGU/IENvbnRhY3QgbGlzdG1hc3RlckBs
+aXN0cy5kZWJpYW4ub3JnCj4+Pgo+Pgo+PiBJZiB0aGlzIGlzIGFuIG1kYWRtLXJlbGF0ZWQgcmFp
+ZCAobm90IGRtcmFpZCkgcGxlYXNlIHNob3cgYWxsIHJlbGV2YW50IG1kCj4+IGluZm8sIG1kYWRt
+IC1EIC9kZXYvbWQwLCBJIGhhdmUgY2MnZCBsaW51eC1yYWlkIG9uIHRoaXMgdGhyZWFkIGZvciB5
+b3UuCj4+Cj4+IFlvdSdsbCB3YW50IHRvIHJlYWQgbWQudHh0IGluIC91c3Ivc3JjL2xpbnV4L0Rv
+Y3VtZW50YXRpb24gYW5kIHJlYWQgb24KPj4gdGhlIGNoZWNrIGFuZCByZXBhaXIgY29tbWFuZHMu
+Cj4+Cj4+IEluIGFkZGl0aW9uLCBoYXZlIHlvdSBydW4gbWVtdGVzdDg2IG9uIHlvdXIgc3lzdGVt
+IGZpcnN0IHRvIG1ha2Ugc3VyZSBpdHMKPj4gbm90IG1lbW9yeSByZWxhdGVkPwo+Pgo+PiBKdXN0
+aW4uCj4KPiAtLQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5l
+ICJ1bnN1YnNjcmliZSBsaW51eC1yYWlkIiBpbgo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBt
+YWpvcmRvbW9Admdlci5rZXJuZWwub3JnCj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDov
+L3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sCj4K
