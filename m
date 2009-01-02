@@ -1,70 +1,109 @@
-From: Twigathy <twigathy@gmail.com>
-Subject: Re: Corrupt data - RAID sata_sil 3114 chip
-Date: Fri, 2 Jan 2009 21:47:29 +0000
-Message-ID: <1f0f1a960901021347ja5da16dgb0d42ddbdfb6853b@mail.gmail.com>
-References: <495E01E3.9060903@sm7jqb.se>
-	 <alpine.DEB.1.10.0901020741200.11852@p34.internal.lan>
-	 <20090102213007.GA4349@lanczos.q-leap.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: RFC: detection of silent corruption via ATA long sector reads
+Date: Fri, 02 Jan 2009 17:04:56 -0500
+Message-ID: <yq13ag174af.fsf@sermon.lab.mkp.net>
+References: <fa.8mwKV7y4hm+Q6mvIKtp9QGoJYUU@ifi.uio.no>
+	<fa.4QcsYZC0gJJwJ0eUOht3hDYaVWs@ifi.uio.no>
+	<49580061.9060506@yahoo.com>
+	<87f94c370901021226j40176872h9e5723c6da4afcbe@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20090102213007.GA4349@lanczos.q-leap.de>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-To: Bernd Schubert <bs@q-leap.de>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, bengt@remove.sm7jqb.se, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87f94c370901021226j40176872h9e5723c6da4afcbe@mail.gmail.com> (Greg Freemyer's message of "Fri\, 2 Jan 2009 15\:26\:38 -0500")
+Sender: linux-raid-owner@vger.kernel.org
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: Sitsofe Wheeler <sitsofe@yahoo.com>, Mark Lord <liml@rtr.ca>, Redeeman <redeeman@metanurb.dk>, piergiorgio.sartor@nexgo.de, neilb@suse.de, linux-raid@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 List-Id: linux-raid.ids
 
-SGksCgpJIGFsc28gaGFkIHByb2JsZW1zIHdpdGggdGhlIHNhdGFfc2lsIGRyaXZlciB3aXRoIG1v
-cmUgdGhhbiBvbmUKc2lsaWNvbiBpbWFnZSBjYXJkIGluIHRoZSBzYW1lIG1hY2hpbmUgYWJvdXQg
-YSB5ZWFyIG9yIHR3byBiYWNrLiBEb24ndApyZW1lbWJlciB0aGUgc3BlY2lmaWNzLCBidXQgYmFz
-aWNhbGx5IHRoZSBjYXJkcyB3b3VsZCBvY2Nhc2lvbmFsbHkKZHJvcCB0aGUgU0FUQSBsaW5rLiBU
-aGlzIHdhcyB3aXRoIFdlc3Rlcm4gRGlnaXRhbCBkcml2ZXMuIFdpdGggYQpTYW1zdW5nIDc1MEdC
-IGRpc2sgdGhlIGRpc2sgYW5kIGNvbnRyb2xsZXIgYWJzb2x1dGVseSByZWZ1c2VkIHRvIHRhbGsK
-dG8gZWFjaCBvdGhlci4KCkkndmUgc2luY2UgZ290IHJpZCBvZiBhbGwgYnV0IG9uZSBzaWxpY29u
-IGltYWdlIGNhcmQgYW5kIGhhdmVuJ3QgaGFkCnByb2JsZW1zIHNpbmNlIGFuZCBzd2FwcGVkIG91
-dCBjYWJsZXMuIENvaW5jaWRlbmNlPyBObyBpZGVhLgoKMDQ6MDEuMCBSQUlEIGJ1cyBjb250cm9s
-bGVyOiBTaWxpY29uIEltYWdlLCBJbmMuIFNpSSAzNTEyCltTQVRBTGluay9TQVRBUmFpZF0gU2Vy
-aWFsIEFUQSBDb250cm9sbGVyIChyZXYgMDEpCkN1cnJlbnRseSBydW5uaW5nIGtlcm5lbCAyLjYu
-MjQtMjEKCk5vdCBtdWNoIGZ1biB3aGVuIGRpc2tzIGRvbid0IHdvcmsgcHJvcGVybHksIGlzIGl0
-PyA6LSgKClQKCjIwMDkvMS8yIEJlcm5kIFNjaHViZXJ0IDxic0BxLWxlYXAuZGU+Ogo+IEhlbGxv
-IEJlbmd0LAo+Cj4gc2lsMzExNCBpcyBrbm93biB0byBjYXVzZSBkYXRhIGNvcnJ1cHRpb24gd2l0
-aCBzb21lIGRpc2tzLiBTbyBmYXIgSSBvbmx5IGtub3cKPiBhYm91dCBTZWFnYXRlLCBidXQgbWF5
-YmUgdGhlcmUgaXNzdWVzIHdpdGggbmV3ZXIgU2Ftc3VuZ3MgYXMgd2VsbD8KPgo+IGh0dHA6Ly9s
-a21sLmluZGlhbmEuZWR1L2h5cGVybWFpbC9saW51eC9rZXJuZWwvMDcxMC4yLzIwMzUuaHRtbAo+
-Cj4gVW5mb3J0dW50ZWx5IHRoaXMgaXNzdWUgaGFzIGJlZW4gc2ltcGx5IGlnbm9yZWQgYnkgdGhl
-IFNBVEEgZGV2ZWxvcGVycyA6KAo+IFNvIGlmIHlvdSB3YW50IHRvIGJlIG9uIHRoZSBzYWZlIHNp
-ZGUsIGdvIGFuIGdldCBhbm90aGVyIGNvbnRyb2xsZXIuCj4KPiBJIGhvcGUgSSB3b24ndCBmcmln
-aHRlbiB5b3UgdG9vIG11Y2gsIGJ1dCBpdCBhbHNvIG1pZ2h0IGJlIHBvc3NpYmxlIG9uZSBvZgo+
-IHlvdXIgZGlza3MgaGFzIGEgcHJvYmxlbSwgIEkgaGF2ZSBhbHNvIHNlZW4gYSBmZXcgYnJva2Vu
-IGRpc2tzLCB3aGljaCBkb24ndAo+IHJldHVybiB3aGF0IHlvdSB3cml0ZSB0byBpdC4uLgo+Cj4K
-PiBDaGVlcnMsCj4gQmVybmQKPgo+Cj4gT24gRnJpLCBKYW4gMDIsIDIwMDkgYXQgMDc6NDI6MzBB
-TSAtMDUwMCwgSnVzdGluIFBpc3pjeiB3cm90ZToKPj4KPj4KPj4gT24gRnJpLCAyIEphbiAyMDA5
-LCBCZW5ndCBTYW11ZWxzc29uIHdyb3RlOgo+Pgo+Pj4KPj4+IEhpLAo+Pj4KPj4+IEkgbmVlZCBz
-b21lIHN1cHBvcnQgZm9yIHRoaXMgc29mdC1yYWlkIHN5c3RlbS4KPj4+Cj4+PiBJIGFtIHJ1bm5p
-bmcgaXQgYXMgUkFJRDUgd2l0aCA0IHNhbXN1bmcgc3BpbnBvaW50IDUwMEcgU0FUQTMwMCB0b3Qg
-MS4zVCBieXRlCj4+Pgo+Pj4gQW5kIGl0IHJ1bnMgaW4gaHR0cDovL3NtN2pxYi5kbnNhbGlhcy5j
-b20KPj4+IEkgdXNlIG1kYWRtIHN5dGVtIGluIGEgRGViaWFuIExpbnV4Cj4+PiBDUFUgMS4yTWh6
-IDFHIG1lbW9yeSAoIG15IG9sZGVyIDQzM01oeiAvIDUxMk0gZG9udCB3b3JrIGF0IGFsbCApCj4+
-Pgo+Pj4gSSBoYXZlICdzb21lIGNvdXJydXB0JyBkYXRhLiBBbmQgSSBkb24ndCB1bmRlcnN0YW5k
-IHdoYXkgYW5kIGhvdyB0byBmaXggaXQuCj4+PiBNeWJlZSBzbG93IGl0IGRvd24gbW9yZSwgYnV0
-IGhvdyBzbG93IGl0IGRvd24/Cj4+Pgo+Pj4gQW55IHdpdGggZXhwZXJlbnRzIGZyb20gdGhpcyBj
-aGVlcCB3YXkgb2YgUkFJRCBzeXN0ZW1zLgo+Pj4KPj4+IEFzayBmb3IgbW9yZSBpbmZvcm1hdGlv
-biBhbmQgSSBjYW4gZ2V0IGl0LCBsb2dzLCBzZXR1cCBmaWxlcyBhbmQgd2hhdAo+Pj4geW91IHdh
-bnQKPj4+IHRvIGtub3cuCj4+Pgo+Pj4gLS0KPj4+IEJlbmd0IFNhbXVlbHNzb24KPj4+IE55ZGFs
-YXbDpGdlbiAzMCBBCj4+PiAzNTIgNDggVsOkeGrDtgo+Pj4KPj4+ICs0NigwKTcwMzY4NjQ0MQo+
-Pj4KPj4+IGh0dHA6Ly9zbTdqcWIuc2UKPj4+Cj4+Pgo+Pj4gLS0KPj4+IFRvIFVOU1VCU0NSSUJF
-LCBlbWFpbCB0byBkZWJpYW4tdXNlci1SRVFVRVNUQGxpc3RzLmRlYmlhbi5vcmcgd2l0aCBhCj4+
-PiBzdWJqZWN0IG9mICJ1bnN1YnNjcmliZSIuIFRyb3VibGU/IENvbnRhY3QgbGlzdG1hc3RlckBs
-aXN0cy5kZWJpYW4ub3JnCj4+Pgo+Pgo+PiBJZiB0aGlzIGlzIGFuIG1kYWRtLXJlbGF0ZWQgcmFp
-ZCAobm90IGRtcmFpZCkgcGxlYXNlIHNob3cgYWxsIHJlbGV2YW50IG1kCj4+IGluZm8sIG1kYWRt
-IC1EIC9kZXYvbWQwLCBJIGhhdmUgY2MnZCBsaW51eC1yYWlkIG9uIHRoaXMgdGhyZWFkIGZvciB5
-b3UuCj4+Cj4+IFlvdSdsbCB3YW50IHRvIHJlYWQgbWQudHh0IGluIC91c3Ivc3JjL2xpbnV4L0Rv
-Y3VtZW50YXRpb24gYW5kIHJlYWQgb24KPj4gdGhlIGNoZWNrIGFuZCByZXBhaXIgY29tbWFuZHMu
-Cj4+Cj4+IEluIGFkZGl0aW9uLCBoYXZlIHlvdSBydW4gbWVtdGVzdDg2IG9uIHlvdXIgc3lzdGVt
-IGZpcnN0IHRvIG1ha2Ugc3VyZSBpdHMKPj4gbm90IG1lbW9yeSByZWxhdGVkPwo+Pgo+PiBKdXN0
-aW4uCj4KPiAtLQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5l
-ICJ1bnN1YnNjcmliZSBsaW51eC1yYWlkIiBpbgo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBt
-YWpvcmRvbW9Admdlci5rZXJuZWwub3JnCj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDov
-L3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sCj4K
+>>>>> "Greg" == Greg Freemyer <greg.freemyer@gmail.com> writes:
+
+Greg> I also see Device Mapper support was discussed in Oct.  (My 2.6.27
+Greg> kernel does not have those patches).
+
+See below.
+
+
+Greg> Is there a more comprehensive write-up / resource that describes
+Greg> the current status of the overall INTEGRITY support is, 
+
+http://oss.oracle.com/projects/data-integrity/documentation/
+
+The status is:
+
+ - The infrastructure in the kernel is in place as of .27.  Hoping to
+   get MD/DM support in .29 but I'm running late wrt. the merge window.
+
+ - We recently announced an early adopter program for Oracle DB
+   customers.  The ASM component of the database now supports the
+   integrity hooks so we can true end-to-end integrity protection of DB
+   I/O.
+
+ - btrfs support is work in progress.
+
+ - Other people have expressed interest in adding support to ext4 and
+   XFS.
+
+
+Greg> especially as it relates to ATA devices?
+
+ATA support was put on hold in the T13 committee because the drive
+vendors don't feel like adding a big, intrusive feature to their
+firmware.  I'm still hoping we can eventually get support added to
+nearline class drives but it'll be a while.  Market demand needs to be
+there first.  I.e. the array vendors that use SATA drives will need to
+start asking for it.
+
+We're just, just, just starting to push out FC support.  Then comes SAS.
+And then hopefully ATA.
+
+
+Greg> ie.  Do actual ATA hardware devices that support "T13/ATA External
+Greg> Path Protection" exist yet?  Does it require HDD and controller
+Greg> support?  Or just HDD?
+
+Both.  You could emulate some of the DIX features in software (like
+scatterlist interleaving) and then plug in the long commands on the back
+end.  But as Mark said the checksum formats differ between drive
+vendors/models.
+
+On SCSI you could conceivably use the block integrity stuff to store an
+LVM/MD checksum when used with devices that expose the application tag.
+
+However, it's only a 16-bit field (16 bits - 1 to be exact) so it's not
+exactly a lot of space.  And only dumb drives are going to make it
+available.  Some RAID controllers are going to keep those 16-bits for
+their own internal use.
+
+The main purpose of the block integrity stuff is to protect in-flight
+I/O.  Persistence is an optional feature and a side-effect.
+
+So I think it would be much more worthwhile to implement checksumming in
+MD/DM without relying on special hardware.  I did some experiments in
+that department a few years ago when we were investigating how to go
+about fixing some of the data integrity problems in Linux.
+
+I wrote something akin to DIF in software by doing 64 512-byte blocks +
+512 bytes of checksums.  The disadvantage there is having to do
+read-modify-write for small writes.  I tried several other approaches
+sacrificing both space and locality but performance was still anemic.
+
+The reason DIF is implemented the way it is (with 520 byte sectors: 512
+bytes followed by 8 bytes of checksum) is to prevent the cost of seeking
+to write the protection information elsewhere.  With solid state devices
+that seek penalty doesn't exist so this may become less of an issue
+going forward.
+
+The beauty of checksumming in btrfs is that the checksum is stored in
+the filesystem metadata which is read/written anyway.  So the only
+overhead is in calculating the actual checksum.  That's something
+virtual block devices have a much harder time providing because they
+don't have metadata describing individual blocks.
+
+That doesn't mean it can't be done but it's a lot more work.  I'm
+personally much more interested in adding support for adding a
+retry-other-mirror interface to MD/DM and leave the checksumming to the
+filesystems.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
+
