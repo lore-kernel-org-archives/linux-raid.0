@@ -1,76 +1,31 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.27.10: ata1.00: HPA detected: current 293044655, native  
- 293046768
-Date: Sat, 3 Jan 2009 08:15:52 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0901030813410.31871@p34.internal.lan>
-References: <alpine.DEB.1.10.0812300657050.11356@p34.internal.lan> <495A5A9F.9020406@shaw.ca> <495B9ED3.8050008@rtr.ca>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: RFC: detection of silent corruption via ATA long sector reads
+Date: Sat, 03 Jan 2009 13:20:34 +0000
+Message-ID: <495F6622.9010103@anonymous.org.uk>
+References: <fa.8mwKV7y4hm+Q6mvIKtp9QGoJYUU@ifi.uio.no>	<fa.4QcsYZC0gJJwJ0eUOht3hDYaVWs@ifi.uio.no>	<49580061.9060506@yahoo.com>	<87f94c370901021226j40176872h9e5723c6da4afcbe@mail.gmail.com> <yq13ag174af.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <495B9ED3.8050008@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Robert Hancock <hancockr@shaw.ca>, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <yq13ag174af.fsf@sermon.lab.mkp.net>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 02/01/2009 22:04, Martin K. Petersen wrote:
+[...]
+> I wrote something akin to DIF in software by doing 64 512-byte blocks +
+> 512 bytes of checksums.  The disadvantage there is having to do
+> read-modify-write for small writes.  I tried several other approaches
+> sacrificing both space and locality but performance was still anemic.
 
+Excuse me if I'm being dense - and indeed tell me! - but RAID 4/5/6 
+already suffer from having to do ready-modify-write for small writes, so 
+is there any chance this could be done at relatively little additional 
+expense for these?
 
-On Wed, 31 Dec 2008, Mark Lord wrote:
+Cheers,
 
-> Robert Hancock wrote:
->> Justin Piszcz wrote:
->>> On one system, two Raptor 150s:
->>> 
->>> [    0.739402] ata1.00: HPA detected: current 293044655, native 293046768
-> ..
->> Presumably somebody or something set up a host protected area on one drive 
->> and not the other.. I believe there are some utilities out there that can 
->> be used to disable the HPA and allow the full capacity to be used.
-> ..
->
-> "hdparm -N" can do this, temporarily or permanently.
-> Get the latest version from Sourceforge, and see the manpage for details.
->
-> -ml
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-Just incase someone Google's this later on, this is what it looks like,
-for my case:
-
-The /dev/sda (first disk) is the one with the problem.
-
-root@Knoppix:~/hpa# hdparm -N /dev/sda
-
-/dev/sda:
-  max sectors   = 293044655/293046768, HPA is enabled
-root@Knoppix:~/hpa# hdparm -N /dev/sdb
-
-/dev/sdb:
-  max sectors   = 293046768/293046768, HPA is disabled
-root@Knoppix:~/hpa# hdparm -N p293046768 /dev/sda
-
-/dev/sda:
-  setting max visible sectors to 293046768 (permanent)
-  max sectors   = 293046768/293046768, HPA is disabled
-root@Knoppix:~/hpa#
-
-root@Knoppix:~# hdparm -N /dev/sda
-
-/dev/sda:
-  max sectors   = 293046768/293046768, HPA is disabled
-root@Knoppix:~#
-
-1. I backed up the volume of the RAID-1 array.
-2. Failed out the disk with the problem.
-3. Then ran the commands above.
-4. Reboot back to the OS.
-5. Re-add the disk back into the RAID-1.
-
-
-Justin.
+John.
 
