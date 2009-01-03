@@ -1,32 +1,46 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Corrupt data - RAID sata_sil 3114 chip
-Date: Sat, 3 Jan 2009 13:39:36 +0000
-Message-ID: <20090103133936.0f6a3d2c@lxorguk.ukuu.org.uk>
-References: <495E01E3.9060903@sm7jqb.se>
-	<alpine.DEB.1.10.0901020741200.11852@p34.internal.lan>
-	<20090102213007.GA4349@lanczos.q-leap.de>
+From: Mike Myers <mikesm559@yahoo.com>
+Subject: Re: Need urgent help in fixing raid5 array
+Date: Sat, 3 Jan 2009 07:49:39 -0800 (PST)
+Message-ID: <432505.65026.qm@web30805.mail.mud.yahoo.com>
+References: <451872.61166.qm@web30802.mail.mud.yahoo.com> <alpine.DEB.1.10.0901011039110.9903@p34.internal.lan> <467705.96388.qm@web30807.mail.mud.yahoo.com> <alpine.DEB.1.10.0901011328380.17888@p34.internal.lan> <344038.60917.qm@web30808.mail.mud.yahoo.com> <alpine.DEB.1.10.0901020708210.3858@p34.internal.lan> <17665.11566.qm@web30804.mail.mud.yahoo.com> <alpine.DEB.1.10.0901021319330.26159@p34.internal.lan> <746863.34803.qm@web30803.mail.mud.yahoo.com> <alpine.DEB.1.10.0901021355370.3485@p34.internal.lan> <480194.8807.qm@web30808.mail.mud.yahoo.com> <26FE68629F5947799772AAAFA8A6DF6F@m5> <889784.63168.qm@web30805.mail.mud.yahoo.com> <495F5E17.4070600@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090102213007.GA4349@lanczos.q-leap.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bernd Schubert <bs@q-leap.de>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, bengt@remove.sm7jqb.se, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 2 Jan 2009 22:30:07 +0100
-Bernd Schubert <bs@q-leap.de> wrote:
+Ugh.  This would explain a lot!  i'll try this out and see if it can help get md1 back online.  Is the only way to regenerate a superblock on a member doing a a create with the assume-clean option?
 
-> Hello Bengt,
+thx
+mike
+
+
+
+----- Original Message ----
+From: John Robinson <john.robinson@anonymous.org.uk>
+To: Mike Myers <mikesm559@yahoo.com>
+Cc: linux-raid@vger.kernel.org
+Sent: Saturday, January 3, 2009 4:46:15 AM
+Subject: Re: Need urgent help in fixing raid5 array
+
+On 03/01/2009 05:02, Mike Myers wrote:
+> I have tried that.  It still complains about only having 4 disks to start the array (if don't tell it to use sdf1).
 > 
-> sil3114 is known to cause data corruption with some disks. 
+> I have been unable to explain my md refuses to use some of the members even though they have good superblock info on them even with the force command.  There are two members of md1 that are online and seem to have proper superblock info, but md doesn't assemble md1 with them.  
+> Is there a place (besides the code) where md's specifics about how it assembles members is documented?  
 
-News to me. There are a few people with lots of SI and other devices
-jammed into the same mainboard who had problems but that doesn't appear
-to be an SI problem as far as I can tell.
+I'm absolutely no expert here, but I vaguely recall one of the developers recently noting that there was a minor bug in `mdadm --assemble --force` whereby if you didn't mention the broken member(s) first on the command line, and the early member(s) were good, the later member(s) didn't get forced. So in your case, you might try mentioning your array members in a different order, as long as you don't blame me when it eats your cat, or whatever.
 
-There are some incompatibilities between certain silicon image chips and
-Nvidia chipsets needing BIOS workarounds according to the errata docs.
+Aha, here it is: http://marc.info/?l=linux-raid&m=122938233431234&w=2
 
-Alan
+Not quite what I said, but not a zillion miles off :-) Good luck.
+
+Cheers,
+
+John.
+
+
+
+      
