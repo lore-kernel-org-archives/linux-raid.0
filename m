@@ -1,18 +1,34 @@
-From: "Guy Watkins" <linux-raid@watkins-home.com>
-Subject: RE: Need urgent help in fixing raid5 array
-Date: Fri, 2 Jan 2009 23:43:53 -0500
-Message-ID: <26FE68629F5947799772AAAFA8A6DF6F@m5>
-References: <451872.61166.qm@web30802.mail.mud.yahoo.com> <alpine.DEB.1.10.0901011039110.9903@p34.internal.lan> <467705.96388.qm@web30807.mail.mud.yahoo.com> <alpine.DEB.1.10.0901011328380.17888@p34.internal.lan> <344038.60917.qm@web30808.mail.mud.yahoo.com> <alpine.DEB.1.10.0901020708210.3858@p34.internal.lan> <17665.11566.qm@web30804.mail.mud.yahoo.com> <alpine.DEB.1.10.0901021319330.26159@p34.internal.lan> <746863.34803.qm@web30803.mail.mud.yahoo.com> <alpine.DEB.1.10.0901021355370.3485@p34.internal.lan> <480194.8807.qm@web30808.mail.mud.yahoo.com>
+From: Mike Myers <mikesm559@yahoo.com>
+Subject: Re: Need urgent help in fixing raid5 array
+Date: Fri, 2 Jan 2009 21:02:37 -0800 (PST)
+Message-ID: <889784.63168.qm@web30805.mail.mud.yahoo.com>
+References: <451872.61166.qm@web30802.mail.mud.yahoo.com> <alpine.DEB.1.10.0901011039110.9903@p34.internal.lan> <467705.96388.qm@web30807.mail.mud.yahoo.com> <alpine.DEB.1.10.0901011328380.17888@p34.internal.lan> <344038.60917.qm@web30808.mail.mud.yahoo.com> <alpine.DEB.1.10.0901020708210.3858@p34.internal.lan> <17665.11566.qm@web30804.mail.mud.yahoo.com> <alpine.DEB.1.10.0901021319330.26159@p34.internal.lan> <746863.34803.qm@web30803.mail.mud.yahoo.com> <alpine.DEB.1.10.0901021355370.3485@p34.internal.lan> <480194.8807.qm@web30808.mail.mud.yahoo.com> <26FE68629F5947799772AAAFA8A6DF6F@m5>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <480194.8807.qm@web30808.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Mike Myers' <mikesm559@yahoo.com>, 'Justin Piszcz' <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org, 'john lists' <john4lists@gmail.com>
+To: Guy Watkins <linux-raid@watkins-home.com>, Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-raid@vger.kernel.org, john lists <john4lists@gmail.com>
 List-Id: linux-raid.ids
+
+I have tried that.  It still complains about only having 4 disks to start the array (if don't tell it to use sdf1).
+
+I have been unable to explain my md refuses to use some of the members even though they have good superblock info on them even with the force command.  There are two members of md1 that are online and seem to have proper superblock info, but md doesn't assemble md1 with them.  
+
+Is there a place (besides the code) where md's specifics about how it assembles members is documented?  
+
+Thx
+mike
+
+
+
+
+----- Original Message ----
+From: Guy Watkins <linux-raid@watkins-home.com>
+To: Mike Myers <mikesm559@yahoo.com>; Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-raid@vger.kernel.org; john lists <john4lists@gmail.com>
+Sent: Friday, January 2, 2009 8:43:53 PM
+Subject: RE: Need urgent help in fixing raid5 array
 
 } -----Original Message-----
 } From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
@@ -113,3 +129,5 @@ Guy
 } the body of a message to majordomo@vger.kernel.org
 } More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+
+      
