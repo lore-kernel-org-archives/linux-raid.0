@@ -1,37 +1,45 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Need urgent help in fixing raid5 array
-Date: Sat, 03 Jan 2009 12:46:15 +0000
-Message-ID: <495F5E17.4070600@anonymous.org.uk>
-References: <451872.61166.qm@web30802.mail.mud.yahoo.com> <alpine.DEB.1.10.0901011039110.9903@p34.internal.lan> <467705.96388.qm@web30807.mail.mud.yahoo.com> <alpine.DEB.1.10.0901011328380.17888@p34.internal.lan> <344038.60917.qm@web30808.mail.mud.yahoo.com> <alpine.DEB.1.10.0901020708210.3858@p34.internal.lan> <17665.11566.qm@web30804.mail.mud.yahoo.com> <alpine.DEB.1.10.0901021319330.26159@p34.internal.lan> <746863.34803.qm@web30803.mail.mud.yahoo.com> <alpine.DEB.1.10.0901021355370.3485@p34.internal.lan> <480194.8807.qm@web30808.mail.mud.yahoo.com> <26FE68629F5947799772AAAFA8A6DF6F@m5> <889784.63168.qm@web30805.mail.mud.yahoo.com>
+From: Bernd Schubert <bs@q-leap.de>
+Subject: Re: Corrupt data - RAID sata_sil 3114 chip
+Date: Sat, 3 Jan 2009 14:13:02 +0100
+Message-ID: <200901031413.03623.bs@q-leap.de>
+References: <495E01E3.9060903@sm7jqb.se> <20090102213007.GA4349@lanczos.q-leap.de> <1230949917.21115.4.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <889784.63168.qm@web30805.mail.mud.yahoo.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Mike Myers <mikesm559@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1230949917.21115.4.camel@localhost>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: Redeeman <redeeman@metanurb.dk>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, bengt@sm7jqb.se, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 03/01/2009 05:02, Mike Myers wrote:
-> I have tried that.  It still complains about only having 4 disks to start the array (if don't tell it to use sdf1).
-> 
-> I have been unable to explain my md refuses to use some of the members even though they have good superblock info on them even with the force command.  There are two members of md1 that are online and seem to have proper superblock info, but md doesn't assemble md1 with them.  
-> 
-> Is there a place (besides the code) where md's specifics about how it assembles members is documented?  
+On Saturday 03 January 2009 03:31:57 Redeeman wrote:
+> On Fri, 2009-01-02 at 22:30 +0100, Bernd Schubert wrote:
+> > Hello Bengt,
+> >
+> > sil3114 is known to cause data corruption with some disks. So far I only
+> > know about Seagate, but maybe there issues with newer Samsungs as well?
+> >
+> > http://lkml.indiana.edu/hypermail/linux/kernel/0710.2/2035.html
+> >
+> > Unfortuntely this issue has been simply ignored by the SATA developers :(
+> > So if you want to be on the safe side, go an get another controller.
+>
+> Are you sure? is this not the "15" or "slow_down" thing mentioned here:
+> http://ata.wiki.kernel.org/index.php/Sata_sil ?
+>
 
-I'm absolutely no expert here, but I vaguely recall one of the 
-developers recently noting that there was a minor bug in `mdadm 
---assemble --force` whereby if you didn't mention the broken member(s) 
-first on the command line, and the early member(s) were good, the later 
-member(s) didn't get forced. So in your case, you might try mentioning 
-your array members in a different order, as long as you don't blame me 
-when it eats your cat, or whatever.
+According to Jeff Garzik and Tejun Heo 3114 is not affected by the mod15 bug. 
+The mod15 also help in our case, but probably we are just luckily.
 
-Aha, here it is: http://marc.info/?l=linux-raid&m=122938233431234&w=2
+https://kerneltrap.org/mailarchive/linux-kernel/2007/10/11/334985/thread
 
-Not quite what I said, but not a zillion miles off :-) Good luck.
 
 Cheers,
+Bernd
 
-John.
+-- 
+Bernd Schubert
+Q-Leap Networks GmbH
