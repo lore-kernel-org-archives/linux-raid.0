@@ -1,58 +1,64 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re: southbridge/sata controller performance?
-Date: Sat, 03 Jan 2009 14:11:38 -0600
-Message-ID: <495FC67A.2030201@gmail.com>
-References: <20090103193429.GA17462@sewage.raw-sewage.fake>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: Corrupt data - RAID sata_sil 3114 chip
+Date: Sat, 03 Jan 2009 14:53:09 -0600
+Message-ID: <495FD035.8080501@shaw.ca>
+References: <200901032104.15242.bs@q-leap.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090103193429.GA17462@sewage.raw-sewage.fake>
-Sender: linux-raid-owner@vger.kernel.org
-To: Matt Garman <matthew.garman@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <200901032104.15242.bs@q-leap.de>
+Sender: linux-ide-owner@vger.kernel.org
+To: Bernd Schubert <bs@q-leap.de>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Justin Piszcz <jpiszcz@lucidpixels.com>, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
-Matt Garman wrote:
-> When using Linux software RAID, I was thinking that, from a
-> performance perspective, the southbridge/SATA controller is probably
-> one of the most important components (assuming a reasonable CPU).
-> Is this a correct generalization?
+Bernd Schubert wrote:
+> [sorry sent again, since Robert dropped all mailing list CCs and I didn't 
+> notice first]
 > 
-> If it is, has anyone done a study or benchmarked SATA controller
-> performance?  Particularly with consumer-grade hardware?
+> On Sat, Jan 03, 2009 at 12:31:12PM -0600, Robert Hancock wrote:
+>> Bernd Schubert wrote:
+>>> On Sat, Jan 03, 2009 at 01:39:36PM +0000, Alan Cox wrote:
+>>>> On Fri, 2 Jan 2009 22:30:07 +0100
+>>>> Bernd Schubert <bs@q-leap.de> wrote:
+>>>>
+>>>>> Hello Bengt,
+>>>>>
+>>>>> sil3114 is known to cause data corruption with some disks. 
+>>>> News to me. There are a few people with lots of SI and other devices
+>>> No no, you just forgot about it, since you even reviewed the patches ;)
+>>>
+>>> http://lkml.org/lkml/2007/10/11/137
+>> And Jeff explained why they were not merged:
+>>
+>> http://lkml.org/lkml/2007/10/11/166
+>>
+>> All the patch does is try to reduce the speed impact of the workaround.  
+>> But as was pointed out, they don't reliably solve the problem the  
+>> workaround is trying to fix, and besides, the workaround is already not  
+>> applied to SiI3114 at all, as it is apparently not applicable on that  
+>> controller (only 3112).
 > 
-> I haven't been able to find much info about this on the web; the
-> Tech Report seems to consistently benchmark SATA performance:
+> Well, do they reliable solve the problem in our case (before taking the patch
+> into production I run a checksum tests for about 2 weeks). Anyway, I entirely
+> understand the patches didn't get accepted. 
 > 
->     AMD SB600: http://techreport.com/articles.x/13832/5
->     AMD SB700: http://techreport.com/articles.x/14261/10
->     AMD SB750: http://techreport.com/articles.x/13628/9
->     Intel ICH10: http://techreport.com/articles.x/15653/9
->     nVidia GeForce 8300: http://techreport.com/articles.x/14993/9
+> But now more than a year has passed again without doing anything
+> about it and actually this is what I strongly criticize. Most people don't
+> know about issues like that and don't run file checksum tests as I now always
+> do before taking a disk into production. So users are exposed to known
+> data corruption problems without even being warned about it. Usually
+> even backups don't help, since one creates a backup of the corrupted data.
+> 
+> So IMHO, the driver should be deactived for sil3114 until a real solution is 
+> found. And it only should be possible to force activate it by a kernel flag, 
+> which then also would print a huuuge warning about possible data corruption 
+> (unfortunately most distributions disables inital kernel messages *grumble*).
 
-In general those benchmarks are mostly useless for Raid.
-
-The biggest different for RAID is what happens when multiple channels 
-are used.   On full speed streaming read/write almost every (even the 
-worst PCI controllers on a PCI bus) sata controller is close to equal 
-when you only have one drive, once you use 2 drives or more things 
-change.   If the given controller setup can actually run several 
-drives at close to full single drive speed performance will be good, 
-if it cannot things are going to get much slower.
-
-One test I do is a single dd from one disk and watch the io speed, and 
-then I add dd's and watch what happens.   I have 4 identical disks, 2 
-are on a ICH7, 2 are on a pci bus based MB controller, any single of 
-these disks will do about 75MB/second no matter were it is, using 2 on 
-the ich7 gets about 140-150MB/second, using the 2 on the pci bus based 
-MB controller gets 98MB/second.   If all of the controllers 
-techreports tested were equal on this test, then it might be worth it 
-to look at the benchmarks techreport is using, but the simple dd 
-benchmark is likely more important, and I am pretty sure that someone 
-could use a controller (on a bandwidth limited bus) that would do good 
-on the above techreport benchmark, but fail horribly when several 
-disks with a high io speed were being used and work badly for raid.
-
-
-
+If the corruption was happening on all such controllers then people 
+would have been complaining in droves and something would have been 
+done. It seems much more likely that in this case the problem is some 
+kind of hardware fault or combination of hardware which is causing the 
+problem. Unfortunately these kind of not-easily-reproducible issues tend 
+to be very hard to track down.
