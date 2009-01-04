@@ -1,88 +1,61 @@
-From: "Jeff Rippy" <jrippy@gmail.com>
-Subject: Re: Fwd: Raid 5 --grow to fewer, larger drives
-Date: Sat, 3 Jan 2009 21:32:06 -0600
-Message-ID: <de6d3ea90901031932k24d557c7y6fec0eda0c8302af@mail.gmail.com>
-References: <de6d3ea90901031521va35b7b5uf3050995561592c0@mail.gmail.com>
-	 <de6d3ea90901031527x4af0dfcfm28f2d8890698a931@mail.gmail.com>
-	 <49601216.4090203@anonymous.org.uk>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: RFC: detection of silent corruption via ATA long sector reads
+Date: Sun, 04 Jan 2009 02:37:23 -0500
+Message-ID: <yq1eizj5xos.fsf@sermon.lab.mkp.net>
+References: <fa.8mwKV7y4hm+Q6mvIKtp9QGoJYUU@ifi.uio.no>
+	<fa.4QcsYZC0gJJwJ0eUOht3hDYaVWs@ifi.uio.no>
+	<49580061.9060506@yahoo.com>
+	<87f94c370901021226j40176872h9e5723c6da4afcbe@mail.gmail.com>
+	<yq13ag174af.fsf@sermon.lab.mkp.net>
+	<495F6622.9010103@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49601216.4090203@anonymous.org.uk>
-Content-Disposition: inline
+In-Reply-To: <495F6622.9010103@anonymous.org.uk> (John Robinson's message of "Sat\, 03 Jan 2009 13\:20\:34 +0000")
 Sender: linux-raid-owner@vger.kernel.org
 To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: linux-raid@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks for the suggestions.  I am running LVM on top of the raid.  I
-can't fit any more drives in the case but I do have room to hang them
-out, the problem though is SATA ports.  I'm out.  The cards are cheap
-so maybe I'll pick one up for this move.  Any suggestions on brands to
-stay away from or is pretty everything supported in the kernel by now?
+>>>>> "John" == John Robinson <john.robinson@anonymous.org.uk> writes:
 
-On Sat, Jan 3, 2009 at 7:34 PM, John Robinson
-<john.robinson@anonymous.org.uk> wrote:
-> On 03/01/2009 23:27, Jeff Rippy wrote:
->>
->> I too am looking at this.  My current setup is 4x 500GB drives and I
->> want to move to 3x  >=1TB drives.
->> My usable space should increase from 1.5TB to >= 2TB with this move if
->> possible.
->>
->> I'm fairly new to linux-raid in general but I know you can replace
->> drives with bigger ones.  You just can't use their space until all
->> drives in the array are of that size.  So I'm thinking of replacing 3
->> of the 500's with the 1 TBs.  Then fail and remove the 4th drive
->> (assuming enough free space) and somehow forcing a reshape on the
->> remaining 3 drives.  Not sure if that is possible but I can't imagine
->> why it wouldn't be.  After the resync, finally grow to the new size
->> and be done.
->>
->> Can someone tell me if this is even possible?  I saw the one reply in
->> Nov. to Alex's email but I don't have another machine to swap the
->> disks too.
->
-> No, it'll only work if you move to 4x1TB, but even then it would be risky;
-> you wouldn't have any redundancy during 3 rebuilds and a reshape, and if one
-> drive goes bad you'll lose your data.
->
-> If you can physically fit the 3 new drives, just build the new array and
-> copy over instead. Jon Nelson's suggestion sounds to me like a good one to
-> make the copying easy if you're using LVM.
->
-> If you can physically fit 2 more drives, you can either:
-> a) build the new array with a drive missing, copy the data, then pull the
-> old array and resync with the third new drive, or
-> b) go read-only, yank one of the old drives, build the new array and copy
-> over
->
-> If you can physically fit 1 more drive, you can do both of the above
-> simultaneously, i.e. go read-only, pull one of the old drives, build the new
-> array with a disc missing, copy the data, then resync with the third new
-> disc.
->
-> If you can't fit any more drives, err, open the case and hang the drives
-> outside the case?
->
-> Actually there is a funky thing you can do if you can't fit any more drives,
-> as long as your data will fit on just one of the new drives: go read-only,
-> pull one of the old drives, install one of the new ones, create a 2-disc
-> RAID-5 with a disc missing (! - yes, this works), copy the data, pull the
-> rest of the old array, add the second new disc and resync the new array onto
-> it, add the third new disc and reshape the array onto it.
->
-> None of the above methods where I say "go read-only" will work with the LVM
-> copy method, but your old array will remain intact so you won't lose data,
-> as long as you're being careful about what you're doing.
->
-> If you're going to do any of this b*ggering about, you'd be well advised to
-> make a backup first, save a copy of your mdadm.conf and various outputs from
-> mdadm --examine, perhaps even on paper(!), and try to keep track of what
-> drives came from where, in case it all goes horribly wrong.
->
-> Cheers,
->
-> John.
->
+John> Excuse me if I'm being dense - and indeed tell me! - but RAID
+John> 4/5/6 already suffer from having to do ready-modify-write for
+John> small writes, so is there any chance this could be done at
+John> relatively little additional expense for these?
+
+You'd still need to store a checksum somewhere else, incurring
+additional seek cost.  You could attempt to weasel out of that by adding
+the checksum sector after a limited number of blocks and hope that you'd
+be able to pull it in or write it out in one sweep.
+
+The downside is that assume we do checksums on - say - 8KB chunks in the
+RAID5 case.  We only need to store a few handfuls of bytes of checksum
+goo per block.  But we can't address less than a 512 byte sector.  So we
+need to either waste the bulk of 1 sector for every 16 to increase the
+likelihood of adjacent access.  Or we can push the checksum sector
+further out to fill it completely.  That wastes less space but has a
+higher chance of causing an extra seek.  Pick your poison.
+
+The reason I'm advocating checksumming on logical (filesystem) blocks is
+that the filesystems have a much better idea what's good and what's bad
+in a recovery situation.  And the filesystems already have an
+infrastructure for storing metadata like checksums.  The cost of
+accessing that metadata is inherent and inevitable.
+
+btrfs had checksums from the get-go.  The XFS folks are working hard on
+adding them.  ext4 is going to checksum metadata, I believe.  So this is
+stuff that's already in the pipeline.
+
+We also don't want to do checksumming at every layer.  That's going to
+suck from a performance perspective.  It's better to do checksumming
+high up in the stack and only do it once.  As long as we give the upper
+layers the option of re-driving the I/O.
+
+That involves adding a cookie to each bio that gets filled out by DM/MD
+on completion.  If the filesystem checksum fails we can resubmit the I/O
+and pass along the cookie indicating that we want a different copy than
+the one the cookie represents.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
