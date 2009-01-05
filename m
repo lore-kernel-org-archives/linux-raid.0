@@ -1,174 +1,94 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: southbridge/sata controller performance?
-Date: Mon, 5 Jan 2009 08:08:07 +0100
-Message-ID: <20090105070806.GA3910@rap.rap.dk>
-References: <20090103193429.GA17462@sewage.raw-sewage.fake> <495FC67A.2030201@gmail.com> <alpine.DEB.1.10.0901040451520.18797@p34.internal.lan> <20090104194023.GB10174@sewage.raw-sewage.fake> <496123ED.5050809@gmail.com> <20090105032728.GA24328@sewage.raw-sewage.fake>
+From: "Roy Lim" <cableroy@gmail.com>
+Subject: Re: raid5 with 2 disks not working correctly. Need help!
+Date: Mon, 5 Jan 2009 09:19:37 +0100
+Message-ID: <995ea3b00901050019s151024d0n3b2eb2680bd32c0e@mail.gmail.com>
+References: <995ea3b00812160536x55d140caned9952c99dd5e2be@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <995ea3b00812160536x55d140caned9952c99dd5e2be@mail.gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20090105032728.GA24328@sewage.raw-sewage.fake>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matt Garman <matthew.garman@gmail.com>
-Cc: Roger Heflin <rogerheflin@gmail.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-What about CPU usage?
+Hi again,
 
-What happens when you put it into one or more raids, what are then your
-combinde performance? Did you experiment with different raid types?
+Can anybody please help me out here?
 
-best regards
-keld
+Roy
 
-On Sun, Jan 04, 2009 at 09:27:28PM -0600, Matt Garman wrote:
-> On Sun, Jan 04, 2009 at 03:02:37PM -0600, Roger Heflin wrote:
-> > Yes, that is valid, so long as the md device is fairly quiet at
-> > the time of the test.  Since you already have a machine, please
-> > post the mb type, and number/type of sata ports and the 1-disk,
-> > 2-disk, 3-disk,... numbers that you get.
-> 
-> I attached a little Perl script I hacked up for running many
-> instances of dd in parallel or individually.  It takes one or more
-> block devices on the command line, and issues parallel dd reads for
-> each one.  (Note my block size and count params are enormous; I made
-> these huge to avoid caching effects of having 4 GB of RAM.)
-> 
-> I have two MD arrays in my system:
-> 
-> $ cat /proc/mdstat 
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
-> md1 : active raid5 sdb1[0] sdd1[3] sdc1[2] sde1[1]
->       2930279808 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
->             
-> md0 : active raid5 sdf1[0] sdi1[3] sdh1[2] sdg1[1]
->       2197715712 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
->             
-> unused devices: <none>
-> 
-> 
-> This is on Ubuntu server 8.04.  Hardware is an Intel DQ35JO
-> motherboard (Q35/ICH9DO chipsets) with 4 GB RAM and an E5200 CPU.
-> 
->     - md1 has four WD RE2 GP 1 TB hard drives (the 5400 RPM ones).
->       These are drives are connected to two 2-port PCIe SATA add-on
->       cards with the Silicon Image 3132 controller.
-> 
->     - md0 has four WD 750 GB drives (neither "RE2" version nor
->       GreenPower).  These drives are connected directly to the
->       on-board SATA ports (i.e. ICH9DO).
-> 
-> For md1 (RE2 GP drives on SiI 3132), it looks like I get about 80
-> MB/s when running dd on one drive:
-> 
-> $ sudo ./sata_performance.pl /dev/sd[b]
-> /dev/sdb: 13107200000 bytes (13 GB) copied, 163.757 s, 80.0 MB/s
-> 
-> With all four drives, it only drops to about 75 MB/s per drive:
-> 
-> $ sudo ./sata_performance.pl /dev/sd[bcde]
-> /dev/sdb: 13107200000 bytes (13 GB) copied, 171.647 s, 76.4 MB/s
-> /dev/sde: 13107200000 bytes (13 GB) copied, 172.052 s, 76.2 MB/s
-> /dev/sdd: 13107200000 bytes (13 GB) copied, 172.737 s, 75.9 MB/s
-> /dev/sdc: 13107200000 bytes (13 GB) copied, 172.777 s, 75.9 MB/s
-> 
-> For md0 (4x750 GB drives), performance is a little better; these
-> drives are definitely faster (7200 rpm vs 5400 rpm), and IIRC, the
-> SiI 3132 chipsets are known to be lousy performers.
-> 
-> Anyway, single drive performance is just shy of 100 MB/s:
-> 
-> $ sudo ./sata_performance.pl /dev/sd[f]
-> /dev/sdf: 13107200000 bytes (13 GB) copied, 133.099 s, 98.5 MB/s
-> 
-> And I lose virtually nothing when running all four disks at once:
-> 
-> $ sudo ./sata_performance.pl /dev/sd[fghi]
-> /dev/sdi: 13107200000 bytes (13 GB) copied, 130.632 s, 100 MB/s
-> /dev/sdf: 13107200000 bytes (13 GB) copied, 133.077 s, 98.5 MB/s
-> /dev/sdh: 13107200000 bytes (13 GB) copied, 133.411 s, 98.2 MB/s
-> /dev/sdg: 13107200000 bytes (13 GB) copied, 138.481 s, 94.6 MB/s
-> 
-> Read performance only drops a bit when reading from all eight
-> drives:
-> 
-> $ sudo ./sata_performance.pl /dev/sd[bcdefghi]
-> /dev/sdi: 13107200000 bytes (13 GB) copied, 133.086 s, 98.5 MB/s
-> /dev/sdf: 13107200000 bytes (13 GB) copied, 135.59 s, 96.7 MB/s
-> /dev/sdh: 13107200000 bytes (13 GB) copied, 135.86 s, 96.5 MB/s
-> /dev/sdg: 13107200000 bytes (13 GB) copied, 140.215 s, 93.5 MB/s
-> /dev/sdb: 13107200000 bytes (13 GB) copied, 182.402 s, 71.9 MB/s
-> /dev/sdc: 13107200000 bytes (13 GB) copied, 183.234 s, 71.5 MB/s
-> /dev/sdd: 13107200000 bytes (13 GB) copied, 189.025 s, 69.3 MB/s
-> /dev/sde: 13107200000 bytes (13 GB) copied, 189.517 s, 69.2 MB/s
-> 
-> 
-> Note: in all the above test runs, I actually ran them all three
-> times to catch any variance; all runs were consistent.
-> 
-> > I am looking at getting a new AMD solution in the next month or so
-> > and would like also know which scales reasonably.
-> 
-> The one I've got my eye on is the GA-MA74GM-S2.  It's got six
-> onboard SATA ports (provided by the SB700 southbridge).
-> SilentPCReview reviewed this board[1] and found it to have extremely
-> low power consumption when paired with a 4050e CPU.  On that site
-> and other hardware enthusiast sites, there are a lot of people using
-> it for home NAS/fileserver boxes.  I thinking about picking one up
-> to replace this Intel board and CPU; if I do, I'll report back the
-> results.
-> 
-> [1] http://www.silentpcreview.com/article859-page1.html
-> 
-> Thanks again!  Hope someone finds this info useful.
-> 
-> Matt
-> 
-
-> #!/usr/bin/perl
-> 
-> # License: public domain
-> 
-> use strict;
-> 
-> my $dd="/bin/dd";
-> my $bs="128k";
-> my $count="100000";
-> 
-> my @pids;
-> for my $dev (@ARGV)
-> {
->     my $pid = fork();
->     if ($pid == 0) # child
->     {
->         my $cmd = "$dd if=$dev of=/dev/null bs=$bs count=$count 2>&1";
->         my @output = `$cmd`;
->         my $n_lines = scalar(@output);
->         my $rc = $? >> 8;
->         if ($rc != 0 || $n_lines != 3)
->         {
->             print STDERR "ERROR: $dev: return code=$rc, n_lines=$n_lines:\n";
->             foreach my $line (@output)
->             {
->                 print STDERR "  " . $line;
->             }
->         }
->         else
->         {
->             my $line = $output[2];
->             chomp($line);
->             print "$dev: $line\n";
->         }
->         exit(0);
->     }
->     else # parent
->     {
->         push(@pids, $pid);
->     }
-> }
-> 
-> for my $pid (@pids)
-> {
->     waitpid($pid, 0);
-> }
-
+On Tue, Dec 16, 2008 at 2:36 PM, Roy Lim <cableroy@gmail.com> wrote:
+> Hi
+> I have ran into a serious problem with my raid5 array and need expert
+> help on this one.
+>
+> My array is with 5x500GB disks none spare, I've accidentally did a
+> unclean shutdown of the server. When it came up it gave me this error:
+>
+> Dec 15 09:07:11 ares kernel: md: kicking non-fresh hdk1 from array!
+> Dec 15 09:07:11 ares kernel: md: unbind<hdk1>
+> Dec 15 09:07:11 ares kernel: md: export_rdev(hdk1)
+> Dec 15 09:07:11 ares kernel: md: md0: raid array is not clean --
+> starting background reconstruction
+> Dec 15 09:07:11 ares kernel: raid5: device hde1 operational as raid disk 0
+> Dec 15 09:07:11 ares kernel: raid5: device sda1 operational as raid disk 4
+> Dec 15 09:07:11 ares kernel: raid5: device hdi1 operational as raid disk 2
+> Dec 15 09:07:11 ares kernel: raid5: device hdg1 operational as raid disk 1
+> Dec 15 09:07:11 ares kernel: raid5: cannot start dirty degraded array for md0
+>
+> However i managed to get this back up with remove and add, the system
+> was rebuilding the array. around 70-80% in the process i was going to
+> prepare to decrypt it (luks crypted) so I'm going to mount the usb
+> stick witch has the encryption key however when i was going to mount
+> it i tried to mount wrong device, resulting trying to mount a device
+> in the array (sda1) i hit repeatedly crtl+c, now taking a look at the
+> details on the array it looks like this:
+>
+> /dev/md0:
+>        Version : 00.90.03
+>  Creation Time : Mon Feb  4 18:25:28 2008
+>     Raid Level : raid5
+>     Array Size : 1953535744 (1863.04 GiB 2000.42 GB)
+>    Device Size : 488383936 (465.76 GiB 500.11 GB)
+>   Raid Devices : 5
+>  Total Devices : 5
+> Preferred Minor : 0
+>    Persistence : Superblock is persistent
+>
+>    Update Time : Mon Dec 15 16:02:54 2008
+>          State : clean, degraded
+>  Active Devices : 3
+> Working Devices : 4
+>  Failed Devices : 1
+>  Spare Devices : 1
+>
+>         Layout : left-symmetric
+>     Chunk Size : 64K
+>
+>           UUID : 856a6e4e:a1663e98:9efbd2b1:7507133b
+>         Events : 0.74
+>
+>    Number   Major   Minor   RaidDevice State
+>       0      33        1        0      active sync   /dev/hde1
+>       1      34        1        1      active sync   /dev/hdg1
+>       2      56        1        2      active sync   /dev/hdi1
+>       3       0        0        3      removed
+>       4       0        0        4      removed
+>
+>       5      57        1        -      spare   /dev/hdk1
+>       6       8        1        -      faulty spare   /dev/sda1
+>
+> a quick summary: hdk1 was the one failing in the first place, witch
+> was about to get rebuild, sda1 was the device i tried to mount while
+> reconstruction the data. As you can see, hdk1 is now marked as spare
+> and sda1 a faulty spare.  I have not touch the array after this. Can
+> anyone help me out? How can i force mdadm to set the sda1 to active
+> sync so i can mount the array and start a backup? Can i use dd_rescue
+> to file of all of the disks and play with it?
+>
+> All help is appreciated!
+>
+> /Roy
+>
