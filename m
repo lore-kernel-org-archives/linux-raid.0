@@ -1,45 +1,55 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE: Are there some alignment settings when creating filesystem on RAID5 array which can improve performance?
-Date: Sun, 4 Jan 2009 19:32:01 -0600
-Message-ID: <A20315AE59B5C34585629E258D76A97C0337C80B@34093-C3-EVS3.exchange.rackspace.com>
-References: <389deec70901041707l1613a8e8jb6a6a3fbba57ea91@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: RFC: detection of silent corruption via ATA long sector reads
+Date: Sun, 04 Jan 2009 21:43:38 -0500
+Message-ID: <yq14p0e4gmd.fsf@sermon.lab.mkp.net>
+References: <fa.8mwKV7y4hm+Q6mvIKtp9QGoJYUU@ifi.uio.no>
+	<fa.4QcsYZC0gJJwJ0eUOht3hDYaVWs@ifi.uio.no>
+	<49580061.9060506@yahoo.com>
+	<87f94c370901021226j40176872h9e5723c6da4afcbe@mail.gmail.com>
+	<yq13ag174af.fsf@sermon.lab.mkp.net>
+	<495F6622.9010103@anonymous.org.uk>
+	<yq1eizj5xos.fsf@sermon.lab.mkp.net>
+	<4960AC15.8030207@anonymous.org.uk>
+	<4960BE63.3040608@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <389deec70901041707l1613a8e8jb6a6a3fbba57ea91@mail.gmail.com>
+In-Reply-To: <4960BE63.3040608@anonymous.org.uk> (John Robinson's message of "Sun\, 04 Jan 2009 13\:49\:23 +0000")
 Sender: linux-raid-owner@vger.kernel.org
-To: hank peng <pengxihan@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1yYWlkLW93bmVyQHZn
-ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXJhaWQtDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
-Z10gT24gQmVoYWxmIE9mIGhhbmsgcGVuZw0KPiBTZW50OiBTdW5kYXksIEphbnVhcnkgMDQsIDIw
-MDkgNzowOCBQTQ0KPiBUbzogbGludXgtcmFpZA0KPiBTdWJqZWN0OiBBcmUgdGhlcmUgc29tZSBh
-bGlnbm1lbnQgc2V0dGluZ3Mgd2hlbiBjcmVhdGluZyBmaWxlc3lzdGVtIG9uDQo+IFJBSUQ1IGFy
-cmF5IHdoaWNoIGNhbiBpbXByb3ZlIHBlcmZvcm1hbmNlPw0KPiANCj4gSGksIGV2ZXJ5Ym9keToN
-Cj4gSSBoYXZlIGEgbWFjaGluZSBhbmQgY2VudG9zIDUuMiBpbnN0YWxsZWQgb24gaXQuIEkgaGF2
-ZSBjcmVhdGVkIGENCj4gUkFJRDUgYXJyYXkgd2l0aCBmaXZlIFNBVEEgZGlza3MsIHRoZW4gSSBj
-cmVhdGUgTFZNIG9uIHRoaXMgYXJyYXkuDQo+ICNwdmNyZWF0ZSAvZGV2L21kMA0KPiAjdmdjcmVh
-dGUgbXl2ZyAvZGV2L21kMA0KPiAjbHZjcmVhdGUgLW4gbXlsdiBteXZnDQo+IEFzIHlvdSBzZWUs
-IEkgd2FudCB0byB1c2UgWEZTIG9yIFJlaXNlckZTIG9uICJteWx2IiB2b2x1bWUuIEkgd29uZGVy
-DQo+IGlmIHRoZXJlIGFyZSBzb21lIGFsaWdubWVudCBzZXR0aW5ncyB3aGVuIGNyZWF0aW5nIHN1
-Y2ggZmlsZSBzeXN0ZW1zDQo+IHNvIHRoYXQgYSBiZXR0ZXIgUi9XIHBlcmZvcm1hbmNlIGNhbiBi
-ZSBhY2hpZXZlZC4gVGh4IGluIGFkdmFuY2UuDQo+IA0KPiANCj4gLS0NCj4gVGhlIHNpbXBsZXN0
-IGlzIG5vdCBhbGwgYmVzdCBidXQgdGhlIGJlc3QgaXMgc3VyZWx5IHRoZSBzaW1wbGVzdCENCj4g
-LS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vi
-c2NyaWJlIGxpbnV4LXJhaWQiDQo+IGluDQo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpv
-cmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92
-Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KDQoNClllcywgYnV0IGJlIHNwZWNp
-ZmljLiAgSG93IGRvIHlvdSB1c2UgdGhlIHZvbHVtZT8gICBEbyB5b3Ugd2FudCB0byBvcHRpbWl6
-ZSBmb3IgSU9QcyBvcg0KcmF3IGZpbGUgdHJhbnNmZXI/ICBXaGF0IGlzIG1peCBvZiByYW5kb20g
-dnMgc2VxdWVudGlhbCBmb3IgYm90aCByZWFkcyBhbmQgd3JpdGVzLg0KV2hhdCBpcyBibG9jay9j
-aHVuayBzaXplIG9mIHZvbHVtZSwgcmFpZHNldCwgZmlsZXN5c3RlbT8gIFJldmVhbCB5b3VyDQpq
-b3VybmFsaW5nIHNldHRpbmdzLiAgV2hhdCBhcmUgeW91IGdldHRpbmcgbm93LCBhbmQgaG93IGRp
-ZCB5b3UgbWVhc3VyZSBpdD8gICBBcmUgdGhpbmdzDQpsaWtlIE5DUS9UQ1EvcmVhZC13cml0ZSBj
-YWNoZSBlbmFibGVkIG9yIGRpc2FibGVkPyAgDQoNCkhvdyBhcmUgdGhlIGRpc2tzIHBoeXNpY2Fs
-bHkgYXR0YWNoZWQ/ICBQQ0koLVgpIG9yIFBDSWUsIGhvdyBtYW55IGNoYW5uZWxzICBhcmUgeW91
-IHVzaW5nLCBvciBhcmUNCnRoZSBkaXNrcyBhdHRhY2hlZCB2aWEgVVNCIHBvcnRzLiAgDQoNCk5l
-ZWQgbW9yZSBpbmZvLg0KDQoNCg==
+>>>>> "John" == John Robinson <john.robinson@anonymous.org.uk> writes:
+
+John> I've thought about this again, and I'm wrong; there may be
+John> complications in handling the cookies up and down the stack where
+John> more than one layer thinks it knows how to have another go, but I
+John> can see what you describe as being useful and relatively
+John> device-agnostic.
+
+Yeah, care will need to be taken if you have multiple layers in the
+stack providing redundancy.  That's usually not the case, though.
+
+
+John> I wonder if there might also be scope for cookies going down
+John> through the stack to carry an indication of how hard to try; some
+John> filesystems or other consumers of block devices may be willing to
+John> ask again or want to be told about problems quickly (e.g. btrfs
+John> over RAID over TLER-equipped discs), while some may need best
+John> efforts all out first time because they can't cope will failure
+John> returns (e.g. FAT over cheap IDE discs).
+
+We already have this functionality.  It's orthogonal to the integrity
+bits.  You can tell the low-level drivers either fail a request
+immediately or to retry.
+
+That's only a software thing, though.  It doesn't work terribly well
+with consumer harddrives that assume there's only one copy of the data
+and consequently enter annoying-click-mode and retry for a long time.
+Nearline and enterprise drives assume there's a redundant copy and will
+not try as hard under the assumption that you know how to remedy the
+problem.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
