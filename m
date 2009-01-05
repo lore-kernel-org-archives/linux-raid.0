@@ -1,58 +1,84 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Need urgent help in fixing raid5 array
-Date: Tue, 6 Jan 2009 09:11:01 +1100
-Message-ID: <18786.34165.639790.37753@notabene.brown>
-References: <451872.61166.qm@web30802.mail.mud.yahoo.com>
-	<alpine.DEB.1.10.0901011039110.9903@p34.internal.lan>
-	<467705.96388.qm@web30807.mail.mud.yahoo.com>
-	<alpine.DEB.1.10.0901011328380.17888@p34.internal.lan>
-	<344038.60917.qm@web30808.mail.mud.yahoo.com>
+Subject: Re: RAID5 (mdadm) array hosed after grow operation
+Date: Tue, 6 Jan 2009 09:17:46 +1100
+Message-ID: <18786.34570.756734.253596@notabene.brown>
+References: <1231144738.2997.1293010001@webmail.messagingengine.com>
+	<alpine.DEB.1.10.0901050913470.3359@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mike Myers on Thursday January 1
+In-Reply-To: message from Justin Piszcz on Monday January 5
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Myers <mikesm559@yahoo.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, john lists <john4lists@gmail.com>
+To: whollygoat@letterboxes.org
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, debian-user@lists.debian.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday January 1, mikesm559@yahoo.com wrote:
+On Monday January 5, jpiszcz@lucidpixels.com wrote:
+> cc linux-raid
 > 
-> (md1 is comprised of sdd1 sdf1 sdg1 sdh1 sdj1 sdk1 sdo1) 
+> On Mon, 5 Jan 2009, whollygoat@letterboxes.org wrote:
 > 
-> (none):~> mdadm --examine /dev/sdd1 /dev/sdf1 /dev/sdg1 /dev/sdh1
-....
-> (none):~> mdadm --examine /dev/sdj1 /dev/sdk1 /dev/sdo1
-....
+> > I think growing my RAID array after replacing all the
+> > drives with bigger ones has somehow hosed the array.
+> >
+> > The system is Etch with a stock 2.6.18 kernel and
+> > mdadm v. 2.5.6, running on an Athlon 1700 box.
+> > The array is 6 disk (5 active, one spare) RAID 5
+> > that has been humming along quite nicely for
+> > a few months now.  However, I decided to replace
+> > all the drives with larger ones.
+> >
+> > The RAID reassembled fine at each boot as the drives
+> > were replaced one by one.  After the last drive was
+> > partitioned and added to the array, I issued the
+> > command
+> >
+> >   "mdadm -G /dev/md/0 -z max"
+> >
+> > to grow the array to the maximum space available
+> > on the smallest drive.  That appeared to work just
+> > fine at the time, but booting today the array
+> > refused to assemble with the following error:
+> >
+> >    md: hdg1 has invalid sb, not importing!
+> >    md: md_import_device returned -22
+> >
+> > I tried to force assembly but only two of the remaining
+> > 4 active drives appeared to be fault free.  dmesg gives
+> >
+> >    md: kicking non-fresh hde1 from array!
+> >    md: unbind<hde1>
+> >    md: export_rdev(hde1)
+> >    md: kicking non-fresh hdi1 from array!
+> >    md: unbind<hdi1>
+> >    md: export_rdev(hdi1)
 
-So, of these 7 devices, 5 of them (d1 f1 h1 j1 k1) think that are
-good members of the array with current metadata, and the other two (g1
-and o1) have old/wrong metadata.
+Please report
+   mdadm --examine /dev/whatever
+for every device that you think should be a part of the array.
 
-This means that you need to recreate the array.
+> >
+> > I also noticed that "mdadm -X <drive>" shows
+> > the pre-grow device size for 2 of the devices
+> > and some discrepancies between event and event cleared
+> > counts.
 
-The questions:  Which of g1 and o1 has more recent valid data, and
-which should be device '1' and which should be device '2'.
-Depending on the answer to these two questions, the command to you
-will be one for the following 4 possibilities.
+You cannot grow an array with an active bitmap... or at least you
+shouldn't be able to.  Maybe 2.6.18 didn't enforce that.  Maybe that
+is what caused the problem - not sure.
 
-mdadm -C /dev/md1 -e1.0 -l5 -n7 -c128 -b internal /dev/sdh1 /dev/sdg1 missing /dev/sdk1 /dev/sdf1 /dev/sdd1 /dev/sdj1
-mdadm -C /dev/md1 -e1.0 -l5 -n7 -c128 -b internal /dev/sdh1 /dev/sdo1 missing /dev/sdk1 /dev/sdf1 /dev/sdd1 /dev/sdj1
-mdadm -C /dev/md1 -e1.0 -l5 -n7 -c128 -b internal /dev/sdh1 missing /dev/sdg1 /dev/sdk1 /dev/sdf1 /dev/sdd1 /dev/sdj1
-mdadm -C /dev/md1 -e1.0 -l5 -n7 -c128 -b internal /dev/sdh1 missing /dev/sdo1 /dev/sdk1 /dev/sdf1 /dev/sdd1 /dev/sdj1
+> >
+> > One last thing I found curious---from dmesg:
+> >
+> >    EXT3-fs error (device hdg1): ext3_check_descriptors: Block
+> >    bitmap for group 0 not in group (block 2040936682)!
+> >    EXT3-fs: group descriptors corrupted!
+> >
+> > There is not ext3 directly on hdg1.  LVM sits between the
+> > and the filesystem, so the above message seems suspect.
 
-These commands will not change the data on the device, just the
-metadata.
-Once you have created the array, you try to validate the data (fsck or
-similar).
-If it looks bad, stop the array and try a different command.
-
-
-Note: the metadata on g1 and o1 is very strange.  It looks like an old
-copy of the metadata from sdh1.  so it could be that one of g1 or o1
-is really the first drive in the array, and h1 one of the two
-'missing' devices.  So if none of the 4 commands I gave work, try
-other permutations with o1 or g1 first, and h1 second or third.
+Seems like something got confused during boot and the wrong device got
+mounted.  That is bad.
 
 NeilBrown
