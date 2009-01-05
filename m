@@ -1,26 +1,45 @@
-From: "hank peng" <pengxihan@gmail.com>
-Subject: Are there some alignment settings when creating filesystem on RAID5 array which can improve performance?
-Date: Mon, 5 Jan 2009 09:07:36 +0800
-Message-ID: <389deec70901041707l1613a8e8jb6a6a3fbba57ea91@mail.gmail.com>
+From: "David Lethe" <david@santools.com>
+Subject: RE: Are there some alignment settings when creating filesystem on RAID5 array which can improve performance?
+Date: Sun, 4 Jan 2009 19:32:01 -0600
+Message-ID: <A20315AE59B5C34585629E258D76A97C0337C80B@34093-C3-EVS3.exchange.rackspace.com>
+References: <389deec70901041707l1613a8e8jb6a6a3fbba57ea91@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+Content-class: urn:content-classes:message
+In-Reply-To: <389deec70901041707l1613a8e8jb6a6a3fbba57ea91@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: hank peng <pengxihan@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi, everybody:
-I have a machine and centos 5.2 installed on it. I have created a
-RAID5 array with five SATA disks, then I create LVM on this array.
-#pvcreate /dev/md0
-#vgcreate myvg /dev/md0
-#lvcreate -n mylv myvg
-As you see, I want to use XFS or ReiserFS on "mylv" volume. I wonder
-if there are some alignment settings when creating such file systems
-so that a better R/W performance can be achieved. Thx in advance.
-
-
--- 
-The simplest is not all best but the best is surely the simplest!
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1yYWlkLW93bmVyQHZn
+ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXJhaWQtDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
+Z10gT24gQmVoYWxmIE9mIGhhbmsgcGVuZw0KPiBTZW50OiBTdW5kYXksIEphbnVhcnkgMDQsIDIw
+MDkgNzowOCBQTQ0KPiBUbzogbGludXgtcmFpZA0KPiBTdWJqZWN0OiBBcmUgdGhlcmUgc29tZSBh
+bGlnbm1lbnQgc2V0dGluZ3Mgd2hlbiBjcmVhdGluZyBmaWxlc3lzdGVtIG9uDQo+IFJBSUQ1IGFy
+cmF5IHdoaWNoIGNhbiBpbXByb3ZlIHBlcmZvcm1hbmNlPw0KPiANCj4gSGksIGV2ZXJ5Ym9keToN
+Cj4gSSBoYXZlIGEgbWFjaGluZSBhbmQgY2VudG9zIDUuMiBpbnN0YWxsZWQgb24gaXQuIEkgaGF2
+ZSBjcmVhdGVkIGENCj4gUkFJRDUgYXJyYXkgd2l0aCBmaXZlIFNBVEEgZGlza3MsIHRoZW4gSSBj
+cmVhdGUgTFZNIG9uIHRoaXMgYXJyYXkuDQo+ICNwdmNyZWF0ZSAvZGV2L21kMA0KPiAjdmdjcmVh
+dGUgbXl2ZyAvZGV2L21kMA0KPiAjbHZjcmVhdGUgLW4gbXlsdiBteXZnDQo+IEFzIHlvdSBzZWUs
+IEkgd2FudCB0byB1c2UgWEZTIG9yIFJlaXNlckZTIG9uICJteWx2IiB2b2x1bWUuIEkgd29uZGVy
+DQo+IGlmIHRoZXJlIGFyZSBzb21lIGFsaWdubWVudCBzZXR0aW5ncyB3aGVuIGNyZWF0aW5nIHN1
+Y2ggZmlsZSBzeXN0ZW1zDQo+IHNvIHRoYXQgYSBiZXR0ZXIgUi9XIHBlcmZvcm1hbmNlIGNhbiBi
+ZSBhY2hpZXZlZC4gVGh4IGluIGFkdmFuY2UuDQo+IA0KPiANCj4gLS0NCj4gVGhlIHNpbXBsZXN0
+IGlzIG5vdCBhbGwgYmVzdCBidXQgdGhlIGJlc3QgaXMgc3VyZWx5IHRoZSBzaW1wbGVzdCENCj4g
+LS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vi
+c2NyaWJlIGxpbnV4LXJhaWQiDQo+IGluDQo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpv
+cmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92
+Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KDQoNClllcywgYnV0IGJlIHNwZWNp
+ZmljLiAgSG93IGRvIHlvdSB1c2UgdGhlIHZvbHVtZT8gICBEbyB5b3Ugd2FudCB0byBvcHRpbWl6
+ZSBmb3IgSU9QcyBvcg0KcmF3IGZpbGUgdHJhbnNmZXI/ICBXaGF0IGlzIG1peCBvZiByYW5kb20g
+dnMgc2VxdWVudGlhbCBmb3IgYm90aCByZWFkcyBhbmQgd3JpdGVzLg0KV2hhdCBpcyBibG9jay9j
+aHVuayBzaXplIG9mIHZvbHVtZSwgcmFpZHNldCwgZmlsZXN5c3RlbT8gIFJldmVhbCB5b3VyDQpq
+b3VybmFsaW5nIHNldHRpbmdzLiAgV2hhdCBhcmUgeW91IGdldHRpbmcgbm93LCBhbmQgaG93IGRp
+ZCB5b3UgbWVhc3VyZSBpdD8gICBBcmUgdGhpbmdzDQpsaWtlIE5DUS9UQ1EvcmVhZC13cml0ZSBj
+YWNoZSBlbmFibGVkIG9yIGRpc2FibGVkPyAgDQoNCkhvdyBhcmUgdGhlIGRpc2tzIHBoeXNpY2Fs
+bHkgYXR0YWNoZWQ/ICBQQ0koLVgpIG9yIFBDSWUsIGhvdyBtYW55IGNoYW5uZWxzICBhcmUgeW91
+IHVzaW5nLCBvciBhcmUNCnRoZSBkaXNrcyBhdHRhY2hlZCB2aWEgVVNCIHBvcnRzLiAgDQoNCk5l
+ZWQgbW9yZSBpbmZvLg0KDQoNCg==
