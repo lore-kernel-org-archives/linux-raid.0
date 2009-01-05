@@ -1,107 +1,82 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid5 with 2 disks not working correctly. Need help!
-Date: Mon, 5 Jan 2009 21:27:51 +1100
-Message-ID: <18785.57511.258898.368282@notabene.brown>
-References: <995ea3b00812160536x55d140caned9952c99dd5e2be@mail.gmail.com>
+From: "hank peng" <pengxihan@gmail.com>
+Subject: Re: Are there some alignment settings when creating filesystem on RAID5 array which can improve performance?
+Date: Mon, 5 Jan 2009 19:44:51 +0800
+Message-ID: <389deec70901050344t3216690i9ecd1350bbf016b4@mail.gmail.com>
+References: <389deec70901041707l1613a8e8jb6a6a3fbba57ea91@mail.gmail.com>
+	 <A20315AE59B5C34585629E258D76A97C0337C80B@34093-C3-EVS3.exchange.rackspace.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Roy Lim on Tuesday December 16
+In-Reply-To: <A20315AE59B5C34585629E258D76A97C0337C80B@34093-C3-EVS3.exchange.rackspace.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Roy Lim <cableroy@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: David Lethe <david@santools.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tuesday December 16, cableroy@gmail.com wrote:
-> Hi
-> I have ran into a serious problem with my raid5 array and need expert
-> help on this one.
-> 
-> My array is with 5x500GB disks none spare, I've accidentally did a
-> unclean shutdown of the server. When it came up it gave me this error:
-> 
-> Dec 15 09:07:11 ares kernel: md: kicking non-fresh hdk1 from array!
-> Dec 15 09:07:11 ares kernel: md: unbind<hdk1>
-> Dec 15 09:07:11 ares kernel: md: export_rdev(hdk1)
-> Dec 15 09:07:11 ares kernel: md: md0: raid array is not clean --
-> starting background reconstruction
-> Dec 15 09:07:11 ares kernel: raid5: device hde1 operational as raid disk 0
-> Dec 15 09:07:11 ares kernel: raid5: device sda1 operational as raid disk 4
-> Dec 15 09:07:11 ares kernel: raid5: device hdi1 operational as raid disk 2
-> Dec 15 09:07:11 ares kernel: raid5: device hdg1 operational as raid disk 1
-> Dec 15 09:07:11 ares kernel: raid5: cannot start dirty degraded array for md0
-> 
-> However i managed to get this back up with remove and add, the system
-> was rebuilding the array. around 70-80% in the process i was going to
-> prepare to decrypt it (luks crypted) so I'm going to mount the usb
-> stick witch has the encryption key however when i was going to mount
-> it i tried to mount wrong device, resulting trying to mount a device
-> in the array (sda1) i hit repeatedly crtl+c, now taking a look at the
-> details on the array it looks like this:
+2009/1/5 David Lethe <david@santools.com>:
+>> -----Original Message-----
+>> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+>> owner@vger.kernel.org] On Behalf Of hank peng
+>> Sent: Sunday, January 04, 2009 7:08 PM
+>> To: linux-raid
+>> Subject: Are there some alignment settings when creating filesystem on
+>> RAID5 array which can improve performance?
+>>
+>> Hi, everybody:
+>> I have a machine and centos 5.2 installed on it. I have created a
+>> RAID5 array with five SATA disks, then I create LVM on this array.
+>> #pvcreate /dev/md0
+>> #vgcreate myvg /dev/md0
+>> #lvcreate -n mylv myvg
+>> As you see, I want to use XFS or ReiserFS on "mylv" volume. I wonder
+>> if there are some alignment settings when creating such file systems
+>> so that a better R/W performance can be achieved. Thx in advance.
+>>
+>>
+>> --
+>> The simplest is not all best but the best is surely the simplest!
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid"
+>> in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+> Yes, but be specific.  How do you use the volume?   Do you want to optimize for IOPs or
+> raw file transfer?  What is mix of random vs sequential for both reads and writes.
+> What is block/chunk size of volume, raidset, filesystem?  Reveal your
+> journaling settings.  What are you getting now, and how did you measure it?   Are things
+> like NCQ/TCQ/read-write cache enabled or disabled?
+>
+> How are the disks physically attached?  PCI(-X) or PCIe, how many channels  are you using, or are
+> the disks attached via USB ports.
+>
+I am new to this area, so I'm not quite familiar with some words what
+you mentioned.
+The machine has a SATA controller (chip is Marvell 6081) attached on
+PCI-X bus. Five SATA II disks are attached to it.
+Each disk has 500G space.
+The following is my procedure:
+#mdadm -C /dev/md0 -l5 -n5 /dev/sd{a,b,c,d,e}
+After recovery is done, I do this:
+#pvcreate /dev/md0
+#vgcreate myvg /dev/md0
+#lvcreate -n mylv -L 1000G myvg
+#mkfs.xfs /dev/myvg/mylv  or  #mkfs.reiserfs /dev/myvg/mylv
+mount this file system and begin to use it.
+I mainly want to optimise its sequential write performace, IOPs is not
+my concern.
+SATA driver is provided by marvell, so NCQ/TCQ/read-write is default.
 
-Trying to mount sda1 should have simply failed as the device was in
-use.  I wonder what really happened....
 
-> 
-> /dev/md0:
->         Version : 00.90.03
->   Creation Time : Mon Feb  4 18:25:28 2008
->      Raid Level : raid5
->      Array Size : 1953535744 (1863.04 GiB 2000.42 GB)
->     Device Size : 488383936 (465.76 GiB 500.11 GB)
->    Raid Devices : 5
->   Total Devices : 5
-> Preferred Minor : 0
->     Persistence : Superblock is persistent
-> 
->     Update Time : Mon Dec 15 16:02:54 2008
->           State : clean, degraded
->  Active Devices : 3
-> Working Devices : 4
->  Failed Devices : 1
->   Spare Devices : 1
-> 
->          Layout : left-symmetric
->      Chunk Size : 64K
-> 
->            UUID : 856a6e4e:a1663e98:9efbd2b1:7507133b
->          Events : 0.74
-> 
->     Number   Major   Minor   RaidDevice State
->        0      33        1        0      active sync   /dev/hde1
->        1      34        1        1      active sync   /dev/hdg1
->        2      56        1        2      active sync   /dev/hdi1
->        3       0        0        3      removed
->        4       0        0        4      removed
-> 
->        5      57        1        -      spare   /dev/hdk1
->        6       8        1        -      faulty spare   /dev/sda1
-> 
-> a quick summary: hdk1 was the one failing in the first place, witch
-> was about to get rebuild, sda1 was the device i tried to mount while
-> reconstruction the data. As you can see, hdk1 is now marked as spare
-> and sda1 a faulty spare.  I have not touch the array after this. Can
-> anyone help me out? How can i force mdadm to set the sda1 to active
-> sync so i can mount the array and start a backup? Can i use dd_rescue
-> to file of all of the disks and play with it?
-> 
-> All help is appreciated!
+> Need more info.
+>
+>
+>
 
-Your only option at this stage is to re-create the array with the best
-devices.  Create it will one device missing so that it won't try a
-resync.
-e.g.
 
-  mdadm -C /dev/md0 -l5 -n5 /dev/hde1 /dev/hdg1 /dev/hdi1 missing /dev/sda1
 
-then try to access the data to see if it looks right.
-This will not modify the data on any devices (until you try writing to
-md0), only the RAID metadata.
-If you are happy that md0 looks OK, you can then
-  mdadm /dev/md0 --add /dev/hdk1
-and it will recover data to hdk1 and you will have redundancy back
-again.
-
-Good luck,
-NeilBrown
+-- 
+The simplest is not all best but the best is surely the simplest!
