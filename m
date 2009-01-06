@@ -1,307 +1,177 @@
-From: whollygoat@letterboxes.org
-Subject: Re: RAID5 (mdadm) array hosed after grow operation
-Date: Tue, 06 Jan 2009 00:45:01 -0800
-Message-ID: <1231231501.19066.1293214739@webmail.messagingengine.com>
-References: <1231144738.2997.1293010001@webmail.messagingengine.com>
- <alpine.DEB.1.10.0901050913470.3359@p34.internal.lan>
- <18786.34570.756734.253596@notabene.brown>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: Corrupt data - RAID sata_sil 3114 chip
+Date: Tue, 6 Jan 2009 05:48:04 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0901060547270.19351@p34.internal.lan>
+References: <bQVFb-3SB-37@gated-at.bofh.it> <bQVFb-3SB-39@gated-at.bofh.it> <bQVFb-3SB-41@gated-at.bofh.it> <bQVFc-3SB-43@gated-at.bofh.it> <bQVFc-3SB-45@gated-at.bofh.it> <bQVFc-3SB-47@gated-at.bofh.it> <bQVFb-3SB-35@gated-at.bofh.it>
+ <4963306F.4060504@sm7jqb.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463747160-326657234-1231238884=:19351"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <18786.34570.756734.253596@notabene.brown>
+In-Reply-To: <4963306F.4060504@sm7jqb.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, debian-user@lists.debian.org, linux-raid@vger.kernel.org
+To: Bengt Samuelsson <bengt@sm7jqb.se>
+Cc: debian-user@lists.debian.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-On Tue, 6 Jan 2009 09:17:46 +1100, "Neil Brown" <neilb@suse.de> said:
-> On Monday January 5, jpiszcz@lucidpixels.com wrote:
-> > cc linux-raid
-> > 
-> > On Mon, 5 Jan 2009, whollygoat@letterboxes.org wrote:
-> > 
-> > > I think growing my RAID array after replacing all the
-> > > drives with bigger ones has somehow hosed the array.
-> > >
-> > > The system is Etch with a stock 2.6.18 kernel and
-> > > mdadm v. 2.5.6, running on an Athlon 1700 box.
-> > > The array is 6 disk (5 active, one spare) RAID 5
-> > > that has been humming along quite nicely for
-> > > a few months now.  However, I decided to replace
-> > > all the drives with larger ones.
-> > >
-> > > The RAID reassembled fine at each boot as the drives
-> > > were replaced one by one.  After the last drive was
-> > > partitioned and added to the array, I issued the
-> > > command
-> > >
-> > >   "mdadm -G /dev/md/0 -z max"
-> > >
-> > > to grow the array to the maximum space available
-> > > on the smallest drive.  That appeared to work just
-> > > fine at the time, but booting today the array
-> > > refused to assemble with the following error:
-> > >
-> > >    md: hdg1 has invalid sb, not importing!
-> > >    md: md_import_device returned -22
-> > >
-> > > I tried to force assembly but only two of the remaining
-> > > 4 active drives appeared to be fault free.  dmesg gives
-> > >
-> > >    md: kicking non-fresh hde1 from array!
-> > >    md: unbind<hde1>
-> > >    md: export_rdev(hde1)
-> > >    md: kicking non-fresh hdi1 from array!
-> > >    md: unbind<hdi1>
-> > >    md: export_rdev(hdi1)
-> 
-> Please report
->    mdadm --examine /dev/whatever
-> for every device that you think should be a part of the array.
+---1463747160-326657234-1231238884=:19351
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-I noticed as I copied and pasted below the requested info,
-that "Device Size" and "Used Size" all make sense, whereas
-with the -X option "Sync Size" reflects the sizes of the 
-swapped out drives "39078016 (37.27 GiB 40.02 GB)" 
-for hdg1 and hdo1.
+cc: linux-ide, linux-raid
 
-Also, when booting today, I was able to get my eye balls 
-moving fast enough to capture boot messages I noticed but
-couldn't decipher yesterday "incorrect meta data area
-header checksum" for hdo and hdg, but for at least one, and I 
-think two other drives that I still wasn't fast enough to
-capture.
+There was some talk about corruption on these chips I believe, hopefully=20
+someone on the list can offer further insight.
 
-Also, with regard to your comment below, what do you mean by
-"active bitmap".  I seems to me I couldn't do anything with
-the array until it was activated.
+On Tue, 6 Jan 2009, Bengt Samuelsson wrote:
 
-Hmm, just noticed something else that seems weird. There seem
-to be 10 and 11 place holders (3 drives each) in the "Array Slot"
-field below which is respectively 4 and 5 more places than there
-are drives.
-
-Thanks for you help.
-
-------------- begin output --------------
-fly:~# mdadm -E /dev/hde1
-/dev/hde1:
-          Magic : a92b4efc
-        Version : 01
-    Feature Map : 0x1
-     Array UUID : 6d57c75c:01b1b110:524cdc82:f2fc9c68
-           Name : fly:FlyFileServ  (local to host fly)
-  Creation Time : Mon Aug  4 00:59:16 2008
-     Raid Level : raid5
-   Raid Devices : 5
-
-    Device Size : 160086320 (76.34 GiB 81.96 GB)
-     Array Size : 625184768 (298.11 GiB 320.09 GB)
-      Used Size : 156296192 (74.53 GiB 80.02 GB)
-   Super Offset : 160086448 sectors
-          State : clean
-    Device UUID : d0992c0a:d645873f:d1e325cc:0a00327f
-
-Internal Bitmap : 2 sectors from superblock
-    Update Time : Sat Jan  3 21:31:41 2009
-       Checksum : 1a5674a1 - correct
-         Events : 218
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-    Array Slot : 9 (failed, failed, failed, failed, failed, empty, 3, 2,
-    0, 1, 4)
-   Array State : uUuuu 5 failed
-
- 
-fly:~# mdadm -E /dev/hdg1
-/dev/hdg1:
-          Magic : a92b4efc
-        Version : 01
-    Feature Map : 0x1
-     Array UUID : 6d57c75c:01b1b110:524cdc82:f2fc9c68
-           Name : fly:FlyFileServ  (local to host fly)
-  Creation Time : Mon Aug  4 00:59:16 2008
-     Raid Level : raid5
-   Raid Devices : 5
-
-    Device Size : 156296176 (74.53 GiB 80.02 GB)
-     Array Size : 625184768 (298.11 GiB 320.09 GB)
-      Used Size : 156296192 (74.53 GiB 80.02 GB)
-   Super Offset : 156296304 sectors
-          State : clean
-    Device UUID : 72b7258a:22e70cea:cc667617:8873796f
-
-Internal Bitmap : 2 sectors from superblock
-    Update Time : Sat Jan  3 21:31:41 2009
-       Checksum : 7ff97f89 - correct
-         Events : 218
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-    Array Slot : 10 (failed, failed, failed, failed, failed, empty, 3,
-    2, 0, 1, 4)
-   Array State : uuuuU 5 failed
-
- 
-fly:~# mdadm -E /dev/hdi1
-/dev/hdi1:
-          Magic : a92b4efc
-        Version : 01
-    Feature Map : 0x1
-     Array UUID : 6d57c75c:01b1b110:524cdc82:f2fc9c68
-           Name : fly:FlyFileServ  (local to host fly)
-  Creation Time : Mon Aug  4 00:59:16 2008
-     Raid Level : raid5
-   Raid Devices : 5
-
-    Device Size : 160086320 (76.34 GiB 81.96 GB)
-     Array Size : 625184768 (298.11 GiB 320.09 GB)
-      Used Size : 156296192 (74.53 GiB 80.02 GB)
-   Super Offset : 160086448 sectors
-          State : clean
-    Device UUID : ade7e4e9:e58dc8df:c36df5b7:a938711d
-
-Internal Bitmap : 2 sectors from superblock
-    Update Time : Sat Jan  3 21:31:41 2009
-       Checksum : 245ecd1e - correct
-         Events : 218
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-    Array Slot : 8 (failed, failed, failed, failed, failed, empty, 3, 2,
-    0, 1, 4)
-   Array State : Uuuuu 5 failed
- 
-
-fly:~# mdadm -E /dev/hdk1
-/dev/hdk1:
-          Magic : a92b4efc
-        Version : 01
-    Feature Map : 0x1
-     Array UUID : 6d57c75c:01b1b110:524cdc82:f2fc9c68
-           Name : fly:FlyFileServ  (local to host fly)
-  Creation Time : Mon Aug  4 00:59:16 2008
-     Raid Level : raid5
-   Raid Devices : 5
-
-    Device Size : 234436336 (111.79 GiB 120.03 GB)
-     Array Size : 625184768 (298.11 GiB 320.09 GB)
-      Used Size : 156296192 (74.53 GiB 80.02 GB)
-   Super Offset : 234436464 sectors
-          State : clean
-    Device UUID : a7c337b5:c3c02071:e0f1099c:6f14a48e
-
-Internal Bitmap : 2 sectors from superblock
-    Update Time : Sun Jan  4 16:15:10 2009
-       Checksum : df2d3ea6 - correct
-         Events : 222
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-    Array Slot : 7 (failed, failed, failed, failed, failed, empty, 3, 2,
-    failed, failed)
-   Array State : __Uu_ 7 failed
- 
- 
-fly:~# mdadm -E /dev/hdm1
-/dev/hdm1:
-          Magic : a92b4efc
-        Version : 01
-    Feature Map : 0x1
-     Array UUID : 6d57c75c:01b1b110:524cdc82:f2fc9c68
-           Name : fly:FlyFileServ  (local to host fly)
-  Creation Time : Mon Aug  4 00:59:16 2008
-     Raid Level : raid5
-   Raid Devices : 5
-
-    Device Size : 156360432 (74.56 GiB 80.06 GB)
-     Array Size : 625184768 (298.11 GiB 320.09 GB)
-      Used Size : 156296192 (74.53 GiB 80.02 GB)
-   Super Offset : 156360560 sectors
-          State : clean
-    Device UUID : 01c88710:44a63ce1:ae1c03ba:0d8aaca0
-
-Internal Bitmap : 2 sectors from superblock
-    Update Time : Sun Jan  4 16:15:10 2009
-       Checksum : d14c18ec - correct
-         Events : 222
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-    Array Slot : 6 (failed, failed, failed, failed, failed, empty, 3, 2,
-    failed, failed)
-   Array State : __uU_ 7 failed
-
- 
-fly:~# mdadm -E /dev/hdo1
-/dev/hdo1:
-          Magic : a92b4efc
-        Version : 01
-    Feature Map : 0x1
-     Array UUID : 6d57c75c:01b1b110:524cdc82:f2fc9c68
-           Name : fly:FlyFileServ  (local to host fly)
-  Creation Time : Mon Aug  4 00:59:16 2008
-     Raid Level : raid5
-   Raid Devices : 5
-
-    Device Size : 234436336 (111.79 GiB 120.03 GB)
-     Array Size : 625184768 (298.11 GiB 320.09 GB)
-      Used Size : 156296192 (74.53 GiB 80.02 GB)
-   Super Offset : 234436464 sectors
-          State : clean
-    Device UUID : bbb30d5a:39f90588:65d5b01c:3e1a4d9a
-
-Internal Bitmap : 2 sectors from superblock
-    Update Time : Sun Jan  4 16:15:10 2009
-       Checksum : 27385082 - correct
-         Events : 222
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-    Array Slot : 5 (failed, failed, failed, failed, failed, empty, 3, 2,
-    failed, failed)
-   Array State : __uu_ 7 failed
-
--------------- end output ---------------
-> 
-> > >
-> > > I also noticed that "mdadm -X <drive>" shows
-> > > the pre-grow device size for 2 of the devices
-> > > and some discrepancies between event and event cleared
-> > > counts.
-> 
-> You cannot grow an array with an active bitmap... or at least you
-> shouldn't be able to.  Maybe 2.6.18 didn't enforce that.  Maybe that
-> is what caused the problem - not sure.
-> 
-> > >
-> > > One last thing I found curious---from dmesg:
-> > >
-> > >    EXT3-fs error (device hdg1): ext3_check_descriptors: Block
-> > >    bitmap for group 0 not in group (block 2040936682)!
-> > >    EXT3-fs: group descriptors corrupted!
-> > >
-> > > There is not ext3 directly on hdg1.  LVM sits between the
-> > > and the filesystem, so the above message seems suspect.
-> 
-> Seems like something got confused during boot and the wrong device got
-> mounted.  That is bad.
-> 
-> NeilBrown
--- 
-  
-  whollygoat@letterboxes.org
-
--- 
-http://www.fastmail.fm - The professional email service
-
+> Justin Piszcz skrev:
+>>=20
+>>=20
+>> On Mon, 5 Jan 2009, Bengt Samuelsson wrote:
+>>=20
+>>> Justin Piszcz skrev:
+>>>>=20
+>>>>=20
+>>>> On Sun, 4 Jan 2009, Bengt Samuelsson wrote:
+>>>>=20
+>>>>> Bengt Samuelsson skrev:
+>>>>>=20
+>>>>> ~# mdadm -D /dev/md0
+>>>>> ------------------------------
+>>>>> /dev/md0:
+>>>>>         Version : 00.90.03
+>>>>>   Creation Time : Fri Sep 12 19:08:22 2008
+>>>>>      Raid Level : raid5
+>>>>>      Array Size : 1465151616 (1397.28 GiB 1500.32 GB)
+>>>>>     Device Size : 488383872 (465.76 GiB 500.11 GB)
+>>>>>    Raid Devices : 4
+>>>>>   Total Devices : 4
+>>>>> Preferred Minor : 0
+>>>>>     Persistence : Superblock is persistent
+>>>>>
+>>>>>     Update Time : Fri Jan  2 16:53:10 2009
+>>>>>           State : clean
+>>>>>  Active Devices : 4
+>>>>> Working Devices : 4
+>>>>>  Failed Devices : 0
+>>>>>   Spare Devices : 0
+>>>>>
+>>>>>          Layout : left-symmetric
+>>>>>      Chunk Size : 128K
+>>>>>
+>>>>>            UUID : 68439662:90431c4a:5e66217b:5a1a585f (local to host=
+=20
+>>>>> sm7jqb.dnsalias.com)
+>>>>>          Events : 0.13406
+>>>>>
+>>>>>     Number   Major   Minor   RaidDevice State
+>>>>>        0       8        1        0      active sync   /dev/sda1
+>>>>>        1       8       17        1      active sync   /dev/sdb1
+>>>>>        2       8       33        2      active sync   /dev/sdc1
+>>>>>        3       8       49        3      active sync   /dev/sdd1
+>>>>> ------------------------------
+>>>>>=20
+>>>>>=20
+>>>>>=20
+>>>=20
+>>>>> No memory error
+>>>>>=20
+>>>>> L1 Cache 128 7361MB/s
+>>>>> L2 Cache 64k 3260MB/s
+>>>>> Mem 1024M 275MB/s
+>>>>>=20
+>>>>> Next to check for?
+>>>>>=20
+>>>>> --=20
+>>>>=20
+>>>> You ran a check on the array and then checked mismatch_cnt?
+>>> like
+>>> ~# fsck.ext3 -y -v /dev/md0  ??
+>>> You vant to se any log ??  I do not understand maybe?
+>>> It works for 95% I want it to work 100%
+>>>=20
+>>> /var/log/fsck/ceheks
+>>> Log of fsck -C -R -A -a
+>>> Sun Jan  4 16:30:05 2009
+>>>=20
+>>> fsck 1.40-WIP (14-Nov-2006)
+>>> /: clean, 21179/987712 files, 648652/1973160 blocks
+>>> boot: clean, 30/32128 files, 22378/128488 blocks
+>>> /dev/md0: clean, 142094/183156736 files, 23162450/366287904 blocks (che=
+ck=20
+>>> after next mount)
+>>>=20
+>>> Sun Jan  4 16:30:06 2009
+>>> ----------------
+>>>=20
+>>> Can I se the sata_sil parameters?
+>>> Or test something there?
+>>> For me it shuld slow don a bit more.
+>>>=20
+>>>=20
+>>>=20
+>>=20
+>> Run a check on the array:
+>> p34:~# echo check > /sys/devices/virtual/block/md0/md/sync_action
+>
+> I found /sys/block/md0/md/sync_action
+> idle
+>
+> I don't find 'check' i my box, but I run this every 2nd day, it help a bi=
+t.
+> /etc/cron.d/mdadm/
+> ...
+> 5 0 * * 1,3,5 root [ -x /usr/share/mdadm/checkarray ] \
+> && /usr/share/mdadm/checkarray --cron --all --quiet
+> ...
+>
+>> p34:~#
+>>=20
+>> Watch the status:
+>> p34:~# cat /proc/mdstat
+> ---
+> Personalities : [raid6] [raid5] [raid4]
+> md0 : active raid5 sda1[0] sdd1[3] sdc1[2] sdb1[1]
+>      1465151616 blocks level 5, 128k chunk, algorithm 2 [4/4] [UUUU]
+>
+> unused devices: <none>
+> ---
+>>=20
+>> When its done, run:
+>>=20
+>> p34:~# cat /sys/devices/virtual/block/md0/md/mismatch_cnt
+> /sys/block/md0/md/mismatch_cnt 0
+>
+>> p34:~#
+>>=20
+>> And show the output.
+>>=20
+>> Justin.
+> I find
+> /sys/module/sata_sil/parameter/slow_down
+> 0
+>
+> and some more, all locks ok to me!
+>
+> My motherboard is KT7A-RAID (not using that raid)
+> AMD 1.2Ghz
+> I have a pdf manual.
+>
+> SATA kontroler board SA3114-4IR
+> http://it.us.syba.com/product/43/02/05/index.html
+>
+> Now I have -3C and sunshine outside, I have to go out in the sun now!
+>
+> --=20
+> Bengt Samuelsson
+> Nydalav=E4gen 30 A
+> 352 48 V=E4xj=F6
+>
+> +46(0)703686441
+>
+> http://sm7jqb.se
+>
+---1463747160-326657234-1231238884=:19351--
