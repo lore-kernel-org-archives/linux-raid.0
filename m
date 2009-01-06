@@ -1,27 +1,36 @@
-From: Neil Brown <neilb@suse.de>
+From: Mike Myers <mikesm559@yahoo.com>
 Subject: Re: Need urgent help in fixing raid5 array
-Date: Wed, 7 Jan 2009 10:31:44 +1100
-Message-ID: <18787.59872.647206.934303@notabene.brown>
-References: <451872.61166.qm@web30802.mail.mud.yahoo.com>
-	<alpine.DEB.1.10.0901011039110.9903@p34.internal.lan>
-	<467705.96388.qm@web30807.mail.mud.yahoo.com>
-	<alpine.DEB.1.10.0901011328380.17888@p34.internal.lan>
-	<344038.60917.qm@web30808.mail.mud.yahoo.com>
-	<18786.34165.639790.37753@notabene.brown>
-	<546794.45786.qm@web30802.mail.mud.yahoo.com>
-	<879ae2ec7c5524fd9fa9841245772ab6.squirrel@neil.brown.name>
-	<100979.40008.qm@web30803.mail.mud.yahoo.com>
-	<780997576890f2ccd07a4486c2702e8d.squirrel@neil.brown.name>
-	<524209.67755.qm@web30805.mail.mud.yahoo.com>
+Date: Tue, 6 Jan 2009 15:54:13 -0800 (PST)
+Message-ID: <46247.99152.qm@web30807.mail.mud.yahoo.com>
+References: <451872.61166.qm@web30802.mail.mud.yahoo.com> <alpine.DEB.1.10.0901011039110.9903@p34.internal.lan> <467705.96388.qm@web30807.mail.mud.yahoo.com> <alpine.DEB.1.10.0901011328380.17888@p34.internal.lan> <344038.60917.qm@web30808.mail.mud.yahoo.com> <18786.34165.639790.37753@notabene.brown> <546794.45786.qm@web30802.mail.mud.yahoo.com> <879ae2ec7c5524fd9fa9841245772ab6.squirrel@neil.brown.name> <100979.40008.qm@web30803.mail.mud.yahoo.com> <780997576890f2ccd07a4486c2702e8d.squirrel@neil.brown.name> <524209.67755.qm@web30805.mail.mud.yahoo.com> <18787.59872.647206.934303@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mike Myers on Monday January 5
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Myers <mikesm559@yahoo.com>
+To: Neil Brown <neilb@suse.de>
 Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, john lists <john4lists@gmail.com>
 List-Id: linux-raid.ids
+
+Thanks for this and the previous explanation of how roles and slots work.  I should be able to try and few combinations and see.  At this point, I am not sure if the issue was caused by a bad backplane, or bad controller or bad disk.  I can't tell for sure the backplane was bad, but I have a replacement sitting at my desk now, so I can go ahead and replace it just to be sure.  The LSI MPT controller that failed was connected only to drives in md2, but that array is up and running fine and so I don't think it broke something when it failed.
+
+I had seen two smart alerts indicating a drive was failing, which is what caused me to try and replace the kicked drive with a new one and do a rebuild, which was the event that started this chain of events.  I swapped the drive (part of md1), but the OS did not indicate the SATA port went down and did not init the new drive.  When I rebooted to system (suspecting a temporary problem with the controller), everything went to hell.  I suspect this initial failure was due to the backplane problem, but it may have had some corruption on the disks as well.  
+
+I may have fat fingered something after the reboot that caused the problem with a bad superblock being written to the sdf1 as the device names may have changed on boot, and I didn't catch that (I may have done a hotswap a month ago when I had my first near death experience with md2) leading me to use the wrong device in an mdadm command, but it's hard to tell that now.
+
+With 15 hotswap drives in the system, I can tell you that device name changing is fraught with peril.  I am unfamilar with the /dev/disk/by-uuid functionality.  Is that documented in a howto somewhere?  How is that supposed to work?  
+
+thx
+mike
+
+
+
+
+----- Original Message ----
+From: Neil Brown <neilb@suse.de>
+To: Mike Myers <mikesm559@yahoo.com>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>; linux-raid@vger.kernel.org; john lists <john4lists@gmail.com>
+Sent: Tuesday, January 6, 2009 3:31:44 PM
+Subject: Re: Need urgent help in fixing raid5 array
 
 On Monday January 5, mikesm559@yahoo.com wrote:
 > BTW, in the original email I sent that had the --examine info for
@@ -71,3 +80,7 @@ I'm happy to help as much as I can... I just hope your hardware hasn't
 done too much damage...
 
 NeilBrown
+
+
+
+      
