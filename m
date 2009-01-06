@@ -1,7 +1,7 @@
 From: Neil Brown <neilb@suse.de>
 Subject: Re: Need urgent help in fixing raid5 array
-Date: Wed, 7 Jan 2009 10:23:09 +1100
-Message-ID: <18787.59357.94643.611681@notabene.brown>
+Date: Wed, 7 Jan 2009 10:31:44 +1100
+Message-ID: <18787.59872.647206.934303@notabene.brown>
 References: <451872.61166.qm@web30802.mail.mud.yahoo.com>
 	<alpine.DEB.1.10.0901011039110.9903@p34.internal.lan>
 	<467705.96388.qm@web30807.mail.mud.yahoo.com>
@@ -12,7 +12,7 @@ References: <451872.61166.qm@web30802.mail.mud.yahoo.com>
 	<879ae2ec7c5524fd9fa9841245772ab6.squirrel@neil.brown.name>
 	<100979.40008.qm@web30803.mail.mud.yahoo.com>
 	<780997576890f2ccd07a4486c2702e8d.squirrel@neil.brown.name>
-	<654038.66009.qm@web30803.mail.mud.yahoo.com>
+	<524209.67755.qm@web30805.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -24,105 +24,50 @@ Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, john li
 List-Id: linux-raid.ids
 
 On Monday January 5, mikesm559@yahoo.com wrote:
-> Neil, the devices have moved around a bit since my post on the
-> --examine results of each drive as an attempt to bypass a possibly bad
-> sata backplane and known bad sata controller.  So I have to recheck
-> the array positions of the drives.  A few questions about how md acts: 
+> BTW, in the original email I sent that had the --examine info for
+> each of these array members, three devices have the same device UUID
+> and array slot, and two of them share an older event count, and one
+> has a slightly newer event count.  Which of these should be the real
+> array slot 0?  And I notice that one of the members in that email
+> had a device UUID that I can't find anymore (I suspect it's the
+> current sdf1 that thinks it's part of md2).  In that email, it had
+> array slot 4, which is one of the missing devices in the current
+> familt (that I assume --assemble would add as "3").  It also has
+> 9663 hours on it, which makes it part of the original set of 4
+> members for this raid5 array.  The drive in slot 5 only has 7630
+> hours on it, so it should have been added later as part of a --grow
+> operation. 
 > 
-> 1)  When I grow an array, do the existing members of the array
->     maintain their slot positions?  So if I had 4 drives sda1 sdb1
->     sdc1 and sdd1 as part of a RAID5 array, and then add sde1, would
->     sde1 take slot 4 or the array, or do the array slots get reset
->     during a reshape operation?   
+> Does all that make sense?  If so, then sdb1, (which says it's slot
+> 0), sdi1 (at 9671 hours) and also thinks it's slot 0, sdj1 (at 9194
+> hours) which also says it's 0, and sdf1 (at 9663 hours) and used to
+> apparently think it's slot 4 should be the original 4 drives of the
+> array.  How can I figure out which is the real slot 0, and who is
+> slot 1 and 2 if sdi1 and sdj1 all have the same event count and
+> array slot id (0) and same device UUID? 
 
-Slots do not get reset.
+I had noticed the slot number was repeated.  I hadn't noticed the
+device uuid was the same, though I guess that makes sense.  Somehow
+the superblock for one device has been written to the other devices.
+It is not really possible to be sure which is the original without
+knowing how this happened, though I suspect that the one with the
+higher event count is more likely to be the original.
 
-> 
-> The reason I ask is that from the smartctl -a data for each drive, I
-> can get the total powered on hours for the drive.  If the drive has
-> a lot of hours on it, it will have been added earlier than another
-> drive, and if the array positiosn are constant, then I can kind of
-> reconstruct the array order on an array that's been built
-> incrementally by look at drive power on times. 
-> 
-> 2) If a drive goes bad an is replaced by a spare, does the spare
->    take the orginal array slot of the faulty drive? 
+Being a software guy, I tend to like to blame hardware, and I wonder
+if your problematic backplane managed to send write requests to the
+wrong drive somehow.  If it did, then my expectation of your success
+just went down a few notches. :-(
 
-With v1.x metadata you need to be careful of the difference between the
-'slot' and the 'role' of each drive.
-
-The 'slot' is an arbitrary number that is assigned when the devices is
-added to the array, whether as a full member or as a spare.  It
-doesn't change.
-The 'role' is how the drive is functioning in the array.  When a device
-is added to an array, its role is set to 'spare'.  When a drive
-fails and this spare is used to recover that drive, the 'role' is
-change to match the role of the original drive.  But the slot stays
-the same.
-If you look at the "Array Slot" line in the "mdadm --examine" output
-you will see something like 
-    Array Slot : 8 (0, failed, failed, failed, 3, 4, failed, 5, 6)
-
-That means that this device occupies slot 8, and that for the whole
-array:
-  The device in slot 0 is being used in role 0 (first live device in array)
-  The devices in slots 1,2,3 have all failed
-  The device in slot 4 has role 3
-  The device in slot 5 has role 4
-  The device in slot 6 has failed
-  The devices in slots 7 and 8 have roles 5 and 6
-So this device is in role 6.
-This can be confirmed by looking at the "Array State" line:
-   Array State : u__uuuU 4 failed
-
-There is no device ('_') with role 1 or 2, This device ('U') is in the
-last role, role 6, and roles 0,3,4,5 are filled by other working
-devices in the array ('u').
-
+The only option for you to try to find out which device is which is to
+try various combinations and see what gives you access to the most
+consistent data.
 
 > 
-> 3)  It appears the slot number -1 is the member number?  That is, if
-      I do an examine on /dev/sdc1, it tells me it's got slot 5 of
-      md1.  But when I do an assemble operation with the --verbose
-      flag, it says /dev/sdc1 "as added as 4".  The reason I ask if
-      that's true, what would a slot number 0 mean in terms of what
-      --assemble is supposed to add it as?  When I do the assemble,
-      it's added as 0, which I don't understand if the slot number is
-      supposed to be one higher? 
+> This is way harder work than should be need to fix a problem.  :-)
+> But I am sure glad you gurus know how this stuff is supposed to
+> work! 
 
-There is no simple arithmetical relationship between slot number and
-member number (aka 'role').  They are assigned independently.
-
-> 
-> 4)  /dev/sdf1 (the new device name) thinks it's part of md2 (when I
->     do an examine), but can't be, because md2 is all seagate and
->     already has 7 members in it (the right number of drives).  So it
->     must be part of md1, which is missing a member.  When I first
->     tried to reassemble md1, it said it only found 5 good drives,
->     and couldn't start.  now it says it only finds 4 good drives.
->     So I assume sdf1 is one of the 5 good ones but got a weird
->     superblock written to it.  Other than the drive hours trick I
->     thought of earlier, is there any way to determine what it's slot
->     number should have been since I am missing slots 1, 2, and 3,
->     and have 3 candidates for slot 0? 
-
-No.  That information lives in the superblock and is displayed by
---examine.  If the superblock as been corrupted somehow, then that
-information is gone.
-
-> 
-> Lasttly, it REALLY would make life a LOT easier if the devices
-> wouldn't change evrytime they were plugged into a different
-> controller slot, or that controller slots wouldn't change based on
-> boot order etc...  It is a pain in rear when you have a hardware
-> outage or a disk that isn't detected properly on boot and then hot
-> added to have it's /dev/sdx1 label change.  I know it's not md's
-> fault the way this works, but in a hot swap world it makes it very
-> hard to document drive configurations and map devices under linux to
-> physical drives. 
-
-Yes, it can be a pain.  The various link in e.g. /dev/disk/by-uuid are
-supposed to make that a bit more manageable.  Whether they succeed is
-less clear.
+I'm happy to help as much as I can... I just hope your hardware hasn't
+done too much damage...
 
 NeilBrown
