@@ -1,7 +1,8 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 1/2] md: set mddev readonly flag on blkdev BLKROSET ioctl
-Date: Thu, 08 Jan 2009 00:24:38 -0700
-Message-ID: <20090108072438.9577.22558.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 2/2] Revert "Restore force switch of md array to readonly at
+	reboot time."
+Date: Thu, 08 Jan 2009 00:24:43 -0700
+Message-ID: <20090108072443.9577.10920.stgit@dwillia2-linux.ch.intel.com>
 References: <20090108072023.9577.3585.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,66 +14,36 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When the user sets the block device to readwrite then the mddev should
-follow suit.  Otherwise, the BUG_ON in md_write_start() will be set to
-trigger.
+This reverts commit 2b25000bf5157c28d8591f03f0575248a8cbd900.
 
-The reverse direction, setting mddev->ro to match a set readonly
-request, can be ignored because the blkdev level readonly flag precludes
-the need to have mddev->ro set correctly.  Nevermind the fact that
-setting mddev->ro to 1 may fail if the array is in use.
+Justin provided a test case that can reliably trigger the md_write_start
+BUG_ON(mddev->ro == 1) at shutdown time.  Kernels prior to 2.6.27 do not fail
+this test because the array remains readwrite.  The block layer does not
+quiesce in-flight writes after setting the readonly flag so there will need to
+be new infrastructure (stop writes at shutdown), or support for barriers
+before MD arrays can reliably force readonly while writes may be in flight.
 
-Cc: <stable@kernel.org>
+Reported-by: Justin Maggard <jmaggard10@gmail.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/md/md.c |   29 +++++++++++++++++++++++++++++
- 1 files changed, 29 insertions(+), 0 deletions(-)
+ drivers/md/md.c |    6 +-----
+ 1 files changed, 1 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 1b1d326..7ac2b56 100644
+index 7ac2b56..d3640b8 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -4805,6 +4805,7 @@ static int md_ioctl(struct block_device *bdev, fmode_t mode,
- 	int err = 0;
- 	void __user *argp = (void __user *)arg;
- 	mddev_t *mddev = NULL;
-+	int ro;
+@@ -6281,11 +6281,7 @@ static int md_notify_reboot(struct notifier_block *this,
  
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
-@@ -4940,6 +4941,34 @@ static int md_ioctl(struct block_device *bdev, fmode_t mode,
- 			err = do_md_stop(mddev, 1, 1);
- 			goto done_unlock;
- 
-+		case BLKROSET:
-+			if (get_user(ro, (int __user *)(arg))) {
-+				err = -EFAULT;
-+				goto done_unlock;
-+			}
-+			err = -EINVAL;
-+
-+			/* if the bdev is going readonly the value of mddev->ro
-+			 * does not matter, no writes are coming
-+			 */
-+			if (ro)
-+				goto done_unlock;
-+
-+			/* are we are already prepared for writes? */
-+			if (mddev->ro != 1)
-+				goto done_unlock;
-+
-+			/* transitioning to readauto need only happen for
-+			 * arrays that call md_write_start
-+			 */
-+			if (mddev->pers) {
-+				err = restart_array(mddev);
-+				if (err == 0) {
-+					mddev->ro = 2;
-+					set_disk_ro(mddev->gendisk, 0);
-+				}
-+			}
-+			goto done_unlock;
- 	}
- 
- 	/*
+ 		for_each_mddev(mddev, tmp)
+ 			if (mddev_trylock(mddev)) {
+-				/* Force a switch to readonly even array
+-				 * appears to still be in use.  Hence
+-				 * the '100'.
+-				 */
+-				do_md_stop(mddev, 1, 100);
++				do_md_stop(mddev, 1, 0);
+ 				mddev_unlock(mddev);
+ 			}
+ 		/*
 
