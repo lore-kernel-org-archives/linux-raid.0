@@ -1,104 +1,77 @@
-From: "stephan sperber" <quinte17@gmx.de>
-Subject: RE: failed raid5 after ide cable malfunction.
-Date: Wed, 7 Jan 2009 22:33:11 +0100
-Message-ID: <003401c9710f$8ab4c280$a01e4780$@de>
-References: <003301c970e8$1c6d2b90$554782b0$@de> <alpine.DEB.1.10.0901071316170.29147@p34.internal.lan>
+From: whollygoat@letterboxes.org
+Subject: Re: RAID5 (mdadm) array hosed after grow operation
+Date: Wed, 07 Jan 2009 20:19:05 -0800
+Message-ID: <1231388345.19357.1293603883@webmail.messagingengine.com>
+References: <1231144738.2997.1293010001@webmail.messagingengine.com>
+ <alpine.DEB.1.10.0901050913470.3359@p34.internal.lan>
+ <18786.34570.756734.253596@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0901071316170.29147@p34.internal.lan>
-Content-Language: de
+Content-Disposition: inline
+In-Reply-To: <18786.34570.756734.253596@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, debian-user@lists.debian.org, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-# mdadm --assemble --force /dev/md3 /dev/sd[c-l]1
-This hint did it :) Thank you for your great help!
 
-Have a nice day.
+On Tue, 6 Jan 2009 09:17:46 +1100, "Neil Brown" <neilb@suse.de> said:
+> On Monday January 5, jpiszcz@lucidpixels.com wrote:
+> > cc linux-raid
+> > 
+> > On Mon, 5 Jan 2009, whollygoat@letterboxes.org wrote:
+> > 
+> > > 
 
-Stephan
+[snip]
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Justin Piszcz
-Sent: Wednesday, January 07, 2009 7:19 PM
-To: stephan sperber
-Cc: linux-raid@vger.kernel.org
-Subject: Re: failed raid5 after ide cable malfunction.
+> > > The RAID reassembled fine at each boot as the drives
+> > > were replaced one by one.  After the last drive was
+> > > partitioned and added to the array, I issued the
+> > > command
+> > >
+> > >   "mdadm -G /dev/md/0 -z max"
+> > >
 
+[snip]
 
+> 
+> You cannot grow an array with an active bitmap... or at least you
+> shouldn't be able to.  Maybe 2.6.18 didn't enforce that.  Maybe that
+> is what caused the problem - not sure.
+> 
 
-On Wed, 7 Jan 2009, stephan sperber wrote:
+I've decided to swap the smaller drives back in and start the upgrade 
+process over again.  Seems that might be the fastest way to fix the 
+problem.
 
-> Hello everybody!
-> I have a little trouble in getting the raid5 up and running again.
-> What has happened so far:
-> 1. Booting the System
-> 2. Ide cable had some troubles so 2 disks went "mad" during boot and raid
-> couldn't get assembled.
-> (/dev/sda4 /dev/sdb2)
-> 3. I forced poweroff because system wasn't responsible due to ATA
-connection
-> problems.
-> 4. after reboot the raid5 got up again, were clean, but attempted a
-resync.
-> 5. during the resync the cable had troubles again, so those 2 devices were
-> marked as spare.
-> 6. i forced a poweroff again and reseated the cable.
-> 7. I booted again but now all devices of the raid were marked as spare.
->
-> Is there a possibility to get the raid active without dataloss?
->
-> Here some infos:
-> cat /proc/mdstat
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-[raid4]
-> [raid10]
-> md1 : inactive sdc2[2](S) sdb2[1](S) sda4[0](S)
->      709140864 blocks
->
-> unused devices: <none>
->
-> mdadm --detail /dev/md1
-> mdadm: md device /dev/md1 does not appear to be active.
->
-> Thx in advance
-> Stephan
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+How should I have done the grow operation if not as above?  The only
+thing I see in man mdadm is the "-S" switch which seems to disassemble
+the array.  Maybe this is because I've only tried it on the degraded 
+array this problem has left with.  At any rate, after 
 
-Example (use your disks obviously):
+    mdadm -S /dev/md/0
 
-# mdadm --assemble --force /dev/md3 /dev/sd[c-l]1
+running
 
-If that does not work, you can use Neil's advice from another thread:
+    mdadm -D /dev/md/0
 
-> Your only option at this stage is to re-create the array with the best
-> devices.  Create it will one device missing so that it won't try a
-> resync.
-> e.g.
+gave me an error something to the effect the array didn't exist or 
+couldn't be found or something like that.
 
->  mdadm -C /dev/md0 -l5 -n5 /dev/hde1 /dev/hdg1 /dev/hdi1 missing /dev/sda1
+Or maybe do I need to add "--bitmap=none" to remove the bitmap 
+when running the above grow command?
 
-You would want -C /dev/md1 -l5 -n3 and then specify only two of the disks
-with one "missing"
+Hope you can help,
 
-See if this does it for you?
+Thanks
 
-Justin.
+goat
+-- 
+  
+  whollygoat@letterboxes.org
 
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+http://www.fastmail.fm - Same, same, but different...
 
