@@ -1,51 +1,45 @@
-From: "adam radford" <aradford@gmail.com>
-Subject: Re: [Benchmarks] How do I set the memory invalidate bit for a 3ware 9550SXU-12 controller?
-Date: Thu, 8 Jan 2009 14:52:28 -0800
-Message-ID: <b1bc6a000901081452j3cce22dfy82a160cbcab0c5ed@mail.gmail.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: [Benchmarks] How do I set the memory invalidate bit for a 3ware
+ 9550SXU-12 controller?
+Date: Thu, 08 Jan 2009 23:52:21 +0000
+Message-ID: <496691B5.2020607@anonymous.org.uk>
 References: <alpine.DEB.1.10.0901080846430.29454@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <alpine.DEB.1.10.0901080846430.29454@p34.internal.lan>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide-arrays@lists.math.uh.edu
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Jan 8, 2009 at 6:20 AM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+On 08/01/2009 14:20, Justin Piszcz wrote:
 > System = RHEL5 x86_64
 > Kernel = 2.6.18-53.1.13.el5
 
-> Invalidate' (lspci now shows that the 3Ware controller 9550 is in 'MemWINV+'
-> instead of 'MemWINV-' mode), maybe enhancing write throughput. The 9650 is
-> in 'MemWINV-' mode. This seems somewhat frequent with SuperMicro mainboards,
+Not on the topic of your query, but why are you running a year-old 
+kernel? There have been about 10 updates since then.
 
-The 3ware 9650SE is PCIe based, and memory-write-invalidate
-does not apply.  See the following link from "PCI Express System
-Architecture":
+[...]
+> Also tried:
+> # setpci -d *:* e6.b=2e
 
-http://books.google.com/books?id=sBtKutWpVh8C&pg=PA787&lpg=PA787&dq=PCIe+memory+write+invalidate&source=web&ots=fZE68z97DP&sig=qWnb8nTRBrQL2g8DwZwLpiFWE4c
+Eeek, don't do that, that's asking for trouble, throwing settings at 
+every PCI device in your system. Really, you should look up the PCI spec 
+and see.
 
-> How do I change MemWINV+ to MemWINV- using setpci?
->
+If you're sure you're not going to hose your system and lose data, or 
+you don't care for the sake of experiment, you might try:
 
-Why would you want to turn this bit off?
+# setpci -s 03:01.0 COMMAND=0:0010
 
-> Does anyone know how to set it via setpci?
+that's -s 03:01.0 to select your card by its bus and slot, COMMAND to 
+play with the command register, 0 to set to zero, 0010 as a mask to 
+affect only bit 4. But I may have got it wrong - as I said you should 
+look up the PCI spec for yourself, as well as the setpci man page - and 
+in any case I take no responsibility if it goes wrong.
 
-You mean unset it (as per your above request)?
+Cheers,
 
-You shouldn't use 'setpci' to just artibrarily set and unset the
-memwinv bit.  For this bit to work correctly, the PCI device
-must have its cache line size set correctly.  The kernel call
-pci_try_set_mwi() does this by calling pci_set_cachline_size().   The
-3ware driver in kernels 2.6.25 and higher makes this call to attempt
-to turn on MWI support for motherboards that to not automatically have
-it enabled.
-
-You should not be trying to turn this bit off as it most likely will not help
-your performance by doing so.
-
--Adam
+John.
