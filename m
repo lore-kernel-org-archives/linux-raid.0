@@ -1,102 +1,51 @@
-From: Neil Brown <neilb@suse.de>
-Subject: [PULL request] md update for 2.6.29 (includes change to fs/block.c)
-Date: Fri, 9 Jan 2009 08:55:59 +1100
-Message-ID: <18790.30319.768568.100620@notabene.brown>
+From: "adam radford" <aradford@gmail.com>
+Subject: Re: [Benchmarks] How do I set the memory invalidate bit for a 3ware 9550SXU-12 controller?
+Date: Thu, 8 Jan 2009 14:52:28 -0800
+Message-ID: <b1bc6a000901081452j3cce22dfy82a160cbcab0c5ed@mail.gmail.com>
+References: <alpine.DEB.1.10.0901080846430.29454@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.0901080846430.29454@p34.internal.lan>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Al Viro <viro@ftp.linux.org.uk>, Tejun Heo <tj@kernel.org>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide-arrays@lists.math.uh.edu
 List-Id: linux-raid.ids
 
+On Thu, Jan 8, 2009 at 6:20 AM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+> System = RHEL5 x86_64
+> Kernel = 2.6.18-53.1.13.el5
 
-Hi Linus,
- here is my drivers/md pull request for the 2.6.29 merge window.
+> Invalidate' (lspci now shows that the 3Ware controller 9550 is in 'MemWINV+'
+> instead of 'MemWINV-' mode), maybe enhancing write throughput. The 9650 is
+> in 'MemWINV-' mode. This seems somewhat frequent with SuperMicro mainboards,
 
- The most interesting change is
-      md: make devices disappear when they are no longer needed.
- which is functionality I have tried to add in the past and always got
- wrong.  I think it is right this time :-)
+The 3ware 9650SE is PCIe based, and memory-write-invalidate
+does not apply.  See the following link from "PCI Express System
+Architecture":
 
- It involves a change to fs/block_dev.c.
- The reason for this change is the there is a period between ->probe
- being called on a device, and ->open being call, where the gendisk is
- not reference counted but must not go away.
- This interacts badly which md's (questionable but historic) approach
- of devices being created by ->probe.
- The fs/block_dev.c change allows the open to fail in a new way
- (ERESTARTSYS) so that we loop back and call ->probe, so if the
- gendisk does get removed in that window, we handle the situation
- gracefully.   The changelog (and code) give more details.
+http://books.google.com/books?id=sBtKutWpVh8C&pg=PA787&lpg=PA787&dq=PCIe+memory+write+invalidate&source=web&ots=fZE68z97DP&sig=qWnb8nTRBrQL2g8DwZwLpiFWE4c
 
- This was discussed on linux-kernel with Al Viro and Tejun Heo without
- a clear resolution.  There was a feeling that some sort of cleanup in
- the block layer could make this unnecessary and would fix other
- issues, but no clear direction on the cleanup was found, nor were
- any clear problems with my approach identified.
+> How do I change MemWINV+ to MemWINV- using setpci?
+>
 
+Why would you want to turn this bit off?
 
- Also of some note is 
-         md: Allow md devices to be created by name.
- which provides a new way of creating md devices and allows us to
- provide the name for kernel-internal use, so it isn't always 
- md0 or md27, but can be md_bitbucket or md_scratch.
+> Does anyone know how to set it via setpci?
 
- Finally
-       md: fix bitmap-on-external-file bug.
- fixes a bug that I let in to 2.6.28 fairly late due to insufficient
- testing.  It is flagged for -stable.
+You mean unset it (as per your above request)?
 
-Thanks,
-NeilBrown
+You shouldn't use 'setpci' to just artibrarily set and unset the
+memwinv bit.  For this bit to work correctly, the PCI device
+must have its cache line size set correctly.  The kernel call
+pci_try_set_mwi() does this by calling pci_set_cachline_size().   The
+3ware driver in kernels 2.6.25 and higher makes this call to attempt
+to turn on MWI support for motherboards that to not automatically have
+it enabled.
 
+You should not be trying to turn this bit off as it most likely will not help
+your performance by doing so.
 
-
-The following changes since commit 9e42d0cf5020aaf217433cad1a224745241d212a:
-  Linus Torvalds (1):
-        Merge git://git.kernel.org/.../davem/sparc-2.6
-
-are available in the git repository at:
-
-  git://neil.brown.name/md/ for-linus
-
-Andre Noll (9):
-      md: raid0_make_request(): Replace chunksize_bits by chunksect_bits.
-      md: raid0_make_request(): Remove local variable chunk_size.
-      md: raid0_make_request(): Replace local variable block by sector.
-      md: raid0: Represent device offset in sectors.
-      md: raid0: Represent zone->zone_offset in sectors.
-      md: raid0 create_strip_zones(): Make two local variables sector-based.
-      md: raid0 create_strip_zones(): Add KERN_INFO/KERN_ERR to printk's.
-      md: raid0: Represent the size of strip zones in sectors.
-      md: raid0: make hash_spacing and preshift sector-based.
-
-Cheng Renquan (2):
-      md: use list_for_each_entry macro directly
-      md: need another print_sb for mdp_superblock_1
-
-NeilBrown (7):
-      md: fix bitmap-on-external-file bug.
-      md: use sysfs_notify_dirent to notify changes to md/sync_action.
-      md: move allocation of ->queue from mddev_find to md_probe
-      md: centralise all freeing of an 'mddev' in 'md_free'
-      md: make devices disappear when they are no longer needed.
-      md: Allow md devices to be created by name.
-      md: don't retry recovery of raid1 that fails due to error on source drive.
-
- drivers/md/bitmap.c        |   11 +-
- drivers/md/faulty.c        |    3 +-
- drivers/md/linear.c        |    3 +-
- drivers/md/md.c            |  416 +++++++++++++++++++++++++++++++-------------
- drivers/md/multipath.c     |    3 +-
- drivers/md/raid0.c         |  178 ++++++++++----------
- drivers/md/raid1.c         |   11 +-
- drivers/md/raid10.c        |    3 +-
- drivers/md/raid5.c         |    8 +-
- fs/block_dev.c             |   14 ++
- include/linux/raid/md_k.h  |   20 ++-
- include/linux/raid/md_p.h  |    2 +
- include/linux/raid/raid0.h |   10 +-
- 13 files changed, 435 insertions(+), 247 deletions(-)
+-Adam
