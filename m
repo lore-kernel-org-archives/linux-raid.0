@@ -1,154 +1,163 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: Corrupt data - RAID sata_sil 3114 chip
-Date: Sat, 10 Jan 2009 18:43:00 -0600
-Message-ID: <49694094.60501@shaw.ca>
-References: <200901032104.15242.bs@q-leap.de> <496436C4.4070305@kernel.org> <49643FD4.9080100@shaw.ca> <200901071632.02264.bs@q-leap.de> <49693E08.3050209@shaw.ca>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: Roadmap for md/raid ???
+Date: Sun, 11 Jan 2009 19:14:13 +0100
+Message-ID: <20090111181413.GA24988@lazy.lzy>
+References: <18763.7881.300921.177207@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49693E08.3050209@shaw.ca>
+Content-Disposition: inline
+In-Reply-To: <18763.7881.300921.177207@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: Bernd Schubert <bs@q-leap.de>, Tejun Heo <tj@kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Justin Piszcz <jpiszcz@lucidpixels.com>, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Robert Hancock wrote:
-> Bernd Schubert wrote:
->>>> I think it's something related to setting up the PCI side of things.
->>>> There have been hints that incorrect CLS setting was the culprit and I
->>>> tried thte combinations but without any success and unfortunately the
->>>> problem wasn't reproducible with the hardware I have here.  :-(
->>> As far as the cache line size register, the only thing the documentation
->>> says it controls _directly_ is "With the SiI3114 as a master, initiating
->>> a read transaction, it issues PCI command Read Multiple in place, when
->>> empty space in its FIFO is larger than the value programmed in this
->>> register."
->>>
->>> The interesting thing is the commit (log below) that added code to the
->>> driver to check the PCI cache line size register and set up the FIFO
->>> thresholds:
->>>
->>>    2005/03/24 23:32:42-05:00 Carlos.Pardo
->>>    [PATCH] sata_sil: Fix FIFO PCI Bus Arbitration
->>>
->>>    This patch set default values for the FIFO PCI Bus Arbitration to
->>>    avoid data corruption. The root cause is due to our PCI bus master
->>>    handling mismatch with the chipset PCI bridge during DMA xfer (write
->>>    data to the device). The patch is to setup the DMA fifo threshold so
->>>    that there is no chance for the DMA engine to change protocol. We 
->>> have
->>>    seen this problem only on one motherboard.
->>>
->>>    Signed-off-by: Silicon Image Corporation <cpardo@siliconimage.com>
->>>    Signed-off-by: Jeff Garzik <jgarzik@pobox.com>
->>> 4
->>> What the code's doing is setting the FIFO thresholds, used to assign
->>> priority when requesting a PCI bus read or write operation, based on the
->>> cache line size somehow. It seems to be trusting that the chip's cache
->>> line size register has been set properly by the BIOS. The kernel should
->>> know what the cache line size is but AFAIK normally only sets it when
->>> the driver requests MWI. This chip doesn't support MWI, but it looks
->>> like pci_set_mwi would fix up the CLS register as a side effect..
->>>
->>>> Anyways, there was an interesting report that updating the BIOS on the
->>>> controller fixed the problem.
->>>>
->>>>   http://bugzilla.kernel.org/show_bug.cgi?id=10480
->>>>
->>>> Taking "lspci -nnvvvxxx" output of before and after such BIOS update
->>>> will shed some light on what's really going on.  Can you please try
->>>> that?
->>> Yes, that would be quite interesting.. the output even with the current
->>> BIOS would be useful to see if the BIOS set some stupid cache line size
->>> value..
->>
->> Unfortunately I can't update the bios/firmware of the Sil3114 
->> directly, it is onboard and the firmware is included into the 
->> mainboard bios. There is not the most recent bios version installed, 
->> but when we initially had the problems, we first tried a bios update, 
->> but it didn't help.
-> 
-> Well if one is really adventurous one can sometimes use some BIOS image 
-> editing tools to install an updated flash image for such integrated 
-> chips into the main BIOS image. This is definitely for advanced users 
-> only though..
-> 
->>
->> As suggested by Robert, I'm presently trying to figure out the 
->> corruption pattern. Actually our test tool easily provides these data. 
->> Unfortunately, it so far didn't report anything, although the reiserfs 
->> already got corrupted. Might be my colleague, who wrote that tool, 
->> recently broke something (as it is the second time, it doesn't report 
->> corruptions), in the past it did work reliably. Please give me a few 
->> more days...
->>
->>
->> 03:05.0 Mass storage controller [0180]: Silicon Image, Inc. SiI 3114 
->> [SATALink/SATARaid] Serial ATA Controller [1095:3114] (rev 02)
->>         Subsystem: Silicon Image, Inc. SiI 3114 SATALink Controller 
->> [1095:3114]
->>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
->> ParErr- Stepping- SERR+ FastB2B-
->>         Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium 
->> >TAbort- <TAbort- <MAbort- >SERR- <PERR-
->>         Latency: 64, Cache Line Size: 64 bytes
-> 
-> Well, 64 seems quite reasonable, so that doesn't really give any more 
-> useful information.
-> 
-> I'm CCing Carlos Pardo at Silicon Image who wrote the patch above, maybe 
-> he has some insight.. Carlos, we have a case here where Bernd is 
-> reporting seeing corruption on an integrated SiI3114 on a Tyan Thunder 
-> K8S Pro (S2882) board, AMD 8111 chipset. This is reportedly occurring 
-> only with certain Seagate drives. Do you have any insight into this 
-> problem, in particular as far as whether the problem worked around in 
-> the patch mentioned above might be related?
-> 
-> There are apparently some reports of issues on NVidia chipsets as well, 
-> though I don't have any details at hand.
+Hi,
 
-Well, Carlos' email bounces, so much for that one. Anyone have any other 
-contacts at Silicon Image?
+something else you can add to your "todo list",
+or not, as you like.
 
+RAID-5/6 with heterogeneous devices.
+The idea would be to build a RAID-5/6 with devices
+of different size, but using, whenever possible,
+the complete available space.
+Example: let's say we have 6 HDs, 3x 500GB and 3x 1TB.
+The idea is to have a single md device, in RAID-5,
+where the first part of the device (500GB range) uses
+the whole 6 HDs, while the second part uses only 3.
+Specifically, the first part will have 500GB x5
+and the second 500GB x2.
+This is already doable by partitioning the HDs properly
+before and creating 2 md devices.
+Nevertheless, given the "grow" possibility, in both
+directions (disk number, disk size), the RAID only
+solution would be interesting.
+
+RAID-5/6 pre-caching.
+Maybe this one is already there, in any case the
+idea would be to try to cache a complete stripe
+set, in case of RAID-5/6, in order to avoid sub
+sequent reads in case of write.
+This could be a user switchable parameter, for
+example when the user knows there will be a lot
+of read-modify-write to the array.
+
+Hope this helps.
+
+bye,
+
+pg
+
+On Fri, Dec 19, 2008 at 03:10:49PM +1100, Neil Brown wrote:
 > 
->>         Interrupt: pin A routed to IRQ 19
->>         Region 0: I/O ports at bc00 [size=8]
->>         Region 1: I/O ports at b880 [size=4]
->>         Region 2: I/O ports at b800 [size=8]
->>         Region 3: I/O ports at ac00 [size=4]
->>         Region 4: I/O ports at a880 [size=16]
->>         Region 5: Memory at feafec00 (32-bit, non-prefetchable) [size=1K]
->>         Expansion ROM at fea00000 [disabled] [size=512K]
->>         Capabilities: [60] Power Management version 2
->>                 Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA 
->> PME(D0-,D1-,D2-,D3hot-,D3cold-)
->>                 Status: D0 PME-Enable- DSel=0 DScale=2 PME-
->> 00: 95 10 14 31 07 01 b0 02 02 00 80 01 10 40 00 00
->> 10: 01 bc 00 00 81 b8 00 00 01 b8 00 00 01 ac 00 00
->> 20: 81 a8 00 00 00 ec af fe 00 00 00 00 95 10 14 31
->> 30: 00 00 a0 fe 60 00 00 00 00 00 00 00 0a 01 00 00
->> 40: 02 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00
->> 50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->> 60: 01 00 22 06 00 40 00 64 00 00 00 00 00 00 00 00
->> 70: 00 00 60 00 d0 d0 09 00 00 00 60 00 00 00 00 00
->> 80: 03 00 00 00 22 00 00 00 00 00 00 00 c8 93 7f ef
->> 90: 00 00 00 09 ff ff 00 00 00 00 00 19 00 00 00 00
->> a0: 01 31 15 65 dd 62 dd 62 92 43 92 43 09 40 09 40
->> b0: 01 21 15 65 dd 62 dd 62 92 43 92 43 09 40 09 40
->> c0: 84 03 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->> d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->> e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->> f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->>
->>
->>
->> Cheers,
->> Bernd
->>
 > 
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> Not really a roadmap, more a few tourist attractions that you might
+> see on the way if you stick around (and if I stick around)...
+> 
+> Comments welcome.
+> 
+> NeilBrown
+> 
+> 
+> - Bad block list
+>   The idea here is to maintain and store on each device a list of
+>   blocks that are known to be 'bad'.  This effectively allows us to
+>   fail a single block rather than a whole device when we get a media
+>   write error.  Of course if updating the bad-block-list gives an
+>   error we then have to fail the device.
+> 
+>   We would also record a bad block if we get a read error on a degraded
+>   array.  This would e.g. allow recovery for a degraded raid1 where the
+>   sole remaining device has a bad block.
+> 
+>   An array could have multiple errors on different devices and just
+>   those stripes would be considered to be "degraded".  As long a no
+>   single stripe had too many bad blocks, the data would still be safe.
+>   Naturally as soon as you get one bad block, the array becomes
+>   susceptible to data loss on a single device failure, so it wouldn't
+>   be advisable to run with non-empty badblock lists for an extended
+>   length of time,  However it might provide breathing space until
+>   drive replacement can be achieved.
+> 
+> - hot-device-replace
+>   This is probably the most asked for feature of late.  It would allow
+>   a device to be 'recovered' while the original was still in service. 
+>   So instead of failing out a device and adding a spare, you can add
+>   the spare, build the data onto it, then fail out the device.
+> 
+>   This meshes well with the bad block list.  When we find a bad block,
+>   we start a hot-replace onto a spare (if one exists).  If sleeping
+>   bad blocks are discovered during the hot-replace process, we don't
+>   lose the data unless we find two bad blocks in the same stripe.
+>   And then we just lose data in that stripe.
+> 
+>   Recording in the metadata that a hot-replace was happening might be
+>   a little tricky, so it could be that if you reboot in the middle,
+>   you would have to restart from the beginning.  Similarly there would
+>   be no 'intent' bitmap involved for this resync.
+> 
+>   Each personality would have to implement much of this independently,
+>   effectively providing a mini raid1 implementation.  It would be very
+>   minimal without e.g. read balancing or write-behind etc.
+> 
+>   There would be no point implementing this in raid1.  Just
+>   raid456 and raid10.
+>   It could conceivably make sense for raid0 and linear, but that is
+>   very unlikely to be implemented.
+> 
+> - split-mirror
+>   This is really a function of mdadm rather than md.  It is already
+>   quite possible to break a mirror into two separate single-device
+>   arrays.  However it is a sufficiently common operation that it is
+>   probably making it very easy to do with mdadm.
+>   I'm thinking something like
+>       mdadm --create /dev/md/new --split /dev/md/old
+> 
+>   will create a new raid1 by taking one device off /dev/md/old (which
+>   must be a raid1) and making an array with exactly the right metadata
+>   and size.
+> 
+> - raid5->raid6 conversion.
+>    This is also a fairly commonly asked for feature.
+>    The first step would be to define a raid6 layout where the Q block
+>    was not rotated around the devices but was always on the last
+>    device.  Then we could change a raid5 to a singly-degraded raid6
+>    without moving any data.
+> 
+>    The next step would be to implement in-place restriping. 
+>    This involves 
+>       - freezing a section of the array (all IO blocks)
+>       - copying the data out to a safe backup
+>       - copying it back in with the new layout
+>       - updating the metadata to indicate that the restripe has
+>         progressed.
+>       - repeat.
+> 
+>    This would probably be quite slow but it would achieve the desired
+>    result. 
+> 
+>    Once we have in-place restriping we could change chunksize as
+>    well.
+> 
+> - raid5 reduce number of devices.
+>    We can currently restripe a raid5 (or 6) over a larger number of
+>    devices but not over a smaller number of devices.  That means you
+>    cannot undo an increase that you didn't want.
+> 
+>    It might be nice to allow this to happen at the same time as
+>    increasing --size (if the devices are big enough) to allow the
+>    array to be restriped without changing the available space.
+> 
+> - cluster raid1
+>    Allow a raid1 to be assembled on multiple hosts that share some
+>    drives, so a cluster filesystem (e.g. ocfs2) can be run over it.
+>    It requires co-ordination to handle failure events and
+>    resync/recovery.  Most of this would probably be done in userspace.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
 
+-- 
+
+piergiorgio
