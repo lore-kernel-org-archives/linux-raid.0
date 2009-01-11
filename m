@@ -1,163 +1,52 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: Roadmap for md/raid ???
-Date: Sun, 11 Jan 2009 19:14:13 +0100
-Message-ID: <20090111181413.GA24988@lazy.lzy>
-References: <18763.7881.300921.177207@notabene.brown>
+From: Bernd Rieke <bernd@rhm.de>
+Subject: opensuse 11.1: after growing a raid1 by one disk, no md1 on boot
+Date: Sun, 11 Jan 2009 19:55:01 +0100
+Message-ID: <496A4085.8040904@rhm.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <18763.7881.300921.177207@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Hi all,
 
-something else you can add to your "todo list",
-or not, as you like.
+we made the following steps:
 
-RAID-5/6 with heterogeneous devices.
-The idea would be to build a RAID-5/6 with devices
-of different size, but using, whenever possible,
-the complete available space.
-Example: let's say we have 6 HDs, 3x 500GB and 3x 1TB.
-The idea is to have a single md device, in RAID-5,
-where the first part of the device (500GB range) uses
-the whole 6 HDs, while the second part uses only 3.
-Specifically, the first part will have 500GB x5
-and the second 500GB x2.
-This is already doable by partitioning the HDs properly
-before and creating 2 md devices.
-Nevertheless, given the "grow" possibility, in both
-directions (disk number, disk size), the RAID only
-solution would be interesting.
+install an opensuse 11.1 as RAID1 on two scsi-disks:
 
-RAID-5/6 pre-caching.
-Maybe this one is already there, in any case the
-idea would be to try to cache a complete stripe
-set, in case of RAID-5/6, in order to avoid sub
-sequent reads in case of write.
-This could be a user switchable parameter, for
-example when the user knows there will be a lot
-of read-modify-write to the array.
+/dev/md0 .... swap (/dev/sda1 /dev/sdb1)
+/dev/md1 .... root (/dev/sda2 /dev/sdb2)
 
-Hope this helps.
+Just the install with no modifications, nothing else!
 
-bye,
+Everything works fine. We rebooted the system several times, it came up
+as expected. Then we noticed that we forgot the third disk within the
+arrays as we meant to have for more redundancy. So we made a
 
-pg
+mdadm --grow -n 3 /dev/md0
+mdadm --grow -n 3 /dev/md1
+mdadm -a /dev/md0 /dev/sdc1
+mdadm -a /dev/md1 /dev/sdc2
 
-On Fri, Dec 19, 2008 at 03:10:49PM +1100, Neil Brown wrote:
-> 
-> 
-> Not really a roadmap, more a few tourist attractions that you might
-> see on the way if you stick around (and if I stick around)...
-> 
-> Comments welcome.
-> 
-> NeilBrown
-> 
-> 
-> - Bad block list
->   The idea here is to maintain and store on each device a list of
->   blocks that are known to be 'bad'.  This effectively allows us to
->   fail a single block rather than a whole device when we get a media
->   write error.  Of course if updating the bad-block-list gives an
->   error we then have to fail the device.
-> 
->   We would also record a bad block if we get a read error on a degraded
->   array.  This would e.g. allow recovery for a degraded raid1 where the
->   sole remaining device has a bad block.
-> 
->   An array could have multiple errors on different devices and just
->   those stripes would be considered to be "degraded".  As long a no
->   single stripe had too many bad blocks, the data would still be safe.
->   Naturally as soon as you get one bad block, the array becomes
->   susceptible to data loss on a single device failure, so it wouldn't
->   be advisable to run with non-empty badblock lists for an extended
->   length of time,  However it might provide breathing space until
->   drive replacement can be achieved.
-> 
-> - hot-device-replace
->   This is probably the most asked for feature of late.  It would allow
->   a device to be 'recovered' while the original was still in service. 
->   So instead of failing out a device and adding a spare, you can add
->   the spare, build the data onto it, then fail out the device.
-> 
->   This meshes well with the bad block list.  When we find a bad block,
->   we start a hot-replace onto a spare (if one exists).  If sleeping
->   bad blocks are discovered during the hot-replace process, we don't
->   lose the data unless we find two bad blocks in the same stripe.
->   And then we just lose data in that stripe.
-> 
->   Recording in the metadata that a hot-replace was happening might be
->   a little tricky, so it could be that if you reboot in the middle,
->   you would have to restart from the beginning.  Similarly there would
->   be no 'intent' bitmap involved for this resync.
-> 
->   Each personality would have to implement much of this independently,
->   effectively providing a mini raid1 implementation.  It would be very
->   minimal without e.g. read balancing or write-behind etc.
-> 
->   There would be no point implementing this in raid1.  Just
->   raid456 and raid10.
->   It could conceivably make sense for raid0 and linear, but that is
->   very unlikely to be implemented.
-> 
-> - split-mirror
->   This is really a function of mdadm rather than md.  It is already
->   quite possible to break a mirror into two separate single-device
->   arrays.  However it is a sufficiently common operation that it is
->   probably making it very easy to do with mdadm.
->   I'm thinking something like
->       mdadm --create /dev/md/new --split /dev/md/old
-> 
->   will create a new raid1 by taking one device off /dev/md/old (which
->   must be a raid1) and making an array with exactly the right metadata
->   and size.
-> 
-> - raid5->raid6 conversion.
->    This is also a fairly commonly asked for feature.
->    The first step would be to define a raid6 layout where the Q block
->    was not rotated around the devices but was always on the last
->    device.  Then we could change a raid5 to a singly-degraded raid6
->    without moving any data.
-> 
->    The next step would be to implement in-place restriping. 
->    This involves 
->       - freezing a section of the array (all IO blocks)
->       - copying the data out to a safe backup
->       - copying it back in with the new layout
->       - updating the metadata to indicate that the restripe has
->         progressed.
->       - repeat.
-> 
->    This would probably be quite slow but it would achieve the desired
->    result. 
-> 
->    Once we have in-place restriping we could change chunksize as
->    well.
-> 
-> - raid5 reduce number of devices.
->    We can currently restripe a raid5 (or 6) over a larger number of
->    devices but not over a smaller number of devices.  That means you
->    cannot undo an increase that you didn't want.
-> 
->    It might be nice to allow this to happen at the same time as
->    increasing --size (if the devices are big enough) to allow the
->    array to be restriped without changing the available space.
-> 
-> - cluster raid1
->    Allow a raid1 to be assembled on multiple hosts that share some
->    drives, so a cluster filesystem (e.g. ocfs2) can be run over it.
->    It requires co-ordination to handle failure events and
->    resync/recovery.  Most of this would probably be done in userspace.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The third disk was synced, everything fine again. But on the next reboot
+the system stopped with 'waiting for /dev/md1 to appear'.
 
--- 
+When the system is installed initially with 3 disks there are no
+problems. To produce the problem it needs only the --grow -n 3. After
+this the root-partition /dev/md1 seems to be corrupted or not known to 
+the kernel for any reasons.
 
-piergiorgio
+When we try to assemble with the rescue system it tells us that there is
+no superblock on /dev/sdx2. And when we try to mount one of the disks
+directly it tells us that the filesystem linux-raid-xxx (forgot the xxx,
+it was something like 'type', i think) is not a valid filesystem-type.
+
+What goes wrong?
+
+Kernel: 2.6.27.7-9-pae #1 SMP 2008-12-04 18:10:04 +0100
+
+Greetings Bernd Rieke
+
+
