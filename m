@@ -1,38 +1,47 @@
-From: Nifty Fedora Mitch <niftyfedora@niftyegg.com>
-Subject: Re: [Benchmarks] How do I set the memory invalidate bit for a
-	3ware 9550SXU-12 controller?
-Date: Sun, 11 Jan 2009 11:27:42 -0800
-Message-ID: <20090111192742.GA3784@compegg.wr.niftyegg.com>
-References: <alpine.DEB.1.10.0901080846430.29454@p34.internal.lan>
+From: Jan Engelhardt <jengelh@medozas.de>
+Subject: md: constify VFTs
+Date: Sun, 11 Jan 2009 23:47:18 +0100 (CET)
+Message-ID: <alpine.LSU.2.00.0901112345400.20350@fbirervta.pbzchgretzou.qr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.1.10.0901080846430.29454@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide-arrays@lists.math.uh.edu
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jan 08, 2009 at 09:20:30AM -0500, Justin Piszcz wrote:
-> Subject: [Benchmarks] How do I set the memory invalidate bit for a 3ware 9550SXU-12 controller?
-> 
-> System = RHEL5 x86_64
-> Kernel = 2.6.18-53.1.13.el5
->
-> Per: http://makarevitch.org/rant/raid/
-> It states: "A potential culprit, at least for slow write operations, lies in Q12546. I played with setpci in order to enable this ''Memory Write and Invalidate' (lspci now shows that the 3Ware controller 9550 is in 'MemWINV+' instead of 'MemWINV-' mode), maybe enhancing write throughput. The 9650 is in 'MemWINV-' mode. This seems somewhat frequent with SuperMicro mainboards, check this with your system integrator or SuperMicro support service. This may be somewhat tied to the "interleaved memory". With the 9650 my PCI parameters are as follows:"
->
-> Links to: http://www.3ware.com/KB/article.aspx?id=12546
->
-> How do I change MemWINV+ to MemWINV- using setpci?
 
-Since this is a SuperMicro motherboard double check the BIOS settings
-involved with MTRR registers.  Since Windows uses PAT its drivers will often
-ignore BIOS settings that Linux will not.
+This was already sent on January 22 2008 for 2.6.25, but on a recent
+rebase of my constify branch still was not in for 2.6.29.
+http://www.mail-archive.com/linux-raid@vger.kernel.org/msg10397.html
 
 
+---8<---
+parent 5b692aa02e68392e41a5b341e5c965b382fda948 (v2.6.29-rc1-6-g5b692aa)
+commit e6422a7a52d38365b8697463bebaefcdcb179e3a
+Author: Jan Engelhardt <jengelh@medozas.de>
+Date:   Sun Jan 11 23:45:53 2009 +0100
+
+md: constify VFTs
+
+Signed-off-by: Jan Engelhardt <jengelh@medozas.de>
+---
+ drivers/md/md.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 41e2509..20c1634 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5644,7 +5644,7 @@ static int md_seq_show(struct seq_file *seq, void *v)
+ 	return 0;
+ }
+ 
+-static struct seq_operations md_seq_ops = {
++static const struct seq_operations md_seq_ops = {
+ 	.start  = md_seq_start,
+ 	.next   = md_seq_next,
+ 	.stop   = md_seq_stop,
 -- 
-	T o m  M i t c h e l l 
-	Found me a new hat, now what?
+# Created with git-export-patch
 
