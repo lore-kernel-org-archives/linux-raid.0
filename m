@@ -1,32 +1,29 @@
-From: Michal Soltys <soltys@ziu.info>
-Subject: Re: Kernel doesn't find root from new style partitionable array
-Date: Mon, 12 Jan 2009 00:26:13 +0100
-Message-ID: <496A8015.5000704@ziu.info>
-References: <871vvbulaz.fsf@divinity.mikat.iki.fi>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Corrupt data - RAID sata_sil 3114 chip
+Date: Mon, 12 Jan 2009 10:30:42 +0900
+Message-ID: <496A9D42.4000302@kernel.org>
+References: <200901032104.15242.bs@q-leap.de> <496436C4.4070305@kernel.org> <49643FD4.9080100@shaw.ca> <200901071632.02264.bs@q-leap.de> <49693E08.3050209@shaw.ca> <49694094.60501@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <871vvbulaz.fsf@divinity.mikat.iki.fi>
+In-Reply-To: <49694094.60501@shaw.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mika Tiainen <mikat@iki.fi>
-Cc: linux-raid@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Bernd Schubert <bs@q-leap.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Justin Piszcz <jpiszcz@lucidpixels.com>, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mika Tiainen wrote:
-> Hi,
+Robert Hancock wrote:
+>> There are apparently some reports of issues on NVidia chipsets as
+>> well, though I don't have any details at hand.
 > 
-> When booting from another disk I can see that the md0 partitions are
-> only found later:
-> 
->  md0: p1 p2
-> 
-> This line shows up after root is already mounted.
-> 
+> Well, Carlos' email bounces, so much for that one. Anyone have any other
+> contacts at Silicon Image?
 
-I've never used in-kernel raid autodetection (always relying on 
-initramfs - any reason not to use one ?), but looking at md.txt from 
-kernel docs, raid=partitionable parameter should get it done. You might 
-end with md_d0 (as in earlier kernels) name instead of md0, so adjust 
-root=, fstab, etc. accordingly.
+I'll ping my SIMG contacts but I've pinged about this problem in the
+past but it didn't get anywhere.
 
+Thanks.
+
+-- 
+tejun
