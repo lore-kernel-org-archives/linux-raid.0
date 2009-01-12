@@ -1,69 +1,76 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: opensuse 11.1: after growing a raid1 by one disk, no md1 on boot
-Date: Mon, 12 Jan 2009 18:43:00 -0500
-Message-ID: <496BD584.5060605@tmr.com>
-References: <496A4085.8040904@rhm.de>
+Subject: Re: Strange array state
+Date: Mon, 12 Jan 2009 18:51:23 -0500
+Message-ID: <496BD77B.508@tmr.com>
+References: <20090112120517.D4653832E425@gemini.denx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <496A4085.8040904@rhm.de>
+In-Reply-To: <20090112120517.D4653832E425@gemini.denx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bernd Rieke <bernd@rhm.de>
+To: Wolfgang Denk <wd@denx.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bernd Rieke wrote:
-> Hi all,
+Wolfgang Denk wrote:
+> Hello, 
 >
-> we made the following steps:
+> I see somewhat strange reports for a RAID6 array of 6 disks:
 >
-> install an opensuse 11.1 as RAID1 on two scsi-disks:
+> # cat /proc/mdstat 
+> Personalities : [raid1] [raid6] [raid5] [raid4] 
+> md2 : active raid6 sdc[0] sdh[6] sdg[4] sdf[3] sde[2] sdd[1]
+>       1953545792 blocks super 1.0 level 6, 16k chunk, algorithm 2 [6/6] [UUUUUU]
+> ...
 >
-> /dev/md0 .... swap (/dev/sda1 /dev/sdb1)
-> /dev/md1 .... root (/dev/sda2 /dev/sdb2)
+> Oops? I see disks 0, 1, 2, 3, 4, and 6 - why 6 and not 5 ?
 >
-> Just the install with no modifications, nothing else!
+> If I check the devices, I see for example this:
 >
-> Everything works fine. We rebooted the system several times, it came up
-> as expected. Then we noticed that we forgot the third disk within the
-> arrays as we meant to have for more redundancy. So we made a
+> # mdadm -Q --examine /dev/sdc
+> mdadm: metadata format 1.00 unknown, ignored.
+> /dev/sdc:
+>           Magic : a92b4efc
+>         Version : 1.0
+>     Feature Map : 0x0
+>      Array UUID : ed815df1:a9df9e8e:a65e948f:17ef5557
+>            Name : 1
+>   Creation Time : Sat Apr 12 00:02:52 2008
+>      Raid Level : raid6
+>    Raid Devices : 6
 >
-> mdadm --grow -n 3 /dev/md0
-> mdadm --grow -n 3 /dev/md1
-> mdadm -a /dev/md0 /dev/sdc1
-> mdadm -a /dev/md1 /dev/sdc2
+>  Avail Dev Size : 976772896 (465.76 GiB 500.11 GB)
+>      Array Size : 3907091584 (1863.05 GiB 2000.43 GB)
+>    Super Offset : 976773152 sectors
+>           State : clean
+>     Device UUID : bc286549:0267dd3b:ce683a7c:66341111
 >
-> The third disk was synced, everything fine again. But on the next reboot
-> the system stopped with 'waiting for /dev/md1 to appear'.
+>     Update Time : Mon Jan 12 13:02:52 2009
+>        Checksum : 62b5e607 - correct
+>          Events : 35060
 >
-> When the system is installed initially with 3 disks there are no
-> problems. To produce the problem it needs only the --grow -n 3. After
-> this the root-partition /dev/md1 seems to be corrupted or not known to 
-> the kernel for any reasons.
+>      Chunk Size : 16K
 >
-> When we try to assemble with the rescue system it tells us that there is
-> no superblock on /dev/sdx2. And when we try to mount one of the disks
-> directly it tells us that the filesystem linux-raid-xxx (forgot the xxx,
-> it was something like 'type', i think) is not a valid filesystem-type.
+>     Array Slot : 0 (0, 1, 2, 3, 4, failed, 5)
+>    Array State : Uuuuuu 1 failed
 >
-> What goes wrong?
+> What does the "metadata format 1.00 unknown, ignored." mean, and how
+> can I fix it?  And why does it report "Array State ... 1 failed"?
 >
-> Kernel: 2.6.27.7-9-pae #1 SMP 2008-12-04 18:10:04 +0100
+>
+> [This is on a standard Fedora 10 system.]
+>
+> Any help welcome - thanks in advance.
+>   
 
-I'm guessing that this would be cured by creating a new initrd file, 
-because I but the mdadm.conf file used device names instead of 
-PARTITIONS and a UUID. Mind you, guessing, but look at /etc/mdadm.conf 
-and see if in fact this is the case after install.
+I have seen similar on a system which has a drive fail and which rebuilt 
+on a spare. Also, check you /etc/mdadm.conf file and be sure it uses 
+PARTITIONS and UUID to build the array, and isn't looking for some 
+missing device.
 
-If you can get up on a recovery CD, check the mdadm.conf, fix if needed, 
-run mkinitrd and reboot, assuming SuSE gave you the right tools.
-
-If you are a wizard you can boot from a recovery CD, unpack the initrd 
-file somewhere, patch the mdadm.conf, recompress, save the initrd file, 
-and everything will be fine. I have done this before, so if you find 
-that this is your problem and you understand the outline of steps I 
-mentioned, go to it. I'm not about to try details, if I forget one you lose.
+Report back, if none of that helps someone else will have ideas by 
+then.  ;-)
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
