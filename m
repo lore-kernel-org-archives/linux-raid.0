@@ -1,71 +1,49 @@
-From: Wolfgang Denk <wd@denx.de>
-Subject: Strange array state
-Date: Mon, 12 Jan 2009 13:05:17 +0100
-Message-ID: <20090112120517.D4653832E425@gemini.denx.de>
+From: Yuri Tikhonov <yur@emcraft.com>
+Subject: dmaengine: fix dependency chaining
+Date: Tue, 13 Jan 2009 00:22:50 +0300
+Message-ID: <200901130022.50231.yur@emcraft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: Dan Williams <dan.j.williams@intel.com>, dzu@denx.de, wd@denx.de, Ilya Yanok <yanok@emcraft.com>
 List-Id: linux-raid.ids
 
-Hello, 
+In dmaengine we track the dependencies between the descriptors
+using the 'next' pointers of the structure. These pointers are
+set to NULL as soon as the corresponding descriptor has been
+submitted to the channel (in dma_run_dependencies()).
 
-I see somewhat strange reports for a RAID6 array of 6 disks:
+But, the first 'next' in chain is still remaining set, regardless
+the fact, that tx->next has been already submitted. This may lead to
+multiple submissions of the same descriptor. This patch fixes this.
 
-# cat /proc/mdstat 
-Personalities : [raid1] [raid6] [raid5] [raid4] 
-md2 : active raid6 sdc[0] sdh[6] sdg[4] sdf[3] sde[2] sdd[1]
-      1953545792 blocks super 1.0 level 6, 16k chunk, algorithm 2 [6/6] [UUUUUU]
-...
+Actually, some previous implementation of the xxx_run_dependencies()
+function already had this fix in place. The fdb..0eaf3 commit, beside the
+correct things, broke this.
 
-Oops? I see disks 0, 1, 2, 3, 4, and 6 - why 6 and not 5 ?
+Signed-off-by: Yuri Tikhonov <yur@emcraft.com>
+---
+ drivers/dma/dmaengine.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-If I check the devices, I see for example this:
-
-# mdadm -Q --examine /dev/sdc
-mdadm: metadata format 1.00 unknown, ignored.
-/dev/sdc:
-          Magic : a92b4efc
-        Version : 1.0
-    Feature Map : 0x0
-     Array UUID : ed815df1:a9df9e8e:a65e948f:17ef5557
-           Name : 1
-  Creation Time : Sat Apr 12 00:02:52 2008
-     Raid Level : raid6
-   Raid Devices : 6
-
- Avail Dev Size : 976772896 (465.76 GiB 500.11 GB)
-     Array Size : 3907091584 (1863.05 GiB 2000.43 GB)
-   Super Offset : 976773152 sectors
-          State : clean
-    Device UUID : bc286549:0267dd3b:ce683a7c:66341111
-
-    Update Time : Mon Jan 12 13:02:52 2009
-       Checksum : 62b5e607 - correct
-         Events : 35060
-
-     Chunk Size : 16K
-
-    Array Slot : 0 (0, 1, 2, 3, 4, failed, 5)
-   Array State : Uuuuuu 1 failed
-
-What does the "metadata format 1.00 unknown, ignored." mean, and how
-can I fix it?  And why does it report "Array State ... 1 failed"?
-
-
-[This is on a standard Fedora 10 system.]
-
-Any help welcome - thanks in advance.
-
-Best regards,
-
-Wolfgang Denk
-
+diff --git a/drivers/dma/dmaengine.c b/drivers/dma/dmaengine.c
+index 403dbe7..6df144a 100644
+--- a/drivers/dma/dmaengine.c
++++ b/drivers/dma/dmaengine.c
+@@ -961,6 +961,8 @@ void dma_run_dependencies(struct dma_async_tx_descriptor *tx)
+ 	if (!dep)
+ 		return;
+ 
++	/* we'll submit tx->next now, so clear the link */
++	tx->next = NULL;
+ 	chan = dep->chan;
+ 
+ 	/* keep submitting up until a channel switch is detected
 -- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-The ultimate barrier is one's viewpoint.
-                        - Terry Pratchett, _The Dark Side of the Sun_
+1.6.0.6
+
