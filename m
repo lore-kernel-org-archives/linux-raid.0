@@ -1,53 +1,71 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: howto and faq
-Date: Mon, 12 Jan 2009 11:19:27 +0000
-Message-ID: <496B273F.1010905@dgreaves.com>
-References: <20080207164249.GA7116@rap.rap.dk> <47AECC59.1020808@dgreaves.com> <20080210111404.GA4823@rap.rap.dk> <20090110211256.GA5502@rap.rap.dk> <20090112093831.GA25566@rap.rap.dk>
+From: Wolfgang Denk <wd@denx.de>
+Subject: Strange array state
+Date: Mon, 12 Jan 2009 13:05:17 +0100
+Message-ID: <20090112120517.D4653832E425@gemini.denx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090112093831.GA25566@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Keld J=F8rn Simonsen wrote:
->>> I have had a look at other search engines, yahoo and msn.
->>> Our pages do show up within the 10 first hits for "linux raid".
->>> So that is not that bad. Still, Google has the
->>> http://linux-raid.osdl.org/ page as number 127. That is very bad.
->>> Maybe something about it being referenced from wikipedia?
->> Just looked at google today for "linux raid". We are now number 1!
->> So a little less than a year to go from number 127 to the top spot.
->> We are also number 1 on yahoo, and number 3 on MSN.
->> Congratulations to all that helped!
->=20
-> Hmm, looked at google from different browsers, and it is only on
-> google.dk and with firefox that we are number one. So this is on the
-> edge. If people on this list could link to the wiki from diferent
-> places, then maybe we can make it.
+Hello, 
 
-I'd like to thank the people on the list who have helped edit the wiki =
-too.
+I see somewhat strange reports for a RAID6 array of 6 disks:
 
-I managed to do a fair bit when I had a glut of time but not much since=
- so the
-community support has been invaluable.
-The, err, 'good' news is that it looks like I'll have some more spare t=
-ime
-coming up soon thanks to the recession ;)
+# cat /proc/mdstat 
+Personalities : [raid1] [raid6] [raid5] [raid4] 
+md2 : active raid6 sdc[0] sdh[6] sdg[4] sdf[3] sde[2] sdd[1]
+      1953545792 blocks super 1.0 level 6, 16k chunk, algorithm 2 [6/6] [UUUUUU]
+...
 
-Oh, I also had the wiki redirected from the kernel wiki farm at:
-  http://raid.wiki.kernel.org/
+Oops? I see disks 0, 1, 2, 3, 4, and 6 - why 6 and not 5 ?
 
-David
+If I check the devices, I see for example this:
 
---=20
-"Don't worry, you'll be fine; I saw it work in a cartoon once..."
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+# mdadm -Q --examine /dev/sdc
+mdadm: metadata format 1.00 unknown, ignored.
+/dev/sdc:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x0
+     Array UUID : ed815df1:a9df9e8e:a65e948f:17ef5557
+           Name : 1
+  Creation Time : Sat Apr 12 00:02:52 2008
+     Raid Level : raid6
+   Raid Devices : 6
+
+ Avail Dev Size : 976772896 (465.76 GiB 500.11 GB)
+     Array Size : 3907091584 (1863.05 GiB 2000.43 GB)
+   Super Offset : 976773152 sectors
+          State : clean
+    Device UUID : bc286549:0267dd3b:ce683a7c:66341111
+
+    Update Time : Mon Jan 12 13:02:52 2009
+       Checksum : 62b5e607 - correct
+         Events : 35060
+
+     Chunk Size : 16K
+
+    Array Slot : 0 (0, 1, 2, 3, 4, failed, 5)
+   Array State : Uuuuuu 1 failed
+
+What does the "metadata format 1.00 unknown, ignored." mean, and how
+can I fix it?  And why does it report "Array State ... 1 failed"?
+
+
+[This is on a standard Fedora 10 system.]
+
+Any help welcome - thanks in advance.
+
+Best regards,
+
+Wolfgang Denk
+
+-- 
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+The ultimate barrier is one's viewpoint.
+                        - Terry Pratchett, _The Dark Side of the Sun_
