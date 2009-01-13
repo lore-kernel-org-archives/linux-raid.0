@@ -1,80 +1,56 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Strange array state
-Date: Mon, 12 Jan 2009 18:51:23 -0500
-Message-ID: <496BD77B.508@tmr.com>
-References: <20090112120517.D4653832E425@gemini.denx.de>
+From: Yuri Tikhonov <yur@emcraft.com>
+Subject: [RFC PATCH 00/11][v3] md: support for asynchronous execution of RAID6 operations
+Date: Tue, 13 Jan 2009 03:42:55 +0300
+Message-ID: <200901130342.55633.yur@emcraft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090112120517.D4653832E425@gemini.denx.de>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linuxppc-dev@ozlabs.org, dan.j.williams@intel.com, dzu@denx.de, wd@denx.de, yanok@emcraft.com
 List-Id: linux-raid.ids
 
-Wolfgang Denk wrote:
-> Hello, 
->
-> I see somewhat strange reports for a RAID6 array of 6 disks:
->
-> # cat /proc/mdstat 
-> Personalities : [raid1] [raid6] [raid5] [raid4] 
-> md2 : active raid6 sdc[0] sdh[6] sdg[4] sdf[3] sde[2] sdd[1]
->       1953545792 blocks super 1.0 level 6, 16k chunk, algorithm 2 [6/6] [UUUUUU]
-> ...
->
-> Oops? I see disks 0, 1, 2, 3, 4, and 6 - why 6 and not 5 ?
->
-> If I check the devices, I see for example this:
->
-> # mdadm -Q --examine /dev/sdc
-> mdadm: metadata format 1.00 unknown, ignored.
-> /dev/sdc:
->           Magic : a92b4efc
->         Version : 1.0
->     Feature Map : 0x0
->      Array UUID : ed815df1:a9df9e8e:a65e948f:17ef5557
->            Name : 1
->   Creation Time : Sat Apr 12 00:02:52 2008
->      Raid Level : raid6
->    Raid Devices : 6
->
->  Avail Dev Size : 976772896 (465.76 GiB 500.11 GB)
->      Array Size : 3907091584 (1863.05 GiB 2000.43 GB)
->    Super Offset : 976773152 sectors
->           State : clean
->     Device UUID : bc286549:0267dd3b:ce683a7c:66341111
->
->     Update Time : Mon Jan 12 13:02:52 2009
->        Checksum : 62b5e607 - correct
->          Events : 35060
->
->      Chunk Size : 16K
->
->     Array Slot : 0 (0, 1, 2, 3, 4, failed, 5)
->    Array State : Uuuuuu 1 failed
->
-> What does the "metadata format 1.00 unknown, ignored." mean, and how
-> can I fix it?  And why does it report "Array State ... 1 failed"?
->
->
-> [This is on a standard Fedora 10 system.]
->
-> Any help welcome - thanks in advance.
->   
+ Hello,
 
-I have seen similar on a system which has a drive fail and which rebuilt 
-on a spare. Also, check you /etc/mdadm.conf file and be sure it uses 
-PARTITIONS and UUID to build the array, and isn't looking for some 
-missing device.
+ This is the next attempt on asynchronous RAID-6 support. This patch-set
+has the Dan Williams' comments (Dec, 17) addressed with the following
+exception:
 
-Report back, if none of that helps someone else will have ideas by 
-then.  ;-)
-
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
+- I still think that using 'enum dma_ctrl_flags' for PQ-specific 
+operations is better than introducing another group of flags and 
+enhance the device_prep_dma_pq()/device_prep_dma_pqzero_sum() with one 
+more parameter. If unchanged 'enum dma_ctrl_flags' will be a criteria 
+of acceptance, please let me know - I'll re-implement this exactly as 
+Dan suggested.
 
 
+ Fearing to look like a spammer, I post only those patches, which had 
+been affected by the changes intended to address Dan's comments. These 
+are the following five:
+
+0002-async_tx-add-support-for-asynchronous-GF-multiplica.patch
+0003-async_tx-add-support-for-asynchronous-RAID6-recover.patch
+0004-md-run-RAID-6-stripe-operations-outside-the-lock.patch
+0008-md-asynchronous-handle_parity_check6.patch
+0011-ppc440spe-adma-ADMA-driver-for-the-PPC440SP-e-syst.patch
+
+ As regarding the other six patches of asynchronous RAID-6 support 
+patchset:
+
+0001-async_tx-don-t-use-src_list-argument-of-async_xor.patch
+0005-md-common-schedule_reconstruction-for-raid5-6.patch
+0006-md-change-handle_stripe_fill6-to-work-in-asynchrono.patch
+0007-md-rewrite-handle_stripe_dirtying6-in-asynchronous.patch
+0009-md-change-handle_stripe6-to-work-asynchronously.patch
+0010-md-remove-unused-functions.patch
+
+ they are the same as in my 09 Dec 2008 post:
+
+ https://kerneltrap.org/mailarchive/linux-raid/2008/12/8/4367574
+
+ and are waiting for your comments.
+
+ Regards, Yuri
