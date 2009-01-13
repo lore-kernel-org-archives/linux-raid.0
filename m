@@ -1,15 +1,30 @@
 From: Mike Myers <mikesm559@yahoo.com>
 Subject: Re: Need urgent help in fixing raid5 array
-Date: Mon, 12 Jan 2009 21:38:21 -0800 (PST)
-Message-ID: <627627.60301.qm@web30804.mail.mud.yahoo.com>
-References: <451872.61166.qm@web30802.mail.mud.yahoo.com> <alpine.DEB.1.10.0901011039110.9903@p34.internal.lan> <467705.96388.qm@web30807.mail.mud.yahoo.com> <alpine.DEB.1.10.0901011328380.17888@p34.internal.lan> <344038.60917.qm@web30808.mail.mud.yahoo.com> <18786.34165.639790.37753@notabene.brown> <546794.45786.qm@web30802.mail.mud.yahoo.com> <879ae2ec7c5524fd9fa9841245772ab6.squirrel@neil.brown.name> <100979.40008.qm@web30803.mail.mud.yahoo.com> <780997576890f2ccd07a4486c2702e8d.squirrel@neil.brown.name> <524209.67755.qm@web30805.mail.mud.yahoo.com> <18787.59872.647206.934303@notabene.brown>
+Date: Mon, 12 Jan 2009 21:57:22 -0800 (PST)
+Message-ID: <578884.52327.qm@web30804.mail.mud.yahoo.com>
+References: <451872.61166.qm@web30802.mail.mud.yahoo.com> <alpine.DEB.1.10.0901011039110.9903@p34.internal.lan> <467705.96388.qm@web30807.mail.mud.yahoo.com> <alpine.DEB.1.10.0901011328380.17888@p34.internal.lan> <344038.60917.qm@web30808.mail.mud.yahoo.com> <18786.34165.639790.37753@notabene.brown> <546794.45786.qm@web30802.mail.mud.yahoo.com> <879ae2ec7c5524fd9fa9841245772ab6.squirrel@neil.brown.name> <100979.40008.qm@web30803.mail.mud.yahoo.com> <780997576890f2ccd07a4486c2702e8d.squirrel@neil.brown.name> <524209.67755.qm@web30805.mail.mud.yahoo.com> <18787.59872.647206.934303@notabene.brown> <627627.60301.qm@web30804.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Mike Myers <mikesm559@yahoo.com>, Neil Brown <neilb@suse.de>
 Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, john lists <john4lists@gmail.com>
 List-Id: linux-raid.ids
+
+Figured this out.  I had to stop md1 even though md couldn't assemble it.  The "good devices" were still running.
+
+Will let you know how it goes.
+
+thx
+mike
+
+
+----- Original Message ----
+From: Mike Myers <mikesm559@yahoo.com>
+To: Neil Brown <neilb@suse.de>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>; linux-raid@vger.kernel.org; john lists <john4lists@gmail.com>
+Sent: Monday, January 12, 2009 9:38:21 PM
+Subject: Re: Need urgent help in fixing raid5 array
 
 Ok, still more help needed.  I finally got enough time scheduled tonight to be able to try recreating the raid array as per our conversation before.  When doing the create as you outlined in your earlier post, mdadm -C says the first two disks are part of an existing raid array (I assume this is a normal "error" for this sort of situation and will be ignored in the end), but for each of the last 4 devices I speciffy on the command line, it says: mdadm: cannot open /dev/sdc1: Device or resource busy (and gives this error for each of the 4 devices).
 
@@ -78,6 +93,14 @@ I'm happy to help as much as I can... I just hope your hardware hasn't
 done too much damage...
 
 NeilBrown
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+      
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 the body of a message to majordomo@vger.kernel.org
