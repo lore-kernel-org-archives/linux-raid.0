@@ -1,79 +1,75 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: upgrade advice
-Date: Mon, 12 Jan 2009 22:00:16 -0500
-Message-ID: <496C03C0.8050407@tmr.com>
-References: <d5fe39840812160310t45e822c1geb633f805cf5388e@mail.gmail.com>	<alpine.DEB.1.10.0812160641130.725@p34.internal.lan>	<1229428184.22331.43.camel@localhost>	<alpine.DEB.1.10.0812160807200.725@p34.internal.lan>	<1229436950.22331.45.camel@localhost>	<cccedfc60812160757x2af73afbv4a69eac31d212062@mail.gmail.com>	<alpine.DEB.1.10.0812161829490.31132@p34.internal.lan>	<cccedfc60812161608y29e6c645n6ff7df5c87292374@mail.gmail.com>	<1229497160.22331.73.camel@localhost>	<cccedfc60812170526l43c661ddgff95c99ea883f362@mail.gmail.com>	<A20315AE59B5C34585629E258D76A97C030D4837@34093-C3-EVS3.exchange.rackspace.com>	<1229525166.22331.79.camel@localhost> <yq17i5yhkvl.fsf@sermon.lab.mkp.net>
+From: whollygoat@letterboxes.org
+Subject: Re: Alex Samad Re: RAID5 (mdadm) array hosed after grow operation
+Date: Mon, 12 Jan 2009 19:46:08 -0800
+Message-ID: <1231818368.32510.1294443075@webmail.messagingengine.com>
+References: <1231144738.2997.1293010001@webmail.messagingengine.com>
+ <alpine.DEB.1.10.0901050913470.3359@p34.internal.lan>
+ <18786.34570.756734.253596@notabene.brown>
+ <1231388345.19357.1293603883@webmail.messagingengine.com>
+ <20090108101218.GI25654@samad.com.au>
+ <1231468886.24549.1293797183@webmail.messagingengine.com>
+ <49672AE4.2060602@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <yq17i5yhkvl.fsf@sermon.lab.mkp.net>
+Content-Disposition: inline
+In-Reply-To: <49672AE4.2060602@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Redeeman <redeeman@metanurb.dk>, David Lethe <david@santools.com>, Jon Nelson <jnelson-linux-raid@jamponi.net>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
+To: debian-user@lists.debian.org, linux-raid@vger.kernel.org
+Cc: John Robinson <john.robinson@anonymous.org.uk>
 List-Id: linux-raid.ids
 
-Martin K. Petersen wrote:
-> People always seem to assume that hardware is what's making the
-> difference between consumer and enterprise.  It's not.  The physical
-> hardware differs mostly due to capacity vs. RPM trade-offs.  Most
-> vendors these days have big platters for high-capacity drives and
-> smaller platters for high RPM/higher IOPS class drives.  On top of
-> that, head/platter count may vary in capacity classes within a series.
->
-> But the important difference between consumer and enterprise drives is
-> not mechanical.  It's the firmware.  Consumer drive firmware is about
-> squeezing out the most capacity/$ and nothing else.
->
->   
-That's simply not the case. Cost is one of the issues, but the typical 
-use of the drive is one of the most important things about the firmware. 
-With consumer drives, it's likely that this is the one and only drive 
-holding the data, so clever retries in case of error are important. With 
-server grade drives, it's likely they are in a RAID, so returning the 
-error quickly so the controller or OS can compensate is the important 
-issue. That's been discussed here before, some drives even give you a 
-choice of "don't hang up" vs. "try like hell" on errors, through jumpers 
-or firmware.
 
-> Enterprise drives trade capacity for reliability by way of the
-> firmware.  That includes many things like using more space for track
-> info (gap/sync), much better ECC, better tolerance for rotational
-> vibration, etc.
->
-> Most of the errors you see on drives are a result of media errors that
-> are big enough that the drive ECC can't correct them.  Errors are
-> often caused by head misses due to bad tracking, vibration from other
-> drives in the enclosure, the user kicking the cabinet at an
-> inopportune moment, etc.  I.e. external interference.  Other errors
-> are due to real imperfections of the media itself.
->
->   
-I would be surprised if a consumer grade drive doing more retries over 
-several seconds rather than several rotations wasn't better able to 
-correct for most of the transient problems you mention. So your comments 
-about transient mechanical issues aren't telling me much, other than 
-server drives being more likely to get vibration from other drives.
+On Fri, 09 Jan 2009 10:45:56 +0000, "John Robinson"
+<john.robinson@anonymous.org.uk> said:
+> On 09/01/2009 02:41, whollygoat@letterboxes.org wrote:
+> > But anyway, I don't think that is going to matter.  The issue I am
+> > trying to 
+> > solve is how to de-activate the bitmap. It was suggested on the
+> > linux-raid 
+> > list that my problem may have been caused by running the grow op on an
+> > active 
+> > bitmap and I can't see from "man mdadm" how to de-activate the bit map.
+> 
+> man mdadm tells me:
+> [...]
+> -b, --bitmap=
+>      Specify a file to store a write-intent bitmap in. The file should 
+> not exist unless --force is also given. The same file should be provided 
+> when assembling the array. If the word internal is given, then the 
+> bitmap is stored with the metadata on the array, and so is replicated on 
+> all devices. If the word none is given with --grow mode, then any bitmap 
+> that is present is removed.
+> 
+> So I imagine you'd want to
+>    # mdadm --grow /dev/mdX --bitmap=none
+> to de-activate the bitmap.
 
-> Enterprise drive firmware is about being more resistant to outside
-> factors as well as real media defects.  That firmware cost more to
-> develop than the consumer ditto.  And the vendors charge a premium for
-> it.
->
->   
-Other than possibly having more ECC bits there isn't much difference, as 
-several people here have noted you don't want the drive to hang for 
-several seconds trying this and that in a server environment. And given 
-that there are a very small number of things to be done on error, like 
-reread, seek away and back, recalibrate, etc, I would be amazed if 
-vendors didn't just put all the code in the firmware and use a little 
-table to determine which actions to take in what order, and how many 
-times. The idea of some vast and complex code just doesn't fly, there 
-aren't that many things to try.
+The question that came to mind when I read that in the docs,
+was how to recreate the bitmap on an already created array
+after nuking it with "none".
+
+I guess I also had doubts because the reply I had a few iterations
+back didn't say that I shouldn't have performed the grow operation
+on an existant bitmap, but an active one, and I wasn't prepared to
+make the leap from active/inactive to existant/non-existant.
+
+But, this has all become moot anyway.  When I put the original, smaller
+drives back in, hoping to do the grow op overagain, I was faced with a
+similar problem assembling the array, so I'm guessing the problem
+caused by something other than the grow.  I put the larger drives in,
+zeroed them, and am in the process of recreating the array and
+file systems to be populated from backups.
+
+Thanks for the input.
+
+goat
+-- 
+  
+  whollygoat@letterboxes.org
 
 -- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
-
+http://www.fastmail.fm - Faster than the air-speed velocity of an
+                          unladen european swallow
 
