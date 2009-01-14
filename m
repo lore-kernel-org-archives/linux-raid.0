@@ -1,51 +1,48 @@
-From: "Chris Worley" <worleys@gmail.com>
-Subject: Re: Interesting article
-Date: Wed, 14 Jan 2009 15:55:33 -0700
-Message-ID: <f3177b9e0901141455i460f09cs69e38e24842e9c62@mail.gmail.com>
-References: <496E44DE.7090200@harddata.com>
+From: Eamonn Hamilton <eamonn@snifter.org>
+Subject: Re: differnet UUIDs and no of spares :(
+Date: Wed, 14 Jan 2009 23:15:18 +0000
+Message-ID: <1231974918.17710.20.camel@brandy.snifter.org>
+References: <1231954002.17710.13.camel@brandy.snifter.org>
+	 <496E6C37.9030608@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <496E44DE.7090200@harddata.com>
-Content-Disposition: inline
+In-Reply-To: <496E6C37.9030608@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Maurice Hilarius <maurice@harddata.com>
+To: Bill Davidsen <davidsen@tmr.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jan 14, 2009 at 1:02 PM, Maurice Hilarius <maurice@harddata.com> wrote:
-> I read this today:
-> http://blogs.zdnet.com/storage/?p=162
->
-> Would anyone who knows enough about this care to comment?
+Hi Bill,
 
-We need disks continuously scanned in spare cycles, and offline the
-drives (or remap the sectors) as soon as an error is found.
+> 
+> What can you tell us about how that happened? When (if ever) was it 
+> running, how was it created, etc, etc.
 
-Also, when rebuilding an array, don't stop due to a read failure.
-mark the sector as bad and complete the rebuild.
+It was running stably for a long time, with the raid5 being expanded
+from 1TB to 2. It recently had two spare drives added to it, and again
+was running fine, however  a new kernel on the box provoked some nasty
+behaviour with the sata_nv driver.
 
-Waiting for a drive to fail has been too late to recover the array, in
-my experience.
+This left the raid not starting at boot-up, as devmapper had claimed one
+of the spares as it's own, so I started the array without that spare,
+which provoked a re-sync for reasons I'm not clear on. Having cleared
+the devmapper mapping on the other spare, it was added back in as a
+spare to the array. 15 minutes into the resync, however, the biox fell
+over, whether as a result of the array resync or something else I dont
+know, there's nothing suspicious in the logs. Which brings us to where
+we are today :(
 
-Chris
->
-> Thanks in advance for any thoughts..
->
->
-> --
-> With our best regards,
->
-> //Maurice W. Hilarius         Telephone: 01-780-456-9771/
-> /Hard Data Ltd.                FAX:          01-780-456-9772/
-> /11060 - 166 Avenue         email:maurice@harddata.com/
-> /Edmonton, AB, Canada/
-> /     T5X 1Y3/
-> /
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+
+> 
+> You could probably try some things like trying to start it read-only 
+> using --force, but don't do that yet, if you get it wrong you WILL be 
+> likely to lose data.
+> 
+
+I was tempted to change the UUID on the nonstarting members, but the
+number of spares being different gave me pause.
+
+
+
