@@ -1,119 +1,111 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Read errors and SMART tests
-Date: Wed, 14 Jan 2009 15:59:08 -0500
-Message-ID: <496E521C.10505@tmr.com>
-References: <20081220013043.GM1749@cubit> <A20315AE59B5C34585629E258D76A97C031B1B62@34093-C3-EVS3.exchange.rackspace.com> <20081220052244.GN1749@cubit>
+Subject: Re: southbridge/sata controller performance?
+Date: Wed, 14 Jan 2009 17:34:36 -0500
+Message-ID: <496E687C.90603@tmr.com>
+References: <20090103193429.GA17462@sewage.raw-sewage.fake> <495FC67A.2030201@gmail.com> <alpine.DEB.1.10.0901040451520.18797@p34.internal.lan> <20090104194023.GB10174@sewage.raw-sewage.fake> <496123ED.5050809@gmail.com> <20090105032728.GA24328@sewage.raw-sewage.fake>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20081220052244.GN1749@cubit>
+In-Reply-To: <20090105032728.GA24328@sewage.raw-sewage.fake>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kevin Shanahan <kmshanah@disenchant.net>
-Cc: David Lethe <david@santools.com>, linux-raid@vger.kernel.org
+To: Matt Garman <matthew.garman@gmail.com>
+Cc: Roger Heflin <rogerheflin@gmail.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Kevin Shanahan wrote:
-> On Fri, Dec 19, 2008 at 10:13:14PM -0600, David Lethe wrote:
+Matt Garman wrote:
+> On Sun, Jan 04, 2009 at 03:02:37PM -0600, Roger Heflin wrote:
 >   
->> This shows nothing more than you having a single bad block.  You have a
->> 1TB drive, for crying out loud, they can't all stay perfect ;)
+>> Yes, that is valid, so long as the md device is fairly quiet at
+>> the time of the test.  Since you already have a machine, please
+>> post the mb type, and number/type of sata ports and the 1-disk,
+>> 2-disk, 3-disk,... numbers that you get.
 >>     
 >
-> Heh, true.
+> I attached a little Perl script I hacked up for running many
+> instances of dd in parallel or individually.  It takes one or more
+> block devices on the command line, and issues parallel dd reads for
+> each one.  (Note my block size and count params are enormous; I made
+> these huge to avoid caching effects of having 4 GB of RAM.)
 >
->   
->> This is no reason to assume the disk is bad, or that it has anything to
->> do with cabling.   When you wrote you have 
->> read "errors" .. does that mean you have dozens, hundreds of individual
->> unreadable blocks, or 
->> could you just have just this one bad block.
->>     
+> I have two MD arrays in my system:
 >
-> Sorry, I didn't provide a lot of detail there. The "bad" drive,
-> /dev/sdd was doing more than just failing the self test:
+> $ cat /proc/mdstat 
+> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
+> md1 : active raid5 sdb1[0] sdd1[3] sdc1[2] sde1[1]
+>       2930279808 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
+>             
+> md0 : active raid5 sdf1[0] sdi1[3] sdh1[2] sdg1[1]
+>       2197715712 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
+>             
+> unused devices: <none>
 >
-> Dec 20 06:55:20 hermes kernel: ata4.00: exception Emask 0x0 SAct 0x5 SErr 0x0 action 0x0
-> Dec 20 06:55:20 hermes kernel: ata4.00: irq_stat 0x40000008
-> Dec 20 06:55:20 hermes kernel: ata4.00: cmd 60/78:10:47:d5:fa/00:00:1e:00:00/40 tag 2 ncq 61440 in
-> Dec 20 06:55:20 hermes kernel:          res 51/40:00:b9:d5:fa/00:00:1e:00:00/40 Emask 0x409 (media error) <F>
-> Dec 20 06:55:20 hermes kernel: ata4.00: status: { DRDY ERR }
-> Dec 20 06:55:20 hermes kernel: ata4.00: error: { UNC }
-> Dec 20 06:55:20 hermes kernel: ata4.00: configured for UDMA/133
-> Dec 20 06:55:20 hermes kernel: ata4: EH complete
-> Dec 20 06:55:20 hermes kernel: sd 3:0:0:0: [sdd] 1953525168 512-byte hardware sectors (1000205 MB)
-> Dec 20 06:55:20 hermes kernel: sd 3:0:0:0: [sdd] Write Protect is off
-> Dec 20 06:55:20 hermes kernel: sd 3:0:0:0: [sdd] Mode Sense: 00 3a 00 00
-> Dec 20 06:55:20 hermes kernel: sd 3:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
 >
-> (repeats several times)
+> This is on Ubuntu server 8.04.  Hardware is an Intel DQ35JO
+> motherboard (Q35/ICH9DO chipsets) with 4 GB RAM and an E5200 CPU.
 >
-> Dec 20 06:55:30 hermes kernel: raid5:md5: read error corrected (8 sectors at 519755016 on sdd1)
-> Dec 20 06:55:30 hermes kernel: raid5:md5: read error corrected (8 sectors at 519755024 on sdd1)
-> Dec 20 06:55:30 hermes kernel: raid5:md5: read error corrected (8 sectors at 519755032 on sdd1)
-> Dec 20 06:55:30 hermes kernel: raid5:md5: read error corrected (8 sectors at 519755040 on sdd1)
-> Dec 20 06:55:30 hermes kernel: raid5:md5: read error corrected (8 sectors at 519755048 on sdd1)
-> Dec 20 06:55:30 hermes kernel: raid5:md5: read error corrected (8 sectors at 519755056 on sdd1)
-> Dec 20 06:55:30 hermes kernel: raid5:md5: read error corrected (8 sectors at 519755064 on sdd1)
-> Dec 20 06:55:30 hermes kernel: raid5:md5: read error corrected (8 sectors at 519755072 on sdd1)
-> Dec 20 06:55:30 hermes kernel: raid5:md5: read error corrected (8 sectors at 519755080 on sdd1)
-> Dec 20 06:55:30 hermes kernel: raid5:md5: read error corrected (8 sectors at 519755088 on sdd1)
+>     - md1 has four WD RE2 GP 1 TB hard drives (the 5400 RPM ones).
+>       These are drives are connected to two 2-port PCIe SATA add-on
+>       cards with the Silicon Image 3132 controller.
 >
-> ...
+>     - md0 has four WD 750 GB drives (neither "RE2" version nor
+>       GreenPower).  These drives are connected directly to the
+>       on-board SATA ports (i.e. ICH9DO).
 >
-> Dec 20 07:04:30 hermes kernel: raid5:md5: read error corrected (8 sectors at 613165696 on sdd1)
-> Dec 20 07:04:30 hermes kernel: raid5:md5: read error corrected (8 sectors at 613165704 on sdd1)
-> Dec 20 07:04:30 hermes kernel: raid5:md5: read error corrected (8 sectors at 613165712 on sdd1)
-> Dec 20 07:04:30 hermes kernel: raid5:md5: read error corrected (8 sectors at 613165720 on sdd1)
-> Dec 20 07:04:30 hermes kernel: raid5:md5: read error corrected (8 sectors at 613165728 on sdd1)
-> Dec 20 07:04:30 hermes kernel: raid5:md5: read error corrected (8 sectors at 613165736 on sdd1)
-> Dec 20 07:04:30 hermes kernel: raid5:md5: read error corrected (8 sectors at 613165744 on sdd1)
-> Dec 20 07:04:30 hermes kernel: raid5:md5: read error corrected (8 sectors at 613165752 on sdd1)
-> Dec 20 07:04:30 hermes kernel: raid5:md5: read error corrected (8 sectors at 613165760 on sdd1)
-> Dec 20 07:04:30 hermes kernel: raid5:md5: read error corrected (8 sectors at 613165768 on sdd1)
+> For md1 (RE2 GP drives on SiI 3132), it looks like I get about 80
+> MB/s when running dd on one drive:
 >
-> ...
+> $ sudo ./sata_performance.pl /dev/sd[b]
+> /dev/sdb: 13107200000 bytes (13 GB) copied, 163.757 s, 80.0 MB/s
 >
-> Dec 20 07:04:47 hermes kernel: raid5:md5: read error corrected (8 sectors at 613181440 on sdd1)
-> Dec 20 07:04:47 hermes kernel: raid5:md5: read error corrected (8 sectors at 613181448 on sdd1)
-> Dec 20 07:04:47 hermes kernel: raid5:md5: read error corrected (8 sectors at 613181456 on sdd1)
-> Dec 20 07:04:47 hermes kernel: raid5:md5: read error corrected (8 sectors at 613181464 on sdd1)
-> Dec 20 07:04:47 hermes kernel: raid5:md5: read error corrected (8 sectors at 613181472 on sdd1)
-> Dec 20 07:04:47 hermes kernel: raid5:md5: read error corrected (8 sectors at 613181480 on sdd1)
-> Dec 20 07:04:47 hermes kernel: raid5:md5: read error corrected (8 sectors at 613181488 on sdd1)
-> Dec 20 07:04:47 hermes kernel: raid5:md5: read error corrected (8 sectors at 613181496 on sdd1)
-> Dec 20 07:04:47 hermes kernel: raid5:md5: read error corrected (8 sectors at 613181504 on sdd1)
-> Dec 20 07:04:47 hermes kernel: raid5:md5: read error corrected (8 sectors at 613181512 on sdd1)
+> With all four drives, it only drops to about 75 MB/s per drive:
 >
-> ...
+> $ sudo ./sata_performance.pl /dev/sd[bcde]
+> /dev/sdb: 13107200000 bytes (13 GB) copied, 171.647 s, 76.4 MB/s
+> /dev/sde: 13107200000 bytes (13 GB) copied, 172.052 s, 76.2 MB/s
+> /dev/sdd: 13107200000 bytes (13 GB) copied, 172.737 s, 75.9 MB/s
+> /dev/sdc: 13107200000 bytes (13 GB) copied, 172.777 s, 75.9 MB/s
 >
-> Dec 20 08:10:09 hermes kernel: raid5:md5: read error corrected (8 sectors at 613552584 on sdd1)
-> Dec 20 08:10:09 hermes kernel: raid5:md5: read error corrected (8 sectors at 613552592 on sdd1)
-> Dec 20 08:10:09 hermes kernel: raid5:md5: read error corrected (8 sectors at 613552600 on sdd1)
-> Dec 20 08:10:09 hermes kernel: raid5:md5: read error corrected (8 sectors at 613552608 on sdd1)
-> Dec 20 08:10:09 hermes kernel: raid5:md5: read error corrected (8 sectors at 613552616 on sdd1)
-> Dec 20 08:10:09 hermes kernel: raid5:md5: read error corrected (8 sectors at 613552624 on sdd1)
-> Dec 20 08:10:09 hermes kernel: raid5:md5: read error corrected (8 sectors at 613552632 on sdd1)
+> For md0 (4x750 GB drives), performance is a little better; these
+> drives are definitely faster (7200 rpm vs 5400 rpm), and IIRC, the
+> SiI 3132 chipsets are known to be lousy performers.
 >
-> ...
+> Anyway, single drive performance is just shy of 100 MB/s:
 >
-> Dec 20 08:16:19 hermes kernel: raid5:md5: read error corrected (8 sectors at 613020008 on sdd1)
+> $ sudo ./sata_performance.pl /dev/sd[f]
+> /dev/sdf: 13107200000 bytes (13 GB) copied, 133.099 s, 98.5 MB/s
 >
-> That's just a sample from today - it's been doing similar things for
-> several days.  So the drive was hanging in there in the array, thanks
-> to the error correction, but it was of course impacting performance.
+> And I lose virtually nothing when running all four disks at once:
 >
-> Anyway, when I put the replacement drive in I decided to do a self
-> test before adding it to the array and I guess I was a bit concerned
-> that it immediately failed the test. Since it was inserted into the
-> same slot in the drive cage, same cable, etc. I wondered if those
-> factors can affect a self test. My assumption was no, but I thought
-> I'd ask.
+> $ sudo ./sata_performance.pl /dev/sd[fghi]
+> /dev/sdi: 13107200000 bytes (13 GB) copied, 130.632 s, 100 MB/s
+> /dev/sdf: 13107200000 bytes (13 GB) copied, 133.077 s, 98.5 MB/s
+> /dev/sdh: 13107200000 bytes (13 GB) copied, 133.411 s, 98.2 MB/s
+> /dev/sdg: 13107200000 bytes (13 GB) copied, 138.481 s, 94.6 MB/s
+>
+> Read performance only drops a bit when reading from all eight
+> drives:
+>
+> $ sudo ./sata_performance.pl /dev/sd[bcdefghi]
+> /dev/sdi: 13107200000 bytes (13 GB) copied, 133.086 s, 98.5 MB/s
+> /dev/sdf: 13107200000 bytes (13 GB) copied, 135.59 s, 96.7 MB/s
+> /dev/sdh: 13107200000 bytes (13 GB) copied, 135.86 s, 96.5 MB/s
+> /dev/sdg: 13107200000 bytes (13 GB) copied, 140.215 s, 93.5 MB/s
+> /dev/sdb: 13107200000 bytes (13 GB) copied, 182.402 s, 71.9 MB/s
+> /dev/sdc: 13107200000 bytes (13 GB) copied, 183.234 s, 71.5 MB/s
+> /dev/sdd: 13107200000 bytes (13 GB) copied, 189.025 s, 69.3 MB/s
+> /dev/sde: 13107200000 bytes (13 GB) copied, 189.517 s, 69.2 MB/s
+>
+>
+> Note: in all the above test runs, I actually ran them all three
+> times to catch any variance; all runs were consistent.
 >   
 
-A bad cable, poor cooling, funky power, any external problem isn't going 
-away by replacing the drive. And I don't expect a new drive to have bad 
-sectors which haven't been relocated before the drive got to me...
+There are several things left out here. First, you didn't say you 
+dropped caches with
+  echo 1 >/proc/sys/vm/drop_caches
+before you start. And running dd as a test, using the "iflag=direct" 
+will allow you to isolate the effect of the system cache on i/o performance.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
