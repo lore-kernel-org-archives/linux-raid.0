@@ -1,65 +1,108 @@
-From: "Dan Williams" <dan.j.williams@intel.com>
-Subject: Re: [RFC PATCH 00/11][v3] md: support for asynchronous execution of RAID6 operations
-Date: Wed, 14 Jan 2009 12:00:26 -0700
-Message-ID: <e9c3a7c20901141100r666007cbv76a869eddf292371@mail.gmail.com>
-References: <200901130342.55633.yur@emcraft.com>
+From: "Roy Lim" <cableroy@gmail.com>
+Subject: Re: raid5 with 2 disks not working correctly. Need help!
+Date: Wed, 14 Jan 2009 20:35:41 +0100
+Message-ID: <995ea3b00901141135p55172a76s8d87c6907a5c3e05@mail.gmail.com>
+References: <995ea3b00812160536x55d140caned9952c99dd5e2be@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200901130342.55633.yur@emcraft.com>
+In-Reply-To: <995ea3b00812160536x55d140caned9952c99dd5e2be@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Yuri Tikhonov <yur@emcraft.com>
-Cc: linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, dzu@denx.de, wd@denx.de, yanok@emcraft.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jan 12, 2009 at 5:42 PM, Yuri Tikhonov <yur@emcraft.com> wrote:
->  Hello,
->
->  This is the next attempt on asynchronous RAID-6 support. This patch-set
-> has the Dan Williams' comments (Dec, 17) addressed with the following
-> exception:
->
-> - I still think that using 'enum dma_ctrl_flags' for PQ-specific
-> operations is better than introducing another group of flags and
-> enhance the device_prep_dma_pq()/device_prep_dma_pqzero_sum() with one
-> more parameter. If unchanged 'enum dma_ctrl_flags' will be a criteria
-> of acceptance, please let me know - I'll re-implement this exactly as
-> Dan suggested.
+Call me coward but...
+ares:~#  mdadm -C /dev/md0 -l5 -n5 /dev/hde1 /dev/hdg1 /dev/hdi1
+missing /dev/sda1
+mdadm: /dev/hde1 appears to contain an ext2fs file system
+    size=1953535744K  mtime=Mon Feb  4 20:57:17 2008
+mdadm: /dev/hde1 appears to be part of a raid array:
+    level=raid5 devices=5 ctime=Mon Feb  4 18:25:28 2008
+mdadm: /dev/hdg1 appears to be part of a raid array:
+    level=raid5 devices=5 ctime=Mon Feb  4 18:25:28 2008
+Continue creating array?
 
-Ignore that Dan character :-), dma_ctrl_flags is the proper place for
-this functionality.
 
-However, I do not believe we need/want ASYNC_TX_ZERO_{P,Q}.  I will
-reply to 0002 and 0003 with details.
+hde1 appears to contain an ext2fs file system?? No i don't think so..
 
->
->
->  Fearing to look like a spammer, I post only those patches, which had
-> been affected by the changes intended to address Dan's comments. These
-> are the following five:
->
-> 0002-async_tx-add-support-for-asynchronous-GF-multiplica.patch
-> 0003-async_tx-add-support-for-asynchronous-RAID6-recover.patch
-> 0004-md-run-RAID-6-stripe-operations-outside-the-lock.patch
-> 0008-md-asynchronous-handle_parity_check6.patch
-> 0011-ppc440spe-adma-ADMA-driver-for-the-PPC440SP-e-syst.patch
->
->  As regarding the other six patches of asynchronous RAID-6 support
-> patchset:
->
-> 0001-async_tx-don-t-use-src_list-argument-of-async_xor.patch
-> 0005-md-common-schedule_reconstruction-for-raid5-6.patch
-> 0006-md-change-handle_stripe_fill6-to-work-in-asynchrono.patch
-> 0007-md-rewrite-handle_stripe_dirtying6-in-asynchronous.patch
-> 0009-md-change-handle_stripe6-to-work-asynchronously.patch
-> 0010-md-remove-unused-functions.patch
->
->  they are the same as in my 09 Dec 2008 post:
+But experts... can't i create with assume-clean without hdk1 then? I
+ask cause there is 1.5TB data there and i'm not any expert on raid :)
 
-Do you have a git tree where you can post this series?  That would
-make it easier for me to track/review.
 
-Thanks,
-Dan
+Roy
+
+On Tue, Dec 16, 2008 at 2:36 PM, Roy Lim <cableroy@gmail.com> wrote:
+> Hi
+> I have ran into a serious problem with my raid5 array and need expert
+> help on this one.
+>
+> My array is with 5x500GB disks none spare, I've accidentally did a
+> unclean shutdown of the server. When it came up it gave me this error:
+>
+> Dec 15 09:07:11 ares kernel: md: kicking non-fresh hdk1 from array!
+> Dec 15 09:07:11 ares kernel: md: unbind<hdk1>
+> Dec 15 09:07:11 ares kernel: md: export_rdev(hdk1)
+> Dec 15 09:07:11 ares kernel: md: md0: raid array is not clean --
+> starting background reconstruction
+> Dec 15 09:07:11 ares kernel: raid5: device hde1 operational as raid disk 0
+> Dec 15 09:07:11 ares kernel: raid5: device sda1 operational as raid disk 4
+> Dec 15 09:07:11 ares kernel: raid5: device hdi1 operational as raid disk 2
+> Dec 15 09:07:11 ares kernel: raid5: device hdg1 operational as raid disk 1
+> Dec 15 09:07:11 ares kernel: raid5: cannot start dirty degraded array for md0
+>
+> However i managed to get this back up with remove and add, the system
+> was rebuilding the array. around 70-80% in the process i was going to
+> prepare to decrypt it (luks crypted) so I'm going to mount the usb
+> stick witch has the encryption key however when i was going to mount
+> it i tried to mount wrong device, resulting trying to mount a device
+> in the array (sda1) i hit repeatedly crtl+c, now taking a look at the
+> details on the array it looks like this:
+>
+> /dev/md0:
+>        Version : 00.90.03
+>  Creation Time : Mon Feb  4 18:25:28 2008
+>     Raid Level : raid5
+>     Array Size : 1953535744 (1863.04 GiB 2000.42 GB)
+>    Device Size : 488383936 (465.76 GiB 500.11 GB)
+>   Raid Devices : 5
+>  Total Devices : 5
+> Preferred Minor : 0
+>    Persistence : Superblock is persistent
+>
+>    Update Time : Mon Dec 15 16:02:54 2008
+>          State : clean, degraded
+>  Active Devices : 3
+> Working Devices : 4
+>  Failed Devices : 1
+>  Spare Devices : 1
+>
+>         Layout : left-symmetric
+>     Chunk Size : 64K
+>
+>           UUID : 856a6e4e:a1663e98:9efbd2b1:7507133b
+>         Events : 0.74
+>
+>    Number   Major   Minor   RaidDevice State
+>       0      33        1        0      active sync   /dev/hde1
+>       1      34        1        1      active sync   /dev/hdg1
+>       2      56        1        2      active sync   /dev/hdi1
+>       3       0        0        3      removed
+>       4       0        0        4      removed
+>
+>       5      57        1        -      spare   /dev/hdk1
+>       6       8        1        -      faulty spare   /dev/sda1
+>
+> a quick summary: hdk1 was the one failing in the first place, witch
+> was about to get rebuild, sda1 was the device i tried to mount while
+> reconstruction the data. As you can see, hdk1 is now marked as spare
+> and sda1 a faulty spare.  I have not touch the array after this. Can
+> anyone help me out? How can i force mdadm to set the sda1 to active
+> sync so i can mount the array and start a backup? Can i use dd_rescue
+> to file of all of the disks and play with it?
+>
+> All help is appreciated!
+>
+> /Roy
+>
