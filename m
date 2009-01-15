@@ -1,82 +1,32 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 07/11] md: rewrite handle_stripe_dirtying6 in asynchronous
-	way
-Date: Thu, 15 Jan 2009 14:51:39 -0700
-Message-ID: <e9c3a7c20901151351p5e1b4641h1b4c8ba1ae5dcc73__4327.99748746238$1232056792$gmane$org@mail.gmail.com>
-References: <200812090057.33890.yur@emcraft.com>
+From: Michal Soltys <soltys@ziu.info>
+Subject: Re: Interesting article
+Date: Thu, 15 Jan 2009 23:13:30 +0100
+Message-ID: <496FB50A.4040600@ziu.info>
+References: <496E44DE.7090200@harddata.com> <f3177b9e0901141455i460f09cs69e38e24842e9c62@mail.gmail.com> <496F194C.2050002@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200812090057.33890.yur@emcraft.com>
+In-Reply-To: <496F194C.2050002@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Yuri Tikhonov <yur@emcraft.com>
-Cc: linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, dzu@denx.de, wd@denx.de, yanok@emcraft.com
+To: David Greaves <david@dgreaves.com>
+Cc: Chris Worley <worleys@gmail.com>, Maurice Hilarius <maurice@harddata.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Dec 8, 2008 at 2:57 PM, Yuri Tikhonov <yur@emcraft.com> wrote:
-> Rewrite handle_stripe_dirtying6 function to work asynchronously.
->
-> Signed-off-by: Yuri Tikhonov <yur@emcraft.com>
-> Signed-off-by: Ilya Yanok <yanok@emcraft.com>
-> ---
->  drivers/md/raid5.c |  113 ++++++++++++++--------------------------------------
->  1 files changed, 30 insertions(+), 83 deletions(-)
->
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index e08ed4f..f0b47bd 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -2485,99 +2485,46 @@ static void handle_stripe_dirtying6(raid5_conf_t *conf,
->                struct stripe_head *sh, struct stripe_head_state *s,
->                struct r6_state *r6s, int disks)
->  {
-> -       int rcw = 0, must_compute = 0, pd_idx = sh->pd_idx, i;
-> +       int rcw = 0, pd_idx = sh->pd_idx, i;
->        int qd_idx = r6s->qd_idx;
-> +
-> +       set_bit(STRIPE_HANDLE, &sh->state);
->        for (i = disks; i--; ) {
->                struct r5dev *dev = &sh->dev[i];
-> -               /* Would I have to read this buffer for reconstruct_write */
-> -               if (!test_bit(R5_OVERWRITE, &dev->flags)
-> -                   && i != pd_idx && i != qd_idx
-> -                   && (!test_bit(R5_LOCKED, &dev->flags)
-> -                           ) &&
-> -                   !test_bit(R5_UPTODATE, &dev->flags)) {
-> -                       if (test_bit(R5_Insync, &dev->flags)) rcw++;
-> -                       else {
-> -                               pr_debug("raid6: must_compute: "
-> -                                       "disk %d flags=%#lx\n", i, dev->flags);
-> -                               must_compute++;
-> +               /* check if we haven't enough data */
-> +               if (!test_bit(R5_OVERWRITE, &dev->flags) &&
-> +                   i != pd_idx && i != qd_idx &&
-> +                   !test_bit(R5_LOCKED, &dev->flags) &&
-> +                   !(test_bit(R5_UPTODATE, &dev->flags) ||
-> +                     test_bit(R5_Wantcompute, &dev->flags))) {
-> +                       rcw++;
-> +                       if (!test_bit(R5_Insync, &dev->flags))
-> +                               continue; /* it's a failed drive */
-> +
-> +                       if (
-> +                         test_bit(STRIPE_PREREAD_ACTIVE, &sh->state)) {
-> +                               pr_debug("Read_old stripe %llu "
-> +                                       "block %d for Reconstruct\n",
-> +                                    (unsigned long long)sh->sector, i);
-> +                               set_bit(R5_LOCKED, &dev->flags);
-> +                               set_bit(R5_Wantread, &dev->flags);
-> +                               s->locked++;
-> +                       } else {
-> +                               pr_debug("Request delayed stripe %llu "
-> +                                       "block %d for Reconstruct\n",
-> +                                    (unsigned long long)sh->sector, i);
-> +                               set_bit(STRIPE_DELAYED, &sh->state);
-> +                               set_bit(STRIPE_HANDLE, &sh->state);
+David Greaves wrote:
+> 
+> Agreed - and I think another huge gap is that when you lose a block you really
+> should be able to find out what file was affected. Doable on ext3 but not
+> (AFAIK) xfs.
+> 
 
-What's the reasoning behind changing the logic here, i.e. removing
-must_compute and such?  I'd feel more comfortable seeing copy and
-paste where possible with cleanups separated out into their own patch.
+It's doable on xfs as well.
 
---
-Dan
+http://oss.sgi.com/archives/xfs/2008-10/msg01448.html <- two methods in
+that thread.
+
+On related note - if there's a mismatch on some stripe under linux's md 
+- is there any way to pinpoint which stripe exactly (or what blocks 
+correspond to fixed/checked stripe) ?
+
+ITOW - is there anything besides mismatch_cnt ?
