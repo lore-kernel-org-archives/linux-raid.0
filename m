@@ -1,30 +1,43 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 07/11] md: rewrite handle_stripe_dirtying6 in asynchronous
-	way
-Date: Thu, 15 Jan 2009 15:21:18 -0700
-Message-ID: <e9c3a7c20901151421o69522f71rfe6d7d9621de47eb@mail.gmail.com>
-References: <200812090057.33890.yur@emcraft.com>
-	 <e9c3a7c20901151351p5e1b4641h1b4c8ba1ae5dcc73@mail.gmail.com>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: Interesting article
+Date: Thu, 15 Jan 2009 22:31:59 +0000
+Message-ID: <496FB95F.7060503@dgreaves.com>
+References: <496E44DE.7090200@harddata.com> <f3177b9e0901141455i460f09cs69e38e24842e9c62@mail.gmail.com> <496F194C.2050002@dgreaves.com> <496FB50A.4040600@ziu.info>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e9c3a7c20901151351p5e1b4641h1b4c8ba1ae5dcc73@mail.gmail.com>
+In-Reply-To: <496FB50A.4040600@ziu.info>
 Sender: linux-raid-owner@vger.kernel.org
-To: Yuri Tikhonov <yur@emcraft.com>
-Cc: linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, dzu@denx.de, wd@denx.de, yanok@emcraft.com
+To: Michal Soltys <soltys@ziu.info>
+Cc: Chris Worley <worleys@gmail.com>, Maurice Hilarius <maurice@harddata.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jan 15, 2009 at 2:51 PM, Dan Williams <dan.j.williams@intel.com> wrote:
-> On Mon, Dec 8, 2008 at 2:57 PM, Yuri Tikhonov <yur@emcraft.com> wrote:
-> What's the reasoning behind changing the logic here, i.e. removing
-> must_compute and such?  I'd feel more comfortable seeing copy and
-> paste where possible with cleanups separated out into their own patch.
->
+Michal Soltys wrote:
+> David Greaves wrote:
+>>
+>> Agreed - and I think another huge gap is that when you lose a block
+>> you really
+>> should be able to find out what file was affected. Doable on ext3 but not
+>> (AFAIK) xfs.
+>>
+> 
+> It's doable on xfs as well.
+> 
+> http://oss.sgi.com/archives/xfs/2008-10/msg01448.html <- two methods in
+> that thread.
+> 
+> On related note - if there's a mismatch on some stripe under linux's md
+> - is there any way to pinpoint which stripe exactly (or what blocks
+> correspond to fixed/checked stripe) ?
+> 
+> ITOW - is there anything besides mismatch_cnt ?
 
-Ok, I now see why this change was made.  Please make this changelog
-more descriptive than "Rewrite handle_stripe_dirtying6 function to
-work asynchronously."
+Thanks, I'll take a look at that - first glance says that it's not exactly
+end-user material!
 
-Regards,
-Dan
+David
+
+
+-- 
+"Don't worry, you'll be fine; I saw it work in a cartoon once..."
