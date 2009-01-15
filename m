@@ -2,24 +2,16 @@ From: Dan Williams <dan.j.williams@intel.com>
 Subject: Re: [PATCH 07/11] md: rewrite handle_stripe_dirtying6 in asynchronous
 	way
 Date: Thu, 15 Jan 2009 14:51:39 -0700
-Message-ID: <e9c3a7c20901151351p5e1b4641h1b4c8ba1ae5dcc73__42970.4379676425$1232056488$gmane$org@mail.gmail.com>
+Message-ID: <e9c3a7c20901151351p5e1b4641h1b4c8ba1ae5dcc73__4327.99748746238$1232056792$gmane$org@mail.gmail.com>
 References: <200812090057.33890.yur@emcraft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <200812090057.33890.yur@emcraft.com>
-List-Unsubscribe: <https://ozlabs.org/mailman/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Sender: linux-raid-owner@vger.kernel.org
 To: Yuri Tikhonov <yur@emcraft.com>
-Cc: linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, wd@denx.de, dzu@denx.de, yanok@emcraft.com
+Cc: linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, dzu@denx.de, wd@denx.de, yanok@emcraft.com
 List-Id: linux-raid.ids
 
 On Mon, Dec 8, 2008 at 2:57 PM, Yuri Tikhonov <yur@emcraft.com> wrote:
