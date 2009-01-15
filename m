@@ -1,58 +1,49 @@
-From: "Guy Watkins" <linux-raid@watkins-home.com>
-Subject: RE: Interesting article
-Date: Wed, 14 Jan 2009 19:57:38 -0500
-Message-ID: <690282F04F6144E69BEE18546053E6DC@m5>
-References: <496E44DE.7090200@harddata.com>
+From: "Dan Williams" <dan.j.williams@intel.com>
+Subject: Re: [PATCH 03/11][v3] async_tx: add support for asynchronous RAID6 recovery operations
+Date: Wed, 14 Jan 2009 18:06:31 -0700
+Message-ID: <e9c3a7c20901141706v17215220s22d973f81369be72@mail.gmail.com>
+References: <200901130343.14016.yur@emcraft.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <496E44DE.7090200@harddata.com>
+In-Reply-To: <200901130343.14016.yur@emcraft.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Maurice Hilarius' <maurice@harddata.com>, linux-raid@vger.kernel.org
+To: Yuri Tikhonov <yur@emcraft.com>
+Cc: linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, dzu@denx.de, wd@denx.de, yanok@emcraft.com
 List-Id: linux-raid.ids
 
-} -----Original Message-----
-} From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-} owner@vger.kernel.org] On Behalf Of Maurice Hilarius
-} Sent: Wednesday, January 14, 2009 3:03 PM
-} To: linux-raid@vger.kernel.org
-} Subject: Interesting article
-} 
-} I read this today:
-} http://blogs.zdnet.com/storage/?p=162
-} 
-} Would anyone who knows enough about this care to comment?
-} 
-} Thanks in advance for any thoughts..
-} 
-} 
-} --
-} With our best regards,
-} 
-} //Maurice W. Hilarius         Telephone: 01-780-456-9771/
-} /Hard Data Ltd.                FAX:          01-780-456-9772/
-} /11060 - 166 Avenue         email:maurice@harddata.com/
-} /Edmonton, AB, Canada/
-} /     T5X 1Y3/
+On Mon, Jan 12, 2009 at 5:43 PM, Yuri Tikhonov <yur@emcraft.com> wrote:
+> +       /* (2) Calculate Q+Qxy */
+> +       lptrs[0] = ptrs[failb];
+> +       lptrs[1] = ptrs[disks-1];
+> +       lptrs[2] = NULL;
+> +       tx = async_pq(lptrs, NULL, 0, 1, bytes, ASYNC_TX_DEP_ACK,
+> +                     tx, NULL, NULL);
+> +
+> +       /* (3) Calculate P+Pxy */
+> +       lptrs[0] = ptrs[faila];
+> +       lptrs[1] = ptrs[disks-2];
+> +       lptrs[2] = NULL;
+> +       tx = async_pq(lptrs, NULL, 0, 1, bytes, ASYNC_TX_DEP_ACK,
+> +                     tx, NULL, NULL);
+> +
 
-I have seen RAID5 arrays loose data because of a bad block during a rebuild
-since the late 1990's.  Even on big hardware RAID systems.  I now use 3 or 4
-way mirrors or RAID6.  RAID 5 is too risky for me.
+These two calls convinced me that ASYNC_TX_PQ_ZERO_{P,Q} need to go.
+A 1-source async_pq operation does not make sense.  These should be:
 
-Back in the 1990's we mirrored some RAID5 data, but only about 5% of it.
-The really important stuff.  And that has saved the day at least once.
+       /* (2) Calculate Q+Qxy */
+       lptrs[0] = ptrs[disks-1];
+       lptrs[1] = ptrs[failb];
+       tx = async_xor(lptrs[0], lptrs, 0, 2, bytes,
+                      ASYNC_TX_XOR_DROP_DST|ASYNC_TX_DEP_ACK, tx, NULL, NULL);
 
-Daily read tests are needed, but they don't give any guarantees!
+        /* (3) Calculate P+Pxy */
+       lptrs[0] = ptrs[disks-2];
+       lptrs[1] = ptrs[faila];
+       tx = async_xor(lptrs[0], lptrs, 0, 2, bytes,
+                      ASYNC_TX_XOR_DROP_DST|ASYNC_TX_DEP_ACK, tx, NULL, NULL);
 
-I disagree with the statement "So RAID 6 will give you no more protection
-than RAID 5 does now".  Not true at all, RAID5 has always had this problem
-and can't recover.  RAID6 can, even with many bad blocks.  As long as you
-don't have 2 bad blocks on the same block stripe.  However, if a RAID6 has a
-double disk failure and you try to recover, you now have a problem if a
-block is bad on another disk, and the chances of that are good with really
-big disks.
-
-Guy
-
+Regards,
+Dan
