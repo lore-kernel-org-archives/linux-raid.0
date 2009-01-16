@@ -1,33 +1,92 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: mdadm man page update proposed
-Date: Fri, 16 Jan 2009 17:04:50 +0000
-Message-ID: <4970BE32.8020209@dgreaves.com>
-References: <6121ee740901160136l43925896v42d1cd35ab5ab724@mail.gmail.com>	 <3ECBDC05781B3D48ABD520A01ABF2F9B2A0E2BFB9A@SE-EX008.groupinfra.com>	 <20090116164502.GA31757@cthulhu.home.robinhill.me.uk> <6121ee740901160900ncb107a3m81dd55ecc79be7a5@mail.gmail.com>
+From: Max Waterman <davidmaxwaterman@fastmail.co.uk>
+Subject: Re: trouble adding spare
+Date: Fri, 16 Jan 2009 19:57:48 +0200
+Message-ID: <4970CA9C.7060902@fastmail.co.uk>
+References: <496DB3A4.4090605@fastmail.co.uk> <alpine.DEB.1.10.0901140654100.11696@p34.internal.lan> <496DE2BD.6070905@fastmail.co.uk> <496DE763.9010300@fastmail.co.uk> <alpine.DEB.1.10.0901140830280.11696@p34.internal.lan> <496DF771.4010407@fastmail.co.uk> <496DFFF0.2060807@fastmail.co.uk> <alpine.DEB.1.10.0901141012050.19747@p34.internal.lan> <496E26DA.6010703@fastmail.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6121ee740901160900ncb107a3m81dd55ecc79be7a5@mail.gmail.com>
+In-Reply-To: <496E26DA.6010703@fastmail.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Attila Nagy <nagy.attila.gabor@gmail.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Attila Nagy wrote:
-> On 1/16/09, Robin Hill <robin@robinhill.me.uk> wrote:
-> 
->>  - without a ramdisk the kernel will fail to assemble arrays with 1.0+
->>  superblocks.
-> 
-> I'd appreciate a lot if this would be noted in the man page. Please!
-> 
-You are right that some of this should be on the man page - but it is a
-reference document.
+Can no one provide any enlightenment on this issue?
 
-I thing the wiki (http://linux-raid.osdl.org/) has a lot more background (and it
-certainly talks about auto-detect.
+Max.
 
-David
+Max Waterman wrote:
+> Justin Piszcz wrote:
+>>
+>>
+>> On Wed, 14 Jan 2009, Max Waterman wrote:
+>>
+>>> Max Waterman wrote:
+>>>>>
+>>>>> If that does not work, clean the drive out manually after removing 
+>>>>> it as a spare from the array:
+>>>>> dd if=/dev/zero of=/dev/sdi bs=1M
+>>>> This is taking forever
+>>> I stopped it after about half an hour, hoping that it had made 
+>>> garbage of whatever was the problem.
+>>>
+>>> I then added it into the array and it worked as before.
+>>>
+>>> However, it still wasn't added when I rebooted.
+>>>
+>>> ...but, there is something different. Now, when I --examine 
+>>> /dev/sdi, it gives output for the whole array including 2 spares, 
+>>> which is the end result I expect :
+>>>
+>>> Active Devices : 6
+>>> Working Devices : 8
+>>> Failed Devices : 0
+>>> Spare Devices : 2
+>>>
+>>> However, --detail /dev/md2 still denies /dev/sdi exists :
+>>>
+>>> Active Devices : 6
+>>> Working Devices : 7
+>>> Failed Devices : 0
+>>> Spare Devices : 1
+>>>
+>>> What's up?
+>>>
+>>> Max.
+>>>
+>>> -- 
+>>> To unsubscribe from this list: send the line "unsubscribe 
+>>> linux-raid" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>
+>> The superblock is at the end of the disk for 0.90.00 superblocks, so 
+>> you would need to write to end of the disk or just let dd clear out 
+>> the entire disk.  Honestly though that may not fix the root cause of 
+>> the problem, we may need to wait for others on the list and/or Neil 
+>> to check this one out. It seems very strange, can you post the 
+>> regular output that people ask for so once they see your mail, they 
+>> will have (hopefully) most of what they need to diagnose the problem.
+>>
+>> 1. mdadm -D /dev/mdX
+>> 2. cat /proc/mdstat
+>> 3. mdadm -Esvvv
+>> 4. uname -a
+> 5. mdadm -E /dev/sdi
+>
+> OK, I uploaded the output of the above commands to here :
+>
+> <http://reality.sgiweb.org/maxw/tmp/md2Details/>
+>
+> I hope someone can shed some light on this.
+>
+> Thanks,
+>
+> Max.
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
--- 
-"Don't worry, you'll be fine; I saw it work in a cartoon once..."
