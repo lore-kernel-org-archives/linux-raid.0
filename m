@@ -1,38 +1,25 @@
-From: Yuri Tikhonov <yur@emcraft.com>
-Subject: Re[2]: [RFC PATCH 00/11][v3] md: support for asynchronous execution of RAID6 operations
-Date: Fri, 16 Jan 2009 12:06:31 +0300
-Message-ID: <1291825804.20090116120631@emcraft.com>
-References: <200901130342.55633.yur@emcraft.com> <e9c3a7c20901141100r666007cbv76a869eddf292371@mail.gmail.com>
+From: "Attila Nagy" <nagy.attila.gabor@gmail.com>
+Subject: mdadm man page update proposed
+Date: Fri, 16 Jan 2009 10:36:17 +0100
+Message-ID: <6121ee740901160136l43925896v42d1cd35ab5ab724@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e9c3a7c20901141100r666007cbv76a869eddf292371@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, dzu@denx.de, wd@denx.de, yanok@emcraft.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi!
 
+I believe it would be helpful to many to note in the mdadm manual
+page, that only version 0.90 superblocks can be auto-detected by
+current kernels. There is a notice at version 1 and up that "they have
+some limitations", but this important fact isn't mentioned anywhere in
+the man page.
 
- Hello Dan,
+Thanks a lot.
 
-On Wednesday, January 14, 2009 you wrote:
-
-[..]
-
-> Do you have a git tree where you can post this series?  That would
-> make it easier for me to track/review.
-
- Yes.
-
- Please see the "raidstuff" branch in the linux-2.6-denx repository:
-
-http://git.denx.de/?p=linux-2.6-denx.git;a=shortlog;h=refs/heads/raidstuff
-
- Regards, Yuri
-
- --
- Yuri Tikhonov, Senior Software Engineer
- Emcraft Systems, www.emcraft.com
-
+-- 
+Nagy Attila Gabor
