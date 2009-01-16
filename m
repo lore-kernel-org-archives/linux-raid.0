@@ -1,92 +1,82 @@
-From: Max Waterman <davidmaxwaterman@fastmail.co.uk>
-Subject: Re: trouble adding spare
-Date: Fri, 16 Jan 2009 19:57:48 +0200
-Message-ID: <4970CA9C.7060902@fastmail.co.uk>
-References: <496DB3A4.4090605@fastmail.co.uk> <alpine.DEB.1.10.0901140654100.11696@p34.internal.lan> <496DE2BD.6070905@fastmail.co.uk> <496DE763.9010300@fastmail.co.uk> <alpine.DEB.1.10.0901140830280.11696@p34.internal.lan> <496DF771.4010407@fastmail.co.uk> <496DFFF0.2060807@fastmail.co.uk> <alpine.DEB.1.10.0901141012050.19747@p34.internal.lan> <496E26DA.6010703@fastmail.co.uk>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: Re[2]: [PATCH 02/11][v3] async_tx: add support for asynchronous
+	GF multiplication
+Date: Fri, 16 Jan 2009 11:28:04 -0700
+Message-ID: <e9c3a7c20901161028v3320b14ay68df8360fff2b8a5@mail.gmail.com>
+References: <200901130343.06895.yur@emcraft.com>
+	 <e9c3a7c20901141656g2fec1802vcecc4ae433838bb3@mail.gmail.com>
+	 <1328000796.20090116144156@emcraft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <496E26DA.6010703@fastmail.co.uk>
+In-Reply-To: <1328000796.20090116144156@emcraft.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Yuri Tikhonov <yur@emcraft.com>
+Cc: linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, dzu@denx.de, wd@denx.de, yanok@emcraft.com
 List-Id: linux-raid.ids
 
-Can no one provide any enlightenment on this issue?
+On Fri, Jan 16, 2009 at 4:41 AM, Yuri Tikhonov <yur@emcraft.com> wrote:
+>> I don't think this will work as we will be mixing Q into the new P and
+>> P into the new Q.  In order to support (src_cnt > device->max_pq) we
+>> need to explicitly tell the driver that the operation is being
+>> continued (DMA_PREP_CONTINUE) and to apply different coeffeicients to
+>> P and Q to cancel the effect of including them as sources.
+>
+>  With DMA_PREP_ZERO_P/Q approach, the Q isn't mixed into new P, and P
+> isn't mixed into new Q. For your example of max_pq=4:
+>
+>  p, q = PQ(src0, src1, src2, src3, src4, COEF({01}, {02}, {04}, {08}, {10}))
+>
+>  with the current implementation will be split into:
+>
+>  p, q = PQ(src0, src1, src2, src3, COEF({01}, {02}, {04}, {08})
+>  p`,q` = PQ(src4, COEF({10}))
+>
+>  which will result to the following:
+>
+>  p = ((dma_flags & DMA_PREP_ZERO_P) ? 0 : old_p) + src0 + src1 + src2 + src3
+>  q = ((dma_flags & DMA_PREP_ZERO_Q) ? 0 : old_q) + {01}*src0 + {02}*src1 + {04}*src2 + {08}*src3
+>
+>  p` = p + src4
+>  q` = q + {10}*src4
+>
 
-Max.
+Huh?  Does the ppc440spe engine have some notion of flagging a source
+as old_p/old_q?  Otherwise I do not see how the engine will not turn
+this into:
 
-Max Waterman wrote:
-> Justin Piszcz wrote:
->>
->>
->> On Wed, 14 Jan 2009, Max Waterman wrote:
->>
->>> Max Waterman wrote:
->>>>>
->>>>> If that does not work, clean the drive out manually after removing 
->>>>> it as a spare from the array:
->>>>> dd if=/dev/zero of=/dev/sdi bs=1M
->>>> This is taking forever
->>> I stopped it after about half an hour, hoping that it had made 
->>> garbage of whatever was the problem.
->>>
->>> I then added it into the array and it worked as before.
->>>
->>> However, it still wasn't added when I rebooted.
->>>
->>> ...but, there is something different. Now, when I --examine 
->>> /dev/sdi, it gives output for the whole array including 2 spares, 
->>> which is the end result I expect :
->>>
->>> Active Devices : 6
->>> Working Devices : 8
->>> Failed Devices : 0
->>> Spare Devices : 2
->>>
->>> However, --detail /dev/md2 still denies /dev/sdi exists :
->>>
->>> Active Devices : 6
->>> Working Devices : 7
->>> Failed Devices : 0
->>> Spare Devices : 1
->>>
->>> What's up?
->>>
->>> Max.
->>>
->>> -- 
->>> To unsubscribe from this list: send the line "unsubscribe 
->>> linux-raid" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>
->> The superblock is at the end of the disk for 0.90.00 superblocks, so 
->> you would need to write to end of the disk or just let dd clear out 
->> the entire disk.  Honestly though that may not fix the root cause of 
->> the problem, we may need to wait for others on the list and/or Neil 
->> to check this one out. It seems very strange, can you post the 
->> regular output that people ask for so once they see your mail, they 
->> will have (hopefully) most of what they need to diagnose the problem.
->>
->> 1. mdadm -D /dev/mdX
->> 2. cat /proc/mdstat
->> 3. mdadm -Esvvv
->> 4. uname -a
-> 5. mdadm -E /dev/sdi
->
-> OK, I uploaded the output of the above commands to here :
->
-> <http://reality.sgiweb.org/maxw/tmp/md2Details/>
->
-> I hope someone can shed some light on this.
->
-> Thanks,
->
-> Max.
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+p` = p + src4 + q
+q` = q + {10}*src4 + {x}*p
 
+I think you missed the fact that we have passed p and q back in as
+sources.  Unless we have multiple p destinations and multiple q
+destinations, or hardware support for continuations I do not see how
+you can guarantee this split.
+
+>  I'm afraid that the difference (13/4, 125/32) is very significant, so
+> getting rid of DMA_PREP_ZERO_P/Q will eat most of the improvement
+> which could be achieved with the current approach.
+
+Data corruption is a slightly higher cost :-).
+
+>
+>>  but at this point I do not see a cleaner alternatve for engines like iop13xx.
+>
+>  I can't find any description of iop13xx processors at Intel's
+> web-site, only 3xx:
+>
+> http://www.intel.com/design/iio/index.htm?iid=ipp_embed+embed_io
+>
+>  So, it's hard for me to do any suggestions. I just wonder - doesn't
+> iop13xx allow users to program destination addresses into the sources
+> fields of descriptors?
+
+Yes it does, but the engine does not know it is a destination.
+
+Take a look at page 496 of the following and tell me if you come to a
+different conclusion.
+http://download.intel.com/design/iio/docs/31503602.pdf
+
+Thanks,
+Dan
