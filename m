@@ -1,60 +1,62 @@
 From: Yuri Tikhonov <yur@emcraft.com>
 Subject: Re[2]: [PATCH 07/11] md: rewrite handle_stripe_dirtying6 in asynchronous  way
-Date: Fri, 16 Jan 2009 17:24:03 +0300
-Message-ID: <1141743016.20090116172403@emcraft.com>
-References: <200812090057.33890.yur@emcraft.com> <e9c3a7c20901151351p5e1b4641h1b4c8ba1ae5dcc73@mail.gmail.com> <e9c3a7c20901151421o69522f71rfe6d7d9621de47eb@mail.gmail.com>
+Date: Fri, 16 Jan 2009 17:46:03 +0300
+Message-ID: <1675190812.20090116174603@emcraft.com>
+References: <200812090057.33890.yur@emcraft.com> <e9c3a7c20901151351p5e1b4641h1b4c8ba1ae5dcc73@mail.gmail.com> <e9c3a7c20901151421o69522f71rfe6d7d9621de47eb@mail.gmail.com> <91b13c310901151707x48b1ef8av1609c3a622c19565@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e9c3a7c20901151421o69522f71rfe6d7d9621de47eb@mail.gmail.com>
+In-Reply-To: <91b13c310901151707x48b1ef8av1609c3a622c19565@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, dzu@denx.de, wd@denx.de, yanok@emcraft.com
+To: Cheng Renquan <crquan@gmail.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, dzu@denx.de, wd@denx.de, yanok@emcraft.com
 List-Id: linux-raid.ids
+
+=0D
+Hello Cheng,
 
 On Friday, January 16, 2009 you wrote:
 
-> On Thu, Jan 15, 2009 at 2:51 PM, Dan Williams <dan.j.williams@intel.com> wrote:
->> On Mon, Dec 8, 2008 at 2:57 PM, Yuri Tikhonov <yur@emcraft.com> wrote:
->> What's the reasoning behind changing the logic here, i.e. removing
->> must_compute and such?  I'd feel more comfortable seeing copy and
->> paste where possible with cleanups separated out into their own patch.
->>
+> Ack, could you please make the changelog more descriptive?
+> and or add some of your benchmark results?
 
-> Ok, I now see why this change was made.  Please make this changelog
-> more descriptive than "Rewrite handle_stripe_dirtying6 function to
-> work asynchronously."
+ Of course. We did benchmarking using the Xdd tool like follows:
 
- Sure, how about the following:
+# xdd -op write -kbytes $kbytes -reqsize $reqsize -dio-passes 2 =E2=80=93=
+verbose -target $target_device
 
-"
+ where
 
- md: rewrite handle_stripe_dirtying6 in asynchronous way
+$kbytes =3D data disks * size of disk
+$reqsize=3D data disks * chunk size
+$target_device =3D /dev/md0
 
- Processing stripe dirtying in asynchronous way requires some changes 
-to the handle_stripe_dirtying6() algorithm.
+ This way we did write of full array size, and thus achieved the=20
+maximum performance.
 
- In the synchronous implementation of the stripe dirtying we processed 
-dirtying of a degraded stripe (with partially changed strip(s) located 
-on the failed drive(s)) inside one handle_stripe_dirtying6() call:
-- we computed the missed strips from the old parities, and thus got 
-the fully up-to-date stripe, then
-- we did reconstruction using the new data to write.
+ The test cases were RAID-6 built on the top of 14 S-ATA drives=20
+connected to 2 LSI cards (7+7) inserted into the 800 MHz Katmai board=20
+(based on ppc440spe) equipped with 4GB of 800 MHz DRAM .
 
- In the asynchronous case of handle_stripe_dirtying6() we don't 
-process anything right inside this function (since we under the lock), 
-but only schedule the necessary operations with flags. Thus, if 
-handle_stripe_dirtying6() is performed on the top of a degraded array 
-we should schedule the reconstruction operation when the failed strips 
-are marked (by previously called fetch_block6()) as to be computed 
-(with the R5_Wantcompute flag), and all the other strips of the stripe 
-are UPTODATE. The schedule_reconstruction() function will set the 
-STRIPE_OP_POSTXOR flag [for new parity calculation], which is then 
-handled in raid_run_ops() after the STRIPE_OP_COMPUTE_BLK one [which 
-causes computing of the data missed].
+ Here are the results (Psw - write throughput with s/w RAID-6; Phw -=20
+write throughput with the h/w accelerated RAID-6):
 
-"
+ PAGE_SIZE=3D4KB, chunk=3D64/128/256 KB
+        Psw =3D 71/72/74 MBps
+        Phw =3D 128/136/139 MBps
+
+ PAGE_SIZE=3D16KB, chunk=3D256/512/1024 KB
+        Psw =3D 81/81/82 MBps
+        Phw =3D 205/244/239 MBps
+
+ PAGE_SIZE=3D64KB, chunk=3D1024/2048/4096 KB
+        Psw =3D 84/84/85 MBps
+        Phw =3D 258/253/258 MBps
+
+ PAGE_SIZE=3D256KB, chunk=3D4096/8192/16384 KB
+        Psw =3D 81/83/83 MBps
+        Phw =3D 288/275/274 MBps
 
  Regards, Yuri
 
@@ -62,3 +64,8 @@ causes computing of the data missed].
  Yuri Tikhonov, Senior Software Engineer
  Emcraft Systems, www.emcraft.com
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
