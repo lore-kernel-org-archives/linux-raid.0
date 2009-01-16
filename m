@@ -1,71 +1,65 @@
-From: Yuri Tikhonov <yur@emcraft.com>
-Subject: Re[2]: [PATCH 07/11] md: rewrite handle_stripe_dirtying6 in asynchronous  way
-Date: Fri, 16 Jan 2009 17:46:03 +0300
-Message-ID: <1675190812.20090116174603@emcraft.com>
-References: <200812090057.33890.yur@emcraft.com> <e9c3a7c20901151351p5e1b4641h1b4c8ba1ae5dcc73@mail.gmail.com> <e9c3a7c20901151421o69522f71rfe6d7d9621de47eb@mail.gmail.com> <91b13c310901151707x48b1ef8av1609c3a622c19565@mail.gmail.com>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: mdadm man page update proposed
+Date: Fri, 16 Jan 2009 16:45:02 +0000
+Message-ID: <20090116164502.GA31757@cthulhu.home.robinhill.me.uk>
+References: <6121ee740901160136l43925896v42d1cd35ab5ab724@mail.gmail.com> <3ECBDC05781B3D48ABD520A01ABF2F9B2A0E2BFB9A@SE-EX008.groupinfra.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="9jxsPFA5p3P2qPhR"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <91b13c310901151707x48b1ef8av1609c3a622c19565@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <3ECBDC05781B3D48ABD520A01ABF2F9B2A0E2BFB9A@SE-EX008.groupinfra.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Cheng Renquan <crquan@gmail.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, dzu@denx.de, wd@denx.de, yanok@emcraft.com
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-=0D
-Hello Cheng,
 
-On Friday, January 16, 2009 you wrote:
+--9jxsPFA5p3P2qPhR
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> Ack, could you please make the changelog more descriptive?
-> and or add some of your benchmark results?
+On Fri Jan 16, 2009 at 11:51:24AM +0100, Henry, Andrew wrote:
 
- Of course. We did benchmarking using the Xdd tool like follows:
+> > I believe it would be helpful to many to note in the mdadm manual
+> > page, that only version 0.90 superblocks can be auto-detected by
+> > current kernels.
+> >
+> > Nagy Attila Gabor
+>=20
+> You know, I used 0.90 superblocks on CentOS 5.2 and they were
+> recognized (ie assembled so that Cat/proc/mdstat saw the discs).
+>=20
+> I just moved to Ubuntu with 2.6.27 and decided on 1.2 superblocks and
+> they were auto assembled anyway.  Is this what we mean when we say
+> "autodetected by the kernel" or have I misunderstood?
+>=20
+> If im right then it doesn't seem to be an issue with later kernels.
+>=20
+Most current distributions use a ramdisk to load up a base system
+(busybox + a few other tools) which allows for more advanced detection
+of arrays than the kernel can do itself.  This is what you'll be seeing
+- without a ramdisk the kernel will fail to assemble arrays with 1.0+
+superblocks.
 
-# xdd -op write -kbytes $kbytes -reqsize $reqsize -dio-passes 2 =E2=80=93=
-verbose -target $target_device
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
- where
+--9jxsPFA5p3P2qPhR
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-$kbytes =3D data disks * size of disk
-$reqsize=3D data disks * chunk size
-$target_device =3D /dev/md0
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
 
- This way we did write of full array size, and thus achieved the=20
-maximum performance.
+iEYEARECAAYFAklwuY0ACgkQShxCyD40xBKEFwCgjl5+vLqr9mdlDt39p+MDh4mX
+99kAniE23sRNTmsfTLoR53DQpkB3h9VS
+=ZLWG
+-----END PGP SIGNATURE-----
 
- The test cases were RAID-6 built on the top of 14 S-ATA drives=20
-connected to 2 LSI cards (7+7) inserted into the 800 MHz Katmai board=20
-(based on ppc440spe) equipped with 4GB of 800 MHz DRAM .
-
- Here are the results (Psw - write throughput with s/w RAID-6; Phw -=20
-write throughput with the h/w accelerated RAID-6):
-
- PAGE_SIZE=3D4KB, chunk=3D64/128/256 KB
-        Psw =3D 71/72/74 MBps
-        Phw =3D 128/136/139 MBps
-
- PAGE_SIZE=3D16KB, chunk=3D256/512/1024 KB
-        Psw =3D 81/81/82 MBps
-        Phw =3D 205/244/239 MBps
-
- PAGE_SIZE=3D64KB, chunk=3D1024/2048/4096 KB
-        Psw =3D 84/84/85 MBps
-        Phw =3D 258/253/258 MBps
-
- PAGE_SIZE=3D256KB, chunk=3D4096/8192/16384 KB
-        Psw =3D 81/83/83 MBps
-        Phw =3D 288/275/274 MBps
-
- Regards, Yuri
-
- --
- Yuri Tikhonov, Senior Software Engineer
- Emcraft Systems, www.emcraft.com
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--9jxsPFA5p3P2qPhR--
