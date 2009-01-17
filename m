@@ -1,16 +1,28 @@
 From: Yuri Tikhonov <yur@emcraft.com>
-Subject: Re[4]: [PATCH 02/11][v3] async_tx: add support for asynchronous  GF multiplication
+Subject: Re[4]: [PATCH 02/11][v3] async_tx: add support for asynchronous GF
+	multiplication
 Date: Sat, 17 Jan 2009 15:19:37 +0300
-Message-ID: <81938970.20090117151937__10233.287435449$1232194926$gmane$org@emcraft.com>
-References: <200901130343.06895.yur@emcraft.com> <e9c3a7c20901141656g2fec1802vcecc4ae433838bb3@mail.gmail.com> <1328000796.20090116144156@emcraft.com> <e9c3a7c20901161028v3320b14ay68df8360fff2b8a5@mail.gmail.com>
+Message-ID: <81938970.20090117151937__30745.0571949177$1232194960$gmane$org@emcraft.com>
+References: <200901130343.06895.yur@emcraft.com>
+	<e9c3a7c20901141656g2fec1802vcecc4ae433838bb3@mail.gmail.com>
+	<1328000796.20090116144156@emcraft.com>
+	<e9c3a7c20901161028v3320b14ay68df8360fff2b8a5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
 In-Reply-To: <e9c3a7c20901161028v3320b14ay68df8360fff2b8a5@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
+List-Unsubscribe: <https://ozlabs.org/mailman/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
 To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, dzu@denx.de, wd@denx.de, yanok@emcraft.com
+Cc: linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, wd@denx.de, dzu@denx.de, yanok@emcraft.com
 List-Id: linux-raid.ids
 
 Hello Dan,
@@ -127,4 +139,3 @@ to process such a request.
  --
  Yuri Tikhonov, Senior Software Engineer
  Emcraft Systems, www.emcraft.com
-
