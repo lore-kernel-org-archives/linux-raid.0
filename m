@@ -1,31 +1,39 @@
-From: "Sujit Karataparambil" <sjt.kar@gmail.com>
-Subject: Re: RAID 6 recovery (it's not looking good) *Even More problems*
-Date: Sat, 17 Jan 2009 20:08:45 +0530
-Message-ID: <921ca19c0901170638q2077ba97q6d08050bf3e2c228@mail.gmail.com>
-References: <921ca19c0901170547u57f394d9kd7b9a736bc57da67@mail.gmail.com>
-	 <C5979771.C0E4%groups@email.iain.rauch.co.uk>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Performance question
+Date: Sat, 17 Jan 2009 18:18:06 +0100
+Message-ID: <20090117171806.GA9432@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <C5979771.C0E4%groups@email.iain.rauch.co.uk>
 Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Iain Rauch <groups@email.iain.rauch.co.uk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > How did you copy the super block.
-> >
-> Not sure what you mean there? Which superblock?
+Hi all,
 
-I mean did you use some tool like Ghost(database backup software).
+I'll have to setup some machines with two HDs (each)
+in order to get some redundancy.
 
-> > did you run fsck after booting you could set up that.
-> >
-> > http://www.cyberciti.biz/faq/linux-force-fsck-on-the-next-reboot-or-boot-seque
-> > nce/
-> Not sure why this will be helpful? There's not an independent file system on
-> each md device is there?
+Reading the MD features I noticed there are several
+possibilities to create a mirror.
+I was wondering which one offer the best perfomances
+and/or what are the compromises to accept between
+the different solutions.
 
-Even an single filesytem requires you sync the upgrades or down grades.
+One possibility is a classic RAID-1 mirror.
+Another is a RAID-10 far.
+There would also be the RAID-10 near, but I guess
+this is equivalent to RAID-1.
+
+Any suggestion on which method offers higher "speed"?
+Or there are other possibilities with 2 HDs (keeping
+the redundancy, of course)?
+
+Thanks a lot in advance,
+
+bye,
+
+-- 
+
+piergiorgio
