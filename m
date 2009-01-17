@@ -1,49 +1,50 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Performance question
-Date: Sat, 17 Jan 2009 13:37:57 -0500
-Message-ID: <49722585.4020400@tmr.com>
-References: <20090117171806.GA9432@lazy.lzy>
+From: Mike Berger <lists@mike01.com>
+Subject: Re: RAID 5 Recovery Help Needed
+Date: Sat, 17 Jan 2009 12:51:07 -0600
+Message-ID: <4972289B.30607@mike01.com>
+References: <4970E18C.2000100@mike01.com> <4970F153.30106@scalableinformatics.com> <4970F76C.2040500@mike01.com> <49722439.3060103@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090117171806.GA9432@lazy.lzy>
+In-Reply-To: <49722439.3060103@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Piergiorgio Sartor wrote:
-> Hi all,
+Bill Davidsen wrote:
 >
-> I'll have to setup some machines with two HDs (each)
-> in order to get some redundancy.
+> Depending on your distribution, I would not be surprised to see your
+> array assemble just fine with or without an ARRAY line, it seems some
+> try harder than others and I just noticed that the system I use most
+> has only "super minor" lines for the first three arrays and nothing
+> for the rest, yet arrays 0..6 all come up at boot.
 >
-> Reading the MD features I noticed there are several
-> possibilities to create a mirror.
-> I was wondering which one offer the best perfomances
-> and/or what are the compromises to accept between
-> the different solutions.
+> However, the bad news is that many distributions don't do ext4 very
+> well, and may mount an ext4 file system as ext3, resulting in damage
+> which gets worse if you write to it. I would suggest starting the
+> array, unmounted, running fsck.ext4 on the array, and seeing if it
+> offers any hope of recovery. If so, after the fsck mount the array
+> *read-only* and see what's there.
 >
-> One possibility is a classic RAID-1 mirror.
-> Another is a RAID-10 far.
-> There would also be the RAID-10 near, but I guess
-> this is equivalent to RAID-1.
+> Some distributions seem to need "ext4" on the boot command line to
+> detect the file system type for mounting. Of course if it's in fstab
+> it should work correctly, but I wouldn't bet the farm on it.
 >
-> Any suggestion on which method offers higher "speed"?
-> Or there are other possibilities with 2 HDs (keeping
-> the redundancy, of course)?
+> -- 
+> Bill Davidsen <davidsen@tmr.com>
+>   "Woe unto the statesman who makes war without a reason that will still
+>   be valid when the war is over..." Otto von Bismark 
+>
 >   
+I have an ext4 partition on another drive working flawlessly, so I don't
+think it is or was being mounted incorrectly as ext3.  I have a feeling
+the ext4 boot option is needed for the root partition in the cases you
+mention.
 
-Mirrored array will offer slower write speed no matter how you do it, 
-usually about the speed of a single drive. With raid10 far you should 
-get about N times faster read than a single drive, where N is drives in 
-the array. Clearly using three or more drives will help a LOT in typical 
-performance.
+Thanks for the suggestions.  I've tried a dry run (-n) of fsck without
+success, but put off doing a full fsck for fear of corrupting the data
+were it to be recoverable.  I will try the full fsck before abandoning
+all hope.
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
-
-
+Mike
