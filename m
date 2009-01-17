@@ -1,43 +1,68 @@
-From: Jan Engelhardt <jengelh@medozas.de>
-Subject: Re: [GIT PULL -tip] fix 33 make headers_check warnings
-Date: Sat, 17 Jan 2009 23:04:06 +0100 (CET)
-Message-ID: <alpine.LSU.2.00.0901172301380.14505@fbirervta.pbzchgretzou.qr>
-References: <1232223441.3966.22.camel@localhost.localdomain> <1232228261.27094.0.camel@macbook.infradead.org>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: Performance question
+Date: Sat, 17 Jan 2009 23:08:49 +0100
+Message-ID: <20090117220849.GB29866@rap.rap.dk>
+References: <20090117171806.GA9432@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <netfilter-devel-owner@vger.kernel.org>
-In-Reply-To: <1232228261.27094.0.camel@macbook.infradead.org>
-Sender: netfilter-devel-owner@vger.kernel.org
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: Jaswinder Singh Rajput <jaswinder@kernel.org>, Ingo Molnar <mingo@elte.hu>, x86 maintainers <x86@kernel.org>, urs.thuermann@volkswagen.de, oliver.hartkopp@volkswagen.de, linux-media@vger.kernel.org, netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, linux-nfs@vger.kernel.org, linux-raid@vger.kernel.org, dbrownell@users.sourceforge.net, spi-devel-general@lists.sourceforge.net, netdev@vger.kernel.org, greg@kroah.com, linux-usb@vger.kernel.org, linux-mtd@lists.infradead.org, tiwai@suse.de, mchehab@infradead.org, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain; charset=iso-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20090117171806.GA9432@lazy.lzy>
+Sender: linux-raid-owner@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Sat, Jan 17, 2009 at 06:18:06PM +0100, Piergiorgio Sartor wrote:
+> Hi all,
+> 
+> I'll have to setup some machines with two HDs (each)
+> in order to get some redundancy.
+> 
+> Reading the MD features I noticed there are several
+> possibilities to create a mirror.
+> I was wondering which one offer the best perfomances
+> and/or what are the compromises to accept between
+> the different solutions.
+> 
+> One possibility is a classic RAID-1 mirror.
+> Another is a RAID-10 far.
+> There would also be the RAID-10 near, but I guess
+> this is equivalent to RAID-1.
 
-On Saturday 2009-01-17 22:37, David Woodhouse wrote:
->On Sun, 2009-01-18 at 01:47 +0530, Jaswinder Singh Rajput wrote:
->> --- a/include/linux/dvb/audio.h
->> +++ b/include/linux/dvb/audio.h
->> @@ -24,9 +24,8 @@
->>  #ifndef _DVBAUDIO_H_
->>  #define _DVBAUDIO_H_
->>  
->> -#ifdef __KERNEL__
->>  #include <linux/types.h>
->> -#else
->> +#ifndef __KERNEL__
->>  #include <stdint.h>
->>  #endif
->
->That patch looks wrong, and unnecessary. It was fine before.
+Yes, raid10,n2 is quite the same as raid1 for 2 drives,
+That is the disk layout is the same. There may be some 
+differences due to the use of different drivers, tho. It was reported at
+some time that there were some errors that one of the drivers handled
+better than the other. I am not sure which one was the better.
+Also syncing and rebuilding etc. may have different performance.
 
-What itches my eye is
+> Any suggestion on which method offers higher "speed"?
+> Or there are other possibilities with 2 HDs (keeping
+> the redundancy, of course)?
 
-#ifndef __KERNEL__
-#include <stdint.h>
-#endif
+raid10,f2 offers something like double the speed for sequential read,
+while probably being a little faster on random read, and with a file
+system about equal in performance on writes. Degraded performance (in
+tha case that one disk is failing) could be worse for raid10,f2, but in
+real life, with the fs elevator in operation, the penalty may be
+minimal. IMHO you could normally replace raid1 and raid10,n2, and
+raid1+0 with raid10,f2, except for boot devices.
 
-I am not sure how much Linux header files are supposed to be usable
-from C++, but in case someone does, <cstdint> should be used in C++0x
-mode. Testing for C++0x with macros however looks even more out of
-place in such header files.
-Thoughts?
+Theoretically there is another possibility in raid5 with 2 drives,
+but I am not sure it even works out in practice, and there is imho no
+gain in it, except that you can expand the array with more disks.
+Furthermore there is raid10,o2 which is viable, but does not
+perform as well as raid10,f2.
+
+For linux raid performance have a look at
+http://linux-raid.osdl.org/index.php/Performance
+
+For setting up a system with 2 disks so you can survive that one disk
+fails, see
+http://linux-raid.osdl.org/index.php/Preventing_against_a_failing_disk
+
+I am the main author of both wiki pages, so I am interested in feedback.
+
+Best regards
+Keld
