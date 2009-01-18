@@ -1,71 +1,60 @@
-From: Sam Ravnborg <sam-uyr5N9Q2VtJg9hUCZPvPmw@public.gmane.org>
-Subject: Re: [GIT PULL -tip] fix 33 make headers_check warnings
-Date: Sun, 18 Jan 2009 11:10:29 +0100
-Message-ID: <20090118101029.GA31461@uranus.ravnborg.org>
-References: <1232223441.3966.22.camel@localhost.localdomain> <1232228261.27094.0.camel@macbook.infradead.org> <20090117221932.GA4956@uranus.ravnborg.org> <20090118091300.GA24849@elte.hu>
+From: =?ISO-8859-1?Q?Tor_Arne_Vestb=F8?= <torarnv@gmail.com>
+Subject: Re: Linux RAID autodetect partitions go missing from /dev, but fdisk
+ can see them
+Date: Sun, 18 Jan 2009 18:51:38 +0100
+Message-ID: <49736C2A.3050108@gmail.com>
+References: <49402CFE.3080708@gmail.com>	<18759.8246.568849.244513@notabene.brown>	<494AC8BA.7010704@gmail.com> <18762.53424.819087.495066@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20090118091300.GA24849-X9Un+BFzKDI@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>
-Cc: David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jaswinder Singh Rajput <jaswinder-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, x86 maintainers <x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, urs.thuermann-l29pVbxQd1IUtdQbppsyvg@public.gmane.org, oliver.hartkopp-l29pVbxQd1IUtdQbppsyvg@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netfilter-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org, neilb-l3A5Bk7waGM@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dbrownell-Rn4VEauK+AKRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, spi-devel-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, tiwai-l3A5Bk7waGM@public.gmane.org, mchehab-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <18762.53424.819087.495066@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Jan 18, 2009 at 10:13:00AM +0100, Ingo Molnar wrote:
-> 
-> * Sam Ravnborg <sam-uyr5N9Q2VtJg9hUCZPvPmw@public.gmane.org> wrote:
-> 
-> > On Sun, Jan 18, 2009 at 08:37:41AM +1100, David Woodhouse wrote:
-> > > On Sun, 2009-01-18 at 01:47 +0530, Jaswinder Singh Rajput wrote:
-> > > > --- a/include/linux/dvb/audio.h
-> > > > +++ b/include/linux/dvb/audio.h
-> > > > @@ -24,9 +24,8 @@
-> > > >  #ifndef _DVBAUDIO_H_
-> > > >  #define _DVBAUDIO_H_
-> > > >  
-> > > > -#ifdef __KERNEL__
-> > > >  #include <linux/types.h>
-> > > > -#else
-> > > > +#ifndef __KERNEL__
-> > > >  #include <stdint.h>
-> > > >  #endif
-> > > >  
-> > > 
-> > > That patch looks wrong, and unnecessary. It was fine before.
-> > Nope - include/linux/dvb/audio.h failed to include linux/types.h
-> > despite the fact that is uses __u32 etc.
-> > 
-> > But why the _kernel_ should include a userspace header is
-> > much more questionable.
-> 
-> ok, i dropped this one for the time being.
-> 
-> Sam, Andrew, et al, i've got the commit lineup below, to fix the ~200 new 
-> CONFIG_HEADERS_CHECK=y warnings we have in current -git, on x86 
-> allyesconfig.
-> 
-> Note that i have restructured the tree and the commits so that this effort 
-> can be tracked more easily: each commit has a "headers_check fix" subject 
-> line prefix. So you can go back later and revisit these things - for 
-> example whether a header really needs to be exported to user-space, via:
-> 
->   git log --grep='headers_check fix:' --pretty=format:"%h: %s"
-> 
-> to get an overview and a historic track record. We can follow this 
-> notation in the future too.
-> 
-> So if there are no objections, i'll send this to Linus tomorrow-ish and 
-> we'll have the worst of the fallout behind us and can embark on a much 
-> more fluid (and per maintainer) headers_check related workflow.
+Hi again,
 
-Thanks for taking care of this Ingo and please push towards Linus.
-And thanks to all the contributors too - it was great to see this dealt
-with soo quickly!
+Sorry for the delay (Christmas vacation, ++). I still have the problem
+though.
 
-	Sam
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+My attempt to re-create /dev/sdb1 by fdisk'ing it again and adding it to
+the array failed. That is, mdadm started re-constructing the array, and
+that succeeded, but when I rebooted /dev/sdb1 was missing again :/
+
+Neil Brown wrote:
+> If a partition start at an offset in the device which is a multiple of
+> 64K, and ends at the end of the device, then both the partition and
+> the whole device will appear to have the same superblock.  This can
+> cause confusion.
+
+I think you are on to something here! I did partition all my disks with
+just one partition, starting on the first block and taking up all the
+remaining space, and set it to type Linux RAID auto detect.
+
+Here's the output of the fdisk -pu and mdmadm -E commands before running
+blockdev:
+
+    http://pastebin.com/f4cad67ea
+
+    http://pastebin.com/f34be2b86
+
+It seems that mdadm thinks sd[bc] are part of the array directly
+somehow, but for sd[def] the partition itself is in the array, which I
+guess supports your suspicion?
+
+Here's the output after running blockdev --rereadpt /dev/sdc :
+
+   http://pastebin.com/f725ee0c3
+
+Suddenly mdadm -E /dev/sdc* shows info for both sdc and sdc1, and guess
+what? /dev/sdc1 is back as a device node :)
+
+So is this a case of the problem you described about
+superblock-confusion? If so, is it fixable?
+
+Thank you so much for your help in this! I really do feel I'm one big
+step closer to solving this!
+
+Tor Arne
