@@ -1,40 +1,28 @@
-From: Michal Soltys <soltys@ziu.info>
-Subject: Re: LVM on raid10,f2 performance issues
-Date: Mon, 19 Jan 2009 08:30:22 +0100
-Message-ID: <49742C0E.6080402@ziu.info>
-References: <49332920.5010503@gmail.com> <20081201164244.GB23899@rap.rap.dk> <4935C4B3.2060404@gmail.com> <493654C7.2090909@ziu.info> <8CB47EBD70FE9E8-AC4-981@WEBMAIL-DG06.sim.aol.com>
+From: Peter Rabbitson <rabbit+list@rabbit.us>
+Subject: Raid6 write performance
+Date: Mon, 19 Jan 2009 08:40:36 +0100
+Message-ID: <49742E74.9090502@rabbit.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8CB47EBD70FE9E8-AC4-981@WEBMAIL-DG06.sim.aol.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: thomas62186218@aol.com
-Cc: mauermann@gmail.com, keld@dkuug.dk, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-thomas62186218@aol.com wrote:
-> Hi everyone,
-> 
-> I too was seeing miserable read-performance with LVM2 volumes on top of 
-> md RAID 10's on my Ubuntu 8.04 64-bit machine. My RAID 10 has 12 x 300GB 
-> 15K SAS drives on a 4-port LSI PCIe SAS controller.
-> 
-> I use:
-> blockdev --setra 65536 /dev/md0
-> 
-> And this dramatically increased my RAID 10 read performance.
-> 
-> You MUST do the same for your LVM2 volumes for them to see a comparable 
-> performance boost.
-> 
-> blockdev --setra 65536 /dev/mapper/raid10-testvol
-> 
-> Otherwise, your LVM will default to 256 read-ahead value, which stinks. 
-> I increased my read performance by 3.5x with this one change! See below:
-> 
+Hi,
 
-Yea, that's the general idea, besides proper alignment. It wokred nice 
-for Holger as well. Specifying (popular for some reason) 65536 is quite 
-an overkill though, imho.
+I am experimenting with raid6 on 4 drives on 2.6.27.11. The problem I am
+having is that no matter what chunk size I use, the write benchmark
+always comes out at single drive speed, although I should be seeing
+double drive speed (read speed is at near 4x as expected). Is there some
+hidden setting that I am overlooking, or is this a current known
+limitation of raid6? In contrast if I make a raid5 on these 4 drives, I
+get the expected 3xdrive write speed, and occasionally 4xdrive linear
+read speed.
 
+When the write test is running, I get about 14% of system cpu a sporadic
+40% of iowait and the rest idle at all times (machine is in runlevel 1
+so not to screw with results). Anyone has any ideas?
+
+Thank you.
