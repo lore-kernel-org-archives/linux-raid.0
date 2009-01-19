@@ -1,80 +1,49 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Roadmap for md/raid ???
-Date: Mon, 19 Jan 2009 13:05:34 +1100
-Message-ID: <18803.57326.591385.40711@nbeee.brown>
-References: <18763.7881.300921.177207@notabene.brown>
-	<496E4E59.4090505@tmr.com>
+From: Jaswinder Singh Rajput <jaswinder@kernel.org>
+Subject: Re: [GIT PULL -tip] fix 33 make headers_check warnings
+Date: Mon, 19 Jan 2009 08:23:14 +0530
+Message-ID: <1232333594.3129.31.camel@localhost.localdomain>
+References: <1232223441.3966.22.camel@localhost.localdomain>
+	 <20090119112429.78f5dc33.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bill Davidsen on Wednesday January 14
-Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-media-owner@vger.kernel.org>
+In-Reply-To: <20090119112429.78f5dc33.sfr@canb.auug.org.au>
+Sender: linux-media-owner@vger.kernel.org
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Ingo Molnar <mingo@elte.hu>, x86 maintainers <x86@kernel.org>, urs.thuermann@volkswagen.de, oliver.hartkopp@volkswagen.de, linux-media@vger.kernel.org, netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, linux-nfs@vger.kernel.org, linux-raid@vger.kernel.org, dbrownell@users.sourceforge.net, spi-devel-general@lists.sourceforge.net, netdev@vger.kernel.org, greg@kroah.com, linux-usb@vger.kernel.org, dwmw2@infradead.org, linux-mtd@lists.infradead.org, tiwai@suse.de, mchehab@infradead.org, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-raid.ids
 
-On Wednesday January 14, davidsen@tmr.com wrote:
-> Neil Brown wrote:
-> > Not really a roadmap, more a few tourist attractions that you might
-> > see on the way if you stick around (and if I stick around)...
+On Mon, 2009-01-19 at 11:24 +1100, Stephen Rothwell wrote:
+> On Sun, 18 Jan 2009 01:47:21 +0530 Jaswinder Singh Rajput <jaswinder@kernel.org> wrote:
 > >
-> >   
-> Thanks for sharing, although that last comment is a little worrisome.
-
-No one in irreplaceable... but I'm not planning on going anywhere
-just now :-)
-
+> > diff --git a/include/linux/nfsd/stats.h b/include/linux/nfsd/stats.h
+> > index 7678cfb..0b53cfe 100644
+> > --- a/include/linux/nfsd/stats.h
+> > +++ b/include/linux/nfsd/stats.h
+> > @@ -29,9 +29,11 @@ struct nfsd_stats {
+> >  	unsigned int	ra_size;	/* size of ra cache */
+> >  	unsigned int	ra_depth[11];	/* number of times ra entry was found that deep
+> >  					 * in the cache (10percentiles). [10] = not found */
+> > +#ifdef __KERNEL__
+> >  #ifdef CONFIG_NFSD_V4
+> >  	unsigned int	nfs4_opcount[LAST_NFS4_OP + 1];	/* count of individual nfsv4 operations */
+> >  #endif
+> > +#endif /* __KERNEL__ */
+> >  
+> >  };
 > 
-> > Comments welcome.
-> >
-> >   
-> Here's one, is this in some sense a prioritized list? If so I might 
-> comment on the order, and I'm sure others would feel even more strongly 
-> than I. ;-)
+> The only variable in the kernel of type "struct nfsd_stats" is only
+> exported to user mode via procfs, so this whole structure could probably
+> go inside __KERNEL__.  Then looking harder, I wonder if this header
+> should be exported to user mode at all.
+> 
 
-No, the list isn't prioritised.  I'll do things as the mood takes me.
+I was in doubt may be this will be used by some userspace utilities.
 
-> > - raid5->raid6 conversion.
-> >    This is also a fairly commonly asked for feature.
-> >    The first step would be to define a raid6 layout where the Q block
-> >    was not rotated around the devices but was always on the last
-> >    device.  Then we could change a raid5 to a singly-degraded raid6
-> >    without moving any data.
-> >
-> >    The next step would be to implement in-place restriping. 
-> >    This involves 
-> >       - freezing a section of the array (all IO blocks)
-> >       - copying the data out to a safe backup
-> >       - copying it back in with the new layout
-> >       - updating the metadata to indicate that the restripe has
-> >         progressed.
-> >       - repeat.
-> >
-> >   
-> It would seem very safe, something like
->  1 - call the chunk on the new drive the available space
->  2 - determine what needs to be in the available space
->  3 - if data, copy the data chunk to the available chunk, mark the old 
-> location avail, repeat step 2
->  4 - Q goes in the available chunk, calculate it and the stripe is done
-> I don't see the move to a safe backup if you move one chunk at a time 
-> until you are ready for Q, unless there are moves I'm missing. You 
-> always have a free space to move one chunk, when all data is in the 
-> right place and the P value is in place (does it move?), then Q is 
-> calculated and saved. In other words, no out of stripe storage needed.
+Once I got confirmation that it is not required in userspace, I will
+remove it :-)
 
-The difficulty is "How do you handle a crash?"
-If you crash and restart in the middle of a reshape, you need to know
-where all the data is.
-To follow your scheme, you would need to update the metadata for
-every block that is moved.
+--
+JSR
 
-The value of having a large avail space is that you only update the
-metadata only every time the space fills up.
-
-
-
-Thanks for your thoughts.
-
-NeilBrown
