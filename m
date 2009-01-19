@@ -1,60 +1,81 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: Roadmap for md/raid ???
-Date: Mon, 19 Jan 2009 19:41:46 +0100
-Message-ID: <20090119184146.GA4419@lazy.lzy>
-References: <18763.7881.300921.177207@notabene.brown> <20090111181413.GA24988@lazy.lzy> <18803.55804.905420.503480@nbeee.brown> <20090119181919.GB4290@lazy.lzy> <4974C5DA.3090806@rabbit.us>
+From: Dave Jones <davej@redhat.com>
+Subject: Re: Corrupt data - RAID sata_sil 3114 chip
+Date: Mon, 19 Jan 2009 13:43:04 -0500
+Message-ID: <20090119184304.GB30365@redhat.com>
+References: <200901032104.15242.bs@q-leap.de> <496436C4.4070305@kernel.org> <49643FD4.9080100@shaw.ca> <200901071632.02264.bs@q-leap.de> <49693E08.3050209@shaw.ca> <49694094.60501@shaw.ca> <496A9D42.4000302@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4974C5DA.3090806@rabbit.us>
+In-Reply-To: <496A9D42.4000302@kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Robert Hancock <hancockr@shaw.ca>, Bernd Schubert <bs@q-leap.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Justin Piszcz <jpiszcz@lucidpixels.com>, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Mon, Jan 12, 2009 at 10:30:42AM +0900, Tejun Heo wrote:
+ > Robert Hancock wrote:
+ > >> There are apparently some reports of issues on NVidia chipsets as
+ > >> well, though I don't have any details at hand.
+ > > 
+ > > Well, Carlos' email bounces, so much for that one. Anyone have any other
+ > > contacts at Silicon Image?
+ > 
+ > I'll ping my SIMG contacts but I've pinged about this problem in the
+ > past but it didn't get anywhere.
 
-> Or alternatively you use LVM from the start. Then you only need to
-> "cleverly partition" the new drives, use the first partition in the old
-> RAID, use the second partition for a new smaller raid, join the new raid
-> to the VG of the old raid and voilla - no wasted space.
+I wish I'd read this thread last week.. I've been beating my head
+against this problem all weekend.
 
-I think that's exactly what I'm doing right now
-with my test array.
+I picked up a cheap 3114 card, and found that when I created a filesystem
+with it on a 250GB disk, it got massive corruption very quickly.
 
-Basically I've 7 disks, all, but two, different
-in size.
-I created partitions, of equal size between disks,
-than I configured 4 RAID-6 devices (with 7, 6, 5, 4
-partitions respectively) and put everything together
-with LVM.
+My experience echos most the other peoples in this thread, but here's
+a few data points I've been able to figure out..
 
-This works fine, it is possible to add HDs, or change
-the old ones with bigger new ones.
+I ran badblocks -v -w -s on the disk, and after running
+for nearly 24 hours, it reported a huge number of blocks
+failing at the upper part of the disk.
 
-One issue is that, with time, the larger HDs will
-have many partitions, this led to use GPT table
-(max 128 partitions) instead of DOS.
-Metadata needs to be 1.x, of course.
+I created a partition in this bad area to speed up testing..
 
-The second point is the "annoyance" of creating
-those partitions on the new HDs and adding them
-to the proper md devices.
+   Device Boot      Start         End	   Blocks   Id  System
+/dev/sde1               1	30000   240974968+  83  Linux
+/dev/sde2           30001	30200     1606500   83  Linux
+/dev/sde3           30201	30401     1614532+  83  Linux
 
-Of course, nothing particularly difficult, nevertheless
-it would be nice to have everything integrated into
-the md driver and transparent to the user.
+Rerunning badblocks on /dev/sde2 consistently fails when
+it gets to the reading back 0x00 stage.
+(Somehow it passes reading back 0xff, 0xaa and 0x55)
 
-Just an idea of improvement, nothing more.
+I was beginning to suspect the disk may be bad, but when I
+moved it to a box with Intel sata, the badblocks run on that
+same partition succeeds with no problems at all.
 
-Side note: if anybody has suggestions on how to script
-the complete procedure of adding/replacing an HD in
-such configuration, I'll appreciate it a lot!
+Given the corruption happens at high block numbers, I'm wondering
+if maybe there's some kind of wraparound bug happening here.
+(Though why only the 0x00 pattern fails would still be a mystery).
 
-Thanks,
 
-bye,
+After reading about the firmware update fixing it, I thought I'd
+give that a shot.  This was pretty much complete fail.
+
+The DOS utility for flashing claims I'm running BIOS 5.0.39,
+which looking at http://www.siliconimage.com/support/searchresults.aspx?pid=28&cat=15
+is quite ancient.  So I tried the newer ones.
+Same experience with both 5.4.0.3, and 5.0.73
+
+"BIOS version in the input file is not a newer version"
+
+Forcing it to write anyway gets..
+
+"Data is different at address 65f6h"
+
+
+
+
+	Dave 
+
 
 -- 
-
-piergiorgio
+http://www.codemonkey.org.uk
