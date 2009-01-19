@@ -1,49 +1,37 @@
-From: Jaswinder Singh Rajput <jaswinder@kernel.org>
-Subject: Re: [GIT PULL -tip] fix 33 make headers_check warnings
-Date: Mon, 19 Jan 2009 08:23:14 +0530
-Message-ID: <1232333594.3129.31.camel@localhost.localdomain>
-References: <1232223441.3966.22.camel@localhost.localdomain>
-	 <20090119112429.78f5dc33.sfr@canb.auug.org.au>
+From: Peter Rabbitson <rabbit+list@rabbit.us>
+Subject: Re: LVM on raid10,f2 performance issues
+Date: Mon, 19 Jan 2009 08:28:20 +0100
+Message-ID: <49742B94.8090407@rabbit.us>
+References: <49332920.5010503@gmail.com> <20081201164244.GB23899@rap.rap.dk> <4935C4B3.2060404@gmail.com> <493654C7.2090909@ziu.info> <8CB47EBD70FE9E8-AC4-981@WEBMAIL-DG06.sim.aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-media-owner@vger.kernel.org>
-In-Reply-To: <20090119112429.78f5dc33.sfr@canb.auug.org.au>
-Sender: linux-media-owner@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Ingo Molnar <mingo@elte.hu>, x86 maintainers <x86@kernel.org>, urs.thuermann@volkswagen.de, oliver.hartkopp@volkswagen.de, linux-media@vger.kernel.org, netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, linux-nfs@vger.kernel.org, linux-raid@vger.kernel.org, dbrownell@users.sourceforge.net, spi-devel-general@lists.sourceforge.net, netdev@vger.kernel.org, greg@kroah.com, linux-usb@vger.kernel.org, dwmw2@infradead.org, linux-mtd@lists.infradead.org, tiwai@suse.de, mchehab@infradead.org, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <8CB47EBD70FE9E8-AC4-981@WEBMAIL-DG06.sim.aol.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: thomas62186218@aol.com
+Cc: soltys@ziu.info, mauermann@gmail.com, keld@dkuug.dk, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 2009-01-19 at 11:24 +1100, Stephen Rothwell wrote:
-> On Sun, 18 Jan 2009 01:47:21 +0530 Jaswinder Singh Rajput <jaswinder@kernel.org> wrote:
-> >
-> > diff --git a/include/linux/nfsd/stats.h b/include/linux/nfsd/stats.h
-> > index 7678cfb..0b53cfe 100644
-> > --- a/include/linux/nfsd/stats.h
-> > +++ b/include/linux/nfsd/stats.h
-> > @@ -29,9 +29,11 @@ struct nfsd_stats {
-> >  	unsigned int	ra_size;	/* size of ra cache */
-> >  	unsigned int	ra_depth[11];	/* number of times ra entry was found that deep
-> >  					 * in the cache (10percentiles). [10] = not found */
-> > +#ifdef __KERNEL__
-> >  #ifdef CONFIG_NFSD_V4
-> >  	unsigned int	nfs4_opcount[LAST_NFS4_OP + 1];	/* count of individual nfsv4 operations */
-> >  #endif
-> > +#endif /* __KERNEL__ */
-> >  
-> >  };
+thomas62186218@aol.com wrote:
+> Hi everyone,
 > 
-> The only variable in the kernel of type "struct nfsd_stats" is only
-> exported to user mode via procfs, so this whole structure could probably
-> go inside __KERNEL__.  Then looking harder, I wonder if this header
-> should be exported to user mode at all.
+> I too was seeing miserable read-performance with LVM2 volumes on top of
+> md RAID 10's on my Ubuntu 8.04 64-bit machine. My RAID 10 has 12 x 300GB
+> 15K SAS drives on a 4-port LSI PCIe SAS controller.
+> 
+> I use:
+> blockdev --setra 65536 /dev/md0
+> 
+> And this dramatically increased my RAID 10 read performance.
+> 
+> You MUST do the same for your LVM2 volumes for them to see a comparable
+> performance boost.
+> 
+> blockdev --setra 65536 /dev/mapper/raid10-testvol
 > 
 
-I was in doubt may be this will be used by some userspace utilities.
-
-Once I got confirmation that it is not required in userspace, I will
-remove it :-)
-
---
-JSR
-
+This is incorrect. Only the readahead setting of the _last_ block device
+matters. So in case you have a raid6 of 10 drives, with LUKS on top,
+with LVM on top - only the readahead settings of the individual LVs
+matter, nothing further down the chain is consulted.
