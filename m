@@ -1,57 +1,68 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [RFC PATCH 0/2] a couple of readonly handling fixups
-Date: Mon, 19 Jan 2009 10:07:43 +1100
-Message-ID: <18803.46655.134295.118861@nbeee.brown>
-References: <20090108072023.9577.3585.stgit@dwillia2-linux.ch.intel.com>
+From: Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>
+Subject: Re: [GIT PULL -tip] fix 33 make headers_check warnings
+Date: Mon, 19 Jan 2009 11:24:29 +1100
+Message-ID: <20090119112429.78f5dc33.sfr@canb.auug.org.au>
+References: <1232223441.3966.22.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Dan Williams on Thursday January 8
-Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Mon__19_Jan_2009_11_24_29_+1100_YrWGFK.9COO2jjcI"
+Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1232223441.3966.22.camel-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
+Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jaswinder Singh Rajput <jaswinder-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>, x86 maintainers <x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, urs.thuermann-l29pVbxQd1IUtdQbppsyvg@public.gmane.org, oliver.hartkopp-l29pVbxQd1IUtdQbppsyvg@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netfilter-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org, neilb-l3A5Bk7waGM@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dbrownell-Rn4VEauK+AKRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, spi-devel-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, tiwai-l3A5Bk7waGM@public.gmane.org, mchehab-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 List-Id: linux-raid.ids
 
-On Thursday January 8, dan.j.williams@intel.com wrote:
-> The BUG_ON(mddev->ro == 1) in md_write_start can be triggered under two
-> circumstances in recent kernels.  One was reported by Justin Maggard:
+--Signature=_Mon__19_Jan_2009_11_24_29_+1100_YrWGFK.9COO2jjcI
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Hi Dan,
- Thanks for following up with this.....
+On Sun, 18 Jan 2009 01:47:21 +0530 Jaswinder Singh Rajput <jaswinder@kernel=
+.org> wrote:
+>
+> diff --git a/include/linux/nfsd/stats.h b/include/linux/nfsd/stats.h
+> index 7678cfb..0b53cfe 100644
+> --- a/include/linux/nfsd/stats.h
+> +++ b/include/linux/nfsd/stats.h
+> @@ -29,9 +29,11 @@ struct nfsd_stats {
+>  	unsigned int	ra_size;	/* size of ra cache */
+>  	unsigned int	ra_depth[11];	/* number of times ra entry was found that d=
+eep
+>  					 * in the cache (10percentiles). [10] =3D not found */
+> +#ifdef __KERNEL__
+>  #ifdef CONFIG_NFSD_V4
+>  	unsigned int	nfs4_opcount[LAST_NFS4_OP + 1];	/* count of individual nfs=
+v4 operations */
+>  #endif
+> +#endif /* __KERNEL__ */
+> =20
+>  };
 
-(I meant to send this over a week ago, but I've been on vaction
-in Tasmania and my mobile has no coverage....)
+The only variable in the kernel of type "struct nfsd_stats" is only
+exported to user mode via procfs, so this whole structure could probably
+go inside __KERNEL__.  Then looking harder, I wonder if this header
+should be exported to user mode at all.
 
-> 
-> 1) Create an md array with >= 1 disk
-> 2) Start a task writing to the array ("dd if=/dev/zero of=/dev/md0
-> bs=1M count=10000 &" does the trick for me)
-> 3) Force an improper reboot with reboot -fn
-> 
-> ...the other was discovered while investigating this issue.
-> 
-> 1) Set a raid5 readyonly with mdadm
-> 2) Set the array writable with blockdev
-> 3) Attempt to write to the array
-> 
-> ---
-> 
-> Dan Williams (2):
->       Revert "Restore force switch of md array to readonly at reboot time."
+--=20
+Cheers,
+Stephen Rothwell                    sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org
+http://www.canb.auug.org.au/~sfr/
 
-I'm not comfortable with this.  That patch itself fixed a regression.
-In some situations, the reboot notifier is the only thing that makes
-sure the array is marked clean at shutdown time.  This revert
-effectively disables that so sometimes a reboot will leave an array
-dirty, which is not good.
+--Signature=_Mon__19_Jan_2009_11_24_29_+1100_YrWGFK.9COO2jjcI
+Content-Type: application/pgp-signature
 
-There must be some other recent change that causes IO still to be in
-flight this late.  Maybe I'll try to track it down.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
 
->       md: set mddev readonly flag on blkdev BLKROSET ioctl
+iEYEARECAAYFAklzyD0ACgkQjjKRsyhoI8yt9QCgmEHLhNSAB2fYNfqbvgl+WPEm
+rRoAnRBfynsNZYdMSfUK9yUqeTiWdV62
+=eQRT
+-----END PGP SIGNATURE-----
 
-This one I'm happy with.  I'll make sure it gets through.
-
-Thanks,
-NeilBrown
+--Signature=_Mon__19_Jan_2009_11_24_29_+1100_YrWGFK.9COO2jjcI--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
