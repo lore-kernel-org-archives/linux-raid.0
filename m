@@ -1,33 +1,52 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: Roadmap for md/raid ???
-Date: Mon, 19 Jan 2009 22:08:29 +0100
-Message-ID: <20090119210829.GA6143@rap.rap.dk>
-References: <18763.7881.300921.177207@notabene.brown> <20090111181413.GA24988@lazy.lzy> <18803.55804.905420.503480@nbeee.brown> <20090119181919.GB4290@lazy.lzy>
+Date: Tue, 20 Jan 2009 09:32:31 +1100
+Message-ID: <18804.65407.220481.267665@notabene.brown>
+References: <18763.7881.300921.177207@notabene.brown>
+	<496E4E59.4090505@tmr.com>
+	<18803.57326.591385.40711@nbeee.brown>
+	<49740C81.2030502@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090119181919.GB4290@lazy.lzy>
+In-Reply-To: message from Bill Davidsen on Monday January 19
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+To: Bill Davidsen <davidsen@tmr.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jan 19, 2009 at 07:19:19PM +0100, Piergiorgio Sartor wrote:
-> Hi,
-> 
-> Let's assume we have a RAID-5 with 7 disks.
-> Each time an HD fails, we will replace it with a
-> larger one, since this will be cheaper.
-> Once we replaced 3 HDs, with could use the unused
-> space in RAID-5 again.
-> Unfortunately, with the current features, we will
-> have to wait to fail all the 7 disks.
+On Monday January 19, davidsen@tmr.com wrote:
+> Neil Brown wrote:
+> >
+> > The difficulty is "How do you handle a crash?"
+> > If you crash and restart in the middle of a reshape, you need to know
+> > where all the data is.
+> > To follow your scheme, you would need to update the metadata for
+> > every block that is moved.
+> >
+> >   
+> That would seem to be an issue doing it in a large task as well, if I 
+> understand what you want to do. After the data have been written to the 
+> spare space I believe you are going to write it back. If you update the 
+> metadata before the write and something happens you have old metadata 
+> but data in another format. Conversely, if you update the metadata 
+> first, and something happens, you have the metadata describing a change 
+> which didn't happen. So You would have to have a metadata reflecting the 
+> data not being in the array, but actually somewhere else, or you would 
+> have to keep the spare space inside the array, where room might not be 
+> available.
 
-Nah, when you have 2 new disks, you can put the excessive space into a
-new raid, which should be able to grow, with further new disks to arrive. 
-But in principle you are right, it would be nice to use dirfferent
-age/size disks in a clever way.
+I "freeze" a section of the array so that any writes block,
+I copy that data to somewhere safe, and mark that copy as being a
+valid copy of the moved data.
+Then I copy it back in the new layout and update the array metadata to
+show that the change-over point between old-layout and new-layout has
+changed.  Then I invalidate the copy.
+Then repeat.
 
-Best regards
-Keld
+When restarting an array, mdadm checks the copy (which could be in a
+file on a different device) and if it is valid, it is copied on to
+the array and the metadata is updated.
+
+NeilBrown
