@@ -1,70 +1,80 @@
 From: Neil Brown <neilb@suse.de>
 Subject: Re: Roadmap for md/raid ???
-Date: Mon, 19 Jan 2009 12:40:12 +1100
-Message-ID: <18803.55804.905420.503480@nbeee.brown>
+Date: Mon, 19 Jan 2009 13:05:34 +1100
+Message-ID: <18803.57326.591385.40711@nbeee.brown>
 References: <18763.7881.300921.177207@notabene.brown>
-	<20090111181413.GA24988@lazy.lzy>
+	<496E4E59.4090505@tmr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Piergiorgio Sartor on Sunday January 11
+In-Reply-To: message from Bill Davidsen on Wednesday January 14
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+To: Bill Davidsen <davidsen@tmr.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday January 11, piergiorgio.sartor@nexgo.de wrote:
-> Hi,
-> 
-> something else you can add to your "todo list",
-> or not, as you like.
-> 
-> RAID-5/6 with heterogeneous devices.
-> The idea would be to build a RAID-5/6 with devices
-> of different size, but using, whenever possible,
-> the complete available space.
-> Example: let's say we have 6 HDs, 3x 500GB and 3x 1TB.
-> The idea is to have a single md device, in RAID-5,
-> where the first part of the device (500GB range) uses
-> the whole 6 HDs, while the second part uses only 3.
-> Specifically, the first part will have 500GB x5
-> and the second 500GB x2.
-> This is already doable by partitioning the HDs properly
-> before and creating 2 md devices.
-> Nevertheless, given the "grow" possibility, in both
-> directions (disk number, disk size), the RAID only
-> solution would be interesting.
+On Wednesday January 14, davidsen@tmr.com wrote:
+> Neil Brown wrote:
+> > Not really a roadmap, more a few tourist attractions that you might
+> > see on the way if you stick around (and if I stick around)...
+> >
+> >   
+> Thanks for sharing, although that last comment is a little worrisome.
 
-I've thought about this occasionally but don't think much of the idea.
-It seems nice until you think about what happens when devices fail
-and you need to integrate hot spares.
-Clearly any spare will need to be as big as the largest device.
-When that get integrated in place of a small device, you will be
-wasting space on it, and then someone will want to be able to
-grow the array to use that extra space, which would be rather
-messy.
-
-I think it is best to assume that all devices are the same size.
-Trying to support anything else in a useful way would just add
-complexity with little value.
-
+No one in irreplaceable... but I'm not planning on going anywhere
+just now :-)
 
 > 
-> RAID-5/6 pre-caching.  Maybe this one is already there, in any case
-> the idea would be to try to cache a complete stripe set, in case of
-> RAID-5/6, in order to avoid sub sequent reads in case of write.
-> This could be a user switchable parameter, for example when the user
-> knows there will be a lot of read-modify-write to the array.
+> > Comments welcome.
+> >
+> >   
+> Here's one, is this in some sense a prioritized list? If so I might 
+> comment on the order, and I'm sure others would feel even more strongly 
+> than I. ;-)
 
-We already do some degree of caching. This primarily exists so that
-we can be working on multiple stripes at once.  If there are multiple
-write accesses to a stripe while it stays in cache you could save some
-reads, but I suspect that most times stripes fall out of cache before
-they are used again.  That cache can be made bigger, but I'm not sure
-it would help a lot..
+No, the list isn't prioritised.  I'll do things as the mood takes me.
+
+> > - raid5->raid6 conversion.
+> >    This is also a fairly commonly asked for feature.
+> >    The first step would be to define a raid6 layout where the Q block
+> >    was not rotated around the devices but was always on the last
+> >    device.  Then we could change a raid5 to a singly-degraded raid6
+> >    without moving any data.
+> >
+> >    The next step would be to implement in-place restriping. 
+> >    This involves 
+> >       - freezing a section of the array (all IO blocks)
+> >       - copying the data out to a safe backup
+> >       - copying it back in with the new layout
+> >       - updating the metadata to indicate that the restripe has
+> >         progressed.
+> >       - repeat.
+> >
+> >   
+> It would seem very safe, something like
+>  1 - call the chunk on the new drive the available space
+>  2 - determine what needs to be in the available space
+>  3 - if data, copy the data chunk to the available chunk, mark the old 
+> location avail, repeat step 2
+>  4 - Q goes in the available chunk, calculate it and the stripe is done
+> I don't see the move to a safe backup if you move one chunk at a time 
+> until you are ready for Q, unless there are moves I'm missing. You 
+> always have a free space to move one chunk, when all data is in the 
+> right place and the P value is in place (does it move?), then Q is 
+> calculated and saved. In other words, no out of stripe storage needed.
+
+The difficulty is "How do you handle a crash?"
+If you crash and restart in the middle of a reshape, you need to know
+where all the data is.
+To follow your scheme, you would need to update the metadata for
+every block that is moved.
+
+The value of having a large avail space is that you only update the
+metadata only every time the space fills up.
 
 
-Thanks for the ideas.
+
+Thanks for your thoughts.
 
 NeilBrown
