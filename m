@@ -1,53 +1,33 @@
-From: Mika Tiainen <mikat@iki.fi>
-Subject: Re: Kernel doesn't find root from new style partitionable array
-Date: Tue, 20 Jan 2009 14:09:17 +0200
-Message-ID: <87zlhmxjpu.fsf@divinity.mikat.iki.fi>
-References: <871vvbulaz.fsf@divinity.mikat.iki.fi>
- <496A8015.5000704@ziu.info>
+From: Dave Jones <davej@redhat.com>
+Subject: Re: Corrupt data - RAID sata_sil 3114 chip
+Date: Tue, 20 Jan 2009 15:07:41 -0500
+Message-ID: <20090120200741.GA1020@redhat.com>
+References: <200901032104.15242.bs@q-leap.de> <496436C4.4070305@kernel.org> <49643FD4.9080100@shaw.ca> <200901071632.02264.bs@q-leap.de> <49693E08.3050209@shaw.ca> <49694094.60501@shaw.ca> <496A9D42.4000302@kernel.org> <20090119184304.GB30365@redhat.com> <49753BDE.8050403@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <496A8015.5000704@ziu.info> (Michal Soltys's message of "Mon,
- 12
-	Jan 2009 00:26:13 +0100")
+Content-Disposition: inline
+In-Reply-To: <49753BDE.8050403@shaw.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michal Soltys <soltys@ziu.info>
-Cc: linux-raid@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: Tejun Heo <tj@kernel.org>, Bernd Schubert <bs@q-leap.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Justin Piszcz <jpiszcz@lucidpixels.com>, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Mon, Jan 19, 2009 at 08:50:06PM -0600, Robert Hancock wrote:
+ 
+ > > Given the corruption happens at high block numbers, I'm wondering
+ > > if maybe there's some kind of wraparound bug happening here.
+ > > (Though why only the 0x00 pattern fails would still be a mystery).
+ > 
+ > Yeah, that seems a bit bizarre.. Apparently somehow zeros are being 
+ > converted into non-zero.. Can you try zeroing out the partition by 
+ > dd'ing into it from /dev/zero or something, then dumping it back out to 
+ > see what kind of data is showing up?
 
-(Sorry for the late reply)
+Hmm, it seems the failed firmware update has killed the eeprom.
+It no longer reports the right PCI vendor ID.
 
-On 12 Jan 2009, Michal Soltys wrote:
-
-> Mika Tiainen wrote:
->> Hi,
->>
->> When booting from another disk I can see that the md0 partitions are
->> only found later:
->>
->> md0: p1 p2
->>
->> This line shows up after root is already mounted.
->>
->
-> I've never used in-kernel raid autodetection (always relying on
-> initramfs - any reason not to use one ?),
-
-Initrd is what I'm using now and it works, but I'd rather get by without
-initrd as I have no other need for it.
-
-> but looking at md.txt from kernel docs, raid=partitionable parameter
-> should get it done. You might end with md_d0 (as in earlier kernels)
-> name instead of md0, so adjust root=, fstab, etc. accordingly.
-
-raid=partitionable is what I used before, but it doesn't work with these
-new style partitions. The raid gets detected as md_d0, but no md_d0p1.
-
-If this can't be fixed and these new partitionable arrays can't be used
-as root without initrd it should be documented somewhere.
+	Dave
 
 -- 
-Mika Tiainen		Always be wary of any helpful item that
-mikat@iki.fi		weighs less than its operating manual.
-http://mikat.iki.fi	-- (Terry Pratchett, Jingo)
+http://www.codemonkey.org.uk
