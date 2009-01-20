@@ -1,148 +1,53 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: system upgrade reordered drives, confused software raid-1
-Date: Tue, 20 Jan 2009 06:14:24 -0500 (EST)
-Message-ID: <alpine.DEB.1.10.0901200613230.14067@p34.internal.lan>
-References: <6d344ffd0901192019t2e9f1e59q862fed68a68ea4a@mail.gmail.com>
+From: Mika Tiainen <mikat@iki.fi>
+Subject: Re: Kernel doesn't find root from new style partitionable array
+Date: Tue, 20 Jan 2009 14:09:17 +0200
+Message-ID: <87zlhmxjpu.fsf@divinity.mikat.iki.fi>
+References: <871vvbulaz.fsf@divinity.mikat.iki.fi>
+ <496A8015.5000704@ziu.info>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6d344ffd0901192019t2e9f1e59q862fed68a68ea4a@mail.gmail.com>
+In-Reply-To: <496A8015.5000704@ziu.info> (Michal Soltys's message of "Mon,
+ 12
+	Jan 2009 00:26:13 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Troy Cauble <troycauble@gmail.com>
+To: Michal Soltys <soltys@ziu.info>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
+(Sorry for the late reply)
 
-On Mon, 19 Jan 2009, Troy Cauble wrote:
+On 12 Jan 2009, Michal Soltys wrote:
 
-> I recently upgraded an Ubuntu box and noticed that my drives got reordered
-> (possibly by a SATA driver change) and my RAID-1 is degraded.
+> Mika Tiainen wrote:
+>> Hi,
+>>
+>> When booting from another disk I can see that the md0 partitions are
+>> only found later:
+>>
+>> md0: p1 p2
+>>
+>> This line shows up after root is already mounted.
+>>
 >
-> Originally...
-> My (PATA) OS drive had some other partitions and *was* known as /dev/sda.
-> My (SATA) raid-1 /home *was* made from /dev/sdb and /dev/sdc.
->
-> Now my OS drive is sdc with side effects like mounting some sdc partitions
-> on my old sda mount points. (not a big deal)
->
-> The real problem is the RAID-1. I think the following 3 queries say:
-> 1) the raid is running with SDA, with the other drive removed.
-> 2) SDA is clean and part of md0
-> 3) SDB is "clean", but part of a raid that doesn't exist.
->
->
-> Quote:
-> mastershake:~> sudo mdadm --detail /dev/md0
-> /dev/md0:
-> Version : 00.90.03
-> Creation Time : Sun Jan 2 12:53:01 2005
-> Raid Level : raid1
-> Array Size : 244195904 (232.88 GiB 250.06 GB)
-> Used Dev Size : 244195904 (232.88 GiB 250.06 GB)
-> Raid Devices : 2
-> Total Devices : 1
-> Preferred Minor : 0
-> Persistence : Superblock is persistent
->
-> Update Time : Sun Jan 18 23:33:56 2009
-> State : clean, degraded
-> Active Devices : 1
-> Working Devices : 1
-> Failed Devices : 0
-> Spare Devices : 0
->
-> UUID : 61645020:223a69dc:12d77363:0c0f047d
-> Events : 0.5125062
->
-> Number Major Minor RaidDevice State
-> 0 8 1 0 active sync /dev/sda1
-> 1 0 0 1 removed
->
->
-> Quote:
-> mastershake:~> sudo mdadm --examine /dev/sda1
-> /dev/sda1:
-> Magic : a92b4efc
-> Version : 00.90.00
-> UUID : 61645020:223a69dc:12d77363:0c0f047d
-> Creation Time : Sun Jan 2 12:53:01 2005
-> Raid Level : raid1
-> Used Dev Size : 244195904 (232.88 GiB 250.06 GB)
-> Array Size : 244195904 (232.88 GiB 250.06 GB)
-> Raid Devices : 2
-> Total Devices : 1
-> Preferred Minor : 0
->
-> Update Time : Sun Jan 18 23:34:36 2009
-> State : clean
-> Active Devices : 1
-> Working Devices : 1
-> Failed Devices : 1
-> Spare Devices : 0
-> Checksum : e627430d - correct
-> Events : 0.5125064
->
->
-> Number Major Minor RaidDevice State
-> this 0 8 1 0 active sync /dev/sda1
->
-> 0 0 8 1 0 active sync /dev/sda1
-> 1 1 0 0 1 faulty removed
-> Quote:
->
->
-> mastershake:~> sudo mdadm --examine /dev/sdb1
-> /dev/sdb1:
-> Magic : a92b4efc
-> Version : 00.90.00
-> UUID : 61645020:223a69dc:12d77363:0c0f047d
-> Creation Time : Sun Jan 2 12:53:01 2005
-> Raid Level : raid1
-> Used Dev Size : 244195904 (232.88 GiB 250.06 GB)
-> Array Size : 244195904 (232.88 GiB 250.06 GB)
-> Raid Devices : 2
-> Total Devices : 2
-> Preferred Minor : 0
->
-> Update Time : Tue Sep 16 07:38:13 2008
-> State : clean
-> Active Devices : 2
-> Working Devices : 2
-> Failed Devices : 0
-> Spare Devices : 0
-> Checksum : e5808830 - correct
-> Events : 0.5048904
->
->
-> Number Major Minor RaidDevice State
-> this 1 8 33 1 active sync /dev/sdc1
->
-> 0 0 8 17 0 active sync /dev/sdb1
-> 1 1 8 33 1 active sync /dev/sdc1
->
->
-> I've touched files on the degraded md0, so sdb is out-of-date.
->
-> So what's the safest way to fix this? I've never had to rebuild before.
->
-> Do I need to fail, remove, then add sdb?  Can I
->    mdadm -f /dev/md0 /dev/sdb1
-> if md0 doesn't thinks sdb is part of it?
->
-> Or does "removed" in the md0 output mean I don't need to
-> fail and remove, just add?
->
-> Or do I need to "assemble"?  I really don't understand when to use what.
->
-> Thanks,
-> -troy
+> I've never used in-kernel raid autodetection (always relying on
+> initramfs - any reason not to use one ?),
 
-1. mdadm /dev/md0 --fail /dev/sdb1
-2. mdadm /dev/md0 -r /dev/sdb1
-3. sfdisk -d /dev/sda | sfdisk /dev/sdb
-4. mdadm /dev/md0 -a /dev/sdb1
-5. mdadm --examine --scan >> /etc/mdadm/mdadm.conf
+Initrd is what I'm using now and it works, but I'd rather get by without
+initrd as I have no other need for it.
 
-Justin.
+> but looking at md.txt from kernel docs, raid=partitionable parameter
+> should get it done. You might end with md_d0 (as in earlier kernels)
+> name instead of md0, so adjust root=, fstab, etc. accordingly.
 
+raid=partitionable is what I used before, but it doesn't work with these
+new style partitions. The raid gets detected as md_d0, but no md_d0p1.
+
+If this can't be fixed and these new partitionable arrays can't be used
+as root without initrd it should be documented somewhere.
+
+-- 
+Mika Tiainen		Always be wary of any helpful item that
+mikat@iki.fi		weighs less than its operating manual.
+http://mikat.iki.fi	-- (Terry Pratchett, Jingo)
