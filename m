@@ -1,86 +1,133 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: Corrupt data - RAID sata_sil 3114 chip
-Date: Mon, 19 Jan 2009 20:50:06 -0600
-Message-ID: <49753BDE.8050403@shaw.ca>
-References: <200901032104.15242.bs@q-leap.de> <496436C4.4070305@kernel.org> <49643FD4.9080100@shaw.ca> <200901071632.02264.bs@q-leap.de> <49693E08.3050209@shaw.ca> <49694094.60501@shaw.ca> <496A9D42.4000302@kernel.org> <20090119184304.GB30365@redhat.com>
+From: Troy Cauble <troycauble@gmail.com>
+Subject: system upgrade reordered drives, confused software raid-1
+Date: Mon, 19 Jan 2009 23:19:17 -0500
+Message-ID: <6d344ffd0901192019t2e9f1e59q862fed68a68ea4a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090119184304.GB30365@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dave Jones <davej@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Bernd Schubert <bs@q-leap.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Justin Piszcz <jpiszcz@lucidpixels.com>, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dave Jones wrote:
-> On Mon, Jan 12, 2009 at 10:30:42AM +0900, Tejun Heo wrote:
->  > Robert Hancock wrote:
->  > >> There are apparently some reports of issues on NVidia chipsets as
->  > >> well, though I don't have any details at hand.
->  > > 
->  > > Well, Carlos' email bounces, so much for that one. Anyone have any other
->  > > contacts at Silicon Image?
->  > 
->  > I'll ping my SIMG contacts but I've pinged about this problem in the
->  > past but it didn't get anywhere.
-> 
-> I wish I'd read this thread last week.. I've been beating my head
-> against this problem all weekend.
-> 
-> I picked up a cheap 3114 card, and found that when I created a filesystem
-> with it on a 250GB disk, it got massive corruption very quickly.
-> 
-> My experience echos most the other peoples in this thread, but here's
-> a few data points I've been able to figure out..
-> 
-> I ran badblocks -v -w -s on the disk, and after running
-> for nearly 24 hours, it reported a huge number of blocks
-> failing at the upper part of the disk.
-> 
-> I created a partition in this bad area to speed up testing..
-> 
->    Device Boot      Start         End	   Blocks   Id  System
-> /dev/sde1               1	30000   240974968+  83  Linux
-> /dev/sde2           30001	30200     1606500   83  Linux
-> /dev/sde3           30201	30401     1614532+  83  Linux
-> 
-> Rerunning badblocks on /dev/sde2 consistently fails when
-> it gets to the reading back 0x00 stage.
-> (Somehow it passes reading back 0xff, 0xaa and 0x55)
-> 
-> I was beginning to suspect the disk may be bad, but when I
-> moved it to a box with Intel sata, the badblocks run on that
-> same partition succeeds with no problems at all.
-> 
-> Given the corruption happens at high block numbers, I'm wondering
-> if maybe there's some kind of wraparound bug happening here.
-> (Though why only the 0x00 pattern fails would still be a mystery).
+I recently upgraded an Ubuntu box and noticed that my drives got reordered
+(possibly by a SATA driver change) and my RAID-1 is degraded.
 
-Yeah, that seems a bit bizarre.. Apparently somehow zeros are being 
-converted into non-zero.. Can you try zeroing out the partition by 
-dd'ing into it from /dev/zero or something, then dumping it back out to 
-see what kind of data is showing up?
+Originally...
+My (PATA) OS drive had some other partitions and *was* known as /dev/sda.
+My (SATA) raid-1 /home *was* made from /dev/sdb and /dev/sdc.
 
-> 
-> 
-> After reading about the firmware update fixing it, I thought I'd
-> give that a shot.  This was pretty much complete fail.
-> 
-> The DOS utility for flashing claims I'm running BIOS 5.0.39,
-> which looking at http://www.siliconimage.com/support/searchresults.aspx?pid=28&cat=15
-> is quite ancient.  So I tried the newer ones.
-> Same experience with both 5.4.0.3, and 5.0.73
-> 
-> "BIOS version in the input file is not a newer version"
-> 
-> Forcing it to write anyway gets..
-> 
-> "Data is different at address 65f6h"
-> 
-> 
-> 
-> 
-> 	Dave 
-> 
-> 
+Now my OS drive is sdc with side effects like mounting some sdc partitions
+on my old sda mount points. (not a big deal)
+
+The real problem is the RAID-1. I think the following 3 queries say:
+1) the raid is running with SDA, with the other drive removed.
+2) SDA is clean and part of md0
+3) SDB is "clean", but part of a raid that doesn't exist.
+
+
+Quote:
+mastershake:~> sudo mdadm --detail /dev/md0
+/dev/md0:
+Version : 00.90.03
+Creation Time : Sun Jan 2 12:53:01 2005
+Raid Level : raid1
+Array Size : 244195904 (232.88 GiB 250.06 GB)
+Used Dev Size : 244195904 (232.88 GiB 250.06 GB)
+Raid Devices : 2
+Total Devices : 1
+Preferred Minor : 0
+Persistence : Superblock is persistent
+
+Update Time : Sun Jan 18 23:33:56 2009
+State : clean, degraded
+Active Devices : 1
+Working Devices : 1
+Failed Devices : 0
+Spare Devices : 0
+
+UUID : 61645020:223a69dc:12d77363:0c0f047d
+Events : 0.5125062
+
+Number Major Minor RaidDevice State
+0 8 1 0 active sync /dev/sda1
+1 0 0 1 removed
+
+
+Quote:
+mastershake:~> sudo mdadm --examine /dev/sda1
+/dev/sda1:
+Magic : a92b4efc
+Version : 00.90.00
+UUID : 61645020:223a69dc:12d77363:0c0f047d
+Creation Time : Sun Jan 2 12:53:01 2005
+Raid Level : raid1
+Used Dev Size : 244195904 (232.88 GiB 250.06 GB)
+Array Size : 244195904 (232.88 GiB 250.06 GB)
+Raid Devices : 2
+Total Devices : 1
+Preferred Minor : 0
+
+Update Time : Sun Jan 18 23:34:36 2009
+State : clean
+Active Devices : 1
+Working Devices : 1
+Failed Devices : 1
+Spare Devices : 0
+Checksum : e627430d - correct
+Events : 0.5125064
+
+
+Number Major Minor RaidDevice State
+this 0 8 1 0 active sync /dev/sda1
+
+0 0 8 1 0 active sync /dev/sda1
+1 1 0 0 1 faulty removed
+Quote:
+
+
+mastershake:~> sudo mdadm --examine /dev/sdb1
+/dev/sdb1:
+Magic : a92b4efc
+Version : 00.90.00
+UUID : 61645020:223a69dc:12d77363:0c0f047d
+Creation Time : Sun Jan 2 12:53:01 2005
+Raid Level : raid1
+Used Dev Size : 244195904 (232.88 GiB 250.06 GB)
+Array Size : 244195904 (232.88 GiB 250.06 GB)
+Raid Devices : 2
+Total Devices : 2
+Preferred Minor : 0
+
+Update Time : Tue Sep 16 07:38:13 2008
+State : clean
+Active Devices : 2
+Working Devices : 2
+Failed Devices : 0
+Spare Devices : 0
+Checksum : e5808830 - correct
+Events : 0.5048904
+
+
+Number Major Minor RaidDevice State
+this 1 8 33 1 active sync /dev/sdc1
+
+0 0 8 17 0 active sync /dev/sdb1
+1 1 8 33 1 active sync /dev/sdc1
+
+
+I've touched files on the degraded md0, so sdb is out-of-date.
+
+So what's the safest way to fix this? I've never had to rebuild before.
+
+Do I need to fail, remove, then add sdb?  Can I
+    mdadm -f /dev/md0 /dev/sdb1
+if md0 doesn't thinks sdb is part of it?
+
+Or does "removed" in the md0 output mean I don't need to
+fail and remove, just add?
+
+Or do I need to "assemble"?  I really don't understand when to use what.
+
+Thanks,
+-troy
