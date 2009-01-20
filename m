@@ -1,52 +1,86 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Roadmap for md/raid ???
-Date: Tue, 20 Jan 2009 09:32:31 +1100
-Message-ID: <18804.65407.220481.267665@notabene.brown>
-References: <18763.7881.300921.177207@notabene.brown>
-	<496E4E59.4090505@tmr.com>
-	<18803.57326.591385.40711@nbeee.brown>
-	<49740C81.2030502@tmr.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: Corrupt data - RAID sata_sil 3114 chip
+Date: Mon, 19 Jan 2009 20:50:06 -0600
+Message-ID: <49753BDE.8050403@shaw.ca>
+References: <200901032104.15242.bs@q-leap.de> <496436C4.4070305@kernel.org> <49643FD4.9080100@shaw.ca> <200901071632.02264.bs@q-leap.de> <49693E08.3050209@shaw.ca> <49694094.60501@shaw.ca> <496A9D42.4000302@kernel.org> <20090119184304.GB30365@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bill Davidsen on Monday January 19
+In-Reply-To: <20090119184304.GB30365@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-raid@vger.kernel.org
+To: Dave Jones <davej@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Bernd Schubert <bs@q-leap.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Justin Piszcz <jpiszcz@lucidpixels.com>, debian-user@lists.debian.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday January 19, davidsen@tmr.com wrote:
-> Neil Brown wrote:
-> >
-> > The difficulty is "How do you handle a crash?"
-> > If you crash and restart in the middle of a reshape, you need to know
-> > where all the data is.
-> > To follow your scheme, you would need to update the metadata for
-> > every block that is moved.
-> >
-> >   
-> That would seem to be an issue doing it in a large task as well, if I 
-> understand what you want to do. After the data have been written to the 
-> spare space I believe you are going to write it back. If you update the 
-> metadata before the write and something happens you have old metadata 
-> but data in another format. Conversely, if you update the metadata 
-> first, and something happens, you have the metadata describing a change 
-> which didn't happen. So You would have to have a metadata reflecting the 
-> data not being in the array, but actually somewhere else, or you would 
-> have to keep the spare space inside the array, where room might not be 
-> available.
+Dave Jones wrote:
+> On Mon, Jan 12, 2009 at 10:30:42AM +0900, Tejun Heo wrote:
+>  > Robert Hancock wrote:
+>  > >> There are apparently some reports of issues on NVidia chipsets as
+>  > >> well, though I don't have any details at hand.
+>  > > 
+>  > > Well, Carlos' email bounces, so much for that one. Anyone have any other
+>  > > contacts at Silicon Image?
+>  > 
+>  > I'll ping my SIMG contacts but I've pinged about this problem in the
+>  > past but it didn't get anywhere.
+> 
+> I wish I'd read this thread last week.. I've been beating my head
+> against this problem all weekend.
+> 
+> I picked up a cheap 3114 card, and found that when I created a filesystem
+> with it on a 250GB disk, it got massive corruption very quickly.
+> 
+> My experience echos most the other peoples in this thread, but here's
+> a few data points I've been able to figure out..
+> 
+> I ran badblocks -v -w -s on the disk, and after running
+> for nearly 24 hours, it reported a huge number of blocks
+> failing at the upper part of the disk.
+> 
+> I created a partition in this bad area to speed up testing..
+> 
+>    Device Boot      Start         End	   Blocks   Id  System
+> /dev/sde1               1	30000   240974968+  83  Linux
+> /dev/sde2           30001	30200     1606500   83  Linux
+> /dev/sde3           30201	30401     1614532+  83  Linux
+> 
+> Rerunning badblocks on /dev/sde2 consistently fails when
+> it gets to the reading back 0x00 stage.
+> (Somehow it passes reading back 0xff, 0xaa and 0x55)
+> 
+> I was beginning to suspect the disk may be bad, but when I
+> moved it to a box with Intel sata, the badblocks run on that
+> same partition succeeds with no problems at all.
+> 
+> Given the corruption happens at high block numbers, I'm wondering
+> if maybe there's some kind of wraparound bug happening here.
+> (Though why only the 0x00 pattern fails would still be a mystery).
 
-I "freeze" a section of the array so that any writes block,
-I copy that data to somewhere safe, and mark that copy as being a
-valid copy of the moved data.
-Then I copy it back in the new layout and update the array metadata to
-show that the change-over point between old-layout and new-layout has
-changed.  Then I invalidate the copy.
-Then repeat.
+Yeah, that seems a bit bizarre.. Apparently somehow zeros are being 
+converted into non-zero.. Can you try zeroing out the partition by 
+dd'ing into it from /dev/zero or something, then dumping it back out to 
+see what kind of data is showing up?
 
-When restarting an array, mdadm checks the copy (which could be in a
-file on a different device) and if it is valid, it is copied on to
-the array and the metadata is updated.
-
-NeilBrown
+> 
+> 
+> After reading about the firmware update fixing it, I thought I'd
+> give that a shot.  This was pretty much complete fail.
+> 
+> The DOS utility for flashing claims I'm running BIOS 5.0.39,
+> which looking at http://www.siliconimage.com/support/searchresults.aspx?pid=28&cat=15
+> is quite ancient.  So I tried the newer ones.
+> Same experience with both 5.4.0.3, and 5.0.73
+> 
+> "BIOS version in the input file is not a newer version"
+> 
+> Forcing it to write anyway gets..
+> 
+> "Data is different at address 65f6h"
+> 
+> 
+> 
+> 
+> 	Dave 
+> 
+> 
