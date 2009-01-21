@@ -1,86 +1,61 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: Performance question
-Date: Wed, 21 Jan 2009 01:15:03 +0100
-Message-ID: <20090121001503.GA26587@rap.rap.dk>
-References: <20090117171806.GA9432@lazy.lzy> <20090117220849.GB29866@rap.rap.dk> <20090119181253.GA4290@lazy.lzy>
+From: Jaswinder Singh Rajput <jaswinder-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [GIT PULL -tip] fix 33 make headers_check warnings
+Date: Wed, 21 Jan 2009 06:08:39 +0530
+Message-ID: <1232498319.3123.34.camel@localhost.localdomain>
+References: <1232223441.3966.22.camel@localhost.localdomain>
+	 <1232228261.27094.0.camel@macbook.infradead.org>
+	 <20090117221932.GA4956@uranus.ravnborg.org>  <49725B1E.604@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090119181253.GA4290@lazy.lzy>
-Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <49725B1E.604-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "H. Peter Anvin" <hpa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Sam Ravnborg <sam-uyr5N9Q2VtJg9hUCZPvPmw@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>, x86 maintainers <x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, urs.thuermann-l29pVbxQd1IUtdQbppsyvg@public.gmane.org, oliver.hartkopp-l29pVbxQd1IUtdQbppsyvg@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netfilter-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netfilter-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org, neilb-l3A5Bk7waGM@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dbrownell-Rn4VEauK+AKRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, spi-devel-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, tiwai-l3A5Bk7waGM@public.gmane.org, mchehab-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 List-Id: linux-raid.ids
 
-On Mon, Jan 19, 2009 at 07:12:53PM +0100, Piergiorgio Sartor wrote:
-> Hi,
+On Sat, 2009-01-17 at 14:26 -0800, H. Peter Anvin wrote:
+> Sam Ravnborg wrote:
+> >>>  
+> >> That patch looks wrong, and unnecessary. It was fine before.
+> > Nope - include/linux/dvb/audio.h failed to include linux/types.h
+> > despite the fact that is uses __u32 etc.
+> > 
+> > But why the _kernel_ should include a userspace header is
+> > much more questionable.
+> > 
 > 
-> thanks for the answer, that was exactly what I
-> was looking for.
-
-Good!
-
-> Some feedback for you.
-> About the performance & benchmarking I've nothing
-> special to say.
-> About the setup of two disks, I've some questions,
-> in no particular order.
+> <stdint.h> is one of a handful of headers provided by gcc itself.
 > 
-> The creation of "mdadm.conf" is done by:
-> 
-> mdadm --detail --scan
-> 
-> Somewhere else I found:
-> 
-> mdadm --examine --scan
-> 
-> The two produce different results and the Fedora
-> installer seems to use the second one.
-> 
-> Which one is really correct? Can we use one or the
-> other interchangeably?
 
---detail looks at the running arrays, while --examine most
-likely (depending on mdadm.conf) looks at all partitions
-on the system. 
+Should I reintroduce my patch to solve this warning of 'make headers_check':
+ usr/include/linux/dvb/audio.h:133: found __[us]{8,16,32,64} type without #include <linux/types.h>
 
-Given that the arrays are just created in the installation process, and
-the active running arrays are most likely the ones you want your system
-to know of, I think --detail is the better. --examine does on two of my
-systems generate info that are in conflict and not suitable for a
-mdadm.conf file, such as two /dev/md1 with different UUIDs.
+diff --git a/include/linux/dvb/audio.h b/include/linux/dvb/audio.h
+index 89412e1..758a48c 100644
+--- a/include/linux/dvb/audio.h
++++ b/include/linux/dvb/audio.h
+@@ -24,9 +24,8 @@
+ #ifndef _DVBAUDIO_H_
+ #define _DVBAUDIO_H_
+ 
+-#ifdef __KERNEL__
+ #include <linux/types.h>
+-#else
++#ifndef __KERNEL__
+ #include <stdint.h>
+ #endif
 
-> Second question.
-> The wiki page does not mention anything about
-> metadata types.
-> While it is clear that /boot must have the RAID
-> header at the end, it is not clear if the RAID-10,f2
-> could or should have the metadata at the beginning.
-> In this respect, it would be nice also to have some
-> clarification about the reccommended metadata version,
-> i.e. is it better 0.90 or 1.x? Why?
+Or you guys have some better plan.
 
-To me it does not matter that much, except for the booting device.
-Each partition in the booting device must look like a normal (ext3)
-partition, as grub and lilo does not know of raids, and just treats
-a booting partition as a standalone partition. So here you should use
-0.90 metadata, which is put at the end of the array.
+Thanks,
 
-For other arrays I think one important choice is if you have an array
-greater than 2 TiB to not use 0.90 metadata, as this has a limit of 2
-TiB.
-
-> One note. Maybe it could be worth to mention that
-> further "partitioning" could be done with LVM on top
-> of the RAID, so only 3 md devices will be needed.
-
-yes, I have been looking into that. Maybe I will add some words on this.
-
-> Hope this helps.
+--
+JSR
 
 
-yes, thanks for your feedback!
-
-best regards
-keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
