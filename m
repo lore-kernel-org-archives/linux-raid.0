@@ -1,61 +1,121 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Roadmap for md/raid ???
-Date: Wed, 21 Jan 2009 12:04:32 -0500
-Message-ID: <497755A0.3090600@tmr.com>
-References: <18763.7881.300921.177207@notabene.brown>	<496E4E59.4090505@tmr.com>	<18803.57326.591385.40711@nbeee.brown>	<49740C81.2030502@tmr.com> <18804.65407.220481.267665@notabene.brown>
+From: Max Waterman <davidmaxwaterman@fastmail.co.uk>
+Subject: Re: trouble adding spare
+Date: Wed, 21 Jan 2009 19:21:04 +0200
+Message-ID: <49775980.5010803@fastmail.co.uk>
+References: <496DB3A4.4090605@fastmail.co.uk> <alpine.DEB.1.10.0901140654100.11696@p34.internal.lan> <496DE2BD.6070905@fastmail.co.uk> <496DE763.9010300@fastmail.co.uk> <alpine.DEB.1.10.0901140830280.11696@p34.internal.lan> <496DF771.4010407@fastmail.co.uk> <496DFFF0.2060807@fastmail.co.uk> <alpine.DEB.1.10.0901141012050.19747@p34.internal.lan> <496E26DA.6010703@fastmail.co.uk> <4970CA9C.7060902@fastmail.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18804.65407.220481.267665@notabene.brown>
+In-Reply-To: <4970CA9C.7060902@fastmail.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Monday January 19, davidsen@tmr.com wrote:
->   
->> Neil Brown wrote:
->>     
->>> The difficulty is "How do you handle a crash?"
->>> If you crash and restart in the middle of a reshape, you need to know
->>> where all the data is.
->>> To follow your scheme, you would need to update the metadata for
->>> every block that is moved.
+Someone else's post prompted me to try :
+
+$ sudo /sbin/mdadm --detail --scan
+ARRAY /dev/md2 level=raid5 num-devices=6 metadata=00.90 spares=2 
+UUID=15bfec75:595ac793:0914f8ee:862effd8
+
+and use that in mdadm.conf instead of the output of :
+
+~$ sudo /sbin/mdadm --examine --scan
+ARRAY /dev/md2 level=raid5 num-devices=6 
+UUID=15bfec75:595ac793:0914f8ee:862effd8
+   spares=2
+
+This fixes my problem of the second spare drive not being added. I'm not 
+sure why.
+
+However, mdadm now gives me a 'message' :
+
+mdadm: metadata format 00.90 unknown, ignored.
+
+What's this about? Anything to worry about?
+
+Max.
+Max Waterman wrote:
+> Can no one provide any enlightenment on this issue?
+>
+> Max.
+>
+> Max Waterman wrote:
+>> Justin Piszcz wrote:
 >>>
->>>   
->>>       
->> That would seem to be an issue doing it in a large task as well, if I 
->> understand what you want to do. After the data have been written to the 
->> spare space I believe you are going to write it back. If you update the 
->> metadata before the write and something happens you have old metadata 
->> but data in another format. Conversely, if you update the metadata 
->> first, and something happens, you have the metadata describing a change 
->> which didn't happen. So You would have to have a metadata reflecting the 
->> data not being in the array, but actually somewhere else, or you would 
->> have to keep the spare space inside the array, where room might not be 
->> available.
->>     
+>>>
+>>> On Wed, 14 Jan 2009, Max Waterman wrote:
+>>>
+>>>> Max Waterman wrote:
+>>>>>>
+>>>>>> If that does not work, clean the drive out manually after 
+>>>>>> removing it as a spare from the array:
+>>>>>> dd if=/dev/zero of=/dev/sdi bs=1M
+>>>>> This is taking forever
+>>>> I stopped it after about half an hour, hoping that it had made 
+>>>> garbage of whatever was the problem.
+>>>>
+>>>> I then added it into the array and it worked as before.
+>>>>
+>>>> However, it still wasn't added when I rebooted.
+>>>>
+>>>> ...but, there is something different. Now, when I --examine 
+>>>> /dev/sdi, it gives output for the whole array including 2 spares, 
+>>>> which is the end result I expect :
+>>>>
+>>>> Active Devices : 6
+>>>> Working Devices : 8
+>>>> Failed Devices : 0
+>>>> Spare Devices : 2
+>>>>
+>>>> However, --detail /dev/md2 still denies /dev/sdi exists :
+>>>>
+>>>> Active Devices : 6
+>>>> Working Devices : 7
+>>>> Failed Devices : 0
+>>>> Spare Devices : 1
+>>>>
+>>>> What's up?
+>>>>
+>>>> Max.
+>>>>
+>>>> -- 
+>>>> To unsubscribe from this list: send the line "unsubscribe 
+>>>> linux-raid" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>
+>>>
+>>> The superblock is at the end of the disk for 0.90.00 superblocks, so 
+>>> you would need to write to end of the disk or just let dd clear out 
+>>> the entire disk.  Honestly though that may not fix the root cause of 
+>>> the problem, we may need to wait for others on the list and/or Neil 
+>>> to check this one out. It seems very strange, can you post the 
+>>> regular output that people ask for so once they see your mail, they 
+>>> will have (hopefully) most of what they need to diagnose the problem.
+>>>
+>>> 1. mdadm -D /dev/mdX
+>>> 2. cat /proc/mdstat
+>>> 3. mdadm -Esvvv
+>>> 4. uname -a
+>> 5. mdadm -E /dev/sdi
+>>
+>> OK, I uploaded the output of the above commands to here :
+>>
+>> <http://reality.sgiweb.org/maxw/tmp/md2Details/>
+>>
+>> I hope someone can shed some light on this.
+>>
+>> Thanks,
+>>
+>> Max.
+>> -- 
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
-> I "freeze" a section of the array so that any writes block,
-> I copy that data to somewhere safe, and mark that copy as being a
-> valid copy of the moved data.
-> Then I copy it back in the new layout and update the array metadata to
-> show that the change-over point between old-layout and new-layout has
-> changed.  Then I invalidate the copy.
-> Then repeat.
->
-> When restarting an array, mdadm checks the copy (which could be in a
-> file on a different device) and if it is valid, it is copied on to
-> the array and the metadata is updated.
->   
-
-Sounds good...
-
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
-
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
