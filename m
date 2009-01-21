@@ -1,121 +1,31 @@
-From: Max Waterman <davidmaxwaterman@fastmail.co.uk>
-Subject: Re: trouble adding spare
-Date: Wed, 21 Jan 2009 19:21:04 +0200
-Message-ID: <49775980.5010803@fastmail.co.uk>
-References: <496DB3A4.4090605@fastmail.co.uk> <alpine.DEB.1.10.0901140654100.11696@p34.internal.lan> <496DE2BD.6070905@fastmail.co.uk> <496DE763.9010300@fastmail.co.uk> <alpine.DEB.1.10.0901140830280.11696@p34.internal.lan> <496DF771.4010407@fastmail.co.uk> <496DFFF0.2060807@fastmail.co.uk> <alpine.DEB.1.10.0901141012050.19747@p34.internal.lan> <496E26DA.6010703@fastmail.co.uk> <4970CA9C.7060902@fastmail.co.uk>
+From: Bryon Roche <kain@kain.org>
+Subject: Re: differnet UUIDs and no of spares :(
+Date: Wed, 21 Jan 2009 18:04:08 +0000 (UTC)
+Message-ID: <gl7o2n$6et$2@ger.gmane.org>
+References: <1231954002.17710.13.camel@brandy.snifter.org>
+	<496E6C37.9030608@tmr.com> <35147.127.0.0.1.1232535970.squirrel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4970CA9C.7060902@fastmail.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Someone else's post prompted me to try :
+On Wed, 21 Jan 2009 11:06:10 +0000, eamonn wrote:
 
-$ sudo /sbin/mdadm --detail --scan
-ARRAY /dev/md2 level=raid5 num-devices=6 metadata=00.90 spares=2 
-UUID=15bfec75:595ac793:0914f8ee:862effd8
+> I don't suppose anybody else has any ideas? I've been holding off
+> attempting anything in the hope of somebody handing me a silver bullet,
+> but failing that ... ;)
+No silver bullets. your best chance is to use the logs like you mention 
+to do a forced read-only assemble.  For this reason, it's also usually a 
+good idea to save the arguments you used for mdadm --create somewhere, 
+especially if you made the array with a non-default layout.  At least 
+this will let you stream the data of the array onto something else.
 
-and use that in mdadm.conf instead of the output of :
-
-~$ sudo /sbin/mdadm --examine --scan
-ARRAY /dev/md2 level=raid5 num-devices=6 
-UUID=15bfec75:595ac793:0914f8ee:862effd8
-   spares=2
-
-This fixes my problem of the second spare drive not being added. I'm not 
-sure why.
-
-However, mdadm now gives me a 'message' :
-
-mdadm: metadata format 00.90 unknown, ignored.
-
-What's this about? Anything to worry about?
-
-Max.
-Max Waterman wrote:
-> Can no one provide any enlightenment on this issue?
->
-> Max.
->
-> Max Waterman wrote:
->> Justin Piszcz wrote:
->>>
->>>
->>> On Wed, 14 Jan 2009, Max Waterman wrote:
->>>
->>>> Max Waterman wrote:
->>>>>>
->>>>>> If that does not work, clean the drive out manually after 
->>>>>> removing it as a spare from the array:
->>>>>> dd if=/dev/zero of=/dev/sdi bs=1M
->>>>> This is taking forever
->>>> I stopped it after about half an hour, hoping that it had made 
->>>> garbage of whatever was the problem.
->>>>
->>>> I then added it into the array and it worked as before.
->>>>
->>>> However, it still wasn't added when I rebooted.
->>>>
->>>> ...but, there is something different. Now, when I --examine 
->>>> /dev/sdi, it gives output for the whole array including 2 spares, 
->>>> which is the end result I expect :
->>>>
->>>> Active Devices : 6
->>>> Working Devices : 8
->>>> Failed Devices : 0
->>>> Spare Devices : 2
->>>>
->>>> However, --detail /dev/md2 still denies /dev/sdi exists :
->>>>
->>>> Active Devices : 6
->>>> Working Devices : 7
->>>> Failed Devices : 0
->>>> Spare Devices : 1
->>>>
->>>> What's up?
->>>>
->>>> Max.
->>>>
->>>> -- 
->>>> To unsubscribe from this list: send the line "unsubscribe 
->>>> linux-raid" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>
->>>
->>> The superblock is at the end of the disk for 0.90.00 superblocks, so 
->>> you would need to write to end of the disk or just let dd clear out 
->>> the entire disk.  Honestly though that may not fix the root cause of 
->>> the problem, we may need to wait for others on the list and/or Neil 
->>> to check this one out. It seems very strange, can you post the 
->>> regular output that people ask for so once they see your mail, they 
->>> will have (hopefully) most of what they need to diagnose the problem.
->>>
->>> 1. mdadm -D /dev/mdX
->>> 2. cat /proc/mdstat
->>> 3. mdadm -Esvvv
->>> 4. uname -a
->> 5. mdadm -E /dev/sdi
->>
->> OK, I uploaded the output of the above commands to here :
->>
->> <http://reality.sgiweb.org/maxw/tmp/md2Details/>
->>
->> I hope someone can shed some light on this.
->>
->> Thanks,
->>
->> Max.
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+A forced assembly necessarily destroys the superblock and any metadata 
+that could be used to resume the build.  Your best bet here will be to 
+make sure you got the device order correct, probably in accordance to the 
+oldest list.  This assumes that you didn't start rebuilding onto any 
+disks in such a way as to change that order.
 
