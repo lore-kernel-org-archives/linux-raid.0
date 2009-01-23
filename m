@@ -1,34 +1,71 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [GIT PULL -tip] fix 33 make headers_check warnings
-Date: Fri, 23 Jan 2009 14:01:07 -0800
-Message-ID: <497A3E23.7040606@zytor.com>
-References: <1232223441.3966.22.camel@localhost.localdomain>  <1232228261.27094.0.camel@macbook.infradead.org>  <20090117221932.GA4956@uranus.ravnborg.org>  <49725B1E.604@kernel.org>  <1232498319.3123.34.camel@localhost.localdomain>  <1232726359.3504.18.camel@localhost.localdomain> <1232726658.3504.22.camel@localhost.localdomain> <alpine.LSU.2.00.0901231710350.15413@fbirervta.pbzchgretzou.qr> <497A3793.5090502@zytor.com> <alpine.LSU.2.00.0901232252510.25716@fbirervta.pbzchgretzou.qr>
+From: Mike Berger <lists@mike01.com>
+Subject: Re: Filesystem on RAID5 missing or corrupted after reboot (bad superblock
+ error)
+Date: Fri, 23 Jan 2009 16:34:05 -0600
+Message-ID: <497A45DD.4020107@mike01.com>
+References: <497A226D.9030807@mike01.com> <alpine.DEB.1.10.0901231622490.1615@p34.internal.lan> <497A387B.9000300@mike01.com> <alpine.DEB.1.10.0901231639290.1866@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.LSU.2.00.0901232252510.25716@fbirervta.pbzchgretzou.qr>
+In-Reply-To: <alpine.DEB.1.10.0901231639290.1866@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jan Engelhardt <jengelh@medozas.de>
-Cc: Jaswinder Singh Rajput <jaswinder@kernel.org>, "H. Peter Anvin" <hpa@kernel.org>, Sam Ravnborg <sam@ravnborg.org>, David Woodhouse <dwmw2@infradead.org>, Ingo Molnar <mingo@elte.hu>, x86 maintainers <x86@kernel.org>, urs.thuermann@volkswagen.de, oliver.hartkopp@volkswagen.de, linux-media@vger.kernel.org, netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org, bfields@fieldses.org, neilb@suse.de, linux-nfs@vger.kernel.org, linux-raid@vger.kernel.org, dbrownell@users.sourceforge.net, netdev@vger.kernel.org, greg@kroah.com, linux-usb@vger.kernel.org, linux-mtd@lists.infradead.org, tiwai@suse.de, mchehab@infradead.org, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jan Engelhardt wrote:
-> 
-> Hm, maybe g++ defaults to std? Because this works without me using
-> "using std;"
-> 
-> #include <cstdint>
-> int main(void)
-> {
-> 	uint32_t x;
-> }
-> 
+Justin Piszcz wrote:
+>
+>
+> On Fri, 23 Jan 2009, Mike Berger wrote:
+>
+>> Justin Piszcz wrote:
+>>>
+>>> Hi,
+>>>
+>>> If you are using GPT partitions, the kernel will not recognize them
+>>> after stop/start or a reboot unless you have this option enabled in the
+>>> kernel:
+>>>
+>>> CONFIG_EFI_PARTITION=y
+>>>
+>>> Also, why use a GPT partition, do you have individual HDDs over 2TiB?
+>>> If not, just make a regular partition on each HDD with fdisk and make
+>>> it type
+>>> 'fd'?
+>>>
+>>> Justin.
+>> This seems likely to be the problem.
+>> CONFIG_LBD=y
+>> CONFIG_EFI=y
+>> CONFIG_FB_EFI=y
+>> CONFIG_PARTITION_ADVANCED=y
+>> # CONFIG_EFI_VARS is not set
+>> # CONFIG_EFI_PARTITION is not set
+>>
+>>
+>> I've got a kernel building now with CONFIG_EFI_PARTITION=y so I will
+>> know shortly.
+>>
+>> My thinking with the GPT partition table was to be more future proof.
+>> I'm already using 1.5 TiB drives, so it seems likely I would transition
+>> to 2 TiB or larger drives whenever I replaced these or added to the
+>> array.  Do you know if using a traditional/msdos partition table now
+>> would be an issue if I wanted to migrate to larger disks in the future?
+>>
+>> Thanks,
+>> Mike
+>>
+>
+> In that case, use GPT.  Who knows, maybe next year there will be > 2T
+> disks
+> and in that case you need GPT I believe..
+>
+> Justin.
+Just wanted to say thanks (and leave a trail for those who may google
+with similar problems and find the archives).  After setting
+CONFIG_EFI_PARTITION=y and building a new kernel the filesystem showed
+up again on reboot and things are working great.
 
-Sorry, this was a bit of a surprise... basically the g++ <cstdint> 
-functionally does #include <stdint.h> then exports the symbols into the 
-std namespace, so it puts them into both...
-
-	-hpa
-
+Mike
 
