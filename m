@@ -1,79 +1,81 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [PATCH 0/2] md: More block -> sector conversions.
-Date: Mon, 26 Jan 2009 19:33:59 +0100
-Message-ID: <20090126183359.GG17185@skl-net.de>
-References: <1232982852-32747-1-git-send-email-maan@systemlinux.org> <497DD740.8080306@rabbit.us> <20090126160814.GD17185@skl-net.de> <497DF230.1080908@rabbit.us>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Raid6 write performance
+Date: Mon, 26 Jan 2009 13:47:05 -0500
+Message-ID: <497E0529.3050501@tmr.com>
+References: <49742E74.9090502@rabbit.us>	 <8CB482475EFC01A-17F0-256E@webmail-dx12.sysops.aol.com> <1cd4f41f0901190107l53d02785l844da71a6643605@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="df+09Je9rNq3P+GE"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <497DF230.1080908@rabbit.us>
+In-Reply-To: <1cd4f41f0901190107l53d02785l844da71a6643605@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Rabbitson <rabbit+list@rabbit.us>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: NiftyFedora Mitch <niftyfedora@niftyegg.com>
+Cc: thomas62186218@aol.com, rabbit+list@rabbit.us, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+NiftyFedora Mitch wrote:
+> On Mon, Jan 19, 2009 at 12:10 AM,  <thomas62186218@aol.com> wrote:
+>   
+>> I tested RAID 5 and RAID 6 with 12 x 15K SAS drives on Ubuntu 8.04 64-bit
+>> and found their performance to be about the same. I used 256 K chunk size,
+>> v1.0 superblocks, stripecachesize of 16384, and readahead of 65536.
+>>
+>> RAID 5 reads: 774 MB/sec
+>> RAID 5 writes: 585 MB/sec
+>>
+>> RAID 6 reads: 742 MB/sec
+>> RAID 6 writes: 559 MB/sec
+>>
+>> My CPU utilization remains under 10% though during writes, and I'm wondering
+>> what can be done to get write performance closer to read performance. I have
+>> dual quad-core CPUs so there's plenty of CPU to go around. Any ideas on that
+>> front?
+>>
+>> -Thomas
+>>
+>>
+>> -----Original Message-----
+>> From: Peter Rabbitson <rabbit+list@rabbit.us>
+>> To: linux-raid@vger.kernel.org
+>> Sent: Sun, 18 Jan 2009 11:40 pm
+>> Subject: Raid6 write performance
+>>     
+>
+>   
+>> Hi,
+>>
+>> I am experimenting with raid6 on 4 drives on 2.6.27.11. The problem I am
+>> having is that no matter what chunk size I use, the write benchmark
+>> always comes out at single drive speed, although I should be seeing
+>> double drive speed (read speed is at near 4x as expected). Is there some
+>> hidden setting that I am overlooking, or is this a current known
+>> limitation of raid6? In contrast if I make a raid5 on these 4 drives, I
+>> get the expected 3xdrive write speed, and occasionally 4xdrive linear
+>> read speed.
+>>
+>> When the write test is running, I get about 14% of system cpu a sporadic
+>> 40% of iowait and the rest idle at all times (machine is in runlevel 1
+>> so not to screw with results). Anyone has any ideas?
+>>     
+>
+> Read bandwidth will always be quicker than writes with parity.
+> Data and parity both need to be written in an atomic way so the completion
+> will be gated by the last write to be "posted as done" back to the
+> system.
+>
+> It can pay to locate the journal  on a physically different, smaller
+> and faster resource.
+> One informative experiment might be to mount the file system as ext2 and compare
+> and contrast with the same FS mounted as ext3.  I am not recommending ext2
+> over ext3 other than as an experiment to see what the impact of the
+> journal activity is...
+>
+>   
+Also see noatime, relatime, etc.
 
---df+09Je9rNq3P+GE
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
-On 18:26, Peter Rabbitson wrote:
-> > Can you reproduce the incorrect output for the used device size
-> > with the recent master branch of the mdadm git tree?
-> >=20
->=20
-> Hi Andre,
->=20
-> Yes I can:
 
-[snip]
-
->   Used Dev Size : 576720896 (550.00 GiB 590.56 GB)
-
-This is twice as much as it should be due to a bug in mdadm which bites
-only for version1 superblocks. The patch below should fix it. However,
-this might not be the most elegant solution because the real bug
-is IMHO that get_component_size() multiplies the value from sysfs
-(which is always in 1K units) by two, so it returns 2K units which
-looks a bit weird.
-
-Since there are more callers of get_component_size() I have to take
-a deeper look to come up with a more reasonable patch.
-
-Have fun
-Andre
-
-diff --git a/Detail.c b/Detail.c
-index 3cee66f..cef1abb 100644
---- a/Detail.c
-+++ b/Detail.c
-@@ -195,7 +195,7 @@ int Detail(char *dev, int brief, int export, int test, =
-char *homehost)
- 		if (array.level >=3D 1) {
- 			if (array.major_version !=3D 0 &&
- 			    (larray_size >=3D 0xFFFFFFFFULL|| array.size =3D=3D 0)) {
--				unsigned long long dsize =3D get_component_size(fd);
-+				unsigned long long dsize =3D get_component_size(fd) / 2; /* KB */
- 				if (dsize > 0)
- 					printf("  Used Dev Size : %llu%s\n",
- 					       dsize,
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---df+09Je9rNq3P+GE
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFJfgIXWto1QDEAkw8RAk8xAKCB7pdY5G6h8/2Z19urw0CVFPo4hQCfczpl
-Y29O0Iq29HP8P/7X7Li++nY=
-=uFyD
------END PGP SIGNATURE-----
-
---df+09Je9rNq3P+GE--
