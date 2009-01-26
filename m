@@ -1,19 +1,24 @@
-From: Troy Cauble <troycauble@gmail.com>
-Subject: raid-1, oops -- partition type 83
-Date: Mon, 26 Jan 2009 09:37:37 -0500
-Message-ID: <6d344ffd0901260637l1d705629l9e23db431a33a9af@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Andre Noll <maan@systemlinux.org>
+Subject: [PATCH 0/2] md: More block -> sector conversions.
+Date: Mon, 26 Jan 2009 16:14:10 +0100
+Message-ID: <1232982852-32747-1-git-send-email-maan@systemlinux.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>, Andre Noll <maan@systemlinux.org>
 List-Id: linux-raid.ids
 
-I have a raid 1 with partition types 83 that I now realize should be 0xDA.
-Is it safe to change this with fdisk live, or should I play it safe and do
-   fail / remove / change-partition-type / add
-on each disk?
+These two patches against Neil's for-next tree make the internal
+representaions of mddev->size and rdev->size sector-based.
+checkpatch.pl is happy with both patches, and the patched kernel
+passes all tests of the mdadm test suite on my i386 UP box.
 
-Thanks,
--troy
+Please review.
+
+BTW: This completes the block -> sector conversion of the md code base
+because all remaining block-based quantities are either user-visible
+(via sysfs) or describe on-disk formats (version 0.90 superblocks)
+and hence can not be changed without breaking user space.
+
+Andre
+
