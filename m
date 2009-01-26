@@ -1,38 +1,47 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: Re: raid-1, oops -- partition type 83
-Date: Mon, 26 Jan 2009 17:10:32 +0100
-Message-ID: <20090126161032.GD32416@skl-net.de>
-References: <6d344ffd0901260637l1d705629l9e23db431a33a9af@mail.gmail.com>
+Subject: Re: [PATCH 0/2] md: More block -> sector conversions.
+Date: Mon, 26 Jan 2009 17:08:14 +0100
+Message-ID: <20090126160814.GD17185@skl-net.de>
+References: <1232982852-32747-1-git-send-email-maan@systemlinux.org> <497DD740.8080306@rabbit.us>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="cHMo6Wbp1wrKhbfi"
+	protocol="application/pgp-signature"; boundary="rz+pwK2yUstbofK6"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <6d344ffd0901260637l1d705629l9e23db431a33a9af@mail.gmail.com>
+In-Reply-To: <497DD740.8080306@rabbit.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Troy Cauble <troycauble@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Peter Rabbitson <rabbit+list@rabbit.us>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
---cHMo6Wbp1wrKhbfi
+--rz+pwK2yUstbofK6
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On 09:37, Troy Cauble wrote:
-> I have a raid 1 with partition types 83 that I now realize should be 0xDA.
-> Is it safe to change this with fdisk live, or should I play it safe and do
->    fail / remove / change-partition-type / add
-> on each disk?
+On 16:31, Peter Rabbitson wrote:
 
-It should be safe to change this live.
+> Is it possible that the following issue is related to your earlier
+> patches: http://marc.info/?l=3Dlinux-raid&m=3D123202024116493&w=3D2
 
+I don't think this is possible because you are using Linux 2.6.24.7
+which does not contain any of the block -> sector conversion changes.
+
+Moreover, those changes should be invisible to userspace. In
+particular, mdadm does not need to know whether the kernel uses blocks
+or sectors for its internal representations. In fact, no changes to
+mdadm were made wrt. the block -> sector conversions.
+
+Can you reproduce the incorrect output for the used device size
+with the recent master branch of the mdadm git tree?
+
+Thanks
 Andre
 --=20
 The only person who always got his work done by Friday was Robinson Crusoe
 
---cHMo6Wbp1wrKhbfi
+--rz+pwK2yUstbofK6
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 Content-Disposition: inline
@@ -40,9 +49,9 @@ Content-Disposition: inline
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.1 (GNU/Linux)
 
-iD8DBQFJfeB4Wto1QDEAkw8RAj7tAJ9n5cbCstFmQDyXO3J/u2MA4vqlZQCfXyOb
-go8UKWNzGWKZpse3je00LD8=
-=ryO3
+iD8DBQFJfd/uWto1QDEAkw8RAlF8AJ9AiPdwb+2Re1RWTgAQ62TEzF35egCeMvPV
+TX3vsm8g31N92KfxDYVKeyg=
+=kmDa
 -----END PGP SIGNATURE-----
 
---cHMo6Wbp1wrKhbfi--
+--rz+pwK2yUstbofK6--
