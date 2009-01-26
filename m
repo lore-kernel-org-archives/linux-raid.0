@@ -1,57 +1,102 @@
-From: Andre Noll <maan@systemlinux.org>
+From: Peter Rabbitson <rabbit+list@rabbit.us>
 Subject: Re: [PATCH 0/2] md: More block -> sector conversions.
-Date: Mon, 26 Jan 2009 17:08:14 +0100
-Message-ID: <20090126160814.GD17185@skl-net.de>
-References: <1232982852-32747-1-git-send-email-maan@systemlinux.org> <497DD740.8080306@rabbit.us>
+Date: Mon, 26 Jan 2009 18:26:08 +0100
+Message-ID: <497DF230.1080908@rabbit.us>
+References: <1232982852-32747-1-git-send-email-maan@systemlinux.org> <497DD740.8080306@rabbit.us> <20090126160814.GD17185@skl-net.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="rz+pwK2yUstbofK6"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <497DD740.8080306@rabbit.us>
+In-Reply-To: <20090126160814.GD17185@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Rabbitson <rabbit+list@rabbit.us>
+To: Andre Noll <maan@systemlinux.org>
 Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Andre Noll wrote:
+> On 16:31, Peter Rabbitson wrote:
+> 
+>> Is it possible that the following issue is related to your earlier
+>> patches: http://marc.info/?l=linux-raid&m=123202024116493&w=2
+> 
+> I don't think this is possible because you are using Linux 2.6.24.7
+> which does not contain any of the block -> sector conversion changes.
+> 
+> Moreover, those changes should be invisible to userspace. In
+> particular, mdadm does not need to know whether the kernel uses blocks
+> or sectors for its internal representations. In fact, no changes to
+> mdadm were made wrt. the block -> sector conversions.
+> 
+> Can you reproduce the incorrect output for the used device size
+> with the recent master branch of the mdadm git tree?
+> 
 
---rz+pwK2yUstbofK6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi Andre,
 
-On 16:31, Peter Rabbitson wrote:
+Yes I can:
 
-> Is it possible that the following issue is related to your earlier
-> patches: http://marc.info/?l=3Dlinux-raid&m=3D123202024116493&w=3D2
+root@Thesaurus:/home/rabbit/src/git/mdadm# ./mdadm --version
+mdadm - v2.6.8 - 28th November 2008
 
-I don't think this is possible because you are using Linux 2.6.24.7
-which does not contain any of the block -> sector conversion changes.
 
-Moreover, those changes should be invisible to userspace. In
-particular, mdadm does not need to know whether the kernel uses blocks
-or sectors for its internal representations. In fact, no changes to
-mdadm were made wrt. the block -> sector conversions.
+root@Thesaurus:/home/rabbit/src/git/mdadm# ./mdadm -E /dev/sda1
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 1.1
+    Feature Map : 0x0
+     Array UUID : 6b11b1ba:78985745:b320fc1a:1db68bcf
+           Name : Thesaurus:Crypta  (local to host Thesaurus)
+  Creation Time : Sat Mar  8 16:33:41 2008
+     Raid Level : raid5
+   Raid Devices : 4
 
-Can you reproduce the incorrect output for the used device size
-with the recent master branch of the mdadm git tree?
+ Avail Dev Size : 578130828 (275.67 GiB 296.00 GB)
+     Array Size : 1730162688 (825.01 GiB 885.84 GB)
+  Used Dev Size : 576720896 (275.00 GiB 295.28 GB)
+    Data Offset : 264 sectors
+   Super Offset : 0 sectors
+          State : active
+    Device UUID : 85e0e62b:56129e5f:b0d82e78:2ace7d37
 
-Thanks
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
+    Update Time : Mon Jan 26 18:24:19 2009
+       Checksum : 61b214ff - correct
+         Events : 772406
 
---rz+pwK2yUstbofK6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+         Layout : left-symmetric
+     Chunk Size : 2048K
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
+    Array Slot : 5 (failed, failed, 2, 3, 0, 1)
+   Array State : uUuu 2 failed
 
-iD8DBQFJfd/uWto1QDEAkw8RAlF8AJ9AiPdwb+2Re1RWTgAQ62TEzF35egCeMvPV
-TX3vsm8g31N92KfxDYVKeyg=
-=kmDa
------END PGP SIGNATURE-----
 
---rz+pwK2yUstbofK6--
+root@Thesaurus:/home/rabbit/src/git/mdadm# ./mdadm -D /dev/md5
+/dev/md5:
+        Version : 1.01
+  Creation Time : Sat Mar  8 16:33:41 2008
+     Raid Level : raid5
+     Array Size : 865081344 (825.01 GiB 885.84 GB)
+  Used Dev Size : 576720896 (550.00 GiB 590.56 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 5
+    Persistence : Superblock is persistent
+
+    Update Time : Mon Jan 26 18:24:34 2009
+          State : clean
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 2048K
+
+           Name : Thesaurus:Crypta  (local to host Thesaurus)
+           UUID : 6b11b1ba:78985745:b320fc1a:1db68bcf
+         Events : 772406
+
+    Number   Major   Minor   RaidDevice State
+       4       8       67        0      active sync   /dev/sde3
+       5       8        1        1      active sync   /dev/sda1
+       2       8       19        2      active sync   /dev/sdb3
+       3       8       35        3      active sync   /dev/sdc3
