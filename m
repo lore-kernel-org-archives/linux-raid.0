@@ -1,83 +1,36 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [PATCH] mdadm: Fix the used device size in mdadm -D output.
-Date: Tue, 27 Jan 2009 08:52:53 +0100
-Message-ID: <20090127075253.GH17185@skl-net.de>
-References: <1232982852-32747-1-git-send-email-maan@systemlinux.org> <497DD740.8080306@rabbit.us> <20090126160814.GD17185@skl-net.de> <497DF230.1080908@rabbit.us> <20090126183359.GG17185@skl-net.de>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: SSD data reliable vs. unreliable [Was: Re: Data Recovery from
+ 	SSDs - Impact of trim?]
+Date: Tue, 27 Jan 2009 10:49:08 +0000
+Message-ID: <497EE6A4.7030406@anonymous.org.uk>
+References: <87f94c370901221553p4d3a749fl4717deabba5419ec@mail.gmail.com>	<497A2B3C.3060603@redhat.com>	<1232749447.3250.146.camel@localhost.localdomain>	<87f94c370901231526jb41ea66ta1d6a23d7631d63c@mail.gmail.com>	<497A542C.1040900@redhat.com>	<7fce22690901260659u30ffd634m3fb7f75102141ee9@mail.gmail.com>	<497DE35C.6090308@redhat.com>	<87f94c370901260934vef69a2cgada9ae3dfdb440ef@mail.gmail.com>	<1232992065.3248.38.camel@localhost.localdomain> <18814.39074.194781.490676@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="fd5uyaI9j6xoeUBo"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090126183359.GG17185@skl-net.de>
+In-Reply-To: <18814.39074.194781.490676@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Rabbitson <rabbit+list@rabbit.us>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg Freemyer <greg.freemyer@norcrossgroup.com>, Ric Wheeler <rwheeler@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, Dongjun Shin <djshin90@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 27/01/2009 05:16, Neil Brown wrote:
+[...]
+> Probably the only practical data structure for this would be a bitmap
+> similar to the current write-intent bitmap.
+> 
+> Is it really worth supporting this in raid5?   Are the sorts of
+> devices that will benefit from 'discard' requests likely to be used
+> inside an md/raid5 array I wonder....
 
---fd5uyaI9j6xoeUBo
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Assuming I've understood correctly, this usage map sounds to me like a 
+useful thing to have for all RAIDs. When building the array in the first 
+place, the initial sync is just writing a usage map saying it's all 
+empty. Filesystem writes and discards update it appropriately. Then when 
+we get failing sectors reported via e.g. SMART or a scrub operation we 
+know whether they're on used or unused areas so whether it's worth 
+attempting recovery.
 
-On 19:33, Andre Noll wrote:
-> This is twice as much as it should be due to a bug in mdadm which bites
-> only for version1 superblocks. The patch below should fix it. However,
-> this might not be the most elegant solution because the real bug
-> is IMHO that get_component_size() multiplies the value from sysfs
-> (which is always in 1K units) by two, so it returns 2K units which
-> looks a bit weird.
+Cheers,
 
-This was of course a braino: Multiplying a value in 1K units by two
-yields 512byte units rather than 2K units, which is exactly what the
-comment to get_component_size() says ;)
-
-That being said, I think my patch is correct and dividing the result
-by two in Detail() seems the best way to deal with the situation.
-So here's the patch again, this time with proper log message.
-
-Andre
-
-commit 2e9fd78bd09bf332ac86f2d288a0e7c3c1c3df4f
-Author: Andre Noll <maan@systemlinux.org>
-Date:   Tue Jan 27 08:49:15 2009 +0100
-
-    Fix the used device size in mdadm -D output.
-   =20
-    As get_component_size() returns the number of used sectors of a
-    device while mdadm is supposed to print this size in kilobytes,
-    we have to divide the return value of get_component_size() by two.
-   =20
-    Signed-off-by: Andre Noll <maan@systemlinux.org>
-
-diff --git a/Detail.c b/Detail.c
-index 3cee66f..cef1abb 100644
---- a/Detail.c
-+++ b/Detail.c
-@@ -195,7 +195,7 @@ int Detail(char *dev, int brief, int export, int test, =
-char *homehost)
- 		if (array.level >=3D 1) {
- 			if (array.major_version !=3D 0 &&
- 			    (larray_size >=3D 0xFFFFFFFFULL|| array.size =3D=3D 0)) {
--				unsigned long long dsize =3D get_component_size(fd);
-+				unsigned long long dsize =3D get_component_size(fd) / 2; /* KB */
- 				if (dsize > 0)
- 					printf("  Used Dev Size : %llu%s\n",
- 					       dsize,
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---fd5uyaI9j6xoeUBo
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFJfr1VWto1QDEAkw8RAq9UAJ9WDCjueK88+Z8T+TASjJQDG1tQoQCfYpwn
-VtPGTVRcKcFMtfxUS8ClYb0=
-=0OWJ
------END PGP SIGNATURE-----
-
---fd5uyaI9j6xoeUBo--
+John.
