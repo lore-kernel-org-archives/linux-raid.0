@@ -1,131 +1,85 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: SSD data reliable vs. unreliable [Was: Re: Data Recovery from
- 	SSDs - Impact of trim?]
-Date: Tue, 27 Jan 2009 09:54:30 -0500
-Message-ID: <497F2026.4000409@redhat.com>
-References: <87f94c370901221553p4d3a749fl4717deabba5419ec@mail.gmail.com>	 <497A2B3C.3060603@redhat.com>	 <1232749447.3250.146.camel@localhost.localdomain>	 <87f94c370901231526jb41ea66ta1d6a23d7631d63c@mail.gmail.com>	 <497A542C.1040900@redhat.com>	 <7fce22690901260659u30ffd634m3fb7f75102141ee9@mail.gmail.com>	 <497DE35C.6090308@redhat.com>	 <87f94c370901260934vef69a2cgada9ae3dfdb440ef@mail.gmail.com>	 <1232992065.3248.38.camel@localhost.localdomain>	 <18814.39074.194781.490676@notabene.brown> <1233067737.3231.6.camel@localhost.localdomain>
+From: 'Keld =?iso-8859-1?Q?J=F8rn?= Simonsen' <keld@dkuug.dk>
+Subject: Re: Properly setting up partitions and verbose boot
+Date: Wed, 28 Jan 2009 19:13:49 +0100
+Message-ID: <20090128181349.GA10524@rap.rap.dk>
+References: <001401c97f08$91205150$b360f3f0$@com> <20090126012013.GB28271@rap.rap.dk> <003501c97fd0$0ee0fa00$2ca2ee00$@com> <20090127042608.GA21425@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1233067737.3231.6.camel@localhost.localdomain>
+Content-Disposition: inline
+In-Reply-To: <20090127042608.GA21425@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Neil Brown <neilb@suse.de>, Greg Freemyer <greg.freemyer@norcrossgroup.com>, linux-raid <linux-raid@vger.kernel.org>, Dongjun Shin <djshin90@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: GeneralNMX <generalmx@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-James Bottomley wrote:
-> On Tue, 2009-01-27 at 16:16 +1100, Neil Brown wrote:
->   
->> On Monday January 26, James.Bottomley@HansenPartnership.com wrote:
->>     
->>> On Mon, 2009-01-26 at 12:34 -0500, Greg Freemyer wrote:
->>>       
->>>> Adding mdraid list:
->>>>
->>>> Top post as a recap for mdraid list (redundantly at end of email if
->>>> anyone wants to respond to any of this).:
->>>>
->>>> == Start RECAP
->>>> With proposed spec changes for both T10 and T13 a new "unmap" or
->>>> "trim" command is proposed respectively.  The linux kernel is
->>>> implementing this as a sector discard and will be called by various
->>>> file systems as they delete data files.  Ext4 will be one of the first
->>>> to support this. (At least via out of kernel patches.)
->>>>
->>>> SCSI - see http://www.t10.org/cgi-bin/ac.pl?t=d&f=08-356r5.pdf
->>>> ATA - see T13/e08137r2 draft
->>>>
->>>> Per the proposed spec changes, the underlying SSD device can
->>>> optionally modify the unmapped data.  SCSI T10 at least restricts the
->>>> way the modification happens, but data modification of unmapped data
->>>> is still definitely allowed for both classes of SSD.
->>>>
->>>> Thus if a filesystem "discards" a sector, the contents of the sector
->>>> can change and thus parity values are no longer meaningful for the
->>>> stripe.
->>>>         
->>> This isn't correct.  The implementation is via bio and request discard
->>> flags.  linux raid as a bio->bio mapping entity can choose to drop or
->>> implement the discard flag (by default it will be dropped unless the
->>> raid layer is modified).
->>>       
->> That's good.  I would be worried if they could slip through without
->> md/raid noticing.
->>
->>     
->>>> ie. If the unmap-ed blocks don't exactly correlate with the Raid-5 / 6
->>>> stripping, then the integrity of a stripe containing both mapped and
->>>> unmapped data is lost.
->>>>
->>>> Thus it seems that either the filesystem will have to understand the
->>>> raid 5 / 6 stripping / chunking setup and ensure it never issues a
->>>> discard command unless an entire stripe is being discarded.  Or that
->>>> the raid implementation must must snoop the discard commands and take
->>>> appropriate actions.
->>>>         
->>> No.  It only works if the discard is supported all the way through the
->>> stack to the controller and device ... any point in the stack can drop
->>> the discard.  It's also theoretically possible that any layer could
->>> accumulate them as well (i.e. up to stripe size for raid).
->>>       
->> Accumulating them in the raid level would probably be awkward.
->>
->> It was my understanding that filesystems would (try to) send the
->> largest possible 'discard' covering any surrounding blocks that had
->> already been discarded.  Then e.g. raid5 could just round down any
->> discard request to an aligned number of complete stripes and just
->> discard those.  i.e. have all the accumulation done in the filesystem.
->>     
->
-> The jury is still out on this one.   Array manufacturers, who would
-> probably like this as well because their internal granularity for thin
-> provisioning is reputedly huge (in the megabytes).  However, trim and
-> discard are being driven by SSD which has no such need.
->   
+On Tue, Jan 27, 2009 at 05:26:08AM +0100, 'Keld J=F8rn Simonsen' wrote:
+> On Mon, Jan 26, 2009 at 11:06:32AM -0500, GeneralNMX wrote:
+> >=20
+> > >From my understanding, there is fault tolerance and then there is =
+the chance
+> > of a disk dying. Obviously, the more disks you have, the greater ch=
+ance you
+> > have of a disk dying. If we assume all disks start out at some base=
+ chance
+> > to fail and degrade, putting multiple RAID types on the same disks =
+can
+> > dramatically increase the wear & tear as the number of disks increa=
+se,
+> > especially when you have both a raid5 (which doesn't need to write =
+to all
+> > disks, but will read from all disks) and a raid10 (which probably w=
+ill write
+> > and read to all disks) on the same physical array of disks. Since f=
+ault
+> > tolerance is there to decrease the problems with disks dying, my se=
+tup is
+> > obviously sub-optimal. Whenever I access my RAID10, I'm also ever s=
+o
+> > slightly degrading my RAID5 and RAID1, and visa-versa.
+>=20
+> Your arrangement does not increase the wear and tear, as far as I can
+> tell. This compared to a solution where you only have one big raid10,=
+f2
+> raid. Actually your wear and  tear would be lower, because raid5 does
+> not write so much if you mainly deal with bigger files, and not datab=
+ase
+> like operations.
+>=20
 
-I have heard from some array vendors of sizes that range from 8k erase 
-chunks (pretty easy for us) up to 768KB, but not up to megabytes....
+Compared to raid10,f2, raid5 only writes 1/3 of the data for redundancy=
+i
+in a 4-drive setup, and it does it in a striping manner, so raid5
+is quite fast for sequential writing.
 
-ric
+> > Now, as for the I/O Wait, this happens when I try to access both th=
+e RAID10
+> > and RAID5 at the same time, especially if I'm moving a lot of data =
+from the
+> > RAID10 to the RAID5.
+>=20
+> I think this would be the same if you moved the data (copying it) wit=
+hin
+> the RAID10, or within the RAID5. Please try it out, and I would be
+> interested also to hear your results.
 
->   
->> To be able to safely discard stripes, raid5 would need to remember
->> which stripes were discarded so that it could be sure to write out the
->> whole stripe when updating any block on it, thus ensuring that parity
->> will be correct again and will remain correct.
->>     
->
-> right.  This gives you a minimal discard size of the stripe width.
->
->   
->> Probably the only practical data structure for this would be a bitmap
->> similar to the current write-intent bitmap.
->>     
->
-> Hmm ... the feature you're talking about is called white space
-> elimination by most in the industry.  The layer above RAID (usually fs)
-> knows this information exactly ... if there were a way to pass it on,
-> there'd be no need to store it separately.
->
->   
->> Is it really worth supporting this in raid5?   Are the sorts of
->> devices that will benefit from 'discard' requests likely to be used
->> inside an md/raid5 array I wonder....
->>     
->
-> There's no hard data on how useful Trim will be in general.  The idea is
-> it allows SSDs to pre-erase (which can be a big deal) and for Thin
-> Provisioning it allows just in time storage decisions.  However, all
-> thin provision devices are likely to do RAID internally ...
->
->   
->> raid1 and raid10 are much easier to handle, so supporting 'discard'
->> there certainly makes sense.
->>     
->
-> James
->
->
->   
+Of cause moving around big files is IO bound.  I think the theoretical=20
+best performance is sequential read time for the one raid, plus
+theoretical write time for the other raid, hoping that random read/writ=
+e
+can be minimized. The theoretical read performance for raid10,f2 is
+almost 4 times nominal read speed, and theoretical write time for the
+raid5 is almost 3 times nominal speed, in your 4-drive setup.=20
+I tried some of it out with "cp", just on a single normal partititon,
+and it looks like "cp" minimizes the random read/write.
 
+I would be interested in hearing some performance fugures from you.
+
+Best regards
+keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
