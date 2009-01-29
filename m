@@ -1,40 +1,38 @@
-From: Vladimir Ivashchenko <hazard@francoudi.com>
-Subject: Re: sun x4500 soft lockup during raid creation
-Date: Thu, 29 Jan 2009 01:08:52 +0200
-Message-ID: <20090128230852.GA8495@francoudi.com>
-References: <1233174633.7008.34.camel@hazard2.francoudi.com> <20090128223330.GA14409@sillage.bis.pasteur.fr>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: SSD data reliable vs. unreliable [Was: Re: Data Recovery from
+ 	SSDs - Impact of trim?]
+Date: Thu, 29 Jan 2009 01:49:55 +0000
+Message-ID: <49810B43.20108@anonymous.org.uk>
+References: <87f94c370901221553p4d3a749fl4717deabba5419ec@mail.gmail.com>	 <87f94c370901231526jb41ea66ta1d6a23d7631d63c@mail.gmail.com>	 <497A542C.1040900@redhat.com>	 <7fce22690901260659u30ffd634m3fb7f75102141ee9@mail.gmail.com>	 <497DE35C.6090308@redhat.com>	 <87f94c370901260934vef69a2cgada9ae3dfdb440ef@mail.gmail.com>	 <1232992065.3248.38.camel@localhost.localdomain>	 <18814.39074.194781.490676@notabene.brown>	 <497EE6A4.7030406@anonymous.org.uk> <4980BBE7.30808@tmr.com> <7fce22690901281556h67fb353dp879f88e6c2a76eaf@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090128223330.GA14409@sillage.bis.pasteur.fr>
-Sender: linux-raid-owner@vger.kernel.org
-To: Tru Huynh <tru@pasteur.fr>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <7fce22690901281556h67fb353dp879f88e6c2a76eaf@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Greg Freemyer <greg.freemyer@norcrossgroup.com>
+Cc: Bill Davidsen <davidsen@tmr.com>, Neil Brown <neilb@suse.de>, James Bottomley <James.Bottomley@hansenpartnership.com>, Ric Wheeler <rwheeler@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, Dongjun Shin <djshin90@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 List-Id: linux-raid.ids
 
-
-On Wed, Jan 28, 2009 at 11:33:30PM +0100, Tru Huynh wrote:
-
-> > CentOS 5.2, 2.6.18-92.1.22.el5PAE, sata_mv. Two dual-core Opterons @ 2.8
-> > Ghz, 16 GB RAM.
-> any reason for using the 32 bits version instead of the 64 bits?
+On 28/01/2009 23:56, Greg Freemyer wrote:
+> Once discard calls get into linux file systems mdraid and/or device
+> mapper could implement linux's own thin provisioning implementation.
+> Even with traditional disks that don't support unmap.  I gather that
+> is what the EMCs of the world will be doing in their platforms.
 > 
-> you must also be aware of http://kbase.redhat.com/faq/docs/DOC-15593
-> 
-> just my .2 cents
+> http://en.wikipedia.org/wiki/Thin_provisioning
 
-Always welcome :)
+Sounds more like a device mapper or LVM thing (than md/RAID) to me, but 
+I'd definitely agree that this would be another great reason for block 
+devices to implement map/unmap.
 
-According to http://epubs.cclrc.ac.uk/bitstream/2943/ThumperReport.pdf, x4500 was shown to be unstable under centos/rhel 4.x (he didn't 
-use mv_sata though). In any case, centos 4.x is way too old.
+And I wonder if there's room for another dm/md device type which just 
+implements these usage maps over traditional devices which don't support 
+unmap (much as I was wondering a few weeks back about a soft DIF 
+implementation over e.g. SATA devices). Darn it, I might just have to 
+dig out my school books on C; it's a while since I offered a kernel patch.
 
-I changed the kernel to 2.6.27.12-78.2.8.fc9.i686 and so far it is stable. 
+Cheers,
 
-x64 will be the next step. i686 is what our guys install by default, I didn't bother to reinstall it.
+John.
 
--- 
-Best Regards
-Vladimir Ivashchenko
-Chief Technology Officer
-PrimeTel, Cyprus - www.prime-tel.com
