@@ -1,45 +1,52 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: raid 5, drives marked as failed. Can I recover?
-Date: Fri, 30 Jan 2009 15:24:20 +0000
-Message-ID: <49831BA4.2000000@dgreaves.com>
-References: <f97906a70901291517h2da6fd19pe800d9c17c49f562@mail.gmail.com>	 <alpine.DEB.1.10.0901300917120.23960@p34.internal.lan>	 <4983151A.4050609@dgreaves.com> <f97906a70901300706j442b89c3k8c61e8bb4a8aa49e@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: sun x4500 soft lockup during raid creation
+Date: Fri, 30 Jan 2009 10:28:59 -0500
+Message-ID: <49831CBB.8010609@tmr.com>
+References: <1233174633.7008.34.camel@hazard2.francoudi.com> <20090128223330.GA14409@sillage.bis.pasteur.fr> <20090128230852.GA8495@francoudi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f97906a70901300706j442b89c3k8c61e8bb4a8aa49e@mail.gmail.com>
+In-Reply-To: <20090128230852.GA8495@francoudi.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tom <matx3001@gmail.com>
-Cc: jpiszcz@lucidpixels.com, linux-raid@vger.kernel.org
+To: Vladimir Ivashchenko <hazard@francoudi.com>
+Cc: Tru Huynh <tru@pasteur.fr>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Tom wrote:
-> Hello,
-> 
-> I spent a night trying out mdadm --assemble on a virtual machine to
-> see how it attempts to fix a raid where 2 or more drives have been
-> marked faulty.
-> I was quite sure that the drives were fine and that they were wrongly
-> marked as bad.
-> I think I just have a bad ata controller.
-Given 2 drives died in 1 second then I'd agree.
+Vladimir Ivashchenko wrote:
+> On Wed, Jan 28, 2009 at 11:33:30PM +0100, Tru Huynh wrote:
+>
+>   
+>>> CentOS 5.2, 2.6.18-92.1.22.el5PAE, sata_mv. Two dual-core Opterons @ 2.8
+>>> Ghz, 16 GB RAM.
+>>>       
+>> any reason for using the 32 bits version instead of the 64 bits?
+>>
+>> you must also be aware of http://kbase.redhat.com/faq/docs/DOC-15593
+>>
+>> just my .2 cents
+>>     
+>
+> Always welcome :)
+>
+> According to http://epubs.cclrc.ac.uk/bitstream/2943/ThumperReport.pdf, x4500 was shown to be unstable under centos/rhel 4.x (he didn't 
+> use mv_sata though). In any case, centos 4.x is way too old.
+>
+> I changed the kernel to 2.6.27.12-78.2.8.fc9.i686 and so far it is stable. 
+>
+> x64 will be the next step. i686 is what our guys install by default, I didn't bother to reinstall it.
+>
+>   
+In spite of the theoretical benefits of 64 bit, I find that the 
+advantages are "measurable but not noticeable" for most things. The lack 
+of 64 bit versions of some applications was a problem for me, but may 
+not be for you. I did find that even building from source not all 
+applications worked right, or worked at all, or in some cases compiled. :-(
 
-> I used --assemble on real machine and it seemed to have detected the raid again.
-> 1 drive was found to be bad and it is recreating it now.
-> But my data is there and I can open it.
-> I am going to get some dvd's and back all this up before it dies again!
 
-OK, that's good :)
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "Woe unto the statesman who makes war without a reason that will still
+  be valid when the war is over..." Otto von Bismark 
 
-A forced assemble will make md assume all the disks are good and that all writes
-succeeded. ie all is well.
-
-They probably didn't and it probably isn't. OTOH you probably lost a few hundred
-bytes in many many Gb so nothing to panic over.
-
-You should fsck and, ideally, checksum compare your filesystem against a backup.
-I would run a read-only fsck before doing anything. Then if you just have light
-damage, repair.
-
-David
 
