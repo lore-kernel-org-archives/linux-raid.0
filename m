@@ -1,48 +1,43 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: sun x4500 soft lockup during raid creation
-Date: Fri, 30 Jan 2009 10:28:59 -0500
-Message-ID: <49831CBB.8010609@tmr.com>
-References: <1233174633.7008.34.camel@hazard2.francoudi.com> <20090128223330.GA14409@sillage.bis.pasteur.fr> <20090128230852.GA8495@francoudi.com>
+Subject: Re: SSD data reliable vs. unreliable [Was: Re: Data Recovery from
+ 	SSDs - Impact of trim?]
+Date: Fri, 30 Jan 2009 10:43:31 -0500
+Message-ID: <49832023.2040906@tmr.com>
+References: <87f94c370901221553p4d3a749fl4717deabba5419ec@mail.gmail.com>	 <497A542C.1040900@redhat.com>	 <7fce22690901260659u30ffd634m3fb7f75102141ee9@mail.gmail.com>	 <497DE35C.6090308@redhat.com>	 <87f94c370901260934vef69a2cgada9ae3dfdb440ef@mail.gmail.com>	 <497DF807.7010600@rtr.ca>	 <87f94c370901261009w431156fbx4d2b20638dc5097c@mail.gmail.com>	 <497DFF1A.2050401@rtr.ca>	 <7fe698080901290607n86b054q20cb830286d7a6d0@mail.gmail.com>	 <4981CF60.2040507@rtr.ca> <87f94c370901290827n77882126k75547bfdd2db0072@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090128230852.GA8495@francoudi.com>
+In-Reply-To: <87f94c370901290827n77882126k75547bfdd2db0072@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Vladimir Ivashchenko <hazard@francoudi.com>
-Cc: Tru Huynh <tru@pasteur.fr>, linux-raid@vger.kernel.org
+To: Greg Freemyer <greg.freemyer@norcrossgroup.com>
+Cc: Mark Lord <liml@rtr.ca>, Dongjun Shin <djshin90@gmail.com>, Ric Wheeler <rwheeler@redhat.com>, linux-raid <linux-raid@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Vladimir Ivashchenko wrote:
-> On Wed, Jan 28, 2009 at 11:33:30PM +0100, Tru Huynh wrote:
->
+Greg Freemyer wrote:
+> On Thu, Jan 29, 2009 at 10:46 AM, Mark Lord <liml@rtr.ca> wrote:
 >   
->>> CentOS 5.2, 2.6.18-92.1.22.el5PAE, sata_mv. Two dual-core Opterons @ 2.8
->>> Ghz, 16 GB RAM.
+>> Dongjun Shin wrote:
+>> ..
+>>     
+>>> Please also consider that, although not directly related with trim,
+>>> features like
+>>> Full-Disk-Encryption are also making things difficult for you.
 >>>       
->> any reason for using the 32 bits version instead of the 64 bits?
+>> ..
 >>
->> you must also be aware of http://kbase.redhat.com/faq/docs/DOC-15593
->>
->> just my .2 cents
+>> Assuming the encryption doesn't have a state-mandated backdoor hidden
+>> inside.
 >>     
 >
-> Always welcome :)
->
-> According to http://epubs.cclrc.ac.uk/bitstream/2943/ThumperReport.pdf, x4500 was shown to be unstable under centos/rhel 4.x (he didn't 
-> use mv_sata though). In any case, centos 4.x is way too old.
->
-> I changed the kernel to 2.6.27.12-78.2.8.fc9.i686 and so far it is stable. 
->
-> x64 will be the next step. i686 is what our guys install by default, I didn't bother to reinstall it.
->
+> The timing could not be worse.  Last year if we could not get the
+> password, we could just send the user to Gitmo!!!
 >   
-In spite of the theoretical benefits of 64 bit, I find that the 
-advantages are "measurable but not noticeable" for most things. The lack 
-of 64 bit versions of some applications was a problem for me, but may 
-not be for you. I did find that even building from source not all 
-applications worked right, or worked at all, or in some cases compiled. :-(
 
+I believe that in England, or maybe the whole EU, you can be forced to 
+give up your passwords, and be imprisoned until you do. There was an 
+article about that and I don't remember the details, but it was enough 
+to make me leave my computer home when I visit England again.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
