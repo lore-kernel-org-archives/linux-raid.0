@@ -1,51 +1,40 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: Linux RAID autodetect partitions go missing from /dev, but fdisk
-  can see them
-Date: Sun, 01 Feb 2009 07:50:09 +1300
-Message-ID: <49849D61.5040602@sauce.co.nz>
-References: <49402CFE.3080708@gmail.com>	<18759.8246.568849.244513@notabene.brown>	<494AC8BA.7010704@gmail.com> <18762.53424.819087.495066@notabene.brown> <49736C2A.3050108@gmail.com> <49844FD9.2090705@gmail.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: 2.6.28: All I/O, D-state: 3ware
+ 9650SE-16ML/Intel/965/MTRR/PAT?
+Date: Sat, 31 Jan 2009 18:11:41 -0500 (EST)
+Message-ID: <alpine.DEB.1.10.0901311811140.19833@p34.internal.lan>
+References: <alpine.DEB.1.10.0901310523480.29879@p34.internal.lan> <alpine.DEB.1.10.0901311230510.4472@p34.internal.lan> <20090131175509.GA24900@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49844FD9.2090705@gmail.com>
+In-Reply-To: <20090131175509.GA24900@infradead.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Tor_Arne_Vestb=F8?= <torarnv@gmail.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, Alan Piszcz <ap@solarrain.com>, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-Tor Arne Vestb=F8 wrote:
 
-> Changed the DEVICE line in my mdadm.conf from:
->=20
->   DEVICE partitions
->=20
-> to
->=20
->   DEVICE /dev/sd[bcdef]1
->=20
-> Now the array is assembled correctly at boot.
 
-A safer way of acheiving this is to list the array in mdadm.conf by=20
-UUID, which will guarantee all the correct devices are used - sd device=
-s=20
-can move around under some conditions.
+On Sat, 31 Jan 2009, Christoph Hellwig wrote:
 
-eg.
+> On Sat, Jan 31, 2009 at 12:37:39PM -0500, Justin Piszcz wrote:
+>> I think it was a coincidence when I tried to login before, I tried it
+>> again (after trying to re-produce the problem, which I had been able to
+>> do) and this time the mouse worked but the keyboard did not..even running
+>> echo b > sysrq-trigger did not reboot the server..  Had to resort to
+>> manual method.
+>>
+>> I am now on kernel 2.6.28.2 and will see if I can make it happen again.
+>
+> This looks like the bug fixed by commit
+> e8c82c2e23e3527e0c9dc195e432c16784d270fa.  Make sure you have it.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-ARRAY /dev/md1 level=3Draid1 num-devices=3D2=20
-UUID=3Df6bd7495:52288189:40f44282:1c220686
-ARRAY /dev/md0 level=3Draid1 num-devices=3D2=20
-UUID=3Df7d720fe:a5d0724c:c9bd10fa:a496ed51
+Thanks, looks like that was the culprit, no hangs in 1-2 hrs of heavy I/O.
 
-Note each ARRAY entry and UUID are entered as a single line.
-
-Regards,
-
-Richard
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Justin.
