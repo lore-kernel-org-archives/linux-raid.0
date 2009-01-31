@@ -1,42 +1,49 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: sun x4500 soft lockup during raid creation
-Date: Fri, 30 Jan 2009 23:28:42 +0100
-Message-ID: <20090130222842.GA9733@rap.rap.dk>
-References: <1233174633.7008.34.camel@hazard2.francoudi.com> <20090128223330.GA14409@sillage.bis.pasteur.fr> <20090128230852.GA8495@francoudi.com> <49831CBB.8010609@tmr.com> <1233344286.14088.36.camel@hazard2.francoudi.com>
+From: whollygoat@letterboxes.org
+Subject: some ?? re failed disk and resyncing of array
+Date: Sat, 31 Jan 2009 00:16:56 -0800
+Message-ID: <1233389816.28363.1297740563@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1233344286.14088.36.camel@hazard2.francoudi.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Vladimir Ivashchenko <hazard@francoudi.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, Tru Huynh <tru@pasteur.fr>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Jan 30, 2009 at 09:38:06PM +0200, Vladimir Ivashchenko wrote:
-> On Fri, 2009-01-30 at 10:28 -0500, Bill Davidsen wrote:
-> 
-> > > I changed the kernel to 2.6.27.12-78.2.8.fc9.i686 and so far it is stable. 
-> > >
-> > > x64 will be the next step. i686 is what our guys install by default, I didn't bother to reinstall it.
-> > >
-> >    
-> > In spite of the theoretical benefits of 64 bit, I find that the 
-> > advantages are "measurable but not noticeable" for most things. The lack 
-> > of 64 bit versions of some applications was a problem for me, but may 
-> > not be for you. I did find that even building from source not all 
-> > applications worked right, or worked at all, or in some cases compiled. :-(
-> 
-> More or less this is our experience also, but this box will only be used
-> as a file-server.
-> 
-> Does anybody know if software RAID benefits when being run in 64-bit ?
+On a boot a couple of days ago, mdadm failed a disk and
+started resyncing to spare (raid5, 6 drives, 5 active, 1
+spare).  smartctl -H <disk> returned info (can't remember
+the exact text) that made me suspect the drive was
+fine, but the data connection was bad.  Sure enough the
+data cable was damaged.  Replaced the cable and smartctl
+sees the disk just fine and reports no errors.
 
-I think it may. IO buffer copying may be twice as  fast.
-Some statistics on IO, including network traffic can be measured
-when it goes beyound about 100 Mbit/s - tehere are some counters that
-would overflow 32 bit.
+- I'd like to readd the drive as a spare.  Is it enough
+to "mdadm --add /dev/hdk" or do I need to prep the drive to
+remove any data that said where it previously belonged
+in the array?  
 
+- When I tried to list some files on one of the filesystems
+on the array (the fact that it took so long to react to
+the ls is how I discovered the box was in the middle of
+rebuiling to spare) it couldn't find the file (or many 
+others).  I thought that resyncing was supposed to be
+transparent, yet parts of the fs seemed to be missing.
+Everything was there afterwards.  Is that normal?
 
-best regards
-keld
+- On a subsequent boot I had to run e2fsck on the three
+filesystems housed on the array.  Many stray blocks, 
+illegal inodes, etc were found.  An artifact of the rebuild
+or unrelated?
+
+Thanks.
+
+WG
+-- 
+  
+  whollygoat@letterboxes.org
+
+-- 
+http://www.fastmail.fm - Send your email first class
+
