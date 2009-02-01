@@ -1,84 +1,77 @@
-From: Troy Cauble <troycauble@gmail.com>
-Subject: Can't boot with drive pulled from RAID-1 /home (was: problem growing
-	raid-1)
-Date: Sun, 1 Feb 2009 17:18:45 -0500
-Message-ID: <6d344ffd0902011418k4eaf1a10sc58358f289f1d5c@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH] mdadm: Fix the used device size in mdadm -D output.
+Date: Mon, 2 Feb 2009 10:04:45 +1100
+Message-ID: <18822.10893.62071.901769@notabene.brown>
+References: <1232982852-32747-1-git-send-email-maan@systemlinux.org>
+	<497DD740.8080306@rabbit.us>
+	<20090126160814.GD17185@skl-net.de>
+	<497DF230.1080908@rabbit.us>
+	<20090126183359.GG17185@skl-net.de>
+	<20090127075253.GH17185@skl-net.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Andre Noll on Tuesday January 27
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andre Noll <maan@systemlinux.org>
+Cc: Peter Rabbitson <rabbit+list@rabbit.us>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-OK.  Forget about the "growing" part of my question.
-I'll re-state things:
+On Tuesday January 27, maan@systemlinux.org wrote:
+> On 19:33, Andre Noll wrote:
+> > This is twice as much as it should be due to a bug in mdadm which bites
+> > only for version1 superblocks. The patch below should fix it. However,
+> > this might not be the most elegant solution because the real bug
+> > is IMHO that get_component_size() multiplies the value from sysfs
+> > (which is always in 1K units) by two, so it returns 2K units which
+> > looks a bit weird.
+> 
+> This was of course a braino: Multiplying a value in 1K units by two
+> yields 512byte units rather than 2K units, which is exactly what the
+> comment to get_component_size() says ;)
+> 
+> That being said, I think my patch is correct and dividing the result
+> by two in Detail() seems the best way to deal with the situation.
+> So here's the patch again, this time with proper log message.
 
-Why doesn't my system boot when I pull a drive that's
-part of the the RAID-1 /home?
-
-Recent history:
-I discovered a couple of weeks ago that I had been running
-this RAID degraded for an unknown amount of time.  So it
-could boot and run degraded then.
-I did a (fail, add, remove) pattern and was up and running.
-
-Later, I figured out that my partition types for the raid drives
-shouldn't be 83 and I changed them to 0xDA with fdisk.  I
-did this while the raid was mounted, if it matters.
-
-NOW I find out that if I shutdown, pull a disk and boot, I get
-dropped into a repair shell with:
-
-fsck.ext3: Unable to resolve 'UUID=806153bf-6917-440d-ae48-553418cfbbeb'
-
- which is the UUID of the raid filesystem.
-
-But when I put the drive back in and reboot, and everything is fine.
-I've repeated this with both disks of the raid.
-
-In the repair shell I captured the following:
-
-root@mastershake:/root# mdadm -D --scan
-mdadm: md device /dev/md0 does not appear to be active.
-root@mastershake:/root# mdadm -E --scan
-ARRAY /dev/md0 level=raid1 num-devices=2
-UUID=61645020:223a69dc:12d77363:0c0f047d
-root@mastershake:/root# mdadm -E /dev/sdc1
-/dev/sdc1:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 61645020:223a69dc:12d77363:0c0f047d
-  Creation Time : Sun Jan  2 12:53:01 2005
-     Raid Level : raid1
-  Used Dev Size : 244195904 (232.88 GiB 250.06 GB)
-     Array Size : 244195904 (232.88 GiB 250.06 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
-
-    Update Time : Sun Feb  1 16:14:11 2009
-          State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : e639550e - correct
-         Events : 0.5125560
-
-
-      Number   Major   Minor   RaidDevice State
-this     1       8       33        1      active sync   /dev/sdc1
-
-   0     0       8       17        0      active sync
-   1     1       8       33        1      active sync   /dev/sdc1
-
-
-
-So, why
-"md device /dev/md0 does not appear to be active." ????
-
-Again, if I put the 2nd drive back in, everything's fine.
+Thanks Andre.
+Your patch is good... but I really like to use "sectors" as often as
+possible.
+So I've changed it to leave 'dsize' as sectors, but device it by 2, or
+shift by 9, as appropriate.
 
 Thanks,
--troy
+NeilBrown
+
+
+> 
+> Andre
+> 
+> commit 2e9fd78bd09bf332ac86f2d288a0e7c3c1c3df4f
+> Author: Andre Noll <maan@systemlinux.org>
+> Date:   Tue Jan 27 08:49:15 2009 +0100
+> 
+>     Fix the used device size in mdadm -D output.
+>     
+>     As get_component_size() returns the number of used sectors of a
+>     device while mdadm is supposed to print this size in kilobytes,
+>     we have to divide the return value of get_component_size() by two.
+>     
+>     Signed-off-by: Andre Noll <maan@systemlinux.org>
+> 
+> diff --git a/Detail.c b/Detail.c
+> index 3cee66f..cef1abb 100644
+> --- a/Detail.c
+> +++ b/Detail.c
+> @@ -195,7 +195,7 @@ int Detail(char *dev, int brief, int export, int test, char *homehost)
+>  		if (array.level >= 1) {
+>  			if (array.major_version != 0 &&
+>  			    (larray_size >= 0xFFFFFFFFULL|| array.size == 0)) {
+> -				unsigned long long dsize = get_component_size(fd);
+> +				unsigned long long dsize = get_component_size(fd) / 2; /* KB */
+>  				if (dsize > 0)
+>  					printf("  Used Dev Size : %llu%s\n",
+>  					       dsize,
+> -- 
+> The only person who always got his work done by Friday was Robinson Crusoe
