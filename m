@@ -1,51 +1,33 @@
-From: "GeneralNMX" <generalmx@gmail.com>
-Subject: Raid starts dirty every boot on Ubuntu
-Date: Sun, 1 Feb 2009 12:23:16 -0500
-Message-ID: <004101c98491$c575dd10$50619730$@com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: problem growing raid-1
+Date: Mon, 02 Feb 2009 07:56:48 +1300
+Message-ID: <4985F070.10105@sauce.co.nz>
+References: <6d344ffd0901312134q623be8ffi4cec4b6c39dd6216@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-References: 
-In-Reply-To: 
-Content-Language: en-us
+In-Reply-To: <6d344ffd0901312134q623be8ffi4cec4b6c39dd6216@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Troy Cauble <troycauble@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Troy Cauble wrote:
+> I want to replace both disks in a RAID-1 with larger ones using the
+> instructions here:
+> http://linux-raid.osdl.org/index.php/Growing#Extending_an_existing_RAID_array
+> 
+> It looks straightforward: mdadm -f, mdmadm -r, swap a drive, etc., etc.
+> 
+> Except if I -f & -r a drive, I won't know which physical drive to pull.
+> (And I have no spare SATA ports.)
 
-On my Ubuntu server, ALL my raids start dirty every single time and kic=
-ks
-one drive (any one of the four), re-adds it, then reconstructs the raid
-array. For the example below, this is a raid1 with two spares. =A0When =
-it
-finishes booting, the device that was kicked is still in the array, as =
-a
-spare. This makes the boot literally take hours, and I don=92t know exa=
-ctly
-what it=92s doing since it just sits there without a progress indicator=
-=2E I
-don=92t think it=92s fsck because it doesn=92t even get to fsck yet in =
-the
-runlevel. It goes like this:
+smartctl -a -d ata /dev/sdx
 
-md: md7 stopped.
-md: unbind<sda9>
-md: export_rdev(sda9)
-md: ubind<sdb9>
-md: export_rdev(sdb9)
-md: bind<sdc9>
-md: bind<sdb9>
-md: bind<sdd9>
-md: bind<sda9>
-md: Kicking non-fresh sdd9 from array!
-md: unbind<sdd9>
-md: export_rdev(sdd9)
-raid1: raid set md7 active with 2 out of 2 mirrors
+will tell you the serial number of the drive, which then lets you 
+shutdown, identify and remove the correct one.
 
+Regards,
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Richard
