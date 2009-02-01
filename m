@@ -1,77 +1,69 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] mdadm: Fix the used device size in mdadm -D output.
-Date: Mon, 2 Feb 2009 10:04:45 +1100
-Message-ID: <18822.10893.62071.901769@notabene.brown>
-References: <1232982852-32747-1-git-send-email-maan@systemlinux.org>
-	<497DD740.8080306@rabbit.us>
-	<20090126160814.GD17185@skl-net.de>
-	<497DF230.1080908@rabbit.us>
-	<20090126183359.GG17185@skl-net.de>
-	<20090127075253.GH17185@skl-net.de>
+Subject: Re: [mdadm git pull] imsm fixes and general external metadata updates
+Date: Mon, 2 Feb 2009 10:46:21 +1100
+Message-ID: <18822.13389.938876.964972@notabene.brown>
+References: <1232576408.2029.56.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andre Noll on Tuesday January 27
+In-Reply-To: message from Dan Williams on Wednesday January 21
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
-Cc: Peter Rabbitson <rabbit+list@rabbit.us>, LinuxRaid <linux-raid@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tuesday January 27, maan@systemlinux.org wrote:
-> On 19:33, Andre Noll wrote:
-> > This is twice as much as it should be due to a bug in mdadm which bites
-> > only for version1 superblocks. The patch below should fix it. However,
-> > this might not be the most elegant solution because the real bug
-> > is IMHO that get_component_size() multiplies the value from sysfs
-> > (which is always in 1K units) by two, so it returns 2K units which
-> > looks a bit weird.
+On Wednesday January 21, dan.j.williams@intel.com wrote:
+> Hi Neil,
 > 
-> This was of course a braino: Multiplying a value in 1K units by two
-> yields 512byte units rather than 2K units, which is exactly what the
-> comment to get_component_size() says ;)
+> The following changes since commit 78fbcc10312649f2f4f88283e3f19dce9b205733:
+>   NeilBrown (1):
+>         Merge branch 'master' into scratch-3.0
 > 
-> That being said, I think my patch is correct and dividing the result
-> by two in Detail() seems the best way to deal with the situation.
-> So here's the patch again, this time with proper log message.
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/djbw/mdadm.git devel
+> 
 
-Thanks Andre.
-Your patch is good... but I really like to use "sectors" as often as
-possible.
-So I've changed it to leave 'dsize' as sectors, but device it by 2, or
-shift by 9, as appropriate.
+Thanks.
 
-Thanks,
+
+> Dan Williams (12):
+>       mdmon: fix missing ->subarray initialization
+>       imsm: fix dev_open return value handling
+>       imsm: imsm_read_serial check for zero-length response
+>       mdmon: expand permissible container device names
+>       mdmon: support scanning for containers
+>       Assemble: fix busy detection
+>       mdmon: make switchroot an undecorated option
+>       Create: allow per-metadata default layouts
+>       imsm: rename vprintf macro to pr_vrb
+>       imsm: enforce num_disks constraints
+>       imsm: enforce "all member disks must be members of all arrays"
+>       Create: warn when a metadata format's platform components are missing
+
+This all looks fine, though I confess that I didn't read "all
+member disks must be members of all arrays" very closely...
+
+> 
+> Beyond the straightforward fixes the more interesting bits are:
+> 
+> mdmon: support scanning for containers
+> This is an attempt to make mdmon more manageable in the initramfs
+> environment.  Once mdadm has assembled the rootfs we need to switch the
+> currently running mdmon instance(s) over to the new mount point.  With
+> the current code it is awkward to do this in a generic way because a
+> script needs to know the names of all the active containers.  This tree
+> allows a script to do "mdmon /proc/mdstat /newroot" to batch convert all
+> mdmon instances to /newroot.  This is probably a good time to start
+> interfacing with initramfs@vger.kernel.org to make sure these "initramfs
+> helper" changes are relevant, and to see what else is missing.
+
+We really need a man page for mdmon don't we.  Then this sort of text
+could be placed there for safely.
+
+All pulled.
+
+Thanks.
+
 NeilBrown
-
-
-> 
-> Andre
-> 
-> commit 2e9fd78bd09bf332ac86f2d288a0e7c3c1c3df4f
-> Author: Andre Noll <maan@systemlinux.org>
-> Date:   Tue Jan 27 08:49:15 2009 +0100
-> 
->     Fix the used device size in mdadm -D output.
->     
->     As get_component_size() returns the number of used sectors of a
->     device while mdadm is supposed to print this size in kilobytes,
->     we have to divide the return value of get_component_size() by two.
->     
->     Signed-off-by: Andre Noll <maan@systemlinux.org>
-> 
-> diff --git a/Detail.c b/Detail.c
-> index 3cee66f..cef1abb 100644
-> --- a/Detail.c
-> +++ b/Detail.c
-> @@ -195,7 +195,7 @@ int Detail(char *dev, int brief, int export, int test, char *homehost)
->  		if (array.level >= 1) {
->  			if (array.major_version != 0 &&
->  			    (larray_size >= 0xFFFFFFFFULL|| array.size == 0)) {
-> -				unsigned long long dsize = get_component_size(fd);
-> +				unsigned long long dsize = get_component_size(fd) / 2; /* KB */
->  				if (dsize > 0)
->  					printf("  Used Dev Size : %llu%s\n",
->  					       dsize,
-> -- 
-> The only person who always got his work done by Friday was Robinson Crusoe
