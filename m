@@ -1,7 +1,7 @@
 From: whollygoat@letterboxes.org
-Subject: Re: some ?? re failed disk and resyncing of array
-Date: Sun, 01 Feb 2009 17:47:53 -0800
-Message-ID: <1233539273.12800.1297953007@webmail.messagingengine.com>
+Subject: zero-superblock, Re: some ?? re failed disk and resyncing of array
+Date: Mon, 02 Feb 2009 16:52:13 -0800
+Message-ID: <1233622333.26974.1298163227@webmail.messagingengine.com>
 References: <1233389816.28363.1297740563@webmail.messagingengine.com>
  <49842A1E.1090105@dgreaves.com>
  <1233403388.29916.1297756217@webmail.messagingengine.com>
@@ -16,7 +16,6 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 Cc: Bill Davidsen <davidsen@tmr.com>, David Greaves <david@dgreaves.com>
 List-Id: linux-raid.ids
-
 
 On Sun, 01 Feb 2009 14:41:37 -0500, "Bill Davidsen" <davidsen@tmr.com>
 said:
@@ -51,66 +50,140 @@ said:
 > put into preventing unwanted autodetection the fewer learning 
 > experiences you will have.
 
-Will do
-> > fly:~# mdadm -D /dev/md0
-[snip]
+Can anyone provide any more insight with the below?
 
-> >    Raid Devices : 5
-> >   Total Devices : 5
-> > Preferred Minor : 0
-> >     Persistence : Superblock is persistent
-> >
-> >   Intent Bitmap : Internal
-> >
-> >     Update Time : Fri Jan 30 15:52:01 2009
-> >           State : active
-> >  Active Devices : 5
-> > Working Devices : 5
-> >  Failed Devices : 0
-> >   Spare Devices : 0
+fly:~# mdadm --zero-superblock /dev/hdk1
+mdadm: Unrecognised md component device - /dev/hdk1
 
-[snip]
-> >
-> >     Number   Major   Minor   RaidDevice State
-> >        0      33        1        0      active sync   /dev/hde1
-> >        1      34        1        1      active sync   /dev/hdg1
-> >        2      56        1        2      active sync   /dev/hdi1
-> >        5      89        1        3      active sync   /dev/hdo1
-> >        6      88        1        4      active sync   /dev/hdm1
-> >
-> >
-> > fly:~# mdadm -E /dev/hdo1
+fly:~# fdisk -l /dev/hdk
 
-[snip]
-> >
-> >     Array Slot : 5 (0, 1, 2, failed, failed, 3, 4)
-> >    Array State : uuuUu 2 failed
-> > --------- end output -------------
-> >
-> > Why does the "Array Slot" field show 7 slots?  And why
-> > does the field "Array State" show 2 failed?  There 
-> > ever only were 6 disks in the array.  Only one of those
-> > is currently missing.  mdadm -D above doesn't list any
-> > failed devices in the "Failed Devices" field.
-> >
-> >   
-> No idea, but did you explicitly remove the failed drive? Was there a 
-> failed drive at some time in the past?
+Disk /dev/hdk: 120.0 GB, 120034123776 bytes
+255 heads, 63 sectors/track, 14593 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
 
-No explicit removal.  Maybe I should have.  I let it rebuild
-then shutdown to see if it was just something like cabling.
-After dealing with the cabling problem and rebooting mdadm -D
-didn't show any failed drives, just as above, so it never occurred
-to me to remove the drive.
+   Device Boot      Start         End      Blocks   Id  System
+/dev/hdk1               1       14593   117218241   da  Non-FS data
 
-Is there anything I can do to fix the information reported by
-mdadm -E <component device>?  Maybe when I add the old drive
-as the new spare it will be taken care of?
+fly:~# mdadm -a /dev/hdk1
+mdadm: /dev/hdk1 does not appear to be an md device
+
+fly:~# smartctl -a /dev/hdk
+smartctl version 5.36 [i686-pc-linux-gnu] Copyright (C) 2002-6 Bruce
+Allen
+Home page is http://smartmontools.sourceforge.net/
+
+=== START OF INFORMATION SECTION ===
+Model Family:     Western Digital Caviar SE family
+Device Model:     WDC WD1200JB-00GVC0
+Serial Number:    WD-WCALA2237663
+Firmware Version: 08.02D08
+User Capacity:    120,034,123,776 bytes
+Device is:        In smartctl database [for details use: -P show]
+ATA Version is:   6
+ATA Standard is:  Exact ATA specification draft version not indicated
+Local Time is:    Mon Feb  2 16:50:13 2009 PST
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
+
+=== START OF READ SMART DATA SECTION ===
+SMART overall-health self-assessment test result: PASSED
+
+General SMART Values:
+Offline data collection status:  (0x82) Offline data collection activity
+                                        was completed without error.
+                                        Auto Offline Data Collection:
+                                        Enabled.
+Self-test execution status:      (   0) The previous self-test routine
+completed
+                                        without error or no self-test
+                                        has ever 
+                                        been run.
+Total time to complete Offline 
+data collection:                 (3472) seconds.
+Offline data collection
+capabilities:                    (0x7b) SMART execute Offline immediate.
+                                        Auto Offline data collection
+                                        on/off support.
+                                        Suspend Offline collection upon
+                                        new
+                                        command.
+                                        Offline surface scan supported.
+                                        Self-test supported.
+                                        Conveyance Self-test supported.
+                                        Selective Self-test supported.
+SMART capabilities:            (0x0003) Saves SMART data before entering
+                                        power-saving mode.
+                                        Supports SMART auto save timer.
+Error logging capability:        (0x01) Error logging supported.
+                                        No General Purpose Logging
+                                        support.
+Short self-test routine 
+recommended polling time:        (   2) minutes.
+Extended self-test routine
+recommended polling time:        (  49) minutes.
+Conveyance self-test routine
+recommended polling time:        (   5) minutes.
+
+SMART Attributes Data Structure revision number: 16
+Vendor Specific SMART Attributes with Thresholds:
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE     
+UPDATED  WHEN_FAILED RAW_VALUE
+  1 Raw_Read_Error_Rate     0x000b   200   200   051    Pre-fail  Always
+        -       0
+  3 Spin_Up_Time            0x0007   126   122   021    Pre-fail  Always
+        -       4200
+  4 Start_Stop_Count        0x0032   100   100   040    Old_age   Always
+        -       680
+  5 Reallocated_Sector_Ct   0x0033   200   200   140    Pre-fail  Always
+        -       0
+  7 Seek_Error_Rate         0x000b   200   200   051    Pre-fail  Always
+        -       0
+  9 Power_On_Hours          0x0032   085   085   000    Old_age   Always
+        -       10951
+ 10 Spin_Retry_Count        0x0013   100   100   051    Pre-fail  Always
+       -       0
+ 11 Calibration_Retry_Count 0x0013   100   100   051    Pre-fail  Always
+       -       0
+ 12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always
+       -       677
+194 Temperature_Celsius     0x0022   112   094   000    Old_age   Always
+      -       35
+196 Reallocated_Event_Count 0x0032   200   200   000    Old_age   Always
+      -       0
+197 Current_Pending_Sector  0x0012   200   200   000    Old_age   Always
+      -       0
+198 Offline_Uncorrectable   0x0012   200   200   000    Old_age   Always
+      -       0
+199 UDMA_CRC_Error_Count    0x000a   200   253   000    Old_age   Always
+      -       0
+200 Multi_Zone_Error_Rate   0x0009   200   200   051    Pre-fail 
+Offline      -       0
+
+SMART Error Log Version: 1
+No Errors Logged
+
+SMART Self-test log structure revision number 1
+Num  Test_Description    Status                  Remaining 
+LifeTime(hours)  LBA_of_first_error
+# 1  Extended offline    Completed without error       00%     10922    
+    -
+
+SMART Selective self-test log data structure revision number 1
+ SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
+    1        0        0  Not_testing
+    2        0        0  Not_testing
+    3        0        0  Not_testing
+    4        0        0  Not_testing
+    5        0        0  Not_testing
+Selective self-test flags (0x0):
+  After scanning selected spans, do NOT read-scan remainder of disk.
+If Selective self-test is pending on power-up, resume after 0 minute
+delay.
+
 
 Thanks,
 
 wg
-
 -- 
   
   whollygoat@letterboxes.org
