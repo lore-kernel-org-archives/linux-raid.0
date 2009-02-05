@@ -1,38 +1,29 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: How to start SW raid later in boot?
-Date: Thu, 05 Feb 2009 13:44:52 -0500
-Message-ID: <498B33A4.3090505@tmr.com>
-References: <20090204193039.M36676@estone.ca> <498A0D0E.70000@musmo.com> <20090205112014.M278@estone.ca>
+Subject: Re: Any hope for a 27 disk RAID6+1HS array with four disks reporting
+ "No md superblock detected"?
+Date: Thu, 05 Feb 2009 13:49:14 -0500
+Message-ID: <498B34AA.5020606@tmr.com>
+References: <1233775657.10151.5.camel@localhost.localdomain>	 <4989FF7B.6030503@scalableinformatics.com> <1233781437.696.2.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090205112014.M278@estone.ca>
+In-Reply-To: <1233781437.696.2.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: michael <michael@estone.ca>
-Cc: linuxraid <linux-raid@vger.kernel.org>
+To: tjb@unh.edu
+Cc: landman@scalableinformatics.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-michael wrote:
-> On Wed, 04 Feb 2009 22:47:58 +0100, KwangErn Liew wrote
->
->   
->> Do you have initrd enabled?
->>
->>     
->
-> I believe I do, its a standard install of Debian stable.
-> For now, I suppose I can do as the last poster suggested and 
-> run a startup script to assemble the array, and mount it.
->
-> I will look more into the driver as its a 3rd party loaded module.
-> Perhaps it can be setup to load earlier in the boot.
+Thomas J. Baker wrote:
+> The array was made probably two years ago and had been working fine
+> until recently. In reading the documentation for mdadm, it did seem like
+> it should have required me to use the higher version but it never
+> complained when I made it and worked fine.
 >   
 
-If you put the module into the initrd (see man mkinitrd) you can get it 
-loaded early. You may be able to prevent early start by changing the 
-partition types (unlikely) or keeping the md device out of fstab and 
-starting and mounting it from rc.local. I would go initrd.
+What have you changed lately? Are the drives all on a single controller? 
+Are you using PARTITIONS in mdadm.conf and letting mdadm find things for 
+itself?
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
