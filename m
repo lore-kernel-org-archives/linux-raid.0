@@ -1,54 +1,50 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: RAID-10 unbalanced reads
-Date: Mon, 9 Feb 2009 21:27:28 +0100
-Message-ID: <20090209202728.GA11996@lazy.lzy>
+From: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Subject: Re: raid1 + 2.6.27.7 issues
+Date: Mon, 9 Feb 2009 14:56:21 -0600
+Message-ID: <cccedfc60902091256y5a280b0drb468c2757ffdb980@mail.gmail.com>
+References: <cccedfc60902090836n76e5e6e6mfd149db5ac2f5d2b@mail.gmail.com>
+	 <C5B60EA5.C47B%groups@email.iain.rauch.co.uk>
+	 <20090209165940.GA805@esri.com>
+	 <cccedfc60902090949sec3336u661cea5fbb96e246@mail.gmail.com>
+	 <4990843B.7010708@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <4990843B.7010708@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all.
+On Mon, Feb 9, 2009 at 1:30 PM, Bill Davidsen <davidsen@tmr.com> wrote:
+> Jon Nelson wrote:
+>>
+>> I don't think so. This is how I *remove* the nbd device:
+>>
+>> mdadm /dev/md11 --fail /dev/nbd0
+>> sleep 3
+>> mdadm /dev/md11 --remove /dev/nbd0
+>>
+>> and then finally nbd-client -d /dev/nbd0
+>>
+>> If necessary, I can try to simulate the problem by using a local
+>> logical volume or some such.
+>>
+>
+> I would try this with just the first step. I looked at the code briefly, and
+> I think the write intent bitmap will not get built for a removed device but
+> will for failed. In any case it's certainly something you can easily try.
 
-I've setup a system with two RAID volumes.
-One is a small RAID-1, /dev/md0, with the /boot
-content, the other is a RAID-10 f2, with LVM,
-for the rest of the system.
+Nope. :-(  --remove is necessary.
 
-I just noticed that /dev/sdb, which is not the
-boot disk, I assume, has more reads than /dev/sda.
-Writes are the same, here is the output of "iostat":
+turnip:~ # mdadm --fail /dev/md11 /dev/nbd0
+mdadm: set /dev/nbd0 faulty in /dev/md11
+turnip:~ # mdadm --re-add /dev/md11 /dev/nbd0
+mdadm: Cannot open /dev/nbd0: Device or resource busy
+turnip:~ # mdadm --add /dev/md11 /dev/nbd0
+mdadm: Cannot open /dev/nbd0: Device or resource busy
+turnip:~ #
 
-Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrtn
-sda              10.08       183.15       408.74     755018    1684972
-sda1              0.04         1.24         0.02       5118         66
-sda2             10.03       181.71       408.72     749071    1684880
-sdb              10.49       187.64       408.74     773532    1684972
-sdb1              0.03         1.17         0.02       4837         66
-sdb2             10.44       186.26       408.72     767832    1684880
-md1              62.95       367.26       391.79    1513976    1615112
-md0               0.02         0.18         0.00        724          8
-
-Note that sda1 has more reads than sdb1.
-This is possibly due to the fact that it is
-used during boot.
-
-What is strange, is sdb2, which has by far
-more reads than sda2. Both belong to /dev/md1.
-
-Note also the /dev/sdb is the slowest of the
-two drives.
-
-Is that somehow normal?
-If not, is it possible to find out what or
-why the reads are unbalanced?
-
-Thanks a lot in advance,
-
-bye,
 
 -- 
-
-piergiorgio
+Jon
