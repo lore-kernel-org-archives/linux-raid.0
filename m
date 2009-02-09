@@ -1,98 +1,127 @@
-From: "Thomas J. Baker" <tjb@unh.edu>
-Subject: Re: Any hope for a 27 disk RAID6+1HS array with four disks  
- reporting "No md superblock detected"?
-Date: Mon, 09 Feb 2009 09:48:18 -0500
-Message-ID: <1234190898.10428.7.camel@localhost.localdomain>
-References: <1233775657.10151.5.camel@localhost.localdomain>
-	 <18827.51024.270348.20624@notabene.brown>
-	 <1233952325.9786.20.camel@localhost.localdomain>
-	 <5b35884ec706518d378265e6b95ace53.squirrel@neil.brown.name>
-	 <1233956838.9786.37.camel@localhost.localdomain>
-	 <a12770d97b01cc418aaff84bdd9e9349.squirrel@neil.brown.name>
-Reply-To: tjb@unh.edu
+From: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Subject: raid1 + 2.6.27.7 issues
+Date: Mon, 9 Feb 2009 10:36:38 -0600
+Message-ID: <cccedfc60902090836n76e5e6e6mfd149db5ac2f5d2b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <a12770d97b01cc418aaff84bdd9e9349.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, 2009-02-07 at 13:09 +1100, NeilBrown wrote:
-> On Sat, February 7, 2009 8:47 am, Thomas J. Baker wrote:
-> > On Sat, 2009-02-07 at 08:01 +1100, NeilBrown wrote:
-> >> On Sat, February 7, 2009 7:32 am, Thomas J. Baker wrote:
-> >>
-> >> > Thanks for the info. I think I follow everything. One last question
-> >> > before really trying it - is this what is expected when I actually run
-> >> > the command - the warnings about previous array, etc?
-> >>
-> >> Yes, you would expect exactly those messages.
-> >>
-> >> NeilBrown
-> >>
-> >
-> > OK, first I put the drives back to their original configuration (I had
-> > swapped two banks to make them appear physically as the kernel sees them
-> > logically to make it easier to track down the possibly faulty disks.)
-> > For clarity, I put them back to the original configuration before trying
-> > anything.
-> >
-> > Next I ran
-> >
-> > mdadm --create /dev/md0 --verbose --level=6 --raid-devices=26  \
-> > /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1 missing \
-> > /dev/sdi1 missing /dev/sdk1 /dev/sdl1 /dev/sdm1 /dev/sdn1 /dev/sdo1 \
-> > /dev/sdp1 /dev/sdq1 /dev/sdr1 /dev/sdt1 /dev/sdu1 /dev/sdv1 \
-> > /dev/sdw1 /dev/sdx1 /dev/sdy1 /dev/sdz1 /dev/sdaa1 /dev/sdab1
-> 
-> 
-> You said  "--raid-devices=26".  Why did you do that?
-> It should be '27'.
-> You need to have 25 real devices and 2 'missing' devices.
-> 24 of those real devices you can identify the correct position for
-> by looking at the --examine information from before you tried to
-> recreate the array.
-> The 25th real device you have to guess which is likely to be
-> the right one.
-> 
-> 
-> >
-> > which completed but when I fsck'd the disk, it wasn't happy, complaining
-> > about a missing superblock on /dev/md0. I then stopped the array. I'm
-> > not sure what to do next. It seems like the examine information of all
-> > the disks has been updated by the last create. I guess I should only go
-> > by the previous examine? As for the missing statement, should that only
-> > relate to drives with no md superblock?
-> 
-> Yes, go by the previous examine information.
-> 
-> The 'missing' can be any two devices.  The important thing is the devices
-> that aren't 'missing'.  They need to be devices that you have reason to
-> believe belong to that slot in the array.
-> 
-> NeilBrown
-> 
+I found some time to get back to some raid1 issues I have been having.
 
-OK, specifying 27 devices worked and I successfully mounted the RAID and
-looked around. Thanks again for the guidance! I guess things look OK
-(there are directories and files!) 
 
-I was wondering if I should fsck it before adding the other two disks
-back in or after? Any other words of experience?
+Briefly:
 
-Thanks again,
+I have a pair of machines each with an 80G hard drive. One machine exports
+this hard drive over NBD (network block device) to the other. When both
+devices are available, they are combined via MD into a raid1. The raid1
+looks like this:
 
-tjb
--- 
-=======================================================================
-| Thomas Baker                                  email: tjb@unh.edu    |
-| Systems Programmer                                                  |
-| Research Computing Center                     voice: (603) 862-4490 |
-| University of New Hampshire                     fax: (603) 862-1761 |
-| 332 Morse Hall                                                      |
-| Durham, NH 03824 USA              http://wintermute.sr.unh.edu/~tjb |
-=======================================================================
+/dev/md11:
+        Version : 1.00
+  Creation Time : Mon Dec 15 07:06:13 2008
+     Raid Level : raid1
+     Array Size : 78123988 (74.50 GiB 80.00 GB)
+  Used Dev Size : 156247976 (149.01 GiB 160.00 GB)
+   Raid Devices : 2
+  Total Devices : 2
+    Persistence : Superblock is persistent
 
+  Intent Bitmap : Internal
+
+    Update Time : Mon Feb  9 09:53:13 2009
+          State : active, degraded, recovering
+ Active Devices : 1
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 1
+
+ Rebuild Status : 9% complete
+
+           Name : turnip:11  (local to host turnip)
+           UUID : cf24d099:9e174a79:2a2f6797:dcff1420
+         Events : 90220
+
+    Number   Major   Minor   RaidDevice State
+       2      43        0        0      writemostly spare rebuilding
+/dev/nbd0
+       3       8        0        1      active sync   /dev/sda
+
+
+
+
+The typical use case for me is this: I will run the array (/dev/md11) in
+degraded mode (without /dev/nbd0) for a week or so.
+At some point, I will try to synchronize the underlying devices. To do this
+I use:
+
+mdadm /dev/md11 --re-add /dev/nbd0
+
+The issues I encounter are this: the array goes into *recovery* mode rather
+than *resync*, despite the fact that /dev/nbd0 was at one point a full
+member (in sync) of the array. Typically, less than 1/3 of the array needs
+to be resynchronized, often much less than that. I base this off of the
+--examine-bitmap output from /dev/sda. Today it says:
+
+Bitmap : 19074 bits (chunks), 6001 dirty (31.5%)
+
+which is a substantially higher percentage than usual.
+
+Indications of a problem: --examine and --examine-bitmap have an Events
+count which agrees for /dev/sda but does *not* agree for /dev/nbd0. From
+today, the --examine and --examine-bitmap output from /dev/nbd0:
+
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : cf24d099:9e174a79:2a2f6797:dcff1420
+           Name : turnip:11  (local to host turnip)
+  Creation Time : Mon Dec 15 07:06:13 2008
+     Raid Level : raid1
+   Raid Devices : 2
+
+ Avail Dev Size : 160086384 (76.34 GiB 81.96 GB)
+     Array Size : 156247976 (74.50 GiB 80.00 GB)
+  Used Dev Size : 156247976 (74.50 GiB 80.00 GB)
+   Super Offset : 160086512 sectors
+          State : clean
+    Device UUID : 01524a75:c309869c:6da972c9:084115c6
+
+Internal Bitmap : 2 sectors from superblock
+      Flags : write-mostly
+    Update Time : Mon Feb  9 09:52:58 2009
+       Checksum : 64058b3b - correct
+         Events : 90192
+
+    Array Slot : 2 (failed, failed, empty, 1)
+   Array State : _u 2 failed
+        Filename : /dev/nbd0
+           Magic : 6d746962
+         Version : 4
+            UUID : cf24d099:9e174a79:2a2f6797:dcff1420
+          Events : 81596
+  Events Cleared : 81570
+           State : OK
+       Chunksize : 4 MB
+          Daemon : 5s flush period
+      Write Mode : Allow write behind, max 256
+       Sync Size : 78123988 (74.50 GiB 80.00 GB)
+          Bitmap : 19074 bits (chunks), 0 dirty (0.0%)
+
+
+As you can see, --examine says that there are 90192 events, and
+--examine-bitmap says there are 81596 events.
+
+So that seems to be a bug or some other issue.
+
+What am I doing wrong that causes the array to go into "recovery" instead of
+"resync" mode? It's clearly showing /dev/nbd0 as a *spare* - does this have
+anything to do with it?
+
+
+
+--
+Jon
