@@ -1,31 +1,42 @@
-From: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Subject: Re: raid1 + 2.6.27.7 issues
-Date: Mon, 9 Feb 2009 12:13:51 -0600
-Message-ID: <cccedfc60902091013i3bc13ba2vb0e006c8d509edac@mail.gmail.com>
-References: <cccedfc60902090836n76e5e6e6mfd149db5ac2f5d2b@mail.gmail.com>
-	 <C5B60EA5.C47B%groups@email.iain.rauch.co.uk>
-	 <20090209165940.GA805@esri.com>
-	 <cccedfc60902090949sec3336u661cea5fbb96e246@mail.gmail.com>
-	 <20090209175348.GA1462@esri.com>
+From: Jan Ceuleers <jan.ceuleers@computer.org>
+Subject: [Fwd: Spares not automatically added on boot]
+Date: Mon, 09 Feb 2009 20:20:13 +0100
+Message-ID: <499081ED.4060000@computer.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090209175348.GA1462@esri.com>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Feb 9, 2009 at 11:53 AM, Ray Van Dolson <rvandolson@esri.com> wrote:
-> Don't want to send you on a wild goose chase, but I'd be interested to
-> see the results of that and maybe the results of the same with an iSCSI
-> backed blocked device vs nbd.
+Bumping. Sorry 'bout that, but I would like to give this another chance 
+at attracting attention.
 
-I'm trying with AoE. I've never had any luck setting up a software
-iSCSI device. Maybe I'll give that a try one of these days.
+Many thanks, Jan
 
-Once the dev is done /recovering/ (4.5% done, 3 hours to go) we'll see
-if AoE behaves any differently. I doubt it.
+-------- Original Message --------
+Date: Sun, 01 Feb 2009 13:10:04 +0100
+From: Jan Ceuleers <jan.ceuleers@computer.org>
+To: linux-raid@vger.kernel.org
+Subject: Spares not automatically added on boot
 
--- 
-Jon
+All,
+
+I've been having a long-standing problem with spares not being
+automatically re-added to my raid sets when the system is booted. I
+reported this problem here:
+
+https://bugs.launchpad.net/ubuntu/+source/mdadm/+bug/252365
+
+The problem appears to be that if spare drives are served by a disk
+controller that is of another type than the one serving the active
+volumes, then the modules for both types of disk controller need to be
+included in the initrd image for things to work properly. This is on
+Ubuntu 7.10 and 8.04.
+
+I'd be interested in views here as to the real root cause (since the fix
+that works for me and for one other user may not a generic fix).
+
+Thanks, Jan
+
