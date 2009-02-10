@@ -1,95 +1,138 @@
-From: David Rees <drees76@gmail.com>
-Subject: Re: Disk IO Slowly Grinds to a (near) Halt
-Date: Mon, 9 Feb 2009 15:25:35 -0800
-Message-ID: <72dbd3150902091525n516ec5c6i12f3749fd55c47bf@mail.gmail.com>
-References: <72dbd3150901152004m2e3d721bwf2cc633361f1fe40@mail.gmail.com>
+From: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Subject: Re: raid1 + 2.6.27.7 issues
+Date: Mon, 9 Feb 2009 18:07:48 -0600
+Message-ID: <cccedfc60902091607j4f37420s64898e4994d2607e@mail.gmail.com>
+References: <cccedfc60902090836n76e5e6e6mfd149db5ac2f5d2b@mail.gmail.com>
+	 <18832.43882.839120.846061@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <72dbd3150901152004m2e3d721bwf2cc633361f1fe40@mail.gmail.com>
+In-Reply-To: <18832.43882.839120.846061@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Jan 15, 2009 at 8:04 PM, David Rees <drees76@gmail.com> wrote:
-> I've got a server running Fedora 9 server running kernel
-> 2.6.27.9-73.fc9 where inevitably, any sort of IO activity slows down
-> significantly.
+On Mon, Feb 9, 2009 at 4:17 PM, Neil Brown <neilb@suse.de> wrote:
+...
+
+> I've managed to reproduce this.
 >
-> The machine is a basic Athlon 64 X2 5000+, 3GB RAM and 4 disks
-> (2x250GB IDE and 2x1TB SATA) running in two software RAID1 arrays.
+> If you fail the write-mostly device when the array is 'clean' (as
+> reported by --examine), it works as expected.
+> If you fail it when the array is 'active', you get the full recovery.
 >
-> One IDE drive is connected to the onboard (Nvidia MCP51 pata_amd), the
-> other connected to a Promise (PDC20268 pata_pdc2027x) controller.
+> The array is 'active' if there have been any writes in the last 200
+> msecs, and clean otherwise.
 >
-> Both SATA drivers are connected to the onboard Nvidia MCP51 sata_nv controller.
->
-> I suspect that the culprit has something to do with the fact that this
-> machine acts as a BackupPC server, and as such, has a filesystem with
-> over 7million inodes on it (about 175GB in use on that partition), but
-> that's just a hunch.
->
-> A simple test to confirm the issue is to drop the caches, and then do
-> a directory listing on an empty directory.  Doesn't matter which raid1
-> array it's on.  On the normally performing systems I tested this
-> typically took 0.15-0.45 seconds.  On this slow system, it takes over
-> a second for the same test to run when it's acting up.  After a fresh
-> reboot, it takes less than 0.2 seconds.
->
-> Any ideas? The only thing that seems to help is rebooting the server.
-> Let me know if there is any more information I can provide that would
-> be helpful.
+> I'll have to have a bit of a think about this and figure out where
+> what the correct fix is.   Nag me if you haven't heard anything by the
+> end of the week.
 
-Following up to my old message - and CC'ing linux-raid - I found the issue.
 
-The server was suffering again from slow IO today - I also happened to
-run a few more tests to try to narrow things down.
+Can-do. Here are some more wrinkles:
 
-I ran some dd raw throughput tests and while write speeds seemed to be
-down about 50% slow for one mirror (only ~20MB/s), read speeds of the
-individual disks and write speeds of the other mirror were normal.
+Wrinkle "A". I can't un-do "write-mostly". I used the md.txt docs that
+ship with the kernel which suggest that the following should work:
 
-But any disk IO which required small bursts of activity seemed very slow.
+1. I let the array come up to sync
+2. I echoed "-writemostly" into /sys/block/md11/md/dev-nbd0/state
+3. A 'cat state' showed "in_sync,write_mostly" before, and "in_sync" after.
+4. --fail and --remove /dev/nbd0
+5. --re-add /dev/nbd0
+6. 'cat state' shows "in_sync,write_mostly" again. D'oh!
 
-I then realized that I made a mistake in my previous test.  While the
-directory listing was slow on both arrays after dropping the caches,
-the primary reason it was slow was because of the random IO required
-to load the `ls` binary and not the actual directory listing itself.
 
-So this narrowed down the performance issue to the mirror which was
-also showing about 1/2 the expected raw write speeds - the /
-partition.
 
-I then noticed that there was a raid-check running on the / partition
-(which was running about 1/10-1/20th of the expected speed or 1-2MB/s
-on a nearly idle system), and then also realized that long smart self
-tests were running on those disks, too.  After killing the smart
-self-tests the raid check speed jumped to 20MB/s.
+Wrinkle "B": When I did the above, when I --re-add'ed /dev/nbd0, it
+went into "recovery" mode, which completed instantly. My recollection
+of "recovery" is that it does not update the bitmap until the entire
+process is complete. Is this correct? If so, I'd like to try to
+convince you (Neil Brown) that it's worthwhile to behave the same WRT
+the bitmap and up-to-dateness regardless of whether it's recovery or
+resync.
 
-So that explains why heavy read/write loads were working OK - they
-kept the disks busy enough to keep the raid-check and smart self-tests
-from thinking the system was idle and doing their work - and why small
-bursts of random IO were slow - a small request would come in and have
-to interrupt both the smart self test and the raid recheck.
+I'm including the --examine, --examine-bitmap from both /dev/nbd0 and /dev/sda:
 
-It seems that the combination of the smart self-test and raid recheck
-interact very poorly on this particular mirror though as I don't
-recall having similar issues before even though I've used similar
-raid-check and smart-test schedules on multiple systems in the past.
-At the rate things were going, it'd take the better part of a week to
-finish the raid check and longer for the long smart test.  Meanwhile,
-the other array had finished both checks in less than 12 hours.
+/dev/nbd0:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : cf24d099:9e174a79:2a2f6797:dcff1420
+           Name : turnip:11  (local to host turnip)
+  Creation Time : Mon Dec 15 07:06:13 2008
+     Raid Level : raid1
+   Raid Devices : 2
 
-I'm going to try spacing out the start of the raid check and long
-smart self-tests more - hopefully ensuring that only one check is
-running at a time will avoid the huge slowdowns that are present when
-both are running.
+ Avail Dev Size : 160086384 (76.34 GiB 81.96 GB)
+     Array Size : 156247976 (74.50 GiB 80.00 GB)
+  Used Dev Size : 156247976 (74.50 GiB 80.00 GB)
+   Super Offset : 160086512 sectors
+          State : clean
+    Device UUID : 01524a75:c309869c:6da972c9:084115c6
 
-I'd be curious to know if anyone else has seen similar very poor
-interaction between the two before.  I wonder if there is some sort of
-firmware bug on the "slow" array (Seagate ST3250824A) that makes this
-worse.
+Internal Bitmap : 2 sectors from superblock
+      Flags : write-mostly
+    Update Time : Mon Feb  9 17:49:21 2009
+       Checksum : 6404fbcd - correct
+         Events : 90426
 
--Dave
+
+    Array Slot : 2 (failed, failed, 0, 1)
+   Array State : Uu 2 failed
+        Filename : /dev/nbd0
+           Magic : 6d746962
+         Version : 4
+            UUID : cf24d099:9e174a79:2a2f6797:dcff1420
+          Events : 90426
+  Events Cleared : 90398
+           State : OK
+       Chunksize : 4 MB
+          Daemon : 5s flush period
+      Write Mode : Allow write behind, max 256
+       Sync Size : 78123988 (74.50 GiB 80.00 GB)
+          Bitmap : 19074 bits (chunks), 0 dirty (0.0%)
+
+/dev/sda:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x1
+     Array UUID : cf24d099:9e174a79:2a2f6797:dcff1420
+           Name : turnip:11  (local to host turnip)
+  Creation Time : Mon Dec 15 07:06:13 2008
+     Raid Level : raid1
+   Raid Devices : 2
+
+ Avail Dev Size : 160086384 (76.34 GiB 81.96 GB)
+     Array Size : 156247976 (74.50 GiB 80.00 GB)
+  Used Dev Size : 156247976 (74.50 GiB 80.00 GB)
+   Super Offset : 160086512 sectors
+          State : clean
+    Device UUID : 0059434c:ecef51a0:2974482d:ba38f944
+
+Internal Bitmap : 2 sectors from superblock
+    Update Time : Mon Feb  9 17:57:34 2009
+       Checksum : 2184ad61 - correct
+         Events : 90446
+
+
+    Array Slot : 3 (failed, failed, failed, 1)
+   Array State : _U 3 failed
+        Filename : /dev/sda
+           Magic : 6d746962
+         Version : 4
+            UUID : cf24d099:9e174a79:2a2f6797:dcff1420
+          Events : 90446
+  Events Cleared : 90398
+           State : OK
+       Chunksize : 4 MB
+          Daemon : 5s flush period
+      Write Mode : Allow write behind, max 256
+       Sync Size : 78123988 (74.50 GiB 80.00 GB)
+          Bitmap : 19074 bits (chunks), 0 dirty (0.0%)
+
+
+
+
+-- 
+Jon
