@@ -1,47 +1,63 @@
-From: Luca Berra <bluca@comedia.it>
+From: Nagilum <nagilum@nagilum.org>
 Subject: Re: Any hope for a 27 disk RAID6+1HS array with four disks
-	reporting "No md superblock detected"?
-Date: Tue, 10 Feb 2009 09:55:03 +0100
-Message-ID: <20090210085503.GA11220@maude.comedia.it>
-References: <1233775657.10151.5.camel@localhost.localdomain> <18827.51024.270348.20624@notabene.brown> <alpine.LNX.2.00.0902061903510.21732@filesrv1.baby-dragons.com> <9B27D278-ED85-498A-8EF6-DDB7EFB103F7@unh.edu> <499017CB.30307@fastmail.co.uk>
+ reporting "No md superblock detected"?
+Date: Tue, 10 Feb 2009 17:58:33 +0100
+Message-ID: <20090210175833.15261jw8a7awdu80@cakebox.home>
+References: <1233775657.10151.5.camel@localhost.localdomain>
+ <18827.51024.270348.20624@notabene.brown>
+ <1233952325.9786.20.camel@localhost.localdomain>
+ <5b35884ec706518d378265e6b95ace53.squirrel@neil.brown.name>
+ <1233956838.9786.37.camel@localhost.localdomain>
+ <a12770d97b01cc418aaff84bdd9e9349.squirrel@neil.brown.name>
+ <1234190898.10428.7.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain;
+ charset=ISO-8859-2;
+ DelSp="Yes";
+ format="flowed"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1234190898.10428.7.camel@localhost.localdomain>
 Content-Disposition: inline
-In-Reply-To: <499017CB.30307@fastmail.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid maillist <linux-raid@vger.kernel.org>
+To: tjb@unh.edu
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-im going a bit ot, bare with me.
-On Mon, Feb 09, 2009 at 01:47:23PM +0200, Max Waterman wrote:
-> I only have the one drive (sda) on this computer, so 'sa[abcd]1' only 
-> matched one drive. The unexpected bit is that the shell passed on the arg 
-> 'as is' when it didn't match any file (IIRC that's different for csh, which 
-> I notice you're using).
-filename generation (glob) syntax is common to all shell iirc
-behaviour when globbing does not match varies
 
-ksh: will pass the argument unmodified, which i believe is posix.
+----- Message from tjb@unh.edu ---------
+     Date: Mon, 09 Feb 2009 09:48:18 -0500
+     From: "Thomas J. Baker" <tjb@unh.edu>
+Reply-To: tjb@unh.edu
+  Subject: Re: Any hope for a 27 disk RAID6+1HS array with four disks  
+reporting "No md superblock detected"?
+       To: NeilBrown <neilb@suse.de>
+       Cc: linux-raid@vger.kernel.org
 
-csh: depends on option nonomatch, if set lets the argument unmodified,
-else (default) will print an error.
-         csh% got light?
-         No Match.
+> OK, specifying 27 devices worked and I successfully mounted the RAID and
+> looked around. Thanks again for the guidance! I guess things look OK
+> (there are directories and files!)
+>
+> I was wondering if I should fsck it before adding the other two disks
+> back in or after? Any other words of experience?
+----- End message from tjb@unh.edu -----
 
-bash: has two options that controll globbing
-         default is as ksh
-         failglob: if set prints error, like csh
-         nullglob: if set just ignores the pattern (i.e. replaces it with
-nothing)
+All fsck commands should have a 'dry-run' or 'no-modify' mode in which  
+they just check without attempting to change anything. This should be  
+your first mode of operation.
+If everything checks out you can add your spares and regain your redundancy.
+Kind regards,
+Alex.
 
-zsh: rtfm
+
+========================================================================
+#    _  __          _ __     http://www.nagilum.org/ \n icq://69646724 #
+#   / |/ /__ ____ _(_) /_ ____ _  nagilum@nagilum.org \n +491776461165 #
+#  /    / _ `/ _ `/ / / // /  ' \  Amiga (68k/PPC): AOS/NetBSD/Linux   #
+# /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/   Mac (PPC): MacOS-X / NetBSD /Linux #
+#           /___/     x86: FreeBSD/Linux/Solaris/Win2k  ARM9: EPOC EV6 #
+========================================================================
 
 
--- 
-Luca Berra -- bluca@comedia.it
-         Communication Media & Services S.r.l.
-  /"\
-  \ /     ASCII RIBBON CAMPAIGN
-   X        AGAINST HTML MAIL
-  / \
+----------------------------------------------------------------
+cakebox.homeunix.net - all the machine one needs..
