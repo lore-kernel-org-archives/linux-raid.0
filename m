@@ -1,121 +1,132 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: RAID-10 unbalanced reads
-Date: Tue, 10 Feb 2009 20:07:55 +0100
-Message-ID: <20090210190755.GA5415@lazy.lzy>
-References: <20090209202728.GA11996@lazy.lzy> <20090209231138.GB13450@rap.rap.dk>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: raid1 + 2.6.27.7 issues
+Date: Wed, 11 Feb 2009 16:06:30 +1100
+Message-ID: <18834.23766.46860.265639@notabene.brown>
+References: <cccedfc60902090836n76e5e6e6mfd149db5ac2f5d2b@mail.gmail.com>
+	<18832.43882.839120.846061@notabene.brown>
+	<cccedfc60902091607j4f37420s64898e4994d2607e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090209231138.GB13450@rap.rap.dk>
+In-Reply-To: message from Jon Nelson on Monday February 9
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+On Monday February 9, jnelson-linux-raid@jamponi.net wrote:
+> On Mon, Feb 9, 2009 at 4:17 PM, Neil Brown <neilb@suse.de> wrote:
+> ...
+> 
+> > I've managed to reproduce this.
+> >
+> > If you fail the write-mostly device when the array is 'clean' (as
+> > reported by --examine), it works as expected.
+> > If you fail it when the array is 'active', you get the full recovery.
+> >
+> > The array is 'active' if there have been any writes in the last 200
+> > msecs, and clean otherwise.
+> >
+> > I'll have to have a bit of a think about this and figure out where
+> > what the correct fix is.   Nag me if you haven't heard anything by the
+> > end of the week.
 
-thanks for the answer.
+See below...
 
-The kernel is the latest in Fedora 10, i.e.
-the 2.6.27.12-170.2.5.fc10.x86_64, the array
-has metadata 1.1 and bitmap.
+> 
+> 
+> Can-do. Here are some more wrinkles:
+> 
+> Wrinkle "A". I can't un-do "write-mostly". I used the md.txt docs that
+> ship with the kernel which suggest that the following should work:
 
-There are two issues, which I noticed, which
-have led to the iostat discovery.
 
-One is that the reading speed of the array is
-less than double the speed of the slowest drive.
-Accordingly to hdparm, /dev/sda2 transfers about
-100~110 MB/s, /dev/sdb2 about 75~85 MB/s, while
-/dev/md1 goes about 140~150 MB/s.
-I would have expected a bit more, let's say
-around 150~160 MB/s for the RAID.
+You want mdadm 2.6.8
+  mdadm /dev/md0 --re-add --readwrite /dev/whatever
 
-Second, I ran a smart long test on both drives.
-/dev/sda finished more or less in one hour, as
-declared by the smart info (the system was
-barely in use).
-/dev/sdb finished in maybe 3~4 hours, by far more
-than the (about) 1h40m declared by the smart info.
+... or you would if it actually worked... That's odd, I cannot have
+tested that....  I'll have to think about that too.
 
-The only reason it took so long could be the drive
-was somehow in use, but it belongs completely to
-the RAID, so it should be is use as much as /dev/sda.
+> 
+> 
+> Wrinkle "B": When I did the above, when I --re-add'ed /dev/nbd0, it
+> went into "recovery" mode, which completed instantly. My recollection
+> of "recovery" is that it does not update the bitmap until the entire
+> process is complete. Is this correct? If so, I'd like to try to
+> convince you (Neil Brown) that it's worthwhile to behave the same WRT
+> the bitmap and up-to-dateness regardless of whether it's recovery or
+> resync.
 
-Or I have some virus...
+If the recovery is completing instantly, I wonder why you care exactly
+when in that instant the bitmap is updated.... but I suspect that is
+missing the point.
 
-Any idea?
+No, the bitmap isn't updated during recovery... Maybe it could be...
+More thinking.
 
-Thanks again,
 
-pg
+Mean while, this patch should fix your original problem.
 
-On Tue, Feb 10, 2009 at 12:11:39AM +0100, Keld J=F8rn Simonsen wrote:
-> On Mon, Feb 09, 2009 at 09:27:28PM +0100, Piergiorgio Sartor wrote:
-> > Hi all.
-> >=20
-> > I've setup a system with two RAID volumes.
-> > One is a small RAID-1, /dev/md0, with the /boot
-> > content, the other is a RAID-10 f2, with LVM,
-> > for the rest of the system.
-> >=20
-> > I just noticed that /dev/sdb, which is not the
-> > boot disk, I assume, has more reads than /dev/sda.
-> > Writes are the same, here is the output of "iostat":
-> >=20
-> > Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_w=
-rtn
-> > sda              10.08       183.15       408.74     755018    1684=
-972
-> > sda1              0.04         1.24         0.02       5118        =
- 66
-> > sda2             10.03       181.71       408.72     749071    1684=
-880
-> > sdb              10.49       187.64       408.74     773532    1684=
-972
-> > sdb1              0.03         1.17         0.02       4837        =
- 66
-> > sdb2             10.44       186.26       408.72     767832    1684=
-880
-> > md1              62.95       367.26       391.79    1513976    1615=
-112
-> > md0               0.02         0.18         0.00        724        =
-  8
-> >=20
-> > Note that sda1 has more reads than sdb1.
-> > This is possibly due to the fact that it is
-> > used during boot.
-> >=20
-> > What is strange, is sdb2, which has by far
-> > more reads than sda2. Both belong to /dev/md1.
-> >=20
-> > Note also the /dev/sdb is the slowest of the
-> > two drives.
-> >=20
-> > Is that somehow normal?
-> > If not, is it possible to find out what or
-> > why the reads are unbalanced?
->=20
-> What kernel are you using?
-> Before 2.6.25 you could have differences in usage.
->=20
-> Anyway, I think the difference is too small to be of inportance
-> for the performance. Or did you notice a difference?
->=20
-> best regards
-> keld
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+commit 67ad8eaf70c5ca2948b482138d3f88764b3e8ee5
+Author: NeilBrown <neilb@suse.de>
+Date:   Wed Feb 11 15:33:21 2009 +1100
 
---=20
+    md: never clear bit from the write-intent bitmap when the array is degraded.
+    
+    
+    It is safe to clear a bit from the write-intent bitmap for a raid1
+    when if we know the data has been written to all devices, which is
+    what the current test does.
+    But it is not always safe to update the 'events_cleared' counter in
+    that case.  This is one request could complete successfully after some
+    other request has partially failed.
+    
+    So simply disable the clearing and updating of events_cleared whenever
+    the array is degraded.  This might end up not clearing some bits that
+    could safely be cleared, but it is safest approach.
+    
+    Signed-off-by: NeilBrown <neilb@suse.de>
 
-piergiorgio
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 01e3cff..d875172 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -386,7 +386,8 @@ static void raid1_end_write_request(struct bio *bio, int error)
+ 			/* clear the bitmap if all writes complete successfully */
+ 			bitmap_endwrite(r1_bio->mddev->bitmap, r1_bio->sector,
+ 					r1_bio->sectors,
+-					!test_bit(R1BIO_Degraded, &r1_bio->state),
++					!test_bit(R1BIO_Degraded, &r1_bio->state)
++					&& !r1_bio->mddev->degraded,
+ 					behind);
+ 			md_write_end(r1_bio->mddev);
+ 			raid_end_bio_io(r1_bio);
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 6736d6d..9797a85 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -332,7 +332,8 @@ static void raid10_end_write_request(struct bio *bio, int error)
+ 		/* clear the bitmap if all writes complete successfully */
+ 		bitmap_endwrite(r10_bio->mddev->bitmap, r10_bio->sector,
+ 				r10_bio->sectors,
+-				!test_bit(R10BIO_Degraded, &r10_bio->state),
++				!test_bit(R10BIO_Degraded, &r10_bio->state) &&
++				!r10_bio->mddev->degraded,
+ 				0);
+ 		md_write_end(r10_bio->mddev);
+ 		raid_end_bio_io(r10_bio);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index a5ba080..4d71cce 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -2076,7 +2076,8 @@ static void handle_stripe_clean_event(raid5_conf_t *conf,
+ 					bitmap_endwrite(conf->mddev->bitmap,
+ 							sh->sector,
+ 							STRIPE_SECTORS,
+-					 !test_bit(STRIPE_DEGRADED, &sh->state),
++					 !test_bit(STRIPE_DEGRADED, &sh->state) &&
++					 !conf->mddev->degraded,
+ 							0);
+ 			}
+ 		}
