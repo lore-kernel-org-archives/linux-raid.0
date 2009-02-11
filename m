@@ -1,132 +1,124 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid1 + 2.6.27.7 issues
-Date: Wed, 11 Feb 2009 16:06:30 +1100
-Message-ID: <18834.23766.46860.265639@notabene.brown>
-References: <cccedfc60902090836n76e5e6e6mfd149db5ac2f5d2b@mail.gmail.com>
-	<18832.43882.839120.846061@notabene.brown>
-	<cccedfc60902091607j4f37420s64898e4994d2607e@mail.gmail.com>
+From: whollygoat@letterboxes.org
+Subject: --examine contradicts --create and --detail, again
+Date: Wed, 11 Feb 2009 02:48:09 -0800
+Message-ID: <1234349289.21577.1299744243@webmail.messagingengine.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jon Nelson on Monday February 9
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday February 9, jnelson-linux-raid@jamponi.net wrote:
-> On Mon, Feb 9, 2009 at 4:17 PM, Neil Brown <neilb@suse.de> wrote:
-> ...
-> 
-> > I've managed to reproduce this.
-> >
-> > If you fail the write-mostly device when the array is 'clean' (as
-> > reported by --examine), it works as expected.
-> > If you fail it when the array is 'active', you get the full recovery.
-> >
-> > The array is 'active' if there have been any writes in the last 200
-> > msecs, and clean otherwise.
-> >
-> > I'll have to have a bit of a think about this and figure out where
-> > what the correct fix is.   Nag me if you haven't heard anything by the
-> > end of the week.
+I am on my 4th or 5th try at getting a raid5 array 
+set up.  I did have one working quite nicely with 6 
+(5 active, 1 spare) 40GB drives but have had a 
+succession of failures since trying to grow the array
+after putting bigger drives in the box.
 
-See below...
+Either I am misunderstanding something, or I have
+a hardware issue I don't know how to diagnose.  Any 
+suggestions on things to read or to try are welcome.
 
-> 
-> 
-> Can-do. Here are some more wrinkles:
-> 
-> Wrinkle "A". I can't un-do "write-mostly". I used the md.txt docs that
-> ship with the kernel which suggest that the following should work:
+I've been told that zeroing the superblock is sufficient
+but having had so many failures I wanted to be thourough
 
 
-You want mdadm 2.6.8
-  mdadm /dev/md0 --re-add --readwrite /dev/whatever
+# dd if=/dev/zero of=/dev/hd{egikmo} (for brevity, each was
+run separately)
 
-... or you would if it actually worked... That's odd, I cannot have
-tested that....  I'll have to think about that too.
+# rm -R /dev/md0 /dev/md
 
-> 
-> 
-> Wrinkle "B": When I did the above, when I --re-add'ed /dev/nbd0, it
-> went into "recovery" mode, which completed instantly. My recollection
-> of "recovery" is that it does not update the bitmap until the entire
-> process is complete. Is this correct? If so, I'd like to try to
-> convince you (Neil Brown) that it's worthwhile to behave the same WRT
-> the bitmap and up-to-dateness regardless of whether it's recovery or
-> resync.
+# fdisk /dev/hd{egikmo}
+ - creating a new, primary, partition starting cylinder 1, 80G
+ - type da (non-fs data)
+ 
+#mdadm -C /dev/md/0 -e 1.0 -v -l 5 -b internal -a yes\
+  -n 5 /dev/hde1 /dev/hdg1 /dev/hdi1 /dev/hdk1 /dev/hdm1\
+  -x 1 /dev/hdo1  --name=FlyFileServ_md
 
-If the recovery is completing instantly, I wonder why you care exactly
-when in that instant the bitmap is updated.... but I suspect that is
-missing the point.
+After waiting for the initial syncing of the array to complete
 
-No, the bitmap isn't updated during recovery... Maybe it could be...
-More thinking.
+# mdadm -D /dev/md/0
+/dev/md/0:
+        Version : 01.00.03
+  Creation Time : Tue Feb 10 14:45:39 2009
+     Raid Level : raid5
+     Array Size : 312501760 (298.02 GiB 320.00 GB)
+    Device Size : 156250880 (74.51 GiB 80.00 GB)
+   Raid Devices : 5
+  Total Devices : 6
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-
-Mean while, this patch should fix your original problem.
-
-commit 67ad8eaf70c5ca2948b482138d3f88764b3e8ee5
-Author: NeilBrown <neilb@suse.de>
-Date:   Wed Feb 11 15:33:21 2009 +1100
-
-    md: never clear bit from the write-intent bitmap when the array is degraded.
+  Intent Bitmap : Internal
+   
+    Update Time : Tue Feb 10 16:41:48 2009
+          State : active
+ Active Devices : 5
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 1
+           
+         Layout : left-symmetric
+     Chunk Size : 64K
+           
+           Name : fly:FlyFileServ_md  (local to host fly)
+           UUID : 684bf5f1:de2c0d2a:5a5ac88f:de7cf2d3
+         Events : 2
     
-    
-    It is safe to clear a bit from the write-intent bitmap for a raid1
-    when if we know the data has been written to all devices, which is
-    what the current test does.
-    But it is not always safe to update the 'events_cleared' counter in
-    that case.  This is one request could complete successfully after some
-    other request has partially failed.
-    
-    So simply disable the clearing and updating of events_cleared whenever
-    the array is degraded.  This might end up not clearing some bits that
-    could safely be cleared, but it is safest approach.
-    
-    Signed-off-by: NeilBrown <neilb@suse.de>
+    Number   Major   Minor   RaidDevice State
+       0      33        1        0      active sync   /dev/hde1
+       1      34        1        1      active sync   /dev/hdg1
+       2      56        1        2      active sync   /dev/hdi1
+       3      57        1        3      active sync   /dev/hdk1
+       6      88        1        4      active sync   /dev/hdm1
+         
+       5      89        1        -      spare   /dev/hdo1
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 01e3cff..d875172 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -386,7 +386,8 @@ static void raid1_end_write_request(struct bio *bio, int error)
- 			/* clear the bitmap if all writes complete successfully */
- 			bitmap_endwrite(r1_bio->mddev->bitmap, r1_bio->sector,
- 					r1_bio->sectors,
--					!test_bit(R1BIO_Degraded, &r1_bio->state),
-+					!test_bit(R1BIO_Degraded, &r1_bio->state)
-+					&& !r1_bio->mddev->degraded,
- 					behind);
- 			md_write_end(r1_bio->mddev);
- 			raid_end_bio_io(r1_bio);
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 6736d6d..9797a85 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -332,7 +332,8 @@ static void raid10_end_write_request(struct bio *bio, int error)
- 		/* clear the bitmap if all writes complete successfully */
- 		bitmap_endwrite(r10_bio->mddev->bitmap, r10_bio->sector,
- 				r10_bio->sectors,
--				!test_bit(R10BIO_Degraded, &r10_bio->state),
-+				!test_bit(R10BIO_Degraded, &r10_bio->state) &&
-+				!r10_bio->mddev->degraded,
- 				0);
- 		md_write_end(r10_bio->mddev);
- 		raid_end_bio_io(r10_bio);
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index a5ba080..4d71cce 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -2076,7 +2076,8 @@ static void handle_stripe_clean_event(raid5_conf_t *conf,
- 					bitmap_endwrite(conf->mddev->bitmap,
- 							sh->sector,
- 							STRIPE_SECTORS,
--					 !test_bit(STRIPE_DEGRADED, &sh->state),
-+					 !test_bit(STRIPE_DEGRADED, &sh->state) &&
-+					 !conf->mddev->degraded,
- 							0);
- 			}
- 		}
+So, then, why oh why oh why does --examine, on any of the 
+component devices, show slots for  7 devices, one failed, 
+one empty?  I have recently changed RAM, mobo, system disk
+and some IDE cables thinking each time that I had finally
+come to the end of this.
+
+
+
+# mdadm -E /dev/hde1
+/dev/hde1:
+          Magic : a92b4efc
+        Version : 01
+    Feature Map : 0x1
+     Array UUID : 684bf5f1:de2c0d2a:5a5ac88f:de7cf2d3
+           Name : fly:FlyFileServ_md  (local to host fly)
+  Creation Time : Tue Feb 10 14:45:39 2009
+     Raid Level : raid5
+   Raid Devices : 5
+     
+    Device Size : 156250880 (74.51 GiB 80.00 GB)
+     Array Size : 625003520 (298.02 GiB 320.00 GB)
+   Super Offset : 156251008 sectors
+          State : clean
+    Device UUID : 88b0d67e:3e2cf8ee:83f58286:4040c5da
+
+Internal Bitmap : 2 sectors from superblock
+    Update Time : Tue Feb 10 16:41:48 2009
+       Checksum : dae7896e - correct
+         Events : 2
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+    Array Slot : 0 (0, 1, 2, 3, failed, empty, 4)
+   Array State : Uuuuu 1 failed
+
+Sorry for bringing up this new instance of the same old 
+problem yet one more time.
+-- 
+  
+  whollygoat@letterboxes.org
+
+-- 
+http://www.fastmail.fm - A no graphics, no pop-ups email service
+
