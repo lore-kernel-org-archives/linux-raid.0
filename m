@@ -1,90 +1,148 @@
-From: Wil Reichert <wil.reichert@gmail.com>
-Subject: Re: [PATCH 00/18] Assorted md patches headed for 2.6.30
-Date: Thu, 12 Feb 2009 07:28:59 -0800
-Message-ID: <7a329d910902120728u146e7cddk6e7d990668c16345@mail.gmail.com>
-References: <20090212031009.23983.14496.stgit@notabene.brown>
-	 <20090212081148.GD9439@rap.rap.dk>
-	 <12039e3b9172d1a1347b8396cab59f11.squirrel@neil.brown.name>
-	 <20090212095305.GB11981@rap.rap.dk>
-	 <780b8d5e33de8ec127222529e84f6026.squirrel@neil.brown.name>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [PATCH 09/18] md/raid6: remove expectation that Q device is immediately after P device.
+Date: Thu, 12 Feb 2009 17:56:25 +0100
+Message-ID: <20090212165625.GH32416@skl-net.de>
+References: <20090212031009.23983.14496.stgit@notabene.brown> <20090212031010.23983.26264.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="RwGu8mu1E+uYXPWP"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <780b8d5e33de8ec127222529e84f6026.squirrel@neil.brown.name>
+Content-Disposition: inline
+In-Reply-To: <20090212031010.23983.26264.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
-Cc: =?UTF-8?Q?Keld_J=C3=B8rn_Simonsen?= <keld@dkuug.dk>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Feb 12, 2009 at 2:45 AM, NeilBrown <neilb@suse.de> wrote:
-> On Thu, February 12, 2009 8:53 pm, Keld J=C3=B8rn Simonsen wrote:
->> On Thu, Feb 12, 2009 at 08:21:12PM +1100, NeilBrown wrote:
->>> On Thu, February 12, 2009 7:11 pm, Keld J=C3=B8rn Simonsen wrote:
->>> > On Thu, Feb 12, 2009 at 02:10:10PM +1100, NeilBrown wrote:
->>> >> Comments and testing very welcome.
->>> >
->>> > I would rather have functionality to convert raid10 to raid5.
->>> > raid1 should be depreciated, as raid10,n2 for all purposes is the=
- same
->>> > but better implementation and performance, and raid10,f2 and raid=
-10,o2
->>> > are even better.  Nobody should use raid1 anymore.
->>>
->>> That is a fairly simplistic view.
->>
->> It was also formulated to provoke some thoughts.
->>
->>> raid1 supports --write-mostly and --write-behind which raid10 is
->>> unlikely
->>> ever to support.
->>
->> why?
->>
->> Anyway would it not be possible that this functionality be implement=
-ed
->> for raid10,n2?
->
-> It would be possible, but it might not be sensible.
->
-> write-mostly and write-behind only really make sense when you have th=
-e
-> clear distinction between drives that raid1 gives you.
-> These options don't make sense for raid10 in general.  Only in very s=
-pecific
-> layouts.
-> If you like, raid1 is an implementation of a specific raid10 layout,
-> where it makes sense to add some extra functionality.
->
->>
->> Some code to grow raid10 would also be desirable. Maybe it is some o=
-f
->> the same operations that need to be applied: getting the old data in=
-,
->> have it restructured for the new format, in a safe way, and possibly
->> with the help of an extra disk, or possibly not. It sounds non-trivi=
-al
->> to me too.
->
-> What particular growth scenarios are you interested it?
-> Just adding a drive and restriping onto that?  i.e keep that
-> same nominal layout but increase 'raid-disks'?
->
-> That would be quite similar to the raid5 grow operation so it shouldn=
-'t
-> be too hard to achieve.
-> A 'grow' which changed the layout (e.g. near to far) would be a lot
-> harder.
 
-I'd previously seen the wikipedia article regarding Linux RAID10 and
-its mention of the 3 disk case.  Out of academic curiousity, how does
-the 2 disk RAID10 work?  Is it just a matter of have 2 identical
-volumes and reading subsequent stripes from the alteranate drives?  Or
-is the algorithm more complicated?
+--RwGu8mu1E+uYXPWP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Wil
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On 14:10, NeilBrown wrote:
+
+> -static int stripe_to_pdidx(sector_t stripe, raid5_conf_t *conf, int prev=
+ious);
+> +static int stripe_to_pdidx(sector_t stripe, raid5_conf_t *conf, int prev=
+ious,
+> +			   int *qd_idx);
+
+That's a bit ugly, isn't it? The function computes both the p index
+and the q index which is not obvious from its name. Also, the p index
+is the return value and the q index is returned via a pointer which
+is a bit unsymmetric.
+
+static void get_parity_indices(sector_t stripe, raid5_conf_t *conf, int pre=
+vious,
+				 int *pd_idx, int *qd_idx);
+
+perhaps?
+
+> +	/* Note that unlike RAID-5, the ordering of the disks matters greatly.*/
+> +	/* FIX: Is this ordering of drives even remotely optimal? */
+> +	count =3D 0;
+> +	i =3D d0_idx;
+> +	do {
+> +		if (i =3D=3D sh->pd_idx)
+> +			ptrs[disks-2] =3D page_address(sh->dev[i].page);
+> +		else if (i =3D=3D sh->qd_idx)
+> +			ptrs[disks-1] =3D page_address(sh->dev[i].page);
+> +		else {
+>  			ptrs[count++] =3D page_address(sh->dev[i].page);
+> -			if (count <=3D disks-2 && !test_bit(R5_UPTODATE, &sh->dev[i].flags))
+> +			if (!test_bit(R5_UPTODATE, &sh->dev[i].flags))
+>  				printk("block %d/%d not uptodate on parity calc\n", i,count);
+> -			i =3D raid6_next_disk(i, disks);
+> -		} while ( i !=3D d0_idx );
+> -//		break;
+> -//	}
+> +		}
+> +		i =3D raid6_next_disk(i, disks);
+> +	} while (i !=3D d0_idx);
+> +	BUG_ON(count+2 !=3D disks);
+
+Isn't it really dangerous to ignore a dirty stripe head during parity
+calculation? I understand that compute_parity6() does not have a
+return value and that dirty stripe heads have always been ignored by
+compute_parity6(). But it looks much saner to fail in this case.
+
+BTW, the printk lacks a KERN_ERR.
+
+> +	/**** FIX THIS: This could be very bad if disks is close to 256 ****/
+> +	void *ptrs[disks];
+
+How serious is this? It's probably not a problem for version 0.90
+superblocks as one can't have more than 26 disks. OTOH, for version
+1 superblocks we might end up using up to 2K of stack space on 64
+bit machines.
+
+Would it be a reasonable to always allocate 26 pointers, say, and
+fall back to malloc() if this turns out to be too small?
+
+> +	count =3D 0;
+> +	i =3D d0_idx;
+> +	do {
+> +		int slot;
+> +		if (i =3D=3D sh->pd_idx)
+> +			slot =3D disks-2;
+> +		else if (i =3D=3D sh->qd_idx)
+> +			slot =3D disks-1;
+> +		else
+> +			slot =3D count++;
+> +		ptrs[slot] =3D page_address(sh->dev[i].page);
+> +		if (i =3D=3D dd_idx1)
+> +			faila =3D slot;
+> +		if (i =3D=3D dd_idx2)
+> +			failb =3D slot;
+> +		i =3D raid6_next_disk(i, disks);
+> +	} while (i !=3D d0_idx);
+> +	BUG_ON(count+2 !=3D disks);
+
+Deja vu. How about using a helper function like
+
+static inline int is_parity_idx(int idx, struct stripe_head_sh)
+{
+	if (idx =3D=3D sh->pd_idx)
+		return sh->disks - 2;
+	if (idx =3D=3D sh->qd_idx)
+		return sh->disks - 1;
+	return 0;
+}
+
+Then the above becomes
+
+	int slot =3D is_parity_idx(i, sh);
+	if (!slot)
+		slot =3D count++;
+
+And in compute_parity6() we could write
+
+	count =3D 0;
+	i =3D d0_idx;
+	do {
+		int slot =3D is_parity_idx(i, sh);
+		if (!slot)
+			slot =3D count++;
+		ptrs[slot] =3D page_address(sh->dev[i].page);
+
+
+Regards
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--RwGu8mu1E+uYXPWP
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFJlFS5Wto1QDEAkw8RAgO4AJ9bvVCGI+Mpq/w4MFLDdLggwPUN9wCfeuaE
+6Em7JCY2qkVCE9IHr+XR5hY=
+=ib70
+-----END PGP SIGNATURE-----
+
+--RwGu8mu1E+uYXPWP--
