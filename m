@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 01/18] md: never clear bit from the write-intent bitmap when
-	the array is degraded.
+Subject: [PATCH 02/18] md: write bitmap information to devices that are
+	undergoing recovery.
 Date: Thu, 12 Feb 2009 14:10:10 +1100
-Message-ID: <20090212031010.23983.36919.stgit@notabene.brown>
+Message-ID: <20090212031010.23983.53597.stgit@notabene.brown>
 References: <20090212031009.23983.14496.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,41 +13,34 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-It is safe to clear a bit from the write-intent bitmap for a raid1
-when if we know the data has been written to all devices, which is
-what the current test does.
-But it is not always safe to update the 'events_cleared' counter in
-that case.  This is one request could complete successfully after some
-other request has partially failed.
+When we add some spares to an array and start recovery, and with have
+a bitmap which is stored 'internally' on all devices, we call
+bitmap_write_all to make sure the bitmap is correct on the new
+device(s).
+However that doesn't work as write_sb_page only writes to
+'In_sync' devices, and devices undergoing recovery are not
+'In_sync' until recovery finishes.
 
-So simply disable the clearing and updating of events_cleared whenever
-the array is degraded.  This might end up not clearing some bits that
-could safely be cleared, but it is safest approach.
-
-Note that the bug fixed here did not risk corrupting data by letting
-the array get out-of-sync.  Rather it meant that when a device is
-removed and re-added to the array, it might incorrectly require a full
-recovery rather than just recovering based on the bitmap.
+So extend write_sb_page (actually next_active_rdev) to include devices
+that are under recovery.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/bitmap.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ drivers/md/bitmap.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 7199437..be29937 100644
+index be29937..96a43bd 100644
 --- a/drivers/md/bitmap.c
 +++ b/drivers/md/bitmap.c
-@@ -1306,6 +1306,9 @@ void bitmap_endwrite(struct bitmap *bitmap, sector_t offset, unsigned long secto
- 		PRINTK(KERN_DEBUG "dec write-behind count %d/%d\n",
- 		  atomic_read(&bitmap->behind_writes), bitmap->max_write_behind);
- 	}
-+	if (bitmap->mddev->degraded)
-+		/* Never clear bits or update events_cleared when degraded */
-+		success = 0;
- 
- 	while (sectors) {
- 		int blocks;
+@@ -265,7 +265,6 @@ static mdk_rdev_t *next_active_rdev(mdk_rdev_t *rdev, mddev_t *mddev)
+ 	list_for_each_continue_rcu(pos, &mddev->disks) {
+ 		rdev = list_entry(pos, mdk_rdev_t, same_set);
+ 		if (rdev->raid_disk >= 0 &&
+-		    test_bit(In_sync, &rdev->flags) &&
+ 		    !test_bit(Faulty, &rdev->flags)) {
+ 			/* this is a usable devices */
+ 			atomic_inc(&rdev->nr_pending);
 
 
