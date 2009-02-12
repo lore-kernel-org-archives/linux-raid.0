@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 09/18] md/raid6: remove expectation that Q device is
-	immediately after P device.
+Subject: [PATCH 11/18] md/raid5: Add support for new layouts for raid5 and
+	raid6.
 Date: Thu, 12 Feb 2009 14:10:11 +1100
-Message-ID: <20090212031010.23983.26264.stgit@notabene.brown>
+Message-ID: <20090212031011.23983.40931.stgit@notabene.brown>
 References: <20090212031009.23983.14496.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,512 +13,356 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Code currently assumes that the devices in a raid6 stripe are
-  0 1 ... N-1 P Q
-in some rotated order.  We will shortly add new layouts in which
-this strict pattern is broken.
-So remove this expectation.  We still assume that the data disks
-are roughly in-order.  However P and Q can be inserted anywhere within
-that order.
+DDF uses different layouts for P and Q blocks than current md/raid6
+so add those that are missing.
+Also add support for RAID6 layouts that are identical to various
+raid5 layouts with the simple addition of one device to hold all of
+the 'Q' blocks.
+Finally add 'raid5' layouts to match raid4.
+These last to will allow online level conversion.
+
+Note that this does not provide correct support for DDF/raid6 yet
+as the order in which data blocks are summed to produce the Q block
+is significant and different between current md code and DDF
+requirements.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid5.c         |  197 +++++++++++++++++++++++++-------------------
- include/linux/raid/raid5.h |   15 ++-
- 2 files changed, 120 insertions(+), 92 deletions(-)
+ drivers/md/raid5.c         |  151 ++++++++++++++++++++++++++++++++++++++++----
+ include/linux/raid/raid5.h |   61 +++++++++++++++++-
+ 2 files changed, 193 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index a061484..95f39d2 100644
+index ab751b2..b26b637 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -130,6 +130,14 @@ static inline void raid5_set_bi_hw_segments(struct bio *bio, unsigned int cnt)
- 	bio->bi_phys_segments = raid5_bi_phys_segments(bio) || (cnt << 16);
- }
+@@ -1079,7 +1079,7 @@ static void shrink_stripes(raid5_conf_t *conf)
  
-+/* Find first data disk in a raid6 stripe */
-+static inline int raid6_d0(struct stripe_head *sh)
-+{
-+	if (sh->qd_idx == sh->disks - 1)
-+		return 0;
-+	else
-+		return sh->qd_idx + 1;
-+}
- static inline int raid6_next_disk(int disk, int raid_disks)
+ static void raid5_end_read_request(struct bio * bi, int error)
  {
- 	disk++;
-@@ -193,6 +201,7 @@ static void __release_stripe(raid5_conf_t *conf, struct stripe_head *sh)
- 		}
- 	}
- }
-+
- static void release_stripe(struct stripe_head *sh)
- {
+- 	struct stripe_head *sh = bi->bi_private;
++	struct stripe_head *sh = bi->bi_private;
  	raid5_conf_t *conf = sh->raid_conf;
-@@ -271,12 +280,14 @@ static int grow_buffers(struct stripe_head *sh, int num)
- }
+ 	int disks = sh->disks, i;
+ 	int uptodate = test_bit(BIO_UPTODATE, &bi->bi_flags);
+@@ -1161,7 +1161,7 @@ static void raid5_end_read_request(struct bio * bi, int error)
  
- static void raid5_build_block(struct stripe_head *sh, int i);
--static int stripe_to_pdidx(sector_t stripe, raid5_conf_t *conf, int previous);
-+static int stripe_to_pdidx(sector_t stripe, raid5_conf_t *conf, int previous,
-+			   int *qd_idx);
- 
- static void init_stripe(struct stripe_head *sh, sector_t sector, int previous)
+ static void raid5_end_write_request(struct bio *bi, int error)
  {
+- 	struct stripe_head *sh = bi->bi_private;
++	struct stripe_head *sh = bi->bi_private;
  	raid5_conf_t *conf = sh->raid_conf;
- 	int i;
-+	int qd_idx;
- 
- 	BUG_ON(atomic_read(&sh->count) != 0);
- 	BUG_ON(test_bit(STRIPE_HANDLE, &sh->state));
-@@ -290,7 +301,8 @@ static void init_stripe(struct stripe_head *sh, sector_t sector, int previous)
- 
- 	sh->disks = previous ? conf->previous_raid_disks : conf->raid_disks;
- 	sh->sector = sector;
--	sh->pd_idx = stripe_to_pdidx(sector, conf, previous);
-+	sh->pd_idx = stripe_to_pdidx(sector, conf, previous, &qd_idx);
-+	sh->qd_idx = qd_idx;
- 	sh->state = 0;
- 
- 
-@@ -1232,7 +1244,7 @@ static void error(mddev_t *mddev, mdk_rdev_t *rdev)
-  */
- static sector_t raid5_compute_sector(raid5_conf_t *conf, sector_t r_sector,
- 				     int previous,
--				     int *dd_idx, int *pd_idx)
-+				     int *dd_idx, int *pd_idx, int *qd_idx)
- {
- 	long stripe;
- 	unsigned long chunk_number;
-@@ -1265,6 +1277,7 @@ static sector_t raid5_compute_sector(raid5_conf_t *conf, sector_t r_sector,
- 	/*
- 	 * Select the parity disk based on the user selected algorithm.
- 	 */
-+	*qd_idx = ~0;
- 	switch(conf->level) {
- 	case 4:
- 		*pd_idx = data_disks;
-@@ -1300,24 +1313,30 @@ static sector_t raid5_compute_sector(raid5_conf_t *conf, sector_t r_sector,
- 		switch (conf->algorithm) {
- 		case ALGORITHM_LEFT_ASYMMETRIC:
- 			*pd_idx = raid_disks - 1 - (stripe % raid_disks);
--			if (*pd_idx == raid_disks-1)
-+			*qd_idx = *pd_idx + 1;
-+			if (*pd_idx == raid_disks-1) {
- 				(*dd_idx)++; 	/* Q D D D P */
--			else if (*dd_idx >= *pd_idx)
-+				*qd_idx = 0;
-+			} else if (*dd_idx >= *pd_idx)
- 				(*dd_idx) += 2; /* D D P Q D */
+ 	int disks = sh->disks, i;
+ 	int uptodate = test_bit(BIO_UPTODATE, &bi->bi_flags);
+@@ -1301,20 +1301,27 @@ static sector_t raid5_compute_sector(raid5_conf_t *conf, sector_t r_sector,
+ 			pd_idx = stripe % raid_disks;
+ 			*dd_idx = (pd_idx + 1 + *dd_idx) % raid_disks;
  			break;
- 		case ALGORITHM_RIGHT_ASYMMETRIC:
- 			*pd_idx = stripe % raid_disks;
--			if (*pd_idx == raid_disks-1)
-+			*qd_idx = *pd_idx + 1;
-+			if (*pd_idx == raid_disks-1) {
- 				(*dd_idx)++; 	/* Q D D D P */
--			else if (*dd_idx >= *pd_idx)
-+				*qd_idx = 0;
-+			} else if (*dd_idx >= *pd_idx)
- 				(*dd_idx) += 2; /* D D P Q D */
- 			break;
- 		case ALGORITHM_LEFT_SYMMETRIC:
- 			*pd_idx = raid_disks - 1 - (stripe % raid_disks);
-+			*qd_idx = (*pd_idx + 1) % raid_disks;
- 			*dd_idx = (*pd_idx + 2 + *dd_idx) % raid_disks;
- 			break;
- 		case ALGORITHM_RIGHT_SYMMETRIC:
- 			*pd_idx = stripe % raid_disks;
-+			*qd_idx = (*pd_idx + 1) % raid_disks;
- 			*dd_idx = (*pd_idx + 2 + *dd_idx) % raid_disks;
- 			break;
++		case ALGORITHM_PARITY_0:
++			pd_idx = 0;
++			(*dd_idx)++;
++			break;
++		case ALGORITHM_PARITY_N:
++			pd_idx = data_disks;
++			break;
  		default:
-@@ -1344,7 +1363,7 @@ static sector_t compute_blocknr(struct stripe_head *sh, int i)
- 	int sectors_per_chunk = conf->chunk_size >> 9;
- 	sector_t stripe;
- 	int chunk_offset;
--	int chunk_number, dummy1, dummy2, dd_idx = i;
-+	int chunk_number, dummy1, dummy2, dummy3, dd_idx = i;
- 	sector_t r_sector;
- 
- 
-@@ -1375,7 +1394,7 @@ static sector_t compute_blocknr(struct stripe_head *sh, int i)
+ 			printk(KERN_ERR "raid5: unsupported algorithm %d\n",
+ 				conf->algorithm);
++			BUG();
  		}
  		break;
  	case 6:
--		if (i == raid6_next_disk(sh->pd_idx, raid_disks))
-+		if (i == sh->qd_idx)
- 			return 0; /* It is the Q disk */
+ 
+-		/**** FIX THIS ****/
  		switch (conf->algorithm) {
  		case ALGORITHM_LEFT_ASYMMETRIC:
-@@ -1408,7 +1427,7 @@ static sector_t compute_blocknr(struct stripe_head *sh, int i)
- 
- 	check = raid5_compute_sector(conf, r_sector,
- 				     (raid_disks != conf->raid_disks),
--				     &dummy1, &dummy2);
-+				     &dummy1, &dummy2, &dummy3);
- 	if (check != sh->sector || dummy1 != dd_idx || dummy2 != sh->pd_idx) {
- 		printk(KERN_ERR "compute_blocknr: map not correct\n");
- 		return 0;
-@@ -1477,13 +1496,14 @@ static void copy_data(int frombio, struct bio *bio,
- static void compute_parity6(struct stripe_head *sh, int method)
- {
- 	raid6_conf_t *conf = sh->raid_conf;
--	int i, pd_idx = sh->pd_idx, qd_idx, d0_idx, disks = sh->disks, count;
-+	int i, pd_idx, qd_idx, d0_idx, disks = sh->disks, count;
- 	struct bio *chosen;
- 	/**** FIX THIS: This could be very bad if disks is close to 256 ****/
- 	void *ptrs[disks];
- 
--	qd_idx = raid6_next_disk(pd_idx, disks);
--	d0_idx = raid6_next_disk(qd_idx, disks);
-+	pd_idx = sh->pd_idx;
-+	qd_idx = sh->qd_idx;
-+	d0_idx = raid6_d0(sh);
- 
- 	pr_debug("compute_parity, stripe %llu, method %d\n",
- 		(unsigned long long)sh->sector, method);
-@@ -1521,22 +1541,23 @@ static void compute_parity6(struct stripe_head *sh, int method)
- 			set_bit(R5_UPTODATE, &sh->dev[i].flags);
- 		}
- 
--//	switch(method) {
--//	case RECONSTRUCT_WRITE:
--//	case CHECK_PARITY:
--//	case UPDATE_PARITY:
--		/* Note that unlike RAID-5, the ordering of the disks matters greatly. */
--		/* FIX: Is this ordering of drives even remotely optimal? */
--		count = 0;
--		i = d0_idx;
--		do {
-+	/* Note that unlike RAID-5, the ordering of the disks matters greatly.*/
-+	/* FIX: Is this ordering of drives even remotely optimal? */
-+	count = 0;
-+	i = d0_idx;
-+	do {
-+		if (i == sh->pd_idx)
-+			ptrs[disks-2] = page_address(sh->dev[i].page);
-+		else if (i == sh->qd_idx)
-+			ptrs[disks-1] = page_address(sh->dev[i].page);
-+		else {
- 			ptrs[count++] = page_address(sh->dev[i].page);
--			if (count <= disks-2 && !test_bit(R5_UPTODATE, &sh->dev[i].flags))
-+			if (!test_bit(R5_UPTODATE, &sh->dev[i].flags))
- 				printk("block %d/%d not uptodate on parity calc\n", i,count);
--			i = raid6_next_disk(i, disks);
--		} while ( i != d0_idx );
--//		break;
--//	}
-+		}
-+		i = raid6_next_disk(i, disks);
-+	} while (i != d0_idx);
-+	BUG_ON(count+2 != disks);
- 
- 	raid6_call.gen_syndrome(disks, STRIPE_SIZE, ptrs);
- 
-@@ -1560,8 +1581,7 @@ static void compute_block_1(struct stripe_head *sh, int dd_idx, int nozero)
- {
- 	int i, count, disks = sh->disks;
- 	void *ptr[MAX_XOR_BLOCKS], *dest, *p;
--	int pd_idx = sh->pd_idx;
--	int qd_idx = raid6_next_disk(pd_idx, disks);
-+	int qd_idx = sh->qd_idx;
- 
- 	pr_debug("compute_block_1, stripe %llu, idx %d\n",
- 		(unsigned long long)sh->sector, dd_idx);
-@@ -1597,21 +1617,36 @@ static void compute_block_1(struct stripe_head *sh, int dd_idx, int nozero)
- static void compute_block_2(struct stripe_head *sh, int dd_idx1, int dd_idx2)
- {
- 	int i, count, disks = sh->disks;
--	int pd_idx = sh->pd_idx;
--	int qd_idx = raid6_next_disk(pd_idx, disks);
--	int d0_idx = raid6_next_disk(qd_idx, disks);
--	int faila, failb;
-+	int d0_idx = raid6_d0(sh);
-+	int faila = -1, failb = -1;
-+	/**** FIX THIS: This could be very bad if disks is close to 256 ****/
-+	void *ptrs[disks];
- 
--	/* faila and failb are disk numbers relative to d0_idx */
--	/* pd_idx become disks-2 and qd_idx become disks-1 */
--	faila = (dd_idx1 < d0_idx) ? dd_idx1+(disks-d0_idx) : dd_idx1-d0_idx;
--	failb = (dd_idx2 < d0_idx) ? dd_idx2+(disks-d0_idx) : dd_idx2-d0_idx;
-+	count = 0;
-+	i = d0_idx;
-+	do {
-+		int slot;
-+		if (i == sh->pd_idx)
-+			slot = disks-2;
-+		else if (i == sh->qd_idx)
-+			slot = disks-1;
-+		else
-+			slot = count++;
-+		ptrs[slot] = page_address(sh->dev[i].page);
-+		if (i == dd_idx1)
-+			faila = slot;
-+		if (i == dd_idx2)
-+			failb = slot;
-+		i = raid6_next_disk(i, disks);
-+	} while (i != d0_idx);
-+	BUG_ON(count+2 != disks);
- 
- 	BUG_ON(faila == failb);
- 	if ( failb < faila ) { int tmp = faila; faila = failb; failb = tmp; }
- 
- 	pr_debug("compute_block_2, stripe %llu, idx %d,%d (%d,%d)\n",
--	       (unsigned long long)sh->sector, dd_idx1, dd_idx2, faila, failb);
-+		 (unsigned long long)sh->sector, dd_idx1, dd_idx2,
-+		 faila, failb);
- 
- 	if ( failb == disks-1 ) {
- 		/* Q disk is one of the missing disks */
-@@ -1621,39 +1656,26 @@ static void compute_block_2(struct stripe_head *sh, int dd_idx1, int dd_idx2)
- 			return;
- 		} else {
- 			/* We're missing D+Q; recompute D from P */
--			compute_block_1(sh, (dd_idx1 == qd_idx) ? dd_idx2 : dd_idx1, 0);
-+			compute_block_1(sh, ((dd_idx1 == sh->qd_idx) ?
-+					     dd_idx2 : dd_idx1),
-+					0);
- 			compute_parity6(sh, UPDATE_PARITY); /* Is this necessary? */
- 			return;
- 		}
- 	}
- 
--	/* We're missing D+P or D+D; build pointer table */
--	{
--		/**** FIX THIS: This could be very bad if disks is close to 256 ****/
--		void *ptrs[disks];
--
--		count = 0;
--		i = d0_idx;
--		do {
--			ptrs[count++] = page_address(sh->dev[i].page);
--			i = raid6_next_disk(i, disks);
--			if (i != dd_idx1 && i != dd_idx2 &&
--			    !test_bit(R5_UPTODATE, &sh->dev[i].flags))
--				printk("compute_2 with missing block %d/%d\n", count, i);
--		} while ( i != d0_idx );
--
--		if ( failb == disks-2 ) {
--			/* We're missing D+P. */
--			raid6_datap_recov(disks, STRIPE_SIZE, faila, ptrs);
--		} else {
--			/* We're missing D+D. */
--			raid6_2data_recov(disks, STRIPE_SIZE, faila, failb, ptrs);
--		}
--
--		/* Both the above update both missing blocks */
--		set_bit(R5_UPTODATE, &sh->dev[dd_idx1].flags);
--		set_bit(R5_UPTODATE, &sh->dev[dd_idx2].flags);
-+	/* We're missing D+P or D+D; */
-+	if (failb == disks-2) {
-+		/* We're missing D+P. */
-+		raid6_datap_recov(disks, STRIPE_SIZE, faila, ptrs);
-+	} else {
-+		/* We're missing D+D. */
-+		raid6_2data_recov(disks, STRIPE_SIZE, faila, failb, ptrs);
- 	}
+ 			pd_idx = raid_disks - 1 - (stripe % raid_disks);
+ 			qd_idx = pd_idx + 1;
+ 			if (pd_idx == raid_disks-1) {
+-				(*dd_idx)++; 	/* Q D D D P */
++				(*dd_idx)++;	/* Q D D D P */
+ 				qd_idx = 0;
+ 			} else if (*dd_idx >= pd_idx)
+ 				(*dd_idx) += 2; /* D D P Q D */
+@@ -1323,7 +1330,7 @@ static sector_t raid5_compute_sector(raid5_conf_t *conf, sector_t r_sector,
+ 			pd_idx = stripe % raid_disks;
+ 			qd_idx = pd_idx + 1;
+ 			if (pd_idx == raid_disks-1) {
+-				(*dd_idx)++; 	/* Q D D D P */
++				(*dd_idx)++;	/* Q D D D P */
+ 				qd_idx = 0;
+ 			} else if (*dd_idx >= pd_idx)
+ 				(*dd_idx) += 2; /* D D P Q D */
+@@ -1338,9 +1345,89 @@ static sector_t raid5_compute_sector(raid5_conf_t *conf, sector_t r_sector,
+ 			qd_idx = (pd_idx + 1) % raid_disks;
+ 			*dd_idx = (pd_idx + 2 + *dd_idx) % raid_disks;
+ 			break;
 +
-+	/* Both the above update both missing blocks */
-+	set_bit(R5_UPTODATE, &sh->dev[dd_idx1].flags);
-+	set_bit(R5_UPTODATE, &sh->dev[dd_idx2].flags);
- }
- 
- static void
-@@ -1808,7 +1830,8 @@ static int page_is_zero(struct page *p)
- 		memcmp(a, a+4, STRIPE_SIZE-4)==0);
- }
- 
--static int stripe_to_pdidx(sector_t stripe, raid5_conf_t *conf, int previous)
-+static int stripe_to_pdidx(sector_t stripe, raid5_conf_t *conf, int previous,
-+			   int *qd_idxp)
- {
- 	int sectors_per_chunk = conf->chunk_size >> 9;
- 	int pd_idx, dd_idx;
-@@ -1819,7 +1842,7 @@ static int stripe_to_pdidx(sector_t stripe, raid5_conf_t *conf, int previous)
- 			     stripe * (disks - conf->max_degraded)
- 			     *sectors_per_chunk + chunk_offset,
- 			     previous,
--			     &dd_idx, &pd_idx);
-+			     &dd_idx, &pd_idx, qd_idxp);
- 	return pd_idx;
- }
- 
-@@ -2478,12 +2501,13 @@ static void handle_stripe_expansion(raid5_conf_t *conf, struct stripe_head *sh,
- 	clear_bit(STRIPE_EXPAND_SOURCE, &sh->state);
- 	for (i = 0; i < sh->disks; i++)
- 		if (i != sh->pd_idx && (!r6s || i != r6s->qd_idx)) {
--			int dd_idx, pd_idx, j;
-+			int dd_idx, pd_idx, qd_idx, j;
- 			struct stripe_head *sh2;
- 
- 			sector_t bn = compute_blocknr(sh, i);
--			sector_t s = raid5_compute_sector(conf, bn, 0,
--							  &dd_idx, &pd_idx);
-+			sector_t s =
-+				raid5_compute_sector(conf, bn, 0,
-+						     &dd_idx, &pd_idx, &qd_idx);
- 			sh2 = get_active_stripe(conf, s, 0, 1);
- 			if (sh2 == NULL)
- 				/* so far only the early blocks of this stripe
-@@ -2507,8 +2531,7 @@ static void handle_stripe_expansion(raid5_conf_t *conf, struct stripe_head *sh,
- 			set_bit(R5_UPTODATE, &sh2->dev[dd_idx].flags);
- 			for (j = 0; j < conf->raid_disks; j++)
- 				if (j != sh2->pd_idx &&
--				    (!r6s || j != raid6_next_disk(sh2->pd_idx,
--								 sh2->disks)) &&
-+				    (!r6s || j != sh2->qd_idx) &&
- 				    !test_bit(R5_Expanded, &sh2->dev[j].flags))
- 					break;
- 			if (j == conf->raid_disks) {
-@@ -2768,9 +2791,11 @@ static bool handle_stripe5(struct stripe_head *sh)
- 
- 	if (s.expanded && test_bit(STRIPE_EXPANDING, &sh->state) &&
- 	    !sh->reconstruct_state) {
-+		int qd_idx;
- 		/* Need to write out all blocks after computing parity */
- 		sh->disks = conf->raid_disks;
--		sh->pd_idx = stripe_to_pdidx(sh->sector, conf, 0);
-+		sh->pd_idx = stripe_to_pdidx(sh->sector, conf, 0, &qd_idx);
-+		sh->qd_idx = qd_idx;
- 		schedule_reconstruction5(sh, &s, 1, 1);
- 	} else if (s.expanded && !sh->reconstruct_state && s.locked == 0) {
- 		clear_bit(STRIPE_EXPAND_READY, &sh->state);
-@@ -2811,7 +2836,7 @@ static bool handle_stripe6(struct stripe_head *sh, struct page *tmp_page)
- 	struct r5dev *dev, *pdev, *qdev;
- 	mdk_rdev_t *blocked_rdev = NULL;
- 
--	r6s.qd_idx = raid6_next_disk(pd_idx, disks);
-+	r6s.qd_idx = sh->qd_idx;
- 	pr_debug("handling stripe %llu, state=%#lx cnt=%d, "
- 		"pd_idx=%d, qd_idx=%d\n",
- 	       (unsigned long long)sh->sector, sh->state,
-@@ -2987,8 +3012,10 @@ static bool handle_stripe6(struct stripe_head *sh, struct page *tmp_page)
- 
- 	if (s.expanded && test_bit(STRIPE_EXPANDING, &sh->state)) {
- 		/* Need to write out all blocks after computing P&Q */
-+		int qd_idx;
- 		sh->disks = conf->raid_disks;
--		sh->pd_idx = stripe_to_pdidx(sh->sector, conf, 0);
-+		sh->pd_idx = stripe_to_pdidx(sh->sector, conf, 0, &qd_idx);
-+		sh->qd_idx = qd_idx;
- 		compute_parity6(sh, RECONSTRUCT_WRITE);
- 		for (i = conf->raid_disks ; i-- ;  ) {
- 			set_bit(R5_LOCKED, &sh->dev[i].flags);
-@@ -3260,7 +3287,7 @@ static int chunk_aligned_read(struct request_queue *q, struct bio * raid_bio)
- {
- 	mddev_t *mddev = q->queuedata;
- 	raid5_conf_t *conf = mddev_to_conf(mddev);
--	unsigned int dd_idx, pd_idx;
-+	unsigned int dd_idx, pd_idx, qd_idx;
- 	struct bio* align_bi;
- 	mdk_rdev_t *rdev;
- 
-@@ -3285,7 +3312,7 @@ static int chunk_aligned_read(struct request_queue *q, struct bio * raid_bio)
++		case ALGORITHM_PARITY_0:
++			pd_idx = 0;
++			qd_idx = 1;
++			(*dd_idx) += 2;
++			break;
++		case ALGORITHM_PARITY_N:
++			pd_idx = data_disks;
++			qd_idx = data_disks + 1;
++			break;
++
++		case ALGORITHM_ROTATING_ZERO_RESTART:
++			/* Exactly the same as RIGHT_ASYMMETRIC, but or
++			 * of blocks for computing Q is different.
++			 */
++			pd_idx = stripe % raid_disks;
++			qd_idx = pd_idx + 1;
++			if (pd_idx == raid_disks-1) {
++				(*dd_idx)++;	/* Q D D D P */
++				qd_idx = 0;
++			} else if (*dd_idx >= pd_idx)
++				(*dd_idx) += 2; /* D D P Q D */
++			break;
++
++		case ALGORITHM_ROTATING_N_RESTART:
++			/* Same a left_asymmetric, by first stripe is
++			 * D D D P Q  rather than
++			 * Q D D D P
++			 */
++			pd_idx = raid_disks - 1 - ((stripe + 1) % raid_disks);
++			qd_idx = pd_idx + 1;
++			if (pd_idx == raid_disks-1) {
++				(*dd_idx)++;	/* Q D D D P */
++				qd_idx = 0;
++			} else if (*dd_idx >= pd_idx)
++				(*dd_idx) += 2; /* D D P Q D */
++			break;
++
++		case ALGORITHM_ROTATING_N_CONTINUE:
++			/* Same as left_symmetric but Q is before P */
++			pd_idx = raid_disks - 1 - (stripe % raid_disks);
++			qd_idx = (pd_idx + raid_disks - 1) % raid_disks;
++			*dd_idx = (pd_idx + 1 + *dd_idx) % raid_disks;
++			break;
++
++		case ALGORITHM_LEFT_ASYMMETRIC_6:
++			/* RAID5 left_asymmetric, with Q on last device */
++			pd_idx = data_disks - stripe % (raid_disks-1);
++			if (*dd_idx >= pd_idx)
++				(*dd_idx)++;
++			qd_idx = raid_disks - 1;
++			break;
++
++		case ALGORITHM_RIGHT_ASYMMETRIC_6:
++			pd_idx = stripe % (raid_disks-1);
++			if (*dd_idx >= pd_idx)
++				(*dd_idx)++;
++			qd_idx = raid_disks - 1;
++			break;
++
++		case ALGORITHM_LEFT_SYMMETRIC_6:
++			pd_idx = data_disks - stripe % (raid_disks-1);
++			*dd_idx = (pd_idx + 1 + *dd_idx) % (raid_disks-1);
++			qd_idx = raid_disks - 1;
++			break;
++
++		case ALGORITHM_RIGHT_SYMMETRIC_6:
++			pd_idx = stripe % (raid_disks-1);
++			*dd_idx = (pd_idx + 1 + *dd_idx) % (raid_disks-1);
++			qd_idx = raid_disks - 1;
++			break;
++
++		case ALGORITHM_PARITY_0_6:
++			pd_idx = 0;
++			(*dd_idx)++;
++			qd_idx = raid_disks - 1;
++			break;
++
++
+ 		default:
+ 			printk(KERN_CRIT "raid6: unsupported algorithm %d\n",
+ 			       conf->algorithm);
++			BUG();
+ 		}
+ 		break;
+ 	}
+@@ -1392,9 +1479,15 @@ static sector_t compute_blocknr(struct stripe_head *sh, int i)
+ 				i += raid_disks;
+ 			i -= (sh->pd_idx + 1);
+ 			break;
++		case ALGORITHM_PARITY_0:
++			i -= 1;
++			break;
++		case ALGORITHM_PARITY_N:
++			break;
+ 		default:
+ 			printk(KERN_ERR "raid5: unsupported algorithm %d\n",
+ 			       conf->algorithm);
++			BUG();
+ 		}
+ 		break;
+ 	case 6:
+@@ -1403,8 +1496,10 @@ static sector_t compute_blocknr(struct stripe_head *sh, int i)
+ 		switch (conf->algorithm) {
+ 		case ALGORITHM_LEFT_ASYMMETRIC:
+ 		case ALGORITHM_RIGHT_ASYMMETRIC:
+-		  	if (sh->pd_idx == raid_disks-1)
+-				i--; 	/* Q D D D P */
++		case ALGORITHM_ROTATING_ZERO_RESTART:
++		case ALGORITHM_ROTATING_N_RESTART:
++			if (sh->pd_idx == raid_disks-1)
++				i--;	/* Q D D D P */
+ 			else if (i > sh->pd_idx)
+ 				i -= 2; /* D D P Q D */
+ 			break;
+@@ -1419,9 +1514,35 @@ static sector_t compute_blocknr(struct stripe_head *sh, int i)
+ 				i -= (sh->pd_idx + 2);
+ 			}
+ 			break;
++		case ALGORITHM_PARITY_0:
++			i -= 2;
++			break;
++		case ALGORITHM_PARITY_N:
++			break;
++		case ALGORITHM_ROTATING_N_CONTINUE:
++			if (sh->pd_idx == 0)
++				i--;	/* P D D D Q */
++			else if (i > sh->pd_idx)
++				i -= 2; /* D D Q P D */
++			break;
++		case ALGORITHM_LEFT_ASYMMETRIC_6:
++		case ALGORITHM_RIGHT_ASYMMETRIC_6:
++			if (i > sh->pd_idx)
++				i--;
++			break;
++		case ALGORITHM_LEFT_SYMMETRIC_6:
++		case ALGORITHM_RIGHT_SYMMETRIC_6:
++			if (i < sh->pd_idx)
++				i += data_disks + 1;
++			i -= (sh->pd_idx + 1);
++			break;
++		case ALGORITHM_PARITY_0_6:
++			i -= 1;
++			break;
+ 		default:
+ 			printk(KERN_CRIT "raid6: unsupported algorithm %d\n",
+ 			       conf->algorithm);
++			BUG();
+ 		}
+ 		break;
+ 	}
+@@ -3295,7 +3416,7 @@ static int chunk_aligned_read(struct request_queue *q, struct bio * raid_bio)
+ 		return 0;
+ 	}
+ 	/*
+- 	 * use bio_clone to make a copy of the bio
++	 * use bio_clone to make a copy of the bio
  	 */
- 	align_bi->bi_sector =  raid5_compute_sector(conf, raid_bio->bi_sector,
- 						    0,
--						    &dd_idx, &pd_idx);
-+						    &dd_idx, &pd_idx, &qd_idx);
+ 	align_bi = bio_clone(raid_bio, GFP_NOIO);
+ 	if (!align_bi)
+@@ -3426,7 +3547,7 @@ static int make_request(struct request_queue *q, struct bio * bi)
+ 	if (rw == READ &&
+ 	     mddev->reshape_position == MaxSector &&
+ 	     chunk_aligned_read(q,bi))
+-            	return 0;
++		return 0;
  
- 	rcu_read_lock();
- 	rdev = rcu_dereference(conf->disks[dd_idx].rdev);
-@@ -3377,7 +3404,7 @@ static int make_request(struct request_queue *q, struct bio * bi)
- {
- 	mddev_t *mddev = q->queuedata;
- 	raid5_conf_t *conf = mddev_to_conf(mddev);
--	unsigned int dd_idx, pd_idx;
-+	int dd_idx, pd_idx, qd_idx;
- 	sector_t new_sector;
- 	sector_t logical_sector, last_sector;
- 	struct stripe_head *sh;
-@@ -3444,7 +3471,7 @@ static int make_request(struct request_queue *q, struct bio * bi)
+ 	logical_sector = bi->bi_sector & ~((sector_t)STRIPE_SECTORS-1);
+ 	last_sector = bi->bi_sector + (bi->bi_size>>9);
+@@ -4021,6 +4142,12 @@ static int run(mddev_t *mddev)
+ 		       mdname(mddev), mddev->level);
+ 		return -EIO;
+ 	}
++	if ((mddev->level == 5 && !algorithm_valid_raid5(mddev->layout)) ||
++	    (mddev->level == 6 && !algorithm_valid_raid6(mddev->layout))) {
++		printk(KERN_ERR "raid5: %s: layout %d not supported\n",
++		       mdname(mddev), mddev->layout);
++		return -EIO;
++	}
  
- 		new_sector = raid5_compute_sector(conf, logical_sector,
- 						  previous,
--						  &dd_idx, &pd_idx);
-+						  &dd_idx, &pd_idx, &qd_idx);
- 		pr_debug("raid5: make_request, sector %llu logical %llu\n",
- 			(unsigned long long)new_sector, 
- 			(unsigned long long)logical_sector);
-@@ -3532,7 +3559,7 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
- 	 */
- 	raid5_conf_t *conf = (raid5_conf_t *) mddev->private;
- 	struct stripe_head *sh;
--	int pd_idx;
-+	int pd_idx, qd_idx;
- 	sector_t first_sector, last_sector;
- 	int raid_disks = conf->previous_raid_disks;
- 	int data_disks = raid_disks - conf->max_degraded;
-@@ -3595,7 +3622,7 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
- 			if (j == sh->pd_idx)
- 				continue;
- 			if (conf->level == 6 &&
--			    j == raid6_next_disk(sh->pd_idx, sh->disks))
-+			    j == sh->qd_idx)
- 				continue;
- 			s = compute_blocknr(sh, j);
- 			if (s < mddev->array_sectors) {
-@@ -3622,11 +3649,11 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
- 	 */
- 	first_sector =
- 		raid5_compute_sector(conf, sector_nr*(new_data_disks),
--				     1, &dd_idx, &pd_idx);
-+				     1, &dd_idx, &pd_idx, &qd_idx);
- 	last_sector =
- 		raid5_compute_sector(conf, ((sector_nr+conf->chunk_size/512)
- 					    *(new_data_disks) - 1),
--				     1, &dd_idx, &pd_idx);
-+				     1, &dd_idx, &pd_idx, &qd_idx);
- 	if (last_sector >= mddev->dev_sectors)
- 		last_sector = mddev->dev_sectors - 1;
- 	while (first_sector <= last_sector) {
-@@ -3761,7 +3788,7 @@ static int  retry_aligned_read(raid5_conf_t *conf, struct bio *raid_bio)
- 	 * it will be only one 'dd_idx' and only need one call to raid5_compute_sector.
- 	 */
- 	struct stripe_head *sh;
--	int dd_idx, pd_idx;
-+	int dd_idx, pd_idx, qd_idx;
- 	sector_t sector, logical_sector, last_sector;
- 	int scnt = 0;
- 	int remaining;
-@@ -3769,7 +3796,7 @@ static int  retry_aligned_read(raid5_conf_t *conf, struct bio *raid_bio)
- 
- 	logical_sector = raid_bio->bi_sector & ~((sector_t)STRIPE_SECTORS-1);
- 	sector = raid5_compute_sector(conf, logical_sector,
--				      0, &dd_idx, &pd_idx);
-+				      0, &dd_idx, &pd_idx, &qd_idx);
- 	last_sector = raid_bio->bi_sector + (raid_bio->bi_size>>9);
- 
- 	for (; logical_sector < last_sector;
+ 	if (mddev->chunk_size < PAGE_SIZE) {
+ 		printk(KERN_ERR "md/raid5: chunk_size must be at least "
+@@ -4172,12 +4299,6 @@ static int run(mddev_t *mddev)
+ 			conf->chunk_size, mdname(mddev));
+ 		goto abort;
+ 	}
+-	if (conf->algorithm > ALGORITHM_RIGHT_SYMMETRIC) {
+-		printk(KERN_ERR 
+-			"raid5: unsupported parity algorithm %d for %s\n",
+-			conf->algorithm, mdname(mddev));
+-		goto abort;
+-	}
+ 	if (mddev->degraded > conf->max_degraded) {
+ 		printk(KERN_ERR "raid5: not enough operational devices for %s"
+ 			" (%d/%d failed)\n",
 diff --git a/include/linux/raid/raid5.h b/include/linux/raid/raid5.h
-index 3b26727..804dac7 100644
+index 804dac7..4d43b08 100644
 --- a/include/linux/raid/raid5.h
 +++ b/include/linux/raid/raid5.h
-@@ -197,15 +197,16 @@ enum reconstruct_states {
+@@ -395,9 +395,62 @@ typedef struct raid5_private_data raid5_conf_t;
+ /*
+  * Our supported algorithms
+  */
+-#define ALGORITHM_LEFT_ASYMMETRIC	0
+-#define ALGORITHM_RIGHT_ASYMMETRIC	1
+-#define ALGORITHM_LEFT_SYMMETRIC	2
+-#define ALGORITHM_RIGHT_SYMMETRIC	3
++#define ALGORITHM_LEFT_ASYMMETRIC	0 /* Rotating Parity N with Data Restart */
++#define ALGORITHM_RIGHT_ASYMMETRIC	1 /* Rotating Parity 0 with Data Restart */
++#define ALGORITHM_LEFT_SYMMETRIC	2 /* Rotating Parity N with Data Continuation */
++#define ALGORITHM_RIGHT_SYMMETRIC	3 /* Rotating Parity 0 with Data Continuation */
  
- struct stripe_head {
- 	struct hlist_node	hash;
--	struct list_head	lru;			/* inactive_list or handle_list */
--	struct raid5_private_data	*raid_conf;
--	sector_t		sector;			/* sector of this row */
--	int			pd_idx;			/* parity disk index */
--	unsigned long		state;			/* state flags */
--	atomic_t		count;			/* nr of active thread/requests */
-+	struct list_head	lru;	      /* inactive_list or handle_list */
-+	struct raid5_private_data *raid_conf;
-+	sector_t		sector;		/* sector of this row */
-+	short			pd_idx;		/* parity disk index */
-+	short			qd_idx;		/* 'Q' disk index for raid6 */
-+	unsigned long		state;		/* state flags */
-+	atomic_t		count;	      /* nr of active thread/requests */
- 	spinlock_t		lock;
- 	int			bm_seq;	/* sequence number for bitmap flushes */
--	int			disks;			/* disks in stripe */
-+	int			disks;		/* disks in stripe */
- 	enum check_states	check_state;
- 	enum reconstruct_states reconstruct_state;
- 	/* stripe_operations
++/* Define non-rotating (raid4) algorithms.  These allow
++ * conversion of raid4 to raid5.
++ */
++#define ALGORITHM_PARITY_0		4 /* P or P,Q are initial devices */
++#define ALGORITHM_PARITY_N		5 /* P or P,Q are final devices. */
++
++/* DDF RAID6 layouts differ from md/raid6 layouts in two ways.
++ * Firstly, the exact positioning of the parity block is slightly
++ * different between the 'LEFT_*' modes of md and the "_N_*" modes
++ * of DDF.
++ * Secondly, or order of datablocks over which the Q syndrome is computed
++ * is different.
++ * Consequently we have different layouts for DDF/raid6 than md/raid6.
++ * These layouts are from the DDFv1.2 spec.
++ * Interestingly DDFv1.2-Errata-A does not specify N_CONTINUE but
++ * leaves RLQ=3 as 'Vendor Specific'
++ */
++
++#define ALGORITHM_ROTATING_ZERO_RESTART	8 /* DDF PRL=6 RLQ=1 */
++#define ALGORITHM_ROTATING_N_RESTART	9 /* DDF PRL=6 RLQ=2 */
++#define ALGORITHM_ROTATING_N_CONTINUE	10 /*DDF PRL=6 RLQ=3 */
++
++
++/* For every RAID5 algorithm we define a RAID6 algorithm
++ * with exactly the same layout for data and parity, and
++ * with the Q block always on the last device (N-1).
++ * This allows trivial conversion from RAID5 to RAID6
++ */
++#define ALGORITHM_LEFT_ASYMMETRIC_6	16
++#define ALGORITHM_RIGHT_ASYMMETRIC_6	17
++#define ALGORITHM_LEFT_SYMMETRIC_6	18
++#define ALGORITHM_RIGHT_SYMMETRIC_6	19
++#define ALGORITHM_PARITY_0_6		20
++#define ALGORITHM_PARITY_N_6		ALGORITHM_PARITY_N
++
++static inline int algorithm_valid_raid5(int layout)
++{
++	return (layout >= 0) &&
++		(layout <= 5);
++}
++static inline int algorithm_valid_raid6(int layout)
++{
++	return (layout >= 0 && layout <= 5)
++		||
++		(layout == 8 || layout == 10)
++		||
++		(layout >= 16 && layout <= 20);
++}
++
++static inline int algorithm_is_DDF(int layout)
++{
++	return layout >= 8 && layout <= 10;
++}
+ #endif
 
 
