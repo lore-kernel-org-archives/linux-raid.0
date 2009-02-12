@@ -1,48 +1,36 @@
-From: "NeilBrown" <neilb@suse.de>
+From: Farkas Levente <lfarkas@lfarkas.org>
 Subject: Re: [PATCH 00/18] Assorted md patches headed for 2.6.30
-Date: Thu, 12 Feb 2009 20:21:12 +1100 (EST)
-Message-ID: <12039e3b9172d1a1347b8396cab59f11.squirrel@neil.brown.name>
+Date: Thu, 12 Feb 2009 10:42:04 +0100
+Message-ID: <4993EEEC.2020901@lfarkas.org>
 References: <20090212031009.23983.14496.stgit@notabene.brown>
-    <20090212081148.GD9439@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090212081148.GD9439@rap.rap.dk>
+In-Reply-To: <20090212031009.23983.14496.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Keld =?iso-8859-1?Q?J=F8rn_Simonsen?= <keld@dkuug.dk>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, February 12, 2009 7:11 pm, Keld J=F8rn Simonsen wrote:
-> On Thu, Feb 12, 2009 at 02:10:10PM +1100, NeilBrown wrote:
->> Comments and testing very welcome.
->
-> I would rather have functionality to convert raid10 to raid5.
-> raid1 should be depreciated, as raid10,n2 for all purposes is the sam=
-e
-> but better implementation and performance, and raid10,f2 and raid10,o=
-2
-> are even better.  Nobody should use raid1 anymore.
+NeilBrown wrote:
+> Hi,
+>  following is my current patch queue for 2.6.30, in case anyone would
+> like to review or otherwise comment.
+> They should show up in -next shortly.
+> 
+> Probably the most interesting are the last few which provide support
+> for converting a raid1 into a raid5, and a raid5 into a raid6.
+> I plan to do some more work here so the code might change a bit before
+> final submission, as I work out how best ot factor the code.
+> 
+> mdadm doesn't current support these conversions, but you can
+> simply
+>    echo raid5 > /sys/block/md0/md/level
+> to change a 2-drive raid1 into a raid5.  Similarly for 5->6
 
-That is a fairly simplistic view.
-raid1 supports --write-mostly and --write-behind which raid10 is unlike=
-ly
-ever to support.
-Certainly in many cases raid10 is just as good or better than raid1
-though.
+any plan for non-raid to raid1 or anything else like in windows on can
+convert a normal partition into a mirrored one online.
 
-Certainly a raid10->raid5 conversion for a 2-drive n2 configuration
-is trivial to arrange.  Other conversions are less likely to be support=
-ed
-as they require significant non-trivial rearrangement of data.
-
-Thanks for the comment.
-
-NeilBrown
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+  Levente                               "Si vis pacem para bellum!"
