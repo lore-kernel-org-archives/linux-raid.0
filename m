@@ -1,58 +1,60 @@
 From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
 Subject: Re: [PATCH 00/18] Assorted md patches headed for 2.6.30
-Date: Thu, 12 Feb 2009 10:46:04 +0100
-Message-ID: <20090212094604.GA11981@rap.rap.dk>
-References: <20090212031009.23983.14496.stgit@notabene.brown> <20090212081148.GD9439@rap.rap.dk> <4993E82D.1020309@fairbairn-family.com>
+Date: Thu, 12 Feb 2009 10:53:05 +0100
+Message-ID: <20090212095305.GB11981@rap.rap.dk>
+References: <20090212031009.23983.14496.stgit@notabene.brown> <20090212081148.GD9439@rap.rap.dk> <12039e3b9172d1a1347b8396cab59f11.squirrel@neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4993E82D.1020309@fairbairn-family.com>
+In-Reply-To: <12039e3b9172d1a1347b8396cab59f11.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steve Fairbairn <steve@fairbairn-family.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Feb 12, 2009 at 09:13:17AM +0000, Steve Fairbairn wrote:
-> Keld J=F8rn Simonsen wrote:
+On Thu, Feb 12, 2009 at 08:21:12PM +1100, NeilBrown wrote:
+> On Thu, February 12, 2009 7:11 pm, Keld J=F8rn Simonsen wrote:
+> > On Thu, Feb 12, 2009 at 02:10:10PM +1100, NeilBrown wrote:
+> >> Comments and testing very welcome.
 > >
-> >I would rather have functionality to convert raid10 to raid5.
-> >raid1 should be depreciated, as raid10,n2 for all purposes is the sa=
-me
-> >but better implementation and performance, and raid10,f2 and raid10,=
-o2
-> >are even better.  Nobody should use raid1 anymore.
-> >
-> Complete ignorance of raid10 here, but is raid10,<anything> bootable,=
-=20
-> like raid1 is?  I use raid1 on my root and boot partitions.
+> > I would rather have functionality to convert raid10 to raid5.
+> > raid1 should be depreciated, as raid10,n2 for all purposes is the s=
+ame
+> > but better implementation and performance, and raid10,f2 and raid10=
+,o2
+> > are even better.  Nobody should use raid1 anymore.
+>=20
+> That is a fairly simplistic view.
 
-AFAIK, raid10,n2 in default mode (superblock etc) is bootable, as it
-looks like two copies of a normal FS. I think this was even reported=20
-on this list at some time.=20
+It was also formulated to provoke some thoughts.
 
-You are not the only one that does not know much about raid10. I think
-most Linux administrators don't.  And other system adminstrators most
-likely don't either.
+> raid1 supports --write-mostly and --write-behind which raid10 is unli=
+kely
+> ever to support.
 
-Maybe we should rename raid10 to raid1?
+why?
 
-Raid10 should just be an enhanced raid1. And I understand from Neil tha=
-t
-raid10,o2 is mostly done because it is a standard raid1 layout. So it i=
-s
-strange that it is not available with raid1 in Linux. And I also think
-that the raid10,f2 layout is available from some HW raid controllers, a=
-s
-their implementation of raid1. So all what is in raid10 is other places
-considered raid1 stuff.
+Anyway would it not be possible that this functionality be implemented
+for raid10,n2?
 
-Or we could merge the two drivers.=20
+> Certainly in many cases raid10 is just as good or better than raid1
+> though.
+>=20
+> Certainly a raid10->raid5 conversion for a 2-drive n2 configuration
+> is trivial to arrange.  Other conversions are less likely to be suppo=
+rted
+> as they require significant non-trivial rearrangement of data.
 
-I think we will never get people in general to know about raid10 as wel=
-l
-as they know about raid1, not even by far.=20
+Yes, possibly.
+
+
+Some code to grow raid10 would also be desirable. Maybe it is some of
+the same operations that need to be applied: getting the old data in,
+have it restructured for the new format, in a safe way, and possibly
+with the help of an extra disk, or possibly not. It sounds non-trivial
+to me too.
 
 Best regards
 keld
