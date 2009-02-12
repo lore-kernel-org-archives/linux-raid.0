@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [PATCH 07/18] md/raid5: simplify interface for init_stripe and
-	get_active_stripe
+Subject: [PATCH 08/18] md/raid5: change raid5_compute_sector and
+	stripe_to_pdidx to take a 'previous' argument
 Date: Thu, 12 Feb 2009 14:10:10 +1100
-Message-ID: <20090212031010.23983.32536.stgit@notabene.brown>
+Message-ID: <20090212031010.23983.4781.stgit@notabene.brown>
 References: <20090212031009.23983.14496.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,162 +13,215 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Rather than passing 'pd_idx' and 'disks' to these functions, just pass
-'previous' which tells whether to use the 'previous' or 'current'
-geometry during a reshape, and let init_stripe calculate
-disks and pd_idx and anything else it might need.
-
-This is not a substantial simplification and even adds a division.
-However we will shortly be adding more complexity to to init_stripe
-to handle more interesting 'reshape' activities, and without this
-change, the interface to these functions would get very complex.
+This similar to the recent change to get_active_stripe.
+There is no functional change, just come rearrangement to make
+future patches cleaner.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid5.c |   43 ++++++++++++++++++++++---------------------
- 1 files changed, 22 insertions(+), 21 deletions(-)
+ drivers/md/raid5.c |   78 +++++++++++++++++++++++-----------------------------
+ 1 files changed, 34 insertions(+), 44 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 99c5261..94ed206 100644
+index 94ed206..a061484 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -271,8 +271,9 @@ static int grow_buffers(struct stripe_head *sh, int num)
+@@ -271,7 +271,7 @@ static int grow_buffers(struct stripe_head *sh, int num)
  }
  
  static void raid5_build_block(struct stripe_head *sh, int i);
-+static int stripe_to_pdidx(sector_t stripe, raid5_conf_t *conf, int disks);
+-static int stripe_to_pdidx(sector_t stripe, raid5_conf_t *conf, int disks);
++static int stripe_to_pdidx(sector_t stripe, raid5_conf_t *conf, int previous);
  
--static void init_stripe(struct stripe_head *sh, sector_t sector, int pd_idx, int disks)
-+static void init_stripe(struct stripe_head *sh, sector_t sector, int previous)
+ static void init_stripe(struct stripe_head *sh, sector_t sector, int previous)
  {
- 	raid5_conf_t *conf = sh->raid_conf;
- 	int i;
-@@ -287,11 +288,11 @@ static void init_stripe(struct stripe_head *sh, sector_t sector, int pd_idx, int
+@@ -290,7 +290,7 @@ static void init_stripe(struct stripe_head *sh, sector_t sector, int previous)
  
- 	remove_hash(sh);
- 
-+	sh->disks = previous ? conf->previous_raid_disks : conf->raid_disks;
+ 	sh->disks = previous ? conf->previous_raid_disks : conf->raid_disks;
  	sh->sector = sector;
--	sh->pd_idx = pd_idx;
-+	sh->pd_idx = stripe_to_pdidx(sector, conf, sh->disks);
+-	sh->pd_idx = stripe_to_pdidx(sector, conf, sh->disks);
++	sh->pd_idx = stripe_to_pdidx(sector, conf, previous);
  	sh->state = 0;
  
--	sh->disks = disks;
  
- 	for (i = sh->disks; i--; ) {
- 		struct r5dev *dev = &sh->dev[i];
-@@ -327,10 +328,12 @@ static struct stripe_head *__find_stripe(raid5_conf_t *conf, sector_t sector, in
- static void unplug_slaves(mddev_t *mddev);
- static void raid5_unplug_device(struct request_queue *q);
- 
--static struct stripe_head *get_active_stripe(raid5_conf_t *conf, sector_t sector, int disks,
--					     int pd_idx, int noblock)
-+static struct stripe_head *
-+get_active_stripe(raid5_conf_t *conf, sector_t sector,
-+		  int previous, int noblock)
+@@ -1230,15 +1230,18 @@ static void error(mddev_t *mddev, mdk_rdev_t *rdev)
+  * Input: a 'big' sector number,
+  * Output: index of the data and parity disk, and the sector # in them.
+  */
+-static sector_t raid5_compute_sector(sector_t r_sector, unsigned int raid_disks,
+-			unsigned int data_disks, unsigned int * dd_idx,
+-			unsigned int * pd_idx, raid5_conf_t *conf)
++static sector_t raid5_compute_sector(raid5_conf_t *conf, sector_t r_sector,
++				     int previous,
++				     int *dd_idx, int *pd_idx)
  {
- 	struct stripe_head *sh;
+ 	long stripe;
+ 	unsigned long chunk_number;
+ 	unsigned int chunk_offset;
+ 	sector_t new_sector;
+ 	int sectors_per_chunk = conf->chunk_size >> 9;
++	int raid_disks = previous ? conf->previous_raid_disks
++				  : conf->raid_disks;
++	int data_disks = raid_disks - conf->max_degraded;
+ 
+ 	/* First compute the information on this sector */
+ 
+@@ -1403,7 +1406,9 @@ static sector_t compute_blocknr(struct stripe_head *sh, int i)
+ 	chunk_number = stripe * data_disks + i;
+ 	r_sector = (sector_t)chunk_number * sectors_per_chunk + chunk_offset;
+ 
+-	check = raid5_compute_sector(r_sector, raid_disks, data_disks, &dummy1, &dummy2, conf);
++	check = raid5_compute_sector(conf, r_sector,
++				     (raid_disks != conf->raid_disks),
++				     &dummy1, &dummy2);
+ 	if (check != sh->sector || dummy1 != dd_idx || dummy2 != sh->pd_idx) {
+ 		printk(KERN_ERR "compute_blocknr: map not correct\n");
+ 		return 0;
+@@ -1803,16 +1808,18 @@ static int page_is_zero(struct page *p)
+ 		memcmp(a, a+4, STRIPE_SIZE-4)==0);
+ }
+ 
+-static int stripe_to_pdidx(sector_t stripe, raid5_conf_t *conf, int disks)
++static int stripe_to_pdidx(sector_t stripe, raid5_conf_t *conf, int previous)
+ {
+ 	int sectors_per_chunk = conf->chunk_size >> 9;
+ 	int pd_idx, dd_idx;
+ 	int chunk_offset = sector_div(stripe, sectors_per_chunk);
 +	int disks = previous ? conf->previous_raid_disks : conf->raid_disks;
  
- 	pr_debug("get_stripe, sector %llu\n", (unsigned long long)sector);
+-	raid5_compute_sector(stripe * (disks - conf->max_degraded)
++	raid5_compute_sector(conf,
++			     stripe * (disks - conf->max_degraded)
+ 			     *sectors_per_chunk + chunk_offset,
+-			     disks, disks - conf->max_degraded,
+-			     &dd_idx, &pd_idx, conf);
++			     previous,
++			     &dd_idx, &pd_idx);
+ 	return pd_idx;
+ }
  
-@@ -358,7 +361,7 @@ static struct stripe_head *get_active_stripe(raid5_conf_t *conf, sector_t sector
- 					);
- 				conf->inactive_blocked = 0;
- 			} else
--				init_stripe(sh, sector, pd_idx, disks);
-+				init_stripe(sh, sector, previous);
- 		} else {
- 			if (atomic_read(&sh->count)) {
- 			  BUG_ON(!list_empty(&sh->lru));
-@@ -2476,8 +2479,7 @@ static void handle_stripe_expansion(raid5_conf_t *conf, struct stripe_head *sh,
- 						conf->raid_disks -
- 						conf->max_degraded, &dd_idx,
- 						&pd_idx, conf);
--			sh2 = get_active_stripe(conf, s, conf->raid_disks,
--						pd_idx, 1);
-+			sh2 = get_active_stripe(conf, s, 0, 1);
+@@ -2475,10 +2482,8 @@ static void handle_stripe_expansion(raid5_conf_t *conf, struct stripe_head *sh,
+ 			struct stripe_head *sh2;
+ 
+ 			sector_t bn = compute_blocknr(sh, i);
+-			sector_t s = raid5_compute_sector(bn, conf->raid_disks,
+-						conf->raid_disks -
+-						conf->max_degraded, &dd_idx,
+-						&pd_idx, conf);
++			sector_t s = raid5_compute_sector(conf, bn, 0,
++							  &dd_idx, &pd_idx);
+ 			sh2 = get_active_stripe(conf, s, 0, 1);
  			if (sh2 == NULL)
  				/* so far only the early blocks of this stripe
- 				 * have been requested.  When later blocks
-@@ -3410,8 +3412,10 @@ static int make_request(struct request_queue *q, struct bio * bi)
- 	for (;logical_sector < last_sector; logical_sector += STRIPE_SECTORS) {
- 		DEFINE_WAIT(w);
- 		int disks, data_disks;
-+		int previous;
+@@ -2765,8 +2770,7 @@ static bool handle_stripe5(struct stripe_head *sh)
+ 	    !sh->reconstruct_state) {
+ 		/* Need to write out all blocks after computing parity */
+ 		sh->disks = conf->raid_disks;
+-		sh->pd_idx = stripe_to_pdidx(sh->sector, conf,
+-			conf->raid_disks);
++		sh->pd_idx = stripe_to_pdidx(sh->sector, conf, 0);
+ 		schedule_reconstruction5(sh, &s, 1, 1);
+ 	} else if (s.expanded && !sh->reconstruct_state && s.locked == 0) {
+ 		clear_bit(STRIPE_EXPAND_READY, &sh->state);
+@@ -2984,8 +2988,7 @@ static bool handle_stripe6(struct stripe_head *sh, struct page *tmp_page)
+ 	if (s.expanded && test_bit(STRIPE_EXPANDING, &sh->state)) {
+ 		/* Need to write out all blocks after computing P&Q */
+ 		sh->disks = conf->raid_disks;
+-		sh->pd_idx = stripe_to_pdidx(sh->sector, conf,
+-					     conf->raid_disks);
++		sh->pd_idx = stripe_to_pdidx(sh->sector, conf, 0);
+ 		compute_parity6(sh, RECONSTRUCT_WRITE);
+ 		for (i = conf->raid_disks ; i-- ;  ) {
+ 			set_bit(R5_LOCKED, &sh->dev[i].flags);
+@@ -3257,8 +3260,6 @@ static int chunk_aligned_read(struct request_queue *q, struct bio * raid_bio)
+ {
+ 	mddev_t *mddev = q->queuedata;
+ 	raid5_conf_t *conf = mddev_to_conf(mddev);
+-	const unsigned int raid_disks = conf->raid_disks;
+-	const unsigned int data_disks = raid_disks - conf->max_degraded;
+ 	unsigned int dd_idx, pd_idx;
+ 	struct bio* align_bi;
+ 	mdk_rdev_t *rdev;
+@@ -3282,12 +3283,9 @@ static int chunk_aligned_read(struct request_queue *q, struct bio * raid_bio)
+ 	/*
+ 	 *	compute position
+ 	 */
+-	align_bi->bi_sector =  raid5_compute_sector(raid_bio->bi_sector,
+-					raid_disks,
+-					data_disks,
+-					&dd_idx,
+-					&pd_idx,
+-					conf);
++	align_bi->bi_sector =  raid5_compute_sector(conf, raid_bio->bi_sector,
++						    0,
++						    &dd_idx, &pd_idx);
  
- 	retry:
-+		previous = 0;
- 		prepare_to_wait(&conf->wait_for_overlap, &w, TASK_UNINTERRUPTIBLE);
- 		if (likely(conf->expand_progress == MaxSector))
- 			disks = conf->raid_disks;
-@@ -3426,9 +3430,10 @@ static int make_request(struct request_queue *q, struct bio * bi)
- 			 */
- 			spin_lock_irq(&conf->device_lock);
- 			disks = conf->raid_disks;
--			if (logical_sector >= conf->expand_progress)
-+			if (logical_sector >= conf->expand_progress) {
- 				disks = conf->previous_raid_disks;
--			else {
-+				previous = 1;
-+			} else {
- 				if (logical_sector >= conf->expand_lo) {
- 					spin_unlock_irq(&conf->device_lock);
- 					schedule();
-@@ -3445,7 +3450,8 @@ static int make_request(struct request_queue *q, struct bio * bi)
+ 	rcu_read_lock();
+ 	rdev = rcu_dereference(conf->disks[dd_idx].rdev);
+@@ -3444,8 +3442,9 @@ static int make_request(struct request_queue *q, struct bio * bi)
+ 		}
+ 		data_disks = disks - conf->max_degraded;
+ 
+- 		new_sector = raid5_compute_sector(logical_sector, disks, data_disks,
+-						  &dd_idx, &pd_idx, conf);
++		new_sector = raid5_compute_sector(conf, logical_sector,
++						  previous,
++						  &dd_idx, &pd_idx);
+ 		pr_debug("raid5: make_request, sector %llu logical %llu\n",
  			(unsigned long long)new_sector, 
  			(unsigned long long)logical_sector);
- 
--		sh = get_active_stripe(conf, new_sector, disks, pd_idx, (bi->bi_rw&RWA_MASK));
-+		sh = get_active_stripe(conf, new_sector, previous,
-+				       (bi->bi_rw&RWA_MASK));
- 		if (sh) {
- 			if (unlikely(conf->expand_progress != MaxSector)) {
- 				/* expansion might have moved on while waiting for a
-@@ -3579,9 +3585,7 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
- 	for (i=0; i < conf->chunk_size/512; i+= STRIPE_SECTORS) {
- 		int j;
- 		int skipped = 0;
--		pd_idx = stripe_to_pdidx(sector_nr+i, conf, conf->raid_disks);
--		sh = get_active_stripe(conf, sector_nr+i,
--				       conf->raid_disks, pd_idx, 0);
-+		sh = get_active_stripe(conf, sector_nr+i, 0, 0);
- 		set_bit(STRIPE_EXPANDING, &sh->state);
- 		atomic_inc(&conf->reshape_stripes);
- 		/* If any of this stripe is beyond the end of the old
-@@ -3629,10 +3633,7 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
+@@ -3622,14 +3621,12 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
+ 	 * block on the destination stripes.
+ 	 */
+ 	first_sector =
+-		raid5_compute_sector(sector_nr*(new_data_disks),
+-				     raid_disks, data_disks,
+-				     &dd_idx, &pd_idx, conf);
++		raid5_compute_sector(conf, sector_nr*(new_data_disks),
++				     1, &dd_idx, &pd_idx);
+ 	last_sector =
+-		raid5_compute_sector((sector_nr+conf->chunk_size/512)
+-				     *(new_data_disks) -1,
+-				     raid_disks, data_disks,
+-				     &dd_idx, &pd_idx, conf);
++		raid5_compute_sector(conf, ((sector_nr+conf->chunk_size/512)
++					    *(new_data_disks) - 1),
++				     1, &dd_idx, &pd_idx);
  	if (last_sector >= mddev->dev_sectors)
  		last_sector = mddev->dev_sectors - 1;
  	while (first_sector <= last_sector) {
--		pd_idx = stripe_to_pdidx(first_sector, conf,
--					 conf->previous_raid_disks);
--		sh = get_active_stripe(conf, first_sector,
--				       conf->previous_raid_disks, pd_idx, 0);
-+		sh = get_active_stripe(conf, first_sector, 1, 0);
- 		set_bit(STRIPE_EXPAND_SOURCE, &sh->state);
- 		set_bit(STRIPE_HANDLE, &sh->state);
- 		release_stripe(sh);
-@@ -3722,9 +3723,9 @@ static inline sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *ski
+@@ -3666,8 +3663,6 @@ static inline sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *ski
+ {
+ 	raid5_conf_t *conf = (raid5_conf_t *) mddev->private;
+ 	struct stripe_head *sh;
+-	int pd_idx;
+-	int raid_disks = conf->raid_disks;
+ 	sector_t max_sector = mddev->dev_sectors;
+ 	int sync_blocks;
+ 	int still_degraded = 0;
+@@ -3722,7 +3717,6 @@ static inline sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *ski
+ 
  	bitmap_cond_end_sync(mddev->bitmap, sector_nr);
  
- 	pd_idx = stripe_to_pdidx(sector_nr, conf, raid_disks);
--	sh = get_active_stripe(conf, sector_nr, raid_disks, pd_idx, 1);
-+	sh = get_active_stripe(conf, sector_nr, 0, 1);
+-	pd_idx = stripe_to_pdidx(sector_nr, conf, raid_disks);
+ 	sh = get_active_stripe(conf, sector_nr, 0, 1);
  	if (sh == NULL) {
--		sh = get_active_stripe(conf, sector_nr, raid_disks, pd_idx, 0);
-+		sh = get_active_stripe(conf, sector_nr, 0, 0);
- 		/* make sure we don't swamp the stripe cache if someone else
- 		 * is trying to get access
- 		 */
-@@ -3790,7 +3791,7 @@ static int  retry_aligned_read(raid5_conf_t *conf, struct bio *raid_bio)
- 			/* already done this stripe */
- 			continue;
+ 		sh = get_active_stripe(conf, sector_nr, 0, 0);
+@@ -3774,12 +3768,8 @@ static int  retry_aligned_read(raid5_conf_t *conf, struct bio *raid_bio)
+ 	int handled = 0;
  
--		sh = get_active_stripe(conf, sector, conf->raid_disks, pd_idx, 1);
-+		sh = get_active_stripe(conf, sector, 0, 1);
+ 	logical_sector = raid_bio->bi_sector & ~((sector_t)STRIPE_SECTORS-1);
+-	sector = raid5_compute_sector(	logical_sector,
+-					conf->raid_disks,
+-					conf->raid_disks - conf->max_degraded,
+-					&dd_idx,
+-					&pd_idx,
+-					conf);
++	sector = raid5_compute_sector(conf, logical_sector,
++				      0, &dd_idx, &pd_idx);
+ 	last_sector = raid_bio->bi_sector + (raid_bio->bi_size>>9);
  
- 		if (!sh) {
- 			/* failed to get a stripe - must wait */
+ 	for (; logical_sector < last_sector;
 
 
