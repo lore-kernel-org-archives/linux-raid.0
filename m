@@ -1,93 +1,96 @@
-From: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Subject: very bad performance: md raid6 / 2.6.27.7
-Date: Fri, 13 Feb 2009 11:12:05 -0600
-Message-ID: <cccedfc60902130912g32c38602pd098bfa96aee7148@mail.gmail.com>
+From: Andrew Burgess <aab@cichlid.com>
+Subject: grow raid6 array: Cannot set device size/shape: Device or resource
+	busy, even in single user mode
+Date: Fri, 13 Feb 2009 09:43:16 -0800
+Message-ID: <1234546996.20249.23.camel@cichlid.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I recently built a 4-disk raid6 to replace a 3-disk raid10,f2.  3 of
-the 4 disks are from the raid10,f2.
-I have a conundrum: read performance from the raid6 is occasionally
-really, really awful, and highly variable. How slow? Sometimes as low
-as 10MB/s (that reads as *ten* megabytes-per-second) but never more
-than 140MB/s. On the average it's more like 50-60MB/s.
+I've grown this array before. This time I can't figure out why it
+complains.
+Even rebooting to single user mode and making sure the array isn't
+mounted
+gives the same error.
 
-So I use the most handy-dandy tool, strace.  Strace shows me something
-that explains why it's slow, but does not highlight the underlying
-cause:
+One discrepancy I noticed (may be unrelated) is that mdadm thinks
+the array's device size is twice as big as it actually is:
 
-read(2) of 4MB takes an eyeball *average* of 0.12s, but I see that
-some take quite a bit longer.
-Here are the first 9 reads of the device:
+cat /sys/block/md5/md/component_size 
+732159744
 
-11:03:37.195358 read(0, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"...,
-4194304) = 4194304 <0.069695>
-11:03:37.265381 read(0, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"...,
-4194304) = 4194304 <0.024970>
-11:03:37.290659 read(0, "\300;9\230\0\0\0\2\0\37\224M\0\0\0\0"...,
-4194304) = 4194304 <0.027476>
-11:03:37.318446 read(0, "\300;9\230\0\0\0\1\0\37\225\24\0000]\20"...,
-4194304) = 4194304 <0.027327>
-11:03:37.346074 read(0,
-"\n\10\337\0\v\223\7S\371\3\350\v\10\337\0\v"..., 4194304) = 4194304
-<0.028539>
-11:03:37.374921 read(0,
-"\r\1\244\0\224\1\222\0\17\330\17\306\17\260\17\214"..., 4194304) =
-4194304 <0.025713>
-11:03:37.400935 read(0,
-"\377\377\377\377\377\377\377\377\2V\371\277\337\377\377\347"...,
-4194304) = 4194304 <0.041939>
-11:03:37.443170 read(0, "\201\2\0\0\202\2\0\0\203\2\0\0\0\0\365?"...,
-4194304) = 4194304 <0.201095>
-11:03:37.645672 read(0, "\201\2\0\0\202\2\0\0\203\2\0\0\0\0\365?"...,
-4194304) = 4194304 <1.171630>
+mdadm -D /dev/md5|grep Used
+Used Dev Size : 1464319488 (1396.48 GiB 1499.46 GB)
 
-The system is otherwise bored - ambient I/O probably averages less than 150K/s.
+(I have another smaller raid6 array on this machine and these numbers
+match)
 
-When I use dstat to show what the underlying disks are doing, they are
-getting (all 4 of them) 12-30 MB/s reads (again, clearly clustered
-around the lower-end of 12-15 MB/s).
+strace reveals that mdadm is doing an ioctl on /dev/md5 when the error
+occurs
+and that the earlier open on /dev/md5 in RW mode worked.
 
-What might be going on here?
+If it is an mdadm problem, would writing the new number of devices
+to /sys/block/md5/md/raid_disks work?
 
-Details:
+Thanks in advance for any clues
+Andrew
 
-/dev/md0:
-        Version : 1.01
-  Creation Time : Mon Feb  9 20:56:40 2009
+-----------------------------------------------
+# uname -a
+Linux athlon 2.6.28.3-noatop-1 #1 SMP PREEMPT Wed Feb 4 13:49:05 PST
+2009 x86_64 x86_64 x86_64 GNU/Linux
+# mdadm -V
+mdadm - v2.6.7.1 - 15th October 2008
+-----------------------------------------------
+root@athlon:~ # mdadm /dev/md5 --add /dev/sds1
+mdadm: re-added /dev/sds1
+root@athlon:~ # mdadm /dev/md5 --grow --raid-devices=10
+mdadm: Need to backup 7168K of critical section..
+mdadm: Cannot set device size/shape for /dev/md5: Device or resource
+busy
+---------------------------------------------------
+# mdadm -D /dev/md5
+/dev/md5:
+        Version : 1.02
+  Creation Time : Tue Sep 11 13:49:50 2007
      Raid Level : raid6
-     Array Size : 613409536 (584.99 GiB 628.13 GB)
-  Used Dev Size : 613409536 (584.99 GiB 628.13 GB)
-   Raid Devices : 4
-  Total Devices : 4
+     Array Size : 5125118208 (4887.69 GiB 5248.12 GB)
+  Used Dev Size : 1464319488 (1396.48 GiB 1499.46 GB)
+   Raid Devices : 9
+  Total Devices : 10
+Preferred Minor : 5
     Persistence : Superblock is persistent
 
   Intent Bitmap : Internal
 
-    Update Time : Fri Feb 13 11:11:50 2009
+    Update Time : Fri Feb 13 09:27:52 2009
           State : active
- Active Devices : 4
-Working Devices : 4
+ Active Devices : 9
+Working Devices : 10
  Failed Devices : 0
-  Spare Devices : 0
+  Spare Devices : 1
 
-     Chunk Size : 64K
+     Chunk Size : 128K
 
-           Name : turnip:0  (local to host turnip)
-           UUID : 7c88c253:bc904b7f:bda87b47:9c46cebe
-         Events : 2416
+           Name : 5
+           UUID : 5211e02e:19f8718e:8feeb699:03a4879f
+         Events : 7840654
 
     Number   Major   Minor   RaidDevice State
-       0       8       20        0      active sync   /dev/sdb4
-       1       8       36        1      active sync   /dev/sdc4
-       4       8       68        2      active sync   /dev/sde4
-       5       8       52        3      active sync   /dev/sdd4
+       0       8       17        0      active sync   /dev/sdb1
+      10       8       97        1      active sync   /dev/sdg1
+       2       8       49        2      active sync   /dev/sdd1
+       8      65       65        3      active sync   /dev/sdu1
+       4       8       65        4      active sync   /dev/sde1
+       7      65       49        5      active sync   /dev/sdt1
+       9       8       81        6      active sync   /dev/sdf1
+      11       8       33        7      active sync   /dev/sdc1
+      12      65       81        8      active sync   /dev/sdv1
+
+      13      65       33        -      spare   /dev/sds1
 
 
--- 
-Jon
