@@ -1,59 +1,45 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [PATCH 03/18] md: occasionally checkpoint drive recovery to reduce
- duplicate effort after a crash
-Date: Fri, 13 Feb 2009 11:20:24 -0500
-Message-ID: <49959DC8.1000603@tmr.com>
-References: <20090212031009.23983.14496.stgit@notabene.brown> <20090212031010.23983.74842.stgit@notabene.brown>
+Subject: Re: [PATCH 09/18] md/raid6: remove expectation that Q device is	immediately
+ after P device.
+Date: Fri, 13 Feb 2009 11:37:40 -0500
+Message-ID: <4995A1D4.3020700@tmr.com>
+References: <20090212031009.23983.14496.stgit@notabene.brown> <20090212031010.23983.26264.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090212031010.23983.74842.stgit@notabene.brown>
+In-Reply-To: <20090212031010.23983.26264.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 NeilBrown wrote:
-> Version 1.x metadata has the ability to record the status of a
-> partially completed drive recovery.
-> However we only update that record on a clean shutdown.
-> It would be nice to update it on unclean shutdowns too, particularly
-> when using a bitmap that removes much to the 'sync' effort after an
-> unclean shutdown.
->
-> One complication with checkpointing recovery is that we only know
-> where we are up to in terms of IO requests started, not which ones
-> have completed.  And we need to know what has completed to record
-> how much is recovered.  So occasionally pause the recovery until all
-> submitted requests are completed, then update the record of where
-> we are up to.
->
-> When we have a bitmap, we already do that pause occasionally to keep
-> the bitmap up-to-date.  So enhance that code to record the recovery
-> offset and schedule a superblock update.
-> And when there is no bitmap, just pause 16 times during the resync to
-> do a checkpoint.
-> '16' is a fairly arbitrary number.  But we don't really have any good
-> way to judge how often is acceptable, and it seems like a reasonable
-> number for now.
+> Code currently assumes that the devices in a raid6 stripe are
+>   0 1 ... N-1 P Q
+> in some rotated order.  We will shortly add new layouts in which
+> this strict pattern is broken.
+> So remove this expectation.  We still assume that the data disks
+> are roughly in-order.  However P and Q can be inserted anywhere within
+> that order.
 >   
 
-Since the object of this code is to save time on shutdown and restart, 
-16 has little relation to time. I would think that having this update on 
-a time basis would more reasonably reflect this. I would like to see a 
-fairly short time, say ten minutes, since the cost of a save is low, and 
-ten minutes seems like a reasonable lower bound on "worth effort to 
-save" recovery.
+Is this a change which could be done on the fly? Because if it is, 
+there's obviously a huge performance gain to be had in degraded mode.
 
-As arrays get larger even a 16th of the recovery time can be a pretty 
-long time, particularly if the min recovery speed is set fairly low to 
-avoid impact on a production server.
+To clarify, if the order could be changed (raid5 example):
+    running array         0 1 2 3 4 P
+    failed device          0 1 F 3 4 P
+Leads to a recover of data from the failed device. But if the order 
+could be changed on the fly, then "recover" would be a one time 
+operation, recover the entire chunk previously on device 2, write to 
+device 5(P), change the order so the parity is on the failed device 
+(can't recover from another fail anyway), and:
+    remapped stripe    0 1 F 3 4 2
 
-Thought for comment: I already move a lot of overhead to the 2-6am slot 
-of low load, would changing the rebuild speeds during prime load be 
-desirable? The con is longer degraded operation, the pro is less impact 
-on performance.
+Now reads will not cost a recover, and writes hopefully could skip the 
+parity completely. When the failed device is replaced the rebuild could 
+restore the chunk order to improve leveling of head motion.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
