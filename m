@@ -1,119 +1,144 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [PATCH 00/18] Assorted md patches headed for 2.6.30
-Date: Fri, 13 Feb 2009 12:02:21 -0500
-Message-ID: <4995A79D.9050701@tmr.com>
-References: <20090212031009.23983.14496.stgit@notabene.brown>    <4993EEEC.2020901@lfarkas.org> <3a947c3081cd563d233d923cac5738c8.squirrel@neil.brown.name> <49940539.3030008@lfarkas.org>
+From: Georgi Alexandrov <teh@amln.net>
+Subject: write-behind performance ... or how behind can write-behind write
+Date: Fri, 13 Feb 2009 18:36:00 +0200
+Message-ID: <4995A170.4000000@amln.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigFE5BD0F78FA30F5D6065E721"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49940539.3030008@lfarkas.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Farkas Levente <lfarkas@lfarkas.org>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Farkas Levente wrote:
-> NeilBrown wrote:
->   
->> On Thu, February 12, 2009 8:42 pm, Farkas Levente wrote:
->>     
->>> NeilBrown wrote:
->>>       
->>>> Hi,
->>>>  following is my current patch queue for 2.6.30, in case anyone would
->>>> like to review or otherwise comment.
->>>> They should show up in -next shortly.
->>>>
->>>> Probably the most interesting are the last few which provide support
->>>> for converting a raid1 into a raid5, and a raid5 into a raid6.
->>>> I plan to do some more work here so the code might change a bit before
->>>> final submission, as I work out how best ot factor the code.
->>>>
->>>> mdadm doesn't current support these conversions, but you can
->>>> simply
->>>>    echo raid5 > /sys/block/md0/md/level
->>>> to change a 2-drive raid1 into a raid5.  Similarly for 5->6
->>>>         
->>> any plan for non-raid to raid1 or anything else like in windows on can
->>> convert a normal partition into a mirrored one online.
->>>       
->> No plan exactly, but I do think about it from time to time.
->>
->> There are two problems with this, and solving just one of them
->> doesn't help you much.  So you really have to solve both at once,
->> which reduces the motivation towards either ....
->>
->> One problem is the task of changing the implementation of the device
->> underneath the filesystem without the filesystem needing to care.
->>
->> i.e. the filesystem opens block device 8,1 (/dev/sda1) and starts do
->> IO, then mdadm steps in and magically changes things so that /dev/sda1
->> is now on a raid1 array which happens to access the same data, but
->> through a different code path.
->> Figuring out exactly which data structure to install the redirection
->> and how to doing in a way that is guaranteed to be safe is non-trivial.
->>
->> dm has a mechanism to change the implementation under a given dm
->> device, and md now has an mechanism to change the implementation
->> under a given md device.  But generalising that to 'any device' is
->> not entirely trivial.  Now that I have done it for md I'm in a better
->> position to understand how it might be done.
->>
->> The other problem is where to store the metadata.  You need at least a
->> few bytes and realistically 1K of space on the devices that is free to
->> be used by md to record information about device state to allow arrays to
->> be assembled correctly.
->>
->> One idea I had was to get the filesystem to allocate a block and make that
->> available to md, then md would copy the data from the last block of the
->> device into that block and redirect all IO request aim at the
->> last block so that really access the relocated block.  Then md puts
->> it's metadata in that last block.
->>
->> This could work but is a little to error prone for my liking.  e.g.
->> if you fsck the device, you suddenly loose your guarantee that
->> the filesystem isn't going to write to that relocation block.
->>
->> I think it could only work if mdadm can inspect the device and ensure
->> that the last block isn't part of any partition, or any active filesystem.
->> This is possible, but messy.
->>
->> e.g. on my notebook which has a 250Gig drive whatever I used to partition
->> it (cfdisk?) insisted on using multiples of cylinders for partitions
->> (what an out-of-date concept!) and as the reported geometry is
->>
->> Disk /dev/sda: 250.0 GB, 250059350016 bytes
->> 255 heads, 63 sectors/track, 30401 cylinders
->>
->> There are 5013 unused sectors at the end - plenty of room for
->> md to put some metadata.  But if someone else had used sfdisk,
->> I think they would find no spare space and be unhappy.
->>
->> Maybe it is sufficient to support just those people who are
->> lucky enough to not be using the whole device...
->>
->>
->> So it might happen, but it is just a little to easy to stick this
->> one in the too-hard basket.
->>     
->
-> the main reason here is our life. i saw many cases where there was a
-> system installed to one system and later it'd be nice to make it
-> redundant (a most sysadm said: it's not working on linux it's even
-> working on windows, just put into a new disk and make it mirror).
-> so i don't know the technical detail, but would be a very useful feature.
->
->   
-I think you can get there for normal file systems data by creating a 
-raid1 on a new drive using a failed drive. Then copy the data from the 
-unmirrored drive to the mirrored f/s, unmount the original drive and 
-mount the array, and add the original drive to the new array. This is 
-ugly, and a verified backup and restore is better, but it can be done.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigFE5BD0F78FA30F5D6065E721
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "Woe unto the statesman who makes war without a reason that will still
-  be valid when the war is over..." Otto von Bismark 
+Hello,
+
+I've been going through the list archives to find a similar thread but
+couldn't.
+
+The setup:
+
+debian lenny 2.6.26-1-amd64
+raid1 array with 1 SSD disk and 1 regular SATA disk. It will be used for
+a DB.
+
+What I'm trying to achieve is to make the system read from the SSD disk
+as long as the array is healthy and write delayed on the regular SATA
+disk to benefit from the good random write performance of the SSD disk.
+
+So far I've managed to achieve only the first goal - make the system
+read from SSD on healthy array via the write-mostly option.
+
+The problem is with the second option - write-behind. I've enabled it
+and made two tests (one with healthy array and one with the SATA disk
+marked as failed) with tiobench and the results are not good(1).
+
+Generally with the healthy array I'm getting the write performance of
+the SATA disk alone (in terms of requests/sec issued to the disk and
+bytes/sec written). The SATA disk is obviously a bottleneck even with
+the write-behind option set(2).
+
+With a failed array (SSD active only) I'm getting the great write
+performance of a SSD disk(3).
 
 
+
+1. tiobench stats:
+
+Unit information
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+File size =3D megabytes
+Blk Size  =3D bytes
+Rate      =3D megabytes per second
+CPU%      =3D percentage of CPU used during the test
+Latency   =3D milliseconds
+Lat%      =3D percent of requests that took longer than X seconds
+CPU Eff   =3D Rate divided by CPU% - throughput per cpu load
+
+Healthy Array Random Writes (~4 MB/sec):
+
+                              File  Blk   Num                   Avg
+ Maximum      Lat%     Lat%    CPU
+Identifier                    Size  Size  Thr   Rate  (CPU%)  Latency
+ Latency      >2s      >10s    Eff
+---------------------------- ------ ----- ---  ------ ------ ---------
+-----------  -------- -------- -----
+2.6.26-1-amd64                2000  11264   1    4.34 0.687%     0.007
+      0.03   0.00000  0.00000   632
+2.6.26-1-amd64                2000  11264   2    4.26 2.299%     0.012
+      0.04   0.00000  0.00000   185
+2.6.26-1-amd64                2000  11264   4    4.12 6.018%     0.019
+      0.13   0.00000  0.00000    68
+2.6.26-1-amd64                2000  11264   8    4.13 7.611%     0.020
+      8.94   0.00000  0.00000    54
+
+
+SSD-Only Array Random Writes (~135 MB/s):
+
+                              File  Blk   Num                   Avg
+ Maximum      Lat%     Lat%    CPU
+Identifier                    Size  Size  Thr   Rate  (CPU%)  Latency
+ Latency      >2s      >10s    Eff
+---------------------------- ------ ----- ---  ------ ------ ---------
+-----------  -------- -------- -----
+2.6.26-1-amd64                2000  11264   1  138.12 21.85%     0.007
+      0.03   0.00000  0.00000   632
+2.6.26-1-amd64                2000  11264   2  135.82 70.80%     0.012
+      0.05   0.00000  0.00000   192
+2.6.26-1-amd64                2000  11264   4  135.10 176.0%     0.018
+      0.07   0.00000  0.00000    77
+2.6.26-1-amd64                2000  11264   8  145.38 380.3%     0.020
+      3.45   0.00000  0.00000    38
+
+
+2. healthy array iostat output (sda1 being the SSD disk):
+Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s
+avgrq-sz avgqu-sz   await  svctm  %util
+sda1              0.00 14183.50    0.00  220.50     0.00    56.27
+522.59     5.23   23.70   1.25  27.60
+sdc3              0.00 14272.00    0.00  129.50     0.00    56.99
+901.22   137.77 1108.25   7.72 100.00
+
+
+3. ssd-only array iostat output:
+
+Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s
+avgrq-sz avgqu-sz   await  svctm  %util
+sda1              0.00 51941.50    0.00  483.00     0.00   209.70
+889.16   140.81  282.74   2.07 100.00
+sdc3              0.00     0.00    0.00    0.00     0.00     0.00
+0.00     0.00    0.00   0.00   0.00
+
+
+So the questions is How behind can write-behind write? And can we get a
+better performance in a similar setup.
+
+thanks upfront!
+
+--=20
+regards,
+Georgi Alexandrov
+key server - pgp.mit.edu :: key id - 0x37B4B3EE
+Key fingerprint =3D E429 BF93 FA67 44E9 B7D4  F89E F990 01C1 37B4 B3EE
+
+
+
+--------------enigFE5BD0F78FA30F5D6065E721
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkmVoXAACgkQ+ZABwTe0s+6DhwCgkgwy3sLV3Mr+LmvJ7TMxsAsI
+daEAnRPYgnETm0MxB4w+Z7XNZwANnBEr
+=U5Dc
+-----END PGP SIGNATURE-----
+
+--------------enigFE5BD0F78FA30F5D6065E721--
