@@ -1,144 +1,93 @@
-From: Georgi Alexandrov <teh@amln.net>
-Subject: write-behind performance ... or how behind can write-behind write
-Date: Fri, 13 Feb 2009 18:36:00 +0200
-Message-ID: <4995A170.4000000@amln.net>
+From: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Subject: very bad performance: md raid6 / 2.6.27.7
+Date: Fri, 13 Feb 2009 11:12:05 -0600
+Message-ID: <cccedfc60902130912g32c38602pd098bfa96aee7148@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigFE5BD0F78FA30F5D6065E721"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigFE5BD0F78FA30F5D6065E721
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+I recently built a 4-disk raid6 to replace a 3-disk raid10,f2.  3 of
+the 4 disks are from the raid10,f2.
+I have a conundrum: read performance from the raid6 is occasionally
+really, really awful, and highly variable. How slow? Sometimes as low
+as 10MB/s (that reads as *ten* megabytes-per-second) but never more
+than 140MB/s. On the average it's more like 50-60MB/s.
 
-Hello,
+So I use the most handy-dandy tool, strace.  Strace shows me something
+that explains why it's slow, but does not highlight the underlying
+cause:
 
-I've been going through the list archives to find a similar thread but
-couldn't.
+read(2) of 4MB takes an eyeball *average* of 0.12s, but I see that
+some take quite a bit longer.
+Here are the first 9 reads of the device:
 
-The setup:
+11:03:37.195358 read(0, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"...,
+4194304) = 4194304 <0.069695>
+11:03:37.265381 read(0, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"...,
+4194304) = 4194304 <0.024970>
+11:03:37.290659 read(0, "\300;9\230\0\0\0\2\0\37\224M\0\0\0\0"...,
+4194304) = 4194304 <0.027476>
+11:03:37.318446 read(0, "\300;9\230\0\0\0\1\0\37\225\24\0000]\20"...,
+4194304) = 4194304 <0.027327>
+11:03:37.346074 read(0,
+"\n\10\337\0\v\223\7S\371\3\350\v\10\337\0\v"..., 4194304) = 4194304
+<0.028539>
+11:03:37.374921 read(0,
+"\r\1\244\0\224\1\222\0\17\330\17\306\17\260\17\214"..., 4194304) =
+4194304 <0.025713>
+11:03:37.400935 read(0,
+"\377\377\377\377\377\377\377\377\2V\371\277\337\377\377\347"...,
+4194304) = 4194304 <0.041939>
+11:03:37.443170 read(0, "\201\2\0\0\202\2\0\0\203\2\0\0\0\0\365?"...,
+4194304) = 4194304 <0.201095>
+11:03:37.645672 read(0, "\201\2\0\0\202\2\0\0\203\2\0\0\0\0\365?"...,
+4194304) = 4194304 <1.171630>
 
-debian lenny 2.6.26-1-amd64
-raid1 array with 1 SSD disk and 1 regular SATA disk. It will be used for
-a DB.
+The system is otherwise bored - ambient I/O probably averages less than 150K/s.
 
-What I'm trying to achieve is to make the system read from the SSD disk
-as long as the array is healthy and write delayed on the regular SATA
-disk to benefit from the good random write performance of the SSD disk.
+When I use dstat to show what the underlying disks are doing, they are
+getting (all 4 of them) 12-30 MB/s reads (again, clearly clustered
+around the lower-end of 12-15 MB/s).
 
-So far I've managed to achieve only the first goal - make the system
-read from SSD on healthy array via the write-mostly option.
+What might be going on here?
 
-The problem is with the second option - write-behind. I've enabled it
-and made two tests (one with healthy array and one with the SATA disk
-marked as failed) with tiobench and the results are not good(1).
+Details:
 
-Generally with the healthy array I'm getting the write performance of
-the SATA disk alone (in terms of requests/sec issued to the disk and
-bytes/sec written). The SATA disk is obviously a bottleneck even with
-the write-behind option set(2).
+/dev/md0:
+        Version : 1.01
+  Creation Time : Mon Feb  9 20:56:40 2009
+     Raid Level : raid6
+     Array Size : 613409536 (584.99 GiB 628.13 GB)
+  Used Dev Size : 613409536 (584.99 GiB 628.13 GB)
+   Raid Devices : 4
+  Total Devices : 4
+    Persistence : Superblock is persistent
 
-With a failed array (SSD active only) I'm getting the great write
-performance of a SSD disk(3).
+  Intent Bitmap : Internal
 
+    Update Time : Fri Feb 13 11:11:50 2009
+          State : active
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
 
+     Chunk Size : 64K
 
-1. tiobench stats:
+           Name : turnip:0  (local to host turnip)
+           UUID : 7c88c253:bc904b7f:bda87b47:9c46cebe
+         Events : 2416
 
-Unit information
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-File size =3D megabytes
-Blk Size  =3D bytes
-Rate      =3D megabytes per second
-CPU%      =3D percentage of CPU used during the test
-Latency   =3D milliseconds
-Lat%      =3D percent of requests that took longer than X seconds
-CPU Eff   =3D Rate divided by CPU% - throughput per cpu load
-
-Healthy Array Random Writes (~4 MB/sec):
-
-                              File  Blk   Num                   Avg
- Maximum      Lat%     Lat%    CPU
-Identifier                    Size  Size  Thr   Rate  (CPU%)  Latency
- Latency      >2s      >10s    Eff
----------------------------- ------ ----- ---  ------ ------ ---------
------------  -------- -------- -----
-2.6.26-1-amd64                2000  11264   1    4.34 0.687%     0.007
-      0.03   0.00000  0.00000   632
-2.6.26-1-amd64                2000  11264   2    4.26 2.299%     0.012
-      0.04   0.00000  0.00000   185
-2.6.26-1-amd64                2000  11264   4    4.12 6.018%     0.019
-      0.13   0.00000  0.00000    68
-2.6.26-1-amd64                2000  11264   8    4.13 7.611%     0.020
-      8.94   0.00000  0.00000    54
-
-
-SSD-Only Array Random Writes (~135 MB/s):
-
-                              File  Blk   Num                   Avg
- Maximum      Lat%     Lat%    CPU
-Identifier                    Size  Size  Thr   Rate  (CPU%)  Latency
- Latency      >2s      >10s    Eff
----------------------------- ------ ----- ---  ------ ------ ---------
------------  -------- -------- -----
-2.6.26-1-amd64                2000  11264   1  138.12 21.85%     0.007
-      0.03   0.00000  0.00000   632
-2.6.26-1-amd64                2000  11264   2  135.82 70.80%     0.012
-      0.05   0.00000  0.00000   192
-2.6.26-1-amd64                2000  11264   4  135.10 176.0%     0.018
-      0.07   0.00000  0.00000    77
-2.6.26-1-amd64                2000  11264   8  145.38 380.3%     0.020
-      3.45   0.00000  0.00000    38
+    Number   Major   Minor   RaidDevice State
+       0       8       20        0      active sync   /dev/sdb4
+       1       8       36        1      active sync   /dev/sdc4
+       4       8       68        2      active sync   /dev/sde4
+       5       8       52        3      active sync   /dev/sdd4
 
 
-2. healthy array iostat output (sda1 being the SSD disk):
-Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s
-avgrq-sz avgqu-sz   await  svctm  %util
-sda1              0.00 14183.50    0.00  220.50     0.00    56.27
-522.59     5.23   23.70   1.25  27.60
-sdc3              0.00 14272.00    0.00  129.50     0.00    56.99
-901.22   137.77 1108.25   7.72 100.00
-
-
-3. ssd-only array iostat output:
-
-Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s
-avgrq-sz avgqu-sz   await  svctm  %util
-sda1              0.00 51941.50    0.00  483.00     0.00   209.70
-889.16   140.81  282.74   2.07 100.00
-sdc3              0.00     0.00    0.00    0.00     0.00     0.00
-0.00     0.00    0.00   0.00   0.00
-
-
-So the questions is How behind can write-behind write? And can we get a
-better performance in a similar setup.
-
-thanks upfront!
-
---=20
-regards,
-Georgi Alexandrov
-key server - pgp.mit.edu :: key id - 0x37B4B3EE
-Key fingerprint =3D E429 BF93 FA67 44E9 B7D4  F89E F990 01C1 37B4 B3EE
-
-
-
---------------enigFE5BD0F78FA30F5D6065E721
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkmVoXAACgkQ+ZABwTe0s+6DhwCgkgwy3sLV3Mr+LmvJ7TMxsAsI
-daEAnRPYgnETm0MxB4w+Z7XNZwANnBEr
-=U5Dc
------END PGP SIGNATURE-----
-
---------------enigFE5BD0F78FA30F5D6065E721--
+-- 
+Jon
