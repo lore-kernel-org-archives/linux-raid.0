@@ -1,90 +1,53 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 09/18] md/raid6: remove expectation that Q device is
-	immediately after P device.
-Date: Fri, 13 Feb 2009 15:19:43 -0700
-Message-ID: <e9c3a7c20902131419u38e75b2eqbaf442a2b090755e@mail.gmail.com>
-References: <20090212031009.23983.14496.stgit@notabene.brown>
-	 <20090212031010.23983.26264.stgit@notabene.brown>
-	 <20090212165625.GH32416@skl-net.de>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH] md: 'size_limit' attribute
+Date: Sat, 14 Feb 2009 14:20:10 +1100
+Message-ID: <18838.14442.891790.33471@notabene.brown>
+References: <1234549811.26769.7.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090212165625.GH32416@skl-net.de>
+In-Reply-To: message from Dan Williams on Friday February 13
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, ed.ciechanowski@intel.com, jacek.danecki@intel.com
 List-Id: linux-raid.ids
 
-On Thu, Feb 12, 2009 at 9:56 AM, Andre Noll <maan@systemlinux.org> wrote:
-> On 14:10, NeilBrown wrote:
->
->> -static int stripe_to_pdidx(sector_t stripe, raid5_conf_t *conf, int previous);
->> +static int stripe_to_pdidx(sector_t stripe, raid5_conf_t *conf, int previous,
->> +                        int *qd_idx);
->
-> That's a bit ugly, isn't it? The function computes both the p index
-> and the q index which is not obvious from its name. Also, the p index
-> is the return value and the q index is returned via a pointer which
-> is a bit unsymmetric.
->
-> static void get_parity_indices(sector_t stripe, raid5_conf_t *conf, int previous,
->                                 int *pd_idx, int *qd_idx);
->
-> perhaps?
->
->> +     /* Note that unlike RAID-5, the ordering of the disks matters greatly.*/
->> +     /* FIX: Is this ordering of drives even remotely optimal? */
->> +     count = 0;
->> +     i = d0_idx;
->> +     do {
->> +             if (i == sh->pd_idx)
->> +                     ptrs[disks-2] = page_address(sh->dev[i].page);
->> +             else if (i == sh->qd_idx)
->> +                     ptrs[disks-1] = page_address(sh->dev[i].page);
->> +             else {
->>                       ptrs[count++] = page_address(sh->dev[i].page);
->> -                     if (count <= disks-2 && !test_bit(R5_UPTODATE, &sh->dev[i].flags))
->> +                     if (!test_bit(R5_UPTODATE, &sh->dev[i].flags))
->>                               printk("block %d/%d not uptodate on parity calc\n", i,count);
->> -                     i = raid6_next_disk(i, disks);
->> -             } while ( i != d0_idx );
->> -//           break;
->> -//   }
->> +             }
->> +             i = raid6_next_disk(i, disks);
->> +     } while (i != d0_idx);
->> +     BUG_ON(count+2 != disks);
->
-> Isn't it really dangerous to ignore a dirty stripe head during parity
-> calculation? I understand that compute_parity6() does not have a
-> return value and that dirty stripe heads have always been ignored by
-> compute_parity6(). But it looks much saner to fail in this case.
->
-> BTW, the printk lacks a KERN_ERR.
->
->> +     /**** FIX THIS: This could be very bad if disks is close to 256 ****/
->> +     void *ptrs[disks];
->
-> How serious is this? It's probably not a problem for version 0.90
-> superblocks as one can't have more than 26 disks. OTOH, for version
-> 1 superblocks we might end up using up to 2K of stack space on 64
-> bit machines.
+On Friday February 13, dan.j.williams@intel.com wrote:
+> Subject: md: 'size_limit' attribute
+> From: Dan Williams <dan.j.williams@intel.com>
+> 
+> Provide a sysfs attribute to allow a raid array to be truncated to an
+> arbitrary size.  This functionality is needed to support imsm raid
+> arrays where the metadata format expects that the size of some arrays is
+> rounded down to the nearest 1MB boundary.
 
-This is ok in recent kernels because we perform raid calculations in
-raid5d or md_do_sync where we have our own stack.  However, with raid6
-acceleration we also want to convert dma addresses on the stack which
-means the calculation needs double the amount of space.
+Well it's not April 1st, so I assume you are serious.
 
-> Would it be a reasonable to always allocate 26 pointers, say, and
-> fall back to malloc() if this turns out to be too small?
+It really truncates the array, not the individual drives?
+So you could have e.g. a raid0 in which only some of the last stripe
+was used?
 
-Even a GFP_ATOMIC allocation may fail and we would always be
-allocating in the > 26 disks case.  The worst case scenario is
-actually 4K stacks on a raid6 acceleration enabled 32-bit system with
-64-bit dma addresses.  This configuration would require 3K of stack to
-start a 256 disk parity calculation, but that should still be ok given
-we have our own thread.
+Can you give me a concrete example of an array where this will make a
+required difference?  I just want to be sure I understand.
 
-Regards,
-Dan
+I guess you couldn't just add an 'array_size' attribute which gave
+direct access to mddev->array_size because that gets set when the
+array is started, and we want to be able to impose the limit before
+starting the array....
+
+How about a semantic where starting the array will only modify
+->array_size if it's value is zero of if it would reduce the value.
+
+How might this interact with array resizing?  You add a drive to an
+array, reshape it, and then it doesn't get any bigger until the
+size_limit is updated?   I guess that could work but it might be
+confusing.... though presumably mdadm/mdmon would know to look after
+all the details. 
+
+
+What would you think of renaming the attribute to 'array_size' with
+the semantic of "once user-space sets it, the kernel will never change
+it" ??
+
+NeilBrown
