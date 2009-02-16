@@ -1,70 +1,78 @@
-From: whollygoat@letterboxes.org
-Subject: Re: --examine contradicts --create and --detail, again
-Date: Sun, 15 Feb 2009 22:22:20 -0800
-Message-ID: <1234765340.31599.1300576011@webmail.messagingengine.com>
-References: <1234349289.21577.1299744243@webmail.messagingengine.com>
- <20090211135917.GA7295@cthulhu.home.robinhill.me.uk>
+From: Georgi Alexandrov <teh@amln.net>
+Subject: Re: write-behind performance ... or how behind can write-behind write
+Date: Mon, 16 Feb 2009 12:39:31 +0200
+Message-ID: <49994263.4090204@amln.net>
+References: <4995A170.4000000@amln.net> <4995BF95.1010908@steeleye.com> <4996C965.9020205@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigF4940BC2D8DA54A006F943B2"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090211135917.GA7295@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <4996C965.9020205@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Robin Hill <robin@robinhill.me.uk>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Paul Clements <paul.clements@steeleye.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 11 Feb 2009 13:59:17 +0000, "Robin Hill" <robin@robinhill.me.uk>
-said:
-> On Wed Feb 11, 2009 at 02:48:09AM -0800, whollygoat@letterboxes.org
-> wrote:
-> 
-[snip]
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigF4940BC2D8DA54A006F943B2
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-> > # mdadm -E /dev/hde1
-> > 
-> >     Array Slot : 0 (0, 1, 2, 3, failed, empty, 4)
-> >    Array State : Uuuuu 1 failed
-> > 
-> > Sorry for bringing up this new instance of the same old 
-> > problem yet one more time.
-> >
-> I'd say this is just an artifact of how the array creation works,
-> Because it starts as a degraded array, initially one of the RAID devices
-> is flagged as missing/faulty (so you have member numbers 0, 1, 2 and 3
-> in the array, 4 flagged as missing/faulty, and 5 & 6 as spares).  When
-> it does the initial build, it uses member number 6, leaving 5 as the
-> spare.  This leaves you with 1 "failed" member and one "empty" (the
-> spare - it's not part of the array so doesn't have a Device Number).
-> 
-> Unfortunately I don't have any RAID5 arrays around now to check whether
-> I see the same here.  However, if the system's working fine otherwise
-> then I certainly wouldn't worry about it.
+Bill Davidsen wrote:
+> Paul Clements wrote:
+>> Georgi Alexandrov wrote:
+>>
+>>> Generally with the healthy array I'm getting the write performance of=
 
-Thanks for the reply.  Unfortunately, I can't claim to be enjoying a
-finely working system.  Since your reply, I've tried unplugging the ide
-expansion cards from the pci but, and playing around with the ide
-cables.
+>>> the SATA disk alone (in terms of requests/sec issued to the disk and
+>>> bytes/sec written). The SATA disk is obviously a bottleneck even with=
 
-I've managed to pull off one create run where the end result showed no
-"failed" or "empty" slots for --examine.  Unfortunately, I have not been
-able to reproduce that "clean" run, even with the same card removed.  So
-I 
-am guessing that it is either an ide cable or the sole ide card I have
-not
-been able to remove (kernel oopses when this card is not plugged into
-the 
-bus).
+>>> the write-behind option set(2).
+>>
+>> write-behind can help with two things:
+>>
+>> 1) overcoming latency (say one disk is on the network -- it may be the=
 
-Ta,
+>> same speed as the source disk, but it takes longer round-trip for each=
 
-wg
-some bad h/w somewhere.
--- 
-  
-  whollygoat@letterboxes.org
+>> I/O to complete)
+>>
+>> 2) temporary slowness of a device (say at a peak in I/O) -- the queue
+>> can temporarily hide the slowness of the secondary disk, but this
+>> won't last very long -- if writes continue at a pace faster than the
+>> disk can handle (i.e., the queue gets filled) then the array drops
+>> back to non-write-behind behavior
+>>
+> At least with write-mostly all of the capacity is going into saving
+> data, not serving data. But as you note below if the writes are
+> happening at a rate faster than the device can support it will be a
+> bottleneck.
+<snip>
 
--- 
-http://www.fastmail.fm - The way an email service should be
+Well, at least write-mostly is suitable for reading from the SSD disk
+only in a setup like mine. If writes get really problematic maybe it's
+better to consider a SSD-only solution.
 
+--=20
+regards,
+Georgi Alexandrov
+key server - pgp.mit.edu :: key id - 0x37B4B3EE
+Key fingerprint =3D E429 BF93 FA67 44E9 B7D4  F89E F990 01C1 37B4 B3EE
+
+
+
+--------------enigF4940BC2D8DA54A006F943B2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkmZQmkACgkQ+ZABwTe0s+7l4ACbBX3KubMurPz+/qEd6TVn6s6m
+rBEAoKFVtVmjVBTYkiw2J/FV//BRrNfm
+=rQ+H
+-----END PGP SIGNATURE-----
+
+--------------enigF4940BC2D8DA54A006F943B2--
