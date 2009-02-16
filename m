@@ -1,78 +1,73 @@
-From: Georgi Alexandrov <teh@amln.net>
-Subject: Re: write-behind performance ... or how behind can write-behind write
-Date: Mon, 16 Feb 2009 12:39:31 +0200
-Message-ID: <49994263.4090204@amln.net>
-References: <4995A170.4000000@amln.net> <4995BF95.1010908@steeleye.com> <4996C965.9020205@tmr.com>
+From: =?ISO-8859-1?B?UultaQ==?= PALANCHER <remi.palancher@inria.fr>
+Subject: mdadm RAID5 re-assemble issue
+Date: Mon, 16 Feb 2009 13:34:50 +0100
+Message-ID: <20090216133450.5c700c09@laptop>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigF4940BC2D8DA54A006F943B2"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4996C965.9020205@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Paul Clements <paul.clements@steeleye.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigF4940BC2D8DA54A006F943B2
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Hi there,
 
-Bill Davidsen wrote:
-> Paul Clements wrote:
->> Georgi Alexandrov wrote:
->>
->>> Generally with the healthy array I'm getting the write performance of=
+I've been a happy and successful mdadm user for a while now, but
+unfortunately, I met a problem recently.
 
->>> the SATA disk alone (in terms of requests/sec issued to the disk and
->>> bytes/sec written). The SATA disk is obviously a bottleneck even with=
+I use mdadm to manage a RAID5 array with 5 disks and 1 spare. The
+devices in the array are sda5, sdb1, sdc1, sdd1, sde1 and sdf1. Before
+things start to go wrong, sdb1 device was the spare and the other
+devices were active in the array. Here is this configuration as shown
+by the logs:
 
->>> the write-behind option set(2).
->>
->> write-behind can help with two things:
->>
->> 1) overcoming latency (say one disk is on the network -- it may be the=
+[85054.372171] RAID5 conf printout:
+[85054.372175]  --- rd:5 wd:4
+[85054.372177]  disk 0, o:1, dev:sdc1
+[85054.372179]  disk 1, o:1, dev:sde1
+[85054.372181]  disk 2, o:1, dev:sda5
+[85054.372183]  disk 3, o:1, dev:sdd1
+[85054.372185]  disk 4, o:0, dev:sdf1
 
->> same speed as the source disk, but it takes longer round-trip for each=
+Last thursday, a problem occured on sdf1 and mdadm started recovering
+the array with sdb1 as expected. But sdb1 have had a problem too during
+the recovery process, but the array continued to run properly with the
+last good 4 devices. I can attach logs if needed. Actually, sdb1 was
+defective, and I removed it physically from the server.
 
->> I/O to complete)
->>
->> 2) temporary slowness of a device (say at a peak in I/O) -- the queue
->> can temporarily hide the slowness of the secondary disk, but this
->> won't last very long -- if writes continue at a pace faster than the
->> disk can handle (i.e., the queue gets filled) then the array drops
->> back to non-write-behind behavior
->>
-> At least with write-mostly all of the capacity is going into saving
-> data, not serving data. But as you note below if the writes are
-> happening at a rate faster than the device can support it will be a
-> bottleneck.
-<snip>
+But here is the output when I try to reassemble the array with the
+remaining devices:
+# mdadm --assemble /dev/md0 --force \
+--verbose /dev/sda5 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1
+mdadm: looking for devices for /dev/md0
+mdadm: /dev/sda5 is identified as a member of /dev/md0, slot 5.
+mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 0.
+mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 3.
+mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 1.
+mdadm: /dev/sde1 is identified as a member of /dev/md0, slot -1.
+mdadm: added /dev/sdd1 to /dev/md0 as 1
+mdadm: no uptodate device for slot 2 of /dev/md0
+mdadm: added /dev/sdc1 to /dev/md0 as 3
+mdadm: no uptodate device for slot 4 of /dev/md0
+mdadm: added /dev/sda5 to /dev/md0 as 5
+mdadm: added /dev/sde1 to /dev/md0 as -1
+mdadm: added /dev/sdb1 to /dev/md0 as 0
+mdadm: /dev/md0 assembled from 3 drives and 2 spares - not enough to
+start the array.
 
-Well, at least write-mostly is suitable for reading from the SSD disk
-only in a setup like mine. If writes get really problematic maybe it's
-better to consider a SSD-only solution.
+I can understand why sde1 (previously sdf1) cannot take an active slot,
+but why does sda5 wanna take slot5 instead of slot2, as it was
+previously?
 
---=20
-regards,
-Georgi Alexandrov
-key server - pgp.mit.edu :: key id - 0x37B4B3EE
-Key fingerprint =3D E429 BF93 FA67 44E9 B7D4  F89E F990 01C1 37B4 B3EE
+Is there any way to force it?
+Do I have to deal with mkdir or mdadm --create --assume-clean to
+recover my data?
 
-
-
---------------enigF4940BC2D8DA54A006F943B2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkmZQmkACgkQ+ZABwTe0s+7l4ACbBX3KubMurPz+/qEd6TVn6s6m
-rBEAoKFVtVmjVBTYkiw2J/FV//BRrNfm
-=rQ+H
------END PGP SIGNATURE-----
-
---------------enigF4940BC2D8DA54A006F943B2--
+Regards,
+--
+R=E9mi PALANCHER
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
