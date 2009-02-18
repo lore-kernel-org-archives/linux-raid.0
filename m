@@ -1,74 +1,82 @@
-From: Redeeman <redeeman@metanurb.dk>
-Subject: problem in grow of raid5 3 -> 4 disks
-Date: Tue, 17 Feb 2009 21:48:11 +0100
-Message-ID: <1234903691.18827.21.camel@localhost>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH] md: 'size_limit' attribute
+Date: Tue, 17 Feb 2009 17:06:33 -0700
+Message-ID: <e9c3a7c20902171606g1ad719f6v812aecc06f20ac2@mail.gmail.com>
+References: <1234549811.26769.7.camel@dwillia2-linux.ch.intel.com>
+	 <18838.14442.891790.33471@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <18838.14442.891790.33471@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>, ed.ciechanowski@intel.com, jacek.danecki@intel.com
 List-Id: linux-raid.ids
 
-Hello.
+On Fri, Feb 13, 2009 at 8:20 PM, Neil Brown <neilb@suse.de> wrote:
+> On Friday February 13, dan.j.williams@intel.com wrote:
+>> Subject: md: 'size_limit' attribute
+>> From: Dan Williams <dan.j.williams@intel.com>
+>>
+>> Provide a sysfs attribute to allow a raid array to be truncated to an
+>> arbitrary size.  This functionality is needed to support imsm raid
+>> arrays where the metadata format expects that the size of some arrays is
+>> rounded down to the nearest 1MB boundary.
+>
+> Well it's not April 1st, so I assume you are serious.
+>
+> It really truncates the array, not the individual drives?
+> So you could have e.g. a raid0 in which only some of the last stripe
+> was used?
 
-A friend of mines array just stalled in the reshape process, while
-growing from 3 to 4 disks, on raid5.
+Unfortunately yes.  It will even record the "correct" value for
+num_data_stripes based on the per device size, but the actual
+array_size recorded in the metadata is this weird rounded down value.
 
-kernel is 2.6.27,
+> Can you give me a concrete example of an array where this will make a
+> required difference?  I just want to be sure I understand.
 
-dmesg spews insane amounts of:
-compute_blocknr: map not correct
-compute_blocknr: map not correct
-compute_blocknr: map not correct
-compute_blocknr: map not correct
+1/ Array created in orom
+2/ User assembles, partitions, and formats the array in Linux
+3/ User reboots into Windows and sees data missing off the end of the volume
 
-/proc/mdstat:
-md0 : active raid5 sdd1[3] sdc1[2] sdb1[1] sda1[0]
-      1953519872 blocks super 0.91 level 5, 64k chunk, algorithm 2 [4/4]
-[UUUU]
-      [==============>......]  reshape = 73.2% (715827840/976759936)
-finish=15504.9min speed=280K/sec
+So, it is purely an interoperability issue with other imsm drivers.
 
-# mdadm --detail:
-/dev/md0:
-        Version : 0.91
-  Creation Time : Sun Feb  1 03:30:50 2009
-     Raid Level : raid5
-     Array Size : 1953519872 (1863.02 GiB 2000.40 GB)
-  Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 0
-    Persistence : Superblock is persistent
- 
-    Update Time : Tue Feb 17 23:26:37 2009
-          State : clean, recovering
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
- 
-         Layout : left-symmetric
-     Chunk Size : 64K
- 
- Reshape Status : 73% complete
-  Delta Devices : 1, (3->4)
- 
-           UUID : e55b3e10:456492af:b4421a5d:cd497c91
-         Events : 0.476018
- 
-    Number   Major   Minor   RaidDevice State
-       0       8        1        0      active sync   /dev/sda1
-       1       8       17        1      active sync   /dev/sdb1
-       2       8       33        2      active sync   /dev/sdc1
-       3       8       49        3      active sync   /dev/sdd1
+> I guess you couldn't just add an 'array_size' attribute which gave
+> direct access to mddev->array_size because that gets set when the
+> array is started, and we want to be able to impose the limit before
+> starting the array....
+>
+> How about a semantic where starting the array will only modify
+> ->array_size if it's value is zero of if it would reduce the value.
+>
+>
+> How might this interact with array resizing?  You add a drive to an
+> array, reshape it, and then it doesn't get any bigger until the
+> size_limit is updated?   I guess that could work but it might be
+> confusing.... though presumably mdadm/mdmon would know to look after
+> all the details.
+>
+>
+> What would you think of renaming the attribute to 'array_size' with
+> the semantic of "once user-space sets it, the kernel will never change
+> it" ??
 
+To be be sure I understand, the differences from the current patch:
+1/ The kernel will set ->array_size at array start time unless
+userspace has modified it from zero.  If userspace has modified it we
+should probably refuse to run if ->array_size is > ->array_sectors?
+Upon successfully starting the array we record that userspace owns
+->array_size.
+2/ At reshape time the kernel sets ->array_size = ->array_sectors
+unless userspace owns ->array_size at which point we don't touch
+->array_size.  I assume we must then block attempts to reshape the
+array to a smaller than ->array_size size when userspace ->array_size
+is in effect?
+3/ While an array is active userspace can set ->array_size only if the
+kernel has recorded that ->array_size is under userspace control, and
+then it can only set a value that is <= ->array_sectors?
 
-What should we do about this? Anyone experienced something similar?
-SMART reports no errors on any of the disks.
-
----
-Thanks.
-Kasper Sandberg
-
+Thanks,
+Dan
