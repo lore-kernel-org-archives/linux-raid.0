@@ -1,58 +1,74 @@
-From: Kay Sievers <kay.sievers@vrfy.org>
-Subject: Re: General question (scheduler) with SSDs?
-Date: Fri, 20 Feb 2009 15:56:06 +0100
-Message-ID: <ac3eb2510902200656l11275aber128848182553726d@mail.gmail.com>
-References: <alpine.DEB.1.10.0902190837270.19552@p34.internal.lan>
-	 <20090220094356.GB26124@silver.sucs.org>
-	 <ac3eb2510902200316m387ecb45n86a2ea7c6196b01@mail.gmail.com>
-	 <20090220131209.GA21446@silver.sucs.org>
-	 <ac3eb2510902200523o619e64aas7bffac9aeca86814@mail.gmail.com>
-	 <20090220142705.GA429@silver.sucs.org>
+From: Jacek Danecki <Jacek.Danecki@intel.com>
+Subject: problem: mdadm: device /dev/sda not suitable for any style of array
+Date: Fri, 20 Feb 2009 17:21:22 +0100
+Message-ID: <499ED882.6040204@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20090220142705.GA429@silver.sucs.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Sitsofe Wheeler <sitsofe@yahoo.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Feb 20, 2009 at 15:27, Sitsofe Wheeler <sitsofe@yahoo.com> wrote:
-> On Fri, Feb 20, 2009 at 02:23:38PM +0100, Kay Sievers wrote:
->> On Fri, Feb 20, 2009 at 14:12, Sitsofe Wheeler <sitsofe@yahoo.com> wrote:
->> >
->> > I tried
->> > SUBSYSTEM=="block", ATTRS{model}=="ASUS-PHISON *", ATTR{queue/rotational}="0"
->> > but udevtest /sys/block/sda/ doesn't list it as firing (udev 117-8)...
->>
->> I does here:
->>   udev_rules_apply_to_event: ATTR '/sys/devices/ ...
->> /sdb/queue/rotational' writing '0'
->>
->>   $grep . /sys/class/block/*/queue/rotational
->>   /sys/class/block/sda/queue/rotational:1
->>   /sys/class/block/sdb/queue/rotational:0
->>
->> Maybe "udevtest" is not showing it for you, or udev 117 is too old and
->> does not work that way.
->
-> After you mentioned this I tried again and seemingly I was mistaken - it
-> does work as you described.
+Hi,
 
-Great.
+I've found today an issue during tests for creation of raid1 array on 
+Fedora 11 rawhide (kernel 2.6.29-0.112.rc4.git3.fc11.i586). I've tested 
+some versions between version labeled mdadm-3.0-devel2 (which was good) 
+and the HEAD of branch devel-3.0 using git bisect tool. Logs are below.
+After reboot problem disappeared for a moment, but during next tests it 
+arrived again.
 
-> I had to make a slight rule tweak to stop
-> it matching on partitions though:
->
-> SUBSYSTEM=="block", KERNEL=="[sh]d[a-z]", ATTRS{model}=="ASUS-PHISON *", ATTR{queue/rotational}="0"
+script test-create-problem1:
 
-Newer kernels have DEVTYPE in the envent environment, and:
-  ENV{DEVTYPE}=="disk"
-can be used, which is easier and more reliable.
+mdadm -CR /dev/md/imsm -e imsm  -n2 -z 102400 /dev/sda /dev/sdc
+sleep 1
+mdadm -CR /dev/md/raid1 -l 1  -n2 -z 102400 /dev/sda /dev/sdc
+cat /proc/mdstat
+sleep 1
+mdadm -S /dev/md/raid1
+mdadm -S /dev/md/imsm
+mdadm --zero /dev/sda /dev/sdc
+-------------------------------------------------------------
+Test log:
 
-Also the whitespace after "...PHISON *" does not need to be matched.
-If the match value does not end in whitespace itself, udev will match
-against the value with all trailing whitespace ignored.
+# ./test-create-problem1
+mdadm: device /dev/sda not suitable for any style of array
+Personalities : [raid1]
+md97 : inactive sdc[1](S) sda[0](S)
+       418 blocks super external:imsm
 
-Kay
+unused devices: <none>
+mdadm: stopped /dev/md/raid1
+mdadm: stopped /dev/md/imsm
+
+----------------------------------------
+Log from bisect session:
+
+# git bisect good
+88c32bb1ec5d0c12eb557c4f46832fa4e1076784 is first bad commit
+commit 88c32bb1ec5d0c12eb557c4f46832fa4e1076784
+Author: Dan Williams <dan.j.williams@intel.com>
+Date:   Mon Dec 8 16:59:18 2008 -0700
+
+     imsm: validate arrays being created against firmware capabilities
+
+     These checks are only enabled when platform support for imsm is found,
+     i.e. ahci driver is loaded and talking to an Intel(R) controller, and
+     the option rom header is located.
+
+     They can be turned off by setting the environment variable
+     IMSM_NO_PLATFORM to 1.
+
+     Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+
+:100644 100644 afbd7120e2c8a2f4d8adc90fdbff09c5dd37799a 
+7f27aa46de199e877416de8c368624688958cb1d M      Makefile
+:100644 100644 c1264825d930af4bd375971f5cfb33486db7be40 
+bbdc9f9508b4c95e6322b6ac5e8f776e4c939780 M      platform-intel.h
+:100644 100644 7066e8e607f46cd3ebc38b2f4a2624660fd86d41 
+abc320632b0dcc065e2374fc7b0f04b6cd2a424d M      super-intel.c
+
+
+--
+Jacek
