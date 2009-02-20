@@ -1,53 +1,31 @@
-From: Vladimir Ivashchenko <hazard@francoudi.com>
-Subject: Re: sun x4500 soft lockup during raid creation
-Date: Fri, 20 Feb 2009 20:57:39 +0200
-Message-ID: <1235156259.14251.12.camel@hazard2.francoudi.com>
-References: <1233174633.7008.34.camel@hazard2.francoudi.com>
-	 <1233850207.13374.35.camel@hazard2.francoudi.com>
+From: Sitsofe Wheeler <sitsofe@yahoo.com>
+Subject: Re: General question (scheduler) with SSDs?
+Date: Fri, 20 Feb 2009 19:25:44 +0000
+Message-ID: <20090220192543.GA21644@silver.sucs.org>
+References: <alpine.DEB.1.10.0902190837270.19552@p34.internal.lan> <20090220094356.GB26124@silver.sucs.org> <ac3eb2510902200316m387ecb45n86a2ea7c6196b01@mail.gmail.com> <20090220131209.GA21446@silver.sucs.org> <ac3eb2510902200523o619e64aas7bffac9aeca86814@mail.gmail.com> <20090220142705.GA429@silver.sucs.org> <ac3eb2510902200656l11275aber128848182553726d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1233850207.13374.35.camel@hazard2.francoudi.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Mark Lord <mlord@pobox.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <ac3eb2510902200656l11275aber128848182553726d@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: Sitsofe Wheeler <sitsofe@yahoo.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi All,
+On Fri, Feb 20, 2009 at 03:56:06PM +0100, Kay Sievers wrote:
+> Also the whitespace after "...PHISON *" does not need to be matched.
+> If the match value does not end in whitespace itself, udev will match
+> against the value with all trailing whitespace ignored.
 
-Final update. I have contacted Mark Lord who gave me one patch for
-2.6.29 and advised that hotplug should be stable. From my tests so far,
-it is indeed so. We removed and added HDDs on our Sun X4500 during I/O
-and seek activity without any errors or crashes.
+Ah, I'm not matching against only whitespace:
 
-On Thu, 2009-02-05 at 18:10 +0200, Vladimir Ivashchenko wrote: 
-> Ok, further updates:
-> 
-> I have installed a 64-bit CentOS5 and put x86_64  2.6.26.8-57.fc8 Fedora
-> kernel on it.
-> 
-> The RAID creation was mostly quiet, apart from a few softluckups as
-> described below.
-> 
-> Then we tried inserting and removing a HDD. As expected, it didn't fully
-> work properly, but at least the machine have not crashed. The arrays
-> didn't have any load though. From being /dev/sdat the disk
-> became /dev/sdax. For some reason mdadm was reporting the array and the
-> disk itself to be healthy, but the device entry for the removed hard
-> drive #19 was empty with wrong major/minor numbers.
-> 
-> Reading about sata_mv driver, it seems that hotplug is known to be
-> problematic, so we're going to try OpenSolaris. However I have another
-> X4500 for a few days, and if any developers would like me to check
-> something, I will try to do it.
+$ cat /sys/block/*/device/model 
+ASUS-PHISON OB S
+ASUS-PHISON SSD 
+
+(the first is the builtin faster SSD, the other is the slower removable
+SSD).
 
 -- 
-Best Regards,
-Vladimir Ivashchenko
-Chief Technology Officer
-PrimeTel PLC, Cyprus - www.prime-tel.com
-Tel: +357 25 100100 Fax: +357 2210 2211
-
-
-
+Sitsofe | http://sucs.org/~sits/
