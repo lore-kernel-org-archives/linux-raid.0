@@ -1,85 +1,58 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [mdadm git pull] imsm fixes and general external metadata
-	updates
-Date: Mon, 23 Feb 2009 14:53:52 -0500
-Message-ID: <1235418832.751.385.camel@firewall.xsintricity.com>
-References: <1232576408.2029.56.camel@dwillia2-linux.ch.intel.com>
-	 <18822.13389.938876.964972@notabene.brown>
-	 <1235404451.751.383.camel@firewall.xsintricity.com>
-	 <e9c3a7c20902231058x4196e688xa9091c72e31b1c4@mail.gmail.com>
+From: Harry Mangalam <harry.mangalam@uci.edu>
+Subject: Re: rescue an alien md raid5
+Date: Mon, 23 Feb 2009 11:59:34 -0800
+Message-ID: <200902231159.34403.harry.mangalam@uci.edu>
+References: <200902231013.46082.harry.mangalam@uci.edu> <49A2F1E8.6030901@scalableinformatics.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-64bD7JUQsVyEFI0DGHNQ"
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e9c3a7c20902231058x4196e688xa9091c72e31b1c4@mail.gmail.com>
+In-Reply-To: <49A2F1E8.6030901@scalableinformatics.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+To: landman@scalableinformatics.com
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi Joe,
 
---=-64bD7JUQsVyEFI0DGHNQ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks for the reply and the hint, but the norecovery option fails due 
+to the superblock not being found.  Neil's comment seems to indicate 
+that there's a basic incompatibility in the way the NAS vendors 
+implemented XFS.  We may be hosed on this one (not my NAS/files - I'm 
+just trying to help some others in the group).  I will try the XFS 
+group tho.
 
-On Mon, 2009-02-23 at 11:58 -0700, Dan Williams wrote:
-> On Mon, Feb 23, 2009 at 8:54 AM, Doug Ledford <dledford@redhat.com> wrote=
-:
-> > On Mon, 2009-02-02 at 10:46 +1100, Neil Brown wrote:
-> >> We really need a man page for mdmon don't we.  Then this sort of text
-> >> could be placed there for safely.
-> >
-> > Yes, a man page is definitely needed.
->=20
-> I have one brewing, I'll include it in an upcoming pull request.
->=20
-> > I have no intention of putting
-> > mdmon in the initramfs.  The only arrays that should be started during
-> > initramfs operation are / and possibly /boot.  Both of those are starte=
-d
-> > readonly.  It isn't until later in the boot process (in rc.sysinit on
-> > Fedora/RHEL) that we remount the / device rw.  It's my intention to
-> > modify our rc.sysinit so that before the root device goes rw, we start
-> > the necessary mdmon instances.  This should be sufficient to keep the
-> > container metadata state consistent with reality and avoids having to
-> > add mdmon to the initramfs.  However, that means I need to know how to
-> > invoke mdmon when mdadm isn't starting it for me.
->=20
-> Did you happen to catch the discussion on the initramfs mailing list
-> [1]?  It would be nice to not need mdmon in the initramfs.  However, I
-> have found it needs to be there because even read-only mounted
-> filesystems require write access to the underlying block device to
-> recover the journal.
->=20
-> --
-> Dan
->=20
-> [1] http://thread.gmane.org/gmane.linux.kernel.initramfs/65/
+The mdadm part came thru like a champ tho - thanks!
 
-Is XFS the only one that does the journal recovery on initial mount
-read-only during the initfs step, or do other journaled fses do the same
-thing?  I didn't think ext3 recovered the journal until you switch to a
-read-write mount, but I guess I could be wrong.
+Another reason to stay away from these kind of gadgets (I actually 
+tried this device when it first came out and abandoned that approach 
+as too futzy, not nearly flexible enough and not administratable 
+enough).  As well, with all the big P3/p4 towers being given away for 
+free now, I can build one of these in an hour or so with one of the 
+SilImage cards and get a much more useful box for essentially the 
+cost of raw disk.
 
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-              http://people.redhat.com/dledford
+Harry
 
-Infiniband specific RPMs available at
-              http://people.redhat.com/dledford/Infiniband
+On Monday 23 February 2009, Joe Landman wrote:
+> Harry Mangalam wrote:
+> > Here's an unusual (long) tale of woe.
+
+> Hmmm... is it possible that the journal is external for the XFS
+> filesystem in question?  Could you try
+>
+> 	mount -o norecovery,ro /dev/md1 /mountpoint
+>
+> Otherwise, could you dd the file system off there onto another
+> (large) partition, before you try xfs_repair
 
 
---=-64bD7JUQsVyEFI0DGHNQ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkmi/tAACgkQTzP9PM7pjw9JOACfXiZ4LYgu8HAo5e9wQDSMUVTC
-s1MAn2fC1kEYiPNnil1yx1uh104ugI4h
-=/7BL
------END PGP SIGNATURE-----
-
---=-64bD7JUQsVyEFI0DGHNQ--
-
+-- 
+Harry Mangalam - Research Computing, NACS, E2148, Engineering Gateway, 
+UC Irvine 92697  949 824-0084(o), 949 285-4487(c)
+---
+Good judgment comes from experience; 
+Experience comes from bad judgment. [F. Brooks.]
