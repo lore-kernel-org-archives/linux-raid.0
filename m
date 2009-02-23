@@ -1,78 +1,56 @@
-From: Joe Landman <landman@scalableinformatics.com>
-Subject: Re: rescue an alien md raid5
-Date: Mon, 23 Feb 2009 13:58:48 -0500
-Message-ID: <49A2F1E8.6030901@scalableinformatics.com>
-References: <200902231013.46082.harry.mangalam@uci.edu>
-Reply-To: landman@scalableinformatics.com
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Reliability of bitmapped resync
+Date: Mon, 23 Feb 2009 20:40:19 +0100
+Message-ID: <20090223194019.GA3488@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200902231013.46082.harry.mangalam@uci.edu>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Harry Mangalam <harry.mangalam@uci.edu>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Harry Mangalam wrote:
-> Here's an unusual (long) tale of woe.
-> 
-> We had a USRobotics 8700 NAS appliance with 4 SATA disks in RAID5:
->  <http://www.usr.com/support/product-template.asp?prod=8700>
-> which was a fine (if crude) ARM-based Linux NAS until it stroked out 
-> at some point, leaving us with a degraded RAID5 and comatose NAS 
-> device.
-> 
-> We'd like to get the files back of course and I've moved the disks to 
-> a Linux PC, hooked them up to a cheap Silicon Image 4x SATA 
-> controller and brought up the whole frankenmess with mdadm.  It 
-> reported a clean but degraded array:
-> 
-> ===============================================================
-> 
-> root@pnh-rcs:/# mdadm --detail /dev/md0
-> /dev/md0:
->         Version : 00.90.03
+Hi all,
 
-> The docs and files on the USR web site imply that the native 
-> filesystem was originally XFS, but when i try to mount it as such, I 
-> can't:
-> 
-> mount -vvv -t xfs /dev/md1 /mnt
-> mount: fstab path: "/etc/fstab"
-> mount: lock path:  "/etc/mtab~"
-> mount: temp path:  "/etc/mtab.tmp"
-> mount: no LABEL=, no UUID=, going to mount /dev/md1 by path
-> mount: spec:  "/dev/md1"
-> mount: node:  "/mnt"
-> mount: types: "xfs"
-> mount: opts:  "(null)"
-> mount: mount(2) syscall: source: "/dev/md1", target: "/mnt", 
-> filesystemtype: "xfs", mountflags: -1058209792, data: (null)
-> mount: wrong fs type, bad option, bad superblock on /dev/md1,
->        missing codepage or helper program, or other error
->        In some cases useful info is found in syslog - try
->        dmesg | tail  or so
+I've a strange issue.
 
-Hmmm... is it possible that the journal is external for the XFS 
-filesystem in question?  Could you try
+I've a PC with 2 HDs in RAID-10 f2 with bitmap.
+There are actually 3 md devices, boot, swap and root.
 
-	mount -o norecovery,ro /dev/md1 /mountpoint
+It happens that one SATA cable is/was flaky, so sometimes,
+at boot, /dev/sdb does not show up.
+The RAID starts in degraded mode, tracking the writes
+in the bitmap.
+On the next reboot, /dev/sdb is again there, so it is
+possible to re-add it.
+The md device resyncs what is to be resynced, very
+quickly, due to the bitmap.
 
-Otherwise, could you dd the file system off there onto another (large) 
-partition, before you try xfs_repair
+Later, if I run a check, usually a lot of mismatches
+show up.
 
+After repair (or add) further checks return zero mismatches.
+Without boot failure, no mismatches showed up after check.
 
+On a different PC, with same setup, but good cables,
+something similar happened.
 
+I tried, just for testing, to fail-remove-writeSomething-reAdd
+one HD, a then run a check.
+This was also returned some (few) mismatches.
+Now, this test I did not repeat, so I cannot say this was
+always the case.
 
+Nevertheless I'm a bit concerned.
+
+Is this behaviour somehow expected?
+Is there something special to take into account when
+removing and re-adding a RAID component?
+
+Thanks a lot in advance,
+
+bye,
 
 -- 
-Joseph Landman, Ph.D
-Founder and CEO
-Scalable Informatics LLC,
-email: landman@scalableinformatics.com
-web  : http://www.scalableinformatics.com
-        http://jackrabbit.scalableinformatics.com
-phone: +1 734 786 8423 x121
-fax  : +1 866 888 3112
-cell : +1 734 612 4615
+
+piergiorgio
