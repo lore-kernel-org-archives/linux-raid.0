@@ -1,57 +1,68 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Reliability of bitmapped resync
-Date: Tue, 24 Feb 2009 06:59:10 +1100 (EST)
-Message-ID: <b2460d0414270e6a6be4c91ec2d5a071.squirrel@neil.brown.name>
-References: <20090223194019.GA3488@lazy.lzy>
+From: Harry Mangalam <harry.mangalam@uci.edu>
+Subject: Re: rescue an alien md raid5
+Date: Mon, 23 Feb 2009 12:04:39 -0800
+Message-ID: <200902231204.39660.harry.mangalam@uci.edu>
+References: <200902231013.46082.harry.mangalam@uci.edu> <ae41ed6f5db4a30599973b9466f89e19.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090223194019.GA3488@lazy.lzy>
+In-Reply-To: <ae41ed6f5db4a30599973b9466f89e19.squirrel@neil.brown.name>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, February 24, 2009 6:40 am, Piergiorgio Sartor wrote:
-> Hi all,
+On Monday 23 February 2009, NeilBrown wrote:
+> On Tue, February 24, 2009 5:13 am, Harry Mangalam wrote:
+> > Here's an unusual (long) tale of woe.
+> >
+> > We had a USRobotics 8700 NAS appliance with 4 SATA disks in
+> > RAID5:
+> > <http://www.usr.com/support/product-template.asp?prod=8700> which
+> > was a fine (if crude) ARM-based Linux NAS until it stroked out at
+> > some point, leaving us with a degraded RAID5 and comatose NAS
+> > device.
+> >
+> > We'd like to get the files back of course and I've moved the
+> > disks to a Linux PC, hooked them up to a cheap Silicon Image 4x
+> > SATA controller and brought up the whole frankenmess with mdadm. 
+> > It reported a clean but degraded array:
 >
-> I've a strange issue.
+> Isn't it nice that it was Linux inside that box, rather than some
+> proprietary OS with some undocumented raid metadata....
+
+And that it used mdadm.. - /IT/ worked perfectly.
+
+> > The docs and files on the USR web site imply that the native
+> > filesystem was originally XFS, but when i try to mount it as
+> > such, I can't:
 >
-> I've a PC with 2 HDs in RAID-10 f2 with bitmap.
-> There are actually 3 md devices, boot, swap and root.
+> I heard Dave Chinner talking about this during LCA-2009.
+> If I remember correctly, there is something a bit funny about
+> structure layout and padding on the ARM and it affects XFS is some
+> strange way, and some NAS vendors 'fixed' it the wrong way, so they
+> are incompatible with mainline..... or something like that.  What I
+> really remember is ARM + XFS + NAS == BAD Vendor
 >
-> It happens that one SATA cable is/was flaky, so sometimes,
-> at boot, /dev/sdb does not show up.
-> The RAID starts in degraded mode, tracking the writes
-> in the bitmap.
-> On the next reboot, /dev/sdb is again there, so it is
-> possible to re-add it.
-> The md device resyncs what is to be resynced, very
-> quickly, due to the bitmap.
+> I suggest asking at xfs@oss.sgi.com
+
+Thanks - I'll go over and bug them a bit before I give up.
+
 >
-> Later, if I run a check, usually a lot of mismatches
-> show up.
+> No, those other partitions are relevant.  One was clearly for
+> swap.  The other was probably /boot.
 
-What exactly do you mean by "check".
+Yes, I now remember that it did provide a small /boot (+ a bit of OS 
+space).  I added some utils there while I was testing it before I 
+decided it was too much effort for the return.
+Thanks very much for the note.
 
-If you mean "look in /sys/block/md0/md/mismatch_cnt", then that is
-exactly what I would expect.  The resync found some differences, just
-as you would expect it to, and reported them.
-
-However if by "check" you mean:
-  echo check > /sys/block/md0/md/sync_action
-  mdadm --wait /dev/md0
-  cat /sys/block/md0/md/mismatch_cnt
-
-then I would not expect any mismatches, and the resync should have
-fixed them.
-
-If it is the later, that is a real concern and I will need to look into it.
-Please let me know exactly which kernel version and mdadm version you
-are running.
-
-Thanks,
-NeilBrown
-
-
+-- 
+Harry Mangalam - Research Computing, NACS, E2148, Engineering Gateway, 
+UC Irvine 92697  949 824-0084(o), 949 285-4487(c)
+---
+Good judgment comes from experience; 
+Experience comes from bad judgment. [F. Brooks.]
