@@ -1,47 +1,54 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [mdadm git pull] imsm fixes and general external metadata updates
-Date: Mon, 23 Feb 2009 11:58:50 -0700
-Message-ID: <e9c3a7c20902231058x4196e688xa9091c72e31b1c4@mail.gmail.com>
-References: <1232576408.2029.56.camel@dwillia2-linux.ch.intel.com>
-	 <18822.13389.938876.964972@notabene.brown>
-	 <1235404451.751.383.camel@firewall.xsintricity.com>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: rescue an alien md raid5
+Date: Tue, 24 Feb 2009 06:14:07 +1100 (EST)
+Message-ID: <ae41ed6f5db4a30599973b9466f89e19.squirrel@neil.brown.name>
+References: <200902231013.46082.harry.mangalam@uci.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1235404451.751.383.camel@firewall.xsintricity.com>
+In-Reply-To: <200902231013.46082.harry.mangalam@uci.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+To: Harry Mangalam <harry.mangalam@uci.edu>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Feb 23, 2009 at 8:54 AM, Doug Ledford <dledford@redhat.com> wrote:
-> On Mon, 2009-02-02 at 10:46 +1100, Neil Brown wrote:
->> We really need a man page for mdmon don't we.  Then this sort of text
->> could be placed there for safely.
+On Tue, February 24, 2009 5:13 am, Harry Mangalam wrote:
+> Here's an unusual (long) tale of woe.
 >
-> Yes, a man page is definitely needed.
+> We had a USRobotics 8700 NAS appliance with 4 SATA disks in RAID5:
+>  <http://www.usr.com/support/product-template.asp?prod=8700>
+> which was a fine (if crude) ARM-based Linux NAS until it stroked out
+> at some point, leaving us with a degraded RAID5 and comatose NAS
+> device.
+>
+> We'd like to get the files back of course and I've moved the disks to
+> a Linux PC, hooked them up to a cheap Silicon Image 4x SATA
+> controller and brought up the whole frankenmess with mdadm.  It
+> reported a clean but degraded array:
 
-I have one brewing, I'll include it in an upcoming pull request.
+Isn't it nice that it was Linux inside that box, rather than some
+proprietary OS with some undocumented raid metadata....
 
-> I have no intention of putting
-> mdmon in the initramfs.  The only arrays that should be started during
-> initramfs operation are / and possibly /boot.  Both of those are started
-> readonly.  It isn't until later in the boot process (in rc.sysinit on
-> Fedora/RHEL) that we remount the / device rw.  It's my intention to
-> modify our rc.sysinit so that before the root device goes rw, we start
-> the necessary mdmon instances.  This should be sufficient to keep the
-> container metadata state consistent with reality and avoids having to
-> add mdmon to the initramfs.  However, that means I need to know how to
-> invoke mdmon when mdadm isn't starting it for me.
 
-Did you happen to catch the discussion on the initramfs mailing list
-[1]?  It would be nice to not need mdmon in the initramfs.  However, I
-have found it needs to be there because even read-only mounted
-filesystems require write access to the underlying block device to
-recover the journal.
 
---
-Dan
+>
+> The docs and files on the USR web site imply that the native
+> filesystem was originally XFS, but when i try to mount it as such, I
+> can't:
 
-[1] http://thread.gmane.org/gmane.linux.kernel.initramfs/65/
+I heard Dave Chinner talking about this during LCA-2009.
+If I remember correctly, there is something a bit funny about structure
+layout and padding on the ARM and it affects XFS is some strange way,
+and some NAS vendors 'fixed' it the wrong way, so they are incompatible
+with mainline..... or something like that.  What I really remember is
+ARM + XFS + NAS == BAD Vendor
+
+I suggest asking at xfs@oss.sgi.com
+
+No, those other partitions are relevant.  One was clearly for
+swap.  The other was probably /boot.
+
+Good luck,
+NeilBrown
+
