@@ -1,48 +1,60 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: [mdadm git pull] imsm fixes and general external metadata
-     updates
-Date: Tue, 24 Feb 2009 07:16:06 +1100 (EST)
-Message-ID: <78a6226da1dee8c5b070b9ee30ee4705.squirrel@neil.brown.name>
-References: <1232576408.2029.56.camel@dwillia2-linux.ch.intel.com>
-    <18822.13389.938876.964972@notabene.brown>
-    <1235404451.751.383.camel@firewall.xsintricity.com>
-    <e9c3a7c20902231058x4196e688xa9091c72e31b1c4@mail.gmail.com>
-    <1235418832.751.385.camel@firewall.xsintricity.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: Reliability of bitmapped resync
+Date: Mon, 23 Feb 2009 21:19:05 +0100
+Message-ID: <20090223201905.GA7585@lazy.lzy>
+References: <20090223194019.GA3488@lazy.lzy> <b2460d0414270e6a6be4c91ec2d5a071.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1235418832.751.385.camel@firewall.xsintricity.com>
+Content-Disposition: inline
+In-Reply-To: <b2460d0414270e6a6be4c91ec2d5a071.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, February 24, 2009 6:53 am, Doug Ledford wrote:
-> Is XFS the only one that does the journal recovery on initial mount
-> read-only during the initfs step, or do other journaled fses do the same
-> thing?  I didn't think ext3 recovered the journal until you switch to a
-> read-write mount, but I guess I could be wrong.
+Hi,
 
-This from fs/ext3/super.c
+> What exactly do you mean by "check".
+> 
+> If you mean "look in /sys/block/md0/md/mismatch_cnt", then that is
+> exactly what I would expect.  The resync found some differences, just
+> as you would expect it to, and reported them.
+> 
+> However if by "check" you mean:
+>   echo check > /sys/block/md0/md/sync_action
+>   mdadm --wait /dev/md0
+>   cat /sys/block/md0/md/mismatch_cnt
 
-	if (EXT3_HAS_INCOMPAT_FEATURE(sb, EXT3_FEATURE_INCOMPAT_RECOVER)) {
-		if (sb->s_flags & MS_RDONLY) {
-			printk(KERN_INFO "EXT3-fs: INFO: recovery "
-					"required on readonly filesystem.\n");
-			if (really_read_only) {
-				printk(KERN_ERR "EXT3-fs: write access "
-					"unavailable, cannot proceed.\n");
-				return -EROFS;
-			}
-			printk (KERN_INFO "EXT3-fs: write access will "
-					"be enabled during recovery.\n");
-		}
-	}
+yes, that is what I mean.
+I start the check _after_ the resync.
 
-suggests that, unfortunately, you are.
+Actually, maybe this is not correct, I keep running
+something like:
 
-NeilBrown
+watch cat /proc/mdstat /sys/block/md2/md/mismatch_cnt
 
+So I can see real-time, so to speak, the check
+progress and the mismatch count, just to have
+an idea on where, on the RAID, the mismatches
+could be located. 
 
+Is this a problem?
 
+> then I would not expect any mismatches, and the resync should have
+> fixed them.
+> 
+> If it is the later, that is a real concern and I will need to look into it.
+> Please let me know exactly which kernel version and mdadm version you
+> are running.
+
+It is an up-to-date Fedora 10, i.e. kernel-2.6.27.15-170.2.24.fc10
+and mdadm-2.6.7.1-1.fc10.
+
+Thanks again,
+
+bye,
+
+-- 
+
+piergiorgio
