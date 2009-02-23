@@ -1,58 +1,57 @@
-From: Harry Mangalam <harry.mangalam@uci.edu>
-Subject: Re: rescue an alien md raid5
-Date: Mon, 23 Feb 2009 11:59:34 -0800
-Message-ID: <200902231159.34403.harry.mangalam@uci.edu>
-References: <200902231013.46082.harry.mangalam@uci.edu> <49A2F1E8.6030901@scalableinformatics.com>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: Reliability of bitmapped resync
+Date: Tue, 24 Feb 2009 06:59:10 +1100 (EST)
+Message-ID: <b2460d0414270e6a6be4c91ec2d5a071.squirrel@neil.brown.name>
+References: <20090223194019.GA3488@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49A2F1E8.6030901@scalableinformatics.com>
-Content-Disposition: inline
+In-Reply-To: <20090223194019.GA3488@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: landman@scalableinformatics.com
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Joe,
-
-Thanks for the reply and the hint, but the norecovery option fails due 
-to the superblock not being found.  Neil's comment seems to indicate 
-that there's a basic incompatibility in the way the NAS vendors 
-implemented XFS.  We may be hosed on this one (not my NAS/files - I'm 
-just trying to help some others in the group).  I will try the XFS 
-group tho.
-
-The mdadm part came thru like a champ tho - thanks!
-
-Another reason to stay away from these kind of gadgets (I actually 
-tried this device when it first came out and abandoned that approach 
-as too futzy, not nearly flexible enough and not administratable 
-enough).  As well, with all the big P3/p4 towers being given away for 
-free now, I can build one of these in an hour or so with one of the 
-SilImage cards and get a much more useful box for essentially the 
-cost of raw disk.
-
-Harry
-
-On Monday 23 February 2009, Joe Landman wrote:
-> Harry Mangalam wrote:
-> > Here's an unusual (long) tale of woe.
-
-> Hmmm... is it possible that the journal is external for the XFS
-> filesystem in question?  Could you try
+On Tue, February 24, 2009 6:40 am, Piergiorgio Sartor wrote:
+> Hi all,
 >
-> 	mount -o norecovery,ro /dev/md1 /mountpoint
+> I've a strange issue.
 >
-> Otherwise, could you dd the file system off there onto another
-> (large) partition, before you try xfs_repair
+> I've a PC with 2 HDs in RAID-10 f2 with bitmap.
+> There are actually 3 md devices, boot, swap and root.
+>
+> It happens that one SATA cable is/was flaky, so sometimes,
+> at boot, /dev/sdb does not show up.
+> The RAID starts in degraded mode, tracking the writes
+> in the bitmap.
+> On the next reboot, /dev/sdb is again there, so it is
+> possible to re-add it.
+> The md device resyncs what is to be resynced, very
+> quickly, due to the bitmap.
+>
+> Later, if I run a check, usually a lot of mismatches
+> show up.
+
+What exactly do you mean by "check".
+
+If you mean "look in /sys/block/md0/md/mismatch_cnt", then that is
+exactly what I would expect.  The resync found some differences, just
+as you would expect it to, and reported them.
+
+However if by "check" you mean:
+  echo check > /sys/block/md0/md/sync_action
+  mdadm --wait /dev/md0
+  cat /sys/block/md0/md/mismatch_cnt
+
+then I would not expect any mismatches, and the resync should have
+fixed them.
+
+If it is the later, that is a real concern and I will need to look into it.
+Please let me know exactly which kernel version and mdadm version you
+are running.
+
+Thanks,
+NeilBrown
 
 
-
--- 
-Harry Mangalam - Research Computing, NACS, E2148, Engineering Gateway, 
-UC Irvine 92697  949 824-0084(o), 949 285-4487(c)
----
-Good judgment comes from experience; 
-Experience comes from bad judgment. [F. Brooks.]
