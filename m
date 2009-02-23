@@ -1,47 +1,57 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Reliability of bitmapped resync
-Date: Tue, 24 Feb 2009 08:49:08 +1100 (EST)
-Message-ID: <16ff0082259ce384e30c4a7f9a0e66fb.squirrel@neil.brown.name>
-References: <20090223194019.GA3488@lazy.lzy>
-    <b2460d0414270e6a6be4c91ec2d5a071.squirrel@neil.brown.name>
-    <20090223201905.GA7585@lazy.lzy>
-    <e3d195aab8b8de113e146e2932996777.squirrel@neil.brown.name>
-    <20090223214016.GB18555@lazy.lzy>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: RAID-10 unbalanced reads
+Date: Mon, 23 Feb 2009 23:15:32 +0100
+Message-ID: <20090223221532.GA23542@lazy.lzy>
+References: <20090209202728.GA11996@lazy.lzy> <20090209231138.GB13450@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090223214016.GB18555@lazy.lzy>
+Content-Disposition: inline
+In-Reply-To: <20090209231138.GB13450@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, February 24, 2009 8:40 am, Piergiorgio Sartor wrote:
-> Hi,
->
->> I might have found something.  If the bitmap chunk size is smaller than
->> the raid10 chunk size, and the first bitmap chunk in a raid10 chunk is
->> clean, it might be skipping the remaining bitmap chunks in that
->> raid10 chunk.
->
-> the RAID-10 chunk is standard 64K, the bitmap
-> chunk should be 256K.
-> So, this does not seem to be the case, if I
-> got it correctly.
+Hi,
 
-OK.. In that case I cannot reproduce the problem.
+some updates.
 
+> > Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrtn
+> > sda              10.08       183.15       408.74     755018    1684972
+> > sda1              0.04         1.24         0.02       5118         66
+> > sda2             10.03       181.71       408.72     749071    1684880
+> > sdb              10.49       187.64       408.74     773532    1684972
+> > sdb1              0.03         1.17         0.02       4837         66
+> > sdb2             10.44       186.26       408.72     767832    1684880
+> > md1              62.95       367.26       391.79    1513976    1615112
+> > md0               0.02         0.18         0.00        724          8
+[...]
+> Anyway, I think the difference is too small to be of inportance
+> for the performance. Or did you notice a difference?
 
->
->> Can you please show me "--examine" and "--examine-bitmap" of one of the
->> devices in your array please.
->
-> OK, but you'll have to wait until tomorrow, I do
-> not have the PC here (it is an office PC).
+What about this:
 
-I'll wait for these details before I start hunting further.
+Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrtn
+sda               5.43        64.15        71.33     598692     665656
+sda1              0.01         0.15         0.01       1421         64
+sda2              5.42        63.95        71.32     596823     665592
+sdb               6.22       219.19        71.33    2045590     665656
+sdb1              0.29        67.16         0.01     626774         64
+sdb2              5.93       151.87        71.32    1417344     665592
+md1              12.56       129.09        57.25    1204696     534320
+md0               0.01         0.08         0.00        724          8
 
-Thanks,
-NeilBrown
+Now, I do not recall any particular reason why
+it should be like this (i.e. no resync or else),
+but it seems to me a bit too unbalanced.
 
+Could it be a problem with /dev/sdb?
+I run smart long tests weekly, but nothing special
+was reported, until now.
+
+bye,
+
+-- 
+
+piergiorgio
