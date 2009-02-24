@@ -1,52 +1,76 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: [mdadm git pull] imsm fixes and general external metadata
-	updates
-Date: Tue, 24 Feb 2009 08:57:33 +0100
-Message-ID: <20090224075733.GE19209@maude.comedia.it>
-References: <1232576408.2029.56.camel@dwillia2-linux.ch.intel.com> <18822.13389.938876.964972@notabene.brown> <1235404451.751.383.camel@firewall.xsintricity.com> <e9c3a7c20902231058x4196e688xa9091c72e31b1c4@mail.gmail.com> <1235418832.751.385.camel@firewall.xsintricity.com> <78a6226da1dee8c5b070b9ee30ee4705.squirrel@neil.brown.name>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: RAID-10 unbalanced reads
+Date: Tue, 24 Feb 2009 10:00:34 +0100
+Message-ID: <20090224090034.GA8051@rap.rap.dk>
+References: <20090209202728.GA11996@lazy.lzy> <20090209231138.GB13450@rap.rap.dk> <20090223221532.GA23542@lazy.lzy> <20090223225202.GA28505@rap.rap.dk> <20090223232415.GA24493@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <78a6226da1dee8c5b070b9ee30ee4705.squirrel@neil.brown.name>
+In-Reply-To: <20090223232415.GA24493@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Feb 24, 2009 at 07:16:06AM +1100, NeilBrown wrote:
->On Tue, February 24, 2009 6:53 am, Doug Ledford wrote:
->> Is XFS the only one that does the journal recovery on initial mount
->> read-only during the initfs step, or do other journaled fses do the same
->> thing?  I didn't think ext3 recovered the journal until you switch to a
->> read-write mount, but I guess I could be wrong.
->
->This from fs/ext3/super.c
->
->	if (EXT3_HAS_INCOMPAT_FEATURE(sb, EXT3_FEATURE_INCOMPAT_RECOVER)) {
->		if (sb->s_flags & MS_RDONLY) {
->			printk(KERN_INFO "EXT3-fs: INFO: recovery "
->					"required on readonly filesystem.\n");
->			if (really_read_only) {
->				printk(KERN_ERR "EXT3-fs: write access "
->					"unavailable, cannot proceed.\n");
->				return -EROFS;
->			}
->			printk (KERN_INFO "EXT3-fs: write access will "
->					"be enabled during recovery.\n");
->		}
->	}
->
->suggests that, unfortunately, you are.
->
-am i misreading or the above is just a check not to
-incur in further problems later?
+On Tue, Feb 24, 2009 at 12:24:15AM +0100, Piergiorgio Sartor wrote:
+> Hi,
+> 
+> > You think the sdb2 read rate of 151 blks/s vs sda2 63 blks/s is strange?
+> > Well, it does look strange. OTOH the tps is 
+> > 
+> > sdb2   5.93
+> > sda2   5.42 
+> > 
+> > Which is not so big a difference. 
+> 
+> Also the whole RAID tps somehow matches
+> the (sum of the) single devices.
 
-L.
+And is about equal +- 10 % for the two devices.
 
--- 
-Luca Berra -- bluca@comedia.it
-         Communication Media & Services S.r.l.
-  /"\
-  \ /     ASCII RIBBON CAMPAIGN
-   X        AGAINST HTML MAIL
-  / \
+The boot partition is most likely a raid1 partition, which is quite
+oriented towards a very uneven usage, theory will tell that if you are
+mostly reading sequentially, you are better off just reading from one
+device, as you can always read all content in the same time as it would
+take to only read hlaf of the content, because you have to skip data
+otherwise.
+
+
+> > what is sdb1 and sda1 used for? the fugures there seems even stranger.
+> > It also looks strnge that the sdb disk is the slower about 80 MB/s
+> > while sda is around 110 MB/s - and then sdb produces more than sda...
+> 
+> The first partion (sda1, sdb1) is the /boot,
+> around 100MB, the rest (sda2, sdb2) is the LVM
+> physical volume, around 320GB.
+> 
+> Also this looks strange:
+> 
+> Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrtn
+> sdb2              4.98       109.30        64.28    1444432     849528
+> md1              10.45        95.23        51.27    1258536     677608
+> 
+> sdb2 has more reads than the whole RAID it belongs,
+> but tps are OK...
+
+Depends on how you measure things. It could be that sdb2 has delivered
+some blocks that md1 did not use, and thus did not register as read.
+
+Are these numbers taken like just after a boot?
+Activity on /boot indicates this. You seldomly use /boot after booting.
+If so, it is a bit interesting that you have about 1/3 of the IO done in
+writing. Why is there so much wroting? I thought that booting was 
+almost only reading.
+
+And sdb2 reading should only be about 1/2 of total md1 reading, 
+the rest should be on sda2.
+> 
+> The only thing that *could* do something on the
+> raw devices is "smartd", I cannot think anything
+> else. Maybe I will disable it, for now...
+
+I think that would be a good idea for your testing.
+
+best regards
+keld
