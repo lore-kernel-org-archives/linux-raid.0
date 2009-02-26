@@ -1,51 +1,33 @@
-From: payment <payment@swhome.ru>
-Subject: Medical Assistance
-Date: Wed, 25 Feb 2009 21:38:59 -0500
-Message-ID: <dc9a275987d28074088698df7ec9fb42@medical.com>
+From: Chris Webb <chris@arachsys.com>
+Subject: Re: Assume-clean for md grow
+Date: Thu, 26 Feb 2009 14:54:42 +0000
+Message-ID: <20090226145442.GH17577@arachsys.com>
+References: <20090225142229.GI32722@arachsys.com> <c5fe66de938d528320cf21d8ca3c7a83.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <c5fe66de938d528320cf21d8ca3c7a83.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: dirk@informatik.uni-frankfurt.de, sale@ddci.dk, linux-raid@vger.kernel.org, elfchief@lupine.org, part9_1059214963@rtfm.mit.edu, techsports@farallon.com, callee@domain.com
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+NeilBrown <neilb@suse.de> writes:
 
-www.oxycodon.net
+> Or if you want to be slightly more subtle, remove the
+> 	if (mddev->pers)
+> 		return -EBUSY;
+> from resync_start_store.  Then before a grow that you want to be
+> --assume-clean, write into /sys/block/mdXX/md/resync_start the
+> number of sectors in the final raid1 array.
 
-Oxycodone is in a group of drugs called narcotic pain relievers. 
-It is similar to morphine.
+Hi Neil. Thanks for this suggestion: it looks fine for what we're looking to
+achieve. Interestingly, this will mean writing a smaller value that shown by
+a read from this file for an in-sync array, but will still work?
 
-Oxycodone is used to treat moderate to severe pain. The extended-release 
-form of this medication is for around-the-clock treatment of pain. It is 
-not for treating pain just after a surgery unless you were already taking 
-oxycodone before the surgery.
+I'll build a patched kernel and give it a go a little later on.
 
-You can get OXYCODONE 40mg, 80mg for cheapest price on the WEB!
-www.oxycodon.net
+Best wishes,
 
-NO RX REQUIRED, FAST & DISCREET SHIPPING, PLAIN PACKAGE.
-
-
-
-
-
-
-
-nestor begemotov ne tak strashen kvadrat kak ego narisoval malevich 
-vash kommentator sorval segodnya golos
-molodost prekrasna v lubom vozraste
-znay nashih - a to svoih ne uznaesh
-otechestvennye poezda - samye poezdatye poezda v mire
-molchanie - zoloto ne trat ego popustu
-my by borolis za nashi prava esli by eto vhodilo v nashi obyazannosti
-i ovcy cely i volki syty svetlaya pamyat pastuhu
-papuas papuasu drug tovarisch i korm
-a po mne pust hot vseh poubivaut lish by ne bylo voyny
-vokrug stolko vragov chto prihoditsya ne uzhinat godami
-ne vse to windows chto visit
-my pridem k vam na vyruchku esli est vyruchka
-smotrite chto delaetsya kantona bet onopko snachala nogoy potom rukoy da esche po lysoy golove
-chto delaut kuryaschie kogda kuryat  ubivaut v sebe loshad
-
-
+Chris.
