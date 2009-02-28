@@ -1,32 +1,76 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: Raid6 write performance
-Date: Fri, 27 Feb 2009 17:04:52 -0800
-Message-ID: <49A88DB4.40008@zytor.com>
-References: <49742E74.9090502@rabbit.us>
+From: Brad <brad46526@gmail.com>
+Subject: System hangs on raid md recovery/resync - revisit
+Date: Sat, 28 Feb 2009 11:32:15 +1000
+Message-ID: <da290bd50902271732m54a32ad6r5797f618f5af7d7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49742E74.9090502@rabbit.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Rabbitson <rabbit+list@rabbit.us>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Peter Rabbitson wrote:
-> Hi,
-> 
-> I am experimenting with raid6 on 4 drives on 2.6.27.11. The problem I am
-> having is that no matter what chunk size I use, the write benchmark
-> always comes out at single drive speed, although I should be seeing
-> double drive speed (read speed is at near 4x as expected).
+Hi.  I'd like to revisit a problem I put to the mailing list on the
+27th July 2008.
 
-I have no idea why you "should" be seeing double drive speed.  All
-drives have to be written, so you'd logically see single drive speed.
+My linux system hangs if I have a lengthy recovery of a raid-1
+device going on at the same time as any significant network
+traffic.  If I terminate my networking applications the re-sync
+succeeds; if I allow them to run then the re-sync will almost always
+hang the system.
 
-	-hpa
+My PC is about 1.5 years old; it has a Gigabyte GA-P35-DS4 motherboard
+with an Intel Core 2 Quad Q6600 CPU.  The motherboard
+has an Intel ICH9R northbridge with 6 SATA 2 ports and a 'Gigabyte'
+(JMicron 20360/20363) southbridge with 2 SATA 2 ports.  I have two
+500GB Western Digital SATA 2 internal disks, both on the ICH9R northbridge,
+as I used to get occasional SATA disconnects/errors if I had a disk under
+heavy load on the JMicron controller.  The two disks have 400GB
+partitions in a MD raid1 mirror.  I typically experience this problem when
+I plug in a third disk (also on the ICH9R controller) to synchronise as
+a backup procedure, but it also happens if I just have the two permanent
+disks synchronising between themselves.
 
--- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
+I'm running Linux  2.6.28.6.  The motherboard has a Realtek RTL8111/8168B
+gigabit ethernet controller which I have running in a 100Mbit full duplex
+link to my ADSL modem.  I'm using the kernel's standard r8169 driver for the
+network.
 
+If I have no significant network activity taking place (other than trivial
+traffic from named, ntpd and the like) then my md1 recoveries always
+succeed.  But if I have a program maxing out the connection to my ISP -
+about 160KB/sec down, 30KB/sec up - then the re-synchronisation will
+always end up hanging:
+
+o  disk I/O stops - the disk activity LED will stop flashing, iostat statistics
+    will drop to zero, 'cat /proc/mdstat' will show dwindling I/O speeds and
+    ever-increasing finish times (from 200 minutes to 30,000+ minutes!).
+
+o  any access to the filesystem I have mounted on top of the md1 device
+    hangs.
+
+o  access to OTHER filesystems is fine, and anything independent of the
+    hung filesystem works as normal.
+
+There are absolutely no errors reported by the system - nothing logged
+to the console and nothing logged via syslog (the /var/log filesystem
+is fully operational even while the recovering one is hung).
+
+Looking at /proc/interrupts I can see that the 'eth0' driver has an
+interrupt all to itself.
+
+I haven't had a single SATA disconnect error since I moved all my disks
+off the JMicron southbridge.  I can 'dd' each drive simultaneously with
+no errors and better than 70MB/sec throughput from each in parallel.
+
+Does anyone know of any condition which would cause the md1
+recovery process to silently hang like this?  Can I get some sort of
+debug/verbose log out of the raid software to work out why it's hanging?
+
+Has anyone ever experienced this sort of problem - md recovery
+'sensitivity' to network traffic? - on this motherboard?
+
+Thanks,
+
+
+Brad
