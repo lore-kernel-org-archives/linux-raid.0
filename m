@@ -1,63 +1,83 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Raid-5 Reshape Gone Bad
-Date: Mon, 2 Mar 2009 14:32:32 +1100 (EST)
-Message-ID: <3cc49e61d3c06311a24fd4a9ac1f4d00.squirrel@neil.brown.name>
-References: <39656.69.54.28.143.1235961738.squirrel@webmail.luckyy.com>
+From: Daniel Pittman <daniel@rimspace.net>
+Subject: Re: MD software RAID1 vs suspend-to-disk
+Date: Mon, 02 Mar 2009 14:40:30 +1100
+Message-ID: <87fxhwy4lt.fsf@rimspace.net>
+References: <87d4d17hgh.fsf@rimspace.net> <49AB2B65.6070102@anonymous.org.uk>
+	<87ocwky86o.fsf@rimspace.net>
+	<f28499db7337f052f84784a1967f3758.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <39656.69.54.28.143.1235961738.squirrel@webmail.luckyy.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brian Manning <luckyy@luckyy.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, March 2, 2009 1:42 pm, Brian Manning wrote:
-> I've been running a MD three-drive raid-5 for a while now with no problems
-> on a CentOS 5.2 i386 box.  I've attempted to add a fourth drive to the
-> array yesterday & grow it.  This is where things got ugly....
+"NeilBrown" <neilb@suse.de> writes:
+> On Mon, March 2, 2009 1:23 pm, Daniel Pittman wrote:
+>> John Robinson <john.robinson@anonymous.org.uk> writes:
+>>> On 01/03/2009 08:52, Daniel Pittman wrote:
+>>>
+>>>> I have a random desktop machine here, running Debian/sid with a
+>>>> 2.6.26 Debian kernel.  It has a two disk software RAID1, and
+>>>> apparently passes through a suspend/resume cycle correctly, but...
+
+[...]
+
+>> No, that appears to be about suspending and resuming access to the
+>> MD device while reconfiguring it; I don't /think/ that is accessed
+>> during a system-wide suspend/resume (aka hibernate, or s2disk) cycle.
+>>
+>> Certainly, it doesn't look like the path is invoked for that from my
+>> reading of the code.
 >
-> It began the reshape as expected, some hours later I rebooted the box for
-> another reason entirely, forgetting about the reshape that was still going
-> on.  But it was a clean shutdown process and md stopped just fine.  So I
-> wasn't too worried about it, I knew it was just pick up again once it
-> booted.
+> Correct, they are completely unrelated.
 >
-> After startup the kernel found the md, said it was to resume the
-> reshape... then it came time for the kernel to mount root.. and hung
-> scanning for Logical Volumes, I left it for over an hour, it never
-> proceeded past this stage.  Disk io light was off, nothing going on.
+> I have never tried hibernating to an md array, but I think others
+> have, though I don't have a lot of specifics.
 >
-> My entire OS save /boot is on the raid-5, split across several LVM2s
-> inside that md device.  It's always worked fine for me in the past.
+> One observation is that you really don't want resync to start before
+> the resume has completed.  For this reason we have the 'start_ro'
+> parameter.  Setting that to 1, e.g
 >
-> But now LVM is hanging on boot, I can't even get into single mode or
-> anything like that.  So I bring out the boot disc and go into rescue mode.
+>   echo 1 > /sys/module/md_mod/parameters/start_ro
 >
-> I check the raid status, everything looks okay, so I manually start the MD
-> again from the boot cd, and that fires up as expected, however.... when I
-> look at /proc/mdstat... the speed is 0KB/sec, and the ETA is growing by
-> 100's of minutes a second.
+> will mean that resync will not start until the first write to the
+> array.  The initrd should set this before assembling an md array to
+> load a resume image from.
+
+Ah.  Debian already do this; see:
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=415441
+(Actually, since you wrote in that bug thread you already know. :)
+
+Hmmm.  I have swap on LVM on MD, though, and I suspect that LVM writes
+to disk when it discovers and activates the volume groups...
+
+Let me try and find out.  Then I can go and be grumpy, but at least
+complain to the right people about this. :)
+
+[...]
+
+> It should be that your observed symtpom of "check reports 48800
+> mismatches" has nothing to do with hibernate/resume.
+
+OK.
+
+> Presumably you have swap on md/raid1 (as that is where hibenate
+> writes).  The nature of swap writeout is that it is entirely possible
+> for different data to be written to each device of a raid1 when a page
+> is swapped out.
 >
-> I let this go for about 2 hours, and nothing ever happens, speed is 0,
-> diskio light is off, nothing is happening.
+> However in that case, the data will never be read back in so the
+> apparent corruption is not a problem.
 
-I notice that your array has a chunksize of 1024K.
-That is big enough to cause an issue that was only resolved in mdadm-2.6.8,
-which I suspect you aren't using.
+Well, that is a relief, at least.
 
-If you
-  echo 1024 > /sys/block/md0/md/stripe_cache_size
-it might spring to life.
+> I would recommend that you run 'repair' before hibernating, to be sure
+> that the array is in-sync.  Then hibenate/resume and see if it is
+> still in sync.  I suspect it will be.
 
-I think the 1024 is right, but if it doesn't work try a larger number
-(e.g. 8192) just in case I got the math wrong.
+That seems reasonable; I will test it.
 
-And:  no, you cannot go back to a 3 drive array.  The transformation
-is currently one-way.
-
-NeilBrown
-
-
+Regards,
+        Daniel
 
