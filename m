@@ -1,191 +1,113 @@
-From: CoolCold <coolthecold@gmail.com>
-Subject: md raid1 check (resync) freeze on 2.6.25.2
-Date: Mon, 2 Mar 2009 15:31:44 +0300
-Message-ID: <f19d625d0903020431q4457348bl411ac3688e4d648b@mail.gmail.com>
-References: <f19d625d0903011759n65260856s476a53b0353e54a8@mail.gmail.com>
+From: <bmanning@sbschools.net>
+Subject: RE: Raid-5 Reshape Gone Bad
+Date: Mon, 2 Mar 2009 10:28:41 -0500
+Message-ID: <24AAD26C88B9534093235DD9C02F4D1702AABB7D@exchangesrvr.sbschools.net>
+References: <39656.69.54.28.143.1235961738.squirrel@webmail.luckyy.com> <3cc49e61d3c06311a24fd4a9ac1f4d00.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f19d625d0903011759n65260856s476a53b0353e54a8@mail.gmail.com>
+Content-class: urn:content-classes:message
+In-Reply-To: <3cc49e61d3c06311a24fd4a9ac1f4d00.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de
 List-Id: linux-raid.ids
 
-Hello!
+Neil,
 
-On Sunday my server hanged, but was not completely dead. I could ping
-it, but couldn't login via ssh. In monitoring I could see that server
-is still sending data to collectd agent on remote node, and what is
-more interesting, I've seen several cpus spending all time in iowait,
-and 2 drives were issuing a lot of read commands.
+Thanks for the tip.. It appears it might work.  I will try it tonight.
 
-My disk partitioning is: lvm over 2 raid1 arrays, md2 & md3.
+I had actually been working to recreate the situation in a vmware test
+bed, which I did successfully recreate.  And it suffered the same
+symptoms I had on the real hardware. When I tried your stripe_cache
+setting, it immediately began the process in my vm.
 
----- cut ----
-[07:09:49]root@maindb:~# pvs
- PV         VG    Fmt  Attr PSize   PFree
- /dev/md2   lvmdb lvm2 a-   134.65G 52.15G
- /dev/md3   lvmdb lvm2 a-   134.65G 52.15G
+(and you were right, the newest mdadm any of the resue cds I tried was
+2.6.7)
 
-[07:09:57]root@maindb:~# cat /proc/mdstat
-Personalities : [raid1]
-md2 : active raid1 sda3[0] sdc1[1]
-     141195200 blocks [2/2] [UU]
-
-md3 : active raid1 sdb3[0] sdd1[1]
-     141195200 blocks [2/2] [UU]
-
-md1 : active raid1 sda2[0] sdb2[1]
-     1951808 blocks [2/2] [UU]
-
-md0 : active raid1 sda1[0] sdb1[1]
-     489856 blocks [2/2] [UU]
-
-unused devices: <none>
------- end of cut ----
-
-Underlying hard drives and controller:
-
---- cut ---
-[    1.528456] aic94xx: found Adaptec AIC-9410W SAS/SATA Host Adapter,
-device 0000:04:02.0
-[    1.528544] scsi0 : aic94xx
-[    1.548948] aic94xx: Found sequencer Firmware version 1.1 (V17/10c6)
-[    1.597254] aic94xx: device 0000:04:02.0: SAS addr
-5003048000241770, PCBA SN ORG, 8 phys, 8 enabled phys, flash present,
-BIOS build 1822
-[    1.605186] scsi 0:0:0:0: Direct-Access     FUJITSU  MAX3147RC
-  0104 PQ: 0 ANSI: 3
-[    1.059426] scsi 0:0:1:0: Direct-Access     FUJITSU  MBA3147RC
-  0103 PQ: 0 ANSI: 5
-[    1.233381] scsi 0:0:2:0: Direct-Access     FUJITSU  MBA3147RC
-  0103 PQ: 0 ANSI: 5
-[    1.235496] scsi 0:0:3:0: Direct-Access     FUJITSU  MAX3147RC
-  0104 PQ: 0 ANSI: 3
---- end of cut ---
-
-Active reading occurred on sda3 & sdc1 (md2) while other drives were
-idling. That was strange and while i was thinking what it can be,
-server unhanged and let me in.
-
-When I logged in, I've seen:
-
-[02:15:10]coolcold@maindb:~$ cat /proc/mdstat
-Personalities : [raid1]
-md2 : active raid1 sda3[0] sdc1[1]
-     141195200 blocks [2/2] [UU]
-     [===================>.]  check = 97.0% (136972928/141195200)
-finish=39608.8min speed=1K/sec
-
-md3 : active raid1 sdb3[0] sdd1[1]
-     141195200 blocks [2/2] [UU]
-       resync=DELAYED
-
-md1 : active raid1 sda2[0] sdb2[1]
-     1951808 blocks [2/2] [UU]
-       resync=DELAYED
-
-md0 : active raid1 sda1[0] sdb1[1]
-     489856 blocks [2/2] [UU]
-
-unused devices: <none>
-
-[02:15:15]coolcold@maindb:~$ ps -e -o cmd,state --sort state|head
-CMD                         S
-[pdflush]                   D
-[md1_resync]                D
-[md2_resync]                D
-[md3_resync]                D
-/usr/bin/rsync -aH /banners D
-/bin/bash /root/scripts/bac D
-ls --color=auto -la         D
-ps -e -o cmd,state --sort s R
-init [2]                    S
-
-Array was in checking state, but speed was really strange - one day
-i've already seen such low speed, but don't remember on resync or on
-check and was machine the same or other, while kernel, most likely was
-the same - all my production machines has the same kernel.
-
-Referring to logs, array check was caused by check-array script -
-debian has auto check on every first Sunday of the month at 1:06 AM
-
-I've waited for sometime, but nothing changed, speed have not grown,
-processes were still in "D", so i've done "echo b >
-/proc/sysrq-trigger" to reboot it. After some time, ~ 20 minutes
-machine came back, looks like it was syncing raid before bringing up
-network, which is really strange for me, since i've thought resync
-should go in background and not interfere with normal operations:
-
---- cut ---
-Mar  1 02:50:06 maindb kernel: [    6.396342] raid1: raid set md3
-active with 2 out of 2 mirrors
-Mar  1 02:50:06 maindb kernel: [    5.154728] md: bind<sdc1>
-Mar  1 02:50:06 maindb kernel: [    6.431547] md: bind<sda3>
-Mar  1 02:50:06 maindb kernel: [    6.449480] raid1: raid set md2
-active with 2 out of 2 mirrors
-Mar  1 02:50:06 maindb kernel: [    6.451157] md: resync of RAID array md2
-Mar  1 02:50:06 maindb kernel: [    6.451224] md: minimum _guaranteed_
-speed: 1000 KB/sec/disk.
-Mar  1 02:50:06 maindb kernel: [    6.451294] md: using maximum
-available idle IO bandwidth (but not more than 200000 KB/sec) for
-resync.
-Mar  1 02:50:06 maindb kernel: [    6.451385] md: using 128k window,
-over a total of 141195200 blocks.
-Mar  1 02:50:06 maindb kernel: [    7.053347] kjournald starting.
-Commit interval 5 seconds
-Mar  1 02:50:06 maindb kernel: [    5.896644] EXT3 FS on md0, internal journal
-Mar  1 02:50:06 maindb kernel: [    5.896762] EXT3-fs: mounted
-filesystem with ordered data mode.
-Mar  1 02:50:06 maindb kernel: [    7.077823] JFS: nTxBlock = 8192,
-nTxLock = 65536
-Mar  1 02:50:06 maindb kernel: [  216.218519] md: md2: resync done.
-Mar  1 02:50:06 maindb kernel: [  221.486827] RAID1 conf printout:
-Mar  1 02:50:06 maindb kernel: [  221.486827]  --- wd:2 rd:2
-Mar  1 02:50:06 maindb kernel: [  221.486827]  disk 0, wo:0, o:1, dev:sda3
-Mar  1 02:50:06 maindb kernel: [  221.486827]  disk 1, wo:0, o:1, dev:sdc1
-Mar  1 02:50:06 maindb kernel: [  218.568293] NET: Registered protocol family 10
-Mar  1 02:50:06 maindb kernel: [  218.570284] lo: Disabled Privacy Extensions
-Mar  1 02:50:06 maindb kernel: [  218.570925] ADDRCONF(NETDEV_UP):
-eth0: link is not ready
-Mar  1 02:50:06 maindb kernel: [  218.571378] ADDRCONF(NETDEV_UP):
-eth1: link is not ready
-Mar  1 02:50:07 maindb kernel: [  219.209950] eth1: Link is Up 1000
-Mbps Full Duplex, Flow Control: None
-
----- end of cut ----
-
-Now I'm trying to understand what the problem was/is, and I've found
-Neil's Brown letter into lkml about fixed deadlocks (
-http://lkml.org/lkml/2008/3/2/175 ) in 2.6.25-rc2 . Not sure this is
-my case because:
-1) my kernel is 2.6.25-2-amd64
-
-[08:50:48]root@maindb:/var/
-log# cat /proc/version
-Linux version 2.6.25-2-amd64 (Debian 2.6.25-3) (maks@debian.org) (gcc
-version 4.1.3 20080420 (prerelease) (Debian 4.1.2-22)) #1 SMP Wed May
-14 14:04:05 UTC 2008
-
-and patches should be already in, since appeared in rc2
-
-2) you mention "Fix deadlock in md/raid1 and md/raid10 when handling a
-read error", but I can't find any log entries about drive seek error
-or such.
-
-And I have no ideas how to reproduce it, except get semi-broken hdd
-with predictable errors and try to play with read/resync
-
-Could you please help me to clarify what's going on ? May be I've
-found new bug... or just missing some hints in kernel log?
+Will let you know how it goes on the real thing tonight.
 
 
-http://web.coolcold.org/screens/mdraid/cpu_usage_iowait.png - cpu is busy in IO
-http://web.coolcold.org/screens/mdraid/sda_sda3_disk_traffic.png and
-http://web.coolcold.org/screens/mdraid/sdc1_disk_traffic.png - data
-reading on partitions in md2
 
--- 
-Best regards,
-[COOLCOLD-RIPN]
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of NeilBrown
+Sent: Sunday, March 01, 2009 10:33 PM
+To: Brian Manning
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Raid-5 Reshape Gone Bad
+
+On Mon, March 2, 2009 1:42 pm, Brian Manning wrote:
+> I've been running a MD three-drive raid-5 for a while now with no 
+> problems on a CentOS 5.2 i386 box.  I've attempted to add a fourth 
+> drive to the array yesterday & grow it.  This is where things got
+ugly....
+>
+> It began the reshape as expected, some hours later I rebooted the box 
+> for another reason entirely, forgetting about the reshape that was 
+> still going on.  But it was a clean shutdown process and md stopped 
+> just fine.  So I wasn't too worried about it, I knew it was just pick 
+> up again once it booted.
+>
+> After startup the kernel found the md, said it was to resume the 
+> reshape... then it came time for the kernel to mount root.. and hung 
+> scanning for Logical Volumes, I left it for over an hour, it never 
+> proceeded past this stage.  Disk io light was off, nothing going on.
+>
+> My entire OS save /boot is on the raid-5, split across several LVM2s 
+> inside that md device.  It's always worked fine for me in the past.
+>
+> But now LVM is hanging on boot, I can't even get into single mode or 
+> anything like that.  So I bring out the boot disc and go into rescue
+mode.
+>
+> I check the raid status, everything looks okay, so I manually start 
+> the MD again from the boot cd, and that fires up as expected, 
+> however.... when I look at /proc/mdstat... the speed is 0KB/sec, and 
+> the ETA is growing by 100's of minutes a second.
+>
+> I let this go for about 2 hours, and nothing ever happens, speed is 0,
+
+> diskio light is off, nothing is happening.
+
+I notice that your array has a chunksize of 1024K.
+That is big enough to cause an issue that was only resolved in
+mdadm-2.6.8, which I suspect you aren't using.
+
+If you
+  echo 1024 > /sys/block/md0/md/stripe_cache_size
+it might spring to life.
+
+I think the 1024 is right, but if it doesn't work try a larger number
+(e.g. 8192) just in case I got the math wrong.
+
+And:  no, you cannot go back to a 3 drive array.  The transformation is
+currently one-way.
+
+NeilBrown
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org More majordomo info
+at  http://vger.kernel.org/majordomo-info.html
+
+______________________________________________________________
+______________________________________________________________
+This email may contain information protected under the Family 
+Educational Rights and Privacy Act (FERPA) or the Health Insurance 
+Portability and Accountability Act (HIPAA).  If this email contains 
+confidential and/or privileged health or student information and you 
+are not entitled to access such information under FERPA or HIPAA, 
+federal regulations require that you destroy this email without 
+reviewing it and you may not forward it to anyone.
+
+
+--
+This message has been scanned for viruses and
+dangerous content by MailScanner, ClamAV and Bitdefender  and is
+believed to be clean.
+
