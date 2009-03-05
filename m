@@ -1,98 +1,70 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [mdadm git pull] support for removed disks / imsm updates
-Date: Wed, 4 Mar 2009 16:59:27 -0700
-Message-ID: <e9c3a7c20903041559udc4df4cpb4f2a8b63f4d08ad@mail.gmail.com>
-References: <1235779532.26302.32.camel@dwillia2-linux.ch.intel.com>
-	 <18863.943.962566.542421@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH] md: stop defining MAJOR_NR
+Date: Thu, 5 Mar 2009 13:41:30 +1100
+Message-ID: <18863.15322.43861.564018@notabene.brown>
+References: <20090303175843.GA27386@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18863.943.962566.542421@notabene.brown>
+In-Reply-To: message from Christoph Hellwig on Tuesday March 3
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Jacek Danecki <jacek.danecki@intel.com>, Ed Ciechanowski <ed.ciechanowski@intel.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Mar 4, 2009 at 3:41 PM, Neil Brown <neilb@suse.de> wrote:
-> On Friday February 27, dan.j.williams@intel.com wrote:
->> 2/ Support for handling removed disks as currently all container
->> manipulations fail once a live disk is hot-unplugged.
->
-> So this is when md thinks the device is in the array, but the device
-> has actually been removed so with the block/dev file is missing or
-> empty, or the status is not 'online'..
->
-> But we only check for that if mdmon is running. =A0For some reason th=
-at
-> seems odd, but I'm not really sure.
-> Why do we want to treat this case differently depending on whether
-> mdmon is running or not?
+On Tuesday March 3, hch@lst.de wrote:
+> MAJOR_NR was only required for magic in linux/blk.h in 2.4 or earlier
+> kernels, so no need to keep it around.
 
-The thinking, dubious or otherwise, is that if mdmon is not running
-then the administrator is in charge of managing the container, and
-would want to know about these errors.  I could not convince myself
-that we *always* wanted to ignore missing disks here... so I erred
-conservative.
+Thanks.  Applied.  Should be in -next shortly.
 
-However, we have already found another location where SKIP_GONE_DEVS
-is needed, so part of me wonders about just making it the default?
+NeilBrown
 
->> 3/ An initial mdmon man page
->> 4/ imsm auto layout support
->> 5/ Updates to --incremental in pursuit of assembling external metada=
-ta
->> arrays in the initramfs via udev events
->
-> Thanks.
->
-> Most look good.
-> My attention was caught by Create: wait_for container creation.
->
-> I vaguely remember trying that and it didn't work. =A0Something about
-> the md array not being in the right sort of state for udev to create =
-a
-> device, or something... =A0But I expect you have tested it so maybe I=
-'m
-> remembering something else.
-
-It corrected a test script failure here fwiw, but will keep an eye out
-for container creation deadlocks.
-
->>
->> The one "fix" that is missing from this update is to teach mdmon to =
-kick
->> "non-fresh" drives similar to what the kernel does at initial assemb=
-ly.
->> I dropped the attempt after realizing I would need to take an O_EXCL
->> open on the container in an awkward place. =A0I guess it is not nece=
-ssary,
->> but it is a quirk of containers that known failed drives can be allo=
-wed
->> back into the container.
->
-> I always thought it was a slightly odd quirk that if you had an array
-> with failed drives, then stopped and restarted the array, those faile=
-d
-> drives would no longer be there.
-> My feeling is that it doesn't matter a great deal one way or the
-> other. =A0The important thing is that when mdadm describes the state =
-of
-> an array, it describes it in a way that doesn't confuse people (an
-> area in which v1.x metadata lets us down at the moment).
-
-Ok, that clarifies things...
-
-[..]
-> For now, all these patches have been pulled and pushed to neil.brown.=
-name/mdadm
-
-Thanks!
-
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: linux-2.6/drivers/md/md.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/md/md.c	2009-02-27 17:44:32.351286370 +0100
+> +++ linux-2.6/drivers/md/md.c	2009-02-27 17:44:51.547286608 +0100
+> @@ -46,8 +46,6 @@
+>  #include <linux/file.h>
+>  #include <linux/delay.h>
+>  
+> -#define MAJOR_NR MD_MAJOR
+> -
+>  /* 63 partitions with the alternate major number (mdp) */
+>  #define MdpMinorShift 6
+>  
+> @@ -6464,13 +6462,13 @@ static void md_geninit(void)
+>  
+>  static int __init md_init(void)
+>  {
+> -	if (register_blkdev(MAJOR_NR, "md"))
+> +	if (register_blkdev(MD_MAJOR, "md"))
+>  		return -1;
+>  	if ((mdp_major=register_blkdev(0, "mdp"))<=0) {
+> -		unregister_blkdev(MAJOR_NR, "md");
+> +		unregister_blkdev(MD_MAJOR, "md");
+>  		return -1;
+>  	}
+> -	blk_register_region(MKDEV(MAJOR_NR, 0), 1UL<<MINORBITS, THIS_MODULE,
+> +	blk_register_region(MKDEV(MD_MAJOR, 0), 1UL<<MINORBITS, THIS_MODULE,
+>  			    md_probe, NULL, NULL);
+>  	blk_register_region(MKDEV(mdp_major, 0), 1UL<<MINORBITS, THIS_MODULE,
+>  			    md_probe, NULL, NULL);
+> @@ -6556,10 +6554,10 @@ static __exit void md_exit(void)
+>  	mddev_t *mddev;
+>  	struct list_head *tmp;
+>  
+> -	blk_unregister_region(MKDEV(MAJOR_NR,0), 1U << MINORBITS);
+> +	blk_unregister_region(MKDEV(MD_MAJOR,0), 1U << MINORBITS);
+>  	blk_unregister_region(MKDEV(mdp_major,0), 1U << MINORBITS);
+>  
+> -	unregister_blkdev(MAJOR_NR,"md");
+> +	unregister_blkdev(MD_MAJOR,"md");
+>  	unregister_blkdev(mdp_major, "mdp");
+>  	unregister_reboot_notifier(&md_notifier);
+>  	unregister_sysctl_table(raid_table_header);
