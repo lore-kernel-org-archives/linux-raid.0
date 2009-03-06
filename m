@@ -1,70 +1,44 @@
-From: PGNet <pgnet.trash+raid@gmail.com>
-Subject: /boot & non-"/" LVs on RAID-1 fail to mount in SingleUser mode; ok in
-	'normal' boot
-Date: Fri, 6 Mar 2009 13:22:03 -0800
-Message-ID: <dbd51810903061322u1fc299el4e45dfee513d9294@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 2.6.29-rc7] md: fix deadlock when stopping arrays
+Date: Fri, 06 Mar 2009 15:20:45 -0700
+Message-ID: <1236378045.26719.2.camel@dwillia2-linux.ch.intel.com>
+References: <20090305230615.9122.62640.stgit@dwillia2-linux.ch.intel.com>
+	 <18864.46162.353471.534054@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <18864.46162.353471.534054@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Danecki, Jacek" <jacek.danecki@intel.com>
 List-Id: linux-raid.ids
 
-(trying to convince myself whether this is a config prob, or a bug ...)
+On Thu, 2009-03-05 at 22:27 -0700, Neil Brown wrote:
+> Can you add 
+>    Cc: stable@kernel.org
+> at the bottom.  Then I'll pull it and send a pull request to Linus.  I
+> think it should go straight in.
 
-my openSUSE 11.1 has all its partitions on RAID-1
+Done.
 
-"/boot" is on an ext3 formatted partition,
+The following changes since commit 559595a985e106d2fa9f0c79b7f5805453fed593:
+  Linus Torvalds (1):
+        Merge branch 'merge' of git://git.kernel.org/.../benh/powerpc
 
-    grep boot /etc/fstab
-        /dev/md0   /boot   ext3   acl,user_xattr   1 2
+are available in the git repository at:
 
-other partitions are on LVs
+  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/md.git md-deadlock-fix
 
- pvs
-  PV         VG    Fmt  Attr PSize    PFree
-  /dev/md1   VGS   lvm2 a-   508.00M        0
-  /dev/md2   VG0   lvm2 a-    11.97G        0
-  /dev/md3   VG1   lvm2 a-   220.23G  178.23G
+Dan Williams (1):
+      md: fix deadlock when stopping arrays
 
- grep VG /etc/fstab
-  /dev/VG0/LV_ROOT        /           ext3  acl,user_xattr 1 1
-  /dev/mapper/VGS-LV_SWAP swap        swap  defaults       0 0
-  /dev/VG1/stor           /home/stor  ext3  defaults       0 2
-  /dev/VG1/work           /home/work  ext3  defaults       0 2
+ drivers/md/md.c |   30 ++++++++++++++++++------------
+ 1 files changed, 18 insertions(+), 12 deletions(-)
 
-unders 'normal' boot, it works fine.
 
-booting into single user mode, however, only "/" mounts/appears,
+Double check that it is commit 5fd3a17e.
 
- df -H
-  Filesystem              Size   Used  Avail Use% Mounted on
-  /dev/mapper/VG0-LV_ROOT  13G   4.5G   7.6G  37% /
-  sysfs                    13G   4.5G   7.6G  37% /sys
-  debugfs                  13G   4.5G   7.6G  37% /sys/kernel/debug
-  udev                    4.2G    95k   4.2G   1% /dev
-  devpts                  4.2G    95k   4.2G   1% /dev/pts
-  none                    135M      0   135M   0% /tmp
+Thanks,
+Dan
 
- -- /boot and the other VG1 LVs are missing :-/
-
-attempting to mount returns,
-
-    mount -a
-        mount: special device /dev/md0 does not exist
-        mount: special device /dev/VG1/stor does not exist
-        mount: special device /dev/VG1/work does not exist
-
-and, checking,
-
-    ls -al /boot
-
-it's, not suprisingly, (empty)
-
-how do i correctly set up so that "/boot" (and other, non-"/" parts, as above)
-is correctly mounted in single-user mode?
-
-is this a config problem on my part, a bug in md, or something else?
-
-thanks.
