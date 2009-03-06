@@ -1,7 +1,8 @@
-From: Anthony debeus <anthony.debeus@gmail.com>
-Subject: mdadm ntfs-3g
-Date: Fri, 6 Mar 2009 13:06:27 -0700
-Message-ID: <e7c6e7680903061206h43a8a278g1432ae84a124b7c0@mail.gmail.com>
+From: PGNet <pgnet.trash+raid@gmail.com>
+Subject: /boot & non-"/" LVs on RAID-1 fail to mount in SingleUser mode; ok in
+	'normal' boot
+Date: Fri, 6 Mar 2009 13:22:03 -0800
+Message-ID: <dbd51810903061322u1fc299el4e45dfee513d9294@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
@@ -10,31 +11,60 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sorry if this counts as a cross-post, I posted this comment on
-http://neil.brown.name/blog/20040607123837, but perhaps emailing was
-the best route to get help. Here's the problem/question:
+(trying to convince myself whether this is a config prob, or a bug ...)
 
-I've greatly enjoyed using mdadm, but have been puzzled by one piece
-of its behaviour. If used to to build a prexisting Windows Raid array
-with -build, e.g.:
+my openSUSE 11.1 has all its partitions on RAID-1
 
-mdadm -B -c 64 -l 1 -n 2 /dev/md2 /dev/hda1 /dev/hdb1
+"/boot" is on an ext3 formatted partition,
 
-where Windows has built a healthy RAID1 array on the first partitions
-of /dev/hda1 and bdb1, all seems to go well.
+    grep boot /etc/fstab
+        /dev/md0   /boot   ext3   acl,user_xattr   1 2
 
-The array is mountable with the kernel ntfs driver ro or rw. Using
-ntfs-3g, however, is impossible as apparently the device size is
-smaller than the volume size (as found by ntfsresize -i /dev/md2, for
-example, see the thread below)
+other partitions are on LVs
 
-Thinking this to be a ntfs-3g problem, I contacted the developer,
+ pvs
+  PV         VG    Fmt  Attr PSize    PFree
+  /dev/md1   VGS   lvm2 a-   508.00M        0
+  /dev/md2   VG0   lvm2 a-    11.97G        0
+  /dev/md3   VG1   lvm2 a-   220.23G  178.23G
 
-http://forum.ntfs-3g.org/viewtopic.php?f=3&t=1125
+ grep VG /etc/fstab
+  /dev/VG0/LV_ROOT        /           ext3  acl,user_xattr 1 1
+  /dev/mapper/VGS-LV_SWAP swap        swap  defaults       0 0
+  /dev/VG1/stor           /home/stor  ext3  defaults       0 2
+  /dev/VG1/work           /home/work  ext3  defaults       0 2
 
-but apparently they feel this is a mdadm problem. I did some testing,
-and the problem is independent of whether dmraid is in use or not.
-Searching around the web yields similar problems with Windows Raid-0
-and Raid-5 arrays, all with the same issue.
+unders 'normal' boot, it works fine.
 
-Any clues?
+booting into single user mode, however, only "/" mounts/appears,
+
+ df -H
+  Filesystem              Size   Used  Avail Use% Mounted on
+  /dev/mapper/VG0-LV_ROOT  13G   4.5G   7.6G  37% /
+  sysfs                    13G   4.5G   7.6G  37% /sys
+  debugfs                  13G   4.5G   7.6G  37% /sys/kernel/debug
+  udev                    4.2G    95k   4.2G   1% /dev
+  devpts                  4.2G    95k   4.2G   1% /dev/pts
+  none                    135M      0   135M   0% /tmp
+
+ -- /boot and the other VG1 LVs are missing :-/
+
+attempting to mount returns,
+
+    mount -a
+        mount: special device /dev/md0 does not exist
+        mount: special device /dev/VG1/stor does not exist
+        mount: special device /dev/VG1/work does not exist
+
+and, checking,
+
+    ls -al /boot
+
+it's, not suprisingly, (empty)
+
+how do i correctly set up so that "/boot" (and other, non-"/" parts, as above)
+is correctly mounted in single-user mode?
+
+is this a config problem on my part, a bug in md, or something else?
+
+thanks.
