@@ -1,75 +1,80 @@
-From: martin f krafft <madduck@debian.org>
-Subject: Re: Future of md multipath
-Date: Fri, 6 Mar 2009 16:17:15 +0100
-Message-ID: <20090306151715.GD6030@lapse.rw.madduck.net>
-References: <20090303180433.GA27569@lst.de> <18863.15828.150450.275712@notabene.brown> <20090305130017.GA1696@piper.oerlikon.madduck.net> <18864.46425.242906.213929@notabene.brown>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [PATCH 1/3] md: add 'size' as a personality method
+Date: Fri, 6 Mar 2009 17:15:51 +0100
+Message-ID: <20090306161551.GI32416@skl-net.de>
+References: <20090306002341.9882.61625.stgit@dwillia2-linux.ch.intel.com> <20090306002448.9882.88409.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="osDK9TLjxFScVI/L"
+	protocol="application/pgp-signature"; boundary="boAH8PqvUi1v1f55"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <18864.46425.242906.213929@notabene.brown>
+In-Reply-To: <20090306002448.9882.88409.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, jacek.danecki@intel.com
 List-Id: linux-raid.ids
 
 
---osDK9TLjxFScVI/L
+--boAH8PqvUi1v1f55
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-also sprach Neil Brown <neilb@suse.de> [2009.03.06.0632 +0100]:
-> > I understand that dm-multipath is more favourable, but unless
-> > there's a riskless way to convert mdadm multipath into dm-multipath
-> > on old systems, I don't think we have the option of deprecating it,
-> > unless deprecation lasts for several years.
->=20
-> Always the practical one, aren't you :-)
+On 17:24, Dan Williams wrote:
+> +raid10_size(mddev_t *mddev, sector_t sectors, int raid_disks)
+> +{
+> +	sector_t size;
+> +	int chunk_shift;
+> +	conf_t *conf =3D mddev_to_conf(mddev);
+> +	int chunk_size =3D mddev->chunk_size;
+> +
+> +	if (!raid_disks)
+> +		raid_disks =3D mddev->raid_disks;
+> +	if (!sectors)
+> +		sectors =3D mddev->dev_sectors;
+> +
+> +	chunk_shift =3D ffz(~chunk_size) - 9;
+> +	size =3D sectors >> chunk_shift;
+> +	sector_div(size, conf->far_copies);
+> +	size =3D size * raid_disks;
+> +	sector_div(size, conf->near_copies);
+> +
+> +	return size << chunk_shift;
+> +}
 
-Goes with the territory. Debian does not need to make long term
-support guarantees. They're inherent in our quality assurance,
-security support, and chaotic organisation. :)
+Is there a reason you are recomputing chunk_shift instead of using
+conf->chunk_shift.
 
-> I wonder how hard it would be to get mdadm to assemble a multipath
-> using the 'dm' code rather than the 'md' code....
-> Or to get the md layer in the kernel to hook in to the dm multipath
-> implementation.
+> +static sector_t
+> +raid5_size(mddev_t *mddev, sector_t sectors, int raid_disks)
+> +{
+> +	raid5_conf_t *conf =3D mddev_to_conf(mddev);
+> +	int chunk_size =3D mddev->chunk_size;
+> +
+> +	if (!sectors)
+> +		sectors =3D mddev->dev_sectors;
+> +	if (!raid_disks)
+> +		raid_disks =3D conf->previous_raid_disks;
+> +
+> +	sectors &=3D ~(chunk_size / 512 - 1);
 
-A migration isn't possible?
+Don't we need a cast to sector_t here?
 
-> I think it is probably worth putting in a printk now to say "You
-> should probably be using dm-multipath".  But we probably do need
-> to leave the code there for a while longer..
-
-Maybe it would be possible to disable creation of new multipath
-arrays, but still to support existing ones, insert the warning, and
-quote a fixed deprecation date, say, 5 years into the future?
-
+Andre
 --=20
- .''`.   martin f. krafft <madduck@d.o>      Related projects:
-: :'  :  proud Debian developer               http://debiansystem.info
-`. `'`   http://people.debian.org/~madduck    http://vcs-pkg.org
-  `-  Debian - when you have better things to do than fixing systems
-=20
-god is dead.
-    -- nietzsche
-nietzsche is dead.
-    -- god
-nietzsche is god.
-    -- dead
+The only person who always got his work done by Friday was Robinson Crusoe
 
---osDK9TLjxFScVI/L
-Content-Type: application/pgp-signature; name="digital_signature_gpg.asc"
-Content-Description: Digital signature (see http://martin-krafft.net/gpg/)
+--boAH8PqvUi1v1f55
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+Version: GnuPG v1.4.1 (GNU/Linux)
 
-iEYEARECAAYFAkmxPnsACgkQIgvIgzMMSnUQcQCff50ZnDoBq+g8Ek7c3O47GmPH
-vKcAnRIu96ezlsqesT+c4i7mJOH8Sn5k
-=F9q5
+iD8DBQFJsUw3Wto1QDEAkw8RArJzAKCgUKPNEACcLT/D/Gd/EGORmJzC6wCgq3wi
+HCvK16GRtnzQLvNmhMs+Jbg=
+=nCRW
 -----END PGP SIGNATURE-----
 
---osDK9TLjxFScVI/L--
+--boAH8PqvUi1v1f55--
