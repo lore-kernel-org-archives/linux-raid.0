@@ -1,33 +1,40 @@
-From: Bodo Eggert <7eggert@gmx.de>
-Subject: Re: Future of md multipath
-Date: Sat, 07 Mar 2009 21:08:54 +0100
-Message-ID: <E1Lg2pL-0003s6-4e@be1.7eggert.dyndns.org>
-References: <cbHe8-JR-9@gated-at.bofh.it> <ccbYG-sd-9@gated-at.bofh.it> <ccluS-7IV-3@gated-at.bofh.it>
-Reply-To: 7eggert@gmx.de
+From: Neil Brown <neilb@suse.de>
+Subject: [PULL-REQUEST] md: remove a potential deadlock.
+Date: Mon, 9 Mar 2009 10:12:49 +1100
+Message-ID: <18868.20721.541359.900702@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: martin f krafft <madduck@debian.org>, Neil Brown <neilb@suse.de>, Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: stable@kernel.org, linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-martin f krafft <madduck@debian.org> wrote:
-> also sprach Neil Brown <neilb@suse.de> [2009.03.05.0349 +0100]:
 
->> I'm in favour of deprecating it.  Whenever I hear of people using it I
->> suggest dm-multipath, but there could people I don't here about.
->> I think the upcoming mdadm-3.0 will need a compile-time option to
->> enable multipath, so people will only get it if they really really
->> want it.
-> 
-> How do you propose a distro to deal with this? Keep it enabled for
-> a certain time (with a deprecation warning?) and then just to close
-> the doors on users who still need it?
+Hi Linus / stable.
 
-What about reverting the patch for their kernels until they release the
-next major version, then drop it?
+ The following fixes a potential deadlock in md.  The possibility has
+ been around for a while, but only more recently has userspace code
+ been acting in a way that is likely to trigger it.
 
-For users who compile their kernels, add "Deprecated" to the description,
-and rename the CONFIG_.
+ It is tagged "Cc: <stable@kernel.org>" to make sure stable eventually
+ gets it.
 
+Thanks,
+NeilBrown
+
+
+The following changes since commit fec6c6fec3e20637bee5d276fb61dd8b49a3f9cc:
+  Linus Torvalds (1):
+        Linux 2.6.29-rc7
+
+are available in the git repository at:
+
+  git://neil.brown.name/md for-linus
+
+Dan Williams (1):
+      md: fix deadlock when stopping arrays
+
+ drivers/md/md.c |   30 ++++++++++++++++++------------
+ 1 files changed, 18 insertions(+), 12 deletions(-)
