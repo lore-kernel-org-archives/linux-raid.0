@@ -1,7 +1,7 @@
 From: Neil Brown <neilb@suse.de>
-Subject: ANNOUNCE: mdadm 3.0-devel3 - A tool for managing Soft RAID under Linux
-Date: Tue, 10 Mar 2009 17:02:45 +1100
-Message-ID: <18870.645.929352.583131@notabene.brown>
+Subject: ANNOUNCE: mdadm 2.6.9 - A tool for managing Soft RAID under Linux
+Date: Tue, 10 Mar 2009 17:02:05 +1100
+Message-ID: <18870.605.963621.55379@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -12,7 +12,7 @@ List-Id: linux-raid.ids
 
 
 I am pleased to announce the availability of
-   mdadm version 3.0-devel3
+   mdadm version 2.6.9
 
 It is available at the usual places:
    countrycode=xx.
@@ -21,104 +21,42 @@ and via git at
    git://neil.brown.name/mdadm
    http://neil.brown.name/git?p=mdadm
 
-Note that this is a "devel" release.  It should be used with
-caution, though it is believed to be close to release-candidate stage.
+mdadm is a tool for creating, managing and monitoring
+device arrays using the "md" driver in Linux, also
+known as Software RAID arrays.
 
-There have been numerous improvements and additions since -devel2.
-I think we are close to a release of 3.0.
+Release 2.6.9 contains various bug fixes.
+Clearly 2.6.8 was not the final 2.x release.
+Hopefully 2.6.9 will be as I don't want go to 2.7, and
+2.6.10 might be confusing (though I'll probably go that
+way if I need to).
 
-I need to add lots of tests to the test suite to test the new
-functionality.  And I need to review the man pages.
+New features will only appear in the 3.x series of which 3.0 will be
+release within a few months.
 
-After that I will release -rc1 followed by -final.
+Changelog Entries:
+ Bernhard Reutner-Fischer (1):
+      mdadm fix compilation for uClibc
+
+ Dustin Kirkland (2):
+      Fail overtly when asprintf fails to allocate memory
+      Typo in earlier patch : asprintf -> vasprintf
+
+ NeilBrown (11):
+      Allow --config in --incremental mode.
+      Kill:  Don't use O_EXCL when --force is used.
+      Assemble: don't assume array is 'clean' unless all devices think it is.
+      Assemble: set stripe_cache_size properly when restarting a reshape.
+      map: rebuild map if it doesn't exist.
+      Free mdstat data structures properly.
+      Fix the used device size in mdadm -D output.
+      Document 'max' option to --grow --size in --help output.
+      Fix possible crash if bitmap metadata is bad.
+      Monitor: send --test message for arrays in /proc/mdstat that aren't in mdadm.conf
+      super1: make sure max_dev grows enough when adding a device to an array.
 
 
-The following is the same introduction to 3.x as appeared in
-previous announcements.
+Development of mdadm is sponsored by
+ SUSE Labs, Novell Inc.
 
-
-Any testing and feedback will be greatly appreciated.
-
-NeilBrown  10th March 2009
-
-
-=====================================================
-
-The significant change which justifies the new major version number is
-that mdadm can now handle metadata updates entirely in userspace.
-This allows mdadm to support metadata formats that the kernel knows
-nothing about.
-
-Currently two such metadata formats are supported:
-  - DDF  - The SNIA standard format
-  - Intel Matrix - The metadata used by recent Intel ICH controlers.
-
-Also the approach to device names has changed significantly.
-
-If udev is installed on the system, mdadm will not create any devices
-in /dev.  Rather it allows udev to manage those devices.  For this to work
-as expected, the included udev rules file should be installed.
-
-If udev is not install, mdadm will still create devices and symlinks 
-as required, and will also remove them when the array is stopped.
-
-mdadm now requires all devices which do not have a standard name (mdX
-or md_dX) to live in the directory /dev/md/.  Names in this directory
-will always be created as symlinks back to the standard name in /dev.
-
-The man pages contain some information about the new externally managed
-metadata.  However see below for a more condensed overview.
-
-Externally managed metadata introduces the concept of a 'container'.
-A container is a collection of (normally) physical devices which have
-a common set of metadata.  A container is assembled as an md array, but
-is left 'inactive'.
-
-A container can contain one or more data arrays.  These are composed from
-slices (partitions?) of various devices in the container.
-
-For example, a 5 devices DDF set can container a RAID1 using the first
-half of two devices, a RAID0 using the first half of the remain 3 devices,
-and a RAID5 over thte second half of all 5 devices.
-
-A container can be created with
-
-   mdadm --create /dev/md0 -e ddf -n5 /dev/sd[abcde]
-
-or "-e imsm" to use the Intel Matrix Storage Manager.
-
-An array can be created within a container either by giving the
-container name and the only member:
-
-   mdadm -C /dev/md1 --level raid1 -n 2 /dev/md0
-
-or by listing the component devices
-
-   mdadm -C /dev/md2 --level raid0 -n 3 /dev/sd[cde]
-
-To assemble a container, it is easiest just to pass each device in turn to 
-mdadm -I
-
-  for i in /dev/sd[abcde]
-  do mdadm -I $i
-  done
-
-This will assemble the container and the components.
-
-Alternately the container can be assembled explicitly
-
-   mdadm -A /dev/md0 /dev/sd[abcde]
-
-Then the components can all be assembled with
-
-   mdadm -I /dev/md0
-
-For each container, mdadm will start a program called "mdmon" which will
-monitor the array and effect any metadata updates needed.  The array is
-initially assembled readonly. It is up to "mdmon" to mark the metadata 
-as 'dirty' and which the array to 'read-write'.
-
-The version 0.90 and 1.x metadata formats supported by previous
-versions for mdadm are still supported and the kernel still performs
-the same updates it use to.  The new 'mdmon' approach is only used for
-newly introduced metadata types.
+NeilBrown  28th November 2008
