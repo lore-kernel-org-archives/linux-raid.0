@@ -1,33 +1,34 @@
-From: "jzc-sina" <jinzc@sina.com>
-Subject: Re: [PATCH 00/18] Assorted md patches headed for 2.6.30
-Date: Tue, 10 Mar 2009 16:24:01 +0800
-Message-ID: <002b01c9a159$98cfb440$5f4610ac@uitmarketing>
+From: Mitchell Laks <mlaks@post.harvard.edu>
+Subject: raid 1 single drive failure. rebuilt with replacement drive.
+	missing 20G of data
+Date: Wed, 11 Mar 2009 22:10:24 -0400
+Message-ID: <20090312021024.GA31067@earthlink.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-aGkgbmVpbDoNCkkgZ2V0IHlvdXIgdGhlIGxhdGVzdCBwYXRjaGVzICh2Mi42LjI5LXJjNS0zMzUt
-ZzBhYzRlZTcpIGZyb20gZ2l0Oi8vbmVpbC5icm93bi5uYW1lL21kLg0KSSB3YW50IHRvIHRlc3Qg
-dGhlIGZ1bmN0aW9uIHRoYXQgc3dpdGNoIHJhaWQgZnJvbSByYWlkNSB0byByYWlkNi4NCkJ1dCBm
-aW5kIHNvbWUgcHJvYmxlbS4NCkkgY3JlYXRlIGEgcmFpZDYgd2hpY2ggaGFzIDQgZGlza3MsYW5k
-IHdyaXRlIHNvbWUgZmlsZXMgdG8gdGhpcyByYWlkNiAsbmV4dCxpIHJlbW92ZSB0d28gb2YgdGhl
-bS4NCmlmIHRoaXMgcmFpZDYgaXMgb2ssbm93IGkgY2FuIHJlYWQgdGhlIGZpbGVzIHRoYXQgaSBo
-YXZlIHdyaXR0ZW4gY29ycmVjdGx5Lg0KYnV0IGluIGZhY3QgdGhhdCBpIGNhbid0IHJlYWQgdGhl
-IGZpbGVzIG9rLm1heWJlIHRoZXJlIGlzIHNvbWUgZXJyb3IgYWJvdXQgcmFpZDYgaW4gdjIuNi4y
-OS1yYzUtMzM1LWcwYWM0ZWU3Lg0KDQoNClN0ZXBzIGkgaGF2ZSBkb25lIGFyZSBhcyBmb2xsb3dz
-DQoxLCBtZGFkbSAtQyAvZGV2L21kNiAtbCA2IC1uIDQgL2Rldi9zZGEgL2Rldi9zZGIgL2Rldi9z
-ZGMgL2Rldi9zZGQgLS1tZXRhZGF0YT0xLjAgLS1zaXplPTEwMDAwMDAgLWYNCjIsIHB2Y3JlYXRl
-IC9kZXYvbWQ2DQozLCB2Z2NyZWF0ZSBtZDZ2ZyAvZGV2L21kNg0KNCwgbHZjcmVhdGUgLUwgMjAw
-TSAtbiBtZDZsdiBtZDZ2Zw0KNSwgbWtmcy54ZnMgL2Rldi9tYXBwZXIvbWQ2dmctbWQ2bHYNCjYs
-IG1vdW50IC9kZXYvbWFwcGVyL21kNnZnLW1kNmx2IC90bXAgICAgIChpcyBvaykNCg0KNywgbWRh
-ZG0gLWYgL2Rldi9tZDYgL2Rldi9zZGEgL2Rldi9zZGIgIChmYXVsdHkgdHdvIGRpc2tzKQ0KOCwg
-bW91bnQgL2Rldi9tYXBwZXIvbWQ2dmctbWQ2bHYgL3RtcCAgIChub3cgY2FuJ3QgcmVhZCB0aGUg
-ZmlsZXN5c3RlbSBpbmZvcm1hdGlvbiBjb3JyZWN0bHkpDQoobW91bnQ6IFN0cnVjdHVyZSBuZWVk
-cyBjbGVhbmluZykgKHByaW50IHRoaXMgKQ0KDQp0aGFua3MgbmVpbCAscmlnaHQgaGVyZSB3YWl0
-aW5nIGZvciB5b3VyIGhlbHAgIQ0KDQp6aGVuY2hlbmdqaW4g
+Hi,
 
+I have used linux software raid1 for many years without any data loss. Now I seem to have a problem.
+
+I run a server with a pair of WD 400G drives that I keep in a raid 1 configuration. The raid became degraded
+but continued to function and continue to store data on the remaining  drive. 
+
+I simply replaced the faulty drive and rebuilt the raid. All seemed to be   ok,  however now I notice that 20G of data are 
+missing from the raid. I see this by comparing to a backup device that I mirror to every night.
+
+Any idea on how can this have happened? These are the most recent 20G of data. Perhaps this is the last 20 G since the 
+raid went bad,  however that the data was clearly stored initially - I see it on the backup device I copied to.
+
+Could the data   have been lost in the rebuild process? seems strange. Total of 220G of data on the device at present.
+
+The server is  running debian 4.0 (etch) which runs mdadm-2.5.6-9 (debian). Linux kernel 2.6.18-5-686
+
+
+Thanks
+
+Mitchell Laks
