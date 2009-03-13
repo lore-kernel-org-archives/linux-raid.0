@@ -1,58 +1,94 @@
 From: David Rees <drees76@gmail.com>
 Subject: Re: High IO Wait with RAID 1
-Date: Fri, 13 Mar 2009 11:37:02 -0700
-Message-ID: <72dbd3150903131137m1106e302oa6b36d1270bb10f@mail.gmail.com>
+Date: Fri, 13 Mar 2009 11:42:43 -0700
+Message-ID: <72dbd3150903131142q1da9c98dr3838eef1d5fd0970@mail.gmail.com>
 References: <7d86ddb90903121646q485ad12y90824a4c3fcc2dfd@mail.gmail.com>
 	 <20090313004802.GB29989@mint.phcomp.co.uk>
-	 <7d86ddb90903122021y5f4f0868na3f1944f87f77f4a@mail.gmail.com>
-	 <49BA8855.1030904@tmr.com>
-	 <7d86ddb90903131042i2bd6aba9o9bae3a99fdcdae5f@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7d86ddb90903131042i2bd6aba9o9bae3a99fdcdae5f@mail.gmail.com>
+In-Reply-To: <20090313004802.GB29989@mint.phcomp.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ryan Wagoner <rswagoner@gmail.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, Alain Williams <addw@phcomp.co.uk>, linux-raid@vger.kernel.org
+To: Alain Williams <addw@phcomp.co.uk>
+Cc: Ryan Wagoner <rswagoner@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Mar 13, 2009 at 10:42 AM, Ryan Wagoner <rswagoner@gmail.com> wrote:
-> Yeah I understand the basics to RAID and the effect cache has on
-> performance. It just seems that RAID 1 should offer better write
-> performance than a 3 drive RAID 5 array. However I haven't run the
-> numbers so I could be wrong.
+On Thu, Mar 12, 2009 at 5:48 PM, Alain Williams <addw@phcomp.co.uk> wro=
+te:
+> I suspect that the answer is 'no', however I am seeing problems with =
+raid 1
+> on CentOS 5.2 x86_64. The system worked nicely for some 2 months, the=
+n apparently
+> a disk died and it's mirror appeared to have problems before the firs=
+t could be
+> replaced. The motherboard & both disks have now been replaced (data s=
+aved with a bit
+> of luck & juggling). I have been assuming hardware, but there seems l=
+ittle else
+> to change... and you report long I/O waits that I saw and still see
+> (even when I don't see the kernel error messages below).
+>
+> Disks have been Seagate & Samsung, but now both ST31000333AS (1TB) as=
+ raid 1.
+> Adaptec AIC7902 Ultra320 SCSI adapter
+> aic7902: Ultra320 Wide Channel A, SCSI Id=3D7, PCI-X 101-133Mhz, 512 =
+SCBs
 
-If we just look at best case scenario write throughput where N is the
-number of disks in the array:
+Uh, how are you using SATA disks on a SCSI controller?
 
-RAID1 = 1
-RAID5 = N-1
+> I am seeing this sort of thing in /var/log/messages:
+> Mar 12 09:21:58 BFPS kernel: ata2.00: exception Emask 0x0 SAct 0x0 SE=
+rr 0x0 action 0x2 frozen
+> Mar 12 09:21:58 BFPS kernel: ata2.00: cmd ea/00:00:00:00:00/00:00:00:=
+00:00/a0 tag 0
+> Mar 12 09:21:58 BFPS kernel: =A0 =A0 =A0 =A0 =A0res 40/00:00:00:4f:c2=
+/00:00:00:00:00/00 Emask 0x4 (timeout)
+> Mar 12 09:21:58 BFPS kernel: ata2.00: status: { DRDY }
+> Mar 12 09:22:03 BFPS kernel: ata2: port is slow to respond, please be=
+ patient (Status 0xd0)
+> Mar 12 09:22:08 BFPS kernel: ata2: device not ready (errno=3D-16), fo=
+rcing hardreset
+> Mar 12 09:22:08 BFPS kernel: ata2: hard resetting link
+> Mar 12 09:22:08 BFPS kernel: ata2: SATA link up 3.0 Gbps (SStatus 123=
+ SControl 300)
+> Mar 12 09:22:39 BFPS kernel: ata2.00: qc timeout (cmd 0xec)
+> Mar 12 09:22:39 BFPS kernel: ata2.00: failed to IDENTIFY (I/O error, =
+err_mask=3D0x5)
+> Mar 12 09:22:39 BFPS kernel: ata2.00: revalidation failed (errno=3D-5=
+)
+> Mar 12 09:22:39 BFPS kernel: ata2: failed to recover some devices, re=
+trying in 5 secs
+> Mar 12 09:22:44 BFPS kernel: ata2: hard resetting link
 
-So for your case, your RAID5 array should be able to write up to twice
-as fast as your RAID1 array.  This could be enough to explain the
-difference in load.
+You are experiencing one of the following:
 
-Where RAID5 writes slow down significantly is if you are writing
-chunks smaller than the stripe size and the affected stripe isn't in
-cache and a read has to be performed before the write to recalculate
-the parity.
+Drive failure
+Cabling failure
+Controller failure
+Buggy drive firmware
+Buggy drivers
 
-But for your use case of transferring large VM images, this is
-unlikely to be the case.
+BTW, the ST31000333AS is one of the drives that were shipped with
+buggy firmware causing timeouts like the ones you are seeing.  You
+should check with Seagate that you have the latest firmware flashed to
+those drives.
 
-In otherwords, what you are experiencing (high IO wait writing to the
-RAID1 arrays) is to be expected.  From the stats you posted earlier,
-it looks like you are maxing out the write speed of the RAID1 arrays -
-thus you end up with high IO wait times.
+> Mar 12 09:28:07 BFPS smartd[3183]: Device: /dev/sdb, not capable of S=
+MART self-check
+> Mar 12 09:28:07 BFPS smartd[3183]: Sending warning via mail to root .=
+=2E.
+> Mar 12 09:28:07 BFPS smartd[3183]: Warning via mail to root: successf=
+ul
 
-> It could be just that I expect too much from RAID 1. I'm debating
-> about reloading the box with RAID 10 across 160GB of the 4 drives
-> (160GB and 320GB) and a mirror on the remaining space. In theory this
-> should gain me write performance.
+You really need to get SMART checking working as well.  Checking the
+status of the drive (try smartctl) may help you isolate your problem.
 
-Yes, a RAID10 with 4 disks will get you up to twice the write
-performance and up to 4 times the read performance without the
-drawback of small writes losing performance due to parity reads.
+Which, BTW, does not appear to be the same as the thread starter's.
 
 -Dave
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
