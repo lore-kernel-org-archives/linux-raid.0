@@ -1,54 +1,60 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Raid6 write performance
-Date: Fri, 13 Mar 2009 13:11:47 -0400
-Message-ID: <49BA93D3.9070700@tmr.com>
-References: <49742E74.9090502@rabbit.us> <49A88DB4.40008@zytor.com> <49AADFCA.2060406@rabbit.us>
+Subject: Re: Reliability of bitmapped resync
+Date: Fri, 13 Mar 2009 13:19:48 -0400
+Message-ID: <49BA95B4.9070605@tmr.com>
+References: <20090223194019.GA3488@lazy.lzy>	<b2460d0414270e6a6be4c91ec2d5a071.squirrel@neil.brown.name>	<20090223201905.GA7585@lazy.lzy>	<e3d195aab8b8de113e146e2932996777.squirrel@neil.brown.name>	<20090223214016.GB18555@lazy.lzy>	<16ff0082259ce384e30c4a7f9a0e66fb.squirrel@neil.brown.name>	<20090224193931.GB3470@lazy.lzy> <18852.44880.811967.897554@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49AADFCA.2060406@rabbit.us>
+In-Reply-To: <18852.44880.811967.897554@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Rabbitson <rabbit+list@rabbit.us>
-Cc: "H. Peter Anvin" <hpa@zytor.com>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Peter Rabbitson wrote:
-> H. Peter Anvin wrote:
+Neil Brown wrote:
+> On Tuesday February 24, piergiorgio.sartor@nexgo.de wrote:
 >   
->> Peter Rabbitson wrote:
->>     
->>> Hi,
->>>
->>> I am experimenting with raid6 on 4 drives on 2.6.27.11. The problem I am
->>> having is that no matter what chunk size I use, the write benchmark
->>> always comes out at single drive speed, although I should be seeing
->>> double drive speed (read speed is at near 4x as expected).
->>>       
->> I have no idea why you "should" be seeing double drive speed.  All
->> drives have to be written, so you'd logically see single drive speed.
+>> Hi,
 >>
 >>     
+>>> I'll wait for these details before I start hunting further.
+>>>       
+>> OK, here we are.
+>> Some forewords, the last disk to fail at boot was
+>> /dev/sda, this data was collected after a "clean"
+>> add of the /dev/sda3 to the RAID.
+>> This means the superblock was zeroed and the device
+>> added, so it should be clean.
+>>
+>>     
+> ....
 >
-> Because with properly adjusted elevators and chunk sizes it is reasonable
-> to expect N * S write speed from _any_ raid, where N is the number of
-> different data bearing disks in a stripe, and S is the speed of a hard
-> drive (assuming the drive speeds are equal). So for raid5 we have N =
-> numdisks-1, for raid6 numdisks-2, for raid10 -n4 -pf3 we get 4-(3-1) and
-> so on. I have personally verified the write behavior for raid10 and raid5,
-> don't see why it should/would be different for raid6.
+> Thanks a lot for that.
+>
+>   
+>> Now, one thing I do not understand, but maybe it is
+>> anyway OK, and it is this last line:
+>>
+>>           Bitmap : 945199 bits (chunks), 524289 dirty (55.5%)
+>>
+>> Because the array status was fully recovered (in sync)
+>> and /dev/sdb3 showed:
+>>
+>>           Bitmap : 945199 bits (chunks), 1 dirty (0.0%)
+>>
+>> Confirmed somehow by /proc/mdstat
+>>
+>> How it could be 55.5% dirty? Is this expected?
+>>     
+>
+> This is a bug.  Is fixed by a patch that I have queued for 2.6.30.  As
+> it doesn't cause a crash or data corruption, it doesn't get to jump
+> the queue.  It is very small though:
 >   
 
-That's a lovely theory, but in practice I have to say I have never 
-measured any such thing, using benchmarks intended to match real world, 
-or even heavy disk writes of a dumb nature like dd. I have tested 
-through the raw device, and through filesystems, tuned stripe-cache-size 
-and buffers, tried setting "stride" in ext3, all to conclude that with 
-raid5 I see essentially write speed of 1x a single drive and read speed 
-of (N-1)x as you suggest. Actually, looking at results for arrays with 
-more drives I can see a trend to write at (N/3)x speed, being a 
-seek-write for full chunk data and seef-read-write for XOR. But even on 
-six drive arrays I don't get near (N-1)x in measurable.
+Belatedly I ask if this went to -stable for 2.6.29.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
