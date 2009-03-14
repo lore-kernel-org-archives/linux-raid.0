@@ -1,30 +1,73 @@
-From: David Rees <drees76@gmail.com>
-Subject: Re: High IO Wait with RAID 1
-Date: Fri, 13 Mar 2009 15:10:04 -0700
-Message-ID: <72dbd3150903131510p58c85cf6pdd70f11330774958@mail.gmail.com>
-References: <407601c9a405$d3d76b6a$e90df40a@exchange.rackspace.com>
-	 <7d86ddb90903131129k2fa7d98ah636320c9a3b78259@mail.gmail.com>
+From: Ryan Wagoner <rswagoner@gmail.com>
+Subject: Re: rescue an alien md raid5
+Date: Sat, 14 Mar 2009 09:12:23 -0500
+Message-ID: <7d86ddb90903140712v358c170bq554e9fd963099a1@mail.gmail.com>
+References: <200902231013.46082.harry.mangalam@uci.edu>
+	 <49A345BC.1010206@gluesys.com>
+	 <200902241311.33442.harry.mangalam@uci.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7d86ddb90903131129k2fa7d98ah636320c9a3b78259@mail.gmail.com>
+In-Reply-To: <200902241311.33442.harry.mangalam@uci.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ryan Wagoner <rswagoner@gmail.com>
-Cc: David Lethe <david@santools.com>, Bill Davidsen <davidsen@tmr.com>, Alain Williams <addw@phcomp.co.uk>, linux-raid@vger.kernel.org
+To: Harry Mangalam <harry.mangalam@uci.edu>
+Cc: hgichon <kpkim@gluesys.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Mar 13, 2009 at 11:29 AM, Ryan Wagoner <rswagoner@gmail.com> wrote:
-> The other system with the onboard ICH controller exhibits the same
-> symptoms so I think my card is configured correctly. The interesting
-> part of this is I can kick off a resync on all three RAID volumes and
-> the system load and io wait is low. The rebuild rate is 85M/s for the
-> RAID 5 volume and 65M/s for the RAID 1 volumes, which is the max each
-> individual drive can do.
+No LVM has no correlation with mdadm. LVM stands for logical volume
+manager and lets you dynamically partition space on top of a real
+partition. Try running the commands below. If LVM is not used it won't
+affect the data on the disk. If it is used then your problem is
+resolved.
 
-The load from rebuilding the raid doesn't show up in system load or io
-wait as it's done in-kernel.  If you run some other IO intensive
-processes during the rebuild you should notice that it will run a bit
-slower and io wait should be higher.
-
--Dave
+On Tue, Feb 24, 2009 at 4:11 PM, Harry Mangalam <harry.mangalam@uci.edu=
+> wrote:
+> Hi kpkim,
+>
+> You mean that the system needs an lvm/lvm2 layer to properly interpre=
+t
+> the underlying filesystem?
+>
+> Possible, but the USR OSS list:
+> <http://www.usr.com/support/gpl/8700-OpenSourcesList-0.63_USR.xls>
+> doesn't list lvm as part of their implementation. =A0Would mdadm have
+> been able to detect this?
+>
+> Harry
+>
+>
+> On Monday 23 February 2009, hgichon wrote:
+>> I read USRobotics 8700 feature.
+>>
+>> # Supports linear storage use (all drives as one logical drive) or
+>> use multiple drives as primary and back-up storage
+>> # Dynamic logical drive sizing - Add an additional drive, when
+>> needed, and it will be integrated into the logical drive with no
+>> effect on data
+>>
+>> maybe... there is no lvm layer?
+>> try vgscan / vgchange -ay
+>>
+>> best regards.
+>
+>
+>
+> --
+> Harry Mangalam - Research Computing, NACS, E2148, Engineering Gateway=
+,
+> UC Irvine 92697 =A0949 824-0084(o), 949 285-4487(c)
+> ---
+> Good judgment comes from experience;
+> Experience comes from bad judgment. [F. Brooks.]
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
