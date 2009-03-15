@@ -1,94 +1,58 @@
-From: Harry Mangalam <harry.mangalam@uci.edu>
-Subject: Re: rescue an alien md raid5
-Date: Sat, 14 Mar 2009 10:15:58 -0800
-Message-ID: <200903141115.59105.harry.mangalam@uci.edu>
-References: <200902231013.46082.harry.mangalam@uci.edu> <200902241311.33442.harry.mangalam@uci.edu> <7d86ddb90903140712v358c170bq554e9fd963099a1@mail.gmail.com>
+From: Christopher Chen <muffaleta@gmail.com>
+Subject: Best Practices for a Virtualized Tira Misu md Setup
+Date: Sat, 14 Mar 2009 19:36:02 -0700
+Message-ID: <7bc80d500903141936p64bb0595xc07d4c8a4e9a3cdd@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7d86ddb90903140712v358c170bq554e9fd963099a1@mail.gmail.com>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Ryan Wagoner <rswagoner@gmail.com>
-Cc: hgichon <kpkim@gluesys.com>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I mentioned the OSS layer because if LVM was involved, it would have=20
-been included in the GPL'ed SW listing.
+I've got more layers than I can count.
 
-As noted, there's no LVM software in the GPL listing, and none of the=20
-commands were found on the NAS device - it can be telnet'ed into, but=20
-has a limited set of tools available (busybox and not much else=20
-besides mdadm)
+However, I wanted to ask about what people consider to be best
+practices regarding linux software raid over large numbers of drives
+(> 50). I'm not creating groups that big, but in the aggregate, I'm
+trying to have md manage about 56 spindles in 10 separate raid groups.
+The drives themselves are 73G fibre channel, 10k. The decision has
+been made to trade off sheer speed for capacity (since the drives
+themselves are small), so they are arranged in raid 5 groups rather
+than 10. Write speed has been good, relatively-- 160 MB/sec writes,
+110 MB/sec reads for a six disk group. Since the drives are pretty old
+at this point, I'm happy.
 
-I've since found out that the data on the RAID was a set of VM images=20
-that were recoverable via other means so I'm stopping my efforts to=20
-restore it. =20
+So far, I haven't seen any horrible problems with the md layer--after
+increasing the size of the stripe cache, my write speeds began to look
+normal.
 
-It was an interesting diversion tho and I thank all of the comments=20
-and suggestions.  I've learned a lot.
+Im setting this all up for iscsi export, in a DRBD and LVM sandwich.
+Obviously, I expect to lose some performance in the assemblage, but I
+did want to ask about readahead.
 
-Harry
+When you have a physical device that's part of an md that's part of a
+logical volume, not to mention a drbd pseudo block device, you've got
+a lot of places to set readahead using blockdev or lvchange. My
+question is--where would one start to adjust, if at all? Mdadm creates
+my md device with a readahead of chunk x 10. When I create a logical
+volume on top of that, should I adjust it's read ahead? For my base
+physical devices, should I leave them at 256 or change them?
 
+Obviously there's no right answer--if I increase the read-ahead too
+much, I'll kill my random performance, but given the fact that iscsi
+is going to throw a fair bit of latency into the loop, I may have to
+increase read ahead to get sequential read access up.
 
-On Saturday 14 March 2009, Ryan Wagoner wrote:
-> No LVM has no correlation with mdadm. LVM stands for logical volume
-> manager and lets you dynamically partition space on top of a real
-> partition. Try running the commands below. If LVM is not used it
-> won't affect the data on the disk. If it is used then your problem
-> is resolved.
->
-> On Tue, Feb 24, 2009 at 4:11 PM, Harry Mangalam=20
-<harry.mangalam@uci.edu> wrote:
-> > Hi kpkim,
-> >
-> > You mean that the system needs an lvm/lvm2 layer to properly
-> > interpret the underlying filesystem?
-> >
-> > Possible, but the USR OSS list:
-> > <http://www.usr.com/support/gpl/8700-OpenSourcesList-0.63_USR.xls
-> >> doesn't list lvm as part of their implementation. =A0Would mdadm
-> > have been able to detect this?
-> >
-> > Harry
-> >
-> > On Monday 23 February 2009, hgichon wrote:
-> >> I read USRobotics 8700 feature.
-> >>
-> >> # Supports linear storage use (all drives as one logical drive)
-> >> or use multiple drives as primary and back-up storage
-> >> # Dynamic logical drive sizing - Add an additional drive, when
-> >> needed, and it will be integrated into the logical drive with no
-> >> effect on data
-> >>
-> >> maybe... there is no lvm layer?
-> >> try vgscan / vgchange -ay
-> >>
-> >> best regards.
-> >
-> > --
-> > Harry Mangalam - Research Computing, NACS, E2148, Engineering
-> > Gateway, UC Irvine 92697 =A0949 824-0084(o), 949 285-4487(c)
-> > ---
-> > Good judgment comes from experience;
-> > Experience comes from bad judgment. [F. Brooks.]
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe
-> > linux-raid" in the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at
-> > =A0http://vger.kernel.org/majordomo-info.html
+And there's the initiator side to deal with.
 
+I just wanted to write the list and gather any thoughts people might have.
 
+Cheers
 
---=20
-Harry Mangalam - Research Computing, NACS, E2148, Engineering Gateway,=20
-UC Irvine 92697  949 824-0084(o), 949 285-4487(c)
----
-Good judgment comes from experience;=20
-Experience comes from bad judgment. [F. Brooks.]
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+cc
+
+-- 
+Chris Chen <muffaleta@gmail.com>
+"I want the kind of six pack you can't drink."
+-- Micah
