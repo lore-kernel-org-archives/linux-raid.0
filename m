@@ -1,92 +1,61 @@
-From: pg_mh@mh.to.sabi.co.UK (Peter Grandi)
-Subject: Re: Best Practices for a Virtualized Tira Misu md Setup
-Date: Sun, 15 Mar 2009 14:40:57 +0000
-Message-ID: <18877.4985.774328.594532@tree.ty.sabi.co.uk>
-References: <7bc80d500903141936p64bb0595xc07d4c8a4e9a3cdd@mail.gmail.com>
+From: David Greaves <david@dgreaves.com>
+Subject: sync_action repair not reading all sectors?
+Date: Mon, 16 Mar 2009 11:27:02 +0000
+Message-ID: <49BE3786.50809@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7bc80d500903141936p64bb0595xc07d4c8a4e9a3cdd@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I have a drive that has bad sectors. Lots of them.
 
-> I've got more layers than I can count.
+smartctl shows
+# 1  Short offline       Completed: read failure       20%       530
+1953520877
 
-Bad news in general... and not for performance.
+A simple ddrescue to this part of the disk gets this:
 
-> However, I wanted to ask about what people consider to be best
-> practices regarding linux software raid over large numbers of
-> drives (> 50).
+Mar 16 10:41:28 elm kernel: [ 8643.123397] sd 3:0:0:0: [sdd] 1953525168 512-byte
+hardware sectors (1000205 MB)
+<snip<>51/40:00:f0:5c:70/00:00:74:00:00/e0 Emask 0x9 (media error)
+Mar 16 10:41:29 elm kernel: [ 8644.190060] ata4.00: status: { DRDY ERR }
+Mar 16 10:41:29 elm kernel: [ 8644.190099] ata4.00: error: { UNC }
 
-Lustre? GlusterFS? :-).
-
-> I'm not creating groups that big,
-
-That's excellent, current record holder is the guy who inherited
-a 27 drive RAID6 (amazing news from America! ;->).
+and reports 30 or so errors.
 
 
-> but in the aggregate, I'm trying to have md manage about 56
-> spindles in 10 separate [ ... ] raid 5 groups rather than 10.
+mdstat tells me:
+md0 : active raid5 sdd1[0] sdb1[2] sda1[1]
+      1953519872 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
 
-Well, as long as you are happy with the downsides (check
-http://WWW.BAARF.com/).
+So sdd1 is in there.
 
-> Write speed has been good, relatively-- 160 MB/sec writes, 110
-> MB/sec reads for a six disk group. Since the drives are pretty
-> old at this point, I'm happy.
+/dev/sdd1 is the full disk
 
-Those numbers are a bit disappointing, but as long as it is
-enough for you...
+Now this is an enterprise class disk so I thought re-writing the blocks would be
+worthwhile as a first step. (It is being RMAed but if it succeeds then I'll stop
+the array, mirror/replace the disk and start the array - less risky than a resync).
 
-> So far, I haven't seen any horrible problems with the md
-> layer--after increasing the size of the stripe cache, my write
-> speeds began to look normal.
+However (two runs of)
+  echo repair > /sys/block/md0/md/sync_action
+ran to completion without *any* errors being reported in syslog (or anywhere)
 
-Uhm, that might indicate that you are testing the speed using
-something like 'dd' on the block device, which is not quite the
-same as when doing filesystem IO. Because file system code may
-not be so good at doing stripe aligned whole stripe writes.
+Is this expected? It suggests that it isn't reading the bad parts of sdd. It
+certainly hasn't repaired it and I'm none the wiser...
 
-> Im setting this all up for iscsi export, in a DRBD and LVM
-> sandwich.
+kernel is 2.6.26-1-xen-686
+mdadm v2.6.7.2
 
-DRBD is nice, but LVM is almost never useful, with only two
-minor exceptions.
 
-> Obviously, I expect to lose some performance in the
-> assemblage, but I did want to ask about readahead.
+PS
+This is an excellent place where I'd love to add in a new 'spare' disk, mirror
+sdd to the new disk (apart from the bad sectors which should come from the
+array) and then swap new for old.
+Instead I'm going to have to go degraded and sync - risking a sector read
+failure on one of the other drives and a restore from backup :(
 
-In general, especially in 2.6 kernels with the new demented
-block layer (and its marvelous plug/unplug logic among other
-"features") readhead (and elevators) seems to be in a rather
-poor state. So the only way ahead :-) I have found is random
-tweaking.
-
-During this I have found that for whatever reason MD does IO
-chunked in transactions of size equal to readhead, instead of
-rolling it, so a very large block device readhead seem to be a
-win.
-
-> When you have a physical device that's part of an md that's
-> part of a logical volume, not to mention a drbd pseudo block
-> device, you've got a lot of places to set readahead using
-> blockdev or lvchange.
-
-Welcome to "it is a pile of undocumented random hacks" world
-:-).
-
-> Obviously there's no right answer--if I increase the
-> read-ahead too much, I'll kill my random performance,
-
-Not necessarily -- if you have lots of memory to waste relative
-to the number of the IO flows you do.
-
-> but given the fact that iscsi is going to throw a fair bit of
-> latency into the loop, I may have to increase read ahead to
-> get sequential read access up. [ ... ]
-
-That is only going to help in some cases.
+-- 
+"Don't worry, you'll be fine; I saw it work in a cartoon once..."
