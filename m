@@ -1,32 +1,53 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: sync_action repair not reading all sectors?
-Date: Tue, 17 Mar 2009 10:49:41 +0000
-Message-ID: <49BF8045.50004@dgreaves.com>
-References: <49BE3786.50809@dgreaves.com>	 <F2C688D6A021E34CB81C0E631EF4C093014C015D@34093-C4-EVS1.exchange.rackspace.com> <87f94c370903160820j6d96ce36t743bfca4a1cfea5e@mail.gmail.com>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Why do I need 4 disks for a raid6?
+Date: Tue, 17 Mar 2009 20:12:38 +0100
+Message-ID: <87ljr4hsk9.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87f94c370903160820j6d96ce36t743bfca4a1cfea5e@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: David Lethe <david@santools.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-<snip suggestions to replace drive as I am doing that>
-Greg Freemyer wrote:
-> The question was how to keep the raid-5 as fault tolerant as possible
-> during the drive swapout.
+Hi,
 
-I think I'm resigned that that is an on-going feature request :)
+I'm wondering why the kernel requires a raid6 to have at least 4
+disks (of which at most 2 can be missing). Why not 3 disks?
 
-Actually I'm more worried that a clearly failing drive is not causing any
-problems for a sync_action = repair.
+I know a 1+2 disk raid6 sounds stupid but it has an use case. Let me
+demonstrate this with raid5:
 
-This drive is almost dead and md appears to think it is fine. How come?
+Lets say you started with a raid1 when you bought your computer:
+mdadm --create -l 1 -n 2 /dev/md9 /dev/sda1 /dev/sdb1
+a fewyears of use on /dev/md9 
 
-David
+Now you run out of space and went and bought a 3rd harddisk. What to
+do now?
+mdadm --stop /dev/md9
+mdadm --create -l 5 -n 2 --assume-clean /dev/sda1 /dev/sdb1
+mdadm --add /dev/md9 /dev/sdc1
+mdadm --grow -n 3 /dev/md9
+
+Voila. A nice raid5 with twice the size of the raid1. And no single
+point of failure like degrading the raid1 and copying the data to a
+degraded raid5 would have. And the downtime is just a minute to create
+the new superblock.
 
 
--- 
-"Don't worry, you'll be fine; I saw it work in a cartoon once..."
+
+Now for the raid6 case. With only 1 data disk and 2 parity disks all 3
+disks should end up with identical data on them. In effect this should
+be a 3 disk raid1, a cpu intensive one. Take an existing raid1 with 2
+or 3 disks, stop the raid, create a new raid6 ovver it with
+--assume-clean, start the raid. After that one can add more disks and
+--grow -n 4/5/6/.. the raid6 to a sensible size. Again without going
+into degraded mode.
+
+
+So back to my original question: Why does the kernel require 4 disks
+for a raid6 instead of allowing 3?
+
+MfG
+        Goswin
+
+PS: Please CC me on replies.
