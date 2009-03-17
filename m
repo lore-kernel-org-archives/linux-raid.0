@@ -1,53 +1,62 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Why do I need 4 disks for a raid6?
-Date: Tue, 17 Mar 2009 20:12:38 +0100
-Message-ID: <87ljr4hsk9.fsf@frosties.localdomain>
+From: Dan Williams <dan.j.williams@gmail.com>
+Subject: Re: sync_action repair not reading all sectors?
+Date: Tue, 17 Mar 2009 14:46:29 -0700
+Message-ID: <e9c3a7c20903171446w122ef4f5ibb127b9cbec3c636@mail.gmail.com>
+References: <49BE3786.50809@dgreaves.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <49BE3786.50809@dgreaves.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: David Greaves <david@dgreaves.com>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Mon, Mar 16, 2009 at 4:27 AM, David Greaves <david@dgreaves.com> wro=
+te:
+> I have a drive that has bad sectors. Lots of them.
+>
+> smartctl shows
+> # 1 =A0Short offline =A0 =A0 =A0 Completed: read failure =A0 =A0 =A0 =
+20% =A0 =A0 =A0 530
+> 1953520877
+>
+> A simple ddrescue to this part of the disk gets this:
+>
+> Mar 16 10:41:28 elm kernel: [ 8643.123397] sd 3:0:0:0: [sdd] 19535251=
+68 512-byte
+> hardware sectors (1000205 MB)
+> <snip<>51/40:00:f0:5c:70/00:00:74:00:00/e0 Emask 0x9 (media error)
+> Mar 16 10:41:29 elm kernel: [ 8644.190060] ata4.00: status: { DRDY ER=
+R }
+> Mar 16 10:41:29 elm kernel: [ 8644.190099] ata4.00: error: { UNC }
+>
+> and reports 30 or so errors.
+>
+>
+> mdstat tells me:
+> md0 : active raid5 sdd1[0] sdb1[2] sda1[1]
+> =A0 =A0 =A01953519872 blocks level 5, 64k chunk, algorithm 2 [3/3] [U=
+UU]
+>
+> So sdd1 is in there.
+>
+> /dev/sdd1 is the full disk
+>
 
-I'm wondering why the kernel requires a raid6 to have at least 4
-disks (of which at most 2 can be missing). Why not 3 disks?
+Are you sure?  Maybe I did the following math wrong, but it seems
+there is a chance this bad region is outside the raid array.
+/proc/mdstat says the array is 1953519872 blocks large which is
+3907039744 sectors.  For a three disk raid5 that means we are using
+1953519872 sectors per disk.  The failing sector of 1953520877 is 1005
+sectors outside the array, probably 942 assuming partition 1 starts at
+sector 63??
 
-I know a 1+2 disk raid6 sounds stupid but it has an use case. Let me
-demonstrate this with raid5:
-
-Lets say you started with a raid1 when you bought your computer:
-mdadm --create -l 1 -n 2 /dev/md9 /dev/sda1 /dev/sdb1
-a fewyears of use on /dev/md9 
-
-Now you run out of space and went and bought a 3rd harddisk. What to
-do now?
-mdadm --stop /dev/md9
-mdadm --create -l 5 -n 2 --assume-clean /dev/sda1 /dev/sdb1
-mdadm --add /dev/md9 /dev/sdc1
-mdadm --grow -n 3 /dev/md9
-
-Voila. A nice raid5 with twice the size of the raid1. And no single
-point of failure like degrading the raid1 and copying the data to a
-degraded raid5 would have. And the downtime is just a minute to create
-the new superblock.
-
-
-
-Now for the raid6 case. With only 1 data disk and 2 parity disks all 3
-disks should end up with identical data on them. In effect this should
-be a 3 disk raid1, a cpu intensive one. Take an existing raid1 with 2
-or 3 disks, stop the raid, create a new raid6 ovver it with
---assume-clean, start the raid. After that one can add more disks and
---grow -n 4/5/6/.. the raid6 to a sensible size. Again without going
-into degraded mode.
-
-
-So back to my original question: Why does the kernel require 4 disks
-for a raid6 instead of allowing 3?
-
-MfG
-        Goswin
-
-PS: Please CC me on replies.
+--
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
