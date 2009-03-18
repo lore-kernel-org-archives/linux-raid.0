@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 04/13] async_tx: kill needless module_{init|exit}
-Date: Wed, 18 Mar 2009 12:20:36 -0700
-Message-ID: <20090318192036.20375.67203.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 13/13] dmatest: add pq support
+Date: Wed, 18 Mar 2009 12:21:22 -0700
+Message-ID: <20090318192122.20375.85892.stgit@dwillia2-linux.ch.intel.com>
 References: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,133 +10,88 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: neilb@suse.de, Dan Williams <dan.j.wiliams@intel.com>, maciej.sosnowski@intel.com
+Cc: neilb@suse.de, maciej.sosnowski@intel.com
 List-Id: linux-raid.ids
 
-From: Dan Williams <dwillia2@dwillia2-mobl1.amr.corp.intel.com>
+Test raid6 p+q operations with a simple "always multiply by 1" q
+calculation to fit into dmatest's current destination verification
+scheme.
 
-If module_init and module_exit are nops then neither need to be defined.
-
-Signed-off-by: Dan Williams <dan.j.wiliams@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- crypto/async_tx/async_memcpy.c |   13 -------------
- crypto/async_tx/async_memset.c |   13 -------------
- crypto/async_tx/async_tx.c     |   17 +++--------------
- crypto/async_tx/async_xor.c    |   13 -------------
- 4 files changed, 3 insertions(+), 53 deletions(-)
+ drivers/dma/dmatest.c |   26 ++++++++++++++++++++++++++
+ 1 files changed, 26 insertions(+), 0 deletions(-)
 
-diff --git a/crypto/async_tx/async_memcpy.c b/crypto/async_tx/async_memcpy.c
-index ddccfb0..1a902b9 100644
---- a/crypto/async_tx/async_memcpy.c
-+++ b/crypto/async_tx/async_memcpy.c
-@@ -90,19 +90,6 @@ async_memcpy(struct page *dest, struct page *src, unsigned int dest_offset,
- }
- EXPORT_SYMBOL_GPL(async_memcpy);
+diff --git a/drivers/dma/dmatest.c b/drivers/dma/dmatest.c
+index a27c0fb..a5ee541 100644
+--- a/drivers/dma/dmatest.c
++++ b/drivers/dma/dmatest.c
+@@ -43,6 +43,11 @@ module_param(xor_sources, uint, S_IRUGO);
+ MODULE_PARM_DESC(xor_sources,
+ 		"Number of xor source buffers (default: 3)");
  
--static int __init async_memcpy_init(void)
--{
--	return 0;
--}
--
--static void __exit async_memcpy_exit(void)
--{
--	do { } while (0);
--}
--
--module_init(async_memcpy_init);
--module_exit(async_memcpy_exit);
--
- MODULE_AUTHOR("Intel Corporation");
- MODULE_DESCRIPTION("asynchronous memcpy api");
- MODULE_LICENSE("GPL");
-diff --git a/crypto/async_tx/async_memset.c b/crypto/async_tx/async_memset.c
-index 5b5eb99..631c3d0 100644
---- a/crypto/async_tx/async_memset.c
-+++ b/crypto/async_tx/async_memset.c
-@@ -83,19 +83,6 @@ async_memset(struct page *dest, int val, unsigned int offset,
- }
- EXPORT_SYMBOL_GPL(async_memset);
- 
--static int __init async_memset_init(void)
--{
--	return 0;
--}
--
--static void __exit async_memset_exit(void)
--{
--	do { } while (0);
--}
--
--module_init(async_memset_init);
--module_exit(async_memset_exit);
--
- MODULE_AUTHOR("Intel Corporation");
- MODULE_DESCRIPTION("asynchronous memset api");
- MODULE_LICENSE("GPL");
-diff --git a/crypto/async_tx/async_tx.c b/crypto/async_tx/async_tx.c
-index f21147f..c3b07cf 100644
---- a/crypto/async_tx/async_tx.c
-+++ b/crypto/async_tx/async_tx.c
-@@ -42,6 +42,9 @@ static void __exit async_tx_exit(void)
- 	dmaengine_put();
- }
- 
-+module_init(async_tx_init);
-+module_exit(async_tx_exit);
++static unsigned int pq_sources = 3;
++module_param(pq_sources, uint, S_IRUGO);
++MODULE_PARM_DESC(pq_sources,
++		"Number of p+q source buffers (default: 3)");
 +
- /**
-  * __async_tx_find_channel - find a channel to carry out the operation or let
-  *	the transaction execute synchronously
-@@ -59,17 +62,6 @@ __async_tx_find_channel(struct dma_async_tx_descriptor *depend_tx,
- 	return dma_find_channel(tx_type);
- }
- EXPORT_SYMBOL_GPL(__async_tx_find_channel);
--#else
--static int __init async_tx_init(void)
--{
--	printk(KERN_INFO "async_tx: api initialized (sync-only)\n");
--	return 0;
--}
--
--static void __exit async_tx_exit(void)
--{
--	do { } while (0);
--}
- #endif
+ /*
+  * Initialization patterns. All bytes in the source buffer has bit 7
+  * set, all bytes in the destination buffer has bit 7 cleared.
+@@ -227,6 +232,7 @@ static int dmatest_func(void *data)
+ 	dma_cookie_t		cookie;
+ 	enum dma_status		status;
+ 	enum dma_ctrl_flags 	flags;
++	u8			pq_coefs[pq_sources];
+ 	int			ret;
+ 	int			src_cnt;
+ 	int			dst_cnt;
+@@ -243,6 +249,11 @@ static int dmatest_func(void *data)
+ 	else if (thread->type == DMA_XOR) {
+ 		src_cnt = xor_sources | 1; /* force odd to ensure dst = src */
+ 		dst_cnt = 1;
++	} else if (thread->type == DMA_PQ) {
++		src_cnt = pq_sources | 1; /* force odd to ensure dst = src */
++		dst_cnt = 2;
++		for (i = 0; i < pq_sources; i++)
++			pq_coefs[i] = 1;
+ 	} else
+ 		goto err_srcs;
  
+@@ -310,6 +321,15 @@ static int dmatest_func(void *data)
+ 						      dma_dsts[0] + dst_off,
+ 						      dma_srcs, xor_sources,
+ 						      len, flags);
++		else if (thread->type == DMA_PQ) {
++			dma_addr_t dma_pq[dst_cnt];
++
++			for (i = 0; i < dst_cnt; i++)
++				dma_pq[i] = dma_dsts[i] + dst_off;
++			tx = dev->device_prep_dma_pq(chan, dma_pq, dma_srcs,
++						     pq_sources, pq_coefs,
++						     len, flags);
++		}
  
-@@ -295,9 +287,6 @@ void async_tx_quiesce(struct dma_async_tx_descriptor **tx)
- }
- EXPORT_SYMBOL_GPL(async_tx_quiesce);
+ 		if (!tx) {
+ 			for (i = 0; i < src_cnt; i++)
+@@ -446,6 +466,8 @@ static int dmatest_add_threads(struct dmatest_chan *dtc, enum dma_transaction_ty
+ 		op = "copy";
+ 	else if (type == DMA_XOR)
+ 		op = "xor";
++	else if (type == DMA_PQ)
++		op = "pq";
+ 	else
+ 		return -EINVAL;
  
--module_init(async_tx_init);
--module_exit(async_tx_exit);
--
- MODULE_AUTHOR("Intel Corporation");
- MODULE_DESCRIPTION("Asynchronous Bulk Memory Transactions API");
- MODULE_LICENSE("GPL");
-diff --git a/crypto/async_tx/async_xor.c b/crypto/async_tx/async_xor.c
-index 11978a8..0a56fae 100644
---- a/crypto/async_tx/async_xor.c
-+++ b/crypto/async_tx/async_xor.c
-@@ -298,19 +298,6 @@ async_xor_zero_sum(struct page *dest, struct page **src_list,
- }
- EXPORT_SYMBOL_GPL(async_xor_zero_sum);
+@@ -501,6 +523,10 @@ static int dmatest_add_channel(struct dma_chan *chan)
+ 		cnt = dmatest_add_threads(dtc, DMA_XOR);
+ 		thread_count += cnt > 0 ?: 0;
+ 	}
++	if (dma_has_cap(DMA_PQ, dma_dev->cap_mask)) {
++		cnt = dmatest_add_threads(dtc, DMA_PQ);
++		thread_count += cnt > 0 ?: 0;
++	}
  
--static int __init async_xor_init(void)
--{
--	return 0;
--}
--
--static void __exit async_xor_exit(void)
--{
--	do { } while (0);
--}
--
--module_init(async_xor_init);
--module_exit(async_xor_exit);
--
- MODULE_AUTHOR("Intel Corporation");
- MODULE_DESCRIPTION("asynchronous xor/xor-zero-sum api");
- MODULE_LICENSE("GPL");
+ 	pr_info("dmatest: Started %u threads using %s\n",
+ 		thread_count, dma_chan_name(chan));
 
