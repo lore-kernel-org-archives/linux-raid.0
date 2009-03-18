@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 03/13] async_tx: provide __async_inline for HAS_DMA=n archs
-Date: Wed, 18 Mar 2009 12:20:31 -0700
-Message-ID: <20090318192031.20375.37575.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 04/13] async_tx: kill needless module_{init|exit}
+Date: Wed, 18 Mar 2009 12:20:36 -0700
+Message-ID: <20090318192036.20375.67203.stgit@dwillia2-linux.ch.intel.com>
 References: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,55 +10,133 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: neilb@suse.de, maciej.sosnowski@intel.com
+Cc: neilb@suse.de, Dan Williams <dan.j.wiliams@intel.com>, maciej.sosnowski@intel.com
 List-Id: linux-raid.ids
 
-To allow an async_tx routine to be compiled away on HAS_DMA=n arch it
-needs to be declared __always_inline otherwise the compiler may emit
-code and cause a link error.
+From: Dan Williams <dwillia2@dwillia2-mobl1.amr.corp.intel.com>
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+If module_init and module_exit are nops then neither need to be defined.
+
+Signed-off-by: Dan Williams <dan.j.wiliams@intel.com>
 ---
- crypto/async_tx/async_xor.c |    7 ++-----
- include/linux/async_tx.h    |    9 +++++++++
- 2 files changed, 11 insertions(+), 5 deletions(-)
+ crypto/async_tx/async_memcpy.c |   13 -------------
+ crypto/async_tx/async_memset.c |   13 -------------
+ crypto/async_tx/async_tx.c     |   17 +++--------------
+ crypto/async_tx/async_xor.c    |   13 -------------
+ 4 files changed, 3 insertions(+), 53 deletions(-)
 
-diff --git a/crypto/async_tx/async_xor.c b/crypto/async_tx/async_xor.c
-index e1f1f28..11978a8 100644
---- a/crypto/async_tx/async_xor.c
-+++ b/crypto/async_tx/async_xor.c
-@@ -30,11 +30,8 @@
- #include <linux/raid/xor.h>
- #include <linux/async_tx.h>
+diff --git a/crypto/async_tx/async_memcpy.c b/crypto/async_tx/async_memcpy.c
+index ddccfb0..1a902b9 100644
+--- a/crypto/async_tx/async_memcpy.c
++++ b/crypto/async_tx/async_memcpy.c
+@@ -90,19 +90,6 @@ async_memcpy(struct page *dest, struct page *src, unsigned int dest_offset,
+ }
+ EXPORT_SYMBOL_GPL(async_memcpy);
  
--/* do_async_xor - dma map the pages and perform the xor with an engine.
-- * 	This routine is marked __always_inline so it can be compiled away
-- * 	when CONFIG_DMA_ENGINE=n
-- */
--static __always_inline struct dma_async_tx_descriptor *
-+/* do_async_xor - dma map the pages and perform the xor with an engine */
-+static __async_inline struct dma_async_tx_descriptor *
- do_async_xor(struct dma_chan *chan, struct page *dest, struct page **src_list,
- 	     unsigned int offset, int src_cnt, size_t len,
- 	     enum async_tx_flags flags,
-diff --git a/include/linux/async_tx.h b/include/linux/async_tx.h
-index 45f6297..5fc2ef8 100644
---- a/include/linux/async_tx.h
-+++ b/include/linux/async_tx.h
-@@ -21,6 +21,15 @@
- #include <linux/spinlock.h>
- #include <linux/interrupt.h>
+-static int __init async_memcpy_init(void)
+-{
+-	return 0;
+-}
+-
+-static void __exit async_memcpy_exit(void)
+-{
+-	do { } while (0);
+-}
+-
+-module_init(async_memcpy_init);
+-module_exit(async_memcpy_exit);
+-
+ MODULE_AUTHOR("Intel Corporation");
+ MODULE_DESCRIPTION("asynchronous memcpy api");
+ MODULE_LICENSE("GPL");
+diff --git a/crypto/async_tx/async_memset.c b/crypto/async_tx/async_memset.c
+index 5b5eb99..631c3d0 100644
+--- a/crypto/async_tx/async_memset.c
++++ b/crypto/async_tx/async_memset.c
+@@ -83,19 +83,6 @@ async_memset(struct page *dest, int val, unsigned int offset,
+ }
+ EXPORT_SYMBOL_GPL(async_memset);
  
-+/* on architectures without dma-mapping capabilities we need to ensure
-+ * that the asynchronous path compiles away
-+ */
-+#ifdef CONFIG_HAS_DMA
-+#define __async_inline
-+#else
-+#define __async_inline __always_inline
-+#endif
+-static int __init async_memset_init(void)
+-{
+-	return 0;
+-}
+-
+-static void __exit async_memset_exit(void)
+-{
+-	do { } while (0);
+-}
+-
+-module_init(async_memset_init);
+-module_exit(async_memset_exit);
+-
+ MODULE_AUTHOR("Intel Corporation");
+ MODULE_DESCRIPTION("asynchronous memset api");
+ MODULE_LICENSE("GPL");
+diff --git a/crypto/async_tx/async_tx.c b/crypto/async_tx/async_tx.c
+index f21147f..c3b07cf 100644
+--- a/crypto/async_tx/async_tx.c
++++ b/crypto/async_tx/async_tx.c
+@@ -42,6 +42,9 @@ static void __exit async_tx_exit(void)
+ 	dmaengine_put();
+ }
+ 
++module_init(async_tx_init);
++module_exit(async_tx_exit);
 +
  /**
-  * dma_chan_ref - object used to manage dma channels received from the
-  *   dmaengine core.
+  * __async_tx_find_channel - find a channel to carry out the operation or let
+  *	the transaction execute synchronously
+@@ -59,17 +62,6 @@ __async_tx_find_channel(struct dma_async_tx_descriptor *depend_tx,
+ 	return dma_find_channel(tx_type);
+ }
+ EXPORT_SYMBOL_GPL(__async_tx_find_channel);
+-#else
+-static int __init async_tx_init(void)
+-{
+-	printk(KERN_INFO "async_tx: api initialized (sync-only)\n");
+-	return 0;
+-}
+-
+-static void __exit async_tx_exit(void)
+-{
+-	do { } while (0);
+-}
+ #endif
+ 
+ 
+@@ -295,9 +287,6 @@ void async_tx_quiesce(struct dma_async_tx_descriptor **tx)
+ }
+ EXPORT_SYMBOL_GPL(async_tx_quiesce);
+ 
+-module_init(async_tx_init);
+-module_exit(async_tx_exit);
+-
+ MODULE_AUTHOR("Intel Corporation");
+ MODULE_DESCRIPTION("Asynchronous Bulk Memory Transactions API");
+ MODULE_LICENSE("GPL");
+diff --git a/crypto/async_tx/async_xor.c b/crypto/async_tx/async_xor.c
+index 11978a8..0a56fae 100644
+--- a/crypto/async_tx/async_xor.c
++++ b/crypto/async_tx/async_xor.c
+@@ -298,19 +298,6 @@ async_xor_zero_sum(struct page *dest, struct page **src_list,
+ }
+ EXPORT_SYMBOL_GPL(async_xor_zero_sum);
+ 
+-static int __init async_xor_init(void)
+-{
+-	return 0;
+-}
+-
+-static void __exit async_xor_exit(void)
+-{
+-	do { } while (0);
+-}
+-
+-module_init(async_xor_init);
+-module_exit(async_xor_exit);
+-
+ MODULE_AUTHOR("Intel Corporation");
+ MODULE_DESCRIPTION("asynchronous xor/xor-zero-sum api");
+ MODULE_LICENSE("GPL");
 
