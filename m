@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 05/13] async_tx: add sum check flags
-Date: Wed, 18 Mar 2009 12:20:41 -0700
-Message-ID: <20090318192041.20375.11506.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 09/13] iop-adma: P+Q self test
+Date: Wed, 18 Mar 2009 12:21:02 -0700
+Message-ID: <20090318192102.20375.36540.stgit@dwillia2-linux.ch.intel.com>
 References: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,182 +13,229 @@ To: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: neilb@suse.de, maciej.sosnowski@intel.com
 List-Id: linux-raid.ids
 
-Replace the flat zero_sum_result with a collection of flags to contain
-the P (xor) zero-sum result, and the soon to be utilized Q (raid6 reed
-solomon syndrome) zero-sum result.  Use the SUM_CHECK_ namespace instead
-of DMA_ since these flags will be used on non-dma-zero-sum enabled
-platforms.
+Even though the intent is to extend dmatest with P+Q tests there is
+still value in having an always-on sanity check to prevent an
+unintentionally broken driver from registering.
+
+This depends on raid6_pq.ko for verification, the side effect being that
+PQ capable channels will fail to register when raid6 is disabled.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- arch/arm/include/asm/hardware/iop3xx-adma.h |    5 +++--
- arch/arm/mach-iop13xx/include/mach/adma.h   |   12 +++++++-----
- crypto/async_tx/async_xor.c                 |    4 ++--
- drivers/md/raid5.c                          |    2 +-
- drivers/md/raid5.h                          |    5 +++--
- include/linux/async_tx.h                    |    2 +-
- include/linux/dmaengine.h                   |   21 ++++++++++++++++++++-
- 7 files changed, 37 insertions(+), 14 deletions(-)
+ drivers/dma/iop-adma.c |  182 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 181 insertions(+), 1 deletions(-)
 
-diff --git a/arch/arm/include/asm/hardware/iop3xx-adma.h b/arch/arm/include/asm/hardware/iop3xx-adma.h
-index 83e6ba3..26eefea 100644
---- a/arch/arm/include/asm/hardware/iop3xx-adma.h
-+++ b/arch/arm/include/asm/hardware/iop3xx-adma.h
-@@ -756,13 +756,14 @@ static inline void iop_desc_set_block_fill_val(struct iop_adma_desc_slot *desc,
- 	hw_desc->src[0] = val;
+diff --git a/drivers/dma/iop-adma.c b/drivers/dma/iop-adma.c
+index 0cdb333..2b014b6 100644
+--- a/drivers/dma/iop-adma.c
++++ b/drivers/dma/iop-adma.c
+@@ -31,6 +31,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/memory.h>
+ #include <linux/ioport.h>
++#include <linux/raid/raid6.h>
+ 
+ #include <mach/adma.h>
+ 
+@@ -1200,6 +1201,177 @@ out:
+ 	return err;
  }
  
--static inline int iop_desc_get_zero_result(struct iop_adma_desc_slot *desc)
-+static inline enum sum_check_flags
-+iop_desc_get_zero_result(struct iop_adma_desc_slot *desc)
- {
- 	struct iop3xx_desc_aau *hw_desc = desc->hw_desc;
- 	struct iop3xx_aau_desc_ctrl desc_ctrl = hw_desc->desc_ctrl_field;
- 
- 	iop_paranoia(!(desc_ctrl.tx_complete && desc_ctrl.zero_result_en));
--	return desc_ctrl.zero_result_err;
-+	return desc_ctrl.zero_result_err << SUM_CHECK_P;
- }
- 
- static inline void iop_chan_append(struct iop_adma_chan *chan)
-diff --git a/arch/arm/mach-iop13xx/include/mach/adma.h b/arch/arm/mach-iop13xx/include/mach/adma.h
-index 5722e86..1cd31df 100644
---- a/arch/arm/mach-iop13xx/include/mach/adma.h
-+++ b/arch/arm/mach-iop13xx/include/mach/adma.h
-@@ -428,18 +428,20 @@ static inline void iop_desc_set_block_fill_val(struct iop_adma_desc_slot *desc,
- 	hw_desc->block_fill_data = val;
- }
- 
--static inline int iop_desc_get_zero_result(struct iop_adma_desc_slot *desc)
-+static inline enum sum_check_flags
-+iop_desc_get_zero_result(struct iop_adma_desc_slot *desc)
- {
- 	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc;
- 	struct iop13xx_adma_desc_ctrl desc_ctrl = hw_desc->desc_ctrl_field;
- 	struct iop13xx_adma_byte_count byte_count = hw_desc->byte_count_field;
-+	enum sum_check_flags flags;
- 
- 	BUG_ON(!(byte_count.tx_complete && desc_ctrl.zero_result));
- 
--	if (desc_ctrl.pq_xfer_en)
--		return byte_count.zero_result_err_q;
--	else
--		return byte_count.zero_result_err;
-+	flags = byte_count.zero_result_err_q << SUM_CHECK_Q;
-+	flags |= byte_count.zero_result_err << SUM_CHECK_P;
++static int __devinit
++iop_adma_pq_zero_sum_self_test(struct iop_adma_device *device)
++{
++	#ifdef CONFIG_MD_RAID6_PQ
++	/* combined sources, software pq results, and extra hw pq results */
++	struct page *pq[IOP_ADMA_NUM_SRC_TEST+2+2];
++	/* ptr to the extra hw pq buffers defined above */
++	struct page **pq_hw = &pq[IOP_ADMA_NUM_SRC_TEST+2];
++	/* address conversion buffers (dma_map / page_address) */
++	void *pq_sw[IOP_ADMA_NUM_SRC_TEST+2];
++	dma_addr_t pq_src[IOP_ADMA_NUM_SRC_TEST];
++	dma_addr_t pq_dest[2];
 +
-+	return flags;
- }
- 
- static inline void iop_chan_append(struct iop_adma_chan *chan)
-diff --git a/crypto/async_tx/async_xor.c b/crypto/async_tx/async_xor.c
-index 0a56fae..d1a084e 100644
---- a/crypto/async_tx/async_xor.c
-+++ b/crypto/async_tx/async_xor.c
-@@ -238,7 +238,7 @@ static int page_is_zero(struct page *p, unsigned int offset, size_t len)
- struct dma_async_tx_descriptor *
- async_xor_zero_sum(struct page *dest, struct page **src_list,
- 	unsigned int offset, int src_cnt, size_t len,
--	u32 *result, enum async_tx_flags flags,
-+	enum sum_check_flags *result, enum async_tx_flags flags,
- 	struct dma_async_tx_descriptor *depend_tx,
- 	dma_async_tx_callback cb_fn, void *cb_param)
++	int i;
++	struct dma_async_tx_descriptor *tx;
++	struct dma_chan *dma_chan;
++	dma_cookie_t cookie;
++	u32 zero_sum_result;
++	int err = 0;
++	struct device *dev;
++
++	dev_dbg(device->common.dev, "%s\n", __func__);
++
++	for (i = 0; i < ARRAY_SIZE(pq); i++) {
++		pq[i] = alloc_page(GFP_KERNEL);
++		if (!pq[i]) {
++			while (i--)
++				__free_page(pq[i]);
++			return -ENOMEM;
++		}
++	}
++
++	/* Fill in src buffers */
++	for (i = 0; i < IOP_ADMA_NUM_SRC_TEST; i++) {
++		pq_sw[i] = page_address(pq[i]);
++		memset(pq_sw[i], 0x11111111 * (1<<i), PAGE_SIZE);
++	}
++	pq_sw[i] = page_address(pq[i]);
++	pq_sw[i+1] = page_address(pq[i+1]);
++
++	dma_chan = container_of(device->common.channels.next,
++				struct dma_chan,
++				device_node);
++	if (iop_adma_alloc_chan_resources(dma_chan) < 1) {
++		err = -ENODEV;
++		goto out;
++	}
++
++	dev = dma_chan->device->dev;
++
++	/* initialize the dests */
++	memset(page_address(pq_hw[0]), 0 , PAGE_SIZE);
++	memset(page_address(pq_hw[1]), 0 , PAGE_SIZE);
++
++	/* test pq */
++	pq_dest[0] = dma_map_page(dev, pq_hw[0], 0, PAGE_SIZE, DMA_FROM_DEVICE);
++	pq_dest[1] = dma_map_page(dev, pq_hw[1], 0, PAGE_SIZE, DMA_FROM_DEVICE);
++	for (i = 0; i < IOP_ADMA_NUM_SRC_TEST; i++)
++		pq_src[i] = dma_map_page(dev, pq[i], 0, PAGE_SIZE,
++					 DMA_TO_DEVICE);
++
++	tx = iop_adma_prep_dma_pq(dma_chan, pq_dest, pq_src,
++				  IOP_ADMA_NUM_SRC_TEST, (u8 *)raid6_gfexp,
++				  PAGE_SIZE,
++				  DMA_PREP_INTERRUPT |
++				  DMA_CTRL_ACK);
++
++	cookie = iop_adma_tx_submit(tx);
++	iop_adma_issue_pending(dma_chan);
++	msleep(8);
++
++	if (iop_adma_is_complete(dma_chan, cookie, NULL, NULL) !=
++		DMA_SUCCESS) {
++		dev_err(dev, "Self-test pq timed out, disabling\n");
++		err = -ENODEV;
++		goto free_resources;
++	}
++
++	raid6_call.gen_syndrome(IOP_ADMA_NUM_SRC_TEST+2, PAGE_SIZE, pq_sw);
++
++	if (memcmp(pq_sw[IOP_ADMA_NUM_SRC_TEST],
++		   page_address(pq_hw[0]), PAGE_SIZE) != 0) {
++		dev_err(dev, "Self-test p failed compare, disabling\n");
++		err = -ENODEV;
++		goto free_resources;
++	}
++	if (memcmp(pq_sw[IOP_ADMA_NUM_SRC_TEST+1],
++		   page_address(pq_hw[1]), PAGE_SIZE) != 0) {
++		dev_err(dev, "Self-test q failed compare, disabling\n");
++		err = -ENODEV;
++		goto free_resources;
++	}
++
++	/* test correct zero sum using the software generated pq values */
++	for (i = 0; i < IOP_ADMA_NUM_SRC_TEST + 2; i++)
++		pq_src[i] = dma_map_page(dev, pq[i], 0, PAGE_SIZE,
++					 DMA_TO_DEVICE);
++
++	zero_sum_result = ~0;
++	tx = iop_adma_prep_dma_pq_zero_sum(dma_chan, pq_src,
++					   IOP_ADMA_NUM_SRC_TEST + 2,
++					   (u8 *) raid6_gfexp, PAGE_SIZE,
++					   &zero_sum_result,
++					   DMA_PREP_INTERRUPT |
++					   DMA_CTRL_ACK);
++
++	cookie = iop_adma_tx_submit(tx);
++	iop_adma_issue_pending(dma_chan);
++	msleep(8);
++
++	if (iop_adma_is_complete(dma_chan, cookie, NULL, NULL) !=
++		DMA_SUCCESS) {
++		dev_err(dev, "Self-test pq-zero-sum timed out, disabling\n");
++		err = -ENODEV;
++		goto free_resources;
++	}
++
++	if (zero_sum_result != 0) {
++		dev_err(dev, "Self-test pq-zero-sum failed to validate: %x\n",
++			zero_sum_result);
++		err = -ENODEV;
++		goto free_resources;
++	}
++
++	/* test incorrect zero sum */
++	i = IOP_ADMA_NUM_SRC_TEST;
++	memset(pq_sw[i] + 100, 0, 100);
++	memset(pq_sw[i+1] + 200, 0, 200);
++	for (i = 0; i < IOP_ADMA_NUM_SRC_TEST + 2; i++)
++		pq_src[i] = dma_map_page(dev, pq[i], 0, PAGE_SIZE,
++					 DMA_TO_DEVICE);
++
++	zero_sum_result = 0;
++	tx = iop_adma_prep_dma_pq_zero_sum(dma_chan, pq_src,
++					   IOP_ADMA_NUM_SRC_TEST + 2,
++					   (u8 *) raid6_gfexp, PAGE_SIZE,
++					   &zero_sum_result,
++					   DMA_PREP_INTERRUPT |
++					   DMA_CTRL_ACK);
++
++	cookie = iop_adma_tx_submit(tx);
++	iop_adma_issue_pending(dma_chan);
++	msleep(8);
++
++	if (iop_adma_is_complete(dma_chan, cookie, NULL, NULL) !=
++		DMA_SUCCESS) {
++		dev_err(dev, "Self-test !pq-zero-sum timed out, disabling\n");
++		err = -ENODEV;
++		goto free_resources;
++	}
++
++	if (zero_sum_result != (SUM_CHECK_P_RESULT | SUM_CHECK_Q_RESULT)) {
++		dev_err(dev, "Self-test !pq-zero-sum failed to validate: %x\n",
++			zero_sum_result);
++		err = -ENODEV;
++		goto free_resources;
++	}
++
++free_resources:
++	iop_adma_free_chan_resources(dma_chan);
++out:
++	i = ARRAY_SIZE(pq);
++	while (i--)
++		__free_page(pq[i]);
++	return err;
++	#else
++	return -ENODEV; /* no raid6 support */
++	#endif
++}
++
++
+ static int __devexit iop_adma_remove(struct platform_device *dev)
  {
-@@ -289,7 +289,7 @@ async_xor_zero_sum(struct page *dest, struct page **src_list,
- 
- 		async_tx_quiesce(&tx);
- 
--		*result = page_is_zero(dest, offset, len) ? 0 : 1;
-+		*result = !page_is_zero(dest, offset, len) << SUM_CHECK_P;
- 
- 		async_tx_sync_epilog(cb_fn, cb_param);
+ 	struct iop_adma_device *device = platform_get_drvdata(dev);
+@@ -1350,13 +1522,21 @@ static int __devinit iop_adma_probe(struct platform_device *pdev)
  	}
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 21626cc..a102337 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -2521,7 +2521,7 @@ static void handle_parity_checks5(raid5_conf_t *conf, struct stripe_head *sh,
- 		 * we are done.  Otherwise update the mismatch count and repair
- 		 * parity if !MD_RECOVERY_CHECK
- 		 */
--		if (sh->ops.zero_sum_result == 0)
-+		if ((sh->ops.zero_sum_result & SUM_CHECK_P_RESULT) == 0)
- 			/* parity is correct (on disc,
- 			 * not in buffer any more)
- 			 */
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 2934ee0..cfb5006 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -2,6 +2,7 @@
- #define _RAID5_H
  
- #include <linux/raid/xor.h>
-+#include <linux/dmaengine.h>
+ 	if (dma_has_cap(DMA_XOR, dma_dev->cap_mask) ||
+-		dma_has_cap(DMA_MEMSET, dma_dev->cap_mask)) {
++	    dma_has_cap(DMA_MEMSET, dma_dev->cap_mask)) {
+ 		ret = iop_adma_xor_zero_sum_self_test(adev);
+ 		dev_dbg(&pdev->dev, "xor self test returned %d\n", ret);
+ 		if (ret)
+ 			goto err_free_iop_chan;
+ 	}
  
- /*
-  *
-@@ -213,8 +214,8 @@ struct stripe_head {
- 	 * @target - STRIPE_OP_COMPUTE_BLK target
- 	 */
- 	struct stripe_operations {
--		int		   target;
--		u32		   zero_sum_result;
-+		int		     target;
-+		enum sum_check_flags zero_sum_result;
- 	} ops;
- 	struct r5dev {
- 		struct bio	req;
-diff --git a/include/linux/async_tx.h b/include/linux/async_tx.h
-index 5fc2ef8..6370f32 100644
---- a/include/linux/async_tx.h
-+++ b/include/linux/async_tx.h
-@@ -119,7 +119,7 @@ async_xor(struct page *dest, struct page **src_list, unsigned int offset,
- struct dma_async_tx_descriptor *
- async_xor_zero_sum(struct page *dest, struct page **src_list,
- 	unsigned int offset, int src_cnt, size_t len,
--	u32 *result, enum async_tx_flags flags,
-+	enum sum_check_flags *result, enum async_tx_flags flags,
- 	struct dma_async_tx_descriptor *depend_tx,
- 	dma_async_tx_callback cb_fn, void *cb_fn_param);
- 
-diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
-index 1956c8d..cd17392 100644
---- a/include/linux/dmaengine.h
-+++ b/include/linux/dmaengine.h
-@@ -90,6 +90,25 @@ enum dma_ctrl_flags {
- };
- 
- /**
-+ * enum sum_check_bits - bit position of pq_check_flags
-+ */
-+enum sum_check_bits {
-+	SUM_CHECK_P = 0,
-+	SUM_CHECK_Q = 1,
-+};
++	if (dma_has_cap(DMA_PQ, dma_dev->cap_mask) &&
++	    dma_has_cap(DMA_PQ_ZERO_SUM, dma_dev->cap_mask)) {
++		ret = iop_adma_pq_zero_sum_self_test(adev);
++		dev_dbg(&pdev->dev, "pq self test returned %d\n", ret);
++		if (ret)
++			goto err_free_iop_chan;
++	}
 +
-+/**
-+ * enum pq_check_flags - result of async_{xor,pq}_zero_sum operations
-+ * @SUM_CHECK_P_RESULT - 1 if xor zero sum error, 0 otherwise
-+ * @SUM_CHECK_Q_RESULT - 1 if reed-solomon zero sum error, 0 otherwise
-+ */
-+enum sum_check_flags {
-+	SUM_CHECK_P_RESULT = (1 << SUM_CHECK_P),
-+	SUM_CHECK_Q_RESULT = (1 << SUM_CHECK_Q),
-+};
-+
-+
-+/**
-  * dma_cap_mask_t - capabilities bitmap modeled after cpumask_t.
-  * See linux/cpumask.h
-  */
-@@ -246,7 +265,7 @@ struct dma_device {
- 		unsigned int src_cnt, size_t len, unsigned long flags);
- 	struct dma_async_tx_descriptor *(*device_prep_dma_zero_sum)(
- 		struct dma_chan *chan, dma_addr_t *src,	unsigned int src_cnt,
--		size_t len, u32 *result, unsigned long flags);
-+		size_t len, enum sum_check_flags *result, unsigned long flags);
- 	struct dma_async_tx_descriptor *(*device_prep_dma_memset)(
- 		struct dma_chan *chan, dma_addr_t dest, int value, size_t len,
- 		unsigned long flags);
+ 	dev_printk(KERN_INFO, &pdev->dev, "Intel(R) IOP: "
+ 	  "( %s%s%s%s%s%s%s%s%s%s)\n",
+ 	  dma_has_cap(DMA_PQ, dma_dev->cap_mask) ? "pq " : "",
 
