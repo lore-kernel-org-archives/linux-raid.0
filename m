@@ -1,69 +1,45 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: [PATCH]  md: raid5 run(): Fix max_degraded for raid level 4.
-Date: Wed, 18 Mar 2009 13:53:24 +0100
-Message-ID: <20090318125324.GL17185@skl-net.de>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: Why do I need 4 disks for a raid6?
+Date: Wed, 18 Mar 2009 15:08:56 +0100
+Message-ID: <87wsam53ev.fsf@frosties.localdomain>
+References: <87ljr4hsk9.fsf@frosties.localdomain>
+	<20090318121825.GL32416@skl-net.de> <49C0EA5F.9070901@vshift.com>
+	<20090318123525.GK17185@skl-net.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Is40wmw6z7H9MUbF"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20090318123525.GK17185@skl-net.de> (Andre Noll's message of
+	"Wed, 18 Mar 2009 13:35:25 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Andre Noll <maan@systemlinux.org>
+Cc: Ruslan Sivak <russ@vshift.com>, Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Andre Noll <maan@systemlinux.org> writes:
 
---Is40wmw6z7H9MUbF
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> On 08:34, Ruslan Sivak wrote:
+>
+>> I would guess the reason is that it doesn't make sense.  As mentioned, if
+>> you are going to create a 3 disk raid 6, it's essentially a raid1 over 3
+>> disks, at which point you are better off with the raid-1.  I don't think
+>> there's a raid controller that would let you set something like this up, I
+>> don't see why the softraid should.
+>
+> Well, Goswin mentioned some pretty good reasons I think.
+>
+> Andre
+> -- 
+> The only person who always got his work done by Friday was Robinson Crusoe
 
-Hi Neil,
+Raid6 is the only level that requires such "sanity".
 
-I found this one while trying to figure out why 3-disk raid6 arrays
-aren't supported. It's an obvious and trivial bug fix but probably
-not important enough for stable as it only affects raid4.
+Here is another scenario: Say you have a 2 disk raid1 and now want to
+switch to 5 disk raid6. No problem, add 3 new disks, set up 1+2 disk
+raid6, pvmove the data (don't you love LVM?), stop the raid1, grow the
+raid6 to 5 disks.
 
-Regards
-Andre
+It is clear that 1+2 disk raid6 only makes sense as a transitory step
+but one that is usefull.
 
-commit ea30abef4d1f3aad635eb24db082f3531b573540
-Author: Andre Noll <maan@systemlinux.org>
-Date:   Wed Mar 18 13:43:08 2009 +0100
-
-    md: raid5 run(): Fix max_degraded for raid level 4.
-   =20
-    raid4 allows only one failed disk.
-   =20
-    Signed-off-by: Andre Noll <maan@systemlinux.org>
-
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index a76ef52..ceb5924 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4484,7 +4484,7 @@ static int run(mddev_t *mddev)
- 		 */
- 		sector_t here_new, here_old;
- 		int old_disks;
--		int max_degraded =3D (mddev->level =3D=3D 5 ? 1 : 2);
-+		int max_degraded =3D (mddev->level =3D=3D 6 ? 2 : 1);
-=20
- 		if (mddev->new_level !=3D mddev->level ||
- 		    mddev->new_layout !=3D mddev->layout ||
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---Is40wmw6z7H9MUbF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFJwO7EWto1QDEAkw8RAvEkAJ0cm86VVKfH75Xa+GMdRmy6JSyLAgCgiJq8
-FUoJUNCdixAmqreWsohVkMo=
-=PL9S
------END PGP SIGNATURE-----
-
---Is40wmw6z7H9MUbF--
+MfG
+        Goswin
