@@ -1,8 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 07/13] async_tx: add support for asynchronous RAID6 recovery
-	operations
-Date: Wed, 18 Mar 2009 12:20:52 -0700
-Message-ID: <20090318192052.20375.68157.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 11/13] dmatest: add xor test
+Date: Wed, 18 Mar 2009 12:21:12 -0700
+Message-ID: <20090318192112.20375.76447.stgit@dwillia2-linux.ch.intel.com>
 References: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -11,354 +10,436 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: neilb@suse.de, maciej.sosnowski@intel.com, Ilya Yanok <yanok@emcraft.com>, Yuri Tikhonov <yur@emcraft.com>
+Cc: neilb@suse.de, maciej.sosnowski@intel.com
 List-Id: linux-raid.ids
 
-[ Based on an original patch by Yuri Tikhonov ]
+Extend dmatest to launch a thread per supported operation type and add
+an xor test.
 
-This patch extends async_tx API with two routines for RAID6 recovery.
-
- async_r6_dd_recov() recovers after double data disk failure
-
- async_r6_dp_recov() recovers after D+P failure
-
-These routines make use of async_pq() which is fast in the asynchronous
-case, but much slower than raid6_2data_recov() and raid6_datap_recov()
-in the synchronous case.  The ASYNC_TX_ASYNC_ONLY flag is used to test
-early for the presence of a raid6 offload engine before committing to
-the asynchronous path.
-
-Signed-off-by: Yuri Tikhonov <yur@emcraft.com>
-Signed-off-by: Ilya Yanok <yanok@emcraft.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- crypto/async_tx/Kconfig         |    5 +
- crypto/async_tx/Makefile        |    1 
- crypto/async_tx/async_r6recov.c |  272 +++++++++++++++++++++++++++++++++++++++
- include/linux/async_tx.h        |   12 ++
- 4 files changed, 290 insertions(+), 0 deletions(-)
- create mode 100644 crypto/async_tx/async_r6recov.c
+ drivers/dma/dmatest.c |  274 ++++++++++++++++++++++++++++++++++---------------
+ 1 files changed, 189 insertions(+), 85 deletions(-)
 
-diff --git a/crypto/async_tx/Kconfig b/crypto/async_tx/Kconfig
-index cb6d731..0b56224 100644
---- a/crypto/async_tx/Kconfig
-+++ b/crypto/async_tx/Kconfig
-@@ -18,3 +18,8 @@ config ASYNC_PQ
- 	tristate
- 	select ASYNC_CORE
+diff --git a/drivers/dma/dmatest.c b/drivers/dma/dmatest.c
+index e190d8b..224acf4 100644
+--- a/drivers/dma/dmatest.c
++++ b/drivers/dma/dmatest.c
+@@ -38,6 +38,11 @@ module_param(max_channels, uint, S_IRUGO);
+ MODULE_PARM_DESC(max_channels,
+ 		"Maximum number of channels to use (default: all)");
  
-+config ASYNC_R6RECOV
-+	tristate
-+	select ASYNC_CORE
-+	select ASYNC_PQ
++static unsigned int xor_sources = 3;
++module_param(xor_sources, uint, S_IRUGO);
++MODULE_PARM_DESC(xor_sources,
++		"Number of xor source buffers (default: 3)");
 +
-diff --git a/crypto/async_tx/Makefile b/crypto/async_tx/Makefile
-index 1b99265..0ed8f13 100644
---- a/crypto/async_tx/Makefile
-+++ b/crypto/async_tx/Makefile
-@@ -3,3 +3,4 @@ obj-$(CONFIG_ASYNC_MEMCPY) += async_memcpy.o
- obj-$(CONFIG_ASYNC_MEMSET) += async_memset.o
- obj-$(CONFIG_ASYNC_XOR) += async_xor.o
- obj-$(CONFIG_ASYNC_PQ) += async_pq.o
-+obj-$(CONFIG_ASYNC_R6RECOV) += async_r6recov.o
-diff --git a/crypto/async_tx/async_r6recov.c b/crypto/async_tx/async_r6recov.c
-new file mode 100644
-index 0000000..90cdec6
---- /dev/null
-+++ b/crypto/async_tx/async_r6recov.c
-@@ -0,0 +1,272 @@
-+/*
-+ *	Copyright(c) 2007 Yuri Tikhonov <yur@emcraft.com>
-+ *	Copyright(c) 2009 Intel Corporation
-+ *
-+ *	Developed for DENX Software Engineering GmbH
-+ *
-+ *	Asynchronous RAID-6 recovery calculations ASYNC_TX API.
-+ *
-+ *	based on async_xor.c code written by:
-+ *		Dan Williams <dan.j.williams@intel.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License as published by the Free
-+ * Software Foundation; either version 2 of the License, or (at your option)
-+ * any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc., 51
-+ * Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-+ *
-+ */
-+#include <linux/kernel.h>
-+#include <linux/interrupt.h>
-+#include <linux/dma-mapping.h>
-+#include <linux/raid/pq.h>
-+#include <linux/async_tx.h>
-+
-+/**
-+ * async_r6_dd_recov - attempt to calculate two data misses using dma engines.
-+ * @disks: number of disks in the RAID-6 array
-+ * @bytes: size of strip
-+ * @faila: first failed drive index
-+ * @failb: second failed drive index
-+ * @ptrs: array of pointers to strips (last two must be p and q, respectively)
-+ * @flags: ASYNC_TX_ACK, ASYNC_TX_DEP_ACK
-+ * @depend_tx: depends on the result of this transaction.
-+ * @cb: function to call when the operation completes
-+ * @cb_param: parameter to pass to the callback routine
-+ */
-+struct dma_async_tx_descriptor *
-+async_r6_dd_recov(int disks, size_t bytes, int faila, int failb,
-+		  struct page **ptrs, enum async_tx_flags flags,
-+		  struct dma_async_tx_descriptor *depend_tx,
-+		  dma_async_tx_callback cb, void *cb_param)
-+{
-+	struct dma_async_tx_descriptor *tx = NULL;
-+	struct page *lptrs[disks];
-+	unsigned char lcoef[disks-4];
-+	int i = 0, k = 0;
-+	uint8_t bc[2];
-+	dma_async_tx_callback lcb = NULL;
-+	void *lcb_param = NULL;
-+
-+	/* Assume that failb > faila */
-+	if (faila > failb)
-+		swap(faila, failb);
-+
-+	/* Try to compute missed data asynchronously. */
-+	if (disks == 4) {
-+		/*
-+		 * Pxy and Qxy are zero in this case so we already have
-+		 * P+Pxy and Q+Qxy in P and Q strips respectively.
-+		 */
-+		tx = depend_tx;
-+		lcb = cb;
-+		lcb_param = cb_param;
-+		goto do_mult;
-+	}
-+
-+	/*
-+	 * (1) Calculate Qxy and Pxy:
-+	 * Qxy = A(0)*D(0) + ... + A(n-1)*D(n-1) + A(n+1)*D(n+1) + ... +
-+	 *	 A(m-1)*D(m-1) + A(m+1)*D(m+1) + ... + A(disks-1)*D(disks-1),
-+	 * where n = faila, m = failb.
-+	 */
-+	for (i = 0, k = 0; i < disks - 2; i++) {
-+		if (i != faila && i != failb) {
-+			lptrs[k] = ptrs[i];
-+			lcoef[k] = raid6_gfexp[i];
-+			k++;
-+		}
-+	}
-+
-+	lptrs[k] = ptrs[faila];
-+	lptrs[k+1] = ptrs[failb];
-+	tx = async_pq(lptrs, 0, k, lcoef, bytes,
-+		      ASYNC_TX_ASYNC_ONLY|(flags & ASYNC_TX_DEP_ACK),
-+		      depend_tx, NULL, NULL);
-+	if (!tx) {
-+		/* jump to optimized synchronous path */
-+		if (flags & ASYNC_TX_ASYNC_ONLY)
-+			return NULL;
-+		goto ddr_sync;
-+	}
-+
-+	/*
-+	 * The following operations will 'damage' P/Q strips;
-+	 * so now we condemned to move in an asynchronous way.
-+	 */
-+
-+	/* (2) Calculate Q+Qxy */
-+	lptrs[0] = ptrs[disks-1];
-+	lptrs[1] = ptrs[failb];
-+	tx = async_xor(lptrs[0], lptrs, 0, 2, bytes,
-+		       ASYNC_TX_XOR_DROP_DST|ASYNC_TX_DEP_ACK, tx, NULL, NULL);
-+
-+	/* (3) Calculate P+Pxy */
-+	lptrs[0] = ptrs[disks-2];
-+	lptrs[1] = ptrs[faila];
-+	tx = async_xor(lptrs[0], lptrs, 0, 2, bytes,
-+		       ASYNC_TX_XOR_DROP_DST|ASYNC_TX_DEP_ACK, tx, NULL, NULL);
-+
-+do_mult:
-+	/*
-+	 * (4) Compute (P+Pxy) * Bxy. Compute (Q+Qxy) * Cxy. XOR them and get
-+	 *  faila.
-+	 * B = (2^(y-x))*((2^(y-x) + {01})^(-1))
-+	 * C = (2^(-x))*((2^(y-x) + {01})^(-1))
-+	 * B * [p] + C * [q] -> [failb]
-+	 */
-+	bc[0] = raid6_gfexi[failb-faila];
-+	bc[1] = raid6_gfinv[raid6_gfexp[faila]^raid6_gfexp[failb]];
-+
-+	lptrs[0] = ptrs[disks - 2];
-+	lptrs[1] = ptrs[disks - 1];
-+	lptrs[2] = NULL;
-+	lptrs[3] = ptrs[failb];
-+	tx = async_pq(lptrs, 0, 2, bc, bytes, ASYNC_TX_DEP_ACK, tx, NULL, NULL);
-+
-+	/* (5) Compute failed Dy using recovered [failb] and P+Pnm in [p] */
-+	lptrs[0] = ptrs[disks-2];
-+	lptrs[1] = ptrs[failb];
-+	lptrs[2] = ptrs[faila];
-+	tx = async_xor(lptrs[2], lptrs, 0, 2, bytes,
-+		       ASYNC_TX_XOR_ZERO_DST|ASYNC_TX_DEP_ACK, tx,
-+		       lcb, lcb_param);
-+
-+	if (disks == 4) {
-+		if (flags & ASYNC_TX_ACK)
-+			async_tx_ack(tx);
-+		return tx;
-+	}
-+
-+	/* (6) Restore the parities back */
-+	memcpy(lptrs, ptrs, (disks - 2) * sizeof(struct page *));
-+	lptrs[disks - 2] = ptrs[disks-2];
-+	lptrs[disks - 1] = ptrs[disks-1];
-+	return async_gen_syndrome(lptrs, 0, disks - 2, bytes,
-+				  ASYNC_TX_DEP_ACK|(flags & ASYNC_TX_ACK),
-+				  tx, cb, cb_param);
-+
-+ddr_sync:
-+	{
-+		void **sptrs = (void **)lptrs;
-+		/*
-+		 * Failed to compute asynchronously, do it in
-+		 * synchronous manner
-+		 */
-+
-+		/* wait for any prerequisite operations */
-+		async_tx_quiesce(&depend_tx);
-+		if (flags & ASYNC_TX_DEP_ACK)
-+			async_tx_ack(depend_tx);
-+
-+		i = disks;
-+		while (i--)
-+			sptrs[i] = page_address(ptrs[i]);
-+		raid6_2data_recov(disks, bytes, faila, failb, sptrs);
-+
-+		async_tx_sync_epilog(cb, cb_param);
-+	}
-+
-+	return tx;
-+}
-+EXPORT_SYMBOL_GPL(async_r6_dd_recov);
-+
-+/**
-+ * async_r6_dp_recov - attempt to calculate one data miss using dma engines.
-+ * @disks: number of disks in the RAID-6 array
-+ * @bytes: size of strip
-+ * @faila: failed drive index
-+ * @ptrs: array of pointers to strips (last two must be p and q, respectively)
-+ * @flags: ASYNC_TX_ACK, ASYNC_TX_DEP_ACK
-+ * @depend_tx: depends on the result of this transaction.
-+ * @cb: function to call when the operation completes
-+ * @cb_param: parameter to pass to the callback routine
-+ */
-+struct dma_async_tx_descriptor *
-+async_r6_dp_recov(int disks, size_t bytes, int faila, struct page **ptrs,
-+		  enum async_tx_flags flags,
-+		  struct dma_async_tx_descriptor *depend_tx,
-+		  dma_async_tx_callback cb, void *cb_param)
-+{
-+	struct dma_async_tx_descriptor *tx = NULL;
-+	struct page *lptrs[disks];
-+	unsigned char lcoef[disks-2];
-+	int i = 0, k = 0;
-+
-+	/* Try compute missed data asynchronously. */
-+
-+	/*
-+	 * (1) Calculate Qn + Q:
-+	 * Qn = A(0)*D(0) + .. + A(n-1)*D(n-1) + A(n+1)*D(n+1) + ..,
-+	 *  where n = faila;
-+	 * then subtract Qn from Q and place result to Pn.
-+	 */
-+	for (i = 0; i < disks - 2; i++) {
-+		if (i != faila) {
-+			lptrs[k] = ptrs[i];
-+			lcoef[k++] = raid6_gfexp[i];
-+		}
-+	}
-+	lptrs[k] = ptrs[disks-1]; /* Q-parity */
-+	lcoef[k++] = 1;
-+
-+	lptrs[k] = NULL;
-+	lptrs[k+1] = ptrs[disks-2];
-+
-+	tx = async_pq(lptrs, 0, k, lcoef, bytes,
-+		      ASYNC_TX_ASYNC_ONLY|(flags & ASYNC_TX_DEP_ACK),
-+		      depend_tx, NULL, NULL);
-+	if (!tx) {
-+		/* jump to optimized synchronous path */
-+		if (flags & ASYNC_TX_ASYNC_ONLY)
-+			return NULL;
-+		goto dpr_sync;
-+	}
-+
-+	/*
-+	 * (2) Compute missed Dn:
-+	 * Dn = (Q + Qn) * [A(n)^(-1)]
-+	 */
-+	lptrs[0] = ptrs[disks-2];
-+	lptrs[1] = NULL;
-+	lptrs[2] = ptrs[faila];
-+	return async_pq(lptrs, 0, 1, (u8 *)&raid6_gfexp[faila ? 255-faila : 0],
-+			bytes, ASYNC_TX_DEP_ACK|(flags & ASYNC_TX_ACK),
-+			tx, cb, cb_param);
-+
-+dpr_sync:
-+	{
-+		void **sptrs = (void **) lptrs;
-+		/*
-+		 * Failed to compute asynchronously, do it in
-+		 * synchronous manner
-+		 */
-+
-+		/* wait for any prerequisite operations */
-+		async_tx_quiesce(&depend_tx);
-+		if (flags & ASYNC_TX_DEP_ACK)
-+			async_tx_ack(depend_tx);
-+
-+		i = disks;
-+		while (i--)
-+			sptrs[i] = page_address(ptrs[i]);
-+		raid6_datap_recov(disks, bytes, faila, (void *)sptrs);
-+
-+		async_tx_sync_epilog(cb, cb_param);
-+	}
-+
-+	return tx;
-+}
-+EXPORT_SYMBOL_GPL(async_r6_dp_recov);
-+
-+MODULE_AUTHOR("Yuri Tikhonov <yur@emcraft.com>, Dan Williams <dan.j.williams@intel.com>");
-+MODULE_DESCRIPTION("asynchronous RAID-6 recovery api");
-+MODULE_LICENSE("GPL");
-diff --git a/include/linux/async_tx.h b/include/linux/async_tx.h
-index 1f10141..3febff9 100644
---- a/include/linux/async_tx.h
-+++ b/include/linux/async_tx.h
-@@ -169,5 +169,17 @@ async_syndrome_zero_sum(struct page **blocks, unsigned int offset, int src_cnt,
- 			struct dma_async_tx_descriptor *depend_tx,
- 			dma_async_tx_callback cb_fn, void *cb_param);
+ /*
+  * Initialization patterns. All bytes in the source buffer has bit 7
+  * set, all bytes in the destination buffer has bit 7 cleared.
+@@ -59,8 +64,9 @@ struct dmatest_thread {
+ 	struct list_head	node;
+ 	struct task_struct	*task;
+ 	struct dma_chan		*chan;
+-	u8			*srcbuf;
+-	u8			*dstbuf;
++	u8			**srcs;
++	u8			**dsts;
++	enum dma_transaction_type type;
+ };
  
-+struct dma_async_tx_descriptor *
-+async_r6_dd_recov(int src_num, size_t bytes, int faila, int failb,
-+		  struct page **ptrs, enum async_tx_flags flags,
-+		  struct dma_async_tx_descriptor *depend_tx,
-+		  dma_async_tx_callback callback, void *callback_param);
+ struct dmatest_chan {
+@@ -98,30 +104,37 @@ static unsigned long dmatest_random(void)
+ 	return buf;
+ }
+ 
+-static void dmatest_init_srcbuf(u8 *buf, unsigned int start, unsigned int len)
++static void dmatest_init_srcs(u8 **bufs, unsigned int start, unsigned int len)
+ {
+ 	unsigned int i;
+-
+-	for (i = 0; i < start; i++)
+-		buf[i] = PATTERN_SRC | (~i & PATTERN_COUNT_MASK);
+-	for ( ; i < start + len; i++)
+-		buf[i] = PATTERN_SRC | PATTERN_COPY
+-			| (~i & PATTERN_COUNT_MASK);;
+-	for ( ; i < test_buf_size; i++)
+-		buf[i] = PATTERN_SRC | (~i & PATTERN_COUNT_MASK);
++	u8 *buf;
 +
-+struct dma_async_tx_descriptor *
-+async_r6_dp_recov(int src_num, size_t bytes, int faila, struct page **ptrs,
-+		  enum async_tx_flags flags,
-+		  struct dma_async_tx_descriptor *depend_tx,
-+		  dma_async_tx_callback callback, void *callback_param);
++	for (; (buf = *bufs); bufs++) {
++		for (i = 0; i < start; i++)
++			buf[i] = PATTERN_SRC | (~i & PATTERN_COUNT_MASK);
++		for ( ; i < start + len; i++)
++			buf[i] = PATTERN_SRC | PATTERN_COPY
++				| (~i & PATTERN_COUNT_MASK);;
++		for ( ; i < test_buf_size; i++)
++			buf[i] = PATTERN_SRC | (~i & PATTERN_COUNT_MASK);
++		buf++;
++	}
+ }
+ 
+-static void dmatest_init_dstbuf(u8 *buf, unsigned int start, unsigned int len)
++static void dmatest_init_dsts(u8 **bufs, unsigned int start, unsigned int len)
+ {
+ 	unsigned int i;
+-
+-	for (i = 0; i < start; i++)
+-		buf[i] = PATTERN_DST | (~i & PATTERN_COUNT_MASK);
+-	for ( ; i < start + len; i++)
+-		buf[i] = PATTERN_DST | PATTERN_OVERWRITE
+-			| (~i & PATTERN_COUNT_MASK);
+-	for ( ; i < test_buf_size; i++)
+-		buf[i] = PATTERN_DST | (~i & PATTERN_COUNT_MASK);
++	u8 *buf;
 +
- void async_tx_quiesce(struct dma_async_tx_descriptor **tx);
- #endif /* _ASYNC_TX_H_ */
++	for (; (buf = *bufs); bufs++) {
++		for (i = 0; i < start; i++)
++			buf[i] = PATTERN_DST | (~i & PATTERN_COUNT_MASK);
++		for ( ; i < start + len; i++)
++			buf[i] = PATTERN_DST | PATTERN_OVERWRITE
++				| (~i & PATTERN_COUNT_MASK);
++		for ( ; i < test_buf_size; i++)
++			buf[i] = PATTERN_DST | (~i & PATTERN_COUNT_MASK);
++	}
+ }
+ 
+ static void dmatest_mismatch(u8 actual, u8 pattern, unsigned int index,
+@@ -150,23 +163,30 @@ static void dmatest_mismatch(u8 actual, u8 pattern, unsigned int index,
+ 				thread_name, index, expected, actual);
+ }
+ 
+-static unsigned int dmatest_verify(u8 *buf, unsigned int start,
++static unsigned int dmatest_verify(u8 **bufs, unsigned int start,
+ 		unsigned int end, unsigned int counter, u8 pattern,
+ 		bool is_srcbuf)
+ {
+ 	unsigned int i;
+ 	unsigned int error_count = 0;
+ 	u8 actual;
+-
+-	for (i = start; i < end; i++) {
+-		actual = buf[i];
+-		if (actual != (pattern | (~counter & PATTERN_COUNT_MASK))) {
+-			if (error_count < 32)
+-				dmatest_mismatch(actual, pattern, i, counter,
+-						is_srcbuf);
+-			error_count++;
++	u8 expected;
++	u8 *buf;
++	unsigned int counter_orig = counter;
++
++	for (; (buf = *bufs); bufs++) {
++		counter = counter_orig;
++		for (i = start; i < end; i++) {
++			actual = buf[i];
++			expected = pattern | (~counter & PATTERN_COUNT_MASK);
++			if (actual != expected) {
++				if (error_count < 32)
++					dmatest_mismatch(actual, pattern, i,
++							 counter, is_srcbuf);
++				error_count++;
++			}
++			counter++;
+ 		}
+-		counter++;
+ 	}
+ 
+ 	if (error_count > 32)
+@@ -178,10 +198,10 @@ static unsigned int dmatest_verify(u8 *buf, unsigned int start,
+ 
+ /*
+  * This function repeatedly tests DMA transfers of various lengths and
+- * offsets until it is told to exit by kthread_stop(). There may be
+- * multiple threads running this function in parallel for a single
+- * channel, and there may be multiple channels being tested in
+- * parallel.
++ * offsets for a given operation type until it is told to exit by
++ * kthread_stop(). There may be multiple threads running this function
++ * in parallel for a single channel, and there may be multiple channels
++ * being tested in parallel.
+  *
+  * Before each test, the source and destination buffer is initialized
+  * with a known pattern. This pattern is different depending on
+@@ -201,25 +221,53 @@ static int dmatest_func(void *data)
+ 	unsigned int		total_tests = 0;
+ 	dma_cookie_t		cookie;
+ 	enum dma_status		status;
++	enum dma_ctrl_flags 	flags;
+ 	int			ret;
++	int			src_cnt;
++	int			dst_cnt;
++	int			i;
+ 
+ 	thread_name = current->comm;
+ 
+ 	ret = -ENOMEM;
+-	thread->srcbuf = kmalloc(test_buf_size, GFP_KERNEL);
+-	if (!thread->srcbuf)
+-		goto err_srcbuf;
+-	thread->dstbuf = kmalloc(test_buf_size, GFP_KERNEL);
+-	if (!thread->dstbuf)
+-		goto err_dstbuf;
+ 
+ 	smp_rmb();
+ 	chan = thread->chan;
++	if (thread->type == DMA_MEMCPY)
++		src_cnt = dst_cnt = 1;
++	else if (thread->type == DMA_XOR) {
++		src_cnt = xor_sources | 1; /* force odd to ensure dst = src */
++		dst_cnt = 1;
++	} else
++		goto err_srcs;
++
++	thread->srcs = kcalloc(src_cnt+1, sizeof(u8 *), GFP_KERNEL);
++	if (!thread->srcs)
++		goto err_srcs;
++	for (i = 0; i < src_cnt; i++) {
++		thread->srcs[i] = kmalloc(test_buf_size, GFP_KERNEL);
++		if (!thread->srcs[i])
++			goto err_srcbuf;
++	}
++	thread->srcs[i] = NULL;
++
++	thread->dsts = kcalloc(dst_cnt+1, sizeof(u8 *), GFP_KERNEL);
++	if (!thread->dsts)
++		goto err_dsts;
++	for (i = 0; i < dst_cnt; i++) {
++		thread->dsts[i] = kmalloc(test_buf_size, GFP_KERNEL);
++		if (!thread->dsts[i])
++			goto err_dstbuf;
++	}
++	thread->dsts[i] = NULL;
++
++	flags = DMA_CTRL_ACK | DMA_COMPL_SKIP_DEST_UNMAP;
+ 
+ 	while (!kthread_should_stop()) {
+ 		struct dma_device *dev = chan->device;
+-		struct dma_async_tx_descriptor *tx;
+-		dma_addr_t dma_src, dma_dest;
++		struct dma_async_tx_descriptor *tx = NULL;
++		dma_addr_t dma_srcs[src_cnt];
++		dma_addr_t dma_dsts[dst_cnt];
+ 
+ 		total_tests++;
+ 
+@@ -227,22 +275,41 @@ static int dmatest_func(void *data)
+ 		src_off = dmatest_random() % (test_buf_size - len + 1);
+ 		dst_off = dmatest_random() % (test_buf_size - len + 1);
+ 
+-		dmatest_init_srcbuf(thread->srcbuf, src_off, len);
+-		dmatest_init_dstbuf(thread->dstbuf, dst_off, len);
++		dmatest_init_srcs(thread->srcs, src_off, len);
++		dmatest_init_dsts(thread->dsts, dst_off, len);
++
++		for (i = 0; i < src_cnt; i++) {
++			u8 *buf = thread->srcs[i] + src_off;
+ 
+-		dma_src = dma_map_single(dev->dev, thread->srcbuf + src_off,
+-				len, DMA_TO_DEVICE);
++			dma_srcs[i] = dma_map_single(dev->dev, buf, len,
++						     DMA_TO_DEVICE);
++		}
+ 		/* map with DMA_BIDIRECTIONAL to force writeback/invalidate */
+-		dma_dest = dma_map_single(dev->dev, thread->dstbuf,
+-				test_buf_size, DMA_BIDIRECTIONAL);
++		for (i = 0; i < dst_cnt; i++) {
++			dma_dsts[i] = dma_map_single(dev->dev, thread->dsts[i],
++						     test_buf_size,
++						     DMA_BIDIRECTIONAL);
++		}
++
++		if (thread->type == DMA_MEMCPY)
++			tx = dev->device_prep_dma_memcpy(chan,
++							 dma_dsts[0] + dst_off,
++							 dma_srcs[0], len,
++							 flags);
++		else if (thread->type == DMA_XOR)
++			tx = dev->device_prep_dma_xor(chan,
++						      dma_dsts[0] + dst_off,
++						      dma_srcs, xor_sources,
++						      len, flags);
+ 
+-		tx = dev->device_prep_dma_memcpy(chan, dma_dest + dst_off,
+-				dma_src, len,
+-				DMA_CTRL_ACK | DMA_COMPL_SKIP_DEST_UNMAP);
+ 		if (!tx) {
+-			dma_unmap_single(dev->dev, dma_src, len, DMA_TO_DEVICE);
+-			dma_unmap_single(dev->dev, dma_dest,
+-					test_buf_size, DMA_BIDIRECTIONAL);
++			for (i = 0; i < src_cnt; i++)
++				dma_unmap_single(dev->dev, dma_srcs[i], len,
++						 DMA_TO_DEVICE);
++			for (i = 0; i < dst_cnt; i++)
++				dma_unmap_single(dev->dev, dma_dsts[i],
++						 test_buf_size,
++						 DMA_BIDIRECTIONAL);
+ 			pr_warning("%s: #%u: prep error with src_off=0x%x "
+ 					"dst_off=0x%x len=0x%x\n",
+ 					thread_name, total_tests - 1,
+@@ -263,11 +330,11 @@ static int dmatest_func(void *data)
+ 			failed_tests++;
+ 			continue;
+ 		}
+-		dma_async_memcpy_issue_pending(chan);
++		dma_async_issue_pending(chan);
+ 
+ 		do {
+ 			msleep(1);
+-			status = dma_async_memcpy_complete(
++			status = dma_async_is_tx_complete(
+ 					chan, cookie, NULL, NULL);
+ 		} while (status == DMA_IN_PROGRESS);
+ 
+@@ -278,29 +345,30 @@ static int dmatest_func(void *data)
+ 			continue;
+ 		}
+ 		/* Unmap by myself (see DMA_COMPL_SKIP_DEST_UNMAP above) */
+-		dma_unmap_single(dev->dev, dma_dest,
+-				test_buf_size, DMA_BIDIRECTIONAL);
++		for (i = 0; i < dst_cnt; i++)
++			dma_unmap_single(dev->dev, dma_dsts[i], test_buf_size,
++					 DMA_BIDIRECTIONAL);
+ 
+ 		error_count = 0;
+ 
+ 		pr_debug("%s: verifying source buffer...\n", thread_name);
+-		error_count += dmatest_verify(thread->srcbuf, 0, src_off,
++		error_count += dmatest_verify(thread->srcs, 0, src_off,
+ 				0, PATTERN_SRC, true);
+-		error_count += dmatest_verify(thread->srcbuf, src_off,
++		error_count += dmatest_verify(thread->srcs, src_off,
+ 				src_off + len, src_off,
+ 				PATTERN_SRC | PATTERN_COPY, true);
+-		error_count += dmatest_verify(thread->srcbuf, src_off + len,
++		error_count += dmatest_verify(thread->srcs, src_off + len,
+ 				test_buf_size, src_off + len,
+ 				PATTERN_SRC, true);
+ 
+ 		pr_debug("%s: verifying dest buffer...\n",
+ 				thread->task->comm);
+-		error_count += dmatest_verify(thread->dstbuf, 0, dst_off,
++		error_count += dmatest_verify(thread->dsts, 0, dst_off,
+ 				0, PATTERN_DST, false);
+-		error_count += dmatest_verify(thread->dstbuf, dst_off,
++		error_count += dmatest_verify(thread->dsts, dst_off,
+ 				dst_off + len, src_off,
+ 				PATTERN_SRC | PATTERN_COPY, false);
+-		error_count += dmatest_verify(thread->dstbuf, dst_off + len,
++		error_count += dmatest_verify(thread->dsts, dst_off + len,
+ 				test_buf_size, dst_off + len,
+ 				PATTERN_DST, false);
+ 
+@@ -319,10 +387,16 @@ static int dmatest_func(void *data)
+ 	}
+ 
+ 	ret = 0;
+-	kfree(thread->dstbuf);
++	for (i = 0; thread->dsts[i]; i++)
++		kfree(thread->dsts[i]);
+ err_dstbuf:
+-	kfree(thread->srcbuf);
++	kfree(thread->dsts);
++err_dsts:
++	for (i = 0; thread->srcs[i]; i++)
++		kfree(thread->srcs[i]);
+ err_srcbuf:
++	kfree(thread->srcs);
++err_srcs:
+ 	pr_notice("%s: terminating after %u tests, %u failures (status %d)\n",
+ 			thread_name, total_tests, failed_tests, ret);
+ 	return ret;
+@@ -344,35 +418,36 @@ static void dmatest_cleanup_channel(struct dmatest_chan *dtc)
+ 	kfree(dtc);
+ }
+ 
+-static int dmatest_add_channel(struct dma_chan *chan)
++static int dmatest_add_threads(struct dmatest_chan *dtc, enum dma_transaction_type type)
+ {
+-	struct dmatest_chan	*dtc;
+-	struct dmatest_thread	*thread;
+-	unsigned int		i;
+-
+-	dtc = kmalloc(sizeof(struct dmatest_chan), GFP_KERNEL);
+-	if (!dtc) {
+-		pr_warning("dmatest: No memory for %s\n", dma_chan_name(chan));
+-		return -ENOMEM;
+-	}
++	struct dmatest_thread *thread;
++	struct dma_chan *chan = dtc->chan;
++	char *op;
++	unsigned int i;
+ 
+-	dtc->chan = chan;
+-	INIT_LIST_HEAD(&dtc->threads);
++	if (type == DMA_MEMCPY)
++		op = "copy";
++	else if (type == DMA_XOR)
++		op = "xor";
++	else
++		return -EINVAL;
+ 
+ 	for (i = 0; i < threads_per_chan; i++) {
+ 		thread = kzalloc(sizeof(struct dmatest_thread), GFP_KERNEL);
+ 		if (!thread) {
+-			pr_warning("dmatest: No memory for %s-test%u\n",
+-				   dma_chan_name(chan), i);
++			pr_warning("dmatest: No memory for %s-%s%u\n",
++				   dma_chan_name(chan), op, i);
++
+ 			break;
+ 		}
+ 		thread->chan = dtc->chan;
++		thread->type = type;
+ 		smp_wmb();
+-		thread->task = kthread_run(dmatest_func, thread, "%s-test%u",
+-				dma_chan_name(chan), i);
++		thread->task = kthread_run(dmatest_func, thread, "%s-%s%u",
++				dma_chan_name(chan), op, i);
+ 		if (IS_ERR(thread->task)) {
+-			pr_warning("dmatest: Failed to run thread %s-test%u\n",
+-					dma_chan_name(chan), i);
++			pr_warning("dmatest: Failed to run thread %s-%s%u\n",
++					dma_chan_name(chan), op, i);
+ 			kfree(thread);
+ 			break;
+ 		}
+@@ -382,7 +457,36 @@ static int dmatest_add_channel(struct dma_chan *chan)
+ 		list_add_tail(&thread->node, &dtc->threads);
+ 	}
+ 
+-	pr_info("dmatest: Started %u threads using %s\n", i, dma_chan_name(chan));
++	return i;
++}
++
++static int dmatest_add_channel(struct dma_chan *chan)
++{
++	struct dmatest_chan	*dtc;
++	struct dma_device	*dma_dev = chan->device;
++	unsigned int		thread_count = 0;
++	unsigned int		cnt;
++
++	dtc = kmalloc(sizeof(struct dmatest_chan), GFP_KERNEL);
++	if (!dtc) {
++		pr_warning("dmatest: No memory for %s\n", dma_chan_name(chan));
++		return -ENOMEM;
++	}
++
++	dtc->chan = chan;
++	INIT_LIST_HEAD(&dtc->threads);
++
++	if (dma_has_cap(DMA_MEMCPY, dma_dev->cap_mask)) {
++		cnt = dmatest_add_threads(dtc, DMA_MEMCPY);
++		thread_count += cnt > 0 ?: 0;
++	}
++	if (dma_has_cap(DMA_XOR, dma_dev->cap_mask)) {
++		cnt = dmatest_add_threads(dtc, DMA_XOR);
++		thread_count += cnt > 0 ?: 0;
++	}
++
++	pr_info("dmatest: Started %u threads using %s\n",
++		thread_count, dma_chan_name(chan));
+ 
+ 	list_add_tail(&dtc->node, &dmatest_channels);
+ 	nr_channels++;
 
