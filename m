@@ -1,90 +1,58 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Why do I need 4 disks for a raid6?
-Date: Wed, 18 Mar 2009 14:26:53 +0000
-Message-ID: <20090318142653.GA15321@cthulhu.home.robinhill.me.uk>
-References: <87ljr4hsk9.fsf@frosties.localdomain> <20090318121825.GL32416@skl-net.de> <49C0EA5F.9070901@vshift.com> <20090318123525.GK17185@skl-net.de> <87wsam53ev.fsf@frosties.localdomain>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: What hardware for RAID5? (PCIe controller or fast onboard)
+Date: Wed, 18 Mar 2009 18:33:39 +0100
+Message-ID: <200903181833.39469.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Dxnq1zWXvFF0Q93v"
+Content-Type: multipart/signed;
+  boundary="nextPart1956672.C7kuyzZORb";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87wsam53ev.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
---Dxnq1zWXvFF0Q93v
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--nextPart1956672.C7kuyzZORb
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
-
-On Wed Mar 18, 2009 at 03:08:56PM +0100, Goswin von Brederlow wrote:
-
-> Andre Noll <maan@systemlinux.org> writes:
->=20
-> > On 08:34, Ruslan Sivak wrote:
-> >
-> >> I would guess the reason is that it doesn't make sense.  As mentioned,=
- if
-> >> you are going to create a 3 disk raid 6, it's essentially a raid1 over=
- 3
-> >> disks, at which point you are better off with the raid-1.  I don't thi=
-nk
-> >> there's a raid controller that would let you set something like this u=
-p, I
-> >> don't see why the softraid should.
-> >
-> > Well, Goswin mentioned some pretty good reasons I think.
-> >
->=20
-> Raid6 is the only level that requires such "sanity".
->=20
-> Here is another scenario: Say you have a 2 disk raid1 and now want to
-> switch to 5 disk raid6. No problem, add 3 new disks, set up 1+2 disk
-> raid6, pvmove the data (don't you love LVM?), stop the raid1, grow the
-> raid6 to 5 disks.
->=20
-> It is clear that 1+2 disk raid6 only makes sense as a transitory step
-> but one that is usefull.
->=20
-You could do this via the new RAID5-RAID6 migration. Either:
-    - recreate the two disk RAID1 as RAID5 (assume clean)
-    - add 2 disks and grow the array
-    - add the fifth disk and convert to RAID6
-or
-    - create a new 3-disk RAID5 array
-    - copy/pvmove the data
-    - add a fourth disk and grow the array
-    - add the fifth disk and convert to RAID6
-or even (not 100% sure this'll work until the RAID6 restriping work is
-done):
-    - create a new 3-disk RAID5 array
-    - copy/pvmove the data
-    - add a fourth disk and convert to RAID6
-    - add the fifth disk and grow the array
-
-So the 3-disk RAID6 isn't essential, though if there's no particular
-reason to prohibit it then it might as well be allowed as an option.
-
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---Dxnq1zWXvFF0Q93v
-Content-Type: application/pgp-signature
 Content-Disposition: inline
+
+I want to upgrade server hardware here, currently I have 5 Samsungs (sATA I=
+I)=20
+sitting on the onboard controller of an Asus K8N-E Socket754 board.
+I guess the controller chips are both connected via PCI hence performance=20
+isn't really hot.
+
+Basically I need either a board with at least 6x sATA-II attached via PCIe =
+or=20
+a "dumb" PCIe 4x or 8x controller card.
+
+Any recommendations?
+
+Dex
+
+=2D-=20
+=2D----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@=20
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+=2D-----END GEEK CODE BLOCK------
+
+http://www.vorratsdatenspeicherung.de
+
+--nextPart1956672.C7kuyzZORb
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
+Version: GnuPG v1.4.6 (GNU/Linux)
 
-iEYEARECAAYFAknBBK0ACgkQShxCyD40xBLvgQCgidPAPn+7pTTYtFGdiuFhci6/
-Z2MAnA+erzNtQ8n+d2JnQNrJp6ux+RWI
-=f2M6
+iD8DBQBJwTBzm6TdMk9WhQ0RAmmHAJ9VgtZjODXsEEjHoS744cWMNKRJogCeL3En
+SS08OaR87W9tvAxhOCQuW5s=
+=KmOs
 -----END PGP SIGNATURE-----
 
---Dxnq1zWXvFF0Q93v--
+--nextPart1956672.C7kuyzZORb--
