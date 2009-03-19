@@ -1,30 +1,42 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH 00/13] Asynchronous raid6 acceleration (part 1 of 2)
-Date: Thu, 19 Mar 2009 00:43:39 +0100
-Message-ID: <87ljr21jo4.fsf@basil.nowhere.org>
-References: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com>
+From: "H. Peter Anvin" <h.peter.anvin@intel.com>
+Subject: Re: [PATCH 06/13] async_tx: add support for asynchronous GF multiplication
+Date: Thu, 19 Mar 2009 09:06:41 -0700
+Message-ID: <49C26D91.10804@intel.com>
+References: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com> <20090318192046.20375.89854.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com> (Dan Williams's message of "Wed, 18 Mar 2009 12:20:16 -0700")
+In-Reply-To: <20090318192046.20375.89854.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, neilb@suse.de, maciej.sosnowski@intel.com
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, neilb@suse.de, maciej.sosnowski@intel.com, Ilya Yanok <yanok@emcraft.com>, Yuri Tikhonov <yur@emcraft.com>
 List-Id: linux-raid.ids
 
-Dan Williams <dan.j.williams@intel.com> writes:
+Dan Williams wrote:
+> + * @scfs: array of source coefficients used in GF-multiplication
 
-> This series constitutes the pieces of the raid6 acceleration work that are
-> aimed at the next merge window.  It implements:
-> 1/ An api for asynchronous raid6 parity generation and recovery routines
+Array of source coefficients?  Are you doing a vector-vector
+multiplication here?
 
-Could you please comment a bit how well the default load balancing works. If
-I write a single stream from a single CPU will it use multiple CPU
-cores in the system to do the RAID6 work?
+Given this code:
 
-Thanks,
+> 	for (d = 0; d < len; d++) {
+> +		wq = wp = ptrs[0][d];
+> +		for (z = 1; z < src_cnt; z++) {
+> +			wd = ptrs[z][d];
+> +			wp ^= wd;
+> +			wq ^= raid6_gfmul[scfs[z]][wd];
+> +		}
 
--Andi
+... it kinds of looks like that.
 
--- 
-ak@linux.intel.com -- Speaking for myself only.
+This is really quite expensive!  The whole point of the restore code
+that exists is that we never do a two-dimensional lookup, instead
+caching a pointer to the multiplication table that we intend to use,
+because the RAID-6 code only ever contains scalar-vector multiplications.
+
+I really don't get this, and I think it's broken.
+
+	-hpa
+
