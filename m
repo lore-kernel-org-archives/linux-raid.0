@@ -1,51 +1,66 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [PATCH 02/13] async_tx: don't use src_list argument of async_xor() for dma addresses
-Date: Thu, 19 Mar 2009 21:10:08 +0100
-Message-ID: <20090319201008.GC10491@skl-net.de>
-References: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com> <20090318192026.20375.3053.stgit@dwillia2-linux.ch.intel.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Why do I need 4 disks for a raid6?
+Date: Fri, 20 Mar 2009 10:35:39 +1100
+Message-ID: <18882.54987.332211.49180@notabene.brown>
+References: <87ljr4hsk9.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="B4IIlcmfBL/1gGOG"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090318192026.20375.3053.stgit@dwillia2-linux.ch.intel.com>
+In-Reply-To: message from Goswin von Brederlow on Tuesday March 17
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, neilb@suse.de, maciej.sosnowski@intel.com, Yuri Tikhonov <yur@emcraft.com>, Ilya Yanok <yanok@emcraft.com>
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tuesday March 17, goswin-v-b@web.de wrote:
+> Hi,
+> 
+> I'm wondering why the kernel requires a raid6 to have at least 4
+> disks (of which at most 2 can be missing). Why not 3 disks?
+> 
+> I know a 1+2 disk raid6 sounds stupid but it has an use case. Let me
+> demonstrate this with raid5:
+> 
+> Lets say you started with a raid1 when you bought your computer:
+> mdadm --create -l 1 -n 2 /dev/md9 /dev/sda1 /dev/sdb1
+> a fewyears of use on /dev/md9 
+> 
+> Now you run out of space and went and bought a 3rd harddisk. What to
+> do now?
+> mdadm --stop /dev/md9
+> mdadm --create -l 5 -n 2 --assume-clean /dev/sda1 /dev/sdb1
+> mdadm --add /dev/md9 /dev/sdc1
+> mdadm --grow -n 3 /dev/md9
+> 
+> Voila. A nice raid5 with twice the size of the raid1. And no single
+> point of failure like degrading the raid1 and copying the data to a
+> degraded raid5 would have. And the downtime is just a minute to create
+> the new superblock.
 
---B4IIlcmfBL/1gGOG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In 2.6.30 and later you wont even need the downtime.  Just
+  echo raid5 > /sys/block/md9/md/level
+in place of the "stop" and "create" steps.
 
-On 12:20, Dan Williams wrote:
+> 
+> 
+> 
+> Now for the raid6 case. With only 1 data disk and 2 parity disks all 3
+> disks should end up with identical data on them. In effect this should
+> be a 3 disk raid1, a cpu intensive one. Take an existing raid1 with 2
+> or 3 disks, stop the raid, create a new raid6 ovver it with
+> --assume-clean, start the raid. After that one can add more disks and
+> --grow -n 4/5/6/.. the raid6 to a sensible size. Again without going
+> into degraded mode.
+> 
+> 
+> So back to my original question: Why does the kernel require 4 disks
+> for a raid6 instead of allowing 3?
 
-> Using src_list argument of async_xor() as a storage for dma addresses
-> implies sizeof(dma_addr_t) <=3D sizeof(struct page *) restriction which is
-> not always true (e.g. ppc440spe).
+I have occasionally wondered that.  But I didn't write that code and
+never saw a need to change it.  As Andre says, it is very likely that
+just relaxing the restriction will allow it to "just work".
 
-This message does not tell what the patch is going to do about that.
-It would also be nice to mention (either in the log message or as a
-comment) why allocating the dma_src arrays on the stack is not going
-to be a problem.
+Maybe that will happen in 2.6.31...
 
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---B4IIlcmfBL/1gGOG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFJwqagWto1QDEAkw8RAol7AJ9jG26hiovmH4WW54bhvV1PctW/LQCeOxo7
-a4ILQjqS5mMDQoLby5qlPvs=
-=mIQl
------END PGP SIGNATURE-----
-
---B4IIlcmfBL/1gGOG--
+NeilBrown
