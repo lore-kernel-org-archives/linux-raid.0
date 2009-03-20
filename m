@@ -1,66 +1,47 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Why do I need 4 disks for a raid6?
-Date: Fri, 20 Mar 2009 10:35:39 +1100
-Message-ID: <18882.54987.332211.49180@notabene.brown>
-References: <87ljr4hsk9.fsf@frosties.localdomain>
+Subject: Re: [ md/for-next git pull ] Support setting the array size from
+	userspace
+Date: Fri, 20 Mar 2009 11:02:42 +1100
+Message-ID: <18882.56610.951405.653376@notabene.brown>
+References: <1237337937.4026.13.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Goswin von Brederlow on Tuesday March 17
+In-Reply-To: message from Dan Williams on Tuesday March 17
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Andre Noll <maan@systemlinux.org>, Jacek Danecki <jacek.danecki@intel.com>, Ed Ciechanowski <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-On Tuesday March 17, goswin-v-b@web.de wrote:
-> Hi,
+On Tuesday March 17, dan.j.williams@intel.com wrote:
+> The following changes since commit 28453471bcdd767f22b8c03987f1acd73a8f34c3:
+>   Atsushi SAKAI (1):
+>         md: fix typo in FSF address
 > 
-> I'm wondering why the kernel requires a raid6 to have at least 4
-> disks (of which at most 2 can be missing). Why not 3 disks?
+> are available in the git repository at:
 > 
-> I know a 1+2 disk raid6 sounds stupid but it has an use case. Let me
-> demonstrate this with raid5:
+>   git://git.kernel.org/pub/scm/linux/kernel/git/djbw/md.git md-array-size
 > 
-> Lets say you started with a raid1 when you bought your computer:
-> mdadm --create -l 1 -n 2 /dev/md9 /dev/sda1 /dev/sdb1
-> a fewyears of use on /dev/md9 
-> 
-> Now you run out of space and went and bought a 3rd harddisk. What to
-> do now?
-> mdadm --stop /dev/md9
-> mdadm --create -l 5 -n 2 --assume-clean /dev/sda1 /dev/sdb1
-> mdadm --add /dev/md9 /dev/sdc1
-> mdadm --grow -n 3 /dev/md9
-> 
-> Voila. A nice raid5 with twice the size of the raid1. And no single
-> point of failure like degrading the raid1 and copying the data to a
-> degraded raid5 would have. And the downtime is just a minute to create
-> the new superblock.
+> Dan Williams (3):
+>       md: add 'size' as a personality method
+>       md: centralize ->array_sectors modifications
+>       md: 'array_size' sysfs attribute
 
-In 2.6.30 and later you wont even need the downtime.  Just
-  echo raid5 > /sys/block/md9/md/level
-in place of the "stop" and "create" steps.
+Thanks again.
 
-> 
-> 
-> 
-> Now for the raid6 case. With only 1 data disk and 2 parity disks all 3
-> disks should end up with identical data on them. In effect this should
-> be a 3 disk raid1, a cpu intensive one. Take an existing raid1 with 2
-> or 3 disks, stop the raid, create a new raid6 ovver it with
-> --assume-clean, start the raid. After that one can add more disks and
-> --grow -n 4/5/6/.. the raid6 to a sensible size. Again without going
-> into degraded mode.
-> 
-> 
-> So back to my original question: Why does the kernel require 4 disks
-> for a raid6 instead of allowing 3?
+I like "strict_blocks_to_sectors".  I wonder if there would ever by
+any value it allowing it to parse 2000000.5 as 4000001 sectors ???
+Probably not.
 
-I have occasionally wondered that.  But I didn't write that code and
-never saw a need to change it.  As Andre says, it is very likely that
-just relaxing the restriction will allow it to "just work".
+I don't feel comfortable about md_set_array_sectors_lock.
+It makes me think there is something wrong with the locking somewhere.
 
-Maybe that will happen in 2.6.31...
+Maybe we should have an explicit "end_reshape" method which is called
+under the lock by md_check_recovery.  That would seem more "obviously
+right".
+I cannot see any demonstrable problem with the current code so I'll
+take it as it is, but I might add a patch along those lines.
 
+Thanks,
 NeilBrown
