@@ -1,59 +1,43 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH]  md: raid5 run(): Fix max_degraded for raid level 4.
-Date: Fri, 20 Mar 2009 11:09:30 +1100
-Message-ID: <18882.57018.465098.201167@notabene.brown>
-References: <20090318125324.GL17185@skl-net.de>
+Subject: Re: [PATCH 09/13] iop-adma: P+Q self test
+Date: Fri, 20 Mar 2009 11:14:53 +1100
+Message-ID: <18882.57341.196519.507194@notabene.brown>
+References: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com>
+	<20090318192102.20375.36540.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andre Noll on Wednesday March 18
+In-Reply-To: message from Dan Williams on Wednesday March 18
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
-Cc: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, maciej.sosnowski@intel.com
 List-Id: linux-raid.ids
 
-On Wednesday March 18, maan@systemlinux.org wrote:
-> Hi Neil,
+On Wednesday March 18, dan.j.williams@intel.com wrote:
+> Even though the intent is to extend dmatest with P+Q tests there is
+> still value in having an always-on sanity check to prevent an
+> unintentionally broken driver from registering.
 > 
-> I found this one while trying to figure out why 3-disk raid6 arrays
-> aren't supported. It's an obvious and trivial bug fix but probably
-> not important enough for stable as it only affects raid4.
+> This depends on raid6_pq.ko for verification, the side effect being that
+> PQ capable channels will fail to register when raid6 is disabled.
 > 
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  drivers/dma/iop-adma.c |  182 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 files changed, 181 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/dma/iop-adma.c b/drivers/dma/iop-adma.c
+> index 0cdb333..2b014b6 100644
+> --- a/drivers/dma/iop-adma.c
+> +++ b/drivers/dma/iop-adma.c
+> @@ -31,6 +31,7 @@
+>  #include <linux/platform_device.h>
+>  #include <linux/memory.h>
+>  #include <linux/ioport.h>
+> +#include <linux/raid/raid6.h>
 
-Thanks!
-Applied.
-
-Have you tried a 3-disk raid6 yet?  Any conclusions?
+???
+ <linux/raid/pq.h>  Maybe?
 
 NeilBrown
-
-
-> Regards
-> Andre
-> 
-> commit ea30abef4d1f3aad635eb24db082f3531b573540
-> Author: Andre Noll <maan@systemlinux.org>
-> Date:   Wed Mar 18 13:43:08 2009 +0100
-> 
->     md: raid5 run(): Fix max_degraded for raid level 4.
->     
->     raid4 allows only one failed disk.
->     
->     Signed-off-by: Andre Noll <maan@systemlinux.org>
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index a76ef52..ceb5924 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -4484,7 +4484,7 @@ static int run(mddev_t *mddev)
->  		 */
->  		sector_t here_new, here_old;
->  		int old_disks;
-> -		int max_degraded = (mddev->level == 5 ? 1 : 2);
-> +		int max_degraded = (mddev->level == 6 ? 2 : 1);
->  
->  		if (mddev->new_level != mddev->level ||
->  		    mddev->new_layout != mddev->layout ||
-> -- 
-> The only person who always got his work done by Friday was Robinson Crusoe
