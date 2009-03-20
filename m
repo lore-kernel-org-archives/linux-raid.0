@@ -1,47 +1,59 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [ md/for-next git pull ] Support setting the array size from
-	userspace
-Date: Fri, 20 Mar 2009 11:02:42 +1100
-Message-ID: <18882.56610.951405.653376@notabene.brown>
-References: <1237337937.4026.13.camel@dwillia2-linux.ch.intel.com>
+Subject: Re: [PATCH]  md: raid5 run(): Fix max_degraded for raid level 4.
+Date: Fri, 20 Mar 2009 11:09:30 +1100
+Message-ID: <18882.57018.465098.201167@notabene.brown>
+References: <20090318125324.GL17185@skl-net.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Dan Williams on Tuesday March 17
+In-Reply-To: message from Andre Noll on Wednesday March 18
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Andre Noll <maan@systemlinux.org>, Jacek Danecki <jacek.danecki@intel.com>, Ed Ciechanowski <ed.ciechanowski@intel.com>
+To: Andre Noll <maan@systemlinux.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday March 17, dan.j.williams@intel.com wrote:
-> The following changes since commit 28453471bcdd767f22b8c03987f1acd73a8f34c3:
->   Atsushi SAKAI (1):
->         md: fix typo in FSF address
+On Wednesday March 18, maan@systemlinux.org wrote:
+> Hi Neil,
 > 
-> are available in the git repository at:
+> I found this one while trying to figure out why 3-disk raid6 arrays
+> aren't supported. It's an obvious and trivial bug fix but probably
+> not important enough for stable as it only affects raid4.
 > 
->   git://git.kernel.org/pub/scm/linux/kernel/git/djbw/md.git md-array-size
-> 
-> Dan Williams (3):
->       md: add 'size' as a personality method
->       md: centralize ->array_sectors modifications
->       md: 'array_size' sysfs attribute
 
-Thanks again.
+Thanks!
+Applied.
 
-I like "strict_blocks_to_sectors".  I wonder if there would ever by
-any value it allowing it to parse 2000000.5 as 4000001 sectors ???
-Probably not.
+Have you tried a 3-disk raid6 yet?  Any conclusions?
 
-I don't feel comfortable about md_set_array_sectors_lock.
-It makes me think there is something wrong with the locking somewhere.
-
-Maybe we should have an explicit "end_reshape" method which is called
-under the lock by md_check_recovery.  That would seem more "obviously
-right".
-I cannot see any demonstrable problem with the current code so I'll
-take it as it is, but I might add a patch along those lines.
-
-Thanks,
 NeilBrown
+
+
+> Regards
+> Andre
+> 
+> commit ea30abef4d1f3aad635eb24db082f3531b573540
+> Author: Andre Noll <maan@systemlinux.org>
+> Date:   Wed Mar 18 13:43:08 2009 +0100
+> 
+>     md: raid5 run(): Fix max_degraded for raid level 4.
+>     
+>     raid4 allows only one failed disk.
+>     
+>     Signed-off-by: Andre Noll <maan@systemlinux.org>
+> 
+> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+> index a76ef52..ceb5924 100644
+> --- a/drivers/md/raid5.c
+> +++ b/drivers/md/raid5.c
+> @@ -4484,7 +4484,7 @@ static int run(mddev_t *mddev)
+>  		 */
+>  		sector_t here_new, here_old;
+>  		int old_disks;
+> -		int max_degraded = (mddev->level == 5 ? 1 : 2);
+> +		int max_degraded = (mddev->level == 6 ? 2 : 1);
+>  
+>  		if (mddev->new_level != mddev->level ||
+>  		    mddev->new_layout != mddev->layout ||
+> -- 
+> The only person who always got his work done by Friday was Robinson Crusoe
