@@ -1,38 +1,52 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [PATCH 06/13] async_tx: add support for asynchronous GF 	multiplication
-Date: Sat, 21 Mar 2009 12:16:16 -0700
-Message-ID: <49C53D00.9060008@zytor.com>
-References: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com>	 <20090318192046.20375.89854.stgit@dwillia2-linux.ch.intel.com>	 <49C26D91.10804@intel.com> <e9c3a7c20903191020k4d0169e3oc9749103a711f3e3@mail.gmail.com> <49C41C1E.4060401@zytor.com> <49C4201A.5060905@emcraft.com> <49C425F5.8060309@intel.com> <49C42F99.5010700@emcraft.com> <49C45159.8020503@zytor.com> <49C4BF15.5050502@emcraft.com>
+From: Ilya Yanok <yanok@emcraft.com>
+Subject: Re: [PATCH 06/13] async_tx: add support for asynchronous GF multiplication
+Date: Sat, 21 Mar 2009 23:05:01 +0300
+Message-ID: <49C5486D.9020103@emcraft.com>
+References: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com> <20090318192046.20375.89854.stgit@dwillia2-linux.ch.intel.com> <49C26D91.10804@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49C4BF15.5050502@emcraft.com>
+In-Reply-To: <49C26D91.10804@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ilya Yanok <yanok@emcraft.com>
-Cc: "H. Peter Anvin" <h.peter.anvin@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>, "Sosnowski, Maciej" <maciej.sosnowski@intel.com>, Yuri Tikhonov <yur@emcraft.com>
+To: "H. Peter Anvin" <h.peter.anvin@intel.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, neilb@suse.de, maciej.sosnowski@intel.com, Yuri Tikhonov <yur@emcraft.com>
 List-Id: linux-raid.ids
 
-Ilya Yanok wrote:
->>>     
->> For any n (which would mean any GF field)?  In that case, that is
->> generic scalar-vector multiplication...
->>   
-> 
-> Ok. I think I got it. Vectors are things that depend on position inside
-> buffer and scalars are things that don't, am I right? In that sense we
-> don't have any vector-vector multiplication. Both async_gen_syndrome()
-> and async_pq() use constant coefficients. So I don't really understand
-> the problem here.
-> 
+Hi H.Peter,
 
-Perhaps the interface is just too confusing (in which case it needs to
-at least be better documented), but at least the synchronous simulation
-code looked like it was doing a vector-vector multiply.
+H. Peter Anvin wrote:
+>> + * @scfs: array of source coefficients used in GF-multiplication
+>>     
+>
+> Array of source coefficients?  Are you doing a vector-vector
+> multiplication here?
+>
+> Given this code:
+>
+>   
+>> 	for (d = 0; d < len; d++) {
+>> +		wq = wp = ptrs[0][d];
+>> +		for (z = 1; z < src_cnt; z++) {
+>> +			wd = ptrs[z][d];
+>> +			wp ^= wd;
+>> +			wq ^= raid6_gfmul[scfs[z]][wd];
+>> +		}
+>>     
+>
+> ... it kinds of looks like that.
+>
+> This is really quite expensive!  The whole point of the restore code
+> that exists is that we never do a two-dimensional lookup, instead
+> caching a pointer to the multiplication table that we intend to use,
+> because the RAID-6 code only ever contains scalar-vector multiplications.
+>
+> I really don't get this, and I think it's broken.
+>   
+Well, that code IS broken. Dan, I think you over-optimized this part.
+Have you ever tested this code path? Besides of doing two-dimensional
+lookup at every step it ignores scfs[0] completely so if it's not equal
+to one the result is wrong.
 
-	-hpa
-
--- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
+Regards, Ilya.
 
