@@ -1,139 +1,60 @@
-From: Erik Boettcher <tehfoo@gmail.com>
+From: Max Amanshauser <linux-raid@lambdalifting.org>
 Subject: Re: Raid 5 Recovery
-Date: Sun, 22 Mar 2009 03:15:15 +0000
-Message-ID: <125ed8800903212015g4987fca9lbb8f42cfb2333a0d@mail.gmail.com>
-References: <125ed8800812272221y44e77849l886a80f32cbcfbec@mail.gmail.com>
-	 <3513de790812280753k5c46799cj92a0e9566227fadc@mail.gmail.com>
-	 <125ed8800812281002t6eecb5cbu2173efab36418c92@mail.gmail.com>
-	 <125ed8800812281004o4d179064r735e46315481775a@mail.gmail.com>
-	 <125ed8800812281013t59a3dc8cte44091d262cb8905@mail.gmail.com>
-	 <20081228183921.GA5815@csy.ca>
-	 <alpine.DEB.1.10.0812281714080.23996@p34.internal.lan>
-Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=0016e647ecfc07ee6c0465ac8f66
+Date: Sun, 22 Mar 2009 08:15:16 +0100
+Message-ID: <FCCA5C2A-C9B5-40CF-8DB7-5DDAC1663384@lambdalifting.org>
+References: <125ed8800812272221y44e77849l886a80f32cbcfbec@mail.gmail.com> <3513de790812280753k5c46799cj92a0e9566227fadc@mail.gmail.com> <125ed8800812281002t6eecb5cbu2173efab36418c92@mail.gmail.com> <125ed8800812281004o4d179064r735e46315481775a@mail.gmail.com> <125ed8800812281013t59a3dc8cte44091d262cb8905@mail.gmail.com> <20081228183921.GA5815@csy.ca> <alpine.DEB.1.10.0812281714080.23996@p34.internal.lan> <125ed8800903212015g4987fca9lbb8f42cfb2333a0d@mail.gmail.com>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0812281714080.23996@p34.internal.lan>
+In-Reply-To: <125ed8800903212015g4987fca9lbb8f42cfb2333a0d@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Shane W <shane-kernel@csy.ca>, linux-raid@vger.kernel.org
+To: Erik Boettcher <tehfoo@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---0016e647ecfc07ee6c0465ac8f66
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 
-On Sun, Dec 28, 2008 at 10:15 PM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> On Sun, 28 Dec 2008, Shane W wrote:
->> I am curious as to whether there is another way to recover
->> from the multiple drive nonfailure condition though because
->> recreating can raise the heart rate a little.
->
-> I was also going to suggest this; however this should be marked as the
-> option of last resort, I did this with an array once and used the exact same
-> options and much of the FS was corrupted.  If all other options are
-> exhausted and you have confirmed that, then it is your last hope I believe.
->
+On Mar 22, 2009, at 4:15 AM, Erik Boettcher wrote:
 
-Indeed recreating seems like my only option now.  I'd like to ensure
-the right creation order, so I'd like to ask for some help.  Attached
-is the output of 'mdadm -Evvvv /dev/sd{a,b,c,d,e}3'  Any help
-restoring this array is greatly appreciated!
+> Indeed recreating seems like my only option now.  I'd like to ensure
+> the right creation order, so I'd like to ask for some help.  Attached
+> is the output of 'mdadm -Evvvv /dev/sd{a,b,c,d,e}3'  Any help
+> restoring this array is greatly appreciated!
+> <mdadmEout>
 
---0016e647ecfc07ee6c0465ac8f66
-Content-Type: application/octet-stream; name=mdadmEout
-Content-Disposition: attachment; filename=mdadmEout
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ftt9714t0
 
-L2Rldi9zZGEzOgogICAgICAgICAgTWFnaWMgOiBhOTJiNGVmYwogICAgICAgIFZlcnNpb24gOiAw
-MC44OC4wMAogICAgICAgICAgIFVVSUQgOiBiMmNjYTVmMAogIENyZWF0aW9uIFRpbWUgOiBUaHUg
-SmFuIDE4IDAyOjI5OjA5IDIwMDcKICAgICBSYWlkIExldmVsIDogcmFpZDUKICBVc2VkIERldiBT
-aXplIDogMTk1MDkzMjQ4ICgxODYuMDYgR2lCIDE5OS43OCBHQikKICAgICBBcnJheSBTaXplIDog
-NzgwMzcyOTkyICg3NDQuMjIgR2lCIDc5OS4xMCBHQikKICAgUmFpZCBEZXZpY2VzIDogNQogIFRv
-dGFsIERldmljZXMgOiA1ClByZWZlcnJlZCBNaW5vciA6IDAKCiAgICBVcGRhdGUgVGltZSA6IFR1
-ZSBEZWMgIDkgMDI6MTE6NTYgMjAwOAogICAgICAgICAgU3RhdGUgOiBjbGVhbgogQWN0aXZlIERl
-dmljZXMgOiA1CldvcmtpbmcgRGV2aWNlcyA6IDUKIEZhaWxlZCBEZXZpY2VzIDogMAogIFNwYXJl
-IERldmljZXMgOiAwCiAgICAgICBDaGVja3N1bSA6IDQ2Mzg0YzEgLSBleHBlY3RlZCA0NjM4NDli
-CiAgICAgICAgIEV2ZW50cyA6IDAuNDUwOAoKICAgICAgICAgTGF5b3V0IDogbGVmdC1hc3ltbWV0
-cmljCiAgICAgQ2h1bmsgU2l6ZSA6IDMySwoKICAgICAgTnVtYmVyICAgTWFqb3IgICBNaW5vciAg
-IFJhaWREZXZpY2UgU3RhdGUKdGhpcyAgICAgNCAgICAgICA4ICAgICAgICAxICAgICAgICA0ICAg
-ICAgc3luYyAgIC9kZXYvc2RhMQoKICAgMCAgICAgMCAgICAgICA4ICAgICAgIDMzICAgICAgICAw
-ICAgICAgc3luYyAgIC9kZXYvc2RjMQogICAxICAgICAxICAgICAgIDggICAgICAgNDkgICAgICAg
-IDEgICAgICBzeW5jICAgL2Rldi9zZGQxCiAgIDIgICAgIDAgICAgICAgOCAgICAgICA2NSAgICAg
-ICAgMCAgICAgIHN5bmMgICAvZGV2L3NkZTEKICAgMyAgICAgMSAgICAgICA4ICAgICAgIDE3ICAg
-ICAgICAxICAgICAgc3luYyAgIC9kZXYvc2RiMQogICA0ICAgICA0ICAgICAgIDggICAgICAgIDEg
-ICAgICAgIDQgICAgICBzeW5jICAgL2Rldi9zZGExCi9kZXYvc2RiMzoKICAgICAgICAgIE1hZ2lj
-IDogYTkyYjRlZmMKICAgICAgICBWZXJzaW9uIDogMDAuODguMDAKICAgICAgICAgICBVVUlEIDog
-YjJjY2E1ZjAKICBDcmVhdGlvbiBUaW1lIDogVGh1IEphbiAxOCAwMjoyOTowOSAyMDA3CiAgICAg
-UmFpZCBMZXZlbCA6IHJhaWQ1CiAgVXNlZCBEZXYgU2l6ZSA6IDE5NTA5MzI0OCAoMTg2LjA2IEdp
-QiAxOTkuNzggR0IpCiAgICAgQXJyYXkgU2l6ZSA6IDc4MDM3Mjk5MiAoNzQ0LjIyIEdpQiA3OTku
-MTAgR0IpCiAgIFJhaWQgRGV2aWNlcyA6IDUKICBUb3RhbCBEZXZpY2VzIDogNQpQcmVmZXJyZWQg
-TWlub3IgOiAwCgogICAgVXBkYXRlIFRpbWUgOiBUdWUgRGVjICA5IDAyOjExOjU2IDIwMDgKICAg
-ICAgICAgIFN0YXRlIDogY2xlYW4KIEFjdGl2ZSBEZXZpY2VzIDogNQpXb3JraW5nIERldmljZXMg
-OiA1CiBGYWlsZWQgRGV2aWNlcyA6IDAKICBTcGFyZSBEZXZpY2VzIDogMAogICAgICAgQ2hlY2tz
-dW0gOiA0NjM4NGQxIC0gZXhwZWN0ZWQgNDYzODRhNQogICAgICAgICBFdmVudHMgOiAwLjQ1MDgK
-CiAgICAgICAgIExheW91dCA6IGxlZnQtYXN5bW1ldHJpYwogICAgIENodW5rIFNpemUgOiAzMksK
-CiAgICAgIE51bWJlciAgIE1ham9yICAgTWlub3IgICBSYWlkRGV2aWNlIFN0YXRlCnRoaXMgICAg
-IDEgICAgICAgOCAgICAgICAxNyAgICAgICAgMSAgICAgIHN5bmMgICAvZGV2L3NkYjEKCiAgIDAg
-ICAgIDAgICAgICAgOCAgICAgICAzMyAgICAgICAgMCAgICAgIHN5bmMgICAvZGV2L3NkYzEKICAg
-MSAgICAgMSAgICAgICA4ICAgICAgIDQ5ICAgICAgICAxICAgICAgc3luYyAgIC9kZXYvc2RkMQog
-ICAyICAgICAwICAgICAgIDggICAgICAgNjUgICAgICAgIDAgICAgICBzeW5jICAgL2Rldi9zZGUx
-CiAgIDMgICAgIDEgICAgICAgOCAgICAgICAxNyAgICAgICAgMSAgICAgIHN5bmMgICAvZGV2L3Nk
-YjEKICAgNCAgICAgNCAgICAgICA4ICAgICAgICAxICAgICAgICA0ICAgICAgc3luYyAgIC9kZXYv
-c2RhMQovZGV2L3NkYzM6CiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjCiAgICAgICAgVmVyc2lv
-biA6IDAwLjg4LjAwCiAgICAgICAgICAgVVVJRCA6IGIyY2NhNWYwCiAgQ3JlYXRpb24gVGltZSA6
-IFRodSBKYW4gMTggMDI6Mjk6MDkgMjAwNwogICAgIFJhaWQgTGV2ZWwgOiByYWlkNQogIFVzZWQg
-RGV2IFNpemUgOiAxOTUwOTMyNDggKDE4Ni4wNiBHaUIgMTk5Ljc4IEdCKQogICAgIEFycmF5IFNp
-emUgOiA3ODAzNzI5OTIgKDc0NC4yMiBHaUIgNzk5LjEwIEdCKQogICBSYWlkIERldmljZXMgOiA1
-CiAgVG90YWwgRGV2aWNlcyA6IDUKUHJlZmVycmVkIE1pbm9yIDogMAoKICAgIFVwZGF0ZSBUaW1l
-IDogVHVlIERlYyAgOSAwMjoxMTo1NiAyMDA4CiAgICAgICAgICBTdGF0ZSA6IGNsZWFuCiBBY3Rp
-dmUgRGV2aWNlcyA6IDUKV29ya2luZyBEZXZpY2VzIDogNQogRmFpbGVkIERldmljZXMgOiAwCiAg
-U3BhcmUgRGV2aWNlcyA6IDAKICAgICAgIENoZWNrc3VtIDogNDYzODRiOSAtIGNvcnJlY3QKICAg
-ICAgICAgRXZlbnRzIDogMC40NTA4CgogICAgICAgICBMYXlvdXQgOiBsZWZ0LWFzeW1tZXRyaWMK
-ICAgICBDaHVuayBTaXplIDogMzJLCgogICAgICBOdW1iZXIgICBNYWpvciAgIE1pbm9yICAgUmFp
-ZERldmljZSBTdGF0ZQp0aGlzICAgICAwICAgICAgIDggICAgICAgMzMgICAgICAgIDAgICAgICBz
-eW5jICAgL2Rldi9zZGMxCgogICAwICAgICAwICAgICAgIDggICAgICAgMzMgICAgICAgIDAgICAg
-ICBhY3RpdmUgc3luYyAgIC9kZXYvc2RjMQogICAxICAgICAxICAgICAgIDggICAgICAgNDkgICAg
-ICAgIDEgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RkMQogICAyICAgICAwICAgICAgIDggICAg
-ICAgNjUgICAgICAgIDAgICAgICBzeW5jICAgL2Rldi9zZGUxCiAgIDMgICAgIDEgICAgICAgOCAg
-ICAgICAxNyAgICAgICAgMSAgICAgIHN5bmMgICAvZGV2L3NkYjEKICAgNCAgICAgNCAgICAgICA4
-ICAgICAgICAxICAgICAgICA0ICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkYTEKL2Rldi9zZGQz
-OgogICAgICAgICAgTWFnaWMgOiBhOTJiNGVmYwogICAgICAgIFZlcnNpb24gOiAwMC45MC4wMAog
-ICAgICAgICAgIFVVSUQgOiBiMmNjYTVmMDo1OWEwNGNmYzphM2JiZTcwNzoxMDgxMjRhMgogIENy
-ZWF0aW9uIFRpbWUgOiBUaHUgSmFuIDE4IDAyOjI5OjA5IDIwMDcKICAgICBSYWlkIExldmVsIDog
-cmFpZDUKICBVc2VkIERldiBTaXplIDogMTk1MDkzMjQ4ICgxODYuMDYgR2lCIDE5OS43OCBHQikK
-ICAgICBBcnJheSBTaXplIDogNzgwMzcyOTkyICg3NDQuMjIgR2lCIDc5OS4xMCBHQikKICAgUmFp
-ZCBEZXZpY2VzIDogNQogIFRvdGFsIERldmljZXMgOiA1ClByZWZlcnJlZCBNaW5vciA6IDAKCiAg
-ICBVcGRhdGUgVGltZSA6IFR1ZSBEZWMgIDkgMDI6MTE6NTYgMjAwOAogICAgICAgICAgU3RhdGUg
-OiBjbGVhbgogQWN0aXZlIERldmljZXMgOiA1CldvcmtpbmcgRGV2aWNlcyA6IDUKIEZhaWxlZCBE
-ZXZpY2VzIDogMAogIFNwYXJlIERldmljZXMgOiAwCiAgICAgICBDaGVja3N1bSA6IDQ2Mzg0ZWQg
-LSBjb3JyZWN0CiAgICAgICAgIEV2ZW50cyA6IDAuNDUwOAoKICAgICAgICAgTGF5b3V0IDogbGVm
-dC1hc3ltbWV0cmljCiAgICAgQ2h1bmsgU2l6ZSA6IDMySwoKICAgICAgTnVtYmVyICAgTWFqb3Ig
-ICBNaW5vciAgIFJhaWREZXZpY2UgU3RhdGUKdGhpcyAgICAgMSAgICAgICA4ICAgICAgIDUxICAg
-ICAgICAxICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkZDMKCiAgIDAgICAgIDAgICAgICAgOCAg
-ICAgICAzNSAgICAgICAgMCAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGMzCiAgIDEgICAgIDEg
-ICAgICAgOCAgICAgICA1MSAgICAgICAgMSAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGQzCiAg
-IDIgICAgIDIgICAgICAgOCAgICAgICA2NyAgICAgICAgMiAgICAgIGFjdGl2ZSBzeW5jICAgL2Rl
-di9zZGUzCiAgIDMgICAgIDMgICAgICAgOCAgICAgICAxOSAgICAgICAgMyAgICAgIGFjdGl2ZSBz
-eW5jICAgL2Rldi9zZGIzCiAgIDQgICAgIDQgICAgICAgOCAgICAgICAgMyAgICAgICAgNCAgICAg
-IGFjdGl2ZSBzeW5jICAgL2Rldi9zZGEzCi9kZXYvc2RlMzoKICAgICAgICAgIE1hZ2ljIDogYTky
-YjRlZmMKICAgICAgICBWZXJzaW9uIDogMDAuOTAuMDAKICAgICAgICAgICBVVUlEIDogYjJjY2E1
-ZjA6NTlhMDRjZmM6YTNiYmU3MDc6MTA4MTI0YTIKICBDcmVhdGlvbiBUaW1lIDogVGh1IEphbiAx
-OCAwMjoyOTowOSAyMDA3CiAgICAgUmFpZCBMZXZlbCA6IHJhaWQ1CiAgVXNlZCBEZXYgU2l6ZSA6
-IDE5NTA5MzI0OCAoMTg2LjA2IEdpQiAxOTkuNzggR0IpCiAgICAgQXJyYXkgU2l6ZSA6IDc4MDM3
-Mjk5MiAoNzQ0LjIyIEdpQiA3OTkuMTAgR0IpCiAgIFJhaWQgRGV2aWNlcyA6IDUKICBUb3RhbCBE
-ZXZpY2VzIDogNQpQcmVmZXJyZWQgTWlub3IgOiAwCgogICAgVXBkYXRlIFRpbWUgOiBUdWUgRGVj
-ICA5IDAyOjExOjU2IDIwMDgKICAgICAgICAgIFN0YXRlIDogY2xlYW4KIEFjdGl2ZSBEZXZpY2Vz
-IDogNQpXb3JraW5nIERldmljZXMgOiA1CiBGYWlsZWQgRGV2aWNlcyA6IDAKICBTcGFyZSBEZXZp
-Y2VzIDogMAogICAgICAgQ2hlY2tzdW0gOiA0NjM4NGZmIC0gY29ycmVjdAogICAgICAgICBFdmVu
-dHMgOiAwLjQ1MDgKCiAgICAgICAgIExheW91dCA6IGxlZnQtYXN5bW1ldHJpYwogICAgIENodW5r
-IFNpemUgOiAzMksKCiAgICAgIE51bWJlciAgIE1ham9yICAgTWlub3IgICBSYWlkRGV2aWNlIFN0
-YXRlCnRoaXMgICAgIDIgICAgICAgOCAgICAgICA2NyAgICAgICAgMiAgICAgIGFjdGl2ZSBzeW5j
-ICAgL2Rldi9zZGUzCgogICAwICAgICAwICAgICAgIDggICAgICAgMzUgICAgICAgIDAgICAgICBh
-Y3RpdmUgc3luYyAgIC9kZXYvc2RjMwogICAxICAgICAxICAgICAgIDggICAgICAgNTEgICAgICAg
-IDEgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RkMwogICAyICAgICAyICAgICAgIDggICAgICAg
-NjcgICAgICAgIDIgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RlMwogICAzICAgICAzICAgICAg
-IDggICAgICAgMTkgICAgICAgIDMgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RiMwogICA0ICAg
-ICA0ICAgICAgIDggICAgICAgIDMgICAgICAgIDQgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2Rh
-Mwo=
---0016e647ecfc07ee6c0465ac8f66--
+
+I had the same problem recently and solved it relatively pain-free.
+
+
+Basically what I did was:
+
+*) Find out where the old superblocks are located and backup them with  
+dd, just in case. Ideally you should backup all of the disks entirely  
+(if they have errors, use dd_rescue and do the following on healthy  
+disks).
+
+*) Recreate with mdadm and the same options that were used when  
+creating the raid in the first place, with one device declared missing.
+"mdadm --create /dev/md0 -e 0.90 -c 32 -p left-asymmetric -l 5 -n 5 / 
+dev/sdc3 /dev/sdd3 /dev/sde3 /dev/sdb3 missing" sounds about right in  
+your case. I'd find out what the difference between 0.88 and 0.90  
+superblocks is, though. If you have devices with errors you should  
+declare the most broken one missing, of course. And make absolutely  
+sure that the options are correct or you will overwrite innocent data.  
+The device order is not so important, since you can change it in  
+subsequent recreate attempts without breaking anything.
+
+*) Try to read-only mount the array, and/or use dumpe2fs (if you have  
+ext2/3). If it works, hurray. If not, recreate again with a different  
+device order. Ultimately you will probably have to e2fsck to correct  
+the damage.
+
+
+I got the correct device order on the second attempt and lost only  
+150kB due to hard disk errors. Guess I was lucky.
+
+-- 
+Good luck,
+Max.
+
