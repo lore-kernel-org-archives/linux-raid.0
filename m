@@ -1,56 +1,32 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 01/13] md/raid6: move raid6 data processing to raid6_pq.ko
-Date: Sun, 22 Mar 2009 10:22:05 -0700
-Message-ID: <e9c3a7c20903221022v6049a74fu89b5032322343f25@mail.gmail.com>
-References: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com>
-	 <20090318192021.20375.69678.stgit@dwillia2-linux.ch.intel.com>
-	 <20090319200931.GA10491@skl-net.de>
+From: Ilya Yanok <yanok@emcraft.com>
+Subject: Re: [PATCH 06/13] async_tx: add support for asynchronous GF 	multiplication
+Date: Mon, 23 Mar 2009 00:37:15 +0300
+Message-ID: <49C6AF8B.6080602@emcraft.com>
+References: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com>	 <20090318192046.20375.89854.stgit@dwillia2-linux.ch.intel.com>	 <49C26D91.10804@intel.com> <49C5486D.9020103@emcraft.com>	 <e9c3a7c20903211500j3f1575e7o2ad9fb5969a2bdd@mail.gmail.com>	 <49C56D74.3030303@emcraft.com> <e9c3a7c20903211553w5200ea0cu360d0a57fef77c66@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090319200931.GA10491@skl-net.de>
+In-Reply-To: <e9c3a7c20903211553w5200ea0cu360d0a57fef77c66@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, neilb@suse.de, maciej.sosnowski@intel.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "H. Peter Anvin" <h.peter.anvin@intel.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, neilb@suse.de, maciej.sosnowski@intel.com, Yuri Tikhonov <yur@emcraft.com>
 List-Id: linux-raid.ids
 
-On Thu, Mar 19, 2009 at 1:09 PM, Andre Noll <maan@systemlinux.org> wrot=
-e:
-> On 12:20, Dan Williams wrote:
->> Move the raid6 data processing routines into a standalone module
->> (raid6_pq) to prepare them to be called from async_tx wrappers and o=
-ther
->> non-md drivers/modules. =A0This precludes a circular dependency of r=
-aid456
->> needing the async modules for data processing while those modules in
->> turn depend on raid456 for the base level synchronous raid6 routines=
-=2E
->>
->> To support this move:
->> 1/ The exportable definitions in raid6.h move to include/linux/raid/=
-pq.h
+Hi Dan,
+
+Dan Williams wrote:
+>> Unfortunately we are not getting paid for this project any more so I
+>> can't spend much time on it.
+>>     
 >
-> As raid*.h and md.h have been moved to drivers/md recently, pq.h
-> should probably live there as well.
+> Hopefully I can occasionally call on you to try out some tests with
+> ppc440spe driver and hardware?  As we have seen in the past that
+> platform hits corner cases that iop13xx does not.
+>   
 
-Not in this case.  pq.h is analogous to xor.h currently in
-include/linux/raid/.  I.e. just the data processing symbols that are
-used by modules outside of drivers/md/.
+Well, I think I'll be able to run some tests... but I can't do much
+coding or debugging here or my manager won't be happy...
 
->> +#define time_before(x, y) ((x) < (y))
->
-> This macro seems to have no users (and a strange name).
->
+Regards, Ilya.
 
-It's used a few lines down in the same file.  It allows raid6algos.c
-to be compiled for the userspace test (drivers/md/raid6test/) where we
-do not have jiffies.h.
-
-Regards,
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
