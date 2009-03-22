@@ -1,37 +1,56 @@
-From: Erik Boettcher <tehfoo@gmail.com>
-Subject: Re: Raid 5 Recovery
-Date: Sun, 22 Mar 2009 12:49:42 -0400
-Message-ID: <125ed8800903220949k73b143ffyaca92464ad714f70@mail.gmail.com>
-References: <125ed8800812272221y44e77849l886a80f32cbcfbec@mail.gmail.com>
-	 <3513de790812280753k5c46799cj92a0e9566227fadc@mail.gmail.com>
-	 <125ed8800812281002t6eecb5cbu2173efab36418c92@mail.gmail.com>
-	 <125ed8800812281004o4d179064r735e46315481775a@mail.gmail.com>
-	 <125ed8800812281013t59a3dc8cte44091d262cb8905@mail.gmail.com>
-	 <20081228183921.GA5815@csy.ca>
-	 <alpine.DEB.1.10.0812281714080.23996@p34.internal.lan>
-	 <125ed8800903212015g4987fca9lbb8f42cfb2333a0d@mail.gmail.com>
-	 <FCCA5C2A-C9B5-40CF-8DB7-5DDAC1663384@lambdalifting.org>
-	 <125ed8800903220205l6c3efa1boecad13161de1754b@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 01/13] md/raid6: move raid6 data processing to raid6_pq.ko
+Date: Sun, 22 Mar 2009 10:22:05 -0700
+Message-ID: <e9c3a7c20903221022v6049a74fu89b5032322343f25@mail.gmail.com>
+References: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com>
+	 <20090318192021.20375.69678.stgit@dwillia2-linux.ch.intel.com>
+	 <20090319200931.GA10491@skl-net.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <125ed8800903220205l6c3efa1boecad13161de1754b@mail.gmail.com>
+In-Reply-To: <20090319200931.GA10491@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Max Amanshauser <linux-raid@lambdalifting.org>
-Cc: linux-raid@vger.kernel.org
+To: Andre Noll <maan@systemlinux.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, neilb@suse.de, maciej.sosnowski@intel.com
 List-Id: linux-raid.ids
 
-Ok so I found the superblocks, backed them up, then created the array
-(it was sdc,sdd,sde,sda,missing -- luckily I got that first time
-around :).  I checked out the first few sectors of /dev/md0 and it
-APPEARS to be LLVM, as shown below.  Now before I do anything that
-writes the disks any more, I want to be sure that if I'm seeing this
-I'm golden.  What do I need to do to bring the last disk back into the
-array?
+On Thu, Mar 19, 2009 at 1:09 PM, Andre Noll <maan@systemlinux.org> wrot=
+e:
+> On 12:20, Dan Williams wrote:
+>> Move the raid6 data processing routines into a standalone module
+>> (raid6_pq) to prepare them to be called from async_tx wrappers and o=
+ther
+>> non-md drivers/modules. =A0This precludes a circular dependency of r=
+aid456
+>> needing the async modules for data processing while those modules in
+>> turn depend on raid456 for the base level synchronous raid6 routines=
+=2E
+>>
+>> To support this move:
+>> 1/ The exportable definitions in raid6.h move to include/linux/raid/=
+pq.h
+>
+> As raid*.h and md.h have been moved to drivers/md recently, pq.h
+> should probably live there as well.
 
-00000210  82 d3 36 66 20 00 00 00  4c 56 4d 32 20 30 30 31  |..6f ...LVM2 001|
-00000220  75 67 35 77 55 43 59 6e  34 57 71 39 49 38 53 35  |ug5wUCYn4Wq9I8S5|
-00000230  41 31 45 6d 69 79 71 32  51 78 68 42 39 63 32 78  |A1Emiyq2QxhB9c2x|
+Not in this case.  pq.h is analogous to xor.h currently in
+include/linux/raid/.  I.e. just the data processing symbols that are
+used by modules outside of drivers/md/.
 
-Many thanks for all of your help!
+>> +#define time_before(x, y) ((x) < (y))
+>
+> This macro seems to have no users (and a strange name).
+>
+
+It's used a few lines down in the same file.  It allows raid6algos.c
+to be compiled for the userspace test (drivers/md/raid6test/) where we
+do not have jiffies.h.
+
+Regards,
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
