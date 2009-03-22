@@ -1,58 +1,139 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 06/13] async_tx: add support for asynchronous GF
-	multiplication
-Date: Sat, 21 Mar 2009 15:53:38 -0700
-Message-ID: <e9c3a7c20903211553w5200ea0cu360d0a57fef77c66@mail.gmail.com>
-References: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com>
-	 <20090318192046.20375.89854.stgit@dwillia2-linux.ch.intel.com>
-	 <49C26D91.10804@intel.com> <49C5486D.9020103@emcraft.com>
-	 <e9c3a7c20903211500j3f1575e7o2ad9fb5969a2bdd@mail.gmail.com>
-	 <49C56D74.3030303@emcraft.com>
+From: Erik Boettcher <tehfoo@gmail.com>
+Subject: Re: Raid 5 Recovery
+Date: Sun, 22 Mar 2009 03:15:15 +0000
+Message-ID: <125ed8800903212015g4987fca9lbb8f42cfb2333a0d@mail.gmail.com>
+References: <125ed8800812272221y44e77849l886a80f32cbcfbec@mail.gmail.com>
+	 <3513de790812280753k5c46799cj92a0e9566227fadc@mail.gmail.com>
+	 <125ed8800812281002t6eecb5cbu2173efab36418c92@mail.gmail.com>
+	 <125ed8800812281004o4d179064r735e46315481775a@mail.gmail.com>
+	 <125ed8800812281013t59a3dc8cte44091d262cb8905@mail.gmail.com>
+	 <20081228183921.GA5815@csy.ca>
+	 <alpine.DEB.1.10.0812281714080.23996@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed; boundary=0016e647ecfc07ee6c0465ac8f66
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49C56D74.3030303@emcraft.com>
+In-Reply-To: <alpine.DEB.1.10.0812281714080.23996@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ilya Yanok <yanok@emcraft.com>
-Cc: "H. Peter Anvin" <h.peter.anvin@intel.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, neilb@suse.de, maciej.sosnowski@intel.com, Yuri Tikhonov <yur@emcraft.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Shane W <shane-kernel@csy.ca>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Mar 21, 2009 at 3:43 PM, Ilya Yanok <yanok@emcraft.com> wrote:
-> Hi Dan,
+--0016e647ecfc07ee6c0465ac8f66
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+
+On Sun, Dec 28, 2008 at 10:15 PM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+> On Sun, 28 Dec 2008, Shane W wrote:
+>> I am curious as to whether there is another way to recover
+>> from the multiple drive nonfailure condition though because
+>> recreating can raise the heart rate a little.
 >
-> Dan Williams wrote:
->>> Have you ever tested this code path?
->>>
->>
->> Not this path, not yet.
+> I was also going to suggest this; however this should be marked as the
+> option of last resort, I did this with an array once and used the exact same
+> options and much of the FS was corrupted.  If all other options are
+> exhausted and you have confirmed that, then it is your last hope I believe.
 >
-> You can disable the fallback to optimized synchronous functions and t=
-est
-> it with raid with dmaengine disabled. Or you can add support for
-> arbitrary coefficients in dmatest...
 
-There are also corner cases with channel switching that can only be
-tested with an async_tx specific test module and coordination from the
-driver.
+Indeed recreating seems like my only option now.  I'd like to ensure
+the right creation order, so I'd like to ask for some help.  Attached
+is the output of 'mdadm -Evvvv /dev/sd{a,b,c,d,e}3'  Any help
+restoring this array is greatly appreciated!
 
->> =A0 Which is exactly why I am holding back the md
->> pieces. =A0We can collaborate on testing and stabilizing the api for=
- a
->> kernel cycle before turning on the raid6 conversion.
->>
->
-> Unfortunately we are not getting paid for this project any more so I
-> can't spend much time on it.
+--0016e647ecfc07ee6c0465ac8f66
+Content-Type: application/octet-stream; name=mdadmEout
+Content-Disposition: attachment; filename=mdadmEout
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_ftt9714t0
 
-Hopefully I can occasionally call on you to try out some tests with
-ppc440spe driver and hardware?  As we have seen in the past that
-platform hits corner cases that iop13xx does not.
-
-Thanks,
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+L2Rldi9zZGEzOgogICAgICAgICAgTWFnaWMgOiBhOTJiNGVmYwogICAgICAgIFZlcnNpb24gOiAw
+MC44OC4wMAogICAgICAgICAgIFVVSUQgOiBiMmNjYTVmMAogIENyZWF0aW9uIFRpbWUgOiBUaHUg
+SmFuIDE4IDAyOjI5OjA5IDIwMDcKICAgICBSYWlkIExldmVsIDogcmFpZDUKICBVc2VkIERldiBT
+aXplIDogMTk1MDkzMjQ4ICgxODYuMDYgR2lCIDE5OS43OCBHQikKICAgICBBcnJheSBTaXplIDog
+NzgwMzcyOTkyICg3NDQuMjIgR2lCIDc5OS4xMCBHQikKICAgUmFpZCBEZXZpY2VzIDogNQogIFRv
+dGFsIERldmljZXMgOiA1ClByZWZlcnJlZCBNaW5vciA6IDAKCiAgICBVcGRhdGUgVGltZSA6IFR1
+ZSBEZWMgIDkgMDI6MTE6NTYgMjAwOAogICAgICAgICAgU3RhdGUgOiBjbGVhbgogQWN0aXZlIERl
+dmljZXMgOiA1CldvcmtpbmcgRGV2aWNlcyA6IDUKIEZhaWxlZCBEZXZpY2VzIDogMAogIFNwYXJl
+IERldmljZXMgOiAwCiAgICAgICBDaGVja3N1bSA6IDQ2Mzg0YzEgLSBleHBlY3RlZCA0NjM4NDli
+CiAgICAgICAgIEV2ZW50cyA6IDAuNDUwOAoKICAgICAgICAgTGF5b3V0IDogbGVmdC1hc3ltbWV0
+cmljCiAgICAgQ2h1bmsgU2l6ZSA6IDMySwoKICAgICAgTnVtYmVyICAgTWFqb3IgICBNaW5vciAg
+IFJhaWREZXZpY2UgU3RhdGUKdGhpcyAgICAgNCAgICAgICA4ICAgICAgICAxICAgICAgICA0ICAg
+ICAgc3luYyAgIC9kZXYvc2RhMQoKICAgMCAgICAgMCAgICAgICA4ICAgICAgIDMzICAgICAgICAw
+ICAgICAgc3luYyAgIC9kZXYvc2RjMQogICAxICAgICAxICAgICAgIDggICAgICAgNDkgICAgICAg
+IDEgICAgICBzeW5jICAgL2Rldi9zZGQxCiAgIDIgICAgIDAgICAgICAgOCAgICAgICA2NSAgICAg
+ICAgMCAgICAgIHN5bmMgICAvZGV2L3NkZTEKICAgMyAgICAgMSAgICAgICA4ICAgICAgIDE3ICAg
+ICAgICAxICAgICAgc3luYyAgIC9kZXYvc2RiMQogICA0ICAgICA0ICAgICAgIDggICAgICAgIDEg
+ICAgICAgIDQgICAgICBzeW5jICAgL2Rldi9zZGExCi9kZXYvc2RiMzoKICAgICAgICAgIE1hZ2lj
+IDogYTkyYjRlZmMKICAgICAgICBWZXJzaW9uIDogMDAuODguMDAKICAgICAgICAgICBVVUlEIDog
+YjJjY2E1ZjAKICBDcmVhdGlvbiBUaW1lIDogVGh1IEphbiAxOCAwMjoyOTowOSAyMDA3CiAgICAg
+UmFpZCBMZXZlbCA6IHJhaWQ1CiAgVXNlZCBEZXYgU2l6ZSA6IDE5NTA5MzI0OCAoMTg2LjA2IEdp
+QiAxOTkuNzggR0IpCiAgICAgQXJyYXkgU2l6ZSA6IDc4MDM3Mjk5MiAoNzQ0LjIyIEdpQiA3OTku
+MTAgR0IpCiAgIFJhaWQgRGV2aWNlcyA6IDUKICBUb3RhbCBEZXZpY2VzIDogNQpQcmVmZXJyZWQg
+TWlub3IgOiAwCgogICAgVXBkYXRlIFRpbWUgOiBUdWUgRGVjICA5IDAyOjExOjU2IDIwMDgKICAg
+ICAgICAgIFN0YXRlIDogY2xlYW4KIEFjdGl2ZSBEZXZpY2VzIDogNQpXb3JraW5nIERldmljZXMg
+OiA1CiBGYWlsZWQgRGV2aWNlcyA6IDAKICBTcGFyZSBEZXZpY2VzIDogMAogICAgICAgQ2hlY2tz
+dW0gOiA0NjM4NGQxIC0gZXhwZWN0ZWQgNDYzODRhNQogICAgICAgICBFdmVudHMgOiAwLjQ1MDgK
+CiAgICAgICAgIExheW91dCA6IGxlZnQtYXN5bW1ldHJpYwogICAgIENodW5rIFNpemUgOiAzMksK
+CiAgICAgIE51bWJlciAgIE1ham9yICAgTWlub3IgICBSYWlkRGV2aWNlIFN0YXRlCnRoaXMgICAg
+IDEgICAgICAgOCAgICAgICAxNyAgICAgICAgMSAgICAgIHN5bmMgICAvZGV2L3NkYjEKCiAgIDAg
+ICAgIDAgICAgICAgOCAgICAgICAzMyAgICAgICAgMCAgICAgIHN5bmMgICAvZGV2L3NkYzEKICAg
+MSAgICAgMSAgICAgICA4ICAgICAgIDQ5ICAgICAgICAxICAgICAgc3luYyAgIC9kZXYvc2RkMQog
+ICAyICAgICAwICAgICAgIDggICAgICAgNjUgICAgICAgIDAgICAgICBzeW5jICAgL2Rldi9zZGUx
+CiAgIDMgICAgIDEgICAgICAgOCAgICAgICAxNyAgICAgICAgMSAgICAgIHN5bmMgICAvZGV2L3Nk
+YjEKICAgNCAgICAgNCAgICAgICA4ICAgICAgICAxICAgICAgICA0ICAgICAgc3luYyAgIC9kZXYv
+c2RhMQovZGV2L3NkYzM6CiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjCiAgICAgICAgVmVyc2lv
+biA6IDAwLjg4LjAwCiAgICAgICAgICAgVVVJRCA6IGIyY2NhNWYwCiAgQ3JlYXRpb24gVGltZSA6
+IFRodSBKYW4gMTggMDI6Mjk6MDkgMjAwNwogICAgIFJhaWQgTGV2ZWwgOiByYWlkNQogIFVzZWQg
+RGV2IFNpemUgOiAxOTUwOTMyNDggKDE4Ni4wNiBHaUIgMTk5Ljc4IEdCKQogICAgIEFycmF5IFNp
+emUgOiA3ODAzNzI5OTIgKDc0NC4yMiBHaUIgNzk5LjEwIEdCKQogICBSYWlkIERldmljZXMgOiA1
+CiAgVG90YWwgRGV2aWNlcyA6IDUKUHJlZmVycmVkIE1pbm9yIDogMAoKICAgIFVwZGF0ZSBUaW1l
+IDogVHVlIERlYyAgOSAwMjoxMTo1NiAyMDA4CiAgICAgICAgICBTdGF0ZSA6IGNsZWFuCiBBY3Rp
+dmUgRGV2aWNlcyA6IDUKV29ya2luZyBEZXZpY2VzIDogNQogRmFpbGVkIERldmljZXMgOiAwCiAg
+U3BhcmUgRGV2aWNlcyA6IDAKICAgICAgIENoZWNrc3VtIDogNDYzODRiOSAtIGNvcnJlY3QKICAg
+ICAgICAgRXZlbnRzIDogMC40NTA4CgogICAgICAgICBMYXlvdXQgOiBsZWZ0LWFzeW1tZXRyaWMK
+ICAgICBDaHVuayBTaXplIDogMzJLCgogICAgICBOdW1iZXIgICBNYWpvciAgIE1pbm9yICAgUmFp
+ZERldmljZSBTdGF0ZQp0aGlzICAgICAwICAgICAgIDggICAgICAgMzMgICAgICAgIDAgICAgICBz
+eW5jICAgL2Rldi9zZGMxCgogICAwICAgICAwICAgICAgIDggICAgICAgMzMgICAgICAgIDAgICAg
+ICBhY3RpdmUgc3luYyAgIC9kZXYvc2RjMQogICAxICAgICAxICAgICAgIDggICAgICAgNDkgICAg
+ICAgIDEgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RkMQogICAyICAgICAwICAgICAgIDggICAg
+ICAgNjUgICAgICAgIDAgICAgICBzeW5jICAgL2Rldi9zZGUxCiAgIDMgICAgIDEgICAgICAgOCAg
+ICAgICAxNyAgICAgICAgMSAgICAgIHN5bmMgICAvZGV2L3NkYjEKICAgNCAgICAgNCAgICAgICA4
+ICAgICAgICAxICAgICAgICA0ICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkYTEKL2Rldi9zZGQz
+OgogICAgICAgICAgTWFnaWMgOiBhOTJiNGVmYwogICAgICAgIFZlcnNpb24gOiAwMC45MC4wMAog
+ICAgICAgICAgIFVVSUQgOiBiMmNjYTVmMDo1OWEwNGNmYzphM2JiZTcwNzoxMDgxMjRhMgogIENy
+ZWF0aW9uIFRpbWUgOiBUaHUgSmFuIDE4IDAyOjI5OjA5IDIwMDcKICAgICBSYWlkIExldmVsIDog
+cmFpZDUKICBVc2VkIERldiBTaXplIDogMTk1MDkzMjQ4ICgxODYuMDYgR2lCIDE5OS43OCBHQikK
+ICAgICBBcnJheSBTaXplIDogNzgwMzcyOTkyICg3NDQuMjIgR2lCIDc5OS4xMCBHQikKICAgUmFp
+ZCBEZXZpY2VzIDogNQogIFRvdGFsIERldmljZXMgOiA1ClByZWZlcnJlZCBNaW5vciA6IDAKCiAg
+ICBVcGRhdGUgVGltZSA6IFR1ZSBEZWMgIDkgMDI6MTE6NTYgMjAwOAogICAgICAgICAgU3RhdGUg
+OiBjbGVhbgogQWN0aXZlIERldmljZXMgOiA1CldvcmtpbmcgRGV2aWNlcyA6IDUKIEZhaWxlZCBE
+ZXZpY2VzIDogMAogIFNwYXJlIERldmljZXMgOiAwCiAgICAgICBDaGVja3N1bSA6IDQ2Mzg0ZWQg
+LSBjb3JyZWN0CiAgICAgICAgIEV2ZW50cyA6IDAuNDUwOAoKICAgICAgICAgTGF5b3V0IDogbGVm
+dC1hc3ltbWV0cmljCiAgICAgQ2h1bmsgU2l6ZSA6IDMySwoKICAgICAgTnVtYmVyICAgTWFqb3Ig
+ICBNaW5vciAgIFJhaWREZXZpY2UgU3RhdGUKdGhpcyAgICAgMSAgICAgICA4ICAgICAgIDUxICAg
+ICAgICAxICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkZDMKCiAgIDAgICAgIDAgICAgICAgOCAg
+ICAgICAzNSAgICAgICAgMCAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGMzCiAgIDEgICAgIDEg
+ICAgICAgOCAgICAgICA1MSAgICAgICAgMSAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGQzCiAg
+IDIgICAgIDIgICAgICAgOCAgICAgICA2NyAgICAgICAgMiAgICAgIGFjdGl2ZSBzeW5jICAgL2Rl
+di9zZGUzCiAgIDMgICAgIDMgICAgICAgOCAgICAgICAxOSAgICAgICAgMyAgICAgIGFjdGl2ZSBz
+eW5jICAgL2Rldi9zZGIzCiAgIDQgICAgIDQgICAgICAgOCAgICAgICAgMyAgICAgICAgNCAgICAg
+IGFjdGl2ZSBzeW5jICAgL2Rldi9zZGEzCi9kZXYvc2RlMzoKICAgICAgICAgIE1hZ2ljIDogYTky
+YjRlZmMKICAgICAgICBWZXJzaW9uIDogMDAuOTAuMDAKICAgICAgICAgICBVVUlEIDogYjJjY2E1
+ZjA6NTlhMDRjZmM6YTNiYmU3MDc6MTA4MTI0YTIKICBDcmVhdGlvbiBUaW1lIDogVGh1IEphbiAx
+OCAwMjoyOTowOSAyMDA3CiAgICAgUmFpZCBMZXZlbCA6IHJhaWQ1CiAgVXNlZCBEZXYgU2l6ZSA6
+IDE5NTA5MzI0OCAoMTg2LjA2IEdpQiAxOTkuNzggR0IpCiAgICAgQXJyYXkgU2l6ZSA6IDc4MDM3
+Mjk5MiAoNzQ0LjIyIEdpQiA3OTkuMTAgR0IpCiAgIFJhaWQgRGV2aWNlcyA6IDUKICBUb3RhbCBE
+ZXZpY2VzIDogNQpQcmVmZXJyZWQgTWlub3IgOiAwCgogICAgVXBkYXRlIFRpbWUgOiBUdWUgRGVj
+ICA5IDAyOjExOjU2IDIwMDgKICAgICAgICAgIFN0YXRlIDogY2xlYW4KIEFjdGl2ZSBEZXZpY2Vz
+IDogNQpXb3JraW5nIERldmljZXMgOiA1CiBGYWlsZWQgRGV2aWNlcyA6IDAKICBTcGFyZSBEZXZp
+Y2VzIDogMAogICAgICAgQ2hlY2tzdW0gOiA0NjM4NGZmIC0gY29ycmVjdAogICAgICAgICBFdmVu
+dHMgOiAwLjQ1MDgKCiAgICAgICAgIExheW91dCA6IGxlZnQtYXN5bW1ldHJpYwogICAgIENodW5r
+IFNpemUgOiAzMksKCiAgICAgIE51bWJlciAgIE1ham9yICAgTWlub3IgICBSYWlkRGV2aWNlIFN0
+YXRlCnRoaXMgICAgIDIgICAgICAgOCAgICAgICA2NyAgICAgICAgMiAgICAgIGFjdGl2ZSBzeW5j
+ICAgL2Rldi9zZGUzCgogICAwICAgICAwICAgICAgIDggICAgICAgMzUgICAgICAgIDAgICAgICBh
+Y3RpdmUgc3luYyAgIC9kZXYvc2RjMwogICAxICAgICAxICAgICAgIDggICAgICAgNTEgICAgICAg
+IDEgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RkMwogICAyICAgICAyICAgICAgIDggICAgICAg
+NjcgICAgICAgIDIgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RlMwogICAzICAgICAzICAgICAg
+IDggICAgICAgMTkgICAgICAgIDMgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RiMwogICA0ICAg
+ICA0ICAgICAgIDggICAgICAgIDMgICAgICAgIDQgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2Rh
+Mwo=
+--0016e647ecfc07ee6c0465ac8f66--
