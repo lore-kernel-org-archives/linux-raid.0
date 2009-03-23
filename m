@@ -1,33 +1,59 @@
-From: Nifty Fedora Mitch <niftyfedora@niftyegg.com>
-Subject: Re: raid 1 single drive failure. rebuilt with replacement drive.
-	missing 20G of data
-Date: Mon, 23 Mar 2009 13:29:28 -0700
-Message-ID: <20090323202928.GB3841@compegg.wr.niftyegg.com>
-References: <20090312021024.GA31067@earthlink.net> <18887.10166.209184.82788@notabene.brown>
+From: Khelben Blackstaff <eye.of.the.8eholder@gmail.com>
+Subject: Questions about 1.X RAID metadata
+Date: Tue, 24 Mar 2009 00:40:22 +0200
+Message-ID: <20090324004022.510bd6b5@ktinos.info>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <18887.10166.209184.82788@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Mitchell Laks <mlaks@post.harvard.edu>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Mar 23, 2009 at 05:09:58PM +1100, Neil Brown wrote:
-> On Wednesday March 11, mlaks@post.harvard.edu wrote:
-> > Hi,
-> > 
-> > I have used linux software raid1 for many years without any data loss. Now I seem to have a problem.
-> > 
-> > I run a server with a pair of WD 400G drives that I keep in a raid 1 configuration. The raid became degraded
-> > but continued to function and continue to store data on the remaining  drive. 
-> > 
+Hello.
 
-Just curious... How much RAM in the system?  Size and config of swap?
+I would like to ask about the V1 RAID metadata.
 
+I searched the mailing list archives for "metadata" and found some interesting
+posts like the following:
 
--- 
-	T o m  M i t c h e l l 
-	Found me a new hat, now what?
+"Time to deprecate old RAID formats"
+"Superblock limits / conversion"
+http://linux-raid.osdl.org/index.php/RAID_superblock_formats
+http://linux-raid.osdl.org/index.php/Superblock
 
+However i still have some questions as there is much confusion about V1 metadata.
+I proceed with my questions:
+
+1) The Superblock article from linux-raid.osdl.org (and some posts in the Time
+to deprecate old RAID formats thread) mention that LILO can't boot of V1 metadata
+The thread in the mailing list is dated October 2007 and the Superblock article
+doesn't mention date, so I don't know if this still stands.
+
+Also, http://lilo.go.dyndns.org/ doesn't work for me so i can't see if there is
+any new LILO version. I use version 22.8
+
+So, can LILO 22.8 (or a newer one if it exists) boot off V1 metadata ?
+
+2) A setup that is usually recommended is to install LILO in the RAID partition
+and mark that partition bootable. So the MBR will boot from the first partition
+that is bootable which is the RAID one.
+
+This obviously works for 0.90 and i assume it would work for 1.0 and 1.2
+If someone chooses 1.1 metadata which are stored in the start of the device, he
+can't install any bootloader to the RAID partition because it would overwrite
+512 bytes of the RAID metadata.
+
+Is this thought of mine correct ?
+In other words can a bootloader (512 bytes - 1 sector) be installed in a
+RAID partition using 1.1 metadata ? (Same question for 1.0 and 1.2)
+
+3) I read in many posts in the mailing list archives about V1 metadata not
+allowing "recovery to continue after restart".
+Is this correct ? Or recovery continues from where it stopped like it does
+with the 0.90 metadata ?
+
+I apologize if my questions are already answered, but i couldn't find a
+definitive (and up to date) answer.
+
+Thank you for your time.
