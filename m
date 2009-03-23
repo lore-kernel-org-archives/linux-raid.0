@@ -1,43 +1,82 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid 1 single drive failure. rebuilt with replacement drive.
-	missing 20G of data
-Date: Mon, 23 Mar 2009 17:09:58 +1100
-Message-ID: <18887.10166.209184.82788@notabene.brown>
-References: <20090312021024.GA31067@earthlink.net>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [PATCH 07/13] async_tx: add support for asynchronous RAID6 recovery operations
+Date: Mon, 23 Mar 2009 11:11:21 +0100
+Message-ID: <20090323101121.GO17185@skl-net.de>
+References: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com> <20090318192052.20375.68157.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="u3NPeJodHuZECfqv"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mitchell Laks on Wednesday March 11
+Content-Disposition: inline
+In-Reply-To: <20090318192052.20375.68157.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mitchell Laks <mlaks@post.harvard.edu>
-Cc: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, neilb@suse.de, maciej.sosnowski@intel.com, Ilya Yanok <yanok@emcraft.com>, Yuri Tikhonov <yur@emcraft.com>
 List-Id: linux-raid.ids
 
-On Wednesday March 11, mlaks@post.harvard.edu wrote:
-> Hi,
-> 
-> I have used linux software raid1 for many years without any data loss. Now I seem to have a problem.
-> 
-> I run a server with a pair of WD 400G drives that I keep in a raid 1 configuration. The raid became degraded
-> but continued to function and continue to store data on the remaining  drive. 
-> 
-> I simply replaced the faulty drive and rebuilt the raid. All seemed to be   ok,  however now I notice that 20G of data are 
-> missing from the raid. I see this by comparing to a backup device that I mirror to every night.
-> 
-> Any idea on how can this have happened? These are the most recent 20G of data. Perhaps this is the last 20 G since the 
-> raid went bad,  however that the data was clearly stored initially - I see it on the backup device I copied to.
-> 
-> Could the data   have been lost in the rebuild process? seems strange. Total of 220G of data on the device at present.
 
-Seems very strange indeed.  I cannot explain it at all.
-So you have complete kernel logs covering the time when the drive
-failed, and the time when you added a new device?  They might shed
-some light.
+--u3NPeJodHuZECfqv
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-An explanation that fits most of the available data is that you
-actually replaced the good drive rather than the bad drive.  Was the
-'bad' drive totally dead, or just a bit sick and might have recovered
-after cooling down?
+On 12:20, Dan Williams wrote:
+> +struct dma_async_tx_descriptor *
+> +async_r6_dd_recov(int disks, size_t bytes, int faila, int failb,
+> +		  struct page **ptrs, enum async_tx_flags flags,
+> +		  struct dma_async_tx_descriptor *depend_tx,
+> +		  dma_async_tx_callback cb, void *cb_param)
+> +{
+> +	struct dma_async_tx_descriptor *tx =3D NULL;
+> +	struct page *lptrs[disks];
+> +	unsigned char lcoef[disks-4];
 
-NeilBrown
+This probably needs a BUG_ON(disks < 4).
+
+> +	 * B =3D (2^(y-x))*((2^(y-x) + {01})^(-1))
+
+Minor optimization suggestion: As B depends only on y-x, there are
+255 possible values for B, so a lookup table for all these values
+would only occupy 255 bytes.
+
+> +ddr_sync:
+> +	{
+> +		void **sptrs =3D (void **)lptrs;
+
+unnecessary cast
+
+> +struct dma_async_tx_descriptor *
+> +async_r6_dp_recov(int disks, size_t bytes, int faila, struct page **ptrs,
+> +		  enum async_tx_flags flags,
+> +		  struct dma_async_tx_descriptor *depend_tx,
+> +		  dma_async_tx_callback cb, void *cb_param)
+> +{
+> +	struct dma_async_tx_descriptor *tx =3D NULL;
+
+unnecessary initialization.
+
+> +	struct page *lptrs[disks];
+> +	unsigned char lcoef[disks-2];
+> +	int i =3D 0, k =3D 0;
+
+again. I'd suggest to init i and k in the for() loop.
+
+Regards
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--u3NPeJodHuZECfqv
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFJx2BJWto1QDEAkw8RAgW1AJ9SkTvDbhj8HoAidqQiFHKRbFOv7ACeMcr+
+C9C/nRCfl2E8vQEm2v4Ebps=
+=TmX4
+-----END PGP SIGNATURE-----
+
+--u3NPeJodHuZECfqv--
