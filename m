@@ -1,49 +1,55 @@
-From: Raz <raziebe@gmail.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
 Subject: Re: How to configure 36 disks ?
-Date: Mon, 23 Mar 2009 18:32:46 +0200
-Message-ID: <5d96567b0903230932j5bf11d88yee16be70759ef73b@mail.gmail.com>
-References: <5d96567b0903230659t734677a3pb4fd77cccb54008b@mail.gmail.com>
-	 <20090323151257.1c7c0a8e@harpe.intellique.com>
+Date: Mon, 23 Mar 2009 12:45:23 -0400
+Message-ID: <87f94c370903230945k66a804a0iefbb76dd9c93fc16@mail.gmail.com>
+References: <49C7AC2C.9090307@tmr.com>
+	 <174852.24274.qm@web51309.mail.re2.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090323151257.1c7c0a8e@harpe.intellique.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-aio@kvack.org>
+In-Reply-To: <174852.24274.qm@web51309.mail.re2.yahoo.com>
+Sender: owner-linux-aio@kvack.org
+To: Jon@ehardcastle.com
+Cc: Raz <raziebe@gmail.com>, Bill Davidsen <davidsen@tmr.com>, linux-fsdevel@vger.kernel.org, Linux RAID Mailing List <linux-raid@vger.kernel.org>, linux-xfs@oss.sgi.com, linux-aio@kvack.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Mar 23, 2009 at 4:12 PM, Emmanuel Florac <eflorac@intellique.co=
-m> wrote:
-> Le Mon, 23 Mar 2009 15:59:47 +0200
-> Raz <raziebe@gmail.com> =E9crivait:
+On Mon, Mar 23, 2009 at 12:02 PM, Jon Hardcastle
+<jd_hardcastle@yahoo.com> wrote:
 >
->> 1. redundancy. fair. less likely three disks will break in a single
->> raid 2. performance. bad.
->> 3. modularity. yes. grows
->> 4. Size 24TB
->
-> I don't understand why you'd have a bad performance here. I usually
-> notice a very slight difference between LVM and linux-raid raid0 in a=
-ll
-> practical benchmarks. Did you use LVM striping capability? You may
-> have to adjust readahead (using blockdev --setra) on each
-> device /dev/dm-X and /dev/md-X) to achieve optimal performance.
-Problem i have with performance is that once you *add* to a active
-volume a new PE, you lose striping in the sense that you cannot tell
-where the IO is directed to ( which disk). My implementation relies on
-this fact. If you know I am wrong please correct me.
+> I'd like to understand how you even go attaching that many devices to a s=
+ystem.. I am 'comparatively' new to this.. and have a 6 raid5 system.. not =
+enterprise.. and i have slammed into case/power/sat slot issues already. Wh=
+at sort of hardware must one use to grow to a 36 array system!
 
->
-> --
-> ----------------------------------------
-> Emmanuel Florac =A0 =A0 | =A0 Intellique
-> ----------------------------------------
->
->
+For the drives you could get a few big enclosures:
+
+http://www.pc-pitstop.com/sata_enclosures/sat122urd.asp
+http://www.pc-pitstop.com/sata_enclosures/scsas16rm.asp
+
+I don't think these offer PMP (port multiplexer) support.  I would
+look for ones that did if you're serious about doing something like
+this.
+
+If you used PMP with 4x drives per sata port, you would only need 9
+sata ports in the PC to control the 36 drives.  Not sure what the
+limits of PMP is, but 4x seems reasonable to me.
+
+Greg
+--=20
+Greg Freemyer
+Head of EDD Tape Extraction and Processing team
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+First 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-aio' in
+the body to majordomo@kvack.org.  For more info on Linux AIO,
+see: http://www.kvack.org/aio/
+Don't email: <a href=mailto:"aart@kvack.org">aart@kvack.org</a>
