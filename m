@@ -1,38 +1,60 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: How to configure 36 disks ?
-Date: Mon, 23 Mar 2009 19:32:28 +0100 (CET)
-Message-ID: <alpine.DEB.1.10.0903231930000.25843@uplift.swm.pp.se>
-References: <49C7AC2C.9090307@tmr.com>  <174852.24274.qm@web51309.mail.re2.yahoo.com> <87f94c370903230945k66a804a0iefbb76dd9c93fc16@mail.gmail.com>
+From: Nifty Fedora Mitch <niftyfedora@niftyegg.com>
+Subject: Re: Why do I need 4 disks for a raid6?
+Date: Mon, 23 Mar 2009 13:20:43 -0700
+Message-ID: <20090323202043.GA3841@compegg.wr.niftyegg.com>
+References: <87ljr4hsk9.fsf@frosties.localdomain> <18882.54987.332211.49180@notabene.brown>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <owner-linux-aio@kvack.org>
-In-Reply-To: <87f94c370903230945k66a804a0iefbb76dd9c93fc16@mail.gmail.com>
-Sender: owner-linux-aio@kvack.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Jon@ehardcastle.com, Raz <raziebe@gmail.com>, Bill Davidsen <davidsen@tmr.com>, linux-fsdevel@vger.kernel.org, Linux RAID Mailing List <linux-raid@vger.kernel.org>, linux-xfs@oss.sgi.com, linux-aio@kvack.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <18882.54987.332211.49180@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 23 Mar 2009, Greg Freemyer wrote:
+> On Tuesday March 17, goswin-v-b@web.de wrote:
+> > Hi,
+> > 
+> > I'm wondering why the kernel requires a raid6 to have at least 4
+> > disks (of which at most 2 can be missing). Why not 3 disks?
 
-> http://www.pc-pitstop.com/sata_enclosures/sat122urd.asp
-> http://www.pc-pitstop.com/sata_enclosures/scsas16rm.asp
+I should think that this is the 'defination' of a raid6.
+If you build a raid6 resource it should be raid6 and
+as such be able to tolerate the loss of two disks
+and all the other raid6 properties.
 
-I would like to add this if you're on a budget:
+If you build a raidN with three disks that can tolerate the
+loss of one disk it is not raid6 but raid5 and should be called
+by the correct descriptive name.
 
-<http://cgi.ebay.com/NORCO-RPC-4020-4u-rack-mountable-case-no-power-supply_W0QQitemZ380111981091QQcmdZViewItemQQptZCOMP_EN_Servers?hash=item380111981091&_trksid=p3286.c0.m14&_trkparms=72%3A1205|66%3A4|65%3A12|39%3A1|240%3A1318|301%3A1|293%3A1|294%3A200>
+The importance of this strictness surfaces in documentation.   
+Both to the system admin working on the system and also
+documentation from the system admin to his management that
+is comparing prices and matching features.   i.e. "Bob's raid6 
+is 25% less costly than Fred's".   Truth in advertising comes
+to play.
 
-> sata ports in the PC to control the 36 drives.  Not sure what the limits 
-> of PMP is, but 4x seems reasonable to me.
+Hidden in this thread is an interesting notion of migration from a
+"lesser" raid to a more durable raid over time.   It might make sense to
+facilitate limited tools to this end.   Even for those sites that wish to stage
+the construction of a large raid install or to stagger the poweron hours
+and date codes of drives on the common notion that batches of drives
+fail together.  Or perhaps a "raid6 ready" raid5 that gets populated with
+the absent drive on the first statistical sniff of an error outside of
+the norm.  Or the arrival of warrenty expiration....
 
-The PMPs I've seen take 5 drives each:
+Such a "raidN ready" setup does confuse the notion of operational health
+for any monitoring tool and is likely a very bad idea for that reason alone.
 
-<http://www.addonics.com/products/host_controller/ad5sapm.asp>
+This 2001 URL is interesting in the comments about how unfortunate the
+choice of the world "level" was.
+   http://www.pcguide.com/ref/hdd/perf/raid/levels/index.htm
+also interesting is the coment about a vendor being sloppy
+with the technical language.
+
 
 -- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+	T o m  M i t c h e l l 
+	Found me a new hat, now what?
 
---
-To unsubscribe, send a message with 'unsubscribe linux-aio' in
-the body to majordomo@kvack.org.  For more info on Linux AIO,
-see: http://www.kvack.org/aio/
-Don't email: <a href=mailto:"aart@kvack.org">aart@kvack.org</a>
