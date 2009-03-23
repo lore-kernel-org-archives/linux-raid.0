@@ -1,32 +1,21 @@
-From: Ilya Yanok <yanok@emcraft.com>
-Subject: Re: [PATCH 06/13] async_tx: add support for asynchronous GF 	multiplication
-Date: Mon, 23 Mar 2009 00:37:15 +0300
-Message-ID: <49C6AF8B.6080602@emcraft.com>
-References: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com>	 <20090318192046.20375.89854.stgit@dwillia2-linux.ch.intel.com>	 <49C26D91.10804@intel.com> <49C5486D.9020103@emcraft.com>	 <e9c3a7c20903211500j3f1575e7o2ad9fb5969a2bdd@mail.gmail.com>	 <49C56D74.3030303@emcraft.com> <e9c3a7c20903211553w5200ea0cu360d0a57fef77c66@mail.gmail.com>
+From: Erik Boettcher <tehfoo@gmail.com>
+Subject: Bad news after raid-5 recovery
+Date: Sun, 22 Mar 2009 21:59:10 -0400
+Message-ID: <125ed8800903221859s69a92f86l2848ad177be1f519@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e9c3a7c20903211553w5200ea0cu360d0a57fef77c66@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "H. Peter Anvin" <h.peter.anvin@intel.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, neilb@suse.de, maciej.sosnowski@intel.com, Yuri Tikhonov <yur@emcraft.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Dan,
-
-Dan Williams wrote:
->> Unfortunately we are not getting paid for this project any more so I
->> can't spend much time on it.
->>     
->
-> Hopefully I can occasionally call on you to try out some tests with
-> ppc440spe driver and hardware?  As we have seen in the past that
-> platform hits corner cases that iop13xx does not.
->   
-
-Well, I think I'll be able to run some tests... but I can't do much
-coding or debugging here or my manager won't be happy...
-
-Regards, Ilya.
-
+Ok so the circumstances of the raid-5 array failing were odd --
+related to an MCE caused by an issue with the chipset...  After
+recovering the array, I find large sections of useful data.. but the
+filesystems are junk!  I am using ext3 on top of LVM2 on top of
+software raid-5...
+Can anyone point me to programs that can assist me in recovering my
+data?  All that comes to my mind is ext3grep.  I have yet to write
+anything, and I find it odd that the superblocks and journals of all 7
+logical volumes are messed up.
