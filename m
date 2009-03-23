@@ -1,82 +1,111 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [PATCH 07/13] async_tx: add support for asynchronous RAID6 recovery operations
-Date: Mon, 23 Mar 2009 11:11:21 +0100
-Message-ID: <20090323101121.GO17185@skl-net.de>
-References: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com> <20090318192052.20375.68157.stgit@dwillia2-linux.ch.intel.com>
+From: Raz <raziebe@gmail.com>
+Subject: How to configure 36 disks ?
+Date: Mon, 23 Mar 2009 15:59:47 +0200
+Message-ID: <5d96567b0903230659t734677a3pb4fd77cccb54008b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="u3NPeJodHuZECfqv"
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090318192052.20375.68157.stgit@dwillia2-linux.ch.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, neilb@suse.de, maciej.sosnowski@intel.com, Ilya Yanok <yanok@emcraft.com>, Yuri Tikhonov <yur@emcraft.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-aio@kvack.org>
+Sender: owner-linux-aio@kvack.org
+To: linux-fsdevel@vger.kernel.org, Linux RAID Mailing List <linux-raid@vger.kernel.org>, linux-xfs@oss.sgi.com, linux-aio@kvack.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hello
+I need to configure 3xDAS'es, each with 12 disks.
+All three DAS'es are connected to a single machine.
+I have the following requirements (in this order of importance)
+from the storage:
 
---u3NPeJodHuZECfqv
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+1. redundancy.
+   having two disks failing in one raid5 breaks the entire raid. when
+you have 30TB storage
+   it is a disaster.
 
-On 12:20, Dan Williams wrote:
-> +struct dma_async_tx_descriptor *
-> +async_r6_dd_recov(int disks, size_t bytes, int faila, int failb,
-> +		  struct page **ptrs, enum async_tx_flags flags,
-> +		  struct dma_async_tx_descriptor *depend_tx,
-> +		  dma_async_tx_callback cb, void *cb_param)
-> +{
-> +	struct dma_async_tx_descriptor *tx =3D NULL;
-> +	struct page *lptrs[disks];
-> +	unsigned char lcoef[disks-4];
+2. performance.
+   My code eliminates Linux raid5/6 write penalty. I managed to do by
+   manipulating xfs and patching linux raid5 a bit.
 
-This probably needs a BUG_ON(disks < 4).
+3. modularity ( a "grow" and it will be nice to have "shrink" )
+   file system and volume must be able to grow. shrinking is possible
+by unifying multiple file systems
+   under unionfs or aufs.
 
-> +	 * B =3D (2^(y-x))*((2^(y-x) + {01})^(-1))
+4. Utilize storage size.
 
-Minor optimization suggestion: As B depends only on y-x, there are
-255 possible values for B, so a lookup table for all these values
-would only occupy 255 bytes.
+I assume each disk is 1TB.
 
-> +ddr_sync:
-> +	{
-> +		void **sptrs =3D (void **)lptrs;
+Solution #1
+			     raid0
+ DAS1: raid5: D,D,D,D,D,D     |
+       raid5: D,D,D,D,D,D     |
+   			      |
+ DAS2: raid5: D,D,D,D,D,D     |   xfs
+       raid5: D,D,D,D,D,D     |
+                              |
+ DAS3: raid5: D,D,D,D,D,D     |
+       raid5: D,D,D,D,D,D     |
 
-unnecessary cast
 
-> +struct dma_async_tx_descriptor *
-> +async_r6_dp_recov(int disks, size_t bytes, int faila, struct page **ptrs,
-> +		  enum async_tx_flags flags,
-> +		  struct dma_async_tx_descriptor *depend_tx,
-> +		  dma_async_tx_callback cb, void *cb_param)
-> +{
-> +	struct dma_async_tx_descriptor *tx =3D NULL;
+1. redundancy. no. if a single raid fails, 30 TB fails.
+2. performance. good.
+3. modularity. no. raid0 does not grow.
+4. Size.      30TB.
 
-unnecessary initialization.
+Solution #2
+			     raid0
+ DAS1: raid6: D,D,D,D,D,D     |
+       raid6: D,D,D,D,D,D     |
+   			      |
+ DAS2: raid6: D,D,D,D,D,D     | xfs.
+       raid6: D,D,D,D,D,D     |
+                              |
+ DAS3: raid6: D,D,D,D,D,D     |
+       raid6: D,D,D,D,D,D     |
 
-> +	struct page *lptrs[disks];
-> +	unsigned char lcoef[disks-2];
-> +	int i =3D 0, k =3D 0;
 
-again. I'd suggest to init i and k in the for() loop.
+1. redundancy. fair. less likely three disks will break in a single raid.
+2. performance. good.
+3. modularity. no. raid0 does not grow.
+4. size. 24 TB
 
-Regards
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
+Solution #3
+			          unionfs/aufs
+ DAS1: raid5: D,D,D,D,D,D     xfs   | 	
+       raid5: D,D,D,D,D,D     xfs   |
+   			            |
+ DAS2: raid5: D,D,D,D,D,D     xfs   |
+       raid5: D,D,D,D,D,D     xfs   |
+                                    |
+ DAS3: raid5: D,D,D,D,D,D     xfs   |
+       raid5: D,D,D,D,D,D     xfs   |
 
---u3NPeJodHuZECfqv
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+1. redundancy. fair. if a single raid fails, only this raid fails.
+2. performance. fair.
+     unionfs is not mainline and does not support write balancing.
+     aufs is not mature enough.
+3. modularity. yes. grow and shrinks.
+4. Size. 30TB.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
+Solution #4
+			       xfs over Linux LVM
+ DAS1: raid6: D,D,D,D,D,D         | 	
+       raid6: D,D,D,D,D,D         |
+   			          |
+ DAS2: raid6: D,D,D,D,D,D         |
+       raid6: D,D,D,D,D,D         |
+                                  |
+ DAS3: raid6: D,D,D,D,D,D         |
+       raid6: D,D,D,D,D,D         |
 
-iD8DBQFJx2BJWto1QDEAkw8RAgW1AJ9SkTvDbhj8HoAidqQiFHKRbFOv7ACeMcr+
-C9C/nRCfl2E8vQEm2v4Ebps=
-=TmX4
------END PGP SIGNATURE-----
+1. redundancy. fair. less likely three disks will break in a single raid
+2. performance. bad.
+3. modularity. yes. grows
+4. Size 24TB
 
---u3NPeJodHuZECfqv--
+Any other ideas ?
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-aio' in
+the body to majordomo@kvack.org.  For more info on Linux AIO,
+see: http://www.kvack.org/aio/
+Don't email: <a href=mailto:"aart@kvack.org">aart@kvack.org</a>
