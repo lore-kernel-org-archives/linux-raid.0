@@ -1,41 +1,49 @@
 From: Raz <raziebe@gmail.com>
 Subject: Re: How to configure 36 disks ?
-Date: Mon, 23 Mar 2009 18:28:07 +0200
-Message-ID: <5d96567b0903230928p794e4140y9263f4095beb5b52@mail.gmail.com>
-References: <174852.24274.qm@web51309.mail.re2.yahoo.com>
-	 <49C7B778.7000604@xman.org>
+Date: Mon, 23 Mar 2009 18:32:46 +0200
+Message-ID: <5d96567b0903230932j5bf11d88yee16be70759ef73b@mail.gmail.com>
+References: <5d96567b0903230659t734677a3pb4fd77cccb54008b@mail.gmail.com>
+	 <20090323151257.1c7c0a8e@harpe.intellique.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-aio@kvack.org>
-In-Reply-To: <49C7B778.7000604@xman.org>
-Sender: owner-linux-aio@kvack.org
-To: Christopher Smith <x@xman.org>
-Cc: Jon@ehardcastle.com, Bill Davidsen <davidsen@tmr.com>, linux-fsdevel@vger.kernel.org, Linux RAID Mailing List <linux-raid@vger.kernel.org>, linux-xfs@oss.sgi.com, linux-aio@kvack.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20090323151257.1c7c0a8e@harpe.intellique.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Mar 23, 2009 at 6:23 PM, Christopher Smith <x@xman.org> wrote:
-> Jon Hardcastle wrote:
->>
->> I'd like to understand how you even go attaching that many devices to a
->> system.. I am 'comparatively' new to this.. and have a 6 raid5 system.. not
->> enterprise.. and i have slammed into case/power/sat slot issues already.
->> What sort of hardware must one use to grow to a 36 array system!
+On Mon, Mar 23, 2009 at 4:12 PM, Emmanuel Florac <eflorac@intellique.co=
+m> wrote:
+> Le Mon, 23 Mar 2009 15:59:47 +0200
+> Raz <raziebe@gmail.com> =E9crivait:
 >
-> You can always use this approach:
+>> 1. redundancy. fair. less likely three disks will break in a single
+>> raid 2. performance. bad.
+>> 3. modularity. yes. grows
+>> 4. Size 24TB
 >
-> http://www.youtube.com/watch?v=96dWOEa4Djs
->
-> --Chris
->
-> P.S.: Sorry, couldn't resist.
->
->
-me too.
-http://blogs.sun.com/observatory/entry/don_t_shout_at_your
+> I don't understand why you'd have a bad performance here. I usually
+> notice a very slight difference between LVM and linux-raid raid0 in a=
+ll
+> practical benchmarks. Did you use LVM striping capability? You may
+> have to adjust readahead (using blockdev --setra) on each
+> device /dev/dm-X and /dev/md-X) to achieve optimal performance.
+Problem i have with performance is that once you *add* to a active
+volume a new PE, you lose striping in the sense that you cannot tell
+where the IO is directed to ( which disk). My implementation relies on
+this fact. If you know I am wrong please correct me.
 
+>
+> --
+> ----------------------------------------
+> Emmanuel Florac =A0 =A0 | =A0 Intellique
+> ----------------------------------------
+>
+>
 --
-To unsubscribe, send a message with 'unsubscribe linux-aio' in
-the body to majordomo@kvack.org.  For more info on Linux AIO,
-see: http://www.kvack.org/aio/
-Don't email: <a href=mailto:"aart@kvack.org">aart@kvack.org</a>
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
