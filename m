@@ -1,33 +1,34 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: How to configure 36 disks ?
-Date: Tue, 24 Mar 2009 20:38:35 +0100
-Message-ID: <87hc1iemo4.fsf@frosties.localdomain>
-References: <174852.24274.qm@web51309.mail.re2.yahoo.com>
+From: Dylan Distasio <interzone@gmail.com>
+Subject: Question on RAID 10 setup
+Date: Tue, 24 Mar 2009 18:15:13 -0400
+Message-ID: <3513de790903241515m2eeff929x855322a51117c45b@mail.gmail.com>
+References: <1183FAF84E86E244938C2174EE436BAC030FBE29@NYKPCMEU306VEUA.INTRANET.BARCAPINT.COM>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-aio@kvack.org>
-In-Reply-To: <174852.24274.qm@web51309.mail.re2.yahoo.com> (Jon Hardcastle's
-	message of "Mon, 23 Mar 2009 09:02:14 -0700 (PDT)")
-Sender: owner-linux-aio@kvack.org
-To: Jon@eHardcastle.com
-Cc: Raz <raziebe@gmail.com>, Bill Davidsen <davidsen@tmr.com>, linux-fsdevel@vger.kernel.org, Linux RAID Mailing List <linux-raid@vger.kernel.org>, linux-xfs@oss.sgi.com, linux-aio@kvack.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1183FAF84E86E244938C2174EE436BAC030FBE29@NYKPCMEU306VEUA.INTRANET.BARCAPINT.COM>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jon Hardcastle <jd_hardcastle@yahoo.com> writes:
+Hi all-
 
-> I'd like to understand how you even go attaching that many devices to a system.. I am 'comparatively' new to this.. and have a 6 raid5 system.. not enterprise.. and i have slammed into case/power/sat slot issues already. What sort of hardware must one use to grow to a 36 array system!
+I would like to put together a RAID10 array utilizing 2x1TB drives and
+2x500 gig drives I have in my home Linux server. =A0Is the best way to =
+do
+this to create 2 separate RAID1 arrays, one for each set of drives, and
+then a RAID0 array made up of the RAID1 ones? =A0 I just wanted to veri=
+fy
+that I am going about this correctly, and also get input on whether
+there are any disadvantages to this setup. =A0I would prefer not to spl=
+it
+these up into two separate RAID10 arrays because I want the combined
+space available under one. =A0 Thanks for any comments.
 
-Well, lets see.
-
-Put 3 dual channel SAS controler in the box giving you 6 external SAS
-connectors. Buy 6 48x disk enclosures and connect them. Configure them
-all as JBOD and you get your 288 disks.
-
-MfG
-        Goswin
-
+-Dylan
 --
-To unsubscribe, send a message with 'unsubscribe linux-aio' in
-the body to majordomo@kvack.org.  For more info on Linux AIO,
-see: http://www.kvack.org/aio/
-Don't email: <a href=mailto:"aart@kvack.org">aart@kvack.org</a>
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
