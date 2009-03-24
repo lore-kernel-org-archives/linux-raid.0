@@ -1,61 +1,79 @@
-From: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Subject: mdadm ignoring homehost?
-Date: Tue, 24 Mar 2009 11:57:39 -0500
-Message-ID: <cccedfc60903240957j9314cb2k41d86cb78ec10b86@mail.gmail.com>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: Why do I need 4 disks for a raid6?
+Date: Tue, 24 Mar 2009 20:32:36 +0100
+Message-ID: <87ljquemy3.fsf@frosties.localdomain>
+References: <87ljr4hsk9.fsf@frosties.localdomain>
+	<18882.54987.332211.49180@notabene.brown>
+	<20090323202043.GA3841@compegg.wr.niftyegg.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20090323202043.GA3841@compegg.wr.niftyegg.com> (Nifty Fedora
+	Mitch's message of "Mon, 23 Mar 2009 13:20:43 -0700")
 Sender: linux-raid-owner@vger.kernel.org
-To: LinuxRaid <linux-raid@vger.kernel.org>
+To: Nifty Fedora Mitch <niftyfedora@niftyegg.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have a raid1 comprised of a local physical device (/dev/sda) and a
-network block device (/dev/nbd0).
-When the machine hosting the network block device comes up, however,
-it creates /dev/md127.
-Why?
+Nifty Fedora Mitch <niftyfedora@niftyegg.com> writes:
 
-On the machine hosting the network block device, /dev/sdb is what
-backs /dev/nbd0.
-This is physical storage for /dev/nbd0:
+>> On Tuesday March 17, goswin-v-b@web.de wrote:
+>> > Hi,
+>> > 
+>> > I'm wondering why the kernel requires a raid6 to have at least 4
+>> > disks (of which at most 2 can be missing). Why not 3 disks?
+>
+> I should think that this is the 'defination' of a raid6.
+> If you build a raid6 resource it should be raid6 and
+> as such be able to tolerate the loss of two disks
+> and all the other raid6 properties.
 
-frank:~ # mdadm --examine /dev/sdb
-/dev/sdb:
-          Magic : a92b4efc
-        Version : 1.0
-    Feature Map : 0x1
-     Array UUID : cf24d099:9e174a79:2a2f6797:dcff1420
-           Name : turnip:11
-  Creation Time : Mon Dec 15 07:06:13 2008
-     Raid Level : raid1
-   Raid Devices : 2
+Actually the definition I read was that raid6 is like raid5 but
+allowing for 2 or more disks to fail without loss. So a 15 disks raid
+with 10 data blocks and 5 parity blocks per stripe would also be raid6.
 
- Avail Dev Size : 160086384 (76.34 GiB 81.96 GB)
-     Array Size : 156247976 (74.50 GiB 80.00 GB)
-  Used Dev Size : 156247976 (74.50 GiB 80.00 GB)
-   Super Offset : 160086512 sectors
-          State : clean
-    Device UUID : 01524a75:c309869c:6da972c9:084115c6
+> If you build a raidN with three disks that can tolerate the
+> loss of one disk it is not raid6 but raid5 and should be called
+> by the correct descriptive name.
 
-Internal Bitmap : 2 sectors from superblock
-      Flags : write-mostly
-    Update Time : Tue Mar 24 11:41:41 2009
-       Checksum : 643e99c0 - correct
-         Events : 111338
+I was talking about a raid6 with three disks that can tolerate the
+loss of *two* disks. I know that effectively that would be just like a
+raid1 with 3 disks but that was exactly the point. To change a 3 disk
+raid1 into a 3 disk raid6 and then grow it.
+
+> The importance of this strictness surfaces in documentation.   
+> Both to the system admin working on the system and also
+> documentation from the system admin to his management that
+> is comparing prices and matching features.   i.e. "Bob's raid6 
+> is 25% less costly than Fred's".   Truth in advertising comes
+> to play.
+>
+> Hidden in this thread is an interesting notion of migration from a
+> "lesser" raid to a more durable raid over time.   It might make sense to
+> facilitate limited tools to this end.   Even for those sites that wish to stage
+> the construction of a large raid install or to stagger the poweron hours
+> and date codes of drives on the common notion that batches of drives
+> fail together.  Or perhaps a "raid6 ready" raid5 that gets populated with
+> the absent drive on the first statistical sniff of an error outside of
+> the norm.  Or the arrival of warrenty expiration....
+
+That would be a raid6 with 4 disks of which one is missing. You can
+already do that.
+
+> Such a "raidN ready" setup does confuse the notion of operational health
+> for any monitoring tool and is likely a very bad idea for that reason alone.
+>
+> This 2001 URL is interesting in the comments about how unfortunate the
+> choice of the world "level" was.
+>    http://www.pcguide.com/ref/hdd/perf/raid/levels/index.htm
+> also interesting is the coment about a vendor being sloppy
+> with the technical language.
+
+Verry badly advertising polluted url and confusing imho.
+
+http://en.wikipedia.org/wiki/RAID
+
+MfG
+        Goswin
 
 
-    Array Slot : 2 (failed, failed, empty, 1)
-   Array State : _u 2 failed
-frank:~ #
-
-
-As you can see, the "Name" attribute is "turnip:11". The hostname is
-"frank". Why did frank bring up the device?
-The only thing in frank's /etc/mdadm.conf is "HOMEHOST frank" which I
-didn't think was necessary anyway.
-
-
-
--- 
-Jon
