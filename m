@@ -1,59 +1,90 @@
-From: Khelben Blackstaff <eye.of.the.8eholder@gmail.com>
-Subject: Questions about 1.X RAID metadata
-Date: Tue, 24 Mar 2009 00:40:22 +0200
-Message-ID: <20090324004022.510bd6b5@ktinos.info>
+From: NeilBrown <neilb@suse.de>
+Subject: [md PATCH 0/6] Reduce the number of devices in RAID4/5/6
+Date: Tue, 24 Mar 2009 19:53:31 +1100
+Message-ID: <20090324084629.15383.10271.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello.
+Here is a set of patches I just finished that will be submitted for
+2.6.30.
+They make it possible to reduce the number of devices in a raid 4/5/6
+array.
 
-I would like to ask about the V1 RAID metadata.
+There is no support in mdadm for this yet so:
+  a/ it has to be done by hand, writing to sysfs
+  b/ there is no protection for the "critical section".
+     So if you try this and your system crashes just before
+     the reshape finishes, you lose data.
 
-I searched the mailing list archives for "metadata" and found some interesting
-posts like the following:
+When reducing the number of device, you need to reduce the size of the
+array first.  This can be done by writing to the "array_size"
+attribute.
+Alternately you can write the current size to the array_size
+attribute, to pin it, then use "mdadm --grow --size=whatever" to use
+more of the devices.  That is what the script below does.
 
-"Time to deprecate old RAID formats"
-"Superblock limits / conversion"
-http://linux-raid.osdl.org/index.php/RAID_superblock_formats
-http://linux-raid.osdl.org/index.php/Superblock
+When reducing the number of devices in an array, restriping starts at
+the end of the devices and works towards the beginning.  When it gets
+to the first few chunks it needs to over-write data that is currently
+live.  This is perfectly safe unless the system crashes.  In that case
+see the comment about "critical section" above.
 
-However i still have some questions as there is much confusion about V1 metadata.
-I proceed with my questions:
+The following script give some idea how to use this if you want to
+experiment.  I kept and ext3 filesystem on md0 busy while this was
+happening, and it fscked perfectly afterwards.
 
-1) The Superblock article from linux-raid.osdl.org (and some posts in the Time
-to deprecate old RAID formats thread) mention that LILO can't boot of V1 metadata
-The thread in the mailing list is dated October 2007 and the Superblock article
-doesn't mention date, so I don't know if this still stands.
+Note that the array starts degraded (I only have 5 test disks) and
+ends degraded.  But then there are suddenly two spare devices, so it
+start recovery straight away.
 
-Also, http://lilo.go.dyndns.org/ doesn't work for me so i can't see if there is
-any new LILO version. I use version 22.8
+Comments or improvements, as always, very welcome.
 
-So, can LILO 22.8 (or a newer one if it exists) boot off V1 metadata ?
+NeilBrown
 
-2) A setup that is usually recommended is to install LILO in the RAID partition
-and mark that partition bootable. So the MBR will boot from the first partition
-that is bootable which is the RAID one.
+# test script for shrinking a raid5
+# from 6 devices to 4
+# don't worry about critical section
+# make the devices larger first
 
-This obviously works for 0.90 and i assume it would work for 1.0 and 1.2
-If someone chooses 1.1 metadata which are stored in the start of the device, he
-can't install any bootloader to the RAID partition because it would overwrite
-512 bytes of the RAID metadata.
+mdadm -Ss
+mdadm -CR /dev/md0 -l5 -n6 -z 2000000 missing /dev/sd[bcdef]
+mdadm --wait /dev/md0
+cat /proc/mdstat
+echo 4 > /sys/block/md0/md/raid_disks
+# freeze the array size at 5*2000000
+echo 10000000 > /sys/block/md0/md/array_size
+# make the individual devices bigger to 3333376
+mdadm -G /dev/md0 --size 3333376
+sleep 2
+echo reshape > /sys/block/md0/md/sync_action
+sleep 2
+cat /proc/mdstat
+mdadm --wait /dev/md0
+echo default > /sys/block/md0/md/array_size
+cat /proc/mdstat
 
-Is this thought of mine correct ?
-In other words can a bootloader (512 bytes - 1 sector) be installed in a
-RAID partition using 1.1 metadata ? (Same question for 1.0 and 1.2)
 
-3) I read in many posts in the mailing list archives about V1 metadata not
-allowing "recovery to continue after restart".
-Is this correct ? Or recovery continues from where it stopped like it does
-with the 0.90 metadata ?
+---
 
-I apologize if my questions are already answered, but i couldn't find a
-definitive (and up to date) answer.
+NeilBrown (6):
+      Documentation/md.txt update
+      md: allow number of drives in raid5 to be reduced
+      md/raid5: change reshape-progress measurement to cope with reshaping backwards.
+      md: add explicit method to signal the end of a reshape.
+      md/raid5: enhance raid5_size to work correctly with negative delta_disks
+      md/raid5: drop qd_idx from r6_state
 
-Thank you for your time.
+
+ Documentation/md.txt |   37 ++++++-
+ drivers/md/md.c      |   11 +-
+ drivers/md/md.h      |    2 
+ drivers/md/raid5.c   |  259 ++++++++++++++++++++++++++++++++++----------------
+ drivers/md/raid5.h   |   17 ++-
+ 5 files changed, 219 insertions(+), 107 deletions(-)
+
+
