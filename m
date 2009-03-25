@@ -1,52 +1,51 @@
-From: Neil Brown <neilb@suse.de>
+From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: Question on RAID 10 setup
-Date: Wed, 25 Mar 2009 13:23:44 +1100
-Message-ID: <18889.38320.418741.501873@notabene.brown>
-References: <1183FAF84E86E244938C2174EE436BAC030FBE29@NYKPCMEU306VEUA.INTRANET.BARCAPINT.COM>
-	<3513de790903241515m2eeff929x855322a51117c45b@mail.gmail.com>
-	<49C97161.5020207@anonymous.org.uk>
+Date: Wed, 25 Mar 2009 08:26:40 -0400
+Message-ID: <49CA2300.2090009@tmr.com>
+References: <1183FAF84E86E244938C2174EE436BAC030FBE29@NYKPCMEU306VEUA.INTRANET.BARCAPINT.COM> <3513de790903241515m2eeff929x855322a51117c45b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from John Robinson on Tuesday March 24
+In-Reply-To: <3513de790903241515m2eeff929x855322a51117c45b@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Dylan Distasio <interzone@gmail.com>, linux-raid@vger.kernel.org
+To: Dylan Distasio <interzone@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday March 24, john.robinson@anonymous.org.uk wrote:
-> On 24/03/2009 22:15, Dylan Distasio wrote:
-> > Hi all-
-> > 
-> > I would like to put together a RAID10 array utilizing 2x1TB drives and
-> > 2x500 gig drives I have in my home Linux server.  Is the best way to do
-> > this to create 2 separate RAID1 arrays, one for each set of drives, and
-> > then a RAID0 array made up of the RAID1 ones?   I just wanted to verify
-> > that I am going about this correctly, and also get input on whether
-> > there are any disadvantages to this setup.  I would prefer not to split
-> > these up into two separate RAID10 arrays because I want the combined
-> > space available under one.   Thanks for any comments.
-> 
-> I think you can mix drive sizes under md RAID-10 - much as you're 
-> proposing to above with your RAID-0 of different-sized RAID-1s - and md 
-> will just do the Right Thing.
+Dylan Distasio wrote:
+> Hi all-
+>
+> I would like to put together a RAID10 array utilizing 2x1TB drives and
+> 2x500 gig drives I have in my home Linux server.  Is the best way to do
+> this to create 2 separate RAID1 arrays, one for each set of drives, and
+> then a RAID0 array made up of the RAID1 ones?   I just wanted to verify
+> that I am going about this correctly, and also get input on whether
+> there are any disadvantages to this setup.  I would prefer not to split
+> these up into two separate RAID10 arrays because I want the combined
+> space available under one.   Thanks for any comments.
+>   
 
-Incorrect.  RAID-10, as with all levels that provide redundancy and
-hot-spares etc, used the same amount of space on all devices.
-Only RAID0 and Linear make use of all available space.
+Possibly you are confusing raid10 with raid1+0, and the documentation 
+seems to encourage that. You can just use all your drives with raid10 
+and mdadm will do the right thing as far as putting mirrors on other drives.
 
->                               I'd go for testing that and play with 
-> layouts (near, far, offset) to suit your requirements before worrying 
-> about setting up RAID 1+0.
-> 
-> Actually with your hardware I'd probably set up a 1TB RAID-0 with the 
-> 500G drives then make a RAID-5 from the 3 1TB devices (2 raw drives plus 
-> one md RAID-0). If you can be bothered try benchmarking that too; as 
-> well as giving you more storage I think it'll probably match the RAID-10 
-> or RAID 1+0 for performance.
+That said, I like the suggestion John made of raid0 to make a third 1TB 
+device, then raid5. But be aware that "raid10 -f2" will be as fast or a 
+little faster for write, and quite a bit faster for read, at the expense 
+of some size. Using raid10 will give you 1.5TB and fast, raid0+5 will 
+give you 2TB storage, but somewhat slower. And raid10 will be far faster 
+if you should lose a drive and be running in a degraded mode.
 
-I think that is a very reasonable option, as is the original
-suggestion.
+Or you could buy a 1TB drive from Newegg for $89 and have even more 
+choices. ;-)
 
-NeilBrown
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+
+"You are disgraced professional losers. And by the way, give us our money back."
+    - Representative Earl Pomeroy,  Democrat of North Dakota
+on the A.I.G. executives who were paid bonuses  after a federal bailout.
+
+
