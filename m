@@ -1,51 +1,47 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Question on RAID 10 setup
-Date: Wed, 25 Mar 2009 08:26:40 -0400
-Message-ID: <49CA2300.2090009@tmr.com>
-References: <1183FAF84E86E244938C2174EE436BAC030FBE29@NYKPCMEU306VEUA.INTRANET.BARCAPINT.COM> <3513de790903241515m2eeff929x855322a51117c45b@mail.gmail.com>
+From: Drew <drew.kay@gmail.com>
+Subject: Re: How to configure 36 disks ?
+Date: Wed, 25 Mar 2009 05:14:42 -0700
+Message-ID: <c268e4660903250514y12babcc5hf42f4d3daff3fa45@mail.gmail.com>
+References: <174852.24274.qm@web51309.mail.re2.yahoo.com>
+	<87hc1iemo4.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3513de790903241515m2eeff929x855322a51117c45b@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Dylan Distasio <interzone@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Return-path: <xfs-bounces@oss.sgi.com>
+In-Reply-To: <87hc1iemo4.fsf@frosties.localdomain>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Sender: xfs-bounces@oss.sgi.com
+Errors-To: xfs-bounces@oss.sgi.com
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: Jon@ehardcastle.com, Linux RAID Mailing List <linux-raid@vger.kernel.org>, linux-aio@kvack.org, linux-xfs@oss.sgi.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Raz <raziebe@gmail.com>, linux-fsdevel@vger.kernel.org, Bill Davidsen <davidsen@tmr.com>
 List-Id: linux-raid.ids
 
-Dylan Distasio wrote:
-> Hi all-
+>> I'd like to understand how you even go attaching that many devices to a system.. I am 'comparatively'
+>> new to this.. and have a 6 raid5 system.. not enterprise.. and i have slammed into case/power/sat slot
+>> issues already. What sort of hardware must one use to grow to a 36 array system!
 >
-> I would like to put together a RAID10 array utilizing 2x1TB drives and
-> 2x500 gig drives I have in my home Linux server.  Is the best way to do
-> this to create 2 separate RAID1 arrays, one for each set of drives, and
-> then a RAID0 array made up of the RAID1 ones?   I just wanted to verify
-> that I am going about this correctly, and also get input on whether
-> there are any disadvantages to this setup.  I would prefer not to split
-> these up into two separate RAID10 arrays because I want the combined
-> space available under one.   Thanks for any comments.
->   
+> Well, lets see.
+>
+> Put 3 dual channel SAS controler in the box giving you 6 external SAS
+> connectors. Buy 6 48x disk enclosures and connect them. Configure them
+> all as JBOD and you get your 288 disks.
 
-Possibly you are confusing raid10 with raid1+0, and the documentation 
-seems to encourage that. You can just use all your drives with raid10 
-and mdadm will do the right thing as far as putting mirrors on other drives.
+And after you've mortgaged your house, your future, and your first born ... :-P
 
-That said, I like the suggestion John made of raid0 to make a third 1TB 
-device, then raid5. But be aware that "raid10 -f2" will be as fast or a 
-little faster for write, and quite a bit faster for read, at the expense 
-of some size. Using raid10 will give you 1.5TB and fast, raid0+5 will 
-give you 2TB storage, but somewhat slower. And raid10 will be far faster 
-if you should lose a drive and be running in a degraded mode.
-
-Or you could buy a 1TB drive from Newegg for $89 and have even more 
-choices. ;-)
 
 -- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
+Drew
 
-"You are disgraced professional losers. And by the way, give us our money back."
-    - Representative Earl Pomeroy,  Democrat of North Dakota
-on the A.I.G. executives who were paid bonuses  after a federal bailout.
+"Nothing in life is to be feared. It is only to be understood."
+--Marie Curie
 
-
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
