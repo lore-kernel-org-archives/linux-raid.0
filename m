@@ -1,47 +1,40 @@
-From: Drew <drew.kay@gmail.com>
-Subject: Re: How to configure 36 disks ?
-Date: Wed, 25 Mar 2009 05:14:42 -0700
-Message-ID: <c268e4660903250514y12babcc5hf42f4d3daff3fa45@mail.gmail.com>
-References: <174852.24274.qm@web51309.mail.re2.yahoo.com>
-	<87hc1iemo4.fsf@frosties.localdomain>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 02/13] async_tx: don't use src_list argument of
+	async_xor() for dma addresses
+Date: Wed, 25 Mar 2009 10:11:04 -0700
+Message-ID: <e9c3a7c20903251011w3f6b3f58u7c0352ae39bb1c7c@mail.gmail.com>
+References: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com>
+	 <20090318192026.20375.3053.stgit@dwillia2-linux.ch.intel.com>
+	 <20090319201008.GC10491@skl-net.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
-In-Reply-To: <87hc1iemo4.fsf@frosties.localdomain>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Sender: xfs-bounces@oss.sgi.com
-Errors-To: xfs-bounces@oss.sgi.com
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: Jon@ehardcastle.com, Linux RAID Mailing List <linux-raid@vger.kernel.org>, linux-aio@kvack.org, linux-xfs@oss.sgi.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Raz <raziebe@gmail.com>, linux-fsdevel@vger.kernel.org, Bill Davidsen <davidsen@tmr.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20090319201008.GC10491@skl-net.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: Andre Noll <maan@systemlinux.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, neilb@suse.de, maciej.sosnowski@intel.com, Yuri Tikhonov <yur@emcraft.com>, Ilya Yanok <yanok@emcraft.com>
 List-Id: linux-raid.ids
 
->> I'd like to understand how you even go attaching that many devices to a system.. I am 'comparatively'
->> new to this.. and have a 6 raid5 system.. not enterprise.. and i have slammed into case/power/sat slot
->> issues already. What sort of hardware must one use to grow to a 36 array system!
+On Thu, Mar 19, 2009 at 1:10 PM, Andre Noll <maan@systemlinux.org> wrote:
+> On 12:20, Dan Williams wrote:
 >
-> Well, lets see.
+>> Using src_list argument of async_xor() as a storage for dma addresses
+>> implies sizeof(dma_addr_t) <= sizeof(struct page *) restriction which is
+>> not always true (e.g. ppc440spe).
 >
-> Put 3 dual channel SAS controler in the box giving you 6 external SAS
-> connectors. Buy 6 48x disk enclosures and connect them. Configure them
-> all as JBOD and you get your 288 disks.
+> This message does not tell what the patch is going to do about that.
+> It would also be nice to mention (either in the log message or as a
+> comment) why allocating the dma_src arrays on the stack is not going
+> to be a problem.
+>
 
-And after you've mortgaged your house, your future, and your first born ... :-P
+True, and taking into account your other comment about the number of
+parameters I think this is a good opportunity to solve this problem
+rather than kick it down the road.  So I will prepare a rework to make
+this memory caller provided.  This gives us the flexibility to use a
+kmalloc'd buffer hanging off the stripe_head as Neil suggested in
+another thread.
 
-
--- 
-Drew
-
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+Regards,
+Dan
