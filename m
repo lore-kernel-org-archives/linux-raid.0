@@ -1,68 +1,65 @@
-From: "Stefan G. Weichinger" <lists@xunil.at>
-Subject: Re: RAID5 reshape problems
-Date: Thu, 26 Mar 2009 11:20:32 +0100
-Message-ID: <49CB56F0.9030902@xunil.at>
-References: <49CA787C.2090100@xunil.at> <18890.44146.95223.103114@notabene.brown> <49CAB3A3.7020807@xunil.at> <49CB2799.7000305@xunil.at>
-Reply-To: lists@xunil.at
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [PATCH 02/13] async_tx: don't use src_list argument of async_xor() for dma addresses
+Date: Thu, 26 Mar 2009 11:39:12 +0100
+Message-ID: <20090326103912.GP17185@skl-net.de>
+References: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com> <20090318192026.20375.3053.stgit@dwillia2-linux.ch.intel.com> <20090319201008.GC10491@skl-net.de> <e9c3a7c20903251011w3f6b3f58u7c0352ae39bb1c7c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="+sObS8/rhx1YpqEF"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49CB2799.7000305@xunil.at>
+Content-Disposition: inline
+In-Reply-To: <e9c3a7c20903251011w3f6b3f58u7c0352ae39bb1c7c@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, neilb@suse.de, maciej.sosnowski@intel.com, Yuri Tikhonov <yur@emcraft.com>, Ilya Yanok <yanok@emcraft.com>
 List-Id: linux-raid.ids
 
-Stefan G. Weichinger schrieb:
 
-> I assume that I will simply have to add /dev/sdf4 then ??
-> Or again "add" and then "grow" ?
+--+sObS8/rhx1YpqEF
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Did a "mdadm --re-add /dev/md2 /dev/sdf4", now it looks like:
+On 10:11, Dan Williams wrote:
+> On Thu, Mar 19, 2009 at 1:10 PM, Andre Noll <maan@systemlinux.org> wrote:
+> > On 12:20, Dan Williams wrote:
+> >
+> >> Using src_list argument of async_xor() as a storage for dma addresses
+> >> implies sizeof(dma_addr_t) <=3D sizeof(struct page *) restriction whic=
+h is
+> >> not always true (e.g. ppc440spe).
+> >
+> > This message does not tell what the patch is going to do about that.
+> > It would also be nice to mention (either in the log message or as a
+> > comment) why allocating the dma_src arrays on the stack is not going
+> > to be a problem.
+> >
+>=20
+> True, and taking into account your other comment about the number of
+> parameters I think this is a good opportunity to solve this problem
+> rather than kick it down the road.  So I will prepare a rework to make
+> this memory caller provided.  This gives us the flexibility to use a
+> kmalloc'd buffer hanging off the stripe_head as Neil suggested in
+> another thread.
 
-# mdadm -D /dev/md2
-/dev/md2:
-        Version : 00.91.03
-  Creation Time : Wed Oct 22 19:43:13 2008
-     Raid Level : raid5
-     Array Size : 2903386944 (2768.89 GiB 2973.07 GB)
-  Used Dev Size : 967795648 (922.96 GiB 991.02 GB)
-   Raid Devices : 6
-  Total Devices : 6
-Preferred Minor : 2
-    Persistence : Superblock is persistent
+Glad you agree. I'm looking forward to seeing the reworked patch set.
 
-    Update Time : Thu Mar 26 11:18:48 2009
-          State : clean, degraded, recovering
- Active Devices : 5
-Working Devices : 6
- Failed Devices : 0
-  Spare Devices : 1
+Thanks
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
 
-         Layout : left-symmetric
-     Chunk Size : 64K
+--+sObS8/rhx1YpqEF
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
- Reshape Status : 14% complete
-  Delta Devices : 2, (4->6)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
 
-           UUID : 2e27c42d:40936d45:53eb5abe:265a9668
-         Events : 0.96428
+iD8DBQFJy1tQWto1QDEAkw8RAh77AKCZjEr0A4Sjog2N583P4DDO6X0tiACgmiiV
+8YWg4iVYkIFoN1ejRsQQieQ=
+=VWTU
+-----END PGP SIGNATURE-----
 
-    Number   Major   Minor   RaidDevice State
-       0       8        4        0      active sync   /dev/sda4
-       1       8       20        1      active sync   /dev/sdb4
-       2       8       52        2      active sync   /dev/sdd4
-       3       8       68        3      active sync   /dev/sde4
-       4       0        0        4      removed
-       5       8       36        5      active sync   /dev/sdc4
-
-       6       8       84        -      spare   /dev/sdf4
-
-
-Looks very OK to me.
-
-*phew*
-
-I will wait until it isn't degraded anymore before I do the "pvresize".
-
-Thanks all, Stefan
+--+sObS8/rhx1YpqEF--
