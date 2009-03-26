@@ -1,57 +1,86 @@
-From: David Rees <drees76@gmail.com>
-Subject: RAID1 write-behind not working?
-Date: Wed, 25 Mar 2009 17:39:24 -0700
-Message-ID: <72dbd3150903251739q21de8a2ew835860f9e3b11d14@mail.gmail.com>
+From: "Stefan G. Weichinger" <lists@xunil.at>
+Subject: Re: RAID5 reshape problems
+Date: Thu, 26 Mar 2009 07:58:33 +0100
+Message-ID: <49CB2799.7000305@xunil.at>
+References: <49CA787C.2090100@xunil.at> <18890.44146.95223.103114@notabene.brown> <49CAB3A3.7020807@xunil.at>
+Reply-To: lists@xunil.at
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <49CAB3A3.7020807@xunil.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I picked up a SSD (30GB OCZ Vertex if you're curious) and am planning
-to set up a RAID1 with it and a SATA disk with the SATA disk in
-write-mostly mode along with write-behind enabled.
+Stefan G. Weichinger schrieb:
 
-So I went to test it to make sure I had all the details correct on
-aligning the partition to a 128kB offset and the correct mdadm
-commands to create the array in write-mostly and write-behind, but I
-found that I couldn't get writes to "write-behind".  Essentially all
-writes would complete at the speed of the rotating disk.  Reads
-however worked great - they all appeared to be coming from the SSD.
+> Might take till tomorrow when the owner comes to office again that he
+> will be able to reboot the box via console.
+> 
+> At least I am somehow more confident now that we won't lose data.
 
-I created the array with the following command:
+Update: a hard reboot worked, the raid was visible but inactive.
+We re-added the now checked sdf (in a completely cleaned server) and the
+raid was still inactive. In the end I had to re-assemble the md-device
+with 5 out of 6 devices, right now it rebuilds:
 
-mdadm --create /dev/md0 --raid-devices=2 --level=1 \
-  --bitmap=internal --write-behind /dev/sdb1 --write-mostly /dev/sda1
+# cat /proc/mdstat
+Personalities : [raid0] [raid1] [raid6] [raid5] [raid4]
+md1 : active raid5 sde3[3](S) sdd3[2] sdb3[1] sda3[0]
+      17591040 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
 
-/dev/sda is the SATA disk, /dev/sdb is the SSD.
+md2 : active raid5 sde4[3] sdd4[2] sdc4[5] sdb4[1] sda4[0]
+      2903386944 blocks super 0.91 level 5, 64k chunk, algorithm 2 [6/5]
+[UUUU_U]
+      [>....................]  reshape =  1.9% (18408064/967795648)
+finish=1479.2min speed=10696K/sec
 
-So then I created an ext3 filesystem on the array (mkfs -t ext3 -E
-stride=32 /dev/md0), mounted it and proceeded to run some quick dd
-tests to verify that things were working as expected.
 
-I simply wrote a 1kB file to disk like this:
-dd if=/dev/zero of=/mnt/disk/tmpfile bs=1k count=1 conv=fdatasync
+# mdadm -D /dev/md2
+/dev/md2:
+        Version : 00.91.03
+  Creation Time : Wed Oct 22 19:43:13 2008
+     Raid Level : raid5
+     Array Size : 2903386944 (2768.89 GiB 2973.07 GB)
+  Used Dev Size : 967795648 (922.96 GiB 991.02 GB)
+   Raid Devices : 6
+  Total Devices : 5
+Preferred Minor : 2
+    Persistence : Superblock is persistent
 
-I tried various file sizes, and even tried reconfiguring the bitmap
-with a write-behind setting of 10000.
-I confirmed speeds by failing and removing either the SSD or SATA disk
-- with both disks active, writes were completing at the speed of the
-SATA disk, which was 2-5 times slower depending on the size of the
-file.
+    Update Time : Thu Mar 26 07:56:33 2009
+          State : clean, degraded, recovering
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 0
 
-My only guess is that by specifying fdatasync on the dd command, that
-forces the data to be written out to all members of the array.  Not
-quite intuitive if that is by design - because otherwise, when are you
-able to take advantage of the write-behind feature.
+         Layout : left-symmetric
+     Chunk Size : 64K
 
-The system I was testing on was running off a Fedora 10 live CD, so
-it's not the most recent software, but it's not that old, either:
-(kernel 2.6.27.5-117.fc10, mdadm 2.6.7.1).
+ Reshape Status : 1% complete
+  Delta Devices : 2, (4->6)
 
-Can anyone confirm that write-behind is working for them, and a quick
-test to show that it's working?
+           UUID : 2e27c42d:40936d45:53eb5abe:265a9668
+         Events : 0.12576
 
--Dave
+    Number   Major   Minor   RaidDevice State
+       0       8        4        0      active sync   /dev/sda4
+       1       8       20        1      active sync   /dev/sdb4
+       2       8       52        2      active sync   /dev/sdd4
+       3       8       68        3      active sync   /dev/sde4
+       4       0        0        4      removed
+       5       8       36        5      active sync   /dev/sdc4
+
+
+---
+
+I assume that I will simply have to add /dev/sdf4 then ??
+Or again "add" and then "grow" ?
+
+The PV/VG/LVs all are valid, time to try to relax a bit now.
+
+Thanks, Neil,
+
+Stefan
