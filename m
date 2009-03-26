@@ -1,51 +1,68 @@
-From: Raz <raziebe@gmail.com>
-Subject: Re: Re-size RAID-10
-Date: Thu, 26 Mar 2009 10:22:40 +0200
-Message-ID: <5d96567b0903260122r19ac19b2u943a82aac2852197@mail.gmail.com>
-References: <49CAA763.3050405@amfes.com> <18890.44223.469.924083@notabene.brown>
-	<20090326081418.GB23977@rap.rap.dk>
+From: "Stefan G. Weichinger" <lists@xunil.at>
+Subject: Re: RAID5 reshape problems
+Date: Thu, 26 Mar 2009 11:20:32 +0100
+Message-ID: <49CB56F0.9030902@xunil.at>
+References: <49CA787C.2090100@xunil.at> <18890.44146.95223.103114@notabene.brown> <49CAB3A3.7020807@xunil.at> <49CB2799.7000305@xunil.at>
+Reply-To: lists@xunil.at
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090326081418.GB23977@rap.rap.dk>
+In-Reply-To: <49CB2799.7000305@xunil.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
-Cc: Neil Brown <neilb@suse.de>, "Daniel L. Miller" <dmiller@amfes.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2009/3/26 Keld J=F8rn Simonsen <keld@dkuug.dk>:
-> On Thu, Mar 26, 2009 at 09:14:22AM +1100, Neil Brown wrote:
->> On Wednesday March 25, dmiller@amfes.com wrote:
->> > I think I asked this once before, if so I apologize for the redund=
-ancy -
->> > but then again maybe something's changed...
->> >
->> > I've got a RAID-10 array with four drives. =A0It's nearing capacit=
-y, and I
->> > need to explore expansion options. =A0Can I simply add a pair of n=
-ew
->> > drives? =A0Or do I have to archive the information first and rebui=
-ld the
->> > array from scratch?
->>
->> It is not currently possible to resize a raid-10.
->
-> In my mind, it should not be that difficult, tho, to do it.
->
-> Is resize an operation that needs to be done with the fs unmounted?
-No. in raid5 there is no need for that.
-> best regards
-> keld
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Stefan G. Weichinger schrieb:
+
+> I assume that I will simply have to add /dev/sdf4 then ??
+> Or again "add" and then "grow" ?
+
+Did a "mdadm --re-add /dev/md2 /dev/sdf4", now it looks like:
+
+# mdadm -D /dev/md2
+/dev/md2:
+        Version : 00.91.03
+  Creation Time : Wed Oct 22 19:43:13 2008
+     Raid Level : raid5
+     Array Size : 2903386944 (2768.89 GiB 2973.07 GB)
+  Used Dev Size : 967795648 (922.96 GiB 991.02 GB)
+   Raid Devices : 6
+  Total Devices : 6
+Preferred Minor : 2
+    Persistence : Superblock is persistent
+
+    Update Time : Thu Mar 26 11:18:48 2009
+          State : clean, degraded, recovering
+ Active Devices : 5
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 1
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+ Reshape Status : 14% complete
+  Delta Devices : 2, (4->6)
+
+           UUID : 2e27c42d:40936d45:53eb5abe:265a9668
+         Events : 0.96428
+
+    Number   Major   Minor   RaidDevice State
+       0       8        4        0      active sync   /dev/sda4
+       1       8       20        1      active sync   /dev/sdb4
+       2       8       52        2      active sync   /dev/sdd4
+       3       8       68        3      active sync   /dev/sde4
+       4       0        0        4      removed
+       5       8       36        5      active sync   /dev/sdc4
+
+       6       8       84        -      spare   /dev/sdf4
+
+
+Looks very OK to me.
+
+*phew*
+
+I will wait until it isn't degraded anymore before I do the "pvresize".
+
+Thanks all, Stefan
