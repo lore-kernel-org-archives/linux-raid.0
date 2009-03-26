@@ -1,65 +1,30 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [PATCH 02/13] async_tx: don't use src_list argument of async_xor() for dma addresses
-Date: Thu, 26 Mar 2009 11:39:12 +0100
-Message-ID: <20090326103912.GP17185@skl-net.de>
-References: <20090318191248.20375.40560.stgit@dwillia2-linux.ch.intel.com> <20090318192026.20375.3053.stgit@dwillia2-linux.ch.intel.com> <20090319201008.GC10491@skl-net.de> <e9c3a7c20903251011w3f6b3f58u7c0352ae39bb1c7c@mail.gmail.com>
+From: Federico <undicizeri@gmail.com>
+Subject: Best way to re-format RAID1 disks
+Date: Thu, 26 Mar 2009 12:10:35 +0100
+Message-ID: <26c008d70903260410y22c8af1ocf00138a1ff6a2b6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="+sObS8/rhx1YpqEF"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <e9c3a7c20903251011w3f6b3f58u7c0352ae39bb1c7c@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, neilb@suse.de, maciej.sosnowski@intel.com, Yuri Tikhonov <yur@emcraft.com>, Ilya Yanok <yanok@emcraft.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi all,
+I've two disks in RAID1 formatted with reiserfs which, in my system,
+has  amazingly poor performance... I want to switch to ext3 and in a
+couple of kernel releases to upgrade to ext4.
+This is my plan:
 
---+sObS8/rhx1YpqEF
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+1 - Remove one disk from the array
+2 - Format the removed disk with ext3 filesystem
+3 - Copy all the data from the degradeted RAID to the newly ext3-formatted disk
+4 - Create a new degradeted RAID1 with the ext3 disk
+5 - Modify grub and reconfigure mdadm to boot in the ext3 RAID1 disk.
+6 - Reboot.
+7 - Reformat the reiserfs disk
+8 - Add the formatted disk to the ext3 RAID and start to syncing.
 
-On 10:11, Dan Williams wrote:
-> On Thu, Mar 19, 2009 at 1:10 PM, Andre Noll <maan@systemlinux.org> wrote:
-> > On 12:20, Dan Williams wrote:
-> >
-> >> Using src_list argument of async_xor() as a storage for dma addresses
-> >> implies sizeof(dma_addr_t) <=3D sizeof(struct page *) restriction whic=
-h is
-> >> not always true (e.g. ppc440spe).
-> >
-> > This message does not tell what the patch is going to do about that.
-> > It would also be nice to mention (either in the log message or as a
-> > comment) why allocating the dma_src arrays on the stack is not going
-> > to be a problem.
-> >
->=20
-> True, and taking into account your other comment about the number of
-> parameters I think this is a good opportunity to solve this problem
-> rather than kick it down the road.  So I will prepare a rework to make
-> this memory caller provided.  This gives us the flexibility to use a
-> kmalloc'd buffer hanging off the stripe_head as Neil suggested in
-> another thread.
-
-Glad you agree. I'm looking forward to seeing the reworked patch set.
-
-Thanks
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---+sObS8/rhx1YpqEF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFJy1tQWto1QDEAkw8RAh77AKCZjEr0A4Sjog2N583P4DDO6X0tiACgmiiV
-8YWg4iVYkIFoN1ejRsQQieQ=
-=VWTU
------END PGP SIGNATURE-----
-
---+sObS8/rhx1YpqEF--
+Is there a more easy and failproof method?
+I'm a bit scared to lose same (or all) of my data during the process...
+Thank you for your help :P
