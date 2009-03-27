@@ -1,48 +1,56 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Re-size RAID-10
-Date: Fri, 27 Mar 2009 15:44:58 +1100
-Message-ID: <18892.22986.266806.170097@notabene.brown>
-References: <49CAA763.3050405@amfes.com>
-	<18890.44223.469.924083@notabene.brown>
-	<5d96567b0903260040u7269749y284b66c1f495c48@mail.gmail.com>
+From: David Rees <drees76@gmail.com>
+Subject: Re: RAID1 write-behind not working?
+Date: Thu, 26 Mar 2009 22:48:56 -0700
+Message-ID: <72dbd3150903262248l407f3fddr1933d2662041a915@mail.gmail.com>
+References: <72dbd3150903251739q21de8a2ew835860f9e3b11d14@mail.gmail.com>
+	<18892.22029.923043.59931@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Raz on Thursday March 26
+In-Reply-To: <18892.22029.923043.59931@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Raz <raziebe@gmail.com>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday March 26, raziebe@gmail.com wrote:
-> Neil Hello
-> I will be grateful for your reply. Currently I am working on raid0
-> code reshape.
->  1. Will you be working on this functionality in the near future ?
+On Thu, Mar 26, 2009 at 9:29 PM, Neil Brown <neilb@suse.de> wrote:
+> On Wednesday March 25, drees76@gmail.com wrote:
+>> I picked up a SSD (30GB OCZ Vertex if you're curious) and am plannin=
+g
+>> to set up a RAID1 with it and a SATA disk with the SATA disk in
+>> write-mostly mode along with write-behind enabled.
+>>
+>> So I went to test it to make sure I had all the details correct on
+>> aligning the partition to a 128kB offset and the correct mdadm
+>> commands to create the array in write-mostly and write-behind, but I
+>> found that I couldn't get writes to "write-behind". =A0Essentially a=
+ll
+>> writes would complete at the speed of the rotating disk. =A0Reads
+>> however worked great - they all appeared to be coming from the SSD.
+>>
+>> I created the array with the following command:
+>>
+>> mdadm --create /dev/md0 --raid-devices=3D2 --level=3D1 \
+>> =A0 --bitmap=3Dinternal --write-behind /dev/sdb1 --write-mostly /dev=
+/sda1
+>
+> Hmmm... try with an external bitmap stored elsewhere on the SSD.
+> When you have bitmap=3Dinternal, bitmap updates are synchronous to al=
+l
+> devices. =A0Maybe that is causing the loss of speed that you see.
 
-I have no plans for raid0 reshape or raid10 reshape.
+Darn, I gave that a brief thought when I was setting it up but later
+forgot about it.  I'll have to give it another test.  If so, we should
+probably include some docs alongside the write-behind information
+noting that you need to put the bitmap externally to see any benefit.
 
->  2. Should I save the superblocks like mdadm does in the case of 1,4,5,6 ?
+Hopefully I'll have time to get this set up and tested over the next
+couple days.
 
-When the layout changes, you certainly have to update the superblock,
-yes.
-
-
->  3. What is the heuristics of strip_zones ? why do we need them ?
-
-To make maximum use of available space.
-
-> 
-> . non-power 2 raid0 chunk sizes.
->  4. Other than segments masks issues, why isn't possible ? can't i fix raid0
->   to support 3MB chunks with a segment of 1MB ?
-
-There is no intrinsic reason why chunk sizes should be powers of two.
-When I started working on the code that limit already existed and I
-have never had any reason to remove it.
-
-If you would like to create patches which provide support for
-non-power-of-two chunk sizes, I will be happy to review them.
-
-NeilBrown
+-Dave
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
