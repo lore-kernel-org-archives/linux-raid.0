@@ -1,55 +1,52 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Thoughts on using SSD
-Date: Fri, 27 Mar 2009 15:37:23 +1100
-Message-ID: <18892.22531.392563.258229@notabene.brown>
-References: <49CC0B0D.5000904@tmr.com>
+Subject: Re: raid0 zones
+Date: Fri, 27 Mar 2009 15:41:22 +1100
+Message-ID: <18892.22770.668365.114417@notabene.brown>
+References: <5d96567b0903261017u515b8e00qc12368e7f82b73f5@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bill Davidsen on Thursday March 26
+In-Reply-To: message from Raz on Thursday March 26
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Raz <raziebe@gmail.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thursday March 26, davidsen@tmr.com wrote:
-> I'm building a fairly aggressive machine for both a backup host for 
-> virtual machines and spare time development platform, compile engine and 
-> testbed both. I want to get cost effective use from an SSD unit, and I 
-> propose to use a 32GB unit as follows: for the root filesystem, 12GB, 
-> which should hold all the usual root things, and 16GB for swap (12GB 
-> RAM, and I want boot and/or hibernate to happen NOW). The remaining 
-> space I think might be used for various high impact things, and one of 
-> those with speeding raid.
+On Thursday March 26, raziebe@gmail.com wrote:
+> Neil Hello
+> I sincerely hope you will answer this email.As i understand , raid0
+> zones are aimed for cases where the disks are not symmetric ( or
+> partitions ) in their sizes.
+
+correct.
+
+> But this means imbalanced IO. An inbalanced IO, from my application
+> perspective is a disaster.
+> I am wondering whether zone number greater than 1 may be an option in mdadm.
+> I will most thankful for your opinion on this matter.
+
+If you want to avoid zones, simply create partitions that are all the
+same size and do raid0 across those.
+
+With v1.x metadata, it might be possible that specifying "--size
+whatever" will achieve the same effect, but I'm not certain.
+
 > 
-> If I were to create a small raid device, raid1, made of the 4GB Ssd and 
-> 4GB of SATA space, if I made the SATA write-mostly and write-behind, and 
-> put the journal for my raid arrays (and bitmaps?) that seems likely to 
-> provide a significant performance gain in small storage.
-> 
-> Am I missing anything here? Is there an obvious drawback I'm missing?
+> PS
+> I managed to expand raid0 ( very very experimental , and only with zone
+> nr == 1).
 
+Cool.
 
-I'd probably just put the journal on the SSD and mount my ext3
-filesystem data=journal
+> I still have to learn how to write the superblocks though because I
+> cannot re-assemble the raid, and behave according to md rules.
 
-That has a similar effect to raid1/write-behind in that data is
-written to both but we only wait for the write to the SSD to
-complete.  But as it is done at the filesystem level - and the
-filesystem has a much better idea what it is doing - you would expect
-to get much more efficient results.  e.g. less wasted memory, much
-larger amount of data that is safe of SSD but still trickling out to
-the HD.
-
-I guess there might be a small lost in data safety as is the journal
-device fails you lose your journal.  But that is only 5 seconds of
-data, and I suspect SSDs don't suffer from many of the failure modes
-of HDs.
-
-.... I wonder if it would make sense to mirror two partitions of the
-one SSD?? It would save you from media errors and only expose you to
-total-drive-death errors.
-
+I've been wondering whether it might be easiest to use the raid5 code
+base to reshape a raid0.  Handling zones would be very messy, but the
+rest should be quite easy.
+Just convert the raid0 into a raid4 with a missing party disk.  Then
+add a device and reshape to a larger raid4 which is still missing the
+parity disk.  Then convert back to raid0.
 
 NeilBrown
