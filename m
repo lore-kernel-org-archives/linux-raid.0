@@ -1,56 +1,70 @@
-From: David Rees <drees76@gmail.com>
-Subject: Re: RAID1 write-behind not working?
-Date: Thu, 26 Mar 2009 22:48:56 -0700
-Message-ID: <72dbd3150903262248l407f3fddr1933d2662041a915@mail.gmail.com>
-References: <72dbd3150903251739q21de8a2ew835860f9e3b11d14@mail.gmail.com>
-	<18892.22029.923043.59931@notabene.brown>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [md PATCH 4/6] md/raid5: change reshape-progress measurement to cope with reshaping backwards.
+Date: Fri, 27 Mar 2009 17:19:36 +0100
+Message-ID: <20090327161936.GQ17185@skl-net.de>
+References: <20090324084629.15383.10271.stgit@notabene.brown> <20090324085332.15383.94300.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="oiTwr10F0DlNHtiD"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18892.22029.923043.59931@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <20090324085332.15383.94300.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Mar 26, 2009 at 9:29 PM, Neil Brown <neilb@suse.de> wrote:
-> On Wednesday March 25, drees76@gmail.com wrote:
->> I picked up a SSD (30GB OCZ Vertex if you're curious) and am plannin=
-g
->> to set up a RAID1 with it and a SATA disk with the SATA disk in
->> write-mostly mode along with write-behind enabled.
->>
->> So I went to test it to make sure I had all the details correct on
->> aligning the partition to a 128kB offset and the correct mdadm
->> commands to create the array in write-mostly and write-behind, but I
->> found that I couldn't get writes to "write-behind". =A0Essentially a=
-ll
->> writes would complete at the speed of the rotating disk. =A0Reads
->> however worked great - they all appeared to be coming from the SSD.
->>
->> I created the array with the following command:
->>
->> mdadm --create /dev/md0 --raid-devices=3D2 --level=3D1 \
->> =A0 --bitmap=3Dinternal --write-behind /dev/sdb1 --write-mostly /dev=
-/sda1
->
-> Hmmm... try with an external bitmap stored elsewhere on the SSD.
-> When you have bitmap=3Dinternal, bitmap updates are synchronous to al=
-l
-> devices. =A0Maybe that is causing the loss of speed that you see.
 
-Darn, I gave that a brief thought when I was setting it up but later
-forgot about it.  I'll have to give it another test.  If so, we should
-probably include some docs alongside the write-behind information
-noting that you need to put the bitmap externally to see any benefit.
+--oiTwr10F0DlNHtiD
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Hopefully I'll have time to get this set up and tested over the next
-couple days.
+On 19:53, NeilBrown wrote:
+> -			if (logical_sector >=3D conf->expand_progress) {
+> +			if (mddev->delta_disks < 0
+> +			    ? logical_sector < conf->reshape_progress
+> +			    : logical_sector >=3D conf->reshape_progress) {
+>  				disks =3D conf->previous_raid_disks;
+>  				previous =3D 1;
+>  			} else {
+> -				if (logical_sector >=3D conf->expand_lo) {
+> +				if (mddev->delta_disks < 0
+> +				    ? logical_sector < conf->reshape_safe
+> +				    : logical_sector >=3D conf->reshape_safe) {
+>  					spin_unlock_irq(&conf->device_lock);
+>  					schedule();
+>  					goto retry;
 
--Dave
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Is it only me who finds such code hard to comprehend?  Given that
+the patch adds checks of the form
+
+	(delta < 0 && s < r) || (delta >=3D 0 && s >=3D r)
+
+at several locations, it might make sense to introduce a marco or an
+inline function for this check.
+
+> +	/* reshape_progress is the leading edge of a 'reshape'
+> +	 * It has value MaxSector when no expand is happening
+
+s/expand/reshape
+
+Regards
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--oiTwr10F0DlNHtiD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFJzPyYWto1QDEAkw8RAkg4AJ9lKMhnOejOxjRYk4R3daeMp5MIIQCfU/Xa
+ZzhHddVzG7IdU8GUivjruF0=
+=NCyb
+-----END PGP SIGNATURE-----
+
+--oiTwr10F0DlNHtiD--
