@@ -1,47 +1,28 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [md PATCH 6/6] Documentation/md.txt update
-Date: Fri, 27 Mar 2009 17:19:50 +0100
-Message-ID: <20090327161950.GS17185@skl-net.de>
-References: <20090324084629.15383.10271.stgit@notabene.brown> <20090324085332.15383.530.stgit@notabene.brown>
+From: "Stefan G. Weichinger" <lists@xunil.at>
+Subject: Re: RAID5 reshape problems : SOLVED
+Date: Fri, 27 Mar 2009 19:11:18 +0100
+Message-ID: <49CD16C6.301@xunil.at>
+References: <49CA787C.2090100@xunil.at> <18890.44146.95223.103114@notabene.brown> <49CAB3A3.7020807@xunil.at> <49CB2799.7000305@xunil.at> <49CB56F0.9030902@xunil.at>
+Reply-To: lists@xunil.at
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="BBw4iOnA9FNdCxVc"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090324085332.15383.530.stgit@notabene.brown>
+In-Reply-To: <49CB56F0.9030902@xunil.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: lists@xunil.at
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Stefan G. Weichinger schrieb:
+> I will wait until it isn't degraded anymore before I do the "pvresize".
 
---BBw4iOnA9FNdCxVc
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Just for the records (maybe I need to google this myself someday ;) ):
 
-On 19:53, NeilBrown wrote:
-> +     reduce the size of the array.  To reduce the number of drives
-> +     in an e.g. raid5, the array size musts first be reduced by
+The whole process finished this afternoon, with all 6 disks in the
+raid5. The following pvresize worked without a problem as well.
 
-s/musts/must
+So everything is fine again, it really seems that dust was the main
+problem here ...
 
-Regards
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---BBw4iOnA9FNdCxVc
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFJzPymWto1QDEAkw8RAti0AJ0bcvqeAEmT3U//McveCvzXNG9GbQCglHb2
-dDyY4/VtK3XvzecADAW6ZSk=
-=PmxZ
------END PGP SIGNATURE-----
-
---BBw4iOnA9FNdCxVc--
+Thanks, Stefan
