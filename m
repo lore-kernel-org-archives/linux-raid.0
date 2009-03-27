@@ -1,69 +1,37 @@
 From: Neil Brown <neilb@suse.de>
 Subject: Re: RAID1 write-behind not working?
-Date: Fri, 27 Mar 2009 15:25:55 +1100
-Message-ID: <18892.21843.355089.953191@notabene.brown>
+Date: Fri, 27 Mar 2009 15:29:01 +1100
+Message-ID: <18892.22029.923043.59931@notabene.brown>
 References: <72dbd3150903251739q21de8a2ew835860f9e3b11d14@mail.gmail.com>
-	<49CB7CB2.1020105@tmr.com>
-	<72dbd3150903261028idacb20esc9e56854379d76bb@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from David Rees on Thursday March 26
+In-Reply-To: message from David Rees on Wednesday March 25
 Sender: linux-raid-owner@vger.kernel.org
 To: David Rees <drees76@gmail.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday March 26, drees76@gmail.com wrote:
-> (re-adding linux-raid to Cc)
->=20
-> On Thu, Mar 26, 2009 at 6:01 AM, Bill Davidsen <davidsen@tmr.com> wro=
-te:
-> > David Rees wrote:
-> >> My only guess is that by specifying fdatasync on the dd command, t=
-hat
-> >> forces the data to be written out to all members of the array. =A0=
-Not
-> >> quite intuitive if that is by design - because otherwise, when are=
- you
-> >> able to take advantage of the write-behind feature.
+On Wednesday March 25, drees76@gmail.com wrote:
+> I picked up a SSD (30GB OCZ Vertex if you're curious) and am planning
+> to set up a RAID1 with it and a SATA disk with the SATA disk in
+> write-mostly mode along with write-behind enabled.
+> 
+> So I went to test it to make sure I had all the details correct on
+> aligning the partition to a 128kB offset and the correct mdadm
+> commands to create the array in write-mostly and write-behind, but I
+> found that I couldn't get writes to "write-behind".  Essentially all
+> writes would complete at the speed of the rotating disk.  Reads
+> however worked great - they all appeared to be coming from the SSD.
+> 
+> I created the array with the following command:
+> 
+> mdadm --create /dev/md0 --raid-devices=2 --level=1 \
+>   --bitmap=internal --write-behind /dev/sdb1 --write-mostly /dev/sda1
 
-That is not the design.  md/raid doesn't know anything about
-fdatasync.
-
-When a write request arrives at a raid1 with write-behind, a copy is
-made of the data, and that copy is written to the "write-mostly"
-devices while the original is written to the other devices (or
-something like that.  When the writes to the non-write-mostly devices
-complete, the filesystem is told that the write is complete.
-
-The write-behind devices can only cause a delay if:
-
- - the number of outstanding write exceeds the maximum given
-   with --write-behind=3D to mdadm
- - memory gets tight and we fail to malloc space to make a copy of
-   the data.
-
-So if your write-behind device has high latency, that should be
-masked.  If however it has low throughput, that cannot be masked.  The
-throughput of the raid1 will always be limited by the throughput of
-the slowest component device.
-
->=20
-> In this case, all I really care is that the data has been written to
-> the non-write-mostly disks and that the write-mostly disks can lag by
-> the number of IOs I've specified.
-
-That is exactly how it is designed to work (providing malloc doesn't
-fail).
-
-If you have numerical evidence that it is behaving otherwise, I'd be
-keen to see it.
+Hmmm... try with an external bitmap stored elsewhere on the SSD.
+When you have bitmap=internal, bitmap updates are synchronous to all
+devices.  Maybe that is causing the loss of speed that you see.
 
 NeilBrown
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
