@@ -1,41 +1,25 @@
-From: Patrick Ringl <patrick.ringl@gmx.de>
-Subject: 2.6.29 - raid10 issue - spares do not get synched automatically
-Date: Sat, 28 Mar 2009 13:37:04 +0100
-Message-ID: <49CE19F0.5040809@gmx.de>
+From: Max Waterman <davidmaxwaterman@fastmail.co.uk>
+Subject: RAID5 -> RAID6
+Date: Sat, 28 Mar 2009 15:05:55 +0200
+Message-ID: <49CE20B3.9010101@fastmail.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Hi,
 
-I am using 2.6.29 on a debian lenny. Anyway, I am having problems with a 
-raid10 sandbox setup consisting of 4 loopback devices. To make a long 
-story short:
+I'm wondering what the latest is on migrating from RAID5 to RAID6.
 
-I created a raid10 array with all these 4 devices (loop0-loop3)
-then I set two devices faulty, removed them .. checked if I can still 
-write to the array (which I could, so I/O errors, nothing in dmesg):
+I have a 6 disk RAID5 with 2 spares and have long been thinking of 
+making better use of the spares. All 200GB.
 
-BUT - here it comes: once I am trying to (re)add them (I zero'ed the 
-superblock before) they're only getting added as spares and the array 
-will not sync.
+I have a 1TB drive that is serving as a backup, but I wonder if there's 
+a way to migrate without having to wipe the array.
 
-Here's the logfile with mdadm -D /dev/md0 in between so one can see what 
-is going on:
+Any advice?
 
-http://paste.debian.net/31758/
-
-
-Any ideas?
-
-
-PS: Please CC to me since I am not subscribed.
-
-
-regards,
-Patrick
+Max.
