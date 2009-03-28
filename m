@@ -1,79 +1,41 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: [md PATCH 4/6] md/raid5: change reshape-progress measurement
-     to cope with reshaping backwards.
-Date: Sat, 28 Mar 2009 06:54:31 +1100 (EST)
-Message-ID: <38a7f1dc05f8b3cedebd2e30a0288929.squirrel@neil.brown.name>
-References: <20090324084629.15383.10271.stgit@notabene.brown>
-    <20090324085332.15383.94300.stgit@notabene.brown>
-    <20090327161936.GQ17185@skl-net.de>
+From: Patrick Ringl <patrick.ringl@gmx.de>
+Subject: 2.6.29 - raid10 issue - spares do not get synched automatically
+Date: Sat, 28 Mar 2009 13:37:04 +0100
+Message-ID: <49CE19F0.5040809@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090327161936.GQ17185@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
+To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, March 28, 2009 3:19 am, Andre Noll wrote:
-> On 19:53, NeilBrown wrote:
->> -			if (logical_sector >= conf->expand_progress) {
->> +			if (mddev->delta_disks < 0
->> +			    ? logical_sector < conf->reshape_progress
->> +			    : logical_sector >= conf->reshape_progress) {
->>  				disks = conf->previous_raid_disks;
->>  				previous = 1;
->>  			} else {
->> -				if (logical_sector >= conf->expand_lo) {
->> +				if (mddev->delta_disks < 0
->> +				    ? logical_sector < conf->reshape_safe
->> +				    : logical_sector >= conf->reshape_safe) {
->>  					spin_unlock_irq(&conf->device_lock);
->>  					schedule();
->>  					goto retry;
->
-> Is it only me who finds such code hard to comprehend?  Given that
-> the patch adds checks of the form
->
-> 	(delta < 0 && s < r) || (delta >= 0 && s >= r)
+Hello,
 
-They are really of the form
-       delta < 0 ? s < r : s >= r
+I am using 2.6.29 on a debian lenny. Anyway, I am having problems with a 
+raid10 sandbox setup consisting of 4 loopback devices. To make a long 
+story short:
 
-I guess I could use something like
+I created a raid10 array with all these 4 devices (loop0-loop3)
+then I set two devices faulty, removed them .. checked if I can still 
+write to the array (which I could, so I/O errors, nothing in dmesg):
 
- static inline inorder(mddev_t *mddev, sector_t a, sector_t b)
- {
-      if (mddev->delta_disks < 0)
-                return b > a;
-      else
-                return a <= b;
- }
+BUT - here it comes: once I am trying to (re)add them (I zero'ed the 
+superblock before) they're only getting added as spares and the array 
+will not sync.
 
-However sometimes it is '<' vs '>=' and sometimes  '<' vs '>',
-so I'm not sure it would apply universally.....
+Here's the logfile with mdadm -D /dev/md0 in between so one can see what 
+is going on:
+
+http://paste.debian.net/31758/
 
 
->
-> at several locations, it might make sense to introduce a marco or an
-> inline function for this check.
->
->> +	/* reshape_progress is the leading edge of a 'reshape'
->> +	 * It has value MaxSector when no expand is happening
->
-> s/expand/reshape
-
-Thanks.
-Fixed.
+Any ideas?
 
 
-NeilBrown
+PS: Please CC to me since I am not subscribed.
 
->
-> Regards
-> Andre
-> --
-> The only person who always got his work done by Friday was Robinson Crusoe
->
 
+regards,
+Patrick
