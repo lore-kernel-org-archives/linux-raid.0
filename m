@@ -1,71 +1,44 @@
 From: Andre Noll <maan@systemlinux.org>
 Subject: Re: [md PATCH 4/6] md/raid5: change reshape-progress measurement to cope with reshaping backwards.
-Date: Mon, 30 Mar 2009 11:09:38 +0200
-Message-ID: <20090330090938.GT17185@skl-net.de>
-References: <20090324084629.15383.10271.stgit@notabene.brown> <20090324085332.15383.94300.stgit@notabene.brown> <20090327161936.GQ17185@skl-net.de> <38a7f1dc05f8b3cedebd2e30a0288929.squirrel@neil.brown.name>
+Date: Mon, 30 Mar 2009 11:20:55 +0200
+Message-ID: <20090330092055.GU17185@skl-net.de>
+References: <20090324084629.15383.10271.stgit@notabene.brown> <20090324085332.15383.94300.stgit@notabene.brown> <20090327161936.GQ17185@skl-net.de> <38a7f1dc05f8b3cedebd2e30a0288929.squirrel@neil.brown.name> <49CE1713.9070707@tmr.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="dU989noCA+aq9KP4"
+	protocol="application/pgp-signature"; boundary="t54s24TTWYm6oOX+"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <38a7f1dc05f8b3cedebd2e30a0288929.squirrel@neil.brown.name>
+In-Reply-To: <49CE1713.9070707@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---dU989noCA+aq9KP4
+--t54s24TTWYm6oOX+
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On 06:54, NeilBrown wrote:
-> > Is it only me who finds such code hard to comprehend?  Given that
-> > the patch adds checks of the form
-> >
-> > 	(delta < 0 && s < r) || (delta >=3D 0 && s >=3D r)
->=20
-> They are really of the form
->        delta < 0 ? s < r : s >=3D r
+On 08:24, Bill Davidsen wrote:
 
-Yeah right. This underlines that it is easy to get wrong :)
+> Let me say that (a) I find the existing code very readable, but (b) I
+> find the suggested rewrite even more so, using (?:) notation. If you
+> really want to use a macro, see the attached and preprocess with "cc
+> -E" to expand the macro. I personally find the macro version really
+> hard to read.
 
->  static inline inorder(mddev_t *mddev, sector_t a, sector_t b)
->  {
->       if (mddev->delta_disks < 0)
->                 return b > a;
->       else
->                 return a <=3D b;
->  }
->=20
-> However sometimes it is '<' vs '>=3D' and sometimes  '<' vs '>',
-> so I'm not sure it would apply universally.....
+Yes, the macro is not much easier to read either. It's not only about
+readability btw. Doing the check at only one place makes it easier to
+change the code later, should that ever be necessary. It also reduces
+the probability of getting it wrong at one location without noticing.
 
-Return -1, 0, or 1, i.e. something like this:
-
-static inline int inorder(int delta, sector_t a, sector_t b)
-{
-	int x;
-
-	if (a < b)
-		x =3D 1;
-	else if (a > b)
-		x =3D -1;
-	else x =3D 0;
-	if (delta < 0)
-		x =3D -x;
-	return x;
-}
-
-Of course, the callers would need to be adapted slightly.
-
-Thanks
+Regards
 Andre
 --=20
 The only person who always got his work done by Friday was Robinson Crusoe
 
---dU989noCA+aq9KP4
+--t54s24TTWYm6oOX+
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 Content-Disposition: inline
@@ -73,9 +46,9 @@ Content-Disposition: inline
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.1 (GNU/Linux)
 
-iD8DBQFJ0IxSWto1QDEAkw8RAk8rAJ9VBGQACtcVtv6f/QnANkJfjSBg6gCeJZ7N
-OVKGkWx/djLCkx+rrIjSREk=
-=2ZTK
+iD8DBQFJ0I73Wto1QDEAkw8RAryuAKCrJ77SQBdIPw2FDQrtdkoQdMG/SgCgpjzq
+UDB6J8uoYTvuN+bLUjcb9Gs=
+=Ll0q
 -----END PGP SIGNATURE-----
 
---dU989noCA+aq9KP4--
+--t54s24TTWYm6oOX+--
