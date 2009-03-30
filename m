@@ -1,97 +1,81 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: raid5 degraded twice, what happened here?
-Date: Sun, 29 Mar 2009 22:38:20 +0200
-Message-ID: <200903292238.23416.Dexter.Filmore@gmx.de>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [md PATCH 4/6] md/raid5: change reshape-progress measurement to cope with reshaping backwards.
+Date: Mon, 30 Mar 2009 11:09:38 +0200
+Message-ID: <20090330090938.GT17185@skl-net.de>
+References: <20090324084629.15383.10271.stgit@notabene.brown> <20090324085332.15383.94300.stgit@notabene.brown> <20090327161936.GQ17185@skl-net.de> <38a7f1dc05f8b3cedebd2e30a0288929.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1276764.pYbuyAQoSF";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="dU989noCA+aq9KP4"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <38a7f1dc05f8b3cedebd2e30a0288929.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---nextPart1276764.pYbuyAQoSF
-Content-Type: text/plain;
-  charset="us-ascii"
+
+--dU989noCA+aq9KP4
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
+
+On 06:54, NeilBrown wrote:
+> > Is it only me who finds such code hard to comprehend?  Given that
+> > the patch adds checks of the form
+> >
+> > 	(delta < 0 && s < r) || (delta >=3D 0 && s >=3D r)
+>=20
+> They are really of the form
+>        delta < 0 ? s < r : s >=3D r
+
+Yeah right. This underlines that it is easy to get wrong :)
+
+>  static inline inorder(mddev_t *mddev, sector_t a, sector_t b)
+>  {
+>       if (mddev->delta_disks < 0)
+>                 return b > a;
+>       else
+>                 return a <=3D b;
+>  }
+>=20
+> However sometimes it is '<' vs '>=3D' and sometimes  '<' vs '>',
+> so I'm not sure it would apply universally.....
+
+Return -1, 0, or 1, i.e. something like this:
+
+static inline int inorder(int delta, sector_t a, sector_t b)
+{
+	int x;
+
+	if (a < b)
+		x =3D 1;
+	else if (a > b)
+		x =3D -1;
+	else x =3D 0;
+	if (delta < 0)
+		x =3D -x;
+	return x;
+}
+
+Of course, the callers would need to be adapted slightly.
+
+Thanks
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--dU989noCA+aq9KP4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 Content-Disposition: inline
 
-During the last two weeks my raid5 array degraded while shutting down.
-Here's what happened at shutdown last time according to logs:
-
-Mar 29 05:16:27 xerxes shutdown[5690]: shutting down for system halt
-Mar 29 05:16:58 xerxes kernel:          res=20
-40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-Mar 29 05:16:58 xerxes kernel: ata3: soft resetting port
-Mar 29 05:17:03 xerxes kernel: ata3: port is slow to respond, please be=20
-patient (Status 0xd0)
-Mar 29 05:17:07 xerxes kernel: ata3: SATA link up 1.5 Gbps (SStatus 113=20
-SControl 310)
-Mar 29 05:17:37 xerxes kernel: ata3.00: qc timeout (cmd 0xec)
-Mar 29 05:17:37 xerxes kernel: ata3.00: failed to IDENTIFY (I/O error,=20
-err_mask=3D0x4)
-Mar 29 05:17:37 xerxes kernel: ata3: failed to recover some devices, retryi=
-ng=20
-in 5 secs
-Mar 29 05:17:42 xerxes kernel: ata3: hard resetting port
-Mar 29 05:17:48 xerxes kernel: ata3: port is slow to respond, please be=20
-patient (Status 0xff)
-Mar 29 05:17:52 xerxes kernel: ata3: SATA link up 1.5 Gbps (SStatus 113=20
-SControl 310)
-Mar 29 05:17:52 xerxes kernel: ata3.00: failed to IDENTIFY (I/O error,=20
-err_mask=3D0x3)
-Mar 29 05:17:52 xerxes kernel: ata3.00: limiting speed to UDMA/100:PIO3
-Mar 29 05:17:52 xerxes kernel: ata3: failed to recover some devices, retryi=
-ng=20
-in 5 secs
-Mar 29 05:17:57 xerxes kernel: ata3: hard resetting port
-Mar 29 05:18:02 xerxes kernel: ata3: port is slow to respond, please be=20
-patient (Status 0xff)
-Mar 29 05:18:06 xerxes kernel: ata3: SATA link up 1.5 Gbps (SStatus 113=20
-SControl 310)
-Mar 29 05:18:06 xerxes kernel: ata3.00: failed to IDENTIFY (I/O error,=20
-err_mask=3D0x3)
-Mar 29 05:18:06 xerxes kernel: ata3.00: disabled
-Mar 29 05:18:07 xerxes kernel: ata3: EH complete
-Mar 29 05:18:07 xerxes kernel: sd 2:0:0:0: [sdb] Result:=20
-hostbyte=3DDID_BAD_TARGET driverbyte=3DDRIVER_OK,SUGGEST_OK
-Mar 29 05:18:07 xerxes kernel: end_request: I/O error, dev sdb, sector=20
-976751807
-Mar 29 05:18:07 xerxes kernel: md: super_written gets error=3D-5, uptodate=
-=3D0
-Mar 29 05:18:07 xerxes kernel: RAID5 conf printout:
-
-
-What is this? Controller screwup? Disk oops? Software thing?
-
-Debian Etch r7, mdadm 2.5.6.
-
-Dex
-
-
-=2D-=20
-=2D----BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@=20
-b++(+++) DI+++ D- G++ e* h>++ r* y?
-=2D-----END GEEK CODE BLOCK------
-
-http://www.vorratsdatenspeicherung.de
-
---nextPart1276764.pYbuyAQoSF
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+Version: GnuPG v1.4.1 (GNU/Linux)
 
-iD8DBQBJz9w/m6TdMk9WhQ0RArJGAKDMbHuAtzWmvpxhMbKUaI35yBLYLgCfdmtq
-Lit+IL8jvJHmaZcZMKL/uOY=
-=KQVw
+iD8DBQFJ0IxSWto1QDEAkw8RAk8rAJ9VBGQACtcVtv6f/QnANkJfjSBg6gCeJZ7N
+OVKGkWx/djLCkx+rrIjSREk=
+=2ZTK
 -----END PGP SIGNATURE-----
 
---nextPart1276764.pYbuyAQoSF--
+--dU989noCA+aq9KP4--
