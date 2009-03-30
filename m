@@ -1,25 +1,47 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
+From: Nagilum <nagilum@nagilum.org>
 Subject: Re: Adding more drives/saturating the bandwidth
-Date: Mon, 30 Mar 2009 17:40:31 +0200
-Message-ID: <87eiwf81e8.fsf@frosties.localdomain>
+Date: Mon, 30 Mar 2009 18:28:01 +0200
+Message-ID: <20090330182801.24395xahlmpcutwc@cakebox.home>
 References: <440826.81462.qm@web51312.mail.re2.yahoo.com>
+ <87eiwf81e8.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+ charset=ISO-8859-2;
+ DelSp="Yes";
+ format="flowed"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <440826.81462.qm@web51312.mail.re2.yahoo.com> (Jon Hardcastle's
-	message of "Thu, 26 Mar 2009 05:43:45 -0700 (PDT)")
+In-Reply-To: <87eiwf81e8.fsf@frosties.localdomain>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon@eHardcastle.com
-Cc: linux-raid@vger.kernel.org
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: Jon@eHardcastle.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jon Hardcastle <jd_hardcastle@yahoo.com> writes:
 
-> Hey guys, How do you know if your machine can handle adding some more drives to it? How can you check that there is enough BUS IO to handle extra sata cards and also that the machine is powerful enough to support say an 8 drive raid 5...
+----- Message from goswin-v-b@web.de ---------
+> Jon Hardcastle <jd_hardcastle@yahoo.com> writes:
+>
+>> Hey guys, How do you know if your machine can handle adding some  
+>> more drives to it? How can you check that there is enough BUS IO to  
+>> handle extra sata cards and also that the machine is powerful  
+>> enough to support say an 8 drive raid 5...
 
-A) Try & error.
-B) look up the speed of the bus and half it. Any bandwidth left?
-   make sure the cpu isn't at 100% already as well
+Maybe hdparm could abused for that?
+Reporting the disk cache transfer rates for one or two disks at the same time?
 
-MfG
-        Goswin
+----- End message from goswin-v-b@web.de -----
+
+
+
+========================================================================
+#    _  __          _ __     http://www.nagilum.org/ \n icq://69646724 #
+#   / |/ /__ ____ _(_) /_ ____ _  nagilum@nagilum.org \n +491776461165 #
+#  /    / _ `/ _ `/ / / // /  ' \  Amiga (68k/PPC): AOS/NetBSD/Linux   #
+# /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/   Mac (PPC): MacOS-X / NetBSD /Linux #
+#           /___/     x86: FreeBSD/Linux/Solaris/Win2k  ARM9: EPOC EV6 #
+========================================================================
+
+
+----------------------------------------------------------------
+cakebox.homeunix.net - all the machine one needs..
