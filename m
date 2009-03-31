@@ -1,47 +1,70 @@
-From: Nagilum <nagilum@nagilum.org>
-Subject: Re: Adding more drives/saturating the bandwidth
-Date: Mon, 30 Mar 2009 18:28:01 +0200
-Message-ID: <20090330182801.24395xahlmpcutwc@cakebox.home>
-References: <440826.81462.qm@web51312.mail.re2.yahoo.com>
- <87eiwf81e8.fsf@frosties.localdomain>
+From: NeilBrown <neilb@suse.de>
+Subject: [md PATCH 00/14] Final set of patches head for 2.6.30
+Date: Tue, 31 Mar 2009 15:54:42 +1100
+Message-ID: <20090331044827.2589.95894.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-2;
- DelSp="Yes";
- format="flowed"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87eiwf81e8.fsf@frosties.localdomain>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: Jon@eHardcastle.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi again,
+ following are some more patches that are heading for 2.6.30.
+ I'll probably send a pull request in a day or two.
 
------ Message from goswin-v-b@web.de ---------
-> Jon Hardcastle <jd_hardcastle@yahoo.com> writes:
->
->> Hey guys, How do you know if your machine can handle adding some  
->> more drives to it? How can you check that there is enough BUS IO to  
->> handle extra sata cards and also that the machine is powerful  
->> enough to support say an 8 drive raid 5...
+ There is some overlap between this set and the previous as I
+ had to significantly change
+      md: add explicit method to signal the end of a reshape.
+ as I found out that some things need to be done in the reshape
+ thread, and some needs to be done under the mddev_lock in the
+ raid5d thread.
 
-Maybe hdparm could abused for that?
-Reporting the disk cache transfer rates for one or two disks at the same time?
+ The main new functionality here is the ability to change chunk_size
+ and layout during reshape.  This means that we can really change
+ a RAID5 into a RAID6, though it needs some mdadm support to do it
+ safely.
 
------ End message from goswin-v-b@web.de -----
+ e.g. if you write a new number of .../md/chunk_size and then write
+ 'reshape' to 'sync_action' it will restripe the whole array with
+ the new chunk size.  If you get a system crash during this, you lose
+ your data (sorry).  Mdadm will not do this for you until it is able
+ to backup each few stripes while they are being reshaped so that in
+ the event of a crash you can restore from backup and not lose all
+ your data.
+
+ Any review comments most welcome.
+
+NeilBrown
+
+---
+
+NeilBrown (14):
+      md/raid5 revise rules for when to update metadata during reshape
+      md/raid5: minor code cleanups in make_request.
+      md: remove CONFIG_MD_RAID_RESHAPE config option.
+      md/raid5: be more careful about write ordering when reshaping.
+      md: don't display meaningless values in sysfs files resync_start and sync_speed
+      md/raid5: allow layout and chunksize to be changed on active array.
+      md/raid5: reshape using largest of old and new chunk size
+      md/raid5: prepare for allowing reshape to change layout
+      md/raid5: prepare for allowing reshape to change chunksize.
+      md/raid5: clearly differentiate 'before' and 'after' stripes during reshape.
+      Documentation/md.txt update
+      md: allow number of drives in raid5 to be reduced
+      md/raid5: change reshape-progress measurement to cope with reshaping backwards.
+      md: add explicit method to signal the end of a reshape.
 
 
+ Documentation/md.txt |   37 +++-
+ drivers/md/Kconfig   |   29 ---
+ drivers/md/md.c      |   15 +
+ drivers/md/md.h      |    2 
+ drivers/md/raid5.c   |  506 +++++++++++++++++++++++++++++++++++---------------
+ drivers/md/raid5.h   |   21 ++
+ 6 files changed, 411 insertions(+), 199 deletions(-)
 
-========================================================================
-#    _  __          _ __     http://www.nagilum.org/ \n icq://69646724 #
-#   / |/ /__ ____ _(_) /_ ____ _  nagilum@nagilum.org \n +491776461165 #
-#  /    / _ `/ _ `/ / / // /  ' \  Amiga (68k/PPC): AOS/NetBSD/Linux   #
-# /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/   Mac (PPC): MacOS-X / NetBSD /Linux #
-#           /___/     x86: FreeBSD/Linux/Solaris/Win2k  ARM9: EPOC EV6 #
-========================================================================
+-- 
+Signature
 
-
-----------------------------------------------------------------
-cakebox.homeunix.net - all the machine one needs..
