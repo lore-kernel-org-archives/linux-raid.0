@@ -1,7 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 04/14] Documentation/md.txt update
+Subject: [md PATCH 05/14] md/raid5: clearly differentiate 'before' and 'after'
+	stripes during reshape.
 Date: Tue, 31 Mar 2009 15:54:43 +1100
-Message-ID: <20090331045443.2589.62526.stgit@notabene.brown>
+Message-ID: <20090331045443.2589.48426.stgit@notabene.brown>
 References: <20090331044827.2589.95894.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,78 +14,108 @@ To: linux-raid@vger.kernel.org
 Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Update md.txt to reflect recent changes in a number of sysfs
-attributes.
+During a raid5 reshape, we have some stripes in the cache that are
+'before' the reshape (and are still to be processed) and some that are
+'after'.  They are currently differentiated by having different
+->disks values as the only reshape current supported involves changing
+the number of disks.
+
+However we will soon support reshapes that do not change the number
+of disks (chunk parity or chunk size).  So make the difference more
+explicit with a 'generation' number.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- Documentation/md.txt |   37 ++++++++++++++++++++++++++++++-------
- 1 files changed, 30 insertions(+), 7 deletions(-)
+ drivers/md/raid5.c |   12 +++++++-----
+ drivers/md/raid5.h |    3 +++
+ 2 files changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/Documentation/md.txt b/Documentation/md.txt
-index 1da9d1b..4edd39e 100644
---- a/Documentation/md.txt
-+++ b/Documentation/md.txt
-@@ -164,15 +164,19 @@ All md devices contain:
-   raid_disks
-      a text file with a simple number indicating the number of devices
-      in a fully functional array.  If this is not yet known, the file
--     will be empty.  If an array is being resized (not currently
--     possible) this will contain the larger of the old and new sizes.
--     Some raid level (RAID1) allow this value to be set while the
--     array is active.  This will reconfigure the array.   Otherwise
--     it can only be set while assembling an array.
-+     will be empty.  If an array is being resized this will contain
-+     the new number of devices.
-+     Some raid levels allow this value to be set while the array is
-+     active.  This will reconfigure the array.   Otherwise it can only
-+     be set while assembling an array.
-+     A change to this attribute will not be permitted if it would
-+     reduce the size of the array.  To reduce the number of drives
-+     in an e.g. raid5, the array size must first be reduced by
-+     setting the 'array_size' attribute.
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 76eed59..73cdf43 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -318,6 +318,7 @@ static void init_stripe(struct stripe_head *sh, sector_t sector, int previous)
  
-   chunk_size
--     This is the size if bytes for 'chunks' and is only relevant to
--     raid levels that involve striping (1,4,5,6,10). The address space
-+     This is the size in bytes for 'chunks' and is only relevant to
-+     raid levels that involve striping (0,4,5,6,10). The address space
-      of the array is conceptually divided into chunks and consecutive
-      chunks are striped onto neighbouring devices.
-      The size should be at least PAGE_SIZE (4k) and should be a power
-@@ -183,6 +187,20 @@ All md devices contain:
-      simply a number that is interpretted differently by different
-      levels.  It can be written while assembling an array.
+ 	remove_hash(sh);
  
-+  array_size
-+     This can be used to artificially constrain the available space in
-+     the array to be less than is actually available on the combined
-+     devices.  Writing a number (in Kilobytes) which is less than
-+     the available size will set the size.  Any reconfiguration of the
-+     array (e.g. adding devices) will not cause the size to change.
-+     Writing the word 'default' will cause the effective size of the
-+     array to be whatever size is actually available based on
-+     'level', 'chunk_size' and 'component_size'.
-+
-+     This can be used to reduce the size of the array before reducing
-+     the number of devices in a raid4/5/6, or to support external
-+     metadata formats which mandate such clipping.
-+
-   reshape_position
-      This is either "none" or a sector number within the devices of
-      the array where "reshape" is up to.  If this is set, the three
-@@ -207,6 +225,11 @@ All md devices contain:
-      about the array.  It can be 0.90 (traditional format), 1.0, 1.1,
-      1.2 (newer format in varying locations) or "none" indicating that
-      the kernel isn't managing metadata at all.
-+     Alternately it can be "external:" followed by a string which
-+     is set by user-space.  This indicates that metadata is managed
-+     by a user-space program.  Any device failure or other event that
-+     requires a metadata update will cause array activity to be
-+     suspended until the event is acknowledged.
++	sh->generation = conf->generation - previous;
+ 	sh->disks = previous ? conf->previous_raid_disks : conf->raid_disks;
+ 	sh->sector = sector;
+ 	stripe_set_idx(sector, conf, previous, sh);
+@@ -341,7 +342,8 @@ static void init_stripe(struct stripe_head *sh, sector_t sector, int previous)
+ 	insert_hash(conf, sh);
+ }
  
-   resync_start
-      The point at which resync should start.  If no resync is needed,
+-static struct stripe_head *__find_stripe(raid5_conf_t *conf, sector_t sector, int disks)
++static struct stripe_head *__find_stripe(raid5_conf_t *conf, sector_t sector,
++					 short generation)
+ {
+ 	struct stripe_head *sh;
+ 	struct hlist_node *hn;
+@@ -349,7 +351,7 @@ static struct stripe_head *__find_stripe(raid5_conf_t *conf, sector_t sector, in
+ 	CHECK_DEVLOCK();
+ 	pr_debug("__find_stripe, sector %llu\n", (unsigned long long)sector);
+ 	hlist_for_each_entry(sh, hn, stripe_hash(conf, sector), hash)
+-		if (sh->sector == sector && sh->disks == disks)
++		if (sh->sector == sector && sh->generation == generation)
+ 			return sh;
+ 	pr_debug("__stripe %llu not in cache\n", (unsigned long long)sector);
+ 	return NULL;
+@@ -363,7 +365,6 @@ get_active_stripe(raid5_conf_t *conf, sector_t sector,
+ 		  int previous, int noblock)
+ {
+ 	struct stripe_head *sh;
+-	int disks = previous ? conf->previous_raid_disks : conf->raid_disks;
+ 
+ 	pr_debug("get_stripe, sector %llu\n", (unsigned long long)sector);
+ 
+@@ -373,7 +374,7 @@ get_active_stripe(raid5_conf_t *conf, sector_t sector,
+ 		wait_event_lock_irq(conf->wait_for_stripe,
+ 				    conf->quiesce == 0,
+ 				    conf->device_lock, /* nothing */);
+-		sh = __find_stripe(conf, sector, disks);
++		sh = __find_stripe(conf, sector, conf->generation - previous);
+ 		if (!sh) {
+ 			if (!conf->inactive_blocked)
+ 				sh = get_free_stripe(conf);
+@@ -3648,7 +3649,7 @@ static int make_request(struct request_queue *q, struct bio * bi)
+ 				if ((mddev->delta_disks < 0
+ 				     ? logical_sector >= conf->reshape_progress
+ 				     : logical_sector < conf->reshape_progress)
+-				    && disks == conf->previous_raid_disks)
++				    && previous)
+ 					/* mismatch, need to try again */
+ 					must_retry = 1;
+ 				spin_unlock_irq(&conf->device_lock);
+@@ -4837,6 +4838,7 @@ static int raid5_start_reshape(mddev_t *mddev)
+ 	else
+ 		conf->reshape_progress = 0;
+ 	conf->reshape_safe = conf->reshape_progress;
++	conf->generation++;
+ 	spin_unlock_irq(&conf->device_lock);
+ 
+ 	/* Add some new drives, as many as will fit.
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index b2edcc4..a081fb4 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -198,6 +198,8 @@ struct stripe_head {
+ 	struct hlist_node	hash;
+ 	struct list_head	lru;	      /* inactive_list or handle_list */
+ 	struct raid5_private_data *raid_conf;
++	short			generation;	/* increments with every
++						 * reshape */
+ 	sector_t		sector;		/* sector of this row */
+ 	short			pd_idx;		/* parity disk index */
+ 	short			qd_idx;		/* 'Q' disk index for raid6 */
+@@ -348,6 +350,7 @@ struct raid5_private_data {
+ 	 */
+ 	sector_t		reshape_safe;
+ 	int			previous_raid_disks;
++	short			generation; /* increments with every reshape */
+ 
+ 	struct list_head	handle_list; /* stripes needing handling */
+ 	struct list_head	hold_list; /* preread ready stripes */
 
 
