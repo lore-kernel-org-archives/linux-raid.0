@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 08/14] md/raid5: reshape using largest of old and new chunk
-	size
+Subject: [md PATCH 09/14] md/raid5: allow layout and chunksize to be changed
+	on active array.
 Date: Tue, 31 Mar 2009 15:54:43 +1100
-Message-ID: <20090331045443.2589.70639.stgit@notabene.brown>
+Message-ID: <20090331045443.2589.66653.stgit@notabene.brown>
 References: <20090331044827.2589.95894.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,109 +14,163 @@ To: linux-raid@vger.kernel.org
 Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-This ensures that even when old and new stripes are overlapping,
-we will try to read all of the old before having to write any
-of the new.
+If an array has 3 or more devices, we allow the chunksize or layout
+to be changed and when a reshape starts, we use these as the 'new'
+values.
+
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid5.c |   34 ++++++++++++++++++++++------------
- 1 files changed, 22 insertions(+), 12 deletions(-)
+ drivers/md/raid5.c |   76 ++++++++++++++++++++++++++++++++++++++--------------
+ 1 files changed, 56 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 80ec9a6..f7fb2b8 100644
+index f7fb2b8..4fdc6d0 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -3738,6 +3738,7 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
- 	int dd_idx;
- 	sector_t writepos, safepos, gap;
- 	sector_t stripe_addr;
-+	int reshape_sectors;
+@@ -4397,9 +4397,7 @@ static int run(mddev_t *mddev)
+ 		int old_disks;
+ 		int max_degraded = (mddev->level == 6 ? 2 : 1);
  
- 	if (sector_nr == 0) {
- 		/* If restarting in the middle, skip the initial sectors */
-@@ -3755,6 +3756,15 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
- 		}
- 	}
+-		if (mddev->new_level != mddev->level ||
+-		    mddev->new_layout != mddev->layout ||
+-		    mddev->new_chunk != mddev->chunk_size) {
++		if (mddev->new_level != mddev->level) {
+ 			printk(KERN_ERR "raid5: %s: unsupported reshape "
+ 			       "required - aborting.\n",
+ 			       mdname(mddev));
+@@ -4784,8 +4782,10 @@ static int raid5_check_reshape(mddev_t *mddev)
+ {
+ 	raid5_conf_t *conf = mddev_to_conf(mddev);
  
-+	/* We need to process a full chunk at a time.
-+	 * If old and new chunk sizes differ, we need to process the
-+	 * largest of these
-+	 */
-+	if (mddev->new_chunk > mddev->chunk_size)
-+		reshape_sectors = mddev->new_chunk / 512;
-+	else
-+		reshape_sectors = mddev->chunk_size / 512;
-+
- 	/* we update the metadata when there is more than 3Meg
- 	 * in the block range (that is rather arbitrary, should
- 	 * probably be time based) or when the data about to be
-@@ -3768,12 +3778,12 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
- 	safepos = conf->reshape_safe;
- 	sector_div(safepos, data_disks);
- 	if (mddev->delta_disks < 0) {
--		writepos -= conf->chunk_size/512;
--		safepos += conf->chunk_size/512;
-+		writepos -= reshape_sectors;
-+		safepos += reshape_sectors;
- 		gap = conf->reshape_safe - conf->reshape_progress;
- 	} else {
--		writepos += conf->chunk_size/512;
--		safepos -= conf->chunk_size/512;
-+		writepos += reshape_sectors;
-+		safepos -= reshape_sectors;
- 		gap = conf->reshape_progress - conf->reshape_safe;
- 	}
- 
-@@ -3799,14 +3809,14 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
- 		BUG_ON(conf->reshape_progress == 0);
- 		stripe_addr = writepos;
- 		BUG_ON((mddev->dev_sectors &
--			~((sector_t)conf->chunk_size / 512 - 1))
--		       - (conf->chunk_size / 512) - stripe_addr
-+			~((sector_t)reshape_sectors - 1))
-+		       - reshape_sectors - stripe_addr
- 		       != sector_nr);
- 	} else {
--		BUG_ON(writepos != sector_nr + conf->chunk_size / 512);
-+		BUG_ON(writepos != sector_nr + reshape_sectors);
- 		stripe_addr = sector_nr;
- 	}
--	for (i=0; i < conf->chunk_size/512; i+= STRIPE_SECTORS) {
-+	for (i = 0; i < reshape_sectors; i += STRIPE_SECTORS) {
- 		int j;
- 		int skipped = 0;
- 		sh = get_active_stripe(conf, stripe_addr+i, 0, 0);
-@@ -3839,9 +3849,9 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
- 	}
+-	if (mddev->delta_disks == 0)
+-		return 0; /* nothing to do */
++	if (mddev->delta_disks == 0 &&
++	    mddev->new_layout == mddev->layout &&
++	    mddev->new_chunk == mddev->chunk_size)
++		return -EINVAL; /* nothing to do */
+ 	if (mddev->bitmap)
+ 		/* Cannot grow a bitmap yet */
+ 		return -EBUSY;
+@@ -4860,6 +4860,10 @@ static int raid5_start_reshape(mddev_t *mddev)
  	spin_lock_irq(&conf->device_lock);
+ 	conf->previous_raid_disks = conf->raid_disks;
+ 	conf->raid_disks += mddev->delta_disks;
++	conf->prev_chunk = conf->chunk_size;
++	conf->chunk_size = mddev->new_chunk;
++	conf->prev_algo = conf->algorithm;
++	conf->algorithm = mddev->new_layout;
  	if (mddev->delta_disks < 0)
--		conf->reshape_progress -= i * new_data_disks;
-+		conf->reshape_progress -= reshape_sectors * new_data_disks;
+ 		conf->reshape_progress = raid5_size(mddev, 0, 0);
  	else
--		conf->reshape_progress += i * new_data_disks;
-+		conf->reshape_progress += reshape_sectors * new_data_disks;
- 	spin_unlock_irq(&conf->device_lock);
- 	/* Ok, those stripe are ready. We can start scheduling
- 	 * reads on the source stripes.
-@@ -3867,7 +3877,7 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
- 	/* If this takes us to the resync_max point where we have to pause,
- 	 * then we need to write out the superblock.
- 	 */
--	sector_nr += conf->chunk_size>>9;
-+	sector_nr += reshape_sectors;
- 	if (sector_nr >= mddev->resync_max) {
- 		/* Cannot proceed until we've updated the superblock... */
- 		wait_event(conf->wait_for_overlap,
-@@ -3883,7 +3893,7 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
- 		spin_unlock_irq(&conf->device_lock);
- 		wake_up(&conf->wait_for_overlap);
+@@ -4952,6 +4956,7 @@ static void end_reshape(raid5_conf_t *conf)
+ static void raid5_finish_reshape(mddev_t *mddev)
+ {
+ 	struct block_device *bdev;
++	raid5_conf_t *conf = mddev_to_conf(mddev);
+ 
+ 	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
+ 
+@@ -4970,7 +4975,6 @@ static void raid5_finish_reshape(mddev_t *mddev)
+ 			}
+ 		} else {
+ 			int d;
+-			raid5_conf_t *conf = mddev_to_conf(mddev);
+ 			mddev->degraded = conf->raid_disks;
+ 			for (d = 0; d < conf->raid_disks ; d++)
+ 				if (conf->disks[d].rdev &&
+@@ -4982,6 +4986,8 @@ static void raid5_finish_reshape(mddev_t *mddev)
+ 			     d++)
+ 				raid5_remove_disk(mddev, d);
+ 		}
++		mddev->layout = conf->algorithm;
++		mddev->chunk_size = conf->chunk_size;
+ 		mddev->reshape_position = MaxSector;
+ 		mddev->delta_disks = 0;
  	}
--	return conf->chunk_size>>9;
-+	return reshape_sectors;
+@@ -5080,11 +5086,10 @@ static void *raid5_takeover_raid6(mddev_t *mddev)
+ 
+ static int raid5_reconfig(mddev_t *mddev, int new_layout, int new_chunk)
+ {
+-	/* Currently the layout and chunk size can only be changed
+-	 * for a 2-drive raid array, as in that case no data shuffling
+-	 * is required.
+-	 * Later we might validate these and set new_* so a reshape
+-	 * can complete the change.
++	/* For a 2-drive array, the layout and chunk size can be changed
++	 * immediately as not restriping is needed.
++	 * For larger arrays we record the new value - after validation
++	 * to be used by a reshape pass.
+ 	 */
+ 	raid5_conf_t *conf = mddev_to_conf(mddev);
+ 
+@@ -5103,19 +5108,49 @@ static int raid5_reconfig(mddev_t *mddev, int new_layout, int new_chunk)
+ 
+ 	/* They look valid */
+ 
+-	if (mddev->raid_disks != 2)
+-		return -EINVAL;
++	if (mddev->raid_disks == 2) {
+ 
+-	if (new_layout >= 0) {
+-		conf->algorithm = new_layout;
+-		mddev->layout = mddev->new_layout = new_layout;
++		if (new_layout >= 0) {
++			conf->algorithm = new_layout;
++			mddev->layout = mddev->new_layout = new_layout;
++		}
++		if (new_chunk > 0) {
++			conf->chunk_size = new_chunk;
++			mddev->chunk_size = mddev->new_chunk = new_chunk;
++		}
++		set_bit(MD_CHANGE_DEVS, &mddev->flags);
++		md_wakeup_thread(mddev->thread);
++	} else {
++		if (new_layout >= 0)
++			mddev->new_layout = new_layout;
++		if (new_chunk > 0)
++			mddev->new_chunk = new_chunk;
+ 	}
++	return 0;
++}
++
++static int raid6_reconfig(mddev_t *mddev, int new_layout, int new_chunk)
++{
++	if (new_layout >= 0 && !algorithm_valid_raid6(new_layout))
++		return -EINVAL;
+ 	if (new_chunk > 0) {
+-		conf->chunk_size = new_chunk;
+-		mddev->chunk_size = mddev->new_chunk = new_chunk;
++		if (new_chunk & (new_chunk-1))
++			/* not a power of 2 */
++			return -EINVAL;
++		if (new_chunk < PAGE_SIZE)
++			return -EINVAL;
++		if (mddev->array_sectors & ((new_chunk>>9)-1))
++			/* not factor of array size */
++			return -EINVAL;
+ 	}
+-	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+-	md_wakeup_thread(mddev->thread);
++
++	/* They look valid */
++
++	if (new_layout >= 0)
++		mddev->new_layout = new_layout;
++	if (new_chunk > 0)
++		mddev->new_chunk = new_chunk;
++
+ 	return 0;
  }
  
- /* FIXME go_faster isn't used */
+@@ -5216,6 +5251,7 @@ static struct mdk_personality raid6_personality =
+ #endif
+ 	.quiesce	= raid5_quiesce,
+ 	.takeover	= raid6_takeover,
++	.reconfig	= raid6_reconfig,
+ };
+ static struct mdk_personality raid5_personality =
+ {
 
 
