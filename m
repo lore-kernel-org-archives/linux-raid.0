@@ -1,7 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 12/14] md: remove CONFIG_MD_RAID_RESHAPE config option.
+Subject: [md PATCH 11/14] md/raid5: be more careful about write ordering when
+	reshaping.
 Date: Tue, 31 Mar 2009 15:54:44 +1100
-Message-ID: <20090331045444.2589.86566.stgit@notabene.brown>
+Message-ID: <20090331045444.2589.28692.stgit@notabene.brown>
 References: <20090331044827.2589.95894.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,127 +14,128 @@ To: linux-raid@vger.kernel.org
 Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-This was only needed when the code was experimental.  Most of it
-is well tested now, so the option is no longer useful.
+When we are reshaping an array, it is very important that we read
+the data from a particular sector offset before writing new data
+at that offset.
+
+In most cases when growing or shrinking an array we read long before
+we even consider writing.  But when restriping an array without
+changing it size, there is a small possibility that we might have
+some data to available write before the read has happened at the same
+location.  This would require some stripes to be in cache already.
+
+To guard against this small possibility, we check, before writing,
+that the 'old' stripe at the same location is not in the process of
+being read.  And we ensure that we mark all 'source' stripes as such
+before allowing new 'destination' stripes to proceed.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/Kconfig |   29 -----------------------------
- drivers/md/raid5.c |   10 ----------
- 2 files changed, 0 insertions(+), 39 deletions(-)
+ drivers/md/raid5.c |   49 +++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 files changed, 47 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
-index 449d0b9..36e0675 100644
---- a/drivers/md/Kconfig
-+++ b/drivers/md/Kconfig
-@@ -152,35 +152,6 @@ config MD_RAID456
- 
- 	  If unsure, say Y.
- 
--config MD_RAID5_RESHAPE
--	bool "Support adding drives to a raid-5 array"
--	depends on MD_RAID456
--	default y
--	---help---
--	  A RAID-5 set can be expanded by adding extra drives. This
--	  requires "restriping" the array which means (almost) every
--	  block must be written to a different place.
--
--          This option allows such restriping to be done while the array
--	  is online.
--
--	  You will need mdadm version 2.4.1 or later to use this
--	  feature safely.  During the early stage of reshape there is
--	  a critical section where live data is being over-written.  A
--	  crash during this time needs extra care for recovery.  The
--	  newer mdadm takes a copy of the data in the critical section
--	  and will restore it, if necessary, after a crash.
--
--	  The mdadm usage is e.g.
--	       mdadm --grow /dev/md1 --raid-disks=6
--	  to grow '/dev/md1' to having 6 disks.
--
--	  Note: The array can only be expanded, not contracted.
--	  There should be enough spares already present to make the new
--	  array workable.
--
--	  If unsure, say Y.
--
- config MD_RAID6_PQ
- 	tristate
- 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 062df84..fb11c13 100644
+index 4fdc6d0..062df84 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -948,7 +948,6 @@ static int grow_stripes(raid5_conf_t *conf, int num)
- 	return 0;
- }
+@@ -395,7 +395,8 @@ get_active_stripe(raid5_conf_t *conf, sector_t sector,
+ 				init_stripe(sh, sector, previous);
+ 		} else {
+ 			if (atomic_read(&sh->count)) {
+-			  BUG_ON(!list_empty(&sh->lru));
++				BUG_ON(!list_empty(&sh->lru)
++				    && !test_bit(STRIPE_EXPANDING, &sh->state));
+ 			} else {
+ 				if (!test_bit(STRIPE_HANDLE, &sh->state))
+ 					atomic_inc(&conf->active_stripes);
+@@ -2944,6 +2945,23 @@ static bool handle_stripe5(struct stripe_head *sh)
  
--#ifdef CONFIG_MD_RAID5_RESHAPE
- static int resize_stripes(raid5_conf_t *conf, int newsize)
- {
- 	/* Make all the stripes able to hold 'newsize' devices.
-@@ -1073,7 +1072,6 @@ static int resize_stripes(raid5_conf_t *conf, int newsize)
- 	conf->pool_size = newsize;
- 	return err;
- }
--#endif
+ 	/* Finish reconstruct operations initiated by the expansion process */
+ 	if (sh->reconstruct_state == reconstruct_state_result) {
++		struct stripe_head *sh2
++			= get_active_stripe(conf, sh->sector, 1, 1);
++		if (sh2 && test_bit(STRIPE_EXPAND_SOURCE, &sh2->state)) {
++			/* sh cannot be written until sh2 has been read.
++			 * so arrange for sh to be delayed a little
++			 */
++			set_bit(STRIPE_DELAYED, &sh->state);
++			set_bit(STRIPE_HANDLE, &sh->state);
++			if (!test_and_set_bit(STRIPE_PREREAD_ACTIVE,
++					      &sh2->state))
++				atomic_inc(&conf->preread_active_stripes);
++			release_stripe(sh2);
++			goto unlock;
++		}
++		if (sh2)
++			release_stripe(sh2);
++
+ 		sh->reconstruct_state = reconstruct_state_idle;
+ 		clear_bit(STRIPE_EXPANDING, &sh->state);
+ 		for (i = conf->raid_disks; i--; ) {
+@@ -3172,6 +3190,23 @@ static bool handle_stripe6(struct stripe_head *sh, struct page *tmp_page)
+ 		}
  
- static int drop_one_stripe(raid5_conf_t *conf)
- {
-@@ -4822,7 +4820,6 @@ static int raid5_resize(mddev_t *mddev, sector_t sectors)
- 	return 0;
- }
+ 	if (s.expanded && test_bit(STRIPE_EXPANDING, &sh->state)) {
++		struct stripe_head *sh2
++			= get_active_stripe(conf, sh->sector, 1, 1);
++		if (sh2 && test_bit(STRIPE_EXPAND_SOURCE, &sh2->state)) {
++			/* sh cannot be written until sh2 has been read.
++			 * so arrange for sh to be delayed a little
++			 */
++			set_bit(STRIPE_DELAYED, &sh->state);
++			set_bit(STRIPE_HANDLE, &sh->state);
++			if (!test_and_set_bit(STRIPE_PREREAD_ACTIVE,
++					      &sh2->state))
++				atomic_inc(&conf->preread_active_stripes);
++			release_stripe(sh2);
++			goto unlock;
++		}
++		if (sh2)
++			release_stripe(sh2);
++
+ 		/* Need to write out all blocks after computing P&Q */
+ 		sh->disks = conf->raid_disks;
+ 		stripe_set_idx(sh->sector, conf, 0, sh);
+@@ -3739,6 +3774,7 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
+ 	sector_t writepos, safepos, gap;
+ 	sector_t stripe_addr;
+ 	int reshape_sectors;
++	struct list_head stripes;
  
--#ifdef CONFIG_MD_RAID5_RESHAPE
- static int raid5_check_reshape(mddev_t *mddev)
- {
- 	raid5_conf_t *conf = mddev_to_conf(mddev);
-@@ -4967,7 +4964,6 @@ static int raid5_start_reshape(mddev_t *mddev)
- 	md_new_event(mddev);
- 	return 0;
- }
--#endif
- 
- /* This is called from the reshape thread and should make any
-  * changes needed in 'conf'
-@@ -5289,11 +5285,9 @@ static struct mdk_personality raid6_personality =
- 	.sync_request	= sync_request,
- 	.resize		= raid5_resize,
- 	.size		= raid5_size,
--#ifdef CONFIG_MD_RAID5_RESHAPE
- 	.check_reshape	= raid5_check_reshape,
- 	.start_reshape  = raid5_start_reshape,
- 	.finish_reshape = raid5_finish_reshape,
--#endif
- 	.quiesce	= raid5_quiesce,
- 	.takeover	= raid6_takeover,
- 	.reconfig	= raid6_reconfig,
-@@ -5314,11 +5308,9 @@ static struct mdk_personality raid5_personality =
- 	.sync_request	= sync_request,
- 	.resize		= raid5_resize,
- 	.size		= raid5_size,
--#ifdef CONFIG_MD_RAID5_RESHAPE
- 	.check_reshape	= raid5_check_reshape,
- 	.start_reshape  = raid5_start_reshape,
- 	.finish_reshape = raid5_finish_reshape,
--#endif
- 	.quiesce	= raid5_quiesce,
- 	.takeover	= raid5_takeover,
- 	.reconfig	= raid5_reconfig,
-@@ -5340,11 +5332,9 @@ static struct mdk_personality raid4_personality =
- 	.sync_request	= sync_request,
- 	.resize		= raid5_resize,
- 	.size		= raid5_size,
--#ifdef CONFIG_MD_RAID5_RESHAPE
- 	.check_reshape	= raid5_check_reshape,
- 	.start_reshape  = raid5_start_reshape,
- 	.finish_reshape = raid5_finish_reshape,
--#endif
- 	.quiesce	= raid5_quiesce,
- };
- 
+ 	if (sector_nr == 0) {
+ 		/* If restarting in the middle, skip the initial sectors */
+@@ -3816,6 +3852,7 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
+ 		BUG_ON(writepos != sector_nr + reshape_sectors);
+ 		stripe_addr = sector_nr;
+ 	}
++	INIT_LIST_HEAD(&stripes);
+ 	for (i = 0; i < reshape_sectors; i += STRIPE_SECTORS) {
+ 		int j;
+ 		int skipped = 0;
+@@ -3845,7 +3882,7 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
+ 			set_bit(STRIPE_EXPAND_READY, &sh->state);
+ 			set_bit(STRIPE_HANDLE, &sh->state);
+ 		}
+-		release_stripe(sh);
++		list_add(&sh->lru, &stripes);
+ 	}
+ 	spin_lock_irq(&conf->device_lock);
+ 	if (mddev->delta_disks < 0)
+@@ -3874,6 +3911,14 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
+ 		release_stripe(sh);
+ 		first_sector += STRIPE_SECTORS;
+ 	}
++	/* Now that the sources are clearly marked, we can release
++	 * the destination stripes
++	 */
++	while (!list_empty(&stripes)) {
++		sh = list_entry(stripes.next, struct stripe_head, lru);
++		list_del_init(&sh->lru);
++		release_stripe(sh);
++	}
+ 	/* If this takes us to the resync_max point where we have to pause,
+ 	 * then we need to write out the superblock.
+ 	 */
 
 
