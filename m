@@ -1,70 +1,196 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 00/14] Final set of patches head for 2.6.30
+Subject: [md PATCH 01/14] md: add explicit method to signal the end of a
+	reshape.
 Date: Tue, 31 Mar 2009 15:54:42 +1100
-Message-ID: <20090331044827.2589.95894.stgit@notabene.brown>
+Message-ID: <20090331045442.2589.52429.stgit@notabene.brown>
+References: <20090331044827.2589.95894.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20090331044827.2589.95894.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Hi again,
- following are some more patches that are heading for 2.6.30.
- I'll probably send a pull request in a day or two.
+Currently raid5 (the only module that supports restriping)
+notices that the reshape has finished be sync_request being
+given a large value, and handles any cleanup them.
 
- There is some overlap between this set and the previous as I
- had to significantly change
-      md: add explicit method to signal the end of a reshape.
- as I found out that some things need to be done in the reshape
- thread, and some needs to be done under the mddev_lock in the
- raid5d thread.
+This patch changes it so md_check_recovery calls into an
+explicit finish_reshape method as well.
 
- The main new functionality here is the ability to change chunk_size
- and layout during reshape.  This means that we can really change
- a RAID5 into a RAID6, though it needs some mdadm support to do it
- safely.
+The clean-up from sync_request can do things that need to be
+done promptly, typically things local to the raid5_conf_t
+structure.
 
- e.g. if you write a new number of .../md/chunk_size and then write
- 'reshape' to 'sync_action' it will restripe the whole array with
- the new chunk size.  If you get a system crash during this, you lose
- your data (sorry).  Mdadm will not do this for you until it is able
- to backup each few stripes while they are being reshaped so that in
- the event of a crash you can restore from backup and not lose all
- your data.
+The "finish_reshape" method is called under the mddev_lock
+so it can do things involving reconfiguring the device.
 
- Any review comments most welcome.
+This allows us to get rid of md_set_array_sectors_locked, which
+would have caused a deadlock if you tried to stop and array
+while a reshape was happening.
 
-NeilBrown
-
+Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
-NeilBrown (14):
-      md/raid5 revise rules for when to update metadata during reshape
-      md/raid5: minor code cleanups in make_request.
-      md: remove CONFIG_MD_RAID_RESHAPE config option.
-      md/raid5: be more careful about write ordering when reshaping.
-      md: don't display meaningless values in sysfs files resync_start and sync_speed
-      md/raid5: allow layout and chunksize to be changed on active array.
-      md/raid5: reshape using largest of old and new chunk size
-      md/raid5: prepare for allowing reshape to change layout
-      md/raid5: prepare for allowing reshape to change chunksize.
-      md/raid5: clearly differentiate 'before' and 'after' stripes during reshape.
-      Documentation/md.txt update
-      md: allow number of drives in raid5 to be reduced
-      md/raid5: change reshape-progress measurement to cope with reshaping backwards.
-      md: add explicit method to signal the end of a reshape.
+ drivers/md/md.c    |   11 +++--------
+ drivers/md/md.h    |    2 +-
+ drivers/md/raid5.c |   50 ++++++++++++++++++++++++++++++--------------------
+ 3 files changed, 34 insertions(+), 29 deletions(-)
 
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 923d125..c509313 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5073,14 +5073,6 @@ void md_set_array_sectors(mddev_t *mddev, sector_t array_sectors)
+ }
+ EXPORT_SYMBOL(md_set_array_sectors);
+ 
+-void md_set_array_sectors_lock(mddev_t *mddev, sector_t array_sectors)
+-{
+-	mddev_lock(mddev);
+-	md_set_array_sectors(mddev, array_sectors);
+-	mddev_unlock(mddev);
+-}
+-EXPORT_SYMBOL(md_set_array_sectors_lock);
+-
+ static int update_size(mddev_t *mddev, sector_t num_sectors)
+ {
+ 	mdk_rdev_t *rdev;
+@@ -6641,6 +6633,9 @@ void md_check_recovery(mddev_t *mddev)
+ 					sysfs_notify(&mddev->kobj, NULL,
+ 						     "degraded");
+ 			}
++			if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery) &&
++			    mddev->pers->finish_reshape)
++				mddev->pers->finish_reshape(mddev);
+ 			md_update_sb(mddev, 1);
+ 
+ 			/* if array is no-longer degraded, then any saved_raid_disk
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index d13e34f..e9b7f54 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -317,6 +317,7 @@ struct mdk_personality
+ 	sector_t (*size) (mddev_t *mddev, sector_t sectors, int raid_disks);
+ 	int (*check_reshape) (mddev_t *mddev);
+ 	int (*start_reshape) (mddev_t *mddev);
++	void (*finish_reshape) (mddev_t *mddev);
+ 	int (*reconfig) (mddev_t *mddev, int layout, int chunk_size);
+ 	/* quiesce moves between quiescence states
+ 	 * 0 - fully active
+@@ -433,4 +434,3 @@ extern void md_new_event(mddev_t *mddev);
+ extern int md_allow_write(mddev_t *mddev);
+ extern void md_wait_for_blocked_rdev(mdk_rdev_t *rdev, mddev_t *mddev);
+ extern void md_set_array_sectors(mddev_t *mddev, sector_t array_sectors);
+-extern void md_set_array_sectors_lock(mddev_t *mddev, sector_t array_sectors);
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 5694eb8..a0f22dd 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -3850,6 +3850,7 @@ static inline sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *ski
+ 	if (sector_nr >= max_sector) {
+ 		/* just being told to finish up .. nothing much to do */
+ 		unplug_slaves(mddev);
++
+ 		if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery)) {
+ 			end_reshape(conf);
+ 			return 0;
+@@ -4836,43 +4837,49 @@ static int raid5_start_reshape(mddev_t *mddev)
+ 
+ static void end_reshape(raid5_conf_t *conf)
+ {
+-	struct block_device *bdev;
+ 
+ 	if (!test_bit(MD_RECOVERY_INTR, &conf->mddev->recovery)) {
+-		mddev_t *mddev = conf->mddev;
+-
+-		md_set_array_sectors_lock(mddev, raid5_size(mddev, 0,
+-						       conf->raid_disks));
+-		set_capacity(mddev->gendisk, mddev->array_sectors);
+-		mddev->changed = 1;
+-		conf->previous_raid_disks = conf->raid_disks;
+ 
+-		bdev = bdget_disk(conf->mddev->gendisk, 0);
+-		if (bdev) {
+-			mutex_lock(&bdev->bd_inode->i_mutex);
+-			i_size_write(bdev->bd_inode,
+-				     (loff_t)conf->mddev->array_sectors << 9);
+-			mutex_unlock(&bdev->bd_inode->i_mutex);
+-			bdput(bdev);
+-		}
+ 		spin_lock_irq(&conf->device_lock);
++		conf->previous_raid_disks = conf->raid_disks;
+ 		conf->expand_progress = MaxSector;
+ 		spin_unlock_irq(&conf->device_lock);
+-		conf->mddev->reshape_position = MaxSector;
+ 
+ 		/* read-ahead size must cover two whole stripes, which is
+ 		 * 2 * (datadisks) * chunksize where 'n' is the number of raid devices
+ 		 */
+ 		{
+-			int data_disks = conf->previous_raid_disks - conf->max_degraded;
+-			int stripe = data_disks *
+-				(conf->mddev->chunk_size / PAGE_SIZE);
++			int data_disks = conf->raid_disks - conf->max_degraded;
++			int stripe = data_disks * (conf->chunk_size
++						   / PAGE_SIZE);
+ 			if (conf->mddev->queue->backing_dev_info.ra_pages < 2 * stripe)
+ 				conf->mddev->queue->backing_dev_info.ra_pages = 2 * stripe;
+ 		}
+ 	}
+ }
+ 
++static void raid5_finish_reshape(mddev_t *mddev)
++{
++	struct block_device *bdev;
++
++	if (!test_bit(MD_RECOVERY_INTR, &mddev->recovery)) {
++
++		md_set_array_sectors(mddev, raid5_size(mddev, 0, 0));
++		set_capacity(mddev->gendisk, mddev->array_sectors);
++		mddev->changed = 1;
++		mddev->reshape_position = MaxSector;
++
++		bdev = bdget_disk(mddev->gendisk, 0);
++		if (bdev) {
++			mutex_lock(&bdev->bd_inode->i_mutex);
++			i_size_write(bdev->bd_inode,
++				     (loff_t)mddev->array_sectors << 9);
++			mutex_unlock(&bdev->bd_inode->i_mutex);
++			bdput(bdev);
++		}
++	}
++}
++
+ static void raid5_quiesce(mddev_t *mddev, int state)
+ {
+ 	raid5_conf_t *conf = mddev_to_conf(mddev);
+@@ -5098,6 +5105,7 @@ static struct mdk_personality raid6_personality =
+ #ifdef CONFIG_MD_RAID5_RESHAPE
+ 	.check_reshape	= raid5_check_reshape,
+ 	.start_reshape  = raid5_start_reshape,
++	.finish_reshape = raid5_finish_reshape,
+ #endif
+ 	.quiesce	= raid5_quiesce,
+ 	.takeover	= raid6_takeover,
+@@ -5121,6 +5129,7 @@ static struct mdk_personality raid5_personality =
+ #ifdef CONFIG_MD_RAID5_RESHAPE
+ 	.check_reshape	= raid5_check_reshape,
+ 	.start_reshape  = raid5_start_reshape,
++	.finish_reshape = raid5_finish_reshape,
+ #endif
+ 	.quiesce	= raid5_quiesce,
+ 	.takeover	= raid5_takeover,
+@@ -5146,6 +5155,7 @@ static struct mdk_personality raid4_personality =
+ #ifdef CONFIG_MD_RAID5_RESHAPE
+ 	.check_reshape	= raid5_check_reshape,
+ 	.start_reshape  = raid5_start_reshape,
++	.finish_reshape = raid5_finish_reshape,
+ #endif
+ 	.quiesce	= raid5_quiesce,
+ };
 
- Documentation/md.txt |   37 +++-
- drivers/md/Kconfig   |   29 ---
- drivers/md/md.c      |   15 +
- drivers/md/md.h      |    2 
- drivers/md/raid5.c   |  506 +++++++++++++++++++++++++++++++++++---------------
- drivers/md/raid5.h   |   21 ++
- 6 files changed, 411 insertions(+), 199 deletions(-)
-
--- 
-Signature
 
