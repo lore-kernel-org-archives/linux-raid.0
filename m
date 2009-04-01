@@ -1,7 +1,7 @@
 From: Jon Hardcastle <jd_hardcastle@yahoo.com>
 Subject: Re: Adding more drives/saturating the bandwidth
-Date: Wed, 1 Apr 2009 01:15:08 -0700 (PDT)
-Message-ID: <236849.18269.qm@web51310.mail.re2.yahoo.com>
+Date: Wed, 1 Apr 2009 01:56:14 -0700 (PDT)
+Message-ID: <771992.67269.qm@web51307.mail.re2.yahoo.com>
 References: <87myb1ieoq.fsf@frosties.localdomain>
 Reply-To: Jon@eHardcastle.com
 Mime-Version: 1.0
@@ -13,6 +13,7 @@ Sender: linux-raid-owner@vger.kernel.org
 To: Jon@eHardcastle.com, Goswin von Brederlow <goswin-v-b@web.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
 
 
 --- On Tue, 31/3/09, Goswin von Brederlow <goswin-v-b@web.de> wrote:
@@ -88,8 +89,8 @@ List-Id: linux-raid.ids
 >         Goswin
 > --
 
-Thank you, can i assume that is a destructive test? :-D
 
+Whoops! of course it isn't; sorry. it is presumably a read test thought rather than a read/write? Safe to do whilst the array is constructed?
 
 -----------------------
 N: Jon Hardcastle
