@@ -1,31 +1,69 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: Why do I need 4 disks for a raid6?
-Date: Wed, 01 Apr 2009 09:09:57 -0700
-Message-ID: <49D391D5.1050509@zytor.com>
-References: <87ljr4hsk9.fsf@frosties.localdomain>	<18882.54987.332211.49180@notabene.brown>	<20090323202043.GA3841@compegg.wr.niftyegg.com> <87ljquemy3.fsf@frosties.localdomain>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: Adding more drives/saturating the bandwidth
+Date: Wed, 1 Apr 2009 12:15:23 -0400
+Message-ID: <87f94c370904010915xd1f5e82sca9e92c9a68884cc@mail.gmail.com>
+References: <771992.67269.qm@web51307.mail.re2.yahoo.com>
+	 <87skks9xg5.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87ljquemy3.fsf@frosties.localdomain>
+In-Reply-To: <87skks9xg5.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
 To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: Nifty Fedora Mitch <niftyfedora@niftyegg.com>, linux-raid@vger.kernel.org
+Cc: Jon@ehardcastle.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Goswin von Brederlow wrote:
-> 
-> Actually the definition I read was that raid6 is like raid5 but
-> allowing for 2 or more disks to fail without loss. So a 15 disks raid
-> with 10 data blocks and 5 parity blocks per stripe would also be raid6.
-> 
+On Wed, Apr 1, 2009 at 11:59 AM, Goswin von Brederlow <goswin-v-b@web.d=
+e> wrote:
+> Jon Hardcastle <jd_hardcastle@yahoo.com> writes:
+>
+>> --- On Tue, 31/3/09, Goswin von Brederlow <goswin-v-b@web.de> wrote:
+>>> Just see if you can get a decent bandwidth from each disk:
+>>>
+>>> for i in /dev/sd?; do dd if=3D$i of=3D/dev/null bs=3D1M
+>>> count=3D10240 & done
+>>> iostat -k 10
+>>>
+>>>
+>>> Halving the bus speed gives you a reasonable low
+>>> expectation of how
+>>> much data you should be able to pull of the disks. If your
+>>> disks can't
+>>> even fill half the bus bandwidth you certainly can cope
+>>> with more
+>>> disks or something is seriously wrong.
+>>>
+>>> MfG
+>>> =A0 =A0 =A0 =A0 Goswin
+>
+> Perfectly save. Just don't do it the other way around:
+>
+> !!!WARNING WRITE TEST!!!
+>
+> for i in /dev/sd?; do dd if=3D/dev/zero of=3D$i bs=3D1M count=3D10240=
+ & done
+> iostat -k 10
 
-2 or more *arbitrary* disks.  You can't, say, have two RAID-5s and call
-the combination a RAID-6, because they're not all there.
+Be advised: on some suse kernels /dev/zero is known to have a
+performance bug that would keep it from saturating a PCI-express bus.
+I think it was the kernel they had about a year ago (10.3 release).
 
-	-hpa
+Greg
+--=20
+Greg Freemyer
+Head of EDD Tape Extraction and Processing team
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+=46irst 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.p=
+df
 
--- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
-
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
