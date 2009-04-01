@@ -1,42 +1,28 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: Adding more drives/saturating the bandwidth
-Date: Thu, 02 Apr 2009 07:57:00 +1300
-Message-ID: <49D3B8FC.7050204@sauce.co.nz>
-References: <439371.59188.qm@web51306.mail.re2.yahoo.com>	<87myb1ieoq.fsf@frosties.localdomain>	<1238597796.4604.6.camel@cichlid.com> <87tz58b65a.fsf@frosties.localdomain>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: Why do I need 4 disks for a raid6?
+Date: Wed, 01 Apr 2009 12:05:00 -0700
+Message-ID: <49D3BADC.7070106@zytor.com>
+References: <87ljr4hsk9.fsf@frosties.localdomain>	<20090318121825.GL32416@skl-net.de> <49D39169.2050705@zytor.com> <87prfwb62u.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87tz58b65a.fsf@frosties.localdomain>
+In-Reply-To: <87prfwb62u.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
 To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: Andrew Burgess <aab@cichlid.com>, linux raid mailing list <linux-raid@vger.kernel.org>
+Cc: Andre Noll <maan@systemlinux.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Goswin von Brederlow wrote:
-
 > 
-> Now think about the same with 6 disk raid5. Suddenly you have partial
-> stripes. And the alignment on stripe boundaries is gone too. So now
-> you need to read 384k (I think) of data, compute or delta (whichever
-> requires less reads) the parity and write back 384k in 4 out of 6
-> cases and read 64k and write back 320k otherwise. So on average you
-> read 277.33k and write 362.66k (= 640k combined). That is twice the
-> previous bandwidth not to mention the delay for reading.
+> Could you point me at the file/line where the corner case is?
 > 
-> So by adding a drive your throughput is suddenly halfed. Reading in
-> degraded mode suffers a slowdown too. CPU goes up too.
-> 
-> 
-> The performance of a raid is so much dependent on its access pattern
-> that imho one can not talk about a general case. But note that the
-> more drives you have the bigger a stripe becomes and you need larger
-> sequential writes to avoid reads.
 
-I take your point, but don't filesystems like XFS and ext4 play nice in 
-this scenario by combining multiple sub-stripe writes into stripe sized 
-writes out to disk?
+No, am I'm not even sure if it's there anymore.  It's been a long time.
 
-Regards,
+	-hpa
 
-Richard
+-- 
+H. Peter Anvin, Intel Open Source Technology Center
+I work for Intel.  I don't speak on their behalf.
+
