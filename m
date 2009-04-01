@@ -1,45 +1,35 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Adding more drives/saturating the bandwidth
-Date: Wed, 01 Apr 2009 17:59:38 +0200
-Message-ID: <87skks9xg5.fsf@frosties.localdomain>
-References: <771992.67269.qm@web51307.mail.re2.yahoo.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: Why do I need 4 disks for a raid6?
+Date: Wed, 01 Apr 2009 09:08:09 -0700
+Message-ID: <49D39169.2050705@zytor.com>
+References: <87ljr4hsk9.fsf@frosties.localdomain> <20090318121825.GL32416@skl-net.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <771992.67269.qm@web51307.mail.re2.yahoo.com> (Jon Hardcastle's
-	message of "Wed, 1 Apr 2009 01:56:14 -0700 (PDT)")
+In-Reply-To: <20090318121825.GL32416@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon@eHardcastle.com
+To: Andre Noll <maan@systemlinux.org>
 Cc: Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jon Hardcastle <jd_hardcastle@yahoo.com> writes:
+Andre Noll wrote:
+> 
+>> So back to my original question: Why does the kernel require 4 disks
+>> for a raid6 instead of allowing 3?
+> 
+> Dunno. Maybe Dan, Neil or HPA can tell the reason for imposing this
+> limitation.
+> 
 
-> --- On Tue, 31/3/09, Goswin von Brederlow <goswin-v-b@web.de> wrote:
->> Just see if you can get a decent bandwidth from each disk:
->> 
->> for i in /dev/sd?; do dd if=$i of=/dev/null bs=1M
->> count=10240 & done
->> iostat -k 10
->> 
->> 
->> Halving the bus speed gives you a reasonable low
->> expectation of how
->> much data you should be able to pull of the disks. If your
->> disks can't
->> even fill half the bus bandwidth you certainly can cope
->> with more
->> disks or something is seriously wrong.
->> 
->> MfG
->>         Goswin
+It's very simple: it avoids an ugly corner case in the RAID-6
+computation code.  Rather than inserting special code (and verifying it,
+etc.) to deal with the 3-disk RAID-6 degenerate case, it was easier to
+just not permit it.
 
-Perfectly save. Just don't do it the other way around:
+	-hpa
 
-!!!WARNING WRITE TEST!!!
+-- 
+H. Peter Anvin, Intel Open Source Technology Center
+I work for Intel.  I don't speak on their behalf.
 
-for i in /dev/sd?; do dd if=/dev/zero of=$i bs=1M count=10240 & done
-iostat -k 10
-
-MfG
-        Goswin
