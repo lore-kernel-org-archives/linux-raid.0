@@ -1,78 +1,62 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: Why do I need 4 disks for a raid6?
-Date: Wed, 1 Apr 2009 19:47:29 +0200
-Message-ID: <20090401174729.GW17185@skl-net.de>
-References: <87ljr4hsk9.fsf@frosties.localdomain> <20090318121825.GL32416@skl-net.de> <49D39169.2050705@zytor.com>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: Adding more drives/saturating the bandwidth
+Date: Wed, 01 Apr 2009 20:06:25 +0200
+Message-ID: <87tz58b65a.fsf@frosties.localdomain>
+References: <439371.59188.qm@web51306.mail.re2.yahoo.com>
+	<87myb1ieoq.fsf@frosties.localdomain>
+	<1238597796.4604.6.camel@cichlid.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="gsAOdWNCzgDntp8s"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <49D39169.2050705@zytor.com>
+In-Reply-To: <1238597796.4604.6.camel@cichlid.com> (Andrew Burgess's message
+	of "Wed, 01 Apr 2009 07:56:36 -0700")
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
+To: Andrew Burgess <aab@cichlid.com>
+Cc: linux raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Andrew Burgess <aab@cichlid.com> writes:
 
---gsAOdWNCzgDntp8s
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+>> >> > Hey guys, How do you know if your machine can handle
+>> >> adding some more drives to it? How can you check that there
+>> >> is enough BUS IO to handle extra sata cards and also that
+>> >> the machine is powerful enough to support say an 8 drive
+>> >> raid 5...
+>
+> Look at it from the viewpoint of raid performance rather than disk
+> performance. How can the throughput be less with more disks?
+>
+> So what if your bus bandwidth is saturated now? Then it will be
+> saturated with more disks too, but the raid bandwidth should not change,
+> it's still the saturation bandwidth.
+>
+> And if it's not saturated now then the raid throughput will increase
+> assuming you can get more disks operating in parallel.
+>
+> I'm sure there are corner cases we can nitpick but isn't this correct in
+> general?
 
-On 09:08, H. Peter Anvin wrote:
-> Andre Noll wrote:
-> >=20
-> >> So back to my original question: Why does the kernel require 4 disks
-> >> for a raid6 instead of allowing 3?
-> >=20
-> > Dunno. Maybe Dan, Neil or HPA can tell the reason for imposing this
-> > limitation.
-> >=20
->=20
-> It's very simple: it avoids an ugly corner case in the RAID-6
-> computation code.  Rather than inserting special code (and verifying it,
-> etc.) to deal with the 3-disk RAID-6 degenerate case, it was easier to
-> just not permit it.
+To show a worstcase say you have a 5 disk raid5 with 64k chunk
+size. Further say your application writes chunks of 256k to disk at
+random offsets (but aligned to 256k). Each write is a nice full
+stripe, the parity is calculated and 320k are written.
 
-Out of curiosity, why is any special-casing needed for the 3-disk case?
+Now think about the same with 6 disk raid5. Suddenly you have partial
+stripes. And the alignment on stripe boundaries is gone too. So now
+you need to read 384k (I think) of data, compute or delta (whichever
+requires less reads) the parity and write back 384k in 4 out of 6
+cases and read 64k and write back 320k otherwise. So on average you
+read 277.33k and write 362.66k (= 640k combined). That is twice the
+previous bandwidth not to mention the delay for reading.
 
-As
+So by adding a drive your throughput is suddenly halfed. Reading in
+degraded mode suffers a slowdown too. CPU goes up too.
 
-	P =3D D_0 + ... + D_{n-1}
 
-coincides with
+The performance of a raid is so much dependent on its access pattern
+that imho one can not talk about a general case. But note that the
+more drives you have the bigger a stripe becomes and you need larger
+sequential writes to avoid reads.
 
-	Q =3D g^0D_0 + ... + g^{n-1}D_{n-1}
-
-in the case n=3D1 (because only the first addend is present), we have
-
-	D_0 =3D P =3D Q
-
-i.e. raid6 with three disks is the same as raid1. If we lose D_0 and P,
-the general formula for reconstruction, i.e.
-
-	D_x =3D g^{-x}(Q + Q_x)
-
-still works for n=3D1: It reduces to D_0 =3D Q since x=3D0 and Q_0 =3D 0.
-So I don't see why special-casing the n=3D1 case is necessary.
-
-Regards
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---gsAOdWNCzgDntp8s
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFJ06ixWto1QDEAkw8RAoScAJ4vwnflNaUdt2wCtYzBhFLlCBTt5ACggNjX
-XXMWp02B/DVEgn7mh/8os1s=
-=zCon
------END PGP SIGNATURE-----
-
---gsAOdWNCzgDntp8s--
+MfG
+        Goswin
