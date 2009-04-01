@@ -1,69 +1,78 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: Adding more drives/saturating the bandwidth
-Date: Wed, 1 Apr 2009 12:15:23 -0400
-Message-ID: <87f94c370904010915xd1f5e82sca9e92c9a68884cc@mail.gmail.com>
-References: <771992.67269.qm@web51307.mail.re2.yahoo.com>
-	 <87skks9xg5.fsf@frosties.localdomain>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: Why do I need 4 disks for a raid6?
+Date: Wed, 1 Apr 2009 19:47:29 +0200
+Message-ID: <20090401174729.GW17185@skl-net.de>
+References: <87ljr4hsk9.fsf@frosties.localdomain> <20090318121825.GL32416@skl-net.de> <49D39169.2050705@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="gsAOdWNCzgDntp8s"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87skks9xg5.fsf@frosties.localdomain>
+Content-Disposition: inline
+In-Reply-To: <49D39169.2050705@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: Jon@ehardcastle.com, linux-raid@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Apr 1, 2009 at 11:59 AM, Goswin von Brederlow <goswin-v-b@web.d=
-e> wrote:
-> Jon Hardcastle <jd_hardcastle@yahoo.com> writes:
->
->> --- On Tue, 31/3/09, Goswin von Brederlow <goswin-v-b@web.de> wrote:
->>> Just see if you can get a decent bandwidth from each disk:
->>>
->>> for i in /dev/sd?; do dd if=3D$i of=3D/dev/null bs=3D1M
->>> count=3D10240 & done
->>> iostat -k 10
->>>
->>>
->>> Halving the bus speed gives you a reasonable low
->>> expectation of how
->>> much data you should be able to pull of the disks. If your
->>> disks can't
->>> even fill half the bus bandwidth you certainly can cope
->>> with more
->>> disks or something is seriously wrong.
->>>
->>> MfG
->>> =A0 =A0 =A0 =A0 Goswin
->
-> Perfectly save. Just don't do it the other way around:
->
-> !!!WARNING WRITE TEST!!!
->
-> for i in /dev/sd?; do dd if=3D/dev/zero of=3D$i bs=3D1M count=3D10240=
- & done
-> iostat -k 10
 
-Be advised: on some suse kernels /dev/zero is known to have a
-performance bug that would keep it from saturating a PCI-express bus.
-I think it was the kernel they had about a year ago (10.3 release).
+--gsAOdWNCzgDntp8s
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Greg
+On 09:08, H. Peter Anvin wrote:
+> Andre Noll wrote:
+> >=20
+> >> So back to my original question: Why does the kernel require 4 disks
+> >> for a raid6 instead of allowing 3?
+> >=20
+> > Dunno. Maybe Dan, Neil or HPA can tell the reason for imposing this
+> > limitation.
+> >=20
+>=20
+> It's very simple: it avoids an ugly corner case in the RAID-6
+> computation code.  Rather than inserting special code (and verifying it,
+> etc.) to deal with the 3-disk RAID-6 degenerate case, it was easier to
+> just not permit it.
+
+Out of curiosity, why is any special-casing needed for the 3-disk case?
+
+As
+
+	P =3D D_0 + ... + D_{n-1}
+
+coincides with
+
+	Q =3D g^0D_0 + ... + g^{n-1}D_{n-1}
+
+in the case n=3D1 (because only the first addend is present), we have
+
+	D_0 =3D P =3D Q
+
+i.e. raid6 with three disks is the same as raid1. If we lose D_0 and P,
+the general formula for reconstruction, i.e.
+
+	D_x =3D g^{-x}(Q + Q_x)
+
+still works for n=3D1: It reduces to D_0 =3D Q since x=3D0 and Q_0 =3D 0.
+So I don't see why special-casing the n=3D1 case is necessary.
+
+Regards
+Andre
 --=20
-Greg Freemyer
-Head of EDD Tape Extraction and Processing team
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-=46irst 99 Days Litigation White Paper -
-http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.p=
-df
+The only person who always got his work done by Friday was Robinson Crusoe
 
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--gsAOdWNCzgDntp8s
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFJ06ixWto1QDEAkw8RAoScAJ4vwnflNaUdt2wCtYzBhFLlCBTt5ACggNjX
+XXMWp02B/DVEgn7mh/8os1s=
+=zCon
+-----END PGP SIGNATURE-----
+
+--gsAOdWNCzgDntp8s--
