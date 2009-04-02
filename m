@@ -1,32 +1,41 @@
-From: estr4ng3d <e5tr4ng3d@yahoo.com>
-Subject: RAID5 volumes suddenly lost superblock and show weird hexdump
- patterns
-Date: Thu, 2 Apr 2009 07:25:57 -0700 (PDT)
-Message-ID: <22849175.post@talk.nabble.com>
+From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
+Subject: Re:
+Date: Thu, 2 Apr 2009 08:33:50 +0100
+Message-ID: <18900.27230.197006.570645@tree.ty.sabi.co.uk>
+References: <20090402041606.HVVA17102.cdptpa-omta03.mail.rr.com@Leslie>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20090402041606.HVVA17102.cdptpa-omta03.mail.rr.com@Leslie>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
-I got some of my RAID5 array volumes damaged. I have no idea what happened, I
-was simply trying to manually assemble them after a reboot, only to discover
-they are no longer recognized by mdadm as containing a superblock.
+> The issue is the entire array will occasionally pause completely
+> for about 40 seconds when a file is created. [ ... ] During heavy
+> file transfer activity, sometimes the system halts with every
+> other file creation. [ ... ] There are other drives formatted
+> with other file systems on the machine, but the issue has never
+> been seen on any of the other drives.  When the array runs its
+> regularly scheduled health check, the problem is much worse. [
+> ... ]
 
-What's interesting and really weird (to my humble knowledge at least) is
-that hexdumps show interesting patterns. http://pastebin.com/m494e69c0
-Obviously far from being random garbage (hence I'm ruling out media damage).
-Does RAID create this sort of data sequences as part of its operation? Could
-this have been deliberate overwriting of my volumes?
+Looks like that either you have hw issues (transfer errors, bad
+blocks) or more likely the cache flusher and elevator settings have
+not been tuned for a steady flow.
 
-I'm desperately trying to recover data on this array. Any help/pointers
-appreciated!
+> How can I troubleshoot and more importantly resolve this issue?
 
-Thanks
--- 
-View this message in context: http://www.nabble.com/RAID5-volumes-suddenly-lost-superblock-and-show-weird-hexdump-patterns-tp22849175p22849175.html
-Sent from the linux-raid mailing list archive at Nabble.com.
+Well, troubleshooting would require a good understanding of file
+system design and storage subsystem design, and quite a bit of time.
 
+However, for hardware errors check the kernel logs, and for cache
+flusher and elevator settings check the 'bi'/'bo' numbers of
+'vmstat 1' while the pause happens.
+
+For a deeper profile of per-drive IO run 'watch iostat 1 2' while
+this is happening. This might also help indicate drive errors (no
+IO is happening) or flusher/elevator tuning issues (lots of IO is
+happening suddenfly).
