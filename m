@@ -1,85 +1,60 @@
-From: "Steven Ellis" <steven@openmedia.co.nz>
-Subject: Troubleshooting raid1 data corruption and mismatch_cnt
-Date: Fri, 3 Apr 2009 16:14:35 +1300 (NZDT)
-Message-ID: <51541.60.234.49.2.1238728475.squirrel@webmail.stevencherie.net>
+From: "Lelsie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: RAID halting
+Date: Thu, 2 Apr 2009 18:01:12 -0500
+Message-ID: <20090402230114.EFCO22375.cdptpa-omta01.mail.rr.com@Leslie>
+References: <18900.27230.197006.570645@tree.ty.sabi.co.uk>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <18900.27230.197006.570645@tree.ty.sabi.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I've been noticing a number of corrupted files since installing a new
-raid1 set in my server, and the most troubling part is the corruption is
-happening on existing raid1 volumes as well as the new raid1 set
+>> The issue is the entire array will occasionally pause completely
+>> for about 40 seconds when a file is created. [ ... ] During heavy
+>> file transfer activity, sometimes the system halts with every
+>> other file creation. [ ... ] There are other drives formatted
+>> with other file systems on the machine, but the issue has never
+>> been seen on any of the other drives.  When the array runs its
+>> regularly scheduled health check, the problem is much worse. [
+>> ... ]
 
-Initial environment is as follows
+>Looks like that either you have hw issues (transfer errors, bad
+>blocks) or more likely the cache flusher and elevator settings have
+>not been tuned for a steady flow.
 
-ASRock VT8378/VT8237 based motherboard (K7VM4)
-Sii 680 IDE controller - PCI
-AMD Athlon XP2000+
-1.5 GB Ram
-Intel E100 ethernet card - PCI
-OS = Centos 5.2 Xen Dom0 with a series of Centos 5.2 VMs.
+That doesn't sound right.  I can read and write all day long at up to 450
+Mbps in both directions continuously for hours at a time.  It's only when a
+file is created, even a file of only a few bytes, that the issue occurs, and
+then not always.  Indeed, earlier today I had transfers going with an
+average throughput of more than 300 Mbps total and despite creating more
+than 20 new files, not once did the transfers halt.
 
-All raid and LVM is managed at the Xen level.
+> How can I troubleshoot and more importantly resolve this issue?
 
-The onboard VIA IDE controller has a two disk raid 1 set (md1) and the
-sii680 controller has a 4 disk raid 5 set. To date this has been very
-stable with no raid issues.
+>Well, troubleshooting would require a good understanding of file
+>system design and storage subsystem design, and quite a bit of time.
 
-I needed some extra storage and as I had no on board SATA installed a
-common sii3114 quad sata PCI card, and a pair of WD10EACS 1TB disks Raid1
-(md3).
+>However, for hardware errors check the kernel logs, and for cache
+>flusher and elevator settings check the 'bi'/'bo' numbers of
+>'vmstat 1' while the pause happens.
 
-Now my problems begin. I started to notice that files on the 1TB volume
-are corrupted with varying MD5SUM values. I then did a
+I've already done that.  There are no errors of any sort in the kernel log.
+Vmstat only tells me both bi and bo are zero, which we already knew.  I've
+tried ps, iostat, vmstat, and top, and nothing provides anything of any
+significance I can see except that resierfs is waiting on md, which we
+already knew, and (as I recall - it's been a couple of weeks) the number of
+bytes in and out of md0 falls to zero.
 
-echo check > /sys/block/md3/md/sync_action
+>For a deeper profile of per-drive IO run 'watch iostat 1 2' while
+>this is happening. This might also help indicate drive errors (no
+>IO is happening) or flusher/elevator tuning issues (lots of IO is
+>happening suddenfly).
 
-Which produced several thousand errors. I corrected this with
+I'll give it a try.  I haven't been able to reproduce the issue today.
+Usually it's pretty easy.
 
-echo repair > /sys/block/md1/md/sync_action
-
-The errors were fixed, but soon started to re-occur.
-
-Next I decided to check the core root raid1 set (md1) and found it also
-had errors, but thankfully not as many.
-
-After a couple of days I took the Sata controller and disks out to make
-sure it wasn't another problem, and no more issues occured on the primary
-md1 array.
-
-My next thought was the server might be under powered. I bumped the PSU
-from 400W to 550W and put the SATA controller and disks back in. All of my
-previous problems re-occured.
-
-Interestingly no issues on the sii680 based raid5 set.
-
-So what should be my next point of action?
-
-1. Are their known issues with sii3114 iand via based motherboards?
-2. Is there a conflict between the sii3114 and sii680 cards?
-3. Should I try a different motherboard?
-4. Should I try a different Sata card?
-5. Should I move to a motherboard with onboard sata?
-
-I'm going to leave a memory test running tonight, but I've run one quite
-recently on this hardware. I'll also try swapping the 3 PCI cards around.
-
-Sadly here in NZ there isn't a lot of choice in Sata cards unless you want
-high end hardware raid models.
-
-I'm not sure what else I can do at this stage in the way of
-troubleshooting. I've also tried using the system with a vanilla Centos
-5.2 kernel (2.6.18-92.1.22.el5) and the problem still appears to be
-present.
-
-Steve
-
---------------------------------------------
-Steven Ellis - Technical Director
-OpenMedia Limited - The Home of myPVR
-email   - steven@openmedia.co.nz
-website - http://www.openmedia.co.nz
