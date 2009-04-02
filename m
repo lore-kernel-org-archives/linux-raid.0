@@ -1,29 +1,32 @@
-From: Andrew Burgess <aab@cichlid.com>
-Subject: Re:
-Date: Thu, 02 Apr 2009 06:35:55 -0700
-Message-ID: <1238679355.4604.19.camel@cichlid.com>
-References: <20090402041606.HVVA17102.cdptpa-omta03.mail.rr.com@Leslie>
+From: estr4ng3d <e5tr4ng3d@yahoo.com>
+Subject: RAID5 volumes suddenly lost superblock and show weird hexdump
+ patterns
+Date: Thu, 2 Apr 2009 07:25:57 -0700 (PDT)
+Message-ID: <22849175.post@talk.nabble.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090402041606.HVVA17102.cdptpa-omta03.mail.rr.com@Leslie>
 Sender: linux-raid-owner@vger.kernel.org
-To: lrhorer@satx.rr.com
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2009-04-01 at 23:16 -0500, Lelsie Rhorer wrote:
 
-> The issue is the entire array will occasionally pause completely for about
-> 40 seconds when a file is created. 
+I got some of my RAID5 array volumes damaged. I have no idea what happened, I
+was simply trying to manually assemble them after a reboot, only to discover
+they are no longer recognized by mdadm as containing a superblock.
 
-I had symptoms like this once. It turned out to be a defective disk. The
-disk would never return a read or write error but just intermittently
-took a really long time to respond.
+What's interesting and really weird (to my humble knowledge at least) is
+that hexdumps show interesting patterns. http://pastebin.com/m494e69c0
+Obviously far from being random garbage (hence I'm ruling out media damage).
+Does RAID create this sort of data sequences as part of its operation? Could
+this have been deliberate overwriting of my volumes?
 
-I found it by running atop. All the other drives would be running at low
-utilization and this one drive would be at 100% when the symptoms
-occurred (which in atop gets colored red so it jumps out at you)
+I'm desperately trying to recover data on this array. Any help/pointers
+appreciated!
 
+Thanks
+-- 
+View this message in context: http://www.nabble.com/RAID5-volumes-suddenly-lost-superblock-and-show-weird-hexdump-patterns-tp22849175p22849175.html
+Sent from the linux-raid mailing list archive at Nabble.com.
 
