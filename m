@@ -1,47 +1,55 @@
-From: Michal Soltys <soltys@ziu.info>
-Subject: Re: mdadm ignoring homehost?
-Date: Thu, 02 Apr 2009 00:47:18 +0200
-Message-ID: <49D3EEF6.8050601@ziu.info>
-References: <cccedfc60903240957j9314cb2k41d86cb78ec10b86@mail.gmail.com>
+From: "Lelsie Rhorer" <lrhorer@satx.rr.com>
+Subject: (unknown)
+Date: Wed, 1 Apr 2009 23:16:06 -0500
+Message-ID: <20090402041606.HVVA17102.cdptpa-omta03.mail.rr.com@Leslie>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cccedfc60903240957j9314cb2k41d86cb78ec10b86@mail.gmail.com>
+Subject: 
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jon Nelson wrote:
-> I have a raid1 comprised of a local physical device (/dev/sda) and a
-> network block device (/dev/nbd0).
-> When the machine hosting the network block device comes up, however,
-> it creates /dev/md127.
-> Why?
-> 
+I'm having a severe problem whose root cause I cannot determine.  I have a
+RAID 6 array managed by mdadm running on Debian "Lenny" with a 3.2GHz AMD
+Athlon 64 x 2 processor and 8G of RAM.  There are ten 1 Terabyte SATA
+drives, unpartitioned, fully allocated to the /dev/md0 device. The drive
+are served by 3 Silicon Image SATA port multipliers and a Silicon Image 4
+port eSATA controller.  The /dev/md0 device is also unpartitioned, and all
+8T of active space is formatted as a single Reiserfs file system.  The
+entire volume is mounted to /RAID.  Various directories on the volume are
+shared using both NFS and SAMBA.
 
-Likely due to udev. Stock udev rules for md devices create with names as 
-seen by kernel. When mdadm assembles arrary with non standard name, the 
-suitable kernel name will be chosen, often md127 or md_d127 depending on 
-the scheme (regular, or legacy partitionable)
+Performance of the RAID system is very good.  The array can read and write
+at over 450 Mbps, and I don't know if the limit is the array itself or the
+network, but since the performance is more than adequate I really am not
+concerned which is the case.
 
-> On the machine hosting the network block device, /dev/sdb is what
-> backs /dev/nbd0.
-> This is physical storage for /dev/nbd0:
-> 
-> ...
-> 
-> As you can see, the "Name" attribute is "turnip:11". The hostname is
-> "frank". Why did frank bring up the device?
+The issue is the entire array will occasionally pause completely for about
+40 seconds when a file is created.  This does not always happen, but the
+situation is easily reproducible.  The frequency at which the symptom
+occurs seems to be related to the transfer load on the array.  If no other
+transfers are in process, then the failure seems somewhat more rare,
+perhaps accompanying less than 1 file creation in 10..  During heavy file
+transfer activity, sometimes the system halts with every other file
+creation.  Although I have observed many dozens of these events, I have
+never once observed it to happen except when a file creation occurs. 
+Reading and writing existing files never triggers the event, although any
+read or write occurring during the event is halted for the duration. 
+(There is one cron jog which runs every half-hour that creates a tiny file;
+this is the most common failure vector.)  There are other drives formatted
+with other file systems on the machine, but the issue has never been seen
+on any of the other drives.  When the array runs its regularly scheduled
+health check, the problem is much worse.  Not only does it lock up with
+almost every single file creation, but the lock-up time is much longer -
+sometimes in excess of 2 minutes.
 
-Homehost is secondary to ARRAY - so if you have ARRAY line and all 
-metadata matches (or appropriate switches on the commandline) - the 
-array will be assembled regardless of the hostname.
+Transfers via Linux based utilities (ftp, NFS, cp, mv, rsync, etc) all
+recover after the event, but SAMBA based transfers frequently fail, both
+reads and writes.
 
-> The only thing in frank's /etc/mdadm.conf is "HOMEHOST frank" which I
-> didn't think was necessary anyway.
-> 
+How can I troubleshoot and more importantly resolve this issue?
 
-If the only thing there is that HOMEHOST line, and you're trying to 
-assembly using just mdadm -As, then the assembly shouldn't succeed, afaik.
