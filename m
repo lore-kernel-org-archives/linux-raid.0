@@ -1,60 +1,55 @@
-From: "Lelsie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: RAID halting
-Date: Thu, 2 Apr 2009 18:01:12 -0500
-Message-ID: <20090402230114.EFCO22375.cdptpa-omta01.mail.rr.com@Leslie>
-References: <18900.27230.197006.570645@tree.ty.sabi.co.uk>
-Reply-To: <lrhorer@satx.rr.com>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: Adding more drives/saturating the bandwidth
+Date: Fri, 03 Apr 2009 22:42:20 +0200
+Message-ID: <87d4btjwpf.fsf@frosties.localdomain>
+References: <439371.59188.qm@web51306.mail.re2.yahoo.com>
+	<87myb1ieoq.fsf@frosties.localdomain>
+	<1238597796.4604.6.camel@cichlid.com>
+	<87tz58b65a.fsf@frosties.localdomain> <49D3B8FC.7050204@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18900.27230.197006.570645@tree.ty.sabi.co.uk>
+In-Reply-To: <49D3B8FC.7050204@sauce.co.nz> (Richard Scobie's message of "Thu,
+	02 Apr 2009 07:57:00 +1300")
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: Richard Scobie <richard@sauce.co.nz>
+Cc: Andrew Burgess <aab@cichlid.com>, linux raid mailing list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->> The issue is the entire array will occasionally pause completely
->> for about 40 seconds when a file is created. [ ... ] During heavy
->> file transfer activity, sometimes the system halts with every
->> other file creation. [ ... ] There are other drives formatted
->> with other file systems on the machine, but the issue has never
->> been seen on any of the other drives.  When the array runs its
->> regularly scheduled health check, the problem is much worse. [
->> ... ]
+Richard Scobie <richard@sauce.co.nz> writes:
 
->Looks like that either you have hw issues (transfer errors, bad
->blocks) or more likely the cache flusher and elevator settings have
->not been tuned for a steady flow.
+> Goswin von Brederlow wrote:
+>
+>>
+>> Now think about the same with 6 disk raid5. Suddenly you have partial
+>> stripes. And the alignment on stripe boundaries is gone too. So now
+>> you need to read 384k (I think) of data, compute or delta (whichever
+>> requires less reads) the parity and write back 384k in 4 out of 6
+>> cases and read 64k and write back 320k otherwise. So on average you
+>> read 277.33k and write 362.66k (= 640k combined). That is twice the
+>> previous bandwidth not to mention the delay for reading.
+>>
+>> So by adding a drive your throughput is suddenly halfed. Reading in
+>> degraded mode suffers a slowdown too. CPU goes up too.
+>>
+>>
+>> The performance of a raid is so much dependent on its access pattern
+>> that imho one can not talk about a general case. But note that the
+>> more drives you have the bigger a stripe becomes and you need larger
+>> sequential writes to avoid reads.
+>
+> I take your point, but don't filesystems like XFS and ext4 play nice
+> in this scenario by combining multiple sub-stripe writes into stripe
+> sized writes out to disk?
+>
+> Regards,
+>
+> Richard
 
-That doesn't sound right.  I can read and write all day long at up to 450
-Mbps in both directions continuously for hours at a time.  It's only when a
-file is created, even a file of only a few bytes, that the issue occurs, and
-then not always.  Indeed, earlier today I had transfers going with an
-average throughput of more than 300 Mbps total and despite creating more
-than 20 new files, not once did the transfers halt.
+Some FS have a parameter to tune to the stripe size. If that actually
+helps or not I leave for you to test.
 
-> How can I troubleshoot and more importantly resolve this issue?
+But ask yourself: Have any a tool to retune after you've grown the raid?
 
->Well, troubleshooting would require a good understanding of file
->system design and storage subsystem design, and quite a bit of time.
-
->However, for hardware errors check the kernel logs, and for cache
->flusher and elevator settings check the 'bi'/'bo' numbers of
->'vmstat 1' while the pause happens.
-
-I've already done that.  There are no errors of any sort in the kernel log.
-Vmstat only tells me both bi and bo are zero, which we already knew.  I've
-tried ps, iostat, vmstat, and top, and nothing provides anything of any
-significance I can see except that resierfs is waiting on md, which we
-already knew, and (as I recall - it's been a couple of weeks) the number of
-bytes in and out of md0 falls to zero.
-
->For a deeper profile of per-drive IO run 'watch iostat 1 2' while
->this is happening. This might also help indicate drive errors (no
->IO is happening) or flusher/elevator tuning issues (lots of IO is
->happening suddenfly).
-
-I'll give it a try.  I haven't been able to reproduce the issue today.
-Usually it's pretty easy.
-
+MfG
+        Goswin
