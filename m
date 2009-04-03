@@ -1,157 +1,85 @@
-From: Neil Brown <neilb@suse.de>
-Subject: PULL REQUEST: md patches for 2.6.30 merge window
-Date: Fri, 3 Apr 2009 10:51:59 +1100
-Message-ID: <18901.20383.185576.306972@notabene.brown>
+From: "Steven Ellis" <steven@openmedia.co.nz>
+Subject: Troubleshooting raid1 data corruption and mismatch_cnt
+Date: Fri, 3 Apr 2009 16:14:35 +1300 (NZDT)
+Message-ID: <51541.60.234.49.2.1238728475.squirrel@webmail.stevencherie.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Alasdair G Kergon <agk@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Andre Noll <maan@systemlinux.org>, Atsushi SAKAI <sakaia@jp.fujitsu.com>, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I've been noticing a number of corrupted files since installing a new
+raid1 set in my server, and the most troubling part is the corruption is
+happening on existing raid1 volumes as well as the new raid1 set
 
-Hi Linus,
- please pull my md development tree as described below.
+Initial environment is as follows
 
- Highlights (for me) are:
-   moving .h file from include/linux to driver/md from Christoph.
-     I'm already loving the fact that e.g. raid5.h is in the same
-     directory as raid5.c :-)
-   more options for reshaping arrays including raid5->raid6 and back,
-     reducing the number of drives in an array and changing the chunksize.   
+ASRock VT8378/VT8237 based motherboard (K7VM4)
+Sii 680 IDE controller - PCI
+AMD Athlon XP2000+
+1.5 GB Ram
+Intel E100 ethernet card - PCI
+OS = Centos 5.2 Xen Dom0 with a series of Centos 5.2 VMs.
 
-  There is lots of other stuff, bug fixes and other feature
-  enhancements.
-  A small change to md/Makefile touches 'dm' as well, hence Cc to
-  Alasdair.
+All raid and LVM is managed at the Xen level.
 
-Thanks,
-NeilBrown
-   
+The onboard VIA IDE controller has a two disk raid 1 set (md1) and the
+sii680 controller has a 4 disk raid 5 set. To date this has been very
+stable with no raid issues.
 
+I needed some extra storage and as I had no on board SATA installed a
+common sii3114 quad sata PCI card, and a pair of WD10EACS 1TB disks Raid1
+(md3).
 
-The following changes since commit 8e0ee43bc2c3e19db56a4adaa9a9b04ce885cd84:
-  Linus Torvalds (1):
-        Linux 2.6.29
+Now my problems begin. I started to notice that files on the 1TB volume
+are corrupted with varying MD5SUM values. I then did a
 
-are available in the git repository at:
+echo check > /sys/block/md3/md/sync_action
 
-  git://neil.brown.name/md for-linus
+Which produced several thousand errors. I corrected this with
 
-Andre Noll (3):
-      md: Make mddev->size sector-based.
-      md: Represent raid device size in sectors.
-      md: raid5 run(): Fix max_degraded for raid level 4.
+echo repair > /sys/block/md1/md/sync_action
 
-Atsushi SAKAI (1):
-      md: fix typo in FSF address
+The errors were fixed, but soon started to re-occur.
 
-Christoph Hellwig (3):
-      md: stop defining MAJOR_NR
-      cleanup drivers/md/Makefile
-      md: move headers out of include/linux/raid/
+Next I decided to check the core root raid1 set (md1) and found it also
+had errors, but thankfully not as many.
 
-Dan Williams (4):
-      md: add 'size' as a personality method
-      md: centralize ->array_sectors modifications
-      md: 'array_size' sysfs attribute
-      md/raid6: move raid6 data processing to raid6_pq.ko
+After a couple of days I took the Sata controller and disks out to make
+sure it wasn't another problem, and no more issues occured on the primary
+md1 array.
 
-Martin K. Petersen (1):
-      MD data integrity support
+My next thought was the server might be under powered. I bumped the PSU
+from 400W to 550W and put the SATA controller and disks back in. All of my
+previous problems re-occured.
 
-NeilBrown (41):
-      md: Fix is_mddev_idle test (again).
-      md: Allow write-intent bitmaps to have chunksize < PAGE_SIZE
-      md: never clear bit from the write-intent bitmap when the array is degraded.
-      md: write bitmap information to devices that are undergoing recovery.
-      md: move LEVEL_* definition from md_k.h to md_u.h
-      md: move most content from md.h to md_k.h
-      md: move lots of #include lines out of .h files and into .c
-      md: move md_k.h from include/linux/raid/ to drivers/md/
-      md: occasionally checkpoint drive recovery to reduce duplicate effort after a crash
-      md: be more consistent about setting WriteMostly flag when adding a drive to an array
-      md/raid5: simplify interface for init_stripe and get_active_stripe
-      md/raid5: change raid5_compute_sector and stripe_to_pdidx to take a 'previous' argument
-      md/raid6: remove expectation that Q device is immediately after P device.
-      md/raid5: simplify raid5_compute_sector interface
-      md/raid5: Add support for new layouts for raid5 and raid6.
-      md/raid5: finish support for DDF/raid6
-      md: make sure new_level, new_chunksize, new_layout always have sensible values.
-      md/raid5: refactor raid5 "run"
-      md: md_unregister_thread should cope with being passed NULL
-      md: enable suspend/resume of md devices.
-      md: add ->takeover method to support changing the personality managing an array
-      md: add ->takeover method for raid5 to be able to take over raid1
-      md/raid5: allow layout/chunksize to be changed on an active 2-drive raid5.
-      md: add takeover support for raid4 -> raid5 conversion.
-      md: add takeover support for converting raid6 back into raid5
-      md/raid5: drop qd_idx from r6_state
-      md/raid5: enhance raid5_size to work correctly with negative delta_disks
-      md: add explicit method to signal the end of a reshape.
-      md/raid5: change reshape-progress measurement to cope with reshaping backwards.
-      md: allow number of drives in raid5 to be reduced
-      Documentation/md.txt update
-      md/raid5: clearly differentiate 'before' and 'after' stripes during reshape.
-      md/raid5: prepare for allowing reshape to change chunksize.
-      md/raid5: prepare for allowing reshape to change layout
-      md/raid5: reshape using largest of old and new chunk size
-      md/raid5: allow layout and chunksize to be changed on active array.
-      md: don't display meaningless values in sysfs files resync_start and sync_speed
-      md/raid5: be more careful about write ordering when reshaping.
-      md: remove CONFIG_MD_RAID_RESHAPE config option.
-      md/raid5: minor code cleanups in make_request.
-      md/raid5 revise rules for when to update metadata during reshape
+Interestingly no issues on the sii680 based raid5 set.
 
- Documentation/md.txt                           |   37 +-
- crypto/xor.c                                   |    2 +-
- drivers/md/Kconfig                             |   31 +-
- drivers/md/Makefile                            |   16 +-
- drivers/md/bitmap.c                            |   49 +-
- {include/linux/raid => drivers/md}/bitmap.h    |    0
- drivers/md/faulty.c                            |   19 +-
- drivers/md/linear.c                            |   25 +-
- {include/linux/raid => drivers/md}/linear.h    |    2 -
- drivers/md/md.c                                |  615 ++++++++---
- include/linux/raid/md_k.h => drivers/md/md.h   |   66 +-
- drivers/md/mktables.c                          |   14 +-
- drivers/md/multipath.c                         |   17 +-
- {include/linux/raid => drivers/md}/multipath.h |    2 -
- drivers/md/raid0.c                             |   66 +-
- {include/linux/raid => drivers/md}/raid0.h     |    2 -
- drivers/md/raid1.c                             |   35 +-
- {include/linux/raid => drivers/md}/raid1.h     |    2 -
- drivers/md/raid10.c                            |   42 +-
- {include/linux/raid => drivers/md}/raid10.h    |    2 -
- drivers/md/raid5.c                             | 1494 +++++++++++++++++-------
- {include/linux/raid => drivers/md}/raid5.h     |  110 ++-
- drivers/md/raid6algos.c                        |   21 +-
- drivers/md/raid6altivec.uc                     |    4 +-
- drivers/md/raid6int.uc                         |    4 +-
- drivers/md/raid6mmx.c                          |    4 +-
- drivers/md/raid6recov.c                        |   13 +-
- drivers/md/raid6sse1.c                         |    4 +-
- drivers/md/raid6sse2.c                         |    4 +-
- drivers/md/raid6test/Makefile                  |    2 +-
- drivers/md/raid6test/test.c                    |    2 +-
- drivers/md/raid6x86.h                          |    2 +-
- fs/compat_ioctl.c                              |    2 +-
- include/linux/raid/md.h                        |   81 --
- include/linux/raid/md_u.h                      |   35 +
- drivers/md/raid6.h => include/linux/raid/pq.h  |   28 +-
- include/linux/raid/xor.h                       |    2 -
- init/do_mounts.h                               |    1 +
- init/do_mounts_md.c                            |    5 +-
- 39 files changed, 2002 insertions(+), 860 deletions(-)
- rename {include/linux/raid => drivers/md}/bitmap.h (100%)
- rename {include/linux/raid => drivers/md}/linear.h (95%)
- rename include/linux/raid/md_k.h => drivers/md/md.h (83%)
- rename {include/linux/raid => drivers/md}/multipath.h (96%)
- rename {include/linux/raid => drivers/md}/raid0.h (96%)
- rename {include/linux/raid => drivers/md}/raid1.h (99%)
- rename {include/linux/raid => drivers/md}/raid10.h (99%)
- rename {include/linux/raid => drivers/md}/raid5.h (81%)
- delete mode 100644 include/linux/raid/md.h
- rename drivers/md/raid6.h => include/linux/raid/pq.h (86%)
+So what should be my next point of action?
+
+1. Are their known issues with sii3114 iand via based motherboards?
+2. Is there a conflict between the sii3114 and sii680 cards?
+3. Should I try a different motherboard?
+4. Should I try a different Sata card?
+5. Should I move to a motherboard with onboard sata?
+
+I'm going to leave a memory test running tonight, but I've run one quite
+recently on this hardware. I'll also try swapping the 3 PCI cards around.
+
+Sadly here in NZ there isn't a lot of choice in Sata cards unless you want
+high end hardware raid models.
+
+I'm not sure what else I can do at this stage in the way of
+troubleshooting. I've also tried using the system with a vanilla Centos
+5.2 kernel (2.6.18-92.1.22.el5) and the problem still appears to be
+present.
+
+Steve
+
+--------------------------------------------
+Steven Ellis - Technical Director
+OpenMedia Limited - The Home of myPVR
+email   - steven@openmedia.co.nz
+website - http://www.openmedia.co.nz
