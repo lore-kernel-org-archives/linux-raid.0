@@ -1,47 +1,49 @@
-From: Andrew Burgess <aab@cichlid.com>
+From: "Lelsie Rhorer" <lrhorer@satx.rr.com>
 Subject: RE: RAID halting
-Date: Sat, 04 Apr 2009 09:39:24 -0700
-Message-ID: <1238863164.16200.71.camel@cichlid.com>
-References: <20090404151557.VWAG19140.cdptpa-omta03.mail.rr.com@Leslie>
+Date: Sat, 4 Apr 2009 12:05:58 -0500
+Message-ID: <20090404170600.YFXC19140.cdptpa-omta03.mail.rr.com@Leslie>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090404151557.VWAG19140.cdptpa-omta03.mail.rr.com@Leslie>
 Sender: linux-raid-owner@vger.kernel.org
-To: lrhorer@satx.rr.com
-Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, 2009-04-04 at 10:15 -0500, Lelsie Rhorer wrote:
-
-> > Oprofile is supposed to be good for user and kernel profiling but I
-> > don't know if it can find non-cpu bound stuff. There are also a bunch of
-> > latency analysis tools in the kernel that were used for realtime tuning,
-> > they might show where something is getting stuck. Andrew Morton did alot
-> > of work in this area.
+> One thing that can cause this sort of behaviour is if the filesystem is in
+> the middle of a sync and has to complete it before the create can
+> complete, and the sync is writing out many megabytes of data.
 > 
-> Do you know if he subscribes to this list?  If not, how may I reach him?
+> You can see if this is happening by running
+> 
+>      watch 'grep Dirty /proc/meminfo'
 
-He's on the kernel list which I seldom read nowadays. His email used to
-be akpm@something I think.
+OK, I did this.
 
-He worked on ftrace, documented in the kernel source
-in /usr/src/linux/Documentation/ftrace.txt
+> if that is large when the hang starts, and drops down to zero, and the
+> hang lets go when it hits (close to) zero, then this is the problem.
 
-An excerpt:
+No, not really.  The value of course rises and falls erratically during
+normal operation (anything from a few dozen K to 200 Megs), but it is not
+necessarily very high at the event onset.  When the halt occurs it drops
+from whatever value it may have (perhaps 256K or so) to 16K, and then slowly
+rises to several hundred K until the event terminates.
 
-"Ftrace is an internal tracer designed to help out developers and
-designers of systems to find what is going on inside the kernel.
-It can be used for debugging or analyzing latencies and performance
-issues that take place outside of user-space.
+> If that doesn't turn out to be the problem, then knowing how the
+> "Dirty" count is behaving might still be useful, and I would probably
+> look at what processes are in 'D' state, (ps axgu)
 
-Although ftrace is the function tracer, it also includes an
-infrastructure that allows for other types of tracing. Some of the
-tracers that are currently in ftrace include a tracer to trace
-context switches, the time it takes for a high priority task to
-run after it was woken up, the time interrupts are disabled, and
-more (ftrace allows for tracer plugins, which means that the list of
-tracers can always grow)."
+Well, nothing surprising, there.  The process(es) involved with the
+transfer(s) are dirty (D+), as well as the trigger process (for testing, I
+simply copy /etc/hosts over to a directory on the RAID array), and pdflush
+had a D state (no plus), but that's all.
 
+> and look at their stack (/proc/$PID/stack)..
+
+Um, I thought I knew what you meant by this, but apparently not.  I tried to
+`cat /proc/<PID of the process with a D status>/stack`, but the system
+returns "cat: /proc/8005/stack: No such file or directory".  What did I do
+wrong?
 
