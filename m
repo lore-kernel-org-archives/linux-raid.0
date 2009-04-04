@@ -1,49 +1,47 @@
-From: "Lelsie Rhorer" <lrhorer@satx.rr.com>
+From: Andrew Burgess <aab@cichlid.com>
 Subject: RE: RAID halting
-Date: Sat, 4 Apr 2009 10:15:55 -0500
-Message-ID: <20090404151557.VWAG19140.cdptpa-omta03.mail.rr.com@Leslie>
-References: <1238857457.16200.64.camel@cichlid.com>
-Reply-To: <lrhorer@satx.rr.com>
+Date: Sat, 04 Apr 2009 09:39:24 -0700
+Message-ID: <1238863164.16200.71.camel@cichlid.com>
+References: <20090404151557.VWAG19140.cdptpa-omta03.mail.rr.com@Leslie>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1238857457.16200.64.camel@cichlid.com>
+In-Reply-To: <20090404151557.VWAG19140.cdptpa-omta03.mail.rr.com@Leslie>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: lrhorer@satx.rr.com
+Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> Oprofile is supposed to be good for user and kernel profiling but I
-> don't know if it can find non-cpu bound stuff. There are also a bunch of
-> latency analysis tools in the kernel that were used for realtime tuning,
-> they might show where something is getting stuck. Andrew Morton did alot
-> of work in this area.
+On Sat, 2009-04-04 at 10:15 -0500, Lelsie Rhorer wrote:
 
-Do you know if he subscribes to this list?  If not, how may I reach him?
+> > Oprofile is supposed to be good for user and kernel profiling but I
+> > don't know if it can find non-cpu bound stuff. There are also a bunch of
+> > latency analysis tools in the kernel that were used for realtime tuning,
+> > they might show where something is getting stuck. Andrew Morton did alot
+> > of work in this area.
+> 
+> Do you know if he subscribes to this list?  If not, how may I reach him?
 
-> If the cpu was spinning somewhere it would show as system time so it
-> must be waiting for a timer or some other event (wild guessing). It's as
-> if the i/o completion never arrives but some timer eventually goes off
-> and maybe the i/o is retried and everything gets back on track? But that
-> should cause utilization to go up and you'd think some sort of
-> message...
+He's on the kernel list which I seldom read nowadays. His email used to
+be akpm@something I think.
 
-It's also puzzling why the issue is so much worse when the array diagnostic
-is running.  Almost every file creation triggers a halt, and the halt time
-extends to 2 minutes.  This is one thing which makes me tend to think it is
-an interaction between the file system and the RAID system, rather than
-either one alone.
+He worked on ftrace, documented in the kernel source
+in /usr/src/linux/Documentation/ftrace.txt
 
- 
-> Perhaps the ide list would know of some diagnostic knobs to tweak.
+An excerpt:
 
+"Ftrace is an internal tracer designed to help out developers and
+designers of systems to find what is going on inside the kernel.
+It can be used for debugging or analyzing latencies and performance
+issues that take place outside of user-space.
 
-> One last thing, the cpu goes toward 100% idle not wait?
+Although ftrace is the function tracer, it also includes an
+infrastructure that allows for other types of tracing. Some of the
+tracers that are currently in ftrace include a tracer to trace
+context switches, the time it takes for a high priority task to
+run after it was woken up, the time interrupts are disabled, and
+more (ftrace allows for tracer plugins, which means that the list of
+tracers can always grow)."
 
-Neither one.  If the drive access is tied to a local CPU intensive user
-application, for example ffmpeg, then of course CPU utilization dips, but if
-all the drive accesses are via network utilities (ftp, SAMBA, etc), I
-haven't noticed any change in CPU utilization.  Simultaneous reads and
-writes to other local drives or network drives continue without a hiccough. 
 
