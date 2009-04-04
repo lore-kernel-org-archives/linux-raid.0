@@ -1,134 +1,49 @@
-From: Gabriele Tozzi <gabriele@tozzi.eu>
-Subject: Kernel bug?
-Date: Sat, 04 Apr 2009 17:07:40 +0200
-Message-ID: <49D777BC.4090009@tozzi.eu>
+From: "Lelsie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: RAID halting
+Date: Sat, 4 Apr 2009 10:15:55 -0500
+Message-ID: <20090404151557.VWAG19140.cdptpa-omta03.mail.rr.com@Leslie>
+References: <1238857457.16200.64.camel@cichlid.com>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1238857457.16200.64.camel@cichlid.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+> Oprofile is supposed to be good for user and kernel profiling but I
+> don't know if it can find non-cpu bound stuff. There are also a bunch of
+> latency analysis tools in the kernel that were used for realtime tuning,
+> they might show where something is getting stuck. Andrew Morton did alot
+> of work in this area.
 
-I guess I've found a kernel bug: I get an oops when rebuilding a raid1
-array (/dev/md5) on an SMP system. The md5_resync process then hangs.
+Do you know if he subscribes to this list?  If not, how may I reach him?
 
-This is my current configuration:
+> If the cpu was spinning somewhere it would show as system time so it
+> must be waiting for a timer or some other event (wild guessing). It's as
+> if the i/o completion never arrives but some timer eventually goes off
+> and maybe the i/o is retried and everything gets back on track? But that
+> should cause utilization to go up and you'd think some sort of
+> message...
 
-transylvania:~# uname -a
-Linux transylvania 2.6.29.1transylvania #1 SMP Sat Apr 4 04:08:40 CEST
-2009 i686 GNU/Linux
+It's also puzzling why the issue is so much worse when the array diagnostic
+is running.  Almost every file creation triggers a halt, and the halt time
+extends to 2 minutes.  This is one thing which makes me tend to think it is
+an interaction between the file system and the RAID system, rather than
+either one alone.
 
-transylvania:~# cat /proc/mdstat
-Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
-md1 : active raid1 sdb2[1] sda2[0]
-      1003968 blocks [2/2] [UU]
+ 
+> Perhaps the ide list would know of some diagnostic knobs to tweak.
 
-md2 : active raid1 sdb5[1] sda5[0]
-      2008000 blocks [2/2] [UU]
 
-md3 : active raid1 sdb6[1] sda6[0]
-      1003904 blocks [2/2] [UU]
+> One last thing, the cpu goes toward 100% idle not wait?
 
-md4 : active raid1 sdb7[1] sda7[0]
-      505920 blocks [2/2] [UU]
+Neither one.  If the drive access is tied to a local CPU intensive user
+application, for example ffmpeg, then of course CPU utilization dips, but if
+all the drive accesses are via network utilities (ftp, SAMBA, etc), I
+haven't noticed any change in CPU utilization.  Simultaneous reads and
+writes to other local drives or network drives continue without a hiccough. 
 
-md6 : active linear sdb8[1] sda8[0]
-      25719808 blocks 4k rounding
-
-md5 : active raid1 sdd2[1] sdc2[3]
-      97843776 blocks [3/1] [_U_]
-      [===>.................]  recovery = 15.3% (15018752/97843776)
-finish=35.2min speed=39182K/sec
-
-md0 : active raid1 sdb1[1] sda1[0]
-      40064 blocks [2/2] [UU]
-
-unused devices: <none>
-
-When the system hangs, i receive these messages:
-
-transylvania:~#
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel: Oops: 0000 [#1] SMP
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel: last sysfs file:
-/sys/devices/pci0000:00/0000:00:04.2/usb2/2-2/2-2:1.0/host5/target5:0:0/5:0:0:0/type
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel: Process md5_resync (pid: 6969, ti=dcbba000
-task=d59c72a0 task.ti=dcbba000)
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel: Stack:
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel:  df3e2080 0ba9f480 00011210 df3e209c c0163dfc 00000010
-00000078 00000000
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel:  c019f38f 00000000 0ba9f480 00000000 0ba9f480 00000000
-dcbbbe78 c04a29fd
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel: Call Trace:
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel:  [<c04a2753>] r1buf_pool_alloc+0x11c/0x164
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel:  [<c0163dfc>] mempool_alloc+0x27/0xcb
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel:  [<c019f38f>] bio_add_page+0x28/0x2e
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel:  [<c04a29fd>] sync_request+0x1fd/0x5f2
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel:  [<c01374ba>] __wake_up+0x29/0x39
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel:  [<c04b5028>] md_do_sync+0x6d4/0xb60
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel:  [<c013976d>] set_next_entity+0x29/0x51
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel:  [<c013b884>] try_to_wake_up+0x127/0x130
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel:  [<c04b58b0>] md_thread+0xdd/0xf4
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel:  [<c0137445>] complete+0x28/0x36
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel:  [<c04b57d3>] md_thread+0x0/0xf4
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel:  [<c014e857>] kthread+0x38/0x5d
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel:  [<c014e81f>] kthread+0x0/0x5d
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel:  [<c011d8a3>] kernel_thread_helper+0x7/0x10
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel: Code: 14 10 8b 02 89 4c 82 08 40 83 f8 0e 89 02 75 07
-89 d0 e8 06 fe ff ff 89 d8 50 9d 90 8d b4 26 00 00 00 00 5b c3 55 57 56
-53 89 c3 <8b> 00 f6 c4 60 74 23 f6 c4 40 74 03 8b 5b 0c 8d 43 04 f0 ff 08
-
-Message from syslogd@localhost at Sat Apr  4 16:51:17 2009 ...
-localhost kernel: EIP: [<c0168f1d>] put_page+0x6/0xdd SS:ESP 0068:dcbbbdd8
-
-transylvania:~#
-
-Please include my address in replies 'cause I'm not subscribed to this
-list. Thank you.
-
-Gabriele Tozzi
