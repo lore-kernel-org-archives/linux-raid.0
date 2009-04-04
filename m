@@ -1,70 +1,43 @@
-From: "Lelsie Rhorer" <lrhorer@satx.rr.com>
+From: Andrew Burgess <aab@cichlid.com>
 Subject: RE: RAID halting
-Date: Sat, 4 Apr 2009 09:39:15 -0500
-Message-ID: <20090404143918.VANQ19140.cdptpa-omta03.mail.rr.com@Leslie>
-References: <1238850066.16200.51.camel@cichlid.com>
-Reply-To: <lrhorer@satx.rr.com>
+Date: Sat, 04 Apr 2009 08:04:17 -0700
+Message-ID: <1238857457.16200.64.camel@cichlid.com>
+References: <20090404143918.VANQ19140.cdptpa-omta03.mail.rr.com@Leslie>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1238850066.16200.51.camel@cichlid.com>
+In-Reply-To: <20090404143918.VANQ19140.cdptpa-omta03.mail.rr.com@Leslie>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: lrhorer@satx.rr.com
+Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> I think that's the filesystem buffering and then writing all at once.
-> It's normal if it's periodic; they go briefly to ~100% and then back to
-> ~0%?
+On Sat, 2009-04-04 at 09:39 -0500, Lelsie Rhorer wrote:
 
-Yes.
+> Well, diagnostically, I think the situation is clear.  All ten drives stop
+> writing completely.  Five of the ten stop reading, and the other five slow
+> their reads to a dribble - always the same five drives.
 
-> > I don't know if this is ordinary
-> > behavior for atop, but all the drives also periodically disappear from
-> the
-> > status display.
-> 
-> That's a config option (and I find the default annoying).
+So the delay seems to be hiding in the kernel else the userspace tools
+would see it (they see some kernel stuff too, like utilization)
 
-Yeah, me, too.
+Oprofile is supposed to be good for user and kernel profiling but I
+don't know if it can find non-cpu bound stuff. There are also a bunch of
+latency analysis tools in the kernel that were used for realtime tuning,
+they might show where something is getting stuck. Andrew Morton did alot
+of work in this area.
 
-> sorts the drives by utilization every second which can be a little hard
-> to watch. But if you have the problem I had then that one drive stays at
-> the top of the list when the problem occurs.
+If the cpu was spinning somewhere it would show as system time so it
+must be waiting for a timer or some other event (wild guessing). It's as
+if the i/o completion never arrives but some timer eventually goes off
+and maybe the i/o is retried and everything gets back on track? But that
+should cause utilization to go up and you'd think some sort of
+message... 
 
-No.
+Perhaps the ide list would know of some diagnostic knobs to tweak.
 
-> I used:
-> 
->   iostat -t -k -x 1 | egrep -v 'sd.[0-9]'
-> 
-> to get percent utilization and not show each partition but just whole
-> drives.
+It's a puzzler...
 
-Since there are no partitions, it shouldn't make a difference.
- 
-> For atop you want the -f option to 'fixate' the number of lines so
-> drives with zero utilization don't disappear.
-
-Well, diagnostically, I think the situation is clear.  All ten drives stop
-writing completely.  Five of the ten stop reading, and the other five slow
-their reads to a dribble - always the same five drives.
-
-> Does the sata multiplier have it's own driver and if so, is it the
-> latest? Any other complaints on the net about it? I would think a
-> problem there would show up as 100% utilization though...
-
-Multipliers - three of them, and no, they require no driver.  The SI
-controller's drivers are included in the distro.
-
-> And I think you already said the cpu usage is low when the event occurs?
-> No one core at near 100%? (atop would show this too...)
-
-Nowhere near.  Typically both cores are running below 25%, depending upon
-what processes are running, of course.  I have the Gnome system monitor up,
-and the graphs don't spike when the event occurs.  Of course, if there is a
-local drive access process which uses lots of CPU horsepower, such as
-ffmpeg, then when the array halt occurs, the CPU utilization falls right
-off.
+One last thing, the cpu goes toward 100% idle not wait?
 
