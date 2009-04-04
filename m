@@ -1,49 +1,36 @@
-From: "Lelsie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: RAID halting
-Date: Sat, 4 Apr 2009 12:05:58 -0500
-Message-ID: <20090404170600.YFXC19140.cdptpa-omta03.mail.rr.com@Leslie>
-Reply-To: <lrhorer@satx.rr.com>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: Kernel bug?
+Date: Sun, 5 Apr 2009 08:40:04 +1000 (EST)
+Message-ID: <b4d41c1ac8bd783b1a62b73b4efc4200.squirrel@neil.brown.name>
+References: <49D777BC.4090009@tozzi.eu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <49D777BC.4090009@tozzi.eu>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: Gabriele Tozzi <gabriele@tozzi.eu>
+Cc: linux-raid@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 List-Id: linux-raid.ids
 
-> One thing that can cause this sort of behaviour is if the filesystem is in
-> the middle of a sync and has to complete it before the create can
-> complete, and the sync is writing out many megabytes of data.
-> 
-> You can see if this is happening by running
-> 
->      watch 'grep Dirty /proc/meminfo'
+On Sun, April 5, 2009 1:07 am, Gabriele Tozzi wrote:
+> Hello,
+>
+> I guess I've found a kernel bug: I get an oops when rebuilding a raid1
+> array (/dev/md5) on an SMP system. The md5_resync process then hangs.
 
-OK, I did this.
+Yes, it appears you have found a bug.  Thanks for reporting it.
 
-> if that is large when the hang starts, and drops down to zero, and the
-> hang lets go when it hits (close to) zero, then this is the problem.
+It looks like an alloc_page failed in r1buf_pool_alloc and when trying
+to clean up we tried to free pages that had never been allocated.
 
-No, not really.  The value of course rises and falls erratically during
-normal operation (anything from a few dozen K to 200 Megs), but it is not
-necessarily very high at the event onset.  When the halt occurs it drops
-from whatever value it may have (perhaps 256K or so) to 16K, and then slowly
-rises to several hundred K until the event terminates.
+The code in raid1.c assumes that newly allocated 'bios' have their
+bvec initialised to NULLs, but that apparently changed recently
+with commit d3f761104b097738932afcc310fbbbbfb007ef92
 
-> If that doesn't turn out to be the problem, then knowing how the
-> "Dirty" count is behaving might still be useful, and I would probably
-> look at what processes are in 'D' state, (ps axgu)
+I'll post a patch after the weekend.
 
-Well, nothing surprising, there.  The process(es) involved with the
-transfer(s) are dirty (D+), as well as the trigger process (for testing, I
-simply copy /etc/hosts over to a directory on the RAID array), and pdflush
-had a D state (no plus), but that's all.
+Thanks,
 
-> and look at their stack (/proc/$PID/stack)..
-
-Um, I thought I knew what you meant by this, but apparently not.  I tried to
-`cat /proc/<PID of the process with a D status>/stack`, but the system
-returns "cat: /proc/8005/stack: No such file or directory".  What did I do
-wrong?
+NeilBrown
 
