@@ -1,40 +1,49 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re:
-Date: Sat, 04 Apr 2009 19:45:56 -0500
-Message-ID: <49D7FF44.8010309@gmail.com>
-References: <20090405001223.PZXI1944.cdptpa-omta02.mail.rr.com@Leslie>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: RAID halting
+Date: Sat, 4 Apr 2009 20:49:36 -0400
+Message-ID: <87f94c370904041749j318b577dr663ef0bd3b4ad717@mail.gmail.com>
+References: <49D7C19C.2050308@gmail.com>
+	 <20090405000728.GGPW19140.cdptpa-omta03.mail.rr.com@Leslie>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090405001223.PZXI1944.cdptpa-omta02.mail.rr.com@Leslie>
+In-Reply-To: <20090405000728.GGPW19140.cdptpa-omta03.mail.rr.com@Leslie>
 Sender: linux-raid-owner@vger.kernel.org
 To: lrhorer@satx.rr.com
-Cc: linux-raid@vger.kernel.org
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Lelsie Rhorer wrote:
->> I would try to first run hardware diagnostics.  Maybe you will get
->> "lucky" and one or more disks will fail diagnostics, which at least
->> means it will be easy to repair the problem.
->>
->> This could very well be situation where you have a lot of bad blocks
->> that have to get restriped, and parity has to be regenerated.   Are
->> these the cheap consumer SATA disk drives, or enterprise class disks?
-> 
-> 
-> I don't buy that for a second.  First of all, restriping parity can and does
-> occur in the background.  Secondly, how is it the system writes many
-> terrabytes of data post file creation, then chokes on a 0 byte file?
-> 
+<snip>
+>=A0Also, it doesn't take a drive 40 seconds,
+> let alone 2 minutes, to mark a sector bad.
 
+Just for info, with Enterprise class sata drives, you're right.
 
-You should note that the drive won't know a sector it just wrote is 
-bad until it reads it....are you sure you actually successfully wrote 
-all of that data and that it is still there?
+=46or consumer grade sata, they have extended auto retry logic as an
+effort not to fail a read from a bad sector.  It can easily take times
+like your seeing.  I think the standard drive timeout is on the order
+of 30 seconds and then libata sometimes has retry logic of its own.
 
-And it is not the writes that kill when you have a drive going bad, it 
-is the reads of the bad sectors.    And to create a file, a number of 
-things will likely need to be read to finish the file creation, and if 
-one of those is a bad sector things get ugly.
+Especially with PATA drives a 2 minute issue is not out of the
+question, since the kernel will step down the i/o speed and retry each
+speed as it goes.  And PATA (IDE) has a lot of speeds to try.
 
+Greg
+--=20
+Greg Freemyer
+Head of EDD Tape Extraction and Processing team
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+=46irst 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.p=
+df
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
