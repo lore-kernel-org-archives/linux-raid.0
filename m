@@ -1,59 +1,52 @@
-From: pg_lxra@lxra.for.sabi.co.UK (Peter Grandi)
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
 Subject: RE: RAID halting
-Date: Sun, 5 Apr 2009 21:57:40 +0100
-Message-ID: <18905.6980.631038.776261@tree.ty.sabi.co.uk>
-References: <c268e4660904050705v73f1aa0eud93357f1e369110c@mail.gmail.com>
-	<20090405185421.RJPR28081.cdptpa-omta04.mail.rr.com@Leslie>
+Date: Sun, 5 Apr 2009 16:02:08 -0500
+Message-ID: <20090405210208.XEXH19140.cdptpa-omta03.mail.rr.com@Leslie>
+References: <49D903BA.8000000@anonymous.org.uk>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090405185421.RJPR28081.cdptpa-omta04.mail.rr.com@Leslie>
+In-Reply-To: <49D903BA.8000000@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-[ ... ]
+> > Several, actually.  Since the RAID array kept crashing, I had to re-
+> create
+> > it numerous times.
+> [...]
+> >> your culprit is higher up the chain, ie the FS.
+> >
+> > I've suspected this may be the case from the outset.
+> 
+> I'm sorry? You've repeatedly had trouble with this system, this array,
+> you've tried several filesystems; do you think they're *ALL* broken?
 
-> Several, actually.  Since the RAID array kept crashing,
+No, the other issues were clearly related to a single hardware issue.  It
+took quite a while to find it, it being highly intermittent, but once I did,
+replacing the culprit system apparently solved all the issues, and the
+system ran fine for several weeks.  Then I reconfigured and formatted under
+reiserfs.  That's when this issue popped up.  It's entirely possible there
+is a persistent hardware problem which has plagued the system from day 1,
+but was masked by the other, more severe hardware issue.  It's possible one
+of the drives or some other component went bad just as I reformatted the
+array.  It's possible moving the drives physically around has introduced
+some problem.  It's possible whatever issue was causing the symptoms went
+quiescent during the testing phase after the chassis was replaced.  All are
+unlikely given the physical evidence, but none impossible.  To go any
+further, I need further diagnostics.
 
-Someone who talks or thinks in vague terms like "RAID array kept
-crashing" is already on a bad path.
+Look, people, I am not a duffer.  I am a professional engineer who has been
+in this business for over 30 years.  Personal computers and Linux are not my
+area of expertise, but hardware systems and troubleshooting them are.  I am
+not asking for anyone to fix my system for me, and I am perfectly capable of
+drawing reasonable conclusions from empirical data.  Don't be surprised if
+my conclusions differ from yours, but don't make the mistake of thinking I
+have discarded any possible solutions, either.  Explain to me how the
+alignment of Jupiter and Mars with Lake Michigan could be having an effect,
+and I will look into it.  In the mean time, I need the advice of those more
+experienced with Linux and possibly PCs than I.  That's you.
 
-> I had to re-create it numerous times. I tried ext3 more than
-> once, but the journal kept getting corrupted, and fixing it
-> lost several files.
-
-Well, 'ext3' is *exceptionally* well tested, and this points to
-some problems with the storage system or the kernel or some
-driver (e.g. use of some blob/binary proprietary driver in the
-kernel). In theory everything should work with everything else
-and everything should be bug free in every combination... In
-practice wise people try not to beg for trouble.
-
-> Once I lost several important files during a RAID expansion.
-> In some cases I converted to ext2, and others I started out
-> with ext2, but last I checked, one cannot grow an ext2 file
-> system on the fly.
-
-Modifying filesystem structure while the filesystem is operating
-is a very good way to beg for trouble. Especially if under load.
-
-That something is *possible* does not mean that it is wise to
-rely on it.
-
-[ ... ]
-
-> Yes, but I had many problems with ext3, as well,
-
-
-> and I definitely need a file system which can be grown on the
-> fly.
-
-Good luck with that. Perhaps you need to think again about your
-requirements, and/or perhaps to get a much larger budget to do
-some research and development into "dynamic storage pools".
-
-Not many seem to have sorted out all subtle problems; I have
-even heard rumours that even GPFS has issues in demanding
-configurations.
