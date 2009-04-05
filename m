@@ -1,83 +1,105 @@
-From: "David Lethe" <david@santools.com>
-Subject: RE:
-Date: Sun, 5 Apr 2009 00:33:24 -0500
-Message-ID: <F2C688D6A021E34CB81C0E631EF4C093017FF4C3@34093-C4-EVS1.exchange.rackspace.com>
-References: <49D7FF44.8010309@gmail.com> <20090405052113.LAKK19140.cdptpa-omta03.mail.rr.com@Leslie>
+From: "Lelsie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: RAID halting
+Date: Sun, 5 Apr 2009 01:30:19 -0500
+Message-ID: <20090405063022.LLUH19140.cdptpa-omta03.mail.rr.com@Leslie>
+References: <49D8020E.3010705@gmail.com>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <20090405052113.LAKK19140.cdptpa-omta03.mail.rr.com@Leslie>
+In-Reply-To: <49D8020E.3010705@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: lrhorer@satx.rr.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Lelsie Rhorer
-> Sent: Sunday, April 05, 2009 12:21 AM
-> To: linux-raid@vger.kernel.org
-> Subject: RE:
-> 
-> > You should note that the drive won't know a sector it just wrote is
-> > bad until it reads it
-> 
-> Yes, but it also won't halt the write for 40 seconds because it was
-> bad.
-> More to  the point, there is no difference at the drive level between
-a
-> bad
-> sector written for a 30Gb file and a 30 byte file.
-> 
-> > ....are you sure you actually successfully wrote all of that data
-and
-> that
-> >it is still there?  Pretty sure, yeah.  There are no errors in the
-> filesystem, and every file I have written works.  Again, however, the
-> point
-> is there is never a problem once the file is created, no matter how
-> long it
-> takes to write it out to disk.  The moment the file is created,
-> however,
-> there may be up to a 2 minute delay in writing its data to the drive.
-> 
-> > And it is not the writes that kill when you have a drive going bad,
-> it
-> > is the reads of the bad sectors.    And to create a file, a number
-of
-> > things will likely need to be read to finish the file creation, and
-> if
-> > one of those is a bad sector things get ugly.
-> 
-> Well, I agree to some extent, except that why would it be loosely
-> related to
-> the volume of drive activity, and why is it 5 drives stop reading
-> altogether
-> and 5 do not?  Furthermore, every single video file gets read, re-
-> written,
-> edited, re-written again, and finally read again at least once,
-> sometimes
-> several times, before being finally archived.  Why does the kernel log
-> never
-> report any errors of any sort?
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Lelsie Rhorer wrote:
 
-All of what you report is still consistent with delays caused by having
-to remap bad blocks
-The O/S will not report recovered errors, as this gets done internally
-by the disk drive, and the O/S never learns about it. (Queue depth
-settings can account for some of the other "weirdness" you reported.
+Is that my error in spelling my name, or yours?  If mine, how do I fix it?
 
-Really, if this was my system I would run non-destructive read tests on
-all blocks; along with the embedded self-test on the disk.  It is often
-a lot easier and more productive to eliminate what ISN'T the problem
-rather than chase all of the potential reasons for the problem.  
+> Writes don't trigger this sort of events, it is only the reads, and
+> are you sure the data the you wrote is still readable?
 
+This data has been read and written, hundreds of gigabytes a day, for
+months.  None of the files have experienced any noticeable problems.  I
+can't vouch for every byte, of course, but no read out of the tens of
+millions of blocks read has ever triggered a halt or produced a noticeable
+error, AFAIK.  Typical read rates are between 5000 and 20,000 blocks per
+second for one or two hours at a time.
+
+> And what I said if you read it carefully is, that *WHEN* you hit a bad
+> sector it will cause a delay almost every time, not you will hit a
+> delay every time you read the disk.
+
+So why is it that thousands of read blocks per second continuously over
+hours at a time and spanning the entire drive space many times over have
+never produced a single event, yet creating a 200 byte file under some
+circumstances causes the failure in some cases every single time? The total
+number of sectors involved with failure triggers has not exceeded 100
+kilobytes, even allowing for file system overheard and the existence of
+large numbers of superblocks.  The total number of bytes read, however, is
+easily 200 - 300 terabytes, or more.
+
+> It will only result in a delay if you hit the magic bad sector.   And
+> on reads it cannot mark the sector bad until it successfully reads the
+> sector so it tries really hard and takes a long time trying, and once
+> it reads that sector successfully it will rewrite it elsewhere and
+> mark the sector bad.
+
+So why doesn't it happen when reading any file?  Why does it rarely, if ever
+happen when low volumes of reading and writing are underway, but happen
+extremely frequently when large numbers of reads, write, or both are
+happening?  A bad sector doesn't care how many other sectors are being read
+or written.  I have several times backed up the entire array, end to end, at
+400+ Mbps, without a single burp.  Create one or two tiny files during the
+process, and it comes to a screeching halt for 40 seconds.  Note the time is
+highly regular.  Unless the array health check is underway, the halt is
+always 40 seconds long, never 30 or 50.
+
+> When you hit the next bad sector the same
+> thing will happen again.
+
+But how is it in a sea of some 19,531,250,000 sectors, multi gigabyte long
+reads never hit any bad sectors, but hitting bad sectors with 1K long file
+creations manage to find a bad sector sometimes 50% of the time or more?  If
+the bad sectors were in the superblocks, then file reads and writes would
+find them just as often as file creations.  If the errors are in the inodes,
+how is it billions and billions of sectors read and written find no errors,
+but the odd file creation can find them up to 50% of the time or more?  Why
+is it the likelihood of hitting a bad sector in an inode or superblock - for
+file creations only - is much more likely when other drive accesses are
+going on?
+
+
+> When the array chassis had its issue, likely the chassis decided they
+
+The chassis didn't decide anything.  It (like the new one) was a dumb drive
+chassis.  When I purchased it, it was a multilane chassis served by a
+RocketRaid SAS PCI Express RAID adapter.  It had troubles from day 1, and
+they grew exponentially as more drives were added to the array.  Finally,
+when the array needed to grow beyond 8 drives, it required the addition of
+an additional adapter.  I was never able to get two adapters to work in the
+system, no matter what.  At that point, I switched to the SI adapter and
+converted the chassis to port multipliers.  It would fail up to 4 drives a
+day, completely trashing the RAID6 array numerous times.  Replacing the
+chassis caused the reported errors to drop to virtually zero, and the system
+has not failed a drive since, or even had to restart one, that I have seen.
+
+> were bad after getting a successful read, the read came back quickly
+> and the chassis decided it was bad and marked it as such, the *DRIVE*
+> has to think the sector is bad to get the delay, and in the array
+> chassis case the drive knew the sector was just find and the array
+> chassis misinterpreted what the drive was telling it and decided it
+> was bad.
+
+Then why did SMART's reading of the sectors marked as errored on the drives
+correspond closely to the reports in the kernel logs?
+
+In any case, no offense, but this isn't really helping.  I need methods of
+determining what is wrong, not hypotheses about what could be wrong,
+especially when those hypotheses appear to be unsupported by the facts.  If
+a drive in the array is bad, I need to know which one, and how to find it.
+With ten drives, and the fact it takes over three days to rebuild the array,
+I can't afford to just go around swapping drives.
 
