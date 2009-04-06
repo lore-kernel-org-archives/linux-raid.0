@@ -1,60 +1,82 @@
-From: jim owens <jowens@hp.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
 Subject: Re: RAID halting
-Date: Mon, 06 Apr 2009 16:35:08 -0400
-Message-ID: <49DA677C.2080009@hp.com>
-References: <20090405235540.KKYO1944.cdptpa-omta02.mail.rr.com@Leslie>
+Date: Mon, 6 Apr 2009 18:16:50 -0400
+Message-ID: <87f94c370904061516t51b74f26g9d2b02c09f27283f@mail.gmail.com>
+References: <87f94c370904051300x531acb1fqb55319536333c01f@mail.gmail.com>
+	 <20090405220311.YMPW19140.cdptpa-omta03.mail.rr.com@Leslie>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090405235540.KKYO1944.cdptpa-omta02.mail.rr.com@Leslie>
+In-Reply-To: <20090405220311.YMPW19140.cdptpa-omta03.mail.rr.com@Leslie>
 Sender: linux-raid-owner@vger.kernel.org
 To: lrhorer@satx.rr.com
-Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Leslie Rhorer wrote:
+>> Lot of reported problems turn out to be power supplies not designed =
+to
+>> carry a Sata load. =A0Apparently sata drives are very demanding and =
+many
+>> "good" power supplies don't cut the mustard.
+>
+> Well, the server itself only has a single PATA drive as its boot driv=
+e, and
+> the only peripheral card is the SATA controller. =A0It's a new chassi=
+s (6
+> months) with a 550 Watt supply, so it's unlikely to be the culprit, e=
+ven
+> though the CPU is 125 Watts. =A0The RAID chassis is a 12 slot system =
+with a
+> 400 Watt supply and 11 drives. =A0I suppose I could try changing the =
+RAID
+> supply to a 600 or 700 watt model, but really 400W should be enough f=
+or 11
+> drives and 3 port multipliers. =A0According to the spec sheets, the m=
+ost power
+> hungry drives in the mix (Hitachi E7K1000) require an absolute maximu=
+m of 26
+> watts. =A0If all the drives were the same, that would be 286 watts.
+> Especially given the Western Digital drives and the one Seagate (not =
+part of
+> the array) drives are specified to have somewhat lower power consumpt=
+ion,
+> 400W should be fine.
 
-> could tell without losing any additional files.  I'm not saying ext3 cause
-> any of the problems, but it certainly allowed itself to be corrupted by
-> hardware issues.
+It may or may not be as simple as you describe.
 
-Some observations from a filesystem guy lurking on this list...
+A lot of modern PSUs have multiple rails.  Each rail is independent
+and provides some number of watts.
 
-You won't find a filesystem that can't be corrupted by bad hardware.
-Most devices lie these days and say the data is recorded when it
-is not.  I have had drive firmware remap a bad sector but forget to
-write the data to the spare sector. And the list goes on and on.
+So if your CPU / graphic rail(s) are getting 300 watts out of your
+550, then that only leave 250.  And that can be split among 2 or 3
+rails as well.
 
-Most filesystems update some same set of common blocks to do a
-create.  This is particularly true of journal filesystems like
-reiserFS.  If the journal write stalls, everything else can hang
-on a journaling fs.  And I've had drives that did their bad sector
-remap by first running through multiple algorithms trying the
-original sector before going to the spare on every access!
+It definitely gets complicated.
 
-While I agree your symptoms sound more like a software problem, my
-experience with enterprise raid arrays and drives says I would not
-rule hardware out as the trigger for the problem.
+Or you may have a simple design where all the 5v lines are tied
+together, same for +12v,-12v.
 
-That 20 minute hang sure sounds like an array ignoring the host.
-With an enterprise array a 20 minute state like that is "normal"
-and really makes us want to beat the storage guys severely.
+OTOH, if your having issues with power you should be seeing sata
+transmission errors reported in the kernel log.  I don't recall your
+saying, but I assume you've been watching that and nothing is showing
+up during these events?
 
-As was pointed out, there is a block layer "plug" when a device
-says "I'm busy".  That requires the FS to issue an "unplug", but
-if a code path doesn't have it... hang until some other path is
-taken that does do the unplug.
+Greg
+--=20
+Greg Freemyer
+Head of EDD Tape Extraction and Processing team
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+=46irst 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.p=
+df
 
-I suggest using blktrace to see what is happening between the
-filesystem, block layer, and device.
-
-As to your choice of ReiserFS.  I don't have personal experience
-with it, but check Wikipedia.  What I do see is no developers
-are actively working on it, which is not a good sign.  On the
-other hand, ext3, JFS, and XFS all have active developers so
-they are kept up to date with changes in the surrounding kernel.
-
-But none of them will protect you from bad hardware.
-
-jim
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
