@@ -1,9 +1,9 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: mdadm udev rules change
-Date: Mon, 6 Apr 2009 10:57:16 -0400
-Message-ID: <3B6F676A-5ADD-4741-8269-D7D655C4E21E@redhat.com>
+Subject: [Patch] mdadm: fix compile warnings on ppc64
+Date: Mon, 6 Apr 2009 10:59:00 -0400
+Message-ID: <1FF86487-F8D6-454E-B9FF-0C187192F2C3@redhat.com>
 Mime-Version: 1.0 (Apple Message framework v930.3)
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-29-877115622"
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-31-877219362"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -12,26 +12,61 @@ Cc: Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
 This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---Apple-Mail-29-877115622
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+--Apple-Mail-31-877219362
+Content-Type: multipart/mixed; boundary=Apple-Mail-30-877219327
+
+
+--Apple-Mail-30-877219327
+Content-Type: text/plain;
+	charset=US-ASCII;
+	format=flowed;
+	delsp=yes
 Content-Transfer-Encoding: 7bit
 
-I'm not attaching a patch for this because it's so simple.  Long story  
-short, watching both add and change events in udev rules is bad for md  
-devices.  Specifically, the kernel will generate a change event on  
-things like array stop, and on things like fdisk close.  In the case  
-of array stop, it can result in the array being assembled again  
-immediately.  In the case of fdisk close, the situation is worse.   
-Let's say you stop all the md devices on some block device in order to  
-repartition.  You run fdisk, change the partition table, then issue a  
-write of the table.  The write of the table triggers the change event  
-*before* the kernel updates the partition table in memory for the  
-block device, causing udev to rerun the incremental rules on the old  
-partition table and restart all the arrays you just stopped with the  
-old partition table layout, at which point the kernel is unable to  
-reread the partition table.  So, once you've enable incremental  
-assembly, it becomes apparent that what we really want is to only  
-start devices on add, not on add|change.
+Simple patch to silence some compile warnings that only show up on  
+64bit arches.
+
+
+--Apple-Mail-30-877219327
+Content-Disposition: attachment;
+	filename=mdadm-3.0-cast.patch
+Content-Type: application/octet-stream;
+	x-unix-mode=0664;
+	name="mdadm-3.0-cast.patch"
+Content-Transfer-Encoding: 7bit
+
+--- mdadm-3.0-devel3/super-ddf.c.orig	2009-03-10 01:39:41.000000000 -0400
++++ mdadm-3.0-devel3/super-ddf.c	2009-03-17 15:22:41.000000000 -0400
+@@ -1062,9 +1062,9 @@
+ 			       map_num(ddf_sec_level, vc->srl) ?: "-unknown-");
+ 		}
+ 		printf("  Device Size[%d] : %llu\n", n,
+-		       __be64_to_cpu(vc->blocks)/2);
++		       (unsigned long long)__be64_to_cpu(vc->blocks)/2);
+ 		printf("   Array Size[%d] : %llu\n", n,
+-		       __be64_to_cpu(vc->array_blocks)/2);
++		       (unsigned long long)__be64_to_cpu(vc->array_blocks)/2);
+ 	}
+ }
+ 
+@@ -1111,7 +1111,8 @@
+ 		//printf("\n");
+ 		printf("       %3d    %08x  ", i,
+ 		       __be32_to_cpu(pd->refnum));
+-		printf("%lluK ",  __be64_to_cpu(pd->config_size)>>1);
++		printf("%lluK ", 
++		       (unsigned long long)__be64_to_cpu(pd->config_size)>>1);
+ 		for (dl = sb->dlist; dl ; dl = dl->next) {
+ 			if (dl->disk.refnum == pd->refnum) {
+ 				char *dv = map_dev(dl->major, dl->minor, 0);
+
+--Apple-Mail-30-877219327
+Content-Type: text/plain;
+	charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7bit
+
+
 
 --
 
@@ -47,7 +82,9 @@ http://people.redhat.com/dledford/Infiniband
 
 
 
---Apple-Mail-29-877115622
+--Apple-Mail-30-877219327--
+
+--Apple-Mail-31-877219362
 content-type: application/pgp-signature; x-mac-type=70674453;
 	name=PGP.sig
 content-description: This is a digitally signed message part
@@ -57,9 +94,9 @@ content-transfer-encoding: 7bit
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG/MacGPG2 v2.0.11 (Darwin)
 
-iEYEARECAAYFAknaGE0ACgkQQ9aEs6Ims9ipBACgjeVXoq5XZjkGHIQsmkKF800c
-nUkAoOu90KopBXSX8g2ioLugauFcL7te
-=jdy8
+iEYEARECAAYFAknaGLQACgkQQ9aEs6Ims9iDYgCfZ3m783BocvQ6zgCKZvPq+0dF
+OYQAoM43DKNl+u3SySfDa5q2HW/IWNGg
+=h+D7
 -----END PGP SIGNATURE-----
 
---Apple-Mail-29-877115622--
+--Apple-Mail-31-877219362--
