@@ -1,9 +1,9 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: [Patch] mdadm: move mdadm.map file into /dev/md
-Date: Mon, 6 Apr 2009 10:52:10 -0400
-Message-ID: <E2135ED2-AC92-48FE-843E-9E8C83B12729@redhat.com>
+Subject: mdadm udev rules change
+Date: Mon, 6 Apr 2009 10:57:16 -0400
+Message-ID: <3B6F676A-5ADD-4741-8269-D7D655C4E21E@redhat.com>
 Mime-Version: 1.0 (Apple Message framework v930.3)
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-28-876808828"
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-29-877115622"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
@@ -12,171 +12,26 @@ Cc: Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
 This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---Apple-Mail-28-876808828
-Content-Type: multipart/mixed; boundary=Apple-Mail-27-876808785
-
-
---Apple-Mail-27-876808785
-Content-Type: text/plain;
-	charset=US-ASCII;
-	format=flowed;
-	delsp=yes
+--Apple-Mail-29-877115622
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 
-Originally, mdadm used /var/run/mdadm/mdadm.map file to store the  
-temporary mappings of incrementally added devices to device names.   
-Unfortunately, this breaks incremental assembly if used early in the  
-booting process.  Specifically, root may still be read only.  Since  
-incremental assembly is largely a udev specific feature, and udev  
-needs a writable /dev tmpfs mount even when root is still read only,  
-it's safer to put our mdadm.map file in /dev/md so that we can write  
-to the map file no matter how early in the boot process we are  
-attempting to use incremental assembly.
-
-
---Apple-Mail-27-876808785
-Content-Disposition: attachment;
-	filename=mdadm-3.0-mapfile.patch
-Content-Type: application/octet-stream;
-	x-unix-mode=0664;
-	name="mdadm-3.0-mapfile.patch"
-Content-Transfer-Encoding: 7bit
-
---- mdadm-3.0-devel3/Incremental.c.dev	2009-03-20 13:19:35.000000000 -0400
-+++ mdadm-3.0-devel3/Incremental.c	2009-03-20 13:20:01.000000000 -0400
-@@ -52,7 +52,7 @@ int Incremental(char *devname, int verbo
- 	 *    a 'foreign' array.
- 	 * 4/ Determine device number.
- 	 * - If in mdadm.conf with std name, use that
--	 * - UUID in /var/run/mdadm.map  use that
-+	 * - UUID in /dev/md/mdadm.map  use that
- 	 * - If name is suggestive, use that. unless in use with different uuid.
- 	 * - Choose a free, high number.
- 	 * - Use a partitioned device unless strong suggestion not to.
-@@ -67,7 +67,7 @@ int Incremental(char *devname, int verbo
- 	 * - check one drive in array to make sure metadata is a reasonably
- 	 *       close match.  Reject if not (e.g. different type)
- 	 * - add the device
--	 * 6/ Make sure /var/run/mdadm.map contains this array.
-+	 * 6/ Make sure /dev/md/mdadm.map contains this array.
- 	 * 7/ Is there enough devices to possibly start the array?
- 	 *     For a container, this means running Incremental_container.
- 	 * 7a/ if not, finish with success.
-@@ -315,7 +315,7 @@ int Incremental(char *devname, int verbo
- 		}
- 		info.array.working_disks = 1;
- 		sysfs_free(sra);
--		/* 6/ Make sure /var/run/mdadm.map contains this array. */
-+		/* 6/ Make sure /dev/md/mdadm.map contains this array. */
- 		map_update(&map, fd2devnum(mdfd),
- 			   info.text_version,
- 			   info.uuid, chosen_name);
---- mdadm-3.0-devel3/mapfile.c.dev	2009-03-20 13:16:27.000000000 -0400
-+++ mdadm-3.0-devel3/mapfile.c	2009-03-20 13:18:37.000000000 -0400
-@@ -1,5 +1,5 @@
- /*
-- * mapfile - manage /var/run/mdadm.map. Part of:
-+ * mapfile - manage /dev/md/mdadm.map. Part of:
-  * mdadm - manage Linux "md" devices aka RAID arrays.
-  *
-  * Copyright (C) 2006 Neil Brown <neilb@suse.de>
-@@ -28,7 +28,7 @@
-  *           Australia
-  */
- 
--/* /var/run/mdadm.map is used to track arrays being created in --incremental
-+/* /dev/md/mdadm.map is used to track arrays being created in --incremental
-  * more.  It particularly allows lookup from UUID to array device, but
-  * also allows the array device name to be easily found.
-  *
-@@ -50,9 +50,9 @@ int map_write(struct map_ent *mel)
- 	int err;
- 	int subdir = 1;
- 
--	f = fopen("/var/run/mdadm/map.new", "w");
-+	f = fopen("/dev/md/mdadm/map.new", "w");
- 	if (!f) {
--		f = fopen("/var/run/mdadm.map.new", "w");
-+		f = fopen("/dev/md/mdadm.map.new", "w");
- 		subdir = 0;
- 	}
- 	if (!f)
-@@ -74,17 +74,17 @@ int map_write(struct map_ent *mel)
- 	fclose(f);
- 	if (err) {
- 		if (subdir)
--			unlink("/var/run/mdadm/map.new");
-+			unlink("/dev/md/mdadm/map.new");
- 		else
--			unlink("/var/run/mdadm.map.new");
-+			unlink("/dev/md/mdadm.map.new");
- 		return 0;
- 	}
- 	if (subdir)
--		return rename("/var/run/mdadm/map.new",
--			      "/var/run/mdadm/map") == 0;
-+		return rename("/dev/md/mdadm/map.new",
-+			      "/dev/md/mdadm/map") == 0;
- 	else
--		return rename("/var/run/mdadm.map.new",
--			      "/var/run/mdadm.map") == 0;
-+		return rename("/dev/md/mdadm.map.new",
-+			      "/dev/md/mdadm.map") == 0;
- }
- 
- 
-@@ -93,9 +93,9 @@ static int lsubdir = 0;
- int map_lock(struct map_ent **melp)
- {
- 	if (lfd < 0) {
--		lfd = open("/var/run/mdadm/map.lock", O_CREAT|O_RDWR, 0600);
-+		lfd = open("/dev/md/mdadm/map.lock", O_CREAT|O_RDWR, 0600);
- 		if (lfd < 0) {
--			lfd = open("/var/run/mdadm.map.lock", O_CREAT|O_RDWR, 0600);
-+			lfd = open("/dev/md/mdadm.map.lock", O_CREAT|O_RDWR, 0600);
- 			lsubdir = 0;
- 		} else
- 			lsubdir = 1;
-@@ -118,9 +118,9 @@ void map_unlock(struct map_ent **melp)
- 	if (lfd >= 0)
- 		close(lfd);
- 	if (lsubdir)
--		unlink("/var/run/mdadm/map.lock");
-+		unlink("/dev/md/mdadm/map.lock");
- 	else
--		unlink("/var/run/mdadm.map.lock");
-+		unlink("/dev/md/mdadm.map.lock");
- 	lfd = -1;
- }
- 
-@@ -149,15 +149,15 @@ void map_read(struct map_ent **melp)
- 
- 	*melp = NULL;
- 
--	f = fopen("/var/run/mdadm/map", "r");
-+	f = fopen("/dev/md/mdadm/map", "r");
- 	if (!f)
--		f = fopen("/var/run/mdadm.map", "r");
-+		f = fopen("/dev/md/mdadm.map", "r");
- 	if (!f) {
- 		RebuildMap();
--		f = fopen("/var/run/mdadm/map", "r");
-+		f = fopen("/dev/md/mdadm/map", "r");
- 	}
- 	if (!f)
--		f = fopen("/var/run/mdadm.map", "r");
-+		f = fopen("/dev/md/mdadm.map", "r");
- 	if (!f)
- 		return;
- 
-
---Apple-Mail-27-876808785
-Content-Type: text/plain;
-	charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7bit
-
-
+I'm not attaching a patch for this because it's so simple.  Long story  
+short, watching both add and change events in udev rules is bad for md  
+devices.  Specifically, the kernel will generate a change event on  
+things like array stop, and on things like fdisk close.  In the case  
+of array stop, it can result in the array being assembled again  
+immediately.  In the case of fdisk close, the situation is worse.   
+Let's say you stop all the md devices on some block device in order to  
+repartition.  You run fdisk, change the partition table, then issue a  
+write of the table.  The write of the table triggers the change event  
+*before* the kernel updates the partition table in memory for the  
+block device, causing udev to rerun the incremental rules on the old  
+partition table and restart all the arrays you just stopped with the  
+old partition table layout, at which point the kernel is unable to  
+reread the partition table.  So, once you've enable incremental  
+assembly, it becomes apparent that what we really want is to only  
+start devices on add, not on add|change.
 
 --
 
@@ -192,9 +47,7 @@ http://people.redhat.com/dledford/Infiniband
 
 
 
---Apple-Mail-27-876808785--
-
---Apple-Mail-28-876808828
+--Apple-Mail-29-877115622
 content-type: application/pgp-signature; x-mac-type=70674453;
 	name=PGP.sig
 content-description: This is a digitally signed message part
@@ -204,9 +57,9 @@ content-transfer-encoding: 7bit
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG/MacGPG2 v2.0.11 (Darwin)
 
-iEYEARECAAYFAknaFxoACgkQQ9aEs6Ims9iAkACfTMa3f0iz2hzKOX+NaU431xqj
-/WkAoOLPPIRUmvR0l1Ti+WHC1mndTWVS
-=B4k3
+iEYEARECAAYFAknaGE0ACgkQQ9aEs6Ims9ipBACgjeVXoq5XZjkGHIQsmkKF800c
+nUkAoOu90KopBXSX8g2ioLugauFcL7te
+=jdy8
 -----END PGP SIGNATURE-----
 
---Apple-Mail-28-876808828--
+--Apple-Mail-29-877115622--
