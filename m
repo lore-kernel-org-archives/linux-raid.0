@@ -1,87 +1,75 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: RAID halting
-Date: Sun, 5 Apr 2009 18:55:39 -0500
-Message-ID: <20090405235540.KKYO1944.cdptpa-omta02.mail.rr.com@Leslie>
-References: <18905.6980.631038.776261@tree.ty.sabi.co.uk>
-Reply-To: <lrhorer@satx.rr.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: RAID halting
+Date: Sun, 5 Apr 2009 20:31:32 -0400
+Message-ID: <783F1304-DEE5-4495-A81A-B98A5EDCCABF@redhat.com>
+References: <20090405203331.FWRT1944.cdptpa-omta02.mail.rr.com@Leslie>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-14-825171704"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18905.6980.631038.776261@tree.ty.sabi.co.uk>
+In-Reply-To: <20090405203331.FWRT1944.cdptpa-omta02.mail.rr.com@Leslie>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: lrhorer@satx.rr.com
+Cc: 'David Lethe' <david@santools.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> [ ... ]
-> 
-> > Several, actually.  Since the RAID array kept crashing,
-> 
-> Someone who talks or thinks in vague terms like "RAID array kept
-> crashing" is already on a bad path.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--Apple-Mail-14-825171704
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 
-Into how much detail do you wish me to go?  I could write a small volume on
-the various symptoms.  The array was taken offline numerous times due to
-drives being disconnected or convicted as bad.  Usually I could recover the
-array, but 3 times it proved to be completely unrecoverable.  After
-replacing a convicted drive and placing it in another machine, destructive
-diagnostics showed no problems.  This happened many times.
+On Apr 5, 2009, at 4:33 PM, Leslie Rhorer wrote:
+> Oh, brother.  Since I personally own outright every last nut, bolt,  
+> and
+> transistor in these systems, and since the data belongs entirely and
+> exclusively to me (with the exception of some copyright  
+> restrictions), for
+> use by me, exactly who is going to fire me or prosecute me?   
+> Enough.  Please
+> cease the ad hominem attacks, and point me towards the utilities  
+> which will
+> allow me to further diagnose the issue.
 
-> > I had to re-create it numerous times. I tried ext3 more than
-> > once, but the journal kept getting corrupted, and fixing it
-> > lost several files.
-> 
-> Well, 'ext3' is *exceptionally* well tested, and this points to
-> some problems with the storage system
+Well said.  I found it particularly interesting to hear David talk of  
+statistical probabilities as he studiously ignored the astronomical  
+statistical improbability that sector remapping would strike only on  
+file creation, and would simultaneously block a drive up for the  
+purpose of file creation but not block it up for the purpose of raid  
+sector checking.  David definitely went on a "short bus" rant, I'd  
+just ignore the rant part and see if he manages to provide any useful  
+data about how to check things as you requested.  Personally, I've  
+only ever used badblocks for low level disk checking, but back when I  
+used it for diagnosis drives were different than they are today in  
+terms of firmware and you could actually trust that badblocks was  
+doing something useful.
 
-It *WAS* the storage system, almost surely.  The first time ext3 was crashed
-was when I performed an on-line RAID expansion while using a hardware RAID
-controller.  Everything seemed to be fine after adding a drive, but the next
-morning I could not write to the array.  I re-mounted the drive, and
-everything seemed fine.  Fifteen minutes later, I could not write to the
-array again.  After nosing around, I found the array was constantly trying
-to seek beyond the end of the physical drive system when writing.  When I
-tried to run fsck, it wouldn't let me because the journal inode was invalid
-(I don't recall the exact error).  I converted to ext2, and once again ran
-fsck.  It deleted and fixed a very large number of errors, and when the dust
-settled, a number of newer files were lost.  During one of the numerous
-array crashes, the journal got munched again.  This time, however, fsck was
-able to recover all the errors without converting to ext2 and as far as I
-could tell without losing any additional files.  I'm not saying ext3 cause
-any of the problems, but it certainly allowed itself to be corrupted by
-hardware issues.
+--
 
-> driver (e.g. use of some blob/binary proprietary driver in the
-> kernel). In theory everything should work with everything else
-> and everything should be bug free in every combination... In
-> practice wise people try not to beg for trouble.
-> 
-> > Once I lost several important files during a RAID expansion.
-> > In some cases I converted to ext2, and others I started out
-> > with ext2, but last I checked, one cannot grow an ext2 file
-> > system on the fly.
-> 
-> Modifying filesystem structure while the filesystem is operating
-> is a very good way to beg for trouble. Especially if under load.
+Doug Ledford <dledford@redhat.com>
 
-I am aware of the risk, but ext3 claims to be capable of the migration
-(indeed I just did one on an LVM system employing ext3), and the RAID
-controller has a very prominent utility for OLRE.  Taking the array offline
-for 3 days every time I need to do an expansion is not a very thrilling
-prospect.  If it were 3 or 4 hours, or even overnight...
+GPG KeyID: CFBFF194
+http://people.redhat.com/dledford
 
-> That something is *possible* does not mean that it is wise to
-> rely on it.
+InfiniBand Specific RPMS
+http://people.redhat.com/dledford/Infiniband
 
-I am aware of this, too.  I did not consider the option lightly.  At the
-time, I did not have the money to put together a backup server, and having
-the array offline for three days was not an attractive option.
 
-> Good luck with that. Perhaps you need to think again about your
-> requirements, and/or perhaps to get a much larger budget to do
-> some research and development into "dynamic storage pools".
 
-I would be happy to, as soon as someone offers me a large pay increase.  Are
-you offering?
 
+
+--Apple-Mail-14-825171704
+content-type: application/pgp-signature; x-mac-type=70674453;
+	name=PGP.sig
+content-description: This is a digitally signed message part
+content-disposition: inline; filename=PGP.sig
+content-transfer-encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2.0.11 (Darwin)
+
+iEYEARECAAYFAknZTWwACgkQQ9aEs6Ims9hcHQCg9Q+bDFOZDl9bYL9wIx+m8Asd
+750An3v5xfaX1l78NtEivHou6pLlGhzw
+=XuFk
+-----END PGP SIGNATURE-----
+
+--Apple-Mail-14-825171704--
