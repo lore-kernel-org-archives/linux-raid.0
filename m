@@ -1,75 +1,60 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: RAID halting
-Date: Sun, 5 Apr 2009 20:31:32 -0400
-Message-ID: <783F1304-DEE5-4495-A81A-B98A5EDCCABF@redhat.com>
-References: <20090405203331.FWRT1944.cdptpa-omta02.mail.rr.com@Leslie>
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-14-825171704"
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: RAID halting
+Date: Sun, 5 Apr 2009 20:53:56 -0500
+Message-ID: <20090406015357.NYON1944.cdptpa-omta02.mail.rr.com@Leslie>
+References: <783F1304-DEE5-4495-A81A-B98A5EDCCABF@redhat.com>
+Reply-To: <lrhorer@satx.rr.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090405203331.FWRT1944.cdptpa-omta02.mail.rr.com@Leslie>
+In-Reply-To: <783F1304-DEE5-4495-A81A-B98A5EDCCABF@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: lrhorer@satx.rr.com
-Cc: 'David Lethe' <david@santools.com>, linux-raid@vger.kernel.org
+To: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---Apple-Mail-14-825171704
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
+> Well said.  I found it particularly interesting to hear David talk of
+> statistical probabilities as he studiously ignored the astronomical
+> statistical improbability that sector remapping would strike only on
+> file creation, and would simultaneously block a drive up for the
+> purpose of file creation but not block it up for the purpose of raid
+> sector checking.
 
-On Apr 5, 2009, at 4:33 PM, Leslie Rhorer wrote:
-> Oh, brother.  Since I personally own outright every last nut, bolt,  
-> and
-> transistor in these systems, and since the data belongs entirely and
-> exclusively to me (with the exception of some copyright  
-> restrictions), for
-> use by me, exactly who is going to fire me or prosecute me?   
-> Enough.  Please
-> cease the ad hominem attacks, and point me towards the utilities  
-> which will
-> allow me to further diagnose the issue.
+I know.  I was apoplectic.  I truly didn't know how best to respond to such
+a glaring incongruity.  It's likely the average sector in the free space
+region has been read 50 times or more without a single instance of the
+failure, yet under load every single creation causes a halt.  'Billions of
+sectors read over, and over, and over again, yet perform a file create to
+one or two from the very same sector space, and kerplewey!  It boggled my
+mind.
 
-Well said.  I found it particularly interesting to hear David talk of  
-statistical probabilities as he studiously ignored the astronomical  
-statistical improbability that sector remapping would strike only on  
-file creation, and would simultaneously block a drive up for the  
-purpose of file creation but not block it up for the purpose of raid  
-sector checking.  David definitely went on a "short bus" rant, I'd  
-just ignore the rant part and see if he manages to provide any useful  
-data about how to check things as you requested.  Personally, I've  
-only ever used badblocks for low level disk checking, but back when I  
-used it for diagnosis drives were different than they are today in  
-terms of firmware and you could actually trust that badblocks was  
-doing something useful.
+> David definitely went on a "short bus" rant, I'd
+> just ignore the rant
 
---
+I was trying to, mostly.  I've never heard the term, "short bus", before.  I
+presume it refers to what can happen on a computer bus with an electrical
+short?  What really gets me is rather than going on and on about how
+ignorant I was, all he had to do in his very first message was say, "Try the
+badblocks command."
 
-Doug Ledford <dledford@redhat.com>
+> Personally, I've
+> only ever used badblocks for low level disk checking, but back when I
+> used it for diagnosis drives were different than they are today in
+> terms of firmware and you could actually trust that badblocks was
+> doing something useful.
 
-GPG KeyID: CFBFF194
-http://people.redhat.com/dledford
+Am I mistaken in believing, per the discussion in this list, it should
+trigger an event, provided the problem really is bad blocks on one or more
+drives?  If so, then I need someone to explain a bit more what badblocks
+does, and perhaps point me toward some low level test which will potentially
+either rule out or convict the drive layer of being the source of issues.
+I've never used it before, quite obviously.  I read the MAN page, of course,
+but as is typical with MAN pages, it doesn't go into any detail under the
+hood, as it were.
 
-InfiniBand Specific RPMS
-http://people.redhat.com/dledford/Infiniband
+Oh, just BTW, I have the system set to notify me via e-mail of any events
+passing through the Monitor daemon of mdadm.  Will this notify me if the
+RAID device encounters any errors requiring recovery at the RAID level?  If
+so, I have never received any such notifications since implementing mdadm.
 
-
-
-
-
---Apple-Mail-14-825171704
-content-type: application/pgp-signature; x-mac-type=70674453;
-	name=PGP.sig
-content-description: This is a digitally signed message part
-content-disposition: inline; filename=PGP.sig
-content-transfer-encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG/MacGPG2 v2.0.11 (Darwin)
-
-iEYEARECAAYFAknZTWwACgkQQ9aEs6Ims9hcHQCg9Q+bDFOZDl9bYL9wIx+m8Asd
-750An3v5xfaX1l78NtEivHou6pLlGhzw
-=XuFk
------END PGP SIGNATURE-----
-
---Apple-Mail-14-825171704--
