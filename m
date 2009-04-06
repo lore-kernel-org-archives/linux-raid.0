@@ -1,40 +1,32 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: [Patch] mdadm: move mdadm.map file into /dev/md
-Date: Mon, 6 Apr 2009 21:36:04 +0200
-Message-ID: <20090406193604.GB18829@maude.comedia.it>
-References: <E2135ED2-AC92-48FE-843E-9E8C83B12729@redhat.com>
+From: LCID Fire <lcid-fire@gmx.net>
+Subject: Recreate raid 10 array
+Date: Mon, 06 Apr 2009 21:49:58 +0200
+Message-ID: <49DA5CE6.7030902@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <E2135ED2-AC92-48FE-843E-9E8C83B12729@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: LinuxRaid RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Apr 06, 2009 at 10:52:10AM -0400, Doug Ledford wrote:
-> Originally, mdadm used /var/run/mdadm/mdadm.map file to store the temporary 
-> mappings of incrementally added devices to device names.  Unfortunately, 
-> this breaks incremental assembly if used early in the booting process.  
-> Specifically, root may still be read only.  Since incremental assembly is 
-> largely a udev specific feature, and udev needs a writable /dev tmpfs mount 
-> even when root is still read only, it's safer to put our mdadm.map file in 
-> /dev/md so that we can write to the map file no matter how early in the 
-> boot process we are attempting to use incremental assembly.
->
+On my raid10 array (4 drives) I've had 2 drives (the same model) which 
+got disconnected by the kernel (almost at the same time). It seems like 
+both were one raid1 part so one half of the raid0 is missing.
+Afterwards I tried to readd the drives again (my bad) so now I'm stuck 
+with 1 half of the raid0 part being present and valid and the other (2 
+drives) marked as spare.
+The thing I'd like to do is:
+- Take 2 new drives (different manufacturers)
+- Clone one of the valid and one of the spare drives to the new drives
+- Try to reassemble the array.
+Problem is - is this even possible?
+How do I tell mdadm to not care about the spare state?
+Does the kernel write bogus data to the still valid drives if the other 
+2 fail?
 
+Would be great if someone could enlighten me ;)
 
-since we are at it, what about using a #define for the file path?
+P.S.: Does someone know how to easily report the different sata errors 
+which the kernel encounters?
 
-L.
-
-
-
-
--- 
-Luca Berra -- bluca@comedia.it
-         Communication Media & Services S.r.l.
-  /"\
-  \ /     ASCII RIBBON CAMPAIGN
-   X        AGAINST HTML MAIL
-  / \
