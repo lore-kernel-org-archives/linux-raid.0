@@ -1,60 +1,90 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: RAID halting
-Date: Sun, 5 Apr 2009 20:53:56 -0500
-Message-ID: <20090406015357.NYON1944.cdptpa-omta02.mail.rr.com@Leslie>
-References: <783F1304-DEE5-4495-A81A-B98A5EDCCABF@redhat.com>
-Reply-To: <lrhorer@satx.rr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Kernel bug?
+Date: Mon, 6 Apr 2009 14:43:19 +1000
+Message-ID: <18905.34919.541782.615845@notabene.brown>
+References: <49D777BC.4090009@tozzi.eu>
+	<b4d41c1ac8bd783b1a62b73b4efc4200.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <783F1304-DEE5-4495-A81A-B98A5EDCCABF@redhat.com>
+In-Reply-To: message from NeilBrown on Sunday April 5
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: Gabriele Tozzi <gabriele@tozzi.eu>
+Cc: linux-raid@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 List-Id: linux-raid.ids
 
-> Well said.  I found it particularly interesting to hear David talk of
-> statistical probabilities as he studiously ignored the astronomical
-> statistical improbability that sector remapping would strike only on
-> file creation, and would simultaneously block a drive up for the
-> purpose of file creation but not block it up for the purpose of raid
-> sector checking.
+On Sunday April 5, neilb@suse.de wrote:
+> On Sun, April 5, 2009 1:07 am, Gabriele Tozzi wrote:
+> > Hello,
+> >
+> > I guess I've found a kernel bug: I get an oops when rebuilding a raid1
+> > array (/dev/md5) on an SMP system. The md5_resync process then hangs.
+> 
+> Yes, it appears you have found a bug.  Thanks for reporting it.
+> 
+> It looks like an alloc_page failed in r1buf_pool_alloc and when trying
+> to clean up we tried to free pages that had never been allocated.
+> 
+> The code in raid1.c assumes that newly allocated 'bios' have their
+> bvec initialised to NULLs, but that apparently changed recently
+> with commit d3f761104b097738932afcc310fbbbbfb007ef92
+> 
+> I'll post a patch after the weekend.
 
-I know.  I was apoplectic.  I truly didn't know how best to respond to such
-a glaring incongruity.  It's likely the average sector in the free space
-region has been read 50 times or more without a single instance of the
-failure, yet under load every single creation causes a halt.  'Billions of
-sectors read over, and over, and over again, yet perform a file create to
-one or two from the very same sector space, and kerplewey!  It boggled my
-mind.
+And here it is.   Applying this patch will mean that you are resync a
+raid1 array safely.   It will send it upstream shortly and hopefully
+it will be in 2.6.29.1
 
-> David definitely went on a "short bus" rant, I'd
-> just ignore the rant
+Thanks again,
+NeilBrown
 
-I was trying to, mostly.  I've never heard the term, "short bus", before.  I
-presume it refers to what can happen on a computer bus with an electrical
-short?  What really gets me is rather than going on and on about how
-ignorant I was, all he had to do in his very first message was say, "Try the
-badblocks command."
+From 303a0e11d0ee136ad8f53f747f3c377daece763b Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.de>
+Date: Mon, 6 Apr 2009 14:40:38 +1000
+Subject: [PATCH] md/raid1 - don't assume newly allocated bvecs are initialised.
 
-> Personally, I've
-> only ever used badblocks for low level disk checking, but back when I
-> used it for diagnosis drives were different than they are today in
-> terms of firmware and you could actually trust that badblocks was
-> doing something useful.
+Since commit d3f761104b097738932afcc310fbbbbfb007ef92
+newly allocated bvecs aren't initialised to NULL, so we have
+to be more careful about freeing a bio which only managed
+to get a few pages allocated to it.  Otherwise the resync
+process crashes.
 
-Am I mistaken in believing, per the discussion in this list, it should
-trigger an event, provided the problem really is bad blocks on one or more
-drives?  If so, then I need someone to explain a bit more what badblocks
-does, and perhaps point me toward some low level test which will potentially
-either rule out or convict the drive layer of being the source of issues.
-I've never used it before, quite obviously.  I read the MAN page, of course,
-but as is typical with MAN pages, it doesn't go into any detail under the
-hood, as it were.
+This patch is appropriate for 2.6.29-stable.
 
-Oh, just BTW, I have the system set to notify me via e-mail of any events
-passing through the Monitor daemon of mdadm.  Will this notify me if the
-RAID device encounters any errors requiring recovery at the RAID level?  If
-so, I have never received any such notifications since implementing mdadm.
+Cc: stable@kernel.org
+Cc: "Jens Axboe" <jens.axboe@oracle.com>
+Reported-by: Gabriele Tozzi <gabriele@tozzi.eu>
+Signed-off-by: NeilBrown <neilb@suse.de>
+---
+ drivers/md/raid1.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index b4f4bad..f2247b0 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -123,6 +123,7 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
+ 				goto out_free_pages;
+ 
+ 			bio->bi_io_vec[i].bv_page = page;
++			bio->bi_vcnt = i+1;
+ 		}
+ 	}
+ 	/* If not user-requests, copy the page pointers to all bios */
+@@ -138,9 +139,9 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
+ 	return r1_bio;
+ 
+ out_free_pages:
+-	for (i=0; i < RESYNC_PAGES ; i++)
+-		for (j=0 ; j < pi->raid_disks; j++)
+-			safe_put_page(r1_bio->bios[j]->bi_io_vec[i].bv_page);
++	for (j=0 ; j < pi->raid_disks; j++)
++		for (i=0; i < r1_bio->bios[j]->bi_vcnt ; i++)
++			put_page(r1_bio->bios[j]->bi_io_vec[i].bv_page);
+ 	j = -1;
+ out_free_bio:
+ 	while ( ++j < pi->raid_disks )
+-- 
+1.6.2.1
 
