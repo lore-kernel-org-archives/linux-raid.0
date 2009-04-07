@@ -1,51 +1,40 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Recreate raid 10 array
-Date: Tue, 07 Apr 2009 08:13:49 +0200
-Message-ID: <87prfpdm8y.fsf@frosties.localdomain>
-References: <49DA5CE6.7030902@gmx.net>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: [Patch] mdadm: move mdadm.map file into /dev/md
+Date: Tue, 7 Apr 2009 12:55:21 +0200
+Message-ID: <20090407105520.GA29222@maude.comedia.it>
+References: <E2135ED2-AC92-48FE-843E-9E8C83B12729@redhat.com> <87tz51dmmu.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49DA5CE6.7030902@gmx.net> (LCID Fire's message of "Mon, 06 Apr
-	2009 21:49:58 +0200")
+Content-Disposition: inline
+In-Reply-To: <87tz51dmmu.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: LCID Fire <lcid-fire@gmx.net>
-Cc: linux-raid@vger.kernel.org
+To: LinuxRaid RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-LCID Fire <lcid-fire@gmx.net> writes:
-
-> On my raid10 array (4 drives) I've had 2 drives (the same model) which
-> got disconnected by the kernel (almost at the same time). It seems
-> like both were one raid1 part so one half of the raid0 is missing.
-> Afterwards I tried to readd the drives again (my bad) so now I'm stuck
-> with 1 half of the raid0 part being present and valid and the other (2
-> drives) marked as spare.
-> The thing I'd like to do is:
-> - Take 2 new drives (different manufacturers)
-> - Clone one of the valid and one of the spare drives to the new drives
-> - Try to reassemble the array.
-> Problem is - is this even possible?
-> How do I tell mdadm to not care about the spare state?
-> Does the kernel write bogus data to the still valid drives if the
-> other 2 fail?
+On Tue, Apr 07, 2009 at 08:05:29AM +0200, Goswin von Brederlow wrote:
+>Doug Ledford <dledford@redhat.com> writes:
 >
-> Would be great if someone could enlighten me ;)
+>> Originally, mdadm used /var/run/mdadm/mdadm.map file to store the
+>> temporary mappings of incrementally added devices to device names.
+>> Unfortunately, this breaks incremental assembly if used early in the
+>> booting process.  Specifically, root may still be read only.  Since
+>> incremental assembly is largely a udev specific feature, and udev
+>> needs a writable /dev tmpfs mount even when root is still read only,
+>> it's safer to put our mdadm.map file in /dev/md so that we can write
+>> to the map file no matter how early in the boot process we are
+>> attempting to use incremental assembly.
 >
-> P.S.: Does someone know how to easily report the different sata errors
-> which the kernel encounters?
+>What about /lib/init/rw?
 
-mdadm --create --assume-clean -l 10 -n 4 /dev/mdX /dev/copied_disk_1 /dev/copied_disk2 missing missing
+What is that?, i never heard of '/lib/init/rw' before
 
-You need to match the create parameters exactly with the ones you
-initially used (near/offset/farcopies? stripe size? ...) and the order
-of devices is relevant so you might have to shuffle the disk
-arguments. So just try different orders till the result can be mounted
-or fscked. With the wrong options the mount/fsck could screw up the
-data but then you copy the disk again for the next try. It should be
-reasonably obvious when mount/fsck goes wrong as it should find tons
-of errors. Mostly I would expect mount/fsck to just fail with the
-wrong mdadm args though.
+L.
 
-MfG
-        Goswin
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
