@@ -1,63 +1,97 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] md: tiny md.h cleanups
-Date: Tue, 7 Apr 2009 18:15:48 +0200
-Message-ID: <20090407161548.GA11724@lst.de>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: RAID halting
+Date: Tue, 7 Apr 2009 12:47:20 -0500
+Message-ID: <20090407174723.LMYU4586.cdptpa-omta02.mail.rr.com@Leslie>
+References: <49DA677C.2080009@hp.com>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <49DA677C.2080009@hp.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
- - update inclusion guard and make sure it covers the whole file
- - remove superflous #ifdef CONFIG_BLOCK
- - make sure all required headers are included so that new users aren't
-   required to include others before
+> > could tell without losing any additional files.  I'm not saying ext3
+> cause
+> > any of the problems, but it certainly allowed itself to be corrupted by
+> > hardware issues.
+> 
+> Some observations from a filesystem guy lurking on this list...
+> 
+> You won't find a filesystem that can't be corrupted by bad hardware.
 
+That's absolutely true, but a RAID array is supposed to be fault tolerant.
+Now, I am well aware of the vast difference between fault tolerant and fault
+proof, and I cannot begin to claim another file system would not have
+suffered problems, but to my admittedly inexperienced (in the realm of ext3
+and other Linux file systems) eye, a journal which thinks the device is
+bigger than it really is after an array expansion causing a loss of data
+seems pretty frail.  It's not like there was an actual array failure or any
+number of bad blocks associated with the event.  It also left a  bit of a
+bad taste in my mouth that fsck could not repair the issue until I converted
+the system to ext2.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Most filesystems update some same set of common blocks to do a
+> create.  This is particularly true of journal filesystems like
+> reiserFS.  If the journal write stalls, everything else can hang
+> on a journaling fs.
 
-Index: linux-2.6/drivers/md/md.h
-===================================================================
---- linux-2.6.orig/drivers/md/md.h	2009-04-06 14:17:05.642571528 +0200
-+++ linux-2.6/drivers/md/md.h	2009-04-07 17:56:33.472570155 +0200
-@@ -12,10 +12,17 @@
-    Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
- */
- 
--#ifndef _MD_K_H
--#define _MD_K_H
-+#ifndef _MD_MD_H
-+#define _MD_MD_H
- 
--#ifdef CONFIG_BLOCK
-+#include <linux/blkdev.h>
-+#include <linux/kobject.h>
-+#include <linux/list.h>
-+#include <linux/mm.h>
-+#include <linux/mutex.h>
-+#include <linux/timer.h>
-+#include <linux/wait.h>
-+#include <linux/workqueue.h>
- 
- #define MaxSector (~(sector_t)0)
- 
-@@ -408,10 +415,6 @@ static inline void safe_put_page(struct 
- 	if (p) put_page(p);
- }
- 
--#endif /* CONFIG_BLOCK */
--#endif
--
--
- extern int register_md_personality(struct mdk_personality *p);
- extern int unregister_md_personality(struct mdk_personality *p);
- extern mdk_thread_t * md_register_thread(void (*run) (mddev_t *mddev),
-@@ -434,3 +437,5 @@ extern void md_new_event(mddev_t *mddev)
- extern int md_allow_write(mddev_t *mddev);
- extern void md_wait_for_blocked_rdev(mdk_rdev_t *rdev, mddev_t *mddev);
- extern void md_set_array_sectors(mddev_t *mddev, sector_t array_sectors);
-+
-+#endif /* _MD_MD_H */
+Yes, I would expect that.  Read or write failures from those common blocks
+- and nothing else - should not ordinarily be related to the volume of data
+being read or written elsewhere on the array, however.  In other words, if
+the common blocks are number 1000 - 2000, then reading and writing to blocks
+10,000 and above should not cause the rate of failure of reads from blocks
+1000 - 2000 to change.  Instead, what we see quite clearly in this case is
+modest to high write and / or read rates in blocks 10,000 and above cause
+file creation events on blocks 1000 - 2000 to fail, while low data rates do
+not.  I also think it is probably significant that the journal is obviously
+written to by both file creations and file writes, yet only creations cause
+the failure.  Now if certain sections of the journal blocks are only for
+file creation, then why do read-only data rates affect the issue at all?
+
+> While I agree your symptoms sound more like a software problem, my
+> experience with enterprise raid arrays and drives says I would not
+> rule hardware out as the trigger for the problem.
+
+Nor have I done so.  At this point, I haven't ruled out anything.  It's
+taking better than a day to scan each drive using badblocks, so it's going
+to be about 2 weeks before I have scanned all 10 drives.  AFAIK, the
+badblocks routine itself has not triggered any read/write halts.
+
+> That 20 minute hang sure sounds like an array ignoring the host.
+> With an enterprise array a 20 minute state like that is "normal"
+> and really makes us want to beat the storage guys severely.
+
+I can't argue against that at this point, for certain.  What puzzles me
+(among other things) is why do 5 of the drives show zero reads while 5 of
+them show very low levels of read activity, and always the same 5 drives?
+The main question, of course, is not so much what is happening, as why, and
+of course how can it be avoided?
+
+Fortunately the multi-minute hangs only occur once a month, when the array
+is resyncing.  Even so, however, the nearly continuous 40 second hangs are
+driving me mad.  I have a large number of videos to edit, and stretching
+what should be a 7 minute manual process into 20 minutes 4 or 5 times a day
+is getting old fast.
+
+> As was pointed out, there is a block layer "plug" when a device
+> says "I'm busy".  That requires the FS to issue an "unplug", but
+> if a code path doesn't have it... hang until some other path is
+> taken that does do the unplug.
+> 
+> I suggest using blktrace to see what is happening between the
+> filesystem, block layer, and device.
+
+Thanks!  I'll take a look after all the drives are scanned.
+
+> But none of them will protect you from bad hardware.
+
+No, of course not, but I believe I am pretty close to having a stable
+hardware set.  Before that gathers any flames, let me hasten to say that in
+no way means I am certain of it, or that I refuse to change out any suspect
+hardware.  Changing out non-suspect hardware, however, is just a means of
+introducing more possible failures into a system.
+
