@@ -1,81 +1,162 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [Patch] mdadm: move mdadm.map file into /dev/md
-Date: Tue, 7 Apr 2009 08:16:37 -0400
-Message-ID: <FF2073B4-6922-4D16-8FA7-90C66071C6F6@redhat.com>
-References: <E2135ED2-AC92-48FE-843E-9E8C83B12729@redhat.com> <87tz51dmmu.fsf@frosties.localdomain>
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-45-953875774"
-Content-Transfer-Encoding: 7bit
+From: =?iso-8859-1?Q?=22J=F6rg_Habenicht=22?= <j.habenicht@gmx.de>
+Subject: how to restore a raid5 with 1 disk destroyed and 1 kicked out?
+Date: Tue, 07 Apr 2009 16:02:25 +0200
+Message-ID: <20090407140225.140400@gmx.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87tz51dmmu.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: LinuxRaid RAID <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---Apple-Mail-45-953875774
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
+Hello list, hello Neil,
 
-On Apr 7, 2009, at 2:05 AM, Goswin von Brederlow wrote:
-> Doug Ledford <dledford@redhat.com> writes:
->
->> Originally, mdadm used /var/run/mdadm/mdadm.map file to store the
->> temporary mappings of incrementally added devices to device names.
->> Unfortunately, this breaks incremental assembly if used early in the
->> booting process.  Specifically, root may still be read only.  Since
->> incremental assembly is largely a udev specific feature, and udev
->> needs a writable /dev tmpfs mount even when root is still read only,
->> it's safer to put our mdadm.map file in /dev/md so that we can write
->> to the map file no matter how early in the boot process we are
->> attempting to use incremental assembly.
->
-> What about /lib/init/rw?
+I hope you may help me with this one:
 
-Never heard of it.  But, if / is read-only, why wouldn't that also be  
-read-only?
+During a RAID5 synchronisation with one faulty disk my server crashed a=
+nd left my RAID in an unsynced state. I'd like to get the content from =
+the array back to freshen my last backup (4 months ago) and then build =
+the array anew.
 
-> You say largely udev specific so there might not be an udev running
-> and no tmpfs on /dev.
+The array consists of 6 disks, right now 1 is dead (hw failure) and one=
+ is "out of sync". I assume the latter is just marked out of sync witho=
+ut being so.(*)
 
 
-Generally speaking, it's only ever going to be used by udev or run  
-manually.  I doubt people will use it in things like rc.sysinit.   
-However, regardless of all that, udev is started before any manual  
-device bringups, so even if someone did decide to use it manually in  
-rc.sysinit when root is still read only, udev will already be up by  
-then.  The only exception to this would be a system that doesn't use  
-udev at all, in which case they get what they get, and /dev/md/ 
-mdadm.map is no better or worse than /lib/init/rw than /var/run/mdadm.
+In http://www.mail-archive.com/linux-raid@vger.kernel.org/msg08909.html=
+ and http://www.mail-archive.com/linux-raid@vger.kernel.org/msg06332.ht=
+ml you suggested to recreate the array with --assume-clean.
+In http://www.mail-archive.com/linux-raid@vger.kernel.org/msg08162.html=
+ you advised not to use --assume-clean for RAID5, it may very well brea=
+k.
+Is it ok to use --assume-clean on a degraded array (5 out of 6, RAID5)?
+
+
+Would it be better to recreate the array without --assume-clean? (E.g. =
+like "mdadm --create /dev/md0 disk1 disk2 disk3 missing disk5 disk6")
+
+Just out of interest: What is the difference between the two commands?
+
+I think /deb/sdb1 is marked "out of sync" without being so. Is "--assum=
+e-clean" used exactly for this case?
+
+
+Thank you in advance for any advice or help
+cu
+J=F6rg
+
+
+
+(*)
+/dev/sdd1 dropped dead
+/dev/sdb1 is marked 'out of sync', but I think the content on the disk =
+is in sync with the array
+
+
+ Now the dirty details:
+
+~ # mdadm -S /dev/md0
+mdadm: stopped /dev/md0
+
+~ # mdadm --assemble --force /dev/md0  --run --verbose  /dev/sdb1 /dev/=
+hda1 /dev/sdc1  /dev/sde1  /dev/sdf1
+mdadm: looking for devices for /dev/md0
+mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 6.
+mdadm: /dev/hda1 is identified as a member of /dev/md0, slot 1.
+mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 2.
+mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 3.
+mdadm: /dev/sdf1 is identified as a member of /dev/md0, slot 5.
+mdadm: no uptodate device for slot 0 of /dev/md0
+mdadm: added /dev/sdc1 to /dev/md0 as 2
+mdadm: added /dev/sde1 to /dev/md0 as 3
+mdadm: no uptodate device for slot 4 of /dev/md0
+mdadm: added /dev/sdf1 to /dev/md0 as 5
+mdadm: added /dev/sdb1 to /dev/md0 as 6
+mdadm: added /dev/hda1 to /dev/md0 as 1
+mdadm: failed to RUN_ARRAY /dev/md0: Input/output error
+mdadm: Not enough devices to start the array.
+
+~ # cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4] [raid1]
+md0 : inactive hda1[1] sdf1[5] sde1[3] sdc1[2]
+      976791680 blocks
+
+~ # mdadm -D /dev/md0
+/dev/md0:
+        Version : 00.90.03
+  Creation Time : Mon Apr  3 12:35:48 2006
+     Raid Level : raid5
+  Used Dev Size : 244195904 (232.88 GiB 250.06 GB)
+   Raid Devices : 6
+  Total Devices : 4
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Tue Apr  7 12:02:58 2009
+          State : active, degraded, Not Started
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+           UUID : b72d31b8:f6bbac3d:c1c586ef:bb458af6
+         Events : 0.3088065
+
+    Number   Major   Minor   RaidDevice State
+       0       0        0        0      removed
+       1       3        1        1      active sync   /dev/hda1
+       2       8       33        2      active sync   /dev/sdc1
+       3       8       65        3      active sync   /dev/sde1
+       4       0        0        4      removed
+       5       8       81        5      active sync   /dev/sdf1
+
+~ # mdadm -IR /dev/sdb1
+mdadm: /dev/sdb1 attached to /dev/md0, not enough to start (4).
+
+~ # cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4] [raid1]
+md0 : inactive sdb1[0] hda1[1] sdf1[5] sde1[3] sdc1[2]
+      1220987584 blocks
+
+~ # mdadm -D /dev/md0
+(.....)
+    Number   Major   Minor   RaidDevice State
+       0       8       17        0      spare rebuilding   /dev/sdb1
+       1       3        1        1      active sync   /dev/hda1
+       2       8       33        2      active sync   /dev/sdc1
+       3       8       65        3      active sync   /dev/sde1
+       4       0        0        4      removed
+       5       8       81        5      active sync   /dev/sdf1
+
+
+
+I already tried
+- "mdadm --assemble /dev/md0 /dev/sdb1 /dev/hda1 /dev/sdc1 /dev/sde1  /=
+dev/sdf1"
+- "mdadm --assemble --force /dev/md0 /dev/sdb1 /dev/hda1 /dev/sdc1  /de=
+v/sde1  /dev/sdf1"
+
+
+
+--=20
+cu,
+Joerg
 
 --
-
-Doug Ledford <dledford@redhat.com>
-
-GPG KeyID: CFBFF194
-http://people.redhat.com/dledford
-
-InfiniBand Specific RPMS
-http://people.redhat.com/dledford/Infiniband
+THE full automatic planets host
+:-)                            http://planets.unix-ag.uni-hannover.de
 
 
 
-
-
---Apple-Mail-45-953875774
-content-type: application/pgp-signature; x-mac-type=70674453;
-	name=PGP.sig
-content-description: This is a digitally signed message part
-content-disposition: inline; filename=PGP.sig
-content-transfer-encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG/MacGPG2 v2.0.11 (Darwin)
-
-iEYEARECAAYFAknbRCoACgkQQ9aEs6Ims9jdpACgyBYD/TskuvJ89/ZidzXQi8rw
-RUEAmQE5m9lVG5+axTW7+GnRBJVOgz+V
-=IXsk
------END PGP SIGNATURE-----
-
---Apple-Mail-45-953875774--
+Neu: GMX FreeDSL Komplettanschluss mit DSL 6.000 Flatrate + Telefonansc=
+hluss f=FCr nur 17,95 Euro/mtl.!* http://dslspecial.gmx.de/freedsl-surf=
+flat/?ac=3DOM.AD.PD003K11308T4569a
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
