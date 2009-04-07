@@ -1,23 +1,23 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
+From: "NeilBrown" <neilb@suse.de>
 Subject: Re: [Patch] mdadm: move mdadm.map file into /dev/md
-Date: Tue, 07 Apr 2009 23:04:30 +0200
-Message-ID: <87myastbtt.fsf@frosties.localdomain>
+Date: Wed, 8 Apr 2009 07:26:24 +1000 (EST)
+Message-ID: <155bf3edda1c2692d316807ff5f58f30.squirrel@neil.brown.name>
 References: <E2135ED2-AC92-48FE-843E-9E8C83B12729@redhat.com>
-	<87tz51dmmu.fsf@frosties.localdomain>
-	<20090407105520.GA29222@maude.comedia.it>
+    <87tz51dmmu.fsf@frosties.localdomain>
+    <FF2073B4-6922-4D16-8FA7-90C66071C6F6@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090407105520.GA29222@maude.comedia.it> (Luca Berra's message
-	of "Tue, 7 Apr 2009 12:55:21 +0200")
+In-Reply-To: <FF2073B4-6922-4D16-8FA7-90C66071C6F6@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: LinuxRaid RAID <linux-raid@vger.kernel.org>
+To: Doug Ledford <dledford@redhat.com>
+Cc: Goswin von Brederlow <goswin-v-b@web.de>, LinuxRaid RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Luca Berra <bluca@comedia.it> writes:
-
-> On Tue, Apr 07, 2009 at 08:05:29AM +0200, Goswin von Brederlow wrote:
->>Doug Ledford <dledford@redhat.com> writes:
+On Tue, April 7, 2009 10:16 pm, Doug Ledford wrote:
+> On Apr 7, 2009, at 2:05 AM, Goswin von Brederlow wrote:
+>> Doug Ledford <dledford@redhat.com> writes:
 >>
 >>> Originally, mdadm used /var/run/mdadm/mdadm.map file to store the
 >>> temporary mappings of incrementally added devices to device names.
@@ -29,18 +29,27 @@ Luca Berra <bluca@comedia.it> writes:
 >>> to the map file no matter how early in the boot process we are
 >>> attempting to use incremental assembly.
 >>
->>What about /lib/init/rw?
+>> What about /lib/init/rw?
 >
-> What is that?, i never heard of '/lib/init/rw' before
->
-> L.
+> Never heard of it.  But, if / is read-only, why wouldn't that also be
+> read-only?
 
-At least under debian that is a tmpfs mounted in
-/etc/rcS.d/S02mountkernfs.sh for programs that need to write somewhere
-early in the boot process while potentially / is read-only and tmp and
-var are still missing.
+because a tmpfs was mounted there.  It's probably a Debian-specific
+thing.
 
-It even runs before /etc/rcS.d/S03udev.
+Why /var/run cannot be mounted from tmpfs nice and early too I don't know..
+I understand that some people think /var/run needs to persist across
+reboots to preserve ownership of directories, but they are wrong :-)
+/var/run should be a tmpfs mount point very early.
 
-MfG
-        Goswin
+I have to say that putting the map file in /dev feels very icky
+to me.  It isn't a device, and so doesn't belong in /dev.
+If we go around putting things somewhere convenient rather than
+where they belong, we quickly end up with a mess.
+
+So while it might be very pragmatic, I am currently dis-inclined
+to take the patch.   Can you try asking your boot-script people
+to make /var/run be an early tmpfs ???
+
+NeilBrown
+
