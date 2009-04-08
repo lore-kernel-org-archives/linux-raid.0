@@ -1,35 +1,32 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: RAID halting
-Date: Wed, 08 Apr 2009 09:45:37 +0100
-Message-ID: <49DC6431.2020404@anonymous.org.uk>
-References: <20090407174723.LMYU4586.cdptpa-omta02.mail.rr.com@Leslie>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Steven Ellis <steven@openmedia.co.nz>
+Subject: Can't resolve mismatch_count > 0 for a raid 1 array
+Date: Wed, 8 Apr 2009 22:03:32 +1200
+Message-ID: <F87E9034-BDD7-4D74-8117-3ED1884D4165@openmedia.co.nz>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090407174723.LMYU4586.cdptpa-omta02.mail.rr.com@Leslie>
 Sender: linux-raid-owner@vger.kernel.org
-To: lrhorer@satx.rr.com
-Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 07/04/2009 18:47, Leslie Rhorer wrote:
-> [...]  What puzzles me
-> (among other things) is why do 5 of the drives show zero reads while 5 of
-> them show very low levels of read activity, and always the same 5 drives?
+I've resolved most of my raid issues by re-housing the affected system  
+and replacing the motherboard, but across the 3 boards I've tried I  
+always have an issue with my /dev/md1 array producing mismatch_count  
+of 128 or 256.
 
-Can you identify how these drives are connected? If I recall correctly, 
-you're using port multipliers (because you have to); is there anything 
-like a pattern between the activity of drives and the PMPs or PMP 
-channels they're connected to?
+System is running Centos 5.2 with a Xen Dom0 kernel
 
-To borrow your expression, PMPs have left me with a bad taste in my 
-mouth. Actually ReiserFS has too, though that was much longer ago.
+This md1 volume is a pair of 40GB HDs raid1 on an IDE controller which  
+I them have a bunch of LVM's that are my Xen guests.
 
-Anyway, apologies for my last mini-flame (is that a smoulder?), and best 
-of luck getting to the cause of your problem.
+Is there any chance that these mismatch_count values are due to swap  
+partitions for the Xen guests?
 
-Cheers,
+Steve
 
-John.
+
+Steven Ellis - Technical Director
+OpenMedia Limited
+
 
