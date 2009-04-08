@@ -1,65 +1,53 @@
-From: LCID Fire <lcid-fire@gmx.net>
-Subject: Re: Recreate raid 10 array
-Date: Thu, 09 Apr 2009 00:14:30 +0200
-Message-ID: <49DD21C6.4060200@gmx.net>
-References: <49DA5CE6.7030902@gmx.net> <87prfpdm8y.fsf@frosties.localdomain>	 <49DD1B87.2050804@tmr.com> <1239227842.18515.8.camel@cichlid.com>
+From: Frank Baumgart <frank.baumgart@gmx.net>
+Subject: Re: RAID5 in strange state
+Date: Thu, 09 Apr 2009 00:19:46 +0200
+Message-ID: <49DD2302.3010206@gmx.net>
+References: <49DD1730.4070108@gmx.net> <878wmag62s.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1239227842.18515.8.camel@cichlid.com>
+In-Reply-To: <878wmag62s.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-First off the good news: I'm currently running on my raid10 again - with 
-only little data loss.
+Goswin von Brederlow schrieb:
+> Stop the raid and assemble it with just the two reliable disks. For me
+> that always works automatically. After that add the flaky disk again.
+>
+> If you fear the disk might flake out again I suggest you add a bitmap
+> to the raid by runing (works any time the raid is not resyncing)
+>
+> mdadm --grow --bitmap internal /dev/md0
+>
+> This will cost you some performance but when a disk fails and you
+> readd it it will only have to sync regions that have changed and not
+> the full disk.
+>
+> You can also remove the bitmap again with
+>
+> mdadm --grow --bitmap none /dev/md0
+>
+> at any later time. So I really would do that till you have figured out
+> if the cable is falky or not.
+>   
 
-Andrew Burgess wrote:
-> On Wed, 2009-04-08 at 17:47 -0400, Bill Davidsen wrote:
->> Goswin von Brederlow wrote:
->>> mdadm --create --assume-clean -l 10 -n 4 /dev/mdX /dev/copied_disk_1 /dev/copied_disk2 missing missing
->>>
->>> You need to match the create parameters exactly with the ones you
->>> initially used (near/offset/farcopies? stripe size? ...) and the order
->>> of devices is relevant so you might have to shuffle the disk
->>> arguments. So just try different orders till the result can be mounted
->>> or fscked. With the wrong options the mount/fsck could screw up the
->>> data but then you copy the disk again for the next try. It should be
->>> reasonably obvious when mount/fsck goes wrong as it should find tons
->>> of errors. Mostly I would expect mount/fsck to just fail with the
->>> wrong mdadm args though.
-> 
-> Most fscks can be told to run read-only so they won't write to the
-> device and also interactive so they ask before writing so you should be
-> able to avoid recopying. The ext3 journal recovery violates at least one
-> of these IIRC (or used to) so if it's ext3 find an option to tell it to
-> ignore the journal.
-Too late. The journal recovery did complain quite a bit and I didn't 
-know better than to have it fix the things it liked to fix.
-As a result it shows the problem with many apps using sqlite these days 
-- it's not very good when the database file is corrupted.
+Adding an internal bitmap to an existing array will not destroy any
+data, correct?
 
->> May I say that this makes a great case for saving the contents of some 
->> files to a safe place when the system is up and running right.? Maybe 
->> all of /etc, and at least a "tree /sys" and /proc/mdstat would be 
->> useful, preferably on something readable like a CD or USB flash drive, 
->> so you have a chance of reading it if you can't boot.
->>
->> Of course a rescue flash drive is pretty useful as well, so that's 
->> probably the way to go.
-Quite frankly I don't really care about / - as long as my /home is safe 
-- because I can setup my machine again - but losing my work means losing 
-far more time.
+mdadm --stop /dev/md0
+mdadm --assemble /dev/md0 /dev/sdc1 /dev/sdd1
+mdadm /dev/md0 --re-add /dev/sde1
 
-> It also seems like mdadm could be enhanced to figure stuff like this out
-> given intact device superblocks (I suggest --wild-ass-guess as the
-> option name)
-That would be great (not that I'm eager to run into that again).
+appears to do the trick (still sync'ing...)
 
-As a note I did a binary comparison between the raid1 stuff and got 
-quite shocked. The corrupted one had around 1.000.000 byte difference - 
-something I would expect - but even the valid mirror had around 20.0000 
-bytes difference - which I can't explain to myself this easily.
+Anyway I wonder why the array did not come up automatically as 2 out of
+the 3 devices were still working and in sync.
+On previous occasions with just the same kind of setup, this always
+worked fine out of the box.
 
-Anyway - thanks guys for the great help.
+Thanks for your help!
+
+Frank
+
