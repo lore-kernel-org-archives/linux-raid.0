@@ -1,32 +1,33 @@
-From: Steven Ellis <steven@openmedia.co.nz>
-Subject: Can't resolve mismatch_count > 0 for a raid 1 array
-Date: Wed, 8 Apr 2009 22:03:32 +1200
-Message-ID: <F87E9034-BDD7-4D74-8117-3ED1884D4165@openmedia.co.nz>
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: RAID halting
+Date: Wed, 8 Apr 2009 09:17:52 -0500
+Message-ID: <20090408141756.SJCK26228.cdptpa-omta04.mail.rr.com@Leslie>
+References: <F2C688D6A021E34CB81C0E631EF4C09301864D15@34093-C4-EVS1.exchange.rackspace.com>
+Reply-To: <lrhorer@satx.rr.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <F2C688D6A021E34CB81C0E631EF4C09301864D15@34093-C4-EVS1.exchange.rackspace.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I've resolved most of my raid issues by re-housing the affected system  
-and replacing the motherboard, but across the 3 boards I've tried I  
-always have an issue with my /dev/md1 array producing mismatch_count  
-of 128 or 256.
+> There is also a SMART error log reporting mechanism.  The disks have
+> ability to report the last 5 commands that errored on each disk, which
+> includes timestamp, op code, input parameters and reason for error.
 
-System is running Centos 5.2 with a Xen Dom0 kernel
+I pulled the logs from the drives.  Four showed no errors whatsoever, and
+three showed 1, 2, and 3 errors, respectively.  The others ranged from 408
+to 1871.  I then triggered a halt with a mv command, and checked the logs
+again.  The values all remain the same, with no new errors reported
+whatsoever.
 
-This md1 volume is a pair of 40GB HDs raid1 on an IDE controller which  
-I them have a bunch of LVM's that are my Xen guests.
+> This runs instantly, and it is possible that just having these last 5
+> errors will tell you exactly what problem is. The errors are also
 
-Is there any chance that these mismatch_count values are due to swap  
-partitions for the Xen guests?
-
-Steve
-
-
-Steven Ellis - Technical Director
-OpenMedia Limited
-
+I presume a sector remapping would be caught by the log file, yes?  If so,
+bad sector mapping is pretty much completely eliminated as a cause for this
+issue.
 
