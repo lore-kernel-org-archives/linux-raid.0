@@ -1,155 +1,71 @@
-From: Frank Baumgart <frank.baumgart@gmx.net>
-Subject: RAID5 in strange state
-Date: Wed, 08 Apr 2009 23:29:20 +0200
-Message-ID: <49DD1730.4070108@gmx.net>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Recreate raid 10 array
+Date: Wed, 08 Apr 2009 17:47:51 -0400
+Message-ID: <49DD1B87.2050804@tmr.com>
+References: <49DA5CE6.7030902@gmx.net> <87prfpdm8y.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87prfpdm8y.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: LCID Fire <lcid-fire@gmx.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear List,
+Goswin von Brederlow wrote:
+> LCID Fire <lcid-fire@gmx.net> writes:
+>
+>   
+>> On my raid10 array (4 drives) I've had 2 drives (the same model) which
+>> got disconnected by the kernel (almost at the same time). It seems
+>> like both were one raid1 part so one half of the raid0 is missing.
+>> Afterwards I tried to readd the drives again (my bad) so now I'm stuck
+>> with 1 half of the raid0 part being present and valid and the other (2
+>> drives) marked as spare.
+>> The thing I'd like to do is:
+>> - Take 2 new drives (different manufacturers)
+>> - Clone one of the valid and one of the spare drives to the new drives
+>> - Try to reassemble the array.
+>> Problem is - is this even possible?
+>> How do I tell mdadm to not care about the spare state?
+>> Does the kernel write bogus data to the still valid drives if the
+>> other 2 fail?
+>>
+>> Would be great if someone could enlighten me ;)
+>>
+>> P.S.: Does someone know how to easily report the different sata errors
+>> which the kernel encounters?
+>>     
+>
+> mdadm --create --assume-clean -l 10 -n 4 /dev/mdX /dev/copied_disk_1 /dev/copied_disk2 missing missing
+>
+> You need to match the create parameters exactly with the ones you
+> initially used (near/offset/farcopies? stripe size? ...) and the order
+> of devices is relevant so you might have to shuffle the disk
+> arguments. So just try different orders till the result can be mounted
+> or fscked. With the wrong options the mount/fsck could screw up the
+> data but then you copy the disk again for the next try. It should be
+> reasonably obvious when mount/fsck goes wrong as it should find tons
+> of errors. Mostly I would expect mount/fsck to just fail with the
+> wrong mdadm args though.
+>   
 
-I use MD RAID 5 since some years and so far had to recover from single
-disk failures a few times which was always successful.
-Now though, I am puzzled.
+May I say that this makes a great case for saving the contents of some 
+files to a safe place when the system is up and running right.? Maybe 
+all of /etc, and at least a "tree /sys" and /proc/mdstat would be 
+useful, preferably on something readable like a CD or USB flash drive, 
+so you have a chance of reading it if you can't boot.
 
-Setup:
-Some PC with 3x WD 1 TB SATA disk drives set up as RAID 5 using kernel
-2.6.27.21 (now); the array ran fine for at least 6 months now.
+Of course a rescue flash drive is pretty useful as well, so that's 
+probably the way to go.
 
-I check the state of the RAID every few days with looking at
-/proc/mdstat manually.
-Apparently one drive had been kicked out of the array 4 days ago without
-me noticing it.
-Root cause seemed to be bad cabling but is not confirmed yet.
-Anyway, the disc in question ("sde") reports 23 UDMA_CRC errors,
-compared to 0 about 2 weeks ago.
-Reading the complete device just now via DD still reports those 23
-errors but no new ones.
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
 
-Well, RAID 5 should survive a single disc failure (again) but after a
-reboot (due to non-RAID related reasons) the RAID came up as "md0 stopped".
+"You are disgraced professional losers. And by the way, give us our money back."
+    - Representative Earl Pomeroy,  Democrat of North Dakota
+on the A.I.G. executives who were paid bonuses  after a federal bailout.
 
-cat /proc/mdstat
-
-Personalities :
-md0 : inactive sdc1[1](S) sdd1[2](S) sde1[0](S)
-      2930279424 blocks
-
-unused devices: <none>
-
-
-
-What's that?
-First, documentation on the web is rather outdated and/or incomplete.
-Second, my guess that "(S)" represents a spare is backuped up by the
-kernel source.
-
-
-mdadm --examine [devices] gives consistent reports about the RAID 5
-structure as:
-
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : ec4fdb7b:e57733c0:4dc42c07:36d99219
-  Creation Time : Wed Dec 24 11:40:29 2008
-     Raid Level : raid5
-  Used Dev Size : 976759808 (931.51 GiB 1000.20 GB)
-     Array Size : 1953519616 (1863.02 GiB 2000.40 GB)
-   Raid Devices : 3
-  Total Devices : 3
-Preferred Minor : 0
-...
-         Layout : left-symmetric
-     Chunk Size : 256K
-
-
-
-The state though differs:
-
-sdc1:
-    Update Time : Tue Apr  7 20:51:33 2009
-          State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : ccff6a15 - correct
-         Events : 177920
-...
-      Number   Major   Minor   RaidDevice State
-this     1       8       33        1      active sync   /dev/sdc1
-
-   0     0       0        0        0      removed
-   1     1       8       33        1      active sync   /dev/sdc1
-   2     2       8       49        2      active sync   /dev/sdd1
-
-
-
-sdd1:
-    Update Time : Tue Apr  7 20:51:33 2009
-          State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : ccff6a27 - correct
-         Events : 177920
-
-         Layout : left-symmetric
-     Chunk Size : 256K
-
-      Number   Major   Minor   RaidDevice State
-this     2       8       49        2      active sync   /dev/sdd1
-
-   0     0       0        0        0      removed
-   1     1       8       33        1      active sync   /dev/sdc1
-   2     2       8       49        2      active sync   /dev/sdd1
-
-
-
-sde1:
-    Update Time : Fri Apr  3 15:00:31 2009
-          State : active
- Active Devices : 3
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : ccf463ec - correct
-         Events : 7
-
-         Layout : left-symmetric
-     Chunk Size : 256K
-
-      Number   Major   Minor   RaidDevice State
-this     0       8       65        0      active sync   /dev/sde1
-
-   0     0       8       65        0      active sync   /dev/sde1
-   1     1       8       33        1      active sync   /dev/sdc1
-   2     2       8       49        2      active sync   /dev/sdd1
-
-
-
-sde is the device that failed once and was kicked out of the array.
-The update time reflects that if I interprete that right.
-But how can sde1 status claim 3 active and working devices? IMO that's
-way off.
-
-
-Now, my assumption:
-I think I should be able to either remove sde temporarily and just
-restart the degraded array from sdc1/sdd1.
-correct?
-
-My backup is a few days old and I would really like to keep the work on
-the RAID done in the meantime.
-
-If the answer is just 2 or 3 mdadm command lines, I am yours :-)
-
-Best regards
-
-Frank Baumgart
 
