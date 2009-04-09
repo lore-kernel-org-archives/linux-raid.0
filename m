@@ -1,54 +1,89 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Thoughts on using SSD
-Date: Thu, 09 Apr 2009 18:26:25 -0400
-Message-ID: <49DE7611.4070703@tmr.com>
-References: <49CC0B0D.5000904@tmr.com> <18892.22531.392563.258229@notabene.brown>
+Subject: Re: Recreate raid 10 array
+Date: Thu, 09 Apr 2009 18:38:20 -0400
+Message-ID: <49DE78DC.8080700@tmr.com>
+References: <49DA5CE6.7030902@gmx.net> <87prfpdm8y.fsf@frosties.localdomain>	 <49DD1B87.2050804@tmr.com> <1239227842.18515.8.camel@cichlid.com> <49DD21C6.4060200@gmx.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18892.22531.392563.258229@notabene.brown>
+In-Reply-To: <49DD21C6.4060200@gmx.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: LCID Fire <lcid-fire@gmx.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Thursday March 26, davidsen@tmr.com wrote:
->   
->> I'm building a fairly aggressive machine for both a backup host for 
->> virtual machines and spare time development platform, compile engine and 
->> testbed both. I want to get cost effective use from an SSD unit, and I 
->> propose to use a 32GB unit as follows: for the root filesystem, 12GB, 
->> which should hold all the usual root things, and 16GB for swap (12GB 
->> RAM, and I want boot and/or hibernate to happen NOW). The remaining 
->> space I think might be used for various high impact things, and one of 
->> those with speeding raid.
+LCID Fire wrote:
+> First off the good news: I'm currently running on my raid10 again - 
+> with only little data loss.
+>
+> Andrew Burgess wrote:
+>> On Wed, 2009-04-08 at 17:47 -0400, Bill Davidsen wrote:
+>>> Goswin von Brederlow wrote:
+>>>> mdadm --create --assume-clean -l 10 -n 4 /dev/mdX 
+>>>> /dev/copied_disk_1 /dev/copied_disk2 missing missing
+>>>>
+>>>> You need to match the create parameters exactly with the ones you
+>>>> initially used (near/offset/farcopies? stripe size? ...) and the order
+>>>> of devices is relevant so you might have to shuffle the disk
+>>>> arguments. So just try different orders till the result can be mounted
+>>>> or fscked. With the wrong options the mount/fsck could screw up the
+>>>> data but then you copy the disk again for the next try. It should be
+>>>> reasonably obvious when mount/fsck goes wrong as it should find tons
+>>>> of errors. Mostly I would expect mount/fsck to just fail with the
+>>>> wrong mdadm args though.
 >>
->> If I were to create a small raid device, raid1, made of the 4GB Ssd and 
->> 4GB of SATA space, if I made the SATA write-mostly and write-behind, and 
->> put the journal for my raid arrays (and bitmaps?) that seems likely to 
->> provide a significant performance gain in small storage.
->>
->> Am I missing anything here? Is there an obvious drawback I'm missing?
->>     
+>> Most fscks can be told to run read-only so they won't write to the
+>> device and also interactive so they ask before writing so you should be
+>> able to avoid recopying. The ext3 journal recovery violates at least one
+>> of these IIRC (or used to) so if it's ext3 find an option to tell it to
+>> ignore the journal.
+> Too late. The journal recovery did complain quite a bit and I didn't 
+> know better than to have it fix the things it liked to fix.
+> As a result it shows the problem with many apps using sqlite these 
+> days - it's not very good when the database file is corrupted.
 >
+>>> May I say that this makes a great case for saving the contents of 
+>>> some files to a safe place when the system is up and running right.? 
+>>> Maybe all of /etc, and at least a "tree /sys" and /proc/mdstat would 
+>>> be useful, preferably on something readable like a CD or USB flash 
+>>> drive, so you have a chance of reading it if you can't boot.
+>>>
+>>> Of course a rescue flash drive is pretty useful as well, so that's 
+>>> probably the way to go.
+> Quite frankly I don't really care about / - as long as my /home is 
+> safe - because I can setup my machine again - but losing my work means 
+> losing far more time.
 >
-> I'd probably just put the journal on the SSD and mount my ext3
-> filesystem data=journal
+>> It also seems like mdadm could be enhanced to figure stuff like this out
+>> given intact device superblocks (I suggest --wild-ass-guess as the
+>> option name)
+> That would be great (not that I'm eager to run into that again).
 >
-> That has a similar effect to raid1/write-behind in that data is
-> written to both but we only wait for the write to the SSD to
-> complete.  But as it is done at the filesystem level - and the
-> filesystem has a much better idea what it is doing - you would expect
-> to get much more efficient results.  e.g. less wasted memory, much
-> larger amount of data that is safe of SSD but still trickling out to
-> the HD.
->   
+> As a note I did a binary comparison between the raid1 stuff and got 
+> quite shocked. The corrupted one had around 1.000.000 byte difference 
+> - something I would expect - but even the valid mirror had around 
+> 20.0000 bytes difference - which I can't explain to myself this easily.
 
-But I think for raid in general you would benefit from having the bitmap 
-on SSD as well. In my dreams I also put the inodes on that SSD, and 
-everything runs 10x faster. Unfortunately no f/s seems to offer this.
+My personal explanation for mismatch on raid1 swap is this: because 
+software raid isn't real raid, you don't get a mirror by writing the 
+same page once only to two different drives by sending the data to the 
+controller and letting that happen. What you get is the kernel sending 
+the same page to two drives without locking the page so it can't change 
+as it's being written. That's a gross over-simplification, but I think 
+it addresses the heart of the matter. To prevent that would require a 
+flag which causes COW until the page had been moved to the controller 
+for the last time.
+
+The alternate I've seen proposed is that somewhere between writing 
+copies the page is deallocated so the second (or Nth for more than two 
+way mirror) write is abandoned.
+
+In any case this appears to be because the page in memory changes 
+between write and/or not all writes are mirrored.
+
+The interesting thing is that some systems seem to have lots of 
+mishatches and some almost always none.
 
 -- 
 bill davidsen <davidsen@tmr.com>
