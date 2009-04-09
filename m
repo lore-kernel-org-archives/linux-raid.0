@@ -1,30 +1,45 @@
-From: David Rees <drees76@gmail.com>
-Subject: Re: RAID5 in strange state
-Date: Wed, 8 Apr 2009 16:43:15 -0700
-Message-ID: <72dbd3150904081643j378a7490j1ee1b7975f151a0@mail.gmail.com>
-References: <49DD1730.4070108@gmx.net> <878wmag62s.fsf@frosties.localdomain>
-	<49DD2302.3010206@gmx.net>
+From: "Steven Ellis" <steven@openmedia.co.nz>
+Subject: Re: Can't resolve mismatch_count > 0 for a raid 1 array
+Date: Thu, 9 Apr 2009 12:07:59 +1200 (NZST)
+Message-ID: <43631.60.234.49.2.1239235679.squirrel@webmail.stevencherie.net>
+References: <F87E9034-BDD7-4D74-8117-3ED1884D4165@openmedia.co.nz>
+    <87d4bmg6j5.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49DD2302.3010206@gmx.net>
+In-Reply-To: <87d4bmg6j5.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Frank Baumgart <frank.baumgart@gmx.net>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Apr 8, 2009 at 3:19 PM, Frank Baumgart <frank.baumgart@gmx.net> wrote:
-> Adding an internal bitmap to an existing array will not destroy any
-> data, correct?
 
-Yes, safe to do at any time (as long as it's not syncing, in which
-case it simply won't work).
+On Thu, April 9, 2009 9:49 am, Goswin von Brederlow wrote:
+> Steven Ellis <steven@openmedia.co.nz> writes:
+>
+>> I've resolved most of my raid issues by re-housing the affected system
+>> and replacing the motherboard, but across the 3 boards I've tried I
+>> always have an issue with my /dev/md1 array producing mismatch_count
+>> of 128 or 256.
+>>
+>> System is running Centos 5.2 with a Xen Dom0 kernel
+>>
+>> This md1 volume is a pair of 40GB HDs raid1 on an IDE controller which
+>> I them have a bunch of LVM's that are my Xen guests.
+>>
+>> Is there any chance that these mismatch_count values are due to swap
+>> partitions for the Xen guests?
+>>
+>> Steve
+>
+> Have you repaired the raid or do you just check and check and check?
+>
 
-> Anyway I wonder why the array did not come up automatically as 2 out of
-> the 3 devices were still working and in sync.
+Yes I've repaired the raid several times. Then when I put the Xen guests
+under load and re-run check the errors re-appear.
 
-Good question!  Hard to answer - it sure looks like it should have
-assembled the two good drives and had the third drive as stopped.
-
--Dave
+--------------------------------------------
+Steven Ellis - Technical Director
+OpenMedia Limited - The Home of myPVR
+email   - steven@openmedia.co.nz
+website - http://www.openmedia.co.nz
