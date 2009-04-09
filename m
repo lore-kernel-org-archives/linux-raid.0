@@ -1,89 +1,64 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Recreate raid 10 array
-Date: Thu, 09 Apr 2009 18:38:20 -0400
-Message-ID: <49DE78DC.8080700@tmr.com>
-References: <49DA5CE6.7030902@gmx.net> <87prfpdm8y.fsf@frosties.localdomain>	 <49DD1B87.2050804@tmr.com> <1239227842.18515.8.camel@cichlid.com> <49DD21C6.4060200@gmx.net>
+Subject: Re: Any benefity to write intent bitmaps on Raid1
+Date: Thu, 09 Apr 2009 18:51:15 -0400
+Message-ID: <49DE7BE3.1000601@tmr.com>
+References: <45635.60.234.49.2.1239236645.squirrel@webmail.stevencherie.net> <18909.36541.447308.778177@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49DD21C6.4060200@gmx.net>
+In-Reply-To: <18909.36541.447308.778177@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: LCID Fire <lcid-fire@gmx.net>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Steven Ellis <steven@openmedia.co.nz>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-LCID Fire wrote:
-> First off the good news: I'm currently running on my raid10 again - 
-> with only little data loss.
+Neil Brown wrote:
+> On Thursday April 9, steven@openmedia.co.nz wrote:
+>   
+>> Given I have a pair of 1TB drives Raid1 I'd prefer to reduce any recovery
+>> sync time. Would an internal bitmap help dramatically, and are there any
+>> other benefits.
+>>     
 >
-> Andrew Burgess wrote:
->> On Wed, 2009-04-08 at 17:47 -0400, Bill Davidsen wrote:
->>> Goswin von Brederlow wrote:
->>>> mdadm --create --assume-clean -l 10 -n 4 /dev/mdX 
->>>> /dev/copied_disk_1 /dev/copied_disk2 missing missing
->>>>
->>>> You need to match the create parameters exactly with the ones you
->>>> initially used (near/offset/farcopies? stripe size? ...) and the order
->>>> of devices is relevant so you might have to shuffle the disk
->>>> arguments. So just try different orders till the result can be mounted
->>>> or fscked. With the wrong options the mount/fsck could screw up the
->>>> data but then you copy the disk again for the next try. It should be
->>>> reasonably obvious when mount/fsck goes wrong as it should find tons
->>>> of errors. Mostly I would expect mount/fsck to just fail with the
->>>> wrong mdadm args though.
->>
->> Most fscks can be told to run read-only so they won't write to the
->> device and also interactive so they ask before writing so you should be
->> able to avoid recopying. The ext3 journal recovery violates at least one
->> of these IIRC (or used to) so if it's ext3 find an option to tell it to
->> ignore the journal.
-> Too late. The journal recovery did complain quite a bit and I didn't 
-> know better than to have it fix the things it liked to fix.
-> As a result it shows the problem with many apps using sqlite these 
-> days - it's not very good when the database file is corrupted.
+> Bryan answered some of this but...
 >
->>> May I say that this makes a great case for saving the contents of 
->>> some files to a safe place when the system is up and running right.? 
->>> Maybe all of /etc, and at least a "tree /sys" and /proc/mdstat would 
->>> be useful, preferably on something readable like a CD or USB flash 
->>> drive, so you have a chance of reading it if you can't boot.
->>>
->>> Of course a rescue flash drive is pretty useful as well, so that's 
->>> probably the way to go.
-> Quite frankly I don't really care about / - as long as my /home is 
-> safe - because I can setup my machine again - but losing my work means 
-> losing far more time.
+>  - if your machine crashes, then resync will be much faster if you
+>    have a bitmap.
+>  - If one drive becomes disconnected, and then can be reconnected,
+>    recovery will be much faster.
+>  - if one drive fails and has to be replaced, a bitmap makes no
+>    difference(*).
+>  - there might be performance hit - it is very dependant on your
+>    workload.
+>  - You can add or remove a bitmap at any time, so you can try to
+>    measure the impact on your particular workload fairly easily.
 >
->> It also seems like mdadm could be enhanced to figure stuff like this out
->> given intact device superblocks (I suggest --wild-ass-guess as the
->> option name)
-> That would be great (not that I'm eager to run into that again).
 >
-> As a note I did a binary comparison between the raid1 stuff and got 
-> quite shocked. The corrupted one had around 1.000.000 byte difference 
-> - something I would expect - but even the valid mirror had around 
-> 20.0000 bytes difference - which I can't explain to myself this easily.
+> (*) I've been wondering about adding another bitmap which would record
+> which sections of the array have valid data.  Initially nothing would
+> be valid and so wouldn't need recovery.  Every time we write to a new
+> section we add that section to the 'valid' sections and make sure that
+> section is in-sync.
+> When a device was replaced, we would only need to recover the parts of
+> the array that are known to be invalid.
+> As filesystem start using the new "invalidate" command for block
+> devices, we could clear bits for sections that the filesystem says are
+> not needed any more...
+> But currently it is just a vague idea.
+>   
 
-My personal explanation for mismatch on raid1 swap is this: because 
-software raid isn't real raid, you don't get a mirror by writing the 
-same page once only to two different drives by sending the data to the 
-controller and letting that happen. What you get is the kernel sending 
-the same page to two drives without locking the page so it can't change 
-as it's being written. That's a gross over-simplification, but I think 
-it addresses the heart of the matter. To prevent that would require a 
-flag which causes COW until the page had been moved to the controller 
-for the last time.
+It's obvious that this idea would provide a speedup, and might be useful 
+in terms of doing some physical dump software which would just save the 
+"used" portions of the array. Only you have an idea of how much effort 
+this would take, although my thought is "very little" for the stable 
+case and "bunches" for the case of an array size change.
 
-The alternate I've seen proposed is that somewhere between writing 
-copies the page is deallocated so the second (or Nth for more than two 
-way mirror) write is abandoned.
-
-In any case this appears to be because the page in memory changes 
-between write and/or not all writes are mirrored.
-
-The interesting thing is that some systems seem to have lots of 
-mishatches and some almost always none.
+I have been trying making a COW copy of an entire drive with qemu-img, 
+then booting it under KCM, and besides giving an interesting slant to 
+the term "dual boot," I can back up the changes files (a sparse file) 
+quickly and into small space with a backup which knows about sparse 
+files. There is lots of room to imagine uses for this if we had it.
 
 -- 
 bill davidsen <davidsen@tmr.com>
