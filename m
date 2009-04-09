@@ -1,71 +1,87 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Any benefity to write intent bitmaps on Raid1
-Date: Thu, 09 Apr 2009 18:51:15 -0400
-Message-ID: <49DE7BE3.1000601@tmr.com>
-References: <45635.60.234.49.2.1239236645.squirrel@webmail.stevencherie.net> <18909.36541.447308.778177@notabene.brown>
+From: "Timothy D. Lenz" <tlenz@vorgon.com>
+Subject: Converting system to raid
+Date: Thu, 9 Apr 2009 16:44:25 -0700
+Message-ID: <003801c9b96d$21a0f420$0a00a8c0@vorg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18909.36541.447308.778177@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Steven Ellis <steven@openmedia.co.nz>, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Thursday April 9, steven@openmedia.co.nz wrote:
->   
->> Given I have a pair of 1TB drives Raid1 I'd prefer to reduce any recovery
->> sync time. Would an internal bitmap help dramatically, and are there any
->> other benefits.
->>     
->
-> Bryan answered some of this but...
->
->  - if your machine crashes, then resync will be much faster if you
->    have a bitmap.
->  - If one drive becomes disconnected, and then can be reconnected,
->    recovery will be much faster.
->  - if one drive fails and has to be replaced, a bitmap makes no
->    difference(*).
->  - there might be performance hit - it is very dependant on your
->    workload.
->  - You can add or remove a bitmap at any time, so you can try to
->    measure the impact on your particular workload fairly easily.
->
->
-> (*) I've been wondering about adding another bitmap which would record
-> which sections of the array have valid data.  Initially nothing would
-> be valid and so wouldn't need recovery.  Every time we write to a new
-> section we add that section to the 'valid' sections and make sure that
-> section is in-sync.
-> When a device was replaced, we would only need to recover the parts of
-> the array that are known to be invalid.
-> As filesystem start using the new "invalidate" command for block
-> devices, we could clear bits for sections that the filesystem says are
-> not needed any more...
-> But currently it is just a vague idea.
->   
+I have 2 computers that I am trying to convert to raid. Both where setup with debian netinst cd to hda. The first computer has 2
+sata drives. They have been configured into 3 mirrored arrays. md0 is to replace hda and become the new boot. md1 will be the new
+swap and md2 will be for storing recordings from vdr.
 
-It's obvious that this idea would provide a speedup, and might be useful 
-in terms of doing some physical dump software which would just save the 
-"used" portions of the array. Only you have an idea of how much effort 
-this would take, although my thought is "very little" for the stable 
-case and "bunches" for the case of an array size change.
+The second system which has been runing for awhile is basicly the same only it was setup with just 1 sata drive used for storage
+which failed. It has been replaced with 3 sata drives setup with 2 mirrors + spare each and a raid5 array for storage. Currently the
+first 2 arrays are not being used, the 3rd is mounted as /mnt/md2 and is used for the recordings folder and for some storage. Once I
+figure out getting the 2 sata drive system booting with raid, I plan to do the same with the 3 sata drive system.
 
-I have been trying making a COW copy of an entire drive with qemu-img, 
-then booting it under KCM, and besides giving an interesting slant to 
-the term "dual boot," I can back up the changes files (a sparse file) 
-quickly and into small space with a backup which knows about sparse 
-files. There is lots of room to imagine uses for this if we had it.
+On the 2 sata drive system:
+While booting with hda I have md0 mounted as /mnt/md0. I have marked the first partition bootable on both sda and sdb as bootable
+and installed grub by doing the following:
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
+sudo grub --no-floppy
+Grub> device (hd0) /dev/sda
+Grub> root (hd0,0)
+Grub> setup (hd0)
+Grub> device (hd0) /dev/sdb
+Grub> root (hd0,0)
+Grub> setup (hd0)
+Grub> quit
 
-"You are disgraced professional losers. And by the way, give us our money back."
-    - Representative Earl Pomeroy,  Democrat of North Dakota
-on the A.I.G. executives who were paid bonuses  after a federal bailout.
+I used "sudo cp -axu / /mnt/md0" to copy hda to md0. I changed /mnt/md0/etc/fstab so that "/" os /md0 instead of /hda. I also
+changed /mnt/md0/boot/grub/menu.lst first kernel entry to md0:
 
+title  Debian GNU/Linux, kernel 2.6.26.8.20090311.1
+root  (hd0,0)
+kernel  /boot/vmlinuz-2.6.26.8.20090311.1 root=/dev/md0 ro quiet
+
+Changed kopt in  /mnt/md0/boot/grub/menu.lst
+# kopt=root=/dev/md0 ro
+
+I have raid built into the kernel so initrd shouldn't be needed:
+
+CONFIG_MD=y
+CONFIG_BLK_DEV_MD=y
+# CONFIG_MD_LINEAR is not set
+# CONFIG_MD_RAID0 is not set
+CONFIG_MD_RAID1=y
+# CONFIG_MD_RAID10 is not set
+CONFIG_MD_RAID456=y
+CONFIG_MD_RAID5_RESHAPE=y
+CONFIG_MD_MULTIPATH=y
+# CONFIG_MD_FAULTY is not set
+CONFIG_BLK_DEV_DM=y
+# CONFIG_DM_DEBUG is not set
+# CONFIG_DM_CRYPT is not set
+CONFIG_DM_SNAPSHOT=y
+CONFIG_DM_MIRROR=y
+CONFIG_DM_ZERO=y
+# CONFIG_DM_MULTIPATH is not set
+# CONFIG_DM_DELAY is not set
+# CONFIG_DM_UEVENT is not set
+
+I changed the grub boot menu color for md0 menu.lst to show which menu was being used.
+
+When I boot up, I go into cmos amd move the ide to the bottom of the harddrive boot list so that it list sata 1, then sata 2, then
+the ide.
+
+When it boots, it should come up with the md0 array. I do get the md0 boot menu, but it hangs at booting kernel.  I some help in irc
+freenode/#grub and was told grub seems ok, but there is some problem with the array when trying to boot from it. After booting the
+array to the grub menu, he had me switch to grubs command line. Found that sda had become hd0, hda was now hd1 and sdb was still
+hd2. Kernel started to boot and saw some md stuff go by:
+....
+md: considering sdb2...
+[13:30] <Vorg> md: adding adb2
+[13:30] <Vorg> md: sdb1 has different UUID to sdb2
+[13:31] <Vorg> md: adding sda2..
+.......
+
+Ended with warning: unable to open an initial console. I was able to scroll back and didn't really see any errors. Don't know if I
+missed a change to some config file or something else that should be built into the kernel. I have gone over a lot of "guides" and
+don't see what is missing.
 
