@@ -1,98 +1,72 @@
-From: Jared Raddigan <jraddigan@kfh.org>
-Subject: Mirroring Entire Drives Partition Type Clarification
-Date: Fri, 10 Apr 2009 14:00:23 -0700
-Message-ID: <68c007470904101400s498b2d03w79e15072f1fa6605@mail.gmail.com>
-References: <68c007470904101351y7442396bla5366afbc7653e10@mail.gmail.com>
+From: "Timothy D. Lenz" <tlenz@vorgon.com>
+Subject: Re: Converting system to raid
+Date: Fri, 10 Apr 2009 14:26:26 -0700
+Message-ID: <00f301c9ba23$032025f0$0a00a8c0@vorg>
+References: <003801c9b96d$21a0f420$0a00a8c0@vorg> <49DF0D06.8030705@musmo.com> <20090410195303.GB21242@cthulhu.home.robinhill.me.uk> <00cc01c9ba1d$3aefecf0$0a00a8c0@vorg> <20090410205942.GC21242@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <68c007470904101351y7442396bla5366afbc7653e10@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Playing with mdadm today I noticed it seems to allow full drive
-mirroring something I remember that raidtools would fail on.
+Strange:
+-----------------
+sudo mdadm -D /dev/md0
+/dev/md0:
+        Version : 00.90
+  Creation Time : Fri Mar 27 16:49:37 2009
+     Raid Level : raid1
+     Array Size : 24418688 (23.29 GiB 25.00 GB)
+  Used Dev Size : 24418688 (23.29 GiB 25.00 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
- Back in raidtools days I remember that even though it was possible to
-mirror an entire drive with a single md volume (sda, sdb rather than
-sda1, sdb1) it really did not work and was not recommended.=A0 It looks
-like that is no longer the case with mdadm.   Here is what I did.
+    Update Time : Fri Apr 10 12:58:59 2009
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
 
- Took two hard drives and created a single partition that spans the
-whole drive.=A0 then do:
+           UUID : 27ce9bd9:4ce6ceb2:670e265f:82e0c670 (local to host LLLx64-32)
+         Events : 0.38
 
- mdadm --create --level=3Dmirror --raid-devices=3D2 /dev/md1 /dev/sd[ab=
-]1
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       8       17        1      active sync   /dev/sdb1
+-----------------
 
- Look using mdadm --detail and see
- Number=A0=A0 Major=A0=A0 Minor=A0=A0 RaidDevice State
- =A0=A0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0=A0 1=A0=A0=A0=
-=A0=A0=A0=A0 0=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sda1
- =A0=A0=A0=A0=A0=A0 1=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 17=A0=A0=A0=
-=A0=A0=A0=A0 1=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdb1
+Seems ok, but then:
+-----------------
+sudo mdadm -E /dev/md0
+mdadm: No md superblock detected on /dev/md0.
+-----------------
+----- Original Message ----- 
+From: "Robin Hill" <robin@robinhill.me.uk>
+To: <linux-raid@vger.kernel.org>
+Sent: Friday, April 10, 2009 1:59 PM
+Subject: Re: Converting system to raid
 
+> As for the other reply, the sata drives each have 3 primary partitions
+> all set to type fd and formated with ext3. I was going to try ext4 for
+> the main storage of the newer system but I found there is a problem
+> with kernels .27 and newer on nforce2 and newer boards. some sort of
+> problem with the bios and apci. How do I find out which superblocks
+> version is used?
+> 
+Either "mdadm -D" on the array, or "mdadm -E" on one of the partitions
+will show you the version.
 
- I reboot and now using mdadm --detail I see:
- Number=A0=A0 Major=A0=A0 Minor=A0=A0 RaidDevice State
- =A0=A0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0=A0 0=A0=A0=A0=
-=A0=A0=A0=A0 0=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sda
- =A0=A0=A0=A0=A0=A0 1=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 16=A0=A0=A0=
-=A0=A0=A0=A0 1=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdb
+Cheers,
+    Robin
+-- 
+     ___        
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
- So it would seem mdadm basically figured out what I wanted to do and
-no longer shows the partition number after a reboot.=A0 So next deleted
-all partitions on the drives and recreated the raid set without
-referencing the partitions
-
- mdadm --create --level=3Dmirror --raid-devices=3D2 /dev/md1 /dev/sd[ab=
-]
-
- That worked just fine and now=A0 mdadm --detail gives me the same as
-before (but without rebooting)
- Number=A0=A0 Major=A0=A0 Minor=A0=A0 RaidDevice State
- =A0=A0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0=A0 0=A0=A0=A0=
-=A0=A0=A0=A0 0=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sda
- =A0=A0=A0=A0=A0=A0 1=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 16=A0=A0=A0=
-=A0=A0=A0=A0 1=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdb
-
-
- My questions are:
-
- Is there anything wrong with doing this as this was not recommend
-with raidtools.=A0 This with LVM or partition the md directly (cool
-feature you added) seems like a hard combo to beat?
-
- Does the MBR get synced across the drives when doing this?
-
- I know partition type does not seem to matter with mdadm compared to
-raidtools, but when creating partitions I use "da" rather than "fd",
-is that the recommended type or since it no longer seems to matter no
-one really cares what you use?
-
- I am using version mdadm - v2.6.7.2 - 14th November 2008 from Debian L=
-enny
-
- Thanks and I am pretty excited how mdadm keeps getting better and bett=
-er.
-
- --
- Jared
-
-
->
->
-
-
-
---
-Jared Raddigan
-Koinonia I.T. Director
-p. 916-577-7982 x101
-http://www.kfh.org
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
