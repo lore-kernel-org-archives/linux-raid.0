@@ -1,62 +1,59 @@
-From: "Timothy D. Lenz" <tlenz@vorgon.com>
+From: Robin Hill <robin@robinhill.me.uk>
 Subject: Re: Converting system to raid
-Date: Fri, 10 Apr 2009 12:43:01 -0700
-Message-ID: <008a01c9ba14$955074c0$0a00a8c0@vorg>
-References: <003801c9b96d$21a0f420$0a00a8c0@vorg> <49DF0D06.8030705@musmo.com> <f19d625d0904100255j1ee672b8ped4b6b517a7f9dc5@mail.gmail.com>
+Date: Fri, 10 Apr 2009 20:50:06 +0100
+Message-ID: <20090410195006.GA21242@cthulhu.home.robinhill.me.uk>
+References: <003801c9b96d$21a0f420$0a00a8c0@vorg> <20090410132233.GA15442@cthulhu.home.robinhill.me.uk> <008001c9ba12$3ac92c10$0a00a8c0@vorg>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="EVF5PPMfhYS0aIcm"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <008001c9ba12$3ac92c10$0a00a8c0@vorg>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Is that 
-  /etc/mdadm/mdadm.conf
-or
-/mnt/md0/etc/mdadm/mdadm.conf
 
-Both are the same in his case, but of chroot moves the root point to the array, shouldn't it look at that conf?
+--EVF5PPMfhYS0aIcm
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
------ Original Message ----- 
-From: "CoolCold" <coolthecold@gmail.com>
-To: <admin@musmo.com>
-Cc: "Timothy D. Lenz" <tlenz@vorgon.com>; <linux-raid@vger.kernel.org>
-Sent: Friday, April 10, 2009 2:55 AM
-Subject: Re: Converting system to raid
+On Fri Apr 10, 2009 at 12:22:44PM -0700, Timothy D. Lenz wrote:
 
+> How can cp not work? every guide I found used ether cp or rsync. Even
+> guides on seting up an auto backup system use cp or rsync.
+> Seems the only files/folders that shouldn't get copied are the block
+> device ones that are created at boot and are not really on the drive.
+>=20
+They'll all get copied, but you won't necessarily get the correct
+contents.  Because the system is in use:
+ - files will be being written, so you'll either get a partial copy, or
+   an old version.
+ - files may be locked, so you won't be able to copy them.
 
-Yes, he should provide correct /etc/mdadm/mdadm.conf and
-update-initramfs -u on md boot, smth like
-chroot /mnt/md0
-update-initramfs -u
+Doing a backup of a running system using cp/rsync will work fine for a
+lot of things (especially for config files, documents, etc) but will
+almost certainly fail miserably for some (databases for example).
 
-On Fri, Apr 10, 2009 at 1:10 PM, KwangErn Liew <admin@musmo.com> wrote:
->
-> Timothy D. Lenz wrote:
->>
->> Ended with warning: unable to open an initial console. I was able to
->> scroll back and didn't really see any errors. Don't know if I
->> missed a change to some config file or something else that should be built
->> into the kernel. I have gone over a lot of "guides" and
->> don't see what is missing.
->
-> FYI, I've never been successful in booting RAID without initrd even though
-> all necessary modules are built-in. I guess mdadm.conf requires initrd to
-> kick start?
->
->
-> KwangErn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html
->
+HTH,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
+--EVF5PPMfhYS0aIcm
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.10 (GNU/Linux)
 
--- 
--- 
-Best regards,
-[COOLCOLD-RIPN]
+iEYEARECAAYFAknfouwACgkQShxCyD40xBKnVwCfdbAZgQaDXJydTsSHoorJNY2J
+KVUAn3woxt4BVRBgSkB4wj9axRc/GIBq
+=YbwW
+-----END PGP SIGNATURE-----
+
+--EVF5PPMfhYS0aIcm--
