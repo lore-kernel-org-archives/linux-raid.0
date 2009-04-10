@@ -1,42 +1,55 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Recreate raid 10 array
-Date: Fri, 10 Apr 2009 03:41:45 +0200
-Message-ID: <874owx5lpi.fsf@frosties.localdomain>
-References: <49DA5CE6.7030902@gmx.net> <87prfpdm8y.fsf@frosties.localdomain>
-	<49DD1B87.2050804@tmr.com> <1239227842.18515.8.camel@cichlid.com>
-	<49DD21C6.4060200@gmx.net> <1239274037.23944.3.camel@cichlid.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: RAID halting
+Date: Thu, 9 Apr 2009 22:02:47 -0500
+Message-ID: <20090410030252.RSAN6222.cdptpa-omta03.mail.rr.com@Leslie>
+References: <1239208193.27764.9.camel@cichlid.com>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1239274037.23944.3.camel@cichlid.com> (Andrew Burgess's message
-	of "Thu, 09 Apr 2009 03:47:17 -0700")
+In-Reply-To: <1239208193.27764.9.camel@cichlid.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Burgess <aab@cichlid.com>
-Cc: LCID Fire <lcid-fire@gmx.net>, linux-raid@vger.kernel.org
+To: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Andrew Burgess <aab@cichlid.com> writes:
+> > I think the only way to switch schedulers is to reboot.  You invoke
+> > the noop scheduler via a command line arg to the kernel at boot time.
+> 
+> This can be done at any time, no reboot required:
+> 
+>  for f in /sys/block/*/queue/scheduler; do
+>     echo noop > $f
+>     echo $f "$(cat $f)"
+>   done
 
-> On Thu, 2009-04-09 at 00:14 +0200, LCID Fire wrote:
->
->> > Most fscks can be told to run read-only so they won't write to the
->> > device and also interactive so they ask before writing so you should be
->> > able to avoid recopying. The ext3 journal recovery violates at least one
->> > of these IIRC (or used to) so if it's ext3 find an option to tell it to
->> > ignore the journal.
->
->> Too late. The journal recovery did complain quite a bit and I didn't 
->> know better than to have it fix the things it liked to fix.
->
-> Sorry to hear that. Actually our advice should have been to assemble the
-> array read-only, then all manner of fs bugs/features could not write to
-> it.
+OK, I did this.  Two questions:
 
-But then you couldn't mount it at all since the journal replay needs
-to happen in ext3.
+1.  The system responded in each case with this: "/sys/block/<block
+device>/queue/scheduler [noop] anticipatory deadline cfq".  Is this as
+expected?
 
-> If anyone ever implements the --wild-ass-guess/--recreate mdadm option
-> perhaps that should automatically set read-only?
+2.  To switch back to the default scheduler, which I take it is CFQ, do I
+simply issue the command above, replacing the string "noop" with "cfq"?
 
-MfG
-        Goswin
+
+> Just FYI, I don't think ionice and friends will work when using noop.
+> 
+> Leslie: I still think finding out what the kernel is doing during the
+> stall would be a HUGE hint to the problem. Did you look into oprofile or
+> ftrace?
+
+I couldn't find a Debian source for ftrace, but I did download oprofile.  I
+am going to require some guidance, however.  I understand in general terms
+what oprofile does, and vaguely what is involved with setup and
+configuration, but it's quite a powerful and flexible tool, and I have
+little or no idea of where to head with specifics.  If someone would care to
+send a little guidance on what parameters I need to employ for setup and
+configuration, and what processes I need to profile, I would be most
+grateful.
+
+Not knowing what to expect for an output, I may also require some help with
+analysis.  If anyone wishes to help, but would prefer to take it offline,
+please feel free to e-mail me directly.  Otherwise, please respond here.
+
