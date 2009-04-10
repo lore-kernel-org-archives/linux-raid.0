@@ -1,71 +1,98 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Converting system to raid
-Date: Fri, 10 Apr 2009 21:59:42 +0100
-Message-ID: <20090410205942.GC21242@cthulhu.home.robinhill.me.uk>
-References: <003801c9b96d$21a0f420$0a00a8c0@vorg> <49DF0D06.8030705@musmo.com> <20090410195303.GB21242@cthulhu.home.robinhill.me.uk> <00cc01c9ba1d$3aefecf0$0a00a8c0@vorg>
+From: Jared Raddigan <jraddigan@kfh.org>
+Subject: Mirroring Entire Drives Partition Type Clarification
+Date: Fri, 10 Apr 2009 14:00:23 -0700
+Message-ID: <68c007470904101400s498b2d03w79e15072f1fa6605@mail.gmail.com>
+References: <68c007470904101351y7442396bla5366afbc7653e10@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="S1BNGpv0yoYahz37"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <00cc01c9ba1d$3aefecf0$0a00a8c0@vorg>
+In-Reply-To: <68c007470904101351y7442396bla5366afbc7653e10@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Playing with mdadm today I noticed it seems to allow full drive
+mirroring something I remember that raidtools would fail on.
 
---S1BNGpv0yoYahz37
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+ Back in raidtools days I remember that even though it was possible to
+mirror an entire drive with a single md volume (sda, sdb rather than
+sda1, sdb1) it really did not work and was not recommended.=A0 It looks
+like that is no longer the case with mdadm.   Here is what I did.
 
-On Fri Apr 10, 2009 at 01:45:00PM -0700, Timothy D. Lenz wrote:
+ Took two hard drives and created a single partition that spans the
+whole drive.=A0 then do:
 
-> Great, for every bit of nudge forward I end up a step or two back. Not
-> I have to figure out this copy stuff. Is there any easy way to do some
-> sort of compair after cp/rsync to see if/what was missed? Creating yet
-> another botable disk to get the copy over to the array would be a bit
-> of a pain. Might be easyer to pull the hda from one computer, stick it
-> in another or usb case and copy to a temp storage area. on the other
-> computer. Then put the drive back and copy from the temp storage to
-> the array over then network. Nether computer has any ftp or web
-> servers or a desktop. The older computer with the 3 sata drives does
-> have mysql installed because I started to mess with setting up mythtv
-> but never finished.
->=20
-The easiest option is to use a bootable CD - there's plenty of linux CDs
-around (have a look at http://linuxiso.org - my preferred one is GRML)).
-Otherwise, yes, putting the drive into another system and doing the copy
-there would work fine.
+ mdadm --create --level=3Dmirror --raid-devices=3D2 /dev/md1 /dev/sd[ab=
+]1
 
-> As for the other reply, the sata drives each have 3 primary partitions
-> all set to type fd and formated with ext3. I was going to try ext4 for
-> the main storage of the newer system but I found there is a problem
-> with kernels .27 and newer on nforce2 and newer boards. some sort of
-> problem with the bios and apci. How do I find out which superblocks
-> version is used?
->=20
-Either "mdadm -D" on the array, or "mdadm -E" on one of the partitions
-will show you the version.
+ Look using mdadm --detail and see
+ Number=A0=A0 Major=A0=A0 Minor=A0=A0 RaidDevice State
+ =A0=A0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0=A0 1=A0=A0=A0=
+=A0=A0=A0=A0 0=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sda1
+ =A0=A0=A0=A0=A0=A0 1=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 17=A0=A0=A0=
+=A0=A0=A0=A0 1=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdb1
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
 
---S1BNGpv0yoYahz37
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+ I reboot and now using mdadm --detail I see:
+ Number=A0=A0 Major=A0=A0 Minor=A0=A0 RaidDevice State
+ =A0=A0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0=A0 0=A0=A0=A0=
+=A0=A0=A0=A0 0=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sda
+ =A0=A0=A0=A0=A0=A0 1=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 16=A0=A0=A0=
+=A0=A0=A0=A0 1=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdb
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.10 (GNU/Linux)
+ So it would seem mdadm basically figured out what I wanted to do and
+no longer shows the partition number after a reboot.=A0 So next deleted
+all partitions on the drives and recreated the raid set without
+referencing the partitions
 
-iEYEARECAAYFAknfsz0ACgkQShxCyD40xBIGSgCgjf0d65B/onXGCE5YCtzzKMBi
-ZBMAoMSrGwSiJVkSWVX3hiQAKr6LCwY0
-=B+XI
------END PGP SIGNATURE-----
+ mdadm --create --level=3Dmirror --raid-devices=3D2 /dev/md1 /dev/sd[ab=
+]
 
---S1BNGpv0yoYahz37--
+ That worked just fine and now=A0 mdadm --detail gives me the same as
+before (but without rebooting)
+ Number=A0=A0 Major=A0=A0 Minor=A0=A0 RaidDevice State
+ =A0=A0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0=A0 0=A0=A0=A0=
+=A0=A0=A0=A0 0=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sda
+ =A0=A0=A0=A0=A0=A0 1=A0=A0=A0=A0=A0=A0 8=A0=A0=A0=A0=A0=A0 16=A0=A0=A0=
+=A0=A0=A0=A0 1=A0=A0=A0=A0=A0 active sync=A0=A0 /dev/sdb
+
+
+ My questions are:
+
+ Is there anything wrong with doing this as this was not recommend
+with raidtools.=A0 This with LVM or partition the md directly (cool
+feature you added) seems like a hard combo to beat?
+
+ Does the MBR get synced across the drives when doing this?
+
+ I know partition type does not seem to matter with mdadm compared to
+raidtools, but when creating partitions I use "da" rather than "fd",
+is that the recommended type or since it no longer seems to matter no
+one really cares what you use?
+
+ I am using version mdadm - v2.6.7.2 - 14th November 2008 from Debian L=
+enny
+
+ Thanks and I am pretty excited how mdadm keeps getting better and bett=
+er.
+
+ --
+ Jared
+
+
+>
+>
+
+
+
+--
+Jared Raddigan
+Koinonia I.T. Director
+p. 916-577-7982 x101
+http://www.kfh.org
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
