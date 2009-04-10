@@ -1,61 +1,72 @@
-From: Robin Hill <robin@robinhill.me.uk>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
 Subject: Re: RAID-6 horizontal grow
-Date: Fri, 10 Apr 2009 22:58:33 +0100
-Message-ID: <20090410215833.GF21242@cthulhu.home.robinhill.me.uk>
-References: <20090410215435.GA10451@lazy.lzy>
+Date: Sat, 11 Apr 2009 00:34:33 +0200
+Message-ID: <20090410223433.GA10797@lazy.lzy>
+References: <20090410215435.GA10451@lazy.lzy> <20090410215833.GF21242@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="E7i4zwmWs5DOuDSH"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20090410215435.GA10451@lazy.lzy>
+In-Reply-To: <20090410215833.GF21242@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi again,
 
---E7i4zwmWs5DOuDSH
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I made a quick test, but that does not seem to
+work, at least with RAID-6.
 
-On Fri Apr 10, 2009 at 11:54:35PM +0200, Piergiorgio Sartor wrote:
+What I did was to create 4 loop devices of 128MB
+and then a RAID-6, metadata 1.1, on top of that.
+The I stopped the array and the loop, I added
+another 128MB (added as in "dd ... >> file"),
+run "losetup" again and "mdadm -A ...".
+Then "mdadm --grow --size=max ...", but the size
+of the array did not change from 256MB (2x128MB).
+The loop devices are 256MB (wc -c /dev/loop..).
 
-> Hi all,
->=20
-> is it possible to grow a RAID-6, not by adding
-> more drives, but by extending the partions which
-> are composing the array?
->=20
-> In other words, let's say I've "n" partitions of
-> "x" GB forming a RAID-6 array. After some time I
-> increase the size of each partition to "y" GB, of
-> course y > x.
-> Is it then possible to use the complete space
-> growing the array?
-> How?
->=20
-Yes - "mdadm --grow --size=3Dmax /dev/mdX".  You'll also need to grow the
-filesystem afterwards of course.
+So, either I'm missing something or this type of
+grow does not seem to affect RAID-6.
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+Any ideas?
 
---E7i4zwmWs5DOuDSH
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+Thanks again,
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.10 (GNU/Linux)
+bye,
 
-iEYEARECAAYFAknfwQgACgkQShxCyD40xBLJjwCbBUFBRTUbOxOHhRDVphQqg0hr
-GUEAoJ9uytjMZv6USLBY+Lk5HdHBubaK
-=FvXr
------END PGP SIGNATURE-----
+pg
 
---E7i4zwmWs5DOuDSH--
+On Fri, Apr 10, 2009 at 10:58:33PM +0100, Robin Hill wrote:
+> On Fri Apr 10, 2009 at 11:54:35PM +0200, Piergiorgio Sartor wrote:
+> 
+> > Hi all,
+> > 
+> > is it possible to grow a RAID-6, not by adding
+> > more drives, but by extending the partions which
+> > are composing the array?
+> > 
+> > In other words, let's say I've "n" partitions of
+> > "x" GB forming a RAID-6 array. After some time I
+> > increase the size of each partition to "y" GB, of
+> > course y > x.
+> > Is it then possible to use the complete space
+> > growing the array?
+> > How?
+> > 
+> Yes - "mdadm --grow --size=max /dev/mdX".  You'll also need to grow the
+> filesystem afterwards of course.
+> 
+> Cheers,
+>     Robin
+> -- 
+>      ___        
+>     ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+>    / / )      | Little Jim says ....                            |
+>   // !!       |      "He fallen in de water !!"                 |
+
+
+
+-- 
+
+piergiorgio
