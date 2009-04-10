@@ -1,52 +1,25 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Converting system to raid
-Date: Fri, 10 Apr 2009 14:22:33 +0100
-Message-ID: <20090410132233.GA15442@cthulhu.home.robinhill.me.uk>
-References: <003801c9b96d$21a0f420$0a00a8c0@vorg>
+From: LCID Fire <lcid-fire@gmx.net>
+Subject: Re: Recreate raid 10 array
+Date: Fri, 10 Apr 2009 16:25:35 +0200
+Message-ID: <49DF56DF.4050206@gmx.net>
+References: <49DA5CE6.7030902@gmx.net> <87prfpdm8y.fsf@frosties.localdomain>	 <49DD1B87.2050804@tmr.com> <1239227842.18515.8.camel@cichlid.com> <49DD21C6.4060200@gmx.net> <49DF270C.4080600@gmx.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ikeVEW9yuYc//A+q"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <003801c9b96d$21a0f420$0a00a8c0@vorg>
+In-Reply-To: <49DF270C.4080600@gmx.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
---ikeVEW9yuYc//A+q
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Thu Apr 09, 2009 at 04:44:25PM -0700, Timothy D. Lenz wrote:
-
-> I used "sudo cp -axu / /mnt/md0" to copy hda to md0. I changed
-> /mnt/md0/etc/fstab so that "/" os /md0 instead of /hda.
->=20
-This won't work properly, for a start.  You _cannot_ copy a running
-system - there's bound to be data which hasn't yet been flushed to disk,
-as well as locked files.  You need to boot off a CD (or another
-partition) and do the copy from there.
-
-HTH,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---ikeVEW9yuYc//A+q
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.10 (GNU/Linux)
-
-iEYEARECAAYFAknfSBkACgkQShxCyD40xBK2zACfTyGDMV03tgEeQkF3o31m2qmB
-PW0AoKeQWxRRIn9jazRQOZxClambGmmx
-=Q63h
------END PGP SIGNATURE-----
-
---ikeVEW9yuYc//A+q--
+LCID Fire wrote:
+> And now also some bad news again :(
+> Appearently something is wrong.
+> mount /dev/md0 /mnt
+> complains
+> mount: unknown filesystem type 'linux_raid_member'
+> 
+> On older kernels it works when stating ext3 as the filesystem - but with 
+> recent 2.6.28/mdadm it doesn't anymore.
+Seems like I accidentally added /dev/md0 to another (temporarily) raid 
+device. After removing the superblock it works fine now.
