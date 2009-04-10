@@ -1,57 +1,25 @@
-From: CoolCold <coolthecold@gmail.com>
-Subject: Re: Converting system to raid
-Date: Fri, 10 Apr 2009 13:55:53 +0400
-Message-ID: <f19d625d0904100255j1ee672b8ped4b6b517a7f9dc5@mail.gmail.com>
-References: <003801c9b96d$21a0f420$0a00a8c0@vorg> <49DF0D06.8030705@musmo.com>
+From: LCID Fire <lcid-fire@gmx.net>
+Subject: Re: Recreate raid 10 array
+Date: Fri, 10 Apr 2009 13:01:32 +0200
+Message-ID: <49DF270C.4080600@gmx.net>
+References: <49DA5CE6.7030902@gmx.net> <87prfpdm8y.fsf@frosties.localdomain>	 <49DD1B87.2050804@tmr.com> <1239227842.18515.8.camel@cichlid.com> <49DD21C6.4060200@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49DF0D06.8030705@musmo.com>
+In-Reply-To: <49DD21C6.4060200@gmx.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: admin@musmo.com
-Cc: "Timothy D. Lenz" <tlenz@vorgon.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Yes, he should provide correct /etc/mdadm/mdadm.conf and
-update-initramfs -u on md boot, smth like
-chroot /mnt/md0
-update-initramfs -u
+LCID Fire wrote:
+> First off the good news: I'm currently running on my raid10 again - 
+> with only little data loss.
+And now also some bad news again :(
+Appearently something is wrong.
+mount /dev/md0 /mnt
+complains
+mount: unknown filesystem type 'linux_raid_member'
 
-On Fri, Apr 10, 2009 at 1:10 PM, KwangErn Liew <admin@musmo.com> wrote:
->
-> Timothy D. Lenz wrote:
->>
->> Ended with warning: unable to open an initial console. I was able to
->> scroll back and didn't really see any errors. Don't know if I
->> missed a change to some config file or something else that should be=
- built
->> into the kernel. I have gone over a lot of "guides" and
->> don't see what is missing.
->
-> FYI, I've never been successful in booting RAID without initrd even t=
-hough
-> all necessary modules are built-in. I guess mdadm.conf requires initr=
-d to
-> kick start?
->
->
-> KwangErn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
-
-
-
---=20
---=20
-Best regards,
-[COOLCOLD-RIPN]
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On older kernels it works when stating ext3 as the filesystem - but with 
+recent 2.6.28/mdadm it doesn't anymore.
