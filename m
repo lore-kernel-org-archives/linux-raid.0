@@ -1,62 +1,64 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Thoughts on using SSD
-Date: Fri, 10 Apr 2009 19:14:12 +1000
-Message-ID: <18911.3556.260172.777291@notabene.brown>
-References: <49CC0B0D.5000904@tmr.com>
-	<18892.22531.392563.258229@notabene.brown>
-	<49DE7611.4070703@tmr.com>
+Subject: Re: mdadm udev rules change
+Date: Fri, 10 Apr 2009 19:22:38 +1000
+Message-ID: <18911.4062.64497.82446@notabene.brown>
+References: <3B6F676A-5ADD-4741-8269-D7D655C4E21E@redhat.com>
+	<18908.21182.706667.310243@notabene.brown>
+	<A9A53B64-720E-48DF-8377-5FCFDA2D6A7A@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Bill Davidsen on Thursday April 9
+In-Reply-To: message from Doug Ledford on Thursday April 9
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Doug Ledford <dledford@redhat.com>
+Cc: LinuxRaid RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thursday April 9, davidsen@tmr.com wrote:
-> Neil Brown wrote:
-> > On Thursday March 26, davidsen@tmr.com wrote:
-> >   
-> >> I'm building a fairly aggressive machine for both a backup host for 
-> >> virtual machines and spare time development platform, compile engine and 
-> >> testbed both. I want to get cost effective use from an SSD unit, and I 
-> >> propose to use a 32GB unit as follows: for the root filesystem, 12GB, 
-> >> which should hold all the usual root things, and 16GB for swap (12GB 
-> >> RAM, and I want boot and/or hibernate to happen NOW). The remaining 
-> >> space I think might be used for various high impact things, and one of 
-> >> those with speeding raid.
-> >>
-> >> If I were to create a small raid device, raid1, made of the 4GB Ssd and 
-> >> 4GB of SATA space, if I made the SATA write-mostly and write-behind, and 
-> >> put the journal for my raid arrays (and bitmaps?) that seems likely to 
-> >> provide a significant performance gain in small storage.
-> >>
-> >> Am I missing anything here? Is there an obvious drawback I'm missing?
-> >>     
+On Thursday April 9, dledford@redhat.com wrote:
+> On Apr 8, 2009, at 3:31 AM, Neil Brown wrote:
 > >
+> > And you are saying that if we uncomment the "#ENV{...." line, then we
+> > only want it to fire on add devices.  So something like:
 > >
-> > I'd probably just put the journal on the SSD and mount my ext3
-> > filesystem data=journal
+> > ....
+> > ACTION!="add|change", GOTO="md_end"
+> > +ACTION=="change", GOTO="no_incr"
 > >
-> > That has a similar effect to raid1/write-behind in that data is
-> > written to both but we only wait for the write to the SSD to
-> > complete.  But as it is done at the filesystem level - and the
-> > filesystem has a much better idea what it is doing - you would expect
-> > to get much more efficient results.  e.g. less wasted memory, much
-> > larger amount of data that is safe of SSD but still trickling out to
-> > the HD.
-> >   
+> > # import data from a raid member and activate it
+> > #ENV{ID_FS_TYPE}=="linux_raid_member", IMPORT{program}="/sbin/mdadm  
+> > --examine --export $tempnode", RUN+="/sbin/mdadm --incremental  
+> > $env{DEVNAME}"
+> > # import data from a raid set
+> > +LABEL="no_incr"
+> > KERNEL!="md*", GOTO="md_end"
+> > ......
+> >
+> > Is that correct?
+> >
+> > Your explanation certainly seems reasonable.
 > 
-> But I think for raid in general you would benefit from having the bitmap 
-> on SSD as well. In my dreams I also put the inodes on that SSD, and 
-> everything runs 10x faster. Unfortunately no f/s seems to offer this.
+> As I was reading through this, I certainly thought the above  
+> implementation was reasonable, and then I got this new bug report:
+> 
+> https://bugzilla.redhat.com/show_bug.cgi?id=495034
 
-Sounds like hierarchical storage management at a different level.
-Keep the metadata on a fast device and allow the data to migrate on to
-slow devices.
-I'm sure we'll get there one day.... if only there were more hours in
-the day :-)
+I'm guessing this bug is because the line
+
+TEST!="md/array_state", GOTO="md_end"
+
+is missing from the udev rules file??  It is a relatively recent
+addition.
+
+> 
+> I would do some investigation on your own machines, but given udev  
+> change semantics, I think the proper course of action is simply to not  
+> watch changes.
+
+We absolutely have to watch change events on md devices.
+When the "new" event happens, the array doesn't exist yet.  We have
+just started building it.  Once it is fully assembled and started a
+change event happens and it is on that event that we create /dev
+files, look for partitions, and mount filesystems.
 
 NeilBrown
