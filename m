@@ -1,99 +1,46 @@
-From: Robin Hill <robin@robinhill.me.uk>
+From: jim owens <jowens@hp.com>
 Subject: Re: Converting system to raid
-Date: Sat, 11 Apr 2009 15:36:42 +0100
-Message-ID: <20090411143642.GA9915@cthulhu.home.robinhill.me.uk>
-References: <003801c9b96d$21a0f420$0a00a8c0@vorg> <49DF0D06.8030705@musmo.com> <20090410195303.GB21242@cthulhu.home.robinhill.me.uk> <00cc01c9ba1d$3aefecf0$0a00a8c0@vorg> <20090410205942.GC21242@cthulhu.home.robinhill.me.uk> <00f301c9ba23$032025f0$0a00a8c0@vorg> <20090410215129.GD21242@cthulhu.home.robinhill.me.uk> <019701c9ba66$aeed5630$0a00a8c0@vorg>
+Date: Sat, 11 Apr 2009 11:04:40 -0400
+Message-ID: <49E0B188.8050009@hp.com>
+References: <003801c9b96d$21a0f420$0a00a8c0@vorg> <49DF0D06.8030705@musmo.com> <20090410195303.GB21242@cthulhu.home.robinhill.me.uk> <00cc01c9ba1d$3aefecf0$0a00a8c0@vorg> <20090410205942.GC21242@cthulhu.home.robinhill.me.uk> <00f301c9ba23$032025f0$0a00a8c0@vorg> <20090410215129.GD21242@cthulhu.home.robinhill.me.uk> <019701c9ba66$aeed5630$0a00a8c0@vorg> <20090411143642.GA9915@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="J/dobhs11T7y2rNN"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <019701c9ba66$aeed5630$0a00a8c0@vorg>
+In-Reply-To: <20090411143642.GA9915@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Robin Hill wrote:
+>> From: "CoolCold" <coolthecold@gmail.com>
+>>
+>> # rsync -avHhx --progress --delete / /mnt/raid-md0
+>>
+> Yes, this is an alternative to running from a bootable CD.  In
+> single-user mode (init 1), there can be no background applications
+> running, so there should be no open files to worry about.  I'd still
+> rather use a bootable CD though.
 
---J/dobhs11T7y2rNN
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Strong ACK on bootable CD as the right method, or doing it all
+while init 1... not as a 2-step multi-user mode, single user.
 
-On Fri Apr 10, 2009 at 10:29:59PM -0700, Timothy D. Lenz wrote:
+rsync is a very good tool but unless you use:
 
-> From: "CoolCold" <coolthecold@gmail.com>
->=20
-> > Yes, he should provide correct /etc/mdadm/mdadm.conf and
-> > update-initramfs -u on md boot, smth like
-> > chroot /mnt/md0
-> > update-initramfs -u
->=20
-> How would this help in a system that doesn't ramdisk built in to the
-> kernel or as a module? Or does it change some other stuff?
->=20
-This is useless if you don't use an initrd.
+    -c, --checksum    skip based on checksum, not mod-time & size
 
-> I started looking at the stuff that was copied to md0 and /md0/dev is
-> empty. Looking through the guides I found a few things. One said that
-> using cp had to be from root or not everything would get coppied. I
-> used sudo but I know some things require you to root.
->
-This shouldn't matter in this case.  The reason you're getting nothing
-copied in /dev is that it's a mounted filesystem, and your copy command
-specifically excludes mounted filesystems.
+the consistency between runs is not 100% safe.  It may be 99.9%,
+but the problem is that for file blocks being rewritten you don't
+know what is on disk or in memory and mod-time only changes at the
+whim of the FS (I'm an FS developer) and at the granularity of
+the FS and system clock... nanosecond time stamps are a myth!
 
-> Also this:
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D
-> # rsync -avHhx --progress / /mnt/raid-md0
->=20
->     * If the system wasn't previously in single user mode, move to
->     single user mode and update the data that changed during the first
->     copy:
-> (--delete flag tells rsync to delete files from the destination which
-> do not exist on the source):
->=20
-> # rsync -avHhx --progress --delete / /mnt/raid-md0
->=20
-Yes, this is an alternative to running from a bootable CD.  In
-single-user mode (init 1), there can be no background applications
-running, so there should be no open files to worry about.  I'd still
-rather use a bootable CD though.
+And if you are going to use the rsync -c 2-pass method it will
+probably take your system off line longer than a CD boot and copy.
 
->     * Create needed device nodes:
->=20
-> # cd /mnt/raid-md0/dev/ && MAKEDEV generic
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D
-> Using rsync from single user mode still left /mnt/md0/dev empty. I
-> read up in "makedev generic" and it seems to be a shotgun fix adding
-> way more then is needed. Is there a way to create just what is in
-> /dev?
->=20
-Again, the rsync command includes the 'x' option so excludes mounted
-filesystems (which is what you want here).  You can copy the necessary
-/dev entries manually - I think the only entries you need are
-/dev/console & /dev/null, so:
-    cp -a /dev/console /dev/null /mnt/raid-md0/dev
+At the end of process, is 99.9% good enough?  For much of my
+backup needs it is because I only care about not loosing more
+than a small amount of work.  But if I'm converting to a new
+disk and loosing the old one, I want 100%.
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---J/dobhs11T7y2rNN
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.10 (GNU/Linux)
-
-iEYEARECAAYFAkngqvkACgkQShxCyD40xBKFlgCgsfZ5gJh076LRZyf7sY1bAVWJ
-hPYAoIbbAVvb1lxIvS8LJJbmAEJP5YkQ
-=8t2F
------END PGP SIGNATURE-----
-
---J/dobhs11T7y2rNN--
+jim
