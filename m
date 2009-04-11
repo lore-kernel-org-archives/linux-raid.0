@@ -1,46 +1,50 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Converting system to raid
-Date: Sat, 11 Apr 2009 10:50:35 +0200
-Message-ID: <87y6u7o9pg.fsf@frosties.localdomain>
-References: <003801c9b96d$21a0f420$0a00a8c0@vorg>
-	<20090410132233.GA15442@cthulhu.home.robinhill.me.uk>
-	<008001c9ba12$3ac92c10$0a00a8c0@vorg>
-	<20090410195006.GA21242@cthulhu.home.robinhill.me.uk>
-	<Pine.LNX.4.61.0904110035420.6312@soloth.lewis.org>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: RAID-6 horizontal grow
+Date: Sat, 11 Apr 2009 19:53:54 +1000 (EST)
+Message-ID: <bf90f0dca1b3c313c8ef5e74a4648938.squirrel@neil.brown.name>
+References: <20090410215435.GA10451@lazy.lzy>
+    <20090410215833.GF21242@cthulhu.home.robinhill.me.uk>
+    <20090410223433.GA10797@lazy.lzy> <20090411082348.GA3983@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0904110035420.6312@soloth.lewis.org> (Jon Lewis's
-	message of "Sat, 11 Apr 2009 00:40:37 -0400 (EDT)")
+In-Reply-To: <20090411082348.GA3983@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Lewis <jlewis@lewis.org>
-Cc: Robin Hill <robin@robinhill.me.uk>, linux-raid@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jon Lewis <jlewis@lewis.org> writes:
-
-> On Fri, 10 Apr 2009, Robin Hill wrote:
+On Sat, April 11, 2009 6:23 pm, Piergiorgio Sartor wrote:
+> Hi again,
 >
->> On Fri Apr 10, 2009 at 12:22:44PM -0700, Timothy D. Lenz wrote:
->>
->>> How can cp not work? every guide I found used ether cp or rsync. Even
->>> guides on seting up an auto backup system use cp or rsync.
->>> Seems the only files/folders that shouldn't get copied are the block
->>> device ones that are created at boot and are not really on the drive.
->>>
->> They'll all get copied, but you won't necessarily get the correct
->> contents.  Because the system is in use:
->> - files will be being written, so you'll either get a partial copy, or
->>   an old version.
->> - files may be locked, so you won't be able to copy them.
->>
->> Doing a backup of a running system using cp/rsync will work fine for a
->> lot of things (especially for config files, documents, etc) but will
->> almost certainly fail miserably for some (databases for example).
+> I answer to myself.
+>
+> It seems that the array needs to be assembled
+> with "--update devicesize", so that later the
+> "--grow --size=max" could really work.
 
-What one can easily do is rsync the running system, then init 1 and
-rsync again to get all the changed or blocked files. In runlevel 1
-there should be nothing left blocking files.
+I love it when people find out answers by themselves - it shows the
+documentation isn't completely worthless :-)
 
-MfG
-        Goswin
+>
+> It also seems that "--update" works only with
+> "--assemble".
+> Is there any way to update the device size "live",
+> i.e. without stopping and re-assembling the array?
+> (and without failing/removing/adding components?).
+
+I think so, but mdadm cannot do it for you (yet).
+
+If you
+  for i in /sys/block/mdX/md/dev-*/size
+  do echo 0 > $i
+  done
+
+it will have much the same effect as --assemble --update devicesize
+
+Then you can
+   --grow --size=max
+
+NeilBrown
+
