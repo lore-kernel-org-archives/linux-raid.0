@@ -1,46 +1,73 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: RAID-6 horizontal grow
-Date: Sat, 11 Apr 2009 12:40:47 +0200
-Message-ID: <20090411104047.GA4489@lazy.lzy>
-References: <20090410215435.GA10451@lazy.lzy> <20090410215833.GF21242@cthulhu.home.robinhill.me.uk> <20090410223433.GA10797@lazy.lzy> <20090411082348.GA3983@lazy.lzy> <bf90f0dca1b3c313c8ef5e74a4648938.squirrel@neil.brown.name>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: RAID halting
+Date: Sat, 11 Apr 2009 09:02:39 -0400
+Message-ID: <49E094EF.6030206@tmr.com>
+References: <20090411013735.VDNG2520.cdptpa-omta04.mail.rr.com@Leslie>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <bf90f0dca1b3c313c8ef5e74a4648938.squirrel@neil.brown.name>
+In-Reply-To: <20090411013735.VDNG2520.cdptpa-omta04.mail.rr.com@Leslie>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: lrhorer@satx.rr.com
+Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+Leslie Rhorer wrote:
+>>> Something very disturbing is happening now, however.  Just a few minutes
+>>> after loading oprofile, the system did a sudden total shutdown.  The
+>>>       
+>> file
+>>     
+>>> systems were all left dirty, and power was suddenly cut to the main
+>>>       
+>> chassis.
+>>     
+>>> This has never happened before.  I rebooted the system, and the file
+>>>       
+>> systems
+>>     
+>>> replayed their journals.  Some data was lost, of course, but nothing
+>>> serious.  A few hours later, the exact same thing happened again:  A
+>>>       
+>> sudden
+>>     
+>>> shut-down.  Nothing like this has ever happened before.  Of course the
+>>> system can issue a power shutdown from software, but it is supposed to
+>>>       
+>> clean
+>>     
+>>> up the file systems first, and it's not supposed to just do it
+>>>       
+>> autonomously.
+>>     
+>> Just for grins, is this system by any chance on a UPS? Because I found
+>> an interesting failure mode if that's the case.
+>>     
+>
+> Yeah, you bet.  Indeed, the first thing I considered was a false Low Battery
+> indication causing the system to shut down, but in that case it should have
+> been a clean shut-down.
+>   
 
-> I love it when people find out answers by themselves - it shows the
-> documentation isn't completely worthless :-)
+Actually what I saw was that the load exceeded the charge capacity, so 
+the battery gradually discharged, and at some point the UPS just shut 
+off (or the output voltage got so low the system crashed). The cause was 
+not too much load, but a failure of a diode in the charging circuit, 
+such that the full wave rectifier became a half wave rectifier, and in 
+addition to the other problems there was a lot of noise on the output 
+voltage.
 
-well, I think the mdadm man page is good and
-complete, even if it requires several re-reads
-in order to get all the information... :-)
-It is definitely worth!
-
-BTW, maybe it would be good to update the wiki
-page about this topic.
-
-> I think so, but mdadm cannot do it for you (yet).
-> 
-> If you
->   for i in /sys/block/mdX/md/dev-*/size
->   do echo 0 > $i
->   done
-> 
-> it will have much the same effect as --assemble --update devicesize
-
-Thank you so much!
-This is exactly what I needed!
- 
-Thanks again,
-
-bye,
+Anyway, just a thought, if this falls over often I would take a chance 
+on losing power and run on just a surge protector for a little bit to 
+see if any UPS issue might be involved.
 
 -- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
 
-piergiorgio
+"You are disgraced professional losers. And by the way, give us our money back."
+    - Representative Earl Pomeroy,  Democrat of North Dakota
+on the A.I.G. executives who were paid bonuses  after a federal bailout.
+
+
