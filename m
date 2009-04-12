@@ -1,38 +1,49 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: "Timothy D. Lenz" <tlenz@vorgon.com>
 Subject: Re: Converting system to raid
-Date: Sun, 12 Apr 2009 13:18:44 -0400
-Message-ID: <49E22274.9000404@garzik.org>
-References: <003801c9b96d$21a0f420$0a00a8c0@vorg> <49DF0D06.8030705@musmo.com> <20090410195303.GB21242@cthulhu.home.robinhill.me.uk> <00cc01c9ba1d$3aefecf0$0a00a8c0@vorg> <20090410205942.GC21242@cthulhu.home.robinhill.me.uk> <00f301c9ba23$032025f0$0a00a8c0@vorg> <20090410215129.GD21242@cthulhu.home.robinhill.me.uk> <019701c9ba66$aeed5630$0a00a8c0@vorg> <20090411143642.GA9915@cthulhu.home.robinhill.me.uk> <49E0B188.8050009@hp.com> <49E0BAF9.3090209@garzik.org> <49E0D60E.7040904@hp.com> <49E1CC6F.7020409@garzik.org> <49E21A1A.4020004@hp.com>
+Date: Sun, 12 Apr 2009 12:55:33 -0700
+Message-ID: <000b01c9bba8$a5b08a40$0a00a8c0@vorg>
+References: <49DF0D06.8030705@musmo.com> <20090410195303.GB21242@cthulhu.home.robinhill.me.uk> <00cc01c9ba1d$3aefecf0$0a00a8c0@vorg> <20090410205942.GC21242@cthulhu.home.robinhill.me.uk> <00f301c9ba23$032025f0$0a00a8c0@vorg> <20090410215129.GD21242@cthulhu.home.robinhill.me.uk> <019701c9ba66$aeed5630$0a00a8c0@vorg> <f19d625d0904110729y30e8bc80m41fcd8f2c3298d49@mail.gmail.com> <007001c9bad6$2525c610$0a00a8c0@vorg> <001201c9bb09$3161e9d0$0a00a8c0@vorg> <20090412111107.GA19413@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49E21A1A.4020004@hp.com>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-jim owens wrote:
-> To continue the pointless (but maybe entertaining) argument :)
+While booted on the array I renamed device.map and ran:
+sudo grub --no-floppy --device-map=/boot/grub/device.map
+
+But the new map is the same:
+(hd0) /dev/hda
+(hd1) /dev/sda
+(hd2) /dev/sdb
+
+----- Original Message ----- 
+From: "Robin Hill" <robin@robinhill.me.uk>
+To: <linux-raid@vger.kernel.org>
+Sent: Sunday, April 12, 2009 4:11 AM
+Subject: Re: Converting system to raid
+
+> Before when at the grub boot menu when booting with the ide moved
+> below the sata drives, droping to command line for grub showed that
+> the ide drive only moved down 1, not 2. It seemed to have:
+>   hd0 = sda
+>   hd1 = hda
+>   hd2 = sdb
 > 
-> Jeff Garzik wrote:
->> jim owens wrote:
->>> The filesystem mod-time might have nanoseconds in it, but
->>> that does not mean 2 writes 100 nanoseconds apart will have
->>> different mod-times.
->>
->> Modern Linux filesystems absolutely do do metadata updates at that 
->> level of granularity.
+> Now with the array booted, going to the grub command line and using
+> auto complete for "root (hd0," it seems to be using the device map at
+> this point which is no longer correct:
+> (hd0) /dev/hda
+> (hd1) /dev/sda
+> (hd2) /dev/sdb
 > 
-> In filesystems it only counts if it makes it to disk.
-> 
-> 10,000,000 write-to-disk metadata updates per second?  I think not.
-
-Does every write (mtime update) trigger a write to disk?  I think not :) 
-  You can write (== update inode mtime) 10,000,000 times, without ever 
-touching disk.  Yet you fstat() still returns a nanosecond-granularity 
-mtime.
-
-	Jeff
-
-
+> Note that in the other system, because linux was installed with only
+> the ide and 1 sata drive, it doesn't even list the other two in it's
+> device map. So what is the best/safest way to update/correct this to
+> what ever it should be?
+>
+Just delete/rename the old device map file (/boot/grub/device.map) and
+run grub again - it'll rescan the devices and create a new map file.
