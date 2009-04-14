@@ -1,70 +1,62 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [mdadm git pull] Intel metadata updates and some general fixes
-Date: Tue, 14 Apr 2009 11:19:24 +1000
-Message-ID: <18915.58524.95857.14466@notabene.brown>
-References: <1239525557.7433.49.camel@dwillia2-linux.ch.intel.com>
+From: John Hughes <john@Calva.COM>
+Subject: Using linux software raid (mdadm) in a shared-disk cluster.
+Date: Tue, 14 Apr 2009 10:58:44 +0200
+Message-ID: <49E45044.5000406@Calva.COM>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Dan Williams on Sunday April 12
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Ed Ciechanowski <ed.ciechanowski@intel.com>, Jacek Danecki <jacek.danecki@intel.com>, Doug Ledford <dledford@redhat.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday April 12, dan.j.williams@intel.com wrote:
-> Hi Neil,
-> 
-> This release includes a collection of metadata compatibility updates:
-> 1/ Rounding down the array size at create and assemble.  mdadm will warn
-> if an array requests a custom size but the md/array_size attribute is
-> not found.
-> 2/ Refusing to assemble arrays that are in an unsupported migration
-> state.  Until proper support is ready we need to detect such arrays and
-> tell the user to finish the migration (raid level change, capacity
-> expansion, restripe etc...) before trying to assemble the array in
-> Linux.
-> 3/ Various other fixups to gain better compatibility with the Windows
-> driver.
+I've got a little shared disk cluster (parallel SCSI, external DELL 
+PV210 disk cabinet).
 
-I love the 'ddf' flag that mysterious needs to be '1'.  I wonder what
-that is about...
+I've used linux raid to make a nice RAID10 on the external disks.
 
-> 
-> According to Jacek the 'MD_METADATA' key from
-> export_examine_super_imsm() gives anaconda fits when the array is not a
-> native md array.  I had a patch to remove it, but decided to leave it in
-> for a few reasons:
-> 1/ I strongly suspect it is an anaconda misunderstanding of how to
-> handle 'container' devices.
-> 2/ It is a simple hack that if needed can be added to the Fedora local
-> version of mdadm.
-> 3/ I see no other way for udev to detect imsm members and perform
-> operations like 'mdadm --detail-platform -e $MD_METADATA' to verify that
-> raid support is enabled in the BIOS.  At installation time I would think
-> a user would want the option to ignore raid metadata on the drives if
-> support is disabled in the BIOS.
+I can access this from either machine in the cluster, only one at a time 
+of course, it works very well and I'm happy.
 
-That all sounds appropriate to me.  Thanks.
+Now I'm running XEN and I want to be able to migrate a XEN domU from one 
+machine to the other while the domU is using the RAID10 device.  I can 
+make this "work" using XEN's migration hooks - it calls a script when it 
+has stopped the running domU and I can start the raid device on the 
+destination node, ready for the arrival of the domU.
 
-> 
-> The remaining patches are just straightforward fixes.
-> 
-> Please pull.
+There is one small problem - I can't stop the RAID10 on the source node 
+until the domU has finished, so it seems to me there is a window that 
+could lead to data corruption:
 
-Pulled, and pushed to git://neil.brown.name/mdadm.
+Source node                             Destination node
 
-Do you have anything else in the works that you want to be in
-3.0-final?
-My pending list is now:
-  - some more ddf self-tests
-  - think about Doug's opinion on 'homehost'
-  - review and update man pages.
+mdadm --assemble /dev/md0 ....
+Start migrate
+domU suspended
+call migration script
+               \-------------------->   mdadm --assemble /dev/md0 ...
+                                        domU starts running
+...
+domU destroyed
+mdadm --stop /dev/md0
 
-which is unlikely to be all done this week, but maybe next week.
-If you (or anyone else) has things that can be done in that time frame
-and you want in 3.0-final, a heads-up would be appreciated.
 
-Thanks,
-NeilBrown
+I seems to me that the source node could still be messing with the 
+bitmap and resyncing between the moment the destination node
+starts the RAID10 and the source node stops it[*].
+
+Am I right?  Is there a window?
+
+If there is a window it could be closed if there was some kind of mdadm 
+--freeze command which would stop the sync activity, which could be run 
+on the source node before doing the assemble on the destination node.
+
+([*] - imagine some block is marked unsynced in the bitmap.  The 
+destination node does the assemble, so now it's in-memory bitmap has the 
+block marked.  The source node syncs the block, updates the on disk 
+bitmap.   Now the destination node happens to write that block,  it 
+thinks the block is marked unsynced on the disk so it doesn't bother 
+updating the bitmnap.  If the destination node crashes at this point 
+there is a block on the disk that is unsyced, but the bitmap claims it's 
+in sync.)
+
