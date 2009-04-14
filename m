@@ -1,62 +1,56 @@
-From: John Hughes <john@Calva.COM>
-Subject: Using linux software raid (mdadm) in a shared-disk cluster.
-Date: Tue, 14 Apr 2009 10:58:44 +0200
-Message-ID: <49E45044.5000406@Calva.COM>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: Converting system to raid
+Date: Tue, 14 Apr 2009 10:30:15 +0100
+Message-ID: <20090414093015.GA19074@cthulhu.home.robinhill.me.uk>
+References: <00cc01c9ba1d$3aefecf0$0a00a8c0@vorg> <20090410205942.GC21242@cthulhu.home.robinhill.me.uk> <00f301c9ba23$032025f0$0a00a8c0@vorg> <20090410215129.GD21242@cthulhu.home.robinhill.me.uk> <019701c9ba66$aeed5630$0a00a8c0@vorg> <f19d625d0904110729y30e8bc80m41fcd8f2c3298d49@mail.gmail.com> <007001c9bad6$2525c610$0a00a8c0@vorg> <001201c9bb09$3161e9d0$0a00a8c0@vorg> <20090412111107.GA19413@cthulhu.home.robinhill.me.uk> <000b01c9bba8$a5b08a40$0a00a8c0@vorg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="45Z9DzgjV8m4Oswq"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <000b01c9bba8$a5b08a40$0a00a8c0@vorg>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've got a little shared disk cluster (parallel SCSI, external DELL 
-PV210 disk cabinet).
 
-I've used linux raid to make a nice RAID10 on the external disks.
+--45Z9DzgjV8m4Oswq
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I can access this from either machine in the cluster, only one at a time 
-of course, it works very well and I'm happy.
+On Sun Apr 12, 2009 at 12:55:33PM -0700, Timothy D. Lenz wrote:
 
-Now I'm running XEN and I want to be able to migrate a XEN domU from one 
-machine to the other while the domU is using the RAID10 device.  I can 
-make this "work" using XEN's migration hooks - it calls a script when it 
-has stopped the running domU and I can start the raid device on the 
-destination node, ready for the arrival of the domU.
+> While booted on the array I renamed device.map and ran:
+> sudo grub --no-floppy --device-map=3D/boot/grub/device.map
+>=20
+> But the new map is the same:
+> (hd0) /dev/hda
+> (hd1) /dev/sda
+> (hd2) /dev/sdb
+>=20
+That's a little odd - it should be picking up the BIOS order (though it
+may actually depend on what order the kernel picks up the devices).  You
+can just edit the file manually anyway.
 
-There is one small problem - I can't stop the RAID10 on the source node 
-until the domU has finished, so it seems to me there is a window that 
-could lead to data corruption:
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
-Source node                             Destination node
+--45Z9DzgjV8m4Oswq
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-mdadm --assemble /dev/md0 ....
-Start migrate
-domU suspended
-call migration script
-               \-------------------->   mdadm --assemble /dev/md0 ...
-                                        domU starts running
-...
-domU destroyed
-mdadm --stop /dev/md0
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.10 (GNU/Linux)
 
+iEYEARECAAYFAknkV6cACgkQShxCyD40xBKjOwCfb+cExv3n1UV4Sp29LSp8oLEt
+sMQAn2SkPgbla5L+8/c7pXfffKIdsjfe
+=hZvv
+-----END PGP SIGNATURE-----
 
-I seems to me that the source node could still be messing with the 
-bitmap and resyncing between the moment the destination node
-starts the RAID10 and the source node stops it[*].
-
-Am I right?  Is there a window?
-
-If there is a window it could be closed if there was some kind of mdadm 
---freeze command which would stop the sync activity, which could be run 
-on the source node before doing the assemble on the destination node.
-
-([*] - imagine some block is marked unsynced in the bitmap.  The 
-destination node does the assemble, so now it's in-memory bitmap has the 
-block marked.  The source node syncs the block, updates the on disk 
-bitmap.   Now the destination node happens to write that block,  it 
-thinks the block is marked unsynced on the disk so it doesn't bother 
-updating the bitmnap.  If the destination node crashes at this point 
-there is a block on the disk that is unsyced, but the bitmap claims it's 
-in sync.)
-
+--45Z9DzgjV8m4Oswq--
