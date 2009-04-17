@@ -1,40 +1,63 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Strange md(_resync?) related paging errors on 2.6.29
-Date: Fri, 17 Apr 2009 19:53:55 +1000 (EST)
-Message-ID: <50b8e80aaee3832b921cda536666d717.squirrel@neil.brown.name>
-References: <20090417074301.GA21290@darkside.22.kls.lan>
-    <777409cc1e62236fdb44290fd539a19b.squirrel@neil.brown.name>
-    <20090417084656.GA13682@darkside.22.kls.lan>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: [PATCHES] new barriers - 2
+Date: Fri, 17 Apr 2009 10:26:56 -0400
+Message-ID: <49E891B0.4080103@redhat.com>
+References: <4982D33E.60000@wpkg.org>
+	<170fa0d20901300904l31d0c143ya02d6fb4de28c281@mail.gmail.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090417084656.GA13682@darkside.22.kls.lan>
-Sender: linux-raid-owner@vger.kernel.org
-To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <170fa0d20901300904l31d0c143ya02d6fb4de28c281@mail.gmail.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Mike Snitzer <snitzer@gmail.com>
+Cc: linux-raid@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, Jens Axboe <jens.axboe@oracle.com>
 List-Id: linux-raid.ids
 
-On Fri, April 17, 2009 6:46 pm, Mario 'BitKoenig' Holbe wrote:
-> On Fri, Apr 17, 2009 at 06:18:20PM +1000, NeilBrown wrote:
->> This is a known problem that is fixed by
->> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=303a0e11d0ee136ad8f53f747f3c377daece763b
->> That patch should be in 2.6.29.1 when that gets released.
+Mike Snitzer wrote:
+> On Fri, Jan 30, 2009 at 5:15 AM, Tomasz Chmielewski <mangoo@wpkg.org> wrote:
+>   
+>>> Here I announce 2nd version my new barrier support patches:
+>>> http://people.redhat.com/mpatocka/patches/kernel/barriers/
+>>>
+>>> They are against 2.6.29-rc3.
+>>>
+>>> The most important enhancement is that with these patches, device mapper
+>>> is able to send barrier requests to lower devices.
+>>>       
+>> I guess it still won't work for those using LVM on md (Linux software RAID)
+>> because md lacks barrier support? Do you know if someone is working on it?
+>>     
 >
-> Hmmm, I guess you mean 2.6.29.2, do you?
-
-Yes, I guess I do.  2.6.29.1 came out 4 days before that patch,
-and I didn't even notice...
-
-NeilBrown
-
-
-> All the 3 errors appeared on Debians linux-image-2.6.29-1-686-bigmem
-> 2.6.29-2 which includes 2.6.29.1. And I can't find a commit for
-> 303a0e11d0ee136ad8f53f747f3c377daece763b in ChangeLog-2.6.29.1.
+> md raid1 has supported barriers since 2.6.17
 >
-> --
-> Tower: "Say fuelstate." Pilot: "Fuelstate."
-> Tower: "Say again." Pilot: "Again."
-> Tower: "Arghl, give me your fuel!" Pilot: "Sorry, need it by myself..."
+> But I'm not aware of any md work being done to support barriers in
+> other raid levels.  Judging by Neil Brown's thoughts on the matter
+> (from 2006) it would seem unlikely he is putting effort to it, please
+> see the following thread:
+> http://marc.info/?l=linux-raid&m=115321319003578&w=2
+> http://marc.info/?l=linux-raid&m=115335249503450&w=2
 >
+> cc'ing linux-raid to see if others have more insight
+>   
 
+Neil, Hannes,
+
+Is Mike's assumption above still true - no plans/thoughts about doing 
+barrier support for RAID5/6 and so on?
+
+At least some things (the null barrier op) are in place now since your 
+summary of a couple years back, does this make it easier?
+
+Thanks!
+
+Ric
