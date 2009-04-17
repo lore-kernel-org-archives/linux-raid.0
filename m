@@ -1,405 +1,219 @@
-From: Dave Fisher <davef@davefisher.co.uk>
-Subject: RAID 10 array won't assemble, all devices marked spare, confusing mdadm metadata
-Date: Fri, 17 Apr 2009 15:14:02 +0100
-Message-ID: <20090417141402.GB27042@davefisher.co.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [Patch] mdadm ignoring homehost?
+Date: Fri, 17 Apr 2009 14:17:47 -0400
+Message-ID: <D6CEC060-43DC-40A5-A7EE-F2653DBA9C4C@redhat.com>
+References: <cccedfc60903240957j9314cb2k41d86cb78ec10b86@mail.gmail.com> <cccedfc60904010815h4056f55doebff4827705d231b@mail.gmail.com> <18899.61151.445765.360191@notabene.brown> <51C39605-BBE7-48E8-AB35-D55D0B36B3A6@redhat.com> <18919.64597.426128.498393@notabene.brown>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-6--307937061"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <18919.64597.426128.498393@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Jon Nelson <jnelson-linux-raid@jamponi.net>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
-
-Please forgive me if I'm posting to the wrong list because I've
-misunderstood the list's parameters.  The osdl wiki, and the list
-archives it points to, suggest that this is *not* a developer-only
-list. If I've got that wrong, please redirect me to somewhere more
-appropriate.
-
-I need help to diagnose a RAID 10 failure, but I'm struggling to find
-anyone with genuinely authoritive knowledge of Linux software raid who
-might be willing to spare a little time to help me out.
-
-The affected system is an Ubuntu 8.10 amd64 server, running a 2.6.27-11
-kernel.
-
-I have two RAID arrays:
-
-[CODE]
-  $ sudo mdadm --examine --scan -v
-  ARRAY /dev/md0 level=raid1 num-devices=2 UUID=e1023500:94537d05:cb667a5a:bd8e784b
-     spares=1   devices=/dev/sde2,/dev/sdd2,/dev/sdc2,/dev/sdb2,/dev/sda2
-  ARRAY /dev/md1 level=raid10 num-devices=4 UUID=f4ddbd55:206c7f81:b855f41b:37d33d37
-     spares=1   devices=/dev/sde4,/dev/sdd4,/dev/sdc4,/dev/sdb4,/dev/sda4
-[/CODE]
-
-/dev/md1 doesn't assemble on boot, and I can't assemble it manually (although
-that might be because I don't know how to):
-
-[CODE]
-  $ sudo mdadm --assemble /dev/md1 /dev/sda4 /dev/sdb4 /dev/sdc4 /dev/sdd4 /dev/sde4
-  mdadm: /dev/md1 assembled from 1 drive and 1 spare - not enough to start the array.
-[/CODE]
-
-As you can see from mdstat, the kernel appears to have marked all the
-partitions in /dev/md1 as spare (S):
-
-[CODE]
-  $ cat /proc/mdstat
-  Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
-  md1 : inactive sda4[0](S) sde4[4](S) sdd4[3](S) sdc4[2](S) sdb4[1](S)
-        4829419520 blocks
-         
-  md0 : active raid1 sda2[0] sde2[2](S) sdb2[1]
-        9767424 blocks [2/2] [UU]
-        
-  unused devices: <none>
-[/CODE]
-
-This is clearly wrong.  The /dev/md1 arrray should have 4 members plus one spare. 
-
-When I examine the partitions in /dev/md1, the messages are confusing, and seem contradictory: 
-
-[CODE]
-$ sudo mdadm -E /dev/sd{a,b,c,d,e}4
-/dev/sda4:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : f4ddbd55:206c7f81:b855f41b:37d33d37
-  Creation Time : Tue May  6 02:06:45 2008
-     Raid Level : raid10
-  Used Dev Size : 965883904 (921.14 GiB 989.07 GB)
-     Array Size : 1931767808 (1842.28 GiB 1978.13 GB)
-   Raid Devices : 4
-  Total Devices : 5
-Preferred Minor : 1
-
-    Update Time : Tue Apr 14 00:45:27 2009
-          State : active
- Active Devices : 3
-Working Devices : 4
- Failed Devices : 1
-  Spare Devices : 1
-       Checksum : 7a3576c1 - correct
-         Events : 221
-
-         Layout : near=2, far=1
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     0       8       20        0      active sync   /dev/sdb4
-
-   0     0       8       20        0      active sync   /dev/sdb4
-   1     1       8       36        1      active sync   /dev/sdc4
-   2     2       0        0        2      faulty removed
-   3     3       8       68        3      active sync   /dev/sde4
-   4     4       8       84        4      spare
-/dev/sdb4:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : f4ddbd55:206c7f81:b855f41b:37d33d37
-  Creation Time : Tue May  6 02:06:45 2008
-     Raid Level : raid10
-  Used Dev Size : 965883904 (921.14 GiB 989.07 GB)
-     Array Size : 1931767808 (1842.28 GiB 1978.13 GB)
-   Raid Devices : 4
-  Total Devices : 5
-Preferred Minor : 1
-
-    Update Time : Tue Apr 14 00:44:13 2009
-          State : active
- Active Devices : 4
-Working Devices : 5
- Failed Devices : 0
-  Spare Devices : 1
-       Checksum : 7a35767a - correct
-         Events : 219
-
-         Layout : near=2, far=1
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     1       8       36        1      active sync   /dev/sdc4
-
-   0     0       8       20        0      active sync   /dev/sdb4
-   1     1       8       36        1      active sync   /dev/sdc4
-   2     2       8       52        2      active sync   /dev/sdd4
-   3     3       8       68        3      active sync   /dev/sde4
-   4     4       8       84        4      spare
-/dev/sdc4:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : f4ddbd55:206c7f81:b855f41b:37d33d37
-  Creation Time : Tue May  6 02:06:45 2008
-     Raid Level : raid10
-  Used Dev Size : 965883904 (921.14 GiB 989.07 GB)
-     Array Size : 1931767808 (1842.28 GiB 1978.13 GB)
-   Raid Devices : 4
-  Total Devices : 5
-Preferred Minor : 1
-
-    Update Time : Tue Apr 14 00:44:13 2009
-          State : active
- Active Devices : 4
-Working Devices : 5
- Failed Devices : 0
-  Spare Devices : 1
-       Checksum : 7a35768c - correct
-         Events : 219
-
-         Layout : near=2, far=1
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     2       8       52        2      active sync   /dev/sdd4
-
-   0     0       8       20        0      active sync   /dev/sdb4
-   1     1       8       36        1      active sync   /dev/sdc4
-   2     2       8       52        2      active sync   /dev/sdd4
-   3     3       8       68        3      active sync   /dev/sde4
-   4     4       8       84        4      spare
-/dev/sdd4:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : f4ddbd55:206c7f81:b855f41b:37d33d37
-  Creation Time : Tue May  6 02:06:45 2008
-     Raid Level : raid10
-  Used Dev Size : 965883904 (921.14 GiB 989.07 GB)
-     Array Size : 1931767808 (1842.28 GiB 1978.13 GB)
-   Raid Devices : 4
-  Total Devices : 5
-Preferred Minor : 1
-
-    Update Time : Tue Apr 14 00:44:13 2009
-          State : active
- Active Devices : 4
-Working Devices : 5
- Failed Devices : 0
-  Spare Devices : 1
-       Checksum : 7a35769e - correct
-         Events : 219
-
-         Layout : near=2, far=1
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     3       8       68        3      active sync   /dev/sde4
-
-   0     0       8       20        0      active sync   /dev/sdb4
-   1     1       8       36        1      active sync   /dev/sdc4
-   2     2       8       52        2      active sync   /dev/sdd4
-   3     3       8       68        3      active sync   /dev/sde4
-   4     4       8       84        4      spare
-/dev/sde4:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : f4ddbd55:206c7f81:b855f41b:37d33d37
-  Creation Time : Tue May  6 02:06:45 2008
-     Raid Level : raid10
-  Used Dev Size : 965883904 (921.14 GiB 989.07 GB)
-     Array Size : 1931767808 (1842.28 GiB 1978.13 GB)
-   Raid Devices : 4
-  Total Devices : 5
-Preferred Minor : 1
-
-    Update Time : Fri Apr 10 16:43:47 2009
-          State : clean
- Active Devices : 4
-Working Devices : 5
- Failed Devices : 0
-  Spare Devices : 1
-       Checksum : 7a31126a - correct
-         Events : 218
-
-         Layout : near=2, far=1
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     4       8       84        4      spare
-
-   0     0       8       20        0      active sync   /dev/sdb4
-   1     1       8       36        1      active sync   /dev/sdc4
-   2     2       8       52        2      active sync   /dev/sdd4
-   3     3       8       68        3      active sync   /dev/sde4
-   4     4       8       84        4      spare
-[/CODE]
-
-As you can see, sda4 is not explicitly listed in any of the tables above.
-
-I am guessing that this is because mdadm thinks that sda4 is the actual spare.  
-
-I'm not sure that mdadm is correct.  Based on the fdisk readouts shown below,
-and my (admittedly imperfect human) memory, I think that sde4 should be the
-spare
-
-Another confusing thing is that mdadm --examine for sda4 produces results that
-appear to contradict the examinations of sdb4, sdc4, sdd4, and sde4.
-
-The results for sda4 show one partition (apparently sdd4) to be "faulty
-removed", but the other four examinations show sdd4 as "active sync".
-Examining sda4 also shows 1 "Failed" device, whereas the remaining 4
-examinations show no failures.
-
-On the other hand, sda4, sdb4, sdc4, and sdd4 are shown as "State: active"
-whereas sde4 is shown as "State: clean".  
- 
-The checksums look OK.
-
-All the devices have the same UUID, which I presume, is the UUID for /dev/md1.
-
-I haven't seen any obvious signs of hardware failure, although the following do
-appear in my syslog:
-
-[CODE]
-  Apr 14 23:16:43 lonsdale mdadm[22524]: DeviceDisappeared event detected on md device /dev/md1
-  Apr 14 23:23:21 lonsdale mdadm[10050]: DeviceDisappeared event detected on md device /dev/md1
-  Apr 15 13:45:52 lonsdale mdadm[6780]: DeviceDisappeared event detected on md device /dev/md1
-[/CODE]
-
-I cannot afford to mess around with /dev/md1 because it contains a small amount
-of business-critical data for which no totally clean back-ups exist, i.e. I
-don't want to do anything that could conceivably overwrite this data until I'm
-certain that I've correctly diagnosed the problem.
-
-So please suggest non-destructive diagnostic procedures that I can follow to
-narrow down the problem.
-
-A further complication is that /dev/md1 contains my /home, /var, and /tmp
-filesystems, so I can't update my kernel, initrd or mdadm via a normal apt
-install.
-
-
-For what it's worth, here's my /etc/mdadm/mdam.conf, /etc/fstab, and fdisk outut:
-
-mdadm.conf
-[CODE]
-  DEVICE partitions
-  CREATE owner=root group=disk mode=0660 auto=yes
-  HOMEHOST <system>
-  MAILADDR root
-  # definitions of existing MD arrays
-  ARRAY /dev/md0 level=raid1 num-devices=2 UUID=e1023500:94537d05:cb667a5a:bd8e784b
-  ARRAY /dev/md0 level=raid1 num-devices=2 UUID=8643e320:2d6a0e4d:49d52491:42504c27
-  ARRAY /dev/md1 level=raid10 num-devices=4 UUID=f4ddbd55:206c7f81:b855f41b:37d33d37
-     spares=1
-[/CODE]
-
-fstab:
-[CODE]
-cat /etc/fstab 
-# <file system> <mount point>   <type>  <options>       <dump>  <pass>
-proc            /proc           proc    defaults        0       0
-# /dev/md0
-UUID=5d494f0c-d723-4f15-90d6-b4d08e5fd059 /               ext3    relatime,errors=remount-ro 0       1
-# /dev/sda1
-UUID=2968bbbe-223f-490f-869e-1312dabdaf18 /boot           ext2    relatime        0       2
-# /dev/mapper/vg--data1-lv--home on /dev/md1
-UUID=8b824f93-e686-4f08-9ec2-76e754d8f06f /home           ext3    relatime        0       2
-# /dev/mapper/vg--data1-lv--tmp on /dev/md1
-UUID=dee6072f-ca1c-462f-9730-c277e3f8b8d9 /tmp            ext3    relatime        0       2
-# /dev/mapper/vg--data1-lv--var on /dev/md1
-UUID=03600db0-f72f-4021-9bb2-b8cb19f3a2a0 /var            ext3    relatime        0       2
-[/CODE]
-
-fdisk
-[CODE]
-Disk /dev/sda: 1000.2 GB, 1000204886016 bytes
-255 heads, 63 sectors/track, 121601 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Disk identifier: 0x0004b119
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sda1   *           1          16      128488+  83  Linux
-/dev/sda2              17        1232     9767520   fd  Linux RAID autodetect
-/dev/sda3            1233        1354      979965   82  Linux swap / Solaris
-/dev/sda4            1355      121601   965884027+  fd  Linux RAID autodetect
-
-
-Disk /dev/sdb: 1000.2 GB, 1000204886016 bytes
-255 heads, 63 sectors/track, 121601 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Disk identifier: 0x000aca3f
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdb1               1          16      128488+  83  Linux
-/dev/sdb2              17        1232     9767520   fd  Linux RAID autodetect
-/dev/sdb3            1233        1354      979965   82  Linux swap / Solaris
-/dev/sdb4            1355      121601   965884027+  fd  Linux RAID autodetect
-
-Disk /dev/sdc: 1000.2 GB, 1000204886016 bytes
-255 heads, 63 sectors/track, 121601 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Disk identifier: 0x00052d44
-
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdc1   *           1          16      128488+  83  Linux
-/dev/sdc2              17        1232     9767520   83  Linux
-/dev/sdc3            1233        1354      979965   82  Linux swap / Solaris
-/dev/sdc4            1355      121601   965884027+  fd  Linux RAID autodetect
-
-
-Disk /dev/sdd: 1000.2 GB, 1000204886016 bytes
-255 heads, 63 sectors/track, 121601 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Disk identifier: 0x00055ffb
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdd1   *           1          16      128488+  83  Linux
-/dev/sdd2              17        1232     9767520   83  Linux
-/dev/sdd3            1233        1354      979965   82  Linux swap / Solaris
-/dev/sdd4            1355      121601   965884027+  fd  Linux RAID autodetect
-
-
-Disk /dev/sde: 1000.2 GB, 1000204886016 bytes
-255 heads, 63 sectors/track, 121601 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Disk identifier: 0x000249a1
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sde1               1          16      128488+  83  Linux
-/dev/sde2              17        1232     9767520   83  Linux
-/dev/sde3            1233        1354      979965   82  Linux swap / Solaris
-/dev/sde4            1355      121601   965884027+  fd  Linux RAID autodetect
-[/CODE]
-
-Finally, I should point out that some of the data on the dodgy /dev/md1 is
-absolutely vital and needs to be accessed urgently.
-
-If the worst comes to the worst and I can't assemble, re-sync or re-build the
-array non-destructively, I'd appreciate any advice you could give on any
-possibilities that might exist for retrieving the data by reading the raw disks. 
-
-UPDATES:
-
-Since I started writing this message I've rebooted the machine from an
-ubuntu jaunty alternate install disc and got radically different results
-from "cat /proc/mdstat".
-
-Now, mdadm thinks that /dev/md1 only consists of one partition
-(/dev/sda4), marking the other 3 unidentified members as removed.
-
-Moreover, if I try to assemble with:
-
-Code:
-
-$ mdadm --assemble /dev/md1 /dev/sda4 /dev/sdb4 /dev/sdc4 /dev/sdd4
-/dev/sde4
-
-It says that it can't assemble because md1 is currently active ...
-whereas /proc/mstat says that it is inactive.
-
-Any ideas?
-
-N.B. I am having difficulty getting remote access to/from the machine
-concerned, so copy + paste code is currently unavailable.
-
-I've also seen this bug report, which appears to describe similar
-symptoms:
-
-   http://bugzilla.kernel.org/show_bug.cgi?id=11967
-
-Dave
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--Apple-Mail-6--307937061
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
+
+On Apr 16, 2009, at 11:49 PM, Neil Brown wrote:
+> On Monday April 6, dledford@redhat.com wrote:
+>> On Apr 1, 2009, at 6:46 PM, Neil Brown wrote:
+>>
+>>> On Wednesday April 1, jnelson-linux-raid@jamponi.net wrote:
+>>>> ping?
+>>>
+>>> Oh yeah, that's right, I was going to reply to that - thanks for the
+>>> reminder.
+>>>
+>>>>
+>>>> On Tue, Mar 24, 2009 at 11:57 AM, Jon Nelson
+>>>> <jnelson-linux-raid@jamponi.net> wrote:
+>>>>>
+>>>>> I have a raid1 comprised of a local physical device (/dev/sda)  
+>>>>> and a
+>>>>> network block device (/dev/nbd0).
+>>>>> When the machine hosting the network block device comes up,  
+>>>>> however,
+>>>>> it creates /dev/md127.
+>>>>> Why?
+>>>
+>>> Because you cannot please all the people, all the time.
+>>
+>> Very true.
+>
+> And I fear I'm going to be displeasing again :-(
+>
+>>
+>>>
+>>> People seem to want their arrays to auto-assemble - you know, just
+>>> appear and do the right thing, read their mind probably, because
+>>> creating config files is too hard.
+>>> So I've endeavoured to make that happen.
+>>>
+>>> The biggest problem with auto-assembly is what to do if two arrays
+>>> claim to have the same name. (e.g. /dev/md0) - which one wins.
+>>> The 'homehost' is (currently) used to resolve that.  An array only
+>>> gets to use the name it claims to have if it can show that it  
+>>> belongs
+>>> to "this" host.  If it doesn't it still get assembled, but with some
+>>> other more generic name.
+>>
+>> FWIW, I happen to disagree with this method.  And I'm currently
+>> testing out a new algorithm for this in Fedora 11 beta.
+>
+> Thank you for explaining this in such detail.
+> There are aspects of it that I don't like, but I think there might be
+> pieces that I can take away from it too.
+>
+> As you probably know, my preferred solution is to have all arrays
+> listed in /etc/mdadm.conf.  If it isn't in mdadm.conf, it doesn't get
+> assembled.   But I don't have a lot of company in this opinion.  Lots
+> of people want to have arrays assembled without them being in
+> mdadm.conf, and I'm trying to work with that.
+
+This appears to be the difference between a server setup and a desktop  
+setup.  Server admins want to list things and only have known actions  
+happen.  Desktop people want things to "just work".  I've had several  
+people tell me they thought the idea of mdadm.conf was completely out  
+of date and it should just go away entirely.  Not saying I agree, just  
+letting you know what I get.
+
+> Parts of what you are proposing seem to involve expecting people to
+> take a middle ground with some arrays listed in mdadm.conf and other
+> that aren't.
+
+I do this myself FWIW.  My / and /boot arrays are in mdadm.conf, but  
+arrays that I plug in via USB, eSATA, etc. are not.
+
+>  I'm not sure I'm happy with expecting people to do that
+> (though of course I'm happy to support it).
+
+I really don't expect them to per se.  More like it's the *safe* thing  
+to do.  If you ever have a conflict in names, the one in the file  
+wins.  If you ever have a conflict in names without one of them in the  
+file, then it's whoever got there first.  In that sense, mdadm.conf is  
+just a backup for me.  Well, that and mkinitrd doesn't do incremental  
+assembly, so it's needed for boot in my case.  But that could be  
+changed.
+
+> So the various parts of your algorithm which involve heuristics
+> based on the entries in mdadm.conf - or on the existence of mdadm.conf
+> itself - are parts that I don't feel comfortable with.
+>
+> What is left?  Well, the observation that moving an external
+> multi-drive enclosure between hosts causes confusing naming is a valid
+> and useful observation.
+>
+> Someone should be able to create an array on such a device called
+> 'foo' and get '/dev/md/foo' created on any host.
+> The best thought I have come to so far is to support (and document)
+> something like
+>  --create --homehost=any
+> or
+>  --create --homehost=*
+>
+> with the meaning that the array so created will get preferential
+> access to it's recorded name (i.e. no "_0" suffix).
+>
+> I also wonder if, when mdadm finds an array that is explicitly for
+> another host, we could use that host name rather than _0 to
+> disambiguate.  So
+>  --create /dev/md/foo --homehost=bob
+> when assembled on some other host is called
+>       /dev/md/foo_bob
+> that might at least make it more obvious what is happening.
+
+This is probably where you and I disagree.  I don't think you are  
+disambiguating.  I think you are confounding the common case of no  
+conflict.  If someone has a non-portable array, like /, they commonly  
+use something like /dev/md0.  That, you will likely never get a  
+conflict on.  On the other hand, if someone creates an array to be  
+mobile, it will likely have a higher number (or it could be 0, but  
+that implies they aren't using root raid arrays on their machines in  
+all likelihood).  So, if you make a mobile array, just give it any old  
+number you can remember other than the normal base numbers used by non- 
+portable arrays, and viola, no conflicts (note that this is also why I  
+was in favor of a completely numberless md setup, where device  
+major:minor do not impact name of the array at all, and you are free  
+to create something like /dev/md/root and there will be no access file  
+other than /dev/md/root, specifically no alias from /dev/md0 to /dev/ 
+md/root...it's much easier to remember names than numbers, and much  
+easier to create a scheme that avoids conflicts 100% of the time).  As  
+it stands though, the current code still won't honor random names as  
+though that was the official and canonical name of the array, it  
+insists on creating a /dev/md# device and then just symlinking the  
+name as though the /dev/md# device is canonical.  In one of your  
+previous emails you mentioned something about how bad design decisions  
+get entrenched and can never be rooted out, I would point to this ;-)
+
+> Note that 0.90 metadata does contain homehost information to some
+> extent.  When homehost is set, the last few bytes of the uuid is set
+> from a hash of the homehost name.  That makes it possible to test if a
+> 0.90 array was created for 'this' host, but not to find out what host
+> it was created for.  So the above expedient won't work for 0.90
+> arrays, but the rest of the homehost concept (including any possible
+> 'homehost=any' option) does.
+>
+> You note that arrays with no homehost are treated as foreign with not
+> always being a good thing.  In 3.0, homehost is no longer optional.
+> If it is not explicitly set, it will default to `uname -n`.  So newly
+> created arrays will not suffer from this problem.  Arrays created with
+> mdadm 2.x do.  They can be 'upgraded' with
+>    --assemble --update=homehost
+> which is a suggestion that should be put in the man page.
+
+This is a bad idea, and just reinforces my thought that we shouldn't  
+be paying attention to homehost.  Amongst the most important aspects  
+are machines that are booted up, installed, raid arrays created during  
+install, then shut down and moved, likely changing dhcp hostnames in  
+the process.  Now all your homehosts belong to some hostname in some  
+IT guys install network instead of in your final network.  At install  
+time, it's actually fairly common that the hostname is not yet set,  
+especially at raid array creation time.
+
+> Your idea of allowing the names "/dev/md0" and "md0" to connect with  
+> the
+> minor number '0' in the same way that the name "0" does is a good
+> one.  I have implemented that.
+>
+> I think I am leaning towards 'homehost=any' rather than 'homehost=*'
+> and will implement that. (No one would have a computer called 'any'
+> would they?).
+>
+> Thanks again for your input.
+
+No problem.
+
+--
+
+Doug Ledford <dledford@redhat.com>
+
+GPG KeyID: CFBFF194
+http://people.redhat.com/dledford
+
+InfiniBand Specific RPMS
+http://people.redhat.com/dledford/Infiniband
+
+
+
+
+
+--Apple-Mail-6--307937061
+content-type: application/pgp-signature; x-mac-type=70674453;
+	name=PGP.sig
+content-description: This is a digitally signed message part
+content-disposition: inline; filename=PGP.sig
+content-transfer-encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2.0.11 (Darwin)
+
+iEYEARECAAYFAknox8wACgkQQ9aEs6Ims9hZlwCeIubggF3W5arK5JtrTfFA5dNK
+xEAAn1IdFYNIFXGeQc2Dm4uF4lBM3iUY
+=M4ak
+-----END PGP SIGNATURE-----
+
+--Apple-Mail-6--307937061--
