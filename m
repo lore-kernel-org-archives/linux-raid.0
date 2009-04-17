@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 3/4] md: improve usefulness and accuracy of sysfs file
-	md/sync_completed.
+Subject: [md PATCH 4/4] md: update sync_completed and reshape_position even
+	more often.
 Date: Fri, 17 Apr 2009 12:14:54 +1000
-Message-ID: <20090417021453.13390.67267.stgit@notabene.brown>
+Message-ID: <20090417021454.13390.2513.stgit@notabene.brown>
 References: <20090417020953.13390.5371.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,158 +14,82 @@ To: linux-raid@vger.kernel.org
 Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-The sync_completed file reports how much of a resync (or recovery or
-reshape) has been completed.
-However due to the possibility of out-of-order completion of writes,
-it is not certain to be accurate.
+There are circumstances when a user-space process might need to
+"oversee" a resync/reshape process.  For example when doing an
+in-place reshape of a raid5, it is prudent to take a backup of each
+section before reshaping it as this is the only way to provide
+safety against an unplanned shutdown (i.e. crash/power failure).
 
-We have an internal value - mddev->curr_resync_completed - which is an
-accurate value (though it might not always be quite so uptodate).
+The sync_max sysfs value can be used to stop the resync from
+advancing beyond a particular point.
+So user-space can:
+  suspend IO to the first section and back it up
+  set 'sync_max' to the end of the section
+  wait for 'sync_completed' to reach that point
+  resume IO on the first section and move on to the next section.
 
-So:
- - make curr_resync_completed be uptodate a little more often,
-   particularly when raid5 reshape updates status in the metadata
- - report curr_resync_completed in the sysfs file
- - allow poll/select to report all updates to md/sync_completed.
+However this process requires the kernel and user-space to run in
+lock-step which could introduce unnecessary delays.
 
-This makes sync_completed completed usable by any external metadata
-handler that wants to record this status information in its metadata.
+It would be better if a 'double buffered' approach could be used with
+userspace and kernel space working on different sections with the
+'next' section always ready when the 'current' section is finished.
+
+One problem with implementing this is that sync_completed is only
+guaranteed to be updated when the sync process reaches sync_max.
+(it is updated on a time basis at other times, but it is hard to rely
+on that).  This defeats some of the double buffering.
+
+With this patch, sync_completed (and reshape_position) get updated as
+the current position approaches sync_max, so there is room for
+userspace to advance sync_max early without losing updates.
+
+To be precise, sync_completed is updated when the current sync
+position reaches half way between the current value of sync_completed
+and the value of sync_max.  This will usually be a good time for user
+space to update sync_max.
+
+If sync_max does not get updated, the updates to sync_completed
+(together with associated metadata updates) will occur at an
+exponentially increasing frequency which will get unreasonably fast
+(one update every page) immediately before the process hits sync_max
+and stops.  So the update rate will be unreasonably fast only for an
+insignificant period of time.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/bitmap.c |    1 +
- drivers/md/md.c     |   34 ++++++++++++++++++++++------------
- drivers/md/raid5.c  |    4 ++++
- 3 files changed, 27 insertions(+), 12 deletions(-)
+ drivers/md/md.c    |    3 ++-
+ drivers/md/raid5.c |    3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index f8a9f7a..e4510c9 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -1479,6 +1479,7 @@ void bitmap_cond_end_sync(struct bitmap *bitmap, sector_t sector)
- 		s += blocks;
- 	}
- 	bitmap->last_end_sync = jiffies;
-+	sysfs_notify(&bitmap->mddev->kobj, NULL, "sync_completed");
- }
- 
- static void bitmap_set_memory_bits(struct bitmap *bitmap, sector_t offset, int needed)
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 298731b..7af64f3 100644
+index 7af64f3..612343f 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -2017,6 +2017,8 @@ repeat:
- 	clear_bit(MD_CHANGE_PENDING, &mddev->flags);
- 	spin_unlock_irq(&mddev->write_lock);
- 	wake_up(&mddev->sb_wait);
-+	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
-+		sysfs_notify(&mddev->kobj, NULL, "sync_completed");
- 
- }
- 
-@@ -3486,12 +3488,15 @@ sync_completed_show(mddev_t *mddev, char *page)
- {
- 	unsigned long max_sectors, resync;
- 
-+	if (!test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
-+		return sprintf(page, "none\n");
-+
- 	if (test_bit(MD_RECOVERY_SYNC, &mddev->recovery))
- 		max_sectors = mddev->resync_max_sectors;
- 	else
- 		max_sectors = mddev->dev_sectors;
- 
--	resync = (mddev->curr_resync - atomic_read(&mddev->recovery_active));
-+	resync = mddev->curr_resync_completed;
- 	return sprintf(page, "%lu / %lu\n", resync, max_sectors);
- }
- 
-@@ -6338,18 +6343,12 @@ void md_do_sync(mddev_t *mddev)
- 		sector_t sectors;
- 
- 		skipped = 0;
--		if (j >= mddev->resync_max) {
--			sysfs_notify(&mddev->kobj, NULL, "sync_completed");
--			wait_event(mddev->recovery_wait,
--				   mddev->resync_max > j
--				   || kthread_should_stop());
--		}
--		if (kthread_should_stop())
--			goto interrupted;
- 
--		if (mddev->curr_resync > mddev->curr_resync_completed &&
--		    (mddev->curr_resync - mddev->curr_resync_completed)
--		    > (max_sectors >> 4)) {
-+		if ((mddev->curr_resync > mddev->curr_resync_completed &&
-+		     (mddev->curr_resync - mddev->curr_resync_completed)
-+		    > (max_sectors >> 4)) ||
-+		    j >= mddev->resync_max
-+			) {
+@@ -6347,7 +6347,8 @@ void md_do_sync(mddev_t *mddev)
+ 		if ((mddev->curr_resync > mddev->curr_resync_completed &&
+ 		     (mddev->curr_resync - mddev->curr_resync_completed)
+ 		    > (max_sectors >> 4)) ||
+-		    j >= mddev->resync_max
++		    (j - mddev->curr_resync_completed)*2
++		    >= mddev->resync_max - mddev->curr_resync_completed
+ 			) {
  			/* time to update curr_resync_completed */
  			blk_unplug(mddev->queue);
- 			wait_event(mddev->recovery_wait,
-@@ -6357,7 +6356,17 @@ void md_do_sync(mddev_t *mddev)
- 			mddev->curr_resync_completed =
- 				mddev->curr_resync;
- 			set_bit(MD_CHANGE_CLEAN, &mddev->flags);
-+			sysfs_notify(&mddev->kobj, NULL, "sync_completed");
- 		}
-+
-+		if (j >= mddev->resync_max)
-+			wait_event(mddev->recovery_wait,
-+				   mddev->resync_max > j
-+				   || kthread_should_stop());
-+
-+		if (kthread_should_stop())
-+			goto interrupted;
-+
- 		sectors = mddev->pers->sync_request(mddev, j, &skipped,
- 						  currspeed < speed_min(mddev));
- 		if (sectors == 0) {
-@@ -6465,6 +6474,7 @@ void md_do_sync(mddev_t *mddev)
- 
-  skip:
- 	mddev->curr_resync = 0;
-+	mddev->curr_resync_completed = 0;
- 	mddev->resync_min = 0;
- 	mddev->resync_max = MaxSector;
- 	sysfs_notify(&mddev->kobj, NULL, "sync_completed");
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 3bbc6d6..76892ac 100644
+index 76892ac..4616bc3 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -3845,6 +3845,7 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
- 		wait_event(conf->wait_for_overlap,
- 			   atomic_read(&conf->reshape_stripes)==0);
- 		mddev->reshape_position = conf->reshape_progress;
-+		mddev->curr_resync_completed = mddev->curr_resync;
- 		conf->reshape_checkpoint = jiffies;
- 		set_bit(MD_CHANGE_DEVS, &mddev->flags);
- 		md_wakeup_thread(mddev->thread);
-@@ -3854,6 +3855,7 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
- 		conf->reshape_safe = mddev->reshape_position;
- 		spin_unlock_irq(&conf->device_lock);
- 		wake_up(&conf->wait_for_overlap);
-+		sysfs_notify(&mddev->kobj, NULL, "sync_completed");
- 	}
- 
- 	if (mddev->delta_disks < 0) {
-@@ -3943,6 +3945,7 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
+@@ -3940,7 +3940,8 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
+ 	 * then we need to write out the superblock.
+ 	 */
+ 	sector_nr += reshape_sectors;
+-	if (sector_nr >= mddev->resync_max) {
++	if ((sector_nr - mddev->curr_resync_completed) * 2
++	    >= mddev->resync_max - mddev->curr_resync_completed) {
+ 		/* Cannot proceed until we've updated the superblock... */
  		wait_event(conf->wait_for_overlap,
  			   atomic_read(&conf->reshape_stripes) == 0);
- 		mddev->reshape_position = conf->reshape_progress;
-+		mddev->curr_resync_completed = mddev->curr_resync;
- 		conf->reshape_checkpoint = jiffies;
- 		set_bit(MD_CHANGE_DEVS, &mddev->flags);
- 		md_wakeup_thread(mddev->thread);
-@@ -3953,6 +3956,7 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
- 		conf->reshape_safe = mddev->reshape_position;
- 		spin_unlock_irq(&conf->device_lock);
- 		wake_up(&conf->wait_for_overlap);
-+		sysfs_notify(&mddev->kobj, NULL, "sync_completed");
- 	}
- 	return reshape_sectors;
- }
 
 
