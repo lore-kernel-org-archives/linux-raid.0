@@ -1,7 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 1/4] md: tiny md.h cleanups
+Subject: [md PATCH 2/4] md: allow setting newly added device to 'in_sync' via
+	sysfs.
 Date: Fri, 17 Apr 2009 12:14:53 +1000
-Message-ID: <20090417021453.13390.9543.stgit@notabene.brown>
+Message-ID: <20090417021453.13390.32772.stgit@notabene.brown>
 References: <20090417020953.13390.5371.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,65 +11,51 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20090417020953.13390.5371.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, NeilBrown <neilb@suse.de>
+Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-From: Christoph Hellwig <hch@lst.de>
+When adding devices to an active array via sysfs, there is currently
+no way to mark a device as 'in-sync' which is useful when
+incrementally assembling an array.
 
-- update inclusion guard and make sure it covers the whole file
- - remove superflous #ifdef CONFIG_BLOCK
- - make sure all required headers are included so that new users aren't
-   required to include others before
+So add that option.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/md.h |   21 +++++++++++++--------
- 1 files changed, 13 insertions(+), 8 deletions(-)
+ drivers/md/md.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index e9b7f54..8227ab9 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -12,10 +12,17 @@
-    Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
- */
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index ed5727c..298731b 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2086,6 +2086,7 @@ state_store(mdk_rdev_t *rdev, const char *buf, size_t len)
+ 	 *  -writemostly - clears write_mostly
+ 	 *  blocked - sets the Blocked flag
+ 	 *  -blocked - clears the Blocked flag
++	 *  insync - sets Insync providing device isn't active
+ 	 */
+ 	int err = -EINVAL;
+ 	if (cmd_match(buf, "faulty") && rdev->mddev->pers) {
+@@ -2118,6 +2119,9 @@ state_store(mdk_rdev_t *rdev, const char *buf, size_t len)
+ 		md_wakeup_thread(rdev->mddev->thread);
  
--#ifndef _MD_K_H
--#define _MD_K_H
--
--#ifdef CONFIG_BLOCK
-+#ifndef _MD_MD_H
-+#define _MD_MD_H
-+
-+#include <linux/blkdev.h>
-+#include <linux/kobject.h>
-+#include <linux/list.h>
-+#include <linux/mm.h>
-+#include <linux/mutex.h>
-+#include <linux/timer.h>
-+#include <linux/wait.h>
-+#include <linux/workqueue.h>
+ 		err = 0;
++	} else if (cmd_match(buf, "insync") && rdev->raid_disk == -1) {
++		set_bit(In_sync, &rdev->flags);
++		err = 0;
+ 	}
+ 	if (!err && rdev->sysfs_state)
+ 		sysfs_notify_dirent(rdev->sysfs_state);
+@@ -2190,7 +2194,7 @@ slot_store(mdk_rdev_t *rdev, const char *buf, size_t len)
+ 	} else if (rdev->mddev->pers) {
+ 		mdk_rdev_t *rdev2;
+ 		/* Activating a spare .. or possibly reactivating
+-		 * if we every get bitmaps working here.
++		 * if we ever get bitmaps working here.
+ 		 */
  
- #define MaxSector (~(sector_t)0)
- 
-@@ -408,10 +415,6 @@ static inline void safe_put_page(struct page *p)
- 	if (p) put_page(p);
- }
- 
--#endif /* CONFIG_BLOCK */
--#endif
--
--
- extern int register_md_personality(struct mdk_personality *p);
- extern int unregister_md_personality(struct mdk_personality *p);
- extern mdk_thread_t * md_register_thread(void (*run) (mddev_t *mddev),
-@@ -434,3 +437,5 @@ extern void md_new_event(mddev_t *mddev);
- extern int md_allow_write(mddev_t *mddev);
- extern void md_wait_for_blocked_rdev(mdk_rdev_t *rdev, mddev_t *mddev);
- extern void md_set_array_sectors(mddev_t *mddev, sector_t array_sectors);
-+
-+#endif /* _MD_MD_H */
+ 		if (rdev->raid_disk != -1)
 
 
