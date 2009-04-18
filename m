@@ -1,86 +1,62 @@
-From: Dave Fisher <davef@davefisher.co.uk>
-Subject: Re: RAID 10 array won't assemble, all devices marked spare, confusing mdadm metadata
-Date: Sat, 18 Apr 2009 15:43:03 +0100
-Message-ID: <20090418144303.GA18440@davefisher.co.uk>
-References: <20090417141402.GB27042@davefisher.co.uk> <18921.1283.548260.293728@notabene.brown>
+From: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Subject: Re: [Patch] mdadm ignoring homehost?
+Date: Sat, 18 Apr 2009 09:48:33 -0500
+Message-ID: <cccedfc60904180748t58cf0980jf8b7c501db0cf653@mail.gmail.com>
+References: <cccedfc60903240957j9314cb2k41d86cb78ec10b86@mail.gmail.com>
+	<cccedfc60904010815h4056f55doebff4827705d231b@mail.gmail.com>
+	<18899.61151.445765.360191@notabene.brown> <51C39605-BBE7-48E8-AB35-D55D0B36B3A6@redhat.com>
+	<18919.64597.426128.498393@notabene.brown> <D6CEC060-43DC-40A5-A7EE-F2653DBA9C4C@redhat.com>
+	<20090418081239.GB2124@maude.comedia.it> <F43DC4EB-8E83-4284-A2BE-85EF146AE956@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <18921.1283.548260.293728@notabene.brown>
+In-Reply-To: <F43DC4EB-8E83-4284-A2BE-85EF146AE956@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, Apr 18, 2009 at 08:38:59AM +1000, Neil Brown wrote:
-> To restart your array, simple use the "--force" flag.
-> It might be valuable to also add "--verbose" so you can see what is
-> happening.
-> So:
-> 
->   mdadm -S /dev/md1
->   mdadm -A /dev/md1 -fv /dev/sd[abcde]4
-> 
-> and report the result.
-
-Hi Neil,
-
-Thanks for the kind and exceptionally helpful response. It was much
-appreciated.  It greatly improved my understanding of both the problem
-and md generally.
-
-As it happens, I'd issued the following command some time before your
-message arrived:
-
-  $ mdadm --assemble --run /dev/md1 /dev/sd[bcde]4
-
-Fortunately, my impatience (after nearly a week of grief) was not
-rewarded by the punishment it probably deserved ;-) [Note 1]
-
-After many more hours /dev/md1 had resynched and recovered, using sdbe4
-as the spare.
-
-The system then rebooted perfectly.
-
-Unfortunately, I then stupidly installed a new kernel, forgetting that
-Debian/Ubuntu would then update grub.  
-
-So now I can boot kernels which reside on /dev/md0 from grub, but they
-don't find the root file system, which is also on /dev/md0.  
-
-Needless to say, I'd find this a little easier to understand if the
-booting kernel didn't actually sit on the root filesystem itself.
-
-Obviously I need to fix grub, but I'm not sure how.  I'm guessing that I
-have to do one or both of the following:
-
-  1. Tweak the root parameters for grub or the kernel in menu.lst
-
-  2. Update/reinstall parts of the bootloader on my MBRs or partitions.  
-
-Sadly, my understanding of grub is a bit flaky, and my understanding of
-how it handles raid arrays is even flakier.
-
-I'd appreciate some advice, but fully understand that the new problem
-is slightly off-topic for this list, so I'm not expecting anything.
-
-By the way, once I've sorted grub (and backed up my business-critical
-data), I'll run your suggested command on the original disks and report
-back.
-
-In the real world I have decades of experience as a technical writer and
-teacher.  So, once I've educated myself a bit more, I'd like to
-contribute by helping to improve the fragmented and outdated
-documentation that I've found over the course of the last week. 
-
-Best wishes,
-
-Dave
-
-[Note 1] I should add that my impatient act was not 100% reckless,
-since I had previously dd'd all 5 1TB disks and was operating only on
-the copies.
+On Sat, Apr 18, 2009 at 8:35 AM, Doug Ledford <dledford@redhat.com> wro=
+te:
+> I've been thinking about this, and this is the method I would suggest=
+=2E
+>
+> Add two new keywords to the mdadm.conf file:
+>
+> ASSEMBLE
+> INCREMENTAL
+>
+> Allow each of those keywords to have one of three set values:
+> None - Don't attempt to assemble any arrays regardless of whether or =
+not they are in the mdadm.conf file or not
+> Known - Only assemble arrays with a matching array line
+> All - Attempt to assemble any array found
+>
+> The combination of the two options and the three settings would allow=
+ you to control mdadm behavior for both array assembly modes independen=
+tly. =A0That, combined with my previous patch, should allow arrays to a=
+ssemble well, with known names, allow you to control auto assembly by u=
+dev, and in the event that your machine just exports volumes to other m=
+achines for their use, stop assembly entirely.
+>
+> --
 
 
 
+Of the proposals thus far, I think I like this one the best.
+More or less, it's what I thought homehost was supposed to do (if
+homehost did not match, ignore!) but given the morass around homehost,
+this seems like a very reasonable approach to solving this class of
+issues. With the increasing prevalence of block devices which may
+appear on many hosts (like AoE, etc...) it seems as though this issue
+isn't going to go away easily.
+
+
+
+--
+Jon
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
