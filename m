@@ -1,34 +1,86 @@
-From: Andrew Burgess <aab@cichlid.com>
-Subject: Re: [Patch] mdadm ignoring homehost?
-Date: Sat, 18 Apr 2009 07:34:11 -0700
-Message-ID: <1240065251.9039.3.camel@cichlid.com>
-References: <cccedfc60903240957j9314cb2k41d86cb78ec10b86@mail.gmail.com>
-	 <cccedfc60904010815h4056f55doebff4827705d231b@mail.gmail.com>
-	 <18899.61151.445765.360191@notabene.brown>
-	 <51C39605-BBE7-48E8-AB35-D55D0B36B3A6@redhat.com>
-	 <18919.64597.426128.498393@notabene.brown>
-	 <D6CEC060-43DC-40A5-A7EE-F2653DBA9C4C@redhat.com>
-	 <20090417183952.GA6090@lazy.lzy>
+From: Dave Fisher <davef@davefisher.co.uk>
+Subject: Re: RAID 10 array won't assemble, all devices marked spare, confusing mdadm metadata
+Date: Sat, 18 Apr 2009 15:43:03 +0100
+Message-ID: <20090418144303.GA18440@davefisher.co.uk>
+References: <20090417141402.GB27042@davefisher.co.uk> <18921.1283.548260.293728@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090417183952.GA6090@lazy.lzy>
+Content-Disposition: inline
+In-Reply-To: <18921.1283.548260.293728@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux raid mailing list <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 2009-04-17 at 20:40 +0200, Piergiorgio Sartor wrote:
+On Sat, Apr 18, 2009 at 08:38:59AM +1000, Neil Brown wrote:
+> To restart your array, simple use the "--force" flag.
+> It might be valuable to also add "--verbose" so you can see what is
+> happening.
+> So:
 > 
-> The problem is that when something is changed in the array,
-> the file needs to be recreated.
-> For example, this happened to me, after growing the array it
-> was not possibile anymore to restart it without rerunning
-> the "--examin --scan" thing.
+>   mdadm -S /dev/md1
+>   mdadm -A /dev/md1 -fv /dev/sd[abcde]4
+> 
+> and report the result.
 
-That happened to me too but it was because I had the number of devices
-in the file and that became incorrect when I grew the array. So I
-removed everything except the UID and the name. All the other
-information mdadm can glean from the devices themselves. The UID won't
-change unless you completely obliterate the array.
+Hi Neil,
+
+Thanks for the kind and exceptionally helpful response. It was much
+appreciated.  It greatly improved my understanding of both the problem
+and md generally.
+
+As it happens, I'd issued the following command some time before your
+message arrived:
+
+  $ mdadm --assemble --run /dev/md1 /dev/sd[bcde]4
+
+Fortunately, my impatience (after nearly a week of grief) was not
+rewarded by the punishment it probably deserved ;-) [Note 1]
+
+After many more hours /dev/md1 had resynched and recovered, using sdbe4
+as the spare.
+
+The system then rebooted perfectly.
+
+Unfortunately, I then stupidly installed a new kernel, forgetting that
+Debian/Ubuntu would then update grub.  
+
+So now I can boot kernels which reside on /dev/md0 from grub, but they
+don't find the root file system, which is also on /dev/md0.  
+
+Needless to say, I'd find this a little easier to understand if the
+booting kernel didn't actually sit on the root filesystem itself.
+
+Obviously I need to fix grub, but I'm not sure how.  I'm guessing that I
+have to do one or both of the following:
+
+  1. Tweak the root parameters for grub or the kernel in menu.lst
+
+  2. Update/reinstall parts of the bootloader on my MBRs or partitions.  
+
+Sadly, my understanding of grub is a bit flaky, and my understanding of
+how it handles raid arrays is even flakier.
+
+I'd appreciate some advice, but fully understand that the new problem
+is slightly off-topic for this list, so I'm not expecting anything.
+
+By the way, once I've sorted grub (and backed up my business-critical
+data), I'll run your suggested command on the original disks and report
+back.
+
+In the real world I have decades of experience as a technical writer and
+teacher.  So, once I've educated myself a bit more, I'd like to
+contribute by helping to improve the fragmented and outdated
+documentation that I've found over the course of the last week. 
+
+Best wishes,
+
+Dave
+
+[Note 1] I should add that my impatient act was not 100% reckless,
+since I had previously dd'd all 5 1TB disks and was operating only on
+the copies.
+
+
 
