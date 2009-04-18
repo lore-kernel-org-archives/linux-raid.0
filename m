@@ -1,79 +1,72 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [Patch] mdadm ignoring homehost?
-Date: Sat, 18 Apr 2009 10:50:37 -0400
-Message-ID: <B91E8659-0AD8-4A4D-A1B6-7B6E083753EE@redhat.com>
-References: <cccedfc60903240957j9314cb2k41d86cb78ec10b86@mail.gmail.com> <cccedfc60904010815h4056f55doebff4827705d231b@mail.gmail.com> <18899.61151.445765.360191@notabene.brown> <51C39605-BBE7-48E8-AB35-D55D0B36B3A6@redhat.com> <18919.64597.426128.498393@notabene.brown> <D6CEC060-43DC-40A5-A7EE-F2653DBA9C4C@redhat.com> <20090418081239.GB2124@maude.comedia.it> <F43DC4EB-8E83-4284-A2BE-85EF146AE956@redhat.com> <20090418135203.GA3448@lazy.lzy>
-Mime-Version: 1.0 (Apple Message framework v930.3)
-Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-9--233967382"
-Content-Transfer-Encoding: 7bit
+From: Matti Aarnio <matti.aarnio@zmailer.org>
+Subject: Re: Proposal: make RAID6 code optional
+Date: Sat, 18 Apr 2009 17:58:50 +0300
+Message-ID: <20090418145850.GD28512@mea-ext.zmailer.org>
+References: <200904180946.27722.prakash@punnoor.de> <49E98AD2.8060601@msgid.tls.msk.ru> <200904181117.03418.prakash@punnoor.de> <alpine.LNX.2.00.0904181551320.16493@swampdragon.chaosbits.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090418135203.GA3448@lazy.lzy>
+Content-Disposition: inline
+In-Reply-To: <alpine.LNX.2.00.0904181551320.16493@swampdragon.chaosbits.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org, Luca Berra <bluca@comedia.it>
+To: Jesper Juhl <jj@chaosbits.net>
+Cc: Prakash Punnoor <prakash@punnoor.de>, Michael Tokarev <mjt@tls.msk.ru>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---Apple-Mail-9--233967382
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
+On Sat, Apr 18, 2009 at 03:56:17PM +0200, Jesper Juhl wrote:
+> On Sat, 18 Apr 2009, Prakash Punnoor wrote:
+> > On Samstag 18 April 2009 10:09:54 Michael Tokarev wrote:
+> > > Prakash Punnoor wrote:
+.....
+> > > What's your goal?  What's the problem you're trying to solve?
+> > 
+> > Having duplicate code is not good, of course. But unused code is also not 
+> > good. As I said, I only use RAID5, so I don't need RAID6 support. The RAID6 
+> > support enlarges kernel (the built-in.o in drivers/md grows from 325kb to 
+> > 414kb in my case), making boot time and compile time longer 
+> 
+> By a few ms perhaps - nothing that you'd ever notice in real life... A 
+> small price to pay for the shared code. If you were to split them all 
+> again, the combined total size would be greater still.
 
-On Apr 18, 2009, at 9:52 AM, Piergiorgio Sartor wrote:
-> On Sat, Apr 18, 2009 at 09:35:33AM -0400, Doug Ledford wrote:
->> On Apr 18, 2009, at 4:12 AM, Luca Berra wrote:
->>> uhm, udev should be able to assemble an array without mdadm.conf,  
->>> not
->>> that i like it
->>
->> It does, the question is whether or not it should honor the preferred
->> minor when it assembles an array not in mdadm.conf.
->
-> Does it?
 
-Starting with F11, yes.  Not with prior releases.
+I did quick "sum of symbol sizes" lookup of the   raid.ko, and got
+it like this:
 
-> Then I should open a bug to Fedora, because to
-> me it does not (always).
->
-> bye,
->
+nm -t d -n -S /lib/modules/2.6.27.21-170.2.56.fc10.x86_64/kernel/drivers/md/raid456.ko | grep raid4|awk '{print $2}'|sed -e 's/^0*//g'|awk '{sum+=$1}END{print sum}'
+  ...
+
+raid4:   152
+raid5:  7165
+raid6: 75558
+
+Entire 64kB of that raid6 is single pre-initialized r/o datablock:  raid6_gfmul
+
+So yes, having RAID6 personality as separate module would be appropriate for
+systems that are only interested in RAID4 or RAID5.  Separating the RAID4
+personality wastes space, separating RAID5 ...  barely 2 of 4k memory pages.
+
+There are perhaps a few kB more of codes for RAID5 and RAID6 classes - not all
+local functions at each are named with relevant prefix,  but overall I would
+consider extracting RAID6 as a reasonable goal with common codes on RAID4/5.
+
+> > - admittedly not 
+> > by a big margin. But then again I could argue: Why not put RAID0,1,10,4,5,6 
+> > into one big module? Makes no sense, huh? 
+> 
+> Makes perfect sense to me. Just modprobe raid.o and you have all 
+> raid levels available. That would make a lot of sense. 
+
+Also, systems with so many disks that they run RAID4/5/6 to begin with are
+likely to have enough memory so that "wasted" 75-80 kB does not matter.
+
+> > For me putting 5 and 6 into one 
+> > monolithic module makes no sense. A proper architecture would be to have some 
+> > common shared code (in a separate module?), not a monolithic big one.
+> 
+> That's also a way, and certainly better than just splitting out raid6.
 > -- 
->
-> piergiorgio
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux- 
-> raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Jesper Juhl <jj@chaosbits.net>             http://www.chaosbits.net/
+> Plain text mails only, please      http://www.expita.com/nomime.html
 
-
---
-
-Doug Ledford <dledford@redhat.com>
-
-GPG KeyID: CFBFF194
-http://people.redhat.com/dledford
-
-InfiniBand Specific RPMS
-http://people.redhat.com/dledford/Infiniband
-
-
-
-
-
---Apple-Mail-9--233967382
-content-type: application/pgp-signature; x-mac-type=70674453;
-	name=PGP.sig
-content-description: This is a digitally signed message part
-content-disposition: inline; filename=PGP.sig
-content-transfer-encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG/MacGPG2 v2.0.11 (Darwin)
-
-iEYEARECAAYFAknp6L0ACgkQQ9aEs6Ims9iMkgCeJSZIN2aERXIv0mduqwxmSG0+
-wIAAn0xOqq3LV2FaI27cbpSPZemDO66d
-=y5rI
------END PGP SIGNATURE-----
-
---Apple-Mail-9--233967382--
+/Matti Aarnio
