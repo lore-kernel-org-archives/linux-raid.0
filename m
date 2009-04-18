@@ -1,72 +1,73 @@
-From: Matti Aarnio <matti.aarnio@zmailer.org>
-Subject: Re: Proposal: make RAID6 code optional
-Date: Sat, 18 Apr 2009 17:58:50 +0300
-Message-ID: <20090418145850.GD28512@mea-ext.zmailer.org>
-References: <200904180946.27722.prakash@punnoor.de> <49E98AD2.8060601@msgid.tls.msk.ru> <200904181117.03418.prakash@punnoor.de> <alpine.LNX.2.00.0904181551320.16493@swampdragon.chaosbits.net>
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Incorrect in-kernel bitmap on raid10
+Date: Sat, 18 Apr 2009 20:15:25 +0200
+Message-ID: <slrnguk663.8bq.Mario.Holbe@darkside.dyn.samba-tng.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.LNX.2.00.0904181551320.16493@swampdragon.chaosbits.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jesper Juhl <jj@chaosbits.net>
-Cc: Prakash Punnoor <prakash@punnoor.de>, Michael Tokarev <mjt@tls.msk.ru>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Apr 18, 2009 at 03:56:17PM +0200, Jesper Juhl wrote:
-> On Sat, 18 Apr 2009, Prakash Punnoor wrote:
-> > On Samstag 18 April 2009 10:09:54 Michael Tokarev wrote:
-> > > Prakash Punnoor wrote:
-.....
-> > > What's your goal?  What's the problem you're trying to solve?
-> > 
-> > Having duplicate code is not good, of course. But unused code is also not 
-> > good. As I said, I only use RAID5, so I don't need RAID6 support. The RAID6 
-> > support enlarges kernel (the built-in.o in drivers/md grows from 325kb to 
-> > 414kb in my case), making boot time and compile time longer 
-> 
-> By a few ms perhaps - nothing that you'd ever notice in real life... A 
-> small price to pay for the shared code. If you were to split them all 
-> again, the combined total size would be greater still.
+Hello,
+
+I created a 4.5T RAID10 with internal bitmap out of 3 1.5T disks on a
+Debian 2.6.28-1-686-bigmem kernel:
+# mdadm --create -l raid10 -n 6 -c 512 -b internal -a md /dev/md7 /dev/sdc1 missing /dev/sdd1 missing /dev/sde1 missing
+and I get a strange inconsistency between the on-disk and the in-kernel
+bitmap representation:
+[202617.869531] md: bind<sdc1>
+[202617.888998] md: bind<sdd1>
+[202617.908895] md: bind<sde1>
+[202617.917307] md: md7: raid array is not clean -- starting background reconstruction
+[202619.527127] md: raid10 personality registered for level 10
+[202619.544588] raid10: raid set md7 active with 3 out of 6 devices
+[202619.563536] md7: bitmap file is out of date (0 < 1) -- forcing full recovery
+[202619.584919] md7: bitmap file is out of date, doing full recovery
+[202619.655867] md7: bitmap initialized from disk: read 1/1 pages, set 6131 bits
+[202619.677268] created bitmap (3 pages) for device md7
+[202619.714033] md7: detected capacity change from 0 to 4500896612352
+[202619.732554]  md7: unknown partition table
+[202781.236591] md: resync of RAID array md7
+[202781.248610] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+[202781.266343] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for resync.
+[202781.294735] md: using 128k window, over a total of 4395406848 blocks.
+[202781.336808] md: md7: resync done.
+[202781.347708] md7: invalid bitmap page request: 3 (> 2)
+[202781.363228] md7: invalid bitmap page request: 3 (> 2)
+[202781.378637] md7: invalid bitmap page request: 3 (> 2)
+[202781.394286] md7: invalid bitmap page request: 3 (> 2)
+[202781.409704] md7: invalid bitmap page request: 3 (> 2)
+...lots more of them...
+[202781.832046] md7: invalid bitmap page request: 129 (> 2)
+[202781.832047] md7: invalid bitmap page request: 129 (> 2)
+[202781.832048] md7: invalid bitmap page request: 129 (> 2)
+[202781.832049] md7: invalid bitmap page request: 129 (> 2)
+[202781.832050] md7: invalid bitmap page request: 129 (> 2)
+...lots more of them...
+[202781.832095] md7: invalid bitmap page request: 130 (> 2)
+[202781.832096] md7: invalid bitmap page request: 130 (> 2)
+[202781.832097] md7: invalid bitmap page request: 130 (> 2)
+[202781.832097] md7: invalid bitmap page request: 130 (> 2)
+[202781.832098] md7: invalid bitmap page request: 130 (> 2)
+...lots more of them...
+
+While mdadm -X on every component shows a reasonable bitmap with a 16M
+chunk size and 268275 chunks, the kernel seems to assume there are only
+6131 chunks and initializes 3 instead of 130 pages.
+
+The same happens when adding the bitmap with -G -b internal to an
+existing array.
+
+I don't know if this problem belongs to the array size (i.e. some 32bit
+boundary problem) or to raid10 in general.
 
 
-I did quick "sum of symbol sizes" lookup of the   raid.ko, and got
-it like this:
+regards
+   Mario
+-- 
+<snupidity> bjmg: ja, logik ist mein fachgebiet. das liegt im gen
+<uepsie> in welchem?
+<snupidity> im zweiten X
 
-nm -t d -n -S /lib/modules/2.6.27.21-170.2.56.fc10.x86_64/kernel/drivers/md/raid456.ko | grep raid4|awk '{print $2}'|sed -e 's/^0*//g'|awk '{sum+=$1}END{print sum}'
-  ...
-
-raid4:   152
-raid5:  7165
-raid6: 75558
-
-Entire 64kB of that raid6 is single pre-initialized r/o datablock:  raid6_gfmul
-
-So yes, having RAID6 personality as separate module would be appropriate for
-systems that are only interested in RAID4 or RAID5.  Separating the RAID4
-personality wastes space, separating RAID5 ...  barely 2 of 4k memory pages.
-
-There are perhaps a few kB more of codes for RAID5 and RAID6 classes - not all
-local functions at each are named with relevant prefix,  but overall I would
-consider extracting RAID6 as a reasonable goal with common codes on RAID4/5.
-
-> > - admittedly not 
-> > by a big margin. But then again I could argue: Why not put RAID0,1,10,4,5,6 
-> > into one big module? Makes no sense, huh? 
-> 
-> Makes perfect sense to me. Just modprobe raid.o and you have all 
-> raid levels available. That would make a lot of sense. 
-
-Also, systems with so many disks that they run RAID4/5/6 to begin with are
-likely to have enough memory so that "wasted" 75-80 kB does not matter.
-
-> > For me putting 5 and 6 into one 
-> > monolithic module makes no sense. A proper architecture would be to have some 
-> > common shared code (in a separate module?), not a monolithic big one.
-> 
-> That's also a way, and certainly better than just splitting out raid6.
-> -- 
-> Jesper Juhl <jj@chaosbits.net>             http://www.chaosbits.net/
-> Plain text mails only, please      http://www.expita.com/nomime.html
-
-/Matti Aarnio
