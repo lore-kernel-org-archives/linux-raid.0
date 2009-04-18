@@ -1,62 +1,79 @@
-From: Jon Nelson <jnelson-linux-raid@jamponi.net>
+From: Doug Ledford <dledford@redhat.com>
 Subject: Re: [Patch] mdadm ignoring homehost?
-Date: Sat, 18 Apr 2009 09:48:33 -0500
-Message-ID: <cccedfc60904180748t58cf0980jf8b7c501db0cf653@mail.gmail.com>
-References: <cccedfc60903240957j9314cb2k41d86cb78ec10b86@mail.gmail.com>
-	<cccedfc60904010815h4056f55doebff4827705d231b@mail.gmail.com>
-	<18899.61151.445765.360191@notabene.brown> <51C39605-BBE7-48E8-AB35-D55D0B36B3A6@redhat.com>
-	<18919.64597.426128.498393@notabene.brown> <D6CEC060-43DC-40A5-A7EE-F2653DBA9C4C@redhat.com>
-	<20090418081239.GB2124@maude.comedia.it> <F43DC4EB-8E83-4284-A2BE-85EF146AE956@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Date: Sat, 18 Apr 2009 10:50:37 -0400
+Message-ID: <B91E8659-0AD8-4A4D-A1B6-7B6E083753EE@redhat.com>
+References: <cccedfc60903240957j9314cb2k41d86cb78ec10b86@mail.gmail.com> <cccedfc60904010815h4056f55doebff4827705d231b@mail.gmail.com> <18899.61151.445765.360191@notabene.brown> <51C39605-BBE7-48E8-AB35-D55D0B36B3A6@redhat.com> <18919.64597.426128.498393@notabene.brown> <D6CEC060-43DC-40A5-A7EE-F2653DBA9C4C@redhat.com> <20090418081239.GB2124@maude.comedia.it> <F43DC4EB-8E83-4284-A2BE-85EF146AE956@redhat.com> <20090418135203.GA3448@lazy.lzy>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-9--233967382"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <F43DC4EB-8E83-4284-A2BE-85EF146AE956@redhat.com>
+In-Reply-To: <20090418135203.GA3448@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org, Luca Berra <bluca@comedia.it>
 List-Id: linux-raid.ids
 
-On Sat, Apr 18, 2009 at 8:35 AM, Doug Ledford <dledford@redhat.com> wro=
-te:
-> I've been thinking about this, and this is the method I would suggest=
-=2E
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--Apple-Mail-9--233967382
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
+
+On Apr 18, 2009, at 9:52 AM, Piergiorgio Sartor wrote:
+> On Sat, Apr 18, 2009 at 09:35:33AM -0400, Doug Ledford wrote:
+>> On Apr 18, 2009, at 4:12 AM, Luca Berra wrote:
+>>> uhm, udev should be able to assemble an array without mdadm.conf,  
+>>> not
+>>> that i like it
+>>
+>> It does, the question is whether or not it should honor the preferred
+>> minor when it assembles an array not in mdadm.conf.
 >
-> Add two new keywords to the mdadm.conf file:
+> Does it?
+
+Starting with F11, yes.  Not with prior releases.
+
+> Then I should open a bug to Fedora, because to
+> me it does not (always).
 >
-> ASSEMBLE
-> INCREMENTAL
+> bye,
 >
-> Allow each of those keywords to have one of three set values:
-> None - Don't attempt to assemble any arrays regardless of whether or =
-not they are in the mdadm.conf file or not
-> Known - Only assemble arrays with a matching array line
-> All - Attempt to assemble any array found
+> -- 
 >
-> The combination of the two options and the three settings would allow=
- you to control mdadm behavior for both array assembly modes independen=
-tly. =A0That, combined with my previous patch, should allow arrays to a=
-ssemble well, with known names, allow you to control auto assembly by u=
-dev, and in the event that your machine just exports volumes to other m=
-achines for their use, stop assembly entirely.
->
+> piergiorgio
 > --
-
-
-
-Of the proposals thus far, I think I like this one the best.
-More or less, it's what I thought homehost was supposed to do (if
-homehost did not match, ignore!) but given the morass around homehost,
-this seems like a very reasonable approach to solving this class of
-issues. With the increasing prevalence of block devices which may
-appear on many hosts (like AoE, etc...) it seems as though this issue
-isn't going to go away easily.
-
+> To unsubscribe from this list: send the line "unsubscribe linux- 
+> raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
 --
-Jon
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Doug Ledford <dledford@redhat.com>
+
+GPG KeyID: CFBFF194
+http://people.redhat.com/dledford
+
+InfiniBand Specific RPMS
+http://people.redhat.com/dledford/Infiniband
+
+
+
+
+
+--Apple-Mail-9--233967382
+content-type: application/pgp-signature; x-mac-type=70674453;
+	name=PGP.sig
+content-description: This is a digitally signed message part
+content-disposition: inline; filename=PGP.sig
+content-transfer-encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2.0.11 (Darwin)
+
+iEYEARECAAYFAknp6L0ACgkQQ9aEs6Ims9iMkgCeJSZIN2aERXIv0mduqwxmSG0+
+wIAAn0xOqq3LV2FaI27cbpSPZemDO66d
+=y5rI
+-----END PGP SIGNATURE-----
+
+--Apple-Mail-9--233967382--
