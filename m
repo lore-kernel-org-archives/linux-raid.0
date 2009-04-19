@@ -1,33 +1,28 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: RAID without superblock
-Date: Sun, 19 Apr 2009 13:47:43 +0200
-Message-ID: <20090419114743.GA29195@lazy.lzy>
+From: Jan Ceuleers <jan.ceuleers@computer.org>
+Subject: Spares Missing event in case of spare group?
+Date: Sun, 19 Apr 2009 18:02:15 +0200
+Message-ID: <49EB4B07.9050208@computer.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+Hi!
 
-what is the proper way to assemble a two disk,
-RAID-1, without superblock.
-That is, created with "-B" instead of "-C".
+I have two RAID1 sets of equal size, with one spare shared between them. 
+When I reboot the system I get a Spares Missing notification on one of 
+the arrays.
 
-I noticed that re-using "-B", will start an
-array sync/repair, but it is not clear to me
-which disk is source and which is destination.
+Since this is a false positive, is there a way to avoid it?
 
-Using a bitmap file, seems to be safer option,
-but I'm not sure if this is just a workaround
-or it is the proper way.
+Extract from mdadm.conf:
 
-Thanks a lot in advance,
+ARRAY /dev/md0 level=raid1 num-devices=2 spares=1 
+UUID=19e69537:f7a6aec8:5a5f7576:3fc29e0d spare-group=swapgroup
+ARRAY /dev/md1 level=raid1 num-devices=2 spares=1 
+UUID=5e728621:c8b356a8:01f8e270:f0e280cb spare-group=swapgroup
 
-bye,
-
--- 
-
-piergiorgio
+Thanks, Jan
