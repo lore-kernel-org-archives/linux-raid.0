@@ -1,60 +1,37 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Incorrect in-kernel bitmap on raid10
-Date: Sun, 19 Apr 2009 16:24:02 +1000
-Message-ID: <18922.50050.860008.242658@notabene.brown>
-References: <slrnguk663.8bq.Mario.Holbe@darkside.dyn.samba-tng.org>
+Subject: Re: Proposal: make RAID6 code optional
+Date: Sun, 19 Apr 2009 16:28:11 +1000
+Message-ID: <18922.50299.133847.743973@notabene.brown>
+References: <200904180946.27722.prakash@punnoor.de>
+	<49E98AD2.8060601@msgid.tls.msk.ru>
+	<200904181117.03418.prakash@punnoor.de>
+	<alpine.LNX.2.00.0904181551320.16493@swampdragon.chaosbits.net>
+	<20090418145850.GD28512@mea-ext.zmailer.org>
+	<49EA8766.9070605@zytor.com>
+	<2954ad7f6081b2a6da33f861b0654626.squirrel@neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mario 'BitKoenig' Holbe on Saturday April 18
+In-Reply-To: message from NeilBrown on Sunday April 19
 Sender: linux-raid-owner@vger.kernel.org
-To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Cc: linux-raid@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>, Matti Aarnio <matti.aarnio@zmailer.org>, Jesper Juhl <jj@chaosbits.net>, Prakash Punnoor <prakash@punnoor.de>, Michael Tokarev <mjt@tls.msk.>
 List-Id: linux-raid.ids
 
-On Saturday April 18, Mario.Holbe@TU-Ilmenau.DE wrote:
-> Hello,
+On Sunday April 19, neilb@suse.de wrote:
 > 
-> I created a 4.5T RAID10 with internal bitmap out of 3 1.5T disks on a
-> Debian 2.6.28-1-686-bigmem kernel:
-> # mdadm --create -l raid10 -n 6 -c 512 -b internal -a md /dev/md7 /dev/sdc1 missing /dev/sdd1 missing /dev/sde1 missing
-> and I get a strange inconsistency between the on-disk and the in-kernel
-> bitmap representation:
+> In 2.6.30, the Q syndrome code has been moved into a separate module,
+> so raid456.ko should be quite a bit smaller.
 
-oops...
+Of course that doesn't really help as there will be a dependency
+between raid456.ko and pq.ko so you cannot avoid having pq.ko loaded
+while using raid5.
 
-Could you let me know if that following patch helps?
-This bug will affect RAID4,5,6 when the device exceeds 2 terabytes,
-but it affects RAID10 when the array exceeds 2 terabytes.
-(For RAID1, the device size and array size are the same, if it fits in
-both categories).
+It might make sense to create a raid6 module that just contains 
+The call to register_md_personality(raid6_personality) and some
+linkage so that the code in raid456.ko can get to the code in pq.ko.
 
-Thanks,
+This is probably worth trying one the raid6 async offload stuff
+stabilises.
+
 NeilBrown
-
-
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index e4510c9..1fb91ed 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -1590,7 +1590,7 @@ void bitmap_destroy(mddev_t *mddev)
- int bitmap_create(mddev_t *mddev)
- {
- 	struct bitmap *bitmap;
--	unsigned long blocks = mddev->resync_max_sectors;
-+	sector_t blocks = mddev->resync_max_sectors;
- 	unsigned long chunks;
- 	unsigned long pages;
- 	struct file *file = mddev->bitmap_file;
-@@ -1632,8 +1632,8 @@ int bitmap_create(mddev_t *mddev)
- 	bitmap->chunkshift = ffz(~bitmap->chunksize);
- 
- 	/* now that chunksize and chunkshift are set, we can use these macros */
-- 	chunks = (blocks + CHUNK_BLOCK_RATIO(bitmap) - 1) /
--			CHUNK_BLOCK_RATIO(bitmap);
-+ 	chunks = (blocks + CHUNK_BLOCK_RATIO(bitmap) - 1) >>
-+			CHUNK_BLOCK_SHIFT(bitmap);
-  	pages = (chunks + PAGE_COUNTER_RATIO - 1) / PAGE_COUNTER_RATIO;
- 
- 	BUG_ON(!pages);
