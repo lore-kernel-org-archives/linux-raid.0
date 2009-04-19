@@ -1,52 +1,80 @@
-From: "NeilBrown" <neilb@suse.de>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
 Subject: Re: RAID without superblock
-Date: Mon, 20 Apr 2009 06:44:17 +1000 (EST)
-Message-ID: <e96b335a0ba8595e2921d164f9b15ff7.squirrel@neil.brown.name>
-References: <20090419114743.GA29195@lazy.lzy>
+Date: Sun, 19 Apr 2009 23:04:07 +0200
+Message-ID: <20090419210200.GA6942@lazy.lzy>
+References: <20090419114743.GA29195@lazy.lzy> <e96b335a0ba8595e2921d164f9b15ff7.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090419114743.GA29195@lazy.lzy>
+Content-Disposition: inline
+In-Reply-To: <e96b335a0ba8595e2921d164f9b15ff7.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, April 19, 2009 9:47 pm, Piergiorgio Sartor wrote:
-> Hi all,
->
-> what is the proper way to assemble a two disk,
-> RAID-1, without superblock.
-> That is, created with "-B" instead of "-C".
+Hi,
 
-Why would you want a RAID-1 without superblock. I generally
-consider that a legacy configuration.
+thanks for the answer.
 
->
-> I noticed that re-using "-B", will start an
-> array sync/repair, but it is not clear to me
-> which disk is source and which is destination.
+> Why would you want a RAID-1 without superblock. I generally
+> consider that a legacy configuration.
 
-As there is no superblock, md cannot tell if the array is "clean"
-or not.  It assumes the worst.
-If you know for a fact that the two mirrors are consistent,
-then tell mdadm with "--assume-clean".
+Ah! I was thinking about it as a method to
+build a RAID with an already existing disk
+or partition, which cannot be modified.
+So, let's say I've already a disk with some
+data and I want/need to protect it with a
+RAID configuration, but I cannot re-create
+the RAID from scratch, because this will
+damage the content of the disk.
+Of course, if there is another solution,
+like having the superblock on a separate
+file, it would be nice too.
+BTW, have you ever consider that?
 
+> As there is no superblock, md cannot tell if the array is "clean"
+> or not.  It assumes the worst.
+> If you know for a fact that the two mirrors are consistent,
+> then tell mdadm with "--assume-clean".
 
->
-> Using a bitmap file, seems to be safer option,
-> but I'm not sure if this is just a workaround
-> or it is the proper way.
+Uhm, no, it is not clean, but one of the two
+has the correct data, the other no.
+Is the "-B" always copying from the first to
+the second or else?
+For example, I found consistent to create the
+array with the correct disk and "missing",
+then add the mirror.
+Of course, if there is a known order for the
+resync, then it would be enough to build
+the array with this in mind.
+The issue could also be that the "primary"
+disk could be updated alone, sometimes.
 
-A bitmap (which has to be in a separate file) can be use
-to record the clean/dirty status.  It provides some of the same
-functionality as a superblock.  But it is not a complete replacement.
+> A bitmap (which has to be in a separate file) can be use
 
-To quote from the man page:
+Of course, it is a separate file... :-)
 
-        Because of this, the Build mode should only be used
-        together with a complete understanding of what you are doing.
+> to record the clean/dirty status.  It provides some of the same
+> functionality as a superblock.  But it is not a complete replacement.
 
-NeilBrown
+OK, this is clear.
+ 
+> To quote from the man page:
+> 
+>         Because of this, the Build mode should only be used
+>         together with a complete understanding of what you are doing.
 
+Exactly, I ran into that sentence, that's why
+I'm asking, I try to get the full understanding
+in order to see if I can use this "feature"...
+
+In any case, if this is "legacy", maybe better
+to forget about it.
+
+Thanks again,
+
+bye,
+
+-- 
+
+piergiorgio
