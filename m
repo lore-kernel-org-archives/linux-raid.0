@@ -1,37 +1,32 @@
-From: Jan Ceuleers <jan.ceuleers@computer.org>
-Subject: Re: Spares Missing event in case of spare group?
-Date: Mon, 20 Apr 2009 21:02:35 +0200
-Message-ID: <49ECC6CB.7050107@computer.org>
-References: <49EB4B07.9050208@computer.org> <0ad180f4fb306d79e27eb9c822acdbaf.squirrel@neil.brown.name>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: what superblock to use
+Date: Mon, 20 Apr 2009 14:39:05 -0500
+Message-ID: <20090420193914009.EBTN9976@cdptpa-omta03.mail.rr.com>
+References: <20090420141702.GC17461@maude.comedia.it>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0ad180f4fb306d79e27eb9c822acdbaf.squirrel@neil.brown.name>
+In-Reply-To: <20090420141702.GC17461@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil,
 
-NeilBrown wrote:
-> Yes.  Remove the "spares=1" from each line.
-> The sole effect of this text is to tell --monitor to expect a spare, and
-> to complain if no spare is found.
+> >what's the current recommended superblock to use for a newly created
+> >raid5-6 array with 6 pieces of 1tb disk? by default mdamd use 0.90. is
+> >it worth to change it to any 1.x format?
+> 0.9 has some limitations that 1.x do not have, none apply in your case
+> max_components = 28
+> max_size of component=2TB
 
-Many thanks. I hadn't picked that up from the manpage, so here is a 
-patch for your consideration:
+Oops!  I did not realize this when I built my array.  I'm going to need to
+grow the array to 3T components after the 3T drives are released.  Can the
+superblock be changed on an existing array, or does it have to be rebuilt
+from scratch?  If the latter, I'm glad I learned this now, because I may
+have to rebuild the array, anyway, to try to alleviate the halt issue I am
+experiencing.
 
 
-diff --git a/mdadm.conf.5 b/mdadm.conf.5
-index 40295be..b67bec4 100644
---- a/mdadm.conf.5
-+++ b/mdadm.conf.5
-@@ -135,6 +135,7 @@ this is mainly for compatibility with the output of
-  .TP
-  .B spares=
-  The value is a number of spare devices to expect the array to have.
-+The sole use of this keyword and value is as follows:
-  .B mdadm \-\-monitor
-  will report an array if it is found to have fewer than this number of
-  spares when
