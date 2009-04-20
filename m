@@ -1,92 +1,50 @@
-From: Christopher Chen <muffaleta@gmail.com>
-Subject: Re: RAID without superblock
-Date: Mon, 20 Apr 2009 11:17:09 -0700
-Message-ID: <7bc80d500904201117r60353fa1ped1d64a50da87bc0@mail.gmail.com>
-References: <20090419114743.GA29195@lazy.lzy>
-	 <e96b335a0ba8595e2921d164f9b15ff7.squirrel@neil.brown.name>
-	 <20090419210200.GA6942@lazy.lzy>
-	 <1240178252.31728.12.camel@cichlid.com>
-	 <20090420181045.GA4236@lazy.lzy>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: [Patch] mdadm ignoring homehost?
+Date: Mon, 20 Apr 2009 20:17:36 +0200
+Message-ID: <20090420181736.GB4236@lazy.lzy>
+References: <18899.61151.445765.360191@notabene.brown> <51C39605-BBE7-48E8-AB35-D55D0B36B3A6@redhat.com> <18919.64597.426128.498393@notabene.brown> <D6CEC060-43DC-40A5-A7EE-F2653DBA9C4C@redhat.com> <20090417183952.GA6090@lazy.lzy> <20090418075436.GA2124@maude.comedia.it> <20090418083609.GA4436@lazy.lzy> <20090418101954.GA1448@maude.comedia.it> <20090418130656.GA3344@lazy.lzy> <18924.3824.677493.129885@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090420181045.GA4236@lazy.lzy>
+Content-Disposition: inline
+In-Reply-To: <18924.3824.677493.129885@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I don't think it's a problem anymore, but on Centos 5.2, use of
-superblocks other than 0.90 and sparegroups with md monitor are not
-compatible. I found this out the hard way after creating a few arrays
-with 1.2 and putting them in the same sparegroup--when one array went
-degraded, mdadm removed the spare from one, but failed when trying to
-add it to the other, leaving me one spare less and with a degraded
-array still.
+On Mon, Apr 20, 2009 at 03:58:08PM +1000, Neil Brown wrote:
+[...]
+> If you use 1.x metadata (e.g. 1.0), then this works nicely.
+> 
+>  mdadm --create /dev/md/foo --metadata 1.0 --level .....
+> 
+> This will store the name 'foo' in the metadata and when you assemble
+> the array, it will be called /dev/md/foo.
+> This will be a symlink to /dev/md125 or something like that, but you
+> don't need to care.
 
-=46un!
+Does this really work with mdadm 2.6.7.1?
 
-Cheers
+Because I have this from "--examine --scan"
 
-cc
+ARRAY /dev/md/boot level=raid1 metadata=1.0 num-devices=2 UUID=edb4254d:4274fac1:dd6cad61:a8e3c347 name=boot
 
-On Mon, Apr 20, 2009 at 11:10 AM, Piergiorgio Sartor
-<piergiorgio.sartor@nexgo.de> wrote:
-> Hi,
->
-> first of all thanks a lot for all the suggestions,
-> it is really nice to have this support!
->
-> While reading the answers, I realized that I did
-> not make the "requirements" really clear. My bad.
->
-> The "primary" disk is an external one, which 90%
-> of the time is connected to the same Linux PC.
-> But, it could happen it is removed and connected
-> somewhere else, where no "md" is available.
->
-> My idea was, in order to have some protection, to
-> use it in RAID-1 "superblockless" configuration
-> on the "default" PC, and use it as a normal disk
-> whenever (or wherever) necessary.
-> Of course, the bitmap resync will not work, when
-> updating the disk directly, without "md" layer.
->
-> On the other hand, if the full-resync is always
-> done from this disk to the local mirror, there
-> would be no problem, except time.
->
-> The reason to do this kind of backup is that this
-> disk is encrypted, so a "block device copy" will
-> keep the data encrypted, while a backup of the
-> mounted disk will not. Unless done to another
-> encrypted disk/partition, of course.
->
-> Clearly, any suggestion is still really appreciated!
->
-> Thanks again,
->
-> bye,
->
-> --
->
-> piergiorgio
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+Of course, /dev/mdadm.conf has the same entry.
 
+But:
 
+$> mdadm -A --scan
+mdadm: /dev/md/boot does not exist and is not a 'standard' name so it cannot be created
 
---=20
-Chris Chen <muffaleta@gmail.com>
-"I want the kind of six pack you can't drink."
--- Micah
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The array was *not* created as you suggested,
+but it has metadata 1.0 and a name.
+Which name is also returned by --examine --scan
+as array device name.
+
+Thanks,
+
+bye,
+
+-- 
+
+piergiorgio
