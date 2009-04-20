@@ -1,45 +1,55 @@
-From: Neil Brown <neilb@suse.de>
-Subject: [PULL REQUEST] a few more md patches for 2.6.30
-Date: Mon, 20 Apr 2009 17:52:25 +1000
-Message-ID: <18924.10681.98103.247886@notabene.brown>
+From: "Mario 'BitKoenig' Holbe" <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: Race condition in write_sb_page?
+Date: Mon, 20 Apr 2009 10:03:02 +0200
+Message-ID: <20090420080301.GA28593@darkside.22.kls.lan>
+References: <slrnguk663.8bq.Mario.Holbe@darkside.dyn.samba-tng.org> <18922.50050.860008.242658@notabene.brown> <20090419225556.GC14157@darkside.22.kls.lan> <18923.45938.499331.641264@notabene.brown> <slrngunfh2.90j.Mario.Holbe@darkside.dyn.samba-tng.org> <dad4be16a03ccd96d073ecb16b937183.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="82I3+IH0IqGh5yIs"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <dad4be16a03ccd96d073ecb16b937183.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>, Christoph Hellwig <hch@lst.de>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Hi Linus, 
- a few more md fixes / enhancements.
- The enhancements are fairly minor and essentially finish off various
- threads begun in previous pull.
+--82I3+IH0IqGh5yIs
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
-NeilBrown
+On Mon, Apr 20, 2009 at 11:57:54AM +1000, NeilBrown wrote:
+> The comment lists a number of conditions that are all true when
+> something is remove from (or added to) the list.  So we only need
+> to be sure that one of these is true to be sure the thing wont be removed
+
+Okay, I guess I just confused the component's descriptor index (desc_nr,
+which changes when a resync finishes) and it's position in mddev->disks
+(which doesn't change).
 
 
-The following changes since commit 0882e8dd3aad33eca41696d463bb896e6c8817eb:
-  Linus Torvalds (1):
-        Linux 2.6.30-rc2
+Mario
+--=20
+File names are infinite in length where infinity is set to 255 characters.
+                                -- Peter Collinson, "The Unix File System"
 
-are available in the git repository at:
+--82I3+IH0IqGh5yIs
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
-  git://neil.brown.name/md for-linus
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
 
-Christoph Hellwig (1):
-      md: tiny md.h cleanups
+iQEVAwUBSewsNRS+e2HeSPbpAQKaugf/ewaMiRm0gYrkE0Tsa7Bsme/RU+sJP4wE
+onqUqRmP2ocGHodrv02FImmhJaY1v+Oa0uFxadtZnolx1z0hHBEOnXIC0ZvUff9B
+WaHPeyqUlOLQpwjBkl5Gg0X0wJEu4JGSg0M68g1+MxfpqxD5Lo/xdk0uWcGKkQZc
+S1ykDIDcfKSFC+XX7xUgGgEpx5EoQm/Q7fHFE8zm7Y4XmyXNEwcqVke3f6L3o496
+Fyxnjb1+hN2dBndCjsEdeovJkcOEuNFSYCRoer2BCwqhCvmNqeKTKYgxoHGv96+6
+mHLg+AXfIre6PrcAWFXwi6z3O+h0arzUQhGH3chm/TcH/d1CZPie0g==
+=VnEr
+-----END PGP SIGNATURE-----
 
-NeilBrown (4):
-      md: allow setting newly added device to 'in_sync' via sysfs.
-      md: improve usefulness and accuracy of sysfs file md/sync_completed.
-      md: update sync_completed and reshape_position even more often.
-      md: support bitmaps on RAID10 arrays larger then 2 terabytes
-
- drivers/md/bitmap.c |    7 ++++---
- drivers/md/md.c     |   41 ++++++++++++++++++++++++++++-------------
- drivers/md/md.h     |   21 +++++++++++++--------
- drivers/md/raid5.c  |    7 ++++++-
- 4 files changed, 51 insertions(+), 25 deletions(-)
+--82I3+IH0IqGh5yIs--
