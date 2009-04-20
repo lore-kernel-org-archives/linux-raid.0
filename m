@@ -1,45 +1,34 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: what superblock to use
-Date: Mon, 20 Apr 2009 23:24:54 +0200
-Message-ID: <20090420212454.GC5550@maude.comedia.it>
-References: <20090420141702.GC17461@maude.comedia.it> <20090420193914009.EBTN9976@cdptpa-omta03.mail.rr.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: [Patch] mdadm ignoring homehost?
+Date: Mon, 20 Apr 2009 23:24:44 +0200
+Message-ID: <20090420212444.GA5193@lazy.lzy>
+References: <18919.64597.426128.498393@notabene.brown> <D6CEC060-43DC-40A5-A7EE-F2653DBA9C4C@redhat.com> <20090417183952.GA6090@lazy.lzy> <20090418075436.GA2124@maude.comedia.it> <20090418083609.GA4436@lazy.lzy> <20090418101954.GA1448@maude.comedia.it> <20090418130656.GA3344@lazy.lzy> <18924.3824.677493.129885@notabene.brown> <20090420181736.GB4236@lazy.lzy> <20090420211332.GA5550@maude.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20090420193914009.EBTN9976@cdptpa-omta03.mail.rr.com>
+In-Reply-To: <20090420211332.GA5550@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Apr 20, 2009 at 02:39:05PM -0500, Leslie Rhorer wrote:
->
->> >what's the current recommended superblock to use for a newly created
->> >raid5-6 array with 6 pieces of 1tb disk? by default mdamd use 0.90. is
->> >it worth to change it to any 1.x format?
->> 0.9 has some limitations that 1.x do not have, none apply in your case
->> max_components = 28
->> max_size of component=2TB
->
->Oops!  I did not realize this when I built my array.  I'm going to need to
->grow the array to 3T components after the 3T drives are released.  Can the
->superblock be changed on an existing array, or does it have to be rebuilt
->from scratch?  If the latter, I'm glad I learned this now, because I may
->have to rebuild the array, anyway, to try to alleviate the halt issue I am
->experiencing.
+On Mon, Apr 20, 2009 at 11:13:32PM +0200, Luca Berra wrote:
+> add --auto=md to the command line
+> or put it in the create line in mdadm.conf
 
-afaik it cannot be changed after creation
-if you have free space you could play tricks reducing the fs, recreating
-the array with the exact same parameters except metadata and
---assume-clean (you are limited to using 1.0 in this case)
-anyway do a backup before trying this.
+Thanks, that did the trick!
 
-L.
+Interesting, it seems now I have 3 devices
+for that raid.
+One is /dev/md127, one is /dev/md/boot, with
+same (major, minor) as md127, and there is a
+third one, /dev/md_boot, which is a symbolic
+link to /dev/md/boot.
+
+/proc/mdstat reports /dev/md127
+
+bye,
 
 -- 
-Luca Berra -- bluca@comedia.it
-         Communication Media & Services S.r.l.
-  /"\
-  \ /     ASCII RIBBON CAMPAIGN
-   X        AGAINST HTML MAIL
-  / \
+
+piergiorgio
