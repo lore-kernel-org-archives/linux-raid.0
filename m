@@ -1,42 +1,48 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: RAID without superblock
-Date: Mon, 20 Apr 2009 00:33:08 +0100
-Message-ID: <49EBB4B4.40102@anonymous.org.uk>
-References: <20090419114743.GA29195@lazy.lzy> <e96b335a0ba8595e2921d164f9b15ff7.squirrel@neil.brown.name> <20090419210200.GA6942@lazy.lzy>
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Race condition in write_sb_page? (was: Re: Incorrect in-kernel
+ bitmap on raid10)
+Date: Mon, 20 Apr 2009 02:13:22 +0200
+Message-ID: <slrngunfh2.90j.Mario.Holbe@darkside.dyn.samba-tng.org>
+References: <slrnguk663.8bq.Mario.Holbe@darkside.dyn.samba-tng.org>
+ <18922.50050.860008.242658@notabene.brown>
+ <20090419225556.GC14157@darkside.22.kls.lan>
+ <18923.45938.499331.641264@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090419210200.GA6942@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 19/04/2009 22:04, Piergiorgio Sartor wrote:
->> Why would you want a RAID-1 without superblock. I generally
->> consider that a legacy configuration.
-> 
-> Ah! I was thinking about it as a method to
-> build a RAID with an already existing disk
-> or partition, which cannot be modified.
+Neil Brown <neilb@suse.de> wrote:
+> On Monday April 20, Mario.Holbe@TU-Ilmenau.DE wrote:
+>> existing bitmapped device. When the full-sync of the new component is
+>> finished, the bitmap on the new component does usually show still lots
+>> of dirty bits (sometimes only a few %, sometimes up to 95%) while the
+> I think that problem is fixed by 
+>   commit 355a43e641b948a7b755cb4c2466ec548d5b495f
+> which is in 2.6.29.
 
-Well, something somewhere is going to have to change; at the very least 
-you're going to have to stop whatever's using the filesystem, unmount 
-it, do whatever to create the new RAID-1 incorporating the original 
-disc, and remount the filesystem now on the new md device.
+.2 probably :)
 
-So instead you could create a new RAID-1 md device with (a superblock 
-and) one disc missing, create a filesystem on it, stop your original 
-filesystem, copy its contents to the new md device, mount it, and add 
-the original disc into the new md device.
+While looking at commit 355a43e641b948a7b755cb4c2466ec548d5b495f I'm not
+sure, if this could raise a race condition: the comment in
+next_active_rdev() states:
+	 * As devices are only added or removed when raid_disk is < 0 and
+	 * nr_pending is 0 and In_sync is clear, the entries we return will
+	 * still be in the same position on the list when we re-enter
+	 * list_for_each_continue_rcu.
+but commit 355a43e641b948a7b755cb4c2466ec548d5b495f does exactly remove
+the In_sync test. If the comment is true, the removal of the test
+probably opens a window for a race condition.
 
-If you've too much data to be able to afford the downtime copying, use 
-rsync with the appropriate options while the filesystem's still in use, 
-then again after it's been stopped; the second copy will complete far 
-faster than the full copy.
 
-Cheers,
-
-John.
+regards
+   Mario
+-- 
+Programmieren in C++ haelt die grauen Zellen am Leben. Es schaerft
+alle fuenf Sinne: den Schwachsinn, den Bloedsinn, den Wahnsinn, den
+Unsinn und den Stumpfsinn.
+                                 [Holger Veit in doc]
 
