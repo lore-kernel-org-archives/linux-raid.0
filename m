@@ -1,67 +1,63 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Race condition in write_sb_page? (was: Re: Incorrect in-kernel
-     bitmap on raid10)
-Date: Mon, 20 Apr 2009 11:57:54 +1000 (EST)
-Message-ID: <dad4be16a03ccd96d073ecb16b937183.squirrel@neil.brown.name>
-References: <slrnguk663.8bq.Mario.Holbe@darkside.dyn.samba-tng.org>
-    <18922.50050.860008.242658@notabene.brown>
-    <20090419225556.GC14157@darkside.22.kls.lan>
-    <18923.45938.499331.641264@notabene.brown>
-    <slrngunfh2.90j.Mario.Holbe@darkside.dyn.samba-tng.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [Patch] mdadm ignoring homehost?
+Date: Mon, 20 Apr 2009 15:23:52 +1000
+Message-ID: <18924.1768.721791.765727@notabene.brown>
+References: <cccedfc60903240957j9314cb2k41d86cb78ec10b86@mail.gmail.com>
+	<cccedfc60904010815h4056f55doebff4827705d231b@mail.gmail.com>
+	<18899.61151.445765.360191@notabene.brown>
+	<51C39605-BBE7-48E8-AB35-D55D0B36B3A6@redhat.com>
+	<18919.64597.426128.498393@notabene.brown>
+	<20090417070841.GA29681@boogie.lpds.sztaki.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <slrngunfh2.90j.Mario.Holbe@darkside.dyn.samba-tng.org>
+In-Reply-To: message from Gabor Gombas on Friday April 17
 Sender: linux-raid-owner@vger.kernel.org
-To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Cc: linux-raid@vger.kernel.org
+To: Gabor Gombas <gombasg@sztaki.hu>
+Cc: Doug Ledford <dledford@redhat.com>, Jon Nelson <jnelson-linux-raid@jamponi.net>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, April 20, 2009 10:13 am, Mario 'BitKoenig' Holbe wrote:
-> Neil Brown <neilb@suse.de> wrote:
->> On Monday April 20, Mario.Holbe@TU-Ilmenau.DE wrote:
->>> existing bitmapped device. When the full-sync of the new component is
->>> finished, the bitmap on the new component does usually show still lots
->>> of dirty bits (sometimes only a few %, sometimes up to 95%) while the
->> I think that problem is fixed by
->>   commit 355a43e641b948a7b755cb4c2466ec548d5b495f
->> which is in 2.6.29.
->
-> .2 probably :)
+On Friday April 17, gombasg@sztaki.hu wrote:
+> On Fri, Apr 17, 2009 at 01:49:41PM +1000, Neil Brown wrote:
+> 
+> > As you probably know, my preferred solution is to have all arrays
+> > listed in /etc/mdadm.conf.  If it isn't in mdadm.conf, it doesn't get
+> > assembled.   But I don't have a lot of company in this opinion.  Lots
+> > of people want to have arrays assembled without them being in
+> > mdadm.conf, and I'm trying to work with that.
+> 
+> IMHO the goal to have all arrays defined in mdadm.conf would be much
+> better to achieve if mdadm managed that configuration itself, not unlike
+> how LVM metadata is handled. Of course doing that right is not exactly
+> easy...
 
-Actually not - I haven't tagged it for -stable.  It'll be in .30.
+How does LVM manage metadata???  I assume it stored the metadata on
+the device.  Which is what mdadm does.
+But as devices can move between machines.....
 
-I had used "git describe" to see which release it was in, but that
-tells me a previous release, but a subsequent one, which make it not
-useful for that task.
-I should have used 'get name-rev' after  a 'git pull --tags' which
-would have told me
-  355a43e641b948a7b755cb4c2466ec548d5b495f tags/v2.6.30-rc1~241^2~49
-so it is in 30-rc1.
+> 
+> > Note that 0.90 metadata does contain homehost information to some
+> > extent.  When homehost is set, the last few bytes of the uuid is set
+> > from a hash of the homehost name.  That makes it possible to test if a
+> > 0.90 array was created for 'this' host, but not to find out what host
+> > it was created for.  So the above expedient won't work for 0.90
+> > arrays, but the rest of the homehost concept (including any possible
+> > 'homehost=any' option) does.
+> 
+> How about introducing /dev/md/by-uuid/... (or similar) and teaching
+> people that if they want to transparently carry their arrays from one
+> host to another, then they should always refer to it by UUID?
 
+This already exists, though it might be distro-dependant.
+  /dev/disk/by-id/md-uuid-xxxxx
 
->
-> While looking at commit 355a43e641b948a7b755cb4c2466ec548d5b495f I'm not
-> sure, if this could raise a race condition: the comment in
-> next_active_rdev() states:
-> 	 * As devices are only added or removed when raid_disk is < 0 and
-> 	 * nr_pending is 0 and In_sync is clear, the entries we return will
-> 	 * still be in the same position on the list when we re-enter
-> 	 * list_for_each_continue_rcu.
-> but commit 355a43e641b948a7b755cb4c2466ec548d5b495f does exactly remove
-> the In_sync test. If the comment is true, the removal of the test
-> probably opens a window for a race condition.
+> 
+> Mounting file systems by UUID instead of device path got accepted by
+> people who really care about moving things around, so doing the same for
+> RAID could also work.
 
-Thanks for reviewing the code, I really appreciate it.
+That would be nice... 
 
-In this case, I think the code is still fine.
-The comment lists a number of conditions that are all true when
-something is remove from (or added to) the list.  So we only need
-to be sure that one of these is true to be sure the thing wont be removed
-from the list.  We previously had 3 of them known to be true.  Now
-we only have 2.  But that is still plenty.
-
-Thanks,
 NeilBrown
 
