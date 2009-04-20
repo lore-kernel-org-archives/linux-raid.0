@@ -1,23 +1,48 @@
 From: Luca Berra <bluca@comedia.it>
 Subject: Re: [Patch] mdadm ignoring homehost?
-Date: Mon, 20 Apr 2009 23:13:32 +0200
-Message-ID: <20090420211332.GA5550@maude.comedia.it>
-References: <51C39605-BBE7-48E8-AB35-D55D0B36B3A6@redhat.com> <18919.64597.426128.498393@notabene.brown> <D6CEC060-43DC-40A5-A7EE-F2653DBA9C4C@redhat.com> <20090417183952.GA6090@lazy.lzy> <20090418075436.GA2124@maude.comedia.it> <20090418083609.GA4436@lazy.lzy> <20090418101954.GA1448@maude.comedia.it> <20090418130656.GA3344@lazy.lzy> <18924.3824.677493.129885@notabene.brown> <20090420181736.GB4236@lazy.lzy>
+Date: Mon, 20 Apr 2009 23:18:13 +0200
+Message-ID: <20090420211813.GB5550@maude.comedia.it>
+References: <20090420181736.GB4236@lazy.lzy> <20090420194956144.ESZJ23317@cdptpa-omta01.mail.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20090420181736.GB4236@lazy.lzy>
+In-Reply-To: <20090420194956144.ESZJ23317@cdptpa-omta01.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Apr 20, 2009 at 08:17:36PM +0200, Piergiorgio Sartor wrote:
->$> mdadm -A --scan
->mdadm: /dev/md/boot does not exist and is not a 'standard' name so it cannot be created
+On Mon, Apr 20, 2009 at 02:49:48PM -0500, Leslie Rhorer wrote:
+>> >  mdadm --create /dev/md/foo --metadata 1.0 --level .....
+>> >
+>> > This will store the name 'foo' in the metadata and when you assemble
+>> > the array, it will be called /dev/md/foo.
+>> > This will be a symlink to /dev/md125 or something like that, but you
+>> > don't need to care.
+>> 
+>> Does this really work with mdadm 2.6.7.1?
+>> 
+>> Because I have this from "--examine --scan"
+>> 
+>> ARRAY /dev/md/boot level=raid1 metadata=1.0 num-devices=2
+>> UUID=edb4254d:4274fac1:dd6cad61:a8e3c347 name=boot
 >
-add --auto=md to the command line
-or put it in the create line in mdadm.conf
+>Um, this is slightly odd, but when I use --examine --scan on my array, it
+>returns nothing.  If I run it on an element of the array I get:
+--examine should be run on component device
+ie. mdadm --examine /dev/sda
+using --scan will make it examine all devices matching the DEVICE line
+in mdadm.conf (or all device if mdadm.conf does not exist)
+
+--detail should be run on an array
+ie. mdadm --detail /dev/md0
+
+>ARRAY /dev/md0 level=raid6 num-devices=10
+>UUID=5a53eeb8:4d87963b:4cb502e9:37bde716
+>
+>'Nothing about the metadata or the array name.
+this is because you are using 0.90 metadata and did never set a name on
+the device...
 
 L.
 
