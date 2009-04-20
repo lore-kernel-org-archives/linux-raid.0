@@ -1,50 +1,37 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: [Patch] mdadm ignoring homehost?
-Date: Mon, 20 Apr 2009 20:17:36 +0200
-Message-ID: <20090420181736.GB4236@lazy.lzy>
-References: <18899.61151.445765.360191@notabene.brown> <51C39605-BBE7-48E8-AB35-D55D0B36B3A6@redhat.com> <18919.64597.426128.498393@notabene.brown> <D6CEC060-43DC-40A5-A7EE-F2653DBA9C4C@redhat.com> <20090417183952.GA6090@lazy.lzy> <20090418075436.GA2124@maude.comedia.it> <20090418083609.GA4436@lazy.lzy> <20090418101954.GA1448@maude.comedia.it> <20090418130656.GA3344@lazy.lzy> <18924.3824.677493.129885@notabene.brown>
+From: Jan Ceuleers <jan.ceuleers@computer.org>
+Subject: Re: Spares Missing event in case of spare group?
+Date: Mon, 20 Apr 2009 21:02:35 +0200
+Message-ID: <49ECC6CB.7050107@computer.org>
+References: <49EB4B07.9050208@computer.org> <0ad180f4fb306d79e27eb9c822acdbaf.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <18924.3824.677493.129885@notabene.brown>
+In-Reply-To: <0ad180f4fb306d79e27eb9c822acdbaf.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Apr 20, 2009 at 03:58:08PM +1000, Neil Brown wrote:
-[...]
-> If you use 1.x metadata (e.g. 1.0), then this works nicely.
-> 
->  mdadm --create /dev/md/foo --metadata 1.0 --level .....
-> 
-> This will store the name 'foo' in the metadata and when you assemble
-> the array, it will be called /dev/md/foo.
-> This will be a symlink to /dev/md125 or something like that, but you
-> don't need to care.
+Neil,
 
-Does this really work with mdadm 2.6.7.1?
+NeilBrown wrote:
+> Yes.  Remove the "spares=1" from each line.
+> The sole effect of this text is to tell --monitor to expect a spare, and
+> to complain if no spare is found.
 
-Because I have this from "--examine --scan"
+Many thanks. I hadn't picked that up from the manpage, so here is a 
+patch for your consideration:
 
-ARRAY /dev/md/boot level=raid1 metadata=1.0 num-devices=2 UUID=edb4254d:4274fac1:dd6cad61:a8e3c347 name=boot
 
-Of course, /dev/mdadm.conf has the same entry.
-
-But:
-
-$> mdadm -A --scan
-mdadm: /dev/md/boot does not exist and is not a 'standard' name so it cannot be created
-
-The array was *not* created as you suggested,
-but it has metadata 1.0 and a name.
-Which name is also returned by --examine --scan
-as array device name.
-
-Thanks,
-
-bye,
-
--- 
-
-piergiorgio
+diff --git a/mdadm.conf.5 b/mdadm.conf.5
+index 40295be..b67bec4 100644
+--- a/mdadm.conf.5
++++ b/mdadm.conf.5
+@@ -135,6 +135,7 @@ this is mainly for compatibility with the output of
+  .TP
+  .B spares=
+  The value is a number of spare devices to expect the array to have.
++The sole use of this keyword and value is as follows:
+  .B mdadm \-\-monitor
+  will report an array if it is found to have fewer than this number of
+  spares when
