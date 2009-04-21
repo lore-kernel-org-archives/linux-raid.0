@@ -1,74 +1,59 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Poor write performance with write-intent bitmap?
-Date: Tue, 21 Apr 2009 11:33:21 +1000 (EST)
-Message-ID: <4081b80da35818efbc07723240f8ea36.squirrel@neil.brown.name>
+From: Johannes Segitz <johannes.segitz@gmail.com>
+Subject: Re: Performance of a software raid 5
+Date: Tue, 21 Apr 2009 04:04:09 +0200
+Message-ID: <a5cd9eed0904201904o29c02a8csb875ae68ba19e681@mail.gmail.com>
 References: <a5cd9eed0904201012o67503049laa50f4cb5b8d88de@mail.gmail.com>
-    <49ED096E.1000002@anonymous.org.uk>
-    <49ED16F7.3040906@anonymous.org.uk>
+	 <49ED096E.1000002@anonymous.org.uk>
+	 <a5cd9eed0904201710j5b05d9cam8a61b50f34eda2c0@mail.gmail.com>
+	 <49ED18E6.1090301@anonymous.org.uk>
+	 <a5cd9eed0904201805n1b52aafm206bda5a1afc0b5c@mail.gmail.com>
+	 <15c92f8bd27d912e292c013fea2467e4.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49ED16F7.3040906@anonymous.org.uk>
+In-Reply-To: <15c92f8bd27d912e292c013fea2467e4.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, April 21, 2009 10:44 am, John Robinson wrote:
-> That's more like it, and no more rattling. Can I tune settings for the
-> internal bitmap, or is this something which will have improved anyway
-> since my kernel (2.6.18-128.1.6.el5.centos.plusxen so essentially a
-> prominent North American Enterprise Linux vendor's EL5 codebase for
-> md/raid5)? I mean, I do want the bitmap, but I hadn't realised it was
-> quite so expensive (not that it matters much in this particular
-> application).
+On Tue, Apr 21, 2009 at 3:19 AM, NeilBrown <neilb@suse.de> wrote:
+> Have you done any testing without the crypto layer to see what effect
+> that has?
 >
-
-I don't think newer kernels make any different to bitmap related
-performance, though there might be some general raid5 improvements since
-then.
-
-There are two tunables for bitmaps.  Chuck size and delay (though the
-delay doesn't seem to be in the man page).
-
-Choosing a larger --bitmap-chunk size will require fewer updates to the
-bitmap before writes are allowed to proceed.   However a larger bitmap-chunk
-size will also increase the amount of work needed after a crash or
-re-added device.
-Check your current (default) chunk size with "mdadm -X /dev/sdxx" and
-create a new bitmap with (say) 16 or 64 times the chunk size.
-See if that makes a difference.
-
-The delay tunable sets how quickly bits are removed from the bitmap.
-This is done fairly lazily and opportunistically so it isn't likely
-to affect throughput directly.  However if you are updates the same
-area on disk periodically, and this period is a little bit more than
-the timeout, you will get excessive bitmap updates that service little
-purpose.
-You could try increasing this (to say 30 or 60 seconds), but I doubt
-it will have much effect.
-
-Your other option is to put the bitmap in a file on some other device.
-If you have a device this is rarely used (maybe your root filesystem)
-you can create an external bitmap on there.  You would want to be
-sure that the device storing the bitmap is always going to be
-available when you start the array that the bitmap belongs to.
-
-Maybe you could create an external bitmap in a tmpfs.... but then
-it wouldn't survive a crash and so has little value.  It would be
-fast though :-)
-
-NeilBrown
-
-
-> Cheers,
+> Can I suggest:
 >
-> John.
+> =A0for d in /dev/sd[gjk]1 /dev/md6 /dev/mapper/data bigfile
+> =A0do
+> =A0 =A0dd if=3D$d of=3D/dev/null bs=3D1M count=3D100
+> =A0done
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> and report the times.
 
+tested it with 1gb instead of 100 mb
+
+sdg
+1048576000 bytes (1.0 GB) copied, 9.89311 s, 106 MB/s
+sdj
+1048576000 bytes (1.0 GB) copied, 10.094 s, 104 MB/s
+sdk
+1048576000 bytes (1.0 GB) copied, 8.53513 s, 123 MB/s
+/dev/md6
+1048576000 bytes (1.0 GB) copied, 11.4741 s, 91.4 MB/s
+/dev/mapper/data
+1048576000 bytes (1.0 GB) copied, 34.4544 s, 30.4 MB/s
+bigfile
+1048576000 bytes (1.0 GB) copied, 26.6532 s, 39.3 MB/s
+
+so the crypto indeed slows it down (and i'm surprised that it's that
+bad because i've read
+it's not a big hit on current CPUs and the X2 isn't new but not that
+old) but still read speed
+from md6 is worse than from one drive alone
+
+Johannes
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
