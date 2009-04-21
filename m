@@ -1,66 +1,57 @@
-From: Luca Berra <bluca@comedia.it>
+From: Michal Soltys <soltys@ziu.info>
 Subject: Re: [Patch] mdadm ignoring homehost?
-Date: Tue, 21 Apr 2009 09:06:02 +0200
-Message-ID: <20090421070602.GB13520@maude.comedia.it>
-References: <cccedfc60903240957j9314cb2k41d86cb78ec10b86@mail.gmail.com> <cccedfc60904010815h4056f55doebff4827705d231b@mail.gmail.com> <18899.61151.445765.360191@notabene.brown> <51C39605-BBE7-48E8-AB35-D55D0B36B3A6@redhat.com> <18919.64597.426128.498393@notabene.brown> <20090417070841.GA29681@boogie.lpds.sztaki.hu> <18924.1768.721791.765727@notabene.brown> <20090421063401.GB23231@boogie.lpds.sztaki.hu>
+Date: Tue, 21 Apr 2009 10:57:49 +0200
+Message-ID: <49ED8A8D.3050800@ziu.info>
+References: <18919.64597.426128.498393@notabene.brown> <D6CEC060-43DC-40A5-A7EE-F2653DBA9C4C@redhat.com> <20090417183952.GA6090@lazy.lzy> <20090418075436.GA2124@maude.comedia.it> <20090418083609.GA4436@lazy.lzy> <20090418101954.GA1448@maude.comedia.it> <20090418130656.GA3344@lazy.lzy> <18924.3824.677493.129885@notabene.brown> <20090420181736.GB4236@lazy.lzy> <20090420211332.GA5550@maude.comedia.it> <20090420212444.GA5193@lazy.lzy> <A52FE0A1-DC54-4786-9FE0-C0251C78C9FD@redhat.com> <B982A8CB-4054-4F17-B269-A737462B2A81@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090421063401.GB23231@boogie.lpds.sztaki.hu>
+In-Reply-To: <B982A8CB-4054-4F17-B269-A737462B2A81@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: LinuxRaid <linux-raid@vger.kernel.org>
+To: Doug Ledford <dledford@redhat.com>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Apr 21, 2009 at 08:34:01AM +0200, Gabor Gombas wrote:
->On Mon, Apr 20, 2009 at 03:23:52PM +1000, Neil Brown wrote:
->
->> How does LVM manage metadata???  I assume it stored the metadata on
->> the device.  Which is what mdadm does.
->
->It stores a backup of the metadata under /etc after every changes it
->makes. It is like if "mdadm --create" have automatically added the array
->to /etc/mdadm.conf etc.
-that could be interesting (automatically updating mdadm.conf on create,
-maybe via an option)
+Doug Ledford wrote:
+> On Apr 20, 2009, at 7:47 PM, Doug Ledford wrote:
+> 
+> Actually, I want to expand on this thought for a little bit.  I'm 
+> obviously harping on all the symlinks and stuff that mdadm creates when 
+> you tell it what you want it to do.  I know these were added for back 
+> compatibility reasons.  However, the problem I have is that I work on 
+> mdadm for a living (well, sorta, I have 30+ other packages I also 
+> maintain, many of them orders of magnitude larger than mdadm, and I do 
+> kernel work, so my mdadm specific time is fairly small, but still it's 
+> paid time), and I've sat down before and tried to figure out "if I use 
+> name 'X' for my array, what device file gets created".  The net result 
+> of my attempts to do that, were that I was never able to figure out just 
+> by running mdadm what the proper syntax for the name variable is/was.  
 
->> But as devices can move between machines.....
->
->With LVM, moving a volume group means running
->vgchange/vgexport/pvscan/vgimport/vgchange, so it's not like "it just
->works". So if there are any name conflicts, you must explicitely run
->vgrename before the new VG can be activated.
-yes, but vgexport/vgimport is optional, and the target audience for
-array mobilit don't want to export the array before moving, they just
-want to unplug it from a and replug into b.
+Mdadm will create the name you want it to. If it makes sense from 
+kernel's perspective (aka, it's mdN or md_dN) it will be the same as you 
+can see under /sys - assuming it's not taken already . If not, or if 
+it's taken - you will have name defined in mdadm.conf under /dev or 
+/dev/md/, but from /sys perspective it will be something like md127 or 
+md_d127. If you create under /dev/md/ directory, mdadm will symlink from 
+/dev or not - depending on CREATE line in mdadm.conf or appropriate 
+commandline option.
 
->> > How about introducing /dev/md/by-uuid/... (or similar) and teaching
->> > people that if they want to transparently carry their arrays from one
->> > host to another, then they should always refer to it by UUID?
->> 
->> This already exists, though it might be distro-dependant.
->>   /dev/disk/by-id/md-uuid-xxxxx
->
->But that requrires the MD device to already be present therefore does
->not help solving the name clash issue.
->
->What I propose is that "mdadm --assemble" should accept "UUID=..."
->instead of the MD device name. Then mdadm could ignore the
->name/homehost, and create the device node with a name
->(/dev/md/by-uuid/...) that will never clash with arrays using
->traditional names.
+At the same time udev will do its own stuff. It doesn't care about names 
+   defined in mdadm.conf or specified on commandline. The stock udev 
+rules will create /sys -like names in /dev - including leftovers of 
+inactive arrays and produce all the symlinks it's told to - some from 
+/dev/disk/by* , some from /dev/md (which might conflict with default 
+mdadm's behaviour if one does mdadm -Es >>/etc/mdadm.conf and doesn't 
+even bother adjusting it).
 
-i dont know how much we gain by hiding the md<minor> device, at least
-while the kernel is not able to work completely without minors
+By default, mdadm -Es will create devies using /dev/md/ directory with 
+stripped md[_] prefix (if the name is standard). In case of 1.x 
+superblocks, the name stored in it will be used (by default - name set 
+during --create w/o any md prefix).
 
-see /proc/mdstat or /sys/block/md...
+In practice I've never used homehost, besides few tests for the sake of 
+this thread. The behaviour seemed consistent with the above though.
 
-L.
-
--- 
-Luca Berra -- bluca@comedia.it
-         Communication Media & Services S.r.l.
-  /"\
-  \ /     ASCII RIBBON CAMPAIGN
-   X        AGAINST HTML MAIL
-  / \
+The above is under assumption of versions 2.9.x . I haven't used 3.x 
+branch yet.
