@@ -1,54 +1,48 @@
-From: Gabor Gombas <gombasg@sztaki.hu>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: [Patch] mdadm ignoring homehost?
-Date: Tue, 21 Apr 2009 08:34:01 +0200
-Message-ID: <20090421063401.GB23231@boogie.lpds.sztaki.hu>
-References: <cccedfc60903240957j9314cb2k41d86cb78ec10b86@mail.gmail.com> <cccedfc60904010815h4056f55doebff4827705d231b@mail.gmail.com> <18899.61151.445765.360191@notabene.brown> <51C39605-BBE7-48E8-AB35-D55D0B36B3A6@redhat.com> <18919.64597.426128.498393@notabene.brown> <20090417070841.GA29681@boogie.lpds.sztaki.hu> <18924.1768.721791.765727@notabene.brown>
+Date: Tue, 21 Apr 2009 16:54:01 +1000
+Message-ID: <18925.28041.731116.459343@notabene.brown>
+References: <cccedfc60903240957j9314cb2k41d86cb78ec10b86@mail.gmail.com>
+	<cccedfc60904010815h4056f55doebff4827705d231b@mail.gmail.com>
+	<18899.61151.445765.360191@notabene.brown>
+	<51C39605-BBE7-48E8-AB35-D55D0B36B3A6@redhat.com>
+	<18919.64597.426128.498393@notabene.brown>
+	<D6CEC060-43DC-40A5-A7EE-F2653DBA9C4C@redhat.com>
+	<18924.8917.420265.477921@notabene.brown>
+	<DA9036B3-2702-4783-92A5-3C46698F1CB3@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <18924.1768.721791.765727@notabene.brown>
+In-Reply-To: message from Doug Ledford on Monday April 20
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Doug Ledford <dledford@redhat.com>, Jon Nelson <jnelson-linux-raid@jamponi.net>, LinuxRaid <linux-raid@vger.kernel.org>
+To: Doug Ledford <dledford@redhat.com>
+Cc: Jon Nelson <jnelson-linux-raid@jamponi.net>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Apr 20, 2009 at 03:23:52PM +1000, Neil Brown wrote:
-
-> How does LVM manage metadata???  I assume it stored the metadata on
-> the device.  Which is what mdadm does.
-
-It stores a backup of the metadata under /etc after every changes it
-makes. It is like if "mdadm --create" have automatically added the array
-to /etc/mdadm.conf etc.
-
-> But as devices can move between machines.....
-
-With LVM, moving a volume group means running
-vgchange/vgexport/pvscan/vgimport/vgchange, so it's not like "it just
-works". So if there are any name conflicts, you must explicitely run
-vgrename before the new VG can be activated.
-
-> > How about introducing /dev/md/by-uuid/... (or similar) and teaching
-> > people that if they want to transparently carry their arrays from one
-> > host to another, then they should always refer to it by UUID?
+On Monday April 20, dledford@redhat.com wrote:
+> On Apr 20, 2009, at 3:23 AM, Neil Brown wrote:
+> > The kernel supports this.  We just need to make sure it works with
+> > udev and get mdadm to use it.
+> >
+> > echo md_foo > /sys/modules/md_mod/parameters/new_array
+> > ls -l /dev/md_foo
+> >
+> > no numbers at all.
 > 
-> This already exists, though it might be distro-dependant.
->   /dev/disk/by-id/md-uuid-xxxxx
+> Even in the output of /proc/mdstat?
+> 
 
-But that requrires the MD device to already be present therefore does
-not help solving the name clash issue.
+Yep.
 
-What I propose is that "mdadm --assemble" should accept "UUID=..."
-instead of the MD device name. Then mdadm could ignore the
-name/homehost, and create the device node with a name
-(/dev/md/by-uuid/...) that will never clash with arrays using
-traditional names.
-
-Gabor
-
--- 
-     ---------------------------------------------------------
-     MTA SZTAKI Computer and Automation Research Institute
-                Hungarian Academy of Sciences
-     ---------------------------------------------------------
+# ls -l /dev/md_foo
+brw-rw---- 1 root disk 9, 513 2009-04-21 16:50 /dev/md_foo
+# cat /proc/mdstat 
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4] [multipath] [faulty] 
+md_foo : active raid1 sdf[0]
+      156249920 blocks [1/1] [U]
+# ls -ld /sys/block/md*
+drwxr-xr-x 6 root root 0 2009-04-21 16:49 /sys/block/md127
+drwxr-xr-x 6 root root 0 2009-04-21 16:50 /sys/block/md_foo
+      
+NeilBrown
