@@ -1,61 +1,39 @@
 From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Poor write performance with write-intent bitmap?
-Date: Tue, 21 Apr 2009 01:44:39 +0100
-Message-ID: <49ED16F7.3040906@anonymous.org.uk>
-References: <a5cd9eed0904201012o67503049laa50f4cb5b8d88de@mail.gmail.com> <49ED096E.1000002@anonymous.org.uk>
+Subject: Re: Performance of a software raid 5
+Date: Tue, 21 Apr 2009 01:52:54 +0100
+Message-ID: <49ED18E6.1090301@anonymous.org.uk>
+References: <a5cd9eed0904201012o67503049laa50f4cb5b8d88de@mail.gmail.com>	 <49ED096E.1000002@anonymous.org.uk> <a5cd9eed0904201710j5b05d9cam8a61b50f34eda2c0@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49ED096E.1000002@anonymous.org.uk>
+In-Reply-To: <a5cd9eed0904201710j5b05d9cam8a61b50f34eda2c0@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Johannes Segitz <johannes.segitz@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 21/04/2009 00:46, I wrote:
-[...]
-> # time dd if=/dev/zero of=big_file bs=4096 count=2560000
-> 2560000+0 records in
-> 2560000+0 records out
-> 10485760000 bytes (10 GB) copied, 264.448 seconds, 39.7 MB/s
-[...]
-> I'm not quite sure whether I should be disappointed at my writes being 
-> so slow. Certainly there's a lot of rattling during writing, which 
-> probably indicates lots of seeks to write ext3's journal.
+On 21/04/2009 01:10, Johannes Segitz wrote:
+> On Tue, Apr 21, 2009 at 1:46 AM, John Robinson
+> <john.robinson@anonymous.org.uk> wrote:
+>> I would have thought it's because you're running in degraded mode and one in
+>> 3 sectors is having to be regenerated from the parity. It still seems a bit
+>> slow, though.
+> 
+> i don't think that that is a problem. The data is there without
+> redundancy so i can't see
+> how there would be the need to calculate anything
 
-No, that's not it. Using a scratch logical volume over the md RAID-5 
-isn't much better:
+There's no redundancy but it's still the RAID-5 4-disc layout with 3 
+data and 1 parity, the parity on a different disc in each stripe. In 
+your case with a missing disc, for 3 stripes in 4 you have 2 data and 1 
+parity. Of course the parity is having to be calculated when you're 
+writing, and whatever would be written to your missing disc is being 
+discarded.
 
-# time dd if=/dev/zero of=/dev/mapper/vg0-scratch bs=4096 count=2560000
-2560000+0 records in
-2560000+0 records out
-10485760000 bytes (10 GB) copied, 230.036 seconds, 45.6 MB/s
-
-real    3m50.077s
-user    0m1.608s
-sys     0m11.097s
-
-It still rattles a lot, suggesting a lot of seeking. Now if I turn off 
-the bitmap and try again:
-# mdadm --grow /dev/md1 --bitmap=none
-# time dd if=/dev/zero of=/dev/mapper/vg0-scratch bs=4096 count=2560000
-2560000+0 records in
-2560000+0 records out
-10485760000 bytes (10 GB) copied, 110.17 seconds, 95.2 MB/s
-
-real    1m50.346s
-user    0m1.900s
-sys     0m13.537s
-
-That's more like it, and no more rattling. Can I tune settings for the 
-internal bitmap, or is this something which will have improved anyway 
-since my kernel (2.6.18-128.1.6.el5.centos.plusxen so essentially a 
-prominent North American Enterprise Linux vendor's EL5 codebase for 
-md/raid5)? I mean, I do want the bitmap, but I hadn't realised it was 
-quite so expensive (not that it matters much in this particular 
-application).
+On the other hand if you were using RAID-0 over 3 discs there would be 
+no need to calculate anything.
 
 Cheers,
 
 John.
-
