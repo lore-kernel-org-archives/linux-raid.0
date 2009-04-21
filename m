@@ -1,59 +1,59 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: md: constify VFTs
-Date: Tue, 21 Apr 2009 15:56:11 +1000
-Message-ID: <18925.24571.978885.451763@notabene.brown>
-References: <alpine.LSU.2.00.0901112345400.20350@fbirervta.pbzchgretzou.qr>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: [Patch] mdadm ignoring homehost?
+Date: Tue, 21 Apr 2009 08:29:50 +0200
+Message-ID: <20090421062950.GA13520@maude.comedia.it>
+References: <20090417183952.GA6090@lazy.lzy> <20090418075436.GA2124@maude.comedia.it> <20090418083609.GA4436@lazy.lzy> <20090418101954.GA1448@maude.comedia.it> <20090418130656.GA3344@lazy.lzy> <18924.3824.677493.129885@notabene.brown> <20090420181736.GB4236@lazy.lzy> <20090420211332.GA5550@maude.comedia.it> <20090420212444.GA5193@lazy.lzy> <A52FE0A1-DC54-4786-9FE0-C0251C78C9FD@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jan Engelhardt on Sunday January 11
+Content-Disposition: inline
+In-Reply-To: <A52FE0A1-DC54-4786-9FE0-C0251C78C9FD@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jan Engelhardt <jengelh@medozas.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday January 11, jengelh@medozas.de wrote:
-> 
-> This was already sent on January 22 2008 for 2.6.25, but on a recent
-> rebase of my constify branch still was not in for 2.6.29.
-> http://www.mail-archive.com/linux-raid@vger.kernel.org/msg10397.html
-> 
+On Mon, Apr 20, 2009 at 07:47:36PM -0400, Doug Ledford wrote:
+> On Apr 20, 2009, at 5:24 PM, Piergiorgio Sartor wrote:
+>> On Mon, Apr 20, 2009 at 11:13:32PM +0200, Luca Berra wrote:
+>>> add --auto=md to the command line
+>>> or put it in the create line in mdadm.conf
+>>
+>> Thanks, that did the trick!
+>>
+>> Interesting, it seems now I have 3 devices
+>> for that raid.
+>> One is /dev/md127, one is /dev/md/boot, with
+>> same (major, minor) as md127, and there is a
+>> third one, /dev/md_boot, which is a symbolic
+>> link to /dev/md/boot.
+>>
+>> /proc/mdstat reports /dev/md127
+>
+> And so the confusion is perpetuated.  This is *not* accessing a device by 
+> name.  If I give mdadm a name for my device, I don't want it doing 
+> *anything* with numbers, creating numbered symlinks, or anything else.  In 
+> addition, if I tell mdadm to create something in /dev/md/ (versus it 
+> decided all on its own to create something there), then I do *NOT* want it 
+> creating *anything* in /dev/ that I didn't ask for.  That, again, adds to 
+> the confusion.  Of all of it though, the /proc/mdstat is the worst part as 
+> it underscores that the kernel stack is not able to think in terms of names 
+> instead of numbers.
+>
+and md is not even the worst case, think of device-mapper where
+dm-<minor> could be anything from a multipath san storage to lvm or
+encrypted partition or even a normal partition mapped via kpartx :P
 
-I just found this... sorry for being so tardy in responding.
-It is in my tree now and will got with the next pull request (don't
-know whether that will be .30 or .31).
+I believe we should add a mdstat command that should replace 'cat
+/proc/mdstat' hiding the gory details.
+and device-file creation could be configurable.
 
-Thanks,
-NeilBrown
+L.
 
 
-> 
-> ---8<---
-> parent 5b692aa02e68392e41a5b341e5c965b382fda948 (v2.6.29-rc1-6-g5b692aa)
-> commit e6422a7a52d38365b8697463bebaefcdcb179e3a
-> Author: Jan Engelhardt <jengelh@medozas.de>
-> Date:   Sun Jan 11 23:45:53 2009 +0100
-> 
-> md: constify VFTs
-> 
-> Signed-off-by: Jan Engelhardt <jengelh@medozas.de>
-> ---
->  drivers/md/md.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 41e2509..20c1634 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -5644,7 +5644,7 @@ static int md_seq_show(struct seq_file *seq, void *v)
->  	return 0;
->  }
->  
-> -static struct seq_operations md_seq_ops = {
-> +static const struct seq_operations md_seq_ops = {
->  	.start  = md_seq_start,
->  	.next   = md_seq_next,
->  	.stop   = md_seq_stop,
-> -- 
-> # Created with git-export-patch
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
