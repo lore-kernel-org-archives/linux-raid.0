@@ -1,40 +1,49 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: what superblock to use
-Date: Tue, 21 Apr 2009 10:20:17 -0400
-Message-ID: <49EDD621.5090804@tmr.com>
-References: <49EC7B22.8070805@lfarkas.org>
+Subject: Re: Poor write performance with write-intent bitmap?
+Date: Tue, 21 Apr 2009 12:00:23 -0400
+Message-ID: <49EDED97.5010706@tmr.com>
+References: <a5cd9eed0904201012o67503049laa50f4cb5b8d88de@mail.gmail.com>    <49ED096E.1000002@anonymous.org.uk>    <49ED16F7.3040906@anonymous.org.uk> <4081b80da35818efbc07723240f8ea36.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49EC7B22.8070805@lfarkas.org>
+In-Reply-To: <4081b80da35818efbc07723240f8ea36.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Farkas Levente <lfarkas@lfarkas.org>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: John Robinson <john.robinson@anonymous.org.uk>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Farkas Levente wrote:
-> hi,
-> what's the current recommended superblock to use for a newly created
-> raid5-6 array with 6 pieces of 1tb disk? by default mdamd use 0.90. is
-> it worth to change it to any 1.x format?
-> anyway is there any advantage of a raid6 over raid5+1spare disk? afaik
-> raid5 will be faster and use less cpu and both case 2 disk can failed.
-> thanks in advance.
->
+NeilBrown wrote:
+> On Tue, April 21, 2009 10:44 am, John Robinson wrote:
 >   
-Let me be Devil's Advocate. The advantage of raid6 is that it will 
-survive the failure of two drives at the same time, while a spare must 
-be rebuilt (a good argument for fast rebuild and let response go to blazes).
+>> That's more like it, and no more rattling. Can I tune settings for the
+>> internal bitmap, or is this something which will have improved anyway
+>> since my kernel (2.6.18-128.1.6.el5.centos.plusxen so essentially a
+>> prominent North American Enterprise Linux vendor's EL5 codebase for
+>> md/raid5)? I mean, I do want the bitmap, but I hadn't realised it was
+>> quite so expensive (not that it matters much in this particular
+>> application).
+>>
+>>     
+>
+> I don't think newer kernels make any different to bitmap related
+> performance, though there might be some general raid5 improvements since
+> then.
+>
+> There are two tunables for bitmaps.  Chuck size and delay (though the
+> delay doesn't seem to be in the man page).
+>   
 
-The advantage of raid5+S is that with a failure of a single drive you 
-run your io in recovery mode, and it is slow, while after rebuild on the 
-spare raid5+S is as fast as ever.
+It isn't in the man page, and
+  mdadm --help | egrep 'bitmap|delay'
+comes up empty as well. So then I looked at the strings:
+  strings $(type -p mdadm) | less
+and I not only found it, but found that you have a vast bunch of 
+duplicate strings, including some which are saying the same thing but 
+expressed in several ways. If I might quote my offspring, "That's ugly, 
+dude!"
 
-I have been trying some things with raid5e, and as soon as I find a good 
-primer on using events to kick the recovery off I will be able to report 
-some sucess with this. My POC uses a script, and works fine if I poll to 
-detect the disk failure.
+Anyway, setting "--delay N" (sec) does exactly what you predicted, not much.
 
 -- 
 bill davidsen <davidsen@tmr.com>
