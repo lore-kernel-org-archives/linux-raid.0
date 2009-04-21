@@ -1,39 +1,42 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: what superblock to use
-Date: Tue, 21 Apr 2009 10:31:07 -0700
-Message-ID: <49EE02DB.6020407@zytor.com>
-References: <49EC7B22.8070805@lfarkas.org> <slrngup0vb.90j.Mario.Holbe@darkside.dyn.samba-tng.org>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: [Patch] mdadm ignoring homehost?
+Date: Tue, 21 Apr 2009 20:15:20 +0200
+Message-ID: <20090421181519.GA4114@lazy.lzy>
+References: <18919.64597.426128.498393@notabene.brown> <D6CEC060-43DC-40A5-A7EE-F2653DBA9C4C@redhat.com> <20090417183952.GA6090@lazy.lzy> <20090418075436.GA2124@maude.comedia.it> <20090418083609.GA4436@lazy.lzy> <20090418101954.GA1448@maude.comedia.it> <20090418130656.GA3344@lazy.lzy> <18924.3824.677493.129885@notabene.brown> <20090420181736.GB4236@lazy.lzy> <20090420211332.GA5550@maude.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <slrngup0vb.90j.Mario.Holbe@darkside.dyn.samba-tng.org>
+Content-Disposition: inline
+In-Reply-To: <20090420211332.GA5550@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mario 'BitKoenig' Holbe wrote:
-> Farkas Levente <lfarkas@lfarkas.org> wrote:
->> anyway is there any advantage of a raid6 over raid5+1spare disk? afaik
->> raid5 will be faster and use less cpu and both case 2 disk can failed.
-> 
-> No, raid6 survives the simultaneous failure of two disks.
-> Raid5 survives the simultaneous failure of one disk only. Even with a
-> hot-spare, after this failure you have a time frame where the spare is
-> synching and your array has no redundancy left. Thus, nearly every other
-> disk failure (except a failure on the synching spare) within this time
-> frame kills your array.
-> 
+On Mon, Apr 20, 2009 at 11:13:32PM +0200, Luca Berra wrote:
+> add --auto=md to the command line
+> or put it in the create line in mdadm.conf
 
-It's worth noting that a failure mode that is getting increasingly
-frequently reported is the failure of a drive *during sync*.  I suspect
-that the cause is that synchronization puts different stresses on the
-drives than normal operation.
+Actually I must this did not work quite right
+after reboot...
 
-	-hpa
+This might be a Fedora 10 issue, so maybe Doug would like
+to comment.
+
+After reboot, someone, I guess udev, tries to automagically
+start a RAID, so it assembles /dev/md_d127 with one of the
+two components of /dev/md/boot (randomly, it seems).
+Later, when /dev/md/boot is assembled, one drive is "busy",
+because it belongs to /dev/md_d127, and the array is put
+together degraded, i.e. with the other disk only.
+
+This happens also after re-creating the initrd.
+
+So, it seems there is still work to do...
+
+Thanks,
+
+bye,
 
 -- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
 
+piergiorgio
