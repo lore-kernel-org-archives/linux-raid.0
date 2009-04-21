@@ -1,56 +1,31 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Poor write performance with write-intent bitmap?
-Date: Tue, 21 Apr 2009 12:00:23 -0400
-Message-ID: <49EDED97.5010706@tmr.com>
-References: <a5cd9eed0904201012o67503049laa50f4cb5b8d88de@mail.gmail.com>    <49ED096E.1000002@anonymous.org.uk>    <49ED16F7.3040906@anonymous.org.uk> <4081b80da35818efbc07723240f8ea36.squirrel@neil.brown.name>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: Proposal: make RAID6 code optional
+Date: Tue, 21 Apr 2009 10:23:05 -0700
+Message-ID: <49EE00F9.6090000@zytor.com>
+References: <200904180946.27722.prakash@punnoor.de> <49E98AD2.8060601@msgid.tls.msk.ru> <200904181117.03418.prakash@punnoor.de> <alpine.LNX.2.00.0904181551320.16493@swampdragon.chaosbits.net> <20090418145850.GD28512@mea-ext.zmailer.org> <49EDD11E.2030309@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4081b80da35818efbc07723240f8ea36.squirrel@neil.brown.name>
+In-Reply-To: <49EDD11E.2030309@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: John Robinson <john.robinson@anonymous.org.uk>, Linux RAID <linux-raid@vger.kernel.org>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Matti Aarnio <matti.aarnio@zmailer.org>, Jesper Juhl <jj@chaosbits.net>, Prakash Punnoor <prakash@punnoor.de>, Michael Tokarev <mjt@tls.msk.ru>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-NeilBrown wrote:
-> On Tue, April 21, 2009 10:44 am, John Robinson wrote:
->   
->> That's more like it, and no more rattling. Can I tune settings for the
->> internal bitmap, or is this something which will have improved anyway
->> since my kernel (2.6.18-128.1.6.el5.centos.plusxen so essentially a
->> prominent North American Enterprise Linux vendor's EL5 codebase for
->> md/raid5)? I mean, I do want the bitmap, but I hadn't realised it was
->> quite so expensive (not that it matters much in this particular
->> application).
->>
->>     
->
-> I don't think newer kernels make any different to bitmap related
-> performance, though there might be some general raid5 improvements since
-> then.
->
-> There are two tunables for bitmaps.  Chuck size and delay (though the
-> delay doesn't seem to be in the man page).
->   
+Bill Davidsen wrote:
+> It would seem that that space could be allocated and populated when
+> raid6 was first used, as part of the initialization. I haven't looked at
+> that code since it was new, so I might be optimistic about doing it that
+> way.
 
-It isn't in the man page, and
-  mdadm --help | egrep 'bitmap|delay'
-comes up empty as well. So then I looked at the strings:
-  strings $(type -p mdadm) | less
-and I not only found it, but found that you have a vast bunch of 
-duplicate strings, including some which are saying the same thing but 
-expressed in several ways. If I might quote my offspring, "That's ugly, 
-dude!"
+We could use vmalloc() and generate the tables at initialization time.
+However, having a separate module which exports the raid6 declaration
+and uses the raid5 module as a subroutine library seems easier.
 
-Anyway, setting "--delay N" (sec) does exactly what you predicted, not much.
+	-hpa
 
 -- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-
-"You are disgraced professional losers. And by the way, give us our money back."
-    - Representative Earl Pomeroy,  Democrat of North Dakota
-on the A.I.G. executives who were paid bonuses  after a federal bailout.
-
+H. Peter Anvin, Intel Open Source Technology Center
+I work for Intel.  I don't speak on their behalf.
 
