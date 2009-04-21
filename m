@@ -1,42 +1,69 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: [Patch] mdadm ignoring homehost?
-Date: Tue, 21 Apr 2009 20:15:20 +0200
-Message-ID: <20090421181519.GA4114@lazy.lzy>
-References: <18919.64597.426128.498393@notabene.brown> <D6CEC060-43DC-40A5-A7EE-F2653DBA9C4C@redhat.com> <20090417183952.GA6090@lazy.lzy> <20090418075436.GA2124@maude.comedia.it> <20090418083609.GA4436@lazy.lzy> <20090418101954.GA1448@maude.comedia.it> <20090418130656.GA3344@lazy.lzy> <18924.3824.677493.129885@notabene.brown> <20090420181736.GB4236@lazy.lzy> <20090420211332.GA5550@maude.comedia.it>
+From: Corey Hickey <bugfood-ml@fatooh.org>
+Subject: Re: Performance of a software raid 5
+Date: Tue, 21 Apr 2009 11:56:55 -0700
+Message-ID: <49EE16F7.8060406@fatooh.org>
+References: <a5cd9eed0904201012o67503049laa50f4cb5b8d88de@mail.gmail.com>	 <49ED096E.1000002@anonymous.org.uk>	 <a5cd9eed0904201710j5b05d9cam8a61b50f34eda2c0@mail.gmail.com>	 <49ED18E6.1090301@anonymous.org.uk>	 <a5cd9eed0904201805n1b52aafm206bda5a1afc0b5c@mail.gmail.com>	 <15c92f8bd27d912e292c013fea2467e4.squirrel@neil.brown.name> <a5cd9eed0904201904o29c02a8csb875ae68ba19e681@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090420211332.GA5550@maude.comedia.it>
+In-Reply-To: <a5cd9eed0904201904o29c02a8csb875ae68ba19e681@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Johannes Segitz <johannes.segitz@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Apr 20, 2009 at 11:13:32PM +0200, Luca Berra wrote:
-> add --auto=md to the command line
-> or put it in the create line in mdadm.conf
+Johannes Segitz wrote:
+> On Tue, Apr 21, 2009 at 3:19 AM, NeilBrown <neilb@suse.de> wrote:
+>> Have you done any testing without the crypto layer to see what effect
+>> that has?
+>>
+>> Can I suggest:
+>>
+>>  for d in /dev/sd[gjk]1 /dev/md6 /dev/mapper/data bigfile
+>>  do
+>>    dd if=$d of=/dev/null bs=1M count=100
+>>  done
+>>
+>> and report the times.
+> 
+> tested it with 1gb instead of 100 mb
+> 
+> sdg
+> 1048576000 bytes (1.0 GB) copied, 9.89311 s, 106 MB/s
+> sdj
+> 1048576000 bytes (1.0 GB) copied, 10.094 s, 104 MB/s
+> sdk
+> 1048576000 bytes (1.0 GB) copied, 8.53513 s, 123 MB/s
+> /dev/md6
+> 1048576000 bytes (1.0 GB) copied, 11.4741 s, 91.4 MB/s
+> /dev/mapper/data
+> 1048576000 bytes (1.0 GB) copied, 34.4544 s, 30.4 MB/s
+> bigfile
+> 1048576000 bytes (1.0 GB) copied, 26.6532 s, 39.3 MB/s
+> 
+> so the crypto indeed slows it down (and i'm surprised that it's that
+> bad because i've read
+> it's not a big hit on current CPUs and the X2 isn't new but not that
+> old) but still read speed
+> from md6 is worse than from one drive alone
 
-Actually I must this did not work quite right
-after reboot...
+If it helps, some recent dd benchmarks I did indicate that twofish is
+about 25% faster than aes on my Athlon64.
 
-This might be a Fedora 10 issue, so maybe Doug would like
-to comment.
+Athlon64 3400+ 2.4 GHz, 64-bit Linux 2.6.28.2
 
-After reboot, someone, I guess udev, tries to automagically
-start a RAID, so it assembles /dev/md_d127 with one of the
-two components of /dev/md/boot (randomly, it seems).
-Later, when /dev/md/boot is assembled, one drive is "busy",
-because it belongs to /dev/md_d127, and the array is put
-together degraded, i.e. with the other disk only.
+Both aes and twofish are using the asm implementations according to
+/proc/crypto.
 
-This happens also after re-creating the initrd.
+All numbers are in MB/s; average of three tests for a 512MB dd
+read/write to the encrypted device.
 
-So, it seems there is still work to do...
+                                 read       write
+aes                              69.4        61.0
+twofish                          86.8        76.6
+aes-cbc-essiv:sha256             65.1        56.3
+twofish-cbc-essiv:sha256         82.6        73.5
 
-Thanks,
 
-bye,
-
--- 
-
-piergiorgio
+-Corey
