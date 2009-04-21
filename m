@@ -1,59 +1,65 @@
-From: Johannes Segitz <johannes.segitz@gmail.com>
-Subject: Re: Performance of a software raid 5
-Date: Tue, 21 Apr 2009 04:04:09 +0200
-Message-ID: <a5cd9eed0904201904o29c02a8csb875ae68ba19e681@mail.gmail.com>
-References: <a5cd9eed0904201012o67503049laa50f4cb5b8d88de@mail.gmail.com>
-	 <49ED096E.1000002@anonymous.org.uk>
-	 <a5cd9eed0904201710j5b05d9cam8a61b50f34eda2c0@mail.gmail.com>
-	 <49ED18E6.1090301@anonymous.org.uk>
-	 <a5cd9eed0904201805n1b52aafm206bda5a1afc0b5c@mail.gmail.com>
-	 <15c92f8bd27d912e292c013fea2467e4.squirrel@neil.brown.name>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Poor write performance with write-intent bitmap?
+Date: Tue, 21 Apr 2009 03:13:23 +0100
+Message-ID: <49ED2BC3.7050109@anonymous.org.uk>
+References: <a5cd9eed0904201012o67503049laa50f4cb5b8d88de@mail.gmail.com>    <49ED096E.1000002@anonymous.org.uk>    <49ED16F7.3040906@anonymous.org.uk> <4081b80da35818efbc07723240f8ea36.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15c92f8bd27d912e292c013fea2467e4.squirrel@neil.brown.name>
+In-Reply-To: <4081b80da35818efbc07723240f8ea36.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Apr 21, 2009 at 3:19 AM, NeilBrown <neilb@suse.de> wrote:
-> Have you done any testing without the crypto layer to see what effect
-> that has?
->
-> Can I suggest:
->
-> =A0for d in /dev/sd[gjk]1 /dev/md6 /dev/mapper/data bigfile
-> =A0do
-> =A0 =A0dd if=3D$d of=3D/dev/null bs=3D1M count=3D100
-> =A0done
->
-> and report the times.
+On 21/04/2009 02:33, NeilBrown wrote:
+[...]
+> Choosing a larger --bitmap-chunk size will require fewer updates to the
+> bitmap before writes are allowed to proceed.   However a larger bitmap-chunk
+> size will also increase the amount of work needed after a crash or
+> re-added device.
 
-tested it with 1gb instead of 100 mb
+Ah, from my reading of the mdadm man page I thought you could only 
+specify the chunk size when using an external bitmap:
+--bitmap-chunk=
+        Set  the  chunksize  of the bitmap. Each bit corresponds to that
+        many Kilobytes of storage.  When using a file based bitmap,  the
+        default  is  to  use  the  smallest  size that is at-least 4 and
+        requires no more than  2^21  chunks.   When  using  an  internal
+        bitmap,  the  chunksize is automatically determined to make best
+        use of available space.
 
-sdg
-1048576000 bytes (1.0 GB) copied, 9.89311 s, 106 MB/s
-sdj
-1048576000 bytes (1.0 GB) copied, 10.094 s, 104 MB/s
-sdk
-1048576000 bytes (1.0 GB) copied, 8.53513 s, 123 MB/s
-/dev/md6
-1048576000 bytes (1.0 GB) copied, 11.4741 s, 91.4 MB/s
-/dev/mapper/data
-1048576000 bytes (1.0 GB) copied, 34.4544 s, 30.4 MB/s
-bigfile
-1048576000 bytes (1.0 GB) copied, 26.6532 s, 39.3 MB/s
+> Check your current (default) chunk size with "mdadm -X /dev/sdxx" and
+> create a new bitmap with (say) 16 or 64 times the chunk size.
+> See if that makes a difference.
 
-so the crypto indeed slows it down (and i'm surprised that it's that
-bad because i've read
-it's not a big hit on current CPUs and the X2 isn't new but not that
-old) but still read speed
-from md6 is worse than from one drive alone
+It certainly does. Upping it from 2M to 32M gets me from 45MB/s to 
+81MB/s on the scratch LV, and there's noticeably less seek noise.
 
-Johannes
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Eeek! Trying to `mdadm --grow /dev/md1 --bitmap=none` from my large 
+chunk size caused a reboot! There's nothing in the log, and I didn't see 
+the console. I still have my 32M chunksize but I don't want to try that 
+again in a hurry :-)
+
+[...]
+> Your other option is to put the bitmap in a file on some other device.
+> If you have a device this is rarely used (maybe your root filesystem)
+
+Can't do that, my root filesystem is on the RAID-5, and part of the 
+reason for wanting the bitmap is because the md can't be stopped while 
+shutting down, so it was always wanting to resync at startup, which is 
+rather tedious.
+
+> Maybe you could create an external bitmap in a tmpfs.... but then
+> it wouldn't survive a crash and so has little value.  It would be
+> fast though :-)
+
+"Ooh, virtual memory! Now I can have a really big RAM disc!"
+
+Now, it's time I checked my discs to see if I've lost data in that 
+crash. `mdadm -X` is stuck saying there are 10 dirty chunks.
+
+Cheers,
+
+John.
