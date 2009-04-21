@@ -1,27 +1,35 @@
 From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: Proposal: make RAID6 code optional
-Date: Tue, 21 Apr 2009 10:23:05 -0700
-Message-ID: <49EE00F9.6090000@zytor.com>
-References: <200904180946.27722.prakash@punnoor.de> <49E98AD2.8060601@msgid.tls.msk.ru> <200904181117.03418.prakash@punnoor.de> <alpine.LNX.2.00.0904181551320.16493@swampdragon.chaosbits.net> <20090418145850.GD28512@mea-ext.zmailer.org> <49EDD11E.2030309@tmr.com>
+Subject: Re: what superblock to use
+Date: Tue, 21 Apr 2009 10:31:07 -0700
+Message-ID: <49EE02DB.6020407@zytor.com>
+References: <49EC7B22.8070805@lfarkas.org> <slrngup0vb.90j.Mario.Holbe@darkside.dyn.samba-tng.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49EDD11E.2030309@tmr.com>
+In-Reply-To: <slrngup0vb.90j.Mario.Holbe@darkside.dyn.samba-tng.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Matti Aarnio <matti.aarnio@zmailer.org>, Jesper Juhl <jj@chaosbits.net>, Prakash Punnoor <prakash@punnoor.de>, Michael Tokarev <mjt@tls.msk.ru>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
+To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
-> It would seem that that space could be allocated and populated when
-> raid6 was first used, as part of the initialization. I haven't looked at
-> that code since it was new, so I might be optimistic about doing it that
-> way.
+Mario 'BitKoenig' Holbe wrote:
+> Farkas Levente <lfarkas@lfarkas.org> wrote:
+>> anyway is there any advantage of a raid6 over raid5+1spare disk? afaik
+>> raid5 will be faster and use less cpu and both case 2 disk can failed.
+> 
+> No, raid6 survives the simultaneous failure of two disks.
+> Raid5 survives the simultaneous failure of one disk only. Even with a
+> hot-spare, after this failure you have a time frame where the spare is
+> synching and your array has no redundancy left. Thus, nearly every other
+> disk failure (except a failure on the synching spare) within this time
+> frame kills your array.
+> 
 
-We could use vmalloc() and generate the tables at initialization time.
-However, having a separate module which exports the raid6 declaration
-and uses the raid5 module as a subroutine library seems easier.
+It's worth noting that a failure mode that is getting increasingly
+frequently reported is the failure of a drive *during sync*.  I suspect
+that the cause is that synchronization puts different stresses on the
+drives than normal operation.
 
 	-hpa
 
