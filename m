@@ -1,41 +1,64 @@
 From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Proposal: make RAID6 code optional
-Date: Wed, 22 Apr 2009 11:01:16 +0200
-Message-ID: <87ljptm59f.fsf@frosties.localdomain>
-References: <200904180946.27722.prakash@punnoor.de>
-	<49E98AD2.8060601@msgid.tls.msk.ru>
-	<200904181117.03418.prakash@punnoor.de>
-	<alpine.LNX.2.00.0904181551320.16493@swampdragon.chaosbits.net>
-	<20090418145850.GD28512@mea-ext.zmailer.org>
-	<49EDD11E.2030309@tmr.com> <49EE00F9.6090000@zytor.com>
+Subject: Re: Performance of a software raid 5
+Date: Wed, 22 Apr 2009 11:07:38 +0200
+Message-ID: <87hc0hm4yt.fsf@frosties.localdomain>
+References: <a5cd9eed0904201012o67503049laa50f4cb5b8d88de@mail.gmail.com>
+	<49ED096E.1000002@anonymous.org.uk>
+	<a5cd9eed0904201710j5b05d9cam8a61b50f34eda2c0@mail.gmail.com>
+	<49ED18E6.1090301@anonymous.org.uk>
+	<a5cd9eed0904201805n1b52aafm206bda5a1afc0b5c@mail.gmail.com>
+	<15c92f8bd27d912e292c013fea2467e4.squirrel@neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49EE00F9.6090000@zytor.com> (H. Peter Anvin's message of "Tue,
-	21 Apr 2009 10:23:05 -0700")
+In-Reply-To: <15c92f8bd27d912e292c013fea2467e4.squirrel@neil.brown.name>
+	(NeilBrown's message of "Tue, 21 Apr 2009 11:19:34 +1000 (EST)")
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, Matti Aarnio <matti.aarnio@zmailer.org>, Jesper Juhl <jj@chaosbits.net>, Prakash Punnoor <prakash@punnoor.de>, Michael Tokarev <mjt@tls.msk.ru>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
+To: NeilBrown <neilb@suse.de>
+Cc: Johannes Segitz <johannes.segitz@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-"H. Peter Anvin" <hpa@zytor.com> writes:
+"NeilBrown" <neilb@suse.de> writes:
 
-> Bill Davidsen wrote:
->> It would seem that that space could be allocated and populated when
->> raid6 was first used, as part of the initialization. I haven't looked at
->> that code since it was new, so I might be optimistic about doing it that
->> way.
+> On Tue, April 21, 2009 11:05 am, Johannes Segitz wrote:
+>> On Tue, Apr 21, 2009 at 2:52 AM, John Robinson
+>> <john.robinson@anonymous.org.uk> wrote:
+>>> There's no redundancy but it's still the RAID-5 4-disc layout with 3
+>>> data
+>>> and 1 parity, the parity on a different disc in each stripe. In your
+>>> case
+>>> with a missing disc, for 3 stripes in 4 you have 2 data and 1 parity. Of
+>>> course the parity is having to be calculated when you're writing, and
+>>> whatever would be written to your missing disc is being discarded.
+>>
+>> you're right, i didn't think of that. But calculating an xor isn't really
+>> a big deal (especially with the aes on top of it) so i still can't see why
+>> it's so slow
 >
-> We could use vmalloc() and generate the tables at initialization time.
-> However, having a separate module which exports the raid6 declaration
-> and uses the raid5 module as a subroutine library seems easier.
+> Large sequential writes to a degraded RAID5 will be the same speed as to a
+> non-degraded RAID5.  Smaller random write can still be slower as the
+> amount of pre-reading can increase.
 >
-> 	-hpa
+> Reads from a degraded raid5 will be slower not because of the XOR, but
+> because of needing to read all that extra data to feed in to the XOR.
 
-Combine the two.
+But when doing large sequential reads those blocks have already been
+loaded or would be loaded next anyway. The number of blocks read
+should be exactly the same.
 
-The raid6 module initializes the tables for raid6 and uses the raid5
-module as subroutine library.
+> Have you done any testing without the crypto layer to see what effect
+> that has?
+>
+> Can I suggest:
+>
+>   for d in /dev/sd[gjk]1 /dev/md6 /dev/mapper/data bigfile
+>   do
+>     dd if=$d of=/dev/null bs=1M count=100
+>   done
+>
+> and report the times.
+>
+> NeilBrown
 
 MfG
         Goswin
