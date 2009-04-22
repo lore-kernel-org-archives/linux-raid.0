@@ -1,35 +1,79 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: Proposal: make RAID6 code optional
-Date: Wed, 22 Apr 2009 11:39:19 -0700
-Message-ID: <49EF6457.90505@zytor.com>
-References: <200904180946.27722.prakash@punnoor.de> <49E98AD2.8060601@msgid.tls.msk.ru> <200904181117.03418.prakash@punnoor.de> <alpine.LNX.2.00.0904181551320.16493@swampdragon.chaosbits.net> <20090418145850.GD28512@mea-ext.zmailer.org> <49EDD11E.2030309@tmr.com> <49EE00F9.6090000@zytor.com> <20090422180051.GD13280@skl-net.de>
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: Incorrect in-kernel bitmap on raid10
+Date: Wed, 22 Apr 2009 20:45:53 +0200
+Message-ID: <slrnguupf4.911.Mario.Holbe@darkside.dyn.samba-tng.org>
+References: <slrnguk663.8bq.Mario.Holbe@darkside.dyn.samba-tng.org>
+ <18922.50050.860008.242658@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090422180051.GD13280@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
-Cc: Bill Davidsen <davidsen@tmr.com>, Matti Aarnio <matti.aarnio@zmailer.org>, Jesper Juhl <jj@chaosbits.net>, Prakash Punnoor <prakash@punnoor.de>, Michael Tokarev <mjt@tls.msk.ru>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Andre Noll wrote:
-> On 10:23, H. Peter Anvin wrote:
-> 
->> We could use vmalloc() and generate the tables at initialization time.
->> However, having a separate module which exports the raid6 declaration
->> and uses the raid5 module as a subroutine library seems easier.
-> 
-> Really? Easier than keeping only two 256-byte arrays for exp() and
-> log() and use these at runtime to populate the (dynamically allocated)
-> 64K GF multiplication table? That seems to be really simple and would
-> still shave off 64K of kernel memory for raid5-only users.
-> 
+Neil Brown <neilb@suse.de> wrote:
+> Could you let me know if that following patch helps?
 
-Yes, I believe it would be easier than having dynamically allocated 
-arrays.  Dynamically generated arrays using static memory allocations 
-(bss) is one thing, but that would only reduce size of the module on 
-disk, which I don't think anyone considers a problem.
+Hmmm, it looks like the patch doesn't fully fix it.
+I told you already about the semi-initialized on-disk bitmap:
 
-	-hpa
+root@darkside:~# mdadm -X /dev/sd[cdefgh][1] | grep Bitmap | sort
+          Bitmap : 268275 bits (chunks), 137203 dirty (51.1%)
+          Bitmap : 268275 bits (chunks), 137203 dirty (51.1%)
+          Bitmap : 268275 bits (chunks), 137203 dirty (51.1%)
+          Bitmap : 268275 bits (chunks), 137203 dirty (51.1%)
+          Bitmap : 268275 bits (chunks), 137203 dirty (51.1%)
+          Bitmap : 268275 bits (chunks), 137203 dirty (51.1%)
+
+I tried to clean it up with:
+root@darkside:~# echo 0-268275 > /sys/block/md7/md/bitmap_set_bits
+
+This should set all bits, and it seems to do:
+root@darkside:~# mdadm -X /dev/sd[cdefgh][1] | grep Bitmap 
+          Bitmap : 268275 bits (chunks), 268275 dirty (100.0%)
+          Bitmap : 268275 bits (chunks), 268275 dirty (100.0%)
+          Bitmap : 268275 bits (chunks), 268275 dirty (100.0%)
+          Bitmap : 268275 bits (chunks), 268275 dirty (100.0%)
+          Bitmap : 268275 bits (chunks), 268275 dirty (100.0%)
+          Bitmap : 268275 bits (chunks), 268275 dirty (100.0%)
+
+However, in-kernel it should also allocate all pages, but it does not:
+root@darkside:~# head -4 /proc/mdstat 
+Personalities : [raid1] [raid10] 
+md7 : active (auto-read-only) raid10 sdc1[0] sdh1[5] sde1[4] sdg1[3] sdd1[2] sdf1[1]
+      4395406848 blocks 512K chunks 2 near-copies [6/6] [UUUUUU]
+      bitmap: 64/131 pages [256KB], 16384KB chunk
+
+stopping/starting the array doesn't help either:
+root@darkside:~# mdadm --stop /dev/md7
+mdadm: stopped /dev/md7
+root@darkside:~# mdadm -A /dev/md7
+mdadm: /dev/md7 has been started with 6 drives.
+root@darkside:~# head -4 /proc/mdstat 
+Personalities : [raid1] [raid10] 
+md7 : active (auto-read-only) raid10 sdc1[0] sdh1[5] sde1[4] sdg1[3] sdd1[2] sdf1[1]
+      4395406848 blocks 512K chunks 2 near-copies [6/6] [UUUUUU]
+      bitmap: 64/131 pages [256KB], 16384KB chunk
+root@darkside:~# sleep 10
+root@darkside:~# head -4 /proc/mdstat 
+Personalities : [raid1] [raid10] 
+md7 : active (auto-read-only) raid10 sdc1[0] sdh1[5] sde1[4] sdg1[3] sdd1[2] sdf1[1]
+      4395406848 blocks 512K chunks 2 near-copies [6/6] [UUUUUU]
+      bitmap: 0/131 pages [0KB], 16384KB chunk
+root@darkside:~# echo 3 > /proc/sys/vm/drop_caches 
+root@darkside:~# mdadm -X /dev/sd[cdefgh][1] | grep Bitmap
+          Bitmap : 268275 bits (chunks), 137203 dirty (51.1%)
+          Bitmap : 268275 bits (chunks), 137203 dirty (51.1%)
+          Bitmap : 268275 bits (chunks), 137203 dirty (51.1%)
+          Bitmap : 268275 bits (chunks), 137203 dirty (51.1%)
+          Bitmap : 268275 bits (chunks), 137203 dirty (51.1%)
+          Bitmap : 268275 bits (chunks), 137203 dirty (51.1%)
+
+
+regards
+   Mario
+-- 
+As a rule, the more bizarre a thing is, the less mysterious it proves to be.
+                                    -- Sherlock Holmes by Arthur Conan Doyle
 
