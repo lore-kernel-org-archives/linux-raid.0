@@ -1,37 +1,36 @@
-From: Andrew Burgess <aab@cichlid.com>
-Subject: Re: [Patch] mdadm ignoring homehost?
-Date: Wed, 22 Apr 2009 09:06:54 -0700
-Message-ID: <1240416414.10178.1.camel@cichlid.com>
-References: <18919.64597.426128.498393@notabene.brown>
-	 <D6CEC060-43DC-40A5-A7EE-F2653DBA9C4C@redhat.com>
-	 <20090417183952.GA6090@lazy.lzy> <20090418075436.GA2124@maude.comedia.it>
-	 <20090418083609.GA4436@lazy.lzy> <20090418101954.GA1448@maude.comedia.it>
-	 <20090418130656.GA3344@lazy.lzy> <18924.3824.677493.129885@notabene.brown>
-	 <20090420181736.GB4236@lazy.lzy> <20090420211332.GA5550@maude.comedia.it>
-	 <20090421181519.GA4114@lazy.lzy>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: what superblock to use
+Date: Wed, 22 Apr 2009 11:26:00 -0500
+Message-ID: <20090422162601486.TLKI2063@cdptpa-omta04.mail.rr.com>
+References: <49EE02DB.6020407@zytor.com>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090421181519.GA4114@lazy.lzy>
+In-Reply-To: <49EE02DB.6020407@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 2009-04-21 at 20:15 +0200, Piergiorgio Sartor wrote:
 
-> This might be a Fedora 10 issue, so maybe Doug would like
-> to comment.
+> > No, raid6 survives the simultaneous failure of two disks.
+> > Raid5 survives the simultaneous failure of one disk only. Even with a
+> > hot-spare, after this failure you have a time frame where the spare is
+> > synching and your array has no redundancy left. Thus, nearly every other
+> > disk failure (except a failure on the synching spare) within this time
+> > frame kills your array.
+> >
 > 
-> After reboot, someone, I guess udev, tries to automagically
-> start a RAID, so it assembles /dev/md_d127 with one of the
-> two components of /dev/md/boot (randomly, it seems).
-> Later, when /dev/md/boot is assembled, one drive is "busy",
-> because it belongs to /dev/md_d127, and the array is put
-> together degraded, i.e. with the other disk only.
+> It's worth noting that a failure mode that is getting increasingly
+> frequently reported is the failure of a drive *during sync*.  I suspect
+> that the cause is that synchronization puts different stresses on the
+> drives than normal operation.
 
-Just a "me too". I also started seeing this after upgrading to fedora
-10. I had to create a startup script to stop md_d0 and reassemble
-everything else.
+Yes, that, and with both drives and RAID arrays growing larger, it's taking
+longer for arrays to re-sync, meaning a failure during any random time
+period is going to be more likely to fall during a sync.  When I first
+installed a RAID system on my server, it only took a few hours to sync the
+320G array.  Now it can take up to 3 days to synch the 8T array.
 
