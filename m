@@ -1,51 +1,99 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: Proposal: make RAID6 code optional
-Date: Wed, 22 Apr 2009 20:57:03 +0200
-Message-ID: <20090422185703.GF13280@skl-net.de>
-References: <200904180946.27722.prakash@punnoor.de> <49E98AD2.8060601@msgid.tls.msk.ru> <200904181117.03418.prakash@punnoor.de> <alpine.LNX.2.00.0904181551320.16493@swampdragon.chaosbits.net> <20090418145850.GD28512@mea-ext.zmailer.org> <49EDD11E.2030309@tmr.com> <49EE00F9.6090000@zytor.com> <20090422180051.GD13280@skl-net.de> <49EF6457.90505@zytor.com>
+From: Corey Hickey <bugfood-ml@fatooh.org>
+Subject: Re: Performance of a software raid 5
+Date: Wed, 22 Apr 2009 15:32:46 -0700
+Message-ID: <49EF9B0E.20704@fatooh.org>
+References: <a5cd9eed0904201012o67503049laa50f4cb5b8d88de@mail.gmail.com>	 <49ED096E.1000002@anonymous.org.uk>	 <a5cd9eed0904201710j5b05d9cam8a61b50f34eda2c0@mail.gmail.com>	 <49ED18E6.1090301@anonymous.org.uk>	 <a5cd9eed0904201805n1b52aafm206bda5a1afc0b5c@mail.gmail.com>	 <15c92f8bd27d912e292c013fea2467e4.squirrel@neil.brown.name> <a5cd9eed0904201904o29c02a8csb875ae68ba19e681@mail.gmail.com> <49EE16F7.8060406@fatooh.org> <49EF0DB0.6090800@tmr.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="OzxllxdKGCiKxUZM"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <49EF6457.90505@zytor.com>
+In-Reply-To: <49EF0DB0.6090800@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, Matti Aarnio <matti.aarnio@zmailer.org>, Jesper Juhl <jj@chaosbits.net>, Prakash Punnoor <prakash@punnoor.de>, Michael Tokarev <mjt@tls.msk.ru>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Johannes Segitz <johannes.segitz@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Bill Davidsen wrote:
+> Corey Hickey wrote:
+>> Johannes Segitz wrote:
+>>   
+>>> On Tue, Apr 21, 2009 at 3:19 AM, NeilBrown <neilb@suse.de> wrote:
+>>>     
+>>>> Have you done any testing without the crypto layer to see what effect
+>>>> that has?
+>>>>
+>>>> Can I suggest:
+>>>>
+>>>>  for d in /dev/sd[gjk]1 /dev/md6 /dev/mapper/data bigfile
+>>>>  do
+>>>>    dd if=$d of=/dev/null bs=1M count=100
+>>>>  done
+>>>>
+>>>> and report the times.
+>>>>       
+>>> tested it with 1gb instead of 100 mb
+>>>
+>>> sdg
+>>> 1048576000 bytes (1.0 GB) copied, 9.89311 s, 106 MB/s
+>>> sdj
+>>> 1048576000 bytes (1.0 GB) copied, 10.094 s, 104 MB/s
+>>> sdk
+>>> 1048576000 bytes (1.0 GB) copied, 8.53513 s, 123 MB/s
+>>> /dev/md6
+>>> 1048576000 bytes (1.0 GB) copied, 11.4741 s, 91.4 MB/s
+>>> /dev/mapper/data
+>>> 1048576000 bytes (1.0 GB) copied, 34.4544 s, 30.4 MB/s
+>>> bigfile
+>>> 1048576000 bytes (1.0 GB) copied, 26.6532 s, 39.3 MB/s
+>>>
+>>> so the crypto indeed slows it down (and i'm surprised that it's that
+>>> bad because i've read
+>>> it's not a big hit on current CPUs and the X2 isn't new but not that
+>>> old) but still read speed
+>>> from md6 is worse than from one drive alone
+>>>     
+>> If it helps, some recent dd benchmarks I did indicate that twofish is
+>> about 25% faster than aes on my Athlon64.
+>>
+>> Athlon64 3400+ 2.4 GHz, 64-bit Linux 2.6.28.2
+>>
+>> Both aes and twofish are using the asm implementations according to
+>> /proc/crypto.
+>>
+>> All numbers are in MB/s; average of three tests for a 512MB dd
+>> read/write to the encrypted device.
+>>
+>>                                  read       write
+>> aes                              69.4        61.0
+>> twofish                          86.8        76.6
+>> aes-cbc-essiv:sha256             65.1        56.3
+>> twofish-cbc-essiv:sha256         82.6        73.5
 
---OzxllxdKGCiKxUZM
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+   no encryption                    237        131
 
-On 11:39, H. Peter Anvin wrote:
-> Yes, I believe it would be easier than having dynamically allocated=20
-> arrays.  Dynamically generated arrays using static memory allocations=20
-> (bss) is one thing, but that would only reduce size of the module on=20
-> disk, which I don't think anyone considers a problem.
+>>   
+> 
+> Good info, but was the CPU maxed or was something else the limiting factor?
 
-We would save 64K of RAM in the raid5-only case if we'd defer the
-allocation of the multiplication table until the first raid6 array
-is about to be started.
+To be honest, I didn't check when I benchmarked, but the underlying
+device is much faster. I added the numbers to the table above. This is
+for an md RAID-0 of two 1TB Samsung drives. I don't know why the write
+speed for the RAID-0 is so much slower, except that it's not md's fault;
+writing to the individual drives is slower, too. I would have
+investigated more, but, at the time, I really wanted to get my computer
+operational again. :)
+
+That might be lowering my encrypted write speeds a bit relative to the
+read speeds, but, even if so, I think it would affect the faster of the
+two ciphers more than the slower--and twofish still leads by a
+significant margin.
 
 
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
+Also, to the original poster:
+Check which crypto drivers in your kernel have ASM implementations loaded:
+$ grep asm /proc/crypto
 
---OzxllxdKGCiKxUZM
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+AES, twofish, and salsa20 are available.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
 
-iD8DBQFJ72h/Wto1QDEAkw8RAr8pAJ4yz2/mn1Dv+c8mTYTOGvXtanDCLwCeJv4t
-dPX7eZLkM40f+U7/HokpY/M=
-=9it3
------END PGP SIGNATURE-----
-
---OzxllxdKGCiKxUZM--
+-Corey
