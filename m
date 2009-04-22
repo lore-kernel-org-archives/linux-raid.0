@@ -1,92 +1,41 @@
 From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Using linux software raid (mdadm) in a shared-disk cluster.
-Date: Wed, 22 Apr 2009 10:54:26 +0200
-Message-ID: <87prf5m5kt.fsf@frosties.localdomain>
-References: <49E45044.5000406@Calva.COM>
+Subject: Re: Proposal: make RAID6 code optional
+Date: Wed, 22 Apr 2009 11:01:16 +0200
+Message-ID: <87ljptm59f.fsf@frosties.localdomain>
+References: <200904180946.27722.prakash@punnoor.de>
+	<49E98AD2.8060601@msgid.tls.msk.ru>
+	<200904181117.03418.prakash@punnoor.de>
+	<alpine.LNX.2.00.0904181551320.16493@swampdragon.chaosbits.net>
+	<20090418145850.GD28512@mea-ext.zmailer.org>
+	<49EDD11E.2030309@tmr.com> <49EE00F9.6090000@zytor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49E45044.5000406@Calva.COM> (John Hughes's message of "Tue, 14
-	Apr 2009 10:58:44 +0200")
+In-Reply-To: <49EE00F9.6090000@zytor.com> (H. Peter Anvin's message of "Tue,
+	21 Apr 2009 10:23:05 -0700")
 Sender: linux-raid-owner@vger.kernel.org
-To: John Hughes <john@Calva.COM>
-Cc: linux-raid@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Bill Davidsen <davidsen@tmr.com>, Matti Aarnio <matti.aarnio@zmailer.org>, Jesper Juhl <jj@chaosbits.net>, Prakash Punnoor <prakash@punnoor.de>, Michael Tokarev <mjt@tls.msk.ru>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-John Hughes <john@Calva.COM> writes:
+"H. Peter Anvin" <hpa@zytor.com> writes:
 
-> I've got a little shared disk cluster (parallel SCSI, external DELL
-> PV210 disk cabinet).
+> Bill Davidsen wrote:
+>> It would seem that that space could be allocated and populated when
+>> raid6 was first used, as part of the initialization. I haven't looked at
+>> that code since it was new, so I might be optimistic about doing it that
+>> way.
 >
-> I've used linux raid to make a nice RAID10 on the external disks.
+> We could use vmalloc() and generate the tables at initialization time.
+> However, having a separate module which exports the raid6 declaration
+> and uses the raid5 module as a subroutine library seems easier.
 >
-> I can access this from either machine in the cluster, only one at a
-> time of course, it works very well and I'm happy.
->
-> Now I'm running XEN and I want to be able to migrate a XEN domU from
-> one machine to the other while the domU is using the RAID10 device.  I
-> can make this "work" using XEN's migration hooks - it calls a script
-> when it has stopped the running domU and I can start the raid device
-> on the destination node, ready for the arrival of the domU.
->
-> There is one small problem - I can't stop the RAID10 on the source
-> node until the domU has finished, so it seems to me there is a window
-> that could lead to data corruption:
+> 	-hpa
 
-Can you put it into read-only mode?
+Combine the two.
 
-> Source node                             Destination node
->
-> mdadm --assemble /dev/md0 ....
-> Start migrate
-> domU suspended
-> call migration script
->               \-------------------->   mdadm --assemble /dev/md0 ...
->                                        domU starts running
-> ...
-> domU destroyed
-> mdadm --stop /dev/md0
->
->
-> I seems to me that the source node could still be messing with the
-> bitmap and resyncing between the moment the destination node
-> starts the RAID10 and the source node stops it[*].
->
-> Am I right?  Is there a window?
-
-Certainly.
-
-> If there is a window it could be closed if there was some kind of
-> mdadm --freeze command which would stop the sync activity, which could
-> be run on the source node before doing the assemble on the destination
-> node.
-
-> ([*] - imagine some block is marked unsynced in the bitmap.  The
-> destination node does the assemble, so now it's in-memory bitmap has
-> the block marked.  The source node syncs the block, updates the on
-> disk bitmap.   Now the destination node happens to write that block,
-> it thinks the block is marked unsynced on the disk so it doesn't
-> bother updating the bitmnap.  If the destination node crashes at this
-> point there is a block on the disk that is unsyced, but the bitmap
-> claims it's in sync.)
-
-Source node                             Destination node
-
-read block X for sync
-                                        Write block X
-                                        Write mirror of block X
-write mirror of block X
-
-Now block X and its mirror have different content while being marked
-in sync.
-
-I'm not even sure putting a raid in read-only mode will stop
-background syncing.
-
-
-
-As an alternative approach how about running the raid10 inside the
-domU?
+The raid6 module initializes the tables for raid6 and uses the raid5
+module as subroutine library.
 
 MfG
         Goswin
