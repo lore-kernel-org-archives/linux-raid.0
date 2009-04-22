@@ -1,62 +1,44 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: Poor write performance with write-intent bitmap?
-Date: Wed, 22 Apr 2009 16:21:48 +0200
-Message-ID: <20090422142148.GC13280@skl-net.de>
-References: <a5cd9eed0904201012o67503049laa50f4cb5b8d88de@mail.gmail.com> <49ED096E.1000002@anonymous.org.uk> <49ED16F7.3040906@anonymous.org.uk> <4081b80da35818efbc07723240f8ea36.squirrel@neil.brown.name> <49ED2BC3.7050109@anonymous.org.uk> <87d4b5m4kf.fsf@frosties.localdomain> <49EF108D.4070605@anonymous.org.uk>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: Proposal: make RAID6 code optional
+Date: Wed, 22 Apr 2009 08:11:56 -0700
+Message-ID: <49EF33BC.6060905@zytor.com>
+References: <200904180946.27722.prakash@punnoor.de>	<49E98AD2.8060601@msgid.tls.msk.ru>	<200904181117.03418.prakash@punnoor.de>	<alpine.LNX.2.00.0904181551320.16493@swampdragon.chaosbits.net>	<20090418145850.GD28512@mea-ext.zmailer.org>	<49EDD11E.2030309@tmr.com> <49EE00F9.6090000@zytor.com> <87ljptm59f.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="8NvZYKFJsRX2Djef"
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <49EF108D.4070605@anonymous.org.uk>
-Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Goswin von Brederlow <goswin-v-b@web.de>, Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753519AbZDVPNB@vger.kernel.org>
+In-Reply-To: <87ljptm59f.fsf@frosties.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: Bill Davidsen <davidsen@tmr.com>, Matti Aarnio <matti.aarnio@zmailer.org>, Jesper Juhl <jj@chaosbits.net>, Prakash Punnoor <prakash@punnoor.de>, Michael Tokarev <mjt@tls.msk.ru>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
+Goswin von Brederlow wrote:
+> "H. Peter Anvin" <hpa@zytor.com> writes:
+> 
+>> Bill Davidsen wrote:
+>>> It would seem that that space could be allocated and populated when
+>>> raid6 was first used, as part of the initialization. I haven't looked at
+>>> that code since it was new, so I might be optimistic about doing it that
+>>> way.
+>> We could use vmalloc() and generate the tables at initialization time.
+>> However, having a separate module which exports the raid6 declaration
+>> and uses the raid5 module as a subroutine library seems easier.
+>>
+>> 	-hpa
+> 
+> Combine the two.
+> 
+> The raid6 module initializes the tables for raid6 and uses the raid5
+> module as subroutine library.
+> 
 
---8NvZYKFJsRX2Djef
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+It really doesn't make sense at all.  It's easier at that point to
+retain the static tables.
 
-On 13:41, John Robinson wrote:
+	-hpa
 
-> >Normal shutdown should put the raid in read-only mode as last step. At
-> >least Debian does that. That way even a mounted raid will be clean
-> >after reboot.
->=20
-> Yes, I would have thought it should as well. But I've just looked at=20
-> CentOS 5's /etc/rc.d/halt and as far as I can see it doesn't try to=20
-> switch md devices to read-only.
 
-There's no need to do that in the shutdown script as the kernel will
-switch all arrays to read-only mode on halt/reboot.
-
-Moreover, as raid arrays are automatically marked clean if no writes
-are pending for some small time period, a simple "sync; sleep 1"
-at the end of the shutdown script is usually enough to have a clean
-array during the next boot.
-
-An alternative way to deal with this issue is to not have a root file
-system at all but to mount/link each top level directory separately.
-This allows to stop all md arrays cleany.
-
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---8NvZYKFJsRX2Djef
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFJ7yf8Wto1QDEAkw8RAg7kAJ9JlttrKZJqKHk7GAP1Y6DnENgH1QCgoNKu
-to6czP04gT0cpV8f0XTntLg=
-=aTo/
------END PGP SIGNATURE-----
-
---8NvZYKFJsRX2Djef--
+-- 
+H. Peter Anvin, Intel Open Source Technology Center
+I work for Intel.  I don't speak on their behalf.
