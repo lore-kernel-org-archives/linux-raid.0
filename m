@@ -1,44 +1,37 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: Proposal: make RAID6 code optional
-Date: Wed, 22 Apr 2009 08:11:56 -0700
-Message-ID: <49EF33BC.6060905@zytor.com>
-References: <200904180946.27722.prakash@punnoor.de>	<49E98AD2.8060601@msgid.tls.msk.ru>	<200904181117.03418.prakash@punnoor.de>	<alpine.LNX.2.00.0904181551320.16493@swampdragon.chaosbits.net>	<20090418145850.GD28512@mea-ext.zmailer.org>	<49EDD11E.2030309@tmr.com> <49EE00F9.6090000@zytor.com> <87ljptm59f.fsf@frosties.localdomain>
+From: Andrew Burgess <aab@cichlid.com>
+Subject: Re: [Patch] mdadm ignoring homehost?
+Date: Wed, 22 Apr 2009 09:06:54 -0700
+Message-ID: <1240416414.10178.1.camel@cichlid.com>
+References: <18919.64597.426128.498393@notabene.brown>
+	 <D6CEC060-43DC-40A5-A7EE-F2653DBA9C4C@redhat.com>
+	 <20090417183952.GA6090@lazy.lzy> <20090418075436.GA2124@maude.comedia.it>
+	 <20090418083609.GA4436@lazy.lzy> <20090418101954.GA1448@maude.comedia.it>
+	 <20090418130656.GA3344@lazy.lzy> <18924.3824.677493.129885@notabene.brown>
+	 <20090420181736.GB4236@lazy.lzy> <20090420211332.GA5550@maude.comedia.it>
+	 <20090421181519.GA4114@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753519AbZDVPNB@vger.kernel.org>
-In-Reply-To: <87ljptm59f.fsf@frosties.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: Bill Davidsen <davidsen@tmr.com>, Matti Aarnio <matti.aarnio@zmailer.org>, Jesper Juhl <jj@chaosbits.net>, Prakash Punnoor <prakash@punnoor.de>, Michael Tokarev <mjt@tls.msk.ru>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20090421181519.GA4114@lazy.lzy>
+Sender: linux-raid-owner@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Goswin von Brederlow wrote:
-> "H. Peter Anvin" <hpa@zytor.com> writes:
-> 
->> Bill Davidsen wrote:
->>> It would seem that that space could be allocated and populated when
->>> raid6 was first used, as part of the initialization. I haven't looked at
->>> that code since it was new, so I might be optimistic about doing it that
->>> way.
->> We could use vmalloc() and generate the tables at initialization time.
->> However, having a separate module which exports the raid6 declaration
->> and uses the raid5 module as a subroutine library seems easier.
->>
->> 	-hpa
-> 
-> Combine the two.
-> 
-> The raid6 module initializes the tables for raid6 and uses the raid5
-> module as subroutine library.
-> 
+On Tue, 2009-04-21 at 20:15 +0200, Piergiorgio Sartor wrote:
 
-It really doesn't make sense at all.  It's easier at that point to
-retain the static tables.
+> This might be a Fedora 10 issue, so maybe Doug would like
+> to comment.
+> 
+> After reboot, someone, I guess udev, tries to automagically
+> start a RAID, so it assembles /dev/md_d127 with one of the
+> two components of /dev/md/boot (randomly, it seems).
+> Later, when /dev/md/boot is assembled, one drive is "busy",
+> because it belongs to /dev/md_d127, and the array is put
+> together degraded, i.e. with the other disk only.
 
-	-hpa
+Just a "me too". I also started seeing this after upgrading to fedora
+10. I had to create a startup script to stop md_d0 and reassemble
+everything else.
 
-
--- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
