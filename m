@@ -1,69 +1,82 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: Proposal: make RAID6 code optional
-Date: Thu, 23 Apr 2009 10:07:29 +0200
-Message-ID: <20090423080729.GA11504@skl-net.de>
-References: <49E98AD2.8060601@msgid.tls.msk.ru> <200904181117.03418.prakash@punnoor.de> <alpine.LNX.2.00.0904181551320.16493@swampdragon.chaosbits.net> <20090418145850.GD28512@mea-ext.zmailer.org> <49EDD11E.2030309@tmr.com> <49EE00F9.6090000@zytor.com> <20090422180051.GD13280@skl-net.de> <49EF6457.90505@zytor.com> <20090422185703.GF13280@skl-net.de> <49EFC5DD.9090201@zytor.com>
+From: John Hughes <john@Calva.COM>
+Subject: Re: Using linux software raid (mdadm) in a shared-disk cluster.
+Date: Thu, 23 Apr 2009 11:22:25 +0200
+Message-ID: <49F03351.3090301@Calva.COM>
+References: <49E45044.5000406@Calva.COM> <87prf5m5kt.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="wRRV7LY7NUeQGEoC"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <49EFC5DD.9090201@zytor.com>
+In-Reply-To: <87prf5m5kt.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, Matti Aarnio <matti.aarnio@zmailer.org>, Jesper Juhl <jj@chaosbits.net>, Prakash Punnoor <prakash@punnoor.de>, Michael Tokarev <mjt@tls.msk.ru>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Goswin von Brederlow wrote:
+> John Hughes <john@Calva.COM> writes:
+>   
+>> I've got a little shared disk cluster (parallel SCSI, external DELL
+>> PV210 disk cabinet).
+>>
+>> I've used linux raid to make a nice RAID10 on the external disks.
+>>
+>> I can access this from either machine in the cluster, only one at a
+>> time of course, it works very well and I'm happy.
+>>
+>> Now I'm running XEN and I want to be able to migrate a XEN domU from
+>> one machine to the other while the domU is using the RAID10 device.  I
+>> can make this "work" using XEN's migration hooks - it calls a script
+>> when it has stopped the running domU and I can start the raid device
+>> on the destination node, ready for the arrival of the domU.
+>>
+>> There is one small problem - I can't stop the RAID10 on the source
+>> node until the domU has finished, so it seems to me there is a window
+>> that could lead to data corruption:
+>>     
+>
+> Can you put it into read-only mode?
+>   
 
---wRRV7LY7NUeQGEoC
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+How do I do that?
 
-On 18:35, H. Peter Anvin wrote:
-> Andre Noll wrote:
-> > On 11:39, H. Peter Anvin wrote:
-> >> Yes, I believe it would be easier than having dynamically allocated=20
-> >> arrays.  Dynamically generated arrays using static memory allocations=
-=20
-> >> (bss) is one thing, but that would only reduce size of the module on=
-=20
-> >> disk, which I don't think anyone considers a problem.
-> >=20
-> > We would save 64K of RAM in the raid5-only case if we'd defer the
-> > allocation of the multiplication table until the first raid6 array
-> > is about to be started.
->=20
-> Yes, and we'd have to access it through a pointer for the rest of eternit=
-y.
+Ah, by "mdadm --readonly"[*].
 
-True. You put a lot of effort into raid6 to make it fast, so you know
-best how much that would slow down the code. If using a pointer instead
-of an array would have a measurable impact on the raid6 performance,
-then we should indeed avoid using dynamically allocated memory for
-the table.
+> I'm not even sure putting a raid in read-only mode will stop
+> background syncing.
+>   
 
-As this slowdown likely depends on the arch, it is not easy to measure.
-So I guess the best way to decrease memory usage for the raid5-only
-case is to put the raid6-specific code into a separate module as you
-suggested earlier.
+Hang on a sec, I'll try it.
 
-Thanks
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
+... run bonnie on mounted /dev/md0, kill it, umount the device ...
 
---wRRV7LY7NUeQGEoC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+# cat /proc/mstat
+Personalities : [raid10] 
+md0 : active raid10 sda3[0] sde2[4](S) sdd3[3] sdc3[2] sdb3[1]
+      32067456 blocks 64K chunks 2 near-copies [4/4] [UUUU]
+      bitmap: 66/123 pages [264KB], 128KB chunk
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
+# mdadm --readonly /dev/md0
+# cat /proc/mdstat 
+Personalities : [raid10] 
+md0 : active (read-only) raid10 sda3[0] sde2[4](S) sdd3[3] sdc3[2] sdb3[1]
+      32067456 blocks 64K chunks 2 near-copies [4/4] [UUUU]
+      bitmap: 66/123 pages [264KB], 128KB chunk
 
-iD8DBQFJ8CHBWto1QDEAkw8RAu7BAJwPq5oS8Z30I26UNivvzOx8bEF/xwCfcY2W
-Rvh5eT1BTEipBSoeT95Tsoo=
-=6VR5
------END PGP SIGNATURE-----
+... wait a bit
+# cat /proc/mdstat
+Personalities : [raid10] 
+md0 : active (read-only) raid10 sda3[0] sde2[4](S) sdd3[3] sdc3[2] sdb3[1]
+      32067456 blocks 64K chunks 2 near-copies [4/4] [UUUU]
+      bitmap: 0/123 pages [0KB], 128KB chunk
 
---wRRV7LY7NUeQGEoC--
+No, it seems to keep on syncing.  Bummer.
+
+> As an alternative approach how about running the raid10 inside the
+> domU?
+>   
+
+Didn't want to do that as it requires exporting loadsa devices to the 
+domU instead of one.
+
+But maybe it's the only way (without hacking the md code).
