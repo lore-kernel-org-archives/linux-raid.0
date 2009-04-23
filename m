@@ -1,99 +1,87 @@
-From: Corey Hickey <bugfood-ml@fatooh.org>
-Subject: Re: Performance of a software raid 5
-Date: Wed, 22 Apr 2009 15:32:46 -0700
-Message-ID: <49EF9B0E.20704@fatooh.org>
-References: <a5cd9eed0904201012o67503049laa50f4cb5b8d88de@mail.gmail.com>	 <49ED096E.1000002@anonymous.org.uk>	 <a5cd9eed0904201710j5b05d9cam8a61b50f34eda2c0@mail.gmail.com>	 <49ED18E6.1090301@anonymous.org.uk>	 <a5cd9eed0904201805n1b52aafm206bda5a1afc0b5c@mail.gmail.com>	 <15c92f8bd27d912e292c013fea2467e4.squirrel@neil.brown.name> <a5cd9eed0904201904o29c02a8csb875ae68ba19e681@mail.gmail.com> <49EE16F7.8060406@fatooh.org> <49EF0DB0.6090800@tmr.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [Patch] mdadm ignoring homehost?
+Date: Wed, 22 Apr 2009 21:20:49 -0400
+Message-ID: <9A77DB27-C12A-4BA2-94C4-D59B7DAFF32C@redhat.com>
+References: <18919.64597.426128.498393@notabene.brown> <D6CEC060-43DC-40A5-A7EE-F2653DBA9C4C@redhat.com> <20090417183952.GA6090@lazy.lzy> <20090418075436.GA2124@maude.comedia.it> <20090418083609.GA4436@lazy.lzy> <20090418101954.GA1448@maude.comedia.it> <20090418130656.GA3344@lazy.lzy> <18924.3824.677493.129885@notabene.brown> <20090420181736.GB4236@lazy.lzy> <20090420211332.GA5550@maude.comedia.it> <20090421181519.GA4114@lazy.lzy> <1240416414.10178.1.camel@cichlid.com>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-60-149444599"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49EF0DB0.6090800@tmr.com>
+In-Reply-To: <1240416414.10178.1.camel@cichlid.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Johannes Segitz <johannes.segitz@gmail.com>, linux-raid@vger.kernel.org
+To: Andrew Burgess <aab@cichlid.com>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
-> Corey Hickey wrote:
->> Johannes Segitz wrote:
->>   
->>> On Tue, Apr 21, 2009 at 3:19 AM, NeilBrown <neilb@suse.de> wrote:
->>>     
->>>> Have you done any testing without the crypto layer to see what effect
->>>> that has?
->>>>
->>>> Can I suggest:
->>>>
->>>>  for d in /dev/sd[gjk]1 /dev/md6 /dev/mapper/data bigfile
->>>>  do
->>>>    dd if=$d of=/dev/null bs=1M count=100
->>>>  done
->>>>
->>>> and report the times.
->>>>       
->>> tested it with 1gb instead of 100 mb
->>>
->>> sdg
->>> 1048576000 bytes (1.0 GB) copied, 9.89311 s, 106 MB/s
->>> sdj
->>> 1048576000 bytes (1.0 GB) copied, 10.094 s, 104 MB/s
->>> sdk
->>> 1048576000 bytes (1.0 GB) copied, 8.53513 s, 123 MB/s
->>> /dev/md6
->>> 1048576000 bytes (1.0 GB) copied, 11.4741 s, 91.4 MB/s
->>> /dev/mapper/data
->>> 1048576000 bytes (1.0 GB) copied, 34.4544 s, 30.4 MB/s
->>> bigfile
->>> 1048576000 bytes (1.0 GB) copied, 26.6532 s, 39.3 MB/s
->>>
->>> so the crypto indeed slows it down (and i'm surprised that it's that
->>> bad because i've read
->>> it's not a big hit on current CPUs and the X2 isn't new but not that
->>> old) but still read speed
->>> from md6 is worse than from one drive alone
->>>     
->> If it helps, some recent dd benchmarks I did indicate that twofish is
->> about 25% faster than aes on my Athlon64.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--Apple-Mail-60-149444599
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
+
+On Apr 22, 2009, at 12:06 PM, Andrew Burgess wrote:
+> On Tue, 2009-04-21 at 20:15 +0200, Piergiorgio Sartor wrote:
+>
+>> This might be a Fedora 10 issue, so maybe Doug would like
+>> to comment.
 >>
->> Athlon64 3400+ 2.4 GHz, 64-bit Linux 2.6.28.2
->>
->> Both aes and twofish are using the asm implementations according to
->> /proc/crypto.
->>
->> All numbers are in MB/s; average of three tests for a 512MB dd
->> read/write to the encrypted device.
->>
->>                                  read       write
->> aes                              69.4        61.0
->> twofish                          86.8        76.6
->> aes-cbc-essiv:sha256             65.1        56.3
->> twofish-cbc-essiv:sha256         82.6        73.5
-
-   no encryption                    237        131
-
->>   
-> 
-> Good info, but was the CPU maxed or was something else the limiting factor?
-
-To be honest, I didn't check when I benchmarked, but the underlying
-device is much faster. I added the numbers to the table above. This is
-for an md RAID-0 of two 1TB Samsung drives. I don't know why the write
-speed for the RAID-0 is so much slower, except that it's not md's fault;
-writing to the individual drives is slower, too. I would have
-investigated more, but, at the time, I really wanted to get my computer
-operational again. :)
-
-That might be lowering my encrypted write speeds a bit relative to the
-read speeds, but, even if so, I think it would affect the faster of the
-two ciphers more than the slower--and twofish still leads by a
-significant margin.
+>> After reboot, someone, I guess udev, tries to automagically
+>> start a RAID, so it assembles /dev/md_d127 with one of the
+>> two components of /dev/md/boot (randomly, it seems).
+>> Later, when /dev/md/boot is assembled, one drive is "busy",
+>> because it belongs to /dev/md_d127, and the array is put
+>> together degraded, i.e. with the other disk only.
+>
+> Just a "me too". I also started seeing this after upgrading to fedora
+> 10. I had to create a startup script to stop md_d0 and reassemble
+> everything else.
 
 
-Also, to the original poster:
-Check which crypto drivers in your kernel have ASM implementations loaded:
-$ grep asm /proc/crypto
+Yeah, I found the cause for this while working on F11.  The problem is  
+a race condition between udev and a call to mdadm -As in the  
+rc.sysinit.  For F11, I solved this by making udev not process devices  
+using incremental mode if we are still in the rc.sysinit script.  You  
+can change /etc/udev/rules.d/70-mdadm.rules (I think that's the right  
+name, it might be slightly off) to read something like this:
 
-AES, twofish, and salsa20 are available.
+# This file causes block devices with Linux RAID (mdadm) signatures to
+# automatically cause mdadm to be run.
+# See udev(8) for syntax
+
+SUBSYSTEM=="block", ACTION=="add",  
+ENV{ID_FS_TYPE}=="linux_raid_member", \
+	IMPORT{program}="/sbin/mdadm --examine --export $tempnode", \
+	RUN+="/bin/bash -c '[ ! -f /dev/.in_sysinit ] && mdadm -I  
+$env{DEVNAME}'"
 
 
--Corey
+
+--
+
+Doug Ledford <dledford@redhat.com>
+
+GPG KeyID: CFBFF194
+http://people.redhat.com/dledford
+
+InfiniBand Specific RPMS
+http://people.redhat.com/dledford/Infiniband
+
+
+
+
+
+--Apple-Mail-60-149444599
+content-type: application/pgp-signature; x-mac-type=70674453;
+	name=PGP.sig
+content-description: This is a digitally signed message part
+content-disposition: inline; filename=PGP.sig
+content-transfer-encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2.0.11 (Darwin)
+
+iEYEARECAAYFAknvwnEACgkQQ9aEs6Ims9g3fwCg1fjjipxBIre5CnEUJY8NHDuF
+dpUAni43I39zSpS6c1iYlMo4LkBamO0L
+=Iv87
+-----END PGP SIGNATURE-----
+
+--Apple-Mail-60-149444599--
