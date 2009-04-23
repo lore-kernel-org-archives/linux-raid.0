@@ -1,63 +1,91 @@
 From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Poor write performance with write-intent bitmap?
-Date: Thu, 23 Apr 2009 22:23:54 +0200
-Message-ID: <878wlrw23p.fsf@frosties.localdomain>
-References: <a5cd9eed0904201012o67503049laa50f4cb5b8d88de@mail.gmail.com>
-	<49ED096E.1000002@anonymous.org.uk>
-	<49ED16F7.3040906@anonymous.org.uk>
-	<4081b80da35818efbc07723240f8ea36.squirrel@neil.brown.name>
-	<49ED2BC3.7050109@anonymous.org.uk>
-	<87d4b5m4kf.fsf@frosties.localdomain>
-	<49EF108D.4070605@anonymous.org.uk>
-	<20090422142148.GC13280@skl-net.de>
-	<49F0211C.3010306@anonymous.org.uk>
+Subject: Re: Using linux software raid (mdadm) in a shared-disk cluster.
+Date: Thu, 23 Apr 2009 22:30:08 +0200
+Message-ID: <874owfw1tb.fsf@frosties.localdomain>
+References: <49E45044.5000406@Calva.COM> <87prf5m5kt.fsf@frosties.localdomain>
+	<49F03351.3090301@Calva.COM>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49F0211C.3010306@anonymous.org.uk> (John Robinson's message of
-	"Thu, 23 Apr 2009 09:04:44 +0100")
+In-Reply-To: <49F03351.3090301@Calva.COM> (John Hughes's message of "Thu, 23
+	Apr 2009 11:22:25 +0200")
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, Goswin von Brederlow <goswin-v-b@web.de>
+To: John Hughes <john@Calva.COM>
+Cc: Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-John Robinson <john.robinson@anonymous.org.uk> writes:
+John Hughes <john@Calva.COM> writes:
 
-> On 22/04/2009 15:21, Andre Noll wrote:
->> On 13:41, John Robinson wrote:
->>>> Normal shutdown should put the raid in read-only mode as last step. At
->>>> least Debian does that. That way even a mounted raid will be clean
->>>> after reboot.
->>> Yes, I would have thought it should as well. But I've just looked
->>> at CentOS 5's /etc/rc.d/halt and as far as I can see it doesn't try
->>> to switch md devices to read-only.
+> Goswin von Brederlow wrote:
+>> John Hughes <john@Calva.COM> writes:
 >>
->> There's no need to do that in the shutdown script as the kernel will
->> switch all arrays to read-only mode on halt/reboot.
+>>> I've got a little shared disk cluster (parallel SCSI, external DELL
+>>> PV210 disk cabinet).
+>>>
+>>> I've used linux raid to make a nice RAID10 on the external disks.
+>>>
+>>> I can access this from either machine in the cluster, only one at a
+>>> time of course, it works very well and I'm happy.
+>>>
+>>> Now I'm running XEN and I want to be able to migrate a XEN domU from
+>>> one machine to the other while the domU is using the RAID10 device.  I
+>>> can make this "work" using XEN's migration hooks - it calls a script
+>>> when it has stopped the running domU and I can start the raid device
+>>> on the destination node, ready for the arrival of the domU.
+>>>
+>>> There is one small problem - I can't stop the RAID10 on the source
+>>> node until the domU has finished, so it seems to me there is a window
+>>> that could lead to data corruption:
+>>>
 >>
->> Moreover, as raid arrays are automatically marked clean if no writes
->> are pending for some small time period, a simple "sync; sleep 1"
->> at the end of the shutdown script is usually enough to have a clean
->> array during the next boot.
+>> Can you put it into read-only mode?
+>>
 >
-> But that's still only "usually". Considering the enormous efforts
-> taken to unmount filesystems (or remount them read-only) so they're
-> certain to be clean at the next startup, it seems odd to settle for
-> "usually"... and CentOS 5 doesn't even appear to do that.
+> How do I do that?
 >
-> Goswin, please can you tell me what command Debian uses? I think I
-> want to combine both of these into my systems' halt scripts.
+> Ah, by "mdadm --readonly"[*].
 >
-> Cheers,
+>> I'm not even sure putting a raid in read-only mode will stop
+>> background syncing.
+>>
 >
-> John.
+> Hang on a sec, I'll try it.
+>
+> ... run bonnie on mounted /dev/md0, kill it, umount the device ...
+>
+> # cat /proc/mstat
+> Personalities : [raid10] md0 : active raid10 sda3[0] sde2[4](S)
+> sdd3[3] sdc3[2] sdb3[1]
+>      32067456 blocks 64K chunks 2 near-copies [4/4] [UUUU]
+>      bitmap: 66/123 pages [264KB], 128KB chunk
+>
+> # mdadm --readonly /dev/md0
+> # cat /proc/mdstat Personalities : [raid10] md0 : active (read-only)
+> raid10 sda3[0] sde2[4](S) sdd3[3] sdc3[2] sdb3[1]
+>      32067456 blocks 64K chunks 2 near-copies [4/4] [UUUU]
+>      bitmap: 66/123 pages [264KB], 128KB chunk
+>
+> ... wait a bit
+> # cat /proc/mdstat
+> Personalities : [raid10] md0 : active (read-only) raid10 sda3[0]
+> sde2[4](S) sdd3[3] sdc3[2] sdb3[1]
+>      32067456 blocks 64K chunks 2 near-copies [4/4] [UUUU]
+>      bitmap: 0/123 pages [0KB], 128KB chunk
+>
+> No, it seems to keep on syncing.  Bummer.
+>
+>> As an alternative approach how about running the raid10 inside the
+>> domU?
+>>
+>
+> Didn't want to do that as it requires exporting loadsa devices to the
+> domU instead of one.
+>
+> But maybe it's the only way (without hacking the md code).
 
-On halt I do see a message about the raid being switched to read-only
-but I don't see any command that would do that. So I do believe this
-is, as Andre says, the kernel switching the raid read-only before
-halting.
-
-Maybe your kernel is too old to have this feature?
+You could wait for the syncs to complete after the domU is
+suspended. But that could mean hours if there is a resync or repair
+running. For those you realy need a "pause" state.
 
 MfG
         Goswin
