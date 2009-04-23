@@ -1,46 +1,44 @@
 From: John Robinson <john.robinson@anonymous.org.uk>
 Subject: Re: Poor write performance with write-intent bitmap?
-Date: Thu, 23 Apr 2009 08:48:10 +0100
-Message-ID: <49F01D3A.8050209@anonymous.org.uk>
-References: <a5cd9eed0904201012o67503049laa50f4cb5b8d88de@mail.gmail.com>	<49ED096E.1000002@anonymous.org.uk>	<49ED16F7.3040906@anonymous.org.uk>	<4081b80da35818efbc07723240f8ea36.squirrel@neil.brown.name>	<49ED2BC3.7050109@anonymous.org.uk>	<87d4b5m4kf.fsf@frosties.localdomain>	<49EF108D.4070605@anonymous.org.uk> <87skk0947d.fsf@frosties.localdomain>
+Date: Thu, 23 Apr 2009 09:04:44 +0100
+Message-ID: <49F0211C.3010306@anonymous.org.uk>
+References: <a5cd9eed0904201012o67503049laa50f4cb5b8d88de@mail.gmail.com> <49ED096E.1000002@anonymous.org.uk> <49ED16F7.3040906@anonymous.org.uk> <4081b80da35818efbc07723240f8ea36.squirrel@neil.brown.name> <49ED2BC3.7050109@anonymous.org.uk> <87d4b5m4kf.fsf@frosties.localdomain> <49EF108D.4070605@anonymous.org.uk> <20090422142148.GC13280@skl-net.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87skk0947d.fsf@frosties.localdomain>
+In-Reply-To: <20090422142148.GC13280@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
+Cc: Goswin von Brederlow <goswin-v-b@web.de>
 List-Id: linux-raid.ids
 
-On 22/04/2009 15:02, Goswin von Brederlow wrote:
-> John Robinson <john.robinson@anonymous.org.uk> writes:
->> Another issue might be the LVM layer; does that need to be stopped or
->> switched to read-only too?
+On 22/04/2009 15:21, Andre Noll wrote:
+> On 13:41, John Robinson wrote:
+>>> Normal shutdown should put the raid in read-only mode as last step. At
+>>> least Debian does that. That way even a mounted raid will be clean
+>>> after reboot.
+>> Yes, I would have thought it should as well. But I've just looked at 
+>> CentOS 5's /etc/rc.d/halt and as far as I can see it doesn't try to 
+>> switch md devices to read-only.
 > 
-> Debian does
+> There's no need to do that in the shutdown script as the kernel will
+> switch all arrays to read-only mode on halt/reboot.
 > 
-> /sbin/vgchange -aln --ignorelockingfailure || return 2
-> 
-> before S60mdadm-raid, S60umountroot and S90reboot.
+> Moreover, as raid arrays are automatically marked clean if no writes
+> are pending for some small time period, a simple "sync; sleep 1"
+> at the end of the shutdown script is usually enough to have a clean
+> array during the next boot.
 
-But that's not going to switch any VG with a still-mounted filesystem 
-(e.g. /) to read-only or make it go away, it's going to fail. Still 
-probably a good idea for other circumstances, though.
+But that's still only "usually". Considering the enormous efforts taken 
+to unmount filesystems (or remount them read-only) so they're certain to 
+be clean at the next startup, it seems odd to settle for "usually"... 
+and CentOS 5 doesn't even appear to do that.
 
-> I've been using a 1GB / for years and years now so that won't be a
-> problem. As for the rest one can also bind mount /usr, /var, /home to
-> /mnt/space/* respectively. I.e. have just 2 (/ and everything else)
-> partitions.
+Goswin, please can you tell me what command Debian uses? I think I want 
+to combine both of these into my systems' halt scripts.
 
-Well, I have just 2, /boot and everything else, but I might in the 
-future switch to your suggestion.
-
-> Esspecially for XEN hosts I find LVM verry usefull. Makes it easy to
-> create new logical volumes for new xen domains.
-
-My thoughts exactly :-)
-
-Many thanks,
+Cheers,
 
 John.
+
