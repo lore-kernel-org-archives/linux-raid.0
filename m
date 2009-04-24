@@ -1,37 +1,52 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: RAID halting
-Date: Fri, 24 Apr 2009 05:03:46 -0500
-Message-ID: <20090424100349002.RBNT6537@cdptpa-omta02.mail.rr.com>
-References: <49F16137.1050108@sauce.co.nz>
-Reply-To: <lrhorer@satx.rr.com>
+From: Daniel Reurich <daniel@centurion.net.nz>
+Subject: md extension to support booting from raid whole disks.
+Date: Sat, 25 Apr 2009 00:08:20 +1200
+Message-ID: <1240574900.4507.2076.camel@ezra>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49F16137.1050108@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Quad core Xeon 2.8GHz md RAID6 of 16 x 750GB. Delete 20GB file:
-> 
-> time rm -f dump
-> 
-> real    0m1.849s
-> user    0m0.000s
-> sys     0m1.633s
+Hi,
 
-3.2 GHz AMD Athlon 64 x 2 RAID6 of 10 x 1T:
+I have got linux successfully booting from a raid5 whole disk set with /
+& /boot filesystems on that raid5 disk set.  This is possible thanks to
+grub2 (with some hacking to make it install correctly.)
 
-RAID-Server:/RAID/Recordings# ll sizetest.fil
--rw-rw-rw- 1 lrhorer users 27847620608 2009-04-24 03:21 sizetest.fil
-RAID-Server:/RAID/Recordings# time rm sizetest.fil
+The downside I found is that the system won't boot if the 1st disk is
+missing, as that contains the boot sector and core.img that grub
+requires to boot.  The linux kernel also get unhappy about the partition
+table of the first disk saying the volume is larger then the geometry of
+the physical first disk.
 
-real    0m21.503s
-user    0m0.000s
-sys     0m6.852s
+I was wondering if it was worth extending the md superblock to make it
+easier for booting raided whole disks.  There are several ideas I had
+thought of that would make this achieveable:
 
-See what I mean?  'Zero additional activity on the array other than the rm
-task.  We'll see what happens with XFS.
+A first cylinder which needs to be mirrored across all the devices.
+This would be for the Volume/Master Boot record + Boot Sector Code.
+Grub2 bootsector + core.img should fit in here at (or least enough of it
+to bring grub up with the appropriate raid drivers.)
+
+We could include a dummy partition table with the whole disk in the 1st
+partition labeled as something like linux-raid (0xfd) or Non-FS data
+(0xda).
+
+The second cylinder has the md superblock and write intent bitmap, and
+the raid volume starts at the beginning of the 3rd cylinder.
+
+This would allow for this scheme to work with booting of all whole disk
+raid arrays of all levels using grub2, without any significant changes
+required in grub2.
+
+Thanks for the awesomeness that is linux software raid.
+ 
+-- 
+Daniel Reurich
+
+Centurion Computer Technology (2005) Ltd
+Ph 021 797 722
 
