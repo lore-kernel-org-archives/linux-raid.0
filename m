@@ -1,41 +1,54 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: [Patch] mdadm ignoring homehost?
-Date: Fri, 24 Apr 2009 21:15:09 +0200
-Message-ID: <20090424191509.GA28484@lazy.lzy>
-References: <20090418075436.GA2124@maude.comedia.it> <20090418083609.GA4436@lazy.lzy> <20090418101954.GA1448@maude.comedia.it> <20090418130656.GA3344@lazy.lzy> <18924.3824.677493.129885@notabene.brown> <20090420181736.GB4236@lazy.lzy> <20090420211332.GA5550@maude.comedia.it> <20090421181519.GA4114@lazy.lzy> <1240416414.10178.1.camel@cichlid.com> <9A77DB27-C12A-4BA2-94C4-D59B7DAFF32C@redhat.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: RAID halting
+Date: Fri, 24 Apr 2009 16:25:29 -0400
+Message-ID: <87f94c370904241325r25913030l4cb4828d7f2a5807@mail.gmail.com>
+References: <87f94c370904051300x531acb1fqb55319536333c01f@mail.gmail.com>
+	 <20090424045222253.GZTS2063@cdptpa-omta04.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <9A77DB27-C12A-4BA2-94C4-D59B7DAFF32C@redhat.com>
+In-Reply-To: <20090424045222253.GZTS2063@cdptpa-omta04.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: lrhorer@satx.rr.com
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Apr 22, 2009 at 09:20:49PM -0400, Doug Ledford wrote:
->
-> # This file causes block devices with Linux RAID (mdadm) signatures to
-> # automatically cause mdadm to be run.
-> # See udev(8) for syntax
->
-> SUBSYSTEM=="block", ACTION=="add", ENV{ID_FS_TYPE}=="linux_raid_member", 
-> \
-> 	IMPORT{program}="/sbin/mdadm --examine --export $tempnode", \
-> 	RUN+="/bin/bash -c '[ ! -f /dev/.in_sysinit ] && mdadm -I  
-> $env{DEVNAME}'"
+<snip>
+> 5. =A0Finally, one other thing concerns me a bit. =A0The researchers =
+I read
+> suggested XFS has by far the worst file deletion performance of any o=
+f the
+> journaling file systems, and Reiserfs supposedly has the best.
 
-It seems the missing "change" is causing problems too.
+I'm pretty sure that someone got that wrong.  The real issue is that
+xfs is really slow comparatively at deleting *small* files.
 
-In fact, the first time the array is connected (it's
-hotpluggable), devices are "added", but the second
-time the devices are already there (not removed by
-unplug) and there is no "add" anymore, so the array
-is not assembled.
-If the devices are deleted (rm /dev/md/...), then
-it works again (somehow, not really, to be honest).
+I did a test just a couple months ago comparing reiser and xfs.  xfs
+was 30x slower.
 
-bye,
+My test was to make a copy of a linux kernel source tree.  Then time
+deleting it.
 
--- 
+Reiser did it in a couple seconds.  xfs took a minute.  So xfs is not
+a good choice to hold your source directories it your a kernel
+developer.
 
-piergiorgio
+Greg
+--=20
+Greg Freemyer
+Head of EDD Tape Extraction and Processing team
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+=46irst 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.p=
+df
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
