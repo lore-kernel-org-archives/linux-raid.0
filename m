@@ -1,52 +1,34 @@
-From: Daniel Reurich <daniel@centurion.net.nz>
-Subject: md extension to support booting from raid whole disks.
-Date: Sat, 25 Apr 2009 00:08:20 +1200
-Message-ID: <1240574900.4507.2076.camel@ezra>
+From: Johannes Segitz <johannes.segitz@gmail.com>
+Subject: Re: Performance of a software raid 5
+Date: Fri, 24 Apr 2009 15:49:42 +0200
+Message-ID: <a5cd9eed0904240649wc5cfa97u400ba1f5b65f5634@mail.gmail.com>
+References: <a5cd9eed0904201012o67503049laa50f4cb5b8d88de@mail.gmail.com>
+	 <49ED096E.1000002@anonymous.org.uk>
+	 <a5cd9eed0904201710j5b05d9cam8a61b50f34eda2c0@mail.gmail.com>
+	 <49ED18E6.1090301@anonymous.org.uk>
+	 <a5cd9eed0904201805n1b52aafm206bda5a1afc0b5c@mail.gmail.com>
+	 <15c92f8bd27d912e292c013fea2467e4.squirrel@neil.brown.name>
+	 <a5cd9eed0904201904o29c02a8csb875ae68ba19e681@mail.gmail.com>
+	 <18925.23969.113047.133385@notabene.brown>
+	 <a5cd9eed0904210540y688d9dc6pdc0866b86a748d2a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <a5cd9eed0904210540y688d9dc6pdc0866b86a748d2a@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Tue, Apr 21, 2009 at 2:40 PM, Johannes Segitz
+<johannes.segitz@gmail.com> wrote:
+> I will give it a try and i hope you're right since i can't recreate the array
+> when i used the other drives because currently they are used in another
+> array which then will be destroyed. I'll try it later and then post the results
 
-I have got linux successfully booting from a raid5 whole disk set with /
-& /boot filesystems on that raid5 disk set.  This is possible thanks to
-grub2 (with some hacking to make it install correctly.)
+One of the drives is failing so i have to wait till i get a
+replacement. Currently
+a replacement drive is connected via USB so a benchmark wouldn't make
+much sense. I'll retry the dd test when the new drive is build in.
 
-The downside I found is that the system won't boot if the 1st disk is
-missing, as that contains the boot sector and core.img that grub
-requires to boot.  The linux kernel also get unhappy about the partition
-table of the first disk saying the volume is larger then the geometry of
-the physical first disk.
-
-I was wondering if it was worth extending the md superblock to make it
-easier for booting raided whole disks.  There are several ideas I had
-thought of that would make this achieveable:
-
-A first cylinder which needs to be mirrored across all the devices.
-This would be for the Volume/Master Boot record + Boot Sector Code.
-Grub2 bootsector + core.img should fit in here at (or least enough of it
-to bring grub up with the appropriate raid drivers.)
-
-We could include a dummy partition table with the whole disk in the 1st
-partition labeled as something like linux-raid (0xfd) or Non-FS data
-(0xda).
-
-The second cylinder has the md superblock and write intent bitmap, and
-the raid volume starts at the beginning of the 3rd cylinder.
-
-This would allow for this scheme to work with booting of all whole disk
-raid arrays of all levels using grub2, without any significant changes
-required in grub2.
-
-Thanks for the awesomeness that is linux software raid.
- 
--- 
-Daniel Reurich
-
-Centurion Computer Technology (2005) Ltd
-Ph 021 797 722
-
+Johannes
