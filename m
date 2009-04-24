@@ -1,128 +1,166 @@
-From: Andrew Burgess <aab@cichlid.com>
-Subject: RE: RAID halting
-Date: Fri, 24 Apr 2009 08:24:42 -0700
-Message-ID: <1240586682.12986.38.camel@cichlid.com>
-References: <20090424045222253.GZTS2063@cdptpa-omta04.mail.rr.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [Patch] mdadm ignoring homehost?
+Date: Fri, 24 Apr 2009 12:46:39 -0400
+Message-ID: <5FD80727-8CE9-47DF-8985-0E8E036C5557@redhat.com>
+References: <20090418101954.GA1448@maude.comedia.it> <20090418130656.GA3344@lazy.lzy> <18924.3824.677493.129885@notabene.brown> <20090420181736.GB4236@lazy.lzy> <20090420211332.GA5550@maude.comedia.it> <20090421181519.GA4114@lazy.lzy> <1240416414.10178.1.camel@cichlid.com> <9A77DB27-C12A-4BA2-94C4-D59B7DAFF32C@redhat.com> <20090423055132.GA29487@maude.comedia.it> <F296B205-3CE7-4130-813D-66D63D78AE89@redhat.com> <20090423213155.GA7993@maude.comedia.it>
+Mime-Version: 1.0 (Apple Message framework v930.3)
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-79-291394551"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090424045222253.GZTS2063@cdptpa-omta04.mail.rr.com>
+In-Reply-To: <20090423213155.GA7993@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: lrhorer@satx.rr.com
-Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: Luca Berra <bluca@comedia.it>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 2009-04-23 at 23:52 -0500, Leslie Rhorer wrote:
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--Apple-Mail-79-291394551
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 
-> Does anyone have any better suggestions or comments on creating the array
-> with these options?  It is going to start as an 8T array and probably grow
-> to 30T by the end of this year or early next year, increasing the number of
-> drives to 12 and then swapping out the 1T drives for 3T drives, hopefully
-> after the price of 3T drives has dropped considerably.
-> 
-> I intend to create an XFS file system 
+On Apr 23, 2009, at 5:31 PM, Luca Berra wrote:
+> On Thu, Apr 23, 2009 at 07:05:04AM -0400, Doug Ledford wrote:
+>>>> # This file causes block devices with Linux RAID (mdadm)  
+>>>> signatures to
+>>>> # automatically cause mdadm to be run.
+>>>> # See udev(8) for syntax
+>>>>
+>>>> SUBSYSTEM=="block", ACTION=="add",  
+>>>> ENV{ID_FS_TYPE}=="linux_raid_member", \
+>>>> 	IMPORT{program}="/sbin/mdadm --examine --export $tempnode", \
+>>>> 	RUN+="/bin/bash -c '[ ! -f /dev/.in_sysinit ] && mdadm -I  
+>>>> $env{DEVNAME}'"
+>>>>
+>>>>
+>>>
+>>> i believe i saw this as well, but not at startup, it was when i  
+>>> manually
+>>> run mdadm -As, so while your hack to prevent udev from assembling
+>>> devices while in sysinit may not be a full solution.
+>>
+>> No, it is.  In your situation, the rules line must have read  
+>> ACTION="add|change".  The fact that the incremental assembly rule  
+>> would
+> you are probably right about that, i tried with your ruleset and it
+> looks like the problem was due to the change ACTION
+> just out of curiosity what is the use of the IMPORT statement, is it
+> needed by some other rule?
 
-The one disadvantage to XFS is you cannot shrink the filesystem. This is
-handy when upgrading the array when you want to reuse some of the
-smaller disks to save money. i.e:
+The IMPORT statement just causes udev to add the output of the program  
+to its own list of environment variables.  Since vol_id doesn't pick  
+up all the information that mdadm might care about, we use mdadm to  
+supplant those environment variables.
 
-Create a new 3T device array but one that only holds say half your data.
-Copy half your data to the new array. Shrink the old array (fs and then
-md). This frees up some 1T disks which you can make into 3T devices with
-md, add to the new array, grow the fs. Repeat untill all the data is
-transferred. Your data is protected against disk failure the whole time.
+>
+>>> my solution was "rm -f /etc/udev/rules.d/70-mdadm.rules",
+>>> works like a charm :P
+>>>
+>>> probably the best solution is preventing concurrent mdadm rules  
+>>> with a
+>>> lock.
+>
+> do you think the last suggestion of having mdadm protect from itself
+> would be of use?
 
-I did exactly this in the past with ext3 but talked myself into using
-xfs for the new array so this time when I upgraded the array from 400G
-devices to 750GB devices I had to buy enough 750's to hold everything. I
-was still able to reuse some of the 400GB to give lots of extra space on
-the new array after the copy.
+Not really.  The problem is that assemble and incremental use two  
+different methods of bringing an array online and you can't mix the  
+two.  With assemble, it will open all the devices until it gets a  
+complete set, then open up a control channel to the md stack, init the  
+array, add all the devices in one go, then start the array.  It was  
+the scanning of the devices for superblocks that was getting picked up  
+by the change event portion of the rule and causing udev to try and  
+add the device to an incremental array before mdadm had collected all  
+the devices and added them to its assembly based array.  Now, since  
+assembly mode does everything in one go, you could conceivably lock  
+against other assembly runs, but in practice that isn't a problem  
+because mdadm will attempt to get an exclusive open on the constituent  
+devices before starting the array.
 
-> on the raw RAID device, which I am
-> given to understand offers few if any disadvantages compared to
-> partitioning the array, or partitioning the devices below the array, for
-> that matter, given I am devoting each entire device to the array and the
-> entire array to the single file system.  Does anyone strongly disagree?  I
-> see no advantage to LVM in this application, either.  Again, are there any
-> dissenting opinions?
+Incremental mode is different in that it will take a single device,  
+scan it for info, if it is a constituent device for an array that  
+hasn't been seen yet (as per the md stack, which is true while  
+assembly mode is busy scanning drives), then it will create a place  
+holder array to stick the drive into, but won't attempt to start the  
+array.  When assembly mode gets around to trying to start populate its  
+array, the incremental array already exists (although unstarted) and  
+so it picks another array.  Mdadm does not assume that you might call  
+assemble on an already partially assembled incremental array.  After  
+mdadm puts the device into the incremental array, it exits.  So,  
+incremental wouldn't actually be able to hold a lock through the  
+incremental process because each new device spawns a new mdadm, and we  
+don't really know when that spawn will happen.
 
-I agree about LVM but am no expert
+> I think it might still happen when stacking arrays
+> i.e. mirror of stripes
+> running mdadm -As would activate the first striped md and generate  
+> and 'add'
+> event, then while it is assembling the second one udev will trigger  
+> and
+> create a degraded mirror containing only the first one.
 
-> 3.  The man page says "When a filesystem is created on a logical volume
-> device, mkfs.xfs will automatically  query  the  logical  volume  for
-> appropriate sunit and swidth values."  Does this mean it is best for me to
-> simply not worry about setting these parameters and let mkfs.xfs do it, or
-> is there a good reason for me to intervene?
-> 
-> 4.  My reading, including the statement in the mkfs.xfs man page which says,
-> "The value [of the sw parameter] is expressed as a multiplier of the stripe
-> unit, usually the same as the number of stripe members in the logical volume
-> configuration, or data disks in a RAID device", suggests to me the optimal
-> stripe size for an XFS file system will change when the number of member
-> disks is increased.  Am I correct in this inference?  If so, I haven't seen
-> anything suggesting the stripe size of the FXS file system can be modified
-> after the file system is created.  Certainly the man page for xfs_growfs
-> mentions nothing of it.  The researchers I read all suggested the
-> performance of FXS is greatly enhanced if the file system stripe size
-> matches the RAID stripe size.  I'm also a little puzzled why the stripe
-> width of the XFS file system should be the same as the number of drives in a
-> RAID 5 or RAID 6 array, since to the file system the stripe extent would
-> seem to be defined by the data drives, because a payload which fits
-> perfectly on N drive chunks is spread across N+2 drive chunks on a RAID 6
-> array.  To put it another way, it seems to me the parity drives should be
-> excluded from the calculation.
+The udev rule is designed to handle exactly this type of situation.   
+If you manually assemble the first array, then udev will see that and  
+*start* to create the striped array on top, but because all devices  
+aren't there yet, it will only put the first into the place holder  
+array and not attempt to start it.  Then, when you manually create the  
+second one, another add event for the second array happens, udev picks  
+it up, sees that it's for the same array it's already been working on,  
+and adds that device to the partially assembled array it created  
+before.  Now both constituent devices are there and mdadm will go  
+ahead and start the array.  So, it works like it should.  It's only a  
+problem when you try to mix incremental and assembly mode operation on  
+the *exact* same array.  Since udev only processes on add events now,  
+in order to race with udev on manually starting a hot plugged array,  
+you would likely have to be a quick typist or be trying to beat udev  
+to the punch.
 
-The mount man page says it can be changed at mount time which does seem
-a little strange to me.
-
-Quoting man mount:
-
-       sunit=value and swidth=value
-
-"Used  to  specify  the  stripe unit and width for a RAID device or a
-stripe volume.  value must be specified in 512-byte block units.  If
-this option is not specified and the filesystem was made on a stripe
-volume or the stripe width or unit were specified for the RAID device at
-mkfs time,  then  the  mount system call will restore the value from the
-superblock.  For filesystems that are made directly on RAID devices,
-these options can be used to override the information in the superblock
-if the underlying disk layout changes after the filesystem has been
-created. The swidth option is required if the sunit option has been
-specified, and must be a multiple of the sunit value."
-
-Maybe it means newly created files use the new sunit/swidth values?
-There is also defrag available for xfs, perhaps this rearranges things
-as well, I don't know.
-
-Once you create the fs and examine the values in /proc/mounts you could
-see if they change when you add a device to the array, grow the fs and
-remount. Also, your argument about the number of data disks makes sense
-to me. After you get some data you might ask on the xfs mailing list if
-you see a discrepancy.
-
-My 14 device 128K chunk raid6 xfs picked "sunit=256,swidth=1024"
-according to /proc/mounts. I think the units are 512 byte sectors so the
-sunit is the same as the chunk size. I don't know what these values were
-before the last md grow.
-
-> 5.  Finally, one other thing concerns me a bit.  The researchers I read
-> suggested XFS has by far the worst file deletion performance of any of the
-> journaling file systems
-
-Single file deletes of ~10GB work fine on my system but several in a row
-will bog things down. Make sure you measure whats important to you; your
-example shows deleting a single 20GB file. Is that what needs to be fast
-or do you delete several files like that at once? And benchmarking rm
-without a final sync may not be valid (or at least will measure
-different things).
-
-Also, there is an alloc_size mount parameter which reduces fragmentation
-and may speed deletes. 
-
-HTH
-
-PS I wish I could have helped you with oprofile but its been a while
-since I used it - we'd be starting at the same place ;-)
+>
+> Regards,
+> L.
+>
+>
+>
+> -- 
+> Luca Berra -- bluca@comedia.it
+>        Communication Media & Services S.r.l.
+> /"\
+> \ /     ASCII RIBBON CAMPAIGN
+>  X        AGAINST HTML MAIL
+> / \
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux- 
+> raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
+--
+
+Doug Ledford <dledford@redhat.com>
+
+GPG KeyID: CFBFF194
+http://people.redhat.com/dledford
+
+InfiniBand Specific RPMS
+http://people.redhat.com/dledford/Infiniband
+
+
+
+
+
+--Apple-Mail-79-291394551
+content-type: application/pgp-signature; x-mac-type=70674453;
+	name=PGP.sig
+content-description: This is a digitally signed message part
+content-disposition: inline; filename=PGP.sig
+content-transfer-encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2.0.11 (Darwin)
+
+iEYEARECAAYFAknx7O8ACgkQQ9aEs6Ims9h/1ACeJMRBduA69z++4Fb5ykbbxLI0
+casAoLSCRKNKDEhIGZ1HC/QEGEufAgG/
+=Q+sQ
+-----END PGP SIGNATURE-----
+
+--Apple-Mail-79-291394551--
