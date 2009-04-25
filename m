@@ -1,100 +1,81 @@
 From: "Leslie Rhorer" <lrhorer@satx.rr.com>
 Subject: RE: RAID halting
-Date: Sat, 25 Apr 2009 02:24:59 -0500
-Message-ID: <20090425072502456.OPES2063@cdptpa-omta04.mail.rr.com>
-References: <20090424045222253.GZTS2063@cdptpa-omta04.mail.rr.com>
+Date: Sat, 25 Apr 2009 02:40:24 -0500
+Message-ID: <20090425074027510.YPAD9976@cdptpa-omta03.mail.rr.com>
+References: <CBD259F5-4214-4C0C-A1D7-16ABC0A2BA89@redhat.com>
 Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090424045222253.GZTS2063@cdptpa-omta04.mail.rr.com>
+In-Reply-To: <CBD259F5-4214-4C0C-A1D7-16ABC0A2BA89@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: lrhorer@satx.rr.com, 'Linux RAID' <linux-raid@vger.kernel.org>
+To: 'Doug Ledford' <dledford@redhat.com>
+Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> selected probably a 1.2 superblock, instead.  Given all that, unless
-> someone
-> else has a better idea, I am going to go ahead and tear down the array and
-> rebuild it with a version 1.2 superblock.  I have suspended all writes to
-> the array and double-backed up all the most critical data along with a
-> small
-> handful of files which for some unknown reason appear to differ by a few
-> bytes between the RAID array copy and the backup copy.  I just hope like
-> all
-> get-out the backup system doesn't crash sometime in the four days after I
-> tear down the RAID array and start to rebuild it.
+> On Apr 24, 2009, at 12:52 AM, Leslie Rhorer wrote:
+> > I've done some reading, and it's been suggested a 128K chunk size
+> > might be a
+> > better choice on my system than the default chunk size of 64K, so I
+> > intend
+> > to create the new array on the raw devices with the command:
+> >
+> > mdadm --create --raid-devices=10 --metadata=1.2 --chunk=128 --level=6
+> > /dev/sd[a-j]
 > 
-> I've done some reading, and it's been suggested a 128K chunk size might be
-> a
-> better choice on my system than the default chunk size of 64K, so I intend
-> to create the new array on the raw devices with the command:
-> 
-> mdadm --create --raid-devices=10 --metadata=1.2 --chunk=128 --level=6
-> /dev/sd[a-j]
+> Go with a bigger chunk size.  Especially if you do lots of big file
+> manipulation.  During testing (many years ago now, admittedly) with
+> Dell for some benchmarks, it was determined that when using linux
+> software raid, larger chunk sizes would tend to increase performance.
+> In those tests, we settled on a 2MB chunk size.  I wouldn't recommend
+> you go *that* high, but I could easily see 256k or 512k chunk sizes.
 
-No one noticed this was missing the target array.  I didn't either until I
-ran it and mdadm complained there weren't enough member disks.  'Puzzled the
-dickens out of me until I realized mdadm was trying to create an array at
-/dev/sda from disks /dev/sdb - /dev/sdj.  'Silly computer.  :-)
+I went ahead and selected 256K.  There's something a little odd, though.
+mdadm is reporting a device size of 2T.  These are 1T drives.  The overall
+array size is correct but the device size is goofy.  I hope this doesn't
+cause any problems.  As I believe I mentioned before (or maybe it was on
+another list), I once had problems with ext3 trying to read beyond the
+physical end of the array.
 
-For anyone who is interested, the array has been created and formatted, and
-the file transfers from the backup have begun, plus I have started to write
-all the data I suspended from transferring over the last day or so.  The
-system is also resyncing the drives, of course, so there is a persistent
-stream of fairly high bandwidth reads going on in addition to the writes.
-See below.  So far, nearly 10,000 files have been created without a halt,
-and during a RAID resync the system previous would halt with every single
-file creation.  Forty-two GB out of over 6T of data has been transferred,
-and the system is starting on the large video files right now.  I have high
-hopes the problem may have been resolved.  If so, it is almost certain
-reiserfs was the culprit, as nothing else has changed except for the
-Superblock format and the disk order within the array.  'Fingers crossed.
+RAID-Server:/Backup/Personal_Folders# mdadm -Dt /dev/md0
+/dev/md0:
+        Version : 01.02
+  Creation Time : Sat Apr 25 01:17:12 2009
+     Raid Level : raid6
+     Array Size : 7814098944 (7452.11 GiB 8001.64 GB)
+  Used Dev Size : 1953524736 (1863.03 GiB 2000.41 GB)
+   Raid Devices : 10
+  Total Devices : 10
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-RAID-Server:/# iostat 1 2
-Linux 2.6.26-1-amd64 (RAID-Server)      04/25/2009      _x86_64_
+    Update Time : Sat Apr 25 01:20:47 2009
+          State : active, resyncing
+ Active Devices : 10
+Working Devices : 10
+ Failed Devices : 0
+  Spare Devices : 0
 
-avg-cpu:  %user   %nice %system %iowait  %steal   %idle
-           3.62    0.00    6.58   11.04    0.00   78.77
+     Chunk Size : 256K
 
-Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrtn
-sda              41.00      3440.04      2467.32   19477424   13969924
-sdb              41.19      3441.68      2525.79   19486704   14300948
-sdc              41.71      3437.65      2533.14   19463912   14342596
-sdd              41.62      3445.47      2524.65   19508192   14294540
-sde              41.43      3440.61      2467.74   19480680   13972308
-sdf              41.24      3441.43      2519.61   19485296   14265996
-sdg              41.53      3432.60      2477.87   19435296   14029668
-sdh              41.23      3440.57      2528.07   19480416   14313860
-sdi              45.09      3443.20      2466.24   19495336   13963796
-sdj              45.29      3431.99      2535.49   19431880   14355876
-hda               8.56       105.58        89.97     597815     509384
-hda1              0.02         0.45         0.00       2540          0
-hda2              8.53       104.94        89.92     594160     509104
-hda3              0.00         0.00         0.00          6          0
-hda5              0.01         0.12         0.05        693        280
-md0             103.20         6.34     14438.02      35880   81747792
+ Rebuild Status : 0% complete
 
-avg-cpu:  %user   %nice %system %iowait  %steal   %idle
-          11.17    0.00   15.53   35.92    0.00   37.38
+           Name : RAID-Server:0  (local to host RAID-Server)
+           UUID : 5ff10d73:a096195f:7a646bba:a68986ca
+         Events : 1
 
-Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrtn
-sda              55.00      3128.00      4872.00       3128       4872
-sdb              50.00      2808.00      4256.00       2808       4256
-sdc              44.00      2472.00      3664.00       2472       3664
-sdd              42.00      2872.00      3920.00       2872       3920
-sde              55.00      2280.00      5360.00       2280       5360
-sdf              68.00      2128.00      6984.00       2128       6984
-sdg              56.00      2808.00      5432.00       2808       5432
-sdh              48.00      3072.00      4608.00       3072       4608
-sdi              54.00      3456.00      5008.00       3456       5008
-sdj              59.00      3584.00      5008.00       3584       5008
-hda              23.00         0.00       184.00          0        184
-hda1              0.00         0.00         0.00          0          0
-hda2             23.00         0.00       184.00          0        184
-hda3              0.00         0.00         0.00          0          0
-hda5              0.00         0.00         0.00          0          0
-md0             307.00         0.00     33936.00          0      33936
- 
+    Number   Major   Minor   RaidDevice State
+       0       8        0        0      active sync   /dev/sda
+       1       8       16        1      active sync   /dev/sdb
+       2       8       32        2      active sync   /dev/sdc
+       3       8       48        3      active sync   /dev/sdd
+       4       8       64        4      active sync   /dev/sde
+       5       8       80        5      active sync   /dev/sdf
+       6       8       96        6      active sync   /dev/sdg
+       7       8      112        7      active sync   /dev/sdh
+       8       8      128        8      active sync   /dev/sdi
+       9       8      144        9      active sync   /dev/sdj
+
 
