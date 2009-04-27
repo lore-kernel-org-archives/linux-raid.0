@@ -1,57 +1,60 @@
-From: Michal Soltys <soltys@ziu.info>
-Subject: Re: [Patch] mdadm ignoring homehost?
-Date: Sun, 26 Apr 2009 23:37:16 +0200
-Message-ID: <49F4D40C.7070003@ziu.info>
-References: <20090418101954.GA1448@maude.comedia.it> <20090418130656.GA3344@lazy.lzy> <18924.3824.677493.129885@notabene.brown> <20090420181736.GB4236@lazy.lzy> <20090420211332.GA5550@maude.comedia.it> <20090421181519.GA4114@lazy.lzy> <1240416414.10178.1.camel@cichlid.com> <9A77DB27-C12A-4BA2-94C4-D59B7DAFF32C@redhat.com> <20090424191509.GA28484@lazy.lzy> <302D7194-F25F-48B8-95E3-1A0A054A411F@redhat.com> <20090426121412.GA11921@lazy.lzy>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: md extension to support booting from raid whole disks.
+Date: Mon, 27 Apr 2009 17:08:22 +0200
+Message-ID: <87hc0axhg9.fsf@frosties.localdomain>
+References: <1240574900.4507.2076.camel@ezra>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090426121412.GA11921@lazy.lzy>
+In-Reply-To: <1240574900.4507.2076.camel@ezra> (Daniel Reurich's message of
+	"Sat, 25 Apr 2009 00:08:20 +1200")
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+To: Daniel Reurich <daniel@centurion.net.nz>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Piergiorgio Sartor wrote:
-> 
->> Removing the /dev/md/ device files does nothing of value.  However, I  
-> 
->>From what I saw with udevmonitor, it seems that,
-> with those files, there is no add event.
-> 
+Daniel Reurich <daniel@centurion.net.nz> writes:
 
-Few remarks:
+> Hi,
+>
+> I have got linux successfully booting from a raid5 whole disk set with /
+> & /boot filesystems on that raid5 disk set.  This is possible thanks to
+> grub2 (with some hacking to make it install correctly.)
+>
+> The downside I found is that the system won't boot if the 1st disk is
+> missing, as that contains the boot sector and core.img that grub
+> requires to boot.  The linux kernel also get unhappy about the partition
+> table of the first disk saying the volume is larger then the geometry of
+> the physical first disk.
+>
+> I was wondering if it was worth extending the md superblock to make it
+> easier for booting raided whole disks.  There are several ideas I had
+> thought of that would make this achieveable:
 
-'add' uevent will happen only, if created or assembled array uses kernel 
-name not yet used (in the other words, it's not present under 
-/sys/block/ yet).
+Or grub2 could be thought to install itself into all MBRs of all
+drives in a raid set.
 
-Actual assembly and removal cause only 'change' uevents.
+> A first cylinder which needs to be mirrored across all the devices.
+> This would be for the Volume/Master Boot record + Boot Sector Code.
+> Grub2 bootsector + core.img should fit in here at (or least enough of it
+> to bring grub up with the appropriate raid drivers.)
+>
+> We could include a dummy partition table with the whole disk in the 1st
+> partition labeled as something like linux-raid (0xfd) or Non-FS data
+> (0xda).
+>
+> The second cylinder has the md superblock and write intent bitmap, and
+> the raid volume starts at the beginning of the 3rd cylinder.
+>
+> This would allow for this scheme to work with booting of all whole disk
+> raid arrays of all levels using grub2, without any significant changes
+> required in grub2.
 
-Moreover - if you have partitions on the raid device, access to the 
-device (usually any mdadm udev rules will trigger it due to e.g. vol_id, 
-etc.) will trigger sequence of additional partition 'add' uevents.
+That part I really like. I'm just not sure how complicated the code
+for this would be compared to teaching grub2 to handle this case
+itself.
 
-If you issue mdadm -S, 'change' is issued for the block device, but if 
-you have any md partitions on such array - 'remove' uevents for them 
-will happen when another arrary (possibly the same) is created or 
-assembled using the same kernel name. OR - you can for example issue 
-blockdev --rereadpt /dev/md... to trigger 'remove' partition uevents 
-manually and immediately.
+> Thanks for the awesomeness that is linux software raid.
 
-'remove' for actual raid device will not happen. Mdadm doesn't do it 
-(recalling my old discussion with Neil, it's due to some subtleties, and 
-  coding it it's just not worth the effort, at least not for 2.9.x). So 
-- you're left with inactive /dev node and /sys/block entry.
-
-Still, if all your arrays and stoped, and e.g. you issue rmmod raid1 (if 
-we talk about raid1 arrays for the sake of the example) - that would 
-cause 'remove' uevents of course.
-
-This is all nicely visible under udevd --debug - you might need to 
-simplify your rule files in a few places to control the clobber though.
-
-Michal
-
-
+MfG
+        Goswin
