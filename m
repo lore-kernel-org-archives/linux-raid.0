@@ -1,69 +1,145 @@
-From: Daniel Reurich <daniel@centurion.net.nz>
-Subject: Re: md extension to support booting from raid whole disks.
-Date: Wed, 29 Apr 2009 11:41:59 +1200
-Message-ID: <1240962119.18303.826.camel@ezra>
-References: <1240574900.4507.2076.camel@ezra>
-	 <87hc0axhg9.fsf@frosties.localdomain> <49F68CE0.2010906@zytor.com>
-	 <e9c3a7c20904281124g4682d70cp22760176e7a8cfbc@mail.gmail.com>
-	 <1240957153.18303.689.camel@ezra>
-	 <18935.35747.471257.202356@notabene.brown>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [rfc] Proof-of-concept: refactoring raid6 recovery for the async
+	case
+Date: Tue, 28 Apr 2009 16:53:39 -0700
+Message-ID: <1240962819.10249.2.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18935.35747.471257.202356@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Dan Williams <dan.j.williams@intel.com>, "H. Peter Anvin" <hpa@zytor.com>, Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+The goal of the following implementation is to demonstrate a proposed
+re-factoring of the raid6 recovery code to isolate the operations that
+can be accelerated by hardware.  These operations are xor,
+gf-multiplication by a scalar (mult), and sum_product (the xor-sum of
+two vectors multiplied by two scalars).
 
-> 
-> v1.x metadata has explicit knowledge of where the start of the data
-> is, so it is quite possible to leave the first few (dozen) sectors
-> unused (let's not talk about cylinders this century - OK?).
-> So mdadm could grow a --grub flag to use with --create which arranged
-> for data/bitmap to not use the first (say) 512 sectors of any device.
-> (1.1 and 1.2 would still use reserved blocks for the superblock).
-> [I can cut you a patch to experiment with if you like]
+This version passes the tests from drivers/md/raid6test/test.c and
+barring objections the approach (of course not this code) will be used
+in the next version of the async-raid6 patchset.
 
-That would be nice.  The 1.1 superblock is no good as the bootsector
-goes in the same place, and 1.2 is where I expect grub would be writing
-data too.  I'll check this though.  Grub still needs patching to
-understand v1.X superblocks, so that could include blacklisting the
-location of a v1.2 superblock location and some for the write-intent
-bitmap. (Is there a way to determine where the w-i bitmap gets located
-and how big it is from the super block.)
+Thanks,
+Dan
 
-I'd say put lets reserve the first 64K (2 cylinders) for boot and
-superblock.
+diff --git a/drivers/md/raid6recov.c b/drivers/md/raid6recov.c
+index 2609f00..68414d7 100644
+--- a/drivers/md/raid6recov.c
++++ b/drivers/md/raid6recov.c
+@@ -20,14 +20,42 @@
+ 
+ #include <linux/raid/pq.h>
+ 
++static void sum_product(u8 *dest, u8 **srcs, u8 *coef, size_t bytes)
++{
++	const u8 *amul;
++	const u8 *bmul;
++	u8 ax;
++	u8 bx;
++	u8 *a = srcs[0];
++	u8 *b = srcs[1];
++
++	amul = raid6_gfmul[coef[0]];
++	bmul  = raid6_gfmul[coef[1]];
++
++	/* Now do it... */
++	while ( bytes-- ) {
++		ax    = amul[*a++];
++		bx    = bmul[*b++];
++		*dest++ = ax ^ bx;
++	}
++}
++
++static void xor(u8 *dest, u8 *src, size_t bytes)
++{
++	while (bytes--) {
++		*dest = *dest ^ *src;
++		dest++, src++;
++	}
++}
++
+ /* Recover two failed data blocks. */
+ void raid6_2data_recov(int disks, size_t bytes, int faila, int failb,
+ 		       void **ptrs)
+ {
+ 	u8 *p, *q, *dp, *dq;
+ 	u8 px, qx, db;
+-	const u8 *pbmul;	/* P multiplier table for B data */
+-	const u8 *qmul;		/* Q multiplier table (for both) */
++	u8 *srcs[2];
++	u8 coef[2];
+ 
+ 	p = (u8 *)ptrs[disks-2];
+ 	q = (u8 *)ptrs[disks-1];
+@@ -50,26 +78,36 @@ void raid6_2data_recov(int disks, size_t bytes, int faila, int failb,
+ 	ptrs[disks-2] = p;
+ 	ptrs[disks-1] = q;
+ 
+-	/* Now, pick the proper data tables */
+-	pbmul = raid6_gfmul[raid6_gfexi[failb-faila]];
+-	qmul  = raid6_gfmul[raid6_gfinv[raid6_gfexp[faila]^raid6_gfexp[failb]]];
++	xor(dp, p, bytes);
++	xor(dq, q, bytes);
+ 
+-	/* Now do it... */
+-	while ( bytes-- ) {
+-		px    = *p ^ *dp;
+-		qx    = qmul[*q ^ *dq];
+-		*dq++ = db = pbmul[px] ^ qx; /* Reconstructed B */
+-		*dp++ = db ^ px; /* Reconstructed A */
+-		p++; q++;
+-	}
++	/* Now, pick the proper data tables */
++	coef[0] = raid6_gfexi[failb-faila];
++	coef[1] = raid6_gfinv[raid6_gfexp[faila]^raid6_gfexp[failb]];
++	srcs[0] = dp;
++	srcs[1] = dq;
++	sum_product(dq, srcs, coef, bytes);
++
++	/* dq is now reconstructed B */
++	xor(dp, dq, bytes);
+ }
+ EXPORT_SYMBOL_GPL(raid6_2data_recov);
+ 
++static void mult(u8 *dest, u8 *src, u8 coef, size_t bytes)
++{
++	const u8 *qmul;		/* Q multiplier table */
++
++	qmul  = raid6_gfmul[coef];
++
++	while (bytes--)
++		*dest++ = qmul[*src++];
++}
++
+ /* Recover failure of one data block plus the P block */
+ void raid6_datap_recov(int disks, size_t bytes, int faila, void **ptrs)
+ {
+ 	u8 *p, *q, *dq;
+-	const u8 *qmul;		/* Q multiplier table */
++	u8 coef;
+ 
+ 	p = (u8 *)ptrs[disks-2];
+ 	q = (u8 *)ptrs[disks-1];
+@@ -87,13 +125,11 @@ void raid6_datap_recov(int disks, size_t bytes, int faila, void **ptrs)
+ 	ptrs[disks-1] = q;
+ 
+ 	/* Now, pick the proper data tables */
+-	qmul  = raid6_gfmul[raid6_gfinv[raid6_gfexp[faila]]];
++	coef = raid6_gfinv[raid6_gfexp[faila]];
+ 
+-	/* Now do it... */
+-	while ( bytes-- ) {
+-		*p++ ^= *dq = qmul[*q ^ *dq];
+-		q++; dq++;
+-	}
++	xor(dq, q, bytes);
++	mult(dq, dq, coef, bytes);
++	xor(p, dq, bytes);
+ }
+ EXPORT_SYMBOL_GPL(raid6_datap_recov);
+ 
 
-
-> grub could then write whatever it wants to write to any of these
-> sectors.
-> 
-> That only leaves the question of what happens when a spare is added to
-> the array - how does the grub data get written to the space on the
-> spare.
-> I would rather that grub were responsible for this, than for md to
-> treat that unused space as RAID1.
-
-Fair enough for the short term, but I imagine in the long run it would
-be a better way then calling an external application.  Isn't this
-already done for the w-i bitmap anyway?
-
-> We already have a notification system based on "mdadm --monitor" to
-> process events.  We could possibly plug grub in to that somehow so
-> that it gets told to re-write all it's special blocks every time
-> something significant changes in the array.
-
-If mdmon can call external commands, it should only need to call the
-appropriate grub-install [/dev/md/dX | "(md0)", and it would rewrite the
-superblock on all the devices.
-
--- 
-Daniel Reurich
-
-Centurion Computer Technology (2005) Ltd
-Ph 021 797 722
 
