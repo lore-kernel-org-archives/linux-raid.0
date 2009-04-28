@@ -1,31 +1,35 @@
-From: Kunal Kushwaha <kunal.kushwaha@gmail.com>
-Subject: Query regarding stripe management in linux md-raid
-Date: Tue, 28 Apr 2009 22:02:18 +0800
-Message-ID: <fbae8f520904280702h736197d6ibfdf0212bf1923d2@mail.gmail.com>
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: Incorrect in-kernel bitmap on raid10
+Date: Tue, 28 Apr 2009 16:05:32 +0200
+Message-ID: <slrngve39c.8a2.Mario.Holbe@darkside.dyn.samba-tng.org>
+References: <slrnguk663.8bq.Mario.Holbe@darkside.dyn.samba-tng.org>
+ <18922.50050.860008.242658@notabene.brown>
+ <slrnguupf4.911.Mario.Holbe@darkside.dyn.samba-tng.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE> wrote:
+> Neil Brown <neilb@suse.de> wrote:
+>> Could you let me know if that following patch helps?
+> Hmmm, it looks like the patch doesn't fully fix it.
+> root@darkside:~# echo 0-268275 > /sys/block/md7/md/bitmap_set_bits
+> However, in-kernel it should also allocate all pages, but it does not:
 
-I am trying to put Linux raid in Box with 256 MB of RAM. The kernel is
-compiled with non-swappable memory management option. I looked into
-raid5.c and found, it allocates one page for each chunk.  I am using 5
-disks for 64k chunk size. considering my kernel is within 30 MB.
+*push*
 
-1. If one page is allocated for one chunk instead of actual buffer
-size, isn't memory lot of memory is wasted?
-2. It will restrict the no. of stripes in memory (in case of
-non-swappable memory, no will be very less) will effect performance of
-IO badly.
+I forgot to clarify the (new) issue:
+While now the amount of pages needed in-kernel is calculated correctly,
+only the half of them seems to be actually used, even if all bits are
+set.
 
-Please correct me, if I am wrong, also any suggestion to overcome this
-problem is most welcomed.
 
+regards
+   Mario
 -- 
-Thanks in Advance,
-Kunal Kushwaha--
+I thought the only thing the internet was good for was porn.  -- Futurama
+
