@@ -1,35 +1,30 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: Incorrect in-kernel bitmap on raid10
-Date: Tue, 28 Apr 2009 16:05:32 +0200
-Message-ID: <slrngve39c.8a2.Mario.Holbe@darkside.dyn.samba-tng.org>
-References: <slrnguk663.8bq.Mario.Holbe@darkside.dyn.samba-tng.org>
- <18922.50050.860008.242658@notabene.brown>
- <slrnguupf4.911.Mario.Holbe@darkside.dyn.samba-tng.org>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: md extension to support booting from raid whole disks.
+Date: Tue, 28 Apr 2009 10:36:34 -0700
+Message-ID: <49F73EA2.3020803@zytor.com>
+References: <1240574900.4507.2076.camel@ezra>	<87hc0axhg9.fsf@frosties.localdomain> <49F68CE0.2010906@zytor.com> <87ljplnmrw.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87ljplnmrw.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: Daniel Reurich <daniel@centurion.net.nz>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE> wrote:
-> Neil Brown <neilb@suse.de> wrote:
->> Could you let me know if that following patch helps?
-> Hmmm, it looks like the patch doesn't fully fix it.
-> root@darkside:~# echo 0-268275 > /sys/block/md7/md/bitmap_set_bits
-> However, in-kernel it should also allocate all pages, but it does not:
+Goswin von Brederlow wrote:
+> 
+> And how do you create a raid-1 partition on a whole disk raid?
+> 
 
-*push*
+What you're asking for is a partitioning layer somehow hidden away
+inside md.  This is about as intelligent as Dick Cheney.  We already
+have partitioning layers, use them.
 
-I forgot to clarify the (new) issue:
-While now the amount of pages needed in-kernel is calculated correctly,
-only the half of them seems to be actually used, even if all bits are
-set.
+	-hpa
 
-
-regards
-   Mario
 -- 
-I thought the only thing the internet was good for was porn.  -- Futurama
+H. Peter Anvin, Intel Open Source Technology Center
+I work for Intel.  I don't speak on their behalf.
 
