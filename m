@@ -1,62 +1,45 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Query regarding stripe management in linux md-raid
-Date: Wed, 29 Apr 2009 09:15:52 +1000
-Message-ID: <18935.36392.65600.930716@notabene.brown>
-References: <fbae8f520904280702h736197d6ibfdf0212bf1923d2@mail.gmail.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: md extension to support booting from raid whole disks.
+Date: Tue, 28 Apr 2009 16:20:06 -0700
+Message-ID: <49F78F26.2040909@zytor.com>
+References: <1240574900.4507.2076.camel@ezra>	<87hc0axhg9.fsf@frosties.localdomain>	<49F68CE0.2010906@zytor.com>	<e9c3a7c20904281124g4682d70cp22760176e7a8cfbc@mail.gmail.com>	<1240957153.18303.689.camel@ezra> <18935.35747.471257.202356@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Kunal Kushwaha on Tuesday April 28
+In-Reply-To: <18935.35747.471257.202356@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kunal Kushwaha <kunal.kushwaha@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Daniel Reurich <daniel@centurion.net.nz>, Dan Williams <dan.j.williams@intel.com>, Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday April 28, kunal.kushwaha@gmail.com wrote:
-> Hi,
+Neil Brown wrote:
 > 
-> I am trying to put Linux raid in Box with 256 MB of RAM. The kernel is
-> compiled with non-swappable memory management option. I looked into
-> raid5.c and found, it allocates one page for each chunk.  I am using 5
-> disks for 64k chunk size. considering my kernel is within 30 MB.
-
-That isn't quite right.   It is not 1 page per chunk.
-raid5 maintains a stripe cache.  Each entry in the cache has one page
-per device, and there are 256 entries by default.
-So for a 5-disk array, that is 5*256 == 1280 pages or 5MB (plus
-overhead).
-
+> That only leaves the question of what happens when a spare is added to
+> the array - how does the grub data get written to the space on the
+> spare.
+> I would rather that grub were responsible for this, than for md to
+> treat that unused space as RAID1.
+> We already have a notification system based on "mdadm --monitor" to
+> process events.  We could possibly plug grub in to that somehow so
+> that it gets told to re-write all it's special blocks every time
+> something significant changes in the array.
 > 
-> 1. If one page is allocated for one chunk instead of actual buffer
-> size, isn't memory lot of memory is wasted?
 
-It depends on what you mean by "wasted".  The memory is used to
-provide adequate performance with manageable code complexity.
-Possibly the same performance could be achieved using less memory, but
-I suspect the code would be much more complex and so probably more
-buggy.  It is a trade off.
+I have multiple issues with this concept (including promoting Grub2, but
+let's not get into that.)
 
-If the 5MB eats in to you 256MB too much, you can reduce it be writing
-a number to /sys/block/mdX/md/stripe_cache_size.
-You could probably get away with as little as '4', but I suspect that
-would really kill performance.  With a 64K chunk size you want at
-least 16 entries, so 32 or 64 might be a suitable compromise for you. 
+For this to be reliable, there is only one sensible configuration, which
+is for /boot to be a RAID-1, which is better handled by -- guess what --
+partitioning systems; and we already have quite a few of those that work
+just fine, thank you.  Otherwise there WILL be configurations -- caused
+by controller failures if nothing else -- that simply will not boot even
+though the system is otherwise functional.  Promoting this kind of stuff
+is criminally stupid.
 
-> 2. It will restrict the no. of stripes in memory (in case of
-> non-swappable memory, no will be very less) will effect performance of
-> IO badly.
+	-hpa
 
-The number of (page-wide) stripes in memory is fixed by the cache
-size.  It defaults to 256, but you can change it.  A smaller size
-would be likely to negatively affect performance.  A larger cache can
-improve performance depending on workload.
+-- 
+H. Peter Anvin, Intel Open Source Technology Center
+I work for Intel.  I don't speak on their behalf.
 
-> 
-> Please correct me, if I am wrong, also any suggestion to overcome this
-> problem is most welcomed.
-
-Do you have an actual observed problem, or are you just trying to
-discover what problems you might eventually run in to?
-
-NeilBrown
