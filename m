@@ -1,48 +1,43 @@
-From: <lrhorer@satx.rr.com>
-Subject: RE: RAID halting
-Date: Tue, 28 Apr 2009 14:36:48 -0500
-Message-ID: <20090428193646633.CKYO19475@cdptpa-omta01.mail.rr.com>
-References: <20090424100349002.RBNT6537@cdptpa-omta02.mail.rr.com>
-Reply-To: <lrhorer@satx.rr.com>
+From: Daniel Reurich <daniel@centurion.net.nz>
+Subject: Re: md extension to support booting from raid whole disks.
+Date: Wed, 29 Apr 2009 10:19:12 +1200
+Message-ID: <1240957153.18303.689.camel@ezra>
+References: <1240574900.4507.2076.camel@ezra>
+	 <87hc0axhg9.fsf@frosties.localdomain> <49F68CE0.2010906@zytor.com>
+	 <e9c3a7c20904281124g4682d70cp22760176e7a8cfbc@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090424100349002.RBNT6537@cdptpa-omta02.mail.rr.com>
+In-Reply-To: <e9c3a7c20904281124g4682d70cp22760176e7a8cfbc@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > Quad core Xeon 2.8GHz md RAID6 of 16 x 750GB. Delete 20GB file:
-> >
-> > time rm -f dump
-> >
-> > real    0m1.849s
-> > user    0m0.000s
-> > sys     0m1.633s
-> 
-> 3.2 GHz AMD Athlon 64 x 2 RAID6 of 10 x 1T:
-> 
-> RAID-Server:/RAID/Recordings# ll sizetest.fil
-> -rw-rw-rw- 1 lrhorer users 27847620608 2009-04-24 03:21 sizetest.fil
-> RAID-Server:/RAID/Recordings# time rm sizetest.fil
-> 
-> real    0m21.503s
-> user    0m0.000s
-> sys     0m6.852s
-> 
-> See what I mean?  'Zero additional activity on the array other than the rm
-> task.  We'll see what happens with XFS.
+On Tue, 2009-04-28 at 11:24 -0700, Dan Williams wrote:
 
-So far, it's looking much better.  I'll test it again when the array is
-closer to being full.
+> 
+> ...or use a metadata format that your platform bios understands and
+> provides an int 13h vector.  See the new external metadata formats
+> supported by the mdadm devel-3.0 branch.
 
-RAID-Server:/RAID/Recordings# ll testfile
--rw-rw-rw- 1 lrhorer users 12506679296 2009-04-25 03:29 testfile
-RAID-Server:/RAID/Recordings# time rm testfile
+I don't think a metadata format is the right way either.  
 
-real    0m0.111s
-user    0m0.000s
-sys     0m0.000s
+What we need is a new version of the superblock with the first cylinder
+(32kb on 512b sectors x64 sectors per cylinder) being set aside for the
+bootloader, the superblock and w-i bitmap go in the second cylinder, and
+the raid data area starting in the 3rd cylinder.  
+
+It should be the bootloaders responsibility to install the bootloader
+onto the disks 1st cylinder, but md/mdadm would have to replicate it on
+resync or adding of a new disk.  However we could consider remapping the
+bootloader 
+
+
+-- 
+Daniel Reurich
+
+Centurion Computer Technology (2005) Ltd
+Ph 021 797 722
 
