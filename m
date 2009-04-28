@@ -1,36 +1,40 @@
-From: Daniel Reurich <daniel@centurion.net.nz>
+From: "H. Peter Anvin" <hpa@zytor.com>
 Subject: Re: md extension to support booting from raid whole disks.
-Date: Wed, 29 Apr 2009 11:21:25 +1200
-Message-ID: <1240960885.18303.787.camel@ezra>
-References: <1240574900.4507.2076.camel@ezra>
-	 <18935.35883.181289.739254@notabene.brown>
+Date: Tue, 28 Apr 2009 16:30:58 -0700
+Message-ID: <49F791B2.3010009@zytor.com>
+References: <1240574900.4507.2076.camel@ezra>	 <87hc0axhg9.fsf@frosties.localdomain> <49F68CE0.2010906@zytor.com>	 <87ljplnmrw.fsf@frosties.localdomain>  <49F73EA2.3020803@zytor.com> <1240957422.18303.697.camel@ezra>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18935.35883.181289.739254@notabene.brown>
+In-Reply-To: <1240957422.18303.697.camel@ezra>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Daniel Reurich <daniel@centurion.net.nz>
+Cc: Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
+Daniel Reurich wrote:
+> On Tue, 2009-04-28 at 10:36 -0700, H. Peter Anvin wrote:
+>> Goswin von Brederlow wrote:
+>>> And how do you create a raid-1 partition on a whole disk raid?
+>>>
+>> What you're asking for is a partitioning layer somehow hidden away
+>> inside md.  This is about as intelligent as Dick Cheney.  We already
+>> have partitioning layers, use them.
+>>
+> Dick Who???  
 > 
-> So where does grub store the core.img in this setup?
-
-It's embedded after the MBR in the remaining sectors of the first
-cylinder.
+> No What I'm asking for is a superblock layout that allows the boot
+> loader to be installed in each member disk, so that the booting from a
+> software raid array becomes not only possible, but reliable and easy to
+> set up.
 > 
-> While the kernel might be noisy about large partitions, it should
-> just be noise - everything should still work  - right?
 
-It add's 20 - 30 seconds to the kernel start up time, but yes it does
-work.
+What you're asking for is a partitioning scheme hidden away in md.
 
+	-hpa
 
 -- 
-Daniel Reurich
-
-Centurion Computer Technology (2005) Ltd
-Ph 021 797 722
+H. Peter Anvin, Intel Open Source Technology Center
+I work for Intel.  I don't speak on their behalf.
 
