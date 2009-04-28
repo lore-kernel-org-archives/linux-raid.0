@@ -1,39 +1,33 @@
 From: "H. Peter Anvin" <hpa@zytor.com>
 Subject: Re: md extension to support booting from raid whole disks.
-Date: Tue, 28 Apr 2009 16:30:58 -0700
-Message-ID: <49F791B2.3010009@zytor.com>
-References: <1240574900.4507.2076.camel@ezra>	 <87hc0axhg9.fsf@frosties.localdomain> <49F68CE0.2010906@zytor.com>	 <87ljplnmrw.fsf@frosties.localdomain>  <49F73EA2.3020803@zytor.com> <1240957422.18303.697.camel@ezra>
+Date: Tue, 28 Apr 2009 16:37:21 -0700
+Message-ID: <49F79331.1050007@zytor.com>
+References: <1240574900.4507.2076.camel@ezra> <18935.35883.181289.739254@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1240957422.18303.697.camel@ezra>
+In-Reply-To: <18935.35883.181289.739254@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Daniel Reurich <daniel@centurion.net.nz>
-Cc: Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Daniel Reurich <daniel@centurion.net.nz>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Daniel Reurich wrote:
-> On Tue, 2009-04-28 at 10:36 -0700, H. Peter Anvin wrote:
->> Goswin von Brederlow wrote:
->>> And how do you create a raid-1 partition on a whole disk raid?
->>>
->> What you're asking for is a partitioning layer somehow hidden away
->> inside md.  This is about as intelligent as Dick Cheney.  We already
->> have partitioning layers, use them.
->>
-> Dick Who???  
+Neil Brown wrote:
 > 
-> No What I'm asking for is a superblock layout that allows the boot
-> loader to be installed in each member disk, so that the booting from a
-> software raid array becomes not only possible, but reliable and easy to
-> set up.
+> So where does grub store the core.img in this setup?
+> 
+> While the kernel might be noisy about large partitions, it should
+> just be noise - everything should still work  - right?
 > 
 
-What you're asking for is a partitioning scheme hidden away in md.
+For large disks, don't use MS-DOS partition tables; use GPT or another
+clean scheme.
+
+(For what it's worth, the MS-DOS partition table will work just fine for
+the purpose of carving out a small /boot at the beginning, too.)
 
 	-hpa
-
 -- 
 H. Peter Anvin, Intel Open Source Technology Center
 I work for Intel.  I don't speak on their behalf.
