@@ -1,32 +1,45 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
+From: Luca Berra <bluca@comedia.it>
 Subject: Re: md extension to support booting from raid whole disks.
-Date: Mon, 27 Apr 2009 21:58:08 -0700
-Message-ID: <49F68CE0.2010906@zytor.com>
-References: <1240574900.4507.2076.camel@ezra> <87hc0axhg9.fsf@frosties.localdomain>
+Date: Tue, 28 Apr 2009 08:26:15 +0200
+Message-ID: <20090428062615.GA20541@maude.comedia.it>
+References: <1240574900.4507.2076.camel@ezra> <87hc0axhg9.fsf@frosties.localdomain> <49F68CE0.2010906@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87hc0axhg9.fsf@frosties.localdomain>
+Content-Disposition: inline
+In-Reply-To: <49F68CE0.2010906@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: Daniel Reurich <daniel@centurion.net.nz>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Goswin von Brederlow wrote:
-> 
-> Or grub2 could be thought to install itself into all MBRs of all
-> drives in a raid set.
-> 
+On Mon, Apr 27, 2009 at 09:58:08PM -0700, H. Peter Anvin wrote:
+>Goswin von Brederlow wrote:
+>> 
+>> Or grub2 could be thought to install itself into all MBRs of all
+>> drives in a raid set.
 
-... which is obviously completely wrong, given that that would break the
-whole RAID layer.
+this is what is usually done on grub 0.97, tought implementations i have
+seen do suck a lot.
 
-The right thing is to use a RAID-1 partition.
+>... which is obviously completely wrong, given that that would break the
+>whole RAID layer.
 
-	-hpa
+why?
+
+>The right thing is to use a RAID-1 partition.
+
+I see no big problem in reserving some space on all boot drives for a
+smallish boot loader,
+Maybe it is just a matter of defining an 1.3 metadata format which
+leaves more room at the start of the device than 1.2 for this very
+purpose.
+
+L.
 
 -- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
-
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
