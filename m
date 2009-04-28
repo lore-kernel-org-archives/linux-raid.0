@@ -1,40 +1,42 @@
-From: Daniel Reurich <daniel@centurion.net.nz>
+From: Dan Williams <dan.j.williams@intel.com>
 Subject: Re: md extension to support booting from raid whole disks.
-Date: Wed, 29 Apr 2009 10:23:42 +1200
-Message-ID: <1240957422.18303.697.camel@ezra>
+Date: Tue, 28 Apr 2009 15:26:31 -0700
+Message-ID: <e9c3a7c20904281526i59983678mb6fbc10e1761d9f1@mail.gmail.com>
 References: <1240574900.4507.2076.camel@ezra>
 	 <87hc0axhg9.fsf@frosties.localdomain> <49F68CE0.2010906@zytor.com>
-	 <87ljplnmrw.fsf@frosties.localdomain>  <49F73EA2.3020803@zytor.com>
+	 <e9c3a7c20904281124g4682d70cp22760176e7a8cfbc@mail.gmail.com>
+	 <1240957153.18303.689.camel@ezra>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49F73EA2.3020803@zytor.com>
+In-Reply-To: <1240957153.18303.689.camel@ezra>
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
+To: Daniel Reurich <daniel@centurion.net.nz>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 2009-04-28 at 10:36 -0700, H. Peter Anvin wrote:
-> Goswin von Brederlow wrote:
-> > 
-> > And how do you create a raid-1 partition on a whole disk raid?
-> > 
-> 
-> What you're asking for is a partitioning layer somehow hidden away
-> inside md.  This is about as intelligent as Dick Cheney.  We already
-> have partitioning layers, use them.
-> 
-Dick Who???  
+On Tue, Apr 28, 2009 at 3:19 PM, Daniel Reurich <daniel@centurion.net.n=
+z> wrote:
+> On Tue, 2009-04-28 at 11:24 -0700, Dan Williams wrote:
+>
+>>
+>> ...or use a metadata format that your platform bios understands and
+>> provides an int 13h vector. =A0See the new external metadata formats
+>> supported by the mdadm devel-3.0 branch.
+>
+> I don't think a metadata format is the right way either.
 
-No What I'm asking for is a superblock layout that allows the boot
-loader to be installed in each member disk, so that the booting from a
-software raid array becomes not only possible, but reliable and easy to
-set up.
+Huh? The bootloader does not need to know anything about raid.  It
+just uses int13 calls to read sectors off a "disk".  The fact that the
+disk is a software raid5 array is completely hidden from grub.  This
+is functionality that has been available via dmraid for some time and
+is now being made available with the MD infrastructure and mdadm.
 
--- 
-Daniel Reurich
-
-Centurion Computer Technology (2005) Ltd
-Ph 021 797 722
-
+Regards,
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
