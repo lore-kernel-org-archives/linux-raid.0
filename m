@@ -1,52 +1,145 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: md extension to support booting from raid whole disks.
-Date: Tue, 28 Apr 2009 17:44:19 -0700
-Message-ID: <49F7A2E3.4000908@zytor.com>
-References: <1240574900.4507.2076.camel@ezra>	 <18935.35883.181289.739254@notabene.brown>  <49F79331.1050007@zytor.com>	 <1240963507.18303.866.camel@ezra>  <49F79A0B.1000805@zytor.com> <1240965373.18303.929.camel@ezra>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: array_state_store: 'inactive' versus 'clean' race
+Date: Wed, 29 Apr 2009 11:14:26 +1000
+Message-ID: <18935.43506.654641.312777@notabene.brown>
+References: <1240881843.30002.42.camel@dwillia2-linux.ch.intel.com>
+	<18934.33566.354244.217291@notabene.brown>
+	<49F74560.7030702@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1240965373.18303.929.camel@ezra>
+In-Reply-To: message from Dan Williams on Tuesday April 28
 Sender: linux-raid-owner@vger.kernel.org
-To: Daniel Reurich <daniel@centurion.net.nz>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "Danecki, Jacek" <jacek.danecki@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Daniel Reurich wrote:
+On Tuesday April 28, dan.j.williams@intel.com wrote:
+> Neil Brown wrote:
+> > So I'm leaning towards:
+> >   - a kernel change so that you can only set 'inactive' if the
+> >     array is already clean or readonly.
+> >     i.e. if (mddev->ro || mddev->in_sync)
+> >     which possible is the same as simply
+> >          if (mddev->in_sync)
+> >   - an mdadm change so that is doesn't just set 'inactive'
+> >     but rather
+> >          sysfs_set_str(mdi, NULL, "array_state", "clean");
+> > 	 ping_monitor(mdi->text_version);
+> > 	 sysfs_set_str(mdi, NULL, "array_state", "inactive")
 > 
-> We are already in pain at not having the capability to reliably boot
-> from a software raid array.  
+> I recall that when implementing WaitClean there was a reason not to 
+> write 'clean' from mdadm... /me looks in the logs.  Yes, from commit 
+> 0dd3ba30:
+> 
+> "--wait-clean: shorten timeout
+> 
+> Set the safemode timeout to a small value to get the array marked clean 
+> as soon as possible.  We don't write 'clean' directly as it may cause 
+> mdmon to miss a 'write-pending' event."
+> 
+> So we do not want a thread to hang because we missed its write-pending 
+> event, or will it receive an error after the device has been torn down?
+
+I don't see that writing 'clean' can cause a 'write-pending' state to
+be missed.
+If the array is in 'write-pending', it is because some thread is in
+md_write_start waiting for MD_CHANGE_CLEAN to be cleared.  So
+->writes_pending is elevated.  So an attempt to write 'clean' will
+result in -EBUSY.
+
+???
+
+> 
+> >   - make sure that if mdmon sees the array as 'clean', it will
+> >     update it's metadata etc so that it feels no further urge
+> >     to mark the array clean.
+> > 
+> > Also, we need to fix the WARNING, which I think means moving
+> > 		list_for_each_entry(rdev, &mddev->disks, same_set)
+> > 			if (rdev->raid_disk >= 0) {
+> > 				char nm[20];
+> > 				sprintf(nm, "rd%d", rdev->raid_disk);
+> > 				sysfs_remove_link(&mddev->kobj, nm);
+> > 			}
+> 
+> It would also involve a flush_scheduled_work() somewhere to make sure 
+> the md_redundancy_group has been deleted.  But it occurs to me that 
+> do_md_run() should still be failing in the case where userspace gets the 
+> ordering of 'inactive' wrong...
 > 
 
-We have that just fine.  Use a RAID-1, which means that as long as the
-firmware can find ANY disk you can boot from it, at which time you have
-the full library of Linux drivers available, and it doesn't matter how
-bad things work.
+Uhmm..... I think we should split the removal of md_redundancy_group
+out in to a separate delayed_work.  But yes, we need to deal with that
+somehow.
 
-> This is the last hurdle to supplanting proprietary hardware raid
-> controllers with their proprietary drivers and management tool stacks,
-> and make software raid actually use able for the average Joe with his
-> small business server built from cheap commodity hardware running linux.
->
-> Or is this what your scared of?
 
-The cheap commodity hardware running Linux is exactly what I want to
-make work correctly; in particular I want it to work even when Joe finds
-that a card goes dead in his box and he buys another one off the shelf.
- At that point, it should JUST WORK, no matter how broken the firmware
-is (extremely common) or even if the card comes with no firmware at all
-(common enough).
+> > 
+> > in do_md_stop up in to the
+> > 		case 0: /* disassemble */
+> > 		case 2: /* stop */
+> > 
+> > section.
+> > 
+> > My one concern about this conclusion is that it seems to sidestep the
+> > core problem rather than address it.
+> > The core problem is that setting the state to 'clean' means very
+> > different thing depending on which side you come from, so an app which
+> > writes 'clean' might get more than it bargained for.  All I'm doing is
+> > making that confusion avoidable rather than impossible....
+> > 
+> > I guess I could invent a syntax:
+> >  writing "a->b" to array_state sets the state to 'b' but only if it
+> >  was already in 'a'.
+> > But that feels needlessly complex.
+> > 
+> > So:  do you agree with my leaning?  or my concern?  or both or neither?
+> 
+> First let me say that I really appreciate when you do these 
+> implementation contingency brain dumps, it really helps to get all the 
+> cards on the table (something I would do well to emulate).
+> 
+> I agree with your concern and I am currently more in line with the idea 
+> that the confusion should be impossible rather than avoidable.  I now 
+> think it is a bug that the 'inactive' state has two meanings.  A new 
+> state like 'shutdown' or 'defunct' would imply that 'clear' is the only 
+> valid next state, all other writes return an error.
+> 
+> So, it is not quite as ugly as randomly preventing some 
+> 'inactive->clean' transitions in that userspace can see why its attempt 
+> to write 'clean' is returning -EINVAL.
+> 
+> Thoughts?
 
-We already have the technology to splitting the disk between the boot
-region and the array region (partition tables) and making sure that the
-boot region is fully replicated (RAID-1).  That is what we should be
-deploying, and if it somehow is too hard to deploy, that is what should
-be fixed.
+I don't like the idea of a trap-door where once you get to 'shutdown'
+the only way out is 'clear'.  But I could possibly live with a state
+like 'shutdown' which can transition to either 'clear' or 'inactive',
+but not directly to 'clean'.   I cannot think of an immediate use for
+the 'shutdown'->'inactive' transition, but I wouldn't want to exclude
+it.
 
-	-hpa
+But I really think the 'problem' is more around 'clean' then it is
+around 'inactive'.
+I think I would like writing 'clean' never to start the array.
+If we want to start the array in the 'clean' state, then write
+something else.  I think we can just write 'active'.  That will
+actually leave the array in a 'clean' state I think.  I'd need to
+check that...
 
--- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
+So now I think we just arrange that 'clean' returns -EINVAL if 
+mddev->pers == NULL.
+We never currently write 'clean' to start an array.  We either use
+RUN_ARRAY, or mdmon writes either read_auto or active.
 
+So that is safe.
+
+So we need to:
+
+ - remove the rd%d links earlier
+ - remove the redundancy group earlier
+ - disable starting an array by writing 'clean'.
+
+I think I've convinced myself.  Have I convinced you?
+
+NeilBrown
