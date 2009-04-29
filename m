@@ -1,41 +1,45 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
+From: Gabor Gombas <gombasg@sztaki.hu>
 Subject: Re: md extension to support booting from raid whole disks.
-Date: Tue, 28 Apr 2009 19:33:30 -0700
-Message-ID: <49F7BC7A.3070509@zytor.com>
-References: <1240574900.4507.2076.camel@ezra>	 <18935.35883.181289.739254@notabene.brown>  <49F79331.1050007@zytor.com>	 <1240963507.18303.866.camel@ezra>  <49F79A0B.1000805@zytor.com>	 <1240965373.18303.929.camel@ezra>  <49F7A2E3.4000908@zytor.com>	 <1240968482.18303.1028.camel@ezra>  <49F7B162.8060301@zytor.com> <1240970905.18303.1085.camel@ezra>
+Date: Wed, 29 Apr 2009 08:43:33 +0200
+Message-ID: <20090429064333.GB9372@boogie.lpds.sztaki.hu>
+References: <49F68CE0.2010906@zytor.com> <e9c3a7c20904281124g4682d70cp22760176e7a8cfbc@mail.gmail.com> <1240957153.18303.689.camel@ezra> <18935.35747.471257.202356@notabene.brown> <49F78F26.2040909@zytor.com> <1240963225.18303.858.camel@ezra> <49F7997C.2070808@zytor.com> <1240964410.18303.895.camel@ezra> <49F79F26.9060309@zytor.com> <1240965831.18303.944.camel@ezra>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1240970905.18303.1085.camel@ezra>
+Content-Disposition: inline
+In-Reply-To: <1240965831.18303.944.camel@ezra>
 Sender: linux-raid-owner@vger.kernel.org
 To: Daniel Reurich <daniel@centurion.net.nz>
-Cc: linux-raid@vger.kernel.org
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Neil Brown <neilb@suse.de>, Dan Williams <dan.j.williams@intel.com>, Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Daniel Reurich wrote:
->> Grub2 can't be "fixed" with anything less than replicating the entire
->> device driver system of Linux in it, which is equivalent to turning it
->> into Linux.
->>
-> Ok then....
-> 
-> So we need then to make mdadm --add hook into some tools that can
-> automatically replicate the partition table layout and add each
-> respective partition into it's respective raid volume, and
-> install/replicate the bootloader onto the disk.
-> 
-> Also then we should really have tool to set this up properly as well on
-> the initial creation of the raid.
-> 
+On Wed, Apr 29, 2009 at 12:43:51PM +1200, Daniel Reurich wrote:
 
-Yes, it would definitely be nice to have this capability.  Whether or
-not it should be done in mdadm or in some kind of wrapper I don't know
-offhand.
+> In which case your probably using a hardware raid controller anyway so
+> not our problem.  Otherwise if the array is broken by a failed
+> controller we probably shouldn't boot of it anyway.
 
-	-hpa
+I have set up a box with 8 SATA disks attached to 2 on-board
+controllers. The BIOS can boot from any of the controllers, but then it
+can only see the disks that are attached to the selected controller.
+Which is quite reasonable if the BIOS handles the controller selection
+by redirecting INT 13h (I have not checked).
+
+With "/" on RAID1, I can boot in any failure scenarios (I've actually
+tested that anno). With your setup, the box would never boot, since it
+could never access enough disks in a RAID5/6 array, even if all the
+disks/controllers are perfectly fine.
+
+> What's specifically dangerous about it?  Define the failure modes that
+> this scheme is unable to either cope with that it should do.
+
+There is no need for a failure mode. Your scheme does not work even when
+everything is fine.
+
+Gabor
 
 -- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
-
+     ---------------------------------------------------------
+     MTA SZTAKI Computer and Automation Research Institute
+                Hungarian Academy of Sciences
+     ---------------------------------------------------------
