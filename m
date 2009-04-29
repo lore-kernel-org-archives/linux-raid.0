@@ -1,64 +1,52 @@
-From: Daniel Reurich <daniel@centurion.net.nz>
+From: "H. Peter Anvin" <hpa@zytor.com>
 Subject: Re: md extension to support booting from raid whole disks.
-Date: Wed, 29 Apr 2009 12:43:51 +1200
-Message-ID: <1240965831.18303.944.camel@ezra>
-References: <1240574900.4507.2076.camel@ezra>
-	 <87hc0axhg9.fsf@frosties.localdomain>	<49F68CE0.2010906@zytor.com>
-	 <e9c3a7c20904281124g4682d70cp22760176e7a8cfbc@mail.gmail.com>
-	 <1240957153.18303.689.camel@ezra>
-	 <18935.35747.471257.202356@notabene.brown>  <49F78F26.2040909@zytor.com>
-	 <1240963225.18303.858.camel@ezra>  <49F7997C.2070808@zytor.com>
-	 <1240964410.18303.895.camel@ezra>  <49F79F26.9060309@zytor.com>
+Date: Tue, 28 Apr 2009 17:44:19 -0700
+Message-ID: <49F7A2E3.4000908@zytor.com>
+References: <1240574900.4507.2076.camel@ezra>	 <18935.35883.181289.739254@notabene.brown>  <49F79331.1050007@zytor.com>	 <1240963507.18303.866.camel@ezra>  <49F79A0B.1000805@zytor.com> <1240965373.18303.929.camel@ezra>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49F79F26.9060309@zytor.com>
+In-Reply-To: <1240965373.18303.929.camel@ezra>
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Neil Brown <neilb@suse.de>, Dan Williams <dan.j.williams@intel.com>, Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
+To: Daniel Reurich <daniel@centurion.net.nz>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 2009-04-28 at 17:28 -0700, H. Peter Anvin wrote:
-> Daniel Reurich wrote:
-> >>>  
-> >> Grub is capable of doing that IF THE FIRMWARE CAN REACH IT.
-> > 
-> > Well if the firmware can't find one if the disks, then it doesn't matter
-> > what scheme we have.  Even a single disk won't work.
+Daniel Reurich wrote:
 > 
-> It is *quite* common that firmware can reach a subset of the disks.  If
-> not when the system is set up, then when a controller is blown and the
-> user has to install a new one.  I have seen this particular malfunction
-> up close more times than I can count.
+> We are already in pain at not having the capability to reliably boot
+> from a software raid array.  
 > 
-In which case your probably using a hardware raid controller anyway so
-not our problem.  Otherwise if the array is broken by a failed
-controller we probably shouldn't boot of it anyway.
 
-> > What's your beef. MD already reserve some space for the superblock, and
-> > write-intent bitmap (which I believe is also replicated across the
-> > member disks), so why not add some space to this to make it possible for
-> > a bootloader as well.
-> 
-> My beef is that you're actively promoting an extremely dangerous
-> concept, dangerous exactly because it is seductive -- "it seems so
-> easy."  Most users, you included, apparently, typically will have no
-> notion of the failure modes, and will pick the "easy" option.
-> 
-What's specifically dangerous about it?  Define the failure modes that
-this scheme is unable to either cope with that it should do.
+We have that just fine.  Use a RAID-1, which means that as long as the
+firmware can find ANY disk you can boot from it, at which time you have
+the full library of Linux drivers available, and it doesn't matter how
+bad things work.
 
-> Booting is ugly business.  I have dealt with the subtleties for almost
-> two decades, and it riles me when people go and foist off bad ideas on
-> users.
+> This is the last hurdle to supplanting proprietary hardware raid
+> controllers with their proprietary drivers and management tool stacks,
+> and make software raid actually use able for the average Joe with his
+> small business server built from cheap commodity hardware running linux.
+>
+> Or is this what your scared of?
 
-Then stop being so emotive about it and explain the failings of the
-scheme rather than point the finger at me and say I don't know.
+The cheap commodity hardware running Linux is exactly what I want to
+make work correctly; in particular I want it to work even when Joe finds
+that a card goes dead in his box and he buys another one off the shelf.
+ At that point, it should JUST WORK, no matter how broken the firmware
+is (extremely common) or even if the card comes with no firmware at all
+(common enough).
+
+We already have the technology to splitting the disk between the boot
+region and the array region (partition tables) and making sure that the
+boot region is fully replicated (RAID-1).  That is what we should be
+deploying, and if it somehow is too hard to deploy, that is what should
+be fixed.
+
+	-hpa
 
 -- 
-Daniel Reurich
-
-Centurion Computer Technology (2005) Ltd
-Ph 021 797 722
+H. Peter Anvin, Intel Open Source Technology Center
+I work for Intel.  I don't speak on their behalf.
 
