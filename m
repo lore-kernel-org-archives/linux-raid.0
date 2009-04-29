@@ -1,101 +1,96 @@
-From: Kunal Kushwaha <kunal.kushwaha@gmail.com>
-Subject: Re: Query regarding stripe management in linux md-raid
-Date: Wed, 29 Apr 2009 15:27:28 +0800
-Message-ID: <fbae8f520904290027x6b65419co164c61db7b249223@mail.gmail.com>
-References: <fbae8f520904280702h736197d6ibfdf0212bf1923d2@mail.gmail.com>
-	 <18935.36392.65600.930716@notabene.brown>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: md extension to support booting from raid whole disks.
+Date: Wed, 29 Apr 2009 09:45:59 +0200
+Message-ID: <20090429074559.GA25938@maude.comedia.it>
+References: <1240574900.4507.2076.camel@ezra> <87hc0axhg9.fsf@frosties.localdomain> <49F68CE0.2010906@zytor.com> <e9c3a7c20904281124g4682d70cp22760176e7a8cfbc@mail.gmail.com> <1240957153.18303.689.camel@ezra> <18935.35747.471257.202356@notabene.brown> <49F78F26.2040909@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18935.36392.65600.930716@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <49F78F26.2040909@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
-
-Thanks for your reply. I am trying to find out  problems that I could
-face later on.
-
-On Wed, Apr 29, 2009 at 7:15 AM, Neil Brown <neilb@suse.de> wrote:
-> On Tuesday April 28, kunal.kushwaha@gmail.com wrote:
->> Hi,
->>
->> I am trying to put Linux raid in Box with 256 MB of RAM. The kernel =
-is
->> compiled with non-swappable memory management option. I looked into
->> raid5.c and found, it allocates one page for each chunk. =A0I am usi=
-ng 5
->> disks for 64k chunk size. considering my kernel is within 30 MB.
+On Tue, Apr 28, 2009 at 04:20:06PM -0700, H. Peter Anvin wrote:
+>Neil Brown wrote:
+>> 
+>> That only leaves the question of what happens when a spare is added to
+>> the array - how does the grub data get written to the space on the
+>> spare.
+>> I would rather that grub were responsible for this, than for md to
+>> treat that unused space as RAID1.
+>> We already have a notification system based on "mdadm --monitor" to
+>> process events.  We could possibly plug grub in to that somehow so
+>> that it gets told to re-write all it's special blocks every time
+>> something significant changes in the array.
+>> 
 >
-> That isn't quite right. =A0 It is not 1 page per chunk.
-> raid5 maintains a stripe cache. =A0Each entry in the cache has one pa=
-ge
-> per device, and there are 256 entries by default.
-> So for a 5-disk array, that is 5*256 =3D=3D 1280 pages or 5MB (plus
-> overhead).
->
+>I have multiple issues with this concept (including promoting Grub2, but
+>let's not get into that.)
 
-Sorry I missed to mention about stripe cache. Yes we will be using
-only 5MB if we
-consider page size is of 4k.
+I believe your only issue is promoting grub 2, everything else you say
+does not seem to be backed by any other reason.
+And, please, quit insulting people, it does no justice to your
+intelligence acting like a child.
 
-I have one more doubt regarding this. How a page of 4k will be able to
-store data of
-64k( my chunk size if of 64k) ?
+>For this to be reliable, there is only one sensible configuration, which
+>is for /boot to be a RAID-1, which is better handled by -- guess what --
+>partitioning systems; and we already have quite a few of those that work
+>just fine, thank you.  Otherwise there WILL be configurations -- caused
+>by controller failures if nothing else -- that simply will not boot even
+>though the system is otherwise functional.  Promoting this kind of stuff
+>is criminally stupid.
 
+the very funny thing about this is that the solution you endorse works
+in the very same way as the solution the op would like to see
+implemented. (well at least a cleaned up version of it, if i read the
+word cylinder one more time in AD 2009 i will scream :)
 
+your 'only sensible configuration' puts a hunk of code at the beginning
+on the disk, which the machine firmware will run when booting.
+this particular piece of code has to be put there by something else than
+mdadm.
 
+in the partition table case, this piece of code is very limited and can
+only access data on disk if firmware is able to.
 
->>
->> 1. If one page is allocated for one chunk instead of actual buffer
->> size, isn't memory lot of memory is wasted?
->
-> It depends on what you mean by "wasted". =A0The memory is used to
-> provide adequate performance with manageable code complexity.
-> Possibly the same performance could be achieved using less memory, bu=
-t
-> I suspect the code would be much more complex and so probably more
-> buggy. =A0It is a trade off.
->
-> If the 5MB eats in to you 256MB too much, you can reduce it be writin=
-g
-> a number to /sys/block/mdX/md/stripe_cache_size.
-> You could probably get away with as little as '4', but I suspect that
-> would really kill performance. =A0With a 64K chunk size you want at
-> least 16 entries, so 32 or 64 might be a suitable compromise for you.
->
->> 2. It will restrict the no. of stripes in memory (in case of
->> non-swappable memory, no will be very less) will effect performance =
-of
->> IO badly.
->
-> The number of (page-wide) stripes in memory is fixed by the cache
-> size. =A0It defaults to 256, but you can change it. =A0A smaller size
-> would be likely to negatively affect performance. =A0A larger cache c=
-an
-> improve performance depending on workload.
->
->>
->> Please correct me, if I am wrong, also any suggestion to overcome th=
-is
->> problem is most welcomed.
->
-> Do you have an actual observed problem, or are you just trying to
-> discover what problems you might eventually run in to?
->
-> NeilBrown
->
+the op idea is to put a larger block of code at the beginning of the
+disk. We can safely assume that this larger block of code, being at the
+_beginning_ of the disk is completely readable by the firmware,
+this piece of code would be responsible for reading the raid array,
+and loading a linux kernel from it.
+
+It has its plus, while these are worth it vs another scheme is
+debateable.
+
+Personally I despise disk partitioning schemes, it is a concept that
+should have died long ago, even GPT, while being more sensible than PC
+partitions, is of no real use to me.  Ok on ia64 the firmware will read
+a GPT partition table and load the EFI from a partition, so yes on
+itaniums this would be the way to go, do we really care?
+
+I stumbled upon a lovely failure scenario that shows even your scheme is
+fragile at best.
+Due to issue i would not dwell on here the first disk was kicked from the
+raid1 containing /boot, but it was still very well readable by the bios.
+result: i took a while realizing why the hell after upgrading the kernel
+the system insisted on booting with the previous kernel ;)
+
+also in your 'one sensible configuration' boot should not only be
+raid-1, but it should also be entirely contained in the portion of the
+disk accessible via int-13. i have seen distribution installers enforce
+the first constraint. not the second.
 
 
+Regards,
+L.
 
---=20
-Thanks in Advance,
-Kunal Kushwaha
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
