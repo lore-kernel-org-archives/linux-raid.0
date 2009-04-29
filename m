@@ -1,37 +1,33 @@
 From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: RAID halting
-Date: Wed, 29 Apr 2009 12:25:56 +0100
-Message-ID: <49F83944.8030302@anonymous.org.uk>
-References: <20090428193311920.MKKC6143@cdptpa-omta03.mail.rr.com>
+Subject: Re: md extension to support booting from raid whole disks.
+Date: Wed, 29 Apr 2009 12:32:37 +0100
+Message-ID: <49F83AD5.3010505@anonymous.org.uk>
+References: <1240574900.4507.2076.camel@ezra>	 <87hc0axhg9.fsf@frosties.localdomain> <49F68CE0.2010906@zytor.com>	 <87ljplnmrw.fsf@frosties.localdomain>  <49F73EA2.3020803@zytor.com>	 <1240957422.18303.697.camel@ezra>  <49F791B2.3010009@zytor.com> <1240963353.18303.862.camel@ezra>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090428193311920.MKKC6143@cdptpa-omta03.mail.rr.com>
+In-Reply-To: <1240963353.18303.862.camel@ezra>
 Sender: linux-raid-owner@vger.kernel.org
-To: lrhorer@satx.rr.com
-Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: Daniel Reurich <daniel@centurion.net.nz>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 28/04/2009 20:33, Leslie Rhorer wrote:
-[...]
->  Is it possible, then to use the 1T drives
-> combined with a like number of 1.5T to create a number (say, 6 or so) of
-> 2.5T LVM volumes and then use mdadm to create a RAID 5 array assembled from
-> the virtual volumes?
+On 29/04/2009 01:02, Daniel Reurich wrote:
+>>> No What I'm asking for is a superblock layout that allows the boot
+>>> loader to be installed in each member disk, so that the booting from a
+>>> software raid array becomes not only possible, but reliable and easy to
+>>> set up.
+>>>
+>> What you're asking for is a partitioning scheme hidden away in md.
+>>
+> Nope, just the first 64K of each member disk to be reserved for a raid
+> aware bootloader.
 
-Yes, you could do that, though I think I'd use md to create 6 linear 
-sets, which are then combined into a RAID 5; I imagine md will perform 
-better than LVM for this task.
-
-What I'd be much more inclined to do is create 2 RAID 5 sets, one of 1T 
-discs, and one of 1.5T discs, then combine the two using LVM. It just 
-feels more natural to me that way. In addition, while both setups will 
-tolerate one disc failure, yours will then only tolerate one particular 
-one of the remaining 11 failing (the companion drive in the LVM/linear 
-pair), and mine will tolerate a failure of any drive on the other RAID-5.
-
-Hope this is of interest.
+Which is a 64K RAID-1 partition at the beginning of each disc, and the 
+remaining partition of the disc the main RAID member, which you can 
+already do with visible partitions, so what you're asking for sounds to 
+me very much like a paritioning scheme hidden away in md.
 
 Cheers,
 
