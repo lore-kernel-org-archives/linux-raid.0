@@ -1,38 +1,39 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [rfc] Proof-of-concept: refactoring raid6 recovery for the async
- case
-Date: Tue, 28 Apr 2009 18:49:56 -0700
-Message-ID: <49F7B244.5090304@zytor.com>
-References: <1240962819.10249.2.camel@dwillia2-linux.ch.intel.com>
+From: Daniel Reurich <daniel@centurion.net.nz>
+Subject: Re: md extension to support booting from raid whole disks.
+Date: Wed, 29 Apr 2009 14:08:25 +1200
+Message-ID: <1240970905.18303.1085.camel@ezra>
+References: <1240574900.4507.2076.camel@ezra>
+	 <18935.35883.181289.739254@notabene.brown>  <49F79331.1050007@zytor.com>
+	 <1240963507.18303.866.camel@ezra>  <49F79A0B.1000805@zytor.com>
+	 <1240965373.18303.929.camel@ezra>  <49F7A2E3.4000908@zytor.com>
+	 <1240968482.18303.1028.camel@ezra>  <49F7B162.8060301@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1240962819.10249.2.camel@dwillia2-linux.ch.intel.com>
+In-Reply-To: <49F7B162.8060301@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dan Williams wrote:
-> The goal of the following implementation is to demonstrate a proposed
-> re-factoring of the raid6 recovery code to isolate the operations that
-> can be accelerated by hardware.  These operations are xor,
-> gf-multiplication by a scalar (mult), and sum_product (the xor-sum of
-> two vectors multiplied by two scalars).
+> Grub2 can't be "fixed" with anything less than replicating the entire
+> device driver system of Linux in it, which is equivalent to turning it
+> into Linux.
 > 
-> This version passes the tests from drivers/md/raid6test/test.c and
-> barring objections the approach (of course not this code) will be used
-> in the next version of the async-raid6 patchset.
-> 
-> Thanks,
-> Dan
+Ok then....
 
-Seems quite reasonable to me.
+So we need then to make mdadm --add hook into some tools that can
+automatically replicate the partition table layout and add each
+respective partition into it's respective raid volume, and
+install/replicate the bootloader onto the disk.
 
-	-hpa
+Also then we should really have tool to set this up properly as well on
+the initial creation of the raid.
+
 
 -- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
+Daniel Reurich
+
+Centurion Computer Technology (2005) Ltd
+Ph 021 797 722
 
