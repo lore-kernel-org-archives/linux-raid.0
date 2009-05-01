@@ -1,51 +1,68 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: md extension to support booting from raid whole disks, raid6, grub2, lvm2
-Date: Fri, 01 May 2009 23:36:29 +0200
-Message-ID: <874ow4ld42.fsf@frosties.localdomain>
-References: <1240574900.4507.2076.camel@ezra>
-	<87hc0axhg9.fsf@frosties.localdomain> <49F68CE0.2010906@zytor.com>
-	<e9c3a7c20904281124g4682d70cp22760176e7a8cfbc@mail.gmail.com>
-	<1240957153.18303.689.camel@ezra>
-	<18935.35747.471257.202356@notabene.brown>
-	<49F78F26.2040909@zytor.com> <1240963225.18303.858.camel@ezra>
-	<49F7997C.2070808@zytor.com> <1240964410.18303.895.camel@ezra>
-	<20090429224347.GB29843@rlogin.dk>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: Incorrect in-kernel bitmap on raid10
+Date: Sat, 2 May 2009 07:36:45 +1000 (EST)
+Message-ID: <fb9dbbffc38b437042076747a41ddf9b.squirrel@neil.brown.name>
+References: <slrnguk663.8bq.Mario.Holbe@darkside.dyn.samba-tng.org>
+    <18922.50050.860008.242658@notabene.brown>
+    <slrnguupf4.911.Mario.Holbe@darkside.dyn.samba-tng.org>
+    <slrngve39c.8a2.Mario.Holbe@darkside.dyn.samba-tng.org>
+    <18938.23135.726382.733302@notabene.brown>
+    <20090501175524.GA8163@darkside.22.kls.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090429224347.GB29843@rlogin.dk> (Michael Ole Olsen's message
-	of "Thu, 30 Apr 2009 00:43:47 +0200")
+In-Reply-To: <20090501175524.GA8163@darkside.22.kls.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Ole Olsen <gnu@gmx.net>
-Cc: Daniel Reurich <daniel@centurion.net.nz>, "H. Peter Anvin" <hpa@zytor.com>, Neil Brown <neilb@suse.de>, Dan Williams <dan.j.williams@intel.com>, Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
+To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Ole Olsen <gnu@gmx.net> writes:
-
-> I tried recently with grub2 and also the old grub in lenny (even the lenny
->     installer fails, though it seems to complete fine, it just don't boot
->     afterwards).
+On Sat, May 2, 2009 3:55 am, Mario 'BitKoenig' Holbe wrote:
+> On Fri, May 01, 2009 at 12:11:43PM +1000, Neil Brown wrote:
+>> There some other places
+>> where are are overflowing on a shift.  One of those (in
+>> bitmap_dirty_bits) can cause the problem you see.
+>> This patch should fix it.  Please confirm.
 >
-> didn't think I would get an issue trying to get /boot on my lvm2 raid6 volume,
->     as i recalled grub supported mdadm raids and also lvm2.
+> Together with the small syntax-fix attached this patch fixes the
+> allocation of half of the available pages only. Now, all pages are
+> allocated when I set all bits and they all get cleaned in-kernel as well
+> as on-disk.
 
-Grub supports neither. No idea if grub2 can do raid6.
+Good.  Thanks for the confirmation (and fix).
 
-> seems it has to be partitioned separately as a partition with mdadm and no
-> lvm2 on top of the boot partition, thats the only thing grub supports, 
->      if I am not mistaken?
 >
-> I just made one big volume, then created the logical volume /boot , and
-> neither grub or lilo would touch it (lilo only supports mdadm raid1 volumes)
->
-> would be cool to be able to boot lvm2 /boot volumes with grub
+> However, can you confirm that the bitmap is really used in raid10
+> resync? I removed half of the disks (a correctly removable subset, of
+> course :)), copied 100G to the degraded array, got about 7k bit set in
+> the bitmap, (re-)added the removed devices (mdadm correctly states
+> re-add as well), but the resync looks *very* sequential.
+> Moreover: I stopped and re-assembled the array with about 2k bit left
+> set and the resync starts from the beginning, I can see no skip to the
+> previous position in the resync process.
+> I'll try to watch this and will trigger you again when I have more
+> stable evidence, but perhaps you have some faster test-cases, I have to
+> wait for at least 5 hours now :)
 
-yes it would.
+I just did some testing and it does seem to honour the bitmap during
+recovery.  However there are some caveats.
 
-> just wanted to give my recent experience with grub+lvm2+mdadm raid6.
->
->
-> /Michael Ole Olsen
+1/ it processes the whole array from start to finish in chunk-sized blocks
+  and simply doesn't generate IO where it isn't needed.  This is different
+  to e.g. raid1 where it can skip over a whole bitmap-chunk at at time.
+  So it does use more CPU
+2/ With raid1, when it skips a whole bitmap chunk, that chunk is not
+  included in the speed calculation.  With raid10, everything is included.
+  So I found the resync was hitting the limit of 200M/sec and backing off.
+  I increased the limited (Added a few more zeros) and it sped up.
+3/ I found a bug.  If you have two devices missing and add just one,
+  then after the recovery it might clear the bitmap even though
+  there is another missing device.  When that device is re-added, it will
+  be added with no recovery.  This is bad.  I'll post a patch shortly.
 
-MfG
-        Goswin
+What speed are (were) you getting for resync.  If it was around 200M/sec,
+then point 2 would explain it.  If it was closer to the device speed,
+then there must be something else going wrong.
+
+NeilBrown
+
