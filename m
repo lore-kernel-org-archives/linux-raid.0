@@ -1,55 +1,58 @@
 From: Goswin von Brederlow <goswin-v-b@web.de>
 Subject: Re: md extension to support booting from raid whole disks.
-Date: Fri, 01 May 2009 23:04:49 +0200
-Message-ID: <87ljpgleku.fsf@frosties.localdomain>
-References: <1240574900.4507.2076.camel@ezra>
-	<87hc0axhg9.fsf@frosties.localdomain> <49F68CE0.2010906@zytor.com>
+Date: Fri, 01 May 2009 23:10:49 +0200
+Message-ID: <87hc04leau.fsf@frosties.localdomain>
+References: <49F68CE0.2010906@zytor.com>
 	<e9c3a7c20904281124g4682d70cp22760176e7a8cfbc@mail.gmail.com>
 	<1240957153.18303.689.camel@ezra>
-	<e9c3a7c20904281526i59983678mb6fbc10e1761d9f1@mail.gmail.com>
+	<18935.35747.471257.202356@notabene.brown>
+	<49F78F26.2040909@zytor.com> <1240963225.18303.858.camel@ezra>
+	<49F7997C.2070808@zytor.com> <1240964410.18303.895.camel@ezra>
+	<49F79F26.9060309@zytor.com> <1240965831.18303.944.camel@ezra>
+	<20090429064333.GB9372@boogie.lpds.sztaki.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e9c3a7c20904281526i59983678mb6fbc10e1761d9f1@mail.gmail.com>
-	(Dan Williams's message of "Tue, 28 Apr 2009 15:26:31 -0700")
+In-Reply-To: <20090429064333.GB9372@boogie.lpds.sztaki.hu> (Gabor Gombas's
+	message of "Wed, 29 Apr 2009 08:43:33 +0200")
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Daniel Reurich <daniel@centurion.net.nz>, "H. Peter Anvin" <hpa@zytor.com>, Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
+To: Gabor Gombas <gombasg@sztaki.hu>
+Cc: Daniel Reurich <daniel@centurion.net.nz>, "H. Peter Anvin" <hpa@zytor.com>, Neil Brown <neilb@suse.de>, Dan Williams <dan.j.williams@intel.com>, Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dan Williams <dan.j.williams@intel.com> writes:
+Gabor Gombas <gombasg@sztaki.hu> writes:
 
-> On Tue, Apr 28, 2009 at 3:19 PM, Daniel Reurich <daniel@centurion.net=
-=2Enz> wrote:
->> On Tue, 2009-04-28 at 11:24 -0700, Dan Williams wrote:
->>
->>>
->>> ...or use a metadata format that your platform bios understands and
->>> provides an int 13h vector. =A0See the new external metadata format=
-s
->>> supported by the mdadm devel-3.0 branch.
->>
->> I don't think a metadata format is the right way either.
+> On Wed, Apr 29, 2009 at 12:43:51PM +1200, Daniel Reurich wrote:
 >
-> Huh? The bootloader does not need to know anything about raid.  It
-> just uses int13 calls to read sectors off a "disk".  The fact that th=
-e
-> disk is a software raid5 array is completely hidden from grub.  This
-> is functionality that has been available via dmraid for some time and
-> is now being made available with the MD infrastructure and mdadm.
+>> In which case your probably using a hardware raid controller anyway so
+>> not our problem.  Otherwise if the array is broken by a failed
+>> controller we probably shouldn't boot of it anyway.
 >
-> Regards,
-> Dan
+> I have set up a box with 8 SATA disks attached to 2 on-board
+> controllers. The BIOS can boot from any of the controllers, but then it
+> can only see the disks that are attached to the selected controller.
+> Which is quite reasonable if the BIOS handles the controller selection
+> by redirecting INT 13h (I have not checked).
+>
+> With "/" on RAID1, I can boot in any failure scenarios (I've actually
+> tested that anno). With your setup, the box would never boot, since it
+> could never access enough disks in a RAID5/6 array, even if all the
+> disks/controllers are perfectly fine.
 
-And is horribly ugly when you have to switch hardware. And try doing
-it with disks from different controlers? What bios supports that?
-What bios even supports raid5?
+So you have lost nothing. It doesn't boot now from raid5 (accross all
+disks) and it still doesn't boot from raid5 with the proposal. Your
+hardware just doesn't support it.
+
+>> What's specifically dangerous about it?  Define the failure modes that
+>> this scheme is unable to either cope with that it should do.
+>
+> There is no need for a failure mode. Your scheme does not work even when
+> everything is fine.
+>
+> Gabor
+
+It would only be a problem if with the proposal things would get
+worse.
 
 MfG
         Goswin
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
