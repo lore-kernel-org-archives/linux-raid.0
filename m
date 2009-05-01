@@ -1,66 +1,61 @@
 From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Query regarding stripe management in linux md-raid
-Date: Fri, 01 May 2009 23:41:17 +0200
-Message-ID: <87zldwjybm.fsf@frosties.localdomain>
-References: <fbae8f520904280702h736197d6ibfdf0212bf1923d2@mail.gmail.com>
-	<18935.36392.65600.930716@notabene.brown>
-	<fbae8f520904290027x6b65419co164c61db7b249223@mail.gmail.com>
+Subject: Re: md extension to support booting from raid whole disks.
+Date: Sat, 02 May 2009 00:33:01 +0200
+Message-ID: <87r5z8jvxe.fsf@frosties.localdomain>
+References: <1240574900.4507.2076.camel@ezra>
+	<87hc0axhg9.fsf@frosties.localdomain> <49F68CE0.2010906@zytor.com>
+	<e9c3a7c20904281124g4682d70cp22760176e7a8cfbc@mail.gmail.com>
+	<1240957153.18303.689.camel@ezra>
+	<e9c3a7c20904281526i59983678mb6fbc10e1761d9f1@mail.gmail.com>
+	<87ljpgleku.fsf@frosties.localdomain>
+	<e9c3a7c20905011424s6c3b3fd6ya563539b3c079d4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <fbae8f520904290027x6b65419co164c61db7b249223@mail.gmail.com>
-	(Kunal Kushwaha's message of "Wed, 29 Apr 2009 15:27:28 +0800")
+In-Reply-To: <e9c3a7c20905011424s6c3b3fd6ya563539b3c079d4@mail.gmail.com> (Dan
+	Williams's message of "Fri, 1 May 2009 14:24:15 -0700")
 Sender: linux-raid-owner@vger.kernel.org
-To: Kunal Kushwaha <kunal.kushwaha@gmail.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Goswin von Brederlow <goswin-v-b@web.de>, Daniel Reurich <daniel@centurion.net.nz>, "H. Peter Anvin" <hpa@zytor.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Kunal Kushwaha <kunal.kushwaha@gmail.com> writes:
+Dan Williams <dan.j.williams@intel.com> writes:
 
-> Hi Neil,
+> On Fri, May 1, 2009 at 2:04 PM, Goswin von Brederlow <goswin-v-b@web.de> wrote:
+>> And is horribly ugly when you have to switch hardware. And try doing
+>> it with disks from different controlers? What bios supports that?
 >
-> Thanks for your reply. I am trying to find out  problems that I could
-> face later on.
+> This is just a simple trade-off between two options.
 >
-> On Wed, Apr 29, 2009 at 7:15 AM, Neil Brown <neilb@suse.de> wrote:
->> On Tuesday April 28, kunal.kushwaha@gmail.com wrote:
->>> Hi,
->>>
->>> I am trying to put Linux raid in Box with 256 MB of RAM. The kernel=
- is
->>> compiled with non-swappable memory management option. I looked into
->>> raid5.c and found, it allocates one page for each chunk. =A0I am us=
-ing 5
->>> disks for 64k chunk size. considering my kernel is within 30 MB.
->>
->> That isn't quite right. =A0 It is not 1 page per chunk.
->> raid5 maintains a stripe cache. =A0Each entry in the cache has one p=
-age
->> per device, and there are 256 entries by default.
->> So for a 5-disk array, that is 5*256 =3D=3D 1280 pages or 5MB (plus
->> overhead).
->>
->
-> Sorry I missed to mention about stripe cache. Yes we will be using
-> only 5MB if we
-> consider page size is of 4k.
->
-> I have one more doubt regarding this. How a page of 4k will be able t=
-o
-> store data of
-> 64k( my chunk size if of 64k) ?
+> 1/ If you want to reliably boot from multiple disks then make a native
+> md-raid1 array for /boot like hpa suggests.
 
-A chunk size of 64k does in no way mean all transactions are done in
-64k chunks.
+Which still has the same problems as the raid5. How to handle the
+bootloader. Say I have a raid1 over sda/b with lvm on it. How do I
+boot that? How do I get the bootloader cloned to a new spare disk when
+it gets added?
 
-What effect does chunk size actually do have? Was it just the amount
-of sequential data before the parity is rotated in a raid5/6.
+It realy makes no difference if it is a raid0/1/10/4/5/6.
+
+> 2/ If you do not want to make /boot into an md-raid1, and you still
+> want to boot from raid5, then use $VENDOR's raid5 option-rom and
+> mdadm's external metadata support.
+
+There is no such thing as $VENDOR's raid5 option-rom in pretty much
+all cases. And even raid0/1 roms are horribly.
+
+> There is no third option with native md-raid5 and grub2 because as
+> Gabor and hpa point out it is not reliable and will break.
+
+And they can still be wrong.
+
+>> What bios even supports raid5?
+>
+> Just look for any off-the-shelf motherboard that says it has onboard
+> raid5 support and is not using a dedicated hardware raid controller.
+>
+> Regards,
+> Dan
 
 MfG
         Goswin
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
