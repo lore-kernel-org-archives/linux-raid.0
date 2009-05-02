@@ -1,156 +1,67 @@
-From: raz ben yehuda <raziebe@013.net>
-Subject: Subject: [002/002 ] raid0 reshape. mdadm
-Date: Sun, 03 May 2009 00:46:10 +0300
-Message-ID: <1241300770.5607.37.camel@raz>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: Incorrect in-kernel bitmap on raid10
+Date: Sun, 3 May 2009 08:41:49 +1000 (EST)
+Message-ID: <a960aae116852f769f6e223581fa6835.squirrel@neil.brown.name>
+References: <slrnguk663.8bq.Mario.Holbe@darkside.dyn.samba-tng.org>
+    <18922.50050.860008.242658@notabene.brown>
+    <slrnguupf4.911.Mario.Holbe@darkside.dyn.samba-tng.org>
+    <slrngve39c.8a2.Mario.Holbe@darkside.dyn.samba-tng.org>
+    <18938.23135.726382.733302@notabene.brown>
+    <20090501175524.GA8163@darkside.22.kls.lan>
+    <fb9dbbffc38b437042076747a41ddf9b.squirrel@neil.brown.name>
+    <20090502195259.GA8499@darkside.22.kls.lan>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20090502195259.GA8499@darkside.22.kls.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-mdadm to support grow
- Grow.c |   49 +++++++++++++++++++++++++++++++++++--------------
- 1 file changed, 35 insertions(+), 14 deletions(-)
-Signed-of-By : Neil Brown neilb@suse.de
----
---- /home/razb/downloads/mdadm-2.6/Grow.c	2009-05-03 00:21:59.000000000 +0300
-+++ mdadm-2.6/Grow.c	2009-05-03 00:22:52.000000000 +0300
-@@ -483,7 +483,7 @@
- 
- 	case 1: /* raid_disks and size can each be changed.  They are independant */
- 
--		if (level != UnSet && level != 1) {
-+		if (level != UnSet && level > 2) {
- 			fprintf(stderr, Name ": %s: Cannot change RAID level of a RAID1 array.\n",
- 				devname);
- 			return 1;
-@@ -505,6 +505,8 @@
- 					devname, strerror(errno));
- 				return 1;
- 			}
-+			fprintf(stderr, Name ": Set raid-devices for %s: OK\n",
-+					devname);
- 		}
- 		if (size >= 0) {
- 			array.size = size;
-@@ -516,6 +518,7 @@
- 		}
- 		return 0;
- 
-+	case 0:
- 	case 4:
- 	case 5:
- 	case 6:
-@@ -589,9 +592,13 @@
- 		if (layout != UnSet) nlayout = layout;
- 		if (raid_disks) ndisks = raid_disks;
- 
--		odata = odisks-1;
-+		odata = odisks;
-+		if (array.level != 0)
-+			odata = odisks-1;
- 		if (olevel == 6) odata--; /* number of data disks */
--		ndata = ndisks-1;
-+		ndata = ndisks;
-+		if (array.level != 0)
-+			ndata = ndisks-1;
- 		if (nlevel == 6) ndata--;
- 
- 		if (ndata < odata) {
-@@ -616,18 +623,21 @@
- 			ostripe = last_block / odata / (ochunk/512) * (ochunk/512);
- 		}
- 		printf("mdadm: Need to backup %lluK of critical section..\n", last_block/2);
--
--		sra = sysfs_read(fd, 0,
--				 GET_COMPONENT|GET_DEVS|GET_OFFSET|GET_STATE|
--				 GET_CACHE);
-+		{
-+		int read_flags = GET_COMPONENT|GET_DEVS|GET_OFFSET|GET_STATE;
-+		if (array.level != 0)
-+			read_flags |= GET_CACHE;
-+			sra = sysfs_read(fd, 0, read_flags);
-+		}
- 		if (!sra) {
- 			fprintf(stderr, Name ": %s: Cannot get array details from sysfs\n",
- 				devname);
- 			return 1;
- 		}
- 
--		if (last_block >= sra->component_size/2) {
--			fprintf(stderr, Name ": %s: Something wrong - reshape aborted\n",
-+		if (array.level != 0 &&  last_block >= sra->component_size/2) {
-+			fprintf(stderr, Name
-+			": %s: Something wrong - reshape aborted\n",
- 				devname);
- 			return 1;
- 		}
-@@ -640,6 +650,8 @@
- 		nrdisks = array.nr_disks + sra->spares;
- 		/* Now we need to open all these devices so we can read/write.
- 		 */
-+		if (array.level == 0)
-+			goto set_array_info;
- 		fdlist = malloc((1+nrdisks) * sizeof(int));
- 		offsets = malloc((1+nrdisks) * sizeof(offsets[0]));
- 		if (!fdlist || !offsets) {
-@@ -682,7 +694,8 @@
- 			}
- 		spares = sra->spares;
- 		if (backup_file) {
--			fdlist[d] = open(backup_file, O_RDWR|O_CREAT|O_EXCL, 0600);
-+			fdlist[d] =
-+				open(backup_file, O_RDWR|O_CREAT|O_EXCL, 0600);
- 			if (fdlist[d] < 0) {
- 				fprintf(stderr, Name ": %s: cannot create backup file %s: %s\n",
- 					devname, backup_file, strerror(errno));
-@@ -720,8 +733,13 @@
- 			if (i==d-1 && backup_file) {
- 				/* This is the backup file */
- 				offsets[i] = 8;
--			} else
--				offsets[i] += sra->component_size - last_block - 8;
-+			} else {
-+			  if (array.level != 0)
-+				offsets[i] += sra->component_size
-+					 - last_block - 8;
-+				else
-+					offsets[i] += 8;
-+			}
- 			if (lseek64(fdlist[i], (offsets[i]<<9) - 4096, 0)
- 			    != (offsets[i]<<9) - 4096) {
- 				fprintf(stderr, Name ": could not seek...\n");
-@@ -736,6 +754,7 @@
- 				goto abort;
- 			}
- 		}
-+set_array_info:
- 		array.level = nlevel;
- 		array.raid_disks = ndisks;
- 		array.chunk_size = nchunk;
-@@ -760,7 +779,10 @@
- 			goto abort;
- 		}
- 		ok: ;
--
-+		if (array.level == 0) {
-+			fprintf(stderr, "raid0 started reshape\n");
-+			return 0;
-+		}
- 		/* suspend the relevant region */
- 		sysfs_set_num(sra, NULL, "suspend_hi", 0); /* just in case */
- 		if (sysfs_set_num(sra, NULL, "suspend_lo", 0) < 0 ||
-@@ -839,7 +861,6 @@
- 	}
- 	return 0;
- 
--
-  abort_resume:
- 	sysfs_set_num(sra, NULL, "suspend_lo", last_block);
-  abort:
+On Sun, May 3, 2009 5:52 am, Mario 'BitKoenig' Holbe wrote:
+> I guess, there is something else going wrong here. I attached a (quite
+> large, sorry for that) transcript of what I was doing with the output of
+> what I think could help.
+>
+> What I did:
+> * I had a stable and clean raid10 out of 6 disks with superblocks all
+>   uptodate, on-disk bitmaps all uptodate.
+> * I failed and removed 3 of the disks.
+> * I set some bits in the bitmap via mounting/umounting the raid10.
+> * I stopped the raid10 just to make sure all superblocks/bitmaps are
+>   uptodate.
+> * I assembled the raid10 again with 3 out of 6 devices now.
+> * I re-added the 3 missing disks.
+>   Please note, that I cannot add them all at the same time because if
+>   the array is read-write the resync starts immediately when the first
+>   device is added, while I cannot add devices as long as the array is
+>   read-only.
+>   In this immediately starting re-sync only the first of the three
+>   spares is synched, it seems to ignore the bitmap, and it generates
+>   I/O all the time, I just forgot to c'n'p the evidence. I have seen
+>   that 3 times now with iostat, it really does I/O.
+> * I stopped and started the array to make it resync over all 3 spares
+>   concurrently, it seems to ignore the bitmap, and it generates I/O
+>   all the time again.
 
+I managed to reproduce this thanks to all the detail you provided.
+The problem was caused by trying to add a device to the array while the
+array was readonly.
+mdadm attempts a re-add.  When this fails it tries a conventional add
+which involves writing  new metadata which shows the device to be a
+spare.  That causes the information that would allow the fast resync
+to be destroyed.
 
+Can you duplicated the problem without setting the array to readonly?
+
+The next mdadm release will check for EROFS from the re-add attempt and
+not attempt the conventional add, thus saving the metadata.
+
+Yes, it would be nice to be able to add multiple devices at once.
+Maybe I could just get the kernel to wait 100ms after an add before
+starting recovery in case a second device is about to be added.
+I'll give it some thought.
+
+NeilBrown
 
