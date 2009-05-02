@@ -1,61 +1,82 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
+From: =?ISO-8859-2?Q?Micha=B3_Przy=B3uski?= <mikylie@gmail.com>
 Subject: Re: md extension to support booting from raid whole disks.
-Date: Sat, 02 May 2009 13:07:08 +0100
-Message-ID: <49FC376C.6050508@anonymous.org.uk>
-References: <1240574900.4507.2076.camel@ezra>	<87hc0axhg9.fsf@frosties.localdomain> <49F68CE0.2010906@zytor.com>	<e9c3a7c20904281124g4682d70cp22760176e7a8cfbc@mail.gmail.com>	<1240957153.18303.689.camel@ezra>	<e9c3a7c20904281526i59983678mb6fbc10e1761d9f1@mail.gmail.com>	<87ljpgleku.fsf@frosties.localdomain>	<e9c3a7c20905011424s6c3b3fd6ya563539b3c079d4@mail.gmail.com> <87r5z8jvxe.fsf@frosties.localdomain>
+Date: Sat, 2 May 2009 19:02:45 +0200
+Message-ID: <6c4602af0905021002i6fb0e667mdde8fb589f34ead6@mail.gmail.com>
+References: <49F68CE0.2010906@zytor.com> <1240963225.18303.858.camel@ezra>
+	 <49F7997C.2070808@zytor.com> <1240964410.18303.895.camel@ezra>
+	 <49F79F26.9060309@zytor.com> <1240965831.18303.944.camel@ezra>
+	 <20090429064333.GB9372@boogie.lpds.sztaki.hu>
+	 <87hc04leau.fsf@frosties.localdomain>
+	 <1241217394.4418.4.camel@poledra.romunt.nl>
+	 <1241226246.4862.24.camel@ezra>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87r5z8jvxe.fsf@frosties.localdomain>
+In-Reply-To: <1241226246.4862.24.camel@ezra>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
+To: Daniel Reurich <daniel@centurion.net.nz>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 01/05/2009 23:33, Goswin von Brederlow wrote:
-> Dan Williams <dan.j.williams@intel.com> writes:
-> 
->> On Fri, May 1, 2009 at 2:04 PM, Goswin von Brederlow <goswin-v-b@web.de> wrote:
->>> And is horribly ugly when you have to switch hardware. And try doing
->>> it with disks from different controlers? What bios supports that?
->> This is just a simple trade-off between two options.
+Hello,
+
+2009/5/2 Daniel Reurich <daniel@centurion.net.nz>:
+>> It would get worse, as in many situations the installer would succeed,
+>> and the boot would fail. Many raid 5/6 configurations will spread over
+>> controllers, and not BIOS supports booting over several controllers.
 >>
->> 1/ If you want to reliably boot from multiple disks then make a native
->> md-raid1 array for /boot like hpa suggests.
-> 
-> Which still has the same problems as the raid5. How to handle the
-> bootloader. Say I have a raid1 over sda/b with lvm on it. How do I
-> boot that? How do I get the bootloader cloned to a new spare disk when
-> it gets added?
+> Then we teach the bootloaders installer to detect whether all the member
+> disks are on the same controller, and refuse to install (or atleast warn
+> at that point) if not.
 
-`dd if=/dev/originaldrive of=/dev/newdrive bs=512 count=1` to clone the 
-boot sector from one of the remaining original drives; this clones your 
-partition table too. Once that's done, and you've added the new drive's 
-partition(s) back into the RAID set(s) and it's synced, it will boot.
+That has been an interesting discussion over last week or so. I have
+some thoughts at this point, not really technical...
 
-Or just tell your bootloader to install itself on the new drive.
+First thing is, DO NOT boot from raid5/6. It's pointless anyway.
+Let's think of raid5 as a bigger raid1. It won't add any extra
+redundancy to our boot-process over a separate raid1 for /boot. Making
+it a hidden raid1 over first few sectors is just creating an
+automation that gains nothing and makes things unnecessarily
+complicated inside.
+For example, if user has a, say, 4 disk raid5, with magic or normal
+raid1 for boot, and looses 2 disks, he or she is still pretty angry,
+no matter that they can boot, when they'd lost all their data. I'm
+quite sure users care more about data when they go raid5 than system
+itself.
 
-> It realy makes no difference if it is a raid0/1/10/4/5/6.
+If you can afford real hw controller, that "does it all for raid5/6"
+and provides one int13 device for bootloader then no problems. But
+then, who makes his or hers /boot (and / and data) on one huge
+partition.
 
-Yes it does - anything which needs access to more discs than whatever 
-the BIOS offers as the boot drive via int13 is asking for trouble.
+If you can't, and want to have reliable boot, then you should mirror
+your drives. Going anywhere over raid1 is pointless. You should just
+have a backup, boot is small and changes rarely, one can burn it to a
+dvd easily.
 
->> 2/ If you do not want to make /boot into an md-raid1, and you still
->> want to boot from raid5, then use $VENDOR's raid5 option-rom and
->> mdadm's external metadata support.
-> 
-> There is no such thing as $VENDOR's raid5 option-rom in pretty much
-> all cases. And even raid0/1 roms are horribly.
+So, as /boot (or even /) nowadays is really tiny, compared to disk
+sizes, you can easily carve out few gigs at the start of device for
+raid1, and use rest of all disks for raid5. Also, lvm'ing /boot sounds
+just wrong, I don't think resizing or other lvm features are of any
+use for /boot.
 
-Dan was being modest referring to $VENDOR; any recent board with an 
-Intel ICHxR has Intel Matrix RAID with RAID-5 in the BIOS/option ROM. I 
-imagine other chipsets have RAID-5 too. I would have used this method on 
-my Asus P5Q Pro but the CentOS 5 installer doesn't support it; I think 
-recent Fedora and Ubuntu installers do, thanks to excellent work by Dan, 
-Neil Brown and others improving md's support for 3rd-party metadata formats.
+Summing up, I don't get, why would anybody really want to boot from raid5 or 6.
 
-Cheers,
+I second booting from one thing, and storing data on the other. It can
+be different partition, it can be different disk, but mixing those
+things together in one place is bad practice for many many reasons.
 
-John.
+And my very personal background; I chose mdadm because it allows me to
+make raid sets across multiple controllers, and I don't use my raid6
+for anything other than data. System boots from single (even EIDE)
+disk, I'm totally not worried about my system, only data matter.
 
+So all in all, I think all levels of protections are already
+available. And please, no next metadata format; we already have 4
+mdadm metadata versions, and users are still not sure which one they
+should choose.
+
+Please don't eat me at once,
+Have a nice spring day everybody,
+Mike
