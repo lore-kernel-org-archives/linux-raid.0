@@ -1,58 +1,30 @@
-From: "Mario 'BitKoenig' Holbe" <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: 32bit variables on >2T arrays
-Date: Sun, 3 May 2009 16:27:28 +0200
-Message-ID: <20090503142728.GA1591@darkside.22.kls.lan>
-References: <20090503141300.GA30773@darkside.22.kls.lan>
+From: David Vuorio <vuorio@kth.se>
+Subject: Configure speed of checkarray in mdadm?
+Date: Sun, 03 May 2009 17:06:10 +0200
+Message-ID: <49FDB2E2.6000300@kth.se>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="LQksG6bCIzRHxTLp"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090503141300.GA30773@darkside.22.kls.lan>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
---LQksG6bCIzRHxTLp
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I'm a happy user of mdadm 2.6.7.1 (2.6.7.1-1ubuntu8) and would like to
+make a request.
 
-On Sun, May 03, 2009 at 04:13:00PM +0200, Mario 'BitKoenig' Holbe wrote:
-> there seems to be another (minor) 32bit-issue...
->       [>....................]  check =3D  0.6% (28034560/4395406848) fini=
-sh=3D4.7min speed=3D254624K/sec
+When my monthly RAID check is triggered (I have two SATA disks in a
+RAID1 setup) it consumes a significant amount of resources, essentially
+freezing the system for the most part.
 
-A little later it normalizes...
+While I might cancel or reschedule these checks as needed, I would
+prefer if the bandwidth usage could be configured manually, or even
+adjusted dynamically. Alternatively, is there already a way to minimize
+the impact beforehand?
 
-      [=3D>...................]  check =3D  6.1% (269385216/4395406848) fin=
-ish=3D266.0min speed=3D258429K/sec
+Thanks a lot for your help.
 
-seems like it broke the 32bit barrier :)
-4395406848 - 269385216 < 2^32
-
-
-Mario
---=20
-"Why are we hiding from the police, daddy?"      | J. E. Guenther
-"Because we use SuSE son, they use SYSVR4."      | de.alt.sysadmin.recovery
-
---LQksG6bCIzRHxTLp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iQEVAwUBSf2p0BS+e2HeSPbpAQI9hwf/RqqKZwQQj9YEQCJuBoDBkZgxv0n0U8g5
-lUAaAUcYxJ2Mn8vNsy2SAnN9UcCvJszwr0QXlGU6ssOW/hsOK51PYKDX/T6k9n3o
-IlsIz/ZMg2eMdeuuIeX6Jo4WQPYhUwI//sqilLG0qTfSOX1TBF6P0xz+fSyeND7n
-pU4rlYbRmRWUNfj3Y2n8jmwUT+GhyaAXQfV48UMnPgZgHo4Ygh7fK2qwLT9nlP/V
-aTW6JP/qsRQVRBc0L/G8H1BsyeP/lidFfBy6VhfVZkemJkjx2dIKbR+1IiLS2+gH
-+KTv4Heugdj3I2jvucVo4ULdtNALGIrjUsgKZfvRVRpIcDQJfDqT3g==
-=Lqa/
------END PGP SIGNATURE-----
-
---LQksG6bCIzRHxTLp--
+Kind regards,
+David Vuorio
