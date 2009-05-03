@@ -1,85 +1,74 @@
-From: Peter Mairhofer <63832452@gmx.net>
-Subject: BUG?: MD UUIDs changed?
-Date: Sun, 03 May 2009 13:49:19 +0200
-Message-ID: <gtk0c2$in4$1@ger.gmane.org>
+From: "Mario 'BitKoenig' Holbe" <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: Incorrect in-kernel bitmap on raid10
+Date: Sun, 3 May 2009 15:22:30 +0200
+Message-ID: <20090503132230.GA23302@darkside.22.kls.lan>
+References: <slrnguk663.8bq.Mario.Holbe@darkside.dyn.samba-tng.org> <18922.50050.860008.242658@notabene.brown> <slrnguupf4.911.Mario.Holbe@darkside.dyn.samba-tng.org> <slrngve39c.8a2.Mario.Holbe@darkside.dyn.samba-tng.org> <18938.23135.726382.733302@notabene.brown> <20090501175524.GA8163@darkside.22.kls.lan> <fb9dbbffc38b437042076747a41ddf9b.squirrel@neil.brown.name> <20090502195259.GA8499@darkside.22.kls.lan> <a960aae116852f769f6e223581fa6835.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="BOKacYhQ+x31HxR3"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <a960aae116852f769f6e223581fa6835.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
 
-I have a Software RAID 1 with Debian lenny (2.6.26) on the top if two 
-1GB RAID disks (Promise SATA300 TX2). I build three MDs (all RAID1) with 
-the following commands:
+--BOKacYhQ+x31HxR3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-# mdadm --create /dev/md0 --verbose --level=1 --raid-devices=2 /dev/sda1 
-/dev/sdb1
-# mdadm --create /dev/md1 --verbose --level=1 --raid-devices=2 /dev/sda2 
-/dev/sdb2
-# mdadm --create /dev/md2 --verbose --level=1 --raid-devices=2 /dev/sda3 
-/dev/sdb3
+On Sun, May 03, 2009 at 08:41:49AM +1000, NeilBrown wrote:
+> I managed to reproduce this thanks to all the detail you provided.
+> The problem was caused by trying to add a device to the array while the
+> array was readonly.
 
-(md0 = Linux root, md1 = data (LVM), md2=swap)
-Finally, I saved the configuration with:
+Okay, I understand. I was just trying to find a way to sync all the
+spares simultaneously.
 
-# mdadm --examine --scan >> /etc/mdadm/mdadm.conf
-# cat /etc/mdadm/mdadm.conf
-[...]
-ARRAY /dev/md0 level=raid1 num-devices=2 
-UUID=a17a69b8:8fffe883:f742d439:f75daca2
-ARRAY /dev/md1 level=raid1 num-devices=2 
-UUID=97b4ff9d:246a656e:27cc7924:96506d18
-ARRAY /dev/md2 level=raid1 num-devices=2 
-UUID=b9b6b4d8:ad052c30:dde8335f:840c6bd3
+> Can you duplicated the problem without setting the array to readonly?
 
-Well, everything worked fine.
+No, mdadm -A /dev/md7; mdadm --add /dev/md7 /dev/sd[fgh]1 seems to
+respect the bitmap, but first adds the first spare only and the two
+remaining spares when the first resync has been finished.
 
-But then I wanted to test my SATA RAID and did the following:
+According to your previous mail, I will run into your case 3/ this way,
+the bug where the bitmap is cleared too early, will I?
+I'm very willing to test your announced patch :)
 
-1.) Just plugged off one drive (sda)
-2.) MDs were in the [_U]-state (/proc/mdstat)
-3.) I made an SCSI bus-rescan
+> Yes, it would be nice to be able to add multiple devices at once.
+> Maybe I could just get the kernel to wait 100ms after an add before
 
-Now I wanted to readd the the "failed" drive:
-
-4.) plugged in the drive again
-5.) I made an SCSI bus-rescan
-6.) the drive appeared as sdd
-7.) Removed the failed drives:
-     # mdadm --manage /dev/md0 --remove failed
-     # mdadm --manage /dev/md1 --remove failed
-     # mdadm --manage /dev/md2 --remove failed
-8.) added the new (old) ones:
-     # mdadm --manage /dev/md0 --add /dev/hdd1
-     # mdadm --manage /dev/md1 --add /dev/hdd2
-     # mdadm --manage /dev/md2 --add /dev/hdd3
-
-The MDs were rebuilt successfully and now I have [UU]-states again.
-
-But suddenly the UUIDs have changed! In my optinion this should not 
-happen because I did not recreate the MDs! I just removed and added 
-devices. As you can see, the UUID changed compared to the output above:
-
-# mdadm --examine --scan
-ARRAY /dev/md0 level=raid1 num-devices=2 
-UUID=ecd91936:b1a55e83:84db6932:6eb15673
-ARRAY /dev/md1 level=raid1 num-devices=2 
-UUID=97b4ff9d:246a656e:27cc7924:96506d18
-ARRAY /dev/md2 level=raid1 num-devices=2 
-UUID=8e413e87:bd062cc3:82a1dfb2:c7b8d31a
-
-The very vers strange thing: Only the UUIDs from md0 and md2 changed!
-
-The first question: Why did this happen? Should this ever happen? What 
-went wrong? Is this a bug?
-
-The second question: Should I rewrite the mdadm.conf with the new UUIDs?
-
-Regards,
-Peter
+This is probably the easiest way to work around this issue on the short
+run. However, such kind of timeouts cry for race conditions. Perhaps,
+allowing to add spares in read-only mode or some flag like "wait for
+confirmation before starting to resync" would be a cleaner approach on
+the long run.
 
 
+Thank you very much for your help
+   Mario
+--=20
+Gemuese schmeckt am besten, wenn man es kurz vor dem Verzehr durch ein
+Schnitzel ersetzt!
+
+--BOKacYhQ+x31HxR3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iQEVAwUBSf2alhS+e2HeSPbpAQIEbgf+Oq+QfPez1pCow/BpFixox1+9ixEP9KYW
+Sw7G+zLImS5gnolQeg/rm0OpDkdOPcredbkX63fpjux6yqJYL/jT7H1KKnBH7PhX
+WsVW7cBs/AkgUgoKJbzzf9xwIcGQbBlZyQtcIxl6TtA9vfhT2cTCtCT9sZ47va0N
+x6+39LX1yhIYPUFPyPcsfTLA17pLWU2EMnbGTRgE7gLfeL8j45A+Xk8OF2XJYhoC
+e/GRPIo2iAj4t9lLeMA9t/0VwuZTmmhCsOu7Gaj1aR2DZQ8Bjj1e8zjakEiWyDVV
+pslGBw9EBAkEEvjw1KLUb10AGhGzKUmXoUr7c8ANDrv+WKlmHPY5tw==
+=8Gpb
+-----END PGP SIGNATURE-----
+
+--BOKacYhQ+x31HxR3--
