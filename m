@@ -1,67 +1,51 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Incorrect in-kernel bitmap on raid10
-Date: Sun, 3 May 2009 08:41:49 +1000 (EST)
-Message-ID: <a960aae116852f769f6e223581fa6835.squirrel@neil.brown.name>
-References: <slrnguk663.8bq.Mario.Holbe@darkside.dyn.samba-tng.org>
-    <18922.50050.860008.242658@notabene.brown>
-    <slrnguupf4.911.Mario.Holbe@darkside.dyn.samba-tng.org>
-    <slrngve39c.8a2.Mario.Holbe@darkside.dyn.samba-tng.org>
-    <18938.23135.726382.733302@notabene.brown>
-    <20090501175524.GA8163@darkside.22.kls.lan>
-    <fb9dbbffc38b437042076747a41ddf9b.squirrel@neil.brown.name>
-    <20090502195259.GA8499@darkside.22.kls.lan>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: md extension to support booting from raid whole disks.
+Date: Sat, 2 May 2009 20:33:38 -0500
+Message-ID: <20090503013342770.VMBT19475@cdptpa-omta01.mail.rr.com>
+References: <6c4602af0905021002i6fb0e667mdde8fb589f34ead6@mail.gmail.com>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090502195259.GA8499@darkside.22.kls.lan>
+In-Reply-To: <6c4602af0905021002i6fb0e667mdde8fb589f34ead6@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>, NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, May 3, 2009 5:52 am, Mario 'BitKoenig' Holbe wrote:
-> I guess, there is something else going wrong here. I attached a (quite
-> large, sorry for that) transcript of what I was doing with the output of
-> what I think could help.
->
-> What I did:
-> * I had a stable and clean raid10 out of 6 disks with superblocks all
->   uptodate, on-disk bitmaps all uptodate.
-> * I failed and removed 3 of the disks.
-> * I set some bits in the bitmap via mounting/umounting the raid10.
-> * I stopped the raid10 just to make sure all superblocks/bitmaps are
->   uptodate.
-> * I assembled the raid10 again with 3 out of 6 devices now.
-> * I re-added the 3 missing disks.
->   Please note, that I cannot add them all at the same time because if
->   the array is read-write the resync starts immediately when the first
->   device is added, while I cannot add devices as long as the array is
->   read-only.
->   In this immediately starting re-sync only the first of the three
->   spares is synched, it seems to ignore the bitmap, and it generates
->   I/O all the time, I just forgot to c'n'p the evidence. I have seen
->   that 3 times now with iostat, it really does I/O.
-> * I stopped and started the array to make it resync over all 3 spares
->   concurrently, it seems to ignore the bitmap, and it generates I/O
->   all the time again.
+> First thing is, DO NOT boot from raid5/6. It's pointless anyway.
 
-I managed to reproduce this thanks to all the detail you provided.
-The problem was caused by trying to add a device to the array while the
-array was readonly.
-mdadm attempts a re-add.  When this fails it tries a conventional add
-which involves writing  new metadata which shows the device to be a
-spare.  That causes the information that would allow the fast resync
-to be destroyed.
+I agree.
 
-Can you duplicated the problem without setting the array to readonly?
+> Summing up, I don't get, why would anybody really want to boot from raid5
+> or 6.
 
-The next mdadm release will check for EROFS from the re-add attempt and
-not attempt the conventional add, thus saving the metadata.
+Well, I can see the reasons, but to my mind they are outweighed by the
+problems inherent in doing so and the fact the benefits are minimal.
 
-Yes, it would be nice to be able to add multiple devices at once.
-Maybe I could just get the kernel to wait 100ms after an add before
-starting recovery in case a second device is about to be added.
-I'll give it some thought.
 
-NeilBrown
+> I second booting from one thing, and storing data on the other. It can
+> be different partition, it can be different disk, but mixing those
+> things together in one place is bad practice for many many reasons.
+
+With hard drives being so inexpensive, I see no reason not to have separate
+boot drive or mirrored set and data devices.  Indeed, since a human error is
+much more likley than a drive failure, what I like to do is use a moderate
+(160G or so) sized hard drive to create all the boot and OS partitions
+(including Grub and if necessary, Windows) and keep a hard drive on the
+shelf with a copy of the running system.  Of course there are snapshot
+utilities which can make it fairly easy to revert to earlier states, and
+those used in combination with mirrored drives can serve the same purpose,
+but I find the spare drive on the shelf to be the most comfortable solution.
+
+> And my very personal background; I chose mdadm because it allows me to
+> make raid sets across multiple controllers, and I don't use my raid6
+> for anything other than data. System boots from single (even EIDE)
+> disk, I'm totally not worried about my system, only data matter.
+
+Well, it can take a while to set up a system and recover from a boot drive
+failure, so some means of backup is definitely a good idea.  If nothing
+else, one can simply tar all the files from the boot system to the RAID
+array.  At the very least, a copy of /var and /etc is a good idea.
 
