@@ -1,8 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 3/7] md: fix some (more) errors with bitmaps on devices
-	larger than 2TB.
+Subject: [md PATCH 5/7] md: constify VFTs
 Date: Mon, 04 May 2009 16:58:50 +1000
-Message-ID: <20090504065849.11688.17591.stgit@notabene.brown>
+Message-ID: <20090504065850.11688.55214.stgit@notabene.brown>
 References: <20090504065540.11688.39505.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -11,72 +10,30 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20090504065540.11688.39505.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: NeilBrown <neilb@suse.de>
+Cc: Jan Engelhardt <jengelh@medozas.de>, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-If a write intent bitmap covers more than 2TB, we sometimes work with
-values beyond 32bit, so these need to be sector_t.  This patches
-add the required casts to some unsigned longs that are being shifted
-up.
+From: Jan Engelhardt <jengelh@medozas.de>
 
-This will affect any raid10 larger than 2TB, or any raid1/4/5/6 with
-member devices that are larger than 2TB.
-
+Signed-off-by: Jan Engelhardt <jengelh@medozas.de>
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/bitmap.c |   18 +++++++++++-------
- 1 files changed, 11 insertions(+), 7 deletions(-)
+ drivers/md/md.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index bc1d64b..47c68bc 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -1013,9 +1013,11 @@ static int bitmap_init_from_disk(struct bitmap *bitmap, sector_t start)
- 		kunmap_atomic(paddr, KM_USER0);
- 		if (b) {
- 			/* if the disk bit is set, set the memory bit */
--			bitmap_set_memory_bits(bitmap, i << CHUNK_BLOCK_SHIFT(bitmap),
--					       ((i+1) << (CHUNK_BLOCK_SHIFT(bitmap)) >= start)
--				);
-+			int needed = ((sector_t)(i+1) << (CHUNK_BLOCK_SHIFT(bitmap))
-+				      >= start);
-+			bitmap_set_memory_bits(bitmap,
-+					       (sector_t)i << CHUNK_BLOCK_SHIFT(bitmap),
-+					       needed);
- 			bit_cnt++;
- 			set_page_attr(bitmap, page, BITMAP_PAGE_CLEAN);
- 		}
-@@ -1151,8 +1153,9 @@ void bitmap_daemon_work(struct bitmap *bitmap)
- 			spin_lock_irqsave(&bitmap->lock, flags);
- 			clear_page_attr(bitmap, page, BITMAP_PAGE_CLEAN);
- 		}
--		bmc = bitmap_get_counter(bitmap, j << CHUNK_BLOCK_SHIFT(bitmap),
--					&blocks, 0);
-+		bmc = bitmap_get_counter(bitmap,
-+					 (sector_t)j << CHUNK_BLOCK_SHIFT(bitmap),
-+					 &blocks, 0);
- 		if (bmc) {
- /*
-   if (j < 100) printk("bitmap: j=%lu, *bmc = 0x%x\n", j, *bmc);
-@@ -1166,7 +1169,8 @@ void bitmap_daemon_work(struct bitmap *bitmap)
- 			} else if (*bmc == 1) {
- 				/* we can clear the bit */
- 				*bmc = 0;
--				bitmap_count_page(bitmap, j << CHUNK_BLOCK_SHIFT(bitmap),
-+				bitmap_count_page(bitmap,
-+						  (sector_t)j << CHUNK_BLOCK_SHIFT(bitmap),
- 						  -1);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 5eb01a4..8350bde 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5976,7 +5976,7 @@ static int md_seq_show(struct seq_file *seq, void *v)
+ 	return 0;
+ }
  
- 				/* clear the bit */
-@@ -1511,7 +1515,7 @@ void bitmap_dirty_bits(struct bitmap *bitmap, unsigned long s, unsigned long e)
- 	unsigned long chunk;
- 
- 	for (chunk = s; chunk <= e; chunk++) {
--		sector_t sec = chunk << CHUNK_BLOCK_SHIFT(bitmap);
-+		sector_t sec = (sector_t)chunk << CHUNK_BLOCK_SHIFT(bitmap);
- 		bitmap_set_memory_bits(bitmap, sec, 1);
- 		bitmap_file_set_bit(bitmap, sec);
- 	}
+-static struct seq_operations md_seq_ops = {
++static const struct seq_operations md_seq_ops = {
+ 	.start  = md_seq_start,
+ 	.next   = md_seq_next,
+ 	.stop   = md_seq_stop,
 
 
