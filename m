@@ -1,88 +1,36 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 7/7] md: remove rd%d links immediately after stopping an
-	array.
-Date: Mon, 04 May 2009 16:58:51 +1000
-Message-ID: <20090504065850.11688.1906.stgit@notabene.brown>
-References: <20090504065540.11688.39505.stgit@notabene.brown>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: 32bit variables on >2T arrays
+Date: Mon, 4 May 2009 17:01:20 +1000 (EST)
+Message-ID: <48a370bae432f6e8bffc48121f9f6f2e.squirrel@neil.brown.name>
+References: <20090503141300.GA30773@darkside.22.kls.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090504065540.11688.39505.stgit@notabene.brown>
+In-Reply-To: <20090503141300.GA30773@darkside.22.kls.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: NeilBrown <neilb@suse.de>
+To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-md maintains link in sys/mdXX/md/ to identify which device has
-which role in the array. e.g.
-   rd2 -> dev-sda
+On Mon, May 4, 2009 12:13 am, Mario 'BitKoenig' Holbe wrote:
+> Hello again :)
+>
+> there seems to be another (minor) 32bit-issue...
+>
+> md7 : active raid10 sdh1[5] sdg1[3] sdf1[1] sdc1[0] sde1[4] sdd1[2]
+>       4395406848 blocks 512K chunks 2 near-copies [6/6] [UUUUUU]
+>       [>....................]  check =  0.6% (28034560/4395406848)
+> finish=4.7min speed=254624K/sec
+>       bitmap: 0/131 pages [0KB], 16384KB chunk
+>
+> the time-to-finish calculation seems to be quite optimistic :)
 
-indicates that the device with role '2' in the array is sda.
+Thanks.
 
-These links are only present when the array is active.  They are
-created immediately after ->run is called, and so should be removed
-immediately after ->stop is called.
-However they are currently removed a little bit later, and it is
-possible for ->run to be called again, thus adding these links, before
-they are removed.
+I've just posted as series of patches which includes a fix for
+this as well as the other issues you identified.
 
-So move the removal earlier so they are consistently only present when
-the array is active.
+Thanks for helping to improve md!
 
-Signed-off-by: NeilBrown <neilb@suse.de>
----
-
- drivers/md/md.c |   16 ++++++++--------
- 1 files changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 1dd723d..fccc834 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4294,6 +4294,7 @@ static int do_md_stop(mddev_t * mddev, int mode, int is_open)
- {
- 	int err = 0;
- 	struct gendisk *disk = mddev->gendisk;
-+	mdk_rdev_t *rdev;
- 
- 	if (atomic_read(&mddev->openers) > is_open) {
- 		printk("md: %s still in use.\n",mdname(mddev));
-@@ -4336,6 +4337,13 @@ static int do_md_stop(mddev_t * mddev, int mode, int is_open)
- 			/* tell userspace to handle 'inactive' */
- 			sysfs_notify_dirent(mddev->sysfs_state);
- 
-+			list_for_each_entry(rdev, &mddev->disks, same_set)
-+				if (rdev->raid_disk >= 0) {
-+					char nm[20];
-+					sprintf(nm, "rd%d", rdev->raid_disk);
-+					sysfs_remove_link(&mddev->kobj, nm);
-+				}
-+
- 			set_capacity(disk, 0);
- 			mddev->changed = 1;
- 
-@@ -4356,7 +4364,6 @@ static int do_md_stop(mddev_t * mddev, int mode, int is_open)
- 	 * Free resources if final stop
- 	 */
- 	if (mode == 0) {
--		mdk_rdev_t *rdev;
- 
- 		printk(KERN_INFO "md: %s stopped.\n", mdname(mddev));
- 
-@@ -4368,13 +4375,6 @@ static int do_md_stop(mddev_t * mddev, int mode, int is_open)
- 		}
- 		mddev->bitmap_offset = 0;
- 
--		list_for_each_entry(rdev, &mddev->disks, same_set)
--			if (rdev->raid_disk >= 0) {
--				char nm[20];
--				sprintf(nm, "rd%d", rdev->raid_disk);
--				sysfs_remove_link(&mddev->kobj, nm);
--			}
--
- 		/* make sure all md_delayed_delete calls have finished */
- 		flush_scheduled_work();
- 
-
+NeilBrown
 
