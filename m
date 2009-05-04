@@ -1,36 +1,52 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: 32bit variables on >2T arrays
-Date: Mon, 4 May 2009 17:01:20 +1000 (EST)
-Message-ID: <48a370bae432f6e8bffc48121f9f6f2e.squirrel@neil.brown.name>
-References: <20090503141300.GA30773@darkside.22.kls.lan>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [md PATCH 6/7] md: remove ability to explicit set an inactive
+	array to 'clean'.
+Date: Mon, 4 May 2009 09:27:14 -0700
+Message-ID: <e9c3a7c20905040927j1f587c91p5c4fc14c27563d3d@mail.gmail.com>
+References: <20090504065540.11688.39505.stgit@notabene.brown>
+	 <20090504065850.11688.1442.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090503141300.GA30773@darkside.22.kls.lan>
+In-Reply-To: <20090504065850.11688.1442.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, May 4, 2009 12:13 am, Mario 'BitKoenig' Holbe wrote:
-> Hello again :)
+On Sun, May 3, 2009 at 11:58 PM, NeilBrown <neilb@suse.de> wrote:
+> Being able to write 'clean' to an 'array_state' of an inactive array
+> to activate it in 'clean' mode is both unnecessary and inconvenient.
 >
-> there seems to be another (minor) 32bit-issue...
+> It is unnecessary because the same can be achieved by writing
+> 'active'. =A0This activates and array, but it still remains 'clean'
+> until the first write.
 >
-> md7 : active raid10 sdh1[5] sdg1[3] sdf1[1] sdc1[0] sde1[4] sdd1[2]
->       4395406848 blocks 512K chunks 2 near-copies [6/6] [UUUUUU]
->       [>....................]  check =  0.6% (28034560/4395406848)
-> finish=4.7min speed=254624K/sec
->       bitmap: 0/131 pages [0KB], 16384KB chunk
+> It is inconvenient because writing 'clean' is more often used to
+> cause an 'active' array to revert to 'clean' mode (thus blocking
+> any writes until a 'write-pending' is promoted to 'active').
 >
-> the time-to-finish calculation seems to be quite optimistic :)
+> Allowing 'clean' to both activate an array and mark an active array a=
+s
+> clean can lead to races: =A0One program writes 'clean' to mark the
+> active array as clean at the same time as another program writes
+> 'inactive' to deactivate (stop) and active array. =A0Depending on whi=
+ch
+> writes first, the array could be deactivated and immediately
+> reactivated which isn't what was desired.
+>
+> So just disable the use of 'clean' to activate an array.
+>
+> Signed-off-by: NeilBrown <neilb@suse.de>
 
-Thanks.
+Reported-by: Rafal Marszewski <rafal.marszewski@intel.com>
+Acked-by: Dan Williams <dan.j.williams@intel.com>
 
-I've just posted as series of patches which includes a fix for
-this as well as the other issues you identified.
-
-Thanks for helping to improve md!
-
-NeilBrown
-
+Thanks,
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
