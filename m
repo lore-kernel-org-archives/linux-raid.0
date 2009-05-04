@@ -1,44 +1,94 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Query regarding stripe management in linux md-raid
-Date: Mon, 04 May 2009 19:04:04 +0200
-Message-ID: <87y6tclrzv.fsf@frosties.localdomain>
-References: <fbae8f520904280702h736197d6ibfdf0212bf1923d2@mail.gmail.com>
-	<18935.36392.65600.930716@notabene.brown>
-	<fbae8f520904290027x6b65419co164c61db7b249223@mail.gmail.com>
-	<87zldwjybm.fsf@frosties.localdomain>
-	<fbae8f520905020018mc6bb23cw51301052ff164928@mail.gmail.com>
+From: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>
+Subject: Re: md extension to support booting from raid whole disks.
+Date: Mon, 04 May 2009 22:57:11 +0200
+Message-ID: <1241470631.25901.130.camel@poledra.romunt.nl>
+References: <49F68CE0.2010906@zytor.com>
+	 <e9c3a7c20904281124g4682d70cp22760176e7a8cfbc@mail.gmail.com>
+	 <1240957153.18303.689.camel@ezra>
+	 <18935.35747.471257.202356@notabene.brown> <49F78F26.2040909@zytor.com>
+	 <1240963225.18303.858.camel@ezra> <49F7997C.2070808@zytor.com>
+	 <1240964410.18303.895.camel@ezra> <49F79F26.9060309@zytor.com>
+	 <1240965831.18303.944.camel@ezra>
+	 <20090429064333.GB9372@boogie.lpds.sztaki.hu>
+	 <87hc04leau.fsf@frosties.localdomain>
+	 <1241217394.4418.4.camel@poledra.romunt.nl>
+	 <87presxwu4.fsf@frosties.localdomain>
+	 <1241219902.9516.6.camel@poledra.romunt.nl>
+	 <87bpq8n6ym.fsf@frosties.localdomain>
+Reply-To: Rudy@grumpydevil.homelinux.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <fbae8f520905020018mc6bb23cw51301052ff164928@mail.gmail.com>
-	(Kunal Kushwaha's message of "Sat, 2 May 2009 12:48:18 +0530")
+In-Reply-To: <87bpq8n6ym.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kunal Kushwaha <kunal.kushwaha@gmail.com>
-Cc: Goswin von Brederlow <goswin-v-b@web.de>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Kunal Kushwaha <kunal.kushwaha@gmail.com> writes:
+Op maandag 04-05-2009 om 18:55 uur [tijdzone +0200], schreef Goswin von
+Brederlow:
+> Rudy Zijlstra <rudy@grumpydevil.homelinux.org> writes:
+> 
+> > Op zaterdag 02-05-2009 om 00:49 uur [tijdzone +0200], schreef Goswin von
+> > Brederlow:
+> >> Rudy Zijlstra <rudy@grumpydevil.homelinux.org> writes:
+> >> 
+> >> > I really prefer the current situation, where you need to explicitly
+> >> > configure a RAID1. This makes clear what is happening, and reduces
+> >> > confusion. This propposal would make debug of a failed boot just so much
+> >> > more difficult. 
+> >> >
+> >> > Cheers,
+> >> >
+> >> > Rudy
+> >> 
+> >> As said in another mail the same problem is there with raid1. The
+> >> proposal should allow creating a raid1 over sda/b without partitioning
+> >> and any replacement drive automatically becoming bootable without you
+> >> having to manually reinstall the bootloader to the new disk.
+> >> 
+> >> Wouldn't that be a huge plus?
+> >> 
+> >> MfG
+> >>         Goswin
+> >
+> > Agreed to the automatic bootable of replacement disk, I still prefer the
+> > partitioning though, as it makes clear what is happening. There are two
+> > aspects here:
+> > 1/ ease of installation
+> 
+> Which isn't true. Installing thebootloader on every component device
+> is currently a pain and easy to forget when changing disks.
 
-> Hi Goswin,
->
-> My understanding of chunk size is that,  it is minimum unit of data
-> that is used for read/write.
-> Chunk size defines, amount of data written on one disk after breaking
-> it in equal no of chunks.
-> Chunk size = Stripe size /  (disks in array - parity disks)
->
-> so for raid 5, chunk_size = Stripe_Size / (total_disks -1)
-> and for raid 6, chunk_size = Stripe_Size / total_disks -2)
->
-> and parity is also written in terms of chunk size.
->
-> Now considering a case where IO request came for complete 1 stripe, we
-> need buffer, for 1 stripe, but since we allocated 1 page per chunk,
-> instead of 64k buffer we have only 4k buffer, So how this is handled?
+which means it is an important aspect... And i agree at the moment easy
+to forget. So far i do not see improvement in this aspect from current
+proposal. 
 
-No. read/write are generaly handled on a page size level, which almost
-always means 4k. If you think about it you can easily split a chunk
-into 4k bits and handle each one independently.
+> 
+> > 2/ ease of debug
+> >
+> > The latter is very important in boot situations. It gets worse with any
+> > implied action. Please take a look at what you are specifying: an
+> > implicit RAID1 over 2 "special" disks, within a RAIDX device... Now you
+> > expect a user to debug that, in case it fails?? I have had too often
+> > trouble to get my systems to boot the way i wanted to boot them, to
+> > trust any BIOS to do the expected :(
+> >
+> > Cheers,
+> >
+> > Rudy
+> 
+> Not over 2 "special" disks. Plain across all disks.
 
-MfG
-        Goswin
+Which is even worse, as i have not seen *any* BIOS able to handle
+that... and i have a intel based board wich according to this email
+thread should do that (and linux did not recognise the raid it had
+configured, so let us forget about booting from it)
+
+
+
+Cheers,
+
+Rudy
+
