@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 2/7] md/raid10: don't clear bitmap during recovery if array
-	will still be degraded.
-Date: Mon, 04 May 2009 16:58:49 +1000
-Message-ID: <20090504065849.11688.47998.stgit@notabene.brown>
+Subject: [md PATCH 3/7] md: fix some (more) errors with bitmaps on devices
+	larger than 2TB.
+Date: Mon, 04 May 2009 16:58:50 +1000
+Message-ID: <20090504065849.11688.17591.stgit@notabene.brown>
 References: <20090504065540.11688.39505.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -11,56 +11,72 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20090504065540.11688.39505.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: stable@kernel.org, NeilBrown <neilb@suse.de>
+Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-If we have a raid10 with multiple missing devices, and we recover just
-one of these to a spare, then we risk (depending on the bitmap and
-array chunk size) clearing bits of the bitmap for which recovery isn't
-complete (because a device is still missing).
+If a write intent bitmap covers more than 2TB, we sometimes work with
+values beyond 32bit, so these need to be sector_t.  This patches
+add the required casts to some unsigned longs that are being shifted
+up.
 
-This can lead to a subsequent "re-add" being recovered without
-any IO happening, which would result in loss of data.
+This will affect any raid10 larger than 2TB, or any raid1/4/5/6 with
+member devices that are larger than 2TB.
 
-This patch takes the safe approach of not clearing bitmap bits
-if the array will still be degraded.
-
-This patch is suitable for all active -stable kernels.
-
-Cc: stable@kernel.org
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid10.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/md/bitmap.c |   18 +++++++++++-------
+ 1 files changed, 11 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 81a54f1..499620a 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1809,17 +1809,17 @@ static sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *skipped, i
- 				r10_bio->sector = sect;
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index bc1d64b..47c68bc 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -1013,9 +1013,11 @@ static int bitmap_init_from_disk(struct bitmap *bitmap, sector_t start)
+ 		kunmap_atomic(paddr, KM_USER0);
+ 		if (b) {
+ 			/* if the disk bit is set, set the memory bit */
+-			bitmap_set_memory_bits(bitmap, i << CHUNK_BLOCK_SHIFT(bitmap),
+-					       ((i+1) << (CHUNK_BLOCK_SHIFT(bitmap)) >= start)
+-				);
++			int needed = ((sector_t)(i+1) << (CHUNK_BLOCK_SHIFT(bitmap))
++				      >= start);
++			bitmap_set_memory_bits(bitmap,
++					       (sector_t)i << CHUNK_BLOCK_SHIFT(bitmap),
++					       needed);
+ 			bit_cnt++;
+ 			set_page_attr(bitmap, page, BITMAP_PAGE_CLEAN);
+ 		}
+@@ -1151,8 +1153,9 @@ void bitmap_daemon_work(struct bitmap *bitmap)
+ 			spin_lock_irqsave(&bitmap->lock, flags);
+ 			clear_page_attr(bitmap, page, BITMAP_PAGE_CLEAN);
+ 		}
+-		bmc = bitmap_get_counter(bitmap, j << CHUNK_BLOCK_SHIFT(bitmap),
+-					&blocks, 0);
++		bmc = bitmap_get_counter(bitmap,
++					 (sector_t)j << CHUNK_BLOCK_SHIFT(bitmap),
++					 &blocks, 0);
+ 		if (bmc) {
+ /*
+   if (j < 100) printk("bitmap: j=%lu, *bmc = 0x%x\n", j, *bmc);
+@@ -1166,7 +1169,8 @@ void bitmap_daemon_work(struct bitmap *bitmap)
+ 			} else if (*bmc == 1) {
+ 				/* we can clear the bit */
+ 				*bmc = 0;
+-				bitmap_count_page(bitmap, j << CHUNK_BLOCK_SHIFT(bitmap),
++				bitmap_count_page(bitmap,
++						  (sector_t)j << CHUNK_BLOCK_SHIFT(bitmap),
+ 						  -1);
  
- 				raid10_find_phys(conf, r10_bio);
--				/* Need to check if this section will still be
-+
-+				/* Need to check if the array will still be
- 				 * degraded
- 				 */
--				for (j=0; j<conf->copies;j++) {
--					int d = r10_bio->devs[j].devnum;
--					if (conf->mirrors[d].rdev == NULL ||
--					    test_bit(Faulty, &conf->mirrors[d].rdev->flags)) {
-+				for (j=0; j<conf->raid_disks; j++)
-+					if (conf->mirrors[j].rdev == NULL ||
-+					    test_bit(Faulty, &conf->mirrors[j].rdev->flags)) {
- 						still_degraded = 1;
- 						break;
- 					}
--				}
-+
- 				must_sync = bitmap_start_sync(mddev->bitmap, sect,
- 							      &sync_blocks, still_degraded);
+ 				/* clear the bit */
+@@ -1511,7 +1515,7 @@ void bitmap_dirty_bits(struct bitmap *bitmap, unsigned long s, unsigned long e)
+ 	unsigned long chunk;
  
+ 	for (chunk = s; chunk <= e; chunk++) {
+-		sector_t sec = chunk << CHUNK_BLOCK_SHIFT(bitmap);
++		sector_t sec = (sector_t)chunk << CHUNK_BLOCK_SHIFT(bitmap);
+ 		bitmap_set_memory_bits(bitmap, sec, 1);
+ 		bitmap_file_set_bit(bitmap, sec);
+ 	}
 
 
