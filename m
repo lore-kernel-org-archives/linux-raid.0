@@ -1,66 +1,58 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+From: Michal Soltys <soltys@ziu.info>
 Subject: Re: md extension to support booting from raid whole disks.
-Date: Tue, 5 May 2009 11:03:55 +0200
-Message-ID: <20090505090355.GB26772@rap.rap.dk>
-References: <1240965831.18303.944.camel@ezra> <20090429064333.GB9372@boogie.lpds.sztaki.hu> <87hc04leau.fsf@frosties.localdomain> <1241217394.4418.4.camel@poledra.romunt.nl> <87presxwu4.fsf@frosties.localdomain> <1241219902.9516.6.camel@poledra.romunt.nl> <87bpq8n6ym.fsf@frosties.localdomain> <1241470631.25901.130.camel@poledra.romunt.nl> <1241476412.11754.118.camel@ezra> <49FF87A3.4000707@anonymous.org.uk>
+Date: Tue, 05 May 2009 11:31:27 +0200
+Message-ID: <4A00076F.9010402@ziu.info>
+References: <1240574900.4507.2076.camel@ezra>	<87hc0axhg9.fsf@frosties.localdomain> <49F68CE0.2010906@zytor.com>	<e9c3a7c20904281124g4682d70cp22760176e7a8cfbc@mail.gmail.com>	<1240957153.18303.689.camel@ezra>	<e9c3a7c20904281526i59983678mb6fbc10e1761d9f1@mail.gmail.com>	<87ljpgleku.fsf@frosties.localdomain>	<e9c3a7c20905011424s6c3b3fd6ya563539b3c079d4@mail.gmail.com> <87r5z8jvxe.fsf@frosties.localdomain> <49FC376C.6050508@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <49FF87A3.4000707@anonymous.org.uk>
+In-Reply-To: <49FC376C.6050508@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
 To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Daniel Reurich <daniel@centurion.net.nz>, Linux Raid <linux-raid@vger.kernel.org>
+Cc: Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, May 05, 2009 at 01:26:11AM +0100, John Robinson wrote:
-> On 04/05/2009 23:33, Daniel Reurich wrote:
->> I'd like to someone tell me how to get a partitioned scenario where the
->> partition that starts right at the start of the disk and includes the
->> bootsector, so that we raid1 that partition and have the bootsector
->> replicated as well?
->
-> I'm sure there are hooks to allow automatic rebuilding of arrays when  
-> drives fail and are replaced. I don't know what they are (hotplug?), or  
-> whether they're used in any current distros. I do know some people have  
-> this automatic rebuilding; for example Netgear (ex Infrant) ReadyNAS  
-> devices, which are Linux based and use md RAID, do this. It can't be  
-> such a big leap to use such a hook to reinstate the boot sector at the  
-> same time as reinstating RAID metadata amd resyncing the array(s). Maybe  
-> current distros don't automatically do this because it only works if the  
-> user/OEM understands the particular case.
->
-> I don't believe it can't be done using the existing partition table and  
-> md RAID-1 /boot arrangements, and it would be great if we (and more  
-> distros) had suitable scripts available, but I suspect it's impossible  
-> to generalise for all RAID'ed installations.
+> John Robinson wrote:
+>> Which still has the same problems as the raid5. How to handle the
+>> bootloader. Say I have a raid1 over sda/b with lvm on it. How do I
+>> boot that? How do I get the bootloader cloned to a new spare disk when
+>> it gets added?
+> 
 
-Hmm, what are you motivation for this?
+Btw - if you have _only_ raid1 on the drives, then you can also set up
+partitionable md raid1 with its superblock at the end of the device. 
+Thus -  linux raid will cover _whole_ disk, while remaining capable of 
+booting with /boot partition in a typical way if /boot was raid1 over 
+sd[abc..]1
 
-I think that you can make a much automated disk partitioning scheme,
-in the tune of the following:
+As for booting itself - the key thing is to have "tiny" /boot partition
+_with_ simple well understood and supported filesystem (such as fat,
+ext2) at the beginning - outside of lvm or more complex raids. Such a
+partition can have - apart from linux kernel+initramfs - bootable
+freedos or linux, and host some good bootloader/manager (such
+as syslinux, which is far more powerful and flexible than grub).
 
-You want to have multiple partitions on your disks.
-Like /boot, /root, /home etc.
+If /boot is created inside some container (lvm, raid5) and/or as a part 
+of other filesystem - then it only ties hands, imho.
 
-This is because you can only boot off a raid1, and raid1 is relatively
-slow, so you want to minimize the use of raid1, eg to just the boot
-partition. The rest of the partitions can then be the more io-effective
-raid10,f2, or space effective raid5 (or raid6). 
+>> On Fri, May 1, 2009 at 2:04 PM, Goswin von Brederlow 
+>> <goswin-v-b@web.de> wrote:
+> `dd if=/dev/originaldrive of=/dev/newdrive bs=512 count=1` to clone the 
+> boot sector from one of the remaining original drives; this clones your 
+> partition table too. Once that's done, and you've added the new drive's 
+> partition(s) back into the RAID set(s) and it's synced, it will boot.
+> 
 
-You do not boot from MBR, but rather from the partition marked as
-active.
+Assuming you have no extended/logical partitions. In case of
+legacy partitions, it's better to use:
 
-Then make your partition scheme, and copy the whole scheme via eg
+sfdisk -d /dev/sda >pt.dump
 
-  sfdisk -d /dev/sda | sfdisk /dev/sdb
+and later to restore somewhere else
 
-Then when you update your system, either by lilo or grub, you only need
-to make the change once, and it will apply to all of the raids that
-/boot and /root are located on.
+sfdisk /dev/sdb <pt.dump
 
-This is further described in
-http://linux-raid.osdl.org/index.php/Preventing_against_a_failing_disk
+Also - the 'dd' method would also clone disk signature (4 bytes at
+1B8h), which depending on the needs, may not be desirable.
 
-best regards
-keld
