@@ -1,46 +1,53 @@
-From: Neil Brown <neilb@suse.de>
-Subject: [PULL REQUEST] md updates for 2.6.30
-Date: Thu, 7 May 2009 15:12:06 +1000
-Message-ID: <18946.28070.563110.755463@notabene.brown>
+From: "Simon Jackson" <sjackson@bluearc.com>
+Subject: RAID 1 resync with both members good.
+Date: Thu, 7 May 2009 09:08:27 +0100
+Message-ID: <3D76E016F4A2A749A1EB1A3FD83E22BC02783863@uk-email.terastack.bluearc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752592AbZEGFMW@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Could someone help me understand why I am seeing the following
+behaviour?
 
-Hi,
-  a few more fixes for md.  A couple relate to v.large raid10 arrays.
-  several are tagged for -stable.
+We use a pair of disks with 3 RAID1 partitions inside an appliance
+system.
 
-Thanks,
-NeilBrown
+During testing we have seen some instances of the RAID devices resyncing
+even though both members are marked as good in the output of
+/proc/mdstat.
 
- 
+merc:~# cat /proc/mdstat 
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10] 
+md2 : active raid1 sda3[0] sdb3[1]
+7823552 blocks [2/2] [UU]
+resync=DELAYED
+md0 : active raid1 sda5[0] sdb5[1]
+7823552 blocks [2/2] [UU]
+md1 : active raid1 sda6[0] sdb6[1]
+55841792 blocks [2/2] [UU]
+[=================>...] resync = 88.8% (49606848/55841792) finish=8.4min
+speed=12256K/sec
+unused devices: <none>
 
-The following changes since commit b4348f32dae3cb6eb4bc21c7ed8f76c0b11e9d6a:
-  Linus Torvalds (1):
-        Merge branch 'for-linus' of git://oss.sgi.com/xfs/xfs
 
-are available in the git repository at:
+Why would a resync occur if both members are marked us good?
 
-  git://neil.brown.name/md for-linus
+What we usually see when a drive is failed removed and readded is that
+the resync marks the new drive as down "_" until the resync completes.
 
-Jan Engelhardt (1):
-      md: constify VFTs
+Firstly why is a resync occurring when both drives are still good in the
+raid set?  Is this be expected behaviour or an indication of an
+underlying problem.
 
-NeilBrown (6):
-      md: fix loading of out-of-date bitmap.
-      md/raid10: don't clear bitmap during recovery if array will still be degraded.
-      md: fix some (more) errors with bitmaps on devices larger than 2TB.
-      md: tidy up status_resync to handle large arrays.
-      md: remove ability to explicit set an inactive array to 'clean'.
-      md: remove rd%d links immediately after stopping an array.
+Thanks for any assistance.
 
- drivers/md/bitmap.c |   29 +++++++++++----------
- drivers/md/md.c     |   70 ++++++++++++++++++++++++++++----------------------
- drivers/md/raid10.c |   12 ++++----
- 3 files changed, 60 insertions(+), 51 deletions(-)
+Using Debian 2.6.26-1 
+
+Thanks Simon.  
