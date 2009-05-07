@@ -1,52 +1,70 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH] md: Track raid5/6 statistics
-Date: Thu, 7 May 2009 09:30:33 -0700
-Message-ID: <e9c3a7c20905070930n5b7bd3dcy3e837d17865d4540@mail.gmail.com>
-References: <20090312205754.GH8732@clouds>
-	 <e9c3a7c20903141007h5fea439co70e4ea9ea4a10ec1@mail.gmail.com>
-	 <20090506200502.GK25233@clouds>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: RAID 1 resync with both members good.
+Date: Fri, 08 May 2009 07:18:30 +1200
+Message-ID: <4A033406.3090009@sauce.co.nz>
+References: <3D76E016F4A2A749A1EB1A3FD83E22BC02783863@uk-email.terastack.bluearc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090506200502.GK25233@clouds>
+In-Reply-To: <3D76E016F4A2A749A1EB1A3FD83E22BC02783863@uk-email.terastack.bluearc.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jody McIntyre <scjody@sun.com>
-Cc: linux-raid@vger.kernel.org, neilb@suse.de
+To: Simon Jackson <sjackson@bluearc.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, May 6, 2009 at 1:05 PM, Jody McIntyre <scjody@sun.com> wrote:
-> 2. The out_of_stripes tracking is useful - we've found several cases
-> where stripe_cache_size was set too low and performance suffered as a
-> result. =A0Monitoring stripe_cache_active during IO is difficult so i=
-t's
-> far better to have a counter like this.
->
-> So if we can solve the second problem somehow - maybe just introduce =
-a
-> read-only counter under /sys/block/md*/md/out_of_stripes - the need f=
-or
-> the rest of the patch goes away IMO.
+I could be way off the mark as I do not use Debian, but it is my 
+understanding that they install a script which performs regular (weekly? 
+monthly?) checks on md arrays.
 
-It would be nice if the kernel could auto-tune stripe_cache_size, but
-I think modifying it in a reactive fashion may do more harm than good.
- The times when we want write-out to be faster are usually the times
-when the system has too much dirty memory lying around so there is no
-room to increase the cache.  If we are under utilizing the stripe
-cache then there is a good chance the memory could be put to better
-use in the page cache, but then we are putting ourselves in a
-compromised state when a write burst appears.
+These will show as resync events.
 
-In the end I agree that having some kind of out_of_stripes
-notification would be useful.  However, I think it would make more
-sense to implement it as a "stripe_cache_active load average".  Then
-for a given workload the operator can see if there are spikes or
-sustained cache saturation.  What do you think?
+Regards,
 
-Thanks,
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Richard
+
+Simon Jackson wrote:
+> Could someone help me understand why I am seeing the following
+> behaviour?
+> 
+> We use a pair of disks with 3 RAID1 partitions inside an appliance
+> system.
+> 
+> During testing we have seen some instances of the RAID devices resyncing
+> even though both members are marked as good in the output of
+> /proc/mdstat.
+> 
+> merc:~# cat /proc/mdstat 
+> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+> [raid4] [raid10] 
+> md2 : active raid1 sda3[0] sdb3[1]
+> 7823552 blocks [2/2] [UU]
+> resync=DELAYED
+> md0 : active raid1 sda5[0] sdb5[1]
+> 7823552 blocks [2/2] [UU]
+> md1 : active raid1 sda6[0] sdb6[1]
+> 55841792 blocks [2/2] [UU]
+> [=================>...] resync = 88.8% (49606848/55841792) finish=8.4min
+> speed=12256K/sec
+> unused devices: <none>
+> 
+> 
+> Why would a resync occur if both members are marked us good?
+> 
+> What we usually see when a drive is failed removed and readded is that
+> the resync marks the new drive as down "_" until the resync completes.
+> 
+> Firstly why is a resync occurring when both drives are still good in the
+> raid set?  Is this be expected behaviour or an indication of an
+> underlying problem.
+> 
+> Thanks for any assistance.
+> 
+> Using Debian 2.6.26-1 
+> 
+> Thanks Simon.  
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
