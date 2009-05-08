@@ -1,110 +1,48 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: mdadm issue adding components to an array (avail_size /
-     array_size issue).
-Date: Fri, 8 May 2009 10:49:01 +1000 (EST)
-Message-ID: <21ae4b77ea9418bc5a6cc3aac0250ad7.squirrel@neil.brown.name>
-References: <4A02F95C.9000106@mpstor.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: RAID 1 resync with both members good.
+Date: Fri, 8 May 2009 08:07:33 +0200
+Message-ID: <20090508060733.GA7759@maude.comedia.it>
+References: <3D76E016F4A2A749A1EB1A3FD83E22BC02783863@uk-email.terastack.bluearc.com> <a93e6da36d0a72953e6a2cce74323e2d.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A02F95C.9000106@mpstor.com>
+Content-Disposition: inline
+In-Reply-To: <a93e6da36d0a72953e6a2cce74323e2d.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Benjamin ESTRABAUD <be@mpstor.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, May 8, 2009 1:08 am, Benjamin ESTRABAUD wrote:
-> Hi,
+On Fri, May 08, 2009 at 10:32:01AM +1000, NeilBrown wrote:
+>On Thu, May 7, 2009 6:08 pm, Simon Jackson wrote:
+>> Could someone help me understand why I am seeing the following
+>> behaviour?
+>>
+>> We use a pair of disks with 3 RAID1 partitions inside an appliance
+>> system.
+>>
+>> During testing we have seen some instances of the RAID devices resyncing
+>> even though both members are marked as good in the output of
+>> /proc/mdstat.
 >
-> I am experiencing what seems to be a bug with mdadm which prevents me
-> from --add ing a disk in some specifics conditions.
+>That is exactly as expectedc.
+>If one of the devices had failed and was being replaced by a spare, you
+>would see "recovery" not "resync".
 >
-> The current setup is as follow:
+>Resync happens after an unclean shutdown.
+>In that case, both drives have good data, but they might not be the same.
+>The resync makes sure that all copies have exactly the same data.
 >
-> -1 RAID 5 on 3* 26Gb block devices. > /dev/md/d0
-> -1 RAID 5 on 3*36Gb block devices. > /dev/md/d1
-> -1 RAID 5 on 3* 9Gb block devices. > /dev/md/d2
->
-> No config file is being used. RAIDs are created as follow:
->
-> mdadm - v2.6.9 - 10th March 2009
->
-> ./mdadm --create -vvv --force --run --metadata=1.2 /dev/md/dX --level=5
-> --size=<sizeofraid> --chunk=64 --name=<name, like: 1356341> -n3
-> --bitmap=internal --bitmap-chunk=4096 --layout=ls /dev/<blockdev1>
-> /dev/<blockdev2> /dev/<blockdev3>
->
-> - Several different size available block devices for adding to the
-> arrays (1*14Gb, 1*26Gb, 2*32Gb, etc.)
->
-> If trying to --add a block device to the /dev/md/d0 RAID array after
-> degrading it, everything works fine as long as the device being added is
-> at least as big as the "component_size" size found in sysfs from
-> /dev/md_d0/md/component_size. Therefore, a 32Gb drive can be added to
-> the first array.
->
-> However, trying to do the same procedure for the third RAID, using
-> either a 9Gb, 14Gb block device fails complaining that the device being
-> hot added is not large enough to join the array. Which is strange, since
-> after checking the /dev/md_d3/md/component_size, this value is much
-> lower than the size obtained for the block device being added.
->
-> On another hand, degrading md/d1 and trying to add a 32Gb block device
-> to this array composed of 3*36Gb block devices does not complain that
-> the block device size is not large enough to join the array, and adds it
-> to /dev/md/d1, however, as a Failed (F) drive.
->
-> In the second example, the hotAdd does not work on /dev/md/d1 that has
-> its smallest component size set to 9Gb as long as the drive being added
-> is not >= to the component size of /dev/md/d0's component size.
->
-> After further checking in the mdadm source, I noticed that "array_size"
-> in Manage_subdevs from Manage.c is always the same, regardless of which
-> RAID we are trying to operate on.
->
-> by examining the "get_component_size" method, I noticed the following:
->
->    if (major(stb.st_rdev) != get_mdp_major())
->         sprintf(fname, "/sys/block/md%d/md/component_size",
->             (int)minor(stb.st_rdev));
->     else
->         sprintf(fname, "/sys/block/md_d%d/md/component_size",
->             (int)minor(stb.st_rdev)>>MdpMinorShift);"
->
->  >>> (int)minor(stb.st_rdev)>>MdpMinorShift) is always "0", therefore
-> the component size file is always the following:
->
-> /sys/block/md_d0/md/component_size
->
-> Whatever the md device is currently used, md/d1, or md/d2 etc.
+>So you there must have been an unclean shutdown before the most recent
+>restart.
 
-That is very odd.
-For /dev/md/d0, minor(stb.st_rdev) should be 0
-For /dev/md/d1, minor(stb.st_rdev) should be 64
-For /dev/md/d2, minor(stb.st_rdev) should be 128.
-so when shifted with >>MdpMinorShift, they should give values 0,1,2.
-So I cannot understand why it is always 0.
-And you put some more printfs in and see what the value of
-stb.st_rdev is in each case?
+or a stupid udev rule that gets incremental assembly wrong
 
+L.
 
->
-> The "get_component_size" seems to be using an integer, "fd" to find out
-> the size and return it.
-> However, fd is always the same value, "3", whatever RAID is being worked
-> on.
->
-> this value seems to be generated in mdadm.c, in the main function:
->
-> line 944: mdfd = open_mddev(devlist->devname, autof);
->
-> This always returns "3" in my case.
-
-Yes.  mdfd is a "file descriptor".  It is simple a number use to identify
-a particular open file.  It will always be 3 in this case, but will
-refer to a different file (or device) depending on what
-devlist->devname was.
-
-NeilBrown
-
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
