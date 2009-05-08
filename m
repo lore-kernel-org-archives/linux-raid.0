@@ -1,28 +1,46 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Requesting replace mode for changing a disk
-Date: Sat, 09 May 2009 00:15:35 +0200
-Message-ID: <8763gb44xk.fsf@frosties.localdomain>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: md extension to support booting from raid whole disks.
+Date: Sat, 9 May 2009 08:16:27 +1000 (EST)
+Message-ID: <21cdc7a16fbdd42979d52331db97c737.squirrel@neil.brown.name>
+References: <20090503013342770.VMBT19475@cdptpa-omta01.mail.rr.com>
+    <e13f0e541934a0966f213f6da13d83da.squirrel@neil.brown.name>
+    <1241406283.17240.26.camel@ezra>
+    <87fxff462s.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87fxff462s.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: Daniel Reurich <daniel@centurion.net.nz>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+On Sat, May 9, 2009 7:50 am, Goswin von Brederlow wrote:
 
-consider the following situation: You have a software raid that runs
-fine but one disk is suspect (e.g. SMART says failure imminent or
-something). How do you replace that disk?
+>>> So I still plan to offer a "--reserve-space=2M" option for mdadm to
+>>> allow the first 2M of each device to not used for raid data.  Whether
+>>> any particular usage of this option is viable or not, is a different
+>>> question altogether.
+>
+> How exactly would that layout be then?
+>
+> Block  0   bootblock
+> Block  1   raid metadata
+> Block  x   2M reserved space
+> Block x+2M start of raid data
+>
+> Like this?
 
-Currently you have do fail/remove the disk from the raid, add a
-fresh disk and resync. That leaves a large window in which redundancy
-is compromised. With current disk sizes that can be days.
+When using 1.2 metadata, yes, possible with bitmap
+inserted  between the reserved space and the start of raid data.
 
-It would be nice if one could tell the kernel to replace a disk in a
-raid set with a spare without the need to degrade the raid.
+When using 1.0, it would be
 
-Thoughts?
+  Block 0..N-1   boot block and second stage
+  Block N..near-the-end raid data
+  Block x..y     bitmap
+  block z        superblock
 
-MfG
-        Goswin
+NeilBrown
+
