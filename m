@@ -1,155 +1,108 @@
-From: Tobias Gunkel <tobias.gunkel@qumido.de>
-Subject: Re: Problem with auto-assembling raid1 on system start
-Date: Fri, 08 May 2009 22:09:14 +0200
-Message-ID: <4A04916A.1020001@qumido.de>
-References: <4A043D78.8020104@qumido.de> <f19d625d0905081136p6af2249bk16efeaf9a71faadb@mail.gmail.com>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: md extension to support booting from raid whole disks.
+Date: Fri, 08 May 2009 23:18:50 +0200
+Message-ID: <87skjf47k5.fsf@frosties.localdomain>
+References: <49F68CE0.2010906@zytor.com>
+	<e9c3a7c20904281124g4682d70cp22760176e7a8cfbc@mail.gmail.com>
+	<1240957153.18303.689.camel@ezra>
+	<18935.35747.471257.202356@notabene.brown>
+	<49F78F26.2040909@zytor.com> <1240963225.18303.858.camel@ezra>
+	<49F7997C.2070808@zytor.com> <1240964410.18303.895.camel@ezra>
+	<49F79F26.9060309@zytor.com> <1240965831.18303.944.camel@ezra>
+	<20090429064333.GB9372@boogie.lpds.sztaki.hu>
+	<87hc04leau.fsf@frosties.localdomain>
+	<1241217394.4418.4.camel@poledra.romunt.nl>
+	<87presxwu4.fsf@frosties.localdomain>
+	<1241219902.9516.6.camel@poledra.romunt.nl>
+	<87bpq8n6ym.fsf@frosties.localdomain>
+	<1241470631.25901.130.camel@poledra.romunt.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f19d625d0905081136p6af2249bk16efeaf9a71faadb@mail.gmail.com>
+In-Reply-To: <1241470631.25901.130.camel@poledra.romunt.nl> (Rudy Zijlstra's
+	message of "Mon, 04 May 2009 22:57:11 +0200")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: CoolCold <coolthecold@gmail.com>
+To: Rudy@grumpydevil.homelinux.org
+Cc: Goswin von Brederlow <goswin-v-b@web.de>, Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Great! That was exactly the problem. The uuid differed from the one out of
-    mdadm --detail --scan
-After rebuilding the initrd image, including the fixed mdadm.conf, 
-everything is working fine again.
+Rudy Zijlstra <rudy@grumpydevil.homelinux.org> writes:
 
-Thank you very much!
-Best regards, Tobias
+> Op maandag 04-05-2009 om 18:55 uur [tijdzone +0200], schreef Goswin von
+> Brederlow:
+>> Rudy Zijlstra <rudy@grumpydevil.homelinux.org> writes:
+>> 
+>> > Op zaterdag 02-05-2009 om 00:49 uur [tijdzone +0200], schreef Goswin von
+>> > Brederlow:
+>> >> Rudy Zijlstra <rudy@grumpydevil.homelinux.org> writes:
+>> >> 
+>> >> > I really prefer the current situation, where you need to explicitly
+>> >> > configure a RAID1. This makes clear what is happening, and reduces
+>> >> > confusion. This propposal would make debug of a failed boot just so much
+>> >> > more difficult. 
+>> >> >
+>> >> > Cheers,
+>> >> >
+>> >> > Rudy
+>> >> 
+>> >> As said in another mail the same problem is there with raid1. The
+>> >> proposal should allow creating a raid1 over sda/b without partitioning
+>> >> and any replacement drive automatically becoming bootable without you
+>> >> having to manually reinstall the bootloader to the new disk.
+>> >> 
+>> >> Wouldn't that be a huge plus?
+>> >> 
+>> >> MfG
+>> >>         Goswin
+>> >
+>> > Agreed to the automatic bootable of replacement disk, I still prefer the
+>> > partitioning though, as it makes clear what is happening. There are two
+>> > aspects here:
+>> > 1/ ease of installation
+>> 
+>> Which isn't true. Installing thebootloader on every component device
+>> is currently a pain and easy to forget when changing disks.
+>
+> which means it is an important aspect... And i agree at the moment easy
+> to forget. So far i do not see improvement in this aspect from current
+> proposal. 
 
-CoolCold schrieb:
-> Does mdadm.conf in initrd image contains valid uuids/array names? (you
-> can ungzip && extract cpio archive to check this)
+My preference is to have md consider the bootloader space part of the
+metadata and copy it accross to new disks when they get added to a
+raid. That way you can't forget it.
+ 
+>> > 2/ ease of debug
+>> >
+>> > The latter is very important in boot situations. It gets worse with any
+>> > implied action. Please take a look at what you are specifying: an
+>> > implicit RAID1 over 2 "special" disks, within a RAIDX device... Now you
+>> > expect a user to debug that, in case it fails?? I have had too often
+>> > trouble to get my systems to boot the way i wanted to boot them, to
+>> > trust any BIOS to do the expected :(
+>> >
+>> > Cheers,
+>> >
+>> > Rudy
+>> 
+>> Not over 2 "special" disks. Plain across all disks.
 >
-> On Fri, May 8, 2009 at 6:11 PM, Tobias Gunkel <tobias.gunkel@qumido.de> wrote:
->   
->> Hello everyone!
->>
->> After rebooting one of our Debian servers yesterday (under normal
->> conditions), mdadm was not able to assemble /dev/md0 automaticly any more.
->> System: Debian Lenny, mdmadm v2.5.6, Kernel 2.6.26-preemptive-cpuset (from
->> Debian testing sources)
->>
->> This is what I get during boot:
->>
->>  [...]
->>  Begin: Mounting root file system... ...
->>  Begin: Running /scripts/local-top ...
->>  Begin: Loading MD modules ...
->>  md: raid1 personality registered for level 1
->>  Success: loaded module raid1.
->>  Done.
->>  Begin: Assembling all MD arrays ...
->>  [...]
->>  md: md0 stopped.
->>  mdadm: no devices found for /dev/md0
->>  Failure: failed to assemble all arrays.
->>  [...]
->>
->> Then the system falls back to BusyBox shell from initramfs, because the root
->> fs  - which is located on /dev/md0 - could not be mounted.
->> But from the initramfs shell, it is possible to cleanly assemble and mount
->> the md0 array:
->>
->>  (initramfs) mdadm -A /dev/md0 /dev/sda2 /dev/sdb2
->>  md: md0 stopped.
->>  md: bind<sdb2>
->>  md: bind<sda2>
->>  raid1: raid set md0 active with 2 out of 2 mirrors
->>  mdadm: /dev/md0 has been started with 2 drives.
->>
->>  (initramfs) mount /dev/md0 root
->>  kjournald starting. Commit interval 5 seconds
->>  EXT3 FS on md0, internal journal
->>  EXT3-fs: mounted filesystem with ordered data mode.
->>
->> After leaving the initramfs shell with 'exit', the system continues to boot
->> normally.
->>
->> Strange: /dev/md1 (swap) which is the first array in assembling order, gets
->> assembled and started correctly.
->> I also played around with ROOTDELAY=60, but this did not changed anything.
->>
->> I'm grateful for any help.
->> Best regards, Tobias
->>
->>
->> PS: Maybe some helpful output (after starting the system the way described
->> above):
->>
->> $ cat /proc/mdstat
->> Personalities : [raid1]
->> md0 : active raid1 sda2[0] sdb2[1]
->>     487331648 blocks [2/2] [UU]
->>
->> md1 : active raid1 sda1[0] sdb1[1]
->>     1052160 blocks [2/2] [UU]
->>
->> unused devices: <none>
->>
->>
->> $ mdadm --detail --scan
->> ARRAY /dev/md1 level=raid1 num-devices=2
->> UUID=c3838888:50dbed72:15a9bffb:d0e83d23
->> ARRAY /dev/md0 level=raid1 num-devices=2
->> UUID=0d0a0c79:70adae03:f802952b:2b58c14d
->>
->>
->> $ grep -v ^# /etc/mdadm/mdadm.conf
->>
->> DEVICE /dev/sd*[0-9] /dev/sd*[0-9]
->>
->> CREATE owner=root group=disk mode=0660 auto=yes
->>
->> HOMEHOST <system>
->>
->> MAILADDR root
->>
->> ARRAY /dev/md1 level=raid1 num-devices=2
->> UUID=c3838888:50dbed72:15a9bffb:d0e83d23
->> ARRAY /dev/md0 level=raid1 num-devices=2
->> UUID=0d0a0c79:70adae03:f802952b:2b58c14d
->>
->>
->> $ mdadm --detail /dev/md0
->> /dev/md0:
->>       Version : 00.90.03
->>  Creation Time : Thu Dec 11 14:18:44 2008
->>    Raid Level : raid1
->>    Array Size : 487331648 (464.76 GiB 499.03 GB)
->>   Device Size : 487331648 (464.76 GiB 499.03 GB)
->>  Raid Devices : 2
->>  Total Devices : 2
->> Preferred Minor : 0
->>   Persistence : Superblock is persistent
->>
->>   Update Time : Fri May  8 15:45:32 2009
->>         State : clean
->> Active Devices : 2
->> Working Devices : 2
->> Failed Devices : 0
->>  Spare Devices : 0
->>
->>          UUID : 0d0a0c79:70adae03:f802952b:2b58c14d
->>        Events : 0.900
->>
->>   Number   Major   Minor   RaidDevice State
->>      0       8        2        0      active sync   /dev/sda2
->>      1       8       18        1      active sync   /dev/sdb2
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>     
->
->
->
->   
+> Which is even worse, as i have not seen *any* BIOS able to handle
+> that... and i have a intel based board wich according to this email
+> thread should do that (and linux did not recognise the raid it had
+> configured, so let us forget about booting from it)
 
+If it is mirrored across all disks any one disk (of the raid) will be
+bootable. Every bios supports that.
+
+The part where you need bios support only comes later once the
+bootloader is loaded, activates its raid capabilities and then tries
+to read a raid 0/4/5/6. If the bios does not grive access to enough
+component devices of such a raid then the bootloader will be stuck
+then.
+
+But that is really nothing new. With a partition block and raid on
+partitions the bootloader is just as stuck there. That just can't be
+helped so I don't consider that an argument for or against anything.
+
+MfG
+        Goswin
