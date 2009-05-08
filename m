@@ -1,40 +1,77 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: Incorrect in-kernel bitmap on raid10
-Date: Thu, 7 May 2009 22:25:32 +0200
-Message-ID: <slrnh06gts.8gr.Mario.Holbe@darkside.dyn.samba-tng.org>
-References: <slrnguk663.8bq.Mario.Holbe@darkside.dyn.samba-tng.org>
- <18922.50050.860008.242658@notabene.brown>
- <slrnguupf4.911.Mario.Holbe@darkside.dyn.samba-tng.org>
- <slrngve39c.8a2.Mario.Holbe@darkside.dyn.samba-tng.org>
- <18938.23135.726382.733302@notabene.brown>
- <20090501175524.GA8163@darkside.22.kls.lan>
- <fb9dbbffc38b437042076747a41ddf9b.squirrel@neil.brown.name>
- <20090502195259.GA8499@darkside.22.kls.lan>
- <a960aae116852f769f6e223581fa6835.squirrel@neil.brown.name>
- <20090503132230.GA23302@darkside.22.kls.lan>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: RAID 1 resync with both members good.
+Date: Fri, 8 May 2009 10:32:01 +1000 (EST)
+Message-ID: <a93e6da36d0a72953e6a2cce74323e2d.squirrel@neil.brown.name>
+References: <3D76E016F4A2A749A1EB1A3FD83E22BC02783863@uk-email.terastack.bluearc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <3D76E016F4A2A749A1EB1A3FD83E22BC02783863@uk-email.terastack.bluearc.c
+     om>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Simon Jackson <sjackson@bluearc.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE> wrote:
-> No, mdadm -A /dev/md7; mdadm --add /dev/md7 /dev/sd[fgh]1 seems to
-> respect the bitmap, but first adds the first spare only and the two
-...
-> According to your previous mail, I will run into your case 3/ this way,
-> the bug where the bitmap is cleared too early, will I?
+On Thu, May 7, 2009 6:08 pm, Simon Jackson wrote:
+> Could someone help me understand why I am seeing the following
+> behaviour?
+>
+> We use a pair of disks with 3 RAID1 partitions inside an appliance
+> system.
+>
+> During testing we have seen some instances of the RAID devices resyncing
+> even though both members are marked as good in the output of
+> /proc/mdstat.
 
-All right, I applied your "[md PATCH 2/7] md/raid10: don't clear bitmap
-during recovery if array will still be degraded." patch, modified about
-2% of my fully degraded raid10, synched the 3 missing devices, compared
-the mirrors and found no difference, so I guess I can confirm the patch
-works for me :)
+That is exactly as expectedc.
+If one of the devices had failed and was being replaced by a spare, you
+would see "recovery" not "resync".
+
+Resync happens after an unclean shutdown.
+In that case, both drives have good data, but they might not be the same.
+The resync makes sure that all copies have exactly the same data.
+
+So you there must have been an unclean shutdown before the most recent
+restart.
+
+NeilBrown
 
 
-regards
-   Mario
--- 
-The opposite of a correct statement is a false statement.
-But the opposite of a profound truth may well be another profound truth.
-                                                           -- Niels Bohr
+>
+> merc:~# cat /proc/mdstat
+> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+> [raid4] [raid10]
+> md2 : active raid1 sda3[0] sdb3[1]
+> 7823552 blocks [2/2] [UU]
+> resync=DELAYED
+> md0 : active raid1 sda5[0] sdb5[1]
+> 7823552 blocks [2/2] [UU]
+> md1 : active raid1 sda6[0] sdb6[1]
+> 55841792 blocks [2/2] [UU]
+> [=================>...] resync = 88.8% (49606848/55841792) finish=8.4min
+> speed=12256K/sec
+> unused devices: <none>
+>
+>
+> Why would a resync occur if both members are marked us good?
+>
+> What we usually see when a drive is failed removed and readded is that
+> the resync marks the new drive as down "_" until the resync completes.
+>
+> Firstly why is a resync occurring when both drives are still good in the
+> raid set?  Is this be expected behaviour or an indication of an
+> underlying problem.
+>
+> Thanks for any assistance.
+>
+> Using Debian 2.6.26-1
+>
+> Thanks Simon.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
