@@ -1,60 +1,61 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
+From: Peter Rabbitson <rabbit+list@rabbit.us>
 Subject: Re: md extension to support booting from raid whole disks.
-Date: Sat, 09 May 2009 00:29:12 +0200
-Message-ID: <87ws8r2pqf.fsf@frosties.localdomain>
-References: <20090503013342770.VMBT19475@cdptpa-omta01.mail.rr.com>
-	<e13f0e541934a0966f213f6da13d83da.squirrel@neil.brown.name>
-	<1241406283.17240.26.camel@ezra> <87fxff462s.fsf@frosties.localdomain>
-	<21cdc7a16fbdd42979d52331db97c737.squirrel@neil.brown.name>
+Date: Sat, 09 May 2009 09:20:30 +0200
+Message-ID: <4A052EBE.5010605@rabbit.us>
+References: <49F68CE0.2010906@zytor.com> <1240963225.18303.858.camel@ezra>	<49F7997C.2070808@zytor.com> <1240964410.18303.895.camel@ezra>	<49F79F26.9060309@zytor.com> <1240965831.18303.944.camel@ezra>	<20090429064333.GB9372@boogie.lpds.sztaki.hu>	<87hc04leau.fsf@frosties.localdomain>	<1241217394.4418.4.camel@poledra.romunt.nl>	<1241226246.4862.24.camel@ezra>	<6c4602af0905021002i6fb0e667mdde8fb589f34ead6@mail.gmail.com> <87ab5n45dc.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <21cdc7a16fbdd42979d52331db97c737.squirrel@neil.brown.name>
-	(NeilBrown's message of "Sat, 9 May 2009 08:16:27 +1000 (EST)")
+In-Reply-To: <87ab5n45dc.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Goswin von Brederlow <goswin-v-b@web.de>, Daniel Reurich <daniel@centurion.net.nz>, Linux RAID <linux-raid@vger.kernel.org>
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: Micha Przyuski <mikylie@gmail.com>, Daniel Reurich <daniel@centurion.net.nz>, linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-"NeilBrown" <neilb@suse.de> writes:
+Goswin von Brederlow wrote:
+> Micha=C2=B3 Przy=C2=B3uski <mikylie@gmail.com> writes:
+>=20
+>=20
+> The point was not to add redundancy but to remove complexity.
+>=20
+> Just look at what you need to do for the next generation of disks
+> (>2TB):
+>=20
+> - Create a MS Dos partition table with a fake /boot partition in the
+>   first 2TB.
+> - Create a GPT table with a matching /boot partition and the rest
+> - Create a raid1 for /boot
+> - Create a raidX for the rest
+>=20
+> Now you have to watch 2 raids and add/remove partitions from 2 raids,
+> You also need to copy the bootloader to every new disk you add.
+>=20
+> The idea is to bring this down to:
+>=20
+> - Create raidX over all disks
+>=20
+>> it a hidden raid1 over first few sectors is just creating an
+>> automation that gains nothing and makes things unnecessarily
+>> complicated inside.
+>=20
+> If the hidden raid1 is just reserved space that is considered part of
+> the raid metadata then this moves completly into mdadm userspace. The
+> extra complexity comes down to "read reserved space from old disk,
+> write reserved space to new disk". In the most basic form that is 3
+> lines of code (declare buffer, read, write).
+>=20
 
-> On Sat, May 9, 2009 7:50 am, Goswin von Brederlow wrote:
->
->>>> So I still plan to offer a "--reserve-space=2M" option for mdadm to
->>>> allow the first 2M of each device to not used for raid data.  Whether
->>>> any particular usage of this option is viable or not, is a different
->>>> question altogether.
->>
->> How exactly would that layout be then?
->>
->> Block  0   bootblock
->> Block  1   raid metadata
->> Block  x   2M reserved space
->> Block x+2M start of raid data
->>
->> Like this?
->
-> When using 1.2 metadata, yes, possible with bitmap
-> inserted  between the reserved space and the start of raid data.
+This is the best description of the problem/benefit so far. Also when
+deciding on the size of the reserved space, factor in possible
+bitmap size explosion when moving from say a 4x300G raid6 to a 4x2T rai=
+d6.
 
-That realy seems to be the best option. Simple to implement, simple to
-use and if mdadm copies the reserved space from old to new drives when
-adding one it gives us exactly what we want.
++1 on this feature request
 
-Are you working on that already or do you think it needs more discussion?
-
-> When using 1.0, it would be
->
->   Block 0..N-1   boot block and second stage
->   Block N..near-the-end raid data
->   Block x..y     bitmap
->   block z        superblock
-
-I never liked the idea of 1.0.
-
-What actualy does happen when you have raid on partitions and resize a
-partition? Am I right that the raid then can't be assembled until the
-raid itself gets grown (and the superblock gets moved to the new end)?
-
-> NeilBrown
-
+Cheers
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
