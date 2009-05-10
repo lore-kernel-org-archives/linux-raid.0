@@ -1,93 +1,59 @@
-From: "Guy Watkins" <linux-raid@watkins-home.com>
-Subject: RE: Requesting replace mode for changing a disk
-Date: Sun, 10 May 2009 11:55:29 -0400
-Message-ID: <399961AA486C4EDD8C4B78FF36FCA9FF@m5>
-References: <8763gb44xk.fsf@frosties.localdomain> <4A060CBE.9090308@tmr.com> <4019EAB86E8342028374C6968D6D67E2@m5> <4A06E5CD.3020306@tmr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Subject: [001/002 ] raid0 reshape
+Date: Mon, 11 May 2009 08:31:59 +1000
+Message-ID: <18951.21983.1676.992436@notabene.brown>
+References: <1241300764.5607.36.camel@raz>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A06E5CD.3020306@tmr.com>
+In-Reply-To: message from raz ben yehuda on Sunday May 3
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Bill Davidsen' <davidsen@tmr.com>, 'Guy Watkins' <linux-raid@watkins-home.com>
-Cc: 'Goswin von Brederlow' <goswin-v-b@web.de>, linux-raid@vger.kernel.org
+To: raz ben yehuda <raziebe@013.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-} -----Original Message-----
-} From: Bill Davidsen [mailto:davidsen@tmr.com]
-} Sent: Sunday, May 10, 2009 10:34 AM
-} To: Guy Watkins
-} Cc: 'Goswin von Brederlow'; linux-raid@vger.kernel.org
-} Subject: Re: Requesting replace mode for changing a disk
-} 
-} Guy Watkins wrote:
-} > } -----Original Message-----
-} > } From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-} > } owner@vger.kernel.org] On Behalf Of Bill Davidsen
-} > } Sent: Saturday, May 09, 2009 7:08 PM
-} > } To: Goswin von Brederlow
-} > } Cc: linux-raid@vger.kernel.org
-} > } Subject: Re: Requesting replace mode for changing a disk
-} > }
-} > } Goswin von Brederlow wrote:
-} > } > Hi,
-} > } >
-} > } > consider the following situation: You have a software raid that runs
-} > } > fine but one disk is suspect (e.g. SMART says failure imminent or
-} > } > something). How do you replace that disk?
-} > } >
-} > } > Currently you have do fail/remove the disk from the raid, add a
-} > } > fresh disk and resync. That leaves a large window in which
-} redundancy
-} > } > is compromised. With current disk sizes that can be days.
-} > } >
-} > } > It would be nice if one could tell the kernel to replace a disk in a
-} > } > raid set with a spare without the need to degrade the raid.
-} > } >
-} > } > Thoughts?
-} > } >
-} > }
-} > } This is one of many things proposed occasionally here, no real
-} > } objection, sometimes loud support, but no one actually *does* the
-} code.
-} > }
-} > } You have described the problem exactly, and the solution is still to
-} do
-} > } it manually. But you don't need to fail the drive long term, if you
-} can
-} > } stop the array for a few moments. You stop the array, remove the
-} suspect
-} > } drive, create a raid1 of the suspect drive marked write-mostly and the
-} > } new spare, then add the raid1 in place of the suspect drive. For any
-} > } chunks present on the new drive the reads will go there, reducing
-} > } access, while data is copied from the old to the new in resync, and
-} > } writes still go to the old suspect drive so if the new drive fails you
-} > } are no worse off. When the raid1 is clean you stop the main array and
-} > } back the suspect drive out.
-} > }
-} > } This is complicated enough that I totally agree a hot migrate would be
-} > } desirable. This is why people use lvm, although I make zero claims
-} that
-} > } this same problem will solve more easily, I'm just not an lvm guru (or
-} > } even a newbie, just an occasional user).
-} >
-} > If the disk is suspect, I would expect read errors!
-} > If you have 1 bad block on the suspect disk, this process will fail.
-} >
-} 
-} The raid1 is part of the original raid5, so the error should go to that
-} level, where it will be recovered, and hopefully then rewritten. I have
-} actually done this, and it has always completed, so I haven't researched
-} why it worked, just noted that it did.
+On Sunday May 3, raziebe@013.net wrote:
+> Neil Hello
+> The bellow is the raid0 grow code.I have decided to fix raid0 and not 
+> perform the transformation raid0-raid4-raid0 due to two reasons:
+> 1. raid0 zones. this patch support any zone transformations.
+> 2. Undesired dependency of raid0 over raid4 re-striping code. 
+> 
+> The following tests were conducted:
+> 1. various chunk sizes, 4K to 512K. ( mainly in 2.6.27 and 2.6.18 )
+> 2. regrow ( tested on 2.6.27 and 2.6.18 )
+> 3. various super blocks. 0.9 , 1, 1.1 and 1.2 ( mainly in 2.6.27 and 2.6.18 ).
+> 4. support assembling and mounting older raid version ( older kernels and code before patch) after it was grown.
+> 
+> patch passed checkpatch.pl . other than reshaping code i beautified the code. 
+> Currently i about to pass this code to our testing team for further tests. 
+> Other things to do:
+> 1. Speedup the reshape process.It is too slow.
+> 2. Support for non power 2^n ( page size) chunks.
+> 
+> I will be thankful for your criticism.
 
-It depends on who sees the error.  If the parent array is trying to read,
-then yes.  But if the RAID1 is reading to sync, then no.  The RAID1 layer
-does not know about the RAID5 (or whatever) just above.
+Probably my main criticism at this point is that there is no
+commentary explaining how it works.
+You appear to have chosen to run your own reshape thread rather than
+providing a "resync" method and make use of the md_do_sync thread
+which provides speed limiting etc.  
+Maybe that it a good decision, but as you haven't explained it, it is
+hard to be sure.
 
-} > If the logic was built-in to md, then any read errors while replacing
-} could
-} > be recovered from another disk or disks.
-} >
-} >
+Also, it seems to if an IO request arrives while the reshape is
+happening, then it fails with -EBUSY.
+I don't think that is a good thing.
+1/ no filesystem is going to be expecting EBUSY so it could cause
+   serious problems
+2/ if you aren't going to support online reshape so that a device can 
+   be reshaped while it is in use, then there seems to be little point
+   in putting this code in the kernel.  Just write a program that runs
+   in userspace which reshapes the array while it is not assembled.
 
+Also, I cannot see any evidence that you checkpoint the reshape at
+all.  So if your machine crashes during the reshape, everything is
+lost.  I do not find this acceptable.
+
+NeilBrown
