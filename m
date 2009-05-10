@@ -1,59 +1,49 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Subject: [001/002 ] raid0 reshape
-Date: Mon, 11 May 2009 08:31:59 +1000
-Message-ID: <18951.21983.1676.992436@notabene.brown>
-References: <1241300764.5607.36.camel@raz>
+From: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
+Subject: extending raid-5 ?
+Date: Mon, 11 May 2009 01:00:18 +0200
+Message-ID: <795999990.20090511010018@kaneda.iguw.tuwien.ac.at>
+Reply-To: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from raz ben yehuda on Sunday May 3
 Sender: linux-raid-owner@vger.kernel.org
-To: raz ben yehuda <raziebe@013.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday May 3, raziebe@013.net wrote:
-> Neil Hello
-> The bellow is the raid0 grow code.I have decided to fix raid0 and not 
-> perform the transformation raid0-raid4-raid0 due to two reasons:
-> 1. raid0 zones. this patch support any zone transformations.
-> 2. Undesired dependency of raid0 over raid4 re-striping code. 
-> 
-> The following tests were conducted:
-> 1. various chunk sizes, 4K to 512K. ( mainly in 2.6.27 and 2.6.18 )
-> 2. regrow ( tested on 2.6.27 and 2.6.18 )
-> 3. various super blocks. 0.9 , 1, 1.1 and 1.2 ( mainly in 2.6.27 and 2.6.18 ).
-> 4. support assembling and mounting older raid version ( older kernels and code before patch) after it was grown.
-> 
-> patch passed checkpatch.pl . other than reshaping code i beautified the code. 
-> Currently i about to pass this code to our testing team for further tests. 
-> Other things to do:
-> 1. Speedup the reshape process.It is too slow.
-> 2. Support for non power 2^n ( page size) chunks.
-> 
-> I will be thankful for your criticism.
+hi,
 
-Probably my main criticism at this point is that there is no
-commentary explaining how it works.
-You appear to have chosen to run your own reshape thread rather than
-providing a "resync" method and make use of the md_do_sync thread
-which provides speed limiting etc.  
-Maybe that it a good decision, but as you haven't explained it, it is
-hard to be sure.
+I'm currently using a 4*750GB SATA RAID-5 under centos 5.2 (mdadm
+v2.6.4, kernel 2.6.18-128.1.6.el5) which I need to exend by replacing
+the 750GB disks with 1.5TB ones.
 
-Also, it seems to if an IO request arrives while the reshape is
-happening, then it fails with -EBUSY.
-I don't think that is a good thing.
-1/ no filesystem is going to be expecting EBUSY so it could cause
-   serious problems
-2/ if you aren't going to support online reshape so that a device can 
-   be reshaped while it is in use, then there seems to be little point
-   in putting this code in the kernel.  Just write a program that runs
-   in userspace which reshapes the array while it is not assembled.
+since the mainboard has only 4 SATA ports, I need to replace one disk
+after the other. I came up with the following plan:
 
-Also, I cannot see any evidence that you checkpoint the reshape at
-all.  So if your machine crashes during the reshape, everything is
-lost.  I do not find this acceptable.
+1) fail first disk
+  mdadm /dev/md0 -f /dev/sda1
 
-NeilBrown
+2) remove first disk
+  mdadm /dev/md0 -r /dev/sda1
+
+3) shutdown the server, unplug 750GB sda drive, plug in 1.5TB drive
+
+4) create a linux raid autodetect partition on sda which covers the
+whole 1.5TB
+
+5) add new device to the raid5 and wait until resync has finished
+  mdadm /dev/md0 -a /dev/sda1
+  
+... repeat steps 1 tp 5 for sdb to sdd
+
+6) grow the raid
+  mdadm --grow /dev/md0
+
+7) resize the xfs filesystem
+   xfs_growfs /md0-mount-point
+   
+is this the proper way to do it, are there any issues I should know
+about ?
+
+thnx in advance.
+
