@@ -1,62 +1,53 @@
 From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Requesting replace mode for changing a disk
-Date: Sun, 10 May 2009 03:22:58 +0200
-Message-ID: <87ab5lycnh.fsf@frosties.localdomain>
-References: <8763gb44xk.fsf@frosties.localdomain> <4A060CBE.9090308@tmr.com>
+Subject: Re: md extension to support booting from raid whole disks.
+Date: Sun, 10 May 2009 03:29:34 +0200
+Message-ID: <8763g9ycch.fsf@frosties.localdomain>
+References: <49F68CE0.2010906@zytor.com> <1240963225.18303.858.camel@ezra>
+	<49F7997C.2070808@zytor.com> <1240964410.18303.895.camel@ezra>
+	<49F79F26.9060309@zytor.com> <1240965831.18303.944.camel@ezra>
+	<20090429064333.GB9372@boogie.lpds.sztaki.hu>
+	<87hc04leau.fsf@frosties.localdomain>
+	<1241217394.4418.4.camel@poledra.romunt.nl>
+	<1241226246.4862.24.camel@ezra>
+	<6c4602af0905021002i6fb0e667mdde8fb589f34ead6@mail.gmail.com>
+	<87ab5n45dc.fsf@frosties.localdomain> <4A052EBE.5010605@rabbit.us>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A060CBE.9090308@tmr.com> (Bill Davidsen's message of "Sat, 09
-	May 2009 19:07:42 -0400")
+In-Reply-To: <4A052EBE.5010605@rabbit.us> (Peter Rabbitson's message of "Sat,
+	09 May 2009 09:20:30 +0200")
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
+To: Peter Rabbitson <rabbit+list@rabbit.us>
+Cc: Micha Przyuski <mikylie@gmail.com>, Daniel Reurich <daniel@centurion.net.nz>, linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-Bill Davidsen <davidsen@tmr.com> writes:
+Peter Rabbitson <rabbit+list@rabbit.us> writes:
 
 > Goswin von Brederlow wrote:
->> Hi,
->>
->> consider the following situation: You have a software raid that runs
->> fine but one disk is suspect (e.g. SMART says failure imminent or
->> something). How do you replace that disk?
->>
->> Currently you have do fail/remove the disk from the raid, add a
->> fresh disk and resync. That leaves a large window in which redundancy
->> is compromised. With current disk sizes that can be days.
->>
->> It would be nice if one could tell the kernel to replace a disk in a
->> raid set with a spare without the need to degrade the raid.
->>
->> Thoughts?
->>
+>> If the hidden raid1 is just reserved space that is considered part of
+>> the raid metadata then this moves completly into mdadm userspace. The
+>> extra complexity comes down to "read reserved space from old disk,
+>> write reserved space to new disk". In the most basic form that is 3
+>> lines of code (declare buffer, read, write).
+>> 
 >
-> This is one of many things proposed occasionally here, no real
-> objection, sometimes loud support, but no one actually *does* the code.
+> This is the best description of the problem/benefit so far. Also when
+> deciding on the size of the reserved space, factor in possible
+> bitmap size explosion when moving from say a 4x300G raid6 to a 4x2T raid6.
 >
-> You have described the problem exactly, and the solution is still to
-> do it manually. But you don't need to fail the drive long term, if you
-> can stop the array for a few moments. You stop the array, remove the
-> suspect drive, create a raid1 of the suspect drive marked write-mostly
-> and the new spare, then add the raid1 in place of the suspect
-> drive. For any chunks present on the new drive the reads will go
-> there, reducing access, while data is copied from the old to the new
-> in resync, and writes still go to the old suspect drive so if the new
-> drive fails you are no worse off. When the raid1 is clean you stop the
-> main array and back the suspect drive out.
+> +1 on this feature request
 >
-> This is complicated enough that I totally agree a hot migrate would be
-> desirable. This is why people use lvm, although I make zero claims
-> that this same problem will solve more easily, I'm just not an lvm
-> guru (or even a newbie, just an occasional user).
+> Cheers
 
-The difference, appart from simpler usage, would be that the raid does
-not have to be stoped. Stopping the raid that contains / or /usr means
-some downtime.
+From what Neil described it should be no problem to resize the amount
+of space used for metadata. It would have to copy around all the data
+of the raid, do a reshape basically, but that isn't hard. Or it could
+be limited to adding drives, which would need to do a resync anyway,
+e.g. something like
 
-In the case of LVM there is the fact that you can suspend a
-device-mapper device and alter its mapping any way you wish. So you
-can do things manually without umounting the filesystems. But lvm /
-device-mapper doesn't have all the raid stuff so one can't just
-switch.
+mdadm --add --reserved-space=3M --bitmap-space=4M /dev/md0 /dev/sdx
+
+MfG
+        Goswin
+
+PS: tests seem to show though that smaller bitmaps are faster
