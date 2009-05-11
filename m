@@ -1,132 +1,64 @@
-From: Benjamin ESTRABAUD <be@mpstor.com>
-Subject: Re: mdadm issue adding components to an array (avail_size /     
- array_size issue).
-Date: Mon, 11 May 2009 12:05:26 +0100
-Message-ID: <4A080676.6080106@mpstor.com>
-References: <4A02F95C.9000106@mpstor.com> <21ae4b77ea9418bc5a6cc3aac0250ad7.squirrel@neil.brown.name>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: Is TRIM/DISCARD going to be a performance problem?
+Date: Mon, 11 May 2009 09:10:15 -0400
+Message-ID: <87f94c370905110610j2f5ea7fcua4e596b2b5e82a5f@mail.gmail.com>
+References: <E1M2ts6-0005jr-Cg@closure.thunk.org>
+	 <20090510165259.GA31850@logfs.org> <20090511083754.GA29082@mit.edu>
+	 <20090511100624.GB6585@logfs.org> <20090511112729.GD29082@mit.edu>
+	 <20090511120936.GB6277@mit.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <21ae4b77ea9418bc5a6cc3aac0250ad7.squirrel@neil.brown.name>
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-ext4-owner@vger.kernel.org>
+In-Reply-To: <20090511120936.GB6277@mit.edu>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Theodore Tso <tytso@mit.edu>
+Cc: =?ISO-8859-1?Q?J=F6rn_Engel?= <joern@logfs.org>, Matthew Wilcox <willy@linux.intel.com>, Jens Axboe <jens.axboe@oracle.com>, Ric Wheeler <rwheeler@redhat.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-NeilBrown wrote:
-> On Fri, May 8, 2009 1:08 am, Benjamin ESTRABAUD wrote:
->   
->> Hi,
->>
->> I am experiencing what seems to be a bug with mdadm which prevents me
->> from --add ing a disk in some specifics conditions.
->>
->> The current setup is as follow:
->>
->> -1 RAID 5 on 3* 26Gb block devices. > /dev/md/d0
->> -1 RAID 5 on 3*36Gb block devices. > /dev/md/d1
->> -1 RAID 5 on 3* 9Gb block devices. > /dev/md/d2
->>
->> No config file is being used. RAIDs are created as follow:
->>
->> mdadm - v2.6.9 - 10th March 2009
->>
->> ./mdadm --create -vvv --force --run --metadata=1.2 /dev/md/dX --level=5
->> --size=<sizeofraid> --chunk=64 --name=<name, like: 1356341> -n3
->> --bitmap=internal --bitmap-chunk=4096 --layout=ls /dev/<blockdev1>
->> /dev/<blockdev2> /dev/<blockdev3>
->>
->> - Several different size available block devices for adding to the
->> arrays (1*14Gb, 1*26Gb, 2*32Gb, etc.)
->>
->> If trying to --add a block device to the /dev/md/d0 RAID array after
->> degrading it, everything works fine as long as the device being added is
->> at least as big as the "component_size" size found in sysfs from
->> /dev/md_d0/md/component_size. Therefore, a 32Gb drive can be added to
->> the first array.
->>
->> However, trying to do the same procedure for the third RAID, using
->> either a 9Gb, 14Gb block device fails complaining that the device being
->> hot added is not large enough to join the array. Which is strange, since
->> after checking the /dev/md_d3/md/component_size, this value is much
->> lower than the size obtained for the block device being added.
->>
->> On another hand, degrading md/d1 and trying to add a 32Gb block device
->> to this array composed of 3*36Gb block devices does not complain that
->> the block device size is not large enough to join the array, and adds it
->> to /dev/md/d1, however, as a Failed (F) drive.
->>
->> In the second example, the hotAdd does not work on /dev/md/d1 that has
->> its smallest component size set to 9Gb as long as the drive being added
->> is not >= to the component size of /dev/md/d0's component size.
->>
->> After further checking in the mdadm source, I noticed that "array_size"
->> in Manage_subdevs from Manage.c is always the same, regardless of which
->> RAID we are trying to operate on.
->>
->> by examining the "get_component_size" method, I noticed the following:
->>
->>    if (major(stb.st_rdev) != get_mdp_major())
->>         sprintf(fname, "/sys/block/md%d/md/component_size",
->>             (int)minor(stb.st_rdev));
->>     else
->>         sprintf(fname, "/sys/block/md_d%d/md/component_size",
->>             (int)minor(stb.st_rdev)>>MdpMinorShift);"
->>
->>  >>> (int)minor(stb.st_rdev)>>MdpMinorShift) is always "0", therefore
->> the component size file is always the following:
->>
->> /sys/block/md_d0/md/component_size
->>
->> Whatever the md device is currently used, md/d1, or md/d2 etc.
->>     
->
-> That is very odd.
-> For /dev/md/d0, minor(stb.st_rdev) should be 0
-> For /dev/md/d1, minor(stb.st_rdev) should be 64
-> For /dev/md/d2, minor(stb.st_rdev) should be 128.
-> so when shifted with >>MdpMinorShift, they should give values 0,1,2.
-> So I cannot understand why it is always 0.
-> And you put some more printfs in and see what the value of
-> stb.st_rdev is in each case?
->
->
->   
-Hi Neil,
+On Mon, May 11, 2009 at 8:09 AM, Theodore Tso
+> All of the web browsing I've doen confirms that the ATA folks expect
+> trim to work on 512-sector granularity.
 
-Thank you very much for your reply, this is much appreciated.
+Ted,
 
-This is technically my fault in this case, since I changed the default 
-shifthing in md for testing purposes.
+That implies that the SSD folks are not treating erase blocks as a
+contiguous group of sectors.  For some reason, I thought their was
+only one mapping per erase block and within the erase block the
+sectors were contiguous..
 
-At least I know understand what went wrong there and can fix it on this 
-system.
+If I'm right, then the ata spec may allow you to send sub-erase block
+trim commands down, but the spec does not prevent the (blackbox)
+hardware from clipping the size of the trim to be on erase block
+boundaries and ignoring the sub-erase block portions on each end.  Or
+ignoring the whole command if your trim command does not span a whole
+erase block.
 
-Thank you very much again for your help, which was very much 
-appreciated, and sorry for reporting an issue with a non-standard kernel.
+Also the mdraid people plan to clip at the stripe width boundary for
+raid 5, 6, etc.  Their expectation is that discards will be coalesced
+into bigger blocks before it gets to the mdraid layer.
 
-Ben.
->> The "get_component_size" seems to be using an integer, "fd" to find out
->> the size and return it.
->> However, fd is always the same value, "3", whatever RAID is being worked
->> on.
->>
->> this value seems to be generated in mdadm.c, in the main function:
->>
->> line 944: mdfd = open_mddev(devlist->devname, autof);
->>
->> This always returns "3" in my case.
->>     
->
-> Yes.  mdfd is a "file descriptor".  It is simple a number use to identify
-> a particular open file.  It will always be 3 in this case, but will
-> refer to a different file (or device) depending on what
-> devlist->devname was.
->
-> NeilBrown
->
->
->   
+I still think reshaping a raid 5 online will be next to impossible
+when some of the stripes may contain indeterminate data.
 
+More realistic is to figure out a way to make it deterministic at
+least for the short term (by writing data to all the trimmed blocks?),
+then reshaping, then having a tool to scan the filesystem and re-issue
+all the trim commands.
 
+Obviously, if the ata spec had a signaling mechanism that
+differentiated between deterministic data and non-deterministic data
+then the above code excess could be simplified greatly.
+
+Greg
+-- 
+Greg Freemyer
+Head of EDD Tape Extraction and Processing team
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+First 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
