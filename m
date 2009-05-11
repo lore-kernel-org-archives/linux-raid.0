@@ -1,49 +1,39 @@
-From: Andreas Dilger <adilger@sun.com>
-Subject: Re: Is TRIM/DISCARD going to be a performance problem?
-Date: Mon, 11 May 2009 13:22:14 -0600
-Message-ID: <20090511192214.GC3209@webber.adilger.int>
-References: <20090511083754.GA29082@mit.edu> <20090511100624.GB6585@logfs.org>
- <20090511112729.GD29082@mit.edu> <20090511120936.GB6277@mit.edu>
- <87f94c370905110610j2f5ea7fcua4e596b2b5e82a5f@mail.gmail.com>
- <20090511142740.GC6277@mit.edu> <4A08365F.5040805@redhat.com>
- <20090511145059.GD6277@mit.edu> <20090511150040.GF8112@parisc-linux.org>
- <87f94c370905111147t77250b92pc511ef9c6c0e7e42@mail.gmail.com>
+From: mental-gemof@mail.ru
+Subject: =?windows-1251?Q?=C0=E7=E0  =D1=EE=EA=EE=EB=EE=E2=E0?=
+Date: Mon, 11 May 2009 19:32:34 +0400
+Message-ID: <E1M3bEw-0005tQ-00.mental-gemof-mail-ru@mx39.mail.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; CHARSET=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ext4-owner@vger.kernel.org>
-Content-disposition: inline
-In-reply-to: <87f94c370905111147t77250b92pc511ef9c6c0e7e42@mail.gmail.com>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Theodore Tso <tytso@mit.edu>, Ric Wheeler <rwheeler@redhat.com>, J?rn Engel <joern@logfs.org>, Matthew Wilcox <willy@linux.intel.com>, Jens Axboe <jens.axboe@oracle.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On May 11, 2009  14:47 -0400, Greg Freemyer wrote:
-> Overall, I think Linux will need a mechanism to scan a filesystem and
-> re-issue all the trim commands in order to get the hardware back in
-> sync a major maintenance activity.  That mechanism could either be
-> admin invoked.or a always on maintenance task.
-> 
-> Personally, I think the best option is a background task (kernel I
-> assume) to scan the filesystem and issue discards for all the data on
-> a slow but steady basis.  If it takes a week to make its way around
-> the disk/volume, then it takes a week.  Who really cares.
+P=F3=EAo=E2o=E4c=F2=E2=F3 =E5ka=F2=E5p=E8=ED=E1=F3p=E3c=EAo=E3o =EE=F2=E4=
+e=EBe=ED=E8=FF "Bc=E5po=F1c=E8=E9=F1=EA=E0=FF =EF=EE=EB=E8=F2=E8=F7=E5=F1=
+=EAa=FF  =EF=E0p=F2=E8=FF  =ED=E0po=E4a"
+=C7=E4=F0=E0=E2=F1=F2=E2=F3=E9=F2e =C3app=E8 Makc=E8=EC=EE=E2=E8=F7
 
-I'd suggested that we can also modify e2fsck to (optionally) send the
-definitive list of blocks to be trimmed at that time.  It shouldn't
-necessarily be done all of the times e2fsck is run, because that would
-kill any chance of data recovery, but should be optional.
+3=E0=EF=EE=E2=E5=E4=E8 =F1a=F2=E0=ED=FB. =CA=E0 k=EE=E2=FB =EE=ED=E8?
+B =F7em =E1=FB=EBa =E3=EB a=E2=EDa=FF o=F8=E8=E1ka k=EEm=EC=F3=ED=E8=F1=
+=F2o=E2?
+=C1e=E4=ED=FB =E5 =E4=EE=EB=E6=ED=FB co=E4=E5=F0=E6a=F2=FC =E1o=E3=E0=F2=
+=FB=F5!
+ =D7=F2=EE =F2a=EAoe =ABm=FF=E3k=E0=FF c=E8=EBa=BB?
+Ko=E3=E4=E0 =EAo m=EF=FC=FE=F2ep =EF=F0e=E2=E7o=E9=E4=E5=F2 =F7=E5=EBo=E2=
+eka?
 
-Other filesystem checking tools (say btrfs online check) can periodically
-do the same - lock an idle group from new allocations, scan the allocation
-bitmap for all unused blocks, send a trim command for any regions >=
-erase block size, unlock group.  It might make more sense to do this
-than send thousands of trim operations while the filesystem is busy.
+=CA=ED=E8=E3=E0 "3 =C0K=C0=D2`  =D7 E =CB0B=C5 =D7E=D1=D2BA!"=20
+=E8 m=ED. =E4=F0=F3=E3oe. =C4=CB=DF =CFO=CB=C8 T=C8K0B. 0 =CFO=CB=C8=D2=
+=C8=CA=C5.
 
-Cheers, Andreas
+ =CFo =F2=E5=F5=ED=E8=F7ec=EA=E8m =EFp=E8=F7=E8=EDa=EC  =EC=FB =E2=FBc=FB=
+=EBa=E5=EC =EF=E8c=FC=EC=EE =F2o=EB=FCko =EE=E4=E8=ED =F0a=E7..
+=C3=C03=C5T=C0  "=D0E=CB=C8=C3=C8=DF =C8 =CFO=CB=C8=D2=C8=CA A".=20
+
 --
-Andreas Dilger
-Sr. Staff Engineer, Lustre Group
-Sun Microsystems of Canada, Inc.
-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
