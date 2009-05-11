@@ -1,64 +1,64 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: Is TRIM/DISCARD going to be a performance problem?
-Date: Mon, 11 May 2009 09:10:15 -0400
-Message-ID: <87f94c370905110610j2f5ea7fcua4e596b2b5e82a5f@mail.gmail.com>
-References: <E1M2ts6-0005jr-Cg@closure.thunk.org>
-	 <20090510165259.GA31850@logfs.org> <20090511083754.GA29082@mit.edu>
-	 <20090511100624.GB6585@logfs.org> <20090511112729.GD29082@mit.edu>
-	 <20090511120936.GB6277@mit.edu>
+From: Jody McIntyre <scjody@sun.com>
+Subject: Re: [PATCH] md: Track raid5/6 statistics
+Date: Mon, 11 May 2009 09:36:03 -0400
+Message-ID: <20090511133602.GB30561@clouds>
+References: <20090312205754.GH8732@clouds>
+ <e9c3a7c20903141007h5fea439co70e4ea9ea4a10ec1@mail.gmail.com>
+ <20090506200502.GK25233@clouds>
+ <e9c3a7c20905070930n5b7bd3dcy3e837d17865d4540@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ext4-owner@vger.kernel.org>
-In-Reply-To: <20090511120936.GB6277@mit.edu>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Theodore Tso <tytso@mit.edu>
-Cc: =?ISO-8859-1?Q?J=F6rn_Engel?= <joern@logfs.org>, Matthew Wilcox <willy@linux.intel.com>, Jens Axboe <jens.axboe@oracle.com>, Ric Wheeler <rwheeler@redhat.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; CHARSET=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-disposition: inline
+In-reply-to: <e9c3a7c20905070930n5b7bd3dcy3e837d17865d4540@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-On Mon, May 11, 2009 at 8:09 AM, Theodore Tso
-> All of the web browsing I've doen confirms that the ATA folks expect
-> trim to work on 512-sector granularity.
+On Thu, May 07, 2009 at 09:30:33AM -0700, Dan Williams wrote:
 
-Ted,
+> It would be nice if the kernel could auto-tune stripe_cache_size, but
+> I think modifying it in a reactive fashion may do more harm than good.
+>  The times when we want write-out to be faster are usually the times
+> when the system has too much dirty memory lying around so there is no
+> room to increase the cache.  If we are under utilizing the stripe
+> cache then there is a good chance the memory could be put to better
+> use in the page cache, but then we are putting ourselves in a
+> compromised state when a write burst appears.
 
-That implies that the SSD folks are not treating erase blocks as a
-contiguous group of sectors.  For some reason, I thought their was
-only one mapping per erase block and within the erase block the
-sectors were contiguous..
+Yes - it's really too bad that we have this tunable, but I can't think
+of a good way to get rid of it.  In some customer issues I've seen,
+performance really suffers when the array is out of stripes - enough to
+make single IOs take _minutes_ in the worst cases.  This is especially
+easy to reproduce during a resync or rebuild, for obvious reasons.
 
-If I'm right, then the ata spec may allow you to send sub-erase block
-trim commands down, but the spec does not prevent the (blackbox)
-hardware from clipping the size of the trim to be on erase block
-boundaries and ignoring the sub-erase block portions on each end.  Or
-ignoring the whole command if your trim command does not span a whole
-erase block.
+On a related note, there seems to be some confusion surrounding how much
+memory is used by the stripe cache.  I've seen users who believed the
+value was in kilobytes of memory, whereas the truth is a bit more
+complicated.  We could add a stripe_cache_kb entry (writeable even) to
+make this clearer, and/or improve Documentation/md.txt.  Also, we
+helpfully print the amount allocated when the array is first run():
 
-Also the mdraid people plan to clip at the stripe width boundary for
-raid 5, 6, etc.  Their expectation is that discards will be coalesced
-into bigger blocks before it gets to the mdraid layer.
+		printk(KERN_INFO "raid5: allocated %dkB for %s\n",
+			memory, mdname(mddev));
 
-I still think reshaping a raid 5 online will be next to impossible
-when some of the stripes may contain indeterminate data.
+but we don't ever provide an update when it changes.  I don't think we
+want to printk() every time someone changes the sysfs tunable though -
+perhaps we should get rid of the message in run()?
 
-More realistic is to figure out a way to make it deterministic at
-least for the short term (by writing data to all the trimmed blocks?),
-then reshaping, then having a tool to scan the filesystem and re-issue
-all the trim commands.
+> In the end I agree that having some kind of out_of_stripes
+> notification would be useful.  However, I think it would make more
+> sense to implement it as a "stripe_cache_active load average".  Then
+> for a given workload the operator can see if there are spikes or
+> sustained cache saturation.  What do you think?
 
-Obviously, if the ata spec had a signaling mechanism that
-differentiated between deterministic data and non-deterministic data
-then the above code excess could be simplified greatly.
+That makes sense.  It would be a more meaningful number than our current
+statistic, which is "at some point since you started the array, we had
+to wait for a stripe N times."
 
-Greg
--- 
-Greg Freemyer
-Head of EDD Tape Extraction and Processing team
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-First 99 Days Litigation White Paper -
-http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
+I'll come up with a patch when I get the chance.
 
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
+Cheers,
+Jody
