@@ -1,64 +1,33 @@
-From: Jody McIntyre <scjody@sun.com>
-Subject: Re: [PATCH] md: Track raid5/6 statistics
-Date: Mon, 11 May 2009 09:36:03 -0400
-Message-ID: <20090511133602.GB30561@clouds>
-References: <20090312205754.GH8732@clouds>
- <e9c3a7c20903141007h5fea439co70e4ea9ea4a10ec1@mail.gmail.com>
- <20090506200502.GK25233@clouds>
- <e9c3a7c20905070930n5b7bd3dcy3e837d17865d4540@mail.gmail.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Is TRIM/DISCARD going to be a performance problem?
+Date: Mon, 11 May 2009 07:39:48 -0600
+Message-ID: <20090511133947.GE8112@parisc-linux.org>
+References: <E1M2ts6-0005jr-Cg@closure.thunk.org> <20090510165259.GA31850@logfs.org> <20090511083754.GA29082@mit.edu> <20090511100624.GB6585@logfs.org> <20090511112729.GD29082@mit.edu> <20090511120936.GB6277@mit.edu> <87f94c370905110610j2f5ea7fcua4e596b2b5e82a5f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; CHARSET=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-disposition: inline
-In-reply-to: <e9c3a7c20905070930n5b7bd3dcy3e837d17865d4540@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <87f94c370905110610j2f5ea7fcua4e596b2b5e82a5f@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org, neilb@suse.de
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: Theodore Tso <tytso@mit.edu>, J?rn Engel <joern@logfs.org>, Matthew Wilcox <willy@linux.intel.com>, Jens Axboe <jens.axboe@oracle.com>, Ric Wheeler <rwheeler@redhat.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, May 07, 2009 at 09:30:33AM -0700, Dan Williams wrote:
+On Mon, May 11, 2009 at 09:10:15AM -0400, Greg Freemyer wrote:
+> That implies that the SSD folks are not treating erase blocks as a
+> contiguous group of sectors.  For some reason, I thought their was
+> only one mapping per erase block and within the erase block the
+> sectors were contiguous..
 
-> It would be nice if the kernel could auto-tune stripe_cache_size, but
-> I think modifying it in a reactive fashion may do more harm than good.
->  The times when we want write-out to be faster are usually the times
-> when the system has too much dirty memory lying around so there is no
-> room to increase the cache.  If we are under utilizing the stripe
-> cache then there is a good chance the memory could be put to better
-> use in the page cache, but then we are putting ourselves in a
-> compromised state when a write burst appears.
+I believe there is a mapping per LBA, not per erase block.  Of course,
+different technologies will have different limitations here, but it
+would be foolish to assume anything about SSDs at this point.
 
-Yes - it's really too bad that we have this tunable, but I can't think
-of a good way to get rid of it.  In some customer issues I've seen,
-performance really suffers when the array is out of stripes - enough to
-make single IOs take _minutes_ in the worst cases.  This is especially
-easy to reproduce during a resync or rebuild, for obvious reasons.
+(For those who haven't heard my disclaimer before, the Intel SSD team
+don't tell me anything fun about how the drives work internally).
 
-On a related note, there seems to be some confusion surrounding how much
-memory is used by the stripe cache.  I've seen users who believed the
-value was in kilobytes of memory, whereas the truth is a bit more
-complicated.  We could add a stripe_cache_kb entry (writeable even) to
-make this clearer, and/or improve Documentation/md.txt.  Also, we
-helpfully print the amount allocated when the array is first run():
-
-		printk(KERN_INFO "raid5: allocated %dkB for %s\n",
-			memory, mdname(mddev));
-
-but we don't ever provide an update when it changes.  I don't think we
-want to printk() every time someone changes the sysfs tunable though -
-perhaps we should get rid of the message in run()?
-
-> In the end I agree that having some kind of out_of_stripes
-> notification would be useful.  However, I think it would make more
-> sense to implement it as a "stripe_cache_active load average".  Then
-> for a given workload the operator can see if there are spikes or
-> sustained cache saturation.  What do you think?
-
-That makes sense.  It would be a more meaningful number than our current
-statistic, which is "at some point since you started the array, we had
-to wait for a stripe N times."
-
-I'll come up with a patch when I get the chance.
-
-Cheers,
-Jody
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
