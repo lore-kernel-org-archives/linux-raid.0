@@ -1,150 +1,55 @@
 From: Neil Brown <neilb@suse.de>
-Subject: ANNOUNCE: mdadm 3.0-rc1 - A tool for managing Soft RAID under Linux
-Date: Mon, 11 May 2009 16:40:39 +1000
-Message-ID: <18951.51303.361598.363081@notabene.brown>
+Subject: Re: [Patch] mdadm ignoring homehost?
+Date: Mon, 11 May 2009 16:47:35 +1000
+Message-ID: <18951.51719.756364.632799@notabene.brown>
+References: <cccedfc60903240957j9314cb2k41d86cb78ec10b86@mail.gmail.com>
+	<cccedfc60904010815h4056f55doebff4827705d231b@mail.gmail.com>
+	<18899.61151.445765.360191@notabene.brown>
+	<51C39605-BBE7-48E8-AB35-D55D0B36B3A6@redhat.com>
+	<18919.64597.426128.498393@notabene.brown>
+	<D6CEC060-43DC-40A5-A7EE-F2653DBA9C4C@redhat.com>
+	<18924.8917.420265.477921@notabene.brown>
+	<DA9036B3-2702-4783-92A5-3C46698F1CB3@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Doug Ledford on Monday April 20
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: Jon Nelson <jnelson-linux-raid@jamponi.net>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Monday April 20, dledford@redhat.com wrote:
+> 
+> IMO, with my name selection patch, with the option to list an array as  
+> ignore, and with the option to turn either assembly or incremental  
+> modes completely off as I suggested, done in combination with a boot  
+> sequence like we now use in Fedora, you have this problem solved.
 
-I am pleased to announce the availability of
-   mdadm version 3.0-rc1
+I've thought a lot about all that you have said, and made some
+changes, and hopefully have something that we can all be happy with.
 
-It is available at the usual places:
-   countrycode=xx.
-   http://www.${countrycode}kernel.org/pub/linux/utils/raid/mdadm/
-and via git at
-   git://neil.brown.name/mdadm
-   http://neil.brown.name/git?p=mdadm
+As you may have notices, I just released 3.0-rc1.  Maybe that is a
+little optimistic as I haven't sought any feedback concerning my
+recent changes, but I really want 3.0 out soon...
 
-This is a "release candidate" which means that I think it is safe
-to use and that there will be no significant change in functionality
-before release.
+I have added the option of putting
+  HOMEHOST <ignore>
 
-The man pages aren't really "release candidate" yet but I will be
-working on them before the final release.
+in mdadm.conf which does - I think - essentially what you want for
+Fedora.
 
-The most significant changes since -devel3 relate to the names of md
-devices as they appear in /dev and /dev/md/, and in particular the names
-that are used when an array is assembled with "--incremental" or with
-"mdadm --assemble --scan" when there are no ARRAY lines in mdadm.conf.
-In these cases mdadm needs to deduce a name to use, and to try to
-avoid using a name that a different array might have a stronger claim to.
-The rules are:
-  - if the array is mentioned in mdadm.conf, use the name given there.
-  - if the array appear to have been created for "this host" using the
-    "homehost" concept, trust the name given in the metadata
-  - if the new setting "HOMEHOST <ignore>" is given (can be in mdadm.conf
-    or on command line) the the name given in the metadata is not
-    associated with some other array by mdadm.conf, then trust the
-    name given in the metadata
-  - otherwise use the name in the metadata, but in an untrusted manner.
+It tells mdadm not to put much weight on the 'homehost', but to
+instead look to mdadm.conf to be as authoritative as necessary.
 
-If a name is untrusted, or if the name is already in use by another
-array, then a numeric suffix like "_0", "_1" is appended to create
-a unique name for the array.
+So if a name is in use in mdadm.conf, then no other array will get
+that name.  But if a name is not in use in mdadm.conf, then it is
+available on a first-come, first-served basis.
 
-That name is then used to create a device file in /dev/md/.
+There are a bunch of other bug fixes in there too.
 
-So if all arrays needed for boot will always be listed in
-/etc/mdadm.conf, then it is appropriate to add "HOMEHOST <ignore>" to
-mdadm.conf and there is no risk of conflicting names.  However if you
-want auto-assemble to assemble all arrays at boot time and you don't
-want to list them in mdadm.conf, then don't give "HOMEHOST <ignore>"
-either else there could be a risk of the wrong array being assembled
-for a given name.
+Please try it out and let me know if you find it usable.
 
-
-
-The following is the same introduction to 3.x as appeared in
-previous announcements.
-
-Any testing and feedback will be greatly appreciated.
-
-NeilBrown  11th May 2009
-
-
-=====================================================
-
-The significant change which justifies the new major version number is
-that mdadm can now handle metadata updates entirely in userspace.
-This allows mdadm to support metadata formats that the kernel knows
-nothing about.
-
-Currently two such metadata formats are supported:
-  - DDF  - The SNIA standard format
-  - Intel Matrix - The metadata used by recent Intel ICH controlers.
-
-Also the approach to device names has changed significantly.
-
-If udev is installed on the system, mdadm will not create any devices
-in /dev.  Rather it allows udev to manage those devices.  For this to work
-as expected, the included udev rules file should be installed.
-
-If udev is not install, mdadm will still create devices and symlinks 
-as required, and will also remove them when the array is stopped.
-
-mdadm now requires all devices which do not have a standard name (mdX
-or md_dX) to live in the directory /dev/md/.  Names in this directory
-will always be created as symlinks back to the standard name in /dev.
-
-The man pages contain some information about the new externally managed
-metadata.  However see below for a more condensed overview.
-
-Externally managed metadata introduces the concept of a 'container'.
-A container is a collection of (normally) physical devices which have
-a common set of metadata.  A container is assembled as an md array, but
-is left 'inactive'.
-
-A container can contain one or more data arrays.  These are composed from
-slices (partitions?) of various devices in the container.
-
-For example, a 5 devices DDF set can container a RAID1 using the first
-half of two devices, a RAID0 using the first half of the remain 3 devices,
-and a RAID5 over thte second half of all 5 devices.
-
-A container can be created with
-
-   mdadm --create /dev/md0 -e ddf -n5 /dev/sd[abcde]
-
-or "-e imsm" to use the Intel Matrix Storage Manager.
-
-An array can be created within a container either by giving the
-container name and the only member:
-
-   mdadm -C /dev/md1 --level raid1 -n 2 /dev/md0
-
-or by listing the component devices
-
-   mdadm -C /dev/md2 --level raid0 -n 3 /dev/sd[cde]
-
-To assemble a container, it is easiest just to pass each device in turn to 
-mdadm -I
-
-  for i in /dev/sd[abcde]
-  do mdadm -I $i
-  done
-
-This will assemble the container and the components.
-
-Alternately the container can be assembled explicitly
-
-   mdadm -A /dev/md0 /dev/sd[abcde]
-
-Then the components can all be assembled with
-
-   mdadm -I /dev/md0
-
-For each container, mdadm will start a program called "mdmon" which will
-monitor the array and effect any metadata updates needed.  The array is
-initially assembled readonly. It is up to "mdmon" to mark the metadata 
-as 'dirty' and which the array to 'read-write'.
-
-The version 0.90 and 1.x metadata formats supported by previous
-versions for mdadm are still supported and the kernel still performs
-the same updates it use to.  The new 'mdmon' approach is only used for
-newly introduced metadata types.
+Thanks,
+NeilBrown
