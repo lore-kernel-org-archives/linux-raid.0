@@ -1,39 +1,144 @@
-From: mental-gemof@mail.ru
-Subject: =?windows-1251?Q?=C0=E7=E0  =D1=EE=EA=EE=EB=EE=E2=E0?=
-Date: Mon, 11 May 2009 19:32:34 +0400
-Message-ID: <E1M3bEw-0005tQ-00.mental-gemof-mail-ru@mx39.mail.ru>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Spare fails to transfer between RAID groups
+Date: Tue, 12 May 2009 09:30:21 +1000
+Message-ID: <18952.46349.611683.608352@notabene.brown>
+References: <001901c9d202$709acad0$51d06070$@us>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Garth Snyder on Sunday May 10
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: garth@grsweb.us
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-P=F3=EAo=E2o=E4c=F2=E2=F3 =E5ka=F2=E5p=E8=ED=E1=F3p=E3c=EAo=E3o =EE=F2=E4=
-e=EBe=ED=E8=FF "Bc=E5po=F1c=E8=E9=F1=EA=E0=FF =EF=EE=EB=E8=F2=E8=F7=E5=F1=
-=EAa=FF  =EF=E0p=F2=E8=FF  =ED=E0po=E4a"
-=C7=E4=F0=E0=E2=F1=F2=E2=F3=E9=F2e =C3app=E8 Makc=E8=EC=EE=E2=E8=F7
+On Sunday May 10, garth@grsweb.us wrote:
+> Hi raiders --
+> 
+> I'm having a problem getting a spare partition moved to the right RAID group
+> after a failure. I see some past discussion of issues related to spare
+> groups in the list archive, but no exact fit for the behavior I'm seeing.
+> Here's the outline:
+> 
+> 1) Two RAID arrays (/dev/md_d0 and /dev/md_d3) are assigned to one
+> spare-group in /etc/mdadm/mdadm.conf. The spare partition is initially
+> assigned to /dev/md_d0.
+> 
+...
+> 6) Two error messages are submitted via syslog to /var/log/kern.log in quick
+> succession, both with the same message: "HOT_ADD may only be used with
+> version-0 superblocks". The first message is tagged "md_d3" and the second
+> "md_d0".
+> 
+....
+> 
+> All superblocks involved are version 1.2. This is a new setup, and every
+> mdadm --create command has included --metadata=1.2. There should be no
+> legacy or old RAID superblocks around.
+> 
 
-3=E0=EF=EE=E2=E5=E4=E8 =F1a=F2=E0=ED=FB. =CA=E0 k=EE=E2=FB =EE=ED=E8?
-B =F7em =E1=FB=EBa =E3=EB a=E2=EDa=FF o=F8=E8=E1ka k=EEm=EC=F3=ED=E8=F1=
-=F2o=E2?
-=C1e=E4=ED=FB =E5 =E4=EE=EB=E6=ED=FB co=E4=E5=F0=E6a=F2=FC =E1o=E3=E0=F2=
-=FB=F5!
- =D7=F2=EE =F2a=EAoe =ABm=FF=E3k=E0=FF c=E8=EBa=BB?
-Ko=E3=E4=E0 =EAo m=EF=FC=FE=F2ep =EF=F0e=E2=E7o=E9=E4=E5=F2 =F7=E5=EBo=E2=
-eka?
+This would be because no one has tried the spare-group feature with
+1.x metadata yet.  You are the first (or the first to report when it
+failed at least).
 
-=CA=ED=E8=E3=E0 "3 =C0K=C0=D2`  =D7 E =CB0B=C5 =D7E=D1=D2BA!"=20
-=E8 m=ED. =E4=F0=F3=E3oe. =C4=CB=DF =CFO=CB=C8 T=C8K0B. 0 =CFO=CB=C8=D2=
-=C8=CA=C5.
+The following patch should make it work for you.  This patch is against
+2.6.9, though it should apply to any reasonably recent 2.x mdadm.
+(it won't apply to 3.0).
 
- =CFo =F2=E5=F5=ED=E8=F7ec=EA=E8m =EFp=E8=F7=E8=EDa=EC  =EC=FB =E2=FBc=FB=
-=EBa=E5=EC =EF=E8c=FC=EC=EE =F2o=EB=FCko =EE=E4=E8=ED =F0a=E7..
-=C3=C03=C5T=C0  "=D0E=CB=C8=C3=C8=DF =C8 =CFO=CB=C8=D2=C8=CA A".=20
+Please let me know if it works for you.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks for the report,
+NeilBrown
+
+diff --git a/Manage.c b/Manage.c
+index 33a0bc7..fa4bb60 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -292,11 +292,15 @@ int Manage_subdevs(char *devname, int fd,
+ 		} else {
+ 			j = 0;
+ 
+-			if (stat(dv->devname, &stb)) {
++			tfd = dev_open(dv->devname, O_RDONLY);
++			if (tfd < 0 || fstat(tfd, &stb) != 0) {
+ 				fprintf(stderr, Name ": cannot find %s: %s\n",
+ 					dv->devname, strerror(errno));
++				if (tfd >= 0)
++					close(tfd);
+ 				return 1;
+ 			}
++			close(tfd);
+ 			if ((stb.st_mode & S_IFMT) != S_IFBLK) {
+ 				fprintf(stderr, Name ": %s is not a "
+ 					"block device.\n",
+@@ -313,7 +317,7 @@ int Manage_subdevs(char *devname, int fd,
+ 			/* add the device */
+ 
+ 			/* Make sure it isn't in use (in 2.6 or later) */
+-			tfd = open(dv->devname, O_RDONLY|O_EXCL);
++			tfd = dev_open(dv->devname, O_RDONLY|O_EXCL);
+ 			if (tfd < 0) {
+ 				fprintf(stderr, Name ": Cannot open %s: %s\n",
+ 					dv->devname, strerror(errno));
+diff --git a/Monitor.c b/Monitor.c
+index 3825600..e0a9d2a 100644
+--- a/Monitor.c
++++ b/Monitor.c
+@@ -470,16 +470,25 @@ int Monitor(mddev_dev_t devlist,
+ 							}
+ 						}
+ 						if (dev > 0) {
+-							if (ioctl(fd2, HOT_REMOVE_DISK,
+-								  (unsigned long)dev) == 0) {
+-								if (ioctl(fd1, HOT_ADD_DISK,
+-									  (unsigned long)dev) == 0) {
++							struct mddev_dev_s devlist;
++							char devname[20];
++							devlist.next = NULL;
++							devlist.used = 0;
++							devlist.re_add = 0;
++							devlist.writemostly = 0;
++							devlist.devname = devname;
++							sprintf(devname, "%d:%d", major(dev), minor(dev));
++
++							devlist.disposition = 'r';
++							if (Manage_subdevs(st2->devname, fd2, &devlist, -1) == 0) {
++								devlist.disposition = 'a';
++								if (Manage_subdevs(st->devname, fd1, &devlist, -1) == 0) {
+ 									alert("MoveSpare", st->devname, st2->devname, mailaddr, mailfrom, alert_cmd, dosyslog);
+ 									close(fd1);
+ 									close(fd2);
+ 									break;
+ 								}
+-								else ioctl(fd2, HOT_ADD_DISK, (unsigned long) dev);
++								else Manage_subdevs(st2->devname, fd2, &devlist, -1);
+ 							}
+ 						}
+ 						close(fd1);
+diff --git a/super0.c b/super0.c
+index 90fdf23..ebba534 100644
+--- a/super0.c
++++ b/super0.c
+@@ -672,7 +672,7 @@ static int write_init_super0(struct supertype *st,
+ 			     mdu_disk_info_t *dinfo, char *devname)
+ {
+ 	mdp_super_t *sb = st->sb;
+-	int fd = open(devname, O_RDWR|O_EXCL);
++	int fd = dev_open(devname, O_RDWR|O_EXCL);
+ 	int rv;
+ 
+ 	if (fd < 0) {
+diff --git a/super1.c b/super1.c
+index 037c5eb..b86a28b 100644
+--- a/super1.c
++++ b/super1.c
+@@ -887,7 +887,7 @@ static int write_init_super1(struct supertype *st,
+ {
+ 	struct mdp_superblock_1 *sb = st->sb;
+ 	struct supertype refst;
+-	int fd = open(devname, O_RDWR | O_EXCL);
++	int fd = dev_open(devname, O_RDWR | O_EXCL);
+ 	int rfd;
+ 	int rv;
+ 	int bm_space;
