@@ -1,97 +1,86 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: Is TRIM/DISCARD going to be a performance problem?
-Date: Tue, 12 May 2009 09:28:53 -0400
-Message-ID: <87f94c370905120628r2352e923h43dca1645e197b6c@mail.gmail.com>
-References: <E1M2ts6-0005jr-Cg@closure.thunk.org>
-	 <20090511112729.GD29082@mit.edu> <20090511120936.GB6277@mit.edu>
-	 <87f94c370905110610j2f5ea7fcua4e596b2b5e82a5f@mail.gmail.com>
-	 <20090511142740.GC6277@mit.edu> <4A08365F.5040805@redhat.com>
-	 <20090511145059.GD6277@mit.edu>
-	 <20090511150040.GF8112@parisc-linux.org>
-	 <87f94c370905111147t77250b92pc511ef9c6c0e7e42@mail.gmail.com>
-	 <18952.46829.115084.46432@notabene.brown>
+From: Raz <raziebe@gmail.com>
+Subject: Re: Subject: [001/002 ] raid0 reshape
+Date: Tue, 12 May 2009 19:59:49 +0300
+Message-ID: <5d96567b0905120959k2910b6b9k95f7f364d167d15f@mail.gmail.com>
+References: <1241300764.5607.36.camel@raz> <18951.21983.1676.992436@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ext4-owner@vger.kernel.org>
-In-Reply-To: <18952.46829.115084.46432@notabene.brown>
-Sender: linux-ext4-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <18951.21983.1676.992436@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: Matthew Wilcox <matthew@wil.cx>, Theodore Tso <tytso@mit.edu>, Ric Wheeler <rwheeler@redhat.com>, J?rn Engel <joern@logfs.org>, Matthew Wilcox <willy@linux.intel.com>, Jens Axboe <jens.axboe@oracle.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+Cc: raz ben yehuda <raziebe@013.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, May 11, 2009 at 7:38 PM, Neil Brown <neilb@suse.de> wrote:
-> On Monday May 11, greg.freemyer@gmail.com wrote:
+On Mon, May 11, 2009 at 1:31 AM, Neil Brown <neilb@suse.de> wrote:
+> On Sunday May 3, raziebe@013.net wrote:
+>> Neil Hello
+>> The bellow is the raid0 grow code.I have decided to fix raid0 and no=
+t
+>> perform the transformation raid0-raid4-raid0 due to two reasons:
+>> 1. raid0 zones. this patch support any zone transformations.
+>> 2. Undesired dependency of raid0 over raid4 re-striping code.
 >>
->> And since the mdraid layer is not currently planning to track what h=
-as
->> been discarded over time, when a re-shape comes along, it will
->> effectively un-trim everything and rewrite 100% of the FS.
+>> The following tests were conducted:
+>> 1. various chunk sizes, 4K to 512K. ( mainly in 2.6.27 and 2.6.18 )
+>> 2. regrow ( tested on 2.6.27 and 2.6.18 )
+>> 3. various super blocks. 0.9 , 1, 1.1 and 1.2 ( mainly in 2.6.27 and=
+ 2.6.18 ).
+>> 4. support assembling and mounting older raid version ( older kernel=
+s and code before patch) after it was grown.
+>>
+>> patch passed checkpatch.pl . other than reshaping code i beautified =
+the code.
+>> Currently i about to pass this code to our testing team for further =
+tests.
+>> Other things to do:
+>> 1. Speedup the reshape process.It is too slow.
+>> 2. Support for non power 2^n ( page size) chunks.
+>>
+>> I will be thankful for your criticism.
 >
-> You might not call them "plans" exactly, but I have had thoughts
-> about tracking which part of an raid5 had 'live' data and which were
-> trimmed. =A0I think that is the only way I could support TRIM, unless
-> devices guarantee that all trimmed blocks read a zeros, and that seem=
-s
-> unlikely.
+> Probably my main criticism at this point is that there is no
+> commentary explaining how it works.
+> You appear to have chosen to run your own reshape thread rather than
+> providing a "resync" method and make use of the md_do_sync thread
+> which provides speed limiting etc.
+> Maybe that it a good decision, but as you haven't explained it, it is
+> hard to be sure.
+You are correct , I will move to md resync; online reshape is essential=
+=2E
+I just need to understand the entire md resync processes for that. I
+am going to
+base raid0 reshape code like raid1's, meaning, have two threads,
+raid0_resync and
+raid0d for the writes.
+Thank you Neil
 
-Neil,
-
-Re: raid 5, etc. No FS info/discussion
-
-The latest T13 proposed spec I saw explicitly allows reads from
-trimmed sectors to return non-determinate data in some devices.  Their
-is a per device flag you can read to see if a device does that or not.
- I think mdraid needs to simply assume all trimmed sectors return
-non-determinate data.  Either that, or simply check that per device
-flag and refuse to accept a drive that supports returning
-non-determinate data.
-
-Regardless, ignoring reshape, why do you need to track it?
-
-=2E.. thinking
-
-Oh yes, you will have to track it at least at the stripe level.
-
-If p =3D d1 ^ d2 is not guaranteed to be true due to a stripe discard
-and p, d1, d2 are all potentially non-determinate all is good at first
-because who cares that d1 =3D p ^ d2 is not true for your discarded
-stripe.  d1 is effectively just random data anyway.
-
-But as soon as either d1 or d2 is written to, you will need to force
-the entire stripe back into a determinate state or else you will have
-unprotected data sitting on that stripe.  You can only do that if you
-know the entire stripe was previously indeterminate, thus you have no
-option but to track the state of the stripes if dmraid is going to
-support discards with devices that advertise themselves as returning
-indeterminate data.
-
-So Neil, it looks like you need to move from thoughts about tracking
-discards to planning to track discards.
-
-=46YI: I don't know if it just for show, or if people really plan to do
-it, but I have seen several people build up very high performance raid
-arrays from SSDs already.  Seems that about 8 SSDs maxes out the
-current group of sata controllers, pci-express, etc.
-
-Since SSDs with trim support should be even faster, I suspect these
-ultra-high performance setups will want to use them.
-
-Greg
---=20
-Greg Freemyer
-Head of EDD Tape Extraction and Processing team
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-=46irst 99 Days Litigation White Paper -
-http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.p=
-df
-
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
+> Also, it seems to if an IO request arrives while the reshape is
+> happening, then it fails with -EBUSY.
+> I don't think that is a good thing.
+> 1/ no filesystem is going to be expecting EBUSY so it could cause
+> =A0 serious problems
+> 2/ if you aren't going to support online reshape so that a device can
+> =A0 be reshaped while it is in use, then there seems to be little poi=
+nt
+> =A0 in putting this code in the kernel. =A0Just write a program that =
+runs
+> =A0 in userspace which reshapes the array while it is not assembled.
+>
+> Also, I cannot see any evidence that you checkpoint the reshape at
+> all. =A0So if your machine crashes during the reshape, everything is
+> lost. =A0I do not find this acceptable.
+>
+> NeilBrown
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 --
-To unsubscribe from this list: send the line "unsubscribe linux-ext4" i=
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
