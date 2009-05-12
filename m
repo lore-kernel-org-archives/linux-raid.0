@@ -1,43 +1,83 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Is TRIM/DISCARD going to be a performance problem?
-Date: Tue, 12 May 2009 09:38:21 +1000
-Message-ID: <18952.46829.115084.46432@notabene.brown>
-References: <E1M2ts6-0005jr-Cg@closure.thunk.org>
-	<20090511083754.GA29082@mit.edu>
-	<20090511100624.GB6585@logfs.org>
-	<20090511112729.GD29082@mit.edu>
-	<20090511120936.GB6277@mit.edu>
-	<87f94c370905110610j2f5ea7fcua4e596b2b5e82a5f@mail.gmail.com>
-	<20090511142740.GC6277@mit.edu>
-	<4A08365F.5040805@redhat.com>
-	<20090511145059.GD6277@mit.edu>
-	<20090511150040.GF8112@parisc-linux.org>
-	<87f94c370905111147t77250b92pc511ef9c6c0e7e42@mail.gmail.com>
+From: fibre raid <fibreraid@gmail.com>
+Subject: mdadm issue on Ubuntu Januty 9.04 server
+Date: Mon, 11 May 2009 18:32:38 -0700
+Message-ID: <5817fbed0905111832u35d39a5au52482cceea53a4cb@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ext4-owner@vger.kernel.org>
-In-Reply-To: message from Greg Freemyer on Monday May 11
-Sender: linux-ext4-owner@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Theodore Tso <tytso@mit.edu>, Ric Wheeler <rwheeler@redhat.com>, J?rn Engel <joern@logfs.org>, Matthew Wilcox <willy@linux.intel.com>, Jens Axboe <jens.axboe@oracle.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Monday May 11, greg.freemyer@gmail.com wrote:
-> 
-> And since the mdraid layer is not currently planning to track what has
-> been discarded over time, when a re-shape comes along, it will
-> effectively un-trim everything and rewrite 100% of the FS.
+Hi,
 
-You might not call them "plans" exactly, but I have had thoughts
-about tracking which part of an raid5 had 'live' data and which were
-trimmed.  I think that is the only way I could support TRIM, unless
-devices guarantee that all trimmed blocks read a zeros, and that seems
-unlikely.
-You are right that the granularity would have to be at least
-one stripe.
-And a re-shape would be interesting, wouldn't it!  We could probably
-avoid instantiating every trimmed block, but in general quite a few
-would get instantiated.. I hadn't thought about that...
+I am facing an issue with mdadm on Ubuntu Jaunty 9.04 Server 64-bit edi=
+tion.
 
-NeilBrown
+Host:
+- Dual quad-core Xeon 5450 3.0 GHz CPUs
+- 16 GB RAM
+- Ubuntu 9.04 server (2.6.28-11)
+- mdadm 2.6.7.1
+- LSI 3801E controller with 12 x Seagate Cheetah 15K.5 300GB drives
+
+I am trying to create a RAID 0 md device from two of the 15K.5 drives.
+When I boot my Host, it seems like there is some legacy md data in
+/proc/mdstat. However, /etc/mdadm.conf is empty.
+
+root@JAUNTY:~# cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+md_d1 : inactive sdx[1](S)
+=A0=A0=A0=A0=A0 292968640 blocks
+
+md_d0 : inactive sdj[3](S) sdm[0](S) sdf[7](S) sdg[6](S)
+=A0=A0=A0=A0=A0 1171874560 blocks
+
+unused devices: <none>
+
+
+I proceed to stop and remove these md devices and use /proc/mdstat to
+verify that they were removed.
+
+root@JAUNTY:~# mdadm -S /dev/md_d1
+mdadm: stopped /dev/md_d1
+root@JAUNTY:~# mdadm -S /dev/md_d0
+mdadm: stopped /dev/md_d0
+root@JAUNTY:~# mdadm -r /dev/md_d1
+root@JAUNTY:~# mdadm -r /dev/md_d0
+root@JAUNTY:~# cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+unused devices: <none>
+
+
+Now it appears that the md devices are removed.
+
+I then try to create an md device:
+
+root@JAUNTY:~# mdadm -C -f -e 1.0 -R /dev/md0 -l 0 -n 2 -c 64 /dev/sdd =
+/dev/sdg
+mdadm: /dev/sdg appears to be part of a raid array:
+=A0=A0=A0 level=3Draid0 devices=3D8 ctime=3DSun Mar 22 23:22:03 2009
+mdadm: array /dev/md0 started.
+root@JAUNTY:~# cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+md0 : active raid0 sdg[1] sdd[0]
+=A0=A0=A0=A0=A0 585937408 blocks super 1.0 64k chunks
+
+unused devices: <none>
+
+
+Why does mdadm report /dev/sdg as part of a raid array? I removed all
+the md devices as shown above. Thank you for your help!
+
+Thanks!
+-Thomas
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
