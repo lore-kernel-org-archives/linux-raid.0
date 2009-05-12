@@ -1,86 +1,85 @@
-From: Raz <raziebe@gmail.com>
-Subject: Re: Subject: [001/002 ] raid0 reshape
-Date: Tue, 12 May 2009 19:59:49 +0300
-Message-ID: <5d96567b0905120959k2910b6b9k95f7f364d167d15f@mail.gmail.com>
-References: <1241300764.5607.36.camel@raz> <18951.21983.1676.992436@notabene.brown>
+From: Daniel Reurich <daniel@centurion.net.nz>
+Subject: Re: md extension to support booting from raid whole disks.
+Date: Wed, 13 May 2009 07:44:29 +1200
+Message-ID: <1242157469.18958.13.camel@ezra>
+References: <20090503013342770.VMBT19475@cdptpa-omta01.mail.rr.com>
+	 <e13f0e541934a0966f213f6da13d83da.squirrel@neil.brown.name>
+	 <1241406283.17240.26.camel@ezra> <87fxff462s.fsf@frosties.localdomain>
+	 <21cdc7a16fbdd42979d52331db97c737.squirrel@neil.brown.name>
+	 <87ws8r2pqf.fsf@frosties.localdomain>
+	 <18953.2936.212863.158003@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18951.21983.1676.992436@notabene.brown>
+In-Reply-To: <18953.2936.212863.158003@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: raz ben yehuda <raziebe@013.net>, linux-raid@vger.kernel.org
+Cc: Goswin von Brederlow <goswin-v-b@web.de>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, May 11, 2009 at 1:31 AM, Neil Brown <neilb@suse.de> wrote:
-> On Sunday May 3, raziebe@013.net wrote:
->> Neil Hello
->> The bellow is the raid0 grow code.I have decided to fix raid0 and no=
-t
->> perform the transformation raid0-raid4-raid0 due to two reasons:
->> 1. raid0 zones. this patch support any zone transformations.
->> 2. Undesired dependency of raid0 over raid4 re-striping code.
->>
->> The following tests were conducted:
->> 1. various chunk sizes, 4K to 512K. ( mainly in 2.6.27 and 2.6.18 )
->> 2. regrow ( tested on 2.6.27 and 2.6.18 )
->> 3. various super blocks. 0.9 , 1, 1.1 and 1.2 ( mainly in 2.6.27 and=
- 2.6.18 ).
->> 4. support assembling and mounting older raid version ( older kernel=
-s and code before patch) after it was grown.
->>
->> patch passed checkpatch.pl . other than reshaping code i beautified =
-the code.
->> Currently i about to pass this code to our testing team for further =
-tests.
->> Other things to do:
->> 1. Speedup the reshape process.It is too slow.
->> 2. Support for non power 2^n ( page size) chunks.
->>
->> I will be thankful for your criticism.
->
-> Probably my main criticism at this point is that there is no
-> commentary explaining how it works.
-> You appear to have chosen to run your own reshape thread rather than
-> providing a "resync" method and make use of the md_do_sync thread
-> which provides speed limiting etc.
-> Maybe that it a good decision, but as you haven't explained it, it is
-> hard to be sure.
-You are correct , I will move to md resync; online reshape is essential=
-=2E
-I just need to understand the entire md resync processes for that. I
-am going to
-base raid0 reshape code like raid1's, meaning, have two threads,
-raid0_resync and
-raid0d for the writes.
-Thank you Neil
+On Tue, 2009-05-12 at 15:39 +1000, Neil Brown wrote:
+> On Saturday May 9, goswin-v-b@web.de wrote:
+> > "NeilBrown" <neilb@suse.de> writes:
+> > 
+> > > On Sat, May 9, 2009 7:50 am, Goswin von Brederlow wrote:
+> > >
+> > >>>> So I still plan to offer a "--reserve-space=2M" option for mdadm to
+> > >>>> allow the first 2M of each device to not used for raid data.  Whether
+> > >>>> any particular usage of this option is viable or not, is a different
+> > >>>> question altogether.
+> > >>
+> > >> How exactly would that layout be then?
+> > >>
+> > >> Block  0   bootblock
+> > >> Block  1   raid metadata
+> > >> Block  x   2M reserved space
+> > >> Block x+2M start of raid data
+> > >>
+> > >> Like this?
+> > >
+> > > When using 1.2 metadata, yes, possible with bitmap
+> > > inserted  between the reserved space and the start of raid data.
+> > 
+> > That realy seems to be the best option. Simple to implement, simple to
+> > use and if mdadm copies the reserved space from old to new drives when
+> > adding one it gives us exactly what we want.
+> > 
+> > Are you working on that already or do you think it needs more discussion?
+> 
+> Discussion is good....
+> 
+> I have just pushed out some changes to the 'master' branch of
+>    git://neil.brown.name/mdadm
+> 
+> The last patch adds "--reserve-space=" support to create.
+> It only works with 1.x metadata (and causes the default to be 1.0).
+> 
+> You cannot hot-add a bitmap to a 1.1 or 1.2 array created with this
+> feature (the kernel cannot be told the right thing to do yet).
+> 
+> The space can have a K, M, or G suffix with the obvious meanings.
+> K is the default.
+> 
+> mdadm currently does not copy any data from one device to another.
+> This could possibly be added for "--add" but not for "--create".
 
-> Also, it seems to if an IO request arrives while the reshape is
-> happening, then it fails with -EBUSY.
-> I don't think that is a good thing.
-> 1/ no filesystem is going to be expecting EBUSY so it could cause
-> =A0 serious problems
-> 2/ if you aren't going to support online reshape so that a device can
-> =A0 be reshaped while it is in use, then there seems to be little poi=
-nt
-> =A0 in putting this code in the kernel. =A0Just write a program that =
-runs
-> =A0 in userspace which reshapes the array while it is not assembled.
->
-> Also, I cannot see any evidence that you checkpoint the reshape at
-> all. =A0So if your machine crashes during the reshape, everything is
-> lost. =A0I do not find this acceptable.
->
-> NeilBrown
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Could we do this better using containers and snia's ddf in intels matrix
+(or our own) metadata to define the data areas and this way create a
+raid1 container at the start of the disks and use 1.0 format superblock
+and metadata at the end of the drive (as long as this doesn't mess with
+the metadata.  
+
+This would solve the syncing of boot sectors because it would be done as
+part of normal raid 1.  Hot add would simply be a matter of adding
+members to the container.  The only issue I can see is whether you are
+able to hot resize the data areas in containers as part of the grow
+feature, or would we have to do a metadata tweak to redefine the size of
+data areas.
+
+-- 
+Daniel Reurich
+
+Centurion Computer Technology (2005) Ltd
+Ph 021 797 722
+
