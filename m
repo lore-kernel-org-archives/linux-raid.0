@@ -1,55 +1,70 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: How do people deal with disk size variations?
-Date: Wed, 13 May 2009 09:05:34 -0400
-Message-ID: <4A0AC59E.7020808@tmr.com>
-References: <4A0A89DE.4070502@eyal.emu.id.au>
+Subject: Re: [PATCH] md: Track raid5/6 statistics
+Date: Wed, 13 May 2009 09:10:27 -0400
+Message-ID: <4A0AC6C3.6020702@tmr.com>
+References: <20090312205754.GH8732@clouds> <e9c3a7c20903141007h5fea439co70e4ea9ea4a10ec1@mail.gmail.com> <20090506200502.GK25233@clouds> <e9c3a7c20905070930n5b7bd3dcy3e837d17865d4540@mail.gmail.com> <20090511133602.GB30561@clouds>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A0A89DE.4070502@eyal.emu.id.au>
+In-Reply-To: <20090511133602.GB30561@clouds>
 Sender: linux-raid-owner@vger.kernel.org
-To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Jody McIntyre <scjody@sun.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-Eyal Lebedinsky wrote:
-> I have a 5-disk raid5. I notice that the five identical disks, which also
-> list identical LBA numbers on the label, do not show the same size when
-> queried. One is reporting (smart - it should tell the truth from the disk
-> pov) a smaller size.
+Jody McIntyre wrote:
+> On Thu, May 07, 2009 at 09:30:33AM -0700, Dan Williams wrote:
 >
-> One disk reports
->     User Capacity: 1,000,203,804,160 bytes
-> and the other four
->     User Capacity: 1,000,204,886,016 bytes
+>   
+>> It would be nice if the kernel could auto-tune stripe_cache_size, but
+>> I think modifying it in a reactive fashion may do more harm than good.
+>>  The times when we want write-out to be faster are usually the times
+>> when the system has too much dirty memory lying around so there is no
+>> room to increase the cache.  If we are under utilizing the stripe
+>> cache then there is a good chance the memory could be put to better
+>> use in the page cache, but then we are putting ourselves in a
+>> compromised state when a write burst appears.
+>>     
 >
-> Luckily I always build a raid on partitions so this difference is
-> irrelevant being in the slack past the partition end.
+> Yes - it's really too bad that we have this tunable, but I can't think
+> of a good way to get rid of it.  In some customer issues I've seen,
+> performance really suffers when the array is out of stripes - enough to
+> make single IOs take _minutes_ in the worst cases.  This is especially
+> easy to reproduce during a resync or rebuild, for obvious reasons.
 >
-If a drive is advertised as a certain size and isn't as least that big I 
-think you have a return. But as for "bonus bytes" you take what you get. 
-In many cases recently I have found drives are even larger than claimed, 
-with extra capacity blocked using the hpa. In those cases you can reset 
-the hpa if you dare (the extra may not be good, that's why it was 
-downsized). Using space you unblock is like overclocking, sometimes you 
-get performance for free and sometimes you get a learning experience.
-
-Note that downsizing to a given size using the hpa will allow you to run 
-"whole disk" arrays without the issues you mention. I have never seen a 
-benefit to do so, but I know people who do it.
-> However, if I managed to use the whole disk, the raid will be as large as
-> the smallest disk. What happens when I replace a disk and get an even
-> smaller replacement one?
+> On a related note, there seems to be some confusion surrounding how much
+> memory is used by the stripe cache.  I've seen users who believed the
+> value was in kilobytes of memory, whereas the truth is a bit more
+> complicated.  We could add a stripe_cache_kb entry (writeable even) to
+> make this clearer, and/or improve Documentation/md.txt.  Also, we
+> helpfully print the amount allocated when the array is first run():
 >
-> Do people always leave unused space at the end? Do you expect disks from
-> the same exact model to have exactly the same usable size?
+> 		printk(KERN_INFO "raid5: allocated %dkB for %s\n",
+> 			memory, mdname(mddev));
 >
-> BTW, even if the label gave the correct size, one does not know in
-> advance what will arrive when you order a disk, right?
+> but we don't ever provide an update when it changes.  I don't think we
+> want to printk() every time someone changes the sysfs tunable though -
+> perhaps we should get rid of the message in run()?
 >
-> cheers
+>   
+I think the opposite, when it changes log the new value. This is not 
+something likely to be done repeatedly, usually just when tuning right 
+after boot. Or bumping the size for doing a resync or such, in any case 
+it's infrequent.
+>> In the end I agree that having some kind of out_of_stripes
+>> notification would be useful.  However, I think it would make more
+>> sense to implement it as a "stripe_cache_active load average".  Then
+>> for a given workload the operator can see if there are spikes or
+>> sustained cache saturation.  What do you think?
+>>     
 >
+> That makes sense.  It would be a more meaningful number than our current
+> statistic, which is "at some point since you started the array, we had
+> to wait for a stripe N times."
+>
+> I'll come up with a patch when I get the chance.
+>   
 
 
 -- 
