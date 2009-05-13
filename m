@@ -1,34 +1,45 @@
 From: Neil Brown <neilb@suse.de>
-Subject: RE: Requesting replace mode for changing a disk
-Date: Wed, 13 May 2009 14:31:03 +1000
-Message-ID: <18954.19719.172893.761454@notabene.brown>
-References: <4A060CBE.9090308@tmr.com>
-	<20090513012112681.IEFQ19662@cdptpa-omta02.mail.rr.com>
+Subject: Re: Requesting replace mode for changing a disk
+Date: Wed, 13 May 2009 14:36:45 +1000
+Message-ID: <18954.20061.109627.591832@notabene.brown>
+References: <20090513012112681.IEFQ19662@cdptpa-omta02.mail.rr.com>
+	<87zldhvg0v.fsf@frosties.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Leslie Rhorer on Tuesday May 12
+In-Reply-To: message from Goswin von Brederlow on Wednesday May 13
 Sender: linux-raid-owner@vger.kernel.org
-To: lrhorer@satx.rr.com
-Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: lrhorer@satx.rr.com, 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tuesday May 12, lrhorer@satx.rr.com wrote:
+On Wednesday May 13, goswin-v-b@web.de wrote:
+> > OK, basically the same question.  How does one disassemble the RAID1 array
+> > without wiping the data on the new drive?
 > 
-> But doesn't creating the array with the drive wipe the contents?  If so, it
-> doesn't seem to me this provides much redundancy.
+> I think he ment this:
+> 
+> mdadm --stop /dev/md0
+> mdadm --build /dev/md9 --chunk=64k --level=1 --raid-devices=2 /dev/suspect /dev/new
+> mdadm --assemble /dev/md0 /dev/md9 /dev/other ...
 
-No.  Creating an array does not wipe the contents.
-It might cause a resync which will copy contents from one drive to the
-other and I don't promise which one.
-However if you:
+or better still:
 
-   mdadm -C /dev/md0 --level 1 -n 2 /dev/foo missing
-   mdadm /dev/md0 --add /dev/bar
+  mdadm --grow /dev/md0 --bitmap internal
+  mdadm /dev/md0 --fail /dev/suspect --remove /dev/suspect
+  mdadm --build /dev/md9 --level 1 --raid-devices 2 /dev/suspect missing
+  mdadm /dev/md0 --add /dev/md9
+  mdadm /dev/md9 --add /dev/new
 
-then the contents on /dev/foo will not be changed (except for a few K
-at the end for the metadata) and then all of foo will be copied to
-bar.
+no down time at all.  The bitmap ensures that /dev/md9 will be
+recovered almost immediately once it is added back in to the array.
+
+The one problem with this approach is that if there is a read error on
+/dev/suspect while data is being copied to /dev/new, you lose.
+
+Hence the requested functionality which I do hope to implement for
+raid456 and raid10 (it adds no value to raid1).
+Maybe by the end of this year... it is on the roadmap.
 
 NeilBrown
