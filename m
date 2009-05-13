@@ -1,78 +1,35 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [PATCH] md: Track raid5/6 statistics
-Date: Wed, 13 May 2009 09:10:27 -0400
-Message-ID: <4A0AC6C3.6020702@tmr.com>
-References: <20090312205754.GH8732@clouds> <e9c3a7c20903141007h5fea439co70e4ea9ea4a10ec1@mail.gmail.com> <20090506200502.GK25233@clouds> <e9c3a7c20905070930n5b7bd3dcy3e837d17865d4540@mail.gmail.com> <20090511133602.GB30561@clouds>
+From: John Hughes <john@Calva.COM>
+Subject: Re: mdadm issue on Ubuntu Januty 9.04 server
+Date: Wed, 13 May 2009 15:14:40 +0200
+Message-ID: <4A0AC7C0.1020507@Calva.COM>
+References: <5817fbed0905111832u35d39a5au52482cceea53a4cb@mail.gmail.com> <f6ef7d922bea762a5b2539e4d015934a.squirrel@neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090511133602.GB30561@clouds>
+In-Reply-To: <f6ef7d922bea762a5b2539e4d015934a.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jody McIntyre <scjody@sun.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, neilb@suse.de
+To: NeilBrown <neilb@suse.de>
+Cc: fibre raid <fibreraid@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Jody McIntyre wrote:
-> On Thu, May 07, 2009 at 09:30:33AM -0700, Dan Williams wrote:
->
+NeilBrown wrote:
+> that make them look like part of some old array.
+> Why jaunty partially assembled them isn't clear.  Maybe it
+> is using --incremental and it is waiting for the rest of the
+> array to appear.
 >   
->> It would be nice if the kernel could auto-tune stripe_cache_size, but
->> I think modifying it in a reactive fashion may do more harm than good.
->>  The times when we want write-out to be faster are usually the times
->> when the system has too much dirty memory lying around so there is no
->> room to increase the cache.  If we are under utilizing the stripe
->> cache then there is a good chance the memory could be put to better
->> use in the page cache, but then we are putting ourselves in a
->> compromised state when a write burst appears.
->>     
->
-> Yes - it's really too bad that we have this tunable, but I can't think
-> of a good way to get rid of it.  In some customer issues I've seen,
-> performance really suffers when the array is out of stripes - enough to
-> make single IOs take _minutes_ in the worst cases.  This is especially
-> easy to reproduce during a resync or rebuild, for obvious reasons.
->
-> On a related note, there seems to be some confusion surrounding how much
-> memory is used by the stripe cache.  I've seen users who believed the
-> value was in kilobytes of memory, whereas the truth is a bit more
-> complicated.  We could add a stripe_cache_kb entry (writeable even) to
-> make this clearer, and/or improve Documentation/md.txt.  Also, we
-> helpfully print the amount allocated when the array is first run():
->
-> 		printk(KERN_INFO "raid5: allocated %dkB for %s\n",
-> 			memory, mdname(mddev));
->
-> but we don't ever provide an update when it changes.  I don't think we
-> want to printk() every time someone changes the sysfs tunable though -
-> perhaps we should get rid of the message in run()?
->
->   
-I think the opposite, when it changes log the new value. This is not 
-something likely to be done repeatedly, usually just when tuning right 
-after boot. Or bumping the size for doing a resync or such, in any case 
-it's infrequent.
->> In the end I agree that having some kind of out_of_stripes
->> notification would be useful.  However, I think it would make more
->> sense to implement it as a "stripe_cache_active load average".  Then
->> for a given workload the operator can see if there are spikes or
->> sustained cache saturation.  What do you think?
->>     
->
-> That makes sense.  It would be a more meaningful number than our current
-> statistic, which is "at some point since you started the array, we had
-> to wait for a stripe N times."
->
-> I'll come up with a patch when I get the chance.
->   
+In my experience mdadm --incremental just doesn't work on Jaunty.
 
+When you run it on the first disk in the raid it sets the raid up as 
+waiting for the rest, creates the /dev/md/xxx device, all looks good.
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
+When you try the second disk (I have a raid-1) it complains that the 
+/dev/md/xxx exists and does nothing.
 
-"You are disgraced professional losers. And by the way, give us our money back."
-    - Representative Earl Pomeroy,  Democrat of North Dakota
-on the A.I.G. executives who were paid bonuses  after a federal bailout.
+Results - exactly as "fibre raid" complains - you're left with a partly 
+set up inactive raid.
 
+Haven't got around to doing a bugreport yet as I don't want to mess with 
+my running server.
 
