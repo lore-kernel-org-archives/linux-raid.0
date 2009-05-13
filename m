@@ -1,49 +1,39 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Change Chunk Size on Array?
-Date: Wed, 13 May 2009 20:49:02 +1000
-Message-ID: <18954.42398.147783.405948@notabene.brown>
-References: <16137381.post@talk.nabble.com>
-	<23514897.post@talk.nabble.com>
-	<18954.20603.952706.467047@notabene.brown>
-	<878wl1ihil.fsf@frosties.localdomain>
+Subject: Re: Requesting replace mode for changing a disk
+Date: Wed, 13 May 2009 20:51:34 +1000
+Message-ID: <18954.42550.29885.82983@notabene.brown>
+References: <4A060CBE.9090308@tmr.com>
+	<20090513012112681.IEFQ19662@cdptpa-omta02.mail.rr.com>
+	<18954.19719.172893.761454@notabene.brown>
+	<37d33d830905122137l18f13c2aoec8e1cf67fdba2c0@mail.gmail.com>
+	<18954.21141.982191.727975@notabene.brown>
+	<37d33d830905122207pd676f00vac502f18d972dfae@mail.gmail.com>
+	<b9218ba81e2428201586f3d740e7ad2f.squirrel@neil.brown.name>
+	<37d33d830905122231p28e86b31y21ace4668d1697e7@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Goswin von Brederlow on Wednesday May 13
+In-Reply-To: message from SandeepKsinha on Wednesday May 13
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: SandeepKsinha <sandeepksinha@gmail.com>, linux-raid@vger.kernel.org
+To: SandeepKsinha <sandeepksinha@gmail.com>
+Cc: lrhorer@satx.rr.com, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wednesday May 13, goswin-v-b@web.de wrote:
-> Neil Brown <neilb@suse.de> writes:
+On Wednesday May 13, sandeepksinha@gmail.com wrote:
 > 
-> > Online changing of chunk size for raid5 is very close to being
-> > implemented.
-> > All the kernel side support will be in 2.6.30.
-> > I just need to spend some time getting mdadm to make it work.
-> > Because data is being rearranged in-place, and because you don't want
-> > to lose everything if your systems crashes, mdadm will have to work in
-> > tandem with the kernel making a backup copy of a section of the array,
-> > allowing the kernel to reshape that section, and then moving on to the
-> > next section.  It will be slow, but it will be reliable.
-> >
-> > NeilBrown
+> Thanks but I am still confused. Here is what I see on the console.
 > 
-> Shouldn't mdadm create a file and pass the FD to the kernel or a
-> loopback device and pass the major/minor and the kernel then moves
-> data there itself? Seems like a bad idea to pass all the data of the
-> raid to userspace just so it can be passed back to the kernel again.
+> 
+> [10:55:16 sinhas]$ sudo mdadm -C /dev/md0 --level 1 -n 2 /dev/sda5 missing
+> mdadm: /dev/sda5 appears to contain an ext2fs file system
+>     size=19535008K  mtime=Sun Apr  5 21:34:00 2009
+> mdadm: /dev/sda5 appears to be part of a raid array:
+>     level=raid1 devices=2 ctime=Wed May 13 10:06:33 2009
+> Continue creating array? y
+> mdadm: RUN_ARRAY failed: Invalid argument
+> mdadm: stopped /dev/md0
 
-The data doesn't really have to go to user-space.
-If we use mmap instead of read, and pass the mmapped buffer to write,
-then the data just lives in kernel buffers (I think) - it never gets
-faulted in to the address space.
-
-I want to keep the functionality in the kernel to a minimum and do any
-fiddly bits in user-space.  I think keeping that back - and restoring
-from it in the event of a crash - is definitely a fiddly bit that does
-not belong in the kernel.
+Odd.  Look for explanatory message in 'dmesg'.
 
 NeilBrown
