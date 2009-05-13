@@ -1,39 +1,67 @@
 From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Subject: [001/001 ] raid0 remove hashing, variable chunk size
-Date: Thu, 14 May 2009 07:04:11 +1000 (EST)
-Message-ID: <691b51234567a1fcea495b655f3275de.squirrel@neil.brown.name>
-References: <1242237805.8753.6.camel@raz>
+Subject: Re: RAID0 - unitialised zone->dev_start for zone[0]
+Date: Thu, 14 May 2009 07:11:36 +1000 (EST)
+Message-ID: <beb1238841d24e553e0248080d5e4dca.squirrel@neil.brown.name>
+References: <37d33d830905131008y4a3a3815i6bec41a0d9b32ddf@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1242237805.8753.6.camel@raz>
+In-Reply-To: <37d33d830905131008y4a3a3815i6bec41a0d9b32ddf@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: raz ben yehuda <raziebe@013.net>
-Cc: linux-raid@vger.kernel.org
+To: SandeepKsinha <sandeepksinha@gmail.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, May 14, 2009 4:03 am, raz ben yehuda wrote:
-> 1. Beautify raid0 code
-> 2. Remove hashing
-> 3. Chunk size of 4K*n instead of 4K*2^n ( must apply a patch to mdadm ).
-> patch was tested with backward compatibility to 2.6.18. i did not test
-> 32bit, i do have
-> a 32bit compiler for 2.6.30-rc2.
->  md.c    |   24 ++-
->  raid0.c |  428
-> ++++++++++++++++++++++++++++++----------------------------------
->  raid0.h |    3
->  3 files changed, 221 insertions(+), 234 deletions(-)
+On Thu, May 14, 2009 3:08 am, SandeepKsinha wrote:
+> Hi Neil,
+>
+>
+> [22:33:46 sinhas]$ diff raid0.c raid0.c.orig
 
-That is a very small description for a very big patch.
+Always, always, always use "diff -u".  It provides context
+so the diff is much easier to read.
 
-As it does 3 different things, can you make it into three different
-patches?  That tends to make it a lot easier to review.
+> 160d159
+> <       zone->dev_start =3D 0;
+> [/usr/src/linux-2.6.29/drivers/md]
+> [22:33:59 sinhas]$
+>
+> I see this piece of code missing and being used later.
+> Not very sure of the code flow, but still as part of defensive
+> programming.
+>
+> Am i missing something?
 
-> Signed-of-By : Neil Brown neilb@suse.de
-
-You are meant to put your own email address here, not mine.
+conf->strip_zone is allocated with kzalloc, so all values are
+initialised to 0.
 
 NeilBrown
 
+
+>
+>
+>
+> --
+> Regards,
+> Sandeep.
+>
+>
+>
+>
+>
+>
+> =93To learn is to change. Education is a process that changes the lea=
+rner.=94
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
