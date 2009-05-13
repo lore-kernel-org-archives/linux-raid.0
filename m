@@ -1,77 +1,46 @@
-From: SandeepKsinha <sandeepksinha@gmail.com>
-Subject: Re: Requesting replace mode for changing a disk
-Date: Wed, 13 May 2009 10:07:00 +0530
-Message-ID: <37d33d830905122137l18f13c2aoec8e1cf67fdba2c0@mail.gmail.com>
-References: <4A060CBE.9090308@tmr.com>
-	 <20090513012112681.IEFQ19662@cdptpa-omta02.mail.rr.com>
-	 <18954.19719.172893.761454@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Change Chunk Size on Array?
+Date: Wed, 13 May 2009 14:45:47 +1000
+Message-ID: <18954.20603.952706.467047@notabene.brown>
+References: <16137381.post@talk.nabble.com>
+	<23514897.post@talk.nabble.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18954.19719.172893.761454@notabene.brown>
+In-Reply-To: message from SandeepKsinha on Tuesday May 12
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: lrhorer@satx.rr.com, Linux RAID <linux-raid@vger.kernel.org>
+To: SandeepKsinha <sandeepksinha@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Tuesday May 12, sandeepksinha@gmail.com wrote:
+> 
+> 
+> 
+> crshman wrote:
+> > 
+> > Hello All,
+> > 
+> > I wanted to know if it were possible to change the chunk size on an array
+> > after it has been created. I have a software raid 5 comprised of 7 drives
+> > with a chunk size of 64k. I wanted to up that to 1024k, would this be
+> > possible without losing any data? This isn't mission critical so it is ok
+> > if i need to stop the array first, however I'd rather not lose any data.
+> > 
+> It is possible to change the chunksize but for the same you would need to
+> offline your array.
 
-On Wed, May 13, 2009 at 10:01 AM, Neil Brown <neilb@suse.de> wrote:
-> On Tuesday May 12, lrhorer@satx.rr.com wrote:
->>
->> But doesn't creating the array with the drive wipe the contents? =A0=
-If so, it
->> doesn't seem to me this provides much redundancy.
->
-> No. =A0Creating an array does not wipe the contents.
-> It might cause a resync which will copy contents from one drive to th=
-e
-> other and I don't promise which one.
-> However if you:
->
-Now, my question is that what if I create a RAID1 with 100 disks on eac=
-h side.
-Do you mean to say that there will be unnecessary resync happening
-there as well, that too for unallocated/written data.
+Is it?  How?
 
-If thats the case, we surely need to handle these two situations
-differently (1) which neil mentioned (2) the one I mentioned above.
+Online changing of chunk size for raid5 is very close to being
+implemented.
+All the kernel side support will be in 2.6.30.
+I just need to spend some time getting mdadm to make it work.
+Because data is being rearranged in-place, and because you don't want
+to lose everything if your systems crashes, mdadm will have to work in
+tandem with the kernel making a backup copy of a section of the array,
+allowing the kernel to reshape that section, and then moving on to the
+next section.  It will be slow, but it will be reliable.
 
-Remember I referring to the case of creation.
-
-> =A0 mdadm -C /dev/md0 --level 1 -n 2 /dev/foo missing
-> =A0 mdadm /dev/md0 --add /dev/bar
->
-> then the contents on /dev/foo will not be changed (except for a few K
-> at the end for the metadata) and then all of foo will be copied to
-> bar.
->
-
-Will the create happen at the first place?
-> NeilBrown
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
-
-
-
---=20
-Regards,
-Sandeep.
-
-
-
-
-
- =09
-=93To learn is to change. Education is a process that changes the learn=
-er.=94
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+NeilBrown
