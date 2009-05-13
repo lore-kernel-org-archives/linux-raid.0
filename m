@@ -1,45 +1,77 @@
-From: Neil Brown <neilb@suse.de>
+From: SandeepKsinha <sandeepksinha@gmail.com>
 Subject: Re: Requesting replace mode for changing a disk
-Date: Wed, 13 May 2009 14:36:45 +1000
-Message-ID: <18954.20061.109627.591832@notabene.brown>
-References: <20090513012112681.IEFQ19662@cdptpa-omta02.mail.rr.com>
-	<87zldhvg0v.fsf@frosties.localdomain>
+Date: Wed, 13 May 2009 10:07:00 +0530
+Message-ID: <37d33d830905122137l18f13c2aoec8e1cf67fdba2c0@mail.gmail.com>
+References: <4A060CBE.9090308@tmr.com>
+	 <20090513012112681.IEFQ19662@cdptpa-omta02.mail.rr.com>
+	 <18954.19719.172893.761454@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Goswin von Brederlow on Wednesday May 13
+In-Reply-To: <18954.19719.172893.761454@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: lrhorer@satx.rr.com, 'Linux RAID' <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: lrhorer@satx.rr.com, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wednesday May 13, goswin-v-b@web.de wrote:
-> > OK, basically the same question.  How does one disassemble the RAID1 array
-> > without wiping the data on the new drive?
-> 
-> I think he ment this:
-> 
-> mdadm --stop /dev/md0
-> mdadm --build /dev/md9 --chunk=64k --level=1 --raid-devices=2 /dev/suspect /dev/new
-> mdadm --assemble /dev/md0 /dev/md9 /dev/other ...
+Hi,
 
-or better still:
+On Wed, May 13, 2009 at 10:01 AM, Neil Brown <neilb@suse.de> wrote:
+> On Tuesday May 12, lrhorer@satx.rr.com wrote:
+>>
+>> But doesn't creating the array with the drive wipe the contents? =A0=
+If so, it
+>> doesn't seem to me this provides much redundancy.
+>
+> No. =A0Creating an array does not wipe the contents.
+> It might cause a resync which will copy contents from one drive to th=
+e
+> other and I don't promise which one.
+> However if you:
+>
+Now, my question is that what if I create a RAID1 with 100 disks on eac=
+h side.
+Do you mean to say that there will be unnecessary resync happening
+there as well, that too for unallocated/written data.
 
-  mdadm --grow /dev/md0 --bitmap internal
-  mdadm /dev/md0 --fail /dev/suspect --remove /dev/suspect
-  mdadm --build /dev/md9 --level 1 --raid-devices 2 /dev/suspect missing
-  mdadm /dev/md0 --add /dev/md9
-  mdadm /dev/md9 --add /dev/new
+If thats the case, we surely need to handle these two situations
+differently (1) which neil mentioned (2) the one I mentioned above.
 
-no down time at all.  The bitmap ensures that /dev/md9 will be
-recovered almost immediately once it is added back in to the array.
+Remember I referring to the case of creation.
 
-The one problem with this approach is that if there is a read error on
-/dev/suspect while data is being copied to /dev/new, you lose.
+> =A0 mdadm -C /dev/md0 --level 1 -n 2 /dev/foo missing
+> =A0 mdadm /dev/md0 --add /dev/bar
+>
+> then the contents on /dev/foo will not be changed (except for a few K
+> at the end for the metadata) and then all of foo will be copied to
+> bar.
+>
 
-Hence the requested functionality which I do hope to implement for
-raid456 and raid10 (it adds no value to raid1).
-Maybe by the end of this year... it is on the roadmap.
+Will the create happen at the first place?
+> NeilBrown
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-NeilBrown
+
+
+--=20
+Regards,
+Sandeep.
+
+
+
+
+
+ =09
+=93To learn is to change. Education is a process that changes the learn=
+er.=94
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
