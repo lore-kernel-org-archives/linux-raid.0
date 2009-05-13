@@ -1,50 +1,99 @@
 From: Neil Brown <neilb@suse.de>
-Subject: RE: Spare fails to transfer between RAID groups
-Date: Wed, 13 May 2009 21:07:28 +1000
-Message-ID: <18954.43504.87590.384746@notabene.brown>
-References: <001901c9d202$709acad0$51d06070$@us>
-	<18952.46349.611683.608352@notabene.brown>
-	<007c01c9d34c$9a618f70$cf24ae50$@us>
+Subject: Re: md extension to support booting from raid whole disks.
+Date: Wed, 13 May 2009 21:12:58 +1000
+Message-ID: <18954.43834.53155.793587@notabene.brown>
+References: <20090503013342770.VMBT19475@cdptpa-omta01.mail.rr.com>
+	<e13f0e541934a0966f213f6da13d83da.squirrel@neil.brown.name>
+	<1241406283.17240.26.camel@ezra>
+	<87fxff462s.fsf@frosties.localdomain>
+	<21cdc7a16fbdd42979d52331db97c737.squirrel@neil.brown.name>
+	<87ws8r2pqf.fsf@frosties.localdomain>
+	<18953.2936.212863.158003@notabene.brown>
+	<1242157469.18958.13.camel@ezra>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Garth Snyder on Tuesday May 12
+In-Reply-To: message from Daniel Reurich on Wednesday May 13
 Sender: linux-raid-owner@vger.kernel.org
-To: garth@grsweb.us
-Cc: linux-raid@vger.kernel.org
+To: Daniel Reurich <daniel@centurion.net.nz>
+Cc: Goswin von Brederlow <goswin-v-b@web.de>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tuesday May 12, garth@grsweb.us wrote:
-> On Sunday May 10, I (garth@grsweb.us) wrote:
+On Wednesday May 13, daniel@centurion.net.nz wrote:
+> On Tue, 2009-05-12 at 15:39 +1000, Neil Brown wrote:
+> > On Saturday May 9, goswin-v-b@web.de wrote:
+> > > "NeilBrown" <neilb@suse.de> writes:
+> > > 
+> > > > On Sat, May 9, 2009 7:50 am, Goswin von Brederlow wrote:
+> > > >
+> > > >>>> So I still plan to offer a "--reserve-space=2M" option for mdadm to
+> > > >>>> allow the first 2M of each device to not used for raid data.  Whether
+> > > >>>> any particular usage of this option is viable or not, is a different
+> > > >>>> question altogether.
+> > > >>
+> > > >> How exactly would that layout be then?
+> > > >>
+> > > >> Block  0   bootblock
+> > > >> Block  1   raid metadata
+> > > >> Block  x   2M reserved space
+> > > >> Block x+2M start of raid data
+> > > >>
+> > > >> Like this?
+> > > >
+> > > > When using 1.2 metadata, yes, possible with bitmap
+> > > > inserted  between the reserved space and the start of raid data.
+> > > 
+> > > That realy seems to be the best option. Simple to implement, simple to
+> > > use and if mdadm copies the reserved space from old to new drives when
+> > > adding one it gives us exactly what we want.
+> > > 
+> > > Are you working on that already or do you think it needs more discussion?
+> > 
+> > Discussion is good....
+> > 
+> > I have just pushed out some changes to the 'master' branch of
+> >    git://neil.brown.name/mdadm
+> > 
+> > The last patch adds "--reserve-space=" support to create.
+> > It only works with 1.x metadata (and causes the default to be 1.0).
+> > 
+> > You cannot hot-add a bitmap to a 1.1 or 1.2 array created with this
+> > feature (the kernel cannot be told the right thing to do yet).
+> > 
+> > The space can have a K, M, or G suffix with the obvious meanings.
+> > K is the default.
+> > 
+> > mdadm currently does not copy any data from one device to another.
+> > This could possibly be added for "--add" but not for "--create".
 > 
-> > I'm having a problem getting a spare partition moved to the right RAID
-> group
-> > after a failure...All superblocks involved are version 1.2.
+> Could we do this better using containers and snia's ddf in intels matrix
+> (or our own) metadata to define the data areas and this way create a
+> raid1 container at the start of the disks and use 1.0 format superblock
+> and metadata at the end of the drive (as long as this doesn't mess with
+> the metadata.  
 > 
-> Neil Brown replied:
-> 
-> > This would be because no one has tried the spare-group feature with
-> > 1.x metadata yet...The following patch should make it work...This patch
-> > is against 2.6.9, though it should apply to any reasonably recent 2.x
-> mdadm.
-> 
-> Thanks for the response, Neil. The patch works great; now I get Fail,
-> MoveSpare, and Rebuild events in sequence with no errors. /proc/mdstat shows
-> that the appropriate spare was moved into the failed array and that the
-> array is being rebuilt onto it.
+> This would solve the syncing of boot sectors because it would be done as
+> part of normal raid 1.  Hot add would simply be a matter of adding
+> members to the container.  The only issue I can see is whether you are
+> able to hot resize the data areas in containers as part of the grow
+> feature, or would we have to do a metadata tweak to redefine the size of
+> data areas.
 
-Excellent.  Thanks for testing and reporting.
+While it might be possible to do something vaguely like this, I don't
+want to.
 
-> 
-> I patched the 2.6.7.1 tree, which was Jaunty's default for "apt-get source
-> mdadm" (and the same version included in the binary package). Manage.c and
-> Monitor.c already matched the "after" state of your patch, so the only code
-> that actually changed was the one-liners in super0.c and super1.c.
+Having a replicated boot loader and having a raid1 are conceptually
+quite different things.
+A raid1 says "keep N (typically 2) copies of the data somewhere for
+me".
+A replicated boot loader says "store this boot loader on every
+bootable device".
+One is more abstract, the other is more concrete.
 
-That is impossible.  I had only just written that patch, so there is
-no way the 'after' bit could possibly be in Jaunty.  Maybe something
-got confused when you ran patch.... doesn't really matter - it works,
-and that is the important thing.
+Maybe it is a very subtle distinction, but I think it is worth
+maintaining.  Get your boot-loader-installer to install at the front
+of every drive - don't bother having a raid1 there that is never read
+and hardly ever written..
 
 NeilBrown
