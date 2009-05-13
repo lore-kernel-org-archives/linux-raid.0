@@ -1,35 +1,63 @@
-From: John Hughes <john@Calva.COM>
-Subject: Re: mdadm issue on Ubuntu Januty 9.04 server
-Date: Wed, 13 May 2009 15:14:40 +0200
-Message-ID: <4A0AC7C0.1020507@Calva.COM>
-References: <5817fbed0905111832u35d39a5au52482cceea53a4cb@mail.gmail.com> <f6ef7d922bea762a5b2539e4d015934a.squirrel@neil.brown.name>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: raid0 hashing funtion
+Date: Wed, 13 May 2009 15:18:54 +0200
+Message-ID: <20090513131854.GE11504@skl-net.de>
+References: <5d96567b0905030629s3e1ec55coa9f0fc5fb0a3ce2b@mail.gmail.com> <18953.62556.265428.572219@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="M/SuVGWktc5uNpra"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f6ef7d922bea762a5b2539e4d015934a.squirrel@neil.brown.name>
+Content-Disposition: inline
+In-Reply-To: <18953.62556.265428.572219@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: fibre raid <fibreraid@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: Raz <raziebe@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-NeilBrown wrote:
-> that make them look like part of some old array.
-> Why jaunty partially assembled them isn't clear.  Maybe it
-> is using --incremental and it is waiting for the rest of the
-> array to appear.
->   
-In my experience mdadm --incremental just doesn't work on Jaunty.
 
-When you run it on the first disk in the raid it sets the raid up as 
-waiting for the rest, creates the /dev/md/xxx device, all looks good.
+--M/SuVGWktc5uNpra
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-When you try the second disk (I have a raid-1) it complains that the 
-/dev/md/xxx exists and does nothing.
+On 08:12, Neil Brown wrote:
 
-Results - exactly as "fibre raid" complains - you're left with a partly 
-set up inactive raid.
+> On reflection, I am not convinced that the hash really does add value.
+> You cannot have more entries in the list than there are drives, and
+> you usually have much fewer.  Given that consecutive entries in the
+> list are likely to be in the same cache line, and the hash_table is in
+> a totally different page, probing 3 or 4 locations in the list is
+> probably faster than doing a lookup in the hash table.  And as we
+> would be able to get rid of that sector_div, we would probably get
+> even more saving.
 
-Haven't got around to doing a bugreport yet as I don't want to mess with 
-my running server.
+Yup, that's exactly what I was thinking when I looked at the code.
 
+> The only cost would be if someone had a raid0 with lots of devices all
+> of very different sizes.  I suspect that case does not need to be
+> optimised for.  So I would probably be happy to accept a patch which
+> removed that hash table.
+
+I'll see if I can come up with a patch that gets rid of the hash table
+and that one sector_div. Killing all instances of sector_div in raid0,
+while possible and probably desirable, would be more involved though.
+
+Thanks
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--M/SuVGWktc5uNpra
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFKCsi+Wto1QDEAkw8RAgjzAJ0eblH4GHNhzPWZhMbeSTMXPQPLegCgpAaD
+FtCh71OQQQEUl9cqn2dG8wk=
+=FF24
+-----END PGP SIGNATURE-----
+
+--M/SuVGWktc5uNpra--
