@@ -1,42 +1,86 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: [PATCH 0/6] md: Remove the hash tables from raid0.
-Date: Thu, 14 May 2009 12:43:47 +0200
-Message-ID: <1242297833-13908-1-git-send-email-maan@systemlinux.org>
+Subject: [PATCH] md: raid0: Replace hash table lookup by looping over all strip_zones.
+Date: Thu, 14 May 2009 12:43:48 +0200
+Message-ID: <1242297833-13908-2-git-send-email-maan@systemlinux.org>
+References: <1242297833-13908-1-git-send-email-maan@systemlinux.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1242297833-13908-1-git-send-email-maan@systemlinux.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
 Cc: raziebe@gmail.com, linux-raid@vger.kernel.org, Andre Noll <maan@systemlinux.org>
 List-Id: linux-raid.ids
 
-As mentioned by Neil, the raid0 hash table code does probably not
-add any value. Moreover, it contains some rather strange sector_t
-manipulations which are needed to setup and maintain the table.
+The number of strip_zones of a raid0 array is bounded by the number of
+drives in the array and is in fact much smaller for typical setups. For
+example, any raid0 array containing identical disks will have only
+a single strip_zone.
 
-This patch series against Neil's for-next tree as of yesterday removes
-the hash table from the raid0 code.
+Therefore, the hash tables which are used for quickly finding the
+strip_zone that holds a particular sector are of questionable value
+and add quite a bit of unnecessary complexity.
 
-Patch #1 replaces the hash table lookup by a simple function that
-loops over all strip zones to find the zone that holds a given sector.
-This change allows to get rid of the hash table itself (patch #2)
-and of related fields of struct raid0_private_data (patch #3).
+This patch replaces the hash table lookup by equivalent code which
+simply loops over all strip zones to find the zone that holds the
+given sector.
 
-Patch #4 makes raid0 return a proper error code rather than -ENOMEM
-in case the array could not be started for reasons other than memory
-shortage.
+Subsequent cleanup patches will remove the hash table structure.
 
-The remaining two patches are simple cleanups that further simplify
-the raid0 code a bit.
+Signed-off-by: Andre Noll <maan@systemlinux.org>
+---
+ drivers/md/raid0.c |   32 +++++++++++++++++++-------------
+ 1 files changed, 19 insertions(+), 13 deletions(-)
 
-The patched kernel has been tested with a smallish raid0 array
-consisting of five devices of varying sizes (created and filled with
-contents by an unpatched kernel) and seems to work just fine. It
-passes the raid0 tests of the mdadm test suite.
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index c08d755..9fd3c3c 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -398,6 +398,22 @@ static int raid0_stop (mddev_t *mddev)
+ 	return 0;
+ }
+ 
++/* Find the zone which holds a particular offset */
++static struct strip_zone *find_zone(struct raid0_private_data *conf,
++		sector_t sector)
++{
++	int i;
++
++	for (i = 0; i < conf->nr_strip_zones; i++) {
++		struct strip_zone *z = conf->strip_zone + i;
++
++		if (sector < z->zone_start + z->sectors)
++			return z;
++	}
++	BUG();
++	return NULL;
++}
++
+ static int raid0_make_request (struct request_queue *q, struct bio *bio)
+ {
+ 	mddev_t *mddev = q->queuedata;
+@@ -443,20 +459,10 @@ static int raid0_make_request (struct request_queue *q, struct bio *bio)
+ 		bio_pair_release(bp);
+ 		return 0;
+ 	}
+- 
+-
+-	{
+-		sector_t x = sector >> conf->sector_shift;
+-		sector_div(x, (u32)conf->spacing);
+-		zone = conf->hash_table[x];
+-	}
+-
+-	while (sector >= zone->zone_start + zone->sectors)
+-		zone++;
+-
++	zone = find_zone(conf, sector);
++	if (!zone)
++		return 1;
+ 	sect_in_chunk = bio->bi_sector & (chunk_sects - 1);
+-
+-
+ 	{
+ 		sector_t x = (sector - zone->zone_start) >> chunksect_bits;
+ 
+-- 
+1.5.4.3
 
-Please consider for inclusion.
-
- drivers/md/raid0.c |  150 ++++++++++++++--------------------------------------
- drivers/md/raid0.h |    4 --
- 2 files changed, 39 insertions(+), 115 deletions(-)
-
-Thanks
-Andre
