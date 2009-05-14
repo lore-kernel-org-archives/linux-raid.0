@@ -1,67 +1,89 @@
-From: Daniel Reurich <daniel@centurion.net.nz>
-Subject: Re: md extension to support booting from raid whole disks.
-Date: Thu, 14 May 2009 14:21:54 +1200
-Message-ID: <1242267714.11016.174.camel@ezra>
-References: <20090503013342770.VMBT19475@cdptpa-omta01.mail.rr.com>
-	 <e13f0e541934a0966f213f6da13d83da.squirrel@neil.brown.name>
-	 <1241406283.17240.26.camel@ezra> <87fxff462s.fsf@frosties.localdomain>
-	 <21cdc7a16fbdd42979d52331db97c737.squirrel@neil.brown.name>
-	 <87ws8r2pqf.fsf@frosties.localdomain>
-	 <18953.2936.212863.158003@notabene.brown> <1242157469.18958.13.camel@ezra>
-	 <18954.43834.53155.793587@notabene.brown>
+From: SandeepKsinha <sandeepksinha@gmail.com>
+Subject: Re: RAID0 - unitialised zone->dev_start for zone[0]
+Date: Thu, 14 May 2009 08:44:05 +0530
+Message-ID: <37d33d830905132014n8c0270fw6a4cb4a80563c8d8@mail.gmail.com>
+References: <37d33d830905131008y4a3a3815i6bec41a0d9b32ddf@mail.gmail.com>
+	 <beb1238841d24e553e0248080d5e4dca.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18954.43834.53155.793587@notabene.brown>
+In-Reply-To: <beb1238841d24e553e0248080d5e4dca.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Goswin von Brederlow <goswin-v-b@web.de>, Linux RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Thu, May 14, 2009 at 2:41 AM, NeilBrown <neilb@suse.de> wrote:
+> On Thu, May 14, 2009 3:08 am, SandeepKsinha wrote:
+>> Hi Neil,
+>>
+>>
+>> [22:33:46 sinhas]$ diff raid0.c raid0.c.orig
+>
+> Always, always, always use "diff -u". =A0It provides context
+> so the diff is much easier to read.
+>
+>> 160d159
+>> < =A0 =A0 =A0 zone->dev_start =3D 0;
+>> [/usr/src/linux-2.6.29/drivers/md]
+>> [22:33:59 sinhas]$
+>>
+>> I see this piece of code missing and being used later.
+>> Not very sure of the code flow, but still as part of defensive
+>> programming.
+>>
+>> Am i missing something?
+>
+> conf->strip_zone is allocated with kzalloc, so all values are
+> initialised to 0.
+>
 
-> > Could we do this better using containers and snia's ddf in intels matrix
-> > (or our own) metadata to define the data areas and this way create a
-> > raid1 container at the start of the disks and use 1.0 format superblock
-> > and metadata at the end of the drive (as long as this doesn't mess with
-> > the metadata.  
-> > 
-> > This would solve the syncing of boot sectors because it would be done as
-> > part of normal raid 1.  Hot add would simply be a matter of adding
-> > members to the container.  The only issue I can see is whether you are
-> > able to hot resize the data areas in containers as part of the grow
-> > feature, or would we have to do a metadata tweak to redefine the size of
-> > data areas.
-> 
-> While it might be possible to do something vaguely like this, I don't
-> want to.
-> 
-Is it already possible to do with mdadm v3?
+zone->zone_start =3D 0;
 
-BTW, I'm not talking about just raiding the boot sector, but a raid1
-volume with a filesystem for /boot with the embedded bootsector at the
-start of it.  This means that for every member disk that includes
-the /boot volume we have a mirror.
+Sorry, this confused me.
 
-The description I got about ddf|matrix containers led me to believe this
-was a robust way to do this.  
+> NeilBrown
+>
+>
+>>
+>>
+>>
+>> --
+>> Regards,
+>> Sandeep.
+>>
+>>
+>>
+>>
+>>
+>>
+>> =93To learn is to change. Education is a process that changes the le=
+arner.=94
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>>
+>
+>
 
-What's the point in supporting ddf|matrix containers if we can't create
-the data areas within them to suit particular use cases like this?  
 
-If we could/can then nothing further needs to be done to md/mdadm to
-allow me to implement my preferred boot solution.
 
-> don't bother having a raid1 there that is never read
-> and hardly ever written..
-????
-It's read every time we boot!
+--=20
+Regards,
+Sandeep.
 
-I guess I've failed to communicate what I'm after effectively! :(
 
--- 
-Daniel Reurich
 
-Centurion Computer Technology (2005) Ltd
-Ph 021 797 722
 
+
+ =09
+=93To learn is to change. Education is a process that changes the learn=
+er.=94
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
