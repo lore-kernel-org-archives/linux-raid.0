@@ -1,145 +1,114 @@
-From: SandeepKsinha <sandeepksinha@gmail.com>
-Subject: Re: [PATCH] md: raid0: Replace hash table lookup by looping over all
-	strip_zones.
-Date: Thu, 14 May 2009 17:31:28 +0530
-Message-ID: <37d33d830905140501m46a88e1fp318f94b262403d@mail.gmail.com>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: [PATCH] md: raid0: Simplify raid0_run().
+Date: Thu, 14 May 2009 22:06:40 +1000 (EST)
+Message-ID: <5b77011896440aa0a5c0e1c89f0730a2.squirrel@neil.brown.name>
 References: <1242297833-13908-1-git-send-email-maan@systemlinux.org>
-	 <1242297833-13908-2-git-send-email-maan@systemlinux.org>
+    <1242297833-13908-7-git-send-email-maan@systemlinux.org>
+    <37d33d830905140443y3e81ed8gf1dbb00843eb2864@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1242297833-13908-2-git-send-email-maan@systemlinux.org>
+In-Reply-To: <37d33d830905140443y3e81ed8gf1dbb00843eb2864@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
-Cc: neilb@suse.de, raziebe@gmail.com, linux-raid@vger.kernel.org
+To: SandeepKsinha <sandeepksinha@gmail.com>
+Cc: Andre Noll <maan@systemlinux.org>, raziebe@gmail.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, May 14, 2009 at 4:13 PM, Andre Noll <maan@systemlinux.org> wrot=
-e:
-> The number of strip_zones of a raid0 array is bounded by the number o=
-f
-> drives in the array and is in fact much smaller for typical setups. F=
-or
-> example, any raid0 array containing identical disks will have only
-> a single strip_zone.
+On Thu, May 14, 2009 9:43 pm, SandeepKsinha wrote:
+> Hi Andre,
 >
-> Therefore, the hash tables which are used for quickly finding the
-> strip_zone that holds a particular sector are of questionable value
-> and add quite a bit of unnecessary complexity.
+> On Thu, May 14, 2009 at 4:13 PM, Andre Noll <maan@systemlinux.org> wr=
+ote:
+>> Get rid of the local variable "conf" and of an unnecessary cast.
+>>
+>> Signed-off-by: Andre Noll <maan@systemlinux.org>
+>> ---
+>> =A0drivers/md/raid0.c | =A0 20 +++++++-------------
+>> =A01 files changed, 7 insertions(+), 13 deletions(-)
+>>
+>> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+>> index 5ff6290..36b747a 100644
+>> --- a/drivers/md/raid0.c
+>> +++ b/drivers/md/raid0.c
+>> @@ -261,7 +261,6 @@ static sector_t raid0_size(mddev_t *mddev, secto=
+r_t
+>> sectors, int raid_disks)
+>>
+>> =A0static int raid0_run(mddev_t *mddev)
+>> =A0{
+>> - =A0 =A0 =A0 raid0_conf_t *conf;
+>> =A0 =A0 =A0 =A0int ret;
+>>
+>> =A0 =A0 =A0 =A0if (mddev->chunk_size =3D=3D 0) {
+>> @@ -276,14 +275,15 @@ static int raid0_run(mddev_t *mddev)
+>> =A0 =A0 =A0 =A0blk_queue_segment_boundary(mddev->queue, (mddev->chun=
+k_size>>1) -
+>> 1);
+>> =A0 =A0 =A0 =A0mddev->queue->queue_lock =3D &mddev->queue->__queue_l=
+ock;
+>>
+>> - =A0 =A0 =A0 conf =3D kmalloc(sizeof (raid0_conf_t), GFP_KERNEL);
+>> - =A0 =A0 =A0 if (!conf)
+>> + =A0 =A0 =A0 mddev->private =3D kmalloc(sizeof(raid0_conf_t), GFP_K=
+ERNEL);
+>> + =A0 =A0 =A0 if (!mddev->private)
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -ENOMEM;
+>> - =A0 =A0 =A0 mddev->private =3D (void *)conf;
+>> -
+>> =A0 =A0 =A0 =A0ret =3D create_strip_zones(mddev);
+>> - =A0 =A0 =A0 if (ret < 0)
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out_free_conf;
+>> + =A0 =A0 =A0 if (ret < 0) {
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 kfree(mddev->private);
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 mddev->private =3D NULL;
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return ret;
+>> + =A0 =A0 =A0 }
+>>
 >
-> This patch replaces the hash table lookup by equivalent code which
-> simply loops over all strip zones to find the zone that holds the
-> given sector.
 >
-> Subsequent cleanup patches will remove the hash table structure.
+> I believe the use of goto statements keep the code more structured,
+> especially for code cleanup in case of failures.
+> Its better that you revert back to the goto's so that later if a new
+> piece of code is added and there would be cases of failure to handle,
+> you will have a common cleanup routine.
 >
-> Signed-off-by: Andre Noll <maan@systemlinux.org>
-> ---
-> =A0drivers/md/raid0.c | =A0 32 +++++++++++++++++++-------------
-> =A01 files changed, 19 insertions(+), 13 deletions(-)
->
-> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> index c08d755..9fd3c3c 100644
-> --- a/drivers/md/raid0.c
-> +++ b/drivers/md/raid0.c
-> @@ -398,6 +398,22 @@ static int raid0_stop (mddev_t *mddev)
-> =A0 =A0 =A0 =A0return 0;
-> =A0}
->
-> +/* Find the zone which holds a particular offset */
-> +static struct strip_zone *find_zone(struct raid0_private_data *conf,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sector_t sector)
-> +{
-> + =A0 =A0 =A0 int i;
-> +
-> + =A0 =A0 =A0 for (i =3D 0; i < conf->nr_strip_zones; i++) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 struct strip_zone *z =3D conf->strip_zo=
-ne + i;
-> +
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (sector < z->zone_start + z->sectors=
-)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return z;
-> + =A0 =A0 =A0 }
-> + =A0 =A0 =A0 BUG();
-> + =A0 =A0 =A0 return NULL;
-> +}
-> +
+> I think Neil can comment better on this one.
 
-The point here is that rather than figuring the issue after traversing
-through the list of all the zones,
-you can make a check and smartly get away with the situation without
-wasting extra effort.
+I'm in two minds about this.
+In general I prefer
+   if (something went wrong)
+         return error;
+to
+   if (something went wrong)_
+         goto handle_error;
+   ....
 
-      int i;
+  handle_error:
+    return error;
 
-      BUG_ON(sector > conf->stripe_zone[0].sectors);
+as it is easier to read.
 
-       for (i =3D 0; i < conf->nr_strip_zones; i++) {
-               struct strip_zone *z =3D conf->strip_zone + i;
+However the point about maintainability is valid.  Having to put all
+those gotos back in if you find that you need to free something for
+unlock something in error prone (you might miss a return)
+So having exactly one return for each function is a valuable
+goal.
 
-               if (sector < z->zone_start + z->sectors)
-                       return z;
-       }
+So in the general case there are good arguments in both directions.
+Which means you have to make a decision based on the specifics of a
+given case.
+In this case, I think raid0_run is sufficiently small (now that all
+the hash related code is gone) that the benefits of having gotos
+are minimal.  So I would be inclined to leave it as it is.
 
-       return NULL;
+Thanks for the suggestion.
 
-
-
-> =A0static int raid0_make_request (struct request_queue *q, struct bio=
- *bio)
-> =A0{
-> =A0 =A0 =A0 =A0mddev_t *mddev =3D q->queuedata;
-> @@ -443,20 +459,10 @@ static int raid0_make_request (struct request_q=
-ueue *q, struct bio *bio)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0bio_pair_release(bp);
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return 0;
-> =A0 =A0 =A0 =A0}
-> -
-> -
-> - =A0 =A0 =A0 {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 sector_t x =3D sector >> conf->sector_s=
-hift;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 sector_div(x, (u32)conf->spacing);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 zone =3D conf->hash_table[x];
-> - =A0 =A0 =A0 }
-> -
-> - =A0 =A0 =A0 while (sector >=3D zone->zone_start + zone->sectors)
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 zone++;
-> -
-> + =A0 =A0 =A0 zone =3D find_zone(conf, sector);
-> + =A0 =A0 =A0 if (!zone)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 1;
-> =A0 =A0 =A0 =A0sect_in_chunk =3D bio->bi_sector & (chunk_sects - 1);
-> -
-> -
-> =A0 =A0 =A0 =A0{
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0sector_t x =3D (sector - zone->zone_st=
-art) >> chunksect_bits;
->
-> --
-> 1.5.4.3
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
-
-
-
---=20
-Regards,
-Sandeep.
+NeilBrown
 
 
 
 
-
- =09
-=93To learn is to change. Education is a process that changes the learn=
-er.=94
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
