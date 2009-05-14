@@ -1,57 +1,121 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [PATCH] md: raid0: Make raid0_run() return a proper error code.
-Date: Thu, 14 May 2009 13:42:11 +0200
-Message-ID: <20090514114211.GG11504@skl-net.de>
-References: <1242297833-13908-1-git-send-email-maan@systemlinux.org> <1242297833-13908-5-git-send-email-maan@systemlinux.org> <846d967866a89248644f819abeddfc62.squirrel@neil.brown.name>
+From: SandeepKsinha <sandeepksinha@gmail.com>
+Subject: Re: [PATCH] md: raid0: Simplify raid0_run().
+Date: Thu, 14 May 2009 17:13:18 +0530
+Message-ID: <37d33d830905140443y3e81ed8gf1dbb00843eb2864@mail.gmail.com>
+References: <1242297833-13908-1-git-send-email-maan@systemlinux.org>
+	 <1242297833-13908-7-git-send-email-maan@systemlinux.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Qf1oXS95uex85X0R"
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <846d967866a89248644f819abeddfc62.squirrel@neil.brown.name>
+In-Reply-To: <1242297833-13908-7-git-send-email-maan@systemlinux.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: raziebe@gmail.com, linux-raid@vger.kernel.org
+To: Andre Noll <maan@systemlinux.org>
+Cc: neilb@suse.de, raziebe@gmail.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi Andre,
 
---Qf1oXS95uex85X0R
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Thu, May 14, 2009 at 4:13 PM, Andre Noll <maan@systemlinux.org> wrot=
+e:
+> Get rid of the local variable "conf" and of an unnecessary cast.
+>
+> Signed-off-by: Andre Noll <maan@systemlinux.org>
+> ---
+> =A0drivers/md/raid0.c | =A0 20 +++++++-------------
+> =A01 files changed, 7 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index 5ff6290..36b747a 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -261,7 +261,6 @@ static sector_t raid0_size(mddev_t *mddev, sector=
+_t sectors, int raid_disks)
+>
+> =A0static int raid0_run(mddev_t *mddev)
+> =A0{
+> - =A0 =A0 =A0 raid0_conf_t *conf;
+> =A0 =A0 =A0 =A0int ret;
+>
+> =A0 =A0 =A0 =A0if (mddev->chunk_size =3D=3D 0) {
+> @@ -276,14 +275,15 @@ static int raid0_run(mddev_t *mddev)
+> =A0 =A0 =A0 =A0blk_queue_segment_boundary(mddev->queue, (mddev->chunk=
+_size>>1) - 1);
+> =A0 =A0 =A0 =A0mddev->queue->queue_lock =3D &mddev->queue->__queue_lo=
+ck;
+>
+> - =A0 =A0 =A0 conf =3D kmalloc(sizeof (raid0_conf_t), GFP_KERNEL);
+> - =A0 =A0 =A0 if (!conf)
+> + =A0 =A0 =A0 mddev->private =3D kmalloc(sizeof(raid0_conf_t), GFP_KE=
+RNEL);
+> + =A0 =A0 =A0 if (!mddev->private)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -ENOMEM;
+> - =A0 =A0 =A0 mddev->private =3D (void *)conf;
+> -
+> =A0 =A0 =A0 =A0ret =3D create_strip_zones(mddev);
+> - =A0 =A0 =A0 if (ret < 0)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out_free_conf;
+> + =A0 =A0 =A0 if (ret < 0) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 kfree(mddev->private);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 mddev->private =3D NULL;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return ret;
+> + =A0 =A0 =A0 }
+>
 
-On 21:21, NeilBrown wrote:
-> >  	conf->strip_zone =3D NULL;
-> >  	conf->devlist =3D NULL;
-> > -	if (create_strip_zones (mddev))
-> > +	ret =3D create_strip_zones(mddev);
-> > +	if (ret < 0)
-> >  		goto out_free_conf;
->=20
-> Can we go one set further here and move the allocation of ->private
-> into create_stripe_zones.  It seems funny allocating it here and
-> never actually using it directly.
 
-Yes, I thought about that but wanted the patches to be as small as
-possible. I'll follow up with another patch that moves the allocation
-to create_stripe_zones().
+I believe the use of goto statements keep the code more structured,
+especially for code cleanup in case of failures.
+Its better that you revert back to the goto's so that later if a new
+piece of code is added and there would be cases of failure to handle,
+you will have a common cleanup routine.
 
-Thanks
-Andre
+I think Neil can comment better on this one.
+
+
+> =A0 =A0 =A0 =A0/* calculate array device size */
+> =A0 =A0 =A0 =A0md_set_array_sectors(mddev, raid0_size(mddev, 0, 0));
+> @@ -305,14 +305,8 @@ static int raid0_run(mddev_t *mddev)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0mddev->queue->backing_=
+dev_info.ra_pages =3D 2* stripe;
+> =A0 =A0 =A0 =A0}
+>
+> -
+> =A0 =A0 =A0 =A0blk_queue_merge_bvec(mddev->queue, raid0_mergeable_bve=
+c);
+> =A0 =A0 =A0 =A0return 0;
+> -
+> -out_free_conf:
+> - =A0 =A0 =A0 kfree(conf);
+> - =A0 =A0 =A0 mddev->private =3D NULL;
+> - =A0 =A0 =A0 return ret;
+> =A0}
+>
+> =A0static int raid0_stop (mddev_t *mddev)
+> --
+> 1.5.4.3
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+
+
+
 --=20
-The only person who always got his work done by Friday was Robinson Crusoe
+Regards,
+Sandeep.
 
---Qf1oXS95uex85X0R
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
 
-iD8DBQFKDAOTWto1QDEAkw8RAir9AKCFC4kfaNqyke6UqsMqK10LJEiO4QCeLtkO
-+zkalMsS2KAd2aH5xDxi0KE=
-=AeAK
------END PGP SIGNATURE-----
 
---Qf1oXS95uex85X0R--
+
+ =09
+=93To learn is to change. Education is a process that changes the learn=
+er.=94
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
