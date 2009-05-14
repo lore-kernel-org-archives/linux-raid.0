@@ -1,47 +1,71 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: resync duration ?
-Date: Fri, 15 May 2009 07:38:38 +1200
-Message-ID: <4A0C733E.9010306@sauce.co.nz>
-References: <1308264373.20090514150647@kaneda.iguw.tuwien.ac.at> <20090514135840.GB8862@atlantis.cc.ndsu.NoDak.edu> <4A0C4FAB.3020607@anonymous.org.uk> <20090514180747.GA9995@atlantis.cc.ndsu.NoDak.edu>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: [PATCH] md: raid0: Replace hash table lookup by looping over  
+     all strip_zones.
+Date: Fri, 15 May 2009 06:38:35 +1000 (EST)
+Message-ID: <bdf8aeadb1c3d24a5b43ba3264d53dc2.squirrel@neil.brown.name>
+References: <1242297833-13908-1-git-send-email-maan@systemlinux.org>
+    <1242297833-13908-2-git-send-email-maan@systemlinux.org>
+    <fe4d072c76f1ce1d6b2b75f83766b1f0.squirrel@neil.brown.name>
+    <18956.3337.786085.284689@notabene.brown>
+    <1242316280.11444.4.camel@raz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090514180747.GA9995@atlantis.cc.ndsu.NoDak.edu>
+In-Reply-To: <1242316280.11444.4.camel@raz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
-Cc: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
+To: raz ben yehuda <raziebe@gmail.com>
+Cc: Andre Noll <maan@systemlinux.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bryan Mesich wrote:
-> On Thu, May 14, 2009 at 06:06:51PM +0100, John Robinson wrote:
-> 
->>I think about 160 minutes is reasonable for 750GB, on an otherwise  
->>unloaded box; it's only 70MB/sec off 3 drives and on to 1 newer, faster  
->>drive.
-> 
-> 
-> I have a similar setup with 4 750G SATA drives.  The box is
-> failry beefy, with 8 processor cores and a PCI-E SATA controler
-> (3Ware 9650SE).  For an initial sync, it will take about 315
-> minutes to complete.
-> 
-> I'm not sure if this is a fair comparison, since Rainer was do a
-> resync.
-> 
-> md8 : active raid5 sdx1[4] sdw1[2] sdv1[1] sdu1[0]
->       2197209600 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
->       [>....................]  recovery =  1.6% (12015536/732403200) finish=312.3min speed=38437K/sec
-> 
-> I'm probably splitting hairs at this point.
-> 
-> Bryan
+On Fri, May 15, 2009 1:51 am, raz ben yehuda wrote:
+>
+> On Thu, 2009-05-14 at 22:22 +1000, Neil Brown wrote:
+>> On Thursday May 14, neilb@suse.de wrote:
+>> >
+>> > Then the loop could be
+>> >    for (i = 0; i < conf->nr_strip_zones; i++)
+>> >          if (sector < conf->strip_zone[i+1])
+>> >                return conf->strip_zone[i]
+>> >
+>> > Save our selves an 'add' that way :-)
+>>
+>> That should have been
+>>
+>> >
+>> > Then the loop could be
+>> >    for (i = 0; i < conf->nr_strip_zones; i++)
+>> >          if (sector < conf->strip_zone[i+1]->zone_start)
+>> >                return conf->strip_zone[i]
+>> >
+>> > Save ourselves an 'add' that way :-)
+>>
+>> and as we aren't using ->sectors in this loop any more, I think it
+>> can be discarded completely, just making struct strip_zone 20% smaller
+>> and improving cache performance.
+>>
+>> What do you think?
+> hamm.. please do not do it now. I think i need it for the reshape
+> because I have to traverse each zone up to its end.
 
-Just to add another data point, I replaced a dead 750GB drive in 4 x 750 
-md RAID5 last week and it took 145 minutes.
+You don't lose that ability.  Then end of one zone matches the
+beginning of the next zone.  So run from
+   zone[0].zone_start
+to
+   zone[1].zone_start
 
-Resync on another 16 x 750GB md RAID6 takes around 180min.
+I was thinking further about this and realised that in the first zone,
+zone_start is always 0.  And we added a sentinal zone for which only
+the zone_start value is set.  This seems silly.
+Instead we can just store 'zone_end' in each zone (or possibly
+start_of_next_zone) and then we don't need the sentinal and don't waste
+the zone_start at the beginning.
 
-Regards,
+NeilBrown
 
-Richard
+
+>> NeilBrown
+>
+>
+>
+
