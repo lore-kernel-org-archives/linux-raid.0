@@ -1,116 +1,104 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: [PATCH] md: raid0: Simplify raid0_run().
-Date: Thu, 14 May 2009 22:06:40 +1000 (EST)
-Message-ID: <5b77011896440aa0a5c0e1c89f0730a2.squirrel@neil.brown.name>
-References: <1242297833-13908-1-git-send-email-maan@systemlinux.org>
-    <1242297833-13908-7-git-send-email-maan@systemlinux.org>
-    <37d33d830905140443y3e81ed8gf1dbb00843eb2864@mail.gmail.com>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [PATCH] md: raid0: Replace hash table lookup by looping over all strip_zones.
+Date: Thu, 14 May 2009 14:10:42 +0200
+Message-ID: <20090514121042.GH11504@skl-net.de>
+References: <1242297833-13908-1-git-send-email-maan@systemlinux.org> <1242297833-13908-2-git-send-email-maan@systemlinux.org> <fe4d072c76f1ce1d6b2b75f83766b1f0.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="y9PDtDHaFrXNoMPU"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <37d33d830905140443y3e81ed8gf1dbb00843eb2864@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <fe4d072c76f1ce1d6b2b75f83766b1f0.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: SandeepKsinha <sandeepksinha@gmail.com>
-Cc: Andre Noll <maan@systemlinux.org>, raziebe@gmail.com, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: raziebe@gmail.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, May 14, 2009 9:43 pm, SandeepKsinha wrote:
-> Hi Andre,
->
-> On Thu, May 14, 2009 at 4:13 PM, Andre Noll <maan@systemlinux.org> wr=
-ote:
->> Get rid of the local variable "conf" and of an unnecessary cast.
->>
->> Signed-off-by: Andre Noll <maan@systemlinux.org>
->> ---
->> =A0drivers/md/raid0.c | =A0 20 +++++++-------------
->> =A01 files changed, 7 insertions(+), 13 deletions(-)
->>
->> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
->> index 5ff6290..36b747a 100644
->> --- a/drivers/md/raid0.c
->> +++ b/drivers/md/raid0.c
->> @@ -261,7 +261,6 @@ static sector_t raid0_size(mddev_t *mddev, secto=
-r_t
->> sectors, int raid_disks)
->>
->> =A0static int raid0_run(mddev_t *mddev)
->> =A0{
->> - =A0 =A0 =A0 raid0_conf_t *conf;
->> =A0 =A0 =A0 =A0int ret;
->>
->> =A0 =A0 =A0 =A0if (mddev->chunk_size =3D=3D 0) {
->> @@ -276,14 +275,15 @@ static int raid0_run(mddev_t *mddev)
->> =A0 =A0 =A0 =A0blk_queue_segment_boundary(mddev->queue, (mddev->chun=
-k_size>>1) -
->> 1);
->> =A0 =A0 =A0 =A0mddev->queue->queue_lock =3D &mddev->queue->__queue_l=
-ock;
->>
->> - =A0 =A0 =A0 conf =3D kmalloc(sizeof (raid0_conf_t), GFP_KERNEL);
->> - =A0 =A0 =A0 if (!conf)
->> + =A0 =A0 =A0 mddev->private =3D kmalloc(sizeof(raid0_conf_t), GFP_K=
-ERNEL);
->> + =A0 =A0 =A0 if (!mddev->private)
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return -ENOMEM;
->> - =A0 =A0 =A0 mddev->private =3D (void *)conf;
->> -
->> =A0 =A0 =A0 =A0ret =3D create_strip_zones(mddev);
->> - =A0 =A0 =A0 if (ret < 0)
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out_free_conf;
->> + =A0 =A0 =A0 if (ret < 0) {
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 kfree(mddev->private);
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 mddev->private =3D NULL;
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return ret;
->> + =A0 =A0 =A0 }
->>
->
->
-> I believe the use of goto statements keep the code more structured,
-> especially for code cleanup in case of failures.
-> Its better that you revert back to the goto's so that later if a new
-> piece of code is added and there would be cases of failure to handle,
-> you will have a common cleanup routine.
->
-> I think Neil can comment better on this one.
 
-I'm in two minds about this.
-In general I prefer
-   if (something went wrong)
-         return error;
-to
-   if (something went wrong)_
-         goto handle_error;
-   ....
+--y9PDtDHaFrXNoMPU
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-  handle_error:
-    return error;
+On 21:15, NeilBrown wrote:
+> > +/* Find the zone which holds a particular offset */
+> > +static struct strip_zone *find_zone(struct raid0_private_data *conf,
+> > +		sector_t sector)
+> > +{
+> > +	int i;
+> > +
+> > +	for (i =3D 0; i < conf->nr_strip_zones; i++) {
+> > +		struct strip_zone *z =3D conf->strip_zone + i;
+> > +
+> > +		if (sector < z->zone_start + z->sectors)
+> > +			return z;
+> > +	}
+>=20
+> Maybe I'm being petty, but I really don't like this...
+>=20
+> I really like
+> > -        while (sector >=3D zone->zone_start + zone->sectors)
+> > -                zone++;
+>=20
+> It seems to capture what is really happening.
+> But I can see that your code has a defensive aspect to it
+> which is hard to argue against.
+>=20
+> It's probably the fact that there are two loop variables (i and z)
+> that bothers me....
+> Here is a thought.  How about we extend the stripe_zone array
+> by one element and put a sentinal at the end, with ->zone_start being
+> the size of the drive ... or maybe even "max sector".
+>=20
+> Then the loop could be
+>    for (i =3D 0; i < conf->nr_strip_zones; i++)
+>          if (sector < conf->strip_zone[i+1])
+>                return conf->strip_zone[i]
+>=20
+> Save our selves an 'add' that way :-)
 
-as it is easier to read.
+Saving an addition is a good thing as find_zone() is certainly
+performance-critical. After all, that's why the original author used
+hash tables.
 
-However the point about maintainability is valid.  Having to put all
-those gotos back in if you find that you need to free something for
-unlock something in error prone (you might miss a return)
-So having exactly one return for each function is a valuable
-goal.
+The drawback is of course that we will happily return the last zone
+for (invalid) requests beyond the array size. If that happens, data
+corruption on the drive(s) of the last zone will likely be the result,
+so I feel a bit uncomfortable in doing this.
 
-So in the general case there are good arguments in both directions.
-Which means you have to make a decision based on the specifics of a
-given case.
-In this case, I think raid0_run is sufficiently small (now that all
-the hash related code is gone) that the benefits of having gotos
-are minimal.  So I would be inclined to leave it as it is.
+How about extending stripe_zone as you propose, storing the array
+size in ->zone_start of the last element and still call BUG() after
+the loop?  That still saves the additional add and avoids the mentioned
+data corruption.
 
-Thanks for the suggestion.
+> > +	zone =3D find_zone(conf, sector);
+> > +	if (!zone)
+> > +		return 1;
+>=20
+> I don't much like those last two lines either.  zone will
+> never be NULL because if find_zone doesn't find anything, it
+> calls BUG.  And returning from make_request without doing any IO
+> is just wrong.  So those two lines can go.
 
-NeilBrown
+Yup. Do you want me to rework the patches, or should I follow up with
+patches on top of the series?
 
+Thanks
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
 
+--y9PDtDHaFrXNoMPU
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+iD8DBQFKDApCWto1QDEAkw8RAqyBAKCL5NiRit/NRlcIvzLlzjzx6W4jcgCdHV+Q
+MiEM0nrI2aCUZc6U1Nnw3jY=
+=diV7
+-----END PGP SIGNATURE-----
+
+--y9PDtDHaFrXNoMPU--
