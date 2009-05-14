@@ -1,78 +1,92 @@
 From: raz ben yehuda <raziebe@gmail.com>
-Subject: Re: [PATCH] md: raid0: Simplify raid0_run().
-Date: Thu, 14 May 2009 17:03:48 +0300
-Message-ID: <1242309828.3500.5.camel@raz>
+Subject: Re: [PATCH] md: raid0: Replace hash table lookup by looping over
+	all strip_zones.
+Date: Thu, 14 May 2009 17:13:37 +0300
+Message-ID: <1242310417.3500.8.camel@raz>
 References: <1242297833-13908-1-git-send-email-maan@systemlinux.org>
-	 <1242297833-13908-7-git-send-email-maan@systemlinux.org>
+	 <1242297833-13908-2-git-send-email-maan@systemlinux.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1242297833-13908-7-git-send-email-maan@systemlinux.org>
+In-Reply-To: <1242297833-13908-2-git-send-email-maan@systemlinux.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andre Noll <maan@systemlinux.org>
 Cc: neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-andre
-i applied your patches and tested it a bit. seems to be working.
-so thank you. Neil,  I will continue on top of andre of patches, if this
-is ok with you.I promise to dissect better now.
+
 On Thu, 2009-05-14 at 12:43 +0200, Andre Noll wrote:
-> Get rid of the local variable "conf" and of an unnecessary cast.
+> The number of strip_zones of a raid0 array is bounded by the number of
+> drives in the array and is in fact much smaller for typical setups. For
+> example, any raid0 array containing identical disks will have only
+> a single strip_zone.
+> 
+> Therefore, the hash tables which are used for quickly finding the
+> strip_zone that holds a particular sector are of questionable value
+> and add quite a bit of unnecessary complexity.
+> 
+> This patch replaces the hash table lookup by equivalent code which
+> simply loops over all strip zones to find the zone that holds the
+> given sector.
+> 
+> Subsequent cleanup patches will remove the hash table structure.
 > 
 > Signed-off-by: Andre Noll <maan@systemlinux.org>
 > ---
->  drivers/md/raid0.c |   20 +++++++-------------
->  1 files changed, 7 insertions(+), 13 deletions(-)
+>  drivers/md/raid0.c |   32 +++++++++++++++++++-------------
+>  1 files changed, 19 insertions(+), 13 deletions(-)
 > 
 > diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> index 5ff6290..36b747a 100644
+> index c08d755..9fd3c3c 100644
 > --- a/drivers/md/raid0.c
 > +++ b/drivers/md/raid0.c
-> @@ -261,7 +261,6 @@ static sector_t raid0_size(mddev_t *mddev, sector_t sectors, int raid_disks)
->  
->  static int raid0_run(mddev_t *mddev)
->  {
-> -	raid0_conf_t *conf;
->  	int ret;
->  
->  	if (mddev->chunk_size == 0) {
-> @@ -276,14 +275,15 @@ static int raid0_run(mddev_t *mddev)
->  	blk_queue_segment_boundary(mddev->queue, (mddev->chunk_size>>1) - 1);
->  	mddev->queue->queue_lock = &mddev->queue->__queue_lock;
->  
-> -	conf = kmalloc(sizeof (raid0_conf_t), GFP_KERNEL);
-> -	if (!conf)
-> +	mddev->private = kmalloc(sizeof(raid0_conf_t), GFP_KERNEL);
-> +	if (!mddev->private)
->  		return -ENOMEM;
-> -	mddev->private = (void *)conf;
-> -
->  	ret = create_strip_zones(mddev);
-> -	if (ret < 0)
-> -		goto out_free_conf;
-> +	if (ret < 0) {
-> +		kfree(mddev->private);
-> +		mddev->private = NULL;
-> +		return ret;
-> +	}
->  
->  	/* calculate array device size */
->  	md_set_array_sectors(mddev, raid0_size(mddev, 0, 0));
-> @@ -305,14 +305,8 @@ static int raid0_run(mddev_t *mddev)
->  			mddev->queue->backing_dev_info.ra_pages = 2* stripe;
->  	}
->  
-> -
->  	blk_queue_merge_bvec(mddev->queue, raid0_mergeable_bvec);
+> @@ -398,6 +398,22 @@ static int raid0_stop (mddev_t *mddev)
 >  	return 0;
-> -
-> -out_free_conf:
-> -	kfree(conf);
-> -	mddev->private = NULL;
-> -	return ret;
 >  }
 >  
->  static int raid0_stop (mddev_t *mddev)
+> +/* Find the zone which holds a particular offset */
+> +static struct strip_zone *find_zone(struct raid0_private_data *conf,
+> +		sector_t sector)
+> +{
+> +	int i;
+> +
+> +	for (i = 0; i < conf->nr_strip_zones; i++) {
+> +		struct strip_zone *z = conf->strip_zone + i;
+> +
+> +		if (sector < z->zone_start + z->sectors)
+> +			return z;
+> +	}
+> +	BUG();
+> +	return NULL;
+> +}
+> +
+>  static int raid0_make_request (struct request_queue *q, struct bio *bio)
+>  {
+>  	mddev_t *mddev = q->queuedata;
+> @@ -443,20 +459,10 @@ static int raid0_make_request (struct request_queue *q, struct bio *bio)
+>  		bio_pair_release(bp);
+>  		return 0;
+>  	}
+> - 
+> -
+> -	{
+> -		sector_t x = sector >> conf->sector_shift;
+> -		sector_div(x, (u32)conf->spacing);
+> -		zone = conf->hash_table[x];
+> -	}
+> -
+> -	while (sector >= zone->zone_start + zone->sectors)
+> -		zone++;
+> -
+> +	zone = find_zone(conf, sector);
+> +	if (!zone)
+> +		return 1;
+? if you cannot serve the io you shouldn't you return an error ?
+>  	sect_in_chunk = bio->bi_sector & (chunk_sects - 1);
+> -
+> -
+>  	{
+>  		sector_t x = (sector - zone->zone_start) >> chunksect_bits;
+>  
 
