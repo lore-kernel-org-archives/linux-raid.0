@@ -1,28 +1,22 @@
-From: SandeepKsinha <sandeepksinha@gmail.com>
-Subject: Re: [PATCH] md: raid0: Replace hash table lookup by looping over all
-	strip_zones.
-Date: Thu, 14 May 2009 16:45:40 +0530
-Message-ID: <37d33d830905140415h5f7585edy80f24b19b4fa98eb@mail.gmail.com>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: [PATCH] md: raid0: Replace hash table lookup by looping over
+     all strip_zones.
+Date: Thu, 14 May 2009 21:15:40 +1000 (EST)
+Message-ID: <fe4d072c76f1ce1d6b2b75f83766b1f0.squirrel@neil.brown.name>
 References: <1242297833-13908-1-git-send-email-maan@systemlinux.org>
-	 <1242297833-13908-2-git-send-email-maan@systemlinux.org>
+    <1242297833-13908-2-git-send-email-maan@systemlinux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1242297833-13908-2-git-send-email-maan@systemlinux.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
-Cc: neilb@suse.de, raziebe@gmail.com, linux-raid@vger.kernel.org
+Cc: raziebe@gmail.com, linux-raid@vger.kernel.org, Andre Noll <maan@systemlinux.org>
 List-Id: linux-raid.ids
 
-Hi Andre,
-
-On Thu, May 14, 2009 at 4:13 PM, Andre Noll <maan@systemlinux.org> wrot=
-e:
-> The number of strip_zones of a raid0 array is bounded by the number o=
-f
-> drives in the array and is in fact much smaller for typical setups. F=
-or
+On Thu, May 14, 2009 8:43 pm, Andre Noll wrote:
+> The number of strip_zones of a raid0 array is bounded by the number of
+> drives in the array and is in fact much smaller for typical setups. For
 > example, any raid0 array containing identical disks will have only
 > a single strip_zone.
 >
@@ -38,106 +32,97 @@ or
 >
 > Signed-off-by: Andre Noll <maan@systemlinux.org>
 > ---
-> =A0drivers/md/raid0.c | =A0 32 +++++++++++++++++++-------------
-> =A01 files changed, 19 insertions(+), 13 deletions(-)
+>  drivers/md/raid0.c |   32 +++++++++++++++++++-------------
+>  1 files changed, 19 insertions(+), 13 deletions(-)
 >
 > diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
 > index c08d755..9fd3c3c 100644
 > --- a/drivers/md/raid0.c
 > +++ b/drivers/md/raid0.c
 > @@ -398,6 +398,22 @@ static int raid0_stop (mddev_t *mddev)
-> =A0 =A0 =A0 =A0return 0;
-> =A0}
+>  	return 0;
+>  }
 >
 > +/* Find the zone which holds a particular offset */
 > +static struct strip_zone *find_zone(struct raid0_private_data *conf,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sector_t sector)
+> +		sector_t sector)
 > +{
-> + =A0 =A0 =A0 int i;
+> +	int i;
 > +
-> + =A0 =A0 =A0 for (i =3D 0; i < conf->nr_strip_zones; i++) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 struct strip_zone *z =3D conf->strip_zo=
-ne + i;
+> +	for (i = 0; i < conf->nr_strip_zones; i++) {
+> +		struct strip_zone *z = conf->strip_zone + i;
 > +
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (sector < z->zone_start + z->sectors=
-)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return z;
-> + =A0 =A0 =A0 }
-> + =A0 =A0 =A0 BUG();
-> + =A0 =A0 =A0 return NULL;
+> +		if (sector < z->zone_start + z->sectors)
+> +			return z;
+> +	}
+
+Maybe I'm being petty, but I really don't like this...
+
+I really like
+> -        while (sector >= zone->zone_start + zone->sectors)
+> -                zone++;
+
+It seems to capture what is really happening.
+But I can see that your code has a defensive aspect to it
+which is hard to argue against.
+
+It's probably the fact that there are two loop variables (i and z)
+that bothers me....
+Here is a thought.  How about we extend the stripe_zone array
+by one element and put a sentinal at the end, with ->zone_start being
+the size of the drive ... or maybe even "max sector".
+
+Then the loop could be
+   for (i = 0; i < conf->nr_strip_zones; i++)
+         if (sector < conf->strip_zone[i+1])
+               return conf->strip_zone[i]
+
+Save our selves an 'add' that way :-)
+
+
+> +	BUG();
+> +	return NULL;
 > +}
 > +
-> =A0static int raid0_make_request (struct request_queue *q, struct bio=
- *bio)
-> =A0{
-> =A0 =A0 =A0 =A0mddev_t *mddev =3D q->queuedata;
-> @@ -443,20 +459,10 @@ static int raid0_make_request (struct request_q=
-ueue *q, struct bio *bio)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0bio_pair_release(bp);
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return 0;
-> =A0 =A0 =A0 =A0}
+>  static int raid0_make_request (struct request_queue *q, struct bio *bio)
+>  {
+>  	mddev_t *mddev = q->queuedata;
+> @@ -443,20 +459,10 @@ static int raid0_make_request (struct request_queue
+> *q, struct bio *bio)
+>  		bio_pair_release(bp);
+>  		return 0;
+>  	}
 > -
 > -
-> - =A0 =A0 =A0 {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 sector_t x =3D sector >> conf->sector_s=
-hift;
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 sector_div(x, (u32)conf->spacing);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 zone =3D conf->hash_table[x];
-> - =A0 =A0 =A0 }
+> -	{
+> -		sector_t x = sector >> conf->sector_shift;
+> -		sector_div(x, (u32)conf->spacing);
+> -		zone = conf->hash_table[x];
+> -	}
 > -
-> - =A0 =A0 =A0 while (sector >=3D zone->zone_start + zone->sectors)
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 zone++;
+> -	while (sector >= zone->zone_start + zone->sectors)
+> -		zone++;
 > -
-> + =A0 =A0 =A0 zone =3D find_zone(conf, sector);
-> + =A0 =A0 =A0 if (!zone)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 1;
+> +	zone = find_zone(conf, sector);
+> +	if (!zone)
+> +		return 1;
 
-=46irstly, will find_zone ever return a NULL. You code already asserts
-on that situation in find_zone.
+I don't much like those last two lines either.  zone will
+never be NULL because if find_zone doesn't find anything, it
+calls BUG.  And returning from make_request without doing any IO
+is just wrong.  So those two lines can go.
 
-But in my opinion,
+Thanks,
+NeilBrown
 
-You should allow NULL to be returned from find_zone( ),
-handle NULL in the caller function more gracefully than panicking (BUG)=
-=2E
 
-Also, the above lines mean that if zone=3D=3DNULL, you return 1, which
-will eventually submit your request through generic_make_request.
-
-I might be wrong as I am quite new to this code.
-Kindly forgive.
-> =A0 =A0 =A0 =A0sect_in_chunk =3D bio->bi_sector & (chunk_sects - 1);
+>  	sect_in_chunk = bio->bi_sector & (chunk_sects - 1);
 > -
 > -
-> =A0 =A0 =A0 =A0{
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0sector_t x =3D (sector - zone->zone_st=
-art) >> chunksect_bits;
+>  	{
+>  		sector_t x = (sector - zone->zone_start) >> chunksect_bits;
 >
 > --
 > 1.5.4.3
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
 
-
-
---=20
-Regards,
-Sandeep.
-
-
-
-
-
- =09
-=93To learn is to change. Education is a process that changes the learn=
-er.=94
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
