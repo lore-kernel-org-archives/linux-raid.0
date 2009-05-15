@@ -1,64 +1,77 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Starting RAID 5
-Date: Thu, 14 May 2009 22:58:14 -0500
-Message-ID: <20090515035816892.ZJVZ15274@cdptpa-omta02.mail.rr.com>
-References: <adb53d3552334dd6c949c4c029ae7135.squirrel@neil.brown.name>
-Reply-To: <lrhorer@satx.rr.com>
+From: Sujit Karataparambil <sjt.kar@gmail.com>
+Subject: Re: Subject: [PATCH] mdadm: raid0: support chunks of 4K*n for raid0
+Date: Fri, 15 May 2009 09:29:16 +0530
+Message-ID: <921ca19c0905142059u3c16ca2bk6d830d1f74c58ee3@mail.gmail.com>
+References: <1242297833-13908-1-git-send-email-maan@systemlinux.org>
+	 <1242297833-13908-2-git-send-email-maan@systemlinux.org>
+	 <fe4d072c76f1ce1d6b2b75f83766b1f0.squirrel@neil.brown.name>
+	 <20090514121042.GH11504@skl-net.de>
+	 <4743925b38e2d64317e0b6d7c8005a29.squirrel@neil.brown.name>
+	 <1242321131.11444.23.camel@raz>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <adb53d3552334dd6c949c4c029ae7135.squirrel@neil.brown.name>
+In-Reply-To: <1242321131.11444.23.camel@raz>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: raz ben yehuda <raziebe@gmail.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Neil,
 
-> > OK, I've torn down the LVM backup arraqy and am rebuilding it as a RAID
-> 5.
-> > I've had problems with this before, and I'm having them, again.  I
-> created
-> > the array with:
-> >
-> > mdadm --create /dev/md0 --raid-devices=7 --metadata=1.2 --chunk=256
-> > --level=5 /dev/sd[a-g]
-> >
-> > whereupon it creates the array and then immediately removes /dev/sdg and
-> > makes it a spare.  I think I may have read where this is normal
-> behavior.
-> 
-> Correct. Maybe you read it in the mdadm man page.
+I donot understand why this needs to be done in raid. Why should be the=
+ raid
+taking care of 4k*n data sets.
 
-That's what I thought.  I breezed through the MAN page to try to find it
-again, but one of my baby chicks (technicians who work for me) was having a
-major melt-down over some minor problems he was experiencing in the network
-while trying to prepare for a maintenance window, so I had to break off.
+What I see of this patch is that it specifically checks for some sort
+of 4K Boundaries.
 
-> > I can't get it to do an initial resync or promote the spare, however.
-> 
-> So it doesn't start recovery straight away? That is odd...
+Thanks,
+Sujit
 
-No, and it's happened before, on the other system.  Version 2.6.7.2-1  It
-didn't do it when I created the RAID 6 array.
+On Thu, May 14, 2009 at 10:42 PM, raz ben yehuda <raziebe@gmail.com> wr=
+ote:
+> Neil.
+> I do not know what is policy for mdadm patches. I would thankful for =
+some instructions.
+> The bellow is the patch I applied to support raid0 chunk sizes 4K*n.
+> ---
+> --- mdadm.c =A0 =A0 (revision 16152)
+> +++ mdadm.c =A0 =A0 (working copy)
+> @@ -314,7 +314,8 @@
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0exit(2=
+);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0chunk =3D strtol(optar=
+g, &c, 10);
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!optarg[0] || *c ||=
+ chunk<4 || (chunk%4)) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!optarg[0] || *c ||=
+ chunk<4 || =A0(((chunk-1)&chunk) && level !=3D0)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 || =A0(((chunk%4) && level =3D=3D0) )) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0fprint=
+f(stderr, Name ": invalid chunk/rounding value: %s\n",
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0optarg);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0exit(2=
+);
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-> Maybe it is in read-auto mode.  I should probably get mdadm to poke
-> it out of that.
-> 
-> If it is just start creating the filesystem or whatever you want to
-> do, that will prod it into action.
 
-Umph.  Well, that was easy.  I kept messing with mdadm, not mkfs.  Generally
-speaking, when I'm working on something I don't move on to subsequent
-processes until the current process is functioning properly, so I was loathe
-to move on.  Silly me, I guess, but I still say it's usually the best
-practice.  Sometimes even good habits get you in trouble, I suppose.
 
-> If not (check /proc/mdstat), what kernel log messages are them from the
-> time when you created the array.
-
-Yeah, that was the first thing I did.  There was nothing out of the
-ordinary.  Mdadm reported to stdout that it was removing the 7th disk, but
-put nothing about it in the log except to say it was active on 6 of 7
-devices.
-
+--=20
+-- Sujit K M
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
