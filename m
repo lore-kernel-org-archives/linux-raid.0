@@ -1,7 +1,7 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: [PATCH 3/6] md: raid0: Remove hash spacing and sector shift.
-Date: Fri, 15 May 2009 15:18:15 +0200
-Message-ID: <1242393498-7528-4-git-send-email-maan@systemlinux.org>
+Subject: [PATCH 5/6] md: raid0: Allocate all buffers for the raid0 configuration in one function.
+Date: Fri, 15 May 2009 15:18:17 +0200
+Message-ID: <1242393498-7528-6-git-send-email-maan@systemlinux.org>
 References: <1242393498-7528-1-git-send-email-maan@systemlinux.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1242393498-7528-1-git-send-email-maan@systemlinux.org>
@@ -10,128 +10,138 @@ To: neilb@suse.de
 Cc: raziebe@gmail.com, linux-raid@vger.kernel.org, Andre Noll <maan@systemlinux.org>
 List-Id: linux-raid.ids
 
-The "sector_shift" and "spacing" fields of struct raid0_private_data
-were only used for the hash table lookups. So the removal of the
-hash table allows get rid of these fields as well which simplifies
-create_strip_zones() and raid0_run() quite a bit.
+Currently the raid0 configuration is allocated in raid0_run() while
+the buffers for the strip_zone and the dev_list arrays are allocated
+in create_strip_zones(). On errors, all three buffers are freed
+in raid0_run().
+
+It's easier and more readable to do the allocation and cleanup within
+a single function. So move that code into create_strip_zones().
 
 Signed-off-by: Andre Noll <maan@systemlinux.org>
 ---
- drivers/md/raid0.c |   63 +---------------------------------------------------
- drivers/md/raid0.h |    3 --
- 2 files changed, 1 insertions(+), 65 deletions(-)
+ drivers/md/raid0.c |   47 +++++++++++++++++------------------------------
+ 1 files changed, 17 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index d550396..4b207ab 100644
+index 7f89843..74689ad 100644
 --- a/drivers/md/raid0.c
 +++ b/drivers/md/raid0.c
-@@ -56,7 +56,6 @@ static int create_strip_zones (mddev_t *mddev)
- {
- 	int i, c, j;
- 	sector_t current_start, curr_zone_start;
--	sector_t min_spacing;
- 	raid0_conf_t *conf = mddev_to_conf(mddev);
- 	mdk_rdev_t *smallest, *rdev1, *rdev2, *rdev;
- 	struct strip_zone *zone;
-@@ -204,28 +203,7 @@ static int create_strip_zones (mddev_t *mddev)
- 		printk(KERN_INFO "raid0: current zone start: %llu\n",
- 			(unsigned long long)current_start);
- 	}
--	/* Now find appropriate hash spacing.
--	 * We want a number which causes most hash entries to cover
--	 * at most two strips, but the hash table must be at most
--	 * 1 PAGE.  We choose the smallest strip, or contiguous collection
--	 * of strips, that has big enough size.  We never consider the last
--	 * strip though as it's size has no bearing on the efficacy of the hash
--	 * table.
--	 */
--	conf->spacing = curr_zone_start;
--	min_spacing = curr_zone_start;
--	sector_div(min_spacing, PAGE_SIZE/sizeof(struct strip_zone*));
--	for (i=0; i < conf->nr_strip_zones-1; i++) {
--		sector_t s = 0;
--		for (j = i; j < conf->nr_strip_zones - 1 &&
--				s < min_spacing; j++)
--			s += conf->strip_zone[j].sectors;
--		if (s >= min_spacing && s < conf->spacing)
--			conf->spacing = s;
--	}
--
- 	mddev->queue->unplug_fn = raid0_unplug;
--
- 	mddev->queue->backing_dev_info.congested_fn = raid0_congested;
- 	mddev->queue->backing_dev_info.congested_data = mddev;
- 
-@@ -275,10 +253,8 @@ static sector_t raid0_size(mddev_t *mddev, sector_t sectors, int raid_disks)
- 	return array_sectors;
+@@ -52,21 +52,18 @@ static int raid0_congested(void *data, int bits)
+ 	return ret;
  }
  
--static int raid0_run (mddev_t *mddev)
-+static int raid0_run(mddev_t *mddev)
+-static int create_strip_zones (mddev_t *mddev)
++static int create_strip_zones(mddev_t *mddev)
  {
--	unsigned  cur=0, i=0, nb_zone;
--	s64 sectors;
- 	raid0_conf_t *conf;
+-	int i, c, j;
++	int i, c, j, err;
+ 	sector_t current_start, curr_zone_start;
+-	raid0_conf_t *conf = mddev_to_conf(mddev);
+ 	mdk_rdev_t *smallest, *rdev1, *rdev2, *rdev;
+ 	struct strip_zone *zone;
+ 	int cnt;
+ 	char b[BDEVNAME_SIZE];
+- 
+-	/*
+-	 * The number of 'same size groups'
+-	 */
+-	conf->nr_strip_zones = 0;
+- 
++	raid0_conf_t *conf = kzalloc(sizeof(*conf), GFP_KERNEL);
++
++	if (!conf)
++		return -ENOMEM;
+ 	list_for_each_entry(rdev1, &mddev->disks, same_set) {
+ 		printk(KERN_INFO "raid0: looking at %s\n",
+ 			bdevname(rdev1->bdev,b));
+@@ -101,16 +98,16 @@ static int create_strip_zones (mddev_t *mddev)
+ 		}
+ 	}
+ 	printk(KERN_INFO "raid0: FINAL %d zones\n", conf->nr_strip_zones);
+-
++	err = -ENOMEM;
+ 	conf->strip_zone = kzalloc(sizeof(struct strip_zone)*
+ 				conf->nr_strip_zones, GFP_KERNEL);
+ 	if (!conf->strip_zone)
+-		return -ENOMEM;
++		goto abort;
+ 	conf->devlist = kzalloc(sizeof(mdk_rdev_t*)*
+ 				conf->nr_strip_zones*mddev->raid_disks,
+ 				GFP_KERNEL);
+ 	if (!conf->devlist)
+-		return -ENOMEM;
++		goto abort;
+ 
+ 	/* The first zone must contain all devices, so here we check that
+ 	 * there is a proper alignment of slots to devices and find them all
+@@ -119,6 +116,7 @@ static int create_strip_zones (mddev_t *mddev)
+ 	cnt = 0;
+ 	smallest = NULL;
+ 	zone->dev = conf->devlist;
++	err = -EINVAL;
+ 	list_for_each_entry(rdev1, &mddev->disks, same_set) {
+ 		int j = rdev1->raid_disk;
+ 
+@@ -208,9 +206,14 @@ static int create_strip_zones (mddev_t *mddev)
+ 	mddev->queue->backing_dev_info.congested_data = mddev;
+ 
+ 	printk(KERN_INFO "raid0: done.\n");
++	mddev->private = conf;
+ 	return 0;
+ abort:
+-	return -EINVAL;
++	kfree(conf->strip_zone);
++	kfree(conf->devlist);
++	kfree(conf);
++	mddev->private = NULL;
++	return err;
+ }
+ 
+ /**
+@@ -255,7 +258,6 @@ static sector_t raid0_size(mddev_t *mddev, sector_t sectors, int raid_disks)
+ 
+ static int raid0_run(mddev_t *mddev)
+ {
+-	raid0_conf_t *conf;
+ 	int ret;
  
  	if (mddev->chunk_size == 0) {
-@@ -308,43 +284,6 @@ static int raid0_run (mddev_t *mddev)
+@@ -270,16 +272,9 @@ static int raid0_run(mddev_t *mddev)
+ 	blk_queue_segment_boundary(mddev->queue, (mddev->chunk_size>>1) - 1);
+ 	mddev->queue->queue_lock = &mddev->queue->__queue_lock;
  
- 	printk(KERN_INFO "raid0 : md_size is %llu sectors.\n",
- 		(unsigned long long)mddev->array_sectors);
--	printk(KERN_INFO "raid0 : conf->spacing is %llu sectors.\n",
--		(unsigned long long)conf->spacing);
--	{
--		sector_t s = raid0_size(mddev, 0, 0);
--		sector_t space = conf->spacing;
--		int round;
--		conf->sector_shift = 0;
--		if (sizeof(sector_t) > sizeof(u32)) {
--			/*shift down space and s so that sector_div will work */
--			while (space > (sector_t) (~(u32)0)) {
--				s >>= 1;
--				space >>= 1;
--				s += 1; /* force round-up */
--				conf->sector_shift++;
--			}
--		}
--		round = sector_div(s, (u32)space) ? 1 : 0;
--		nb_zone = s + round;
--	}
--	printk(KERN_INFO "raid0 : nb_zone is %d.\n", nb_zone);
--	sectors = conf->strip_zone[cur].sectors;
--
--	for (i=1; i< nb_zone; i++) {
--		while (sectors <= conf->spacing) {
--			cur++;
--			sectors += conf->strip_zone[cur].sectors;
--		}
--		sectors -= conf->spacing;
--	}
--	if (conf->sector_shift) {
--		conf->spacing >>= conf->sector_shift;
--		/* round spacing up so when we divide by it, we
--		 * err on the side of too-low, which is safest
--		 */
--		conf->spacing++;
--	}
--
- 	/* calculate the max read-ahead size.
- 	 * For read-ahead of large files to be effective, we need to
- 	 * readahead at least twice a whole stripe. i.e. number of devices
-diff --git a/drivers/md/raid0.h b/drivers/md/raid0.h
-index a14630a..dbcf1da 100644
---- a/drivers/md/raid0.h
-+++ b/drivers/md/raid0.h
-@@ -15,9 +15,6 @@ struct raid0_private_data
- 	struct strip_zone *strip_zone;
- 	mdk_rdev_t **devlist; /* lists of rdevs, pointed to by strip_zone->dev */
- 	int nr_strip_zones;
--
--	sector_t spacing;
--	int sector_shift; /* shift this before divide by spacing */
- };
+-	conf = kmalloc(sizeof (raid0_conf_t), GFP_KERNEL);
+-	if (!conf)
+-		return -ENOMEM;
+-	mddev->private = (void *)conf;
+- 
+-	conf->strip_zone = NULL;
+-	conf->devlist = NULL;
+ 	ret = create_strip_zones(mddev);
+ 	if (ret < 0)
+-		goto out_free_conf;
++		return ret;
  
- typedef struct raid0_private_data raid0_conf_t;
+ 	/* calculate array device size */
+ 	md_set_array_sectors(mddev, raid0_size(mddev, 0, 0));
+@@ -301,16 +296,8 @@ static int raid0_run(mddev_t *mddev)
+ 			mddev->queue->backing_dev_info.ra_pages = 2* stripe;
+ 	}
+ 
+-
+ 	blk_queue_merge_bvec(mddev->queue, raid0_mergeable_bvec);
+ 	return 0;
+-
+-out_free_conf:
+-	kfree(conf->strip_zone);
+-	kfree(conf->devlist);
+-	kfree(conf);
+-	mddev->private = NULL;
+-	return ret;
+ }
+ 
+ static int raid0_stop (mddev_t *mddev)
 -- 
 1.5.4.3
 
