@@ -1,58 +1,55 @@
-From: "Rainer Fuegenstein" <rfu@kaneda.iguw.tuwien.ac.at>
-Subject: Re: resync duration ?
-Date: Fri, 15 May 2009 13:16:13 +0200 (CEST)
-Message-ID: <41321.81.217.58.120.1242386173.squirrel@kaneda.iguw.tuwien.ac.at>
-References: <1308264373.20090514150647@kaneda.iguw.tuwien.ac.at>
-    <18956.50134.658843.652060@notabene.brown>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [PATCH] md: raid0: Replace hash table lookup by looping over all strip_zones.
+Date: Fri, 15 May 2009 15:18:05 +0200
+Message-ID: <20090515131805.GM6403@skl-net.de>
+References: <1242297833-13908-1-git-send-email-maan@systemlinux.org> <1242297833-13908-2-git-send-email-maan@systemlinux.org> <fe4d072c76f1ce1d6b2b75f83766b1f0.squirrel@neil.brown.name> <18956.3337.786085.284689@notabene.brown> <1242316280.11444.4.camel@raz> <bdf8aeadb1c3d24a5b43ba3264d53dc2.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="hnsKUeImFCk/igEn"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18956.50134.658843.652060@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <bdf8aeadb1c3d24a5b43ba3264d53dc2.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: raz ben yehuda <raziebe@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-> As others have said, 3 hours it a reasonable ball-part for 750Gig.
-> 10-12 hours is definitely longer than I would expect.
->
-> Of course, if use are using the array then resync (or recovery) will
-> back off and let the regular IO have priority.  So if you were
-> actively using the array during the 10-12 hours resync, then it makes
-> perfect sense.
+--hnsKUeImFCk/igEn
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-That's what puzzles me: the server is used just for storage and usually
-there are nearly no accesses during the 10-12h resync period. whereas
-(according to your statement above) when accessing the raid with the one
-new 1.5TB disk during the 3h resync period, the estimate climbs to about
-1600 minutes, but drops back to 3 hours when idle again.
+On 06:38, NeilBrown wrote:
 
-could this be a result of the hardware configuration ?
+> I was thinking further about this and realised that in the first zone,
+> zone_start is always 0.  And we added a sentinal zone for which only
+> the zone_start value is set.  This seems silly.
 
-old 750GB disk:
-  Vendor: ATA       Model: SAMSUNG HD753LJ   Rev: 1AA0
-  Type:   Direct-Access                      ANSI SCSI revision: 05
+Yes, it is.
 
-new 1.5TB disk: (western digital caviar green)
-  Vendor: ATA       Model: WDC WD15EADS-00R  Rev: 01.0
-  Type:   Direct-Access                      ANSI SCSI revision: 05
+> Instead we can just store 'zone_end' in each zone (or possibly
+> start_of_next_zone) and then we don't need the sentinal and don't waste
+> the zone_start at the beginning.
 
-$ cat /proc/cpuinfo
-processor       : 0
-vendor_id       : AuthenticAMD
-cpu family      : 15
-model           : 127
-model name      : AMD Sempron(tm) Processor LE-1200
-stepping        : 1
-cpu MHz         : 1800.000
-cache size      : 512 KB
-[...]
+That's what I did in the new version of the patch set. I'll send it out
+shortly.
 
-mainboard is an ASUS M2N with 4 onbord SATA ports.
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
 
-anyway, when all the 1.5TB disks are active in the raid5, I'll simulate a
-power failure and see how long the re-sync will take then.
+--hnsKUeImFCk/igEn
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
 
+iD8DBQFKDWuNWto1QDEAkw8RAs0dAJ4+13rrTEAJTNb2KsUeFdx+ROl+nQCdF5py
+P42+N0wo5p/r//qCGSiemg0=
+=DVgn
+-----END PGP SIGNATURE-----
+
+--hnsKUeImFCk/igEn--
