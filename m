@@ -1,47 +1,95 @@
-From: Sujit Karataparambil <sjt.kar@gmail.com>
+From: "NeilBrown" <neilb@suse.de>
 Subject: Re: Subject: [PATCH] mdadm: raid0: support chunks of 4K*n for raid0
-Date: Fri, 15 May 2009 12:15:42 +0530
-Message-ID: <921ca19c0905142345u36729c38t9ca1e39824703728@mail.gmail.com>
+Date: Fri, 15 May 2009 18:39:44 +1000 (EST)
+Message-ID: <e0376270c41e5a8a15f06849aaae8863.squirrel@neil.brown.name>
 References: <1242297833-13908-1-git-send-email-maan@systemlinux.org>
-	 <1242297833-13908-2-git-send-email-maan@systemlinux.org>
-	 <fe4d072c76f1ce1d6b2b75f83766b1f0.squirrel@neil.brown.name>
-	 <20090514121042.GH11504@skl-net.de>
-	 <4743925b38e2d64317e0b6d7c8005a29.squirrel@neil.brown.name>
-	 <1242321131.11444.23.camel@raz>
-	 <921ca19c0905142059u3c16ca2bk6d830d1f74c58ee3@mail.gmail.com>
-	 <5d96567b0905142301v144f428dsb110d9e81e3ad592@mail.gmail.com>
+    <1242297833-13908-2-git-send-email-maan@systemlinux.org>
+    <fe4d072c76f1ce1d6b2b75f83766b1f0.squirrel@neil.brown.name>
+    <20090514121042.GH11504@skl-net.de>
+    <4743925b38e2d64317e0b6d7c8005a29.squirrel@neil.brown.name>
+    <1242321131.11444.23.camel@raz>
+    <921ca19c0905142059u3c16ca2bk6d830d1f74c58ee3@mail.gmail.com>
+    <5d96567b0905142301v144f428dsb110d9e81e3ad592@mail.gmail.com>
+    <921ca19c0905142345u36729c38t9ca1e39824703728@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5d96567b0905142301v144f428dsb110d9e81e3ad592@mail.gmail.com>
+In-Reply-To: <921ca19c0905142345u36729c38t9ca1e39824703728@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Raz <raziebe@gmail.com>
-Cc: linux-raid@vger.kernel.org, neilb@suse.de
+To: Sujit Karataparambil <sjt.kar@gmail.com>
+Cc: Raz <raziebe@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, May 15, 2009 at 11:31 AM, Raz <raziebe@gmail.com> wrote:
-> where else ?
+On Fri, May 15, 2009 4:45 pm, Sujit Karataparambil wrote:
+> On Fri, May 15, 2009 at 11:31 AM, Raz <raziebe@gmail.com> wrote:
+>> where else ?
+>
+> See you were the one who has sent out the patch. Ok? Then you should
+> know the reason for patch? What I had asked from Neil is an RFC Cross
+> Checking the Patch. So I donot expect an Reply From You. Ok?
+>>> taking care of 4k*n data sets.
+>>> What I see of this patch is that it specifically checks for some sort
+>>> of 4K Boundaries.
+>
+>
+>> instead of 4K*2^n where n>=0
+>> correct and recompure IO posistion.
+>>>>                                fprintf(stderr, Name ": invalid
+>>>> chunk/rounding value: %s\n",
+>
+> Could you tell me how 4K*2^n is  used to do the patch what ever it was
+> sent for? Or
+> is it that the patch is incomplete.
+>
+> Kindly Maintain Some sort of mailing list courtesy.Ok? Reply only when
+> you are asked to.
+> Ok?
 
-See you were the one who has sent out the patch. Ok? Then you should
-know the reason for patch? What I had asked from Neil is an RFC Cross
-Checking the Patch. So I donot expect an Reply From You. Ok?
->> taking care of 4k*n data sets.
->> What I see of this patch is that it specifically checks for some sort
->> of 4K Boundaries.
+That really isn't an appropriate thing to say.  If people want to
+reply (politely) this questions directed at other people on a public
+list, I think that is quite appropriate.  In fact I value it as it
+often means I don't need to reply because someone else has done
+it for me.
+
+Now I agree that "where else" is not a very helpful reply, but I'm
+not sure that the original question was crystal clear either.  Maybe
+there is a bit of a language barrier - I'm sure not everyone on this
+list has English as their first language, yet English is the language
+we use (for which I'm very thankful as I don't speak anything else).
+So a little bit of patience all around would be good.
+
+Also it would help if explanations were a little more detailed, and
+even if questions contained more detail too.
+
+In the case of the original patch, I'm not really sure of the point
+of the patch myself.
+
+The text
+  "I do not know what is policy for mdadm patches. I would thankful for some
+instructions."
+
+is clear enough.  The answer is "send them to me" in much the same format
+as the kernel patches you have seen sent by e.g. Andre Noll.
+
+The text
+   "The bellow is the patch I applied to support raid0 chunk sizes 4K*n."
+
+confuses me as it doesn't seem add anything, it only removes.
+i.e. it removes the possibility of passing a non-power-of-2
+chunk size to raid levels other than 0.
+
+That might be an appropriate thing to do, but the commentary that
+came with the patch doesn't say it does that, and says something
+quite different, so I'm not really sure what to make of it.  Which
+is one of the reasons I didn't reply straight away - I wanted to give
+myself time to read it again and make sure I wasn't missing anything.
 
 
-> instead of 4K*2^n where n>=0
-> correct and recompure IO posistion.
->>>                                fprintf(stderr, Name ": invalid chunk/rounding value: %s\n",
+NeilBrown
 
-Could you tell me how 4K*2^n is  used to do the patch what ever it was
-sent for? Or
-is it that the patch is incomplete.
+>
+> --
+> -- Sujit K M
+>
 
-Kindly Maintain Some sort of mailing list courtesy.Ok? Reply only when
-you are asked to.
-Ok?
-
--- 
--- Sujit K M
