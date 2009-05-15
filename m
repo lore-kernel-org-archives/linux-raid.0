@@ -1,45 +1,53 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: resync duration ?
-Date: Thu, 14 May 2009 23:04:49 -0500
-Message-ID: <20090515040451334.NCNJ13751@cdptpa-omta01.mail.rr.com>
-References: <18956.50134.658843.652060@notabene.brown>
-Reply-To: <lrhorer@satx.rr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Spares Missing event in case of spare group?
+Date: Fri, 15 May 2009 14:38:21 +1000
+Message-ID: <18956.61885.121354.537078@notabene.brown>
+References: <49EB4B07.9050208@computer.org>
+	<0ad180f4fb306d79e27eb9c822acdbaf.squirrel@neil.brown.name>
+	<49ECC6CB.7050107@computer.org>
+	<49FA9C4D.8040206@computer.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18956.50134.658843.652060@notabene.brown>
+In-Reply-To: message from Jan Ceuleers on Friday May 1
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: Jan Ceuleers <jan.ceuleers@computer.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > I'm a but confused about the duration of a raid5 resync:
-> >
-> > - occasionally, my server with 4*750 gb sata raid5 crashed (because of
-> > problems with the power supply); after rebooting it took about 10 to 12
-> > hours to resync the raid5 (guess it just re-created some parity
-> > information or however it works internally, but didn't have to copy
-> > any data)
+On Friday May 1, jan.ceuleers@computer.org wrote:
+> Jan Ceuleers wrote:
+> > NeilBrown wrote:
+> >> Yes.  Remove the "spares=1" from each line.
+> >> The sole effect of this text is to tell --monitor to expect a spare, and
+> >> to complain if no spare is found.
+> > 
+> > Many thanks. I hadn't picked that up from the manpage, so here is a 
+> > patch for your consideration:
 > 
-> A resync reads all the data and checks the parity.  If it find bad
-> parity (which is likely to be very rare) then it corrects it.
-> So resync should run at the full speed of the hardware, just reading.
+> Reasonable patch?
 
-It will?  Maybe I am just mis-remembering, but I thought I saw the same note
-in the log when the resync occurred (ckarray) as when a recovery was in
-progress:
+Yes.  Thanks.  (And sorry for the delay :-)
 
-May 14 22:40:42 Backup kernel: [ 8083.747787] md: recovery of RAID array md0
-May 14 22:40:42 Backup kernel: [ 8083.747789] md: minimum _guaranteed_
-speed: 1000 KB/sec/disk.
-May 14 22:40:42 Backup kernel: [ 8083.747791] md: using maximum available
-idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
-May 14 22:40:42 Backup kernel: [ 8083.747797] md: using 128k window, over a
-total of 1465138432 blocks.
+NeilBrown
 
-Am I mis-remembering, or am I missing something here?
-
-Oh, while I am thinking of it, ckarray runs every month on the first of the
-month, but how can one trigger it manually?
-
+> 
+> > diff --git a/mdadm.conf.5 b/mdadm.conf.5
+> > index 40295be..b67bec4 100644
+> > --- a/mdadm.conf.5
+> > +++ b/mdadm.conf.5
+> > @@ -135,6 +135,7 @@ this is mainly for compatibility with the output of
+> >  .TP
+> >  .B spares=
+> >  The value is a number of spare devices to expect the array to have.
+> > +The sole use of this keyword and value is as follows:
+> >  .B mdadm \-\-monitor
+> >  will report an array if it is found to have fewer than this number of
+> >  spares when
+> 
+> Thanks, Jan
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
