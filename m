@@ -1,79 +1,47 @@
-From: Raz <raziebe@gmail.com>
+From: Sujit Karataparambil <sjt.kar@gmail.com>
 Subject: Re: Subject: [PATCH] mdadm: raid0: support chunks of 4K*n for raid0
-Date: Fri, 15 May 2009 09:01:53 +0300
-Message-ID: <5d96567b0905142301v144f428dsb110d9e81e3ad592@mail.gmail.com>
+Date: Fri, 15 May 2009 12:15:42 +0530
+Message-ID: <921ca19c0905142345u36729c38t9ca1e39824703728@mail.gmail.com>
 References: <1242297833-13908-1-git-send-email-maan@systemlinux.org>
-	<1242297833-13908-2-git-send-email-maan@systemlinux.org> <fe4d072c76f1ce1d6b2b75f83766b1f0.squirrel@neil.brown.name>
-	<20090514121042.GH11504@skl-net.de> <4743925b38e2d64317e0b6d7c8005a29.squirrel@neil.brown.name>
-	<1242321131.11444.23.camel@raz> <921ca19c0905142059u3c16ca2bk6d830d1f74c58ee3@mail.gmail.com>
+	 <1242297833-13908-2-git-send-email-maan@systemlinux.org>
+	 <fe4d072c76f1ce1d6b2b75f83766b1f0.squirrel@neil.brown.name>
+	 <20090514121042.GH11504@skl-net.de>
+	 <4743925b38e2d64317e0b6d7c8005a29.squirrel@neil.brown.name>
+	 <1242321131.11444.23.camel@raz>
+	 <921ca19c0905142059u3c16ca2bk6d830d1f74c58ee3@mail.gmail.com>
+	 <5d96567b0905142301v144f428dsb110d9e81e3ad592@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <921ca19c0905142059u3c16ca2bk6d830d1f74c58ee3@mail.gmail.com>
+In-Reply-To: <5d96567b0905142301v144f428dsb110d9e81e3ad592@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sujit Karataparambil <sjt.kar@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Raz <raziebe@gmail.com>
+Cc: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-On Fri, May 15, 2009 at 6:59 AM, Sujit Karataparambil <sjt.kar@gmail.co=
-m> wrote:
-> Neil,
->
-> I donot understand why this needs to be done in raid. Why should be t=
-he raid
-where else ?
-> taking care of 4k*n data sets.
-> What I see of this patch is that it specifically checks for some sort
-> of 4K Boundaries.
-instead of 4K*2^n where n>=3D0
-correct and recompure IO posistion.
-> Thanks,
-> Sujit
->
-> On Thu, May 14, 2009 at 10:42 PM, raz ben yehuda <raziebe@gmail.com> =
-wrote:
->> Neil.
->> I do not know what is policy for mdadm patches. I would thankful for=
- some instructions.
->> The bellow is the patch I applied to support raid0 chunk sizes 4K*n.
->> ---
->> --- mdadm.c =A0 =A0 (revision 16152)
->> +++ mdadm.c =A0 =A0 (working copy)
->> @@ -314,7 +314,8 @@
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0exit(=
-2);
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0chunk =3D strtol(opta=
-rg, &c, 10);
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!optarg[0] || *c |=
-| chunk<4 || (chunk%4)) {
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!optarg[0] || *c |=
-| chunk<4 || =A0(((chunk-1)&chunk) && level !=3D0)
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 || =A0(((chunk%4) && level =3D=3D0) )) {
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0fprin=
-tf(stderr, Name ": invalid chunk/rounding value: %s\n",
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0 =A0optarg);
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0exit(=
-2);
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->>
->
->
->
-> --
-> -- Sujit K M
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Fri, May 15, 2009 at 11:31 AM, Raz <raziebe@gmail.com> wrote:
+> where else ?
+
+See you were the one who has sent out the patch. Ok? Then you should
+know the reason for patch? What I had asked from Neil is an RFC Cross
+Checking the Patch. So I donot expect an Reply From You. Ok?
+>> taking care of 4k*n data sets.
+>> What I see of this patch is that it specifically checks for some sort
+>> of 4K Boundaries.
+
+
+> instead of 4K*2^n where n>=0
+> correct and recompure IO posistion.
+>>>                                fprintf(stderr, Name ": invalid chunk/rounding value: %s\n",
+
+Could you tell me how 4K*2^n is  used to do the patch what ever it was
+sent for? Or
+is it that the patch is incomplete.
+
+Kindly Maintain Some sort of mailing list courtesy.Ok? Reply only when
+you are asked to.
+Ok?
+
+-- 
+-- Sujit K M
