@@ -1,31 +1,47 @@
 From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: RAID4 and RAID5 Code
-Date: Fri, 15 May 2009 09:08:36 -0700
-Message-ID: <4A0D9384.1020805@zytor.com>
-References: <37d33d830905140957q6e180d89v4cd4a21d23471481@mail.gmail.com>
+Subject: Re: md extension to support booting from raid whole disks.
+Date: Fri, 15 May 2009 09:13:30 -0700
+Message-ID: <4A0D94AA.8020803@zytor.com>
+References: <20090503013342770.VMBT19475@cdptpa-omta01.mail.rr.com>	<e13f0e541934a0966f213f6da13d83da.squirrel@neil.brown.name>	<1241406283.17240.26.camel@ezra>	<87fxff462s.fsf@frosties.localdomain>	<21cdc7a16fbdd42979d52331db97c737.squirrel@neil.brown.name>	<87ws8r2pqf.fsf@frosties.localdomain>	<18953.2936.212863.158003@notabene.brown>	<1242157469.18958.13.camel@ezra> <18954.43834.53155.793587@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <37d33d830905140957q6e180d89v4cd4a21d23471481@mail.gmail.com>
+In-Reply-To: <18954.43834.53155.793587@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: SandeepKsinha <sandeepksinha@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: Daniel Reurich <daniel@centurion.net.nz>, Goswin von Brederlow <goswin-v-b@web.de>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-SandeepKsinha wrote:
-> Hi all,
+Neil Brown wrote:
 > 
-> Looks like we have the same code for RAID 4 and RAID 5, I could see
-> the same make_request for both.
+> Having a replicated boot loader and having a raid1 are conceptually
+> quite different things.
+> A raid1 says "keep N (typically 2) copies of the data somewhere for
+> me".
+> A replicated boot loader says "store this boot loader on every
+> bootable device".
+> One is more abstract, the other is more concrete.
 > 
-> Can someone point me in the code, where exactly we differentiate
-> between these two. i.e updating checksum block, etc.
+> Maybe it is a very subtle distinction, but I think it is worth
+> maintaining.  Get your boot-loader-installer to install at the front
+> of every drive - don't bother having a raid1 there that is never read
+> and hardly ever written..
 > 
 
-RAID 4 is really nothing but a block layout algorithm for RAID 5 (which
-has four more block layout algorithms.)  RAID 6 contains all five under
-one "level".
+I think it is an unfortunate distinction (although I see why you want to
+make it), and one which goes in the wrong direction.
+
+As I've stated many times (and not just in this debate), I believe using
+the RAID-1 mechanism to replicate /boot across the entire span of
+devices is the right thing to do.  Not just the boot loader, but all of
+/boot.
+
+Once you do that, you do want to write it on a regular basis, and using
+the RAID-1 code is the obvious way to do it.  You can argue that it is
+an accidental effect of the way the current Linux RAID-1 code does it,
+but it's nevertheless extremely useful, widely deployed, and extremely
+resilient.
 
 	-hpa
 
