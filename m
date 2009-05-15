@@ -1,55 +1,52 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [PATCH] md: raid0: Replace hash table lookup by looping over all strip_zones.
-Date: Fri, 15 May 2009 15:18:05 +0200
-Message-ID: <20090515131805.GM6403@skl-net.de>
-References: <1242297833-13908-1-git-send-email-maan@systemlinux.org> <1242297833-13908-2-git-send-email-maan@systemlinux.org> <fe4d072c76f1ce1d6b2b75f83766b1f0.squirrel@neil.brown.name> <18956.3337.786085.284689@notabene.brown> <1242316280.11444.4.camel@raz> <bdf8aeadb1c3d24a5b43ba3264d53dc2.squirrel@neil.brown.name>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="hnsKUeImFCk/igEn"
+Subject: [PATCH 0/6] md: Remove the hash tables from raid0 V2 -- Introduction.
+Date: Fri, 15 May 2009 15:18:12 +0200
+Message-ID: <1242393498-7528-1-git-send-email-maan@systemlinux.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <bdf8aeadb1c3d24a5b43ba3264d53dc2.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: raz ben yehuda <raziebe@gmail.com>, linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: raziebe@gmail.com, linux-raid@vger.kernel.org, Andre Noll <maan@systemlinux.org>
 List-Id: linux-raid.ids
 
+As mentioned by Neil, the raid0 hash table does probably not add
+any value and contains some rather strange code that manipulates the
+various sector counts needed to maintain this table.
 
---hnsKUeImFCk/igEn
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This patch series against Neil's for-next tree as of yesterday removes
+the hash table from the raid0 code.
 
-On 06:38, NeilBrown wrote:
+Patch #1 replaces the hash table lookup by a simple function that
+loops over all strip zones to find the zone that holds a given sector.
+This change allows to get rid of the hash table itself (patch #2)
+and of related fields of struct raid0_private_data (patch #3).
 
-> I was thinking further about this and realised that in the first zone,
-> zone_start is always 0.  And we added a sentinal zone for which only
-> the zone_start value is set.  This seems silly.
+Patch #4 makes raid0 return a proper error code rather than -ENOMEM
+in case the array could not be started for reasons different from
+memory shortage.
 
-Yes, it is.
+Patch #5 cleans up the allocation of the buffers for the raid0
+configuration.
 
-> Instead we can just store 'zone_end' in each zone (or possibly
-> start_of_next_zone) and then we don't need the sentinal and don't waste
-> the zone_start at the beginning.
+Patch #6 fixes a memory leak that happens when a raid0 array is
+shut down.
 
-That's what I did in the new version of the patch set. I'll send it out
-shortly.
+The patched kernel has been tested with a smallish raid0 array
+consisting of five devices of different sizes (created with an
+unpatched kernel) and seems to work just fine. Moreover, it passes
+the raid0 tests of the mdadm test suite.
 
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
+Differences to the first version of the patch set:
 
---hnsKUeImFCk/igEn
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+	- According to the discussion on linux-raid, ->zone_start has
+	been renamed to ->zone_end with the obvious semantic change.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
+	- Patch #5 and #6 of the old patch set have been combined
+	and the allocation/freeing of the raid0 configuration has
+	been moved from raid0_run() to create_strip_zones().
 
-iD8DBQFKDWuNWto1QDEAkw8RAs0dAJ4+13rrTEAJTNb2KsUeFdx+ROl+nQCdF5py
-P42+N0wo5p/r//qCGSiemg0=
-=DVgn
------END PGP SIGNATURE-----
+	- Patch #6 is new.
 
---hnsKUeImFCk/igEn--
+ drivers/md/raid0.c |  174 +++++++++++++---------------------------------------
+ drivers/md/raid0.h |    6 +--
+ 2 files changed, 45 insertions(+), 135 deletions(-)
+
