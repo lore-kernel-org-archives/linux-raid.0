@@ -1,95 +1,58 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Subject: [PATCH] mdadm: raid0: support chunks of 4K*n for raid0
-Date: Fri, 15 May 2009 18:39:44 +1000 (EST)
-Message-ID: <e0376270c41e5a8a15f06849aaae8863.squirrel@neil.brown.name>
-References: <1242297833-13908-1-git-send-email-maan@systemlinux.org>
-    <1242297833-13908-2-git-send-email-maan@systemlinux.org>
-    <fe4d072c76f1ce1d6b2b75f83766b1f0.squirrel@neil.brown.name>
-    <20090514121042.GH11504@skl-net.de>
-    <4743925b38e2d64317e0b6d7c8005a29.squirrel@neil.brown.name>
-    <1242321131.11444.23.camel@raz>
-    <921ca19c0905142059u3c16ca2bk6d830d1f74c58ee3@mail.gmail.com>
-    <5d96567b0905142301v144f428dsb110d9e81e3ad592@mail.gmail.com>
-    <921ca19c0905142345u36729c38t9ca1e39824703728@mail.gmail.com>
+From: "Rainer Fuegenstein" <rfu@kaneda.iguw.tuwien.ac.at>
+Subject: Re: resync duration ?
+Date: Fri, 15 May 2009 13:16:13 +0200 (CEST)
+Message-ID: <41321.81.217.58.120.1242386173.squirrel@kaneda.iguw.tuwien.ac.at>
+References: <1308264373.20090514150647@kaneda.iguw.tuwien.ac.at>
+    <18956.50134.658843.652060@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <921ca19c0905142345u36729c38t9ca1e39824703728@mail.gmail.com>
+In-Reply-To: <18956.50134.658843.652060@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sujit Karataparambil <sjt.kar@gmail.com>
-Cc: Raz <raziebe@gmail.com>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, May 15, 2009 4:45 pm, Sujit Karataparambil wrote:
-> On Fri, May 15, 2009 at 11:31 AM, Raz <raziebe@gmail.com> wrote:
->> where else ?
+
+> As others have said, 3 hours it a reasonable ball-part for 750Gig.
+> 10-12 hours is definitely longer than I would expect.
 >
-> See you were the one who has sent out the patch. Ok? Then you should
-> know the reason for patch? What I had asked from Neil is an RFC Cross
-> Checking the Patch. So I donot expect an Reply From You. Ok?
->>> taking care of 4k*n data sets.
->>> What I see of this patch is that it specifically checks for some sort
->>> of 4K Boundaries.
->
->
->> instead of 4K*2^n where n>=0
->> correct and recompure IO posistion.
->>>>                                fprintf(stderr, Name ": invalid
->>>> chunk/rounding value: %s\n",
->
-> Could you tell me how 4K*2^n is  used to do the patch what ever it was
-> sent for? Or
-> is it that the patch is incomplete.
->
-> Kindly Maintain Some sort of mailing list courtesy.Ok? Reply only when
-> you are asked to.
-> Ok?
+> Of course, if use are using the array then resync (or recovery) will
+> back off and let the regular IO have priority.  So if you were
+> actively using the array during the 10-12 hours resync, then it makes
+> perfect sense.
 
-That really isn't an appropriate thing to say.  If people want to
-reply (politely) this questions directed at other people on a public
-list, I think that is quite appropriate.  In fact I value it as it
-often means I don't need to reply because someone else has done
-it for me.
+That's what puzzles me: the server is used just for storage and usually
+there are nearly no accesses during the 10-12h resync period. whereas
+(according to your statement above) when accessing the raid with the one
+new 1.5TB disk during the 3h resync period, the estimate climbs to about
+1600 minutes, but drops back to 3 hours when idle again.
 
-Now I agree that "where else" is not a very helpful reply, but I'm
-not sure that the original question was crystal clear either.  Maybe
-there is a bit of a language barrier - I'm sure not everyone on this
-list has English as their first language, yet English is the language
-we use (for which I'm very thankful as I don't speak anything else).
-So a little bit of patience all around would be good.
+could this be a result of the hardware configuration ?
 
-Also it would help if explanations were a little more detailed, and
-even if questions contained more detail too.
+old 750GB disk:
+  Vendor: ATA       Model: SAMSUNG HD753LJ   Rev: 1AA0
+  Type:   Direct-Access                      ANSI SCSI revision: 05
 
-In the case of the original patch, I'm not really sure of the point
-of the patch myself.
+new 1.5TB disk: (western digital caviar green)
+  Vendor: ATA       Model: WDC WD15EADS-00R  Rev: 01.0
+  Type:   Direct-Access                      ANSI SCSI revision: 05
 
-The text
-  "I do not know what is policy for mdadm patches. I would thankful for some
-instructions."
+$ cat /proc/cpuinfo
+processor       : 0
+vendor_id       : AuthenticAMD
+cpu family      : 15
+model           : 127
+model name      : AMD Sempron(tm) Processor LE-1200
+stepping        : 1
+cpu MHz         : 1800.000
+cache size      : 512 KB
+[...]
 
-is clear enough.  The answer is "send them to me" in much the same format
-as the kernel patches you have seen sent by e.g. Andre Noll.
+mainboard is an ASUS M2N with 4 onbord SATA ports.
 
-The text
-   "The bellow is the patch I applied to support raid0 chunk sizes 4K*n."
+anyway, when all the 1.5TB disks are active in the raid5, I'll simulate a
+power failure and see how long the re-sync will take then.
 
-confuses me as it doesn't seem add anything, it only removes.
-i.e. it removes the possibility of passing a non-power-of-2
-chunk size to raid levels other than 0.
-
-That might be an appropriate thing to do, but the commentary that
-came with the patch doesn't say it does that, and says something
-quite different, so I'm not really sure what to make of it.  Which
-is one of the reasons I didn't reply straight away - I wanted to give
-myself time to read it again and make sure I wasn't missing anything.
-
-
-NeilBrown
-
->
-> --
-> -- Sujit K M
->
 
