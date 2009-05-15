@@ -1,69 +1,79 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: resync duration ?
-Date: Fri, 15 May 2009 00:07:59 -0500
-Message-ID: <20090515050801951.MELG9927@cdptpa-omta04.mail.rr.com>
-References: <9a9f58b3517ecbc3a076725c671f6cd1.squirrel@neil.brown.name>
-Reply-To: <lrhorer@satx.rr.com>
+From: Raz <raziebe@gmail.com>
+Subject: Re: Subject: [PATCH] mdadm: raid0: support chunks of 4K*n for raid0
+Date: Fri, 15 May 2009 09:01:53 +0300
+Message-ID: <5d96567b0905142301v144f428dsb110d9e81e3ad592@mail.gmail.com>
+References: <1242297833-13908-1-git-send-email-maan@systemlinux.org>
+	<1242297833-13908-2-git-send-email-maan@systemlinux.org> <fe4d072c76f1ce1d6b2b75f83766b1f0.squirrel@neil.brown.name>
+	<20090514121042.GH11504@skl-net.de> <4743925b38e2d64317e0b6d7c8005a29.squirrel@neil.brown.name>
+	<1242321131.11444.23.camel@raz> <921ca19c0905142059u3c16ca2bk6d830d1f74c58ee3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9a9f58b3517ecbc3a076725c671f6cd1.squirrel@neil.brown.name>
+In-Reply-To: <921ca19c0905142059u3c16ca2bk6d830d1f74c58ee3@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: Sujit Karataparambil <sjt.kar@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> >> A resync reads all the data and checks the parity.  If it find bad
-> >> parity (which is likely to be very rare) then it corrects it.
-> >> So resync should run at the full speed of the hardware, just reading.
-> >
-> > It will?  Maybe I am just mis-remembering, but I thought I saw the same
-> > note
-> > in the log when the resync occurred (ckarray) as when a recovery was in
-> > progress:
-> >
-> > May 14 22:40:42 Backup kernel: [ 8083.747787] md: recovery of RAID array
-> > md0
-> > May 14 22:40:42 Backup kernel: [ 8083.747789] md: minimum _guaranteed_
-> > speed: 1000 KB/sec/disk.
-> > May 14 22:40:42 Backup kernel: [ 8083.747791] md: using maximum
-> available
-> > idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
-> > May 14 22:40:42 Backup kernel: [ 8083.747797] md: using 128k window,
-> over
-> > a
-> > total of 1465138432 blocks.
-> >
-> > Am I mis-remembering, or am I missing something here?
-> 
-> It isn't clear to me exactly what you are asking...
-> 
-> It says it won't use more than 200MB/sec, which is true. But that is
-> per-device, and few devices can deliver that yet.
-
-Oh.  I thought it meant for the entire array.  Yeah, 200MBps is pretty far
-out there, at least for a sustained rate.  SATA II can burst to that, but
-few drives can manage much more than 50 MBps, sustained.
-
-> It says "using maximum available", so it if you want the bandwidth
-> for something else, it will back off.
-> 
-> It prints the same message for resync as for recovery.
-
-Ah, so I'm not going crazy, I just have a comprehension problem.
-
-Hmmm.  I'm not sure which is worse. :-)
-
-> > Oh, while I am thinking of it, ckarray runs every month on the first of
-> > the
-> > month, but how can one trigger it manually?
-> 
->   echo check > /sys/block/mdX/md/sync_action.
-> 
-> or "echo repair" to get it to fix anything it finds.
-
-Thanks.  Those are pretty easy, but it would be nice if they were in the MAN
-page.  Better yet, have you considered adding both as command line options
-for mdadm?
-
+On Fri, May 15, 2009 at 6:59 AM, Sujit Karataparambil <sjt.kar@gmail.co=
+m> wrote:
+> Neil,
+>
+> I donot understand why this needs to be done in raid. Why should be t=
+he raid
+where else ?
+> taking care of 4k*n data sets.
+> What I see of this patch is that it specifically checks for some sort
+> of 4K Boundaries.
+instead of 4K*2^n where n>=3D0
+correct and recompure IO posistion.
+> Thanks,
+> Sujit
+>
+> On Thu, May 14, 2009 at 10:42 PM, raz ben yehuda <raziebe@gmail.com> =
+wrote:
+>> Neil.
+>> I do not know what is policy for mdadm patches. I would thankful for=
+ some instructions.
+>> The bellow is the patch I applied to support raid0 chunk sizes 4K*n.
+>> ---
+>> --- mdadm.c =A0 =A0 (revision 16152)
+>> +++ mdadm.c =A0 =A0 (working copy)
+>> @@ -314,7 +314,8 @@
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0exit(=
+2);
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0chunk =3D strtol(opta=
+rg, &c, 10);
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!optarg[0] || *c |=
+| chunk<4 || (chunk%4)) {
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!optarg[0] || *c |=
+| chunk<4 || =A0(((chunk-1)&chunk) && level !=3D0)
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 || =A0(((chunk%4) && level =3D=3D0) )) {
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0fprin=
+tf(stderr, Name ": invalid chunk/rounding value: %s\n",
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0optarg);
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0exit(=
+2);
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>>
+>
+>
+>
+> --
+> -- Sujit K M
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
