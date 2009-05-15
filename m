@@ -1,51 +1,72 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: md extension to support booting from raid whole disks.
-Date: Fri, 15 May 2009 09:13:30 -0700
-Message-ID: <4A0D94AA.8020803@zytor.com>
-References: <20090503013342770.VMBT19475@cdptpa-omta01.mail.rr.com>	<e13f0e541934a0966f213f6da13d83da.squirrel@neil.brown.name>	<1241406283.17240.26.camel@ezra>	<87fxff462s.fsf@frosties.localdomain>	<21cdc7a16fbdd42979d52331db97c737.squirrel@neil.brown.name>	<87ws8r2pqf.fsf@frosties.localdomain>	<18953.2936.212863.158003@notabene.brown>	<1242157469.18958.13.camel@ezra> <18954.43834.53155.793587@notabene.brown>
+From: SandeepKsinha <sandeepksinha@gmail.com>
+Subject: Re: RAID4 and RAID5 Code
+Date: Fri, 15 May 2009 21:44:37 +0530
+Message-ID: <37d33d830905150914v5d780e44s6cc2174944530ddb@mail.gmail.com>
+References: <37d33d830905140957q6e180d89v4cd4a21d23471481@mail.gmail.com>
+	 <4A0D9384.1020805@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18954.43834.53155.793587@notabene.brown>
+In-Reply-To: <4A0D9384.1020805@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Daniel Reurich <daniel@centurion.net.nz>, Goswin von Brederlow <goswin-v-b@web.de>, Linux RAID <linux-raid@vger.kernel.org>
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> 
-> Having a replicated boot loader and having a raid1 are conceptually
-> quite different things.
-> A raid1 says "keep N (typically 2) copies of the data somewhere for
-> me".
-> A replicated boot loader says "store this boot loader on every
-> bootable device".
-> One is more abstract, the other is more concrete.
-> 
-> Maybe it is a very subtle distinction, but I think it is worth
-> maintaining.  Get your boot-loader-installer to install at the front
-> of every drive - don't bother having a raid1 there that is never read
-> and hardly ever written..
-> 
+On Fri, May 15, 2009 at 9:38 PM, H. Peter Anvin <hpa@zytor.com> wrote:
+> SandeepKsinha wrote:
+>> Hi all,
+>>
+>> Looks like we have the same code for RAID 4 and RAID 5, I could see
+>> the same make_request for both.
+>>
+>> Can someone point me in the code, where exactly we differentiate
+>> between these two. i.e updating checksum block, etc.
+>>
+>
+> RAID 4 is really nothing but a block layout algorithm for RAID 5 (whi=
+ch
+> has four more block layout algorithms.) =A0RAID 6 contains all five u=
+nder
+> one "level".
+>
+RAID 4 vs RAID 5
+Actually debatable. They have their own pros and cons and especially
+where you don't consider the physical properties of disk.
+Addition of new disk, differences in speed of disks, etc.. create
+bottlenecks especially in case of RAID5.
 
-I think it is an unfortunate distinction (although I see why you want to
-make it), and one which goes in the wrong direction.
+Except hot spot issue with RAID 4, I find it better than all others.
+Also, most of the proprietary solutions from IBM, Adaptec and NetApp
+suggest RAID4 as compared to others.
 
-As I've stated many times (and not just in this debate), I believe using
-the RAID-1 mechanism to replicate /boot across the entire span of
-devices is the right thing to do.  Not just the boot loader, but all of
-/boot.
+No offenses please, this is just an opinion.
 
-Once you do that, you do want to write it on a regular basis, and using
-the RAID-1 code is the obvious way to do it.  You can argue that it is
-an accidental effect of the way the current Linux RAID-1 code does it,
-but it's nevertheless extremely useful, widely deployed, and extremely
-resilient.
 
-	-hpa
+> =A0 =A0 =A0 =A0-hpa
+>
+> --
+> H. Peter Anvin, Intel Open Source Technology Center
+> I work for Intel. =A0I don't speak on their behalf.
+>
+>
 
--- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
 
+
+--=20
+Regards,
+Sandeep.
+
+
+
+
+
+ =09
+=93To learn is to change. Education is a process that changes the learn=
+er.=94
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
