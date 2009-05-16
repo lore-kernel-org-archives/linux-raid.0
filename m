@@ -1,134 +1,88 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 2/2] md: raid0: remove ->dev pointer from strip_zone
-	structure
-Date: Sat, 16 May 2009 21:57:31 +1000
-Message-ID: <20090516115731.14596.16948.stgit@notabene.brown>
-References: <20090516115726.14596.58766.stgit@notabene.brown>
+From: Jeff Rippy <jrippy@gmail.com>
+Subject: Re: extending raid-5 ?
+Date: Sat, 16 May 2009 16:07:11 -0500
+Message-ID: <de6d3ea90905161407h457188fdk6c388f1cc5688b65@mail.gmail.com>
+References: <795999990.20090511010018@kaneda.iguw.tuwien.ac.at>
+	 <1242018671.29072.18.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090516115726.14596.58766.stgit@notabene.brown>
+In-Reply-To: <1242018671.29072.18.camel@localhost>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Redeeman <redeeman@metanurb.dk>
+Cc: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If we treat conf->devlist more like a 2 dimensional array,
-we can get the devlist for a particular zone simply by indexing
-that array, so we don't need to store the pointers to subarrays
-in strip_zone.  This makes strip_zone smaller and so (hopefully)
-searches faster.
+But don't copy the partition map at the beginning of the drive
+otherwise you'll end up with 1.5tb drives that have a 750gb partition.
+ Someone confirm but I believe that's the first 512 bytes when copying
+with dd.
 
-Signed-of-by: NeilBrown <neilb@suse.de>
----
+Jeff
 
- drivers/md/raid0.c |   21 +++++++++++----------
- drivers/md/raid0.h |    1 -
- 2 files changed, 11 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 4b6c16a..afea606 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -27,7 +27,7 @@ static void raid0_unplug(struct request_queue *q)
- {
- 	mddev_t *mddev = q->queuedata;
- 	raid0_conf_t *conf = mddev_to_conf(mddev);
--	mdk_rdev_t **devlist = conf->strip_zone[0].dev;
-+	mdk_rdev_t **devlist = conf->devlist;
- 	int i;
- 
- 	for (i=0; i<mddev->raid_disks; i++) {
-@@ -41,7 +41,7 @@ static int raid0_congested(void *data, int bits)
- {
- 	mddev_t *mddev = data;
- 	raid0_conf_t *conf = mddev_to_conf(mddev);
--	mdk_rdev_t **devlist = conf->strip_zone[0].dev;
-+	mdk_rdev_t **devlist = conf->devlist;
- 	int i, ret = 0;
- 
- 	for (i = 0; i < mddev->raid_disks && !ret ; i++) {
-@@ -56,7 +56,7 @@ static int create_strip_zones(mddev_t *mddev)
- {
- 	int i, c, j, err;
- 	sector_t current_start, curr_zone_start, sectors;
--	mdk_rdev_t *smallest, *rdev1, *rdev2, *rdev;
-+	mdk_rdev_t *smallest, *rdev1, *rdev2, *rdev, **dev;
- 	struct strip_zone *zone;
- 	int cnt;
- 	char b[BDEVNAME_SIZE];
-@@ -115,7 +115,7 @@ static int create_strip_zones(mddev_t *mddev)
- 	zone = &conf->strip_zone[0];
- 	cnt = 0;
- 	smallest = NULL;
--	zone->dev = conf->devlist;
-+	dev = conf->devlist;
- 	err = -EINVAL;
- 	list_for_each_entry(rdev1, &mddev->disks, same_set) {
- 		int j = rdev1->raid_disk;
-@@ -125,12 +125,12 @@ static int create_strip_zones(mddev_t *mddev)
- 				"aborting!\n", j);
- 			goto abort;
- 		}
--		if (zone->dev[j]) {
-+		if (dev[j]) {
- 			printk(KERN_ERR "raid0: multiple devices for %d - "
- 				"aborting!\n", j);
- 			goto abort;
- 		}
--		zone->dev[j] = rdev1;
-+		dev[j] = rdev1;
- 
- 		blk_queue_stack_limits(mddev->queue,
- 				       rdev1->bdev->bd_disk->queue);
-@@ -162,7 +162,7 @@ static int create_strip_zones(mddev_t *mddev)
- 	for (i = 1; i < conf->nr_strip_zones; i++)
- 	{
- 		zone = conf->strip_zone + i;
--		zone->dev = conf->strip_zone[i-1].dev + mddev->raid_disks;
-+		dev = conf->devlist + i * mddev->raid_disks;
- 
- 		printk(KERN_INFO "raid0: zone %d\n", i);
- 		zone->dev_start = current_start;
-@@ -171,7 +171,7 @@ static int create_strip_zones(mddev_t *mddev)
- 
- 		for (j=0; j<cnt; j++) {
- 			char b[BDEVNAME_SIZE];
--			rdev = conf->strip_zone[0].dev[j];
-+			rdev = conf->devlist[j];
- 			printk(KERN_INFO "raid0: checking %s ...",
- 				bdevname(rdev->bdev, b));
- 			if (rdev->sectors <= current_start) {
-@@ -179,7 +179,7 @@ static int create_strip_zones(mddev_t *mddev)
- 				continue;
- 			}
- 			printk(KERN_INFO " contained as device %d\n", c);
--			zone->dev[c] = rdev;
-+			dev[c] = rdev;
- 			c++;
- 			if (!smallest || rdev->sectors < smallest->sectors) {
- 				smallest = rdev;
-@@ -385,7 +385,8 @@ static int raid0_make_request (struct request_queue *q, struct bio *bio)
- 		chunk = x;
- 
- 		x = sector >> chunksect_bits;
--		tmp_dev = zone->dev[sector_div(x, zone->nb_dev)];
-+		tmp_dev = conf->devlist[(zone - conf->strip_zone)*mddev->raid_disks
-+					+ sector_div(x, zone->nb_dev)];
- 	}
- 	rsect = (chunk << chunksect_bits) + zone->dev_start + sect_in_chunk;
-  
-diff --git a/drivers/md/raid0.h b/drivers/md/raid0.h
-index 124ba34..7b3605e 100644
---- a/drivers/md/raid0.h
-+++ b/drivers/md/raid0.h
-@@ -6,7 +6,6 @@ struct strip_zone
- 	sector_t zone_end;	/* Start of the next zone (in sectors) */
- 	sector_t dev_start;	/* Zone offset in real dev (in sectors) */
- 	int nb_dev;		/* # of devices attached to the zone */
--	mdk_rdev_t **dev;	/* Devices attached to the zone */
- };
- 
- struct raid0_private_data
-
-
+On Mon, May 11, 2009 at 12:11 AM, Redeeman <redeeman@metanurb.dk> wrote=
+:
+>
+> On Mon, 2009-05-11 at 01:00 +0200, Rainer Fuegenstein wrote:
+> > hi,
+> >
+> > I'm currently using a 4*750GB SATA RAID-5 under centos 5.2 (mdadm
+> > v2.6.4, kernel 2.6.18-128.1.6.el5) which I need to exend by replaci=
+ng
+> > the 750GB disks with 1.5TB ones.
+> >
+> > since the mainboard has only 4 SATA ports, I need to replace one di=
+sk
+> > after the other. I came up with the following plan:
+> >
+> > 1) fail first disk
+> > =A0 mdadm /dev/md0 -f /dev/sda1
+> >
+> > 2) remove first disk
+> > =A0 mdadm /dev/md0 -r /dev/sda1
+> >
+> > 3) shutdown the server, unplug 750GB sda drive, plug in 1.5TB drive
+>
+> If you are going to do downtime anyway, i would suggest you just down
+> the box, and then copy the data with dd, that way you should probably=
+ be
+> able to avoid the costly resync, plus temporary loss of redundancy
+>
+> > 4) create a linux raid autodetect partition on sda which covers the
+> > whole 1.5TB
+> >
+> > 5) add new device to the raid5 and wait until resync has finished
+> > =A0 mdadm /dev/md0 -a /dev/sda1
+> >
+> > ... repeat steps 1 tp 5 for sdb to sdd
+> >
+> > 6) grow the raid
+> > =A0 mdadm --grow /dev/md0
+> >
+> > 7) resize the xfs filesystem
+> > =A0 =A0xfs_growfs /md0-mount-point
+> >
+> > is this the proper way to do it, are there any issues I should know
+> > about ?
+>
+> >
+> > thnx in advance.
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-rai=
+d" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
+l
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
