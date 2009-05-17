@@ -1,50 +1,84 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RAID Halting: Final Result
-Date: Sat, 16 May 2009 22:59:59 -0500
-Message-ID: <20090517040003649.VLMT15274@cdptpa-omta02.mail.rr.com>
-Reply-To: <lrhorer@satx.rr.com>
+From: SandeepKsinha <sandeepksinha@gmail.com>
+Subject: RFC: Removal of hash table for Linear RAID
+Date: Sun, 17 May 2009 11:40:30 +0530
+Message-ID: <37d33d830905162310w1b90e8b2h185202643331342@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi all,
 
-	Well, after one day shy of three weeks of transferring files, the
-system finally finished transferring data from the backup server to the main
-RAID server Wednesday night.  As I mentioned in another thread, I then tore
-down the LVM array, added two 1.5T drives, and rebuilt it as a 7 drive RAID
-5 array.  I formatted the new backup array as XFS, and allowed the array to
-resync.  I am now using rsync to copy all the files back to the backup array
-from the main array, and all is looking very good.  The rsync is reaching
-sustained peaks of over 420 Mbps at Layer II, and I can create and delete
-files - large or small - with impunity.  Here are the results from
-concatenating three large files to one, then deleting the large file, all
-whie the rsync process is going on in the background.  (Note the transfer
-rate did drop to under 100 Mbps while the file copy was going on, so it
-looks like it may the RAID array which limits the transfer speed.  This is
-not surprising - especially since I am using a single inexpensive SATA
-controller and 3 port multipliers - but it also is not problematical.)  The
-transfer should now take less than 2 days.
+I suggest the removal of the hashing table and various other members
+associated with it from the struct linear_private_data, which are used
+majorly for faster searching of devices.
 
-RAID-Server:/RAID/Recordings/Lord of the Rings# time `cat "1 Lord of the
-Rings- The Fellowship of the Ring, The (Recorded Fri Apr 04, 2008,
-TNTHD).mpg" "2 Lord of the Rings- The Two Towers, The (Recorded Sat Apr 05,
-2008, TNTHD).mpg" "3 Lord of the Rings- The Return of the King, The
-(Recorded Sun Apr 06, 2008, TNTHD).mpg" > testfile`
+struct linear_private_data
+  {
+          struct linear_private_data *prev;       /* earlier version */
+-          dev_info_t              **hash_table;
+-          sector_t                spacing;
+          sector_t                array_sectors;
+-          int                     sector_shift;   /* shift before divi=
+ding
+-                                                  * by spacing
+-                                                   */
+          dev_info_t              disks[0];
+  };
 
-real    71m8.154s
-user    0m2.568s
-sys     2m35.482s
-RAID-Server:/RAID/Recordings/Lord of the Rings# time rm testfile
 
-real    0m1.052s
-user    0m0.000s
-sys     0m0.004s
 
-The system copied three 20G files into a fourth 60G file in under 75
-minutes, and then deleted the result in just over 1 second.
+The reason for the same being that use of sector_div, spacing and
+sector_shift involves lots of computations, which can be easily
+avoided and we can achieve the same in a simpler way.
 
+Also, in an environment where we hold a restriction to have a maximum
+of 27 devices. I believe that a linear search would be faster or
+atleast equal in time, if you take into consider the (time taken for
+computations + search) while using the hash table as well.
+
+Other than making the code simpler, IMO, this should also help shrink
+the struct linear_private_data which might further help caching as
+well.
+
+Another enhancement to this can be to add a new member "nr_devices" (
+number of devices ) to struct linear_private_data and use the same to
+perform a binary search for the lokkup, as we know the sectors would
+always be increasing as per we move ahead with devices.
+
+Something like,
+
+struct linear_private_data
+  {
+          struct linear_private_data *prev;       /* earlier version */
+          sector_t                array_sectors;
+          int                        nr_devices;
+          dev_info_t              disks[0];
+  };
+
+
+And accordingly, which_dev( ) can use the same to make the search
+faster and better.
+
+
+Comments/suggestions please.
+
+--=20
+Regards,
+Sandeep.
+
+
+
+
+
+ =09
+=93To learn is to change. Education is a process that changes the learn=
+er.=94
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
