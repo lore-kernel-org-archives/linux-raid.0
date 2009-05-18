@@ -1,109 +1,75 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Starting RAID 5
-Date: Tue, 19 May 2009 07:36:54 +1000 (EST)
-Message-ID: <bd12c2abf38ab775bf40fd52654daa36.squirrel@neil.brown.name>
-References: <20090515021521914.KSFT13751@cdptpa-omta01.mail.rr.com>
-    <adb53d3552334dd6c949c4c029ae7135.squirrel@neil.brown.name>
-    <4A117B0D.5040804@tmr.com>
+From: "Janos Haar" <janos.haar@netcenter.hu>
+Subject: RCU detected CPU 1 stall (t=4295904002/751 jiffies) Pid: 902, comm: md1_raid5
+Date: Tue, 19 May 2009 00:07:40 +0200
+Message-ID: <12a901c9d805$119fef20$0400a8c0@dcccs>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-2";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A117B0D.5040804@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: lrhorer@satx.rr.com, 'Linux RAID' <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, May 19, 2009 1:13 am, Bill Davidsen wrote:
-> NeilBrown wrote:
->> On Fri, May 15, 2009 12:15 pm, Leslie Rhorer wrote:
->>
->>> OK, I've torn down the LVM backup arraqy and am rebuilding it as a RAID
->>> 5.
->>> I've had problems with this before, and I'm having them, again.  I
->>> created
->>> the array with:
->>>
->>> mdadm --create /dev/md0 --raid-devices=7 --metadata=1.2 --chunk=256
->>> --level=5 /dev/sd[a-g]
->>>
->>> whereupon it creates the array and then immediately removes /dev/sdg
->>> and
->>> makes it a spare.  I think I may have read where this is normal
->>> behavior.
->>>
->>
->> Correct. Maybe you read it in the mdadm man page.
->>
->>
->>
-> While I know about that, I have never understood why that was desirable,
-> or even acceptable, behavior. The array sits half created doing nothing
-> until the system tries to use the array, at which time it's slow because
-> it's finally getting around to actually getting the array into some
-> sensible state. Is there some benefit to wasting time so the array can
-> be slow when needed?
+Hello list, Neil,
 
-Is the "that" which you refer to the content of the previous paragraph,
-or the following paragraph.
+Somebody can say something about this issue?
+I am not surprised, if it is hardware related, but this is on a brand new 
+server, so i am looking for a solution... :-)
+May 17 23:12:13 gladiator-afth1 kernel: RCU detected CPU 1 stall 
+(t=4295904002/751 jiffies)
+May 17 23:12:13 gladiator-afth1 kernel: Pid: 902, comm: md1_raid5 Not 
+tainted 2.6.28.10 #1
+May 17 23:12:13 gladiator-afth1 kernel: Call Trace:
+May 17 23:12:13 gladiator-afth1 kernel:  <IRQ>  [<ffffffff80265395>] ? 
+get_timestamp+0x9/0xf
+May 17 23:12:13 gladiator-afth1 kernel:  [<ffffffff8026854f>] 
+__rcu_pending+0x64/0x1e2
+May 17 23:12:13 gladiator-afth1 kernel:  [<ffffffff80268703>] 
+rcu_pending+0x36/0x6f
+May 17 23:12:13 gladiator-afth1 kernel:  [<ffffffff8023f546>] 
+update_process_times+0x37/0x5f
+May 17 23:12:13 gladiator-afth1 kernel:  [<ffffffff802504a7>] 
+tick_periodic+0x6e/0x7a
+May 17 23:12:13 gladiator-afth1 kernel:  [<ffffffff802504d4>] 
+tick_handle_periodic+0x21/0x65
+May 17 23:12:13 gladiator-afth1 kernel:  [<ffffffff8021ad60>] 
+smp_apic_timer_interrupt+0x8f/0xad
+May 17 23:12:13 gladiator-afth1 kernel:  [<ffffffff8020bf1b>] 
+apic_timer_interrupt+0x6b/0x70
+May 17 23:12:13 gladiator-afth1 kernel:  <EOI>  [<ffffffff80820b8f>] ? 
+_spin_unlock_irqrestore+0x13/0x17
+May 17 23:12:13 gladiator-afth1 kernel:  [<ffffffff80728720>] ? 
+bitmap_daemon_work+0x142/0x3b0
+May 17 23:12:18 gladiator-afth1 kernel:  [<ffffffff80724c58>] ? 
+md_check_recovery+0x1b/0x45b
+May 17 23:12:18 gladiator-afth1 kernel:  [<ffffffff8071976c>] ? 
+raid5d+0x5d/0x503
+May 17 23:12:18 gladiator-afth1 kernel:  [<ffffffff80726533>] ? 
+md_thread+0xd5/0xed
+May 17 23:12:18 gladiator-afth1 kernel:  [<ffffffff80248e4a>] ? 
+autoremove_wake_function+0x0/0x38
+May 17 23:12:18 gladiator-afth1 kernel:  [<ffffffff8072645e>] ? 
+md_thread+0x0/0xed
+May 17 23:12:18 gladiator-afth1 kernel:  [<ffffffff80248d3b>] ? 
+kthread+0x49/0x76
+May 17 23:12:18 gladiator-afth1 kernel:  [<ffffffff8020c169>] ? 
+child_rip+0xa/0x11
+May 17 23:12:18 gladiator-afth1 kernel:  [<ffffffff80248cf2>] ? 
+kthread+0x0/0x76
+May 17 23:12:18 gladiator-afth1 kernel:  [<ffffffff8020c15f>] ? 
+child_rip+0x0/0x11
 
-The content of your comment suggests the following paragraph which,
-as I hint, is a misfeature that should be fixed by having mdadm
-"poke it out of that" (i.e. set the array to read-write if it is
-read-mostly).
+The entire log is here:
+http://download.netcenter.hu/bughunt/20090518/messages
 
-But the positioning of your comment makes it seem to refer to
-the previous paragraph which is totally unrelated to your complaint,
-but I will explain anyway.
+The system is on the md1, and working, but slowly.
+If i left the server for 1 day,  it will crash without a saved log.
 
-When a raid5 performs a 'resync' it reads every block, tests parity,
-then if the parity is wrong, it writes out the correct parity block.
-For an array with mostly correct parity, this involves sequential
-reads across all devices in parallel and so is as fast as possible.
-For an array with mostly incorrect parity (as is quite likely at
-array creation) there will be many writes to parity block as well
-as the reads, which will take a lot longer.
+Memtest survived >48 hour.
 
-If we instead make one drive a spare then raid5 will perform recovery
-which involves reading N-1 drives and writing to the Nth drive.
-All sequential IOs.  This should be as fast as resync on a mostly-clean
-array, and much faster than resync on a mostly-dirty array.
-
-NeilBrown
-
-
->>> I can't get it to do an initial resync or promote the spare, however.
->>>
->>
->> So it doesn't start recovery straight away? That is odd...
->> Maybe it is in read-auto mode.  I should probably get mdadm to poke
->> it out of that.
->>
->> If it is just start creating the filesystem or whatever you want to
->> do, that will prod it into action.
->>
->> If not (check /proc/mdstat), what kernel log messages are them from the
->> time when you created the array.
->>
->> NeilBrown
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->
->
-> --
-> bill davidsen <davidsen@tmr.com>
->   CTO TMR Associates, Inc
->
-> "You are disgraced professional losers. And by the way, give us our money
-> back."
->     - Representative Earl Pomeroy,  Democrat of North Dakota
-> on the A.I.G. executives who were paid bonuses  after a federal bailout.
->
->
+Thanks,
+Janos Haar
 
