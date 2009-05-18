@@ -1,50 +1,42 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: RAID0 - unitialised zone->dev_start for zone[0]
-Date: Mon, 18 May 2009 10:45:20 -0400
-Message-ID: <4A117480.4030401@tmr.com>
-References: <37d33d830905131008y4a3a3815i6bec41a0d9b32ddf@mail.gmail.com> <beb1238841d24e553e0248080d5e4dca.squirrel@neil.brown.name>
+Subject: Re: resync duration ?
+Date: Mon, 18 May 2009 11:00:02 -0400
+Message-ID: <4A1177F2.30402@tmr.com>
+References: <9a9f58b3517ecbc3a076725c671f6cd1.squirrel@neil.brown.name>	<20090515050801951.MELG9927@cdptpa-omta04.mail.rr.com> <18957.58351.832772.646681@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <beb1238841d24e553e0248080d5e4dca.squirrel@neil.brown.name>
+In-Reply-To: <18957.58351.832772.646681@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: SandeepKsinha <sandeepksinha@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: lrhorer@satx.rr.com, 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-NeilBrown wrote:
-> On Thu, May 14, 2009 3:08 am, SandeepKsinha wrote:
+Neil Brown wrote:
+> On Friday May 15, lrhorer@satx.rr.com wrote:
 >   
->> Hi Neil,
->>
->>
->> [22:33:46 sinhas]$ diff raid0.c raid0.c.orig
+>>>   echo check > /sys/block/mdX/md/sync_action.
+>>>
+>>> or "echo repair" to get it to fix anything it finds.
+>>>       
+>> Thanks.  Those are pretty easy, but it would be nice if they were in the MAN
+>> page.  Better yet, have you considered adding both as command line options
+>> for mdadm?
 >>     
 >
-> Always, always, always use "diff -u".  It provides context
-> so the diff is much easier to read.
+> Considered, yes.  But they are very low on my priority list.
+> I accept patches.
+> Maybe and option like
+>    mdadm --syncaction=check /dev/md0
 >
->   
->> 160d159
->> <       zone->dev_start = 0;
->> [/usr/src/linux-2.6.29/drivers/md]
->> [22:33:59 sinhas]$
->>
->> I see this piece of code missing and being used later.
->> Not very sure of the code flow, but still as part of defensive
->> programming.
->>
->> Am i missing something?
->>     
->
-> conf->strip_zone is allocated with kzalloc, so all values are
-> initialised to 0.
+> ??
 >   
 
-To prevent future unnecessary analysis of this section, perhaps a 
-comment instead of code would be appropriate?
-
+That is a great idea, it puts the md administration in the mdadm program 
+(where it belongs) instead of counting on a script to do the right 
+thing. Well, if you do this at all, the other actions are probably 
+appropriate as well.
 
 -- 
 bill davidsen <davidsen@tmr.com>
