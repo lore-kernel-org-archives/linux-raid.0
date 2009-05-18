@@ -1,73 +1,109 @@
-From: raz ben yehuda <raziebe@gmail.com>
-Subject: Subject: [ mdadm PATCH 6/6] : mdadm to support 1K chunks
-Date: Tue, 19 May 2009 02:09:27 +0300
-Message-ID: <1242688167.21201.22.camel@raz>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: Starting RAID 5
+Date: Tue, 19 May 2009 07:36:54 +1000 (EST)
+Message-ID: <bd12c2abf38ab775bf40fd52654daa36.squirrel@neil.brown.name>
+References: <20090515021521914.KSFT13751@cdptpa-omta01.mail.rr.com>
+    <adb53d3552334dd6c949c4c029ae7135.squirrel@neil.brown.name>
+    <4A117B0D.5040804@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4A117B0D.5040804@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
-Cc: yaronp@bitbabd.com
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: lrhorer@satx.rr.com, 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-fix mdadm to path 1K*n chunks only in the case of raid0. 
-Commit is stacked on top mdadm.c
-commit c8b4de0cccfba18818416f62687e4094a5b83922
-Author: NeilBrown <neilb@suse.de>
-Date:   Tue May 12 15:25:55 2009 +1000
+On Tue, May 19, 2009 1:13 am, Bill Davidsen wrote:
+> NeilBrown wrote:
+>> On Fri, May 15, 2009 12:15 pm, Leslie Rhorer wrote:
+>>
+>>> OK, I've torn down the LVM backup arraqy and am rebuilding it as a RAID
+>>> 5.
+>>> I've had problems with this before, and I'm having them, again.  I
+>>> created
+>>> the array with:
+>>>
+>>> mdadm --create /dev/md0 --raid-devices=7 --metadata=1.2 --chunk=256
+>>> --level=5 /dev/sd[a-g]
+>>>
+>>> whereupon it creates the array and then immediately removes /dev/sdg
+>>> and
+>>> makes it a spare.  I think I may have read where this is normal
+>>> behavior.
+>>>
+>>
+>> Correct. Maybe you read it in the mdadm man page.
+>>
+>>
+>>
+> While I know about that, I have never understood why that was desirable,
+> or even acceptable, behavior. The array sits half created doing nothing
+> until the system tries to use the array, at which time it's slow because
+> it's finally getting around to actually getting the array into some
+> sensible state. Is there some benefit to wasting time so the array can
+> be slow when needed?
 
- mdadm.c |   29 +++++++++++++++++++++++++----
- 1 file changed, 25 insertions(+), 4 deletions(-)
+Is the "that" which you refer to the content of the previous paragraph,
+or the following paragraph.
 
-Signed-off-by: raziebe@gmail.com
----
-diff --git a/mdadm.c b/mdadm.c
-index 166ea9d..b54e650 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -326,10 +326,25 @@ int main(int argc, char *argv[])
- 				exit(2);
- 			}
- 			chunk = strtol(optarg, &c, 10);
--			if (!optarg[0] || *c || chunk<4 || ((chunk-1)&chunk)) {
--				fprintf(stderr, Name ": invalid chunk/rounding value: %s\n",
--					optarg);
--				exit(2);
-+			/* if level is parsed, chunk is probably ok */
-+			if (level == 0) {
-+				if ((chunk <= 0 || !optarg[0] || *c)) {
-+					fprintf(stderr,
-+						Name ": invalid chunk/rounding"
-+						" value: %s %d\n",
-+						optarg, chunk);
-+					exit(2);
-+				}
-+				continue;
-+			}
-+			if (level != UnSet)
-+				if (!optarg[0] || *c || chunk < 4 ||
-+					((chunk-1)&chunk)) {
-+					fprintf(stderr, Name
-+						": invalid chunk"
-+						"/rounding value: %s\n",
-+						optarg);
-+					exit(2);
- 			}
- 			continue;
- 
-@@ -411,6 +426,12 @@ int main(int argc, char *argv[])
- 					optarg);
- 				exit(2);
- 			}
-+			if (level != 0 && (chunk % 4)) {
-+				fprintf(stderr, Name ": raid level %s must"
-+					" have power 2 chunk size\n",
-+					optarg);
-+				exit(2);
-+			}
- 			ident.level = level;
- 			continue;
- 
+The content of your comment suggests the following paragraph which,
+as I hint, is a misfeature that should be fixed by having mdadm
+"poke it out of that" (i.e. set the array to read-write if it is
+read-mostly).
 
+But the positioning of your comment makes it seem to refer to
+the previous paragraph which is totally unrelated to your complaint,
+but I will explain anyway.
+
+When a raid5 performs a 'resync' it reads every block, tests parity,
+then if the parity is wrong, it writes out the correct parity block.
+For an array with mostly correct parity, this involves sequential
+reads across all devices in parallel and so is as fast as possible.
+For an array with mostly incorrect parity (as is quite likely at
+array creation) there will be many writes to parity block as well
+as the reads, which will take a lot longer.
+
+If we instead make one drive a spare then raid5 will perform recovery
+which involves reading N-1 drives and writing to the Nth drive.
+All sequential IOs.  This should be as fast as resync on a mostly-clean
+array, and much faster than resync on a mostly-dirty array.
+
+NeilBrown
+
+
+>>> I can't get it to do an initial resync or promote the spare, however.
+>>>
+>>
+>> So it doesn't start recovery straight away? That is odd...
+>> Maybe it is in read-auto mode.  I should probably get mdadm to poke
+>> it out of that.
+>>
+>> If it is just start creating the filesystem or whatever you want to
+>> do, that will prod it into action.
+>>
+>> If not (check /proc/mdstat), what kernel log messages are them from the
+>> time when you created the array.
+>>
+>> NeilBrown
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>
+>
+>
+> --
+> bill davidsen <davidsen@tmr.com>
+>   CTO TMR Associates, Inc
+>
+> "You are disgraced professional losers. And by the way, give us our money
+> back."
+>     - Representative Earl Pomeroy,  Democrat of North Dakota
+> on the A.I.G. executives who were paid bonuses  after a federal bailout.
+>
+>
 
