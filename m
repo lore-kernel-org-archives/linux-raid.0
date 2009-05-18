@@ -1,34 +1,73 @@
 From: raz ben yehuda <raziebe@gmail.com>
-Subject: Subject : [ md PATCHE 5/6] : 1K *n chunks.
-Date: Tue, 19 May 2009 02:08:00 +0300
-Message-ID: <1242688081.21201.19.camel@raz>
+Subject: Subject: [ mdadm PATCH 6/6] : mdadm to support 1K chunks
+Date: Tue, 19 May 2009 02:09:27 +0300
+Message-ID: <1242688167.21201.22.camel@raz>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
-Cc: yaronp@bitband.com
+Cc: yaronp@bitbabd.com
 List-Id: linux-raid.ids
 
-md to support 1K*n chunks only in the case of raid 0
+fix mdadm to path 1K*n chunks only in the case of raid0. 
+Commit is stacked on top mdadm.c
+commit c8b4de0cccfba18818416f62687e4094a5b83922
+Author: NeilBrown <neilb@suse.de>
+Date:   Tue May 12 15:25:55 2009 +1000
+
+ mdadm.c |   29 +++++++++++++++++++++++++----
+ 1 file changed, 25 insertions(+), 4 deletions(-)
+
 Signed-off-by: raziebe@gmail.com
 ---
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index aab183e..75a3634 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -4011,9 +4011,9 @@ static int do_md_run(mddev_t * mddev)
- 			return -EINVAL;
- 		}
- 		/*
--		* raid0 chunk size has to divide by a page
-+		* raid0 chunk size has to divide by a 1K
- 		*/
--		if (mddev->level == 0 && (chunk_size % PAGE_SIZE)) {
-+		if (mddev->level == 0 && (chunk_size % 1024)) {
- 			printk(KERN_ERR "chunk_size of %d not valid\n",
- 				chunk_size);
- 			return -EINVAL;
+diff --git a/mdadm.c b/mdadm.c
+index 166ea9d..b54e650 100644
+--- a/mdadm.c
++++ b/mdadm.c
+@@ -326,10 +326,25 @@ int main(int argc, char *argv[])
+ 				exit(2);
+ 			}
+ 			chunk = strtol(optarg, &c, 10);
+-			if (!optarg[0] || *c || chunk<4 || ((chunk-1)&chunk)) {
+-				fprintf(stderr, Name ": invalid chunk/rounding value: %s\n",
+-					optarg);
+-				exit(2);
++			/* if level is parsed, chunk is probably ok */
++			if (level == 0) {
++				if ((chunk <= 0 || !optarg[0] || *c)) {
++					fprintf(stderr,
++						Name ": invalid chunk/rounding"
++						" value: %s %d\n",
++						optarg, chunk);
++					exit(2);
++				}
++				continue;
++			}
++			if (level != UnSet)
++				if (!optarg[0] || *c || chunk < 4 ||
++					((chunk-1)&chunk)) {
++					fprintf(stderr, Name
++						": invalid chunk"
++						"/rounding value: %s\n",
++						optarg);
++					exit(2);
+ 			}
+ 			continue;
+ 
+@@ -411,6 +426,12 @@ int main(int argc, char *argv[])
+ 					optarg);
+ 				exit(2);
+ 			}
++			if (level != 0 && (chunk % 4)) {
++				fprintf(stderr, Name ": raid level %s must"
++					" have power 2 chunk size\n",
++					optarg);
++				exit(2);
++			}
+ 			ident.level = level;
+ 			continue;
+ 
 
 
