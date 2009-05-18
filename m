@@ -1,46 +1,57 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [PATCH] md: raid0: Replace hash table lookup by looping over all strip_zones.
-Date: Mon, 18 May 2009 10:21:04 +0200
-Message-ID: <20090518082104.GP6403@skl-net.de>
-References: <1242297833-13908-1-git-send-email-maan@systemlinux.org> <1242297833-13908-2-git-send-email-maan@systemlinux.org> <fe4d072c76f1ce1d6b2b75f83766b1f0.squirrel@neil.brown.name> <18956.3337.786085.284689@notabene.brown> <1242316280.11444.4.camel@raz> <20090515173040.GN6403@skl-net.de> <5d96567b0905151419m1744a8a0td1f59641ea2775e6@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: RAID0 - unitialised zone->dev_start for zone[0]
+Date: Mon, 18 May 2009 10:45:20 -0400
+Message-ID: <4A117480.4030401@tmr.com>
+References: <37d33d830905131008y4a3a3815i6bec41a0d9b32ddf@mail.gmail.com> <beb1238841d24e553e0248080d5e4dca.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="fjEAjMKpll6GDq3U"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5d96567b0905151419m1744a8a0td1f59641ea2775e6@mail.gmail.com>
+In-Reply-To: <beb1238841d24e553e0248080d5e4dca.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Raz <raziebe@gmail.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: SandeepKsinha <sandeepksinha@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+NeilBrown wrote:
+> On Thu, May 14, 2009 3:08 am, SandeepKsinha wrote:
+>   
+>> Hi Neil,
+>>
+>>
+>> [22:33:46 sinhas]$ diff raid0.c raid0.c.orig
+>>     
+>
+> Always, always, always use "diff -u".  It provides context
+> so the diff is much easier to read.
+>
+>   
+>> 160d159
+>> <       zone->dev_start = 0;
+>> [/usr/src/linux-2.6.29/drivers/md]
+>> [22:33:59 sinhas]$
+>>
+>> I see this piece of code missing and being used later.
+>> Not very sure of the code flow, but still as part of defensive
+>> programming.
+>>
+>> Am i missing something?
+>>     
+>
+> conf->strip_zone is allocated with kzalloc, so all values are
+> initialised to 0.
+>   
 
---fjEAjMKpll6GDq3U
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+To prevent future unnecessary analysis of this section, perhaps a 
+comment instead of code would be appropriate?
 
-On 00:19, Raz wrote:
 
-> I have not patched yet my code with this new serie, but where is patch
-> 1/6 ? Does it exist or simply wrong numbering ?
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
 
-It's all in Neil's for-next tree. Sorry for the confusion.
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
+"You are disgraced professional losers. And by the way, give us our money back."
+    - Representative Earl Pomeroy,  Democrat of North Dakota
+on the A.I.G. executives who were paid bonuses  after a federal bailout.
 
---fjEAjMKpll6GDq3U
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFKERpwWto1QDEAkw8RAljcAJ95D0WuEwSulc4I2AtJABUJrc2K7ACfa4Te
-S4yQAi/+3MA4L0NjBrPaPMg=
-=rKkV
------END PGP SIGNATURE-----
-
---fjEAjMKpll6GDq3U--
