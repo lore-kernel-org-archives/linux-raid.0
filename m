@@ -1,13 +1,13 @@
 From: raz ben yehuda <raziebe@gmail.com>
 Subject: Subject: [PATCH 007/009]: raid10: chunk size check in run
-Date: Tue, 19 May 2009 19:10:03 +0300
-Message-ID: <1242749403.3293.87.camel@raz>
+Date: Tue, 19 May 2009 19:10:20 +0300
+Message-ID: <1242749420.3293.89.camel@raz>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de, linux raid <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>, linux raid <linux-raid@vger.kernel.org>
 Cc: ofer <ofer@bitband.com>, yaron <yaronp@bitband.com>
 List-Id: linux-raid.ids
 
