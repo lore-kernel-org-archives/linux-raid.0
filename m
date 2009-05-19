@@ -1,8 +1,8 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2 04/11] async_xor: permit callers to pass in a 'dma/page
-	scribble' region
-Date: Mon, 18 May 2009 17:59:46 -0700
-Message-ID: <20090519005946.4104.28803.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH v2 09/11] async_tx: add support for asynchronous RAID6
+	recovery operations
+Date: Mon, 18 May 2009 18:00:12 -0700
+Message-ID: <20090519010012.4104.50825.stgit@dwillia2-linux.ch.intel.com>
 References: <20090519005647.4104.81119.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,157 +14,368 @@ To: neilb@suse.de, linux-raid@vger.kernel.org
 Cc: maan@systemlinux.org, linux-kernel@vger.kernel.org, yur@emcraft.com, hpa@zytor.com
 List-Id: linux-raid.ids
 
-async_xor() needs space to perform dma and page address conversions.  In
-most cases the code can simply reuse the struct page * array because the
-size of the native pointer matches the size of a dma/page address.  In
-order to support archs where sizeof(dma_addr_t) is larger than
-sizeof(struct page *), or to preserve the input parameters, we utilize a
-memory region passed in by the caller.
+ async_raid6_2data_recov() recovers two data disk failures
 
-Since the code is now prepared to handle the case where it cannot
-perform address conversions on the stack, we no longer need the
-!HIGHMEM64G dependency in drivers/dma/Kconfig.
+ async_raid6_datap_recov() recovers a data disk and the P disk
 
-[ Impact: don't clobber input buffers for address conversions ]
+These routines are a port of the synchronous versions found in
+drivers/md/raid6recov.c.  The primary difference is breaking out the xor
+operations into separate calls to async_xor.  Two helper routines are
+introduced to perform scalar multiplication where needed.
+async_sum_product() multiplies two sources by scalar coefficients and
+then sums (xor) the result.  async_mult() simply multiplies a single
+source by a scalar.
 
+[ Impact: asynchronous raid6 recovery routines for 2data and datap cases ]
+
+Cc: Yuri Tikhonov <yur@emcraft.com>
+Cc: Ilya Yanok <yanok@emcraft.com>
+Cc: H. Peter Anvin <hpa@zytor.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- crypto/async_tx/async_xor.c |   59 ++++++++++++++++++++-----------------------
- drivers/dma/Kconfig         |    2 +
- 2 files changed, 29 insertions(+), 32 deletions(-)
+ crypto/async_tx/Kconfig             |    5 +
+ crypto/async_tx/Makefile            |    1 
+ crypto/async_tx/async_raid6_recov.c |  292 +++++++++++++++++++++++++++++++++++
+ include/linux/async_tx.h            |    8 +
+ 4 files changed, 306 insertions(+), 0 deletions(-)
+ create mode 100644 crypto/async_tx/async_raid6_recov.c
 
-diff --git a/crypto/async_tx/async_xor.c b/crypto/async_tx/async_xor.c
-index 6290d05..3caecdd 100644
---- a/crypto/async_tx/async_xor.c
-+++ b/crypto/async_tx/async_xor.c
-@@ -33,11 +33,10 @@
- /* do_async_xor - dma map the pages and perform the xor with an engine */
- static __async_inline struct dma_async_tx_descriptor *
- do_async_xor(struct dma_chan *chan, struct page *dest, struct page **src_list,
--	     unsigned int offset, int src_cnt, size_t len,
-+	     unsigned int offset, int src_cnt, size_t len, dma_addr_t *dma_src,
- 	     struct async_submit_ctl *submit)
- {
- 	struct dma_device *dma = chan->device;
--	dma_addr_t *dma_src = (dma_addr_t *) src_list;
- 	struct dma_async_tx_descriptor *tx = NULL;
- 	int src_off = 0;
- 	int i;
-@@ -125,9 +124,14 @@ do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
- 	int xor_src_cnt;
- 	int src_off = 0;
- 	void *dest_buf;
--	void **srcs = (void **) src_list;
-+	void **srcs;
+diff --git a/crypto/async_tx/Kconfig b/crypto/async_tx/Kconfig
+index cb6d731..e5aeb2b 100644
+--- a/crypto/async_tx/Kconfig
++++ b/crypto/async_tx/Kconfig
+@@ -18,3 +18,8 @@ config ASYNC_PQ
+ 	tristate
+ 	select ASYNC_CORE
  
--	/* reuse the 'src_list' array to convert to buffer pointers */
-+	if (submit->scribble)
-+		srcs = (void **) submit->scribble;
-+	else
-+		srcs = (void **) src_list;
++config ASYNC_RAID6_RECOV
++	tristate
++	select ASYNC_CORE
++	select ASYNC_PQ
 +
-+	/* convert to buffer pointers */
- 	for (i = 0; i < src_cnt; i++)
- 		srcs[i] = page_address(src_list[i]) + offset;
- 
-@@ -171,17 +175,26 @@ async_xor(struct page *dest, struct page **src_list, unsigned int offset,
- 	struct dma_chan *chan = async_tx_find_channel(submit, DMA_XOR,
- 						      &dest, 1, src_list,
- 						      src_cnt, len);
-+	dma_addr_t *dma_src = NULL;
+diff --git a/crypto/async_tx/Makefile b/crypto/async_tx/Makefile
+index 1b99265..9a1a768 100644
+--- a/crypto/async_tx/Makefile
++++ b/crypto/async_tx/Makefile
+@@ -3,3 +3,4 @@ obj-$(CONFIG_ASYNC_MEMCPY) += async_memcpy.o
+ obj-$(CONFIG_ASYNC_MEMSET) += async_memset.o
+ obj-$(CONFIG_ASYNC_XOR) += async_xor.o
+ obj-$(CONFIG_ASYNC_PQ) += async_pq.o
++obj-$(CONFIG_ASYNC_RAID6_RECOV) += async_raid6_recov.o
+diff --git a/crypto/async_tx/async_raid6_recov.c b/crypto/async_tx/async_raid6_recov.c
+new file mode 100644
+index 0000000..ea019e8
+--- /dev/null
++++ b/crypto/async_tx/async_raid6_recov.c
+@@ -0,0 +1,292 @@
++/*
++ * Asynchronous RAID-6 recovery calculations ASYNC_TX API.
++ * Copyright(c) 2009 Intel Corporation
++ *
++ * based on raid6recov.c:
++ *   Copyright 2002 H. Peter Anvin
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License as published by the Free
++ * Software Foundation; either version 2 of the License, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc., 51
++ * Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ */
++#include <linux/kernel.h>
++#include <linux/interrupt.h>
++#include <linux/dma-mapping.h>
++#include <linux/raid/pq.h>
++#include <linux/async_tx.h>
 +
- 	BUG_ON(src_cnt <= 1);
- 
--	if (chan) {
-+	if (submit->scribble)
-+		dma_src = submit->scribble;
-+	else if (sizeof(dma_addr_t) <= sizeof(struct page *))
-+		dma_src = (dma_addr_t *) src_list;
++static struct dma_async_tx_descriptor *
++async_sum_product(struct page *dest, struct page **srcs, unsigned char *coef,
++		  size_t len, struct async_submit_ctl *submit)
++{
++	struct dma_chan *chan = async_tx_find_channel(submit, DMA_PQ,
++						      &dest, 1, srcs, 2, len);
++	struct dma_device *dma = chan ? chan->device : NULL;
++	const u8 *amul, *bmul;
++	u8 ax, bx;
++	u8 *a, *b, *c;
 +
-+	if (dma_src && chan) {
- 		/* run the xor asynchronously */
- 		pr_debug("%s (async): len: %zu\n", __func__, len);
- 
- 		return do_async_xor(chan, dest, src_list, offset, src_cnt, len,
--				    submit);
-+				    dma_src, submit);
- 	} else {
- 		/* run the xor synchronously */
- 		pr_debug("%s (sync): len: %zu\n", __func__, len);
-+		WARN_ONCE(chan, "%s: no space for dma address conversion\n",
-+			  __func__);
- 
- 		/* in the sync case the dest is an implied source
- 		 * (assumes the dest is the first source)
-@@ -229,11 +242,16 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
- 						      src_cnt, len);
- 	struct dma_device *device = chan ? chan->device : NULL;
- 	struct dma_async_tx_descriptor *tx = NULL;
-+	dma_addr_t *dma_src = NULL;
- 
- 	BUG_ON(src_cnt <= 1);
- 
--	if (device && src_cnt <= device->max_xor) {
--		dma_addr_t *dma_src = (dma_addr_t *) src_list;
-+	if (submit->scribble)
-+		dma_src = submit->scribble;
-+	else if (sizeof(dma_addr_t) <= sizeof(struct page *))
-+		dma_src = (dma_addr_t *) src_list;
++	if (dma) {
++		dma_addr_t dma_dest[2];
++		dma_addr_t dma_src[2];
++		struct device *dev = dma->dev;
++		struct dma_async_tx_descriptor *tx;
++		enum dma_ctrl_flags dma_flags = DMA_PREP_PQ_DISABLE_P;
 +
-+	if (dma_src && device && src_cnt <= device->max_xor) {
- 		unsigned long dma_prep_flags;
- 		int i;
++		dma_dest[1] = dma_map_page(dev, dest, 0, len, DMA_BIDIRECTIONAL);
++		dma_src[0] = dma_map_page(dev, srcs[0], 0, len, DMA_TO_DEVICE);
++		dma_src[1] = dma_map_page(dev, srcs[1], 0, len, DMA_TO_DEVICE);
++		tx = dma->device_prep_dma_pq(chan, dma_dest, dma_src, 2, coef,
++					     len, dma_flags);
++		if (tx) {
++			async_tx_submit(chan, tx, submit);
++			return tx;
++		}
++	}
++
++	/* run the operation synchronously */
++	async_tx_quiesce(&submit->depend_tx);
++	amul = raid6_gfmul[coef[0]];
++	bmul = raid6_gfmul[coef[1]];
++	a = page_address(srcs[0]);
++	b = page_address(srcs[1]);
++	c = page_address(dest);
++
++	while (len--) {
++		ax    = amul[*a++];
++		bx    = bmul[*b++];
++		*c++ = ax ^ bx;
++	}
++
++	return NULL;
++}
++
++/**
++ * async_raid6_2data_recov - asynchronously calculate two missing data blocks
++ * @disks: number of disks in the RAID-6 array
++ * @bytes: block size
++ * @faila: first failed drive index
++ * @failb: second failed drive index
++ * @blocks: array of source pointers where the last two entries are p and q
++ * @submit: submission/completion modifiers
++ */
++struct dma_async_tx_descriptor *
++async_raid6_2data_recov(int disks, size_t bytes, int faila, int failb,
++			struct page **blocks, struct async_submit_ctl *submit)
++{
++	struct dma_async_tx_descriptor *tx;
++	struct page *p, *q, *dp, *dq;
++	struct page *srcs[2];
++	unsigned char coef[2];
++	enum async_tx_flags flags_orig = submit->flags;
++	dma_async_tx_callback cb_fn_orig = submit->cb_fn;
++	void *cb_param_orig = submit->cb_param;
++
++	/* we need to preserve the contents of 'blocks' for the async
++	 * case, so punt to synchronous if a scribble buffer is not available
++	 */
++	if (!submit->scribble) {
++		void **ptrs = (void **) blocks;
++		int i;
++
++		async_tx_quiesce(&submit->depend_tx);
++		for (i = 0; i < disks; i++)
++			ptrs[i] = page_address(blocks[i]);
++
++		raid6_2data_recov(disks, bytes, faila, failb, ptrs);
++
++		async_tx_sync_epilog(submit);
++
++		return NULL;
++	}
++
++	p = blocks[disks-2];
++	q = blocks[disks-1];
++
++	/* Compute syndrome with zero for the missing data pages
++	   Use the dead data pages as temporary storage for
++	   delta p and delta q */
++	dp = blocks[faila];
++	blocks[faila] = (void *)raid6_empty_zero_page;
++	blocks[disks-2] = dp;
++	dq = blocks[failb];
++	blocks[failb] = (void *)raid6_empty_zero_page;
++	blocks[disks-1] = dq;
++
++	submit->flags &= ~ASYNC_TX_ACK;
++	submit->cb_fn = NULL;
++	submit->cb_param = NULL;
++	tx = async_gen_syndrome(blocks, 0, disks, bytes, submit);
++	submit->depend_tx = tx;
++
++	/* Restore pointer table */
++	blocks[faila]   = dp;
++	blocks[failb]   = dq;
++	blocks[disks-2] = p;
++	blocks[disks-1] = q;
++
++	/* compute P + Pxy */
++	srcs[0] = dp;
++	srcs[1] = p;
++	submit->flags |= ASYNC_TX_XOR_DROP_DST;
++	tx = async_xor(dp, srcs, 0, 2, bytes, submit);
++	submit->depend_tx = tx;
++
++	/* compute Q + Qxy */
++	srcs[0] = dq;
++	srcs[1] = q;
++	tx = async_xor(dq, srcs, 0, 2, bytes, submit);
++	submit->depend_tx = tx;
++
++	/* Dx = A*(P+Pxy) + B*(Q+Qxy) */
++	srcs[0] = dp;
++	srcs[1] = dq;
++	coef[0] = raid6_gfexi[failb-faila];
++	coef[1] = raid6_gfinv[raid6_gfexp[faila]^raid6_gfexp[failb]];
++	tx = async_sum_product(dq, srcs, coef, bytes, submit);
++	submit->depend_tx = tx;
++
++	/* Dy = P+Pxy+Dx */
++	srcs[0] = dp;
++	srcs[1] = dq;
++	submit->flags = flags_orig | ASYNC_TX_XOR_DROP_DST;
++	submit->cb_fn = cb_fn_orig;
++	submit->cb_param = cb_param_orig;
++	tx = async_xor(dp, srcs, 0, 2, bytes, submit);
++
++	return tx;
++}
++EXPORT_SYMBOL_GPL(async_raid6_2data_recov);
++
++static struct dma_async_tx_descriptor *
++async_mult(struct page *dest, struct page *src, u8 coef, size_t len,
++	   struct async_submit_ctl *submit)
++{
++	struct dma_chan *chan = async_tx_find_channel(submit, DMA_PQ,
++						      &dest, 1, srcs, 2, len);
++	struct dma_device *dma = chan ? chan->device : NULL;
++	const u8 *qmul; /* Q multiplier table */
++	u8 *d, *s;
++
++	if (dma) {
++		dma_addr_t dma_dest[2];
++		dma_addr_t dma_src[1];
++		struct device *dev = dma->dev;
++		struct dma_async_tx_descriptor *tx;
++		enum dma_ctrl_flags dma_flags = DMA_PREP_PQ_DISABLE_P;
++
++		dma_dest[1] = dma_map_page(dev, dest, 0, len, DMA_BIDIRECTIONAL);
++		dma_src[0] = dma_map_page(dev, src, 0, len, DMA_TO_DEVICE);
++		tx = dma->device_prep_dma_pq(chan, dma_dest, dma_src, 1, &coef,
++					     len, dma_flags);
++		if (tx) {
++			async_tx_submit(chan, tx, submit);
++			return tx;
++		}
++	}
++
++	async_tx_quiesce(&submit->depend_tx);
++	qmul  = raid6_gfmul[coef];
++	d = page_address(dest);
++	s = page_address(src);
++
++	while (len--)
++		*d++ = qmul[*s++];
++
++	return NULL;
++}
++
++/**
++ * async_raid6_datap_recov - asynchronously calculate a data and the 'p' block
++ * @disks: number of disks in the RAID-6 array
++ * @bytes: block size
++ * @faila: failed drive index
++ * @blocks: array of source pointers where the last two entries are p and q
++ * @submit: submission/completion modifiers
++ */
++struct dma_async_tx_descriptor *
++async_raid6_datap_recov(int disks, size_t bytes, int faila,
++			struct page **blocks, struct async_submit_ctl *submit)
++{
++	struct dma_async_tx_descriptor *tx;
++	struct page *p, *q, *dq;
++	u8 coef;
++	enum async_tx_flags flags_orig = submit->flags;
++	dma_async_tx_callback cb_fn_orig = submit->cb_fn;
++	void *cb_param_orig = submit->cb_param;
++	struct page *srcs[2];
++
++	/* we need to preserve the contents of 'blocks' for the async
++	 * case, so punt to synchronous if a scribble buffer is not available
++	 */
++	if (!submit->scribble) {
++		void **ptrs = (void **) blocks;
++		int i;
++
++		async_tx_quiesce(&submit->depend_tx);
++		for (i = 0; i < disks; i++)
++			ptrs[i] = page_address(blocks[i]);
++
++		raid6_datap_recov(disks, bytes, faila, ptrs);
++
++		async_tx_sync_epilog(submit);
++
++		return NULL;
++	}
++
++	p = blocks[disks-2];
++	q = blocks[disks-1];
++
++	/* Compute syndrome with zero for the missing data page
++	   Use the dead data page as temporary storage for delta q */
++	dq = blocks[faila];
++	blocks[faila] = (void *)raid6_empty_zero_page;
++	blocks[disks-1] = dq;
++
++	submit->flags &= ~ASYNC_TX_ACK;
++	submit->cb_fn = NULL;
++	submit->cb_param = NULL;
++	tx = async_gen_syndrome(blocks, 0, disks, bytes, submit);
++	submit->depend_tx = tx;
++
++	/* Restore pointer table */
++	blocks[faila]   = dq;
++	blocks[disks-1] = q;
++
++	/* Now, pick the proper data tables */
++	coef = raid6_gfinv[raid6_gfexp[faila]];
++
++	submit->flags |= ASYNC_TX_XOR_DROP_DST;
++	srcs[0] = dq;
++	srcs[1] = q;
++	tx = async_xor(dq, srcs, 0, 2, bytes, submit);
++	submit->depend_tx = tx;
++
++	tx = async_mult(dq, dq, coef, bytes, submit);
++	submit->depend_tx = tx;
++
++	srcs[0] = p;
++	srcs[1] = dq;
++	submit->flags = flags_orig | ASYNC_TX_XOR_DROP_DST;
++	submit->cb_fn = cb_fn_orig;
++	submit->cb_param = cb_param_orig;
++	tx = async_xor(p, srcs, 0, 2, bytes, submit);
++
++	return tx;
++}
++EXPORT_SYMBOL_GPL(async_raid6_datap_recov);
++
++MODULE_AUTHOR("Dan Williams <dan.j.williams@intel.com>");
++MODULE_DESCRIPTION("asynchronous RAID-6 recovery api");
++MODULE_LICENSE("GPL");
+diff --git a/include/linux/async_tx.h b/include/linux/async_tx.h
+index 6d80022..265e7e2 100644
+--- a/include/linux/async_tx.h
++++ b/include/linux/async_tx.h
+@@ -171,5 +171,13 @@ async_syndrome_val(struct page **blocks, unsigned int offset, int src_cnt,
+ 		   size_t len, enum sum_check_flags *pqres,
+ 		   struct async_submit_ctl *submit);
  
-@@ -263,6 +281,8 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
- 		enum async_tx_flags flags_orig = submit->flags;
- 
- 		pr_debug("%s: (sync) len: %zu\n", __func__, len);
-+		WARN_ONCE(device && src_cnt <= device->max_xor,
-+			  "%s: no space for dma address conversion\n", __func__);
- 
- 		submit->flags |= ASYNC_TX_XOR_DROP_DST;
- 		submit->flags &= ~ASYNC_TX_ACK;
-@@ -281,29 +301,6 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
- }
- EXPORT_SYMBOL_GPL(async_xor_val);
- 
--static int __init async_xor_init(void)
--{
--	#ifdef CONFIG_DMA_ENGINE
--	/* To conserve stack space the input src_list (array of page pointers)
--	 * is reused to hold the array of dma addresses passed to the driver.
--	 * This conversion is only possible when dma_addr_t is less than the
--	 * the size of a pointer.  HIGHMEM64G is known to violate this
--	 * assumption.
--	 */
--	BUILD_BUG_ON(sizeof(dma_addr_t) > sizeof(struct page *));
--	#endif
--
--	return 0;
--}
--
--static void __exit async_xor_exit(void)
--{
--	do { } while (0);
--}
--
--module_init(async_xor_init);
--module_exit(async_xor_exit);
--
- MODULE_AUTHOR("Intel Corporation");
- MODULE_DESCRIPTION("asynchronous xor/xor-zero-sum api");
- MODULE_LICENSE("GPL");
-diff --git a/drivers/dma/Kconfig b/drivers/dma/Kconfig
-index 3b3c01b..912a51b 100644
---- a/drivers/dma/Kconfig
-+++ b/drivers/dma/Kconfig
-@@ -4,7 +4,7 @@
- 
- menuconfig DMADEVICES
- 	bool "DMA Engine support"
--	depends on !HIGHMEM64G && HAS_DMA
-+	depends on HAS_DMA
- 	help
- 	  DMA engines can do asynchronous data transfers without
- 	  involving the host CPU.  Currently, this framework can be
++struct dma_async_tx_descriptor *
++async_raid6_2data_recov(int src_num, size_t bytes, int faila, int failb,
++			struct page **ptrs, struct async_submit_ctl *submit);
++
++struct dma_async_tx_descriptor *
++async_raid6_datap_recov(int src_num, size_t bytes, int faila,
++			struct page **ptrs, struct async_submit_ctl *submit);
++
+ void async_tx_quiesce(struct dma_async_tx_descriptor **tx);
+ #endif /* _ASYNC_TX_H_ */
 
