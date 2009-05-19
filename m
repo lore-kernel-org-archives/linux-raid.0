@@ -1,44 +1,73 @@
 From: raz ben yehuda <raziebe@gmail.com>
-Subject: Subject: [PATCH 005/009]: raid0: chunk size check in raid0_run
-Date: Tue, 19 May 2009 19:07:34 +0300
-Message-ID: <1242749254.3293.65.camel@raz>
+Subject: Subject: [PATCH 002/009]: have raid0 report its formation
+Date: Tue, 19 May 2009 19:07:58 +0300
+Message-ID: <1242749278.3293.69.camel@raz>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, linux raid <linux-raid@vger.kernel.org>
+To: linux raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
 Cc: ofer <ofer@bitband.com>, yaron <yaronp@bitband.com>
 List-Id: linux-raid.ids
 
-have raid0 check chunk size in run method instead of in md
-hardsect is short and chunksize am int, so i can use %.
- raid0.c |   12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+Report to the user what are the raid zones
+
+ raid0.c |   33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
+
 Signed-off-by: raziebe@gmail.com
 ---
 diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index a994169..b92b332 100644
+index 8049a92..0a6d0fa 100644
 --- a/drivers/md/raid0.c
 +++ b/drivers/md/raid0.c
-@@ -236,7 +236,17 @@ static int create_strip_zones(mddev_t *mddev)
- 	mddev->queue->unplug_fn = raid0_unplug;
- 	mddev->queue->backing_dev_info.congested_fn = raid0_congested;
- 	mddev->queue->backing_dev_info.congested_data = mddev;
--
-+	/*
-+	* now since we have the hard sector sizes, we can make sure
-+	* chunk size is a multiple of that sector size
-+	* note! mdadm enforced 1K minimum for the chunk size.
-+	*/
-+	if (mddev->chunk_size % mddev->queue->hardsect_size) {
-+		printk(KERN_ERR "%s chunk_size of %d not valid\n",
-+				mdname(mddev),
-+				mddev->chunk_size);
-+		goto abort;
+@@ -52,6 +52,38 @@ static int raid0_congested(void *data, int bits)
+ 	return ret;
+ }
+ 
++/*
++ * inform the user of the raid configuration
++*/
++static void dump_zones(mddev_t *mddev)
++{
++	int j, k, h;
++	sector_t zone_size = 0;
++	sector_t zone_start = 0;
++	char b[BDEVNAME_SIZE];
++	raid0_conf_t *conf = mddev->private;
++	printk(KERN_INFO "******* %s configuration *********",
++		mdname(mddev));
++	h = 0;
++	for (j = 0; j < conf->nr_strip_zones; j++) {
++		printk("\nzone%d", j);
++		printk("=[");
++		for (k = 0; k < conf->strip_zone[j].nb_dev; k++)
++			printk("%s/",
++			bdevname(conf->devlist[j*mddev->raid_disks
++						+ k]->bdev, b));
++
++		zone_size  = conf->strip_zone[j].zone_end - zone_start;
++		printk("]\n\t zone offset=%llukb "
++				"device offset=%llukb size=%llukb\n",
++			(unsigned long long)zone_start>>1,
++			(unsigned long long)conf->strip_zone[j].dev_start>>1,
++			(unsigned long long)zone_size>>1);
++		zone_start = conf->strip_zone[j].zone_end;
 +	}
- 	printk(KERN_INFO "raid0: done.\n");
- 	mddev->private = conf;
++	printk(KERN_INFO "**********************************\n\n");
++}
++
+ static int create_strip_zones(mddev_t *mddev)
+ {
+ 	int i, c, j, err;
+@@ -291,6 +323,7 @@ static int raid0_run(mddev_t *mddev)
+ 	}
+ 
+ 	blk_queue_merge_bvec(mddev->queue, raid0_mergeable_bvec);
++	dump_zones(mddev);
  	return 0;
+ }
+ 
 
 
