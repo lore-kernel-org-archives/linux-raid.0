@@ -1,97 +1,174 @@
-From: "Janos Haar" <janos.haar@netcenter.hu>
-Subject: Re: RCU detected CPU 1 stall (t=4295904002/751 jiffies) Pid: 902, comm: md1_raid5
-Date: Tue, 19 May 2009 12:30:13 +0200
-Message-ID: <154801c9d86c$cd8fc9f0$0400a8c0@dcccs>
-References: <12a901c9d805$119fef20$0400a8c0@dcccs> <18962.1522.937784.126331@notabene.brown>
+From: SandeepKsinha <sandeepksinha@gmail.com>
+Subject: Re: [PATCH] md: Enhancements and clean to linear RAID
+Date: Tue, 19 May 2009 16:16:01 +0530
+Message-ID: <37d33d830905190346g4147a114o5f4a53bf64c1ebac@mail.gmail.com>
+References: <37d33d830905182323x22eec1c8l2a7471668c1a02b3@mail.gmail.com>
+	 <9a138833b29b54e5d6c1eaa188f27399.squirrel@neil.brown.name>
+	 <37d33d830905190031u5172af46kccb720343e359d99@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="ISO-8859-1";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <37d33d830905190031u5172af46kccb720343e359d99@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi Neil,
 
------ Original Message ----- 
-From: "Neil Brown" <neilb@suse.de>
-To: "Janos Haar" <janos.haar@netcenter.hu>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Tuesday, May 19, 2009 3:05 AM
-Subject: Re: RCU detected CPU 1 stall (t=4295904002/751 jiffies) Pid: 902, 
-comm: md1_raid5
+I have made all the required changes and have tested the changes.
+It works fine.
 
+Thanks for enlightening me, the changes really optimized the code furth=
+er.
 
-> On Tuesday May 19, janos.haar@netcenter.hu wrote:
->> Hello list, Neil,
+The patches will be followed by this mail.
+
+On Tue, May 19, 2009 at 1:01 PM, SandeepKsinha <sandeepksinha@gmail.com=
+> wrote:
+> Thanks Neil,
+>
+>
+> On Tue, May 19, 2009 at 12:55 PM, NeilBrown <neilb@suse.de> wrote:
+>> On Tue, May 19, 2009 4:23 pm, SandeepKsinha wrote:
+>>> Hi Neil,
+>>>
+>>> I have made the desired changes and have tested the changes as well=
+=2E
+>>> As expected the performance gain with number of devices ( > 20 ) is
+>>> quite visible.
 >>
->> Somebody can say something about this issue?
->> I am not surprised, if it is hardware related, but this is on a brand new
->> server, so i am looking for a solution... :-)
->> May 17 23:12:13 gladiator-afth1 kernel: RCU detected CPU 1 stall
->> (t=4295904002/751 jiffies)
->
-> I have no idea what this means.
-> I've occasionally seen this sort of message in early boot then the
-> system continued to work perfectly so I figured it was an early-boot
-> glitch.  I suggest asking someone who understands RCU.
->
+>> How did you measure the performance gain and what were your
+>> results?
 >>
->> The entire log is here:
->> http://download.netcenter.hu/bughunt/20090518/messages
+>
+> I created arrays with 20 devices and performed random I/O it.
+> The results with linear search were slower as compared to binary.
+>
+>>> The code also looks simpler as compared to what it earlier was.
+>>>
+>>> I have created the following patches for the changes:
+>>>
+>>> PATCH [01/03] md: Removal of num_sectors from dev_info in linear ra=
+id
+>>>
+>>> This patch removes the num_sectors from dev_info and makes use of t=
+he
+>>> rdev->sectors for
+>>> all further usage.
 >>
->> The system is on the md1, and working, but slowly.
+>> Could I as you to redo this one a little differently?
+>> I want to keep the linear search very tight, and you have just added
+>> a pointer de-reference to it.
+>>
+>> If you could replace start_sector by end_sector, we wouldn't need th=
+at
+>> de-reference or the addition.
+>>
+>>
+> I would make the required changes.
 >
-> How slowly?  Is the slowness due to disk throughput?
-
-No no, this is a fresh and idle server.
-I have configured the disks, raid on another PC, and when it finished, i 
-have copy up the known good, pre-installed sw pack with old 2.6.18.
-This pack is good, tested on many times, and this reports too this issue on 
-this machine. (first)
-I have compiled the 2.6.28.10 on it, it takes about 6 hour! 8-/
-But the 2.6.28.10 reports this too.
-
-The slowness is not disk based, i think, on idle time if i move the selector 
-line in mc, this stopps too for some seconds or i can't type in bash when 
-this happens, and another one RCU message comes to the log...
-(It happens periodically, independently of i am doing something or not.)
-
-I am not sure, it is raid related or not, but the kernel reports only the 
-md1_raid5 pid, not another one.
-This is why i am asking here first.
-
-Thanks anyway. :-)
-
-> Have you tested the individual drives and compared that with the
-> array?
-
-This is a brand new hw, with 4x500GB samsung drive, wich reports no problem 
-at all by smart.
-
+>>>
+>>> PATCH[02/03] md: Getting rid of sector_div and hash table in linear=
+ raid
+>>>
+>>> Removal of all the code pertaining hast table and other related dat=
+a
+>>> structures.
+>>> This also makes the code really really simple.
+>>> The searching being made linear for the time being to test the patc=
+h.
+>>>
+>>> PATCH[03/03] md: Replacing linear with a binary search
+>>>
+>>> This patch replaces the linear search in which_dev with binary sear=
+ch.
+>>
+>> Two things wrong with you binary search.
+>> 1/ the while() condition is "hi >=3D lo". =A0That will always be tru=
+e, so it
+>> =A0would be better to make that explicit. =A0i.e. "while(1)".
+>> =A0However the while loop of a binary search should be
+>> =A0 while (hi > lo)
+>>
+>> 2/ You have 3 comparisons against 'sector' inside the loop. =A0There=
+ should
+>> =A0 only be one. =A0We are aiming for speed remember :-)
+>>
+>> =A0 while (hi > lo) {
+>> =A0 =A0 =A0 mid =3D (hi + lo + 1) / 2;
+>> =A0 =A0 =A0 dev =3D conf->disks + mid;
+>>
+>> =A0 =A0 =A0 if (sector >=3D dev->start_sector)
+>> =A0 =A0 =A0 =A0 =A0 =A0lo =3D mid;
+>> =A0 =A0 =A0 else
+>> =A0 =A0 =A0 =A0 =A0 =A0hi =3D mid - 1;
+>> =A0 =A0}
+>> =A0 =A0return dev;
+>>
+>> =A0 =A0With that formulation, you don't even need to replace
+>> =A0 =A0sector_start by sector_end.. However doing so would make othe=
+r
+>> =A0 =A0code simpler, so please do proceed with replacing sector_star=
+t by
+>> =A0 =A0sector_end.
+>> =A0 =A0Then the binary search (with a fix because dev can be uniniti=
+alised),
+>> =A0 =A0becomes:
+>>
+>> =A0 =A0while (hi > lo) {
+>> =A0 =A0 =A0 mid =3D (hi + lo) / 2;
+>>
+>> =A0 =A0 =A0 if (sector < conf->disks[mid].end_sector)
+>> =A0 =A0 =A0 =A0 =A0 =A0hi =3D mid;
+>> =A0 =A0 =A0 else
+>> =A0 =A0 =A0 =A0 =A0 =A0lo =3D mid + 1;
+>> =A0 =A0}
+>> =A0 =A0return conf->disks + lo;
+>>
+>
+> I will make this change too.
 >
 >
->> If i left the server for 1 day,  it will crash without a saved log.
+> Thanks.
 >
-> This is a concern!  It usually points to some sort of hardware
-> problem, but it is very hard to trace.
-> Is the power supply rated high enough to support all devices?
-
-I am using 550W good quality new PS, and the PC uses only 55-65W, measured. 
-;-)
-(1x core2duo, 4x hdd, nothing more interesting)
-
-> I cannot think of anything else to suggest .. except start swapping
-> components until the problem goes away...
-
-In this way, i need to start with the motherboard. 8-(
-
-Thanks a lot,
-Janos Haar
-
+>> NeilBrown
+>>
+>>
+>>
+>>
 >
-> NeilBrown 
+>
+>
+> --
+> Regards,
+> Sandeep.
+>
+>
+>
+>
+>
+>
+> =93To learn is to change. Education is a process that changes the lea=
+rner.=94
+>
 
+
+
+--=20
+Regards,
+Sandeep.
+
+
+
+
+
+ =09
+=93To learn is to change. Education is a process that changes the learn=
+er.=94
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
