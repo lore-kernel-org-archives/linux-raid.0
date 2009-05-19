@@ -1,73 +1,71 @@
 From: raz ben yehuda <raziebe@gmail.com>
-Subject: Subject: [PATCH 009/009]: mdadm: 1K chunks for raid0
-Date: Tue, 19 May 2009 19:04:57 +0300
-Message-ID: <1242749098.3293.56.camel@raz>
+Subject: Subject: [PATCH 001/009]: have raid0 compile with MD_DEBUG on
+Date: Tue, 19 May 2009 19:06:15 +0300
+Message-ID: <1242749175.3293.57.camel@raz>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, linux raid <linux-raid@vger.kernel.org>
-Cc: ofer <ofer@bitband.com>, yaron <yaronp@bitband.com>
+To: linux raid <linux-raid@vger.kernel.org>, neilb@suse.de
+Cc: yaron <yaronp@bitband.com>, ofer <ofer@bitband.com>
 List-Id: linux-raid.ids
 
-fix mdadm to pass 1K*n chunks only in the case of raid0.
-Commit is stacked on top mdadm.c
-commit c8b4de0cccfba18818416f62687e4094a5b83922
-Author: NeilBrown <neilb@suse.de>
-Date:   Tue May 12 15:25:55 2009 +1000
+Because of the removal the device list from 
+the strips raid0 did not compile with MD_DEBUG flag on
 
- mdadm.c |   29 +++++++++++++++++++++++++----
- 1 file changed, 25 insertions(+), 4 deletions(-)
+ raid0.c |   20 +++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
 
-Signed-off-by: raziebe@gmail.com
+This Commit is stacked on top of:
+	commit 747df02a154401948426050979b061446eadc37e
+	Author: NeilBrown <neilb@suse.de>
+	Date:   Sat May 16 21:51:51 2009 +1000
+all the reset of this patch set are on top of this commit
 ---
-diff --git a/mdadm.c b/mdadm.c
-index 166ea9d..b54e650 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -326,10 +326,25 @@ int main(int argc, char *argv[])
- 				exit(2);
- 			}
- 			chunk = strtol(optarg, &c, 10);
--			if (!optarg[0] || *c || chunk<4 || ((chunk-1)&chunk)) {
--				fprintf(stderr, Name ": invalid chunk/rounding value: %s\n",
--					optarg);
--				exit(2);
-+			/* if level is parsed, chunk is probably ok */
-+			if (level == 0) {
-+				if ((chunk <= 0 || !optarg[0] || *c)) {
-+					fprintf(stderr,
-+						Name ": invalid chunk/rounding"
-+						" value: %s %d\n",
-+						optarg, chunk);
-+					exit(2);
-+				}
-+				continue;
-+			}
-+			if (level != UnSet)
-+				if (!optarg[0] || *c || chunk < 4 ||
-+					((chunk-1)&chunk)) {
-+					fprintf(stderr, Name
-+						": invalid chunk"
-+						"/rounding value: %s\n",
-+						optarg);
-+					exit(2);
- 			}
- 			continue;
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index 86249c5..8049a92 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -402,7 +402,7 @@ bad_map:
+ 	return 0;
+ }
  
-@@ -411,6 +426,12 @@ int main(int argc, char *argv[])
- 					optarg);
- 				exit(2);
- 			}
-+			if (level != 0 && (chunk % 4)) {
-+				fprintf(stderr, Name ": raid level %s must"
-+					" have power 2 chunk size\n",
-+					optarg);
-+				exit(2);
-+			}
- 			ident.level = level;
- 			continue;
+-static void raid0_status (struct seq_file *seq, mddev_t *mddev)
++static void raid0_status(struct seq_file *seq, mddev_t *mddev)
+ {
+ #undef MD_DEBUG
+ #ifdef MD_DEBUG
+@@ -410,18 +410,24 @@ static void raid0_status (struct seq_file *seq, mddev_t *mddev)
+ 	char b[BDEVNAME_SIZE];
+ 	raid0_conf_t *conf = mddev->private;
  
++	sector_t zone_size;
++	sector_t zone_start = 0;
+ 	h = 0;
++
+ 	for (j = 0; j < conf->nr_strip_zones; j++) {
+ 		seq_printf(seq, "      z%d", j);
+ 		seq_printf(seq, "=[");
+ 		for (k = 0; k < conf->strip_zone[j].nb_dev; k++)
+ 			seq_printf(seq, "%s/", bdevname(
+-				conf->strip_zone[j].dev[k]->bdev,b));
+-
+-		seq_printf(seq, "] ze=%d ds=%d s=%d\n",
+-				conf->strip_zone[j].zone_end,
+-				conf->strip_zone[j].dev_start,
+-				conf->strip_zone[j].sectors);
++				conf->devlist[j*mddesk->raid_disks + k]
++						->bdev, b));
++
++		zone_size  = conf->strip_zone[j].zone_end - zone_start;
++		seq_printf(seq, "] ze=%lld ds=%lld s=%lld\n",
++			(unsigned long long)zone_start>>1,
++			(unsigned long long)conf->strip_zone[j].dev_start>>1,
++			(unsigned long long)zone_size>>1);
++		zone_start = conf->strip_zone[j].zone_end;
+ 	}
+ #endif
+ 	seq_printf(seq, " %dk chunks", mddev->chunk_size/1024);
 
 
