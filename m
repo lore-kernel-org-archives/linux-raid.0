@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2 02/11] async_tx: kill ASYNC_TX_DEP_ACK flag
-Date: Mon, 18 May 2009 17:59:36 -0700
-Message-ID: <20090519005936.4104.58597.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH v2 06/11] async_tx: add sum check flags
+Date: Mon, 18 May 2009 17:59:56 -0700
+Message-ID: <20090519005956.4104.27783.stgit@dwillia2-linux.ch.intel.com>
 References: <20090519005647.4104.81119.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,197 +13,182 @@ To: neilb@suse.de, linux-raid@vger.kernel.org
 Cc: maan@systemlinux.org, linux-kernel@vger.kernel.org, yur@emcraft.com, hpa@zytor.com
 List-Id: linux-raid.ids
 
-In support of inter-channel chaining async_tx utilizes an ack flag to
-gate whether a dependent operation can be chained to another.  While the
-flag is not set the chain can be considered open for appending.  Setting
-the ack flag closes the chain and flags the descriptor for garbage
-collection.  The ASYNC_TX_DEP_ACK flag essentially means "close the
-chain after adding this dependency".  Since each operation can only have
-one child the api now implicitly sets the ack flag at dependency
-submission time.  This removes an unnecessary management burden from
-clients of the api.
-
-[ Impact: clean up and enforce one dependency per operation ]
+Replace the flat zero_sum_result with a collection of flags to contain
+the P (xor) zero-sum result, and the soon to be utilized Q (raid6 reed
+solomon syndrome) zero-sum result.  Use the SUM_CHECK_ namespace instead
+of DMA_ since these flags will be used on non-dma-zero-sum enabled
+platforms.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- crypto/async_tx/async_memcpy.c |    2 +-
- crypto/async_tx/async_memset.c |    2 +-
- crypto/async_tx/async_tx.c     |    4 ++--
- crypto/async_tx/async_xor.c    |    6 ++----
- drivers/md/raid5.c             |   25 +++++++++++--------------
- include/linux/async_tx.h       |    4 +---
- 6 files changed, 18 insertions(+), 25 deletions(-)
+ arch/arm/include/asm/hardware/iop3xx-adma.h |    5 +++--
+ arch/arm/mach-iop13xx/include/mach/adma.h   |   12 +++++++-----
+ crypto/async_tx/async_xor.c                 |    4 ++--
+ drivers/md/raid5.c                          |    2 +-
+ drivers/md/raid5.h                          |    5 +++--
+ include/linux/async_tx.h                    |    2 +-
+ include/linux/dmaengine.h                   |   21 ++++++++++++++++++++-
+ 7 files changed, 37 insertions(+), 14 deletions(-)
 
-diff --git a/crypto/async_tx/async_memcpy.c b/crypto/async_tx/async_memcpy.c
-index ddccfb0..7117ec6 100644
---- a/crypto/async_tx/async_memcpy.c
-+++ b/crypto/async_tx/async_memcpy.c
-@@ -35,7 +35,7 @@
-  * @src: src page
-  * @offset: offset in pages to start transaction
-  * @len: length in bytes
-- * @flags: ASYNC_TX_ACK, ASYNC_TX_DEP_ACK,
-+ * @flags: ASYNC_TX_ACK
-  * @depend_tx: memcpy depends on the result of this transaction
-  * @cb_fn: function to call when the memcpy completes
-  * @cb_param: parameter to pass to the callback routine
-diff --git a/crypto/async_tx/async_memset.c b/crypto/async_tx/async_memset.c
-index 5b5eb99..b2f1338 100644
---- a/crypto/async_tx/async_memset.c
-+++ b/crypto/async_tx/async_memset.c
-@@ -35,7 +35,7 @@
-  * @val: fill value
-  * @offset: offset in pages to start transaction
-  * @len: length in bytes
-- * @flags: ASYNC_TX_ACK, ASYNC_TX_DEP_ACK
-+ * @flags: ASYNC_TX_ACK
-  * @depend_tx: memset depends on the result of this transaction
-  * @cb_fn: function to call when the memcpy completes
-  * @cb_param: parameter to pass to the callback routine
-diff --git a/crypto/async_tx/async_tx.c b/crypto/async_tx/async_tx.c
-index 06eb6cc..3766bc3 100644
---- a/crypto/async_tx/async_tx.c
-+++ b/crypto/async_tx/async_tx.c
-@@ -223,7 +223,7 @@ async_tx_submit(struct dma_chan *chan, struct dma_async_tx_descriptor *tx,
- 	if (flags & ASYNC_TX_ACK)
- 		async_tx_ack(tx);
- 
--	if (depend_tx && (flags & ASYNC_TX_DEP_ACK))
-+	if (depend_tx)
- 		async_tx_ack(depend_tx);
+diff --git a/arch/arm/include/asm/hardware/iop3xx-adma.h b/arch/arm/include/asm/hardware/iop3xx-adma.h
+index 83e6ba3..26eefea 100644
+--- a/arch/arm/include/asm/hardware/iop3xx-adma.h
++++ b/arch/arm/include/asm/hardware/iop3xx-adma.h
+@@ -756,13 +756,14 @@ static inline void iop_desc_set_block_fill_val(struct iop_adma_desc_slot *desc,
+ 	hw_desc->src[0] = val;
  }
- EXPORT_SYMBOL_GPL(async_tx_submit);
-@@ -231,7 +231,7 @@ EXPORT_SYMBOL_GPL(async_tx_submit);
- /**
-  * async_trigger_callback - schedules the callback function to be run after
-  * any dependent operations have been completed.
-- * @flags: ASYNC_TX_ACK, ASYNC_TX_DEP_ACK
-+ * @flags: ASYNC_TX_ACK
-  * @depend_tx: 'callback' requires the completion of this transaction
-  * @cb_fn: function to call after depend_tx completes
-  * @cb_param: parameter to pass to the callback routine
+ 
+-static inline int iop_desc_get_zero_result(struct iop_adma_desc_slot *desc)
++static inline enum sum_check_flags
++iop_desc_get_zero_result(struct iop_adma_desc_slot *desc)
+ {
+ 	struct iop3xx_desc_aau *hw_desc = desc->hw_desc;
+ 	struct iop3xx_aau_desc_ctrl desc_ctrl = hw_desc->desc_ctrl_field;
+ 
+ 	iop_paranoia(!(desc_ctrl.tx_complete && desc_ctrl.zero_result_en));
+-	return desc_ctrl.zero_result_err;
++	return desc_ctrl.zero_result_err << SUM_CHECK_P;
+ }
+ 
+ static inline void iop_chan_append(struct iop_adma_chan *chan)
+diff --git a/arch/arm/mach-iop13xx/include/mach/adma.h b/arch/arm/mach-iop13xx/include/mach/adma.h
+index 5722e86..1cd31df 100644
+--- a/arch/arm/mach-iop13xx/include/mach/adma.h
++++ b/arch/arm/mach-iop13xx/include/mach/adma.h
+@@ -428,18 +428,20 @@ static inline void iop_desc_set_block_fill_val(struct iop_adma_desc_slot *desc,
+ 	hw_desc->block_fill_data = val;
+ }
+ 
+-static inline int iop_desc_get_zero_result(struct iop_adma_desc_slot *desc)
++static inline enum sum_check_flags
++iop_desc_get_zero_result(struct iop_adma_desc_slot *desc)
+ {
+ 	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc;
+ 	struct iop13xx_adma_desc_ctrl desc_ctrl = hw_desc->desc_ctrl_field;
+ 	struct iop13xx_adma_byte_count byte_count = hw_desc->byte_count_field;
++	enum sum_check_flags flags;
+ 
+ 	BUG_ON(!(byte_count.tx_complete && desc_ctrl.zero_result));
+ 
+-	if (desc_ctrl.pq_xfer_en)
+-		return byte_count.zero_result_err_q;
+-	else
+-		return byte_count.zero_result_err;
++	flags = byte_count.zero_result_err_q << SUM_CHECK_Q;
++	flags |= byte_count.zero_result_err << SUM_CHECK_P;
++
++	return flags;
+ }
+ 
+ static inline void iop_chan_append(struct iop_adma_chan *chan)
 diff --git a/crypto/async_tx/async_xor.c b/crypto/async_tx/async_xor.c
-index e0580b0..3cc5dc7 100644
+index 3caecdd..3bfbbc0 100644
 --- a/crypto/async_tx/async_xor.c
 +++ b/crypto/async_tx/async_xor.c
-@@ -105,7 +105,6 @@ do_async_xor(struct dma_chan *chan, struct page *dest, struct page **src_list,
- 				_cb_param);
+@@ -234,7 +234,7 @@ static int page_is_zero(struct page *p, unsigned int offset, size_t len)
+  */
+ struct dma_async_tx_descriptor *
+ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
+-	      int src_cnt, size_t len, u32 *result,
++	      int src_cnt, size_t len, enum sum_check_flags *result,
+ 	      struct async_submit_ctl *submit)
+ {
+ 	struct dma_chan *chan = async_tx_find_channel(submit, DMA_XOR_VAL,
+@@ -291,7 +291,7 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
  
- 		depend_tx = tx;
--		flags |= ASYNC_TX_DEP_ACK;
+ 		async_tx_quiesce(&tx);
  
- 		if (src_cnt > xor_src_cnt) {
- 			/* drop completed sources */
-@@ -168,8 +167,7 @@ do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
-  * @offset: offset in pages to start transaction
-  * @src_cnt: number of source pages
-  * @len: length in bytes
-- * @flags: ASYNC_TX_XOR_ZERO_DST, ASYNC_TX_XOR_DROP_DEST,
-- *	ASYNC_TX_ACK, ASYNC_TX_DEP_ACK
-+ * @flags: ASYNC_TX_XOR_ZERO_DST, ASYNC_TX_XOR_DROP_DEST, ASYNC_TX_ACK
-  * @depend_tx: xor depends on the result of this transaction.
-  * @cb_fn: function to call when the xor completes
-  * @cb_param: parameter to pass to the callback routine
-@@ -230,7 +228,7 @@ static int page_is_zero(struct page *p, unsigned int offset, size_t len)
-  * @src_cnt: number of source pages
-  * @len: length in bytes
-  * @result: 0 if sum == 0 else non-zero
-- * @flags: ASYNC_TX_ACK, ASYNC_TX_DEP_ACK
-+ * @flags: ASYNC_TX_ACK
-  * @depend_tx: xor depends on the result of this transaction.
-  * @cb_fn: function to call when the xor completes
-  * @cb_param: parameter to pass to the callback routine
+-		*result = page_is_zero(dest, offset, len) ? 0 : 1;
++		*result = !page_is_zero(dest, offset, len) << SUM_CHECK_P;
+ 
+ 		async_tx_sync_epilog(submit);
+ 		submit->flags = flags_orig;
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index f8d2d35..0ef5362 100644
+index 0e456a6..a39b14a 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -525,14 +525,12 @@ async_copy_data(int frombio, struct bio *bio, struct page *page,
- 			bio_page = bio_iovec_idx(bio, i)->bv_page;
- 			if (frombio)
- 				tx = async_memcpy(page, bio_page, page_offset,
--					b_offset, clen,
--					ASYNC_TX_DEP_ACK,
--					tx, NULL, NULL);
-+						  b_offset, clen, 0,
-+						  tx, NULL, NULL);
- 			else
- 				tx = async_memcpy(bio_page, page, b_offset,
--					page_offset, clen,
--					ASYNC_TX_DEP_ACK,
--					tx, NULL, NULL);
-+						  page_offset, clen, 0,
-+						  tx, NULL, NULL);
- 		}
- 		if (clen < len) /* hit end of page */
- 			break;
-@@ -615,8 +613,7 @@ static void ops_run_biofill(struct stripe_head *sh)
- 	}
+@@ -2569,7 +2569,7 @@ static void handle_parity_checks5(raid5_conf_t *conf, struct stripe_head *sh,
+ 		 * we are done.  Otherwise update the mismatch count and repair
+ 		 * parity if !MD_RECOVERY_CHECK
+ 		 */
+-		if (sh->ops.zero_sum_result == 0)
++		if ((sh->ops.zero_sum_result & SUM_CHECK_P_RESULT) == 0)
+ 			/* parity is correct (on disc,
+ 			 * not in buffer any more)
+ 			 */
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index 6ab0ccd..f580cb9 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -2,6 +2,7 @@
+ #define _RAID5_H
  
- 	atomic_inc(&sh->count);
--	async_trigger_callback(ASYNC_TX_DEP_ACK | ASYNC_TX_ACK, tx,
--		ops_complete_biofill, sh);
-+	async_trigger_callback(ASYNC_TX_ACK, tx, ops_complete_biofill, sh);
- }
+ #include <linux/raid/xor.h>
++#include <linux/dmaengine.h>
  
- static void ops_complete_compute5(void *stripe_head_ref)
-@@ -701,8 +698,8 @@ ops_run_prexor(struct stripe_head *sh, struct dma_async_tx_descriptor *tx)
- 	}
- 
- 	tx = async_xor(xor_dest, xor_srcs, 0, count, STRIPE_SIZE,
--		ASYNC_TX_DEP_ACK | ASYNC_TX_XOR_DROP_DST, tx,
--		ops_complete_prexor, sh);
-+		       ASYNC_TX_XOR_DROP_DST, tx,
-+		       ops_complete_prexor, sh);
- 
- 	return tx;
- }
-@@ -809,7 +806,7 @@ ops_run_postxor(struct stripe_head *sh, struct dma_async_tx_descriptor *tx)
- 	 * set ASYNC_TX_XOR_DROP_DST and ASYNC_TX_XOR_ZERO_DST
- 	 * for the synchronous xor case
+ /*
+  *
+@@ -220,8 +221,8 @@ struct stripe_head {
+ 	 * @target - STRIPE_OP_COMPUTE_BLK target
  	 */
--	flags = ASYNC_TX_DEP_ACK | ASYNC_TX_ACK |
-+	flags = ASYNC_TX_ACK |
- 		(prexor ? ASYNC_TX_XOR_DROP_DST : ASYNC_TX_XOR_ZERO_DST);
- 
- 	atomic_inc(&sh->count);
-@@ -858,7 +855,7 @@ static void ops_run_check(struct stripe_head *sh)
- 		&sh->ops.zero_sum_result, 0, NULL, NULL, NULL);
- 
- 	atomic_inc(&sh->count);
--	tx = async_trigger_callback(ASYNC_TX_DEP_ACK | ASYNC_TX_ACK, tx,
-+	tx = async_trigger_callback(ASYNC_TX_ACK, tx,
- 		ops_complete_check, sh);
- }
- 
-@@ -2687,8 +2684,8 @@ static void handle_stripe_expansion(raid5_conf_t *conf, struct stripe_head *sh,
- 
- 			/* place all the copies on one channel */
- 			tx = async_memcpy(sh2->dev[dd_idx].page,
--				sh->dev[i].page, 0, 0, STRIPE_SIZE,
--				ASYNC_TX_DEP_ACK, tx, NULL, NULL);
-+					  sh->dev[i].page, 0, 0, STRIPE_SIZE,
-+					  0, tx, NULL, NULL);
- 
- 			set_bit(R5_Expanded, &sh2->dev[dd_idx].flags);
- 			set_bit(R5_UPTODATE, &sh2->dev[dd_idx].flags);
+ 	struct stripe_operations {
+-		int		   target;
+-		u32		   zero_sum_result;
++		int		     target;
++		enum sum_check_flags zero_sum_result;
+ 	} ops;
+ 	struct r5dev {
+ 		struct bio	req;
 diff --git a/include/linux/async_tx.h b/include/linux/async_tx.h
-index 513150d..9f14cd5 100644
+index 00cfb63..3d21a25 100644
 --- a/include/linux/async_tx.h
 +++ b/include/linux/async_tx.h
-@@ -58,13 +58,11 @@ struct dma_chan_ref {
-  * array.
-  * @ASYNC_TX_ACK: immediately ack the descriptor, precludes setting up a
-  * dependency chain
-- * @ASYNC_TX_DEP_ACK: ack the dependency descriptor.  Useful for chaining.
-  */
- enum async_tx_flags {
- 	ASYNC_TX_XOR_ZERO_DST	 = (1 << 0),
- 	ASYNC_TX_XOR_DROP_DST	 = (1 << 1),
--	ASYNC_TX_ACK		 = (1 << 3),
--	ASYNC_TX_DEP_ACK	 = (1 << 4),
-+	ASYNC_TX_ACK		 = (1 << 2),
+@@ -148,7 +148,7 @@ async_xor(struct page *dest, struct page **src_list, unsigned int offset,
+ 
+ struct dma_async_tx_descriptor *
+ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
+-	      int src_cnt, size_t len, u32 *result,
++	      int src_cnt, size_t len, enum sum_check_flags *result,
+ 	      struct async_submit_ctl *submit);
+ 
+ struct dma_async_tx_descriptor *
+diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
+index 6768727..02447af 100644
+--- a/include/linux/dmaengine.h
++++ b/include/linux/dmaengine.h
+@@ -87,6 +87,25 @@ enum dma_ctrl_flags {
  };
  
- #ifdef CONFIG_DMA_ENGINE
+ /**
++ * enum sum_check_bits - bit position of pq_check_flags
++ */
++enum sum_check_bits {
++	SUM_CHECK_P = 0,
++	SUM_CHECK_Q = 1,
++};
++
++/**
++ * enum pq_check_flags - result of async_{xor,pq}_zero_sum operations
++ * @SUM_CHECK_P_RESULT - 1 if xor zero sum error, 0 otherwise
++ * @SUM_CHECK_Q_RESULT - 1 if reed-solomon zero sum error, 0 otherwise
++ */
++enum sum_check_flags {
++	SUM_CHECK_P_RESULT = (1 << SUM_CHECK_P),
++	SUM_CHECK_Q_RESULT = (1 << SUM_CHECK_Q),
++};
++
++
++/**
+  * dma_cap_mask_t - capabilities bitmap modeled after cpumask_t.
+  * See linux/cpumask.h
+  */
+@@ -245,7 +264,7 @@ struct dma_device {
+ 		unsigned int src_cnt, size_t len, unsigned long flags);
+ 	struct dma_async_tx_descriptor *(*device_prep_dma_xor_val)(
+ 		struct dma_chan *chan, dma_addr_t *src,	unsigned int src_cnt,
+-		size_t len, u32 *result, unsigned long flags);
++		size_t len, enum sum_check_flags *result, unsigned long flags);
+ 	struct dma_async_tx_descriptor *(*device_prep_dma_memset)(
+ 		struct dma_chan *chan, dma_addr_t dest, int value, size_t len,
+ 		unsigned long flags);
 
