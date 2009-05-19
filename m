@@ -1,7 +1,8 @@
 From: SandeepKsinha <sandeepksinha@gmail.com>
-Subject: PATCH [01/03] md: Removal of hash table in linear raid
-Date: Tue, 19 May 2009 16:19:16 +0530
-Message-ID: <37d33d830905190349h2b4a9364l768e50f1dad6e421@mail.gmail.com>
+Subject: PATCH [02/03] md: Removing num_sector and replacing start_sector with
+	end_sector
+Date: Tue, 19 May 2009 16:21:21 +0530
+Message-ID: <37d33d830905190351i5e7a2bc2x523f978a7ca27a50@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
@@ -13,172 +14,146 @@ List-Id: linux-raid.ids
 
 Hi,
 
-This patch basically removes the use of hash tables and the related
-data structures.
-Code cleanup.
+This patch removes the num_sector from dev_info and also replaces
+start_sector with end_sector in dev_info.
+
 
 Author: Sandeep K Sinha <sandeepksinha@gmail.com>
-Date:   Tue May 19 13:14:00 2009 +0530
+Date:   Tue May 19 15:55:56 2009 +0530
 
-    Getting rid of sector_div and hash table for linear raid.
-    Also, using linear search in which_dev.
+    Removal of num_sectors and also maintaining end_sector
+    rather than start_sector in dev_info.
 
 diff --git a/drivers/md/linear.c b/drivers/md/linear.c
-index 7a36e38..f7f748d 100644
+index f7f748d..f7f6bb9 100644
 --- a/drivers/md/linear.c
 +++ b/drivers/md/linear.c
-@@ -29,13 +29,8 @@ static inline dev_info_t *which_dev(mddev_t *mddev,
+@@ -32,7 +32,7 @@ static inline dev_info_t *which_dev(mddev_t *mddev,
 sector_t sector)
- {
- 	dev_info_t *hash;
- 	linear_conf_t *conf =3D mddev_to_conf(mddev);
--	sector_t idx =3D sector >> conf->sector_shift;
 
--	/*
--	 * sector_div(a,b) returns the remainer and sets a to a/b
--	 */
--	(void)sector_div(idx, conf->spacing);
--	hash =3D conf->hash_table[idx];
-+	hash =3D conf->disks;
+ 	hash =3D conf->disks;
 
- 	while (sector >=3D hash->num_sectors + hash->start_sector)
+-	while (sector >=3D hash->num_sectors + hash->start_sector)
++	while (sector >=3D hash->end_sector)
  		hash++;
-@@ -114,11 +109,8 @@ static sector_t linear_size(mddev_t *mddev,
-sector_t sectors, int raid_disks)
- static linear_conf_t *linear_conf(mddev_t *mddev, int raid_disks)
- {
- 	linear_conf_t *conf;
--	dev_info_t **table;
- 	mdk_rdev_t *rdev;
--	int i, nb_zone, cnt;
--	sector_t min_sectors;
--	sector_t curr_sector;
-+	int i, cnt;
+ 	return hash;
+ }
+@@ -55,7 +55,7 @@ static int linear_mergeable_bvec(struct request_queue=
+ *q,
+ 	sector_t sector =3D bvm->bi_sector + get_start_sect(bvm->bi_bdev);
 
- 	conf =3D kzalloc (sizeof (*conf) + raid_disks*sizeof(dev_info_t),
- 			GFP_KERNEL);
-@@ -159,63 +151,9 @@ static linear_conf_t *linear_conf(mddev_t *mddev,
+ 	dev0 =3D which_dev(mddev, sector);
+-	maxsectors =3D dev0->num_sectors - (sector - dev0->start_sector);
++	maxsectors =3D dev0->end_sector - sector;
+
+ 	if (maxsectors < bio_sectors)
+ 		maxsectors =3D 0;
+@@ -141,10 +141,9 @@ static linear_conf_t *linear_conf(mddev_t *mddev,
 int raid_disks)
- 		goto out;
+ 		    mddev->queue->max_sectors > (PAGE_SIZE>>9))
+ 			blk_queue_max_sectors(mddev->queue, PAGE_SIZE>>9);
+
+-		disk->num_sectors =3D rdev->sectors;
+ 		conf->array_sectors +=3D rdev->sectors;
+-
+ 		cnt++;
++
  	}
-
--	min_sectors =3D conf->array_sectors;
--	sector_div(min_sectors, PAGE_SIZE/sizeof(struct dev_info *));
--	if (min_sectors =3D=3D 0)
--		min_sectors =3D 1;
--
--	/* min_sectors is the minimum spacing that will fit the hash
--	 * table in one PAGE.  This may be much smaller than needed.
--	 * We find the smallest non-terminal set of consecutive devices
--	 * that is larger than min_sectors and use the size of that as
--	 * the actual spacing
--	 */
--	conf->spacing =3D conf->array_sectors;
--	for (i=3D0; i < cnt-1 ; i++) {
--		sector_t tmp =3D 0;
--		int j;
--		for (j =3D i; j < cnt - 1 && tmp < min_sectors; j++)
--			tmp +=3D conf->disks[j].num_sectors;
--		if (tmp >=3D min_sectors && tmp < conf->spacing)
--			conf->spacing =3D tmp;
--	}
--
--	/* spacing may be too large for sector_div to work with,
--	 * so we might need to pre-shift
--	 */
--	conf->sector_shift =3D 0;
--	if (sizeof(sector_t) > sizeof(u32)) {
--		sector_t space =3D conf->spacing;
--		while (space > (sector_t)(~(u32)0)) {
--			space >>=3D 1;
--			conf->sector_shift++;
--		}
--	}
--	/*
--	 * This code was restructured to work around a gcc-2.95.3 internal
--	 * compiler error.  Alter it with care.
--	 */
--	{
--		sector_t sz;
--		unsigned round;
--		unsigned long base;
--
--		sz =3D conf->array_sectors >> conf->sector_shift;
--		sz +=3D 1; /* force round-up */
--		base =3D conf->spacing >> conf->sector_shift;
--		round =3D sector_div(sz, base);
--		nb_zone =3D sz + (round ? 1 : 0);
--	}
--	BUG_ON(nb_zone > PAGE_SIZE / sizeof(struct dev_info *));
--
--	conf->hash_table =3D kmalloc (sizeof (struct dev_info *) * nb_zone,
--					GFP_KERNEL);
--	if (!conf->hash_table)
--		goto out;
-
+ 	if (cnt !=3D raid_disks) {
+ 		printk("linear: not enough drives present. Aborting!\n");
+@@ -155,11 +154,12 @@ static linear_conf_t *linear_conf(mddev_t
+*mddev, int raid_disks)
  	/*
--	 * Here we generate the linear hash table
--	 * First calculate the device offsets.
-+	 * Here we calculate the device offsets.
+ 	 * Here we calculate the device offsets.
  	 */
- 	conf->disks[0].start_sector =3D 0;
+-	conf->disks[0].start_sector =3D 0;
++	conf->disks[0].end_sector =3D conf->disks[0].rdev->sectors;
++
  	for (i =3D 1; i < raid_disks; i++)
-@@ -223,29 +161,6 @@ static linear_conf_t *linear_conf(mddev_t *mddev,
-int raid_disks)
- 			conf->disks[i-1].start_sector +
- 			conf->disks[i-1].num_sectors;
+-		conf->disks[i].start_sector =3D
+-			conf->disks[i-1].start_sector +
+-			conf->disks[i-1].num_sectors;
++		conf->disks[i].end_sector =3D
++			conf->disks[i-1].end_sector +
++			conf->disks[i].rdev->sectors;
 
--	table =3D conf->hash_table;
--	i =3D 0;
--	for (curr_sector =3D 0;
--	     curr_sector < conf->array_sectors;
--	     curr_sector +=3D conf->spacing) {
--
--		while (i < raid_disks-1 &&
--		       curr_sector >=3D conf->disks[i+1].start_sector)
--			i++;
--
--		*table ++ =3D conf->disks + i;
--	}
--
--	if (conf->sector_shift) {
--		conf->spacing >>=3D conf->sector_shift;
--		/* round spacing up so that when we divide by it,
--		 * we err on the side of "too-low", which is safest.
--		 */
--		conf->spacing++;
--	}
--
--	BUG_ON(table - conf->hash_table > nb_zone);
--
  	return conf;
 
- out:
-@@ -309,7 +224,6 @@ static int linear_stop (mddev_t *mddev)
- 	blk_sync_queue(mddev->queue); /* the unplug fn references 'conf'*/
- 	do {
- 		linear_conf_t *t =3D conf->prev;
--		kfree(conf->hash_table);
- 		kfree(conf);
- 		conf =3D t;
- 	} while (conf);
+@@ -236,6 +236,7 @@ static int linear_make_request (struct
+request_queue *q, struct bio *bio)
+ 	const int rw =3D bio_data_dir(bio);
+ 	mddev_t *mddev =3D q->queuedata;
+ 	dev_info_t *tmp_dev;
++	sector_t start_sector;
+ 	int cpu;
+
+ 	if (unlikely(bio_barrier(bio))) {
+@@ -250,32 +251,30 @@ static int linear_make_request (struct
+request_queue *q, struct bio *bio)
+ 	part_stat_unlock();
+
+ 	tmp_dev =3D which_dev(mddev, bio->bi_sector);
+-
+-	if (unlikely(bio->bi_sector >=3D (tmp_dev->num_sectors +
+-					tmp_dev->start_sector)
+-		     || (bio->bi_sector <
+-			 tmp_dev->start_sector))) {
++    start_sector =3D tmp_dev->end_sector - tmp_dev->rdev->sectors;
++
++	if (unlikely(bio->bi_sector >=3D (tmp_dev->end_sector)
++		     || (bio->bi_sector < start_sector ))) {
+ 		char b[BDEVNAME_SIZE];
+
+ 		printk("linear_make_request: Sector %llu out of bounds on "
+ 			"dev %s: %llu sectors, offset %llu\n",
+ 			(unsigned long long)bio->bi_sector,
+ 			bdevname(tmp_dev->rdev->bdev, b),
+-			(unsigned long long)tmp_dev->num_sectors,
+-			(unsigned long long)tmp_dev->start_sector);
++			(unsigned long long)tmp_dev->rdev->sectors,
++			(unsigned long long)start_sector);
+ 		bio_io_error(bio);
+ 		return 0;
+ 	}
+ 	if (unlikely(bio->bi_sector + (bio->bi_size >> 9) >
+-		     tmp_dev->start_sector + tmp_dev->num_sectors)) {
++		     tmp_dev->end_sector)) {
+ 		/* This bio crosses a device boundary, so we have to
+ 		 * split it.
+ 		 */
+ 		struct bio_pair *bp;
+
+ 		bp =3D bio_split(bio,
+-			       tmp_dev->start_sector + tmp_dev->num_sectors
+-			       - bio->bi_sector);
++			       tmp_dev->end_sector - bio->bi_sector);
+
+ 		if (linear_make_request(q, &bp->bio1))
+ 			generic_make_request(&bp->bio1);
+@@ -286,7 +285,7 @@ static int linear_make_request (struct
+request_queue *q, struct bio *bio)
+ 	}
+ 	=09
+ 	bio->bi_bdev =3D tmp_dev->rdev->bdev;
+-	bio->bi_sector =3D bio->bi_sector - tmp_dev->start_sector
++	bio->bi_sector =3D bio->bi_sector - start_sector
+ 		+ tmp_dev->rdev->data_offset;
+
+ 	return 1;
 diff --git a/drivers/md/linear.h b/drivers/md/linear.h
-index bf81795..de9ad5b 100644
+index de9ad5b..843e955 100644
 --- a/drivers/md/linear.h
 +++ b/drivers/md/linear.h
-@@ -12,12 +12,7 @@ typedef struct dev_info dev_info_t;
- struct linear_private_data
- {
- 	struct linear_private_data *prev;	/* earlier version */
--	dev_info_t		**hash_table;
--	sector_t		spacing;
- 	sector_t		array_sectors;
--	int			sector_shift;	/* shift before dividing
--						 * by spacing
--						 */
- 	dev_info_t		disks[0];
+@@ -3,8 +3,7 @@
+
+ struct dev_info {
+ 	mdk_rdev_t	*rdev;
+-	sector_t	num_sectors;
+-	sector_t	start_sector;
++	sector_t	end_sector;
  };
 
+ typedef struct dev_info dev_info_t;
 
 --=20
 Regards,
