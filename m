@@ -1,159 +1,183 @@
 From: SandeepKsinha <sandeepksinha@gmail.com>
-Subject: Re: [PATCH] md: Enhancements and clean to linear RAID
-Date: Tue, 19 May 2009 16:16:01 +0530
-Message-ID: <37d33d830905190346g4147a114o5f4a53bf64c1ebac@mail.gmail.com>
-References: <37d33d830905182323x22eec1c8l2a7471668c1a02b3@mail.gmail.com>
-	 <9a138833b29b54e5d6c1eaa188f27399.squirrel@neil.brown.name>
-	 <37d33d830905190031u5172af46kccb720343e359d99@mail.gmail.com>
+Subject: PATCH [01/03] md: Removal of hash table in linear raid
+Date: Tue, 19 May 2009 16:19:16 +0530
+Message-ID: <37d33d830905190349h2b4a9364l768e50f1dad6e421@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <37d33d830905190031u5172af46kccb720343e359d99@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
+To: Neil Brown <neilb@suse.de>
 Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Neil,
+Hi,
 
-I have made all the required changes and have tested the changes.
-It works fine.
+This patch basically removes the use of hash tables and the related
+data structures.
+Code cleanup.
 
-Thanks for enlightening me, the changes really optimized the code furth=
-er.
+Author: Sandeep K Sinha <sandeepksinha@gmail.com>
+Date:   Tue May 19 13:14:00 2009 +0530
 
-The patches will be followed by this mail.
+    Getting rid of sector_div and hash table for linear raid.
+    Also, using linear search in which_dev.
 
-On Tue, May 19, 2009 at 1:01 PM, SandeepKsinha <sandeepksinha@gmail.com=
-> wrote:
-> Thanks Neil,
->
->
-> On Tue, May 19, 2009 at 12:55 PM, NeilBrown <neilb@suse.de> wrote:
->> On Tue, May 19, 2009 4:23 pm, SandeepKsinha wrote:
->>> Hi Neil,
->>>
->>> I have made the desired changes and have tested the changes as well=
-=2E
->>> As expected the performance gain with number of devices ( > 20 ) is
->>> quite visible.
->>
->> How did you measure the performance gain and what were your
->> results?
->>
->
-> I created arrays with 20 devices and performed random I/O it.
-> The results with linear search were slower as compared to binary.
->
->>> The code also looks simpler as compared to what it earlier was.
->>>
->>> I have created the following patches for the changes:
->>>
->>> PATCH [01/03] md: Removal of num_sectors from dev_info in linear ra=
-id
->>>
->>> This patch removes the num_sectors from dev_info and makes use of t=
-he
->>> rdev->sectors for
->>> all further usage.
->>
->> Could I as you to redo this one a little differently?
->> I want to keep the linear search very tight, and you have just added
->> a pointer de-reference to it.
->>
->> If you could replace start_sector by end_sector, we wouldn't need th=
-at
->> de-reference or the addition.
->>
->>
-> I would make the required changes.
->
->>>
->>> PATCH[02/03] md: Getting rid of sector_div and hash table in linear=
- raid
->>>
->>> Removal of all the code pertaining hast table and other related dat=
-a
->>> structures.
->>> This also makes the code really really simple.
->>> The searching being made linear for the time being to test the patc=
-h.
->>>
->>> PATCH[03/03] md: Replacing linear with a binary search
->>>
->>> This patch replaces the linear search in which_dev with binary sear=
-ch.
->>
->> Two things wrong with you binary search.
->> 1/ the while() condition is "hi >=3D lo". =A0That will always be tru=
-e, so it
->> =A0would be better to make that explicit. =A0i.e. "while(1)".
->> =A0However the while loop of a binary search should be
->> =A0 while (hi > lo)
->>
->> 2/ You have 3 comparisons against 'sector' inside the loop. =A0There=
- should
->> =A0 only be one. =A0We are aiming for speed remember :-)
->>
->> =A0 while (hi > lo) {
->> =A0 =A0 =A0 mid =3D (hi + lo + 1) / 2;
->> =A0 =A0 =A0 dev =3D conf->disks + mid;
->>
->> =A0 =A0 =A0 if (sector >=3D dev->start_sector)
->> =A0 =A0 =A0 =A0 =A0 =A0lo =3D mid;
->> =A0 =A0 =A0 else
->> =A0 =A0 =A0 =A0 =A0 =A0hi =3D mid - 1;
->> =A0 =A0}
->> =A0 =A0return dev;
->>
->> =A0 =A0With that formulation, you don't even need to replace
->> =A0 =A0sector_start by sector_end.. However doing so would make othe=
-r
->> =A0 =A0code simpler, so please do proceed with replacing sector_star=
-t by
->> =A0 =A0sector_end.
->> =A0 =A0Then the binary search (with a fix because dev can be uniniti=
-alised),
->> =A0 =A0becomes:
->>
->> =A0 =A0while (hi > lo) {
->> =A0 =A0 =A0 mid =3D (hi + lo) / 2;
->>
->> =A0 =A0 =A0 if (sector < conf->disks[mid].end_sector)
->> =A0 =A0 =A0 =A0 =A0 =A0hi =3D mid;
->> =A0 =A0 =A0 else
->> =A0 =A0 =A0 =A0 =A0 =A0lo =3D mid + 1;
->> =A0 =A0}
->> =A0 =A0return conf->disks + lo;
->>
->
-> I will make this change too.
->
->
-> Thanks.
->
->> NeilBrown
->>
->>
->>
->>
->
->
->
-> --
-> Regards,
-> Sandeep.
->
->
->
->
->
->
-> =93To learn is to change. Education is a process that changes the lea=
-rner.=94
->
+diff --git a/drivers/md/linear.c b/drivers/md/linear.c
+index 7a36e38..f7f748d 100644
+--- a/drivers/md/linear.c
++++ b/drivers/md/linear.c
+@@ -29,13 +29,8 @@ static inline dev_info_t *which_dev(mddev_t *mddev,
+sector_t sector)
+ {
+ 	dev_info_t *hash;
+ 	linear_conf_t *conf =3D mddev_to_conf(mddev);
+-	sector_t idx =3D sector >> conf->sector_shift;
 
+-	/*
+-	 * sector_div(a,b) returns the remainer and sets a to a/b
+-	 */
+-	(void)sector_div(idx, conf->spacing);
+-	hash =3D conf->hash_table[idx];
++	hash =3D conf->disks;
+
+ 	while (sector >=3D hash->num_sectors + hash->start_sector)
+ 		hash++;
+@@ -114,11 +109,8 @@ static sector_t linear_size(mddev_t *mddev,
+sector_t sectors, int raid_disks)
+ static linear_conf_t *linear_conf(mddev_t *mddev, int raid_disks)
+ {
+ 	linear_conf_t *conf;
+-	dev_info_t **table;
+ 	mdk_rdev_t *rdev;
+-	int i, nb_zone, cnt;
+-	sector_t min_sectors;
+-	sector_t curr_sector;
++	int i, cnt;
+
+ 	conf =3D kzalloc (sizeof (*conf) + raid_disks*sizeof(dev_info_t),
+ 			GFP_KERNEL);
+@@ -159,63 +151,9 @@ static linear_conf_t *linear_conf(mddev_t *mddev,
+int raid_disks)
+ 		goto out;
+ 	}
+
+-	min_sectors =3D conf->array_sectors;
+-	sector_div(min_sectors, PAGE_SIZE/sizeof(struct dev_info *));
+-	if (min_sectors =3D=3D 0)
+-		min_sectors =3D 1;
+-
+-	/* min_sectors is the minimum spacing that will fit the hash
+-	 * table in one PAGE.  This may be much smaller than needed.
+-	 * We find the smallest non-terminal set of consecutive devices
+-	 * that is larger than min_sectors and use the size of that as
+-	 * the actual spacing
+-	 */
+-	conf->spacing =3D conf->array_sectors;
+-	for (i=3D0; i < cnt-1 ; i++) {
+-		sector_t tmp =3D 0;
+-		int j;
+-		for (j =3D i; j < cnt - 1 && tmp < min_sectors; j++)
+-			tmp +=3D conf->disks[j].num_sectors;
+-		if (tmp >=3D min_sectors && tmp < conf->spacing)
+-			conf->spacing =3D tmp;
+-	}
+-
+-	/* spacing may be too large for sector_div to work with,
+-	 * so we might need to pre-shift
+-	 */
+-	conf->sector_shift =3D 0;
+-	if (sizeof(sector_t) > sizeof(u32)) {
+-		sector_t space =3D conf->spacing;
+-		while (space > (sector_t)(~(u32)0)) {
+-			space >>=3D 1;
+-			conf->sector_shift++;
+-		}
+-	}
+-	/*
+-	 * This code was restructured to work around a gcc-2.95.3 internal
+-	 * compiler error.  Alter it with care.
+-	 */
+-	{
+-		sector_t sz;
+-		unsigned round;
+-		unsigned long base;
+-
+-		sz =3D conf->array_sectors >> conf->sector_shift;
+-		sz +=3D 1; /* force round-up */
+-		base =3D conf->spacing >> conf->sector_shift;
+-		round =3D sector_div(sz, base);
+-		nb_zone =3D sz + (round ? 1 : 0);
+-	}
+-	BUG_ON(nb_zone > PAGE_SIZE / sizeof(struct dev_info *));
+-
+-	conf->hash_table =3D kmalloc (sizeof (struct dev_info *) * nb_zone,
+-					GFP_KERNEL);
+-	if (!conf->hash_table)
+-		goto out;
+
+ 	/*
+-	 * Here we generate the linear hash table
+-	 * First calculate the device offsets.
++	 * Here we calculate the device offsets.
+ 	 */
+ 	conf->disks[0].start_sector =3D 0;
+ 	for (i =3D 1; i < raid_disks; i++)
+@@ -223,29 +161,6 @@ static linear_conf_t *linear_conf(mddev_t *mddev,
+int raid_disks)
+ 			conf->disks[i-1].start_sector +
+ 			conf->disks[i-1].num_sectors;
+
+-	table =3D conf->hash_table;
+-	i =3D 0;
+-	for (curr_sector =3D 0;
+-	     curr_sector < conf->array_sectors;
+-	     curr_sector +=3D conf->spacing) {
+-
+-		while (i < raid_disks-1 &&
+-		       curr_sector >=3D conf->disks[i+1].start_sector)
+-			i++;
+-
+-		*table ++ =3D conf->disks + i;
+-	}
+-
+-	if (conf->sector_shift) {
+-		conf->spacing >>=3D conf->sector_shift;
+-		/* round spacing up so that when we divide by it,
+-		 * we err on the side of "too-low", which is safest.
+-		 */
+-		conf->spacing++;
+-	}
+-
+-	BUG_ON(table - conf->hash_table > nb_zone);
+-
+ 	return conf;
+
+ out:
+@@ -309,7 +224,6 @@ static int linear_stop (mddev_t *mddev)
+ 	blk_sync_queue(mddev->queue); /* the unplug fn references 'conf'*/
+ 	do {
+ 		linear_conf_t *t =3D conf->prev;
+-		kfree(conf->hash_table);
+ 		kfree(conf);
+ 		conf =3D t;
+ 	} while (conf);
+diff --git a/drivers/md/linear.h b/drivers/md/linear.h
+index bf81795..de9ad5b 100644
+--- a/drivers/md/linear.h
++++ b/drivers/md/linear.h
+@@ -12,12 +12,7 @@ typedef struct dev_info dev_info_t;
+ struct linear_private_data
+ {
+ 	struct linear_private_data *prev;	/* earlier version */
+-	dev_info_t		**hash_table;
+-	sector_t		spacing;
+ 	sector_t		array_sectors;
+-	int			sector_shift;	/* shift before dividing
+-						 * by spacing
+-						 */
+ 	dev_info_t		disks[0];
+ };
 
 
 --=20
