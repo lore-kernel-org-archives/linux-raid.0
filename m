@@ -1,80 +1,75 @@
-From: Raz <raziebe@gmail.com>
-Subject: Re: Subject: [001/002 ] raid0 reshape
-Date: Wed, 20 May 2009 01:27:46 +0300
-Message-ID: <5d96567b0905191527m7ca74300mafb108ed14dc62c3@mail.gmail.com>
-References: <1241300764.5607.36.camel@raz> <e9c3a7c20905191109s92db696ue31a20b0816a4aed@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: linear raid : mddev not protected in linear_add
+Date: Wed, 20 May 2009 08:58:58 +1000
+Message-ID: <18963.14770.706341.139054@notabene.brown>
+References: <37d33d830905190523l1ae7536al83ed1255cba3050d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e9c3a7c20905191109s92db696ue31a20b0816a4aed@mail.gmail.com>
+In-Reply-To: message from SandeepKsinha on Tuesday May 19
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: raz ben yehuda <raziebe@013.net>, neilb@suse.de, linux-raid@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, yaronp@bitband.com, Ofer Kruzel <ofer@bitband.com>
+To: SandeepKsinha <sandeepksinha@gmail.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, May 19, 2009 at 9:09 PM, Dan Williams <dan.j.williams@intel.com=
-> wrote:
-> On Sat, May 2, 2009 at 2:46 PM, raz ben yehuda <raziebe@013.net> wrot=
-e:
->> Neil Hello
->> The bellow is the raid0 grow code.I have decided to fix raid0 and no=
-t
->> perform the transformation raid0-raid4-raid0 due to two reasons:
->> 1. raid0 zones. this patch support any zone transformations.
->> 2. Undesired dependency of raid0 over raid4 re-striping code.
->
-> Hi Raz,
->
-> Can you explain a bit more about why the raid4 approach is
-> undesirable? =A0I think making reshape only available to raid0 arrays
-> where all the members are the same size is a reasonable constraint.
+On Tuesday May 19, sandeepksinha@gmail.com wrote:
+> Hi,
+> 
+> In linear_add( ), the mddev is gets changed.
+> Don't we require to lock/unlock around mddev inorder to avoid races?
+> 
 
-1. Because this is the general case. what will you tell a user with two=
- zones ?
-2. In my next generation systems, raid0 is on top of 12 raid5s.
-    A user may choose to expand one of these raid5s separately.
-3. The $/Giga ratio will not decline while it should.
-    Storage lasts years, disks  change sizes and formation. Segate
-just announced a 2TB disk.
-    If you start with 4 1TB disks, and in for 4 years you expand this
-array 4 times, each time
-    with a 2TB  disk, you end up with 8 TB  out of 12 TB.  You lose
-30% storage. Tell that to your
-    marketing and tell me when you do that, I want to see :)
-4. Number of raid components .
-     To reach Size X , you need more components with equal size.Having
-multiple zones lets you increase
-    the raid size without being subordinate to an ever increasing
-number of disks. you just mirror one of the   disks to a bigger disk,
-put the new disk back in the array, and reshape with the extra space
-of the new disk.
+A good question.
 
-Note !
-I do not know what is your code base, but if you still have the hash
-spacing, you might
-have two zones even if the underlying components are the same in size.
-So, in this case your decision if to support or not support the raid0
-reshape is not just nb_zone > 1.
+To be able to answer it, we must also ask "what races do we need to
+avoid".  Did you have some possible races in mind?
 
-Other than that, if you do this work, it be will nice to have my back
-covered  sooner than expected.(as long as you will NOT reach for your
-revolver.... :) )
+In linear add there are 3 lines which are in an important order:
 
-> We then get the nice benefit of reusing the raid5 reshape
-> infrastructure. =A0In other words I am not convinced that the benefit=
-s
-> of reimplementing reshape in raid0 outweigh the costs.
-> Thanks,
-> Dan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	mddev->private = newconf;
+	mddev->raid_disks++;
+	....
+	set_capacity(mddev->gendisk, mddev->array_sectors);
+
+Until raid_disks in incremented, there will be no attempt to access
+the extra information in ->private.
+Until the set_capacity, there will be no attempt to send IO beyond the
+reach of raid_disks.
+So except that it might be wise to insert some barrier()s, it looks
+OK....  or it did.
+
+I just noticed that the new 'which_dev' checks mddev->raid_disks,
+where as the old which_dev did not.
+
+So if:
+  which_dev takes a copy of mddev->private,
+                               linear_add changes mddev->private
+                               linear_add changes raid_disks
+  which_dev takes a copy of mddev->raid_disks
+
+then which_dev will have a raid_disks which points beyond the end of
+conf->disks.  If the target sector were beyond the end of the original
+array, we could fall off the end of that array which would be bad.
+However as the sector number will have been tested again the size of
+the array (in bio_check_eod from generic_make_request), that cannot
+happen.  Unless which_dev was called from linear_mergeable_bvec...
+
+I suspect in light of this it would be best to:
+  1/ insert a barrier() between setting ->private and setting
+      ->raid_disks
+  2/ in which_dev, read ->raid_disks before ->private, and put a
+      barrier in between.
+
+We could possibly use rcu_dereference and rcu_assign_pointer, and
+maybe even make use of rcu to free the old conf structure promptly
+rather than keeping it around until the array is stopped.
+That would require careful placement of rcu_read_{,un}lock around
+access to ->private.
+
+Probably best to just put barriers in for now, and leave the rcu
+stuff.
+
+NeilBrown
+
+
