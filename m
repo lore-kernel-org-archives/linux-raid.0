@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2 06/11] async_tx: add sum check flags
-Date: Mon, 18 May 2009 17:59:56 -0700
-Message-ID: <20090519005956.4104.27783.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH v2 07/11] async_tx: kill needless module_{init|exit}
+Date: Mon, 18 May 2009 18:00:01 -0700
+Message-ID: <20090519010001.4104.24270.stgit@dwillia2-linux.ch.intel.com>
 References: <20090519005647.4104.81119.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,182 +13,105 @@ To: neilb@suse.de, linux-raid@vger.kernel.org
 Cc: maan@systemlinux.org, linux-kernel@vger.kernel.org, yur@emcraft.com, hpa@zytor.com
 List-Id: linux-raid.ids
 
-Replace the flat zero_sum_result with a collection of flags to contain
-the P (xor) zero-sum result, and the soon to be utilized Q (raid6 reed
-solomon syndrome) zero-sum result.  Use the SUM_CHECK_ namespace instead
-of DMA_ since these flags will be used on non-dma-zero-sum enabled
-platforms.
+If module_init and module_exit are nops then neither need to be defined.
+
+[ Impact: pure cleanup ]
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- arch/arm/include/asm/hardware/iop3xx-adma.h |    5 +++--
- arch/arm/mach-iop13xx/include/mach/adma.h   |   12 +++++++-----
- crypto/async_tx/async_xor.c                 |    4 ++--
- drivers/md/raid5.c                          |    2 +-
- drivers/md/raid5.h                          |    5 +++--
- include/linux/async_tx.h                    |    2 +-
- include/linux/dmaengine.h                   |   21 ++++++++++++++++++++-
- 7 files changed, 37 insertions(+), 14 deletions(-)
+ crypto/async_tx/async_memcpy.c |   13 -------------
+ crypto/async_tx/async_memset.c |   13 -------------
+ crypto/async_tx/async_tx.c     |   17 +++--------------
+ 3 files changed, 3 insertions(+), 40 deletions(-)
 
-diff --git a/arch/arm/include/asm/hardware/iop3xx-adma.h b/arch/arm/include/asm/hardware/iop3xx-adma.h
-index 83e6ba3..26eefea 100644
---- a/arch/arm/include/asm/hardware/iop3xx-adma.h
-+++ b/arch/arm/include/asm/hardware/iop3xx-adma.h
-@@ -756,13 +756,14 @@ static inline void iop_desc_set_block_fill_val(struct iop_adma_desc_slot *desc,
- 	hw_desc->src[0] = val;
+diff --git a/crypto/async_tx/async_memcpy.c b/crypto/async_tx/async_memcpy.c
+index c9342ae..3ec118d 100644
+--- a/crypto/async_tx/async_memcpy.c
++++ b/crypto/async_tx/async_memcpy.c
+@@ -87,19 +87,6 @@ async_memcpy(struct page *dest, struct page *src, unsigned int dest_offset,
+ }
+ EXPORT_SYMBOL_GPL(async_memcpy);
+ 
+-static int __init async_memcpy_init(void)
+-{
+-	return 0;
+-}
+-
+-static void __exit async_memcpy_exit(void)
+-{
+-	do { } while (0);
+-}
+-
+-module_init(async_memcpy_init);
+-module_exit(async_memcpy_exit);
+-
+ MODULE_AUTHOR("Intel Corporation");
+ MODULE_DESCRIPTION("asynchronous memcpy api");
+ MODULE_LICENSE("GPL");
+diff --git a/crypto/async_tx/async_memset.c b/crypto/async_tx/async_memset.c
+index e347dbe..ae63140 100644
+--- a/crypto/async_tx/async_memset.c
++++ b/crypto/async_tx/async_memset.c
+@@ -78,19 +78,6 @@ async_memset(struct page *dest, int val, unsigned int offset, size_t len,
+ }
+ EXPORT_SYMBOL_GPL(async_memset);
+ 
+-static int __init async_memset_init(void)
+-{
+-	return 0;
+-}
+-
+-static void __exit async_memset_exit(void)
+-{
+-	do { } while (0);
+-}
+-
+-module_init(async_memset_init);
+-module_exit(async_memset_exit);
+-
+ MODULE_AUTHOR("Intel Corporation");
+ MODULE_DESCRIPTION("asynchronous memset api");
+ MODULE_LICENSE("GPL");
+diff --git a/crypto/async_tx/async_tx.c b/crypto/async_tx/async_tx.c
+index 85e1b44..71f708f 100644
+--- a/crypto/async_tx/async_tx.c
++++ b/crypto/async_tx/async_tx.c
+@@ -42,6 +42,9 @@ static void __exit async_tx_exit(void)
+ 	async_dmaengine_put();
  }
  
--static inline int iop_desc_get_zero_result(struct iop_adma_desc_slot *desc)
-+static inline enum sum_check_flags
-+iop_desc_get_zero_result(struct iop_adma_desc_slot *desc)
- {
- 	struct iop3xx_desc_aau *hw_desc = desc->hw_desc;
- 	struct iop3xx_aau_desc_ctrl desc_ctrl = hw_desc->desc_ctrl_field;
- 
- 	iop_paranoia(!(desc_ctrl.tx_complete && desc_ctrl.zero_result_en));
--	return desc_ctrl.zero_result_err;
-+	return desc_ctrl.zero_result_err << SUM_CHECK_P;
- }
- 
- static inline void iop_chan_append(struct iop_adma_chan *chan)
-diff --git a/arch/arm/mach-iop13xx/include/mach/adma.h b/arch/arm/mach-iop13xx/include/mach/adma.h
-index 5722e86..1cd31df 100644
---- a/arch/arm/mach-iop13xx/include/mach/adma.h
-+++ b/arch/arm/mach-iop13xx/include/mach/adma.h
-@@ -428,18 +428,20 @@ static inline void iop_desc_set_block_fill_val(struct iop_adma_desc_slot *desc,
- 	hw_desc->block_fill_data = val;
- }
- 
--static inline int iop_desc_get_zero_result(struct iop_adma_desc_slot *desc)
-+static inline enum sum_check_flags
-+iop_desc_get_zero_result(struct iop_adma_desc_slot *desc)
- {
- 	struct iop13xx_adma_desc_hw *hw_desc = desc->hw_desc;
- 	struct iop13xx_adma_desc_ctrl desc_ctrl = hw_desc->desc_ctrl_field;
- 	struct iop13xx_adma_byte_count byte_count = hw_desc->byte_count_field;
-+	enum sum_check_flags flags;
- 
- 	BUG_ON(!(byte_count.tx_complete && desc_ctrl.zero_result));
- 
--	if (desc_ctrl.pq_xfer_en)
--		return byte_count.zero_result_err_q;
--	else
--		return byte_count.zero_result_err;
-+	flags = byte_count.zero_result_err_q << SUM_CHECK_Q;
-+	flags |= byte_count.zero_result_err << SUM_CHECK_P;
++module_init(async_tx_init);
++module_exit(async_tx_exit);
 +
-+	return flags;
- }
- 
- static inline void iop_chan_append(struct iop_adma_chan *chan)
-diff --git a/crypto/async_tx/async_xor.c b/crypto/async_tx/async_xor.c
-index 3caecdd..3bfbbc0 100644
---- a/crypto/async_tx/async_xor.c
-+++ b/crypto/async_tx/async_xor.c
-@@ -234,7 +234,7 @@ static int page_is_zero(struct page *p, unsigned int offset, size_t len)
-  */
- struct dma_async_tx_descriptor *
- async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
--	      int src_cnt, size_t len, u32 *result,
-+	      int src_cnt, size_t len, enum sum_check_flags *result,
- 	      struct async_submit_ctl *submit)
- {
- 	struct dma_chan *chan = async_tx_find_channel(submit, DMA_XOR_VAL,
-@@ -291,7 +291,7 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
- 
- 		async_tx_quiesce(&tx);
- 
--		*result = page_is_zero(dest, offset, len) ? 0 : 1;
-+		*result = !page_is_zero(dest, offset, len) << SUM_CHECK_P;
- 
- 		async_tx_sync_epilog(submit);
- 		submit->flags = flags_orig;
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 0e456a6..a39b14a 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -2569,7 +2569,7 @@ static void handle_parity_checks5(raid5_conf_t *conf, struct stripe_head *sh,
- 		 * we are done.  Otherwise update the mismatch count and repair
- 		 * parity if !MD_RECOVERY_CHECK
- 		 */
--		if (sh->ops.zero_sum_result == 0)
-+		if ((sh->ops.zero_sum_result & SUM_CHECK_P_RESULT) == 0)
- 			/* parity is correct (on disc,
- 			 * not in buffer any more)
- 			 */
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 6ab0ccd..f580cb9 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -2,6 +2,7 @@
- #define _RAID5_H
- 
- #include <linux/raid/xor.h>
-+#include <linux/dmaengine.h>
- 
- /*
-  *
-@@ -220,8 +221,8 @@ struct stripe_head {
- 	 * @target - STRIPE_OP_COMPUTE_BLK target
- 	 */
- 	struct stripe_operations {
--		int		   target;
--		u32		   zero_sum_result;
-+		int		     target;
-+		enum sum_check_flags zero_sum_result;
- 	} ops;
- 	struct r5dev {
- 		struct bio	req;
-diff --git a/include/linux/async_tx.h b/include/linux/async_tx.h
-index 00cfb63..3d21a25 100644
---- a/include/linux/async_tx.h
-+++ b/include/linux/async_tx.h
-@@ -148,7 +148,7 @@ async_xor(struct page *dest, struct page **src_list, unsigned int offset,
- 
- struct dma_async_tx_descriptor *
- async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
--	      int src_cnt, size_t len, u32 *result,
-+	      int src_cnt, size_t len, enum sum_check_flags *result,
- 	      struct async_submit_ctl *submit);
- 
- struct dma_async_tx_descriptor *
-diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
-index 6768727..02447af 100644
---- a/include/linux/dmaengine.h
-+++ b/include/linux/dmaengine.h
-@@ -87,6 +87,25 @@ enum dma_ctrl_flags {
- };
- 
  /**
-+ * enum sum_check_bits - bit position of pq_check_flags
-+ */
-+enum sum_check_bits {
-+	SUM_CHECK_P = 0,
-+	SUM_CHECK_Q = 1,
-+};
-+
-+/**
-+ * enum pq_check_flags - result of async_{xor,pq}_zero_sum operations
-+ * @SUM_CHECK_P_RESULT - 1 if xor zero sum error, 0 otherwise
-+ * @SUM_CHECK_Q_RESULT - 1 if reed-solomon zero sum error, 0 otherwise
-+ */
-+enum sum_check_flags {
-+	SUM_CHECK_P_RESULT = (1 << SUM_CHECK_P),
-+	SUM_CHECK_Q_RESULT = (1 << SUM_CHECK_Q),
-+};
-+
-+
-+/**
-  * dma_cap_mask_t - capabilities bitmap modeled after cpumask_t.
-  * See linux/cpumask.h
-  */
-@@ -245,7 +264,7 @@ struct dma_device {
- 		unsigned int src_cnt, size_t len, unsigned long flags);
- 	struct dma_async_tx_descriptor *(*device_prep_dma_xor_val)(
- 		struct dma_chan *chan, dma_addr_t *src,	unsigned int src_cnt,
--		size_t len, u32 *result, unsigned long flags);
-+		size_t len, enum sum_check_flags *result, unsigned long flags);
- 	struct dma_async_tx_descriptor *(*device_prep_dma_memset)(
- 		struct dma_chan *chan, dma_addr_t dest, int value, size_t len,
- 		unsigned long flags);
+  * __async_tx_find_channel - find a channel to carry out the operation or let
+  *	the transaction execute synchronously
+@@ -61,17 +64,6 @@ __async_tx_find_channel(struct async_submit_ctl *submit,
+ 	return async_dma_find_channel(tx_type);
+ }
+ EXPORT_SYMBOL_GPL(__async_tx_find_channel);
+-#else
+-static int __init async_tx_init(void)
+-{
+-	printk(KERN_INFO "async_tx: api initialized (sync-only)\n");
+-	return 0;
+-}
+-
+-static void __exit async_tx_exit(void)
+-{
+-	do { } while (0);
+-}
+ #endif
+ 
+ 
+@@ -293,9 +285,6 @@ void async_tx_quiesce(struct dma_async_tx_descriptor **tx)
+ }
+ EXPORT_SYMBOL_GPL(async_tx_quiesce);
+ 
+-module_init(async_tx_init);
+-module_exit(async_tx_exit);
+-
+ MODULE_AUTHOR("Intel Corporation");
+ MODULE_DESCRIPTION("Asynchronous Bulk Memory Transactions API");
+ MODULE_LICENSE("GPL");
 
