@@ -1,9 +1,8 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Subject [ md PATCH 4/6] : md to support page size chunks in the
-	case of raid 0
-Date: Tue, 19 May 2009 10:47:56 +1000
-Message-ID: <18962.444.630305.895248@notabene.brown>
-References: <1242687989.21201.16.camel@raz>
+Subject: Re: Subject : [ md PATCHE 5/6] : 1K *n chunks.
+Date: Tue, 19 May 2009 10:48:50 +1000
+Message-ID: <18962.498.101162.146118@notabene.brown>
+References: <1242688081.21201.19.camel@raz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -11,119 +10,32 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: message from raz ben yehuda on Tuesday May 19
 Sender: linux-raid-owner@vger.kernel.org
 To: raz ben yehuda <raziebe@gmail.com>
-Cc: linux raid <linux-raid@vger.kernel.org>, Andre Noll <maan@systemlinux.org>, ofer@bitband.com
+Cc: linux raid <linux-raid@vger.kernel.org>, yaronp@bitband.com
 List-Id: linux-raid.ids
 
 On Tuesday May 19, raziebe@gmail.com wrote:
-> md to support page size chunks in the case of raid 0
+> md to support 1K*n chunks only in the case of raid 0
 > Signed-off-by: raziebe@gmail.com
->  md.c |   28 +++++++++++++++++++++-------
->  1 file changed, 21 insertions(+), 7 deletions(-)
 > ---
 > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 279007a..aab183e 100644
+> index aab183e..75a3634 100644
 > --- a/drivers/md/md.c
 > +++ b/drivers/md/md.c
-> @@ -443,9 +443,13 @@ static inline sector_t calc_dev_sboffset(struct block_device *bdev)
->  static sector_t calc_num_sectors(mdk_rdev_t *rdev, unsigned chunk_size)
->  {
->  	sector_t num_sectors = rdev->sb_start;
-> +	if (chunk_size) {
-> +		sector_t chunk_sects = chunk_size>>9;
-> +		sector_t x = num_sectors;
-> +		sector_div(x, chunk_sects);
-> +		num_sectors = x*chunk_sects;
-> +	}
->  
-> -	if (chunk_size)
-> -		num_sectors &= ~((sector_t)chunk_size/512 - 1);
->  	return num_sectors;
->  }
-
-That's OK.... though you have removed the blank line separating the
-variable declarations from the code.  I like to keep that blank line
-there.
-And you have added a blank line before the "return", which I only
-mention because.....
-
->  
-> @@ -3518,11 +3522,11 @@ min_sync_store(mddev_t *mddev, const char *buf, size_t len)
->  
->  	/* Must be a multiple of chunk_size */
->  	if (mddev->chunk_size) {
-> -		if (min & (sector_t)((mddev->chunk_size>>9)-1))
-> +		unsigned long long temp = min;
-> +		if (sector_div(temp, (mddev->chunk_size>>9)))
->  			return -EINVAL;
->  	}
->  	mddev->resync_min = min;
-> -
->  	return len;
->  }
-
-You have removed the blank line before the return here ??? consistency
-is a good thing.
-
-And 'temp' should be 'sector_t'.  'sector_div' requires a 'sector_t'
-for the first argument.
-
-
->  
-> @@ -3555,7 +3559,8 @@ max_sync_store(mddev_t *mddev, const char *buf, size_t len)
->  
->  		/* Must be a multiple of chunk_size */
->  		if (mddev->chunk_size) {
-> -			if (max & (sector_t)((mddev->chunk_size>>9)-1))
-> +			unsigned long long temp = max;
-> +			if (sector_div(temp, (mddev->chunk_size>>9)))
->  				return -EINVAL;
-
-Again, temp must be sector_t.
-
->  		}
->  		mddev->resync_max = max;
-> @@ -3996,14 +4001,23 @@ static int do_md_run(mddev_t * mddev)
->  				chunk_size, MAX_CHUNK_SIZE);
+> @@ -4011,9 +4011,9 @@ static int do_md_run(mddev_t * mddev)
 >  			return -EINVAL;
 >  		}
-> +
 >  		/*
->  		 * chunk-size has to be a power of 2
->  		 */
-> -		if ( (1 << ffz(~chunk_size)) != chunk_size) {
-> +		if ((1 << ffz(~chunk_size)) != chunk_size &&
-> +			 mddev->level != 0) {
->  			printk(KERN_ERR "chunk_size of %d not valid\n", chunk_size);
+> -		* raid0 chunk size has to divide by a page
+> +		* raid0 chunk size has to divide by a 1K
+>  		*/
+> -		if (mddev->level == 0 && (chunk_size % PAGE_SIZE)) {
+> +		if (mddev->level == 0 && (chunk_size % 1024)) {
+>  			printk(KERN_ERR "chunk_size of %d not valid\n",
+>  				chunk_size);
 >  			return -EINVAL;
->  		}
+> 
 
-I wold really like to remove any knowledge about specific raid levels
-from the common (md.c) code and keep it all in the personality modules
-(is that a job for you Andre ??).
-So I definitely don't want to add a test for ->level here.
+Ah... 1K is the minimum now.  I cannot see why this is a separate
+patch, or why 1K is an appropriate limit.
 
-So I would like to see the tests for chunk_size removed do_md_run and
-included in each personalities ->run function.  This would be a series
-of patches that adds the checks in ->run where needed, then removes it
-from md.c.  Would you like to do that?
-
-> -
-> +		/*
-> +		* raid0 chunk size has to divide by a page
-> +		*/
-> +		if (mddev->level == 0 && (chunk_size % PAGE_SIZE)) {
-> +			printk(KERN_ERR "chunk_size of %d not valid\n",
-> +				chunk_size);
-> +			return -EINVAL;
-> +		}
-
-Why should the chunk_size be a multiple of PAGE_SIZE?
-I suspect it should be a multiple of hardsect_size for each component
-device (which, thanks to blk_queue_stack_limits, we can check by just
-checking the hardsect_size of the mddev device after all the calls to
-blk_queue_stack_limits in create_strip_zones, or in raid0_run.
-And again, these checks need to move to raid0.c
-
-
-Thanks,
 NeilBrown
