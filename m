@@ -1,74 +1,49 @@
-From: SandeepKsinha <sandeepksinha@gmail.com>
-Subject: PATCH[03/03] md: Binary search in linear raid
-Date: Tue, 19 May 2009 16:22:54 +0530
-Message-ID: <37d33d830905190352r5380ac16m166b621c13356bc1@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH] md: Enhancements and clean to linear RAID
+Date: Tue, 19 May 2009 21:38:29 +1000
+Message-ID: <18962.39477.173613.395401@notabene.brown>
+References: <37d33d830905182323x22eec1c8l2a7471668c1a02b3@mail.gmail.com>
+	<9a138833b29b54e5d6c1eaa188f27399.squirrel@neil.brown.name>
+	<37d33d830905190031u5172af46kccb720343e359d99@mail.gmail.com>
+	<37d33d830905190346g4147a114o5f4a53bf64c1ebac@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from SandeepKsinha on Tuesday May 19
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: SandeepKsinha <sandeepksinha@gmail.com>
 Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
-This patch replaces the linear search in which_dev to binary search.
+On Tuesday May 19, sandeepksinha@gmail.com wrote:
+> Hi Neil,
+> 
+> I have made all the required changes and have tested the changes.
+> It works fine.
+> 
+> Thanks for enlightening me, the changes really optimized the code further.
+> 
+> The patches will be followed by this mail.
 
-Author: Sandeep K Sinha <sandeepksinha@gmail.com>
-Date:   Tue May 19 16:14:15 2009 +0530
+Thanks.
+I have applied them all (with very minor cleanups) and pushed them to
+my for-next tree.
+They can be viewed here:
+    http://neil.brown.name/git?p=md;a=shortlog;h=refs/heads/for-next
 
-    Replaces the linear search to binary search in which_dev.
+I have taken the liberty of rewriting the introductory comments on the
+patches a little.  I hope you don't mind.
 
-diff --git a/drivers/md/linear.c b/drivers/md/linear.c
-index f7f6bb9..9ad6ec4 100644
---- a/drivers/md/linear.c
-+++ b/drivers/md/linear.c
-@@ -27,14 +27,26 @@
-  */
- static inline dev_info_t *which_dev(mddev_t *mddev, sector_t sector)
- {
--	dev_info_t *hash;
-+	int lo, mid, hi;
- 	linear_conf_t *conf =3D mddev_to_conf(mddev);
-+=09
-+	lo =3D 0;
-+	hi =3D mddev->raid_disks - 1;
+One important part of the patches that was missing was a
+"signed-off-by" line.
+Please read section 12 of Documentation/SubmittingPatches
+and then if you agree that the you an certify the Developer's
+Certificate of Origin on these patches, please write explicitly that I
+should add your Signed-off-by line to these patches.
 
--	hash =3D conf->disks;
-+	/*
-+	 * Binary Search
-+	 */
-+
-+	while (hi > lo) {
-+
-+		mid =3D (hi + lo) / 2;
-+		if (sector < conf->disks[mid].end_sector)
-+			hi =3D mid;
-+		else
-+			lo =3D mid + 1;
-+	}
+I have no doubt that the patches are suitably original, but the
+process requires that you explicitly tell me so.
 
--	while (sector >=3D hash->end_sector)
--		hash++;
--	return hash;
-+	return conf->disks + lo;
- }
-
- /**
-
---=20
-Regards,
-Sandeep.
-
-
-
-
-
- =09
-=93To learn is to change. Education is a process that changes the learn=
-er.=94
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+NeilBrown
