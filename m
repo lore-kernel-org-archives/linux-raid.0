@@ -1,73 +1,58 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: linear raid : mddev not protected in linear_add
-Date: Thu, 21 May 2009 08:35:50 +1000
-Message-ID: <18964.34246.728698.444419@notabene.brown>
-References: <37d33d830905190523l1ae7536al83ed1255cba3050d@mail.gmail.com>
-	<18963.14770.706341.139054@notabene.brown>
-	<37d33d830905200910u6066b668p968604477991ec5c@mail.gmail.com>
+From: Nix <nix@esperi.org.uk>
+Subject: How to un-degrade an array after a totally spurious failure?
+Date: Thu, 21 May 2009 00:10:47 +0100
+Message-ID: <87skiztloo.fsf@hades.wkstn.nix>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from SandeepKsinha on Wednesday May 20
 Sender: linux-raid-owner@vger.kernel.org
-To: SandeepKsinha <sandeepksinha@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday May 20, sandeepksinha@gmail.com wrote:
-> Hi Neil,
->=20
-> On Wed, May 20, 2009 at 4:28 AM, Neil Brown <neilb@suse.de> wrote:
-> > On Tuesday May 19, sandeepksinha@gmail.com wrote:
-> >> Hi,
-> >>
-> >> In linear_add( ), the mddev is gets changed.
-> >> Don't we require to lock/unlock around mddev inorder to avoid race=
-s?
-> >>
-> >
-> > A good question.
-> >
-> > To be able to answer it, we must also ask "what races do we need to
-> > avoid". =A0Did you have some possible races in mind?
-> >
->=20
-> I see mddev being referenced in md.c (md layer) for lot of operations=
-=2E
-> Actually for almost all operations we pass through it. i.e get array
-> info.
+So this just happened on one of my older machines:
 
-True.  The only field of mddev which linear_add changes, and which
-md.c looks at would be ->raid_disks.  Are there any time where it
-depends on the value in a way that a race could make dangerous.  I
-think not.
+sym0: SCSI parity error detected: SCR1=132 DBC=50000000 SBCL=0
+sd 0:0:0:0: [sda] ABORT operation started
+sd 0:0:0:0: ABORT operation timed-out.
+sd 0:0:0:0: [sda] ABORT operation started
+sd 0:0:0:0: ABORT operation timed-out.
+sd 0:0:2:0: [sdb] ABORT operation started
+sd 0:0:2:0: ABORT operation timed-out.
+sd 0:0:0:0: [sda] DEVICE RESET operation started
+sd 0:0:0:0: DEVICE RESET operation timed-out.
+sd 0:0:2:0: [sdb] DEVICE RESET operation started
+sd 0:0:2:0: DEVICE RESET operation timed-out.
+sd 0:0:0:0: [sda] BUS RESET operation started
+sym0: SCSI BUS reset detected.
+sym0: SCSI BUS has been reset.
+sd 0:0:0:0: BUS RESET operation complete.
+end_request: I/O error, dev sdb, sector 128591
+md: super_written gets error=-5, uptodate=0
+raid5: Disk failure on sdb6, disabling device.
+raid5: Operation continuing on 2 devices.
+RAID5 conf printout:
+ --- rd:3 wd:2
+ disk 0, o:1, dev:sda6
+ disk 1, o:0, dev:sdb6
+ disk 2, o:1, dev:sdd5
+RAID5 conf printout:
+ --- rd:3 wd:2
+ disk 0, o:1, dev:sda6
+ disk 2, o:1, dev:sdd5
 
-> > I suspect in light of this it would be best to:
-> > =A01/ insert a barrier() between setting ->private and setting
-> > =A0 =A0 =A0->raid_disks
-> > =A02/ in which_dev, read ->raid_disks before ->private, and put a
-> > =A0 =A0 =A0barrier in between.
-> >
->=20
-> Do you suggest implementing barrier functions for linear raid?
-> Can you elaborate on this a bit more please?
+This failure is quasi-spurious: nothing is actually wrong with the disks
+(just one cable, which throws an error like this about once every two
+years and otherwise works perfectly well, though the error has never
+overlapped with a RAID superblock write before), so I'd like the drive
+to be pulled back into the array sharpish. But it's quite unclear how to
+do that. I can't afford to take the array down, but will accept (because
+I must) the background hit of an array reconstruction.
 
-I'm not talking about IO request barriers, though I agree the
-terminology is confusing.  I'm talking about memory barriers.
-See Documentation/memory-barriers.txt
+Normally I'd just try things until one works, but if I get a command
+wrong now then several rather important and long-running (months)
+processes trickling writes to that array will be interrupted and I'll be
+in rather a lot of trouble.
 
-If one processor writes new values into two variables, 'a' and 'b'.
-At about the same time that another processor reads the two variables,
-then the second process could obviously get the two old values, or
-the two new values, or the new value of 'a' but the old value of 'b'.
-What is less obvious is that some times it could get the old value of
-'a' and the new value of 'b'.
-You can remove some of this indeterminism with memory barriers.
-
-NeilBrown
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So, anyone got a command that would help? I'm not even sure if this is
+assembly or growth: it doesn't quite fit into either of those
+categories. There must be a way to do this, surely?
