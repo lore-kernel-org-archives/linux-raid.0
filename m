@@ -1,76 +1,71 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v2 05/11] md/raid5: add scribble region for buffer lists
-Date: Wed, 20 May 2009 12:05:58 -0700
-Message-ID: <e9c3a7c20905201205j621c6d50ib3b86370eae3696f@mail.gmail.com>
-References: <20090519005647.4104.81119.stgit@dwillia2-linux.ch.intel.com>
-	 <20090519005951.4104.27062.stgit@dwillia2-linux.ch.intel.com>
-	 <20090520080910.GU6403@skl-net.de>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [PATCH v2 04/11] async_xor: permit callers to pass in a 'dma/page scribble' region
+Date: Wed, 20 May 2009 21:09:28 +0200
+Message-ID: <20090520190928.GL11504@skl-net.de>
+References: <20090519005647.4104.81119.stgit@dwillia2-linux.ch.intel.com> <20090519005946.4104.28803.stgit@dwillia2-linux.ch.intel.com> <20090520080818.GT6403@skl-net.de> <e9c3a7c20905201135y46022829s9b68d7ee81a5d3dc@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="zH41lVBEV8cLJnCl"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090520080910.GU6403@skl-net.de>
+Content-Disposition: inline
+In-Reply-To: <e9c3a7c20905201135y46022829s9b68d7ee81a5d3dc@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
+To: Dan Williams <dan.j.williams@intel.com>
 Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, May 20, 2009 at 1:09 AM, Andre Noll <maan@systemlinux.org> wrot=
-e:
-> On Mon, May 18, 2009 at 05:59:51PM -0700, Dan Williams wrote:
->
->> +static size_t scribble_len(int num)
->> +{
->> + =A0 =A0 size_t len;
->> +
->> + =A0 =A0 /* return enough space for an array of page pointers and d=
-ma
->> + =A0 =A0 =A0* addresses for the ddf raid6 layout
->> + =A0 =A0 =A0*/
->> + =A0 =A0 len =3D sizeof(struct page *) * (num+2) + sizeof(addr_conv=
-_t) * (num+2);
->> +
->> + =A0 =A0 return len;
->> +}
->
-> The comment is a bit misleading as the function only returns the
-> _amount_ of space needed. It should probably also explain the meaning
-> of the "+2".
 
-Ok I updated this to:
-/**
- * scribble_len - return the required size of the scribble region
- * @num - total number of disks in the array
- *
- * The size must be enough to contain:
- * 1/ a struct page pointer for each device in the array +2
- * 2/ room to convert each entry in (1) to its corresponding dma
- *    (dma_map_page()) or page (page_address()) address.
- *
- * Note: the +2 is for the destination buffers of the ddf/raid6 case wh=
-ere we
- * calculate over all devices (not just the data blocks), using zeros i=
-n place
- * of the P and Q blocks.
- */
+--zH41lVBEV8cLJnCl
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->
->> +/* return a pointer to the address conversion region of the scribbl=
-e buffer */
->> +static addr_conv_t *sh_to_addr_conv(struct stripe_head *sh)
->> +{
->> + =A0 =A0 return sh->scribble + sizeof(struct page *) * (sh->disks +=
- 2);
->> +}
->
-> Maybe it's safer to return NULL if sh->scribble is NULL.
+On 11:35, Dan Williams wrote:
 
-=2E..yes, and a big fat warning, because it should never be NULL.
+> > Don't we need to fall back to sync xor if src_cnt exceeds
+> > what the device can handle, i.e. if it is larger than
+> > chan->device->max_xor? async_xor_val() further down has a check for
+> > this condition.
+>=20
+> No, we don't need this check for async_xor().  The asynchronous path
+> of async_xor_val() has the constraint that it must be able to validate
+> an xor block without writing to that block i.e. it is a read-only
+> operation.  The synchronous path recalculates the xor with the
+> destination as a source and then does a memcmp() to validate that the
+> new result is zero.
+>=20
+> To support more than ->max_xor sources for async_xor_val() we would
+> need an engine that supported hardware continuation of validate
+> operations (i.e. an engine with an internal buffer for the
+> intermediate xor result) otherwise we will need to store an
+> intermediate xor result in system memory which is no better than the
+> synchronous path.
+>=20
+> For async_xor() we are always allowed to write the destination, so we
+> can reuse it as a source to continue the calculation of the xor
+> result.
 
-Thanks for the review,
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I see. Thanks for this detailed explanation!
+
+BTW: So far I've only glanced at patches 7-11 of your series. I will
+review these patches this evening and tomorrow, so I'll send another
+batch of comments/questions/sign-offs by Friday.
+
+Robinson^WAndre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--zH41lVBEV8cLJnCl
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFKFFVoWto1QDEAkw8RAohHAKCQaRe2u+7Nlh+8bBdk+4odNdWylgCdGHj7
+wla1oy5r6h8Ui5KVPFQm5rw=
+=CmPj
+-----END PGP SIGNATURE-----
+
+--zH41lVBEV8cLJnCl--
