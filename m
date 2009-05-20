@@ -1,105 +1,118 @@
-From: raz ben yehuda <raziebe@gmail.com>
-Subject: Re: Subject: [PATCH 002/009]: have raid0 report its formation
-Date: Wed, 20 May 2009 16:50:49 +0300
-Message-ID: <1242827449.3322.83.camel@raz>
-References: <1242749181.3293.59.camel@raz>
-	 <18963.23693.620765.31533@notabene.brown>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: Subject [ md PATCH 4/6] : md to support page size chunks in the case of raid 0
+Date: Wed, 20 May 2009 15:46:26 +0200
+Message-ID: <20090520134626.GK11504@skl-net.de>
+References: <1242687989.21201.16.camel@raz> <18962.444.630305.895248@notabene.brown> <20090520075117.GQ6403@skl-net.de> <18963.55483.993420.606497@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="GmiNL4+5WUWrod5m"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18963.23693.620765.31533@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <18963.55483.993420.606497@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: linux raid <linux-raid@vger.kernel.org>, ofer <ofer@bitband.com>, yaron <yaronp@bitband.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
 List-Id: linux-raid.ids
 
 
-On Wed, 2009-05-20 at 11:27 +1000, Neil Brown wrote:
-> On Tuesday May 19, raziebe@gmail.com wrote:
-> > Report to the user what are the raid zones
-> 
-> You didn't reply to my question of:
->  - why did you want this?
->  - can it be combined with other information printed by
->    make_strip_zones?
->  - if not, can it be combined with the MD_DEBUG part of
->    raid0_status??
-> 
-> I've applied it for now, but I need answers before I can promise to
-> keep it.
-I will use raid0_status. Please drop it and I will post a new patch in
-the reshape patch set ( in a different patch obviously ). I think
-create_strip_zones printouts are NOT clear to the naive user while
-raid0_status output is;
-Also, I would like to note that i have tested these patches several
-times.The MD_DEBUG failure was due to bad git commit id i accidentally
-used.sorry about that.
+--GmiNL4+5WUWrod5m
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> NeilBrown
-> 
-> 
-> > 
-> >  raid0.c |   33 +++++++++++++++++++++++++++++++++
-> >  1 file changed, 33 insertions(+)
-> > 
-> > Signed-off-by: raziebe@gmail.com
-> > ---
-> > diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> > index 8049a92..0a6d0fa 100644
-> > --- a/drivers/md/raid0.c
-> > +++ b/drivers/md/raid0.c
-> > @@ -52,6 +52,38 @@ static int raid0_congested(void *data, int bits)
-> >  	return ret;
-> >  }
-> >  
-> > +/*
-> > + * inform the user of the raid configuration
-> > +*/
-> > +static void dump_zones(mddev_t *mddev)
-> > +{
-> > +	int j, k, h;
-> > +	sector_t zone_size = 0;
-> > +	sector_t zone_start = 0;
-> > +	char b[BDEVNAME_SIZE];
-> > +	raid0_conf_t *conf = mddev->private;
-> > +	printk(KERN_INFO "******* %s configuration *********",
-> > +		mdname(mddev));
-> > +	h = 0;
-> > +	for (j = 0; j < conf->nr_strip_zones; j++) {
-> > +		printk("\nzone%d", j);
-> > +		printk("=[");
-> > +		for (k = 0; k < conf->strip_zone[j].nb_dev; k++)
-> > +			printk("%s/",
-> > +			bdevname(conf->devlist[j*mddev->raid_disks
-> > +						+ k]->bdev, b));
-> > +
-> > +		zone_size  = conf->strip_zone[j].zone_end - zone_start;
-> > +		printk("]\n\t zone offset=%llukb "
-> > +				"device offset=%llukb size=%llukb\n",
-> > +			(unsigned long long)zone_start>>1,
-> > +			(unsigned long long)conf->strip_zone[j].dev_start>>1,
-> > +			(unsigned long long)zone_size>>1);
-> > +		zone_start = conf->strip_zone[j].zone_end;
-> > +	}
-> > +	printk(KERN_INFO "**********************************\n\n");
-> > +}
-> > +
-> >  static int create_strip_zones(mddev_t *mddev)
-> >  {
-> >  	int i, c, j, err;
-> > @@ -291,6 +323,7 @@ static int raid0_run(mddev_t *mddev)
-> >  	}
-> >  
-> >  	blk_queue_merge_bvec(mddev->queue, raid0_mergeable_bvec);
-> > +	dump_zones(mddev);
-> >  	return 0;
-> >  }
-> >  
-> > 
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On 20:17, Neil Brown wrote:
 
+> > How about rolling our own md_sector_div() which at least checks for
+> > such bugs via the
+> >=20
+> >         (void)(((typeof((temp)) *)0) =3D=3D ((sector_t *)0))
+> >=20
+> > trick?
+>=20
+> Interesting idea..
+> You would still need to eyeball that code to make sure md_sector_div
+> was used instead of sector_div, though I guess that is more obvious..
+
+We could change all sector_div()s to md_sector_div() in one patch
+and refuse to take patches that introduce new uses of sector_div().
+
+> Maybe sector_div should have that test in it globally...
+
+Actually such tests are already in the sector_div version in
+asm-generic/div64.c, but that gets only used if CONFIG_LBD is set. If
+it is unset, no checks are performed at all. So yes, I believe
+it makes sense to add these checks there as well. As Jens (CC'ed)
+is the person who touched this code most recently (back in 2007),
+he can probably tell best if such a change would be appreciated.
+
+> Though I've actually hit more problems with the second arg not being
+> "unsigned long" like it should be.
+
+At I understand it, the second arg should be u32, but it's also OK
+to call sector_div() with a 64-bit second arg as long as the _value_
+of this arg fits into a u32. As this condition can only be checked at
+runtime and with a performance penalty, it might be worth to fix up
+all md users of sector_div() which use something different than u32
+as the second arg. An md_sector_div() with additional checks could
+help to find all such places. And the usual "this must be sector_t"
+review comment would then become "please use md_sector_div()" :-)
+
+> What I was suggesting for you is the previous paragraph.  Removing all
+> knowledge about specific raid levels from md.c.
+> So where ever md.c tests the value for mddev->level, ask the question:
+> how can this information be extracted from the module rather than
+> having this hard-coded test.
+>=20
+> Probably the easiest would be moving
+>=20
+>=20
+> 	if (mddev->recovery_cp !=3D MaxSector &&
+> 	    mddev->level >=3D 1)
+> 		printk(KERN_ERR "md: %s: raid array is not clean"
+> 		       " -- starting background reconstruction\n",
+> 		       mdname(mddev));
+>=20
+> into various ->run methods.
+> Probably the hardest would be all the messing with LEVEL_MULTIPATH.
+> Somewhere in between would be the tests for which levels support
+> bitmaps.
+>=20
+> In general, we just want to delay the test until we are in personality
+> code and do it there.
+>=20
+> Does that make sense?
+
+Yes, it does, and I will have a look at it. One immediate problem I
+can see is that the straight-forward pushdown approach will add quite
+some code duplication. For example the above check for MaxSector and
+the prink would have to be duplicated to each ->run function except
+raid0, linear and multipath.
+
+Adding a common check_reconstruction() function to md.c which is called
+=66rom the personalities that care would avoid the duplication but looks
+a bit like over-engineering in this particular case. However, it might
+be the right approach for more complicated "semi-personality-dependent"
+code.
+
+I suppose it has to be decided on a per-case basis which approach fits
+best.
+
+Thanks
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--GmiNL4+5WUWrod5m
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFKFAmyWto1QDEAkw8RArjBAKCji19hDrlTvho/i/9u39OvkFL8awCfZUas
+w2cHxIEmMsGQfHv/k1T9BkA=
+=Pmqx
+-----END PGP SIGNATURE-----
+
+--GmiNL4+5WUWrod5m--
