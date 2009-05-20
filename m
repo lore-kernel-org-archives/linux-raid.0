@@ -1,120 +1,127 @@
 From: raz ben yehuda <raziebe@gmail.com>
-Subject: Re: Subject [ md PATCH 4/6] : md to support page size chunks in
-	the case of raid 0
-Date: Wed, 20 May 2009 16:30:11 +0300
-Message-ID: <1242826211.3322.60.camel@raz>
-References: <1242687989.21201.16.camel@raz>
-	 <18962.444.630305.895248@notabene.brown> <20090520075117.GQ6403@skl-net.de>
-	 <18963.55483.993420.606497@notabene.brown>
+Subject: Re: Subject: [PATCH 006/009]: raid1: chunk size check in run
+Date: Wed, 20 May 2009 16:50:38 +0300
+Message-ID: <1242827438.3322.81.camel@raz>
+References: <1242749054.3293.53.camel@raz>
+	 <18963.24749.218732.45333@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18963.55483.993420.606497@notabene.brown>
+In-Reply-To: <18963.24749.218732.45333@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: Andre Noll <maan@systemlinux.org>, linux-raid <linux-raid@vger.kernel.org>
+Cc: linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Neil
+First I thank you for your effort. Now I can work in full steam on the
+reshape on top of the new raid0 code. Currently this is what I have in
+mind.If you have any design suggestions I would be happy to hear before
+the coding.
 
-On Wed, 2009-05-20 at 20:17 +1000, Neil Brown wrote:
-> On Wednesday May 20, maan@systemlinux.org wrote:
-> > On Tue, May 19, 2009 at 10:47:56AM +1000, Neil Brown wrote:
-> > 
-> > > And 'temp' should be 'sector_t'.  'sector_div' requires a 'sector_t'
-> > > for the first argument.
-> > 
-> > ...
-> > 
-> > > Again, temp must be sector_t.
-> > 
-> > How about rolling our own md_sector_div() which at least checks for
-> > such bugs via the
-> > 
-> >         (void)(((typeof((temp)) *)0) == ((sector_t *)0))
-> > 
-> > trick?
-nice. did not know typeof is available in c. 
-> Interesting idea..
-> You would still need to eyeball that code to make sure md_sector_div
-> was used instead of sector_div, though I guess that is more obvious..
-> Maybe sector_div should have that test in it globally...
-> Though I've actually hit more problems with the second arg not being
-> "unsigned long" like it should be.
+   I added : raid0_add_hot that:
+	1. checks if the new disk size if smaller than the raid chunk size. if
+so , reject.
+	2. check if new the disk size max_hw_sectors is smaller than the
+raid's. if so generate a warning but do not reject.   
+ 	3. adds a disk to raid0 disk list. and turns off its in_sync bit.
+
+I will add raid0_check_reshape 
+      This procedure prepares the raid for the reshape process.
+	1. Creates a temporary mddev with the same disks as the raid's and with
+the new disks. This raid acts as a mere mappings so i will be able to
+map sectors to the new target raid in the reshape process. This means i
+have to work in create_strip_zones raid0_run ( separate patch ).
+        2. Sets the target raid transfer size.
+	3. Create an allocation scheme for reshape bio allocation. i reshape in
+chunk size. 
+	4. create raid0_reshape thread for writes.
+	5. wake up raid0_sync thread. 
+
+I will add raid0_sync: raid0_sync acts as the reshape read size process.
+
+    1. Allocates a read bio.	
+    2. Map_bio target with find_zone and map_sector, both map_sector and
+find_zone are using the old raid mappings.
+    3. Deactivate the raid.
+    3. Lock and wait for the raid to be emptied from any previous IOs.
+    4. Generate a read request.
+    5. Release the lock. 
+
+I will add reshape_read_endio: 
+	if IO is successful then:
+		add the bio to reshape_list
+	else
+		add the bio to a retry list ( how many retries .. ?)
+
+I will add raid0_reshape: 
+	raid0_reshape is a md_thread that polls on the reshape_list and
+commences writes based on the reads.
+	1. Grub a bio from reshape list.
+	2. map sector and find zone on the new raid mappings. 
+	3. set bio direction to write.
+	4. generate a write.
+	
+	if bio is in retry_list retry the bio.
+	if bio is in active_io list do the bio.
+	
+I will add a reshape_write_endio that just frees the bio and his pages.
+
+raid0_make_request
+	I will add a check and see if the raid is in reshape. 
+	if so then
+		if IO is in the new mappings area we generate the IO
+				from the new mappings.
+		if IO is in the old mappings then we generate the IO
+				from the old mappings ( race here .. no ?)
+		if IO is in the current reshape active area, we push the io to a
+active_io list that will processed by raid0_reshape.
+
+		
+
+
+
+
+
+	 
+On Wed, 2009-05-20 at 11:45 +1000, Neil Brown wrote:
+> On Tuesday May 19, raziebe@gmail.com wrote:
+> > have raid1 check chunk size in run method instead of in md
 > 
-> > 
-> > > > @@ -3996,14 +4001,23 @@ static int do_md_run(mddev_t * mddev)
-> > > >  				chunk_size, MAX_CHUNK_SIZE);
-> > > >  			return -EINVAL;
-> > > >  		}
-> > > > +
-> > > >  		/*
-> > > >  		 * chunk-size has to be a power of 2
-> > > >  		 */
-> > > > -		if ( (1 << ffz(~chunk_size)) != chunk_size) {
-> > > > +		if ((1 << ffz(~chunk_size)) != chunk_size &&
-> > > > +			 mddev->level != 0) {
-> > > >  			printk(KERN_ERR "chunk_size of %d not valid\n", chunk_size);
-> > > >  			return -EINVAL;
-> > > >  		}
-> > > 
-> > > I wold really like to remove any knowledge about specific raid levels
-> > > from the common (md.c) code and keep it all in the personality modules
-> > > (is that a job for you Andre ??).
-> > > So I definitely don't want to add a test for ->level here.
-> > > 
-> > > So I would like to see the tests for chunk_size removed do_md_run and
-> > > included in each personalities ->run function.  This would be a series
-> > > of patches that adds the checks in ->run where needed, then removes it
-> > > from md.c.  Would you like to do that?
-> > 
-> > Sure, I can give it a try. Though I'm not sure I fully understand
-> > what would be the difference between the checks in the individual
-> > ->run functions. Currently, in do_md_run() we check that
-> > 
-> >         * chunk_size <= MAX_CHUNK_SIZE
-> >         * chunk_size is a power of two
-> >         * the rdev is at least one chunk large
-> > 
-> > None of these checks depend on the raid level, so the above change
-> > that allows chunk sizes which are not a power of two for raid0 would
-> > be the only difference. Are you anticipating that the requirements
-> > of the various raid levels with respect to chunk size will further
-> > diverge in the future?
-> 
-> The second paragraph is already done (in for-next).  md.c doesn't
-> check chunksize any more, that is only checked in personality modules
-> that care.
-> 
-> What I was suggesting for you is the previous paragraph.  Removing all
-> knowledge about specific raid levels from md.c.
-> So where ever md.c tests the value for mddev->level, ask the question:
-> how can this information be extracted from the module rather than
-> having this hard-coded test.
-> 
-> Probably the easiest would be moving
-> 
-> 
-> 	if (mddev->recovery_cp != MaxSector &&
-> 	    mddev->level >= 1)
-> 		printk(KERN_ERR "md: %s: raid array is not clean"
-> 		       " -- starting background reconstruction\n",
-> 		       mdname(mddev));
-> 
-> into various ->run methods.
-> Probably the hardest would be all the messing with LEVEL_MULTIPATH.
-> Somewhere in between would be the tests for which levels support
-> bitmaps.
-> 
-> In general, we just want to delay the test until we are in personality
-> code and do it there.
-why not add a new method ? pers->validate_parms ?  
-> Does that make sense?
-> 
-> Thanks,
+> I dropped this patch.  chunk_size is not meaningful for raid1.
+how embarrassing.
+
 > NeilBrown
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> >  raid1.c |    9 +++++++++
+> >  1 file changed, 9 insertions(+)
+> > Signed-off-by: raziebe@gmail.com
+> > ---
+> > diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+> > index 2c8d9e6..8609506 100644
+> > --- a/drivers/md/raid1.c
+> > +++ b/drivers/md/raid1.c
+> > @@ -1942,6 +1942,15 @@ static int run(mddev_t *mddev)
+> >  		       mdname(mddev), mddev->level);
+> >  		goto out;
+> >  	}
+> > +	/*
+> > +	 * chunk-size has to be a power of 2
+> > +	 */
+> > +	if ((1 << ffz(~mddev->chunk_size)) != mddev->chunk_size) {
+> > +		printk(KERN_ERR "%s chunk_size of %d not valid\n",
+> > +			mdname(mddev),
+> > +			mddev->chunk_size);
+> > +		return -EINVAL;
+> > +	}
+> >  	if (mddev->reshape_position != MaxSector) {
+> >  		printk("raid1: %s: reshape_position set but not supported\n",
+> >  		       mdname(mddev));
+> > 
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
