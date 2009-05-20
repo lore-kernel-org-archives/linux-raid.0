@@ -1,8 +1,8 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Subject: [PATCH 001/009]: have raid0 compile with MD_DEBUG on
-Date: Wed, 20 May 2009 11:26:21 +1000
-Message-ID: <18963.23613.407538.894982@notabene.brown>
-References: <1242749175.3293.57.camel@raz>
+Subject: Re: Subject: [PATCH 002/009]: have raid0 report its formation
+Date: Wed, 20 May 2009 11:27:41 +1000
+Message-ID: <18963.23693.620765.31533@notabene.brown>
+References: <1242749181.3293.59.camel@raz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -10,36 +10,82 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: message from raz ben yehuda on Tuesday May 19
 Sender: linux-raid-owner@vger.kernel.org
 To: raz ben yehuda <raziebe@gmail.com>
-Cc: linux raid <linux-raid@vger.kernel.org>, yaron <yaronp@bitband.com>, ofer <ofer@bitband.com>
+Cc: linux raid <linux-raid@vger.kernel.org>, ofer <ofer@bitband.com>, yaron <yaronp@bitband.com>
 List-Id: linux-raid.ids
 
 On Tuesday May 19, raziebe@gmail.com wrote:
-> Because of the removal the device list from 
-> the strips raid0 did not compile with MD_DEBUG flag on
-> -		seq_printf(seq, "] ze=%d ds=%d s=%d\n",
-> -				conf->strip_zone[j].zone_end,
-> -				conf->strip_zone[j].dev_start,
-> -				conf->strip_zone[j].sectors);
-> +				conf->devlist[j*mddesk->raid_disks + k]
-                                                ^^^^^^
+> Report to the user what are the raid zones
 
-You didn't compile test this, did you :-)
-I've replaced that with mddev, and applied it.
+You didn't reply to my question of:
+ - why did you want this?
+ - can it be combined with other information printed by
+   make_strip_zones?
+ - if not, can it be combined with the MD_DEBUG part of
+   raid0_status??
 
-Thanks.
+I've applied it for now, but I need answers before I can promise to
+keep it.
 
 NeilBrown
-> +						->bdev, b));
+
+
+> 
+>  raid0.c |   33 +++++++++++++++++++++++++++++++++
+>  1 file changed, 33 insertions(+)
+> 
+> Signed-off-by: raziebe@gmail.com
+> ---
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index 8049a92..0a6d0fa 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -52,6 +52,38 @@ static int raid0_congested(void *data, int bits)
+>  	return ret;
+>  }
+>  
+> +/*
+> + * inform the user of the raid configuration
+> +*/
+> +static void dump_zones(mddev_t *mddev)
+> +{
+> +	int j, k, h;
+> +	sector_t zone_size = 0;
+> +	sector_t zone_start = 0;
+> +	char b[BDEVNAME_SIZE];
+> +	raid0_conf_t *conf = mddev->private;
+> +	printk(KERN_INFO "******* %s configuration *********",
+> +		mdname(mddev));
+> +	h = 0;
+> +	for (j = 0; j < conf->nr_strip_zones; j++) {
+> +		printk("\nzone%d", j);
+> +		printk("=[");
+> +		for (k = 0; k < conf->strip_zone[j].nb_dev; k++)
+> +			printk("%s/",
+> +			bdevname(conf->devlist[j*mddev->raid_disks
+> +						+ k]->bdev, b));
 > +
 > +		zone_size  = conf->strip_zone[j].zone_end - zone_start;
-> +		seq_printf(seq, "] ze=%lld ds=%lld s=%lld\n",
+> +		printk("]\n\t zone offset=%llukb "
+> +				"device offset=%llukb size=%llukb\n",
 > +			(unsigned long long)zone_start>>1,
 > +			(unsigned long long)conf->strip_zone[j].dev_start>>1,
 > +			(unsigned long long)zone_size>>1);
 > +		zone_start = conf->strip_zone[j].zone_end;
+> +	}
+> +	printk(KERN_INFO "**********************************\n\n");
+> +}
+> +
+>  static int create_strip_zones(mddev_t *mddev)
+>  {
+>  	int i, c, j, err;
+> @@ -291,6 +323,7 @@ static int raid0_run(mddev_t *mddev)
 >  	}
->  #endif
->  	seq_printf(seq, " %dk chunks", mddev->chunk_size/1024);
+>  
+>  	blk_queue_merge_bvec(mddev->queue, raid0_mergeable_bvec);
+> +	dump_zones(mddev);
+>  	return 0;
+>  }
+>  
 > 
 > 
 > --
