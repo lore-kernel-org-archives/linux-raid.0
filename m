@@ -1,118 +1,115 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: Subject [ md PATCH 4/6] : md to support page size chunks in the case of raid 0
-Date: Wed, 20 May 2009 15:46:26 +0200
-Message-ID: <20090520134626.GK11504@skl-net.de>
-References: <1242687989.21201.16.camel@raz> <18962.444.630305.895248@notabene.brown> <20090520075117.GQ6403@skl-net.de> <18963.55483.993420.606497@notabene.brown>
+From: SandeepKsinha <sandeepksinha@gmail.com>
+Subject: Re: linear raid : mddev not protected in linear_add
+Date: Wed, 20 May 2009 21:40:01 +0530
+Message-ID: <37d33d830905200910u6066b668p968604477991ec5c@mail.gmail.com>
+References: <37d33d830905190523l1ae7536al83ed1255cba3050d@mail.gmail.com>
+	 <18963.14770.706341.139054@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="GmiNL4+5WUWrod5m"
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <18963.55483.993420.606497@notabene.brown>
+In-Reply-To: <18963.14770.706341.139054@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi Neil,
 
---GmiNL4+5WUWrod5m
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Wed, May 20, 2009 at 4:28 AM, Neil Brown <neilb@suse.de> wrote:
+> On Tuesday May 19, sandeepksinha@gmail.com wrote:
+>> Hi,
+>>
+>> In linear_add( ), the mddev is gets changed.
+>> Don't we require to lock/unlock around mddev inorder to avoid races?
+>>
+>
+> A good question.
+>
+> To be able to answer it, we must also ask "what races do we need to
+> avoid". =A0Did you have some possible races in mind?
+>
 
-On 20:17, Neil Brown wrote:
+I see mddev being referenced in md.c (md layer) for lot of operations.
+Actually for almost all operations we pass through it. i.e get array
+info.
 
-> > How about rolling our own md_sector_div() which at least checks for
-> > such bugs via the
-> >=20
-> >         (void)(((typeof((temp)) *)0) =3D=3D ((sector_t *)0))
-> >=20
-> > trick?
->=20
-> Interesting idea..
-> You would still need to eyeball that code to make sure md_sector_div
-> was used instead of sector_div, though I guess that is more obvious..
+> In linear add there are 3 lines which are in an important order:
+>
+> =A0 =A0 =A0 =A0mddev->private =3D newconf;
+> =A0 =A0 =A0 =A0mddev->raid_disks++;
+> =A0 =A0 =A0 =A0....
+> =A0 =A0 =A0 =A0set_capacity(mddev->gendisk, mddev->array_sectors);
+>
+> Until raid_disks in incremented, there will be no attempt to access
+> the extra information in ->private.
+> Until the set_capacity, there will be no attempt to send IO beyond th=
+e
+> reach of raid_disks.
+> So except that it might be wise to insert some barrier()s, it looks
+> OK.... =A0or it did.
+>
+> I just noticed that the new 'which_dev' checks mddev->raid_disks,
+> where as the old which_dev did not.
+>
+> So if:
+> =A0which_dev takes a copy of mddev->private,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 linear_ad=
+d changes mddev->private
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 linear_ad=
+d changes raid_disks
+> =A0which_dev takes a copy of mddev->raid_disks
+>
+> then which_dev will have a raid_disks which points beyond the end of
+> conf->disks. =A0If the target sector were beyond the end of the origi=
+nal
+> array, we could fall off the end of that array which would be bad.
+> However as the sector number will have been tested again the size of
+> the array (in bio_check_eod from generic_make_request), that cannot
+> happen. =A0Unless which_dev was called from linear_mergeable_bvec...
+>
+Yes, this is true.
 
-We could change all sector_div()s to md_sector_div() in one patch
-and refuse to take patches that introduce new uses of sector_div().
+> I suspect in light of this it would be best to:
+> =A01/ insert a barrier() between setting ->private and setting
+> =A0 =A0 =A0->raid_disks
+> =A02/ in which_dev, read ->raid_disks before ->private, and put a
+> =A0 =A0 =A0barrier in between.
+>
 
-> Maybe sector_div should have that test in it globally...
+Do you suggest implementing barrier functions for linear raid?
+Can you elaborate on this a bit more please?
 
-Actually such tests are already in the sector_div version in
-asm-generic/div64.c, but that gets only used if CONFIG_LBD is set. If
-it is unset, no checks are performed at all. So yes, I believe
-it makes sense to add these checks there as well. As Jens (CC'ed)
-is the person who touched this code most recently (back in 2007),
-he can probably tell best if such a change would be appreciated.
+> We could possibly use rcu_dereference and rcu_assign_pointer, and
+> maybe even make use of rcu to free the old conf structure promptly
+> rather than keeping it around until the array is stopped.
+> That would require careful placement of rcu_read_{,un}lock around
+> access to ->private.
+>
+> Probably best to just put barriers in for now, and leave the rcu
+> stuff.
+>
+k.
+> NeilBrown
+>
+>
+>
 
-> Though I've actually hit more problems with the second arg not being
-> "unsigned long" like it should be.
 
-At I understand it, the second arg should be u32, but it's also OK
-to call sector_div() with a 64-bit second arg as long as the _value_
-of this arg fits into a u32. As this condition can only be checked at
-runtime and with a performance penalty, it might be worth to fix up
-all md users of sector_div() which use something different than u32
-as the second arg. An md_sector_div() with additional checks could
-help to find all such places. And the usual "this must be sector_t"
-review comment would then become "please use md_sector_div()" :-)
 
-> What I was suggesting for you is the previous paragraph.  Removing all
-> knowledge about specific raid levels from md.c.
-> So where ever md.c tests the value for mddev->level, ask the question:
-> how can this information be extracted from the module rather than
-> having this hard-coded test.
->=20
-> Probably the easiest would be moving
->=20
->=20
-> 	if (mddev->recovery_cp !=3D MaxSector &&
-> 	    mddev->level >=3D 1)
-> 		printk(KERN_ERR "md: %s: raid array is not clean"
-> 		       " -- starting background reconstruction\n",
-> 		       mdname(mddev));
->=20
-> into various ->run methods.
-> Probably the hardest would be all the messing with LEVEL_MULTIPATH.
-> Somewhere in between would be the tests for which levels support
-> bitmaps.
->=20
-> In general, we just want to delay the test until we are in personality
-> code and do it there.
->=20
-> Does that make sense?
-
-Yes, it does, and I will have a look at it. One immediate problem I
-can see is that the straight-forward pushdown approach will add quite
-some code duplication. For example the above check for MaxSector and
-the prink would have to be duplicated to each ->run function except
-raid0, linear and multipath.
-
-Adding a common check_reconstruction() function to md.c which is called
-=66rom the personalities that care would avoid the duplication but looks
-a bit like over-engineering in this particular case. However, it might
-be the right approach for more complicated "semi-personality-dependent"
-code.
-
-I suppose it has to be decided on a per-case basis which approach fits
-best.
-
-Thanks
-Andre
 --=20
-The only person who always got his work done by Friday was Robinson Crusoe
+Regards,
+Sandeep.
 
---GmiNL4+5WUWrod5m
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
 
-iD8DBQFKFAmyWto1QDEAkw8RArjBAKCji19hDrlTvho/i/9u39OvkFL8awCfZUas
-w2cHxIEmMsGQfHv/k1T9BkA=
-=Pmqx
------END PGP SIGNATURE-----
 
---GmiNL4+5WUWrod5m--
+
+ =09
+=93To learn is to change. Education is a process that changes the learn=
+er.=94
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
