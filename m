@@ -1,54 +1,78 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: Re: Subject [ raid0 PATCH 3/6] : Add support to chunk size of 4K*n instead of 4K*2^n
-Date: Wed, 20 May 2009 10:03:58 +0200
-Message-ID: <20090520080358.GR6403@skl-net.de>
-References: <1242687904.21201.13.camel@raz> <18961.65310.282446.521193@notabene.brown>
+Subject: Re: [PATCH v2 03/11] async_tx: structify submission arguments, add scribble
+Date: Wed, 20 May 2009 10:06:54 +0200
+Message-ID: <20090520080654.GS6403@skl-net.de>
+References: <20090519005647.4104.81119.stgit@dwillia2-linux.ch.intel.com> <20090519005941.4104.24363.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="562f9N4fbIs+fPrJ"
+	protocol="application/pgp-signature"; boundary="hOmQO3H5Qmmwdmk8"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <18961.65310.282446.521193@notabene.brown>
+In-Reply-To: <20090519005941.4104.24363.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: raz ben yehuda <raziebe@gmail.com>, linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---562f9N4fbIs+fPrJ
+--hOmQO3H5Qmmwdmk8
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, May 19, 2009 at 10:36:46AM +1000, Neil Brown wrote:
-> > diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-> > index 80ac685..dc2671f 100644
-> > --- a/drivers/md/raid0.c
-> > +++ b/drivers/md/raid0.c
-> > @@ -23,6 +23,9 @@
-> >  #include "md.h"
-> >  #include "raid0.h"
-> > =20
-> > +static int handle_split(struct request_queue *q,
-> > +		unsigned int chunk_sects, struct bio *bio);
-> > +
-> >  static void raid0_unplug(struct request_queue *q)
-> >  {
-> >  	mddev_t *mddev =3D q->queuedata;
-> > @@ -263,7 +266,12 @@ static int raid0_mergeable_bvec(struct request_que=
-ue *q,
-> >  	unsigned int chunk_sectors =3D mddev->chunk_size >> 9;
->=20
-> Hmm... if someone wanted to globally replace mddev->chunk_size with
-> chunk_sectors, I wouldn't complain (Hi Andre :-)
+On Mon, May 18, 2009 at 05:59:41PM -0700, Dan Williams wrote:
 
-Obviously I missed this one. Currently, mddev->chunk_size is in bytes,
-that's probably why I missed it. I'll send a patch ASAP.
+> diff --git a/crypto/async_tx/async_memcpy.c b/crypto/async_tx/async_memcp=
+y.c
+> index 7117ec6..c9342ae 100644
+> --- a/crypto/async_tx/async_memcpy.c
+> +++ b/crypto/async_tx/async_memcpy.c
+> @@ -35,26 +35,23 @@
+>   * @src: src page
+>   * @offset: offset in pages to start transaction
+>   * @len: length in bytes
+> - * @flags: ASYNC_TX_ACK
+> - * @depend_tx: memcpy depends on the result of this transaction
+> - * @cb_fn: function to call when the memcpy completes
+> - * @cb_param: parameter to pass to the callback routine
+> + * @submit: submission / completion modifiers
+>   */
+>  struct dma_async_tx_descriptor *
+>  async_memcpy(struct page *dest, struct page *src, unsigned int dest_offs=
+et,
+> -	unsigned int src_offset, size_t len, enum async_tx_flags flags,
+> -	struct dma_async_tx_descriptor *depend_tx,
+> -	dma_async_tx_callback cb_fn, void *cb_param)
+> +	     unsigned int src_offset, size_t len,
+> +	     struct async_submit_ctl *submit)
+>  {
 
-Thanks
+The third parameter is called "dest_offset", but the comment refers to
+"@offset".
+
+> +struct async_submit_ctl {
+> +	enum async_tx_flags flags;
+> +	struct dma_async_tx_descriptor *depend_tx;
+> +	dma_async_tx_callback cb_fn;
+> +	void *cb_param;
+> +	void *scribble;
+> +};
+
+Can't scribble be of type addr_conv_t *?
+
+Apart from these two minor issues the patch looks really nice. Thanks
+for taking the time to combine the common submission parameters to
+the new structure. This improves readability of the code and makes
+adaptation to future needs easier.
+
+Signed-off-by: Andre Noll <maan@systemlinux.org>
+
 Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
 
---562f9N4fbIs+fPrJ
+
+--hOmQO3H5Qmmwdmk8
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 Content-Disposition: inline
@@ -56,9 +80,9 @@ Content-Disposition: inline
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.1 (GNU/Linux)
 
-iD8DBQFKE7luWto1QDEAkw8RAomcAKCDMRtG0p9zFgAG40b+PbA++khtbACfbxeG
-yZvyymgqFk/HAWR/ebAwGK0=
-=0y65
+iD4DBQFKE7oeWto1QDEAkw8RAhH5AJMGQhCEgL8nsmN9Bv15ZQFZuB62AJ90VBUJ
+ag2Asz6gWlmqurEwM2UEUw==
+=UmXv
 -----END PGP SIGNATURE-----
 
---562f9N4fbIs+fPrJ--
+--hOmQO3H5Qmmwdmk8--
