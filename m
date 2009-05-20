@@ -1,86 +1,98 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v2 03/11] async_tx: structify submission arguments, add
-	scribble
-Date: Wed, 20 May 2009 11:19:56 -0700
-Message-ID: <e9c3a7c20905201119i5c01f959lec38a54e460b1901@mail.gmail.com>
+Subject: Re: [PATCH v2 04/11] async_xor: permit callers to pass in a 'dma/page
+	scribble' region
+Date: Wed, 20 May 2009 11:35:03 -0700
+Message-ID: <e9c3a7c20905201135y46022829s9b68d7ee81a5d3dc@mail.gmail.com>
 References: <20090519005647.4104.81119.stgit@dwillia2-linux.ch.intel.com>
-	 <20090519005941.4104.24363.stgit@dwillia2-linux.ch.intel.com>
-	 <20090520080654.GS6403@skl-net.de>
+	 <20090519005946.4104.28803.stgit@dwillia2-linux.ch.intel.com>
+	 <20090520080818.GT6403@skl-net.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090520080654.GS6403@skl-net.de>
+In-Reply-To: <20090520080818.GT6403@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andre Noll <maan@systemlinux.org>
 Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, May 20, 2009 at 1:06 AM, Andre Noll <maan@systemlinux.org> wrot=
+On Wed, May 20, 2009 at 1:08 AM, Andre Noll <maan@systemlinux.org> wrot=
 e:
-> On Mon, May 18, 2009 at 05:59:41PM -0700, Dan Williams wrote:
+> On Mon, May 18, 2009 at 05:59:46PM -0700, Dan Williams wrote:
 >
->> diff --git a/crypto/async_tx/async_memcpy.c b/crypto/async_tx/async_=
-memcpy.c
->> index 7117ec6..c9342ae 100644
->> --- a/crypto/async_tx/async_memcpy.c
->> +++ b/crypto/async_tx/async_memcpy.c
->> @@ -35,26 +35,23 @@
->> =A0 * @src: src page
->> =A0 * @offset: offset in pages to start transaction
->> =A0 * @len: length in bytes
->> - * @flags: ASYNC_TX_ACK
->> - * @depend_tx: memcpy depends on the result of this transaction
->> - * @cb_fn: function to call when the memcpy completes
->> - * @cb_param: parameter to pass to the callback routine
->> + * @submit: submission / completion modifiers
->> =A0 */
->> =A0struct dma_async_tx_descriptor *
->> =A0async_memcpy(struct page *dest, struct page *src, unsigned int de=
-st_offset,
->> - =A0 =A0 unsigned int src_offset, size_t len, enum async_tx_flags f=
-lags,
->> - =A0 =A0 struct dma_async_tx_descriptor *depend_tx,
->> - =A0 =A0 dma_async_tx_callback cb_fn, void *cb_param)
->> + =A0 =A0 =A0 =A0 =A0unsigned int src_offset, size_t len,
->> + =A0 =A0 =A0 =A0 =A0struct async_submit_ctl *submit)
->> =A0{
+>> diff --git a/crypto/async_tx/async_xor.c b/crypto/async_tx/async_xor=
+=2Ec
+>> @@ -125,9 +124,14 @@ do_sync_xor(struct page *dest, struct page **sr=
+c_list, unsigned int offset,
+>> =A0 =A0 =A0 int xor_src_cnt;
+>> =A0 =A0 =A0 int src_off =3D 0;
+>> =A0 =A0 =A0 void *dest_buf;
+>> - =A0 =A0 void **srcs =3D (void **) src_list;
+>> + =A0 =A0 void **srcs;
+>>
+>> - =A0 =A0 /* reuse the 'src_list' array to convert to buffer pointer=
+s */
+>> + =A0 =A0 if (submit->scribble)
+>> + =A0 =A0 =A0 =A0 =A0 =A0 srcs =3D (void **) submit->scribble;
 >
-> The third parameter is called "dest_offset", but the comment refers t=
-o
-> "@offset".
+> Unnecessary cast as submit->scribble is void *.
 
-=2E..and I was missing a comment for src_offset.  fixed.
+fixed.
 
 >
->> +struct async_submit_ctl {
->> + =A0 =A0 enum async_tx_flags flags;
->> + =A0 =A0 struct dma_async_tx_descriptor *depend_tx;
->> + =A0 =A0 dma_async_tx_callback cb_fn;
->> + =A0 =A0 void *cb_param;
->> + =A0 =A0 void *scribble;
->> +};
+>> @@ -171,17 +175,26 @@ async_xor(struct page *dest, struct page **src=
+_list, unsigned int offset,
+>> =A0 =A0 =A0 struct dma_chan *chan =3D async_tx_find_channel(submit, =
+DMA_XOR,
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 &dest, 1, src_list,
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 src_cnt, len);
+>> + =A0 =A0 dma_addr_t *dma_src =3D NULL;
+>> +
+>> =A0 =A0 =A0 BUG_ON(src_cnt <=3D 1);
+>>
+>> - =A0 =A0 if (chan) {
+>> + =A0 =A0 if (submit->scribble)
+>> + =A0 =A0 =A0 =A0 =A0 =A0 dma_src =3D submit->scribble;
+>> + =A0 =A0 else if (sizeof(dma_addr_t) <=3D sizeof(struct page *))
+>> + =A0 =A0 =A0 =A0 =A0 =A0 dma_src =3D (dma_addr_t *) src_list;
+>> +
+>> + =A0 =A0 if (dma_src && chan) {
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* run the xor asynchronously */
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 pr_debug("%s (async): len: %zu\n", __fun=
+c__, len);
+>>
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 return do_async_xor(chan, dest, src_list=
+, offset, src_cnt, len,
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 su=
+bmit);
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 dm=
+a_src, submit);
+>> =A0 =A0 =A0 } else {
 >
-> Can't scribble be of type addr_conv_t *?
+> Don't we need to fall back to sync xor if src_cnt exceeds
+> what the device can handle, i.e. if it is larger than
+> chan->device->max_xor? async_xor_val() further down has a check for
+> this condition.
 
-It could, but that would require casting it when it is used.  I really
-only added the addr_conv_t type to get a compiler warning if someone
-inadvertently swaps the cb_param and scribble arguments to
-init_async_submit().  There is no benefit for type safety once we go
-to use it, and this will allow me to drop that unnecessary cast from
-void * that you identified in [PATCH 04/11].
+No, we don't need this check for async_xor().  The asynchronous path
+of async_xor_val() has the constraint that it must be able to validate
+an xor block without writing to that block i.e. it is a read-only
+operation.  The synchronous path recalculates the xor with the
+destination as a source and then does a memcmp() to validate that the
+new result is zero.
 
-> Apart from these two minor issues the patch looks really nice. Thanks
-> for taking the time to combine the common submission parameters to
-> the new structure. This improves readability of the code and makes
-> adaptation to future needs easier.
->
-> Signed-off-by: Andre Noll <maan@systemlinux.org>
+To support more than ->max_xor sources for async_xor_val() we would
+need an engine that supported hardware continuation of validate
+operations (i.e. an engine with an internal buffer for the
+intermediate xor result) otherwise we will need to store an
+intermediate xor result in system memory which is no better than the
+synchronous path.
 
-Thanks!
-
---
-Dan
+=46or async_xor() we are always allowed to write the destination, so we
+can reuse it as a source to continue the calculation of the xor
+result.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
