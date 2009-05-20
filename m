@@ -1,69 +1,112 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [PATCH v2 05/11] md/raid5: add scribble region for buffer lists
-Date: Wed, 20 May 2009 10:09:10 +0200
-Message-ID: <20090520080910.GU6403@skl-net.de>
-References: <20090519005647.4104.81119.stgit@dwillia2-linux.ch.intel.com> <20090519005951.4104.27062.stgit@dwillia2-linux.ch.intel.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Subject [ md PATCH 4/6] : md to support page size chunks in the case of raid 0
+Date: Wed, 20 May 2009 20:17:31 +1000
+Message-ID: <18963.55483.993420.606497@notabene.brown>
+References: <1242687989.21201.16.camel@raz>
+	<18962.444.630305.895248@notabene.brown>
+	<20090520075117.GQ6403@skl-net.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="JcGvecxLhm+LytDG"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090519005951.4104.27062.stgit@dwillia2-linux.ch.intel.com>
+In-Reply-To: message from Andre Noll on Wednesday May 20
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Andre Noll <maan@systemlinux.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Wednesday May 20, maan@systemlinux.org wrote:
+> On Tue, May 19, 2009 at 10:47:56AM +1000, Neil Brown wrote:
+> 
+> > And 'temp' should be 'sector_t'.  'sector_div' requires a 'sector_t'
+> > for the first argument.
+> 
+> ...
+> 
+> > Again, temp must be sector_t.
+> 
+> How about rolling our own md_sector_div() which at least checks for
+> such bugs via the
+> 
+>         (void)(((typeof((temp)) *)0) == ((sector_t *)0))
+> 
+> trick?
 
---JcGvecxLhm+LytDG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Interesting idea..
+You would still need to eyeball that code to make sure md_sector_div
+was used instead of sector_div, though I guess that is more obvious..
+Maybe sector_div should have that test in it globally...
+Though I've actually hit more problems with the second arg not being
+"unsigned long" like it should be.
 
-On Mon, May 18, 2009 at 05:59:51PM -0700, Dan Williams wrote:
+> 
+> > > @@ -3996,14 +4001,23 @@ static int do_md_run(mddev_t * mddev)
+> > >  				chunk_size, MAX_CHUNK_SIZE);
+> > >  			return -EINVAL;
+> > >  		}
+> > > +
+> > >  		/*
+> > >  		 * chunk-size has to be a power of 2
+> > >  		 */
+> > > -		if ( (1 << ffz(~chunk_size)) != chunk_size) {
+> > > +		if ((1 << ffz(~chunk_size)) != chunk_size &&
+> > > +			 mddev->level != 0) {
+> > >  			printk(KERN_ERR "chunk_size of %d not valid\n", chunk_size);
+> > >  			return -EINVAL;
+> > >  		}
+> > 
+> > I wold really like to remove any knowledge about specific raid levels
+> > from the common (md.c) code and keep it all in the personality modules
+> > (is that a job for you Andre ??).
+> > So I definitely don't want to add a test for ->level here.
+> > 
+> > So I would like to see the tests for chunk_size removed do_md_run and
+> > included in each personalities ->run function.  This would be a series
+> > of patches that adds the checks in ->run where needed, then removes it
+> > from md.c.  Would you like to do that?
+> 
+> Sure, I can give it a try. Though I'm not sure I fully understand
+> what would be the difference between the checks in the individual
+> ->run functions. Currently, in do_md_run() we check that
+> 
+>         * chunk_size <= MAX_CHUNK_SIZE
+>         * chunk_size is a power of two
+>         * the rdev is at least one chunk large
+> 
+> None of these checks depend on the raid level, so the above change
+> that allows chunk sizes which are not a power of two for raid0 would
+> be the only difference. Are you anticipating that the requirements
+> of the various raid levels with respect to chunk size will further
+> diverge in the future?
 
-> +static size_t scribble_len(int num)
-> +{
-> +	size_t len;
-> +
-> +	/* return enough space for an array of page pointers and dma
-> +	 * addresses for the ddf raid6 layout
-> +	 */
-> +	len =3D sizeof(struct page *) * (num+2) + sizeof(addr_conv_t) * (num+2);
-> +
-> +	return len;
-> +}
+The second paragraph is already done (in for-next).  md.c doesn't
+check chunksize any more, that is only checked in personality modules
+that care.
 
-The comment is a bit misleading as the function only returns the
-_amount_ of space needed. It should probably also explain the meaning
-of the "+2".
+What I was suggesting for you is the previous paragraph.  Removing all
+knowledge about specific raid levels from md.c.
+So where ever md.c tests the value for mddev->level, ask the question:
+how can this information be extracted from the module rather than
+having this hard-coded test.
 
-> +/* return a pointer to the address conversion region of the scribble buf=
-fer */
-> +static addr_conv_t *sh_to_addr_conv(struct stripe_head *sh)
-> +{
-> +	return sh->scribble + sizeof(struct page *) * (sh->disks + 2);
-> +}
-
-Maybe it's safer to return NULL if sh->scribble is NULL.
-
-Thanks
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
+Probably the easiest would be moving
 
 
---JcGvecxLhm+LytDG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+	if (mddev->recovery_cp != MaxSector &&
+	    mddev->level >= 1)
+		printk(KERN_ERR "md: %s: raid array is not clean"
+		       " -- starting background reconstruction\n",
+		       mdname(mddev));
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
+into various ->run methods.
+Probably the hardest would be all the messing with LEVEL_MULTIPATH.
+Somewhere in between would be the tests for which levels support
+bitmaps.
 
-iD8DBQFKE7qmWto1QDEAkw8RAp1pAKCHzd0hL9/7QTD03jQJ32DeMIbIRACdFLeA
-N5Sy6bGqKv/anaFDpkQsz5E=
-=i+qn
------END PGP SIGNATURE-----
+In general, we just want to delay the test until we are in personality
+code and do it there.
 
---JcGvecxLhm+LytDG--
+Does that make sense?
+
+Thanks,
+NeilBrown
