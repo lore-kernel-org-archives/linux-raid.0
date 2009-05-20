@@ -1,71 +1,97 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [PATCH v2 04/11] async_xor: permit callers to pass in a 'dma/page scribble' region
-Date: Wed, 20 May 2009 21:09:28 +0200
-Message-ID: <20090520190928.GL11504@skl-net.de>
-References: <20090519005647.4104.81119.stgit@dwillia2-linux.ch.intel.com> <20090519005946.4104.28803.stgit@dwillia2-linux.ch.intel.com> <20090520080818.GT6403@skl-net.de> <e9c3a7c20905201135y46022829s9b68d7ee81a5d3dc@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Starting RAID 5
+Date: Wed, 20 May 2009 15:45:47 -0400
+Message-ID: <4A145DEB.2080602@tmr.com>
+References: <20090515021521914.KSFT13751@cdptpa-omta01.mail.rr.com>    <adb53d3552334dd6c949c4c029ae7135.squirrel@neil.brown.name>    <4A117B0D.5040804@tmr.com> <bd12c2abf38ab775bf40fd52654daa36.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="zH41lVBEV8cLJnCl"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <e9c3a7c20905201135y46022829s9b68d7ee81a5d3dc@mail.gmail.com>
+In-Reply-To: <bd12c2abf38ab775bf40fd52654daa36.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: lrhorer@satx.rr.com, 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+NeilBrown wrote:
+> On Tue, May 19, 2009 1:13 am, Bill Davidsen wrote:
+>   
+>> NeilBrown wrote:
+>>     
+>>> On Fri, May 15, 2009 12:15 pm, Leslie Rhorer wrote:
+>>>
+>>>       
+>>>> OK, I've torn down the LVM backup arraqy and am rebuilding it as a RAID
+>>>> 5.
+>>>> I've had problems with this before, and I'm having them, again.  I
+>>>> created
+>>>> the array with:
+>>>>
+>>>> mdadm --create /dev/md0 --raid-devices=7 --metadata=1.2 --chunk=256
+>>>> --level=5 /dev/sd[a-g]
+>>>>
+>>>> whereupon it creates the array and then immediately removes /dev/sdg
+>>>> and
+>>>> makes it a spare.  I think I may have read where this is normal
+>>>> behavior.
+>>>>
+>>>>         
+>>> Correct. Maybe you read it in the mdadm man page.
+>>>
+>>>
+>>>
+>>>       
+>> While I know about that, I have never understood why that was desirable,
+>> or even acceptable, behavior. The array sits half created doing nothing
+>> until the system tries to use the array, at which time it's slow because
+>> it's finally getting around to actually getting the array into some
+>> sensible state. Is there some benefit to wasting time so the array can
+>> be slow when needed?
+>>     
+>
+> Is the "that" which you refer to the content of the previous paragraph,
+> or the following paragraph.
+>
+>   
+The problem in the following paragraph is caused by the behavior in the 
+first. I don't understand what benefit there is to bringing up the array 
+with a spare instead of N elements needing a rebuild. Is adding a spare 
+in place of the failed device the best (or only) way to kick off a resync?
 
---zH41lVBEV8cLJnCl
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> The content of your comment suggests the following paragraph which,
+> as I hint, is a misfeature that should be fixed by having mdadm
+> "poke it out of that" (i.e. set the array to read-write if it is
+> read-mostly).
+>
+> But the positioning of your comment makes it seem to refer to
+> the previous paragraph which is totally unrelated to your complaint,
+> but I will explain anyway.
+>
+> When a raid5 performs a 'resync' it reads every block, tests parity,
+> then if the parity is wrong, it writes out the correct parity block.
+> For an array with mostly correct parity, this involves sequential
+> reads across all devices in parallel and so is as fast as possible.
+> For an array with mostly incorrect parity (as is quite likely at
+> array creation) there will be many writes to parity block as well
+> as the reads, which will take a lot longer.
+>
+> If we instead make one drive a spare then raid5 will perform recovery
+> which involves reading N-1 drives and writing to the Nth drive.
+> All sequential IOs.  This should be as fast as resync on a mostly-clean
+> array, and much faster than resync on a mostly-dirty array.
+>   
 
-On 11:35, Dan Williams wrote:
+It's not the process I question, just leaving the resync until the array 
+is written by the user rather than starting it at once so the create 
+actually results in a fully functional array. I have the feeling that 
+raid6 did that, but I haven't hardware to test today.
 
-> > Don't we need to fall back to sync xor if src_cnt exceeds
-> > what the device can handle, i.e. if it is larger than
-> > chan->device->max_xor? async_xor_val() further down has a check for
-> > this condition.
->=20
-> No, we don't need this check for async_xor().  The asynchronous path
-> of async_xor_val() has the constraint that it must be able to validate
-> an xor block without writing to that block i.e. it is a read-only
-> operation.  The synchronous path recalculates the xor with the
-> destination as a source and then does a memcmp() to validate that the
-> new result is zero.
->=20
-> To support more than ->max_xor sources for async_xor_val() we would
-> need an engine that supported hardware continuation of validate
-> operations (i.e. an engine with an internal buffer for the
-> intermediate xor result) otherwise we will need to store an
-> intermediate xor result in system memory which is no better than the
-> synchronous path.
->=20
-> For async_xor() we are always allowed to write the destination, so we
-> can reuse it as a source to continue the calculation of the xor
-> result.
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
 
-I see. Thanks for this detailed explanation!
+"You are disgraced professional losers. And by the way, give us our money back."
+    - Representative Earl Pomeroy,  Democrat of North Dakota
+on the A.I.G. executives who were paid bonuses  after a federal bailout.
 
-BTW: So far I've only glanced at patches 7-11 of your series. I will
-review these patches this evening and tomorrow, so I'll send another
-batch of comments/questions/sign-offs by Friday.
 
-Robinson^WAndre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---zH41lVBEV8cLJnCl
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFKFFVoWto1QDEAkw8RAohHAKCQaRe2u+7Nlh+8bBdk+4odNdWylgCdGHj7
-wla1oy5r6h8Ui5KVPFQm5rw=
-=CmPj
------END PGP SIGNATURE-----
-
---zH41lVBEV8cLJnCl--
