@@ -1,30 +1,44 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Subject [ md PATCH 4/6] : md to support page size chunks in
-	the case of raid 0
-Date: Thu, 21 May 2009 13:13:57 +1000
-Message-ID: <18964.50933.544742.732019@notabene.brown>
-References: <1242687989.21201.16.camel@raz>
-	<18962.444.630305.895248@notabene.brown>
-	<20090520075117.GQ6403@skl-net.de>
-	<18963.55483.993420.606497@notabene.brown>
-	<1242826211.3322.60.camel@raz>
+From: SandeepKsinha <sandeepksinha@gmail.com>
+Subject: Re: [PATCH] md: Enhancements and clean to linear RAID
+Date: Thu, 21 May 2009 08:45:15 +0530
+Message-ID: <37d33d830905202015xc7e9c63pe646f7dbbf4dec4d@mail.gmail.com>
+References: <37d33d830905182323x22eec1c8l2a7471668c1a02b3@mail.gmail.com>
+	 <9a138833b29b54e5d6c1eaa188f27399.squirrel@neil.brown.name>
+	 <37d33d830905190031u5172af46kccb720343e359d99@mail.gmail.com>
+	 <37d33d830905190346g4147a114o5f4a53bf64c1ebac@mail.gmail.com>
+	 <18962.39477.173613.395401@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from raz ben yehuda on Wednesday May 20
+In-Reply-To: <18962.39477.173613.395401@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: raz ben yehuda <raziebe@gmail.com>
-Cc: Andre Noll <maan@systemlinux.org>, linux-raid <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wednesday May 20, raziebe@gmail.com wrote:
-> > 
-> > In general, we just want to delay the test until we are in personality
-> > code and do it there.
-> why not add a new method ? pers->validate_parms ?  
+Hi Neil,
 
-because a new method should not be necessary.  We should be able to
-manage with what we have - or even fewer...
+> I have applied them all (with very minor cleanups) and pushed them to
+> my for-next tree.
 
-NeilBrown
+
+Can you help me pull out this git tree?
+How can I do this ?
+
+--=20
+Regards,
+Sandeep.
+
+
+
+
+
+ =09
+=93To learn is to change. Education is a process that changes the learn=
+er.=94
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
