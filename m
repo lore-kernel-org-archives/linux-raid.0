@@ -1,132 +1,96 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Subject: [PATCH 006/009]: raid1: chunk size check in run
-Date: Thu, 21 May 2009 13:11:39 +1000
-Message-ID: <18964.50795.747389.606277@notabene.brown>
-References: <1242749054.3293.53.camel@raz>
-	<18963.24749.218732.45333@notabene.brown>
-	<1242827438.3322.81.camel@raz>
+From: Tim Connors <tconnors@rather.puzzling.org>
+Subject: raid failure and LVM volume group availability
+Date: Thu, 21 May 2009 13:07:09 +1000 (EST)
+Message-ID: <alpine.DEB.2.00.0905211232250.26077@dirac.rather.puzzling.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from raz ben yehuda on Wednesday May 20
 Sender: linux-raid-owner@vger.kernel.org
-To: raz ben yehuda <raziebe@gmail.com>
-Cc: linux raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-On Wednesday May 20, raziebe@gmail.com wrote:
-> Neil
-> First I thank you for your effort. Now I can work in full steam on the
-> reshape on top of the new raid0 code. Currently this is what I have in
-> mind.If you have any design suggestions I would be happy to hear before
-> the coding.
-> 
->    I added : raid0_add_hot that:
-> 	1. checks if the new disk size if smaller than the raid chunk size. if
-> so , reject.
-> 	2. check if new the disk size max_hw_sectors is smaller than the
-> raid's. if so generate a warning but do not reject.   
->  	3. adds a disk to raid0 disk list. and turns off its in_sync bit.
+I had a raid device (with LVM ontop of it) that failed through the disks
+being disconnected in a long power failure that outlasted the UPS (the
+computer, being a laptop, had its own builtin UPS).
 
-I don't think the 'in_sync' bit is used in raid0 currently, so that
-bit seems irrelevant, but shouldn't hurt.
+While I could just reboot the computer, I don't particularly want to
+reboot it just yet.  Unfortunately, failing a raid device like that means
+that the volume group half disappears in a stream of I/O errors, but you
+can't stop the raid device because it still has something accessing it
+(LVM), but you can't make LVM stop accessing it by making the volume group
+unavailable because it is suffering from I/O errors:
 
-> 
-> I will add raid0_check_reshape 
->       This procedure prepares the raid for the reshape process.
-> 	1. Creates a temporary mddev with the same disks as the raid's and with
-> the new disks. This raid acts as a mere mappings so i will be able to
-> map sectors to the new target raid in the reshape process. This means i
-> have to work in create_strip_zones raid0_run ( separate patch ).
->         2. Sets the target raid transfer size.
-> 	3. Create an allocation scheme for reshape bio allocation. i reshape in
-> chunk size. 
-> 	4. create raid0_reshape thread for writes.
-> 	5. wake up raid0_sync thread. 
+> mdadm -S /dev/md0
+mdadm: fail to stop array /dev/md0: Device or resource busy
+Perhaps a running process, mounted filesystem or active volume group?
 
-Do you really need a temporary mddev, or just a temporary 'conf'??
-Having to create the raid0_reshape thread just for writes is a bit
-unfortunate, but it probably is the easiest approach.  You might be
-able to get the raid0_sync thread to do them, but that would be messy
-I expect.
+> vgchange -an
+  /dev/md0: read failed after 0 of 4096 at 0: Input/output error
+  /dev/dm-5: read failed after 0 of 4096 at 0: Input/output error
+  Can't deactivate volume group "500_lacie" with 2 open logical volume(s)
+  Can't deactivate volume group "laptop_250gb" with 3 open logical volume(s)
 
-> 
-> I will add raid0_sync: raid0_sync acts as the reshape read size process.
-> 
->     1. Allocates a read bio.	
->     2. Map_bio target with find_zone and map_sector, both map_sector and
-> find_zone are using the old raid mappings.
->     3. Deactivate the raid.
->     3. Lock and wait for the raid to be emptied from any previous IOs.
->     4. Generate a read request.
->     5. Release the lock. 
+> vgchange -an rotating_backup
+  /dev/md0: read failed after 0 of 4096 at 0: Input/output error
+  /dev/dm-5: read failed after 0 of 4096 at 0: Input/output error
+  /dev/md0: read failed after 0 of 4096 at 1000204664832: Input/output error
+  /dev/md0: read failed after 0 of 4096 at 1000204722176: Input/output error
+  /dev/md0: read failed after 0 of 4096 at 0: Input/output error
+  /dev/md0: read failed after 0 of 4096 at 4096: Input/output error
+  /dev/md0: read failed after 0 of 4096 at 0: Input/output error
+  /dev/dm-5: read failed after 0 of 4096 at 644245028864: Input/output error
+  /dev/dm-5: read failed after 0 of 4096 at 644245086208: Input/output error
+  /dev/dm-5: read failed after 0 of 4096 at 0: Input/output error
+  /dev/dm-5: read failed after 0 of 4096 at 4096: Input/output error
+  /dev/dm-5: read failed after 0 of 4096 at 0: Input/output error
+  Volume group "rotating_backup" not found
 
-I think that sounds correct.
+The lvm device file still exists,
 
-> 
-> I will add reshape_read_endio: 
-> 	if IO is successful then:
-> 		add the bio to reshape_list
-> 	else
-> 		add the bio to a retry list ( how many retries .. ?)
+> ls -lA /dev/rotating_backup /dev/mapper/rotating_backup-rotating_backup
+brw-rw---- 1 root disk 254, 5 May 10 09:22 /dev/mapper/rotating_backup-rotating_backup
 
-zero retries.  The underlying block device has done all the retries
-that are appropriate.  If you get a read error, then that block is
-gone.  Probably the best you can do is write garbage to the
-destination and report the error.
+/dev/rotating_backup:
+total 0
+lrwxrwxrwx 1 root root 43 May 10 09:22 rotating_backup -> /dev/mapper/rotating_backup-rotating_backup
 
-> 
-> I will add raid0_reshape: 
-> 	raid0_reshape is a md_thread that polls on the reshape_list and
-> commences writes based on the reads.
-> 	1. Grub a bio from reshape list.
-> 	2. map sector and find zone on the new raid mappings. 
-> 	3. set bio direction to write.
-> 	4. generate a write.
-> 	
-> 	if bio is in retry_list retry the bio.
-> 	if bio is in active_io list do the bio.
-> 	
-> I will add a reshape_write_endio that just frees the bio and his pages.
+however lvdisplay, vgdisplay and pvdisplay can't access it:
+> vgdisplay
+  /dev/md0: read failed after 0 of 4096 at 0: Input/output error
+  /dev/dm-5: read failed after 0 of 4096 at 0: Input/output error
+  --- Volume group ---
+  VG Name               500_lacie
+...
 
-OK (except for the retry).
+but the raid device files don't exist (the drive I plugged back in later
+was given a new device name, /dev/sda1) and obviously raid is not very
+happy anymore:
 
-> 
-> raid0_make_request
-> 	I will add a check and see if the raid is in reshape. 
-> 	if so then
-> 		if IO is in the new mappings area we generate the IO
-> 				from the new mappings.
-> 		if IO is in the old mappings then we generate the IO
-> 				from the old mappings ( race here .. no ?)
-> 		if IO is in the current reshape active area, we push the io to a
-> active_io list that will processed by raid0_reshape.
+> cat /proc/mdstat
+Personalities : [raid1]
+md0 : active raid1 sdc1[0] sdb1[2](F)
+      976762432 blocks [2/1] [U_]
+      bitmap: 147/233 pages [588KB], 2048KB chunk
+> ls -lA /dev/sdc1 /dev/sdb1 /dev/md0
+ls: cannot access /dev/sdc1: No such file or directory
+ls: cannot access /dev/sdb1: No such file or directory
+brw-rw---- 1 root disk 9, 0 May 10 09:22 /dev/md0
 
-This doesn't seem to match what you say above.
-If you don't submit a read for 'reshape' until all IO has drained,
-then presumably you would just block any incoming IO until the current
-reshape requests have all finished.  i.e. you only ever have IO or
-reshape, but not both.
 
-Alternately  you could have a sliding window covering there area
-that is currently being reshaped.
-If an IO comes in for that area, you need to either
-  - close the window and perform the IO, or
-  - wait for the window to slide past.
+Does anyone know a way out of this, sans rebooting?
+I don't suspect I could just add /dev/sda1 back into the array because I'm
+sure LVM would still complain about IO errors even if raid would let me (I
+suspect raid itself will also fail to add the disk back because it is
+still trying to be active but has no live disks so would be completely
+inconsistent).
 
-I would favour the latter.  But queueing the IO for raid0_reshape doesn't
-really gain you anything I think.
+Is it possible to force both lvm and md to give up on the device so I can
+readd them without rebooting (since they're not going to be anymore
+corrupt yet than you'd expect from an unclean shutdown, because there's
+been no IO to them yet, so I should just be able to readd them, mount and
+resync)?
 
-Issues that you haven't mentioned:
-  - metadata update: you need to record progress in the metadata
-    as the window slides along, in case of an unclean restart
-  - Unless you only schedule one chunk at a time (which would be slow
-    things down I expect), you need to ensure that you don't schedule
-    a write to block for which the read hasn't completed yet.
-    This is particularly an issues if you support changing the 
-    chunk size.
-  - I assume you are (currently) only supporting a reshape that
-    increases the size of the array and the number of devices?
-
-NeilBrown
+-- 
+TimC
+"This company performed an illegal operation but they will not be shut
+down."     -- Scott Harshbarger from consumer lobby group on Microsoft
