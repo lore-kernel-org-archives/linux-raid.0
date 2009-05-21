@@ -1,50 +1,73 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: "raid array not clean" messages
-Date: Thu, 21 May 2009 14:38:02 -0400
-Message-ID: <4A159F8A.5070302@tmr.com>
-References: <5817fbed0905202136i1e7e73dfk58dfe375baa06360@mail.gmail.com>	<37d33d830905202149u7759fc36id79cc69757892f95@mail.gmail.com>	<4A43563A-43D5-437D-A916-0DCCB1A61239@gmail.com>	<5817fbed0905202211t6f2b73d3o187906f77383fe5b@mail.gmail.com> <18964.62098.885221.299555@notabene.brown>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH 1/3] iop-adma: cleanup iop_adma_run_tx_complete_actions
+Date: Thu, 21 May 2009 12:04:12 -0700
+Message-ID: <20090521190412.18676.89039.stgit@dwillia2-linux.ch.intel.com>
+References: <20090521190336.18676.46149.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18964.62098.885221.299555@notabene.brown>
+In-Reply-To: <20090521190336.18676.46149.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: fibre raid <fibreraid@gmail.com>, Christopher Chen <muffaleta@gmail.com>, SandeepKsinha <sandeepksinha@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
+Cc: adhiraj@linsyssoft.com
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Thursday May 21, fibreraid@gmail.com wrote:
->   
->> I have no problem with this message being written to
->> /var/log/messages, but in our case, we don't want it on the console.
->> We want the console to only be there for kernel crash dumps (if they
->> occur), nothing else.
->>     
->
-> I feel you are a bit optimistic...
->
-> But I guess what you are really asking is for the message to be
-> printed with a lower priority than KERN_ERR - maybe KERN_INFO.
-> It is in drivers/md/md.c at the end of analyze_sbs.
->
-> You would need to compile a new kernel to achieve that.
->   
+Replace 'desc->async_tx.' with 'tx->'
 
-Since it is actually informational rather than an error, I would think 
-KERN_INFO would be more correct for all users. Then people who want 
-stuff like that can play with their syslog configuration to see it if 
-they want. I agree that conditions which do not require intervention to 
-correct them are not errors, messages about them are for informational 
-purposes. Hardware errors and failure in unexpected places don't need to 
-bother the operator (for whatever definition of operator you like).
+[ Impact: pure cleanup ]
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/dma/iop-adma.c |   19 ++++++++++---------
+ 1 files changed, 10 insertions(+), 9 deletions(-)
 
-"You are disgraced professional losers. And by the way, give us our money back."
-    - Representative Earl Pomeroy,  Democrat of North Dakota
-on the A.I.G. executives who were paid bonuses  after a federal bailout.
-
+diff --git a/drivers/dma/iop-adma.c b/drivers/dma/iop-adma.c
+index 4496bc6..ce45f3f 100644
+--- a/drivers/dma/iop-adma.c
++++ b/drivers/dma/iop-adma.c
+@@ -61,17 +61,18 @@ static dma_cookie_t
+ iop_adma_run_tx_complete_actions(struct iop_adma_desc_slot *desc,
+ 	struct iop_adma_chan *iop_chan, dma_cookie_t cookie)
+ {
+-	BUG_ON(desc->async_tx.cookie < 0);
+-	if (desc->async_tx.cookie > 0) {
+-		cookie = desc->async_tx.cookie;
+-		desc->async_tx.cookie = 0;
++	struct dma_async_tx_descriptor *tx = &desc->async_tx;
++
++	BUG_ON(tx->cookie < 0);
++	if (tx->cookie > 0) {
++		cookie = tx->cookie;
++		tx->cookie = 0;
+ 
+ 		/* call the callback (must not sleep or submit new
+ 		 * operations to this channel)
+ 		 */
+-		if (desc->async_tx.callback)
+-			desc->async_tx.callback(
+-				desc->async_tx.callback_param);
++		if (tx->callback)
++			tx->callback(tx->callback_param);
+ 
+ 		/* unmap dma addresses
+ 		 * (unmap_single vs unmap_page?)
+@@ -81,7 +82,7 @@ iop_adma_run_tx_complete_actions(struct iop_adma_desc_slot *desc,
+ 			struct device *dev =
+ 				&iop_chan->device->pdev->dev;
+ 			u32 len = unmap->unmap_len;
+-			enum dma_ctrl_flags flags = desc->async_tx.flags;
++			enum dma_ctrl_flags flags = tx->flags;
+ 			u32 src_cnt;
+ 			dma_addr_t addr;
+ 			dma_addr_t dest;
+@@ -115,7 +116,7 @@ iop_adma_run_tx_complete_actions(struct iop_adma_desc_slot *desc,
+ 	}
+ 
+ 	/* run dependent operations */
+-	dma_run_dependencies(&desc->async_tx);
++	dma_run_dependencies(tx);
+ 
+ 	return cookie;
+ }
 
