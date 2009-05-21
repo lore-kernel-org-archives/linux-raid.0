@@ -1,33 +1,42 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: "raid array not clean" messages
-Date: Thu, 21 May 2009 16:20:02 +1000
-Message-ID: <18964.62098.885221.299555@notabene.brown>
-References: <5817fbed0905202136i1e7e73dfk58dfe375baa06360@mail.gmail.com>
-	<37d33d830905202149u7759fc36id79cc69757892f95@mail.gmail.com>
-	<4A43563A-43D5-437D-A916-0DCCB1A61239@gmail.com>
-	<5817fbed0905202211t6f2b73d3o187906f77383fe5b@mail.gmail.com>
+From: Nix <nix@esperi.org.uk>
+Subject: Re: How to un-degrade an array after a totally spurious failure?
+Date: Thu, 21 May 2009 08:32:23 +0100
+Message-ID: <87my96ews8.fsf@hades.wkstn.nix>
+References: <87skiztloo.fsf@hades.wkstn.nix>
+	<97f847c1f487636ed40b8c1db1b98105.squirrel@neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from fibre raid on Thursday May 21
+In-Reply-To: <97f847c1f487636ed40b8c1db1b98105.squirrel@neil.brown.name> (NeilBrown's message of "Thu, 21 May 2009 12:49:04 +1000 (EST)")
 Sender: linux-raid-owner@vger.kernel.org
-To: fibre raid <fibreraid@gmail.com>
-Cc: Christopher Chen <muffaleta@gmail.com>, SandeepKsinha <sandeepksinha@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday May 21, fibreraid@gmail.com wrote:
-> I have no problem with this message being written to
-> /var/log/messages, but in our case, we don't want it on the console.
-> We want the console to only be there for kernel crash dumps (if they
-> occur), nothing else.
+On 21 May 2009, NeilBrown outgrape:
 
-I feel you are a bit optimistic...
+> On Thu, May 21, 2009 9:10 am, Nix wrote:
+>
+>> So, anyone got a command that would help? I'm not even sure if this is
+>> assembly or growth: it doesn't quite fit into either of those
+>> categories. There must be a way to do this, surely?
+>
+> It is neither.  It is management.
 
-But I guess what you are really asking is for the message to be
-printed with a lower priority than KERN_ERR - maybe KERN_INFO.
-It is in drivers/md/md.c at the end of analyze_sbs.
+And it says as much in the manpage quite clearly now I look specifically
+for it. Maybe trying to fix things at 11pm isn't the best idea.
 
-You would need to compile a new kernel to achieve that.
+It's reconstructing now (*slowly*: this ancient Symbios SCSI card goes
+into a sort of ultra-sluggish mode when it loses parity --- I think it
+stops doing DMA --- so we're seeing astounding 1Mb/s transfer rates.)
 
-NeilBrown
+But it should be finished by, oh, tomorrow, and the annealing jobs can
+keep running, as long as they're not too discomfited by their filesystem
+suddenly deciding to imitate a slow tape drive. :)
+
+>  mdadm --manage /dev/mdX --remove /dev/sdb6
+>  mdadm --manage /dev/mdX --add /dev/sdb6
+>
+> (The --manage is not actually needed, but it doesn't hurt).
+
+Thanks!
