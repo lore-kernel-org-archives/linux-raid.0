@@ -1,35 +1,69 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Does raid5 have error handling while reading?
-Date: Fri, 22 May 2009 18:35:48 +1000 (EST)
-Message-ID: <2bf95d5420210a8cab4700798fb6030c.squirrel@neil.brown.name>
-References: <691c243c0905220110y541ab523v5998b8054c89da60@mail.gmail.com>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [PATCH] md: Protecting mddev with barriers to avoid races
+Date: Fri, 22 May 2009 10:36:41 +0200
+Message-ID: <20090522083641.GQ11504@skl-net.de>
+References: <37d33d830905220118o1c5d6518l49b3dd1177d0a25e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="b6Y3a1uK/7FdRsLm"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <691c243c0905220110y541ab523v5998b8054c89da60@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <37d33d830905220118o1c5d6518l49b3dd1177d0a25e@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Xu Yuehai <raid.yuehai@gmail.com>
-Cc: linux-raid@vger.kernel.org, Trace Green <green.trace@gmail.com>
+To: SandeepKsinha <sandeepksinha@gmail.com>
+Cc: Neil Brown <neilb@suse.de>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, May 22, 2009 6:10 pm, Xu Yuehai wrote:
-> I know that if the read request of raid5 is handled by
-> chunk_aligned_read, there is no error handling in raid5. But, if this
-> read request is not aligned, that's say, raid5 need stripe_head to
-> deal with this request. I find in the code of 2.6.27 that there is no
-> error handling if this read request fail, I remember in older kernel,
-> some operations should be done such as compute_block. Am I right?
 
-If chunk_aligned_read results in an error, then the request
-is re-tried through the stripe cache.  I would call that "error handling".
+--b6Y3a1uK/7FdRsLm
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-If the cache finds that a drives is failed, the data is calculated
-from the other drives, though the code is not a straight forward
-as it used to be.
-See fetch_block5 which sets STRIPE_OP_COMPUTE_BLK which causes
-ops_run_compute5 to do the work (or to schedule the work on separate
-hardware).
+On 13:48, SandeepKsinha wrote:
+> Signed-off-by: Sandeep K Sinha <sandeepksinha@gmail.com>
+> Date:   Fri May 22 13:46:56 2009 +0530
+>=20
+>     Protecting mddev with barriers to avoid races.
+>=20
+> diff --git a/drivers/md/linear.c b/drivers/md/linear.c
+> index 9ad6ec4..e2dbda8 100644
+> --- a/drivers/md/linear.c
+> +++ b/drivers/md/linear.c
+> @@ -28,10 +28,12 @@
+>  static inline dev_info_t *which_dev(mddev_t *mddev, sector_t sector)
+>  {
+>         int lo, mid, hi;
+> -       linear_conf_t *conf =3D mddev_to_conf(mddev);
+> +       linear_conf_t *conf;
+>=20
+>         lo =3D 0;
+>         hi =3D mddev->raid_disks - 1;
+> +       barrier();
+> +       conf =3D mddev_to_conf(mddev);
 
-NeilBrown
+Are you sure that a compiler barrier is sufficient here? Maybe we
+need smp_mb(), but I'm not familar with all the different memory
+barrier types that exist in the kernel.
 
+And please do not use mddev_to_conf() any more.
+
+Thanks
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--b6Y3a1uK/7FdRsLm
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFKFmQZWto1QDEAkw8RAireAKCOdKJS7bu83QkkKJpnbLmzupXrjwCfYoZM
+yodUrZ5J88w4tO+fHAdfL3I=
+=IQr1
+-----END PGP SIGNATURE-----
+
+--b6Y3a1uK/7FdRsLm--
