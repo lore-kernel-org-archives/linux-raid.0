@@ -1,96 +1,100 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v2 09/11] async_tx: add support for asynchronous RAID6
-	recovery operations
-Date: Fri, 22 May 2009 11:39:06 -0700
-Message-ID: <e9c3a7c20905221139q7af824e7k6b3a8205ae73ac09@mail.gmail.com>
-References: <20090519005647.4104.81119.stgit@dwillia2-linux.ch.intel.com>
-	 <20090519010012.4104.50825.stgit@dwillia2-linux.ch.intel.com>
-	 <20090522082908.GN11504@skl-net.de>
+From: Redeeman <redeeman@metanurb.dk>
+Subject: Re: Poor write performance with write-intent bitmap?
+Date: Sat, 23 May 2009 01:00:25 +0200
+Message-ID: <1243033225.5740.30.camel@localhost>
+References: <a5cd9eed0904201012o67503049laa50f4cb5b8d88de@mail.gmail.com>
+	 <49ED096E.1000002@anonymous.org.uk>	<49ED16F7.3040906@anonymous.org.uk>
+	 <4081b80da35818efbc07723240f8ea36.squirrel@neil.brown.name>
+	 <49ED2BC3.7050109@anonymous.org.uk>
+	 <18925.24241.19288.797776@notabene.brown>
+	 <49EDB685.7000004@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090522082908.GN11504@skl-net.de>
+In-Reply-To: <49EDB685.7000004@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, May 22, 2009 at 1:29 AM, Andre Noll <maan@systemlinux.org> wrot=
-e:
-> On Mon, May 18, 2009 at 06:00:12PM -0700, Dan Williams wrote:
->> +/**
->> + * async_raid6_2data_recov - asynchronously calculate two missing d=
-ata blocks
->> + * @disks: number of disks in the RAID-6 array
->> + * @bytes: block size
->> + * @faila: first failed drive index
->> + * @failb: second failed drive index
->> + * @blocks: array of source pointers where the last two entries are=
- p and q
->> + * @submit: submission/completion modifiers
->> + */
->> +struct dma_async_tx_descriptor *
->> +async_raid6_2data_recov(int disks, size_t bytes, int faila, int fai=
-lb,
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 struct page **blocks, stru=
-ct async_submit_ctl *submit)
->> +{
->
-> [...]
->
->> + =A0 =A0 /* Dx =3D A*(P+Pxy) + B*(Q+Qxy) */
->> + =A0 =A0 srcs[0] =3D dp;
->> + =A0 =A0 srcs[1] =3D dq;
->> + =A0 =A0 coef[0] =3D raid6_gfexi[failb-faila];
->
-> Here it's essential that faila < failb. This should either be clearly
-> documented and checked for, or (better) the function should swap
-> faila and failb if they are in the wrong order.
+On Tue, 2009-04-21 at 13:05 +0100, John Robinson wrote:
+> On 21/04/2009 06:50, Neil Brown wrote:
+> > On Tuesday April 21, john.robinson@anonymous.org.uk wrote:
+> >> Eeek! Trying to `mdadm --grow /dev/md1 --bitmap=none` from my large 
+> >> chunk size caused a reboot! There's nothing in the log, and I didn't see 
+> >> the console. I still have my 32M chunksize but I don't want to try that 
+> >> again in a hurry :-)
+> > 
+> > That's a worry... I cannot easily reproduce it.  If it happens again
+> > and you get any more detail, I'm sure you'll let me know.
+> 
+> Sure will. For the moment I have something that looks slightly 
+> inconsistent: mdadm --detail shows no bitmap after the crash:
+> # mdadm --detail /dev/md1
+> /dev/md1:
+>          Version : 00.90.03
+>    Creation Time : Mon Jul 28 15:49:09 2008
+>       Raid Level : raid5
+>       Array Size : 1953310720 (1862.82 GiB 2000.19 GB)
+>    Used Dev Size : 976655360 (931.41 GiB 1000.10 GB)
+>     Raid Devices : 3
+>    Total Devices : 3
+> Preferred Minor : 1
+>      Persistence : Superblock is persistent
+> 
+>      Update Time : Tue Apr 21 12:37:15 2009
+>            State : clean
+>   Active Devices : 3
+> Working Devices : 3
+>   Failed Devices : 0
+>    Spare Devices : 0
+> 
+>           Layout : left-symmetric
+>       Chunk Size : 256K
+> 
+>             UUID : d8c57a89:166ee722:23adec48:1574b5fc
+>           Events : 0.6152
+> 
+>      Number   Major   Minor   RaidDevice State
+>         0       8        2        0      active sync   /dev/sda2
+>         1       8       18        1      active sync   /dev/sdb2
+>         2       8       34        2      active sync   /dev/sdc2
+> 
+> and indeed another attempt to remove the bitmap fails gently:
+> # mdadm --grow /dev/md1 --bitmap none
+> mdadm: no bitmap found on /dev/md1
+> 
+> However examining any of the devices making up the RAID appears to 
+> suggest there is a bitmap:
+> # mdadm --examine-bitmap /dev/sda2
+>          Filename : /dev/sda2
+>             Magic : 6d746962
+>           Version : 4
+>              UUID : d8c57a89:166ee722:23adec48:1574b5fc
+>            Events : 6148
+>    Events Cleared : 6148
+>             State : OK
+>         Chunksize : 32 MB
+>            Daemon : 5s flush period
+>        Write Mode : Normal
+>         Sync Size : 976655360 (931.41 GiB 1000.10 GB)
+>            Bitmap : 29806 bits (chunks), 10 dirty (0.0%)
+> 
+> Is this to be expected? I would have thought it would say nothing here, 
+> or say there's no bitmap.
 
-Yes, it would be safer if we did not trust the caller to get this right=
-=2E
+Hmm very good question, I'd like to know that aswell..
 
->
->> + =A0 =A0 p =3D blocks[disks-2];
->> + =A0 =A0 q =3D blocks[disks-1];
->> +
->> + =A0 =A0 /* Compute syndrome with zero for the missing data page
->> + =A0 =A0 =A0 =A0Use the dead data page as temporary storage for del=
-ta q */
->> + =A0 =A0 dq =3D blocks[faila];
->> + =A0 =A0 blocks[faila] =3D (void *)raid6_empty_zero_page;
->> + =A0 =A0 blocks[disks-1] =3D dq;
->> +
->> + =A0 =A0 submit->flags &=3D ~ASYNC_TX_ACK;
->> + =A0 =A0 submit->cb_fn =3D NULL;
->> + =A0 =A0 submit->cb_param =3D NULL;
->> + =A0 =A0 tx =3D async_gen_syndrome(blocks, 0, disks, bytes, submit)=
-;
->> + =A0 =A0 submit->depend_tx =3D tx;
->> +
->> + =A0 =A0 /* Restore pointer table */
->> + =A0 =A0 blocks[faila] =A0 =3D dq;
->> + =A0 =A0 blocks[disks-1] =3D q;
->> +
->> + =A0 =A0 /* Now, pick the proper data tables */
->> + =A0 =A0 coef =3D raid6_gfinv[raid6_gfexp[faila]];
->
-> Pick data tables? The formula for recovering the data block is
->
-> =A0 =A0 =A0 =A0(q + dq) / g^faila
->
-> (with g being the generator). What this line actually does is computi=
-ng
-> g^{-faila}.
+<snip>
+> Many thanks for all your advice and assistance.
+> 
+> Cheers,
+> 
+> John.
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Yeah, that is a leftover comment from the original implementation,
-I'll change it to be more informative.
-
-Thanks,
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
