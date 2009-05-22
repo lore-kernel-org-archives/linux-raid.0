@@ -1,57 +1,36 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: [PATCH] md: Protecting mddev with barriers to avoid races
-Date: Fri, 22 May 2009 18:58:27 +1000 (EST)
-Message-ID: <21131647e50f4a99c4a3b4261d1227be.squirrel@neil.brown.name>
-References: <37d33d830905220118o1c5d6518l49b3dd1177d0a25e@mail.gmail.com>
-    <20090522083641.GQ11504@skl-net.de>
+From: Xu Yuehai <raid.yuehai@gmail.com>
+Subject: Re: Does raid5 have error handling while reading?
+Date: Fri, 22 May 2009 17:13:59 +0800
+Message-ID: <691c243c0905220213i603ba115ga6aea27b7c564c1d@mail.gmail.com>
+References: <691c243c0905220110y541ab523v5998b8054c89da60@mail.gmail.com>
+	 <2bf95d5420210a8cab4700798fb6030c.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090522083641.GQ11504@skl-net.de>
+In-Reply-To: <2bf95d5420210a8cab4700798fb6030c.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
-Cc: SandeepKsinha <sandeepksinha@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, green.trace@gmail.com
 List-Id: linux-raid.ids
 
-On Fri, May 22, 2009 6:36 pm, Andre Noll wrote:
-> On 13:48, SandeepKsinha wrote:
->> Signed-off-by: Sandeep K Sinha <sandeepksinha@gmail.com>
->> Date:   Fri May 22 13:46:56 2009 +0530
->>
->>     Protecting mddev with barriers to avoid races.
->>
->> diff --git a/drivers/md/linear.c b/drivers/md/linear.c
->> index 9ad6ec4..e2dbda8 100644
->> --- a/drivers/md/linear.c
->> +++ b/drivers/md/linear.c
->> @@ -28,10 +28,12 @@
->>  static inline dev_info_t *which_dev(mddev_t *mddev, sector_t sector)
->>  {
->>         int lo, mid, hi;
->> -       linear_conf_t *conf = mddev_to_conf(mddev);
->> +       linear_conf_t *conf;
->>
->>         lo = 0;
->>         hi = mddev->raid_disks - 1;
->> +       barrier();
->> +       conf = mddev_to_conf(mddev);
 >
-> Are you sure that a compiler barrier is sufficient here? Maybe we
-> need smp_mb(), but I'm not familar with all the different memory
-> barrier types that exist in the kernel.
+> If chunk_aligned_read results in an error, then the request
+> is re-tried through the stripe cache.  I would call that "error handling".
 
-I think we just want a read barrier here:
-    smb_rmb();
-because it is a barrier between reading mddev->raid_disk and
-reading mddev->private.
+I think you mean that error() and raid5_align_endio are invoked and
+the read request is sent to conf->retry_read_aligned_list, then the
+raid5d will handle it.
 
-In linear_add, we want a write barrier
-    smb_wmb();
-before setting mdev->raid_disks, and I think we also want one
-before setting mddev->private to make sure that all the assignments
-to newconf->whatever are stable.
+> If the cache finds that a drives is failed, the data is calculated
+> from the other drives, though the code is not a straight forward
+> as it used to be.
+> See fetch_block5 which sets STRIPE_OP_COMPUTE_BLK which causes
+> ops_run_compute5 to do the work (or to schedule the work on separate
+> hardware).
+>
+I notice that the bit STRIPE_OP_COMPUTE_BLK is set if only s->uptodate
+== disks - 1, however, suppose there is just a single read request, I
+fail to find out why this condition is satisfied.
 
-NeilBrown
-
-
+Yuehai
