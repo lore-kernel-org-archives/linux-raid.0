@@ -1,62 +1,156 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Raid and badblocks
-Date: Fri, 22 May 2009 21:50:58 +1000 (EST)
-Message-ID: <77f027ed892f0a37b3df63d574ae7955.squirrel@neil.brown.name>
-References: <gv5q3p$vof$1@ger.gmane.org> <gv5qnk$1pe$1@ger.gmane.org>
+From: SandeepKsinha <sandeepksinha@gmail.com>
+Subject: Re: [PATCH] md: Protecting mddev with barriers to avoid races
+Date: Fri, 22 May 2009 19:11:12 +0530
+Message-ID: <37d33d830905220641u6adc39d4ucdd2b35e05983070@mail.gmail.com>
+References: <37d33d830905220118o1c5d6518l49b3dd1177d0a25e@mail.gmail.com>
+	 <20090522083641.GQ11504@skl-net.de>
+	 <21131647e50f4a99c4a3b4261d1227be.squirrel@neil.brown.name>
+	 <37d33d830905220246q45567d24p9619f1a02159632a@mail.gmail.com>
+	 <5d25cad49125a635da88c08650cadb07.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <gv5qnk$1pe$1@ger.gmane.org>
+In-Reply-To: <5d25cad49125a635da88c08650cadb07.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jeremy Sanders <jss@ast.cam.ac.uk>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Andre Noll <maan@systemlinux.org>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, May 22, 2009 7:19 pm, Jeremy Sanders wrote:
-> PS, here are some more data from the logs:
-> .....
-> sd 4:0:8:0: [sdj] Sense Key : Medium Error [current]
-> sd 4:0:8:0: [sdj] Add. Sense: Unrecovered read error
-> end_request: I/O error, dev sdj, sector 1953103080
-                                          ^^^^^^^^^^
-> Buffer I/O error on device sdj, logical block 244137885
-                                                ^^^^^^^^^
-> md: requested-resync of RAID array md0
-> md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-> md: using maximum available idle IO bandwidth (but not more than 200000
-> KB/sec) for requested-resync.
-> md: using 128k window, over a total of 976551040 blocks.
-                                         ^^^^^^^^^
-> md: md0: requested-resync done.
+On Fri, May 22, 2009 at 5:03 PM, NeilBrown <neilb@suse.de> wrote:
+> On Fri, May 22, 2009 7:46 pm, SandeepKsinha wrote:
+>> Hi Neil,
+>>
+>>
+>> On Fri, May 22, 2009 at 2:28 PM, NeilBrown <neilb@suse.de> wrote:
+>>> On Fri, May 22, 2009 6:36 pm, Andre Noll wrote:
+>>>> On 13:48, SandeepKsinha wrote:
+>>>>> Signed-off-by: Sandeep K Sinha <sandeepksinha@gmail.com>
+>>>>> Date: =A0 Fri May 22 13:46:56 2009 +0530
+>>>>>
+>>>>> =A0 =A0 Protecting mddev with barriers to avoid races.
+>>>>>
+>>>>> diff --git a/drivers/md/linear.c b/drivers/md/linear.c
+>>>>> index 9ad6ec4..e2dbda8 100644
+>>>>> --- a/drivers/md/linear.c
+>>>>> +++ b/drivers/md/linear.c
+>>>>> @@ -28,10 +28,12 @@
+>>>>> =A0static inline dev_info_t *which_dev(mddev_t *mddev, sector_t s=
+ector)
+>>>>> =A0{
+>>>>> =A0 =A0 =A0 =A0 int lo, mid, hi;
+>>>>> - =A0 =A0 =A0 linear_conf_t *conf =3D mddev_to_conf(mddev);
+>>>>> + =A0 =A0 =A0 linear_conf_t *conf;
+>>>>>
+>>>>> =A0 =A0 =A0 =A0 lo =3D 0;
+>>>>> =A0 =A0 =A0 =A0 hi =3D mddev->raid_disks - 1;
+>>>>> + =A0 =A0 =A0 barrier();
+>>>>> + =A0 =A0 =A0 conf =3D mddev_to_conf(mddev);
+>>>>
+>>>> Are you sure that a compiler barrier is sufficient here? Maybe we
+>>>> need smp_mb(), but I'm not familar with all the different memory
+>>>> barrier types that exist in the kernel.
+>>>
+>>> I think we just want a read barrier here:
+>>> =A0 =A0smb_rmb();
+>>> because it is a barrier between reading mddev->raid_disk and
+>>> reading mddev->private.
+>>>
+>>> In linear_add, we want a write barrier
+>>> =A0 =A0smb_wmb();
+>>> before setting mdev->raid_disks, and I think we also want one
+>>> before setting mddev->private to make sure that all the assignments
+>>> to newconf->whatever are stable.
+>>
+>> Do we really need one before setting mddev->private? Will newconf be
+>> used by anyone before its assigned to mddev->private?
+>> No. Then what makes you put a write barrier before it?
+>
+> I'm not 100% certain we do need it, but the logic goes like that:
+>
+> One processor does
+> =A0newconf->disks[0].end_sector =3D X;
+> =A0mddev->private =3D newconf;
+>
+> and another processor does
+> =A0 conf =3D mddev->private;
+> =A0 foo =3D conf->disk[0].end_sector;
+>
+> Due to the lack of memory ordering guarantees, foo could end up
+> with the value of end_sector *before* X was assigned to it.
+>
 
-Consider those three underlined numbers.
-
-The first is the (512byte) sector number of the error:
-   1953103080
-The second is the 4K block number.  Multiply by 8 to get sector number
-and we get
-   1953103080
-exactly the same.  That is encouraging.
-
-The third is the number of 1K blocks that the array covers.
-So double that to get sectors and the answer is
-   1953102080
-
-So that erroneous sector is 1000 sectors (500K) beyond the end of
-the data area of the array.  i.e. it is in the unused padding at the end,
-possibly near where the metadata lives.
-
-So md/raid5 will never touch that block.
-
-If you want to write to it which might make the drive think it isn't
-bad any more, you could
-   dd if=/dev/zero of=/dev/sdj seek=1953103080 count=1
-
-But if it were me, I would do
-   dd if=/dev/sdj of=/dev/null skip=1953103080 count=1
-and confirm that gives and error, just to double check the numbers.
-
-NeilBrown
+Not sure but can be a possibility. But I feel if thats the case, we
+might have to revisit the whole md code. I see similar instances at
+lot many places.
 
 
+> In fact, rcu_assign_pointer (in include/linux/rcupdate.h) has
+> exactly this purpose: place an smp_wmb before assigning the address
+> of a structure to a pointer, to ensure that the content of the
+> structure is globally visible before the address of the structure
+> become visible.
+> So I would probably do
+>
+> =A0 rcu_assign_pointer(mddev->private, newconf);
+> =A0 smb_wmb();
+> =A0 mddev->raid_disks ++;
+>
+> An alternative (which actually might be an improvement, I'm not
+> sure) is to have a conf->raid_disks field and use that value in
+> which_dev. =A0Then it would be more like
+>
+> =A0 mddev->raid_disk++;
+> =A0 newconf->raid_disk =3D mddev->raid_disks;
+> =A0 rcu_assign_pointer(mddev->private, newconf);
+>
+> and we only have one memory barrier.
+> The which_dev code then becomes:
+>
+> =A0 conf =3D rcu_dereference(mddev->private);
+> =A0 hi =3D conf->raid_disks =3D 1;
+> =A0 .....
+>
+
+I like this approach more. And this will surely keep consistency
+throughout the code.
+
+> and again we have only one memory barrier. =A0The significant benefit
+> of this is that instead of using the low level smp_[rw]mb() operation=
+s,
+> we use the higher level rcu_* interfaces which make it a lot more
+> obvious what we are doing.
+>
+> It would then be a very small step use use rcu_dereference for
+> all mddev->private accesses in linear.c, wrap them in rcu_read_{,un}l=
+ock,
+> and then use call_rcu to arrange for the old conf_t to be freed.
+>
+
+I am going to try this.
+
+Will keep you posted.
+
+
+> NeilBrown
+>
+>
+
+
+
+--=20
+Regards,
+Sandeep.
+
+
+
+
+
+ =09
+=93To learn is to change. Education is a process that changes the learn=
+er.=94
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
