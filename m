@@ -1,87 +1,49 @@
-From: SandeepKsinha <sandeepksinha@gmail.com>
-Subject: Re: [PATCH] md: Protecting mddev with barriers to avoid races
-Date: Fri, 22 May 2009 15:16:20 +0530
-Message-ID: <37d33d830905220246q45567d24p9619f1a02159632a@mail.gmail.com>
-References: <37d33d830905220118o1c5d6518l49b3dd1177d0a25e@mail.gmail.com>
-	 <20090522083641.GQ11504@skl-net.de>
-	 <21131647e50f4a99c4a3b4261d1227be.squirrel@neil.brown.name>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: Does raid5 have error handling while reading?
+Date: Fri, 22 May 2009 21:21:38 +1000 (EST)
+Message-ID: <826660809fa6b6432ed8866d24482b74.squirrel@neil.brown.name>
+References: <691c243c0905220110y541ab523v5998b8054c89da60@mail.gmail.com>
+    <2bf95d5420210a8cab4700798fb6030c.squirrel@neil.brown.name>
+    <691c243c0905220213i603ba115ga6aea27b7c564c1d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <21131647e50f4a99c4a3b4261d1227be.squirrel@neil.brown.name>
+In-Reply-To: <691c243c0905220213i603ba115ga6aea27b7c564c1d@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Andre Noll <maan@systemlinux.org>, Linux RAID <linux-raid@vger.kernel.org>
+To: Xu Yuehai <raid.yuehai@gmail.com>
+Cc: linux-raid@vger.kernel.org, green.trace@gmail.com
 List-Id: linux-raid.ids
 
-Hi Neil,
-
-
-On Fri, May 22, 2009 at 2:28 PM, NeilBrown <neilb@suse.de> wrote:
-> On Fri, May 22, 2009 6:36 pm, Andre Noll wrote:
->> On 13:48, SandeepKsinha wrote:
->>> Signed-off-by: Sandeep K Sinha <sandeepksinha@gmail.com>
->>> Date: =A0 Fri May 22 13:46:56 2009 +0530
->>>
->>> =A0 =A0 Protecting mddev with barriers to avoid races.
->>>
->>> diff --git a/drivers/md/linear.c b/drivers/md/linear.c
->>> index 9ad6ec4..e2dbda8 100644
->>> --- a/drivers/md/linear.c
->>> +++ b/drivers/md/linear.c
->>> @@ -28,10 +28,12 @@
->>> =A0static inline dev_info_t *which_dev(mddev_t *mddev, sector_t sec=
-tor)
->>> =A0{
->>> =A0 =A0 =A0 =A0 int lo, mid, hi;
->>> - =A0 =A0 =A0 linear_conf_t *conf =3D mddev_to_conf(mddev);
->>> + =A0 =A0 =A0 linear_conf_t *conf;
->>>
->>> =A0 =A0 =A0 =A0 lo =3D 0;
->>> =A0 =A0 =A0 =A0 hi =3D mddev->raid_disks - 1;
->>> + =A0 =A0 =A0 barrier();
->>> + =A0 =A0 =A0 conf =3D mddev_to_conf(mddev);
+On Fri, May 22, 2009 7:13 pm, Xu Yuehai wrote:
 >>
->> Are you sure that a compiler barrier is sufficient here? Maybe we
->> need smp_mb(), but I'm not familar with all the different memory
->> barrier types that exist in the kernel.
+>> If chunk_aligned_read results in an error, then the request
+>> is re-tried through the stripe cache.  I would call that "error
+>> handling".
 >
-> I think we just want a read barrier here:
-> =A0 =A0smb_rmb();
-> because it is a barrier between reading mddev->raid_disk and
-> reading mddev->private.
+> I think you mean that error() and raid5_align_endio are invoked and
+> the read request is sent to conf->retry_read_aligned_list, then the
+> raid5d will handle it.
+
+Yes, that sounds right.
+
 >
-> In linear_add, we want a write barrier
-> =A0 =A0smb_wmb();
-> before setting mdev->raid_disks, and I think we also want one
-> before setting mddev->private to make sure that all the assignments
-> to newconf->whatever are stable.
+>> If the cache finds that a drives is failed, the data is calculated
+>> from the other drives, though the code is not a straight forward
+>> as it used to be.
+>> See fetch_block5 which sets STRIPE_OP_COMPUTE_BLK which causes
+>> ops_run_compute5 to do the work (or to schedule the work on separate
+>> hardware).
+>>
+> I notice that the bit STRIPE_OP_COMPUTE_BLK is set if only s->uptodate
+> == disks - 1, however, suppose there is just a single read request, I
+> fail to find out why this condition is satisfied.
 
-Do we really need one before setting mddev->private? Will newconf be
-used by anyone before its assigned to mddev->private?
-No. Then what makes you put a write barrier before it?
+If there is just one read for a block on a device that has failed,
+then fetch_block5 will schedule read requests (Wantread) on all
+the other devices.  Once all those reads complete Uptodate will
+be set, so s->update will indeed equal disks - 1, and so
+COMPUTE_BLK will get set.
 
-> NeilBrown
->
->
->
+NeilBrown
 
-
-
---=20
-Regards,
-Sandeep.
-
-
-
-
-
- =09
-=93To learn is to change. Education is a process that changes the learn=
-er.=94
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
