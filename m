@@ -1,61 +1,38 @@
-From: mboisson <maxime.boissonneault@usherbrooke.ca>
-Subject: Upgrading a RAID configuration
-Date: Fri, 22 May 2009 10:15:02 -0700 (PDT)
-Message-ID: <23674714.post@talk.nabble.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v2 04/11] async_xor: permit callers to pass in a 'dma/page
+	scribble' region
+Date: Fri, 22 May 2009 10:25:54 -0700
+Message-ID: <e9c3a7c20905221025i71bfa9cfl37d8133b6c241bba@mail.gmail.com>
+References: <20090519005647.4104.81119.stgit@dwillia2-linux.ch.intel.com>
+	 <20090519005946.4104.28803.stgit@dwillia2-linux.ch.intel.com>
+	 <20090520080818.GT6403@skl-net.de>
+	 <e9c3a7c20905201135y46022829s9b68d7ee81a5d3dc@mail.gmail.com>
+	 <20090520190928.GL11504@skl-net.de>
+	 <20090522082946.GP11504@skl-net.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20090522082946.GP11504@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andre Noll <maan@systemlinux.org>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Fri, May 22, 2009 at 1:29 AM, Andre Noll <maan@systemlinux.org> wrote:
+> On Wed, May 20, 2009 at 09:09:28PM +0200, Andre Noll wrote:
+>
+>> BTW: So far I've only glanced at patches 7-11 of your series. I will
+>> review these patches this evening and tomorrow, so I'll send another
+>> batch of comments/questions/sign-offs by Friday.
+>
+> I've just sent a couple of review comments for the remaining patches.
+> Since I found only minor issues, feel free to add my sign-off to all
+> patches of the series.
 
-Hello,
-I am using Ubuntu Hardy with 3x500GB drives and the following RAID
-configuration :
+Thanks it is very much appreciated.
 
-/boot is on a 100MB RAID1
-/ is on a 30GB RAID0
-/home is on a 906GB RAID5
-
-I want to replace the 3 drives by 3 1TB drives.
-
-Here is how I planned to do it :
-0- Backup my /home on some external disk.
-1- backup / with something like :
-sudo tar cvpzf /backup.tgz --exclude=/media --exclude=/proc
---exclude=/lost+found --exclude=/backup.tgz --exclude=/mnt --exclude=/sys
---exclude=/home /
-mv /backup.tgz $1
-2- Replace 1 disk
-3- Boot and let the RAID1 and RAID5 reconstruct
-4- Replace 1 other disk
-5- Boot and let the RAID1 and RAID5 reconstruct again
-6- Replace the last disk
-7- Boot and let the RAID1 and RAID5 reconstruct one last time
-8- Boot and restore the backup on the RAID0 / partition.
-9- Resize the /home partition to 1 TB.
-
-I suspect there will be a problem replacing the primary disk, but I guessed
-that I could solve this simply by changing which is the primary disk in the
-BIOS.
-
-Is there any other problem that will or could happen ?
-
-For example, I am not sure if the raid manager is on the /boot partition or
-on the /. I guess if it is on /, it won't work at all since the raid manager
-itself won't be able to run ?
-Also, is it possible to boot and access a command line to restore the backup
-with a failed / partition ?
-
-I am also unsure about how I should proceed to resize the /home partition.
-Is this done through mdadm ?
-
-Please enlight me on any problems that I will have.
-
-Thanks
--- 
-View this message in context: http://www.nabble.com/Upgrading-a-RAID-configuration-tp23674714p23674714.html
-Sent from the linux-raid mailing list archive at Nabble.com.
-
+Strictly speaking your "-by" line in this scenario should be either
+Acked-by or Reviewed-by.  Signed-off-by is reserved for people who had
+the patch in their possession on its way to mainline.  Any heartburn
+if I use Reviewed-by?
