@@ -1,101 +1,41 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [PATCH v2 11/11] async_tx: raid6 recovery self test
-Date: Fri, 22 May 2009 10:29:23 +0200
-Message-ID: <20090522082923.GO11504@skl-net.de>
-References: <20090519005647.4104.81119.stgit@dwillia2-linux.ch.intel.com> <20090519010022.4104.8698.stgit@dwillia2-linux.ch.intel.com>
+Subject: Re: [PATCH v2 04/11] async_xor: permit callers to pass in a 'dma/page scribble' region
+Date: Fri, 22 May 2009 10:29:46 +0200
+Message-ID: <20090522082946.GP11504@skl-net.de>
+References: <20090519005647.4104.81119.stgit@dwillia2-linux.ch.intel.com> <20090519005946.4104.28803.stgit@dwillia2-linux.ch.intel.com> <20090520080818.GT6403@skl-net.de> <e9c3a7c20905201135y46022829s9b68d7ee81a5d3dc@mail.gmail.com> <20090520190928.GL11504@skl-net.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Ck22u5fw4m2k6hx2"
+	protocol="application/pgp-signature"; boundary="gQt10JDuGyDb0HQ5"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20090519010022.4104.8698.stgit@dwillia2-linux.ch.intel.com>
+In-Reply-To: <20090520190928.GL11504@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: Dan Williams <dan.j.williams@intel.com>
 Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---Ck22u5fw4m2k6hx2
+--gQt10JDuGyDb0HQ5
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, May 18, 2009 at 06:00:22PM -0700, Dan Williams wrote:
+On Wed, May 20, 2009 at 09:09:28PM +0200, Andre Noll wrote:
 
-> +static void makedata(void)
-> +{
-> +	int i, j;
-> +
-> +	for (i =3D 0; i < NDISKS; i++) {
+> BTW: So far I've only glanced at patches 7-11 of your series. I will
+> review these patches this evening and tomorrow, so I'll send another
+> batch of comments/questions/sign-offs by Friday.
 
-i < NDISKS - 2 would be sufficient.
+I've just sent a couple of review comments for the remaining patches.
+Since I found only minor issues, feel free to add my sign-off to all
+patches of the series.
 
-> +static char disk_type(int d)
-> +{
-> +	switch (d) {
-> +	case NDISKS-2:
-> +		return 'P';
-> +	case NDISKS-1:
-> +		return 'Q';
-> +	default:
-> +		return 'D';
-> +	}
-> +}
-
-I like this function very much because "if (disk_type(faila) =3D=3D 'Q')"
-is so much more readable than "if (faila =3D=3D num_disks - 1)". It's a
-pity that we only have it in this test module ;)
-
-> +/* Recover two failed blocks. */
-> +static void raid6_dual_recov(int disks, size_t bytes, int faila, int fai=
-lb, struct page **ptrs)
-
-As disks is always NDISKS, the disks parameter could be removed.
-
-> +{
-> +	struct async_submit_ctl submit;
-> +	addr_conv_t addr_conv[NDISKS];
-> +	struct completion cmp;
-> +	struct dma_async_tx_descriptor *tx =3D NULL;
-> +	enum sum_check_flags result =3D ~0;
-> +	bool dataq =3D false;
-> +
-> +	if (faila > failb)
-> +		swap(faila, failb);
-> +
-> +	init_async_submit(&submit, 0, NULL, NULL, NULL, addr_conv);
-> +	if (failb =3D=3D disks-1) {
-
-if (disk_type(failb) =3D=3D 'Q'). Similar for the other tests in this funct=
-ion.
-
-> +	/* Generate assumed good syndrome */
-> +	init_completion(&cmp);
-> +	init_async_submit(&submit, ASYNC_TX_ACK, NULL, callback, &cmp, addr_con=
-v);
-> +	async_gen_syndrome(dataptrs, 0, NDISKS, PAGE_SIZE, &submit);
-
-How hard would it be to also test the fallback code for the synchronous
-paths? AFAICS this test module wouldn't notice errors in the fallback
-logic.
-
-> +config ASYNC_RAID6_TEST
-> +	tristate "Self test for hardware accelerated raid6 recovery"
-> +	depends on MD_RAID6_PQ
-> +	select ASYNC_RAID6_RECOV
-> +	---help---
-> +	  This is a one-shot self test that permutes through the
-> +	  recovery of all the possible two disk failure scenarios for a
-> +	  N-disk array.  Recovery is performed with the asynchronous
-
-Currently N is 16. So s/N-disk/raid6 perhaps?
-
-Regards
+Thanks
 Andre
 --=20
 The only person who always got his work done by Friday was Robinson Crusoe
 
---Ck22u5fw4m2k6hx2
+--gQt10JDuGyDb0HQ5
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 Content-Disposition: inline
@@ -103,9 +43,9 @@ Content-Disposition: inline
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.1 (GNU/Linux)
 
-iD8DBQFKFmJjWto1QDEAkw8RAhYEAKCHkU/FYAxzI4UGMlVFdMbuqhWYqgCfaYRN
-bXTHc07+8Om6aNw7N6YUblA=
-=KoGi
+iD8DBQFKFmJ6Wto1QDEAkw8RAi8+AJ46T5sjdpSYJKEMjNndxq5i0ayXxwCglcqa
+w4feTotPGJ0TBZW9FMKmZDk=
+=ECA1
 -----END PGP SIGNATURE-----
 
---Ck22u5fw4m2k6hx2--
+--gQt10JDuGyDb0HQ5--
