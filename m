@@ -1,63 +1,66 @@
-From: Redeeman <redeeman@metanurb.dk>
-Subject: internal write-intent bitmap, chunksize, superblock
-Date: Sat, 23 May 2009 16:34:27 +0200
-Message-ID: <1243089267.5740.39.camel@localhost>
+From: rdc <denrdc@gmail.com>
+Subject: Missing md superblock on added devices after grow ...
+Date: Sat, 23 May 2009 17:03:03 +0200
+Message-ID: <200905231703.03692.denrdc@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello.
+Yesterday i grew my 4*500GB raid5 array to 7*500GB. The reshape operation 
+ended succesfully according to the logs : 
 
-I have just created a raid6 array with 8 1tb drives, and it uses the
-default metadata 0.9.
+May 22 22:24:56 [kernel] md: md2: reshape done.
+May 22 22:24:56 [kernel] RAID5 conf printout:
+May 22 22:24:56 [kernel]  --- rd:7 wd:7
+May 22 22:24:56 [kernel]  disk 0, o:1, dev:dm-3
+May 22 22:24:56 [kernel]  disk 1, o:1, dev:dm-0
+May 22 22:24:56 [kernel]  disk 2, o:1, dev:dm-2
+May 22 22:24:56 [kernel]  disk 3, o:1, dev:dm-1
+May 22 22:24:56 [kernel]  disk 4, o:1, dev:dm-8
+May 22 22:24:56 [kernel]  disk 5, o:1, dev:dm-6
+May 22 22:24:56 [kernel]  disk 6, o:1, dev:dm-5
 
-I have been reading up on write intent bitmaps, and i wish to create an
-internal one. I read about different chunk sizes yielding different
-performance costs, but one thing i wonder is, how much space is reserved
-in the superblock for the bitmap? and what happens if i try to create a
-bitmap which would take more than the reserved space?
+However, upon restarting this morning the grown array was no longer detected, 
+and my investigation revealed that the 3 device that were added do not contain 
+an md superblock at all !
 
+One of the 3 new devices :
+mdadm --examine -v /dev/sdb1
+mdadm: No md superblock detected on /dev/sdb1.
 
-this is the --detail of the array:
-/dev/md0:
-        Version : 00.90
-  Creation Time : Fri May 22 23:38:18 2009
-     Raid Level : raid6
-     Array Size : 5860559616 (5589.07 GiB 6001.21 GB)
-  Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
-   Raid Devices : 8
-  Total Devices : 8
-Preferred Minor : 0
-    Persistence : Superblock is persistent
+The 4 original devices do contain a superblock :
+mdadm --examine -v /dev/sdc1
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x0
+     Array UUID : 9ee9252c:7eeb7160:fd021026:b68a2612
+           Name : md/md2
+  Creation Time : Thu Jan  1 01:00:00 1970
+     Raid Level : raid5
+   Raid Devices : 7
 
-    Update Time : Sat May 23 16:33:50 2009
-          State : active
- Active Devices : 8
-Working Devices : 8
- Failed Devices : 0
-  Spare Devices : 0
+ Avail Dev Size : 976751872 (465.75 GiB 500.10 GB)
+     Array Size : 5860511232 (2794.51 GiB 3000.58 GB)
+   Super Offset : 976751920 sectors
+          State : clean
+    Device UUID : e2e95a27:c1d3d21d:2c7f1870:97156b44
 
-     Chunk Size : 64K
+    Update Time : Sat May 23 03:31:39 2009
+       Checksum : 2b125ad9 - correct
+         Events : 1790846
 
-           UUID : 8a52684a:161d95d0:2cd51773:dd992753 (local to host
-ida)
-         Events : 0.7
+         Layout : left-symmetric
+     Chunk Size : 32K
 
-    Number   Major   Minor   RaidDevice State
-       0       8        1        0      active sync   /dev/sda1
-       1       8       17        1      active sync   /dev/sdb1
-       2       8       33        2      active sync   /dev/sdc1
-       3       8       49        3      active sync   /dev/sdd1
-       4       8       65        4      active sync   /dev/sde1
-       5       8       81        5      active sync   /dev/sdf1
-       6       8       97        6      active sync   /dev/sdg1
-       7       8      113        7      active sync   /dev/sdh1
+    Array Slot : 1 (failed, 1, failed, 3, 6, 2, 0, 5, 4)
+   Array State : uUuuuuu 2 failed
 
-
-mvh.
-Kasper Sandberg
-
+Kernel version is 2.6.29-gentoo-r1, mdadm is v2.6.9
+Any ideas how i could fix this, or even start the array to get my data off ?
