@@ -1,68 +1,39 @@
-From: Raz <raziebe@gmail.com>
-Subject: Re: Subject: [001/002 ] raid0 reshape
-Date: Mon, 25 May 2009 23:06:04 +0300
-Message-ID: <5d96567b0905251306v4b1b2ef5p9268063ad81eacd8@mail.gmail.com>
-References: <1241300764.5607.36.camel@raz> <e9c3a7c20905191109s92db696ue31a20b0816a4aed@mail.gmail.com>
-	<18965.16276.485692.812516@notabene.brown> <87f94c370905211220n4e686a30ke452a56a2690d22b@mail.gmail.com>
-	<87r5ydqsrd.fsf@frosties.localdomain>
+From: Redeeman <redeeman@metanurb.dk>
+Subject: Re: Western Digital RE3
+Date: Mon, 25 May 2009 23:32:30 +0200
+Message-ID: <1243287150.5740.55.camel@localhost>
+References: <b9f8dfb10905250717p75c04aefqe8bff6776c1d3eda@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87r5ydqsrd.fsf@frosties.localdomain>
+In-Reply-To: <b9f8dfb10905250717p75c04aefqe8bff6776c1d3eda@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
+To: "MOgWai46[Saurceful of Secrets]" <street41@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-It is not clear to me why Linux has both LVM and md,waste of
-development effort to my opinion. Adding to that brtfs/zfs reaching
-mainline, Linux will have 3-4 volume managers to maintain.
-why not join hands  and come up with a single unify system?
-On Mon, May 25, 2009 at 3:19 PM, Goswin von Brederlow <goswin-v-b@web.d=
-e> wrote:
-> Greg Freemyer <greg.freemyer@gmail.com> writes:
->
->> =3D=3D> What I mean by raid equivalent levels
->>
->> More and more arrays allow the user to simply say "give me a 100 GB
->> logical volume with Raid 5 equivalent protection. =A0The array then
->> looks at the drives it has available and puts together the necessary
->> pieces. =A0As drives are added, removed it moves the data around und=
-er
->> its own control, but maintains the raid equivalent protection.
->>
->> Especially when working with dozens of drives and lots of logical
->> volumes it makes life much easier. =A0Admittedly it may come at a co=
-st
->> of not being able to specify raid levels with the specificity that
->> mdraid currently allows.
->>
->> =3D=3D>
->>
->> The reason I ask if this is the goal is that doing so may factor int=
-o
->> decisions about how reshaping is implemented.
->>
->> Greg
->
-> That really seems to scream for LVM to support more raid levels. It
-> already has linear, raid0 and raid1 support (although I have no idea
-> how device mapper raid1 compares to md raid1).
->
-> Those should be fleshed out more and also support raid 4/5/6 for what
-> you ask.
->
-> MfG
-> =A0 =A0 =A0 =A0Goswin
+On Mon, 2009-05-25 at 16:17 +0200, MOgWai46[Saurceful of Secrets] wrote:
+> Hi!
+> 
+> I would replace two Western Digital Velociraptor 300 GB 10K Rpm that
+> in the latest five month gave me a lot problems. Periodically i must
+> re-sync the linux raid 1 array because one of the two Velociraptor
+> stop to work. Someone have an experience with the Western Digital Raid
+> Edition 3 on a machine with linux software Raid 1?
+
+I have one in a raid1 with a seagate ES.2, works flawlessly, though its
+only been running for a month or two.
+
+i do however also have great success with WD RE2-GP and WD10EADS.
+
+
+> 
+> Thank you in advance
+> 
+> Andrea
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
