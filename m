@@ -1,58 +1,50 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 3/3] md: export 'frozen' resync state through sysfs
-Date: Mon, 25 May 2009 14:33:52 +1000
-Message-ID: <20090525043352.3758.60550.stgit@notabene.brown>
-References: <20090525042538.3758.7928.stgit@notabene.brown>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [PATCH v2 04/11] async_xor: permit callers to pass in a 'dma/page scribble' region
+Date: Mon, 25 May 2009 09:55:03 +0200
+Message-ID: <20090525075503.GR11504@skl-net.de>
+References: <20090519005647.4104.81119.stgit@dwillia2-linux.ch.intel.com> <20090519005946.4104.28803.stgit@dwillia2-linux.ch.intel.com> <20090520080818.GT6403@skl-net.de> <e9c3a7c20905201135y46022829s9b68d7ee81a5d3dc@mail.gmail.com> <20090520190928.GL11504@skl-net.de> <20090522082946.GP11504@skl-net.de> <e9c3a7c20905221025i71bfa9cfl37d8133b6c241bba@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="6nfUOKxk8V1TQsEu"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090525042538.3758.7928.stgit@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <e9c3a7c20905221025i71bfa9cfl37d8133b6c241bba@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: NeilBrown <neilb@suse.de>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The md resync engine has a 'frozen' state which ensures that
-no resync/recovery.  This is used to avoid races.
 
-Export this state through the 'sync_action' sysfs attribute
-so that user-space can benefit and also avoid some races.
+--6nfUOKxk8V1TQsEu
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: NeilBrown <neilb@suse.de>
----
+On 10:25, Dan Williams wrote:
 
- drivers/md/md.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
+> Strictly speaking your "-by" line in this scenario should be either
+> Acked-by or Reviewed-by.  Signed-off-by is reserved for people who had
+> the patch in their possession on its way to mainline.  Any heartburn
+> if I use Reviewed-by?
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index cc46c11..6683b9a 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -3303,7 +3303,9 @@ static ssize_t
- action_show(mddev_t *mddev, char *page)
- {
- 	char *type = "idle";
--	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) ||
-+	if (test_bit(MD_RECOVERY_FROZEN, &mddev->recovery))
-+		type = "frozen";
-+	else if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) ||
- 	    (!mddev->ro && test_bit(MD_RECOVERY_NEEDED, &mddev->recovery))) {
- 		if (test_bit(MD_RECOVERY_RESHAPE, &mddev->recovery))
- 			type = "reshape";
-@@ -3326,7 +3328,12 @@ action_store(mddev_t *mddev, const char *page, size_t len)
- 	if (!mddev->pers || !mddev->pers->sync_request)
- 		return -EINVAL;
- 
--	if (cmd_match(page, "idle")) {
-+	if (cmd_match(page, "frozen"))
-+		set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-+	else
-+		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
-+
-+	if (cmd_match(page, "idle") || cmd_match(page, "frozen")) {
- 		if (mddev->sync_thread) {
- 			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
- 			md_unregister_thread(mddev->sync_thread);
+No heartburns, just use Reviewed-by.
 
+Thanks
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
 
+--6nfUOKxk8V1TQsEu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFKGk7XWto1QDEAkw8RAjnaAJ9UNiEZNFTa+l6yhrBKKd4N/7+uyQCfbGGX
+v0BibnFpeD+AHMVgO9lHunQ=
+=YKoR
+-----END PGP SIGNATURE-----
+
+--6nfUOKxk8V1TQsEu--
