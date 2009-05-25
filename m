@@ -1,45 +1,49 @@
 From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: raid failure and LVM volume group availability
-Date: Mon, 25 May 2009 14:15:28 +0200
-Message-ID: <87vdnpqsyn.fsf@frosties.localdomain>
-References: <alpine.DEB.2.00.0905211232250.26077@dirac.rather.puzzling.org>
-	<7df2bc4ce840fbfa8d2bec357069bc5a.squirrel@neil.brown.name>
+Subject: Re: Subject: [001/002 ] raid0 reshape
+Date: Mon, 25 May 2009 14:19:50 +0200
+Message-ID: <87r5ydqsrd.fsf@frosties.localdomain>
+References: <1241300764.5607.36.camel@raz>
+	<e9c3a7c20905191109s92db696ue31a20b0816a4aed@mail.gmail.com>
+	<18965.16276.485692.812516@notabene.brown>
+	<87f94c370905211220n4e686a30ke452a56a2690d22b@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7df2bc4ce840fbfa8d2bec357069bc5a.squirrel@neil.brown.name>
-	(NeilBrown's message of "Thu, 21 May 2009 13:55:03 +1000 (EST)")
+In-Reply-To: <87f94c370905211220n4e686a30ke452a56a2690d22b@mail.gmail.com>
+	(Greg Freemyer's message of "Thu, 21 May 2009 15:20:42 -0400")
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Tim Connors <tconnors@rather.puzzling.org>, linux-raid@vger.kernel.org, dm-devel@redhat.com
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: Neil Brown <neilb@suse.de>, Dan Williams <dan.j.williams@intel.com>, raz ben yehuda <raziebe@013.net>, linux-raid@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>
 List-Id: linux-raid.ids
 
-"NeilBrown" <neilb@suse.de> writes:
+Greg Freemyer <greg.freemyer@gmail.com> writes:
 
-> On Thu, May 21, 2009 1:07 pm, Tim Connors wrote:
->> Is it possible to force both lvm and md to give up on the device so I can
->> readd them without rebooting (since they're not going to be anymore
->> corrupt yet than you'd expect from an unclean shutdown, because there's
->> been no IO to them yet, so I should just be able to readd them, mount and
->> resync)?
+> ==> What I mean by raid equivalent levels
 >
-> For the md side, you can just assemble the drives into an array with
-> a different name.
-> e.g.
->   mdadm -A /dev/md1 /dev/sda1 /dev/sd....
+> More and more arrays allow the user to simply say "give me a 100 GB
+> logical volume with Raid 5 equivalent protection.  The array then
+> looks at the drives it has available and puts together the necessary
+> pieces.  As drives are added, removed it moves the data around under
+> its own control, but maintains the raid equivalent protection.
 >
-> using whatever new names were given to the devices when you plugged them
-> back in.
-> Maybe you can do a similar thing with the LVM side, but I know nothing
-> about that.
+> Especially when working with dozens of drives and lots of logical
+> volumes it makes life much easier.  Admittedly it may come at a cost
+> of not being able to specify raid levels with the specificity that
+> mdraid currently allows.
 >
-> NeilBrown
+> ==>
+>
+> The reason I ask if this is the goal is that doing so may factor into
+> decisions about how reshaping is implemented.
+>
+> Greg
 
-On the device mapper side (the thing below lvm) you can use dmsetup to
-suspend, alter and resume the device mapper table of your
-devices. That should make the actual filesysems happy again.
+That really seems to scream for LVM to support more raid levels. It
+already has linear, raid0 and raid1 support (although I have no idea
+how device mapper raid1 compares to md raid1).
 
-Not sure what LVM tools will make of that though.
+Those should be fleshed out more and also support raid 4/5/6 for what
+you ask.
 
 MfG
         Goswin
