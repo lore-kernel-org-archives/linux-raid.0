@@ -1,61 +1,73 @@
-From: Maxime Boissonneault <maxime.boissonneault@usherbrooke.ca>
-Subject: Upgrading a software RAID
-Date: Mon, 25 May 2009 13:05:15 -0400
-Message-ID: <4A1ACFCB.7010604@usherbrooke.ca>
-References: <20090525173201.25dc3f35@hydro.bl.pg.gda.pl> <1243270350.11073.16.camel@cichlid.com>
+From: Alberto Bertogli <albertito@blitiri.com.ar>
+Subject: Re: [RFC PATCH] dm-csum: A new device mapper target that checks
+	data integrity
+Date: Mon, 25 May 2009 14:46:30 -0300
+Message-ID: <20090525174630.GI1376@blitiri.com.ar>
+References: <20090521161317.GU1376@blitiri.com.ar> <87my91qsn4.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1243270350.11073.16.camel@cichlid.com>
+Content-Disposition: inline
+In-Reply-To: <87my91qsn4.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: linux-kernel@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, agk@redhat.com, neilb@suse.de
 List-Id: linux-raid.ids
 
-Hello,
-I am using Ubuntu Hardy with 3x500GB drives and the following RAID
-configuration :
+On Mon, May 25, 2009 at 02:22:23PM +0200, Goswin von Brederlow wrote:
+> Alberto Bertogli <albertito@blitiri.com.ar> writes:
+> > I'm writing this device mapper target that stores checksums on writes and
+> > verifies them on reads.
+> 
+> How does that behave on crashes? Will checksums be out of sync with data?
+> Will pending blocks recalculate their checksum?
 
-/boot is on a 100MB RAID1
-/ is on a 30GB RAID0
-/home is on a 906GB RAID5
+It should behave well on crashes, the checksums should be in sync (see below),
+and there is no concept of "pending blocks".
 
-I want to replace the 3 drives by 3 1TB drives.
+Quoting from the docs (included at the beginning of the patch):
 
-Here is how I planned to do it :
-0- Backup my /home on some external disk.
-1- backup / with something like :
-sudo tar cvpzf /backup.tgz --exclude=/media --exclude=/proc
---exclude=/lost+found --exclude=/backup.tgz --exclude=/mnt --exclude=/sys
---exclude=/home /
-mv /backup.tgz $1
-2- Replace 1 disk
-3- Boot and let the RAID1 and RAID5 reconstruct
-4- Replace 1 other disk
-5- Boot and let the RAID1 and RAID5 reconstruct again
-6- Replace the last disk
-7- Boot and let the RAID1 and RAID5 reconstruct one last time
-8- Boot and restore the backup on the RAID0 / partition.
-9- Resize the /home partition to 1 TB.
+   It stores an 8-byte "integrity metadata" ("imd", from now on) structure for
+   each 512-byte data sector. imd structures are clustered in groups of 62
+   plus a small header, so they fit a sector (referred to as an "imd sector").
+   Every imd sector has a "brother", another adjacent imd sector, for
+   consistency purposes (explained below). That means we devote two sectors to
+   imd storage for every 62 data sectors.
 
-I suspect there will be a problem replacing the primary disk, but I guessed
-that I could solve this simply by changing which is the primary disk in the
-BIOS.
+   [...]
 
-Is there any other problem that will or could happen ?
+   To guarantee consistency, two imd sectors (named M1 and M2) are kept for
+   every 62 data sectors, and the following procedure is used to update them
+   when a write to a given sector is required:
 
-For example, I am not sure if the raid manager is on the /boot partition or
-on the /. I guess if it is on /, it won't work at all since the raid manager
-itself won't be able to run ?
-Also, is it possible to boot and access a command line to restore the backup
-with a failed / partition ?
+    - Read both M1 and M2.
+    - Find out (using information stored in their headers) which one is newer.
+      Let's assume M1 is newer than M2.
+    - Update the M2 buffer to mark it's newer, and update the new data's CRC.
+    - Submit the write to M2, and then the write to the data, using a barrier
+      to make sure the metadata is updated _after_ the data.
 
-I am also unsure about how I should proceed to resize the /home partition.
-Is this done through mdadm ?
+   Accordingly, the read operations are handled as follows:
 
-Please enlight me on any problems that I will have.
-
-Thanks
+    - Read both the data, M1 and M2.
+    - Find out which one is newer. Let's assume M1 is newer than M2.
+    - Calculate the data's CRC, and compare it to the one found in M1. If they
+      match, the reading is successful. If not, compare it to the one found in
+      M2. If they match, the reading is successful; otherwise, fail. If
+      the read involves multiple sectors, it is possible that some of the
+      correct CRCs are in M1 and some in M2.
 
 
+The barrier will be (it's not done yet) replaced with serialized writes for
+cases where the underlying block device does not support them, or when the
+integrity metadata resides on a different block device than the data.
+
+
+This scheme assumes writes to a single sector are atomic in the presence of
+normal crashes, which I'm not sure if it's something sane to assume in
+practise. If it's not, then the scheme can be modified to cope with that.
+
+
+Thanks a lot,
+		Alberto
 
