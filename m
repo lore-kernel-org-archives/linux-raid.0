@@ -1,9 +1,9 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 1/6] md: Make mddev->chunk_size sector-based.
-Date: Tue, 26 May 2009 09:02:20 +1000
-Message-ID: <18971.9084.661068.219724@notabene.brown>
+Subject: Re: [PATCH 4/6] md: convert conf->chunk_size and conf->prev_chunk to sectors.
+Date: Tue, 26 May 2009 09:14:25 +1000
+Message-ID: <18971.9809.796788.886556@notabene.brown>
 References: <1243243657-21855-1-git-send-email-maan@systemlinux.org>
-	<1243243657-21855-2-git-send-email-maan@systemlinux.org>
+	<1243243657-21855-5-git-send-email-maan@systemlinux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
@@ -15,32 +15,61 @@ Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 On Monday May 25, maan@systemlinux.org wrote:
-> This patch changes the type of the chunk_size field from int to
-> sector_t and renames it to chunk_sectors with the implied change of
-> semantics. Since
+> This kills some more shifts.
 > 
-> 	is_power_of_2(chunk_size) = is_power_of_2(chunk_sectors << 9)
-> 				  = is_power_of_2(chunk_sectors)
-> 
-> these bits don't need an adjustment for the shift.
 
-Thanks.
+> @@ -3916,9 +3915,9 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
+>  		raid5_compute_sector(conf, stripe_addr*(new_data_disks),
+>  				     1, &dd_idx, NULL);
+>  	last_sector =
+> -		raid5_compute_sector(conf, ((stripe_addr+conf->chunk_size/512)
+> -					    *(new_data_disks) - 1),
+> -				     1, &dd_idx, NULL);
+> +		raid5_compute_sector(conf, (stripe_addr + conf->chunk_sectors)
+> +					   * new_data_disks - 1,
+> +					   1, &dd_idx, NULL);
 
-I don't really want chunk_sectors to be sector_t - it is a waste on
-32bit, and would cause
-> +		if (sector_div(temp, mddev->chunk_sectors))
+FYI, the () that you removed there were present for a reason.  They
+help emacs C-mode to get the indenting right.
+Without them, the indent function make it look like
+> +		raid5_compute_sector(conf, (stripe_addr + conf->chunk_sectors)
+> +				     * new_data_disks - 1,
+> +				     1, &dd_idx, NULL);
 
-to fail.
-I've left it as 'int' and removed all the (int) casts and (sector_t)
-casts.   I adjusted the comment too.
+With them I get
+		raid5_compute_sector(conf, ((stripe_addr + conf->chunk_sectors)
+					    * new_data_disks - 1),
+				     1, &dd_idx, NULL);
 
-I also changed:
-	if (mddev->chunk_sectors << 9 < PAGE_SIZE ||
-to
-	if (mddev->chunk_sectors < (PAGE_SIZE >> 9) ||
-primarily because I need the brackets around the shift, even if the
-C compiler doesn't.
+which is "correct".
 
+> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+> index 1a25c9e..f2e1259 100644
+> --- a/drivers/md/raid5.h
+> +++ b/drivers/md/raid5.h
+> @@ -334,7 +334,8 @@ struct raid5_private_data {
+>  	struct hlist_head	*stripe_hashtbl;
+>  	mddev_t			*mddev;
+>  	struct disk_info	*spare;
+> -	int			chunk_size, level, algorithm;
+> +	sector_t		chunk_sectors;
+> +	int			level, algorithm;
+>  	int			max_degraded;
+>  	int			raid_disks;
+>  	int			max_nr_stripes;
+> @@ -350,7 +351,8 @@ struct raid5_private_data {
+>  	 */
+>  	sector_t		reshape_safe;
+>  	int			previous_raid_disks;
+> -	int			prev_chunk, prev_algo;
+> +	sector_t		prev_chunk_sectors;
+> +	int			prev_algo;
+>  	short			generation; /* increments with every reshape */
+>  	unsigned long		reshape_checkpoint; /* Time we last updated
+>  						     * metadata */
 
-Thanks,
+I restored these to 'int' too.
+
+Thanks!
+
 NeilBrown
