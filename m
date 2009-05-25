@@ -1,40 +1,30 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: [PATCH 2/6] md: Fix a bug in super_1_sync().
-Date: Mon, 25 May 2009 11:27:33 +0200
-Message-ID: <1243243657-21855-3-git-send-email-maan@systemlinux.org>
-References: <1243243657-21855-1-git-send-email-maan@systemlinux.org>
+Subject: [PATCH 0/6] md: More sector_t conversions -- intro
+Date: Mon, 25 May 2009 11:27:31 +0200
+Message-ID: <1243243657-21855-1-git-send-email-maan@systemlinux.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1243243657-21855-1-git-send-email-maan@systemlinux.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, Andre Noll <maan@systemlinux.org>
 List-Id: linux-raid.ids
 
-The new_chunk fields of both struct mddev_s and struct mdp_superblock_1
-are measured in bytes. However, in super_1_sync(), mddev->new_chunk
-is converted to sectors before it assigned to sb->new_chunk.
+Hi
 
-This results in a too small number being stored in the in-memory
-image of the superblock which could confuse the reshape process.
+this patch set against the for-next tree as of last Friday converts a
+couple of remaining internal representation of md sizes to sector_t,
+fixes a bug in the reshape code and adds a couple of trivial cleanups.
 
-Signed-off-by: Andre Noll <maan@systemlinux.org>
----
- drivers/md/md.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Patch #1 converts mddev->chunk_size which was previously stored
+in bytes.  Patch #2 fixes what I believe is a bug in super_1_sync()
+and might be a candiate for -stable. Patches #3 and #4 are further
+straight-forward conversions that deal with mddev->new_chunk,
+conf->chunk_size and conf->prev_chunk. Patches #5 and #6 are pure
+cleanups.
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 48bdbdf..66e32e4 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1402,7 +1402,7 @@ static void super_1_sync(mddev_t *mddev, mdk_rdev_t *rdev)
- 		sb->new_layout = cpu_to_le32(mddev->new_layout);
- 		sb->delta_disks = cpu_to_le32(mddev->delta_disks);
- 		sb->new_level = cpu_to_le32(mddev->new_level);
--		sb->new_chunk = cpu_to_le32(mddev->new_chunk>>9);
-+		sb->new_chunk = cpu_to_le32(mddev->new_chunk);
- 	}
- 
- 	max_dev = 0;
--- 
-1.5.4.3
+All patches pass the tests of the mdadm test suite except
+07reshape5intr which appears fail also for the vanilla for-next tree.
 
+Please review and consider for inclusion into for-next.
+
+Thanks
+Andre
