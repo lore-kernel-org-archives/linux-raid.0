@@ -1,22 +1,42 @@
-From: Peter Rabbitson <rabbit+list@rabbit.us>
-Subject: Re: LVM->RAID->LVM
-Date: Sun, 24 May 2009 21:46:42 +0200
-Message-ID: <4A19A422.3000204@rabbit.us>
-References: <a43edf1b0905241131t7dcb3d85v98597f061a4345d6@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: [md PATCH 1/3] md: improve errno return when setting array_size
+Date: Mon, 25 May 2009 14:33:52 +1000
+Message-ID: <20090525043351.3758.38621.stgit@notabene.brown>
+References: <20090525042538.3758.7928.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <a43edf1b0905241131t7dcb3d85v98597f061a4345d6@mail.gmail.com>
+In-Reply-To: <20090525042538.3758.7928.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Billy Crook <billycrook@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Billy Crook wrote:
-> <snip> 
-> I do wish there was an 'mdadm --block-until-all-healthy' that you
-> could use in scripts to block script execution until there were no
-> current or DELAYED resyncs or reshapes.
+Instead of always returns EINVAL if anything goes wrong
+when setting the array size, add the option of
+  E2BIG
+if the size requested is too large.  This makes it easier
+for user-space to be sure what went wrong.
 
-You mean mdadm -W ?
+Signed-off-by: NeilBrown <neilb@suse.de>
+---
+
+ drivers/md/md.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index fccc834..cc46c11 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -3680,7 +3680,7 @@ array_size_store(mddev_t *mddev, const char *buf, size_t len)
+ 		if (strict_blocks_to_sectors(buf, &sectors) < 0)
+ 			return -EINVAL;
+ 		if (mddev->pers && mddev->pers->size(mddev, 0, 0) < sectors)
+-			return -EINVAL;
++			return -E2BIG;
+ 
+ 		mddev->external_size = 1;
+ 	}
+
+
