@@ -1,63 +1,74 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: LVM->RAID->LVM
-Date: Mon, 25 May 2009 14:32:39 +0200
-Message-ID: <87iqjpqs60.fsf@frosties.localdomain>
-References: <a43edf1b0905241131t7dcb3d85v98597f061a4345d6@mail.gmail.com>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [PATCH 2/6] md: Fix a bug in super_1_sync().
+Date: Mon, 25 May 2009 15:40:46 +0200
+Message-ID: <20090525134046.GT11504@skl-net.de>
+References: <1243243657-21855-1-git-send-email-maan@systemlinux.org> <1243243657-21855-3-git-send-email-maan@systemlinux.org> <0fe21d52863495891c4d62bbbe61a36c.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="a6Ri6/t33sscKOaw"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <a43edf1b0905241131t7dcb3d85v98597f061a4345d6@mail.gmail.com>
-	(Billy Crook's message of "Sun, 24 May 2009 13:31:07 -0500")
+Content-Disposition: inline
+In-Reply-To: <0fe21d52863495891c4d62bbbe61a36c.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Billy Crook <billycrook@gmail.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Billy Crook <billycrook@gmail.com> writes:
 
-> I use LVM on top of raid (between raid and the filesystem).  I chose
-> that so I could export the LV's as iSCSI LUNs for different machines
-> for different purposes.  I've been thinking lately though, about using
-> LVM also, below raid (between the partitions and raid).  This could
-> let me 'migrate out' a disk without degrading redundancy of the raid
-> array, but I think it could get a little complicated.  Then again
-> there was a day when I thought LVM was too complicating to be worth it
-> at all.
->
-> If anyone here has done an 'LVM->RAID->LVM sandwich' before, do you
-> think it was worth it?  My understanding of LVM is that its overhead
+--a6Ri6/t33sscKOaw
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I tried it once and gave it up again. The problem is that a raid
-resync only uses idle I/O but any I/O on lvm gets flaged as the devcie
-being used. As a result you consistently get the minimum resync speed
-of 1MiB/s (or whatever you set it). Never more. And if you increase
-the minimum speed it takes I/O away from when the devcie realy isn't
-idle.
+On 19:49, NeilBrown wrote:
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > index 48bdbdf..66e32e4 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -1402,7 +1402,7 @@ static void super_1_sync(mddev_t *mddev, mdk_rdev=
+_t
+> > *rdev)
+> >  		sb->new_layout =3D cpu_to_le32(mddev->new_layout);
+> >  		sb->delta_disks =3D cpu_to_le32(mddev->delta_disks);
+> >  		sb->new_level =3D cpu_to_le32(mddev->new_level);
+> > -		sb->new_chunk =3D cpu_to_le32(mddev->new_chunk>>9);
+> > +		sb->new_chunk =3D cpu_to_le32(mddev->new_chunk);
+>=20
+> I think the current code is correct.
+> For v1.x metadata, the chunk size (both chunksize and new_chunk) is
+> stored in sectors.  in 0.90 it is stored in bytes.
 
-> is minimal, but would this amount of redirection start to be a
-> problem?  What about detection during boot?  I assume if I did this,
+Oops you're right, I got confused by the comment in md_p.h that says
+new_chunk is in bytes, even for v1.x metadata. So please drop this
+second patch.
 
-Yuo need to ensure the lvm detection is run twice, or triggered after
-each new block device passes through udev.
+Note that the corresponding hunk in the third patch needs to be
+changed as well:
 
-> I'd want a separate volume group for every raid component.  Each
-> exporting only one LV and consuming only one PV until I want to move
-> that component to another disk.  I'm using RHEL/CentOS 5.3 and most of
-> my storage is served over iSCSI.  Some over NFS and CIFS.
+-           sb->new_chunk =3D cpu_to_le32(mddev->new_chunk);
++           sb->new_chunk =3D cpu_to_le32(mddev->new_chunk_sectors << 9);
 
-You certainly don't want multiple PVs in a volume group as any disk
-failure takes down the group (stupid userspace).
+must become
 
-> What 'stacks' have you used from disk to filesystem, and what have
-> been your experiences?  (Feel free to reply direct on this so this
-> doesn't become one giant polling thread.)
+-           sb->new_chunk =3D cpu_to_le32(mddev->new_chunk>>9);
++           sb->new_chunk =3D cpu_to_le32(mddev->new_chunk_sectors);
 
-Longest chain so far was:
+Thanks
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
 
-sata -> raid -> dmcrypt -> lvm -> xen block device -> raid -> lvm -> ext3
+--a6Ri6/t33sscKOaw
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
-That was for testing some raid stuff in a xen virtual domain. Only
-reason I had to have raid twice so far.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
 
-MfG
-        Goswin
+iD8DBQFKGp/eWto1QDEAkw8RAtfxAJ0SLFeCUGGv9gvq872S0GGlwx4PHQCgkvhZ
+Vv5/S3fDnjVSLkXI4O0T9eU=
+=7ywP
+-----END PGP SIGNATURE-----
+
+--a6Ri6/t33sscKOaw--
