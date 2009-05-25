@@ -1,50 +1,40 @@
 From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [PATCH v2 04/11] async_xor: permit callers to pass in a 'dma/page scribble' region
-Date: Mon, 25 May 2009 09:55:03 +0200
-Message-ID: <20090525075503.GR11504@skl-net.de>
-References: <20090519005647.4104.81119.stgit@dwillia2-linux.ch.intel.com> <20090519005946.4104.28803.stgit@dwillia2-linux.ch.intel.com> <20090520080818.GT6403@skl-net.de> <e9c3a7c20905201135y46022829s9b68d7ee81a5d3dc@mail.gmail.com> <20090520190928.GL11504@skl-net.de> <20090522082946.GP11504@skl-net.de> <e9c3a7c20905221025i71bfa9cfl37d8133b6c241bba@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="6nfUOKxk8V1TQsEu"
+Subject: [PATCH 2/6] md: Fix a bug in super_1_sync().
+Date: Mon, 25 May 2009 11:27:33 +0200
+Message-ID: <1243243657-21855-3-git-send-email-maan@systemlinux.org>
+References: <1243243657-21855-1-git-send-email-maan@systemlinux.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <e9c3a7c20905221025i71bfa9cfl37d8133b6c241bba@mail.gmail.com>
+In-Reply-To: <1243243657-21855-1-git-send-email-maan@systemlinux.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, Andre Noll <maan@systemlinux.org>
 List-Id: linux-raid.ids
 
+The new_chunk fields of both struct mddev_s and struct mdp_superblock_1
+are measured in bytes. However, in super_1_sync(), mddev->new_chunk
+is converted to sectors before it assigned to sb->new_chunk.
 
---6nfUOKxk8V1TQsEu
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This results in a too small number being stored in the in-memory
+image of the superblock which could confuse the reshape process.
 
-On 10:25, Dan Williams wrote:
+Signed-off-by: Andre Noll <maan@systemlinux.org>
+---
+ drivers/md/md.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> Strictly speaking your "-by" line in this scenario should be either
-> Acked-by or Reviewed-by.  Signed-off-by is reserved for people who had
-> the patch in their possession on its way to mainline.  Any heartburn
-> if I use Reviewed-by?
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 48bdbdf..66e32e4 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1402,7 +1402,7 @@ static void super_1_sync(mddev_t *mddev, mdk_rdev_t *rdev)
+ 		sb->new_layout = cpu_to_le32(mddev->new_layout);
+ 		sb->delta_disks = cpu_to_le32(mddev->delta_disks);
+ 		sb->new_level = cpu_to_le32(mddev->new_level);
+-		sb->new_chunk = cpu_to_le32(mddev->new_chunk>>9);
++		sb->new_chunk = cpu_to_le32(mddev->new_chunk);
+ 	}
+ 
+ 	max_dev = 0;
+-- 
+1.5.4.3
 
-No heartburns, just use Reviewed-by.
-
-Thanks
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---6nfUOKxk8V1TQsEu
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFKGk7XWto1QDEAkw8RAjnaAJ9UNiEZNFTa+l6yhrBKKd4N/7+uyQCfbGGX
-v0BibnFpeD+AHMVgO9lHunQ=
-=YKoR
------END PGP SIGNATURE-----
-
---6nfUOKxk8V1TQsEu--
