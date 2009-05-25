@@ -1,39 +1,57 @@
-From: Redeeman <redeeman@metanurb.dk>
-Subject: Re: Western Digital RE3
-Date: Mon, 25 May 2009 23:32:30 +0200
-Message-ID: <1243287150.5740.55.camel@localhost>
-References: <b9f8dfb10905250717p75c04aefqe8bff6776c1d3eda@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Subject: [001/002 ] raid0 reshape
+Date: Tue, 26 May 2009 08:14:55 +1000
+Message-ID: <18971.6239.413944.47540@notabene.brown>
+References: <1241300764.5607.36.camel@raz>
+	<e9c3a7c20905191109s92db696ue31a20b0816a4aed@mail.gmail.com>
+	<18965.16276.485692.812516@notabene.brown>
+	<87f94c370905211220n4e686a30ke452a56a2690d22b@mail.gmail.com>
+	<87r5ydqsrd.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <b9f8dfb10905250717p75c04aefqe8bff6776c1d3eda@mail.gmail.com>
+In-Reply-To: message from Goswin von Brederlow on Monday May 25
 Sender: linux-raid-owner@vger.kernel.org
-To: "MOgWai46[Saurceful of Secrets]" <street41@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: Greg Freemyer <greg.freemyer@gmail.com>, Dan Williams <dan.j.williams@intel.com>, raz ben yehuda <raziebe@013.net>, linux-raid@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>
 List-Id: linux-raid.ids
 
-On Mon, 2009-05-25 at 16:17 +0200, MOgWai46[Saurceful of Secrets] wrote:
-> Hi!
+On Monday May 25, goswin-v-b@web.de wrote:
+> Greg Freemyer <greg.freemyer@gmail.com> writes:
 > 
-> I would replace two Western Digital Velociraptor 300 GB 10K Rpm that
-> in the latest five month gave me a lot problems. Periodically i must
-> re-sync the linux raid 1 array because one of the two Velociraptor
-> stop to work. Someone have an experience with the Western Digital Raid
-> Edition 3 on a machine with linux software Raid 1?
+> > ==> What I mean by raid equivalent levels
+> >
+> > More and more arrays allow the user to simply say "give me a 100 GB
+> > logical volume with Raid 5 equivalent protection.  The array then
+> > looks at the drives it has available and puts together the necessary
+> > pieces.  As drives are added, removed it moves the data around under
+> > its own control, but maintains the raid equivalent protection.
+> >
+> > Especially when working with dozens of drives and lots of logical
+> > volumes it makes life much easier.  Admittedly it may come at a cost
+> > of not being able to specify raid levels with the specificity that
+> > mdraid currently allows.
+> >
+> > ==>
+> >
+> > The reason I ask if this is the goal is that doing so may factor into
+> > decisions about how reshaping is implemented.
+> >
+> > Greg
+> 
+> That really seems to scream for LVM to support more raid levels. It
+> already has linear, raid0 and raid1 support (although I have no idea
+> how device mapper raid1 compares to md raid1).
 
-I have one in a raid1 with a seagate ES.2, works flawlessly, though its
-only been running for a month or two.
+Note that LVM (a suite of user-space tools) could conceivably use
+md/raid1, md/raid5 etc. The functionality doesn't have to go in dm.
 
-i do however also have great success with WD RE2-GP and WD10EADS.
-
+Neil
 
 > 
-> Thank you in advance
+> Those should be fleshed out more and also support raid 4/5/6 for what
+> you ask.
 > 
-> Andrea
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+> MfG
+>         Goswin
