@@ -1,57 +1,46 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Subject: [001/002 ] raid0 reshape
-Date: Tue, 26 May 2009 08:14:55 +1000
-Message-ID: <18971.6239.413944.47540@notabene.brown>
-References: <1241300764.5607.36.camel@raz>
-	<e9c3a7c20905191109s92db696ue31a20b0816a4aed@mail.gmail.com>
-	<18965.16276.485692.812516@notabene.brown>
-	<87f94c370905211220n4e686a30ke452a56a2690d22b@mail.gmail.com>
-	<87r5ydqsrd.fsf@frosties.localdomain>
+Subject: Re: [PATCH 1/6] md: Make mddev->chunk_size sector-based.
+Date: Tue, 26 May 2009 09:02:20 +1000
+Message-ID: <18971.9084.661068.219724@notabene.brown>
+References: <1243243657-21855-1-git-send-email-maan@systemlinux.org>
+	<1243243657-21855-2-git-send-email-maan@systemlinux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Goswin von Brederlow on Monday May 25
+In-Reply-To: message from Andre Noll on Monday May 25
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: Greg Freemyer <greg.freemyer@gmail.com>, Dan Williams <dan.j.williams@intel.com>, raz ben yehuda <raziebe@013.net>, linux-raid@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>
+To: Andre Noll <maan@systemlinux.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday May 25, goswin-v-b@web.de wrote:
-> Greg Freemyer <greg.freemyer@gmail.com> writes:
+On Monday May 25, maan@systemlinux.org wrote:
+> This patch changes the type of the chunk_size field from int to
+> sector_t and renames it to chunk_sectors with the implied change of
+> semantics. Since
 > 
-> > ==> What I mean by raid equivalent levels
-> >
-> > More and more arrays allow the user to simply say "give me a 100 GB
-> > logical volume with Raid 5 equivalent protection.  The array then
-> > looks at the drives it has available and puts together the necessary
-> > pieces.  As drives are added, removed it moves the data around under
-> > its own control, but maintains the raid equivalent protection.
-> >
-> > Especially when working with dozens of drives and lots of logical
-> > volumes it makes life much easier.  Admittedly it may come at a cost
-> > of not being able to specify raid levels with the specificity that
-> > mdraid currently allows.
-> >
-> > ==>
-> >
-> > The reason I ask if this is the goal is that doing so may factor into
-> > decisions about how reshaping is implemented.
-> >
-> > Greg
+> 	is_power_of_2(chunk_size) = is_power_of_2(chunk_sectors << 9)
+> 				  = is_power_of_2(chunk_sectors)
 > 
-> That really seems to scream for LVM to support more raid levels. It
-> already has linear, raid0 and raid1 support (although I have no idea
-> how device mapper raid1 compares to md raid1).
+> these bits don't need an adjustment for the shift.
 
-Note that LVM (a suite of user-space tools) could conceivably use
-md/raid1, md/raid5 etc. The functionality doesn't have to go in dm.
+Thanks.
 
-Neil
+I don't really want chunk_sectors to be sector_t - it is a waste on
+32bit, and would cause
+> +		if (sector_div(temp, mddev->chunk_sectors))
 
-> 
-> Those should be fleshed out more and also support raid 4/5/6 for what
-> you ask.
-> 
-> MfG
->         Goswin
+to fail.
+I've left it as 'int' and removed all the (int) casts and (sector_t)
+casts.   I adjusted the comment too.
+
+I also changed:
+	if (mddev->chunk_sectors << 9 < PAGE_SIZE ||
+to
+	if (mddev->chunk_sectors < (PAGE_SIZE >> 9) ||
+primarily because I need the brackets around the shift, even if the
+C compiler doesn't.
+
+
+Thanks,
+NeilBrown
