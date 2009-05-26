@@ -1,32 +1,51 @@
-From: "Henry, Andrew" <andrew.henry@logica.com>
-Subject: RE: Western Digital RE3
-Date: Tue, 26 May 2009 09:41:47 +0200
-Message-ID: <3ECBDC05781B3D48ABD520A01ABF2F9B2C64BED645@SE-EX008.groupinfra.com>
-References: <b9f8dfb10905250717p75c04aefqe8bff6776c1d3eda@mail.gmail.com>
- <4A1AEF7C.7020201@sauce.co.nz>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: How to un-degrade an array after a totally spurious failure?
+Date: Tue, 26 May 2009 03:25:49 -0500
+Message-ID: <20090526082555197.DKXE9202@cdptpa-omta04.mail.rr.com>
+References: <97f847c1f487636ed40b8c1db1b98105.squirrel@neil.brown.name>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A1AEF7C.7020201@sauce.co.nz>
-Content-Language: en-US
+In-Reply-To: <97f847c1f487636ed40b8c1db1b98105.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>, "MOgWai46[Saurceful of Secrets]" <street41@gmail.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: 'NeilBrown' <neilb@suse.de>, 'Nix' <nix@esperi.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> MOgWai46[Saurceful of Secrets] wrote:
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of NeilBrown
+> Sent: Wednesday, May 20, 2009 9:49 PM
+> To: Nix
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: How to un-degrade an array after a totally spurious failure?
 > 
-> > stop to work. Someone have an experience with the Western Digital Raid
-> > Edition 3 on a machine with linux software Raid 1?
+> On Thu, May 21, 2009 9:10 am, Nix wrote:
 > 
-> I have been using pairs of md RAID1 RE3's in a number of machines for
-> the last 6 months without issue.
+> > So, anyone got a command that would help? I'm not even sure if this is
+> > assembly or growth: it doesn't quite fit into either of those
+> > categories. There must be a way to do this, surely?
 > 
-> Regards,
+> It is neither.  It is management.
 > 
-> Richard
+>  mdadm --manage /dev/mdX --remove /dev/sdb6
+>  mdadm --manage /dev/mdX --add /dev/sdb6
+> 
+> (The --manage is not actually needed, but it doesn't hurt).
+> 
+> NeilBrown
 
-I have also been using a pair of 1TB RE3's in RAID 1 configuration on Ubuntu 8.10 since January and have not received a single complaint in the logs.  I have used consumer level western digital drives (external firewire) and had lots of issues with them, due to them going into sleep mode all the time.  This may have been due to them being external drives though.
+	I have exactly the same situation, except there are two "failed"
+disks on a RAID5 array.  As for the OP, the "failures" are spurious.
+Running the remove and then the add command puts the disks back in as spare
+disks, not live ones, and then the array just sits there, doing nothing.  I
+tried the trick of doing
 
-Andrew
+echo repair > /sys/block/md0/md/sync_action
+
+but the array still just sits there saying it is "clean, degraded", with 2
+spare and 5 working devices.
+
