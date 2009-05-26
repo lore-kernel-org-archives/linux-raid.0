@@ -1,53 +1,32 @@
-From: Neil Brown <neilb@suse.de>
-Subject: [PULL REQUEST] md - various fixed for 2.6.30
-Date: Tue, 26 May 2009 13:06:32 +1000
-Message-ID: <18971.23736.279996.704625@notabene.brown>
+From: "Henry, Andrew" <andrew.henry@logica.com>
+Subject: RE: Western Digital RE3
+Date: Tue, 26 May 2009 09:41:47 +0200
+Message-ID: <3ECBDC05781B3D48ABD520A01ABF2F9B2C64BED645@SE-EX008.groupinfra.com>
+References: <b9f8dfb10905250717p75c04aefqe8bff6776c1d3eda@mail.gmail.com>
+ <4A1AEF7C.7020201@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4A1AEF7C.7020201@sauce.co.nz>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Richard Scobie <richard@sauce.co.nz>, "MOgWai46[Saurceful of Secrets]" <street41@gmail.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+> MOgWai46[Saurceful of Secrets] wrote:
+> 
+> > stop to work. Someone have an experience with the Western Digital Raid
+> > Edition 3 on a machine with linux software Raid 1?
+> 
+> I have been using pairs of md RAID1 RE3's in a number of machines for
+> the last 6 months without issue.
+> 
+> Regards,
+> 
+> Richard
 
-Hi Linus,
- a few more md fixes turned up through on going testing.
+I have also been using a pair of 1TB RE3's in RAID 1 configuration on Ubuntu 8.10 since January and have not received a single complaint in the logs.  I have used consumer level western digital drives (external firewire) and had lots of issues with them, due to them going into sleep mode all the time.  This may have been due to them being external drives though.
 
- A couple involve refining the user-space interface (sysfs) so that
- some of the recent features can be used reliably.
-
- The 'bitmap' fix isn't strictly a bug fix, but is reduces a fair
- amount of CPU wastage.
-
- The "don't use locked_ioctl" patch is again strictly not a bug fix,
- but it is so trivial it didn't seem worth leaving it for .31.
- It just tells the block layer that md doesn't need lock_kernel, even
- for ioctls.
-
-Thanks,
-NeilBrown
-
-
-The following changes since commit 59a3759d0fe8d969888c741bb33f4946e4d3750d:
-  Linus Torvalds (1):
-        Linux 2.6.30-rc7
-
-are available in the git repository at:
-
-  git://neil.brown.name/md/ for-linus
-
-NeilBrown (7):
-      md: always update level / chunk_size / layout when writing v1.x metadata.
-      md: improve errno return when setting array_size
-      md: bitmap: improve bitmap maintenance code.
-      md: export 'frozen' resync state through sysfs
-      md: raid5: avoid sector values going negative when testing reshape progress.
-      md: don't update curr_resync_completed without also updating reshape_position.
-      md: don't use locked_ioctl.
-
- drivers/md/bitmap.c |   13 +++++++------
- drivers/md/md.c     |   31 +++++++++++++++++++++----------
- drivers/md/raid5.c  |    6 +++---
- 3 files changed, 31 insertions(+), 19 deletions(-)
+Andrew
