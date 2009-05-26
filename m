@@ -1,65 +1,53 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 0/6] md: More sector_t conversions -- intro
-Date: Tue, 26 May 2009 12:40:39 +1000
-Message-ID: <18971.22183.861530.508422@notabene.brown>
-References: <1243243657-21855-1-git-send-email-maan@systemlinux.org>
-	<18971.11911.795582.413933@notabene.brown>
+Subject: [PULL REQUEST] md - various fixed for 2.6.30
+Date: Tue, 26 May 2009 13:06:32 +1000
+Message-ID: <18971.23736.279996.704625@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Neil Brown on Tuesday May 26
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>, linux-raid@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday May 26, neilb@suse.de wrote:
-> > 
-> > All patches pass the tests of the mdadm test suite except
-> > 07reshape5intr which appears fail also for the vanilla for-next tree.
-> 
-> Hmm... I guess I should look into that!
 
-Yep. There is a big there.  Thanks for helping find it.
+Hi Linus,
+ a few more md fixes turned up through on going testing.
 
-Here is the patch.
+ A couple involve refining the user-space interface (sysfs) so that
+ some of the recent features can be used reliably.
+
+ The 'bitmap' fix isn't strictly a bug fix, but is reduces a fair
+ amount of CPU wastage.
+
+ The "don't use locked_ioctl" patch is again strictly not a bug fix,
+ but it is so trivial it didn't seem worth leaving it for .31.
+ It just tells the block layer that md doesn't need lock_kernel, even
+ for ioctls.
 
 Thanks,
 NeilBrown
 
 
-Author: NeilBrown <neilb@suse.de>
-Date:   Tue May 26 12:39:27 2009 +1000
+The following changes since commit 59a3759d0fe8d969888c741bb33f4946e4d3750d:
+  Linus Torvalds (1):
+        Linux 2.6.30-rc7
 
-    md: raid5: avoid sector values going negative when testing reshape progress.
-    
-    As sector_t in unsigned, we cannot afford to let 'safepos' etc go
-    negative.
-    So replace
-       a -= b;
-    by
-       a -= min(b,a);
-    
-    Signed-off-by: NeilBrown <neilb@suse.de>
+are available in the git repository at:
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 6b89a7e..dce7741 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3810,13 +3810,13 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
- 	safepos = conf->reshape_safe;
- 	sector_div(safepos, data_disks);
- 	if (mddev->delta_disks < 0) {
--		writepos -= reshape_sectors;
-+		writepos -= min(reshape_sectors, writepos);
- 		readpos += reshape_sectors;
- 		safepos += reshape_sectors;
- 	} else {
- 		writepos += reshape_sectors;
--		readpos -= reshape_sectors;
--		safepos -= reshape_sectors;
-+		readpos -= min(reshape_sectors, readpos);
-+		safepos -= min(reshape_sectors, safepos);
- 	}
- 
- 	/* 'writepos' is the most advanced device address we might write.
+  git://neil.brown.name/md/ for-linus
+
+NeilBrown (7):
+      md: always update level / chunk_size / layout when writing v1.x metadata.
+      md: improve errno return when setting array_size
+      md: bitmap: improve bitmap maintenance code.
+      md: export 'frozen' resync state through sysfs
+      md: raid5: avoid sector values going negative when testing reshape progress.
+      md: don't update curr_resync_completed without also updating reshape_position.
+      md: don't use locked_ioctl.
+
+ drivers/md/bitmap.c |   13 +++++++------
+ drivers/md/md.c     |   31 +++++++++++++++++++++----------
+ drivers/md/raid5.c  |    6 +++---
+ 3 files changed, 31 insertions(+), 19 deletions(-)
