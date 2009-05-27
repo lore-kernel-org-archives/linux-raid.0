@@ -1,34 +1,25 @@
-From: "Simon Jackson" <sjackson@bluearc.com>
-Subject: FW: Detecting errors on the RAID disks.
-Date: Wed, 27 May 2009 16:28:22 +0100
-Message-ID: <3D76E016F4A2A749A1EB1A3FD83E22BC0285F2F4@uk-email.terastack.bluearc.com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: FW: Detecting errors on the RAID disks.
+Date: Thu, 28 May 2009 07:35:28 +1200
+Message-ID: <4A1D9600.5020109@sauce.co.nz>
+References: <3D76E016F4A2A749A1EB1A3FD83E22BC0285F2F4@uk-email.terastack.bluearc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+In-Reply-To: <3D76E016F4A2A749A1EB1A3FD83E22BC0285F2F4@uk-email.terastack.bluearc.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Simon Jackson <sjackson@bluearc.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Simon Jackson wrote:
+> I have been looking for a way of detecting whether disks used in RAID sets have had errors that might indicate the drive is failing..  
 
-I have been looking for a way of detecting whether disks used in RAID s=
-ets have had errors that might indicate the drive is failing..=A0=20
+smartd, while not foolproof, offers some assistence here:
 
-I have noticed the files =A0"/sys/block/mdX/md/rY/errors".=A0 They appe=
-ar to contain a count value.=A0=20
+http://smartmontools.sourceforge.net/
 
-What errors are reported in this file?=A0=20
+Regards,
 
-Does this provide a way of detecting a dying disk?=A0=20
-
-Are there any better ways to achieve this?
-
-Thanks Simon.
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Richard
