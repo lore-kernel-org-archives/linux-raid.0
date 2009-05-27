@@ -1,58 +1,45 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [PATCH 0/6] md: More sector_t conversions -- intro
-Date: Wed, 27 May 2009 10:02:58 +0200
-Message-ID: <20090527080258.GV11504@skl-net.de>
-References: <1243243657-21855-1-git-send-email-maan@systemlinux.org> <18971.11911.795582.413933@notabene.brown>
+From: Redeeman <redeeman@metanurb.dk>
+Subject: Re: Western Digital RE3
+Date: Wed, 27 May 2009 15:17:26 +0200
+Message-ID: <1243430246.5740.80.camel@localhost>
+References: <b9f8dfb10905250717p75c04aefqe8bff6776c1d3eda@mail.gmail.com>
+	 <20090527012441.GA3506@tosh2egg.wr.niftyegg.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="2tWkrNKppd65XSnD"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <18971.11911.795582.413933@notabene.brown>
+In-Reply-To: <20090527012441.GA3506@tosh2egg.wr.niftyegg.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Nifty Fedora Mitch <niftyfedora@niftyegg.com>
+Cc: "MOgWai46[Saurceful of Secrets]" <street41@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tue, 2009-05-26 at 18:24 -0700, Nifty Fedora Mitch wrote:
+> On Mon, May 25, 2009 at 04:17:34PM +0200, MOgWai46[Saurceful of Secrets] wrote:
+> > 
+> > Hi!
+> > 
+> > I would replace two Western Digital Velociraptor 300 GB 10K Rpm that
+> > in the latest five month gave me a lot problems. Periodically i must
+> > re-sync the linux raid 1 array because one of the two Velociraptor
+> > stop to work. Someone have an experience with the Western Digital Raid
+> > Edition 3 on a machine with linux software Raid 1?
+>  
+> Do inspect the drive and drive logs with WD diagnostic software.
+> 
+> Do inspect the hardware... cables, connectors etc....
+> 
+> Is it always the same disk that is triggering an error?
+> Is the drive firmware up to date?
+> 
+> Software RAID 1 does not place any strange load on a drive the way
+> other RAID models might so unless the drive is well out of warranty 
+> look for the obvious....
 
---2tWkrNKppd65XSnD
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+He is not the first person to have serious problems with the
+velociraptors, so they are probably not too good to use for raid.
 
-On 09:49, Neil Brown wrote:
+> 
+> 
+> 
 
-> > Patch #1 converts mddev->chunk_size which was previously stored
-> > in bytes.  Patch #2 fixes what I believe is a bug in super_1_sync()
-> > and might be a candiate for -stable. Patches #3 and #4 are further
-> > straight-forward conversions that deal with mddev->new_chunk,
-> > conf->chunk_size and conf->prev_chunk. Patches #5 and #6 are pure
-> > cleanups.
->=20
-> Thanks.
-> With the exception of #2, and with the other changes I mentioned,
-> there are all i my for-next now.
-
-Thanks. BTW: I have a couple of other patches ready that push down
-code from md.c to the personalities as you suggested. These need to
-be rebased to current for-next though. I'll send them later this week
-or at the beginning of next week.
-
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---2tWkrNKppd65XSnD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFKHPOyWto1QDEAkw8RApWvAKCPokJEIqRMr/QJQ3SQvkhZctFymwCfWiXi
-HvrtS5B/s4j6H0iOP7v+xhI=
-=swJ/
------END PGP SIGNATURE-----
-
---2tWkrNKppd65XSnD--
