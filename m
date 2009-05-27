@@ -1,45 +1,48 @@
-From: Redeeman <redeeman@metanurb.dk>
+From: russ@vshift.com
 Subject: Re: Western Digital RE3
-Date: Wed, 27 May 2009 15:17:26 +0200
-Message-ID: <1243430246.5740.80.camel@localhost>
-References: <b9f8dfb10905250717p75c04aefqe8bff6776c1d3eda@mail.gmail.com>
-	 <20090527012441.GA3506@tosh2egg.wr.niftyegg.com>
+Date: Wed, 27 May 2009 15:15:45 +0000
+Message-ID: <456697966-1243437329-cardhu_decombobulator_blackberry.rim.net-1583593509-@bxe1125.bisx.prod.on.blackberry>
+Reply-To: russ@vshift.com
 Mime-Version: 1.0
 Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090527012441.GA3506@tosh2egg.wr.niftyegg.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nifty Fedora Mitch <niftyfedora@niftyegg.com>
+To: Redeeman <redeeman@metanurb.dk>, linux-raid-owner@vger.kernel.org, Nifty Fedora Mitch <niftyfedora@niftyegg.com>
 Cc: "MOgWai46[Saurceful of Secrets]" <street41@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 2009-05-26 at 18:24 -0700, Nifty Fedora Mitch wrote:
-> On Mon, May 25, 2009 at 04:17:34PM +0200, MOgWai46[Saurceful of Secrets] wrote:
-> > 
-> > Hi!
-> > 
-> > I would replace two Western Digital Velociraptor 300 GB 10K Rpm that
-> > in the latest five month gave me a lot problems. Periodically i must
-> > re-sync the linux raid 1 array because one of the two Velociraptor
-> > stop to work. Someone have an experience with the Western Digital Raid
-> > Edition 3 on a machine with linux software Raid 1?
->  
-> Do inspect the drive and drive logs with WD diagnostic software.
-> 
-> Do inspect the hardware... cables, connectors etc....
-> 
-> Is it always the same disk that is triggering an error?
-> Is the drive firmware up to date?
-> 
-> Software RAID 1 does not place any strange load on a drive the way
-> other RAID models might so unless the drive is well out of warranty 
-> look for the obvious....
-
-He is not the first person to have serious problems with the
-velociraptors, so they are probably not too good to use for raid.
-
-> 
-> 
-> 
+SXMgaXQgcG9zc2libGUgdGhhdCBpdCBoYXMgc29tZXRoaW5nIHRvIGRvIHdpdGggdGltZW91dHM/
+ICBJIGhhdmUgYSBjb3VwbGUgb2YgdmVsb2NpcmFwdG9ycyBpbiByYWlkIDEsIGFuZCBvdGhlciB0
+aGVuIGEgY291cGxlIG9mIGRyaXZlIHRpbWVvdXRzIEkgaGF2ZW4ndCBoYWQgYW55IHNlcmlvdXMg
+aXNzdWVzLiAgUGVyaGFwcyBoZSBjYW4gdHJ5IHJ1bm5pbmcgV0RUTEVSIHV0aWxpdHkgb24gdGhl
+IGRyaXZlPyAgKEkgYmVsaWV2ZSBpdHMgb24gdGhlIHdkIHRvb2xzIElTTykNCg0KUnVzcw0KLS0t
+LS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tLQ0KRnJvbTogUmVkZWVtYW4NClNlbmRlcjogbGludXgt
+cmFpZC1vd25lckB2Z2VyLmtlcm5lbC5vcmcNClRvOiBOaWZ0eSBGZWRvcmEgTWl0Y2gNCkNjOiBN
+T2dXYWk0NltTYXVyY2VmdWwgb2YgU2VjcmV0c10NCkNjOiBsaW51eC1yYWlkQHZnZXIua2VybmVs
+Lm9yZw0KU3ViamVjdDogUmU6IFdlc3Rlcm4gRGlnaXRhbCBSRTMNClNlbnQ6IE1heSAyNywgMjAw
+OSA5OjE3IEFNDQoNCk9uIFR1ZSwgMjAwOS0wNS0yNiBhdCAxODoyNCAtMDcwMCwgTmlmdHkgRmVk
+b3JhIE1pdGNoIHdyb3RlOg0KPiBPbiBNb24sIE1heSAyNSwgMjAwOSBhdCAwNDoxNzozNFBNICsw
+MjAwLCBNT2dXYWk0NltTYXVyY2VmdWwgb2YgU2VjcmV0c10gd3JvdGU6DQo+ID4gDQo+ID4gSGkh
+DQo+ID4gDQo+ID4gSSB3b3VsZCByZXBsYWNlIHR3byBXZXN0ZXJuIERpZ2l0YWwgVmVsb2NpcmFw
+dG9yIDMwMCBHQiAxMEsgUnBtIHRoYXQNCj4gPiBpbiB0aGUgbGF0ZXN0IGZpdmUgbW9udGggZ2F2
+ZSBtZSBhIGxvdCBwcm9ibGVtcy4gUGVyaW9kaWNhbGx5IGkgbXVzdA0KPiA+IHJlLXN5bmMgdGhl
+IGxpbnV4IHJhaWQgMSBhcnJheSBiZWNhdXNlIG9uZSBvZiB0aGUgdHdvIFZlbG9jaXJhcHRvcg0K
+PiA+IHN0b3AgdG8gd29yay4gU29tZW9uZSBoYXZlIGFuIGV4cGVyaWVuY2Ugd2l0aCB0aGUgV2Vz
+dGVybiBEaWdpdGFsIFJhaWQNCj4gPiBFZGl0aW9uIDMgb24gYSBtYWNoaW5lIHdpdGggbGludXgg
+c29mdHdhcmUgUmFpZCAxPw0KPiAgDQo+IERvIGluc3BlY3QgdGhlIGRyaXZlIGFuZCBkcml2ZSBs
+b2dzIHdpdGggV0QgZGlhZ25vc3RpYyBzb2Z0d2FyZS4NCj4gDQo+IERvIGluc3BlY3QgdGhlIGhh
+cmR3YXJlLi4uIGNhYmxlcywgY29ubmVjdG9ycyBldGMuLi4uDQo+IA0KPiBJcyBpdCBhbHdheXMg
+dGhlIHNhbWUgZGlzayB0aGF0IGlzIHRyaWdnZXJpbmcgYW4gZXJyb3I/DQo+IElzIHRoZSBkcml2
+ZSBmaXJtd2FyZSB1cCB0byBkYXRlPw0KPiANCj4gU29mdHdhcmUgUkFJRCAxIGRvZXMgbm90IHBs
+YWNlIGFueSBzdHJhbmdlIGxvYWQgb24gYSBkcml2ZSB0aGUgd2F5DQo+IG90aGVyIFJBSUQgbW9k
+ZWxzIG1pZ2h0IHNvIHVubGVzcyB0aGUgZHJpdmUgaXMgd2VsbCBvdXQgb2Ygd2FycmFudHkgDQo+
+IGxvb2sgZm9yIHRoZSBvYnZpb3VzLi4uLg0KDQpIZSBpcyBub3QgdGhlIGZpcnN0IHBlcnNvbiB0
+byBoYXZlIHNlcmlvdXMgcHJvYmxlbXMgd2l0aCB0aGUNCnZlbG9jaXJhcHRvcnMsIHNvIHRoZXkg
+YXJlIHByb2JhYmx5IG5vdCB0b28gZ29vZCB0byB1c2UgZm9yIHJhaWQuDQoNCj4gDQo+IA0KPiAN
+Cg0KLS0NClRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1
+YnNjcmliZSBsaW51eC1yYWlkIiBpbg0KdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9t
+b0B2Z2VyLmtlcm5lbC5vcmcNCk1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtl
+cm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KDQoNClNlbnQgZnJvbSBteSBWZXJpem9uIFdp
+cmVsZXNzIEJsYWNrQmVycnk=
 
