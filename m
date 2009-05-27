@@ -1,48 +1,34 @@
-From: russ@vshift.com
-Subject: Re: Western Digital RE3
-Date: Wed, 27 May 2009 15:15:45 +0000
-Message-ID: <456697966-1243437329-cardhu_decombobulator_blackberry.rim.net-1583593509-@bxe1125.bisx.prod.on.blackberry>
-Reply-To: russ@vshift.com
+From: "Simon Jackson" <sjackson@bluearc.com>
+Subject: FW: Detecting errors on the RAID disks.
+Date: Wed, 27 May 2009 16:28:22 +0100
+Message-ID: <3D76E016F4A2A749A1EB1A3FD83E22BC0285F2F4@uk-email.terastack.bluearc.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: Redeeman <redeeman@metanurb.dk>, linux-raid-owner@vger.kernel.org, Nifty Fedora Mitch <niftyfedora@niftyegg.com>
-Cc: "MOgWai46[Saurceful of Secrets]" <street41@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SXMgaXQgcG9zc2libGUgdGhhdCBpdCBoYXMgc29tZXRoaW5nIHRvIGRvIHdpdGggdGltZW91dHM/
-ICBJIGhhdmUgYSBjb3VwbGUgb2YgdmVsb2NpcmFwdG9ycyBpbiByYWlkIDEsIGFuZCBvdGhlciB0
-aGVuIGEgY291cGxlIG9mIGRyaXZlIHRpbWVvdXRzIEkgaGF2ZW4ndCBoYWQgYW55IHNlcmlvdXMg
-aXNzdWVzLiAgUGVyaGFwcyBoZSBjYW4gdHJ5IHJ1bm5pbmcgV0RUTEVSIHV0aWxpdHkgb24gdGhl
-IGRyaXZlPyAgKEkgYmVsaWV2ZSBpdHMgb24gdGhlIHdkIHRvb2xzIElTTykNCg0KUnVzcw0KLS0t
-LS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tLQ0KRnJvbTogUmVkZWVtYW4NClNlbmRlcjogbGludXgt
-cmFpZC1vd25lckB2Z2VyLmtlcm5lbC5vcmcNClRvOiBOaWZ0eSBGZWRvcmEgTWl0Y2gNCkNjOiBN
-T2dXYWk0NltTYXVyY2VmdWwgb2YgU2VjcmV0c10NCkNjOiBsaW51eC1yYWlkQHZnZXIua2VybmVs
-Lm9yZw0KU3ViamVjdDogUmU6IFdlc3Rlcm4gRGlnaXRhbCBSRTMNClNlbnQ6IE1heSAyNywgMjAw
-OSA5OjE3IEFNDQoNCk9uIFR1ZSwgMjAwOS0wNS0yNiBhdCAxODoyNCAtMDcwMCwgTmlmdHkgRmVk
-b3JhIE1pdGNoIHdyb3RlOg0KPiBPbiBNb24sIE1heSAyNSwgMjAwOSBhdCAwNDoxNzozNFBNICsw
-MjAwLCBNT2dXYWk0NltTYXVyY2VmdWwgb2YgU2VjcmV0c10gd3JvdGU6DQo+ID4gDQo+ID4gSGkh
-DQo+ID4gDQo+ID4gSSB3b3VsZCByZXBsYWNlIHR3byBXZXN0ZXJuIERpZ2l0YWwgVmVsb2NpcmFw
-dG9yIDMwMCBHQiAxMEsgUnBtIHRoYXQNCj4gPiBpbiB0aGUgbGF0ZXN0IGZpdmUgbW9udGggZ2F2
-ZSBtZSBhIGxvdCBwcm9ibGVtcy4gUGVyaW9kaWNhbGx5IGkgbXVzdA0KPiA+IHJlLXN5bmMgdGhl
-IGxpbnV4IHJhaWQgMSBhcnJheSBiZWNhdXNlIG9uZSBvZiB0aGUgdHdvIFZlbG9jaXJhcHRvcg0K
-PiA+IHN0b3AgdG8gd29yay4gU29tZW9uZSBoYXZlIGFuIGV4cGVyaWVuY2Ugd2l0aCB0aGUgV2Vz
-dGVybiBEaWdpdGFsIFJhaWQNCj4gPiBFZGl0aW9uIDMgb24gYSBtYWNoaW5lIHdpdGggbGludXgg
-c29mdHdhcmUgUmFpZCAxPw0KPiAgDQo+IERvIGluc3BlY3QgdGhlIGRyaXZlIGFuZCBkcml2ZSBs
-b2dzIHdpdGggV0QgZGlhZ25vc3RpYyBzb2Z0d2FyZS4NCj4gDQo+IERvIGluc3BlY3QgdGhlIGhh
-cmR3YXJlLi4uIGNhYmxlcywgY29ubmVjdG9ycyBldGMuLi4uDQo+IA0KPiBJcyBpdCBhbHdheXMg
-dGhlIHNhbWUgZGlzayB0aGF0IGlzIHRyaWdnZXJpbmcgYW4gZXJyb3I/DQo+IElzIHRoZSBkcml2
-ZSBmaXJtd2FyZSB1cCB0byBkYXRlPw0KPiANCj4gU29mdHdhcmUgUkFJRCAxIGRvZXMgbm90IHBs
-YWNlIGFueSBzdHJhbmdlIGxvYWQgb24gYSBkcml2ZSB0aGUgd2F5DQo+IG90aGVyIFJBSUQgbW9k
-ZWxzIG1pZ2h0IHNvIHVubGVzcyB0aGUgZHJpdmUgaXMgd2VsbCBvdXQgb2Ygd2FycmFudHkgDQo+
-IGxvb2sgZm9yIHRoZSBvYnZpb3VzLi4uLg0KDQpIZSBpcyBub3QgdGhlIGZpcnN0IHBlcnNvbiB0
-byBoYXZlIHNlcmlvdXMgcHJvYmxlbXMgd2l0aCB0aGUNCnZlbG9jaXJhcHRvcnMsIHNvIHRoZXkg
-YXJlIHByb2JhYmx5IG5vdCB0b28gZ29vZCB0byB1c2UgZm9yIHJhaWQuDQoNCj4gDQo+IA0KPiAN
-Cg0KLS0NClRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1
-YnNjcmliZSBsaW51eC1yYWlkIiBpbg0KdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9t
-b0B2Z2VyLmtlcm5lbC5vcmcNCk1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtl
-cm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KDQoNClNlbnQgZnJvbSBteSBWZXJpem9uIFdp
-cmVsZXNzIEJsYWNrQmVycnk=
 
+I have been looking for a way of detecting whether disks used in RAID s=
+ets have had errors that might indicate the drive is failing..=A0=20
+
+I have noticed the files =A0"/sys/block/mdX/md/rY/errors".=A0 They appe=
+ar to contain a count value.=A0=20
+
+What errors are reported in this file?=A0=20
+
+Does this provide a way of detecting a dying disk?=A0=20
+
+Are there any better ways to achieve this?
+
+Thanks Simon.
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
