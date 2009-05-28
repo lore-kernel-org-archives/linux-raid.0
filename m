@@ -1,69 +1,104 @@
-From: Redeeman <redeeman@metanurb.dk>
-Subject: Re: forcing check of RAID1 arrays causes lockup
-Date: Thu, 28 May 2009 14:42:03 +0200
-Message-ID: <1243514523.5740.90.camel@localhost>
-References: <20090526234523.GB14974@foobox.homelinux.net>
-	 <4A1C986A.7040403@gmail.com>  <20090528091726.GA8067@athlon>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Western Digital RE3
+Date: Thu, 28 May 2009 09:24:12 -0400
+Message-ID: <4A1E907C.5000607@tmr.com>
+References: <b9f8dfb10905250717p75c04aefqe8bff6776c1d3eda@mail.gmail.com> <4A1AEF7C.7020201@sauce.co.nz> <3ECBDC05781B3D48ABD520A01ABF2F9B2C64BED645@SE-EX008.groupinfra.com> <4A1DCCE8.9040301@tmr.com> <3ECBDC05781B3D48ABD520A01ABF2F9B2C77213D8A@SE-EX008.groupinfra.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------040101040203040706010307"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090528091726.GA8067@athlon>
+In-Reply-To: <3ECBDC05781B3D48ABD520A01ABF2F9B2C77213D8A@SE-EX008.groupinfra.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kyle Liddell <kyle@foobox.homelinux.net>
-Cc: Roger Heflin <rogerheflin@gmail.com>, linux-raid@vger.kernel.org
+To: "Henry, Andrew" <andrew.henry@logica.com>
+Cc: Richard Scobie <richard@sauce.co.nz>, "MOgWai46[Saurceful of Secrets]" <street41@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, 2009-05-28 at 05:17 -0400, Kyle Liddell wrote:
-> On Tue, May 26, 2009 at 08:33:30PM -0500, Roger Heflin wrote:
-> > Not what you are going to want to hear but badly designed hardware.
-> > 
-> > On a machine I had with 4 disks (2 on a build-in via, 2 on other 
-> > ports--either a built-in promise, or a sil pci card), when the 2 
-> > build-in via sata ports got used heavily at the same times as any 
-> ...
-> >    It appeared to me as designed the via chipsets (And think your 
-> > chipset is pretty close to the one I was using) did not appear to deal 
-> > with with high levels of traffic to several devices at once, and would 
-> > become unstable.
-> > 
-> > Once I figured out the issue, I could duplicate it in under 5 minutes, 
-> > and the only working solution was to not use the via ports.
-> > 
-> > My mb at the time was a Asus k8v se deluxe with a K8T800 chipset, and 
-> > so long as it was not heavily used it was stable, but under heavy use 
-> > it was junk.
-> 
-> That does sound like my problem, and the hardware is similar.  However, I don't think it's the VIA controller that's the problem here:  I moved the two drives off the on-board VIA controller and placed them as slaves on the Promise card.  I was able to install fedora, which was an improvement, but once installed, I was able to bring the system down again by forcing a check.  I've got a spare Promise IDE controller, so I tried swapping it out, with no change.
-> 
-> I suppose it's a weird hardware bug, although it still is strange that certain combinations of kernels (which makes a little sense) + distributions (which makes no sense) will work.  I just went back to debian on the machine, and it works fine.  
-> 
-> I'm trying to reproduce the problem on another machine, but I'm not too hopeful.
+This is a multi-part message in MIME format.
+--------------040101040203040706010307
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I have a system with 6 drives in raid5, on such a k8v se deluxe board
-with the via controller, and an additional PCI controller.
+Henry, Andrew wrote:
+>> I'm told that my script to keep "FreeAgent" USB external drives from
+>> doing that also works with similar other drives which want to sleep. I
+>> have *not* verified that (having none and no time), but if you want the
+>> script to try on your own, I think I posted it here, or could put it up
+>> on request.
+>>
+>> --
+>> bill davidsen <davidsen@tmr.com>
+>>   CTO TMR Associates, Inc
+>>     
+>
+> That would be great!  I would definitely like to have a script that keeps drives alive.  Can you send it privately (keep the list archive smaller) or put it on the net?
+>   
 
-I am experiencing some weird problems on this system too, when doing
-lots of read/write it will freeze for up to 10 seconds sometimes, what
-happens is that one of the disks gets the bus soft reset.
+This is the version I posted, I've played with some extra features, but 
+since you may want to modify it, simple is best. It's small enough to 
+just send.
 
-Now with the old IDE driver, this would f*** up completely, and the box
-had to be rebooted, however, libata was able to recover it nicely and
-just continue after the freeze.
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
 
-I was never able to solve the issue, and since  it wasnt a major problem
-for the use, i have just ignored it.
+"You are disgraced professional losers. And by the way, give us our money back."
+    - Representative Earl Pomeroy,  Democrat of North Dakota
+on the A.I.G. executives who were paid bonuses  after a federal bailout.
 
-do you suppose adding another pci card with IDE ports and discontinuing
-use of the via controller entirely would fix it?
 
-though, i have actually just replaced this box with a newer, so it wont
-do me much good now, however, the small amount of money a pci ide
-controller costs, would be worth it just to actually find out what was
-wrong.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--------------040101040203040706010307
+Content-Type: text/plain;
+ name="FreeAgentFix"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="FreeAgentFix"
 
+#!/bin/bash
+# FreeAgentFix 1.4 2008-02-17 19:45:13-05 root Stable
+#================================================================
+# FreeAgentFix - fix "Free Agent" USB drives going off line in Linux
+#   Author: davidsen@tmr.com
+# Based on discussions in LKML and similar lists
+#   brings the drive online
+#   clears standby
+#   Tells the kernel to allow restart
+
+# sanity check
+if [ $# -lt 1 ]; then
+  echo "FreeAgentFix v1.4 - keeps \"Free Agent\" drives online in Linux"
+  echo
+  echo "Usage:"
+  echo "  ./FreeAgentFix sdX"
+  echo
+  echo "Where \"X\" is the drive letter assigned when the drive is connected"
+  echo
+  echo "Plug in the drive, see what device name is assigned to the drive"
+  echo "using \"dmesg | tail -10\" or similar"
+  echo "run the script with the drive name only (without /dev/)"
+  echo
+  echo
+
+  # this should be made executable (chmod +x FreeAgentFix) but if
+  # someone sources it, don't mess them up
+  fn=${0##*/}
+  if [ "$fn" == "FreeAgentFix" ]; then
+    exit; else
+    return
+  fi
+fi
+
+disk=$1
+
+bash -v <<XX
+# Start the drive
+sdparm --command=start /dev/${disk}
+# Clear the standby
+sdparm --clear STANDBY -6 /dev/${disk}
+# Allow restart
+cd /sys/block/${disk}/device/scsi_disk*
+if [ -f allow_restart ]; then
+ echo 1 >allow_restart
+fi
+
+--------------040101040203040706010307--
