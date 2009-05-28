@@ -1,44 +1,56 @@
-From: Koti <satha_koti@yahoo.co.in>
-Subject: Need information regarding RAID 6 Async APIs for kernel version 2.6.27
-Date: Thu, 28 May 2009 17:57:18 +0000 (UTC)
-Message-ID: <loom.20090528T173957-742@post.gmane.org>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: raid failure and LVM volume group availability
+Date: Thu, 28 May 2009 20:48:10 +0200
+Message-ID: <87skipysgl.fsf@frosties.localdomain>
+References: <alpine.DEB.2.00.0905211232250.26077@dirac.rather.puzzling.org>
+	<389deec70905250909h79c599b2gfd2229520f5a8ce0@mail.gmail.com>
+	<87ws84nmy0.fsf@frosties.localdomain>
+	<18971.55554.63887.457689@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <18971.55554.63887.457689@notabene.brown> (Neil Brown's message
+	of "Tue, 26 May 2009 21:56:50 +1000")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Goswin von Brederlow <goswin-v-b@web.de>, hank peng <pengxihan@gmail.com>, Tim Connors <tconnors@rather.puzzling.org>, linux-raid@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-raid.ids
 
-Hi All,
+Neil Brown <neilb@suse.de> writes:
 
-When I am using the linux kernel version 2.6.21, I applied the RAID5 and RAID6 
-Async_tx APIs, and those are working fine.
+> On Tuesday May 26, goswin-v-b@web.de wrote:
+>> hank peng <pengxihan@gmail.com> writes:
+>> 
+>> > Only one of disks in this RAID1failed, it should continue to work with
+>> > degraded state.
+>> > Why LVM complained with I/O errors??
+>> 
+>> That is because the last drive in a raid1 can not fail:
+>> 
+>> md9 : active raid1 ram1[1] ram0[2](F)
+>>       65472 blocks [2/1] [_U]
+>> 
+>> # mdadm --fail /dev/md9 /dev/ram1
+>> mdadm: set /dev/ram1 faulty in /dev/md9
+>> 
+>> md9 : active raid1 ram1[1] ram0[2](F)
+>>       65472 blocks [2/1] [_U]
+>> 
+>> See, still marked working.
+>> 
+>> MfG
+>>         Goswin
+>> 
+>> PS: Why doesn't mdadm or kernel give a message about not failing?
+>
+> -ENOPATCH :-)
+>
+> You would want to rate limit any such message from the kernel, but it
+> might make sense to have it.
+>
+> NeilBrown
 
-But When I upgraded to linux kernel version 2.6.27, it has RAID5 async_tx APIs 
-inline, but not the RAID6.
+No rate risk in mdadm --fail reporting a failure to fail the device.
 
-I downloaded the recent RAID6 async_tx APIs released on March2009, from the 
-links
-
-git://git.kernel.org/pub/scm/linux/kernel/git/djbw/async_tx.git raid6
-
-git://git.kernel.org/pub/scm/linux/kernel/git/djbw/md.git raid6-for-neil
-
-
-The following is my questions:
-1) Is these are suitable for my kernel version, if not can you please provide 
-me the link where I can get the patches for this kernel.
-
-1) If these are currect one Iam looking, then I have a few more doubts while 
-traversing the code, It has async calls like async_pq, async_r6_dd_recov, ...
-From where these functions are invoked
-how the link happens between these async calls and the md-raid driver.
-
-Can anybody help in solving this problem, it is very useful for my work.
-Thanks in advance for your support.
-
-
-Thanks,
-Satha Koti
-
+MfG
+        Goswin
