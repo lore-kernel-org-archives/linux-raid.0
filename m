@@ -1,44 +1,39 @@
-From: "Simon Jackson" <sjackson@bluearc.com>
-Subject: RE: FW: Detecting errors on the RAID disks.
-Date: Thu, 28 May 2009 09:19:04 +0100
-Message-ID: <3D76E016F4A2A749A1EB1A3FD83E22BC0285F3A9@uk-email.terastack.bluearc.com>
-References: <3D76E016F4A2A749A1EB1A3FD83E22BC0285F2F4@uk-email.terastack.bluearc.com> <4A1D9600.5020109@sauce.co.nz>
+From: Kyle Liddell <kyle@foobox.homelinux.net>
+Subject: Re: forcing check of RAID1 arrays causes lockup
+Date: Thu, 28 May 2009 05:17:26 -0400
+Message-ID: <20090528091726.GA8067@athlon>
+References: <20090526234523.GB14974@foobox.homelinux.net> <4A1C986A.7040403@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <4A1D9600.5020109@sauce.co.nz>
+Content-Disposition: inline
+In-Reply-To: <4A1C986A.7040403@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
+To: Roger Heflin <rogerheflin@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Richard.
+On Tue, May 26, 2009 at 08:33:30PM -0500, Roger Heflin wrote:
+> Not what you are going to want to hear but badly designed hardware.
+> 
+> On a machine I had with 4 disks (2 on a build-in via, 2 on other 
+> ports--either a built-in promise, or a sil pci card), when the 2 
+> build-in via sata ports got used heavily at the same times as any 
+...
+>    It appeared to me as designed the via chipsets (And think your 
+> chipset is pretty close to the one I was using) did not appear to deal 
+> with with high levels of traffic to several devices at once, and would 
+> become unstable.
+> 
+> Once I figured out the issue, I could duplicate it in under 5 minutes, 
+> and the only working solution was to not use the via ports.
+> 
+> My mb at the time was a Asus k8v se deluxe with a K8T800 chipset, and 
+> so long as it was not heavily used it was stable, but under heavy use 
+> it was junk.
 
-Thanks for the pointer, I shall look at that.  
+That does sound like my problem, and the hardware is similar.  However, I don't think it's the VIA controller that's the problem here:  I moved the two drives off the on-board VIA controller and placed them as slaves on the Promise card.  I was able to install fedora, which was an improvement, but once installed, I was able to bring the system down again by forcing a check.  I've got a spare Promise IDE controller, so I tried swapping it out, with no change.
 
-I am still interested to know what the errors file provides a count of.
+I suppose it's a weird hardware bug, although it still is strange that certain combinations of kernels (which makes a little sense) + distributions (which makes no sense) will work.  I just went back to debian on the machine, and it works fine.  
 
-
-Simon.
-
------Original Message-----
-From: Richard Scobie [mailto:richard@sauce.co.nz] 
-Sent: 27 May 2009 20:35
-To: Simon Jackson
-Cc: linux-raid@vger.kernel.org
-Subject: Re: FW: Detecting errors on the RAID disks.
-
-Simon Jackson wrote:
-> I have been looking for a way of detecting whether disks used in RAID
-sets have had errors that might indicate the drive is failing..  
-
-smartd, while not foolproof, offers some assistence here:
-
-http://smartmontools.sourceforge.net/
-
-Regards,
-
-Richard
+I'm trying to reproduce the problem on another machine, but I'm not too hopeful.
