@@ -1,45 +1,53 @@
-From: Maxime Boissonneault <maxime.boissonneault@usherbrooke.ca>
+From: John Robinson <john.robinson@anonymous.org.uk>
 Subject: Re: RAID5 reconstruction ?
-Date: Sat, 30 May 2009 12:16:16 -0400
-Message-ID: <4A215BD0.3070901@usherbrooke.ca>
-References: <37d33d830905292244w685499b3h391aa2ca7a5b1ad@mail.gmail.com> <4A213612.7080206@anonymous.org.uk> <4A213D6B.8040501@usherbrooke.ca> <4A2154C5.6050500@anonymous.org.uk>
+Date: Sat, 30 May 2009 17:30:24 +0100
+Message-ID: <4A215F20.8060901@anonymous.org.uk>
+References: <37d33d830905292244w685499b3h391aa2ca7a5b1ad@mail.gmail.com> <4A213612.7080206@anonymous.org.uk> <4A213D6B.8040501@usherbrooke.ca> <4A2154C5.6050500@anonymous.org.uk> <4A215BD0.3070901@usherbrooke.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A2154C5.6050500@anonymous.org.uk>
+In-Reply-To: <4A215BD0.3070901@usherbrooke.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
+To: Maxime Boissonneault <maxime.boissonneault@usherbrooke.ca>
 Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-
-John Robinson a =E9crit :
-> On 30/05/2009 15:06, Maxime Boissonneault wrote:
->> I don't know how it goes for Linux, but hasn't ZFS been developped=20
->> exactly for that purpose ? From what I understand, ZFS manage both=20
->> the file system and the RAID features at once. Therefore, the "raid"=
+On 30/05/2009 17:16, Maxime Boissonneault wrote:
+> John Robinson a =E9crit :
+>> On 30/05/2009 15:06, Maxime Boissonneault wrote:
+>>> I don't know how it goes for Linux, but hasn't ZFS been developped=20
+>>> exactly for that purpose ? From what I understand, ZFS manage both=20
+>>> the file system and the RAID features at once. Therefore, the "raid=
+"=20
+>>> part knows where are the files and the filesystem knows about the=20
+>>> raid. Reconstruction is then done intelligently (not reconstructing=
 =20
->> part knows where are the files and the filesystem knows about the=20
->> raid. Reconstruction is then done intelligently (not reconstructing=20
->> unused space).
->
-> Yes, ZFS can do this, but ext4 and md could do it too, and probably=20
-> will at some point. I prefer separating the layers, then I can switch=
-=20
-> one and not the other, e.g. start using a hardware RAID controller=20
-> instead of md.
->
-> Cheers,
->
-> John.
->
-Chances are that the hardware controler would not be compatible with=20
-mdadm and you would have to backup and copy your data anyway.
+>>> unused space).
+>>
+>> Yes, ZFS can do this, but ext4 and md could do it too, and probably=20
+>> will at some point. I prefer separating the layers, then I can switc=
+h=20
+>> one and not the other, e.g. start using a hardware RAID controller=20
+>> instead of md.
+>>
+> Chances are that the hardware controler would not be compatible with=20
+> mdadm and you would have to backup and copy your data anyway.
 
+Sure, but I can keep my filesystem, which I've chosen for whatever=20
+filesystem features it has, rather than having chosen it because it doe=
+s=20
+RAID itself.
 
+It would be nice if RAID controllers and md used the same metadata,=20
+though, wouldn't it, so we could swap discs between controllers and=20
+everything would Just Work? Umm, do any RAID controllers support SNIA=20
+DDF? I think md does (or soon will)...
 
+Cheers,
+
+John.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
