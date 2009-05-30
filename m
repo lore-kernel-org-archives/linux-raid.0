@@ -1,32 +1,45 @@
-From: Maxime Boissonneault <maxime.boissonneault@usherbrooke.ca>
-Subject: Re: Upgrading a software RAID
-Date: Sat, 30 May 2009 14:35:24 -0400
-Message-ID: <4A217C6C.7080301@usherbrooke.ca>
-References: <4A1EA095.9090406@usherbrooke.ca> <4A217BA8.1080208@tmr.com>
+From: David Rea <dave@daverea.com>
+Subject: RAID-5 spare drive: Can't make spare persist across reboot
+Date: Sat, 30 May 2009 14:37:49 -0400
+Message-ID: <984c80610905301137l7649391fg64a8108769abd216@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A217BA8.1080208@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: robin@robinhill.me.uk, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+   [First-time poster, done plenty of googling and archive searching
+before sending this, so if it's already been covered my apologies in
+advance...]
 
->>
->> I can not install more drives in the computer. It is a home theater 
->> computer in a small case. I was expecting to be able to let the raid 
->> manage the copies itself.
->>
->> If the / was on a RAID5, would it be able to boot with 2 disks ?
->> If so, is it possible to convert my RAID0 to a RAID5 ?
->> For example, I could boot on a CD, backup / onto /home, delete the 
->> RAID0 array and recreate it as RAID5, then restore the backup. Would 
->> this work ?
->
-> Based on my testing (somewhat old now) and regular use, I would say 
-> raid10 is probably your best bet. It's fast and secure, and with the 
-> -f2 option for "far" copies it's able to give high transfer rates.
+Hello All-
 
-Doesn't RAID10 means RAID 1+0, which requires 4 disks ?
+I am running a 3-disk RAID-5 using kernel 2.6.24 and mdadm 2.6.3 under
+Ubuntu server 8.04LTS. I'm trying to add a spare drive to the array.
+
+/dev/md0 == /dev/sdc, /dev/sdd, /dev/sda
+
+I want to add /dev/sdb1 as a spare partition, so I tried `mdadm
+/dev/md0 --add /dev/sdb1` ... this worked great; running `mdadm
+--detail /dev/md0` shows 3 active and 1 spare. Cool!
+
+However, after a reboot, I'm back to 3 active and 0 spare drives. I
+tried adding the spare to my DEVICES list in /etc/mdadm/mdadm.conf,
+and adding a SPARES=1 attribute to the ARRAY line in that file, still
+no persistence. I tried running `update-initramfs -u` after changing
+mdadm.conf (per an IRC suggestion) but still no persistence.
+
+-- Is it possible to do what I'm trying to do?
+-- Do I need to create the array anew using `mdadm --create` and
+specifying "--spare-devices=1 /dev/sdb1" during creation?
+-- Will creating the array again risk corrupting the data already present?
+-- Is there any way to instantiate a superblock on /dev/sdb1 so that
+it can be associated with this array's UUID?
+-- I have the ARRAY line (in mdadm.conf) specified by UUID; could this
+be causing the spare to be excluded, since it (presumably) does not
+have a superblock?
+
+Thanks in advance,
+Dave
