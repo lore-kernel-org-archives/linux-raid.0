@@ -1,55 +1,66 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH/RFC 0/2] md: personality pushdown patches -- intro
-Date: Sun, 31 May 2009 08:19:41 +1000
-Message-ID: <18977.45309.243141.219288@notabene.brown>
-References: <1243603122-11116-1-git-send-email-maan@systemlinux.org>
+From: David Rea <dave@daverea.com>
+Subject: Re: RAID-5 spare drive: Can't make spare persist across reboot
+Date: Sat, 30 May 2009 18:26:22 -0400
+Message-ID: <984c80610905301526h6a71b79cyd1cb66c992db355a@mail.gmail.com>
+References: <984c80610905301137l7649391fg64a8108769abd216@mail.gmail.com>
+	 <18977.43758.674932.381022@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andre Noll on Friday May 29
+In-Reply-To: <18977.43758.674932.381022@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday May 29, maan@systemlinux.org wrote:
-> Here are the first two patches for pushing down raid level dependent
-> code from md.c to the corresponding personalities.
-> 
-> The first patch is trivial as it moves only a printk() to the
-> personalities. The second patch removes knowledge about bitmaps
-> from md.c.
+On Sat, May 30, 2009 at 5:53 PM, Neil Brown <neilb@suse.de> wrote:
 
-Thanks Andre.
-This first is good and is now in my for-next branch.
+>> However, after a reboot, I'm back to 3 active and 0 spare drives. [s=
+nip]
+>
+> This should "just work". =A0There might be some hints in
+> /var/log/messages if you'd like to post that.
 
-The second is heading in the right direction.
-However md_bitmap_present is as much of a layering violation in its
-own way as the previous code was - diving in to the metatype_type
-specific data.
+Here is the output of `cat /var/log/messages | grep raid`:
+http://pastebin.ca/1441575
 
-You will notice in bitmap_create that an array has a bitmap if and
-only if (mddev->bitmap_file || mddev->bitmap_offset).
+It seems that raid5 only sees the sd[acd] as active drives, but
+doesn't pick up the spare.
 
-So that is the test which should be used in md_bitmap_present.
+>> -- Is there any way to instantiate a superblock on /dev/sdb1 so that
+>> it can be associated with this array's UUID?
+>
+> You have already done that. =A0Use
+> =A0 mdadm --examine /dev/sdb
+> to confirm.
 
-Also the function name "md_bitmap_present" give no hint that it will
-report an error - it reads like a simple test.
-Maybe "md_check_no_bitmap" to indicate what the function is expecting
-to find?
+This successfully identifies /dev/sdb1 as a spare: http://pastebin.ca/1=
+441576
+However running `mdadm --examine /dev/sda` for example does not:
+http://pastebin.ca/1441578
+And running `mdadm --detail /dev/md0` also says no spares:
+http://pastebin.ca/1441579
 
-Thanks,
-NeilBrown
+(let me know if you'd rather I paste these inline, for archival
+purposes or what have you)
 
+>> -- I have the ARRAY line (in mdadm.conf) specified by UUID; could th=
+is
+>> be causing the spare to be excluded, since it (presumably) does not
+>> have a superblock?
+>
+> No. =A0And it does have a superblock.
 
-> 
-> If the general approach used by the second patch is agreed with, I
-> will follow up with patches that deal with data integrity registration
-> and multipath handling which are the remaining two issues where md.c
-> does what should be handled in personality code.
-> 
-> Thanks
-> Andre
-> -- 
-> 1.5.4.3
+Gotcha, I stand corrected! I guess at this point I just need to figure
+out how to get the spare to recognize on bootup, since it's already
+got the same UUID and is listed in mdadm.conf:
+http://pastebin.ca/1441588
+
+Thanks again for your help,
+Dave
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
