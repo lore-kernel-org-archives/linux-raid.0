@@ -1,55 +1,59 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: RAID5 reconstruction ?
-Date: Sat, 30 May 2009 17:30:24 +0100
-Message-ID: <4A215F20.8060901@anonymous.org.uk>
-References: <37d33d830905292244w685499b3h391aa2ca7a5b1ad@mail.gmail.com> <4A213612.7080206@anonymous.org.uk> <4A213D6B.8040501@usherbrooke.ca> <4A2154C5.6050500@anonymous.org.uk> <4A215BD0.3070901@usherbrooke.ca>
+From: Maxime Boissonneault <maxime.boissonneault@usherbrooke.ca>
+Subject: Re: Upgrading a software RAID
+Date: Sat, 30 May 2009 14:11:52 -0400
+Message-ID: <4A2176E8.9090701@usherbrooke.ca>
+References: <20090528141457.GA30322@cthulhu.home.robinhill.me.uk> <4A1EA095.9090406@usherbrooke.ca> <20090528150849.GB30322@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A215BD0.3070901@usherbrooke.ca>
+In-Reply-To: <20090528150849.GB30322@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Maxime Boissonneault <maxime.boissonneault@usherbrooke.ca>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 30/05/2009 17:16, Maxime Boissonneault wrote:
-> John Robinson a =E9crit :
->> On 30/05/2009 15:06, Maxime Boissonneault wrote:
->>> I don't know how it goes for Linux, but hasn't ZFS been developped=20
->>> exactly for that purpose ? From what I understand, ZFS manage both=20
->>> the file system and the RAID features at once. Therefore, the "raid=
-"=20
->>> part knows where are the files and the filesystem knows about the=20
->>> raid. Reconstruction is then done intelligently (not reconstructing=
-=20
->>> unused space).
+
+>> If the / was on a RAID5, would it be able to boot with 2 disks ?
+>> If so, is it possible to convert my RAID0 to a RAID5 ?
+>> For example, I could boot on a CD, backup / onto /home, delete the RAID0 
+>> array and recreate it as RAID5, then restore the backup. Would this work ?
 >>
->> Yes, ZFS can do this, but ext4 and md could do it too, and probably=20
->> will at some point. I prefer separating the layers, then I can switc=
-h=20
->> one and not the other, e.g. start using a hardware RAID controller=20
->> instead of md.
->>
-> Chances are that the hardware controler would not be compatible with=20
-> mdadm and you would have to backup and copy your data anyway.
+>>     
+> Yes, a RAID-5 will run fine with just two disks. You could certainly
+> boot from CD, backup, recreate the RAID, then restore - you'd probably
+> need to update the mdadm.conf file (and the initrd) to indicate the new
+> array UUID and details though.
+>
+> You may also want to read through the GRUB section on
+> http://en.gentoo-wiki.com/wiki/RAID/Software to see how to install grub
+> onto all the drives (avoiding the issue of which drive is currently
+> being booted from).
+>
+>   
+Ok. This is the configuration I had :
+/dev/md1 was a RAID0 composed of /dev/sda2, /dev/sdb2 and /dev/sdc2
 
-Sure, but I can keep my filesystem, which I've chosen for whatever=20
-filesystem features it has, rather than having chosen it because it doe=
-s=20
-RAID itself.
+I did this :
+mdadm --stop /dev/md1
+mdadm --zero-superblock /dev/sda2
+mdadm --zero-superblock /dev/sdb2
+mdadm --zero-superblock /dev/sdc2
 
-It would be nice if RAID controllers and md used the same metadata,=20
-though, wouldn't it, so we could swap discs between controllers and=20
-everything would Just Work? Umm, do any RAID controllers support SNIA=20
-DDF? I think md does (or soon will)...
+and then this :
+mdadm --create --verbose /dev/md1 --level=5 --raid-devices=3 /dev/sda2 
+/dev/sdb2 /dev/sdc2
 
-Cheers,
+I used the rescue mode from an alternate CD (hardy 8.04.2) to format 
+/dev/md1 as ext3. Then, I restored the backup and updated the 
+/etc/mdadm/mdadm.conf file with the output of mdadm --detail --scan.
 
-John.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Now, GRUB loads (it was on /dev/md0 which is a RAID1 composed of sd*1), 
+and it tries to load Ubuntu, but it just won't load.
+
+You said that I would have to edit initrd... what is that and what do I 
+have to change in it ?
+
+Thanks,
+
+Maxime Boissonneault
+
