@@ -1,70 +1,73 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID-5 spare drive: Can't make spare persist across reboot
-Date: Sun, 31 May 2009 07:53:50 +1000
-Message-ID: <18977.43758.674932.381022@notabene.brown>
-References: <984c80610905301137l7649391fg64a8108769abd216@mail.gmail.com>
+From: Maxime Boissonneault <maxime.boissonneault@usherbrooke.ca>
+Subject: Re: Upgrading a software RAID
+Date: Sat, 30 May 2009 18:18:55 -0400
+Message-ID: <4A21B0CF.6030104@usherbrooke.ca>
+References: <20090528141457.GA30322@cthulhu.home.robinhill.me.uk> <4A1EA095.9090406@usherbrooke.ca> <20090528150849.GB30322@cthulhu.home.robinhill.me.uk> <4A2176E8.9090701@usherbrooke.ca> <20090530190348.GB23606@cthulhu.home.robinhill.me.uk> <4A2190F8.3030204@usherbrooke.ca> <20090530201519.GD23606@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from David Rea on Saturday May 30
+In-Reply-To: <20090530201519.GD23606@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Rea <dave@daverea.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Saturday May 30, dave@daverea.com wrote:
->    [First-time poster, done plenty of googling and archive searching
-> before sending this, so if it's already been covered my apologies in
-> advance...]
-> 
-> Hello All-
-> 
-> I am running a 3-disk RAID-5 using kernel 2.6.24 and mdadm 2.6.3 under
-> Ubuntu server 8.04LTS. I'm trying to add a spare drive to the array.
-> 
-> /dev/md0 == /dev/sdc, /dev/sdd, /dev/sda
-> 
-> I want to add /dev/sdb1 as a spare partition, so I tried `mdadm
-> /dev/md0 --add /dev/sdb1` ... this worked great; running `mdadm
-> --detail /dev/md0` shows 3 active and 1 spare. Cool!
-> 
-> However, after a reboot, I'm back to 3 active and 0 spare drives. I
-> tried adding the spare to my DEVICES list in /etc/mdadm/mdadm.conf,
-> and adding a SPARES=1 attribute to the ARRAY line in that file, still
-> no persistence. I tried running `update-initramfs -u` after changing
-> mdadm.conf (per an IRC suggestion) but still no persistence.
 
-This should "just work".  There might be some hints in
-/var/log/messages if you'd like to post that.
+>>> The initrd is the ramdisk which the kernel boots to first, containing
+>>> the various modules and utility programs (like mdadm) needed to access
+>>> the main root filesytem.  A quick search suggests that you need to run
+>>> 'update-initramfs -u' on Ubuntu.  You'll need to boot off the CD and
+>>> chroot onto the new array first though - something like:
+>>>
+>>>  - Boot off CD
+>>>  - Assemble the RAID arrays
+>>>  - Create a mount point for the new array (mkdir /mnt/newroot)
+>>>  - Mount the root filesystem (mount /dev/md1 /mnt/newroot)
+>>>  - Mount the proc filesystem (mount -o bind /proc /mnt/newroot/proc)
+>>>  - Mount the sys filesystem (mount -o bind /sys /mnt/newroot/sys)
+>>>  - Mount the dev filesystem (mount -o bind /dev /mnt/newroot/dev)
+>>>  - Chroot to the new array (chroot /mnt/newroot /bin/bash)
+>>>  - Mount the boot filesystem (mount /boot)
+>>>  - Update the initramfs (update-initramfs -u)
+>>>  - Unmount the boot filesystem (umount /boot)
+>>>  - Exit the chroot (exit)
+>>>  - Unmount the dev filesystem (umount /mnt/newroot/dev)
+>>>  - Unmount the sys filesystem (umount /mnt/newroot/sys)
+>>>  - Unmount the proc filesystem (umount /mnt/newroot/proc)
+>>>  - Unmount the root filesystem (umount /mnt/newroot)
+>>>  - Reboot
+>>>
+>>> That's just from memory though, so watch out for any warnings/errors.
+>>> The other issue you _may_ have is the raid5 module missing from the
+>>> initrd - you'd best check that raid5 is listed in
+>>> /etc/initramfs/modules.
+>>>       
+>> RAID5 should not be missing, my /home was a RAID5.
+>>     
+> Yes, but /home is only mounted after it's accessed the root partition.
+> It can then read any modules from the root partition, so the raid5
+> module could still be missing from the initrd.  I suspect it'll have
+> included it though.
+>
+>   
+I did as you suggested above. I still get the same error message.
+I have looked and did not find /etc/initramfs/modules. Instead, I found 
+/etc/initramfs-tools/modules. In this file, there were a couple of 
+comment lines explaining how to enable modules.
+No modules were included.
+I uncommented the "raid1" and added "raid5" and ran the procedure again.
 
-> 
-> -- Is it possible to do what I'm trying to do?
+Still getting the same problem.
 
-Definitely.
+Since the problem seems to be the boot, I will try to do a fresh 
+install, then restore my backup while keeping the /boot from the fresh 
+install.
 
-> -- Do I need to create the array anew using `mdadm --create` and
-> specifying "--spare-devices=1 /dev/sdb1" during creation?
+Thanks,
 
-No.
+Maxime
 
-> -- Will creating the array again risk corrupting the data already present?
 
-There is always a risk - you might type the wrong command by mistake.  
-Other than that there is no risk.
-However doing so won't gain you anything.
 
-> -- Is there any way to instantiate a superblock on /dev/sdb1 so that
-> it can be associated with this array's UUID?
 
-You have already done that.  Use
-   mdadm --examine /dev/sdb
-to confirm.
 
-> -- I have the ARRAY line (in mdadm.conf) specified by UUID; could this
-> be causing the spare to be excluded, since it (presumably) does not
-> have a superblock?
-
-No.  And it does have a superblock.
-
-NeilBrown
