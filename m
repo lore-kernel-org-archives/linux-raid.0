@@ -1,7 +1,7 @@
 From: Goswin von Brederlow <goswin-v-b@web.de>
 Subject: Re: RAID5 reconstruction ?
-Date: Sat, 30 May 2009 20:54:28 +0200
-Message-ID: <87d49qzajf.fsf@frosties.localdomain>
+Date: Sat, 30 May 2009 20:55:59 +0200
+Message-ID: <878wkezagw.fsf@frosties.localdomain>
 References: <37d33d830905292244w685499b3h391aa2ca7a5b1ad@mail.gmail.com>
 	<4A213612.7080206@anonymous.org.uk>
 	<1243699735.5740.103.camel@localhost>
@@ -41,16 +41,16 @@ Redeeman <redeeman@metanurb.dk> writes:
 > information. Obviously this will only work if you run a filesystem on it
 > which supports it, but it would seem like a nicer solution than a bitmap
 > for it.
+>
+>> 
+>> Cheers,
+>> 
+>> John.
 
-On the other hand checking a bitmap is quick. You could use the bitmap
-not only for reconstruction but also for reads. If the bitmap say the
-block is unused you can skip the read and just zero fill the
-buffer. This would speed up reads and writes that don't cover the full
-stripe. And compared to a raid with current bitmap there shouldn't be
-any real slowdown for the extra "unused" bit.
+And just when I hit send I thought of something else.
 
-The only special case for resync would be that if all data blocks in a
-stripe are unused then the parity blocks can be marked unused too.
+Instead of the initial sync when creating a raid the bitmap could just
+mark all blocks as unused. Much faster raid creation.
 
 MfG
         Goswin
