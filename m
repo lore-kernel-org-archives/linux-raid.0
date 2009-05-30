@@ -1,96 +1,41 @@
-From: SandeepKsinha <sandeepksinha@gmail.com>
-Subject: Re: RAID5 reconstruction ?
-Date: Sat, 30 May 2009 18:58:00 +0530
-Message-ID: <37d33d830905300628h28fdc162j834db675836dfd@mail.gmail.com>
-References: <37d33d830905292244w685499b3h391aa2ca7a5b1ad@mail.gmail.com>
-	 <921ca19c0905300552g7697e4c6of8c357d9b456ad0d@mail.gmail.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Raid and badblocks
+Date: Sat, 30 May 2009 14:29:59 +0100
+Message-ID: <4A2134D7.9020909@anonymous.org.uk>
+References: <gv5q3p$vof$1@ger.gmane.org> <gv5qnk$1pe$1@ger.gmane.org>	 <77f027ed892f0a37b3df63d574ae7955.squirrel@neil.brown.name>	 <gvgp32$9se$1@ger.gmane.org> <1243351643.11073.29.camel@cichlid.com> <389deec70905300313v70766bcfmc10bef87ab11c9a8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <921ca19c0905300552g7697e4c6of8c357d9b456ad0d@mail.gmail.com>
+In-Reply-To: <389deec70905300313v70766bcfmc10bef87ab11c9a8@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sujit Karataparambil <sjt.kar@gmail.com>
+To: hank peng <pengxihan@gmail.com>
 Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I
+On 30/05/2009 11:13, hank peng wrote:
+> 2009/5/26 Andrew Burgess <aab@cichlid.com>:
+>> On Tue, 2009-05-26 at 13:59 +0100, Jeremy Sanders wrote:
+>>
+>>> Strangely, the Reallocated_Sector_Ct is still zero on the drive even though
+>>> Current_Pending_Sector is now zero. This is a Samsung HD103UJ by the way.
+>> That can be ok. It probably tried writing and then rereading and when
+>> that worked it decided the sector didn't really have a 'hard' error
+>> (like a physical defect on the platter) and thus didn't need to be
+>> reallocated to a spare sector. You could generate an unreadable sector
+>> during a write by the power failing or with excessive vibration.
+>>
+> I have a question, in this situation, if I do as Jeremy did, write
+> zero to bad block to make drive think it is not bad any more, then
+> what about old data? Isn't it lost?
 
-On Sat, May 30, 2009 at 6:22 PM, Sujit Karataparambil <sjt.kar@gmail.co=
-m> wrote:
-> Are you talking about hardware raid or software raid.
->
-> I donot think hardware raid can by itself do much of the
-> book keeping.
->
-> Software Raid I think is different from having raid 0 to raid 1
-> to raid 2 to raid 3 to raid 4 to raid 5.
->
+In Jeremy's case, the bad block was past the end of the data in the 
+array, so no, data wasn't lost. If the bad block had been within the 
+array data, the repair operation he ran earlier would have found it, 
+reconstructed the correct data from the other drives, and rewritten it, 
+again avoiding any data loss.
 
-I am taking about mdraid.
+Cheers,
 
-> hope this is correct information.
->
-> Thanks,
->
->
-> On Sat, May 30, 2009 at 11:14 AM, SandeepKsinha <sandeepksinha@gmail.=
-com> wrote:
->> Hi all,
->>
->> Say If I have a RAID 5 array of 50GB of five disks of 10GB each.
->>
->> I have data of 5GB. When a disk fails and replaced with a spare disk=
-=2E
->> Will the reconstruction happen only for the 5GB allocated disk block=
-s
->> or it will happen for the whole disk size.
->>
->>
->> Is it possible to make =A0reconstruction intelligent enough to keep =
-it optimized ?
->>
->> Thanks.
->>
->> --
->> Regards,
->> Sandeep.
->>
->>
->>
->>
->>
->>
->> =93To learn is to change. Education is a process that changes the le=
-arner.=94
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->>
->
->
->
-> --
-> -- Sujit K M
->
+John.
 
-
-
---=20
-Regards,
-Sandeep.
-
-
-
-
-
- =09
-=93To learn is to change. Education is a process that changes the learn=
-er.=94
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
