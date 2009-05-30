@@ -1,66 +1,48 @@
-From: David Rea <dave@daverea.com>
-Subject: Re: RAID-5 spare drive: Can't make spare persist across reboot
-Date: Sat, 30 May 2009 18:26:22 -0400
-Message-ID: <984c80610905301526h6a71b79cyd1cb66c992db355a@mail.gmail.com>
-References: <984c80610905301137l7649391fg64a8108769abd216@mail.gmail.com>
-	 <18977.43758.674932.381022@notabene.brown>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Upgrading a software RAID
+Date: Sat, 30 May 2009 18:39:24 -0400
+Message-ID: <4A21B59C.4030309@tmr.com>
+References: <4A1EA095.9090406@usherbrooke.ca> <4A217BA8.1080208@tmr.com> <4A217C6C.7080301@usherbrooke.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18977.43758.674932.381022@notabene.brown>
+In-Reply-To: <4A217C6C.7080301@usherbrooke.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Maxime Boissonneault <maxime.boissonneault@usherbrooke.ca>
+Cc: robin@robinhill.me.uk, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, May 30, 2009 at 5:53 PM, Neil Brown <neilb@suse.de> wrote:
-
->> However, after a reboot, I'm back to 3 active and 0 spare drives. [s=
-nip]
+Maxime Boissonneault wrote:
 >
-> This should "just work". =A0There might be some hints in
-> /var/log/messages if you'd like to post that.
-
-Here is the output of `cat /var/log/messages | grep raid`:
-http://pastebin.ca/1441575
-
-It seems that raid5 only sees the sd[acd] as active drives, but
-doesn't pick up the spare.
-
->> -- Is there any way to instantiate a superblock on /dev/sdb1 so that
->> it can be associated with this array's UUID?
+>>>
+>>> I can not install more drives in the computer. It is a home theater 
+>>> computer in a small case. I was expecting to be able to let the raid 
+>>> manage the copies itself.
+>>>
+>>> If the / was on a RAID5, would it be able to boot with 2 disks ?
+>>> If so, is it possible to convert my RAID0 to a RAID5 ?
+>>> For example, I could boot on a CD, backup / onto /home, delete the 
+>>> RAID0 array and recreate it as RAID5, then restore the backup. Would 
+>>> this work ?
+>>
+>> Based on my testing (somewhat old now) and regular use, I would say 
+>> raid10 is probably your best bet. It's fast and secure, and with the 
+>> -f2 option for "far" copies it's able to give high transfer rates.
 >
-> You have already done that. =A0Use
-> =A0 mdadm --examine /dev/sdb
-> to confirm.
-
-This successfully identifies /dev/sdb1 as a spare: http://pastebin.ca/1=
-441576
-However running `mdadm --examine /dev/sda` for example does not:
-http://pastebin.ca/1441578
-And running `mdadm --detail /dev/md0` also says no spares:
-http://pastebin.ca/1441579
-
-(let me know if you'd rather I paste these inline, for archival
-purposes or what have you)
-
->> -- I have the ARRAY line (in mdadm.conf) specified by UUID; could th=
-is
->> be causing the spare to be excluded, since it (presumably) does not
->> have a superblock?
+> Doesn't RAID10 means RAID 1+0, which requires 4 disks ?
 >
-> No. =A0And it does have a superblock.
+No, they are not the same thing, see the mdadm man page for more 
+information. The md module does the whole thing for you, you just select 
+the layout, and from my experience and discussions here the "-f2" (far, 
+two copies) seems the fastest for read and acceptable fast for write.
 
-Gotcha, I stand corrected! I guess at this point I just need to figure
-out how to get the spare to recognize on bootup, since it's already
-got the same UUID and is listed in mdadm.conf:
-http://pastebin.ca/1441588
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
 
-Thanks again for your help,
-Dave
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+"You are disgraced professional losers. And by the way, give us our money back."
+    - Representative Earl Pomeroy,  Democrat of North Dakota
+on the A.I.G. executives who were paid bonuses  after a federal bailout.
+
+
