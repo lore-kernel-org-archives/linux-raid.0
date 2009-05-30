@@ -1,73 +1,55 @@
-From: Maxime Boissonneault <maxime.boissonneault@usherbrooke.ca>
-Subject: Re: Upgrading a software RAID
-Date: Sat, 30 May 2009 18:18:55 -0400
-Message-ID: <4A21B0CF.6030104@usherbrooke.ca>
-References: <20090528141457.GA30322@cthulhu.home.robinhill.me.uk> <4A1EA095.9090406@usherbrooke.ca> <20090528150849.GB30322@cthulhu.home.robinhill.me.uk> <4A2176E8.9090701@usherbrooke.ca> <20090530190348.GB23606@cthulhu.home.robinhill.me.uk> <4A2190F8.3030204@usherbrooke.ca> <20090530201519.GD23606@cthulhu.home.robinhill.me.uk>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH/RFC 0/2] md: personality pushdown patches -- intro
+Date: Sun, 31 May 2009 08:19:41 +1000
+Message-ID: <18977.45309.243141.219288@notabene.brown>
+References: <1243603122-11116-1-git-send-email-maan@systemlinux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090530201519.GD23606@cthulhu.home.robinhill.me.uk>
+In-Reply-To: message from Andre Noll on Friday May 29
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andre Noll <maan@systemlinux.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Friday May 29, maan@systemlinux.org wrote:
+> Here are the first two patches for pushing down raid level dependent
+> code from md.c to the corresponding personalities.
+> 
+> The first patch is trivial as it moves only a printk() to the
+> personalities. The second patch removes knowledge about bitmaps
+> from md.c.
 
->>> The initrd is the ramdisk which the kernel boots to first, containing
->>> the various modules and utility programs (like mdadm) needed to access
->>> the main root filesytem.  A quick search suggests that you need to run
->>> 'update-initramfs -u' on Ubuntu.  You'll need to boot off the CD and
->>> chroot onto the new array first though - something like:
->>>
->>>  - Boot off CD
->>>  - Assemble the RAID arrays
->>>  - Create a mount point for the new array (mkdir /mnt/newroot)
->>>  - Mount the root filesystem (mount /dev/md1 /mnt/newroot)
->>>  - Mount the proc filesystem (mount -o bind /proc /mnt/newroot/proc)
->>>  - Mount the sys filesystem (mount -o bind /sys /mnt/newroot/sys)
->>>  - Mount the dev filesystem (mount -o bind /dev /mnt/newroot/dev)
->>>  - Chroot to the new array (chroot /mnt/newroot /bin/bash)
->>>  - Mount the boot filesystem (mount /boot)
->>>  - Update the initramfs (update-initramfs -u)
->>>  - Unmount the boot filesystem (umount /boot)
->>>  - Exit the chroot (exit)
->>>  - Unmount the dev filesystem (umount /mnt/newroot/dev)
->>>  - Unmount the sys filesystem (umount /mnt/newroot/sys)
->>>  - Unmount the proc filesystem (umount /mnt/newroot/proc)
->>>  - Unmount the root filesystem (umount /mnt/newroot)
->>>  - Reboot
->>>
->>> That's just from memory though, so watch out for any warnings/errors.
->>> The other issue you _may_ have is the raid5 module missing from the
->>> initrd - you'd best check that raid5 is listed in
->>> /etc/initramfs/modules.
->>>       
->> RAID5 should not be missing, my /home was a RAID5.
->>     
-> Yes, but /home is only mounted after it's accessed the root partition.
-> It can then read any modules from the root partition, so the raid5
-> module could still be missing from the initrd.  I suspect it'll have
-> included it though.
->
->   
-I did as you suggested above. I still get the same error message.
-I have looked and did not find /etc/initramfs/modules. Instead, I found 
-/etc/initramfs-tools/modules. In this file, there were a couple of 
-comment lines explaining how to enable modules.
-No modules were included.
-I uncommented the "raid1" and added "raid5" and ran the procedure again.
+Thanks Andre.
+This first is good and is now in my for-next branch.
 
-Still getting the same problem.
+The second is heading in the right direction.
+However md_bitmap_present is as much of a layering violation in its
+own way as the previous code was - diving in to the metatype_type
+specific data.
 
-Since the problem seems to be the boot, I will try to do a fresh 
-install, then restore my backup while keeping the /boot from the fresh 
-install.
+You will notice in bitmap_create that an array has a bitmap if and
+only if (mddev->bitmap_file || mddev->bitmap_offset).
+
+So that is the test which should be used in md_bitmap_present.
+
+Also the function name "md_bitmap_present" give no hint that it will
+report an error - it reads like a simple test.
+Maybe "md_check_no_bitmap" to indicate what the function is expecting
+to find?
 
 Thanks,
-
-Maxime
-
+NeilBrown
 
 
-
-
+> 
+> If the general approach used by the second patch is agreed with, I
+> will follow up with patches that deal with data integrity registration
+> and multipath handling which are the remaining two issues where md.c
+> does what should be handled in personality code.
+> 
+> Thanks
+> Andre
+> -- 
+> 1.5.4.3
