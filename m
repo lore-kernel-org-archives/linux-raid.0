@@ -1,53 +1,69 @@
-From: hank peng <pengxihan@gmail.com>
-Subject: Re: Raid and badblocks
-Date: Sat, 30 May 2009 18:13:43 +0800
-Message-ID: <389deec70905300313v70766bcfmc10bef87ab11c9a8@mail.gmail.com>
-References: <gv5q3p$vof$1@ger.gmane.org> <gv5qnk$1pe$1@ger.gmane.org>
-	 <77f027ed892f0a37b3df63d574ae7955.squirrel@neil.brown.name>
-	 <gvgp32$9se$1@ger.gmane.org> <1243351643.11073.29.camel@cichlid.com>
+From: Sujit Karataparambil <sjt.kar@gmail.com>
+Subject: Re: RAID5 reconstruction ?
+Date: Sat, 30 May 2009 18:22:40 +0530
+Message-ID: <921ca19c0905300552g7697e4c6of8c357d9b456ad0d@mail.gmail.com>
+References: <37d33d830905292244w685499b3h391aa2ca7a5b1ad@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1243351643.11073.29.camel@cichlid.com>
+In-Reply-To: <37d33d830905292244w685499b3h391aa2ca7a5b1ad@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Burgess <aab@cichlid.com>
-Cc: Jeremy Sanders <jss@ast.cam.ac.uk>, linux-raid@vger.kernel.org
+To: SandeepKsinha <sandeepksinha@gmail.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-2009/5/26 Andrew Burgess <aab@cichlid.com>:
-> On Tue, 2009-05-26 at 13:59 +0100, Jeremy Sanders wrote:
->
->> Strangely, the Reallocated_Sector_Ct is still zero on the drive even=
- though
->> Current_Pending_Sector is now zero. This is a Samsung HD103UJ by the=
- way.
->
-> That can be ok. It probably tried writing and then rereading and when
-> that worked it decided the sector didn't really have a 'hard' error
-> (like a physical defect on the platter) and thus didn't need to be
-> reallocated to a spare sector. You could generate an unreadable secto=
-r
-> during a write by the power failing or with excessive vibration.
->
-I have a question, in this situation, if I do as Jeremy did, write
-zero to bad block to make drive think it is not bad any more, then
-what about old data? Isn't it lost?
+Are you talking about hardware raid or software raid.
 
-> That said, the drive firmware could also be broken
+I donot think hardware raid can by itself do much of the
+book keeping.
+
+Software Raid I think is different from having raid 0 to raid 1
+to raid 2 to raid 3 to raid 4 to raid 5.
+
+hope this is correct information.
+
+Thanks,
+
+
+On Sat, May 30, 2009 at 11:14 AM, SandeepKsinha <sandeepksinha@gmail.co=
+m> wrote:
+> Hi all,
 >
+> Say If I have a RAID 5 array of 50GB of five disks of 10GB each.
+>
+> I have data of 5GB. When a disk fails and replaced with a spare disk.
+> Will the reconstruction happen only for the 5GB allocated disk blocks
+> or it will happen for the whole disk size.
+>
+>
+> Is it possible to make =A0reconstruction intelligent enough to keep i=
+t optimized ?
+>
+> Thanks.
+>
+> --
+> Regards,
+> Sandeep.
+>
+>
+>
+>
+>
+>
+> =93To learn is to change. Education is a process that changes the lea=
+rner.=94
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid"=
  in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
 >
 
 
 
 --=20
-The simplest is not all best but the best is surely the simplest!
+-- Sujit K M
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
