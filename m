@@ -1,26 +1,20 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: slow random raid5 access?
-Date: Sat, 30 May 2009 13:44:15 -0600
-Message-ID: <200905301344.15895.tfjellstrom@shaw.ca>
-Reply-To: tfjellstrom@shaw.ca
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: Events?
+Date: Sat, 30 May 2009 14:45:42 -0500
+Message-ID: <20090530194545885.SLWT5991@cdptpa-omta01.mail.rr.com>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm have a new md raid5 array, and have been trying to break it in and tweak 
-it a little. But random read or write are rather slow when using small record 
-sizes:
 
-http://pastebin.ca/1441414
+What does the "Events" field reported by -Dt signify, and why does the
+number sometimes decrease?  I've seen the number change, but I don't see
+anything in any of the system logs corresponding to something that would
+seem to relate.
 
-Is that normal? And is there a way to speed it up without significantly 
-slowing down sequential access?
-
--- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
