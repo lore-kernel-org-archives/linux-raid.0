@@ -1,103 +1,63 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: RAID5 reconstruction ?
-Date: Sun, 31 May 2009 22:14:39 +1000 (EST)
-Message-ID: <49f399b955a41bf8f6b5c2441d218a96.squirrel@neil.brown.name>
-References: <37d33d830905292244w685499b3h391aa2ca7a5b1ad@mail.gmail.com>
-    <4A213612.7080206@anonymous.org.uk>
-    <1243699735.5740.103.camel@localhost>
-    <878wkezagw.fsf@frosties.localdomain>
-    <1243712247.5740.105.camel@localhost>
-    <37d33d830905310102m451f26aaw8e233227cda491c@mail.gmail.com>
-    <87ljod7aiy.fsf@frosties.localdomain>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Awful RAID5 random read performance
+Date: Sun, 31 May 2009 13:29:38 +0100
+Message-ID: <4A227832.1090808@anonymous.org.uk>
+References: <4A21A938.6050907@harddata.com> <4A2222E6.2070705@msgid.tls.msk.ru> <200905310147.58119.tfjellstrom@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87ljod7aiy.fsf@frosties.localdomain>
+In-Reply-To: <200905310147.58119.tfjellstrom@shaw.ca>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: SandeepKsinha <sandeepksinha@gmail.com>, Redeeman <redeeman@metanurb.dk>, Goswin von Brederlow <goswin-v-b@web.de>, John Robinson <john.robinson@anonymous.org.uk>, Linux RAID <linux-raid@vger.kernel.org>
+To: tfjellstrom@shaw.ca
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, May 31, 2009 9:54 pm, Goswin von Brederlow wrote:
-> SandeepKsinha <sandeepksinha@gmail.com> writes:
->
->> On Sun, May 31, 2009 at 1:07 AM, Redeeman <redeeman@metanurb.dk> wro=
-te:
->>> On Sat, 2009-05-30 at 20:55 +0200, Goswin von Brederlow wrote:
->>>> And just when I hit send I thought of something else.
->>>>
->>>> Instead of the initial sync when creating a raid the bitmap could =
-just
->>>> mark all blocks as unused. Much faster raid creation.
+On 31/05/2009 08:47, Thomas Fjellstrom wrote:
+> On Sun May 31 2009, Michael Tokarev wrote:
+>> Maurice Hilarius wrote:
+>>> A friend writes:
 >>>
->>
->>
->> This really sounds like a good option. This would have a slight hit
->> for writes which I believe will compensate for later re-construction=
-s,
->> replacing a disk, mirror resysnc and many more operation.
->
-> What hit? Currently with bitmap support a write will set the block to
-> "unclean", write the data, write the parity and set the block to
-> "clean". Setting the "used" bit along the way should not cost much.
->
-> Only difference I see is that the bitmap would have to have finer
-> granularity so one "used" bit covers one filesystem block (4k usualy)=
-=2E
-> Otherwise you could only "use" blocks but not "unuse" them again when
-> the filesystem frees them in 4k chunks.
-
-But the filesystem could "unuse" blocks in larger chunks.
-There is this thing called "thin provisioning" and I believe the propon=
-ents
-of that would like the "TRIM" command to be sent in aligned multiples
-of 1Gigabyte or something like that.
-I believe this is one aspect of Linux TRIM support that is still open.
-
-I think there would be real value in providing an 'allocated'
-bitmap even if it were quite coarsely grained.
-The problem with a very large grain is that every time you set a bit,
-you need to resync that region, and you don't want that to take too lon=
-g.
-So 1 gig (10-30seconds?) would be an upper limit I would thing.
-If you used 1 sector for the bitmap, that is 4096 bits so on a terabyte
-array, you have 256Meg chunks that resync in a few seconds.
-
-Certainly an interesting idea to experiment with I think.
-
-NeilBrown
-
-
->
->> Neil any comments on this?
->>
->> I mean, how difficult would it be to maintain such a bitmap. This ca=
-n
->> though of making something optional as this will incur space.
->>
->>
->>> A filesystem-coexist mode could also do this, by simply refusing
->>> operation until such a time that a filesystem is detected, or i sup=
-pose
->>> in worst case, mounted...
->>
->>
+>>> On a recent machine set up with Raid5.
+>>> On a AMD Phenom II X4 810, and 4GB ram.
+>>> 4 Seagate 7200.12  SATA 1TB drives,
 >>>
->>>>
->>>> MfG
->>>> =A0 =A0 =A0 =A0 Goswin
->
-> MfG
->         Goswin
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+>>> I'm getting some rather impressive numbers for sequential read
+>>> (300MB/s+) and write (170MB/s+) but the random read is proving to be
+>>> absolutely atrocious.
+>>> iostat says its going at about 0.5MB/s,
+>> The key thing about random i/o is the block size.  With, say, 512bytes
+>> blocks and single thread you will see less than 0.5Mb/sec.  With 64kbytes
+>> blocksize it will be much better.
+>>
+>> To diagnose: first try the same test on bare disk without raid layer.
+>> Next try to vary block size and number of concurrent threads doing I/O.
+>> There's no tweaks needed really.
+> 
+> I happen to be the friend Maurice was talking about. I let the raid layer keep 
+> its default chunk size of 64K. The smaller size (below like 2MB) tests in 
+> iozone are very very slow. I recently tried disabling readahead, Acoustic 
+> Management, and played with the io scheduler and all any of it has done is 
+> make the sequential access slower and has barely touched the smaller sized 
+> random access test results. Even with the 64K iozone test random read/write is 
+> only in the 7 and 11MB/s range.
+> 
+> It just seems too low to me.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I don't think so; can you try a similar test on single drives not using 
+md RAID-5?
+
+The killer is seeks, which is what random I/O uses lots of; with a 10ms 
+seek time you're only going to get ~100 seeks/second and if you're only 
+reading 512 bytes after each seek you're only going to get ~500 
+kbytes/second. Bigger block sizes will show higher throughput, but 
+you'll still only get ~100 seeks/second.
+
+Clearly when you're doing this over 4 drives you can have ~400 
+seeks/second but that's still limiting you to ~400 reads/second for 
+smallish block sizes.
+
+Cheers,
+
+John.
+
