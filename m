@@ -1,58 +1,119 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: Re: Awful RAID5 random read performance
-Date: Sun, 31 May 2009 01:47:57 -0600
-Message-ID: <200905310147.58119.tfjellstrom@shaw.ca>
-References: <4A21A938.6050907@harddata.com> <4A2222E6.2070705@msgid.tls.msk.ru>
-Reply-To: tfjellstrom@shaw.ca
+From: SandeepKsinha <sandeepksinha@gmail.com>
+Subject: Re: RAID5 reconstruction ?
+Date: Sun, 31 May 2009 13:32:03 +0530
+Message-ID: <37d33d830905310102m451f26aaw8e233227cda491c@mail.gmail.com>
+References: <37d33d830905292244w685499b3h391aa2ca7a5b1ad@mail.gmail.com>
+	 <4A213612.7080206@anonymous.org.uk>
+	 <1243699735.5740.103.camel@localhost>
+	 <878wkezagw.fsf@frosties.localdomain>
+	 <1243712247.5740.105.camel@localhost>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A2222E6.2070705@msgid.tls.msk.ru>
+In-Reply-To: <1243712247.5740.105.camel@localhost>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Maurice Hilarius <maurice@harddata.com>, linux-raid@vger.kernel.org
+To: Redeeman <redeeman@metanurb.dk>
+Cc: Goswin von Brederlow <goswin-v-b@web.de>, John Robinson <john.robinson@anonymous.org.uk>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun May 31 2009, Michael Tokarev wrote:
-> Maurice Hilarius wrote:
-> > A friend writes:
-> >
-> > On a recent machine set up with Raid5.
-> > On a AMD Phenom II X4 810, and 4GB ram.
-> > 4 Seagate 7200.12  SATA 1TB drives,
-> >
-> > I'm getting some rather impressive numbers for sequential read
-> > (300MB/s+) and write (170MB/s+) but the random read is proving to be
-> > absolutely atrocious.
-> > iostat says its going at about 0.5MB/s,
+On Sun, May 31, 2009 at 1:07 AM, Redeeman <redeeman@metanurb.dk> wrote:
+> On Sat, 2009-05-30 at 20:55 +0200, Goswin von Brederlow wrote:
+>> Redeeman <redeeman@metanurb.dk> writes:
+>>
+>> > On Sat, 2009-05-30 at 14:35 +0100, John Robinson wrote:
+>> >> On 30/05/2009 06:44, SandeepKsinha wrote:
+>> >> > Hi all,
+>> >> >
+>> >> > Say If I have a RAID 5 array of 50GB of five disks of 10GB each=
+=2E
+>> >> >
+>> >> > I have data of 5GB. When a disk fails and replaced with a spare=
+ disk.
+>> >> > Will the reconstruction happen only for the 5GB allocated disk =
+blocks
+>> >> > or it will happen for the whole disk size.
+>> >>
+>> >> The whole disc size, for now anyway; md does not currently note w=
+hich
+>> >> blocks have been used by its client (the filesystem, LVM, whateve=
+r).
+>> >>
+>> >> > Is it possible to make =A0reconstruction intelligent enough to =
+keep it optimized ?
+>> >>
+>> >> This has been discussed in combination with supporting SSD drives=
+' TRIM
+>> >> function, and would mean md had to keep track of used chunks or p=
+ossibly
+>> >> even sectors using a bitmap or something like that, but whether a=
+nyone's
+>> >> working on it I don't know.
+>> >
+>> > I would say it should be possible to 'query' the filesystem for th=
+at
+>> > information. Obviously this will only work if you run a filesystem=
+ on it
+>> > which supports it, but it would seem like a nicer solution than a =
+bitmap
+>> > for it.
+>> >
+>> >>
+>> >> Cheers,
+>> >>
+>> >> John.
+>>
+>> And just when I hit send I thought of something else.
+>>
+>> Instead of the initial sync when creating a raid the bitmap could ju=
+st
+>> mark all blocks as unused. Much faster raid creation.
 >
-> The key thing about random i/o is the block size.  With, say, 512bytes
-> blocks and single thread you will see less than 0.5Mb/sec.  With 64kbytes
-> blocksize it will be much better.
+
+
+This really sounds like a good option. This would have a slight hit
+for writes which I believe will compensate for later re-constructions,
+replacing a disk, mirror resysnc and many more operation.
+
+Neil any comments on this?
+
+I mean, how difficult would it be to maintain such a bitmap. This can
+though of making something optional as this will incur space.
+
+
+> A filesystem-coexist mode could also do this, by simply refusing
+> operation until such a time that a filesystem is detected, or i suppo=
+se
+> in worst case, mounted...
+
+
 >
-> To diagnose: first try the same test on bare disk without raid layer.
-> Next try to vary block size and number of concurrent threads doing I/O.
-> There's no tweaks needed really.
-
-I happen to be the friend Maurice was talking about. I let the raid layer keep 
-its default chunk size of 64K. The smaller size (below like 2MB) tests in 
-iozone are very very slow. I recently tried disabling readahead, Acoustic 
-Management, and played with the io scheduler and all any of it has done is 
-make the sequential access slower and has barely touched the smaller sized 
-random access test results. Even with the 64K iozone test random read/write is 
-only in the 7 and 11MB/s range.
-
-It just seems too low to me.
-
-> /mjt
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>> MfG
+>> =A0 =A0 =A0 =A0 Goswin
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+>
 
 
--- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
+
+--=20
+Regards,
+Sandeep.
+
+
+
+
+
+ =09
+=93To learn is to change. Education is a process that changes the learn=
+er.=94
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
