@@ -1,43 +1,64 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Events?
-Date: Sat, 30 May 2009 20:37:13 -0500
-Message-ID: <20090531013717425.YKVV5991@cdptpa-omta01.mail.rr.com>
-References: <18977.43320.811246.171065@notabene.brown>
-Reply-To: <lrhorer@satx.rr.com>
+From: Maxime Boissonneault <maxime.boissonneault@usherbrooke.ca>
+Subject: Re: Upgrading a software RAID
+Date: Sun, 31 May 2009 01:21:32 -0400
+Message-ID: <4A2213DC.9000100@usherbrooke.ca>
+References: <4A1EA095.9090406@usherbrooke.ca> <4A217BA8.1080208@tmr.com> <4A217C6C.7080301@usherbrooke.ca> <20090531001730.GA16311@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18977.43320.811246.171065@notabene.brown>
+In-Reply-To: <20090531001730.GA16311@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
+Cc: Bill Davidsen <davidsen@tmr.com>, robin@robinhill.me.uk, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: Neil Brown [mailto:neilb@suse.de]
-> Sent: Saturday, May 30, 2009 4:47 PM
-> To: lrhorer@satx.rr.com
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: Events?
-> 
-> On Saturday May 30, lrhorer@satx.rr.com wrote:
-> >
-> > What does the "Events" field reported by -Dt signify, and why does the
-> > number sometimes decrease?  I've seen the number change, but I don't see
-> > anything in any of the system logs corresponding to something that would
-> > seem to relate.
-> 
-> Changes just as device failure and adding or removing a device.
-> Also transitions from 'active' to 'clean' and back.
+I finally succeeded in getting my system back. To remind you, I started 
+with this configuration :
 
-OK, but shouldn't these transitions at least be logged somewhere?
+/proc/mdstat :
 
-> Sometimes the dirty->transition causes the event counter to retreat if
-> md is use the new 'clean' state is indistinguishable from the old
-> 'clean' state.  This allows us not to always be waking up spare drives
-> just to tell them about clean->active->clean transitions.
+md2 : active raid5 sda3[0] sdc3[2] sdb3[1]
+      957040000 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+     
+md1 : active raid0 sda2[0] sdc2[2] sdb2[1]
+      19534848 blocks level 0 [3/3] [UUU]
+     
+md0 : active raid1 sda1[0] sdc1[2] sdb1[1]
+      96256 blocks [3/3] [UUU]
 
-That makes sense, but I think the admin should be able to inspect the
-details of the transactions.
+mount :
+/dev/md1 on / type ext3 (rw,relatime,errors=remount-ro)
+/dev/md0 on /boot type ext3 (rw,relatime)
+/dev/md2 on /home type ext3 (rw,relatime)
 
+And I wanted to change md1 to a RAID5. So, here is what I did and what 
+worked.
+1- Booted with a LiveCD (Ubuntu 8.04.2 Alternate CD)
+2- Backed-up / using tar, put the file on /home
+3- Destroyed the array, with mdadm --zero-superblock /dev/sd*2 and mdadm 
+--stop /dev/md1
+4- Created the new RAID5 array
+5- Installed a fresh Ubuntu with the install disc
+6- Copied the /boot, /etc/mdadm/mdadm.conf and /etc/fstab from the fresh 
+install
+7- Restored the backup over the fresh install
+8- Restore the files copied at step 6
+9- Booted
+
+At this point, it gave me an error saying that the filesystem could not 
+be mounted with some number. I found this web page
+http://linux.byexamples.com/archives/321/fstab-with-uuid/
+which told me how to get the uid for my disks, and I updated the 
+/etc/fstab consequently.
+
+Tadam! It works! I can now plan and buy my new 1TB HD and let the RAID 
+reconstruct the files, then grow the arrays.
+
+I wrote this email in the hope that it might be usefull to someone someday.
+
+
+Thanks everyone for your help throughout the day.
+
+
+Maxime Boissonneault
