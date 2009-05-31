@@ -1,40 +1,65 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: Upgrading a software RAID
-Date: Sun, 31 May 2009 02:17:30 +0200
-Message-ID: <20090531001730.GA16311@rap.rap.dk>
-References: <4A1EA095.9090406@usherbrooke.ca> <4A217BA8.1080208@tmr.com> <4A217C6C.7080301@usherbrooke.ca>
+From: David Rea <dave@daverea.com>
+Subject: Re: RAID-5 spare drive: Can't make spare persist across reboot
+Date: Sat, 30 May 2009 20:31:38 -0400
+Message-ID: <984c80610905301731q118d6b80m3afdea744afa39bf@mail.gmail.com>
+References: <984c80610905301137l7649391fg64a8108769abd216@mail.gmail.com>
+	 <18977.43758.674932.381022@notabene.brown>
+	 <984c80610905301526h6a71b79cyd1cb66c992db355a@mail.gmail.com>
+	 <f9fa44a3d9376b5e2b4c624bd36fab89.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4A217C6C.7080301@usherbrooke.ca>
+In-Reply-To: <f9fa44a3d9376b5e2b4c624bd36fab89.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Maxime Boissonneault <maxime.boissonneault@usherbrooke.ca>
-Cc: Bill Davidsen <davidsen@tmr.com>, robin@robinhill.me.uk, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, May 30, 2009 at 02:35:24PM -0400, Maxime Boissonneault wrote:
->
->>>
->>> I can not install more drives in the computer. It is a home theater  
->>> computer in a small case. I was expecting to be able to let the raid  
->>> manage the copies itself.
->>>
->>> If the / was on a RAID5, would it be able to boot with 2 disks ?
->>> If so, is it possible to convert my RAID0 to a RAID5 ?
->>> For example, I could boot on a CD, backup / onto /home, delete the  
->>> RAID0 array and recreate it as RAID5, then restore the backup. Would  
->>> this work ?
->>
->> Based on my testing (somewhat old now) and regular use, I would say  
->> raid10 is probably your best bet. It's fast and secure, and with the  
->> -f2 option for "far" copies it's able to give high transfer rates.
->
-> Doesn't RAID10 means RAID 1+0, which requires 4 disks ?
+On Sat, May 30, 2009 at 6:44 PM, NeilBrown <neilb@suse.de> wrote:
 
-Linux RAID10 is somewhat different from raid1+0, and can run with just 2
-disks, with fine performance for reads in the F2 layout, almost raid0
-performance, while write performance is close to raid1, with a file system in operation.
+>> Here is the output of `cat /var/log/messages | grep raid`:
+>> http://pastebin.ca/1441575
+>
+> That isn't very useful. =A0Getting the whole /var/log/messasges
+> would be best - then I can see what isn't there as well as what is.
+> maybe
+> =A0 grep -C 10 -E '(md|raid)' /var/log/messages
+> might be enough.
 
-Best regards
-keld
+Here is the output of that command, somewhat lengthy: http://pastebin.c=
+a/1441666
+(inline from now on)
+
+> That would be because the array was assembled without /dev/sdb1
+> so even if sda knew about it before, it will have been told to forget=
+=2E
+
+I'm assuming that the array is re-assembled at every boot (per
+http://linux-raid.osdl.org/index.php/RAID_setup#Using_the_Array); will
+doing an explicit re-assmeble using `mdadm --assemble` correct this on
+a "stickier" basis? How can I instruct the kernel to assemble the
+array *with* /dev/sdb1 every time? I originally thought this was done
+based on /etc/mdadm/mdadm.conf?
+
+> Is there a reason why you are using whole drives (sda, sdc, sdd) for
+> some devices, and just a partition (sdb1) for others?
+
+When I originally created this array (2006), it only had the 3 active
+drives, and I used the entire devices because I didn't know any
+better. When I rebuilt the machine more recently (2008) I added a
+larger boot drive, and had plenty of extra space to reserve a
+partition to use as a spare for the array.
+
+I happen to have several 1TiB SATA drives (awaiting build into a
+different RAID machine) sitting around, so I could back up this array
+and re-create it if that's the only way we can make the spare
+persistent.
+
+Thanks,
+Dave
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
