@@ -1,47 +1,33 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
+From: John Robinson <john.robinson@anonymous.org.uk>
 Subject: Re: Awful RAID5 random read performance
-Date: Mon, 01 Jun 2009 13:41:52 +0200
-Message-ID: <87tz30qiyn.fsf@frosties.localdomain>
-References: <20090601045710141.GMHE24335@cdptpa-omta04.mail.rr.com>
+Date: Mon, 01 Jun 2009 13:01:57 +0100
+Message-ID: <4A23C335.30306@anonymous.org.uk>
+References: <4A21A938.6050907@harddata.com>	<4A2222E6.2070705@msgid.tls.msk.ru>	<200905310147.58119.tfjellstrom@shaw.ca>	<4A227832.1090808@anonymous.org.uk> <874ov1w5po.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090601045710141.GMHE24335@cdptpa-omta04.mail.rr.com> (Leslie
-	Rhorer's message of "Sun, 31 May 2009 23:57:04 -0500")
+In-Reply-To: <874ov1w5po.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: lrhorer@satx.rr.com
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-"Leslie Rhorer" <lrhorer@satx.rr.com> writes:
+On 31/05/2009 18:19, Goswin von Brederlow wrote:
+> John Robinson <john.robinson@anonymous.org.uk> writes:
+>> Clearly when you're doing this over 4 drives you can have ~400
+>> seeks/second but that's still limiting you to ~400 reads/second for
+>> smallish block sizes.
+> 
+> Note that that only holds true for writes or multithreaded reads.
+> Reading from a single thread will randomly pick one drive (depending
+> on where it wants to read), wait for it to seek, read one block of
+> data and repeat. So you get the speed of a single drive no matter how
+> many drives there are in the raid.
 
->>  >	John is perfectly correct, although of course a 10ms seek is a
->>  >fairly slow one.
->> 
->> Unfortunately it doesn't seem to be. Take a well-considered drive such
->> as the WD RE3; it's spec for average latency is 4.2ms. However does it
->> include the rotational latency (the time the head takes to reach the
->> sector once it's on the track)? I bet it doesn't. Taking it to be only
->> the average seek time, this drive is still among the fastest. For a
->> 7200rpm drive this latency is just 4.2ms, so we'd have for this fast
->> drive an average total latency of 8.4ms.
->
-> That's an average.  For a random seek to exceed that, it's going to have to
-> span many cylinders.  Give the container size of a modern cylinder, that's a
-> pretty big jump.  Single applications will tend to have their data lumped
-> somewhat together on the drive.
+Sure, that's why I said "can", but I thought iozone was multi-threaded. 
+Maybe it needs an option specified, in which case using more threads 
+than there are discs would be a good idea.
 
-Only at the start, which is usualy when people benchmark. But after a
-while filesystem fragment. Files get distributed all over the disk,
-files themself get spread out as they grow. And suddenly an FS that
-was fine  month ago is too slow.
+Cheers,
 
-The worst you can do to an FS is run mldonkey/rtorrent on it with lots
-of downloads. I've managed to get an ext2 to the point where copying a
-file from the FS to another disk only managed <100kiB/s.
-
-In conclusion: Seek times can not be ignored and they should be
-avoided.
-
-MfG
-        Goswin
+John.
