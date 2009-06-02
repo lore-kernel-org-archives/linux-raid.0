@@ -1,78 +1,72 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Upgrading a software RAID
-Date: Tue, 02 Jun 2009 14:33:08 -0400
-Message-ID: <4A257064.6030502@tmr.com>
-References: <4A1EA095.9090406@usherbrooke.ca> <4A217BA8.1080208@tmr.com> <4A217C6C.7080301@usherbrooke.ca> <20090531001730.GA16311@rap.rap.dk> <4A2213DC.9000100@usherbrooke.ca>
+Subject: Re: RAID5 reconstruction ?
+Date: Tue, 02 Jun 2009 14:42:47 -0400
+Message-ID: <4A2572A7.6030901@tmr.com>
+References: <37d33d830905292244w685499b3h391aa2ca7a5b1ad@mail.gmail.com>	<4A213612.7080206@anonymous.org.uk>	<1243699735.5740.103.camel@localhost> <878wkezagw.fsf@frosties.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A2213DC.9000100@usherbrooke.ca>
+In-Reply-To: <878wkezagw.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Maxime Boissonneault <maxime.boissonneault@usherbrooke.ca>
-Cc: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>, robin@robinhill.me.uk, linux-raid@vger.kernel.org
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: Redeeman <redeeman@metanurb.dk>, John Robinson <john.robinson@anonymous.org.uk>, SandeepKsinha <sandeepksinha@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Maxime Boissonneault wrote:
-> I finally succeeded in getting my system back. To remind you, I 
-> started with this configuration :
+Goswin von Brederlow wrote:
+> Redeeman <redeeman@metanurb.dk> writes:
 >
-> /proc/mdstat :
+>   
+>> On Sat, 2009-05-30 at 14:35 +0100, John Robinson wrote:
+>>     
+>>> On 30/05/2009 06:44, SandeepKsinha wrote:
+>>>       
+>>>> Hi all,
+>>>>
+>>>> Say If I have a RAID 5 array of 50GB of five disks of 10GB each.
+>>>>
+>>>> I have data of 5GB. When a disk fails and replaced with a spare disk.
+>>>> Will the reconstruction happen only for the 5GB allocated disk blocks
+>>>> or it will happen for the whole disk size.
+>>>>         
+>>> The whole disc size, for now anyway; md does not currently note which 
+>>> blocks have been used by its client (the filesystem, LVM, whatever).
+>>>
+>>>       
+>>>> Is it possible to make  reconstruction intelligent enough to keep it optimized ?
+>>>>         
+>>> This has been discussed in combination with supporting SSD drives' TRIM 
+>>> function, and would mean md had to keep track of used chunks or possibly 
+>>> even sectors using a bitmap or something like that, but whether anyone's 
+>>> working on it I don't know.
+>>>       
+>> I would say it should be possible to 'query' the filesystem for that
+>> information. Obviously this will only work if you run a filesystem on it
+>> which supports it, but it would seem like a nicer solution than a bitmap
+>> for it.
+>>
+>>     
+>>> Cheers,
+>>>
+>>> John.
+>>>       
 >
-> md2 : active raid5 sda3[0] sdc3[2] sdb3[1]
->      957040000 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
->     md1 : active raid0 sda2[0] sdc2[2] sdb2[1]
->      19534848 blocks level 0 [3/3] [UUU]
->     md0 : active raid1 sda1[0] sdc1[2] sdb1[1]
->      96256 blocks [3/3] [UUU]
+> And just when I hit send I thought of something else.
 >
-> mount :
-> /dev/md1 on / type ext3 (rw,relatime,errors=remount-ro)
-> /dev/md0 on /boot type ext3 (rw,relatime)
-> /dev/md2 on /home type ext3 (rw,relatime)
->
-> And I wanted to change md1 to a RAID5. So, here is what I did and what 
-> worked.
-> 1- Booted with a LiveCD (Ubuntu 8.04.2 Alternate CD)
-> 2- Backed-up / using tar, put the file on /home
-> 3- Destroyed the array, with mdadm --zero-superblock /dev/sd*2 and 
-> mdadm --stop /dev/md1
-> 4- Created the new RAID5 array
-> 5- Installed a fresh Ubuntu with the install disc
-> 6- Copied the /boot, /etc/mdadm/mdadm.conf and /etc/fstab from the 
-> fresh install
-> 7- Restored the backup over the fresh install
-> 8- Restore the files copied at step 6
-> 9- Booted
->
-> At this point, it gave me an error saying that the filesystem could 
-> not be mounted with some number. I found this web page
-> http://linux.byexamples.com/archives/321/fstab-with-uuid/
-> which told me how to get the uid for my disks, and I updated the 
-> /etc/fstab consequently.
->
-> Tadam! It works! I can now plan and buy my new 1TB HD and let the RAID 
-> reconstruct the files, then grow the arrays.
->
-> I wrote this email in the hope that it might be usefull to someone 
-> someday.
+> Instead of the initial sync when creating a raid the bitmap could just
+> mark all blocks as unused. Much faster raid creation.
+>   
 
- It is, and I will belatedly tell you that recent versions of mdadm have 
-a "--uuid" option which allows you to set the uuid of the array as you 
-create it. However, it sounds as if the problem was not starting the 
-array with uuid, but mounting the filesystem, and that uuid can be set 
-with tune2fs, using the "-U" option.
-
-I include that for completeness, I agree that changing the things which 
-use a new uuid is safer than changing the uuid which could, given 
-adequate user error, result in duplicate uuid's on multiple arrays or 
-filesystems. This is a "bad thing{tm}" and should be avoided. You did it 
-right (IMHO) and congrats on getting it going.
+That sounds a lot like what I mentioned, therefore it must be right. See 
+the thread on sync on a new array, my reply to Neil.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
-  Even technical things can appear to be magic, if the documentation is
-obscure enough. For example, PulseAudio is configured by dancing naked around
-a fire at midnight, shaking a rattle with one hand and a LISP manual with the
-other, while reciting the GNU manifesto in hexadecimal.
+  Even purely technical things can appear to be magic, if the documentation is
+obscure enough. For example, PulseAudio is configured by dancing naked around a
+fire at midnight, shaking a rattle with one hand and a LISP manual with the
+other, while reciting the GNU manifesto in hexadecimal. The documentation fails
+to note that you must circle the fire counter-clockwise in the southern
+hemisphere.
+
 
