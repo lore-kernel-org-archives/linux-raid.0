@@ -1,55 +1,44 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: OT Re: Good Day
-Date: Tue, 02 Jun 2009 18:02:44 +0100
-Message-ID: <4A255B34.3060806@anonymous.org.uk>
-References: <200906021655.13500@centrum.cz> <4A2541F2.30901@anonymous.org.uk> <91b13c310906020937g56c4ef3bqf7da9d900a9307f8@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Alexander Rietsch <Alexander.Rietsch@hispeed.ch>
+Subject: Re: RAID 5 re-add of removed drive? (failed drive replacement)
+Date: Tue, 2 Jun 2009 19:13:27 +0200
+Message-ID: <5802A2BA-41CF-4036-855D-2DD47D3EF0E0@hispeed.ch>
+References: <876585.41936.qm@web51304.mail.re2.yahoo.com>
+Mime-Version: 1.0 (Apple Message framework v935.3)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <91b13c310906020937g56c4ef3bqf7da9d900a9307f8@mail.gmail.com>
+In-Reply-To: <876585.41936.qm@web51304.mail.re2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Cheng Renquan <crquan@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Jon@eHardcastle.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/06/2009 17:37, Cheng Renquan wrote:
-> On Tue, Jun 2, 2009 at 11:14 PM, John Robinson <john.robinson@anonymous.org.uk> wrote:
->> On 02/06/2009 15:55, isa_youssouf@centrum.sk wrote:
->>> I want to transfer the sum of Twelve Million Dollars
->> [...]
->>
->> Dear sir,
->>
->> I will be happy to help, please send the money to my account, and I will be
->> sure to pass it on.
->>
->> Cheers,
->>
->> John.
-> 
-> I've also received many emails like this in personal email address,
-> maybe several per day or more, and
 
-I've no idea how many get sent to me, but most don't get through the 
-spam filter. This one did 'cos it came via the list, which improved its 
-score considerably.
+On 02.06.2009, at 16:20, Jon Hardcastle wrote:
 
-> I don't believe them at all!
+>> As always, most problems occur only during critical tasks
+>> like
+>> enlarging/restoring.
+>
+> ....
+>
+> Is this a compelling case for regular
+>
+> echo check >> /sys/block/mdX/md/sync_action
+>
+> and/or
+>
+> echo repair >> /sys/block/mdX/md/sync_action
+>
+> ??
 
-Nor do I. Perhaps my reply could have used some smileys but I thought 
-the tone was dripping with sarcasm already!
+Yes, indeed! Another lesson learned.
+This might have prevented numerous cases in the past when disc surface  
+errors occurred while enlarging and resizing a raid array. But all  
+those serious incidents where handled perfectly and flawlessly by the  
+software raid module. Congrats to all kernel developers here. The raid  
+module is far more flexible, error prone and stable than any hardware  
+raid solution I've seen so far.
 
-> I don't think some fool will really transfer money to my account or
-> your account,
-
-Well if they're credulous enough to think I might fall for their scheme, 
-aren't they credulous enough to go for mine?
-
-> It must be all cheating,
-
-That must be it.
-
-Cheers,
-
-John.
+Regards,
+Alexander
