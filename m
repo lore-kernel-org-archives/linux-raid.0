@@ -1,99 +1,49 @@
-From: Bill Davidsen <davidsen@tmr.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
 Subject: Re: Awful RAID5 random read performance
-Date: Tue, 02 Jun 2009 15:47:40 -0400
-Message-ID: <4A2581DC.3060005@tmr.com>
-References: <20090601045710141.GMHE24335@cdptpa-omta04.mail.rr.com> <200905312339.12234.tfjellstrom@shaw.ca>
+Date: Tue, 2 Jun 2009 21:47:04 +0200
+Message-ID: <20090602194704.GA30639@rap.rap.dk>
+References: <20090531154159405.TTOI3923@cdptpa-omta04.mail.rr.com> <200905311056.30521.tfjellstrom@shaw.ca> <4A25754F.5030107@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200905312339.12234.tfjellstrom@shaw.ca>
+Content-Disposition: inline
+In-Reply-To: <4A25754F.5030107@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: tfjellstrom@shaw.ca
-Cc: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: tfjellstrom@shaw.ca, lrhorer@satx.rr.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thomas Fjellstrom wrote:
-> On Sun May 31 2009, Leslie Rhorer wrote:
->
->   
->>> Unfortunately it doesn't seem to be. Take a well-considered drive such
->>> as the WD RE3; it's spec for average latency is 4.2ms. However does it
->>> include the rotational latency (the time the head takes to reach the
->>> sector once it's on the track)? I bet it doesn't. Taking it to be only
->>> the average seek time, this drive is still among the fastest. For a
->>> 7200rpm drive this latency is just 4.2ms, so we'd have for this fast
->>> drive an average total latency of 8.4ms.
->>>       
->> That's an average.  For a random seek to exceed that, it's going to have to
->> span many cylinders.  Give the container size of a modern cylinder, that's
->> a pretty big jump.  Single applications will tend to have their data lumped
->> somewhat together on the drive.
+On Tue, Jun 02, 2009 at 02:54:07PM -0400, Bill Davidsen wrote:
+> Thomas Fjellstrom wrote:
 >>
->>     
->
->   
->>> with
->>>
->>>       
->
->   
->>> No, random I/O is the most common case for busy servers, when there
->>> are lots of processes doing uncorrelated reads and writes. Even if a
->>>       
->> Yes, exactly.  By definition, such a scenario represents a multithreaded
->> set of seeks, and as we already established, multithreaded seeks are vastly
->> more efficient than serial random seeks.  The 400 seeks per second number
->> for 4 drives applies.  I don't know the details of the Linux schedulers,
->> but most schedulers employ some variation of an elevator seek to maximize
->> seek efficiency.  The brings the average latency way down and brings the
->> seek frequency way up.
->>     
->
-> Ah, I never really understood how adding more random load could increase 
-> performance. Now I get it :)
->
->   
->>> single application does sequential access the head will likely have
->>> moved between them. The only solution is to have lots of ram for
->>> cache, and/or lots of disks. It'd be better if they were connected to
->>> several controllers...
->>>       
->> A large RAM cache will help, but as I already pointed out, the increases in
->> returns for increasing cache size diminish rapidly past a certain point.
->> Most quality drives these days have a 32MB cache, or 128M for a 4 drive
->> array.  Add the Linux cache on top of that, and it should be sufficient for
->> most purposes.  Remember, random seeks implies small data extents.  Lots of
->> disks will bring the biggest benefit, and disks are cheap.  Multiple
->> controllers really are not necessary, especially if the controller and
->> drives support NCQ , but having multiple controllers certainly doesn't
->> hurt.
->>     
->
-> Yet I've heard NCQ makes some things worse. Some raid tweaking pages tell you 
-> to try disabling NCQ.
->
-> I've actually been thinking about trying md-cache with an SSD on top of my new 
-> raid and see how that works long term. But I can't really think of a good 
-> benchmark that actually imitates my particular use cases well enough to show 
-> me if it'd help me at all ::)
->
-> I doubt my punny little 30G OCZ Vertex would really help all that much any 
-> how.
->   
+>> When I get around to it I may utilize the raid10 module for the VM's 
+>> and backups. Though that may decrease performance a little bit in the 
+>> small random io case.   
 
-For ext[34] you might want to put the journal on SSD, if you are doing 
-any significant write that will help.
-Mounting data=journal may also help write, supposedly the write will 
-complete when the data hits the journal, and not wait for the platter.
+> The accesses on the VM will be similar to a real disk, so you want the  
+> VM on whatever you would use for bare iron. I run on raid10, many of my  
+> machines are on VM (including this one, my main desktop). Raid10 is a  
+> good general use array, I use it for a lot, other than cases where I  
+> need cheap space and use raid[56] to get more bytes/$ and don't need  
+> blinding speed. Archival storage, for instance.
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  Even purely technical things can appear to be magic, if the documentation is
-obscure enough. For example, PulseAudio is configured by dancing naked around a
-fire at midnight, shaking a rattle with one hand and a LISP manual with the
-other, while reciting the GNU manifesto in hexadecimal. The documentation fails
-to note that you must circle the fire counter-clockwise in the southern
-hemisphere.
+My perception is that raid10,f2 is probably the fastest also for small random
+reads because of the lower latency, and faster transfer times due to only
+using the outer disk sectors. For writes the elevator evens out the
+ramdom access. Benchmarks may not show this effect as they are often
+done on clean file systems, where the files are allocated in the
+beginning of the fs.
 
+For cases where you need cheap disk space, and have big files like
+.iso's then raid5 could be a good choice because it has the most space
+while maintaining fair to good performance for big files. 
 
+In your case, using 3 disks, raid5 should give about 210 % of the nominal
+single disk speed for big file reads, and maybe 180 % for big file
+writes. raid10,f2 should give about 290 % for big file reads and 140%
+for big file writes. Random reads should be about the same for raid5 and
+raid10,f2 - raid10,f2 maybe 15 % faster, while random writes should be
+mediocre for raid5, and good for raid10,f2.
+
+best regards
+keld
