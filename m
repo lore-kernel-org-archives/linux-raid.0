@@ -1,47 +1,44 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: OT Re: Good Day
-Date: Wed, 3 Jun 2009 08:00:35 +1000 (EST)
-Message-ID: <63b634c539466d170f7ab0f8d068fe4e.squirrel@neil.brown.name>
-References: <200906021655.13500@centrum.cz> <4A2541F2.30901@anonymous.org.uk>
-    <91b13c310906020937g56c4ef3bqf7da9d900a9307f8@mail.gmail.com>
-    <4A255B34.3060806@anonymous.org.uk>
+From: Nifty Fedora Mitch <niftyfedora@niftyegg.com>
+Subject: Re: slow random raid5 access?
+Date: Tue, 2 Jun 2009 15:44:49 -0700
+Message-ID: <20090602224449.GA12169@tosh2egg.wr.niftyegg.com>
+References: <200905301344.15895.tfjellstrom@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A255B34.3060806@anonymous.org.uk>
+Content-Disposition: inline
+In-Reply-To: <200905301344.15895.tfjellstrom@shaw.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Cheng Renquan <crquan@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: Thomas Fjellstrom <tfjellstrom@shaw.ca>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, June 3, 2009 3:02 am, John Robinson wrote:
-> On 02/06/2009 17:37, Cheng Renquan wrote:
->> On Tue, Jun 2, 2009 at 11:14 PM, John Robinson
->> <john.robinson@anonymous.org.uk> wrote:
->>> On 02/06/2009 15:55, isa_youssouf@centrum.sk wrote:
->>>> I want to transfer the sum of Twelve Million Dollars
->>> [...]
->>>
->>> Dear sir,
->>>
->>> I will be happy to help, please send the money to my account, and I
->>> will be
->>> sure to pass it on.
->
->> I don't believe them at all!
->
-> Nor do I. Perhaps my reply could have used some smileys but I thought
-> the tone was dripping with sarcasm already!
+On Sat, May 30, 2009 at 01:44:15PM -0600, Thomas Fjellstrom wrote:
+> 
+> I'm have a new md raid5 array, and have been trying to break it in and tweak 
+> it a little. But random read or write are rather slow when using small record 
+> sizes:
+> 
+> http://pastebin.ca/1441414
+> 
+> Is that normal? And is there a way to speed it up without significantly 
+> slowing down sequential access?
+> 
 
-That's the problem with the world today.  Nobody trusts anybody!
-This poor man must be getting desperate, with no-one willing to
-believe him.
+Tell us more about the perf numbers of the raw disks in the raid
+and how it was built.   Geometry of the devices and the filesystem
+type and setup all come to play.
 
-   http://xkcd.com/570/
+For small anything the numbers are likely to reflect the speed of a
+single underlying device.  When reads and writes are large enough to
+span multiple devices you can expect to see acceleration as a result of
+parallel and overlapping I/O.   Also many disks today have interfaces
+that are much quicker than the bit rate to and from media which also
+has implications.
 
-:-)
 
-NeilBrown
 
+-- 
+	T o m  M i t c h e l l 
+	Found me a new hat, now what?
 
