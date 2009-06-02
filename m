@@ -1,69 +1,49 @@
-From: Robin Hill <robin@robinhill.me.uk>
+From: Alexander Rietsch <Alexander.Rietsch@hispeed.ch>
 Subject: Re: RAID 5 re-add of removed drive? (failed drive replacement)
-Date: Tue, 2 Jun 2009 12:17:29 +0100
-Message-ID: <20090602111729.GA15172@cthulhu.home.robinhill.me.uk>
-References: <23828899.post@talk.nabble.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="CE+1k2dSO48ffgeK"
+Date: Tue, 2 Jun 2009 14:00:15 +0200
+Message-ID: <C840D176-51A0-4AFD-8AD0-1F1D2CAA830D@hispeed.ch>
+Mime-Version: 1.0 (Apple Message framework v935.3)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <23828899.post@talk.nabble.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+>
+> AFAIK, the only solution at this stage is to recreate the array.
+>
+> You need to use the "--assume-clean" flag (or replace one of the  
+> drives
+> with "missing"), along with _exactly_ the same parameters & drive  
+> order
+> as when you originally created the array (you should be able to get  
+> most
+> of this from mdadm -D).  This will rewrite the RAID metadata, but  
+> leave
+> the filesystem untouched.
 
---CE+1k2dSO48ffgeK
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+A glimpse of hope. Thank you! Didn't know about this --assume-clean  
+flag. So just to double-check:
 
-On Tue Jun 02, 2009 at 03:09:11AM -0700, Alex R wrote:
+The array to create would be:
+disc 0: sdi1 <- is now disc 7 and SPARE due to failed replacement  
+operation
+disc 1: sdl1
+disc 2: sdh1
+disc 3: sdj1
+disc 4: sdk1
+disc 5: sdg1
+disc 6: sda1 <- is now faulty removed
 
->=20
-> I have a serious RAID problem here. Please have a look at this. Any help
-> would be greatly appreciated!
->=20
-> As always, most problems occur only during critical tasks like
-> enlarging/restoring. I tried to replace a drive in my 7disc 6T RAID5 array
-> as explained here:
-> http://michael-prokop.at/blog/2006/09/09/raid5-online-resizing-with-linux/
->=20
-> After removing a drive and restoring to the new one, another disc in the
-> array failed. Now I still have all the data redundantly available (the old
-> drive is still there), but the RAID header is now in a state where it's
-> impossible to access the data. Is it possible to rearrange the drives to
-> force the kernel to a valid array?
->=20
-<-- SNIP details -->
+So I just create an incomplete array without sda1 in the same order  
+which would be:
 
-AFAIK, the only solution at this stage is to recreate the array.
+mdadm --create /dev/md0 --assume-clean --level=5 --chunk=64 --raid- 
+devices=7 /dev/sdi1 /dev/sdl1 /dev/sdh1 /dev/sdj1 /dev/sdk1 /dev/sdg1
 
-You need to use the "--assume-clean" flag (or replace one of the drives
-with "missing"), along with _exactly_ the same parameters & drive order
-as when you originally created the array (you should be able to get most
-of this from mdadm -D).  This will rewrite the RAID metadata, but leave
-the filesystem untouched.
-
-HTH,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---CE+1k2dSO48ffgeK
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEARECAAYFAkolCkkACgkQShxCyD40xBLOawCfTexGCxxH70p0V0VMCbd2jvix
-LGIAoMGiWgHnsFtaGZ8ZH4L7xCrvXNSF
-=eEXJ
------END PGP SIGNATURE-----
-
---CE+1k2dSO48ffgeK--
+I'm not sure about the drive oder in the mdadm command: is it correct  
+to assume <drive 0> <drive 1> <drive 2> in order or is it mirrored  
+like <drive 2> <drive 1> <drive 0> ?
+I also hope the command doesn't trigger any recovery actions or  
+filesystem changes..
