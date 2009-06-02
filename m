@@ -1,64 +1,116 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: RAID5 reconstruction ?
-Date: Tue, 02 Jun 2009 14:42:47 -0400
-Message-ID: <4A2572A7.6030901@tmr.com>
-References: <37d33d830905292244w685499b3h391aa2ca7a5b1ad@mail.gmail.com>	<4A213612.7080206@anonymous.org.uk>	<1243699735.5740.103.camel@localhost> <878wkezagw.fsf@frosties.localdomain>
+Subject: Re: Awful RAID5 random read performance
+Date: Tue, 02 Jun 2009 14:54:07 -0400
+Message-ID: <4A25754F.5030107@tmr.com>
+References: <20090531154159405.TTOI3923@cdptpa-omta04.mail.rr.com> <200905311056.30521.tfjellstrom@shaw.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <878wkezagw.fsf@frosties.localdomain>
+In-Reply-To: <200905311056.30521.tfjellstrom@shaw.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: Redeeman <redeeman@metanurb.dk>, John Robinson <john.robinson@anonymous.org.uk>, SandeepKsinha <sandeepksinha@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: tfjellstrom@shaw.ca
+Cc: lrhorer@satx.rr.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Goswin von Brederlow wrote:
-> Redeeman <redeeman@metanurb.dk> writes:
->
+Thomas Fjellstrom wrote:
+> On Sun May 31 2009, Leslie Rhorer wrote:
 >   
->> On Sat, 2009-05-30 at 14:35 +0100, John Robinson wrote:
->>     
->>> On 30/05/2009 06:44, SandeepKsinha wrote:
->>>       
->>>> Hi all,
->>>>
->>>> Say If I have a RAID 5 array of 50GB of five disks of 10GB each.
->>>>
->>>> I have data of 5GB. When a disk fails and replaced with a spare disk.
->>>> Will the reconstruction happen only for the 5GB allocated disk blocks
->>>> or it will happen for the whole disk size.
+>>>> I happen to be the friend Maurice was talking about. I let the raid
 >>>>         
->>> The whole disc size, for now anyway; md does not currently note which 
->>> blocks have been used by its client (the filesystem, LVM, whatever).
+>>> layer keep
 >>>
 >>>       
->>>> Is it possible to make  reconstruction intelligent enough to keep it optimized ?
+>>>> its default chunk size of 64K. The smaller size (below like 2MB) tests
 >>>>         
->>> This has been discussed in combination with supporting SSD drives' TRIM 
->>> function, and would mean md had to keep track of used chunks or possibly 
->>> even sectors using a bitmap or something like that, but whether anyone's 
->>> working on it I don't know.
+>>> in
+>>>
 >>>       
->> I would say it should be possible to 'query' the filesystem for that
->> information. Obviously this will only work if you run a filesystem on it
->> which supports it, but it would seem like a nicer solution than a bitmap
->> for it.
+>>>> iozone are very very slow. I recently tried disabling readahead,
+>>>>         
+>>> Acoustic
+>>>
+>>>       
+>>>> Management, and played with the io scheduler and all any of it has done
+>>>>         
+>>> is
+>>>
+>>>       
+>>>> make the sequential access slower and has barely touched the smaller
+>>>>         
+>>> sized
+>>>
+>>>       
+>>>> random access test results. Even with the 64K iozone test random
+>>>>         
+>>> read/write is
+>>>
+>>>       
+>>>> only in the 7 and 11MB/s range.
+>>>>
+>>>> It just seems too low to me.
+>>>>         
+>>> I don't think so; can you try a similar test on single drives not using
+>>> md RAID-5?
+>>>
+>>> The killer is seeks, which is what random I/O uses lots of; with a 10ms
+>>> seek time you're only going to get ~100 seeks/second and if you're only
+>>> reading 512 bytes after each seek you're only going to get ~500
+>>> kbytes/second. Bigger block sizes will show higher throughput, but
+>>> you'll still only get ~100 seeks/second.
+>>>
+>>> Clearly when you're doing this over 4 drives you can have ~400
+>>> seeks/second but that's still limiting you to ~400 reads/second for
+>>> smallish block sizes.
+>>>       
+>> 	John is perfectly correct, although of course a 10ms seek is a
+>> fairly slow one.  The point is, it is drive dependent, and there may not be
+>> much one can do about it at the software layer.  That said, you might try a
+>> different scheduler, as the seek order can make a difference.  Drives with
+>> larger caches may help some, although the increase in performance with
+>> larger cache sizes diminishes rapidly beyond a certain point.  As one would
+>> infer from John's post, increasing the number of drives in the array will
+>> help a lot, since increasing the number of drives raises the limit on the
+>> number of seeks / second.
 >>
+>> 	What file system are you using?  It can make a difference, and
+>> surely has a bigger impact than most tweaks to the RAID subsystem.
+>>
+>> 	The biggest question in my mind, however, is why is random access a
+>> big issue for you?  Are you running a very large relational database with
+>> tens of thousands of tiny files?  For most systems, high volume accesses
+>> consist mostly of large sequential I/O.  The majority of random I/O is of
+>> rather short duration, meaning even with comparatively poor performance, it
+>> doesn't take long to get the job done.  Fifty to eighty Megabits per second
+>> is nothing at which to sneeze for random access of small files.  A few
+>> years ago, many drives would have been barely able to manage that on a
+>> sustained basis for sequential I/O.
 >>     
->>> Cheers,
->>>
->>> John.
->>>       
 >
-> And just when I hit send I thought of something else.
+> I thought the numbers were way too low. But I guess I was wrong. I really only 
+> have three use cases for my arrays. One will be hosting VM images/volumes, and 
+> iso disk images, while another will be hosting large media which will be 
+> streaming off, p2p downloads, amd rsync/rsnapshot backups of several machines. 
+> I imagine the vm array will appreciate faster random io (boot times will 
+> improve, as will things like database and http disk access), and the p2p 
+> surely will appreciate faster random io.
 >
-> Instead of the initial sync when creating a raid the bitmap could just
-> mark all blocks as unused. Much faster raid creation.
+> I currently have them all on one disk array, but I'm thinking its a good idea 
+> to separate the media from the VMs. when ktorrent is downloading a linux iso 
+> or something similar atop shows very high disk utilization for ktorrent, same 
+> goes for booting VMs. and the backups, oh my lord does that take a while, I 
+> even tell it to skip a lot of stuff I don't need to backup.
+>
+> When I get around to it I may utilize the raid10 module for the VM's and 
+> backups. Though that may decrease performance a little bit in the small random 
+> io case. 
 >   
-
-That sounds a lot like what I mentioned, therefore it must be right. See 
-the thread on sync on a new array, my reply to Neil.
+The accesses on the VM will be similar to a real disk, so you want the 
+VM on whatever you would use for bare iron. I run on raid10, many of my 
+machines are on VM (including this one, my main desktop). Raid10 is a 
+good general use array, I use it for a lot, other than cases where I 
+need cheap space and use raid[56] to get more bytes/$ and don't need 
+blinding speed. Archival storage, for instance.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
