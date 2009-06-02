@@ -1,49 +1,96 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: Awful RAID5 random read performance
-Date: Tue, 2 Jun 2009 21:47:04 +0200
-Message-ID: <20090602194704.GA30639@rap.rap.dk>
-References: <20090531154159405.TTOI3923@cdptpa-omta04.mail.rr.com> <200905311056.30521.tfjellstrom@shaw.ca> <4A25754F.5030107@tmr.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Upgrading a software RAID
+Date: Tue, 02 Jun 2009 15:57:52 -0400
+Message-ID: <4A258440.5010001@tmr.com>
+References: <20090528141457.GA30322@cthulhu.home.robinhill.me.uk> <4A21B0CF.6030104@usherbrooke.ca> <4A256E35.9050606@tmr.com> <200906021232.50736.tfjellstrom@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4A25754F.5030107@tmr.com>
+In-Reply-To: <200906021232.50736.tfjellstrom@shaw.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: tfjellstrom@shaw.ca, lrhorer@satx.rr.com, linux-raid@vger.kernel.org
+To: tfjellstrom@shaw.ca
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jun 02, 2009 at 02:54:07PM -0400, Bill Davidsen wrote:
-> Thomas Fjellstrom wrote:
->>
->> When I get around to it I may utilize the raid10 module for the VM's 
->> and backups. Though that may decrease performance a little bit in the 
->> small random io case.   
+Thomas Fjellstrom wrote:
+> On Tue June 2 2009, Bill Davidsen wrote:
+>   
+>> Maxime Boissonneault wrote:
+>>     
+>>>>>> The initrd is the ramdisk which the kernel boots to first, containing
+>>>>>> the various modules and utility programs (like mdadm) needed to access
+>>>>>> the main root filesytem.  A quick search suggests that you need to run
+>>>>>> 'update-initramfs -u' on Ubuntu.  You'll need to boot off the CD and
+>>>>>> chroot onto the new array first though - something like:
+>>>>>>
+>>>>>>  - Boot off CD
+>>>>>>  - Assemble the RAID arrays
+>>>>>>  - Create a mount point for the new array (mkdir /mnt/newroot)
+>>>>>>  - Mount the root filesystem (mount /dev/md1 /mnt/newroot)
+>>>>>>  - Mount the proc filesystem (mount -o bind /proc /mnt/newroot/proc)
+>>>>>>  - Mount the sys filesystem (mount -o bind /sys /mnt/newroot/sys)
+>>>>>>  - Mount the dev filesystem (mount -o bind /dev /mnt/newroot/dev)
+>>>>>>  - Chroot to the new array (chroot /mnt/newroot /bin/bash)
+>>>>>>  - Mount the boot filesystem (mount /boot)
+>>>>>>  - Update the initramfs (update-initramfs -u)
+>>>>>>  - Unmount the boot filesystem (umount /boot)
+>>>>>>  - Exit the chroot (exit)
+>>>>>>  - Unmount the dev filesystem (umount /mnt/newroot/dev)
+>>>>>>  - Unmount the sys filesystem (umount /mnt/newroot/sys)
+>>>>>>  - Unmount the proc filesystem (umount /mnt/newroot/proc)
+>>>>>>  - Unmount the root filesystem (umount /mnt/newroot)
+>>>>>>  - Reboot
+>>>>>>
+>>>>>> That's just from memory though, so watch out for any warnings/errors.
+>>>>>> The other issue you _may_ have is the raid5 module missing from the
+>>>>>> initrd - you'd best check that raid5 is listed in
+>>>>>> /etc/initramfs/modules.
+>>>>>>             
+>>>>> RAID5 should not be missing, my /home was a RAID5.
+>>>>>           
+>>>> Yes, but /home is only mounted after it's accessed the root partition.
+>>>> It can then read any modules from the root partition, so the raid5
+>>>> module could still be missing from the initrd.  I suspect it'll have
+>>>> included it though.
+>>>>         
+>>> I did as you suggested above. I still get the same error message.
+>>> I have looked and did not find /etc/initramfs/modules. Instead, I
+>>> found /etc/initramfs-tools/modules. In this file, there were a couple
+>>> of comment lines explaining how to enable modules.
+>>> No modules were included.
+>>> I uncommented the "raid1" and added "raid5" and ran the procedure again.
+>>>
+>>> Still getting the same problem.
+>>>
+>>> Since the problem seems to be the boot, I will try to do a fresh
+>>> install, then restore my backup while keeping the /boot from the fresh
+>>> install.
+>>>       
+>> If this were Fedora I would be using mkinitrd to get the right modules
+>> in the boot image, however Ubuntu requires another method, which I don't
+>> know well enough to describe. You are probably on the right tract
+>> though, getting the modules and mdadm.conf available at boot.
+>>     
+>
+> I assume its more or less like debian, so you just add the modules to 
+> /etc/initramfs-tools/modules and run: update-initramfs -uk `uname -r`
+>
+> then the modules you added to the modules file will be added to the initramfs 
+> file, and loaded into the kernel at that stage.
+>
+>
+>   
+Is there some explicit action needed to get the mdadm.conf file added to 
+the image?
 
-> The accesses on the VM will be similar to a real disk, so you want the  
-> VM on whatever you would use for bare iron. I run on raid10, many of my  
-> machines are on VM (including this one, my main desktop). Raid10 is a  
-> good general use array, I use it for a lot, other than cases where I  
-> need cheap space and use raid[56] to get more bytes/$ and don't need  
-> blinding speed. Archival storage, for instance.
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  Even purely technical things can appear to be magic, if the documentation is
+obscure enough. For example, PulseAudio is configured by dancing naked around a
+fire at midnight, shaking a rattle with one hand and a LISP manual with the
+other, while reciting the GNU manifesto in hexadecimal. The documentation fails
+to note that you must circle the fire counter-clockwise in the southern
+hemisphere.
 
-My perception is that raid10,f2 is probably the fastest also for small random
-reads because of the lower latency, and faster transfer times due to only
-using the outer disk sectors. For writes the elevator evens out the
-ramdom access. Benchmarks may not show this effect as they are often
-done on clean file systems, where the files are allocated in the
-beginning of the fs.
 
-For cases where you need cheap disk space, and have big files like
-.iso's then raid5 could be a good choice because it has the most space
-while maintaining fair to good performance for big files. 
-
-In your case, using 3 disks, raid5 should give about 210 % of the nominal
-single disk speed for big file reads, and maybe 180 % for big file
-writes. raid10,f2 should give about 290 % for big file reads and 140%
-for big file writes. Random reads should be about the same for raid5 and
-raid10,f2 - raid10,f2 maybe 15 % faster, while random writes should be
-mediocre for raid5, and good for raid10,f2.
-
-best regards
-keld
