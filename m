@@ -1,82 +1,78 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
+From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: Upgrading a software RAID
-Date: Tue, 2 Jun 2009 12:32:50 -0600
-Message-ID: <200906021232.50736.tfjellstrom@shaw.ca>
-References: <20090528141457.GA30322@cthulhu.home.robinhill.me.uk> <4A21B0CF.6030104@usherbrooke.ca> <4A256E35.9050606@tmr.com>
-Reply-To: tfjellstrom@shaw.ca
+Date: Tue, 02 Jun 2009 14:33:08 -0400
+Message-ID: <4A257064.6030502@tmr.com>
+References: <4A1EA095.9090406@usherbrooke.ca> <4A217BA8.1080208@tmr.com> <4A217C6C.7080301@usherbrooke.ca> <20090531001730.GA16311@rap.rap.dk> <4A2213DC.9000100@usherbrooke.ca>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A256E35.9050606@tmr.com>
+In-Reply-To: <4A2213DC.9000100@usherbrooke.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Maxime Boissonneault <maxime.boissonneault@usherbrooke.ca>
+Cc: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>, robin@robinhill.me.uk, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue June 2 2009, Bill Davidsen wrote:
-> Maxime Boissonneault wrote:
-> >>>> The initrd is the ramdisk which the kernel boots to first, containing
-> >>>> the various modules and utility programs (like mdadm) needed to access
-> >>>> the main root filesytem.  A quick search suggests that you need to run
-> >>>> 'update-initramfs -u' on Ubuntu.  You'll need to boot off the CD and
-> >>>> chroot onto the new array first though - something like:
-> >>>>
-> >>>>  - Boot off CD
-> >>>>  - Assemble the RAID arrays
-> >>>>  - Create a mount point for the new array (mkdir /mnt/newroot)
-> >>>>  - Mount the root filesystem (mount /dev/md1 /mnt/newroot)
-> >>>>  - Mount the proc filesystem (mount -o bind /proc /mnt/newroot/proc)
-> >>>>  - Mount the sys filesystem (mount -o bind /sys /mnt/newroot/sys)
-> >>>>  - Mount the dev filesystem (mount -o bind /dev /mnt/newroot/dev)
-> >>>>  - Chroot to the new array (chroot /mnt/newroot /bin/bash)
-> >>>>  - Mount the boot filesystem (mount /boot)
-> >>>>  - Update the initramfs (update-initramfs -u)
-> >>>>  - Unmount the boot filesystem (umount /boot)
-> >>>>  - Exit the chroot (exit)
-> >>>>  - Unmount the dev filesystem (umount /mnt/newroot/dev)
-> >>>>  - Unmount the sys filesystem (umount /mnt/newroot/sys)
-> >>>>  - Unmount the proc filesystem (umount /mnt/newroot/proc)
-> >>>>  - Unmount the root filesystem (umount /mnt/newroot)
-> >>>>  - Reboot
-> >>>>
-> >>>> That's just from memory though, so watch out for any warnings/errors.
-> >>>> The other issue you _may_ have is the raid5 module missing from the
-> >>>> initrd - you'd best check that raid5 is listed in
-> >>>> /etc/initramfs/modules.
-> >>>
-> >>> RAID5 should not be missing, my /home was a RAID5.
-> >>
-> >> Yes, but /home is only mounted after it's accessed the root partition.
-> >> It can then read any modules from the root partition, so the raid5
-> >> module could still be missing from the initrd.  I suspect it'll have
-> >> included it though.
-> >
-> > I did as you suggested above. I still get the same error message.
-> > I have looked and did not find /etc/initramfs/modules. Instead, I
-> > found /etc/initramfs-tools/modules. In this file, there were a couple
-> > of comment lines explaining how to enable modules.
-> > No modules were included.
-> > I uncommented the "raid1" and added "raid5" and ran the procedure again.
-> >
-> > Still getting the same problem.
-> >
-> > Since the problem seems to be the boot, I will try to do a fresh
-> > install, then restore my backup while keeping the /boot from the fresh
-> > install.
+Maxime Boissonneault wrote:
+> I finally succeeded in getting my system back. To remind you, I 
+> started with this configuration :
 >
-> If this were Fedora I would be using mkinitrd to get the right modules
-> in the boot image, however Ubuntu requires another method, which I don't
-> know well enough to describe. You are probably on the right tract
-> though, getting the modules and mdadm.conf available at boot.
+> /proc/mdstat :
+>
+> md2 : active raid5 sda3[0] sdc3[2] sdb3[1]
+>      957040000 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+>     md1 : active raid0 sda2[0] sdc2[2] sdb2[1]
+>      19534848 blocks level 0 [3/3] [UUU]
+>     md0 : active raid1 sda1[0] sdc1[2] sdb1[1]
+>      96256 blocks [3/3] [UUU]
+>
+> mount :
+> /dev/md1 on / type ext3 (rw,relatime,errors=remount-ro)
+> /dev/md0 on /boot type ext3 (rw,relatime)
+> /dev/md2 on /home type ext3 (rw,relatime)
+>
+> And I wanted to change md1 to a RAID5. So, here is what I did and what 
+> worked.
+> 1- Booted with a LiveCD (Ubuntu 8.04.2 Alternate CD)
+> 2- Backed-up / using tar, put the file on /home
+> 3- Destroyed the array, with mdadm --zero-superblock /dev/sd*2 and 
+> mdadm --stop /dev/md1
+> 4- Created the new RAID5 array
+> 5- Installed a fresh Ubuntu with the install disc
+> 6- Copied the /boot, /etc/mdadm/mdadm.conf and /etc/fstab from the 
+> fresh install
+> 7- Restored the backup over the fresh install
+> 8- Restore the files copied at step 6
+> 9- Booted
+>
+> At this point, it gave me an error saying that the filesystem could 
+> not be mounted with some number. I found this web page
+> http://linux.byexamples.com/archives/321/fstab-with-uuid/
+> which told me how to get the uid for my disks, and I updated the 
+> /etc/fstab consequently.
+>
+> Tadam! It works! I can now plan and buy my new 1TB HD and let the RAID 
+> reconstruct the files, then grow the arrays.
+>
+> I wrote this email in the hope that it might be usefull to someone 
+> someday.
 
-I assume its more or less like debian, so you just add the modules to 
-/etc/initramfs-tools/modules and run: update-initramfs -uk `uname -r`
+ It is, and I will belatedly tell you that recent versions of mdadm have 
+a "--uuid" option which allows you to set the uuid of the array as you 
+create it. However, it sounds as if the problem was not starting the 
+array with uuid, but mounting the filesystem, and that uuid can be set 
+with tune2fs, using the "-U" option.
 
-then the modules you added to the modules file will be added to the initramfs 
-file, and loaded into the kernel at that stage.
-
+I include that for completeness, I agree that changing the things which 
+use a new uuid is safer than changing the uuid which could, given 
+adequate user error, result in duplicate uuid's on multiple arrays or 
+filesystems. This is a "bad thing{tm}" and should be avoided. You did it 
+right (IMHO) and congrats on getting it going.
 
 -- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
+Bill Davidsen <davidsen@tmr.com>
+  Even technical things can appear to be magic, if the documentation is
+obscure enough. For example, PulseAudio is configured by dancing naked around
+a fire at midnight, shaking a rattle with one hand and a LISP manual with the
+other, while reciting the GNU manifesto in hexadecimal.
+
