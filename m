@@ -1,59 +1,31 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v2 11/11] async_tx: raid6 recovery self test
-Date: Wed, 3 Jun 2009 14:42:17 -0700
-Message-ID: <e9c3a7c20906031442y487ad504t1bce8976aad90b42@mail.gmail.com>
+Subject: Re: [PATCH v2 08/11] async_tx: add support for asynchronous GF
+	multiplication
+Date: Wed, 3 Jun 2009 15:11:26 -0700
+Message-ID: <e9c3a7c20906031511x5e91b180ya740b6a9cede15a4@mail.gmail.com>
 References: <20090519005647.4104.81119.stgit@dwillia2-linux.ch.intel.com>
-	 <20090519010022.4104.8698.stgit@dwillia2-linux.ch.intel.com>
-	 <20090522082923.GO11504@skl-net.de>
+	 <20090519010006.4104.70181.stgit@dwillia2-linux.ch.intel.com>
+	 <20090522082901.GM11504@skl-net.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090522082923.GO11504@skl-net.de>
+In-Reply-To: <20090522082901.GM11504@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
 To: Andre Noll <maan@systemlinux.org>
 Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, May 22, 2009 at 1:29 AM, Andre Noll <maan@systemlinux.org> wrot=
-e:
-> On Mon, May 18, 2009 at 06:00:22PM -0700, Dan Williams wrote:
->> +static char disk_type(int d)
->> +{
->> + =A0 =A0 switch (d) {
->> + =A0 =A0 case NDISKS-2:
->> + =A0 =A0 =A0 =A0 =A0 =A0 return 'P';
->> + =A0 =A0 case NDISKS-1:
->> + =A0 =A0 =A0 =A0 =A0 =A0 return 'Q';
->> + =A0 =A0 default:
->> + =A0 =A0 =A0 =A0 =A0 =A0 return 'D';
->> + =A0 =A0 }
->> +}
+On Fri, May 22, 2009 at 1:29 AM, Andre Noll <maan@systemlinux.org> wrote:
+> If P is disabled, we could further collapse this loop by also skipping
+> sources where the coefficient is zero. Not sure if this would be a win
+> though.
+
+It's ok to leave this as an optimization opportunity for the caller.
+
+> Otherwise, this patch looks also very nice.
 >
-> I like this function very much because "if (disk_type(faila) =3D=3D '=
-Q')"
-> is so much more readable than "if (faila =3D=3D num_disks - 1)". It's=
- a
-> pity that we only have it in this test module ;)
+> Thanks
+> Andre
 
-I do not see too many places outside this file where it would be
-helpful... but an incremental patch for this cleanup would be welcome.
- In general this code tries to duplicate the look of
-drivers/md/raid6test/test.c, so any cleanups would be applicable in
-both locations.
-
-> How hard would it be to also test the fallback code for the synchrono=
-us
-> paths? AFAICS this test module wouldn't notice errors in the fallback
-> logic.
-
-It does.  Simply omit loading an offload driver and the api will by
-necessity fallback to the synchronous path.
-
-Thanks,
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks, and the other cleanups were addressed as well.
