@@ -1,81 +1,65 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Awful RAID5 random read performance
-Date: Thu, 04 Jun 2009 00:21:02 +0200
-Message-ID: <878wk9q7qp.fsf@frosties.localdomain>
-References: <20090531154159405.TTOI3923@cdptpa-omta04.mail.rr.com>
-	<200905311056.30521.tfjellstrom@shaw.ca> <4A25754F.5030107@tmr.com>
-	<20090602194704.GA30639@rap.rap.dk>
-	<4A25B201.2000705@anonymous.org.uk> <4A26C313.6080700@tmr.com>
-	<4A26D5AE.2000003@anonymous.org.uk>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: import existing intel array
+Date: Thu, 4 Jun 2009 08:43:38 +1000
+Message-ID: <18982.64666.532101.651635@notabene.brown>
+References: <20090603143038.GA11045@mrq1.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A26D5AE.2000003@anonymous.org.uk> (John Robinson's message of
-	"Wed, 03 Jun 2009 20:57:34 +0100")
+In-Reply-To: message from Hermann Gausterer on Wednesday June 3
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Hermann Gausterer <nail-brown-mdadm-question@mrq1.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-John Robinson <john.robinson@anonymous.org.uk> writes:
+On Wednesday June 3, nail-brown-mdadm-question@mrq1.org wrote:
+> hi neil
 
-> On 03/06/2009 19:38, Bill Davidsen wrote:
->> John Robinson wrote:
->>> On 02/06/2009 20:47, Keld J=F8rn Simonsen wrote:
-> [...]
->>>> In your case, using 3 disks, raid5 should give about 210 % of the
->>>> nominal
->>>> single disk speed for big file reads, and maybe 180 % for big file
->>>> writes. raid10,f2 should give about 290 % for big file reads and 1=
-40%
->>>> for big file writes. Random reads should be about the same for rai=
-d5 and
->>>> raid10,f2 - raid10,f2 maybe 15 % faster, while random writes shoul=
-d be
->>>> mediocre for raid5, and good for raid10,f2.
->>>
->>> I'd be interested in reading about where you got these figures from
->>> and/or the rationale behind them; I'd have guessed differently...
->>
->> For small values of N, 10,f2 generally comes quite close to N*Sr,
->> where N is # of disks and Sr is single drive read speed. This is
->> assuming fiarly large reads and adequate stripe buffer
->> space. Obviously for larger values of N that saturates something
->> else in the system, like the bus, before N gets too large. I don't
->> generally see more than (N/2-1)*Sw for write, at least for large
->> writes. I came up with those numbers based on testing 3-4-5 drive
->> arrays which do large file transfers. If you want to read more than
->> large file speed into them, feel free.
+Hi.
+ I've taken the liberty of adding Cc: to linux-raid@vger.kernel.org
 
-With far copies reading is like reading raid0 and writing is like
-raid0 but writing twice with a seek between each. So (N/2) and (N/2-a
-bit) are the theoretical maximums and raid10 comes damn close to those.
+> 
+> your mdadm 3.0 release is great work!
 
-> Actually it was the RAID-5 figures I'd have guessed differently. I'd
-> expect ~290% (rather than 210%) for big 3-disc RAID-5 reads, and ~140=
-%
-> (rather than "mediocre") for random small writes. But of course I
-> haven't tested.
+Thanks.
 
-That kind of depends on the chunk size I think.
+> 
+> what are the commands for accessing a existing
+> (windows created) intel ichX raid array?
+> 
+> i think this is a common use case ..
+> 
+> can you help me?
 
-Say you have a raid 5 with chunk size << size of 1 track. Then on each
-disk you read 2 chunks, skip a chunk, read 2 chunks, skip a chunk. But
-skipping a chunk means waiting for the disk to rotate over it. That
-takes as long as reading it. You shouldn't even get 210% speed.
+I would start with
 
-Only if chunk size >> size of 1 track could you seek over a
-chunk. And you have to hope that by the time you have seeked the start
-of the next chunk hasn't rotated past the head yet.
+# mdadm -Es
 
-Anyone know what the size of a track is on modern disks? How many
-sectors/track do they have?
+which should show something vaguely like:
 
-MfG
-        Goswin
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ARRAY metadata=imsm auto=md UUID=8a73e835:3019890d:4f976c0c:eafd8c7e
+ARRAY /dev/md/r1 container=8a73e835:3019890d:4f976c0c:eafd8c7e
+   member=0 UUID=bede01d9:b40a5dbc:ea37b919:68a0005c
+
+That confirms that there is an imsm array there.  In my case there is
+one member array in the container - it is called 'r1'.
+
+Now you can assemble the container using:
+
+# mdadm -A /dev/md/imsm0 --uuid=8a73e835:3019890d:4f976c0c:eafd8c7e
+
+and then assemble all the arrays in the container using
+
+# mdadm -I /dev/md/imsm0
+
+If you are happy with this, you can put the output of "-Es" in
+mdadm.conf and them
+# mdadm -As
+
+should assemble it all automatically.
+
+Please report any interesting experiences.
+
+Thanks,
+NeilBrown
