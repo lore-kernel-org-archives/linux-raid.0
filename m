@@ -1,62 +1,79 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v2 08/11] async_tx: add support for asynchronous GF
-	multiplication
-Date: Wed, 3 Jun 2009 15:16:17 -0700
-Message-ID: <e9c3a7c20906031516t783dcca7yf10df0054c525ad0@mail.gmail.com>
-References: <20090519005647.4104.81119.stgit@dwillia2-linux.ch.intel.com>
-	 <20090519010006.4104.70181.stgit@dwillia2-linux.ch.intel.com>
-	 <f12847240905200111q37457b29lb9e30879e251888@mail.gmail.com>
-	 <129600E5E5FB004392DDC3FB599660D7ACC13C72@irsmsx504.ger.corp.intel.com>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: Awful RAID5 random read performance
+Date: Thu, 04 Jun 2009 00:21:02 +0200
+Message-ID: <878wk9q7qp.fsf@frosties.localdomain>
+References: <20090531154159405.TTOI3923@cdptpa-omta04.mail.rr.com>
+	<200905311056.30521.tfjellstrom@shaw.ca> <4A25754F.5030107@tmr.com>
+	<20090602194704.GA30639@rap.rap.dk>
+	<4A25B201.2000705@anonymous.org.uk> <4A26C313.6080700@tmr.com>
+	<4A26D5AE.2000003@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <129600E5E5FB004392DDC3FB599660D7ACC13C72@irsmsx504.ger.corp.intel.com>
+In-Reply-To: <4A26D5AE.2000003@anonymous.org.uk> (John Robinson's message of
+	"Wed, 03 Jun 2009 20:57:34 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: "Sosnowski, Maciej" <maciej.sosnowski@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-2009/5/29 Sosnowski, Maciej <maciej.sosnowski@intel.com>:
-> Dan Williams wrote:
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Since we have clobbered the src_lis=
-t we are committed
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* to doing this asynchronously. =A0=
-Drivers force forward
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* progress in case they can not pro=
-vide a descriptor
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 for (;;) {
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 tx =3D dma->device_pre=
-p_dma_pq(chan, dma_dest,
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0&dma_src[src_off],
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pq_src_cnt,
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0&coefs[src_off], len,
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0dma_flags);
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (likely(tx))
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 async_tx_quiesce(&subm=
-it->depend_tx);
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 dma_async_issue_pendin=
-g(chan);
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
->
-> How about adding a timeout to the loop in case we do not get a descri=
-ptor at all for some reason?
->
+John Robinson <john.robinson@anonymous.org.uk> writes:
 
-There is an embedded timeout in async_tx_quiesce().  However, now that
-we have the ->scribble pointer a future patch could make it a
-requirement of the api.  With that in place we would always be able to
-fall back to the synchronous at any point because the input parameters
-would be preserved.
+> On 03/06/2009 19:38, Bill Davidsen wrote:
+>> John Robinson wrote:
+>>> On 02/06/2009 20:47, Keld J=F8rn Simonsen wrote:
+> [...]
+>>>> In your case, using 3 disks, raid5 should give about 210 % of the
+>>>> nominal
+>>>> single disk speed for big file reads, and maybe 180 % for big file
+>>>> writes. raid10,f2 should give about 290 % for big file reads and 1=
+40%
+>>>> for big file writes. Random reads should be about the same for rai=
+d5 and
+>>>> raid10,f2 - raid10,f2 maybe 15 % faster, while random writes shoul=
+d be
+>>>> mediocre for raid5, and good for raid10,f2.
+>>>
+>>> I'd be interested in reading about where you got these figures from
+>>> and/or the rationale behind them; I'd have guessed differently...
+>>
+>> For small values of N, 10,f2 generally comes quite close to N*Sr,
+>> where N is # of disks and Sr is single drive read speed. This is
+>> assuming fiarly large reads and adequate stripe buffer
+>> space. Obviously for larger values of N that saturates something
+>> else in the system, like the bus, before N gets too large. I don't
+>> generally see more than (N/2-1)*Sw for write, at least for large
+>> writes. I came up with those numbers based on testing 3-4-5 drive
+>> arrays which do large file transfers. If you want to read more than
+>> large file speed into them, feel free.
 
-Thanks,
-Dan
+With far copies reading is like reading raid0 and writing is like
+raid0 but writing twice with a seek between each. So (N/2) and (N/2-a
+bit) are the theoretical maximums and raid10 comes damn close to those.
+
+> Actually it was the RAID-5 figures I'd have guessed differently. I'd
+> expect ~290% (rather than 210%) for big 3-disc RAID-5 reads, and ~140=
+%
+> (rather than "mediocre") for random small writes. But of course I
+> haven't tested.
+
+That kind of depends on the chunk size I think.
+
+Say you have a raid 5 with chunk size << size of 1 track. Then on each
+disk you read 2 chunks, skip a chunk, read 2 chunks, skip a chunk. But
+skipping a chunk means waiting for the disk to rotate over it. That
+takes as long as reading it. You shouldn't even get 210% speed.
+
+Only if chunk size >> size of 1 track could you seek over a
+chunk. And you have to hope that by the time you have seeked the start
+of the next chunk hasn't rotated past the head yet.
+
+Anyone know what the size of a track is on modern disks? How many
+sectors/track do they have?
+
+MfG
+        Goswin
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
