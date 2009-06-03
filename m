@@ -1,33 +1,48 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Upgrading a software RAID
-Date: Wed, 03 Jun 2009 12:30:20 -0400
-Message-ID: <4A26A51C.60208@tmr.com>
-References: <20090528141457.GA30322@cthulhu.home.robinhill.me.uk>	 <4A21B0CF.6030104@usherbrooke.ca> <4A256E35.9050606@tmr.com>	 <200906021232.50736.tfjellstrom@shaw.ca> <4A258440.5010001@tmr.com> <f19d625d0906021413m79a684b5v48f142296ddba6b8@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [dm-devel] Re: ANNOUNCE: mdadm 3.0 - A tool for managing Soft
+	RAID under Linux
+Date: Wed, 3 Jun 2009 10:26:51 -0700
+Message-ID: <e9c3a7c20906031026s49a5a694hb91db40dc05a2580@mail.gmail.com>
+References: <18980.48553.328662.80987@notabene.brown>
+	 <4A25876A.1010901@garzik.org>
+	 <18981.62579.171350.910761@notabene.brown>
+	 <1244040123.6938.19.camel@o>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f19d625d0906021413m79a684b5v48f142296ddba6b8@mail.gmail.com>
+In-Reply-To: <1244040123.6938.19.camel@o>
 Sender: linux-raid-owner@vger.kernel.org
-To: CoolCold <coolthecold@gmail.com>
-Cc: tfjellstrom@shaw.ca, linux-raid@vger.kernel.org
+To: heinzm@redhat.com, device-mapper development <dm-devel@redhat.com>
+Cc: Jeff Garzik <jeff@garzik.org>, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Arjan van de Ven <arjan@infradead.org>, Ed Ciechanowski <ed.ciechanowski@intel.com>, Jacek Danecki <jacek.danecki@intel.com>
 List-Id: linux-raid.ids
 
-CoolCold wrote:
-> debian's update-initramfs includes /etc/mdadm/mdadm.conf automatically
-> on image (re)build
->   
+On Wed, Jun 3, 2009 at 7:42 AM, Heinz Mauelshagen <heinzm@redhat.com> w=
+rote:
+> On Wed, 2009-06-03 at 13:56 +1000, Neil Brown wrote:
+>> As for integrating the two code bases.... people have been suggestin=
+g
+>> that for years, but I suspect few of them have looked deeply at the
+>> practicalities. =A0Apparently it was suggested at the recent "storag=
+e
+>> summit". =A0However as the primary md and dm developers were absent,=
+ I
+>> have doubts about how truly well-informed that conversation could ha=
+ve
+>> been.
+>
+> Agreed, we'd need face-time and talk issues through in order to come =
+up
+> with any such plan for md+dm integration.
+>
 
-Thanks, wasn't sure if that was the case, thought I'd mention it for 
-completeness.
+What are your general impressions of dmraid using md kernel
+infrastructure for raid level support?
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  Even purely technical things can appear to be magic, if the documentation is
-obscure enough. For example, PulseAudio is configured by dancing naked around a
-fire at midnight, shaking a rattle with one hand and a LISP manual with the
-other, while reciting the GNU manifesto in hexadecimal. The documentation fails
-to note that you must circle the fire counter-clockwise in the southern
-hemisphere.
-
-
+Thanks,
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
