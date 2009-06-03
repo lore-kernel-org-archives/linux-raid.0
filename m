@@ -1,187 +1,230 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: ANNOUNCE: mdadm 3.0 - A tool for managing Soft RAID under Linux
-Date: Wed, 3 Jun 2009 13:56:35 +1000
-Message-ID: <18981.62579.171350.910761@notabene.brown>
-References: <18980.48553.328662.80987@notabene.brown>
-	<4A25876A.1010901@garzik.org>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [PATCH/RFC 0/2] md: personality pushdown patches -- intro
+Date: Wed, 3 Jun 2009 11:22:31 +0200
+Message-ID: <20090603092231.GZ11504@skl-net.de>
+References: <1243603122-11116-1-git-send-email-maan@systemlinux.org> <18977.45309.243141.219288@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: message from Jeff Garzik on Tuesday June 2
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, dm-devel@redhat.com, Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="vDpQvD79HZx/5O2q"
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <18977.45309.243141.219288@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-[dm-devel added for completeness]
+--vDpQvD79HZx/5O2q
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Hi Jeff,
- thanks for your thoughts.
- I agree this is a conversation worth having.
+On 08:19, Neil Brown wrote:
 
-On Tuesday June 2, jeff@garzik.org wrote:
-> Neil Brown wrote:
+> The second is heading in the right direction.
+> However md_bitmap_present is as much of a layering violation in its
+> own way as the previous code was - diving in to the metatype_type
+> specific data.
+>=20
+> You will notice in bitmap_create that an array has a bitmap if and
+> only if (mddev->bitmap_file || mddev->bitmap_offset).
+> So that is the test which should be used in md_bitmap_present.
 
-> > The significant change which justifies the new major version number is
-> > that mdadm can now handle metadata updates entirely in userspace.
-> > This allows mdadm to support metadata formats that the kernel knows
-> > nothing about.
-> > 
-> > Currently two such metadata formats are supported:
-> >   - DDF  - The SNIA standard format
-> >   - Intel Matrix - The metadata used by recent Intel ICH controlers.
-> 
-> This seems pretty awful from a support standpoint:  dmraid has been the 
-> sole provider of support for vendor-proprietary up until this point.
+I see. And this makes the code much simpler. In fact it's so simple
+that we might probably want to inline it.
 
-And mdadm has been the sole provider of raid5 and raid6 (and,
-arguably, reliable raid1 - there was a thread recently about
-architectural issues in dm/raid1 that allowed data corruption).
-So either dmraid would have to support raid5, or mdadm would have to
-support IMSM.  or both?
+> Also the function name "md_bitmap_present" give no hint that it will
+> report an error - it reads like a simple test.
+> Maybe "md_check_no_bitmap" to indicate what the function is expecting
+> to find?
 
-> 
-> Now Linux users -- and distro installers -- must choose between software 
-> RAID stack "MD" and software RAID stack "DM".  That choice is made _not_ 
-> based on features, but on knowing the underlying RAID metadata format 
-> that is required, and what features you need out of it.
+Yup, md_check_no_bitmap is more descriptive. The patch below addresses
+both issues.
 
-If you replace the word "required" by "supported", then the metadata
-format becomes a feature.  And only md provides raid5/raid6.  And only
-dm provides LVM.  So I think there are plenty of "feature" issues
-between them.
-Maybe there are now more use-cases where the choice cannot be made
-based on features.  I guess things like familiarity and track-record
-come in to play there.  But choice is a crucial element of freedom.
+Thanks
+Andre
+---
 
+commit cb2e46af5393cfed1b46182e2ca19a4adb7a4e0d
+Author: Andre Noll <maan@systemlinux.org>
+Date:   Tue Jun 2 21:49:29 2009 +0200
 
-> 
-> dmraid already supports
-> 	- Intel RAID format, touched by Intel as recently as 2007
-> 	- DDF, the SNIA standard format
-> 
-> This obviously generates some relevant questions...
-> 
-> 1) Why?  This obviously duplicates existing effort and code.  The only 
-> compelling reason I see is RAID5 support, which DM lacks IIRC -- but the 
-> huge issue of user support and duplicated code remains.
+    md: Move check for bitmap presence to personality code.
+   =20
+    If the superblock of a component device indicates the presence of a
+    bitmap but the corresponding raid personality does not support bitmaps
+    (raid0, linear, multipath, faulty), then something is seriously wrong
+    and we'd better refuse to run such an array.
+   =20
+    Currently, this check is performed while the superblocks are examined,
+    i.e. before entering personality code. Therefore the generic md layer
+    must know which raid levels support bitmaps and which do not.
+   =20
+    This patch avoids this layer violation without adding identical code
+    to various personalities. This is accomplished by introducing a new
+    public function to md.c, md_check_no_bitmap(), which replaces the
+    hard-coded checks in the superblock loading functions.
+   =20
+    A call to md_check_no_bitmap() is added to the ->run method of each
+    personality which does not support bitmaps and assembly is aborted
+    if at least one component device contains a bitmap.
+   =20
+    Signed-off-by: Andre Noll <maan@systemlinux.org>
 
-Yes, RAID5 (and RAID6) are big parts of the reason.  RAID1 is not an
-immaterial part.
-But my initial motivation was that this was the direction I wanted the
-md code base to move in.  It was previously locked to two internal
-metadata formats.  I wanted to move the metadata support into
-userspace where I felt it belonged, and DDF was a good vehicle to
-drive that.
-Intel then approached me about adding IMSM support and I was happy to
-co-operate.
+diff --git a/drivers/md/faulty.c b/drivers/md/faulty.c
+index 6e83b38..87d88db 100644
+--- a/drivers/md/faulty.c
++++ b/drivers/md/faulty.c
+@@ -299,8 +299,12 @@ static int run(mddev_t *mddev)
+ {
+ 	mdk_rdev_t *rdev;
+ 	int i;
++	conf_t *conf;
+=20
+-	conf_t *conf =3D kmalloc(sizeof(*conf), GFP_KERNEL);
++	if (md_check_no_bitmap(mddev))
++		return -EINVAL;
++
++	conf =3D kmalloc(sizeof(*conf), GFP_KERNEL);
+ 	if (!conf)
+ 		return -ENOMEM;
+=20
+diff --git a/drivers/md/linear.c b/drivers/md/linear.c
+index 56c46e0..f9c713d 100644
+--- a/drivers/md/linear.c
++++ b/drivers/md/linear.c
+@@ -183,6 +183,8 @@ static int linear_run (mddev_t *mddev)
+ {
+ 	linear_conf_t *conf;
+=20
++	if (md_check_no_bitmap(mddev))
++		return -EINVAL;
+ 	mddev->queue->queue_lock =3D &mddev->queue->__queue_lock;
+ 	conf =3D linear_conf(mddev, mddev->raid_disks);
+=20
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 812a1f7..aaeaa69 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -748,6 +748,24 @@ struct super_type  {
+ };
+=20
+ /*
++ * Check that the given mddev has no bitmap.
++ *
++ * This function is called from the run method of all personalities that d=
+o not
++ * support bitmaps. It prints an error message and returns non-zero if mdd=
+ev
++ * has a bitmap. Otherwise, it returns 0.
++ *
++ */
++int md_check_no_bitmap(mddev_t *mddev)
++{
++	if (!mddev->bitmap_file && !mddev->bitmap_offset)
++		return 0;
++	printk(KERN_ERR "%s: bitmaps are not supported for %s\n",
++		mdname(mddev), mddev->pers->name);
++	return 1;
++}
++EXPORT_SYMBOL(md_bitmap_present);
++
++/*
+  * load_super for 0.90.0=20
+  */
+ static int super_90_load(mdk_rdev_t *rdev, mdk_rdev_t *refdev, int minor_v=
+ersion)
+@@ -800,17 +818,6 @@ static int super_90_load(mdk_rdev_t *rdev, mdk_rdev_t =
+*refdev, int minor_version
+ 	rdev->data_offset =3D 0;
+ 	rdev->sb_size =3D MD_SB_BYTES;
+=20
+-	if (sb->state & (1<<MD_SB_BITMAP_PRESENT)) {
+-		if (sb->level !=3D 1 && sb->level !=3D 4
+-		    && sb->level !=3D 5 && sb->level !=3D 6
+-		    && sb->level !=3D 10) {
+-			/* FIXME use a better test */
+-			printk(KERN_WARNING
+-			       "md: bitmaps not supported for this level.\n");
+-			goto abort;
+-		}
+-	}
+-
+ 	if (sb->level =3D=3D LEVEL_MULTIPATH)
+ 		rdev->desc_nr =3D -1;
+ 	else
+@@ -1188,17 +1195,6 @@ static int super_1_load(mdk_rdev_t *rdev, mdk_rdev_t=
+ *refdev, int minor_version)
+ 		       bdevname(rdev->bdev,b));
+ 		return -EINVAL;
+ 	}
+-	if ((le32_to_cpu(sb->feature_map) & MD_FEATURE_BITMAP_OFFSET)) {
+-		if (sb->level !=3D cpu_to_le32(1) &&
+-		    sb->level !=3D cpu_to_le32(4) &&
+-		    sb->level !=3D cpu_to_le32(5) &&
+-		    sb->level !=3D cpu_to_le32(6) &&
+-		    sb->level !=3D cpu_to_le32(10)) {
+-			printk(KERN_WARNING
+-			       "md: bitmaps not supported for this level.\n");
+-			return -EINVAL;
+-		}
+-	}
+=20
+ 	rdev->preferred_minor =3D 0xffff;
+ 	rdev->data_offset =3D le64_to_cpu(sb->data_offset);
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index bac7c2b..ccc0ace 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -437,5 +437,6 @@ extern void md_new_event(mddev_t *mddev);
+ extern int md_allow_write(mddev_t *mddev);
+ extern void md_wait_for_blocked_rdev(mdk_rdev_t *rdev, mddev_t *mddev);
+ extern void md_set_array_sectors(mddev_t *mddev, sector_t array_sectors);
++extern int md_check_no_bitmap(mddev_t *mddev);
+=20
+ #endif /* _MD_MD_H */
+diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
+index ca387ba..fb8a5e7 100644
+--- a/drivers/md/multipath.c
++++ b/drivers/md/multipath.c
+@@ -421,6 +421,9 @@ static int multipath_run (mddev_t *mddev)
+ 	struct multipath_info *disk;
+ 	mdk_rdev_t *rdev;
+=20
++	if (md_check_no_bitmap(mddev))
++		return -EINVAL;
++
+ 	if (mddev->level !=3D LEVEL_MULTIPATH) {
+ 		printk("multipath: %s: raid level not set to multipath IO (%d)\n",
+ 		       mdname(mddev), mddev->level);
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index 0fcd9b5..3c78b42 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -311,6 +311,8 @@ static int raid0_run(mddev_t *mddev)
+ 		printk(KERN_ERR "md/raid0: chunk size must be a power of 2.\n");
+ 		return -EINVAL;
+ 	}
++	if (md_check_no_bitmap(mddev))
++		return -EINVAL;
+ 	blk_queue_max_sectors(mddev->queue, mddev->chunk_sectors);
+ 	mddev->queue->queue_lock =3D &mddev->queue->__queue_lock;
+=20
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
 
-> 
-> 2) Adding container-like handling obviously moves MD in the direction of 
-> DM.  Does that imply someone will be looking at integrating the two 
-> codebases, or will this begin to implement features also found in DM's 
-> codebase?
+--vDpQvD79HZx/5O2q
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
-I wonder why you think "container-like" handling moves in the
-direction of DM.  I see nothing in the DM that explicitly relates to
-this.  There was something in MD (internal metadata support) which
-explicitly worked against it.  I have since made that less of an issue.
-All the knowledge of containers  is really in lvm2/dmraid and mdadm - the
-user-space tools (and I do think it is important to be aware of the
-distinction between the kernel side and the user side of each
-system). 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
 
-So this is really a case of md "seeing" the wisdom in that aspect of
-the design of "dm" and taking a similar approach - though with
-significantly different details.
+iD8DBQFKJkDXWto1QDEAkw8RApfmAKCqqustmebFWHqjXVSNKPyqVL7qswCfW1SC
+M+eVleKzW3oTKsEtsAmrn80=
+=H7PN
+-----END PGP SIGNATURE-----
 
-As for integrating the two code bases.... people have been suggesting
-that for years, but I suspect few of them have looked deeply at the
-practicalities.  Apparently it was suggested at the recent "storage
-summit".  However as the primary md and dm developers were absent, I
-have doubts about how truly well-informed that conversation could have
-been.
-
-I do have my own sketchy ideas about how unification could be
-achieved.  It would involve creating a third "thing" and then
-migrating md and dm (and loop and nbd and drbd and ...) to mesh with
-that new model.
-But it is hard to make this a priority where there are more
-practically useful things to be done.
-
-It is worth reflecting again on the distinction between lvm2 or dmraid
-and dm, and between mdadm and md.
-lvm2 could conceivably use md.  mdadm could conceivably use dm.
-I have certainly considered teaching mdadm to work with dm-multipath
-so that I could justifiably remove md/multipath without the risk of
-breaking someone's installation.  But it isn't much of a priority.
-The dmraid developers might think that utilising md to provide some
-raid levels might be a good thing (now that I have shown it to be
-possible).  I would be happy to support that to the extent of
-explaining how it can work and even refining interfaces if that proved
-to be necessary.  Who knows - that could eventually lead to me being
-able to end-of-life mdadm and leave everyone using dmraid :-)
-
-Will md implement features found in dm's code base?
-For things like LVM, Multipath, crypt and snapshot : no, definitely not.
-For things like suspend/resume of incoming IO (so a device can be
-reconfigured), maybe.  I recently added that so that I could effect 
-raid5->raid6 conversions.  I would much rather this was implemented in
-the block layer than in md or dm.  I added it to md because that was
-the fastest path, and it allowed me to explore and come to understand
-the issues.  I tried to arrange the implementation so that it could be
-moved up to the block layer without user-space noticing.  Hopefully I
-will get around to attempting that before I forget all that I learnt.
-
-
-> 
-> 3) What is the status of distro integration efforts?  I wager the distro 
-> installer guys will grumble at having to choose among duplicated RAID 
-> code and formats.
-
-Some distros are shipping mdadm-3.0-pre releases, but I don't think
-any have seriously tried to integrate the DDF or IMSM support with
-installers or the boot process yet.
-Intel have engineers working to make sure such integration is
-possible, reliable, and relatively simple.
-
-Installers already understand lvm and mdadm for different use cases.
-Adding some new use cases that overlap should not be a big headache.
-They also already support ext3-vs-xfs, gnome-vs-kde etc.
-
-There is an issue of "if the drives appear to have DDF metadata, which
-tool shall I use".  I am not well placed to give an objective answer
-to that.
-mdadm can easily be told to ignore such arrays unless explicitly
-requested to deal with them.  A line like
-   AUTO -ddf -imsm
-in mdadm.conf would ensure that auto-assembly and incremental assembly
-will ignore both DDF and IMSM.
-
-> 
-> 4) What is the plan for handling existing Intel RAID users (e.g. dmraid 
-> + Intel RAID)?  Has Intel been contacted about dmraid issues?  What does 
-> Intel think about this lovely user confusion shoved into their laps?
-
-The above mentioned AUTO line can disable mdadm auto-management of
-such arrays.  Maybe dmraid auto-management can be equally disabled.
-Distros might be well-advise to make the choice a configurable
-option.
-
-I cannot speak for Intel, except to acknowledge that their engineers
-have done most of the work to support IMSM is mdadm.  I just provided
-the infrastructure and general consulting.
-
-> 
-> 5) Have the dmraid maintainer and DM folks been queried, given that you 
-> are duplicating their functionality via Intel and DDF RAID formats? 
-> What was their response, what issues were raised and resolved?
-
-I haven't spoken to them, no (except for a couple of barely-related
-chats with Alasdair).
-By and large, they live in their little walled garden, and I/we live
-in ours.
-
-NeilBrown
+--vDpQvD79HZx/5O2q--
