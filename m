@@ -1,65 +1,61 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: import existing intel array
-Date: Thu, 4 Jun 2009 08:43:38 +1000
-Message-ID: <18982.64666.532101.651635@notabene.brown>
-References: <20090603143038.GA11045@mrq1.org>
+Subject: Re: ANNOUNCE: mdadm 3.0 - A tool for managing Soft RAID under Linux
+Date: Thu, 4 Jun 2009 08:59:45 +1000
+Message-ID: <18983.97.262909.30692@notabene.brown>
+References: <18980.48553.328662.80987@notabene.brown>
+	<4A25876A.1010901@garzik.org>
+	<18981.62579.171350.910761@notabene.brown>
+	<448D5698-81A1-4100-8AF5-B6660D96ECE9@cam.ac.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Hermann Gausterer on Wednesday June 3
+In-Reply-To: message from Anton Altaparmakov on Wednesday June 3
 Sender: linux-raid-owner@vger.kernel.org
-To: Hermann Gausterer <nail-brown-mdadm-question@mrq1.org>
+To: Anton Altaparmakov <aia21@cam.ac.uk>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday June 3, nail-brown-mdadm-question@mrq1.org wrote:
-> hi neil
 
-Hi.
- I've taken the liberty of adding Cc: to linux-raid@vger.kernel.org
+[Cc list trimmed as this is more of a focused technical issue]
+
+On Wednesday June 3, aia21@cam.ac.uk wrote:
+> Hi Neil,
+> 
+> Is there any documentation for the interface between mdadm and a  
+> metadata format "module" (if I can call it that way)?
+> 
+> What I mean is: where would one start if one wanted to add a new  
+> metadata format to mdadm?
+
+You would start looking in mdadm.h at the "struct superswitch".
+This lists a both of inter points for the metadata module.
+The intent of some should be obvious from the name.  Others
+come with a little bit of documentation.
+
+I'd be very happy to flesh this documentation out now that the
+interface has (hopefully) stablised.   If you could help by asking
+focussed questions that I could answer by improving the comments, that
+would be a big help.
 
 > 
-> your mdadm 3.0 release is great work!
+> Or is the only documentation the source code to mdadm?
 
-Thanks.
-
-> 
-> what are the commands for accessing a existing
-> (windows created) intel ichX raid array?
-> 
-> i think this is a common use case ..
-> 
-> can you help me?
-
-I would start with
-
-# mdadm -Es
-
-which should show something vaguely like:
-
-ARRAY metadata=imsm auto=md UUID=8a73e835:3019890d:4f976c0c:eafd8c7e
-ARRAY /dev/md/r1 container=8a73e835:3019890d:4f976c0c:eafd8c7e
-   member=0 UUID=bede01d9:b40a5dbc:ea37b919:68a0005c
-
-That confirms that there is an imsm array there.  In my case there is
-one member array in the container - it is called 'r1'.
-
-Now you can assemble the container using:
-
-# mdadm -A /dev/md/imsm0 --uuid=8a73e835:3019890d:4f976c0c:eafd8c7e
-
-and then assemble all the arrays in the container using
-
-# mdadm -I /dev/md/imsm0
-
-If you are happy with this, you can put the output of "-Es" in
-mdadm.conf and them
-# mdadm -As
-
-should assemble it all automatically.
-
-Please report any interesting experiences.
+The final arbiter is certainly the source code, and I often have to
+check the actual call patterns myself to be sure.  But I think it is
+time to start tidying this up.
 
 Thanks,
 NeilBrown
+
+
+> 
+> Thanks a lot in advance!
+> 
+> Best regards,
+> 
+> 	Anton
+> -- 
+> Anton Altaparmakov <aia21 at cam.ac.uk> (replace at with @)
+> Unix Support, Computing Service, University of Cambridge, CB2 3QH, UK
+> Linux NTFS maintainer, http://www.linux-ntfs.org/
