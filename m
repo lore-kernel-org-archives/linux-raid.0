@@ -1,146 +1,91 @@
-From: Mike Snitzer <snitzer@gmail.com>
-Subject: MD and DM (was: Re: ANNOUNCE: mdadm 3.0 - A tool for managing Soft
-	RAID under Linux)
-Date: Tue, 2 Jun 2009 19:39:12 -0400
-Message-ID: <170fa0d20906021639w5daa0572p7c27e0d62cc03952@mail.gmail.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: RAID5 reconstruction ?
+Date: Tue, 2 Jun 2009 21:54:37 -0400
+Message-ID: <87f94c370906021854u7b7684d5m716c028e75b14c14@mail.gmail.com>
+References: <37d33d830905292244w685499b3h391aa2ca7a5b1ad@mail.gmail.com>
+	 <4A213612.7080206@anonymous.org.uk>
+	 <1243699735.5740.103.camel@localhost>
+	 <878wkezagw.fsf@frosties.localdomain>
+	 <1243712247.5740.105.camel@localhost>
+	 <37d33d830905310102m451f26aaw8e233227cda491c@mail.gmail.com>
+	 <87ljod7aiy.fsf@frosties.localdomain>
+	 <49f399b955a41bf8f6b5c2441d218a96.squirrel@neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Ed Ciechanowski <ed.ciechanowski@intel.com>, Jacek Danecki <jacek.danecki@intel.com>, device-mapper development <dm-devel@redhat.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <49f399b955a41bf8f6b5c2441d218a96.squirrel@neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Goswin von Brederlow <goswin-v-b@web.de>, SandeepKsinha <sandeepksinha@gmail.com>, Redeeman <redeeman@metanurb.dk>, John Robinson <john.robinson@anonymous.org.uk>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Jun 2, 2009 at 6:58 PM, Dan Williams <dan.j.williams@intel.com>=
- wrote:
-> On Tue, Jun 2, 2009 at 1:11 PM, Jeff Garzik <jeff@garzik.org> wrote:
->> Neil Brown wrote:
->>>
->>> I am pleased to (finally) announce the availability of
->>> =A0 mdadm version 3.0
->>>
->>> It is available at the usual places:
->>> =A0 countrycode=3Dxx.
->>> =A0 http://www.${countrycode}kernel.org/pub/linux/utils/raid/mdadm/
->>> and via git at
->>> =A0 git://neil.brown.name/mdadm
->>> =A0 http://neil.brown.name/git?p=3Dmdadm
->>>
->>>
->>> This is a major new version and as such should be treated with some
->>> caution. =A0However it has seen substantial testing and is consider=
-red
->>> to be ready for wide use.
->>>
->>>
->>> The significant change which justifies the new major version number=
- is
->>> that mdadm can now handle metadata updates entirely in userspace.
->>> This allows mdadm to support metadata formats that the kernel knows
->>> nothing about.
->>>
->>> Currently two such metadata formats are supported:
->>> =A0- DDF =A0- The SNIA standard format
->>> =A0- Intel Matrix - The metadata used by recent Intel ICH controler=
-s.
+On Sun, May 31, 2009 at 8:14 AM, NeilBrown <neilb@suse.de> wrote:
+> On Sun, May 31, 2009 9:54 pm, Goswin von Brederlow wrote:
+>> SandeepKsinha <sandeepksinha@gmail.com> writes:
 >>
->> This seems pretty awful from a support standpoint: =A0dmraid has bee=
-n the sole
->> provider of support for vendor-proprietary up until this point.
->
-> This bares similarities with the early difficulties of selecting
-> between ide and libata.
->
->> Now Linux users -- and distro installers -- must choose between soft=
-ware
->> RAID stack "MD" and software RAID stack "DM". =A0That choice is made=
- _not_
->> based on features, but on knowing the underlying RAID metadata forma=
-t that
->> is required, and what features you need out of it.
+>>> On Sun, May 31, 2009 at 1:07 AM, Redeeman <redeeman@metanurb.dk> wrote:
+>>>> On Sat, 2009-05-30 at 20:55 +0200, Goswin von Brederlow wrote:
+>>>>> And just when I hit send I thought of something else.
+>>>>>
+>>>>> Instead of the initial sync when creating a raid the bitmap could just
+>>>>> mark all blocks as unused. Much faster raid creation.
+>>>>
+>>>
+>>>
+>>> This really sounds like a good option. This would have a slight hit
+>>> for writes which I believe will compensate for later re-constructions,
+>>> replacing a disk, mirror resysnc and many more operation.
 >>
->> dmraid already supports
->> =A0 =A0 =A0 =A0- Intel RAID format, touched by Intel as recently as =
-2007
->> =A0 =A0 =A0 =A0- DDF, the SNIA standard format
+>> What hit? Currently with bitmap support a write will set the block to
+>> "unclean", write the data, write the parity and set the block to
+>> "clean". Setting the "used" bit along the way should not cost much.
 >>
->> This obviously generates some relevant questions...
->>
->> 1) Why? =A0This obviously duplicates existing effort and code. =A0Th=
-e only
->> compelling reason I see is RAID5 support, which DM lacks IIRC -- but=
- the
->> huge issue of user support and duplicated code remains.
+>> Only difference I see is that the bitmap would have to have finer
+>> granularity so one "used" bit covers one filesystem block (4k usualy).
+>> Otherwise you could only "use" blocks but not "unuse" them again when
+>> the filesystem frees them in 4k chunks.
 >
-> The MD raid5 code has been upstream since forever and already has
-> features like online capacity expansion. =A0There is also
-> infrastructure, upstream, for online raid level migration.
+> But the filesystem could "unuse" blocks in larger chunks.
+> There is this thing called "thin provisioning" and I believe the proponents
+> of that would like the "TRIM" command to be sent in aligned multiples
+> of 1Gigabyte or something like that.
+> I believe this is one aspect of Linux TRIM support that is still open.
 >
->> 2) Adding container-like handling obviously moves MD in the directio=
-n of DM.
->> =A0Does that imply someone will be looking at integrating the two co=
-debases,
->> or will this begin to implement features also found in DM's codebase=
-?
+> I think there would be real value in providing an 'allocated'
+> bitmap even if it were quite coarsely grained.
+> The problem with a very large grain is that every time you set a bit,
+> you need to resync that region, and you don't want that to take too long.
+> So 1 gig (10-30seconds?) would be an upper limit I would thing.
+> If you used 1 sector for the bitmap, that is 4096 bits so on a terabyte
+> array, you have 256Meg chunks that resync in a few seconds.
 >
-> I made a proof-of-concept investigation of what it would take to
-> activate all dmraid arrays (any metadata format, any raid level) with
-> MD. =A0The result, dm2md [1], did not stimulate much in the way of
-> conversation.
+> Certainly an interesting idea to experiment with I think.
 >
-> A pluggable architecture for a write-intent log seems to be the only
-> piece that does not have a current equivalent in MD. =A0However, the
-> 'bitmap' infrastructure covers most needs. =A0I think unifying on a
-> write-intent logging infrastructure is a good place to start working
-> together.
+> NeilBrown
 >
->> 3) What is the status of distro integration efforts? =A0I wager the =
-distro
->> installer guys will grumble at having to choose among duplicated RAI=
-D code
->> and formats.
->
-> There has been some grumbling, but the benefits of using one
-> linux-raid infrastructure for md-metadata and vendor metadata is
-> appealing. =A0mdadm-3.0 also makes a serious effort to be more agreea=
-ble
-> with udev and incremental discovery. =A0So hopefully this makes mdadm
-> easier to handle in the installer.
->
->> 4) What is the plan for handling existing Intel RAID users (e.g. dmr=
-aid +
->> Intel RAID)? =A0Has Intel been contacted about dmraid issues? =A0Wha=
-t does Intel
->> think about this lovely user confusion shoved into their laps?
->
-> The confusion was the other way round. =A0We were faced with how to
-> achieve long term feature parity of our raid solution across OS's and
-> the community presented us with two directions DM and MD. =A0The
-> decision was made to support and maintain dmraid for existing
-> deployments while basing future development on extending the MD stack=
-,
-> because it gave some feature advantages out of the gate. =A0So, there=
- is
-> support for both and new development will focus on MD.
->
->> 5) Have the dmraid maintainer and DM folks been queried, given that =
-you are
->> duplicating their functionality via Intel and DDF RAID formats? What=
- was
->> their response, what issues were raised and resolved?
->
-> There have been interludes, but not much in the way of discussion.
-> Hopefully, this will be a starting point.
->
-> Thanks,
-> Dan
->
-> [1] http://marc.info/?l=3Dlinux-raid&m=3D123300614013042&w=3D2
 
-dm-devel should be cc'd to get a dialog going with the DM team.
---
-To unsubscribe from this list: send the line "unsubscribe linux-fsdevel=
-" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Neil,
+
+Is there likely to be any discussion of how trim / unmap will be
+invoked by the filesystem layer at OLS?  Or how do those decisions get
+made?
+
+ie. The ext4 list was recently talking about sending down very small
+grained info, but large grained seems to make a lot more sense to me.
+Hopefully, each filesystem is not given the ability to decide for
+themselves.  Very much seems like something the lk community should
+have input into, not just the ext4 maintainer.
+
+Greg
+-- 
+Greg Freemyer
+Head of EDD Tape Extraction and Processing team
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+First 99 Days Litigation White Paper -
+http://www.norcrossgroup.com/forms/whitepapers/99%20Days%20whitepaper.pdf
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
