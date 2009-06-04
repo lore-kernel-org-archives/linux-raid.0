@@ -1,71 +1,87 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: ANNOUNCE: mdadm 3.0 - A tool for managing Soft RAID under
- Linux
-Date: Thu, 4 Jun 2009 12:30:52 +1000
-Message-ID: <18983.12764.413037.150661@notabene.brown>
-References: <18980.48553.328662.80987@notabene.brown>
-	<alpine.LNX.2.01.0906031749270.15124@filesrv1.baby-dragons.com>
+Subject: Re: Subject : PATCH [001:001]: raid0 devices size should be aligned to
+	chunk size
+Date: Thu, 4 Jun 2009 15:27:39 +1000
+Message-ID: <18983.23371.401202.522863@notabene.brown>
+References: <1243882554.6331.7.camel@raz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mr. James W. Laferriere on Wednesday June 3
+In-Reply-To: message from raz ben yehuda on Monday June 1
 Sender: linux-raid-owner@vger.kernel.org
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Cc: linux-raid maillist <linux-raid@vger.kernel.org>
+To: raz ben yehuda <raziebe@gmail.com>
+Cc: linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wednesday June 3, babydr@baby-dragons.com wrote:
->  	Hello Neil ,  I am getting a interesting Error during compiling 3.0 .
->  	Is there a particular version of kernel that 3.0 is supposed to be 
-> compiled with ?
+On Monday June 1, raziebe@gmail.com wrote:
+> raid devices should be aligned to a chunk size 
+> (when this feature will be enabled)  because zones 
+> will become un-aligned to chunks and we will traverse
+> between zones in a single IO access. 
 
-This has nothing to do with kernel version.  You must be using a
-different compiler version - it is picking up an error that might
-didn't.
+I'm surprised that you need this as the common code in md is supposed
+to round everything th chunk_size...
+However I found a bug that it was still assuming power-of-2 for v1.x
+metadata.
+So I fixed that.
+Then I decide that it is best to do the rounding in the personalities
+- most of them do already.
+So I added rounding code to linear and raid0
 
-The fix is below.
-Thanks,
+http://neil.brown.name/git?p=md;a=commitdiff;h=c9aaceea6015213e571761c0f0899614863c4868
+
+and then removed all the related code from md.c
+
+It is all in my for-next.
+
+thanks,
 NeilBrown
 
 
 > 
->  		Tia ,  JimL
+>  raid0.c |   22 +++++++++++++++++++++-
+>  1 file changed, 21 insertions(+), 1 deletion(-)
+> Signed-off-by: raziebe@gmail.com
+> ---
+> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+> index 0fcd9b5..987a926 100644
+> --- a/drivers/md/raid0.c
+> +++ b/drivers/md/raid0.c
+> @@ -302,6 +302,26 @@ static sector_t raid0_size(mddev_t *mddev, sector_t sectors, int raid_disks)
+>  	return array_sectors;
+>  }
+>  
+> +/*
+> + *	Align devices to a chunk size, else zones will not be aligned
+> +*/
+> +static void align_devices_to_chunk_size(struct list_head *disks,
+> +					int chunk_sects)
+> +{
+> +	sector_t sectors;
+> +	mdk_rdev_t *rdev;
+> +
+> +	list_for_each_entry(rdev, disks, same_set) {
+> +		sectors = rdev->sectors;
+> +		sector_div(sectors, chunk_sects);
+> +		sectors = sectors * chunk_sects;
+> +		printk(KERN_INFO "raid0: reduce device size: %lld --> %lld\n",
+> +				(unsigned long long)rdev->sectors,
+> +				(unsigned long long)sectors);
+> +		rdev->sectors = sectors;
+> +	}
+> +}
+> +
+>  static int raid0_run(mddev_t *mddev)
+>  {
+>  	int ret;
+> @@ -313,7 +333,7 @@ static int raid0_run(mddev_t *mddev)
+>  	}
+>  	blk_queue_max_sectors(mddev->queue, mddev->chunk_sectors);
+>  	mddev->queue->queue_lock = &mddev->queue->__queue_lock;
+> -
+> +	align_devices_to_chunk_size(&mddev->disks, mddev->chunk_sectors);
+>  	ret = create_strip_zones(mddev);
+>  	if (ret < 0)
+>  		return ret;
 > 
-> gcc -Wall -Werror -Wstrict-prototypes -ggdb -DSendmail=\""/usr/sbin/sendmail 
-> -t"\" -DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\"   -c 
-> -o super-intel.o super-intel.c
-> cc1: warnings being treated as errors
-> super-intel.c: In function 'mark_failure':
-> super-intel.c:3632: warning: comparison is always false due to limited range of 
-> data type
-> make: *** [super-intel.o] Error 1
-> 
-
-commit 4291d691b66f65695b5b4be22b80fd00da73b544
-Author: NeilBrown <neilb@suse.de>
-Date:   Thu Jun 4 12:29:21 2009 +1000
-
-    super-intel: fix test on failed_disk_num.
-    
-    We sometimes set failed_disk_num to ~0.
-    However we cannot test for equality with that as  failed_disk_num
-    is 8bit and ~0 is probably 32bit with lots of 1's.
-    So test if ~failed_disk_num is 0 instead.
-    
-    Reported-By: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-    Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/super-intel.c b/super-intel.c
-index 73fe5fa..7e2a086 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -3629,7 +3629,7 @@ static int mark_failure(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
- 
- 	disk->status |= FAILED_DISK;
- 	set_imsm_ord_tbl_ent(map, slot, idx | IMSM_ORD_REBUILD);
--	if (map->failed_disk_num == ~0)
-+	if (~map->failed_disk_num == 0)
- 		map->failed_disk_num = slot;
- 	return 1;
- }
