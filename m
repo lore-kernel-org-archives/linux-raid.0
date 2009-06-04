@@ -1,61 +1,63 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: ANNOUNCE: mdadm 3.0 - A tool for managing Soft RAID under Linux
-Date: Thu, 4 Jun 2009 08:59:45 +1000
-Message-ID: <18983.97.262909.30692@notabene.brown>
-References: <18980.48553.328662.80987@notabene.brown>
-	<4A25876A.1010901@garzik.org>
-	<18981.62579.171350.910761@notabene.brown>
-	<448D5698-81A1-4100-8AF5-B6660D96ECE9@cam.ac.uk>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH 0/8] Asynchronous raid6 acceleration (part 3 of 3)
+Date: Wed, 03 Jun 2009 18:28:58 -0700
+Message-ID: <20090604012709.11507.15528.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Anton Altaparmakov on Wednesday June 3
 Sender: linux-raid-owner@vger.kernel.org
-To: Anton Altaparmakov <aia21@cam.ac.uk>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, yur@emcraft.com
 List-Id: linux-raid.ids
 
+This series covers the changes to md/raid6 to use the new offload
+capabilities of async_tx.  Part 1 [1] covered the changes to async_tx
+for asynchronous raid6 parity generation and recovery.  Part 2 [2]
+covered the updates to the iop-adma driver to enable raid6.
 
-[Cc list trimmed as this is more of a focused technical issue]
+A merge of these 3 topic series is available via the raid6 branch of
+async_tx.git:
 
-On Wednesday June 3, aia21@cam.ac.uk wrote:
-> Hi Neil,
-> 
-> Is there any documentation for the interface between mdadm and a  
-> metadata format "module" (if I can call it that way)?
-> 
-> What I mean is: where would one start if one wanted to add a new  
-> metadata format to mdadm?
+	git://git.kernel.org/pub/scm/linux/kernel/git/djbw/async_tx.git raid6
 
-You would start looking in mdadm.h at the "struct superswitch".
-This lists a both of inter points for the metadata module.
-The intent of some should be obvious from the name.  Others
-come with a little bit of documentation.
+The basic implementation of these patches have not changed much from
+Yuri's previous release [3].  Instead this series has been rebased to
+incorporate the modified async_tx/raid6 apis.  Note that the rework of
+md/raid456 to move its async_tx parameter allocations from the stack to
+the heap was included in commit 'md/raid5: add scribble region for
+buffer lists' of Part 1 [4].  Current testing in the lab is passing, and
+the code is ready for wider testing.
 
-I'd be very happy to flesh this documentation out now that the
-interface has (hopefully) stablised.   If you could help by asking
-focussed questions that I could answer by improving the comments, that
-would be a big help.
+The 'raid6' branch will be placed in linux-next and if all goes well a
+pull request may be sent towards the end of the 2.6.31 merge window.
 
-> 
-> Or is the only documentation the source code to mdadm?
-
-The final arbiter is certainly the source code, and I often have to
-check the actual call patterns myself to be sure.  But I think it is
-time to start tidying this up.
+Please review.
 
 Thanks,
-NeilBrown
+Dan
+
+[1]: http://marc.info/?l=linux-raid&m=124269482227272&w=2
+[2]: http://marc.info/?l=linux-raid&m=124293271625675&w=2
+[3]: http://thread.gmane.org/gmane.linux.raid/21286
+[4]: http://marc.info/?l=linux-raid&m=124269482227284&w=2
+
+---
+
+Dan Williams (3):
+      md/raid6: asynchronous handle_parity_check6
+      md/raid6: asynchronous raid6 operations
+      md/raid5: factor out mark_uptodate from ops_complete_compute5
+
+Yuri Tikhonov (5):
+      md/raid6: remove synchronous infrastructure
+      md/raid6: asynchronous handle_stripe6
+      md/raid6: asynchronous handle_stripe_dirtying6
+      md/raid6: asynchronous handle_stripe_fill6
+      md/raid5,6: common schedule_reconstruction for raid5/6
 
 
-> 
-> Thanks a lot in advance!
-> 
-> Best regards,
-> 
-> 	Anton
-> -- 
-> Anton Altaparmakov <aia21 at cam.ac.uk> (replace at with @)
-> Unix Support, Computing Service, University of Cambridge, CB2 3QH, UK
-> Linux NTFS maintainer, http://www.linux-ntfs.org/
+ drivers/md/Kconfig |    2 
+ drivers/md/raid5.c | 1139 +++++++++++++++++++++++++++++-----------------------
+ drivers/md/raid5.h |    8 
+ 3 files changed, 645 insertions(+), 504 deletions(-)
