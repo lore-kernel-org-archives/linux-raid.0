@@ -1,63 +1,64 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 0/8] Asynchronous raid6 acceleration (part 3 of 3)
-Date: Wed, 03 Jun 2009 18:28:58 -0700
-Message-ID: <20090604012709.11507.15528.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 1/8] md/raid5: factor out mark_uptodate from
+	ops_complete_compute5
+Date: Wed, 03 Jun 2009 18:29:03 -0700
+Message-ID: <20090604012903.11507.39866.stgit@dwillia2-linux.ch.intel.com>
+References: <20090604012709.11507.15528.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20090604012709.11507.15528.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, yur@emcraft.com
 List-Id: linux-raid.ids
 
-This series covers the changes to md/raid6 to use the new offload
-capabilities of async_tx.  Part 1 [1] covered the changes to async_tx
-for asynchronous raid6 parity generation and recovery.  Part 2 [2]
-covered the updates to the iop-adma driver to enable raid6.
+ops_complete_compute5 can be reused in the raid6 path if it is updated to
+generically handle a second target.
 
-A merge of these 3 topic series is available via the raid6 branch of
-async_tx.git:
-
-	git://git.kernel.org/pub/scm/linux/kernel/git/djbw/async_tx.git raid6
-
-The basic implementation of these patches have not changed much from
-Yuri's previous release [3].  Instead this series has been rebased to
-incorporate the modified async_tx/raid6 apis.  Note that the rework of
-md/raid456 to move its async_tx parameter allocations from the stack to
-the heap was included in commit 'md/raid5: add scribble region for
-buffer lists' of Part 1 [4].  Current testing in the lab is passing, and
-the code is ready for wider testing.
-
-The 'raid6' branch will be placed in linux-next and if all goes well a
-pull request may be sent towards the end of the 2.6.31 merge window.
-
-Please review.
-
-Thanks,
-Dan
-
-[1]: http://marc.info/?l=linux-raid&m=124269482227272&w=2
-[2]: http://marc.info/?l=linux-raid&m=124293271625675&w=2
-[3]: http://thread.gmane.org/gmane.linux.raid/21286
-[4]: http://marc.info/?l=linux-raid&m=124269482227284&w=2
-
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
+ drivers/md/raid5.c |   21 ++++++++++++++++-----
+ 1 files changed, 16 insertions(+), 5 deletions(-)
 
-Dan Williams (3):
-      md/raid6: asynchronous handle_parity_check6
-      md/raid6: asynchronous raid6 operations
-      md/raid5: factor out mark_uptodate from ops_complete_compute5
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 48aa114..45eeefd 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -651,18 +651,29 @@ static void ops_run_biofill(struct stripe_head *sh)
+ 	async_trigger_callback(&submit);
+ }
+ 
++static void mark_target_uptodate(struct stripe_head *sh, int target)
++{
++	struct r5dev *tgt;
++
++	if (target < 0)
++		return;
++
++	tgt = &sh->dev[target];
++	set_bit(R5_UPTODATE, &tgt->flags);
++	BUG_ON(!test_bit(R5_Wantcompute, &tgt->flags));
++	clear_bit(R5_Wantcompute, &tgt->flags);
++}
++
+ static void ops_complete_compute5(void *stripe_head_ref)
+ {
+ 	struct stripe_head *sh = stripe_head_ref;
+-	int target = sh->ops.target;
+-	struct r5dev *tgt = &sh->dev[target];
+ 
+ 	pr_debug("%s: stripe %llu\n", __func__,
+ 		(unsigned long long)sh->sector);
+ 
+-	set_bit(R5_UPTODATE, &tgt->flags);
+-	BUG_ON(!test_bit(R5_Wantcompute, &tgt->flags));
+-	clear_bit(R5_Wantcompute, &tgt->flags);
++	/* mark the computed target as uptodate */
++	mark_target_uptodate(sh, sh->ops.target);
++
+ 	clear_bit(STRIPE_COMPUTE_RUN, &sh->state);
+ 	if (sh->check_state == check_state_compute_run)
+ 		sh->check_state = check_state_compute_result;
 
-Yuri Tikhonov (5):
-      md/raid6: remove synchronous infrastructure
-      md/raid6: asynchronous handle_stripe6
-      md/raid6: asynchronous handle_stripe_dirtying6
-      md/raid6: asynchronous handle_stripe_fill6
-      md/raid5,6: common schedule_reconstruction for raid5/6
-
-
- drivers/md/Kconfig |    2 
- drivers/md/raid5.c | 1139 +++++++++++++++++++++++++++++-----------------------
- drivers/md/raid5.h |    8 
- 3 files changed, 645 insertions(+), 504 deletions(-)
