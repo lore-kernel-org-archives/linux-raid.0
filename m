@@ -1,56 +1,50 @@
-From: Heinz Mauelshagen <heinzm@redhat.com>
-Subject: Re: Re: ANNOUNCE: mdadm 3.0 - A tool for managing Soft
-	RAID under Linux
-Date: Thu, 04 Jun 2009 18:38:56 +0200
-Message-ID: <1244133536.5541.48.camel@o>
-References: <18980.48553.328662.80987@notabene.brown>
-	<4A25876A.1010901@garzik.org>
-	<18981.62579.171350.910761@notabene.brown>
-	<1244040123.6938.19.camel@o>
-	<e9c3a7c20906031026s49a5a694hb91db40dc05a2580@mail.gmail.com>
-Reply-To: heinzm@redhat.com, device-mapper development <dm-devel@redhat.com>
+From: Nifty Fedora Mitch <niftyfedora@niftyegg.com>
+Subject: Re: Awful RAID5 random read performance
+Date: Thu, 4 Jun 2009 15:40:54 -0700
+Message-ID: <20090604224054.GA17121@compegg.wr.niftyegg.com>
+References: <20090531154159405.TTOI3923@cdptpa-omta04.mail.rr.com> <200905311056.30521.tfjellstrom@shaw.ca> <4A25754F.5030107@tmr.com> <20090602194704.GA30639@rap.rap.dk> <4A25B201.2000705@anonymous.org.uk> <4A26C313.6080700@tmr.com> <4A26D5AE.2000003@anonymous.org.uk> <878wk9q7qp.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <e9c3a7c20906031026s49a5a694hb91db40dc05a2580@mail.gmail.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Jacek Danecki <jacek.danecki@intel.com>, LKML <linux-kernel@vger.kernel.org>, Ed Ciechanowski <ed.ciechanowski@intel.com>, linux-raid@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Arjan van de Ven <arjan@infradead.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <878wk9q7qp.fsf@frosties.localdomain>
+Sender: linux-raid-owner@vger.kernel.org
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: John Robinson <john.robinson@anonymous.org.uk>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 2009-06-03 at 10:26 -0700, Dan Williams wrote:
-> On Wed, Jun 3, 2009 at 7:42 AM, Heinz Mauelshagen <heinzm@redhat.com> wrote:
-> > On Wed, 2009-06-03 at 13:56 +1000, Neil Brown wrote:
-> >> As for integrating the two code bases.... people have been suggesting
-> >> that for years, but I suspect few of them have looked deeply at the
-> >> practicalities.  Apparently it was suggested at the recent "storage
-> >> summit".  However as the primary md and dm developers were absent, I
-> >> have doubts about how truly well-informed that conversation could have
-> >> been.
-> >
-> > Agreed, we'd need face-time and talk issues through in order to come up
-> > with any such plan for md+dm integration.
-> >
+On Thu, Jun 04, 2009 at 12:21:02AM +0200, Goswin von Brederlow wrote:
+.....mi
 > 
-> What are your general impressions of dmraid using md kernel
-> infrastructure for raid level support?
+> Anyone know what the size of a track is on modern disks? How many
+> sectors/track do they have?
 
-At the time of the dmraid project start, we already had libdevmapper
-which was suitable to handle in-kernel device manipulation with no
-adequate on the MD side so it was the appropriate interface to use.
+The number will differ from the inside to the outside of the
+disk.  The number of zones will differ from drive to drive too....
 
-Cheers,
-Heinz
+Some diagnostic software will either know this or 
+have vendor specific ways to get it live from the disk.
 
-> 
-> Thanks,
-> Dan
+Data sheets now report average... At one time vendors 
+made a big deal on this...
+http://www.impediment.com/seagate/s2000/spec_318436lcv.shtml
+    Sectors/Track (avg)  	426
+    Bytes/Track (avg) 	218,112
+
+If you take numbers like:
+    Track Density (TPI) 	18,145 tracks/inch
+    Recording Density (BPI, max) 	328,272 bits/inch 
+and dust off some geometry you might discover
+how many more bits are possible on the outside
+tracks vs the inside tracks and then take those
+bits and estimate the number of additional blocks.
+An estimate may all you get because spares and 
+other uses for bits will be hidden.
+
+
+
+
+-- 
+	T o m  M i t c h e l l 
+	Found me a new hat, now what?
+
