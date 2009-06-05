@@ -1,50 +1,68 @@
-From: Nifty Fedora Mitch <niftyfedora@niftyegg.com>
-Subject: Re: Awful RAID5 random read performance
-Date: Thu, 4 Jun 2009 15:40:54 -0700
-Message-ID: <20090604224054.GA17121@compegg.wr.niftyegg.com>
-References: <20090531154159405.TTOI3923@cdptpa-omta04.mail.rr.com> <200905311056.30521.tfjellstrom@shaw.ca> <4A25754F.5030107@tmr.com> <20090602194704.GA30639@rap.rap.dk> <4A25B201.2000705@anonymous.org.uk> <4A26C313.6080700@tmr.com> <4A26D5AE.2000003@anonymous.org.uk> <878wk9q7qp.fsf@frosties.localdomain>
+From: "Jack Etherington" <jack@the-etheringtons.co.uk>
+Subject: (unknown)
+Date: Fri, 5 Jun 2009 01:50:25 +0100
+Message-ID: <007001c9e577$9cdedd10$d69c9730$@co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <878wk9q7qp.fsf@frosties.localdomain>
+Subject: 
+Content-Language: en-gb
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: John Robinson <john.robinson@anonymous.org.uk>, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jun 04, 2009 at 12:21:02AM +0200, Goswin von Brederlow wrote:
-.....mi
-> 
-> Anyone know what the size of a track is on modern disks? How many
-> sectors/track do they have?
+Hello,
+I am not sure whether troubleshooting messages are allowed on the mdadm
+mailing list (or it is for development and bugs only) so please point m=
+e in
+the right direction if this is not the right place.
 
-The number will differ from the inside to the outside of the
-disk.  The number of zones will differ from drive to drive too....
+Before posting here I have tried using the following resources for
+information:
+>Google
+>Distribution IRC channel (Ubuntu)
+>Linuxquestions.org
 
-Some diagnostic software will either know this or 
-have vendor specific ways to get it live from the disk.
+My knowledge of Linux is beginner/moderate.
 
-Data sheets now report average... At one time vendors 
-made a big deal on this...
-http://www.impediment.com/seagate/s2000/spec_318436lcv.shtml
-    Sectors/Track (avg)  	426
-    Bytes/Track (avg) 	218,112
+My setup is:
+9x1tb Hard Drives (2xhitachi and 7x Samsung HD103UJ)
+Supermicro AOC-SAT2-MV8 8 Port SATA Card
+1xMotherboard SATA port
+Single RAID5 array created with mdadm, printout of /proc/mdstat:
 
-If you take numbers like:
-    Track Density (TPI) 	18,145 tracks/inch
-    Recording Density (BPI, max) 	328,272 bits/inch 
-and dust off some geometry you might discover
-how many more bits are possible on the outside
-tracks vs the inside tracks and then take those
-bits and estimate the number of additional blocks.
-An estimate may all you get because spares and 
-other uses for bits will be hidden.
+root@server3:~# cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [r=
+aid4]
+[raid10]
+md0 : active raid5 sdj1[7] sdc1[0] sda1[8] sdg1[6] sdi1[9](F) sdd1[4]
+sde1[3] sdh1[2] sdf1[10](F)
+=A0=A0=A0=A0=A0 7814079488 blocks level 5, 64k chunk, algorithm 2 [9/7]=
+ [U_UUU_UUU]
 
 
+A printout of /var/messages is available here: http://pastebin.com/m649=
+9846
+as not to make this post any longer...
+(The array has been down for about a month now. It is my home storage
+server, non-critical, but I do not have a backup)
+
+Also a printout of =91mdadm --detail /dev/md0=92 is available here:
+http://pastebin.com/f44b6e069
+
+I have used =91mdadm -v -A -f /dev/md0=92 to get the array online again=
+, and can
+read data (intact without errors) from the array, but it soon becomes
+degraded again.
+
+Any help on where to start would be greatly appreciated :)
+
+Jack
 
 
--- 
-	T o m  M i t c h e l l 
-	Found me a new hat, now what?
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
