@@ -1,76 +1,36 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v2 05/11] md/raid5: add scribble region for buffer lists
-Date: Fri, 5 Jun 2009 12:19:07 -0700
-Message-ID: <e9c3a7c20906051219x122f443dtc7836f0c16ae9f27@mail.gmail.com>
-References: <20090519005647.4104.81119.stgit@dwillia2-linux.ch.intel.com>
-	 <20090519005951.4104.27062.stgit@dwillia2-linux.ch.intel.com>
-	 <18983.26015.413162.445846@notabene.brown>
+From: Rowland Hook <rjhook70@gmail.com>
+Subject: From Martins D.Legacy
+Date: Fri, 5 Jun 2009 13:39:38 -0700
+Message-ID: <73e2b0650906051339u36354146v3be228a12b5d0a68__20686.2579718747$1244234417$gmane$org@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18983.26015.413162.445846@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, maan@systemlinux.org, linux-kernel@vger.kernel.org, yur@emcraft.com, hpa@zytor.com
 List-Id: linux-raid.ids
 
-On Wed, Jun 3, 2009 at 11:11 PM, Neil Brown<neilb@suse.de> wrote:
-> On Monday May 18, dan.j.williams@intel.com wrote:
->> Hang some memory off of each stripe_head which can be used for stori=
-ng
->> the buffer lists used in parity calculations. =A0Include space for d=
-ma
->> address conversions and pass that to async_tx via the
->> async_submit_ctl.scribble pointer.
->>
->> [ Impact: move memory pressure from stack to heap ]
->
-> I've finally had a look at this and I cannot say that I like it.
->
-> We don't really need one scribble-buffer per stripe_head.
-> And in fact, that isn't even enough because you find you need a mutex
-> to avoid multiple-use.
+My name is Martines Legacy
 
-The mutex is probably not necessary, just need to audit the
-stripe_operations state machine to make sure threads don't overlap in
-raid_run_ops()...  but the point is mute when we move to per-cpu
-resources.
+I am an American soldier serving in the military with the army's 3rd
+infantry division.with a need for assistance, I have summed up courage
+to contact you. I found your contact in address on  journal. I got a
+huge fund of Forty Million United States Dollars, (US$40,000,000)
+.This money is among the various currencies which was discovered in
+barrels at a farm-house near one of  Saddam Hussein old palaces in
+Tikrit-Iraq during a rescue operation. I and Sgt James.Howie where the
+first to discover this fund. We concluded and took part of this money
+which is ($40,000.000.00) and shared between us before informing
+anybody about it. This was quite an illegal even last week a roadside
+bomb killed my brother in-law. Find the story on
+web-address below:  http://news.bbc.co.uk/2/hi/middle_east/2988455.stm?
+If  you will do this with good faith and you assure me that my
+percentage will be safe in your care until I complete my service
+here,then I shall agree with You. This is no stolen money, and there
+is no danger involved. We will share upon this ratio: I will take 50%
+and you will take 30%. and 20% shall be given to charity organisation
+which you shall takecare of this offer after a sucessfull transaction,
+We will discuss this in details.
 
-> We really want one scribble-buffer per thread, or per CPU, or
-> something like that.
-
-One of the design goals was to prevent the occurrence of the
-softlockup watchdog events which seem to trigger on large raid6
-resyncs.  A per-cpu scheme would still require preempt_disable() while
-the calculation is active, so perhaps we just need a call to
-cond_resched() in raid5d to appease the scheduler.
-
-> You could possibly handle it a bit like ->spare_page, though we cope
-> with that being NULL some times, and you might not be able to do that
-> with scribble-buffer.
-> How do the async-raid6 patches cope with possible multiple users of
-> ->spare_page now that the computations are async and so possible in
-> parallel?
-
-Currently the code just takes a spare page lock.
-
->
-> Maybe a little mempool would be best?.... though given that in most
-> cases, the stack solution is really quite adequate it would be good t=
-o
-> make sure the replacement isn't too heavy-weight....
->
-> I'm not sure what would be best, but I really don't like the current
-> proposal.
->
-
-I'll take a look at a per-cpu implementation.
-
-Thanks,
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks
+Sgt.Martines Legacy
+Email: proger34@yahoo.com
