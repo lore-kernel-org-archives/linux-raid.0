@@ -1,88 +1,22 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: ANNOUNCE: mdadm 3.0 - A tool for managing Soft RAID under Linux
-Date: Sat, 06 Jun 2009 19:15:17 -0400
-Message-ID: <4A2AF885.6060309@tmr.com>
-References: <18980.48553.328662.80987@notabene.brown>	<alpine.LNX.2.01.0906031749270.15124@filesrv1.baby-dragons.com> <18983.12764.413037.150661@notabene.brown>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: Unable to stop array
+Date: Sun, 7 Jun 2009 13:52:29 -0500
+Message-ID: <20090607185225345.YFHY28090@cdptpa-omta04.mail.rr.com>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18983.12764.413037.150661@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "Mr. James W. Laferriere" <babydr@baby-dragons.com>, linux-raid maillist <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Wednesday June 3, babydr@baby-dragons.com wrote:
->   
->>  	Hello Neil ,  I am getting a interesting Error during compiling 3.0 .
->>  	Is there a particular version of kernel that 3.0 is supposed to be 
->> compiled with ?
->>     
->
-> This has nothing to do with kernel version.  You must be using a
-> different compiler version - it is picking up an error that might
-> didn't.
->
-> The fix is below.
-> Thanks,
-> NeilBrown
->
->
->   
->>  		Tia ,  JimL
->>
->> gcc -Wall -Werror -Wstrict-prototypes -ggdb -DSendmail=\""/usr/sbin/sendmail 
->> -t"\" -DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\"   -c 
->> -o super-intel.o super-intel.c
->> cc1: warnings being treated as errors
->> super-intel.c: In function 'mark_failure':
->> super-intel.c:3632: warning: comparison is always false due to limited range of 
->> data type
->> make: *** [super-intel.o] Error 1
->>
->>     
->
-> commit 4291d691b66f65695b5b4be22b80fd00da73b544
-> Author: NeilBrown <neilb@suse.de>
-> Date:   Thu Jun 4 12:29:21 2009 +1000
->
->     super-intel: fix test on failed_disk_num.
->     
->     We sometimes set failed_disk_num to ~0.
->     However we cannot test for equality with that as  failed_disk_num
->     is 8bit and ~0 is probably 32bit with lots of 1's.
->     So test if ~failed_disk_num is 0 instead.
->     
->     Reported-By: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
->     Signed-off-by: NeilBrown <neilb@suse.de>
->
-> diff --git a/super-intel.c b/super-intel.c
-> index 73fe5fa..7e2a086 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -3629,7 +3629,7 @@ static int mark_failure(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
->  
->  	disk->status |= FAILED_DISK;
->  	set_imsm_ord_tbl_ent(map, slot, idx | IMSM_ORD_REBUILD);
-> -	if (map->failed_disk_num == ~0)
-> +	if (~map->failed_disk_num == 0)
->  		map->failed_disk_num = slot;
->  	return 1;
->  }
->   
 
-I still don't think this is really portable, the zero should be cast 
-using typeof.
+I am trying to stop one of my arrays for maintenance, but it won't let me.
+I've un-mounted the filesystem, but I still get the following:
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  Even purely technical things can appear to be magic, if the documentation is
-obscure enough. For example, PulseAudio is configured by dancing naked around a
-fire at midnight, shaking a rattle with one hand and a LISP manual with the
-other, while reciting the GNU manifesto in hexadecimal. The documentation fails
-to note that you must circle the fire counter-clockwise in the southern
-hemisphere.
+mdadm: fail to stop array /dev/md0: Device or resource busy
 
+How do I get the array to be free so I can stop it?
 
