@@ -1,53 +1,48 @@
 From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Timeout until degrade of RAID5 array
-Date: Mon, 8 Jun 2009 08:57:35 +1000 (EST)
-Message-ID: <030bb036ec3b807247ac049d82b1c9bd.squirrel@neil.brown.name>
-References: <200906072119.22807.gabriel_ambuehl@buz.ch>
+Subject: Re: Unable to stop array
+Date: Mon, 8 Jun 2009 09:02:22 +1000 (EST)
+Message-ID: <953048308fa5f94ed5dfd3f2c37a3767.squirrel@neil.brown.name>
+References: <20090607185225345.YFHY28090@cdptpa-omta04.mail.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200906072119.22807.gabriel_ambuehl@buz.ch>
+In-Reply-To: <20090607185225345.YFHY28090@cdptpa-omta04.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gabriel Ambuehl <gabriel_ambuehl@buz.ch>
+To: lrhorer@satx.rr.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, June 8, 2009 5:19 am, Gabriel Ambuehl wrote:
-> Dear List
-> Apologies if this is a FAQ but googling for an hour did not yield much of
-> a
-> result.
+On Mon, June 8, 2009 4:52 am, Leslie Rhorer wrote:
 >
-> My situation:
-> I have a NAS running 4 WD greenpower drives in RAID5. This works all nice
-> and
-> dandy, but since I do not actually need the NAS 90% of the time, I figured
-> I
-> would allow the drives to spin down to save on both power, noise and heat
-> budget.
+> I am trying to stop one of my arrays for maintenance, but it won't let me.
+> I've un-mounted the filesystem, but I still get the following:
 >
-> This works most of the times, but I've seen a few cases by now where one
-> drive
-> was kicked out of the array upon wake up. My assumption is the drive took
-> a
-> little too long to wake up and hence hit some form of a time out
-> especially
-> because I could easily rebuild the array with the same drive.
+> mdadm: fail to stop array /dev/md0: Device or resource busy
 >
-> So Is there any way to increase the time that md would wait until removing
-> a
-> drive from an array?
+> How do I get the array to be free so I can stop it?
+>
 
-No - this is not a function of md at all.
+Find out what is keeping it busy.
+This is not always as easy as you might like.
+You could:
 
-You should be asking "is there some way to get the SCSI/SATA/whatever
-controller to wait a bit longer before failing an IO request?"
-And that questions should, of course, be directed to developers
-of the driver for whatever sort of disk controller you have.
+ lsof /dev/md0
+         to see if any process have it open
+ grep md0 /proc/mounts
+         to see if it is still mounted
+ grep md0 /proc/swaps
+         to see if it is in used for swap
+ grep md0 /proc/mdstat
+         to see if it is included in some other md array
+ ls -l /sys/block/md0/holders /sys/block/md0/*/holders
+         to see if dm is using it at all
+ grep loop /proc/partitions
+         to see if there are any loop devices.  If there are,
+         one could conceivable be using it.
 
-Good luck.
+I cannot think off hand of anything else that might be using the
+device.
 
 NeilBrown
-
 
