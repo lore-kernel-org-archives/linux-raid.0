@@ -1,56 +1,38 @@
-From: David Greaves <david@dgreaves.com>
-Subject: Re: RAID 5 re-add of removed drive? (failed drive replacement)
-Date: Mon, 08 Jun 2009 10:19:39 +0100
-Message-ID: <4A2CD7AB.1000504@dgreaves.com>
-References: <20090602111729.GA15172@cthulhu.home.robinhill.me.uk> <C840D176-51A0-4AFD-8AD0-1F1D2CAA830D@hispeed.ch> <20090602131037.GB15172@cthulhu.home.robinhill.me.uk> <49F571CD-BD24-4F22-B13B-CF6B0E24FFD5@hispeed.ch>
+From: carlos@fisica.ufpr.br (Carlos Carvalho)
+Subject: Re: How to un-degrade an array after a totally spurious failure?
+Date: Mon, 8 Jun 2009 10:12:26 -0300
+Message-ID: <18989.3642.996238.323569@fisica.ufpr.br>
+References: <18988.28487.697258.566987@fisica.ufpr.br>
+	<20090608015637783.ESCT2045@cdptpa-omta01.mail.rr.com>
+	<20090608075136.GA3000@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <49F571CD-BD24-4F22-B13B-CF6B0E24FFD5@hispeed.ch>
+In-Reply-To: <20090608075136.GA3000@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alexander Rietsch <Alexander.Rietsch@hispeed.ch>
-Cc: Robin Hill <robin@robinhill.me.uk>, linux-raid@vger.kernel.org, Sujit Karataparambil <sjt.kar@gmail.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Alexander Rietsch wrote:
-> On 02.06.2009, at 15:10, Robin Hill wrote:
-> 
->> Almost - you'll also need to specify "missing" for disc 6 (and the
->> --assume-clean isn't actually needed in this case, as the array can't do
->> any reconstruction with a missing drive), so:
->>
->>    mdadm --create /dev/md0 --level=5 --chunk=64 --raid-devices=7
->>    /dev/sdi1 /dev/sdl1 /dev/sdh1 /dev/sdj1 /dev/sdk1 /dev/sdg1 missing
-> 
-> Yes, that's it! The RAID is alive! Mr. Robin Hill, you're a HERO!
-> 
-> With this trick, it's possible to recover a RAID which was confused by a
-> data error during disk-replacement. I'll note this somewhere.
+ >On Sun Jun 07, 2009 at 08:56:42PM -0500, Leslie Rhorer wrote:
+ >
+ >> > -----Original Message-----
+ >> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+ >> > owner@vger.kernel.org] On Behalf Of Carlos Carvalho
+ >> > Sent: Sunday, June 07, 2009 8:54 PM
+ >> > To: linux-raid@vger.kernel.org
+ >> > Subject: RE: How to un-degrade an array after a totally spurious failure?
+ >> > 
+ >> > Leslie Rhorer (lrhorer@satx.rr.com) wrote on 7 June 2009 20:43:
+ >> >  >OK, what about a RAID 6 array with one failed disk?  Is the remove & add
+ >> >  >the best option there, or should one apply a different method?
+ >> > 
+ >> > It is, since that's what the raid is for. It's still operational.
+ >> > We've done it here and it works.
+ >> 
+ >> Well, yes, I know it should work.  The question is, "Is it the best method?"
 
-Maybe:
-  http://linux-raid.osdl.org/
-
-:)
-
-I've not had time to update it recently.
-
-Sujit Karataparambil wrote:
-> http://www.tldp.org/HOWTO/Software-RAID-HOWTO-3.html
->
-> This is the RAID Documentation which I found very less suffiecient.
-
-I spent some considerable time trying to get that resolved but sadly they were
-of the opinion that it is better for tldp to provide misleading docs rather than
-no docs or a link to better docs. I updated it and moved it to the link above.
-
-Sujit Karataparambil wrote:
-> Kindly Read the document correctly and throughly.
->
-> raidhotadd /dev/mdX /dev/sdb
-nb this is very very old unsupported software and it may not be wise to suggest it.
-
-David
-
--- 
-"Don't worry, you'll be fine; I saw it work in a cartoon once..."
+I don't understand what you mean. It is the only method. Everything
+should be perfectly fine because of the redundancy. You only have to
+do tricks when you have more failed disks than the array supports,
+which always involves a certain risk.
