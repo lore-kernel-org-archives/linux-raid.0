@@ -1,88 +1,65 @@
 From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Unable to stop array
-Date: Sun, 7 Jun 2009 20:37:47 -0500
-Message-ID: <20090608013744436.FBVG26412@cdptpa-omta03.mail.rr.com>
-References: <953048308fa5f94ed5dfd3f2c37a3767.squirrel@neil.brown.name>
+Subject: RE: How to un-degrade an array after a totally spurious failure?
+Date: Sun, 7 Jun 2009 20:43:59 -0500
+Message-ID: <20090608014354722.FGFJ26412@cdptpa-omta03.mail.rr.com>
+References: <a2ada9611479c051e268a76df8b45b40.squirrel@neil.brown.name>
 Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <953048308fa5f94ed5dfd3f2c37a3767.squirrel@neil.brown.name>
+In-Reply-To: <a2ada9611479c051e268a76df8b45b40.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: Sunday, June 07, 2009 6:02 PM
-> To: lrhorer@satx.rr.com
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: Unable to stop array
+> >> -----Original Message-----
+> >> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> >> owner@vger.kernel.org] On Behalf Of NeilBrown
+> >> Sent: Wednesday, May 20, 2009 9:49 PM
+> >> To: Nix
+> >> Cc: linux-raid@vger.kernel.org
+> >> Subject: Re: How to un-degrade an array after a totally spurious
+> >> failure?
+> >>
+> >> On Thu, May 21, 2009 9:10 am, Nix wrote:
+> >>
+> >> > So, anyone got a command that would help? I'm not even sure if this
+> is
+> >> > assembly or growth: it doesn't quite fit into either of those
+> >> > categories. There must be a way to do this, surely?
+> >>
+> >> It is neither.  It is management.
+> >>
+> >>  mdadm --manage /dev/mdX --remove /dev/sdb6
+> >>  mdadm --manage /dev/mdX --add /dev/sdb6
+> >>
+> >> (The --manage is not actually needed, but it doesn't hurt).
+> >>
+> >> NeilBrown
+> >
+> > 	I have exactly the same situation, except there are two "failed"
+> > disks on a RAID5 array.  As for the OP, the "failures" are spurious.
+> > Running the remove and then the add command puts the disks back in as
+> > spare
+> > disks, not live ones, and then the array just sits there, doing nothing.
+> > I
+> > tried the trick of doing
+> >
+> > echo repair > /sys/block/md0/md/sync_action
+> >
+> > but the array still just sits there saying it is "clean, degraded", with
+> 2
+> > spare and 5 working devices.
+> >
 > 
-> On Mon, June 8, 2009 4:52 am, Leslie Rhorer wrote:
-> >
-> > I am trying to stop one of my arrays for maintenance, but it won't let
-> me.
-> > I've un-mounted the filesystem, but I still get the following:
-> >
-> > mdadm: fail to stop array /dev/md0: Device or resource busy
-> >
-> > How do I get the array to be free so I can stop it?
-> >
-> 
-> Find out what is keeping it busy.
-> This is not always as easy as you might like.
-> You could:
-> 
->  lsof /dev/md0
->          to see if any process have it open
+> No such a good option when you have two failures.
+> If you have two failures you need to stop the array, then assemble
+> it again using --force.
+> It is now too late for that:  adding them with "--add" will have erased
+> the old metadata.
 
-Nope
-
->  grep md0 /proc/mounts
->          to see if it is still mounted
-
-Nope
-
->  grep md0 /proc/swaps
->          to see if it is in used for swap
-
-Nope (this drive never had a swap partition on it)
-
->  grep md0 /proc/mdstat
->          to see if it is included in some other md array
-
-Nope, just this one.  It returns:
-
-Backup:/etc/gadmin-rsync/scripts# grep md0 /proc/mdstat
-md0 : active raid5 sde[7](S) sdf[0] sdd[5](F) sdc[4] sdb[3] sda[2] sdg[1]
-
->  ls -l /sys/block/md0/holders /sys/block/md0/*/holders
->          to see if dm is using it at all
-
-It shouldn't be:
-
-Backup:/etc/gadmin-rsync/scripts# ls -l /sys/block/md0/holders
-/sys/block/md0/*/holders
-ls: cannot access /sys/block/md0/*/holders: No such file or directory
-/sys/block/md0/holders:
-total 0
-
->  grep loop /proc/partitions
->          to see if there are any loop devices.  If there are,
->          one could conceivable be using it.
-
-Nope.
-
-> I cannot think off hand of anything else that might be using the
-> device.
-
-It seems to me this is reproducible whenever the mount is used for an NFS
-share.  Even after unmounting the share on the remote system, the umount
-command won't release the mount on the local system unless one issues the -l
-switch, and then the array still won't stop.
+OK, what about a RAID 6 array with one failed disk?  Is the remove & add the
+best option there, or should one apply a different method?
 
