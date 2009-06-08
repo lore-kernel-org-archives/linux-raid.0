@@ -1,48 +1,92 @@
-From: Jody McIntyre <scjody@sun.com>
-Subject: Re: [PATCH v2 05/11] md/raid5: add scribble region for buffer lists
-Date: Mon, 08 Jun 2009 13:25:35 -0400
-Message-ID: <20090608172535.GA28448@clouds>
-References: <20090519005647.4104.81119.stgit@dwillia2-linux.ch.intel.com>
- <20090519005951.4104.27062.stgit@dwillia2-linux.ch.intel.com>
- <18983.26015.413162.445846@notabene.brown>
- <e9c3a7c20906051219x122f443dtc7836f0c16ae9f27@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [dm-devel] Re: ANNOUNCE: mdadm 3.0 - A tool for managing Soft
+	RAID under Linux
+Date: Tue, 9 Jun 2009 09:32:55 +1000
+Message-ID: <18989.40871.865610.422540@notabene.brown>
+References: <18980.48553.328662.80987@notabene.brown>
+	<4A25876A.1010901@garzik.org>
+	<18981.62579.171350.910761@notabene.brown>
+	<1244040123.6938.19.camel@o>
 Mime-Version: 1.0
-Content-Type: text/plain; CHARSET=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-disposition: inline
-In-reply-to: <e9c3a7c20906051219x122f443dtc7836f0c16ae9f27@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, maan@systemlinux.org, linux-kernel@vger.kernel.org, yur@emcraft.com, hpa@zytor.com
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: message from Heinz Mauelshagen on Wednesday June 3
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: heinzm@redhat.com, device-mapper development <dm-devel@redhat.com>
+Cc: Jeff Garzik <jeff@garzik.org>, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Arjan van de Ven <arjan@infradead.org>
 List-Id: linux-raid.ids
 
-On Fri, Jun 05, 2009 at 12:19:07PM -0700, Dan Williams wrote:
-> One of the design goals was to prevent the occurrence of the
-> softlockup watchdog events which seem to trigger on large raid6
-> resyncs.  A per-cpu scheme would still require preempt_disable() while
-> the calculation is active, so perhaps we just need a call to
-> cond_resched() in raid5d to appease the scheduler.
+On Wednesday June 3, heinzm@redhat.com wrote:
+> > 
+> > I haven't spoken to them, no (except for a couple of barely-related
+> > chats with Alasdair).
+> > By and large, they live in their little walled garden, and I/we live
+> > in ours.
+> 
+> Maybe we are about to change that? ;-)
 
-FWIW we added this to the patches shipped with Lustre:
+Maybe ... what should we talk about?
 
-Index: linux-2.6.18-128.1.1/drivers/md/raid5.c
-===================================================================
---- linux-2.6.18-128.1.1.orig/drivers/md/raid5.c
-+++ linux-2.6.18-128.1.1/drivers/md/raid5.c
-@@ -2987,6 +2987,8 @@ static void raid5d (mddev_t *mddev)
- 		handle_stripe(sh, conf->spare_page);
- 		release_stripe(sh);
- 
-+		cond_resched();
-+
- 		spin_lock_irq(&conf->device_lock);
- 	}
- 	PRINTK("%d stripes handled\n", handled);
+Two areas where I think we might be able to have productive
+discussion:
 
-I thought most of these issues were gone in more recent kernels, but we
-haven't tested RAID on anything other than RHEL 4+5 extensively (Lustre
-doesn't support sufficiently new kernels yet.)
+ 1/ Making md personalities available as dm targets.
+    In one sense this is trivial as an block device can be a DM
+    target, and any md personality can be a block device.
+    However it might be more attractive if the md personality
+    responded to dm ioctls.
+    Considering specifically raid5, some aspects of plugging
+    md/raid5 underneath dm would be trivial - e.g. assembling the
+    array at the start.
+    However others are not so straight forward.
+    In particular, when a drive fails in a raid5, you need to update
+    the metadata before allowing any writes which depend on that drive
+    to complete.  Given that metadata is managed in user-space, this
+    means signalling user-space and waiting for a response.
+    md does this via a file in sysfs.  I cannot see any similar
+    mechanism in dm, but I haven't looked very hard.
 
-Cheers,
-Jody
+    Would it be useful to pursue this do you think?
+
+
+ 2/ It might be useful to have a common view how virtual devices in
+    general should be managed in Linux.  Then we could independently
+    migrated md and dm towards this goal.
+
+    I imagine a block-layer level function which allows a blank
+    virtual device to be created, with an arbitrary major/minor
+    allocated.
+    e.g.
+         echo foo > /sys/block/.new
+    causes
+         /sys/devices/virtual/block/foo/
+    to be created.
+    Then a similar mechanism associates that with a particular driver.
+    That causes more attributes to appear in  ../block/foo/ which
+    can be used to flesh out the details of the device.
+
+    There would be library code that a driver could use to:
+      - accept subordinate devices
+      - manage the state of those devices
+      - maintain a write-intent bitmap
+    etc.
+
+    There would also need to be a block-layer function to 
+    suspend/resume or similar so that a block device can be changed
+    underneath a filesystem.
+
+    We currently have three structures for a block device:
+      struct block_device -> struct gendisk -> struct request_queue
+
+    I imagine allow either the "struct gendisk" or  the "struct
+    request_queue" to be swapped between two "struct block_device".
+    I'm not sure which, and the rest of the details are even more
+    fuzzy.
+
+    That sort of infrastructure would allow interesting migrations
+    without being limited to "just with dm" or "just within md".
+
+    Thoughts?
+
+NeilBrown
