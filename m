@@ -1,72 +1,56 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: How to un-degrade an array after a totally spurious failure?
-Date: Mon, 8 Jun 2009 08:51:36 +0100
-Message-ID: <20090608075136.GA3000@cthulhu.home.robinhill.me.uk>
-References: <18988.28487.697258.566987@fisica.ufpr.br> <20090608015637783.ESCT2045@cdptpa-omta01.mail.rr.com>
+From: David Greaves <david@dgreaves.com>
+Subject: Re: RAID 5 re-add of removed drive? (failed drive replacement)
+Date: Mon, 08 Jun 2009 10:19:39 +0100
+Message-ID: <4A2CD7AB.1000504@dgreaves.com>
+References: <20090602111729.GA15172@cthulhu.home.robinhill.me.uk> <C840D176-51A0-4AFD-8AD0-1F1D2CAA830D@hispeed.ch> <20090602131037.GB15172@cthulhu.home.robinhill.me.uk> <49F571CD-BD24-4F22-B13B-CF6B0E24FFD5@hispeed.ch>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="6TrnltStXW4iwmi0"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090608015637783.ESCT2045@cdptpa-omta01.mail.rr.com>
+In-Reply-To: <49F571CD-BD24-4F22-B13B-CF6B0E24FFD5@hispeed.ch>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Alexander Rietsch <Alexander.Rietsch@hispeed.ch>
+Cc: Robin Hill <robin@robinhill.me.uk>, linux-raid@vger.kernel.org, Sujit Karataparambil <sjt.kar@gmail.com>
 List-Id: linux-raid.ids
 
+Alexander Rietsch wrote:
+> On 02.06.2009, at 15:10, Robin Hill wrote:
+> 
+>> Almost - you'll also need to specify "missing" for disc 6 (and the
+>> --assume-clean isn't actually needed in this case, as the array can't do
+>> any reconstruction with a missing drive), so:
+>>
+>>    mdadm --create /dev/md0 --level=5 --chunk=64 --raid-devices=7
+>>    /dev/sdi1 /dev/sdl1 /dev/sdh1 /dev/sdj1 /dev/sdk1 /dev/sdg1 missing
+> 
+> Yes, that's it! The RAID is alive! Mr. Robin Hill, you're a HERO!
+> 
+> With this trick, it's possible to recover a RAID which was confused by a
+> data error during disk-replacement. I'll note this somewhere.
 
---6TrnltStXW4iwmi0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Maybe:
+  http://linux-raid.osdl.org/
 
-On Sun Jun 07, 2009 at 08:56:42PM -0500, Leslie Rhorer wrote:
+:)
 
-> > -----Original Message-----
-> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> > owner@vger.kernel.org] On Behalf Of Carlos Carvalho
-> > Sent: Sunday, June 07, 2009 8:54 PM
-> > To: linux-raid@vger.kernel.org
-> > Subject: RE: How to un-degrade an array after a totally spurious failur=
-e?
-> >=20
-> > Leslie Rhorer (lrhorer@satx.rr.com) wrote on 7 June 2009 20:43:
-> >  >OK, what about a RAID 6 array with one failed disk?  Is the remove & =
-add
-> >  >the best option there, or should one apply a different method?
-> >=20
-> > It is, since that's what the raid is for. It's still operational.
-> > We've done it here and it works.
->=20
-> Well, yes, I know it should work.  The question is, "Is it the best metho=
-d?"
->=20
-Yes - as the array is still active then it's likely to have changed
-since the drive failed.  This means that stopping the array and
-re-assembling, forcing the failed drive active, could lead to
-corruption.  Removing & adding it will ensure the data is updated to
-match the current array state.
+I've not had time to update it recently.
 
-Of course, neither option should be pursued unless you know _exactly_
-why the drive failed and know that it's safe to re-add it to the array.
+Sujit Karataparambil wrote:
+> http://www.tldp.org/HOWTO/Software-RAID-HOWTO-3.html
+>
+> This is the RAID Documentation which I found very less suffiecient.
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+I spent some considerable time trying to get that resolved but sadly they were
+of the opinion that it is better for tldp to provide misleading docs rather than
+no docs or a link to better docs. I updated it and moved it to the link above.
 
---6TrnltStXW4iwmi0
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+Sujit Karataparambil wrote:
+> Kindly Read the document correctly and throughly.
+>
+> raidhotadd /dev/mdX /dev/sdb
+nb this is very very old unsupported software and it may not be wise to suggest it.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
+David
 
-iEYEARECAAYFAkoswwYACgkQShxCyD40xBLtwwCeOnn0g1moETh+78oz041w2d09
-3I8AoIjMjzA07ZbXS3FrjDMGfJk6JAT3
-=6ybp
------END PGP SIGNATURE-----
-
---6TrnltStXW4iwmi0--
+-- 
+"Don't worry, you'll be fine; I saw it work in a cartoon once..."
