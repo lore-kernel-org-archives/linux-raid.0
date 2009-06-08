@@ -1,38 +1,78 @@
 From: carlos@fisica.ufpr.br (Carlos Carvalho)
-Subject: Re: How to un-degrade an array after a totally spurious failure?
-Date: Mon, 8 Jun 2009 10:12:26 -0300
-Message-ID: <18989.3642.996238.323569@fisica.ufpr.br>
-References: <18988.28487.697258.566987@fisica.ufpr.br>
-	<20090608015637783.ESCT2045@cdptpa-omta01.mail.rr.com>
-	<20090608075136.GA3000@cthulhu.home.robinhill.me.uk>
+Subject: Re: Write intent bitmaps
+Date: Mon, 8 Jun 2009 10:51:54 -0300
+Message-ID: <18989.6010.582386.812296@fisica.ufpr.br>
+References: <20090608021026139.GMOD14139@cdptpa-omta02.mail.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090608075136.GA3000@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <20090608021026139.GMOD14139@cdptpa-omta02.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
- >On Sun Jun 07, 2009 at 08:56:42PM -0500, Leslie Rhorer wrote:
- >
- >> > -----Original Message-----
- >> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
- >> > owner@vger.kernel.org] On Behalf Of Carlos Carvalho
- >> > Sent: Sunday, June 07, 2009 8:54 PM
- >> > To: linux-raid@vger.kernel.org
- >> > Subject: RE: How to un-degrade an array after a totally spurious failure?
- >> > 
- >> > Leslie Rhorer (lrhorer@satx.rr.com) wrote on 7 June 2009 20:43:
- >> >  >OK, what about a RAID 6 array with one failed disk?  Is the remove & add
- >> >  >the best option there, or should one apply a different method?
- >> > 
- >> > It is, since that's what the raid is for. It's still operational.
- >> > We've done it here and it works.
- >> 
- >> Well, yes, I know it should work.  The question is, "Is it the best method?"
+Leslie Rhorer (lrhorer@satx.rr.com) wrote on 7 June 2009 21:10:
+ >1. The write-intent bitmap seems to be rather similar to a file system
+ >journal.  Are there any features of the bitmaps which distinguish them from
+ >a journal, other than the fact they operate at the RAID layer, of course,
+ >instead of the filesystem layer?
 
-I don't understand what you mean. It is the only method. Everything
-should be perfectly fine because of the redundancy. You only have to
-do tricks when you have more failed disks than the array supports,
-which always involves a certain risk.
+The bitmap doesn't have the info to be written, it's just a bit for
+the whole region. The FS journal has the [journaled part of the] info,
+which can be fully recovered later if necessary. Don't forget that
+raid doesn't protect against unclean shutdowns; if the array is taken
+down during a write, some disks may have the new version of the stripe
+and others not. When it's resynced the parity will be recalculated
+from what's on all disks, that is a mix of new and old versions of the
+stripes. If later a disk fails before the blocks are re-written the
+not-the-one-you-want parity will be used, and you'll have corruption.
+
+ >2. On a RAID5 or RAID6 array, how much of a performance hit might I expect?
+
+Depends on the chunk and where the bitmap is. With an internal one the
+default chunk will cause a BIG hit. Fortunately it's very easy to try
+different settings with the array live, so you can easily revert when
+the world suddenly freezes around you... Our arrays are rather busy,
+so performance is important and I gave up on it. If you can put it on
+other disks I suppose it's possible to find a chunk size compatible
+with performance.
+
+ >3. The threads I have read all speak about the benefits during a power
+ >failure.  Power failures are not the only source of dirty shutdowns,
+ >however.  Are there any benefits to a bitmap for recovering a failed array
+ >or a degraded array?  A resync can take more than a day, and the array is
+ >vulnerable during that time.
+
+That's the benefit and the purpose of the bitmap. Besides being
+vulnerable during the resync, you also have a BIG performance hit if
+your array is busy (or the resync takes forever), so it's worth trying.
+
+ >4. How much space will be required for the bitmap on an external drive?
+
+You decide it with the chunk size.
+
+ >5. What happens if the bitmap is lost or the external drive fills up?
+
+No idea.
+
+ >6. Would it be best to allocate a small separate partition entirely for the
+ >bitmap?
+
+For performance what's important is to have the bitmap and array on
+different disks. Having a filesystem exclusively for the bitmap might
+avoid fragmentation but I suspect this is negligible in practice.
+If the bitmap disks are being used for other things you'll have to
+wait for the heads to come back, which may impact performance
+noticeably.
+
+ >If so, would ext2 probably be the best choice?
+
+That's what the man page says. I find it strange since if it's a file
+the filesystem shouldn't matter. Neil?
+
+ >How does one guarantee the partition and filesystem will be
+ >available prior to the assembly of the RAID array during boot?
+
+Your boot process must guarantee it. If the bitmap is internal you get
+it automatically from the kernel.
