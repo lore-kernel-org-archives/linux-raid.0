@@ -1,92 +1,102 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [dm-devel] Re: ANNOUNCE: mdadm 3.0 - A tool for managing Soft
-	RAID under Linux
-Date: Tue, 9 Jun 2009 09:32:55 +1000
-Message-ID: <18989.40871.865610.422540@notabene.brown>
+Subject: Re: ANNOUNCE: mdadm 3.0 - A tool for managing Soft RAID under Linux
+Date: Tue, 9 Jun 2009 09:36:30 +1000
+Message-ID: <18989.41086.680592.282765@notabene.brown>
 References: <18980.48553.328662.80987@notabene.brown>
-	<4A25876A.1010901@garzik.org>
-	<18981.62579.171350.910761@notabene.brown>
-	<1244040123.6938.19.camel@o>
+	<alpine.LNX.2.01.0906031749270.15124@filesrv1.baby-dragons.com>
+	<18983.12764.413037.150661@notabene.brown>
+	<4A2AF885.6060309@tmr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: message from Heinz Mauelshagen on Wednesday June 3
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: heinzm@redhat.com, device-mapper development <dm-devel@redhat.com>
-Cc: Jeff Garzik <jeff@garzik.org>, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Arjan van de Ven <arjan@infradead.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Bill Davidsen on Saturday June 6
+Sender: linux-raid-owner@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: "Mr. James W. Laferriere" <babydr@baby-dragons.com>, linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wednesday June 3, heinzm@redhat.com wrote:
-> > 
-> > I haven't spoken to them, no (except for a couple of barely-related
-> > chats with Alasdair).
-> > By and large, they live in their little walled garden, and I/we live
-> > in ours.
+On Saturday June 6, davidsen@tmr.com wrote:
+> Neil Brown wrote:
+> > On Wednesday June 3, babydr@baby-dragons.com wrote:
+> >   
+> >>  	Hello Neil ,  I am getting a interesting Error during compiling 3.0 .
+> >>  	Is there a particular version of kernel that 3.0 is supposed to be 
+> >> compiled with ?
+> >>     
+> >
+> > This has nothing to do with kernel version.  You must be using a
+> > different compiler version - it is picking up an error that might
+> > didn't.
+> >
+> > The fix is below.
+> > Thanks,
+> > NeilBrown
+> >
+> >
+> >   
+> >>  		Tia ,  JimL
+> >>
+> >> gcc -Wall -Werror -Wstrict-prototypes -ggdb -DSendmail=\""/usr/sbin/sendmail 
+> >> -t"\" -DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\"   -c 
+> >> -o super-intel.o super-intel.c
+> >> cc1: warnings being treated as errors
+> >> super-intel.c: In function 'mark_failure':
+> >> super-intel.c:3632: warning: comparison is always false due to limited range of 
+> >> data type
+> >> make: *** [super-intel.o] Error 1
+> >>
+> >>     
+> >
+> > commit 4291d691b66f65695b5b4be22b80fd00da73b544
+> > Author: NeilBrown <neilb@suse.de>
+> > Date:   Thu Jun 4 12:29:21 2009 +1000
+> >
+> >     super-intel: fix test on failed_disk_num.
+> >     
+> >     We sometimes set failed_disk_num to ~0.
+> >     However we cannot test for equality with that as  failed_disk_num
+> >     is 8bit and ~0 is probably 32bit with lots of 1's.
+> >     So test if ~failed_disk_num is 0 instead.
+> >     
+> >     Reported-By: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+> >     Signed-off-by: NeilBrown <neilb@suse.de>
+> >
+> > diff --git a/super-intel.c b/super-intel.c
+> > index 73fe5fa..7e2a086 100644
+> > --- a/super-intel.c
+> > +++ b/super-intel.c
+> > @@ -3629,7 +3629,7 @@ static int mark_failure(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
+> >  
+> >  	disk->status |= FAILED_DISK;
+> >  	set_imsm_ord_tbl_ent(map, slot, idx | IMSM_ORD_REBUILD);
+> > -	if (map->failed_disk_num == ~0)
+> > +	if (~map->failed_disk_num == 0)
+> >  		map->failed_disk_num = slot;
+> >  	return 1;
+> >  }
+> >   
 > 
-> Maybe we are about to change that? ;-)
+> I still don't think this is really portable, the zero should be cast 
+> using typeof.
 
-Maybe ... what should we talk about?
+????
 
-Two areas where I think we might be able to have productive
-discussion:
+zero is zero is zero.
+A cast will either add zero bits or remove zero bits, the net result
+is always the same.
 
- 1/ Making md personalities available as dm targets.
-    In one sense this is trivial as an block device can be a DM
-    target, and any md personality can be a block device.
-    However it might be more attractive if the md personality
-    responded to dm ioctls.
-    Considering specifically raid5, some aspects of plugging
-    md/raid5 underneath dm would be trivial - e.g. assembling the
-    array at the start.
-    However others are not so straight forward.
-    In particular, when a drive fails in a raid5, you need to update
-    the metadata before allowing any writes which depend on that drive
-    to complete.  Given that metadata is managed in user-space, this
-    means signalling user-space and waiting for a response.
-    md does this via a file in sysfs.  I cannot see any similar
-    mechanism in dm, but I haven't looked very hard.
+"-1" is different.  Casting it could add zeros or ones depending on
+whether it seems to be signed at the time.  That was the original
+problem.  failed_disk_num is unsigned 8 bits.  So when we assign ~0
+to it, it becomes 0b11111111.
+But when it is implicitly cast to an int for the comparison, it
+becomes
+   0b00000000000000000000000011111111
+which is very different from ~0 which is
+   0b11111111111111111111111111111111
 
-    Would it be useful to pursue this do you think?
+So I stand by the new code.
 
-
- 2/ It might be useful to have a common view how virtual devices in
-    general should be managed in Linux.  Then we could independently
-    migrated md and dm towards this goal.
-
-    I imagine a block-layer level function which allows a blank
-    virtual device to be created, with an arbitrary major/minor
-    allocated.
-    e.g.
-         echo foo > /sys/block/.new
-    causes
-         /sys/devices/virtual/block/foo/
-    to be created.
-    Then a similar mechanism associates that with a particular driver.
-    That causes more attributes to appear in  ../block/foo/ which
-    can be used to flesh out the details of the device.
-
-    There would be library code that a driver could use to:
-      - accept subordinate devices
-      - manage the state of those devices
-      - maintain a write-intent bitmap
-    etc.
-
-    There would also need to be a block-layer function to 
-    suspend/resume or similar so that a block device can be changed
-    underneath a filesystem.
-
-    We currently have three structures for a block device:
-      struct block_device -> struct gendisk -> struct request_queue
-
-    I imagine allow either the "struct gendisk" or  the "struct
-    request_queue" to be swapped between two "struct block_device".
-    I'm not sure which, and the rest of the details are even more
-    fuzzy.
-
-    That sort of infrastructure would allow interesting migrations
-    without being limited to "just with dm" or "just within md".
-
-    Thoughts?
-
+Thanks,
 NeilBrown
