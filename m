@@ -1,41 +1,68 @@
-From: Neil Brown <neilb@suse.de>
-Subject: [PULL REQUEST] md: a few more reshape fixes for 2.6.30
-Date: Tue, 9 Jun 2009 16:46:57 +1000
-Message-ID: <18990.1377.176969.705222@notabene.brown>
+From: "Simon Jackson" <sjackson@bluearc.com>
+Subject: Resync failing to start.
+Date: Tue, 9 Jun 2009 11:29:06 +0100
+Message-ID: <3D76E016F4A2A749A1EB1A3FD83E22BC028D9D6F@uk-email.terastack.bluearc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756800AbZFIGqj@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Hi Linus,
- more testing, more bugs...
- I'm now in a position to easily test more of the various
- possibilities with the enhances raid5/6 reshape code and consequently
- have found a few bugs.
+We had a hard reset on a system that has 3 RAID 1 partitions on a single
+pair of disks.
 
- Hopefully these three can still squeeze in to 2.6.30 ??
+After the reboot it was noticed that all the md devices were in
+resync=DELAYED state.
 
-Thanks,
-NeilBrown
+I had a quick look in the /var/log/messages and saw the raid start up
+messages that were queuing the raid syncs.
+
+However, a bit further down was the following call trace.  Does this
+indicate that the resync process aborted?
 
 
-The following changes since commit ccc0d38ec13d4649d4168c1db590137df53ad783:
-  Linus Torvalds (1):
-        Merge branch 'for-linus' of git://git.kernel.org/.../jbarnes/pci-2.6
-
-are available in the git repository at:
-
-  git://neil.brown.name/md for-linus
-
-NeilBrown (3):
-      md/raid5: use conf->raid_disks in preference to mddev->raid_disk
-      md/raid5 - avoid deadlocks in get_active_stripe during reshape
-      md/raid5: fix bug in reshape code when chunk_size decreases.
-
- drivers/md/raid5.c |   28 ++++++++++++++--------------
- 1 files changed, 14 insertions(+), 14 deletions(-)
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961124] md1_resync    D
+0000000000000000     0  2055      2
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961128]  ffff8100ddc67db0
+0000000000000046 0000000000000000 0000000000000000
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961131]  ffff8100e50e4810
+ffff8100e76a3470 ffff8100e50e4a98 0000000100000000
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961134]  0000000000000000
+0000000000000000 00000000ffffffff 0000000000000000
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961137] Call Trace:
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961171]
+[<ffffffffa00bf9ad>] :md_mod:md_do_sync+0x224/0x908
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961177]
+[<ffffffff80228cbd>] update_curr+0x44/0x6f
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961181]
+[<ffffffff8022a4ad>] dequeue_entity+0x1a/0xa1
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961184]
+[<ffffffff8022a36b>] __dequeue_entity+0x25/0x69
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961187]
+[<ffffffff8020a857>] __switch_to+0x96/0x35e
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961190]
+[<ffffffff8022f07f>] hrtick_set+0x88/0xf7
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961195]
+[<ffffffff802461a9>] autoremove_wake_function+0x0/0x2e
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961204]
+[<ffffffffa00c24b1>] :md_mod:md_thread+0xd7/0xed
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961212]
+[<ffffffffa00c23da>] :md_mod:md_thread+0x0/0xed
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961214]
+[<ffffffff80246083>] kthread+0x47/0x74
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961216]
+[<ffffffff80230196>] schedule_tail+0x27/0x5c
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961219]
+[<ffffffff8020cf28>] child_rip+0xa/0x12
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961225]
+[<ffffffff8021a826>] lapic_next_event+0xf/0x13
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961229]
+[<ffffffff8024603c>] kthread+0x0/0x74
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961231]
+[<ffffffff8020cf1e>] child_rip+0x0/0x12
+2009-06-09T08:49:00+00:00 m211 kernel: [  377.961233]
