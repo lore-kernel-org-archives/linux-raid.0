@@ -1,68 +1,92 @@
-From: "Simon Jackson" <sjackson@bluearc.com>
-Subject: Resync failing to start.
-Date: Tue, 9 Jun 2009 11:29:06 +0100
-Message-ID: <3D76E016F4A2A749A1EB1A3FD83E22BC028D9D6F@uk-email.terastack.bluearc.com>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: Resync failing to start.
+Date: Tue, 9 Jun 2009 21:25:03 +1000 (EST)
+Message-ID: <4ee98271b4c703fc080f63bb03667ee9.squirrel@neil.brown.name>
+References: <3D76E016F4A2A749A1EB1A3FD83E22BC028D9D6F@uk-email.terastack.bluearc.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+In-Reply-To: <3D76E016F4A2A749A1EB1A3FD83E22BC028D9D6F@uk-email.terastack.bluearc.c
+     om>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Simon Jackson <sjackson@bluearc.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tue, June 9, 2009 8:29 pm, Simon Jackson wrote:
+>
+> We had a hard reset on a system that has 3 RAID 1 partitions on a single
+> pair of disks.
+>
+> After the reboot it was noticed that all the md devices were in
+> resync=DELAYED state.
+>
+> I had a quick look in the /var/log/messages and saw the raid start up
+> messages that were queuing the raid syncs.
+>
+> However, a bit further down was the following call trace.  Does this
+> indicate that the resync process aborted?
 
-We had a hard reset on a system that has 3 RAID 1 partitions on a single
-pair of disks.
+It's hard to be sure without the preceding half-dozen lines, but
+I don't think it indicates that anything has aborted - I think it
+is just a meaningless warning.
+You can easily check with "ps".
 
-After the reboot it was noticed that all the md devices were in
-resync=DELAYED state.
+What kernel version?
 
-I had a quick look in the /var/log/messages and saw the raid start up
-messages that were queuing the raid syncs.
-
-However, a bit further down was the following call trace.  Does this
-indicate that the resync process aborted?
+Can you show the full output of "cat /proc/mdstat" ??
 
 
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961124] md1_resync    D
-0000000000000000     0  2055      2
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961128]  ffff8100ddc67db0
-0000000000000046 0000000000000000 0000000000000000
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961131]  ffff8100e50e4810
-ffff8100e76a3470 ffff8100e50e4a98 0000000100000000
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961134]  0000000000000000
-0000000000000000 00000000ffffffff 0000000000000000
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961137] Call Trace:
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961171]
-[<ffffffffa00bf9ad>] :md_mod:md_do_sync+0x224/0x908
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961177]
-[<ffffffff80228cbd>] update_curr+0x44/0x6f
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961181]
-[<ffffffff8022a4ad>] dequeue_entity+0x1a/0xa1
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961184]
-[<ffffffff8022a36b>] __dequeue_entity+0x25/0x69
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961187]
-[<ffffffff8020a857>] __switch_to+0x96/0x35e
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961190]
-[<ffffffff8022f07f>] hrtick_set+0x88/0xf7
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961195]
-[<ffffffff802461a9>] autoremove_wake_function+0x0/0x2e
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961204]
-[<ffffffffa00c24b1>] :md_mod:md_thread+0xd7/0xed
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961212]
-[<ffffffffa00c23da>] :md_mod:md_thread+0x0/0xed
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961214]
-[<ffffffff80246083>] kthread+0x47/0x74
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961216]
-[<ffffffff80230196>] schedule_tail+0x27/0x5c
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961219]
-[<ffffffff8020cf28>] child_rip+0xa/0x12
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961225]
-[<ffffffff8021a826>] lapic_next_event+0xf/0x13
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961229]
-[<ffffffff8024603c>] kthread+0x0/0x74
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961231]
-[<ffffffff8020cf1e>] child_rip+0x0/0x12
-2009-06-09T08:49:00+00:00 m211 kernel: [  377.961233]
+NeilBrown
+
+
+
+>
+>
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961124] md1_resync    D
+> 0000000000000000     0  2055      2
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961128]  ffff8100ddc67db0
+> 0000000000000046 0000000000000000 0000000000000000
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961131]  ffff8100e50e4810
+> ffff8100e76a3470 ffff8100e50e4a98 0000000100000000
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961134]  0000000000000000
+> 0000000000000000 00000000ffffffff 0000000000000000
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961137] Call Trace:
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961171]
+> [<ffffffffa00bf9ad>] :md_mod:md_do_sync+0x224/0x908
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961177]
+> [<ffffffff80228cbd>] update_curr+0x44/0x6f
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961181]
+> [<ffffffff8022a4ad>] dequeue_entity+0x1a/0xa1
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961184]
+> [<ffffffff8022a36b>] __dequeue_entity+0x25/0x69
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961187]
+> [<ffffffff8020a857>] __switch_to+0x96/0x35e
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961190]
+> [<ffffffff8022f07f>] hrtick_set+0x88/0xf7
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961195]
+> [<ffffffff802461a9>] autoremove_wake_function+0x0/0x2e
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961204]
+> [<ffffffffa00c24b1>] :md_mod:md_thread+0xd7/0xed
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961212]
+> [<ffffffffa00c23da>] :md_mod:md_thread+0x0/0xed
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961214]
+> [<ffffffff80246083>] kthread+0x47/0x74
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961216]
+> [<ffffffff80230196>] schedule_tail+0x27/0x5c
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961219]
+> [<ffffffff8020cf28>] child_rip+0xa/0x12
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961225]
+> [<ffffffff8021a826>] lapic_next_event+0xf/0x13
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961229]
+> [<ffffffff8024603c>] kthread+0x0/0x74
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961231]
+> [<ffffffff8020cf1e>] child_rip+0x0/0x12
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961233]
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
