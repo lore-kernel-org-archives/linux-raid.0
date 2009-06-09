@@ -1,22 +1,43 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Resync failing to start.
-Date: Tue, 9 Jun 2009 21:25:03 +1000 (EST)
-Message-ID: <4ee98271b4c703fc080f63bb03667ee9.squirrel@neil.brown.name>
-References: <3D76E016F4A2A749A1EB1A3FD83E22BC028D9D6F@uk-email.terastack.bluearc.com>
+From: "Simon Jackson" <sjackson@bluearc.com>
+Subject: RE: Resync failing to start.
+Date: Tue, 9 Jun 2009 13:38:03 +0100
+Message-ID: <3D76E016F4A2A749A1EB1A3FD83E22BC028D9DF3@uk-email.terastack.bluearc.com>
+References: <3D76E016F4A2A749A1EB1A3FD83E22BC028D9D6F@uk-email.terastack.bluearc.com> <4ee98271b4c703fc080f63bb03667ee9.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3D76E016F4A2A749A1EB1A3FD83E22BC028D9D6F@uk-email.terastack.bluearc.c
-     om>
+Content-class: urn:content-classes:message
+In-Reply-To: <4ee98271b4c703fc080f63bb03667ee9.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Simon Jackson <sjackson@bluearc.com>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+
+I checked with the system owner.  He does not have the output any more.
+Not sure how he cleared the problem.
+
+Kernel version: Linux  2.6.26-1-amd64 #1 SMP Sat Jan 10 17:57:00 UTC
+2009 x86_64 GNU/Linux
+
+I will ask him to try to reproduce the problem and get the output of
+/proc/mdstat.
+
+Simon.
+
+-----Original Message-----
+From: NeilBrown [mailto:neilb@suse.de] 
+Sent: 09 June 2009 12:25
+To: Simon Jackson
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Resync failing to start.
+
 On Tue, June 9, 2009 8:29 pm, Simon Jackson wrote:
 >
-> We had a hard reset on a system that has 3 RAID 1 partitions on a single
+> We had a hard reset on a system that has 3 RAID 1 partitions on a
+single
 > pair of disks.
 >
 > After the reboot it was noticed that all the md devices were in
@@ -46,11 +67,14 @@ NeilBrown
 >
 > 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961124] md1_resync    D
 > 0000000000000000     0  2055      2
-> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961128]  ffff8100ddc67db0
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961128]
+ffff8100ddc67db0
 > 0000000000000046 0000000000000000 0000000000000000
-> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961131]  ffff8100e50e4810
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961131]
+ffff8100e50e4810
 > ffff8100e76a3470 ffff8100e50e4a98 0000000100000000
-> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961134]  0000000000000000
+> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961134]
+0000000000000000
 > 0000000000000000 00000000ffffffff 0000000000000000
 > 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961137] Call Trace:
 > 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961171]
@@ -85,7 +109,8 @@ NeilBrown
 > [<ffffffff8020cf1e>] child_rip+0x0/0x12
 > 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961233]
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"
+in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
