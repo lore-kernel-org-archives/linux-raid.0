@@ -1,133 +1,145 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: RE: Resync failing to start.
-Date: Tue, 9 Jun 2009 22:53:29 +1000 (EST)
-Message-ID: <80291bb9f05d84d104ff6aeac8d46ba2.squirrel@neil.brown.name>
-References: <3D76E016F4A2A749A1EB1A3FD83E22BC028D9D6F@uk-email.terastack.bluearc.com>
-    <4ee98271b4c703fc080f63bb03667ee9.squirrel@neil.brown.name>
-    <3D76E016F4A2A749A1EB1A3FD83E22BC028D9DF3@uk-email.terastack.bluearc.com>
+From: Heinz Mauelshagen <heinzm@redhat.com>
+Subject: Re: Re: ANNOUNCE: mdadm 3.0 - A tool for managing Soft
+	RAID under Linux
+Date: Tue, 09 Jun 2009 18:29:53 +0200
+Message-ID: <1244564993.2407.27.camel@o>
+References: <18980.48553.328662.80987@notabene.brown>
+	<4A25876A.1010901@garzik.org>
+	<18981.62579.171350.910761@notabene.brown>
+	<1244040123.6938.19.camel@o> <18989.40871.865610.422540@notabene.brown>
+Reply-To: heinzm@redhat.com, device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3D76E016F4A2A749A1EB1A3FD83E22BC028D9DF3@uk-email.terastack.bluearc.c
-     om>
-Sender: linux-raid-owner@vger.kernel.org
-To: Simon Jackson <sjackson@bluearc.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <18989.40871.865610.422540@notabene.brown>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: device-mapper development <dm-devel@redhat.com>
+Cc: Jeff Garzik <jeff@garzik.org>, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Arjan van de Ven <arjan@infradead.org>
 List-Id: linux-raid.ids
 
-On Tue, June 9, 2009 10:38 pm, Simon Jackson wrote:
->
-> I checked with the system owner.  He does not have the output any more.
-> Not sure how he cleared the problem.
->
-> Kernel version: Linux  2.6.26-1-amd64 #1 SMP Sat Jan 10 17:57:00 UTC
-> 2009 x86_64 GNU/Linux
+On Tue, 2009-06-09 at 09:32 +1000, Neil Brown wrote:
+> On Wednesday June 3, heinzm@redhat.com wrote:
+> > > 
+> > > I haven't spoken to them, no (except for a couple of barely-related
+> > > chats with Alasdair).
+> > > By and large, they live in their little walled garden, and I/we live
+> > > in ours.
+> > 
+> > Maybe we are about to change that? ;-)
+> 
+> Maybe ... what should we talk about?
+> 
+> Two areas where I think we might be able to have productive
+> discussion:
+> 
+>  1/ Making md personalities available as dm targets.
+>     In one sense this is trivial as an block device can be a DM
+>     target, and any md personality can be a block device.
 
-I cannot see any changes since 2.6.26 that might fix any bugs about
-resync not starting.
-However I was in 2.6.26 that the "meaningless warning" I mentioned
-first appeared.  I got rid of it for 2.6.27.
-My guess is that all but one were "resync=DELAYED" and the other
-was doing a resync.  This is of course normal.  This would have
-cleared itself eventually when all the resyncs finished.
+Of course one could stack a linear target on any MD personality and live
+with the minor overhead in the io path. The overhead to handle such
+stacking on the tool side of things is not negligible though, hence it's
+a better option to have native dm targets for these mappings.
 
-Is that possible?
+>     However it might be more attractive if the md personality
+>     responded to dm ioctls.
 
-NeilBrown
+Indeed, we need the full interface to be covered in order to stay
+homogeneous.
 
->
-> I will ask him to try to reproduce the problem and get the output of
-> /proc/mdstat.
->
-> Simon.
->
-> -----Original Message-----
-> From: NeilBrown [mailto:neilb@suse.de]
-> Sent: 09 June 2009 12:25
-> To: Simon Jackson
-> Cc: linux-raid@vger.kernel.org
-> Subject: Re: Resync failing to start.
->
-> On Tue, June 9, 2009 8:29 pm, Simon Jackson wrote:
->>
->> We had a hard reset on a system that has 3 RAID 1 partitions on a
-> single
->> pair of disks.
->>
->> After the reboot it was noticed that all the md devices were in
->> resync=DELAYED state.
->>
->> I had a quick look in the /var/log/messages and saw the raid start up
->> messages that were queuing the raid syncs.
->>
->> However, a bit further down was the following call trace.  Does this
->> indicate that the resync process aborted?
->
-> It's hard to be sure without the preceding half-dozen lines, but
-> I don't think it indicates that anything has aborted - I think it
-> is just a meaningless warning.
-> You can easily check with "ps".
->
-> What kernel version?
->
-> Can you show the full output of "cat /proc/mdstat" ??
->
->
+>     Considering specifically raid5, some aspects of plugging
+>     md/raid5 underneath dm would be trivial - e.g. assembling the
+>     array at the start.
+>     However others are not so straight forward.
+>     In particular, when a drive fails in a raid5, you need to update
+>     the metadata before allowing any writes which depend on that drive
+>     to complete.  Given that metadata is managed in user-space, this
+>     means signalling user-space and waiting for a response.
+>     md does this via a file in sysfs.  I cannot see any similar
+>     mechanism in dm, but I haven't looked very hard.
+
+We use events passed to a uspace daemon via an ioctl interface and our
+suspend/resume mechanism to ensure such metadata updates.
+
+> 
+>     Would it be useful to pursue this do you think?
+
+I looked at the MD personality back in time when I was searching for an
+option to support RAID5 in dm but, like you similarly noted above,
+didn't find a simple way to wrap it into a dm target so the answer *was*
+no. That's why I picked some code (e.g. the RAID adressing) and
+implemented a target of my own.
+
+> 
+> 
+>  2/ It might be useful to have a common view how virtual devices in
+>     general should be managed in Linux.  Then we could independently
+>     migrated md and dm towards this goal.
+> 
+>     I imagine a block-layer level function which allows a blank
+>     virtual device to be created, with an arbitrary major/minor
+>     allocated.
+>     e.g.
+>          echo foo > /sys/block/.new
+>     causes
+>          /sys/devices/virtual/block/foo/
+>     to be created.
+>     Then a similar mechanism associates that with a particular driver.
+>     That causes more attributes to appear in  ../block/foo/ which
+>     can be used to flesh out the details of the device.
+> 
+>     There would be library code that a driver could use to:
+>       - accept subordinate devices
+>       - manage the state of those devices
+>       - maintain a write-intent bitmap
+>     etc.
+
+Yes, and such library can be filled with ported dm/md and other code.
+
+> 
+>     There would also need to be a block-layer function to 
+>     suspend/resume or similar so that a block device can be changed
+>     underneath a filesystem.
+
+Yes, consolidating such functionality in a central place is the proper
+design but we still need an interface into any block driver which is
+initiating io on its own behalf (e.g. mirror resynchronization) in order
+to ensure, that such io gets suspended/resumed consistently
+
+> 
+>     We currently have three structures for a block device:
+>       struct block_device -> struct gendisk -> struct request_queue
+> 
+>     I imagine allow either the "struct gendisk" or  the "struct
+>     request_queue" to be swapped between two "struct block_device".
+>     I'm not sure which, and the rest of the details are even more
+>     fuzzy.
+> 
+>     That sort of infrastructure would allow interesting migrations
+>     without being limited to "just with dm" or "just within md".
+
+Or just with other virtual drivers such as drbd.
+
+Hard to imagine issues at the detailed spec level before they are
+fleshed out but this sounds like a good idea to start with.
+
+Heinz
+
+> 
+>     Thoughts?
+> 
 > NeilBrown
->
->
->
->>
->>
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961124] md1_resync    D
->> 0000000000000000     0  2055      2
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961128]
-> ffff8100ddc67db0
->> 0000000000000046 0000000000000000 0000000000000000
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961131]
-> ffff8100e50e4810
->> ffff8100e76a3470 ffff8100e50e4a98 0000000100000000
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961134]
-> 0000000000000000
->> 0000000000000000 00000000ffffffff 0000000000000000
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961137] Call Trace:
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961171]
->> [<ffffffffa00bf9ad>] :md_mod:md_do_sync+0x224/0x908
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961177]
->> [<ffffffff80228cbd>] update_curr+0x44/0x6f
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961181]
->> [<ffffffff8022a4ad>] dequeue_entity+0x1a/0xa1
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961184]
->> [<ffffffff8022a36b>] __dequeue_entity+0x25/0x69
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961187]
->> [<ffffffff8020a857>] __switch_to+0x96/0x35e
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961190]
->> [<ffffffff8022f07f>] hrtick_set+0x88/0xf7
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961195]
->> [<ffffffff802461a9>] autoremove_wake_function+0x0/0x2e
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961204]
->> [<ffffffffa00c24b1>] :md_mod:md_thread+0xd7/0xed
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961212]
->> [<ffffffffa00c23da>] :md_mod:md_thread+0x0/0xed
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961214]
->> [<ffffffff80246083>] kthread+0x47/0x74
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961216]
->> [<ffffffff80230196>] schedule_tail+0x27/0x5c
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961219]
->> [<ffffffff8020cf28>] child_rip+0xa/0x12
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961225]
->> [<ffffffff8021a826>] lapic_next_event+0xf/0x13
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961229]
->> [<ffffffff8024603c>] kthread+0x0/0x74
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961231]
->> [<ffffffff8020cf1e>] child_rip+0x0/0x12
->> 2009-06-09T08:49:00+00:00 m211 kernel: [  377.961233]
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
-
+> 
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
