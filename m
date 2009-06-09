@@ -1,91 +1,199 @@
-From: Nifty Fedora Mitch <niftyfedora@niftyegg.com>
-Subject: Re: RAID5 reconstruction ?
-Date: Mon, 8 Jun 2009 21:13:46 -0700
-Message-ID: <20090609041346.GA2966@tosh2egg.wr.niftyegg.com>
-References: <37d33d830905292244w685499b3h391aa2ca7a5b1ad@mail.gmail.com> <921ca19c0905300552g7697e4c6of8c357d9b456ad0d@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] md: Use new topology calls to indicate alignment and I/O sizes
+Date: Tue, 09 Jun 2009 00:31:03 -0400
+Message-ID: <yq1my8i6naw.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <921ca19c0905300552g7697e4c6of8c357d9b456ad0d@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sujit Karataparambil <sjt.kar@gmail.com>
-Cc: SandeepKsinha <sandeepksinha@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, May 30, 2009 at 06:22:40PM +0530, Sujit Karataparambil wrote:
->=20
-> Are you talking about hardware raid or software raid.
->=20
-> I donot think hardware raid can by itself do much of the
-> book keeping.
->=20
-> Software Raid I think is different from having raid 0 to raid 1
-> to raid 2 to raid 3 to raid 4 to raid 5.
->=20
-> hope this is correct information.
->=20
-> Thanks,
->=20
->=20
-> On Sat, May 30, 2009 at 11:14 AM, SandeepKsinha <sandeepksinha@gmail.=
-com> wrote:
-> > Hi all,
-> >
-> > Say If I have a RAID 5 array of 50GB of five disks of 10GB each.
-> >
-> > I have data of 5GB. When a disk fails and replaced with a spare dis=
-k.
-> > Will the reconstruction happen only for the 5GB allocated disk bloc=
-ks
-> > or it will happen for the whole disk size.
-> >
-> > Is it possible to make =A0reconstruction intelligent enough to keep=
- it optimized ?
-> >
-> > Sandeep.
 
-Sandeep,
+Switch MD over to the new disk_stack_limits() function which checks for
+aligment and adjusts preferred I/O sizes when stacking.
 
-It might help if you think of your 50GB raid as a single disk with
-special properties of redundancy and management.   A single disk has no
-"knowledge" about the file system it contains.   As such it will not
-know anything about the file system data allocation and will be "dumb"
-in terms of what blocks/ stripes/ whatever  it needs to reconstruct/
-repair itself with relation to the file system.
+Also indicate preferred I/O sizes where applicable.
 
-It is possible that unallocated file system regions will still be zeroe=
-d
-blocks and recovery is quick.  It is also possible that the RAID data
-structures will remember if it has been read or written to and needs to
-be recovered/ initialized.
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-To the best of my knowledge RAID-N from vendor to vendor; hardware .vs.=
- software
-only defines the type and general patterns of redundancy.   I.E. I do
-not expect that I can pull a disk set from one raid vendor and expect
-another vendor to understand  and present the logical blocks in the=20
-same identical way.
+---
 
-To set expectations the recovery of a 50GB RAID with 0.1 GB of data=20
-in its file system or with 45GB of data in its filesystem will
-be the same unless the specific RAID implementation keeps a score card.
-More apropos the RAID does not know anything special except at initiali=
-zation --
-and an old RAID incontrast to a new filesystem will want to recover the
-entire RAID (itself) knowing nothing about the history of the filesyste=
-ms
-it contains.
+diff --git a/drivers/md/linear.c b/drivers/md/linear.c
+index 9f7cec4..de65208 100644
+--- a/drivers/md/linear.c
++++ b/drivers/md/linear.c
+@@ -142,9 +142,9 @@ static linear_conf_t *linear_conf(mddev_t *mddev, int raid_disks)
+ 		}
+ 
+ 		disk->rdev = rdev;
++		disk_stack_limits(mddev->gendisk, rdev->bdev,
++				  rdev->data_offset);
+ 
+-		blk_queue_stack_limits(mddev->queue,
+-				       rdev->bdev->bd_disk->queue);
+ 		/* as we don't honour merge_bvec_fn, we must never risk
+ 		 * violating it, so limit ->max_sector to one PAGE, as
+ 		 * a one page request is never in violation.
+diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
+index c1ca63f..0651a73 100644
+--- a/drivers/md/multipath.c
++++ b/drivers/md/multipath.c
+@@ -294,7 +294,8 @@ static int multipath_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
+ 	for (path = first; path <= last; path++)
+ 		if ((p=conf->multipaths+path)->rdev == NULL) {
+ 			q = rdev->bdev->bd_disk->queue;
+-			blk_queue_stack_limits(mddev->queue, q);
++			disk_stack_limits(mddev->gendisk, rdev->bdev,
++				rdev->data_offset);
+ 
+ 		/* as we don't honour merge_bvec_fn, we must never risk
+ 		 * violating it, so limit ->max_sector to one PAGE, as
+@@ -460,9 +461,9 @@ static int multipath_run (mddev_t *mddev)
+ 
+ 		disk = conf->multipaths + disk_idx;
+ 		disk->rdev = rdev;
++		disk_stack_limits(mddev->gendisk, rdev->bdev,
++				  rdev->data_offset);
+ 
+-		blk_queue_stack_limits(mddev->queue,
+-				       rdev->bdev->bd_disk->queue);
+ 		/* as we don't honour merge_bvec_fn, we must never risk
+ 		 * violating it, not that we ever expect a device with
+ 		 * a merge_bvec_fn to be involved in multipath */
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index f9e6073..c4687ea 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -164,8 +164,8 @@ static int create_strip_zones(mddev_t *mddev)
+ 		}
+ 		dev[j] = rdev1;
+ 
+-		blk_queue_stack_limits(mddev->queue,
+-				       rdev1->bdev->bd_disk->queue);
++		disk_stack_limits(mddev->gendisk, rdev1->bdev,
++				  rdev1->data_offset);
+ 		/* as we don't honour merge_bvec_fn, we must never risk
+ 		 * violating it, so limit ->max_sector to one PAGE, as
+ 		 * a one page request is never in violation.
+@@ -246,6 +246,11 @@ static int create_strip_zones(mddev_t *mddev)
+ 		       mddev->chunk_sectors << 9);
+ 		goto abort;
+ 	}
++
++	blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
++	blk_queue_io_opt(mddev->queue,
++			 (mddev->chunk_sectors << 9) * mddev->raid_disks);
++
+ 	printk(KERN_INFO "raid0: done.\n");
+ 	mddev->private = conf;
+ 	return 0;
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 89939a7..174c4dd 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1123,8 +1123,8 @@ static int raid1_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
+ 	for (mirror = first; mirror <= last; mirror++)
+ 		if ( !(p=conf->mirrors+mirror)->rdev) {
+ 
+-			blk_queue_stack_limits(mddev->queue,
+-					       rdev->bdev->bd_disk->queue);
++			disk_stack_limits(mddev->gendisk, rdev->bdev,
++						 rdev->data_offset);
+ 			/* as we don't honour merge_bvec_fn, we must never risk
+ 			 * violating it, so limit ->max_sector to one PAGE, as
+ 			 * a one page request is never in violation.
+@@ -1988,9 +1988,8 @@ static int run(mddev_t *mddev)
+ 		disk = conf->mirrors + disk_idx;
+ 
+ 		disk->rdev = rdev;
+-
+-		blk_queue_stack_limits(mddev->queue,
+-				       rdev->bdev->bd_disk->queue);
++		disk_stack_limits(mddev->gendisk, rdev->bdev,
++				  rdev->data_offset);
+ 		/* as we don't honour merge_bvec_fn, we must never risk
+ 		 * violating it, so limit ->max_sector to one PAGE, as
+ 		 * a one page request is never in violation.
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index ae12cea..dfd18df 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1151,8 +1151,8 @@ static int raid10_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
+ 	for ( ; mirror <= last ; mirror++)
+ 		if ( !(p=conf->mirrors+mirror)->rdev) {
+ 
+-			blk_queue_stack_limits(mddev->queue,
+-					       rdev->bdev->bd_disk->queue);
++			disk_stack_limits(mddev->gendisk, rdev->bdev,
++					  rdev->data_offset);
+ 			/* as we don't honour merge_bvec_fn, we must never risk
+ 			 * violating it, so limit ->max_sector to one PAGE, as
+ 			 * a one page request is never in violation.
+@@ -2044,7 +2044,7 @@ raid10_size(mddev_t *mddev, sector_t sectors, int raid_disks)
+ static int run(mddev_t *mddev)
+ {
+ 	conf_t *conf;
+-	int i, disk_idx;
++	int i, disk_idx, chunk_size;
+ 	mirror_info_t *disk;
+ 	mdk_rdev_t *rdev;
+ 	int nc, fc, fo;
+@@ -2130,6 +2130,10 @@ static int run(mddev_t *mddev)
+ 	spin_lock_init(&conf->device_lock);
+ 	mddev->queue->queue_lock = &conf->device_lock;
+ 
++	chunk_size = mddev->chunk_sectors << 9;
++	blk_queue_io_min(mddev->queue, chunk_size);
++	blk_queue_io_opt(mddev->queue, chunk_size * (mddev->raid_disks >> 1));
++
+ 	list_for_each_entry(rdev, &mddev->disks, same_set) {
+ 		disk_idx = rdev->raid_disk;
+ 		if (disk_idx >= mddev->raid_disks
+@@ -2138,9 +2142,8 @@ static int run(mddev_t *mddev)
+ 		disk = conf->mirrors + disk_idx;
+ 
+ 		disk->rdev = rdev;
+-
+-		blk_queue_stack_limits(mddev->queue,
+-				       rdev->bdev->bd_disk->queue);
++		disk_stack_limits(mddev->gendisk, rdev->bdev,
++				  rdev->data_offset);
+ 		/* as we don't honour merge_bvec_fn, we must never risk
+ 		 * violating it, so limit ->max_sector to one PAGE, as
+ 		 * a one page request is never in violation.
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 41dc36e..ea8d3fd 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -4451,7 +4451,7 @@ static raid5_conf_t *setup_conf(mddev_t *mddev)
+ static int run(mddev_t *mddev)
+ {
+ 	raid5_conf_t *conf;
+-	int working_disks = 0;
++	int working_disks = 0, chunk_size;
+ 	mdk_rdev_t *rdev;
+ 
+ 	if (mddev->recovery_cp != MaxSector)
+@@ -4606,6 +4606,19 @@ static int run(mddev_t *mddev)
+ 	md_set_array_sectors(mddev, raid5_size(mddev, 0, 0));
+ 
+ 	blk_queue_merge_bvec(mddev->queue, raid5_mergeable_bvec);
++	chunk_size = mddev->chunk_sectors << 9;
++	blk_queue_io_min(mddev->queue, chunk_size);
++
++	if (mddev->level == 5)
++		blk_queue_io_opt(mddev->queue,
++				 chunk_size * (mddev->raid_disks - 1));
++	else
++		blk_queue_io_opt(mddev->queue,
++				 chunk_size * (mddev->raid_disks - 2));
++
++	list_for_each_entry(rdev, &mddev->disks, same_set)
++		disk_stack_limits(mddev->gendisk, rdev->bdev,
++				  rdev->data_offset);
+ 
+ 	return 0;
+ abort:
 
-Others may be able to add more details for your specific RAID.
-
---=20
-	T o m  M i t c h e l l=20
-	Found me a new hat, now what?
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
