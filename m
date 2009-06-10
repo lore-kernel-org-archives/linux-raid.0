@@ -1,32 +1,48 @@
-From: <linux-raid.vger.kernel.org@atu.cjb.net>
-Subject: =?UTF-8?B?UmU6IFJBSUQtNiBtZGFkbSBkaXNrcyBvdXQgb2Ygc3luYyBpc3N1ZSAobG9uZyBlLW1haWwp?=
-Date: Wed, 10 Jun 2009 02:58:57 -0600
-Message-ID: <200906100859.n5A8x2f4034355@cjb.net>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: RAID-6 mdadm disks out of sync issue (long e-mail)
+Date: Wed, 10 Jun 2009 20:55:19 +1000 (EST)
+Message-ID: <ed308b763e18e168a98f977857663bed.squirrel@neil.brown.name>
 References: <S1752989AbZFJCy5/20090610025457Z+40@vger.kernel.org>
-Reply-To: <linux-raid.vger.kernel.org@atu.cjb.net>
+    <200906100852.n5A8qPbB034265@cjb.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <S1752989AbZFJCy5/20090610025457Z+40@vger.kernel.org>
+In-Reply-To: <200906100852.n5A8qPbB034265@cjb.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid.vger.kernel.org@atu.cjb.net
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, June 10, 2009 6:52 pm, linux-raid.vger.kernel.org@atu.cjb.net wrote:
+>
+> Hello Linux-RAID mailing list.
+>
+> Any help from those with more knowledge than myself would
+> be greatly appreciated.
 
-Hello again:
+I strongly suspect that you can get all your data back.
 
-I just noticed that the mailing list removed all the spacing
-in my last e-mail, which makes it a lot messier to read.  If
-you want to read it formatted the way I wrote it, then you
-can view it here:
+The arrays are not currently active (/proc/mdstat shows "inactive")
+so nothing is going to write to them.  You can reboot without any
+concern on that point.
 
-http://pastie.org/506934.txt
+Your priority has to be to sort out the read errors on those drives.
+Whether you have to change cables or controller or whatever, and
+reboot as often as you like: just get the drives in a state where
+you can reliably read from them.  Don't perform any further mdadm
+commands until you have achieved that.
 
- - S.A.
+Once you are sure you have the 6 drives with the highest event counts
+working, assemble them with
+   mdadm --assemble /dev/md13 --force /dev/sd?1
 
+and you will almost certainly have a working (though degraded) array.
+Then, if you are confident that the other drives are working, add
+them with
+   mdadm /dev/md13 --add /dev/sdwhatever
 
+Good luck.
 
-
+NeilBrown
 
