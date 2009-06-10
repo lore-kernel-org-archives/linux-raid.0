@@ -1,124 +1,87 @@
-From: "Ing. Jair" <jairzhino@gmail.com>
-Subject: Re: mdadm message (auto-read-only) on "/dev/md1" = swap file system
-Date: Wed, 10 Jun 2009 14:23:54 -0500
-Message-ID: <2b91784d0906101223m2c8e2c2fh9cd2981480623463@mail.gmail.com>
-References: <2b91784d0906101010l409c38d2m8d0e7401c454307f@mail.gmail.com>
-	 <D081A9AE-6E07-4568-880A-2CC8A47947C1@crc.id.au>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Software RAID5 write issues
+Date: Wed, 10 Jun 2009 20:30:53 +0100
+Message-ID: <4A3009ED.1030408@anonymous.org.uk>
+References: <AB9F712C-7A3F-4832-B60B-AB56DE448F14@crc.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <D081A9AE-6E07-4568-880A-2CC8A47947C1@crc.id.au>
+In-Reply-To: <AB9F712C-7A3F-4832-B60B-AB56DE448F14@crc.id.au>
 Sender: linux-raid-owner@vger.kernel.org
 To: Steven Haigh <netwiz@crc.id.au>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thank you very much Steven for your reply. I am not having any issues
-since the two drives are working fine.  But my concern was if this
-will cause problems if in the future I have a hard drive failure.
+On 10/06/2009 18:17, Steven Haigh wrote:
+> After a week and a bit of googling, experimenting and frustration I'm 
+> posting here and hoping I can get some clues on what could be wrong with 
+> my 5 disk RAID5 SATA array.
+> 
+> The array in question is:
+> md1 : active raid5 sdg1[0] sdf1[1] sde1[3] sdd1[2] sdc1[4]
+>       1172131840 blocks level 5, 1024k chunk, algorithm 2 [5/5] [UUUUU]
+> 
+> All 5 drives are connection to a sil_sata controller (a 3112 & a 3114) 
+> set up as a simple SATA controller (ie no RAID here).
+> 
+> Once the system buffer is full, write speeds to the array are usually 
+> under 20MB/sec.
+> 
+> I am currently running CentOS 5.3 (kernel 2.6.18-128.1.10.el5.centos.plus).
+> 
+> I have lodged a bug report against RHEL 5.3, as I believe something is 
+> not quite right here, but haven't been able to narrow down the exact issue.
+>     https://bugzilla.redhat.com/show_bug.cgi?id=502499
+> 
+> Using bonnie++ to benchmark the array, it shows sequential block reads 
+> at 90MB/sec but writes at 11MB/sec across the RAID5 array - a difference 
+> I really didn't expect.
+> 
+> Any pointers on how to try to tackle this one and figure out the root 
+> cause of the problem would be VERY helpful!
 
-=3D)
+Do your drives rattle furiously while writing? Do you have a write 
+intent bitmap? I found my write performance quite sucky until changing 
+the bitmap settings, see 
+http://marc.info/?l=linux-raid&m=124027469610660&w=2 for the thread. In 
+short, changing the bitmap from its default 2M chunk size to 32M got me 
+a substantial speed-up; here's my bonnie++ output on a 3-drive RAID-5:
 
-Thank you again,
-
-On Wed, Jun 10, 2009 at 12:30 PM, Steven Haigh<netwiz@crc.id.au> wrote:
-> On 11/06/2009, at 3:10 AM, Ing. Jair wrote:
->
->> Dear Linux -raid community masters,
->>
->>
->> I have a quick question regarding something i noticed on my first ti=
-me
->> mdadm linux raid configuration server:
->>
->>
->> Current System:
->>
->> Debian Lenny 5.0
->> Two 250GB hard drives identical brand, size, model, speed, etc... th=
-ey
->> are the same.
->> 3GB memory ram
->> 1 AMD athlon 2500 CPU
->>
->> Here I am pasting an example of another machine I configure with the
->> same result notice the "(auto-read-only)" message on the swap file
->> system:
->>
->>
->> md2 : active raid1 hde3[0] hdg3[1]
->> =A0 =A0 153557184 blocks [2/2] [UU]
->>
->> md1 : active (auto-read-only) raid1 hde2[0] hdg2[1]
->> =A0 =A0 2634560 blocks [2/2] [UU]
->>
->>
->>
->> md0 : active raid1 hde1[0] hdg1[1]
->> =A0 =A0 96320 blocks [2/2] [UU]
->>
->> unused devices: <none>
->>
->>
->> My question for this is:
->>
->> 1. Is this the way suppose to work on the device md1 =3D swap filesy=
-stem
->> raid?
->
-> I believe the array will stay read-only until the first write is perf=
-ormed -
-> at which time the array will automatically switch to read/write.
->
->> 2. If this is normal where can I find documentation about the
->> different "messages" displayed on the command "cat /proc/mdstat"?
->>
->> 3. If this is a bug, is there a work around and what will happen if
->> this continue to appear?
->>
->> 4. I ran the command mdadm -w /dev/md1 and the message disappear, bu=
-t
->> after rebooting the system came back up.
->>
->> I appreciate any information or document, links, ideas you can provi=
-de to
->> me.
->
->
-> The following bug report shows this behaviour, and the reply shows th=
-is
-> behaviour as 'not a bug'.
-> http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D464560
->
-> I can't find any more solid references to this however... This being =
-said,
-> logic says that if this is correct, the array would only go read/writ=
-e when
-> something writes to your swap space...
->
-> --
-> Steven Haigh
->
-> Email: netwiz@crc.id.au
-> Web: http://www.crc.id.au
-> Phone: (03) 9001 6090 - 0412 935 897
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+# bonnie++ -d /mnt/store/bonnie/ -u john -n 256 -m beast
+Using uid:500, gid:500.
+Writing with putc()...done
+Writing intelligently...done
+Rewriting...done
+Reading with getc()...done
+Reading intelligently...done
+start 'em...done...done...done...
+Create files in sequential order...done.
+Stat files in sequential order...done.
+Delete files in sequential order...done.
+Create files in random order...done.
+Stat files in random order...done.
+Delete files in random order...done.
+Version  1.03       ------Sequential Output------ --Sequential Input- 
+--Random-
+                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- 
+--Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP 
+/sec %CP
+beast            4G 72011  79 59334  10 35775   4 66455  64 174049   6 
+215.8   0
+                     ------Sequential Create------ --------Random 
+Create--------
+                     -Create-- --Read--- -Delete-- -Create-- --Read--- 
+-Delete--
+               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP 
+/sec %CP
+                 256 61524  81 377753  96 22143  28 53153  73 425291  99 
+  8327  11
+beast,4G,72011,79,59334,10,35775,4,66455,64,174049,6,215.8,0,256,61524,81,377753,96,22143,28,53153,73,425291,99,8327,11
 
 
+Cheers,
 
---=20
-Jairzhino Bolivar (Jair)
-GNU/Linux & Unix Administrator
-Mobile: (312)404-6530
-=46ax: (214)602-4405
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+John.
+
