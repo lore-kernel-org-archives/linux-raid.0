@@ -1,109 +1,136 @@
-From: Kyler Laird <kyler-keyword-linuxraid.6e1399@lairds.com>
-Subject: "cannot start dirty degraded array"
-Date: Wed, 10 Jun 2009 16:03:10 -0400
-Message-ID: <20090610200310.GF18313@lairds.com>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: Software RAID5 write issues
+Date: Wed, 10 Jun 2009 16:57:00 -0400
+Message-ID: <1244667422.21347.210.camel@firewall.xsintricity.com>
+References: <AB9F712C-7A3F-4832-B60B-AB56DE448F14@crc.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-phpfJQIiulul88LHECPU"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <AB9F712C-7A3F-4832-B60B-AB56DE448F14@crc.id.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Steven Haigh <netwiz@crc.id.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm in a bind.  I have three RAID6s on a Sun X4540.  A bunch of disks
-threw error all of a sudden.  Two arrays came back (degraded) on reboot
-but the third is having problems.  
 
-	root@00144ff2a334:/tmp# mdadm -E /dev/sdag                                                                                       
-	/dev/sdag:                                                                                                                       
-		  Magic : a92b4efc                                                                                                       
-		Version : 00.90.00                                                                                                       
-		   UUID : fe5c8175:b45887a9:0fe23972:c126e925 (local to host 00144ff2a334)                                               
-	  Creation Time : Mon Apr 27 22:14:16 2009
-	     Raid Level : raid6
-	  Used Dev Size : 976762496 (931.51 GiB 1000.20 GB)
-	     Array Size : 12697912448 (12109.67 GiB 13002.66 GB)
-	   Raid Devices : 15
-	  Total Devices : 16
-	Preferred Minor : 2
+--=-phpfJQIiulul88LHECPU
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-	    Update Time : Sun Jun  7 07:28:53 2009
-		  State : clean
-	 Active Devices : 15
-	Working Devices : 16
-	 Failed Devices : 0
-	  Spare Devices : 1
-	       Checksum : fb439997 - correct
-		 Events : 0.16
+On Thu, 2009-06-11 at 03:17 +1000, Steven Haigh wrote:
+> Hi all,
+>=20
+> After a week and a bit of googling, experimenting and frustration I'm =20
+> posting here and hoping I can get some clues on what could be wrong =20
+> with my 5 disk RAID5 SATA array.
+>=20
+> The array in question is:
+> md1 : active raid5 sdg1[0] sdf1[1] sde1[3] sdd1[2] sdc1[4]
+>        1172131840 blocks level 5, 1024k chunk, algorithm 2 [5/5] [UUUUU]
+>=20
+> All 5 drives are connection to a sil_sata controller (a 3112 & a 3114) =20
+> set up as a simple SATA controller (ie no RAID here).
+>=20
+> Once the system buffer is full, write speeds to the array are usually =20
+> under 20MB/sec.
+>=20
+> I am currently running CentOS 5.3 (kernel =20
+> 2.6.18-128.1.10.el5.centos.plus).
+>=20
+> I have lodged a bug report against RHEL 5.3, as I believe something is =20
+> not quite right here, but haven't been able to narrow down the exact =20
+> issue.
+> 	https://bugzilla.redhat.com/show_bug.cgi?id=3D502499
+>=20
+> Using bonnie++ to benchmark the array, it shows sequential block reads =20
+> at 90MB/sec but writes at 11MB/sec across the RAID5 array - a =20
+> difference I really didn't expect.
+>=20
+> Any pointers on how to try to tackle this one and figure out the root =20
+> cause of the problem would be VERY helpful!
 
-	     Chunk Size : 16K
+OK, so I read the bug report.  There are two distinctly different
+problems you are experiencing.  One, is a slow down specific to our
+recent kernels.  The slow down in your case takes your normally abysmal
+raid and makes it even worse.  The original bug report was mainly about
+the slowdown, so I'll address that in the bug report.  However, in
+regards to your raid setup, I'll try to address why your array performs
+so poorly regardless of kernel version and maybe that will help you
+build up a better raid setup.
 
-	      Number   Major   Minor   RaidDevice State
+You have 4 motherboard SATA ports, and 4 SATA ports on a PCI card.
+Right now you have your two OS drives on motherboard SATA ports, two of
+the five raid5 drives on motherboard SATA ports, and the three remaining
+raid5 drives on the PCI card SATA ports.  You need to get as many of the
+raid5 SATA disks on motherboard ports as possible.  I would decide if
+you are more concerned about the raid5 array performing well (common, as
+it's usually the data you access most often) or the base OS array
+performing well (not so common, as it gets loaded largely into cache and
+doesn't get hit nearly so often as the data drive).  If you can deal
+with slowing down the OS drives, then I would move one of the OS drives
+to the PCI card and move one of the raid5 drives to the motherboard SATA
+port (and whichever drive you just moved over to the PCI card, I would
+mark it's raid1 arrays as write-mostly so that you don't read from it
+normally).  If your BIOS will allow you to select drives on the PCI card
+as boot drives, and you can tolerate the slow down, then I would move
+both of the OS drives to the PCI card (and don't worry about using
+write-mostly on the raid1 arrays any more) and get 4 of the 5 raid5
+drives onto motherboard SATA ports.
 
-Here's the dmesg output when I try to assemble using "mdadm --assemble
-/dev/md2 /dev/sda[g-v]".
+Your big problem is that with 3 out of 5 raid5 drives on that PCI card,
+and sharing bandwidth, your total theoretical raid speed is abysmal.
+When the three drives are sharing bandwidth on the card, they tend to
+split it up fairly evenly.  That means each drive gets roughly 1/3 of
+the PCI card's total available bandwidth over the PCI bus, which is
+generally poor in the first place.  Understand that a slow drive drags
+down *all* the drives in a raid5 array.  The faster drives just end up
+idling while waiting on the slower drive to finish its work (the faster
+drives will run ahead up to a point, then they eventually just get so
+far ahead that there isn't anything else for them to do until the
+slowest drive finishes up its stuff so old block requests can be
+completed, etc).  On the other hand, if you get 4 of the 5 drives on the
+motherboard ports, then that 5th drive on the PCI card won't be
+splitting bandwidth up and the overall array performance will shoot up
+(assuming the OS drives aren't also heavily loaded).
+
+If you move one OS drive to the PCI card, then that leaves two raid5
+drives on the card.  In that case, I would seriously consider dropping
+back to a 4 drive array if you can handle the space reduction.  I would
+also seriously consider using raid4 instead of raid5 depending on your
+normal usage pattern.  If the data on the raid5 array is written once
+and then read over and over again, a raid4 can be beneficial in that you
+can stick the parity drive off on the PCI card and it won't be read from
+unless there is a drive failure or one the rare occasions when you write
+new data.  If, on the other hand, you write lots of new data, then
+either don't use raid4, or put the parity drive on a motherboard port
+where it won't hog so much bandwidth on the PCI card.  Ideally, I would
+say get both OS drives on the PCI card, and if you need all 5 drives for
+the data raid, then use raid4 with the parity on the PCI card if the
+array is mostly static, use raid5 otherwise.  If you only move one OS
+drive to the PCI card and still have two raid5 drives on the PCI card,
+then again think about whether your data is static or not and possibly
+use raid4 in an attempt to reduce the traffic on the PCI card.
+
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+              http://people.redhat.com/dledford
+
+Infiniband specific RPMs available at
+              http://people.redhat.com/dledford/Infiniband
 
 
-	[ 3469.703048] md: bind<sdag>
-	[ 3469.703305] md: bind<sdai>
-	[ 3469.703554] md: bind<sdaj>
-	[ 3469.703806] md: bind<sdak>
-	[ 3469.704043] md: bind<sdal>
-	[ 3469.704294] md: bind<sdam>
-	[ 3469.704544] md: bind<sdan>
-	[ 3469.775701] md: bind<sdao>
-	[ 3469.775946] md: bind<sdap>
-	[ 3469.776198] md: bind<sdaq>
-	[ 3469.776453] md: bind<sdar>
-	[ 3469.776695] md: bind<sdas>
-	[ 3469.776953] md: bind<sdat>
-	[ 3469.777204] md: bind<sdau>
-	[ 3469.777442] md: bind<sdav>
-	[ 3469.777698] md: bind<sdah>
-	[ 3469.777762] md: kicking non-fresh sdag from array!
-	[ 3469.777766] md: unbind<sdag>
-	[ 3469.801894] md: export_rdev(sdag)
-	[ 3469.801898] md: md2: raid array is not clean -- starting background reconstruction
-	[ 3469.825589] raid5: device sdah operational as raid disk 1
-	[ 3469.825591] raid5: device sdau operational as raid disk 14
-	[ 3469.825593] raid5: device sdat operational as raid disk 13
-	[ 3469.825594] raid5: device sdas operational as raid disk 12
-	[ 3469.825595] raid5: device sdar operational as raid disk 11
-	[ 3469.825596] raid5: device sdaq operational as raid disk 10
-	[ 3469.825597] raid5: device sdap operational as raid disk 9
-	[ 3469.825598] raid5: device sdao operational as raid disk 8
-	[ 3469.825599] raid5: device sdan operational as raid disk 7
-	[ 3469.825600] raid5: device sdam operational as raid disk 6
-	[ 3469.825601] raid5: device sdal operational as raid disk 5
-	[ 3469.825602] raid5: device sdak operational as raid disk 4
-	[ 3469.825603] raid5: device sdaj operational as raid disk 3
-	[ 3469.825604] raid5: device sdai operational as raid disk 2
-	[ 3469.825606] raid5: cannot start dirty degraded array for md2
-	[ 3469.825674] RAID5 conf printout:
-	[ 3469.825675]  --- rd:15 wd:14
-	[ 3469.825676]  disk 1, o:1, dev:sdah
-	[ 3469.825677]  disk 2, o:1, dev:sdai
-	[ 3469.825678]  disk 3, o:1, dev:sdaj
-	[ 3469.825679]  disk 4, o:1, dev:sdak
-	[ 3469.825679]  disk 5, o:1, dev:sdal
-	[ 3469.825680]  disk 6, o:1, dev:sdam
-	[ 3469.825681]  disk 7, o:1, dev:sdan
-	[ 3469.825682]  disk 8, o:1, dev:sdao
-	[ 3469.825683]  disk 9, o:1, dev:sdap
-	[ 3469.825684]  disk 10, o:1, dev:sdaq
-	[ 3469.825685]  disk 11, o:1, dev:sdar
-	[ 3469.825685]  disk 12, o:1, dev:sdas
-	[ 3469.825686]  disk 13, o:1, dev:sdat
-	[ 3469.825687]  disk 14, o:1, dev:sdau
-	[ 3469.825689] raid5: failed to run raid set md2
-	[ 3469.825751] md: pers->run() failed ...
+--=-phpfJQIiulul88LHECPU
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-I ran a check of the disks' SMART data and they seem to be alright.
-We're getting ready to ship the entire unit to a data recovery center
-but I'd really like to know if there's something simple we can do first.
-I've been frantically reading about this issue but none of the simple
-solutions seem to work for me.  I welcome suggestions.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
 
-Thanks!
+iEYEABECAAYFAkowHhwACgkQQ9aEs6Ims9jPtACggp/kRY5PsigjkHYn9xmYnxLO
+o2wAnRpAhsXe+k+AWytLDr43FU/9998n
+=wun3
+-----END PGP SIGNATURE-----
 
---kyler
+--=-phpfJQIiulul88LHECPU--
+
