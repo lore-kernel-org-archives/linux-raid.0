@@ -1,41 +1,53 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: slow mdadm reshape, normal?
-Date: Thu, 11 Jun 2009 00:04:38 +0100
-Message-ID: <4A303C06.9080409@anonymous.org.uk>
-References: <20090610224055.GW30825@rlogin.dk>
+From: Michael Ole Olsen <gnu@gmx.net>
+Subject: Re: Re: slow mdadm reshape, normal?
+Date: Thu, 11 Jun 2009 01:36:59 +0200
+Message-ID: <20090610233659.GD30825@rlogin.dk>
+References: <3D76E016F4A2A749A1EB1A3FD83E22BC0285F2F4@uk-email.terastack.bluearc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090610224055.GW30825@rlogin.dk>
+Content-Disposition: inline
+In-Reply-To: <20090610224055.GW30825@xxxxxxxxx>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/06/2009 23:40, Michael Ole Olsen wrote:
-> is it normal that a raid5 reshape happens at only 7000kB/s on
-> newer disks? i created the array at 60MB/s stable over the whole array
-> (accordin to /proc/mdstat), sometimes up to 90MB/s
-> 
-> chunk size is 64kB, disks are 9xst1500 (1.5tb seagate with upgraded 
-> firmware CC1H /SD1A)
-> 
-> the hardware is a pci 32bit 4port sata and onboard sata2 (6 port sata - non
-> ide host board) if that explains it?
-> 
-> modules are sata_nv and sata_sil
-> 
-> I have lvm2 and xfs+2TB data on top of md before the growing of two new 
-> disks from 7 to 9.
+the slow disks (them with 85MB/s) in the posting are the one on the pci 4x sata controller
 
-I wonder if this is the same issue as in another thread this evening[1]: 
-too many drives competing for the very limited bandwidth available on 
-the PCI bus? Your extra discs, are they attached to the PCI SATA card? 
-How many drives are there on there?
+the 32bit pci sata (sata_sil) controller has 3 disks connected
 
-Cheers,
+the onboard sata2 6x sata connectors have 6 disks connected 
+(p5n32-e sli motherboard), i believe all these are sata2 and not shared with
+an ide controller.
 
-John.
+so only the pci controller should have bus limitations, but i wonder why it is
+that slow on reshape compared to build.
 
+unfortunately I have not gotten the recent postings on the mailinglist since
+28th last month perhaps my subscription got cleared so I didn't see any
+reshape postings, just signed up on new.
 
-[1] http://marc.info/?l=linux-raid&m=124466834109307&w=2
+here you can see the 3 slow disks pci32bit compared to onboard sata2 (sdb):
+
+sda
+200+0 records in
+200+0 records out
+209715200 bytes (210 MB) copied, 2,46597 s, 85,0 MB/s
+sdb
+200+0 records in
+200+0 records out
+209715200 bytes (210 MB) copied, 1,66641 s, 126 MB/s
+sdc
+200+0 records in
+200+0 records out
+209715200 bytes (210 MB) copied, 2,51205 s, 83,5 MB/s
+sdd
+200+0 records in
+200+0 records out
+209715200 bytes (210 MB) copied, 2,33702 s, 89,7 MB/s
+
+are there any good tools you can recommend to test bus congestion as the
+probable cause of this slowness?
+
+/Michael
+
