@@ -1,38 +1,124 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
+From: "Ing. Jair" <jairzhino@gmail.com>
 Subject: Re: mdadm message (auto-read-only) on "/dev/md1" = swap file system
-Date: Wed, 10 Jun 2009 19:59:57 +0100
-Message-ID: <4A3002AD.60103@anonymous.org.uk>
-References: <2b91784d0906101010l409c38d2m8d0e7401c454307f@mail.gmail.com> <D081A9AE-6E07-4568-880A-2CC8A47947C1@crc.id.au>
+Date: Wed, 10 Jun 2009 14:23:54 -0500
+Message-ID: <2b91784d0906101223m2c8e2c2fh9cd2981480623463@mail.gmail.com>
+References: <2b91784d0906101010l409c38d2m8d0e7401c454307f@mail.gmail.com>
+	 <D081A9AE-6E07-4568-880A-2CC8A47947C1@crc.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <D081A9AE-6E07-4568-880A-2CC8A47947C1@crc.id.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Steven Haigh <netwiz@crc.id.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/06/2009 18:30, Steven Haigh wrote:
+Thank you very much Steven for your reply. I am not having any issues
+since the two drives are working fine.  But my concern was if this
+will cause problems if in the future I have a hard drive failure.
+
+=3D)
+
+Thank you again,
+
+On Wed, Jun 10, 2009 at 12:30 PM, Steven Haigh<netwiz@crc.id.au> wrote:
 > On 11/06/2009, at 3:10 AM, Ing. Jair wrote:
-[...]
+>
+>> Dear Linux -raid community masters,
+>>
+>>
+>> I have a quick question regarding something i noticed on my first ti=
+me
+>> mdadm linux raid configuration server:
+>>
+>>
+>> Current System:
+>>
+>> Debian Lenny 5.0
+>> Two 250GB hard drives identical brand, size, model, speed, etc... th=
+ey
+>> are the same.
+>> 3GB memory ram
+>> 1 AMD athlon 2500 CPU
+>>
+>> Here I am pasting an example of another machine I configure with the
+>> same result notice the "(auto-read-only)" message on the swap file
+>> system:
+>>
+>>
+>> md2 : active raid1 hde3[0] hdg3[1]
+>> =A0 =A0 153557184 blocks [2/2] [UU]
+>>
 >> md1 : active (auto-read-only) raid1 hde2[0] hdg2[1]
->>      2634560 blocks [2/2] [UU]
-[...]
+>> =A0 =A0 2634560 blocks [2/2] [UU]
+>>
+>>
+>>
+>> md0 : active raid1 hde1[0] hdg1[1]
+>> =A0 =A0 96320 blocks [2/2] [UU]
+>>
+>> unused devices: <none>
+>>
+>>
 >> My question for this is:
 >>
->> 1. Is this the way suppose to work on the device md1 = swap filesystem 
+>> 1. Is this the way suppose to work on the device md1 =3D swap filesy=
+stem
 >> raid?
-> 
-> I believe the array will stay read-only until the first write is 
-> performed - at which time the array will automatically switch to 
-> read/write.
+>
+> I believe the array will stay read-only until the first write is perf=
+ormed -
+> at which time the array will automatically switch to read/write.
+>
+>> 2. If this is normal where can I find documentation about the
+>> different "messages" displayed on the command "cat /proc/mdstat"?
+>>
+>> 3. If this is a bug, is there a work around and what will happen if
+>> this continue to appear?
+>>
+>> 4. I ran the command mdadm -w /dev/md1 and the message disappear, bu=
+t
+>> after rebooting the system came back up.
+>>
+>> I appreciate any information or document, links, ideas you can provi=
+de to
+>> me.
+>
+>
+> The following bug report shows this behaviour, and the reply shows th=
+is
+> behaviour as 'not a bug'.
+> http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D464560
+>
+> I can't find any more solid references to this however... This being =
+said,
+> logic says that if this is correct, the array would only go read/writ=
+e when
+> something writes to your swap space...
+>
+> --
+> Steven Haigh
+>
+> Email: netwiz@crc.id.au
+> Web: http://www.crc.id.au
+> Phone: (03) 9001 6090 - 0412 935 897
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-I think so too; the boss said something similar about a month ago: 
-http://marc.info/?l=linux-raid&m=124178553609572&w=2
 
-To the OP: what problem are you experiencing?
 
-Cheers,
-
-John.
-
+--=20
+Jairzhino Bolivar (Jair)
+GNU/Linux & Unix Administrator
+Mobile: (312)404-6530
+=46ax: (214)602-4405
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
