@@ -1,87 +1,109 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Software RAID5 write issues
-Date: Wed, 10 Jun 2009 20:30:53 +0100
-Message-ID: <4A3009ED.1030408@anonymous.org.uk>
-References: <AB9F712C-7A3F-4832-B60B-AB56DE448F14@crc.id.au>
+From: Kyler Laird <kyler-keyword-linuxraid.6e1399@lairds.com>
+Subject: "cannot start dirty degraded array"
+Date: Wed, 10 Jun 2009 16:03:10 -0400
+Message-ID: <20090610200310.GF18313@lairds.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AB9F712C-7A3F-4832-B60B-AB56DE448F14@crc.id.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Steven Haigh <netwiz@crc.id.au>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 10/06/2009 18:17, Steven Haigh wrote:
-> After a week and a bit of googling, experimenting and frustration I'm 
-> posting here and hoping I can get some clues on what could be wrong with 
-> my 5 disk RAID5 SATA array.
-> 
-> The array in question is:
-> md1 : active raid5 sdg1[0] sdf1[1] sde1[3] sdd1[2] sdc1[4]
->       1172131840 blocks level 5, 1024k chunk, algorithm 2 [5/5] [UUUUU]
-> 
-> All 5 drives are connection to a sil_sata controller (a 3112 & a 3114) 
-> set up as a simple SATA controller (ie no RAID here).
-> 
-> Once the system buffer is full, write speeds to the array are usually 
-> under 20MB/sec.
-> 
-> I am currently running CentOS 5.3 (kernel 2.6.18-128.1.10.el5.centos.plus).
-> 
-> I have lodged a bug report against RHEL 5.3, as I believe something is 
-> not quite right here, but haven't been able to narrow down the exact issue.
->     https://bugzilla.redhat.com/show_bug.cgi?id=502499
-> 
-> Using bonnie++ to benchmark the array, it shows sequential block reads 
-> at 90MB/sec but writes at 11MB/sec across the RAID5 array - a difference 
-> I really didn't expect.
-> 
-> Any pointers on how to try to tackle this one and figure out the root 
-> cause of the problem would be VERY helpful!
+I'm in a bind.  I have three RAID6s on a Sun X4540.  A bunch of disks
+threw error all of a sudden.  Two arrays came back (degraded) on reboot
+but the third is having problems.  
 
-Do your drives rattle furiously while writing? Do you have a write 
-intent bitmap? I found my write performance quite sucky until changing 
-the bitmap settings, see 
-http://marc.info/?l=linux-raid&m=124027469610660&w=2 for the thread. In 
-short, changing the bitmap from its default 2M chunk size to 32M got me 
-a substantial speed-up; here's my bonnie++ output on a 3-drive RAID-5:
+	root@00144ff2a334:/tmp# mdadm -E /dev/sdag                                                                                       
+	/dev/sdag:                                                                                                                       
+		  Magic : a92b4efc                                                                                                       
+		Version : 00.90.00                                                                                                       
+		   UUID : fe5c8175:b45887a9:0fe23972:c126e925 (local to host 00144ff2a334)                                               
+	  Creation Time : Mon Apr 27 22:14:16 2009
+	     Raid Level : raid6
+	  Used Dev Size : 976762496 (931.51 GiB 1000.20 GB)
+	     Array Size : 12697912448 (12109.67 GiB 13002.66 GB)
+	   Raid Devices : 15
+	  Total Devices : 16
+	Preferred Minor : 2
 
-# bonnie++ -d /mnt/store/bonnie/ -u john -n 256 -m beast
-Using uid:500, gid:500.
-Writing with putc()...done
-Writing intelligently...done
-Rewriting...done
-Reading with getc()...done
-Reading intelligently...done
-start 'em...done...done...done...
-Create files in sequential order...done.
-Stat files in sequential order...done.
-Delete files in sequential order...done.
-Create files in random order...done.
-Stat files in random order...done.
-Delete files in random order...done.
-Version  1.03       ------Sequential Output------ --Sequential Input- 
---Random-
-                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- 
---Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP 
-/sec %CP
-beast            4G 72011  79 59334  10 35775   4 66455  64 174049   6 
-215.8   0
-                     ------Sequential Create------ --------Random 
-Create--------
-                     -Create-- --Read--- -Delete-- -Create-- --Read--- 
--Delete--
-               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP 
-/sec %CP
-                 256 61524  81 377753  96 22143  28 53153  73 425291  99 
-  8327  11
-beast,4G,72011,79,59334,10,35775,4,66455,64,174049,6,215.8,0,256,61524,81,377753,96,22143,28,53153,73,425291,99,8327,11
+	    Update Time : Sun Jun  7 07:28:53 2009
+		  State : clean
+	 Active Devices : 15
+	Working Devices : 16
+	 Failed Devices : 0
+	  Spare Devices : 1
+	       Checksum : fb439997 - correct
+		 Events : 0.16
+
+	     Chunk Size : 16K
+
+	      Number   Major   Minor   RaidDevice State
+
+Here's the dmesg output when I try to assemble using "mdadm --assemble
+/dev/md2 /dev/sda[g-v]".
 
 
-Cheers,
+	[ 3469.703048] md: bind<sdag>
+	[ 3469.703305] md: bind<sdai>
+	[ 3469.703554] md: bind<sdaj>
+	[ 3469.703806] md: bind<sdak>
+	[ 3469.704043] md: bind<sdal>
+	[ 3469.704294] md: bind<sdam>
+	[ 3469.704544] md: bind<sdan>
+	[ 3469.775701] md: bind<sdao>
+	[ 3469.775946] md: bind<sdap>
+	[ 3469.776198] md: bind<sdaq>
+	[ 3469.776453] md: bind<sdar>
+	[ 3469.776695] md: bind<sdas>
+	[ 3469.776953] md: bind<sdat>
+	[ 3469.777204] md: bind<sdau>
+	[ 3469.777442] md: bind<sdav>
+	[ 3469.777698] md: bind<sdah>
+	[ 3469.777762] md: kicking non-fresh sdag from array!
+	[ 3469.777766] md: unbind<sdag>
+	[ 3469.801894] md: export_rdev(sdag)
+	[ 3469.801898] md: md2: raid array is not clean -- starting background reconstruction
+	[ 3469.825589] raid5: device sdah operational as raid disk 1
+	[ 3469.825591] raid5: device sdau operational as raid disk 14
+	[ 3469.825593] raid5: device sdat operational as raid disk 13
+	[ 3469.825594] raid5: device sdas operational as raid disk 12
+	[ 3469.825595] raid5: device sdar operational as raid disk 11
+	[ 3469.825596] raid5: device sdaq operational as raid disk 10
+	[ 3469.825597] raid5: device sdap operational as raid disk 9
+	[ 3469.825598] raid5: device sdao operational as raid disk 8
+	[ 3469.825599] raid5: device sdan operational as raid disk 7
+	[ 3469.825600] raid5: device sdam operational as raid disk 6
+	[ 3469.825601] raid5: device sdal operational as raid disk 5
+	[ 3469.825602] raid5: device sdak operational as raid disk 4
+	[ 3469.825603] raid5: device sdaj operational as raid disk 3
+	[ 3469.825604] raid5: device sdai operational as raid disk 2
+	[ 3469.825606] raid5: cannot start dirty degraded array for md2
+	[ 3469.825674] RAID5 conf printout:
+	[ 3469.825675]  --- rd:15 wd:14
+	[ 3469.825676]  disk 1, o:1, dev:sdah
+	[ 3469.825677]  disk 2, o:1, dev:sdai
+	[ 3469.825678]  disk 3, o:1, dev:sdaj
+	[ 3469.825679]  disk 4, o:1, dev:sdak
+	[ 3469.825679]  disk 5, o:1, dev:sdal
+	[ 3469.825680]  disk 6, o:1, dev:sdam
+	[ 3469.825681]  disk 7, o:1, dev:sdan
+	[ 3469.825682]  disk 8, o:1, dev:sdao
+	[ 3469.825683]  disk 9, o:1, dev:sdap
+	[ 3469.825684]  disk 10, o:1, dev:sdaq
+	[ 3469.825685]  disk 11, o:1, dev:sdar
+	[ 3469.825685]  disk 12, o:1, dev:sdas
+	[ 3469.825686]  disk 13, o:1, dev:sdat
+	[ 3469.825687]  disk 14, o:1, dev:sdau
+	[ 3469.825689] raid5: failed to run raid set md2
+	[ 3469.825751] md: pers->run() failed ...
 
-John.
+I ran a check of the disks' SMART data and they seem to be alright.
+We're getting ready to ship the entire unit to a data recovery center
+but I'd really like to know if there's something simple we can do first.
+I've been frantically reading about this issue but none of the simple
+solutions seem to work for me.  I welcome suggestions.
 
+Thanks!
+
+--kyler
