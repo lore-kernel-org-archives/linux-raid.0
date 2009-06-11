@@ -1,215 +1,65 @@
-From: Jim Paris <jim@jtan.com>
-Subject: Assembly problems with kernel 2.6.30?
-Date: Thu, 11 Jun 2009 03:25:38 -0400
-Message-ID: <20090611072538.GA7841@psychosis.jim.sh>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: slow mdadm reshape, normal?
+Date: Thu, 11 Jun 2009 09:19:09 +0100
+Message-ID: <20090611081909.GA16250@cthulhu.home.robinhill.me.uk>
+References: <4A303C06.9080409@anonymous.org.uk> <20090610233659.GD30825@rlogin.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="tKW2IUtsqtDRztdT"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <20090610233659.GD30825@rlogin.dk>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
 
-I am running Debian with my root filesystem on /dev/md1.
-At boot, hook scripts in initramfs-tools run:
+--tKW2IUtsqtDRztdT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-mdadm --assemble --scan --run --auto=yes /dev/md1
+On Thu Jun 11, 2009 at 01:36:59AM +0200, Michael Ole Olsen wrote:
 
-with the following /etc/mdadm/mdadm.conf:
+> the slow disks (them with 85MB/s) in the posting are the one on the pci 4=
+x sata controller
+>=20
+> the 32bit pci sata (sata_sil) controller has 3 disks connected
+>=20
+> the onboard sata2 6x sata connectors have 6 disks connected=20
+> (p5n32-e sli motherboard), i believe all these are sata2 and not shared w=
+ith
+> an ide controller.
+>=20
+> so only the pci controller should have bus limitations, but i wonder why =
+it is
+> that slow on reshape compared to build.
+>=20
+The build was reading (sequentially) from all drives and writing
+(sequentially) only to one, whereas a reshape is reading from and
+writing to all the drives (including seeking between reads & writes).
+This means it is inevitably a lot slower.  In addition, you're now using
+3 rather than 2 drives on the PCI bus, which will increase the
+congestion.
 
-DEVICE partitions
-ARRAY /dev/md0 level=raid1 num-devices=6 UUID=dece84f3:a8f8be71:ea9d9fee:21fd5f90
-ARRAY /dev/md1 level=raid1 num-devices=2 UUID=0598d2ea:f6c0185f:614fa502:109d1a5d
-ARRAY /dev/md2 level=raid5 num-devices=4 UUID=eed65e3878:f4e6e055:198bdcfe:77de48
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
-For the record:
-/dev/md0 uses /dev/sd[abcdef]1
-/dev/md1 uses /dev/sd[ab]2
-/dev/md2 uses /dev/sd[cdef]2
+--tKW2IUtsqtDRztdT
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-On kernel 2.6.27.3, this worked fine.  After upgrading to 2.6.30, the
-initrams failed with the error:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
 
-  mdadm: superblock on /dev/sdc2 doesn't match others - assembly aborted
+iEYEARECAAYFAkowvfwACgkQShxCyD40xBI7jACg3qu89AY9XFu9PrfDjUQF9K0d
+OIYAnA5WUDuZoXiinyoh/jgji9xYMh6d
+=HEoI
+-----END PGP SIGNATURE-----
 
-The solution was to change the /etc/mdadm/mdadm.conf to specifically
-list the metadata format:
-
-DEVICE partitions
-ARRAY /dev/md0 level=raid1 num-devices=6 UUID=dece84f3:a8f8be71:ea9d9fee:21fd5f90
-ARRAY /dev/md1 level=raid1 num-devices=2 UUID=0598d2ea:f6c0185f:614fa502:109d1a5d
-ARRAY /dev/md2 level=raid5 metadata=1.0 num-devices=4 UUID=eed65e3878:f4e6e055:198bdcfe:77de48
-
-This was tested with Debian mdadm packages 2.6.7.2-1 and 2.6.9-3 -- no
-difference.
-
-So, is this a bug?  Kernel or mdadm?  If user error, why did it work
-before?  Also, why does the metadata on /dev/md2 matter for assembling
-/dev/md1?
-
-This is a live system that I can't reboot easily.  Superblocks (from
-the booted system) on /dev/md1 and /dev/md2 devices are below.
-
--jim
-
-/dev/sda2:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : 0598d2ea:f6c0185f:614fa502:109d1a5d
-  Creation Time : Fri Sep 22 06:18:16 2006
-     Raid Level : raid1
-  Used Dev Size : 976631424 (931.39 GiB 1000.07 GB)
-     Array Size : 976631424 (931.39 GiB 1000.07 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 1
-
-    Update Time : Thu Jun 11 03:25:09 2009
-          State : active
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : e0ef73c6 - correct
-         Events : 252219
-
-
-      Number   Major   Minor   RaidDevice State
-this     1       8        2        1      active sync   /dev/sda2
-
-   0     0       8       18        0      active sync   /dev/sdb2
-   1     1       8        2        1      active sync   /dev/sda2
-/dev/sdb2:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : 0598d2ea:f6c0185f:614fa502:109d1a5d
-  Creation Time : Fri Sep 22 06:18:16 2006
-     Raid Level : raid1
-  Used Dev Size : 976631424 (931.39 GiB 1000.07 GB)
-     Array Size : 976631424 (931.39 GiB 1000.07 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 1
-
-    Update Time : Thu Jun 11 03:25:09 2009
-          State : active
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : e0ef73d4 - correct
-         Events : 252219
-
-
-      Number   Major   Minor   RaidDevice State
-this     0       8       18        0      active sync   /dev/sdb2
-
-   0     0       8       18        0      active sync   /dev/sdb2
-   1     1       8        2        1      active sync   /dev/sda2
-/dev/sdc2:
-          Magic : a92b4efc
-        Version : 1.0
-    Feature Map : 0x0
-     Array UUID : eed65e38:78f4e6e0:55198bdc:fe77de48
-           Name : 2
-  Creation Time : Thu Feb 22 02:28:12 2007
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 1953262752 (931.39 GiB 1000.07 GB)
-     Array Size : 5859788160 (2794.16 GiB 3000.21 GB)
-  Used Dev Size : 1953262720 (931.39 GiB 1000.07 GB)
-   Super Offset : 1953263008 sectors
-          State : active
-    Device UUID : 407cf6b0:3d180e0b:e5be6dc0:e6bcf953
-
-    Update Time : Thu Jun 11 03:25:09 2009
-       Checksum : a59a2510 - correct
-         Events : 10783
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-    Array Slot : 5 (failed, failed, failed, failed, 3, 0, 1, 2)
-   Array State : Uuuu 4 failed
-/dev/sdd2:
-          Magic : a92b4efc
-        Version : 1.0
-    Feature Map : 0x0
-     Array UUID : eed65e38:78f4e6e0:55198bdc:fe77de48
-           Name : 2
-  Creation Time : Thu Feb 22 02:28:12 2007
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 1953262752 (931.39 GiB 1000.07 GB)
-     Array Size : 5859788160 (2794.16 GiB 3000.21 GB)
-  Used Dev Size : 1953262720 (931.39 GiB 1000.07 GB)
-   Super Offset : 1953263008 sectors
-          State : clean
-    Device UUID : df17e349:186715a7:3f7bd3f9:a53ce15d
-
-    Update Time : Thu Jun 11 03:25:09 2009
-       Checksum : 1ddb4ba4 - correct
-         Events : 10782
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-    Array Slot : 6 (failed, failed, failed, failed, 3, 0, 1, 2)
-   Array State : uUuu 4 failed
-/dev/sde2:
-          Magic : a92b4efc
-        Version : 1.0
-    Feature Map : 0x0
-     Array UUID : eed65e38:78f4e6e0:55198bdc:fe77de48
-           Name : 2
-  Creation Time : Thu Feb 22 02:28:12 2007
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 1953262752 (931.39 GiB 1000.07 GB)
-     Array Size : 5859788160 (2794.16 GiB 3000.21 GB)
-  Used Dev Size : 1953262720 (931.39 GiB 1000.07 GB)
-   Super Offset : 1953263008 sectors
-          State : clean
-    Device UUID : 324c496c:2a4a57c4:04a65638:0b9606c5
-
-    Update Time : Thu Jun 11 03:25:09 2009
-       Checksum : 32be735 - correct
-         Events : 10782
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-    Array Slot : 7 (failed, failed, failed, failed, 3, 0, 1, 2)
-   Array State : uuUu 4 failed
-/dev/sdf2:
-          Magic : a92b4efc
-        Version : 1.0
-    Feature Map : 0x0
-     Array UUID : eed65e38:78f4e6e0:55198bdc:fe77de48
-           Name : 2
-  Creation Time : Thu Feb 22 02:28:12 2007
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 1953262752 (931.39 GiB 1000.07 GB)
-     Array Size : 5859788160 (2794.16 GiB 3000.21 GB)
-  Used Dev Size : 1953262720 (931.39 GiB 1000.07 GB)
-   Super Offset : 1953263008 sectors
-          State : clean
-    Device UUID : 4d0e18c4:92574d6d:798f2111:18c93628
-
-    Update Time : Thu Jun 11 03:25:09 2009
-       Checksum : 3febd336 - correct
-         Events : 10782
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-    Array Slot : 4 (failed, failed, failed, failed, 3, 0, 1, 2)
-   Array State : uuuU 4 failed
-
+--tKW2IUtsqtDRztdT--
