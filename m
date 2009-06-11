@@ -1,91 +1,98 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] md: Use new topology calls to indicate alignment and  I/O sizes
-Date: Thu, 11 Jun 2009 20:25:58 +1000
-Message-ID: <18992.56246.663815.790604@notabene.brown>
-References: <yq1my8i6naw.fsf@sermon.lab.mkp.net>
-	<6579bc561e648e03ed4a739799e51d9e.squirrel@neil.brown.name>
-	<yq1ws7k60vt.fsf@sermon.lab.mkp.net>
+From: Michael Ole Olsen <gnu@gmx.net>
+Subject: Re: slow mdadm reshape, normal?
+Date: Thu, 11 Jun 2009 18:07:41 +0200
+Message-ID: <20090611160741.GG30825@rlogin.dk>
+References: <4A303C06.9080409@anonymous.org.uk> <20090610233659.GD30825@rlogin.dk> <20090611081909.GA16250@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Zd8I2GZVcdxtyaG/"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Martin K. Petersen on Wednesday June 10
+Content-Disposition: inline
+In-Reply-To: <20090611081909.GA16250@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday June 10, martin.petersen@oracle.com wrote:
-> >>>>> "Neil" == NeilBrown  <neilb@suse.de> writes:
-> 
-> >> + blk_queue_io_opt(mddev->queue, chunk_size * (mddev->raid_disks >>
-> >>  	blk_queue_io_opt(mddev->1));
-> 
-> Neil>  ">> 1" is wrong.  A raid10 may have more than 2 copies for each
-> Neil>  block.
-> 
-> I recall pondering when I wrote that.  Never got around to revisiting
-> the issue.  Your RAID10 implementation is a bit hipper than most :)
 
-And I know where my towel is, too :-)
-> 
-> 
-> Neil>  This calculation needs to be a bit more subtle and take about of
-> Neil>  the particular layout (near, offset, or far).
-> 
-> Why would layout interfere with preferred I/O size?
+--Zd8I2GZVcdxtyaG/
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-For a 'far' or 'offset' layout, you probably want
-    chunksize * raid_disks
-just like raid0. 
+Thanks
 
-For a 'near' layout, what you suggest seems good.
+I was just hoping for something like 127MB/s divided by 3 =3D 42MB/s which=
+=20
+is the practical limit of the pci bus assuming each disk gets its equal
+share.
 
-The driver actually allows both 'near' and 'far'.  I doubt if anyone
-would use it, but it would be nice to get it 'right'.
-> 
-> How about:
-> 
->     if (conf->raid_disks % conf->copies)
-> 	blk_queue_io_opt(mddev->queue, chunk_size * conf->raid_disks);
->     else
-> 	blk_queue_io_opt(mddev->queue, chunk_size *
-> 			 (conf->raid_disks / conf->copies));
+6MB/s is only 14% of that, so I wonder where the lost bandwidth goes :)
 
-I think that if you replace "conf->copies" by 'nc' (which is
- (mddev->layout & 255)
-) then that will be perfect.  For a 'far' layout, nc is normally '1',
-and either branch will give the correct value.
+The reshape takes only 10-15% cpu or so on my 3ghz cpu so dont think that is
+the bottleneck.
 
-Thanks,
-NeilBrown
+Might be interesting to test a pci network controller at the same time had I
+installed one before the build, that way i could see if the pci bus really =
+got
+congested.
 
 
-> 
-> I.e.:
-> 
-> 2 drives, 2 copies: a1 a1       optimal I/O = 1 * chunk_size
-> 
-> 3 drives, 2 copies: a1 a1 a2
->                     a2 a3 a3    optimal I/O = 3 * chunk_size
-> 
-> 4 drives, 2 copies: a1 a1 a2 a2	optimal I/O = 2 * chunk_size
-> 
-> 4 drives, 3 copies: a1 a1 a1 a2
->                     a2 a2 a3 a3
->                     a3 a4 a4 a4 optimal I/O = 4 * chunk_size
-> 
-> And so on.  Does that make sense?  I.e. we try to keep all drives
-> equally busy.
-> 
-> 
-> Neil> You seem to be treating raid4 like raid6 :-)
-> 
-> Whoops.  I always forget about raid4.  Fixed.
-> 
-> -- 
-> Martin K. Petersen	Oracle Linux Engineering
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Thu, 11 Jun 2009, Robin Hill wrote:
+
+> On Thu Jun 11, 2009 at 01:36:59AM +0200, Michael Ole Olsen wrote:
+>=20
+> > the slow disks (them with 85MB/s) in the posting are the one on the pci=
+ 4x sata controller
+> >=20
+> > the 32bit pci sata (sata_sil) controller has 3 disks connected
+> >=20
+> > the onboard sata2 6x sata connectors have 6 disks connected=20
+> > (p5n32-e sli motherboard), i believe all these are sata2 and not shared=
+ with
+> > an ide controller.
+> >=20
+> > so only the pci controller should have bus limitations, but i wonder wh=
+y it is
+> > that slow on reshape compared to build.
+> >=20
+> The build was reading (sequentially) from all drives and writing
+> (sequentially) only to one, whereas a reshape is reading from and
+> writing to all the drives (including seeking between reads & writes).
+> This means it is inevitably a lot slower.  In addition, you're now using
+> 3 rather than 2 drives on the PCI bus, which will increase the
+> congestion.
+>=20
+> Cheers,
+>     Robin
+> --=20
+>      ___       =20
+>     ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+>    / / )      | Little Jim says ....                            |
+>   // !!       |      "He fallen in de water !!"                 |
+
+
+
+--Zd8I2GZVcdxtyaG/
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iQIcBAEBAgAGBQJKMSvMAAoJECXlragqp/ZI+scP/1gwjj7d08R1ckgo2tsPGlEV
+8CWXG969+4yLjTsDge3oi9zyAAgvVEvpBpAqBO6RCE5HjPynkiM/EwqhJn8nZCdi
+sYPslaaIn/IL9QLpHMOMdlnooMijEG5paNdTborR/QOyzoZdYFcaHpbFbtIz5ny1
+mJyo8yWM2foFWiKsi+Lb0WAhTXmjqTYb1KesFduJ8cEZLil+L0yq32MtpaxaNyMW
+reDxtC0CNhFQ2H1AHrm3h8BqG1Bv2gGIciBHHWnTABMBPkx1xb5oocG68UtakjJb
+Y6yEpiPiwRGgZrlzUIv6Kn0stGyRHbK66wbwlgMUM+/3+6ZB94bV6gjjwChTgjnX
+VGFfP9IVI5UbpPksizm/VSlu5uoYczTXJM81SjFheL8uUuO1VkAe9kEfJVclKEbk
+8kfkMI/tWLQe3Y3O1ivnsNJKb0CWHIFDWgzFGwyyaSCh0RX28QGNPYG/GXux3RzO
+MEVToe4eaFsVEm4TnRUKr0jhrpdpiZABuLXxqACNn6fpxxPOZkv+fY/3wepaHJAM
+CIcC/+cQ5pF0P3cajzBc4zsHv2jG3FT/8RnoAMxxyjGwKhwSzXZzYhgO0PF6i6aJ
+enKyXgfQmuHRDoSxROTREk8+Z1q3mOvzZg2XMOcWe+rozd7Tx87SJacOzJ7awyJJ
+HnTiCRfO8DF0uJZ/V1Mb
+=LsAL
+-----END PGP SIGNATURE-----
+
+--Zd8I2GZVcdxtyaG/--
