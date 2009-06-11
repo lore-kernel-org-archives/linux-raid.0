@@ -1,147 +1,91 @@
-From: "Simon Jackson" <sjackson@bluearc.com>
-Subject: RE: mdadm message (auto-read-only) on "/dev/md1" = swap file system
-Date: Thu, 11 Jun 2009 11:00:23 +0100
-Message-ID: <3D76E016F4A2A749A1EB1A3FD83E22BC0294AB85@uk-email.terastack.bluearc.com>
-References: <2b91784d0906101010l409c38d2m8d0e7401c454307f@mail.gmail.com> <D081A9AE-6E07-4568-880A-2CC8A47947C1@crc.id.au> <2b91784d0906101223m2c8e2c2fh9cd2981480623463@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH] md: Use new topology calls to indicate alignment and  I/O sizes
+Date: Thu, 11 Jun 2009 20:25:58 +1000
+Message-ID: <18992.56246.663815.790604@notabene.brown>
+References: <yq1my8i6naw.fsf@sermon.lab.mkp.net>
+	<6579bc561e648e03ed4a739799e51d9e.squirrel@neil.brown.name>
+	<yq1ws7k60vt.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <2b91784d0906101223m2c8e2c2fh9cd2981480623463@mail.gmail.com>
+In-Reply-To: message from Martin K. Petersen on Wednesday June 10
 Sender: linux-raid-owner@vger.kernel.org
-To: "Ing. Jair" <jairzhino@gmail.com>, Steven Haigh <netwiz@crc.id.au>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The only issue I have seen with this was when I was recovering a disk a=
-nd the swap partition was rebuilding when my system reset for another r=
-eason.  On reboot, the swap partition was marked auto-read-only and the=
- recovering member was marked as hot spare, but was not recovering.  On=
-ce I used mdadm --readwrite /dev/md2, the hot spare was immediately rec=
-overed.
+On Wednesday June 10, martin.petersen@oracle.com wrote:
+> >>>>> "Neil" == NeilBrown  <neilb@suse.de> writes:
+> 
+> >> + blk_queue_io_opt(mddev->queue, chunk_size * (mddev->raid_disks >>
+> >>  	blk_queue_io_opt(mddev->1));
+> 
+> Neil>  ">> 1" is wrong.  A raid10 may have more than 2 copies for each
+> Neil>  block.
+> 
+> I recall pondering when I wrote that.  Never got around to revisiting
+> the issue.  Your RAID10 implementation is a bit hipper than most :)
 
-Simon.
+And I know where my towel is, too :-)
+> 
+> 
+> Neil>  This calculation needs to be a bit more subtle and take about of
+> Neil>  the particular layout (near, offset, or far).
+> 
+> Why would layout interfere with preferred I/O size?
 
------Original Message-----
-=46rom: linux-raid-owner@vger.kernel.org [mailto:linux-raid-owner@vger.=
-kernel.org] On Behalf Of Ing. Jair
-Sent: 10 June 2009 20:24
-To: Steven Haigh
-Cc: linux-raid@vger.kernel.org
-Subject: Re: mdadm message (auto-read-only) on "/dev/md1" =3D swap file=
- system
+For a 'far' or 'offset' layout, you probably want
+    chunksize * raid_disks
+just like raid0. 
 
-Thank you very much Steven for your reply. I am not having any issues
-since the two drives are working fine.  But my concern was if this
-will cause problems if in the future I have a hard drive failure.
+For a 'near' layout, what you suggest seems good.
 
-=3D)
+The driver actually allows both 'near' and 'far'.  I doubt if anyone
+would use it, but it would be nice to get it 'right'.
+> 
+> How about:
+> 
+>     if (conf->raid_disks % conf->copies)
+> 	blk_queue_io_opt(mddev->queue, chunk_size * conf->raid_disks);
+>     else
+> 	blk_queue_io_opt(mddev->queue, chunk_size *
+> 			 (conf->raid_disks / conf->copies));
 
-Thank you again,
+I think that if you replace "conf->copies" by 'nc' (which is
+ (mddev->layout & 255)
+) then that will be perfect.  For a 'far' layout, nc is normally '1',
+and either branch will give the correct value.
 
-On Wed, Jun 10, 2009 at 12:30 PM, Steven Haigh<netwiz@crc.id.au> wrote:
-> On 11/06/2009, at 3:10 AM, Ing. Jair wrote:
->
->> Dear Linux -raid community masters,
->>
->>
->> I have a quick question regarding something i noticed on my first ti=
-me
->> mdadm linux raid configuration server:
->>
->>
->> Current System:
->>
->> Debian Lenny 5.0
->> Two 250GB hard drives identical brand, size, model, speed, etc... th=
-ey
->> are the same.
->> 3GB memory ram
->> 1 AMD athlon 2500 CPU
->>
->> Here I am pasting an example of another machine I configure with the
->> same result notice the "(auto-read-only)" message on the swap file
->> system:
->>
->>
->> md2 : active raid1 hde3[0] hdg3[1]
->> =A0 =A0 153557184 blocks [2/2] [UU]
->>
->> md1 : active (auto-read-only) raid1 hde2[0] hdg2[1]
->> =A0 =A0 2634560 blocks [2/2] [UU]
->>
->>
->>
->> md0 : active raid1 hde1[0] hdg1[1]
->> =A0 =A0 96320 blocks [2/2] [UU]
->>
->> unused devices: <none>
->>
->>
->> My question for this is:
->>
->> 1. Is this the way suppose to work on the device md1 =3D swap filesy=
-stem
->> raid?
->
-> I believe the array will stay read-only until the first write is perf=
-ormed -
-> at which time the array will automatically switch to read/write.
->
->> 2. If this is normal where can I find documentation about the
->> different "messages" displayed on the command "cat /proc/mdstat"?
->>
->> 3. If this is a bug, is there a work around and what will happen if
->> this continue to appear?
->>
->> 4. I ran the command mdadm -w /dev/md1 and the message disappear, bu=
-t
->> after rebooting the system came back up.
->>
->> I appreciate any information or document, links, ideas you can provi=
-de to
->> me.
->
->
-> The following bug report shows this behaviour, and the reply shows th=
-is
-> behaviour as 'not a bug'.
-> http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D464560
->
-> I can't find any more solid references to this however... This being =
-said,
-> logic says that if this is correct, the array would only go read/writ=
-e when
-> something writes to your swap space...
->
+Thanks,
+NeilBrown
+
+
+> 
+> I.e.:
+> 
+> 2 drives, 2 copies: a1 a1       optimal I/O = 1 * chunk_size
+> 
+> 3 drives, 2 copies: a1 a1 a2
+>                     a2 a3 a3    optimal I/O = 3 * chunk_size
+> 
+> 4 drives, 2 copies: a1 a1 a2 a2	optimal I/O = 2 * chunk_size
+> 
+> 4 drives, 3 copies: a1 a1 a1 a2
+>                     a2 a2 a3 a3
+>                     a3 a4 a4 a4 optimal I/O = 4 * chunk_size
+> 
+> And so on.  Does that make sense?  I.e. we try to keep all drives
+> equally busy.
+> 
+> 
+> Neil> You seem to be treating raid4 like raid6 :-)
+> 
+> Whoops.  I always forget about raid4.  Fixed.
+> 
+> -- 
+> Martin K. Petersen	Oracle Linux Engineering
 > --
-> Steven Haigh
->
-> Email: netwiz@crc.id.au
-> Web: http://www.crc.id.au
-> Phone: (03) 9001 6090 - 0412 935 897
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
-
-
-
---=20
-Jairzhino Bolivar (Jair)
-GNU/Linux & Unix Administrator
-Mobile: (312)404-6530
-=46ax: (214)602-4405
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
