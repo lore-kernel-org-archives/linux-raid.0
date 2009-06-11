@@ -1,207 +1,147 @@
-From: Fredrik Pettersson <freppe@deimos.nu>
-Subject: Re: Why is my raid 1 boot/root not working with autodetect?
-Date: Thu, 11 Jun 2009 10:44:44 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0906111019350.9820@deimos.nu>
-References: <Pine.LNX.4.64.0906101828150.10333@deimos.nu>
+From: "Simon Jackson" <sjackson@bluearc.com>
+Subject: RE: mdadm message (auto-read-only) on "/dev/md1" = swap file system
+Date: Thu, 11 Jun 2009 11:00:23 +0100
+Message-ID: <3D76E016F4A2A749A1EB1A3FD83E22BC0294AB85@uk-email.terastack.bluearc.com>
+References: <2b91784d0906101010l409c38d2m8d0e7401c454307f@mail.gmail.com> <D081A9AE-6E07-4568-880A-2CC8A47947C1@crc.id.au> <2b91784d0906101223m2c8e2c2fh9cd2981480623463@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0906101828150.10333@deimos.nu>
+Content-class: urn:content-classes:message
+In-Reply-To: <2b91784d0906101223m2c8e2c2fh9cd2981480623463@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Ing. Jair" <jairzhino@gmail.com>, Steven Haigh <netwiz@crc.id.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have done some more testing in an attempt to gather more data, and here 
-is what I have seen when testing different kernel options.
+The only issue I have seen with this was when I was recovering a disk a=
+nd the swap partition was rebuilding when my system reset for another r=
+eason.  On reboot, the swap partition was marked auto-read-only and the=
+ recovering member was marked as hot spare, but was not recovering.  On=
+ce I used mdadm --readwrite /dev/md2, the hot spare was immediately rec=
+overed.
 
-When booting with my normal kernel options I get the following md output 
-during the boot:
+Simon.
 
-(raid=noautodetect md=0,/dev/sdb1,/dev/sdc1 md=d0,/dev/sdb2,/dev/sdc2)
------
-md: Skipping autodetection of RAID arrays. (raid=autodetect will force)
-md: Loading md0: /dev/sdb1
-md: bind<sdb1>
-md: bind<sdc1>
-raid1: raid set md0 active with 2 out of 2 mirrors
-  md0: unknown partition table
-  md0: unknown partition table
-md: Loading md_d0: /dev/sdb2
-md: bind<sdb2>
-md: bind<sdc2>
-raid1: raid set md_d0 active with 2 out of 2 mirrors
-  md_d0: p1 p2 p3 p4
-  md_d0: p1 p2 p3 p4
------
+-----Original Message-----
+=46rom: linux-raid-owner@vger.kernel.org [mailto:linux-raid-owner@vger.=
+kernel.org] On Behalf Of Ing. Jair
+Sent: 10 June 2009 20:24
+To: Steven Haigh
+Cc: linux-raid@vger.kernel.org
+Subject: Re: mdadm message (auto-read-only) on "/dev/md1" =3D swap file=
+ system
 
-Everything is well and boots fine.
+Thank you very much Steven for your reply. I am not having any issues
+since the two drives are working fine.  But my concern was if this
+will cause problems if in the future I have a hard drive failure.
 
-If I change try to use autodetect but still keep the md= definitions:
+=3D)
 
-(raid=autodetect md=0,/dev/sdb1,/dev/sdc1 md=d0,/dev/sdb2,/dev/sdc2)
------
-md: Autodetecting RAID arrays.
-md: Scanned 4 and added 4 devices.
-md: autorun ...
-md: considering sdc2 ...
-md:  adding sdc2 ...
-md: sdc1 has different UUID to sdc2
-md:  adding sdb2
-md: sdb1 has different UUID to sdc2
-md: created md1
-md: bind<sdb2>
-md: bind<sdc2>
-md: running: <sdc2><sdb2>
-raid1: raid set md1 active with 2 out of 2 mirrors
-md: considering sdc1 ...
-md:  adding sdc1 ...
-md:  adding sdb1 ...
-md: created md0
-md: bind<sdb1>
-md: bind<sdc1>
-md: running: <sdc1><sdb1>
-raid1: raid set md0 active with 2 out of 2 mirrors
-md: ... autorun DONE.
-md: Loading md0: /dev/sdb1
-  md0: unknown partition table
-md: couldn't update array info. -22
-md: could not bd_claim sdb1.
-md: md_import_device returned -16
-md: could not bd_claim sdc1.
-md: md_import_device returned -16
-md: startind md0 failed
-md: Loading md_d0: /dev/sdb2
-md: could not bd_claim sdb2.
-md: md_import_device returned -16
-md: could not bd_claim sdc2.
-md: md_import_device returned -16
-md: starting md0 failed
------
+Thank you again,
 
-In that case boot eventually fails with "mdadm: no devices found for 
-/dev/md_d0".
-
-Finally I tried to remove the md= stuff as well:
-
-(raid=autodetect)
------
-md: Autodetecting RAID arrays.
-md: Scanned 4 and added 4 devices.
-md: autorun ...
-md: considering sdc2 ...
-md:  adding sdc2 ...
-md: sdc1 has different UUID to sdc2
-md:  adding sdb2
-md: sdb1 has different UUID to sdc2
-md: created md1
-md: bind<sdb2>
-md: bind<sdc2>
-md: running: <sdc2><sdb2>
-raid1: raid set md1 active with 2 out of 2 mirrors
-md: considering sdc1 ...
-md:  adding sdc1 ...
-md:  adding sdb1 ...
-md: created md0
-md: bind<sdb1>
-md: bind<sdc1>
-md: running: <sdc1><sdb1>
-raid1: raid set md0 active with 2 out of 2 mirrors
-md: ... autorun DONE.
-  md0: unknown partition table
------
-
-Boot fails with the same mdadm error as the previous attempt.
-
-This is all on 2.6.29. Seems to me like it is actually sort of working in 
-at least the last go. Or at least the raids are detected, but there is no 
-mention of the four partitions on one of them so perhaps it is not 
-detected properly? Have I made some error when creating the raids that 
-causes the autodetect to not notice that one of the raids is partitioned? 
-Any other potential mistakes I might have made that would lead to 
-autodetect failing?
-
-Regards,
-
-/Fredrik Pettersson
-
-
-On Wed, 10 Jun 2009, Fredrik Pettersson wrote:
-
-> Hi,
+On Wed, Jun 10, 2009 at 12:30 PM, Steven Haigh<netwiz@crc.id.au> wrote:
+> On 11/06/2009, at 3:10 AM, Ing. Jair wrote:
 >
-> A couple of years ago I converted my system to run off a software raid 1 
-> rather than from a single disk. On the dual 250GB disks I have set up two 
-> partitions:
+>> Dear Linux -raid community masters,
+>>
+>>
+>> I have a quick question regarding something i noticed on my first ti=
+me
+>> mdadm linux raid configuration server:
+>>
+>>
+>> Current System:
+>>
+>> Debian Lenny 5.0
+>> Two 250GB hard drives identical brand, size, model, speed, etc... th=
+ey
+>> are the same.
+>> 3GB memory ram
+>> 1 AMD athlon 2500 CPU
+>>
+>> Here I am pasting an example of another machine I configure with the
+>> same result notice the "(auto-read-only)" message on the swap file
+>> system:
+>>
+>>
+>> md2 : active raid1 hde3[0] hdg3[1]
+>> =A0 =A0 153557184 blocks [2/2] [UU]
+>>
+>> md1 : active (auto-read-only) raid1 hde2[0] hdg2[1]
+>> =A0 =A0 2634560 blocks [2/2] [UU]
+>>
+>>
+>>
+>> md0 : active raid1 hde1[0] hdg1[1]
+>> =A0 =A0 96320 blocks [2/2] [UU]
+>>
+>> unused devices: <none>
+>>
+>>
+>> My question for this is:
+>>
+>> 1. Is this the way suppose to work on the device md1 =3D swap filesy=
+stem
+>> raid?
 >
-> -----
-> Disk /dev/sdb: 250.0 GB, 250059350016 bytes
-> 255 heads, 63 sectors/track, 30401 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
-> Disk identifier: 0x00000000
+> I believe the array will stay read-only until the first write is perf=
+ormed -
+> at which time the array will automatically switch to read/write.
 >
->   Device Boot      Start         End      Blocks   Id  System
-> /dev/sdb1   *           1        1246    10008463+  fd  Linux raid autodetect
-> /dev/sdb2            1247       30401   234187537+  fd  Linux raid autodetect
-> -----
+>> 2. If this is normal where can I find documentation about the
+>> different "messages" displayed on the command "cat /proc/mdstat"?
+>>
+>> 3. If this is a bug, is there a work around and what will happen if
+>> this continue to appear?
+>>
+>> 4. I ran the command mdadm -w /dev/md1 and the message disappear, bu=
+t
+>> after rebooting the system came back up.
+>>
+>> I appreciate any information or document, links, ideas you can provi=
+de to
+>> me.
 >
-> sdb1/sdc1 is a raid 1 called /dev/md0, sdb2/sdc2 is a partitionable raid 1 
-> called /dev/md_d0, partitioned and used for usr, var & home.
 >
-> Partitions are set up as follows:
+> The following bug report shows this behaviour, and the reply shows th=
+is
+> behaviour as 'not a bug'.
+> http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D464560
 >
-> -----
-> Filesystem           1K-blocks      Used Available Use% Mounted on
-> /dev/md0               9851232    236736   9114080   3% /
-> udev                     10240        76     10164   1% /dev
-> /dev/md_d0p1          29529044   8936164  19092880  32% /usr
-> /dev/md_d0p2          19685916  10876740   7809176  59% /var
-> /dev/md_d0p3           9842852   3453940   5888912  37% /home
-> none                    517192         0    517192   0% /dev/shm
-> -----
+> I can't find any more solid references to this however... This being =
+said,
+> logic says that if this is correct, the array would only go read/writ=
+e when
+> something writes to your swap space...
 >
-> At the time when I set this up I found that the only way for me to get it to 
-> boot properly was to have the following kernel options in my grub.conf:
->
-> raid=noautodetect md=0,/dev/sdb1,/dev/sdc1 md=d0,/dev/sdb2,/dev/sdc2
->
-> As it was some time ago I don't recall exactly why that had to be there, but 
-> it doesn't work without having those kernel options. I've just started 
-> thinking of adding more software raid disks to my system and figured it would 
-> be nice if autodetect would work for me so I would prefer to get rid of those 
-> options. If I remove the "raid=noautodetect" bit, or all of it, then the 
-> system fails to boot properly. From what I can see on the console it appears 
-> to find the md_d0 raid and partitions just fine, but not the /dev/md0 raid 
-> which obviously causes the boot to fail. So my question now is, why is 
-> autodetect not working properly and what can I do to fix it?
->
-> I'm sure there is more information I should have provided here, please ask if 
-> anything is missing. Here is my /proc/mdstat and the full entry from 
-> grub.conf:
->
-> -----
-> # cat /proc/mdstat
-> Personalities : [raid0] [raid1] [raid6] [raid5] [raid4]
-> md_d0 : active raid1 sdc2[1] sdb2[0]
->       234187456 blocks [2/2] [UU]
->
-> md0 : active raid1 sdc1[1] sdb1[0]
->       10008384 blocks [2/2] [UU]
->
-> unused devices: <none>
-> -----
->
-> -----
-> title=Gentoo Linux 2.6.29-gentoo-r5
->        kernel (hd0,0)/boot/kernel-2.6.29-gentoo-r5 root=/dev/md0 
-> raid=noautodetect md=0,/dev/sdb1,/dev/sdc1 md=d0,/dev/sdb2,/dev/sdc2
->        savedefault fallback
-> -----
->
-> Best regards, and thanks in advance for any answers.
->
-> /Fredrik Pettersson
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Steven Haigh
 >
+> Email: netwiz@crc.id.au
+> Web: http://www.crc.id.au
+> Phone: (03) 9001 6090 - 0412 935 897
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+
+
+
+--=20
+Jairzhino Bolivar (Jair)
+GNU/Linux & Unix Administrator
+Mobile: (312)404-6530
+=46ax: (214)602-4405
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
