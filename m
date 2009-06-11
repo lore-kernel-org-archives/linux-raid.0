@@ -1,121 +1,215 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Software RAID5 write issues
-Date: Wed, 10 Jun 2009 21:46:32 -0400
-Message-ID: <1244684792.21347.231.camel@firewall.xsintricity.com>
-References: <AB9F712C-7A3F-4832-B60B-AB56DE448F14@crc.id.au>
-	 <1244667422.21347.210.camel@firewall.xsintricity.com>
-	 <916523ED-3D03-4AB1-A64A-1797852ABE9B@crc.id.au>
+From: Jim Paris <jim@jtan.com>
+Subject: Assembly problems with kernel 2.6.30?
+Date: Thu, 11 Jun 2009 03:25:38 -0400
+Message-ID: <20090611072538.GA7841@psychosis.jim.sh>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-o/EGebM5TV8Lie+pEe8+"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <916523ED-3D03-4AB1-A64A-1797852ABE9B@crc.id.au>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Steven Haigh <netwiz@crc.id.au>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
---=-o/EGebM5TV8Lie+pEe8+
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I am running Debian with my root filesystem on /dev/md1.
+At boot, hook scripts in initramfs-tools run:
 
-On Thu, 2009-06-11 at 10:05 +1000, Steven Haigh wrote:
-> Isn't the PCI Bus limited to around 133MB/sec? If so, even with 3 =20
-> drives on the same controller, you would expect divided equally that =20
-> each drive would get ~44MB/sec before overheads - not around 7MB/sec =20
-> per drive. I know I'm not going to get phenomenal performance with my =20
-> setup, but as most the data is archiving (and then copied to tape), I =20
-> would like to get things at least up to a reasonable level instead of =20
-> having a write speed of ~12% of the read speed.
+mdadm --assemble --scan --run --auto=yes /dev/md1
 
-It is, but it's shared amongst all the cards on that particular bus, and
-in particular older motherboards would daisy chain busses such that a
-later bus only gets part of that bandwidth because earlier busses are
-using it too.  Plus the PCI bus limitation is 133MB/s theoretical
-maximum, in practice you get less due to things like arbitration and
-such.
+with the following /etc/mdadm/mdadm.conf:
 
-> Hmmm - a very interesting read - but I am a little confused when it =20
-> comes to PCI bandwidth. I would assume (maybe wrongly) that if I can =20
-> READ from the array at 95MB/sec (as measured by bonnie++), then I =20
-> should be able to write to the same array at a little faster than 11MB/=20
-> sec - as a read would usually read from 4 of 5 drives, however a write =20
-> would go to all drives. This being said, I wouldn't expect one extra =20
-> write to equal 12% of a read speed!
+DEVICE partitions
+ARRAY /dev/md0 level=raid1 num-devices=6 UUID=dece84f3:a8f8be71:ea9d9fee:21fd5f90
+ARRAY /dev/md1 level=raid1 num-devices=2 UUID=0598d2ea:f6c0185f:614fa502:109d1a5d
+ARRAY /dev/md2 level=raid5 num-devices=4 UUID=eed65e3878:f4e6e055:198bdcfe:77de48
 
-There are two factors involved in this (I'm speculating of course, but
-here goes).
+For the record:
+/dev/md0 uses /dev/sd[abcdef]1
+/dev/md1 uses /dev/sd[ab]2
+/dev/md2 uses /dev/sd[cdef]2
 
-One, a read doesn't involve every drive in the array.  For any given
-stripe, you will actually only read from 4 of the 5 drives.  Since 3 of
-the drives are on the card, that means that 3 out of 5 stripes, one of
-those drives will be the parity drive and therefore not used in the read
-process.  So, for 3 out of 5 stripes, you actually read from two of the
-drives behind the card and two on the motherboard.  The other two you
-read from three of the drives behind the card and one on the
-motherboard.  That accounts for a reasonable amount of difference all by
-itself.  As an example, I have an external SATA drive case here that
-holds 4 drives on a repeater and uses a single eSATA cable to run the 4
-drives.  When accessing a single drive, I get 132MB/s throughput.  When
-I access two drives, it drops to 60MB/s throughput per drive.  When
-accessing three drives, it drops to 39MB/s throughput per drive.  So,
-you can see where, on read, the lack of need to access all three drives
-can really help on specific stripes.  In other words, reading from only
-4 drives at a time *helps* your performance because whatever two drives
-are in use behind the PCI card run faster and can keep up better with
-the two drives on the motherboard.  Since writes always go to all 5
-drives, you always get the slower speed (and you are writing 25% more
-data to disk relative to the amount of actual data transfered than when
-you are reading to boot).
+On kernel 2.6.27.3, this worked fine.  After upgrading to 2.6.30, the
+initrams failed with the error:
 
-Two, you use a 1MB chunk size.  Given a 5 drive raid5, that gives a 4MB
-stripe width.  My guess is that your stripe size is large enough,
-relative to your average write size, that your array is more often than
-not performing a read/modify/write cycle for writing instead of a full
-stripe write.  In a full stripe write, the md stack will write out all
-four data chunks and a calculated parity chunk without regard to what
-parity was before and what data was there before.  If, on the other
-hand, it doesn't have enough data to write an entire stripe by the time
-it is flushing things out, then it has to do a read/modify/write cycle.
-The particulars of what's most efficient in this case depend on how many
-chunks are being overwritten in the stripe, but regardless it means
-reading in parts of the stripe and parity first, then doing xor
-operations, then writing new data and new parity back out.  This will
-mean that at least some of the 5 drives are doing both reads and writes
-in a single stripe operation.  So, I think the combination of
-read/modify/write cycles combined with the poor performance of drives
-behind the PCI card actually can result in the drastic difference you
-are seeing between read and write speeds.
+  mdadm: superblock on /dev/sdc2 doesn't match others - assembly aborted
 
-> The other thing I wonder is if it has something to do with the =20
-> sil_sata driver - as ALL the drives in the RAID5 are handled by that =20
-> kernel module. The boot RAID1 is on the ICH5 SATA controller - and =20
-> suffers no performance issues at all. It shows a good 40MB/sec+ read =20
-> AND write speeds per drive.
+The solution was to change the /etc/mdadm/mdadm.conf to specifically
+list the metadata format:
 
-It's entirely possible that the driver plays a role in this, yes.  I
-don't have any hardware that uses that driver so I couldn't say.
+DEVICE partitions
+ARRAY /dev/md0 level=raid1 num-devices=6 UUID=dece84f3:a8f8be71:ea9d9fee:21fd5f90
+ARRAY /dev/md1 level=raid1 num-devices=2 UUID=0598d2ea:f6c0185f:614fa502:109d1a5d
+ARRAY /dev/md2 level=raid5 metadata=1.0 num-devices=4 UUID=eed65e3878:f4e6e055:198bdcfe:77de48
 
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-              http://people.redhat.com/dledford
+This was tested with Debian mdadm packages 2.6.7.2-1 and 2.6.9-3 -- no
+difference.
 
-Infiniband specific RPMs available at
-              http://people.redhat.com/dledford/Infiniband
+So, is this a bug?  Kernel or mdadm?  If user error, why did it work
+before?  Also, why does the metadata on /dev/md2 matter for assembling
+/dev/md1?
+
+This is a live system that I can't reboot easily.  Superblocks (from
+the booted system) on /dev/md1 and /dev/md2 devices are below.
+
+-jim
+
+/dev/sda2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 0598d2ea:f6c0185f:614fa502:109d1a5d
+  Creation Time : Fri Sep 22 06:18:16 2006
+     Raid Level : raid1
+  Used Dev Size : 976631424 (931.39 GiB 1000.07 GB)
+     Array Size : 976631424 (931.39 GiB 1000.07 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 1
+
+    Update Time : Thu Jun 11 03:25:09 2009
+          State : active
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : e0ef73c6 - correct
+         Events : 252219
 
 
---=-o/EGebM5TV8Lie+pEe8+
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+      Number   Major   Minor   RaidDevice State
+this     1       8        2        1      active sync   /dev/sda2
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+   0     0       8       18        0      active sync   /dev/sdb2
+   1     1       8        2        1      active sync   /dev/sda2
+/dev/sdb2:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 0598d2ea:f6c0185f:614fa502:109d1a5d
+  Creation Time : Fri Sep 22 06:18:16 2006
+     Raid Level : raid1
+  Used Dev Size : 976631424 (931.39 GiB 1000.07 GB)
+     Array Size : 976631424 (931.39 GiB 1000.07 GB)
+   Raid Devices : 2
+  Total Devices : 2
+Preferred Minor : 1
 
-iEYEABECAAYFAkowYfgACgkQQ9aEs6Ims9jdgwCgoVxo0GWAU0mkpRojqkmYBBxC
-LUQAnR1GGsZSsyE9kdE3yKMBFkIH3cJY
-=Lby4
------END PGP SIGNATURE-----
+    Update Time : Thu Jun 11 03:25:09 2009
+          State : active
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : e0ef73d4 - correct
+         Events : 252219
 
---=-o/EGebM5TV8Lie+pEe8+--
+
+      Number   Major   Minor   RaidDevice State
+this     0       8       18        0      active sync   /dev/sdb2
+
+   0     0       8       18        0      active sync   /dev/sdb2
+   1     1       8        2        1      active sync   /dev/sda2
+/dev/sdc2:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x0
+     Array UUID : eed65e38:78f4e6e0:55198bdc:fe77de48
+           Name : 2
+  Creation Time : Thu Feb 22 02:28:12 2007
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 1953262752 (931.39 GiB 1000.07 GB)
+     Array Size : 5859788160 (2794.16 GiB 3000.21 GB)
+  Used Dev Size : 1953262720 (931.39 GiB 1000.07 GB)
+   Super Offset : 1953263008 sectors
+          State : active
+    Device UUID : 407cf6b0:3d180e0b:e5be6dc0:e6bcf953
+
+    Update Time : Thu Jun 11 03:25:09 2009
+       Checksum : a59a2510 - correct
+         Events : 10783
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+    Array Slot : 5 (failed, failed, failed, failed, 3, 0, 1, 2)
+   Array State : Uuuu 4 failed
+/dev/sdd2:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x0
+     Array UUID : eed65e38:78f4e6e0:55198bdc:fe77de48
+           Name : 2
+  Creation Time : Thu Feb 22 02:28:12 2007
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 1953262752 (931.39 GiB 1000.07 GB)
+     Array Size : 5859788160 (2794.16 GiB 3000.21 GB)
+  Used Dev Size : 1953262720 (931.39 GiB 1000.07 GB)
+   Super Offset : 1953263008 sectors
+          State : clean
+    Device UUID : df17e349:186715a7:3f7bd3f9:a53ce15d
+
+    Update Time : Thu Jun 11 03:25:09 2009
+       Checksum : 1ddb4ba4 - correct
+         Events : 10782
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+    Array Slot : 6 (failed, failed, failed, failed, 3, 0, 1, 2)
+   Array State : uUuu 4 failed
+/dev/sde2:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x0
+     Array UUID : eed65e38:78f4e6e0:55198bdc:fe77de48
+           Name : 2
+  Creation Time : Thu Feb 22 02:28:12 2007
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 1953262752 (931.39 GiB 1000.07 GB)
+     Array Size : 5859788160 (2794.16 GiB 3000.21 GB)
+  Used Dev Size : 1953262720 (931.39 GiB 1000.07 GB)
+   Super Offset : 1953263008 sectors
+          State : clean
+    Device UUID : 324c496c:2a4a57c4:04a65638:0b9606c5
+
+    Update Time : Thu Jun 11 03:25:09 2009
+       Checksum : 32be735 - correct
+         Events : 10782
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+    Array Slot : 7 (failed, failed, failed, failed, 3, 0, 1, 2)
+   Array State : uuUu 4 failed
+/dev/sdf2:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x0
+     Array UUID : eed65e38:78f4e6e0:55198bdc:fe77de48
+           Name : 2
+  Creation Time : Thu Feb 22 02:28:12 2007
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 1953262752 (931.39 GiB 1000.07 GB)
+     Array Size : 5859788160 (2794.16 GiB 3000.21 GB)
+  Used Dev Size : 1953262720 (931.39 GiB 1000.07 GB)
+   Super Offset : 1953263008 sectors
+          State : clean
+    Device UUID : 4d0e18c4:92574d6d:798f2111:18c93628
+
+    Update Time : Thu Jun 11 03:25:09 2009
+       Checksum : 3febd336 - correct
+         Events : 10782
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+    Array Slot : 4 (failed, failed, failed, failed, 3, 0, 1, 2)
+   Array State : uuuU 4 failed
 
