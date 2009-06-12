@@ -1,19 +1,42 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Computer locked up when adding bitmap=internal and now filesystem
- is gone
-Date: Fri, 12 Jun 2009 11:09:45 +1000
-Message-ID: <18993.43737.663648.338769@notabene.brown>
+From: Henrik Johnson <henrik.johnson@quest.com>
+Subject: RE: Computer locked up when adding bitmap=internal and now
+ filesystem is gone
+Date: Thu, 11 Jun 2009 18:21:48 -0700
+Message-ID: <6592BDAF72405343BA096C66B735B38E017D643A54@alvxmbw04.prod.quest.corp>
 References: <6592BDAF72405343BA096C66B735B38E017D64335C@alvxmbw04.prod.quest.corp>
 	<6592BDAF72405343BA096C66B735B38E017D643878@alvxmbw04.prod.quest.corp>
+ <18993.43737.663648.338769@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Henrik Johnson on Thursday June 11
+In-Reply-To: <18993.43737.663648.338769@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Henrik Johnson <henrik.johnson@quest.com>
+To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
+
+Some more information. I have now checked that indeed every single group descriptor is invalid (I wrote a little perl script to check it). Weird thing is that the data does seem to be there and fine (Or at least a large part of it) because if I just read the array device I can see data I recognize.
+
+I have also just to check tried removing two devices at a time and reassemble it going through the entire array to see if I got any different result and it was exactly the same. I am leaning towards this being an ext4 problem (This should teach me to be on the bleeding edge) and not a raid problem at least at this point.
+
+Very disappointing output at the end of the e2fsck run though with what I currently have.
+
+/dev/mapper/pallas: 11/213671936 files (303972.7% non-contiguous), 13514152/1709343519 blocks
+
+Something is obviously very wrong (And I definitely have more than 11 files and should have about 90% of the array allocated).
+
+Thanks for the help though and if you come up with anything else please let me know.
+
+/Regards
+Henrik Johnson
+-----Original Message-----
+From: Neil Brown [mailto:neilb@suse.de] 
+Sent: Thursday, June 11, 2009 6:10 PM
+To: Henrik Johnson
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Computer locked up when adding bitmap=internal and now filesystem is gone
 
 On Thursday June 11, henrik.johnson@quest.com wrote:
 > I am having a decidedly bad day today. I just posted another issue
