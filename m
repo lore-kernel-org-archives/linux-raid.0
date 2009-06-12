@@ -1,107 +1,117 @@
-From: Henrik Johnson <henrik.johnson@quest.com>
-Subject: RE: Computer locked up when adding bitmap=internal and now
- filesystem is gone
-Date: Thu, 11 Jun 2009 18:21:48 -0700
-Message-ID: <6592BDAF72405343BA096C66B735B38E017D643A54@alvxmbw04.prod.quest.corp>
-References: <6592BDAF72405343BA096C66B735B38E017D64335C@alvxmbw04.prod.quest.corp>
-	<6592BDAF72405343BA096C66B735B38E017D643878@alvxmbw04.prod.quest.corp>
- <18993.43737.663648.338769@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: RAID-6 mdadm disks out of sync issue (five questions)
+Date: Fri, 12 Jun 2009 11:26:04 +1000
+Message-ID: <18993.44716.150839.661647@notabene.brown>
+References: <ed308b763e18e168a98f977857663bed.squirrel@neil.brown.name>
+	<200906111843.n5BIhlcN024789@cjb.net>
+	<4A319453.3060503@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18993.43737.663648.338769@notabene.brown>
-Content-Language: en-US
+In-Reply-To: message from Michael Tokarev on Friday June 12
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: linux-raid.vger.kernel.org@atu.cjb.net, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Some more information. I have now checked that indeed every single group descriptor is invalid (I wrote a little perl script to check it). Weird thing is that the data does seem to be there and fine (Or at least a large part of it) because if I just read the array device I can see data I recognize.
-
-I have also just to check tried removing two devices at a time and reassemble it going through the entire array to see if I got any different result and it was exactly the same. I am leaning towards this being an ext4 problem (This should teach me to be on the bleeding edge) and not a raid problem at least at this point.
-
-Very disappointing output at the end of the e2fsck run though with what I currently have.
-
-/dev/mapper/pallas: 11/213671936 files (303972.7% non-contiguous), 13514152/1709343519 blocks
-
-Something is obviously very wrong (And I definitely have more than 11 files and should have about 90% of the array allocated).
-
-Thanks for the help though and if you come up with anything else please let me know.
-
-/Regards
-Henrik Johnson
------Original Message-----
-From: Neil Brown [mailto:neilb@suse.de] 
-Sent: Thursday, June 11, 2009 6:10 PM
-To: Henrik Johnson
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Computer locked up when adding bitmap=internal and now filesystem is gone
-
-On Thursday June 11, henrik.johnson@quest.com wrote:
-> I am having a decidedly bad day today. I just posted another issue
-> here a few hours ago. Now on another machine I was trying to remove
-> and then add back an internal bitmap. When executing the command to
-> add the internal bitmap back I ran into this error is the syslog. 
+On Friday June 12, mjt@tls.msk.ru wrote:
+> linux-raid.vger.kernel.org@atu.cjb.net wrote:
+> > NeilBrown <neilb@suse.de> wrote :
+> >> Once you are sure you have the 6 drives with the highest
+> >> event counts working, assemble them with
+> >>
+> >> mdadm --assemble /dev/md13 --force /dev/sd?1
+> > 
+> > I had a few questions before I went ahead with the
+> > reassembly:
+> > 
+> > 1) Does it matter which order the disks are listed in when
+> > reassembling the array (e.g. /dev/sda1 /dev/sdh1 ...)?
 > 
-> Jun 11 14:06:36 pallas klogd: BUG: unable to handle kernel NULL pointer dereference at (null)
-> Jun 11 14:06:36 pallas klogd: IP: [<c0306ddb>] bitmap_daemon_work+0x1eb/0x380
+> No, the order does not matter.  In superblock of each
+> device there's the device number so mdadm will figure
+> it all out automatically.
+> 
+> On the other hand, if you want to RECREATE the array
+> (with mdadm --create), order DOES matter - it's pretty
+> much essential to get the same order as original array.
+> 
+> > 2) Is there any risk to the data stored on the disks by
+> > merely reassembling the six working disks with the above
+> > command?
+> 
+> If you original set (raid6) was 8 disks, there's nothing
+> to do with the data.  I mean, mdadm/kernel will not
+> start any sort of reconstruction because there's no
+> drives to resync data to.  The data will not be
+> changed.  Superblocks will be updated (event counts)
+> but that's not data.
+> 
+> > 3) Does /sys/module/md_mod/parameters/start_ro being
+> > set to 1 prevent the array from syncing/rebuilding/etc.,
+> > or does it only prevent new user data being written to
+> > the array?  If it only prevents user data being written
+> > to the /dev/md*, is there some way to also prevent mdadm
+> > from doing syncing/rebuilding/etc. so I can be sure the
+> > data is not at risk of further damage while testing?
+> 
+> See above.  I really am not sure for start_ro vs
+> rebuilding - will check ;)
 
-Is it possible that this actually happened when you removed the
-bitmap, and you didn't notice until you tried to add the bitmap?
+If an array started read-only, then no resync/rebuild etc will happen
+until the first write, or until the array is explicitly set to
+read-write.
 
-I can see a race in the bitmap removal which could allow this to
-happen - I'll see about fixing that.
 
-> After this the machine completely locked up. I had to hard reset it
-> to get it back up and running. The array was dirty but all the disks
-> seemed to be there and in the array. It started syncing up a bit
-> before I stopped it just to be on the safe side. Here is the
-> problem. It seems that most of the filesystem on the array is
-> gone. According to mdstat and mdadm the array has no bitmap (It was
-> during the call to add the array back that the computer locked
-> up). Here is the output from one of the disks from mdadm -E. 
+> > 
+> > 4) Having checked what the "Events" refers to (I thought it
+> > was write-syncing operations before), should I be worried
+> > at the Event count being above 1,000,000?  I have rebuilt
+> > two failed disks and the distro performed a few data
+> > integrity checks on all the disks.  The array is about
+> > nine to ten months old.
+> 
+> Well, 1.000.000 is a bit too high for that time.
+> Mine has 28 - half a year old raid array.  But I don't
+> reboot machine often, it has been rebooted about 10
+> times in that time.  Events are like - array assembly
+> and disassembly, drive failed, drive added and the like.
 
-That is very sad!
+Events also can increase every time the array switched between
+'active' and 'clean'.  It will switch to 'clean' after 200ms without
+writes and then switch back to 'active' on the first write.
+So you could get nearly 10 changes per second with a workload that
+generates 1 write every 201 ms.
 
-I don't think that the bug which caused the BUG message could have
-caused corruption.  As you say, it will have just locked the array up
-so any further access blocked.  The last thing that would have been
-written was the update to the superblock to record that the bitmap was
-no longer present.
+If you have spare drives, then md drive to avoid increases the event
+count so much so that it doesn't have to write the the otherwise-idle
+drives.  It does this be decrementing the event count on an
+active->clean transition if that seems safe.
 
-Given that none of the devices failed, the parity information should
-not be relevant so whether it did a resync or not, you should still
-see correct data.
+So on an array with no spares, 1,000,000 is entirely possible - it is
+very workload-dependant.
 
 > 
-> Can anybody think of any reason how this could completely corrupt
-> and ext4 file system. The ext4 filesystem is sitting on top of an
-> luks encrypted partition if that helps in any way. It seems not
-> everything is gone though because luks can correctly decode the
-> password but pretty much every single group descriptor in ext4 had
-> an invalid checksum when I ran a read only fsck. 
+> > 5) Any idea why "shutdown -h now" would cause three of
+> > the six working disks to gain 4 events each (happened with
+> > the filesystem unmounted from /dev/md13)?
+> 
+> It shouldn't be that high really.  I think.  *Especially*
+> on only some of the disks.
 
-I believe the group descriptors are spread uniformly across the
-device.  If (almost) all of them are corrupt, it seem very unlikely
-that this would be due to bad data being written.
-
-The possibilities that come to mind are:
-  - the devices in the raid6 are in the wrong order.  This should be
-    impossible as mdadm looks at the content of the metadata to get
-    the order write.  If the superblock for one device was written to
-    another by mistake you could get confusing, but then you would
-    expect to see a missing device.  To get a good array with the
-    devices in the wrong order, two superblocks would have to be
-    swapped, and I think that is incredibly unlikely.
-
-  - The encryption is confused somehow.  It is much easier to point
-    the finger here was I know much less about it :-)
-    However if the encryption were confused, then you would think that
-    every block would look wrong, and the ext4 superblock would not be
-    recognisable and fsck would even get as far as looking for group
-    descriptors. 
-
-So I'm at a loss - I've run out of ideas.  Sorry!
+You would definitely expect them to be all updated by the same amount
+unless there were drive failures.
+Unmounting the filesystem would cause a write of the filesystem
+superblock which could switch the array to active.  Then it would
+switch to clean, and there could be another double-switch in the when
+stopping the array.  So 4 isn't particularly surprising.
 
 NeilBrown
+
+> 
+> /mjt
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
