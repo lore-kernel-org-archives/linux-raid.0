@@ -1,505 +1,204 @@
-From: Jim Paris <jim@jtan.com>
-Subject: Re: Assembly problems with kernel 2.6.30?
-Date: Thu, 11 Jun 2009 22:33:44 -0400
-Message-ID: <20090612023344.GA24806@psychosis.jim.sh>
-References: <20090611072538.GA7841@psychosis.jim.sh> <18993.45142.80174.321434@notabene.brown>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] md: Use new topology calls to indicate alignment and  I/O sizes
+Date: Fri, 12 Jun 2009 00:43:54 -0400
+Message-ID: <yq1vdn2hxit.fsf@sermon.lab.mkp.net>
+References: <yq1my8i6naw.fsf@sermon.lab.mkp.net>
+	<6579bc561e648e03ed4a739799e51d9e.squirrel@neil.brown.name>
+	<yq1ws7k60vt.fsf@sermon.lab.mkp.net>
+	<18992.56246.663815.790604@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <18993.45142.80174.321434@notabene.brown>
+In-Reply-To: <18992.56246.663815.790604@notabene.brown> (Neil Brown's message
+	of "Thu, 11 Jun 2009 20:25:58 +1000")
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> >   mdadm: superblock on /dev/sdc2 doesn't match others - assembly aborted
-> 
-> It looks at first like it might be an mdadm problem - I cannot imagine
-> a kernel bug doing that.  But you say it only happened with an update
-> to 2.6.30, which I cannot explain.
-> Can you:
->  
->  for m in 0.90 1.0 1.1 1.2
->  do mdadm -E -e $m /dev/sd[cdef]2
->  done
-> 
-> and report the result?
 
-Weird: /dev/sdc2 has both a 0.90 and 1.0 superblock.  I guess that's
-the problem.  How would that have happened?  mdadm --create over an 
-existing device without a --zero-superblock inbetween, I suppose?
+Switch MD over to the new disk_stack_limits() function which checks for
+aligment and adjusts preferred I/O sizes when stacking.
 
-I wonder why it was never a problem before.  For the root, only
-/dev/sda2 and /dev/sdb2 are necessary.  Maybe 2.6.30 changed the disk
-order, or the ordering of /proc/partitions, such that mdadm now
-examines this bad disk before the array is fully assembled, whereas it
-never needed to scan it before?
+Also indicate preferred I/O sizes where applicable.
 
-for d in /dev/sd{a,b,c,d,e,f}{1,2}; do
-  for m in 0.90 1.0 1.1 1.2; do
-     echo $m $d 
-     mdadm -E -e $m $d 
-  done
-done
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-Output is below.
+---
 
--jim
+diff --git a/drivers/md/linear.c b/drivers/md/linear.c
+index 9f7cec4..de65208 100644
+--- a/drivers/md/linear.c
++++ b/drivers/md/linear.c
+@@ -142,9 +142,9 @@ static linear_conf_t *linear_conf(mddev_t *mddev, int raid_disks)
+ 		}
+ 
+ 		disk->rdev = rdev;
++		disk_stack_limits(mddev->gendisk, rdev->bdev,
++				  rdev->data_offset);
+ 
+-		blk_queue_stack_limits(mddev->queue,
+-				       rdev->bdev->bd_disk->queue);
+ 		/* as we don't honour merge_bvec_fn, we must never risk
+ 		 * violating it, so limit ->max_sector to one PAGE, as
+ 		 * a one page request is never in violation.
+diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
+index c1ca63f..0651a73 100644
+--- a/drivers/md/multipath.c
++++ b/drivers/md/multipath.c
+@@ -294,7 +294,8 @@ static int multipath_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
+ 	for (path = first; path <= last; path++)
+ 		if ((p=conf->multipaths+path)->rdev == NULL) {
+ 			q = rdev->bdev->bd_disk->queue;
+-			blk_queue_stack_limits(mddev->queue, q);
++			disk_stack_limits(mddev->gendisk, rdev->bdev,
++				rdev->data_offset);
+ 
+ 		/* as we don't honour merge_bvec_fn, we must never risk
+ 		 * violating it, so limit ->max_sector to one PAGE, as
+@@ -460,9 +461,9 @@ static int multipath_run (mddev_t *mddev)
+ 
+ 		disk = conf->multipaths + disk_idx;
+ 		disk->rdev = rdev;
++		disk_stack_limits(mddev->gendisk, rdev->bdev,
++				  rdev->data_offset);
+ 
+-		blk_queue_stack_limits(mddev->queue,
+-				       rdev->bdev->bd_disk->queue);
+ 		/* as we don't honour merge_bvec_fn, we must never risk
+ 		 * violating it, not that we ever expect a device with
+ 		 * a merge_bvec_fn to be involved in multipath */
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index f9e6073..c4687ea 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -164,8 +164,8 @@ static int create_strip_zones(mddev_t *mddev)
+ 		}
+ 		dev[j] = rdev1;
+ 
+-		blk_queue_stack_limits(mddev->queue,
+-				       rdev1->bdev->bd_disk->queue);
++		disk_stack_limits(mddev->gendisk, rdev1->bdev,
++				  rdev1->data_offset);
+ 		/* as we don't honour merge_bvec_fn, we must never risk
+ 		 * violating it, so limit ->max_sector to one PAGE, as
+ 		 * a one page request is never in violation.
+@@ -246,6 +246,11 @@ static int create_strip_zones(mddev_t *mddev)
+ 		       mddev->chunk_sectors << 9);
+ 		goto abort;
+ 	}
++
++	blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
++	blk_queue_io_opt(mddev->queue,
++			 (mddev->chunk_sectors << 9) * mddev->raid_disks);
++
+ 	printk(KERN_INFO "raid0: done.\n");
+ 	mddev->private = conf;
+ 	return 0;
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 89939a7..174c4dd 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1123,8 +1123,8 @@ static int raid1_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
+ 	for (mirror = first; mirror <= last; mirror++)
+ 		if ( !(p=conf->mirrors+mirror)->rdev) {
+ 
+-			blk_queue_stack_limits(mddev->queue,
+-					       rdev->bdev->bd_disk->queue);
++			disk_stack_limits(mddev->gendisk, rdev->bdev,
++						 rdev->data_offset);
+ 			/* as we don't honour merge_bvec_fn, we must never risk
+ 			 * violating it, so limit ->max_sector to one PAGE, as
+ 			 * a one page request is never in violation.
+@@ -1988,9 +1988,8 @@ static int run(mddev_t *mddev)
+ 		disk = conf->mirrors + disk_idx;
+ 
+ 		disk->rdev = rdev;
+-
+-		blk_queue_stack_limits(mddev->queue,
+-				       rdev->bdev->bd_disk->queue);
++		disk_stack_limits(mddev->gendisk, rdev->bdev,
++				  rdev->data_offset);
+ 		/* as we don't honour merge_bvec_fn, we must never risk
+ 		 * violating it, so limit ->max_sector to one PAGE, as
+ 		 * a one page request is never in violation.
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index ae12cea..05ced36 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1151,8 +1151,8 @@ static int raid10_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
+ 	for ( ; mirror <= last ; mirror++)
+ 		if ( !(p=conf->mirrors+mirror)->rdev) {
+ 
+-			blk_queue_stack_limits(mddev->queue,
+-					       rdev->bdev->bd_disk->queue);
++			disk_stack_limits(mddev->gendisk, rdev->bdev,
++					  rdev->data_offset);
+ 			/* as we don't honour merge_bvec_fn, we must never risk
+ 			 * violating it, so limit ->max_sector to one PAGE, as
+ 			 * a one page request is never in violation.
+@@ -2044,7 +2044,7 @@ raid10_size(mddev_t *mddev, sector_t sectors, int raid_disks)
+ static int run(mddev_t *mddev)
+ {
+ 	conf_t *conf;
+-	int i, disk_idx;
++	int i, disk_idx, chunk_size;
+ 	mirror_info_t *disk;
+ 	mdk_rdev_t *rdev;
+ 	int nc, fc, fo;
+@@ -2130,6 +2130,14 @@ static int run(mddev_t *mddev)
+ 	spin_lock_init(&conf->device_lock);
+ 	mddev->queue->queue_lock = &conf->device_lock;
+ 
++	chunk_size = mddev->chunk_sectors << 9;
++	blk_queue_io_min(mddev->queue, chunk_size);
++	if (conf->raid_disks % conf->near_copies)
++		blk_queue_io_opt(mddev->queue, chunk_size * conf->raid_disks);
++	else
++		blk_queue_io_opt(mddev->queue, chunk_size * 
++				 (conf->raid_disks / conf->near_copies));
++
+ 	list_for_each_entry(rdev, &mddev->disks, same_set) {
+ 		disk_idx = rdev->raid_disk;
+ 		if (disk_idx >= mddev->raid_disks
+@@ -2138,9 +2146,8 @@ static int run(mddev_t *mddev)
+ 		disk = conf->mirrors + disk_idx;
+ 
+ 		disk->rdev = rdev;
+-
+-		blk_queue_stack_limits(mddev->queue,
+-				       rdev->bdev->bd_disk->queue);
++		disk_stack_limits(mddev->gendisk, rdev->bdev,
++				  rdev->data_offset);
+ 		/* as we don't honour merge_bvec_fn, we must never risk
+ 		 * violating it, so limit ->max_sector to one PAGE, as
+ 		 * a one page request is never in violation.
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 41dc36e..e9d18eb 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -4451,7 +4451,7 @@ static raid5_conf_t *setup_conf(mddev_t *mddev)
+ static int run(mddev_t *mddev)
+ {
+ 	raid5_conf_t *conf;
+-	int working_disks = 0;
++	int working_disks = 0, chunk_size;
+ 	mdk_rdev_t *rdev;
+ 
+ 	if (mddev->recovery_cp != MaxSector)
+@@ -4606,6 +4606,14 @@ static int run(mddev_t *mddev)
+ 	md_set_array_sectors(mddev, raid5_size(mddev, 0, 0));
+ 
+ 	blk_queue_merge_bvec(mddev->queue, raid5_mergeable_bvec);
++	chunk_size = mddev->chunk_sectors << 9;
++	blk_queue_io_min(mddev->queue, chunk_size);
++	blk_queue_io_opt(mddev->queue, chunk_size *
++			 (conf->raid_disks - conf->max_degraded));
++
++	list_for_each_entry(rdev, &mddev->disks, same_set)
++		disk_stack_limits(mddev->gendisk, rdev->bdev,
++				  rdev->data_offset);
+ 
+ 	return 0;
+ abort:
 
-0.90 /dev/sda1
-/dev/sda1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : dece84f3:a8f8be71:ea9d9fee:21fd5f90
-  Creation Time : Fri Sep 22 06:18:01 2006
-     Raid Level : raid1
-  Used Dev Size : 128384 (125.40 MiB 131.47 MB)
-     Array Size : 128384 (125.40 MiB 131.47 MB)
-   Raid Devices : 6
-  Total Devices : 6
-Preferred Minor : 0
-
-    Update Time : Thu Jun 11 07:01:41 2009
-          State : clean
- Active Devices : 6
-Working Devices : 6
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : ccd42dfc - correct
-         Events : 1056
-
-
-      Number   Major   Minor   RaidDevice State
-this     1       8        1        1      active sync   /dev/sda1
-
-   0     0       8       17        0      active sync   /dev/sdb1
-   1     1       8        1        1      active sync   /dev/sda1
-   2     2       8       33        2      active sync   /dev/sdc1
-   3     3       8       49        3      active sync   /dev/sdd1
-   4     4       8       65        4      active sync   /dev/sde1
-   5     5       8       81        5      active sync   /dev/sdf1
-1.0 /dev/sda1
-mdadm: No super block found on /dev/sda1 (Expected magic a92b4efc, got 00000000)
-1.1 /dev/sda1
-mdadm: No super block found on /dev/sda1 (Expected magic a92b4efc, got 00000000)
-1.2 /dev/sda1
-mdadm: No super block found on /dev/sda1 (Expected magic a92b4efc, got 00007fff)
-0.90 /dev/sda2
-/dev/sda2:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : 0598d2ea:f6c0185f:614fa502:109d1a5d
-  Creation Time : Fri Sep 22 06:18:16 2006
-     Raid Level : raid1
-  Used Dev Size : 976631424 (931.39 GiB 1000.07 GB)
-     Array Size : 976631424 (931.39 GiB 1000.07 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 1
-
-    Update Time : Thu Jun 11 22:24:17 2009
-          State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : e0f457fc - correct
-         Events : 252218
-
-
-      Number   Major   Minor   RaidDevice State
-this     1       8        2        1      active sync   /dev/sda2
-
-   0     0       8       18        0      active sync   /dev/sdb2
-   1     1       8        2        1      active sync   /dev/sda2
-1.0 /dev/sda2
-mdadm: No super block found on /dev/sda2 (Expected magic a92b4efc, got 00000000)
-1.1 /dev/sda2
-mdadm: No super block found on /dev/sda2 (Expected magic a92b4efc, got 20554e47)
-1.2 /dev/sda2
-mdadm: No super block found on /dev/sda2 (Expected magic a92b4efc, got 6b8e963f)
-0.90 /dev/sdb1
-/dev/sdb1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : dece84f3:a8f8be71:ea9d9fee:21fd5f90
-  Creation Time : Fri Sep 22 06:18:01 2006
-     Raid Level : raid1
-  Used Dev Size : 128384 (125.40 MiB 131.47 MB)
-     Array Size : 128384 (125.40 MiB 131.47 MB)
-   Raid Devices : 6
-  Total Devices : 6
-Preferred Minor : 0
-
-    Update Time : Thu Jun 11 07:01:41 2009
-          State : clean
- Active Devices : 6
-Working Devices : 6
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : ccd42e0a - correct
-         Events : 1056
-
-
-      Number   Major   Minor   RaidDevice State
-this     0       8       17        0      active sync   /dev/sdb1
-
-   0     0       8       17        0      active sync   /dev/sdb1
-   1     1       8        1        1      active sync   /dev/sda1
-   2     2       8       33        2      active sync   /dev/sdc1
-   3     3       8       49        3      active sync   /dev/sdd1
-   4     4       8       65        4      active sync   /dev/sde1
-   5     5       8       81        5      active sync   /dev/sdf1
-1.0 /dev/sdb1
-mdadm: No super block found on /dev/sdb1 (Expected magic a92b4efc, got 00000000)
-1.1 /dev/sdb1
-mdadm: No super block found on /dev/sdb1 (Expected magic a92b4efc, got 00000000)
-1.2 /dev/sdb1
-mdadm: No super block found on /dev/sdb1 (Expected magic a92b4efc, got 00007fff)
-0.90 /dev/sdb2
-/dev/sdb2:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : 0598d2ea:f6c0185f:614fa502:109d1a5d
-  Creation Time : Fri Sep 22 06:18:16 2006
-     Raid Level : raid1
-  Used Dev Size : 976631424 (931.39 GiB 1000.07 GB)
-     Array Size : 976631424 (931.39 GiB 1000.07 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 1
-
-    Update Time : Thu Jun 11 22:24:17 2009
-          State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : e0f4580a - correct
-         Events : 252218
-
-
-      Number   Major   Minor   RaidDevice State
-this     0       8       18        0      active sync   /dev/sdb2
-
-   0     0       8       18        0      active sync   /dev/sdb2
-   1     1       8        2        1      active sync   /dev/sda2
-1.0 /dev/sdb2
-mdadm: No super block found on /dev/sdb2 (Expected magic a92b4efc, got 00000000)
-1.1 /dev/sdb2
-mdadm: No super block found on /dev/sdb2 (Expected magic a92b4efc, got 20554e47)
-1.2 /dev/sdb2
-mdadm: No super block found on /dev/sdb2 (Expected magic a92b4efc, got 6b8e963f)
-0.90 /dev/sdc1
-/dev/sdc1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : dece84f3:a8f8be71:ea9d9fee:21fd5f90
-  Creation Time : Fri Sep 22 06:18:01 2006
-     Raid Level : raid1
-  Used Dev Size : 128384 (125.40 MiB 131.47 MB)
-     Array Size : 128384 (125.40 MiB 131.47 MB)
-   Raid Devices : 6
-  Total Devices : 6
-Preferred Minor : 0
-
-    Update Time : Thu Jun 11 07:01:41 2009
-          State : clean
- Active Devices : 6
-Working Devices : 6
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : ccd42e1e - correct
-         Events : 1056
-
-
-      Number   Major   Minor   RaidDevice State
-this     2       8       33        2      active sync   /dev/sdc1
-
-   0     0       8       17        0      active sync   /dev/sdb1
-   1     1       8        1        1      active sync   /dev/sda1
-   2     2       8       33        2      active sync   /dev/sdc1
-   3     3       8       49        3      active sync   /dev/sdd1
-   4     4       8       65        4      active sync   /dev/sde1
-   5     5       8       81        5      active sync   /dev/sdf1
-1.0 /dev/sdc1
-mdadm: No super block found on /dev/sdc1 (Expected magic a92b4efc, got 00000000)
-1.1 /dev/sdc1
-mdadm: No super block found on /dev/sdc1 (Expected magic a92b4efc, got 00000000)
-1.2 /dev/sdc1
-mdadm: No super block found on /dev/sdc1 (Expected magic a92b4efc, got 00007fff)
-0.90 /dev/sdc2
-/dev/sdc2:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : 0598d2ea:f6c0185f:614fa502:109d1a5d
-  Creation Time : Fri Sep 22 06:18:16 2006
-     Raid Level : raid1
-  Used Dev Size : 312440064 (297.97 GiB 319.94 GB)
-     Array Size : 312440064 (297.97 GiB 319.94 GB)
-   Raid Devices : 2
-  Total Devices : 3
-Preferred Minor : 1
-
-    Update Time : Thu Oct  2 21:33:12 2008
-          State : clean
- Active Devices : 2
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 1
-       Checksum : b80f58e0 - correct
-         Events : 187714
-
-
-      Number   Major   Minor   RaidDevice State
-this     2       8       34        2      spare   /dev/sdc2
-
-   0     0       8       18        0      active sync   /dev/sdb2
-   1     1       8        2        1      active sync   /dev/sda2
-   2     2       8       34        2      spare   /dev/sdc2
-1.0 /dev/sdc2
-/dev/sdc2:
-          Magic : a92b4efc
-        Version : 1.0
-    Feature Map : 0x0
-     Array UUID : eed65e38:78f4e6e0:55198bdc:fe77de48
-           Name : 2
-  Creation Time : Thu Feb 22 02:28:12 2007
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 1953262752 (931.39 GiB 1000.07 GB)
-     Array Size : 5859788160 (2794.16 GiB 3000.21 GB)
-  Used Dev Size : 1953262720 (931.39 GiB 1000.07 GB)
-   Super Offset : 1953263008 sectors
-          State : clean
-    Device UUID : 407cf6b0:3d180e0b:e5be6dc0:e6bcf953
-
-    Update Time : Thu Jun 11 22:24:17 2009
-       Checksum : a59b300d - correct
-         Events : 10784
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-    Array Slot : 5 (failed, failed, failed, failed, 3, 0, 1, 2)
-   Array State : Uuuu 4 failed
-1.1 /dev/sdc2
-mdadm: No super block found on /dev/sdc2 (Expected magic a92b4efc, got 00000000)
-1.2 /dev/sdc2
-mdadm: No super block found on /dev/sdc2 (Expected magic a92b4efc, got 6f6dc87d)
-0.90 /dev/sdd1
-/dev/sdd1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : dece84f3:a8f8be71:ea9d9fee:21fd5f90
-  Creation Time : Fri Sep 22 06:18:01 2006
-     Raid Level : raid1
-  Used Dev Size : 128384 (125.40 MiB 131.47 MB)
-     Array Size : 128384 (125.40 MiB 131.47 MB)
-   Raid Devices : 6
-  Total Devices : 6
-Preferred Minor : 0
-
-    Update Time : Thu Jun 11 07:01:41 2009
-          State : clean
- Active Devices : 6
-Working Devices : 6
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : ccd42e30 - correct
-         Events : 1056
-
-
-      Number   Major   Minor   RaidDevice State
-this     3       8       49        3      active sync   /dev/sdd1
-
-   0     0       8       17        0      active sync   /dev/sdb1
-   1     1       8        1        1      active sync   /dev/sda1
-   2     2       8       33        2      active sync   /dev/sdc1
-   3     3       8       49        3      active sync   /dev/sdd1
-   4     4       8       65        4      active sync   /dev/sde1
-   5     5       8       81        5      active sync   /dev/sdf1
-1.0 /dev/sdd1
-mdadm: No super block found on /dev/sdd1 (Expected magic a92b4efc, got 104e0ec4)
-1.1 /dev/sdd1
-mdadm: No super block found on /dev/sdd1 (Expected magic a92b4efc, got 00000000)
-1.2 /dev/sdd1
-mdadm: No super block found on /dev/sdd1 (Expected magic a92b4efc, got 00007fff)
-0.90 /dev/sdd2
-mdadm: No super block found on /dev/sdd2 (Expected magic a92b4efc, got 1a3e2e0f)
-1.0 /dev/sdd2
-/dev/sdd2:
-          Magic : a92b4efc
-        Version : 1.0
-    Feature Map : 0x0
-     Array UUID : eed65e38:78f4e6e0:55198bdc:fe77de48
-           Name : 2
-  Creation Time : Thu Feb 22 02:28:12 2007
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 1953262752 (931.39 GiB 1000.07 GB)
-     Array Size : 5859788160 (2794.16 GiB 3000.21 GB)
-  Used Dev Size : 1953262720 (931.39 GiB 1000.07 GB)
-   Super Offset : 1953263008 sectors
-          State : clean
-    Device UUID : df17e349:186715a7:3f7bd3f9:a53ce15d
-
-    Update Time : Thu Jun 11 22:24:17 2009
-       Checksum : 1ddc56a2 - correct
-         Events : 10784
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-    Array Slot : 6 (failed, failed, failed, failed, 3, 0, 1, 2)
-   Array State : uUuu 4 failed
-1.1 /dev/sdd2
-mdadm: No super block found on /dev/sdd2 (Expected magic a92b4efc, got 639740bf)
-1.2 /dev/sdd2
-mdadm: No super block found on /dev/sdd2 (Expected magic a92b4efc, got 18339908)
-0.90 /dev/sde1
-/dev/sde1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : dece84f3:a8f8be71:ea9d9fee:21fd5f90
-  Creation Time : Fri Sep 22 06:18:01 2006
-     Raid Level : raid1
-  Used Dev Size : 128384 (125.40 MiB 131.47 MB)
-     Array Size : 128384 (125.40 MiB 131.47 MB)
-   Raid Devices : 6
-  Total Devices : 6
-Preferred Minor : 0
-
-    Update Time : Thu Jun 11 07:01:41 2009
-          State : clean
- Active Devices : 6
-Working Devices : 6
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : ccd42e42 - correct
-         Events : 1056
-
-
-      Number   Major   Minor   RaidDevice State
-this     4       8       65        4      active sync   /dev/sde1
-
-   0     0       8       17        0      active sync   /dev/sdb1
-   1     1       8        1        1      active sync   /dev/sda1
-   2     2       8       33        2      active sync   /dev/sdc1
-   3     3       8       49        3      active sync   /dev/sdd1
-   4     4       8       65        4      active sync   /dev/sde1
-   5     5       8       81        5      active sync   /dev/sdf1
-1.0 /dev/sde1
-mdadm: No super block found on /dev/sde1 (Expected magic a92b4efc, got 104e0ec4)
-1.1 /dev/sde1
-mdadm: No super block found on /dev/sde1 (Expected magic a92b4efc, got 00000000)
-1.2 /dev/sde1
-mdadm: No super block found on /dev/sde1 (Expected magic a92b4efc, got 00007fff)
-0.90 /dev/sde2
-mdadm: No super block found on /dev/sde2 (Expected magic a92b4efc, got 1a3e2e0f)
-1.0 /dev/sde2
-/dev/sde2:
-          Magic : a92b4efc
-        Version : 1.0
-    Feature Map : 0x0
-     Array UUID : eed65e38:78f4e6e0:55198bdc:fe77de48
-           Name : 2
-  Creation Time : Thu Feb 22 02:28:12 2007
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 1953262752 (931.39 GiB 1000.07 GB)
-     Array Size : 5859788160 (2794.16 GiB 3000.21 GB)
-  Used Dev Size : 1953262720 (931.39 GiB 1000.07 GB)
-   Super Offset : 1953263008 sectors
-          State : clean
-    Device UUID : 324c496c:2a4a57c4:04a65638:0b9606c5
-
-    Update Time : Thu Jun 11 22:24:17 2009
-       Checksum : 32cf233 - correct
-         Events : 10784
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-    Array Slot : 7 (failed, failed, failed, failed, 3, 0, 1, 2)
-   Array State : uuUu 4 failed
-1.1 /dev/sde2
-mdadm: No super block found on /dev/sde2 (Expected magic a92b4efc, got 639740bf)
-1.2 /dev/sde2
-mdadm: No super block found on /dev/sde2 (Expected magic a92b4efc, got 18339908)
-0.90 /dev/sdf1
-/dev/sdf1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : dece84f3:a8f8be71:ea9d9fee:21fd5f90
-  Creation Time : Fri Sep 22 06:18:01 2006
-     Raid Level : raid1
-  Used Dev Size : 128384 (125.40 MiB 131.47 MB)
-     Array Size : 128384 (125.40 MiB 131.47 MB)
-   Raid Devices : 6
-  Total Devices : 6
-Preferred Minor : 0
-
-    Update Time : Thu Jun 11 07:01:41 2009
-          State : clean
- Active Devices : 6
-Working Devices : 6
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : ccd42e54 - correct
-         Events : 1056
-
-
-      Number   Major   Minor   RaidDevice State
-this     5       8       81        5      active sync   /dev/sdf1
-
-   0     0       8       17        0      active sync   /dev/sdb1
-   1     1       8        1        1      active sync   /dev/sda1
-   2     2       8       33        2      active sync   /dev/sdc1
-   3     3       8       49        3      active sync   /dev/sdd1
-   4     4       8       65        4      active sync   /dev/sde1
-   5     5       8       81        5      active sync   /dev/sdf1
-1.0 /dev/sdf1
-mdadm: No super block found on /dev/sdf1 (Expected magic a92b4efc, got 104e0ec4)
-1.1 /dev/sdf1
-mdadm: No super block found on /dev/sdf1 (Expected magic a92b4efc, got 00000000)
-1.2 /dev/sdf1
-mdadm: No super block found on /dev/sdf1 (Expected magic a92b4efc, got 00007fff)
-0.90 /dev/sdf2
-mdadm: No super block found on /dev/sdf2 (Expected magic a92b4efc, got 1a3e2e0f)
-1.0 /dev/sdf2
-/dev/sdf2:
-          Magic : a92b4efc
-        Version : 1.0
-    Feature Map : 0x0
-     Array UUID : eed65e38:78f4e6e0:55198bdc:fe77de48
-           Name : 2
-  Creation Time : Thu Feb 22 02:28:12 2007
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 1953262752 (931.39 GiB 1000.07 GB)
-     Array Size : 5859788160 (2794.16 GiB 3000.21 GB)
-  Used Dev Size : 1953262720 (931.39 GiB 1000.07 GB)
-   Super Offset : 1953263008 sectors
-          State : clean
-    Device UUID : 4d0e18c4:92574d6d:798f2111:18c93628
-
-    Update Time : Thu Jun 11 22:24:17 2009
-       Checksum : 3fecde34 - correct
-         Events : 10784
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-    Array Slot : 4 (failed, failed, failed, failed, 3, 0, 1, 2)
-   Array State : uuuU 4 failed
-1.1 /dev/sdf2
-mdadm: No super block found on /dev/sdf2 (Expected magic a92b4efc, got 00000000)
-1.2 /dev/sdf2
-mdadm: No super block found on /dev/sdf2 (Expected magic a92b4efc, got 6f6dc87d)
