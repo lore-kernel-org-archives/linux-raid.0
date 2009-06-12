@@ -1,204 +1,95 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] md: Use new topology calls to indicate alignment and  I/O sizes
-Date: Fri, 12 Jun 2009 00:43:54 -0400
-Message-ID: <yq1vdn2hxit.fsf@sermon.lab.mkp.net>
-References: <yq1my8i6naw.fsf@sermon.lab.mkp.net>
-	<6579bc561e648e03ed4a739799e51d9e.squirrel@neil.brown.name>
-	<yq1ws7k60vt.fsf@sermon.lab.mkp.net>
-	<18992.56246.663815.790604@notabene.brown>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Software RAID5 write issues
+Date: Fri, 12 Jun 2009 00:24:40 -0500
+Message-ID: <20090612052434749.TJHN26718@cdptpa-omta01.mail.rr.com>
+References: <1244667422.21347.210.camel@firewall.xsintricity.com>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18992.56246.663815.790604@notabene.brown> (Neil Brown's message
-	of "Thu, 11 Jun 2009 20:25:58 +1000")
+In-Reply-To: <1244667422.21347.210.camel@firewall.xsintricity.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+> You have 4 motherboard SATA ports, and 4 SATA ports on a PCI card.
+> Right now you have your two OS drives on motherboard SATA ports, two of
+> the five raid5 drives on motherboard SATA ports, and the three remaining
+> raid5 drives on the PCI card SATA ports.  You need to get as many of the
+> raid5 SATA disks on motherboard ports as possible.
 
-Switch MD over to the new disk_stack_limits() function which checks for
-aligment and adjusts preferred I/O sizes when stacking.
+'Or at least off the PCI card.  Depending on the motherboard, the
+performance of the embedded ports may not be all that terrific, either.  I
+have one Asus motherboard which is otherwise great, but whose on-board SATA
+performance is anything but stellar.  If he can, I might suggest a different
+SATA controller, either PCI Express or PCI-X.  There are a number of fairly
+inexpensive PCI Express and PCI-X SATA controllers that provide very decent
+performance - certainly better than he is seeing.  I have a couple of SiI
+3124 based SATA controllers coupled with port multipliers and a couple of
+Highpoint multilane SAS controllers that can all deliver in excess of
+100MBps reads and in excess of 65 MBps writes on RAID5 and RAID6 arrays
+across a 1G network.
 
-Also indicate preferred I/O sizes where applicable.
+> I would decide if
+> you are more concerned about the raid5 array performing well (common, as
+> it's usually the data you access most often) or the base OS array
+> performing well (not so common, as it gets loaded largely into cache and
+> doesn't get hit nearly so often as the data drive).  If you can deal
+> with slowing down the OS drives, then I would move one of the OS drives
+> to the PCI card and move one of the raid5 drives to the motherboard SATA
+> port (and whichever drive you just moved over to the PCI card, I would
+> mark it's raid1 arrays as write-mostly so that you don't read from it
+> normally).
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+I think I would recommend replacing the controller and maybe going to a port
+multiplier solution before I would shuffling the drives around using the
+same old PCI card.  The PM is likely not going to be as fast or efficient as
+a multilane solution, but a PCI Express or PCI-X card combined with a PM is
+still probably going to be much faster than a PCI card.  It also allows for
+more economic future expansion.
 
----
+> Your big problem is that with 3 out of 5 raid5 drives on that PCI card,
+> and sharing bandwidth, your total theoretical raid speed is abysmal.
 
-diff --git a/drivers/md/linear.c b/drivers/md/linear.c
-index 9f7cec4..de65208 100644
---- a/drivers/md/linear.c
-+++ b/drivers/md/linear.c
-@@ -142,9 +142,9 @@ static linear_conf_t *linear_conf(mddev_t *mddev, int raid_disks)
- 		}
- 
- 		disk->rdev = rdev;
-+		disk_stack_limits(mddev->gendisk, rdev->bdev,
-+				  rdev->data_offset);
- 
--		blk_queue_stack_limits(mddev->queue,
--				       rdev->bdev->bd_disk->queue);
- 		/* as we don't honour merge_bvec_fn, we must never risk
- 		 * violating it, so limit ->max_sector to one PAGE, as
- 		 * a one page request is never in violation.
-diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
-index c1ca63f..0651a73 100644
---- a/drivers/md/multipath.c
-+++ b/drivers/md/multipath.c
-@@ -294,7 +294,8 @@ static int multipath_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
- 	for (path = first; path <= last; path++)
- 		if ((p=conf->multipaths+path)->rdev == NULL) {
- 			q = rdev->bdev->bd_disk->queue;
--			blk_queue_stack_limits(mddev->queue, q);
-+			disk_stack_limits(mddev->gendisk, rdev->bdev,
-+				rdev->data_offset);
- 
- 		/* as we don't honour merge_bvec_fn, we must never risk
- 		 * violating it, so limit ->max_sector to one PAGE, as
-@@ -460,9 +461,9 @@ static int multipath_run (mddev_t *mddev)
- 
- 		disk = conf->multipaths + disk_idx;
- 		disk->rdev = rdev;
-+		disk_stack_limits(mddev->gendisk, rdev->bdev,
-+				  rdev->data_offset);
- 
--		blk_queue_stack_limits(mddev->queue,
--				       rdev->bdev->bd_disk->queue);
- 		/* as we don't honour merge_bvec_fn, we must never risk
- 		 * violating it, not that we ever expect a device with
- 		 * a merge_bvec_fn to be involved in multipath */
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index f9e6073..c4687ea 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -164,8 +164,8 @@ static int create_strip_zones(mddev_t *mddev)
- 		}
- 		dev[j] = rdev1;
- 
--		blk_queue_stack_limits(mddev->queue,
--				       rdev1->bdev->bd_disk->queue);
-+		disk_stack_limits(mddev->gendisk, rdev1->bdev,
-+				  rdev1->data_offset);
- 		/* as we don't honour merge_bvec_fn, we must never risk
- 		 * violating it, so limit ->max_sector to one PAGE, as
- 		 * a one page request is never in violation.
-@@ -246,6 +246,11 @@ static int create_strip_zones(mddev_t *mddev)
- 		       mddev->chunk_sectors << 9);
- 		goto abort;
- 	}
-+
-+	blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
-+	blk_queue_io_opt(mddev->queue,
-+			 (mddev->chunk_sectors << 9) * mddev->raid_disks);
-+
- 	printk(KERN_INFO "raid0: done.\n");
- 	mddev->private = conf;
- 	return 0;
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 89939a7..174c4dd 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1123,8 +1123,8 @@ static int raid1_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
- 	for (mirror = first; mirror <= last; mirror++)
- 		if ( !(p=conf->mirrors+mirror)->rdev) {
- 
--			blk_queue_stack_limits(mddev->queue,
--					       rdev->bdev->bd_disk->queue);
-+			disk_stack_limits(mddev->gendisk, rdev->bdev,
-+						 rdev->data_offset);
- 			/* as we don't honour merge_bvec_fn, we must never risk
- 			 * violating it, so limit ->max_sector to one PAGE, as
- 			 * a one page request is never in violation.
-@@ -1988,9 +1988,8 @@ static int run(mddev_t *mddev)
- 		disk = conf->mirrors + disk_idx;
- 
- 		disk->rdev = rdev;
--
--		blk_queue_stack_limits(mddev->queue,
--				       rdev->bdev->bd_disk->queue);
-+		disk_stack_limits(mddev->gendisk, rdev->bdev,
-+				  rdev->data_offset);
- 		/* as we don't honour merge_bvec_fn, we must never risk
- 		 * violating it, so limit ->max_sector to one PAGE, as
- 		 * a one page request is never in violation.
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index ae12cea..05ced36 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1151,8 +1151,8 @@ static int raid10_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
- 	for ( ; mirror <= last ; mirror++)
- 		if ( !(p=conf->mirrors+mirror)->rdev) {
- 
--			blk_queue_stack_limits(mddev->queue,
--					       rdev->bdev->bd_disk->queue);
-+			disk_stack_limits(mddev->gendisk, rdev->bdev,
-+					  rdev->data_offset);
- 			/* as we don't honour merge_bvec_fn, we must never risk
- 			 * violating it, so limit ->max_sector to one PAGE, as
- 			 * a one page request is never in violation.
-@@ -2044,7 +2044,7 @@ raid10_size(mddev_t *mddev, sector_t sectors, int raid_disks)
- static int run(mddev_t *mddev)
- {
- 	conf_t *conf;
--	int i, disk_idx;
-+	int i, disk_idx, chunk_size;
- 	mirror_info_t *disk;
- 	mdk_rdev_t *rdev;
- 	int nc, fc, fo;
-@@ -2130,6 +2130,14 @@ static int run(mddev_t *mddev)
- 	spin_lock_init(&conf->device_lock);
- 	mddev->queue->queue_lock = &conf->device_lock;
- 
-+	chunk_size = mddev->chunk_sectors << 9;
-+	blk_queue_io_min(mddev->queue, chunk_size);
-+	if (conf->raid_disks % conf->near_copies)
-+		blk_queue_io_opt(mddev->queue, chunk_size * conf->raid_disks);
-+	else
-+		blk_queue_io_opt(mddev->queue, chunk_size * 
-+				 (conf->raid_disks / conf->near_copies));
-+
- 	list_for_each_entry(rdev, &mddev->disks, same_set) {
- 		disk_idx = rdev->raid_disk;
- 		if (disk_idx >= mddev->raid_disks
-@@ -2138,9 +2146,8 @@ static int run(mddev_t *mddev)
- 		disk = conf->mirrors + disk_idx;
- 
- 		disk->rdev = rdev;
--
--		blk_queue_stack_limits(mddev->queue,
--				       rdev->bdev->bd_disk->queue);
-+		disk_stack_limits(mddev->gendisk, rdev->bdev,
-+				  rdev->data_offset);
- 		/* as we don't honour merge_bvec_fn, we must never risk
- 		 * violating it, so limit ->max_sector to one PAGE, as
- 		 * a one page request is never in violation.
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 41dc36e..e9d18eb 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4451,7 +4451,7 @@ static raid5_conf_t *setup_conf(mddev_t *mddev)
- static int run(mddev_t *mddev)
- {
- 	raid5_conf_t *conf;
--	int working_disks = 0;
-+	int working_disks = 0, chunk_size;
- 	mdk_rdev_t *rdev;
- 
- 	if (mddev->recovery_cp != MaxSector)
-@@ -4606,6 +4606,14 @@ static int run(mddev_t *mddev)
- 	md_set_array_sectors(mddev, raid5_size(mddev, 0, 0));
- 
- 	blk_queue_merge_bvec(mddev->queue, raid5_mergeable_bvec);
-+	chunk_size = mddev->chunk_sectors << 9;
-+	blk_queue_io_min(mddev->queue, chunk_size);
-+	blk_queue_io_opt(mddev->queue, chunk_size *
-+			 (conf->raid_disks - conf->max_degraded));
-+
-+	list_for_each_entry(rdev, &mddev->disks, same_set)
-+		disk_stack_limits(mddev->gendisk, rdev->bdev,
-+				  rdev->data_offset);
- 
- 	return 0;
- abort:
+I agree, or at least it's probably a big part of the problem.  He could of
+course always have other problems, as well.
+
+> When the three drives are sharing bandwidth on the card, they tend to
+> split it up fairly evenly.  That means each drive gets roughly 1/3 of
+> the PCI card's total available bandwidth over the PCI bus, which is
+> generally poor in the first place.  Understand that a slow drive drags
+> down *all* the drives in a raid5 array.  The faster drives just end up
+> idling while waiting on the slower drive to finish its work (the faster
+> drives will run ahead up to a point, then they eventually just get so
+> far ahead that there isn't anything else for them to do until the
+> slowest drive finishes up its stuff so old block requests can be
+> completed, etc).  On the other hand, if you get 4 of the 5 drives on the
+> motherboard ports, then that 5th drive on the PCI card won't be
+> splitting bandwidth up and the overall array performance will shoot up
+> (assuming the OS drives aren't also heavily loaded).
+
+Yeah. I'm not even using SATA drives for my OS partitions.  I've got a bunch
+of PATA drives lying around, good for little else, so rather than spend
+money on new SATA drives or fiddle with booting from the arrays, I just put
+a PATA drive on each system and use it for booting and OS.  While PATA ports
+are getting somewhat rarer, most of even the most modern motherboards have
+at least one IDE chain.  An ordinary old IDE drive with a capacity in the 80
+- 160G range makes a perfectly good boot drive.  If he has a couple of old
+unused IDE drives laying around, he might consider using  them.
+
+> If you move one OS drive to the PCI card, then that leaves two raid5
+> drives on the card.  In that case, I would seriously consider dropping
+> back to a 4 drive array if you can handle the space reduction.  I would
+> also seriously consider using raid4 instead of raid5 depending on your
+> normal usage pattern.  If the data on the raid5 array is written once
+> and then read over and over again, a raid4 can be beneficial in that you
+> can stick the parity drive off on the PCI card and it won't be read from
+> unless there is a drive failure or one the rare occasions when you write
+> new data.
+
+He's complaining more about write performance than read performance, so I
+expect he would not be fond of this solution.
+
 
