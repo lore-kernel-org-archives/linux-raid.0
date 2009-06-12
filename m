@@ -1,31 +1,42 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: Assembly problems with kernel 2.6.30?
-Date: Fri, 12 Jun 2009 12:00:03 +0400
-Message-ID: <4A320B03.5080009@msgid.tls.msk.ru>
-References: <20090611072538.GA7841@psychosis.jim.sh> <18993.45142.80174.321434@notabene.brown> <20090612023344.GA24806@psychosis.jim.sh>
+From: Jody McIntyre <scjody@sun.com>
+Subject: Re: Strange RAID behaviour when faced with user error
+Date: Fri, 12 Jun 2009 14:33:40 -0400
+Message-ID: <20090612183339.GB4936@clouds>
+References: <20090610215835.GA4936@clouds> <4A303178.5060208@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; CHARSET=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090612023344.GA24806@psychosis.jim.sh>
+Content-disposition: inline
+In-reply-to: <4A303178.5060208@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jim Paris <jim@jtan.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jim Paris wrote:
-[]
-> Weird: /dev/sdc2 has both a 0.90 and 1.0 superblock.  I guess that's
-> the problem.  How would that have happened?  mdadm --create over an 
-> existing device without a --zero-superblock inbetween, I suppose?
-> 
-> I wonder why it was never a problem before.  For the root, only
-> /dev/sda2 and /dev/sdb2 are necessary.  Maybe 2.6.30 changed the disk
-> order, or the ordering of /proc/partitions, such that mdadm now
-> examines this bad disk before the array is fully assembled, whereas it
-> never needed to scan it before?
+On Wed, Jun 10, 2009 at 11:19:36PM +0100, John Robinson wrote:
 
-2.6.30 turned on "fastboot" option by default -- it's when
-all disks/controllers gets scanned in parallel.
+> The device node /dev/sdb1 was turned into a md one - probably 9,127 -  
+> when you started the array, and stopping the array hasn't reverted it.  
+> mknod /dev/sdb1 8 17 would probably have fixed it. Assuming you're using  
+> udev, the /dev/sdb1 device is recreated the next time you reboot, so the  
+> problem goes away.
 
-/mjt
+That's exactly right.  Thanks for the insight!
+
+brw-rw---- 1 root disk 9, 127 2009-06-10 17:54 /dev/sdb1
+
+> I think mdadm 3.0 would have deleted the device node when the array was  
+> stopped, but mdadm 2.6.x doesn't.
+
+Actually, mdadm 3.0 is even smarter than that:
+
+# ls -l /dev/sdb1
+brw-rw---- 1 root disk 8, 17 2009-06-12 13:40 /dev/sdb1
+# ./mdadm --version
+mdadm - v3.0 - 2nd June 2009
+# ./mdadm --assemble --verbose /dev/sdb1 /dev/sdb2 /dev/sdb3 /dev/sdb4
+mdadm: device /dev/sdb1 exists but is not an md array.
+
+Cheers,
+Jody
