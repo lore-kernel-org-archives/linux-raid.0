@@ -1,60 +1,41 @@
 From: <linux-raid.vger.kernel.org@atu.cjb.net>
-Subject: =?UTF-8?B?UmU6IFJBSUQtNiBtZGFkbSBkaXNrcyBvdXQgb2Ygc3luYyBpc3N1ZSAoc3VjY2VzcyEp?=
-Date: Sat, 13 Jun 2009 14:27:47 -0600
-Message-ID: <200906132027.n5DKRquL067127@cjb.net>
-References: <200906131802.n5DI2Kj0065178@cjb.net>
+Subject: =?UTF-8?B?UmU6IFJBSUQtNiBtZGFkbSBkaXNrcyBvdXQgb2Ygc3luYyBpc3N1ZSAobW9yZSBxdWVzdGlvbnMp?=
+Date: Sun, 14 Jun 2009 01:10:00 -0600
+Message-ID: <200906140710.n5E7A5o7074412@cjb.net>
+References: <200906132027.n5DKRquL067127@cjb.net>
 Reply-To: <linux-raid.vger.kernel.org@atu.cjb.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="UTF-8"
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200906131802.n5DI2Kj0065178@cjb.net>
+In-Reply-To: <200906132027.n5DKRquL067127@cjb.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Problem solved, thank you for your help.
+So here I was thinking everything was fine.  My six disks were working
+for hours and the other two disks were loaded as spares and the first
+one was rebuilding, up to 30% with an ETA of 5 hours.  I left the house
+for a few hours and when I came back, the same disk with read errors
+before had spontaneously disconnected and reconnected three times (I
+saw in dmesg).  It probably got around 80% of the way through the six
+hour rebuild.
 
-I use a custom program for creating a hardened encryption key,
-wherein I need to fill in a bunch of information, including two
-repetition values.  These are used to cycle over the binary key
-rehashing it N times.
+The problem is that when the /dev/sdc disk reconnected itself after,
+it was marked as a "Spare", and now I can't use the same command any
+longer:
 
-Prior to this Ubuntu upgrade, it would generate the key in about
-15 seconds, after the upgrade about 1 minute.  Because of this
-slowness, I thought I had set the repetition values too high,
-and ended up reverting to the repetitions I used on my previous
-computer from a few years ago.
+# mdadm --assemble /dev/md13 --verbose --force /dev/sd{a,b,c,d,e,f}1
 
-I had been Ctrl+C'ing out of my key generating program because
-it had seemed broken.  I actually sat and waited for it today,
-and it worked fine.  Phew!
+This time it doesn't work, as it says 5 disks and 1 spare isn't enough
+to start the array.  I also tried --re-add, but it already thinks it
+is disk 9 out of 8, a Spare.
 
-The filesystem had been unmounted when I had the RAID issue, so
-the data is intact.
-
-I figured out why three of the disks had higher events after
-the shutdown as well:
-
-My disks go into standby mode fairly quickly when not in use,
-and some of the disks take a long time to wake up (~10 seconds),
-while others are much quicker (~4 seconds).  When Ubuntu was
-shutting down the system, the 3 slower disks didn't get woken
-up before the reboot finished, so they were slightly behind.
-
-I also solved why my event count was in the millions, which is
-because I was running this command for realtime monitoring:
-
-# watch -n 1 'mdadm --verbose --verbose --detail --scan /dev/md13|tail -n 23'
-
-This mdadm command would repeat every second, and it would
-update the event count by 2 each time.  I hadn't realised that
-this way of monitoring the disks would alter the array in any
-way.
-
-Now I'm off to rebuild the 2 missing disks, and then build a
-new array on another computer for backups.
+How can I safely put this disk back into its proper place so I can
+again try to rebuild disks 7 and 8?  I'm assuming I probably need to
+use mdadm --create, but I'm not sure, and don't want to get it wrong
+and have it overwrite this needed disk.
 
  - S.A.
 
