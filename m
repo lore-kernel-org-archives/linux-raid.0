@@ -1,7 +1,7 @@
 From: raz ben yehuda <raziebe@gmail.com>
-Subject: Subject:[PATCH 001:013]: md: Raid0 reshape
-Date: Wed, 17 Jun 2009 00:51:52 +0300
-Message-ID: <1245189112.3478.94.camel@raz>
+Subject: Subject:[PATCH 002:013]: raid0: find_zone to return NULL
+Date: Wed, 17 Jun 2009 00:52:29 +0300
+Message-ID: <1245189149.3478.96.camel@raz>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
@@ -10,43 +10,37 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-md assumes that personality has all its membes of the same
-size,A fact that is incorrect for raid0.
+Have the caller decide whether to report BUG() 
+	when zone is incorrect
 
- md.c |   11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ raid0.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 Signed-off-by: razb <raziebe@gmail.com>
 ---
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 0f11fd1..e14fb90 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5683,7 +5683,8 @@ static void status_resync(struct seq_file *seq, mddev_t * mddev)
- 		max_sectors = mddev->resync_max_sectors;
- 	else
- 		max_sectors = mddev->dev_sectors;
--
-+	if (mddev->level == 0)
-+		max_sectors = mddev->resync_max_sectors;
- 	/*
- 	 * Should not happen.
- 	 */
-@@ -6280,7 +6281,13 @@ void md_do_sync(mddev_t *mddev)
- 			    rdev->recovery_offset < j)
- 				j = rdev->recovery_offset;
- 	}
--
-+	/*
-+	* raid0 members may not be of the same size,use array_size.
-+	*/
-+	if (mddev->level == 0) {
-+		max_sectors = mddev->array_sectors;
-+		j = mddev->recovery_cp;
-+	}
- 	printk(KERN_INFO "md: %s of RAID array %s\n", desc, mdname(mddev));
- 	printk(KERN_INFO "md: minimum _guaranteed_  speed:"
- 		" %d KB/sec/disk.\n", speed_min(mddev));
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index 851e631..8870acc 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -377,7 +377,7 @@ static struct strip_zone *find_zone(struct raid0_private_data *conf,
+ 				*sectorp = sector - z[i-1].zone_end;
+ 			return z + i;
+ 		}
+-	BUG();
++	return NULL;
+ }
+ 
+ /*
+@@ -481,6 +481,8 @@ static int raid0_make_request(struct request_queue *q, struct bio *bio)
+ 
+ 	sector_offset = bio->bi_sector;
+ 	zone =  find_zone(mddev->private, &sector_offset);
++	if (!zone)
++		BUG();
+ 	tmp_dev = map_sector(mddev, zone, bio->bi_sector,
+ 			     &sector_offset);
+ 	bio->bi_bdev = tmp_dev->bdev;
+
 
 
 
