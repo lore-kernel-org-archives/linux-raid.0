@@ -1,156 +1,129 @@
-From: <linux-raid.vger.kernel.org@atu.cjb.net>
-Subject: =?UTF-8?B?UmU6IFJBSUQtNiBtZGFkbSBkaXNrcyBvdXQgb2Ygc3luYyBpc3N1ZSAobW9yZSBxdWVzdGlvbnMp?=
-Date: Tue, 16 Jun 2009 02:13:18 -0600
-Message-ID: <200906160813.n5G8DNgw019811@cjb.net>
-References: <18999.13573.674937.482254@notabene.brown>
-Reply-To: <linux-raid.vger.kernel.org@atu.cjb.net>
+From: raz ben yehuda <raziebe@gmail.com>
+Subject: Subject: Raid0 Reshape . Preface
+Date: Wed, 17 Jun 2009 00:51:12 +0300
+Message-ID: <1245189072.3478.92.camel@raz>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18999.13573.674937.482254@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
+Neil Hello
+This email is followed by a set of the raid0 reshape patches for your inspection.
+hopefully i haven't mess anything in this set.
 
+#1 Tests.
+Most tests were conducted on 2.6.30-rc4 (i ported to 2.6.30-rc7
+				 and made some sanity checks).
 
-> No.  They won't become spares unless you tell them to, but you
-> cannot force them to be 100% read-only.
+. Multiple zoned raid0 to a new multipled zoned raid0 
+		(triggered by adding a disk).
+. Online reshape
+  . I copied while reshaping and performed a cksum over all files while reshaping.
+  . Once a reshape is complete; Reboot and assemble the raid and re-check the files.
 
-This would be a very nice feature to have, rebuilding disks while
-guaranteeing that the data on the "good" disks is not modified in
-any way.
+. Resume reshape
+	.Stop reshape gracefully reboot and continue from same position.
+	.Stop reshape gracefully , stop raid, re-assemble . reshape resumes automatically.
+ 	.Power off machine abruptly by unplugging the power cable.
+			check resume and checksum of content known to be ok. (on ext3 though).
+	. Graceful stop. assemble and resume, unplug cable, boot and re-assemble. checksum files.
 
-> > [ 4628.7] mdadm[19700]: segfault at 0 ip 000000000041617f sp 00007fff87776290 error 4 in mdadm[400000+2a000]
-> > 
-> > mdadm - v2.6.7.1 - 15th October 2008
-> 
-> It would be great if you could get a stack trace of this.  Is the
-> an "mdadm --monitor" that is dying, or mdadm running for some other
-> reason?
+. backward compatibility.
+	. Once a reshape is complete, boot to kernel 2.6.18-8.el5 ,mount , and checksum files.
+. Big volume reshape. 1/2TB reshape ( 10 hours reshape ).
+. Big chunks .200M
+. Non power 2 chunks 1K,101K,7001K.
+. power 2 chunks. 64K and 1024K.
+. USB disks.
+. SATA disks.
+. Meta data. 0.9,1,1.0,1.1,1.2
+. add disk , reshape, add new disk, reshape again without booting.
+. two raid0 reshaped. ( reshape is queued ).
+. checked with lockdep.
 
-It was not me running the command, so presumably it was the
-/etc/init.d/mdadm service running.  I looked at that file, and near
-as I can tell (it's fairly confusing and calls many other files) it
-runs one of these three commands:
+#2 patch set description
+	I apply these patches on top of 2.6.30-rc7 :
+	
+	. for md.c
+	
+	commit fd894e80a4e368e49c393463986a5d9f5ab16bd9
+	Author: NeilBrown <neilb@suse.de>
+	Date:   Thu Jun 4 15:23:11 2009 +1000
 
-# mdadm --monitor
-# mdadm --syslog
-# mdadm --monitor --syslog
+	. for raid0.c
 
-Is there some way I could modify this script so it would capture the
-debugging output when it seg faults?  Or maybe replacing the
-/sbin/mdadm binary with a wrapper Bash script that runs the real mdadm
-in a debug mode?  I know nothing about debugging mdadm.
+	commit c9aaceea6015213e571761c0f0899614863c4868
+	Author: NeilBrown <neilb@suse.de>
+	Date:   Thu Jun 4 15:11:14 2009 +1000
+	
+	. for raid0.h
 
-> > I've noticed that dmesg most often lists disks as "ata1", "ata9"
-> > etc.  Do you know how to translate these disk identifiers?
-> 
-> Sorry, I cannot help you there.  I would probably look in /sys and
-> see if anything looks vaguely similar.
+	commit c3b56cacfab1ababe07e401ac7b515463a7d2ae6
+	Author: NeilBrown <neilb@suse.de>
+	Date:   Thu Jun 4 13:49:55 2009 +1000
+		
 
-I spent quite a while looking in /proc and /sys, but wasn't able to
-come up with anything.  The only method I came up with was to go back
-in the dmesg history until there was a message from only one disk at
-a time, in which case it was easy to deduce which "ata*" related to
-which "/dev/sd*".
+	patch 1: md assumes all personalities members are of the same size.
+		fix this just for raid0.
 
-> What you could do is add both drives, then abort the recovery with
->   echo idle > /sys/block/md13/md/sync_action
-> The recovery will then start again immediately, but using both drives.
+	patch 2: have find_zone return NULL instead of reporting a bug.
+		 It is us up to the use decide what to do. reshape uses 
+		 find_zone to check end of reshape.	
+	
+	patch 3: raid0_size to support reshape.
+	
+	patch 4: replace dump_zones name to print_conf , accept device name
+		 as a parameter, reshape prints the new configuration before
+		 starting.
 
-Thank you.
+	patch 5: beautify create_strip and split raid0_run. have this procedures accept
+		 conf and not mddev and a list of device members.
+	
+	patch 6: remove redudnant argument from is_in_chunk_boundary
 
-> A future release of mdadm will 'freeze' the sync action before adding
-> any drives, then unfreeze afterwards so this will work better in the
-> future.
+	patch 7: have map_sector get raid0_conf struct  instead of mddev
+	
+	patch 8: split raid0_make_request to a make_request core and raid0_make_request wrapper. 
+			reshape used the core make_request.
 
-That sounds like a good way to deal with it.
+	patch 9: add hot_add_disk and hot_remove_disk.
 
-> "Medium Error" is not good.  It implies you have lost data.
-> Though it might be transient due to heat? or something.
+	patch 10: reshape core code.
 
-So far I have only attempted the one rebuild (before this issue with
-a Spare being created of the /dev/sdc1).  I have switched it from the
-motherboard SATA port to one on the PCI card.  Hopefully it can get
-through the rebuild this time.
+	patch 11: reshape structures. header file.
+	
+	patch 12: wrap reshape code ifdefs
 
-It wouldn't be due to heat currently, as the disks are as well
-ventilated as is possible: in a plastic frame outside the computer,
-open to the air, several inches from other disks, with a standing
-room fan blowing air over them.
+	patch 13: add kconfig button :experimental: adding drives for raid0 
+	
+	patch 1: mdadm to support add and reshape for raid0.
 
-Before the crash a week ago, 4 of the 8 disks were close together in
-a 3.5" metal drive cage and were quite hot to the touch.  I'm not
-sure if the problematic /dev/sdc disk was in the group of hot disks
-or not.  Also not sure if heat can cause permanent damage to a disk.
-I think it's just a bad batch of disks, when I recently went looking
-online for people with the same model disk, there were lots of
-comments about them dying.
-
-> The array doesn't go completely off-line.  It remains sufficiently
-> active for you to be able to read any block that isn't on a dead
-> drive.  Possibly there isn't much point in that.
-
-I see.  It seems unlikely that I would be able to swapoff 100MB+ of
-data in such a situation, but I was able to, after the RAID-5 on
-/dev/md9 lost two disks.
-
-> > What is this "recovery done" referring to?
-> > No recovery was completed.
-> 
-> I just means that it has done all the recovery that it can.
-
-Perhaps a more appropriate message would be something like:
-
-"unable to continue with recovery, aborting"
-
-> > I arrived home and performed the following commands
-> > (I have removed some of the duplicate commands):
-> > 
-> > # mdadm --verbose --verbose --detail --scan /dev/md13
-> > # mdadm --verbose --verbose --detail --scan /dev/md13
-> > # mdadm /dev/md13 --remove /dev/sdj1 /dev/sdi1
-> > # mdadm --verbose --verbose --detail --scan /dev/md13
-> > # mdadm /dev/md13 --remove /dev/sdc1
-> > # mdadm --verbose --verbose --detail --scan /dev/md13
-> > # mdadm /dev/md13 --re-add /dev/sdc1
-> 
-> This is where you went wrong.  This will have added /dev/sdc1 as
-> a spare, because the array was too degraded to have any hope of
-> really re-adding it.
-
-Do you mean that "mdadm --detail --scan /dev/md13" caused the disk
-to become marked as a Spare?  Because it was listed as a Spare the
-first time I ran that command when I arrived home.
-
-> You should be able to create the array with
-> 
->  mdadm --create /dev/md13 -l6 -n8 missing /dev/sdd1 /dev/sda1 /dev/sdf1 \
->                                   missing /dev/sdc1 /dev/sde1 /dev/sdb1
->         
-> providing none of the devices have changed names.
-> Then you should be able to get at your data.
-> You could try a recovery again - it might work.
-
-Thank you.
-
-> But if it fails, don't remove and re-add drives that you think have
-> good data.  Rather stop the array and re-assemble with --force.
-
-Okay.  But just to clarify, this last time the rebuild failed, I did
-not --remove and --re-add any disks until after I saw that /dev/sdc
-had become a Spare.
-
-I am off to sleep now, will try the rebuild before I go to work.
-
-Thanks for all your help, very much appreciated.
-
- - S.A.
-
-
+#3 Errata:
+	1. raid0d remains after a reshape is done. 
+		raid0d exists only to stop/start raid0_sync.
+	2. md is still aware to level 0.
+	3. when a reshape starts, md tries to remove the new busy disk. currently I refuse
+		to do it.
+	4. I cannot add raid5 as a member to a raid0 ( or raid5 to a raid5 ).
+		mdadm reports device is busy. hamm...though common to all other personalities,
+		it is quite a problem. 
+		
+#4 My Todo List
+	. Fix addition of raid5 as member of raid0.
+	. Replace the reverse mapping with an algorithm.
+	. Support reshape driven from a change in its members size, 
+		and not just because of a new member. This is most important
+		for raid50.
+	. Support asymmetric chunk sizes. ( each component has a different chunk size ).
+		if I assume raid5 may grow by adding a disk, I will have two different 
+		chunks sizes.
+	. Parallel reshape, have two reshapes over two raids or more run concurrently.
+ 
+#5  Management
+	. Other than me, who else is going to test this code ?
 
 
 
