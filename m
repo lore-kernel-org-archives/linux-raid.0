@@ -1,101 +1,52 @@
 From: Neil Brown <neilb@suse.de>
-Subject: [PULL REQUEST] md updates for 2.6.31
-Date: Thu, 18 Jun 2009 09:34:46 +1000
-Message-ID: <19001.32150.348268.35201@notabene.brown>
+Subject: Re: [PATCH] md linear: Protecting mddev with rcu locks to avoid races
+Date: Thu, 18 Jun 2009 09:38:29 +1000
+Message-ID: <19001.32373.993061.631031@notabene.brown>
+References: <37d33d830906060824u1bf71f1ej22efc3e8bbcaf2b9@mail.gmail.com>
+	<37d33d830906162335j2dda043dn7e5c19d3b40de103@mail.gmail.com>
+	<37d33d830906162346m725af61bg5356e2081f05ce74@mail.gmail.com>
+	<921ca19c0906170102s2928dbbeqb76fc933f2ee60f7@mail.gmail.com>
+	<37d33d830906170148l74d95cd9g90738dfd278361c7@mail.gmail.com>
+	<921ca19c0906170214i2c70c2ebg7f59d525d9ba6307@mail.gmail.com>
+	<37d33d830906170232s75421f5as2e6bbd9db1fe10ac@mail.gmail.com>
+	<921ca19c0906170237o79ba438dpbcaf00c9a4ab56b@mail.gmail.com>
+	<19000.48877.539325.500493@notabene.brown>
+	<37d33d830906170315k4087d532nc2426879c2063fd7@mail.gmail.com>
+	<37d33d830906170317n52afe885y31da8180457fc843@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from SandeepKsinha on Wednesday June 17
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: SandeepKsinha <sandeepksinha@gmail.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Wednesday June 17, sandeepksinha@gmail.com wrote:
+> Hi Neil,
+> 
+> I am attaching the patch file as I am seeing some issues with
+> copy-paste into the mail.
+> 
 
-Hi Linus,
- here is the merge-window pull request for md.
+Thanks.  Much better.
 
- The only real functional change is that we now support non-power-of-2
- chunk sizes in raid0.
- Apart from that there is a lot of simplification and clean up in
- raid0 and linear, some minor refactorisation, and assorted bug fixes.
+I possibly didn't explain myself properly when saying that the
+rcu_read_lock needed to be taken out side of the call to which_dev.
+The reason was that it returns a pointer which still needs to be
+protected.  I possibly didn't for the code as it stood, but I wanted
+to use call_rcu to free the old conf, so it makes sense to protect the
+whole usage of the structure.
 
-thanks,
+So I made that little change.  Then added a patch to free the old conf
+with call_rcu.
+
+It is all now pushed out and you can see the final version of this
+patch at 
+
+http://neil.brown.name/git?p=md;a=commitdiff;h=af11c397fd8835c70ec0bb777104e4ab98b2d660
+
+
+Thanks,
 NeilBrown
-
-The following changes since commit 45e3e1935e2857c54783291107d33323b3ef33c8:
-  Linus Torvalds (1):
-        Merge branch 'master' of git://git.kernel.org/.../sam/kbuild-next
-
-are available in the git repository at:
-
-  git://neil.brown.name/md for-linus
-
-Andre Noll (13):
-      md: raid0: Replace hash table lookup by looping over all strip_zones.
-      md: raid0: Remove hash table.
-      md: raid0: Remove hash spacing and sector shift.
-      md: raid0: Make raid0_run() return a proper error code.
-      md: raid0: Allocate all buffers for the raid0 configuration in one function.
-      md: raid0: Fix a memory leak when stopping a raid0 array.
-      md: Make mddev->chunk_size sector-based.
-      md: Convert mddev->new_chunk to sectors.
-      md: convert conf->chunk_size and conf->prev_chunk to sectors.
-      md/raid5: Use is_power_of_2() in raid5_reconfig()/raid6_reconfig().
-      md: fix some comments.
-      md: Push down reconstruction log message to personality code.
-      md: Move check for bitmap presence to personality code.
-
-Dan Williams (1):
-      md/raid5: add missing call to schedule() after prepare_to_wait()
-
-NeilBrown (14):
-      md/raid0: two cleanups in create_stripe_zones.
-      md: raid0: remove ->sectors from the strip_zone structure.
-      md: raid0: remove ->dev pointer from strip_zone structure
-      md: raid0:  remove setting of segment boundary.
-      md: remove mddev_to_conf "helper" macro
-      md: raid0: chunk_sectors cleanups.
-      md: raid5: check stripe cache is large enough in start_reshape
-      md: remove unnecessary arguments from ->reconfig method.
-      md: merge reconfig and check_reshape methods.
-      md: move assignment of ->utime so that it never gets skipped.
-      md: raid0/linear: ensure device sizes are rounded to chunk size.
-      md: remove chunksize rounding from common code.
-      md/linear: use call_rcu to free obsolete 'conf' structures.
-      md/raid5: correctly update sync_completed when we reach max_resync
-
-Sandeep K Sinha (3):
-      md: Removal of hash table in linear raid
-      md: Removing num_sector and replacing start_sector with end_sector
-      md: Binary search in linear raid
-
-SandeepKsinha (1):
-      md linear: Protecting mddev with rcu locks to avoid races
-
-raz ben yehuda (7):
-      md: have raid0 compile with MD_DEBUG on
-      md: have raid0 report its formation
-      md: raid0: chunk size check in raid0_run
-      md: raid10: chunk size check in run
-      md: raid5: chunk size check in setup_conf
-      md: prepare for non-power-of-two chunk sizes
-      md: raid0 :Enables chunk size other than powers of 2.
-
- drivers/md/faulty.c       |   21 ++-
- drivers/md/linear.c       |  218 ++++++++++--------------
- drivers/md/linear.h       |   12 +-
- drivers/md/md.c           |  196 +++++++++--------------
- drivers/md/md.h           |   14 +-
- drivers/md/multipath.c    |   23 ++-
- drivers/md/multipath.h    |    6 -
- drivers/md/raid0.c        |  403 +++++++++++++++++++++++---------------------
- drivers/md/raid0.h        |   10 +-
- drivers/md/raid1.c        |   46 +++---
- drivers/md/raid1.h        |    6 -
- drivers/md/raid10.c       |   62 ++++---
- drivers/md/raid10.h       |    6 -
- drivers/md/raid5.c        |  218 +++++++++++++------------
- drivers/md/raid5.h        |    8 +-
- include/linux/raid/md_p.h |    2 +-
- 16 files changed, 588 insertions(+), 663 deletions(-)
