@@ -1,189 +1,77 @@
-From: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
-Subject: Resize Raid5 devices
-Date: Wed, 17 Jun 2009 16:22:20 +0200
-Message-ID: <62E07ACC-0F47-4B5F-94C7-29199ECE46FE@bj-ig.de>
-Mime-Version: 1.0 (Apple Message framework v935.3)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: Subject:[PATCH 001:013]: md: Raid0 reshape
+Date: Wed, 17 Jun 2009 18:23:27 +0200
+Message-ID: <20090617162327.GC6403@skl-net.de>
+References: <1245189112.3478.94.camel@raz> <20090617081238.GB6403@skl-net.de> <5d96567b0906170123q2fad427bu37526f3692b0f0f6@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Dy3pjCZLf6+6NySR"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <5d96567b0906170123q2fad427bu37526f3692b0f0f6@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux raid <linux-raid@vger.kernel.org>
+To: Raz <raziebe@gmail.com>
+Cc: linux raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Problem: I would like to grow the member devices of an existing raid5  
-without
-a 40 hour rebuild.
 
-What happend up to here:
-Two or three years before I created a raid5 with 5 300GB disks. A year  
-before
-I replaced 3 of these disks by 1.5TB models. At this time I decided to
-partition these disks to have a 1.2TB partition at the beginning
-and a 300GB partition at the end. The 300GB partitions replaced the  
-300GB
-disks, the 1.2 TB partitions became member of a new raid5 with a  
-version 1.2
-superblocks. I choose version 1.2 superblocks because they are at the  
-beginning
-of the disk so I thought I could resize the partition later without  
-need to
-rebuild the array.
+--Dy3pjCZLf6+6NySR
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Later has been an hour before ;)
+On 11:23, Raz wrote:
 
-After I added a forth 1.5TB disk to the array yesterday and reshaped the
-former 3 disk raid5 to a 4 disk one, I wiped out the 300GB disk raid5,  
-set one
-of the 1.2TB partitions faulty, removed it from its raid, removed the  
-300GB
-partition and resized the former 1.2TB partition (in place) to 1.5TB.  
-Now I
-added this partition to its raid.
+> >> + =A0 =A0 if (mddev->level =3D=3D 0) {
+> >> + =A0 =A0 =A0 =A0 =A0 =A0 max_sectors =3D mddev->array_sectors;
+> >> + =A0 =A0 =A0 =A0 =A0 =A0 j =3D mddev->recovery_cp;
+> >> + =A0 =A0 }
+> >> =A0 =A0 =A0 printk(KERN_INFO "md: %s of RAID array %s\n", desc, mdname=
+(mddev));
+> >> =A0 =A0 =A0 printk(KERN_INFO "md: minimum _guaranteed_ =A0speed:"
+> >> =A0 =A0 =A0 =A0 =A0 =A0 =A0 " %d KB/sec/disk.\n", speed_min(mddev));
+> >
+> > Hm, we want to get rid of personality-dependent code in md.c, so new
+> > code should never check mddev->level. In the first hunk I think it
+> > would be possible to check if pers->sync_request is NULL.
+> No. sync_request does exists. this is what Neil wanted me to do.
+> implement raid0_sync
+> so I will be using md for this purpose. I knew that md patch is a
+> problem, this is why I posted
+> it first.
 
-It has been recognized as a former member of this raid - so far so  
-good - but
-for whatever reason the raid subsystem decided to start a complete  
-recovery.
-So here my question:
+OK, so pers->sync_request can't be used, but that was only one
+possible option to replace the check mddev->level =3D=3D 0 by something
+more generic. BTW: The log message should describe in which case the
+resync status shows an incorrect value and why one can not determine
+which value to use for max_sectors by looking at mddev->recovery.
 
-What went wrong and what do I have to do to avoid a full recovery for  
-the
-next disk?
+> > Is the second hunk really necessary? AFAICS md_do_sync() won't be
+> > called for raid0 anyway.
+> second hunk is necessary for resume reshape. md_do_sync is called
+> indirecrly by raid0d -->md_check_recovery.
 
-I do not feel well with a degraded raid5 in a 10 hour rebuild ...
+Yes, I didn't notice because raid0d() is introduced later in patch
+10/13 of your series. When introducing new and apparently dead code
+it's always nice to let people know that the new code is going to be
+used by a function that will be added in a subsequent patch :)
 
 Regards
-Ralf
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
 
-PS: no the system is not the fastest - it is optimized for size not for
-speed.
+--Dy3pjCZLf6+6NySR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
-DatenGrab:/media # uname -a
-Linux DatenGrab 2.6.25.20-0.4-default #1 SMP 2009-06-01 09:57:12 +0200  
-i686 i686 i386 GNU/Linux
-DatenGrab:/media # mdadm --version
-mdadm - v2.6.4 - 19th October 2007
-DatenGrab:/media # cat /etc/SuSE-release
-openSUSE 11.0 (i586)
-VERSION = 11.0
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
 
-DatenGrab:/media # cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4] [raid1]
-md3 : active raid5 sdf1[3] sdi1[0] sdj1[4] sdh1[1]
-       3457099008 blocks super 1.2 level 5, 256k chunk, algorithm 2  
-[4/4] [UUUU]
-       bitmap: 0/275 pages [0KB], 2048KB chunk
+iD8DBQFKORh+Wto1QDEAkw8RAm3GAJ9orjx5oVNM/bCsmWwmYtPpa5s82gCdHxzE
+1+jPSDd77+YrehyaKDoeICE=
+=XZIE
+-----END PGP SIGNATURE-----
 
-DatenGrab:/media # mdadm -f /dev/md3 /dev/sdf1
-mdadm: set /dev/sdf1 faulty in /dev/md3
-
-DatenGrab:/media # mdadm -r /dev/md3 /dev/sdf1
-mdadm: hot removed /dev/sdf1
-
-DatenGrab:/media # fdisk /dev/sdf
-Command (m for help): p
-
-Disk /dev/sdf: 1500.3 GB, 1500301910016 bytes
-255 heads, 63 sectors/track, 182401 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Disk identifier: 0x26583dd9
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sdf1               1      143463  1152366516   fd  Linux raid  
-autodetect
-/dev/sdf2          143489      182401   312568672+  fd  Linux raid  
-autodetect
-
-Command (m for help): d
-Partition number (1-4): 2
-
-Command (m for help): d
-Selected partition 1
-
-Command (m for help): n
-[...]
-Command (m for help): p
-
-Disk /dev/sdf: 1500.3 GB, 1500301910016 bytes
-255 heads, 63 sectors/track, 182401 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Disk identifier: 0x26583dd9
-
-    Device Boot      Start         End      Blocks   Id  System
-/dev/sdf1               1      182386  1465015513+  fd  Linux raid  
-autodetect
-
-Command (m for help): w
-The partition table has been altered!
-
-Calling ioctl() to re-read partition table.
-Syncing disks.
-
-DatenGrab:/media # mdadm -a /dev/md3 /dev/sdf1
-mdadm: re-added /dev/sdf1
-
-DatenGrab:/media # cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4] [raid1]
-md3 : active raid5 sdf1[3] sdi1[0] sdj1[4] sdh1[1]
-       3457099008 blocks super 1.2 level 5, 256k chunk, algorithm 2  
-[4/3] [UUU_]
-       [>....................]  recovery =  0.0% (83184/1152366336)  
-finish=461.6min speed=41592K/sec
-       bitmap: 2/275 pages [8KB], 2048KB chunk
-
-Kernel log:
-Jun 17 15:34:46 DatenGrab kernel: raid5: Disk failure on sdf1,  
-disabling device.
-  Operation continuing on 3 devices
-Jun 17 15:34:55 DatenGrab kernel: RAID5 conf printout:
-Jun 17 15:34:55 DatenGrab kernel:  --- rd:4 wd:3
-Jun 17 15:34:55 DatenGrab kernel:  disk 0, o:1, dev:sdi1
-Jun 17 15:34:55 DatenGrab kernel:  disk 1, o:1, dev:sdh1
-Jun 17 15:34:55 DatenGrab kernel:  disk 2, o:1, dev:sdj1
-Jun 17 15:34:55 DatenGrab kernel:  disk 3, o:0, dev:sdf1
-Jun 17 15:34:55 DatenGrab kernel: RAID5 conf printout:
-Jun 17 15:34:55 DatenGrab kernel:  --- rd:4 wd:3
-Jun 17 15:34:55 DatenGrab kernel:  disk 0, o:1, dev:sdi1
-Jun 17 15:34:55 DatenGrab kernel:  disk 1, o:1, dev:sdh1Jun 17  
-15:34:55 DatenGrab kernel:  disk 2, o:1, dev:sdj1
-Jun 17 15:34:55 DatenGrab kernel: md: unbind<sdf1>
-Jun 17 15:34:55 DatenGrab kernel: md: export_rdev(sdf1)
-Jun 17 15:37:54 DatenGrab kernel: sd 6:0:0:0: [sdf] 2930277168 512- 
-byte hardware sectors (1500302 MB)
-Jun 17 15:37:54 DatenGrab kernel: sd 6:0:0:0: [sdf] Write Protect is off
-Jun 17 15:37:54 DatenGrab kernel: sd 6:0:0:0: [sdf] Mode Sense: 00 3a  
-00 00Jun 17 15:37:54 DatenGrab kernel: sd 6:0:0:0: [sdf] Write cache:  
-enabled, read c
-ache: enabled, doesn't support DPO or FUA
-Jun 17 15:37:54 DatenGrab kernel:  sdf: sdf1
-Jun 17 15:37:56 DatenGrab kernel: sd 6:0:0:0: [sdf] 2930277168 512- 
-byte hardware sectors (1500302 MB)
-Jun 17 15:37:56 DatenGrab kernel: sd 6:0:0:0: [sdf] Write Protect is off
-Jun 17 15:37:56 DatenGrab kernel: sd 6:0:0:0: [sdf] Mode Sense: 00 3a  
-00 00
-Jun 17 15:37:56 DatenGrab kernel: sd 6:0:0:0: [sdf] Write cache:  
-enabled, read c
-ache: enabled, doesn't support DPO or FUA
-Jun 17 15:37:56 DatenGrab kernel:  sdf: sdf1
-
-Jun 17 15:38:15 DatenGrab kernel: md: bind<sdf1>
-Jun 17 15:38:15 DatenGrab kernel: RAID5 conf printout:
-Jun 17 15:38:15 DatenGrab kernel:  --- rd:4 wd:3
-Jun 17 15:38:15 DatenGrab kernel:  disk 0, o:1, dev:sdi1
-Jun 17 15:38:15 DatenGrab kernel:  disk 1, o:1, dev:sdh1
-Jun 17 15:38:15 DatenGrab kernel:  disk 2, o:1, dev:sdj1
-Jun 17 15:38:15 DatenGrab kernel:  disk 3, o:1, dev:sdf1
-Jun 17 15:38:15 DatenGrab kernel: md: recovery of RAID array md3
-Jun 17 15:38:15 DatenGrab kernel: md: minimum _guaranteed_  speed:  
-1000 KB/sec/disk.
-Jun 17 15:38:15 DatenGrab kernel: md: using maximum available idle IO  
-bandwidth (but not more than 200000 KB/sec) for recovery.
-Jun 17 15:38:15 DatenGrab kernel: md: using 128k window, over a total  
-of 1152366
-
--- 
-Van Roy's Law: -------------------------------------------------------
-        An unbreakable toy is useful for breaking other toys.
-
-
-
+--Dy3pjCZLf6+6NySR--
