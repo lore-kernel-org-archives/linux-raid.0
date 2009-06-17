@@ -1,50 +1,101 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: init_emergency_isa_pool calling mempool_create in
-	non-sleeping context
-Date: Wed, 17 Jun 2009 18:50:23 -0400
-Message-ID: <20090617225022.GC9405@redhat.com>
-References: <4A396195.8060503@goop.org>
-	<0f79c2d4513c50184383e223d3d2ee97.squirrel@neil.brown.name>
-	<20090617224219.GA9405@redhat.com> <4A3971FE.7040700@goop.org>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Neil Brown <neilb@suse.de>
+Subject: [PULL REQUEST] md updates for 2.6.31
+Date: Thu, 18 Jun 2009 09:34:46 +1000
+Message-ID: <19001.32150.348268.35201@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <4A3971FE.7040700@goop.org>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Jeremy Fitzhardinge <jeremy@goop.org>
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jun 17 2009 at  6:45pm -0400,
-Jeremy Fitzhardinge <jeremy@goop.org> wrote:
 
-> On 06/17/09 15:42, Mike Snitzer wrote:
-> > This has been resolved and is waiting to be pushed along with the rest
-> > of the DM changes for 2.6.31.
-> >
-> > See:
-> > ftp://ftp.kernel.org/pub/linux/kernel/people/agk/patches/2.6/editing/dm-table-establish-queue-limits-by-copying-table-limits.patch
-> >   
-> 
-> OK, good to know.
-> 
-> > Maybe this fix should go now rather than wait a day or so for the larger
-> > DM push?
-> >   
-> 
-> The machine booted fine with no apparent badness, so I don't think its
-> urgent.  I just reported it for diligence's sake.
+Hi Linus,
+ here is the merge-window pull request for md.
 
-OK, thanks.
+ The only real functional change is that we now support non-power-of-2
+ chunk sizes in raid0.
+ Apart from that there is a lot of simplification and clean up in
+ raid0 and linear, some minor refactorisation, and assorted bug fixes.
 
-Mike
+thanks,
+NeilBrown
+
+The following changes since commit 45e3e1935e2857c54783291107d33323b3ef33c8:
+  Linus Torvalds (1):
+        Merge branch 'master' of git://git.kernel.org/.../sam/kbuild-next
+
+are available in the git repository at:
+
+  git://neil.brown.name/md for-linus
+
+Andre Noll (13):
+      md: raid0: Replace hash table lookup by looping over all strip_zones.
+      md: raid0: Remove hash table.
+      md: raid0: Remove hash spacing and sector shift.
+      md: raid0: Make raid0_run() return a proper error code.
+      md: raid0: Allocate all buffers for the raid0 configuration in one function.
+      md: raid0: Fix a memory leak when stopping a raid0 array.
+      md: Make mddev->chunk_size sector-based.
+      md: Convert mddev->new_chunk to sectors.
+      md: convert conf->chunk_size and conf->prev_chunk to sectors.
+      md/raid5: Use is_power_of_2() in raid5_reconfig()/raid6_reconfig().
+      md: fix some comments.
+      md: Push down reconstruction log message to personality code.
+      md: Move check for bitmap presence to personality code.
+
+Dan Williams (1):
+      md/raid5: add missing call to schedule() after prepare_to_wait()
+
+NeilBrown (14):
+      md/raid0: two cleanups in create_stripe_zones.
+      md: raid0: remove ->sectors from the strip_zone structure.
+      md: raid0: remove ->dev pointer from strip_zone structure
+      md: raid0:  remove setting of segment boundary.
+      md: remove mddev_to_conf "helper" macro
+      md: raid0: chunk_sectors cleanups.
+      md: raid5: check stripe cache is large enough in start_reshape
+      md: remove unnecessary arguments from ->reconfig method.
+      md: merge reconfig and check_reshape methods.
+      md: move assignment of ->utime so that it never gets skipped.
+      md: raid0/linear: ensure device sizes are rounded to chunk size.
+      md: remove chunksize rounding from common code.
+      md/linear: use call_rcu to free obsolete 'conf' structures.
+      md/raid5: correctly update sync_completed when we reach max_resync
+
+Sandeep K Sinha (3):
+      md: Removal of hash table in linear raid
+      md: Removing num_sector and replacing start_sector with end_sector
+      md: Binary search in linear raid
+
+SandeepKsinha (1):
+      md linear: Protecting mddev with rcu locks to avoid races
+
+raz ben yehuda (7):
+      md: have raid0 compile with MD_DEBUG on
+      md: have raid0 report its formation
+      md: raid0: chunk size check in raid0_run
+      md: raid10: chunk size check in run
+      md: raid5: chunk size check in setup_conf
+      md: prepare for non-power-of-two chunk sizes
+      md: raid0 :Enables chunk size other than powers of 2.
+
+ drivers/md/faulty.c       |   21 ++-
+ drivers/md/linear.c       |  218 ++++++++++--------------
+ drivers/md/linear.h       |   12 +-
+ drivers/md/md.c           |  196 +++++++++--------------
+ drivers/md/md.h           |   14 +-
+ drivers/md/multipath.c    |   23 ++-
+ drivers/md/multipath.h    |    6 -
+ drivers/md/raid0.c        |  403 +++++++++++++++++++++++---------------------
+ drivers/md/raid0.h        |   10 +-
+ drivers/md/raid1.c        |   46 +++---
+ drivers/md/raid1.h        |    6 -
+ drivers/md/raid10.c       |   62 ++++---
+ drivers/md/raid10.h       |    6 -
+ drivers/md/raid5.c        |  218 +++++++++++++------------
+ drivers/md/raid5.h        |    8 +-
+ include/linux/raid/md_p.h |    2 +-
+ 16 files changed, 588 insertions(+), 663 deletions(-)
