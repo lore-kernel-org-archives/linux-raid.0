@@ -1,51 +1,74 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: [PATCH] md linear: Protecting mddev with rcu locks to avoid
-     races  in
-Date: Wed, 17 Jun 2009 16:50:13 +1000 (EST)
-Message-ID: <750ace456f740751a36dc62f891e2ea0.squirrel@neil.brown.name>
-References: <37d33d830906060824u1bf71f1ej22efc3e8bbcaf2b9@mail.gmail.com>
-    <18997.32786.206008.486995@notabene.brown>
-    <37d33d830906162335j2dda043dn7e5c19d3b40de103@mail.gmail.com>
+From: raz ben yehuda <raziebe@gmail.com>
+Subject: Re: Subject:[PATCH 001:013]: md: Raid0 reshape
+Date: Wed, 17 Jun 2009 13:25:07 +0300
+Message-ID: <1245234307.3333.7.camel@raz>
+References: <1245189112.3478.94.camel@raz>  <4A382993.1070702@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <37d33d830906162335j2dda043dn7e5c19d3b40de103@mail.gmail.com>
+In-Reply-To: <4A382993.1070702@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: SandeepKsinha <sandeepksinha@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: linux raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-On Wed, June 17, 2009 4:35 pm, SandeepKsinha wrote:
->>
->> 2/ mddev->raid_disks should really be dereferenced before 'conf'.
->> =A0Doing it the way you have done it, the 'raid_disks' value could b=
-e
->> =A0larger than the value supported by the 'conf' so things could
->> =A0go wrong.
->>
-> Agreed. I hope you are referring to the case where a disk is in the
-> process of being added to an array. Is that right ?
-> Kindly confirm.
 
-Yes, that is correct.
+On Tue, 2009-06-16 at 19:24 -0400, Bill Davidsen wrote:
+> raz ben yehuda wrote:
+> > md assumes that personality has all its membes of the same
+> > size,A fact that is incorrect for raid0.
+> >
+> >  md.c |   11 +++++++++--
+> >  1 file changed, 9 insertions(+), 2 deletions(-)
+> >
+> > Signed-off-by: razb <raziebe@gmail.com>
+> > ---
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c
+> > index 0f11fd1..e14fb90 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -5683,7 +5683,8 @@ static void status_resync(struct seq_file *seq, mddev_t * mddev)
+> >  		max_sectors = mddev->resync_max_sectors;
+> >  	else
+> >  		max_sectors = mddev->dev_sectors;
+> > -
+> > +	if (mddev->level == 0)
+> > +		max_sectors = mddev->resync_max_sectors;
+> >  	/*
+> >  	 * Should not happen.
+> >  	 */
+> > @@ -6280,7 +6281,13 @@ void md_do_sync(mddev_t *mddev)
+> >  			    rdev->recovery_offset < j)
+> >  				j = rdev->recovery_offset;
+> >  	}
+> > -
+> > +	/*
+> > +	* raid0 members may not be of the same size,use array_size.
+> > +	*/
+> > +	if (mddev->level == 0) {
+> > +		max_sectors = mddev->array_sectors;
+> > +		j = mddev->recovery_cp;
+> > +	}
+> >  	printk(KERN_INFO "md: %s of RAID array %s\n", desc, mdname(mddev));
+> >  	printk(KERN_INFO "md: minimum _guaranteed_  speed:"
+> >  		" %d KB/sec/disk.\n", speed_min(mddev));
+> >   
+> 
+> If I admit I only spent about 20 minutes looking at this code will you 
+> explain why you use different fields of the struct to set max_sectors? I 
 
->> 4/ We don't need the rcu protection here as we hold ->reconfig_mutex
->> =A0 both in linear_add and linear_stop, so they cannot race.
->> =A0 Adding a comment to this effect might be a good idea though.
->>
->
-> Fine. Shall do this as well.
->
-> The new patch will follow soon.
->
+md_sync uses max_sectors as an ending point of the reshape process.
+problem is that md assumes all raid's members are of the same size, so
+it uses dev_sectors and this is not true to raid0 with multiple zones
+> guess my real confusion is why resync_max_sectors would be valid, given 
+> that raid0 has no redundancy. Or are you using it in some obscure way 
+> for reshape values?  The values stored in the field don't really to be 
+> what you want... Yes, the reshape is new to me.
+It has nothing to do with redundancy, but with the state machine of md.
+I agree that there should be more elegant way to fix this, but it means
+bigger fixes in md, and this is something I definitely don't want
+to do.
 
 
-Thanks!
-NeilBrown
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
