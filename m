@@ -1,76 +1,76 @@
-From: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
-Subject: Re: Resize Raid5 devices
-Date: Thu, 18 Jun 2009 10:36:32 +0200
-Message-ID: <4CB2808F-EB88-458A-9D2B-22E31A97EB4F@bj-ig.de>
-References: <62E07ACC-0F47-4B5F-94C7-29199ECE46FE@bj-ig.de> <87tz2e7xqt.fsf@frosties.localdomain>
-Mime-Version: 1.0 (Apple Message framework v935.3)
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed	delsp=yes
+From: Raz <raziebe@gmail.com>
+Subject: Re: Subject:[PATCH 001:013]: md: Raid0 reshape
+Date: Thu, 18 Jun 2009 14:42:45 +0300
+Message-ID: <5d96567b0906180442j1fc4b753xe3db627da0dccd90@mail.gmail.com>
+References: <1245189112.3478.94.camel@raz> <20090617081238.GB6403@skl-net.de>
+	<5d96567b0906170123q2fad427bu37526f3692b0f0f6@mail.gmail.com>
+	<20090617162327.GC6403@skl-net.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87tz2e7xqt.fsf@frosties.localdomain>
+In-Reply-To: <20090617162327.GC6403@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux raid <linux-raid@vger.kernel.org>
-Cc: Goswin von Brederlow <goswin-v-b@web.de>
+To: Andre Noll <maan@systemlinux.org>
+Cc: linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-
-Am 18.06.2009 um 10:27 schrieb Goswin von Brederlow:
-> Ralf M=FCller <ralf@bj-ig.de> writes:
+On Wed, Jun 17, 2009 at 7:23 PM, Andre Noll<maan@systemlinux.org> wrote=
+:
+> On 11:23, Raz wrote:
 >
->> After I added a forth 1.5TB disk to the array yesterday and =20
->> reshaped the
->> former 3 disk raid5 to a 4 disk one, I wiped out the 300GB disk =20
->> raid5,
->> set one of the 1.2TB partitions faulty, removed it from its raid,
->> removed the 300GB partition and resized the former 1.2TB partition
->> (in place) to 1.5TB. Now I added this partition to its raid.
->>
->> It has been recognized as a former member of this raid - so far so
->> good - but for whatever reason the raid subsystem decided to start
->> a complete recovery.
->> So here my question:
->>
->> What went wrong and what do I have to do to avoid a full recovery fo=
-r
->> the next disk?
+>> >> + =A0 =A0 if (mddev->level =3D=3D 0) {
+>> >> + =A0 =A0 =A0 =A0 =A0 =A0 max_sectors =3D mddev->array_sectors;
+>> >> + =A0 =A0 =A0 =A0 =A0 =A0 j =3D mddev->recovery_cp;
+>> >> + =A0 =A0 }
+>> >> =A0 =A0 =A0 printk(KERN_INFO "md: %s of RAID array %s\n", desc, m=
+dname(mddev));
+>> >> =A0 =A0 =A0 printk(KERN_INFO "md: minimum _guaranteed_ =A0speed:"
+>> >> =A0 =A0 =A0 =A0 =A0 =A0 =A0 " %d KB/sec/disk.\n", speed_min(mddev=
+));
+>> >
+>> > Hm, we want to get rid of personality-dependent code in md.c, so n=
+ew
+>> > code should never check mddev->level. In the first hunk I think it
+>> > would be possible to check if pers->sync_request is NULL.
+>> No. sync_request does exists. this is what Neil wanted me to do.
+>> implement raid0_sync
+>> so I will be using md for this purpose. I knew that md patch is a
+>> problem, this is why I posted
+>> it first.
 >
-> I guess something wrote to your raid5 while the one disk was
-> removed.
-
-Thats possible - after re-add, the bitmap showed 2/275 pages as unclean=
-=2E
-
-> When you added it back the event counter would differ and the
-> disk needs to be resynced completly. A bitmap would help limiting thi=
-s
-> to the parts that have changed. Add an internal bitmap before you
-> remove the next disk.
-
-There is an internal write intent bitmap at the array:
-DatenGrab:/media # cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4] [raid1]
-md3 : active raid5 sdf1[3] sdi1[0] sdj1[4] sdh1[1]
-      3457099008 blocks super 1.2 level 5, 256k chunk, algorithm 2 =20
-[4/4] [UUUU]
-      bitmap: 0/275 pages [0KB], 2048KB chunk
-
-Do you have an idea why this bitmap has been ignored?
-
-> Alternatively stop the raid completly, resize all the partitions and
-> start the raid again. No need to fail/readd each disk in turn.
-
-good idea ...
-
-Thanks so far
-Ralf
-
---=20
-Van Roy's Law: -------------------------------------------------------
-        An unbreakable toy is useful for breaking other toys.
-
-
-
+> OK, so pers->sync_request can't be used, but that was only one
+> possible option to replace the check mddev->level =3D=3D 0 by somethi=
+ng
+> more generic. BTW: The log message should describe in which case the
+> resync status shows an incorrect value and why one can not determine
+> which value to use for max_sectors by looking at mddev->recovery.
+>
+>> > Is the second hunk really necessary? AFAICS md_do_sync() won't be
+>> > called for raid0 anyway.
+>> second hunk is necessary for resume reshape. md_do_sync is called
+>> indirecrly by raid0d -->md_check_recovery.
+>
+> Yes, I didn't notice because raid0d() is introduced later in patch
+> 10/13 of your series. When introducing new and apparently dead code
+> it's always nice to let people know that the new code is going to be
+> used by a function that will be added in a subsequent patch :)
+noted.
+> Regards
+> Andre
+> --
+> The only person who always got his work done by Friday was Robinson C=
+rusoe
+>
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v1.4.1 (GNU/Linux)
+>
+> iD8DBQFKORh+Wto1QDEAkw8RAm3GAJ9orjx5oVNM/bCsmWwmYtPpa5s82gCdHxzE
+> 1+jPSDd77+YrehyaKDoeICE=3D
+> =3DXZIE
+> -----END PGP SIGNATURE-----
+>
+>
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
