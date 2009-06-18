@@ -1,48 +1,60 @@
 From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Why is my raid 1 boot/root not working with autodetect?
-Date: Thu, 18 Jun 2009 10:21:41 +0200
-Message-ID: <87zlc67y0a.fsf@frosties.localdomain>
-References: <Pine.LNX.4.64.0906101828150.10333@deimos.nu>
-	<Pine.LNX.4.64.0906111019350.9820@deimos.nu>
+Subject: Re: Resize Raid5 devices
+Date: Thu, 18 Jun 2009 10:27:22 +0200
+Message-ID: <87tz2e7xqt.fsf@frosties.localdomain>
+References: <62E07ACC-0F47-4B5F-94C7-29199ECE46FE@bj-ig.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0906111019350.9820@deimos.nu> (Fredrik
-	Pettersson's message of "Thu, 11 Jun 2009 10:44:44 +0200 (CEST)")
+In-Reply-To: <62E07ACC-0F47-4B5F-94C7-29199ECE46FE@bj-ig.de> (Ralf Mueller's
+	message of "Wed, 17 Jun 2009 16:22:20 +0200")
 Sender: linux-raid-owner@vger.kernel.org
-To: Fredrik Pettersson <freppe@deimos.nu>
-Cc: linux-raid@vger.kernel.org
+To: Ralf Mueller <ralf@bj-ig.de>
+Cc: linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Fredrik Pettersson <freppe@deimos.nu> writes:
+Ralf M=FCller <ralf@bj-ig.de> writes:
 
-> I have done some more testing in an attempt to gather more data, and
-> here is what I have seen when testing different kernel options.
+> After I added a forth 1.5TB disk to the array yesterday and reshaped =
+the
+> former 3 disk raid5 to a 4 disk one, I wiped out the 300GB disk raid5=
+,
+> set one
+> of the 1.2TB partitions faulty, removed it from its raid, removed the
+> 300GB
+> partition and resized the former 1.2TB partition (in place) to
+> 1.5TB. Now I
+> added this partition to its raid.
 >
-> When booting with my normal kernel options I get the following md
-> output during the boot:
+> It has been recognized as a former member of this raid - so far so
+> good - but
+> for whatever reason the raid subsystem decided to start a complete
+> recovery.
+> So here my question:
 >
-> (raid=noautodetect md=0,/dev/sdb1,/dev/sdc1 md=d0,/dev/sdb2,/dev/sdc2)
-> -----
-> md: Skipping autodetection of RAID arrays. (raid=autodetect will force)
-> md: Loading md0: /dev/sdb1
-> md: bind<sdb1>
-> md: bind<sdc1>
-> raid1: raid set md0 active with 2 out of 2 mirrors
->  md0: unknown partition table
->  md0: unknown partition table
-> md: Loading md_d0: /dev/sdb2
-> md: bind<sdb2>
-> md: bind<sdc2>
-> raid1: raid set md_d0 active with 2 out of 2 mirrors
->  md_d0: p1 p2 p3 p4
->  md_d0: p1 p2 p3 p4
-> -----
+> What went wrong and what do I have to do to avoid a full recovery for
+> the
+> next disk?
 
-I seem to remember something about partitionable raid not being able
-to autodetect.
+I guess something wrote to your raid5 while the one disk was
+removed. When you added it back the event counter would differ and the
+disk needs to be resynced completly. A bitmap would help limiting this
+to the parts that have changed. Add an internal bitmap before you
+remove the next disk.
+
+Alternatively stop the raid completly, resize all the partitions and
+start the raid again. No need to fail/readd each disk in turn.
+
+> I do not feel well with a degraded raid5 in a 10 hour rebuild ...
+>
+> Regards
+> Ralf
 
 MfG
         Goswin
-
-PS: why not use lvm?
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
