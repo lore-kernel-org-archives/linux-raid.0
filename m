@@ -1,56 +1,53 @@
-From: =?ISO-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
-Subject: Re: Resize Raid5 devices
-Date: Fri, 19 Jun 2009 10:04:42 +0200
-Message-ID: <EF59F281-B4DA-478C-8D21-DECABCBCDA7E@bj-ig.de>
-References: <62E07ACC-0F47-4B5F-94C7-29199ECE46FE@bj-ig.de> <87tz2e7xqt.fsf@frosties.localdomain> <4CB2808F-EB88-458A-9D2B-22E31A97EB4F@bj-ig.de> <19002.61619.121746.923481@notabene.brown>
-Mime-Version: 1.0 (Apple Message framework v935.3)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: filesystem stripe parameters
+Date: Fri, 19 Jun 2009 13:15:41 +0400
+Message-ID: <4A3B573D.5020206@msgid.tls.msk.ru>
+References: <7a329d910906181208t2f95d94bsc4eac2c5f20355f5@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <19002.61619.121746.923481@notabene.brown>
+In-Reply-To: <7a329d910906181208t2f95d94bsc4eac2c5f20355f5@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux raid <linux-raid@vger.kernel.org>
-Cc: Neil Brown <neilb@suse.de>
+To: Wil Reichert <wil.reichert@gmail.com>
+Cc: linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Wil Reichert wrote:
+> When using LVM on top of RAID 5, is it still worthwhile to pass RAID
+> stripe information to the filesystem on creation?  Or do the PE's in
+> LVM blur the specific stripe sizes & I'd want to use some multiple of
+> those instead?
 
-Am 19.06.2009 um 03:58 schrieb Neil Brown:
->> There is an internal write intent bitmap at the array:
->> DatenGrab:/media # cat /proc/mdstat
->> Personalities : [raid6] [raid5] [raid4] [raid1]
->> md3 : active raid5 sdf1[3] sdi1[0] sdj1[4] sdh1[1]
->>      3457099008 blocks super 1.2 level 5, 256k chunk, algorithm 2
->> [4/4] [UUUU]
->>      bitmap: 0/275 pages [0KB], 2048KB chunk
->>
->> Do you have an idea why this bitmap has been ignored?
->
-> Probably a kernel bug.  There have been a couple of fixes relating to
-> this since 2.6.25.  Hopefully it is all working in 2.6.30...
->
-> The bug that you hit was probably the one fixed by
->  commit a0da84f35b25875870270d16b6eccda4884d61a7
-> which is in 2.6.27.
+It's a very good question, especially in context of RAID5.
 
-Mh ... ok. So it may be a good idea to update to OpenSuSE 11.1 before
-growing the other devices. Will do that at the weekend.
+Yes it is still a good idea to pass that info because it is still a
+RAID5 which requires proper treatment wrt unaligned writes and keeping
+redundancy.
 
->>> Alternatively stop the raid completly, resize all the partitions and
->>> start the raid again. No need to fail/readd each disk in turn.
->>
->> good idea ...
->
-> And when you re-assemble the array, use --update=devicesize.  That
-> will ensure that md sees all of the new space on the devices.
+But the thing is that RAID5 and LVM are not good to each other UNLESS
+RAID5 consists of 3, 5 or 9 (or 17 etc) drives -- i.e. 2^N+1, so that
+there's 2^N data drives.
 
-This hint may have saved me a lot of time.
+This is because LVM can only have blocksize as a power of two and in
+order to be useful that blocksize should be a multiple of RAID5 data
+row size (stripe size etc).
 
-Thanks a lot
-Ralf
+This is only possible when RAID5 has 2^N data drives or 2^N+1 total
+drives.  The same is for RAID4, and for RAID6 it's 2^N+2 since RAID6
+has 2 parity drives.
 
--- 
-Van Roy's Law: -------------------------------------------------------
-        An unbreakable toy is useful for breaking other toys.
+But if you can't match LVM blocksize and RAID strip size, there's
+*almost* no point at telling raid parameters to the filesystem: no
+matter how hard you'll try, LVM will make the whole thing non-optimal.
 
+Ok, depending on the number of drives, *some* logical volumes will
+be properly aligned, but definitely not all of them.  For example
+on a 4-drive RAID5 array, only every 3rd volume will be ok, --
+provided the volumes are allocated in full one after another,
+without holes and fragmentation.
 
+When everything is properly aligned, it's still worth the effort
+IMHO to tell the filesystem about true raid properties.
 
+/mjt
