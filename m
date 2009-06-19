@@ -1,39 +1,57 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Write intent bitmaps
-Date: Fri, 19 Jun 2009 17:01:31 +0200
-Message-ID: <87ab44mfn8.fsf@frosties.localdomain>
-References: <20090608021026139.GMOD14139@cdptpa-omta02.mail.rr.com>
-	<18989.6010.582386.812296@fisica.ufpr.br>
-	<19002.62697.475588.28776@notabene.brown>
+From: Justin Perreault <justinperreault@dl-jp.com>
+Subject: Re: filesystem stripe parameters
+Date: Fri, 19 Jun 2009 21:59:02 +0100
+Message-ID: <1245445142.18616.33.camel@Gecko.local>
+References: <7a329d910906181208t2f95d94bsc4eac2c5f20355f5@mail.gmail.com>
+	 <4A3B573D.5020206@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <19002.62697.475588.28776@notabene.brown> (Neil Brown's message
-	of "Fri, 19 Jun 2009 12:16:09 +1000")
+In-Reply-To: <4A3B573D.5020206@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Carlos Carvalho <carlos@fisica.ufpr.br>, linux-raid@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Wil Reichert <wil.reichert@gmail.com>, linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil Brown <neilb@suse.de> writes:
+Still learning, please be gentle.
 
-> On Monday June 8, carlos@fisica.ufpr.br wrote:
->>  >If so, would ext2 probably be the best choice?
->> 
->> That's what the man page says. I find it strange since if it's a file
->> the filesystem shouldn't matter. Neil?
->
-> The way that md writes to the bitmap file is not entirely portable
-> across different filesystems.  As the man page say,  it is known to
-> work for ext2 and ext3.  Either is a fine choice.
-> A new filesystem interface is being introduced in 2.6.31 as part of
-> the swap-over-NFS work.  I might end up using that to write to bitmap
-> files, as it has the right characteristics.  But that is very much in
-> the future.
->
-> NeilBrown
+On Fri, 2009-06-19 at 13:15 +0400, Michael Tokarev wrote:
+> Wil Reichert wrote:
+> > When using LVM on top of RAID 5, is it still worthwhile to pass RAID
+> > stripe information to the filesystem on creation?  Or do the PE's in
+> > LVM blur the specific stripe sizes & I'd want to use some multiple of
+> > those instead?
+> Yes it is still a good idea to pass that info because it is still a
+> RAID5 which requires proper treatment wrt unaligned writes and keeping
+> redundancy.
+> 
+> But the thing is that RAID5 and LVM are not good to each other UNLESS
+> RAID5 consists of 3, 5 or 9 (or 17 etc) drives -- i.e. 2^N+1, so that
+> there's 2^N data drives.
+> 
+> This is because LVM can only have blocksize as a power of two and in
+> order to be useful that blocksize should be a multiple of RAID5 data
+> row size (stripe size etc).
+> 
+> This is only possible when RAID5 has 2^N data drives or 2^N+1 total
+> drives.  The same is for RAID4, and for RAID6 it's 2^N+2 since RAID6
+> has 2 parity drives.
+> 
+> But if you can't match LVM blocksize and RAID strip size, there's
+> *almost* no point at telling raid parameters to the filesystem: no
+> matter how hard you'll try, LVM will make the whole thing non-optimal.
 
-How about support to write to a device instead of a file?
+2.5 questions:
 
-MfG
-        Goswin
+1) Will this same issue affect a 5+0 raid array?
+
+2) It is inferred that one can choose to not tell the filesystem the
+raid parameters, what negative effect does not doing it have?
+Conversely, what is the positive effect does doing it have?
+
+Thanks,
+Justin
+
+
+
