@@ -1,122 +1,89 @@
-From: Fredrik Pettersson <freppe@deimos.nu>
-Subject: Re: Why is my raid 1 boot/root not working with autodetect?
-Date: Fri, 19 Jun 2009 11:21:41 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0906191110330.9419@deimos.nu>
-References: <Pine.LNX.4.64.0906101828150.10333@deimos.nu>
- <Pine.LNX.4.64.0906111019350.9820@deimos.nu> <19002.62328.200010.484984@notabene.brown>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: filesystem stripe parameters
+Date: Fri, 19 Jun 2009 10:36:03 +0100
+Message-ID: <20090619093603.GA20316@cthulhu.home.robinhill.me.uk>
+References: <7a329d910906181208t2f95d94bsc4eac2c5f20355f5@mail.gmail.com> <4A3B573D.5020206@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="r5Pyd7+fXNt84Ff3"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <19002.62328.200010.484984@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <4A3B573D.5020206@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, 19 Jun 2009, Neil Brown wrote:
-> On Thursday June 11, freppe@deimos.nu wrote:
->> I have done some more testing in an attempt to gather more data, and here
->> is what I have seen when testing different kernel options.
->>
->> When booting with my normal kernel options I get the following md output
->> during the boot:
->>
->> (raid=noautodetect md=0,/dev/sdb1,/dev/sdc1 md=d0,/dev/sdb2,/dev/sdc2)
->> -----
->> md: Skipping autodetection of RAID arrays. (raid=autodetect will force)
->> md: Loading md0: /dev/sdb1
->> md: bind<sdb1>
->> md: bind<sdc1>
->> raid1: raid set md0 active with 2 out of 2 mirrors
->>   md0: unknown partition table
->>   md0: unknown partition table
->> md: Loading md_d0: /dev/sdb2
->> md: bind<sdb2>
->> md: bind<sdc2>
->> raid1: raid set md_d0 active with 2 out of 2 mirrors
->>   md_d0: p1 p2 p3 p4
->>   md_d0: p1 p2 p3 p4
->> -----
->>
->> Everything is well and boots fine.
->>
->> If I change try to use autodetect but still keep the md= definitions:
->>
->> (raid=autodetect md=0,/dev/sdb1,/dev/sdc1 md=d0,/dev/sdb2,/dev/sdc2)
->> -----
->> md: Autodetecting RAID arrays.
->> md: Scanned 4 and added 4 devices.
->> md: autorun ...
->> md: considering sdc2 ...
->> md:  adding sdc2 ...
->> md: sdc1 has different UUID to sdc2
->> md:  adding sdb2
->> md: sdb1 has different UUID to sdc2
->> md: created md1
->> md: bind<sdb2>
->> md: bind<sdc2>
->> md: running: <sdc2><sdb2>
->> raid1: raid set md1 active with 2 out of 2 mirrors
->> md: considering sdc1 ...
->> md:  adding sdc1 ...
->> md:  adding sdb1 ...
->> md: created md0
->> md: bind<sdb1>
->> md: bind<sdc1>
->> md: running: <sdc1><sdb1>
->> raid1: raid set md0 active with 2 out of 2 mirrors
->> md: ... autorun DONE.
->> md: Loading md0: /dev/sdb1
->>   md0: unknown partition table
->> md: couldn't update array info. -22
->> md: could not bd_claim sdb1.
->> md: md_import_device returned -16
->> md: could not bd_claim sdc1.
->> md: md_import_device returned -16
->> md: startind md0 failed
->> md: Loading md_d0: /dev/sdb2
->> md: could not bd_claim sdb2.
->> md: md_import_device returned -16
->> md: could not bd_claim sdc2.
->> md: md_import_device returned -16
->> md: starting md0 failed
->> -----
->>
->> In that case boot eventually fails with "mdadm: no devices found for
->> /dev/md_d0".
+
+--r5Pyd7+fXNt84Ff3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Fri Jun 19, 2009 at 01:15:41PM +0400, Michael Tokarev wrote:
+
+> Wil Reichert wrote:
+>> When using LVM on top of RAID 5, is it still worthwhile to pass RAID
+>> stripe information to the filesystem on creation?  Or do the PE's in
+>> LVM blur the specific stripe sizes & I'd want to use some multiple of
+>> those instead?
 >
-> That is because autodetect gave it a different name.  The thing that
-> was md_d0 is now md1.  mdadm thinks md_d0 doesn't exist so it tried to
-> assemble it and failed.
-> the system then tries to mount things from /dev/md_d0p1 etc and that
-> fails too.
+> It's a very good question, especially in context of RAID5.
 >
-> If you change fstab to mount from /dev/md1p1 etc it might work (since
-> 2.6.28, all md devices are partitionable, you don't need the md_d*
-> ones).
-
-Thanks, that sounds like a good idea. I've actually changed fstab to use 
-the UUID rather than /dev/md* as that seemed like a good idea considering 
-that the devices might change names when I'm playing around with different 
-options. The boot fails when starting up mdadm though, so that should be 
-unrelated to fstab.
-
-> However I recommend and you only use autodetect for the boot device,
-> and allow mdadm to assemble all the rest.
-> So change the partition type of sdc2 and sdb2 to something else
-> e.g. 0xDA.
-> Then auto-detect will ignore them, mdadm will find and assemble them,
-> and all with be happy.
+> Yes it is still a good idea to pass that info because it is still a
+> RAID5 which requires proper treatment wrt unaligned writes and keeping
+> redundancy.
 >
-> NeilBrown
+> But the thing is that RAID5 and LVM are not good to each other UNLESS
+> RAID5 consists of 3, 5 or 9 (or 17 etc) drives -- i.e. 2^N+1, so that
+> there's 2^N data drives.
 >
+> This is because LVM can only have blocksize as a power of two and in
+> order to be useful that blocksize should be a multiple of RAID5 data
+> row size (stripe size etc).
+>
+> This is only possible when RAID5 has 2^N data drives or 2^N+1 total
+> drives.  The same is for RAID4, and for RAID6 it's 2^N+2 since RAID6
+> has 2 parity drives.
+>
+> But if you can't match LVM blocksize and RAID strip size, there's
+> *almost* no point at telling raid parameters to the filesystem: no
+> matter how hard you'll try, LVM will make the whole thing non-optimal.
+>
+> Ok, depending on the number of drives, *some* logical volumes will
+> be properly aligned, but definitely not all of them.  For example
+> on a 4-drive RAID5 array, only every 3rd volume will be ok, --
+> provided the volumes are allocated in full one after another,
+> without holes and fragmentation.
+>
+> When everything is properly aligned, it's still worth the effort
+> IMHO to tell the filesystem about true raid properties.
+>
+You'll also need to get the LVM header padding right, otherwise the
+filesystem won't start on a stripe boundary and the alignment will all
+go wrong.  I've no idea of the syntax but I recall seeing it discussed
+on here several times.  A quick search throws up:
+    http://www.issociate.de/board/goto/1859627/stride_/_stripe_alignment_on=
+_LVM_?.html
 
-Now this sounds promising. So what you say is that if I just go with 
-autodetect for the boot device (in my case md0, sdb1 + sdc1), then later 
-in the boot process when mdadm is started it will create the other raid 
-devices even though they are not set as 0xFD? I will test that, thanks for 
-the advice.
+Cheers,
+    Robin
 
-Best Regards,
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
-/Fredrik Pettersson
+--r5Pyd7+fXNt84Ff3
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+
+iEYEARECAAYFAko7XAIACgkQShxCyD40xBL1AACggJboDw76ToS2854xN8GccbaL
++w8AoL0nGIZr6dX8DLkBxpWeZ2blRX38
+=oJRF
+-----END PGP SIGNATURE-----
+
+--r5Pyd7+fXNt84Ff3--
