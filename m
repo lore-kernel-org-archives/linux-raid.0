@@ -1,53 +1,61 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Write intent bitmaps
-Date: Sun, 21 Jun 2009 14:06:21 -0400
-Message-ID: <4A3E769D.7060207@tmr.com>
-References: <20090608021026139.GMOD14139@cdptpa-omta02.mail.rr.com>	<18989.6010.582386.812296@fisica.ufpr.br> <19002.62697.475588.28776@notabene.brown>
+Subject: Re: Subject: Raid0 Reshape . Preface
+Date: Sun, 21 Jun 2009 14:19:11 -0400
+Message-ID: <4A3E799F.8040305@tmr.com>
+References: <1245189072.3478.92.camel@raz>	<19000.55700.831349.967378@notabene.brown>	<51950.194.105.184.77.1245241039.squirrel@www.yuiop.co.uk> <19001.28349.151553.26110@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <19002.62697.475588.28776@notabene.brown>
+In-Reply-To: <19001.28349.151553.26110@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: Carlos Carvalho <carlos@fisica.ufpr.br>, linux-raid@vger.kernel.org
+Cc: John Robinson <john.robinson@anonymous.org.uk>, linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 Neil Brown wrote:
-> On Monday June 8, carlos@fisica.ufpr.br wrote:
+> On Wednesday June 17, john.robinson@anonymous.org.uk wrote:
 >   
->>  >5. What happens if the bitmap is lost or the external drive fills up?
->>
->> No idea.
+>> On Wed, June 17, 2009 12:55 pm, Neil Brown wrote:
+>>     
+>>>  The more I think about it, the more I feel I would prefer to use the
+>>>  raid5 module for all restriping.
+>>>       
+>> That doesn't make sense to me, for various reasons including those for
+>> having separate RAID personality modules in the first place. On the other
+>> hand, if you're keeping the raid0 module simple, perhaps the raid5 module
+>> could also be simplified and all objectives could be served by shipping
+>> out all restriping to a new, separate restriping module? Or even to
+>> userspace?
 >>     
 >
-> If the bitmap is lost, it is just as though you didn't have a bitmap 
-> (or as though all the bits in the bitmap were set to one).
+> The enhancements needed to raid5 to make is able to handle reshaping a
+> raid0 are either minor, or are ones that we want eventually any way.
+> Given that, there seems little point implementing the same thing in
+> two different ways.
 >
-> The drive filling up is not relevant.  When the bitmap is in a
-> separate file, the file is preallocated to be the right size.
+> I have occasionally thought that it would be nice if all the "Reshape"
+> code could be separated out of raid5 as it is not used very often.
+> However I suspect that you would find that it isn't very much code as
+> it shares a lot with resync and normal raid5 processing.
 >
->   
->>  >If so, would ext2 probably be the best choice?
->>
->> That's what the man page says. I find it strange since if it's a file
->> the filesystem shouldn't matter. Neil?
->>     
->
-> The way that md writes to the bitmap file is not entirely portable
-> across different filesystems.  As the man page say,  it is known to
-> work for ext2 and ext3.  Either is a fine choice.
-> A new filesystem interface is being introduced in 2.6.31 as part of
-> the swap-over-NFS work.  I might end up using that to write to bitmap
-> files, as it has the right characteristics.  But that is very much in
-> the future.
+> Striping it out into user-space is also tempting.  The tricky bit
+> would be deciding on the interface - exactly how much to leave in the
+> kernel and how much to takeout.  It might be an interesting exercise.
+> It's hard to know if it would be productive or not.
 >   
 
-I never understood why swap over anything wasn't supported... we had 
-swap over NFS in SunOS, in 1992, and that was over 10Mbit thicknet to 
-drives sized in MB (RAM in MB, too). I have been trying some things with 
-SSD, putting swap on it, bitmaps both raid and f/s, and journals. At the 
-moment I'm developing the scripts and tools to do valid measurement.
+Render unto Caesar what is Caesar's, etc. I don't think anything 
+critical like that should be in user space, it invites people to try to 
+"improve it" and really mess up their data, then come looking for help. 
+At least by raising the bar to require being able to build a kernel you 
+eliminate some people who probably shouldn't be doing that.
+
+On the other hand, putting reshape into a module which could be loaded 
+if needed or enhanced and inserted for testing might be a good idea. It 
+just seems easier to have kernel code than to try to make user code do 
+the right thing in terms of keeping things resident, running with 
+appropriate priorities, etc.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
