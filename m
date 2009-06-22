@@ -1,45 +1,30 @@
-From: Randall Smith <randall@tnr.cc>
-Subject: Re: resync hangs
-Date: Mon, 22 Jun 2009 11:53:55 -0500
-Message-ID: <h1ocv7$i4h$1@ger.gmane.org>
-References: <h0e9qm$91r$1@ger.gmane.org> <h0mjne$mkv$1@ger.gmane.org>    <e95d1c83e3f5fa745e914e77e90dd8ec.squirrel@neil.brown.name>    <h1mt5n$b74$1@ger.gmane.org> <31c94e366685d963f1a4794853b9339f.squirrel@neil.brown.name>
+From: <Ryan_MichaelS@emc.com>
+Subject: Slow raid10 resync
+Date: Mon, 22 Jun 2009 13:34:17 -0400
+Message-ID: <2A22ECE278A6604A84476172F106BFCE07AC7A5A@CORPUSMX50A.corp.emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <31c94e366685d963f1a4794853b9339f.squirrel@neil.brown.name>
+Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown wrote:
->>
->> ~$ grep . /sys/block/md2/md/*
-> ...
->> /sys/block/md2/md/sync_speed:0
->> /sys/block/md2/md/sync_speed_max:0 (system)
->> /sys/block/md2/md/sync_speed_min:0 (system)
-> 
-> This looks like the culprit.  The sync_speed has been limited to
-> 0.  The "(system)" means that it is using the value from
->   /proc/sys/dev/raid/speed_limit_max
-> 
-> It seem that that value has been set to 0 somehow.
-> The default value is 200000.
-> 
-> Could something be setting that?  Can you set it back?
->  .../speed_limit_min should be 1000 by default.
-> 
-> NeilBrown
+Occasionally one of my devices with a 4 drive raid10 array resyncs very
+slowly.  Typical resync speed is in the 50-60 MB/sec range.  When
+running slow the speed is around 7-10 MB/sec.  sync_speed_min is set to
+20,000, max is set to 200,000.  By setting sync_speed_min to 5000 I can
+slow the sync further, but setting it back to 20000 doesn't fix the
+speed.  Other IO on the system is normal.  The drives and the CPU are
+not maxed.
 
-I'll set it back next time it happens.  Any guess what might set that 
-value to 0 and why? mdadm is the only thing I know of that knows about 
-raid.  It starts up late in the init process with this command:
+I don't know what is triggering this slow sync state.  Once in this
+state it will continue until the build completes.
 
-/sbin/mdadm --monitor --pid-file /var/run/mdadm/monitor.pid --daemonise 
---scan --syslog
+Any idea what might be happening here?  I'm running Debian with a 2.6.22
+kernel.
 
 Thanks for your help.
-
-Randall
-
+- Michael
