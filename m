@@ -1,70 +1,54 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: resync hangs
-Date: Mon, 22 Jun 2009 13:46:31 +1000 (EST)
-Message-ID: <31c94e366685d963f1a4794853b9339f.squirrel@neil.brown.name>
-References: <h0e9qm$91r$1@ger.gmane.org> <h0mjne$mkv$1@ger.gmane.org>
-    <e95d1c83e3f5fa745e914e77e90dd8ec.squirrel@neil.brown.name>
-    <h1mt5n$b74$1@ger.gmane.org>
+From: Michael Ole Olsen <gnu@gmx.net>
+Subject: mdadm raid5 and bit errors resync
+Date: Mon, 22 Jun 2009 07:58:08 +0200
+Message-ID: <20090622055808.GN2828@rlogin.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="uTRFFR9qmiCqR05s"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <h1mt5n$b74$1@ger.gmane.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Randall Smith <randall@tnr.cc>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, June 22, 2009 1:18 pm, Randall Smith wrote:
-> NeilBrown wrote:
->> On Wed, June 10, 2009 7:20 am, Randall Smith wrote:
->>> Maybe I should have used "resync stalls" in the subject.
->>>
->>> Any hints about this?  What kind of things might cause it to stall?
->>
->> I cannot think of anything that would cause a stall like that.
->>
->> The "128" suggest that md_do_sync has scheduled one "window" of
->> IO and is in the section of code that calculates the speed and
->> makes sure were aren't going too fast.
->>
->> 'currspeed' will almost certainly be '1' by this point, so it seems
->> to imply that min_speed and max_speed are both zero.  Seems unlikely.
->> You could confirm or deny that with
->>
->>    grep . /sys/block/md2/md/*
->>
->> if you ever see the problem again.
->
->
-> Happened again.
->
-> md2 : active raid5 sda3[0] sdf3[2] sdc3[1]
->        488279424 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
->        [>....................]  resync =  0.3% (787584/244139712)
-> finish=1257319.3min speed=0K/sec
 
-This is a little different.  Instead of stopping at 128K, it
-stopped at 787M.  So it didn't stop straight away.
+--uTRFFR9qmiCqR05s
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 
->
->
-> ~$ grep . /sys/block/md2/md/*
-...
-> /sys/block/md2/md/sync_speed:0
-> /sys/block/md2/md/sync_speed_max:0 (system)
-> /sys/block/md2/md/sync_speed_min:0 (system)
+what happens in the case of a single unrecoverable bit error when resyncing a
+raid5 or upgrading it?
 
-This looks like the culprit.  The sync_speed has been limited to
-0.  The "(system)" means that it is using the value from
-  /proc/sys/dev/raid/speed_limit_max
+and in the case of raid6?
 
-It seem that that value has been set to 0 somehow.
-The default value is 200000.
+would raid6 only be able to survive 2 bit errors?
 
-Could something be setting that?  Can you set it back?
- .../speed_limit_min should be 1000 by default.
+couldn't really find any information on it in the docs or google, but I have
+heard about systems failing because of single bit errors.
 
-NeilBrown
+/Michael Ole Olsen
 
+--uTRFFR9qmiCqR05s
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iQIcBAEBAgAGBQJKPx1vAAoJECXlragqp/ZI2f0P/1m3lw2lrDV4SLoCbH3w/lIi
+So1VD2UVT5Uh0xp61l2qOdJ8xkyQfh2U/OVX2LTP5OTM62+TqsvAVGSkNuMyu79u
+QayaF2r/bOuLddY6OAuJois5cx16LjtpkTXdsBWf3L8yxgWSTDBGslNlK58pADHg
+oo5Gg5Q5JuZ6lUEpxf4Aaq21Cakb+9oFXKfiGyZIi/N0a3QQNG/Rard1FpKpTKA5
+BDifmzErkb+CPVR9TI3WONVS2r/xIq4WCJsXcvzJX7DzNNs+S/A/MZS8UhhS1ZkG
+Fb+hhLp6cvjwo1vWS/z8utQJIo1rMaN/XaMDD7F51SjVuojJ27WRUtTg7aNk8A8p
+bxvaKaZBoCqSI7PJ5cT0GqizfW1xnS8npPsCsNIIStR/nrYZKYrE8TJzsKBD4Obp
+b4GGse9J1Gh/0pnsemNobCQXHXODJNjd0aTChNZLF02996XpbQXbfmtdloWjVyB0
+gQgsP4G68RLyGzx02nng6GWDUE29NcaqdyoI3rmmfsxuWFK46sZXexZpnGs96N69
+O3WeBbUod3G7YoEb3ONIq6sVEn4SMkQSyMf73CpNBaIT2R//IiMlczwAxxwAb4ZL
+DwZZGoJlnD1z6s+bpq/rzH9prwCLQdsKa2GQ2HOJZFSKtYbo0xUT2kPdlIFwdnI6
+KZEW4FuIgbG77GPgwVv0
+=UHtL
+-----END PGP SIGNATURE-----
+
+--uTRFFR9qmiCqR05s--
