@@ -1,40 +1,22 @@
-From: Mike Snitzer <snitzer@gmail.com>
-Subject: Re: [PATCH] md: Use new topology calls to indicate alignment and I/O
-	sizes
-Date: Tue, 23 Jun 2009 17:44:46 -0400
-Message-ID: <170fa0d20906231444t5432998eo8cc2335c6d4a3a0d@mail.gmail.com>
-References: <yq1ws73turf.fsf@sermon.lab.mkp.net>
+From: "Tirumala Reddy Marri" <tmarri@amcc.com>
+Subject: RAID-5 creation crashes when files system installed while recovery going on
+Date: Tue, 23 Jun 2009 15:35:08 -0700
+Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C0797AC80@SDCEXCHANGE01.ad.amcc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <yq1ws73turf.fsf@sermon.lab.mkp.net>
+Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, snitzer@redhat.com, Linus Torvalds <torvalds@linux-foundation.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jun 23, 2009 at 12:54 AM, Martin K.
-Petersen<martin.petersen@oracle.com> wrote:
->
-> Neil,
->
-> Looks like this one missed the boat on the first MD pull request.
-> Here's an updated patch that applies to Linus' current tree in case you
-> are planning a second round...
->
->
-> Switch MD over to the new disk_stack_limits() function which checks for
-> aligment and adjusts preferred I/O sizes when stacking.
->
-> Also indicate preferred I/O sizes where applicable.
-
-Given that Linus has not yet pulled in the DM changes for 2.6.31
-(which includes DM's topology support) I'd imagine it shouldn't be a
-problem to get this patch in.  In fact it would be a real shame if
-this somehow missed 2.6.31 seeing as MD is the only consumer of the
-topology infrastructure's disk_stack_limits().
-
-Neil, please push to Linus for 2.6.31, thanks!
-
-Mike
+All,
+ I started RAID-5 creation using mdadm command. While recovery is
+happening I tried to install file system . I see intermittent crash   .
+And crash doesn't happen at fixed location. Any clue what could be the
+problem? How does the read/writes to MD driver handled while RAID-5 is
+under building.
+Thanks,
+Marri
