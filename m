@@ -1,40 +1,40 @@
-From: Nicolas Pitre <nico@marvell.com>
-Subject: Re: [PATCH] mv_xor: add support for clkdev framework
-Date: Tue, 23 Jun 2009 13:22:33 -0400 (EDT)
-Message-ID: <alpine.LFD.2.00.0906231317370.16467@xanadu.home>
-References: <1245751004-3056-1-git-send-email-saeed@marvell.com> <4A4100B0.3070704@intel.com> <alpine.LFD.2.00.0906231241150.16467@xanadu.home> <alpine.DEB.2.00.0906231957570.31324@ubuntu-saeed.il.marvell.com>
+From: Mike Snitzer <snitzer@gmail.com>
+Subject: Re: [PATCH] md: Use new topology calls to indicate alignment and I/O
+	sizes
+Date: Tue, 23 Jun 2009 17:44:46 -0400
+Message-ID: <170fa0d20906231444t5432998eo8cc2335c6d4a3a0d@mail.gmail.com>
+References: <yq1ws73turf.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.0906231957570.31324@ubuntu-saeed.il.marvell.com>
+In-Reply-To: <yq1ws73turf.fsf@sermon.lab.mkp.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Saeed Bishara <saeed@marvell.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Lennert Buijtenhek <buytenh@marvell.com>, "saeed.bishara@gmail.com" <saeed.bishara@gmail.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org, snitzer@redhat.com, Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: linux-raid.ids
 
-On Tue, 23 Jun 2009, Saeed Bishara wrote:
+On Tue, Jun 23, 2009 at 12:54 AM, Martin K.
+Petersen<martin.petersen@oracle.com> wrote:
+>
+> Neil,
+>
+> Looks like this one missed the boat on the first MD pull request.
+> Here's an updated patch that applies to Linus' current tree in case you
+> are planning a second round...
+>
+>
+> Switch MD over to the new disk_stack_limits() function which checks for
+> aligment and adjusts preferred I/O sizes when stacking.
+>
+> Also indicate preferred I/O sizes where applicable.
 
-> 
-> > >
-> > > Can you expand the changelog to explain why this patch is needed and
-> > > summarize what it does?  Also, releasing patches this late in the merge
-> Here is the patch with more explanation:
-> ----------------------------------------<
-> >From c999ed53a913979f1739854cb7c881a9dde980c6 Mon Sep 17 00:00:00 2001
-> From: Saeed Bishara <saeed@marvell.com>
-> Date: Tue, 12 May 2009 13:29:34 +0300
-> Subject: [PATCH 1/2 v2] mv_xor: add support for clkdev framework
-> 
-> When the clkdev framework is enabled, the device's clock is gated
-> by default, this patch uses the framework to enable the clock
-> when using the driver loaded and disables it when unloading the
-> driver.
+Given that Linus has not yet pulled in the DM changes for 2.6.31
+(which includes DM's topology support) I'd imagine it shouldn't be a
+problem to get this patch in.  In fact it would be a real shame if
+this somehow missed 2.6.31 seeing as MD is the only consumer of the
+topology infrastructure's disk_stack_limits().
 
-Can't you be more agressive with clock gating?
+Neil, please push to Linus for 2.6.31, thanks!
 
-Like using clk_get() when loading the driver and clk_put() when 
-unloading, but using clk_enable()/clk_disable() only when a DMA channel 
-is actually requested or active.
-
-
-Nicolas
+Mike
