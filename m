@@ -1,203 +1,101 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] md: Use new topology calls to indicate alignment and I/O sizes
-Date: Tue, 23 Jun 2009 00:54:28 -0400
-Message-ID: <yq1ws73turf.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Saeed Bishara <saeed@marvell.com>
+Subject: [PATCH] mv_xor: add support for power management
+Date: Tue, 23 Jun 2009 12:56:44 +0300
+Message-ID: <1245751004-3056-2-git-send-email-saeed@marvell.com>
+References: <1245751004-3056-1-git-send-email-saeed@marvell.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1245751004-3056-1-git-send-email-saeed@marvell.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, dan.j.williams@intel.com
+Cc: buytenh@marvell.com, nico@marvell.com, saeed.bishara@gmail.com, Saeed Bishara <saeed@marvell.com>
 List-Id: linux-raid.ids
 
 
-Neil,
-
-Looks like this one missed the boat on the first MD pull request.
-Here's an updated patch that applies to Linus' current tree in case you
-are planning a second round...
-
-
-Switch MD over to the new disk_stack_limits() function which checks for
-aligment and adjusts preferred I/O sizes when stacking.
-
-Also indicate preferred I/O sizes where applicable.
-
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-
+Signed-off-by: Saeed Bishara <saeed@marvell.com>
 ---
+ drivers/dma/mv_xor.c |   56 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 56 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/md/linear.c b/drivers/md/linear.c
-index 15c8b7b..7df78b9 100644
---- a/drivers/md/linear.c
-+++ b/drivers/md/linear.c
-@@ -166,8 +166,8 @@ static linear_conf_t *linear_conf(mddev_t *mddev, int raid_disks)
- 			rdev->sectors = sectors * mddev->chunk_sectors;
- 		}
+diff --git a/drivers/dma/mv_xor.c b/drivers/dma/mv_xor.c
+index db77903..ecacd32 100644
+--- a/drivers/dma/mv_xor.c
++++ b/drivers/dma/mv_xor.c
+@@ -1284,9 +1284,38 @@ mv_xor_conf_mbus_windows(struct mv_xor_shared_private *msp,
+ 	writel(win_enable, base + WINDOW_BAR_ENABLE(1));
+ }
  
--		blk_queue_stack_limits(mddev->queue,
--				       rdev->bdev->bd_disk->queue);
-+		disk_stack_limits(mddev->gendisk, rdev->bdev,
-+				  rdev->data_offset);
- 		/* as we don't honour merge_bvec_fn, we must never risk
- 		 * violating it, so limit ->max_sector to one PAGE, as
- 		 * a one page request is never in violation.
-diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
-index cbe368f..d48f72a 100644
---- a/drivers/md/multipath.c
-+++ b/drivers/md/multipath.c
-@@ -294,7 +294,8 @@ static int multipath_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
- 	for (path = first; path <= last; path++)
- 		if ((p=conf->multipaths+path)->rdev == NULL) {
- 			q = rdev->bdev->bd_disk->queue;
--			blk_queue_stack_limits(mddev->queue, q);
-+			disk_stack_limits(mddev->gendisk, rdev->bdev,
-+				rdev->data_offset);
- 
- 		/* as we don't honour merge_bvec_fn, we must never risk
- 		 * violating it, so limit ->max_sector to one PAGE, as
-@@ -463,9 +464,9 @@ static int multipath_run (mddev_t *mddev)
- 
- 		disk = conf->multipaths + disk_idx;
- 		disk->rdev = rdev;
-+		disk_stack_limits(mddev->gendisk, rdev->bdev,
-+				  rdev->data_offset);
- 
--		blk_queue_stack_limits(mddev->queue,
--				       rdev->bdev->bd_disk->queue);
- 		/* as we don't honour merge_bvec_fn, we must never risk
- 		 * violating it, not that we ever expect a device with
- 		 * a merge_bvec_fn to be involved in multipath */
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index ab4a489..12cd1eb 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -170,8 +170,8 @@ static int create_strip_zones(mddev_t *mddev)
- 		}
- 		dev[j] = rdev1;
- 
--		blk_queue_stack_limits(mddev->queue,
--				       rdev1->bdev->bd_disk->queue);
-+		disk_stack_limits(mddev->gendisk, rdev1->bdev,
-+				  rdev1->data_offset);
- 		/* as we don't honour merge_bvec_fn, we must never risk
- 		 * violating it, so limit ->max_sector to one PAGE, as
- 		 * a one page request is never in violation.
-@@ -250,6 +250,11 @@ static int create_strip_zones(mddev_t *mddev)
- 		       mddev->chunk_sectors << 9);
- 		goto abort;
- 	}
++#ifdef CONFIG_PM
++static int mv_xor_suspend(struct platform_device *pdev, pm_message_t state)
++{
++	return 0;
++}
 +
-+	blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
-+	blk_queue_io_opt(mddev->queue,
-+			 (mddev->chunk_sectors << 9) * mddev->raid_disks);
++static int mv_xor_resume(struct platform_device *pdev)
++{
++	struct mv_xor_device *device = platform_get_drvdata(pdev);
++	struct dma_chan *chan, *_chan;
++	struct mv_xor_chan *mv_chan;
 +
- 	printk(KERN_INFO "raid0: done.\n");
- 	mddev->private = conf;
++	list_for_each_entry_safe(chan, _chan, &device->common.channels,
++				device_node) {
++		mv_chan = to_mv_xor_chan(chan);
++		mv_chan_unmask_interrupts(mv_chan);
++
++		mv_set_mode(mv_chan, mv_chan->current_type);
++	}
++	return 0;
++}
++
++#else
++#define mv_xor_suspend NULL
++#define mv_xor_resume NULL
++#endif
++
+ static struct platform_driver mv_xor_driver = {
+ 	.probe		= mv_xor_probe,
+ 	.remove		= __devexit_p(mv_xor_remove),
++	.suspend	= mv_xor_suspend,
++	.resume		= mv_xor_resume,
+ 	.driver		= {
+ 		.owner	= THIS_MODULE,
+ 		.name	= MV_XOR_NAME,
+@@ -1355,9 +1384,36 @@ static int mv_xor_shared_remove(struct platform_device *pdev)
  	return 0;
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 89939a7..174c4dd 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1123,8 +1123,8 @@ static int raid1_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
- 	for (mirror = first; mirror <= last; mirror++)
- 		if ( !(p=conf->mirrors+mirror)->rdev) {
+ }
  
--			blk_queue_stack_limits(mddev->queue,
--					       rdev->bdev->bd_disk->queue);
-+			disk_stack_limits(mddev->gendisk, rdev->bdev,
-+						 rdev->data_offset);
- 			/* as we don't honour merge_bvec_fn, we must never risk
- 			 * violating it, so limit ->max_sector to one PAGE, as
- 			 * a one page request is never in violation.
-@@ -1988,9 +1988,8 @@ static int run(mddev_t *mddev)
- 		disk = conf->mirrors + disk_idx;
- 
- 		disk->rdev = rdev;
--
--		blk_queue_stack_limits(mddev->queue,
--				       rdev->bdev->bd_disk->queue);
-+		disk_stack_limits(mddev->gendisk, rdev->bdev,
-+				  rdev->data_offset);
- 		/* as we don't honour merge_bvec_fn, we must never risk
- 		 * violating it, so limit ->max_sector to one PAGE, as
- 		 * a one page request is never in violation.
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index ae12cea..032e791 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1151,8 +1151,8 @@ static int raid10_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
- 	for ( ; mirror <= last ; mirror++)
- 		if ( !(p=conf->mirrors+mirror)->rdev) {
- 
--			blk_queue_stack_limits(mddev->queue,
--					       rdev->bdev->bd_disk->queue);
-+			disk_stack_limits(mddev->gendisk, rdev->bdev,
-+					  rdev->data_offset);
- 			/* as we don't honour merge_bvec_fn, we must never risk
- 			 * violating it, so limit ->max_sector to one PAGE, as
- 			 * a one page request is never in violation.
-@@ -2044,7 +2044,7 @@ raid10_size(mddev_t *mddev, sector_t sectors, int raid_disks)
- static int run(mddev_t *mddev)
- {
- 	conf_t *conf;
--	int i, disk_idx;
-+	int i, disk_idx, chunk_size;
- 	mirror_info_t *disk;
- 	mdk_rdev_t *rdev;
- 	int nc, fc, fo;
-@@ -2130,6 +2130,14 @@ static int run(mddev_t *mddev)
- 	spin_lock_init(&conf->device_lock);
- 	mddev->queue->queue_lock = &conf->device_lock;
- 
-+	chunk_size = mddev->chunk_sectors << 9;
-+	blk_queue_io_min(mddev->queue, chunk_size);
-+	if (conf->raid_disks % conf->near_copies)
-+		blk_queue_io_opt(mddev->queue, chunk_size * conf->raid_disks);
-+	else
-+		blk_queue_io_opt(mddev->queue, chunk_size *
-+				 (conf->raid_disks / conf->near_copies));
++#ifdef CONFIG_PM
++static int mv_xor_shared_suspend(struct platform_device *pdev,
++				 pm_message_t state)
++{
++	return 0;
++}
 +
- 	list_for_each_entry(rdev, &mddev->disks, same_set) {
- 		disk_idx = rdev->raid_disk;
- 		if (disk_idx >= mddev->raid_disks
-@@ -2138,9 +2146,8 @@ static int run(mddev_t *mddev)
- 		disk = conf->mirrors + disk_idx;
- 
- 		disk->rdev = rdev;
--
--		blk_queue_stack_limits(mddev->queue,
--				       rdev->bdev->bd_disk->queue);
-+		disk_stack_limits(mddev->gendisk, rdev->bdev,
-+				  rdev->data_offset);
- 		/* as we don't honour merge_bvec_fn, we must never risk
- 		 * violating it, so limit ->max_sector to one PAGE, as
- 		 * a one page request is never in violation.
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index f9f991e..d363489 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4452,7 +4452,7 @@ static raid5_conf_t *setup_conf(mddev_t *mddev)
- static int run(mddev_t *mddev)
- {
- 	raid5_conf_t *conf;
--	int working_disks = 0;
-+	int working_disks = 0, chunk_size;
- 	mdk_rdev_t *rdev;
- 
- 	if (mddev->recovery_cp != MaxSector)
-@@ -4607,6 +4607,14 @@ static int run(mddev_t *mddev)
- 	md_set_array_sectors(mddev, raid5_size(mddev, 0, 0));
- 
- 	blk_queue_merge_bvec(mddev->queue, raid5_mergeable_bvec);
-+	chunk_size = mddev->chunk_sectors << 9;
-+	blk_queue_io_min(mddev->queue, chunk_size);
-+	blk_queue_io_opt(mddev->queue, chunk_size *
-+			 (conf->raid_disks - conf->max_degraded));
++static int mv_xor_shared_resume(struct platform_device *pdev)
++{
++	struct mv_xor_platform_shared_data *msd = pdev->dev.platform_data;
++	struct mv_xor_shared_private *msp = platform_get_drvdata(pdev);
++	/*
++	 * (Re-)program MBUS remapping windows if we are asked to.
++	 */
++	if (msd != NULL && msd->dram != NULL)
++		mv_xor_conf_mbus_windows(msp, msd->dram);
 +
-+	list_for_each_entry(rdev, &mddev->disks, same_set)
-+		disk_stack_limits(mddev->gendisk, rdev->bdev,
-+				  rdev->data_offset);
- 
- 	return 0;
- abort:
++	return 0;
++}
++
++#else
++#define mv_xor_shared_suspend NULL
++#define mv_xor_shared_resume NULL
++#endif
++
+ static struct platform_driver mv_xor_shared_driver = {
+ 	.probe		= mv_xor_shared_probe,
+ 	.remove		= mv_xor_shared_remove,
++	.suspend	= mv_xor_shared_suspend,
++	.resume		= mv_xor_shared_resume,
+ 	.driver		= {
+ 		.owner	= THIS_MODULE,
+ 		.name	= MV_XOR_SHARED_NAME,
+-- 
+1.6.0.4
+
