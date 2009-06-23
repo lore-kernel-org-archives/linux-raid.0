@@ -1,30 +1,33 @@
-From: <Ryan_MichaelS@emc.com>
-Subject: Slow raid10 resync
-Date: Mon, 22 Jun 2009 13:34:17 -0400
-Message-ID: <2A22ECE278A6604A84476172F106BFCE07AC7A5A@CORPUSMX50A.corp.emc.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH/RFC] md: Push down data integrity code to personalities.
+Date: Tue, 23 Jun 2009 00:49:17 -0400
+Message-ID: <yq11vpbv9ki.fsf@sermon.lab.mkp.net>
+References: <20090619141419.GB11504@skl-net.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+In-Reply-To: <20090619141419.GB11504@skl-net.de> (Andre Noll's message of
+	"Fri, 19 Jun 2009 16:14:19 +0200")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andre Noll <maan@systemlinux.org>
+Cc: Neil Brown <neilb@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Occasionally one of my devices with a 4 drive raid10 array resyncs very
-slowly.  Typical resync speed is in the 50-60 MB/sec range.  When
-running slow the speed is around 7-10 MB/sec.  sync_speed_min is set to
-20,000, max is set to 200,000.  By setting sync_speed_min to 5000 I can
-slow the sync further, but setting it back to 20000 doesn't fix the
-speed.  Other IO on the system is normal.  The drives and the CPU are
-not maxed.
+>>>>> "Andre" == Andre Noll <maan@systemlinux.org> writes:
 
-I don't know what is triggering this slow sync state.  Once in this
-state it will continue until the build completes.
+Andre> Hi here's another patch that aims to reduce the knowledge about
+Andre> specific raid levels from md.c. It addresses the data integrity
+Andre> code which was added quite recently by Martin (CCed).
 
-Any idea what might be happening here?  I'm running Debian with a 2.6.22
-kernel.
+Andre> Please review.
 
-Thanks for your help.
-- Michael
+There was a slight conflict in latest md.h against current Linus.  You
+may want to respin.
+
+I tested on a few different configurations adding and removing devices
+with and without integrity enabled.  Looks good on this end.
+
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
