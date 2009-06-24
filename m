@@ -1,50 +1,36 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm raid5 and bit errors resync
-Date: Wed, 24 Jun 2009 13:23:39 +1000
-Message-ID: <19009.39995.508538.297396@notabene.brown>
-References: <20090622055808.GN2828@rlogin.dk>
+Subject: Re: help please
+Date: Wed, 24 Jun 2009 13:29:02 +1000
+Message-ID: <19009.40318.938280.11068@notabene.brown>
+References: <OF4A69EBA3.01FB682F-ON852575DE.0051EB68-802575DE.00521E0F@pt.com>
+	<efbcb4173b866e6407787256ba1ea15a.squirrel@neil.brown.name>
+	<OF9266A41E.AA29AB09-ON852575DE.007396F5-802575DE.007403D4@pt.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Michael Ole Olsen on Monday June 22
+In-Reply-To: message from Ken Rowe on Tuesday June 23
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Ole Olsen <gnu@gmx.net>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Ken Rowe <klr@pt.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday June 22, gnu@gmx.net wrote:
-> what happens in the case of a single unrecoverable bit error when resyncing a
-> raid5 or upgrading it?
-
-During resync, a read error will cause the drive to fail and the
-resync to abort.  So you get a degraded array.  On the next restart,
-you will need to --force assemble the array because it will appear not
-to be 'clean'.
-
-What exactly do you mean by "uprade".
-
+On Tuesday June 23, klr@pt.com wrote:
+> Hi Neil,
 > 
-> and in the case of raid6?
+> thanks for the info, I am running a raid 1 configuration and when we lost 
+> power we lose a drive from the raid and can never get it back unless we 
+> manually force it back into the raid. The drive is marked as failed and 
+> would like to know how you code behaves when the power is removed and why 
+> the drive is removed and never returned and why it is tagged as failed.
 
-The same.
+This is still awefully short on real details.
+ - cat /proc/mdstat often helps.
+ - kernel logs might be useful here
+ - exact command you use to 'for it back into the raid"
 
-> 
-> would raid6 only be able to survive 2 bit errors?
-
-I don't understand why you are focussing on 'bit' error.  raid deals
-with whole blocks, which either succeed or fail.
-During resync you cannot trust the parity, so any read error means
-lost data.
-During recovery (to a hot spare) for a partially degraded raid6, the
-correct data will be generated from the remaining good drives and
-written out.
+If the drive is marked as failed, that would be because an attempt to
+write data to it failed.  Failed drives are never automatically added
+back in to arrays as that would be a crazy thing to do.
 
 NeilBrown
-
-
-> 
-> couldn't really find any information on it in the docs or google, but I have
-> heard about systems failing because of single bit errors.
-> 
-> /Michael Ole Olsen
