@@ -1,32 +1,39 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: RAID-5 creation crashes when files system installed while
-     recovery going on
-Date: Wed, 24 Jun 2009 12:31:07 +1000 (EST)
-Message-ID: <a5f578de750a09c145f5d4f50e90a4f8.squirrel@neil.brown.name>
-References: <AC5E1C3367E37D44970B81A6ADD1DA2C0797AC80@SDCEXCHANGE01.ad.amcc.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Slow raid10 resync
+Date: Wed, 24 Jun 2009 13:19:24 +1000
+Message-ID: <19009.39740.60091.349944@notabene.brown>
+References: <2A22ECE278A6604A84476172F106BFCE07AC7A5A@CORPUSMX50A.corp.emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AC5E1C3367E37D44970B81A6ADD1DA2C0797AC80@SDCEXCHANGE01.ad.amcc.com>
+In-Reply-To: message from Ryan_MichaelS@emc.com on Monday June 22
 Sender: linux-raid-owner@vger.kernel.org
-To: Tirumala Reddy Marri <tmarri@amcc.com>
+To: Ryan_MichaelS@emc.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, June 24, 2009 8:35 am, Tirumala Reddy Marri wrote:
-> All,
->  I started RAID-5 creation using mdadm command. While recovery is
-> happening I tried to install file system . I see intermittent crash   .
-> And crash doesn't happen at fixed location. Any clue what could be the
-> problem? How does the read/writes to MD driver handled while RAID-5 is
-> under building.
+On Monday June 22, Ryan_MichaelS@emc.com wrote:
+> Occasionally one of my devices with a 4 drive raid10 array resyncs very
+> slowly.  Typical resync speed is in the 50-60 MB/sec range.  When
+> running slow the speed is around 7-10 MB/sec.  sync_speed_min is set to
+> 20,000, max is set to 200,000.  By setting sync_speed_min to 5000 I can
+> slow the sync further, but setting it back to 20000 doesn't fix the
+> speed.  Other IO on the system is normal.  The drives and the CPU are
+> not maxed.
+> 
+> I don't know what is triggering this slow sync state.  Once in this
+> state it will continue until the build completes.
+> 
+> Any idea what might be happening here?  I'm running Debian with a 2.6.22
+> kernel.
 
-Can you describe exactly what you mean by "crash" ??
+Not really...
+There have been a couple of bugs that cause resync to go faster than
+it should, but I can't think of anything that would make it go slower
+than sync_speed_min unless that the the fastest that the storage
+subsystem could handle.
 
-The raid5 driver normally has no problems handling writes while
-it is resyncing.  It has a 'stripe_cache' which is used to
-synchronise regular IO with resync IO.
+Is this just a default raid10 with 'near=2' as the layout?
 
 NeilBrown
-
