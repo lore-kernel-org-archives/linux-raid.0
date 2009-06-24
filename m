@@ -1,94 +1,150 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: md: Use new topology calls to indicate alignment and I/O  sizes
-Date: Thu, 25 Jun 2009 09:28:24 +1000
-Message-ID: <19010.46744.848750.641185@notabene.brown>
-References: <yq1ws73turf.fsf@sermon.lab.mkp.net>
-	<170fa0d20906231444t5432998eo8cc2335c6d4a3a0d@mail.gmail.com>
-	<19009.42494.925771.283731@notabene.brown>
-	<yq1zlbyrzo9.fsf@sermon.lab.mkp.net>
-	<19009.50739.830769.821582@notabene.brown>
-	<20090624152748.GA16648@redhat.com>
+From: "Tirumala Reddy Marri" <tmarri@amcc.com>
+Subject: RE: RAID-5 creation crashes when files system installed while           recovery going on
+Date: Wed, 24 Jun 2009 16:45:57 -0700
+Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C07A318FD@SDCEXCHANGE01.ad.amcc.com>
+References: <AC5E1C3367E37D44970B81A6ADD1DA2C0797AC80@SDCEXCHANGE01.ad.amcc.com>    <a5f578de750a09c145f5d4f50e90a4f8.squirrel@neil.brown.name>    <AC5E1C3367E37D44970B81A6ADD1DA2C0534ABE5@SDCEXCHANGE01.ad.amcc.com> <a765142d3b99baf3edb3da397b2ee350.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mike Snitzer on Wednesday June 24
+Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-raid@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>, dm-devel@redhat.com
+To: Tirumala Reddy Marri <tmarri@amcc.com>, NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-On Wednesday June 24, snitzer@redhat.com wrote:
-> 
-> 
-> Hi Neil,
-> 
-> For some reason I thought you were aware of what Martin had put
-> together.  I assumed as much given you helped sort out some MD interface
-> compile fixes in linux-next relative to topology-motivated changes.
-> Anyway, not your fault that you didn't notice the core topology
-> support.. It is likely a function of Martin having implemented the MD
-> bits; you got this topology support "for free"; whereas I was forced to
-> implement DM's topology support (and a few important changes to the core
-> infrastructure).
-> 
-> Here is a thread from April that discusses the core of the topology
-> support:
-> http://marc.info/?l=linux-ide&m=124058535512850&w=4
+Hi Dan,
+   I am suspecting that ADMA driver has all the XOR operations queued up
+for processing and file-system mount is not waiting till ADMA finishes
+all the requests. Is this working fine on Intel IO-Processor ?
+Thanks and Regards,
+Marri
 
-Thanks for these.
-I see they were mainly on linux-ide and linux-scsi, neither of which I
-read.  They also eventually made an appearance on linux-kernel, but it
-is only by luck that I find important stuff there.
+-----Original Message-----
+From: Tirumala Reddy Marri 
+Sent: Wednesday, June 24, 2009 3:36 PM
+To: 'NeilBrown'
+Cc: linux-raid@vger.kernel.org; Dan Williams
+Subject: RE: RAID-5 creation crashes when files system installed while
+recovery going on
 
-Yes, I have been aware of it for a while but had my mind on other
-things and figured other people could probably get the details right
-without me interfering....
 
-> 
-> This post touches on naming and how userland tools are expected to
-> consume the topology metrics:
-> http://marc.info/?t=124055146700007&r=1&w=4
-> 
-> This post talks about the use of sysfs:
-> http://marc.info/?l=linux-ide&m=124058543713031&w=4
-> 
-> 
-> Martin later shared the following with Alasdair and I and it really
-> helped smooth out my understanding of these new topology metrics (I've
-> updated it to reflect the current naming of these metrics):
+I could not reproduce the panic. But there is one other data point is
+when I tried to mount the /dev/md0 after file system installation it
+failed to mount. Once the MD recover is done I was able to mount the
+drive.
+Thanks,
+Marri
 
-Thanks for this - quite helpful.  I might refer to bit in my reply to
-Martin.
+------- here is log-----
+# mkfs.ext3 -b 65536 /dev/md0
+Warning: blocksize 65536 not usable on most systems.
+mke2fs 1.38 (30-Jun-2005)
+Filesystem label=
+OS type: Linux
+Block size=65536 (log=6)
+Fragment size=65536 (log=6)
+471040 inodes, 468750 blocks
+23437 blocks (5.00%) reserved for the super user
+First data block=0
+Maximum filesystem blocks=536805376
+8 block groups
+65528 blocks per group, 65528 fragments per group
+58880 inodes per group
+Superblock backups stored on blocks: 
+        65528, 196584, 327640, 458696
 
-> > > 
-> > > That being said I don't have a problem moving the limits somewhere else
-> > > if that's what people want to do.  I agree that the current sysfs
-> > > location for the device limits is mostly a function of implementation
-> > > and backwards compatibility.
-> > 
-> > Who do I have to get on side for you to be comfortable moving the
-> > various metrics to 'bdi' (leaving legacy duplicates in 'queue' where
-> > that is necessary) ??  i.e. which people need to want it?
-> 
-> While I agree that adding these generic topology metrics to 'queue' may
-> not be the perfect place I don't feel 'bdi' really helps userland
-> understand them any better.  Nor would userland really care.  But I do
-> agree that 'bdi' is likely a better place.
-> 
-> You had mentioned your goal of removing MD's 'queue' entirely. Well DM
-> already had that but Martin exposed a minimalist one as part of
-> preparations for the topology support, see commit:
-> cd43e26f071524647e660706b784ebcbefbd2e44
+Writing inode tables: done                            
+Creating journal (8192 blocks): done
+Writing superblocks and filesystem accounting information: done
 
-Oh yuck.  I wasn't aware of that.  This is just horrible.
-> 
-> We _could_ then backout cd43e26f071524647e660706b784ebcbefbd2e44 too?
+This filesystem will be automatically checked every 33 mounts or
+180 days, whichever comes first.  Use tune2fs -c or -i to override.
+# mount -t ext3 /dev/md0 /mnt/tmpmnt/
+EXT3-fs: invalid journal inode.
+mount: mounting /dev/md0 on /mnt/tmpmnt/ failed: Invalid argument
+# mount  /dev/md0 /mnt/tmpmnt/       
+EXT3-fs: invalid journal inode.
+EXT2-fs: corrupt root inode, run e2fsck
+mount: mounting /dev/md0 on /mnt/tmpmnt/ failed: Invalid argument
+# md: md0: recovery done.
+RAID5 conf printout:
+ --- rd:4 wd:4
+ disk 0, o:1, dev:sda
+ disk 1, o:1, dev:sdb
+ disk 2, o:1, dev:sdc
+ disk 3, o:1, dev:sdd
 
-please please please please please!
+# 
+# mount -t ext3 /dev/md0 /mnt/tmpmnt/
+kjournald starting.  Commit interval 5 seconds
+EXT3 FS on md0, internal journal
+EXT3-fs: mounted filesystem with ordered data mode.
+# df
+Filesystem           1k-blocks      Used Available Use% Mounted on
+/dev/ram0                63461     44131     19330  70% /
+/dev/md0              29939456    525568  27913920   2% /mnt/tmpmnt
 
-(I haven't really paid attention, but I thought everything always had
- a 'queue' - I just ignored in on md devices because it didn't mean
- anything).
+-----------
+
+-----Original Message-----
+From: NeilBrown [mailto:neilb@suse.de] 
+Sent: Tuesday, June 23, 2009 11:56 PM
+To: Tirumala Reddy Marri
+Cc: linux-raid@vger.kernel.org; Dan Williams
+Subject: RE: RAID-5 creation crashes when files system installed while
+recovery going on
+
+On Wed, June 24, 2009 4:39 pm, Tirumala Reddy Marri wrote:
+> My meaning of crash was kernel panic happens.  BTW we have HW
+acceleration
+> to do the XOR calculations which uses ADMA driver model.
+> Thanks,
+> MArri
+
+Is it possible to get details of this panic?  A digital photo
+of the screen perhaps?
 
 NeilBrown
+
+>
+> ________________________________
+>
+> From: linux-raid-owner@vger.kernel.org on behalf of NeilBrown
+> Sent: Tue 6/23/2009 7:31 PM
+> To: Tirumala Reddy Marri
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: RAID-5 creation crashes when files system installed while
+> recovery going on
+>
+>
+>
+> On Wed, June 24, 2009 8:35 am, Tirumala Reddy Marri wrote:
+>> All,
+>>  I started RAID-5 creation using mdadm command. While recovery is
+>> happening I tried to install file system . I see intermittent crash
+.
+>> And crash doesn't happen at fixed location. Any clue what could be
+the
+>> problem? How does the read/writes to MD driver handled while RAID-5
+is
+>> under building.
+>
+> Can you describe exactly what you mean by "crash" ??
+>
+> The raid5 driver normally has no problems handling writes while
+> it is resyncing.  It has a 'stripe_cache' which is used to
+> synchronise regular IO with resync IO.
+>
+> NeilBrown
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"
+in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
+
