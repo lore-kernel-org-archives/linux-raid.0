@@ -1,67 +1,69 @@
-From: Michael Ole Olsen <gnu@gmx.net>
-Subject: reshape raid5 to raid6
-Date: Wed, 24 Jun 2009 12:27:29 +0200
-Message-ID: <20090624102729.GY2828@rlogin.dk>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: reshape raid5 to raid6
+Date: Wed, 24 Jun 2009 21:20:41 +1000 (EST)
+Message-ID: <972c997a386db1106868b3dc6b29ee21.squirrel@neil.brown.name>
+References: <20090624102729.GY2828@rlogin.dk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="uc35eWnScqDcQrv5"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20090624102729.GY2828@rlogin.dk>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Wed, June 24, 2009 8:27 pm, Michael Ole Olsen wrote:
+> Is it possible to reshape my /dev/md0 raid5 into raid6?
 
---uc35eWnScqDcQrv5
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+If you are are using Linux 2.6.30, then you can
 
-Is it possible to reshape my /dev/md0 raid5 into raid6?
+  echo raid6 > /sys/block/md0/md/level
 
-I found the following recipe in the docs:
-mdadm --create /dev/md0 -l6 -n4 /dev/sdb1 /dev/sdc1 /dev/sdd1 missing
+and it will instantly be sort-of-raid6.
+It is exactly like raid6 except that the Q blocks are all one
+the one drive, and drive that previously didn't exist.
+If you have a spare, it will start building the Q blocks
+on that drive and when it finishes you will have true raid6
+redundancy, though possibly a little less than raid6 performance,
+as a real raid6 has the Q block distributed.
 
-I have 9 disks in my raid5, would i then do:
-[1] mdadm --create /dev/md0 -l6 -n10 /dev/sda /dev/sdb ... missing
+When mdadm-3.1 is released, you will be able to tell the raid6
+to re-stripe with a more traditional layout.  This will take quite
+a while, but you can continue to use the array (though a bit more
+slowly) will it progresses.
+Of course you don't need to do that step if you don't want to.
 
-i.e. only the first 9 drives and then hot add a new device to get it to
-reshape and add the extra parity to all drives?
 
-mdadm --add /dev/md0 /dev/sdk ?
 
-I would guess  command [1] would give problems as md0 is an active array
-will it work if i --stop the array first so that i can reshape to raid6?
+>
+> I found the following recipe in the docs:
+> mdadm --create /dev/md0 -l6 -n4 /dev/sdb1 /dev/sdc1 /dev/sdd1 missing
+>
+> I have 9 disks in my raid5, would i then do:
+> [1] mdadm --create /dev/md0 -l6 -n10 /dev/sda /dev/sdb ... missing
 
-I couldn't really find much information on this, some say it is impossible
-without recreating the array? (So i ask here first before i try, as I dont
-want to risk my data, even though I have backups of the important
-data)
+If you did this, an the drives contained raid5 data, then that data
+would not be available on /dev/md0.
 
-Any advice would be nice
+NeilBrown
 
-/Michael Ole Olsen
 
---uc35eWnScqDcQrv5
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+>
+> i.e. only the first 9 drives and then hot add a new device to get it to
+> reshape and add the extra parity to all drives?
+>
+> mdadm --add /dev/md0 /dev/sdk ?
+>
+> I would guess  command [1] would give problems as md0 is an active array
+> will it work if i --stop the array first so that i can reshape to raid6?
+>
+> I couldn't really find much information on this, some say it is impossible
+> without recreating the array? (So i ask here first before i try, as I dont
+> want to risk my data, even though I have backups of the important
+> data)
+>
+> Any advice would be nice
+>
+> /Michael Ole Olsen
+>
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iQIcBAEBAgAGBQJKQf+QAAoJECXlragqp/ZI3UkQAIus04vyFtFhKC2U7e5PO4g3
-V7bVWgO5fUrO+p4Xwssw1yz2teoMhFnM2Od0b2cbBQlnCW09Pe4qaF5Azc8t0yHi
-yjWCpoTWcwiYoYCIRfekjQcazb52tKsi1ZPHU6FQUxcQ/H5y+fWAd4bbwAzQasr9
-aEURn+ASecXRTgjDlzabVtxQapiUNoIxmQPvKPP3FUqtkC47C4ADR4hQeVKU3Jh0
-eFtGft5Jmeml1RReITq/fkQyEHOuptDEQq2TXORX258UsR7u/ZpSOFQij9+Ytgxc
-vPtbjMaKm3nhqVxz4XOhISz5KcEjgEGI+UdIUiT3JciBGtxv/ug5H6WyO9syZZ5z
-UZXJ+9MtRS251Jg3zR7QkXZvqMshdfBJEIBWgXr6QmTGLjwfZwV6i2/8AvcVR7V6
-LtMUdZ3rH5/+Ep0FShRXtT1sUlOcGUGB09ubdxPpBAhxWkFZMw6G9+Fhg3ynqsq6
-HrkZ0wuoGDww5Ks77XYa/I6Zecoq9g7UxqMqFem7U0oQz5Wz3pIuEpMT7zfhHQ9/
-6thNJJx+fwxcQmbfUdh2HT60ALlweXNAshaWh4tnKQtQeo0eGhg7jWbZqiNnk+ZA
-KIx3/E8z/dZIUwsY8Zccacy798AUQTebOiS99e+mGy+FdtGXpcucDItTGsSe7wI/
-7xHi7GPROC6EmtcWA6Ul
-=kBNa
------END PGP SIGNATURE-----
-
---uc35eWnScqDcQrv5--
