@@ -1,57 +1,53 @@
-From: Billy Crook <billycrook@gmail.com>
-Subject: Re: reshape raid5 to raid6
-Date: Wed, 24 Jun 2009 11:10:08 -0500
-Message-ID: <a43edf1b0906240910l50f564fbh942be94e9e7fb281@mail.gmail.com>
-References: <20090624102729.GY2828@rlogin.dk> <972c997a386db1106868b3dc6b29ee21.squirrel@neil.brown.name>
+From: <Ryan_MichaelS@emc.com>
+Subject: RE: Slow raid10 resync
+Date: Wed, 24 Jun 2009 12:23:33 -0400
+Message-ID: <2A22ECE278A6604A84476172F106BFCE07B4D99A@CORPUSMX50A.corp.emc.com>
+References: <2A22ECE278A6604A84476172F106BFCE07AC7A5A@CORPUSMX50A.corp.emc.com> <19009.39740.60091.349944@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <972c997a386db1106868b3dc6b29ee21.squirrel@neil.brown.name>
+Content-class: urn:content-classes:message
+In-Reply-To: <19009.39740.60091.349944@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jun 24, 2009 at 06:20, NeilBrown<neilb@suse.de> wrote:
-> On Wed, June 24, 2009 8:27 pm, Michael Ole Olsen wrote:
->> Is it possible to reshape my /dev/md0 raid5 into raid6?
+>On Monday June 22, Ryan_MichaelS@emc.com wrote:
+> Occasionally one of my devices with a 4 drive raid10 array resyncs
+very
+>> slowly.  Typical resync speed is in the 50-60 MB/sec range.  When
+>> running slow the speed is around 7-10 MB/sec.  sync_speed_min is set
+to
+>> 20,000, max is set to 200,000.  By setting sync_speed_min to 5000 I
+can
+>> slow the sync further, but setting it back to 20000 doesn't fix the
+>> speed.  Other IO on the system is normal.  The drives and the CPU are
+>> not maxed.
+>> 
+>> I don't know what is triggering this slow sync state.  Once in this
+>> state it will continue until the build completes.
+>> 
+>> Any idea what might be happening here?  I'm running Debian with a
+2.6.22
+>> kernel.
 >
-> If you are are using Linux 2.6.30, then you can
+> Not really...
+> There have been a couple of bugs that cause resync to go faster than
+> ..it should, but I can't think of anything that would make it go
+slower
+> than sync_speed_min unless that the the fastest that the storage
+> subsystem could handle.
 >
-> =A0echo raid6 > /sys/block/md0/md/level
+> Is this just a default raid10 with 'near=2' as the layout?
 >
-> and it will instantly be sort-of-raid6.
-> It is exactly like raid6 except that the Q blocks are all one
-> the one drive, and drive that previously didn't exist.
-> If you have a spare, it will start building the Q blocks
-> on that drive and when it finishes you will have true raid6
-> redundancy, though possibly a little less than raid6 performance,
-> as a real raid6 has the Q block distributed.
->
-> When mdadm-3.1 is released, you will be able to tell the raid6
-> to re-stripe with a more traditional layout. =A0This will take quite
-> a while, but you can continue to use the array (though a bit more
-> slowly) will it progresses.
-> Of course you don't need to do that step if you don't want to.
+> NeilBrown
 
-I have a raid5 array on 2.6.18 that I'd like to grow like this.  I
-might wait until mdadm-3.1 so I can stripe Q from the git-go.  I'd
-like to --stop the array on the 2.6.18 machine, and export the
-individual disks over iscsi to a 2.6.30 machine, and use the newer
-mdadm there to grow the array from raid5 to raid6.  Then --stop it on
-the 2.6.30 machine, unexport the disks, and --start the array again on
-the 2.6.18 machine.  Disclaimers aside, should that work?  My main
-concern is 2.6.18's ability to work with this 'creative' raid6
-implementation that currently results from the grow from raid5 to
-raid6.
+Yep, default raid12, near=2.  The device can handle 50-60 MB/sec.  When
+the resync is running slow there doesn't seem to be anything else on the
+system that is consuming CPU or IO resources.
 
-I've also got a few disks to add, so maybe the better solution would
-be to add one and get the unstriped Q, then add another and let Q
-stripe with everything else during the reshape.  That is, if it will
-stripe Q during the reshape.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks for the info, I'll keep digging.
+- Michael
+
