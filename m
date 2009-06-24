@@ -1,52 +1,97 @@
-From: Beolach <beolach@gmail.com>
-Subject: Re: reshape raid5 to raid6
-Date: Wed, 24 Jun 2009 06:17:20 -0600
-Message-ID: <aebf5d970906240517h783273b2t876fe2be09ef59d6@mail.gmail.com>
-References: <20090624102729.GY2828@rlogin.dk>
-	 <972c997a386db1106868b3dc6b29ee21.squirrel@neil.brown.name>
-	 <aebf5d970906240515y6c616250lca1cedea32927b00@mail.gmail.com>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [PATCH/RFC] md: Push down data integrity code to personalities.
+Date: Wed, 24 Jun 2009 15:25:07 +0200
+Message-ID: <20090624132507.GD6403@skl-net.de>
+References: <20090619141419.GB11504@skl-net.de> <yq11vpbv9ki.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="EcSFpNr6Vcxykj4g"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <aebf5d970906240515y6c616250lca1cedea32927b00@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <yq11vpbv9ki.fsf@sermon.lab.mkp.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Jun 24, 2009 at 05:20, NeilBrown <neilb@suse.de> wrote:
->
-> On Wed, June 24, 2009 8:27 pm, Michael Ole Olsen wrote:
-> > Is it possible to reshape my /dev/md0 raid5 into raid6?
->
-> If you are are using Linux 2.6.30, then you can
->
-> =C2=A0echo raid6 > /sys/block/md0/md/level
->
-> and it will instantly be sort-of-raid6.
-> It is exactly like raid6 except that the Q blocks are all one
-> the one drive, and drive that previously didn't exist.
-> If you have a spare, it will start building the Q blocks
-> on that drive and when it finishes you will have true raid6
-> redundancy, though possibly a little less than raid6 performance,
-> as a real raid6 has the Q block distributed.
->
-> When mdadm-3.1 is released, you will be able to tell the raid6
-> to re-stripe with a more traditional layout. =C2=A0This will take qui=
-te
-> a while, but you can continue to use the array (though a bit more
-> slowly) will it progresses.
-> Of course you don't need to do that step if you don't want to.
 
-If a raid5 is changed to raid6, and then the raid6 is grown w/
-additional disks, will that switch it to a more traditional layout,
-since it has to be re-striped anyway?
+--EcSFpNr6Vcxykj4g
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On 00:49, Martin K. Petersen wrote:
 
-TIA,
-Conway S. Smith
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> There was a slight conflict in latest md.h against current Linus.  You
+> may want to respin.
+
+Jup, but it's trivial to fix. Neil, do you want me to resend?
+
+> I tested on a few different configurations adding and removing devices
+> with and without integrity enabled.  Looks good on this end.
+>=20
+> Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+Thanks. Btw, below is a trivial patch that fixes two typos in
+Documentation/block/data-integrity.txt. While reading the paragraph
+
+	Layered block devices will need to pick a profile that's
+	appropriate for all subdevices.  blk_integrity_compare()
+	can help with that.  DM and MD linear, RAID0 and RAID1 are
+	currently supported.  RAID4/5/6 will require extra work due
+	to the application tag.
+
+I was wondering why raid10 is not mentioned and whether someone is
+currently working on data integrity support for raid levels 4/5/6.
+
+Andre
+
+commit 5fa2be272d578d9043bd0d9102ecb257cfba8fb8
+Author: Andre Noll <maan@systemlinux.org>
+Date:   Wed Jun 24 15:22:47 2009 +0200
+
+    Trivial typo fixes in Documentation/block/data-integrity.txt.
+   =20
+    Signed-off-by: Andre Noll <maan@systemlinux.org>
+
+diff --git a/Documentation/block/data-integrity.txt b/Documentation/block/d=
+ata-integrity.txt
+index e8ca040..2d735b0 100644
+--- a/Documentation/block/data-integrity.txt
++++ b/Documentation/block/data-integrity.txt
+@@ -50,7 +50,7 @@ encouraged them to allow separation of the data and integ=
+rity metadata
+ scatter-gather lists.
+=20
+ The controller will interleave the buffers on write and split them on
+-read.  This means that the Linux can DMA the data buffers to and from
++read.  This means that Linux can DMA the data buffers to and from
+ host memory without changes to the page cache.
+=20
+ Also, the 16-bit CRC checksum mandated by both the SCSI and SATA specs
+@@ -66,7 +66,7 @@ software RAID5).
+=20
+ The IP checksum is weaker than the CRC in terms of detecting bit
+ errors.  However, the strength is really in the separation of the data
+-buffers and the integrity metadata.  These two distinct buffers much
++buffers and the integrity metadata.  These two distinct buffers must
+ match up for an I/O to complete.
+=20
+ The separation of the data and integrity metadata buffers as well as
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--EcSFpNr6Vcxykj4g
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFKQikzWto1QDEAkw8RAr88AJ4hjpiMhSwDM87Nro6+XKEyoYuVAQCfa9ZA
+DNALoyILkwXGwcmeW1KMjhA=
+=NZiS
+-----END PGP SIGNATURE-----
+
+--EcSFpNr6Vcxykj4g--
