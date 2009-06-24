@@ -1,91 +1,80 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Write barriers on MD RAID1
-Date: Wed, 24 Jun 2009 13:43:35 +1000
-Message-ID: <19009.41191.662901.179565@notabene.brown>
-References: <4A188CAD.1080009@googlemail.com>
-	<0fa4b1e19d3edb12931e0d641ce2c7d7.squirrel@neil.brown.name>
-	<4A3E3C49.7010907@googlemail.com>
+Subject: Re: [PATCH] md: Use new topology calls to indicate alignment and I/O
+	sizes
+Date: Wed, 24 Jun 2009 14:05:18 +1000
+Message-ID: <19009.42494.925771.283731@notabene.brown>
+References: <yq1ws73turf.fsf@sermon.lab.mkp.net>
+	<170fa0d20906231444t5432998eo8cc2335c6d4a3a0d@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Ken Milmore on Sunday June 21
+In-Reply-To: message from Mike Snitzer on Tuesday June 23
 Sender: linux-raid-owner@vger.kernel.org
-To: Ken Milmore <ken.milmore@googlemail.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, Jens Axboe <jens.axboe@oracle.com>
+To: Mike Snitzer <snitzer@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-raid@vger.kernel.org, snitzer@redhat.com, Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: linux-raid.ids
 
-On Sunday June 21, ken.milmore@googlemail.com wrote:
-> I thought I had better bump my previous post as this regression is still 
-> present in 2.6.29.5.
-
-Thanks Ken.
-
+On Tuesday June 23, snitzer@gmail.com wrote:
+> On Tue, Jun 23, 2009 at 12:54 AM, Martin K.
+> Petersen<martin.petersen@oracle.com> wrote:
+> >
+> > Neil,
+> >
+> > Looks like this one missed the boat on the first MD pull request.
+> > Here's an updated patch that applies to Linus' current tree in case you
+> > are planning a second round...
+> >
+> >
+> > Switch MD over to the new disk_stack_limits() function which checks for
+> > aligment and adjusts preferred I/O sizes when stacking.
+> >
+> > Also indicate preferred I/O sizes where applicable.
 > 
-> To recap, commit cec0707e40ae25794b5a2de7b7f03c51961f80d9 has broken 
-> write barriers on md raid1 block devices in 2.6.29 and later kernels. 
-> Reversing this commit appears to fix the problem.
+> Given that Linus has not yet pulled in the DM changes for 2.6.31
+> (which includes DM's topology support) I'd imagine it shouldn't be a
+> problem to get this patch in.  In fact it would be a real shame if
+> this somehow missed 2.6.31 seeing as MD is the only consumer of the
+> topology infrastructure's disk_stack_limits().
 > 
-> Please let me know if I'm harassing the wrong maintainers here!
+> Neil, please push to Linus for 2.6.31, thanks!
+> 
 
-Jens,
-  have you had a chance to look at this?
+It looks mostly OK and can now be pulled from
+   git://neil.brown.name/md/ for-linus
+though I'll send a more formal pull request later (if necessary)
 
-I think the following patch is appropriate and should go in to
--stable.
+But while I have your collective attention:
+
+1/ Is there any documentation on exactly what "io_min" etc mean?
+  I can guess that "io_opt" means "try to use this size, or a multiple
+  of this size, whenever possible" and does not differentiate between
+  read and write (despite the fact that I probably care a lot more
+  about write than read).
+  But when io_min is larger than physical_block_size, what does it
+  mean?
+  Maybe I just didn't look hard enough for the documentation??
+
+2/ Is it too late to discuss moving the sysfs files out of the 'queue'
+  subdirectory?
+  'queue' has a lot of values the are purely related to the request
+  queue used in the elevator algorithm, and are completely irrelevant
+  to md and other virtual devices (I look forward to the day when md
+  devices don't have a 'queue' at all).
+  However these new fields are part of the interface between the block
+  device and the filesystem (or other client) and so are of a very
+  different character and should - I think - be in a very different
+  place.
+  I'm not sure where that place should be yet.  One idea I has was in
+  the bdi, but that isn't completely convincing.
+  However a separate directory like bdi but called e.g. topology might
+  make a lot of sense.
+  I would probably like to move the fields out of struct request_queue
+  too, but as that is purely of internal interest, it doesn't matter
+  if that is delayed a release or two.  The interface through sysfs
+  is more important to get 'right'.
+
+  So: can this be open for discussion?
 
 Thanks,
 NeilBrown
-
-
-From addd8b129835a63d6df9a38eae20caaa15de5988 Mon Sep 17 00:00:00 2001
-From: NeilBrown <neilb@suse.de>
-Date: Wed, 24 Jun 2009 13:39:15 +1000
-Subject: [PATCH] Restore barrier support for md and probably other virtual devices.
-
-The next_ordered flag is only meaningful for devices that use __make_request.
-So move the test against next_ordered out of generic code and in to
-__make_request
-
-Since this test was added, barriers have not worked on md, and (I
-think) dm and similar devices that don't use __make_request and so
-don't bother to set next_ordered.
-
-Cc: stable@kernel.org
-Cc: Ken Milmore <ken.milmore@googlemail.com>
-Signed-off-by: NeilBrown <neilb@suse.de>
----
- block/blk-core.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/block/blk-core.c b/block/blk-core.c
-index b06cf5c..fc221aa 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1172,6 +1172,11 @@ static int __make_request(struct request_queue *q, struct bio *bio)
- 	const int unplug = bio_unplug(bio);
- 	int rw_flags;
- 
-+	if (bio_barrier(bio) && bio_has_data(bio) &&
-+	    (q->next_ordered == QUEUE_ORDERED_NONE)) {
-+		bio_endio(bio, -EOPNOTSUPP)
-+			return 0;
-+	}
- 	/*
- 	 * low level driver can indicate that it wants pages above a
- 	 * certain limit bounced to low memory (ie for highmem, or even
-@@ -1472,11 +1477,6 @@ static inline void __generic_make_request(struct bio *bio)
- 			err = -EOPNOTSUPP;
- 			goto end_io;
- 		}
--		if (bio_barrier(bio) && bio_has_data(bio) &&
--		    (q->next_ordered == QUEUE_ORDERED_NONE)) {
--			err = -EOPNOTSUPP;
--			goto end_io;
--		}
- 
- 		ret = q->make_request_fn(q, bio);
- 	} while (ret);
--- 
-1.6.3.1
-
