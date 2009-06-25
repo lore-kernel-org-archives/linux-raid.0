@@ -1,163 +1,212 @@
-From: Neil Brown <neilb@suse.de>
-Subject: REQUEST for new 'topology' metrics to be moved out of
-	the 'queue' sysfs directory.
-Date: Thu, 25 Jun 2009 13:58:31 +1000
-Message-ID: <19010.62951.886231.96622@notabene.brown>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] md: Use new topology calls to indicate alignment and I/O  sizes
+Date: Thu, 25 Jun 2009 00:37:14 -0400
+Message-ID: <yq163elrksl.fsf@sermon.lab.mkp.net>
+References: <yq1ws73turf.fsf@sermon.lab.mkp.net>
+	<170fa0d20906231444t5432998eo8cc2335c6d4a3a0d@mail.gmail.com>
+	<19009.42494.925771.283731@notabene.brown>
+	<yq1zlbyrzo9.fsf@sermon.lab.mkp.net>
+	<19009.50739.830769.821582@notabene.brown>
+	<yq1vdmlsgqo.fsf@sermon.lab.mkp.net>
+	<19010.57942.43011.108889@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Mike Snitzer <snitzer@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>, jens.axboe@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <19010.57942.43011.108889@notabene.brown> (Neil Brown's message
+	of "Thu, 25 Jun 2009 12:35:02 +1000")
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@gmail.com>, linux-raid@vger.kernel.org, snitzer@redhat.com, jens.axboe@oracle.com, Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: linux-raid.ids
 
+>>>>> "Neil" == Neil Brown <neilb@suse.de> writes:
 
-Hi,
- I have (belatedly, I admit) been looking at the new 'topology'
- metrics that were introduced for 2.6.31.
- I have a few questions about them which I have been discussing with
- Martin, but there is one issue that I feel fairly strongly about and
- would like to see changed before it gets into a -final release.
- Hence this email to try to garner understanding and consensus.
+Neil,
 
- The various topology metrics are exposed to user-space through sysfs
- attributes in the 'queue' subdirectory of the block device
- (e.g. .../sda/queue).
- I think this is a poor choice and would like to find a better
- choice.
+Neil> With RAID5, this definition would make the physical_block_size the
+Neil> same as the stripe size because if the array is degraded (which is
+Neil> the only time a write error can be visible), a write error will
+Neil> potentially corrupt other blocks in the stripe.
 
- To explain why, it probably helps to review the current situation.
- Before 2.6.30, 'queue' contains:
-   hw_sector_size	max_hw_sectors_kb  nr_requests	  rq_affinity
-   iosched/		max_sectors_kb	   read_ahead_kb  scheduler
-   iostats		nomerges	   rotational
+But with MD RAID5 we know about it.  The problem with disk drives (and
+even some arrays) is that the result is undefined.  But see below.
 
- Of these:
 
-   max_hw_sectors_kb, nr_requests, rq_affinity, iosched/,
-   max_sectors_kb scheduler nomerges rotational
+Neil> Well, the smallest write, 'O', but not 'I'.  I guess it is the
+Neil> smallest atomic read is many cases, but I cannot see that being
+Neil> relevant.  Is it OK to just talk about he 'write' path here?
 
- are really only relevant to the elevator code and those devices that
- used that code (ide, scsi, etc).
- They are not relevant for dm or md (md has it's own separate 'md'
- directory, and before 2.6.30, the '/queue' subdirectory did not even
- appear in dm or md devices).
+As I said earlier, these values are write centric.  People didn't see
+much value in providing a similar set of knobs for reads so I removed
+them.
 
- Of the others:
-   hw_sector_size   - is applicable to all block devices, and could
-                      reasonably be placed one level up in the device
-                      directory (along side 'size').
-   read_ahead_kb    - a duplicate of bdi/read_ahead_kb
-   iostats          - is a switch to enable or disable accounting of
-                      statistics that are reported in the 'stat'
-                      file (one level up)
 
- So most of '/queue' is specific to one class of devices (admittedly a
- very large class).  The others could be argued to be aberrations.
+>> - minimum_io_size is the preferred I/O size for random writes.  No
+>> R-M-W.  >= physical_block_size.
 
- Adding a number of extra fields such as minimum_io_size,
- optimal_io_size etc to '/queue' seems to increase the number of
- aberrations and enforces md and dm device to have a /queue which is
- largely irrelevant.
+Neil> Presumably this is not simply >= physical_block_size, but is an
+Neil> integer multiple of physical_block_size ??
 
- One approach that we could take would be to hide all those fields
- in 'queue' that are not relevant to the current device, and let
- 'queue' be a 'dumping ground' for each block device to place whatever
- sysfs attributes they want (thus md would move all of md/* to
- queue/*, and leave 'md' as a symlink to 'queue').
+Yep.
 
- I don't like this approach because it does not make best use of the
- name space.  If 'md' and 'queue' have different directories, they are
- each free to create new attributes without risk of collision between
- different drivers - not that the collision would be a technical
- problem but it could be confusing to users.
 
- So, where to put these new fields?
+Neil> This is assumed to be aligned the same as physical_block_size and
+Neil> no further alignment added? i.e. the address should be
+Neil>    alignment_offset + N * minimum_io_size ???
 
-   They could go in the device directory, along side 'size' and 'ro'.
-   Like those fields, the new ones give guidance to filesystems on how
-   to use the device.  Whether or not this is a good thing depends a
-   bit on how many fields we are talking about.  One or two might be
-   OK.  4 or more might look messy.
-   There are currently 4 fields: logical_block_size,
-   physical_block_size, minimum_io_size, optimal_io_size.
-   I have suggested to Martin that 2 are enough.  While I don't
-   particularly want to debate that in this thread, it could be
-   relevant so I'll outline my idea below.
+Yep.
 
-   They could go in 'bdi' along with read_ahead_kb.  read_ahead_kb
-   gives guidance on optimal read sizes.  The topology fields give
-   guidance on optimal write sizes.  There is a synergy there.  And
-   these fields are undeniably info about a backing device.
-   NFS has it's own per-filesystem bdi so we would not want to impose
-   fields on NFS that weren't at all relevant.  NFS has 'rsize' and
-   'wsize' which are somewhat related.  So I feel somewhat positive
-   about this possibility.  My only concern is that 'read_ahead_kb' is
-   more about reading *files*, where as the *_block_size and *_io_size
-   are about writing to the *device*.  I'm not sure how important a
-   difference this is.
 
-   They could go in a new subdirectory of the block device, just like
-   the integrity fields. e.g 'topology/'. or 'metrics/'.  This would
-   be my preferred approach if there do turn out to be the full 4
-   fields.
+Neil> Maybe we really want physical_block_size_A and
+Neil> physical_block_size_B.  Where B is preferred, but A is better than
+Neil> nothing.  You could even add that A must be a power of 2, but B
+Neil> doesn't need to be.
 
-Thanks for your attention.  Comments most welcome.
+The way I view it is that physical_block_size is tied to the low-level
+hardware.  It is called physical_block_size to match the definition in
+the ATA and SCSI specs.  That's also where logical_block_size comes
+from.
 
-NeilBrown
+Applications that care about the write block size should look at
+minimum_io_size.  Regardless of whether they are sitting on top of the
+raw disk or MD or DM.  Above the physical disk layer pbs mostly has
+meaning as housekeeping.  I.e. it records the max pbs of the component
+devices.  For instance a RAID1 using a 512-byte drive and a 4KB drive
+will have a pbs of 4KB.
 
-----------------------
-Alternate implementation with only two fields.
-According to Documentation/ABI/testing/sysfs-block, both
-physical_block_size and minimum_io_size are the smallest unit of IO
-that doesn't require read-modify-write.  The first is thought to
-relate to drives with 4K blocks.  The second to RAID5 arrays.
-But that doesn't make sense as it stands: you cannot have two things
-that are both the smallest.
+There are a few special cases where something may want to look directly
+at physical_block_size.  But that's in the journal padding/cluster
+heartbeat department.
 
-Also, minimum_io_size and optimal_io_size are both described as a
-"preferred" for IO - presumably writes, not reads.  Again, we cannot
-have two values that are both preferred.  There is again some
-suggestion that one is for disks and the other is for RAID, but I
-cannot see how a mkfs would choose between them.
 
-My conclusion is that there are two issues of importance.
-1/ avoiding read-modify-write as that can affect correctness (When a
-  write error happens, you can lose unrelated data).
-2/ throughput.
+Neil> In the email Mike forwarded, you said:
 
-For each of these issues, there are a number of sizes that are
-relevant.
-e.g as you increase the request size, the performance can increase,
-but there a key points where a small increase in size can give a big
-increase in performance.  These sizes might include block size, chunk
-size, stripe size, and cache size.
+Neil> 	- optimal_io_size = the biggest I/O we can submit without
+Neil> 	  incurring a penalty (stall, cache or queue full).  A multiple
+Neil> 	  of minimum_io_size.
 
-So I suggested two fields, each of which can store multiple values:
+I believe I corrected that description later in the thread.  But
+anyway...
 
-safe_write_size:  512 4096 327680
-preferred_write_size: 4096 65536 327680 10485760
 
-The guidance for using these is simple:
- When choosing a size where atomicity of writes is important, choose
- the largest size from safe_write_size which is practical (or a
- multiple there-of).
+Neil> Which has a subtly different implication.  If the queue and cache
+Neil> are configurable (as is the case for e.g. md/raid5) then this is a
+Neil> dynamic value (contrasting with 'spindles' which are much less
+Neil> likely to be dynamic) and so is really of interest only to the VM
+Neil> and filesystem while the device is being accessed.
 
- When choosing a size which doesn't require atomicity, but where
- throughput is important, choose a multiple of the largest size from
- preferred_write_size which is practical.
+The SCSI spec says:
 
-The smallest safe_write_size would be taken as the logical_block_size.
+"The OPTIMAL TRANSFER LENGTH GRANULARITY field indicates the optimal
+transfer length granularity in blocks for a single [...]
+command. Transfers with transfer lengths not equal to a multiple of this
+value may incur significant delays in processing."
 
-If we just have these two fields, I would put them in the top level
-directory for the block device.
+
+I tried to provide a set of hints that could:
+
+1. Be seeded by the knobs actually provided in the hardware specs
+
+2. Help filesystems lay out things optimally for the underlying storage
+   using a single interface regardless of whether it was disk, array, MD
+   or LVM
+
+3. Make sense when allowing essentially arbitrary stacking of MD and LVM
+   devices (for fun add virtualization to the mix)
+
+4. Allow us to make sure we did not submit misaligned requests
+
+And consequently I am deliberately being vague.  What makes sense for an
+spinning disk doesn't make sense for an SSD.  Or for a Symmetrix.  Or
+for LVM on top of MD on top of 10 Compact Flash devices.  So min and opt
+are hints that are supposed to make some sort of sense regardless of
+what your actual storage stack looks like.
+
+I'm happy to take a stab at making the documentation clearer.  But I am
+against making it so explicit that the terminology only makes sense in
+an "MD RAID5 on top of three raw disks" universe.
+
+I think "Please don't submit writes smaller than this" and "I prefer big
+writes in multiples of this" are fairly universal.
+
+
+Neil> As an aside, I can easily imagine devices where the
+Neil> minimum_io_size varies across the address-space of the device -
+Neil> RAID-X being one interesting example.  Regular hard drives being
+Neil> another if it helped to make minimum_io_size line up with the
+Neil> track or cylinder size.  So maybe it would be best not to export
+Neil> this, but to provide a way for the VM and filesystem do discover
+Neil> it dynamically on a per-address basic??
+
+This is what I presented at the Storage & Filesystems workshop.  And
+people hated the "list of topologies" thing.  General consensus was that
+it was too complex.  The original code had:
+
+    /sys/block/topology/nr_regions
+    /sys/block/topology/0/{offset,length,min_io,opt_io,etc.}
+    /sys/block/topology/1/{offset,length,min_io,opt_io,etc.}
+
+Aside from the nightmare of splitting and merging topologies when
+stacking there were also obvious problems with providing an exact
+representation.
+
+For instance a RAID1 with drives with different topologies.  How do you
+describe that?  Or a RAID0 with similar mismatched drives where each -
+say - 64KB chunk in the stripe has a different topology.  That becomes a
+really long list.  And if you make it a mapping function callback then
+what's mkfs supposed to do?  Walk the entire block device to get the
+picture?
+
+There was a long discussion about this at the workshop.  My code started
+out last summer as a tiny patch kit called "I/O hints" and the resulting
+topology patch series as of this spring had turned into a big, bloated
+monster thanks to arbitrary stacking.
+
+So I was not sad to see heterogeneous topology code go at the workshop.
+It was complex despite my best efforts to keep things simple.
+
+The intent with the changes that are now in the kernel is to:
+
+1. Make sure we align properly by way of the hardware metrics
+   (physical_block_size, alignment_offset)
+
+2. Provide some hints that filesystems may or may not use to lay out
+   things (minimum_io_size, optimal_io_size)
+
+We already do (2) and have been for ages by way of libdisk which queries
+LVM or MD but only understands the top device.  So part of fixing (2)
+involved making stacking do the right thing and making a unified
+interface for a block device to kill the
+
+        if (this_is_an_md_dev(foo))
+           /* Go poke MD with ioctls */
+        else if (this_is_a_dm_dev(foo)
+           /* Go fork LVM utilities and parse cmd line output */
+
+Everybody agreed that it would be better to have a unified set of hints
+in /sys/block.  So that's why things were done this way.
+
+
+Neil> This clearly justifies logical_block_size, physical_block_size,
+Neil> alignment_offset.  And it justifies minimum_io_size as a
+Neil> hint. (Which is really minimum_write_size).  I'm not so sure about
+Neil> optimal_io_size.. I guess it is just another hint.
+
+Absolutely.
+
+
+Neil> There is a bit of a pattern there.  We have a number (2) of
+Neil> different write sizes where going below that size risks integrity,
+Neil> and a number (2) where going below that size risks performance.
+Neil> So maybe we should be explicit about that and provide some lists
+Neil> of sizes:
+
+Neil> safe_write_size: 512 4096 327680 optimal_write_size: 65536 327680
+Neil> 10485760
+
+Violates the one-value-per-sysfs file rule :)
+
+I understand your point but I think it's too much information.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
