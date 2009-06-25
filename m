@@ -1,164 +1,107 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] md: Use new topology calls to indicate alignment and I/O  sizes
-Date: Thu, 25 Jun 2009 16:16:59 +1000
-Message-ID: <19011.5723.905426.951624@notabene.brown>
-References: <yq1ws73turf.fsf@sermon.lab.mkp.net>
-	<170fa0d20906231444t5432998eo8cc2335c6d4a3a0d@mail.gmail.com>
-	<19009.42494.925771.283731@notabene.brown>
-	<yq1zlbyrzo9.fsf@sermon.lab.mkp.net>
-	<19009.50739.830769.821582@notabene.brown>
-	<yq1vdmlsgqo.fsf@sermon.lab.mkp.net>
-	<19010.57942.43011.108889@notabene.brown>
-	<yq163elrksl.fsf@sermon.lab.mkp.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: REQUEST for new 'topology' metrics to be moved out of
+	the 'queue' sysfs directory.
+Date: Thu, 25 Jun 2009 04:00:51 -0400
+Message-ID: <yq11vp8spxo.fsf@sermon.lab.mkp.net>
+References: <19010.62951.886231.96622@notabene.brown>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Martin K. Petersen on Thursday June 25
-Sender: linux-raid-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Mike Snitzer <snitzer@gmail.com>, linux-raid@vger.kernel.org, snitzer@redhat.com, jens.axboe@oracle.com, Linus Torvalds <torvalds@linux-foundation.org>
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <19010.62951.886231.96622@notabene.brown> (Neil Brown's message
+	of "Thu, 25 Jun 2009 13:58:31 +1000")
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: NeilBrown <neilb@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, jens.axboe@oracle.com, linux-fsdevel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>
 List-Id: linux-raid.ids
 
-On Thursday June 25, martin.petersen@oracle.com wrote:
-> >>>>> "Neil" == Neil Brown <neilb@suse.de> writes:
-> Neil> Well, the smallest write, 'O', but not 'I'.  I guess it is the
-> Neil> smallest atomic read is many cases, but I cannot see that being
-> Neil> relevant.  Is it OK to just talk about he 'write' path here?
-> 
-> As I said earlier, these values are write centric.  People didn't see
-> much value in providing a similar set of knobs for reads so I removed
-> them.
+>>>>> "Neil" == Neil Brown <neilb@suse.de> writes:
 
-Agreed.  All I'm asking here is to change the names to reflect this truth.
-  minimum_write_size, optimum_write_size
+Neil,
 
-> Neil> Maybe we really want physical_block_size_A and
-> Neil> physical_block_size_B.  Where B is preferred, but A is better than
-> Neil> nothing.  You could even add that A must be a power of 2, but B
-> Neil> doesn't need to be.
-> 
-> The way I view it is that physical_block_size is tied to the low-level
-> hardware.  It is called physical_block_size to match the definition in
-> the ATA and SCSI specs.  That's also where logical_block_size comes
-> from.
-> 
-> Applications that care about the write block size should look at
-> minimum_io_size.  Regardless of whether they are sitting on top of the
-> raw disk or MD or DM.  Above the physical disk layer pbs mostly has
-> meaning as housekeeping.  I.e. it records the max pbs of the component
-> devices.  For instance a RAID1 using a 512-byte drive and a 4KB drive
-> will have a pbs of 4KB.
-> 
-> There are a few special cases where something may want to look directly
-> at physical_block_size.  But that's in the journal padding/cluster
-> heartbeat department.
+Neil>  Of these:
 
-Here you're thinking seems be very specific.
-This value comes from that spec.  That value is used for this
-particular application.
-Yet....
-> 
-> And consequently I am deliberately being vague.  What makes sense for an
-> spinning disk doesn't make sense for an SSD.  Or for a Symmetrix.  Or
-> for LVM on top of MD on top of 10 Compact Flash devices.  So min and opt
-> are hints that are supposed to make some sort of sense regardless of
-> what your actual storage stack looks like.
+Neil>    max_hw_sectors_kb, nr_requests, rq_affinity, iosched/,
+Neil>    max_sectors_kb scheduler nomerges rotational
 
-...here you are being deliberately vague.  But with the exact same
-values.   I find this confusing.
+Neil>  are really only relevant to the elevator code and those devices
+Neil>  that used that code (ide, scsi, etc).
 
-I think that we need to have values that have very strong and well
-defined meanings.  I read your comments above as saying something
-like:
+I'm not sure I completely agree with putting rotational in that bucket.
+It affects the choice of allocation policy in btrfs, for instance.
 
-  When writing use at least minimum_io_size unless you are journal
-  or heartbeat or similar code, then use physical_block_size.
 
-I don't like that definition at all.
-Conversely: "use the largest of these values that is practical for
-             you, each is better than the previous"
-does work nicely.  It actually reflects reality of devices, gives
-strong guidance to filesystems and doesn't carry any baggage.
 
-> 
-> I'm happy to take a stab at making the documentation clearer.  But I am
-> against making it so explicit that the terminology only makes sense in
-> an "MD RAID5 on top of three raw disks" universe.
-> 
+Neil>  Of the others:
+Neil>    hw_sector_size - is applicable to all block devices, and could
+Neil>                       reasonably be placed one level up in the
+Neil>                       device directory (along side 'size').
 
-I often find that when it is hard to document something clearly, it is
-because that something itself is not well defined...
+hw_sector_size is deprecated.  It's now split into logical and
+physical_block_size.
 
-My target for this or any similar interface documentation, is that the
-provider must be guided by the documentation to know exactly what
-value to present, and the consumer must be guided by the documentation
-to know exactly which value to use.
 
-> 
-> Neil> There is a bit of a pattern there.  We have a number (2) of
-> Neil> different write sizes where going below that size risks integrity,
-> Neil> and a number (2) where going below that size risks performance.
-> Neil> So maybe we should be explicit about that and provide some lists
-> Neil> of sizes:
-> 
-> Neil> safe_write_size: 512 4096 327680 optimal_write_size: 65536 327680
-> Neil> 10485760
-> 
-> Violates the one-value-per-sysfs file rule :)
+Neil>  Adding a number of extra fields such as minimum_io_size,
+Neil>  optimal_io_size etc to '/queue' seems to increase the number of
+Neil>  aberrations and enforces md and dm device to have a /queue which
+Neil>  is largely irrelevant.
 
-Since when are array values not values?  It *is* only one value per
-file!
+You seem to be hung up on the fact that you don't queue things.  I think
+that's beside the point.  You *do* have a request_queue thanks to
+calling blk_queue_make_request() in md.c.  And there is more to
+request_queue than the values you brought up.  Like the callback
+functions.  I'm not saying that all the values in request_queue apply to
+MD, but I really don't understand what all the fuss is about.  Other
+than the presence of the string "queue" in the choice of naming.
 
-> 
-> I understand your point but I think it's too much information.
+Anyway.  If you look at the request_queue in the current tree you'll see
+that the very limits we are discussing are contained in a separate
+struct.  We can easily move that somewhere else at a later date if that
+is deemed the right thing to do.
 
-I think that it is exactly the same information that you are
-presenting, but in a more meaningful and less confusing (to me) way.
 
-safe_write_size: logical_block_size physical_block_size minimum_io_size
-optimal_write_size: physical_block_size minimum_io_size optimal_io_size
+Neil>    I have suggested to Martin that 2 are enough.  
 
-And it is more flexible if someone has a more complex hierarchy.
+I think I have covered this in a separate mail.  You are mixing up
+hardware limitations and I/O hints on the grounds that they went in as
+part of the same patch set and live in the same place.
 
-The 'alignment' value applies equally to any size value which is
-larger than it.  (I wonder if 'alignment' could benefit from being an
-array value.....probably not).
+fdisk/mdadm/dmsetup need to use physical_block_size and alignment_offset
+to prevent us from misaligning when setting up partitions and virtual
+block devices.  Also, when stacking devices I need to know these values
+to ensure that the I/O hints set by MD/DM don't conflict with the
+underlying hardware limitations.  There are also special cases like
+shared disk setups and filesystem journal padding that may need to know
+details of the hardware atomicity.
 
-Just for completeness, I tried to write documentation for the above
-two array values to fit my guidelines described earlier.
-I found that I couldn't find a really convincing case for the
-distinction.   A filesystem wants all of it's data to be safe, and
-wants all of its writes to be fast.
-And in all the examples we can think of, a safer write is faster than a
-less-safe write.
-What that leaves us with is a simple increasing list of sizes, each a
-multiple of the previous.  Each safer and/or faster, but also larger.
+mkfs.* can leverage minimum_io_size and optimal_io_size hints to choose
+block sizes and to lay out data structures on stripe boundaries.  Just
+like we're doing today except using a common interface for all block
+devices instead of poking at MD and LVM internals.
 
-So I seem to now be suggesting a single array value:
 
- preferred_write_size: logical_block_size physical_block_size \
-          minimum_io_size optimal_io_size
+logical_block_size, physical_block_size and alignment_offset are
+hardware limits that need to be honored when creating a (virtual) block
+device or partition.
 
-It would be documented as:
+The minimum/optimal write sizes are hints to the *user* of the block
+device about how to lay out things.  If you look at my MD patch you'll
+see that I only set the I/O hints.  The hardware settings are off limits
+for MD.
 
-preferred_write_size:
-  A list of sizes (in bytes) such that a write of that size, aligned
-  to a multiple of that size (plus alignment_offset) is strongly
-  preferred over an smaller write for reasons of safety and/or
-  performance.  All writes *must* be a multiple of the smallest listed
-  size.  Due to the hierarchical nature of some storage systems, there
-  may be a list of values, each safer and/or faster than the previous,
-  but also larger.  Subsequent values will normally be multiples of
-  previous values.  Sizes other than the first are not constrained to
-  be powers of 2.
-  A filesystem or other client should choose the largest listed size
-  (or a multiple-thereof) which fits within any other constraint
-  it is working under.
 
-  Note: the 'safety' aspect only applies to cases where a device error
-  or system crash occurs.  In such cases there may be a chance that
-  data outside the target area of a write gets corrupted.  When there
-  is no such error, all writes are equally safe.
+I don't particularly care whether we store the values in queue/,
+topology/, metrics/, limits/ or in the device root.  Nor whether we call
+it minimum_write_size instead of minimum_io_size.  I'll be happy to roll
+up a renaming patch...
 
-NeilBrown
+-- 
+Martin K. Petersen	Oracle Linux Engineering
