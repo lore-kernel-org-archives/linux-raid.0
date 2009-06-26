@@ -1,17 +1,41 @@
-From: "NeilBrown" <neilb@suse.de>
+From: "Ron Lai" <ronlai@cs.stanford.edu>
 Subject: Re: Questions regarding failure in the last IO path in multipath
-Date: Fri, 26 Jun 2009 11:27:51 +1000 (EST)
-Message-ID: <da62ba781a117db1ba73ffc1e7a11189.squirrel@neil.brown.name>
-References: <8733366C889641E8942BD8F6DC5DD876@FireEye.com>
+Date: Thu, 25 Jun 2009 18:43:49 -0700
+Message-ID: <154EADCFA8D54500B7E8CDD98B526E0E@FireEye.com>
+References: <8733366C889641E8942BD8F6DC5DD876@FireEye.com> <da62ba781a117db1ba73ffc1e7a11189.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8733366C889641E8942BD8F6DC5DD876@FireEye.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ron Lai <ronlai@cs.stanford.edu>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+The changes are in multipath_error(). The diffs for /derivers/md/multipath.c 
+are:
+
+233,234c233
+<                  /* leave it active... it's all we have */
+<          } else {
+---
+>          }
+252c251
+<          }
+---
+>
+
+Thanks.
+----- Original Message ----- 
+From: "NeilBrown" <neilb@suse.de>
+To: "Ron Lai" <ronlai@cs.stanford.edu>
+Cc: <linux-raid@vger.kernel.org>
+Sent: Thursday, June 25, 2009 6:27 PM
+Subject: Re: Questions regarding failure in the last IO path in multipath
+
 
 On Fri, June 26, 2009 10:30 am, Ron Lai wrote:
 > Hi,
