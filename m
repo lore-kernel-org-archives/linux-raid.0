@@ -1,66 +1,35 @@
-From: "Tirumala Reddy Marri" <tmarri@amcc.com>
-Subject: Strange issue with async_xor
-Date: Fri, 26 Jun 2009 11:34:58 -0700
-Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C07A31CA0@SDCEXCHANGE01.ad.amcc.com>
+From: koti <koti.here.4u@gmail.com>
+Subject: Request on MD Driver
+Date: Fri, 26 Jun 2009 18:46:15 +0000 (UTC)
+Message-ID: <loom.20090626T183850-511@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-All,
-  I am using not open sourced(will open source it in future)ADMA driver
-for PowerPC procerror.  I tried to upgrade to newer kernel to get all
-latest MD and async changes. I see  some arguments are messed up between
-do_async_xor() and ppc4xx_adma_prep_dma_mq_xor(). From the code I see
-same number of arguments. But when I step through debugger src_cnt & len
-arguments got corrupted. Is anything changed with async_xor() or
-dmaengine.c ?
-I Looked at Dan williams driver and everything looks ok. Any ideas ?
+Hi All,
 
-Regards,
-Marri
+    I am very much interested to analyze the kernel code for MD driver, and 
+need to work in RAID5/6 levels, so can body suggest good articles to analyze 
+the code flow in linux kernel for MD driver.
+
+    While analyzing the md/raid5.c file I have some confusions like:
+
+1) Where we use all bitmap_list, handle_list, inactive_list, hold_list, 
+delayed_list.
+2) What exactly the stripe_head contains, where it is allocated and how the 
+request submitted in asynchronous case.
+3) Where the stripe_head freed.
+
+   Any good books to follow (available in India is better for me).
+
+   Any reply for this is very much helpful for my further work.
 
 
-(gdb)  bt
-#0  ppc460ex_adma_prep_dma_mq_xor (chan=0xdd61c4a4, dst=0x5af7, src=0x0,
-src_cnt=492167168, len=3714768144, flags=3) at
-drivers/dma/ppc460ex-adma.c:3113
-#1  0xc01196e4 in async_xor (dest=<value optimized out>,
-src_list=0xdd6addbc, offset=<value optimized out>, src_cnt=3, len=4096, 
-    flags=ASYNC_TX_XOR_ZERO_DST, depend_tx=0x0, cb_fn=0xc01e42a8
-<ops_complete_compute>, cb_param=0xd8986000) at
-crypto/async_tx/async_xor.c:93
-#2  0xc01e4bac in ops_run_compute5 (sh=<value optimized out>) at
-drivers/md/raid5.c:641
-#3  0xc01e6240 in raid_run_ops (sh=0xd8986000, ops_request=2) at
-drivers/md/raid5.c:1147
-#4  0xc01e6734 in handle_stripe5 (sh=0xd8986000) at
-drivers/md/raid5.c:2945
-#5  0xc01e786c in handle_stripe (sh=0xdd61c4a4, tmp_page=0x5af7) at
-drivers/md/raid5.c:3233
-#6  0xc01e8a44 in raid5d (mddev=0xdd74e800) at drivers/md/raid5.c:4082
-#7  0xc01f4908 in md_thread (arg=<value optimized out>) at
-drivers/md/md.c:5295
-#8  0xc00386c8 in kthread (_create=<value optimized out>) at
-kernel/kthread.c:83
-#9  0xc000da8c in kernel_thread ()
-Backtrace stopped: previous frame inner to this frame (corrupt stack?)
-(gdb) p *src_list
-No symbol "src_list" in current context.
-(gdb) f 1
-#1  0xc01196e4 in async_xor (dest=<value optimized out>,
-src_list=0xdd6addbc, offset=<value optimized out>, src_cnt=3, len=4096, 
-    flags=ASYNC_TX_XOR_ZERO_DST, depend_tx=0x0, cb_fn=0xc01e42a8
-<ops_complete_compute>, cb_param=0xd8986000) at
-crypto/async_tx/async_xor.c:93
-93                      tx = dma->device_prep_dma_xor(chan, dma_dest,
-&dma_src[src_off],
-(gdb) p *src_list
-$13 = (struct page *) 0xe
-(gdb)
+Thanks inadvance,
+Koti
+
+
