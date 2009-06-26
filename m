@@ -1,136 +1,137 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Readding a drive fails because of wrong size?
-Date: Fri, 26 Jun 2009 10:34:33 +1000 (EST)
-Message-ID: <9be1aac09da53367651c62b7de9b668a.squirrel@neil.brown.name>
-References: <4A43C8C7.7000209@canbytel.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: RAID-5 creation crashes when files system installed while
+	recovery going on
+Date: Thu, 25 Jun 2009 18:25:36 -0700
+Message-ID: <e9c3a7c20906251825i14c735f9kb5ddd7fe0d50d655@mail.gmail.com>
+References: <AC5E1C3367E37D44970B81A6ADD1DA2C0797AC80@SDCEXCHANGE01.ad.amcc.com>
+	 <a5f578de750a09c145f5d4f50e90a4f8.squirrel@neil.brown.name>
+	 <AC5E1C3367E37D44970B81A6ADD1DA2C0534ABE5@SDCEXCHANGE01.ad.amcc.com>
+	 <a765142d3b99baf3edb3da397b2ee350.squirrel@neil.brown.name>
+	 <AC5E1C3367E37D44970B81A6ADD1DA2C07A318FD@SDCEXCHANGE01.ad.amcc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A43C8C7.7000209@canbytel.com>
+In-Reply-To: <AC5E1C3367E37D44970B81A6ADD1DA2C07A318FD@SDCEXCHANGE01.ad.amcc.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Scott Baker <bakers@canbytel.com>
-Cc: linux-raid@vger.kernel.org
+To: Tirumala Reddy Marri <tmarri@amcc.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, June 26, 2009 4:58 am, Scott Baker wrote:
-> I have a four disk RAID5 array, and one of the HDs got removed from the
-> array. All four drives are identical in size and partitioning.
->
-> --------------------------------------------------------------------------
->
-> Disk /dev/sdc: 500.1 GB, 500107862016 bytes
-> 255 heads, 63 sectors/track, 60801 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
->
->     Device Boot      Start         End      Blocks   Id  System
-> /dev/sdc1               1       60801   488384032   fd  Linux raid
-> autodetect
->
-> Disk /dev/sdd: 500.1 GB, 500107862016 bytes
-> 255 heads, 63 sectors/track, 60801 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
->
->     Device Boot      Start         End      Blocks   Id  System
-> /dev/sdd1               1       60801   488384032   fd  Linux raid
-> autodetect
->
-> Disk /dev/sde: 500.1 GB, 500107862016 bytes
-> 255 heads, 63 sectors/track, 60801 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
->
->     Device Boot      Start         End      Blocks   Id  System
-> /dev/sde1               1       60801   488384032   fd  Linux raid
-> autodetect
->
-> Disk /dev/sdf: 500.1 GB, 500107862016 bytes
-> 255 heads, 63 sectors/track, 60801 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
->
->     Device Boot      Start         End      Blocks   Id  System
-> /dev/sdf1               1       60801   488384032   fd  Linux raid
-> autodetect
->
-> --------------------------------------------------------------------------
->
-> /dev/sde1 needs to get added back into the array, the other three drives
-> are fine.
->
-> --------------------------------------------------------------------------
->
-> /dev/md8:
->          Version : 00.90.03
->    Creation Time : Fri Oct 26 16:00:51 2007
->       Raid Level : raid5
->       Array Size : 1465151808 (1397.28 GiB 1500.32 GB)
->    Used Dev Size : 488383936 (465.76 GiB 500.11 GB)
->     Raid Devices : 4
->    Total Devices : 3
-> Preferred Minor : 8
->      Persistence : Superblock is persistent
->
->      Update Time : Thu Jun 25 11:27:31 2009
->            State : clean, degraded
->   Active Devices : 3
-> Working Devices : 3
->   Failed Devices : 0
->    Spare Devices : 0
->
->           Layout : left-symmetric
->       Chunk Size : 64K
->
->             UUID : 44c3189a:58ffab82:c2c79482:d044a0fb
->           Events : 0.218148
->
->      Number   Major   Minor   RaidDevice State
->         0       8       33        0      active sync   /dev/sdc1
->         1       8       49        1      active sync   /dev/sdd1
->         2       0        0        2      removed
->         3       8       81        3      active sync   /dev/sdf1
->
-> --------------------------------------------------------------------------
->
-> But when I try and add it to the array it gives me a array that the
-> partition isn't big enough? Nothing has changed, I haven't formatted or
-> anything. All I did was replace a SATA cable and now I can't add that
-> drive
-> back to the array? This server is running CentOS 5.3 with all the updates.
->
+On Wed, Jun 24, 2009 at 4:45 PM, Tirumala Reddy Marri<tmarri@amcc.com> =
+wrote:
+> Hi Dan,
+> =A0 I am suspecting that ADMA driver has all the XOR operations queue=
+d up
+> for processing and file-system mount is not waiting till ADMA finishe=
+s
+> all the requests. Is this working fine on Intel IO-Processor ?
 
-Very strange - I cannot explain this at all.
-What does
-  blockdev --getsz /dev/sde1
-show?
-Can you
-  strace -o /tmp/str mdadm /dev/md8 --add /dev/sde1
-and post "/tmp/str" ??
+Yes, this works fine on iop13xx with 2.6.30, see the log below.  Check
+to see if your driver can run dmatest (CONFIG_DMATEST).  Make sure
+CONFIG_NET_DMA=3Dn and the raid456 module is not loaded, otherwise
+dmatest will not be able to acquire the channels.
 
-> --------------------------------------------------------------------------
->
-> :./mdadm /dev/md8 --add /dev/sde1
-> mdadm: /dev/sde1 not large enough to join array
->
-> root@white(/tmp/mdadm-2.6.9)
-> :mdadm --version
-> mdadm - v2.6.4 - 19th October 2007
+Regards,
+Dan
 
-It looks like you have downloaded mdadm-2.6.9 and maybe even
-compiled it.  Did you try it?
-  cd /tmp/mdadm-2.6.9
-  make
-  ./mdadm /dev/md0 --add /dev/sde1
-??
+iq81340mc:~# mdadm --create /dev/md0 /dev/sd[a-d] -n 4 -l 5
+md: bind<sda>
+md: bind<sdb>
+md: bind<sdc>
+md: bind<sdd>
+raid5: device sdc operational as raid disk 2
+raid5: device sdb operational as raid disk 1
+raid5: device sda operational as raid disk 0
+raid5: allocated 4208kB for md0
+raid5: raid level 5 set md0 active with 3 out of 4 devices, algorithm 2
+RAID5 conf printout:
+ --- rd:4 wd:3
+ disk 0, o:1, dev:sda
+ disk 1, o:1, dev:sdb
+ disk 2, o:1, dev:sdc
+RAID5 conf printout:
+ --- rd:4 wd:3
+ disk 0, o:1, dev:sda
+ disk 1, o:1, dev:sdb
+ disk 2, o:1, dev:sdc
+ disk 3, o:1, dev:sdd
+md0: detected capacity change from 0 to 240078815232
+ md0:<6>md: recovery of RAID array md0
+md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+md: using maximum available idle IO bandwidth (but not more than
+200000 KB/sec) for recovery.
+md: using 128k window, over a total of 78150656 blocks.
+ unknown partition table
+mdadm: array /dev/md/0 started.
+iq81340mc:~# mkfs /dev/md0
+mke2fs 1.40-WIP (14-Nov-2006)
+=46ilesystem label=3D
+OS type: Linux
+Block size=3D4096 (log=3D2)
+=46ragment size=3D4096 (log=3D2)
+29310976 inodes, 58612992 blocks
+2930649 blocks (5.00%) reserved for the super user
+=46irst data block=3D0
+Maximum filesystem blocks=3D0
+1789 block groups
+32768 blocks per group, 32768 fragments per group
+16384 inodes per group
+Superblock backups stored on blocks:
+        32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, =
+2654208,
+        4096000, 7962624, 11239424, 20480000, 23887872
+Writing superblocks and filesystem accounting information: done
 
-NeilBrown
+This filesystem will be automatically checked every 24 mounts or
+180 days, whichever comes first.  Use tune2fs -c or -i to override.
+iq81340mc:~# cat /proc/interrupts
+           CPU0
+  0:       6929   IOP13xx-1  iop-adma
+  1:     301173   IOP13xx-1  iop-adma
+  2:     186895   IOP13xx-1  iop-adma
+  3:     187957   IOP13xx-1  iop-adma
+  4:          0   IOP13xx-1  iop-adma
+  5:          5   IOP13xx-1  iop-adma
+  8:      18175   IOP13xx-1  IOP Timer Tick
+ 10:          0   IOP13xx-1  IOP3xx-I2C
+ 11:          0   IOP13xx-1  IOP3xx-I2C
+ 25:     127234   IOP13xx-1  sata_vsc
+ 26:      31572   IOP13xx-1  eth0
+ 52:       3937   IOP13xx-2  serial
+ 57:          0   IOP13xx-2  iop-adma
+ 58:          0   IOP13xx-2  iop-adma
+ 59:          0   IOP13xx-2  iop-adma
+ 96:          0   IOP13xx-4  IOP3xx-I2C
+Err:          0
 
-
->
-> --------------------------------------------------------------------------
->
-> HELP!
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
+iq81340mc:~# fsck /dev/md0
+fsck 1.40-WIP (14-Nov-2006)
+e2fsck 1.40-WIP (14-Nov-2006)
+/dev/md0: clean, 12/29310976 files, 960553/58612992 blocks
+iq81340mc:~# mdadm --fail /dev/md0 /dev/sdd
+raid5: Disk failure on sdd, disabling device.
+raid5: Operation continuing on 3 devices.
+md: md0: recovery done.
+mdadm: set /dev/sdd faulty in /dev/md0
+RAID5 conf printout:
+ --- rd:4 wd:3
+ disk 0, o:1, dev:sda
+ disk 1, o:1, dev:sdb
+ disk 2, o:1, dev:sdc
+ disk 3, o:0, dev:sdd
+RAID5 conf printout:
+ --- rd:4 wd:3
+ disk 0, o:1, dev:sda
+ disk 1, o:1, dev:sdb
+ disk 2, o:1, dev:sdc
+iq81340mc:~# echo 3 > /proc/sys/vm/drop_caches
+iq81340mc:~# fsck /dev/md0
+fsck 1.40-WIP (14-Nov-2006)
+e2fsck 1.40-WIP (14-Nov-2006)
+/dev/md0: clean, 12/29310976 files, 960553/58612992 blocks
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
