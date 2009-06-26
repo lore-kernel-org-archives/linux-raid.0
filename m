@@ -1,48 +1,43 @@
-From: Molinero <marianne@masu.dk>
-Subject: device with newer data added as spare - data now gone?
-Date: Fri, 26 Jun 2009 04:46:54 -0700 (PDT)
-Message-ID: <24218843.post@talk.nabble.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [dm-devel] REQUEST for new 'topology' metrics to be moved out  of the 'queue' sysfs directory.
+Date: Fri, 26 Jun 2009 21:58:29 +1000
+Message-ID: <19012.47077.328965.919868@notabene.brown>
+References: <19010.62951.886231.96622@notabene.brown>
+	<yq11vp8spxo.fsf@sermon.lab.mkp.net>
+	<125b48b7ffc99a496fbdd512f38cada5.squirrel@neil.brown.name>
+	<yq1k530qkm7.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: message from Martin K. Petersen on Thursday June 25
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, device-mapper development <dm-devel@redhat.com>
 List-Id: linux-raid.ids
 
+On Thursday June 25, martin.petersen@oracle.com wrote:
+> >>>>> "Neil" == NeilBrown  <neilb@suse.de> writes:
+> 
+> And just to make it clear: I completely agree with your argument that
+> which knob to choose is I/O size dependent.  My beef with your proposal
+> is that I believe the length of the list should be 2.
 
-Hi all
+0, 1, or infinity are the only credible sizes for this sort of list.
 
-I've lost quite a lot of data on my /home raid partition and I'm wondering
-what exactly I did to make it happen. I'd like to know so something similar
-won't happen in the future.
+However I feel I've written enough on this particular issue (the
+particular meaning of the various fields, not the directory location
+which I still feel strongly about).
 
-I'm pretty much a raid newbie. I setup raid1 on my home server and I'm
-guessing that something like this happened. Please tell me if it's possible.
+Providing the fields are clearly and unambiguously documented so that
+it I can use the documentation to verify the implementation (in md at
+least), I will be satisfied.  And if the names of the files actually
+match the documented meaning (so e.g. s/io/write/) I might even be
+happy.
 
-* Some time ago I did something to have one device fail which resulted md3
-in having only 1 device.
-* Time went by without me noticing (because I suck)
-* An update broke my raid setup and gave me a kernel panic (because I suck).
-Didn't put the mdadm and raid hooks in mkinitcpio.conf
-* Booted a live-cd, mounted the drives and chrooted back into the system and
-fixed the mkinitcpio.conf
-* Rebooted and noticed that md3 was running with only 1 device
-* Added sdb4 to md3 and it then read 1 device with 1 spare
-* cat /proc/mdstat started to say "recovery"
-* All data from approx. 1 year is gone
+I'm looking forward to seeing how you justify the name
+"physical_block_size" in a way the encompasses possibilities like a
+device that stripes over a heterogeneous set of disk drives ;-)
 
-I guessing that the old (not updated) device was set as "master" and the
-data on the drive (containing newer data) was overwritten by data on the old
-device - is this plausible?
-
-If not what exactly did I do to delete all of the data? 
-
-It's not the end of the world but it does suck a lot - especially some email
-and pictures are gone that I will miss.
-
-Any clarifications will be much appreciated.
--- 
-View this message in context: http://www.nabble.com/device-with-newer-data-added-as-spare---data-now-gone--tp24218843p24218843.html
-Sent from the linux-raid mailing list archive at Nabble.com.
-
+Thanks,
+NeilBrown
