@@ -1,32 +1,23 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
 Subject: Re: Adding a smaller drive
-Date: Sun, 28 Jun 2009 19:43:25 -0400
-Message-ID: <yq1skhjzzz6.fsf@sermon.lab.mkp.net>
-References: <20090628194705152.ITZI24524@cdptpa-omta02.mail.rr.com>
-	<yq1eit411s4.fsf@sermon.lab.mkp.net>
-	<alpine.DEB.1.10.0906290029410.5467@uplift.swm.pp.se>
-	<yq11vp40y79.fsf@sermon.lab.mkp.net>
-	<alpine.DEB.1.10.0906290134450.5467@uplift.swm.pp.se>
+Date: Mon, 29 Jun 2009 00:54:57 +0100
+Message-ID: <4A4802D1.4080305@anonymous.org.uk>
+References: <20090628194705152.ITZI24524@cdptpa-omta02.mail.rr.com> <yq1eit411s4.fsf@sermon.lab.mkp.net> <alpine.DEB.1.10.0906290029410.5467@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0906290134450.5467@uplift.swm.pp.se> (Mikael
-	Abrahamsson's message of "Mon, 29 Jun 2009 01:37:12 +0200 (CEST)")
+In-Reply-To: <alpine.DEB.1.10.0906290029410.5467@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
 To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, lrhorer@satx.rr.com, linux-raid@vger.kernel.org
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->>>>> "Mikael" == Mikael Abrahamsson <swmike@swm.pp.se> writes:
+On 28/06/2009 23:33, Mikael Abrahamsson wrote:
+> (2TB ones have 3907029168 sectors, the 1TB ones have 1953103872).
 
-Mikael> On Sun, 28 Jun 2009, Martin K. Petersen wrote:
->> Which model is this?
+Those 1TB ones are under 1TB: they have 999989182464 bytes.
 
-Mikael> WD10EACS.
+Cheers,
 
-Weird.  The data sheet even lists the right (IDEMA) value:
-
-http://www.wdc.com/en/products/productspecs.asp?driveid=336#jump24
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+John.
