@@ -1,39 +1,28 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
 Subject: Re: Adding a smaller drive
-Date: Sun, 28 Jun 2009 18:51:06 -0400
-Message-ID: <yq11vp40y79.fsf@sermon.lab.mkp.net>
-References: <20090628194705152.ITZI24524@cdptpa-omta02.mail.rr.com>
-	<yq1eit411s4.fsf@sermon.lab.mkp.net>
-	<alpine.DEB.1.10.0906290029410.5467@uplift.swm.pp.se>
+Date: Sun, 28 Jun 2009 23:52:40 +0100
+Message-ID: <4A47F438.4070905@anonymous.org.uk>
+References: <20090628212227029.KYDP20969@cdptpa-omta01.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0906290029410.5467@uplift.swm.pp.se> (Mikael
-	Abrahamsson's message of "Mon, 29 Jun 2009 00:33:55 +0200 (CEST)")
+In-Reply-To: <20090628212227029.KYDP20969@cdptpa-omta01.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, lrhorer@satx.rr.com, linux-raid@vger.kernel.org
+To: lrhorer@satx.rr.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Mikael" == Mikael Abrahamsson <swmike@swm.pp.se> writes:
+On 28/06/2009 22:22, Leslie Rhorer wrote:
+> 	I'm not confidant of that presumption.  I would not be surprised in
+> the least if some manufacturer produced a 1T drive with an actual 999.8G
 
-Mikael> The 2TB WD GP drives have less sectors than their 2x their 1TB
-Mikael> drives.
+If they did that, they'd be lying in describing it as a 1TB drive. I 
+wish they'd be more honest in the first place and sell them as 931GiB 
+drives, or make real 1TiB drives, but the marketing literature does at 
+least explain their definition of TB, GB etc.
 
-That's how it's supposed to be.
+Cheers,
 
+John.
 
-Mikael> The 2TB ones adhere to the IDEMA standard (per your other
-Mikael> email), but the 1TB ones do not. (2TB ones have 3907029168
-Mikael> sectors, the 1TB ones have 1953103872).
-
-That, on the other hand, is pretty weird.  Call the capacity police!
-
-I have two 500GB WDC GP drives in a machine in the lab and they report
-the correct IDEMA size.  But other than that I don't have any WDC drives
-that I check.
-
-Which model is this?
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
