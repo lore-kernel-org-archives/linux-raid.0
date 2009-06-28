@@ -1,51 +1,51 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: bug in asyn_xor() function
-Date: Sun, 28 Jun 2009 09:50:36 -0700
-Message-ID: <4A479F5C.10208@intel.com>
-References: <AC5E1C3367E37D44970B81A6ADD1DA2C0534ABEC@SDCEXCHANGE01.ad.amcc.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Write intent bitmaps
+Date: Sun, 28 Jun 2009 13:14:23 -0500
+Message-ID: <20090628181428746.EXYX19511@cdptpa-omta03.mail.rr.com>
+References: <19002.62697.475588.28776@notabene.brown>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AC5E1C3367E37D44970B81A6ADD1DA2C0534ABEC@SDCEXCHANGE01.ad.amcc.com>
+In-Reply-To: <19002.62697.475588.28776@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tirumala Reddy Marri <tmarri@amcc.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: 'Neil Brown' <neilb@suse.de>, 'Carlos Carvalho' <carlos@fisica.ufpr.br>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Tirumala Reddy Marri wrote:
->  
-> Looks like there is bug in the do_async_xor() function where" dma_addr_t 
-> *dma_src = (dma_addr_t *) src_list;" causing corrupting source 
-> addresses.  And dma_src is being modified in the for loop. This should 
-> be something like dma_addr_t dma_src[src_cnt].
+> >  >5. What happens if the bitmap is lost or the external drive fills up?
+> >
+> > No idea.
+> 
+> If the bitmap is lost, it is just as though you didn't have a bitmap
+> (or as though all the bits in the bitmap were set to one).
 
-As you can see from the comment to async_xor:
+	OK, what about the thread in this list where (as I recall) the
+fellow's bitmap was corrupted or lost and it evidently caused the entire
+array to go splat?  That's worrisome.
 
-"@src_list: array of source pages (if the dest is also a source it must 
-be at index zero).  The contents of this array may be overwritten."
+> The drive filling up is not relevant.  When the bitmap is in a
+> separate file, the file is preallocated to be the right size.
 
-...and the comment in async_xor_init:
-/* To conserve stack space the input src_list (array of page pointers)
-  * is reused to hold the array of dma addresses passed to the driver.
-  * This conversion is only possible when dma_addr_t is less than the
-  * the size of a pointer.  HIGHMEM64G is known to violate this
-  * assumption.
-  */
+	Let me take a little different tack.  I don't have any ext2 or ext3
+file systems on the server.  If I am going to set up an external bitmap, I
+am going to have to steal some space from one of the other file systems -
+perhaps from the swap area (5G), the boot file system (reiserfs - 109G), or
+the Windows XP filesystem (NTFS - 40G).  I need to be able to calculate how
+much space to steal to fit the bitmap, and allow for later expansion.
 
-...this is deliberate, not ideal, but deliberate.  The reasoning is to 
-avoid stack overflows for arbitrarily large arrays, so we reuse the 
-input source list to perform address conversions.  This also happens in 
-the non-accelerated case to perform page_address() conversions.  As a 
-part of the raid6 work [1] this will be changed to a preallocated 
-'scribble' buffer to preserve in the input parameters.
+> >  >If so, would ext2 probably be the best choice?
+> >
+> > That's what the man page says. I find it strange since if it's a file
+> > the filesystem shouldn't matter. Neil?
+> 
+> The way that md writes to the bitmap file is not entirely portable
+> across different filesystems.  As the man page say,  it is known to
+> work for ext2 and ext3.  Either is a fine choice.
 
---
-Dan
+	I'm fine with shrinking one of the existing file systems and
+creating a tiny partition just for the bitmap.
 
-[1] git.kernel.org/pub/scm/linux/kernel/git/djbw/async_tx.git raid6
-
-I just noticed the documentation in 
-Documentation/crypto/async-tx-api.txt does not reflect this 
-constraint... will fix.
 
