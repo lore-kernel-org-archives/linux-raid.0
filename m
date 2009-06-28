@@ -1,88 +1,44 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: device with newer data added as spare - data now gone?
-Date: Sun, 28 Jun 2009 14:04:54 -0500
-Message-ID: <20090628190459297.FVMV19511@cdptpa-omta03.mail.rr.com>
-References: <24218843.post@talk.nabble.com>
-Reply-To: <lrhorer@satx.rr.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Adding a smaller drive
+Date: Sun, 28 Jun 2009 20:05:14 +0100
+Message-ID: <4A47BEEA.3080608@anonymous.org.uk>
+References: <20090628183111280.HTRN20969@cdptpa-omta01.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <24218843.post@talk.nabble.com>
+In-Reply-To: <20090628183111280.HTRN20969@cdptpa-omta01.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: lrhorer@satx.rr.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Hi all
-> 
-> I've lost quite a lot of data on my /home raid partition and I'm wondering
-> what exactly I did to make it happen. I'd like to know so something
-> similar
-> won't happen in the future.
+On 28/06/2009 19:31, Leslie Rhorer wrote:
+> 	I have a few questions.  Some RAID implementations will simply
+> refuse to create or grow an array if all the targets are not precisely the
+> same size.  Clearly this is not the case for mdadm.  Not all drives of a
+> given "size" are actually precisely the same size, however, and I am using
+> unpartitioned drives for my RAID systems.  What happens if I add a drive
+> whose apparent physical size is a bit smaller than the device size used to
+> create the array?
 
-	Well, first of all, of course learning from your mistakes will
-prevent them from happening in the future.  If you ask me, a second very
-important utility to enable is mdadm's ability to notify you via e-mail
-whenever a significant event transpires.  You will then be notified quickly
-of any significant changes to any RAID array, such as losing a hard drive.
+For RAID 4/5/6, I think it'll be refused. You have to shrink the 
+filesystem, and LVM if you use it, then the array, so the used size is 
+no bigger than the new drive - as you've noted, md doesn't mind if it 
+doesn't use all the available space on its constituent devices. If it's 
+a small reduction, as I imagine it would be, and your filesystem 
+supports shrinking, it won't take long to do the the shrinks. Then 
+adding the new drive will be painless. If your filesystem won't shrink - 
+and some (many?) won't - I suspect you're scuppered.
 
-	Finally, more important than anything else: BACK UP YOUR IMPORTANT
-DATA.  If it is data that can be recovered through some external process,
-but takes a bit of doing, back it up once, and keep it handy.  A different
-drive or array on the same machine or a different machine in the same room
-is fine for this level of backup.  If it is data that cannot be recovered
-and would cause some heartache if lost, then include it in the local handy
-backup, but also include it in an off-premise backup.  If it is critical
-data - like financial information, then back it up 16 ways from Sunday.  I
-keep all critical data backed up on two different servers with independent
-RAID arrays, DVD-ROM backups offsite, and independent multi-generation
-backups on every workstation which accesses the data.  If it is a commercial
-application and the revenue supports it, or if it is important enough to you
-and you can personally afford it, I suggest you might look into an online
-storage solution.
+It has to be that way because md can't (currently?) tell whatever's 
+layered over it to change itself (though I think (guess) that to some 
+extent this may change at some point in the future with some of the 
+topology stuff that's been discussed here recently).
 
-	Remember, RAID arrays are fault tolerant, not fault-free, and while
-hard drives are frail, the most likely source of data failure by far is user
-error.
+I don't know what RAID 0/1/10 would do but I imagine they'd be the same.
 
-> * Some time ago I did something to have one device fail which resulted md3
-> in having only 1 device.
+Cheers,
 
-	I presume md3 is the /home array and this was a 2 drive RAID1 array,
-yes?
-
-> * Time went by without me noticing (because I suck)
-
-	See above.  We human beings all tend to suck from time to time.
-Computers can help by reminding or notifying us of things - if we bother to
-set them up to do so.
-
-> * An update broke my raid setup and gave me a kernel panic (because I
-> suck).
-> Didn't put the mdadm and raid hooks in mkinitcpio.conf
-> * Booted a live-cd, mounted the drives and chrooted back into the system
-> and
-> fixed the mkinitcpio.conf
-
-	This all sounds like lessons learned.
-
-> * Rebooted and noticed that md3 was running with only 1 device
-> * Added sdb4 to md3 and it then read 1 device with 1 spare
-> * cat /proc/mdstat started to say "recovery"
-> * All data from approx. 1 year is gone
-
-	Was sdb4 originally the second partition in the array?  What is the
-first partition?  What was the apparent cause of the failure?
-
-> I guessing that the old (not updated) device was set as "master" and the
-> data on the drive (containing newer data) was overwritten by data on the
-> old
-> device - is this plausible?
-
-	Well, I suppose, yeah.
-
-> If not what exactly did I do to delete all of the data?
-
-	What command did you use to add the partition back to the array?
+John.
 
