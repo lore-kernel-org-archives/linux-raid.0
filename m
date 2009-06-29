@@ -1,28 +1,72 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Adding a smaller drive
-Date: Mon, 29 Jun 2009 02:02:21 +0200 (CEST)
-Message-ID: <alpine.DEB.1.10.0906290158190.5467@uplift.swm.pp.se>
-References: <20090628194705152.ITZI24524@cdptpa-omta02.mail.rr.com> <yq1eit411s4.fsf@sermon.lab.mkp.net> <alpine.DEB.1.10.0906290029410.5467@uplift.swm.pp.se> <4A4802D1.4080305@anonymous.org.uk>
+From: "Tirumala Reddy Marri" <tmarri@amcc.com>
+Subject: RE: bug in asyn_xor() function
+Date: Sun, 28 Jun 2009 23:51:19 -0700
+Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C07A31D8D@SDCEXCHANGE01.ad.amcc.com>
+References: <AC5E1C3367E37D44970B81A6ADD1DA2C0534ABEC@SDCEXCHANGE01.ad.amcc.com> <4A479F5C.10208@intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A4802D1.4080305@anonymous.org.uk>
+Content-class: urn:content-classes:message
+In-Reply-To: <4A479F5C.10208@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 29 Jun 2009, John Robinson wrote:
+Thanks for the response. I see two extra arguments being passed to 
+tx = dma->device_prep_dma_xor(chan, dma_dest, &dma_src[src_off],
+xor_src_cnt, len, dma_flags);.
+When actual function started executing it sees 2 more arguments. 
 
-> On 28/06/2009 23:33, Mikael Abrahamsson wrote:
->> (2TB ones have 3907029168 sectors, the 1TB ones have 1953103872).
->
-> Those 1TB ones are under 1TB: they have 999989182464 bytes.
+Thanks,
+Marri
 
-If I use smartctl instead of using fdisk after 3ware superblock, it says:
 
-Device Model:     WDC WD10EACS-00ZJB0
-User Capacity:    1,000,204,886,016 bytes
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+-----Original Message-----
+From: Dan Williams [mailto:dan.j.williams@intel.com] 
+Sent: Sunday, June 28, 2009 9:51 AM
+To: Tirumala Reddy Marri
+Cc: linux-raid@vger.kernel.org
+Subject: Re: bug in asyn_xor() function
+
+Tirumala Reddy Marri wrote:
+>  
+> Looks like there is bug in the do_async_xor() function where"
+dma_addr_t 
+> *dma_src = (dma_addr_t *) src_list;" causing corrupting source 
+> addresses.  And dma_src is being modified in the for loop. This should
+
+> be something like dma_addr_t dma_src[src_cnt].
+
+As you can see from the comment to async_xor:
+
+"@src_list: array of source pages (if the dest is also a source it must 
+be at index zero).  The contents of this array may be overwritten."
+
+...and the comment in async_xor_init:
+/* To conserve stack space the input src_list (array of page pointers)
+  * is reused to hold the array of dma addresses passed to the driver.
+  * This conversion is only possible when dma_addr_t is less than the
+  * the size of a pointer.  HIGHMEM64G is known to violate this
+  * assumption.
+  */
+
+...this is deliberate, not ideal, but deliberate.  The reasoning is to 
+avoid stack overflows for arbitrarily large arrays, so we reuse the 
+input source list to perform address conversions.  This also happens in 
+the non-accelerated case to perform page_address() conversions.  As a 
+part of the raid6 work [1] this will be changed to a preallocated 
+'scribble' buffer to preserve in the input parameters.
+
+--
+Dan
+
+[1] git.kernel.org/pub/scm/linux/kernel/git/djbw/async_tx.git raid6
+
+I just noticed the documentation in 
+Documentation/crypto/async-tx-api.txt does not reflect this 
+constraint... will fix.
+
