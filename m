@@ -1,48 +1,42 @@
 From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Write intent bitmaps
-Date: Mon, 29 Jun 2009 12:01:13 +0200
-Message-ID: <87my7r1hqu.fsf@frosties.localdomain>
-References: <20090628181428746.EXYX19511@cdptpa-omta03.mail.rr.com>
+Subject: Re: Adding a smaller drive
+Date: Mon, 29 Jun 2009 12:05:11 +0200
+Message-ID: <87iqif1hk8.fsf@frosties.localdomain>
+References: <20090628212227029.KYDP20969@cdptpa-omta01.mail.rr.com>
+	<4A47F438.4070905@anonymous.org.uk>
+	<4A47F7B9.3040003@anonymous.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090628181428746.EXYX19511@cdptpa-omta03.mail.rr.com> (Leslie
-	Rhorer's message of "Sun, 28 Jun 2009 13:14:23 -0500")
+In-Reply-To: <4A47F7B9.3040003@anonymous.org.uk> (John Robinson's message of
+	"Mon, 29 Jun 2009 00:07:37 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: lrhorer@satx.rr.com
-Cc: 'Neil Brown' <neilb@suse.de>, 'Carlos Carvalho' <carlos@fisica.ufpr.br>, linux-raid@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: lrhorer@satx.rr.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-"Leslie Rhorer" <lrhorer@satx.rr.com> writes:
+John Robinson <john.robinson@anonymous.org.uk> writes:
 
->> >  >5. What happens if the bitmap is lost or the external drive fills up?
->> >
->> > No idea.
->> 
->> If the bitmap is lost, it is just as though you didn't have a bitmap
->> (or as though all the bits in the bitmap were set to one).
+> On 28/06/2009 23:52, John Robinson wrote:
+>> On 28/06/2009 22:22, Leslie Rhorer wrote:
+>>>     I'm not confidant of that presumption.  I would not be surprised in
+>>> the least if some manufacturer produced a 1T drive with an actual 999.8G
+>>
+>> If they did that, they'd be lying in describing it as a 1TB drive. I
+>> wish they'd be more honest in the first place and sell them as
+>> 931GiB drives, or make real 1TiB drives, but the marketing
+>> literature does at least explain their definition of TB, GB etc.
 >
-> 	OK, what about the thread in this list where (as I recall) the
-> fellow's bitmap was corrupted or lost and it evidently caused the entire
-> array to go splat?  That's worrisome.
+> Maybe it wouldn't be lying if they redefined 1KB to be 998 bytes. I
+> vaguely recall there being an xkcd strip suggesting something
+> similar...
 >
->> The drive filling up is not relevant.  When the bitmap is in a
->> separate file, the file is preallocated to be the right size.
+> Cheers,
 >
-> 	Let me take a little different tack.  I don't have any ext2 or ext3
-> file systems on the server.  If I am going to set up an external bitmap, I
-> am going to have to steal some space from one of the other file systems -
-> perhaps from the swap area (5G), the boot file system (reiserfs - 109G), or
-> the Windows XP filesystem (NTFS - 40G).  I need to be able to calculate how
-> much space to steal to fit the bitmap, and allow for later expansion.
+> John.
 
-That is pretty flexible and the size is miniscule. For example my big
-raid5 with internal bitmap has
-
-      bitmap: 0/233 pages [0KB], 2048KB chunk
-
-That is slightly less than 1MB. With 512MB bitmap I could do 4KB
-chunks but from a few tests a larger chunk size is better for me.
+At least on some drives they actually say
+1.000.xxx.xxx kilo bytes.
 
 MfG
         Goswin
