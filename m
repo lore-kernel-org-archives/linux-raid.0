@@ -1,54 +1,67 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: What will happen with spares in this scenario?
-Date: Tue, 30 Jun 2009 19:54:58 +0200
-Message-ID: <87d48l8v4d.fsf@frosties.localdomain>
-References: <ab50889f0906290828s44e10b14n1af6d23556e3f0ee@mail.gmail.com>
-	<87zlbruinb.fsf@frosties.localdomain>
-	<BD450977-FA0D-4F63-8ADB-1314FA43E654@googlemail.com>
-	<87r5x2xs7i.fsf@frosties.localdomain>
-	<ab50889f0906300116p42b48afnf1605ea1e8cdf60c@mail.gmail.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: Adding a smaller drive
+Date: Tue, 30 Jun 2009 14:22:20 -0400
+Message-ID: <87f94c370906301122p404c5cbcg61a8dfa81ee78594@mail.gmail.com>
+References: <20090628194705152.ITZI24524@cdptpa-omta02.mail.rr.com>
+	 <4A4A4506.1070003@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ab50889f0906300116p42b48afnf1605ea1e8cdf60c@mail.gmail.com>
-	(John McNulty's message of "Tue, 30 Jun 2009 09:16:09 +0100")
+In-Reply-To: <4A4A4506.1070003@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John McNulty <johnmcn1@googlemail.com>
+To: Bill Davidsen <davidsen@tmr.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-John McNulty <johnmcn1@googlemail.com> writes:
-
-> On Tue, Jun 30, 2009 at 5:26 AM, Goswin von Brederlow<goswin-v-b@web.de> wrote:
+On Tue, Jun 30, 2009 at 1:01 PM, Bill Davidsen<davidsen@tmr.com> wrote:
+> Leslie Rhorer wrote:
+>>>>
+<snip>
+>> =A0 =A0 =A0 =A0I may have to rethink my position on using raw drives=
+=2E =A0If I
+>> partition the drives, I can make the partition a bit smaller than th=
+e
+>> whole
+>> drive, allowing for the addition of a future drive whose size is a b=
+it
+>> off.
+>> I hate to waste space, but being stuck with an undersized or limping=
+ array
+>> is worse.
 >>
->> Hmm, do I understand this right that you want 2 partitions. One for
->> /boot and one for everything else on lvm?
->>
->> Just a crazy idea. But why not put /boot on lvm too and use grub2 or
->> lilo as bootloader? Or does Kickstart not allow that?
 >
-> I didn't think that booting from an LVM device was supported, whether
-> it's sitting on an md raid device or not.  How is the bootloader meant
-> to find the kernel and initrd without first constructing the VG and
-> mounting the /boot Logical Volume.  It's been quite a while since I
-> looked (we get into the habit of doing things the same way) but last
-> time I checked this didn't work.
->
-> Rgds,
->
-> John
+> Some manufacturers use the HPA (host protected area) to reduce the si=
+ze
+> available to the user. You will see reference to this in the dmesg ou=
+tput.
+> There is a tool to let you see/set HPA, but I can't put my hand on th=
+e info
+> right now, the one I have is out of date, so I won't mention it.
 
-In case of grub2: It does support both raid and lvm. The raid
-superblocks are parsed to construct mdX devices and the lvm metadata
-is parsed to locate lvm logical volumes. So you could say it does
-construct the LV and mounts the FS.
+Any recent version of hdparm can get/set HPA for LBA-48 drives.  That
+feature went in a couple years ago. And it is the only tool I know
+that works with LBA-48 drives.  (ie. drives larger than 128 GiB).
 
-In case of lilo: Lilo only stores a list of blocks where the
-kernel/initrd are on the device. Afaik each component device of a raid
-stores the the block numbers for the kernel/initrd on that component
-device. So no matter which component device boots it will find the
-kernel/initrd on the same device. The raid1 and lvm are completly
-circumvented.
+If your version is too old you can get a new version off of
+sourceforge I believe.
 
-MfG
-        Goswin
+Greg
+--=20
+Greg Freemyer
+Head of EDD Tape Extraction and Processing team
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+Preservation and Forensic processing of Exchange Repositories White Pap=
+er -
+http://www.norcrossgroup.com/forms/whitepapers/Forensic%20Processing%20=
+of%20Exchange%20WP%20final.pdf
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
