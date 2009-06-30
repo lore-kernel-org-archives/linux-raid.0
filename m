@@ -1,245 +1,55 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: md: Use new topology calls to indicate alignment and I/O sizes
-Date: Tue, 30 Jun 2009 16:24:32 -0400
-Message-ID: <20090630202432.GG7888@redhat.com>
-References: <yq1ws73turf.fsf@sermon.lab.mkp.net> <170fa0d20906231444t5432998eo8cc2335c6d4a3a0d@mail.gmail.com> <19009.42494.925771.283731@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: John McNulty <johnmcn1@googlemail.com>
+Subject: Re: What will happen with spares in this scenario?
+Date: Tue, 30 Jun 2009 21:47:33 +0100
+Message-ID: <59D0D540-60D3-45EE-B917-56D2A262991C@googlemail.com>
+References: <ab50889f0906290828s44e10b14n1af6d23556e3f0ee@mail.gmail.com> <87zlbruinb.fsf@frosties.localdomain> <BD450977-FA0D-4F63-8ADB-1314FA43E654@googlemail.com> <87r5x2xs7i.fsf@frosties.localdomain> <ab50889f0906300116p42b48afnf1605ea1e8cdf60c@mail.gmail.com> <87d48l8v4d.fsf@frosties.localdomain>
+Mime-Version: 1.0 (Apple Message framework v935.3)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <19009.42494.925771.283731@notabene.brown>
+In-Reply-To: <87d48l8v4d.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: jens.axboe@oracle.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jun 24 2009 at 12:05am -0400,
-Neil Brown <neilb@suse.de> wrote:
 
-> On Tuesday June 23, snitzer@gmail.com wrote:
-> >
-> > On Tue, Jun 23, 2009 at 12:54 AM, Martin K.
-> > Petersen<martin.petersen@oracle.com> wrote:
-> > >
-> > > Neil,
-> > >
-> > > Looks like this one missed the boat on the first MD pull request.
-> > > Here's an updated patch that applies to Linus' current tree in case you
-> > > are planning a second round...
-> > >
-> > >
-> > > Switch MD over to the new disk_stack_limits() function which checks for
-> > > aligment and adjusts preferred I/O sizes when stacking.
-> > >
-> > > Also indicate preferred I/O sizes where applicable.
-> > 
-> > Given that Linus has not yet pulled in the DM changes for 2.6.31
-> > (which includes DM's topology support) I'd imagine it shouldn't be a
-> > problem to get this patch in.  In fact it would be a real shame if
-> > this somehow missed 2.6.31 seeing as MD is the only consumer of the
-> > topology infrastructure's disk_stack_limits().
-> > 
-> > Neil, please push to Linus for 2.6.31, thanks!
-> > 
-> 
-> It looks mostly OK and can now be pulled from
->    git://neil.brown.name/md/ for-linus
-> though I'll send a more formal pull request later (if necessary)
+On 30 Jun 2009, at 18:54, Goswin von Brederlow wrote:
 
-Neil,
+> In case of grub2: It does support both raid and lvm. The raid
+> superblocks are parsed to construct mdX devices and the lvm metadata
+> is parsed to locate lvm logical volumes. So you could say it does
+> construct the LV and mounts the FS.
 
-Any chance you could make a formal pull request for this MD topology
-support patch for 2.6.31-rc2?
+Interesting, thanks.  I've not been following grub2 development.   
+Given the production nature of these systems though (and the customer)  
+I'm stuck with grub legacy until Redhat update it and support grub2,  
+which judging from the chatter on the Fedora Project Portal about the  
+possibility of including it in Fedora 12, could be some years off.   
+Looks like Ubuntu will be putting it into 9.10 though, so I'll have a  
+play with it on one of my dev boxes at home.
 
-NOTE: all the disk_stack_limits() calls must pass the 3rd 'offset' arg
-in terms of bytes and _not_ sectors.  So all of MD's calls to
-disk_stack_limits() should pass: rdev->data_offset << 9
+> In case of lilo: Lilo only stores a list of blocks where the
+> kernel/initrd are on the device. Afaik each component device of a raid
+> stores the the block numbers for the kernel/initrd on that component
+> device. So no matter which component device boots it will find the
+> kernel/initrd on the same device. The raid1 and lvm are completly
+> circumvented.
 
-Here is an updated patch, please advise, thanks!
+Have not touched lilo since grub went main stream, but will have  
+another look at that.
+
+I've gone over all this with the customer.  They want belt and braces  
+protection (they are to be very critical systems in a hospital) so  
+we've decided to hardware mirror c0d0 and c0d1 for the disks on one  
+controller, plus the same for c1d0 and c1d1 on the second controller,  
+then partition and md mirror both of those.  The rest of the disks  
+will be handled separately and the kickstart config is quite simple.   
+It's a bit overkill, but it won't be failing disks or controllers that  
+cause the systems to fail in the future.
+
+Rgds,
+
+John
 
 
-From: Martin K. Petersen <martin.petersen@oracle.com>
-
-Switch MD over to the new disk_stack_limits() function which checks for
-alignment and adjusts preferred I/O sizes when stacking.
-
-Also indicate preferred I/O sizes where applicable.
-
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
-
---
-diff --git a/drivers/md/linear.c b/drivers/md/linear.c
-index 15c8b7b..5810fa9 100644
---- a/drivers/md/linear.c
-+++ b/drivers/md/linear.c
-@@ -166,8 +166,8 @@ static linear_conf_t *linear_conf(mddev_t *mddev, int raid_disks)
- 			rdev->sectors = sectors * mddev->chunk_sectors;
- 		}
- 
--		blk_queue_stack_limits(mddev->queue,
--				       rdev->bdev->bd_disk->queue);
-+		disk_stack_limits(mddev->gendisk, rdev->bdev,
-+				  rdev->data_offset << 9);
- 		/* as we don't honour merge_bvec_fn, we must never risk
- 		 * violating it, so limit ->max_sector to one PAGE, as
- 		 * a one page request is never in violation.
-diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
-index cbe368f..3e320ac 100644
---- a/drivers/md/multipath.c
-+++ b/drivers/md/multipath.c
-@@ -294,7 +294,8 @@ static int multipath_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
- 	for (path = first; path <= last; path++)
- 		if ((p=conf->multipaths+path)->rdev == NULL) {
- 			q = rdev->bdev->bd_disk->queue;
--			blk_queue_stack_limits(mddev->queue, q);
-+			disk_stack_limits(mddev->gendisk, rdev->bdev,
-+				rdev->data_offset << 9);
- 
- 		/* as we don't honour merge_bvec_fn, we must never risk
- 		 * violating it, so limit ->max_sector to one PAGE, as
-@@ -463,9 +464,9 @@ static int multipath_run (mddev_t *mddev)
- 
- 		disk = conf->multipaths + disk_idx;
- 		disk->rdev = rdev;
-+		disk_stack_limits(mddev->gendisk, rdev->bdev,
-+				  rdev->data_offset << 9);
- 
--		blk_queue_stack_limits(mddev->queue,
--				       rdev->bdev->bd_disk->queue);
- 		/* as we don't honour merge_bvec_fn, we must never risk
- 		 * violating it, not that we ever expect a device with
- 		 * a merge_bvec_fn to be involved in multipath */
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index ab4a489..335f490 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -170,8 +170,8 @@ static int create_strip_zones(mddev_t *mddev)
- 		}
- 		dev[j] = rdev1;
- 
--		blk_queue_stack_limits(mddev->queue,
--				       rdev1->bdev->bd_disk->queue);
-+		disk_stack_limits(mddev->gendisk, rdev1->bdev,
-+				  rdev1->data_offset << 9);
- 		/* as we don't honour merge_bvec_fn, we must never risk
- 		 * violating it, so limit ->max_sector to one PAGE, as
- 		 * a one page request is never in violation.
-@@ -250,6 +250,11 @@ static int create_strip_zones(mddev_t *mddev)
- 		       mddev->chunk_sectors << 9);
- 		goto abort;
- 	}
-+
-+	blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
-+	blk_queue_io_opt(mddev->queue,
-+			 (mddev->chunk_sectors << 9) * mddev->raid_disks);
-+
- 	printk(KERN_INFO "raid0: done.\n");
- 	mddev->private = conf;
- 	return 0;
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 89939a7..0569efb 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1123,8 +1123,8 @@ static int raid1_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
- 	for (mirror = first; mirror <= last; mirror++)
- 		if ( !(p=conf->mirrors+mirror)->rdev) {
- 
--			blk_queue_stack_limits(mddev->queue,
--					       rdev->bdev->bd_disk->queue);
-+			disk_stack_limits(mddev->gendisk, rdev->bdev,
-+					  rdev->data_offset << 9);
- 			/* as we don't honour merge_bvec_fn, we must never risk
- 			 * violating it, so limit ->max_sector to one PAGE, as
- 			 * a one page request is never in violation.
-@@ -1988,9 +1988,8 @@ static int run(mddev_t *mddev)
- 		disk = conf->mirrors + disk_idx;
- 
- 		disk->rdev = rdev;
--
--		blk_queue_stack_limits(mddev->queue,
--				       rdev->bdev->bd_disk->queue);
-+		disk_stack_limits(mddev->gendisk, rdev->bdev,
-+				  rdev->data_offset << 9);
- 		/* as we don't honour merge_bvec_fn, we must never risk
- 		 * violating it, so limit ->max_sector to one PAGE, as
- 		 * a one page request is never in violation.
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index ae12cea..7298a5e 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1151,8 +1151,8 @@ static int raid10_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
- 	for ( ; mirror <= last ; mirror++)
- 		if ( !(p=conf->mirrors+mirror)->rdev) {
- 
--			blk_queue_stack_limits(mddev->queue,
--					       rdev->bdev->bd_disk->queue);
-+			disk_stack_limits(mddev->gendisk, rdev->bdev,
-+					  rdev->data_offset << 9);
- 			/* as we don't honour merge_bvec_fn, we must never risk
- 			 * violating it, so limit ->max_sector to one PAGE, as
- 			 * a one page request is never in violation.
-@@ -2044,7 +2044,7 @@ raid10_size(mddev_t *mddev, sector_t sectors, int raid_disks)
- static int run(mddev_t *mddev)
- {
- 	conf_t *conf;
--	int i, disk_idx;
-+	int i, disk_idx, chunk_size;
- 	mirror_info_t *disk;
- 	mdk_rdev_t *rdev;
- 	int nc, fc, fo;
-@@ -2130,6 +2130,14 @@ static int run(mddev_t *mddev)
- 	spin_lock_init(&conf->device_lock);
- 	mddev->queue->queue_lock = &conf->device_lock;
- 
-+	chunk_size = mddev->chunk_sectors << 9;
-+	blk_queue_io_min(mddev->queue, chunk_size);
-+	if (conf->raid_disks % conf->near_copies)
-+		blk_queue_io_opt(mddev->queue, chunk_size * conf->raid_disks);
-+	else
-+		blk_queue_io_opt(mddev->queue, chunk_size *
-+				 (conf->raid_disks / conf->near_copies));
-+
- 	list_for_each_entry(rdev, &mddev->disks, same_set) {
- 		disk_idx = rdev->raid_disk;
- 		if (disk_idx >= mddev->raid_disks
-@@ -2138,9 +2146,8 @@ static int run(mddev_t *mddev)
- 		disk = conf->mirrors + disk_idx;
- 
- 		disk->rdev = rdev;
--
--		blk_queue_stack_limits(mddev->queue,
--				       rdev->bdev->bd_disk->queue);
-+		disk_stack_limits(mddev->gendisk, rdev->bdev,
-+				  rdev->data_offset << 9);
- 		/* as we don't honour merge_bvec_fn, we must never risk
- 		 * violating it, so limit ->max_sector to one PAGE, as
- 		 * a one page request is never in violation.
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index f9f991e..92ef9b6 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4452,7 +4452,7 @@ static raid5_conf_t *setup_conf(mddev_t *mddev)
- static int run(mddev_t *mddev)
- {
- 	raid5_conf_t *conf;
--	int working_disks = 0;
-+	int working_disks = 0, chunk_size;
- 	mdk_rdev_t *rdev;
- 
- 	if (mddev->recovery_cp != MaxSector)
-@@ -4607,6 +4607,14 @@ static int run(mddev_t *mddev)
- 	md_set_array_sectors(mddev, raid5_size(mddev, 0, 0));
- 
- 	blk_queue_merge_bvec(mddev->queue, raid5_mergeable_bvec);
-+	chunk_size = mddev->chunk_sectors << 9;
-+	blk_queue_io_min(mddev->queue, chunk_size);
-+	blk_queue_io_opt(mddev->queue, chunk_size *
-+			 (conf->raid_disks - conf->max_degraded));
-+
-+	list_for_each_entry(rdev, &mddev->disks, same_set)
-+		disk_stack_limits(mddev->gendisk, rdev->bdev,
-+				  rdev->data_offset << 9);
- 
- 	return 0;
- abort:
