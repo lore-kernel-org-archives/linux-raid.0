@@ -1,80 +1,54 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Adding a smaller drive
-Date: Tue, 30 Jun 2009 13:01:58 -0400
-Message-ID: <4A4A4506.1070003@tmr.com>
-References: <20090628194705152.ITZI24524@cdptpa-omta02.mail.rr.com>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: What will happen with spares in this scenario?
+Date: Tue, 30 Jun 2009 19:54:58 +0200
+Message-ID: <87d48l8v4d.fsf@frosties.localdomain>
+References: <ab50889f0906290828s44e10b14n1af6d23556e3f0ee@mail.gmail.com>
+	<87zlbruinb.fsf@frosties.localdomain>
+	<BD450977-FA0D-4F63-8ADB-1314FA43E654@googlemail.com>
+	<87r5x2xs7i.fsf@frosties.localdomain>
+	<ab50889f0906300116p42b48afnf1605ea1e8cdf60c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090628194705152.ITZI24524@cdptpa-omta02.mail.rr.com>
+In-Reply-To: <ab50889f0906300116p42b48afnf1605ea1e8cdf60c@mail.gmail.com>
+	(John McNulty's message of "Tue, 30 Jun 2009 09:16:09 +0100")
 Sender: linux-raid-owner@vger.kernel.org
+To: John McNulty <johnmcn1@googlemail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Leslie Rhorer wrote:
->>> 	I have a few questions.  Some RAID implementations will simply
->>> refuse to create or grow an array if all the targets are not precisely
->>>       
->> the
->>     
->>> same size.  Clearly this is not the case for mdadm.  Not all drives of a
->>> given "size" are actually precisely the same size, however, and I am
->>>       
->> using
->>     
->>> unpartitioned drives for my RAID systems.  What happens if I add a drive
->>> whose apparent physical size is a bit smaller than the device size used
->>>       
->> to
->>     
->>> create the array?
->>>       
->> For RAID 4/5/6, I think it'll be refused.
->>     
->
-> 	Do you know if the refusal would include an error message clearly
-> indicating why the growth is refused?
->
->   
->> You have to shrink the
->> filesystem, and LVM if you use it, then the array, so the used size is
->> no bigger than the new drive - as you've noted, md doesn't mind if it
->> doesn't use all the available space on its constituent devices. If it's
->> a small reduction, as I imagine it would be, and your filesystem
->> supports shrinking, it won't take long to do the the shrinks. Then
->> adding the new drive will be painless. If your filesystem won't shrink -
->> and some (many?) won't - I suspect you're scuppered.
->>     
->
-> 	I'm no longer using LVM on any of the servers, and I've converted to
-> XFS on RAID 5 and RAID 6 arrays.  At this time XFS does not support
-> shrinking.  I've seen some chatter on the web about 3rd party utilities
-> which might make it possible.
->
-> 	For growing an array, this would be a bit of a pain, but probably
-> not a show stopper.  Even for a failed drive I could probably just send the
-> new drive back and purchase a different model whose real size is as large or
-> larger than the extant drives.  The problem is, waiting that long for a new
-> drive or doing anything significant (like multiple shrinks!) to a partially
-> failed array sends shivers up my spine.
->
-> 	I may have to rethink my position on using raw drives.  If I
-> partition the drives, I can make the partition a bit smaller than the whole
-> drive, allowing for the addition of a future drive whose size is a bit off.
-> I hate to waste space, but being stuck with an undersized or limping array
-> is worse.
->   
+John McNulty <johnmcn1@googlemail.com> writes:
 
-Some manufacturers use the HPA (host protected area) to reduce the size 
-available to the user. You will see reference to this in the dmesg 
-output. There is a tool to let you see/set HPA, but I can't put my hand 
-on the info right now, the one I have is out of date, so I won't mention it.
+> On Tue, Jun 30, 2009 at 5:26 AM, Goswin von Brederlow<goswin-v-b@web.de> wrote:
+>>
+>> Hmm, do I understand this right that you want 2 partitions. One for
+>> /boot and one for everything else on lvm?
+>>
+>> Just a crazy idea. But why not put /boot on lvm too and use grub2 or
+>> lilo as bootloader? Or does Kickstart not allow that?
+>
+> I didn't think that booting from an LVM device was supported, whether
+> it's sitting on an md raid device or not.  How is the bootloader meant
+> to find the kernel and initrd without first constructing the VG and
+> mounting the /boot Logical Volume.  It's been quite a while since I
+> looked (we get into the habit of doing things the same way) but last
+> time I checked this didn't work.
+>
+> Rgds,
+>
+> John
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  Obscure bug of 2004: BASH BUFFER OVERFLOW - if bash is being run by a
-normal user and is setuid root, with the "vi" line edit mode selected,
-and the character set is "big5," an off-by-one error occurs during
-wildcard (glob) expansion.
+In case of grub2: It does support both raid and lvm. The raid
+superblocks are parsed to construct mdX devices and the lvm metadata
+is parsed to locate lvm logical volumes. So you could say it does
+construct the LV and mounts the FS.
 
+In case of lilo: Lilo only stores a list of blocks where the
+kernel/initrd are on the device. Afaik each component device of a raid
+stores the the block numbers for the kernel/initrd on that component
+device. So no matter which component device boots it will find the
+kernel/initrd on the same device. The raid1 and lvm are completly
+circumvented.
+
+MfG
+        Goswin
