@@ -1,13 +1,11 @@
 From: Kris Hofmans <kris.hofmans@gmail.com>
-Subject: Fwd: series of unfortunate events
-Date: Wed, 1 Jul 2009 11:54:02 +0200
-Message-ID: <632ddf2c0907010254p595921cdrade70d59a693546f@mail.gmail.com>
-References: <632ddf2c0907010223x43742d68l99bfbdca73603cde@mail.gmail.com>
+Subject: series of unfortunate events on a raid5 array
+Date: Wed, 1 Jul 2009 12:24:20 +0200
+Message-ID: <632ddf2c0907010324v667faf1ar8f889e120a989cff@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <632ddf2c0907010223x43742d68l99bfbdca73603cde@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
@@ -21,57 +19,73 @@ I had a 6 1TB disk raid 5 array. One disk started failing, I put the
 failing one as faulty and added a replacement disk. The rebuild went
 fine!
 
-This is output from when it was doing the resync, which ended without issues.
+This is output from when it was doing the resync, which ended without i=
+ssues.
 
 bbox:/home/blacky# cat /proc/mdstat
 Personalities : [raid6] [raid5] [raid4]
 md0 : active raid5 sdd1[6] sda1[0] sdf1[5] sde1[4] sdc1[2] sdb1[1]
 
-      4883799680 blocks level 5, 64k chunk, algorithm 2 [6/5] [UUU_UU]
-      [>....................]  recovery =  0.4% (3996208/976759936)
-finish=898.2min speed=18047K/sec
+=C2=A0 =C2=A0 =C2=A04883799680 blocks level 5, 64k chunk, algorithm 2 [=
+6/5] [UUU_UU]
+=C2=A0 =C2=A0 =C2=A0[>....................] =C2=A0recovery =3D =C2=A00.=
+4% (3996208/976759936)
+finish=3D898.2min speed=3D18047K/sec
 
 unused devices: <none>
 
 
 bbox:/home/blacky# mdadm --detail /dev/md0
 /dev/md0:
-        Version : 00.90
-  Creation Time : Sat Dec 13 08:30:08 2008
-     Raid Level : raid5
-     Array Size : 4883799680 (4657.55 GiB 5001.01 GB)
-  Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
+=C2=A0 =C2=A0 =C2=A0 =C2=A0Version : 00.90
+=C2=A0Creation Time : Sat Dec 13 08:30:08 2008
+=C2=A0 =C2=A0 Raid Level : raid5
+=C2=A0 =C2=A0 Array Size : 4883799680 (4657.55 GiB 5001.01 GB)
+=C2=A0Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
 
-   Raid Devices : 6
-  Total Devices : 6
+=C2=A0 Raid Devices : 6
+=C2=A0Total Devices : 6
 Preferred Minor : 0
-    Persistence : Superblock is persistent
+=C2=A0 =C2=A0Persistence : Superblock is persistent
 
-    Update Time : Sun Jun 28 23:25:48 2009
-          State : clean, degraded, recovering
- Active Devices : 5
+=C2=A0 =C2=A0Update Time : Sun Jun 28 23:25:48 2009
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0State : clean, degraded, recovering
+=C2=A0Active Devices : 5
 
 Working Devices : 6
- Failed Devices : 0
-  Spare Devices : 1
+=C2=A0Failed Devices : 0
+=C2=A0Spare Devices : 1
 
-         Layout : left-symmetric
-     Chunk Size : 64K
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 Layout : left-symmetric
+=C2=A0 =C2=A0 Chunk Size : 64K
 
- Rebuild Status : 0% complete
+=C2=A0Rebuild Status : 0% complete
 
-           UUID : 2ecd246f:8de14b9d:4d948b44:39f918b9 (local to host bbox)
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 UUID : 2ecd246f:8de14b9d:4d948b44:39=
+f918b9 (local to host bbox)
 
-         Events : 0.88
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 Events : 0.88
 
-    Number   Major   Minor   RaidDevice State
-       0       8        1        0      active sync   /dev/sda1
-       1       8       17        1      active sync   /dev/sdb1
-       2       8       33        2      active sync   /dev/sdc1
+=C2=A0 =C2=A0Number =C2=A0 Major =C2=A0 Minor =C2=A0 RaidDevice State
+=C2=A0 =C2=A0 =C2=A0 0 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+1 =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0active sync =C2=A0 /=
+dev/sda1
+=C2=A0 =C2=A0 =C2=A0 1 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 17 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A01 =C2=A0 =C2=A0 =C2=A0active sync =C2=A0 /dev/s=
+db1
+=C2=A0 =C2=A0 =C2=A0 2 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 33 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A02 =C2=A0 =C2=A0 =C2=A0active sync =C2=A0 /dev/s=
+dc1
 
-       6       8       49        3      spare rebuilding   /dev/sdd1
-       4       8       65        4      active sync   /dev/sde1
-       5       8       81        5      active sync   /dev/sdf1
+=C2=A0 =C2=A0 =C2=A0 6 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 49 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A03 =C2=A0 =C2=A0 =C2=A0spare rebuilding =C2=A0 /=
+dev/sdd1
+=C2=A0 =C2=A0 =C2=A0 4 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 65 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A04 =C2=A0 =C2=A0 =C2=A0active sync =C2=A0 /dev/s=
+de1
+=C2=A0 =C2=A0 =C2=A0 5 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 81 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A05 =C2=A0 =C2=A0 =C2=A0active sync =C2=A0 /dev/s=
+df1
 
 Since I already had to buy a new disk I decided what the heck, lets
 buy some extra disks to grow the array with 2 extra disks.
@@ -101,14 +115,16 @@ After reading things yesterday I performed an attempt to zero out all
 the superblocks on those 6 disks. And then recreate the original
 array, I am unsure if I do:
 
-mdadm --create --verbose /dev/md0 --level=5 --raid-devices=6 /dev/sda1
+mdadm --create --verbose /dev/md0 --level=3D5 --raid-devices=3D6 /dev/s=
+da1
 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1
 
 This is the original command I used to create it, but I saw that sdd1
 the replaced disk was [6] after the rebuild ...
 so do I create it like this:
 
-mdadm --create --verbose /dev/md0 --level=5 --raid-devices=6 /dev/sda1
+mdadm --create --verbose /dev/md0 --level=3D5 --raid-devices=3D6 /dev/s=
+da1
 /dev/sdb1 /dev/sdc1 /dev/sde1 /dev/sdf1 /dev/sdd1
 
 ?
@@ -131,3 +147,8 @@ Any help will be immensely appreciated!
 
 Kind regards,
 Kris Hofmans
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
