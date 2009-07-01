@@ -1,156 +1,60 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] MD: md, fix lock imbalance
-Date: Wed, 1 Jul 2009 11:46:23 +1000
-Message-ID: <19018.49135.87053.44522@notabene.brown>
-References: <1245621576-27066-1-git-send-email-jirislaby@gmail.com>
+From: Roger Heflin <rogerheflin@gmail.com>
+Subject: Re: device with newer data added as spare - data now gone?
+Date: Tue, 30 Jun 2009 21:43:32 -0500
+Message-ID: <4A4ACD54.9030700@gmail.com>
+References: <24218843.post@talk.nabble.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jiri Slaby on Sunday June 21
+In-Reply-To: <24218843.post@talk.nabble.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Molinero <marianne@masu.dk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday June 21, jirislaby@gmail.com wrote:
-> Add unlock and put to one of fail paths in md_alloc.
+Molinero wrote:
+> Hi all
+> 
+> I've lost quite a lot of data on my /home raid partition and I'm wondering
+> what exactly I did to make it happen. I'd like to know so something similar
+> won't happen in the future.
+> 
+> I'm pretty much a raid newbie. I setup raid1 on my home server and I'm
+> guessing that something like this happened. Please tell me if it's possible.
+> 
+> * Some time ago I did something to have one device fail which resulted md3
+> in having only 1 device.
+> * Time went by without me noticing (because I suck)
+> * An update broke my raid setup and gave me a kernel panic (because I suck).
+> Didn't put the mdadm and raid hooks in mkinitcpio.conf
+> * Booted a live-cd, mounted the drives and chrooted back into the system and
+> fixed the mkinitcpio.conf
+> * Rebooted and noticed that md3 was running with only 1 device
+> * Added sdb4 to md3 and it then read 1 device with 1 spare
+> * cat /proc/mdstat started to say "recovery"
+> * All data from approx. 1 year is gone
+> 
+> I guessing that the old (not updated) device was set as "master" and the
+> data on the drive (containing newer data) was overwritten by data on the old
+> device - is this plausible?
 
-Hi Jiri,
- thanks for finding this.
- I have split it up in to two patches.  One just fixes the bug as
- simply as possible.  This will be tagged for -stable.
- The other tidies up the exist paths (a little differently to the way
- you did).  That one won't go to -stable.
+If the old device was brought up as md3 and had dropped out months 
+ago, the data would now be the data that existed when that disk 
+dropped off.   And when a device drops out, there is no mark on that 
+device marking it as bad since the typical reasons for the device 
+dropping off are that it is not longer talking.    And sometimes 
+mirrors are intentionally broken for various reasons to preserve a 
+copy for one reason or another such as to be able to back out of a 
+serious OS upgrade that did not go well quickly.
 
- See below.
+If you added the current device as a spare it would have copied the 
+data from the old device over the current device.
 
-Thanks,
-NeilBrown
+That is one thing that would make 3+ disk raid5 a bit more resistant 
+to this, with a dropped off disk you could not start the array with 
+only the dropped device, and with all 3, 2 of the devices will know 
+the 3rd was dropped at some time in the past, and with any 2 on of 
+those devices would believe the other one was marked bad.
 
-commit d7a0dc02b59b8656d7817bf2da3822df64fe4886
-Author: NeilBrown <neilb@suse.de>
-Date:   Wed Jul 1 11:45:14 2009 +1000
 
-    md: fix error patch which duplicate name is found on md device creation.
-    
-    When an md device is created by name (rather than number) we need to
-    check that the name is not already in use.  If this check finds a
-    duplicate, we return an error without dropping the lock or freeing
-    the newly create mddev.
-    This patch fixes that.
-    
-    Cc: stable@kernel.org
-    Found-by: Jiri Slaby <jirislaby@gmail.com>
-    Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 2166af8..58bee23 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -3862,6 +3862,8 @@ static int md_alloc(dev_t dev, char *name)
- 			if (mddev2->gendisk &&
- 			    strcmp(mddev2->gendisk->disk_name, name) == 0) {
- 				spin_unlock(&all_mddevs_lock);
-+				mutex_unlock(&disks_mutex);
-+				mddev_put(mddev);
- 				return -EEXIST;
- 			}
- 		spin_unlock(&all_mddevs_lock);
-
-commit 84dfea9c9910a7e01ecb2463c6298c0689a0c6a1
-Author: NeilBrown <neilb@suse.de>
-Date:   Wed Jul 1 11:45:14 2009 +1000
-
-    md: tidy up error paths in md_alloc
-    
-    As the recent bug in md_alloc showed, having a single exit path for
-    unlocking and putting is a good idea.  So restructure md_alloc to have
-    a single mutex_unlock and mddev_put, and use gotos where necessary.
-    
-    Found-by: Jiri Slaby <jirislaby@gmail.com>
-    Signed-off-by: NeilBrown <neilb@suse.de>
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 58bee23..65fe35b 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -3846,11 +3846,9 @@ static int md_alloc(dev_t dev, char *name)
- 	flush_scheduled_work();
- 
- 	mutex_lock(&disks_mutex);
--	if (mddev->gendisk) {
--		mutex_unlock(&disks_mutex);
--		mddev_put(mddev);
--		return -EEXIST;
--	}
-+	error = -EEXIST;
-+	if (mddev->gendisk)
-+		goto abort;
- 
- 	if (name) {
- 		/* Need to ensure that 'name' is not a duplicate.
-@@ -3862,19 +3860,15 @@ static int md_alloc(dev_t dev, char *name)
- 			if (mddev2->gendisk &&
- 			    strcmp(mddev2->gendisk->disk_name, name) == 0) {
- 				spin_unlock(&all_mddevs_lock);
--				mutex_unlock(&disks_mutex);
--				mddev_put(mddev);
--				return -EEXIST;
-+				goto abort;
- 			}
- 		spin_unlock(&all_mddevs_lock);
- 	}
- 
-+	error = -ENOMEM;
- 	mddev->queue = blk_alloc_queue(GFP_KERNEL);
--	if (!mddev->queue) {
--		mutex_unlock(&disks_mutex);
--		mddev_put(mddev);
--		return -ENOMEM;
--	}
-+	if (!mddev->queue)
-+		goto abort;
- 	mddev->queue->queuedata = mddev;
- 
- 	/* Can be unlocked because the queue is new: no concurrency */
-@@ -3884,11 +3878,9 @@ static int md_alloc(dev_t dev, char *name)
- 
- 	disk = alloc_disk(1 << shift);
- 	if (!disk) {
--		mutex_unlock(&disks_mutex);
- 		blk_cleanup_queue(mddev->queue);
- 		mddev->queue = NULL;
--		mddev_put(mddev);
--		return -ENOMEM;
-+		goto abort;
- 	}
- 	disk->major = MAJOR(mddev->unit);
- 	disk->first_minor = unit << shift;
-@@ -3910,16 +3902,22 @@ static int md_alloc(dev_t dev, char *name)
- 	mddev->gendisk = disk;
- 	error = kobject_init_and_add(&mddev->kobj, &md_ktype,
- 				     &disk_to_dev(disk)->kobj, "%s", "md");
--	mutex_unlock(&disks_mutex);
--	if (error)
-+	if (error) {
-+		/* This isn't possible, but as kobject_init_and_add is marked
-+		 * __must_check, we must do something with the result
-+		 */
- 		printk(KERN_WARNING "md: cannot register %s/md - name in use\n",
- 		       disk->disk_name);
--	else {
-+		error = 0;
-+	}
-+ abort:
-+	mutex_unlock(&disks_mutex);
-+	if (!error) {
- 		kobject_uevent(&mddev->kobj, KOBJ_ADD);
- 		mddev->sysfs_state = sysfs_get_dirent(mddev->kobj.sd, "array_state");
- 	}
- 	mddev_put(mddev);
--	return 0;
-+	return error;
- }
- 
- static struct kobject *md_probe(dev_t dev, int *part, void *data)
