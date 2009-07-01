@@ -1,48 +1,42 @@
-From: Neil Brown <neilb@suse.de>
-Subject: [PULL REQUEST] md updates for 2.6.31-rc
-Date: Wed, 1 Jul 2009 13:20:47 +1000
-Message-ID: <19018.54799.551738.530964@notabene.brown>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Adding a smaller drive
+Date: Tue, 30 Jun 2009 23:12:11 -0500
+Message-ID: <20090701041219526.QNFU19322@cdptpa-omta02.mail.rr.com>
+References: <yq11vp40y79.fsf@sermon.lab.mkp.net>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <yq11vp40y79.fsf@sermon.lab.mkp.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jiri Slaby <jirislaby@gmail.com>
+To: "'Martin K. Petersen'" <martin.petersen@oracle.com>, 'Mikael Abrahamsson' <swmike@swm.pp.se>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-Hi Linus,
- please pull these md updates:  They add the appropriate call for the
- new 'topology' numbers, and fix a small assortment of bugs.
+> >>>>> "Mikael" == Mikael Abrahamsson <swmike@swm.pp.se> writes:
+> 
+> Mikael> The 2TB WD GP drives have less sectors than their 2x their 1TB
+> Mikael> drives.
+> 
+> That's how it's supposed to be.
 
-Thanks,
-NeilBrown
+	You mean that's how IDEMA specs read.  Unless there is some legal
+agreement signed by the drive manufacturer (or whomever) requiring adherence
+to a certain spec, they can do just about anything they want.  Compliance
+with a published spec is great, but unless some licensing agreement is in
+place, it isn't enforceable.
 
 
-The following changes since commit 5a4f13fad1ab5bd08dea78fc55321e429d83cddf:
-  Linus Torvalds (1):
-        Merge git://git.kernel.org/.../davem/ide-2.6
+> Mikael> The 2TB ones adhere to the IDEMA standard (per your other
+> Mikael> email), but the 1TB ones do not. (2TB ones have 3907029168
+> Mikael> sectors, the 1TB ones have 1953103872).
+> 
+> That, on the other hand, is pretty weird.  Call the capacity police!
 
-are available in the git repository at:
+	That's pretty much the point.  Not adhering to IDEMA specs is not
+illegal.
 
-  git://neil.brown.name/md for-linus
 
-Martin K. Petersen (1):
-      md: Use new topology calls to indicate alignment and I/O sizes
-
-NeilBrown (5):
-      md: avoid dereferencing NULL pointer when accessing suspend_* sysfs attributes.
-      md: fix error path when duplicate name is found on md device creation.
-      md: tidy up error paths in md_alloc
-      md/raid5: suspend shouldn't affect read requests.
-      md: use interruptible wait when duration is controlled by userspace.
-
- drivers/md/linear.c    |    4 +-
- drivers/md/md.c        |   56 +++++++++++++++++++++++++++--------------------
- drivers/md/multipath.c |    7 +++--
- drivers/md/raid0.c     |    9 ++++++-
- drivers/md/raid1.c     |    9 +++----
- drivers/md/raid10.c    |   19 +++++++++++-----
- drivers/md/raid5.c     |   28 ++++++++++++++++++-----
- 7 files changed, 84 insertions(+), 48 deletions(-)
