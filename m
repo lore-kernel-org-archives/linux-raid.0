@@ -1,42 +1,32 @@
 From: "Leslie Rhorer" <lrhorer@satx.rr.com>
 Subject: RE: Adding a smaller drive
-Date: Tue, 30 Jun 2009 23:12:11 -0500
-Message-ID: <20090701041219526.QNFU19322@cdptpa-omta02.mail.rr.com>
-References: <yq11vp40y79.fsf@sermon.lab.mkp.net>
+Date: Tue, 30 Jun 2009 23:16:17 -0500
+Message-ID: <20090701041625544.LNL26680@cdptpa-omta04.mail.rr.com>
+References: <4A47F438.4070905@anonymous.org.uk>
 Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <yq11vp40y79.fsf@sermon.lab.mkp.net>
+In-Reply-To: <4A47F438.4070905@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: "'Martin K. Petersen'" <martin.petersen@oracle.com>, 'Mikael Abrahamsson' <swmike@swm.pp.se>
+To: 'John Robinson' <john.robinson@anonymous.org.uk>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-> >>>>> "Mikael" == Mikael Abrahamsson <swmike@swm.pp.se> writes:
+> On 28/06/2009 22:22, Leslie Rhorer wrote:
+> > 	I'm not confidant of that presumption.  I would not be surprised in
+> > the least if some manufacturer produced a 1T drive with an actual 999.8G
 > 
-> Mikael> The 2TB WD GP drives have less sectors than their 2x their 1TB
-> Mikael> drives.
-> 
-> That's how it's supposed to be.
+> If they did that, they'd be lying in describing it as a 1TB drive. I
 
-	You mean that's how IDEMA specs read.  Unless there is some legal
-agreement signed by the drive manufacturer (or whomever) requiring adherence
-to a certain spec, they can do just about anything they want.  Compliance
-with a published spec is great, but unless some licensing agreement is in
-place, it isn't enforceable.
+	'Not as long as they do publish the actual size.
 
+> wish they'd be more honest in the first place and sell them as 931GiB
+> drives, or make real 1TiB drives, but the marketing literature does at
+> least explain their definition of TB, GB etc.
 
-> Mikael> The 2TB ones adhere to the IDEMA standard (per your other
-> Mikael> email), but the 1TB ones do not. (2TB ones have 3907029168
-> Mikael> sectors, the 1TB ones have 1953103872).
-> 
-> That, on the other hand, is pretty weird.  Call the capacity police!
-
-	That's pretty much the point.  Not adhering to IDEMA specs is not
-illegal.
-
+	Which illustrates the point, I think.  In any case, it won't be the
+end of the world, but it does make just one more thing to nag me.
 
