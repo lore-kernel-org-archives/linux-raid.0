@@ -1,32 +1,44 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Adding a smaller drive
-Date: Tue, 30 Jun 2009 23:16:17 -0500
-Message-ID: <20090701041625544.LNL26680@cdptpa-omta04.mail.rr.com>
-References: <4A47F438.4070905@anonymous.org.uk>
-Reply-To: <lrhorer@satx.rr.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Adding a smaller drive
+Date: Wed, 01 Jul 2009 01:25:43 -0400
+Message-ID: <yq1k52tgejs.fsf@sermon.lab.mkp.net>
+References: <20090701041219526.QNFU19322@cdptpa-omta02.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A47F438.4070905@anonymous.org.uk>
+In-Reply-To: <20090701041219526.QNFU19322@cdptpa-omta02.mail.rr.com> (Leslie
+	Rhorer's message of "Tue, 30 Jun 2009 23:12:11 -0500")
 Sender: linux-raid-owner@vger.kernel.org
-To: 'John Robinson' <john.robinson@anonymous.org.uk>
-Cc: linux-raid@vger.kernel.org
+To: lrhorer@satx.rr.com
+Cc: "'Martin K. Petersen'" <martin.petersen@oracle.com>, 'Mikael Abrahamsson' <swmike@swm.pp.se>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> On 28/06/2009 22:22, Leslie Rhorer wrote:
-> > 	I'm not confidant of that presumption.  I would not be surprised in
-> > the least if some manufacturer produced a 1T drive with an actual 999.8G
-> 
-> If they did that, they'd be lying in describing it as a 1TB drive. I
+>>>>> "Leslie" == Leslie Rhorer <lrhorer@satx.rr.com> writes:
 
-	'Not as long as they do publish the actual size.
+>> That's how it's supposed to be.
 
-> wish they'd be more honest in the first place and sell them as 931GiB
-> drives, or make real 1TiB drives, but the marketing literature does at
-> least explain their definition of TB, GB etc.
+Leslie> You mean that's how IDEMA specs read.  Unless there is some
+Leslie> legal agreement signed by the drive manufacturer (or whomever)
+Leslie> requiring adherence to a certain spec, they can do just about
+Leslie> anything they want.  Compliance with a published spec is great,
+Leslie> but unless some licensing agreement is in place, it isn't
+Leslie> enforceable.
 
-	Which illustrates the point, I think.  In any case, it won't be the
-end of the world, but it does make just one more thing to nag me.
+Oracle is not a member so I'm not sure what (if any) leverage is
+available as part of the IDEMA membership agreement.
 
+I do think, however, that you are underestimating the power of industry
+associations and standards bodies.  System manufacturers, enterprise
+customers and governments absolutely refuse to buy things that are not
+compliant.  So this is not about whether you can legally cut corners.
+It is about being able to sell your product in the first place.
+
+In this particular case IDEMA is an organization founded and run by the
+drive manufacturers themselves.  They collaborated on the LBA spec and
+have all publicly stated that they'll adhere to it.  It is not a
+requirement that was forced upon them by an external entity.  Although
+it was, of course, motivated by customers unhappy with the annoying
+variation in LBA count between brands and even drive models...
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
