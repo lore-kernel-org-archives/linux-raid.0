@@ -1,83 +1,133 @@
-From: John McNulty <johnmcn1@googlemail.com>
-Subject: Re: device with newer data added as spare - data now gone?
-Date: Wed, 1 Jul 2009 10:32:39 +0100
-Message-ID: <ab50889f0907010232k3ca72faasd01c8e46a66fa47a@mail.gmail.com>
-References: <24218843.post@talk.nabble.com> <4A4ACD54.9030700@gmail.com>
-	 <ab50889f0907010231k2af2f35l7d880187a395b6d0@mail.gmail.com>
+From: Kris Hofmans <kris.hofmans@gmail.com>
+Subject: Fwd: series of unfortunate events
+Date: Wed, 1 Jul 2009 11:54:02 +0200
+Message-ID: <632ddf2c0907010254p595921cdrade70d59a693546f@mail.gmail.com>
+References: <632ddf2c0907010223x43742d68l99bfbdca73603cde@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ab50889f0907010231k2af2f35l7d880187a395b6d0@mail.gmail.com>
+In-Reply-To: <632ddf2c0907010223x43742d68l99bfbdca73603cde@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've got myself into the babit of comparing the output from "cat /proc/mdstat"
-and  "mdadm -Esbv" to see if there's any old md metadata
-floating around on disks I'm about to use before using them.  Just as
-a precaution.   If I find any then I --zero-superblock the disk first
-before re-using it, just to prevent myself getting caught out by
-events like this.
+Hello,
 
-Rgds,
+It's a long story to tell, but I don't want to omit anything that
+might be important as to the recovery strategy.
 
-John
+I had a 6 1TB disk raid 5 array. One disk started failing, I put the
+failing one as faulty and added a replacement disk. The rebuild went
+fine!
+
+This is output from when it was doing the resync, which ended without issues.
+
+bbox:/home/blacky# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 sdd1[6] sda1[0] sdf1[5] sde1[4] sdc1[2] sdb1[1]
+
+      4883799680 blocks level 5, 64k chunk, algorithm 2 [6/5] [UUU_UU]
+      [>....................]  recovery =  0.4% (3996208/976759936)
+finish=898.2min speed=18047K/sec
+
+unused devices: <none>
 
 
-On Wed, Jul 1, 2009 at 3:43 AM, Roger Heflin<rogerheflin@gmail.com> wrote:
-> Molinero wrote:
->>
->> Hi all
->>
->> I've lost quite a lot of data on my /home raid partition and I'm wondering
->> what exactly I did to make it happen. I'd like to know so something
->> similar
->> won't happen in the future.
->>
->> I'm pretty much a raid newbie. I setup raid1 on my home server and I'm
->> guessing that something like this happened. Please tell me if it's
->> possible.
->>
->> * Some time ago I did something to have one device fail which resulted md3
->> in having only 1 device.
->> * Time went by without me noticing (because I suck)
->> * An update broke my raid setup and gave me a kernel panic (because I
->> suck).
->> Didn't put the mdadm and raid hooks in mkinitcpio.conf
->> * Booted a live-cd, mounted the drives and chrooted back into the system
->> and
->> fixed the mkinitcpio.conf
->> * Rebooted and noticed that md3 was running with only 1 device
->> * Added sdb4 to md3 and it then read 1 device with 1 spare
->> * cat /proc/mdstat started to say "recovery"
->> * All data from approx. 1 year is gone
->>
->> I guessing that the old (not updated) device was set as "master" and the
->> data on the drive (containing newer data) was overwritten by data on the
->> old
->> device - is this plausible?
->
-> If the old device was brought up as md3 and had dropped out months ago, the
-> data would now be the data that existed when that disk dropped off.   And
-> when a device drops out, there is no mark on that device marking it as bad
-> since the typical reasons for the device dropping off are that it is not
-> longer talking.    And sometimes mirrors are intentionally broken for
-> various reasons to preserve a copy for one reason or another such as to be
-> able to back out of a serious OS upgrade that did not go well quickly.
->
-> If you added the current device as a spare it would have copied the data
-> from the old device over the current device.
->
-> That is one thing that would make 3+ disk raid5 a bit more resistant to
-> this, with a dropped off disk you could not start the array with only the
-> dropped device, and with all 3, 2 of the devices will know the 3rd was
-> dropped at some time in the past, and with any 2 on of those devices would
-> believe the other one was marked bad.
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+bbox:/home/blacky# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 00.90
+  Creation Time : Sat Dec 13 08:30:08 2008
+     Raid Level : raid5
+     Array Size : 4883799680 (4657.55 GiB 5001.01 GB)
+  Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
+
+   Raid Devices : 6
+  Total Devices : 6
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Sun Jun 28 23:25:48 2009
+          State : clean, degraded, recovering
+ Active Devices : 5
+
+Working Devices : 6
+ Failed Devices : 0
+  Spare Devices : 1
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+ Rebuild Status : 0% complete
+
+           UUID : 2ecd246f:8de14b9d:4d948b44:39f918b9 (local to host bbox)
+
+         Events : 0.88
+
+    Number   Major   Minor   RaidDevice State
+       0       8        1        0      active sync   /dev/sda1
+       1       8       17        1      active sync   /dev/sdb1
+       2       8       33        2      active sync   /dev/sdc1
+
+       6       8       49        3      spare rebuilding   /dev/sdd1
+       4       8       65        4      active sync   /dev/sde1
+       5       8       81        5      active sync   /dev/sdf1
+
+Since I already had to buy a new disk I decided what the heck, lets
+buy some extra disks to grow the array with 2 extra disks.
+
+So on monday I started the grow operation adding the 2 disks at the
+same time (not smart, I know that now) and saw in /proc/mdstat that it
+was very slow (5MB/sec) so I checked dmesg and a disk was giving
+errors. The grow operation was not completed for more than 0.5%
+
+I saw it was on ata7 so I assumed it was /dev/sdh, and marked it as
+faulty, hoping to speed up the resync. But then suddenly also /dev/sde
+was marked as faulty, I guess that ata 7 was not /dev/sdh. The result
+was that it could not do anything anymore!
+
+After a reboot it did not recognire the md0 anymore.
+
+All I want at this point is to have the array back like this:
+
+sdd1[6] sda1[0] sdf1[5] sde1[4] sdc1[2] sdb1[1]
+
+since that was a working configuration, I don't know if that is
+possible since it was growing, disks put as faulty ... but in the end,
+I don't think that much on the hd's moved around, or is that just
+whishfull thinking on my part?
+
+After reading things yesterday I performed an attempt to zero out all
+the superblocks on those 6 disks. And then recreate the original
+array, I am unsure if I do:
+
+mdadm --create --verbose /dev/md0 --level=5 --raid-devices=6 /dev/sda1
+/dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1
+
+This is the original command I used to create it, but I saw that sdd1
+the replaced disk was [6] after the rebuild ...
+so do I create it like this:
+
+mdadm --create --verbose /dev/md0 --level=5 --raid-devices=6 /dev/sda1
+/dev/sdb1 /dev/sdc1 /dev/sde1 /dev/sdf1 /dev/sdd1
+
+?
+I actually tried both, zero'ing out the superblocks in between, and
+tried to do a mount -o ro /dev/md0 /mnt/storage
+this only gives me an
+
+unknown partition table
+
+error ...
+-----
+The only thing I can think of now as a next step would be to
+repartition /dev/md0 and HOPE that when I repartition the disk it will
+be able to see my data again because it's missing the partition table.
+
+But I would really like some professional opinions and advice before I
+try to start writing to the array.
+
+Any help will be immensely appreciated!
+
+Kind regards,
+Kris Hofmans
