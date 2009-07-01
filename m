@@ -1,69 +1,156 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [dm-devel] REQUEST for new 'topology' metrics to be moved out	of
- the 'queue' sysfs directory.
-Date: Wed, 1 Jul 2009 10:29:10 +1000
-Message-ID: <19018.44502.425131.683796@notabene.brown>
-References: <125b48b7ffc99a496fbdd512f38cada5.squirrel@neil.brown.name>
-	<20090625194015.GB31415@kernel.dk>
-	<19012.49673.454853.975682@notabene.brown>
-	<20090626125037.GO23611@kernel.dk>
-	<f0d53a7338e1be4e7bdcbe09223c6f73.squirrel@neil.brown.name>
-	<20090626132940.GR23611@kernel.dk>
-	<19014.4447.248248.63960@notabene.brown>
-	<20090629101841.GF23611@kernel.dk>
-	<b0aa07ac85efd6040501e4ea875176a3.squirrel@neil.brown.name>
-	<20090629114121.GH23611@kernel.dk>
-	<20090629230927.GU3570@webber.adilger.int>
+Subject: Re: [PATCH] MD: md, fix lock imbalance
+Date: Wed, 1 Jul 2009 11:46:23 +1000
+Message-ID: <19018.49135.87053.44522@notabene.brown>
+References: <1245621576-27066-1-git-send-email-jirislaby@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: message from Andreas Dilger on Tuesday June 30
-Sender: linux-scsi-owner@vger.kernel.org
-To: Andreas Dilger <adilger@sun.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, device-mapper development <dm-devel@redhat.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Jiri Slaby on Sunday June 21
+Sender: linux-raid-owner@vger.kernel.org
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday June 30, adilger@sun.com wrote:
-> On Jun 29, 2009  13:41 +0200, Jens Axboe wrote:
-> > ... externally it just makes the API worse since tools then have to know
-> > which device type they are talking to.
-> > 
-> > So I still see absolutely zero point in making such a change, quite the
-> > opposite.
-> 
-> Exactly correct.  Changing these tunables just for the sake of giving
-> them a slightly different name is madness.  Making all block devices
-> appear more uniform to userspace (even if they don't strictly need all
-> of the semantics) is very sensible.  The whole point of the kernel is
-> to abstract away the underlying details so that userspace doesn't need
-> to understand it all again.
+On Sunday June 21, jirislaby@gmail.com wrote:
+> Add unlock and put to one of fail paths in md_alloc.
 
-Uniformity is certainly desirable.  But we shouldn't take it so far
-as to make apples look like oranges.
+Hi Jiri,
+ thanks for finding this.
+ I have split it up in to two patches.  One just fixes the bug as
+ simply as possible.  This will be tagged for -stable.
+ The other tidies up the exist paths (a little differently to the way
+ you did).  That one won't go to -stable.
 
-We wouldn't want a SATA disk drive to have 'chunk_size' and 'raid_disks'.
-Nor would we want a software RAID array to have a 'scheduler' or
-'iosched' attributes.
+ See below.
 
-> 
-> In order to get good throughput on RAID arrays we need to tune the
-> queue/max_* values to ensure the IO requests don't get split.
-> 
-> It would be great if the MD queue/max_* values would pass these tunings
-> down to the underlying disk devices as well.  As it stands now, we have
-> to follow the /sys/block/*/slaves tree to set all of these ourselves,
-> and before "slaves/" was introduced it was nigh impossible to automatically
-> tune these values.
-
-I don't think that passing these values down is - in general - a well
-defined problem.  This is (in part) because md/dm devices can be based on
-partitions, and partitions don't have independent max_* values.
-
-In your particular case, I don't expect that you use partitions, so it
-makes perfect sense to do the tuning on a per-array basis.  But I
-don't think that it is a concept that fits in the kernel.  As you say,
-we have 'slaves/', which makes it practical to do this in user-space
-and I would rather it stayed there.
-
+Thanks,
 NeilBrown
+
+commit d7a0dc02b59b8656d7817bf2da3822df64fe4886
+Author: NeilBrown <neilb@suse.de>
+Date:   Wed Jul 1 11:45:14 2009 +1000
+
+    md: fix error patch which duplicate name is found on md device creation.
+    
+    When an md device is created by name (rather than number) we need to
+    check that the name is not already in use.  If this check finds a
+    duplicate, we return an error without dropping the lock or freeing
+    the newly create mddev.
+    This patch fixes that.
+    
+    Cc: stable@kernel.org
+    Found-by: Jiri Slaby <jirislaby@gmail.com>
+    Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 2166af8..58bee23 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -3862,6 +3862,8 @@ static int md_alloc(dev_t dev, char *name)
+ 			if (mddev2->gendisk &&
+ 			    strcmp(mddev2->gendisk->disk_name, name) == 0) {
+ 				spin_unlock(&all_mddevs_lock);
++				mutex_unlock(&disks_mutex);
++				mddev_put(mddev);
+ 				return -EEXIST;
+ 			}
+ 		spin_unlock(&all_mddevs_lock);
+
+commit 84dfea9c9910a7e01ecb2463c6298c0689a0c6a1
+Author: NeilBrown <neilb@suse.de>
+Date:   Wed Jul 1 11:45:14 2009 +1000
+
+    md: tidy up error paths in md_alloc
+    
+    As the recent bug in md_alloc showed, having a single exit path for
+    unlocking and putting is a good idea.  So restructure md_alloc to have
+    a single mutex_unlock and mddev_put, and use gotos where necessary.
+    
+    Found-by: Jiri Slaby <jirislaby@gmail.com>
+    Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 58bee23..65fe35b 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -3846,11 +3846,9 @@ static int md_alloc(dev_t dev, char *name)
+ 	flush_scheduled_work();
+ 
+ 	mutex_lock(&disks_mutex);
+-	if (mddev->gendisk) {
+-		mutex_unlock(&disks_mutex);
+-		mddev_put(mddev);
+-		return -EEXIST;
+-	}
++	error = -EEXIST;
++	if (mddev->gendisk)
++		goto abort;
+ 
+ 	if (name) {
+ 		/* Need to ensure that 'name' is not a duplicate.
+@@ -3862,19 +3860,15 @@ static int md_alloc(dev_t dev, char *name)
+ 			if (mddev2->gendisk &&
+ 			    strcmp(mddev2->gendisk->disk_name, name) == 0) {
+ 				spin_unlock(&all_mddevs_lock);
+-				mutex_unlock(&disks_mutex);
+-				mddev_put(mddev);
+-				return -EEXIST;
++				goto abort;
+ 			}
+ 		spin_unlock(&all_mddevs_lock);
+ 	}
+ 
++	error = -ENOMEM;
+ 	mddev->queue = blk_alloc_queue(GFP_KERNEL);
+-	if (!mddev->queue) {
+-		mutex_unlock(&disks_mutex);
+-		mddev_put(mddev);
+-		return -ENOMEM;
+-	}
++	if (!mddev->queue)
++		goto abort;
+ 	mddev->queue->queuedata = mddev;
+ 
+ 	/* Can be unlocked because the queue is new: no concurrency */
+@@ -3884,11 +3878,9 @@ static int md_alloc(dev_t dev, char *name)
+ 
+ 	disk = alloc_disk(1 << shift);
+ 	if (!disk) {
+-		mutex_unlock(&disks_mutex);
+ 		blk_cleanup_queue(mddev->queue);
+ 		mddev->queue = NULL;
+-		mddev_put(mddev);
+-		return -ENOMEM;
++		goto abort;
+ 	}
+ 	disk->major = MAJOR(mddev->unit);
+ 	disk->first_minor = unit << shift;
+@@ -3910,16 +3902,22 @@ static int md_alloc(dev_t dev, char *name)
+ 	mddev->gendisk = disk;
+ 	error = kobject_init_and_add(&mddev->kobj, &md_ktype,
+ 				     &disk_to_dev(disk)->kobj, "%s", "md");
+-	mutex_unlock(&disks_mutex);
+-	if (error)
++	if (error) {
++		/* This isn't possible, but as kobject_init_and_add is marked
++		 * __must_check, we must do something with the result
++		 */
+ 		printk(KERN_WARNING "md: cannot register %s/md - name in use\n",
+ 		       disk->disk_name);
+-	else {
++		error = 0;
++	}
++ abort:
++	mutex_unlock(&disks_mutex);
++	if (!error) {
+ 		kobject_uevent(&mddev->kobj, KOBJ_ADD);
+ 		mddev->sysfs_state = sysfs_get_dirent(mddev->kobj.sd, "array_state");
+ 	}
+ 	mddev_put(mddev);
+-	return 0;
++	return error;
+ }
+ 
+ static struct kobject *md_probe(dev_t dev, int *part, void *data)
