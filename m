@@ -1,98 +1,60 @@
-From: Michael Ole Olsen <gnu@gmx.net>
-Subject: Re: device-mapper: ioctl error adding target to table, lvm will not
- mount
-Date: Wed, 01 Jul 2009 19:17:12 +0200
-Message-ID: <4A4B9A18.5070103@gmx.net>
-References: <4A4B8405.4080607@gmx.net>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Adding a smaller drive
+Date: Wed, 01 Jul 2009 14:53:23 -0400
+Message-ID: <4A4BB0A3.6050401@tmr.com>
+References: <20090628194705152.ITZI24524@cdptpa-omta02.mail.rr.com>	 <4A4A4506.1070003@tmr.com> <87f94c370906301122p404c5cbcg61a8dfa81ee78594@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A4B8405.4080607@gmx.net>
+In-Reply-To: <87f94c370906301122p404c5cbcg61a8dfa81ee78594@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I tried with dm and md as a module using initramfs now also without luck
+Greg Freemyer wrote:
+> On Tue, Jun 30, 2009 at 1:01 PM, Bill Davidsen<davidsen@tmr.com> wrote:
+>   
+>> Leslie Rhorer wrote:
+>>     
+> <snip>
+>   
+>>>        I may have to rethink my position on using raw drives.  If I
+>>> partition the drives, I can make the partition a bit smaller than the
+>>> whole
+>>> drive, allowing for the addition of a future drive whose size is a bit
+>>> off.
+>>> I hate to waste space, but being stuck with an undersized or limping array
+>>> is worse.
+>>>
+>>>       
+>> Some manufacturers use the HPA (host protected area) to reduce the size
+>> available to the user. You will see reference to this in the dmesg output.
+>> There is a tool to let you see/set HPA, but I can't put my hand on the info
+>> right now, the one I have is out of date, so I won't mention it.
+>>     
+>
+> Any recent version of hdparm can get/set HPA for LBA-48 drives.  That
+> feature went in a couple years ago. And it is the only tool I know
+> that works with LBA-48 drives.  (ie. drives larger than 128 GiB).
+>
+> If your version is too old you can get a new version off of
+> sourceforge I believe.
+>   
 
-and upgrading/downgrading udev,dmsetup,cryptsetup,lvm2 to
-lenny,testing,unstable (all at once back and forth) to see if that helped
+I was actually thinking of a GUI tool, used for partition management, 
+but I can't recall the name (I do most things like that from the cli). 
+There's also SleuthKit, which may handle larger drives, 1TB limit comes 
+to mind, but I was using it for something else rather than HPA.
 
-also i tried a kernel option i found on the net something like 
-DM_IOCTL_V4=y
-but the kernel config just deleted it.
+In any case, some drives seem to use that for sizing, just wanted to 
+note that to the O.P.
 
-cannot seem to get it to work, tried compiling the kernel a few times also.
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  Obscure bug of 2004: BASH BUFFER OVERFLOW - if bash is being run by a
+normal user and is setuid root, with the "vi" line edit mode selected,
+and the character set is "big5," an off-by-one error occurs during
+wildcard (glob) expansion.
 
-
-Michael Ole Olsen wrote:
-> With a new compiled kernel from kernel.org 2.6.30 and
-> lvm2,dmsetup from lenny repos i keep getting:
-> # vgchange -a y
->
-> device-mapper ioctl: error adding target to table
-> table: device 9:0 too small for target
-> table: 253:11: linear: dm-linear Device lookup failed
-> device-mapper: reload ioctl failed: Invalid argument
->
-> I have everything compiled into the kernel, also DM, not as module.
->
-> but it did say:
-> 12 logical volume(s) in volume group st1500 now active
->
-> and i can see them in /dev/mapper
->
-> if i tried to mount each of them it said:
-> mount: you must specify the filesystem type
->
-> or some other weird error message
-> i do have xfs in my kernel and can mount other xfs filesystems
-> but all my dm filesystems fail for some reason
->
-> Here is my config
->
-> root@mlap:~/mfs# grep CONFIG_DM .config
-> CONFIG_DMI=y
-> # CONFIG_DM_DEBUG is not set
-> CONFIG_DM_CRYPT=y
-> # CONFIG_DM_SNAPSHOT is not set
-> CONFIG_DM_MIRROR=y
-> CONFIG_DM_ZERO=y
-> CONFIG_DM_MULTIPATH=y
-> # CONFIG_DM_DELAY is not set
-> # CONFIG_DM_UEVENT is not set
-> # CONFIG_DM9102 is not set
-> CONFIG_DMADEVICES=y
-> CONFIG_DMIID=y
-> # CONFIG_DMA_API_DEBUG is not set
-> root@mlap:~/mfs# grep CONFIG_XFS .config
-> CONFIG_XFS_FS=y
-> CONFIG_XFS_QUOTA=y
-> CONFIG_XFS_POSIX_ACL=y
-> # CONFIG_XFS_RT is not set
-> # CONFIG_XFS_DEBUG is not set
-> root@mlap:~/mfs# grep CONFIG_MD .config
-> CONFIG_MD=y
-> CONFIG_MD_AUTODETECT=y
-> CONFIG_MD_LINEAR=y
-> # CONFIG_MD_RAID0 is not set
-> CONFIG_MD_RAID1=y
-> CONFIG_MD_RAID10=y
-> CONFIG_MD_RAID456=y
-> CONFIG_MD_RAID6_PQ=y
-> # CONFIG_MD_MULTIPATH is not set
-> CONFIG_MD_FAULTY=y
-> # CONFIG_MDIO_BITBANG is not set
->
-> Any ideas what I am missing ?
->
-> mdadm is active on the raid, 10 of 10 disks are up and
-> /dev/mapper/st1500-bigdaddy exists, i just cannot mount it,
-> i could do this before kernel and system upgrade
-> (i use an other lenny install now,  but i updated udev,dmsetup,
-> cryptsetup,lvm2 to most recent versions on it)
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
