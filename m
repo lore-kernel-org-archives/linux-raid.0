@@ -1,82 +1,51 @@
-From: Michael Ole Olsen <gnu@gmx.net>
-Subject: Re: mdadm+lvm2: ioctl error and cannot mount the device nodes?
-Date: Thu, 02 Jul 2009 23:55:36 +0200
-Message-ID: <4A4D2CD8.8060705@gmx.net>
-References: <4A4D1478.7010501@gmx.net>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: RAID6 questions
+Date: Thu, 2 Jul 2009 18:13:39 -0400
+Message-ID: <87f94c370907021513mfd59e27g87e0deac74e4bfb9@mail.gmail.com>
+References: <2bdd5a4c0907020822s7d136681g23a4e34e13f0be8@mail.gmail.com>
+	 <871vozox2r.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A4D1478.7010501@gmx.net>
+In-Reply-To: <871vozox2r.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: Marek <mlf.conv@gmail.com>, linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-I think the mdadm was uncleanly shut down
+On Thu, Jul 2, 2009 at 12:42 PM, Goswin von Brederlow<goswin-v-b@web.de> wrote:
+> Marek <mlf.conv@gmail.com> writes:
+<snip>
+>> 6. Is it safe to have 20+ partitions for a RAID5,6 system? Most RAID
+>> related sources state that there's a limitation on number of
+>> partitions one can have on SATA drives(AFAIK 16), but i digged out
+>> some information about a recent patch which would remove this
+>> limitation and which according to some other source had also been
+>> accepted into mainline kernel, though I'm not sure about it.
+>> http://thread.gmane.org/gmane.linux.kernel/701825
+>> http://lwn.net/Articles/289927/
+>
+> Should be 15 or unlimited. Look at the major/minor numbers of sda* and
+> sdb. After sda15 there is no space before sdb comes. So unless sda16
+> gets a dynamic major/minor it can't be accessed.
+>
+> It certainly is safe. But it seems stupid as well.
 
-the rootfs was on nfs and the nfs server halted and was taken off.
+That patch went in 2.6.29 I'm pretty sure.  Not that I have ever
+needed more than 15 partitions on one drive.
 
-mdadm thinks the array is clean, how to i check if its unclean without 
-risking my data
+And yes major/minor after the first 15 are now dynamic I believe.
 
-could this unclean shutdown result in device mapper errors like this?
+Greg
+-- 
+Greg Freemyer
+Head of EDD Tape Extraction and Processing team
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+Preservation and Forensic processing of Exchange Repositories White Paper -
+<http://www.norcrossgroup.com/forms/whitepapers/tng_whitepaper_fpe.html>
 
-best regards
-Michael Ole Olsen
-
-Michael Ole Olsen wrote:
-> i keep getting
->
-> [1]
-> device-mapper: table: device 9:0 too small for target
-> device-mapper: table: 254:11: linear: dm-linear: Device lookup failed
-> device-mapper: ioctl: error adding target to table
->
-> with a cleanly installed system (debian lenny netinstall)
->
-> my raid is a raid5 reshaped to raid6 with 2.6.30 by echoing into /sys
-> (all Q blocks on the last disk)
->
-> i can see all device nodes in /dev/mapper but just not mount them
->
-> if i try to mount it just says:
->    mount: you must specify the filesystem type
-> and the dmesg output as in [1]
->
-> these are the modules in my initramfs:
->
-> xfs
-> ext3
-> dm-mod
-> md
-> raid0
-> raid1
-> raid10
-> raid456
-> raid6_pq
-> linear
->
-> # usb-storage deps
-> usbcore
-> usbhid
-> libata
-> scsi_transport_spi
-> usb-storage
-> scsi_mod
-> sg
-> sd_mod
-> sbp2
->
->
-> Any idea what I am doing wrong? I thought the problem [1] would
-> be because of a misconfigured kernel with no
-> devicemapper support, but I think have compiled everything in?
->
-> I cannot use any other kernels than 2.6.30 or it will not assemble
-> the raid6 (mdadm) so I dont think i have another option than
-> compiling it myself, apt has only 2.6.22 or such
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
