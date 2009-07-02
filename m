@@ -1,130 +1,74 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
+From: Doug Ledford <dledford@redhat.com>
 Subject: Re: RAID6 questions
-Date: Thu, 02 Jul 2009 18:42:52 +0200
-Message-ID: <871vozox2r.fsf@frosties.localdomain>
-References: <2bdd5a4c0907020822s7d136681g23a4e34e13f0be8@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Date: Thu, 2 Jul 2009 12:53:02 -0400
+Message-ID: <8794D0BE-30D6-4B00-9F9C-843E94DD7086@redhat.com>
+References: <2bdd5a4c0907020822s7d136681g23a4e34e13f0be8@mail.gmail.com> <871vozox2r.fsf@frosties.localdomain>
+Mime-Version: 1.0 (Apple Message framework v935.3)
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-41--189073055"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2bdd5a4c0907020822s7d136681g23a4e34e13f0be8@mail.gmail.com>
-	(Marek's message of "Thu, 2 Jul 2009 17:22:54 +0200")
+In-Reply-To: <871vozox2r.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Marek <mlf.conv@gmail.com>
-Cc: linux-raid@vger.kernel.org, neilb@suse.de
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: Marek <mlf.conv@gmail.com>, linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-Marek <mlf.conv@gmail.com> writes:
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--Apple-Mail-41--189073055
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 
-> Hi,
+On Jul 2, 2009, at 12:42 PM, Goswin von Brederlow wrote:
+> Marek <mlf.conv@gmail.com> writes:
+>>
+>> 3. Is it possible to use 0xDA with 0.9 superblock and omit autodetect
+>> with mdadm 2.6.x? I couldn't find any information regarding this  
+>> since
+>> most RAID related sources either still suggest 0xFD and
+>> autodetect(even with mdadm 3.0 by using -e 0.9 option) or they do not
+>> state which version of mdadm to use in case of 1.x superblocks. Since
+>> autodetect is deprecated, is there a safe way(without losing any  
+>> data)
+>> to convert from autodetect + 0xFD in the future?
 >
-> I'm trying to build a RAID6 array out of 6x1TB disks, and would like
-> to ask the following:
->
-> 1. Is it possible to convert from 0.9 superblock to 1.x with mdadm
-> 3.0? The reason is that most distributions ship with mdadm 2.6.x which
-> seems to use 0.9 superblock by default. I wasn't able to find any info
-> on mdadm 2.6.x using or switching to 1.x superblocks, so it seems that
-> unless I'm using mdadm 3.0 which is practically unavailable, I'm stuck
-> with 0.9.
->
-> 2. Is it safe to upgrade to mdadm 3.x?
->
-> 3. Is it possible to use 0xDA with 0.9 superblock and omit autodetect
-> with mdadm 2.6.x? I couldn't find any information regarding this since
-> most RAID related sources either still suggest 0xFD and
-> autodetect(even with mdadm 3.0 by using -e 0.9 option) or they do not
-> state which version of mdadm to use in case of 1.x superblocks. Since
-> autodetect is deprecated, is there a safe way(without losing any data)
-> to convert from autodetect + 0xFD in the future?
+> If you have raid build as module then the kernel does no
+> autodetect. Otherwise you can give some kernel commandline option, see
+> docs.
 
-If you have raid build as module then the kernel does no
-autodetect. Otherwise you can give some kernel commandline option, see
-docs.
+Most (if not all) sane distributions have not used raid autodetect in  
+quite a while.  They use mdadm in the initrd and later during the init  
+script sequence to start raid arrays instead.  Mdadm doesn't care what  
+the partition type is.  I regularly use 0x83 for older raid devices,  
+and 0xda on newer ones, with no ill effects.
 
-> 4. (probably a stupid question but..) Should an extended 0x05
-> partition be ignored on RAID build? This is not directly related to
-> mdadm, but many tutorials basically suggest to
-> for i in `seq 1 x`; do mdadm --create (...) /dev/md$i /dev/sda$i
-> /dev/sdb$i (...)
-> It's not obvious in case one decides to partition the drives into many
-> small partitions e.g. 1TB into 20x 50GB, in such case he gets 3
-> primary partitions and one extended containing(or pointing to?) the
-> remaining logical partitions, however the extended partition shows up
-> as e.g. /dev/sda4, while the logical partitions appear as /dev/sda5,
-> /dev/sda6 etc., so in the above mentioned case it would basically also
-> try to create a RAID array from extended partitions.
-> It would seem more logical to lay out the logical partitions as
-> /dev/sda4l1 /dev/sda4l2 .... /dev/sda4l17 but udev doesn't seem to do
-> that. Is it safe to ignore /dev/sdX4 and just create RAIDs out of
-> /dev/sdX(1..3,5..20)?
 
-Obviously you need to skip the extended partiton. I also see no reason
-to create multiple raid6 over partitions on the same drive. Create one
-big raid6 and use lvm or partitioning on that.
+--
 
-> 5. In case one decides for a partitioned approach - does mdadm kick
-> out faulty partitions or whole drives? I have read several sources
-> including some comments on slashdot that it's much better to split
-> large drives into many small partitions, but noone clarified in
-> detail.  A possible though unlikely scenario would be simultaneous
-> failure of all hdds in the array:
->
->  md1 RAID6 sda1[_] sdb1[_] sdc1[U] sdd1[U] sde1[U] sdf1[U]
->  md2 RAID6 sda2[U] sdb2[_] sdc2[_] sdd2[U] sde2[U] sdf2[U]
->  md3 RAID6 sda3[U] sdb3[U] sdc3[_] sdd3[_] sde3[U] sdf3[U]
->  md4 RAID6 sda4[U] sdb4[U] sdc4[U] sdd4[_] sde4[_] sdf4[U]
->  md5 RAID6 sda5[U] sdb5[U] sdc5[U] sdd5[U] sde5[_] sdf5[_]
-> (...)
->
-> If mdadm kicks out faulty partitions only, but leaves the remaining
-> part of drive going as long as it's able to read it, would it mean
-> that even if every single hdd in the array failed somewhere (for
-> example due to Reallocated_Sector_Ct), mdadm would keep the healthy
-> partitions of that failed drive running, thus the entire system would
-> be still running in degraded mode without loss of data?
+Doug Ledford <dledford@redhat.com>
 
-The raid code kicks out a partition at a time when it gets errors. But
-that means there must be an access to the partition for the kernel to
-notice it does give errors first. So even if sda fails completly only
-those drives you access will notice that and fail their sdaX.
+GPG KeyID: CFBFF194
+http://people.redhat.com/dledford
 
-In case of read errors the raid code also tries to restore a block
-using the parity data and rewrite it so the drive can remap it to a
-healthy sector.
+InfiniBand Specific RPMS
+http://people.redhat.com/dledford/Infiniband
 
-> 6. Is it safe to have 20+ partitions for a RAID5,6 system? Most RAID
-> related sources state that there's a limitation on number of
-> partitions one can have on SATA drives(AFAIK 16), but i digged out
-> some information about a recent patch which would remove this
-> limitation and which according to some other source had also been
-> accepted into mainline kernel, though I'm not sure about it.
-> http://thread.gmane.org/gmane.linux.kernel/701825
-> http://lwn.net/Articles/289927/
 
-Should be 15 or unlimited. Look at the major/minor numbers of sda* and
-sdb. After sda15 there is no space before sdb comes. So unless sda16
-gets a dynamic major/minor it can't be accessed.
 
-It certainly is safe. But it seems stupid as well.
 
-> 7. Question about special metadata with X58 ICH10R controllers - since
-> the 3.0 announcement states that the Intel Matrix metadata format used
-> by recent Intel ICH controlers is also supported, I'd like to ask if
-> there's some instructions available on how to use it and what benefits
-> it would bring to the user.
->
-> 8. Most RAID related sources seem to deal with rather simple scenarios
-> such as RAID0 or RAID1. There are only a few brief examples avaliable
-> on how to build RAID5 and none for RAID6. Does anyone know of any
-> recent & decent RAID6 tutorial?
 
-I don't see how the raid level is really relevant, esspecially between
-raid5 and raid6. Raid6 just protects against 2 drives failing but
-nothing changes in how to set it up or maintain it.
+--Apple-Mail-41--189073055
+content-type: application/pgp-signature; x-mac-type=70674453;
+	name=PGP.sig
+content-description: This is a digitally signed message part
+content-disposition: inline; filename=PGP.sig
+content-transfer-encoding: 7bit
 
-> thanks,
->
-> Marek
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2.0.11 (Darwin)
 
-MfG
-        Goswin
+iEYEARECAAYFAkpM5e4ACgkQQ9aEs6Ims9iJ1wCfTWZsBHTmxEpb0+BsrcCzaa0b
+pfYAoMT8+eb9dzIeHKwwf/4uXuEvabLb
+=zH//
+-----END PGP SIGNATURE-----
+
+--Apple-Mail-41--189073055--
