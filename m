@@ -1,50 +1,35 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: RAID6 questions
-Date: Fri, 03 Jul 2009 00:57:56 +0200
-Message-ID: <87iqiaofpn.fsf@frosties.localdomain>
-References: <2bdd5a4c0907020822s7d136681g23a4e34e13f0be8@mail.gmail.com>
-	<871vozox2r.fsf@frosties.localdomain>
-	<87f94c370907021513mfd59e27g87e0deac74e4bfb9@mail.gmail.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: mdadm+lvm2: ioctl error and cannot mount the device nodes?
+Date: Fri, 3 Jul 2009 08:27:05 +0200
+Message-ID: <20090703062705.GB23464@maude.comedia.it>
+References: <4A4D1478.7010501@gmx.net> <4A4D2CD8.8060705@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87f94c370907021513mfd59e27g87e0deac74e4bfb9@mail.gmail.com>
-	(Greg Freemyer's message of "Thu, 2 Jul 2009 18:13:39 -0400")
+Content-Disposition: inline
+In-Reply-To: <4A4D2CD8.8060705@gmx.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Goswin von Brederlow <goswin-v-b@web.de>, Marek <mlf.conv@gmail.com>, linux-raid@vger.kernel.org, neilb@suse.de
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Greg Freemyer <greg.freemyer@gmail.com> writes:
-
-> On Thu, Jul 2, 2009 at 12:42 PM, Goswin von Brederlow<goswin-v-b@web.de> wrote:
->> Marek <mlf.conv@gmail.com> writes:
-> <snip>
->>> 6. Is it safe to have 20+ partitions for a RAID5,6 system? Most RAID
->>> related sources state that there's a limitation on number of
->>> partitions one can have on SATA drives(AFAIK 16), but i digged out
->>> some information about a recent patch which would remove this
->>> limitation and which according to some other source had also been
->>> accepted into mainline kernel, though I'm not sure about it.
->>> http://thread.gmane.org/gmane.linux.kernel/701825
->>> http://lwn.net/Articles/289927/
->>
->> Should be 15 or unlimited. Look at the major/minor numbers of sda* and
->> sdb. After sda15 there is no space before sdb comes. So unless sda16
->> gets a dynamic major/minor it can't be accessed.
->>
->> It certainly is safe. But it seems stupid as well.
+On Thu, Jul 02, 2009 at 11:55:36PM +0200, Michael Ole Olsen wrote:
+> I think the mdadm was uncleanly shut down
 >
-> That patch went in 2.6.29 I'm pretty sure.  Not that I have ever
-> needed more than 15 partitions on one drive.
+> the rootfs was on nfs and the nfs server halted and was taken off.
 >
-> And yes major/minor after the first 15 are now dynamic I believe.
+> mdadm thinks the array is clean, how to i check if its unclean without 
+> risking my data
 >
-> Greg
+> could this unclean shutdown result in device mapper errors like this?
 
-In case someone misunderstands, the "It certainly is safe. But it
-seems stupid as well." refers to creating 20+ raid6. Not the
-major/minor problem. :)
+who knows? you are providing no useful data at all.
 
-MfG
-        Goswin
+L.
+
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
