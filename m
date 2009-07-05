@@ -1,37 +1,44 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Adding a smaller drive
-Date: Sat, 04 Jul 2009 16:20:22 +0100
-Message-ID: <4A4F7336.6070800@anonymous.org.uk>
-References: <20090703161151277.OOAZ19903@cdptpa-omta03.mail.rr.com> <4A4F6E68.7030209@tmr.com>
+From: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Subject: mdadm --wait doesn't
+Date: Sun, 5 Jul 2009 12:35:58 -0500
+Message-ID: <cccedfc60907051035o1753ea61r7098c2ea2c8ded9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A4F6E68.7030209@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 04/07/2009 15:59, Bill Davidsen wrote:
-> Leslie Rhorer wrote:
->>  The 1.5T drives are less than 1.5 times bigger than the 1T
->> drives, so I could not replace a 3 drive 1T triplet with a pair of 1.5T
->> drives.
-> 
-> That last sentence is important! If this is a standard, then it would 
-> seem to be actually intended to deceive the consumer. If there is to be 
-> a standard for 1, 1.5, and 2, they really should have some sensible 
-> relationship in size.
-> 
-> That said, I confess that I use partitions and leave a little breathing 
-> room on my drives when building a raid array.
+I was trying to use mdadm --wait a bit ago to wait for a recovery
+operation, but mdadm --wait didn't actually wait.
 
-I think I might take to doing that too, making my partitions/arrays 
-multiples of 1,000,000,000 bytes (a drive maker's 1GB) where possible, 
-just to be sure :-)
+Here is md12 after adding /dev/sdf1 back to it.
 
-Cheers,
+md12 : active raid1 sdf1[3] nbd0[2](W)(F) sde[0]
+      72612988 blocks super 1.1 [3/1] [U__]
+      [>....................]  recovery =  3.0% (2195456/72612988)
+finish=51.4min speed=22805K/sec
+      bitmap: 139/139 pages [556KB], 256KB chunk
 
-John.
+However, mdadm /dev/md12 --wait (and --wait-clean) did not wait for
+the recovery to be complete.
 
+turnip:~ # mdadm /dev/md12 --wait
+turnip:~ # echo $?
+0
+turnip:~ # mdadm --version
+mdadm - v3.0 - 2nd June 2009
+
+I would --fail and --remove /dev/sdf1 and try again (with --add), and
+I did this several times, and I could not get it to wait until the
+recovery was complete.
+
+Am I doing something wrong? Did I mis-read the documentation?
+
+kernel: 2.6.27.23, x86_64, openSUSE 11.1 "default" kernel.
+mdadm version compiled out of latest git.
+
+
+-- 
+Jon
