@@ -1,66 +1,36 @@
-From: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Subject: Re: mdadm --wait doesn't
-Date: Sun, 5 Jul 2009 16:37:15 -0500
-Message-ID: <cccedfc60907051437l3309ace5mee09baba2bc51a49@mail.gmail.com>
-References: <cccedfc60907051035o1753ea61r7098c2ea2c8ded9@mail.gmail.com>
-	<4A5112F3.8080504@anonymous.org.uk>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Adding a smaller drive
+Date: Sun, 5 Jul 2009 17:03:02 -0500
+Message-ID: <20090705220252458.BCFJ19903@cdptpa-omta03.mail.rr.com>
+References: <4A4F7336.6070800@anonymous.org.uk>
+Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A5112F3.8080504@anonymous.org.uk>
+In-Reply-To: <4A4F7336.6070800@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Jul 5, 2009 at 3:54 PM, John
-Robinson<john.robinson@anonymous.org.uk> wrote:
-> On 05/07/2009 18:35, Jon Nelson wrote:
->>
->> I was trying to use mdadm --wait a bit ago to wait for a recovery
->> operation, but mdadm --wait didn't actually wait.
->>
->> Here is md12 after adding /dev/sdf1 back to it.
->>
->> md12 : active raid1 sdf1[3] nbd0[2](W)(F) sde[0]
->> =A0 =A0 =A072612988 blocks super 1.1 [3/1] [U__]
->> =A0 =A0 =A0[>....................] =A0recovery =3D =A03.0% (2195456/=
-72612988)
->> finish=3D51.4min speed=3D22805K/sec
->> =A0 =A0 =A0bitmap: 139/139 pages [556KB], 256KB chunk
->>
->> However, mdadm /dev/md12 --wait (and --wait-clean) did not wait for
->> the recovery to be complete.
->>
->> turnip:~ # mdadm /dev/md12 --wait
->> turnip:~ # echo $?
->> 0
->> turnip:~ # mdadm --version
->> mdadm - v3.0 - 2nd June 2009
->>
->> I would --fail and --remove /dev/sdf1 and try again (with --add), an=
-d
->> I did this several times, and I could not get it to wait until the
->> recovery was complete.
->>
->> Am I doing something wrong? Did I mis-read the documentation?
->
-> Did you try `mdadm --wait /dev/md12`? For me that returns 1 on a full=
-y-up
-> array (where there's nothing to wait for) while `mdadm /dev/md12 --wa=
-it`
-> returns 0, so they're obviously handled differently. I don't really f=
-eel
-> like degrading an array to test further, I'll leave it to you :-)
+> > That last sentence is important! If this is a standard, then it would
+> > seem to be actually intended to deceive the consumer. If there is to be
+> > a standard for 1, 1.5, and 2, they really should have some sensible
+> > relationship in size.
+> >
+> > That said, I confess that I use partitions and leave a little breathing
+> > room on my drives when building a raid array.
+> 
+> I think I might take to doing that too, making my partitions/arrays
+> multiples of 1,000,000,000 bytes (a drive maker's 1GB) where possible,
+> just to be sure :-)
 
-OK, that's weird. mdadm /dev/md12 --wait doesn't, while mdadm --wait
-/dev/md12 does.
-That doesn't seem right to me.
+	Well, that's not quite possible, of course, since sectors are
+usually 512 bytes, and 1E9 is not a multiple of 512.  Indeed, that's where
+this whole situation is ridiculous. For drive manufacturers to even consider
+using GB as a measuring basis is ludicrous.  If sectors were 1000 bytes, and
+if computer registers were base 10, it would be an entirely different
+matter, but the fact is the sector size is 2^9 and all the register
+boundaries are going to be multiples of 2, not 10.
 
---=20
-Jon
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
