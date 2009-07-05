@@ -1,35 +1,36 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Adding a smaller drive
-Date: Sun, 05 Jul 2009 23:12:47 +0100
-Message-ID: <4A51255F.1020308@anonymous.org.uk>
-References: <20090705220252458.BCFJ19903@cdptpa-omta03.mail.rr.com>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: mdadm --wait doesn't
+Date: Mon, 6 Jul 2009 08:28:28 +1000 (EST)
+Message-ID: <1960c8896ff51b4b549b5fbe5fc80459.squirrel@neil.brown.name>
+References: <cccedfc60907051035o1753ea61r7098c2ea2c8ded9@mail.gmail.com>
+    <4A5112F3.8080504@anonymous.org.uk>
+    <cccedfc60907051437l3309ace5mee09baba2bc51a49@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090705220252458.BCFJ19903@cdptpa-omta03.mail.rr.com>
+In-Reply-To: <cccedfc60907051437l3309ace5mee09baba2bc51a49@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: lrhorer@satx.rr.com
-Cc: linux-raid@vger.kernel.org
+To: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Cc: ""@neil.brown.name, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 05/07/2009 23:03, Leslie Rhorer wrote:
-[...]
->> I think I might take to doing that too, making my partitions/arrays
->> multiples of 1,000,000,000 bytes (a drive maker's 1GB) where possible,
->> just to be sure :-)
-> 
-> 	Well, that's not quite possible, of course, since sectors are
-> usually 512 bytes, and 1E9 is not a multiple of 512.  Indeed, that's where
-> this whole situation is ridiculous. For drive manufacturers to even consider
-> using GB as a measuring basis is ludicrous.  If sectors were 1000 bytes, and
-> if computer registers were base 10, it would be an entirely different
-> matter, but the fact is the sector size is 2^9 and all the register
-> boundaries are going to be multiples of 2, not 10.
+On Mon, July 6, 2009 7:37 am, Jon Nelson wrote:
 
-But 10^9 is divisible by 512: 10^9 = (2*5)^9 = 2^9 * 5^9. There are 
-therefore 1953125 512-byte sectors in 1 drive maker's GB.
+> OK, that's weird. mdadm /dev/md12 --wait doesn't, while mdadm --wait
+> /dev/md12 does.
+> That doesn't seem right to me.
 
-Cheers,
+That's what I get for overloading the single-letter args.
+Bother --wait and --write-mostly can be given as -W, and mdadm doesn't
+distinguish between those three internally.
+So
+  mdadm /dev/md12 -wait
+chooses MANAGE mode and the --wait is treated like --write-mostly,
+and as you haven't given any drives to add in write-mostly mode,
+it doesn't nothing.
 
-John.
+I probably should fix that one day.
+
+NeilBrown
+
