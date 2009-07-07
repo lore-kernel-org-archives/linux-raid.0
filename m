@@ -1,89 +1,115 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: Adding a smaller drive
-Date: Sun, 05 Jul 2009 20:05:53 -0400
-Message-ID: <yq1ws6m65ge.fsf@sermon.lab.mkp.net>
-References: <20090703154609101.MIIG19322@cdptpa-omta02.mail.rr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [dm-devel] REQUEST for new 'topology' metrics to be moved out  of the 'queue' sysfs directory.
+Date: Tue, 7 Jul 2009 11:47:06 +1000
+Message-ID: <19026.43290.340555.774690@notabene.brown>
+References: <19010.62951.886231.96622@notabene.brown>
+	<yq11vp8spxo.fsf@sermon.lab.mkp.net>
+	<125b48b7ffc99a496fbdd512f38cada5.squirrel@neil.brown.name>
+	<yq1k530qkm7.fsf@sermon.lab.mkp.net>
+	<19012.47077.328965.919868@notabene.brown>
+	<yq1ws6znja4.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090703154609101.MIIG19322@cdptpa-omta02.mail.rr.com> (Leslie
-	Rhorer's message of "Fri, 3 Jul 2009 10:46:21 -0500")
-Sender: linux-raid-owner@vger.kernel.org
-To: lrhorer@satx.rr.com
-Cc: linux-raid@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: message from Martin K. Petersen on Friday June 26
+Sender: linux-scsi-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, device-mapper development <dm-devel@redhat.com>
 List-Id: linux-raid.ids
 
->>>>> "Leslie" == Leslie Rhorer <lrhorer@satx.rr.com> writes:
+On Friday June 26, martin.petersen@oracle.com wrote:
+> >>>>> "Neil" == Neil Brown <neilb@suse.de> writes:
+> 
+> Neil> Providing the fields are clearly and unambiguously documented so
+> Neil> that it I can use the documentation to verify the implementation
+> Neil> (in md at least), I will be satisfied.
+> 
+> The current sysfs documentation says:
+> 
+> /sys/block/<disk>/queue/minimum_io_size:
+> [...] For RAID arrays it is often the stripe chunk size.
+> 
+> /sys/block/<disk>/queue/optimal_io_size:
+> [...] For RAID devices it is usually the stripe width or the internal
+> block size.
+> 
+> The latter should be "internal track size".  But in the context of MD I
+> think those two definitions are crystal clear.
 
->> I do think, however, that you are underestimating the power of
->> industry associations and standards bodies.  System manufacturers,
->> enterprise customers and governments absolutely refuse to buy things
->> that are not compliant.  So this is not about whether you can legally
->> cut corners.  It is about being able to sell your product in the
->> first place.
+They might be "clear" but I'm not convinced that they are "correct".
 
-Leslie> 	So a company like Apple could never compete with IBM?
+> 
+> 
+> As far as making the application of these values more obvious I propose
+> the following:
+> 
+> What:		/sys/block/<disk>/queue/minimum_io_size
+> Date:		April 2009
+> Contact:	Martin K. Petersen <martin.petersen@oracle.com>
+> Description:
+> 		Storage devices may report a granularity or minimum I/O
+> 		size which is the device's preferred unit of I/O.
+> 		Requests smaller than this may incur a significant
+> 		performance penalty.
+> 
+> 		For disk drives this value corresponds to the physical
+> 		block size. For RAID devices it is usually the stripe
+> 		chunk size.
 
-Who says that Apple doesn't care about the LBA count?  Most desktop
-system vendors use disk imaging to perform burn-in and software preload.
-It matters to them.  Same goes for OS deployment on the business desktop
-end of things.
+These two paragraphs are contradictory.  There is no sense in which a
+RAID chunk size is a preferred minimum I/O size.
 
-I don't have any idea whether more desktop class drives are sold
-individually as opposed to as part of a new computer.  But that doesn't
-really matter.  Because fact is that it's the system vendors that set
-the bar for standards compliance.
+To some degree it is actually a 'maximum' preferred size for random
+IO.  If you do random IO is blocks larger than the chunk size then you
+risk causing more 'head contention' (at least with RAID0 - with RAID5
+the tradeoff is more complex).
 
-I am not sure what the incentive would be for the drive vendors to
-provide different capacities/firmware loads for drives sold directly to
-consumers.  Until the IDEMA LBA spec was ratified we were talking about
-capacity variations of a few percent within a given class.  I don't
-think consumers care about that nearly as much as we computer
-professionals do.
-
-
-Leslie> There are myriad examples of non-compliant software and hardware
-Leslie> being developed in a standards-based environment yet selling
-Leslie> very well.  I think maybe you are underestimating the vast
-Leslie> buying power of individual consumers and non-enterprise
-Leslie> businesses.  
-
-I don't disagree that there's a lot of crap hardware out there.
-Absolutely.  And a sizable portion of said crap is in the USB-ATA bridge
-designed-by-dyslexic-monkeys category.
-
-However, there's only a handful of disk drive manufacturers.  And they
-are all pretty good at adhering to existing standards for the reasons I
-outlined earlier.  Namely that they have to sell exactly the same drives
-to customers with higher standards than aforementioned dyslexic monkeys.
-
-Here's the LBA count for a bunch of currently shipping 3.5" 1TB drives
-that I was able to find the data sheets for within a couple of minutes
-of googling:
-
-DRIVE				LBA COUNT
----------------------------------------------
-Hitachi Deskstar 7K1000:	1,953,525,168
-Hitachi Deskstar 7K1000.B:	1,953,525,168
-Seagate Barracuda ES.2:		1,953,525,168
-Seagate Barracuda 7200.11:	1,953,525,168
-Seagate Barracuda 7200.12:	1,953,525,168
-Seagate Barracuda LP:		1,953,525,168
-Samsung SpinPoint F1 DT:        1,953,525,168
-Samsung Ecogreen F2:		1,953,525,168
-WDC Caviar Black:		1,953,525,168
-WDC Caviar Green:		1,953,525,168
-WDC Caviar RE3:			1,953,525,168
-WDC Caviar RE2-GP:		1,953,525,168
----------------------------------------------
+If you are talking about "alignment", then yes - the chunk size is an
+appropriate size to align on.  But so are the block size and the
+stripe size and none is, in general, any better than any other.
 
 
-Leslie> Well, first of all, in this very thread someone gave an example
-Leslie> of a modern drive which is apparently non-compliant. 
+Also, you say "may" report.  If a device does not report, what happens
+to this file.  Is it not present, or empty, or contain a special
+"undefined" value?
+I think the answer is that "512" is reported.  It might be good to
+explicitly document that.
 
-That turned out to be a drive sitting behind a RAID controller which
-reserves a portion of the drive for its own use.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+> 
+> 		A properly aligned multiple of minimum_io_size is the
+> 		preferred request size for workloads where a high number
+> 		of I/O operations is desired.
+> 
+> 
+> What:		/sys/block/<disk>/queue/optimal_io_size
+> Date:		April 2009
+> Contact:	Martin K. Petersen <martin.petersen@oracle.com>
+> Description:
+> 		Storage devices may report an optimal transfer length or
+> 		streaming I/O size which is the device's preferred unit
+> 		of sustained I/O.  This value is a multiple of the
+> 		device's minimum_io_size.
+> 
+> 		optimal_io_size is rarely reported for disk drives. For
+> 		RAID devices it is usually the stripe width or the
+> 		internal track size.
+> 
+> 		A properly aligned multiple of optimal_io_size is the
+> 		preferred request size for workloads where sustained
+> 		throughput is desired.
 
+In this case, if a device does not report an optimal size, the file
+contains "0" - correct?  Should that be explicit?
+
+I'd really like to see an example of how you expect filesystems to use
+this.
+I can well imagine the VM or elevator using this to assemble IO
+requests in to properly aligned requests.  But I cannot imagine how
+e.g mkfs would use it.
+Or am I misunderstanding and this is for programs that use O_DIRECT on
+the block device so they can optimise their request stream?
+
+Thanks,
+NeilBrown
