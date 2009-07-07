@@ -1,92 +1,56 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: REQUEST for new 'topology' metrics to be moved out
-	of the 'queue' sysfs directory.
-Date: Tue, 07 Jul 2009 18:06:53 -0400
-Message-ID: <4A53C6FD.3010603@tmr.com>
-References: <19010.62951.886231.96622@notabene.brown>	<yq11vp8spxo.fsf@sermon.lab.mkp.net>	<125b48b7ffc99a496fbdd512f38cada5.squirrel@neil.brown.name>	<yq1k530qkm7.fsf@sermon.lab.mkp.net>	<19012.47077.328965.919868@notabene.brown>	<yq1ws6znja4.fsf@sermon.lab.mkp.net>
-	<19026.43290.340555.774690@notabene.brown>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+Subject: Re: [PATCH/Resend] md: Push down data integrity code to personalities.
+Date: Tue, 07 Jul 2009 18:10:24 -0400
+Message-ID: <4A53C7D0.6070701@tmr.com>
+References: <20090701083802.GC9910@skl-net.de> <19026.50240.504728.428875@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <19026.43290.340555.774690@notabene.brown>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <19026.50240.504728.428875@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-fsdevel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>
+Cc: Andre Noll <maan@systemlinux.org>, linux-raid <linux-raid@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-raid.ids
 
 Neil Brown wrote:
-> On Friday June 26, martin.petersen@oracle.com wrote:
+> On Wednesday July 1, maan@systemlinux.org wrote:
 >   
->> As far as making the application of these values more obvious I propose
->> the following:
+>> Hi Neil,
 >>
->> What:		/sys/block/<disk>/queue/minimum_io_size
->> Date:		April 2009
->> Contact:	Martin K. Petersen <martin.petersen@oracle.com>
->> Description:
->> 		Storage devices may report a granularity or minimum I/O
->> 		size which is the device's preferred unit of I/O.
->> 		Requests smaller than this may incur a significant
->> 		performance penalty.
+>> here's again the patch that reduces the knowledge about specific
+>> raid levels from md.c by moving the data integrity code to the
+>> personalities. The patch was tested and acked by Martin.
 >>
->> 		For disk drives this value corresponds to the physical
->> 		block size. For RAID devices it is usually the stripe
->> 		chunk size.
+>> Please review.
 >>     
 >
-> These two paragraphs are contradictory.  There is no sense in which a
-> RAID chunk size is a preferred minimum I/O size.
+> Apologies for the delay.  I've been fighting a flu :-(
 >
-> To some degree it is actually a 'maximum' preferred size for random
-> IO.  If you do random IO is blocks larger than the chunk size then you
-> risk causing more 'head contention' (at least with RAID0 - with RAID5
-> the tradeoff is more complex).
+> This patch seems to treat spares inconsistently.
 >
->   
-Actually this is allocation unit, and the array can be assumed to be a 
-series of sets of contiguous bytes of this size. Given LBA addressing, 
-array members which are not simple whole devices, etc, this doesn't 
-(can't) promise much for the physical layout. And any read which resides 
-entirely within a chunk would not have a performance penalty, although 
-write might, if it were not a multiple of the sector size of the array 
-member(s) involved.
-
-> If you are talking about "alignment", then yes - the chunk size is an
-> appropriate size to align on.  But so are the block size and the
-> stripe size and none is, in general, any better than any other.
+> md_integrity_register ignores spares.
+> However bind_rdev_to_array - which is used for adding a spare - calls
+> md_integrity_add_rdev to check that the integrity profile of the new
+> device matches.
 >
+> We need to be consistent.
+> Either all devices that are bound to the array - whether active,
+> spare, or failed - are considered, or only the active devices are
+> considered.
+>
+> In the former case we want to take action in bind_rdev_to_array
+> and possibly in unbind_rdev_from_array.
+> In the latter we need to take action either in remove_and_add_spares,
+> or in the per-personality ->hot_add_disk and ->hot_remove_disk
+> methods.
+>
+> I think I lean towards the latter, and put code in ->hot_*_disk, but
+> it isn't a strong leaning.
 >   
-I would assume that a chunk, aligned on a chunk boundary, would be 
-allocated in a contiguous series of bytes on the underlying array 
-member. And that any i/o not aligned on a chunk boundary would be more 
-likely to access multiple array members.
 
-Feel free to clarify my assumptions.
-
-> Also, you say "may" report.  If a device does not report, what happens
-> to this file.  Is it not present, or empty, or contain a special
-> "undefined" value?
-> I think the answer is that "512" is reported.  It might be good to
-> explicitly document that.
->   
-> I'd really like to see an example of how you expect filesystems to use
-> this.
-> I can well imagine the VM or elevator using this to assemble IO
-> requests in to properly aligned requests.  But I cannot imagine how
-> e.g mkfs would use it.
-> Or am I misunderstanding and this is for programs that use O_DIRECT on
-> the block device so they can optimise their request stream?
->   
+Does this open problems with shared spares between arrays of different 
+types?
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
@@ -94,3 +58,4 @@ Bill Davidsen <davidsen@tmr.com>
 normal user and is setuid root, with the "vi" line edit mode selected,
 and the character set is "big5," an off-by-one error occurs during
 wildcard (glob) expansion.
+
