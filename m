@@ -1,50 +1,21 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [PATCH/Resend] md: Push down data integrity code to personalities.
-Date: Tue, 7 Jul 2009 15:44:53 +0200
-Message-ID: <20090707134453.GC9869@skl-net.de>
-References: <20090701083802.GC9910@skl-net.de> <19026.50240.504728.428875@notabene.brown>
+From: Mark F <gnomeza@gmail.com>
+Subject: Re: Manually specifying data_offset in component device superblock?
+Date: Tue, 7 Jul 2009 15:03:43 +0100
+Message-ID: <6ad05c580907070703l32b424eew4a3671688de0762b@mail.gmail.com>
+References: <6ad05c580907070354o485818d7w255d75de9101fb39@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="wq9mPyueHGvFACwf"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <19026.50240.504728.428875@notabene.brown>
+In-Reply-To: <6ad05c580907070354o485818d7w255d75de9101fb39@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Sorry, I should have added that the array was created with mdadm from
+Debian Etch (mdadm-2.5.6-9 it appears).
 
---wq9mPyueHGvFACwf
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I'm currently using Debian Lenny's mdadm-2.6.7.2-1
 
-On 13:42, Neil Brown wrote:
-
-> We need to be consistent.
-> Either all devices that are bound to the array - whether active,
-> spare, or failed - are considered, or only the active devices are
-> considered.
-
-OK, I'll look at this and send a revised version of the patch.
-
-Get well soon.
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---wq9mPyueHGvFACwf
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFKU1FVWto1QDEAkw8RAnqOAJ45OcToiXb96qMi/NifotsziXwD2gCgo0TG
-V6zZkMPP8/Y19W1ZTZ3weuU=
-=pWIN
------END PGP SIGNATURE-----
-
---wq9mPyueHGvFACwf--
+thanks
+ Mark
