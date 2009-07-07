@@ -1,107 +1,94 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: REQUEST for new 'topology' metrics to be moved out of
-	the 'queue' sysfs directory.
-Date: Tue, 07 Jul 2009 01:29:37 -0400
-Message-ID: <yq163e55ada.fsf@sermon.lab.mkp.net>
-References: <19010.62951.886231.96622@notabene.brown>
-	<yq11vp8spxo.fsf@sermon.lab.mkp.net>
-	<125b48b7ffc99a496fbdd512f38cada5.squirrel@neil.brown.name>
-	<yq1k530qkm7.fsf@sermon.lab.mkp.net>
-	<19012.47077.328965.919868@notabene.brown>
-	<yq1ws6znja4.fsf@sermon.lab.mkp.net>
-	<19026.43290.340555.774690@notabene.brown>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Mark F <gnomeza@gmail.com>
+Subject: Manually specifying data_offset in component device superblock?
+Date: Tue, 7 Jul 2009 11:54:13 +0100
+Message-ID: <6ad05c580907070354o485818d7w255d75de9101fb39@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <19026.43290.340555.774690@notabene.brown> (Neil Brown's message
-	of "Tue, 7 Jul 2009 11:47:06 +1000")
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Neil Brown <neilb@suse.de>
-Cc: Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-fsdevel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Alasdair G Kergon <agk@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Neil" == Neil Brown <neilb@suse.de> writes:
+Hi
 
->> What: /sys/block/<disk>/queue/minimum_io_size Date: April 2009
->> Contact: Martin K. Petersen <martin.petersen@oracle.com> Description:
->> Storage devices may report a granularity or minimum I/O size which is
->> the device's preferred unit of I/O.  Requests smaller than this may
->> incur a significant performance penalty.
->> 
->> For disk drives this value corresponds to the physical block
->> size. For RAID devices it is usually the stripe chunk size.
+__The Problem__
 
-Neil> These two paragraphs are contradictory.  There is no sense in
-Neil> which a RAID chunk size is a preferred minimum I/O size.
+I'm attempting to recover a RAID5 (6 disks) with zeroed superblocks.
 
-Maybe not for MD.  This is not just about MD.
+mdadm -C --assume-clean -f -e 1.2 -l 5 -p ls -c 128 -n6
 
-This is a hint that says "Please don't send me random I/Os smaller than
-this.  And please align to a multiple of this value".
+But I'm unable to get the data offsets of some of the disks in the
+array to match what I had before:
+Diff of mdadm --examine /dev/sdb3 (which became /dev/sde3 after reboot)
 
-I agree that for MD devices the alignment portion of that is the
-important one.  However, putting a lower boundary on the size *is* quite
-important for 4KB disk drives.  There are also HW RAID devices that
-choke on requests smaller than the chunk size.
+--- md3.sdb3.orig       2009-07-07 10:14:25.000000000 +0100
++++ md3.sde3.new        2009-07-07 10:14:27.000000000 +0100
+@@ -2,26 +2,26 @@
+           Magic : a92b4efc
+         Version : 1.2
+     Feature Map : 0x0
+-     Array UUID : 2b7ca9c9:c9fa9a28:086e0f83:90cbef62
++     Array UUID : 679bc68c:aeb0464c:8f11e607:c8e58161
+            Name : hastur:3  (local to host hastur)
+-  Creation Time : Thu Oct 18 14:46:47 2007
++  Creation Time : Sun Jul  5 03:32:38 2009
+      Raid Level : raid5
+    Raid Devices : 6
 
-I appreciate the difficulty in filling out these hints in a way that
-makes sense for all the supported RAID levels in MD.  However, I really
-don't consider the hints particularly interesting in the isolated
-context of MD.  To me the hints are conduits for characteristics of the
-physical storage.  The question you should be asking yourself is: "What
-do I put in these fields to help the filesystem so that we get the most
-out of the underlying, slow hardware?".
+- Avail Dev Size : 870353369 (415.02 GiB 445.62 GB)
++ Avail Dev Size : 870353233 (415.02 GiB 445.62 GB)
+      Array Size : 4351765760 (2075.08 GiB 2228.10 GB)
+   Used Dev Size : 870353152 (415.02 GiB 445.62 GB)
+-    Data Offset : 136 sectors
++    Data Offset : 272 sectors
+    Super Offset : 8 sectors
+           State : clean
+-    Device UUID : c4983266:9ee820fd:106bbf9d:20a69333
++    Device UUID : 1b87acce:883de3fc:881f279e:e2b84a9b
 
-I think it is futile to keep spending time coming up with terminology
-that encompasses all current and future software and hardware storage
-devices with 100% accuracy.
+-    Update Time : Mon Jun 29 21:05:55 2009
+-       Checksum : 5a501eb5 - correct
+-         Events : 320840
++    Update Time : Sun Jul  5 03:32:38 2009
++       Checksum : 94ba3ae4 - correct
++         Events : 0
 
+          Layout : left-symmetric
+      Chunk Size : 128K
 
-Neil> To some degree it is actually a 'maximum' preferred size for
-Neil> random IO.  If you do random IO is blocks larger than the chunk
-Neil> size then you risk causing more 'head contention' (at least with
-Neil> RAID0 - with RAID5 the tradeoff is more complex).
+-    Array Slot : 0 (failed, 1, 2, failed, failed, 4, 5)
+-   Array State : _uu_uu 3 failed
++    Array Slot : 0 (0, 1, 2, 3, 4, 5)
++   Array State : Uuuuuu
 
-Please elaborate.
+Data offset for this disk was originally 136, but on recreation, mdadm
+chooses 272...
 
+The array started off as RAID5 (5 disks plus a hot spare).
+One disk (array slot 4) failed about a year ago and was replaced.
+The array was grown to RAID5 (6 disks) shortly after.
 
-Neil> Also, you say "may" report.  If a device does not report, what
-Neil> happens to this file.  Is it not present, or empty, or contain a
-Neil> special "undefined" value?  I think the answer is that "512" is
-Neil> reported.
+__The Question__
 
-The answer is physical_block_size.
+So, is there a way to force a particular data offset? (short of
+recompiling mdadm?)
 
+__Some things I've tried__
 
-Neil> In this case, if a device does not report an optimal size, the
-Neil> file contains "0" - correct?  Should that be explicit?
+It seems to be feasible to *manually* tweak data_offset with a hexeditor.
+To test things I've created some sparse loopback devices of the
+correct size (dd seek) with just the first 1MB or so of data in each
+device.
+After updating data_offset and the checksum of the first disk I
+assembled the array and cryptsetup found its header. (Yay!)
 
-Now documented.
+But does anyone know if other parts of the superblock are dependent on
+the data_offset value?
+Am I going to bork things horribly by fiddling with the data_offset?
 
+What data is present between the end of the superblock and the
+beginning of data?
 
-Neil> I'd really like to see an example of how you expect filesystems to
-Neil> use this.  I can well imagine the VM or elevator using this to
-Neil> assemble IO requests in to properly aligned requests.  But I
-Neil> cannot imagine how e.g mkfs would use it.  Or am I
-Neil> misunderstanding and this is for programs that use O_DIRECT on the
-Neil> block device so they can optimise their request stream?
-
-The way it has been working so far (with the manual ioctl pokage) is
-that mkfs will align metadata as well as data on a minimum_io_size
-boundary.  And it will try to use the minimum_io_size as filesystem
-block size.  On Linux that's currently limited by the fact that we can't
-have blocks bigger than a page.  The filesystem can also report the
-optimal I/O size in statfs.  For XFS the stripe width also affects how
-the realtime/GRIO allocators work.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Thanks
+  Mark
