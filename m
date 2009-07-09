@@ -1,91 +1,64 @@
 From: "Tirumala Reddy Marri" <tmarri@amcc.com>
 Subject: RE: Question on RAID-5 using ADMA
-Date: Wed, 8 Jul 2009 19:40:17 -0700
-Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C07B08859@SDCEXCHANGE01.ad.amcc.com>
-References: <AC5E1C3367E37D44970B81A6ADD1DA2C07B087D1@SDCEXCHANGE01.ad.amcc.com> <e9c3a7c20907081548r7e7a476difd1970b749987c13@mail.gmail.com> <AC5E1C3367E37D44970B81A6ADD1DA2C07B087FE@SDCEXCHANGE01.ad.amcc.com> <1247100956.18114.5.camel@dwillia2-linux.ch.intel.com>
+Date: Wed, 8 Jul 2009 20:37:15 -0700
+Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C07B08866@SDCEXCHANGE01.ad.amcc.com>
+References: <AC5E1C3367E37D44970B81A6ADD1DA2C07B087D1@SDCEXCHANGE01.ad.amcc.com>    <C804A8D3A7CE4E9B8B6CE8DFD11019B9@m5> <8ba75cd82b7938995077e9e157f5b93f.squirrel@neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-class: urn:content-classes:message
-In-Reply-To: <1247100956.18114.5.camel@dwillia2-linux.ch.intel.com>
+In-Reply-To: <8ba75cd82b7938995077e9e157f5b93f.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>, Guy Watkins <linux-raid@watkins-home.com>
+Cc: linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-Hi Dan,
- Looks like dmatest_init() is not being called. When I load the
-dmatest.ko I don't see any errors or threads getting created. Is there
-any other options I need to select ?
-Thanks,
+Hi Niel,
+
+I am wondering what is the priority between RAID-5 recovery and input IO
+from application.
+I am seeing these filesystem errors  when RAID-5 recovery is going on I
+tried to install ext3 file-system 
+and send data to /mnt/tmpmnt(/dev/md0 mount point) using "dd" command. I
+noticed that when amount of data is less than 
+RAID-5 recovery size no file system errors seen. When amount of data
+copied crosses RAID-5 recovery size I am seeing 
+file-system errors. 
+
+Regards,
 Marri
 
+	
+
 -----Original Message-----
-From: Dan Williams [mailto:dan.j.williams@intel.com] 
-Sent: Wednesday, July 08, 2009 5:56 PM
-To: Tirumala Reddy Marri
-Cc: linux-raid@vger.kernel.org
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of NeilBrown
+Sent: Wednesday, July 08, 2009 4:28 PM
+To: Guy Watkins
+Cc: Tirumala Reddy Marri; linux-raid@vger.kernel.org; 'Dan Williams'
 Subject: RE: Question on RAID-5 using ADMA
 
-On Wed, 2009-07-08 at 15:55 -0700, Tirumala Reddy Marri wrote:
-> I enabled the test. But I don't know how to run it. I have my own
-version of XOR test which verify the XOR operation. In general regular
-RADI-5 creation and creating file system works fine. Then I was doing
-some destructive tests to verify the stability that is where I am
-running into this issue.
-> Thanks,
-> Marri
+On Thu, July 9, 2009 9:11 am, Guy Watkins wrote:
+> I think you are doing --assume-clean wrong.
+>
+> Anyway, if you are bypassing the parity build with --assume-clean then
+how
+> can you expect it to work with a failed disk?
 
-It can be a bit tricky to enable here are the steps:
-1/ Disable other clients from consuming dma engines, i.e. set
-CONFIG_NET_DMA=n and CONFIG_ASYNC_TX_DMA=n
+That was my first thought too, but it doesn't actually follow.
 
-2/ Make sure that your driver loads before the dmatest module loads,
-otherwise it won't find any channels to test:
-modprobe your_driver
-modrpobe dmatest
+With only 3 devices, every write will construct new correct parity, so
+every block that was actually written will read back with the correct
+data after a device failure.
 
-Note: If you build your driver and dmatest into the kernel dmatest will
-use late_initcall to initialize after your driver.
+There must be something going wrong in the xor calculations.
 
-3/ Verify that the xor-threads are running.  You should see something
-like the following in top:
 
-top - 00:02:31 up 2 min,  1 user,  load average: 6.52, 2.87, 1.09
-Tasks:  53 total,   8 running,  45 sleeping,   0 stopped,   0 zombie
-Cpu(s):  4.7%us, 93.8%sy,  0.0%ni,  0.5%id,  0.0%wa,  0.1%hi,  0.9%si,
-0.0%st
-Mem:    807700k total,    31052k used,   776648k free,        0k buffers
-Swap:        0k total,        0k used,        0k free,    17224k cached
-
-  PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
-
-  788 root      30  10     0    0    0 R 14.6  0.0   0:19.47
-dma0chan0-xor0
-
-  790 root      30  10     0    0    0 R 14.6  0.0   0:19.48
-dma1chan0-xor0
-
-  792 root      30  10     0    0    0 R 14.6  0.0   0:19.47
-dma2chan0-xor0
-
-  793 root      30  10     0    0    0 R 14.6  0.0   0:19.49
-dma2chan0-pq0
-
-  787 root      30  10     0    0    0 R 12.8  0.0   0:19.55
-dma0chan0-copy0
-
-  789 root      30  10     0    0    0 R 12.8  0.0   0:19.57
-dma1chan0-copy0
-
-  791 root      30  10     0    0    0 R 12.8  0.0   0:19.55
-dma2chan0-copy0
-
-4/ Errors will be logged to the console, and you will get summary of
-tests passing/failing when you remove the dmatest module.
+NeilBrown
 
 --
-Dan
-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
