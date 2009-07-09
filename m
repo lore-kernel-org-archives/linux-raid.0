@@ -1,51 +1,38 @@
 From: "NeilBrown" <neilb@suse.de>
-Subject: Re: reshape raid5 to raid6
-Date: Thu, 9 Jul 2009 19:35:05 +1000 (EST)
-Message-ID: <0bd56967e395ec8488de00126f297b86.squirrel@neil.brown.name>
-References: <20090624102729.GY2828@rlogin.dk>
-    <972c997a386db1106868b3dc6b29ee21.squirrel@neil.brown.name>
-    <aebf5d970906240515y6c616250lca1cedea32927b00@mail.gmail.com>
-    <aebf5d970906240517h783273b2t876fe2be09ef59d6@mail.gmail.com>
-    <alpine.DEB.1.10.0907091026110.15149@uplift.swm.pp.se>
+Subject: RE: Question on RAID-5 using ADMA
+Date: Thu, 9 Jul 2009 19:37:06 +1000 (EST)
+Message-ID: <718d9b820ffe02616088357a59af8737.squirrel@neil.brown.name>
+References: <AC5E1C3367E37D44970B81A6ADD1DA2C07B087D1@SDCEXCHANGE01.ad.amcc.com>
+    <C804A8D3A7CE4E9B8B6CE8DFD11019B9@m5>
+    <8ba75cd82b7938995077e9e157f5b93f.squirrel@neil.brown.name>
+    <AC5E1C3367E37D44970B81A6ADD1DA2C07B08866@SDCEXCHANGE01.ad.amcc.com>
+    <9a56cb1758c9d7c935da72e9001d8e6b.squirrel@neil.brown.name>
+    <AC5E1C3367E37D44970B81A6ADD1DA2C0534ABF6@SDCEXCHANGE01.ad.amcc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0907091026110.15149@uplift.swm.pp.se>
+In-Reply-To: <AC5E1C3367E37D44970B81A6ADD1DA2C0534ABF6@SDCEXCHANGE01.ad.amcc.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid@vger.kernel.org
+To: Tirumala Reddy Marri <tmarri@amcc.com>
+Cc: Guy Watkins <linux-raid@watkins-home.com>, linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-On Thu, July 9, 2009 6:36 pm, Mikael Abrahamsson wrote:
-> On Wed, 24 Jun 2009, Beolach wrote:
+On Thu, July 9, 2009 5:26 pm, Tirumala Reddy Marri wrote:
+> Make sense what you are saying. I am seeing file system errors during
+> application data being written to file system on /def/md0 and rebuild is
+> happening same time.  If I wait till it finishes re-build no errors seen
+> on application data write(dd command).
 >
->> If a raid5 is changed to raid6, and then the raid6 is grown w/
->> additional disks, will that switch it to a more traditional layout,
->> since it has to be re-striped anyway?
->
-> I'd greatly appreciate if someone in the know could answer this?
+> Question is RAID-5 rebuild has to happen completely before we any write to
+> portions of disk which are not initialized yet ?
 
-Sorry, I thought I had... must have only intended to.
+No.  You don't have to way for raid-5 rebuilt to complete.
 
-The answer is "only if you explicitly tell it to", which mdadm-3.1
-will do for you.
-If you switch to raid6 by writing to a sysfs file, then grow with an
-earlier version of mdadm, it will keep to unusual layout.
-
->
-> Also, this raid6 with all Q blocks on a single drive, will older kernels
-> read this as well or is 2.6.30 needed to handle this "new" layout?
-
-You will need 2.6.30.  Older kernels will not understand it.
-
->
-> I'd like to convert a raid5 to raid6 with 2.6.30, then go back to 2.6.28
-> and run it, then when I grow it next time, I'd like to get the "correct"
-> layout with the Q blocks striped just as if I had created the raid6 from
-> scratch. Is this possible?
-
-Nope, sorry.
+Can you try disabling the ADMA and run exactly the same test.
+If it works without ADMA, but fails with ADMA, then you know where
+the problem is.
 
 NeilBrown
+
 
