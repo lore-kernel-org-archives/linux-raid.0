@@ -1,44 +1,31 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: RE: Question on RAID-5 using ADMA
-Date: Thu, 9 Jul 2009 13:53:42 +1000 (EST)
-Message-ID: <9a56cb1758c9d7c935da72e9001d8e6b.squirrel@neil.brown.name>
-References: <AC5E1C3367E37D44970B81A6ADD1DA2C07B087D1@SDCEXCHANGE01.ad.amcc.com>
-    <C804A8D3A7CE4E9B8B6CE8DFD11019B9@m5>
-    <8ba75cd82b7938995077e9e157f5b93f.squirrel@neil.brown.name>
-    <AC5E1C3367E37D44970B81A6ADD1DA2C07B08866@SDCEXCHANGE01.ad.amcc.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: reshape raid5 to raid6
+Date: Thu, 9 Jul 2009 10:36:05 +0200 (CEST)
+Message-ID: <alpine.DEB.1.10.0907091026110.15149@uplift.swm.pp.se>
+References: <20090624102729.GY2828@rlogin.dk>  <972c997a386db1106868b3dc6b29ee21.squirrel@neil.brown.name>  <aebf5d970906240515y6c616250lca1cedea32927b00@mail.gmail.com> <aebf5d970906240517h783273b2t876fe2be09ef59d6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AC5E1C3367E37D44970B81A6ADD1DA2C07B08866@SDCEXCHANGE01.ad.amcc.com>
+In-Reply-To: <aebf5d970906240517h783273b2t876fe2be09ef59d6@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tirumala Reddy Marri <tmarri@amcc.com>
-Cc: Guy Watkins <linux-raid@watkins-home.com>, linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, July 9, 2009 1:37 pm, Tirumala Reddy Marri wrote:
-> Hi Niel,
->
-> I am wondering what is the priority between RAID-5 recovery and input IO
-> from application.
-> I am seeing these filesystem errors  when RAID-5 recovery is going on I
-> tried to install ext3 file-system
-> and send data to /mnt/tmpmnt(/dev/md0 mount point) using "dd" command. I
-> noticed that when amount of data is less than
-> RAID-5 recovery size no file system errors seen. When amount of data
-> copied crosses RAID-5 recovery size I am seeing
-> file-system errors.
+On Wed, 24 Jun 2009, Beolach wrote:
 
-I'm not sure what you mean by "priority".
+> If a raid5 is changed to raid6, and then the raid6 is grown w/ 
+> additional disks, will that switch it to a more traditional layout, 
+> since it has to be re-striped anyway?
 
-application writes go to the stripe-cache.
-recovery writes go to the stripe-cache
-data from the stripe-cache is written to the devices.
+I'd greatly appreciate if someone in the know could answer this?
 
-there is no really issue of 'priority'.  Just interlocking to make sure
-they don't both updates the same block at the same time, and they
-don't.
+Also, this raid6 with all Q blocks on a single drive, will older kernels 
+read this as well or is 2.6.30 needed to handle this "new" layout?
 
-NeilBrown
+I'd like to convert a raid5 to raid6 with 2.6.30, then go back to 2.6.28 
+and run it, then when I grow it next time, I'd like to get the "correct" 
+layout with the Q blocks striped just as if I had created the raid6 from 
+scratch. Is this possible?
 
-
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
