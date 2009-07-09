@@ -1,48 +1,58 @@
-From: "Tirumala Reddy Marri" <tmarri@amcc.com>
-Subject: RE: Question on RAID-5 using ADMA
-Date: Thu, 9 Jul 2009 12:18:27 -0700
-Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C07B089A3@SDCEXCHANGE01.ad.amcc.com>
-References: <AC5E1C3367E37D44970B81A6ADD1DA2C07B087D1@SDCEXCHANGE01.ad.amcc.com>    <C804A8D3A7CE4E9B8B6CE8DFD11019B9@m5>    <8ba75cd82b7938995077e9e157f5b93f.squirrel@neil.brown.name>    <AC5E1C3367E37D44970B81A6ADD1DA2C07B08866@SDCEXCHANGE01.ad.amcc.com>    <9a56cb1758c9d7c935da72e9001d8e6b.squirrel@neil.brown.name>    <AC5E1C3367E37D44970B81A6ADD1DA2C0534ABF6@SDCEXCHANGE01.ad.amcc.com> <718d9b820ffe02616088357a59af8737.squirrel@neil.brown.name>
+From: Mark F <gnomeza@gmail.com>
+Subject: Re: Manually specifying data_offset in component device superblock?
+Date: Thu, 9 Jul 2009 23:11:31 +0100
+Message-ID: <6ad05c580907091511v59f70a78o72901b54ac1ab7b9@mail.gmail.com>
+References: <6ad05c580907070354o485818d7w255d75de9101fb39@mail.gmail.com>
+	 <19029.18706.672808.169640@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <718d9b820ffe02616088357a59af8737.squirrel@neil.brown.name>
+In-Reply-To: <19029.18706.672808.169640@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Guy Watkins <linux-raid@watkins-home.com>, linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi Neil
 
->No.  You don't have to way for raid-5 rebuilt to complete.
+Firstly, thanks!
+I recovered all the data this evening.
 
->Can you try disabling the ADMA and run exactly the same test.
->If it works without ADMA, but fails with ADMA, then you know where
->the problem is.
+2009/7/9 Neil Brown <neilb@suse.de>:
+> On Tuesday July 7, gnomeza@gmail.com wrote:
+>>
+>> I'm attempting to recover a RAID5 (6 disks) with zeroed superblocks.
+>>
+>> But I'm unable to get the data offsets of some of the disks in the
+>> array to match what I had before:
+>> ...
+>> Data offset for this disk was originally 136, but on recreation, mdadm
+>> chooses 272...
+>
+> It must have been created with mdadm-2.5.6 or earlier
+>
+Ta, I downloaded and compiled mdadm-2.5.6.
 
+>> After updating data_offset and the checksum of the first disk I
+>> assembled the array and cryptsetup found its header. (Yay!)
+>
+> You would need to update the data_offset on each device.
+>
+Thanks again. This info was crucial.
+The dump of mdadm --examine /dev/sd* I grabbed before I shut
+everything down showed two out of six disks with data_offset of 272
+sectors and the rest with 136.
+(I didn't think that was weird at first.)
 
-Working:
-1. Using pure SW RAID without ADMA  everything works fine.
-2. Using ADMA normal operations work fine 
-3. Using ADMA installing file-system works fine while recover happening.
-4. Using ADMA with forcing raid(-f option to mdadm) and io to
-file-system 
-   mounted /dev/md0 while recovery happening works fine.
-5. Using ADMA wait till recovery finishes and then IO to file-system
-mounted /dev/md0 works fine.
+I'm guessing this happened because I dumped the info after trying to
+add the two failed disks back to the array with the new version of
+mdadm.
+Following your hint, I recreated the array with data_offset of 136 on
+all the disks.
 
+A script to permute the order of the disks and run mdadm -C
+--assume-clean && cryptsetup && mount did the rest.
 
-Not Working:
-5. Using ADMA(without  -f option to mdadm) and io(dd command) to
-/dev/md0 which is mounted using 
-   ext3 file-system causing file system errors.
-6. Using ADMA with forcing (with -f to mdadm) and io to file-system
-mounted /dev/md0 while rebuild happening(forced a disk failure) causes
-file-system errors.
-7. Sam as no-6 except without forcing(with out -f option to mdadm) cause
-file-system errors.
-
-Thanks,
-Marri
+So...yay!
+  Mark
