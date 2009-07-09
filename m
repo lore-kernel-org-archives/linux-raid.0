@@ -1,85 +1,91 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Manually specifying data_offset in component device superblock?
-Date: Thu, 9 Jul 2009 11:34:10 +1000
-Message-ID: <19029.18706.672808.169640@notabene.brown>
-References: <6ad05c580907070354o485818d7w255d75de9101fb39@mail.gmail.com>
+From: "Tirumala Reddy Marri" <tmarri@amcc.com>
+Subject: RE: Question on RAID-5 using ADMA
+Date: Wed, 8 Jul 2009 19:40:17 -0700
+Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C07B08859@SDCEXCHANGE01.ad.amcc.com>
+References: <AC5E1C3367E37D44970B81A6ADD1DA2C07B087D1@SDCEXCHANGE01.ad.amcc.com> <e9c3a7c20907081548r7e7a476difd1970b749987c13@mail.gmail.com> <AC5E1C3367E37D44970B81A6ADD1DA2C07B087FE@SDCEXCHANGE01.ad.amcc.com> <1247100956.18114.5.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Mark F on Tuesday July 7
+Content-class: urn:content-classes:message
+In-Reply-To: <1247100956.18114.5.camel@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark F <gnomeza@gmail.com>
+To: Dan Williams <dan.j.williams@intel.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tuesday July 7, gnomeza@gmail.com wrote:
-> Hi
-> 
-> __The Problem__
-> 
-> I'm attempting to recover a RAID5 (6 disks) with zeroed superblocks.
-> 
-> mdadm -C --assume-clean -f -e 1.2 -l 5 -p ls -c 128 -n6
-> 
-> But I'm unable to get the data offsets of some of the disks in the
-> array to match what I had before:
-> Diff of mdadm --examine /dev/sdb3 (which became /dev/sde3 after reboot)
-> 
+Hi Dan,
+ Looks like dmatest_init() is not being called. When I load the
+dmatest.ko I don't see any errors or threads getting created. Is there
+any other options I need to select ?
+Thanks,
+Marri
 
-> 
-> - Avail Dev Size : 870353369 (415.02 GiB 445.62 GB)
-> + Avail Dev Size : 870353233 (415.02 GiB 445.62 GB)
->       Array Size : 4351765760 (2075.08 GiB 2228.10 GB)
->    Used Dev Size : 870353152 (415.02 GiB 445.62 GB)
-> -    Data Offset : 136 sectors
-> +    Data Offset : 272 sectors
+-----Original Message-----
+From: Dan Williams [mailto:dan.j.williams@intel.com] 
+Sent: Wednesday, July 08, 2009 5:56 PM
+To: Tirumala Reddy Marri
+Cc: linux-raid@vger.kernel.org
+Subject: RE: Question on RAID-5 using ADMA
 
-That is unfortunate, isn't it...
+On Wed, 2009-07-08 at 15:55 -0700, Tirumala Reddy Marri wrote:
+> I enabled the test. But I don't know how to run it. I have my own
+version of XOR test which verify the XOR operation. In general regular
+RADI-5 creation and creating file system works fine. Then I was doing
+some destructive tests to verify the stability that is where I am
+running into this issue.
+> Thanks,
+> Marri
 
-> 
-> Data offset for this disk was originally 136, but on recreation, mdadm
-> chooses 272...
+It can be a bit tricky to enable here are the steps:
+1/ Disable other clients from consuming dma engines, i.e. set
+CONFIG_NET_DMA=n and CONFIG_ASYNC_TX_DMA=n
 
-It must have been created with mdadm-2.5.6 or earlier
+2/ Make sure that your driver loads before the dmatest module loads,
+otherwise it won't find any channels to test:
+modprobe your_driver
+modrpobe dmatest
 
-> 
-> The array started off as RAID5 (5 disks plus a hot spare).
-> One disk (array slot 4) failed about a year ago and was replaced.
-> The array was grown to RAID5 (6 disks) shortly after.
-> 
-> __The Question__
-> 
-> So, is there a way to force a particular data offset? (short of
-> recompiling mdadm?)
+Note: If you build your driver and dmatest into the kernel dmatest will
+use late_initcall to initialize after your driver.
 
-No.
+3/ Verify that the xor-threads are running.  You should see something
+like the following in top:
 
-> 
-> __Some things I've tried__
-> 
-> It seems to be feasible to *manually* tweak data_offset with a hexeditor.
-> To test things I've created some sparse loopback devices of the
-> correct size (dd seek) with just the first 1MB or so of data in each
-> device.
-> After updating data_offset and the checksum of the first disk I
-> assembled the array and cryptsetup found its header. (Yay!)
+top - 00:02:31 up 2 min,  1 user,  load average: 6.52, 2.87, 1.09
+Tasks:  53 total,   8 running,  45 sleeping,   0 stopped,   0 zombie
+Cpu(s):  4.7%us, 93.8%sy,  0.0%ni,  0.5%id,  0.0%wa,  0.1%hi,  0.9%si,
+0.0%st
+Mem:    807700k total,    31052k used,   776648k free,        0k buffers
+Swap:        0k total,        0k used,        0k free,    17224k cached
 
-You would need to update the data_offset on each device.
+  PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
 
-> 
-> But does anyone know if other parts of the superblock are dependent on
-> the data_offset value?
-> Am I going to bork things horribly by fiddling with the data_offset?
+  788 root      30  10     0    0    0 R 14.6  0.0   0:19.47
+dma0chan0-xor0
 
-No, that should be safe (as long as you do it on every device).
+  790 root      30  10     0    0    0 R 14.6  0.0   0:19.48
+dma1chan0-xor0
 
+  792 root      30  10     0    0    0 R 14.6  0.0   0:19.47
+dma2chan0-xor0
 
-> 
-> What data is present between the end of the superblock and the
-> beginning of data?
+  793 root      30  10     0    0    0 R 14.6  0.0   0:19.49
+dma2chan0-pq0
 
-That space is used for an internal bitmap.  If you don't have a bitmap
-configured, then that space is not used.
+  787 root      30  10     0    0    0 R 12.8  0.0   0:19.55
+dma0chan0-copy0
 
-NeilBrown
+  789 root      30  10     0    0    0 R 12.8  0.0   0:19.57
+dma1chan0-copy0
+
+  791 root      30  10     0    0    0 R 12.8  0.0   0:19.55
+dma2chan0-copy0
+
+4/ Errors will be logged to the console, and you will get summary of
+tests passing/failing when you remove the dmatest module.
+
+--
+Dan
+
