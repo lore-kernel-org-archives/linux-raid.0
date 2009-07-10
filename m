@@ -1,19 +1,27 @@
-From: Dan Williams <dan.j.williams@intel.com>
+From: "Tirumala Reddy Marri" <tmarri@amcc.com>
 Subject: RE: where is async_tx_clear_ack() function called.
-Date: Fri, 10 Jul 2009 10:53:36 -0700
-Message-ID: <1247248416.15724.5.camel@dwillia2-linux.ch.intel.com>
-References: <AC5E1C3367E37D44970B81A6ADD1DA2C07B08A8F@SDCEXCHANGE01.ad.amcc.com>
-	 <e9c3a7c20907101015t2396048r96be01024537df09@mail.gmail.com>
-	 <AC5E1C3367E37D44970B81A6ADD1DA2C07B08BA9@SDCEXCHANGE01.ad.amcc.com>
+Date: Fri, 10 Jul 2009 13:40:23 -0700
+Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C07B08C3B@SDCEXCHANGE01.ad.amcc.com>
+References: <AC5E1C3367E37D44970B81A6ADD1DA2C07B08A8F@SDCEXCHANGE01.ad.amcc.com> <e9c3a7c20907101015t2396048r96be01024537df09@mail.gmail.com> <AC5E1C3367E37D44970B81A6ADD1DA2C07B08BA9@SDCEXCHANGE01.ad.amcc.com> <1247248416.15724.5.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AC5E1C3367E37D44970B81A6ADD1DA2C07B08BA9@SDCEXCHANGE01.ad.amcc.com>
+Content-class: urn:content-classes:message
+In-Reply-To: <1247248416.15724.5.camel@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tirumala Reddy Marri <tmarri@amcc.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+
+Dan,
+   After disabling memcopy support in ADMA, file system corruption
+doesn't seem to happening. I am going to take a look at this channel
+switching stuff.
+Regards,
+Marri
 
 On Fri, 2009-07-10 at 10:44 -0700, Tirumala Reddy Marri wrote:
 > 
@@ -37,8 +45,5 @@ different channels then turn off (don't register) the memcpy channels
 and see if that resolves your issue.  If it does then you need to review
 the iop-adma driver or the Emcraft ppc440spe driver to see what is
 causing the mishandling of channel switching.
-
---
-Dan
 
 
