@@ -1,17 +1,45 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: where is async_tx_clear_ack() function called.
-Date: Fri, 10 Jul 2009 10:15:07 -0700
-Message-ID: <e9c3a7c20907101015t2396048r96be01024537df09@mail.gmail.com>
-References: <AC5E1C3367E37D44970B81A6ADD1DA2C07B08A8F@SDCEXCHANGE01.ad.amcc.com>
+From: "Tirumala Reddy Marri" <tmarri@amcc.com>
+Subject: RE: where is async_tx_clear_ack() function called.
+Date: Fri, 10 Jul 2009 10:44:31 -0700
+Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C07B08BA9@SDCEXCHANGE01.ad.amcc.com>
+References: <AC5E1C3367E37D44970B81A6ADD1DA2C07B08A8F@SDCEXCHANGE01.ad.amcc.com> <e9c3a7c20907101015t2396048r96be01024537df09@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AC5E1C3367E37D44970B81A6ADD1DA2C07B08A8F@SDCEXCHANGE01.ad.amcc.com>
+Content-class: urn:content-classes:message
+In-Reply-To: <e9c3a7c20907101015t2396048r96be01024537df09@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tirumala Reddy Marri <tmarri@amcc.com>
+To: Dan Williams <dan.j.williams@intel.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+
+
+Thanks Dan.
+  I see the flags are set in the xxxx_pre_dma_xor. I am hitting  BUG_ON=
+(async_tx_test_ack(depend_tx) || depend_tx->next || tx->parent) I happe=
+ning. Looks like some dependency related issue.  When I suppress this b=
+y calling async_tx_clear_ack() in xxx_free_slots() function, that is le=
+ading to file-system corruption in the case of recovery or re-build.
+
+
+The driver I am working on is a different SOC . It  is a subset of (DMA=
++XOR little different) what emccraft posted. That driver can't be used =
+as it is. There is another SOC ADMA driver which is completely differen=
+t HW from the emccrafts driver.
+
+
+Thanks and Regards,
+Marri
+
+-----Original Message-----
+=46rom: dan.j.williams@gmail.com [mailto:dan.j.williams@gmail.com] On B=
+ehalf Of Dan Williams
+Sent: Friday, July 10, 2009 10:15 AM
+To: Tirumala Reddy Marri
+Cc: linux-raid@vger.kernel.org
+Subject: Re: where is async_tx_clear_ack() function called.
 
 On Thu, Jul 9, 2009 at 4:36 PM, Tirumala Reddy Marri<tmarri@amcc.com> w=
 rote:
