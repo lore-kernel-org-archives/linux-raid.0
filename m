@@ -1,71 +1,44 @@
-From: "Tirumala Reddy Marri" <tmarri@amcc.com>
-Subject: RE: Question on RAID-5 using ADMA
-Date: Fri, 10 Jul 2009 10:51:06 -0700
-Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C07B08BB4@SDCEXCHANGE01.ad.amcc.com>
-References: <AC5E1C3367E37D44970B81A6ADD1DA2C07B087D1@SDCEXCHANGE01.ad.amcc.com><C804A8D3A7CE4E9B8B6CE8DFD11019B9@m5><8ba75cd82b7938995077e9e157f5b93f.squirrel@neil.brown.name><AC5E1C3367E37D44970B81A6ADD1DA2C07B08866@SDCEXCHANGE01.ad.amcc.com><9a56cb1758c9d7c935da72e9001d8e6b.squirrel@neil.brown.name><AC5E1C3367E37D44970B81A6ADD1DA2C0534ABF6@SDCEXCHANGE01.ad.amcc.com><718d9b820ffe02616088357a59af8737.squirrel@neil.brown.name><AC5E1C3367E37D44970B81A6ADD1DA2C07B089A3@SDCEXCHANGE01.ad.amcc.com> <19030.40729.769761.428308@notabene.brown>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: RE: where is async_tx_clear_ack() function called.
+Date: Fri, 10 Jul 2009 10:53:36 -0700
+Message-ID: <1247248416.15724.5.camel@dwillia2-linux.ch.intel.com>
+References: <AC5E1C3367E37D44970B81A6ADD1DA2C07B08A8F@SDCEXCHANGE01.ad.amcc.com>
+	 <e9c3a7c20907101015t2396048r96be01024537df09@mail.gmail.com>
+	 <AC5E1C3367E37D44970B81A6ADD1DA2C07B08BA9@SDCEXCHANGE01.ad.amcc.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <19030.40729.769761.428308@notabene.brown>
+In-Reply-To: <AC5E1C3367E37D44970B81A6ADD1DA2C07B08BA9@SDCEXCHANGE01.ad.amcc.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Guy Watkins <linux-raid@watkins-home.com>, linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: Tirumala Reddy Marri <tmarri@amcc.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil,
- Thanks for the comments. You are right. Whenever there are no dependent
-operations things are fine. I mean you do one task at a time. Like
-rebuild, IO to disks or rebuild the failed drive etc. Looks like it a
-issue in my ADMA driver which failed to run the dependent operations.
-And that is causing silent file-system corruptions. 
-Thanks and Regards,
-Marri
-
-
+On Fri, 2009-07-10 at 10:44 -0700, Tirumala Reddy Marri wrote:
 > 
-> Working:
-> 1. Using pure SW RAID without ADMA  everything works fine.
-> 2. Using ADMA normal operations work fine 
-> 3. Using ADMA installing file-system works fine while recover
-happening.
-> 4. Using ADMA with forcing raid(-f option to mdadm) and io to
-> file-system 
->    mounted /dev/md0 while recovery happening works fine.
-> 5. Using ADMA wait till recovery finishes and then IO to file-system
-> mounted /dev/md0 works fine.
-
-None of these operations actually use the parity data that is
-created.  They update it but would not notice if it was wrong.
-
+> Thanks Dan.
+>   I see the flags are set in the xxxx_pre_dma_xor. I am hitting
+> BUG_ON(async_tx_test_ack(depend_tx) || depend_tx->next || tx->parent)
+> I happening. Looks like some dependency related issue.  When I
+> suppress this by calling async_tx_clear_ack() in xxx_free_slots()
+> function, that is leading to file-system corruption in the case of
+> recovery or re-build.
 > 
 > 
-> Not Working:
-> 5. Using ADMA(without  -f option to mdadm) and io(dd command) to
-> /dev/md0 which is mounted using 
->    ext3 file-system causing file system errors.
+> The driver I am working on is a different SOC . It  is a subset of
+> (DMA+XOR little different) what emccraft posted. That driver can't be
+> used as it is. There is another SOC ADMA driver which is completely
+> different HW from the emccrafts driver.
 
-This creates the array in degraded mode so reads will often use the
-parity block to reconstruct data.
+Channel switching can be tricky to debug.  One thing you might try is
+limiting offload to one channel.  I.e. if memcpy and xor are provided by
+different channels then turn off (don't register) the memcpy channels
+and see if that resolves your issue.  If it does then you need to review
+the iop-adma driver or the Emcraft ppc440spe driver to see what is
+causing the mishandling of channel switching.
 
-> 6. Using ADMA with forcing (with -f to mdadm) and io to file-system
-> mounted /dev/md0 while rebuild happening(forced a disk failure) causes
-> file-system errors.
+--
+Dan
 
-This also involves degraded mode so the parity is needed.
 
-> 7. Sam as no-6 except without forcing(with out -f option to mdadm)
-cause
-> file-system errors.
-
-And this.
-
-So either the parity is not being calculated correctly, or the process
-for reconstructing a block from parity and other data is not working
-correctly.
-There is a very good chance that it is both as they are essentially
-the same operation.
-
-NeilBrown
