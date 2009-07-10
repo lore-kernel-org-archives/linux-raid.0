@@ -1,72 +1,57 @@
-From: Neil Brown <neilb@suse.de>
-Subject: RE: Question on RAID-5 using ADMA
-Date: Fri, 10 Jul 2009 11:53:29 +1000
-Message-ID: <19030.40729.769761.428308@notabene.brown>
-References: <AC5E1C3367E37D44970B81A6ADD1DA2C07B087D1@SDCEXCHANGE01.ad.amcc.com>
-	<C804A8D3A7CE4E9B8B6CE8DFD11019B9@m5>
-	<8ba75cd82b7938995077e9e157f5b93f.squirrel@neil.brown.name>
-	<AC5E1C3367E37D44970B81A6ADD1DA2C07B08866@SDCEXCHANGE01.ad.amcc.com>
-	<9a56cb1758c9d7c935da72e9001d8e6b.squirrel@neil.brown.name>
-	<AC5E1C3367E37D44970B81A6ADD1DA2C0534ABF6@SDCEXCHANGE01.ad.amcc.com>
-	<718d9b820ffe02616088357a59af8737.squirrel@neil.brown.name>
-	<AC5E1C3367E37D44970B81A6ADD1DA2C07B089A3@SDCEXCHANGE01.ad.amcc.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: where is async_tx_clear_ack() function called.
+Date: Fri, 10 Jul 2009 10:15:07 -0700
+Message-ID: <e9c3a7c20907101015t2396048r96be01024537df09@mail.gmail.com>
+References: <AC5E1C3367E37D44970B81A6ADD1DA2C07B08A8F@SDCEXCHANGE01.ad.amcc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Tirumala Reddy Marri on Thursday July 9
+In-Reply-To: <AC5E1C3367E37D44970B81A6ADD1DA2C07B08A8F@SDCEXCHANGE01.ad.amcc.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Tirumala Reddy Marri <tmarri@amcc.com>
-Cc: Guy Watkins <linux-raid@watkins-home.com>, linux-raid@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday July 9, tmarri@amcc.com wrote:
-> 
-> >No.  You don't have to way for raid-5 rebuilt to complete.
-> 
-> >Can you try disabling the ADMA and run exactly the same test.
-> >If it works without ADMA, but fails with ADMA, then you know where
-> >the problem is.
-> 
-> 
-> Working:
-> 1. Using pure SW RAID without ADMA  everything works fine.
-> 2. Using ADMA normal operations work fine 
-> 3. Using ADMA installing file-system works fine while recover happening.
-> 4. Using ADMA with forcing raid(-f option to mdadm) and io to
-> file-system 
->    mounted /dev/md0 while recovery happening works fine.
-> 5. Using ADMA wait till recovery finishes and then IO to file-system
-> mounted /dev/md0 works fine.
+On Thu, Jul 9, 2009 at 4:36 PM, Tirumala Reddy Marri<tmarri@amcc.com> w=
+rote:
+> Hi Dan,
+> =A0 =A0While I was debugging file system crash with AMCC ADMA driver =
+, I
+> noticed that async_tx_clear_ack() never been called. Where is the
+> async_tx->flags is cleared up on completion of DMA transfer ? Looks l=
+ike
+> this not cleared and I am hitting the BUG_ON() in async_tx_submit(). =
+If
+> I call async_tx_clear_ack() in ppc4xx_ adma_free_slots() function
+> everything seems working fine .
+>
+> This doesn't sound normal something is going on. Somehow descriptors =
+are
+> allocated even though they are not free .
+>
 
-None of these operations actually use the parity data that is
-created.  They update it but would not notice if it was wrong.
+If you take a look at iop-adma.c you will see lines like:
 
-> 
-> 
-> Not Working:
-> 5. Using ADMA(without  -f option to mdadm) and io(dd command) to
-> /dev/md0 which is mounted using 
->    ext3 file-system causing file system errors.
+     sw_desc->async_tx.flags =3D flags;
 
-This creates the array in degraded mode so reads will often use the
-parity block to reconstruct data.
+So we inheret the DMA_CTRL_ACK flag from when async_tx calls the
+->prep routine.  It is not important to clear ack on completion, it is
+only important to reset it at prep time.  It is merely a flag that
+holds off recycling descriptors while the api may still want to attach
+a dependency.
 
-> 6. Using ADMA with forcing (with -f to mdadm) and io to file-system
-> mounted /dev/md0 while rebuild happening(forced a disk failure) causes
-> file-system errors.
+If memory serves correctly we have tried to debug this driver before,
+please refresh my memory on how this driver is different than the one
+produced by Emcraft[1] that does not seem to exhibit these problems?
 
-This also involves degraded mode so the parity is needed.
+Thanks,
+Dan
 
-> 7. Sam as no-6 except without forcing(with out -f option to mdadm) cause
-> file-system errors.
 
-And this.
-
-So either the parity is not being calculated correctly, or the process
-for reconstructing a block from parity and other data is not working
-correctly.
-There is a very good chance that it is both as they are essentially
-the same operation.
-
-NeilBrown
+[1]: http://patchwork.ozlabs.org/patch/18116/
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
