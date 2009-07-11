@@ -1,49 +1,190 @@
-From: "Tirumala Reddy Marri" <tmarri@amcc.com>
-Subject: RE: where is async_tx_clear_ack() function called.
-Date: Fri, 10 Jul 2009 13:40:23 -0700
-Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C07B08C3B@SDCEXCHANGE01.ad.amcc.com>
-References: <AC5E1C3367E37D44970B81A6ADD1DA2C07B08A8F@SDCEXCHANGE01.ad.amcc.com> <e9c3a7c20907101015t2396048r96be01024537df09@mail.gmail.com> <AC5E1C3367E37D44970B81A6ADD1DA2C07B08BA9@SDCEXCHANGE01.ad.amcc.com> <1247248416.15724.5.camel@dwillia2-linux.ch.intel.com>
+From: Thomas Kenyon <zhadnost@googlemail.com>
+Subject: Help with Failed array
+Date: Sat, 11 Jul 2009 07:46:43 +0000
+Message-ID: <dd404eb00907110046k2bda785fy204c0d23075bda24@mail.gmail.com>
+References: <dd404eb00907110001n177f9fabpb394aac706d3e90@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <1247248416.15724.5.camel@dwillia2-linux.ch.intel.com>
+In-Reply-To: <dd404eb00907110001n177f9fabpb394aac706d3e90@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+My server at home operates a 4 disk software RAID 5 array which is
+normally mounted at /.
 
-Dan,
-   After disabling memcopy support in ADMA, file system corruption
-doesn't seem to happening. I am going to take a look at this channel
-switching stuff.
-Regards,
-Marri
+At the moment I am using mdadm v2.6.7.2 (I don't know which version
+built the array).
 
-On Fri, 2009-07-10 at 10:44 -0700, Tirumala Reddy Marri wrote:
-> 
-> Thanks Dan.
->   I see the flags are set in the xxxx_pre_dma_xor. I am hitting
-> BUG_ON(async_tx_test_ack(depend_tx) || depend_tx->next || tx->parent)
-> I happening. Looks like some dependency related issue.  When I
-> suppress this by calling async_tx_clear_ack() in xxx_free_slots()
-> function, that is leading to file-system corruption in the case of
-> recovery or re-build.
-> 
-> 
-> The driver I am working on is a different SOC . It  is a subset of
-> (DMA+XOR little different) what emccraft posted. That driver can't be
-> used as it is. There is another SOC ADMA driver which is completely
-> different HW from the emccrafts driver.
+One of the disks appeared to have developed a fault, an I/O error
+would be produced and the array would rebuild to try and mao round it,
+and once it had finished there'd be another I/O error and it would
+start again.
 
-Channel switching can be tricky to debug.  One thing you might try is
-limiting offload to one channel.  I.e. if memcpy and xor are provided by
-different channels then turn off (don't register) the memcpy channels
-and see if that resolves your issue.  If it does then you need to review
-the iop-adma driver or the Emcraft ppc440spe driver to see what is
-causing the mishandling of channel switching.
+I marked the drive as faulty, removed it from the array, replaced it
+with a nother drive, replicated the partition map and added it to the
+array.
 
+As expected the drive started being built.
 
+I'm not sure if it had finished by this point, but another disk
+produced an I/O error which broke the array.
+
+Now I'm trying to recover any data I can from it.
+
+The partitions in the array are sd[abcd]1. (SATA controller).
+
+sdb is the drive that originally failed and has been replaced. sdc is
+the drive that took everything down.
+
+When I first try to assemble the array, this message appears in kernel =
+messages.
+
+md: kicking non-fresh sdc1 from array!
+
+and this appears in the console.
+
+mdadm: /dev/md0 assembled from 2 drives and 1 spare - not enough to
+start the array.
+
+even if I use --force.
+
+with this in mdstat
+
+Personalities : [raid6] [raid5] [raid4]
+md0 : inactive sdd1[2](S) sdc1[1](S) sdb1[5](S) sda1[4](S)
+=A0=A0=A0=A0=A0 1937888128 blocks super 1.0
+
+unused devices: <none>
+
+(well, all the [S], except the one on sdb1 appearing is new).
+
+If I try to fail and remove sdc1 and then reinsert it I get.
+
+mdadm /dev/md0 -f /dev/sdc1
+mdadm: cannot get array info for /dev/md0
+
+from examine I get
+
+/dev/sda1:
+=A0=A0=A0=A0=A0=A0=A0=A0=A0 Magic : a92b4efc
+=A0=A0=A0=A0=A0=A0=A0 Version : 1.0
+=A0=A0=A0 Feature Map : 0x0
+=A0=A0=A0=A0 Array UUID : 62f0dee0:e3a81d0c:68df2ad8:1ecb435b
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Name : 'chef':1
+=A0 Creation Time : Mon Jul 21 15:58:36 2008
+=A0=A0=A0=A0 Raid Level : raid5
+=A0=A0 Raid Devices : 4
+
+=A0Avail Dev Size : 968944072 (462.03 GiB 496.10 GB)
+=A0=A0=A0=A0 Array Size : 2906832000 (1386.09 GiB 1488.30 GB)
+=A0 Used Dev Size : 968944000 (462.03 GiB 496.10 GB)
+=A0=A0 Super Offset : 968944328 sectors
+=A0=A0=A0=A0=A0=A0=A0=A0=A0 State : clean
+=A0=A0=A0 Device UUID : 0bf37dbc:000ee685:7bcf601b:ff125af1
+
+=A0=A0=A0 Update Time : Fri Jul 10 18:45:04 2009
+=A0=A0=A0=A0=A0=A0 Checksum : ef734a25 - correct
+=A0=A0=A0=A0=A0=A0=A0=A0 Events : 19518
+
+=A0=A0=A0=A0=A0=A0=A0=A0 Layout : left-symmetric
+=A0=A0=A0=A0 Chunk Size : 64K
+
+=A0=A0=A0 Array Slot : 4 (failed, failed, 2, failed, 3)
+=A0=A0 Array State : __uU 3 failed
+
+/dev/sdb1:
+=A0=A0=A0=A0=A0=A0=A0=A0=A0 Magic : a92b4efc
+=A0=A0=A0=A0=A0=A0=A0 Version : 1.0
+=A0=A0=A0 Feature Map : 0x0
+=A0=A0=A0=A0 Array UUID : 62f0dee0:e3a81d0c:68df2ad8:1ecb435b
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Name : 'chef':1
+=A0 Creation Time : Mon Jul 21 15:58:36 2008
+=A0=A0=A0=A0 Raid Level : raid5
+=A0=A0 Raid Devices : 4
+
+=A0Avail Dev Size : 968944200 (462.03 GiB 496.10 GB)
+=A0=A0=A0=A0 Array Size : 2906832000 (1386.09 GiB 1488.30 GB)
+=A0 Used Dev Size : 968944000 (462.03 GiB 496.10 GB)
+=A0=A0 Super Offset : 968944328 sectors
+=A0=A0=A0=A0=A0=A0=A0=A0=A0 State : clean
+=A0=A0=A0 Device UUID : bb71f618:9d9be6e2:84bd3fdb:02543dfb
+
+=A0=A0=A0 Update Time : Fri Jul 10 18:45:04 2009
+=A0=A0=A0=A0=A0=A0 Checksum : 72ae8ca8 - correct
+=A0=A0=A0=A0=A0=A0=A0=A0 Events : 19518
+
+=A0=A0=A0=A0=A0=A0=A0=A0 Layout : left-symmetric
+=A0=A0=A0=A0 Chunk Size : 64K
+
+=A0=A0=A0 Array Slot : 5 (failed, failed, 2, failed, 3)
+=A0=A0 Array State : __uu 3 failed
+
+/dev/sdc1:
+=A0=A0=A0=A0=A0=A0=A0=A0=A0 Magic : a92b4efc
+=A0=A0=A0=A0=A0=A0=A0 Version : 1.0
+=A0=A0=A0 Feature Map : 0x0
+=A0=A0=A0=A0 Array UUID : 62f0dee0:e3a81d0c:68df2ad8:1ecb435b
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Name : 'chef':1
+=A0 Creation Time : Mon Jul 21 15:58:36 2008
+=A0=A0=A0=A0 Raid Level : raid5
+=A0=A0 Raid Devices : 4
+
+=A0Avail Dev Size : 968944200 (462.03 GiB 496.10 GB)
+=A0=A0=A0=A0 Array Size : 2906832000 (1386.09 GiB 1488.30 GB)
+=A0 Used Dev Size : 968944000 (462.03 GiB 496.10 GB)
+=A0=A0 Super Offset : 968944328 sectors
+=A0=A0=A0=A0=A0=A0=A0=A0=A0 State : clean
+=A0=A0=A0 Device UUID : 0259688e:21902f87:a4da25cd:a5042e6f
+
+=A0=A0=A0 Update Time : Fri Jul 10 18:45:04 2009
+=A0=A0=A0=A0=A0=A0 Checksum : f2402efa - correct
+=A0=A0=A0=A0=A0=A0=A0=A0 Events : 19375
+
+=A0=A0=A0=A0=A0=A0=A0=A0 Layout : left-symmetric
+=A0=A0=A0=A0 Chunk Size : 64K
+
+=A0=A0=A0 Array Slot : 1 (failed, failed, 2, failed, 3)
+=A0=A0 Array State : __uu 3 failed
+
+/dev/sdd1:
+=A0=A0=A0=A0=A0=A0=A0=A0=A0 Magic : a92b4efc
+=A0=A0=A0=A0=A0=A0=A0 Version : 1.0
+=A0=A0=A0 Feature Map : 0x0
+=A0=A0=A0=A0 Array UUID : 62f0dee0:e3a81d0c:68df2ad8:1ecb435b
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Name : 'chef':1
+=A0 Creation Time : Mon Jul 21 15:58:36 2008
+=A0=A0=A0=A0 Raid Level : raid5
+=A0=A0 Raid Devices : 4
+
+=A0Avail Dev Size : 968944072 (462.03 GiB 496.10 GB)
+=A0=A0=A0=A0 Array Size : 2906832000 (1386.09 GiB 1488.30 GB)
+=A0 Used Dev Size : 968944000 (462.03 GiB 496.10 GB)
+=A0=A0 Super Offset : 968944328 sectors
+=A0=A0=A0=A0=A0=A0=A0=A0=A0 State : clean
+=A0=A0=A0 Device UUID : 1f3b1479:3e01d8dd:d8ce565a:cb13e780
+
+=A0=A0=A0 Update Time : Fri Jul 10 18:45:04 2009
+=A0=A0=A0=A0=A0=A0 Checksum : d27e859e - correct
+=A0=A0=A0=A0=A0=A0=A0=A0 Events : 19518
+
+=A0=A0=A0=A0=A0=A0=A0=A0 Layout : left-symmetric
+=A0=A0=A0=A0 Chunk Size : 64K
+
+=A0=A0=A0 Array Slot : 2 (failed, failed, 2, failed, 3)
+=A0=A0 Array State : __Uu 3 failed
+
+As you can see sdc1's event count is more than a little out, oddly
+sdb1 is in State: clean.
+
+I've run out of ideas, can somoneone please give me a point in the
+right direction as to how to recover some of the data from this.
+
+TIA for any help received.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
