@@ -1,69 +1,59 @@
-From: David Lethe <david@santools.com>
-Subject: Re: Chassis manager?
-Date: Wed, 15 Jul 2009 15:46:01 -0500
-Message-ID: <C683AA39.B563%david@santools.com>
-References: <4A5E2D6F.3080000@zytor.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 1/4] md: Factor out RAID6 algorithms into lib/
+Date: Wed, 15 Jul 2009 15:11:18 -0700
+Message-ID: <e9c3a7c20907151511j1997b58al4d103733f1a68404@mail.gmail.com>
+References: <1247494302.19180.268.camel@macbook.infradead.org>
+	 <e9c3a7c20907151223j1d976ea9gdd224c9e6c2c36e3@mail.gmail.com>
+	 <20090715201658.GC23967@think>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A5E2D6F.3080000@zytor.com>
+In-Reply-To: <20090715201658.GC23967@think>
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
-Cc: "J.H." <warthog9@kernel.org>
+To: Chris Mason <chris.mason@oracle.com>, Dan Williams <dan.j.williams@intel.com>, David Woodhouse <dwmw2@infradead.org>, linux-btrfs@vger.kernel.org, neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Assuming you enclosure is SES or SAF-TE compliant, then we've got a $90
-package that does this.
+On Wed, Jul 15, 2009 at 1:16 PM, Chris Mason<chris.mason@oracle.com> wr=
+ote:
+> On Wed, Jul 15, 2009 at 12:23:47PM -0700, Dan Williams wrote:
+>> On Mon, Jul 13, 2009 at 7:11 AM, David Woodhouse<dwmw2@infradead.org=
+> wrote:
+>> > We'll want to use these in btrfs too.
+>> >
+>> > Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
+>>
+>> Do you suspect that btrfs will also want to perform these operations
+>> asynchronously? =A0I am preparing an updated release of the raid6
+>> offload patch kit, but the previous WIP release can be browsed at:
+>
+> The short answer is that we'll definitely want to use the async code
+> where it is available. =A0Btrfs is already wired up to hand off CPU
+> intensive parts of IO submission (compression, checksumming) to helpe=
+r
+> threads. =A0There's some extra ordering so that we can have N threads
+> checksumming but still send down the actual bios in the proper order.
+>
+> Once the btrfs raid5/6 is working well, I'll wire it into the helper
+> threads as well. =A0Are the raid offload engines fast enough that we =
+won't
+> want the helper threads when they are available?
 
-Full environmental reporting (Fan speed, drive bays, temperature, voltage,
-power supply, audible alarms, LEDs, etc ... as well as manipulation and
-diagnostics.
+The api is such that you will not be able to tell ahead of time if the
+operation is to be offloaded or carried out synchronously (unless of
+course you disable offload by CONFIG_ASYNC_TX_DMA=3Dn).  The current
+channel allocator hands out channels on a percpu basis so the
+scheduling of the helper threads can be used as a proxy for scheduling
+the offload engines.  I have considered allowing overloaded channels
+to spill work back on to the cpu[1], but I need more data on whether
+this is worthwhile.
 
-But some gotchas --- in particular with drive failures. Only a catastriphic
-failure will cause an enclosure to light a drive slot.  I.e, a head crash
-won't necessarily result in a drive by let up. It is not the  job of an
-enclosure to monitor drive health. SAS/FC/SCSI controller cards won't
-necessarily do this either as, depending on the architecture, they send
-the command to light up a drive to the disk, which is ignored by the
-enclosure.
+--
+Dan
 
-Our code will let you programmatically manipulate everything, but per the
-spec, not every enclosure is obligated to support all that you wish to do.
-No matter what, you'll need to set up a daemon that monitors whatever you
-consider to be good enough reason to light up a drive bay, and there is no
-"best" way that fits everything.
-
-The SES spec also allows for lighting up a LED to indicate a drive needs to
-be replaced in addition to a fault LED, but not all enclosures have this.
-SAF-TE, used for SCSI-attached enclosures is quite dumb and likely won't let
-you programmatically do anything but report basic info.
-
-The manual is: http://www.santools.com/smart/unix/manual
-
-Best to take this offline, feel free to contact me directly. It  is my
-company, and I wrote most of the code
-David  @ santools dot com
-
-
-On 7/15/09 2:26 PM, "H. Peter Anvin" <hpa@zytor.com> wrote:
-
-> Hi all,
-> 
-> Does anyone happen to know of a chassis manager for Linux softraid?
-> What I mean with that is something that can provide the user interface
-> that hardware RAID provides for a co-lo'd server: light up the error
-> light on a dead disk, have a tech walk up and swap the drive (without
-> administrator intervention; the tech does not have or need access to the
-> system), and then automatically start the rebuild?
-> 
-> -hpa
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
+[1]: http://www.intel.com/design/iio/iop341_42.htm
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
