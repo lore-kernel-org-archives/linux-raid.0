@@ -1,24 +1,36 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Chassis manager?
-Date: Wed, 15 Jul 2009 15:26:39 -0400
-Message-ID: <4A5E2D6F.3080000@zytor.com>
+From: Chris Mason <chris.mason@oracle.com>
+Subject: Re: [PATCH 1/4] md: Factor out RAID6 algorithms into lib/
+Date: Wed, 15 Jul 2009 16:16:58 -0400
+Message-ID: <20090715201658.GC23967@think>
+References: <1247494302.19180.268.camel@macbook.infradead.org> <e9c3a7c20907151223j1d976ea9gdd224c9e6c2c36e3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <e9c3a7c20907151223j1d976ea9gdd224c9e6c2c36e3@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
-Cc: "J.H." <warthog9@kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: David Woodhouse <dwmw2@infradead.org>, linux-btrfs@vger.kernel.org, neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+On Wed, Jul 15, 2009 at 12:23:47PM -0700, Dan Williams wrote:
+> On Mon, Jul 13, 2009 at 7:11 AM, David Woodhouse<dwmw2@infradead.org> wrote:
+> > We'll want to use these in btrfs too.
+> >
+> > Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
+> 
+> Do you suspect that btrfs will also want to perform these operations
+> asynchronously?  I am preparing an updated release of the raid6
+> offload patch kit, but the previous WIP release can be browsed at:
 
-Does anyone happen to know of a chassis manager for Linux softraid? 
-What I mean with that is something that can provide the user interface 
-that hardware RAID provides for a co-lo'd server: light up the error 
-light on a dead disk, have a tech walk up and swap the drive (without 
-administrator intervention; the tech does not have or need access to the 
-system), and then automatically start the rebuild?
+The short answer is that we'll definitely want to use the async code
+where it is available.  Btrfs is already wired up to hand off CPU
+intensive parts of IO submission (compression, checksumming) to helper
+threads.  There's some extra ordering so that we can have N threads
+checksumming but still send down the actual bios in the proper order.
 
-	-hpa
+Once the btrfs raid5/6 is working well, I'll wire it into the helper
+threads as well.  Are the raid offload engines fast enough that we won't
+want the helper threads when they are available?
 
+-chris
