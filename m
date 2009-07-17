@@ -1,61 +1,48 @@
-From: Gregory Maxwell <gmaxwell@gmail.com>
-Subject: Re: [PATCH 1/4] md: Factor out RAID6 algorithms into lib/
-Date: Fri, 17 Jul 2009 15:12:34 -0400
-Message-ID: <e692861c0907171212l26748081n7fa8b55b8df9bd1e@mail.gmail.com>
-References: <1247494302.19180.268.camel@macbook.infradead.org>
-	 <e9c3a7c20907151223j1d976ea9gdd224c9e6c2c36e3@mail.gmail.com>
-	 <4A5F6590.9000006@zytor.com> <4A608913.1060808@redhat.com>
-	 <4A6096A0.5050501@zytor.com> <4A609A52.7070506@redhat.com>
-	 <4A609B72.2010901@zytor.com> <4A609CFA.2060707@redhat.com>
-	 <4A609D8D.8050501@zytor.com>
+From: Justin Maggard <jmaggard10@gmail.com>
+Subject: Re: >16TB RAID0
+Date: Fri, 17 Jul 2009 12:47:50 -0700
+Message-ID: <150c16850907171247u24b7919el33794f72e3d0008c@mail.gmail.com>
+References: <150c16850907162036w44a13b3dn6d6039a8960ed141@mail.gmail.com>
+	 <88b4380a1bcd5fd15556fd1d4454565a.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-btrfs-owner@vger.kernel.org>
-In-Reply-To: <4A609D8D.8050501@zytor.com>
-Sender: linux-btrfs-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, Dan Williams <dan.j.williams@intel.com>, David Woodhouse <dwmw2@infradead.org>, chris.mason@oracle.com, linux-btrfs@vger.kernel.org, neilb@suse.de, linux-raid@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <88b4380a1bcd5fd15556fd1d4454565a.squirrel@neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Jul 17, 2009 at 11:49 AM, H. Peter Anvin<hpa@zytor.com> wrote:
-> Ric Wheeler wrote:
->>>
->>> The bottom line is pretty much this: the cost of changing the encod=
-ing
->>> would appear to outweigh the benefit. I'm not trying to claim the L=
-inux
->>> RAID-6 implementation is optimal, but it is simple and appears to b=
-e
->>> fast enough that the math isn't the bottleneck.
->>
->> Cost? Thank about how to get free grad student hours testing out thi=
-ngs
->> that you might or might not want to leverage on down the road :-)
->>
+On Thu, Jul 16, 2009 at 8:59 PM, NeilBrown<neilb@suse.de> wrote:
+> I'm not 100% sure, but a quick look at the code suggests that
+> 16TB is the upper limit for normal read/write operations on
+> a block device like /dev/md0 on a 32bit host. =A0This is because it u=
+ses
+> the page cache, and that uses 4K pages with a 32bit index, hence
+> 16TB.
+
+Yep, you're right.  Sorry, I should have looked more into that first.
+I was assuming LBD took care of that somehow, because the kernel docs
+just say that LBD allows it to go over 2TB, and doesn't mention the
+new 16TB upper limit.
+
+> However this doesn't explain why it seems to work for RAID5. =A0If I
+> am right, RAID5 should fail in the same way as RAID0.
+> But I would certainly expect RAID0 to work if anything does.
 >
-> Cost, yes, of changing an on-disk format.
 
-In the context of BTRFS the only costs are development of the new
-erasure code and integration as well as the possible cost of carrying
-around two erasure codes (one for MD backwards compatibility, one for
-BTRFS).
+And again you're correct.  It eventually failed the comparison on
+RAID5.  But it failed in a much different way on RAID5 than RAID0 for
+some reason.  The same disk set on an x86_64 machine appears to be
+working fine.  Sorry for the false alarm.  So I guess now my question
+is, should the kernel and/or mdadm refuse to create or run a >16TB
+array on a 32-bit kernel? :)
 
-The availability of arbitrary M of N erasure codes is more attractive
-for BTRFS than MD because of the increased granularity. I.e. with
-BRTFS you might want a smaller stripe width because some sub-volume
-spans fewer spindles, or increased parity blocks you need increased
-redundancy for some small set of files.
-
-On the other hand=E2=80=94 for performance reasons if you want addition=
-al
-redundancy beyond 'RAID6' you might just be better off writing more
-duplicates of the data blocks instead of additional RS syndromes since
-while the additional data blocks are not optimal from an error
-recovery perspective they will provide a performance gain of being
-able to spread reads out across additional disks.
+Thanks much for your help!
+-Justin
 --
-To unsubscribe from this list: send the line "unsubscribe linux-btrfs" =
-in
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
