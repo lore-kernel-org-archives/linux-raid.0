@@ -1,46 +1,55 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: hdaprm -Y /dev/sda /dev/sdb -> I/O error -> disk kicked out of
-      RAID - is it normal?
-Date: Fri, 17 Jul 2009 14:24:00 +0900
-Message-ID: <4A600AF0.2070102@kernel.org>
-References: <4A5FB1DD.3000904@wpkg.org> <4A5FFA46.1070203@kernel.org> <29d09dacb3dce47830a95bc6493d3b88.squirrel@neil.brown.name> <4A6002AC.9090807@kernel.org> <4A600A03.5040808@garzik.org>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: [PATCH 1/4] md: Factor out RAID6 algorithms into lib/
+Date: Fri, 17 Jul 2009 10:22:11 -0400
+Message-ID: <4A608913.1060808@redhat.com>
+References: <1247494302.19180.268.camel@macbook.infradead.org> <e9c3a7c20907151223j1d976ea9gdd224c9e6c2c36e3@mail.gmail.com> <4A5F6590.9000006@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4A600A03.5040808@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: NeilBrown <neilb@suse.de>, Tomasz Chmielewski <mangoo@wpkg.org>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4A5F6590.9000006@zytor.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, David Woodhouse <dwmw2@infradead.org>, chris.mason@oracle.com, linux-btrfs@vger.kernel.org, neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> NeilBrown wrote:
->>> I tried that and easily found cases where it fails way too fast.
->>> FAILFAST seems to mean different things on different devices, making
->>> it useless in general (it is still useful in some specific cases
->>> such as multipath on devices which are expected to be used under
->>> multipath and so treat FAILFAST appropriately).
+On 07/16/2009 01:38 PM, H. Peter Anvin wrote:
+> Dan Williams wrote:
+>> On Mon, Jul 13, 2009 at 7:11 AM, David Woodhouse<dwmw2@infradead.org> 
+>> wrote:
+>>> We'll want to use these in btrfs too.
+>>>
+>>> Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
 >>
->> Yeap, FAILFAST flags seem geared pretty much toward multipathing.
-> 
-> Yes :/
-> 
-> I'm glad this area is getting some attention, because we ideally want to
-> do two things in parallel:
-> 
-> * send upper layer advisory message, when we first notice a failure
-> * begin EH recovery
-> 
-> Time passes, libata attempts recovery, and completes the command with
-> success or failure many seconds later.
-> 
-> Right now, failfast handling is inconsistent, and is not (I think...)
-> always signalled as soon as we begin EH.
+>> Do you suspect that btrfs will also want to perform these operations
+>> asynchronously?  I am preparing an updated release of the raid6
+>> offload patch kit, but the previous WIP release can be browsed at:
+>>
+>> http://git.kernel.org/?p=linux/kernel/git/djbw/async_tx.git;a=shortlog;h=raid6 
+>>
+>>
+>> The routines are housed in crypto/async_tx/async_pq.c and
+>> crypto/async_tx/async_raid6_recov.c.
+>>
+>> I also wonder if the raid6 algos are a better fit under crypto/ 
+>> alongside xor?
+>>
+>
+> I am also sitting on a set of synchronous (CPU) acceleration patches 
+> for RAID-6 recovery, just waiting for the APIs to stabilize.
+>
+>     -hpa
+>
 
-Heh.. yeah, it's notified on completion of EH, which BTW is pretty
-dumb.  :-)
+Worth sharing a pointer to a really neat set of papers that describe 
+open source friendly RAID6 and erasure encoding algorithms that were 
+presented last year and this at FAST:
 
--- 
-tejun
+http://www.cs.utk.edu/~plank/plank/papers/papers.html
+
+If I remember correctly, James Plank's papers also have implemented and 
+benchmarked the various encodings,
+
+Ric
+
+
