@@ -1,56 +1,54 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: >16TB RAID0
-Date: Sat, 18 Jul 2009 10:13:55 +1000 (EST)
-Message-ID: <bcd208d4a52b6706193626667237b729.squirrel@neil.brown.name>
-References: <150c16850907162036w44a13b3dn6d6039a8960ed141@mail.gmail.com>
-    <88b4380a1bcd5fd15556fd1d4454565a.squirrel@neil.brown.name>
-    <150c16850907171247u24b7919el33794f72e3d0008c@mail.gmail.com>
+From: Andreas Dilger <adilger@sun.com>
+Subject: Re: How to handle >16TB devices on 32 bit hosts ??
+Date: Sat, 18 Jul 2009 00:31:55 -0400
+Message-ID: <20090718043155.GI4231@webber.adilger.int>
+References: <19041.4714.686158.130252@notabene.brown>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <150c16850907171247u24b7919el33794f72e3d0008c@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Justin Maggard <jmaggard10@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; CHARSET=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <dm-devel-bounces@redhat.com>
+Content-disposition: inline
+In-reply-to: <19041.4714.686158.130252@notabene.brown>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Neil Brown <neilb@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, July 18, 2009 5:47 am, Justin Maggard wrote:
-> On Thu, Jul 16, 2009 at 8:59 PM, NeilBrown<neilb@suse.de> wrote:
->> I'm not 100% sure, but a quick look at the code suggests that
->> 16TB is the upper limit for normal read/write operations on
->> a block device like /dev/md0 on a 32bit host. =A0This is because it =
-uses
->> the page cache, and that uses 4K pages with a 32bit index, hence
->> 16TB.
->
-> Yep, you're right.  Sorry, I should have looked more into that first.
-> I was assuming LBD took care of that somehow, because the kernel docs
-> just say that LBD allows it to go over 2TB, and doesn't mention the
-> new 16TB upper limit.
->
->> However this doesn't explain why it seems to work for RAID5. =A0If I
->> am right, RAID5 should fail in the same way as RAID0.
->> But I would certainly expect RAID0 to work if anything does.
->>
->
-> And again you're correct.  It eventually failed the comparison on
-> RAID5.  But it failed in a much different way on RAID5 than RAID0 for
-> some reason.  The same disk set on an x86_64 machine appears to be
-> working fine.  Sorry for the false alarm.  So I guess now my question
-> is, should the kernel and/or mdadm refuse to create or run a >16TB
-> array on a 32-bit kernel? :)
+On Jul 18, 2009  10:08 +1000, Neil Brown wrote:
+>  It has recently come to by attention that Linux on a 32 bit host does
+>  not handle devices beyond 16TB particularly well.
+> 
+>  In particular, any access that goes through the page cache for the
+>  block device is limited to a pgoff_t number of pages.
+>  As pgoff_t is "unsigned long" and hence 32bit, and as page size is
+>  4096, this comes to 16TB total.
+:
+:
+>  I suppose we could add a CONFIG option to make pgoff_t be 
+>  "unsigned long long".  Would the cost/benefit of that be acceptable?
 
-I'm not sure that refusal is appropriate as there might be some use
-cases that work perfectly.
-Emitting a warning my be a good idea though, and possibly disabling
-some of the use cases that are known to be unreliable.
+I think the point is that for those people who want to use > 16TB
+devices on 32-bit platforms (e.g. embedded/appliance systems) the
+choice is between "completely non-functional" and "uses a bit more
+memory per page", and the answer is pretty obvious.
 
-Thanks,
-NeilBrown
+For users who don't want to support this, they don't have to (just
+like CONFIG_LBD or whatever), and for 64-bit systems it is irrelevant.
+I think years ago we had the idea that it would be 64-bit everywhere
+by now, and while that is true for many systems, embedded/appliance
+systems will probably continue to be 32-bit for as long as they can.
 
+Cheers, Andreas
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Andreas Dilger
+Sr. Staff Engineer, Lustre Group
+Sun Microsystems of Canada, Inc.
