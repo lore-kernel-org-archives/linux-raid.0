@@ -1,43 +1,71 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: How to handle >16TB devices on 32 bit hosts ??
-Date: Sat, 18 Jul 2009 09:48:11 +0200
-Message-ID: <20090718074811.GA2682@basil.fritz.box>
-References: <19041.4714.686158.130252@notabene.brown> <20090718043155.GI4231@webber.adilger.int> <871voewm6y.fsf@basil.nowhere.org> <20090718065213.GK4231@webber.adilger.int>
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH 1/4] md: Factor out RAID6 algorithms into lib/
+Date: Sat, 18 Jul 2009 12:53:36 +0100
+Message-ID: <1247918016.22313.138.camel@macbook.infradead.org>
+References: <1247494302.19180.268.camel@macbook.infradead.org>
+	 <e9c3a7c20907151223j1d976ea9gdd224c9e6c2c36e3@mail.gmail.com>
+	 <4A5F6590.9000006@zytor.com> <4A608913.1060808@redhat.com>
+	 <4A6096A0.5050501@zytor.com> <4A609A52.7070506@redhat.com>
+	 <4A609B72.2010901@zytor.com> <4A609CFA.2060707@redhat.com>
+	 <4A609D8D.8050501@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753248AbZGRHsU@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090718065213.GK4231@webber.adilger.int>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andreas Dilger <adilger@sun.com>
-Cc: Andi Kleen <andi@firstfloor.org>, device-mapper development <dm-devel@redhat.com>, Neil Brown <neilb@suse.de>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4A609D8D.8050501@zytor.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Ric Wheeler <rwheeler@redhat.com>, Dan Williams <dan.j.williams@intel.com>, chris.mason@oracle.com, linux-btrfs@vger.kernel.org, neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Jul 18, 2009 at 02:52:13AM -0400, Andreas Dilger wrote:
-> If you aren't running a 32-bit system with this config, you shouldn't
-> really care.  For those systems that need to run in this mode they
-> would rather have it work a few percent slower instead of not at all.
+On Fri, 2009-07-17 at 11:49 -0400, H. Peter Anvin wrote:
+> Ric Wheeler wrote:
+> >>
+> >> The bottom line is pretty much this: the cost of changing the enco=
+ding
+> >> would appear to outweigh the benefit. I'm not trying to claim the =
+Linux
+> >> RAID-6 implementation is optimal, but it is simple and appears to =
+be
+> >> fast enough that the math isn't the bottleneck.
+> >=20
+> > Cost? Thank about how to get free grad student hours testing out th=
+ings=20
+> > that you might or might not want to leverage on down the road :-)
+> >=20
+>=20
+> Cost, yes, of changing an on-disk format.
 
-Well, it doesn't work at all anyways due to the fsck problem.
+Personally, I don't care about that -- I'm utterly uninterested in the
+legacy RAID-6 setup where it pretends to be a normal disk. I think that
+model is as fundamentally wrong as flash devices making the similar
+pretence.
 
-> The last test numbers I saw were 5GB of RAM for a 20TB filesystem,
-> but since the bitmaps used are fully-allocated arrays that isn't
-> surprising.  We are planning to replace this with a tree, since the
-> majority of bitmaps used by e2fsck have large contiguous ranges of
-> set or unset bits and can be represented much more efficiently.
+I'm only interested in what we can use directly within btrfs -- and
+ideally I do want something which gives me an _arbitrary_ number of
+redundant blocks, rather than limiting me to 2. But the legacy code is
+good enough for now=C2=B9.
 
-You would need to get <~2.5GB for 32bit. In practice that's
-the limit you have there.
+When I get round to wanting more, I was thinking of lifting something
+like http://git.infradead.org/mtd-utils.git?a=3Dblob;f=3Dfec.c to start
+with, and maybe hoping that someone cleverer will come up with somethin=
+g
+better.
 
-> Also, for filesystems like btrfs or ZFS the checking can be done
-> online and incrementally without storing a full representation of
-> the state in memory.
+The less I have to deal with Galois Fields, the happier I'll be.
 
-You could, but I suspect it would be cheaper to just use a
-64bit system than to rewrite fsck. 64bit is available
-for a lot of embedded setups these days too.
+--=20
+David Woodhouse                            Open Source Technology Centr=
+e
+David.Woodhouse@intel.com                              Intel Corporatio=
+n
 
--Andi
+=C2=B9 Well, kind of. The xor_blocks() function will silently screw you=
+ over
+  if you ask it to handle more than 5 blocks at a time.
 
--- 
-ak@linux.intel.com -- Speaking for myself only.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
