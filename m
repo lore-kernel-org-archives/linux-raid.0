@@ -1,28 +1,27 @@
-From: Tapani Tarvainen <tapani@tapanitarvainen.fi>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: How to handle >16TB devices on 32 bit hosts ??
-Date: Sun, 19 Jul 2009 06:44:36 +0300
-Message-ID: <20090719034436.GA27328@musti.tarvainen.info>
-References: <19041.4714.686158.130252@notabene.brown> <20090718043155.GI4231@webber.adilger.int> <871voewm6y.fsf@basil.nowhere.org> <20090718065213.GK4231@webber.adilger.int> <20090718074811.GA2682@basil.fritz.box>
+Date: Sun, 19 Jul 2009 07:04:47 -0400
+Message-ID: <20090719110447.GA18135@infradead.org>
+References: <20090718142156.GC2682@basil.fritz.box> <20090719005450717.VSFW5000@cdptpa-omta04.mail.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20090718074811.GA2682@basil.fritz.box>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20090719005450717.VSFW5000@cdptpa-omta04.mail.rr.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Leslie Rhorer <lrhorer@satx.rr.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Jul 18, 2009 at 09:48:11AM +0200, Andi Kleen (andi@firstfloor.org) wrote:
-> On Sat, Jul 18, 2009 at 02:52:13AM -0400, Andreas Dilger wrote:
-> > If you aren't running a 32-bit system with this config, you shouldn't
-> > really care.  For those systems that need to run in this mode they
-> > would rather have it work a few percent slower instead of not at all.
+On Sat, Jul 18, 2009 at 07:54:50PM -0500, Leslie Rhorer wrote:
+> > There are regular reports of xfs_repair failing on 32bit,
+> > even on volumes far smaller than 16TB.
 > 
-> Well, it doesn't work at all anyways due to the fsck problem.
+> 	But is that due to the 32 bit system directly, or to the fact XFS
+> requires a huge amount of memory for fsck or repair?
 
-I can imagine several scenarios where 16TB+ raid would be useful
-without any filesystems bigger than 2TB.
-Or does LVM have problems with 16TB+ devices in 32bit-systems, too?
+As mentioned earlier here 16TB is the absolute limit on 32bit right now.
+Failures on smaller systems are due to memory use, and this can be
+mitigated using more swap.  And once we commit Barry's patches to
+optimize the memory usage the memory requirement will go down massively.
 
--- 
-Tapani Tarvainen
