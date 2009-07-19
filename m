@@ -1,27 +1,51 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: How to handle >16TB devices on 32 bit hosts ??
-Date: Sun, 19 Jul 2009 07:04:47 -0400
-Message-ID: <20090719110447.GA18135@infradead.org>
-References: <20090718142156.GC2682@basil.fritz.box> <20090719005450717.VSFW5000@cdptpa-omta04.mail.rr.com>
+From: Dan Carpenter <error27@gmail.com>
+Subject: [patch] md: memory leak on error path in
+ dm_exception_store_create()
+Date: Sun, 19 Jul 2009 14:46:28 +0300 (EAT)
+Message-ID: <alpine.DEB.2.00.0907171414450.12306@bicker>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090719005450717.VSFW5000@cdptpa-omta04.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lrhorer@satx.rr.com>
+To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Jul 18, 2009 at 07:54:50PM -0500, Leslie Rhorer wrote:
-> > There are regular reports of xfs_repair failing on 32bit,
-> > even on volumes far smaller than 16TB.
-> 
-> 	But is that due to the 32 bit system directly, or to the fact XFS
-> requires a huge amount of memory for fsck or repair?
+tmp_store should  be freed if the persistent flag is invalid.
 
-As mentioned earlier here 16TB is the absolute limit on 32bit right now.
-Failures on smaller systems are due to memory use, and this can be
-mitigated using more swap.  And once we commit Barry's patches to
-optimize the memory usage the memory requirement will go down massively.
+Compile tested only.  Sorry.  Found by smatch 
+(http://repo.or.cz/w/smatch.git).
 
+regards,
+dan carpenter
+
+Signed-off-by: Dan Carpenter <error27@gmail.com>
+
+--- orig/drivers/md/dm-exception-store.c	2009-07-17 14:11:10.000000000 +0300
++++ new/drivers/md/dm-exception-store.c	2009-07-17 14:13:24.000000000 +0300
+@@ -217,13 +217,14 @@
+ 		type = get_type("N");
+ 	else {
+ 		ti->error = "Persistent flag is not P or N";
+-		return -EINVAL;
++		r = -EINVAL;
++		goto out_free;
+ 	}
+ 
+ 	if (!type) {
+ 		ti->error = "Exception store type not recognised";
+ 		r = -EINVAL;
+-		goto bad_type;
++		goto out_free;
+ 	}
+ 
+ 	tmp_store->type = type;
+@@ -254,7 +255,7 @@
+ 	dm_put_device(ti, tmp_store->cow);
+ bad_cow:
+ 	put_type(type);
+-bad_type:
++out_free:
+ 	kfree(tmp_store);
+ 	return r;
+ }
