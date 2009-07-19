@@ -1,25 +1,25 @@
 From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: How to handle >16TB devices on 32 bit hosts ??
-Date: Sat, 18 Jul 2009 19:54:50 -0500
-Message-ID: <20090719005450717.VSFW5000@cdptpa-omta04.mail.rr.com>
-References: <20090718142156.GC2682@basil.fritz.box>
+Subject: RE: >16TB RAID0
+Date: Sat, 18 Jul 2009 20:05:28 -0500
+Message-ID: <20090719010529341.VWKI5000@cdptpa-omta04.mail.rr.com>
+References: <bf9e24f010515d7b75e48872edcf68df.squirrel@neil.brown.name>
 Reply-To: <lrhorer@satx.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090718142156.GC2682@basil.fritz.box>
+In-Reply-To: <bf9e24f010515d7b75e48872edcf68df.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'NeilBrown' <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> There are regular reports of xfs_repair failing on 32bit,
-> even on volumes far smaller than 16TB.
+> But just to repeat: on a 64bit host, this is not an issue.  You can have
+> devices so large that I don't know the correct greek prefix and they
+> should still work.  It is only on 32bit hosts where 16TB can be
+> a problem.
 
-	But is that due to the 32 bit system directly, or to the fact XFS
-requires a huge amount of memory for fsck or repair?  xfs_fxck would not
-complete on one of my systems with 2G of RAM and 10G of swap, because it ran
-out of memory after filling up the entire swap space.  I replaced the 10G
-swap with a 750G swap and it completed just fine.
+Assuming 512 byte sectors and an unsigned 64 bit integer sector table, 18
+exabytes.
 
