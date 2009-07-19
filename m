@@ -1,25 +1,28 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: >16TB RAID0
-Date: Sat, 18 Jul 2009 20:05:28 -0500
-Message-ID: <20090719010529341.VWKI5000@cdptpa-omta04.mail.rr.com>
-References: <bf9e24f010515d7b75e48872edcf68df.squirrel@neil.brown.name>
-Reply-To: <lrhorer@satx.rr.com>
+From: Tapani Tarvainen <tapani@tapanitarvainen.fi>
+Subject: Re: How to handle >16TB devices on 32 bit hosts ??
+Date: Sun, 19 Jul 2009 06:44:36 +0300
+Message-ID: <20090719034436.GA27328@musti.tarvainen.info>
+References: <19041.4714.686158.130252@notabene.brown> <20090718043155.GI4231@webber.adilger.int> <871voewm6y.fsf@basil.nowhere.org> <20090718065213.GK4231@webber.adilger.int> <20090718074811.GA2682@basil.fritz.box>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bf9e24f010515d7b75e48872edcf68df.squirrel@neil.brown.name>
-Sender: linux-raid-owner@vger.kernel.org
-To: 'NeilBrown' <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20090718074811.GA2682@basil.fritz.box>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>, linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-> But just to repeat: on a 64bit host, this is not an issue.  You can have
-> devices so large that I don't know the correct greek prefix and they
-> should still work.  It is only on 32bit hosts where 16TB can be
-> a problem.
+On Sat, Jul 18, 2009 at 09:48:11AM +0200, Andi Kleen (andi@firstfloor.org) wrote:
+> On Sat, Jul 18, 2009 at 02:52:13AM -0400, Andreas Dilger wrote:
+> > If you aren't running a 32-bit system with this config, you shouldn't
+> > really care.  For those systems that need to run in this mode they
+> > would rather have it work a few percent slower instead of not at all.
+> 
+> Well, it doesn't work at all anyways due to the fsck problem.
 
-Assuming 512 byte sectors and an unsigned 64 bit integer sector table, 18
-exabytes.
+I can imagine several scenarios where 16TB+ raid would be useful
+without any filesystems bigger than 2TB.
+Or does LVM have problems with 16TB+ devices in 32bit-systems, too?
 
+-- 
+Tapani Tarvainen
