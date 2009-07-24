@@ -1,50 +1,55 @@
 From: "Tirumala Reddy Marri" <tmarri@amcc.com>
-Subject: RE: Question on RAID-5 growing
-Date: Fri, 24 Jul 2009 10:41:16 -0700
-Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C07C7CED2@SDCEXCHANGE01.ad.amcc.com>
-References: <AC5E1C3367E37D44970B81A6ADD1DA2C07C7CDEB@SDCEXCHANGE01.ad.amcc.com> <c268e4660907240603y12d25974kbbab1f7041741b37@mail.gmail.com>
+Subject: RE: DMA zeroing destination and zero_sum support
+Date: Fri, 24 Jul 2009 10:43:01 -0700
+Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C07C7CED5@SDCEXCHANGE01.ad.amcc.com>
+References: <AC5E1C3367E37D44970B81A6ADD1DA2C07BC569D@SDCEXCHANGE01.ad.amcc.com> <AC5E1C3367E37D44970B81A6ADD1DA2C07BC582C@SDCEXCHANGE01.ad.amcc.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-class: urn:content-classes:message
-In-Reply-To: <c268e4660907240603y12d25974kbbab1f7041741b37@mail.gmail.com>
+In-Reply-To: <AC5E1C3367E37D44970B81A6ADD1DA2C07BC582C@SDCEXCHANGE01.ad.amcc.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Drew <drew.kay@gmail.com>, linux-raid@vger.kernel.org
+To: Tirumala Reddy Marri <tmarri@amcc.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-VGhhbmtzIGZvciB0aGUgcmVzcG9uc2UgRHJldy4gSSBhbSB0ZXN0aW5nIHRoZSBzdGFiaWxpdHkg
-b2YgTUQgZHJpdmVyIHdpdGggbmV3IEFETUEgZHJpdmVyIHVzaW5nIEFNQ0MgUG93ZXJQQyBjb3Jl
-cy4gIFdoZW4gSSB0cmllZCB0byBncm93IGR1cmluZyByZWNvdmVyeSB0aGUgZm9sbG93aW5nIGVy
-cm9yIGlzIHNob3dlZCB1cC4NCg0KLS0tLQ0KLWJhc2gtMy4yIyAgbWRhZG0gLUcgL2Rldi9tZDAg
-LW4gNA0KbWRhZG06IE5lZWQgdG8gYmFja3VwIDM4NEsgb2YgY3JpdGljYWwgc2VjdGlvbi4uDQpt
-ZDogY291bGRuJ3QgdXBkYXRlIGFycmF5IGluZm8uIC0xNg0KbWRhZG06IENhbm5vdCBzZXQgZGV2
-aWNlIHNpemUvc2hhcGUgZm9yIC9kZXYvbWQwOiBEZXZpY2Ugb3IgcmVzb3VyY2UgYnVzeQ0KDQoN
-Cg0KLWJhc2gtMy4yIyBjYXQgL3Byb2MvbWRzdGF0IA0KUGVyc29uYWxpdGllcyA6IFtyYWlkMF0g
-W3JhaWQ2XSBbcmFpZDVdIFtyYWlkNF0gDQptZDAgOiBhY3RpdmUgcmFpZDUgc2RkWzNdKFMpIHNk
-Y1syXSBzZGJbMV0gc2RhWzBdDQogICAgICA2MDAwMDAwMCBibG9ja3MgbGV2ZWwgNSwgNjRrIGNo
-dW5rLCBhbGdvcml0aG0gMiBbMy8zXSBbVVVVXQ0KICAgICAgWz0+Li4uLi4uLi4uLi4uLi4uLi4u
-Ll0gIHJlc3luYyA9ICA2LjklICgyMDk0ODQ4LzMwMDAwMDAwKSBmaW5pc2g9MTEuMW1pbiBzcGVl
-ZD00MTY3NEsvc2VjDQogICAgICANCnVudXNlZCBkZXZpY2VzOiA8bm9uZT4NCi1iYXNoLTMuMiMN
-Ci0tLQ0KDQpSZWdhcmRzLA0KTWFycmkNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZy
-b206IGxpbnV4LXJhaWQtb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtcmFpZC1v
-d25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBEcmV3DQpTZW50OiBGcmlkYXksIEp1
-bHkgMjQsIDIwMDkgNjowMyBBTQ0KVG86IGxpbnV4LXJhaWRAdmdlci5rZXJuZWwub3JnDQpTdWJq
-ZWN0OiBSZTogUXVlc3Rpb24gb24gUkFJRC01IGdyb3dpbmcNCg0KPiBJcyBpdCBsZWdhbCB0byBn
-cm93IHdoaWxlIFJBSUQtNSByZWNvdmVyeSBJcyBoYXBwZW5pbmcgPw0KPg0KPg0KPiAxLiBtZGFk
-bSAtQyAvZGV2L21kMCAteiAxMDAwMDAwIC1sIDUgLW4gMyAvZGV2L3NkW2EtY10NCj4gMi4gbWRh
-ZG0gLWEgL2Rldi9tZDAgL2Rldi9zZGQNCj4gMy4gbWRhZG0gLUcgL2Rldi9tZC0gLW4gNA0KDQpI
-aSBNYXJyaSwNCg0KT25lLCBJZiB0aGlzIGlzIGEgbGl2ZSBzeXN0ZW0gSSdtIHRoaW5raW5nIGl0
-J3Mgc2FmZXIgdG8gbGV0IHRoZQ0KcmVjb3ZlcnkgY29tcGxldGUgYW5kIHRoZW4gYWRkIHRoZSBl
-eHRyYSBkaXNrIChhZnRlciBiYWNraW5nIHVwIHRoZQ0KZGF0YSBvZiBjb3Vyc2UpLiBUd28sIGlm
-IHRoaXMgYXJyYXkgaXNuJ3QgbGl2ZSB5ZXQgKG5vIGRhdGEsIGx2bSwNCmZpbGVzeXN0ZW0sIGV0
-YyB5ZXQpIGl0J2QgcHJvYmFibHkgYmUgZWFzaWVyIHRvIGhhbHQgdGhlIGV4aXN0aW5nDQpSQUlE
-LTUsIGFuZCBjcmVhdGUgdGhlIG5ldyBhcnJheSBmcm9tIHNjcmF0Y2guDQoNClRoYXQgc2FpZCBJ
-J20gc3VyZSBOZWlsIHdpbGwgY2hpbWUgaW4gYW5kIGNvcnJlY3QgbWUuIDotKQ0KDQoNCi0tIA0K
-RHJldw0KDQoiTm90aGluZyBpbiBsaWZlIGlzIHRvIGJlIGZlYXJlZC4gSXQgaXMgb25seSB0byBi
-ZSB1bmRlcnN0b29kLiINCi0tTWFyaWUgQ3VyaWUNCi0tDQpUbyB1bnN1YnNjcmliZSBmcm9tIHRo
-aXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtcmFpZCIgaW4NCnRoZSBi
-b2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQpNb3JlIG1ham9y
-ZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwN
-Cg==
+BTW after enabled zeroing the destination when ASYNC_TX_XOR_ZERO_DST is
+set solved my file-system corruption problem. But this seem to affect my
+performance though.
+
+Thanks,
+Marri
+
+-----Original Message-----
+From: Tirumala Reddy Marri 
+Sent: Tuesday, July 21, 2009 10:47 AM
+To: Tirumala Reddy Marri; linux-raid@vger.kernel.org
+Subject: RE: DMA zeroing destination and zero_sum support
+
+Looks like do_async_xor assumes destination will be zeroed
+automatically. Whereas sync_xor does the zeroing of destination if it is
+not one of the sources. 
+
+
+
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Tirumala Reddy
+Marri
+Sent: Monday, July 20, 2009 3:11 PM
+To: linux-raid@vger.kernel.org
+Subject: DMA zeroing destination and zero_sum support
+
+Hi Dan,
+   There may be an issue when ADMA doesn't support
+xxxx_prep_dma_zero_sum() support    OR  not setting destinations to zero
+(ASYNC_TX_XOR_ZERO_DST) . Could you please comment on what are issues on
+not zeroing dest when ASYNC_TX_XOR_ZERO_DST is set.
+Thanks,
+Marri
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
