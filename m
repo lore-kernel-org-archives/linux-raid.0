@@ -1,74 +1,50 @@
-From: Thanassis Tsiodras <ttsiodras@gmail.com>
-Subject: Handling mismatch_cnt
-Date: Fri, 24 Jul 2009 19:01:28 +0300
-Message-ID: <f1d2d9ca0907240901y60c8d8bdlfb9938de9b374561@mail.gmail.com>
+From: "Tirumala Reddy Marri" <tmarri@amcc.com>
+Subject: RE: Question on RAID-5 growing
+Date: Fri, 24 Jul 2009 10:41:16 -0700
+Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C07C7CED2@SDCEXCHANGE01.ad.amcc.com>
+References: <AC5E1C3367E37D44970B81A6ADD1DA2C07C7CDEB@SDCEXCHANGE01.ad.amcc.com> <c268e4660907240603y12d25974kbbab1f7041741b37@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <c268e4660907240603y12d25974kbbab1f7041741b37@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Drew <drew.kay@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Handling mismatch_cnt<>0
-
-I have been a casual user of Software RAID: RAID1 on two disks, to be
-exact. Like many others, eventually I got to see non-zero "mismatch_cnt"
-errors. I searched on the web, and found the comments made by Neil,
-explaining how it could happen for swap (it wasn't swap) - how it
-could happen if the data changed in memory during the time that the
-DMA transfer to the first drive was taking place (doubtful in my case),
-how it could happend during a crash (data written on one drive only
-and then system crashes - maybe) etc.
-
-In the end, one thing was clear: when mismatch_cnt<>0 happens,
-you might be lucky and the report refers to unimportant sectors,
-or you might be unlucky and indeed only one of the sector copies
-is the right one.
-
-The question is... which one?  And how do we fix things?
-
-To which I'm afraid, there's no answer. As Neil says:
-(http://www.mail-archive.com/linux-raid@vger.kernel.org/msg07179.html)
-
-    When performing a check/repair md looks for consistencies and
-    fixes them 'arbitrarily'.  For raid5/6, it just 'corrects' the
-    parity.  For raid1/10, it chooses one block and over-writes the
-    other(s) with it.
-
-That quote made my heart sink - at random?
-Then what is the point of my RAID1, if not preserving my data?
-I don't want a random process deciding what data is good and what isn't!
-
-Also - unless something changed in the last kernels - when mismatch_cnt
-is non-zero, there's no way for me to learn about what sectors this
-is about. I can't ask my filesystem whether these sectors are in use
-or not, whether they point to free-space or not - and I most definitely
-can't read them to see if it's the last incarnation of my code (or
-the one before last). I have no say in the "fixup" process.
-
-Around the same time, I heard of ZFS, and played around with both
-OpenSolaris/ZFS and Linux/ZFS-Fuse. Suffice to say, that the thought
-of checksums was enough to put my heart at ease - as long as the
-FS is mountable, whatever data are shown there are in fact, data
-with correct checksums behind them. And if I use a ZFS mirror, or even
-a "copies=2" option (which stores two copies of each sector even if
-you only have one disk) I am pretty sure that my data will survive
-the occasional bad sector.
-
-So, my point:
-
-Am I missing something? Is MD RAID1 in fact better than what I
-have understood? Is there an answer that would allow me to use it
-without the uncertainty of "russian-roulette" fixes when the
-inevitable mismatch_cnt<>0 occurs?
-
-In other words, is there anything a Linux guy can do besides wait
-for btrfs or trust a FUSE version of ZFS?
-
-Thanks for any feedback,
-Thanassis.
-
-
---
-What I gave, I have; what I spent, I had; what I kept, I lost. -Old Epitaph
+VGhhbmtzIGZvciB0aGUgcmVzcG9uc2UgRHJldy4gSSBhbSB0ZXN0aW5nIHRoZSBzdGFiaWxpdHkg
+b2YgTUQgZHJpdmVyIHdpdGggbmV3IEFETUEgZHJpdmVyIHVzaW5nIEFNQ0MgUG93ZXJQQyBjb3Jl
+cy4gIFdoZW4gSSB0cmllZCB0byBncm93IGR1cmluZyByZWNvdmVyeSB0aGUgZm9sbG93aW5nIGVy
+cm9yIGlzIHNob3dlZCB1cC4NCg0KLS0tLQ0KLWJhc2gtMy4yIyAgbWRhZG0gLUcgL2Rldi9tZDAg
+LW4gNA0KbWRhZG06IE5lZWQgdG8gYmFja3VwIDM4NEsgb2YgY3JpdGljYWwgc2VjdGlvbi4uDQpt
+ZDogY291bGRuJ3QgdXBkYXRlIGFycmF5IGluZm8uIC0xNg0KbWRhZG06IENhbm5vdCBzZXQgZGV2
+aWNlIHNpemUvc2hhcGUgZm9yIC9kZXYvbWQwOiBEZXZpY2Ugb3IgcmVzb3VyY2UgYnVzeQ0KDQoN
+Cg0KLWJhc2gtMy4yIyBjYXQgL3Byb2MvbWRzdGF0IA0KUGVyc29uYWxpdGllcyA6IFtyYWlkMF0g
+W3JhaWQ2XSBbcmFpZDVdIFtyYWlkNF0gDQptZDAgOiBhY3RpdmUgcmFpZDUgc2RkWzNdKFMpIHNk
+Y1syXSBzZGJbMV0gc2RhWzBdDQogICAgICA2MDAwMDAwMCBibG9ja3MgbGV2ZWwgNSwgNjRrIGNo
+dW5rLCBhbGdvcml0aG0gMiBbMy8zXSBbVVVVXQ0KICAgICAgWz0+Li4uLi4uLi4uLi4uLi4uLi4u
+Ll0gIHJlc3luYyA9ICA2LjklICgyMDk0ODQ4LzMwMDAwMDAwKSBmaW5pc2g9MTEuMW1pbiBzcGVl
+ZD00MTY3NEsvc2VjDQogICAgICANCnVudXNlZCBkZXZpY2VzOiA8bm9uZT4NCi1iYXNoLTMuMiMN
+Ci0tLQ0KDQpSZWdhcmRzLA0KTWFycmkNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZy
+b206IGxpbnV4LXJhaWQtb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtcmFpZC1v
+d25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBEcmV3DQpTZW50OiBGcmlkYXksIEp1
+bHkgMjQsIDIwMDkgNjowMyBBTQ0KVG86IGxpbnV4LXJhaWRAdmdlci5rZXJuZWwub3JnDQpTdWJq
+ZWN0OiBSZTogUXVlc3Rpb24gb24gUkFJRC01IGdyb3dpbmcNCg0KPiBJcyBpdCBsZWdhbCB0byBn
+cm93IHdoaWxlIFJBSUQtNSByZWNvdmVyeSBJcyBoYXBwZW5pbmcgPw0KPg0KPg0KPiAxLiBtZGFk
+bSAtQyAvZGV2L21kMCAteiAxMDAwMDAwIC1sIDUgLW4gMyAvZGV2L3NkW2EtY10NCj4gMi4gbWRh
+ZG0gLWEgL2Rldi9tZDAgL2Rldi9zZGQNCj4gMy4gbWRhZG0gLUcgL2Rldi9tZC0gLW4gNA0KDQpI
+aSBNYXJyaSwNCg0KT25lLCBJZiB0aGlzIGlzIGEgbGl2ZSBzeXN0ZW0gSSdtIHRoaW5raW5nIGl0
+J3Mgc2FmZXIgdG8gbGV0IHRoZQ0KcmVjb3ZlcnkgY29tcGxldGUgYW5kIHRoZW4gYWRkIHRoZSBl
+eHRyYSBkaXNrIChhZnRlciBiYWNraW5nIHVwIHRoZQ0KZGF0YSBvZiBjb3Vyc2UpLiBUd28sIGlm
+IHRoaXMgYXJyYXkgaXNuJ3QgbGl2ZSB5ZXQgKG5vIGRhdGEsIGx2bSwNCmZpbGVzeXN0ZW0sIGV0
+YyB5ZXQpIGl0J2QgcHJvYmFibHkgYmUgZWFzaWVyIHRvIGhhbHQgdGhlIGV4aXN0aW5nDQpSQUlE
+LTUsIGFuZCBjcmVhdGUgdGhlIG5ldyBhcnJheSBmcm9tIHNjcmF0Y2guDQoNClRoYXQgc2FpZCBJ
+J20gc3VyZSBOZWlsIHdpbGwgY2hpbWUgaW4gYW5kIGNvcnJlY3QgbWUuIDotKQ0KDQoNCi0tIA0K
+RHJldw0KDQoiTm90aGluZyBpbiBsaWZlIGlzIHRvIGJlIGZlYXJlZC4gSXQgaXMgb25seSB0byBi
+ZSB1bmRlcnN0b29kLiINCi0tTWFyaWUgQ3VyaWUNCi0tDQpUbyB1bnN1YnNjcmliZSBmcm9tIHRo
+aXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtcmFpZCIgaW4NCnRoZSBi
+b2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQpNb3JlIG1ham9y
+ZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwN
+Cg==
