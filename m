@@ -1,55 +1,41 @@
-From: "Tirumala Reddy Marri" <tmarri@amcc.com>
-Subject: RE: DMA zeroing destination and zero_sum support
-Date: Fri, 24 Jul 2009 10:43:01 -0700
-Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C07C7CED5@SDCEXCHANGE01.ad.amcc.com>
-References: <AC5E1C3367E37D44970B81A6ADD1DA2C07BC569D@SDCEXCHANGE01.ad.amcc.com> <AC5E1C3367E37D44970B81A6ADD1DA2C07BC582C@SDCEXCHANGE01.ad.amcc.com>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Subject: Re: Handling mismatch_cnt
+Date: Sat, 25 Jul 2009 10:06:11 +1000
+Message-ID: <4A6A4C73.2070000@eyal.emu.id.au>
+References: <f1d2d9ca0907240901y60c8d8bdlfb9938de9b374561@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <AC5E1C3367E37D44970B81A6ADD1DA2C07BC582C@SDCEXCHANGE01.ad.amcc.com>
+In-Reply-To: <f1d2d9ca0907240901y60c8d8bdlfb9938de9b374561@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tirumala Reddy Marri <tmarri@amcc.com>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-BTW after enabled zeroing the destination when ASYNC_TX_XOR_ZERO_DST is
-set solved my file-system corruption problem. But this seem to affect my
-performance though.
+Thanassis Tsiodras wrote:
+> Handling mismatch_cnt<>0
+[trim]
+> Am I missing something? Is MD RAID1 in fact better than what I
+> have understood? Is there an answer that would allow me to use it
+ > without the uncertainty of "russian-roulette" fixes when the
+ > inevitable mismatch_cnt<>0 occurs?
 
-Thanks,
-Marri
+RAID1 will ensure your data is not lost when one disk completely fails.
+This is a rather common mode of failure. You are protected against this
+catastrophic event but not against (minor? damage of a) sector failure.
+I use RAID for just this benefit.
 
------Original Message-----
-From: Tirumala Reddy Marri 
-Sent: Tuesday, July 21, 2009 10:47 AM
-To: Tirumala Reddy Marri; linux-raid@vger.kernel.org
-Subject: RE: DMA zeroing destination and zero_sum support
+Unlike RAID5, RAID6 should be able to do better than a random correction
+(does it?).
 
-Looks like do_async_xor assumes destination will be zeroed
-automatically. Whereas sync_xor does the zeroing of destination if it is
-not one of the sources. 
+RAID1 with more than two disks should also do better with voting
+(does it?).
 
+> In other words, is there anything a Linux guy can do besides wait
+> for btrfs or trust a FUSE version of ZFS?
+> 
+> Thanks for any feedback,
+> Thanassis.
 
-
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Tirumala Reddy
-Marri
-Sent: Monday, July 20, 2009 3:11 PM
-To: linux-raid@vger.kernel.org
-Subject: DMA zeroing destination and zero_sum support
-
-Hi Dan,
-   There may be an issue when ADMA doesn't support
-xxxx_prep_dma_zero_sum() support    OR  not setting destinations to zero
-(ASYNC_TX_XOR_ZERO_DST) . Could you please comment on what are issues on
-not zeroing dest when ASYNC_TX_XOR_ZERO_DST is set.
-Thanks,
-Marri
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Eyal Lebedinsky	(eyal@eyal.emu.id.au)
