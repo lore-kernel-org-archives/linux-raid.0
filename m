@@ -1,183 +1,117 @@
-From: Andy Bailey <andy@hazlorealidad.com>
-Subject: Re: sdb failure - mdadm: no devices found for /dev/md0
-Date: Tue, 28 Jul 2009 08:05:36 -0500
-Message-ID: <1248786336.13147.172.camel@localhost.localdomain>
-References: <1248711579.13147.75.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1248711579.13147.75.camel@localhost.localdomain>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+From: Sage Weil <sage@newdream.net>
+Subject: [PATCH] mempool: launder reused items from kzalloc pool
+Date: Tue, 28 Jul 2009 13:46:07 -0700
+Message-ID: <1248813967-27448-1-git-send-email-sage@newdream.net>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+To: linux-kernel@vger.kernel.org
+Cc: Sage Weil <sage@newdream.net>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-mm@kvack.org, stable@kernel.org
 List-Id: linux-raid.ids
 
-More info:
+The kzalloc pool created by mempool_create_kzalloc_pool() only zeros items
+the first time they are allocated; it doesn't re-zero freed items that are
+returned to the pool.  This only comes up when the pool is used in the
+first place (when memory is very low).
 
-In the initrd the mdadm.conf has
-ARRAY /dev/md0 level=raid1 num-devices=2 metadata=0.90
-UUID=392f9510:37d5d89a:d9143456:0dceb00d
+Fix this by adding a mempool_launder_t method that is called before
+returning items to the pool, and set it in mempool_create_kzalloc_pool.
+This preserves the use of __GFP_ZERO in the common case where the pool
+isn't touched at all.
 
-In the /etc/mdadm.conf (for that root partition)
-ARRAY /dev/md0 level=raid1 num-devices=2
-UUID=2d10ee45:1a407729:ec85deb0:7e9ea950
+There are currently two in-tree users of mempool_create_kzalloc_pool:
+	drivers/md/multipath.c
+	drivers/scsi/ibmvscsi/ibmvfc.c
+The first appears to be affected by this bug.  The second manually zeros
+each allocation, and can stop doing so after this is fixed.
 
-The rest of the UUID entries are identical in the 2 mdadm.confs.
+Alternatively, mempool_create_kzalloc_pool() could be removed entirely and
+the callers could zero allocations themselves.
 
-So its now clear what the problem was.
+CC: Neil Brown <neilb@suse.de>
+CC: <linux-raid@vger.kernel.org>
+CC: <linux-kernel@vger.kernel.org>
+CC: <linux-mm@kvack.org>
+CC: <stable@kernel.org>
+Signed-off-by: Sage Weil <sage@newdream.net>
+---
+ include/linux/mempool.h |   10 ++++++++--
+ mm/mempool.c            |    9 +++++++++
+ 2 files changed, 17 insertions(+), 2 deletions(-)
 
-However, I still dont know how the problem happened.
+diff --git a/include/linux/mempool.h b/include/linux/mempool.h
+index 9be484d..889c7e1 100644
+--- a/include/linux/mempool.h
++++ b/include/linux/mempool.h
+@@ -10,6 +10,7 @@ struct kmem_cache;
+ 
+ typedef void * (mempool_alloc_t)(gfp_t gfp_mask, void *pool_data);
+ typedef void (mempool_free_t)(void *element, void *pool_data);
++typedef void (mempool_launder_t)(void *element, void *pool_data);
+ 
+ typedef struct mempool_s {
+ 	spinlock_t lock;
+@@ -20,6 +21,7 @@ typedef struct mempool_s {
+ 	void *pool_data;
+ 	mempool_alloc_t *alloc;
+ 	mempool_free_t *free;
++	mempool_launder_t *launder;
+ 	wait_queue_head_t wait;
+ } mempool_t;
+ 
+@@ -52,6 +54,7 @@ mempool_create_slab_pool(int min_nr, struct kmem_cache *kc)
+  */
+ void *mempool_kmalloc(gfp_t gfp_mask, void *pool_data);
+ void *mempool_kzalloc(gfp_t gfp_mask, void *pool_data);
++void mempool_rezero(void *element, void *pool_data);
+ void mempool_kfree(void *element, void *pool_data);
+ static inline mempool_t *mempool_create_kmalloc_pool(int min_nr, size_t size)
+ {
+@@ -60,8 +63,11 @@ static inline mempool_t *mempool_create_kmalloc_pool(int min_nr, size_t size)
+ }
+ static inline mempool_t *mempool_create_kzalloc_pool(int min_nr, size_t size)
+ {
+-	return mempool_create(min_nr, mempool_kzalloc, mempool_kfree,
+-			      (void *) size);
++	mempool_t *pool = mempool_create(min_nr, mempool_kzalloc, mempool_kfree,
++					 (void *) size);
++	if (pool)
++		pool->launder = mempool_rezero;
++	return pool;
+ }
+ 
+ /*
+diff --git a/mm/mempool.c b/mm/mempool.c
+index a46eb1b..6bb3056 100644
+--- a/mm/mempool.c
++++ b/mm/mempool.c
+@@ -269,6 +269,8 @@ void mempool_free(void *element, mempool_t *pool)
+ 	if (pool->curr_nr < pool->min_nr) {
+ 		spin_lock_irqsave(&pool->lock, flags);
+ 		if (pool->curr_nr < pool->min_nr) {
++			if (pool->launder)
++				pool->launder(element, pool->pool_data);
+ 			add_element(pool, element);
+ 			spin_unlock_irqrestore(&pool->lock, flags);
+ 			wake_up(&pool->wait);
+@@ -315,6 +317,13 @@ void *mempool_kzalloc(gfp_t gfp_mask, void *pool_data)
+ }
+ EXPORT_SYMBOL(mempool_kzalloc);
+ 
++void mempool_rezero(void *element, void *pool_data)
++{
++	size_t size = (size_t) pool_data;
++	memset(element, 0, size);
++}
++EXPORT_SYMBOL(mempool_rezero);
++
+ void mempool_kfree(void *element, void *pool_data)
+ {
+ 	kfree(element);
+-- 
+1.5.6.5
 
-What could have caused he UUID for the root filesystem to change.
-Anaconda installed it to md0 and the only thing that we had done was
-grow the filesystem to 3 partitions and add a third partition, as I
-mentioned in my previous email.
-
-Could yum have installed a kernel upgrade that changed the UUID???
-
-Also why didnt the kernel options md=0,/dev/sda1,/dev/sdb1 override the
-settings in mdadm.conf?
-
-Is the syntax correct?
-If its not correct doesnt the kernel print an error message?
-
-The kernel we were running was 2.6.27.24-170.2.68.fc10.x86_64
-
-It also doesnt explain why mkinitrd didnt do anything using the rescue
-disk, no delay, no message, no file.
-
-On the new system it works as expected
-mkinitrd test 2.6.27.24-170.2.68.fc10.x86_64
-
-creates the initrd "test" in the current directory
-and if theres a typo it reports
-No modules available for kernel ....
-
-Any ideas?
-
-Thanks in advance
-
-Andy Bailey
-
---------------------------------------------------------------------
-[root@servidor cron.daily]# cd /mnt/boot/
-
-[root@servidor boot]# zcat initrd-2.6.27.24-170.2.68.fc10.x86_64.img
-> /tmp/initrd
-[root@servidor boot]# cd /tmp/
-[root@servidor tmp]# mkdir init
-[root@servidor tmp]# file initrd 
-initrd: ASCII cpio archive (SVR4 with no CRC)
-[root@servidor tmp]# man cpio
-[root@servidor tmp]# cd init
-[root@servidor init]# cpio -i --make-directories < ../initrd 
-15858 blocks
-[root@servidor init]# cd etc
-
-[root@servidor etc]# cat mdadm.conf 
-
-# mdadm.conf written out by anaconda
-DEVICE partitions
-MAILADDR root
-
-ARRAY /dev/md1 level=raid1 num-devices=2 metadata=0.90
-UUID=ed127569:52ff37b7:da473d79:03ebe556
-ARRAY /dev/md0 level=raid1 num-devices=2 metadata=0.90
-UUID=392f9510:37d5d89a:d9143456:0dceb00d
-ARRAY /dev/md2 level=raid1 num-devices=2 metadata=0.90
-UUID=c964f385:5b6e5d18:2d631c3c:e70b1b22
-ARRAY /dev/md9 level=raid1 num-devices=2 metadata=0.90
-UUID=1ab3d6b5:575a8a2b:dfa789fa:805a401f
-ARRAY /dev/md8 level=raid1 num-devices=2 metadata=0.90
-UUID=318d1ff4:dd2b9ccc:7effe40e:a3e412fc
-ARRAY /dev/md7 level=raid1 num-devices=2 metadata=0.90
-UUID=0114a14e:b6a45be8:3a719518:7cb31784
-ARRAY /dev/md6 level=raid1 num-devices=2 metadata=0.90
-UUID=03254e0d:86de6727:2ff70881:773bec64
-ARRAY /dev/md5 level=raid1 num-devices=2 metadata=0.90
-UUID=644a897a:15ef0e34:833f147a:71729df0
-ARRAY /dev/md4 level=raid1 num-devices=2 metadata=0.90
-UUID=988ecde9:cc998c1b:c50949cb:adc77570
-ARRAY /dev/md3 level=raid1 num-devices=2 metadata=0.90
-UUID=e7b76f39:7c6d5185:3b70f7bd:4b6284f5
-
-[root@servidor etc]# cat /mnt/etc/mdadm.conf 
-
-# mdadm.conf written out by anaconda
-DEVICE partitions
-MAILADDR root
-
-ARRAY /dev/md2 level=raid1 num-devices=2
-UUID=c964f385:5b6e5d18:2d631c3c:e70b1b22
-ARRAY /dev/md4 level=raid1 num-devices=2
-UUID=988ecde9:cc998c1b:c50949cb:adc77570
-ARRAY /dev/md3 level=raid1 num-devices=2
-UUID=e7b76f39:7c6d5185:3b70f7bd:4b6284f5
-ARRAY /dev/md8 level=raid1 num-devices=2
-UUID=318d1ff4:dd2b9ccc:7effe40e:a3e412fc
-ARRAY /dev/md7 level=raid1 num-devices=2
-UUID=0114a14e:b6a45be8:3a719518:7cb31784
-ARRAY /dev/md6 level=raid1 num-devices=2
-UUID=03254e0d:86de6727:2ff70881:773bec64
-ARRAY /dev/md5 level=raid1 num-devices=2
-UUID=644a897a:15ef0e34:833f147a:71729df0
-ARRAY /dev/md0 level=raid1 num-devices=2
-UUID=2d10ee45:1a407729:ec85deb0:7e9ea950
-ARRAY /dev/md1 level=raid1 num-devices=2
-UUID=ed127569:52ff37b7:da473d79:03ebe556
-ARRAY /dev/md9 level=raid1 num-devices=2
-UUID=1ab3d6b5:575a8a2b:dfa789fa:805a401f
-[root@servidor etc]# cat /mnt/etc/mdadm.conf /tmp/init/etc/mdadm.conf |
-sort
-
-ARRAY /dev/md0 level=raid1 num-devices=2 metadata=0.90
-UUID=392f9510:37d5d89a:d9143456:0dceb00d
-ARRAY /dev/md0 level=raid1 num-devices=2
-UUID=2d10ee45:1a407729:ec85deb0:7e9ea950
-
-ARRAY /dev/md1 level=raid1 num-devices=2 metadata=0.90
-UUID=ed127569:52ff37b7:da473d79:03ebe556
-ARRAY /dev/md1 level=raid1 num-devices=2
-UUID=ed127569:52ff37b7:da473d79:03ebe556
-
-ARRAY /dev/md2 level=raid1 num-devices=2 metadata=0.90
-UUID=c964f385:5b6e5d18:2d631c3c:e70b1b22
-ARRAY /dev/md2 level=raid1 num-devices=2
-UUID=c964f385:5b6e5d18:2d631c3c:e70b1b22
-
-ARRAY /dev/md3 level=raid1 num-devices=2 metadata=0.90
-UUID=e7b76f39:7c6d5185:3b70f7bd:4b6284f5
-ARRAY /dev/md3 level=raid1 num-devices=2
-UUID=e7b76f39:7c6d5185:3b70f7bd:4b6284f5
-
-ARRAY /dev/md4 level=raid1 num-devices=2 metadata=0.90
-UUID=988ecde9:cc998c1b:c50949cb:adc77570
-ARRAY /dev/md4 level=raid1 num-devices=2
-UUID=988ecde9:cc998c1b:c50949cb:adc77570
-
-ARRAY /dev/md5 level=raid1 num-devices=2 metadata=0.90
-UUID=644a897a:15ef0e34:833f147a:71729df0
-ARRAY /dev/md5 level=raid1 num-devices=2
-UUID=644a897a:15ef0e34:833f147a:71729df0
-
-ARRAY /dev/md6 level=raid1 num-devices=2 metadata=0.90
-UUID=03254e0d:86de6727:2ff70881:773bec64
-ARRAY /dev/md6 level=raid1 num-devices=2
-UUID=03254e0d:86de6727:2ff70881:773bec64
-
-ARRAY /dev/md7 level=raid1 num-devices=2 metadata=0.90
-UUID=0114a14e:b6a45be8:3a719518:7cb31784
-ARRAY /dev/md7 level=raid1 num-devices=2
-UUID=0114a14e:b6a45be8:3a719518:7cb31784
-
-ARRAY /dev/md8 level=raid1 num-devices=2 metadata=0.90
-UUID=318d1ff4:dd2b9ccc:7effe40e:a3e412fc
-ARRAY /dev/md8 level=raid1 num-devices=2
-UUID=318d1ff4:dd2b9ccc:7effe40e:a3e412fc
-
-ARRAY /dev/md9 level=raid1 num-devices=2 metadata=0.90
-UUID=1ab3d6b5:575a8a2b:dfa789fa:805a401f
-ARRAY /dev/md9 level=raid1 num-devices=2
-UUID=1ab3d6b5:575a8a2b:dfa789fa:805a401f
-
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
