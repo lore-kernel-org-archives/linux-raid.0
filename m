@@ -1,37 +1,43 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: help with bad performing raid6
-Date: Mon, 27 Jul 2009 21:44:41 +0100
-Message-ID: <4A6E11B9.3080908@anonymous.org.uk>
-References: <cccedfc60907271219n1f3431c4w50033d4f5bc43edc@mail.gmail.com>
+From: "Tirumala Reddy Marri" <tmarri@amcc.com>
+Subject: writes raid-6  building
+Date: Mon, 27 Jul 2009 18:09:11 -0700
+Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C07C7D260@SDCEXCHANGE01.ad.amcc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cccedfc60907271219n1f3431c4w50033d4f5bc43edc@mail.gmail.com>
+Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-suse@jamponi.net>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 27/07/2009 20:19, Jon Nelson wrote:
-> I have a raid6 which is exposed via LVM (and parts of which are, in
-> turn, exposed via NFS) and I'm having some really bad performance
-> issues
-[...]
+While raid-6 is building I noticed writes are going on to all the
+drivers. Whereas in  raid-5 I see writes happening to only one drive.
+Any clue ?
 
-Probably the first thing to do is to isolate the problem. First up, I'd 
-say run bonnie++ against the filesystem locally, then you can eliminate 
-the possibility of NFS or networking causing problems. Then, have you 
-any spare space on the LVM VG with which you could try another filesystem?
+---------- iostat dump for raid-6 ---
+Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
+sda             152.76        23.81         3.74         47          7
+sdb             181.91        25.35         5.50         50         10
+sdc             161.31        24.84         3.30         49          6
+sdd             153.77        23.52         4.02         46          8
+sde             169.85        26.29         3.27         52          6
+sdf               0.00         0.00         0.00          0          0
+sdg               0.00         0.00         0.00          0          0
+sdh               0.00         0.00         0.00          0          0
+sdi               0.00         0.00         0.00          0          0
 
-> If I look at the load on the server the top process is
-> md0_raid5 (the raid6 process for md0, despite the raid5 in the name).
-> The load hovers around 8 or 9 at this time.
-
-You say it's the top process, but is it using any CPU, or just blocked 
-waiting for the discs?
-
-Cheers,
-
-John.
-
+Device:            tps    MB_read/s    MB_wrtn/s    MB_read    MB_wrtn
+sda             152.02        24.05         3.44         47          6
+sdb             168.18        26.23         4.14         51          8
+sdc             163.64        22.76         3.69         45          7
+sdd             166.67        24.37         4.04         48          8
+sde             166.16        24.78         3.57         49          7
+sdf               0.00         0.00         0.00          0          0
+sdg               0.00         0.00         0.00          0          0
+sdh               0.00         0.00         0.00          0          0
+sdi               0.00         0.00         0.00          0          0
+---------------
+Thanks,
+Marri
