@@ -1,91 +1,106 @@
-From: Jon Nelson <jnelson-suse@jamponi.net>
-Subject: Re: help with bad performing raid6
-Date: Wed, 29 Jul 2009 10:57:32 -0500
-Message-ID: <cccedfc60907290857s6560beecsa62ced930bc43552@mail.gmail.com>
-References: <cccedfc60907271219n1f3431c4w50033d4f5bc43edc@mail.gmail.com>
-	<4A7065F1.3060203@tmr.com>
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: [BUG] raid1 behind writes alter bio structure illegally
+Date: Wed, 29 Jul 2009 12:14:48 -0400
+Message-ID: <4A707578.3010901@steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A7065F1.3060203@tmr.com>
-Sender: linux-raid-owner@vger.kernel.org
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+Content-Type: multipart/mixed;
+ boundary="------------020107010406080701090800"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755703AbZG2Q2o@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>, kernel list <linux-kernel@vger.kernel.org>
+Cc: ian.campbell@citrix.com
 List-Id: linux-raid.ids
 
-On Wed, Jul 29, 2009 at 10:08 AM, Bill Davidsen<davidsen@tmr.com> wrote=
-:
-> Jon Nelson wrote:
-=2E.
+This is a multi-part message in MIME format.
+--------------020107010406080701090800
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
->> When I say "bad performance" I mean writes that vary down to 100KB/s
->> or less, as reported by rsync. The "average" end-to-end speed for
->> writing large (500MB to 5GB) files hovers around 3-4MB/s. This is ov=
-er
->> 100 MBit.
->>
->> Often times while stracing rsync I will see rsync not make a single
->> system call for sometimes more than a minute. Sometimes well in exce=
-ss
->> of that. If I look at the load on the server the top process is
->> md0_raid5 (the raid6 process for md0, despite the raid5 in the name)=
-=2E
->> The load hovers around 8 or 9 at this time.
->>
->>
->
-> I really suspect disk errors, I assume nothing in /var/log/messages?
+I've run into this bug on a 2.6.18 kernel, but I think the fix is still 
+applicable to the latest kernels (even though the symptoms would be 
+slightly different).
 
-Nope. Nothing in /v/l/m. I'm rather strongly beginning to suspect some
-sort of weird NFS issue.
+Perhaps someone who knows the block and/or SCSI layers well can comment 
+on the legality of attaching new pages to a bio without fixing up the 
+internal bio counters (details below)?
 
-> Perhaps iostat looking at the underlying drives would tell you someth=
-ing.
+Thanks,
+Paul
 
-> You might also run iostat with a test write load to see if something =
-is
-> unusual:
-> =A0dd if=3D/dev/zero bs=3D1024k count=3D1024k of=3DBigJunk.File conv=3D=
-fdatasync
+Environment:
+-----------
 
-During this test, vmstat reports blocks out of (infrequent) lows of
-25000 to about 70000. The values seem to hover in the mid 60K (65MB/s
-give or take). That seems very reasonable.
+Citrix XenServer 5.5 (2.6.18 Red Hat-derived kernel)
 
-> Of course if it runs like a bat out hell, it tells you the problem is
-> elsewhere.
+LVM over raid1 over SCSI/nbd
 
-> Other possible causes are a poor chunk size, bad alignment of the who=
-le
-> filesystem, and many other things too ugly to name. The fact that you=
- use
-> LVM make alignment issue more likely (in the sense of "one more level=
- which
-> could mess up"). Checked the error count on the array?
+Description:
+-----------
 
-Well, since I can write some 25-30MB/s (actual underlying I/O much
-higher obviously) to the same filesystem, and load hovers around 2.5
-I'm suspecting some weird NFS issue.
+The problem is due to the behind-write code in raid1. It turns out the 
+code is doing something a little non-kosher with the bio's and pages
+associated with them. This causes (at least) the SCSI layer to get upset 
+and fail the write requests.
 
-The md0_raid5 process is in R or S most of the time, with about 30% of =
-the CPU.
+Basically, when we do behind writes in raid1, we have to make a copy of
+the original data that is being written, since we're going to complete
+the request back up to user level before all the devices are finished
+writing the data (e.g., the SCSI disk completes the write and raid1 then
+completes the write back to user level, while nbd is still sending data
+across the network).
 
-Summary: writing large files over NFS causes huge load and really
-awful performance. Writing similarly large files directly (same
-underlying filesystem, ext3) performs as expected without huge load.
-Therefore, I am going to assume this is an NFS issue. I've more than
-my fair share of NFS issues lately. :-(
+The problem is actually a pretty simple one -- these copied pages 
+(behind_pages in raid1 code) are allocated at different memory addresses 
+than the original ones (obviously). This can cause the internal segment 
+counts (nr_phys_segments) that were calculated in the bio when it was 
+originally created (or cloned) to be invalid. Specifically, the SCSI 
+layer notices the values are invalid when it tries to build its scatter 
+gather list. The error:
 
-PS. I'm running 2.6.27.25 stock openSUSE kernel. I just checked and it
-does not apper to have the "NFS packet storm" patches which seems to
-cause 2.6.27.X NFS performance to really suck.
+Incorrect number of segments after building list
+counted 94, received 64
+req nr_sec 992, cur_nr_sec 8
 
-Sorry for wasting everybody's time.
+appears in the kernel logs when this happens. (This exact message is no 
+longer present in the kernel, but SCSI still appears to be building its 
+scatter gather list in a similar fashion.)
 
---=20
-Jon
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Solution:
+--------
+
+The patch adds a call to blk_recount_segments to fix up the bio
+structure to account for the new page addresses that have
+been attached to the bio.
+
+--------------020107010406080701090800
+Content-Type: text/x-diff;
+ name="xen-5.5-raid1-blk_recount_segments_fix.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="xen-5.5-raid1-blk_recount_segments_fix.diff"
+
+diff -purN --exclude-from=/export/public/clemep/tmp/dontdiff linux-orig/block/ll_rw_blk.c linux-2.6.18-128.1.6.el5.xs5.5.0.496.1012xen/block/ll_rw_blk.c
+--- linux-orig/block/ll_rw_blk.c	2009-05-29 07:29:54.000000000 -0400
++++ linux-2.6.18-128.1.6.el5.xs5.5.0.496.1012xen/block/ll_rw_blk.c	2009-07-28 13:36:19.000000000 -0400
+@@ -1374,6 +1374,7 @@ new_hw_segment:
+ 	bio->bi_flags |= (1 << BIO_SEG_VALID);
+ }
+ 
++EXPORT_SYMBOL(blk_recount_segments);
+ 
+ static int blk_phys_contig_segment(request_queue_t *q, struct bio *bio,
+ 				   struct bio *nxt)
+diff -purN --exclude-from=/export/public/clemep/tmp/dontdiff linux-orig/drivers/md/raid1.c linux-2.6.18-128.1.6.el5.xs5.5.0.496.1012xen/drivers/md/raid1.c
+--- linux-orig/drivers/md/raid1.c	2009-05-29 07:29:54.000000000 -0400
++++ linux-2.6.18-128.1.6.el5.xs5.5.0.496.1012xen/drivers/md/raid1.c	2009-07-28 13:35:36.000000000 -0400
+@@ -900,6 +900,7 @@ static int make_request(request_queue_t 
+ 			 */
+ 			__bio_for_each_segment(bvec, mbio, j, 0)
+ 				bvec->bv_page = behind_pages[j];
++			blk_recount_segments(q, mbio);
+ 			if (test_bit(WriteMostly, &conf->mirrors[i].rdev->flags))
+ 				atomic_inc(&r1_bio->behind_remaining);
+ 		}
+
+
+--------------020107010406080701090800--
