@@ -1,38 +1,69 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: How to handle >16TB devices on 32 bit hosts ??
-Date: Wed, 29 Jul 2009 17:07:16 +0200
-Message-ID: <20090729150716.GG1534__40256.8065132529$1248880110$gmane$org@ucw.cz>
-References: <19041.4714.686158.130252@notabene.brown> <20090718043155.GI4231@webber.adilger.int> <871voewm6y.fsf@basil.nowhere.org> <20090718065213.GK4231@webber.adilger.int> <20090718074811.GA2682@basil.fritz.box> <20090718134946.GA25546@mit.edu>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: help with bad performing raid6
+Date: Wed, 29 Jul 2009 11:08:33 -0400
+Message-ID: <4A7065F1.3060203@tmr.com>
+References: <cccedfc60907271219n1f3431c4w50033d4f5bc43edc@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090718134946.GA25546@mit.edu>
+In-Reply-To: <cccedfc60907271219n1f3431c4w50033d4f5bc43edc@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Theodore Tso <tytso@mit.edu>, Andi Kleen <andi@firstfloor.org>, Andreas Dilger <adilger@sun.com>, device-mapper development <dm-devel@redhat.com>, Neil Brown <neilb@suse.de>, linux-fs
+To: Jon Nelson <jnelson-suse@jamponi.net>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi!
+Jon Nelson wrote:
+> I have a raid6 which is exposed via LVM (and parts of which are, in
+> turn, exposed via NFS) and I'm having some really bad performance
+> issues, primarily with large files. I'm not sure where the blame lies.
+> When performance is bad "load" on the server is insanely high even
+> though it's not doing anything except for the raid6 (it's otherwise
+> quiescent) and NFS (to typically just one client).
+>
+> This is a home machine, but it has an AMD Athlon X2 3600+ and 4 fast SATA disks.
+>
+> When I say "bad performance" I mean writes that vary down to 100KB/s
+> or less, as reported by rsync. The "average" end-to-end speed for
+> writing large (500MB to 5GB) files hovers around 3-4MB/s. This is over
+> 100 MBit.
+>
+> Often times while stracing rsync I will see rsync not make a single
+> system call for sometimes more than a minute. Sometimes well in excess
+> of that. If I look at the load on the server the top process is
+> md0_raid5 (the raid6 process for md0, despite the raid5 in the name).
+> The load hovers around 8 or 9 at this time.
+>
+>   
+I really suspect disk errors, I assume nothing in /var/log/messages?
 
-> > > Also, for filesystems like btrfs or ZFS the checking can be done
-> > > online and incrementally without storing a full representation of
-> > > the state in memory.
-> > 
-> > You could, but I suspect it would be cheaper to just use a
-> > 64bit system than to rewrite fsck. 64bit is available
-> > for a lot of embedded setups these days too.
-> 
-> We don't have to rewrite fsck; most of the framework for supporting an
-> run-length-conding for compressed bitmaps is already in patches that
-> add > 32-bit block numbers to e2fsprogs; we've just been more focused
-> on getting 64-bit block numbers support merged than implementing
-> compressed bitmaps, but it's only one file that would need to be
-> added, and we might be able to steal the compressed bitmap support
-> from xfsprogs --- which does this already.
+> Even during this period of high load, actual disk I/O is fairly low.
+> I can get 70-80MB/s out of the actual underlying disks the entire time.
+> Uncached.
+>
+> vmstat reports up to 20MB/s writes (this is expected given 100Mbit and
+> raid6) but most of the time it hovers between 2 and 6 MB/s.
+>   
 
-Well... 'If allocation pattern is bad your fsck runs out of address
-space and breaks on your 15T fs' would scare me.
+Perhaps iostat looking at the underlying drives would tell you 
+something. You might also run iostat with a test write load to see if 
+something is unusual:
+  dd if=/dev/zero bs=1024k count=1024k of=BigJunk.File conv=fdatasync
+and just see if iostat or vmstat or /var/log/messages tells you 
+something. Of course if it runs like a bat out hell, it tells you the 
+problem is elsewhere.
+
+Other possible causes are a poor chunk size, bad alignment of the whole 
+filesystem, and many other things too ugly to name. The fact that you 
+use LVM make alignment issue more likely (in the sense of "one more 
+level which could mess up"). Checked the error count on the array?
 
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+
+"You are disgraced professional losers. And by the way, give us our money back."
+    - Representative Earl Pomeroy,  Democrat of North Dakota
+on the A.I.G. executives who were paid bonuses  after a federal bailout.
+
+
