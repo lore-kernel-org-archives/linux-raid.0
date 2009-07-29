@@ -1,38 +1,40 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [PATCH 1/4] md: Factor out RAID6 algorithms into lib/
-Date: Wed, 29 Jul 2009 11:20:58 -0700
-Message-ID: <4A70930A.1050006@zytor.com>
-References: <1247494302.19180.268.camel@macbook.infradead.org> <e9c3a7c20907151223j1d976ea9gdd224c9e6c2c36e3@mail.gmail.com> <4A5F6590.9000006@zytor.com> <4A608913.1060808@redhat.com> <4A6096A0.5050501@zytor.com> <4A609A52.7070506@redhat.com> <4A609B72.2010901@zytor.com> <4A609CFA.2060707@redhat.com> <4A609D8D.8050501@zytor.com> <1247918016.22313.138.camel@macbook.infradead.org> <4A61C3D9.6020200@zytor.com> <h3t5ig$2n2$1@ger.gmane.org> <h3t5lm$2n2$2@ger.gmane.org>
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: [BUG] raid1 behind writes alter bio structure illegally
+Date: Wed, 29 Jul 2009 16:18:46 -0400
+Message-ID: <4A70AEA6.9030209@steeleye.com>
+References: <4A707578.3010901@steeleye.com> <4A707F85.5090008@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-btrfs-owner@vger.kernel.org>
-In-Reply-To: <h3t5lm$2n2$2@ger.gmane.org>
-Sender: linux-btrfs-owner@vger.kernel.org
-To: Alex Elsayed <eternaleye@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4A707F85.5090008@redhat.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Milan Broz <mbroz@redhat.com>
+Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>, kernel list <linux-kernel@vger.kernel.org>, ian.campbell@citrix.com
 List-Id: linux-raid.ids
 
-On 07/18/2009 11:52 AM, Alex Elsayed wrote:
-> Alex Elsayed wrote:
+Milan Broz wrote:
+> Hi Paul,
 > 
->> H. Peter Anvin wrote:
->>> implementation in Java, called "Jerasure".)  Implementability using real 
->>> array instruction sets is key to decent performance.
->> Actually, it is made clear in the paper that Jerasure is written as a C 
->> library, and Clearsafe is the only Java implementation. Don't let the name 
->> fool you. ;D
-> And again, I make a typo. s/Clearsafe/Cleversafe/.
+> Paul Clements wrote:
+>> I've run into this bug on a 2.6.18 kernel, but I think the fix is still 
+>> applicable to the latest kernels (even though the symptoms would be 
+>> slightly different).
+>>
+>> Perhaps someone who knows the block and/or SCSI layers well can comment 
+>> on the legality of attaching new pages to a bio without fixing up the 
+>> internal bio counters (details below)?
 > 
+>> LVM over raid1 over SCSI/nbd
+> 
+> Please can you try that backporting of this patch helps?
+> 
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=5d84070ee0a433620c57e85dac7f82faaec5fbb3
+> 
+> (If so, see https://bugzilla.redhat.com/show_bug.cgi?id=512387)
 
-It's still their own implementation of poor quality.  That it is poor
-quality shows in the numbers, which are dramatically lower than the
-actual Linux implementation -- by an order of magnitude or more.  In
-other words, they build a strawman and knock it down.
+Thanks Milan. I tested the patch and it does fix the issue. I replied to 
+the bugzilla report with this information.
 
-The actual Linux implementation blasts any of the numbers they have in
-their paper, which I presume means they haven't optimized any of them.
-As such, all the numbers are meaningless.
-
-	-hpa
-
+--
+Paul
