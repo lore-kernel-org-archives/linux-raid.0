@@ -1,69 +1,42 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: help with bad performing raid6
-Date: Wed, 29 Jul 2009 11:08:33 -0400
-Message-ID: <4A7065F1.3060203@tmr.com>
-References: <cccedfc60907271219n1f3431c4w50033d4f5bc43edc@mail.gmail.com>
+From: Paul Smith <paul@mad-scientist.us>
+Subject: Want to remove a disk from raid10 during recovery
+Date: Wed, 29 Jul 2009 11:40:14 -0400
+Message-ID: <1248882014.7125.64.camel@psmith-ubeta.netezza.com>
+Reply-To: paul@mad-scientist.us
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cccedfc60907271219n1f3431c4w50033d4f5bc43edc@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-suse@jamponi.net>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jon Nelson wrote:
-> I have a raid6 which is exposed via LVM (and parts of which are, in
-> turn, exposed via NFS) and I'm having some really bad performance
-> issues, primarily with large files. I'm not sure where the blame lies.
-> When performance is bad "load" on the server is insanely high even
-> though it's not doing anything except for the raid6 (it's otherwise
-> quiescent) and NFS (to typically just one client).
->
-> This is a home machine, but it has an AMD Athlon X2 3600+ and 4 fast SATA disks.
->
-> When I say "bad performance" I mean writes that vary down to 100KB/s
-> or less, as reported by rsync. The "average" end-to-end speed for
-> writing large (500MB to 5GB) files hovers around 3-4MB/s. This is over
-> 100 MBit.
->
-> Often times while stracing rsync I will see rsync not make a single
-> system call for sometimes more than a minute. Sometimes well in excess
-> of that. If I look at the load on the server the top process is
-> md0_raid5 (the raid6 process for md0, despite the raid5 in the name).
-> The load hovers around 8 or 9 at this time.
->
->   
-I really suspect disk errors, I assume nothing in /var/log/messages?
+Hi all.  We're working on an IBM Bladecenter with EXP3000 SAS JBOD disk
+arrays.  We are using Linux 2.6.27.26 in an embedded OS (booting the
+blades over PXE with a ramdisk).  We are working with various RAID10
+arrays on these disks.
 
-> Even during this period of high load, actual disk I/O is fairly low.
-> I can get 70-80MB/s out of the actual underlying disks the entire time.
-> Uncached.
->
-> vmstat reports up to 20MB/s writes (this is expected given 100Mbit and
-> raid6) but most of the time it hovers between 2 and 6 MB/s.
->   
+One thing we've discovered is that if we lose a disk and have entered
+recovery, then we lose another disk in that same array, we can't remove
+that one.  Obviously we know that the second failure is not the sole
+surviving copy.  So for example if we have a raid10 set up as:
 
-Perhaps iostat looking at the underlying drives would tell you 
-something. You might also run iostat with a test write load to see if 
-something is unusual:
-  dd if=/dev/zero bs=1024k count=1024k of=BigJunk.File conv=fdatasync
-and just see if iostat or vmstat or /var/log/messages tells you 
-something. Of course if it runs like a bat out hell, it tells you the 
-problem is elsewhere.
+	(D1,D2), (D3,D4), (D5,D6), (D7,D8)
 
-Other possible causes are a poor chunk size, bad alignment of the whole 
-filesystem, and many other things too ugly to name. The fact that you 
-use LVM make alignment issue more likely (in the sense of "one more 
-level which could mess up"). Checked the error count on the array?
+then we lose one disk in a pair (say D2) and enter recovery, then we
+lose another disk in another pair (say D4), we can't remove that one.
+This is a big problem for us in our environment, because we have
+different partitions on the disks that are deployed across different
+RAID configurations... it means that if a disk fails we can't recover
+different array configurations at the same time, which is Not Good(tm).
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
+Looking at the code in the kernel it doesn't seem like it's that
+difficult to change this but I wanted to understand what potential
+problems there would be with it, and why this restriction was added in
+the first place.
 
-"You are disgraced professional losers. And by the way, give us our money back."
-    - Representative Earl Pomeroy,  Democrat of North Dakota
-on the A.I.G. executives who were paid bonuses  after a federal bailout.
+Can anyone comment on this?
 
+
+Thanks!
 
