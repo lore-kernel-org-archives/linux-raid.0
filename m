@@ -1,71 +1,51 @@
-From: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Subject: question about bitmaps and dirty percentile
-Date: Thu, 30 Jul 2009 13:25:01 -0500
-Message-ID: <cccedfc60907301125i2187907od5819e464de2d25a@mail.gmail.com>
+From: Tracy Reed <treed@ultraviolet.org>
+Subject: Re: raind-1 resync speed slow down to 50% by the time it finishes
+Date: Thu, 30 Jul 2009 11:35:27 -0700
+Message-ID: <20090730183526.GD19663@tracyreed.org>
+References: <AC5E1C3367E37D44970B81A6ADD1DA2C07C7D7D6@SDCEXCHANGE01.ad.amcc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="gatW/ieO32f1wygP"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <AC5E1C3367E37D44970B81A6ADD1DA2C07C7D7D6@SDCEXCHANGE01.ad.amcc.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: LinuxRaid <linux-raid@vger.kernel.org>
+To: Tirumala Reddy Marri <tmarri@amcc.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have a 3-disk raid1 configured with bitmaps.
 
-Most of the time it only has 1 disk (disk A)
-Periodically (weekly or less frequenly) I re-add a second disk (disk
-B), which then re-synchronizes, and when it's done I --fail and
---remove it.
-Even less frequently (monthly or less frequently) I do the same thing
-with a third disk (disk C).
+--gatW/ieO32f1wygP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Before adding the disks, I will issue an --examine.
-When I added disk B today, it said this:
+On Wed, Jul 29, 2009 at 11:25:47PM -0700, Tirumala Reddy Marri spake thusly:
+>   I have two 1 tera byte disks in RAID-1 configuration. When I started
+> RAID-1 array initial speed was 100MBps by the time it finishes the speed
+> was <50MBps. Is there is any reason for this behavior ? Isn't speed
+> supposedly uniform.=20
 
-Events : 14580
-Bitmap : 283645 bits (chunks), 11781 dirty (4.2%)
+I currently have a RAID-1 rebuild running and cat /proc/mdstat shows
+speed=3D1481K/sec. This seems incredibly slow to me. That's just just
+about one and a half megs per second. I'm wondering if this machine
+has some more serious hardware problem. No errors showing up in dmesg
+or /var/log/messages or anything though.
 
-I'm curious why *any* of the bitmap chunks are dirty - when the disks
-are removed the device has typically been quiescent for quite some
-time. Is there a way to force a "flush" or whatever to get each disk
-as up-to-date as possible, prior to a --fail and --remove?
+--=20
+Tracy Reed
+http://tracyreed.org
 
+--gatW/ieO32f1wygP
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-While /dev/nbd0 was syncing, I also --re-add'ed /dev/sdf1, which (as
-expected) waited until /dev/nbd0 was done.
-Then, due to a logic bug in a script, /dev/sdf1 was removed (the
-script was waiting with mdadm --wait /dev/md12 which returned when
-/dev/nbd0 was done, even though /dev/sdf1 had not yet started!!).
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
 
-Then things got weird.
+iD4DBQFKcefu9PIYKZYVAq0RAmZWAJdVcQBR21e0dYcSG/VUl//A79T3AJ9V4YBk
+0W03/SAdgBWiY/67CBdNQQ==
+=Ijts
+-----END PGP SIGNATURE-----
 
-I saw this, which just *can't* be right:
-
-md12 : active raid1 nbd0[2](W) sde[0]
-      72612988 blocks super 1.1 [3/1] [U__]
-      [======================================>]  recovery =192.7%
-(69979200/36306494) finish=13228593199978.6min speed=11620K/sec
-      bitmap: 139/139 pages [556KB], 256KB chunk
-
-and of course the percentile kept growing, and the finish minutes are crazy.
-
-I had to --fail and --remove /dev/nbd0, and re-add it, which
-unfortunately started the recovery over.
-
-I haven't even gotten to my questions about dirty percentages and so
-on, which I will save for later.
-
-In summary:
-
-3-disk raid1, using bitmaps, with 2 missing disks.
-re-add disk B. recovery begins.
-re-add disk C. recovery continues on to disk B, will wait for disk C.
-recovery completes on disk B, mdadm --wait returns (unexpectedly)
---fail, --remove disk C (which was never recovered on-to)
-/proc/mdstat crazy, disk I/O still high (WTF is it *doing*, then?)
---fail --remove disk B, --re-add disk B, recovery starts over.
-
-
-
--- 
-Jon
+--gatW/ieO32f1wygP--
