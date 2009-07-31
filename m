@@ -1,52 +1,54 @@
-From: Jon Nelson <jnelson-suse@jamponi.net>
-Subject: Re: help with bad performing raid6
-Date: Fri, 31 Jul 2009 13:23:39 -0500
-Message-ID: <cccedfc60907311123i6232f926n6617ed9d2432c081@mail.gmail.com>
-References: <cccedfc60907271219n1f3431c4w50033d4f5bc43edc@mail.gmail.com>
-	<72dbd3150907301409t5ea20979gcf400e4c53a32d62@mail.gmail.com>
-	<20090731182118.GB11756@rap.rap.dk>
+From: Fredrik Andersson <nablaman@gmail.com>
+Subject: Linux Software Raid hangs after months of operation
+Date: Fri, 31 Jul 2009 21:05:35 +0200
+Message-ID: <a125a870907311205k6380fafcy3eecbac6150f23f5@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090731182118.GB11756@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
-Cc: David Rees <drees76@gmail.com>, LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2009/7/31 Keld J=F8rn Simonsen <keld@dkuug.dk>:
-> On Thu, Jul 30, 2009 at 02:09:19PM -0700, David Rees wrote:
->> On Mon, Jul 27, 2009 at 12:19 PM, Jon Nelson<jnelson-suse@jamponi.ne=
-t> wrote:
->> > When I say "bad performance" I mean writes that vary down to 100KB=
-/s
->> > or less, as reported by rsync. The "average" end-to-end speed for
->> > writing large (500MB to 5GB) files hovers around 3-4MB/s. This is =
-over
->> > 100 MBit.
->>
->> That doesn't sound too unexpected. =A0rsync does a lot of reading an=
-d
->> writing, so you're going to see less than network speeds.
->
-> rsync also does a lot of computing, so that is also a source of delay=
-=2E
-> For faster cpu's the delay is not so big. I get near network speed ( =
-80
-> Mbit/s on a 100 Mbit/s LAN) between two of my faster machines.
+Hi, I have a bunch of machines running Linux 2.6.29.1 on x86_64 which
+are running Linux software raid consisting of two disk partitions
+merged into a single raid0 in /dev/md0. This setup is for performance
+reasons.
+The OS is not run from the raid, it is only used to hold a set of data files.
 
-In this case, you may all be assured it was not doing much reading
-over NFS or computing, as the file did not exist on the NFS share - in
-this case NFS goes into (more or less) pure write mode - no updating
-per-se.
+This seems to work great for weeks to months at a time, but then all
+of a sudden access to the raid filesystem completely locks up. A
+process trying to access any file in there hangs to the point where it
+cannot be killed even with -9, so I suppose it's locked up in a
+syscall.
+I can't attach a debugger to the process, for then the terminal locks
+up too. But the system is operational as long as I don't read anything
+from the raid mount.
 
+Th only thing that helps is a reboot. Then the raid will function
+correctly again.
 
+The version of mdadm is v2.6.7.1 - 15th October 2008.
 
---=20
-Jon
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Here is my /etc/mdadm.conf:
+DEVICE /dev/sda5
+DEVICE /dev/sdb3
+ARRAY /dev/md0 devices=/dev/sda5,/dev/sdb3
+
+/proc/mdstat from a locked machine:
+Personalities : [raid0]
+md0 : active raid0 sda5[0] sdb3[1]
+898362368 blocks 256k chunks
+
+unused devices: <none>
+
+The raid has an ext4 filesystem on it.
+
+I can find no other logs or status files for the software raid system.
+There's nothing in /var/log/messages or any other standard log.
+
+Does anybody know what is going on? Is this a known bug in md or the kernel?
+
+Thank you for any help!
+
+Fredrik
