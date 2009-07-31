@@ -1,358 +1,127 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH/Resend] md: Push down data integrity code to personalities.
-Date: Fri, 31 Jul 2009 15:06:34 +1000
-Message-ID: <19058.31706.803177.77914@notabene.brown>
-References: <20090701083802.GC9910@skl-net.de>
-	<19026.50240.504728.428875@notabene.brown>
-	<20090713085442.GJ9910@skl-net.de>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: raind-1 resync speed slow down to 50% by the time it finishes
+Date: Fri, 31 Jul 2009 19:54:55 +0200
+Message-ID: <20090731175455.GA11463@rap.rap.dk>
+References: <AC5E1C3367E37D44970B81A6ADD1DA2C07C7D7D6@SDCEXCHANGE01.ad.amcc.com> <20090730073554.GA17665@cthulhu.home.robinhill.me.uk> <20090730101846.GA17332@rap.rap.dk> <72dbd3150907301311t5abef2fai91cdae154b987d33@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Andre Noll on Monday July 13
+Content-Disposition: inline
+In-Reply-To: <72dbd3150907301311t5abef2fai91cdae154b987d33@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-raid <linux-raid@vger.kernel.org>
+To: David Rees <drees76@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Monday July 13, maan@systemlinux.org wrote:
+On Thu, Jul 30, 2009 at 01:11:20PM -0700, David Rees wrote:
+> 2009/7/30 Keld J=F8rn Simonsen <keld@dkuug.dk>:
+> > I think raid10,f2 only degrades 10-20 % while raid1 can degrade as =
+much
+> > as 50 %. For writing it is about the same, given that you use a fil=
+e
+> > system on top of the raid.
+>=20
+> Has anyone done any benchmarks of near vs far setups?
 
-Only 18 days later.....
+Yes, there are a number of benchmarks on raid10 near/far scenarios
+at http://linux-raid.osdl.org/index.php/Performance
 
-> 
-> Here is a revised patch that puts calls to the new functions into
-> the ->hot_*_disk methods as you propose.
+> >From what I understand, here's how performance should go for a 2-dis=
+k
+> raid10 setup:
+>=20
+> Streaming/large reads far: Up to 100% faster since reads are striped
+> across both disks
 
-Thanks.  Much better.
-Calling md_integrity_check from the ->error routines isn't a good idea
-though.  They can be called in interrupt context, and
-md_integrity_check can call kmalloc(..., GFP_KERNEL) which might try
-to sleep.  That would be bad.
-We don't need the call in ->error, having it in ->hot_remove_disk is
-adequate, as that is called soon after any failure (it doesn't wait
-for the sysadmin to "mdadm --remove ...".).
+and possibly faster, due to far only using the faster half of the disk
+for reading.
 
-So I have made that change and updated the comment accordingly.
+> Streaming/large reads near: Same as single disk as reads can't be
+> striped across both disks
 
-> 
-> Side note: The patch causes the new gcc warning
-> 
-> 	drivers/md/md.c: In function 'md_integrity_add_rdev':
-> 	drivers/md/md.c:1546: warning: unused variable 'gd'
-> 
-> if data integrity is not compiled in. Any ideas on how to avoid it
-> without introducing an #ifdef-mess are welcome.
+yes.
 
-I just replaced ever occurrence of "gd" with "mddev->gendisk".  It
-isn't too ugly.
-Alternately, blkdev.h could have
+> Streaming/large writes far: Slower than single disk, since disks have
+> to seek to write.  How much of a hit in performance will depend on
+> chunk size.
+> Streaming/large writes near: Same as single disk.
 
-static inline struct blk_integrity *blk_get_integrity(struct gendisk *disk)
-{
-	return NULL;
-}
+Due to the elevator of the file system, writes are about the same for
+both near and far.
 
-in place of
+> Random/small reads far: Up to 100% faster
 
-#define blk_get_integrity(a)			(0)
+Actually a bit more, due to that far only uses the fastest half of the
+disks. One test shows 132 % faster, which is consistent with theory.
 
-and then there would be no complaints about unused variables, and
-slightly improved type checking.
+> Random/small reads near: Up to 100% faster
 
-Thanks.
+One test shows 156 % faster.
 
-NeilBrown
+> Random/small writes far: Same as single disk.
+> Random/small writes near: Same as single disk.
 
+yes.
 
-From 66f4f3f41f5c334f399e920b2aaad9b82514acda Mon Sep 17 00:00:00 2001
-From: Andre Noll <maan@systemlinux.org>
-Date: Fri, 31 Jul 2009 15:04:50 +1000
-Subject: [PATCH] md: Push down data integrity code to personalities.
+> So basically, if you have a setup which mostly reads from disk, using
+> a far layout is beneficial, but if you have a setup which does a
+> higher percentage of writes, sticking to a near layout will be faster=
+=2E
 
-This patch replaces md_integrity_check() by two new public functions:
-md_integrity_register() and md_integrity_add_rdev() which are both
-personality-independent.
+=46or reading, this is true, but for writing, it is not true, given tha=
+t
+you use a filesystem, with an elevator algorithm in use. The elevator
+evens out the lesser performance of layout=3Dfar for a raw raid10,f2, s=
+o
+that the performance is about the same for the near and far layouts.
 
-md_integrity_register() is called from the ->run and ->hot_remove
-methods of all personalities that support data integrity.  The
-function iterates over the component devices of the array and
-determines if all active devices are integrity capable and if their
-profiles match. If this is the case, the common profile is registered
-for the mddev via blk_integrity_register().
+> I recently set up an 8-disk RAID10 across 8 7200 disks across 3 contr=
+ollers.
+>=20
+> 5 disks are in an external enclosure via eSATA and a PCIe card.
+> 2 disks are using onboard SATA controller
+> 1 disk is using onboard IDE controller
+>=20
+> I debated whether or not to use near or far, but ultimately stuck wit=
+h
+> near for two reasons:
+>=20
+> 1. The array mostly sees write activity, streaming reads aren't that =
+common.
+> 2. I can only get about 120 MB/s out of the external enclosure becaus=
+e
+> of the PCIe card [1] , so being able to stripe reads wouldn't help ge=
+t
+> any extra performance out of those disks.
 
-The second new function, md_integrity_add_rdev() is called from the
-->hot_add_disk methods, i.e. whenever a new device is being added
-to a raid array. If the new device does not support data integrity,
-or has a profile different from the one already registered, data
-integrity for the mddev is disabled.
+Hmm, a pci-e x1 should be able to get 2.5 Mbit/s =3D about 300 MB/s.=20
+Wikipedia says 250 MB/s. It is strange that you only can get 120 MB/s.
+That is the speed of a PCI 32 bit bus. I looked at your reference [1]
+for the 3132 model. Have you tried it out in practice?
 
-For raid0 and linear, only the call to md_integrity_register() from
-the ->run method is necessary.
+The max you should be able to get out of your raid10 with 8 disks would
+then be around 400 - 480 MB/s, for sequential reads. 250 MB/s out of yo=
+ur PCIE
+enclosure, or 50 MB/s per disk, and then additional 50 MB/s each of the=
+ last
+3 disks. You can only multiply the speed of the slowest of the disks
+involved by the number of disks. But even then it is not so bad.
+=46or random read it is better yet, given that this is not limited by t=
+he
+transfer speed of your PCIe controller.
 
-Signed-off-by: Andre Noll <maan@systemlinux.org>
-Signed-off-by: NeilBrown <neilb@suse.de>
----
- drivers/md/linear.c    |    1 +
- drivers/md/md.c        |   93 ++++++++++++++++++++++++++++++++---------------
- drivers/md/md.h        |    2 +
- drivers/md/multipath.c |    5 ++-
- drivers/md/raid0.c     |    1 +
- drivers/md/raid1.c     |    6 ++-
- drivers/md/raid10.c    |    4 ++
- 7 files changed, 79 insertions(+), 33 deletions(-)
-
-diff --git a/drivers/md/linear.c b/drivers/md/linear.c
-index 5810fa9..54c8677 100644
---- a/drivers/md/linear.c
-+++ b/drivers/md/linear.c
-@@ -220,6 +220,7 @@ static int linear_run (mddev_t *mddev)
- 	mddev->queue->unplug_fn = linear_unplug;
- 	mddev->queue->backing_dev_info.congested_fn = linear_congested;
- 	mddev->queue->backing_dev_info.congested_data = mddev;
-+	md_integrity_register(mddev);
- 	return 0;
- }
- 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index d4351ff..13535f0 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1487,36 +1487,74 @@ static int match_mddev_units(mddev_t *mddev1, mddev_t *mddev2)
- 
- static LIST_HEAD(pending_raid_disks);
- 
--static void md_integrity_check(mdk_rdev_t *rdev, mddev_t *mddev)
-+/*
-+ * Try to register data integrity profile for an mddev
-+ *
-+ * This is called when an array is started and after a disk has been kicked
-+ * from the array. It only succeeds if all working and active component devices
-+ * are integrity capable with matching profiles.
-+ */
-+int md_integrity_register(mddev_t *mddev)
-+{
-+	mdk_rdev_t *rdev, *reference = NULL;
-+
-+	if (list_empty(&mddev->disks))
-+		return 0; /* nothing to do */
-+	if (blk_get_integrity(mddev->gendisk))
-+		return 0; /* already registered */
-+	list_for_each_entry(rdev, &mddev->disks, same_set) {
-+		/* skip spares and non-functional disks */
-+		if (test_bit(Faulty, &rdev->flags))
-+			continue;
-+		if (rdev->raid_disk < 0)
-+			continue;
-+		/*
-+		 * If at least one rdev is not integrity capable, we can not
-+		 * enable data integrity for the md device.
-+		 */
-+		if (!bdev_get_integrity(rdev->bdev))
-+			return -EINVAL;
-+		if (!reference) {
-+			/* Use the first rdev as the reference */
-+			reference = rdev;
-+			continue;
-+		}
-+		/* does this rdev's profile match the reference profile? */
-+		if (blk_integrity_compare(reference->bdev->bd_disk,
-+				rdev->bdev->bd_disk) < 0)
-+			return -EINVAL;
-+	}
-+	/*
-+	 * All component devices are integrity capable and have matching
-+	 * profiles, register the common profile for the md device.
-+	 */
-+	if (blk_integrity_register(mddev->gendisk,
-+			bdev_get_integrity(reference->bdev)) != 0) {
-+		printk(KERN_ERR "md: failed to register integrity for %s\n",
-+			mdname(mddev));
-+		return -EINVAL;
-+	}
-+	printk(KERN_NOTICE "md: data integrity on %s enabled\n",
-+		mdname(mddev));
-+	return 0;
-+}
-+EXPORT_SYMBOL(md_integrity_register);
-+
-+/* Disable data integrity if non-capable/non-matching disk is being added */
-+void md_integrity_add_rdev(mdk_rdev_t *rdev, mddev_t *mddev)
- {
--	struct mdk_personality *pers = mddev->pers;
--	struct gendisk *disk = mddev->gendisk;
- 	struct blk_integrity *bi_rdev = bdev_get_integrity(rdev->bdev);
--	struct blk_integrity *bi_mddev = blk_get_integrity(disk);
-+	struct blk_integrity *bi_mddev = blk_get_integrity(mddev->gendisk);
- 
--	/* Data integrity passthrough not supported on RAID 4, 5 and 6 */
--	if (pers && pers->level >= 4 && pers->level <= 6)
-+	if (!bi_mddev) /* nothing to do */
- 		return;
--
--	/* If rdev is integrity capable, register profile for mddev */
--	if (!bi_mddev && bi_rdev) {
--		if (blk_integrity_register(disk, bi_rdev))
--			printk(KERN_ERR "%s: %s Could not register integrity!\n",
--			       __func__, disk->disk_name);
--		else
--			printk(KERN_NOTICE "Enabling data integrity on %s\n",
--			       disk->disk_name);
-+	if (rdev->raid_disk < 0) /* skip spares */
- 		return;
--	}
--
--	/* Check that mddev and rdev have matching profiles */
--	if (blk_integrity_compare(disk, rdev->bdev->bd_disk) < 0) {
--		printk(KERN_ERR "%s: %s/%s integrity mismatch!\n", __func__,
--		       disk->disk_name, rdev->bdev->bd_disk->disk_name);
--		printk(KERN_NOTICE "Disabling data integrity on %s\n",
--		       disk->disk_name);
--		blk_integrity_unregister(disk);
--	}
-+	if (bi_rdev && blk_integrity_compare(mddev->gendisk,
-+					     rdev->bdev->bd_disk) >= 0)
-+		return;
-+	printk(KERN_NOTICE "disabling data integrity on %s\n", mdname(mddev));
-+	blk_integrity_unregister(mddev->gendisk);
- }
- 
- static int bind_rdev_to_array(mdk_rdev_t * rdev, mddev_t * mddev)
-@@ -1591,7 +1629,6 @@ static int bind_rdev_to_array(mdk_rdev_t * rdev, mddev_t * mddev)
- 	/* May as well allow recovery to be retried once */
- 	mddev->recovery_disabled = 0;
- 
--	md_integrity_check(rdev, mddev);
- 	return 0;
- 
-  fail:
-@@ -4048,10 +4085,6 @@ static int do_md_run(mddev_t * mddev)
- 	}
- 	strlcpy(mddev->clevel, pers->name, sizeof(mddev->clevel));
- 
--	if (pers->level >= 4 && pers->level <= 6)
--		/* Cannot support integrity (yet) */
--		blk_integrity_unregister(mddev->gendisk);
--
- 	if (mddev->reshape_position != MaxSector &&
- 	    pers->start_reshape == NULL) {
- 		/* This personality cannot handle reshaping... */
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 9430a11..78f0316 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -431,5 +431,7 @@ extern int md_allow_write(mddev_t *mddev);
- extern void md_wait_for_blocked_rdev(mdk_rdev_t *rdev, mddev_t *mddev);
- extern void md_set_array_sectors(mddev_t *mddev, sector_t array_sectors);
- extern int md_check_no_bitmap(mddev_t *mddev);
-+extern int md_integrity_register(mddev_t *mddev);
-+void md_integrity_add_rdev(mdk_rdev_t *rdev, mddev_t *mddev);
- 
- #endif /* _MD_MD_H */
-diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
-index 237fe3f..7140909 100644
---- a/drivers/md/multipath.c
-+++ b/drivers/md/multipath.c
-@@ -313,6 +313,7 @@ static int multipath_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
- 			set_bit(In_sync, &rdev->flags);
- 			rcu_assign_pointer(p->rdev, rdev);
- 			err = 0;
-+			md_integrity_add_rdev(rdev, mddev);
- 			break;
- 		}
- 
-@@ -345,7 +346,9 @@ static int multipath_remove_disk(mddev_t *mddev, int number)
- 			/* lost the race, try later */
- 			err = -EBUSY;
- 			p->rdev = rdev;
-+			goto abort;
- 		}
-+		md_integrity_register(mddev);
- 	}
- abort:
- 
-@@ -519,7 +522,7 @@ static int multipath_run (mddev_t *mddev)
- 	mddev->queue->unplug_fn = multipath_unplug;
- 	mddev->queue->backing_dev_info.congested_fn = multipath_congested;
- 	mddev->queue->backing_dev_info.congested_data = mddev;
--
-+	md_integrity_register(mddev);
- 	return 0;
- 
- out_free_conf:
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index 335f490..898e2bd 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -351,6 +351,7 @@ static int raid0_run(mddev_t *mddev)
- 
- 	blk_queue_merge_bvec(mddev->queue, raid0_mergeable_bvec);
- 	dump_zones(mddev);
-+	md_integrity_register(mddev);
- 	return 0;
- }
- 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 0569efb..67e794d 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1144,7 +1144,7 @@ static int raid1_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
- 			rcu_assign_pointer(p->rdev, rdev);
- 			break;
- 		}
--
-+	md_integrity_add_rdev(rdev, mddev);
- 	print_conf(conf);
- 	return err;
- }
-@@ -1178,7 +1178,9 @@ static int raid1_remove_disk(mddev_t *mddev, int number)
- 			/* lost the race, try later */
- 			err = -EBUSY;
- 			p->rdev = rdev;
-+			goto abort;
- 		}
-+		md_integrity_register(mddev);
- 	}
- abort:
- 
-@@ -2067,7 +2069,7 @@ static int run(mddev_t *mddev)
- 	mddev->queue->unplug_fn = raid1_unplug;
- 	mddev->queue->backing_dev_info.congested_fn = raid1_congested;
- 	mddev->queue->backing_dev_info.congested_data = mddev;
--
-+	md_integrity_register(mddev);
- 	return 0;
- 
- out_no_mem:
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 7298a5e..3d9020c 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1170,6 +1170,7 @@ static int raid10_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
- 			break;
- 		}
- 
-+	md_integrity_add_rdev(rdev, mddev);
- 	print_conf(conf);
- 	return err;
- }
-@@ -1203,7 +1204,9 @@ static int raid10_remove_disk(mddev_t *mddev, int number)
- 			/* lost the race, try later */
- 			err = -EBUSY;
- 			p->rdev = rdev;
-+			goto abort;
- 		}
-+		md_integrity_register(mddev);
- 	}
- abort:
- 
-@@ -2225,6 +2228,7 @@ static int run(mddev_t *mddev)
- 
- 	if (conf->near_copies < mddev->raid_disks)
- 		blk_queue_merge_bvec(mddev->queue, raid10_mergeable_bvec);
-+	md_integrity_register(mddev);
- 	return 0;
- 
- out_free_conf:
--- 
-1.6.3.3
-
+> -Dave
+>=20
+> [1] http://ata.wiki.kernel.org/index.php/Hardware,_driver_status#Sili=
+con_Image_3124
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
