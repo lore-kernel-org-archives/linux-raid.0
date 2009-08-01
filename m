@@ -1,84 +1,219 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Linux Software Raid hangs after months of operation
-Date: Sat, 1 Aug 2009 07:30:20 +1000 (EST)
-Message-ID: <e72f4b43785f28a7b3ef0188514b6648.squirrel@neil.brown.name>
-References: <a125a870907311205k6380fafcy3eecbac6150f23f5@mail.gmail.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: raind-1 resync speed slow down to 50% by the time it finishes
+Date: Sat, 1 Aug 2009 15:00:43 +0200
+Message-ID: <20090801130043.GA24915@rap.rap.dk>
+References: <AC5E1C3367E37D44970B81A6ADD1DA2C07C7D7D6@SDCEXCHANGE01.ad.amcc.com> <20090730073554.GA17665@cthulhu.home.robinhill.me.uk> <20090730101846.GA17332@rap.rap.dk> <72dbd3150907301311t5abef2fai91cdae154b987d33@mail.gmail.com> <20090731175455.GA11463@rap.rap.dk> <72dbd3150907311310s2ccfc379u2c23fe724007b9bb@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <a125a870907311205k6380fafcy3eecbac6150f23f5@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <72dbd3150907311310s2ccfc379u2c23fe724007b9bb@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Fredrik Andersson <nablaman@gmail.com>
+To: David Rees <drees76@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, August 1, 2009 5:05 am, Fredrik Andersson wrote:
-> Hi, I have a bunch of machines running Linux 2.6.29.1 on x86_64 which
-> are running Linux software raid consisting of two disk partitions
-> merged into a single raid0 in /dev/md0. This setup is for performance
-> reasons.
-> The OS is not run from the raid, it is only used to hold a set of data
-> files.
->
-> This seems to work great for weeks to months at a time, but then all
-> of a sudden access to the raid filesystem completely locks up. A
-> process trying to access any file in there hangs to the point where it
-> cannot be killed even with -9, so I suppose it's locked up in a
-> syscall.
-> I can't attach a debugger to the process, for then the terminal locks
-> up too. But the system is operational as long as I don't read anything
-> from the raid mount.
->
-> Th only thing that helps is a reboot. Then the raid will function
-> correctly again.
->
-> The version of mdadm is v2.6.7.1 - 15th October 2008.
->
-> Here is my /etc/mdadm.conf:
-> DEVICE /dev/sda5
-> DEVICE /dev/sdb3
-> ARRAY /dev/md0 devices=/dev/sda5,/dev/sdb3
->
-> /proc/mdstat from a locked machine:
-> Personalities : [raid0]
-> md0 : active raid0 sda5[0] sdb3[1]
-> 898362368 blocks 256k chunks
->
-> unused devices: <none>
->
-> The raid has an ext4 filesystem on it.
+On Fri, Jul 31, 2009 at 01:10:37PM -0700, David Rees wrote:
+> 2009/7/31 Keld J=F8rn Simonsen <keld@dkuug.dk>:
+> > On Thu, Jul 30, 2009 at 01:11:20PM -0700, David Rees wrote:
+> >> 2009/7/30 Keld J=F8rn Simonsen <keld@dkuug.dk>:
+> >> > I think raid10,f2 only degrades 10-20 % while raid1 can degrade =
+as much
+> >> > as 50 %. For writing it is about the same, given that you use a =
+file
+> >> > system on top of the raid.
+> >>
+> >> Has anyone done any benchmarks of near vs far setups?
+> >
+> > Yes, there are a number of benchmarks on raid10 near/far scenarios
+> > at http://linux-raid.osdl.org/index.php/Performance
+>=20
+> Hmm, don't know how I missed those!  Thanks!
+>=20
+> >> >From what I understand, here's how performance should go for a 2-=
+disk
+> >> raid10 setup:
+> >>
+> >> Streaming/large reads far: Up to 100% faster since reads are strip=
+ed
+> >> across both disks
+> >
+> > and possibly faster, due to far only using the faster half of the d=
+isk
+> > for reading.
+>=20
+> How is it possible to go faster than 2x faster?  If the system only
+> reads from the disk that has the data on the faster half of the disk,
+> you can't stripe the reads, so you won't see a significant increase i=
+n
+> speed.
+>=20
+> Let's use some data from a real disk, the Velociraptor and a 2-disk
+> array and streaming reads/writes.  At the beginning of the disk you
+> can read about 120MB/s.  At the end of the disk, you can read about
+> 80MB/s.
 
-In that case, I would suggest that it is much more likely to
-be an ext4 problem than an md/raid problem.
-raid0 is very simple and is extremely unlikely to cause
-anything like that again.
+This is not actual figures from some benchmarking you did, true?
 
-If you have a system with processes that are hung like this,
-I would recommend
+> Data on the "beginning" of array, RAID0 =3D 240MB/s
+> Data on the "end" of array, RAID0 =3D 160MB/s.
+> Data on the "beginning" of array, RAID10,n2 =3D 120MB/s
+> Data on the "end" of array, RAID10,n2 =3D 80MB/s.
+> Data on the "beginning" of array, RAID10,f2 =3D 200MB/s
 
-   echo t > /proc/sysrq-trigger
+Should be:
 
-which will cause a stack trace of every process to be written
-to the kernel log.  This can show exactly where processes are
-hanging.
+Data on the "beginning" of array, RAID10,f2 =3D 230MB/s
 
-NeilBrown
+You can get about 95 % of the theoretical max out of raid10,f2,
+according to a number of tests.
+
+> Data on the "end" of array, RAID10,f2 =3D 200MB/s.
+
+Yes, the "end" here is at the half of the disk, so 200 MB/s is likely
+for raid10,f2.
+
+> With a f2 setup you'll read at something less than 120+80 =3D 200MB/s=
+=2E
+
+When? at the beginning or the end?
+
+> So I guess it's a bit more than 100% faster than 80MB/s, in that
+> situation, but you get less than the peak performance of 240MB/s, so
+> I'd still call it on average, 100% faster.  It may be 120% faster in
+> some situations, but only 80% faster in others.
+
+I was talking of random read speeds, not sequential read speeds.=20
+
+Random read performance on a single disk, in one test, was 34 MB/s whil=
+e
+seq read on same disk was 82. In raid10,f2 with 2 disks random read was
+79 MB/s. This is 235 % of the random read on one disk (34 MB/s). This i=
+s=20
+a likely result as you should expect a doubling in speed from the 2
+disks, and then som additional speed from the faster sectors of the
+outer disks, and then the shorter access times on the oyuter disk
+sectors. Geometry says that on average the transfer speeds are 17 %
+shorter on the outer half part of the disk, compared to the whole disk.=
+=20
+So that gives some 235 % speed improvement (2 * 1.17). The head
+improvement should also give a little, but maybe the elevator algorithm
+of the file system eliminates most of that factor.
 
 
->
-> I can find no other logs or status files for the software raid system.
-> There's nothing in /var/log/messages or any other standard log.
->
-> Does anybody know what is going on? Is this a known bug in md or the
-> kernel?
->
-> Thank you for any help!
->
-> Fredrik
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> >> Streaming/large writes far: Slower than single disk, since disks h=
+ave
+> >> to seek to write. =A0How much of a hit in performance will depend =
+on
+> >> chunk size.
+> >> Streaming/large writes near: Same as single disk.
+> >
+> > Due to the elevator of the file system, writes are about the same f=
+or
+> > both near and far.
+>=20
+> Your benchmarks showed about a 13% performance hit for f2 compared to
+> n2 and RAID1, so I wouldn't quite call it the same.  Close, but still
+> noticeably slower.
 
+Nah, for random write, MB/s:
+
+raid1         55
+raid10,n2     48
+raid10,f2     55
+
+So raid10,f2 and raid1 are the same, raid10,n2 13 % slower.
+In theory the elevator should even this out for all mirrored raid types=
+=2E
+Single disk speed and raid1 and raid10,f2 speeds were identical, as
+theory also would have it, for random writes.
+
+>=20
+> >> Random/small reads far: Up to 100% faster
+> >
+> > Actually a bit more, due to that far only uses the fastest half of =
+the
+> > disks. One test shows 132 % faster, which is consistent with theory=
+=2E
+>=20
+> I doubt that is the case on average.  Best case, yes.  Worst case, no=
+=2E
+>  I guess I should have said "appx 100% faster" instead of Up to 100%
+> faster.  So we're both right. :-)
+
+I would claim that 132 % is consistent with theory, as explained above.
+And as this is based on pure geometry, on a 3.5 " disk with standard
+inner and outer radius, the figure is a general fixed result.
+
+> >> 1. The array mostly sees write activity, streaming reads aren't th=
+at common.
+> >> 2. I can only get about 120 MB/s out of the external enclosure bec=
+ause
+> >> of the PCIe card [1] , so being able to stripe reads wouldn't help=
+ get
+> >> any extra performance out of those disks.
+> >> [1] http://ata.wiki.kernel.org/index.php/Hardware,_driver_status#S=
+ilicon_Image_3124
+> >
+> > Hmm, a pci-e x1 should be able to get 2.5 Mbit/s =3D about 300 MB/s=
+=2E
+> > Wikipedia says 250 MB/s. It is strange that you only can get 120 MB=
+/s.
+> > That is the speed of a PCI 32 bit bus. I looked at your reference [=
+1]
+> > for the 3132 model. Have you tried it out in practice?
+>=20
+> Yes, in practice, IO reached exactly 120MB/s out of the controller.  =
+I
+> ran dd read/write tests on individual disks and found that overall
+> throughput peaked exactly at 120MB/s.
+
+Hmm, get another controller, then. A cheap PCIe contoller should be abl=
+e
+to do about 300 MB/s on a x1 PCIe.
+>=20
+> > The max you should be able to get out of your raid10 with 8 disks w=
+ould
+> > then be around 400 - 480 MB/s, for sequential reads. 250 MB/s out o=
+f your PCIE
+> > enclosure, or 50 MB/s per disk, and then additional 50 MB/s each of=
+ the last
+> > 3 disks. You can only multiply the speed of the slowest of the disk=
+s
+> > involved by the number of disks. But even then it is not so bad.
+> > For random read it is better yet, given that this is not limited by=
+ the
+> > transfer speed of your PCIe controller.
+>=20
+> For streaming reads/writes, I have found am limited by the average
+> speed of each disk the array.  Because I am limited to 120 MB/s on th=
+e
+> 5-disk enclosure, for writes I'm limited to about 80 MB/s.  For reads
+> which only have to come from half the disks, I am able to get up to
+> 180 MB/s out of the array.
+
+> (I did have to use blockdev --setra
+> /dev/md0 to increase the readahead size to at least 16MB to get those
+> numbers).
+
+yes, this is a common trick.
+
+> But the primary reason I built it was to handle lots of small random
+> writes/reads, so being limited to 120MB/s out of the enclosure isn't
+> noticeable most of the time in practice as you say.
+
+Yes, for random read/write you only get something like 45 % out of the
+max transfer bandwidth. So 120 MB/s would be close to the max that your
+5 disks on the PCIe controller can deliver. With a faster PCIe
+controller you should be able to get better performance on random reads
+with raid10,f2. Anyway 180 MB/s may be fast enough for your application=
+=2E
+
+best regards
+keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
