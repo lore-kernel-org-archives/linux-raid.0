@@ -1,8 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 6/8] md/raid5: set reshape_position correctly when reshape
-	starts.
+Subject: [md PATCH 5/8] md: Handle growth of v1.x metadata correctly.
 Date: Mon, 03 Aug 2009 07:58:18 +1000
-Message-ID: <20090802215818.4198.79858.stgit@notabene.brown>
+Message-ID: <20090802215818.4198.37394.stgit@notabene.brown>
 References: <20090802215444.4198.83094.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -11,32 +10,44 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20090802215444.4198.83094.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: NeilBrown <neilb@suse.de>
+Cc: stable@kernel.org, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-As the internal reshape_progress counter is the main driver
-for reshape, the fact that reshape_position sometimes starts with the
-wrong value has minimal effect.  It is visible in sysfs and that
-is all.
+The v1.x metadata does not have a fixed size and can grow
+when devices are added.
+If it grows enough to require an extra sector of storage,
+we need to update the 'sb_size' to match.
 
+Without this, md can write out an incomplete superblock with a
+bad checksum, which will be rejected when trying to re-assemble
+the array.
+
+Cc: stable@kernel.org
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid5.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/md/md.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 3937423..659151e 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5000,7 +5000,7 @@ static int raid5_start_reshape(mddev_t *mddev)
- 		spin_unlock_irqrestore(&conf->device_lock, flags);
- 	}
- 	mddev->raid_disks = conf->raid_disks;
--	mddev->reshape_position = 0;
-+	mddev->reshape_position = conf->reshape_progress;
- 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index fc04963..5b507e9 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -1399,8 +1399,14 @@ static void super_1_sync(mddev_t *mddev, mdk_rdev_t *rdev)
+ 		if (rdev2->desc_nr+1 > max_dev)
+ 			max_dev = rdev2->desc_nr+1;
  
- 	clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
+-	if (max_dev > le32_to_cpu(sb->max_dev))
++	if (max_dev > le32_to_cpu(sb->max_dev)) {
++		int bmask;
+ 		sb->max_dev = cpu_to_le32(max_dev);
++		rdev->sb_size = max_dev * 2 + 256;
++		bmask = queue_logical_block_size(rdev->bdev->bd_disk->queue)-1;
++		if (rdev->sb_size & bmask)
++			rdev->sb_size = (rdev->sb_size | bmask) + 1;
++	}
+ 	for (i=0; i<max_dev;i++)
+ 		sb->dev_roles[i] = cpu_to_le16(0xfffe);
+ 	
 
 
