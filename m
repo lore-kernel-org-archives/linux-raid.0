@@ -1,34 +1,92 @@
-From: Louwrentius <louwrentius@gmail.com>
-Subject: Showcase and thanks to the developers
-Date: Sun, 2 Aug 2009 23:12:04 +0200
-Message-ID: <f13bf29a0908021412h6ab1d976y81154d6b0b88596d@mail.gmail.com>
+From: NeilBrown <neilb@suse.de>
+Subject: [md PATCH 1/8] md/raid6: release spare page at ->stop()
+Date: Mon, 03 Aug 2009 07:58:18 +1000
+Message-ID: <20090802215817.4198.8439.stgit@notabene.brown>
+References: <20090802215444.4198.83094.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20090802215444.4198.83094.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: stable@kernel.org, Dan Williams <dan.j.williams@intel.com>, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Hello,
+From: Dan Williams <dan.j.williams@intel.com>
 
-I've build a storage system based on Debian Linux with a 2.6.28
-kernel. It houses 18 GB of storage based on 20 disks in RAID 6 using
-software RAID.
+Add missing call to safe_put_page from stop() by unifying open coded
+raid5_conf_t de-allocation under free_conf().
 
-The funny thing is that this box does read speeds of 1.1 GB/s, which
-beats many hardware-based RAID cards.
+Cc: <stable@kernel.org>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: NeilBrown <neilb@suse.de>
+---
 
-I am impressed. Of course IO would be another issue, this is only
-linear reads. But it's nice. It should go faster, it did 1.1 GB/s with
-10 disks, it should do more with 20. I think there is some hardware
-bottleneck, but I don't know for sure. Anyway, it is a NAS and the
-Gigabit NIC is the limit here, so who cares anyway.
+ drivers/md/raid5.c |   26 ++++++++++++--------------
+ 1 files changed, 12 insertions(+), 14 deletions(-)
 
-I like to thank the developers for enabling me to build a relatively
-cheap and large storage array without the need for a special hardware
-controller.
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 3783553..3937423 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -4316,6 +4316,15 @@ raid5_size(mddev_t *mddev, sector_t sectors, int raid_disks)
+ 	return sectors * (raid_disks - conf->max_degraded);
+ }
+ 
++static void free_conf(raid5_conf_t *conf)
++{
++	shrink_stripes(conf);
++	safe_put_page(conf->spare_page);
++	kfree(conf->disks);
++	kfree(conf->stripe_hashtbl);
++	kfree(conf);
++}
++
+ static raid5_conf_t *setup_conf(mddev_t *mddev)
+ {
+ 	raid5_conf_t *conf;
+@@ -4447,11 +4456,7 @@ static raid5_conf_t *setup_conf(mddev_t *mddev)
+ 
+  abort:
+ 	if (conf) {
+-		shrink_stripes(conf);
+-		safe_put_page(conf->spare_page);
+-		kfree(conf->disks);
+-		kfree(conf->stripe_hashtbl);
+-		kfree(conf);
++		free_conf(conf);
+ 		return ERR_PTR(-EIO);
+ 	} else
+ 		return ERR_PTR(-ENOMEM);
+@@ -4629,12 +4634,8 @@ abort:
+ 	md_unregister_thread(mddev->thread);
+ 	mddev->thread = NULL;
+ 	if (conf) {
+-		shrink_stripes(conf);
+ 		print_raid5_conf(conf);
+-		safe_put_page(conf->spare_page);
+-		kfree(conf->disks);
+-		kfree(conf->stripe_hashtbl);
+-		kfree(conf);
++		free_conf(conf);
+ 	}
+ 	mddev->private = NULL;
+ 	printk(KERN_ALERT "raid5: failed to run raid set %s\n", mdname(mddev));
+@@ -4649,13 +4650,10 @@ static int stop(mddev_t *mddev)
+ 
+ 	md_unregister_thread(mddev->thread);
+ 	mddev->thread = NULL;
+-	shrink_stripes(conf);
+-	kfree(conf->stripe_hashtbl);
+ 	mddev->queue->backing_dev_info.congested_fn = NULL;
+ 	blk_sync_queue(mddev->queue); /* the unplug fn references 'conf'*/
+ 	sysfs_remove_group(&mddev->kobj, &raid5_attrs_group);
+-	kfree(conf->disks);
+-	kfree(conf);
++	free_conf(conf);
+ 	mddev->private = NULL;
+ 	return 0;
+ }
 
-For pictures, additional specs etc. please visit my blog-post (no ads).
 
-http://louwrentius.blogspot.com/2009/07/20-disk-18-tb-raid-6-storage-based-on.html
