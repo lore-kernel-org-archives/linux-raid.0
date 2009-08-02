@@ -1,7 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 4/8] md: avoid array overflow with bad v1.x metadata
+Subject: [md PATCH 6/8] md/raid5: set reshape_position correctly when reshape
+	starts.
 Date: Mon, 03 Aug 2009 07:58:18 +1000
-Message-ID: <20090802215818.4198.19159.stgit@notabene.brown>
+Message-ID: <20090802215818.4198.79858.stgit@notabene.brown>
 References: <20090802215444.4198.83094.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,33 +14,29 @@ To: linux-raid@vger.kernel.org
 Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-We trust the 'desc_nr' field in v1.x metadata enough to use it
-as an index in an array.  This isn't really safe.
-So range-check the value first.
+As the internal reshape_progress counter is the main driver
+for reshape, the fact that reshape_position sometimes starts with the
+wrong value has minimal effect.  It is visible in sysfs and that
+is all.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/md.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+ drivers/md/raid5.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 5bd7896..fc04963 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -1308,7 +1308,12 @@ static int super_1_validate(mddev_t *mddev, mdk_rdev_t *rdev)
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 3937423..659151e 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -5000,7 +5000,7 @@ static int raid5_start_reshape(mddev_t *mddev)
+ 		spin_unlock_irqrestore(&conf->device_lock, flags);
  	}
- 	if (mddev->level != LEVEL_MULTIPATH) {
- 		int role;
--		role = le16_to_cpu(sb->dev_roles[rdev->desc_nr]);
-+		if (rdev->desc_nr < 0 ||
-+		    rdev->desc_nr >= le32_to_cpu(sb->max_dev)) {
-+			role = 0xffff;
-+			rdev->desc_nr = -1;
-+		} else
-+			role = le16_to_cpu(sb->dev_roles[rdev->desc_nr]);
- 		switch(role) {
- 		case 0xffff: /* spare */
- 			break;
+ 	mddev->raid_disks = conf->raid_disks;
+-	mddev->reshape_position = 0;
++	mddev->reshape_position = conf->reshape_progress;
+ 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 
+ 	clear_bit(MD_RECOVERY_SYNC, &mddev->recovery);
 
 
