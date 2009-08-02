@@ -1,7 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 1/8] md/raid6: release spare page at ->stop()
+Subject: [md PATCH 3/8] md: when a level change reduces the number of devices,
+	remove the excess.
 Date: Mon, 03 Aug 2009 07:58:18 +1000
-Message-ID: <20090802215817.4198.8439.stgit@notabene.brown>
+Message-ID: <20090802215818.4198.2964.stgit@notabene.brown>
 References: <20090802215444.4198.83094.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,83 +11,46 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20090802215444.4198.83094.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: stable@kernel.org, Dan Williams <dan.j.williams@intel.com>, NeilBrown <neilb@suse.de>
+Cc: stable@kernel.org, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-From: Dan Williams <dan.j.williams@intel.com>
+When an array is changed from RAID6 to RAID5, fewer drives are
+needed.  So any device that is made superfluous by the level
+conversion must be marked as not-active.
+For the RAID6->RAID5 conversion, this will be a drive which only
+has 'Q' blocks on it.
 
-Add missing call to safe_put_page from stop() by unifying open coded
-raid5_conf_t de-allocation under free_conf().
-
-Cc: <stable@kernel.org>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Cc: stable@kernel.org
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/raid5.c |   26 ++++++++++++--------------
- 1 files changed, 12 insertions(+), 14 deletions(-)
+ drivers/md/md.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 3783553..3937423 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4316,6 +4316,15 @@ raid5_size(mddev_t *mddev, sector_t sectors, int raid_disks)
- 	return sectors * (raid_disks - conf->max_degraded);
- }
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 13535f0..5bd7896 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2694,6 +2694,7 @@ level_store(mddev_t *mddev, const char *buf, size_t len)
+ 	ssize_t rv = len;
+ 	struct mdk_personality *pers;
+ 	void *priv;
++	mdk_rdev_t *rdev;
  
-+static void free_conf(raid5_conf_t *conf)
-+{
-+	shrink_stripes(conf);
-+	safe_put_page(conf->spare_page);
-+	kfree(conf->disks);
-+	kfree(conf->stripe_hashtbl);
-+	kfree(conf);
-+}
-+
- static raid5_conf_t *setup_conf(mddev_t *mddev)
- {
- 	raid5_conf_t *conf;
-@@ -4447,11 +4456,7 @@ static raid5_conf_t *setup_conf(mddev_t *mddev)
- 
-  abort:
- 	if (conf) {
--		shrink_stripes(conf);
--		safe_put_page(conf->spare_page);
--		kfree(conf->disks);
--		kfree(conf->stripe_hashtbl);
--		kfree(conf);
-+		free_conf(conf);
- 		return ERR_PTR(-EIO);
- 	} else
- 		return ERR_PTR(-ENOMEM);
-@@ -4629,12 +4634,8 @@ abort:
- 	md_unregister_thread(mddev->thread);
- 	mddev->thread = NULL;
- 	if (conf) {
--		shrink_stripes(conf);
- 		print_raid5_conf(conf);
--		safe_put_page(conf->spare_page);
--		kfree(conf->disks);
--		kfree(conf->stripe_hashtbl);
--		kfree(conf);
-+		free_conf(conf);
- 	}
- 	mddev->private = NULL;
- 	printk(KERN_ALERT "raid5: failed to run raid set %s\n", mdname(mddev));
-@@ -4649,13 +4650,10 @@ static int stop(mddev_t *mddev)
- 
- 	md_unregister_thread(mddev->thread);
- 	mddev->thread = NULL;
--	shrink_stripes(conf);
--	kfree(conf->stripe_hashtbl);
- 	mddev->queue->backing_dev_info.congested_fn = NULL;
- 	blk_sync_queue(mddev->queue); /* the unplug fn references 'conf'*/
- 	sysfs_remove_group(&mddev->kobj, &raid5_attrs_group);
--	kfree(conf->disks);
--	kfree(conf);
-+	free_conf(conf);
- 	mddev->private = NULL;
- 	return 0;
- }
+ 	if (mddev->pers == NULL) {
+ 		if (len == 0)
+@@ -2773,6 +2774,12 @@ level_store(mddev_t *mddev, const char *buf, size_t len)
+ 	mddev_suspend(mddev);
+ 	mddev->pers->stop(mddev);
+ 	module_put(mddev->pers->owner);
++	/* Invalidate devices that are now superfluous */
++	list_for_each_entry(rdev, &mddev->disks, same_set)
++		if (rdev->raid_disk >= mddev->raid_disks) {
++			rdev->raid_disk = -1;
++			clear_bit(In_sync, &rdev->flags);
++		}
+ 	mddev->pers = pers;
+ 	mddev->private = priv;
+ 	strlcpy(mddev->clevel, pers->name, sizeof(mddev->clevel));
 
 
