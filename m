@@ -1,35 +1,46 @@
-From: Matthias Urlichs <matthias@urlichs.de>
-Subject: raid6 recovery with read errors
-Date: Mon, 3 Aug 2009 08:36:06 +0000 (UTC)
-Message-ID: <h567hm$u6a$1@ger.gmane.org>
+From: Louwrentius <louwrentius@gmail.com>
+Subject: Re: Showcase and thanks to the developers
+Date: Mon, 3 Aug 2009 13:41:02 +0200
+Message-ID: <f13bf29a0908030441l77bf1b5fs63f5c2b13eca41b@mail.gmail.com>
+References: <f13bf29a0908021412h6ab1d976y81154d6b0b88596d@mail.gmail.com>
+	 <alpine.LNX.2.01.0908021519400.28266@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.LNX.2.01.0908021519400.28266@filesrv1.baby-dragons.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Cc: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+2009/8/3 Mr. James W. Laferriere <babydr@baby-dragons.com>:
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Hello Louwrentius =C2=A0,
+>
+> On Sun, 2 Aug 2009, Louwrentius wrote:
+>>
+>> Hello,
+>>
+>> I've build a storage system based on Debian Linux with a 2.6.28
+>> kernel. It houses 18 GB of storage based on 20 disks in RAID 6 using
+>> software RAID.
 
-I have a rather large RAID6 array where multiple disks have developed
-read errors. The problem is that the RAID6 is built from LVM-mapped disks,
-which (I think) isolated the MD driver from write errors. Thus it thought
-that a re-write of the bad sectors succeeded. WRONG. Thus the bad disks
-were never unmapped.
+IT's 18 TB indeed (stupid me)
 
-The problem is that yesterday, three of these TByte disks failed in
-_exactly_ the same 1k-sized spot. So, no more RAID6. :-(
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Tho , =C2=A0You might want to watch these =
+drives carefully they appear to
+> be commodity desktop system harddrives . =C2=A0From techreport's info=
+ anyway . =C2=A0I
+> do hope I've pick the wrong model number .
 
-So, how do I get the data back?
+No I deliberately chose desktop drives, it's not for business use.
+They are from several different batches, so I don't expect them to
+fail me at the same time.
 
-I've copied the individual partitions with ddrescue, which conveniently
-left me a log file pointing to the sectors which need to be recovered.
-However, I'm sure that there's no way to tell the kernel about individual
-"bad spots".
+With Regards
 
-Is there a standalone program that can do that?
-
--- 
-Matthias Urlichs
-
+Louwrentius
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
