@@ -1,59 +1,108 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: Re: Showcase and thanks to the developers
-Date: Sun, 2 Aug 2009 15:26:29 -0800 (AKDT)
-Message-ID: <alpine.LNX.2.01.0908021519400.28266@filesrv1.baby-dragons.com>
-References: <f13bf29a0908021412h6ab1d976y81154d6b0b88596d@mail.gmail.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: How to un-degrade an array after a totally spurious failure?
+Date: Mon, 3 Aug 2009 02:30:04 -0500
+Message-ID: <20090803073007991.CADI24863@cdptpa-omta03.mail.rr.com>
+References: <a2ada9611479c051e268a76df8b45b40.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f13bf29a0908021412h6ab1d976y81154d6b0b88596d@mail.gmail.com>
+In-Reply-To: <a2ada9611479c051e268a76df8b45b40.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Louwrentius <louwrentius@gmail.com>
-Cc: linux-raid maillist <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
- 	Hello Louwrentius  ,
-
-On Sun, 2 Aug 2009, Louwrentius wrote:
-> Hello,
->
-> I've build a storage system based on Debian Linux with a 2.6.28
-> kernel. It houses 18 GB of storage based on 20 disks in RAID 6 using
-> software RAID.
->
-> The funny thing is that this box does read speeds of 1.1 GB/s, which
-> beats many hardware-based RAID cards.
->
-> I am impressed. Of course IO would be another issue, this is only
-> linear reads. But it's nice. It should go faster, it did 1.1 GB/s with
-> 10 disks, it should do more with 20. I think there is some hardware
-> bottleneck, but I don't know for sure. Anyway, it is a NAS and the
-> Gigabit NIC is the limit here, so who cares anyway.
->
-> I like to thank the developers for enabling me to build a relatively
-> cheap and large storage array without the need for a special hardware
-> controller.
->
-> For pictures, additional specs etc. please visit my blog-post (no ads).
->
-> http://louwrentius.blogspot.com/2009/07/20-disk-18-tb-raid-6-storage-based-on.html
-
- 	Nice stats & thank you for reporting them .
-
- 	Tho ,  You might want to watch these drives carefully they appear to be 
-commodity desktop system harddrives .  From techreport's info anyway .  I do 
-hope I've pick the wrong model number .
-
-Quoted from: http://techreport.com/articles.x/14200
- 	"Even so, that's a good segue into Samsung's warranty coverage for the 
-F1, which lasts for three years?the de facto industry standard for desktop hard 
-drives. Interestingly, the F1's component design life specifications suggest 
-the drive should last an additional two years before it begins to degrade."
 
 
-  -- 
-+------------------------------------------------------------------+
-| James   W.   Laferriere | System    Techniques | Give me VMS     |
-| Network&System Engineer | 2133    McCullam Ave |  Give me Linux  |
-| babydr@baby-dragons.com | Fairbanks, AK. 99701 |   only  on  AXP |
-+------------------------------------------------------------------+
+> >> NeilBrown
+> >
+> > 	I have exactly the same situation, except there are two "failed"
+> > disks on a RAID5 array.  As for the OP, the "failures" are spurious.
+> > Running the remove and then the add command puts the disks back in as
+> > spare
+> > disks, not live ones, and then the array just sits there, doing nothing.
+> > I
+> > tried the trick of doing
+> >
+> > echo repair > /sys/block/md0/md/sync_action
+> >
+> > but the array still just sits there saying it is "clean, degraded", with
+> 2
+> > spare and 5 working devices.
+> >
+> 
+> No such a good option when you have two failures.
+> If you have two failures you need to stop the array, then assemble
+> it again using --force.
+> It is now too late for that:  adding them with "--add" will have erased
+> the old metadata.
+> 
+> Your only option is to re-create the array.  Make sure you use the
+> same parameters (e.g. chunk size) as when you first created the array.
+> You can check the correct parameters by looking at a device with
+> "--examine".
+> Also make sure you put the devices in the correct order.
+> 
+> The best thing to do is to try creating the array, using
+> "--assume-clean" so it won't trigger a resync.
+>  Then use "fsck", the "mount" to make sure the data is good.
+> Once you are satisfied that the data is good and that you created
+> the array with the right parameters, use "echo repair > ...."
+> to make sure the array really is 'clean'.
+> 
+> I guess I should stop mdadm from trashing the superblock when you
+> add a spare to an array which has failed....
+> 
+> NeilBrown
+
+OK, Neil, I've had this occur again.  A prolonged power failure took one of
+the systems offline, and now it's convicting 3 of 7 disks in a RAID5 array.
+I've done nothing but stop the array.  Prior to stopping the array, mdadm
+reported:
+
+Backup:/# mdadm -Dt /dev/md0
+/dev/md0:
+        Version : 01.02
+  Creation Time : Sun Jul 12 20:44:02 2009
+     Raid Level : raid5
+     Array Size : 8790830592 (8383.59 GiB 9001.81 GB)
+  Used Dev Size : 2930276864 (2794.53 GiB 3000.60 GB)
+   Raid Devices : 7
+  Total Devices : 7
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Sun Aug  2 04:01:52 2009
+          State : clean, degraded
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 3
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 256K
+
+           Name : 'Backup':0
+           UUID : 940ae4e4:04057ffc:5e92d2fb:63e3efb7
+         Events : 14
+
+    Number   Major   Minor   RaidDevice State
+       0       8       80        0      active sync   /dev/sdf
+       1       8       96        1      active sync   /dev/sdg
+       2       8        0        2      active sync   /dev/sda
+       3       8       16        3      active sync   /dev/sdb
+       4       0        0        4      removed
+       5       0        0        5      removed
+       6       0        0        6      removed
+
+       4       8       32        -      faulty spare   /dev/sdc
+       5       8       48        -      faulty spare   /dev/sdd
+       6       8       64        -      faulty spare   /dev/sde
+
+	The array did have a bitmap, but mdadm didn't report it.  When I
+attempt using --assemble and --force, I get:
+
+Backup:/# mdadm --assemble --force /dev/md0
+mdadm: /dev/md0 not identified in config file.
+
