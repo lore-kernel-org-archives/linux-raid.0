@@ -1,67 +1,31 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: [PATCH] md: avoid use of broken kzalloc mempool
-Date: Tue, 4 Aug 2009 08:03:52 +1000 (EST)
-Message-ID: <8604b01355a1ff1ec6397d223c28b1d5.squirrel@neil.brown.name>
-References: <1249332888-13440-1-git-send-email-sage@newdream.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH/Resend] md: Push down data integrity code to personalities.
+Date: Tue, 04 Aug 2009 01:28:49 -0400
+Message-ID: <yq163d4f8q6.fsf@sermon.lab.mkp.net>
+References: <20090701083802.GC9910@skl-net.de>
+	<19026.50240.504728.428875@notabene.brown>
+	<20090713085442.GJ9910@skl-net.de>
+	<19058.31706.803177.77914@notabene.brown>
+	<20090803164030.GI5174@skl-net.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1249332888-13440-1-git-send-email-sage@newdream.net>
+In-Reply-To: <20090803164030.GI5174@skl-net.de> (Andre Noll's message of "Mon,
+	3 Aug 2009 18:40:30 +0200")
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Sage Weil <sage@newdream.net>, linux-raid@vger.kernel.org, stable@kernel.org
+To: Andre Noll <maan@systemlinux.org>
+Cc: Neil Brown <neilb@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, August 4, 2009 6:54 am, Sage Weil wrote:
-> The kzalloc mempool does not re-zero items that have been used and then
-> returned to the pool.  Manually zero the allocated multipath_bh instead.
->
-> CC: linux-raid@vger.kernel.org
-> CC: Neil Brown <neilb@suse.de>
+>>>>> "Andre" == Andre Noll <maan@systemlinux.org> writes:
 
-Acked-by: NeilBrown <neilb@suse.de>
+[Inlining blk_get_integrity]
 
-Thanks.
+Andre> IMO this second alternative is be a bit cleaner and it might help
+Andre> other users of blk_get_integrity() as well. Martin, are you OK
+Andre> with this change to blkdev.h?
 
-In fact, you don't even need the memset.  After allocation
-no assumptions are made about the content of the structure.
-Every field is immediately initialised except retry_list, which
-is never accessed until after the object is placed on a list.h list.
+Yeah, that's fine.
 
-So this code never needed kzalloc_pool.
-
-Thanks,
-NeilBrown
-
-> CC: <stable@kernel.org>
-> Signed-off-by: Sage Weil <sage@newdream.net>
-> ---
->  drivers/md/multipath.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
-> index 237fe3f..151ce69 100644
-> --- a/drivers/md/multipath.c
-> +++ b/drivers/md/multipath.c
-> @@ -150,6 +150,7 @@ static int multipath_make_request (struct
-> request_queue *q, struct bio * bio)
->  	}
->
->  	mp_bh = mempool_alloc(conf->pool, GFP_NOIO);
-> +	memset(mp_bh, 0, sizeof(*mp_bh));
->
->  	mp_bh->master_bio = bio;
->  	mp_bh->mddev = mddev;
-> @@ -490,7 +491,7 @@ static int multipath_run (mddev_t *mddev)
->  	}
->  	mddev->degraded = conf->raid_disks - conf->working_disks;
->
-> -	conf->pool = mempool_create_kzalloc_pool(NR_RESERVED_BUFS,
-> +	conf->pool = mempool_create_kmalloc_pool(NR_RESERVED_BUFS,
->  						 sizeof(struct multipath_bh));
->  	if (conf->pool == NULL) {
->  		printk(KERN_ERR
-> --
-> 1.5.6.5
->
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
