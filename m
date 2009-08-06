@@ -1,37 +1,35 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [md PATCH 8/8] md: Use revalidate_disk to effect changes in size
- 	of device.
-Date: Wed, 05 Aug 2009 21:35:41 -0700
-Message-ID: <4A7A5D9D.7030305@zytor.com>
-References: <20090802215444.4198.83094.stgit@notabene.brown>	<20090802215818.4198.77041.stgit@notabene.brown>	<4A7A0287.5010505@zytor.com>	<170fa0d20908051803ud6ef819xdad3cafe44cc1fb8@mail.gmail.com>	<4A7A2EA6.9020603@zytor.com> <19066.19060.95471.616532@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: question about bitmaps and dirty percentile
+Date: Thu, 6 Aug 2009 16:21:45 +1000
+Message-ID: <19066.30329.778572.603105@notabene.brown>
+References: <cccedfc60907301125i2187907od5819e464de2d25a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752309AbZHFEfs@vger.kernel.org>
-In-Reply-To: <19066.19060.95471.616532@notabene.brown>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Mike Snitzer <snitzer@gmail.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Jon Nelson on Thursday July 30
+Sender: linux-raid-owner@vger.kernel.org
+To: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 08/05/2009 08:13 PM, Neil Brown wrote:
-
+On Thursday July 30, jnelson-linux-raid@jamponi.net wrote:
 > 
-> Thanks for the reports guys.
+> I saw this, which just *can't* be right:
 > 
-> I managed to reproduce the lockup and I think this patch should fix
-> it.
-> If you could review/test I would appreciate it.
-> 
-> Thanks,
-> NeilBrown
-> 
+> md12 : active raid1 nbd0[2](W) sde[0]
+>       72612988 blocks super 1.1 [3/1] [U__]
+>       [======================================>]  recovery =192.7%
+> (69979200/36306494) finish=13228593199978.6min speed=11620K/sec
+>       bitmap: 139/139 pages [556KB], 256KB chunk
 
-This patch makes my system boot, whereas previously it would deadlock
-100% of the time.
+Certainly very strange.  I cannot explain it at all.
 
-	-hpa
+Please report exactly what kernel version you were running, all kernel
+log messages from before the first resync completed until after the
+sync-to-200% completed.
 
--- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
+Hopefully there will be a clue somewhere in there.
+
+Thanks,
+NeilBrown
