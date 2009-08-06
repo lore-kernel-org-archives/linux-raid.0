@@ -1,130 +1,67 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [PATCH/Resend] md: Push down data integrity code to personalities.
-Date: Thu, 6 Aug 2009 10:37:10 +0200
-Message-ID: <20090806083710.GJ5174@skl-net.de>
-References: <20090701083802.GC9910@skl-net.de> <19026.50240.504728.428875@notabene.brown> <20090713085442.GJ9910@skl-net.de> <19058.31706.803177.77914@notabene.brown> <20090803164030.GI5174@skl-net.de> <yq163d4f8q6.fsf@sermon.lab.mkp.net>
+From: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Subject: Re: question about bitmaps and dirty percentile
+Date: Thu, 6 Aug 2009 08:02:39 -0500
+Message-ID: <cccedfc60908060602i52403915oa7afcb38a9e386b0@mail.gmail.com>
+References: <cccedfc60907301125i2187907od5819e464de2d25a@mail.gmail.com>
+	<19066.30329.778572.603105@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="bgQAstJ9X1Eg13Dy"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <yq163d4f8q6.fsf@sermon.lab.mkp.net>
+In-Reply-To: <19066.30329.778572.603105@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Thu, Aug 6, 2009 at 1:21 AM, Neil Brown<neilb@suse.de> wrote:
+> On Thursday July 30, jnelson-linux-raid@jamponi.net wrote:
+>>
+>> I saw this, which just *can't* be right:
+>>
+>> md12 : active raid1 nbd0[2](W) sde[0]
+>> =A0 =A0 =A0 72612988 blocks super 1.1 [3/1] [U__]
+>> =A0 =A0 =A0 [=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>] =A0recovery=
+ =3D192.7%
+>> (69979200/36306494) finish=3D13228593199978.6min speed=3D11620K/sec
+>> =A0 =A0 =A0 bitmap: 139/139 pages [556KB], 256KB chunk
+>
+> Certainly very strange. =A0I cannot explain it at all.
+>
+> Please report exactly what kernel version you were running, all kerne=
+l
+> log messages from before the first resync completed until after the
+> sync-to-200% completed.
+>
+> Hopefully there will be a clue somewhere in there.
 
---bgQAstJ9X1Eg13Dy
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Stock openSUSE 2.6.27.25-0.1-default on x86_64.
 
-On 01:28, Martin K. Petersen wrote:
-> >>>>> "Andre" =3D=3D Andre Noll <maan@systemlinux.org> writes:
->=20
-> [Inlining blk_get_integrity]
->=20
-> Andre> IMO this second alternative is be a bit cleaner and it might help
-> Andre> other users of blk_get_integrity() as well. Martin, are you OK
-> Andre> with this change to blkdev.h?
->=20
-> Yeah, that's fine.
+I'm pretty sure this is it:
 
-So here's a patch that replaces the dummy macros for data integrity
-by inline functions. The patch is only compile-tesed, but that's
-hopefully OK as the new functions are only used if data integrity is
-not compiled in and are thrown away by gcc anyway.
+Jul 30 13:51:01 turnip kernel: md: bind<nbd0>
+Jul 30 13:51:01 turnip kernel: RAID1 conf printout:
+Jul 30 13:51:01 turnip kernel:  --- wd:1 rd:3
+Jul 30 13:51:01 turnip kernel:  disk 0, wo:0, o:1, dev:sde
+Jul 30 13:51:01 turnip kernel:  disk 1, wo:1, o:1, dev:nbd0
+Jul 30 13:51:01 turnip kernel: md: recovery of RAID array md12
+Jul 30 13:51:01 turnip kernel: md: minimum _guaranteed_  speed: 1000
+KB/sec/disk.
+Jul 30 13:51:01 turnip kernel: md: using maximum available idle IO
+bandwidth (but not more than 200000 KB/sec) for recovery.
+Jul 30 13:51:01 turnip kernel: md: using 128k window, over a total of
+72612988 blocks.
+Jul 30 14:10:48 turnip kernel: md: md12: recovery done.
+Jul 30 14:10:49 turnip kernel: RAID1 conf printout:
+Jul 30 14:10:49 turnip kernel:  --- wd:2 rd:3
+Jul 30 14:10:49 turnip kernel:  disk 0, wo:0, o:1, dev:sde
+Jul 30 14:10:49 turnip kernel:  disk 1, wo:0, o:1, dev:nbd0
 
-Thanks
-Andre
 
-commit e550b6fe0850933d1be4c430a22d25f9040c7627
-Author: Andre Noll <maan@systemlinux.org>
-Date:   Thu Aug 6 10:32:37 2009 +0200
-
-    [blkdev.h] Replace dummy macros by inline functions.
-   =20
-    This avoids complaints about unused variables and improves type checkin=
-g.
-
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 69103e0..81d683f 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1191,14 +1191,47 @@ static inline int blk_integrity_rq(struct request *=
-rq)
-=20
- #else /* CONFIG_BLK_DEV_INTEGRITY */
-=20
--#define blk_integrity_rq(rq)			(0)
--#define blk_rq_count_integrity_sg(a)		(0)
--#define blk_rq_map_integrity_sg(a, b)		(0)
--#define bdev_get_integrity(a)			(0)
--#define blk_get_integrity(a)			(0)
--#define blk_integrity_compare(a, b)		(0)
--#define blk_integrity_register(a, b)		(0)
--#define blk_integrity_unregister(a)		do { } while (0);
-+static inline int blk_integrity_rq(struct request *rq)
-+{
-+	return 0;
-+}
-+
-+static inline int blk_rq_count_integrity_sg(struct request *rq)
-+{
-+	return 0;
-+}
-+
-+static inline
-+int blk_rq_map_integrity_sg(struct request *rq, struct scatterlist *sglist)
-+{
-+	return 0;
-+}
-+
-+static inline
-+struct blk_integrity *bdev_get_integrity(struct block_device *bdev)
-+{
-+	return NULL;
-+}
-+
-+static inline struct blk_integrity *blk_get_integrity(struct gendisk *disk)
-+{
-+	return NULL;
-+}
-+
-+static inline int blk_integrity_compare(struct gendisk *gd1, struct gendis=
-k *gd2)
-+{
-+	return 0;
-+}
-+
-+static inline
-+int blk_integrity_register(struct gendisk *disk, struct blk_integrity *tem=
-plate)
-+{
-+	return 0;
-+}
-+
-+static inline void blk_integrity_unregister(struct gendisk *disk)
-+{
-+}
-=20
- #endif /* CONFIG_BLK_DEV_INTEGRITY */
-=20
 --=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---bgQAstJ9X1Eg13Dy
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFKepY2Wto1QDEAkw8RAtvJAJ97JY2v2GFHcayB+TVrM5PDw4wz6QCfceMi
-T+Cex3dKq05LTe24W4oaViA=
-=IoTq
------END PGP SIGNATURE-----
-
---bgQAstJ9X1Eg13Dy--
+Jon
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
