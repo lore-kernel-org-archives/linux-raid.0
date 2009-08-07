@@ -1,48 +1,65 @@
-From: Maurice Hilarius <maurice@harddata.com>
-Subject: Re: Draft Mirrored Linux Mini How-to - sfdisk suggestion
-Date: Fri, 07 Aug 2009 09:27:27 -0600
-Message-ID: <4A7C47DF.3000307@harddata.com>
-References: <4A78292A.5000607@in.ibm.com>	 <1249421223.18245.36.camel@pasglop> <4A794E26.8080207@in.ibm.com>	 <1249465934.18245.54.camel@pasglop>  <4A7ADBB1.3050906@in.ibm.com> <1249595469.24311.5.camel@pasglop> <4A7B708F.4050406@uga.edu>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [PATCH/Resend] md: Push down data integrity code to personalities.
+Date: Fri, 7 Aug 2009 18:46:54 +0200
+Message-ID: <20090807164654.GC21495@skl-net.de>
+References: <20090701083802.GC9910@skl-net.de> <19026.50240.504728.428875@notabene.brown> <20090713085442.GJ9910@skl-net.de> <19058.31706.803177.77914@notabene.brown> <20090803164030.GI5174@skl-net.de> <19066.20143.666654.818111@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="p2kqVDKq5asng8Dg"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A7B708F.4050406@uga.edu>
+Content-Disposition: inline
+In-Reply-To: <19066.20143.666654.818111@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: harold@uga.edu, vger majordomo for lists <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Harold Pritchett wrote:
-> Following this note is a draft of a "Mirrored Linux Mini How-to" 
-> document.
-> ..
-> To ensure that the partitions are correct, and in the correct order, 
-> boot from
-> the install CD/DVD and run the rescue system.  Use fdisk from this system
-> to partition the two drives.
-> ..
-> In the event of a disk failure, follow the below procedure.
-> ..
-> 10. Bring up the system and use fdisk to partition the new drive EXACTLY
->     the same as the existing drive.
 
-I suggest that the steps involving partitioning multiple drives are 
-prone to error.
+--p2kqVDKq5asng8Dg
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I offer that the use sfdisk is more accurate, and user friendly.
+On 13:31, Neil Brown wrote:
+> > Thanks. Sorry if this is a FAQ, but how can one tell whether a given
+> > function may be called in interrupt context? Is there a better way
+> > than recursively checking all its callers?
+>=20
+> I think you just have to 'know'. :-(
+> Some functions which mustn't be called from interrupts are
+> 'documented' as such by calling "might_sleep()", but there is no
+> similar documentation for the reverse.
 
-By using sfdisk with the -d option we can get a dump of the current 
-partition table in a regular file,
-and if needed we can restore it from that file.
+There's exactly one call to might_sleep() in drivers/md/*.c ;)
 
-Example:
+> All ->bi_endio routines are called from interrupts.. or maybe
+> from softirqs or something similar.  I think the important point is
+> that they are called without a process context, so they cannot sleep
+> (i.e. no kmalloc unless you use GFP_ATOMIC, no mutex_lock, no
+> wait_event etc) and should use spin_lock_irqsave or spin_lock_bh
+> rather than a bare spin_lock.
 
-|	sfdisk -d /dev/sda | sfdisk /dev/sdb
+So spin_lock_irqsave() and friends are other indicators that the
+function in question might be called from interrupts while kmalloc(...,
+GFP_KERNEL) indicates the converse, i.e. that the function is called
+with process context.
 
-This is a very simple way to duplicate the partition table from one disk to another.
+Thanks for the explanation.
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
 
-|
+--p2kqVDKq5asng8Dg
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
 
--- 
-Regards, Maurice
+iD8DBQFKfFp+Wto1QDEAkw8RAnwYAKCgVAnP0GTm3aPiHG13r9uDjneFTACZAVtV
+u4tex/jH7jDYkCdkVelTjag=
+=YdQB
+-----END PGP SIGNATURE-----
+
+--p2kqVDKq5asng8Dg--
