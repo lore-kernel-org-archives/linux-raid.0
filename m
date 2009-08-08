@@ -1,81 +1,46 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Draft Mirrored Linux Mini How-to
-Date: Sat, 8 Aug 2009 11:41:28 +1000 (EST)
-Message-ID: <24aa235266d4cb2161954c4d49ed8ebe.squirrel@neil.brown.name>
-References: <4A78292A.5000607@in.ibm.com> <1249421223.18245.36.camel@pasglop>
-    <4A794E26.8080207@in.ibm.com> <1249465934.18245.54.camel@pasglop>
-    <4A7ADBB1.3050906@in.ibm.com> <1249595469.24311.5.camel@pasglop>
-    <4A7B708F.4050406@uga.edu>
-    <20090807035303.GA31754@musti.tarvainen.info>
-    <87vdkzp0rk.fsf@frosties.localdomain>
+From: Matthias Dahl <ml_linux_raid@mortal-soul.de>
+Subject: partitioned raid 5 and proper partition alignment
+Date: Sat, 8 Aug 2009 08:12:45 +0200
+Message-ID: <200908080812.45509.ml_linux_raid@mortal-soul.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87vdkzp0rk.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: Tapani Tarvainen <raid@tapanitarvainen.fi>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, August 8, 2009 11:11 am, Goswin von Brederlow wrote:
-> Tapani Tarvainen <raid@tapanitarvainen.fi> writes:
->
->> On Thu, Aug 06, 2009 at 08:08:47PM -0400, Harold Pritchett
->> (harold@uga.edu) wrote:
->>
->>> Mirrored Linux Mini How-to
->>
->> A few quick observations:
->>
->>> Install linux on two identical disk drives in such a way that the
->>> failure
->>> of either of the drives will allow the system to be recovered without
->>> any
->>> loss of data
->>>
->>> Both of the drives are partitioned exactly the same:
->>>      1.  3 primary partitions
->>>      2.  Partition 1 - size - 1GB format as Linux Raid (fd)
->>>      3.  Partition 2 - size = real memory size, format as linux swap
->>> (82)
->>>      4.  Partition 3 = size = remainder of disk, format as linux raid
->>> (fd)
->>
->> If I read correctly, you are not only leaving swap out of lvm,
->> you are not mirroring it at all - which would make the system
->> crash if the swap disk breaks.
->> Putting swap on lvm would also allow growing it easily as needed.
->
-> On the other hand don't forget that raid1 is buggy with swap and the
-> page contents might change between writes to the first and second
-> disk. Or has that been fixed?
+Hello everyone.
 
-There is no bug here.  The behaviour is a little unexpected
-but it is perfectly "correct" in that there is never any risk to
-data.
+I've really looked around everywhere but it is hard to find any decent 
+information about partitioned software raid 5. If someone could please help me 
+out that would be great. Thanks a lot in advance...
 
-NeilBrown
+I am trying to partition a raid 5 but I cannot figure out the partition 
+alignment. My raid has 3 disks and a chunk size of 64kib, thus a total stripe 
+width of 192kib (data + parity). I am using sfdisk w/ sector units and I 
+currently align everything to the stripe width size:
 
+dreamgate ~ # sfdisk -l -uS /dev/md_d0
 
->
->> Another point is that sometimes it is useful to have multiple
->> partitions separately mirrored and then combined with lvm:
->> it allows things like changing the raid configuration from
->> two-disk raid1 to three-disk raid5 without moving data
->> via backup and yet avoiding windows of vulnerability
->> to single-disk failure during the transition.
->> (Perhaps not common enough to be worth mentioning here,
->> but I've found it useful.)
->
-> You can transform raid1 to raid5 without loss of redundncy so I don't
-> quite see what you mean here.
->
-> MfG
->         Goswin
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Disk /dev/md_d0: 485990272 cylinders, 2 heads, 4 sectors/track
+Units = sectors of 512 bytes, counting from 0
 
+   Device Boot    Start       End   #sectors  Id  System
+/dev/md_d0p1           384 314572799  314572416  83  Linux
+/dev/md_d0p2     314572800 629145599  314572800  83  Linux
+/dev/md_d0p3     629145600 3887922175 3258776576  83  Linux
+/dev/md_d0p4             1       383        383  83  Linux
+
+The problem is I cannot figure out how to deal with sector 0 which usually 
+contains the mbr and partition table. So does the striping begin w/ sector 0 
+or w/ sector 1 because sector 0 is handled specially?
+
+If sector 0 is not handled specially and striping starts there, my partitions 
+above are properly aligned otherwise they are off exactly 512 byte.
+
+Like I said, if someone could give me a hint, I'd really appreciate it.
+
+Thanks a lot in advance,
+matthew.
