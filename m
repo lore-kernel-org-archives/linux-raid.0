@@ -1,65 +1,60 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [PATCH/Resend] md: Push down data integrity code to personalities.
-Date: Fri, 7 Aug 2009 18:46:54 +0200
-Message-ID: <20090807164654.GC21495@skl-net.de>
-References: <20090701083802.GC9910@skl-net.de> <19026.50240.504728.428875@notabene.brown> <20090713085442.GJ9910@skl-net.de> <19058.31706.803177.77914@notabene.brown> <20090803164030.GI5174@skl-net.de> <19066.20143.666654.818111@notabene.brown>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: Draft Mirrored Linux Mini How-to
+Date: Sat, 08 Aug 2009 03:11:59 +0200
+Message-ID: <87vdkzp0rk.fsf@frosties.localdomain>
+References: <4A78292A.5000607@in.ibm.com> <1249421223.18245.36.camel@pasglop>
+	<4A794E26.8080207@in.ibm.com> <1249465934.18245.54.camel@pasglop>
+	<4A7ADBB1.3050906@in.ibm.com> <1249595469.24311.5.camel@pasglop>
+	<4A7B708F.4050406@uga.edu>
+	<20090807035303.GA31754@musti.tarvainen.info>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="p2kqVDKq5asng8Dg"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <19066.20143.666654.818111@notabene.brown>
+In-Reply-To: <20090807035303.GA31754@musti.tarvainen.info> (Tapani Tarvainen's
+	message of "Fri, 7 Aug 2009 06:53:03 +0300")
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-raid <linux-raid@vger.kernel.org>
+To: Tapani Tarvainen <raid@tapanitarvainen.fi>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Tapani Tarvainen <raid@tapanitarvainen.fi> writes:
 
---p2kqVDKq5asng8Dg
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> On Thu, Aug 06, 2009 at 08:08:47PM -0400, Harold Pritchett (harold@uga.edu) wrote:
+>
+>> Mirrored Linux Mini How-to
+>
+> A few quick observations:
+>
+>> Install linux on two identical disk drives in such a way that the failure
+>> of either of the drives will allow the system to be recovered without any
+>> loss of data
+>>
+>> Both of the drives are partitioned exactly the same:
+>>      1.  3 primary partitions
+>>      2.  Partition 1 - size - 1GB format as Linux Raid (fd)
+>>      3.  Partition 2 - size = real memory size, format as linux swap (82)
+>>      4.  Partition 3 = size = remainder of disk, format as linux raid (fd)
+>
+> If I read correctly, you are not only leaving swap out of lvm,
+> you are not mirroring it at all - which would make the system
+> crash if the swap disk breaks.
+> Putting swap on lvm would also allow growing it easily as needed.
 
-On 13:31, Neil Brown wrote:
-> > Thanks. Sorry if this is a FAQ, but how can one tell whether a given
-> > function may be called in interrupt context? Is there a better way
-> > than recursively checking all its callers?
->=20
-> I think you just have to 'know'. :-(
-> Some functions which mustn't be called from interrupts are
-> 'documented' as such by calling "might_sleep()", but there is no
-> similar documentation for the reverse.
+On the other hand don't forget that raid1 is buggy with swap and the
+page contents might change between writes to the first and second
+disk. Or has that been fixed?
 
-There's exactly one call to might_sleep() in drivers/md/*.c ;)
+> Another point is that sometimes it is useful to have multiple
+> partitions separately mirrored and then combined with lvm:
+> it allows things like changing the raid configuration from
+> two-disk raid1 to three-disk raid5 without moving data
+> via backup and yet avoiding windows of vulnerability
+> to single-disk failure during the transition.
+> (Perhaps not common enough to be worth mentioning here,
+> but I've found it useful.)
 
-> All ->bi_endio routines are called from interrupts.. or maybe
-> from softirqs or something similar.  I think the important point is
-> that they are called without a process context, so they cannot sleep
-> (i.e. no kmalloc unless you use GFP_ATOMIC, no mutex_lock, no
-> wait_event etc) and should use spin_lock_irqsave or spin_lock_bh
-> rather than a bare spin_lock.
+You can transform raid1 to raid5 without loss of redundncy so I don't
+quite see what you mean here.
 
-So spin_lock_irqsave() and friends are other indicators that the
-function in question might be called from interrupts while kmalloc(...,
-GFP_KERNEL) indicates the converse, i.e. that the function is called
-with process context.
-
-Thanks for the explanation.
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---p2kqVDKq5asng8Dg
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFKfFp+Wto1QDEAkw8RAnwYAKCgVAnP0GTm3aPiHG13r9uDjneFTACZAVtV
-u4tex/jH7jDYkCdkVelTjag=
-=YdQB
------END PGP SIGNATURE-----
-
---p2kqVDKq5asng8Dg--
+MfG
+        Goswin
