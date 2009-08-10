@@ -1,25 +1,42 @@
-From: "Henry, Andrew" <andrew.henry@logica.com>
-Subject: raid-0 with mdadm vs lvm striping
-Date: Mon, 10 Aug 2009 09:09:45 +0200
-Message-ID: <3ECBDC05781B3D48ABD520A01ABF2F9B2E99EDBB63@SE-EX008.groupinfra.com>
+From: "Daniel L. Miller" <dmiller@amfes.com>
+Subject: Possible failure & recovery
+Date: Mon, 10 Aug 2009 11:08:00 -0700
+Message-ID: <4A806200.6010603@amfes.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SSdtIHRoaW5raW5nIG9mIGJ1eWluZyBhIGNvdXBsZSBvZiBkaXNrcyB0byBwdXQgaW4gYSBzdHJp
-cGVkIGFycmF5IGZvciBwZXJmb3JtYW5jZS4gIEkgYWxyZWFkeSBoYXZlIGEgcmFpZC0xIGFycmF5
-IHdpdGggbWRhZG0uDQoNCkFyZSB0aGVyZSBhcmUgbWFuYWdlbWVudCBvciBwZXJmb3JtYW5jZSBi
-ZW5lZml0cyBvZiB1c2luZyBtZGFkbSByYWlkLTAgb3ZlciB1c2luZyBMVk0gc3RyaXBpbmc/DQoN
-CkltIHRoaW5raW5nIGFsb25nIHRoZSBsaW5lcyBvZiAiTFZNIG1pZ2h0IGJlIGEgYmV0dGVyIGNo
-b2ljZSBiZWNhdXNlIEkgY2FuIGhhdmUgbXkgc3RyaXBpbmcgKGJ5IGFkZGluZyBhbm90aGVyIGRp
-c2sgdG8gdGhlIExWKSBhbmQgYWxzbyBoYXZlIHRoZSBhZGRlZCBib251cyBvZiBpdCBiZWluZyBt
-b3JlICdtYW5hZ2VhYmxlJyB0aGFuIHJhaWQsIGJlY2F1c2UgSSBjYW4gZ3JvdyBvciBzaHJpbmsg
-dGhlIExWIi4NCg0KSXMgbXkgaWRlYSBmdWxsIG9mIGhvbGVzPyAgQXJlIHRoZXJlIHdlbGwga25v
-d24gaXNzdWVzOyBwZXJmb3JtYW5jZSB3aXNlIG9yIG1hbmFnZWFiaWxpdHkgd2lzZSBvZiB1c2lu
-ZyBhbiBMVk0gYXMgYSBzdHJpcGVkIGFycmF5IGZvciBwZXJmb3JtYW5jZT8NCg0KQ29tbWVudHMg
-d2VsY29tZQ0KIC0tYW5kcmV3DQo=
+I'm not 100% certain about this...but maybe.
+
+I had setup a small box as a remote backup for our company.  I THOUGHT I 
+had set it up as a Raid-10 - but I can't swear to it now.  I just had a 
+need to try to recover a file from that backup - only to find we just 
+had an error.
+
+Checking mdadm.conf, I find -
+ARRAY /dev/.static/dev/md0 level=raid10 num-devices=4 
+devices=/dev/sda,/dev/sdb,/dev/sdc,/dev/sdd 
+UUID=7ec24ccc:973f5065:a79315d0:449291b3 auto=part
+
+Now, I do know that one of the drives had failed previously (sdd), and 
+the array has been operating in degraded condition for some time.  Now 
+it appears that a second drive failed.  I received XFS errors and only 
+two drives showed under /proc/mdstat (sdb was removed as well as sdd).
+
+xfs_check reported errors.  Whether or not it was a good idea, I tried 
+adding sdb back to the array.  It worked and started rebuilding.  Then I 
+noticed that the array was reporting as "raid6".  I don't know when it 
+BECAME raid6, if I always had it as such or if the raid-10 somehow 
+degraded and became raid-6.  If it actually did so - that might make for 
+some type of a migration/expansion path for a raid-10 array that needs 
+to grow.
+
+My xfs_repair -L /dev/md0 process is currently running...I'm holding my 
+breath to see how much I get back...
+-- 
+Daniel
+
