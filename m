@@ -1,39 +1,47 @@
-From: Drew <drew.kay@gmail.com>
-Subject: Re: raid-0 with mdadm vs lvm striping
-Date: Tue, 11 Aug 2009 14:35:15 -0700
-Message-ID: <c268e4660908111435x81d080fva423c5ea78605fc2@mail.gmail.com>
-References: <3ECBDC05781B3D48ABD520A01ABF2F9B2E99EDBB63@SE-EX008.groupinfra.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] md: avoid use of broken kzalloc mempool
+Date: Tue, 11 Aug 2009 14:52:58 -0700
+Message-ID: <20090811145258.6cd823d6.akpm@linux-foundation.org>
+References: <1249332888-13440-1-git-send-email-sage@newdream.net>
+	<8604b01355a1ff1ec6397d223c28b1d5.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3ECBDC05781B3D48ABD520A01ABF2F9B2E99EDBB63@SE-EX008.groupinfra.com>
+In-Reply-To: <8604b01355a1ff1ec6397d223c28b1d5.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Henry, Andrew" <andrew.henry@logica.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: sage@newdream.net, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, stable@kernel.org
 List-Id: linux-raid.ids
 
-> Are there are management or performance benefits of using mdadm raid-0 over using LVM striping?
+On Tue, 4 Aug 2009 08:03:52 +1000 (EST)
+"NeilBrown" <neilb@suse.de> wrote:
 
-I haven't used LVM striping so take my answer with a grain of salt. In
-my reading on the web about the two I came to the conclusion that MD's
-raid-0 code is a bit better tested then LVM's. For that reason, and
-because I believe in one tool for each job, I went with MD to handle
-the RAID.
+> On Tue, August 4, 2009 6:54 am, Sage Weil wrote:
+> > The kzalloc mempool does not re-zero items that have been used and then
+> > returned to the pool.  Manually zero the allocated multipath_bh instead.
+> >
+> > CC: linux-raid@vger.kernel.org
+> > CC: Neil Brown <neilb@suse.de>
+> > CC: <stable@kernel.org>
 
-> Im thinking along the lines of "LVM might be a better choice because I can have my striping (by adding another disk to the LV) and also have the added bonus of it being more 'manageable' than raid, because I can grow or shrink the LV".
+Sage, why did you cc stable@kernel.org?  The patch fixes some bug? 
+What is it?  Why is the fix sufficiently important to warrant
+backporting?
 
-If you run LVM on top of raid you can have both. :-) All my servers
-run this config and it makes things easy to move around as needed, in
-fact a couple of times it saved my data (and my bacon). And with newer
-versions of mdadm, you can create some interesting raid configs that
-LVM has no chance of creating.
+> Acked-by: NeilBrown <neilb@suse.de>
+> 
 
-So why striping? Aside from faster speeds, raid-0 is anything but redundant.
+Thanks, I'll merge it once the above is understood.
 
+> 
+> In fact, you don't even need the memset.  After allocation
+> no assumptions are made about the content of the structure.
+> Every field is immediately initialised except retry_list, which
+> is never accessed until after the object is placed on a list.h list.
+> 
+> So this code never needed kzalloc_pool.
 
--- 
-Drew
+Well, that's a bit of a functional change so let us (ie: you ;)) do
+that separately?
 
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
