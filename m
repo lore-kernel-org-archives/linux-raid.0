@@ -1,37 +1,46 @@
-From: Drew <drew.kay@gmail.com>
-Subject: Re: raid-0 with mdadm vs lvm striping
-Date: Wed, 12 Aug 2009 10:47:30 -0700
-Message-ID: <c268e4660908121047i52659b9aqb4e31478592538d9@mail.gmail.com>
-References: <3ECBDC05781B3D48ABD520A01ABF2F9B2E99EDBB63@SE-EX008.groupinfra.com>
-	<c268e4660908111435x81d080fva423c5ea78605fc2@mail.gmail.com>
-	<3ECBDC05781B3D48ABD520A01ABF2F9B2E9A0485D5@SE-EX008.groupinfra.com>
-	<87vdkt4e5x.fsf@frosties.localdomain> <3ECBDC05781B3D48ABD520A01ABF2F9B2E9A048A82@SE-EX008.groupinfra.com>
+From: mark delfman <markdelfman@googlemail.com>
+Subject: -z not on RAID0 / MPIO hurdle
+Date: Wed, 12 Aug 2009 19:44:10 +0100
+Message-ID: <66781b10908121144n1f053b57led29391534614b7@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3ECBDC05781B3D48ABD520A01ABF2F9B2E9A048A82@SE-EX008.groupinfra.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Henry, Andrew" <andrew.henry@logica.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> That's what my question was: =C2=A0Will raid0 (striping) be faster or=
- easier to manage than lvm striping
+Hi.... I am hopeful that the group could provide me with some advice
+regarding limiting the drive size on a RAID0.  I know and use the =E2=80=
+=93z
+option for other raid levels, but this seems to have no effect on
+RAID0.
 
-I don't know about faster but IMO it'll be easier with raid0. With LVM
-you have to specify striping *every* time you create a new LV. With an
-underlying raid0 array as the sole physical volume, you can create the
-LV knowing it's striped.
+I am sure many will ask =E2=80=98why bother=E2=80=99 or =E2=80=98use fd=
+isk=E2=80=99 but the problem is:
 
-One less switch to forget.
+We need to have some preserved information on each drive =E2=80=93 can =
+be only
+a few MB at the end of the drive for example
+In the past we have simply used Fdisk to partition, save our data on
+Sdx2 and used Mdadm on Sdx1  (which works fine)
+But we are looking to move to dual channel SAS drives and use DM MPIO
+
+DM MPIO works fine also, but not on the partitions, only the whole
+drive.  So when we MDadm DMx it overwrites the SdX2 partition etc.
+
+The answer was that we used the =E2=80=93z and limited the drive size a=
+nd
+simply used DD to write our data to the end LBA=E2=80=99s....
+
+But on RAID0 the =E2=80=93z does not seem to function, so I cant think =
+of a
+way around this =EF=81=8C  (other than changing the LBA range in the dr=
+ive and
+this is restricted I think)
 
 
---=20
-Drew
-
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
+Does anyone have any ideas?  I appreciate any help
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
