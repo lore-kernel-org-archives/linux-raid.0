@@ -1,48 +1,36 @@
-From: mark delfman <markdelfman@googlemail.com>
-Subject: -z not on RAID0 / MPIO hurdle
-Date: Wed, 12 Aug 2009 19:44:10 +0100
-Message-ID: <66781b10908121144n1f053b57led29391534614b7@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Prevent automatic reconstruction during boot/assembly (RAID 1)?
+Date: Thu, 13 Aug 2009 09:10:09 +1000
+Message-ID: <19075.19409.877554.418049@notabene.brown>
+References: <2953e180908110528u705fc002m6c799821fe278375@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Sebastian Farber on Tuesday August 11
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?Sebastian_F=E4rber?= <faerber@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi.... I am hopeful that the group could provide me with some advice
-regarding limiting the drive size on a RAID0.  I know and use the =E2=80=
-=93z
-option for other raid levels, but this seems to have no effect on
-RAID0.
+On Tuesday August 11, faerber@gmail.com wrote:
+> Hi,
+> 
+> i'm trying to figure out if it is possible to prevent the
+> automatic reconstruction that can occur during the md assembly
+> at boot.
+> I'm running Kernel 2.6.30.4 and use a RAID-1 over two SATA disks.
+> If the server is rebooted "hard" due to power loss etc. it often happens
+> that the reconstruction of my RAID-1 is automatically triggered by the kernel.
+> Is there any way to prevent this? I want to re-add the "out of sync"
+> drive myself
+> using mdadm only.
+> I'm currently using raid auto detection (partiton type fd) and the old
+> 0.90 superblock format but if it helps i would switch
+> to an initrd/newer superblock.
 
-I am sure many will ask =E2=80=98why bother=E2=80=99 or =E2=80=98use fd=
-isk=E2=80=99 but the problem is:
+There isn't any simple way to do what you want.
+May if you could explain why you want it, something else might be
+suitable.
 
-We need to have some preserved information on each drive =E2=80=93 can =
-be only
-a few MB at the end of the drive for example
-In the past we have simply used Fdisk to partition, save our data on
-Sdx2 and used Mdadm on Sdx1  (which works fine)
-But we are looking to move to dual channel SAS drives and use DM MPIO
-
-DM MPIO works fine also, but not on the partitions, only the whole
-drive.  So when we MDadm DMx it overwrites the SdX2 partition etc.
-
-The answer was that we used the =E2=80=93z and limited the drive size a=
-nd
-simply used DD to write our data to the end LBA=E2=80=99s....
-
-But on RAID0 the =E2=80=93z does not seem to function, so I cant think =
-of a
-way around this =EF=81=8C  (other than changing the LBA range in the dr=
-ive and
-this is restricted I think)
-
-
-Does anyone have any ideas?  I appreciate any help
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+NeilBrown
