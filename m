@@ -1,58 +1,29 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: raid-0 with mdadm vs lvm striping
-Date: Thu, 13 Aug 2009 10:08:34 +0200
-Message-ID: <20090813080834.GA24883@rap.rap.dk>
-References: <3ECBDC05781B3D48ABD520A01ABF2F9B2E99EDBB63@SE-EX008.groupinfra.com> <c268e4660908111435x81d080fva423c5ea78605fc2@mail.gmail.com> <3ECBDC05781B3D48ABD520A01ABF2F9B2E9A0485D5@SE-EX008.groupinfra.com> <87vdkt4e5x.fsf@frosties.localdomain> <3ECBDC05781B3D48ABD520A01ABF2F9B2E9A048A82@SE-EX008.groupinfra.com> <a43edf1b0908120900u32226a01w16edc9075282ee9f@mail.gmail.com> <874osc5ut5.fsf@frosties.localdomain>
+From: Simon Jackson <sjackson@bluearc.com>
+Subject: Help understanding the root cause of a member dropping out of a
+ RAID 1 set.
+Date: Thu, 13 Aug 2009 09:44:11 +0100
+Message-ID: <ABFC24E4C13D81489F7F624E14891C860BF9A409@uk-ex-mbx1.terastack.bluearc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <874osc5ut5.fsf@frosties.localdomain>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: Billy Crook <billycrook@gmail.com>, "Henry, Andrew" <andrew.henry@logica.com>, Drew <drew.kay@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Aug 13, 2009 at 04:09:10AM +0200, Goswin von Brederlow wrote:
-> Billy Crook <billycrook@gmail.com> writes:
->=20
-> > On Wed, Aug 12, 2009 at 04:14, Henry, Andrew<andrew.henry@logica.co=
-m> wrote:
-> >> That's what my question was: =A0Will raid0 (striping) be faster or=
- easier to manage than lvm striping
-> >
-> > LVM striping won't change performance for small files. (That is fil=
-es,
-> > smaller than the extent size.)  To be fair, RAID-0 striping won't
-> > accelerate file access for files smaller than the stripe size eithe=
-r.
 
-Have you tested this? In theory, both LVM and raid0 striping should
-accellerate access to small files substantially, for example if a
-process accesses a number of small files, which are laid out in sequenc=
-e
-on the file system. This is a common case.=20
+I am running RAID1 partitions on some systems and a few times I have seen a raid set become degraded as a member has failed out of the md device.  Looking at the /var/log/message file I have seen output similar to below:
 
-I think this could come about eg if you roll in a tarball or package of
-a system, then the small files are created in sequence, and the file
-system should lay them out in sequence on the disk. When reading again,
-the disk read ahead would secure that most of the data for a number of
-small files were already read into the kernel cache when asked for, and
-thus the files would be read at striping speeds.=20
+Can anyone help me decode what actually happened here.  
 
-> > However, traditionally, raid0 stripe sizes are much much smaller th=
-an
-> > LVM extent sizes.  Both are however adjustable.
+Thanks Simon.
 
-What are the parameters? raid normally assumes 64 kiB chunks, but i
-normally use 256 kiB chunks, which is the lowest chunk size that we are
-recommending out of the linux-raid group. What are normal with LVM?
-
-best regards
-keld
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+2009-08-11T06:21:04-07:00 Metro-1 kernel: [556568.670377]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+2009-08-11T06:21:04-07:00 Metro-1 kernel: [556568.670477] ata1: hard resetting link
+2009-08-11T06:21:08-07:00 Metro-1 kernel: [556573.122562] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+2009-08-11T06:21:08-07:00 Metro-1 kernel: [556573.259057] ata1.00: configured for UDMA/133
+2009-08-11T06:21:08-07:00 Metro-1 kernel: [556573.348168] ata1.01: configured for UDMA/133
+2009-08-11T06:21:08-07:00 Metro-1 kernel: [556573.348168] md: super_written gets error=-5, uptodate=0
+2009-08-11T06:21:08-07:00 Metro-1 kernel: [556573.348168] raid1: Operation continuing on 1 devices.
+2009-08-11T06:21:08-07:00 Metro-1 kernel: [556573.348168] ata1: EH complete
