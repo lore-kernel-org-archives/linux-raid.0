@@ -1,29 +1,73 @@
-From: Simon Jackson <sjackson@bluearc.com>
-Subject: Help understanding the root cause of a member dropping out of a
- RAID 1 set.
-Date: Thu, 13 Aug 2009 09:44:11 +0100
-Message-ID: <ABFC24E4C13D81489F7F624E14891C860BF9A409@uk-ex-mbx1.terastack.bluearc.com>
+From: Jan Wagner <jwagner@kurp.hut.fi>
+Subject: 32-bit sys/times.h incorrect return value
+Date: Thu, 13 Aug 2009 12:10:27 +0300 (EEST)
+Message-ID: <alpine.DEB.2.00.0908131141330.24630@orbit.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
-I am running RAID1 partitions on some systems and a few times I have seen a raid set become degraded as a member has failed out of the md device.  Looking at the /var/log/message file I have seen output similar to below:
+we see times() return a really large positive value like 0x66693CF1 i.e. 
+signed int32 +1718172913 just a few minutes after booting.
 
-Can anyone help me decode what actually happened here.  
+Note that clock_gettime(CLOCK_MONOTONIC) works correctly and returns the 
+uptime. While times() +1718172913/100Hz time is in no relation to uptime.
 
-Thanks Simon.
+Checking 'man 2 times': "Since Linux 2.6, this point is (2^32/HZ) - 300 
+(i.e., about 429 million) seconds before system boot time. [...] the 
+returned value may overflow the range of clock_t [...]"
 
-2009-08-11T06:21:04-07:00 Metro-1 kernel: [556568.670377]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-2009-08-11T06:21:04-07:00 Metro-1 kernel: [556568.670477] ata1: hard resetting link
-2009-08-11T06:21:08-07:00 Metro-1 kernel: [556573.122562] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-2009-08-11T06:21:08-07:00 Metro-1 kernel: [556573.259057] ata1.00: configured for UDMA/133
-2009-08-11T06:21:08-07:00 Metro-1 kernel: [556573.348168] ata1.01: configured for UDMA/133
-2009-08-11T06:21:08-07:00 Metro-1 kernel: [556573.348168] md: super_written gets error=-5, uptodate=0
-2009-08-11T06:21:08-07:00 Metro-1 kernel: [556573.348168] raid1: Operation continuing on 1 devices.
-2009-08-11T06:21:08-07:00 Metro-1 kernel: [556573.348168] ata1: EH complete
+Hence in theory on a 32-bit platform where clock_t is signed 32-bit, at 
+first times() should return negative values.
+
+Then 300 seconds later they should become positive. Correct?
+
+This should also happen via glibc times() call. There the times()
+   ./sysdeps/unix/sysv/linux/times.c
+simply does
+   clock_t ret = INTERNAL_SYSCALL (times, err, 1, buf);
+with no extra "+- some constant".
+
+In the kernel all jiffies and times syscall related handling is 64-bit:
+
+---------
+amn@multics:/home/etu/Desktop/linux-2.6.30.3/include$ fgrep INITIAL_JIFFIES
+linux/jiffies.h:#define INITIAL_JIFFIES ((unsigned long)(unsigned int) (-300*HZ))
+
+kernel/sys.c:   return (long) jiffies_64_to_clock_t(get_jiffies_64());
+
+kernel/time.c:u64 get_jiffies_64(void)
+kernel/time.c:          ret = jiffies_64;
+---------
+
+On 32-bit platforms and signed int32 clock_t it should take at least
+
+octave:1>  2^31/(24*60*60 * 100)
+ans =  248.55
+octave:2>  (2^31/100 - 300)/(24*60*60)
+ans =  248.55
+
+days until the positive times() return value wraps back to smallest 
+negative signed 32-bit int.
+
+However, two bugs(?) :
+
+1) times() return value after 1080 'uptime' seconds is 0x66693CF1, why?
+
+Expected value would be (1080-300)*100Hz = 78000 = 0x000130B0 !
+
+2) the times() wraps to negative only after 50 days uptime. Following the 
+intention of INITIAL_JIFFIES, how is this 50-day warp supposed to reveal 
+wrapping bugs right at 300 seconds after boot?
+
+2) on 64-bit platforms, clock_t is 64-bit. There times() does not wrap 
+after 50 days, however it still starts at 0x000000006669**** !?
+
+
+Any ideas?
+
+  - Jan
