@@ -1,43 +1,34 @@
 From: "John Robinson" <john.robinson@anonymous.org.uk>
-Subject: Re: Help understanding the root cause of a member dropping out of
-     a  RAID 1 set.
-Date: Thu, 13 Aug 2009 17:26:39 +0100 (BST)
-Message-ID: <64960.78.86.108.203.1250180799.squirrel@www.yuiop.co.uk>
-References: <ABFC24E4C13D81489F7F624E14891C860BF9A409@uk-ex-mbx1.terastack.bluearc.com>
-    <a43edf1b0908130913x238b33ecref5a3d070bf3cb16@mail.gmail.com>
+Subject: Array management
+Date: Thu, 13 Aug 2009 17:35:55 +0100 (BST)
+Message-ID: <64980.78.86.108.203.1250181355.squirrel@www.yuiop.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain;charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <a43edf1b0908130913x238b33ecref5a3d070bf3cb16@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, 13 August, 2009 5:13 pm, Billy Crook wrote:
-> On Thu, Aug 13, 2009 at 03:44, Simon Jackson<sjackson@bluearc.com> wrote:
-[...]
->> 2009-08-11T06:21:08-07:00 Metro-1 kernel: [556573.348168] md:
->> super_written gets error=-5, uptodate=0
->
-> mdraid notices.  says oh craps.
->
->> 2009-08-11T06:21:08-07:00 Metro-1 kernel: [556573.348168] raid1:
->> Operation continuing on 1 devices.
->
-> mdraid marks the component that encountered the error failed, and
-> keeps on keeping on
->
->> 2009-08-11T06:21:08-07:00 Metro-1 kernel: [556573.348168] ata1: EH
->> complete
->
-> ata reset (of link, and subsequently drive) is complete.
+What tools do you guys use to automate your array management? I mean, I'd
+quite like to be able to pre-configure that certain drive slots should
+have drives re-added or re-built automatically when I hot plug drives,
+then have it Just Happen.
 
-Can or could md be made or configured to try re-adding a device if this
-sort of thing happens? After all, a stray cosmic ray or whatever perhaps
-shouldn't make one lose redundancy if the drive's actually OK?
+Even better if I could do something like Infrant/Netgear's ReadyNAS
+X-RAID, which just does the Right Thing as you add drives. 1 drive, no
+redundancy. Add a second, RAID-1. Add a third, convert to RAID-5. Add a
+fourth, grow the RAID-5. (Actually it's easier than that, just start with
+a 2-drive RAID-5 with one drive missing.) Now, Infrant/Netgear will have
+rolled their own, but is there a package which would help me automate this
+sort of thing?
 
 Cheers,
 
 John.
+
+-- 
+John Robinson, yuiop IT services
+0131 557 9577 / 07771 784 058
+46/12 Broughton Road, Edinburgh EH7 4EE
 
