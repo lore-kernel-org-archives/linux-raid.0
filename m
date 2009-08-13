@@ -1,103 +1,62 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Richard Sharpe <realrichardsharpe@gmail.com>
 Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
-  slot is freed)
-Date: Thu, 13 Aug 2009 19:18:15 +0000
-Message-ID: <1250191095.3901.116.camel@mulgrave.site>
+	slot is freed)
+Date: Thu, 13 Aug 2009 13:31:15 -0700
+Message-ID: <46b8a8850908131331g5b40a9c8j17bd80c8ba13a55f@mail.gmail.com>
 References: <200908122007.43522.ngupta@vflare.org>
 	 <Pine.LNX.4.64.0908122312380.25501@sister.anvils>
 	 <20090813151312.GA13559@linux.intel.com>
 	 <20090813162621.GB1915@phenom2.trippelsdorf.de>
 	 <alpine.DEB.1.10.0908130931400.28013@asgard.lang.hm>
 	 <87f94c370908131115r680a7523w3cdbc78b9e82373c@mail.gmail.com>
+	 <1250191095.3901.116.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <87f94c370908131115r680a7523w3cdbc78b9e82373c@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: david@lang.hm, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932437AbZHMUbU@vger.kernel.org>
+In-Reply-To: <1250191095.3901.116.camel@mulgrave.site>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Greg Freemyer <greg.freemyer@gmail.com>, david@lang.hm, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, 2009-08-13 at 14:15 -0400, Greg Freemyer wrote:
-> On Thu, Aug 13, 2009 at 12:33 PM, <david@lang.hm> wrote:
-> > On Thu, 13 Aug 2009, Markus Trippelsdorf wrote:
-> >
-> >> On Thu, Aug 13, 2009 at 08:13:12AM -0700, Matthew Wilcox wrote:
-> >>>
-> >>> I am planning a complete overhaul of the discard work.  Users can send
-> >>> down discard requests as frequently as they like.  The block layer will
-> >>> cache them, and invalidate them if writes come through.  Periodically,
-> >>> the block layer will send down a TRIM or an UNMAP (depending on the
-> >>> underlying device) and get rid of the blocks that have remained unwanted
-> >>> in the interim.
-> >>
-> >> That is a very good idea. I've tested your original TRIM implementation on
-> >> my Vertex yesterday and it was awful ;-). The SSD needs hundreds of
-> >> milliseconds to digest a single TRIM command. And since your
-> >> implementation
-> >> sends a TRIM for each extent of each deleted file, the whole system is
-> >> unusable after a short while.
-> >> An optimal solution would be to consolidate the discard requests, bundle
-> >> them and send them to the drive as infrequent as possible.
-> >
-> > or queue them up and send them when the drive is idle (you would need to
-> > keep track to make sure the space isn't re-used)
-> >
-> > as an example, if you would consider spinning down a drive you don't hurt
-> > performance by sending accumulated trim commands.
-> >
-> > David Lang
-> 
-> An alternate approach is the block layer maintain its own bitmap of
-> used unused sectors / blocks. Unmap commands from the filesystem just
-> cause the bitmap to be updated.  No other effect.
-> 
-> (Big unknown: Where will the bitmap live between reboots?  Require DM
-> volumes so we can have a dedicated bitmap volume in the mix to store
-> the bitmap to? Maybe on mount, the filesystem has to be scanned to
-> initially populate the bitmap?   Other options?)
+On Thu, Aug 13, 2009 at 12:18 PM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> Actually, I think, if we go in-kernel, the discard might be better ti=
+ed
+> into the block plugging mechanism. =A0The real test might be no
+> outstanding commands and queue plugged, keep plugged and begin
+> discarding.
 
-I wouldn't really have it live anywhere.  Discard is best effort; it's
-not required for fs integrity.  As long as we don't discard an in-use
-block we're free to do anything else (including forget to discard,
-rediscard a discarded block etc).
+I am very interested in this topic, as I have implemented UNMAP
+support in SCST and scst_local.c and ib_srp.c for one SSD vendor, as
+well as the block layer changes to have it work correctly (they were
+minor changes and based on Matthew's original TRIM or UNMAP patch from
+long ago). I believe that the performance was acceptable for them (I
+will have to check).
 
-It is theoretically possible to run all of this from user space using
-the fs mappings, a bit like a defrag command.
+I am also working on other, non-SSD, devices that are in a lower price
+range than the large storage arrays where both DISCARD/UNMAP (and
+WRITE SAME) would be useful in Linux. It also seems that Microsoft
+supports TRIM in Windows 7 if you switch it on, although that really
+only implies we should implement UNMAP support in our firmware and
+hook it up to existing mechanisms.
 
-One other option would just be to scan on mount, discard everything
-empty and redo on next mount ... this might be just the thing for
-laptops.
+I have logged internal enhancement bugs in bugzilla asking for both
+TRIM and UNMAP/WRITE SAME support, and although one environment is
+iSCSI in userland, and thus can be dealt with without support in the
+Linux kernel, there are use cases where DISCARD/UNMAP support in the
+Linux kernel would be useful.
 
-> Assuming we have a persistent bitmap in place, have a background
-> scanner that kicks in when the cpu / disk is idle.  It just
-> continuously scans the bitmap looking for contiguous blocks of unused
-> sectors.  Each time it finds one, it sends the largest possible unmap
-> down the block stack and eventually to the device.
-> 
-> When normal cpu / disk activity kicks in, this process goes to sleep.
-> 
-> That way much of the smarts are concentrated in the block layer, not
-> in the filesystem code.  And it is being done when the disk is
-> otherwise idle, so you don't have the ncq interference.
-> 
-> Even laptop users should have enough idle cpu available to manage
-> this.  Enterprise would get the large discards it wants, and
-> unmentioned in the previous discussion, mdraid gets the large discards
-> it also wants.
-> 
-> ie. If a mdraid raid5/raid6 volume is built of SSDs, it will only be
-> able to discard a full stripe at a time. Otherwise the P=D1 ^ D2 logic
-> is lost.
-> 
-> Another benefit of the above is the code should be extremely safe and testable.
+I would be very willing to make the firmware changes needed in our
+device to support UNMAP/WRITE SAME and to test changes to the Linux
+kernel to support same.
 
-Actually, I think, if we go in-kernel, the discard might be better tied
-into the block plugging mechanism.  The real test might be no
-outstanding commands and queue plugged, keep plugged and begin
-discarding.
+I will go through this thread in more detail when I get back from my
+trip to Australia, but if there are any GIT trees around with nascent
+support in them I would love to know about them, as it will help my
+internal efforts to get UNMAP/WRITE SAME support implemented as well.
 
-James
-
-
+--
+Regards,
+Richard Sharpe
