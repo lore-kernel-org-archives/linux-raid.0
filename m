@@ -1,53 +1,59 @@
-From: Neil Brown <neilb@suse.de>
-Subject: md/raid level conversion ready for testers.
-Date: Thu, 13 Aug 2009 11:49:53 +1000
-Message-ID: <19075.28993.878297.116900@notabene.brown>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: -z not on RAID0 / MPIO hurdle
+Date: Thu, 13 Aug 2009 04:06:29 +0200
+Message-ID: <87d4705uxm.fsf@frosties.localdomain>
+References: <66781b10908121144n1f053b57led29391534614b7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <66781b10908121144n1f053b57led29391534614b7@mail.gmail.com> (mark
+	delfman's message of "Wed, 12 Aug 2009 19:44:10 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: mark delfman <markdelfman@googlemail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+mark delfman <markdelfman@googlemail.com> writes:
 
-Hi,
- as many of you know I have been working on providing support in md
- for converting between RAID5 and RAID6 as well as other conversion
- like reducing the number of devices in a RAID5 or changing the chunk
- size.
+> Hi.... I am hopeful that the group could provide me with some advice
+> regarding limiting the drive size on a RAID0.  I know and use the =E2=
+=80=93z
+> option for other raid levels, but this seems to have no effect on
+> RAID0.
+>
+> I am sure many will ask =E2=80=98why bother=E2=80=99 or =E2=80=98use =
+fdisk=E2=80=99 but the problem is:
+>
+> We need to have some preserved information on each drive =E2=80=93 ca=
+n be only
+> a few MB at the end of the drive for example
+> In the past we have simply used Fdisk to partition, save our data on
+> Sdx2 and used Mdadm on Sdx1  (which works fine)
+> But we are looking to move to dual channel SAS drives and use DM MPIO
+>
+> DM MPIO works fine also, but not on the partitions, only the whole
+> drive.  So when we MDadm DMx it overwrites the SdX2 partition etc.
+>
+> The answer was that we used the =E2=80=93z and limited the drive size=
+ and
+> simply used DD to write our data to the end LBA=E2=80=99s....
+>
+> But on RAID0 the =E2=80=93z does not seem to function, so I cant thin=
+k of a
+> way around this =EF=81=8C  (other than changing the LBA range in the =
+drive and
+> this is restricted I think)
+>
+>
+> Does anyone have any ideas?  I appreciate any help
 
- I think this work is ready for broader testing now, which means that
- I think it reasonably complete and that if something does go wrong, I
- strongly suspect that I will be able to help you put the array back
- together.
+LVM and --setphysicalvolumesize on pvcreate?
 
- However this comes with no warranty and you should always have
- backups of important data.
-
- To test it for me you need to checkout the "devel-3.1" branch of my
-  git://neil.brown.name/mdadm
- git tree.  And "make".
-
- You also need a very recent kernel.  get the lasted from Linus' git
- tree and then
-    git pull git://neil.brown.name/md for-linus
-
- (or wait a day or so and Linus will have pulled it).
- Please don't try to clone the kernel from my server, it only has a
- slow link to the world.
-
- For most things it is safe to use 2.6.30, but I would recommend
- getting the latest kernel to be on the safe side.
-
- You should be able to convert RAID1->RAID5 and RAID5->RAID6 and back
- again.  Also you can change chunk size and layout and you can reduce
- the number of devices in a RAID5.  If you don't increase the --size
- of the devices at the same, you will need to explicitly decrease the 
- --array-size first.  mdadm will tell you what to do when that is
- needed.
-
- Success and failure reports are most welcome.
-
-Thanks,
-NeilBrown
+MfG
+        Goswin
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
