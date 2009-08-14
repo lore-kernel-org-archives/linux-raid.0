@@ -1,66 +1,112 @@
 From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: Discard support
-Date: Fri, 14 Aug 2009 18:10:50 -0400
-Message-ID: <87f94c370908141510p1752183elf32c879c0510ebc4@mail.gmail.com>
+Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
+	slot is freed)
+Date: Fri, 14 Aug 2009 18:54:11 -0400
+Message-ID: <87f94c370908141554ia447f5fo87c74d5d8c517c1c@mail.gmail.com>
 References: <200908122007.43522.ngupta@vflare.org>
+	 <Pine.LNX.4.64.0908122312380.25501@sister.anvils>
+	 <20090813151312.GA13559@linux.intel.com>
+	 <20090813162621.GB1915@phenom2.trippelsdorf.de>
 	 <alpine.DEB.1.10.0908130931400.28013@asgard.lang.hm>
 	 <87f94c370908131115r680a7523w3cdbc78b9e82373c@mail.gmail.com>
-	 <alpine.DEB.1.10.0908131342460.28013@asgard.lang.hm>
-	 <87f94c370908131428u75dfe496x1b7d90b94833bf80@mail.gmail.com>
-	 <46b8a8850908131520s747e045cnd8db9493e072939d@mail.gmail.com>
-	 <87f94c370908131719l7d84c5d0x2157cfeeb2451bce@mail.gmail.com>
-	 <46b8a8850908131758s781b07f6v2729483c0e50ae7a@mail.gmail.com>
-	 <87f94c370908141433h111f819j550467bf31c60776@mail.gmail.com>
-	 <adafxbu3vqt.fsf@cisco.com>
+	 <1250191095.3901.116.camel@mulgrave.site> <4A85DF1E.3050801@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <adafxbu3vqt.fsf@cisco.com>
+In-Reply-To: <4A85DF1E.3050801@rtr.ca>
 Sender: owner-linux-mm@kvack.org
-To: Roland Dreier <rdreier@cisco.com>
-Cc: Richard Sharpe <realrichardsharpe@gmail.com>, david@lang.hm, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+To: Mark Lord <liml@rtr.ca>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, david@lang.hm, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Aug 14, 2009 at 5:56 PM, Roland Dreier<rdreier@cisco.com> wrote:
->
-> =A0> It seems to me that unmap is not all that different, why do we need =
+On Fri, Aug 14, 2009 at 6:03 PM, Mark Lord<liml@rtr.ca> wrote:
+> James Bottomley wrote:
+>>
+>> On Thu, 2009-08-13 at 14:15 -0400, Greg Freemyer wrote:
+>>>
+>>> On Thu, Aug 13, 2009 at 12:33 PM, <david@lang.hm> wrote:
+>>>>
+>>>> On Thu, 13 Aug 2009, Markus Trippelsdorf wrote:
+>>>>
+>>>>> On Thu, Aug 13, 2009 at 08:13:12AM -0700, Matthew Wilcox wrote:
+>>>>>>
+>>>>>> I am planning a complete overhaul of the discard work. =A0Users can =
+send
+>>>>>> down discard requests as frequently as they like. =A0The block layer
+>>>>>> will
+>>>>>> cache them, and invalidate them if writes come through. =A0Periodica=
+lly,
+>>>>>> the block layer will send down a TRIM or an UNMAP (depending on the
+>>>>>> underlying device) and get rid of the blocks that have remained
+>>>>>> unwanted
+>>>>>> in the interim.
+>>>>>
+>>>>> That is a very good idea. I've tested your original TRIM implementati=
+on
+>>>>> on
+>>>>> my Vertex yesterday and it was awful ;-). The SSD needs hundreds of
+>>>>> milliseconds to digest a single TRIM command. And since your
+>>>>> implementation
+>>>>> sends a TRIM for each extent of each deleted file, the whole system i=
+s
+>>>>> unusable after a short while.
+>>>>> An optimal solution would be to consolidate the discard requests,
+>>>>> bundle
+>>>>> them and send them to the drive as infrequent as possible.
+>>>>
+>>>> or queue them up and send them when the drive is idle (you would need =
 to
-> =A0> do it even close in time proximity to the deletes? =A0With a bitmap,=
- we
-> =A0> have total timing control of when the unmaps are forwarded down to t=
-he
-> =A0> device. =A0I like that timing control much better than a cache and
-> =A0> coalesce approach.
+>>>> keep track to make sure the space isn't re-used)
+>>>>
+>>>> as an example, if you would consider spinning down a drive you don't
+>>>> hurt
+>>>> performance by sending accumulated trim commands.
+>>>>
+>>>> David Lang
+>>>
+>>> An alternate approach is the block layer maintain its own bitmap of
+>>> used unused sectors / blocks. Unmap commands from the filesystem just
+>>> cause the bitmap to be updated. =A0No other effect.
+>>>
+>>> (Big unknown: Where will the bitmap live between reboots? =A0Require DM
+>>> volumes so we can have a dedicated bitmap volume in the mix to store
+>>> the bitmap to? Maybe on mount, the filesystem has to be scanned to
+>>> initially populate the bitmap? =A0 Other options?)
+>>
+>> I wouldn't really have it live anywhere. =A0Discard is best effort; it's
+>> not required for fs integrity. =A0As long as we don't discard an in-use
+>> block we're free to do anything else (including forget to discard,
+>> rediscard a discarded block etc).
+>>
+>> It is theoretically possible to run all of this from user space using
+>> the fs mappings, a bit like a defrag command.
 >
-> The trouble I see with a bitmap is the amount of memory it consumes. =A0I=
-t
-> seems that discards must be tracked on no bigger than 4KB sectors (and
-> possibly even 512 byte sectors). =A0But even with 4KB, then, say, a 32 TB
-> volume (just 16 * 2TB disks, or even lower end with thin provisioning)
-> requires 1 GB of bitmap memory. =A0Which is a lot just to store, let alon=
-e
-> walk over etc.
+> ..
+>
+> Already a work-in-progress -- see my wiper.sh script on the hdparm page
+> at sourceforge. =A0Trimming 50+GB of free space on a 120GB Vertex
+> (over 100 million sectors) takes a *single* TRIM command,
+> and completes in only a couple of seconds.
+>
+> Cheers
+>
+Mark,
 
-Have the filesystem guys created any efficient extent tree tracking solutio=
-ns?
+What filesystems does your script support?  Running a tool like this
+in the middle of the night makes a lot of since to me even from the
+perspective of many / most enterprise users.
 
-I mean a 16TB filesystem obviously has to track the freespace somehow
-that does not require 1GB of ram.  Can that logic be leveraged in
-block to track freespace?  That obviously assumes its not too cpu
-intensive to do so.
+How do prevent a race where a block becomes used between userspace
+asking status and it sending the discard request?
 
-If a leaf in the extent tracking tree becomes big enough, it could
-even be sent down from the block layer and that leaf deleted.  ie. If
-a leaf of the tree grows to represent X contiguous blocks, then a
-discard could be sent down to the device and the leaf representing
-those free blocks deleted.
-
-The new topo info about block devices might be able to help optimize
-the minimum size of a coalesced discard.
+ps: I tried to pull wiper.sh straight from sourceforge, but I'm
+getting some crazy page asking all sorts of questions and not letting
+me bypass it.  I hope sourceforge is broken.  The other option is they
+meant to do this. :(
 
 Greg
---
+--=20
 Greg Freemyer
 
 --
