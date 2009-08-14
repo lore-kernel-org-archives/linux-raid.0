@@ -1,81 +1,51 @@
-From: mark delfman <markdelfman@googlemail.com>
-Subject: Re: -z not on RAID0 / MPIO hurdle
-Date: Fri, 14 Aug 2009 09:29:39 +0100
-Message-ID: <66781b10908140129t4fc0947ek1e6f211758a2e969@mail.gmail.com>
-References: <66781b10908121144n1f053b57led29391534614b7@mail.gmail.com>
-	 <87d4705uxm.fsf@frosties.localdomain>
+From: =?ISO-8859-2?Q?Pawe=B3_Brodacki?= <pawel.brodacki@googlemail.com>
+Subject: Re: Help understanding the root cause of a member dropping out of a
+	RAID 1 set.
+Date: Fri, 14 Aug 2009 15:09:41 +0200
+Message-ID: <b95c1fdd0908140609jac48ba9u595f839d3d167293@mail.gmail.com>
+References: <ABFC24E4C13D81489F7F624E14891C860BF9A409@uk-ex-mbx1.terastack.bluearc.com>
+	 <a43edf1b0908130913x238b33ecref5a3d070bf3cb16@mail.gmail.com>
+	 <64960.78.86.108.203.1250180799.squirrel@www.yuiop.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87d4705uxm.fsf@frosties.localdomain>
+In-Reply-To: <64960.78.86.108.203.1250180799.squirrel@www.yuiop.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Goswin,
+2009/8/13 John Robinson <john.robinson@anonymous.org.uk>:
 
-I am not sure that this would work well for us... we would have you
-use LVM to create individual block targerts, then use MD to create
-RAIDs and then LVM again to create pools.
-
-We would ideally stay to LVM on all our raids (whether 0 / 6 etc). so
-would like to keep it in there...
-
-Does any know if there is a reason -z doesn=E2=80=99t work with RAID0 (=
-i mean
-is it designed to not work because of abc reason, or simply its never
-been needed etc)?
-
-
-Thank you for you help
-
-
-Mark D
-On Thu, Aug 13, 2009 at 3:06 AM, Goswin von Brederlow<goswin-v-b@web.de=
-> wrote:
-> mark delfman <markdelfman@googlemail.com> writes:
+> Can or could md be made or configured to try re-adding a device if th=
+is
+> sort of thing happens? After all, a stray cosmic ray or whatever perh=
+aps
+> shouldn't make one lose redundancy if the drive's actually OK?
 >
->> Hi.... I am hopeful that the group could provide me with some advice
->> regarding limiting the drive size on a RAID0. =C2=A0I know and use t=
-he =E2=80=93z
->> option for other raid levels, but this seems to have no effect on
->> RAID0.
->>
->> I am sure many will ask =E2=80=98why bother=E2=80=99 or =E2=80=98use=
- fdisk=E2=80=99 but the problem is:
->>
->> We need to have some preserved information on each drive =E2=80=93 c=
-an be only
->> a few MB at the end of the drive for example
->> In the past we have simply used Fdisk to partition, save our data on
->> Sdx2 and used Mdadm on Sdx1 =C2=A0(which works fine)
->> But we are looking to move to dual channel SAS drives and use DM MPI=
-O
->>
->> DM MPIO works fine also, but not on the partitions, only the whole
->> drive. =C2=A0So when we MDadm DMx it overwrites the SdX2 partition e=
-tc.
->>
->> The answer was that we used the =E2=80=93z and limited the drive siz=
-e and
->> simply used DD to write our data to the end LBA=E2=80=99s....
->>
->> But on RAID0 the =E2=80=93z does not seem to function, so I cant thi=
-nk of a
->> way around this =EF=81=8C =C2=A0(other than changing the LBA range i=
-n the drive and
->> this is restricted I think)
->>
->>
->> Does anyone have any ideas? =C2=A0I appreciate any help
+> Cheers,
 >
-> LVM and --setphysicalvolumesize on pvcreate?
+> John.
 >
-> MfG
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0Goswin
->
+
+I think that from the coding point of view md probably could. The more
+important thing is if it should. The only hard fact is that there was
+an error while accessing the device. md has no way of telling if it
+was just a freak accident, or the drive is unreliable from now on.
+Therefore it does the one safe thing and says "I won't trust you
+anymore.". If a human being knows better, the said being is free to
+re-add the drive.
+
+Personally I'd hate having a suspicious drive being auto-added in hope
+it will rebuild and function properly.
+
+Because such an option could seem tempting but could and would cause
+loss of reliability I'd expect bad publicity if it was actually added.
+
+Just my 2c.
+
+Regards,
+Pawe=B3
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
