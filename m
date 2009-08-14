@@ -1,44 +1,83 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: max number of devices in raid6 array
-Date: Thu, 13 Aug 2009 22:40:00 -0500
-Message-ID: <20090814033956573.OVIM16701@cdptpa-omta01.mail.rr.com>
-References: <3638F6C82C4E4E2480F54B80F38BE410@m5>
+From: mark delfman <markdelfman@googlemail.com>
+Subject: Re: -z not on RAID0 / MPIO hurdle
+Date: Fri, 14 Aug 2009 09:29:39 +0100
+Message-ID: <66781b10908140129t4fc0947ek1e6f211758a2e969@mail.gmail.com>
+References: <66781b10908121144n1f053b57led29391534614b7@mail.gmail.com>
+	 <87d4705uxm.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3638F6C82C4E4E2480F54B80F38BE410@m5>
+In-Reply-To: <87d4705uxm.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> I don't believe a block read error is considered in the MTBF.  A current
-> 2TB
-> disk has a "<1 in 10^15" "Non-recoverable read errors per bits read".
-> That
-> is about 1 error per 114 TB read (10^15/8/1024/1024/1024/1024).  So, you
-> should get 1 failure per about 114 TB read.  If you had 57 2TB disks + 1
-> parity, your chance of a read error should be 1 during a recovery.  If you
+Hi Goswin,
 
-	It doesn't work that way.  Just because there is a 1 in 2 chance of
-getting heads in a coin flip does not mean you must get a heads if you flip
-the coin twice.  The odds of getting at least 1 heads with two coin tosses
-is 75%.  The odds of rolling a 1 with six throws of a single die are 66.5%
-If one takes a card from a deck, replaces the card in the desk, shuffles,
-and pulls another card from the deck, repeating 52 times, the odds of
-drawing the Ace of Spades once is 63.6%  Only if one removes the card from
-the deck completely each time do the odds rise to 1.
+I am not sure that this would work well for us... we would have you
+use LVM to create individual block targerts, then use MD to create
+RAIDs and then LVM again to create pools.
 
-	In this case it means on average there may be 1 error in 1E15 reads,
-provided one reads many hundreds of TB.  To calculate the odds of single
-error for precisely 1E15 bits read, take 1 - 1E-15 and raise it to the power
-of the total number of bits read.  This equals the odds of NOT getting any
-error.  Subtract that number from 1, and you have the odds of getting an
-error.  If we read 1E15 bits, then the odds of getting a single error are
+We would ideally stay to LVM on all our raids (whether 0 / 6 etc). so
+would like to keep it in there...
 
-1 - .999999999999999^1E15
-
-	It's about 63%.
+Does any know if there is a reason -z doesn=E2=80=99t work with RAID0 (=
+i mean
+is it designed to not work because of abc reason, or simply its never
+been needed etc)?
 
 
+Thank you for you help
+
+
+Mark D
+On Thu, Aug 13, 2009 at 3:06 AM, Goswin von Brederlow<goswin-v-b@web.de=
+> wrote:
+> mark delfman <markdelfman@googlemail.com> writes:
+>
+>> Hi.... I am hopeful that the group could provide me with some advice
+>> regarding limiting the drive size on a RAID0. =C2=A0I know and use t=
+he =E2=80=93z
+>> option for other raid levels, but this seems to have no effect on
+>> RAID0.
+>>
+>> I am sure many will ask =E2=80=98why bother=E2=80=99 or =E2=80=98use=
+ fdisk=E2=80=99 but the problem is:
+>>
+>> We need to have some preserved information on each drive =E2=80=93 c=
+an be only
+>> a few MB at the end of the drive for example
+>> In the past we have simply used Fdisk to partition, save our data on
+>> Sdx2 and used Mdadm on Sdx1 =C2=A0(which works fine)
+>> But we are looking to move to dual channel SAS drives and use DM MPI=
+O
+>>
+>> DM MPIO works fine also, but not on the partitions, only the whole
+>> drive. =C2=A0So when we MDadm DMx it overwrites the SdX2 partition e=
+tc.
+>>
+>> The answer was that we used the =E2=80=93z and limited the drive siz=
+e and
+>> simply used DD to write our data to the end LBA=E2=80=99s....
+>>
+>> But on RAID0 the =E2=80=93z does not seem to function, so I cant thi=
+nk of a
+>> way around this =EF=81=8C =C2=A0(other than changing the LBA range i=
+n the drive and
+>> this is restricted I think)
+>>
+>>
+>> Does anyone have any ideas? =C2=A0I appreciate any help
+>
+> LVM and --setphysicalvolumesize on pvcreate?
+>
+> MfG
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Goswin
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
