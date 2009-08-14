@@ -1,144 +1,158 @@
-From: Clinton Lee Taylor <clintonlee.taylor@gmail.com>
-Subject: Ext3 convert to RAID1 ...
-Date: Fri, 14 Aug 2009 00:27:19 +0200
-Message-ID: <b7b14cbb0908131527w19c900c5r2a572b345e177408@mail.gmail.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
+	slot is freed)
+Date: Thu, 13 Aug 2009 20:19:57 -0400
+Message-ID: <87f94c370908131719l7d84c5d0x2157cfeeb2451bce@mail.gmail.com>
+References: <200908122007.43522.ngupta@vflare.org>
+	 <Pine.LNX.4.64.0908122312380.25501@sister.anvils>
+	 <20090813151312.GA13559@linux.intel.com>
+	 <20090813162621.GB1915@phenom2.trippelsdorf.de>
+	 <alpine.DEB.1.10.0908130931400.28013@asgard.lang.hm>
+	 <87f94c370908131115r680a7523w3cdbc78b9e82373c@mail.gmail.com>
+	 <alpine.DEB.1.10.0908131342460.28013@asgard.lang.hm>
+	 <87f94c370908131428u75dfe496x1b7d90b94833bf80@mail.gmail.com>
+	 <46b8a8850908131520s747e045cnd8db9493e072939d@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <46b8a8850908131520s747e045cnd8db9493e072939d@mail.gmail.com>
+Sender: owner-linux-mm@kvack.org
+To: Richard Sharpe <realrichardsharpe@gmail.com>
+Cc: david@lang.hm, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Greetings ...
+On Thu, Aug 13, 2009 at 6:20 PM, Richard
+Sharpe<realrichardsharpe@gmail.com> wrote:
+> On Thu, Aug 13, 2009 at 2:28 PM, Greg Freemyer<greg.freemyer@gmail.com> w=
+rote:
+>> On Thu, Aug 13, 2009 at 4:44 PM, <david@lang.hm> wrote:
+>>> On Thu, 13 Aug 2009, Greg Freemyer wrote:
+>>>
+>>>> On Thu, Aug 13, 2009 at 12:33 PM, <david@lang.hm> wrote:
+>>>>>
+>>>>> On Thu, 13 Aug 2009, Markus Trippelsdorf wrote:
+>>>>>
+>>>>>> On Thu, Aug 13, 2009 at 08:13:12AM -0700, Matthew Wilcox wrote:
+>>>>>>>
+>>>>>>> I am planning a complete overhaul of the discard work. =A0Users can=
+ send
+>>>>>>> down discard requests as frequently as they like. =A0The block laye=
+r will
+>>>>>>> cache them, and invalidate them if writes come through. =A0Periodic=
+ally,
+>>>>>>> the block layer will send down a TRIM or an UNMAP (depending on the
+>>>>>>> underlying device) and get rid of the blocks that have remained
+>>>>>>> unwanted
+>>>>>>> in the interim.
+>>>>>>
+>>>>>> That is a very good idea. I've tested your original TRIM implementat=
+ion
+>>>>>> on
+>>>>>> my Vertex yesterday and it was awful ;-). The SSD needs hundreds of
+>>>>>> milliseconds to digest a single TRIM command. And since your
+>>>>>> implementation
+>>>>>> sends a TRIM for each extent of each deleted file, the whole system =
+is
+>>>>>> unusable after a short while.
+>>>>>> An optimal solution would be to consolidate the discard requests, bu=
+ndle
+>>>>>> them and send them to the drive as infrequent as possible.
+>>>>>
+>>>>> or queue them up and send them when the drive is idle (you would need=
+ to
+>>>>> keep track to make sure the space isn't re-used)
+>>>>>
+>>>>> as an example, if you would consider spinning down a drive you don't =
+hurt
+>>>>> performance by sending accumulated trim commands.
+>>>>>
+>>>>> David Lang
+>>>>
+>>>> An alternate approach is the block layer maintain its own bitmap of
+>>>> used unused sectors / blocks. Unmap commands from the filesystem just
+>>>> cause the bitmap to be updated. =A0No other effect.
+>>>
+>>> how does the block layer know what blocks are unused by the filesystem?
+>>>
+>>> or would it be a case of the filesystem generating discard/trim request=
+s to
+>>> the block layer so that it can maintain it's bitmap, and then the block
+>>> layer generating the requests to the drive below it?
+>>>
+>>> David Lang
+>>
+>> Yes, my thought.was that block layer would consume the discard/trim
+>> requests from the filesystem in realtime to maintain the bitmap, then
+>> at some later point in time when the system has extra resources it
+>> would generate the calls down to the lower layers and eventually the
+>> drive.
+>
+> Why should the block layer be forced to maintain something that is
+> probably of use for only a limited number of cases? For example, the
+> devices I work on already maintain their own mapping of HOST-visible
+> LBAs to underlying storage, and I suspect that most such devices do.
+> So, you are duplicating something that we already do, and there is no
+> way that I am aware of to synchronise the two.
+>
+> All we really need, I believe is for the UNMAP requests to come down
+> to us with writes barriered until we respond, and it is a relatively
+> cheap operation, although writes that are already in the cache and
+> uncommitted to disk present some issues if an UNMAP request comes down
+> for recently written blocks.
+>
 
- Was hoping to find a nice a simple answer to a scary and complicate
-process ... Please could I ask for clarification ...
+Richard,
 
- Let me provide some background, so that somebody can slap me in the
-face and tell me this is not possible ...
+Quoting the original email I saw in this thread:
 
- Running CentOS 5.x, we would like to be able to convert a running or
-populated filesystem from ext3 to ext3 on RAID1 mirror ... I found the
-following ...
+>
+>The unfortunate thing about the TRIM command is that it's not NCQ, so
+>all NCQ commands have to finish, then we can send the TRIM command and
+>wait for it to finish, then we can send NCQ commands again.
+>
+>So TRIM isn't free, and there's a better way for the drive to find
+>out that the contents of a block no longer matter -- write some new
+>data to it.  So if we just swapped a page in, and we're going to swap
+>something else back out again soon, just write it to the same location
+>instead of to a fresh location.  You've saved a command, and you've
+>saved the drive some work, plus you've allowed other users to continue
+>accessing the drive in the meantime.
+>
+>I am planning a complete overhaul of the discard work.  Users can send
+>down discard requests as frequently as they like.  The block layer will
+>cache them, and invalidate them if writes come through.  Periodically,
+>the block layer will send down a TRIM or an UNMAP (depending on the
+>underlying device) and get rid of the blocks that have remained unwanted
+>in the interim.
+>
+>Thoughts on that are welcome.
+>>
 
-http://wiki.centos.org/HowTos/CentOS5ConvertToRAID
+My thought was that a bitmap was a better solution than a cache of
+discard commands.
 
- ... but this sounds like alot of extra work, from what I have been
-able to see, RAID1 is just a little bit more metadata, which should be
-easy to add ... should?
+One of the biggest reasons is that a bitmap can coalesce the unused
+areas into much larger discard ranges than a queue that will only have
+a limited number of discards to coalesce.
 
- So I went a searching, and I found this like that got me thinking ...
-http://ubuntuforums.org/showthread.php?t=990045
+And both Enterprise scsi and mdraid are desirous of larger discard ranges.
 
-So, using a VM, I did the following ...
+Greg
+--=20
+Greg Freemyer
+Head of EDD Tape Extraction and Processing team
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+Preservation and Forensic processing of Exchange Repositories White Paper -
+<http://www.norcrossgroup.com/forms/whitepapers/tng_whitepaper_fpe.html>
 
-created a standard ext3 filesystem on 512MB HD ...
-fdisk /dev/sdb
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
 
-mkfs.ext3 -L data /dev/sdb1
-
-mount /dev/sdb1 /mnt/test
-mkdir /mnt/test/stuff
-cp -vr /var/cache/yum /mnt/test/stuff
-
-sync
-umount /mnt/test
-
- e2fsck -f /dev/sdb1
-
-resize2fs -F -p /dev/sdb1 450M
-
- e2fsck -f /dev/sdb1
-
-Now comes the fun part ...
-
-[root@hermes mnt]# mdadm --create /dev/md0 --level=1 -n 1 /dev/sdb1 --force
-mdadm: /dev/sdb1 appears to contain an ext2fs file system
-    size=460800K  mtime=Fri Aug 14 01:41:46 2009
-Continue creating array? y
-mdadm: array /dev/md0 started.
-
-[root@hermes mnt]# e2fsck -v /dev/md0
-e2fsck 1.39 (29-May-2006)
-data: clean, 242/116280 files, 228707/460800 blocks
-
- mdadm --add /dev/md0 /dev/sdc1
-
-[root@hermes mnt]# mdadm --grow /dev/md0 --raid-disks=2
---backup-file=/root/raid1.backup.file
-
-[root@hermes mnt]# cat /proc/mdstat
-Personalities : [raid1]
-md0 : active raid1 sdc1[1] sdb1[0]
-      521984 blocks [2/2] [UU]
-
-unused devices: <none>
-[root@hermes mnt]# e2fsck -v -f /dev/md0
-e2fsck 1.39 (29-May-2006)
-Pass 1: Checking inodes, blocks, and sizes
-Pass 2: Checking directory structure
-Pass 3: Checking directory connectivity
-Pass 4: Checking reference counts
-Pass 5: Checking group summary information
-
-     242 inodes used (0.21%)
-      22 non-contiguous inodes (9.1%)
-         # of inodes with ind/dind/tind blocks: 182/52/0
-  228707 blocks used (49.63%)
-       0 bad blocks
-       0 large files
-
-     218 regular files
-      15 directories
-       0 character device files
-       0 block device files
-       0 fifos
-       0 links
-       0 symbolic links (0 fast symbolic links)
-       0 sockets
---------
-     233 files
-
-[root@hermes mnt]# resize2fs -F -p /dev/md0
-resize2fs 1.39 (29-May-2006)
-Resizing the filesystem on /dev/md0 to 521984 (1k) blocks.
-Begin pass 1 (max = 7)
-Extending the inode table     XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-The filesystem on /dev/md0 is now 521984 blocks long.
-
-[root@hermes mnt]# e2fsck -v -f /dev/md0
-e2fsck 1.39 (29-May-2006)
-Pass 1: Checking inodes, blocks, and sizes
-Pass 2: Checking directory structure
-Pass 3: Checking directory connectivity
-Pass 4: Checking reference counts
-Pass 5: Checking group summary information
-
-     242 inodes used (0.19%)
-      22 non-contiguous inodes (9.1%)
-         # of inodes with ind/dind/tind blocks: 182/52/0
-  230506 blocks used (44.16%)
-       0 bad blocks
-       0 large files
-
-     218 regular files
-      15 directories
-       0 character device files
-       0 block device files
-       0 fifos
-       0 links
-       0 symbolic links (0 fast symbolic links)
-       0 sockets
---------
-     233 files
-
-diff -urqs test/ orgdata ...
-
-All seems to work out perfectly fine ... Basic test compare perfectly
-... Now, please can someone confirm that this is a working solution to
-convert ext3 partitions to ext3 on RAID1 ...
-
-Thanks
-Mailed
-LeeT
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
