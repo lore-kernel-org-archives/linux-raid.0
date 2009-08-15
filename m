@@ -1,45 +1,55 @@
-From: mark delfman <markdelfman@googlemail.com>
-Subject: Re: -z not on RAID0 / MPIO hurdle
-Date: Sat, 15 Aug 2009 10:33:49 +0100
-Message-ID: <66781b10908150233i3093a7b0xe9cd92cdce76cc71@mail.gmail.com>
-References: <66781b10908121144n1f053b57led29391534614b7@mail.gmail.com>
-	 <20090814153521.GA6501@maude.comedia.it>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
+  slot is freed)
+Date: Sat, 15 Aug 2009 07:59:36 -0500
+Message-ID: <1250341176.4159.2.camel@mulgrave.site>
+References: <200908122007.43522.ngupta@vflare.org>
+	 <20090813151312.GA13559@linux.intel.com>
+	 <20090813162621.GB1915@phenom2.trippelsdorf.de>
+	 <alpine.DEB.1.10.0908130931400.28013@asgard.lang.hm>
+	 <87f94c370908131115r680a7523w3cdbc78b9e82373c@mail.gmail.com>
+	 <alpine.DEB.1.10.0908131342460.28013@asgard.lang.hm>
+	 <3e8340490908131354q167840fcv124ec56c92bbb830@mail.gmail.com>
+	 <4A85E0DC.9040101@rtr.ca>
+	 <f3177b9e0908141621j15ea96c0s26124d03fc2b0acf@mail.gmail.com>
+	 <20090814234539.GE27148@parisc-linux.org>
+	 <f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090814153521.GA6501@maude.comedia.it>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Chris Worley <worleys@gmail.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Mark Lord <liml@rtr.ca>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Greg Freemyer <greg.freemyer@gmail.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Thank you Luca!  much appreciated
+On Fri, 2009-08-14 at 18:19 -0600, Chris Worley wrote:
+> On Fri, Aug 14, 2009 at 5:45 PM, Matthew Wilcox<matthew@wil.cx> wrote:
+> > On Fri, Aug 14, 2009 at 05:21:32PM -0600, Chris Worley wrote:
+> >> Sooner is better than waiting to coalesce.  The longer an LBA is
+> >> inactive, the better for any management scheme.  If you wait until
+> >> it's reused, you might as well forgo the advantages of TRIM/UNMAP.  If
+> >> a the controller wants to coalesce, let it coalesce.
+> >
+> > I'm sorry, you're wrong.  There is a tradeoff point, and it's different
+> > for each drive model.  Sending down a steady stream of tiny TRIMs is
+> > going to give terrible performance.
+> 
+> Sounds like you might be using junk for a device?
+> 
+> For junk, a little coalescing may be warranted... like in the I/O
+> schedular, but no more than 100usecs wait before posting, or then you
+> effect high performing devices too.
 
-On Fri, Aug 14, 2009 at 4:35 PM, Luca Berra<bluca@comedia.it> wrote:
-> On Wed, Aug 12, 2009 at 07:44:10PM +0100, mark delfman wrote:
->>
->> DM MPIO works fine also, but not on the partitions, only the whole
->> drive. =A0So when we MDadm DMx it overwrites the SdX2 partition etc.
->
-> run kpartx on the dm device, it should create mappings for the single
-> partitions.
-> L.
->
-> --
-> Luca Berra -- bluca@comedia.it
-> =A0 =A0 =A0 =A0Communication Media & Services S.r.l.
-> =A0/"\
-> =A0\ / =A0 =A0 ASCII RIBBON CAMPAIGN
-> =A0X =A0 =A0 =A0 =A0AGAINST HTML MAIL
-> =A0/ \
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Um, I think you missed the original point in all of this at the
+beginning of the thread:  On ATA TRIM commands cannot be tagged.  This
+means you have to drain the outstanding NCQ commands (stalling the
+device) before you can send a TRIM.   If we do this for every discard,
+the performance impact will be pretty devastating, hence the need to
+coalesce.  It's nothing really to do with device characteristics, it's
+an ATA protocol problem.
+
+James
+
+
