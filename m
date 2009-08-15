@@ -1,84 +1,90 @@
-From: Chris Worley <worleys@gmail.com>
-Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
-	slot is freed)
-Date: Fri, 14 Aug 2009 18:38:47 -0600
-Message-ID: <f3177b9e0908141738n5f99b85dx3de0f620180a4b46@mail.gmail.com>
-References: <200908122007.43522.ngupta@vflare.org>
-	 <alpine.DEB.1.10.0908130931400.28013@asgard.lang.hm>
-	 <87f94c370908131115r680a7523w3cdbc78b9e82373c@mail.gmail.com>
-	 <alpine.DEB.1.10.0908131342460.28013@asgard.lang.hm>
-	 <3e8340490908131354q167840fcv124ec56c92bbb830@mail.gmail.com>
-	 <4A85E0DC.9040101@rtr.ca>
-	 <f3177b9e0908141621j15ea96c0s26124d03fc2b0acf@mail.gmail.com>
-	 <20090814234539.GE27148@parisc-linux.org>
-	 <f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com>
-	 <87f94c370908141730y3ddcb7bbj65d24b612fc0e96d@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [mdadm git pull] pending fixes for mdadm 3.0.1
+Date: Fri, 14 Aug 2009 17:53:01 -0700
+Message-ID: <e9c3a7c20908141753q130e0860kf620af62252f789b@mail.gmail.com>
+References: <1249412514.19218.37.camel@dwillia2-linux.ch.intel.com>
+	 <19067.42820.630060.102559@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <87f94c370908141730y3ddcb7bbj65d24b612fc0e96d@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Mark Lord <liml@rtr.ca>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <19067.42820.630060.102559@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Jacek Danecki <jacek.danecki@intel.com>, Ed Ciechanowski <ed.ciechanowski@intel.com>, Hans de Goede <hdegoede@redhat.com>, Doug Ledford <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-On Fri, Aug 14, 2009 at 6:30 PM, Greg Freemyer<greg.freemyer@gmail.com>=
- wrote:
-> On Fri, Aug 14, 2009 at 8:19 PM, Chris Worley<worleys@gmail.com> wrot=
-e:
->> On Fri, Aug 14, 2009 at 5:45 PM, Matthew Wilcox<matthew@wil.cx> wrot=
-e:
->>> On Fri, Aug 14, 2009 at 05:21:32PM -0600, Chris Worley wrote:
->>>> Sooner is better than waiting to coalesce. =A0The longer an LBA is
->>>> inactive, the better for any management scheme. =A0If you wait unt=
-il
->>>> it's reused, you might as well forgo the advantages of TRIM/UNMAP.=
- =A0If
->>>> a the controller wants to coalesce, let it coalesce.
->>>
->>> I'm sorry, you're wrong. =A0There is a tradeoff point, and it's dif=
-ferent
->>> for each drive model. =A0Sending down a steady stream of tiny TRIMs=
- is
->>> going to give terrible performance.
+On Thu, Aug 6, 2009 at 9:02 PM, Neil Brown<neilb@suse.de> wrote:
+> On Tuesday August 4, dan.j.williams@intel.com wrote:
+>> The following changes since commit fa09d4961e5c72da3c7f78d53a7d64f51=
+96110a3:
+>> =A0 NeilBrown (1):
+>> =A0 =A0 =A0 =A0 Examine: fix --examine --brief --verbose on containe=
+rs.
 >>
->> Sounds like you might be using junk for a device?
+>> are available in the git repository at:
 >>
->> For junk, a little coalescing may be warranted... like in the I/O
->> schedular, but no more than 100usecs wait before posting, or then yo=
-u
->> effect high performing devices too.
+>> =A0 git://github.com/djbw/mdadm.git master
 >>
->> Chris
+>> Dan Williams (10):
+>> =A0 =A0 =A0 teach imsm and ddf what st->subarray means at load_super=
+ time
+>> =A0 =A0 =A0 fix RebuildMap() to retrieve 'subarray' info
 >
-> Why?
+> Thanks. =A0I've pulled and pushed them all, but I'm not quite sure of
+> this one.
+> What metadata information do we want to have in the map file?
+> The main use of the map file is for incremental assembly. =A0When we
+> find a device, the map file tells us which array/container to attach
+> the device to.
+> So subarrays probably aren't important in the map file and maybe
+> shouldn't be stored there at all???
 >
-> AIUI, on every write a high performing device allocates a new erase
-> block from its free lists, writes to it, and puts the now unused eras=
-e
-> block on the free list.
+> What was the context where the current behaviour became an issue?
 
-So erase blocks are 512 bytes (if I write 512 bytes, an erase block is
-now freed)?  Not true.
+This was noticed when debugging why udev sometimes did not create a
+device node for an imsm container.  The fix for that was to update the
+container UUID after adding a subarray.  It was during this debug that
+I noticed that -Ir would not recreate the same map file as -C, so I
+fixed it for consistency.  Now that I look, we are currently using the
+mapfile to look up the user-friendly device name for "--detail
+--export".  So it is currently needed until we can transition to the
+named device support you added in 2.6.29.
 
-> =A0That erase block becomes available for reuse
-> some milliseconds later.
+>>
+>> Hi Neil,
+>>
+>> This is the same queue that was sent previously [1], but with a few
+>> additions:
 >
-> As long as the SSD has enough free erase blocks to work with I see no
-> disadvantage in delaying a discard by minutes, hours or days in most
-> cases. =A0The exception is when the filesystem is almost full and the
-> SSD is short of erase blocks to work with.
+> Sorry I didn't respond to that - late June was a bad time for me :-(
 
-That "exception..." is another good reason why.
+Not a problem.
 
+>>
+>>
+>> Lastly, I notice that there is a regression of sorts since commit
+>> fa09d496 "Examine: fix --examine --brief --verbose on containers".
+>> Changing the order of containers and members confuses mdadm -Asc, or=
+ -As
+>> when /etc/mdadm.conf is present. =A0We now only get the container, a=
+nd no
+>> members in the multiple container case. =A0Unintended consequence?
 >
-> In that case it will want to get as many free erase blocks as it can
-> as fast as it can get them.
-
-Exactly.
-
-Chris
+> Certainly unintended. =A0I guess I had forgotten that the order of
+> things in mdadm.conf is important.
+> Maybe the best approach would be for Examine.c to call in to the
+> metadata handler a second time to get the subarrays.
 >
-> Greg
->
+> What would you think of something like the following?
+
+Works for me, and you already committed it because I was too slow to
+respond, sorry about that.
+
+Thanks,
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
