@@ -1,52 +1,64 @@
-From: Theodore Tso <tytso@mit.edu>
-Subject: Re: Discard support
-Date: Sun, 16 Aug 2009 18:13:25 -0400
-Message-ID: <20090816221325.GF17958@mit.edu>
-References: <f3177b9e0908141621j15ea96c0s26124d03fc2b0acf@mail.gmail.com> <20090814234539.GE27148@parisc-linux.org> <f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com> <1250341176.4159.2.camel@mulgrave.site> <4A86B69C.7090001@rtr.ca> <1250344518.4159.4.camel@mulgrave.site> <20090816150530.2bae6d1f@lxorguk.ukuu.org.uk> <20090816083434.2ce69859@infradead.org> <1250437927.3856.119.camel@mulgrave.site> <adavdkn2ztb.fsf@cisco.com>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: Software, Raid 5, Different Size Drives.
+Date: Mon, 17 Aug 2009 08:45:11 +1000 (EST)
+Message-ID: <47af6defcf34329212cd18ef65edad38.squirrel@neil.brown.name>
+References: <914153.25662.qm@web51308.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <adavdkn2ztb.fsf@cisco.com>
-Sender: owner-linux-mm@kvack.org
-To: Roland Dreier <rdreier@cisco.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>, Chris Worley <worleys@gmail.com>, Matthew Wilcox <matthew@wil.cx>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Greg Freemyer <greg.freemyer@gmail.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <914153.25662.qm@web51308.mail.re2.yahoo.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jon@eHardcastle.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Aug 16, 2009 at 02:50:40PM -0700, Roland Dreier wrote:
-> 
->  > Well, yes and no ... a lot of SSDs don't actually implement NCQ, so the
->  > impact to them will be less ... although I think enterprise class SSDs
->  > do implement NCQ.
-> 
-> Really?  Which SSDs don't implement NCQ?
+On Sun, August 16, 2009 4:54 am, Jon Hardcastle wrote:
+> Hi quick Q.. I have a 6 drive array made up of 4 500GB's and 2 750GB's.
+>
+> I know the array will only take on a size based on the smallest drive. To
+> that end as I phase drives out based on usage etc I replace them with the
+> best value drive I can lay my hands on (upto 1TB~ as i have read a raid 5
+> array of drives over that size approx start to cause problems with read
+> failures on re-builds - but that is for another thread)
+>
+> So my array is currently ~2.5GB with 2x250GB currently not in use and I am
+> about to phase out a 500GB and replace with a 1TB. Now i have read that
+> you are better of creating a auto detect raid partition on the drive and
+> adding that rather than adding the entire drive (so sda1 not sda). This is
+> where my question comes in. I have read that 2 1TB(or whatever size) can
+> be different block sizes and hence adding a partition that is the entire
+> drive can cause problems as these sizes will differ.
 
-The Intel X25-M was the first SSD to implement NCQ.  The OCZ Core V2
-advertised NCQ with a queue depth of 1, but even that was buggy, so
-Linux has a black list for the that SSD:
+This was a topic of a recent thread on this list.  Apparently there is an
+industry standard which sets out exactly how many sectors a 1TB or 2TB
+drive should be, and it seems that all drive manufactures adhere to this.
 
-      http://markmail.org/message/jvjpmcdqjwrmyl4w
+>
+> Can anyone tell me what truth there is in this? Should I actually create a
+> partition  that is always going to be a nice multiple size smaller so i
+> can smooth over the bumps?
 
-As far as I know, all of the SSD's using the crappy JMicron JMF602
-controllers don't support NCQ in any real way, which would includes
-most of the reasonably priced SSD's up until first half of this year.
-(The OCZ Summit SSD, which uses the Indilnx controller is an exception
-to this statement, but it's more expensive that the JMF602 based
-SSD's, although less expensive than the Intel SSD.)
+Personally I never create a single partition for an md array.  I either
+use the whole drive, or create a number of partitions for different
+arrays.  I also avoid in-kernel autodetect.
 
-JMicron is trying to seek redemption with their JMF612 controllers,
-which were announced at the end of May of this year, and those
-controllers do support NCQ, and are claimed to not to have the
-disatrous small write latency problem of their '602 bretheren.  I'm
-not aware of any products using the JMF612 yet, though.  (According to
-reports the '612 controllers weren't going to hit mass production
-until July, so hopefully later this fall we'll start seeing products
-using the new JMicron controller.)
+The question of what "best" may well come down to the start up scripts
+that your distro uses and any hidden assumptions that might be in them...
 
-      	  				- Ted
+I guess that isn't very helpful though... I can say that either approach
+can be made to work fine.  The one issue that you particularly need to be
+careful off is the boot sector.  Partitions always leave room for a boot
+sector.  If you don't use partitions and you want a separate boot sector,
+then v1.2 metadata is the thing to choose....
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+
+
+>
+> (also anyone know if raid5 to raid 6 native support is anywhere near?)
+
+Yes. It works with 2.6.30 (or preferrable 2.6.31) and the devel-3.1 branch
+from my git tree git://neil.brown.name/mdadm
+
+NeilBrown
+
