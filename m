@@ -1,64 +1,55 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Software, Raid 5, Different Size Drives.
-Date: Mon, 17 Aug 2009 08:45:11 +1000 (EST)
-Message-ID: <47af6defcf34329212cd18ef65edad38.squirrel@neil.brown.name>
-References: <914153.25662.qm@web51308.mail.re2.yahoo.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: Discard support
+Date: Sun, 16 Aug 2009 18:51:23 -0400
+Message-ID: <4A888D6B.8020103__4340.58140167526$1250463113$gmane$org@rtr.ca>
+References: <f3177b9e0908141621j15ea96c0s26124d03fc2b0acf@mail.gmail.com> <20090814234539.GE27148@parisc-linux.org> <f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com> <1250341176.4159.2.camel@mulgrave.site> <4A86B69C.7090001@rtr.ca> <1250344518.4159.4.camel@mulgrave.site> <20090816150530.2bae6d1f@lxorguk.ukuu.org.uk> <20090816083434.2ce69859@infradead.org> <1250437927.3856.119.camel@mulgrave.site> <adavdkn2ztb.fsf@cisco.com> <20090816221325.GF17958@mit.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <914153.25662.qm@web51308.mail.re2.yahoo.com>
+In-Reply-To: <20090816221325.GF17958@mit.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon@eHardcastle.com
-Cc: linux-raid@vger.kernel.org
+To: Theodore Tso <tytso@mit.edu>, Roland Dreier <rdreier@cisco.com>, James Bottomley <James.Bottomley@suse.de>, Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-raid.ids
 
-On Sun, August 16, 2009 4:54 am, Jon Hardcastle wrote:
-> Hi quick Q.. I have a 6 drive array made up of 4 500GB's and 2 750GB's.
->
-> I know the array will only take on a size based on the smallest drive. To
-> that end as I phase drives out based on usage etc I replace them with the
-> best value drive I can lay my hands on (upto 1TB~ as i have read a raid 5
-> array of drives over that size approx start to cause problems with read
-> failures on re-builds - but that is for another thread)
->
-> So my array is currently ~2.5GB with 2x250GB currently not in use and I am
-> about to phase out a 500GB and replace with a 1TB. Now i have read that
-> you are better of creating a auto detect raid partition on the drive and
-> adding that rather than adding the entire drive (so sda1 not sda). This is
-> where my question comes in. I have read that 2 1TB(or whatever size) can
-> be different block sizes and hence adding a partition that is the entire
-> drive can cause problems as these sizes will differ.
+Theodore Tso wrote:
+> On Sun, Aug 16, 2009 at 02:50:40PM -0700, Roland Dreier wrote:
+>>  > Well, yes and no ... a lot of SSDs don't actually implement NCQ, so the
+>>  > impact to them will be less ... although I think enterprise class SSDs
+>>  > do implement NCQ.
+>>
+>> Really?  Which SSDs don't implement NCQ?
+> 
+> The Intel X25-M was the first SSD to implement NCQ.  The OCZ Core V2
+> advertised NCQ with a queue depth of 1, but even that was buggy, so
+> Linux has a black list for the that SSD:
+> 
+>       http://markmail.org/message/jvjpmcdqjwrmyl4w
+> 
+> As far as I know, all of the SSD's using the crappy JMicron JMF602
+> controllers don't support NCQ in any real way, which would includes
+> most of the reasonably priced SSD's up until first half of this year.
+> (The OCZ Summit SSD, which uses the Indilnx controller is an exception
+> to this statement, but it's more expensive that the JMF602 based
+> SSD's, although less expensive than the Intel SSD.)
+> 
+> JMicron is trying to seek redemption with their JMF612 controllers,
+> which were announced at the end of May of this year, and those
+> controllers do support NCQ, and are claimed to not to have the
+> disatrous small write latency problem of their '602 bretheren.  I'm
+> not aware of any products using the JMF612 yet, though.  (According to
+> reports the '612 controllers weren't going to hit mass production
+> until July, so hopefully later this fall we'll start seeing products
+> using the new JMicron controller.)
+..
 
-This was a topic of a recent thread on this list.  Apparently there is an
-industry standard which sets out exactly how many sectors a 1TB or 2TB
-drive should be, and it seems that all drive manufactures adhere to this.
+Great summary, Ted.
 
->
-> Can anyone tell me what truth there is in this? Should I actually create a
-> partition  that is always going to be a nice multiple size smaller so i
-> can smooth over the bumps?
+To add:  SSDs based upon the Indilinx controller don't appear to scale
+beyond an NCQ depth of about 4 or so.  Whereas Intel SSDs continue to
+improve with increased queue depth up to 31 on Linux.
 
-Personally I never create a single partition for an md array.  I either
-use the whole drive, or create a number of partitions for different
-arrays.  I also avoid in-kernel autodetect.
+Or at least that's what I recall from reading various SSD benchmarks
+a few weeks ago here. 
 
-The question of what "best" may well come down to the start up scripts
-that your distro uses and any hidden assumptions that might be in them...
-
-I guess that isn't very helpful though... I can say that either approach
-can be made to work fine.  The one issue that you particularly need to be
-careful off is the boot sector.  Partitions always leave room for a boot
-sector.  If you don't use partitions and you want a separate boot sector,
-then v1.2 metadata is the thing to choose....
-
-
-
->
-> (also anyone know if raid5 to raid 6 native support is anywhere near?)
-
-Yes. It works with 2.6.30 (or preferrable 2.6.31) and the devel-3.1 branch
-from my git tree git://neil.brown.name/mdadm
-
-NeilBrown
-
+Cheers
