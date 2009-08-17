@@ -1,54 +1,40 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
- slot is freed)
-Date: Mon, 17 Aug 2009 15:28:12 -0500
-Message-ID: <1250540892.7858.59.camel@mulgrave.site>
-References: <200908122007.43522.ngupta@vflare.org>
-	 <20090816083434.2ce69859@infradead.org>
-	 <1250437927.3856.119.camel@mulgrave.site> <4A8834B6.2070104@rtr.ca>
-	 <1250446047.3856.273.camel@mulgrave.site> <4A884D9C.3060603@rtr.ca>
-	 <1250447052.3856.294.camel@mulgrave.site> <4A898752.9000205@tmr.com>
-	 <87f94c370908171008t44ff64ack2153e740128278e@mail.gmail.com>
-	 <1250529575.7858.31.camel@mulgrave.site>
-	 <87f94c370908171121u5ee8016p253824b16851b48@mail.gmail.com>
-	 <1250536709.7858.43.camel@mulgrave.site>  <4A89BB5B.5060403@rtr.ca>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: Software, Raid 5, Different Size Drives.
+Date: Tue, 18 Aug 2009 08:11:52 +1000 (EST)
+Message-ID: <60c6680b56086d74292cd847ca212ea6.squirrel@neil.brown.name>
+References: <25160.93380.qm@web51307.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <4A89BB5B.5060403@rtr.ca>
-Sender: owner-linux-mm@kvack.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Greg Freemyer <greg.freemyer@gmail.com>, Bill Davidsen <davidsen@tmr.com>, Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Chris Worley <worleys@gmail.com>, Matthew Wilcox <matthew@wil.cx>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <25160.93380.qm@web51307.mail.re2.yahoo.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jon@eHardcastle.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 2009-08-17 at 16:19 -0400, Mark Lord wrote:
-> James Bottomley wrote:
-> > On Mon, 2009-08-17 at 14:21 -0400, Greg Freemyer wrote:
-> >> On Mon, Aug 17, 2009 at 1:19 PM, James Bottomley<James.Bottomley@suse.de> wrote:
-> >>> On Mon, 2009-08-17 at 13:08 -0400, Greg Freemyer wrote:
-> ..
-> >>>> Non-coalescing is believed detrimental,
-> >>> It is?  Why?
-> >> For the only compliant SSD in the wild, Mark has shown it to be true
-> >> via testing.
-> > 
-> > He only said larger trims take longer.  As I said previously, if it's a
-> > X+nY relationship, then we still benefit from accumulation up to some
-> > value of n.
-> ..
-> 
-> Err, what I said was, "rm -rf /usr/src/linux" takes over half an hour
-> with uncoalesced TRIM, and only a scant few seconds in total *with*
-> coalesced TRIM.
+On Tue, August 18, 2009 12:07 am, Jon Hardcastle wrote:
+> My setup is build on drives that have a partition on them, so the finer
+> points over the pro's and con's of this are moot for me.. until i come to
+> replace the array. Perhaps someone can tell me tho. If I do use a
+> partition on the 1TB drive, and it is is x blocks big. If i add another
+> 1TB drive that is x +/- 10 blocks in size. Will the array just use the
+> size of the smaller and grow accordingly?
 
-Yes, sorry, missed the Non- when I read that sentence.
+The effective size of the drive is rounded to the chunk size
+which defaults to 64K.
 
-James
+If you try to add a drive or partition to an array and it does not
+have enough space for the data plus metadata, then md will not
+accept the drive.
+If you add a drive or partition that has more space than is needed,
+the extra will simple not be used.
+If you eventually replace all drives with drives that have more space,
+then every drive will have space on it that is unused.
+You can, if you choose, then expand the array to use that extra space
+with --grow --size=max.
 
+I hope that answers your question.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+NeilBrown
+
