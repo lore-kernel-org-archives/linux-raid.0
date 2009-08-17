@@ -1,35 +1,39 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
-	slot is freed)
-Date: Mon, 17 Aug 2009 08:10:38 -0600
-Message-ID: <20090817141038.GB11966@parisc-linux.org>
-References: <20090814234539.GE27148@parisc-linux.org> <f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com> <1250341176.4159.2.camel@mulgrave.site> <4A86B69C.7090001@rtr.ca> <1250344518.4159.4.camel@mulgrave.site> <20090816150530.2bae6d1f@lxorguk.ukuu.org.uk> <20090816083434.2ce69859@infradead.org> <1250437927.3856.119.camel@mulgrave.site> <20090816165943.GA26983@infradead.org> <1250517372.3844.3.camel@mulgrave.site>
+From: =?ISO-8859-2?Q?Micha=B3_Przy=B3uski?= <mikylie@gmail.com>
+Subject: Re: Software, Raid 5, Different Size Drives.
+Date: Mon, 17 Aug 2009 16:20:21 +0200
+Message-ID: <6c4602af0908170720s237ad8aau46f94b92a08d496d@mail.gmail.com>
+References: <47af6defcf34329212cd18ef65edad38.squirrel@neil.brown.name>
+	 <25160.93380.qm@web51307.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1250517372.3844.3.camel@mulgrave.site>
-Sender: owner-linux-mm@kvack.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>, Chris Worley <worleys@gmail.com>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Greg Freemyer <greg.freemyer@gmail.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <25160.93380.qm@web51307.mail.re2.yahoo.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jon@ehardcastle.com
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Aug 17, 2009 at 08:56:12AM -0500, James Bottomley wrote:
-> The testing was initially done to see if the initial maximal discard
-> proposal from LSF09 was a viable approach (which it wasn't given the
-> time taken to UNMAP).
+Hi,
 
-It would be nice if that feedback could be made public instead of it
-leaking out in dribs and drabs like this.
+2009/8/17 Jon Hardcastle <jd_hardcastle@yahoo.com>:
+> Any idea where i find out this 'industry standard'?
+>
+> My setup is build on drives that have a partition on them, so the finer points over the pro's and con's of this are moot for me.. until i come to replace the array. Perhaps someone can tell me tho. If I do use a partition on the 1TB drive, and it is is x blocks big. If i add another 1TB drive that is x +/- 10 blocks in size. Will the array just use the size of the smaller and grow accordingly?
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+You might want to check out that linux-raid thread,
+http://www.issociate.de/board/post/497059/Adding_a_smaller_drive.html
+. It seems to be one of IDEMA standards. I cannot say I've seen it
+myself, but the list seems to be pretty confident about it. And, it
+appears that standard defines *exact* block count. It would be
+pointless if it was just a minimum, as you might've built an array
+with "more than minimum" drives, and then couldn't replace them with
+drives with exact block count.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+On top of that, my personal opinion is that having a partition doesn't
+change anything in that matter. You could still, theoretically
+assuming there's no IDEMA standard, find a smaller drive, and make a
+partition that is smaller than partitions on other drives.
+
+Cheers,
+Mike
