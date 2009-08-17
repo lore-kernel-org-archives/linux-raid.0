@@ -1,46 +1,63 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
- slot is freed)
-Date: Mon, 17 Aug 2009 00:24:23 -0400
-Message-ID: <4A88DB77.2070304@interlog.com>
-References: <4A85E0DC.9040101@rtr.ca> <f3177b9e0908141621j15ea96c0s26124d03fc2b0acf@mail.gmail.com> <20090814234539.GE27148@parisc-linux.org> <f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com> <1250341176.4159.2.camel@mulgrave.site> <4A86B69C.7090001@rtr.ca> <1250344518.4159.4.camel@mulgrave.site> <20090816150530.2bae6d1f@lxorguk.ukuu.org.uk> <20090816083434.2ce69859@infradead.org> <1250437927.3856.119.camel@mulgrave.site> <20090816165943.GA26983@infradead.org>
-Reply-To: dgilbert@interlog.com
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Software, Raid 5, Different Size Drives.
+Date: Sun, 16 Aug 2009 23:46:32 -0500
+Message-ID: <20090817044642546.ETRX6077@cdptpa-omta04.mail.rr.com>
+References: <47af6defcf34329212cd18ef65edad38.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20090816165943.GA26983@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@suse.de>, Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>, Chris Worley <worleys@gmail.com>, Matthew Wilcox <matthew@wil.cx>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Greg Freemyer <greg.freemyer@gmail.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <47af6defcf34329212cd18ef65edad38.squirrel@neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Christoph Hellwig wrote:
-> On Sun, Aug 16, 2009 at 10:52:07AM -0500, James Bottomley wrote:
->> However, the enterprise has been doing UNMAP for a while, so we can draw
->> inferences from them since the SSD FTL will operate similarly.  For
->> them, UNMAP is the same cost in terms of time regardless of the number
->> of extents.  The reason is that it's moving the blocks from the global
->> in use list to the global free list.  Part of the problem is that this
->> involves locking and quiescing, so UNMAP ends up being quite expensive
->> to the array but constant in terms of cost (hence they want as few
->> unmaps for as many sectors as possible).
+> > Can anyone tell me what truth there is in this? Should I actually create
+> a
+> > partition  that is always going to be a nice multiple size smaller so i
+> > can smooth over the bumps?
 > 
-> How are they doing the unmaps?  Using something similar to Mark's wiper
-> script and using SG_IO?  Because right now we do not actually implement
-> UNMAP support in the kernel.  I'd really love to test the XFS batched
-> discard support with a real UNMAP implementation.
+> Personally I never create a single partition for an md array.  I either
+> use the whole drive, or create a number of partitions for different
+> arrays.  I also avoid in-kernel autodetect.
 
-The sg3_utils version 1.28 beta at http://sg.danny.cz/sg/
-has a new sg_unmap utility and the previous release
-included sg_write_same with Unmap bit support.
-sg_readcap has been updated to show the TPE and TPRZ bits.
+	Although I am nowhere nearly the expert Neil is, I'm going to add my
+support to his post.  I'm much more familiar with flavors of Unix than with
+Linux, but my experience strongly suggests what he says is true.  With a
+single drive system, partitions are effectively mandatory, but once one
+decides to implement a  multiple drive system, in my estimation the paradigm
+changes.  If your implementation requires more than one array to be built
+from several common disks, then partitioning is required, but if practical I
+prefer to build systems with the main data area supplied by an array of
+whole disks.  Of course, there are a number of variations of even this
+theme, but personally I like to build a rather small OS disk containing the
+root, /var, /etc, and so forth.  Sometimes I will create a separate
+partition for /boot.  The rest I put on a single large RAID array of whole
+disks with no partitions under or above the array.  Although RAID solutions
+are certainly possible for the OS areas, I personally prefer to not
+implement RAID for the OS, and simply keep a cold spare drive around with
+regular backups of the OS configuration kept online.  It's also been my
+experience that, all things considered, it's generally best to limit the
+number of partitions as much as possible.  Of course, there can be some
+performance penalty involved, and valid arguments can be made for creating
+specific partitions to meet various needs.
 
-There is a new SCSI GET LBA STATUS command coming
-(approved at the last t10 meeting, awaiting the next
-SBC-3 draft). That will show the mapped/unmapped
-status of logical blocks in a range of LBAs. I can
-add a utility for that as well.
+> The question of what "best" may well come down to the start up scripts
+> that your distro uses and any hidden assumptions that might be in them...
+> 
+> I guess that isn't very helpful though... I can say that either approach
+> can be made to work fine.  The one issue that you particularly need to be
+> careful off is the boot sector.  Partitions always leave room for a boot
+> sector.  If you don't use partitions and you want a separate boot sector,
+> then v1.2 metadata is the thing to choose....
 
-Doug Gilbert
+	Yeah, what he said.  What's more, booting from an array presents
+it's own special requirements.  While it is certainly possible to arrange to
+meet all the requirements for booting from an array, unless one is working
+with an embedded application, or an enclosure with limited power and / or
+drive slots, I much prefer to simply circumvent the issue by booting from a
+relatively small, very inexpensive drive and making the data area as simple,
+straightforward, and primitive as possible.  If the drive dies, I replace
+it.  'No big deal.
 
