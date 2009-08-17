@@ -1,56 +1,130 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
- slot is freed)
-Date: Mon, 17 Aug 2009 08:56:12 -0500
-Message-ID: <1250517372.3844.3.camel@mulgrave.site>
-References: <4A85E0DC.9040101@rtr.ca>
-	 <f3177b9e0908141621j15ea96c0s26124d03fc2b0acf@mail.gmail.com>
-	 <20090814234539.GE27148@parisc-linux.org>
-	 <f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com>
-	 <1250341176.4159.2.camel@mulgrave.site> <4A86B69C.7090001@rtr.ca>
-	 <1250344518.4159.4.camel@mulgrave.site>
-	 <20090816150530.2bae6d1f@lxorguk.ukuu.org.uk>
-	 <20090816083434.2ce69859@infradead.org>
-	 <1250437927.3856.119.camel@mulgrave.site>
-	 <20090816165943.GA26983@infradead.org>
+From: Jon Hardcastle <jd_hardcastle@yahoo.com>
+Subject: Re: Software, Raid 5, Different Size Drives.
+Date: Mon, 17 Aug 2009 07:07:20 -0700 (PDT)
+Message-ID: <25160.93380.qm@web51307.mail.re2.yahoo.com>
+References: <47af6defcf34329212cd18ef65edad38.squirrel@neil.brown.name>
+Reply-To: Jon@eHardcastle.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20090816165943.GA26983@infradead.org>
-Sender: owner-linux-mm@kvack.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>, Chris Worley <worleys@gmail.com>, Matthew Wilcox <matthew@wil.cx>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Greg Freemyer <greg.freemyer@gmail.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <47af6defcf34329212cd18ef65edad38.squirrel@neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 2009-08-16 at 12:59 -0400, Christoph Hellwig wrote:
-> On Sun, Aug 16, 2009 at 10:52:07AM -0500, James Bottomley wrote:
-> > However, the enterprise has been doing UNMAP for a while, so we can draw
-> > inferences from them since the SSD FTL will operate similarly.  For
-> > them, UNMAP is the same cost in terms of time regardless of the number
-> > of extents.  The reason is that it's moving the blocks from the global
-> > in use list to the global free list.  Part of the problem is that this
-> > involves locking and quiescing, so UNMAP ends up being quite expensive
-> > to the array but constant in terms of cost (hence they want as few
-> > unmaps for as many sectors as possible).
-> 
-> How are they doing the unmaps?  Using something similar to Mark's wiper
-> script and using SG_IO?  Because right now we do not actually implement
-> UNMAP support in the kernel.  I'd really love to test the XFS batched
-> discard support with a real UNMAP implementation.
+--- On Sun, 16/8/09, NeilBrown <neilb@suse.de> wrote:
 
-You mean how is the array vendor testing their implementation?  Using
-SG_IO ... without any filesystem, I believe.
+> From: NeilBrown <neilb@suse.de>
+> Subject: Re: Software, Raid 5, Different Size Drives.
+> To: Jon@eHardcastle.com
+> Cc: linux-raid@vger.kernel.org
+> Date: Sunday, 16 August, 2009, 11:45 PM
+> On Sun, August 16, 2009 4:54 am, Jon
+> Hardcastle wrote:
+> > Hi quick Q.. I have a 6 drive array made up of 4
+> 500GB's and 2 750GB's.
+> >
+> > I know the array will only take on a size based on the
+> smallest drive. To
+> > that end as I phase drives out based on usage etc I
+> replace them with the
+> > best value drive I can lay my hands on (upto 1TB~ as i
+> have read a raid 5
+> > array of drives over that size approx start to cause
+> problems with read
+> > failures on re-builds - but that is for another
+> thread)
+> >
+> > So my array is currently ~2.5GB with 2x250GB currently
+> not in use and I am
+> > about to phase out a 500GB and replace with a 1TB. Now
+> i have read that
+> > you are better of creating a auto detect raid
+> partition on the drive and
+> > adding that rather than adding the entire drive (so
+> sda1 not sda). This is
+> > where my question comes in. I have read that 2 1TB(or
+> whatever size) can
+> > be different block sizes and hence adding a partition
+> that is the entire
+> > drive can cause problems as these sizes will differ.
+>=20
+> This was a topic of a recent thread on this list.=A0
+> Apparently there is an
+> industry standard which sets out exactly how many sectors a
+> 1TB or 2TB
+> drive should be, and it seems that all drive manufactures
+> adhere to this.
+>=20
+> >
+> > Can anyone tell me what truth there is in this? Should
+> I actually create a
+> > partition=A0 that is always going to be a nice
+> multiple size smaller so i
+> > can smooth over the bumps?
+>=20
+> Personally I never create a single partition for an md
+> array.=A0 I either
+> use the whole drive, or create a number of partitions for
+> different
+> arrays.=A0 I also avoid in-kernel autodetect.
+>=20
+> The question of what "best" may well come down to the start
+> up scripts
+> that your distro uses and any hidden assumptions that might
+> be in them...
+>=20
+> I guess that isn't very helpful though... I can say that
+> either approach
+> can be made to work fine.=A0 The one issue that you
+> particularly need to be
+> careful off is the boot sector.=A0 Partitions always
+> leave room for a boot
+> sector.=A0 If you don't use partitions and you want a
+> separate boot sector,
+> then v1.2 metadata is the thing to choose....
+>=20
+>=20
+>=20
+> >
+> > (also anyone know if raid5 to raid 6 native support is
+> anywhere near?)
+>=20
+> Yes. It works with 2.6.30 (or preferrable 2.6.31) and the
+> devel-3.1 branch
+> from my git tree git://neil.brown.name/mdadm
+>=20
+> NeilBrown
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at=A0 http://vger.kernel.org/majordomo-info.html
+>=20
 
-The testing was initially done to see if the initial maximal discard
-proposal from LSF09 was a viable approach (which it wasn't given the
-time taken to UNMAP).
+Any idea where i find out this 'industry standard'?
 
-James
+My setup is build on drives that have a partition on them, so the finer=
+ points over the pro's and con's of this are moot for me.. until i come=
+ to replace the array. Perhaps someone can tell me tho. If I do use a p=
+artition on the 1TB drive, and it is is x blocks big. If i add another =
+1TB drive that is x +/- 10 blocks in size. Will the array just use the =
+size of the smaller and grow accordingly?
 
+-----------------------
+N: Jon Hardcastle
+E: Jon@eHardcastle.com
+'Do not worry about tomorrow, for tomorrow will bring worries of its ow=
+n.'
+-----------------------
 
+Send instant messages to your online friends http://uk.messenger.yahoo.=
+com=20
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
