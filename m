@@ -1,97 +1,76 @@
 From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: -z not on RAID0 / MPIO hurdle
-Date: Mon, 17 Aug 2009 09:32:56 +0200
-Message-ID: <87zl9yvqs7.fsf@frosties.localdomain>
-References: <66781b10908121144n1f053b57led29391534614b7@mail.gmail.com>
-	<87d4705uxm.fsf@frosties.localdomain>
-	<66781b10908140129t4fc0947ek1e6f211758a2e969@mail.gmail.com>
+Subject: Re: Software, Raid 5, Different Size Drives.
+Date: Mon, 17 Aug 2009 10:17:29 +0200
+Message-ID: <87hbw6vopy.fsf@frosties.localdomain>
+References: <914153.25662.qm@web51308.mail.re2.yahoo.com>
+	<47af6defcf34329212cd18ef65edad38.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <66781b10908140129t4fc0947ek1e6f211758a2e969@mail.gmail.com>
-	(mark delfman's message of "Fri, 14 Aug 2009 09:29:39 +0100")
+In-Reply-To: <47af6defcf34329212cd18ef65edad38.squirrel@neil.brown.name>
+	(NeilBrown's message of "Mon, 17 Aug 2009 08:45:11 +1000 (EST)")
 Sender: linux-raid-owner@vger.kernel.org
-To: mark delfman <markdelfman@googlemail.com>
-Cc: Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Jon@eHardcastle.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-mark delfman <markdelfman@googlemail.com> writes:
+"NeilBrown" <neilb@suse.de> writes:
 
-> Hi Goswin,
+> On Sun, August 16, 2009 4:54 am, Jon Hardcastle wrote:
+>> Hi quick Q.. I have a 6 drive array made up of 4 500GB's and 2 750GB's.
+>>
+>> I know the array will only take on a size based on the smallest drive. To
+>> that end as I phase drives out based on usage etc I replace them with the
+>> best value drive I can lay my hands on (upto 1TB~ as i have read a raid 5
+>> array of drives over that size approx start to cause problems with read
+>> failures on re-builds - but that is for another thread)
+>>
+>> So my array is currently ~2.5GB with 2x250GB currently not in use and I am
+>> about to phase out a 500GB and replace with a 1TB. Now i have read that
+>> you are better of creating a auto detect raid partition on the drive and
+>> adding that rather than adding the entire drive (so sda1 not sda). This is
+>> where my question comes in. I have read that 2 1TB(or whatever size) can
+>> be different block sizes and hence adding a partition that is the entire
+>> drive can cause problems as these sizes will differ.
 >
-> I am not sure that this would work well for us... we would have you
-> use LVM to create individual block targerts, then use MD to create
-> RAIDs and then LVM again to create pools.
+> This was a topic of a recent thread on this list.  Apparently there is an
+> industry standard which sets out exactly how many sectors a 1TB or 2TB
+> drive should be, and it seems that all drive manufactures adhere to this.
 
-Last I tried raid on lvm would mess with the idle I/O
-determination. The raid rebuild would cause I/O on the device mapper
-and then raid things the user is doing I/O and slows the raid rebuild
-down to the minimum speed.
+Also note that raid on sda or sda1 both have exactly the same problem.
+You can not use a disk smaller than the minimum disk used in the raid.
+Really makes no difference if it is partitioned or not.
 
-> We would ideally stay to LVM on all our raids (whether 0 / 6 etc). so
-> would like to keep it in there...
+If you fear size problems then look up the industry standard size and
+check your disk follows that. I've never seen a disk smaller than that
+size, only bigger.
+
+>> Can anyone tell me what truth there is in this? Should I actually create a
+>> partition  that is always going to be a nice multiple size smaller so i
+>> can smooth over the bumps?
 >
-> Does any know if there is a reason -z doesn=E2=80=99t work with RAID0=
- (i mean
-> is it designed to not work because of abc reason, or simply its never
-> been needed etc)?
+> Personally I never create a single partition for an md array.  I either
+> use the whole drive, or create a number of partitions for different
+> arrays.  I also avoid in-kernel autodetect.
 >
+> The question of what "best" may well come down to the start up scripts
+> that your distro uses and any hidden assumptions that might be in them...
 >
-> Thank you for you help
->
->
-> Mark D
-> On Thu, Aug 13, 2009 at 3:06 AM, Goswin von Brederlow<goswin-v-b@web.=
-de> wrote:
->> mark delfman <markdelfman@googlemail.com> writes:
->>
->>> Hi.... I am hopeful that the group could provide me with some advic=
-e
->>> regarding limiting the drive size on a RAID0. =C2=A0I know and use =
-the =E2=80=93z
->>> option for other raid levels, but this seems to have no effect on
->>> RAID0.
->>>
->>> I am sure many will ask =E2=80=98why bother=E2=80=99 or =E2=80=98us=
-e fdisk=E2=80=99 but the problem is:
->>>
->>> We need to have some preserved information on each drive =E2=80=93 =
-can be only
->>> a few MB at the end of the drive for example
->>> In the past we have simply used Fdisk to partition, save our data o=
-n
->>> Sdx2 and used Mdadm on Sdx1 =C2=A0(which works fine)
->>> But we are looking to move to dual channel SAS drives and use DM MP=
-IO
->>>
->>> DM MPIO works fine also, but not on the partitions, only the whole
->>> drive. =C2=A0So when we MDadm DMx it overwrites the SdX2 partition =
-etc.
->>>
->>> The answer was that we used the =E2=80=93z and limited the drive si=
-ze and
->>> simply used DD to write our data to the end LBA=E2=80=99s....
->>>
->>> But on RAID0 the =E2=80=93z does not seem to function, so I cant th=
-ink of a
->>> way around this =EF=81=8C =C2=A0(other than changing the LBA range =
-in the drive and
->>> this is restricted I think)
->>>
->>>
->>> Does anyone have any ideas? =C2=A0I appreciate any help
->>
->> LVM and --setphysicalvolumesize on pvcreate?
->>
->> MfG
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0Goswin
->>
+> I guess that isn't very helpful though... I can say that either approach
+> can be made to work fine.  The one issue that you particularly need to be
+> careful off is the boot sector.  Partitions always leave room for a boot
+> sector.  If you don't use partitions and you want a separate boot sector,
+> then v1.2 metadata is the thing to choose....
+
+That is actually a verry important thing. Putting your raid on sda
+without leaving space for the bootloader is rather dangerous. Over
+time it is easy for the bootloader to get installed on the wrong disk
+because sda and sdb switched places or you forgot which drive is the
+boot drive and so on.
+
+I now actually put the bootloader on all my drives and all are setup
+to have space there. That way the system boots even if I rearange
+disks or the boot drive fails and so on.
 
 MfG
         Goswin
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
