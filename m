@@ -1,76 +1,56 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Software, Raid 5, Different Size Drives.
-Date: Mon, 17 Aug 2009 10:17:29 +0200
-Message-ID: <87hbw6vopy.fsf@frosties.localdomain>
-References: <914153.25662.qm@web51308.mail.re2.yahoo.com>
-	<47af6defcf34329212cd18ef65edad38.squirrel@neil.brown.name>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: Discard support (was Re: [PATCH] swap: send callback when swap
+ slot is freed)
+Date: Mon, 17 Aug 2009 08:56:12 -0500
+Message-ID: <1250517372.3844.3.camel@mulgrave.site>
+References: <4A85E0DC.9040101@rtr.ca>
+	 <f3177b9e0908141621j15ea96c0s26124d03fc2b0acf@mail.gmail.com>
+	 <20090814234539.GE27148@parisc-linux.org>
+	 <f3177b9e0908141719s658dc79eye92ab46558a97260@mail.gmail.com>
+	 <1250341176.4159.2.camel@mulgrave.site> <4A86B69C.7090001@rtr.ca>
+	 <1250344518.4159.4.camel@mulgrave.site>
+	 <20090816150530.2bae6d1f@lxorguk.ukuu.org.uk>
+	 <20090816083434.2ce69859@infradead.org>
+	 <1250437927.3856.119.camel@mulgrave.site>
+	 <20090816165943.GA26983@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47af6defcf34329212cd18ef65edad38.squirrel@neil.brown.name>
-	(NeilBrown's message of "Mon, 17 Aug 2009 08:45:11 +1000 (EST)")
-Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Jon@eHardcastle.com, linux-raid@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20090816165943.GA26983@infradead.org>
+Sender: owner-linux-mm@kvack.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>, Chris Worley <worleys@gmail.com>, Matthew Wilcox <matthew@wil.cx>, Bryan Donlan <bdonlan@gmail.com>, david@lang.hm, Greg Freemyer <greg.freemyer@gmail.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, Matthew Wilcox <willy@linux.intel.com>, Hugh Dickins <hugh.dickins@tiscali.co.uk>, Nitin Gupta <ngupta@vflare.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-"NeilBrown" <neilb@suse.de> writes:
+On Sun, 2009-08-16 at 12:59 -0400, Christoph Hellwig wrote:
+> On Sun, Aug 16, 2009 at 10:52:07AM -0500, James Bottomley wrote:
+> > However, the enterprise has been doing UNMAP for a while, so we can draw
+> > inferences from them since the SSD FTL will operate similarly.  For
+> > them, UNMAP is the same cost in terms of time regardless of the number
+> > of extents.  The reason is that it's moving the blocks from the global
+> > in use list to the global free list.  Part of the problem is that this
+> > involves locking and quiescing, so UNMAP ends up being quite expensive
+> > to the array but constant in terms of cost (hence they want as few
+> > unmaps for as many sectors as possible).
+> 
+> How are they doing the unmaps?  Using something similar to Mark's wiper
+> script and using SG_IO?  Because right now we do not actually implement
+> UNMAP support in the kernel.  I'd really love to test the XFS batched
+> discard support with a real UNMAP implementation.
 
-> On Sun, August 16, 2009 4:54 am, Jon Hardcastle wrote:
->> Hi quick Q.. I have a 6 drive array made up of 4 500GB's and 2 750GB's.
->>
->> I know the array will only take on a size based on the smallest drive. To
->> that end as I phase drives out based on usage etc I replace them with the
->> best value drive I can lay my hands on (upto 1TB~ as i have read a raid 5
->> array of drives over that size approx start to cause problems with read
->> failures on re-builds - but that is for another thread)
->>
->> So my array is currently ~2.5GB with 2x250GB currently not in use and I am
->> about to phase out a 500GB and replace with a 1TB. Now i have read that
->> you are better of creating a auto detect raid partition on the drive and
->> adding that rather than adding the entire drive (so sda1 not sda). This is
->> where my question comes in. I have read that 2 1TB(or whatever size) can
->> be different block sizes and hence adding a partition that is the entire
->> drive can cause problems as these sizes will differ.
->
-> This was a topic of a recent thread on this list.  Apparently there is an
-> industry standard which sets out exactly how many sectors a 1TB or 2TB
-> drive should be, and it seems that all drive manufactures adhere to this.
+You mean how is the array vendor testing their implementation?  Using
+SG_IO ... without any filesystem, I believe.
 
-Also note that raid on sda or sda1 both have exactly the same problem.
-You can not use a disk smaller than the minimum disk used in the raid.
-Really makes no difference if it is partitioned or not.
+The testing was initially done to see if the initial maximal discard
+proposal from LSF09 was a viable approach (which it wasn't given the
+time taken to UNMAP).
 
-If you fear size problems then look up the industry standard size and
-check your disk follows that. I've never seen a disk smaller than that
-size, only bigger.
+James
 
->> Can anyone tell me what truth there is in this? Should I actually create a
->> partition  that is always going to be a nice multiple size smaller so i
->> can smooth over the bumps?
->
-> Personally I never create a single partition for an md array.  I either
-> use the whole drive, or create a number of partitions for different
-> arrays.  I also avoid in-kernel autodetect.
->
-> The question of what "best" may well come down to the start up scripts
-> that your distro uses and any hidden assumptions that might be in them...
->
-> I guess that isn't very helpful though... I can say that either approach
-> can be made to work fine.  The one issue that you particularly need to be
-> careful off is the boot sector.  Partitions always leave room for a boot
-> sector.  If you don't use partitions and you want a separate boot sector,
-> then v1.2 metadata is the thing to choose....
 
-That is actually a verry important thing. Putting your raid on sda
-without leaving space for the bootloader is rather dangerous. Over
-time it is easy for the bootloader to get installed on the wrong disk
-because sda and sdb switched places or you forgot which drive is the
-boot drive and so on.
-
-I now actually put the bootloader on all my drives and all are setup
-to have space there. That way the system boots even if I rearange
-disks or the boot drive fails and so on.
-
-MfG
-        Goswin
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
