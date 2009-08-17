@@ -1,63 +1,85 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Software, Raid 5, Different Size Drives.
-Date: Sun, 16 Aug 2009 23:46:32 -0500
-Message-ID: <20090817044642546.ETRX6077@cdptpa-omta04.mail.rr.com>
-References: <47af6defcf34329212cd18ef65edad38.squirrel@neil.brown.name>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: raid-0 with mdadm vs lvm striping
+Date: Mon, 17 Aug 2009 09:27:35 +0200
+Message-ID: <878whix5lk.fsf@frosties.localdomain>
+References: <3ECBDC05781B3D48ABD520A01ABF2F9B2E99EDBB63@SE-EX008.groupinfra.com>
+	<c268e4660908111435x81d080fva423c5ea78605fc2@mail.gmail.com>
+	<3ECBDC05781B3D48ABD520A01ABF2F9B2E9A0485D5@SE-EX008.groupinfra.com>
+	<87vdkt4e5x.fsf@frosties.localdomain>
+	<3ECBDC05781B3D48ABD520A01ABF2F9B2E9A048A82@SE-EX008.groupinfra.com>
+	<a43edf1b0908120900u32226a01w16edc9075282ee9f@mail.gmail.com>
+	<874osc5ut5.fsf@frosties.localdomain>
+	<687B35659F854CFF970C1AB11EF9954B@m5>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <47af6defcf34329212cd18ef65edad38.squirrel@neil.brown.name>
+In-Reply-To: <687B35659F854CFF970C1AB11EF9954B@m5> (Guy Watkins's message of
+	"Wed, 12 Aug 2009 22:40:19 -0400")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Guy Watkins <linux-raid@watkins-home.com>
+Cc: 'Goswin von Brederlow' <goswin-v-b@web.de>, 'Billy Crook' <billycrook@gmail.com>, "'Henry, Andrew'" <andrew.henry@logica.com>, 'Drew' <drew.kay@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > Can anyone tell me what truth there is in this? Should I actually create
-> a
-> > partition  that is always going to be a nice multiple size smaller so i
-> > can smooth over the bumps?
-> 
-> Personally I never create a single partition for an md array.  I either
-> use the whole drive, or create a number of partitions for different
-> arrays.  I also avoid in-kernel autodetect.
+"Guy Watkins" <linux-raid@watkins-home.com> writes:
 
-	Although I am nowhere nearly the expert Neil is, I'm going to add my
-support to his post.  I'm much more familiar with flavors of Unix than with
-Linux, but my experience strongly suggests what he says is true.  With a
-single drive system, partitions are effectively mandatory, but once one
-decides to implement a  multiple drive system, in my estimation the paradigm
-changes.  If your implementation requires more than one array to be built
-from several common disks, then partitioning is required, but if practical I
-prefer to build systems with the main data area supplied by an array of
-whole disks.  Of course, there are a number of variations of even this
-theme, but personally I like to build a rather small OS disk containing the
-root, /var, /etc, and so forth.  Sometimes I will create a separate
-partition for /boot.  The rest I put on a single large RAID array of whole
-disks with no partitions under or above the array.  Although RAID solutions
-are certainly possible for the OS areas, I personally prefer to not
-implement RAID for the OS, and simply keep a cold spare drive around with
-regular backups of the OS configuration kept online.  It's also been my
-experience that, all things considered, it's generally best to limit the
-number of partitions as much as possible.  Of course, there can be some
-performance penalty involved, and valid arguments can be made for creating
-specific partitions to meet various needs.
+> } -----Original Message-----
+> } From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> } owner@vger.kernel.org] On Behalf Of Goswin von Brederlow
+> } Sent: Wednesday, August 12, 2009 10:09 PM
+> } To: Billy Crook
+> } Cc: Henry, Andrew; goswin-v-b@web.de; Drew; linux-raid@vger.kernel.=
+org
+> } Subject: Re: raid-0 with mdadm vs lvm striping
+> }=20
+> } Billy Crook <billycrook@gmail.com> writes:
+> }=20
+> } > On Wed, Aug 12, 2009 at 04:14, Henry, Andrew<andrew.henry@logica.=
+com>
+> } wrote:
+> } >> That's what my question was: =A0Will raid0 (striping) be faster =
+or easier
+> } to manage than lvm striping
+> } >
+> } > LVM striping won't change performance for small files. (That is f=
+iles,
+> } > smaller than the extent size.)  To be fair, RAID-0 striping won't
+> } > accelerate file access for files smaller than the stripe size eit=
+her.
+> } > However, traditionally, raid0 stripe sizes are much much smaller =
+than
+> } > LVM extent sizes.  Both are however adjustable.
+> }=20
+> } That sucks. LVM striping really should have a setting where it stri=
+pes
+> } chunks within a PE.
+> }=20
+> } MfG
+> }         Goswin
+>
+> Why not use this option?
 
-> The question of what "best" may well come down to the start up scripts
-> that your distro uses and any hidden assumptions that might be in them...
-> 
-> I guess that isn't very helpful though... I can say that either approach
-> can be made to work fine.  The one issue that you particularly need to be
-> careful off is the boot sector.  Partitions always leave room for a boot
-> sector.  If you don't use partitions and you want a separate boot sector,
-> then v1.2 metadata is the thing to choose....
+Ignorance. :) I never use raid0 so I never needed to look for all the
+stripe parameters.
 
-	Yeah, what he said.  What's more, booting from an array presents
-it's own special requirements.  While it is certainly possible to arrange to
-meet all the requirements for booting from an array, unless one is working
-with an embedded application, or an enclosure with limited power and / or
-drive slots, I much prefer to simply circumvent the issue by booting from a
-relatively small, very inexpensive drive and making the data area as simple,
-straightforward, and primitive as possible.  If the drive dies, I replace
-it.  'No big deal.
+> -I, --stripesize StripeSize
+>     Gives  the  number  of  kilobytes  for  the  granularity  of the
+> stripes.  StripeSize must be 2^n (n =3D 2 to 9) for metadata in LVM1 =
+format.
+> For  metadata  in  LVM2  format, the stripe size may be a larger powe=
+r of 2
+> but must not exceed the physical extent size.
+>
+> I have never use lvcreate with Linux, but have with HP-UX.  Looks abo=
+ut the
+> same, but maybe I am confused.
+>
+> Guy
 
+MfG
+        Goswin
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
