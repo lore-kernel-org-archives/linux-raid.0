@@ -1,125 +1,107 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Growing raid 5: Failed to reshape
-Date: Sat, 22 Aug 2009 07:30:33 +1000 (EST)
-Message-ID: <2735df411d9ed83a9d11664f595d6dfc.squirrel@neil.brown.name>
-References: <5c45fce80908211231v9238a12i3829ad5d1b107df5@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: RAID10 Layouts
+Date: Fri, 21 Aug 2009 17:57:43 -0400
+Message-ID: <4A8F1857.2010305@tmr.com>
+References: <200908210627.06241.Info@quantum-sci.net> <87ljldce33.fsf@frosties.localdomain> <20090821204234.GA3683@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5c45fce80908211231v9238a12i3829ad5d1b107df5@mail.gmail.com>
+In-Reply-To: <20090821204234.GA3683@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Anshuman Aggarwal <anshuman.aggarwal@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
+Cc: Goswin von Brederlow <goswin-v-b@web.de>, Info@quantum-sci.net, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, August 22, 2009 5:31 am, Anshuman Aggarwal wrote:
-> Hi all,
+Keld J=F8rn Simonsen wrote:
+> On Fri, Aug 21, 2009 at 06:43:28PM +0200, Goswin von Brederlow wrote:
+>  =20
+>> Info@quantum-sci.net writes:
+>>
+>>    =20
+>>> Hello list,
+>>>
+>>> Researching RAID10, trying to learn the most advanced system for a =
+2
+>>> SATA drive system.  Have two WD 2TB drives for a media computer, an=
+d
+>>> the most important requirement is data redundancy.  I realize that
+>>> RAID is no substitute for backups, but this is a backup for the
+>>> backups and the purpose here is data safety.  The secondary goal is
+>>> speed enhancement.  It appears that RAID10 can give both.
+>>>
+>>> First question is on layout of RAID10.  In studying the man pages i=
+t
+>>> seems that Far mode gives 95% of the speed of RAID0, but with
+>>> increased seek for writes.  And that Offset retains much of this
+>>> benefit while increasing efficiency of writes.  What should be the
+>>> preference, Far or Offset?  Are they equally as robust?
+>>>      =20
+>> All raid10 layouts offer the same robustness. Which layout is best f=
+or
+>> you really depends on your use case. Probably the biggest factor wil=
+l
+>> be the average file size. My experience is that with large files the
+>> far copies do not cost noticeable write speed while being twice as
+>> fast reading as raid1.
+>>    =20
 >
-> Here is my problem and configuration. :
+> The file system elevator makes up for the Far write head movement.
 >
-> I had a 3 partition raid5 cluster to which I added  a 4th disk and
-> tried to grow the raid5 by adding the partition on the 4th disk and
-> then growing it. Unfortunately since another sync task was happening
-> on the same disks, the operation to move the critical section did not
-> complete before the machine was shutdown by the UPS (in control not a
-> crash) due to low battery.
+>  =20
+>>> How safe is the data in Far or Offset mode?  If a drive fails, will
+>>> a complete, usable, bootable system exist on the other drive?
+>>> (These two are the only drives in the system, which is Debian
+>>> Testing, Debian kernel 2.6.30-5) Need I make any special Grub
+>>> settings?
+>>>      =20
+>> I don't think lilo or grub1 can boot from raid10 at all with offset =
+or
+>> far copies. With near copies you are identical to a simple raid1 so
+>> that would boot.
+>>    =20
 >
->  Kernel: 2.6.30.4; mdadm (tried 2.6.7 and 3.0)
+> there is a howto on setting up a system, that can continue runnig, if=
+ one=20
+> disk fails at
+> http://linux-raid.osdl.org/index.php/Preventing_against_a_failing_dis=
+k
 >
-> Now, only 1 of my 3 partitions has the superblock and the other 2 and
-> the 4th new one does not have anything.
+>  =20
+>>> How does this look:
+>>> # mdadm --create /dev/md0 --level=3Draid10 --layout=3Do2 --metadata=
+=3D1.2 --chunk=3D64 --raid-disks=3D2 missing /dev/sdb1
+>>>      =20
+>> On partitions it is save to use 1.1 format. Saves you 4k. Jupey.
+>>
+>> You should play with the chunksize though and try with and without
+>> bitmap and different bitmap sizes. Bitmap costs some write performan=
+ce
+>> but it greatly speeds up resyncs after a crash or temporary drive
+>> failure.
+>>    =20
+>
+> I would recommend a bigger chunk size. at least 256 kiB.
+>  =20
 
-It is very strange that only one partition has a superblock.
-I cannot imagine any way that could have happened short of changing
-the partition tables or deliberately destroying them.
-I feel the need to ask "are you sure" though presumably you are or
-you wouldn't have said so...
+You really want to look at stripe-size and stride-size creating an=20
+ext[234] filesystem on top of raid, good things to happen there.
 
->
-> Here is the output of a few mdadm commands.
->
-> $mdadm --misc --examine /dev/sdd5
-> /dev/sdd5:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x4
->      Array UUID : 495f6668:f1e12d10:99520f92:7619b487
->            Name : GATEWAY:raid5_280G  (local to host GATEWAY)
->   Creation Time : Fri Jul 31 23:05:48 2009
->      Raid Level : raid5
->    Raid Devices : 4
->
->  Avail Dev Size : 586099060 (279.47 GiB 300.08 GB)
->      Array Size : 1758296832 (838.42 GiB 900.25 GB)
->   Used Dev Size : 586098944 (279.47 GiB 300.08 GB)
->     Data Offset : 272 sectors
->    Super Offset : 8 sectors
->           State : active
->     Device UUID : 754ae1cf:bbee0582:f660ec89:a88800d3
->
->   Reshape pos'n : 0
->   Delta Devices : 1 (3->4)
+--=20
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
 
-It certainly looks like it didn't get very far.  We cannot
-know from this for certain.
-mdadm should have copied the first 4 chunks (256K) to somewhere
-near the end of the new device, then allowed the reshape to continue.
-It is possible that the reshape had written to some of these early
-blocks.  If it did we need to recover that backed-up data.  I should
-probably add functionality to mdadm to find and recover such a backup....
-
-For now your best bet is to simply try to recreate the array.
-i.e something like
-
-  mdadm -C /dev/md0 -l5 -n3 -e 1.2 --name "raid5_280G" --assume-clean \
-        /dev/sdc5 /dev/sdd5 /dev/sde5
-
-You need to make sure that you get the right devices in the right
-order.  From the information you gave I only know for certain that
-/dev/sdd5 is the middle of the three.
-
-This will write new superblocks and assemble the array but will not
-change any of the data.  You can then access the array read-only
-and see if the data looks like it is all there.  If it isn't, stop
-the array and try to work out why.
-If it is, you can try to grow the array again, this time with a more
-reliable power supply ;-)
-
-Speaking of which... just how long was it before when you started the
-grow and when the power shut off.  It really shouldn't be more than
-a few seconds, even if other things are happening on the system.
-(normally it would be a few hundred milliseconds at most).
-
-Good luck,
-NeilBrown
+"You are disgraced professional losers. And by the way, give us our mon=
+ey back."
+    - Representative Earl Pomeroy,  Democrat of North Dakota
+on the A.I.G. executives who were paid bonuses  after a federal bailout=
+=2E
 
 
->
->     Update Time : Fri Aug 21 09:55:38 2009
->        Checksum : e18481fb - correct
->          Events : 13581
->
->          Layout : left-symmetric
->      Chunk Size : 64K
->
->     Array Slot : 4 (0, failed, failed, 2, 1, 3)
->    Array State : uUuu 2 failed
->
-> $mdadm --assemble --scan
-> mdadm: Failed to restore critical section for reshape, sorry.
->
-> I am positive that none of the actual growing steps even started so my
-> data 'should' be safe as long as I can recreate the superblocks,
-> right?
->
-> As always, appreciate the help of the open source community. Thanks!!
->
-> Thanks,
-> Anshuman
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
