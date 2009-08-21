@@ -1,73 +1,36 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: RAID10 Layouts
-Date: Fri, 21 Aug 2009 18:43:28 +0200
-Message-ID: <87ljldce33.fsf@frosties.localdomain>
-References: <200908210627.06241.Info@quantum-sci.net>
+From: Matt Garman <matthew.garman@gmail.com>
+Subject: Re: linux disk access when idle
+Date: Fri, 21 Aug 2009 11:59:35 -0500
+Message-ID: <20090821165935.GA18915@sewage>
+References: <20090820163522.GA29215@sewage> <4A8D99D9.2090806@sauce.co.nz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200908210627.06241.Info@quantum-sci.net> (Info@quantum-sci.net's
-	message of "Fri, 21 Aug 2009 06:27:06 -0700")
+Content-Disposition: inline
+In-Reply-To: <4A8D99D9.2090806@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Info@quantum-sci.net
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Info@quantum-sci.net writes:
-
-> Hello list,
+On Fri, Aug 21, 2009 at 06:45:45AM +1200, Richard Scobie wrote:
+> Matt Garman wrote:
+>> So what I'm trying to figure out is, what is causing the disk
+>> access?  It could be any one of:
+>>
+>>     - Kernel
+>>     - RAID subsystem (i.e. md)
+>>     - XFS filesystem
+>>     - NFS
+>>     - Samba
+>>     - ???
 >
-> Researching RAID10, trying to learn the most advanced system for a 2
-> SATA drive system.  Have two WD 2TB drives for a media computer, and
-> the most important requirement is data redundancy.  I realize that
-> RAID is no substitute for backups, but this is a backup for the
-> backups and the purpose here is data safety.  The secondary goal is
-> speed enhancement.  It appears that RAID10 can give both.
->
-> First question is on layout of RAID10.  In studying the man pages it
-> seems that Far mode gives 95% of the speed of RAID0, but with
-> increased seek for writes.  And that Offset retains much of this
-> benefit while increasing efficiency of writes.  What should be the
-> preference, Far or Offset?  Are they equally as robust?
+> Are you running smartd? It polls the drives every 30minutes.
 
-All raid10 layouts offer the same robustness. Which layout is best for
-you really depends on your use case. Probably the biggest factor will
-be the average file size. My experience is that with large files the
-far copies do not cost noticeable write speed while being twice as
-fast reading as raid1.
+I was running smartd, until I received your post :)
 
-> How safe is the data in Far or Offset mode?  If a drive fails, will
-> a complete, usable, bootable system exist on the other drive?
-> (These two are the only drives in the system, which is Debian
-> Testing, Debian kernel 2.6.30-5) Need I make any special Grub
-> settings?
+Unfortunately, this does not help keep the heads parked any longer.
 
-I don't think lilo or grub1 can boot from raid10 at all with offset or
-far copies. With near copies you are identical to a simple raid1 so
-that would boot.
+Nonetheless, thank you for the hint.
 
-So to be bootable even with a failed drive you should partition the
-disk. Create a small raid1 for the system and a large raid10 for the
-data.
+Matt
 
-> What about this Intel firmware 'RAID'?  Would this assist in any
-> way?  How does it relate (if it does) to the linux md system?
-> Should I set in BIOS to RAID, or leave it at ACPI?
-
-I would stay away from any half baked bios stuff. It will be no better
-than linux software raid but will tie you to the specific bios. If
-your mainboard fails and the next one has a different bios you can't
-boot your disks.
-
-> How does this look:
-> # mdadm --create /dev/md0 --level=raid10 --layout=o2 --metadata=1.2 --chunk=64 --raid-disks=2 missing /dev/sdb1
-
-On partitions it is save to use 1.1 format. Saves you 4k. Jupey.
-
-You should play with the chunksize though and try with and without
-bitmap and different bitmap sizes. Bitmap costs some write performance
-but it greatly speeds up resyncs after a crash or temporary drive
-failure.
-
-MfG
-        Goswin
