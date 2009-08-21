@@ -1,39 +1,69 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Help
-Date: Fri, 21 Aug 2009 20:38:00 +0100
-Message-ID: <4A8EF798.9010600@anonymous.org.uk>
-References: <200908210627.06241.Info@quantum-sci.net> <87ljldce33.fsf@frosties.localdomain> <200908211102.58744.Info@quantum-sci.net> <200908211220.28701.Info@quantum-sci.net>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: RAID10 Layouts
+Date: Fri, 21 Aug 2009 22:42:34 +0200
+Message-ID: <20090821204234.GA3683@rap.rap.dk>
+References: <200908210627.06241.Info@quantum-sci.net> <87ljldce33.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200908211220.28701.Info@quantum-sci.net>
+Content-Disposition: inline
+In-Reply-To: <87ljldce33.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Info@quantum-sci.net
-Cc: linux-raid@vger.kernel.org
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: Info@quantum-sci.net, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 21/08/2009 20:20, Info@quantum-sci.net wrote:
-> My God, the command is not working.  I need to remove sdb1 from md0 so I can change it from a RAID10 to RAID1, and it simply ignores my command:
-> # mdadm /dev/md0 --fail /dev/sdb1 --remove /dev/sdb1
-> # cat /proc/mdstat
-> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4] [multipath]
-> md2 : active raid10 sdb3[1]
->       1868560128 blocks super 1.2 64K chunks 2 offset-copies [2/1] [_U]
->       bitmap: 94/446 pages [376KB], 2048KB chunk
+On Fri, Aug 21, 2009 at 06:43:28PM +0200, Goswin von Brederlow wrote:
+> Info@quantum-sci.net writes:
 > 
-> md1 : active raid10 sdb2[1]
->       6297344 blocks super 1.2 64K chunks 2 offset-copies [2/1] [_U]
->       bitmap: 0/25 pages [0KB], 128KB chunk
+> > Hello list,
+> >
+> > Researching RAID10, trying to learn the most advanced system for a 2
+> > SATA drive system.  Have two WD 2TB drives for a media computer, and
+> > the most important requirement is data redundancy.  I realize that
+> > RAID is no substitute for backups, but this is a backup for the
+> > backups and the purpose here is data safety.  The secondary goal is
+> > speed enhancement.  It appears that RAID10 can give both.
+> >
+> > First question is on layout of RAID10.  In studying the man pages it
+> > seems that Far mode gives 95% of the speed of RAID0, but with
+> > increased seek for writes.  And that Offset retains much of this
+> > benefit while increasing efficiency of writes.  What should be the
+> > preference, Far or Offset?  Are they equally as robust?
 > 
-> md0 : active raid10 sdb1[1]
->       78654080 blocks super 1.2 64K chunks 2 offset-copies [2/1] [_U]
->       bitmap: 76/151 pages [304KB], 256KB chunk
+> All raid10 layouts offer the same robustness. Which layout is best for
+> you really depends on your use case. Probably the biggest factor will
+> be the average file size. My experience is that with large files the
+> far copies do not cost noticeable write speed while being twice as
+> fast reading as raid1.
 
-Well, it won't let you remove the only thing keeping the array active. 
-Stop the array first with `mdadm --stop /dev/md0`. After that I think 
-you can just create your new RAID-1 array without doing anything else.
+The file system elevator makes up for the Far write head movement.
 
-Cheers,
+> > How safe is the data in Far or Offset mode?  If a drive fails, will
+> > a complete, usable, bootable system exist on the other drive?
+> > (These two are the only drives in the system, which is Debian
+> > Testing, Debian kernel 2.6.30-5) Need I make any special Grub
+> > settings?
+> 
+> I don't think lilo or grub1 can boot from raid10 at all with offset or
+> far copies. With near copies you are identical to a simple raid1 so
+> that would boot.
 
-John.
+there is a howto on setting up a system, that can continue runnig, if one 
+disk fails at
+http://linux-raid.osdl.org/index.php/Preventing_against_a_failing_disk
+
+> > How does this look:
+> > # mdadm --create /dev/md0 --level=raid10 --layout=o2 --metadata=1.2 --chunk=64 --raid-disks=2 missing /dev/sdb1
+> 
+> On partitions it is save to use 1.1 format. Saves you 4k. Jupey.
+> 
+> You should play with the chunksize though and try with and without
+> bitmap and different bitmap sizes. Bitmap costs some write performance
+> but it greatly speeds up resyncs after a crash or temporary drive
+> failure.
+
+I would recommend a bigger chunk size. at least 256 kiB.
+
+Best regards
+keld
