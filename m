@@ -1,74 +1,28 @@
-From: Jon Hardcastle <jd_hardcastle@yahoo.com>
-Subject: RE: linux disk access when idle
-Date: Fri, 21 Aug 2009 01:17:23 -0700 (PDT)
-Message-ID: <371021.65217.qm@web51309.mail.re2.yahoo.com>
-References: <3ECBDC05781B3D48ABD520A01ABF2F9B2E9A6F9E25@SE-EX008.groupinfra.com>
-Reply-To: Jon@eHardcastle.com
+From: Info@quantum-sci.net
+Subject: RAID10 Layouts
+Date: Fri, 21 Aug 2009 06:27:06 -0700
+Message-ID: <200908210627.06241.Info@quantum-sci.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3ECBDC05781B3D48ABD520A01ABF2F9B2E9A6F9E25@SE-EX008.groupinfra.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Matt Garman <matthew.garman@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, AndrewHenry <andrew.henry@logica.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
+Hello list,
 
+Researching RAID10, trying to learn the most advanced system for a 2 SATA drive system.  Have two WD 2TB drives for a media computer, and the most important requirement is data redundancy.  I realize that RAID is no substitute for backups, but this is a backup for the backups and the purpose here is data safety.  The secondary goal is speed enhancement.  It appears that RAID10 can give both.
 
---- On Fri, 21/8/09, Henry, Andrew <andrew.henry@logica.com> wrote:
+First question is on layout of RAID10.  In studying the man pages it seems that Far mode gives 95% of the speed of RAID0, but with increased seek for writes.  And that Offset retains much of this benefit while increasing efficiency of writes.  What should be the preference, Far or Offset?  Are they equally as robust?
 
-> From: Henry, Andrew <andrew.henry@logica.com>
-> Subject: RE: linux disk access when idle
-> To: "Matt Garman" <matthew.garman@gmail.com>, "linux-raid" <linux-rai=
-d@vger.kernel.org>
-> Date: Friday, 21 August, 2009, 7:42 AM
-> I had a similar issue, as I wanted to
-> take full advantage of parking heads but they kept coming
-> alive again.=A0 I was putting them to sleep with hdparm.
->=20
-> I gave up at the end, but thought I had read that it was
-> likely syslog or other internals that were polling the disc
-> too frequently.=A0 Sorry Im a bit vague on the details.
->=20
-> If this was the case (I didn't really investigate) then I
-> thought, stuff it, because I wanted syslog to keep doing
-> it's thing.
->=20
-> --andrew
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at=A0 http://vger.kernel.org/majordomo-info.html
->=20
+How safe is the data in Far or Offset mode?  If a drive fails, will a complete, usable, bootable system exist on the other drive?  (These two are the only drives in the system, which is Debian Testing, Debian kernel 2.6.30-5)  Need I make any special Grub settings?
 
-I did this with the data drives in my array - never managed it with the=
- system drives though.
+What about this Intel firmware 'RAID'?  Would this assist in any way?  How does it relate (if it does) to the linux md system?  Should I set in BIOS to RAID, or leave it at ACPI?
 
-You need to tell smartd to not poll if the drives are asleep and also t=
-ell syslog not to poll too often.=20
+How does this look:
+# mdadm --create /dev/md0 --level=raid10 --layout=o2 --metadata=1.2 --chunk=64 --raid-disks=2 missing /dev/sdb1
 
-There is some for of flag you can apply to see write requests and the a=
-pplication that is doing them.......?
-
-BUT a curious problem I have - and have NEVER really solved is that whe=
-n a drive is asleep if a scheduled smart check runs - the drive doesn't=
- wake up quickly enough so smart brands the drive as 'incapable of a sm=
-art test' and sends me a warning email.... every single time...
-
------------------------
-N: Jon Hardcastle
-E: Jon@eHardcastle.com
-'Do not worry about tomorrow, for tomorrow will bring worries of its ow=
-n.'
------------------------
-
-
-     =20
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
