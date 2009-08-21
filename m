@@ -1,32 +1,38 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: linux disk access when idle
-Date: Fri, 21 Aug 2009 06:45:45 +1200
-Message-ID: <4A8D99D9.2090806@sauce.co.nz>
-References: <20090820163522.GA29215@sewage>
+From: jeffunit <jeff@jeffunit.com>
+Subject: a problem with mdadm 2.6.9
+Date: Thu, 20 Aug 2009 19:01:32 -0700
+Message-ID: <20090821020132421.QHAV6077@cdptpa-omta04.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090820163522.GA29215@sewage>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matt Garman <matthew.garman@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Matt Garman wrote:
+I had a computer that was running mdadm with no problems.
+Then the motherboard failed, while the array was in the process of rebuilding.
+I replaced the motherboard with a new motherboard,
+and I an trying to rebuild my raid array.
 
-> So what I'm trying to figure out is, what is causing the disk
-> access?  It could be any one of:
-> 
->     - Kernel
->     - RAID subsystem (i.e. md)
->     - XFS filesystem
->     - NFS
->     - Samba
->     - ???
+I am running mandriva 2009.1 spring (the latest). The kernel is 2.6.29.6
+I have a 7 drive raid 5 array.
+I said
+mdadm --assemble /dev/md0 /dev/sd[bcdefgh]
 
-Are you running smartd? It polls the drives every 30minutes.
+I got the error
+mdadm cannot open device: /dev/sdb device or resouce busy
+mdadm device /dev/md0 has no superblock - assembly aborted
 
-Regards,
+I then tried to make a degraded array
+mdadm --assemble /dev/sd[cdefgh] --force
+That seemed to work, and the array was degraded.
 
-Richard
+I decided to reboot to see if I could get /dev/sdb online.
+I did, and it didn't help.
+
+What can I do to recover my array?
+
+thanks in advance,
+jeff
+
+
