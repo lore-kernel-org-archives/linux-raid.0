@@ -1,107 +1,95 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: RAID10 Layouts
-Date: Fri, 21 Aug 2009 17:57:43 -0400
-Message-ID: <4A8F1857.2010305@tmr.com>
-References: <200908210627.06241.Info@quantum-sci.net> <87ljldce33.fsf@frosties.localdomain> <20090821204234.GA3683@rap.rap.dk>
+Subject: Re: linux disk access when idle
+Date: Fri, 21 Aug 2009 18:00:43 -0400
+Message-ID: <4A8F190B.9010406@tmr.com>
+References: <20090820163522.GA29215@sewage>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090821204234.GA3683@rap.rap.dk>
+In-Reply-To: <20090820163522.GA29215@sewage>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
-Cc: Goswin von Brederlow <goswin-v-b@web.de>, Info@quantum-sci.net, linux-raid@vger.kernel.org
+To: Matt Garman <matthew.garman@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Keld J=F8rn Simonsen wrote:
-> On Fri, Aug 21, 2009 at 06:43:28PM +0200, Goswin von Brederlow wrote:
->  =20
->> Info@quantum-sci.net writes:
->>
->>    =20
->>> Hello list,
->>>
->>> Researching RAID10, trying to learn the most advanced system for a =
-2
->>> SATA drive system.  Have two WD 2TB drives for a media computer, an=
-d
->>> the most important requirement is data redundancy.  I realize that
->>> RAID is no substitute for backups, but this is a backup for the
->>> backups and the purpose here is data safety.  The secondary goal is
->>> speed enhancement.  It appears that RAID10 can give both.
->>>
->>> First question is on layout of RAID10.  In studying the man pages i=
-t
->>> seems that Far mode gives 95% of the speed of RAID0, but with
->>> increased seek for writes.  And that Offset retains much of this
->>> benefit while increasing efficiency of writes.  What should be the
->>> preference, Far or Offset?  Are they equally as robust?
->>>      =20
->> All raid10 layouts offer the same robustness. Which layout is best f=
-or
->> you really depends on your use case. Probably the biggest factor wil=
-l
->> be the average file size. My experience is that with large files the
->> far copies do not cost noticeable write speed while being twice as
->> fast reading as raid1.
->>    =20
+Matt Garman wrote:
+> The scope of this question is probably broader than Linux RAID, but
+> I thought I'd try here before going to the LKML...
 >
-> The file system elevator makes up for the Far write head movement.
+> I have a fileserver/NAS box that has four Western Digital GreenPower
+> drives in software RAID-5 (i.e. Linux md).  There was some noise
+> about these drives not too long ago: when used under Linux, they
+> tend to have really high (and rapidly increasing) SMART
+> Load_Cycle_Count values[1].
 >
->  =20
->>> How safe is the data in Far or Offset mode?  If a drive fails, will
->>> a complete, usable, bootable system exist on the other drive?
->>> (These two are the only drives in the system, which is Debian
->>> Testing, Debian kernel 2.6.30-5) Need I make any special Grub
->>> settings?
->>>      =20
->> I don't think lilo or grub1 can boot from raid10 at all with offset =
-or
->> far copies. With near copies you are identical to a simple raid1 so
->> that would boot.
->>    =20
+> Basically, in order to save power, these drives park the read/write
+> heads after so many seconds of inactivity.  According to
+> SilentPCReview[2], the 1 TB model uses 5.7W when idle and only 3.7W
+> when the heads are unloaded.  Apparantly, each head parking event
+> causes teh Load_Cycle_Count value to increase.
 >
-> there is a howto on setting up a system, that can continue runnig, if=
- one=20
-> disk fails at
-> http://linux-raid.osdl.org/index.php/Preventing_against_a_failing_dis=
-k
+> Most people seek to disable this head parking behavior to stop that
+> Load_Cycle_Count value from growing alarmingly high.  I actually
+> want to use it to it's full potential.
 >
->  =20
->>> How does this look:
->>> # mdadm --create /dev/md0 --level=3Draid10 --layout=3Do2 --metadata=
-=3D1.2 --chunk=3D64 --raid-disks=3D2 missing /dev/sdb1
->>>      =20
->> On partitions it is save to use 1.1 format. Saves you 4k. Jupey.
->>
->> You should play with the chunksize though and try with and without
->> bitmap and different bitmap sizes. Bitmap costs some write performan=
-ce
->> but it greatly speeds up resyncs after a crash or temporary drive
->> failure.
->>    =20
+> I've got a Kill-A-Watt electricity meter connected to my NAS box.  I
+> see a difference of 10 watts power usage when the heads park (I can
+> hear them unload, so I know when it happens).  Allowing for some
+> power supply inefficiency, I'd say my observation is consistent with
+> SPCR's numbers.
 >
-> I would recommend a bigger chunk size. at least 256 kiB.
->  =20
+> The problem is, the drives don't stay in this parked state very
+> long.  I haven't actually timed the state changes, but average power
+> consumption over a long time (e.g. a week or more) is at the higher
+> (i.e. +10) level.
+>
+> So I figure, something is accessing these drives shortly after the
+> heads park, causing them to un-park (and increasing power
+> consumption).  But this machine is idle 95% of the time.  And even
+> then, the overwhelming majority of the accesses are reads, with very
+> few writes (literally, a handful of writes per week).
+>
+>   
+/proc/sys/vm/dirty_expire_centisecs still set to 30 sec?
 
-You really want to look at stripe-size and stride-size creating an=20
-ext[234] filesystem on top of raid, good things to happen there.
+> So what I'm trying to figure out is, what is causing the disk
+> access?  It could be any one of:
+>
+>     - Kernel
+>     - RAID subsystem (i.e. md)
+>     - XFS filesystem
+>     - NFS
+>     - Samba
+>     - ???
+>
+> I'm hoping someone has enough knowledge of these systems to point me
+> in the right direction for tuning things.  The goal is that when the
+> machine is idle, it is "truly" idle, meaning, no disk accesses take
+> place and the heads can stay parked (thus saving energy).
+>
+> Thank you,
+> Matt
+>
+> LINKS:
+> [1] http://groups.google.com/group/linux.kernel/browse_thread/thread/505ccf760023d132/7e4f4e996f911efd
+>
+> [2] http://www.silentpcreview.com/article804-page2.html
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>   
 
---=20
+
+-- 
 bill davidsen <davidsen@tmr.com>
   CTO TMR Associates, Inc
 
-"You are disgraced professional losers. And by the way, give us our mon=
-ey back."
+"You are disgraced professional losers. And by the way, give us our money back."
     - Representative Earl Pomeroy,  Democrat of North Dakota
-on the A.I.G. executives who were paid bonuses  after a federal bailout=
-=2E
+on the A.I.G. executives who were paid bonuses  after a federal bailout.
 
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
