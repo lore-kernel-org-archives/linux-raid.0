@@ -1,56 +1,100 @@
-From: Info@quantum-sci.net
-Subject: Re: Help
-Date: Fri, 21 Aug 2009 23:14:31 -0700
-Message-ID: <200908212314.31887.Info@quantum-sci.net>
-References: <200908210627.06241.Info@quantum-sci.net> <200908211102.58744.Info@quantum-sci.net> <200908211220.28701.Info@quantum-sci.net>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: RAID10 Layouts
+Date: Sat, 22 Aug 2009 08:31:17 +0200
+Message-ID: <878whcl5qi.fsf@frosties.localdomain>
+References: <200908210627.06241.Info@quantum-sci.net>
+	<87ljldce33.fsf@frosties.localdomain>
+	<200908211102.58744.Info@quantum-sci.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200908211220.28701.Info@quantum-sci.net>
-Content-Disposition: inline
+In-Reply-To: <200908211102.58744.Info@quantum-sci.net> (Info@quantum-sci.net's
+	message of "Fri, 21 Aug 2009 11:02:58 -0700")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Info@quantum-sci.net
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Info@quantum-sci.net writes:
 
-Not able to boot to my RAID devices.  md0 is / and ext3 RAID1, but md1 and md2 are swap and JFS respectively, RAID10 created like this:
-mdadm --create /dev/md1 --level=raid10 --layout=o2 --metadata=1.2 --chunk=256 --raid-disks=2 missing /dev/sdb2
+> Thank you Goswin.
+>
+>
+> On Friday 21 August 2009 09:43:28 Goswin von Brederlow wrote:
+>> I don't think lilo or grub1 can boot from raid10 at all with offset or
+>> far copies. With near copies you are identical to a simple raid1 so
+>> that would boot.
+>> 
+>> So to be bootable even with a failed drive you should partition the
+>> disk. Create a small raid1 for the system and a large raid10 for the
+>> data.
+>
+> Uh oh, already set all 3 parts for RAID10, but haven't switched over yet.
+>
+> As it happens my / is on sda1 and /home is sda3  (swap is sda2), so it'll be pretty easy to just make / RAID1.  Do I need to make swap RAID1 and not 10?
 
-It gives the initial kernel boot message but then says 
-invalid raid superblock magic on sdb2
-invalid raid superblock magic on sdb3
+Need? no. Want? No idea. My experience is that if you need swap (as in
+swap in/out, not just it being used for garbage) then you have lost
+anyway. Half or twice the speed on swap doesn't matter, the system
+will crawl anyway.
+  
+>> I would stay away from any half baked bios stuff. It will be no better
+>> than linux software raid but will tie you to the specific bios. If
+>> your mainboard fails and the next one has a different bios you can't
+>> boot your disks.
+>
+> Thank you.
+>
+>  
+>> > How does this look:
+>> > # mdadm --create /dev/md0 --level=raid10 --layout=o2 --metadata=1.2 --chunk=64 --raid-disks=2 missing /dev/sdb1
+>> 
+>> On partitions it is save to use 1.1 format. Saves you 4k. Jupey.
+>
+> 4k of what?  One time only, or on every cluster?  Any additional benefit to 1.2?
 
-... and halts progress.  I have to hard-reset to continue.  Why isn't the error more specific?
+4k of space overall. The 1.2 format leaves the first 4k of the device
+free for use of a bootloader/MBR.
 
-I've tried setting the metadata to 1.1, and tried adjusting mdadm.conf from /dev/md/1 to /dev/md1, but neither helped.  The parts are set to raid autodetect and the kernel parameter is set to md_autodetect.  What could be wrong?
- 
+> My system records mpeg4 from DishNetwork satellite (R5000-HD), so it
+> handles mostly files over 1GB.  However its most rigorous duty is
+> scanning those videos for commercials, and marking locations in a
+> mysql database.  The disk light is constantly on and system response
+> is sluggish when this is being done.  I don't understand how an
+> advanced drive like this can be so bogged down, but I hope RAID10
+> will speed things up.  Maybe there is a way to increase disk cache
+> size?
 
+man blockdev
 
-On Friday 21 August 2009 12:20:28 Info@quantum-sci.net wrote:
-> 
-> My God, the command is not working.  I need to remove sdb1 from md0 so I can change it from a RAID10 to RAID1, and it simply ignores my command:
-> # mdadm /dev/md0 --fail /dev/sdb1 --remove /dev/sdb1
-> # cat /proc/mdstat
-> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4] [multipath]
-> md2 : active raid10 sdb3[1]
->       1868560128 blocks super 1.2 64K chunks 2 offset-copies [2/1] [_U]
->       bitmap: 94/446 pages [376KB], 2048KB chunk
-> 
-> md1 : active raid10 sdb2[1]
->       6297344 blocks super 1.2 64K chunks 2 offset-copies [2/1] [_U]
->       bitmap: 0/25 pages [0KB], 128KB chunk
-> 
-> md0 : active raid10 sdb1[1]
->       78654080 blocks super 1.2 64K chunks 2 offset-copies [2/1] [_U]
->       bitmap: 76/151 pages [304KB], 256KB chunk
-> 
-> unused devices: <none>
-> #
-> 
-> 
-> My system is half-converted and is now unbootable.  What am I going to do?
-> 
-> 
+Raid1 and the different Raid10 layouts work good for different access
+patterns. The plain raid1 allows 2 streams to read from the drive in
+parallel. If you have multiple streams that will reduce seeks. On the
+other hand the raid10 far layout double sequential read speed. And so
+on. Every layout behaves differently.
 
+For scanning your videos raid10 with far layout is probably best with
+a large read ahead. For your database a simple raid1 is probably better.
+It might be benefitial to have the two on seperate partitions with
+different raid mode.
+
+Or it might be benefitial to have 2 partitions (sdX3 + sdX4) both with
+simple raid1 but flag sdb3 and sda4 as --write-mostly. That way the DB
+would always read from sda while the videos read from sdb.
+
+As said before a lot of this depends on the usage pattern and that
+means trying different things with the work load you will have
+productively.
+
+>> You should play with the chunksize though and try with and without
+>> bitmap and different bitmap sizes. Bitmap costs some write performance
+>> but it greatly speeds up resyncs after a crash or temporary drive
+>> failure.
+>
+> My partitions and data are so enormous that I can't really do any
+> experimenting.  Definitely will use write-intent log.
+
+That is always a problem.
+
+MfG
+        Goswin
