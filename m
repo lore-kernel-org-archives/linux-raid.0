@@ -1,46 +1,42 @@
 From: Goswin von Brederlow <goswin-v-b@web.de>
 Subject: Re: linux disk access when idle
-Date: Sat, 22 Aug 2009 08:33:37 +0200
-Message-ID: <874os0l5mm.fsf@frosties.localdomain>
-References: <20090820163522.GA29215@sewage> <4A8D99D9.2090806@sauce.co.nz>
-	<20090821165935.GA18915@sewage>
+Date: Sat, 22 Aug 2009 08:37:16 +0200
+Message-ID: <87zl9sjqw3.fsf@frosties.localdomain>
+References: <20090820163522.GA29215@sewage> <4A8F190B.9010406@tmr.com>
+	<20090821231039.GB22331@sewage>
+	<20090822050416.GA9202@musti.tarvainen.info>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090821165935.GA18915@sewage> (Matt Garman's message of "Fri,
-	21 Aug 2009 11:59:35 -0500")
+In-Reply-To: <20090822050416.GA9202@musti.tarvainen.info> (Tapani Tarvainen's
+	message of "Sat, 22 Aug 2009 08:04:17 +0300")
 Sender: linux-raid-owner@vger.kernel.org
-To: Matt Garman <matthew.garman@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Matt Garman <matthew.garman@gmail.com> writes:
+Tapani Tarvainen <raid@tapanitarvainen.fi> writes:
 
-> On Fri, Aug 21, 2009 at 06:45:45AM +1200, Richard Scobie wrote:
->> Matt Garman wrote:
->>> So what I'm trying to figure out is, what is causing the disk
->>> access?  It could be any one of:
->>>
->>>     - Kernel
->>>     - RAID subsystem (i.e. md)
->>>     - XFS filesystem
->>>     - NFS
->>>     - Samba
->>>     - ???
->>
->> Are you running smartd? It polls the drives every 30minutes.
+> Just a data point: I've got a box (Debian Lenny) with five disks,
+> system disk plus 4-disk RAID5 array, used as a backup server
+> (rsnapshot), and I power the disks in the raid array down after
+> running the backup - and they stay powered down, even though I don't
+> umount the filesystems let alone stop the array. When accessed (like
+> for restoring something from the backup), they wake up, so I've got an
+> hourly cron job powering them down again - but most days (when
+> there're no restores) they are powered up only during the backup run.
 >
-> I was running smartd, until I received your post :)
+> So it can be done. It's not filesystem type dependent either, there's
+> one jfs and one ext3 in the array.
 >
-> Unfortunately, this does not help keep the heads parked any longer.
->
-> Nonetheless, thank you for the hint.
->
-> Matt
+> The system disk stays up, though. Some experimenting suggested
+> that getting it to stay down would require putting /tmp and parts
+> of /var on a ramdisk (/var/log at least), but I didn't go to
+> the trouble of tracking down all disk-awakening services.
 
-Smartd has an option not to wake up disks. If you have smartd scann
-less often than the suspend time of the disk then idle disk can spinn
-down and stay that way.
+Same here. I have a raid1 for the system on 2 drives and a raid5 over
+6 drives for data. The raid5 is ext3 powers down after 15 minutes
+without access. The raid1 stays up all the time due to /var/log/syslog
+being written to too often. /tmp is tmpfs though.
 
 MfG
         Goswin
