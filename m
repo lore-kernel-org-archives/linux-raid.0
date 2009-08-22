@@ -1,60 +1,55 @@
-From: "Guy Watkins" <linux-raid@watkins-home.com>
-Subject: RE: Help
-Date: Sat, 22 Aug 2009 16:59:04 -0400
-Message-ID: <B0F2EBD236974CA9878F0752EACFC835@m5>
-References: <200908210627.06241.Info@quantum-sci.net> <4A902134.2020009@anonymous.org.uk> <200908221112.35952.Info@quantum-sci.net> <200908221345.00567.Info@quantum-sci.net>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: man mdadm regarding --assume-clean says it's OK to use with
+     RAID1  or 10, when creating:
+Date: Sun, 23 Aug 2009 07:19:32 +1000 (EST)
+Message-ID: <b5c57585f8e55bf526f86418980dfbb4.squirrel@neil.brown.name>
+References: <43d009740908220701j25b26bd8o4ac0030121544c32@mail.gmail.com>
+    <c268e4660908221046x6e461de1u3c6e36f1a7e4021c@mail.gmail.com>
+    <43d009740908221048w2b76f14fwae6abdec1b098bcf@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200908221345.00567.Info@quantum-sci.net>
+In-Reply-To: <43d009740908221048w2b76f14fwae6abdec1b098bcf@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Info@quantum-sci.net, linux-raid@vger.kernel.org
+To: for.poige+linux@gmail.com
+Cc: Drew <drew.kay@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-} -----Original Message-----
-} From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-} owner@vger.kernel.org] On Behalf Of Info@quantum-sci.net
-} Sent: Saturday, August 22, 2009 4:45 PM
-} To: linux-raid@vger.kernel.org
-} Subject: Re: Help
-} 
-} On Saturday 22 August 2009 11:12:35 Info@quantum-sci.net wrote:
-} > Goswin says, "For scanning your videos raid10 with far layout is
-} probably best with
-} > a large read ahead."  I have the RAID10 blocksize set to 1024 for the
-} video partition, but any idea how to set readahead?
-} 
-} My gosh, it turns out this setting is astounding.  You test your drive
-} speed with some large file, as such:
-} # time dd if={somelarge}.iso of=/dev/null bs=256k
-} 
-} ... and check your drive's default readahead setting:
-} # blockdev --getra /dev/sda
-} 256
-} 
-} ... then test with various settings like 1024, 1536, 2048, 4096, 8192, and
-} maybe 16384:
-} # blockdev --setra 4096 /dev/sda
-} 
-} Here are the results for my laptop.  I can't test the HTPC with the array
-} yet, as it's still syncing.
-}    256	 40.4 MB/s
-}  1024	123 MB/s
-}  1536	2.7 GB/s
-}  2048	2.4 GB/s
-}  4096	2.4 GB/s
-}  8192	2.4 GB/s
-} 16384	2.5 GB/s
-} 
-} I suspect it's best to use the minimum readahead for the best speed (in my
-} case 1536), for two reasons:
-} - To save memory;
-} - So there isn't such a performance impact when the blocks are not
-} sequential.
+On Sun, August 23, 2009 3:48 am, Igor Podlesny wrote:
+> 2009/8/23 Drew <drew.kay@gmail.com>:
+>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0"... It can also be used when creating a=
+ RAID1 or RAID10 if
+>>> you want
+>>> to avoid =C2=A0the =C2=A0initial =C2=A0resync ..."
+>>>
+>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0I'm wondering why namely those levels ar=
+e chosen and not
+>>> RAID5/6 for e. g.?
+>>>
+>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0I think it's also safe to use with RAID5=
+/6, isn't it?
+>>
+>> RAID1/10 don't have parity calculations whereas RAID5/6 do.
+>
+> 	Well, and what does it change? I mean if we write some data to that
+> "assume clean" RAID5/6 the parity will be updated anyway.
+>
 
-The disk cache is being used.  You should reboot between each test, or use a
-file much bigger than the amount of RAM you have.  Or use a different file
-each time.
+Yes it will be updated.  But if it is updated with a
+read-modify-write cycle then an old incorrect value will be updated
+to a new incorrect value, which doesn't help you much.
 
+The current RAID6 implementation never does read-modify-write for
+P/Q update so you could get away with --assume-clean there, but I
+don't promise that future implementations will never use r-m-w.
+RAID5 definitely does use R-M-W for single-block writes on
+arrays of 4 or more drives.
+
+NeilBrown
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
