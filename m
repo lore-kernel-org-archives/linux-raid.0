@@ -1,42 +1,38 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Help
-Date: Sat, 22 Aug 2009 17:47:48 +0100
-Message-ID: <4A902134.2020009@anonymous.org.uk>
-References: <200908210627.06241.Info@quantum-sci.net> <200908212314.31887.Info@quantum-sci.net> <3d3031d0053a547684fa49ddc6532819.squirrel@neil.brown.name> <200908220556.32856.Info@quantum-sci.net>
+From: Drew <drew.kay@gmail.com>
+Subject: Re: man mdadm regarding --assume-clean says it's OK to use with RAID1
+	or 10, when creating:
+Date: Sat, 22 Aug 2009 10:46:08 -0700
+Message-ID: <c268e4660908221046x6e461de1u3c6e36f1a7e4021c@mail.gmail.com>
+References: <43d009740908220701j25b26bd8o4ac0030121544c32@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200908220556.32856.Info@quantum-sci.net>
+In-Reply-To: <43d009740908220701j25b26bd8o4ac0030121544c32@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Info@quantum-sci.net
+To: for.poige+linux@gmail.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 22/08/2009 13:56, Info@quantum-sci.net wrote:
-[...]
-> It is very lucid and clear, however I am slightly modifying it to use RAID10 on my second and third partitions.  When I come to 
-> update-initramfs -u
-> ... the only initrd it updates is for an old stock kernel.  It doesn't build one for any of my compiled kernels.
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0"... It can also be used when creating a R=
+AID1 or RAID10 if you want
+> to avoid =C2=A0the =C2=A0initial =C2=A0resync ..."
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0I'm wondering why namely those levels are =
+chosen and not RAID5/6 for e. g.?
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0I think it's also safe to use with RAID5/6=
+, isn't it?
 
-You should have mkinitrd (that's what it is on Fedora/RHEL/CentOS) or 
-something similar with which you can build initramfs images for any kernel.
+RAID1/10 don't have parity calculations whereas RAID5/6 do.
 
-> What partition type should I use rather than raid autodetect?  Or should I revert to 0.90 metadata?
+--=20
+Drew
 
-Probably type DA, Non-FS data, though type FD will be fine even if 
-they're not auto-detected.
-
-> Looking at dmesg it does say that md1 & 2 do not have a valid ==v.90== superblock.  There is no other linux raid partition type, so I guess it's got to be v.090.  Why do they make 1.1 and 1.2 then, if they do not work?
-
-The newer metadata types have their benefits. Auto-detection is being 
-deprecated, I think it's because things which are only for boot-up time 
-are being pushed out of the permanently-loaded kernel into initramfs, so 
-they don't hang around wasting space on a running system. For example, 
-CentOS 5 uses autodetection, Fedora 10 automatically puts mdadm in the 
-initramfs and runs it at the right time.
-
-Cheers,
-
-John.
-
+"Nothing in life is to be feared. It is only to be understood."
+--Marie Curie
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
