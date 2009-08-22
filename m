@@ -1,42 +1,33 @@
-From: Kyle Liddell <kyle@foobox.homelinux.net>
+From: Tapani Tarvainen <raid@tapanitarvainen.fi>
 Subject: Re: linux disk access when idle
-Date: Sat, 22 Aug 2009 01:02:44 -0400
-Message-ID: <1250917364.2889.29.camel@athlon>
-References: <20090820163522.GA29215@sewage>
+Date: Sat, 22 Aug 2009 08:04:17 +0300
+Message-ID: <20090822050416.GA9202@musti.tarvainen.info>
+References: <20090820163522.GA29215@sewage> <4A8F190B.9010406@tmr.com> <20090821231039.GB22331@sewage>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090820163522.GA29215@sewage>
+Content-Disposition: inline
+In-Reply-To: <20090821231039.GB22331@sewage>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matt Garman <matthew.garman@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, 2009-08-20 at 11:35 -0500, Matt Garman wrote:
-> So what I'm trying to figure out is, what is causing the disk
-> access?  It could be any one of:
-> 
->     - Kernel
->     - RAID subsystem (i.e. md)
->     - XFS filesystem
->     - NFS
->     - Samba
->     - ???
+Just a data point: I've got a box (Debian Lenny) with five disks,
+system disk plus 4-disk RAID5 array, used as a backup server
+(rsnapshot), and I power the disks in the raid array down after
+running the backup - and they stay powered down, even though I don't
+umount the filesystems let alone stop the array. When accessed (like
+for restoring something from the backup), they wake up, so I've got an
+hourly cron job powering them down again - but most days (when
+there're no restores) they are powered up only during the backup run.
 
-For one, syslogd.  
-It's probably worthwhile to look up information for laptop power saving.
-In particular, laptop-mode in the kernel, and laptop-mode-tools:
-http://samwel.tk/laptop_mode
-I use this on my laptop, and I don't think I ever have a "surprise" disk
-spinup.  The whole laptop-mode-tools setup is probably much more than
-you want, but it's a good place to start.  The FAQ there also mentions
-how to get syslog to stop syncing to disk.  
-You may also find 'lm-profiler' useful - this will tell you the which
-process is causing disk accesses.  Finally, for general power saving,
-'powertop' tracks the power state information for your CPU, and will
-list the processes that are causing your CPU to come out of any
-sleep/idle states.
+So it can be done. It's not filesystem type dependent either, there's
+one jfs and one ext3 in the array.
 
+The system disk stays up, though. Some experimenting suggested
+that getting it to stay down would require putting /tmp and parts
+of /var on a ramdisk (/var/log at least), but I didn't go to
+the trouble of tracking down all disk-awakening services.
 
-
+-- 
+Tapani Tarvainen
