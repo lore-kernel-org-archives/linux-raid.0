@@ -1,41 +1,38 @@
-From: Igor Podlesny <for.poige+linux@gmail.com>
-Subject: Re: man mdadm regarding --assume-clean says it's OK to use with RAID1
-	or 10, when creating:
-Date: Sun, 23 Aug 2009 01:48:51 +0800
-Message-ID: <43d009740908221048w2b76f14fwae6abdec1b098bcf@mail.gmail.com>
-References: <43d009740908220701j25b26bd8o4ac0030121544c32@mail.gmail.com>
-	<c268e4660908221046x6e461de1u3c6e36f1a7e4021c@mail.gmail.com>
-Reply-To: for.poige+linux@gmail.com
+From: Info@quantum-sci.net
+Subject: Re: Help
+Date: Sat, 22 Aug 2009 11:12:35 -0700
+Message-ID: <200908221112.35952.Info@quantum-sci.net>
+References: <200908210627.06241.Info@quantum-sci.net> <200908220556.32856.Info@quantum-sci.net> <4A902134.2020009@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <c268e4660908221046x6e461de1u3c6e36f1a7e4021c@mail.gmail.com>
+In-Reply-To: <4A902134.2020009@anonymous.org.uk>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Drew <drew.kay@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2009/8/23 Drew <drew.kay@gmail.com>:
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0"... It can also be used when creating a =
-RAID1 or RAID10 if you want
->> to avoid =C2=A0the =C2=A0initial =C2=A0resync ..."
->>
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0I'm wondering why namely those levels are=
- chosen and not RAID5/6 for e. g.?
->>
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0I think it's also safe to use with RAID5/=
-6, isn't it?
->
-> RAID1/10 don't have parity calculations whereas RAID5/6 do.
+On Saturday 22 August 2009 09:47:48 John Robinson wrote:
+> You should have mkinitrd (that's what it is on Fedora/RHEL/CentOS) or 
+> something similar with which you can build initramfs images for any kernel.
 
-	Well, and what does it change? I mean if we write some data to that
-"assume clean" RAID5/6 the parity will be updated anyway.
+OK once I changed the version to 0.90 it stopped just at the kernel banner on boot and hung.  I was about to give up on RAID when your message came through, and I created the initrd.img file.  I always compile my own kernels and don't depend on an initrd, but it now seems to be necessary.  So in Debian:
+# update-initramfs -o /boot/initrd.img-2.6.30-5
+... reboot, and voila it did what it was supposed to, for a change.  I'm now resyncing my 2TB drives, which will take a good while.
 
---=20
-End of message. Next message?
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ 
+> > What partition type should I use rather than raid autodetect?  Or should I revert to 0.90 metadata?
+> 
+> Probably type DA, Non-FS data, though type FD will be fine even if 
+> they're not auto-detected.
+
+It simply found 'bad magick' with FD, so that doesn't work with the newer versions.  I tried to use both newer versions, but it's not possible.  You sound not quite sure of the partition type, so I'll stick with FD and 0.90.  Thanks though John.
+
+Goswin says, "For scanning your videos raid10 with far layout is probably best with
+a large read ahead."  I have the RAID10 blocksize set to 1024 for the video partition, but any idea how to set readahead?
+
+
+
+
