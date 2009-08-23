@@ -1,72 +1,42 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: linux disk access when idle
-Date: Sun, 23 Aug 2009 14:23:14 -0400
-Message-ID: <4A918912.2090602@tmr.com>
-References: <20090820163522.GA29215@sewage> <4A8D99D9.2090806@sauce.co.nz> <20090821165935.GA18915@sewage> <4A8ED2FC.2070700@redhat.com> <20090822210443.GA12033@sewage>
+From: Tony Arcieri <tony@medioh.com>
+Subject: Re: md tries to assemble md_d0 instead of md0
+Date: Sun, 23 Aug 2009 13:54:29 -0600
+Message-ID: <c7e6b2b00908231254u423ecfbch12cb113b49f5b59d@mail.gmail.com>
+References: <c7e6b2b00908230907v4a02a76bt9641e8dca009d64e@mail.gmail.com>
+	 <c7e6b2b00908230912w59f1998wd109272b6904e03b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090822210443.GA12033@sewage>
+In-Reply-To: <c7e6b2b00908230912w59f1998wd109272b6904e03b@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matt Garman <matthew.garman@gmail.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Matt Garman wrote:
-> On Fri, Aug 21, 2009 at 01:01:48PM -0400, Ric Wheeler wrote:
->   
->> On 08/21/2009 12:59 PM, Matt Garman wrote:
->>     
->>>>> So what I'm trying to figure out is, what is causing the disk
->>>>> access?  It could be any one of:
->>>>>
->>>>>      - Kernel
->>>>>      - RAID subsystem (i.e. md)
->>>>>      - XFS filesystem
->>>>>      - NFS
->>>>>      - Samba
->>>>>      - ???
->>>>>        
->>>>>           
->>>> Are you running smartd? It polls the drives every 30minutes.
->>>>         
->>>    
->>>       
->> I think that you can use blktrace to see who is issuing the IO's
->> that  spin up your drives....
->>     
->
-> For five hours today, I ran blktrace on md1 as well as the drives
-> that make up md1 (sd[a-d]).  I also enabled block dump via
->
->     echo 1 > /proc/sys/vm/block_dump
->
-> Nothing.  Neither block_dump nor blktrace recorded anything on md1
-> or sd[abcd].  I caught one instance where the heads parked (I both
-> heard them park as well as saw the power meter show the 10 watt
-> drop).  They only stayed parked for about five minutes.  Yet neither
-> blktrace nor block_dump caught anything.
->
-> I'm going to try lm-profiler now (from the laptop-mode-tools
-> package), but I have low expectations.
->
-> I'm beginning to think that it's not even direct access to the
-> drives that cause the heads to unpark, e.g. perhaps even activity on
-> my system drive (a compact flash card connected to the PATA port)
-> prevents the data drives from parking their heads.
->   
+I booted with a LiveCD, which brought md0 up in the following configuration:
 
-Are you doing regular self test? I'm not sure if non-io connections 
-would show using those tools, I just haven't tried them at that level.
+md0 : active raid5 sdg1[4] sdf1[3] sde1[2] sdb1[0]
+      3907039744 blocks level 5, 64k chunk, algorithm 2 [5/4] [U_UUU]
+
+Unfortunately it also mounted it read/write.  On a subsequent reboot
+back to my original install I'm getting:
+
+md_d0 : inactive sde1[2](S)
+      976759936 blocks
+
+And when I mdadm --assemble --scan -fv:
+
+md0 : active raid5 sdb1[0] sdg1[4] sdf1[3] sdc1[1]
+      3907039744 blocks level 5, 64k chunk, algorithm 2 [5/4] [UU_UU]
+
+md_d0 : inactive sde1[2](S)
+      976759936 blocks
+
+(note the odd drive out changed from sdc to sde)
+
+Any idea WTF is going on here?  I already need to repair the
+filesystem on there because of this.  When I mount it all my data is
+gone.  This is extremely annoying to say the very least.
 
 -- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-
-"Now we have another quarterback besides Kurt Warner telling us during postgame
-interviews that he owes every great thing that happens to him on a football
-field to his faith in Jesus. I knew there had to be a reason why the Almighty
-included a mute button on my remote."
-			-- Arthur Troyer on Tim Tebow (Sports Illustrated)
-
+Tony Arcieri
