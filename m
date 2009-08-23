@@ -1,53 +1,52 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: man mdadm regarding --assume-clean says it's OK to use with
-     RAID1  or 10, when creating:
-Date: Sun, 23 Aug 2009 07:19:32 +1000 (EST)
-Message-ID: <b5c57585f8e55bf526f86418980dfbb4.squirrel@neil.brown.name>
+From: Igor Podlesny <for.poige+linux@gmail.com>
+Subject: Re: man mdadm regarding --assume-clean says it's OK to use with RAID1
+	or 10, when creating:
+Date: Sun, 23 Aug 2009 13:21:49 +0800
+Message-ID: <43d009740908222221w5f5ae3b4qa224322ce0e763c6@mail.gmail.com>
 References: <43d009740908220701j25b26bd8o4ac0030121544c32@mail.gmail.com>
-    <c268e4660908221046x6e461de1u3c6e36f1a7e4021c@mail.gmail.com>
-    <43d009740908221048w2b76f14fwae6abdec1b098bcf@mail.gmail.com>
+	<c268e4660908221046x6e461de1u3c6e36f1a7e4021c@mail.gmail.com>
+	<43d009740908221048w2b76f14fwae6abdec1b098bcf@mail.gmail.com>
+	<b5c57585f8e55bf526f86418980dfbb4.squirrel@neil.brown.name>
+Reply-To: for.poige+linux@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <43d009740908221048w2b76f14fwae6abdec1b098bcf@mail.gmail.com>
+In-Reply-To: <b5c57585f8e55bf526f86418980dfbb4.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: for.poige+linux@gmail.com
+To: NeilBrown <neilb@suse.de>
 Cc: Drew <drew.kay@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, August 23, 2009 3:48 am, Igor Podlesny wrote:
-> 2009/8/23 Drew <drew.kay@gmail.com>:
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0"... It can also be used when creating a=
- RAID1 or RAID10 if
->>> you want
->>> to avoid =C2=A0the =C2=A0initial =C2=A0resync ..."
->>>
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0I'm wondering why namely those levels ar=
-e chosen and not
->>> RAID5/6 for e. g.?
->>>
->>> =C2=A0 =C2=A0 =C2=A0 =C2=A0I think it's also safe to use with RAID5=
-/6, isn't it?
->>
->> RAID1/10 don't have parity calculations whereas RAID5/6 do.
->
-> 	Well, and what does it change? I mean if we write some data to that
-> "assume clean" RAID5/6 the parity will be updated anyway.
->
+2009/8/23 NeilBrown <neilb@suse.de>:
+[...]
+> Yes it will be updated. =C2=A0But if it is updated with a
+> read-modify-write cycle then an old incorrect value will be updated
+> to a new incorrect value, which doesn't help you much.
 
-Yes it will be updated.  But if it is updated with a
-read-modify-write cycle then an old incorrect value will be updated
-to a new incorrect value, which doesn't help you much.
+	I see. Thank you for the answer. My assumption was due thinking that
+parity is never being used when RAID5 is in "healthy" mode.
+=09
+	But anyway, please clear it up: if I've made --asume-clean RAID5
+array, formatted it with some FS (or even LVM), and put OS/data to it,
+then (in idle at night, for e. g.) run "resync", would that be the
+same valid result (overall data integrity) as if I had previously
+created it without "--asume-clean" at all? (Let's suppose hard disks
+were healthy in both cases :-)
 
-The current RAID6 implementation never does read-modify-write for
-P/Q update so you could get away with --assume-clean there, but I
-don't promise that future implementations will never use r-m-w.
-RAID5 definitely does use R-M-W for single-block writes on
-arrays of 4 or more drives.
+	And Neil, using the chance to have your reply :-) I'd like to ask one
+more question: is that true (I think and hope it is!) that MD doesn't
+read/write full chunk size when it's just to read/write another block
+of data and hence chunk size only affects data interleaving on disks.
+=09
+	P. S. Is there someone on this list who can share his linux-RAID
+archive in mbox format? From time to time I find interesting
+discussions have been going but can't just hit "Reply". If you can
+help me with that, please reply personally (not CC:ing to the list).
+Thanks!
 
-NeilBrown
-
+--=20
+End of message. Next message?
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
