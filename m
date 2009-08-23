@@ -1,72 +1,66 @@
-From: Anshuman Aggarwal <anshuman.aggarwal@gmail.com>
-Subject: raid array not auto restarting
-Date: Sun, 23 Aug 2009 19:19:44 +0530
-Message-ID: <5c45fce80908230649y4acc48acxefc8a4bef698e860@mail.gmail.com>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: raid array not auto restarting
+Date: Sun, 23 Aug 2009 14:55:30 +0100
+Message-ID: <20090823135530.GA9860@cthulhu.home.robinhill.me.uk>
+References: <5c45fce80908230649y4acc48acxefc8a4bef698e860@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="opJtzjQTFsWo+cga"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <5c45fce80908230649y4acc48acxefc8a4bef698e860@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Although its not a show stopper, would really appreciate some help on this.
 
-My raid arrays don't start up automatically like they used to after I
-grew them to include the 4th disk (yes, I DID modify the mdadm.conf so
-I'm not sure what's not working here)
-Kernel: 2.6.30.4; mdadm 3.0 (are there any other libraries whose
-version I should be checking also, since I manually upgraded Ubuntu
-Jaunty to mdadm 3.0)
+--opJtzjQTFsWo+cga
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Here is the /proc/mdstat after booting up:
----------------------
-cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-[raid4] [raid10]
-md_d126 : inactive sda2[3](S)
-      195334208 blocks super 1.2
+On Sun Aug 23, 2009 at 07:19:44PM +0530, Anshuman Aggarwal wrote:
 
-md_d127 : inactive sdb[0](S)
-      293057216 blocks super 1.2
+> Although its not a show stopper, would really appreciate some help on thi=
+s.
+>=20
+> My raid arrays don't start up automatically like they used to after I
+> grew them to include the 4th disk (yes, I DID modify the mdadm.conf so
+> I'm not sure what's not working here)
+> Kernel: 2.6.30.4; mdadm 3.0 (are there any other libraries whose
+> version I should be checking also, since I manually upgraded Ubuntu
+> Jaunty to mdadm 3.0)
+>
+<-snip->
+>=20
+> This array starts fine when I do the following:
+>=20
+> mdadm -S /dev/md_d1*
+> mdadm -A -s
+>=20
+> So, if the scan works without any changes in the mdadm, then why
+> doesn't it work at boot time?
+>=20
+Have you updated the initrd so the new mdadm.conf is available at boot?
 
-unused devices: <none>
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
-------------------
-cat /etc/md/mdadm.conf
+--opJtzjQTFsWo+cga
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-DEVICE /dev/sdb /dev/sdd5 /dev/sdc5 /dev/sda1
-DEVICE /dev/sdc6 /dev/sdd6 /dev/sda2
-DEVICE /dev/sdc7 /dev/sdd7
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
 
-# auto-create devices with Debian standard permissions
-# CREATE owner=root group=disk mode=0660 auto=yes
+iEYEARECAAYFAkqRSlEACgkQShxCyD40xBIshACgwAjTbULaM+Po86+C24xoipwd
+tUsAoIirf4BHEyiiZj7k0xGiBHapZ00K
+=ekIo
+-----END PGP SIGNATURE-----
 
-# automatically tag new arrays as belonging to the local system
-HOMEHOST <system>
-
-# instruct the monitoring daemon where to send mail alerts
-MAILADDR root
-
-# definitions of existing MD arrays
-ARRAY /dev/md_d127 LEVEL=raid5 NUM-DEVICES=4 METADATA=1.2
-UUID=42c56ea0:2484f566:387adc6c:b3f6a014
-DEVICES=/dev/sdb,/dev/sdd5,/dev/sdc5,/dev/sda1 NAME=GATEWAY:raid5_280G
-ARRAY /dev/md_d126 LEVEL=raid5 num-devices=3 METADATA=1.2
-UUID=54b83ff7:55316d90:d497a0cb:5a3309fe
-DEVICES=/dev/sdc6,/dev/sdd6,/dev/sda2 NAME=GATEWAY:raid5_186G
-ARRAY /dev/md_d125 LEVEL=raid5 NUM-DEVICES=2 METADATA=1.2
-UUID=e501ec78:3e45999f:4ecca49e:d48db221 DEVICES=/dev/sdc7,/dev/sdd7
-NAME=GATEWAY:raid5_178G
-----------------
-
-This array starts fine when I do the following:
-
-mdadm -S /dev/md_d1*
-mdadm -A -s
-
-So, if the scan works without any changes in the mdadm, then why
-doesn't it work at boot time?
-
-Thanks again,
-Anshuman
+--opJtzjQTFsWo+cga--
