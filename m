@@ -1,66 +1,61 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: raid array not auto restarting
-Date: Sun, 23 Aug 2009 14:55:30 +0100
-Message-ID: <20090823135530.GA9860@cthulhu.home.robinhill.me.uk>
-References: <5c45fce80908230649y4acc48acxefc8a4bef698e860@mail.gmail.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Unbalanced reads of RAID10
+Date: Sun, 23 Aug 2009 16:24:39 +0200
+Message-ID: <20090823142439.GA5162@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="opJtzjQTFsWo+cga"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <5c45fce80908230649y4acc48acxefc8a4bef698e860@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi all,
 
---opJtzjQTFsWo+cga
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+some time ago I was reporting about a strange issue.
 
-On Sun Aug 23, 2009 at 07:19:44PM +0530, Anshuman Aggarwal wrote:
+I have a two HDDs system, with a small RAID1 (/boot)
+and the rest as RAID10 f2 (with LVM on top).
 
-> Although its not a show stopper, would really appreciate some help on thi=
-s.
->=20
-> My raid arrays don't start up automatically like they used to after I
-> grew them to include the 4th disk (yes, I DID modify the mdadm.conf so
-> I'm not sure what's not working here)
-> Kernel: 2.6.30.4; mdadm 3.0 (are there any other libraries whose
-> version I should be checking also, since I manually upgraded Ubuntu
-> Jaunty to mdadm 3.0)
->
-<-snip->
->=20
-> This array starts fine when I do the following:
->=20
-> mdadm -S /dev/md_d1*
-> mdadm -A -s
->=20
-> So, if the scan works without any changes in the mdadm, then why
-> doesn't it work at boot time?
->=20
-Have you updated the initrd so the new mdadm.conf is available at boot?
+It seems that /dev/sdb has more reads than /dev/sda.
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+I had a quick check, with "iostat", and it seems that
+all small reads, somehow below 1~4KiB, are done from
+/dev/sdb2, regardless.
+Actually, it seems that only if there is a pending
+(small) read, this will be scheduled to /dev/sda2,
+but non-overlapping small reads seem to happen always
+from /dev/sdb2.
 
---opJtzjQTFsWo+cga
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+This occurs with the RAID10, but it seems also with
+the RAID1.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
+In normal operation, this does not seem to lead to
+problems, but during the smart long test /dev/sdb
+takes by far more time than /dev/sda, since each
+small read stop the test, and small read occurs
+whenever there is a small write from syslog or
+similar.
+Note that failing and removing /dev/sdb2 results
+in much shorter time for the smart test, about
+1hr30min vs. the 6~7hrs with the drive still
+attached to RAID10.
 
-iEYEARECAAYFAkqRSlEACgkQShxCyD40xBIshACgwAjTbULaM+Po86+C24xoipwd
-tUsAoIirf4BHEyiiZj7k0xGiBHapZ00K
-=ekIo
------END PGP SIGNATURE-----
+Is there any way to tune which is the "preferred"
+drive or the "preferred" policy in case of these
+small (or big) reads?
 
---opJtzjQTFsWo+cga--
+Could this be due to HW configuration?
+The two HDDs are numbered SATA1 and SATA2 in BIOS,
+there are still SATA3 and SATA4 ports somehow
+available (SATA3 has a DVD).
+
+How are the reads scheduled withing the RAID10 software?
+
+Thanks,
+
+bye,
+
+-- 
+
+piergiorgio
