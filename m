@@ -1,61 +1,51 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: RAID 5 recovery to not degrade device on bad block
-Date: Mon, 24 Aug 2009 14:54:24 +0200
-Message-ID: <87ws4t4bjz.fsf@frosties.localdomain>
+From: Simon Jackson <sjackson@bluearc.com>
+Subject: Write intent bitmaps.
+Date: Mon, 24 Aug 2009 15:39:01 +0100
+Message-ID: <ABFC24E4C13D81489F7F624E14891C860D1F15EF@uk-ex-mbx1.terastack.bluearc.com>
 References: <5c45fce80908230116o2f129ab4y8d255cbe83bfac5b@mail.gmail.com>
+ <87ws4t4bjz.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5c45fce80908230116o2f129ab4y8d255cbe83bfac5b@mail.gmail.com>
-	(Anshuman Aggarwal's message of "Sun, 23 Aug 2009 13:46:10 +0530")
+In-Reply-To: <87ws4t4bjz.fsf@frosties.localdomain>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Anshuman Aggarwal <anshuman.aggarwal@gmail.com>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Anshuman Aggarwal <anshuman.aggarwal@gmail.com> writes:
 
-> Here is a simple feature request which I assume would not be much
-> logic change for kernel devs familiar with the code.
->
-> Essentially, if I understand correctly, the kernel raid code will try
-> to let the drive fix a bad sector and otherwise fail the device and
-> degrade the array.
-> However, if an array is already degraded then this behvaviour can be
-> very limiting because typically you are in recovery mode and want to
-> get as much data out to your new disk as you can.
->
-> I would say that for an already degraded array, bad blocks should
-> *NOT* by default cause a single bad block to fail the whole
-> array...instead just log the bad blocks to the syslog and let the
-> admin take care of it.
 
-Big problem there.
+I am trying to use write intent bitmaps on some RAID 1 volumes to reduce the rebuild times in the event of hard resets that cause the md driver to kick members out of my arrays.
 
-As long as the raid is degrade a bad block can be reported to the
-system as I/O error.
+I used the mdadm --grow /dev/md0 --bitmap=internal  and this appeared to succeed, but when I tried to examine the bitmap I get an error. 
 
-But consider what happens when you resync the drive and don't stop on
-a bad block. The block on the new drive coresponding to the bad block
-can not be initialized corectly. But a read of the bad block would
-trigger the block to be recomputed from the remaining disks. Instead
-of an I/O error you would get invalid data.
 
-What would be needed is the ability to mark blocks as bad. Even with
-bitmap support the bit cover too large an area.
+:~$ sudo mdadm --grow /dev/md0 --bitmap=internal
+:~$ sudo mdadm -X /dev/md0
+        Filename : /dev/md0
+           Magic : 00000000
+mdadm: invalid bitmap magic 0x0, the bitmap file appears to be corrupted
+         Version : 0
+mdadm: unknown bitmap version 0, either the bitmap file is corrupted or you need to upgrade your tools
 
-> Right now, the big benefit of RAID5 is being affected
->
-> Ideally, I'd like to see Neil's road map bad block device handler
-> implemented (have often thought of tinkering with the block device
-> code in the kernel to do just that)...but till then a simple check
-> that an array is  degraded before failing a device which would render
-> the whole array inoperable should suffice? This could throw big errors
-> in the syslog but at least the a 2 TB MD array won't be down because
-> of 1 512 byte sector?
->
-> Thanks,
-> Anshuman
+cat /proc/mdstat
+Personalities : [raid1] 
+      
+md0 : active raid1 sda5[0] sdb5[1]
+      7823552 blocks [2/2] [UU]
+      bitmap: 29/239 pages [116KB], 16KB chunk
+      
+unused devices: <none>
+sjackson@mercuryst5:~$ sudo mdadm -X /dev/md0
+        Filename : /dev/md0
+           Magic : 00000000
+mdadm: invalid bitmap magic 0x0, the bitmap file appears to be corrupted
+         Version : 0
+mdadm: unknown bitmap version 0, either the bitmap file is corrupted or you need to upgrade your tools
 
-MfG
-        Goswin
+Do I really have a usable bitmap on the device in this case?
+
+Thanks for any input.  
+
+
