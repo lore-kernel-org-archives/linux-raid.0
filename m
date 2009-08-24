@@ -1,85 +1,43 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Write intent bitmaps.
-Date: Tue, 25 Aug 2009 06:25:14 +1000 (EST)
-Message-ID: <09198ab3b722ad5aa40d32f78626953e.squirrel@neil.brown.name>
-References: <5c45fce80908230116o2f129ab4y8d255cbe83bfac5b@mail.gmail.com>
-    <87ws4t4bjz.fsf@frosties.localdomain>
-    <ABFC24E4C13D81489F7F624E14891C860D1F15EF@uk-ex-mbx1.terastack.bluearc.com>
+From: Clinton Lee Taylor <clintonlee.taylor@gmail.com>
+Subject: Converting ext3 to RAID1 ...
+Date: Mon, 24 Aug 2009 23:24:07 +0200
+Message-ID: <b7b14cbb0908241424i50bdcf59p35a63e4496b108ca@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ABFC24E4C13D81489F7F624E14891C860D1F15EF@uk-ex-mbx1.terastack.bluearc
-     .com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Simon Jackson <sjackson@bluearc.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, August 25, 2009 12:39 am, Simon Jackson wrote:
->
->
-> I am trying to use write intent bitmaps on some RAID 1 volumes to reduce
-> the rebuild times in the event of hard resets that cause the md driver to
-> kick members out of my arrays.
->
-> I used the mdadm --grow /dev/md0 --bitmap=internal  and this appeared to
-> succeed, but when I tried to examine the bitmap I get an error.
->
->
-> :~$ sudo mdadm --grow /dev/md0 --bitmap=internal
-> :~$ sudo mdadm -X /dev/md0
->         Filename : /dev/md0
->            Magic : 00000000
-> mdadm: invalid bitmap magic 0x0, the bitmap file appears to be corrupted
->          Version : 0
-> mdadm: unknown bitmap version 0, either the bitmap file is corrupted or
-> you need to upgrade your tools
+Greetings ...
 
-Quoting from the man page:
+I asked this question about two weeks ago
 
-       -X, --examine-bitmap
-              Report  information about a bitmap file.  The argument is
-either
-              an external bitmap file or an array  component  in  case  of
- an
-              internal  bitmap.   Note  that  running  this on an array
-device
-              (e.g.  /dev/md0) does not report the bitmap for that array.
+http://www.issociate.de/board/post/498227/Ext3_convert_to_RAID1_....html
 
+  and have had not response, so I am going to try and re-phrase and
+hope that somebody can confirm my test case. Thanks.
 
-Particularly read the last sentence.
-Then try
-   mdadm -X /dev/sda5
+Wanting to convert an already created and populated ext3 filesystem.
 
-NeilBrown
+I unmounted the filesystem, ran e2fsck -f /dev/sdb1 to check that the
+current filesystem had no errors.
+Then ran mdadm --create /dev/md0 --level=1 -n 1 /dev/sdb1 --force to
+create the RAID1 device, answered yes to the question.
+Ran e2fsck -v /dev/md0 to check that the RAID1 device had no
+filesystem corruption on it, which it did not.
+Added a spared RAID device using mdadm --add /dev/md0 /dev/sdc1
+Then grew the RAID1 device to two compents with mdadm --grow /dev/md0
+--raid-disks=2 --backup-file=/root/raid1.backup.file
+Did another filesystem check once the RAID finished rebuilding and all
+seemed fine.
+Double checked that the data on the RAID was the same as the original
+data by diffing the two, again all was fine.
 
+ Now is this just lucky or would this be an acceptable way to convert
+an existing ext3 filesystem to RAID1?
 
->
-> cat /proc/mdstat
-> Personalities : [raid1]
->
-> md0 : active raid1 sda5[0] sdb5[1]
->       7823552 blocks [2/2] [UU]
->       bitmap: 29/239 pages [116KB], 16KB chunk
->
-> unused devices: <none>
-> sjackson@mercuryst5:~$ sudo mdadm -X /dev/md0
->         Filename : /dev/md0
->            Magic : 00000000
-> mdadm: invalid bitmap magic 0x0, the bitmap file appears to be corrupted
->          Version : 0
-> mdadm: unknown bitmap version 0, either the bitmap file is corrupted or
-> you need to upgrade your tools
->
-> Do I really have a usable bitmap on the device in this case?
->
-> Thanks for any input.
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
+Thanks
+Mailed
+LeeT
