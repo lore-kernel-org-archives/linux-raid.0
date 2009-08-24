@@ -1,42 +1,61 @@
-From: Tony Arcieri <tony@medioh.com>
-Subject: Re: md tries to assemble md_d0 instead of md0
-Date: Mon, 24 Aug 2009 00:10:15 -0600
-Message-ID: <c7e6b2b00908232310v47e329d0oc32f5265f8859396@mail.gmail.com>
-References: <c7e6b2b00908230907v4a02a76bt9641e8dca009d64e@mail.gmail.com>
-	 <c7e6b2b00908230912w59f1998wd109272b6904e03b@mail.gmail.com>
-	 <20090824055018.GA11940@maude.comedia.it>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: RAID 5 recovery to not degrade device on bad block
+Date: Mon, 24 Aug 2009 14:54:24 +0200
+Message-ID: <87ws4t4bjz.fsf@frosties.localdomain>
+References: <5c45fce80908230116o2f129ab4y8d255cbe83bfac5b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090824055018.GA11940@maude.comedia.it>
+In-Reply-To: <5c45fce80908230116o2f129ab4y8d255cbe83bfac5b@mail.gmail.com>
+	(Anshuman Aggarwal's message of "Sun, 23 Aug 2009 13:46:10 +0530")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Anshuman Aggarwal <anshuman.aggarwal@gmail.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Aug 23, 2009 at 11:50 PM, Luca Berra <bluca@comedia.it> wrote:
+Anshuman Aggarwal <anshuman.aggarwal@gmail.com> writes:
+
+> Here is a simple feature request which I assume would not be much
+> logic change for kernel devs familiar with the code.
 >
-> On Sun, Aug 23, 2009 at 10:12:43AM -0600, Tony Arcieri wrote:
->>
->> Is there a permanent solution to this problem?=A0 Where is md_d0 eve=
-n
->> coming from?=A0 How do I permanently get rid of it?
+> Essentially, if I understand correctly, the kernel raid code will try
+> to let the drive fix a bad sector and otherwise fail the device and
+> degrade the array.
+> However, if an array is already degraded then this behvaviour can be
+> very limiting because typically you are in recovery mode and want to
+> get as much data out to your new disk as you can.
 >
-> check your udev rules
+> I would say that for an already degraded array, bad blocks should
+> *NOT* by default cause a single bad block to fail the whole
+> array...instead just log the bad blocks to the syslog and let the
+> admin take care of it.
 
-=46or what it's worth, reinstalling Ubuntu solved the problem.=A0 Upon =
-my
-first boot into the new install it automatically started resyncing the
-RAID.
+Big problem there.
 
-Dunno what that's about, and reinstalling Linux is not my preferred
-way to fix a problem, but at this point my RAID is resyncing and
-everything seems to be fine.
+As long as the raid is degrade a bad block can be reported to the
+system as I/O error.
 
---
-Tony Arcieri
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+But consider what happens when you resync the drive and don't stop on
+a bad block. The block on the new drive coresponding to the bad block
+can not be initialized corectly. But a read of the bad block would
+trigger the block to be recomputed from the remaining disks. Instead
+of an I/O error you would get invalid data.
+
+What would be needed is the ability to mark blocks as bad. Even with
+bitmap support the bit cover too large an area.
+
+> Right now, the big benefit of RAID5 is being affected
+>
+> Ideally, I'd like to see Neil's road map bad block device handler
+> implemented (have often thought of tinkering with the block device
+> code in the kernel to do just that)...but till then a simple check
+> that an array is  degraded before failing a device which would render
+> the whole array inoperable should suffice? This could throw big errors
+> in the syslog but at least the a 2 TB MD array won't be down because
+> of 1 512 byte sector?
+>
+> Thanks,
+> Anshuman
+
+MfG
+        Goswin
