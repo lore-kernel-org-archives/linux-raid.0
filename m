@@ -1,117 +1,70 @@
-From: Benjamin ESTRABAUD <be@mpstor.com>
-Subject: LVM cannot stop/remove LV, cannot stop/delete dead RAID situation.
-Date: Tue, 25 Aug 2009 15:45:38 +0100
-Message-ID: <4A93F912.5040900@mpstor.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: man mdadm regarding --assume-clean says it's OK to use with RAID1
+	or 10, when creating:
+Date: Wed, 26 Aug 2009 08:25:43 +1000
+Message-ID: <19092.25831.449670.747732@notabene.brown>
+References: <43d009740908220701j25b26bd8o4ac0030121544c32@mail.gmail.com>
+	<c268e4660908221046x6e461de1u3c6e36f1a7e4021c@mail.gmail.com>
+	<43d009740908221048w2b76f14fwae6abdec1b098bcf@mail.gmail.com>
+	<b5c57585f8e55bf526f86418980dfbb4.squirrel@neil.brown.name>
+	<43d009740908222221w5f5ae3b4qa224322ce0e763c6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Igor Podlesny on Sunday August 23
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: for.poige+linux@gmail.com
+Cc: Drew <drew.kay@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On Sunday August 23, for.poige+linux@gmail.com wrote:
+> 2009/8/23 NeilBrown <neilb@suse.de>:
+> [...]
+> > Yes it will be updated. =A0But if it is updated with a
+> > read-modify-write cycle then an old incorrect value will be updated
+> > to a new incorrect value, which doesn't help you much.
+>=20
+> 	I see. Thank you for the answer. My assumption was due thinking that
+> parity is never being used when RAID5 is in "healthy" mode.
+> =09
+> 	But anyway, please clear it up: if I've made --asume-clean RAID5
+> array, formatted it with some FS (or even LVM), and put OS/data to it=
+,
+> then (in idle at night, for e. g.) run "resync", would that be the
+> same valid result (overall data integrity) as if I had previously
+> created it without "--asume-clean" at all? (Let's suppose hard disks
+> were healthy in both cases :-)
 
-I am having an issue with LVM and RAID in some failure cases:
+If by 'run "resync"' you mean
+   echo repair > /sys/block/mdXX/md/sync_action
+then yes, what will have the same effect as not using --assume-clean
+to start with.
 
-It seems that any operations on a LVM LV (lvchange, lvremove, etc..), 
-require this LV's metadata to be readable.
+>=20
+> 	And Neil, using the chance to have your reply :-) I'd like to ask on=
+e
+> more question: is that true (I think and hope it is!) that MD doesn't
+> read/write full chunk size when it's just to read/write another block
+> of data and hence chunk size only affects data interleaving on disks.
 
-In case a LVM LV is setup ontop of a RAID 0, or a RAID 5 for instance, 
-if two disks are lost from the RAID array, the array dies.
+That is correct - chunk size only affect data layout, not IO size.
+md/raid5 always reads or writes a whole page (normally 4K) at a time.
 
-Now that the array is dead, I would like to recreate a new RAID 0 or 5 
-using the remaining alive disks and some new ones. For this reason, I'd 
-like to stop the previous dead RAID using mdadm.
+NeilBrown
 
-However, because the LVM LV does still exists, it seems to have a handle 
-on the dead RAID, as shon below:
 
-# /opt/soma/bin/mdadm/mdadm --stop /dev/md/d0
-raid manager: fail to stop array /dev/md/d0: Device or resource busy
-Perhaps a running process, mounted filesystem or active volume group?
-
-The Volume group created on this RAID's physical volume is:
-
-/dev/1367191
-
-The LVM LV that was created on this RAID is at the location:
-
-/dev/1367191/1367259
-
-Trying to stop or remove the LV as shown below will yield an error too, 
-since the LVM metadata cannot be accessed, since the RAID this LVM is 
-sitting on is dead:
-
-# lvchange -an /dev/1367191/1367259
-  /dev/1367191/1367259: read failed after 0 of 65536 at 0: Input/output 
-error
-  /dev/md/d0p2: read failed after 0 of 65536 at 0: Input/output error
-  /dev/md/d0p3: read failed after 0 of 2048 at 0: Input/output error
-  /dev/1367191/1367259: read failed after 0 of 65536 at 0: Input/output 
-error
-  /dev/1367191/1367259: read failed after 0 of 65536 at 0: Input/output 
-error
-  /dev/1367191/1367259: read failed after 0 of 65536 at 0: Input/output 
-error
-  /dev/md/d0: read failed after 0 of 65536 at 110275985408: Input/output 
-error
-  /dev/md/d0: read failed after 0 of 65536 at 110275985408: Input/output 
-error
-  /dev/md/d0p1: read failed after 0 of 1024 at 50266112: Input/output error
-  /dev/md/d0p2: read failed after 0 of 65536 at 0: Input/output error
-  /dev/md/d0p2: read failed after 0 of 65536 at 0: Input/output error
-  /dev/md/d0p2: read failed after 0 of 65536 at 0: Input/output error
-  /dev/md/d0p3: read failed after 0 of 512 at 110175191040: Input/output 
-error
-  /dev/md/d0p3: read failed after 0 of 512 at 110175293440: Input/output 
-error
-  /dev/md/d0p3: read failed after 0 of 512 at 0: Input/output error
-  /dev/md/d0p3: read failed after 0 of 512 at 4096: Input/output error
-  /dev/md/d0p3: read failed after 0 of 2048 at 0: Input/output error
-  Volume group "1367191" not found
-
-# lvremove -f /dev/1367191/1367259
-  /dev/1367191/1367259: read failed after 0 of 65536 at 0: Input/output 
-error
-  /dev/md/d0p2: read failed after 0 of 65536 at 0: Input/output error
-  /dev/md/d0p3: read failed after 0 of 2048 at 0: Input/output error
-  /dev/1367191/1367259: read failed after 0 of 65536 at 0: Input/output 
-error
-  /dev/1367191/1367259: read failed after 0 of 65536 at 0: Input/output 
-error
-  /dev/1367191/1367259: read failed after 0 of 65536 at 0: Input/output 
-error
-  /dev/md/d0: read failed after 0 of 65536 at 110275985408: Input/output 
-error
-  /dev/md/d0: read failed after 0 of 65536 at 110275985408: Input/output 
-error
-  /dev/md/d0p1: read failed after 0 of 1024 at 50266112: Input/output error
-  /dev/md/d0p2: read failed after 0 of 65536 at 0: Input/output error
-  /dev/md/d0p2: read failed after 0 of 65536 at 0: Input/output error
-  /dev/md/d0p2: read failed after 0 of 65536 at 0: Input/output error
-  /dev/md/d0p3: read failed after 0 of 512 at 110175191040: Input/output 
-error
-  /dev/md/d0p3: read failed after 0 of 512 at 110175293440: Input/output 
-error
-  /dev/md/d0p3: read failed after 0 of 512 at 0: Input/output error
-  /dev/md/d0p3: read failed after 0 of 512 at 4096: Input/output error
-  /dev/md/d0p3: read failed after 0 of 2048 at 0: Input/output error
-  Volume group "1367191" not found
-
--------------
-
-The problem with the above is that because LVM depends on the RAID's 
-good health to perform any operations, and the MD forbids to perform any 
-operation should a handle be opened on itself, we cannot stop either the 
-RAID or the LVM, unless the system is rebooted.
-
-Since rebooting works, but that I cannot afford to reboot in this case, 
-I was wondering if anybody
-knew where to start looking to force the handle opened by LVM on the 
-RAID to go away, maybe in the LVM admin programs (lvremove, lvchange) or 
-in the dm driver itself?
-
-Thanks a million in advance for your advices.
-
-Ben - MPSTOR.
+> =09
+> 	P. S. Is there someone on this list who can share his linux-RAID
+> archive in mbox format? From time to time I find interesting
+> discussions have been going but can't just hit "Reply". If you can
+> help me with that, please reply personally (not CC:ing to the list).
+> Thanks!
+>=20
+> --=20
+> End of message. Next message?
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
