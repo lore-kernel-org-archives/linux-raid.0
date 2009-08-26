@@ -1,57 +1,100 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: LVM cannot stop/remove LV, cannot stop/delete dead RAID situation.
-Date: Wed, 26 Aug 2009 13:20:45 +0200
-Message-ID: <87d46i95yq.fsf@frosties.localdomain>
-References: <4A93F912.5040900@mpstor.com>
+From: Jon Hardcastle <jd_hardcastle@yahoo.com>
+Subject: Re: Raid 5 - not clean and then a failure.
+Date: Wed, 26 Aug 2009 04:29:39 -0700 (PDT)
+Message-ID: <73066.92033.qm@web51304.mail.re2.yahoo.com>
+References: <87hbvu9626.fsf@frosties.localdomain>
+Reply-To: Jon@eHardcastle.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A93F912.5040900@mpstor.com> (Benjamin ESTRABAUD's message of
-	"Tue, 25 Aug 2009 15:45:38 +0100")
+In-Reply-To: <87hbvu9626.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Benjamin ESTRABAUD <be@mpstor.com>
+To: Jon@eHardcastle.com, Goswin von Brederlow <goswin-v-b@web.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Benjamin ESTRABAUD <be@mpstor.com> writes:
 
-> Hi,
->
-> I am having an issue with LVM and RAID in some failure cases:
->
-> It seems that any operations on a LVM LV (lvchange, lvremove, etc..),
-> require this LV's metadata to be readable.
->
-> In case a LVM LV is setup ontop of a RAID 0, or a RAID 5 for instance,
-> if two disks are lost from the RAID array, the array dies.
->
-> Now that the array is dead, I would like to recreate a new RAID 0 or 5
-> using the remaining alive disks and some new ones. For this reason,
-> I'd like to stop the previous dead RAID using mdadm.
->
-> However, because the LVM LV does still exists, it seems to have a
-> handle on the dead RAID, as shon below:
->
->...
->
-> The problem with the above is that because LVM depends on the RAID's
-> good health to perform any operations, and the MD forbids to perform
-> any operation should a handle be opened on itself, we cannot stop
-> either the RAID or the LVM, unless the system is rebooted.
->
-> Since rebooting works, but that I cannot afford to reboot in this
-> case, I was wondering if anybody
-> knew where to start looking to force the handle opened by LVM on the
-> RAID to go away, maybe in the LVM admin programs (lvremove, lvchange)
-> or in the dm driver itself?
->
-> Thanks a million in advance for your advices.
->
-> Ben - MPSTOR.
 
-You can remove the lvm devices yourself:
 
-man dmsetup
+--- On Wed, 26/8/09, Goswin von Brederlow <goswin-v-b@web.de> wrote:
 
-MfG
-        Goswin
+> From: Goswin von Brederlow <goswin-v-b@web.de>
+> Subject: Re: Raid 5 - not clean and then a failure.
+> To: Jon@eHardcastle.com
+> Cc: linux-raid@vger.kernel.org
+> Date: Wednesday, 26 August, 2009, 12:18 PM
+> Jon Hardcastle <jd_hardcastle@yahoo.com>
+> writes:
+>=20
+> > Guys,
+> >
+> > I have been having some problems with my arrays that I
+> think i have nailed down to a pci controller (well I say
+> that - it is always the drives connected to *a* controller
+> but I have tried 2!) anyway the latest saga is i was trying
+> some new kernel options last night - which didn't work.
+> >
+> > But when i booted up again this morning it said one of
+> the drives was in an inconsistent state (not sure of the
+> *exact* error message). I then kicked off an add of the
+> drive and it started syncing. It got about 5% in and then
+> the second drive in on that controller complained and the
+> array failed.=20
+> >
+> > Is there any hope for my data? If i get a good
+> controller in there will the resync continue? can I try and
+> tell it to assume the drives are good (which they ought to
+> be)?
+> >
+> > Please help!
+>=20
+> The inconsistency is probably just a block here or there
+> and I'm
+> assuming none of your drives actualy failed. So 99.9999% of
+> your data
+> should be there. Just rebooting might actualy just get your
+> raid back
+> (to syncing). If not then you have to force reassembly from
+> the drives
+> with the newest serials. That will give you some data
+> corruption,
+> whatever was writing when the controler gave errors. Worst
+> case you
+> have to recreate the raid with --assume-clean.
+>=20
+> I recommend adding a bitmap to the raid. That way a
+> wrongfully failed
+> drive can be resynced in a matter of minutes instead of
+> hours or
+> days. Makes it way less likely another error occurs during
+> resync.
+>=20
+> MfG
+> =A0 =A0 =A0 =A0 Goswin
+> --
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at=A0 http://vger.kernel.org/majordomo-info.html
+>=20
+
+I did look into bitmaps *abit* i could easily have the imagine for my 6=
+ drive raid 5 stored on the raid1 I have in the same system.. The googl=
+ing I did tho did not paint a pretty picture it talked about huge perfo=
+rmance hits?
+
+-----------------------
+N: Jon Hardcastle
+E: Jon@eHardcastle.com
+'Do not worry about tomorrow, for tomorrow will bring worries of its ow=
+n.'
+-----------------------
+
+
+     =20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
