@@ -1,40 +1,58 @@
 From: Robin Hill <robin@robinhill.me.uk>
 Subject: Re: Raid 5 - not clean and then a failure.
-Date: Wed, 26 Aug 2009 15:33:16 +0100
-Message-ID: <20090826143315.GA9995@cthulhu.home.robinhill.me.uk>
-References: <15771.7292.qm@web51312.mail.re2.yahoo.com> <87hbvu9626.fsf@frosties.localdomain> <7d86ddb90908260714j4ddc6b56w580b511bdcf12491@mail.gmail.com>
+Date: Wed, 26 Aug 2009 15:50:22 +0100
+Message-ID: <20090826145022.GB9995@cthulhu.home.robinhill.me.uk>
+References: <7d86ddb90908260714j4ddc6b56w580b511bdcf12491@mail.gmail.com> <353971.56181.qm@web51308.mail.re2.yahoo.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="dDRMvlgZJXvWKvBx"
+	protocol="application/pgp-signature"; boundary="yEPQxsgoJgBvi8ip"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <7d86ddb90908260714j4ddc6b56w580b511bdcf12491@mail.gmail.com>
+In-Reply-To: <353971.56181.qm@web51308.mail.re2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---dDRMvlgZJXvWKvBx
+--yEPQxsgoJgBvi8ip
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Wed Aug 26, 2009 at 10:14:31AM -0400, Ryan Wagoner wrote:
+On Wed Aug 26, 2009 at 07:19:51AM -0700, Jon Hardcastle wrote:
 
-> Wouldn't weekly RAID consistency checks reveal a bad block before you
-> had a failure that required the need to do a full resync? It only
-> takes 3 hours to resync my 3 x 1TB drives and having a bitmap would
-> reduce the performance. I've never had to have a resync in the year
-> I've had the array up. I just wonder if the performance drawback is
-> worth having the bitmap to save a possible resync once every couple
-> years. Or are the RAID consistency checks not reliable enough to
-> prevent more errors during a resync?
+> Can a bitmap be easily removed? I might give it ago if it can.
 >=20
-If your system is that stable, then bitmaps will be a waste of time for
-you.  A lot of people have hardware/software issues which cause drives
-to be kicked out of arrays occasionally, or arrays to fail to shut down
-cleanly.  A bitmap will save time when adding the drive back into the
-array in these cases.
+Yes - you can add/remove a bitmap at any time (on a non-degraded array).
+
+> I am never sure how thorough these checks are. Are they read/write, or
+> just read? for example. I make of point of doing read/write badblocks
+> checks with e2fck -cc when I do run them (not the automatic ones tho -
+> dunno how) but that only checks that partition, which is on LVM, which
+> is on RAID so WHO KNOWS what underlying drives are being checked.
+>=20
+My understanding is that the md "check" action does a read-only check,
+verifying the checksum is valid for the data.  The "repair" action
+will rewrite the checksum if it's not valid.  Neither of these will
+write to the data blocks, or any valid checksum blocks.
+
+Running e2fsck -cc should do a read/write check.  This will only check
+the filesystem data blocks though (and only on ext2/ext3 filesystems of
+course), so will miss the LVM metadata and RAID checksums and metadata.
+
+> I have before now, dismantled the array and run read/write badblocks
+> directly on the constituent drives so at least smart is aware of them
+> and although i aim to do this once every six months, I think I have
+> actually done it only 1nce in the 2 year life of the array.
+>=20
+If you mean running badblocks in read/write mode, that'll be a
+destructive test then.  In this case, you're trading the risk of a
+failure on one disk for the risk of a failure on one of the others
+during rebuild.
+
+You could also run background SMART tests (though this has caused drives
+to be kicked out of the array on some occasions for me) - these look to
+be mostly read-only tests again (though I'm not 100% sure on that).
 
 Cheers,
     Robin
@@ -44,16 +62,16 @@ Cheers,
    / / )      | Little Jim says ....                            |
   // !!       |      "He fallen in de water !!"                 |
 
---dDRMvlgZJXvWKvBx
+--yEPQxsgoJgBvi8ip
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.11 (GNU/Linux)
 
-iEYEARECAAYFAkqVR6sACgkQShxCyD40xBI+IACdHR3MbuV02/TFAR6dupM9SmP5
-BakAnjssqcLEWOqjGbDVZzGnPK+Ydxth
-=qLRA
+iEYEARECAAYFAkqVS64ACgkQShxCyD40xBLtmwCeINWoEgJQepo66VFYBGh6zX1z
+vfsAn3Gm3N2uvup+huPr0b0jd/D0KvV4
+=P/jl
 -----END PGP SIGNATURE-----
 
---dDRMvlgZJXvWKvBx--
+--yEPQxsgoJgBvi8ip--
