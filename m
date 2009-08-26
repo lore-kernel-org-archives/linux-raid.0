@@ -1,99 +1,37 @@
 From: Goswin von Brederlow <goswin-v-b@web.de>
 Subject: Re: Raid 5 - not clean and then a failure.
-Date: Wed, 26 Aug 2009 22:34:30 +0200
-Message-ID: <873a7exqjt.fsf@frosties.localdomain>
-References: <73066.92033.qm@web51304.mail.re2.yahoo.com>
+Date: Wed, 26 Aug 2009 22:35:59 +0200
+Message-ID: <87y6p6wbww.fsf@frosties.localdomain>
+References: <15771.7292.qm@web51312.mail.re2.yahoo.com>
+	<87hbvu9626.fsf@frosties.localdomain>
+	<7d86ddb90908260714j4ddc6b56w580b511bdcf12491@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <73066.92033.qm@web51304.mail.re2.yahoo.com> (Jon Hardcastle's
-	message of "Wed, 26 Aug 2009 04:29:39 -0700 (PDT)")
+In-Reply-To: <7d86ddb90908260714j4ddc6b56w580b511bdcf12491@mail.gmail.com>
+	(Ryan Wagoner's message of "Wed, 26 Aug 2009 10:14:31 -0400")
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon@eHardcastle.com
-Cc: Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
+To: Ryan Wagoner <rswagoner@gmail.com>
+Cc: Goswin von Brederlow <goswin-v-b@web.de>, Jon@ehardcastle.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jon Hardcastle <jd_hardcastle@yahoo.com> writes:
+Ryan Wagoner <rswagoner@gmail.com> writes:
 
-> --- On Wed, 26/8/09, Goswin von Brederlow <goswin-v-b@web.de> wrote:
+> Wouldn't weekly RAID consistency checks reveal a bad block before you
+> had a failure that required the need to do a full resync? It only
+> takes 3 hours to resync my 3 x 1TB drives and having a bitmap would
+> reduce the performance. I've never had to have a resync in the year
+> I've had the array up. I just wonder if the performance drawback is
+> worth having the bitmap to save a possible resync once every couple
+> years. Or are the RAID consistency checks not reliable enough to
+> prevent more errors during a resync?
 >
->> From: Goswin von Brederlow <goswin-v-b@web.de>
->> Subject: Re: Raid 5 - not clean and then a failure.
->> To: Jon@eHardcastle.com
->> Cc: linux-raid@vger.kernel.org
->> Date: Wednesday, 26 August, 2009, 12:18 PM
->> Jon Hardcastle <jd_hardcastle@yahoo.com>
->> writes:
->>=20
->> > Guys,
->> >
->> > I have been having some problems with my arrays that I
->> think i have nailed down to a pci controller (well I say
->> that - it is always the drives connected to *a* controller
->> but I have tried 2!) anyway the latest saga is i was trying
->> some new kernel options last night - which didn't work.
->> >
->> > But when i booted up again this morning it said one of
->> the drives was in an inconsistent state (not sure of the
->> *exact* error message). I then kicked off an add of the
->> drive and it started syncing. It got about 5% in and then
->> the second drive in on that controller complained and the
->> array failed.=20
->> >
->> > Is there any hope for my data? If i get a good
->> controller in there will the resync continue? can I try and
->> tell it to assume the drives are good (which they ought to
->> be)?
->> >
->> > Please help!
->>=20
->> The inconsistency is probably just a block here or there
->> and I'm
->> assuming none of your drives actualy failed. So 99.9999% of
->> your data
->> should be there. Just rebooting might actualy just get your
->> raid back
->> (to syncing). If not then you have to force reassembly from
->> the drives
->> with the newest serials. That will give you some data
->> corruption,
->> whatever was writing when the controler gave errors. Worst
->> case you
->> have to recreate the raid with --assume-clean.
->>=20
->> I recommend adding a bitmap to the raid. That way a
->> wrongfully failed
->> drive can be resynced in a matter of minutes instead of
->> hours or
->> days. Makes it way less likely another error occurs during
->> resync.
->>=20
->> MfG
->> =A0 =A0 =A0 =A0 Goswin
->> --
->> To unsubscribe from this list: send the line "unsubscribe
->> linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at=A0 http://vger.kernel.org/majordomo-info.html
->>=20
->
-> I did look into bitmaps *abit* i could easily have the imagine for my=
- 6 drive raid 5 stored on the raid1 I have in the same system.. The goo=
-gling I did tho did not paint a pretty picture it talked about huge per=
-formance hits?
+> Ryan
 
-That depends on the bitmap size a lot.
-
-It also depends on the frequency of errors. If your controler has a
-hickup once a week causing a drive to fail and you need 1 day to
-rebuild the array you will be left with a double disk failure pretty
-quickly without bitmaps.
+Bitmaps don't protect against disk failures. They help with
+intermittent failures, usualy caused by the controler. If you don't
+have intermittent failures then bitmaps will only cost you for no
+benefit.
 
 MfG
         Goswin
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
