@@ -1,39 +1,35 @@
-From: Alex Butcher <linraid@assursys.co.uk>
-Subject: md check sync_action causes gnome-panel to grow at 1-3MB/s
-Date: Thu, 27 Aug 2009 14:29:18 +0100 (BST)
-Message-ID: <alpine.LFD.2.00.0908271421250.10020@sbhezbfg.of5.nffheflf.cev>
+From: Drew <drew.kay@gmail.com>
+Subject: Re: Western Digital RE3: Raid Failure
+Date: Thu, 27 Aug 2009 07:44:32 -0700
+Message-ID: <c268e4660908270744r17295d5bs6f68bf9abf3ef3b2@mail.gmail.com>
+References: <b9f8dfb10908270243u1213576cs7c5cbc743d637c1c@mail.gmail.com>
+	<4A968C46.9030105@ziu.info>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4A968C46.9030105@ziu.info>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Michal Soltys <soltys@ziu.info>
+Cc: "MOgWai46[Saurceful of Secrets]" <street41@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi -
+> Did you perhaps happen do be hit (in velociraptor case) by:
+> http://forums.storagereview.net/index.php?showtopic=27303&view=findpost&p=256912
+>
+> As for RE3 drives - did the above happen roughly after 49 days of uptime ?
+>
+> Reapperance of this firmware bug in RE3 drives would be hard to believe, but
+> you never know.
 
-I've filed a bug with GNOME at
-<http://bugzilla.gnome.org/show_bug.cgi?id=592308> and added a comment to
-the Red Hat Bugzilla for gnome-panel at
-<https://bugzilla.redhat.com/show_bug.cgi?id=486764#c3>.
+If the TLER problem showed up in the Velociraptors, I'd expect to see
+them in RE3's of the same vintage. The RE (RAID Edition) lineup
+markets TLER as one of their benefits and were positioned to compete
+against Seagate's Barracuda ES Series.
 
-Essentially, if a particular user has a GNOME session running that includes
-gnome-panel, and a md sync_action check on the array that hosts that user's
-home directory is initiated, gnome-panel will allocate memory at a rate of
-about 1-3MB/s until the check is complete.  I've tried reproducing the
-problem with a clean user account but cannot.  It also occurs for the
-original user even if all the GNOME config stuff is moved out of the way. 
-Copying the SELinux context from the original to the clean user's home
-directory still doesn't allow reproduction with the clean user's GNOME
-session.
 
-This suggests it's something magic about the original user's home directory,
-combined with the sync_action check that's provoking this behaviour from
-gnome-panel.
+-- 
+Drew
 
-Any ideas on how I can proceed in attempting to get to the bottom of it?
-
-The problem has been present with all Fedora 11 kernels I've tried, the latest
-being 2.6.29.6-217.2.8.fc11.x86_64.
-
-Thanks,
-Alex
+"Nothing in life is to be feared. It is only to be understood."
+--Marie Curie
