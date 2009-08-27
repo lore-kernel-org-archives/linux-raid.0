@@ -1,37 +1,129 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Raid 5 - not clean and then a failure.
-Date: Wed, 26 Aug 2009 22:35:59 +0200
-Message-ID: <87y6p6wbww.fsf@frosties.localdomain>
-References: <15771.7292.qm@web51312.mail.re2.yahoo.com>
-	<87hbvu9626.fsf@frosties.localdomain>
-	<7d86ddb90908260714j4ddc6b56w580b511bdcf12491@mail.gmail.com>
+From: "MOgWai46[Saurceful of Secrets]" <street41@gmail.com>
+Subject: Western Digital RE3: Raid Failure
+Date: Thu, 27 Aug 2009 11:43:39 +0200
+Message-ID: <b9f8dfb10908270243u1213576cs7c5cbc743d637c1c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7d86ddb90908260714j4ddc6b56w580b511bdcf12491@mail.gmail.com>
-	(Ryan Wagoner's message of "Wed, 26 Aug 2009 10:14:31 -0400")
 Sender: linux-raid-owner@vger.kernel.org
-To: Ryan Wagoner <rswagoner@gmail.com>
-Cc: Goswin von Brederlow <goswin-v-b@web.de>, Jon@ehardcastle.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ryan Wagoner <rswagoner@gmail.com> writes:
+Sunday night i had a problem on my centos 5.3 Server:
 
-> Wouldn't weekly RAID consistency checks reveal a bad block before you
-> had a failure that required the need to do a full resync? It only
-> takes 3 hours to resync my 3 x 1TB drives and having a bitmap would
-> reduce the performance. I've never had to have a resync in the year
-> I've had the array up. I just wonder if the performance drawback is
-> worth having the bitmap to save a possible resync once every couple
-> years. Or are the RAID consistency checks not reliable enough to
-> prevent more errors during a resync?
->
-> Ryan
+Kernel: 2.6.18-128.4.1.el5
+Hard Disks: 4 Western Digital Raid Edition 3 - 500 GB
 
-Bitmaps don't protect against disk failures. They help with
-intermittent failures, usualy caused by the controler. If you don't
-have intermittent failures then bitmaps will only cost you for no
-benefit.
+ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata2.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+         res 51/04:08:38:df:f7/00:00:00:00:00/a7 Emask 0x1 (device error)
+ata2.00: status: { DRDY ERR }
+ata2.00: error: { ABRT }
+ata2.00: configured for UDMA/133
+ata2.01: configured for UDMA/133
+ata2: EH complete
+ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata2.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+         res 51/04:00:38:df:f7/00:00:00:00:00/a7 Emask 0x1 (device error)
+ata2.00: status: { DRDY ERR }
+ata2.00: error: { ABRT }
+ata2.00: configured for UDMA/133
+ata2.01: configured for UDMA/133
+ata2: EH complete
+ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata2.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+         res 51/04:08:38:df:f7/00:00:00:00:00/a7 Emask 0x1 (device error)
+ata2.00: status: { DRDY ERR }
+ata2.00: error: { ABRT }
+ata2.00: configured for UDMA/133
+ata2.01: configured for UDMA/133
+ata2: EH complete
+ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata2.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+         res 51/04:00:38:df:f7/00:00:00:00:00/a7 Emask 0x1 (device error)
+ata2.00: status: { DRDY ERR }
+ata2.00: error: { ABRT }
+ata2.00: configured for UDMA/133
+ata2.01: configured for UDMA/133
+ata2: EH complete
+SCSI device sdc: 976773168 512-byte hdwr sectors (500108 MB)
+sdc: Write Protect is off
+sdc: Mode Sense: 00 3a 00 00
+SCSI device sdc: drive cache: write back
+SCSI device sdd: 976773168 512-byte hdwr sectors (500108 MB)
+sdd: Write Protect is off
+sdd: Mode Sense: 00 3a 00 00
+SCSI device sdd: drive cache: write back
+SCSI device sdc: 976773168 512-byte hdwr sectors (500108 MB)
+sdc: Write Protect is off
+sdc: Mode Sense: 00 3a 00 00
+SCSI device sdc: drive cache: write back
+SCSI device sdd: 976773168 512-byte hdwr sectors (500108 MB)
+sdd: Write Protect is off
+sdd: Mode Sense: 00 3a 00 00
+SCSI device sdd: drive cache: write back
+ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata2.00: BMDMA stat 0x65
+ata2.00: cmd ca/00:08:69:22:ea/00:00:00:00:00/eb tag 0 dma 4096 out
+         res 51/10:08:69:22:ea/00:00:00:00:00/eb Emask 0x81 (invalid argument)
+ata2.00: status: { DRDY ERR }
+ata2.00: error: { IDNF }
+ata2.00: qc timeout (cmd 0xec)
+ata2.00: failed to IDENTIFY (I/O error, err_mask=0x5)
+ata2.00: revalidation failed (errno=-5)
+ata2: failed to recover some devices, retrying in 5 secs
+ata2: soft resetting link
+ata2.00: configured for UDMA/133
+ata2.01: configured for UDMA/133
+sd 1:0:0:0: SCSI error: return code = 0x08000002
+sdc: Current [descriptor]: sense key: Aborted Command
+    Add. Sense: Recorded entity not found
 
-MfG
-        Goswin
+Descriptor sense data with sense descriptors (in hex):
+        72 0b 14 00 00 00 00 0c 00 0a 80 00 00 00 00 00
+        0b ea 22 69
+end_request: I/O error, dev sdc, sector 199893609
+raid1: Disk failure on sdc2, disabling device.
+        Operation continuing on 1 devices
+ata2: EH complete
+SCSI device sdc: 976773168 512-byte hdwr sectors (500108 MB)
+sdc: Write Protect is off
+sdc: Mode Sense: 00 3a 00 00
+SCSI device sdc: drive cache: write back
+SCSI device sdd: 976773168 512-byte hdwr sectors (500108 MB)
+sdd: Write Protect is off
+sdd: Mode Sense: 00 3a 00 00
+SCSI device sdd: drive cache: write back
+SCSI device sdc: 976773168 512-byte hdwr sectors (500108 MB)
+sdc: Write Protect is off
+sdc: Mode Sense: 00 3a 00 00
+SCSI device sdc: drive cache: write back
+SCSI device sdd: 976773168 512-byte hdwr sectors (500108 MB)
+sdd: Write Protect is off
+sdd: Mode Sense: 00 3a 00 00
+SCSI device sdd: drive cache: write back
+RAID1 conf printout:
+ --- wd:1 rd:2
+ disk 0, wo:1, o:0, dev:sdc2
+ disk 1, wo:0, o:1, dev:sda2
+RAID1 conf printout:
+ --- wd:1 rd:2
+ disk 1, wo:0, o:1, dev:sda2
+md: unbind<sdc2>
+md: export_rdev(sdc2)
+md: bind<sdc2>
+
+Monday morning i verified that SDC hard disk didn't have bad blocks
+and i tried to re-add to the Raid md1. The raid array was rebuilded
+with no problems.
+
+I didn't modified the TLER settings on this four hard disk (Default
+Value 7 seconds).
+
+I have installed this type of drives beacuse with the WD Velociraptor
+i had the same issue :(
+
+Can be an issue of the Server Hardware?
+
+Andrea
