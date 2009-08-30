@@ -1,7 +1,8 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v3 14/14] async_tx: raid6 recovery self test
-Date: Sat, 29 Aug 2009 19:31:12 -0700
-Message-ID: <20090830023112.5934.13738.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH v3 10/14] async_tx: remove walk of tx->parent chain in
+	dma_wait_for_async_tx
+Date: Sat, 29 Aug 2009 19:30:52 -0700
+Message-ID: <20090830023052.5934.3855.stgit@dwillia2-linux.ch.intel.com>
 References: <20090830022908.5934.72142.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,303 +11,172 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20090830022908.5934.72142.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, Andre Noll <maan@systemlinux.org>, Maciej Sosnowski <maciej.sosnowski@intel.com>, linux-kernel@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Port drivers/md/raid6test/test.c to use the async raid6 recovery
-routines.  This is meant as a unit test for raid6 acceleration drivers.  In
-addition to the 16-drive test case this implements tests for the 4-disk and
-5-disk special cases (dma devices can not generically handle less than 2
-sources), and adds a test for the D+Q case.
+We currently walk the parent chain when waiting for a given tx to
+complete however this walk may race with the driver cleanup routine.
+The routines in async_raid6_recov.c may fall back to the synchronous
+path at any point so we need to be prepared to call async_tx_quiesce()
+(which calls  dma_wait_for_async_tx).  To remove the ->parent walk we
+guarantee that every time a dependency is attached ->issue_pending() is
+invoked, then we can simply poll the initial descriptor until
+completion.
 
-Reviewed-by: Andre Noll <maan@systemlinux.org>
-Acked-by: Maciej Sosnowski <maciej.sosnowski@intel.com>
+This also allows for a lighter weight 'issue pending' implementation as
+there is no longer a requirement to iterate through all the channels'
+->issue_pending() routines as long as operations have been submitted in
+an ordered chain.  async_tx_issue_pending() is added for this case.
+
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- crypto/async_tx/Makefile    |    1 
- crypto/async_tx/raid6test.c |  241 +++++++++++++++++++++++++++++++++++++++++++
- drivers/md/Kconfig          |   13 ++
- 3 files changed, 255 insertions(+), 0 deletions(-)
- create mode 100644 crypto/async_tx/raid6test.c
+ crypto/async_tx/async_tx.c |   13 +++++++------
+ drivers/dma/dmaengine.c    |   45 ++++++++++----------------------------------
+ include/linux/async_tx.h   |   23 ++++++++++++++++++++++
+ 3 files changed, 40 insertions(+), 41 deletions(-)
 
-diff --git a/crypto/async_tx/Makefile b/crypto/async_tx/Makefile
-index 9a1a768..d1e0e6f 100644
---- a/crypto/async_tx/Makefile
-+++ b/crypto/async_tx/Makefile
-@@ -4,3 +4,4 @@ obj-$(CONFIG_ASYNC_MEMSET) += async_memset.o
- obj-$(CONFIG_ASYNC_XOR) += async_xor.o
- obj-$(CONFIG_ASYNC_PQ) += async_pq.o
- obj-$(CONFIG_ASYNC_RAID6_RECOV) += async_raid6_recov.o
-+obj-$(CONFIG_ASYNC_RAID6_TEST) += raid6test.o
-diff --git a/crypto/async_tx/raid6test.c b/crypto/async_tx/raid6test.c
-new file mode 100644
-index 0000000..98c83ca
---- /dev/null
-+++ b/crypto/async_tx/raid6test.c
-@@ -0,0 +1,241 @@
-+/*
-+ * asynchronous raid6 recovery self test
-+ * Copyright (c) 2009, Intel Corporation.
-+ *
-+ * based on drivers/md/raid6test/test.c:
-+ * 	Copyright 2002-2007 H. Peter Anvin
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-+ *
-+ */
-+#include <linux/async_tx.h>
-+#include <linux/random.h>
-+
-+#undef pr
-+#define pr(fmt, args...) pr_info("raid6test: " fmt, ##args)
-+
-+#define NDISKS 16 /* Including P and Q */
-+
-+static struct page *dataptrs[NDISKS];
-+static struct page *data[NDISKS+3];
-+static struct page *spare;
-+static struct page *recovi;
-+static struct page *recovj;
-+
-+static void callback(void *param)
-+{
-+	struct completion *cmp = param;
-+
-+	complete(cmp);
-+}
-+
-+static void makedata(int disks)
-+{
-+	int i, j;
-+
-+	for (i = 0; i < disks; i++) {
-+		for (j = 0; j < PAGE_SIZE/sizeof(u32); j += sizeof(u32)) {
-+			u32 *p = page_address(data[i]) + j;
-+
-+			*p = random32();
-+		}
-+
-+		dataptrs[i] = data[i];
-+	}
-+}
-+
-+static char disk_type(int d, int disks)
-+{
-+	if (d == disks - 2)
-+		return 'P';
-+	else if (d == disks - 1)
-+		return 'Q';
-+	else
-+		return 'D';
-+}
-+
-+/* Recover two failed blocks. */
-+static void raid6_dual_recov(int disks, size_t bytes, int faila, int failb, struct page **ptrs)
-+{
-+	struct async_submit_ctl submit;
-+	addr_conv_t addr_conv[disks];
-+	struct completion cmp;
-+	struct dma_async_tx_descriptor *tx = NULL;
-+	enum sum_check_flags result = ~0;
-+
-+	if (faila > failb)
-+		swap(faila, failb);
-+
-+	if (failb == disks-1) {
-+		if (faila == disks-2) {
-+			/* P+Q failure.  Just rebuild the syndrome. */
-+			init_async_submit(&submit, 0, NULL, NULL, NULL, addr_conv);
-+			tx = async_gen_syndrome(ptrs, 0, disks, bytes, &submit);
-+		} else {
-+			struct page *blocks[disks];
-+			struct page *dest;
-+			int count = 0;
-+			int i;
-+
-+			/* data+Q failure.  Reconstruct data from P,
-+			 * then rebuild syndrome
-+			 */
-+			for (i = disks; i-- ; ) {
-+				if (i == faila || i == failb)
-+					continue;
-+				blocks[count++] = ptrs[i];
-+			}
-+			dest = ptrs[faila];
-+			init_async_submit(&submit, ASYNC_TX_XOR_ZERO_DST, NULL,
-+					  NULL, NULL, addr_conv);
-+			tx = async_xor(dest, blocks, 0, count, bytes, &submit);
-+
-+			init_async_submit(&submit, 0, tx, NULL, NULL, addr_conv);
-+			tx = async_gen_syndrome(ptrs, 0, disks, bytes, &submit);
-+		}
-+	} else {
-+		if (failb == disks-2) {
-+			/* data+P failure. */
-+			init_async_submit(&submit, 0, NULL, NULL, NULL, addr_conv);
-+			tx = async_raid6_datap_recov(disks, bytes, faila, ptrs, &submit);
-+		} else {
-+			/* data+data failure. */
-+			init_async_submit(&submit, 0, NULL, NULL, NULL, addr_conv);
-+			tx = async_raid6_2data_recov(disks, bytes, faila, failb, ptrs, &submit);
-+		}
-+	}
-+	init_completion(&cmp);
-+	init_async_submit(&submit, ASYNC_TX_ACK, tx, callback, &cmp, addr_conv);
-+	tx = async_syndrome_val(ptrs, 0, disks, bytes, &result, spare, &submit);
-+	async_tx_issue_pending(tx);
-+
-+	if (wait_for_completion_timeout(&cmp, msecs_to_jiffies(3000)) == 0)
-+		pr("%s: timeout! (faila: %d failb: %d disks: %d)\n",
-+		   __func__, faila, failb, disks);
-+
-+	if (result != 0)
-+		pr("%s: validation failure! faila: %d failb: %d sum_check_flags: %x\n",
-+		   __func__, faila, failb, result);
-+}
-+
-+static int test_disks(int i, int j, int disks)
-+{
-+	int erra, errb;
-+
-+	memset(page_address(recovi), 0xf0, PAGE_SIZE);
-+	memset(page_address(recovj), 0xba, PAGE_SIZE);
-+
-+	dataptrs[i] = recovi;
-+	dataptrs[j] = recovj;
-+
-+	raid6_dual_recov(disks, PAGE_SIZE, i, j, dataptrs);
-+
-+	erra = memcmp(page_address(data[i]), page_address(recovi), PAGE_SIZE);
-+	errb = memcmp(page_address(data[j]), page_address(recovj), PAGE_SIZE);
-+
-+	pr("%s(%d, %d): faila=%3d(%c)  failb=%3d(%c)  %s\n",
-+	   __func__, i, j, i, disk_type(i, disks), j, disk_type(j, disks),
-+	   (!erra && !errb) ? "OK" : !erra ? "ERRB" : !errb ? "ERRA" : "ERRAB");
-+
-+	dataptrs[i] = data[i];
-+	dataptrs[j] = data[j];
-+
-+	return erra || errb;
-+}
-+
-+static int test(int disks, int *tests)
-+{
-+	addr_conv_t addr_conv[disks];
-+	struct dma_async_tx_descriptor *tx;
-+	struct async_submit_ctl submit;
-+	struct completion cmp;
-+	int err = 0;
-+	int i, j;
-+
-+	recovi = data[disks];
-+	recovj = data[disks+1];
-+	spare  = data[disks+2];
-+
-+	makedata(disks);
-+
-+	/* Nuke syndromes */
-+	memset(page_address(data[disks-2]), 0xee, PAGE_SIZE);
-+	memset(page_address(data[disks-1]), 0xee, PAGE_SIZE);
-+
-+	/* Generate assumed good syndrome */
-+	init_completion(&cmp);
-+	init_async_submit(&submit, ASYNC_TX_ACK, NULL, callback, &cmp, addr_conv);
-+	tx = async_gen_syndrome(dataptrs, 0, disks, PAGE_SIZE, &submit);
-+	async_tx_issue_pending(tx);
-+
-+	if (wait_for_completion_timeout(&cmp, msecs_to_jiffies(3000)) == 0) {
-+		pr("error: initial gen_syndrome(%d) timed out\n", disks);
-+		return 1;
-+	}
-+
-+	pr("testing the %d-disk case...\n", disks);
-+	for (i = 0; i < disks-1; i++)
-+		for (j = i+1; j < disks; j++) {
-+			(*tests)++;
-+			err += test_disks(i, j, disks);
-+		}
-+
-+	return err;
-+}
-+
-+
-+static int raid6_test(void)
-+{
-+	int err = 0;
-+	int tests = 0;
-+	int i;
-+
-+	for (i = 0; i < NDISKS+3; i++) {
-+		data[i] = alloc_page(GFP_KERNEL);
-+		if (!data[i]) {
-+			while (i--)
-+				put_page(data[i]);
-+			return -ENOMEM;
-+		}
-+	}
-+
-+	/* the 4-disk and 5-disk cases are special for the recovery code */
-+	if (NDISKS > 4)
-+		err += test(4, &tests);
-+	if (NDISKS > 5)
-+		err += test(5, &tests);
-+	err += test(NDISKS, &tests);
-+
-+	pr("\n");
-+	pr("complete (%d tests, %d failure%s)\n",
-+	   tests, err, err == 1 ? "" : "s");
-+
-+	for (i = 0; i < NDISKS+3; i++)
-+		put_page(data[i]);
-+
-+	return 0;
-+}
-+
-+static void raid6_test_exit(void)
-+{
-+}
-+
-+/* when compiled-in wait for drivers to load first (assumes dma drivers
-+ * are also compliled-in)
-+ */
-+late_initcall(raid6_test);
-+module_exit(raid6_test_exit);
-+MODULE_AUTHOR("Dan Williams <dan.j.williams@intel.com>");
-+MODULE_DESCRIPTION("asynchronous RAID-6 recovery self tests");
-+MODULE_LICENSE("GPL");
-diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
-index 36e0675..41b3ae2 100644
---- a/drivers/md/Kconfig
-+++ b/drivers/md/Kconfig
-@@ -155,6 +155,19 @@ config MD_RAID456
- config MD_RAID6_PQ
- 	tristate
+diff --git a/crypto/async_tx/async_tx.c b/crypto/async_tx/async_tx.c
+index 6e37ad3..60615fe 100644
+--- a/crypto/async_tx/async_tx.c
++++ b/crypto/async_tx/async_tx.c
+@@ -77,8 +77,8 @@ static void
+ async_tx_channel_switch(struct dma_async_tx_descriptor *depend_tx,
+ 			struct dma_async_tx_descriptor *tx)
+ {
+-	struct dma_chan *chan;
+-	struct dma_device *device;
++	struct dma_chan *chan = depend_tx->chan;
++	struct dma_device *device = chan->device;
+ 	struct dma_async_tx_descriptor *intr_tx = (void *) ~0;
  
-+config ASYNC_RAID6_TEST
-+	tristate "Self test for hardware accelerated raid6 recovery"
-+	depends on MD_RAID6_PQ
-+	select ASYNC_RAID6_RECOV
-+	---help---
-+	  This is a one-shot self test that permutes through the
-+	  recovery of all the possible two disk failure scenarios for a
-+	  N-disk array.  Recovery is performed with the asynchronous
-+	  raid6 recovery routines, and will optionally use an offload
-+	  engine if one is available.
+ 	/* first check to see if we can still append to depend_tx */
+@@ -90,11 +90,11 @@ async_tx_channel_switch(struct dma_async_tx_descriptor *depend_tx,
+ 	}
+ 	spin_unlock_bh(&depend_tx->lock);
+ 
+-	if (!intr_tx)
++	/* attached dependency, flush the parent channel */
++	if (!intr_tx) {
++		device->device_issue_pending(chan);
+ 		return;
+-
+-	chan = depend_tx->chan;
+-	device = chan->device;
++	}
+ 
+ 	/* see if we can schedule an interrupt
+ 	 * otherwise poll for completion
+@@ -128,6 +128,7 @@ async_tx_channel_switch(struct dma_async_tx_descriptor *depend_tx,
+ 			intr_tx->tx_submit(intr_tx);
+ 			async_tx_ack(intr_tx);
+ 		}
++		device->device_issue_pending(chan);
+ 	} else {
+ 		if (dma_wait_for_async_tx(depend_tx) == DMA_ERROR)
+ 			panic("%s: DMA_ERROR waiting for depend_tx\n",
+diff --git a/drivers/dma/dmaengine.c b/drivers/dma/dmaengine.c
+index 6781e8f..e002e0e 100644
+--- a/drivers/dma/dmaengine.c
++++ b/drivers/dma/dmaengine.c
+@@ -934,49 +934,24 @@ EXPORT_SYMBOL(dma_async_tx_descriptor_init);
+ 
+ /* dma_wait_for_async_tx - spin wait for a transaction to complete
+  * @tx: in-flight transaction to wait on
+- *
+- * This routine assumes that tx was obtained from a call to async_memcpy,
+- * async_xor, async_memset, etc which ensures that tx is "in-flight" (prepped
+- * and submitted).  Walking the parent chain is only meant to cover for DMA
+- * drivers that do not implement the DMA_INTERRUPT capability and may race with
+- * the driver's descriptor cleanup routine.
+  */
+ enum dma_status
+ dma_wait_for_async_tx(struct dma_async_tx_descriptor *tx)
+ {
+-	enum dma_status status;
+-	struct dma_async_tx_descriptor *iter;
+-	struct dma_async_tx_descriptor *parent;
++	unsigned long dma_sync_wait_timeout = jiffies + msecs_to_jiffies(5000);
+ 
+ 	if (!tx)
+ 		return DMA_SUCCESS;
+ 
+-	WARN_ONCE(tx->parent, "%s: speculatively walking dependency chain for"
+-		  " %s\n", __func__, dma_chan_name(tx->chan));
+-
+-	/* poll through the dependency chain, return when tx is complete */
+-	do {
+-		iter = tx;
+-
+-		/* find the root of the unsubmitted dependency chain */
+-		do {
+-			parent = iter->parent;
+-			if (!parent)
+-				break;
+-			else
+-				iter = parent;
+-		} while (parent);
+-
+-		/* there is a small window for ->parent == NULL and
+-		 * ->cookie == -EBUSY
+-		 */
+-		while (iter->cookie == -EBUSY)
+-			cpu_relax();
+-
+-		status = dma_sync_wait(iter->chan, iter->cookie);
+-	} while (status == DMA_IN_PROGRESS || (iter != tx));
+-
+-	return status;
++	while (tx->cookie == -EBUSY) {
++		if (time_after_eq(jiffies, dma_sync_wait_timeout)) {
++			pr_err("%s timeout waiting for descriptor submission\n",
++				__func__);
++			return DMA_ERROR;
++		}
++		cpu_relax();
++	}
++	return dma_sync_wait(tx->chan, tx->cookie);
+ }
+ EXPORT_SYMBOL_GPL(dma_wait_for_async_tx);
+ 
+diff --git a/include/linux/async_tx.h b/include/linux/async_tx.h
+index 3d21a25..12a2efc 100644
+--- a/include/linux/async_tx.h
++++ b/include/linux/async_tx.h
+@@ -83,6 +83,24 @@ struct async_submit_ctl {
+ 
+ #ifdef CONFIG_DMA_ENGINE
+ #define async_tx_issue_pending_all dma_issue_pending_all
 +
-+	  If unsure, say N.
++/**
++ * async_tx_issue_pending - send pending descriptor to the hardware channel
++ * @tx: descriptor handle to retrieve hardware context
++ *
++ * Note: any dependent operations will have already been issued by
++ * async_tx_channel_switch, or (in the case of no channel switch) will
++ * be already pending on this channel.
++ */
++static inline void async_tx_issue_pending(struct dma_async_tx_descriptor *tx)
++{
++	if (likely(tx)) {
++		struct dma_chan *chan = tx->chan;
++		struct dma_device *dma = chan->device;
 +
- config MD_MULTIPATH
- 	tristate "Multipath I/O support"
- 	depends on BLK_DEV_MD
++		dma->device_issue_pending(chan);
++	}
++}
+ #ifdef CONFIG_ARCH_HAS_ASYNC_TX_FIND_CHANNEL
+ #include <asm/async_tx.h>
+ #else
+@@ -98,6 +116,11 @@ static inline void async_tx_issue_pending_all(void)
+ 	do { } while (0);
+ }
+ 
++static inline void async_tx_issue_pending(struct dma_async_tx_descriptor *tx)
++{
++	do { } while (0);
++}
++
+ static inline struct dma_chan *
+ async_tx_find_channel(struct async_submit_ctl *submit,
+ 		      enum dma_transaction_type tx_type, struct page **dst,
 
