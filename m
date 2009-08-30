@@ -1,8 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v3 04/14] async_xor: permit callers to pass in a 'dma/page
-	scribble' region
-Date: Sat, 29 Aug 2009 19:30:21 -0700
-Message-ID: <20090830023021.5934.54848.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH v3 06/14] md/raid6: move the spare page to a percpu allocation
+Date: Sat, 29 Aug 2009 19:30:31 -0700
+Message-ID: <20090830023031.5934.53814.stgit@dwillia2-linux.ch.intel.com>
 References: <20090830022908.5934.72142.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -11,226 +10,406 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20090830022908.5934.72142.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, Andre Noll <maan@systemlinux.org>, Maciej Sosnowski <maciej.sosnowski@intel.com>, linux-kernel@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-async_xor() needs space to perform dma and page address conversions.  In
-most cases the code can simply reuse the struct page * array because the
-size of the native pointer matches the size of a dma/page address.  In
-order to support archs where sizeof(dma_addr_t) is larger than
-sizeof(struct page *), or to preserve the input parameters, we utilize a
-memory region passed in by the caller.
+In preparation for asynchronous handling of raid6 operations move the
+spare page to a percpu allocation to allow multiple simultaneous
+synchronous raid6 recovery operations.
 
-Since the code is now prepared to handle the case where it cannot
-perform address conversions on the stack, we no longer need the
-!HIGHMEM64G dependency in drivers/dma/Kconfig.
+Make this allocation cpu hotplug aware to maximize allocation
+efficiency.
 
-[ Impact: don't clobber input buffers for address conversions ]
-
-Reviewed-by: Andre Noll <maan@systemlinux.org>
-Acked-by: Maciej Sosnowski <maciej.sosnowski@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- Documentation/crypto/async-tx-api.txt |   43 +++++++++++++++---------
- crypto/async_tx/async_xor.c           |   60 ++++++++++++++++-----------------
- drivers/dma/Kconfig                   |    2 +
- 3 files changed, 58 insertions(+), 47 deletions(-)
+ drivers/md/raid5.c |  252 +++++++++++++++++++++++++++++++++++-----------------
+ drivers/md/raid5.h |    9 +-
+ 2 files changed, 175 insertions(+), 86 deletions(-)
 
-diff --git a/Documentation/crypto/async-tx-api.txt b/Documentation/crypto/async-tx-api.txt
-index dfe0475..6b15e48 100644
---- a/Documentation/crypto/async-tx-api.txt
-+++ b/Documentation/crypto/async-tx-api.txt
-@@ -115,29 +115,42 @@ of an operation.
- Perform a xor->copy->xor operation where each operation depends on the
- result from the previous operation:
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 9411466..5359236 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -48,6 +48,7 @@
+ #include <linux/raid/pq.h>
+ #include <linux/async_tx.h>
+ #include <linux/seq_file.h>
++#include <linux/cpu.h>
+ #include "md.h"
+ #include "raid5.h"
+ #include "bitmap.h"
+@@ -2565,14 +2566,15 @@ static void handle_parity_checks5(raid5_conf_t *conf, struct stripe_head *sh,
  
--void complete_xor_copy_xor(void *param)
-+void callback(void *param)
+ 
+ static void handle_parity_checks6(raid5_conf_t *conf, struct stripe_head *sh,
+-				struct stripe_head_state *s,
+-				struct r6_state *r6s, struct page *tmp_page,
+-				int disks)
++				  struct stripe_head_state *s,
++				  struct r6_state *r6s, int disks)
  {
--	printk("complete\n");
-+	struct completion *cmp = param;
-+
-+	complete(cmp);
- }
+ 	int update_p = 0, update_q = 0;
+ 	struct r5dev *dev;
+ 	int pd_idx = sh->pd_idx;
+ 	int qd_idx = sh->qd_idx;
++	unsigned long cpu;
++	struct page *tmp_page;
  
--int run_xor_copy_xor(struct page **xor_srcs,
--		     int xor_src_cnt,
--		     struct page *xor_dest,
--		     size_t xor_len,
--		     struct page *copy_src,
--		     struct page *copy_dest,
--		     size_t copy_len)
-+void run_xor_copy_xor(struct page **xor_srcs,
-+		      int xor_src_cnt,
-+		      struct page *xor_dest,
-+		      size_t xor_len,
-+		      struct page *copy_src,
-+		      struct page *copy_dest,
-+		      size_t copy_len)
- {
- 	struct dma_async_tx_descriptor *tx;
-+	addr_conv_t addr_conv[xor_src_cnt];
-+	struct async_submit_ctl submit;
-+	addr_conv_t addr_conv[NDISKS];
-+	struct completion cmp;
-+
-+	init_async_submit(&submit, ASYNC_TX_XOR_DROP_DST, NULL, NULL, NULL,
-+			  addr_conv);
-+	tx = async_xor(xor_dest, xor_srcs, 0, xor_src_cnt, xor_len, &submit)
+ 	set_bit(STRIPE_HANDLE, &sh->state);
  
--	tx = async_xor(xor_dest, xor_srcs, 0, xor_src_cnt, xor_len,
--		       ASYNC_TX_XOR_DROP_DST, NULL, NULL, NULL);
--	tx = async_memcpy(copy_dest, copy_src, 0, 0, copy_len, tx, NULL, NULL);
--	tx = async_xor(xor_dest, xor_srcs, 0, xor_src_cnt, xor_len,
--		       ASYNC_TX_XOR_DROP_DST | ASYNC_TX_ACK,
--		       tx, complete_xor_copy_xor, NULL);
-+	submit->depend_tx = tx;
-+	tx = async_memcpy(copy_dest, copy_src, 0, 0, copy_len, &submit);
-+
-+	init_completion(&cmp);
-+	init_async_submit(&submit, ASYNC_TX_XOR_DROP_DST | ASYNC_TX_ACK, tx,
-+			  callback, &cmp, addr_conv);
-+	tx = async_xor(xor_dest, xor_srcs, 0, xor_src_cnt, xor_len, &submit);
- 
- 	async_tx_issue_pending_all();
-+
-+	wait_for_completion(&cmp);
- }
- 
- See include/linux/async_tx.h for more information on the flags.  See the
-diff --git a/crypto/async_tx/async_xor.c b/crypto/async_tx/async_xor.c
-index 691fa98..1e96c4d 100644
---- a/crypto/async_tx/async_xor.c
-+++ b/crypto/async_tx/async_xor.c
-@@ -33,11 +33,10 @@
- /* do_async_xor - dma map the pages and perform the xor with an engine */
- static __async_inline struct dma_async_tx_descriptor *
- do_async_xor(struct dma_chan *chan, struct page *dest, struct page **src_list,
--	     unsigned int offset, int src_cnt, size_t len,
-+	     unsigned int offset, int src_cnt, size_t len, dma_addr_t *dma_src,
- 	     struct async_submit_ctl *submit)
- {
- 	struct dma_device *dma = chan->device;
--	dma_addr_t *dma_src = (dma_addr_t *) src_list;
- 	struct dma_async_tx_descriptor *tx = NULL;
- 	int src_off = 0;
- 	int i;
-@@ -125,9 +124,14 @@ do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
- 	int xor_src_cnt;
- 	int src_off = 0;
- 	void *dest_buf;
--	void **srcs = (void **) src_list;
-+	void **srcs;
- 
--	/* reuse the 'src_list' array to convert to buffer pointers */
-+	if (submit->scribble)
-+		srcs = submit->scribble;
-+	else
-+		srcs = (void **) src_list;
-+
-+	/* convert to buffer pointers */
- 	for (i = 0; i < src_cnt; i++)
- 		srcs[i] = page_address(src_list[i]) + offset;
- 
-@@ -178,17 +182,26 @@ async_xor(struct page *dest, struct page **src_list, unsigned int offset,
- 	struct dma_chan *chan = async_tx_find_channel(submit, DMA_XOR,
- 						      &dest, 1, src_list,
- 						      src_cnt, len);
-+	dma_addr_t *dma_src = NULL;
-+
- 	BUG_ON(src_cnt <= 1);
- 
--	if (chan) {
-+	if (submit->scribble)
-+		dma_src = submit->scribble;
-+	else if (sizeof(dma_addr_t) <= sizeof(struct page *))
-+		dma_src = (dma_addr_t *) src_list;
-+
-+	if (dma_src && chan) {
- 		/* run the xor asynchronously */
- 		pr_debug("%s (async): len: %zu\n", __func__, len);
- 
- 		return do_async_xor(chan, dest, src_list, offset, src_cnt, len,
--				    submit);
-+				    dma_src, submit);
- 	} else {
- 		/* run the xor synchronously */
- 		pr_debug("%s (sync): len: %zu\n", __func__, len);
-+		WARN_ONCE(chan, "%s: no space for dma address conversion\n",
-+			  __func__);
- 
- 		/* in the sync case the dest is an implied source
- 		 * (assumes the dest is the first source)
-@@ -241,11 +254,16 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
- 						      src_cnt, len);
- 	struct dma_device *device = chan ? chan->device : NULL;
- 	struct dma_async_tx_descriptor *tx = NULL;
-+	dma_addr_t *dma_src = NULL;
- 
- 	BUG_ON(src_cnt <= 1);
- 
--	if (device && src_cnt <= device->max_xor) {
--		dma_addr_t *dma_src = (dma_addr_t *) src_list;
-+	if (submit->scribble)
-+		dma_src = submit->scribble;
-+	else if (sizeof(dma_addr_t) <= sizeof(struct page *))
-+		dma_src = (dma_addr_t *) src_list;
-+
-+	if (dma_src && device && src_cnt <= device->max_xor) {
- 		unsigned long dma_prep_flags;
- 		int i;
- 
-@@ -275,6 +293,9 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
- 		enum async_tx_flags flags_orig = submit->flags;
- 
- 		pr_debug("%s: (sync) len: %zu\n", __func__, len);
-+		WARN_ONCE(device && src_cnt <= device->max_xor,
-+			  "%s: no space for dma address conversion\n",
-+			  __func__);
- 
- 		submit->flags |= ASYNC_TX_XOR_DROP_DST;
- 		submit->flags &= ~ASYNC_TX_ACK;
-@@ -293,29 +314,6 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
- }
- EXPORT_SYMBOL_GPL(async_xor_val);
- 
--static int __init async_xor_init(void)
--{
--	#ifdef CONFIG_DMA_ENGINE
--	/* To conserve stack space the input src_list (array of page pointers)
--	 * is reused to hold the array of dma addresses passed to the driver.
--	 * This conversion is only possible when dma_addr_t is less than the
--	 * the size of a pointer.  HIGHMEM64G is known to violate this
--	 * assumption.
+@@ -2583,78 +2585,75 @@ static void handle_parity_checks6(raid5_conf_t *conf, struct stripe_head *sh,
+ 	 * case we can only check one of them, possibly using the
+ 	 * other to generate missing data
+ 	 */
+-
+-	/* If !tmp_page, we cannot do the calculations,
+-	 * but as we have set STRIPE_HANDLE, we will soon be called
+-	 * by stripe_handle with a tmp_page - just wait until then.
 -	 */
--	BUILD_BUG_ON(sizeof(dma_addr_t) > sizeof(struct page *));
--	#endif
--
--	return 0;
--}
--
--static void __exit async_xor_exit(void)
--{
--	do { } while (0);
--}
--
--module_init(async_xor_init);
--module_exit(async_xor_exit);
--
- MODULE_AUTHOR("Intel Corporation");
- MODULE_DESCRIPTION("asynchronous xor/xor-zero-sum api");
- MODULE_LICENSE("GPL");
-diff --git a/drivers/dma/Kconfig b/drivers/dma/Kconfig
-index 3b3c01b..912a51b 100644
---- a/drivers/dma/Kconfig
-+++ b/drivers/dma/Kconfig
-@@ -4,7 +4,7 @@
+-	if (tmp_page) {
+-		if (s->failed == r6s->q_failed) {
+-			/* The only possible failed device holds 'Q', so it
+-			 * makes sense to check P (If anything else were failed,
+-			 * we would have used P to recreate it).
+-			 */
+-			compute_block_1(sh, pd_idx, 1);
+-			if (!page_is_zero(sh->dev[pd_idx].page)) {
+-				compute_block_1(sh, pd_idx, 0);
+-				update_p = 1;
+-			}
+-		}
+-		if (!r6s->q_failed && s->failed < 2) {
+-			/* q is not failed, and we didn't use it to generate
+-			 * anything, so it makes sense to check it
+-			 */
+-			memcpy(page_address(tmp_page),
+-			       page_address(sh->dev[qd_idx].page),
+-			       STRIPE_SIZE);
+-			compute_parity6(sh, UPDATE_PARITY);
+-			if (memcmp(page_address(tmp_page),
+-				   page_address(sh->dev[qd_idx].page),
+-				   STRIPE_SIZE) != 0) {
+-				clear_bit(STRIPE_INSYNC, &sh->state);
+-				update_q = 1;
+-			}
++	cpu = get_cpu();
++	tmp_page = per_cpu_ptr(conf->percpu, cpu)->spare_page;
++	if (s->failed == r6s->q_failed) {
++		/* The only possible failed device holds 'Q', so it
++		 * makes sense to check P (If anything else were failed,
++		 * we would have used P to recreate it).
++		 */
++		compute_block_1(sh, pd_idx, 1);
++		if (!page_is_zero(sh->dev[pd_idx].page)) {
++			compute_block_1(sh, pd_idx, 0);
++			update_p = 1;
+ 		}
+-		if (update_p || update_q) {
+-			conf->mddev->resync_mismatches += STRIPE_SECTORS;
+-			if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
+-				/* don't try to repair!! */
+-				update_p = update_q = 0;
++	}
++	if (!r6s->q_failed && s->failed < 2) {
++		/* q is not failed, and we didn't use it to generate
++		 * anything, so it makes sense to check it
++		 */
++		memcpy(page_address(tmp_page),
++		       page_address(sh->dev[qd_idx].page),
++		       STRIPE_SIZE);
++		compute_parity6(sh, UPDATE_PARITY);
++		if (memcmp(page_address(tmp_page),
++			   page_address(sh->dev[qd_idx].page),
++			   STRIPE_SIZE) != 0) {
++			clear_bit(STRIPE_INSYNC, &sh->state);
++			update_q = 1;
+ 		}
++	}
++	put_cpu();
  
- menuconfig DMADEVICES
- 	bool "DMA Engine support"
--	depends on !HIGHMEM64G && HAS_DMA
-+	depends on HAS_DMA
- 	help
- 	  DMA engines can do asynchronous data transfers without
- 	  involving the host CPU.  Currently, this framework can be
+-		/* now write out any block on a failed drive,
+-		 * or P or Q if they need it
+-		 */
++	if (update_p || update_q) {
++		conf->mddev->resync_mismatches += STRIPE_SECTORS;
++		if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
++			/* don't try to repair!! */
++			update_p = update_q = 0;
++	}
+ 
+-		if (s->failed == 2) {
+-			dev = &sh->dev[r6s->failed_num[1]];
+-			s->locked++;
+-			set_bit(R5_LOCKED, &dev->flags);
+-			set_bit(R5_Wantwrite, &dev->flags);
+-		}
+-		if (s->failed >= 1) {
+-			dev = &sh->dev[r6s->failed_num[0]];
+-			s->locked++;
+-			set_bit(R5_LOCKED, &dev->flags);
+-			set_bit(R5_Wantwrite, &dev->flags);
+-		}
++	/* now write out any block on a failed drive,
++	 * or P or Q if they need it
++	 */
+ 
+-		if (update_p) {
+-			dev = &sh->dev[pd_idx];
+-			s->locked++;
+-			set_bit(R5_LOCKED, &dev->flags);
+-			set_bit(R5_Wantwrite, &dev->flags);
+-		}
+-		if (update_q) {
+-			dev = &sh->dev[qd_idx];
+-			s->locked++;
+-			set_bit(R5_LOCKED, &dev->flags);
+-			set_bit(R5_Wantwrite, &dev->flags);
+-		}
+-		clear_bit(STRIPE_DEGRADED, &sh->state);
++	if (s->failed == 2) {
++		dev = &sh->dev[r6s->failed_num[1]];
++		s->locked++;
++		set_bit(R5_LOCKED, &dev->flags);
++		set_bit(R5_Wantwrite, &dev->flags);
++	}
++	if (s->failed >= 1) {
++		dev = &sh->dev[r6s->failed_num[0]];
++		s->locked++;
++		set_bit(R5_LOCKED, &dev->flags);
++		set_bit(R5_Wantwrite, &dev->flags);
++	}
+ 
+-		set_bit(STRIPE_INSYNC, &sh->state);
++	if (update_p) {
++		dev = &sh->dev[pd_idx];
++		s->locked++;
++		set_bit(R5_LOCKED, &dev->flags);
++		set_bit(R5_Wantwrite, &dev->flags);
++	}
++	if (update_q) {
++		dev = &sh->dev[qd_idx];
++		s->locked++;
++		set_bit(R5_LOCKED, &dev->flags);
++		set_bit(R5_Wantwrite, &dev->flags);
+ 	}
++	clear_bit(STRIPE_DEGRADED, &sh->state);
++
++	set_bit(STRIPE_INSYNC, &sh->state);
+ }
+ 
+ static void handle_stripe_expansion(raid5_conf_t *conf, struct stripe_head *sh,
+@@ -3009,7 +3008,7 @@ static bool handle_stripe5(struct stripe_head *sh)
+ 	return blocked_rdev == NULL;
+ }
+ 
+-static bool handle_stripe6(struct stripe_head *sh, struct page *tmp_page)
++static bool handle_stripe6(struct stripe_head *sh)
+ {
+ 	raid5_conf_t *conf = sh->raid_conf;
+ 	int disks = sh->disks;
+@@ -3164,7 +3163,7 @@ static bool handle_stripe6(struct stripe_head *sh, struct page *tmp_page)
+ 	 * data is available
+ 	 */
+ 	if (s.syncing && s.locked == 0 && !test_bit(STRIPE_INSYNC, &sh->state))
+-		handle_parity_checks6(conf, sh, &s, &r6s, tmp_page, disks);
++		handle_parity_checks6(conf, sh, &s, &r6s, disks);
+ 
+ 	if (s.syncing && s.locked == 0 && test_bit(STRIPE_INSYNC, &sh->state)) {
+ 		md_done_sync(conf->mddev, STRIPE_SECTORS,1);
+@@ -3247,16 +3246,14 @@ static bool handle_stripe6(struct stripe_head *sh, struct page *tmp_page)
+ }
+ 
+ /* returns true if the stripe was handled */
+-static bool handle_stripe(struct stripe_head *sh, struct page *tmp_page)
++static bool handle_stripe(struct stripe_head *sh)
+ {
+ 	if (sh->raid_conf->level == 6)
+-		return handle_stripe6(sh, tmp_page);
++		return handle_stripe6(sh);
+ 	else
+ 		return handle_stripe5(sh);
+ }
+ 
+-
+-
+ static void raid5_activate_delayed(raid5_conf_t *conf)
+ {
+ 	if (atomic_read(&conf->preread_active_stripes) < IO_THRESHOLD) {
+@@ -4047,7 +4044,7 @@ static inline sector_t sync_request(mddev_t *mddev, sector_t sector_nr, int *ski
+ 	spin_unlock(&sh->lock);
+ 
+ 	/* wait for any blocked device to be handled */
+-	while(unlikely(!handle_stripe(sh, NULL)))
++	while (unlikely(!handle_stripe(sh)))
+ 		;
+ 	release_stripe(sh);
+ 
+@@ -4104,7 +4101,7 @@ static int  retry_aligned_read(raid5_conf_t *conf, struct bio *raid_bio)
+ 			return handled;
+ 		}
+ 
+-		handle_stripe(sh, NULL);
++		handle_stripe(sh);
+ 		release_stripe(sh);
+ 		handled++;
+ 	}
+@@ -4168,7 +4165,7 @@ static void raid5d(mddev_t *mddev)
+ 		spin_unlock_irq(&conf->device_lock);
+ 		
+ 		handled++;
+-		handle_stripe(sh, conf->spare_page);
++		handle_stripe(sh);
+ 		release_stripe(sh);
+ 
+ 		spin_lock_irq(&conf->device_lock);
+@@ -4309,15 +4306,104 @@ raid5_size(mddev_t *mddev, sector_t sectors, int raid_disks)
+ 	return sectors * (raid_disks - conf->max_degraded);
+ }
+ 
++static void raid5_free_percpu(raid5_conf_t *conf)
++{
++	struct raid5_percpu *percpu;
++	unsigned long cpu;
++
++	if (!conf->percpu)
++		return;
++
++	get_online_cpus();
++	for_each_possible_cpu(cpu) {
++		percpu = per_cpu_ptr(conf->percpu, cpu);
++		safe_put_page(percpu->spare_page);
++	}
++#ifdef CONFIG_HOTPLUG_CPU
++	unregister_cpu_notifier(&conf->cpu_notify);
++#endif
++	put_online_cpus();
++
++	free_percpu(conf->percpu);
++}
++
+ static void free_conf(raid5_conf_t *conf)
+ {
+ 	shrink_stripes(conf);
+-	safe_put_page(conf->spare_page);
++	raid5_free_percpu(conf);
+ 	kfree(conf->disks);
+ 	kfree(conf->stripe_hashtbl);
+ 	kfree(conf);
+ }
+ 
++#ifdef CONFIG_HOTPLUG_CPU
++static int raid456_cpu_notify(struct notifier_block *nfb, unsigned long action,
++			      void *hcpu)
++{
++	raid5_conf_t *conf = container_of(nfb, raid5_conf_t, cpu_notify);
++	long cpu = (long)hcpu;
++	struct raid5_percpu *percpu = per_cpu_ptr(conf->percpu, cpu);
++
++	switch (action) {
++	case CPU_UP_PREPARE:
++	case CPU_UP_PREPARE_FROZEN:
++		if (!percpu->spare_page)
++			percpu->spare_page = alloc_page(GFP_KERNEL);
++		if (!percpu->spare_page) {
++			pr_err("%s: failed memory allocation for cpu%ld\n",
++			       __func__, cpu);
++			return NOTIFY_BAD;
++		}
++		break;
++	case CPU_DEAD:
++	case CPU_DEAD_FROZEN:
++		safe_put_page(percpu->spare_page);
++		percpu->spare_page = NULL;
++		break;
++	default:
++		break;
++	}
++	return NOTIFY_OK;
++}
++#endif
++
++static int raid5_alloc_percpu(raid5_conf_t *conf)
++{
++	unsigned long cpu;
++	struct page *spare_page;
++	struct raid5_percpu *allcpus;
++	int err;
++
++	/* the only percpu data is the raid6 spare page */
++	if (conf->level != 6)
++		return 0;
++
++	allcpus = alloc_percpu(struct raid5_percpu);
++	if (!allcpus)
++		return -ENOMEM;
++	conf->percpu = allcpus;
++
++	get_online_cpus();
++	err = 0;
++	for_each_present_cpu(cpu) {
++		spare_page = alloc_page(GFP_KERNEL);
++		if (!spare_page) {
++			err = -ENOMEM;
++			break;
++		}
++		per_cpu_ptr(conf->percpu, cpu)->spare_page = spare_page;
++	}
++#ifdef CONFIG_HOTPLUG_CPU
++	conf->cpu_notify.notifier_call = raid456_cpu_notify;
++	conf->cpu_notify.priority = 0;
++	if (err == 0)
++		err = register_cpu_notifier(&conf->cpu_notify);
++#endif
++	put_online_cpus();
++
++	return err;
++}
++
+ static raid5_conf_t *setup_conf(mddev_t *mddev)
+ {
+ 	raid5_conf_t *conf;
+@@ -4372,11 +4458,10 @@ static raid5_conf_t *setup_conf(mddev_t *mddev)
+ 	if ((conf->stripe_hashtbl = kzalloc(PAGE_SIZE, GFP_KERNEL)) == NULL)
+ 		goto abort;
+ 
+-	if (mddev->new_level == 6) {
+-		conf->spare_page = alloc_page(GFP_KERNEL);
+-		if (!conf->spare_page)
+-			goto abort;
+-	}
++	conf->level = mddev->new_level;
++	if (raid5_alloc_percpu(conf) != 0)
++		goto abort;
++
+ 	spin_lock_init(&conf->device_lock);
+ 	init_waitqueue_head(&conf->wait_for_stripe);
+ 	init_waitqueue_head(&conf->wait_for_overlap);
+@@ -4412,7 +4497,6 @@ static raid5_conf_t *setup_conf(mddev_t *mddev)
+ 	}
+ 
+ 	conf->chunk_size = mddev->new_chunk;
+-	conf->level = mddev->new_level;
+ 	if (conf->level == 6)
+ 		conf->max_degraded = 2;
+ 	else
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index 52ba999..07a7a41 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -383,8 +383,13 @@ struct raid5_private_data {
+ 					    * (fresh device added).
+ 					    * Cleared when a sync completes.
+ 					    */
+-
+-	struct page 		*spare_page; /* Used when checking P/Q in raid6 */
++	/* per cpu variables */
++	struct raid5_percpu {
++		struct page	*spare_page; /* Used when checking P/Q in raid6 */
++	} *percpu;
++#ifdef CONFIG_HOTPLUG_CPU
++	struct notifier_block	cpu_notify;
++#endif
+ 
+ 	/*
+ 	 * Free stripes pool
 
