@@ -1,86 +1,34 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v3 05/14] md/raid6: release spare page at ->stop()
-Date: Sat, 29 Aug 2009 19:30:26 -0700
-Message-ID: <20090830023026.5934.76997.stgit@dwillia2-linux.ch.intel.com>
-References: <20090830022908.5934.72142.stgit@dwillia2-linux.ch.intel.com>
+From: "MOgWai46[Saurceful of Secrets]" <street41@gmail.com>
+Subject: Re: Western Digital RE3: Raid Failure
+Date: Mon, 31 Aug 2009 12:11:18 +0200
+Message-ID: <b9f8dfb10908310311k4a4e1d5yfb8088670ebb5b1c@mail.gmail.com>
+References: <b9f8dfb10908270243u1213576cs7c5cbc743d637c1c@mail.gmail.com>
+	 <4A968C46.9030105@ziu.info>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090830022908.5934.72142.stgit@dwillia2-linux.ch.intel.com>
+In-Reply-To: <4A968C46.9030105@ziu.info>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Soltys <soltys@ziu.info>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Add missing call to safe_put_page from stop() by unifying open coded
-raid5_conf_t de-allocation under free_conf().
+2009/8/27 Michal Soltys <soltys@ziu.info>:
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/md/raid5.c |   26 ++++++++++++--------------
- 1 files changed, 12 insertions(+), 14 deletions(-)
+> Did you perhaps happen do be hit (in velociraptor case) by:
+> http://forums.storagereview.net/index.php?showtopic=27303&view=findpost&p=256912
+>
+> As for RE3 drives - did the above happen roughly after 49 days of uptime ?
+>
+> Reapperance of this firmware bug in RE3 drives would be hard to believe, but
+> you never know.
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index e1920f2..9411466 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -4309,6 +4309,15 @@ raid5_size(mddev_t *mddev, sector_t sectors, int raid_disks)
- 	return sectors * (raid_disks - conf->max_degraded);
- }
- 
-+static void free_conf(raid5_conf_t *conf)
-+{
-+	shrink_stripes(conf);
-+	safe_put_page(conf->spare_page);
-+	kfree(conf->disks);
-+	kfree(conf->stripe_hashtbl);
-+	kfree(conf);
-+}
-+
- static raid5_conf_t *setup_conf(mddev_t *mddev)
- {
- 	raid5_conf_t *conf;
-@@ -4438,11 +4447,7 @@ static raid5_conf_t *setup_conf(mddev_t *mddev)
- 
-  abort:
- 	if (conf) {
--		shrink_stripes(conf);
--		safe_put_page(conf->spare_page);
--		kfree(conf->disks);
--		kfree(conf->stripe_hashtbl);
--		kfree(conf);
-+		free_conf(conf);
- 		return ERR_PTR(-EIO);
- 	} else
- 		return ERR_PTR(-ENOMEM);
-@@ -4608,12 +4613,8 @@ abort:
- 	md_unregister_thread(mddev->thread);
- 	mddev->thread = NULL;
- 	if (conf) {
--		shrink_stripes(conf);
- 		print_raid5_conf(conf);
--		safe_put_page(conf->spare_page);
--		kfree(conf->disks);
--		kfree(conf->stripe_hashtbl);
--		kfree(conf);
-+		free_conf(conf);
- 	}
- 	mddev->private = NULL;
- 	printk(KERN_ALERT "raid5: failed to run raid set %s\n", mdname(mddev));
-@@ -4628,13 +4629,10 @@ static int stop(mddev_t *mddev)
- 
- 	md_unregister_thread(mddev->thread);
- 	mddev->thread = NULL;
--	shrink_stripes(conf);
--	kfree(conf->stripe_hashtbl);
- 	mddev->queue->backing_dev_info.congested_fn = NULL;
- 	blk_sync_queue(mddev->queue); /* the unplug fn references 'conf'*/
- 	sysfs_remove_group(&mddev->kobj, &raid5_attrs_group);
--	kfree(conf->disks);
--	kfree(conf);
-+	free_conf(conf);
- 	mddev->private = NULL;
- 	return 0;
- }
+Tonight the array was broken again and the problem was on the same
+drive of the last week :|
 
+Drives are online by 13 days (last reboot) and i made the last power
+cycle on 10th August (Ram Upgrade).
+
+I must disable the TLER on my 4 Drives with Linux Software Raid?
+
+Andrea
