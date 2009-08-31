@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2 6/9] md/raid6: asynchronous handle_parity_check6
-Date: Mon, 31 Aug 2009 09:41:34 -0700
-Message-ID: <20090831164134.1696.27588.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH v2 4/9] md/raid6: asynchronous handle_stripe_fill6
+Date: Mon, 31 Aug 2009 09:41:24 -0700
+Message-ID: <20090831164124.1696.9610.stgit@dwillia2-linux.ch.intel.com>
 References: <20090831163914.1696.55782.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,255 +13,177 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, Ilya Yanok <yanok@emcraft.com>, Yuri Tikhonov <yur@emcraft.com>
 List-Id: linux-raid.ids
 
-[ Based on an original patch by Yuri Tikhonov ]
+From: Yuri Tikhonov <yur@emcraft.com>
 
-Implement the state machine for handling the RAID-6 parities check and
-repair functionality.  Note that the raid6 case does not need to check
-for new failures, like raid5, as it will always writeback the correct
-disks.  The raid5 case can be updated to check zero_sum_result to avoid
-getting confused by new failures rather than retrying the entire check
-operation.
+Modify handle_stripe_fill6 to work asynchronously by introducing
+fetch_block6 as the raid6 analog of fetch_block5 (schedule compute
+operations for missing/out-of-sync disks).
 
+[dan.j.williams@intel.com: compute D+Q in one pass]
 Signed-off-by: Yuri Tikhonov <yur@emcraft.com>
 Signed-off-by: Ilya Yanok <yanok@emcraft.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/md/raid5.c |  206 +++++++++++++++++++++++++++++++++++-----------------
- 1 files changed, 139 insertions(+), 67 deletions(-)
+ drivers/md/raid5.c |  143 ++++++++++++++++++++++++++++++++++------------------
+ 1 files changed, 93 insertions(+), 50 deletions(-)
 
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 08f8063..3c31f7f 100644
+index a1245cf..49da6f7 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -2901,91 +2901,163 @@ static void handle_parity_checks6(raid5_conf_t *conf, struct stripe_head *sh,
- 				  struct stripe_head_state *s,
- 				  struct r6_state *r6s, int disks)
- {
--	int update_p = 0, update_q = 0;
--	struct r5dev *dev;
- 	int pd_idx = sh->pd_idx;
- 	int qd_idx = sh->qd_idx;
--	unsigned long cpu;
--	struct page *tmp_page;
-+	struct r5dev *dev;
- 
+@@ -2520,61 +2520,104 @@ static void handle_stripe_fill5(struct stripe_head *sh,
  	set_bit(STRIPE_HANDLE, &sh->state);
- 
- 	BUG_ON(s->failed > 2);
--	BUG_ON(s->uptodate < disks);
-+
- 	/* Want to check and possibly repair P and Q.
- 	 * However there could be one 'failed' device, in which
- 	 * case we can only check one of them, possibly using the
- 	 * other to generate missing data
- 	 */
--	cpu = get_cpu();
--	tmp_page = per_cpu_ptr(conf->percpu, cpu)->spare_page;
--	if (s->failed == r6s->q_failed) {
--		/* The only possible failed device holds 'Q', so it
--		 * makes sense to check P (If anything else were failed,
--		 * we would have used P to recreate it).
--		 */
--		compute_block_1(sh, pd_idx, 1);
--		if (!page_is_zero(sh->dev[pd_idx].page)) {
--			compute_block_1(sh, pd_idx, 0);
--			update_p = 1;
-+
-+	switch (sh->check_state) {
-+	case check_state_idle:
-+		/* start a new check operation if there are < 2 failures */
-+		if (s->failed == r6s->q_failed) {
-+			/* The only possible failed device holds Q, so it
-+			 * makes sense to check P (If anything else were failed,
-+			 * we would have used P to recreate it).
-+			 */
-+			sh->check_state = check_state_run;
- 		}
--	}
--	if (!r6s->q_failed && s->failed < 2) {
--		/* q is not failed, and we didn't use it to generate
--		 * anything, so it makes sense to check it
--		 */
--		memcpy(page_address(tmp_page),
--		       page_address(sh->dev[qd_idx].page),
--		       STRIPE_SIZE);
--		compute_parity6(sh, UPDATE_PARITY);
--		if (memcmp(page_address(tmp_page),
--			   page_address(sh->dev[qd_idx].page),
--			   STRIPE_SIZE) != 0) {
--			clear_bit(STRIPE_INSYNC, &sh->state);
--			update_q = 1;
-+		if (!r6s->q_failed && s->failed < 2) {
-+			/* Q is not failed, and we didn't use it to generate
-+			 * anything, so it makes sense to check it
-+			 */
-+			if (sh->check_state == check_state_run)
-+				sh->check_state = check_state_run_pq;
-+			else
-+				sh->check_state = check_state_run_q;
- 		}
--	}
--	put_cpu();
- 
--	if (update_p || update_q) {
--		conf->mddev->resync_mismatches += STRIPE_SECTORS;
--		if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
--			/* don't try to repair!! */
--			update_p = update_q = 0;
--	}
-+		/* discard potentially stale zero_sum_result */
-+		sh->ops.zero_sum_result = 0;
- 
--	/* now write out any block on a failed drive,
--	 * or P or Q if they need it
--	 */
-+		if (sh->check_state == check_state_run) {
-+			/* async_xor_zero_sum destroys the contents of P */
-+			clear_bit(R5_UPTODATE, &sh->dev[pd_idx].flags);
-+			s->uptodate--;
-+		}
-+		if (sh->check_state >= check_state_run &&
-+		    sh->check_state <= check_state_run_pq) {
-+			/* async_syndrome_zero_sum preserves P and Q, so
-+			 * no need to mark them !uptodate here
-+			 */
-+			set_bit(STRIPE_OP_CHECK, &s->ops_request);
-+			break;
-+		}
- 
--	if (s->failed == 2) {
--		dev = &sh->dev[r6s->failed_num[1]];
--		s->locked++;
--		set_bit(R5_LOCKED, &dev->flags);
--		set_bit(R5_Wantwrite, &dev->flags);
--	}
--	if (s->failed >= 1) {
--		dev = &sh->dev[r6s->failed_num[0]];
--		s->locked++;
--		set_bit(R5_LOCKED, &dev->flags);
--		set_bit(R5_Wantwrite, &dev->flags);
--	}
-+		/* we have 2-disk failure */
-+		BUG_ON(s->failed != 2);
-+		/* fall through */
-+	case check_state_compute_result:
-+		sh->check_state = check_state_idle;
- 
--	if (update_p) {
--		dev = &sh->dev[pd_idx];
--		s->locked++;
--		set_bit(R5_LOCKED, &dev->flags);
--		set_bit(R5_Wantwrite, &dev->flags);
--	}
--	if (update_q) {
--		dev = &sh->dev[qd_idx];
--		s->locked++;
--		set_bit(R5_LOCKED, &dev->flags);
--		set_bit(R5_Wantwrite, &dev->flags);
--	}
--	clear_bit(STRIPE_DEGRADED, &sh->state);
-+		/* check that a write has not made the stripe insync */
-+		if (test_bit(STRIPE_INSYNC, &sh->state))
-+			break;
- 
--	set_bit(STRIPE_INSYNC, &sh->state);
-+		/* now write out any block on a failed drive,
-+		 * or P or Q if they were recomputed
-+		 */
-+		BUG_ON(s->uptodate < disks - 1); /* We don't need Q to recover */
-+		if (s->failed == 2) {
-+			dev = &sh->dev[r6s->failed_num[1]];
-+			s->locked++;
-+			set_bit(R5_LOCKED, &dev->flags);
-+			set_bit(R5_Wantwrite, &dev->flags);
-+		}
-+		if (s->failed >= 1) {
-+			dev = &sh->dev[r6s->failed_num[0]];
-+			s->locked++;
-+			set_bit(R5_LOCKED, &dev->flags);
-+			set_bit(R5_Wantwrite, &dev->flags);
-+		}
-+		if (sh->ops.zero_sum_result & SUM_CHECK_P_RESULT) {
-+			dev = &sh->dev[pd_idx];
-+			s->locked++;
-+			set_bit(R5_LOCKED, &dev->flags);
-+			set_bit(R5_Wantwrite, &dev->flags);
-+		}
-+		if (sh->ops.zero_sum_result & SUM_CHECK_Q_RESULT) {
-+			dev = &sh->dev[qd_idx];
-+			s->locked++;
-+			set_bit(R5_LOCKED, &dev->flags);
-+			set_bit(R5_Wantwrite, &dev->flags);
-+		}
-+		clear_bit(STRIPE_DEGRADED, &sh->state);
-+
-+		set_bit(STRIPE_INSYNC, &sh->state);
-+		break;
-+	case check_state_run:
-+	case check_state_run_q:
-+	case check_state_run_pq:
-+		break; /* we will be called again upon completion */
-+	case check_state_check_result:
-+		sh->check_state = check_state_idle;
-+
-+		/* handle a successful check operation, if parity is correct
-+		 * we are done.  Otherwise update the mismatch count and repair
-+		 * parity if !MD_RECOVERY_CHECK
-+		 */
-+		if (sh->ops.zero_sum_result == 0) {
-+			/* both parities are correct */
-+			if (!s->failed)
-+				set_bit(STRIPE_INSYNC, &sh->state);
-+			else {
-+				/* in contrast to the raid5 case we can validate
-+				 * parity, but still have a failure to write
-+				 * back
-+				 */
-+				sh->check_state = check_state_compute_result;
-+				/* Returning at this point means that we may go
-+				 * off and bring p and/or q uptodate again so
-+				 * we make sure to check zero_sum_result again
-+				 * to verify if p or q need writeback
-+				 */
-+			}
-+		} else {
-+			conf->mddev->resync_mismatches += STRIPE_SECTORS;
-+			if (test_bit(MD_RECOVERY_CHECK, &conf->mddev->recovery))
-+				/* don't try to repair!! */
-+				set_bit(STRIPE_INSYNC, &sh->state);
-+			else {
-+				int *target = &sh->ops.target;
-+
-+				sh->ops.target = -1;
-+				sh->ops.target2 = -1;
-+				sh->check_state = check_state_compute_run;
-+				set_bit(STRIPE_COMPUTE_RUN, &sh->state);
-+				set_bit(STRIPE_OP_COMPUTE_BLK, &s->ops_request);
-+				if (sh->ops.zero_sum_result & SUM_CHECK_P_RESULT) {
-+					set_bit(R5_Wantcompute,
-+						&sh->dev[pd_idx].flags);
-+					*target = pd_idx;
-+					target = &sh->ops.target2;
-+					s->uptodate++;
-+				}
-+				if (sh->ops.zero_sum_result & SUM_CHECK_Q_RESULT) {
-+					set_bit(R5_Wantcompute,
-+						&sh->dev[qd_idx].flags);
-+					*target = qd_idx;
-+					s->uptodate++;
-+				}
-+			}
-+		}
-+		break;
-+	case check_state_compute_run:
-+		break;
-+	default:
-+		printk(KERN_ERR "%s: unknown check_state: %d sector: %llu\n",
-+		       __func__, sh->check_state,
-+		       (unsigned long long) sh->sector);
-+		BUG();
-+	}
  }
  
- static void handle_stripe_expansion(raid5_conf_t *conf, struct stripe_head *sh,
+-static void handle_stripe_fill6(struct stripe_head *sh,
+-			struct stripe_head_state *s, struct r6_state *r6s,
+-			int disks)
++/* fetch_block6 - checks the given member device to see if its data needs
++ * to be read or computed to satisfy a request.
++ *
++ * Returns 1 when no more member devices need to be checked, otherwise returns
++ * 0 to tell the loop in handle_stripe_fill6 to continue
++ */
++static int fetch_block6(struct stripe_head *sh, struct stripe_head_state *s,
++			 struct r6_state *r6s, int disk_idx, int disks)
+ {
+-	int i;
+-	for (i = disks; i--; ) {
+-		struct r5dev *dev = &sh->dev[i];
+-		if (!test_bit(R5_LOCKED, &dev->flags) &&
+-		    !test_bit(R5_UPTODATE, &dev->flags) &&
+-		    (dev->toread || (dev->towrite &&
+-		     !test_bit(R5_OVERWRITE, &dev->flags)) ||
+-		     s->syncing || s->expanding ||
+-		     (s->failed >= 1 &&
+-		      (sh->dev[r6s->failed_num[0]].toread ||
+-		       s->to_write)) ||
+-		     (s->failed >= 2 &&
+-		      (sh->dev[r6s->failed_num[1]].toread ||
+-		       s->to_write)))) {
+-			/* we would like to get this block, possibly
+-			 * by computing it, but we might not be able to
++	struct r5dev *dev = &sh->dev[disk_idx];
++	struct r5dev *fdev[2] = { &sh->dev[r6s->failed_num[0]],
++				  &sh->dev[r6s->failed_num[1]] };
++
++	if (!test_bit(R5_LOCKED, &dev->flags) &&
++	    !test_bit(R5_UPTODATE, &dev->flags) &&
++	    (dev->toread ||
++	     (dev->towrite && !test_bit(R5_OVERWRITE, &dev->flags)) ||
++	     s->syncing || s->expanding ||
++	     (s->failed >= 1 &&
++	      (fdev[0]->toread || s->to_write)) ||
++	     (s->failed >= 2 &&
++	      (fdev[1]->toread || s->to_write)))) {
++		/* we would like to get this block, possibly by computing it,
++		 * otherwise read it if the backing disk is insync
++		 */
++		BUG_ON(test_bit(R5_Wantcompute, &dev->flags));
++		BUG_ON(test_bit(R5_Wantread, &dev->flags));
++		if ((s->uptodate == disks - 1) &&
++		    (s->failed && (disk_idx == r6s->failed_num[0] ||
++				   disk_idx == r6s->failed_num[1]))) {
++			/* have disk failed, and we're requested to fetch it;
++			 * do compute it
+ 			 */
+-			if ((s->uptodate == disks - 1) &&
+-			    (s->failed && (i == r6s->failed_num[0] ||
+-					   i == r6s->failed_num[1]))) {
+-				pr_debug("Computing stripe %llu block %d\n",
+-				       (unsigned long long)sh->sector, i);
+-				compute_block_1(sh, i, 0);
+-				s->uptodate++;
+-			} else if ( s->uptodate == disks-2 && s->failed >= 2 ) {
+-				/* Computing 2-failure is *very* expensive; only
+-				 * do it if failed >= 2
+-				 */
+-				int other;
+-				for (other = disks; other--; ) {
+-					if (other == i)
+-						continue;
+-					if (!test_bit(R5_UPTODATE,
+-					      &sh->dev[other].flags))
+-						break;
+-				}
+-				BUG_ON(other < 0);
+-				pr_debug("Computing stripe %llu blocks %d,%d\n",
+-				       (unsigned long long)sh->sector,
+-				       i, other);
+-				compute_block_2(sh, i, other);
+-				s->uptodate += 2;
+-			} else if (test_bit(R5_Insync, &dev->flags)) {
+-				set_bit(R5_LOCKED, &dev->flags);
+-				set_bit(R5_Wantread, &dev->flags);
+-				s->locked++;
+-				pr_debug("Reading block %d (sync=%d)\n",
+-					i, s->syncing);
++			pr_debug("Computing stripe %llu block %d\n",
++			       (unsigned long long)sh->sector, disk_idx);
++			set_bit(STRIPE_COMPUTE_RUN, &sh->state);
++			set_bit(STRIPE_OP_COMPUTE_BLK, &s->ops_request);
++			set_bit(R5_Wantcompute, &dev->flags);
++			sh->ops.target = disk_idx;
++			sh->ops.target2 = -1; /* no 2nd target */
++			s->req_compute = 1;
++			s->uptodate++;
++			return 1;
++		} else if (s->uptodate == disks-2 && s->failed >= 2) {
++			/* Computing 2-failure is *very* expensive; only
++			 * do it if failed >= 2
++			 */
++			int other;
++			for (other = disks; other--; ) {
++				if (other == disk_idx)
++					continue;
++				if (!test_bit(R5_UPTODATE,
++				      &sh->dev[other].flags))
++					break;
+ 			}
++			BUG_ON(other < 0);
++			pr_debug("Computing stripe %llu blocks %d,%d\n",
++			       (unsigned long long)sh->sector,
++			       disk_idx, other);
++			set_bit(STRIPE_COMPUTE_RUN, &sh->state);
++			set_bit(STRIPE_OP_COMPUTE_BLK, &s->ops_request);
++			set_bit(R5_Wantcompute, &sh->dev[disk_idx].flags);
++			set_bit(R5_Wantcompute, &sh->dev[other].flags);
++			sh->ops.target = disk_idx;
++			sh->ops.target2 = other;
++			s->uptodate += 2;
++			s->req_compute = 1;
++			return 1;
++		} else if (test_bit(R5_Insync, &dev->flags)) {
++			set_bit(R5_LOCKED, &dev->flags);
++			set_bit(R5_Wantread, &dev->flags);
++			s->locked++;
++			pr_debug("Reading block %d (sync=%d)\n",
++				disk_idx, s->syncing);
+ 		}
+ 	}
++
++	return 0;
++}
++
++/**
++ * handle_stripe_fill6 - read or compute data to satisfy pending requests.
++ */
++static void handle_stripe_fill6(struct stripe_head *sh,
++			struct stripe_head_state *s, struct r6_state *r6s,
++			int disks)
++{
++	int i;
++
++	/* look for blocks to read/compute, skip this if a compute
++	 * is already in flight, or if the stripe contents are in the
++	 * midst of changing due to a write
++	 */
++	if (!test_bit(STRIPE_COMPUTE_RUN, &sh->state) && !sh->check_state &&
++	    !sh->reconstruct_state)
++		for (i = disks; i--; )
++			if (fetch_block6(sh, s, r6s, i, disks))
++				break;
+ 	set_bit(STRIPE_HANDLE, &sh->state);
+ }
+ 
 
