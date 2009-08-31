@@ -1,33 +1,26 @@
-From: Anil Raj <anil.calvin@gmail.com>
-Subject: NEWBIE Q: expanding hardware RAID
-Date: Mon, 31 Aug 2009 20:53:20 -0400
-Message-ID: <714cf35c0908311753q1b7b26d8r2c148d566ea6fdeb@mail.gmail.com>
+From: kwick <kwick@shiftmail.org>
+Subject: Re: [PATCH v2 0/9] Asynchronous raid6 acceleration (part 3 of 3)
+Date: Mon, 31 Aug 2009 19:23:53 +0200
+Message-ID: <4A9C0729.6030800@shiftmail.org>
+References: <20090831163914.1696.55782.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-reply-to: <20090831163914.1696.55782.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all,
- I have a dell PowerEdge 1850 server with 146gb HDs setup using (I
-think) hardware RAID.
+Dan Williams wrote:
+> 3/ An experimental multicore raid456 option.  Given the new percpu
+>    scheme it is a straightforward conversion to have raid5d issue 
+>    work to the async thread pool.
+>   
 
-1. Is there anyway that I can confirm if the HDs are indeed setup
-using hardware RAID? (hopefully without rebooting the system) And if
-so, how do I determine the tech details of the RAID setup?
 
-2. I'm planning on buying additional dell drives and was wondering how
-I could go about growing/expanding the current RAID setup to include
-the new drives. Is there any documentation on expanding hardware RAID?
-( I found doc on growing software RAID on the mailing list's wiki but
-none on hardware RAID.)
+YES  YES  YES  YES  YES!!!!!
 
-I really really hope someone can help me with these questions, please.
-Also, if this is not the right forum (and there is a more relevant
-forum) for these questions, please do let me know.
 
-Thanks much in advance!
-
-Best,
-Anil
+THANK YOU!!
