@@ -1,34 +1,40 @@
-From: "MOgWai46[Saurceful of Secrets]" <street41@gmail.com>
-Subject: Re: Western Digital RE3: Raid Failure
-Date: Mon, 31 Aug 2009 12:11:18 +0200
-Message-ID: <b9f8dfb10908310311k4a4e1d5yfb8088670ebb5b1c@mail.gmail.com>
-References: <b9f8dfb10908270243u1213576cs7c5cbc743d637c1c@mail.gmail.com>
-	 <4A968C46.9030105@ziu.info>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH v2 0/4] Asynchronous raid6 acceleration (part 2 of 3)
+Date: Mon, 31 Aug 2009 08:40:37 -0700
+Message-ID: <20090831153946.1068.86702.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4A968C46.9030105@ziu.info>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michal Soltys <soltys@ziu.info>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
 List-Id: linux-raid.ids
 
-2009/8/27 Michal Soltys <soltys@ziu.info>:
+RAID6 acceleration support for the iop13xx ADMA engines.  The iop13xx platform
+has three Application DMA engines providing support for offloading raid
+operations.  Channel0 and Channel1 support memcpy and xor.  Channel2 adds pq
+support.
 
-> Did you perhaps happen do be hit (in velociraptor case) by:
-> http://forums.storagereview.net/index.php?showtopic=27303&view=findpost&p=256912
->
-> As for RE3 drives - did the above happen roughly after 49 days of uptime ?
->
-> Reapperance of this firmware bug in RE3 drives would be hard to believe, but
-> you never know.
+The combined series is available at:
 
-Tonight the array was broken again and the problem was on the same
-drive of the last week :|
+  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/async_tx.git raid6
 
-Drives are online by 13 days (last reboot) and i made the last power
-cycle on 10th August (Ram Upgrade).
+The changes since v1 are:
+1/ Fix the case for continuing a p-disabled pq calculation
+2/ A lockdep annotation for teaching lockdep about iop-adma cross channel
+   dependency submissions.
+---
 
-I must disable the TLER on my 4 Drives with Linux Software Raid?
+Dan Williams (4):
+      iop-adma: P+Q self test
+      iop-adma: P+Q support for iop13xx adma engines
+      iop-adma: fix lockdep false positive
+      iop-adma: cleanup iop_adma_run_tx_complete_actions
 
-Andrea
+
+ arch/arm/include/asm/hardware/iop3xx-adma.h |   76 +++++
+ arch/arm/include/asm/hardware/iop_adma.h    |    1 
+ arch/arm/mach-iop13xx/include/mach/adma.h   |  107 +++++++
+ drivers/dma/iop-adma.c                      |  437 ++++++++++++++++++++++++---
+ 4 files changed, 577 insertions(+), 44 deletions(-)
