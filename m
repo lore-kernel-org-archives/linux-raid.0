@@ -1,10 +1,11 @@
-From: Alex Butcher <linraid@assursys.co.uk>
+From: Ryan Wagoner <rswagoner@gmail.com>
 Subject: Re: NEWBIE Q: expanding hardware RAID
-Date: Tue, 1 Sep 2009 08:34:11 +0100 (BST)
-Message-ID: <alpine.LFD.2.00.0909010831350.5545@sbhezbfg.of5.nffheflf.cev>
+Date: Tue, 1 Sep 2009 08:20:09 -0400
+Message-ID: <7d86ddb90909010520h545caca1o3895f47709c65d64@mail.gmail.com>
 References: <714cf35c0908311753q1b7b26d8r2c148d566ea6fdeb@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <714cf35c0908311753q1b7b26d8r2c148d566ea6fdeb@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
@@ -12,33 +13,35 @@ To: Anil Raj <anil.calvin@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 31 Aug 2009, Anil Raj wrote:
+I would start by installing the Dell OpenManage Server Administrator
+software, which will provide you with a web gui on
+https://yourserver:1311 From here you can monitor the internals of the
+server, check firmware versions, and perform RAID tasks on the PERC
+controller, if it has one. You should be able to download the Red Hat
+version of the Open Manage software from the Dell support site. Last
+time I checked the latest version was 6.1.0.
 
+Ryan
+
+On Mon, Aug 31, 2009 at 8:53 PM, Anil Raj<anil.calvin@gmail.com> wrote:
 > Hi all,
-> I have a dell PowerEdge 1850 server with 146gb HDs setup using (I
+> =A0I have a dell PowerEdge 1850 server with 146gb HDs setup using (I
 > think) hardware RAID.
 >
 > 1. Is there anyway that I can confirm if the HDs are indeed setup
 > using hardware RAID? (hopefully without rebooting the system) And if
 > so, how do I determine the tech details of the RAID setup?
 >
-
-Assuming things haven't changed since I last used Dell's hardware RAID
-controllers, you'll need 'dellmgr' from the driver kit/utils. You should
-have received this on one of the CDs, or you can use the Dell tag to look up
-the appropriate downloads for the machine on Dell's support site.
-
-> 2. I'm planning on buying additional dell drives and was wondering how
+> 2. I'm planning on buying additional dell drives and was wondering ho=
+w
 > I could go about growing/expanding the current RAID setup to include
-> the new drives. Is there any documentation on expanding hardware RAID?
+> the new drives. Is there any documentation on expanding hardware RAID=
+?
 > ( I found doc on growing software RAID on the mailing list's wiki but
 > none on hardware RAID.)
-
-I don't think this is possible; I think you'll need to backup, upgrade, then
-restore onto the new discs. Again, using the Dell support site will find you
-the manuals for the RAID controller installed in your machine.
-
-> I really really hope someone can help me with these questions, please.
+>
+> I really really hope someone can help me with these questions, please=
+=2E
 > Also, if this is not the right forum (and there is a more relevant
 > forum) for these questions, please do let me know.
 >
@@ -46,6 +49,14 @@ the manuals for the RAID controller installed in your machine.
 >
 > Best,
 > Anil
-
-HTH,
-Alex
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
