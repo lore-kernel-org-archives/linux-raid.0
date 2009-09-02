@@ -1,140 +1,90 @@
-From: "me at tmr.com" <tmrbill@tmr.com>
-Subject: (unknown)
-Date: Wed, 2 Sep 2009 14:46:50 -0400
-Message-ID: <200909021846.n82Iko5v020720@firewall2.tmr.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: Unbalanced reads of RAID10
+Date: Wed, 2 Sep 2009 23:27:06 +0200
+Message-ID: <20090902212706.GA17680@rap.rap.dk>
+References: <20090823142439.GA5162@lazy.lzy> <20090830003706.GB5633@rap.rap.dk> <4A9E999B.8070401@tmr.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4A9E999B.8070401@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Clinton Lee Taylor wrote:
-> Greetings ...
->
-> 2009/9/2 Bill Davidsen <davidsen@tmr.com>:
->   
->> Clinton Lee Taylor wrote:
->>     
->>> http://www.issociate.de/board/post/498227/Ext3_convert_to_RAID1_....html
+On Wed, Sep 02, 2009 at 12:13:15PM -0400, Bill Davidsen wrote:
+> Keld J=F8rn Simonsen wrote:
+>> On Sun, Aug 23, 2009 at 04:24:39PM +0200, Piergiorgio Sartor wrote:
+>>  =20
+>>> Hi all,
 >>>
->>> Wanting to convert an already created and populated ext3 filesystem.
+>>> some time ago I was reporting about a strange issue.
 >>>
->>> I unmounted the filesystem, ran e2fsck -f /dev/sdb1 to check that the
->>> current filesystem had no errors.
->>> Then ran mdadm --create /dev/md0 --level=1 -n 1 /dev/sdb1 --force to
->>> create the RAID1 device, answered yes to the question.
+>>> I have a two HDDs system, with a small RAID1 (/boot)
+>>> and the rest as RAID10 f2 (with LVM on top).
 >>>
->>>       
->> Right here is where you invite problems.
->>     
->  This just a warning or have you had problems doing this?
->
->
-> If you don't remember to shrink the filesystem you lose data. The list
-> has had tales of woe from people who have done it. I personally
-> haven't. Oh, and shrinking a filesystem is not totally without
-> possibility of having problems due to hardware or power issues or even
-> just a crash.
->
->
-> Doing it the other way avoids this, all failures keep the original data safe.
->
-> - create an array using the NEW partition
-> - make the filesystem on the new array
-> - mount the new filesystem
-> - copy the data to the new array and verify
-> - umount the old partition
-> - mount the array on the OLD mount point
-> - add the OLD partition to the array and let the system refresh it
->> You want to create the array using
->> the new device or partition, and put a new filesystem on it.
->>     
->  No, I want to convert an existing ext3 to RAID1 partition ...
->   
-
-See above, you want to wind up with the data on an array, preferably 
-without modifying the old data until the old data has been moved and 
-verified.
->   
->> Read and
->> understand the man page for mke2fs in the stride= and stripe-width=
->> parameters, it shouldn't matter for raid-1 but would if you use raid-[56].
->>     
->  How would striding effect RAID growing or shrinking? Does not the
-> striding just effect performance or is it a big problem? Would a RAID
-> defragger help?
->
->   
-On raid-[456] it can improve performance. I mentioned it because people 
-overlook it. And if I were doing this I would use raid-10 to get better 
-performance, but that's me.
->> Then mount the array, copy the data to the array, verify it, and then
->> unmount the old partition and add it.
->>     
->  I know this is a tried, tested and accept procedure to
-> transfer/transform an existing ext3 partition to a RAID partition, but
-> this takes allot of data coping and requires double extra storage ...
->   
-
-You are going to use the NEW partition as part of the array anyway, it 
-takes no extra storage.
-
-> What I'm trying to get right, is to create and test a procedure ( with
-> audience help and peer review ), to convert an ext3 partition to a
-> RAID1, maybe later other RAID, but this is a first step/test ...
->
->   
-Using a missing disk component should work with any raid level but 
-raid-0.  ;-)
->>> Ran e2fsck -v /dev/md0 to check that the RAID1 device had no
->>> filesystem corruption on it, which it did not.
->>> Added a spared RAID device using mdadm --add /dev/md0 /dev/sdc1
->>> Then grew the RAID1 device to two compents with mdadm --grow /dev/md0
->>> --raid-disks=2 --backup-file=/root/raid1.backup.file
->>>       
->> I have an entry in my raid notes which says that's the wrong thing to do,
->> the array should be created with the correct number of members and one left
->> "missing" to be added later. My note says it should be done that way, but
->> not why it's better, but it says "per Neil" so I bet there is a reason. It
->> does seem to work that way, I just did an adventure in file moving to test
->> it the hard way. I was doing a mix of raid-1, raid-10, and raid-5 arrays
->> moving from little drives (750GB) to larger ones.
->>     
->  Okay, but now we have a big question, creating RAID MD with less
-> devices than they should have should only be done with "missing" or
-> forced with number of devices?  Could the really Neil stand up now?
-> ;-)
->
->   
-I'd like to hear at this point, too. I don't want to modify the old 
-partition until the new one is working, other than being paranoid is 
-there a downside to that?
->>> Did another filesystem check once the RAID finished rebuilding and all
->>> seemed fine.
->>> Double checked that the data on the RAID was the same as the original
->>> data by diffing the two, again all was fine.
+>>> It seems that /dev/sdb has more reads than /dev/sda.
 >>>
->>>  Now is this just lucky or would this be an acceptable way to convert
->>> an existing ext3 filesystem to RAID1?
->>>       
->> See above, given the resize you didn't mention it's okay, but forget the
->> resize and you risk your data.
->>     
->  Okay, so, you saying that I should make sure that I shrink the ext3
-> before try and convert, which is what was comment on before ... I only
-> edited out what I thought was not needed for the basic question of
-> converting, but, when I write up an article covering this, I will be
-> sure to detail that and explain that md metadata version 0.90 puts
-> it's metadata at the end of the device, which should be free, after
-> the shrink ...
->   
+>>> I had a quick check, with "iostat", and it seems that
+>>> all small reads, somehow below 1~4KiB, are done from
+>>> /dev/sdb2, regardless.
+>>> Actually, it seems that only if there is a pending
+>>> (small) read, this will be scheduled to /dev/sda2,
+>>> but non-overlapping small reads seem to happen always
+>>> from /dev/sdb2.
+>>>
+>>> This occurs with the RAID10, but it seems also with
+>>> the RAID1.
+>>>    =20
+>>
+>> Hmm, have you done testing separately on each array?
+>>
+>>  =20
+>>> In normal operation, this does not seem to lead to
+>>> problems, but during the smart long test /dev/sdb
+>>> takes by far more time than /dev/sda, since each
+>>> small read stop the test, and small read occurs
+>>> whenever there is a small write from syslog or
+>>> similar.
+>>> Note that failing and removing /dev/sdb2 results
+>>> in much shorter time for the smart test, about
+>>> 1hr30min vs. the 6~7hrs with the drive still
+>>> attached to RAID10.
+>>>
+>>> Is there any way to tune which is the "preferred"
+>>> drive or the "preferred" policy in case of these
+>>> small (or big) reads?
+>>>    =20
+>>
+>> What level of the kernel are you running?
+>>
+>>  =20
+>>> Could this be due to HW configuration?
+>>> The two HDDs are numbered SATA1 and SATA2 in BIOS,
+>>> there are still SATA3 and SATA4 ports somehow
+>>> available (SATA3 has a DVD).
+>>>
+>>> How are the reads scheduled withing the RAID10 software?
+>>>    =20
+>>
+>> there was a change of this about 2.6.25 which forced reads to always=
+ be
+>> from the faster inner part of the disks, and that should even out re=
+ads.
+>>  =20
+>
+> ??? what faster inner part is that? The linear velocity and =20
+> bytes/cylinder are higher as the diameter increases.
 
+I meant the faster lower numbered sectors, which are the *outer*
+sectors on the physical disk.
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-
-"Now we have another quarterback besides Kurt Warner telling us during postgame
-interviews that he owes every great thing that happens to him on a football
-field to his faith in Jesus. I knew there had to be a reason why the Almighty
-included a mute button on my remote."
-			-- Arthur Troyer on Tim Tebow (Sports Illustrated)
-
+Best regards
+Keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
