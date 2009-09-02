@@ -1,76 +1,78 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Converting ext3 to RAID1 ...
-Date: Wed, 02 Sep 2009 12:27:10 -0400
-Message-ID: <4A9E9CDE.1040308@tmr.com>
-References: <b7b14cbb0908241424i50bdcf59p35a63e4496b108ca@mail.gmail.com>
+From: Paul Clements <paul.clements@steeleye.com>
+Subject: Re: Write intent bitmaps.
+Date: Wed, 02 Sep 2009 12:28:11 -0400
+Message-ID: <4A9E9D1B.4080209@steeleye.com>
+References: <5c45fce80908230116o2f129ab4y8d255cbe83bfac5b@mail.gmail.com>    <87ws4t4bjz.fsf@frosties.localdomain>    <ABFC24E4C13D81489F7F624E14891C860D1F15EF@uk-ex-mbx1.terastack.bluearc.com> <09198ab3b722ad5aa40d32f78626953e.squirrel@neil.brown.name> <4A9E9902.8050408@tmr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <b7b14cbb0908241424i50bdcf59p35a63e4496b108ca@mail.gmail.com>
+In-Reply-To: <4A9E9902.8050408@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Clinton Lee Taylor <clintonlee.taylor@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: NeilBrown <neilb@suse.de>, Simon Jackson <sjackson@bluearc.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Clinton Lee Taylor wrote:
-> Greetings ...
->
-> I asked this question about two weeks ago
->
-> http://www.issociate.de/board/post/498227/Ext3_convert_to_RAID1_....html
->
->   and have had not response, so I am going to try and re-phrase and
-> hope that somebody can confirm my test case. Thanks.
->
-> Wanting to convert an already created and populated ext3 filesystem.
->
-> I unmounted the filesystem, ran e2fsck -f /dev/sdb1 to check that the
-> current filesystem had no errors.
-> Then ran mdadm --create /dev/md0 --level=1 -n 1 /dev/sdb1 --force to
-> create the RAID1 device, answered yes to the question.
->   
+Bill Davidsen wrote:
+> NeilBrown wrote:
+>> On Tue, August 25, 2009 12:39 am, Simon Jackson wrote:
+>>  
+>>> I am trying to use write intent bitmaps on some RAID 1 volumes to reduce
+>>> the rebuild times in the event of hard resets that cause the md 
+>>> driver to
+>>> kick members out of my arrays.
+>>>
+>>> I used the mdadm --grow /dev/md0 --bitmap=internal  and this appeared to
+>>> succeed, but when I tried to examine the bitmap I get an error.
+>>>
+>>>
+>>> :~$ sudo mdadm --grow /dev/md0 --bitmap=internal
+>>> :~$ sudo mdadm -X /dev/md0
+>>>         Filename : /dev/md0
+>>>            Magic : 00000000
+>>> mdadm: invalid bitmap magic 0x0, the bitmap file appears to be corrupted
+>>>          Version : 0
+>>> mdadm: unknown bitmap version 0, either the bitmap file is corrupted or
+>>> you need to upgrade your tools
+>>>     
+>>
+>> Quoting from the man page:
+>>
+>>        -X, --examine-bitmap
+>>               Report  information about a bitmap file.  The argument is
+>> either
+>>               an external bitmap file or an array  component  in  
+>> case  of
+>>  an
+>>               internal  bitmap.   Note  that  running  this on an array
+>> device
+>>               (e.g.  /dev/md0) does not report the bitmap for that array.
+>>
+>>
+>> Particularly read the last sentence.
+>> Then try
+>>    mdadm -X /dev/sda5
+>>   
+> 
+> Well that's nice and clear, but raises the question "why not?" This 
+> would seem to be one of the most common things someone would do, to look 
+> at the bitmap for an array.
 
-Right here is where you invite problems. You want to create the array 
-using the new device or partition, and put a new filesystem on it. Read 
-and understand the man page for mke2fs in the stride= and stripe-width= 
-parameters, it shouldn't matter for raid-1 but would if you use 
-raid-[56]. Then mount the array, copy the data to the array, verify it, 
-and then unmount the old partition and add it.
-> Ran e2fsck -v /dev/md0 to check that the RAID1 device had no
-> filesystem corruption on it, which it did not.
-> Added a spared RAID device using mdadm --add /dev/md0 /dev/sdc1
-> Then grew the RAID1 device to two compents with mdadm --grow /dev/md0
-> --raid-disks=2 --backup-file=/root/raid1.backup.file
->   
+Two reasons why not:
 
-I have an entry in my raid notes which says that's the wrong thing to 
-do, the array should be created with the correct number of members and 
-one left "missing" to be added later. My note says it should be done 
-that way, but not why it's better, but it says "per Neil" so I bet there 
-is a reason. It does seem to work that way, I just did an adventure in 
-file moving to test it the hard way. I was doing a mix of raid-1, 
-raid-10, and raid-5 arrays moving from little drives (750GB) to larger ones.
+The examine code simply takes the device or file you give it and looks 
+for a bitmap in that file or device. You'd have to do some hand-waving 
+to "read the bitmap for /dev/md0". There actually is no bitmap on 
+/dev/md0; there is a bitmap stored either in a file or on each of the 
+component devices. So which version of the bitmap do you read? From the 
+first, second, third ... component disk?
 
-> Did another filesystem check once the RAID finished rebuilding and all
-> seemed fine.
-> Double checked that the data on the RAID was the same as the original
-> data by diffing the two, again all was fine.
->
->  Now is this just lucky or would this be an acceptable way to convert
-> an existing ext3 filesystem to RAID1?
->   
+Also, mdadm's behavior would be ambiguous if you implemented the above. 
+What if /dev/md0 is itself a component of another md device? Then how is 
+mdadm to know which bitmap you want? The one that actually physically 
+exists on md0, or the ones that the components of md0 contain?
 
-See above, given the resize you didn't mention it's okay, but forget the 
-resize and you risk your data.
+Perhaps better would be to simply throw an error in this case?
 
--- 
-bill davidsen <davidsen@tmr.com>
-  CTO TMR Associates, Inc
-
-"Now we have another quarterback besides Kurt Warner telling us during postgame
-interviews that he owes every great thing that happens to him on a football
-field to his faith in Jesus. I knew there had to be a reason why the Almighty
-included a mute button on my remote."
-			-- Arthur Troyer on Tim Tebow (Sports Illustrated)
-
+--
+Paul
