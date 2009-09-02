@@ -1,99 +1,134 @@
 From: "me at tmr.com" <tmrbill@tmr.com>
 Subject: (unknown)
-Date: Wed, 2 Sep 2009 14:46:11 -0400
-Message-ID: <200909021846.n82IkB3I020713@firewall2.tmr.com>
+Date: Wed, 2 Sep 2009 14:46:50 -0400
+Message-ID: <200909021846.n82Iko5v020720@firewall2.tmr.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 List-Id: linux-raid.ids
 
-Paul Clements wrote:
-> Bill Davidsen wrote:
->> NeilBrown wrote:
->>> On Tue, August 25, 2009 12:39 am, Simon Jackson wrote:
->>>  
->>>> I am trying to use write intent bitmaps on some RAID 1 volumes to 
->>>> reduce
->>>> the rebuild times in the event of hard resets that cause the md 
->>>> driver to
->>>> kick members out of my arrays.
->>>>
->>>> I used the mdadm --grow /dev/md0 --bitmap=internal  and this 
->>>> appeared to
->>>> succeed, but when I tried to examine the bitmap I get an error.
->>>>
->>>>
->>>> :~$ sudo mdadm --grow /dev/md0 --bitmap=internal
->>>> :~$ sudo mdadm -X /dev/md0
->>>>         Filename : /dev/md0
->>>>            Magic : 00000000
->>>> mdadm: invalid bitmap magic 0x0, the bitmap file appears to be 
->>>> corrupted
->>>>          Version : 0
->>>> mdadm: unknown bitmap version 0, either the bitmap file is 
->>>> corrupted or
->>>> you need to upgrade your tools
->>>>     
->>>
->>> Quoting from the man page:
->>>
->>>        -X, --examine-bitmap
->>>               Report  information about a bitmap file.  The argument is
->>> either
->>>               an external bitmap file or an array  component  in  
->>> case  of
->>>  an
->>>               internal  bitmap.   Note  that  running  this on an array
->>> device
->>>               (e.g.  /dev/md0) does not report the bitmap for that 
->>> array.
->>>
->>>
->>> Particularly read the last sentence.
->>> Then try
->>>    mdadm -X /dev/sda5
->>>   
->>
->> Well that's nice and clear, but raises the question "why not?" This 
->> would seem to be one of the most common things someone would do, to 
->> look at the bitmap for an array.
+Clinton Lee Taylor wrote:
+> Greetings ...
 >
-> Two reasons why not:
+> 2009/9/2 Bill Davidsen <davidsen@tmr.com>:
+>   
+>> Clinton Lee Taylor wrote:
+>>     
+>>> http://www.issociate.de/board/post/498227/Ext3_convert_to_RAID1_....html
+>>>
+>>> Wanting to convert an already created and populated ext3 filesystem.
+>>>
+>>> I unmounted the filesystem, ran e2fsck -f /dev/sdb1 to check that the
+>>> current filesystem had no errors.
+>>> Then ran mdadm --create /dev/md0 --level=1 -n 1 /dev/sdb1 --force to
+>>> create the RAID1 device, answered yes to the question.
+>>>
+>>>       
+>> Right here is where you invite problems.
+>>     
+>  This just a warning or have you had problems doing this?
 >
-> The examine code simply takes the device or file you give it and looks 
-> for a bitmap in that file or device. You'd have to do some hand-waving 
-> to "read the bitmap for /dev/md0". There actually is no bitmap on 
-> /dev/md0; there is a bitmap stored either in a file or on each of the 
-> component devices. So which version of the bitmap do you read? From 
-> the first, second, third ... component disk?
 >
-I know what the code does now, the question is why it doesn't handle the 
-most intuitive usage.  The software can select which component to check 
-if (a) a bitmap exists at all on this array, and (b) this isn't a 
-component. And software could select a component with a current event 
-count, just in case. It's useful if the tool does something useful 
-instead of requiring multiple manual steps.
-> Also, mdadm's behavior would be ambiguous if you implemented the 
-> above. What if /dev/md0 is itself a component of another md device? 
-> Then how is mdadm to know which bitmap you want? The one that actually 
-> physically exists on md0, or the ones that the components of md0 contain?
-
-The two steps above are deterministic, so it will always do the same 
-thing, in most cases the desired thing, and in all cases where the 
-target is a component the same thing it does now.
+> If you don't remember to shrink the filesystem you lose data. The list
+> has had tales of woe from people who have done it. I personally
+> haven't. Oh, and shrinking a filesystem is not totally without
+> possibility of having problems due to hardware or power issues or even
+> just a crash.
 >
-> Perhaps better would be to simply throw an error in this case?
+>
+> Doing it the other way avoids this, all failures keep the original data safe.
+>
+> - create an array using the NEW partition
+> - make the filesystem on the new array
+> - mount the new filesystem
+> - copy the data to the new array and verify
+> - umount the old partition
+> - mount the array on the OLD mount point
+> - add the OLD partition to the array and let the system refresh it
+>> You want to create the array using
+>> the new device or partition, and put a new filesystem on it.
+>>     
+>  No, I want to convert an existing ext3 to RAID1 partition ...
+>   
 
-It does, and the error has three major faults:
-- it misdiagnoses the problem in the majority of cases
-- it suggests that the bitmap is broken or the tools don't match the kernel
-- it needlessly alarms users, who equate "corrupted" with "lost data"
+See above, you want to wind up with the data on an array, preferably 
+without modifying the old data until the old data has been moved and 
+verified.
+>   
+>> Read and
+>> understand the man page for mke2fs in the stride= and stripe-width=
+>> parameters, it shouldn't matter for raid-1 but would if you use raid-[56].
+>>     
+>  How would striding effect RAID growing or shrinking? Does not the
+> striding just effect performance or is it a big problem? Would a RAID
+> defragger help?
+>
+>   
+On raid-[456] it can improve performance. I mentioned it because people 
+overlook it. And if I were doing this I would use raid-10 to get better 
+performance, but that's me.
+>> Then mount the array, copy the data to the array, verify it, and then
+>> unmount the old partition and add it.
+>>     
+>  I know this is a tried, tested and accept procedure to
+> transfer/transform an existing ext3 partition to a RAID partition, but
+> this takes allot of data coping and requires double extra storage ...
+>   
 
-    mdadm: unknown bitmap version 0, either the bitmap file is corrupted
-    or you need to upgrade your tools
-      
+You are going to use the NEW partition as part of the array anyway, it 
+takes no extra storage.
 
----
+> What I'm trying to get right, is to create and test a procedure ( with
+> audience help and peer review ), to convert an ext3 partition to a
+> RAID1, maybe later other RAID, but this is a first step/test ...
+>
+>   
+Using a missing disk component should work with any raid level but 
+raid-0.  ;-)
+>>> Ran e2fsck -v /dev/md0 to check that the RAID1 device had no
+>>> filesystem corruption on it, which it did not.
+>>> Added a spared RAID device using mdadm --add /dev/md0 /dev/sdc1
+>>> Then grew the RAID1 device to two compents with mdadm --grow /dev/md0
+>>> --raid-disks=2 --backup-file=/root/raid1.backup.file
+>>>       
+>> I have an entry in my raid notes which says that's the wrong thing to do,
+>> the array should be created with the correct number of members and one left
+>> "missing" to be added later. My note says it should be done that way, but
+>> not why it's better, but it says "per Neil" so I bet there is a reason. It
+>> does seem to work that way, I just did an adventure in file moving to test
+>> it the hard way. I was doing a mix of raid-1, raid-10, and raid-5 arrays
+>> moving from little drives (750GB) to larger ones.
+>>     
+>  Okay, but now we have a big question, creating RAID MD with less
+> devices than they should have should only be done with "missing" or
+> forced with number of devices?  Could the really Neil stand up now?
+> ;-)
+>
+>   
+I'd like to hear at this point, too. I don't want to modify the old 
+partition until the new one is working, other than being paranoid is 
+there a downside to that?
+>>> Did another filesystem check once the RAID finished rebuilding and all
+>>> seemed fine.
+>>> Double checked that the data on the RAID was the same as the original
+>>> data by diffing the two, again all was fine.
+>>>
+>>>  Now is this just lucky or would this be an acceptable way to convert
+>>> an existing ext3 filesystem to RAID1?
+>>>       
+>> See above, given the resize you didn't mention it's okay, but forget the
+>> resize and you risk your data.
+>>     
+>  Okay, so, you saying that I should make sure that I shrink the ext3
+> before try and convert, which is what was comment on before ... I only
+> edited out what I thought was not needed for the basic question of
+> converting, but, when I write up an article covering this, I will be
+> sure to detail that and explain that md metadata version 0.90 puts
+> it's metadata at the end of the device, which should be free, after
+> the shrink ...
+>   
 
+
+-- 
 bill davidsen <davidsen@tmr.com>
   CTO TMR Associates, Inc
 
