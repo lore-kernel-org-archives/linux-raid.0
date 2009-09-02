@@ -1,98 +1,76 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Unbalanced reads of RAID10
-Date: Wed, 02 Sep 2009 12:13:15 -0400
-Message-ID: <4A9E999B.8070401@tmr.com>
-References: <20090823142439.GA5162@lazy.lzy> <20090830003706.GB5633@rap.rap.dk>
+Subject: Re: Converting ext3 to RAID1 ...
+Date: Wed, 02 Sep 2009 12:27:10 -0400
+Message-ID: <4A9E9CDE.1040308@tmr.com>
+References: <b7b14cbb0908241424i50bdcf59p35a63e4496b108ca@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090830003706.GB5633@rap.rap.dk>
+In-Reply-To: <b7b14cbb0908241424i50bdcf59p35a63e4496b108ca@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: Clinton Lee Taylor <clintonlee.taylor@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Keld J=F8rn Simonsen wrote:
-> On Sun, Aug 23, 2009 at 04:24:39PM +0200, Piergiorgio Sartor wrote:
->  =20
->> Hi all,
->>
->> some time ago I was reporting about a strange issue.
->>
->> I have a two HDDs system, with a small RAID1 (/boot)
->> and the rest as RAID10 f2 (with LVM on top).
->>
->> It seems that /dev/sdb has more reads than /dev/sda.
->>
->> I had a quick check, with "iostat", and it seems that
->> all small reads, somehow below 1~4KiB, are done from
->> /dev/sdb2, regardless.
->> Actually, it seems that only if there is a pending
->> (small) read, this will be scheduled to /dev/sda2,
->> but non-overlapping small reads seem to happen always
->> from /dev/sdb2.
->>
->> This occurs with the RAID10, but it seems also with
->> the RAID1.
->>    =20
+Clinton Lee Taylor wrote:
+> Greetings ...
 >
-> Hmm, have you done testing separately on each array?
+> I asked this question about two weeks ago
 >
->  =20
->> In normal operation, this does not seem to lead to
->> problems, but during the smart long test /dev/sdb
->> takes by far more time than /dev/sda, since each
->> small read stop the test, and small read occurs
->> whenever there is a small write from syslog or
->> similar.
->> Note that failing and removing /dev/sdb2 results
->> in much shorter time for the smart test, about
->> 1hr30min vs. the 6~7hrs with the drive still
->> attached to RAID10.
->>
->> Is there any way to tune which is the "preferred"
->> drive or the "preferred" policy in case of these
->> small (or big) reads?
->>    =20
+> http://www.issociate.de/board/post/498227/Ext3_convert_to_RAID1_....html
 >
-> What level of the kernel are you running?
+>   and have had not response, so I am going to try and re-phrase and
+> hope that somebody can confirm my test case. Thanks.
 >
->  =20
->> Could this be due to HW configuration?
->> The two HDDs are numbered SATA1 and SATA2 in BIOS,
->> there are still SATA3 and SATA4 ports somehow
->> available (SATA3 has a DVD).
->>
->> How are the reads scheduled withing the RAID10 software?
->>    =20
+> Wanting to convert an already created and populated ext3 filesystem.
 >
-> there was a change of this about 2.6.25 which forced reads to always =
-be
-> from the faster inner part of the disks, and that should even out rea=
-ds.
->  =20
+> I unmounted the filesystem, ran e2fsck -f /dev/sdb1 to check that the
+> current filesystem had no errors.
+> Then ran mdadm --create /dev/md0 --level=1 -n 1 /dev/sdb1 --force to
+> create the RAID1 device, answered yes to the question.
+>   
 
-??? what faster inner part is that? The linear velocity and=20
-bytes/cylinder are higher as the diameter increases.
+Right here is where you invite problems. You want to create the array 
+using the new device or partition, and put a new filesystem on it. Read 
+and understand the man page for mke2fs in the stride= and stripe-width= 
+parameters, it shouldn't matter for raid-1 but would if you use 
+raid-[56]. Then mount the array, copy the data to the array, verify it, 
+and then unmount the old partition and add it.
+> Ran e2fsck -v /dev/md0 to check that the RAID1 device had no
+> filesystem corruption on it, which it did not.
+> Added a spared RAID device using mdadm --add /dev/md0 /dev/sdc1
+> Then grew the RAID1 device to two compents with mdadm --grow /dev/md0
+> --raid-disks=2 --backup-file=/root/raid1.backup.file
+>   
 
---=20
+I have an entry in my raid notes which says that's the wrong thing to 
+do, the array should be created with the correct number of members and 
+one left "missing" to be added later. My note says it should be done 
+that way, but not why it's better, but it says "per Neil" so I bet there 
+is a reason. It does seem to work that way, I just did an adventure in 
+file moving to test it the hard way. I was doing a mix of raid-1, 
+raid-10, and raid-5 arrays moving from little drives (750GB) to larger ones.
+
+> Did another filesystem check once the RAID finished rebuilding and all
+> seemed fine.
+> Double checked that the data on the RAID was the same as the original
+> data by diffing the two, again all was fine.
+>
+>  Now is this just lucky or would this be an acceptable way to convert
+> an existing ext3 filesystem to RAID1?
+>   
+
+See above, given the resize you didn't mention it's okay, but forget the 
+resize and you risk your data.
+
+-- 
 bill davidsen <davidsen@tmr.com>
   CTO TMR Associates, Inc
 
-"Now we have another quarterback besides Kurt Warner telling us during =
-postgame
-interviews that he owes every great thing that happens to him on a foot=
-ball
-field to his faith in Jesus. I knew there had to be a reason why the Al=
-mighty
+"Now we have another quarterback besides Kurt Warner telling us during postgame
+interviews that he owes every great thing that happens to him on a football
+field to his faith in Jesus. I knew there had to be a reason why the Almighty
 included a mute button on my remote."
 			-- Arthur Troyer on Tim Tebow (Sports Illustrated)
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
