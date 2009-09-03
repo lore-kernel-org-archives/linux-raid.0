@@ -1,51 +1,147 @@
-From: Zdenek Kaspar <zkaspar82@gmail.com>
-Subject: Re: Western Digital RE3: Raid Failure
-Date: Thu, 03 Sep 2009 14:28:53 +0200
-Message-ID: <4A9FB685.609@gmail.com>
-References: <b9f8dfb10908270243u1213576cs7c5cbc743d637c1c@mail.gmail.com>	 <4A9C3969.8000304@gmail.com> <b9f8dfb10909030214u2144b4fag417997ff9a38f315@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Converting ext3 to RAID1 ...
+Date: Thu, 03 Sep 2009 11:55:11 -0400
+Message-ID: <4A9FE6DF.7050403@tmr.com>
+References: <b7b14cbb0908241424i50bdcf59p35a63e4496b108ca@mail.gmail.com>	 <4A9E9CDE.1040308@tmr.com> <b7b14cbb0909021110t5f38a12by16be5ca604c50b40@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <b9f8dfb10909030214u2144b4fag417997ff9a38f315@mail.gmail.com>
+In-Reply-To: <b7b14cbb0909021110t5f38a12by16be5ca604c50b40@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "MOgWai46[Saurceful of Secrets]" <street41@gmail.com>
+To: Clinton Lee Taylor <clintonlee.taylor@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-MOgWai46[Saurceful of Secrets] napsal(a):
-> 2009/8/31 Zdenek Kaspar <zkaspar82@gmail.com>:
-> 
->> Do you have some sort of port multiplier [because it looks like there
->> are 2 devices on ata2 -> ata2.00 (sdc),ata2.01 (sdd?)] and can you
->> provide smartctl -a /dev/sdc output ?
-> 
-> This is the output of smartctl -a /dev/sdc: http://nopaste.com/p/aXwmnSEphb
-> 
-> This is the output of smartctl -a /dev/sdd: http://nopaste.com/p/aYzhpzppv
-> 
-> There isn't any port replicator on this little server (is not a
-> critical or production server). It has 4 SATA Port on the Mainboard:
-> 
-> # lspci -v
-> 
-> 00:1f.2 IDE interface: Intel Corporation 82801GB/GR/GH (ICH7 Family)
-> SATA IDE Controller (rev 01) (prog-if 8a [Master SecP PriP])
->         Subsystem: Hewlett-Packard Company Unknown device 3206
->         Flags: bus master, 66MHz, medium devsel, latency 0, IRQ 233
->         I/O ports at <unassigned>
->         I/O ports at <unassigned>
->         I/O ports at <unassigned>
->         I/O ports at <unassigned>
->         I/O ports at 3080 [size=16]
->         Memory at 88000000 (32-bit, non-prefetchable) [size=1K]
->         Capabilities: [70] Power Management version 2
-> 
-> Thanks, Andrea
+Clinton Lee Taylor wrote:
+> Greetings ...
+>
+> 2009/9/2 Bill Davidsen <davidsen@tmr.com>:
+>   
+>> Clinton Lee Taylor wrote:
+>>     
+>>> http://www.issociate.de/board/post/498227/Ext3_convert_to_RAID1_....html
+>>>
+>>> Wanting to convert an already created and populated ext3 filesystem.
+>>>
+>>> I unmounted the filesystem, ran e2fsck -f /dev/sdb1 to check that the
+>>> current filesystem had no errors.
+>>> Then ran mdadm --create /dev/md0 --level=1 -n 1 /dev/sdb1 --force to
+>>> create the RAID1 device, answered yes to the question.
+>>>
+>>>       
+>> Right here is where you invite problems.
+>>     
+>  This just a warning or have you had problems doing this?
+>
+>
+> If you don't remember to shrink the filesystem you lose data. The list
+> has had tales of woe from people who have done it. I personally
+> haven't. Oh, and shrinking a filesystem is not totally without
+> possibility of having problems due to hardware or power issues or even
+> just a crash.
+>
+>
+> Doing it the other way avoids this, all failures keep the original data safe.
+>
+> - create an array using the NEW partition
+> - make the filesystem on the new array
+> - mount the new filesystem
+> - copy the data to the new array and verify
+> - umount the old partition
+> - mount the array on the OLD mount point
+> - add the OLD partition to the array and let the system refresh it
+>> You want to create the array using
+>> the new device or partition, and put a new filesystem on it.
+>>     
+>  No, I want to convert an existing ext3 to RAID1 partition ...
+>   
+
+See above, you want to wind up with the data on an array, preferably 
+without modifying the old data until the old data has been moved and 
+verified.
+>   
+>> Read and
+>> understand the man page for mke2fs in the stride= and stripe-width=
+>> parameters, it shouldn't matter for raid-1 but would if you use raid-[56].
+>>     
+>  How would striding effect RAID growing or shrinking? Does not the
+> striding just effect performance or is it a big problem? Would a RAID
+> defragger help?
+>
+>   
+On raid-[456] it can improve performance. I mentioned it because people 
+overlook it. And if I were doing this I would use raid-10 to get better 
+performance, but that's me.
+>> Then mount the array, copy the data to the array, verify it, and then
+>> unmount the old partition and add it.
+>>     
+>  I know this is a tried, tested and accept procedure to
+> transfer/transform an existing ext3 partition to a RAID partition, but
+> this takes allot of data coping and requires double extra storage ...
+>   
+
+You are going to use the NEW partition as part of the array anyway, it 
+takes no extra storage.
+
+> What I'm trying to get right, is to create and test a procedure ( with
+> audience help and peer review ), to convert an ext3 partition to a
+> RAID1, maybe later other RAID, but this is a first step/test ...
+>
+>   
+Using a missing disk component should work with any raid level but 
+raid-0.  ;-)
+>>> Ran e2fsck -v /dev/md0 to check that the RAID1 device had no
+>>> filesystem corruption on it, which it did not.
+>>> Added a spared RAID device using mdadm --add /dev/md0 /dev/sdc1
+>>> Then grew the RAID1 device to two compents with mdadm --grow /dev/md0
+>>> --raid-disks=2 --backup-file=/root/raid1.backup.file
+>>>       
+>> I have an entry in my raid notes which says that's the wrong thing to do,
+>> the array should be created with the correct number of members and one left
+>> "missing" to be added later. My note says it should be done that way, but
+>> not why it's better, but it says "per Neil" so I bet there is a reason. It
+>> does seem to work that way, I just did an adventure in file moving to test
+>> it the hard way. I was doing a mix of raid-1, raid-10, and raid-5 arrays
+>> moving from little drives (750GB) to larger ones.
+>>     
+>  Okay, but now we have a big question, creating RAID MD with less
+> devices than they should have should only be done with "missing" or
+> forced with number of devices?  Could the really Neil stand up now?
+> ;-)
+>
+>   
+I'd like to hear at this point, too. I don't want to modify the old 
+partition until the new one is working, other than being paranoid is 
+there a downside to that?
+>>> Did another filesystem check once the RAID finished rebuilding and all
+>>> seemed fine.
+>>> Double checked that the data on the RAID was the same as the original
+>>> data by diffing the two, again all was fine.
+>>>
+>>>  Now is this just lucky or would this be an acceptable way to convert
+>>> an existing ext3 filesystem to RAID1?
+>>>       
+>> See above, given the resize you didn't mention it's okay, but forget the
+>> resize and you risk your data.
+>>     
+>  Okay, so, you saying that I should make sure that I shrink the ext3
+> before try and convert, which is what was comment on before ... I only
+> edited out what I thought was not needed for the basic question of
+> converting, but, when I write up an article covering this, I will be
+> sure to detail that and explain that md metadata version 0.90 puts
+> it's metadata at the end of the device, which should be free, after
+> the shrink ...
+>   
 
 
-As others already pointed to Reallocated_Sector_Ct value.. it's bad sign
-and you should replace (RMA) such drive quickly. BTW, speed is
-significantly degraded when disk works with sectors from remapped area.
+-- 
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
 
-HTH, Z.
+"Now we have another quarterback besides Kurt Warner telling us during postgame
+interviews that he owes every great thing that happens to him on a football
+field to his faith in Jesus. I knew there had to be a reason why the Almighty
+included a mute button on my remote."
+			-- Arthur Troyer on Tim Tebow (Sports Illustrated)
+
