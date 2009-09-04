@@ -1,43 +1,124 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 05/18] ioat2+: add fence support
-Date: Thu, 03 Sep 2009 23:45:00 -0700
-Message-ID: <20090904064500.7141.60154.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 03/18] dmaengine: cleanup unused transaction types
+Date: Thu, 03 Sep 2009 23:44:50 -0700
+Message-ID: <20090904064450.7141.51497.stgit@dwillia2-linux.ch.intel.com>
 References: <20090904064308.7141.30576.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932697AbZIDGpn@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932641AbZIDGph@vger.kernel.org>
 In-Reply-To: <20090904064308.7141.30576.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: linux-raid@vger.kernel.org, maciej.sosnowski@intel.com
 List-Id: linux-raid.ids
 
-In preparation for adding more operation types to the ioat3 path the
-driver needs to honor the DMA_PREP_FENCE flag.  For example the async_tx api
-will hand xor->memcpy->xor chains to the driver with the 'fence' flag set on
-the first xor and the memcpy operation.  This flag in turn sets the 'fence'
-flag in the descriptor control field telling the hardware that future
-descriptors in the chain depend on the result of the current descriptor, so
-wait for all writes to complete before starting the next operation.
-
-Note that ioat1 does not prefetch the descriptor chain, so does not
-require/support fenced operations.
+No drivers currently implement these operation types, so they can be
+deleted.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/dma/ioat/dma_v2.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ arch/arm/mach-iop13xx/setup.c |    7 -------
+ arch/arm/plat-iop/adma.c      |    2 --
+ drivers/dma/iop-adma.c        |    5 +----
+ include/linux/dmaengine.h     |    3 ---
+ 4 files changed, 1 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/dma/ioat/dma_v2.c b/drivers/dma/ioat/dma_v2.c
-index c4d8a6a..b3a1f81 100644
---- a/drivers/dma/ioat/dma_v2.c
-+++ b/drivers/dma/ioat/dma_v2.c
-@@ -711,6 +711,7 @@ ioat2_dma_prep_memcpy_lock(struct dma_chan *c, dma_addr_t dma_dest,
- 	desc->txd.flags = flags;
- 	desc->len = total_len;
- 	hw->ctl_f.int_en = !!(flags & DMA_PREP_INTERRUPT);
-+	hw->ctl_f.fence = !!(flags & DMA_PREP_FENCE);
- 	hw->ctl_f.compl_write = 1;
- 	dump_desc_dbg(ioat, desc);
- 	/* we leave the channel locked to ensure in order submission */
+diff --git a/arch/arm/mach-iop13xx/setup.c b/arch/arm/mach-iop13xx/setup.c
+index faaef95..5c147fb 100644
+--- a/arch/arm/mach-iop13xx/setup.c
++++ b/arch/arm/mach-iop13xx/setup.c
+@@ -477,10 +477,8 @@ void __init iop13xx_platform_init(void)
+ 			plat_data = &iop13xx_adma_0_data;
+ 			dma_cap_set(DMA_MEMCPY, plat_data->cap_mask);
+ 			dma_cap_set(DMA_XOR, plat_data->cap_mask);
+-			dma_cap_set(DMA_DUAL_XOR, plat_data->cap_mask);
+ 			dma_cap_set(DMA_XOR_VAL, plat_data->cap_mask);
+ 			dma_cap_set(DMA_MEMSET, plat_data->cap_mask);
+-			dma_cap_set(DMA_MEMCPY_CRC32C, plat_data->cap_mask);
+ 			dma_cap_set(DMA_INTERRUPT, plat_data->cap_mask);
+ 			break;
+ 		case IOP13XX_INIT_ADMA_1:
+@@ -489,10 +487,8 @@ void __init iop13xx_platform_init(void)
+ 			plat_data = &iop13xx_adma_1_data;
+ 			dma_cap_set(DMA_MEMCPY, plat_data->cap_mask);
+ 			dma_cap_set(DMA_XOR, plat_data->cap_mask);
+-			dma_cap_set(DMA_DUAL_XOR, plat_data->cap_mask);
+ 			dma_cap_set(DMA_XOR_VAL, plat_data->cap_mask);
+ 			dma_cap_set(DMA_MEMSET, plat_data->cap_mask);
+-			dma_cap_set(DMA_MEMCPY_CRC32C, plat_data->cap_mask);
+ 			dma_cap_set(DMA_INTERRUPT, plat_data->cap_mask);
+ 			break;
+ 		case IOP13XX_INIT_ADMA_2:
+@@ -501,13 +497,10 @@ void __init iop13xx_platform_init(void)
+ 			plat_data = &iop13xx_adma_2_data;
+ 			dma_cap_set(DMA_MEMCPY, plat_data->cap_mask);
+ 			dma_cap_set(DMA_XOR, plat_data->cap_mask);
+-			dma_cap_set(DMA_DUAL_XOR, plat_data->cap_mask);
+ 			dma_cap_set(DMA_XOR_VAL, plat_data->cap_mask);
+ 			dma_cap_set(DMA_MEMSET, plat_data->cap_mask);
+-			dma_cap_set(DMA_MEMCPY_CRC32C, plat_data->cap_mask);
+ 			dma_cap_set(DMA_INTERRUPT, plat_data->cap_mask);
+ 			dma_cap_set(DMA_PQ, plat_data->cap_mask);
+-			dma_cap_set(DMA_PQ_UPDATE, plat_data->cap_mask);
+ 			dma_cap_set(DMA_PQ_VAL, plat_data->cap_mask);
+ 			break;
+ 		}
+diff --git a/arch/arm/plat-iop/adma.c b/arch/arm/plat-iop/adma.c
+index da1dd0d..1ff6a37 100644
+--- a/arch/arm/plat-iop/adma.c
++++ b/arch/arm/plat-iop/adma.c
+@@ -179,7 +179,6 @@ static int __init iop3xx_adma_cap_init(void)
+ 	dma_cap_set(DMA_INTERRUPT, iop3xx_dma_0_data.cap_mask);
+ 	#else
+ 	dma_cap_set(DMA_MEMCPY, iop3xx_dma_0_data.cap_mask);
+-	dma_cap_set(DMA_MEMCPY_CRC32C, iop3xx_dma_0_data.cap_mask);
+ 	dma_cap_set(DMA_INTERRUPT, iop3xx_dma_0_data.cap_mask);
+ 	#endif
+ 
+@@ -188,7 +187,6 @@ static int __init iop3xx_adma_cap_init(void)
+ 	dma_cap_set(DMA_INTERRUPT, iop3xx_dma_1_data.cap_mask);
+ 	#else
+ 	dma_cap_set(DMA_MEMCPY, iop3xx_dma_1_data.cap_mask);
+-	dma_cap_set(DMA_MEMCPY_CRC32C, iop3xx_dma_1_data.cap_mask);
+ 	dma_cap_set(DMA_INTERRUPT, iop3xx_dma_1_data.cap_mask);
+ 	#endif
+ 
+diff --git a/drivers/dma/iop-adma.c b/drivers/dma/iop-adma.c
+index d6b6b52..9bbebf0 100644
+--- a/drivers/dma/iop-adma.c
++++ b/drivers/dma/iop-adma.c
+@@ -1257,15 +1257,12 @@ static int __devinit iop_adma_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	dev_printk(KERN_INFO, &pdev->dev, "Intel(R) IOP: "
+-	  "( %s%s%s%s%s%s%s%s%s%s)\n",
++	  "( %s%s%s%s%s%s%s)\n",
+ 	  dma_has_cap(DMA_PQ, dma_dev->cap_mask) ? "pq " : "",
+-	  dma_has_cap(DMA_PQ_UPDATE, dma_dev->cap_mask) ? "pq_update " : "",
+ 	  dma_has_cap(DMA_PQ_VAL, dma_dev->cap_mask) ? "pq_val " : "",
+ 	  dma_has_cap(DMA_XOR, dma_dev->cap_mask) ? "xor " : "",
+-	  dma_has_cap(DMA_DUAL_XOR, dma_dev->cap_mask) ? "dual_xor " : "",
+ 	  dma_has_cap(DMA_XOR_VAL, dma_dev->cap_mask) ? "xor_val " : "",
+ 	  dma_has_cap(DMA_MEMSET, dma_dev->cap_mask)  ? "fill " : "",
+-	  dma_has_cap(DMA_MEMCPY_CRC32C, dma_dev->cap_mask) ? "cpy+crc " : "",
+ 	  dma_has_cap(DMA_MEMCPY, dma_dev->cap_mask) ? "cpy " : "",
+ 	  dma_has_cap(DMA_INTERRUPT, dma_dev->cap_mask) ? "intr " : "");
+ 
+diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
+index 3e35df3..94656f9 100644
+--- a/include/linux/dmaengine.h
++++ b/include/linux/dmaengine.h
+@@ -56,12 +56,9 @@ enum dma_transaction_type {
+ 	DMA_MEMCPY,
+ 	DMA_XOR,
+ 	DMA_PQ,
+-	DMA_DUAL_XOR,
+-	DMA_PQ_UPDATE,
+ 	DMA_XOR_VAL,
+ 	DMA_PQ_VAL,
+ 	DMA_MEMSET,
+-	DMA_MEMCPY_CRC32C,
+ 	DMA_INTERRUPT,
+ 	DMA_PRIVATE,
+ 	DMA_ASYNC_TX,
