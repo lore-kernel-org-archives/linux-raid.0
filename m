@@ -1,552 +1,107 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 06/29] ioat: split ioat_dma_probe into core/version-specific
-	routines
-Date: Thu, 03 Sep 2009 19:31:00 -0700
-Message-ID: <20090904023100.32667.59699.stgit@dwillia2-linux.ch.intel.com>
-References: <20090904022733.32667.77626.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 00/18] ioatdma: raid5/raid6 offload support
+Date: Thu, 03 Sep 2009 23:44:35 -0700
+Message-ID: <20090904064308.7141.30576.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20090904022733.32667.77626.stgit@dwillia2-linux.ch.intel.com>
-Sender: netdev-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: linux-raid@vger.kernel.org, netdev@vger.kernel.org, Maciej Sosnowski <maciej.sosnowski@intel.com>
+Cc: linux-raid@vger.kernel.org, maciej.sosnowski@intel.com
 List-Id: linux-raid.ids
 
-Towards the removal of ioatdma_device.version split the initialization
-path into distinct versions.  This conversion:
-1/ moves version specific probe code to version specific routines
-2/ removes the need for ioat_device
-3/ turns off the ioat1 msi quirk if the device is reinitialized for intx
+The Intel(R) QuickData Technology specification version 3.2 adds support
+for offloading raid parity calculations.  This patchset builds upon the
+md raid6 acceleration patchset [1] and the ioatdma refactoring patchset
+[2].  Beyond the new operation types and descriptor formats these raid
+engines require a few changes to the current dmaengine/async_tx offload
+infrastructure:
+1/ v3.2 channels may prefetch descriptors which leads to later
+   descriptors in the chain possibly starting their reads before earlier
+   descriptors in the chain have completed their writes.  A 'fence' bit is
+   specified in the descriptor to disable this optimization in case there
+   are data dependencies in the chain.  Fenced operation must be explicitly
+   requested at the async_tx api level. 
+2/ The descriptor ring scheme of the ioatdma driver for v2+ devices
+   precludes async_tx channel switching.  The scheme requires that ->prep()
+   and ->submit() calls not be reordered.  To support this constraint the
+   dmaengine channel allocator is modified to only return "raid" engines
+   when CONFIG_ASYNC_TX_DISABLE_CHANNEL_SWITCH=y which ensures that the
+   async_tx api only ever sees channels that have all the requisite
+   capabilities.
+3/ Raid operations must be 4-byte aligned, so per operation alignment
+   checks are added to the async_tx api.
 
-Signed-off-by: Maciej Sosnowski <maciej.sosnowski@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+A couple user visible changes are included in this update:
+1/ A 'quickdata' attribute directory is added to the sysfs path of ioatdma
+   channel objects.  This allows channels with raid capabilities to be
+   identified and the activity of the channel to be monitored.
+2/ The ioatdma module will now be auto-loaded by the hotplug
+   infrastructure.  Add "blacklist ioatdma" to /etc/modprobe.d/blacklist to
+   maintain the prior policy.
+
+Provided the md raid6 acceleration patches [1] are accepted this
+patchset will follow them into 2.6.32.
+
+   git://git.kernel.org/pub/scm/linux/kernel/git/djbw/async_tx.git ioat-raid
+
+Regards,
+Dan
+
+[1]: http://marc.info/?l=linux-raid&m=125173687620741&w=2
+[2]: http://marc.info/?l=linux-raid&m=125203215231330&w=2
+
 ---
- drivers/dma/ioat/dma.c |  253 +++++++++++++++++++++++++++++-------------------
- drivers/dma/ioat/dma.h |   23 ++--
- drivers/dma/ioat/pci.c |   79 +++++++--------
- 3 files changed, 200 insertions(+), 155 deletions(-)
 
-diff --git a/drivers/dma/ioat/dma.c b/drivers/dma/ioat/dma.c
-index 462dae6..b750804 100644
---- a/drivers/dma/ioat/dma.c
-+++ b/drivers/dma/ioat/dma.c
-@@ -121,52 +121,21 @@ static int ioat_dma_enumerate_channels(struct ioatdma_device *device)
- 	int i;
- 	struct ioat_dma_chan *ioat_chan;
- 	struct device *dev = &device->pdev->dev;
-+	struct dma_device *dma = &device->common;
- 
--	/*
--	 * IOAT ver.3 workarounds
--	 */
--	if (device->version == IOAT_VER_3_0) {
--		u32 chan_err_mask;
--		u16 dev_id;
--		u32 dmauncerrsts;
--
--		/*
--		 * Write CHANERRMSK_INT with 3E07h to mask out the errors
--		 * that can cause stability issues for IOAT ver.3
--		 */
--		chan_err_mask = 0x3E07;
--		pci_write_config_dword(device->pdev,
--			IOAT_PCI_CHANERRMASK_INT_OFFSET,
--			chan_err_mask);
--
--		/*
--		 * Clear DMAUNCERRSTS Cfg-Reg Parity Error status bit
--		 * (workaround for spurious config parity error after restart)
--		 */
--		pci_read_config_word(device->pdev,
--			IOAT_PCI_DEVICE_ID_OFFSET,
--			&dev_id);
--		if (dev_id == PCI_DEVICE_ID_INTEL_IOAT_TBG0) {
--			dmauncerrsts = 0x10;
--			pci_write_config_dword(device->pdev,
--				IOAT_PCI_DMAUNCERRSTS_OFFSET,
--				dmauncerrsts);
--		}
--	}
--
--	device->common.chancnt = readb(device->reg_base + IOAT_CHANCNT_OFFSET);
-+	INIT_LIST_HEAD(&dma->channels);
-+	dma->chancnt = readb(device->reg_base + IOAT_CHANCNT_OFFSET);
- 	xfercap_scale = readb(device->reg_base + IOAT_XFERCAP_OFFSET);
- 	xfercap = (xfercap_scale == 0 ? -1 : (1UL << xfercap_scale));
- 
- #ifdef  CONFIG_I7300_IDLE_IOAT_CHANNEL
--	if (i7300_idle_platform_probe(NULL, NULL, 1) == 0) {
--		device->common.chancnt--;
--	}
-+	if (i7300_idle_platform_probe(NULL, NULL, 1) == 0)
-+		dma->chancnt--;
- #endif
--	for (i = 0; i < device->common.chancnt; i++) {
-+	for (i = 0; i < dma->chancnt; i++) {
- 		ioat_chan = devm_kzalloc(dev, sizeof(*ioat_chan), GFP_KERNEL);
- 		if (!ioat_chan) {
--			device->common.chancnt = i;
-+			dma->chancnt = i;
- 			break;
- 		}
- 
-@@ -175,28 +144,20 @@ static int ioat_dma_enumerate_channels(struct ioatdma_device *device)
- 		ioat_chan->xfercap = xfercap;
- 		ioat_chan->desccount = 0;
- 		INIT_DELAYED_WORK(&ioat_chan->work, ioat_dma_chan_reset_part2);
--		if (ioat_chan->device->version == IOAT_VER_2_0)
--			writel(IOAT_DCACTRL_CMPL_WRITE_ENABLE |
--			       IOAT_DMA_DCA_ANY_CPU,
--			       ioat_chan->reg_base + IOAT_DCACTRL_OFFSET);
--		else if (ioat_chan->device->version == IOAT_VER_3_0)
--			writel(IOAT_DMA_DCA_ANY_CPU,
--			       ioat_chan->reg_base + IOAT_DCACTRL_OFFSET);
- 		spin_lock_init(&ioat_chan->cleanup_lock);
- 		spin_lock_init(&ioat_chan->desc_lock);
- 		INIT_LIST_HEAD(&ioat_chan->free_desc);
- 		INIT_LIST_HEAD(&ioat_chan->used_desc);
- 		/* This should be made common somewhere in dmaengine.c */
- 		ioat_chan->common.device = &device->common;
--		list_add_tail(&ioat_chan->common.device_node,
--			      &device->common.channels);
-+		list_add_tail(&ioat_chan->common.device_node, &dma->channels);
- 		device->idx[i] = ioat_chan;
- 		tasklet_init(&ioat_chan->cleanup_task,
- 			     ioat_dma_cleanup_tasklet,
- 			     (unsigned long) ioat_chan);
- 		tasklet_disable(&ioat_chan->cleanup_task);
- 	}
--	return device->common.chancnt;
-+	return dma->chancnt;
- }
- 
- /**
-@@ -1504,15 +1465,6 @@ msi:
- 		pci_disable_msi(pdev);
- 		goto intx;
- 	}
--	/*
--	 * CB 1.2 devices need a bit set in configuration space to enable MSI
--	 */
--	if (device->version == IOAT_VER_1_2) {
--		u32 dmactrl;
--		pci_read_config_dword(pdev, IOAT_PCI_DMACTRL_OFFSET, &dmactrl);
--		dmactrl |= IOAT_PCI_DMACTRL_MSI_EN;
--		pci_write_config_dword(pdev, IOAT_PCI_DMACTRL_OFFSET, dmactrl);
--	}
- 	goto done;
- 
- intx:
-@@ -1522,6 +1474,8 @@ intx:
- 		goto err_no_irq;
- 
- done:
-+	if (device->intr_quirk)
-+		device->intr_quirk(device);
- 	intrctrl |= IOAT_INTRCTRL_MASTER_INT_EN;
- 	writeb(intrctrl, device->reg_base + IOAT_INTRCTRL_OFFSET);
- 	return 0;
-@@ -1539,21 +1493,12 @@ static void ioat_disable_interrupts(struct ioatdma_device *device)
- 	writeb(0, device->reg_base + IOAT_INTRCTRL_OFFSET);
- }
- 
--struct ioatdma_device *
--ioat_dma_probe(struct pci_dev *pdev, void __iomem *iobase)
-+static int ioat_probe(struct ioatdma_device *device)
- {
--	int err;
-+	int err = -ENODEV;
-+	struct dma_device *dma = &device->common;
-+	struct pci_dev *pdev = device->pdev;
- 	struct device *dev = &pdev->dev;
--	struct ioatdma_device *device;
--	struct dma_device *dma;
--
--	device = devm_kzalloc(dev, sizeof(*device), GFP_KERNEL);
--	if (!device)
--		err = -ENOMEM;
--	device->pdev = pdev;
--	device->reg_base = iobase;
--	device->version = readb(device->reg_base + IOAT_VER_OFFSET);
--	dma = &device->common;
- 
- 	/* DMA coherent memory pool for DMA descriptor allocations */
- 	device->dma_pool = pci_pool_create("dma_desc_pool", pdev,
-@@ -1572,26 +1517,13 @@ ioat_dma_probe(struct pci_dev *pdev, void __iomem *iobase)
- 		goto err_completion_pool;
- 	}
- 
--	INIT_LIST_HEAD(&dma->channels);
- 	ioat_dma_enumerate_channels(device);
- 
-+	dma_cap_set(DMA_MEMCPY, dma->cap_mask);
- 	dma->device_alloc_chan_resources = ioat_dma_alloc_chan_resources;
- 	dma->device_free_chan_resources = ioat_dma_free_chan_resources;
--	dma->dev = &pdev->dev;
--
--	dma_cap_set(DMA_MEMCPY, dma->cap_mask);
- 	dma->device_is_tx_complete = ioat_dma_is_complete;
--	switch (device->version) {
--	case IOAT_VER_1_2:
--		dma->device_prep_dma_memcpy = ioat1_dma_prep_memcpy;
--		dma->device_issue_pending = ioat1_dma_memcpy_issue_pending;
--		break;
--	case IOAT_VER_2_0:
--	case IOAT_VER_3_0:
--		dma->device_prep_dma_memcpy = ioat2_dma_prep_memcpy;
--		dma->device_issue_pending = ioat2_dma_memcpy_issue_pending;
--		break;
--	}
-+	dma->dev = &pdev->dev;
- 
- 	dev_err(dev, "Intel(R) I/OAT DMA Engine found,"
- 		" %d channels, device version 0x%02x, driver version %s\n",
-@@ -1611,19 +1543,7 @@ ioat_dma_probe(struct pci_dev *pdev, void __iomem *iobase)
- 	if (err)
- 		goto err_self_test;
- 
--	err = dma_async_device_register(dma);
--	if (err)
--		goto err_self_test;
--
--	ioat_set_tcp_copy_break(device);
--
--	if (device->version != IOAT_VER_3_0) {
--		INIT_DELAYED_WORK(&device->work, ioat_dma_chan_watchdog);
--		schedule_delayed_work(&device->work,
--				      WATCHDOG_DELAY);
--	}
--
--	return device;
-+	return 0;
- 
- err_self_test:
- 	ioat_disable_interrupts(device);
-@@ -1632,7 +1552,142 @@ err_setup_interrupts:
- err_completion_pool:
- 	pci_pool_destroy(device->dma_pool);
- err_dma_pool:
--	return NULL;
-+	return err;
-+}
-+
-+static int ioat_register(struct ioatdma_device *device)
-+{
-+	int err = dma_async_device_register(&device->common);
-+
-+	if (err) {
-+		ioat_disable_interrupts(device);
-+		pci_pool_destroy(device->completion_pool);
-+		pci_pool_destroy(device->dma_pool);
-+	}
-+
-+	return err;
-+}
-+
-+/* ioat1_intr_quirk - fix up dma ctrl register to enable / disable msi */
-+static void ioat1_intr_quirk(struct ioatdma_device *device)
-+{
-+	struct pci_dev *pdev = device->pdev;
-+	u32 dmactrl;
-+
-+	pci_read_config_dword(pdev, IOAT_PCI_DMACTRL_OFFSET, &dmactrl);
-+	if (pdev->msi_enabled)
-+		dmactrl |= IOAT_PCI_DMACTRL_MSI_EN;
-+	else
-+		dmactrl &= ~IOAT_PCI_DMACTRL_MSI_EN;
-+	pci_write_config_dword(pdev, IOAT_PCI_DMACTRL_OFFSET, dmactrl);
-+}
-+
-+int ioat1_dma_probe(struct ioatdma_device *device, int dca)
-+{
-+	struct pci_dev *pdev = device->pdev;
-+	struct dma_device *dma;
-+	int err;
-+
-+	device->intr_quirk = ioat1_intr_quirk;
-+	dma = &device->common;
-+	dma->device_prep_dma_memcpy = ioat1_dma_prep_memcpy;
-+	dma->device_issue_pending = ioat1_dma_memcpy_issue_pending;
-+
-+	err = ioat_probe(device);
-+	if (err)
-+		return err;
-+	ioat_set_tcp_copy_break(4096);
-+	err = ioat_register(device);
-+	if (err)
-+		return err;
-+	if (dca)
-+		device->dca = ioat_dca_init(pdev, device->reg_base);
-+
-+	INIT_DELAYED_WORK(&device->work, ioat_dma_chan_watchdog);
-+	schedule_delayed_work(&device->work, WATCHDOG_DELAY);
-+
-+	return err;
-+}
-+
-+int ioat2_dma_probe(struct ioatdma_device *device, int dca)
-+{
-+	struct pci_dev *pdev = device->pdev;
-+	struct dma_device *dma;
-+	struct dma_chan *chan;
-+	struct ioat_dma_chan *ioat_chan;
-+	int err;
-+
-+	dma = &device->common;
-+	dma->device_prep_dma_memcpy = ioat2_dma_prep_memcpy;
-+	dma->device_issue_pending = ioat2_dma_memcpy_issue_pending;
-+
-+	err = ioat_probe(device);
-+	if (err)
-+		return err;
-+	ioat_set_tcp_copy_break(2048);
-+
-+	list_for_each_entry(chan, &dma->channels, device_node) {
-+		ioat_chan = to_ioat_chan(chan);
-+		writel(IOAT_DCACTRL_CMPL_WRITE_ENABLE | IOAT_DMA_DCA_ANY_CPU,
-+		       ioat_chan->reg_base + IOAT_DCACTRL_OFFSET);
-+	}
-+
-+	err = ioat_register(device);
-+	if (err)
-+		return err;
-+	if (dca)
-+		device->dca = ioat2_dca_init(pdev, device->reg_base);
-+
-+	INIT_DELAYED_WORK(&device->work, ioat_dma_chan_watchdog);
-+	schedule_delayed_work(&device->work, WATCHDOG_DELAY);
-+
-+	return err;
-+}
-+
-+int ioat3_dma_probe(struct ioatdma_device *device, int dca)
-+{
-+	struct pci_dev *pdev = device->pdev;
-+	struct dma_device *dma;
-+	struct dma_chan *chan;
-+	struct ioat_dma_chan *ioat_chan;
-+	int err;
-+	u16 dev_id;
-+
-+	dma = &device->common;
-+	dma->device_prep_dma_memcpy = ioat2_dma_prep_memcpy;
-+	dma->device_issue_pending = ioat2_dma_memcpy_issue_pending;
-+
-+	/* -= IOAT ver.3 workarounds =- */
-+	/* Write CHANERRMSK_INT with 3E07h to mask out the errors
-+	 * that can cause stability issues for IOAT ver.3
-+	 */
-+	pci_write_config_dword(pdev, IOAT_PCI_CHANERRMASK_INT_OFFSET, 0x3e07);
-+
-+	/* Clear DMAUNCERRSTS Cfg-Reg Parity Error status bit
-+	 * (workaround for spurious config parity error after restart)
-+	 */
-+	pci_read_config_word(pdev, IOAT_PCI_DEVICE_ID_OFFSET, &dev_id);
-+	if (dev_id == PCI_DEVICE_ID_INTEL_IOAT_TBG0)
-+		pci_write_config_dword(pdev, IOAT_PCI_DMAUNCERRSTS_OFFSET, 0x10);
-+
-+	err = ioat_probe(device);
-+	if (err)
-+		return err;
-+	ioat_set_tcp_copy_break(262144);
-+
-+	list_for_each_entry(chan, &dma->channels, device_node) {
-+		ioat_chan = to_ioat_chan(chan);
-+		writel(IOAT_DMA_DCA_ANY_CPU,
-+		       ioat_chan->reg_base + IOAT_DCACTRL_OFFSET);
-+	}
-+
-+	err = ioat_register(device);
-+	if (err)
-+		return err;
-+	if (dca)
-+		device->dca = ioat3_dca_init(pdev, device->reg_base);
-+
-+	return err;
- }
- 
- void ioat_dma_remove(struct ioatdma_device *device)
-diff --git a/drivers/dma/ioat/dma.h b/drivers/dma/ioat/dma.h
-index 6e27ddb..1226e35 100644
---- a/drivers/dma/ioat/dma.h
-+++ b/drivers/dma/ioat/dma.h
-@@ -61,6 +61,8 @@
-  * @version: version of ioatdma device
-  * @msix_entries: irq handlers
-  * @idx: per channel data
-+ * @dca: direct cache access context
-+ * @intr_quirk: interrupt setup quirk (for ioat_v1 devices)
-  */
- 
- struct ioatdma_device {
-@@ -73,6 +75,8 @@ struct ioatdma_device {
- 	struct delayed_work work;
- 	struct msix_entry msix_entries[4];
- 	struct ioat_dma_chan *idx[4];
-+	struct dca_provider *dca;
-+	void (*intr_quirk)(struct ioatdma_device *device);
- };
- 
- /**
-@@ -136,25 +140,16 @@ struct ioat_desc_sw {
- 	struct dma_async_tx_descriptor txd;
- };
- 
--static inline void ioat_set_tcp_copy_break(struct ioatdma_device *dev)
-+static inline void ioat_set_tcp_copy_break(unsigned long copybreak)
- {
- 	#ifdef CONFIG_NET_DMA
--	switch (dev->version) {
--	case IOAT_VER_1_2:
--		sysctl_tcp_dma_copybreak = 4096;
--		break;
--	case IOAT_VER_2_0:
--		sysctl_tcp_dma_copybreak = 2048;
--		break;
--	case IOAT_VER_3_0:
--		sysctl_tcp_dma_copybreak = 262144;
--		break;
--	}
-+	sysctl_tcp_dma_copybreak = copybreak;
- 	#endif
- }
- 
--struct ioatdma_device *ioat_dma_probe(struct pci_dev *pdev,
--				      void __iomem *iobase);
-+int ioat1_dma_probe(struct ioatdma_device *dev, int dca);
-+int ioat2_dma_probe(struct ioatdma_device *dev, int dca);
-+int ioat3_dma_probe(struct ioatdma_device *dev, int dca);
- void ioat_dma_remove(struct ioatdma_device *device);
- struct dca_provider *ioat_dca_init(struct pci_dev *pdev, void __iomem *iobase);
- struct dca_provider *ioat2_dca_init(struct pci_dev *pdev, void __iomem *iobase);
-diff --git a/drivers/dma/ioat/pci.c b/drivers/dma/ioat/pci.c
-index 982e38f..55414d8 100644
---- a/drivers/dma/ioat/pci.c
-+++ b/drivers/dma/ioat/pci.c
-@@ -60,14 +60,8 @@ static struct pci_device_id ioat_pci_tbl[] = {
- 	{ 0, }
- };
- 
--struct ioat_device {
--	struct pci_dev		*pdev;
--	struct ioatdma_device	*dma;
--	struct dca_provider	*dca;
--};
--
--static int __devinit ioat_probe(struct pci_dev *pdev,
--				const struct pci_device_id *id);
-+static int __devinit ioat_pci_probe(struct pci_dev *pdev,
-+				    const struct pci_device_id *id);
- static void __devexit ioat_remove(struct pci_dev *pdev);
- 
- static int ioat_dca_enabled = 1;
-@@ -79,17 +73,28 @@ MODULE_PARM_DESC(ioat_dca_enabled, "control support of dca service (default: 1)"
- static struct pci_driver ioat_pci_driver = {
- 	.name		= DRV_NAME,
- 	.id_table	= ioat_pci_tbl,
--	.probe		= ioat_probe,
-+	.probe		= ioat_pci_probe,
- 	.remove		= __devexit_p(ioat_remove),
- };
- 
--static int __devinit ioat_probe(struct pci_dev *pdev,
--				const struct pci_device_id *id)
-+static struct ioatdma_device *
-+alloc_ioatdma(struct pci_dev *pdev, void __iomem *iobase)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct ioatdma_device *d = devm_kzalloc(dev, sizeof(*d), GFP_KERNEL);
-+
-+	if (!d)
-+		return NULL;
-+	d->pdev = pdev;
-+	d->reg_base = iobase;
-+	return d;
-+}
-+
-+static int __devinit ioat_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- {
- 	void __iomem * const *iomap;
--	void __iomem *iobase;
- 	struct device *dev = &pdev->dev;
--	struct ioat_device *device;
-+	struct ioatdma_device *device;
- 	int err;
- 
- 	err = pcim_enable_device(pdev);
-@@ -119,33 +124,24 @@ static int __devinit ioat_probe(struct pci_dev *pdev,
- 	if (!device)
- 		return -ENOMEM;
- 
--	device->pdev = pdev;
--	pci_set_drvdata(pdev, device);
--	iobase = iomap[IOAT_MMIO_BAR];
--
- 	pci_set_master(pdev);
- 
--	switch (readb(iobase + IOAT_VER_OFFSET)) {
--	case IOAT_VER_1_2:
--		device->dma = ioat_dma_probe(pdev, iobase);
--		if (device->dma && ioat_dca_enabled)
--			device->dca = ioat_dca_init(pdev, iobase);
--		break;
--	case IOAT_VER_2_0:
--		device->dma = ioat_dma_probe(pdev, iobase);
--		if (device->dma && ioat_dca_enabled)
--			device->dca = ioat2_dca_init(pdev, iobase);
--		break;
--	case IOAT_VER_3_0:
--		device->dma = ioat_dma_probe(pdev, iobase);
--		if (device->dma && ioat_dca_enabled)
--			device->dca = ioat3_dca_init(pdev, iobase);
--		break;
--	default:
-+	device = alloc_ioatdma(pdev, iomap[IOAT_MMIO_BAR]);
-+	if (!device)
-+		return -ENOMEM;
-+	pci_set_drvdata(pdev, device);
-+
-+	device->version = readb(device->reg_base + IOAT_VER_OFFSET);
-+	if (device->version == IOAT_VER_1_2)
-+		err = ioat1_dma_probe(device, ioat_dca_enabled);
-+	else if (device->version == IOAT_VER_2_0)
-+		err = ioat2_dma_probe(device, ioat_dca_enabled);
-+	else if (device->version >= IOAT_VER_3_0)
-+		err = ioat3_dma_probe(device, ioat_dca_enabled);
-+	else
- 		return -ENODEV;
--	}
- 
--	if (!device->dma) {
-+	if (err) {
- 		dev_err(dev, "Intel(R) I/OAT DMA Engine init failed\n");
- 		return -ENODEV;
- 	}
-@@ -155,7 +151,10 @@ static int __devinit ioat_probe(struct pci_dev *pdev,
- 
- static void __devexit ioat_remove(struct pci_dev *pdev)
- {
--	struct ioat_device *device = pci_get_drvdata(pdev);
-+	struct ioatdma_device *device = pci_get_drvdata(pdev);
-+
-+	if (!device)
-+		return;
- 
- 	dev_err(&pdev->dev, "Removing dma and dca services\n");
- 	if (device->dca) {
-@@ -163,11 +162,7 @@ static void __devexit ioat_remove(struct pci_dev *pdev)
- 		free_dca_provider(device->dca);
- 		device->dca = NULL;
- 	}
--
--	if (device->dma) {
--		ioat_dma_remove(device->dma);
--		device->dma = NULL;
--	}
-+	ioat_dma_remove(device);
- }
- 
- static int __init ioat_init_module(void)
+Dan Williams (15):
+      dmaengine: add fence support
+      dmaengine, async_tx: add a "no channel switch" allocator
+      dmaengine: cleanup unused transaction types
+      dmaengine, async_tx: support alignment checks
+      ioat2+: add fence support
+      ioat3: hardware version 3.2 register / descriptor definitions
+      ioat3: split ioat3 support to its own file, add memset
+      ioat: add 'ioat' sysfs attributes
+      ioat3: enable dca for completion writes
+      ioat3: xor support
+      ioat3: xor self test
+      ioat3: pq support
+      ioat3: support xor via pq descriptors
+      ioat3: interrupt descriptor support
+      ioat3: segregate raid engines
 
+Roland Dreier (2):
+      Add MODULE_DEVICE_TABLE() so ioatdma module is autoloaded
+      I/OAT: Convert to PCI_VDEVICE()
+
+Tom Picard (1):
+      ioat3: ioat3.2 pci ids for Jasper Forest
+
+ arch/arm/mach-iop13xx/setup.c       |    7 -
+ arch/arm/plat-iop/adma.c            |    2 -
+ crypto/async_tx/async_memcpy.c      |    9 +-
+ crypto/async_tx/async_memset.c      |    9 +-
+ crypto/async_tx/async_pq.c          |   11 +-
+ crypto/async_tx/async_raid6_recov.c |   47 +-
+ crypto/async_tx/async_tx.c          |    4 +
+ crypto/async_tx/async_xor.c         |   16 +-
+ drivers/dma/Kconfig                 |    4 +
+ drivers/dma/dmaengine.c             |   40 ++
+ drivers/dma/dmatest.c               |   14 +
+ drivers/dma/ioat/Makefile           |    2 +-
+ drivers/dma/ioat/dma.c              |  136 ++++-
+ drivers/dma/ioat/dma.h              |   34 +-
+ drivers/dma/ioat/dma_v2.c           |  129 ++--
+ drivers/dma/ioat/dma_v2.h           |   46 ++-
+ drivers/dma/ioat/dma_v3.c           | 1220 +++++++++++++++++++++++++++++++++++
+ drivers/dma/ioat/hw.h               |  142 ++++
+ drivers/dma/ioat/pci.c              |   45 +-
+ drivers/dma/ioat/registers.h        |   20 +
+ drivers/dma/iop-adma.c              |    5 +-
+ drivers/md/raid5.c                  |   37 +-
+ include/linux/async_tx.h            |    3 +
+ include/linux/dmaengine.h           |   60 ++-
+ include/linux/pci_ids.h             |   10 +
+ 25 files changed, 1880 insertions(+), 172 deletions(-)
+ create mode 100644 drivers/dma/ioat/dma_v3.c
