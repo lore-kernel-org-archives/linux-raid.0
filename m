@@ -1,51 +1,43 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 09/18] ioat3: enable dca for completion writes
-Date: Thu, 03 Sep 2009 23:45:20 -0700
-Message-ID: <20090904064520.7141.62811.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 05/18] ioat2+: add fence support
+Date: Thu, 03 Sep 2009 23:45:00 -0700
+Message-ID: <20090904064500.7141.60154.stgit@dwillia2-linux.ch.intel.com>
 References: <20090904064308.7141.30576.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932697AbZIDGpn@vger.kernel.org>
 In-Reply-To: <20090904064308.7141.30576.stgit@dwillia2-linux.ch.intel.com>
-Sender: linux-raid-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: linux-raid@vger.kernel.org, maciej.sosnowski@intel.com
 List-Id: linux-raid.ids
 
-Tag completion writes for direct cache access to reduce the latency of
-checking for descriptor completions.
+In preparation for adding more operation types to the ioat3 path the
+driver needs to honor the DMA_PREP_FENCE flag.  For example the async_tx api
+will hand xor->memcpy->xor chains to the driver with the 'fence' flag set on
+the first xor and the memcpy operation.  This flag in turn sets the 'fence'
+flag in the descriptor control field telling the hardware that future
+descriptors in the chain depend on the result of the current descriptor, so
+wait for all writes to complete before starting the next operation.
+
+Note that ioat1 does not prefetch the descriptor chain, so does not
+require/support fenced operations.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/dma/ioat/dma_v3.c    |    3 ++-
- drivers/dma/ioat/registers.h |    1 +
- 2 files changed, 3 insertions(+), 1 deletions(-)
+ drivers/dma/ioat/dma_v2.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/dma/ioat/dma_v3.c b/drivers/dma/ioat/dma_v3.c
-index 22af78e..0913d11 100644
---- a/drivers/dma/ioat/dma_v3.c
-+++ b/drivers/dma/ioat/dma_v3.c
-@@ -167,7 +167,8 @@ static void ioat3_cleanup_tasklet(unsigned long data)
- 	struct ioat2_dma_chan *ioat = (void *) data;
- 
- 	ioat3_cleanup(ioat);
--	writew(IOAT_CHANCTRL_RUN, ioat->base.reg_base + IOAT_CHANCTRL_OFFSET);
-+	writew(IOAT_CHANCTRL_RUN | IOAT3_CHANCTRL_COMPL_DCA_EN,
-+	       ioat->base.reg_base + IOAT_CHANCTRL_OFFSET);
- }
- 
- static void ioat3_restart_channel(struct ioat2_dma_chan *ioat)
-diff --git a/drivers/dma/ioat/registers.h b/drivers/dma/ioat/registers.h
-index 85d04b8..97d26ea 100644
---- a/drivers/dma/ioat/registers.h
-+++ b/drivers/dma/ioat/registers.h
-@@ -84,6 +84,7 @@
- /* DMA Channel Registers */
- #define IOAT_CHANCTRL_OFFSET			0x00	/* 16-bit Channel Control Register */
- #define IOAT_CHANCTRL_CHANNEL_PRIORITY_MASK	0xF000
-+#define IOAT3_CHANCTRL_COMPL_DCA_EN		0x0200
- #define IOAT_CHANCTRL_CHANNEL_IN_USE		0x0100
- #define IOAT_CHANCTRL_DESCRIPTOR_ADDR_SNOOP_CONTROL	0x0020
- #define IOAT_CHANCTRL_ERR_INT_EN		0x0010
-
+diff --git a/drivers/dma/ioat/dma_v2.c b/drivers/dma/ioat/dma_v2.c
+index c4d8a6a..b3a1f81 100644
+--- a/drivers/dma/ioat/dma_v2.c
++++ b/drivers/dma/ioat/dma_v2.c
+@@ -711,6 +711,7 @@ ioat2_dma_prep_memcpy_lock(struct dma_chan *c, dma_addr_t dma_dest,
+ 	desc->txd.flags = flags;
+ 	desc->len = total_len;
+ 	hw->ctl_f.int_en = !!(flags & DMA_PREP_INTERRUPT);
++	hw->ctl_f.fence = !!(flags & DMA_PREP_FENCE);
+ 	hw->ctl_f.compl_write = 1;
+ 	dump_desc_dbg(ioat, desc);
+ 	/* we leave the channel locked to ensure in order submission */
