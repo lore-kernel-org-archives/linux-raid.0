@@ -1,210 +1,334 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 04/18] dmaengine, async_tx: support alignment checks
-Date: Thu, 03 Sep 2009 23:44:55 -0700
-Message-ID: <20090904064455.7141.41620.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 08/18] ioat: add 'ioat' sysfs attributes
+Date: Thu, 03 Sep 2009 23:45:15 -0700
+Message-ID: <20090904064515.7141.3535.stgit@dwillia2-linux.ch.intel.com>
 References: <20090904064308.7141.30576.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932858AbZIDGqB@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932831AbZIDGsi@vger.kernel.org>
 In-Reply-To: <20090904064308.7141.30576.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: linux-raid@vger.kernel.org, maciej.sosnowski@intel.com
 List-Id: linux-raid.ids
 
-Some engines have transfer size and address alignment restrictions.  Add
-a per-operation alignment property to struct dma_device that the async
-routines and dmatest can use to check alignment capabilities.
+Export driver attributes for diagnostic purposes:
+'ring_size': total number of descriptors available to the engine
+'ring_active': number of descriptors in-flight
+'capabilities': supported operation types for this channel
+'version': Intel(R) QuickData specfication revision
+
+This also allows some chattiness to be removed from the driver startup
+as this information is now available via sysfs.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- crypto/async_tx/async_memcpy.c |    2 +-
- crypto/async_tx/async_memset.c |    2 +-
- crypto/async_tx/async_pq.c     |    6 ++++-
- crypto/async_tx/async_xor.c    |    5 +++--
- drivers/dma/dmatest.c          |   14 +++++++++++++
- include/linux/dmaengine.h      |   44 ++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 67 insertions(+), 6 deletions(-)
+ drivers/dma/ioat/dma.c    |  120 +++++++++++++++++++++++++++++++++++++++++++--
+ drivers/dma/ioat/dma.h    |   12 +++++
+ drivers/dma/ioat/dma_v2.c |   33 ++++++++++++
+ drivers/dma/ioat/dma_v2.h |    1 
+ drivers/dma/ioat/dma_v3.c |    3 +
+ drivers/dma/ioat/pci.c    |    3 +
+ 6 files changed, 166 insertions(+), 6 deletions(-)
 
-diff --git a/crypto/async_tx/async_memcpy.c b/crypto/async_tx/async_memcpy.c
-index b38cbb3..0ec1fb6 100644
---- a/crypto/async_tx/async_memcpy.c
-+++ b/crypto/async_tx/async_memcpy.c
-@@ -50,7 +50,7 @@ async_memcpy(struct page *dest, struct page *src, unsigned int dest_offset,
- 	struct dma_device *device = chan ? chan->device : NULL;
- 	struct dma_async_tx_descriptor *tx = NULL;
+diff --git a/drivers/dma/ioat/dma.c b/drivers/dma/ioat/dma.c
+index 92c2778..2eb1fac 100644
+--- a/drivers/dma/ioat/dma.c
++++ b/drivers/dma/ioat/dma.c
+@@ -263,6 +263,7 @@ static dma_cookie_t ioat1_tx_submit(struct dma_async_tx_descriptor *tx)
+ 	if (!test_and_set_bit(IOAT_COMPLETION_PENDING, &chan->state))
+ 		mod_timer(&chan->timer, jiffies + COMPLETION_TIMEOUT);
  
--	if (device) {
-+	if (device && is_dma_copy_aligned(device, src_offset, dest_offset, len)) {
- 		dma_addr_t dma_dest, dma_src;
- 		unsigned long dma_prep_flags = 0;
++	ioat->active += desc->hw->tx_cnt;
+ 	ioat->pending += desc->hw->tx_cnt;
+ 	if (ioat->pending >= ioat_pending_level)
+ 		__ioat1_dma_memcpy_issue_pending(ioat);
+@@ -612,6 +613,7 @@ static void __cleanup(struct ioat_dma_chan *ioat, unsigned long phys_complete)
+ 			chan->completed_cookie = tx->cookie;
+ 			tx->cookie = 0;
+ 			ioat_dma_unmap(chan, tx->flags, desc->len, desc->hw);
++			ioat->active -= desc->hw->tx_cnt;
+ 			if (tx->callback) {
+ 				tx->callback(tx->callback_param);
+ 				tx->callback = NULL;
+@@ -1029,13 +1031,8 @@ int __devinit ioat_probe(struct ioatdma_device *device)
+ 	dma_cap_set(DMA_MEMCPY, dma->cap_mask);
+ 	dma->dev = &pdev->dev;
  
-diff --git a/crypto/async_tx/async_memset.c b/crypto/async_tx/async_memset.c
-index a374784..58e4a87 100644
---- a/crypto/async_tx/async_memset.c
-+++ b/crypto/async_tx/async_memset.c
-@@ -47,7 +47,7 @@ async_memset(struct page *dest, int val, unsigned int offset, size_t len,
- 	struct dma_device *device = chan ? chan->device : NULL;
- 	struct dma_async_tx_descriptor *tx = NULL;
+-	dev_err(dev, "Intel(R) I/OAT DMA Engine found,"
+-		" %d channels, device version 0x%02x, driver version %s\n",
+-		dma->chancnt, device->version, IOAT_DMA_VERSION);
+-
+ 	if (!dma->chancnt) {
+-		dev_err(dev, "Intel(R) I/OAT DMA Engine problem found: "
+-			"zero channels detected\n");
++		dev_err(dev, "zero channels detected\n");
+ 		goto err_setup_interrupts;
+ 	}
  
--	if (device) {
-+	if (device && is_dma_fill_aligned(device, offset, 0, len)) {
- 		dma_addr_t dma_dest;
- 		unsigned long dma_prep_flags = 0;
+@@ -1086,6 +1083,113 @@ static void ioat1_intr_quirk(struct ioatdma_device *device)
+ 	pci_write_config_dword(pdev, IOAT_PCI_DMACTRL_OFFSET, dmactrl);
+ }
  
-diff --git a/crypto/async_tx/async_pq.c b/crypto/async_tx/async_pq.c
-index a25e290..b88db6d 100644
---- a/crypto/async_tx/async_pq.c
-+++ b/crypto/async_tx/async_pq.c
-@@ -211,7 +211,8 @@ async_gen_syndrome(struct page **blocks, unsigned int offset, int disks,
- 
- 	if (dma_src && device &&
- 	    (src_cnt <= dma_maxpq(device, 0) ||
--	     dma_maxpq(device, DMA_PREP_CONTINUE) > 0)) {
-+	     dma_maxpq(device, DMA_PREP_CONTINUE) > 0) &&
-+	    is_dma_pq_aligned(device, offset, 0, len)) {
- 		/* run the p+q asynchronously */
- 		pr_debug("%s: (async) disks: %d len: %zu\n",
- 			 __func__, disks, len);
-@@ -274,7 +275,8 @@ async_syndrome_val(struct page **blocks, unsigned int offset, int disks,
- 	else if (sizeof(dma_addr_t) <= sizeof(struct page *))
- 		dma_src = (dma_addr_t *) blocks;
- 
--	if (dma_src && device && disks <= dma_maxpq(device, 0)) {
-+	if (dma_src && device && disks <= dma_maxpq(device, 0) &&
-+	    is_dma_pq_aligned(device, offset, 0, len)) {
- 		struct device *dev = device->dev;
- 		dma_addr_t *pq = &dma_src[disks-2];
- 		int i;
-diff --git a/crypto/async_tx/async_xor.c b/crypto/async_tx/async_xor.c
-index db27987..b459a90 100644
---- a/crypto/async_tx/async_xor.c
-+++ b/crypto/async_tx/async_xor.c
-@@ -193,7 +193,7 @@ async_xor(struct page *dest, struct page **src_list, unsigned int offset,
- 	else if (sizeof(dma_addr_t) <= sizeof(struct page *))
- 		dma_src = (dma_addr_t *) src_list;
- 
--	if (dma_src && chan) {
-+	if (dma_src && chan && is_dma_xor_aligned(chan->device, offset, 0, len)) {
- 		/* run the xor asynchronously */
- 		pr_debug("%s (async): len: %zu\n", __func__, len);
- 
-@@ -265,7 +265,8 @@ async_xor_val(struct page *dest, struct page **src_list, unsigned int offset,
- 	else if (sizeof(dma_addr_t) <= sizeof(struct page *))
- 		dma_src = (dma_addr_t *) src_list;
- 
--	if (dma_src && device && src_cnt <= device->max_xor) {
-+	if (dma_src && device && src_cnt <= device->max_xor &&
-+	    is_dma_xor_aligned(device, offset, 0, len)) {
- 		unsigned long dma_prep_flags = 0;
- 		int i;
- 
-diff --git a/drivers/dma/dmatest.c b/drivers/dma/dmatest.c
-index 58e49e4..a3722a7 100644
---- a/drivers/dma/dmatest.c
-+++ b/drivers/dma/dmatest.c
-@@ -288,6 +288,7 @@ static int dmatest_func(void *data)
- 		dma_addr_t dma_dsts[dst_cnt];
- 		struct completion cmp;
- 		unsigned long tmo = msecs_to_jiffies(3000);
-+		u8 align = 0;
- 
- 		total_tests++;
- 
-@@ -295,6 +296,18 @@ static int dmatest_func(void *data)
- 		src_off = dmatest_random() % (test_buf_size - len + 1);
- 		dst_off = dmatest_random() % (test_buf_size - len + 1);
- 
-+		/* honor alignment restrictions */
-+		if (thread->type == DMA_MEMCPY)
-+			align = dev->copy_align;
-+		else if (thread->type == DMA_XOR)
-+			align = dev->xor_align;
-+		else if (thread->type == DMA_PQ)
-+			align = dev->pq_align;
++static ssize_t ring_size_show(struct dma_chan *c, char *page)
++{
++	struct ioat_dma_chan *ioat = to_ioat_chan(c);
 +
-+		len = (len >> align) << align;
-+		src_off = (src_off >> align) << align;
-+		dst_off = (dst_off >> align) << align;
++	return sprintf(page, "%d\n", ioat->desccount);
++}
++static struct ioat_sysfs_entry ring_size_attr = __ATTR_RO(ring_size);
 +
- 		dmatest_init_srcs(thread->srcs, src_off, len);
- 		dmatest_init_dsts(thread->dsts, dst_off, len);
- 
-@@ -311,6 +324,7 @@ static int dmatest_func(void *data)
- 						     DMA_BIDIRECTIONAL);
- 		}
- 
++static ssize_t ring_active_show(struct dma_chan *c, char *page)
++{
++	struct ioat_dma_chan *ioat = to_ioat_chan(c);
 +
- 		if (thread->type == DMA_MEMCPY)
- 			tx = dev->device_prep_dma_memcpy(chan,
- 							 dma_dsts[0] + dst_off,
-diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
-index 94656f9..2b9f2ac 100644
---- a/include/linux/dmaengine.h
-+++ b/include/linux/dmaengine.h
-@@ -242,6 +242,10 @@ struct dma_async_tx_descriptor {
-  * @cap_mask: one or more dma_capability flags
-  * @max_xor: maximum number of xor sources, 0 if no capability
-  * @max_pq: maximum number of PQ sources and PQ-continue capability
-+ * @copy_align: alignment shift for memcpy operations
-+ * @xor_align: alignment shift for xor operations
-+ * @pq_align: alignment shift for pq operations
-+ * @fill_align: alignment shift for memset operations
-  * @dev_id: unique device ID
-  * @dev: struct device reference for dma mapping api
-  * @device_alloc_chan_resources: allocate resources and return the
-@@ -268,6 +272,10 @@ struct dma_device {
- 	dma_cap_mask_t  cap_mask;
- 	unsigned short max_xor;
- 	unsigned short max_pq;
-+	u8 copy_align;
-+	u8 xor_align;
-+	u8 pq_align;
-+	u8 fill_align;
- 	#define DMA_HAS_PQ_CONTINUE (1 << 15)
++	return sprintf(page, "%d\n", ioat->active);
++}
++static struct ioat_sysfs_entry ring_active_attr = __ATTR_RO(ring_active);
++
++static ssize_t cap_show(struct dma_chan *c, char *page)
++{
++	struct dma_device *dma = c->device;
++
++	return sprintf(page, "copy%s%s%s%s%s%s\n",
++		       dma_has_cap(DMA_PQ, dma->cap_mask) ? " pq" : "",
++		       dma_has_cap(DMA_PQ_VAL, dma->cap_mask) ? " pq_val" : "",
++		       dma_has_cap(DMA_XOR, dma->cap_mask) ? " xor" : "",
++		       dma_has_cap(DMA_XOR_VAL, dma->cap_mask) ? " xor_val" : "",
++		       dma_has_cap(DMA_MEMSET, dma->cap_mask)  ? " fill" : "",
++		       dma_has_cap(DMA_INTERRUPT, dma->cap_mask) ? " intr" : "");
++
++}
++struct ioat_sysfs_entry ioat_cap_attr = __ATTR_RO(cap);
++
++static ssize_t version_show(struct dma_chan *c, char *page)
++{
++	struct dma_device *dma = c->device;
++	struct ioatdma_device *device = to_ioatdma_device(dma);
++
++	return sprintf(page, "%d.%d\n",
++		       device->version >> 4, device->version & 0xf);
++}
++struct ioat_sysfs_entry ioat_version_attr = __ATTR_RO(version);
++
++static struct attribute *ioat1_attrs[] = {
++	&ring_size_attr.attr,
++	&ring_active_attr.attr,
++	&ioat_cap_attr.attr,
++	&ioat_version_attr.attr,
++	NULL,
++};
++
++static ssize_t
++ioat_attr_show(struct kobject *kobj, struct attribute *attr, char *page)
++{
++	struct ioat_sysfs_entry *entry;
++	struct ioat_chan_common *chan;
++
++	entry = container_of(attr, struct ioat_sysfs_entry, attr);
++	chan = container_of(kobj, struct ioat_chan_common, kobj);
++
++	if (!entry->show)
++		return -EIO;
++	return entry->show(&chan->common, page);
++}
++
++struct sysfs_ops ioat_sysfs_ops = {
++	.show	= ioat_attr_show,
++};
++
++static struct kobj_type ioat1_ktype = {
++	.sysfs_ops = &ioat_sysfs_ops,
++	.default_attrs = ioat1_attrs,
++};
++
++void ioat_kobject_add(struct ioatdma_device *device, struct kobj_type *type)
++{
++	struct dma_device *dma = &device->common;
++	struct dma_chan *c;
++
++	list_for_each_entry(c, &dma->channels, device_node) {
++		struct ioat_chan_common *chan = to_chan_common(c);
++		struct kobject *parent = &c->dev->device.kobj;
++		int err;
++
++		err = kobject_init_and_add(&chan->kobj, type, parent, "quickdata");
++		if (err) {
++			dev_warn(to_dev(chan),
++				 "sysfs init error (%d), continuing...\n", err);
++			kobject_put(&chan->kobj);
++			set_bit(IOAT_KOBJ_INIT_FAIL, &chan->state);
++		}
++	}
++}
++
++void ioat_kobject_del(struct ioatdma_device *device)
++{
++	struct dma_device *dma = &device->common;
++	struct dma_chan *c;
++
++	list_for_each_entry(c, &dma->channels, device_node) {
++		struct ioat_chan_common *chan = to_chan_common(c);
++
++		if (!test_bit(IOAT_KOBJ_INIT_FAIL, &chan->state)) {
++			kobject_del(&chan->kobj);
++			kobject_put(&chan->kobj);
++		}
++	}
++}
++
+ int __devinit ioat1_dma_probe(struct ioatdma_device *device, int dca)
+ {
+ 	struct pci_dev *pdev = device->pdev;
+@@ -1108,6 +1212,8 @@ int __devinit ioat1_dma_probe(struct ioatdma_device *device, int dca)
+ 	err = ioat_register(device);
+ 	if (err)
+ 		return err;
++	ioat_kobject_add(device, &ioat1_ktype);
++
+ 	if (dca)
+ 		device->dca = ioat_dca_init(pdev, device->reg_base);
  
- 	int dev_id;
-@@ -311,6 +319,42 @@ struct dma_device {
- 	void (*device_issue_pending)(struct dma_chan *chan);
+@@ -1120,6 +1226,8 @@ void __devexit ioat_dma_remove(struct ioatdma_device *device)
+ 
+ 	ioat_disable_interrupts(device);
+ 
++	ioat_kobject_del(device);
++
+ 	dma_async_device_unregister(dma);
+ 
+ 	pci_pool_destroy(device->dma_pool);
+diff --git a/drivers/dma/ioat/dma.h b/drivers/dma/ioat/dma.h
+index 5999c12..6c798f3 100644
+--- a/drivers/dma/ioat/dma.h
++++ b/drivers/dma/ioat/dma.h
+@@ -92,6 +92,7 @@ struct ioat_chan_common {
+ 	#define IOAT_COMPLETION_PENDING 0
+ 	#define IOAT_COMPLETION_ACK 1
+ 	#define IOAT_RESET_PENDING 2
++	#define IOAT_KOBJ_INIT_FAIL 3
+ 	struct timer_list timer;
+ 	#define COMPLETION_TIMEOUT msecs_to_jiffies(100)
+ 	#define IDLE_TIMEOUT msecs_to_jiffies(2000)
+@@ -100,8 +101,13 @@ struct ioat_chan_common {
+ 	dma_addr_t completion_dma;
+ 	u64 *completion;
+ 	struct tasklet_struct cleanup_task;
++	struct kobject kobj;
  };
  
-+static inline bool dmaengine_check_align(u8 align, size_t off1, size_t off2, size_t len)
++struct ioat_sysfs_entry {
++	struct attribute attr;
++	ssize_t (*show)(struct dma_chan *, char *);
++};
+ 
+ /**
+  * struct ioat_dma_chan - internal representation of a DMA channel
+@@ -117,6 +123,7 @@ struct ioat_dma_chan {
+ 
+ 	int pending;
+ 	u16 desccount;
++	u16 active;
+ };
+ 
+ static inline struct ioat_chan_common *to_chan_common(struct dma_chan *c)
+@@ -320,4 +327,9 @@ void ioat_dma_unmap(struct ioat_chan_common *chan, enum dma_ctrl_flags flags,
+ 		    size_t len, struct ioat_dma_descriptor *hw);
+ bool ioat_cleanup_preamble(struct ioat_chan_common *chan,
+ 			   unsigned long *phys_complete);
++void ioat_kobject_add(struct ioatdma_device *device, struct kobj_type *type);
++void ioat_kobject_del(struct ioatdma_device *device);
++extern struct sysfs_ops ioat_sysfs_ops;
++extern struct ioat_sysfs_entry ioat_version_attr;
++extern struct ioat_sysfs_entry ioat_cap_attr;
+ #endif /* IOATDMA_H */
+diff --git a/drivers/dma/ioat/dma_v2.c b/drivers/dma/ioat/dma_v2.c
+index 5a736a3..7408bef 100644
+--- a/drivers/dma/ioat/dma_v2.c
++++ b/drivers/dma/ioat/dma_v2.c
+@@ -796,6 +796,36 @@ ioat2_is_complete(struct dma_chan *c, dma_cookie_t cookie,
+ 	return ioat_is_complete(c, cookie, done, used);
+ }
+ 
++static ssize_t ring_size_show(struct dma_chan *c, char *page)
 +{
-+	size_t mask;
++	struct ioat2_dma_chan *ioat = to_ioat2_chan(c);
 +
-+	if (!align)
-+		return true;
-+	mask = (1 << align) - 1;
-+	if (mask & (off1 | off2 | len))
-+		return false;
-+	return true;
++	return sprintf(page, "%d\n", (1 << ioat->alloc_order) & ~1);
 +}
++static struct ioat_sysfs_entry ring_size_attr = __ATTR_RO(ring_size);
 +
-+static inline bool is_dma_copy_aligned(struct dma_device *dev, size_t off1,
-+				       size_t off2, size_t len)
++static ssize_t ring_active_show(struct dma_chan *c, char *page)
 +{
-+	return dmaengine_check_align(dev->copy_align, off1, off2, len);
-+}
++	struct ioat2_dma_chan *ioat = to_ioat2_chan(c);
 +
-+static inline bool is_dma_xor_aligned(struct dma_device *dev, size_t off1,
-+				      size_t off2, size_t len)
-+{
-+	return dmaengine_check_align(dev->xor_align, off1, off2, len);
++	/* ...taken outside the lock, no need to be precise */
++	return sprintf(page, "%d\n", ioat2_ring_active(ioat));
 +}
++static struct ioat_sysfs_entry ring_active_attr = __ATTR_RO(ring_active);
 +
-+static inline bool is_dma_pq_aligned(struct dma_device *dev, size_t off1,
-+				     size_t off2, size_t len)
-+{
-+	return dmaengine_check_align(dev->pq_align, off1, off2, len);
-+}
++static struct attribute *ioat2_attrs[] = {
++	&ring_size_attr.attr,
++	&ring_active_attr.attr,
++	&ioat_cap_attr.attr,
++	&ioat_version_attr.attr,
++	NULL,
++};
 +
-+static inline bool is_dma_fill_aligned(struct dma_device *dev, size_t off1,
-+				       size_t off2, size_t len)
-+{
-+	return dmaengine_check_align(dev->fill_align, off1, off2, len);
-+}
++struct kobj_type ioat2_ktype = {
++	.sysfs_ops = &ioat_sysfs_ops,
++	.default_attrs = ioat2_attrs,
++};
 +
- static inline void
- dma_set_maxpq(struct dma_device *dma, int maxpq, int has_pq_continue)
+ int __devinit ioat2_dma_probe(struct ioatdma_device *device, int dca)
  {
+ 	struct pci_dev *pdev = device->pdev;
+@@ -828,6 +858,9 @@ int __devinit ioat2_dma_probe(struct ioatdma_device *device, int dca)
+ 	err = ioat_register(device);
+ 	if (err)
+ 		return err;
++
++	ioat_kobject_add(device, &ioat2_ktype);
++
+ 	if (dca)
+ 		device->dca = ioat2_dca_init(pdev, device->reg_base);
+ 
+diff --git a/drivers/dma/ioat/dma_v2.h b/drivers/dma/ioat/dma_v2.h
+index af69dd1..a216b3f 100644
+--- a/drivers/dma/ioat/dma_v2.h
++++ b/drivers/dma/ioat/dma_v2.h
+@@ -182,4 +182,5 @@ enum dma_status ioat2_is_complete(struct dma_chan *c, dma_cookie_t cookie,
+ void __ioat2_restart_chan(struct ioat2_dma_chan *ioat);
+ dma_cookie_t ioat2_inject_fence(struct ioat2_dma_chan *ioat);
+ bool reshape_ring(struct ioat2_dma_chan *ioat, int order);
++extern struct kobj_type ioat2_ktype;
+ #endif /* IOATDMA_V2_H */
+diff --git a/drivers/dma/ioat/dma_v3.c b/drivers/dma/ioat/dma_v3.c
+index b223d66..22af78e 100644
+--- a/drivers/dma/ioat/dma_v3.c
++++ b/drivers/dma/ioat/dma_v3.c
+@@ -360,6 +360,9 @@ int __devinit ioat3_dma_probe(struct ioatdma_device *device, int dca)
+ 	err = ioat_register(device);
+ 	if (err)
+ 		return err;
++
++	ioat_kobject_add(device, &ioat2_ktype);
++
+ 	if (dca)
+ 		device->dca = ioat3_dca_init(pdev, device->reg_base);
+ 
+diff --git a/drivers/dma/ioat/pci.c b/drivers/dma/ioat/pci.c
+index 064bc95..b3d5e89 100644
+--- a/drivers/dma/ioat/pci.c
++++ b/drivers/dma/ioat/pci.c
+@@ -172,6 +172,9 @@ static int __init ioat_init_module(void)
+ {
+ 	int err;
+ 
++	pr_info("%s: Intel(R) QuickData Technology Driver %s\n",
++		DRV_NAME, IOAT_DMA_VERSION);
++
+ 	ioat2_cache = kmem_cache_create("ioat2", sizeof(struct ioat_ring_ent),
+ 					0, SLAB_HWCACHE_ALIGN, NULL);
+ 	if (!ioat2_cache)
