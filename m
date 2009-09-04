@@ -1,27 +1,35 @@
-From: lfmarante@free.fr
-Subject: Software Raid 5 work on ROOT ?
-Date: Fri, 04 Sep 2009 12:19:23 +0200
-Message-ID: <1252059563.4aa0e9ab25de3@imp.free.fr>
+From: Alex Butcher <linraid@assursys.co.uk>
+Subject: Re: Software Raid 5 work on ROOT ?
+Date: Fri, 4 Sep 2009 11:31:38 +0100 (BST)
+Message-ID: <alpine.LFD.2.00.0909041128110.8197@sbhezbfg.of5.nffheflf.cev>
+References: <1252059563.4aa0e9ab25de3@imp.free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1252059563.4aa0e9ab25de3@imp.free.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: lfmarante@free.fr
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello every body.
+On Fri, 4 Sep 2009, lfmarante@free.fr wrote:
 
-I have a question in regard of booting linux under a raid 5. It is possible ?
-All the guides that I found on the net say to have a /boot not stripped, (raid1
-is ok). [EX: http://www.gentoo.org/doc/en/gentoo-x86+raid+lvm2-quickinstall.xml
-]
+> Hello every body.
+>
+> I have a question in regard of booting linux under a raid 5. It is possible ?
+> All the guides that I found on the net say to have a /boot not stripped, (raid1
+> is ok). [EX: http://www.gentoo.org/doc/en/gentoo-x86+raid+lvm2-quickinstall.xml
+> ]
+>
+> They say to have / not stripped too.
 
-They say to have / not stripped too. And these guide show to have an raid 1 boot
-and / and create a LVM volume for /usr /opt /var /whatever that can be raid 5.
-It is not easiest to have directly / in raid 5 format ?
-If it's possible I would prefere to have raid 5 /
-There any particular configuration for grub to boot it?
+No. That document only says "The partition you boot from must not be
+striped". If you have a non-striped /boot, then that fulfils that
+qualification, as long as your /boot also contains an initrd that is able to
+bring your RAID5 / online.
 
-Thanks in advance.
+Note that GRUB doesn't know how to boot from a RAID1 mirror; it just boots
+from one component of the mirror.
 
+Best Regards,
+Alex
