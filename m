@@ -1,56 +1,54 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: 2 Disks Jumped Out While Reshaping RAID5
-Date: Sun, 6 Sep 2009 07:32:37 +1000 (EST)
-Message-ID: <a6dfa0829c75cc81fd4482bb344bbff2.squirrel@neil.brown.name>
-References: <70ed7c3e0909051322l7cf66158lbbc8a5dd2cc18b8b@mail.gmail.com>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [PATCH 10/18] ioat3: xor support
+Date: Sun, 6 Sep 2009 07:33:36 +0200
+Message-ID: <20090906053336.GA1431@ucw.cz>
+References: <20090904064308.7141.30576.stgit@dwillia2-linux.ch.intel.com> <20090904064525.7141.34029.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70ed7c3e0909051322l7cf66158lbbc8a5dd2cc18b8b@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Majed B." <majedb@gmail.com>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753808AbZIFFdn@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20090904064525.7141.34029.stgit@dwillia2-linux.ch.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, maciej.sosnowski@intel.com
 List-Id: linux-raid.ids
 
-On Sun, September 6, 2009 6:22 am, Majed B. wrote:
-> Hello all,
->
-> I have posted my problem already here:
-> http://ubuntuforums.org/showthread.php?p=3D7900571#post7900571
-> It also has file attachments of the output of mdadm -E /dev/sd[a-h]1
 
-It seems that you need to log in to read the attachements... so I haven=
-'t.
+> +static struct dma_async_tx_descriptor *
+> +__ioat3_prep_xor_lock(struct dma_chan *c, enum sum_check_flags *result,
+> +		      dma_addr_t dest, dma_addr_t *src, unsigned int src_cnt,
+> +		      size_t len, unsigned long flags)
+> +{
+> +	struct ioat2_dma_chan *ioat = to_ioat2_chan(c);
+> +	struct ioat_ring_ent *compl_desc;
+> +	struct ioat_ring_ent *desc;
+> +	struct ioat_ring_ent *ext;
+> +	size_t total_len = len;
+> +	struct ioat_xor_descriptor *xor;
+> +	struct ioat_xor_ext_descriptor *xor_ex = NULL;
+> +	struct ioat_dma_descriptor *hw;
+> +	u32 offset = 0;
+> +	int num_descs;
+> +	int with_ext;
+> +	int i;
+> +	u16 idx;
+> +	u8 op = result ? IOAT_OP_XOR_VAL : IOAT_OP_XOR;
 
->
-> I appreciate any help on this.
+Coalesce more variables on one line, so that declaration is shorter?
 
-Hopefully you just need to add "--force" to the assemble command
-and it would all just work.  However I haven't tested that on an array
-that is in the process of a reshape so I cannot promise.
-I might try to reproduce your situation and with some scratch drives
-and check that mdadm -Af does the right thing, but it won't be a day
-or so, and as I cannot see the --examine output I might get the
-situation a bit wrong ... (hint hint: it is always best to post
-full information rather than pointers to it, unless said information is
-really really big).
+> --- a/drivers/dma/ioat/registers.h
+> +++ b/drivers/dma/ioat/registers.h
+> @@ -243,6 +243,8 @@
+>  #define IOAT_CHANERR_XOR_Q_ERR			0x20000
+>  #define IOAT_CHANERR_DESCRIPTOR_COUNT_ERR	0x40000
+>  
+> +#define IOAT_CHANERR_HANDLE_MASK (IOAT_CHANERR_XOR_P_OR_CRC_ERR | IOAT_CHANERR_XOR_Q_ERR)
+> +
+>  #define IOAT_CHANERR_MASK_OFFSET		0x2C	/* 32-bit Channel Error Register */
+>  
 
-NeilBrown
+80 columns?
 
-
-
-> --
-> =C2=A0 =C2=A0 =C2=A0 Majed B.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
