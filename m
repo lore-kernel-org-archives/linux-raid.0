@@ -1,50 +1,41 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Software, Raid 5, Different Size Drives.
-Date: Mon, 7 Sep 2009 20:52:53 +1000 (EST)
-Message-ID: <df369067b4edb525a93983efaedd959f.squirrel@neil.brown.name>
-References: <851324.19026.qm@web51304.mail.re2.yahoo.com>
+From: Tapani Tarvainen <raid@tapanitarvainen.fi>
+Subject: Re: Array Power Management
+Date: Mon, 7 Sep 2009 15:55:23 +0300
+Message-ID: <20090907125522.GL1933@hamsu.tarvainen.info>
+References: <292245.77763.qm@web55804.mail.re3.yahoo.com> <70ed7c3e0909070257y4bec456h6de9cc6d2981c8ce@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <851324.19026.qm@web51304.mail.re2.yahoo.com>
+Content-Disposition: inline
+In-Reply-To: <70ed7c3e0909070257y4bec456h6de9cc6d2981c8ce@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon@eHardcastle.com
-Cc: linux-raid@vger.kernel.org
+To: "Majed B." <majedb@gmail.com>
+Cc: jahammonds prost <gmitch64@yahoo.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, September 7, 2009 8:35 pm, Jon Hardcastle wrote:
-> --- On Sun, 16/8/09, NeilBrown <neilb@suse.de> wrote:
->
-> ...
->
->> >
->> > (also anyone know if raid5 to raid 6 native support is
->> anywhere near?)
->>
->> Yes. It works with 2.6.30 (or preferrable 2.6.31) and the
->> devel-3.1 branch
->> from my git tree git://neil.brown.name/mdadm
->>
->> NeilBrown
->>
->
-> I am probably being a bit thick here, but I am running 2.6.8 as per
->
-> http://packages.gentoo.org/package/sys-fs/mdadm
->
-> Does this imply that I already have these features.. as i am pretty sure i
-> don't (unless it is undocumented)
+On Mon, Sep 07, 2009 at 12:57:33PM +0300, Majed B. (majedb@gmail.com) wrote:
 
-No you don't.
-2.6.8 is < 3.1, so your mdadm doesn't have the required support
-And you need a kernel which is at least 2.6.30.
+> If you're going to spin down the disks, you'd need to unmount the
+> array first to ensure your data is fine, and after a spin-up then you
+> mount the array again.
 
->
-> I want to add 2 more drives to my array and grow it/reshape from raid 5 to
-> 6...
+You don't needo to unmount it: just leave it mounted, and it will
+automatically spin up when accessed.
+I've been doing just that with a backup (rsnapshot) server for
+a some time, works just fine.
 
-You'll need to be a bit more patient.
+> I would suggest you buy a meter to measure how much power your storage
+> is consuming before you decide on your next action.
 
-NeilBrown
+In my case the total power consumption went down by over 50%
+(the disks stay powered down by about 85% of the time).
 
+> On Mon, Sep 7, 2009 at 6:48 AM, jahammonds prost<gmitch64@yahoo.com> wrote:
+> > I've been becoming interested in the power consumption of the arrays I have on a couple of servers here that are basically used as media servers. Since they're not being used when I'm at work, I was looking at the possibility of spinning the disks down during certain times, and having them either spin up at a set time, or (ideally), when there is disk activity.
+> >
+> > I can do this on single drives using hdparm -S to set the spindown timeout, and the disks will spin up on activity as needed. Is there something similar I can do with an md array?
+
+I simply do it with every individual disk of the array.
+
+-- 
+Tapani Tarvainen
