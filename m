@@ -1,40 +1,44 @@
-From: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Subject: mdadm --wait doesn't (part II) [was: Re: question about bitmaps and
-	dirty percentile]
-Date: Tue, 8 Sep 2009 13:23:43 -0500
-Message-ID: <cccedfc60909081123n36363d83ne6f39fd323ea0f47@mail.gmail.com>
+From: Iustin Pop <iusty@k1024.org>
+Subject: Re: mdadm and TLER (Time Limited Error Recovery)
+Date: Tue, 8 Sep 2009 20:48:37 +0200
+Message-ID: <20090908184837.GA28217@teal.hq.k1024.org>
+References: <299cc2790909071735x6eefd8bsc05ad76fa782cae1@mail.gmail.com>
+ <slrnhacpsm.2i5.Mario.Holbe@darkside.dyn.samba-tng.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <slrnhacpsm.2i5.Mario.Holbe@darkside.dyn.samba-tng.org>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Regarding an earlier issue, I've also found that mdadm (v3.0 - 2nd
-June 2009, openSUSE 11.1) doesn't wait if a recovery is in progress if
-the recovery proceeds beyond 100% (due to a kernel bug).
+On Tue, Sep 08, 2009 at 04:17:58PM +0200, Mario 'BitKoenig' Holbe wrote:
+> Tim Rutter <timrutter@gmail.com> wrote:
+> > Is the TLER on drives like Western Digital's WD2002FYPS a problem or
+> > benefit for mdadm(RAID5/RAID6)?
+> 
+> Neither nor with a very very small drift to "problem", IMHO.
+> A (not so little) while ago when md did not automatically correct
+> read-errors, the drift to "problem" was a bit less small ;) This could
+> be the reason for some of the vague answers you mentioned.
+> 
+> Anyways, clarification...
+> The only reason for TLER (Time Limited Error Recovery) is to behave
+> "friendly" toward RAID controllers that timeout disks.
+> In fact, md does not timeout disks as many Hardware RAID controllers do.
+> So, from md's point of view, TLER is useless, i.e. it has no benefit.
 
-turnip:~ # mdadm --wait /dev/md1
-turnip:~ # echo $?
-1
-turnip:~ # cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4] [raid10] [raid0] [raid1]
-md1 : active raid1 sdf[2](W) md2[0]
-      72612920 blocks super 1.1 [2/1] [U_]
-      [=========================>]  recovery =125.7%
-(45641024/36306460) finish=5320721999329.4min speed=28890K/sec
-      bitmap: 29/139 pages [116KB], 256KB chunk
+I'm sorry but I disagree here. *Especially* because md is used over
+normal SATA controllers most of the time, TLER is beneficial because the
+drive doesn't go catatonic for minutes at a time trying to recover a bad
+sector, which would (because md doesn't timeout disks) cause md to hung
+up the whole device. TLER will allow md to see the error quickly and
+attempt to rewrite (read) or retry/fail the disk (write) for a bad the
+sector.
 
-md2 : active raid1 nbd0[2](W) sde[0]
-      72612988 blocks super 1.1 [2/2] [UU]
-      bitmap: 1/139 pages [4KB], 256KB chunk
+Just my understanding of the md stack.
 
-md0 : active raid6 sda4[0] sdc4[5] sdd4[4] sdb4[1]
-      613409536 blocks super 1.1 level 6, 64k chunk, algorithm 2 [4/4] [UUUU]
-
-unused devices: <none>
-turnip:~ #
-
-
--- 
-Jon
+regards,
+iustin
