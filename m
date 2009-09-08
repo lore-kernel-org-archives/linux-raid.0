@@ -1,36 +1,40 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Adaptec 1430SA
-Date: Tue, 08 Sep 2009 16:39:59 +0100
-Message-ID: <4AA67ACF.2080506@anonymous.org.uk>
-References: <769530.6689.qm@web51307.mail.re2.yahoo.com>
+From: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Subject: mdadm --wait doesn't (part II) [was: Re: question about bitmaps and
+	dirty percentile]
+Date: Tue, 8 Sep 2009 13:23:43 -0500
+Message-ID: <cccedfc60909081123n36363d83ne6f39fd323ea0f47@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <769530.6689.qm@web51307.mail.re2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon@eHardcastle.com
-Cc: "Majed B." <majedb@gmail.com>, linux-raid@vger.kernel.org
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 08/09/2009 15:34, Jon Hardcastle wrote:
-> --- On Tue, 8/9/09, Majed B. <majedb@gmail.com> wrote:
->> Jon, According to this link (
->> http://groups.google.com/group/linux.debian.ports.x86-64/browse_thread/thread/12f2084ceace4c08?pli=1
->> ) that card uses fake raid
-[...]
-> Hi, thanks for the link! I was planning on just using it as a means to get more ports - and then use mdadm to actually to the raid part.
+Regarding an earlier issue, I've also found that mdadm (v3.0 - 2nd
+June 2009, openSUSE 11.1) doesn't wait if a recovery is in progress if
+the recovery proceeds beyond 100% (due to a kernel bug).
 
-Been doing a spot of Googling around this myself. Looks like there's 
-open source code available to support seeing the discs, either with 
-sata_mv or Adaptec's own aar81xx drivers, which will get you going for 
-what you say above. However, if you did want to use HostRAID (Adaptec's 
-name for fakeraid) you either have to build Adaptec's driver linking in 
-their closed-source binary HostRAID code or use the open source dmraid.
+turnip:~ # mdadm --wait /dev/md1
+turnip:~ # echo $?
+1
+turnip:~ # cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4] [raid10] [raid0] [raid1]
+md1 : active raid1 sdf[2](W) md2[0]
+      72612920 blocks super 1.1 [2/1] [U_]
+      [=========================>]  recovery =125.7%
+(45641024/36306460) finish=5320721999329.4min speed=28890K/sec
+      bitmap: 29/139 pages [116KB], 256KB chunk
 
-I'm a bit mystified at the idea of Adaptec using Marvell chips, though. 
-I wonder what that's all about?
+md2 : active raid1 nbd0[2](W) sde[0]
+      72612988 blocks super 1.1 [2/2] [UU]
+      bitmap: 1/139 pages [4KB], 256KB chunk
 
-Cheers,
+md0 : active raid6 sda4[0] sdc4[5] sdd4[4] sdb4[1]
+      613409536 blocks super 1.1 level 6, 64k chunk, algorithm 2 [4/4] [UUUU]
 
-John.
+unused devices: <none>
+turnip:~ #
+
+
+-- 
+Jon
