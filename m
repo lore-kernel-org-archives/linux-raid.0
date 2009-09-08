@@ -1,96 +1,86 @@
-From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
+From: =?ISO-8859-2?Q?Micha=B3_Przy=B3uski?= <mikylie@gmail.com>
 Subject: Re: Adaptec 1430SA
-Date: Tue, 8 Sep 2009 22:24:53 +0000
-Message-ID: <73e903670909081524j3e676e98pf0921e79ac3daf93@mail.gmail.com>
-References: <769530.6689.qm@web51307.mail.re2.yahoo.com>
-	 <4AA67ACF.2080506@anonymous.org.uk>
-	 <70ed7c3e0909081513h5affac5at2ce313d02bb01eba@mail.gmail.com>
+Date: Wed, 9 Sep 2009 00:30:07 +0200
+Message-ID: <6c4602af0909081530h3bde17afy2435de130a5a77ff@mail.gmail.com>
+References: <316071.56440.qm@web51305.mail.re2.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70ed7c3e0909081513h5affac5at2ce313d02bb01eba@mail.gmail.com>
+In-Reply-To: <316071.56440.qm@web51305.mail.re2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Majed B." <majedb@gmail.com>
-Cc: John Robinson <john.robinson@anonymous.org.uk>, Jon@ehardcastle.com, linux-raid@vger.kernel.org
+To: Jon@ehardcastle.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Sep 8, 2009 at 10:13 PM, Majed B. <majedb@gmail.com> wrote:
+Hello,
+I am using Adaptec 1430SA. I chose it because it was the only:
+* reasonably priced (no hw raid),
+* >2 port controller,
+* pci-e faster than x1.
+
+=46rom bad news, I cannot access its "configuration utility" during
+startup, just as Ryan mentioned. I'm using Asus P5K-E (P35 chipset),
+and 1430SA lives in non-gfx pci-e slot. I don't cry though, I never
+wanted to use its fakeraid for anything.
+
+I'm running 2.6.23-0.214.rc8.git2.fc8 and currently only a WD10EADS is
+hooked up to the 1430SA. I'm using sata_mv driver, and it looks more
+or less like this:
+
+sata_mv 0000:04:00.0: version 1.0
+ACPI: PCI Interrupt 0000:04:00.0[A] -> GSI 16 (level, low) -> IRQ 16
+sata_mv 0000:04:00.0: Applying 60X1C0 workarounds to unknown rev
+sata_mv 0000:04:00.0: Gen-IIE 32 slots 4 ports ? mode IRQ via INTx
+PCI: Setting latency timer of device 0000:04:00.0 to 64
+scsi10 : sata_mv
+scsi11 : sata_mv
+scsi12 : sata_mv
+scsi13 : sata_mv
+ata11: SATA max UDMA/133 cmd 0x0000000000000000 ctl 0xffffc20002fa2120
+bmdma 0x0000000000000000 irq 16
+ata12: SATA max UDMA/133 cmd 0x0000000000000000 ctl 0xffffc20002fa4120
+bmdma 0x0000000000000000 irq 16
+ata13: SATA max UDMA/133 cmd 0x0000000000000000 ctl 0xffffc20002fa6120
+bmdma 0x0000000000000000 irq 16
+ata14: SATA max UDMA/133 cmd 0x0000000000000000 ctl 0xffffc20002fa8120
+bmdma 0x0000000000000000 irq 16
+ata11: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata11.00: ATA-8: WDC WD10EADS-00M2B0, 01.00A01, max UDMA/133
+ata11.00: 1953525168 sectors, multi 0: LBA48 NCQ (depth 0/32)
+ata11.00: configured for UDMA/133
+ata12: SATA link down (SStatus 0 SControl 300)
+ata13: SATA link down (SStatus 0 SControl 300)
+ata14: SATA link down (SStatus 0 SControl 300)
+scsi 10:0:0:0: Direct-Access     ATA      WDC WD10EADS-00M 01.0 PQ: 0 A=
+NSI: 5
+sd 10:0:0:0: [sdh] 1953525168 512-byte hardware sectors (1000205 MB)
+=2E..
+
+Initially I was worried about
+sata_mv 0000:04:00.0: Applying 60X1C0 workarounds to unknown rev
+sata_mv 0000:04:00.0: Gen-IIE 32 slots 4 ports ? mode IRQ via INTx
+because support for 1430SA was added just around 2.6.23, so it seems
+my kernel doesn't really recognise it correctly (should be 7-something
+chip). I was worried about some data corruption with sata_mv (that
+I've just read about) but both issues turned out to be no problem. It
+works perfectly and I've not encountered any corruption across 1TB of
+md5'ed files. I suggest using newer kernel though.
+
+So to sum up, I found it good value for money with no real drawbacks.
+
+Cheers,
+Mike
+
+2009/9/8 Jon Hardcastle <jd_hardcastle@yahoo.com>:
+> Does anyone have any experience with Adaptec controllers? Namely
 >
-> Check this link out:
-> http://blog.backblaze.com/2009/09/01/petabytes-on-a-budget-how-to-bui=
-ld-cheap-cloud-storage/
+> http://www.adaptec.com/en-US/support/sata/sataii/AAR-1430SA/
 >
-> AT the end, they have a list of components, cheap ones. One is a
-> 2-port sata card and another is a 4-port sata card. You might find
-> them appealing to your usage.
+> I want to increase my machines drive capacity and reply the existing =
+2 port pci-e with this bad boy.
 >
-> On Tue, Sep 8, 2009 at 6:39 PM, John
-> Robinson<john.robinson@anonymous.org.uk> wrote:
-> > On 08/09/2009 15:34, Jon Hardcastle wrote:
-> >>
-> >> --- On Tue, 8/9/09, Majed B. <majedb@gmail.com> wrote:
-> >>>
-> >>> Jon, According to this link (
-> >>>
-> >>> http://groups.google.com/group/linux.debian.ports.x86-64/browse_t=
-hread/thread/12f2084ceace4c08?pli=3D1
-> >>> ) that card uses fake raid
-> >
-> > [...]
-> >>
-> >> Hi, thanks for the link! I was planning on just using it as a mean=
-s to get
-> >> more ports - and then use mdadm to actually to the raid part.
-> >
-> > Been doing a spot of Googling around this myself. Looks like there'=
-s open
-> > source code available to support seeing the discs, either with sata=
-_mv or
-> > Adaptec's own aar81xx drivers, which will get you going for what yo=
-u say
-> > above. However, if you did want to use HostRAID (Adaptec's name for
-> > fakeraid) you either have to build Adaptec's driver linking in thei=
-r
-> > closed-source binary HostRAID code or use the open source dmraid.
-> >
-> > I'm a bit mystified at the idea of Adaptec using Marvell chips, tho=
-ugh. I
-> > wonder what that's all about?
-> >
-> > Cheers,
-> >
-> > John.
-> >
->
-> --
-> =A0 =A0 =A0 Majed B.
-
-
-Hi all,
-
-I've used a Supermicro 8-port Marvell PCI-X card in Linux that works
-really well. There's driver support in the kernel for it and it's
-great. The type is AOC-SAT2-MV8:
-http://www.supermicro.com/products/accessories/addon/AOC-SAT2-MV8.cfm
-
-I've also used a PCI-Express card from Supermicro, the AOC-SASLP-MV8,
-that did NOT work as well. I only managed to get it running on the
-Linux 2.6.31 release candidates, and even then, it loses disks under
-heavy load such as when building an array. There is work ongoing in
-the relevant subsystems of the Linux kernel, so I predict that it will
-work fine in kernel 2.6.31 final, but I wouldn't count on it just yet.
-The card is well built and looks good, it's just that driver support
-isn't solid yet.
-
-So, Supermicro multiport SATA cards: PCI-X good, PCI-Express not so
-great. Both cards are quite cheap as far as I can tell, and solidly
-designed. Supermicro using them is also a vote of confidence in my
-book.
-
-Hope this helps someone!
-
--- Kristleifur
+> Also; any ideas of a good price? Have seen for ~=A370 + p&p
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
