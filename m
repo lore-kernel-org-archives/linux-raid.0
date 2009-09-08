@@ -1,48 +1,56 @@
-From: Johannes 'fish' Ziemke <fish@freigeist.org>
-Subject: Re: mdadm /dev/md0 --detail returns nothing / no LUKS partition
-Date: Tue, 8 Sep 2009 23:20:27 +0200
-Message-ID: <20090908212027.GF2324@freigeist.org>
-References: <20090908204525.GE2324@freigeist.org> <1e068e85fdd495e55ba8c55bc21f386f.squirrel@neil.brown.name>
+From: "Majed B." <majedb@gmail.com>
+Subject: Re: Adaptec 1430SA
+Date: Wed, 9 Sep 2009 01:13:01 +0300
+Message-ID: <70ed7c3e0909081513h5affac5at2ce313d02bb01eba@mail.gmail.com>
+References: <769530.6689.qm@web51307.mail.re2.yahoo.com> <4AA67ACF.2080506@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1e068e85fdd495e55ba8c55bc21f386f.squirrel@neil.brown.name>
+In-Reply-To: <4AA67ACF.2080506@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Jon@ehardcastle.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello NeilBrown
+Check this link out:
+http://blog.backblaze.com/2009/09/01/petabytes-on-a-budget-how-to-build-cheap-cloud-storage/
 
-> On Wed, September 9, 2009 6:45 am, Johannes 'fish' Ziemke wrote:
-> > Hi,
-> >
-> > i'v moved my four raid5 discs from one system to another. There is a
-> > dmcrypt/luks encrypted xfs on it.
-> >
-> > mdadm seems to autodetect everything correctly:
-> >
-> > cat /proc/mdstat
-> > Personalities : [raid6] [raid5] [raid4]
-> > md0 : active raid5 sdd1[1] sdc1[3] sdb1[0] sda1[2]
-> >       4395407808 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
-> >
-> >
-> > mdadm /dev/md0
-> > /dev/md0: 4191.79GiB raid5 4 devices, 0 spares. Use mdadm --detail for
-> > more detail.
-> >
-> >
-> > But 'mdadm /dev/md0 --detail' outputs nothing.
-> 
-> You want
->    mdadm --detail /dev/md0
-> 
-> I guess I should fix that.
+AT the end, they have a list of components, cheap ones. One is a
+2-port sata card and another is a 4-port sata card. You might find
+them appealing to your usage.
+
+On Tue, Sep 8, 2009 at 6:39 PM, John
+Robinson<john.robinson@anonymous.org.uk> wrote:
+> On 08/09/2009 15:34, Jon Hardcastle wrote:
+>>
+>> --- On Tue, 8/9/09, Majed B. <majedb@gmail.com> wrote:
+>>>
+>>> Jon, According to this link (
+>>>
+>>> http://groups.google.com/group/linux.debian.ports.x86-64/browse_thread/thread/12f2084ceace4c08?pli=1
+>>> ) that card uses fake raid
+>
+> [...]
+>>
+>> Hi, thanks for the link! I was planning on just using it as a means to get
+>> more ports - and then use mdadm to actually to the raid part.
+>
+> Been doing a spot of Googling around this myself. Looks like there's open
+> source code available to support seeing the discs, either with sata_mv or
+> Adaptec's own aar81xx drivers, which will get you going for what you say
+> above. However, if you did want to use HostRAID (Adaptec's name for
+> fakeraid) you either have to build Adaptec's driver linking in their
+> closed-source binary HostRAID code or use the open source dmraid.
+>
+> I'm a bit mystified at the idea of Adaptec using Marvell chips, though. I
+> wonder what that's all about?
+>
+> Cheers,
+>
+> John.
+>
 
 
-Damn, how stupid I am..
-Sorry, than I guess its more an dmcrypt issue..
 
-Thanks!
+-- 
+       Majed B.
