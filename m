@@ -1,68 +1,36 @@
-From: Ryan Wagoner <rswagoner@gmail.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
 Subject: Re: Adaptec 1430SA
-Date: Tue, 8 Sep 2009 11:00:57 -0400
-Message-ID: <7d86ddb90909080800n738d7266kb9aa88b222a6459e@mail.gmail.com>
-References: <316071.56440.qm@web51305.mail.re2.yahoo.com>
+Date: Tue, 08 Sep 2009 16:39:59 +0100
+Message-ID: <4AA67ACF.2080506@anonymous.org.uk>
+References: <769530.6689.qm@web51307.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <316071.56440.qm@web51305.mail.re2.yahoo.com>
+In-Reply-To: <769530.6689.qm@web51307.mail.re2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon@ehardcastle.com
-Cc: linux-raid@vger.kernel.org
+To: Jon@eHardcastle.com
+Cc: "Majed B." <majedb@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I had bought one of these to use with my Intel D955XBK board and ended
-up returning it. I could not get the Adaptec controller BIOS screen to
-come up. It kept saying something about not having enough memory. Not
-sure why it wasn't compatible as Adpatec adapters are normally good.
+On 08/09/2009 15:34, Jon Hardcastle wrote:
+> --- On Tue, 8/9/09, Majed B. <majedb@gmail.com> wrote:
+>> Jon, According to this link (
+>> http://groups.google.com/group/linux.debian.ports.x86-64/browse_thread/thread/12f2084ceace4c08?pli=1
+>> ) that card uses fake raid
+[...]
+> Hi, thanks for the link! I was planning on just using it as a means to get more ports - and then use mdadm to actually to the raid part.
 
-I ended up returning and it purchasing a Supermicro AOC-USAS-L8i
-adapter which uses the LSI SAS 1068E chip. You can get these cheap off
-eBay. The only downside is theses are made for the PCI Express UIO
-slot on the Supermicro boards. I didn't realize it at the time, but
-the UIO boards have the components mounted on the opposite side. I had
-to swap out the PCI bracket so I could secure it in the case and it
-takes up the space of two slots. If this isn't a big deal to you then
-the card works great.
+Been doing a spot of Googling around this myself. Looks like there's 
+open source code available to support seeing the discs, either with 
+sata_mv or Adaptec's own aar81xx drivers, which will get you going for 
+what you say above. However, if you did want to use HostRAID (Adaptec's 
+name for fakeraid) you either have to build Adaptec's driver linking in 
+their closed-source binary HostRAID code or use the open source dmraid.
 
-There are three different firmware modes available from Supermicro for
-that card. I have the IT mode firmware which disables the RAID support
-of the card. The drives are passed straight through to the OS without
-having to configure anything in the card's BIOS. I can even use the
-smartmontools to monitor the drives health.
+I'm a bit mystified at the idea of Adaptec using Marvell chips, though. 
+I wonder what that's all about?
 
-Ryan
+Cheers,
 
-On Tue, Sep 8, 2009 at 9:56 AM, Jon Hardcastle<jd_hardcastle@yahoo.com>=
- wrote:
-> Does anyone have any experience with Adaptec controllers? Namely
->
-> http://www.adaptec.com/en-US/support/sata/sataii/AAR-1430SA/
->
-> I want to increase my machines drive capacity and reply the existing =
-2 port pci-e with this bad boy.
->
-> Also; any ideas of a good price? Have seen for ~=A370 + p&p
->
-> -----------------------
-> N: Jon Hardcastle
-> E: Jon@eHardcastle.com
-> 'Do not worry about tomorrow, for tomorrow will bring worries of its =
-own.'
-> -----------------------
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+John.
