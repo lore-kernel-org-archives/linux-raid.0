@@ -1,91 +1,26 @@
 From: Jon Hardcastle <jd_hardcastle@yahoo.com>
 Subject: Re: Adaptec 1430SA
-Date: Wed, 9 Sep 2009 00:44:09 -0700 (PDT)
-Message-ID: <332340.55866.qm@web51306.mail.re2.yahoo.com>
-References: <70ed7c3e0909081513h5affac5at2ce313d02bb01eba@mail.gmail.com>
+Date: Wed, 9 Sep 2009 00:56:42 -0700 (PDT)
+Message-ID: <979188.79789.qm@web51310.mail.re2.yahoo.com>
+References: <4AA6E2C6.1090109@eyal.emu.id.au>
 Reply-To: Jon@eHardcastle.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70ed7c3e0909081513h5affac5at2ce313d02bb01eba@mail.gmail.com>
+In-Reply-To: <4AA6E2C6.1090109@eyal.emu.id.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>, "Majed B." <majedb@gmail.com>
-Cc: Jon@ehardcastle.com, linux-raid@vger.kernel.org
+To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---- On Tue, 8/9/09, Majed B. <majedb@gmail.com> wrote:
+So on the whole we have glowing reviews all round.. Yippe!
 
-> From: Majed B. <majedb@gmail.com>
-> Subject: Re: Adaptec 1430SA
-> To: "John Robinson" <john.robinson@anonymous.org.uk>
-> Cc: Jon@ehardcastle.com, linux-raid@vger.kernel.org
-> Date: Tuesday, 8 September, 2009, 11:13 PM
-> Check this link out:
-> http://blog.backblaze.com/2009/09/01/petabytes-on-a-budget-how-to-bui=
-ld-cheap-cloud-storage/
->=20
-> AT the end, they have a list of components, cheap ones. One
-> is a
-> 2-port sata card and another is a 4-port sata card. You
-> might find
-> them appealing to your usage.
->=20
-> On Tue, Sep 8, 2009 at 6:39 PM, John
-> Robinson<john.robinson@anonymous.org.uk>
-> wrote:
-> > On 08/09/2009 15:34, Jon Hardcastle wrote:
-> >>
-> >> --- On Tue, 8/9/09, Majed B. <majedb@gmail.com>
-> wrote:
-> >>>
-> >>> Jon, According to this link (
-> >>>
-> >>> http://groups.google.com/group/linux.debian.ports.x86-64/browse_t=
-hread/thread/12f2084ceace4c08?pli=3D1
-> >>> ) that card uses fake raid
-> >
-> > [...]
-> >>
-> >> Hi, thanks for the link! I was planning on just
-> using it as a means to get
-> >> more ports - and then use mdadm to actually to the
-> raid part.
-> >
-> > Been doing a spot of Googling around this myself.
-> Looks like there's open
-> > source code available to support seeing the discs,
-> either with sata_mv or
-> > Adaptec's own aar81xx drivers, which will get you
-> going for what you say
-> > above. However, if you did want to use HostRAID
-> (Adaptec's name for
-> > fakeraid) you either have to build Adaptec's driver
-> linking in their
-> > closed-source binary HostRAID code or use the open
-> source dmraid.
-> >
-> > I'm a bit mystified at the idea of Adaptec using
-> Marvell chips, though. I
-> > wonder what that's all about?
-> >
-> > Cheers,
-> >
-> > John.
-> >
->=20
->=20
->=20
-> --=20
-> =A0 =A0 =A0=A0=A0Majed B.
->=20
+I can get it and switch out my 2 port for a 4 port; add 2 more drives..=
+ and wait patiently for raid5~6 conversion to get reliable so I can sle=
+ep easy about >1TB drives in my array!
 
-Are you referring to the Addonics ADSA4R5? Thanks for the heads up! Is =
-PCI straight up got the throughput for 4 devices? I have a 2 port cheap=
-y PCI via card Sata 1 and it has turned out to be abit of a mare...
-
-Whilst I have a skilled audience :) Do you have any experience with por=
-t multiplier?
+Cheers guys.
 
 -----------------------
 N: Jon Hardcastle
@@ -93,6 +28,55 @@ E: Jon@eHardcastle.com
 'Do not worry about tomorrow, for tomorrow will bring worries of its ow=
 n.'
 -----------------------
+
+
+--- On Wed, 9/9/09, Eyal Lebedinsky <eyal@eyal.emu.id.au> wrote:
+
+> From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+> Subject: Re: Adaptec 1430SA
+> To: linux-raid@vger.kernel.org
+> Date: Wednesday, 9 September, 2009, 12:03 AM
+> I use this controller and I know of
+> another mate at the office who does.
+>=20
+> It works well as a simple SATA controller for four drives
+> (+1 on the mobo).
+> It is able to drive all disks at full speed and so far I
+> did not have any
+> issues with it. I am on fedora 11.
+>=20
+> My mobo is unable to handle five disks without hitting some
+> internal
+> bottlenecks.
+>=20
+> cheers
+>=20
+> Jon Hardcastle wrote:
+> > Does anyone have any experience with Adaptec
+> controllers? Namely
+> >=20
+> > http://www.adaptec.com/en-US/support/sata/sataii/AAR-1430SA/
+> >=20
+> > I want to increase my machines drive capacity and
+> reply the existing 2 port pci-e with this bad boy.
+> >=20
+> > Also; any ideas of a good price? Have seen for ~=EF=BF=BD70
+> + p&p
+> >=20
+> > -----------------------
+> > N: Jon Hardcastle
+> > E: Jon@eHardcastle.com
+> > 'Do not worry about tomorrow, for tomorrow will bring
+> worries of its own.'
+>=20
+> -- Eyal Lebedinsky=C2=A0=C2=A0=C2=A0 (eyal@eyal.emu.id.au)
+> --
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at=C2=A0 http://vger.kernel.org/majordomo-info.ht=
+ml
+>=20
 
 
      =20
