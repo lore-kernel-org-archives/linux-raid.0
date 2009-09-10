@@ -1,103 +1,50 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: sync_action missing in action in linux-2.6.12 ?
-Date: Fri, 11 Sep 2009 01:06:35 +0300
-Message-ID: <70ed7c3e0909101506q7565e41cxd71ede871a18d544@mail.gmail.com>
-References: <1252617509.4735.19.camel@lgelinas>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: Raid5 Read Perf drop in 2.6.27
+Date: Thu, 10 Sep 2009 19:55:47 -0400
+Message-ID: <87f94c370909101655g13d50541ma1e93c8c2893e1b8@mail.gmail.com>
+References: <f5d1f90a0909091554u6d40b402ga7e9f58cabf21b57@mail.gmail.com>
+	 <70ed7c3e0909091652m60b0ea9cp7000db919a639c35@mail.gmail.com>
+	 <f5d1f90a0909091817g667d211djcf767714740102d@mail.gmail.com>
+	 <70ed7c3e0909091827i745e2e38u6f8e246a0c9a49f@mail.gmail.com>
+	 <f5d1f90a0909091845t744ce5cerdf00fd656ff21c09@mail.gmail.com>
+	 <20090910172219.GB420@rap.rap.dk>
+	 <f5d1f90a0909101457w7662e17ax790e179c9b11150c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1252617509.4735.19.camel@lgelinas>
+In-Reply-To: <f5d1f90a0909101457w7662e17ax790e179c9b11150c@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Louis-Michel Gelinas <coradiant.kernel@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Linux Raid Study <linuxraid.study@gmail.com>
+Cc: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>, "Majed B." <majedb@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If flashing the firmware to a newer one provides a newer kernel, this
-is a better option.
+2009/9/10 Linux Raid Study <linuxraid.study@gmail.com>:
+> Hello:
+>
+> According to Wiki at http://linux-raid.osdl.org/index.php/Performance,
+> disabling NCQ helps in improving perf....I thought enabling
+> command-queuing helps is perf improvement. Can someone pls elaborate
+> how disabling NCQ helps....
+>
+> I have 3 seagate HDDs (7200RPM) and 2 WD VelcoiRaptor (10k RPM) and
+> disabling NCQ doesn't help in performance....
+>
+> thanks!
 
-These boxes come very customized and stripped down, so it may be
-tricky, if possible, to achieve what you want. If this NAS box has
-been around for more than 2 years, someone may have already tinkered
-with it. I guess...
+First, you are familiar with what NCQ is, right?
 
-On Fri, Sep 11, 2009 at 12:18 AM, Louis-Michel
-Gelinas<coradiant.kernel@gmail.com> wrote:
-> Hi all,
->
-> I bought this neat little NAS box (dlink dns-323).
->
-> I runs linux-2.6.12.6 and mdadm 2.5.6
->
-> There is a nice community and tools to "hack" it and use it as a
-> "normal" linux system.
->
-> I would like to run raid1 "repair" and "check" sync_action.
->
-> However, I do not have a sync_action file in /sys.
->
-> sysfs was not mounted, maybe that is the problem...
->
-> There is a /sys folder holding stuff that does not look like a sysfs
-> heirachy:
-> ls -l /sys
-> total 4
-> drwxr-xr-x 18 root root =C2=A0197 Mar 27 02:41 crfs
-> drwxr-xr-x =C2=A03 root root 1024 Sep =C2=A09 17:29 custom
-> drwxr-xr-x =C2=A02 root root 1024 Sep =C2=A09 17:29 mtd1
-> drwxr-xr-x =C2=A02 root root 1024 Feb 13 =C2=A02006 mtd2
->
->
-> So i did :
-> mkdir /sys2
-> mount -t sysfs /sys2 /sys2 =C2=A0( This worked, is it proper? =C2=A0)
->
-> The structure under /sys2 looks familiar, however, in /sys2/block/md0=
- I
-> have no md folder! only :
-> /sys2/block/md0 # ls -l
-> total 0
-> -r--r--r-- 1 root root 4096 Sep 10 09:39 dev
-> -r--r--r-- 1 root root 4096 Sep 10 09:39 range
-> -r--r--r-- 1 root root 4096 Sep 10 09:39 removable
-> -r--r--r-- 1 root root 4096 Sep 10 09:39 size
-> -r--r--r-- 1 root root 4096 Sep 10 09:39 stat
->
-> I have been reading this list for a few years now and I know I am a
-> little off topic and should go to the forums about the dns-323... But=
- I
-> found nothing anywhere.
->
-> So, am I doing something wrong with sysfs ? Should i assemble the arr=
-ay
-> after sysfs is mounted? Is there a sync_action in 2.6.12?
->
-> Also, is there any other way to trigger the check/repair? I can
-> code/compile my own userspace tool to call an ioctl if needed...
->
-> Is my only option to write my own scripted sector diff/remap tool?
->
-> Upgrading the kernel is an option but requires flashing the firmware,
-> something I would rather avoid at this point.
->
->
-> any help appreciated.
-> lmg
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
+http://en.wikipedia.org/wiki/Native_Command_Queuing
 
+So, the linux kernel has extremely good elevator sorting algorithms of its own.
 
+So if the data is sent to the drive in the optimum order to reduce
+disk seeks, any additional sorting the disk does can result in
+unneeded overhead.
 
---=20
-       Majed B.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So it comes down to the disks sorting characteristics.  If they are
+top-end and thus better than the kernel does, then NCQ helps.  If
+low-end and thus worse than the kernel does, then it hurts.
+
+Or so I understand it.
+
+Greg
