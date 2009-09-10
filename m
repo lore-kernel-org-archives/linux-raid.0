@@ -1,107 +1,54 @@
-From: Linux Raid Study <linuxraid.study@gmail.com>
-Subject: Re: Raid5 Read Perf drop in 2.6.27
-Date: Wed, 9 Sep 2009 18:45:31 -0700
-Message-ID: <f5d1f90a0909091845t744ce5cerdf00fd656ff21c09@mail.gmail.com>
-References: <f5d1f90a0909091554u6d40b402ga7e9f58cabf21b57@mail.gmail.com>
-	 <70ed7c3e0909091652m60b0ea9cp7000db919a639c35@mail.gmail.com>
-	 <f5d1f90a0909091817g667d211djcf767714740102d@mail.gmail.com>
-	 <70ed7c3e0909091827i745e2e38u6f8e246a0c9a49f@mail.gmail.com>
+From: Simon Jackson <sjackson@bluearc.com>
+Subject: RE: mdadm and TLER (Time Limited Error Recovery)
+Date: Thu, 10 Sep 2009 10:26:35 +0100
+Message-ID: <ABFC24E4C13D81489F7F624E14891C860D4C3894@uk-ex-mbx1.terastack.bluearc.com>
+References: <299cc2790909071735x6eefd8bsc05ad76fa782cae1@mail.gmail.com>
+ <slrnhacpsm.2i5.Mario.Holbe@darkside.dyn.samba-tng.org>
+ <20090908184837.GA28217@teal.hq.k1024.org> <4AA70604.7020709@harddata.com>
+ <ABFC24E4C13D81489F7F624E14891C860D4C3553@uk-ex-mbx1.terastack.bluearc.com>
+ <slrnhaf2ub.2i5.Mario.Holbe@darkside.dyn.samba-tng.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70ed7c3e0909091827i745e2e38u6f8e246a0c9a49f@mail.gmail.com>
+In-Reply-To: <slrnhaf2ub.2i5.Mario.Holbe@darkside.dyn.samba-tng.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: "Majed B." <majedb@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I build/compile my own kernel..
+Hmmm.  I do not have sdparm on my system. 
 
-Have you done any benchmarks for Read RAID5 perf?
+Linux 2.6.26-1-amd64 #1 SMP Sat Jan 10 17:57:00 UTC 2009 x86_64 GNU/Linux
 
-Thanks!
+Is this the same functionality as the hdparm utility? 
 
-On 9/9/09, Majed B. <majedb@gmail.com> wrote:
-> Well, that's my point. To make sure that your kernels are identical in
->  options, compare the .config files found in /usr/src/linux-<version>
->
->  You may find changes and differences in areas like bluetooth,
->  wireless, ...etc. These don't matter.
->
->  Did you compile your own kernel, or are you using one compiled for a
->  specific distro?
->
->  On Thu, Sep 10, 2009 at 4:17 AM, Linux Raid
->
-> Study<linuxraid.study@gmail.com> wrote:
->  > Yes - the setup is the same. The only thing that changes is the kernel.
->  >
->  > I have 4 HDDs (2 from WD VelociRaptor 150GB/10k RPM and 2 from Seagate
->  > 320GB/7.2k RPM).  The HDDs are connected using two Silicon Image SATA
->  > controllers (Sil3132) connected to my host using PCIe.
->  >
->  > I use the default kernel scheduling scheme.
->  >
->  > Thanks!
->  >
->  > On 9/9/09, Majed B. <majedb@gmail.com> wrote:
->  >> Are you sure you're using the same Kernel Scheduler on both kernels?
->  >>
->  >>  Have you checked and verified that the same drivers are being loaded?
->  >>  (IDE vs. AHCI -- proprietary drivers vs. open source)
->  >>
->  >>  This is interesting!
->  >>
->  >>
->  >>  On Thu, Sep 10, 2009 at 1:54 AM, Linux Raid
->  >>  Study<linuxraid.study@gmail.com> wrote:
->  >>  > Hello:
->  >>  >
->  >>  > I'm benchmarking RAID5 Read performance with 4 disks and notice perf
->  >>  > drop when using kernel 2.6.27.
->  >>  > The perf with 2.6.27 is 150MB/s whereas with kernel 2.6.21 (and same
->  >>  > setup), the perf is 180MB/s/
->  >>  >
->  >>  >
->  >>  >
->  >>  > Some of the tests I have done:
->  >>  > 1. I ran  experiments using iozone also but notice that READ perf with
->  >>  > RAID5 in 2.6.27 is ~30% less as compared to 2.6.21.
->  >>  > Write perf is similar but Read is an issue.
->  >>  >
->  >>  > 2. On 2.6.27, I played around with chunk size and blocksize parameters
->  >>  > and got ~5% improvement but not much. I used following cmds:
->  >>  >
->  >>  > #mdadm --create /dev/md0 --level=5 --assume-clean --raid-devices=4
->  >>  > /dev/sda /dev/sdb /dev/sdc /dev/sdd --chunk=32
->  >>  > #mke2fs -b 4096 -E stride=8 /dev/md0
->  >>  >
->  >>  > #time dd if=/dev/md0 of=/dev/null bs=94208 count=1024
->  >>  >
->  >>  >
->  >>  > Is this perf drop a known issue? Can someone please recommend some
->  >>  > performance tuning tips?
->  >>  >
->  >>  > Thanks a lot for your time and help!
->  >>
->  >> > --
->  >>  > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->  >>  > the body of a message to majordomo@vger.kernel.org
->  >>  > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->  >>  >
->  >>
->  >>
->  >>
->  >>  --
->  >>
->  >>        Majed B.
->  >>
->  >
->
->
->
->
-> --
->
->        Majed B.
->
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Mario 'BitKoenig' Holbe
+Sent: 09 September 2009 12:05
+To: linux-raid@vger.kernel.org
+Subject: Re: mdadm and TLER (Time Limited Error Recovery)
+
+Simon Jackson <sjackson@bluearc.com> wrote:
+> In my case I am using Seagate and Hitachi drives.
+> Please can anyone tell me how I would go about setting timeout values on these types of drive. Are there utility programs to do this or a Linux 
+
+Well, my Seagates have a RTL (Recovery time limit (ms)) field in the rw
+(Read write error recovery) mode page.
+
+You could try something like `sdparm -W RTL=7000 /dev/sdX' to set it to
+7 seconds. I don't know if it works, I didn't test it, use it at your
+own risk! Do a backup before, it could blow up your disk or even the
+universe :) Tell us if it worked :)
+
+
+regards
+   Mario
+-- 
+() Ascii Ribbon Campaign
+/\ Support plain text e-mail
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
