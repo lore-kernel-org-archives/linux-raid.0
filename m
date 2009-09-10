@@ -1,122 +1,48 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: Raid5 Read Perf drop in 2.6.27
-Date: Thu, 10 Sep 2009 19:22:19 +0200
-Message-ID: <20090910172219.GB420@rap.rap.dk>
-References: <f5d1f90a0909091554u6d40b402ga7e9f58cabf21b57@mail.gmail.com> <70ed7c3e0909091652m60b0ea9cp7000db919a639c35@mail.gmail.com> <f5d1f90a0909091817g667d211djcf767714740102d@mail.gmail.com> <70ed7c3e0909091827i745e2e38u6f8e246a0c9a49f@mail.gmail.com> <f5d1f90a0909091845t744ce5cerdf00fd656ff21c09@mail.gmail.com>
+From: Drew <drew.kay@gmail.com>
+Subject: Re: Port Multipliers
+Date: Thu, 10 Sep 2009 11:14:05 -0700
+Message-ID: <c268e4660909101114h36229a34xc354a41a4f3610d4@mail.gmail.com>
+References: <c268e4660909100556x14b48207w32017a59be889f@mail.gmail.com>
+	<70ed7c3e0909100911q926fa9cs9185854b15dd8764@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <f5d1f90a0909091845t744ce5cerdf00fd656ff21c09@mail.gmail.com>
+In-Reply-To: <70ed7c3e0909100911q926fa9cs9185854b15dd8764@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux Raid Study <linuxraid.study@gmail.com>
-Cc: "Majed B." <majedb@gmail.com>, linux-raid@vger.kernel.org
+To: "Majed B." <majedb@gmail.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi
+> If you're looking at port multipliers, you need to find PCI-Express
+> modules if you want them to be fast. The PCI ones are gonna be very
+> slow when you have more than 2 disks per card.
 
-There is some data on raid5 performance (and other raid types) at our
-wiki at: http://linux-raid.osdl.org/index.php/Performance
+The existing server we're planning to re-purpose for this is an IBM
+xSeries with two free PCI-X/100 slots and dual PCIe/x4 slots.
 
-When you have something you want to share with others, then we can add
-your info to the data there, either by a URL or by direct inclusion in
-the wiki.
+> You might want to checkout Supermicro's offerings as well.
 
-best regards
-keld
+I'd love to be able to upgrade the servers but the bean counters won't
+authorize new servers until the existing kit have been fully amortized
+and/or we're overloading the existing units. Given the main ESXi host
+is a 8 core IBM x445 that's about 60% loaded and I have 3 years worth
+of amortization left I can't add new servers.
 
-On Wed, Sep 09, 2009 at 06:45:31PM -0700, Linux Raid Study wrote:
-> I build/compile my own kernel..
-> 
-> Have you done any benchmarks for Read RAID5 perf?
-> 
-> Thanks!
-> 
-> On 9/9/09, Majed B. <majedb@gmail.com> wrote:
-> > Well, that's my point. To make sure that your kernels are identical in
-> >  options, compare the .config files found in /usr/src/linux-<version>
-> >
-> >  You may find changes and differences in areas like bluetooth,
-> >  wireless, ...etc. These don't matter.
-> >
-> >  Did you compile your own kernel, or are you using one compiled for a
-> >  specific distro?
-> >
-> >  On Thu, Sep 10, 2009 at 4:17 AM, Linux Raid
-> >
-> > Study<linuxraid.study@gmail.com> wrote:
-> >  > Yes - the setup is the same. The only thing that changes is the kernel.
-> >  >
-> >  > I have 4 HDDs (2 from WD VelociRaptor 150GB/10k RPM and 2 from Seagate
-> >  > 320GB/7.2k RPM).  The HDDs are connected using two Silicon Image SATA
-> >  > controllers (Sil3132) connected to my host using PCIe.
-> >  >
-> >  > I use the default kernel scheduling scheme.
-> >  >
-> >  > Thanks!
-> >  >
-> >  > On 9/9/09, Majed B. <majedb@gmail.com> wrote:
-> >  >> Are you sure you're using the same Kernel Scheduler on both kernels?
-> >  >>
-> >  >>  Have you checked and verified that the same drivers are being loaded?
-> >  >>  (IDE vs. AHCI -- proprietary drivers vs. open source)
-> >  >>
-> >  >>  This is interesting!
-> >  >>
-> >  >>
-> >  >>  On Thu, Sep 10, 2009 at 1:54 AM, Linux Raid
-> >  >>  Study<linuxraid.study@gmail.com> wrote:
-> >  >>  > Hello:
-> >  >>  >
-> >  >>  > I'm benchmarking RAID5 Read performance with 4 disks and notice perf
-> >  >>  > drop when using kernel 2.6.27.
-> >  >>  > The perf with 2.6.27 is 150MB/s whereas with kernel 2.6.21 (and same
-> >  >>  > setup), the perf is 180MB/s/
-> >  >>  >
-> >  >>  >
-> >  >>  >
-> >  >>  > Some of the tests I have done:
-> >  >>  > 1. I ran  experiments using iozone also but notice that READ perf with
-> >  >>  > RAID5 in 2.6.27 is ~30% less as compared to 2.6.21.
-> >  >>  > Write perf is similar but Read is an issue.
-> >  >>  >
-> >  >>  > 2. On 2.6.27, I played around with chunk size and blocksize parameters
-> >  >>  > and got ~5% improvement but not much. I used following cmds:
-> >  >>  >
-> >  >>  > #mdadm --create /dev/md0 --level=5 --assume-clean --raid-devices=4
-> >  >>  > /dev/sda /dev/sdb /dev/sdc /dev/sdd --chunk=32
-> >  >>  > #mke2fs -b 4096 -E stride=8 /dev/md0
-> >  >>  >
-> >  >>  > #time dd if=/dev/md0 of=/dev/null bs=94208 count=1024
-> >  >>  >
-> >  >>  >
-> >  >>  > Is this perf drop a known issue? Can someone please recommend some
-> >  >>  > performance tuning tips?
-> >  >>  >
-> >  >>  > Thanks a lot for your time and help!
-> >  >>
-> >  >> > --
-> >  >>  > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> >  >>  > the body of a message to majordomo@vger.kernel.org
-> >  >>  > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >  >>  >
-> >  >>
-> >  >>
-> >  >>
-> >  >>  --
-> >  >>
-> >  >>        Majed B.
-> >  >>
-> >  >
-> >
-> >
-> >
-> >
-> > --
-> >
-> >        Majed B.
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Storage is another matter, we're pushing to about 80% of our current
+400GB capacity and with our OEM suppliers (we sell commercial trucks)
+advising us to expect more of our documentation and training going
+electronic, I'm looking at shelves worth of manuals and training
+material being made electronic over the next few years and given our
+data transmission costs are much higher (~$10/GB) then local storage,
+we're looking at local storage.
+
+We've considered upgrading our SCSI drives but the per GB cost
+difference of SATA vs SCSI drives just isn't worth it. We pay about
+$1-$2/GB for SCSI vs $0.25-$0.50/GB for server grade SATA.
+
+
+-- 
+Drew
+
+"Nothing in life is to be feared. It is only to be understood."
+--Marie Curie
