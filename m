@@ -1,29 +1,48 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
+From: Richard Scobie <richard@sauce.co.nz>
 Subject: Re: Port Multipliers
-Date: Thu, 10 Sep 2009 20:45:11 +0200 (CEST)
-Message-ID: <alpine.DEB.1.10.0909102043000.20805@uplift.swm.pp.se>
-References: <c268e4660909100556x14b48207w32017a59be889f@mail.gmail.com>  <70ed7c3e0909100911q926fa9cs9185854b15dd8764@mail.gmail.com> <c268e4660909101135w4b933cbaj3e6a18e6b586fd62@mail.gmail.com>
+Date: Fri, 11 Sep 2009 07:14:16 +1200
+Message-ID: <4AA95008.4030401@sauce.co.nz>
+References: <c268e4660909100556x14b48207w32017a59be889f@mail.gmail.com> 	<70ed7c3e0909100911q926fa9cs9185854b15dd8764@mail.gmail.com> <c268e4660909101114h36229a34xc354a41a4f3610d4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <c268e4660909101135w4b933cbaj3e6a18e6b586fd62@mail.gmail.com>
+In-Reply-To: <c268e4660909101114h36229a34xc354a41a4f3610d4@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Drew <drew.kay@gmail.com>
+Cc: "Majed B." <majedb@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, 10 Sep 2009, Drew wrote:
+Drew wrote:
+>>If you're looking at port multipliers, you need to find PCI-Express
+>>modules if you want them to be fast. The PCI ones are gonna be very
+>>slow when you have more than 2 disks per card.
+> 
+> 
+> The existing server we're planning to re-purpose for this is an IBM
+> xSeries with two free PCI-X/100 slots and dual PCIe/x4 slots.
 
-> each PM, what sort of speed degradation would I be looking at compared 
-> to making a RAID5 off just the 3124?
+Your best bet might be to use one of these HBA's:
+ 
+http://www.lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas/lsisas3801e/index.html
 
-My biggest beef with some of the PMPs out there are the caveats that come 
-with some of them, such as "you have to have a drive in port 0 otherwise 
-all the drives on that PMP goes haywire".
+although you would need to check whether it functions OK in an x4 slot - 
+obviously the maximum performance will not be reached, but if you are 
+only using one output you should be OK.
 
-So whatever solution you go for, test it properly so it works in your 
-environment. Try hotswapping all drives, make sure you understand what the 
-OS reaction is to combinations of drives being there and not, try 
-rebooting in degraded modes etc.
+This would then be connected to an enclosure like this:
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+http://www.aicipc.com/ProductDetail.aspx?ref=XJ1000%20series%20-%203U%2016-bay
+
+which contains a port expander to all the drives.
+
+I have been running 2 similar setups (although using the LSISAS3442E-R 
+version of the HBA - around $US230 in an x8 slot), for over a year 
+without any trouble, with the drives configured as an md RAID6.
+
+The HBA's can have an alternate firmware loaded which removes the 
+onboard hardware RAID0,1 functionality.
+
+Regards,
+
+Richard
