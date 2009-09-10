@@ -1,38 +1,122 @@
-From: Matt Garman <matthew.garman@gmail.com>
-Subject: Re: Array Power Management
-Date: Thu, 10 Sep 2009 11:51:56 -0500
-Message-ID: <20090910165156.GA30820@sewage>
-References: <292245.77763.qm@web55804.mail.re3.yahoo.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: Raid5 Read Perf drop in 2.6.27
+Date: Thu, 10 Sep 2009 19:22:19 +0200
+Message-ID: <20090910172219.GB420@rap.rap.dk>
+References: <f5d1f90a0909091554u6d40b402ga7e9f58cabf21b57@mail.gmail.com> <70ed7c3e0909091652m60b0ea9cp7000db919a639c35@mail.gmail.com> <f5d1f90a0909091817g667d211djcf767714740102d@mail.gmail.com> <70ed7c3e0909091827i745e2e38u6f8e246a0c9a49f@mail.gmail.com> <f5d1f90a0909091845t744ce5cerdf00fd656ff21c09@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <292245.77763.qm@web55804.mail.re3.yahoo.com>
+In-Reply-To: <f5d1f90a0909091845t744ce5cerdf00fd656ff21c09@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Linux Raid Study <linuxraid.study@gmail.com>
+Cc: "Majed B." <majedb@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Sep 06, 2009 at 08:48:03PM -0700, jahammonds prost wrote:
-> I can do this on single drives using hdparm -S to set the spindown
-> timeout, and the disks will spin up on activity as needed. Is
-> there something similar I can do with an md array? I can see
-> there's a /sys/block/md0/power/wakeup file, but I can't seem to
-> find any documentation on it. I have thought about doing an hdparm
-> -S on the array disks, but I suspect that would be A Bad Thing
-> (tm).
+Hi
 
-On the same note, does anyone have any thoughts on the wear-and-tear
-caused by frequent spinup/spindown cycles?
+There is some data on raid5 performance (and other raid types) at our
+wiki at: http://linux-raid.osdl.org/index.php/Performance
 
-My fileserver has the Western Digital RE2 "enterprise" grade drives.
-I remember reading (years ago) that, in general, "enterprise" grade
-drives were designed to be always running (think 24/7 server), and
-rarely spun down.  As such, they did not tolerate a "consumer
-desktop" usage pattern very well, and trying to save power in this
-way would actually cause them to fail prematurely.
+When you have something you want to share with others, then we can add
+your info to the data there, either by a URL or by direct inclusion in
+the wiki.
 
-Is/was such a thing true?  Is it worth worrying about?
+best regards
+keld
 
-Thanks,
-Matt
-
+On Wed, Sep 09, 2009 at 06:45:31PM -0700, Linux Raid Study wrote:
+> I build/compile my own kernel..
+> 
+> Have you done any benchmarks for Read RAID5 perf?
+> 
+> Thanks!
+> 
+> On 9/9/09, Majed B. <majedb@gmail.com> wrote:
+> > Well, that's my point. To make sure that your kernels are identical in
+> >  options, compare the .config files found in /usr/src/linux-<version>
+> >
+> >  You may find changes and differences in areas like bluetooth,
+> >  wireless, ...etc. These don't matter.
+> >
+> >  Did you compile your own kernel, or are you using one compiled for a
+> >  specific distro?
+> >
+> >  On Thu, Sep 10, 2009 at 4:17 AM, Linux Raid
+> >
+> > Study<linuxraid.study@gmail.com> wrote:
+> >  > Yes - the setup is the same. The only thing that changes is the kernel.
+> >  >
+> >  > I have 4 HDDs (2 from WD VelociRaptor 150GB/10k RPM and 2 from Seagate
+> >  > 320GB/7.2k RPM).  The HDDs are connected using two Silicon Image SATA
+> >  > controllers (Sil3132) connected to my host using PCIe.
+> >  >
+> >  > I use the default kernel scheduling scheme.
+> >  >
+> >  > Thanks!
+> >  >
+> >  > On 9/9/09, Majed B. <majedb@gmail.com> wrote:
+> >  >> Are you sure you're using the same Kernel Scheduler on both kernels?
+> >  >>
+> >  >>  Have you checked and verified that the same drivers are being loaded?
+> >  >>  (IDE vs. AHCI -- proprietary drivers vs. open source)
+> >  >>
+> >  >>  This is interesting!
+> >  >>
+> >  >>
+> >  >>  On Thu, Sep 10, 2009 at 1:54 AM, Linux Raid
+> >  >>  Study<linuxraid.study@gmail.com> wrote:
+> >  >>  > Hello:
+> >  >>  >
+> >  >>  > I'm benchmarking RAID5 Read performance with 4 disks and notice perf
+> >  >>  > drop when using kernel 2.6.27.
+> >  >>  > The perf with 2.6.27 is 150MB/s whereas with kernel 2.6.21 (and same
+> >  >>  > setup), the perf is 180MB/s/
+> >  >>  >
+> >  >>  >
+> >  >>  >
+> >  >>  > Some of the tests I have done:
+> >  >>  > 1. I ran  experiments using iozone also but notice that READ perf with
+> >  >>  > RAID5 in 2.6.27 is ~30% less as compared to 2.6.21.
+> >  >>  > Write perf is similar but Read is an issue.
+> >  >>  >
+> >  >>  > 2. On 2.6.27, I played around with chunk size and blocksize parameters
+> >  >>  > and got ~5% improvement but not much. I used following cmds:
+> >  >>  >
+> >  >>  > #mdadm --create /dev/md0 --level=5 --assume-clean --raid-devices=4
+> >  >>  > /dev/sda /dev/sdb /dev/sdc /dev/sdd --chunk=32
+> >  >>  > #mke2fs -b 4096 -E stride=8 /dev/md0
+> >  >>  >
+> >  >>  > #time dd if=/dev/md0 of=/dev/null bs=94208 count=1024
+> >  >>  >
+> >  >>  >
+> >  >>  > Is this perf drop a known issue? Can someone please recommend some
+> >  >>  > performance tuning tips?
+> >  >>  >
+> >  >>  > Thanks a lot for your time and help!
+> >  >>
+> >  >> > --
+> >  >>  > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> >  >>  > the body of a message to majordomo@vger.kernel.org
+> >  >>  > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >  >>  >
+> >  >>
+> >  >>
+> >  >>
+> >  >>  --
+> >  >>
+> >  >>        Majed B.
+> >  >>
+> >  >
+> >
+> >
+> >
+> >
+> > --
+> >
+> >        Majed B.
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
