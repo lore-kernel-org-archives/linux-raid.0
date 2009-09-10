@@ -1,64 +1,34 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: mdadm and TLER (Time Limited Error Recovery)
-Date: Thu, 10 Sep 2009 10:46:51 +0100
-Message-ID: <20090910094651.GA9619@cthulhu.home.robinhill.me.uk>
-References: <299cc2790909071735x6eefd8bsc05ad76fa782cae1@mail.gmail.com>
- <slrnhacpsm.2i5.Mario.Holbe@darkside.dyn.samba-tng.org>
- <20090908184837.GA28217@teal.hq.k1024.org>
- <4AA70604.7020709@harddata.com>
- <ABFC24E4C13D81489F7F624E14891C860D4C3553@uk-ex-mbx1.terastack.bluearc.com>
- <slrnhaf2ub.2i5.Mario.Holbe@darkside.dyn.samba-tng.org>
- <ABFC24E4C13D81489F7F624E14891C860D4C3894@uk-ex-mbx1.terastack.bluearc.com>
+From: Drew <drew.kay@gmail.com>
+Subject: Port Multipliers
+Date: Thu, 10 Sep 2009 05:56:25 -0700
+Message-ID: <c268e4660909100556x14b48207w32017a59be889f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="VS++wcV0S1rZb1Fb"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <ABFC24E4C13D81489F7F624E14891C860D4C3894@uk-ex-mbx1.terastack.bluearc.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Hi,
 
---VS++wcV0S1rZb1Fb
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I've been reading up on port multipliers and I was wondering if
+anyone's had any experience with them they'd like to share. From what
+I've read of them I would expect the performance to be slower but how
+much slower are they in the real world?
 
-On Thu Sep 10, 2009 at 10:26:35AM +0100, Simon Jackson wrote:
+I ask because I'm exploring options for my organization and we're
+looking at some large JBOD enclosures that can handle up to 15 SATA
+drives and I'm trying to minimize performance impact on the drives
+while at the same time minimize the amount of cabling between the
+openfiler and the enclosure. The server using the enclosure will be
+running openfiler as a backend iSCSI target(?) for a couple of VMware
+ESXi hosts and while the hosts won't be running anything heavy duty,
+mainly just filesharing & email, I'm hoping to keep things running as
+fast as possible.
 
-> Hmmm.  I do not have sdparm on my system.=20
->=20
-> Linux 2.6.26-1-amd64 #1 SMP Sat Jan 10 17:57:00 UTC 2009 x86_64 GNU/Linux
->=20
-> Is this the same functionality as the hdparm utility?=20
->=20
-Yes - it was written for SCSI drives rather than IDE drives.  With the
-different markets these were targeted for, SCSI drives have
-(historically) provided a lot more low-level parameters for tweaking.
-Newer ATA drives have been incorporating a lot of the same functionality
-though, so it'll work (to some extent) with them as well.
 
-The homepage is at http://sg.danny.cz/sg/sdparm.html
+-- 
+Drew
 
-HTH,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---VS++wcV0S1rZb1Fb
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEARECAAYFAkqoywoACgkQShxCyD40xBKxyACfVFRRjP3/RSfqzVJWmk65FfbT
-rbEAoImcz5C/zSUB+JdiPQdoZOvczpT8
-=iNe0
------END PGP SIGNATURE-----
-
---VS++wcV0S1rZb1Fb--
+"Nothing in life is to be feared. It is only to be understood."
+--Marie Curie
