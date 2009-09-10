@@ -1,54 +1,70 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: Raid 5 Read performance
-Date: Thu, 10 Sep 2009 23:17:10 +0300
-Message-ID: <70ed7c3e0909101317l3298743co414a2626c765d00c@mail.gmail.com>
-References: <loom.20090910T220258-188@post.gmane.org>
+From: Louis-Michel Gelinas <coradiant.kernel@gmail.com>
+Subject: sync_action missing in action in linux-2.6.12 ?
+Date: Thu, 10 Sep 2009 17:18:29 -0400
+Message-ID: <1252617509.4735.19.camel@lgelinas>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <loom.20090910T220258-188@post.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Koti <satha_koti@yahoo.co.in>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Someone else has already emailed the mailing list about this. Are you
-two running an assignment or something?!
+Hi all,
 
-Check the mailing list archive for whatever people have already replied=
- with.
+I bought this neat little NAS box (dlink dns-323). 
 
-On Thu, Sep 10, 2009 at 11:07 PM, Koti<satha_koti@yahoo.co.in> wrote:
-> Hi All
->
-> =C2=A0 =C2=A0I am trying measure the RAID 5 Read numbers on linux ker=
-nel-2.6.21 and
-> kernel 2.6.27 the numbers are lower on later kernel (2.6.27). Iam mea=
-suring
-> the numbers using "time dd" command (4GB ). Is any valid reason for t=
-his, or
-> Am missing anything in the process. Can anybody help me in analyze th=
-is
-> problem.
->
-> Thanks,
-> Koti
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
+I runs linux-2.6.12.6 and mdadm 2.5.6 
+
+There is a nice community and tools to "hack" it and use it as a
+"normal" linux system. 
+
+I would like to run raid1 "repair" and "check" sync_action. 
+
+However, I do not have a sync_action file in /sys. 
+
+sysfs was not mounted, maybe that is the problem... 
+
+There is a /sys folder holding stuff that does not look like a sysfs
+heirachy:
+ls -l /sys
+total 4
+drwxr-xr-x 18 root root  197 Mar 27 02:41 crfs
+drwxr-xr-x  3 root root 1024 Sep  9 17:29 custom
+drwxr-xr-x  2 root root 1024 Sep  9 17:29 mtd1
+drwxr-xr-x  2 root root 1024 Feb 13  2006 mtd2
 
 
+So i did :
+mkdir /sys2
+mount -t sysfs /sys2 /sys2  ( This worked, is it proper?  ) 
 
---=20
-       Majed B.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The structure under /sys2 looks familiar, however, in /sys2/block/md0 I
+have no md folder! only :
+/sys2/block/md0 # ls -l 
+total 0
+-r--r--r-- 1 root root 4096 Sep 10 09:39 dev
+-r--r--r-- 1 root root 4096 Sep 10 09:39 range
+-r--r--r-- 1 root root 4096 Sep 10 09:39 removable
+-r--r--r-- 1 root root 4096 Sep 10 09:39 size
+-r--r--r-- 1 root root 4096 Sep 10 09:39 stat
+
+I have been reading this list for a few years now and I know I am a
+little off topic and should go to the forums about the dns-323... But I
+found nothing anywhere.
+
+So, am I doing something wrong with sysfs ? Should i assemble the array
+after sysfs is mounted? Is there a sync_action in 2.6.12? 
+
+Also, is there any other way to trigger the check/repair? I can
+code/compile my own userspace tool to call an ioctl if needed... 
+
+Is my only option to write my own scripted sector diff/remap tool? 
+
+Upgrading the kernel is an option but requires flashing the firmware,
+something I would rather avoid at this point. 
+
+
+any help appreciated.
+lmg 
+
