@@ -1,50 +1,33 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: Raid5 Read Perf drop in 2.6.27
-Date: Thu, 10 Sep 2009 19:55:47 -0400
-Message-ID: <87f94c370909101655g13d50541ma1e93c8c2893e1b8@mail.gmail.com>
-References: <f5d1f90a0909091554u6d40b402ga7e9f58cabf21b57@mail.gmail.com>
-	 <70ed7c3e0909091652m60b0ea9cp7000db919a639c35@mail.gmail.com>
-	 <f5d1f90a0909091817g667d211djcf767714740102d@mail.gmail.com>
-	 <70ed7c3e0909091827i745e2e38u6f8e246a0c9a49f@mail.gmail.com>
-	 <f5d1f90a0909091845t744ce5cerdf00fd656ff21c09@mail.gmail.com>
-	 <20090910172219.GB420@rap.rap.dk>
-	 <f5d1f90a0909101457w7662e17ax790e179c9b11150c@mail.gmail.com>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: sync_action missing in action in linux-2.6.12 ?
+Date: Fri, 11 Sep 2009 14:05:35 +1000 (EST)
+Message-ID: <8dd5fbc076f31a8d043d6edf01ae9e03.squirrel@neil.brown.name>
+References: <1252617509.4735.19.camel@lgelinas>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f5d1f90a0909101457w7662e17ax790e179c9b11150c@mail.gmail.com>
+In-Reply-To: <1252617509.4735.19.camel@lgelinas>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux Raid Study <linuxraid.study@gmail.com>
-Cc: =?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?= <keld@dkuug.dk>, "Majed B." <majedb@gmail.com>, linux-raid@vger.kernel.org
+To: Louis-Michel Gelinas <coradiant.kernel@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2009/9/10 Linux Raid Study <linuxraid.study@gmail.com>:
-> Hello:
+On Fri, September 11, 2009 7:18 am, Louis-Michel Gelinas wrote:
+> Hi all,
 >
-> According to Wiki at http://linux-raid.osdl.org/index.php/Performance,
-> disabling NCQ helps in improving perf....I thought enabling
-> command-queuing helps is perf improvement. Can someone pls elaborate
-> how disabling NCQ helps....
+> I bought this neat little NAS box (dlink dns-323).
 >
-> I have 3 seagate HDDs (7200RPM) and 2 WD VelcoiRaptor (10k RPM) and
-> disabling NCQ doesn't help in performance....
+> I runs linux-2.6.12.6 and mdadm 2.5.6
 >
-> thanks!
+> There is a nice community and tools to "hack" it and use it as a
+> "normal" linux system.
+>
+> I would like to run raid1 "repair" and "check" sync_action.
 
-First, you are familiar with what NCQ is, right?
+This functionality did not appear until 2.6.15. If you want it,
+you will need a new kernel.
 
-http://en.wikipedia.org/wiki/Native_Command_Queuing
+NeilBrown
 
-So, the linux kernel has extremely good elevator sorting algorithms of its own.
 
-So if the data is sent to the drive in the optimum order to reduce
-disk seeks, any additional sorting the disk does can result in
-unneeded overhead.
-
-So it comes down to the disks sorting characteristics.  If they are
-top-end and thus better than the kernel does, then NCQ helps.  If
-low-end and thus worse than the kernel does, then it hurts.
-
-Or so I understand it.
-
-Greg
