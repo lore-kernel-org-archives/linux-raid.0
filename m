@@ -1,101 +1,103 @@
-From: Ryan Wagoner <rswagoner@gmail.com>
-Subject: Re: Array Power Management
-Date: Fri, 11 Sep 2009 08:27:40 -0400
-Message-ID: <7d86ddb90909110527l38bbe234p6c82b3a7bdf99528@mail.gmail.com>
-References: <292245.77763.qm@web55804.mail.re3.yahoo.com>
-	 <20090910165156.GA30820@sewage>
+From: "Majed B." <majedb@gmail.com>
+Subject: Re: Raid 5 Read performance
+Date: Fri, 11 Sep 2009 21:22:31 +0300
+Message-ID: <70ed7c3e0909111122n6b78a45asc92cd0b84d70f07a@mail.gmail.com>
+References: <70ed7c3e0909101317l3298743co414a2626c765d00c@mail.gmail.com>
+	<918883.43112.qm@web94815.mail.in2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090910165156.GA30820@sewage>
+In-Reply-To: <918883.43112.qm@web94815.mail.in2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matt Garman <matthew.garman@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: satha kottidi <satha_koti@yahoo.co.in>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I remember this used to be the case, but it seems to be the opposite
-now. What is interesting is in the lower priced drives there seems to
-be a trade off for the non recoverable error rate and load / unload
-cycles.
+All kernel changes are mentioned in the changelogs, so I think you can
+find what you want at kernel.org -- it also mentions who did the
+change, so you can contact him/her directly.
 
-When I looked at drives over year ago for my storage I went with 1TB
-Hitachi 7K1000 as they were a good price, rated for 24/7 operation,
-and had the 1 per 1.0 E15 bits error rate. Recently prices have come
-down and when I put together my ESXi box I went with 500GB WD RE3
-drives which offer the best rating all around.
+I'm not saying you won't find help here, but the aforementioned is a
+better chance :)
 
-Ryan
-
-WD RE3
-http://products.wdc.com/library/specsheet/eng/2879-701281.pdf
-Load/Unload Cycles 300,000
-Error Rate: 1 per 1.0 E15 bits
-
-WD Caviar Black
-http://products.wdc.com/library/specsheet/eng/2879-701276.pdf
-Load/Unload Cycles 300,000
-Error Rate: 1 per 1.0 E14 bits
-
-WD Caviar Blue
-http://products.wdc.com/library/specsheet/eng/2879-701277.pdf
-Load/Unload Cycles 50,000 minimum
-Error Rate: 1 per 1.0 E15 bits
-
-Seagate ES.2
-http://www.seagate.com/docs/pdf/datasheet/disc/ds_barracuda_es_2.pdf
-Load/Unload Cycles: Not Published
-Error Rate: 1 per 1.0 E15 bits
-
-Seagate Barracuda 7200.12
-http://www.seagate.com/docs/pdf/datasheet/disc/ds_barracuda_7200_12.pdf
-Load/Unload Cycles 50,000
-Error Rate: 1 per 1.0 E14 bits
-
-Hitachi 7K1000
-http://www.hitachigst.com/tech/techlib.nsf/techdocs/67A68C59B27368FC862=
-572570080FC70/$file/Deskstar7K1000_010307_final.pdf
-Load/Unload Cycles 50,000
-Error Rate: 1 per 1.0 E15 bits
-
-Hitachi 7K1000.B
-http://www.hitachigst.com/tech/techlib.nsf/techdocs/D70FC3A0F3216186862=
-5747B00832876/$file/Deskstar_7K1000.B_DS.pdf
-Load/Unload Cycles 300,000
-Error Rate: 1 per 1.0 E14 bits
-
-On Thu, Sep 10, 2009 at 12:51 PM, Matt Garman <matthew.garman@gmail.com=
-> wrote:
-> On Sun, Sep 06, 2009 at 08:48:03PM -0700, jahammonds prost wrote:
->> I can do this on single drives using hdparm -S to set the spindown
->> timeout, and the disks will spin up on activity as needed. Is
->> there something similar I can do with an md array? I can see
->> there's a /sys/block/md0/power/wakeup file, but I can't seem to
->> find any documentation on it. I have thought about doing an hdparm
->> -S on the array disks, but I suspect that would be A Bad Thing
->> (tm).
+On Fri, Sep 11, 2009 at 6:48 PM, satha kottidi<satha_koti@yahoo.co.in> =
+wrote:
+> Hi Majed & All,
 >
-> On the same note, does anyone have any thoughts on the wear-and-tear
-> caused by frequent spinup/spindown cycles?
+> Yes we two are working together. Actually we found a change in md/rai=
+d5.c
+> file in the function sync_request() it restricts the numbers, the ker=
+nel
+> 2.6.27 has code like this
 >
-> My fileserver has the Western Digital RE2 "enterprise" grade drives.
-> I remember reading (years ago) that, in general, "enterprise" grade
-> drives were designed to be always running (think 24/7 server), and
-> rarely spun down. =A0As such, they did not tolerate a "consumer
-> desktop" usage pattern very well, and trying to save power in this
-> way would actually cause them to fail prematurely.
+> while(unlikely(!handle_stripe(sh, NULL)))
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0 ;
+> =C2=A0But in kernel 2.6.21 it simply the handle_stripe(sh, NULL) call=
+=2E
 >
-> Is/was such a thing true? =A0Is it worth worrying about?
+> Can anybody tell me the necessity of the change, and why it reduces t=
+he
+> numbers. Any comments is very helpful for me to analyze the driver fu=
+rther.
+>
 >
 > Thanks,
-> Matt
+> Satha.
+>
+> --- On Fri, 11/9/09, Majed B. <majedb@gmail.com> wrote:
+>
+> From: Majed B. <majedb@gmail.com>
+> Subject: Re: Raid 5 Read performance
+> To: "Koti" <satha_koti@yahoo.co.in>
+> Cc: linux-raid@vger.kernel.org
+> Date: Friday, 11 September, 2009, 1:47 AM
+>
+> Someone else has already emailed the mailing list about this. Are you
+> two running an assignment or something?!
+>
+> Check the mailing list archive for whatever people have already repli=
+ed
+> with.
+>
+> On Thu, Sep 10, 2009 at 11:07 PM, Koti<satha_koti@yahoo.co.in> wrote:
+>> Hi All
+>>
+>> I am trying measure the RAID 5 Read numbers on linux kernel-2.6.21 a=
+nd
+>> kernel 2.6.27 the numbers are lower on later kernel (2.6.27). Iam
+>> measuring
+>> the numbers using "time dd" command (4GB ). Is any valid reason for =
+this,
+>> or
+>> Am missing anything in the process. Can anybody help me in analyze t=
+his
+>> problem.
+>>
+>> Thanks,
+>> Koti
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>>
+>
+>
 >
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+> =C2=A0 =C2=A0 =C2=A0=C2=A0=C2=A0Majed B.
 >
+> ________________________________
+> Connect more, do more and share more with Yahoo! India Mail. Learn mo=
+re.
+
+
+
+--=20
+       Majed B.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
