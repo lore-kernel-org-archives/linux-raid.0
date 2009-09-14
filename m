@@ -1,50 +1,25 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: RAID mirror, resyncing from bad disk
-Date: Mon, 14 Sep 2009 10:23:15 +0100
-Message-ID: <4AAE0B83.8040009@anonymous.org.uk>
-References: <4AAD45AE.6060503@amazinginternet.com> <4AAD5510.2060505@anonymous.org.uk> <4AAE0930.1030204@amazinginternet.com>
+From: "Sosnowski, Maciej" <maciej.sosnowski@intel.com>
+Subject: RE: [PATCH 19/29] ioat1: trim ioat_dma_desc_sw
+Date: Mon, 14 Sep 2009 15:55:32 +0100
+Message-ID: <129600E5E5FB004392DDC3FB599660D7B5548181@irsmsx504.ger.corp.intel.com>
+References: <20090904022733.32667.77626.stgit@dwillia2-linux.ch.intel.com>
+ <20090904023206.32667.35974.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AAE0930.1030204@amazinginternet.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Ronny Adsetts <ronny.adsetts@amazinginternet.com>
-Cc: Linux RAID ML <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755655AbZINO4d@vger.kernel.org>
+In-Reply-To: <20090904023206.32667.35974.stgit@dwillia2-linux.ch.intel.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 14/09/2009 10:13, Ronny Adsetts wrote:
-> John Robinson said at 13/09/2009 21:24:
->> On 13/09/2009 20:19, Ronny Adsetts wrote:
->> [...]
->>> The problematic array is /dev/md2 and the dying disk is /dev/sdc.
->>>
->>> When I try to resync it gets to about 99.2% then gives load of I/O
->>> errors in /var/log/kern.log and finally gives up and restarts the sync.
->>>
->>> Ideally I just want to tell the system to ignore the bad sector and
->>> just resync the array.
->>>
->>> Does anyone have any ideas on how I can get this resolved short of
->>> reinstalling?
->> You need to ddrescue the contents of the dying drive onto a good one,
->> then replace the dying drive with the fresh one. This will require
->> taking the array down but you won't have to reinstall, unless you've
->> lost something important in the lost sectors on the dying drive.
+Williams, Dan J wrote:
+> Save 4 bytes per software descriptor by transmitting tx_cnt in an unused
+> portion of the hardware descriptor.
 > 
-> The bad sector is thankfully right at the end of the disk in an unallocated part of the LVM setup.
-> 
-> So, do I ddrescue the entire disk? I assume this will copy everything including the partition table and other gubbins?
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
 
-Yes you do, and yes it will. You don't have to use ddrescue, there are 
-other tools - for examples see 
-http://www.forensicswiki.org/wiki/Ddrescue - but ddrescue would be my 
-choice.
-
-> Thanks very much, this looks like a winner to me. :-).
-
-Good luck with it!
-
-Cheers,
-
-John.
+Signed-off-by: Maciej Sosnowski <maciej.sosnowski@intel.com>
