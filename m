@@ -1,53 +1,59 @@
-From: Alex Butcher <linraid@assursys.co.uk>
-Subject: Re: Re-map disk sectors in userspace when rewriting after read
- errors
-Date: Tue, 15 Sep 2009 08:37:52 +0100 (BST)
-Message-ID: <alpine.LFD.2.00.0909150832000.5083@sbhezbfg.of5.nffheflf.cev>
-References: <h8nbt5$n8p$1@ger.gmane.org> <alpine.LFD.2.00.0909150810510.5083@sbhezbfg.of5.nffheflf.cev> <h8nfoe$n8p$3@ger.gmane.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v2 7/9] md/raid6: asynchronous handle_stripe6
+Date: Tue, 15 Sep 2009 01:42:34 -0700
+Message-ID: <e9c3a7c20909150142y168febb8v25ffe584fad95f2d@mail.gmail.com>
+References: <20090831163914.1696.55782.stgit@dwillia2-linux.ch.intel.com>
+	 <20090831164139.1696.24706.stgit@dwillia2-linux.ch.intel.com>
+	 <19119.9592.91030.892183@notabene.brown>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <h8nfoe$n8p$3@ger.gmane.org>
+In-Reply-To: <19119.9592.91030.892183@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matthias Urlichs <matthias@urlichs.de>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, Ilya Yanok <yanok@emcraft.com>, Yuri Tikhonov <yur@emcraft.com>
 List-Id: linux-raid.ids
 
-On Tue, 15 Sep 2009, Matthias Urlichs wrote:
-
-> On Tue, 15 Sep 2009 08:13:08 +0100, Alex Butcher wrote:
+On Mon, Sep 14, 2009 at 10:26 PM, Neil Brown <neilb@suse.de> wrote:
 >
->> IME, discs don't remap after read errors, only on writes.
+> Sorry for the long delay in getting to these. =A0I week's leave recen=
+tly
+> and that always causes tasks to pile up....
 >
-> Some may remap after recoverable read errors. However, the RAID code
-> does (I assume - see below) rewrite the data -- which the disk happily
-> acknowledges  -- only to report the very same error next time that spot's
-> being read. :-(
-
-Odd. If I hadn't observed something similar myself with a 40G Maxtor
-(badblocks -w fails, wipe with dd if=/dev/zero, badblocks -w succeeds,
-badblocks -w fails again), I wouldn't believe it.  SMART seems to think that
-it's nowhere near the reallocated sector count threshold.  The only
-conclusion I can come to is that the firmware is trash, or being way too
-forgiving of inconsistently-performing spinning media.  Either way, it's not
-suitable for data I even care a little bit about.
-
-What does SMART say about reallocated and pending sectors on your disks? If
-the reallocated threshold has been crossed, this might be the failure mode,
-I guess.
-
-What make/model are they?
-
->> Are you sure that refresh-writes triggered by read errors are expected
->> behaviour of md's RAID5/6 mode?
+> I am happy for this to =A0all go in this merge window. =A0I just have=
+ a
+> few nits I would like to see changed then I'll pull and push to Linus=
+=2E
 >
-> Not 100%, no -- but recovering the data but otherwise ignoring the error
-> (other than increment the error counter) would be a level of foolishness
-> I won't assume of the RAID code's authors.
+> in this patch:
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* now count some things */
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (test_bit(R5_LOCKED, &dev->flags)) s.=
+locked++;
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (test_bit(R5_UPTODATE, &dev->flags)) =
+s.uptodate++;
+>> + =A0 =A0 =A0 =A0 =A0 =A0 if (test_bit(R5_Wantcompute, &dev->flags))
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 BUG_ON(++s.compute > 2);
+>
+> I think having a side-effect in a BUG_ON is very poor form. =A0I shou=
+ld
+> be able to recompile the code with BUG_ON() becoming a no-op and
+> everything should still work.
+> So something like:
+>> + =A0 =A0 =A0 =A0 =A0 =A0 if (test_bit(R5_Wantcompute, &dev->flags))=
+ {
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ++s.compute;
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 BUG_ON(s.compute > 2);
+>> + =A0 =A0 =A0 =A0 =A0 =A0 }
+>
+> please.
 
-Well, the RAID code had been in the kernel and was being used in production
-systems for quite some time before 2.6.15 came along. It took a BSD user to
-point it out and a read through the kernel source for me to believe it...
+Definitely.  Will fix.
 
-Cheers,
-Alex
+Thanks,
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
