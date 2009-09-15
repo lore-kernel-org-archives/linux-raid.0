@@ -1,26 +1,74 @@
-From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Subject: Re: What's in async_tx.git/next for 2.6.32?
-Date: Wed, 16 Sep 2009 01:12:55 +0900 (JST)
-Message-ID: <20090916.011255.179957018.anemo@mba.ocn.ne.jp>
-References: <4AA2BA83.5020707@intel.com>
-	<20090914.013052.84972601.anemo@mba.ocn.ne.jp>
-	<4AAD28F2.3040606@intel.com>
+From: "Majed B." <majedb@gmail.com>
+Subject: Re: Re-map disk sectors in userspace when rewriting after read errors
+Date: Tue, 15 Sep 2009 20:02:41 +0300
+Message-ID: <70ed7c3e0909151002y5f4690b1j26d33dc297af7795@mail.gmail.com>
+References: <h8nbt5$n8p$1@ger.gmane.org> <70ed7c3e0909150340q4ae91cb1j7eaae473c6d94c9a@mail.gmail.com>
+	<h8nrkn$n8p$5@ger.gmane.org> <70ed7c3e0909150403s4db60837gfd742d5f6960adf0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AAD28F2.3040606@intel.com>
+In-Reply-To: <70ed7c3e0909150403s4db60837gfd742d5f6960adf0@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: dan.j.williams@intel.com
-Cc: linux-kernel@vger.kernel.org, neilb@suse.de, hpa@zytor.com, linux-raid@vger.kernel.org, maciej.sosnowski@intel.com
+To: Matthias Urlichs <matthias@urlichs.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 13 Sep 2009 10:16:34 -0700, Dan Williams <dan.j.williams@intel.com> wrote:
-> > Could you implement a private tx_list for txx9dmac too?
-> 
-> I noticed that too when I merged with -next.  I forgot to send this [1] out.
+Matthias,
 
-Thanks, looks OK for me.
+Out of curiosity, how will you find the sectors/blocks that
+reconstruct a certain bad sector? Is the data spread to the same block
+number on all disks?
 
----
-Atsushi Nemoto
+On Tue, Sep 15, 2009 at 2:03 PM, Majed B. <majedb@gmail.com> wrote:
+> I've been trying to migrate for 2 weeks. I can wait another 2 ... may=
+be 3 weeks.
+>
+> Just to be clear, I'm using dd_rescue, not ddrescue (This is the GNU
+> one). I read the log option but forgot to use it... now I've wasted
+> over 20 hours... ugh ... /smacks self
+>
+> That would be a very useful program for cases like this!
+>
+> On Tue, Sep 15, 2009 at 1:52 PM, Matthias Urlichs <matthias@urlichs.d=
+e> wrote:
+>> On Tue, 15 Sep 2009 13:40:44 +0300, Majed B. wrote:
+>>
+>>> Would anyone suggest a better solution?
+>>
+>> You should tell ddrescue to log which sectors it failed to copy. You=
+ can
+>> then recover the missing data by reading the stuff at that offset fr=
+om
+>> the other disks, and XORing the bytes.
+>>
+>> I plan to write a program which does that (and which also understand=
+s
+>> RAID1 and RAID6). How long can you survive without your data?
+>>
+>> --
+>> Matthias Urlichs
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.h=
+tml
+>>
+>
+>
+>
+> --
+> =C2=A0 =C2=A0 =C2=A0 Majed B.
+>
+
+
+
+--=20
+       Majed B.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
