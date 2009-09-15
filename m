@@ -1,12 +1,10 @@
 From: Matthias Urlichs <matthias@urlichs.de>
 Subject: Re: Re-map disk sectors in userspace when rewriting after read
  errors
-Date: Tue, 15 Sep 2009 10:48:43 +0000 (UTC)
-Message-ID: <h8nreb$n8p$4@ger.gmane.org>
+Date: Tue, 15 Sep 2009 10:52:07 +0000 (UTC)
+Message-ID: <h8nrkn$n8p$5@ger.gmane.org>
 References: <h8nbt5$n8p$1@ger.gmane.org>
-	<alpine.LFD.2.00.0909150810510.5083@sbhezbfg.of5.nffheflf.cev>
-	<h8nfoe$n8p$3@ger.gmane.org>
-	<alpine.LFD.2.00.0909150832000.5083@sbhezbfg.of5.nffheflf.cev>
+	<70ed7c3e0909150340q4ae91cb1j7eaae473c6d94c9a@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -15,23 +13,16 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 15 Sep 2009 08:37:52 +0100, Alex Butcher wrote:
+On Tue, 15 Sep 2009 13:40:44 +0300, Majed B. wrote:
 
-> Either way, it's not
-> suitable for data I even care a little bit about.
+> Would anyone suggest a better solution?
 
-Ordinarily I'd agree with you. In this case, however, the data is mostly 
-read-only and on backup media. So I don't really care if the disks fall 
-off the edge of a cliff; the data will survive.
+You should tell ddrescue to log which sectors it failed to copy. You can 
+then recover the missing data by reading the stuff at that offset from 
+the other disks, and XORing the bytes.
 
-I can justify a moderate amount of time working on this, with the 
-hardware I have. I can't really justify buying eight new disks.
-
-NB: Please don't dismiss this kind of setup out of hand. I know that 
-disks are cheap enough these days that the typical professional user 
-won't ever need to worry about not being able to replace hardware which 
-behaves like this. However, many people happen to be in a different 
-situation. :-/
+I plan to write a program which does that (and which also understands 
+RAID1 and RAID6). How long can you survive without your data?
 
 -- 
 Matthias Urlichs
