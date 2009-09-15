@@ -1,36 +1,41 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 21/29] ioat2,3: dynamically resize descriptor ring
-Date: Tue, 15 Sep 2009 16:07:05 -0700
-Message-ID: <e9c3a7c20909151607h5171784ence5e6722adab4ad7@mail.gmail.com>
-References: <20090904022733.32667.77626.stgit@dwillia2-linux.ch.intel.com>
-	 <20090904023216.32667.55942.stgit@dwillia2-linux.ch.intel.com>
-	 <129600E5E5FB004392DDC3FB599660D7B5548192@irsmsx504.ger.corp.intel.com>
+From: Drew <drew.kay@gmail.com>
+Subject: Re: Port Multipliers
+Date: Tue, 15 Sep 2009 16:32:54 -0700
+Message-ID: <c268e4660909151632i56e9f3f9n48f17cc827d974f0@mail.gmail.com>
+References: <c268e4660909100556x14b48207w32017a59be889f@mail.gmail.com>
+	<70ed7c3e0909100911q926fa9cs9185854b15dd8764@mail.gmail.com>
+	<c268e4660909101135w4b933cbaj3e6a18e6b586fd62@mail.gmail.com>
+	<70ed7c3e0909101144u2c42a1b2scf69e83df931035d@mail.gmail.com>
+	<B1A260D7-B6A2-40D3-83FF-9571D80B66B8@redhat.com> <87f94c370909151328j1f88ab4fi452fcbeb5f1e9172@mail.gmail.com>
+	<FE87C12A-00E6-4DF6-80CF-56850AFFE656@redhat.com> <4AAFFDC4.5090806@sauce.co.nz>
+	<B15861F4-3F63-4D23-8B9A-DCB809C56C0C@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <129600E5E5FB004392DDC3FB599660D7B5548192@irsmsx504.ger.corp.intel.com>
+In-Reply-To: <B15861F4-3F63-4D23-8B9A-DCB809C56C0C@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Sosnowski, Maciej" <maciej.sosnowski@intel.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+To: Doug Ledford <dledford@redhat.com>
+Cc: Richard Scobie <richard@sauce.co.nz>, Greg Freemyer <greg.freemyer@gmail.com>, "Majed B." <majedb@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Sep 14, 2009 at 8:00 AM, Sosnowski, Maciej
-<maciej.sosnowski@intel.com> wrote:
-> Making the max_alloc_order a module parameter gives impression
-> that it can be modified by an user, including making it larger than default.
-> The default is however its maximum value, which may be confusing.
-> Why not to use parameter only as the upper limit?
+Thanks for the input.
 
-It is the upper limit.
+Sounds from your testing like PMs can deliver the sorts of speeds that
+are adequate for our needs. Have you done any testing as far as md
+RAID using member disks from each PM?
 
-The user can limit the upper size of the descriptor ring by setting
-this to a value less than 16.  By default it is the maximum ring size
-that the driver/hardware* supports.  Specifying values greater than 16
-are not supported by the so we need enforce a ceiling at 16.
+Given we're expecting a mix of online and archival data going onto
+this enclosure I was thinking about making up RAID arrays composed of
+disks from each PM for online use and arrays composed of disks from a
+PM for archival use.
 
---
-Dan
+I'm sorry if I keep throwing questions out without doing my own
+testing. As I alluded to earlier I don't have an R&D budget for
+testing so I have to be reasonably sure of my system before I can get
+authorization to purchase kit.
 
-* We could support ring sizes larger than 1 << 16 but we would need to
-extra logic to ensure that the pending count never exceeded 1 << 16.
-Simpler I think to just limit the maximum ring size.
+-- 
+Drew
+
+"Nothing in life is to be feared. It is only to be understood."
+--Marie Curie
