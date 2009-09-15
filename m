@@ -1,41 +1,59 @@
-From: Drew <drew.kay@gmail.com>
-Subject: Re: Port Multipliers
-Date: Tue, 15 Sep 2009 16:32:54 -0700
-Message-ID: <c268e4660909151632i56e9f3f9n48f17cc827d974f0@mail.gmail.com>
-References: <c268e4660909100556x14b48207w32017a59be889f@mail.gmail.com>
-	<70ed7c3e0909100911q926fa9cs9185854b15dd8764@mail.gmail.com>
-	<c268e4660909101135w4b933cbaj3e6a18e6b586fd62@mail.gmail.com>
-	<70ed7c3e0909101144u2c42a1b2scf69e83df931035d@mail.gmail.com>
-	<B1A260D7-B6A2-40D3-83FF-9571D80B66B8@redhat.com> <87f94c370909151328j1f88ab4fi452fcbeb5f1e9172@mail.gmail.com>
-	<FE87C12A-00E6-4DF6-80CF-56850AFFE656@redhat.com> <4AAFFDC4.5090806@sauce.co.nz>
-	<B15861F4-3F63-4D23-8B9A-DCB809C56C0C@redhat.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: Assemble and Stop array
+Date: Tue, 15 Sep 2009 18:35:02 -0500
+Message-ID: <20090915233517830.IGLE14103@cdptpa-omta02.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <B15861F4-3F63-4D23-8B9A-DCB809C56C0C@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Richard Scobie <richard@sauce.co.nz>, Greg Freemyer <greg.freemyer@gmail.com>, "Majed B." <majedb@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks for the input.
 
-Sounds from your testing like PMs can deliver the sorts of speeds that
-are adequate for our needs. Have you done any testing as far as md
-RAID using member disks from each PM?
+	I'm still trying to wrap my mind around two items.
 
-Given we're expecting a mix of online and archival data going onto
-this enclosure I was thinking about making up RAID arrays composed of
-disks from each PM for online use and arrays composed of disks from a
-PM for archival use.
+	One is stopping an array.  From time to time I need to stop an array
+for some reason, but I am persistently having trouble doing so.  It doesn't
+always happen, and sometimes when it does I can free it up by doing
+`exportfs -ua` and `umount -l /xxxxx`, but other times it simply cannot be
+done and my only recourse is to reboot the system.  These are simple RAID5
+or RAID6 arrays on raw drives with a single file system formatted on the
+unpartitioned array.  None of the drives are used for booting or for swap,
+there is no loop device and lsof shows no open files, but mdadm -S still
+fails with a device busy error.  Every time it has happened, a simple umount
+command without the -l switch fails, but a "lazy" umount appears to work,
+with the exception that sometimes I still cannot stop the array.  Clearly,
+the NFS export is sometimes the culprit, but not always.  What else can it
+be?
 
-I'm sorry if I keep throwing questions out without doing my own
-testing. As I alluded to earlier I don't have an R&D budget for
-testing so I have to be reasonably sure of my system before I can get
-authorization to purchase kit.
+	The second item is assembling an array which was formerly stopped.
+By my reading, `mdadm --assemble --scan` should work, but it doesn't.  It
+keeps telling me no devices are found for the array.  Here is a sample from
+one of the /etc/mdadm/mdadm.conf files:
 
--- 
-Drew
+# mdadm.conf
+#
+# Please refer to mdadm.conf(5) for information about this file.
+#
 
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
+# auto-create devices with Debian standard permissions
+CREATE owner=root group=disk mode=0660 auto=yes
+
+# automatically tag new arrays as belonging to the local system
+HOMEHOST <system>
+
+# instruct the monitoring daemon where to send mail alerts
+MAILADDR lrhorer@satx.rr.com
+
+# This file was auto-generated on Fri, 21 Nov 2008 22:35:30 -0600
+# by mkconf $Id$
+PROGRAM /usr/bin/mdadm_notify
+DEVICE /dev/sd[a-j]
+ARRAY /dev/md/0 level=raid6 metadata=1.2 num-devices=10
+UUID=5ff10d73:a096195f:7a646bba:a68986ca name=RAID-Server:0
+
+When I manually assemble the array, I wind up having to re-create the bitmap
+file, as well.
+
