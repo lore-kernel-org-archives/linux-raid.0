@@ -1,31 +1,39 @@
-From: Alex Butcher <linraid@assursys.co.uk>
+From: Matthias Urlichs <matthias@urlichs.de>
 Subject: Re: Re-map disk sectors in userspace when rewriting after read
  errors
-Date: Tue, 15 Sep 2009 08:13:08 +0100 (BST)
-Message-ID: <alpine.LFD.2.00.0909150810510.5083@sbhezbfg.of5.nffheflf.cev>
-References: <h8nbt5$n8p$1@ger.gmane.org>
+Date: Tue, 15 Sep 2009 07:23:08 +0000 (UTC)
+Message-ID: <h8nfcs$n8p$2@ger.gmane.org>
+References: <h8nbt5$n8p$1@ger.gmane.org> <4AAF3809.7080802@panix.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <h8nbt5$n8p$1@ger.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matthias Urlichs <matthias@urlichs.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 15 Sep 2009, Matthias Urlichs wrote:
+On Tue, 15 Sep 2009 02:45:29 -0400, berk walker wrote:
 
-> my problem is that I have a bunch of crappy disks which seem unable to
-> reliably remap bad areas after a read error.
+> I can not believe the question.  What file system might this be?
 
-IME, discs don't remap after read errors, only on writes.
+Umm, what's your problem with my question?
 
-> This obviously makes the read error rewrite feature of our beloved
-> RAID5/6 code somewhat less than useful.
+And why would it matter which file system I'm using?
 
-Are you sure that refresh-writes triggered by read errors are expected
-behaviour of md's RAID5/6 mode? Only they weren't for RAID1 until somewhat
-recently (2.6.15, IIRC).
 
-Best Regards,
-Alex
+_My_ problem is that I have a bunch of disks which are not as reliable as 
+I'd like. Yes I could go and buy a new heap of 1TB disks, but frankly I'd 
+like to avoid that. These disks are "good enough" for the data that's on 
+them. I'll replace one if it fails entirely -- assuming that I can 
+rebuild the RAID6 array when I do that. However, since the rewrite-after-
+read code has caused bad sectors to accumulate on all of these disks, I 
+can't even do that at the moment.
+
+(And, since there's no command which knows how to recover bad spots from 
+the other RAID disks yet (I hope to be able to work on _that_ problem 
+next week), I can't even use ddrescue to copy one almost-good disk to a 
+new one.)
+
+-- 
+Matthias Urlichs
+
