@@ -1,73 +1,48 @@
-From: Louis-Michel Gelinas <coradiant.kernel@gmail.com>
-Subject: Re: Can md/mdadm deal with non-standard size of internal bitmap?
-Date: Tue, 15 Sep 2009 13:39:31 -0400
-Message-ID: <1253036371.9142.1.camel@lgelinas>
-References: <slrnhacnu6.2i5.Mario.Holbe@darkside.dyn.samba-tng.org>
+From: aristizb@ualberta.ca
+Subject: raid disappearing   mdadm: cannot get array info
+Date: Tue, 15 Sep 2009 11:34:14 -0600
+Message-ID: <20090915113414.182528qq5c675mhw@webmail.ualberta.ca>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <slrnhacnu6.2i5.Mario.Holbe@darkside.dyn.samba-tng.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mario, Did you get a [private] answer to this? 
+Hi.
 
-Seems interesting. Any reason to dismiss without a reply? 
+I have several raids created on my Linux box and one of them has  
+disappeared from /proc/mdstat.
 
-Neil, did this pass under your radar? 
+The devices part of this raid are logical volumes and work fine.
 
-thanks
+When I try to fail one of the devices from the raid I get the  
+following message:
+$mdadm /dev/md1744 --fail /dev/storage/disk1
+
+mdadm: cannot get array info for /dev/md1744
 
 
-On Tue, 2009-09-08 at 15:44 +0200, Mario 'BitKoenig' Holbe wrote:
-> Hello (most likely Hello Neil :)),
-> 
-> are md and mdadm able to deal correctly with internal bitmaps of
-> non-standard size, i.e. a 132k internal bitmap?
-> 
-> As far as I can see from the code it should be possible. v1 superblocks
-> store the offset and size of data, bitmap superblocks store the bitmap
-> chunk size, which, in turn, is used to determine the number of blocks to
-> read as bitmap data.
-> Modifying mdadm to set up a non-standard bitmap size would also be easy:
-> change choose_bm_space(), recompile, create array, done. This would just
-> increase sb->data_offset or decrease sb->data_size a little.
-> 
-> However, I'm not sure, if really everything in md and mdadm is able to
-> deal with such a "non-standard" superblock and what would happen on
-> subsequent operations like mdadm --grow using an unpatched mdadm?
-> 
-> 
-> The reason for me to ask is:
-> 
-> When using a chunking RAID level ([0456], 10), there is usually some
-> space cut at the end of component devices which remains unusable because
-> it is too small to contain a chunk. For example, by using unpartitioned
-> 1.5T = 1465138584k component devices and v1.1 superblocks there is a
-> space cut of 20k with 32k-256k chunk size (even 276k with 512k chunks).
-> 
-> When using internal bitmaps, depending on the device size more or less
-> of the available bitmap space is really used. For example, the internal
-> bitmap of a 3*1.5T RAID gets 8192KB chunks and uses 536550 bits out of
-> the 1048576 available (if my calculations are correct :)) - 51%.
-> 
-> If it would be possible to add some of the space cut from RAID chunking
-> to the internal bitmap, one could optimize the bitmap chunk size. In the
-> above example, by adding 4k to the internal bitmap the bitmap chunk size
-> could be decreased to 4096KB and 1073100 of the then 1081344 available
-> bits would be used - 99%.
-> 
-> Of course, this is not always possible, i.e. a 4*1.5T RAID has a bitmap
-> usage/available ratio of 68% - the 20k space cut wouldn't be enough here
-> to optimize it.
-> 
-> I'm not sure if it's worth the effort to automate such optimizations,
-> but being able to do them manually at least would be great.
-> 
-> 
-> regards
->    Mario
+This message is different form the one you get when the raid has not  
+been created:
+mdadm: error opening /dev/mdXX: No such file or directory.
 
+So md1744 must still in some sense, even though it was not listed in  
+/proc/mdstat
+
+The system where I hit this problem has enough RAM and is not being  
+heavily utilized.
+
+
+I am using mdadm version 2.6.3 on Ubuntu kernel 2.6.24-24.
+
+
+Any ideas on this issue are highly appreciated.
+
+
+Juan Aristizabal
