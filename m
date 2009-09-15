@@ -1,59 +1,73 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v2 7/9] md/raid6: asynchronous handle_stripe6
-Date: Tue, 15 Sep 2009 01:42:34 -0700
-Message-ID: <e9c3a7c20909150142y168febb8v25ffe584fad95f2d@mail.gmail.com>
-References: <20090831163914.1696.55782.stgit@dwillia2-linux.ch.intel.com>
-	 <20090831164139.1696.24706.stgit@dwillia2-linux.ch.intel.com>
-	 <19119.9592.91030.892183@notabene.brown>
+From: David =?iso-8859-1?q?Mart=EDnez_Moreno?= <ender@tuenti.com>
+Subject: ext3 crash with tune2fs and MD RAID10 device.
+Date: Tue, 15 Sep 2009 12:01:08 +0200
+Message-ID: <200909151201.08482.ender@tuenti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <19119.9592.91030.892183@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Ilya Yanok <yanok@emcraft.com>, Yuri Tikhonov <yur@emcraft.com>
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ext4-owner@vger.kernel.org>
+Sender: linux-ext4-owner@vger.kernel.org
+To: linux-ext4@vger.kernel.org, "Theodore Y. Ts'o" <tytso@mit.edu>, linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, David =?iso-8859-1?q?Mart=EDnez_Moreno?= <ender@tuenti.com>
 List-Id: linux-raid.ids
 
-On Mon, Sep 14, 2009 at 10:26 PM, Neil Brown <neilb@suse.de> wrote:
->
-> Sorry for the long delay in getting to these. =A0I week's leave recen=
-tly
-> and that always causes tasks to pile up....
->
-> I am happy for this to =A0all go in this merge window. =A0I just have=
- a
-> few nits I would like to see changed then I'll pull and push to Linus=
-=2E
->
-> in this patch:
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* now count some things */
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (test_bit(R5_LOCKED, &dev->flags)) s.=
-locked++;
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (test_bit(R5_UPTODATE, &dev->flags)) =
-s.uptodate++;
->> + =A0 =A0 =A0 =A0 =A0 =A0 if (test_bit(R5_Wantcompute, &dev->flags))
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 BUG_ON(++s.compute > 2);
->
-> I think having a side-effect in a BUG_ON is very poor form. =A0I shou=
-ld
-> be able to recompile the code with BUG_ON() becoming a no-op and
-> everything should still work.
-> So something like:
->> + =A0 =A0 =A0 =A0 =A0 =A0 if (test_bit(R5_Wantcompute, &dev->flags))=
- {
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ++s.compute;
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 BUG_ON(s.compute > 2);
->> + =A0 =A0 =A0 =A0 =A0 =A0 }
->
-> please.
+	Good morning.  During a maintainance, I've changed (20 hours ago) the reserved
+block count in my servers' data partition to 0.  In some hours, I've got a number
+of errors (5) in ext3 in different servers that are not possible by simple luck.
+The errors are:
 
-Definitely.  Will fix.
+=========================================================
+EXT3-fs error (device md3): ext3_new_block: Allocating block in system zone - blocks from 8192000, length 1
+Aborting journal on device md3.
+Remounting filesystem read-only
+EXT3-fs error (device md3): ext3_free_blocks: Freeing blocks in system zones - Block = 8192000, count = 1
+EXT3-fs error (device md3) in ext3_free_blocks_sb: Journal has aborted
+__journal_remove_journal_head: freeing b_committed_data
+__journal_remove_journal_head: freeing b_committed_data
+...
+=========================================================
 
-Thanks,
-Dan
+or
+
+=========================================================
+EXT3-fs error (device md3): ext3_free_blocks_sb: bit already cleared for block 22479363                                     
+Aborting journal on device md3.                                                                                             
+Remounting filesystem read-only                                                                                             
+EXT3-fs error (device md3): ext3_free_blocks_sb: bit already cleared for block 22479364                                     
+EXT3-fs error (device md3): ext3_free_blocks_sb: bit already cleared for block 22479365                                     
+EXT3-fs error (device md3): ext3_free_blocks_sb: bit already cleared for block 22479367                                     
+EXT3-fs error (device md3) in ext3_free_blocks_sb: Journal has aborted                                                      
+EXT3-fs error (device md3) in ext3_free_blocks_sb: Journal has aborted                                                      
+EXT3-fs error (device md3) in ext3_free_blocks_sb: Journal has aborted                                                      
+...
+=========================================================
+
+	I have some servers with a single SAS disc and others with a software RAID10
+volume over 4 discs.  So far, only the RAID10 volumes are showing errors.
+Coincidence?
+
+	This is Debian etch, and 2.6.24.2.  The command line we've run was:
+
+tune2fs -r 0 partition
+
+while MySQL was running.  The e2fsprogs version is 1.39+1.40-WIP-2006.11.14+dfsg-2etch1.
+
+	Do you know of any problem with this setup?  I've reviewed the e2fsprogs
+changelog searching for something like this but it seems rather related to
+RAID10+ext3 interaction.
+
+	We have lots of servers waiting for crashing, I suspect.  While I was writing
+this mail another one crashed.  Probably I can provide superblock copies for
+analysis or any other information.
+
+	Best regards,
+
+
+		Ender.
+-- 
+I once farted on the set of Blue Lagoon.
+		-- Brooke Shields (South Park).
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Responsable de sistemas
+tuenti.com
