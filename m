@@ -1,56 +1,34 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: RAID1 assembled broken array
-Date: Wed, 16 Sep 2009 07:01:14 +1000 (EST)
-Message-ID: <65549e07fd6559855af68b60783213c3.squirrel@neil.brown.name>
-References: <h8ophd$n8p$6@ger.gmane.org>
-    <9F2F4760-DF0C-4416-89AC-C689177AD4ED@redhat.com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: Port Multipliers
+Date: Wed, 16 Sep 2009 08:49:08 +1200
+Message-ID: <4AAFFDC4.5090806@sauce.co.nz>
+References: <c268e4660909100556x14b48207w32017a59be889f@mail.gmail.com> <70ed7c3e0909100911q926fa9cs9185854b15dd8764@mail.gmail.com> <c268e4660909101135w4b933cbaj3e6a18e6b586fd62@mail.gmail.com> <70ed7c3e0909101144u2c42a1b2scf69e83df931035d@mail.gmail.com> <B1A260D7-B6A2-40D3-83FF-9571D80B66B8@redhat.com> <87f94c370909151328j1f88ab4fi452fcbeb5f1e9172@mail.gmail.com> <FE87C12A-00E6-4DF6-80CF-56850AFFE656@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9F2F4760-DF0C-4416-89AC-C689177AD4ED@redhat.com>
+In-Reply-To: <FE87C12A-00E6-4DF6-80CF-56850AFFE656@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Doug Ledford <dledford@redhat.com>
-Cc: Matthias Urlichs <matthias@urlichs.de>, linux-raid@vger.kernel.org
+Cc: Greg Freemyer <greg.freemyer@gmail.com>, "Majed B." <majedb@gmail.com>, Drew <drew.kay@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, September 16, 2009 6:00 am, Doug Ledford wrote:
-> On Sep 15, 2009, at 3:22 PM, Matthias Urlichs wrote:
->> I had a somewhat strange error today.
->>
->> One of my servers has a RAID1 array. Two partitions at the end of the
->> disk; the RAID superblocks are at the end of the partition.
->>
->> After a hard reboot today, one of the disks managed to not have its
->> partition table scanned correctly, most probably because the disk was
->> hung and the ("intelligent") controller got confused about it. After
->> the
->> initial scan, however, it came up correctly.
->>
->> This error caused mdadm to "successfully" build a RAID1 from /dev/sda3
->> and /dev/sdb (instead of /dev/sdb3). Needless to say, the resulting
->> volume was somewhat unuseable. To say the least.
->>
->> My server's mdadm.conf has a 'DEVICE=partitions' line. I suppose that
->> replacing these with a pattern that explicitly only matches
->> partitions,
->> not disks, would make the problem go away, and that the lesson from
->> today's disaster recovery effort is to always explicitly list the
->> allowed
->> partition names, instead of being lazy and using 'DEVICE=partitions'.
->
->
-> Wrong lesson.  The correct lesson to gather from this is to prefer
-> version 1.1 or 1.2 superblocks wherever possible.  Superblocks at the
-> beginning of the device disappear when there is no partition table,
-> superblocks at the end can be confused for superblocks belonging to
-> the whole device when there is no partition table.
+Doug Ledford wrote:
 
-1.0 also protects from this problem.  The 1.x metadata stores the
-offset of the superblock from the start of the device.  That will appear
-to be wrong if you find a partition-superblock when reading from a
-whole-device, so mdadm will reject the device as not having a valid
-superblock.
+> I agree with this sentiment 100%.  I don't have a good answer for why  
+> it topped out where it did, and that's one of the things I'm still  
+> trying to get an answer to.
 
-NeilBrown
+I can also confirm this sub par performance on the Sil 3124 - max 
+throughput of around 120MB/s.
 
+If your motherboard is able to set the "PCIe Max Payload Size" you may 
+be able to improve things.
+
+See Note 3 here:
+
+http://ata.wiki.kernel.org/index.php/Hardware,_driver_status#Silicon_Image_3124
+
+Regards,
+
+Richard
