@@ -1,60 +1,36 @@
-From: David Rees <drees76@gmail.com>
-Subject: Re: Port Multipliers
-Date: Tue, 15 Sep 2009 14:52:52 -0700
-Message-ID: <72dbd3150909151452r38087573od156a1965dc0eba1@mail.gmail.com>
-References: <c268e4660909100556x14b48207w32017a59be889f@mail.gmail.com>
-	<70ed7c3e0909100911q926fa9cs9185854b15dd8764@mail.gmail.com>
-	<c268e4660909101135w4b933cbaj3e6a18e6b586fd62@mail.gmail.com>
-	<70ed7c3e0909101144u2c42a1b2scf69e83df931035d@mail.gmail.com>
-	<B1A260D7-B6A2-40D3-83FF-9571D80B66B8@redhat.com> <87f94c370909151328j1f88ab4fi452fcbeb5f1e9172@mail.gmail.com>
-	<FE87C12A-00E6-4DF6-80CF-56850AFFE656@redhat.com> <4AAFFDC4.5090806@sauce.co.nz>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 21/29] ioat2,3: dynamically resize descriptor ring
+Date: Tue, 15 Sep 2009 16:07:05 -0700
+Message-ID: <e9c3a7c20909151607h5171784ence5e6722adab4ad7@mail.gmail.com>
+References: <20090904022733.32667.77626.stgit@dwillia2-linux.ch.intel.com>
+	 <20090904023216.32667.55942.stgit@dwillia2-linux.ch.intel.com>
+	 <129600E5E5FB004392DDC3FB599660D7B5548192@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AAFFDC4.5090806@sauce.co.nz>
+In-Reply-To: <129600E5E5FB004392DDC3FB599660D7B5548192@irsmsx504.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
-Cc: Doug Ledford <dledford@redhat.com>, Greg Freemyer <greg.freemyer@gmail.com>, "Majed B." <majedb@gmail.com>, Drew <drew.kay@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: "Sosnowski, Maciej" <maciej.sosnowski@intel.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Sep 15, 2009 at 1:49 PM, Richard Scobie <richard@sauce.co.nz> w=
-rote:
-> Doug Ledford wrote:
->> I agree with this sentiment 100%. =A0I don't have a good answer for =
-why =A0it
->> topped out where it did, and that's one of the things I'm still =A0t=
-rying to
->> get an answer to.
->
-> I can also confirm this sub par performance on the Sil 3124 - max thr=
-oughput
-> of around 120MB/s.
->
-> If your motherboard is able to set the "PCIe Max Payload Size" you ma=
-y be
-> able to improve things.
->
-> See Note 3 here:
->
-> http://ata.wiki.kernel.org/index.php/Hardware,_driver_status#Silicon_=
-Image_3124
+On Mon, Sep 14, 2009 at 8:00 AM, Sosnowski, Maciej
+<maciej.sosnowski@intel.com> wrote:
+> Making the max_alloc_order a module parameter gives impression
+> that it can be modified by an user, including making it larger than default.
+> The default is however its maximum value, which may be confusing.
+> Why not to use parameter only as the upper limit?
 
-Another one here with a Sil3124 and max 120MB/s.
+It is the upper limit.
 
-With the port multiplier I've got, I've had to disable NCQ to get
-things to behave when accessing multiple drives - otherwise access to
-the enclosure would lock up under moderate/heavy concurrent disk
-access.
+The user can limit the upper size of the descriptor ring by setting
+this to a value less than 16.  By default it is the maximum ring size
+that the driver/hardware* supports.  Specifying values greater than 16
+are not supported by the so we need enforce a ceiling at 16.
 
-The multipler appears to be a Sil4726.  The array was built on a
-budget so the drives in the multiplier are a mix of drives - some are
-1.5Mbps, some are 3.0Mbps and not all support NCQ.  Not sure how it
-behaves with 100% NCQ capable drives.
-
--Dave
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dan
+
+* We could support ring sizes larger than 1 << 16 but we would need to
+extra logic to ensure that the pending count never exceeded 1 << 16.
+Simpler I think to just limit the maximum ring size.
