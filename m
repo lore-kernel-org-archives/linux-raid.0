@@ -1,60 +1,54 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: Re-map disk sectors in userspace when rewriting after read errors
-Date: Tue, 15 Sep 2009 14:03:17 +0300
-Message-ID: <70ed7c3e0909150403s4db60837gfd742d5f6960adf0@mail.gmail.com>
-References: <h8nbt5$n8p$1@ger.gmane.org> <70ed7c3e0909150340q4ae91cb1j7eaae473c6d94c9a@mail.gmail.com>
-	<h8nrkn$n8p$5@ger.gmane.org>
+From: Simon Jackson <sjackson@bluearc.com>
+Subject: RE: mdadm and TLER (Time Limited Error Recovery)
+Date: Tue, 15 Sep 2009 16:36:00 +0100
+Message-ID: <ABFC24E4C13D81489F7F624E14891C8622CB2EE4@uk-ex-mbx1.terastack.bluearc.com>
+References: <299cc2790909071735x6eefd8bsc05ad76fa782cae1@mail.gmail.com>
+ <slrnhacpsm.2i5.Mario.Holbe@darkside.dyn.samba-tng.org>
+ <20090908184837.GA28217@teal.hq.k1024.org> <4AA70604.7020709@harddata.com>
+ <ABFC24E4C13D81489F7F624E14891C860D4C3553@uk-ex-mbx1.terastack.bluearc.com>
+ <slrnhaf2ub.2i5.Mario.Holbe@darkside.dyn.samba-tng.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <h8nrkn$n8p$5@ger.gmane.org>
+In-Reply-To: <slrnhaf2ub.2i5.Mario.Holbe@darkside.dyn.samba-tng.org>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Matthias Urlichs <matthias@urlichs.de>
-Cc: linux-raid@vger.kernel.org
+To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I've been trying to migrate for 2 weeks. I can wait another 2 ... maybe=
- 3 weeks.
+Did not appear to work.
 
-Just to be clear, I'm using dd_rescue, not ddrescue (This is the GNU
-one). I read the log option but forgot to use it... now I've wasted
-over 20 hours... ugh ... /smacks self
+$ sdparm -s "RTL=7000" /dev/sda
+    /dev/sda: ATA       ST980818SM        3.AA
+change_mode_page: failed setting page: Read write error recovery
 
-That would be a very useful program for cases like this!
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Mario 'BitKoenig' Holbe
+Sent: 09 September 2009 12:05
+To: linux-raid@vger.kernel.org
+Subject: Re: mdadm and TLER (Time Limited Error Recovery)
 
-On Tue, Sep 15, 2009 at 1:52 PM, Matthias Urlichs <matthias@urlichs.de>=
- wrote:
-> On Tue, 15 Sep 2009 13:40:44 +0300, Majed B. wrote:
->
->> Would anyone suggest a better solution?
->
-> You should tell ddrescue to log which sectors it failed to copy. You =
-can
-> then recover the missing data by reading the stuff at that offset fro=
-m
-> the other disks, and XORing the bytes.
->
-> I plan to write a program which does that (and which also understands
-> RAID1 and RAID6). How long can you survive without your data?
->
-> --
-> Matthias Urlichs
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
+Simon Jackson <sjackson@bluearc.com> wrote:
+> In my case I am using Seagate and Hitachi drives.
+> Please can anyone tell me how I would go about setting timeout values on these types of drive. Are there utility programs to do this or a Linux 
+
+Well, my Seagates have a RTL (Recovery time limit (ms)) field in the rw
+(Read write error recovery) mode page.
+
+You could try something like `sdparm -W RTL=7000 /dev/sdX' to set it to
+7 seconds. I don't know if it works, I didn't test it, use it at your
+own risk! Do a backup before, it could blow up your disk or even the
+universe :) Tell us if it worked :)
 
 
+regards
+   Mario
+-- 
+() Ascii Ribbon Campaign
+/\ Support plain text e-mail
 
---=20
-       Majed B.
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
