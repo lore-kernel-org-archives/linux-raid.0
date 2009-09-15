@@ -1,73 +1,82 @@
-From: David =?iso-8859-1?q?Mart=EDnez_Moreno?= <ender@tuenti.com>
-Subject: ext3 crash with tune2fs and MD RAID10 device.
-Date: Tue, 15 Sep 2009 12:01:08 +0200
-Message-ID: <200909151201.08482.ender@tuenti.com>
+From: "Majed B." <majedb@gmail.com>
+Subject: Re: Re-map disk sectors in userspace when rewriting after read errors
+Date: Tue, 15 Sep 2009 13:40:44 +0300
+Message-ID: <70ed7c3e0909150340q4ae91cb1j7eaae473c6d94c9a@mail.gmail.com>
+References: <h8nbt5$n8p$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ext4-owner@vger.kernel.org>
-Sender: linux-ext4-owner@vger.kernel.org
-To: linux-ext4@vger.kernel.org, "Theodore Y. Ts'o" <tytso@mit.edu>, linux-raid@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, David =?iso-8859-1?q?Mart=EDnez_Moreno?= <ender@tuenti.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <h8nbt5$n8p$1@ger.gmane.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Matthias Urlichs <matthias@urlichs.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-	Good morning.  During a maintainance, I've changed (20 hours ago) the reserved
-block count in my servers' data partition to 0.  In some hours, I've got a number
-of errors (5) in ext3 in different servers that are not possible by simple luck.
-The errors are:
+Hello,
 
-=========================================================
-EXT3-fs error (device md3): ext3_new_block: Allocating block in system zone - blocks from 8192000, length 1
-Aborting journal on device md3.
-Remounting filesystem read-only
-EXT3-fs error (device md3): ext3_free_blocks: Freeing blocks in system zones - Block = 8192000, count = 1
-EXT3-fs error (device md3) in ext3_free_blocks_sb: Journal has aborted
-__journal_remove_journal_head: freeing b_committed_data
-__journal_remove_journal_head: freeing b_committed_data
-...
-=========================================================
+I'm facing a similar problem now with 2 disks. The
+Current_Pending_Sectors and Offline_Uncorrectable are higher than 100,
+on a RAID5. SMART monitoring tools failed to report these after each
+test so now I'm battling through...
 
-or
+I'm running the array degraded and yesterday while trying to copy the
+data to another array (5.5TB), one disk jumped out of the dodgy array
+and caused I/O errors... It won't even resync to another disk beyond
+15.6%.
 
-=========================================================
-EXT3-fs error (device md3): ext3_free_blocks_sb: bit already cleared for block 22479363                                     
-Aborting journal on device md3.                                                                                             
-Remounting filesystem read-only                                                                                             
-EXT3-fs error (device md3): ext3_free_blocks_sb: bit already cleared for block 22479364                                     
-EXT3-fs error (device md3): ext3_free_blocks_sb: bit already cleared for block 22479365                                     
-EXT3-fs error (device md3): ext3_free_blocks_sb: bit already cleared for block 22479367                                     
-EXT3-fs error (device md3) in ext3_free_blocks_sb: Journal has aborted                                                      
-EXT3-fs error (device md3) in ext3_free_blocks_sb: Journal has aborted                                                      
-EXT3-fs error (device md3) in ext3_free_blocks_sb: Journal has aborted                                                      
-...
-=========================================================
+Currently, I'm cloning with dd_rescue and hoping to be able to copy
+most of the data, and accept some data loss...
 
-	I have some servers with a single SAS disc and others with a software RAID10
-volume over 4 discs.  So far, only the RAID10 volumes are showing errors.
-Coincidence?
+Would anyone suggest a better solution?
 
-	This is Debian etch, and 2.6.24.2.  The command line we've run was:
+P.S.: The disks in question are WD, model: WDC WD10EACS-00ZJB0. I have
+other WD disks and they're intact and have zero bad sectors...
 
-tune2fs -r 0 partition
+On Tue, Sep 15, 2009 at 9:23 AM, Matthias Urlichs <matthias@urlichs.de>=
+ wrote:
+> Hi,
+>
+> my problem is that I have a bunch of crappy disks which seem unable t=
+o
+> reliably remap bad areas after a read error.
+>
+> This obviously makes the read error rewrite feature of our beloved
+> RAID5/6 code somewhat less than useful.
+>
+> What I would like to do is to re-map these sectors in userspace -- ei=
+ther
+> by browbeating the disk into it, or by using the Device Mapper. So I'=
+d
+> need a way to tell a userspace daemon "this device+block is unreadabl=
+e",
+> and wait until said daemon tells the RAID core to go ahead.
+>
+> I can do the userspace side easily, but my time to dig through the RA=
+ID
+> code and implement that sort of channel in a maintainable way is some=
+what
+> limited. (Plus, I need that code sooner rather than later.)
+>
+> Would somebody be able to help out? There may be some money in it ...
+>
+> --
+> Matthias Urlichs
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+>
 
-while MySQL was running.  The e2fsprogs version is 1.39+1.40-WIP-2006.11.14+dfsg-2etch1.
-
-	Do you know of any problem with this setup?  I've reviewed the e2fsprogs
-changelog searching for something like this but it seems rather related to
-RAID10+ext3 interaction.
-
-	We have lots of servers waiting for crashing, I suspect.  While I was writing
-this mail another one crashed.  Probably I can provide superblock copies for
-analysis or any other information.
-
-	Best regards,
 
 
-		Ender.
--- 
-I once farted on the set of Blue Lagoon.
-		-- Brooke Shields (South Park).
+--=20
+       Majed B.
 --
-Responsable de sistemas
-tuenti.com
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
