@@ -1,9 +1,10 @@
 From: Matthias Urlichs <matthias@urlichs.de>
 Subject: Re: Re-map disk sectors in userspace when rewriting after read
  errors
-Date: Tue, 15 Sep 2009 07:23:08 +0000 (UTC)
-Message-ID: <h8nfcs$n8p$2@ger.gmane.org>
-References: <h8nbt5$n8p$1@ger.gmane.org> <4AAF3809.7080802@panix.com>
+Date: Tue, 15 Sep 2009 07:29:18 +0000 (UTC)
+Message-ID: <h8nfoe$n8p$3@ger.gmane.org>
+References: <h8nbt5$n8p$1@ger.gmane.org>
+	<alpine.LFD.2.00.0909150810510.5083@sbhezbfg.of5.nffheflf.cev>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -12,27 +13,21 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 15 Sep 2009 02:45:29 -0400, berk walker wrote:
+On Tue, 15 Sep 2009 08:13:08 +0100, Alex Butcher wrote:
 
-> I can not believe the question.  What file system might this be?
+> IME, discs don't remap after read errors, only on writes.
 
-Umm, what's your problem with my question?
+Some may remap after recoverable read errors. However, the RAID code
+does (I assume - see below) rewrite the data -- which the disk happily 
+acknowledges  -- only to report the very same error next time that spot's 
+being read. :-(
 
-And why would it matter which file system I'm using?
+> Are you sure that refresh-writes triggered by read errors are expected
+> behaviour of md's RAID5/6 mode?
 
-
-_My_ problem is that I have a bunch of disks which are not as reliable as 
-I'd like. Yes I could go and buy a new heap of 1TB disks, but frankly I'd 
-like to avoid that. These disks are "good enough" for the data that's on 
-them. I'll replace one if it fails entirely -- assuming that I can 
-rebuild the RAID6 array when I do that. However, since the rewrite-after-
-read code has caused bad sectors to accumulate on all of these disks, I 
-can't even do that at the moment.
-
-(And, since there's no command which knows how to recover bad spots from 
-the other RAID disks yet (I hope to be able to work on _that_ problem 
-next week), I can't even use ddrescue to copy one almost-good disk to a 
-new one.)
+Not 100%, no -- but recovering the data but otherwise ignoring the error 
+(other than increment the error counter) would be a level of foolishness 
+I won't assume of the RAID code's authors.
 
 -- 
 Matthias Urlichs
