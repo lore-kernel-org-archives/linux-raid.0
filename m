@@ -1,65 +1,35 @@
-From: "Majed B." <majedb@gmail.com>
+From: Matthias Urlichs <matthias@urlichs.de>
 Subject: Re: RAID1 assembled broken array
-Date: Tue, 15 Sep 2009 22:24:29 +0300
-Message-ID: <70ed7c3e0909151224s75cd6c60kc65c2f4e9076e649@mail.gmail.com>
+Date: Tue, 15 Sep 2009 19:33:19 +0000
+Message-ID: <1253043199.7774.179.camel@kiste>
 References: <h8ophd$n8p$6@ger.gmane.org>
+	 <70ed7c3e0909151224s75cd6c60kc65c2f4e9076e649@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <h8ophd$n8p$6@ger.gmane.org>
+In-Reply-To: <70ed7c3e0909151224s75cd6c60kc65c2f4e9076e649@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matthias Urlichs <matthias@urlichs.de>
+To: "Majed B." <majedb@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Specifying partition names may cause problems if the disk names
-changed. Specify the UUID instead.
+On Tue, 2009-09-15 at 22:24 +0300, Majed B. wrote:
+> Specifying partition names may cause problems if the disk names
+> changed. Specify the UUID instead.
+> 
+What I was trying to say is "use a pattern that matches all of your
+partitions and none of your actual disks". That should be safe from
+changing disk file names.
 
-On Tue, Sep 15, 2009 at 10:22 PM, Matthias Urlichs <matthias@urlichs.de=
-> wrote:
-> I had a somewhat strange error today.
->
-> One of my servers has a RAID1 array. Two partitions at the end of the
-> disk; the RAID superblocks are at the end of the partition.
->
-> After a hard reboot today, one of the disks managed to not have its
-> partition table scanned correctly, most probably because the disk was
-> hung and the ("intelligent") controller got confused about it. After =
-the
-> initial scan, however, it came up correctly.
->
-> This error caused mdadm to "successfully" build a RAID1 from /dev/sda=
-3
-> and /dev/sdb (instead of /dev/sdb3). Needless to say, the resulting
-> volume was somewhat unuseable. To say the least.
->
-> My server's mdadm.conf has a 'DEVICE=3Dpartitions' line. I suppose th=
-at
-> replacing these with a pattern that explicitly only matches partition=
-s,
-> not disks, would make the problem go away, and that the lesson from
-> today's disaster recovery effort is to always explicitly list the all=
-owed
-> partition names, instead of being lazy and using 'DEVICE=3Dpartitions=
-'.
->
-> --
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
+Besides, specifying UUIDs does not work because it runs into the exact
+problem we're trying to solve in the first place. Behold the "blkid"
+output from the server in question:
 
+/dev/sdb2: UUID="1583e643-7004-a86e-4eff-81c58ea53278" TYPE="mdraid" 
+/dev/sdb: UUID="1583e643-7004-a86e-4eff-81c58ea53278" TYPE="mdraid" 
 
+Interestingly, for some reason it doesn't do that with /dev/sda -- most
+probably because the disks in question use different head/sector values
+and thus have slightly different partition layout.
 
---=20
-       Majed B.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
