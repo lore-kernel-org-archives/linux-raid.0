@@ -1,59 +1,90 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: Assemble and Stop array
-Date: Tue, 15 Sep 2009 18:35:02 -0500
-Message-ID: <20090915233517830.IGLE14103@cdptpa-omta02.mail.rr.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: Port Multipliers
+Date: Tue, 15 Sep 2009 20:31:50 -0400
+Message-ID: <D88C9CE6-0F7D-4E8D-B972-75A5012B921C@redhat.com>
+References: <c268e4660909100556x14b48207w32017a59be889f@mail.gmail.com>  <70ed7c3e0909100911q926fa9cs9185854b15dd8764@mail.gmail.com>  <c268e4660909101135w4b933cbaj3e6a18e6b586fd62@mail.gmail.com>  <70ed7c3e0909101144u2c42a1b2scf69e83df931035d@mail.gmail.com>  <B1A260D7-B6A2-40D3-83FF-9571D80B66B8@redhat.com> <87f94c370909151328j1f88ab4fi452fcbeb5f1e9172@mail.gmail.com>  <FE87C12A-00E6-4DF6-80CF-56850AFFE656@redhat.com> <4AAFFDC4.5090806@sauce.co.nz> <72dbd3150909151452r38087573od156a1965dc0eba1@mail.gmail.com>
+Mime-Version: 1.0 (Apple Message framework v936)
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-34--123996212"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <72dbd3150909151452r38087573od156a1965dc0eba1@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: David Rees <drees76@gmail.com>
+Cc: Richard Scobie <richard@sauce.co.nz>, Greg Freemyer <greg.freemyer@gmail.com>, "Majed B." <majedb@gmail.com>, Drew <drew.kay@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--Apple-Mail-34--123996212
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 
-	I'm still trying to wrap my mind around two items.
+On Sep 15, 2009, at 5:52 PM, David Rees wrote:
+> On Tue, Sep 15, 2009 at 1:49 PM, Richard Scobie  
+> <richard@sauce.co.nz> wrote:
+>> Doug Ledford wrote:
+>>> I agree with this sentiment 100%.  I don't have a good answer for  
+>>> why  it
+>>> topped out where it did, and that's one of the things I'm still   
+>>> trying to
+>>> get an answer to.
+>>
+>> I can also confirm this sub par performance on the Sil 3124 - max  
+>> throughput
+>> of around 120MB/s.
+>>
+>> If your motherboard is able to set the "PCIe Max Payload Size" you  
+>> may be
+>> able to improve things.
+>>
+>> See Note 3 here:
+>>
+>> http://ata.wiki.kernel.org/index.php/Hardware,_driver_status#Silicon_Image_3124
+>
+> Another one here with a Sil3124 and max 120MB/s.
+>
+> With the port multiplier I've got, I've had to disable NCQ to get
+> things to behave when accessing multiple drives - otherwise access to
+> the enclosure would lock up under moderate/heavy concurrent disk
+> access.
+>
+> The multipler appears to be a Sil4726.  The array was built on a
+> budget so the drives in the multiplier are a mix of drives - some are
+> 1.5Mbps, some are 3.0Mbps and not all support NCQ.  Not sure how it
+> behaves with 100% NCQ capable drives.
 
-	One is stopping an array.  From time to time I need to stop an array
-for some reason, but I am persistently having trouble doing so.  It doesn't
-always happen, and sometimes when it does I can free it up by doing
-`exportfs -ua` and `umount -l /xxxxx`, but other times it simply cannot be
-done and my only recourse is to reboot the system.  These are simple RAID5
-or RAID6 arrays on raw drives with a single file system formatted on the
-unpartitioned array.  None of the drives are used for booting or for swap,
-there is no loop device and lsof shows no open files, but mdadm -S still
-fails with a device busy error.  Every time it has happened, a simple umount
-command without the -l switch fails, but a "lazy" umount appears to work,
-with the exception that sometimes I still cannot stop the array.  Clearly,
-the NFS export is sometimes the culprit, but not always.  What else can it
-be?
 
-	The second item is assembling an array which was formerly stopped.
-By my reading, `mdadm --assemble --scan` should work, but it doesn't.  It
-keeps telling me no devices are found for the array.  Here is a sample from
-one of the /etc/mdadm/mdadm.conf files:
+My port multiplier is a Sil3726, so very similar.  However, my drives  
+are all more or less identical and are all NCQ capable.  I've been  
+able to beat on them for days at a time under non-stop load and not  
+had a problem.
 
-# mdadm.conf
-#
-# Please refer to mdadm.conf(5) for information about this file.
-#
+--
 
-# auto-create devices with Debian standard permissions
-CREATE owner=root group=disk mode=0660 auto=yes
+Doug Ledford <dledford@redhat.com>
 
-# automatically tag new arrays as belonging to the local system
-HOMEHOST <system>
+GPG KeyID: CFBFF194
+http://people.redhat.com/dledford
 
-# instruct the monitoring daemon where to send mail alerts
-MAILADDR lrhorer@satx.rr.com
+InfiniBand Specific RPMS
+http://people.redhat.com/dledford/Infiniband
 
-# This file was auto-generated on Fri, 21 Nov 2008 22:35:30 -0600
-# by mkconf $Id$
-PROGRAM /usr/bin/mdadm_notify
-DEVICE /dev/sd[a-j]
-ARRAY /dev/md/0 level=raid6 metadata=1.2 num-devices=10
-UUID=5ff10d73:a096195f:7a646bba:a68986ca name=RAID-Server:0
 
-When I manually assemble the array, I wind up having to re-create the bitmap
-file, as well.
 
+
+
+--Apple-Mail-34--123996212
+content-type: application/pgp-signature; x-mac-type=70674453;
+	name=PGP.sig
+content-description: This is a digitally signed message part
+content-disposition: inline; filename=PGP.sig
+content-transfer-encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2.0.12 (Darwin)
+
+iEYEARECAAYFAkqwMfwACgkQg6WylM+/8ZQOmACgqWKnxq+R0/xYQbUjQQ5K24yZ
+mZcAnRT9C7qW/qdGw6Y6CJ09Nasc33kb
+=81W5
+-----END PGP SIGNATURE-----
+
+--Apple-Mail-34--123996212--
