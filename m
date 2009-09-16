@@ -1,79 +1,94 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Port Multipliers
-Date: Wed, 16 Sep 2009 10:35:29 -0500
-Message-ID: <20090916153545511.YYST11918@cdptpa-omta04.mail.rr.com>
-References: <20C809AA-01E5-4402-928C-84F46F2489B9@redhat.com>
+From: "Majed B." <majedb@gmail.com>
+Subject: Re: Assemble and Stop array
+Date: Wed, 16 Sep 2009 19:14:01 +0300
+Message-ID: <70ed7c3e0909160914m3d1fabd4qbfc0084033e17614@mail.gmail.com>
+References: <816534d7bc3fe604e11760fbf33932d1.squirrel@neil.brown.name>
+	<20090916150703425.XXDI6569@cdptpa-omta01.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20C809AA-01E5-4402-928C-84F46F2489B9@redhat.com>
+In-Reply-To: <20090916150703425.XXDI6569@cdptpa-omta01.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Leslie Rhorer <lrhorer@satx.rr.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+You mentioned that lsof doesn't show open files, but what about directo=
+ries?
+
+If you have a shell open and is inside a directory of the mounted
+filesystem, the filesystem can't be unmounted.
+The same would happen if you run a program from the shell from that
+filesystem and that program isn't close before attemtping umount.
+
+I used to get similar symptoms (unable to mount) but on normal
+partitions (no arrays) when I had Slackware 9.0 (2.4 kernel & using
+hotplug, not udev). The problem went away after I compiled a newer
+kernel 3 months later.
+
+I would suggest that you execute "sync" to make sure whatever in the
+disks' cache is written to the filesystem before unmounting to avoid
+data corruption or inconsistency.
+
+On Wed, Sep 16, 2009 at 6:06 PM, Leslie Rhorer <lrhorer@satx.rr.com> wr=
+ote:
+>> > fails with a device busy error. =C2=A0Every time it has happened, =
+a simple
+>> > umount
+>> > command without the -l switch fails, but a "lazy" umount appears t=
+o
+>> work,
+>> > with the exception that sometimes I still cannot stop the array.
+>> Clearly,
+>> > the NFS export is sometimes the culprit, but not always. =C2=A0Wha=
+t else can
+>> it
+>> > be?
+>>
+>> It's best not to use --lazy if yo really want to stop the array.
+>> It makes it harder to find the problem.
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Well, OK. =C2=A0I always try an ordinary u=
+mount first, but when it fails,
+> sometimes a lazy umount works.
+>
+>> You seem to have covered everything that I can think of that would
+>> keep a filesystem active...
+>>
+>> >
+>> > =C2=A0 =C2=A0 The second item is assembling an array which was for=
+merly stopped.
+>> > By my reading, `mdadm --assemble --scan` should work, but it doesn=
+'t.
+>> It
+>> > keeps telling me no devices are found for the array. =C2=A0Here is=
+ a sample
+>> > from
+>> > one of the /etc/mdadm/mdadm.conf files:
+>> >
+>>
+>> Try adding --verbose to the "mdadm --assemble" line. =C2=A0If that d=
+oesn't
+>> give you any hints, post the output and it might give me some hints.
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0OK, thanks. =C2=A0The next time it happens=
+, I will.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+>
 
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Doug Ledford
-> Sent: Wednesday, September 16, 2009 9:28 AM
-> To: Tom Carlson
-> Cc: Majed B.; David Rees; Richard Scobie; Greg Freemyer; Drew; Linux RAID
-> Mailing List
-> Subject: Re: Port Multipliers
-> 
-> On Sep 16, 2009, at 7:11 AM, Tom Carlson wrote:
-> > Hi,
-> >
-> > I've had a slightly bad experience with port multipliers. I have a
-> > PCI-e x1 JMB362 on the host end and a SiI 3726 connected to it. (I
-> > think. It's a 1-5 PM). I have 5 disks connected in raid5 and get some
-> > fairly appalling write speeds, well below what I'd expect even for
-> > raid5 writes. Reads too are fairly slow...
-> >
-> > $ dd if=/dev/zero of=./blah bs=1M count=512
-> > 512+0 records in
-> > 512+0 records out
-> > 536870912 bytes (537 MB) copied, 47.4814 s, 11.3 MB/s
-> >
-> > $ dd if=./bigfile.iso of=/dev/null
-> > 8474857+0 records in
-> > 8474857+0 records out
-> > 4339126272 bytes (4.3 GB) copied, 144.667 s, 30.0 MB/s
-> >
-> > Obviously this isn't the most scientific of tests... :-) but it does
-> > show slowness with this particular combination.
-> >
-> > I'm tempted to go buy a SiI 3132 based controller and compare the
-> > results.
-> 
-> 
-> I would, those numbers look *really* bad compared to what they could be.
 
-	Um, yeah. No kidding.  I did the same tests on a very "low rent"
-system using a mid-range Asus / AMD 64 x 2 motherboard and a $45 three port
-Chinese clone SiI 3124 interface card feeding a ten disk RAID6 array:
-
-RAID-Server:/RAID/Server-Main/Temp# dd if=/dev/zero of=./blah bs=1M
-count=512
-512+0 records in
-512+0 records out
-536870912 bytes (537 MB) copied, 16.0076 s, 33.5 MB/s
-RAID-Server:/RAID/Server-Main/Temp# dd if=Test_HD.TiVo of=/dev/null
-3952838+1 records in
-3952838+1 records out
-2023853135 bytes (2.0 GB) copied, 19.4791 s, 104 MB/s
-
-	And from cached data:
-
-RAID-Server:/RAID/Server-Main/Temp# dd if=./blah of=/dev/null
-1048576+0 records in
-1048576+0 records out
-536870912 bytes (537 MB) copied, 1.51728 s, 354 MB/s
-
-	Doing ordinary daily rsync backups between two similar systems
-across a 1000BaseT LAN I regularly hit peaks of 75 MB/s with sustained rates
-well above 50 MB/s.
-
+--=20
+       Majed B.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
