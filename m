@@ -1,79 +1,24 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: Port Multipliers
-Date: Wed, 16 Sep 2009 04:45:00 +0300
-Message-ID: <70ed7c3e0909151845r5903f0e4w4750b406c4f5d216@mail.gmail.com>
-References: <c268e4660909100556x14b48207w32017a59be889f@mail.gmail.com>
-	<70ed7c3e0909101144u2c42a1b2scf69e83df931035d@mail.gmail.com>
-	<B1A260D7-B6A2-40D3-83FF-9571D80B66B8@redhat.com> <87f94c370909151328j1f88ab4fi452fcbeb5f1e9172@mail.gmail.com>
-	<FE87C12A-00E6-4DF6-80CF-56850AFFE656@redhat.com> <4AAFFDC4.5090806@sauce.co.nz>
-	<72dbd3150909151452r38087573od156a1965dc0eba1@mail.gmail.com>
-	<D88C9CE6-0F7D-4E8D-B972-75A5012B921C@redhat.com> <70ed7c3e0909151801y7fe7bbcap872af6c4f9f76590@mail.gmail.com>
-	<4D899658-EEA4-4511-87FF-9338E681D956@redhat.com>
+From: Matthias Urlichs <matthias@urlichs.de>
+Subject: Re: RAID1 assembled broken array
+Date: Wed, 16 Sep 2009 06:50:34 +0200
+Message-ID: <1253076634.7071.5.camel@kiste>
+References: <h8ophd$n8p$6@ger.gmane.org>
+	 <9F2F4760-DF0C-4416-89AC-C689177AD4ED@redhat.com>
+	 <65549e07fd6559855af68b60783213c3.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D899658-EEA4-4511-87FF-9338E681D956@redhat.com>
+In-Reply-To: <65549e07fd6559855af68b60783213c3.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: David Rees <drees76@gmail.com>, Richard Scobie <richard@sauce.co.nz>, Greg Freemyer <greg.freemyer@gmail.com>, Drew <drew.kay@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Doug Ledford <dledford@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Regarding payloads, I've recently bought an EVGA motherboard off
-newegg for $120 and it supports upping the payload to 4096 bytes.
+On Wed, 2009-09-16 at 07:01 +1000, NeilBrown wrote:
+> 1.0 also protects from this problem.
 
-Newegg link: http://www.newegg.com/Product/Product.aspx?Item=3DN82E1681=
-3188035
-Manual guide: http://www.evga.com/support/manuals/files/113-YW-E115.pdf
+So what's the best way to update a 0.9 superblock to 1.0 format?
 
-The motherboard above has 8 SATA ports, built-in VGA (256MB, if you
-care), 1x Gbit LAN, 4x RAM DIMMs and a few more options. I use it for
-my primary array: 8x1TB disks.
+mdadm --assemble --metadata=1.0 --update=summaries ... ?
 
-ASUS gaming motherboards allow changing the payload as well.
-
-On Wed, Sep 16, 2009 at 4:28 AM, Doug Ledford <dledford@redhat.com> wro=
-te:
-> On Sep 15, 2009, at 9:01 PM, Majed B. wrote:
->>
->> I think someone mentioned in the mailing list that the Linux kernel
->> does sort commands before sending them to the disks, so if the disk
->> tries to sort, and its algorithm isn't that good, the performance
->> drops and hence disabling them is a good idea. I believe it's also
->> mentioned in here: http://linux-raid.osdl.org/index.php/Performance
->
->
-> It depends on the elevator in use. =C2=A0And regardless, I have yet t=
-o see a
-> raid5 array ever perform better with queueing turned off instead of o=
-n.
-> =C2=A0Although, in many cases, very large queue depths don't help muc=
-h. =C2=A0Testing
-> I've done showed that only a 4 to 8 queue depth is sufficient to get =
-95% or
-> better of the performance benefit of queueing.
->
-> --
->
-> Doug Ledford <dledford@redhat.com>
->
-> GPG KeyID: CFBFF194
-> http://people.redhat.com/dledford
->
-> InfiniBand Specific RPMS
-> http://people.redhat.com/dledford/Infiniband
->
->
->
->
->
-
-
-
---=20
-       Majed B.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
