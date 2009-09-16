@@ -1,48 +1,79 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Port Multipliers
-Date: Wed, 16 Sep 2009 16:34:50 +0100
-Message-ID: <4AB1059A.4010705@anonymous.org.uk>
-References: <c268e4660909100556x14b48207w32017a59be889f@mail.gmail.com>  <70ed7c3e0909100911q926fa9cs9185854b15dd8764@mail.gmail.com>  <c268e4660909101135w4b933cbaj3e6a18e6b586fd62@mail.gmail.com> <70ed7c3e0909101144u2c42a1b2scf69e83df931035d@mail.gmail.com> <B1A260D7-B6A2-40D3-83FF-9571D80B66B8@redhat.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Port Multipliers
+Date: Wed, 16 Sep 2009 10:35:29 -0500
+Message-ID: <20090916153545511.YYST11918@cdptpa-omta04.mail.rr.com>
+References: <20C809AA-01E5-4402-928C-84F46F2489B9@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <B1A260D7-B6A2-40D3-83FF-9571D80B66B8@redhat.com>
+In-Reply-To: <20C809AA-01E5-4402-928C-84F46F2489B9@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 15/09/2009 18:56, Doug Ledford wrote:
-> On Sep 10, 2009, at 2:44 PM, Majed B. wrote:
->> The maximum throughput you'll get is the PCI bus's speed. Make sure to
->> note which version your server has.
->>
->> The silicon image controller will be your bottleneck here, but I don't
->> have any numbers to say how much of a loss you'll be at. You'd have to
->> search around for those who already benchmarked their systems, or
->> buy/request a card to test it out.
+
+
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Doug Ledford
+> Sent: Wednesday, September 16, 2009 9:28 AM
+> To: Tom Carlson
+> Cc: Majed B.; David Rees; Richard Scobie; Greg Freemyer; Drew; Linux RAID
+> Mailing List
+> Subject: Re: Port Multipliers
 > 
-> I've actually been doing some of those benchmarks here.  Given a Silicon 
-> Image 3124 card in a x1 PCI-e slot, my maximum throughput should be 
-> about 250MB/s (PCI-e limitation).  My drives behind the pm are all 
-> capable of about 80MB/s, and I have 4 drives.  What I've found is that 
-> when accessing one drive by itself, I get 80MB/s.  When accessing more 
-> than one drive, I get a total of about 120MB/s, but it's divided by 
-> however many drives I'm accessing.  So, two drives is roughly 60MB/s 
-> each, 3 drives about 40MB/s each, and 4 drives about 30MB/s each.
+> On Sep 16, 2009, at 7:11 AM, Tom Carlson wrote:
+> > Hi,
+> >
+> > I've had a slightly bad experience with port multipliers. I have a
+> > PCI-e x1 JMB362 on the host end and a SiI 3726 connected to it. (I
+> > think. It's a 1-5 PM). I have 5 disks connected in raid5 and get some
+> > fairly appalling write speeds, well below what I'd expect even for
+> > raid5 writes. Reads too are fairly slow...
+> >
+> > $ dd if=/dev/zero of=./blah bs=1M count=512
+> > 512+0 records in
+> > 512+0 records out
+> > 536870912 bytes (537 MB) copied, 47.4814 s, 11.3 MB/s
+> >
+> > $ dd if=./bigfile.iso of=/dev/null
+> > 8474857+0 records in
+> > 8474857+0 records out
+> > 4339126272 bytes (4.3 GB) copied, 144.667 s, 30.0 MB/s
+> >
+> > Obviously this isn't the most scientific of tests... :-) but it does
+> > show slowness with this particular combination.
+> >
+> > I'm tempted to go buy a SiI 3132 based controller and compare the
+> > results.
+> 
+> 
+> I would, those numbers look *really* bad compared to what they could be.
 
-Were you using a SiI3124-1 (1.5Gbps, they claim 150MB/s) or SiI3124-2 
-(3Gbps/300MB/s)? What throughput can you get using all 4 channels of the 
-SiI3124 simultaneously, not using the port multiplier - does that top 
-out at 120MB/s too?
+	Um, yeah. No kidding.  I did the same tests on a very "low rent"
+system using a mid-range Asus / AMD 64 x 2 motherboard and a $45 three port
+Chinese clone SiI 3124 interface card feeding a ten disk RAID6 array:
 
-And have you done similar testing of your port multiplier hanging off a 
-motherboard SATA port? Do you get anywhere nearer the 3Gbps?
+RAID-Server:/RAID/Server-Main/Temp# dd if=/dev/zero of=./blah bs=1M
+count=512
+512+0 records in
+512+0 records out
+536870912 bytes (537 MB) copied, 16.0076 s, 33.5 MB/s
+RAID-Server:/RAID/Server-Main/Temp# dd if=Test_HD.TiVo of=/dev/null
+3952838+1 records in
+3952838+1 records out
+2023853135 bytes (2.0 GB) copied, 19.4791 s, 104 MB/s
 
-Just interested...
+	And from cached data:
 
-Cheers,
+RAID-Server:/RAID/Server-Main/Temp# dd if=./blah of=/dev/null
+1048576+0 records in
+1048576+0 records out
+536870912 bytes (537 MB) copied, 1.51728 s, 354 MB/s
 
-John.
+	Doing ordinary daily rsync backups between two similar systems
+across a 1000BaseT LAN I regularly hit peaks of 75 MB/s with sustained rates
+well above 50 MB/s.
 
