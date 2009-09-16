@@ -1,107 +1,90 @@
-From: "Majed B." <majedb@gmail.com>
+From: Doug Ledford <dledford@redhat.com>
 Subject: Re: Port Multipliers
-Date: Wed, 16 Sep 2009 04:01:03 +0300
-Message-ID: <70ed7c3e0909151801y7fe7bbcap872af6c4f9f76590@mail.gmail.com>
-References: <c268e4660909100556x14b48207w32017a59be889f@mail.gmail.com>
-	<70ed7c3e0909100911q926fa9cs9185854b15dd8764@mail.gmail.com>
-	<c268e4660909101135w4b933cbaj3e6a18e6b586fd62@mail.gmail.com>
-	<70ed7c3e0909101144u2c42a1b2scf69e83df931035d@mail.gmail.com>
-	<B1A260D7-B6A2-40D3-83FF-9571D80B66B8@redhat.com> <87f94c370909151328j1f88ab4fi452fcbeb5f1e9172@mail.gmail.com>
-	<FE87C12A-00E6-4DF6-80CF-56850AFFE656@redhat.com> <4AAFFDC4.5090806@sauce.co.nz>
-	<72dbd3150909151452r38087573od156a1965dc0eba1@mail.gmail.com>
-	<D88C9CE6-0F7D-4E8D-B972-75A5012B921C@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Date: Tue, 15 Sep 2009 21:26:57 -0400
+Message-ID: <11531516-3A7D-4858-B198-A1393B898218@redhat.com>
+References: <c268e4660909100556x14b48207w32017a59be889f@mail.gmail.com>  <70ed7c3e0909100911q926fa9cs9185854b15dd8764@mail.gmail.com>  <c268e4660909101135w4b933cbaj3e6a18e6b586fd62@mail.gmail.com>  <70ed7c3e0909101144u2c42a1b2scf69e83df931035d@mail.gmail.com>  <B1A260D7-B6A2-40D3-83FF-9571D80B66B8@redhat.com> <87f94c370909151328j1f88ab4fi452fcbeb5f1e9172@mail.gmail.com>  <FE87C12A-00E6-4DF6-80CF-56850AFFE656@redhat.com> <4AAFFDC4.5090806@sauce.co.nz>  <B15861F4-3F63-4D23-8B9A-DCB809C56C0C@redhat.com> <c268e4660909151632i56e9f3f9n48f17cc827d974f0@mail.gmail.com>
+Mime-Version: 1.0 (Apple Message framework v936)
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-35--120689226"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <D88C9CE6-0F7D-4E8D-B972-75A5012B921C@redhat.com>
+In-Reply-To: <c268e4660909151632i56e9f3f9n48f17cc827d974f0@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: David Rees <drees76@gmail.com>, Richard Scobie <richard@sauce.co.nz>, Greg Freemyer <greg.freemyer@gmail.com>, Drew <drew.kay@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Drew <drew.kay@gmail.com>
+Cc: Richard Scobie <richard@sauce.co.nz>, Greg Freemyer <greg.freemyer@gmail.com>, "Majed B." <majedb@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I think someone mentioned in the mailing list that the Linux kernel
-does sort commands before sending them to the disks, so if the disk
-tries to sort, and its algorithm isn't that good, the performance
-drops and hence disabling them is a good idea. I believe it's also
-mentioned in here: http://linux-raid.osdl.org/index.php/Performance
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--Apple-Mail-35--120689226
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 
-On Wed, Sep 16, 2009 at 3:31 AM, Doug Ledford <dledford@redhat.com> wro=
-te:
-> On Sep 15, 2009, at 5:52 PM, David Rees wrote:
->>
->> On Tue, Sep 15, 2009 at 1:49 PM, Richard Scobie <richard@sauce.co.nz=
+On Sep 15, 2009, at 7:32 PM, Drew wrote:
+> Thanks for the input.
 >
->> wrote:
->>>
->>> Doug Ledford wrote:
->>>>
->>>> I agree with this sentiment 100%. =C2=A0I don't have a good answer=
- for why
->>>> =C2=A0it
->>>> topped out where it did, and that's one of the things I'm still =C2=
-=A0trying
->>>> to
->>>> get an answer to.
->>>
->>> I can also confirm this sub par performance on the Sil 3124 - max
->>> throughput
->>> of around 120MB/s.
->>>
->>> If your motherboard is able to set the "PCIe Max Payload Size" you =
-may be
->>> able to improve things.
->>>
->>> See Note 3 here:
->>>
->>>
->>> http://ata.wiki.kernel.org/index.php/Hardware,_driver_status#Silico=
-n_Image_3124
->>
->> Another one here with a Sil3124 and max 120MB/s.
->>
->> With the port multiplier I've got, I've had to disable NCQ to get
->> things to behave when accessing multiple drives - otherwise access t=
-o
->> the enclosure would lock up under moderate/heavy concurrent disk
->> access.
->>
->> The multipler appears to be a Sil4726. =C2=A0The array was built on =
-a
->> budget so the drives in the multiplier are a mix of drives - some ar=
-e
->> 1.5Mbps, some are 3.0Mbps and not all support NCQ. =C2=A0Not sure ho=
-w it
->> behaves with 100% NCQ capable drives.
->
->
-> My port multiplier is a Sil3726, so very similar. =C2=A0However, my d=
-rives are
-> all more or less identical and are all NCQ capable. =C2=A0I've been a=
-ble to beat
-> on them for days at a time under non-stop load and not had a problem.
->
-> --
->
-> Doug Ledford <dledford@redhat.com>
->
-> GPG KeyID: CFBFF194
-> http://people.redhat.com/dledford
->
-> InfiniBand Specific RPMS
-> http://people.redhat.com/dledford/Infiniband
->
->
->
->
->
+> Sounds from your testing like PMs can deliver the sorts of speeds that
+> are adequate for our needs.
+
+Given a decent SATA port (like the Sil3132) and a motherboard that  
+allows this port to run at full speed (one that can up the max PCI-e  
+payload limit above 128 bytes), then yes.  I'm sure other port types  
+out there would work without the PCI-e requirement, but I don't have  
+any of those for testing.
+
+> Have you done any testing as far as md
+> RAID using member disks from each PM?
+
+I've only got one PM at the moment.
+
+> Given we're expecting a mix of online and archival data going onto
+> this enclosure I was thinking about making up RAID arrays composed of
+> disks from each PM for online use and arrays composed of disks from a
+> PM for archival use.
+
+Well, I might suggest something like doing 3 disks from each PM as  
+part of the archive and one disk from each PM as the online storage.   
+In a scenario like that, the archive system will run slower than the  
+online system, but as long as the online system and archive system  
+aren't currently fighting for bandwidth, the online system will get  
+full speed (assuming the online disks can't go faster than 120MB/s  
+each).  And that's without having to find a motherboard that lets you  
+set the PCI-e payload size.  Another option is the online disks can be  
+internal disks, with at most one disk per PM.  That array would be  
+blindingly fast.  You can then make the archive array(s) use the  
+remaining PM connected drives.
+
+> I'm sorry if I keep throwing questions out without doing my own
+> testing. As I alluded to earlier I don't have an R&D budget for
+> testing so I have to be reasonably sure of my system before I can get
+> authorization to purchase kit.
 
 
-
---=20
-       Majed B.
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Doug Ledford <dledford@redhat.com>
+
+GPG KeyID: CFBFF194
+http://people.redhat.com/dledford
+
+InfiniBand Specific RPMS
+http://people.redhat.com/dledford/Infiniband
+
+
+
+
+
+--Apple-Mail-35--120689226
+content-type: application/pgp-signature; x-mac-type=70674453;
+	name=PGP.sig
+content-description: This is a digitally signed message part
+content-disposition: inline; filename=PGP.sig
+content-transfer-encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2.0.12 (Darwin)
+
+iEYEARECAAYFAkqwPuEACgkQg6WylM+/8ZS7vgCgkHPJkJV5NDt10AUyy+H4BjMo
+yu8An0aDwJoBZkcof44ssZzbhCDQSqGx
+=hOsH
+-----END PGP SIGNATURE-----
+
+--Apple-Mail-35--120689226--
