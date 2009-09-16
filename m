@@ -1,32 +1,30 @@
-From: Matthias Urlichs <matthias@urlichs.de>
-Subject: Re: Re-map disk sectors in userspace when rewriting after read
- errors
-Date: Wed, 16 Sep 2009 15:13:33 +0200
-Message-ID: <1253106813.17888.9.camel@localhost>
-References: <h8nbt5$n8p$1@ger.gmane.org>
-	 <alpine.LFD.2.00.0909150810510.5083@sbhezbfg.of5.nffheflf.cev>
-	 <h8nfoe$n8p$3@ger.gmane.org>
-	 <alpine.LFD.2.00.0909150832000.5083@sbhezbfg.of5.nffheflf.cev>
-	 <h8nreb$n8p$4@ger.gmane.org>  <87ws3z5iro.fsf@frosties.localdomain>
+From: Chris Webb <chris@arachsys.com>
+Subject: Re: LVM and Raid5
+Date: Wed, 16 Sep 2009 14:15:36 +0100
+Message-ID: <20090916131536.GA3752@arachsys.com>
+References: <70ed7c3e0909160320j68c792d2g8ba01ac3c34eaae5@mail.gmail.com>
+ <894436.58276.qm@web51307.mail.re2.yahoo.com>
+ <70ed7c3e0909160400k578741e7ue687d8fd983d0d12@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87ws3z5iro.fsf@frosties.localdomain>
+Content-Disposition: inline
+In-Reply-To: <70ed7c3e0909160400k578741e7ue687d8fd983d0d12@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: linux-raid@vger.kernel.org
+To: "Majed B." <majedb@gmail.com>
+Cc: Jon@ehardcastle.com, Goswin von Brederlow <goswin-v-b@web.de>, Linux Raid Study <linuxraid.study@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 2009-09-16 at 11:41 +0200, Goswin von Brederlow wrote:
-> Alternatively write a re-map device-mapper target that reserves some
-> space of the disk and remaps bad blocks itself.
-> 
-That'd require some place to store the mapping so that the whole thing
-still works after a reboot. Which should probably be on a different
-disk. 
+"Majed B." <majedb@gmail.com> writes:
 
-I tend to want to move (part of) that problem to userspace; you may want
-to do more than a simple remapping of a few blocks when that happens
-(e.g. test-reading the surrounding area).
+> I tested with both dd and hdparm, and in both cases, md0 proved to be
+> much faster than the LV itself.
 
+This is quite odd because usually an LVM2 logical volume is just a simple
+linear device-mapper target onto the backing device. I could imagine a small
+performance change but a large one really surprises me. Could there be
+something going on here wrt sync vs non-sync IO?
+
+Best wishes,
+
+Chris.
