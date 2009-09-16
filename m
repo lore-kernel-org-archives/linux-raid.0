@@ -1,101 +1,82 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: Assemble and Stop array
-Date: Wed, 16 Sep 2009 10:54:38 +0300
-Message-ID: <70ed7c3e0909160054n7cad5615p6cbd5d0a72438b8e@mail.gmail.com>
-References: <20090915233517830.IGLE14103@cdptpa-omta02.mail.rr.com>
+From: Linux Raid Study <linuxraid.study@gmail.com>
+Subject: Re: Raid5 Read Perf drop in 2.6.27
+Date: Wed, 16 Sep 2009 00:57:40 -0700
+Message-ID: <f5d1f90a0909160057s5846df48i12c1026deb666d90@mail.gmail.com>
+References: <f5d1f90a0909091554u6d40b402ga7e9f58cabf21b57@mail.gmail.com>
+	 <70ed7c3e0909091652m60b0ea9cp7000db919a639c35@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090915233517830.IGLE14103@cdptpa-omta02.mail.rr.com>
+In-Reply-To: <70ed7c3e0909091652m60b0ea9cp7000db919a639c35@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lrhorer@satx.rr.com>
+To: "Majed B." <majedb@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Have you tried assembling the drives on another Linux box? Try using a =
-LiveCD.
-Which kernel are you running?
-Which distribution?
+Hi Majed, All:
 
-On Wed, Sep 16, 2009 at 2:35 AM, Leslie Rhorer <lrhorer@satx.rr.com> wr=
-ote:
+I'm using the default scheduler with 2.6.21 and 2.6.27...do you know
+if there is any difference?
+
+I rechecked the perf today - everything (i.e. disks, disk controller
+etc) remaining the same, I see around 45MB/s difference in performance
+when I change kernel from 2.6.21 to 2.6.27. I issue following cmd to
+see performance:
+hdparm -t /dev/md0
+
+FYI...I'm using Seagate HDDs (7200 RPM) with RocketRaid 2310 controller.
+
+Any ideas...I have tried blockdev readahead option and it helps but
+still not enough...
+
+Thanks a lot!
+
+On Wed, Sep 9, 2009 at 4:52 PM, Majed B. <majedb@gmail.com> wrote:
+> Are you sure you're using the same Kernel Scheduler on both kernels?
 >
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0I'm still trying to wrap my mind around tw=
-o items.
+> Have you checked and verified that the same drivers are being loaded?
+> (IDE vs. AHCI -- proprietary drivers vs. open source)
 >
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0One is stopping an array. =C2=A0From time =
-to time I need to stop an array
-> for some reason, but I am persistently having trouble doing so. =C2=A0=
-It doesn't
-> always happen, and sometimes when it does I can free it up by doing
-> `exportfs -ua` and `umount -l /xxxxx`, but other times it simply cann=
-ot be
-> done and my only recourse is to reboot the system. =C2=A0These are si=
-mple RAID5
-> or RAID6 arrays on raw drives with a single file system formatted on =
-the
-> unpartitioned array. =C2=A0None of the drives are used for booting or=
- for swap,
-> there is no loop device and lsof shows no open files, but mdadm -S st=
-ill
-> fails with a device busy error. =C2=A0Every time it has happened, a s=
-imple umount
-> command without the -l switch fails, but a "lazy" umount appears to w=
-ork,
-> with the exception that sometimes I still cannot stop the array. =C2=A0=
-Clearly,
-> the NFS export is sometimes the culprit, but not always. =C2=A0What e=
-lse can it
-> be?
+> This is interesting!
 >
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0The second item is assembling an array whi=
-ch was formerly stopped.
-> By my reading, `mdadm --assemble --scan` should work, but it doesn't.=
- =C2=A0It
-> keeps telling me no devices are found for the array. =C2=A0Here is a =
-sample from
-> one of the /etc/mdadm/mdadm.conf files:
+> On Thu, Sep 10, 2009 at 1:54 AM, Linux Raid
+> Study<linuxraid.study@gmail.com> wrote:
+>> Hello:
+>>
+>> I'm benchmarking RAID5 Read performance with 4 disks and notice perf
+>> drop when using kernel 2.6.27.
+>> The perf with 2.6.27 is 150MB/s whereas with kernel 2.6.21 (and same
+>> setup), the perf is 180MB/s/
+>>
+>>
+>>
+>> Some of the tests I have done:
+>> 1. I ran  experiments using iozone also but notice that READ perf with
+>> RAID5 in 2.6.27 is ~30% less as compared to 2.6.21.
+>> Write perf is similar but Read is an issue.
+>>
+>> 2. On 2.6.27, I played around with chunk size and blocksize parameters
+>> and got ~5% improvement but not much. I used following cmds:
+>>
+>> #mdadm --create /dev/md0 --level=5 --assume-clean --raid-devices=4
+>> /dev/sda /dev/sdb /dev/sdc /dev/sdd --chunk=32
+>> #mke2fs -b 4096 -E stride=8 /dev/md0
+>>
+>> #time dd if=/dev/md0 of=/dev/null bs=94208 count=1024
+>>
+>>
+>> Is this perf drop a known issue? Can someone please recommend some
+>> performance tuning tips?
+>>
+>> Thanks a lot for your time and help!
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
 >
-> # mdadm.conf
-> #
-> # Please refer to mdadm.conf(5) for information about this file.
-> #
 >
-> # auto-create devices with Debian standard permissions
-> CREATE owner=3Droot group=3Ddisk mode=3D0660 auto=3Dyes
->
-> # automatically tag new arrays as belonging to the local system
-> HOMEHOST <system>
->
-> # instruct the monitoring daemon where to send mail alerts
-> MAILADDR lrhorer@satx.rr.com
->
-> # This file was auto-generated on Fri, 21 Nov 2008 22:35:30 -0600
-> # by mkconf $Id$
-> PROGRAM /usr/bin/mdadm_notify
-> DEVICE /dev/sd[a-j]
-> ARRAY /dev/md/0 level=3Draid6 metadata=3D1.2 num-devices=3D10
-> UUID=3D5ff10d73:a096195f:7a646bba:a68986ca name=3DRAID-Server:0
->
-> When I manually assemble the array, I wind up having to re-create the=
- bitmap
-> file, as well.
 >
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
+>       Majed B.
 >
-
-
-
---=20
-       Majed B.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
