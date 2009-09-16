@@ -1,27 +1,48 @@
 From: "Leslie Rhorer" <lrhorer@satx.rr.com>
 Subject: RE: Assemble and Stop array
-Date: Wed, 16 Sep 2009 10:02:02 -0500
-Message-ID: <20090916150218407.XSBX6569@cdptpa-omta01.mail.rr.com>
-References: <70ed7c3e0909160054n7cad5615p6cbd5d0a72438b8e@mail.gmail.com>
+Date: Wed, 16 Sep 2009 10:06:47 -0500
+Message-ID: <20090916150703425.XXDI6569@cdptpa-omta01.mail.rr.com>
+References: <816534d7bc3fe604e11760fbf33932d1.squirrel@neil.brown.name>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70ed7c3e0909160054n7cad5615p6cbd5d0a72438b8e@mail.gmail.com>
+In-Reply-To: <816534d7bc3fe604e11760fbf33932d1.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: "'Majed B.'" <majedb@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Have you tried assembling the drives on another Linux box? Try using a
-> LiveCD.
+> > fails with a device busy error.  Every time it has happened, a simple
+> > umount
+> > command without the -l switch fails, but a "lazy" umount appears to
+> work,
+> > with the exception that sometimes I still cannot stop the array.
+> Clearly,
+> > the NFS export is sometimes the culprit, but not always.  What else can
+> it
+> > be?
+> 
+> It's best not to use --lazy if yo really want to stop the array.
+> It makes it harder to find the problem.
 
-	Well, this happens on multiple Linux boxes.  I'd rather not reboot
-the box when this happens, if I can avoid it.
+	Well, OK.  I always try an ordinary umount first, but when it fails,
+sometimes a lazy umount works.
 
-> Which kernel are you running?
-> Which distribution?
+> You seem to have covered everything that I can think of that would
+> keep a filesystem active...
+> 
+> >
+> > 	The second item is assembling an array which was formerly stopped.
+> > By my reading, `mdadm --assemble --scan` should work, but it doesn't.
+> It
+> > keeps telling me no devices are found for the array.  Here is a sample
+> > from
+> > one of the /etc/mdadm/mdadm.conf files:
+> >
+> 
+> Try adding --verbose to the "mdadm --assemble" line.  If that doesn't
+> give you any hints, post the output and it might give me some hints.
 
-	All of them are on Debian "Lenny" under 2.6.26-2-amd64.
+	OK, thanks.  The next time it happens, I will.
 
