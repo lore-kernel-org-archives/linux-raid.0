@@ -1,11 +1,11 @@
-From: "NeilBrown" <neilb@suse.de>
+From: "Majed B." <majedb@gmail.com>
 Subject: Re: Assemble and Stop array
-Date: Wed, 16 Sep 2009 17:17:58 +1000 (EST)
-Message-ID: <816534d7bc3fe604e11760fbf33932d1.squirrel@neil.brown.name>
+Date: Wed, 16 Sep 2009 10:54:38 +0300
+Message-ID: <70ed7c3e0909160054n7cad5615p6cbd5d0a72438b8e@mail.gmail.com>
 References: <20090915233517830.IGLE14103@cdptpa-omta02.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20090915233517830.IGLE14103@cdptpa-omta02.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
@@ -13,54 +13,57 @@ To: Leslie Rhorer <lrhorer@satx.rr.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, September 16, 2009 9:35 am, Leslie Rhorer wrote:
+Have you tried assembling the drives on another Linux box? Try using a =
+LiveCD.
+Which kernel are you running?
+Which distribution?
+
+On Wed, Sep 16, 2009 at 2:35 AM, Leslie Rhorer <lrhorer@satx.rr.com> wr=
+ote:
 >
-> 	I'm still trying to wrap my mind around two items.
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0I'm still trying to wrap my mind around tw=
+o items.
 >
-> 	One is stopping an array.  From time to time I need to stop an array
-> for some reason, but I am persistently having trouble doing so.  It
-> doesn't
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0One is stopping an array. =C2=A0From time =
+to time I need to stop an array
+> for some reason, but I am persistently having trouble doing so. =C2=A0=
+It doesn't
 > always happen, and sometimes when it does I can free it up by doing
-> `exportfs -ua` and `umount -l /xxxxx`, but other times it simply cannot be
-> done and my only recourse is to reboot the system.  These are simple RAID5
-> or RAID6 arrays on raw drives with a single file system formatted on the
-> unpartitioned array.  None of the drives are used for booting or for swap,
-> there is no loop device and lsof shows no open files, but mdadm -S still
-> fails with a device busy error.  Every time it has happened, a simple
-> umount
-> command without the -l switch fails, but a "lazy" umount appears to work,
-> with the exception that sometimes I still cannot stop the array.  Clearly,
-> the NFS export is sometimes the culprit, but not always.  What else can it
+> `exportfs -ua` and `umount -l /xxxxx`, but other times it simply cann=
+ot be
+> done and my only recourse is to reboot the system. =C2=A0These are si=
+mple RAID5
+> or RAID6 arrays on raw drives with a single file system formatted on =
+the
+> unpartitioned array. =C2=A0None of the drives are used for booting or=
+ for swap,
+> there is no loop device and lsof shows no open files, but mdadm -S st=
+ill
+> fails with a device busy error. =C2=A0Every time it has happened, a s=
+imple umount
+> command without the -l switch fails, but a "lazy" umount appears to w=
+ork,
+> with the exception that sometimes I still cannot stop the array. =C2=A0=
+Clearly,
+> the NFS export is sometimes the culprit, but not always. =C2=A0What e=
+lse can it
 > be?
-
-It's best not to use --lazy if yo really want to stop the array.
-It makes it harder to find the problem.
-
-You seem to have covered everything that I can think of that would
-keep a filesystem active...
-
 >
-> 	The second item is assembling an array which was formerly stopped.
-> By my reading, `mdadm --assemble --scan` should work, but it doesn't.  It
-> keeps telling me no devices are found for the array.  Here is a sample
-> from
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0The second item is assembling an array whi=
+ch was formerly stopped.
+> By my reading, `mdadm --assemble --scan` should work, but it doesn't.=
+ =C2=A0It
+> keeps telling me no devices are found for the array. =C2=A0Here is a =
+sample from
 > one of the /etc/mdadm/mdadm.conf files:
 >
-
-Try adding --verbose to the "mdadm --assemble" line.  If that doesn't
-give you any hints, post the output and it might give me some hints.
-
-NeilBrown
-
-
-
 > # mdadm.conf
 > #
 > # Please refer to mdadm.conf(5) for information about this file.
 > #
 >
 > # auto-create devices with Debian standard permissions
-> CREATE owner=root group=disk mode=0660 auto=yes
+> CREATE owner=3Droot group=3Ddisk mode=3D0660 auto=3Dyes
 >
 > # automatically tag new arrays as belonging to the local system
 > HOMEHOST <system>
@@ -72,16 +75,27 @@ NeilBrown
 > # by mkconf $Id$
 > PROGRAM /usr/bin/mdadm_notify
 > DEVICE /dev/sd[a-j]
-> ARRAY /dev/md/0 level=raid6 metadata=1.2 num-devices=10
-> UUID=5ff10d73:a096195f:7a646bba:a68986ca name=RAID-Server:0
+> ARRAY /dev/md/0 level=3Draid6 metadata=3D1.2 num-devices=3D10
+> UUID=3D5ff10d73:a096195f:7a646bba:a68986ca name=3DRAID-Server:0
 >
-> When I manually assemble the array, I wind up having to re-create the
-> bitmap
+> When I manually assemble the array, I wind up having to re-create the=
+ bitmap
 > file, as well.
 >
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
 >
 
+
+
+--=20
+       Majed B.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
