@@ -1,135 +1,107 @@
 From: "Majed B." <majedb@gmail.com>
-Subject: Re: RAID 5 array recovery - two drives errors in external enclosure
-Date: Fri, 18 Sep 2009 00:35:39 +0300
-Message-ID: <70ed7c3e0909171435u661eeccbte85f968e067709f9@mail.gmail.com>
-References: <2267211f0909171342g6ebf68a2y393daa587e59c714@mail.gmail.com>
-	<20090917212252.GC19611@cthulhu.home.robinhill.me.uk>
+Subject: Re: Formatting Raid5 device as NTFS
+Date: Fri, 18 Sep 2009 00:43:01 +0300
+Message-ID: <70ed7c3e0909171443t68d81495y26acc8f5119d7aa3@mail.gmail.com>
+References: <f5d1f90a0909171223h684e5f65k405fa319ab6be8d9@mail.gmail.com>
+	<20090917200229.GA19611@cthulhu.home.robinhill.me.uk> <f5d1f90a0909171439x18555f61y8d6ab175c745473@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090917212252.GC19611@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <f5d1f90a0909171439x18555f61y8d6ab175c745473@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Linux Raid Study <linuxraid.study@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Looking at your initial examine output, seems like the proper order is:=
- bdce.
+/dev/md0 is not mounted and it doesn't have a filesystem because you
+didn't format the device after creating it.
 
-If the hardware resets have gone after plugging into a normal PC case,
-with different SATA cables, then I'd say the cables in your external
-enclosure might be the suspect here.
+After you have created the filesystem, run: mkfs.ntfs --fast /dev/md0
 
-As Robin said, make sure you have the disks in the proper original
-order as they were previously and that the chunksize is the same as
-before.
+After that, you can mount it: mount /dev/md0 /mnt/windows
 
-This should do it: mdadm -C /dev/md0 -l 5 -n 5 -c 256 /dev/sd[bdce]1 mi=
-ssing
-(notice the order)
-
-On Fri, Sep 18, 2009 at 12:22 AM, Robin Hill <robin@robinhill.me.uk> wr=
-ote:
-> On Thu Sep 17, 2009 at 01:42:30PM -0700, Tim Bostrom wrote:
+On Fri, Sep 18, 2009 at 12:39 AM, Linux Raid Study
+<linuxraid.study@gmail.com> wrote:
+> Hi Robin:
 >
->> OK,
->>
->> Let me start off by saying - I panicked. =C2=A0Rule #1 - don't panic=
-=2E =C2=A0I
->> did. =C2=A0Sorry.
->>
->> I have a RAID 5 array running on Fedora 10.
->> (Linux tera.teambostrom.com 2.6.27.30-170.2.82.fc10.i686 #1 SMP Mon
->> Aug 17 08:38:59 EDT 2009 i686 athlon i386 GNU/Linux)
->>
->> 5 drives in an external enclosure (AMS eSATA Venus T5). =C2=A0It's a
->> Sil4726 inside the enclosure running to a Sil3132 controller via eSA=
-TA
->> in the desktop. =C2=A0I had been running this setup for just over a =
-year.
->> Was working fine. =C2=A0 I just moved into a new home and had my ser=
-ver
->> down for a while =C2=A0- before I brought it back online, I got a "g=
-reat
->> idea" to blow out the dust from the enclosure using compressed air.
->> When I finally brought up the array again, I noticed that drives wer=
-e
->> missing. =C2=A0Tried re-adding the drives to the array and had some =
-issues
->> - they seemed to get added but after a short time of rebuilding the
->> array, I would get a bunch of HW resets in dmesg and then the array
->> would kick out drives and stop.
->>
-> <- much snippage ->
+> I use mdadm cmd to create Raid5 device and did following:
 >
->> I popped the drives out of the enclosure and into the actual tower
->> case and connected each of them to its own SATA port. =C2=A0The HW r=
-esets
->> seemed to go away, but I couldn't get the array to come back online.
->> =C2=A0Then I did the stupid panic (following someone's advice I shou=
-ldn't
->> have).
->>
->> thinking I should just re-create the array, I did:
->>
->> mdadm --create /dev/md0 --level=3D5 --raid-devices=3D5 /dev/sd[b-f]1
->>
->> Stupid me again - ignores the warning that it belongs to an array
->> already. =C2=A0I let it build for a minute or so and then tried to m=
-ount it
->> while rebuilding... and got error messages:
->>
->> EXT3-fs: unable to read superblock
->> EXT3-fs: md0: couldn't mount because of unsupported optional feature=
-s
->> (3fd18e00).
->>
->> Now - I'm at a loss. =C2=A0I'm afraid to do anything else. =C2=A0 I'=
-ve been
->> viewing the FAQ and I have a few ideas, but I'm just more freaked. =C2=
-=A0Is
->> there any hope? =C2=A0What should I do next without causing more tro=
-uble?
->>
-> Looking at the mdadm output, there's a couple of possible errors.
-> Firstly, your newly created array has a different chunksize than your
-> original one. =C2=A0Secondly, the drives may be in the wrong order. =C2=
-=A0In
-> either case, providing you don't _actually_ have any faulty drives, t=
-hen
-> it should be (mostly) recoverable.
+> #mdadm --create /dev/md0 --level=3D5 --assume-clean --raid-devices=3D=
+4
+> /dev/sda /dev/sdb /dev/sdc /dev/sdd
 >
-> Given the order you specified the drives in the create, sdf1 will be =
+> #mdadm -w /dev/md0
+> mdadm: failed to set writable for /dev/md0: Device or resource busy
+>
+> ~ # mount
+> none on /proc type proc (rw)
+> none on /dev/shm type tmpfs (rw)
+> none on /dev/pts type devpts (rw,mode=3D600)
+> none on /sys type sysfs (rw)
+> none on /mnth type hugetlbfs (rw)
+>
+> As u would notice, /dev/md0 is yet mounted...not sure why the above e=
+rror....
+>
+> Thanks for ur help!
+>
+> On Thu, Sep 17, 2009 at 1:02 PM, Robin Hill <robin@robinhill.me.uk> w=
+rote:
+>> On Thu Sep 17, 2009 at 12:23:22PM -0700, Linux Raid Study wrote:
+>>
+>>> Hello:
+>>>
+>>> I have to bundle 4 disks as a Raid5 device, export it to iSCSI
+>>> initiators and format it as NTFS.
+>>>
+>>> What is better:
+>>> - Format individual disks as NTFS and then bundle them as Raid5 dev=
+ice
+>>> and export to initiator PCs
+>>> - Or bundle the disks first as Raid5 dev, export them and then form=
+at
+>>> the /dev/md0 device as NTFS
+>>>
+>>> I get "write-protected" errors when I do the second option. Does it
+>>> mean formatting of raid5 device is not allowed?
+>>> Does Raid5 inherit the NTFS properties of individual disks (first o=
+ption)?
+>>>
+>> I don't see your first option working at all. =C2=A0When you bundle =
 the
-> partition that's been trashed by the rebuild, so you'll want to leave
-> that out altogether for now.
->
-> You need to try to recreate the array with the correct chunk size and
-> with the remaining drives in different orders, running a read-only
-> filesystem check each time until you find the correct order.
->
-> So start with:
-> =C2=A0 =C2=A0mdadm -C /dev/md0 -l 5 -n 5 -c 256 /dev/sd[bcde]1 missin=
-g
->
-> Then repeat for every possible order of the four disks and "missing",
-> stopping the array each time if the mount fails.
->
-> When you've finally found the correct order, you can re-add sdf1 to g=
-et
-> the array back to normal.
->
-> HTH,
-> =C2=A0 =C2=A0Robin
-> --
-> =C2=A0 =C2=A0 ___
-> =C2=A0 =C2=A0( ' } =C2=A0 =C2=A0 | =C2=A0 =C2=A0 =C2=A0 Robin Hill =C2=
+>> drives together, the resulting device will have totally scrambled th=
+e
+>> underlying NTFS filesystems.
+>>
+>> The second option is how md RAID is supposed to work - you bundle
+>> together the disks into a single array, then format that. =C2=A0Wher=
+e are you
+>> getting the "write-protected" errors? =C2=A0Are you trying to format=
+ the
+>> exported iSCSI device from a remote system? =C2=A0Certainly the RAID=
+ device
+>> can be formatted directly, but I've no idea how the iSCSI affects
+>> things.
+>>
+>> HTH,
+>> =C2=A0 =C2=A0Robin
+>> --
+>> =C2=A0 =C2=A0 ___
+>> =C2=A0 =C2=A0( ' } =C2=A0 =C2=A0 | =C2=A0 =C2=A0 =C2=A0 Robin Hill =C2=
 =A0 =C2=A0 =C2=A0 =C2=A0<robin@robinhill.me.uk> |
-> =C2=A0 / / ) =C2=A0 =C2=A0 =C2=A0| Little Jim says .... =C2=A0 =C2=A0=
+>> =C2=A0 / / ) =C2=A0 =C2=A0 =C2=A0| Little Jim says .... =C2=A0 =C2=A0=
  =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
 =C2=A0 =C2=A0|
-> =C2=A0// !! =C2=A0 =C2=A0 =C2=A0 | =C2=A0 =C2=A0 =C2=A0"He fallen in =
-de water !!" =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 |
+>> =C2=A0// !! =C2=A0 =C2=A0 =C2=A0 | =C2=A0 =C2=A0 =C2=A0"He fallen in=
+ de water !!" =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 |
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
 >
 
 
