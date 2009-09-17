@@ -1,58 +1,253 @@
-From: Matt Garman <matthew.garman@gmail.com>
-Subject: Re: recommended 4port SATA controller ?
-Date: Thu, 17 Sep 2009 16:52:40 -0500
-Message-ID: <20090917215240.GA418@sewage>
-References: <4AB22135.7030405@kaneda.iguw.tuwien.ac.at> <87f94c370909170549v156f9b23ie19f7204e21819f1@mail.gmail.com> <4AB24BFC.6070800@kaneda.iguw.tuwien.ac.at>
+From: "Sunpyo Hong" <sunpyo.hong@amac.com>
+Subject: RE: Raid 5 Issue, cannot recognize EXT3 File system.
+Date: Thu, 17 Sep 2009 17:54:29 -0400
+Message-ID: <200909171754312.SM06100@trainer>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4AB24BFC.6070800@kaneda.iguw.tuwien.ac.at>
+In-Reply-To: 
 Sender: linux-raid-owner@vger.kernel.org
-To: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
-Cc: Greg Freemyer <greg.freemyer@gmail.com>, linux-raid@vger.kernel.org
+To: 'Robin Hill' <robin@robinhill.me.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Sep 17, 2009 at 04:47:24PM +0200, Rainer Fuegenstein wrote:
-> the plan is to replace this board with a more power-saving one as
-> soon  as the new intel atom plattfrom (pinewood? pinetrail?) comes
-> out in  2010/Q1 (hard to tell which  expansion slots the boards
-> will have then,  but I bet on PCI).  speed isn't an issue, but low
-> power consumption would be nice (but not  easy to find in
-> datasheets etc.) since the server is supposed to be  powered by
-> photovoltaic panels.
+I am also able to see the filesystem of the NAS, however not the data
+partition. EX:
 
-As others have mentioned, when doing SATA over PCI, the bottleneck
-will be the PCI bus.  IIRC, SATA2 spec supports up to 300 MB/s, and
-PCI is 133 (or 150) MB/s.  Realistically, modern spinning hard
-drives usually max out around 100 MB/s, so just two drives can
-saturate your PCI bus.  I think those numbers are reasonably close.
+I can see the filesystem on:
+#ls /media/disk (which is the mount of the filesystem in the NAS) This =
+is
+also considered to be my /dev/md0, /dev/md2 is the data partition
 
-But, if, for example, you are serving the data strictly over the
-network (i.e. a NAS box), a single Gigabit ethernet connection tops
-out at rougly 125 MB/s.  So in this case the network performance
-would shadow the reduced performance of the drives on the PCI bus.
-(Unless your network controller is also on the PCI bus, then you're
-hosed!  It's always good to check the block diagram of the
-motherboard.)
+-----Original Message-----
+=46rom: Sunpyo Hong [mailto:sunpyo.hong@amac.com]=20
+Sent: Thursday, September 17, 2009 5:47 PM
+To: 'Robin Hill'; 'linux-raid@vger.kernel.org'
+Subject: RE: Raid 5 Issue, cannot recognize EXT3 File system.
 
-Anyway, you asked for four ports, but how about eight?  I'm
-surprised no one has mentioned this yet---I'd consider it a bit of a
-"classic": Supermicro AOC-SAT2-MV8.
+=46irst off, lemme tell you the initial problem. I had a WD ShareSpace =
+that
+had one of the disk go bad. They sent a replacement and it was suppose =
+to
+rebuild on its own, however after the build, the array went bad and it =
+was
+no longer able to see any of the files.=20
 
-    http://www.newegg.com/Product/Product.aspx?Item=N82E16815121009
+I downloaded and tested the drives using windows data recovery tools I =
+saw
+that the ext3 was Linux FS and that using these tools would not help in=
+ the
+recovery. However through the tools I was able to see and recover some =
+of
+the files, but the files themselves were usable. I confirmed with WD th=
+at
+ext3 was in fact the FS and took steps to recover the data. These are t=
+he
+steps I took in order for me to assemble the raid.
 
-Eight SATA ports.  It's PCI-X, but I've used mine in regular 32-bit
-PCI slots on several different motherboards without any problems.
-Plenty of anecdotal evidence on the net as well of people using this
-card in 32-bit PCI slots.  Linux support is good (personal
-experience plus anecdotal).
+Right now I have 3/4 drives with the data. I did #mdadm --assemble --sc=
+an,
+which let me assemble the raid. However at this point I was not able to=
+ see
+any of the files or mount the drive to the mount point it was once at. =
+I
+have also tried #mdadm --create with the array in the right order /w th=
+e
+missing disk.=20
 
-I can't speak to its power consumption; there are no heatsinks on
-the board, that should mean something.  I don't know, but I would
-guess that the PCI bus wasn't designed to provide a lot of power
-anyway.
+Initially the --assemble --scan assembled the array /dev/md2 with the d=
+isks
+in the wrong order. I know because I physically saw where the disks wer=
+e in
+relation to the disk order and wrote down the disk order on every HD.
 
-Hope that helps!
-Matt
+Here's everything I could find in terms of information that you asked f=
+or.
+It's a lot.
 
+#dmesg
+[  339.440187] raid5: device sdb4 operational as raid disk 1
+[  339.440189] raid5: device sdd4 operational as raid disk 3
+[  339.440192] raid5: device sdc4 operational as raid disk 2
+[  339.440610] raid5: allocated 4219kB for md2
+[  339.440612] raid5: raid level 5 set md2 active with 3 out of 4 devic=
+es,
+algorithm 2
+[  339.440615] RAID5 conf printout:
+[  339.440617]  --- rd:4 wd:3
+[  339.440619]  disk 1, o:1, dev:sdb4
+[  339.440620]  disk 2, o:1, dev:sdc4
+[  339.440622]  disk 3, o:1, dev:sdd4
+[  339.440817]  md2: unknown partition table
+[  538.840033] kjournald starting.  Commit interval 5 seconds
+[  538.891844] EXT3 FS on md0, internal journal
+[  538.891849] EXT3-fs: mounted filesystem with ordered data mode.
+[  581.585031] VFS: Can't find ext4 filesystem on dev md2.
+[  587.056825] VFS: Can't find ext3 filesystem on dev md2.
+
+
+#fdisk -l
+WARNING: GPT (GUID Partition Table) detected on '/dev/sda'! The util fd=
+isk
+doesn't support GPT. Use GNU Parted.
+
+
+Disk /dev/sda: 2000.3 GB, 2000398934016 bytes
+255 heads, 63 sectors/track, 243201 cylinders
+Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
+Disk identifier: 0x00000000
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1               1      243202  1953514583+  ee  GPT
+
+Disk /dev/sdb: 2000.3 GB, 2000398934016 bytes
+255 heads, 63 sectors/track, 243201 cylinders
+Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
+Disk identifier: 0xdd07e5e3
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdb1               1          26      208844+  fd  Linux raid
+autodetect
+/dev/sdb2              27         156     1044225   fd  Linux raid
+autodetect
+/dev/sdb3             157         182      208845   fd  Linux raid
+autodetect
+/dev/sdb4             183      243201  1952050117+  fd  Linux raid
+autodetect
+
+Disk /dev/sdc: 2000.3 GB, 2000398934016 bytes
+255 heads, 63 sectors/track, 243201 cylinders
+Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
+Disk identifier: 0xdd07e5e4
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdc1               1          26      208844+  fd  Linux raid
+autodetect
+/dev/sdc2              27         156     1044225   fd  Linux raid
+autodetect
+/dev/sdc3             157         182      208845   fd  Linux raid
+autodetect
+/dev/sdc4             183      243201  1952050117+  fd  Linux raid
+autodetect
+
+Disk /dev/sdd: 2000.3 GB, 2000398934016 bytes
+255 heads, 63 sectors/track, 243201 cylinders
+Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
+Disk identifier: 0xdd07e5e2
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdd1               1          26      208844+  fd  Linux raid
+autodetect
+/dev/sdd2              27         156     1044225   fd  Linux raid
+autodetect
+/dev/sdd3             157         182      208845   fd  Linux raid
+autodetect
+/dev/sdd4             183      243201  1952050117+  fd  Linux raid
+autodetect
+
+Disk /dev/md0: 213 MB, 213778432 bytes
+2 heads, 4 sectors/track, 52192 cylinders
+Units =3D cylinders of 8 * 512 =3D 4096 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/md0 doesn't contain a valid partition table
+
+Disk /dev/md2: 5996.6 GB, 5996697747456 bytes
+2 heads, 4 sectors/track, 1464037536 cylinders
+Units =3D cylinders of 8 * 512 =3D 4096 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/md2 doesn't contain a valid partition table
+
+
+#cat /proc/mdstat
+Personalities : [raid1] [raid6] [raid5] [raid4]=20
+md2 : active raid5 sdb4[1] sdd4[3] sdc4[2]
+      5856150144 blocks level 5, 64k chunk, algorithm 2 [4/3] [_UUU]
+     =20
+md0 : active raid1 sdd1[0] sdb1[2] sdc1[1]
+      208768 blocks [4/3] [UUU_]
+     =20
+
+#cat /etc/fstab
+aufs / aufs rw 0 0
+tmpfs /tmp tmpfs nosuid,nodev 0 0
+/dev/sda2 swap swap defaults 0 0
+/dev/sdb2 swap swap defaults 0 0
+/dev/sdc2 swap swap defaults 0 0
+/dev/sdd2 swap swap defaults 0 0
+
+
+#mount -t ext3 /dev/md2 /media/disk/shares
+mount: wrong fs type, bad option, bad superblock on /dev/md2,
+       missing codepage or helper program, or other error
+       In some cases useful info is found in syslog - try
+       dmesg | tail  or so
+
+#mdadm -Ds -v
+ARRAY /dev/md0 level=3Draid1 num-devices=3D4 metadata=3D00.90
+UUID=3D15e54255:f58be7ca:7f4a592f:038fedf2
+   devices=3D/dev/sdd1,/dev/sdc1,/dev/sdb1
+ARRAY /dev/md2 level=3Draid5 num-devices=3D4 metadata=3D00.90
+UUID=3D0b23d5e1:f5a27618:e368bf24:bd0fce41
+   devices=3D/dev/sdb4,/dev/sdc4,/dev/sdd4
+
+#mdadm -Es -v
+ARRAY /dev/md0 level=3Draid1 num-devices=3D4
+UUID=3D15e54255:f58be7ca:7f4a592f:038fedf2
+   devices=3D/dev/sdd1,/dev/sdc1,/dev/sdb1
+ARRAY /dev/md1 level=3Draid1 num-devices=3D4
+UUID=3D57cd5e76:0d56f114:50bd5336:4477d020
+   devices=3D/dev/sdd2,/dev/sdc2,/dev/sdb2
+ARRAY /dev/md2 level=3Draid5 num-devices=3D4
+UUID=3D0b23d5e1:f5a27618:e368bf24:bd0fce41
+   devices=3D/dev/sdd4,/dev/sdc4,/dev/sdb4
+
+-----Original Message-----
+=46rom: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Robin Hill
+Sent: Thursday, September 17, 2009 5:02 PM
+To: linux-raid@vger.kernel.org
+Subject: Re: Raid 5 Issue, cannot recognize EXT3 File system.
+
+On Thu Sep 17, 2009 at 04:20:16PM -0400, Sunpyo Hong wrote:
+
+> I've contacted just about everyone that knows a thing about RAID5, bu=
+t no
+> one is really able to help me. Anyhow I've read up a lot on RAID5 arr=
+ays
+and
+> how to properly assemble them. However I've run into a problem with a=
+ NAS
+> system from WD that I just can't seem to figure out.
+>=20
+> I have a =BE disks in the array, 1 went down and is out of commission=
+=2E  I've
+> been able to assemble my array through mdadm using --assemble --scan.
+However
+> I cannot access the array due to the fact that the array cannot read =
+a
+> filesystem. Everytime I try to mount I get mount: wrong fs type=85 et=
+c. I
+> know that the FS is an ext3 FS. However I cannot seem to get this
+> thing going. I was wondering if anyone could point me in the right
+> direction with this. I can't seem to find anyone that is capable of
+> solving this. I would appreciate any help. Thanks!
+>=20
+What's the output of 'cat /proc/mdstat' after you assemble the array?
+And what exact error (and dmesg output) do you get when trying to mount
+it as ext3?
+
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
