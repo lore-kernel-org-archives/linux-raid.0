@@ -1,37 +1,75 @@
-From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
+From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
 Subject: Re: recommended 4port SATA controller ?
-Date: Thu, 17 Sep 2009 22:41:12 +0000
-Message-ID: <73e903670909171541s186d9321k15ff2810727f833f@mail.gmail.com>
-References: <4AB22135.7030405@kaneda.iguw.tuwien.ac.at>
-	 <87f94c370909170549v156f9b23ie19f7204e21819f1@mail.gmail.com>
-	 <4AB24BFC.6070800@kaneda.iguw.tuwien.ac.at>
-	 <20090917215240.GA418@sewage>
+Date: Thu, 17 Sep 2009 17:02:47 -0600
+Message-ID: <200909171702.47552.tfjellstrom@shaw.ca>
+References: <4AB22135.7030405@kaneda.iguw.tuwien.ac.at> <fa3b69580909171437s1074d7daqc4df84580ac9a9c3@mail.gmail.com>
+Reply-To: tfjellstrom@shaw.ca
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090917215240.GA418@sewage>
+In-Reply-To: <fa3b69580909171437s1074d7daqc4df84580ac9a9c3@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: John Bridges <john.bridges@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Sep 17, 2009 at 9:52 PM, Matt Garman=A0<matthew.garman@gmail.co=
-m>=A0wrote:
->
-> Anyway, you asked for four ports, but how about eight? =A0I'm
-> surprised no one has mentioned this yet---I'd consider it a bit of a
-> "classic": Supermicro AOC-SAT2-MV8.
->
-> =A0 =A0http://www.newegg.com/Product/Product.aspx?Item=3DN82E16815121=
-009
+On Thu September 17 2009, John Bridges wrote:
+> I'm a fan of the SuperMicro AOC-SAT2-MV8, great card.
+> http://www.supermicro.com/products/accessories/addon/AOC-SAT2-MV8.cfm
+> 
+> It's an 8 port PCI-X card, works in both PCI and PCI-X slots.
+> 
+> SATA2
+> 
+> Drivers for Linux are stable, built in.
 >
 
-And an extra +1 from me on the Supermicro AOC-SAT2-MV8.
-Straightforward, effective, nicely fast.=A0Nice card.=A0Especially if i=
-t
-can go in a PCI slot too - that's REAL useful to know! Thanks.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Have you had any experience with the AOC-SASLP-MV8? I've got one and have been 
+having no end of issues with it under linux.
+
+> You can disable the BIOS to put a LOT of cards into a single machine
+> (I have four in one machine).
+> 
+> Costs about $100
+> 
+> http://www.newegg.com/Product/Product.aspx?Item=N82E16815121009
+> 
+> Reliable card from a real company.
+> 
+> 
+> On Thu, Sep 17, 2009 at 4:44 AM, Rainer Fuegenstein
+> 
+> <rfu@kaneda.iguw.tuwien.ac.at> wrote:
+> > hi,
+> >
+> > I need to move my 4 disk raid5 array from a motherboard with 4 onboard
+> > SATA ports to a mainboard with just 2 ports. therefore I'm looking for a
+> > reliable and inexpensive 4port PCI controller.
+> >
+> > the less raid features it has the better since I fear that a raid
+> > controller may initially write some management informationen (signatures
+> > etc.) to the disks and therefore damage the linux raid5 setup.
+> >
+> > And, if possible, it should have low power consumption since it is about
+> > to be used in a small server powered by photovoltaic panels.
+> >
+> > any recommendations aprreciated.
+> >
+> > thanks and best regards.
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
+-- 
+Thomas Fjellstrom
+tfjellstrom@shaw.ca
