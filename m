@@ -1,180 +1,160 @@
-From: Linux Raid Study <linuxraid.study@gmail.com>
-Subject: changing stripe cache size
-Date: Wed, 16 Sep 2009 18:30:58 -0700
-Message-ID: <f5d1f90a0909161830w8a2cba3laa08fd09111a83e5@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH] md: set the md raid 4,5,6  thead name by its level
+Date: Thu, 17 Sep 2009 11:36:52 +1000
+Message-ID: <19121.37556.237576.950694@notabene.brown>
+References: <1253091297-3889-1-git-send-email-zhenchengjin@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?Q?Keld_J=C3=B8rn_Simonsen?= <keld@dkuug.dk>
-Cc: "Majed B." <majedb@gmail.com>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760649AbZIQBfs@vger.kernel.org>
+In-Reply-To: message from Jinzc on Wednesday September 16
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jinzc <zhenchengjin@gmail.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ok...I figured out...the max stripe_cache_size on my system is 8k.
-Since I was setting it to 32k, it was failing and staying at 1k.
+On Wednesday September 16, zhenchengjin@gmail.com wrote:
+> the current edition, if you create a md raid 4,5,6
+> the name of md thread is mdx_raid5. If you create a raid 4,6
+> the name mdx_raid4, mdx_raid6 are better than mdx_raid5.
 
-Per mdadm, my chunk size is default 64k.
+Thanks for the suggestion and the patch.
 
-The final goal here is to export this /dev/md0 device to iSCSI
-initiators (running on different PCs) and measure performance. So,
-ques is what would be an optimal block size for iSCSI reads if chunk
-size is 64k and stripe cache size is 8k.
+I would like to achieve the same thing a little differently.
+Primarily I am using the personality name rather than combining the
+level number with "raid".  The result is the same.
+See below.
 
-Thanks for your help...
+Thanks,
+NeilBrown
 
-2009/9/16 Linux Raid Study <linuxraid.study@gmail.com>:
-> Hi:
->
-> I tried to change the Raid5 stripe cache size by doing
-> "echo =C2=A0262144 > /sys/block/md0/md/stripe_cache_size"
-> But if I do "cat /sys/block/md0/md/stripe_cache_size", it still shows=
- 1024!
->
-> Can someone please suggest how to increase stripe cache size?
->
-> thanks!
->
->
-> 2009/9/10 Keld J=C3=B8rn Simonsen <keld@dkuug.dk>:
->> Hi
->>
->> There is some data on raid5 performance (and other raid types) at ou=
-r
->> wiki at: http://linux-raid.osdl.org/index.php/Performance
->>
->> When you have something you want to share with others, then we can a=
-dd
->> your info to the data there, either by a URL or by direct inclusion =
-in
->> the wiki.
->>
->> best regards
->> keld
->>
->> On Wed, Sep 09, 2009 at 06:45:31PM -0700, Linux Raid Study wrote:
->>> I build/compile my own kernel..
->>>
->>> Have you done any benchmarks for Read RAID5 perf?
->>>
->>> Thanks!
->>>
->>> On 9/9/09, Majed B. <majedb@gmail.com> wrote:
->>> > Well, that's my point. To make sure that your kernels are identic=
-al in
->>> > =C2=A0options, compare the .config files found in /usr/src/linux-=
-<version>
->>> >
->>> > =C2=A0You may find changes and differences in areas like bluetoot=
-h,
->>> > =C2=A0wireless, ...etc. These don't matter.
->>> >
->>> > =C2=A0Did you compile your own kernel, or are you using one compi=
-led for a
->>> > =C2=A0specific distro?
->>> >
->>> > =C2=A0On Thu, Sep 10, 2009 at 4:17 AM, Linux Raid
->>> >
->>> > Study<linuxraid.study@gmail.com> wrote:
->>> > =C2=A0> Yes - the setup is the same. The only thing that changes =
-is the kernel.
->>> > =C2=A0>
->>> > =C2=A0> I have 4 HDDs (2 from WD VelociRaptor 150GB/10k RPM and 2=
- from Seagate
->>> > =C2=A0> 320GB/7.2k RPM). =C2=A0The HDDs are connected using two S=
-ilicon Image SATA
->>> > =C2=A0> controllers (Sil3132) connected to my host using PCIe.
->>> > =C2=A0>
->>> > =C2=A0> I use the default kernel scheduling scheme.
->>> > =C2=A0>
->>> > =C2=A0> Thanks!
->>> > =C2=A0>
->>> > =C2=A0> On 9/9/09, Majed B. <majedb@gmail.com> wrote:
->>> > =C2=A0>> Are you sure you're using the same Kernel Scheduler on b=
-oth kernels?
->>> > =C2=A0>>
->>> > =C2=A0>> =C2=A0Have you checked and verified that the same driver=
-s are being loaded?
->>> > =C2=A0>> =C2=A0(IDE vs. AHCI -- proprietary drivers vs. open sour=
-ce)
->>> > =C2=A0>>
->>> > =C2=A0>> =C2=A0This is interesting!
->>> > =C2=A0>>
->>> > =C2=A0>>
->>> > =C2=A0>> =C2=A0On Thu, Sep 10, 2009 at 1:54 AM, Linux Raid
->>> > =C2=A0>> =C2=A0Study<linuxraid.study@gmail.com> wrote:
->>> > =C2=A0>> =C2=A0> Hello:
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>> =C2=A0> I'm benchmarking RAID5 Read performance with 4 d=
-isks and notice perf
->>> > =C2=A0>> =C2=A0> drop when using kernel 2.6.27.
->>> > =C2=A0>> =C2=A0> The perf with 2.6.27 is 150MB/s whereas with ker=
-nel 2.6.21 (and same
->>> > =C2=A0>> =C2=A0> setup), the perf is 180MB/s/
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>> =C2=A0> Some of the tests I have done:
->>> > =C2=A0>> =C2=A0> 1. I ran =C2=A0experiments using iozone also but=
- notice that READ perf with
->>> > =C2=A0>> =C2=A0> RAID5 in 2.6.27 is ~30% less as compared to 2.6.=
-21.
->>> > =C2=A0>> =C2=A0> Write perf is similar but Read is an issue.
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>> =C2=A0> 2. On 2.6.27, I played around with chunk size an=
-d blocksize parameters
->>> > =C2=A0>> =C2=A0> and got ~5% improvement but not much. I used fol=
-lowing cmds:
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>> =C2=A0> #mdadm --create /dev/md0 --level=3D5 --assume-cl=
-ean --raid-devices=3D4
->>> > =C2=A0>> =C2=A0> /dev/sda /dev/sdb /dev/sdc /dev/sdd --chunk=3D32
->>> > =C2=A0>> =C2=A0> #mke2fs -b 4096 -E stride=3D8 /dev/md0
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>> =C2=A0> #time dd if=3D/dev/md0 of=3D/dev/null bs=3D94208=
- count=3D1024
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>> =C2=A0> Is this perf drop a known issue? Can someone ple=
-ase recommend some
->>> > =C2=A0>> =C2=A0> performance tuning tips?
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>> =C2=A0> Thanks a lot for your time and help!
->>> > =C2=A0>>
->>> > =C2=A0>> > --
->>> > =C2=A0>> =C2=A0> To unsubscribe from this list: send the line "un=
-subscribe linux-raid" in
->>> > =C2=A0>> =C2=A0> the body of a message to majordomo@vger.kernel.o=
-rg
->>> > =C2=A0>> =C2=A0> More majordomo info at =C2=A0http://vger.kernel.=
-org/majordomo-info.html
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>>
->>> > =C2=A0>>
->>> > =C2=A0>>
->>> > =C2=A0>> =C2=A0--
->>> > =C2=A0>>
->>> > =C2=A0>> =C2=A0 =C2=A0 =C2=A0 =C2=A0Majed B.
->>> > =C2=A0>>
->>> > =C2=A0>
->>> >
->>> >
->>> >
->>> >
->>> > --
->>> >
->>> > =C2=A0 =C2=A0 =C2=A0 =C2=A0Majed B.
->>> >
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.=
-html
->>
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+From: NeilBrown <neilb@suse.de>
+Date: Thu, 17 Sep 2009 11:34:57 +1000
+Subject: [PATCH] md: Improve name of threads created by md_register_thread
+
+The management thread for raid4,5,6 arrays are all called
+mdX_raid5, independent of the actual raid level, which is wrong and
+can be confusion.
+
+So change md_register_thread to use the name from the personality
+unless no alternate name (like 'resync' or 'reshape') is given.
+
+This is simpler and more correct.
+
+Cc: Jinzc <zhenchengjin@gmail.com>
+Signed-off-by: NeilBrown <neilb@suse.de>
+---
+ drivers/md/md.c        |    9 ++++++---
+ drivers/md/multipath.c |    2 +-
+ drivers/md/raid1.c     |    2 +-
+ drivers/md/raid10.c    |    2 +-
+ drivers/md/raid5.c     |    6 +++---
+ 5 files changed, 12 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 84e358d..878773a 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -4371,7 +4371,7 @@ static int do_md_run(mddev_t * mddev)
+ 			set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+ 			mddev->sync_thread = md_register_thread(md_do_sync,
+ 								mddev,
+-								"%s_resync");
++								"resync");
+ 			if (!mddev->sync_thread) {
+ 				printk(KERN_ERR "%s: could not start resync"
+ 				       " thread...\n",
+@@ -5784,7 +5784,10 @@ mdk_thread_t *md_register_thread(void (*run) (mddev_t *), mddev_t *mddev,
+ 	thread->run = run;
+ 	thread->mddev = mddev;
+ 	thread->timeout = MAX_SCHEDULE_TIMEOUT;
+-	thread->tsk = kthread_run(md_thread, thread, name, mdname(thread->mddev));
++	thread->tsk = kthread_run(md_thread, thread,
++				  "%s_%s",
++				  mdname(thread->mddev),
++				  name ?: mddev->pers->name);
+ 	if (IS_ERR(thread->tsk)) {
+ 		kfree(thread);
+ 		return NULL;
+@@ -6898,7 +6901,7 @@ void md_check_recovery(mddev_t *mddev)
+ 			}
+ 			mddev->sync_thread = md_register_thread(md_do_sync,
+ 								mddev,
+-								"%s_resync");
++								"resync");
+ 			if (!mddev->sync_thread) {
+ 				printk(KERN_ERR "%s: could not start resync"
+ 					" thread...\n", 
+diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
+index 17b2bf1..5277b35 100644
+--- a/drivers/md/multipath.c
++++ b/drivers/md/multipath.c
+@@ -503,7 +503,7 @@ static int multipath_run (mddev_t *mddev)
+ 	}
+ 
+ 	{
+-		mddev->thread = md_register_thread(multipathd, mddev, "%s_multipath");
++		mddev->thread = md_register_thread(multipathd, mddev, NULL);
+ 		if (!mddev->thread) {
+ 			printk(KERN_ERR "multipath: couldn't allocate thread"
+ 				" for %s\n", mdname(mddev));
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 8726fd7..f1db87c 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -2045,7 +2045,7 @@ static int run(mddev_t *mddev)
+ 	conf->last_used = j;
+ 
+ 
+-	mddev->thread = md_register_thread(raid1d, mddev, "%s_raid1");
++	mddev->thread = md_register_thread(raid1d, mddev, NULL);
+ 	if (!mddev->thread) {
+ 		printk(KERN_ERR
+ 		       "raid1: couldn't allocate thread for %s\n",
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 8befc3e..a9bf503 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2188,7 +2188,7 @@ static int run(mddev_t *mddev)
+ 	}
+ 
+ 
+-	mddev->thread = md_register_thread(raid10d, mddev, "%s_raid10");
++	mddev->thread = md_register_thread(raid10d, mddev, NULL);
+ 	if (!mddev->thread) {
+ 		printk(KERN_ERR
+ 		       "raid10: couldn't allocate thread for %s\n",
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 5d5dce5..958bf02 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -4448,7 +4448,7 @@ static raid5_conf_t *setup_conf(mddev_t *mddev)
+ 		printk(KERN_INFO "raid5: allocated %dkB for %s\n",
+ 			memory, mdname(mddev));
+ 
+-	conf->thread = md_register_thread(raid5d, mddev, "%s_raid5");
++	conf->thread = md_register_thread(raid5d, mddev, NULL);
+ 	if (!conf->thread) {
+ 		printk(KERN_ERR
+ 		       "raid5: couldn't allocate thread for %s\n",
+@@ -4614,7 +4614,7 @@ static int run(mddev_t *mddev)
+ 		set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+ 		set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+ 		mddev->sync_thread = md_register_thread(md_do_sync, mddev,
+-							"%s_reshape");
++							"reshape");
+ 	}
+ 
+ 	/* read-ahead size must cover two whole stripes, which is
+@@ -5032,7 +5032,7 @@ static int raid5_start_reshape(mddev_t *mddev)
+ 	set_bit(MD_RECOVERY_RESHAPE, &mddev->recovery);
+ 	set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+ 	mddev->sync_thread = md_register_thread(md_do_sync, mddev,
+-						"%s_reshape");
++						"reshape");
+ 	if (!mddev->sync_thread) {
+ 		mddev->recovery = 0;
+ 		spin_lock_irq(&conf->device_lock);
+-- 
+1.6.3.3
