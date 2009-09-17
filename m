@@ -1,75 +1,76 @@
-From: Rui Santos <rsantos@grupopie.com>
+From: Jon Hardcastle <jd_hardcastle@yahoo.com>
 Subject: Re: recommended 4port SATA controller ?
-Date: Thu, 17 Sep 2009 14:28:24 +0100
-Message-ID: <4AB23978.8090706@grupopie.com>
-References: <4AB22135.7030405@kaneda.iguw.tuwien.ac.at> <87f94c370909170549v156f9b23ie19f7204e21819f1@mail.gmail.com>
+Date: Thu, 17 Sep 2009 07:57:31 -0700 (PDT)
+Message-ID: <671739.32513.qm@web51309.mail.re2.yahoo.com>
+References: <4AB22135.7030405@kaneda.iguw.tuwien.ac.at>
+Reply-To: Jon@eHardcastle.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87f94c370909170549v156f9b23ie19f7204e21819f1@mail.gmail.com>
+In-Reply-To: <4AB22135.7030405@kaneda.iguw.tuwien.ac.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
 List-Id: linux-raid.ids
 
-Greg Freemyer wrote:
-> On Thu, Sep 17, 2009 at 7:44 AM, Rainer Fuegenstein
-> <rfu@kaneda.iguw.tuwien.ac.at> wrote:
->   
->> hi,
->>
->> I need to move my 4 disk raid5 array from a motherboard with 4 onboard SATA
->> ports to a mainboard with just 2 ports. therefore I'm looking for a reliable
->> and inexpensive 4port PCI controller.
->>     
->
-> Rainer,
->
-> The support chips are not always available in all flavors of PCI, so
-> you need to specify which flavor PCI slots your mother board has.
->
-> I don't recall seeing a non-raid 4-port "legacy PCI" controller, but I
-> can't say I've looked very hard.  Hopefully your motherboard has a
-> "PCI express" slot available.
->
-> If PCI is all you have, I would go with a pair of SiiG controllers.
-> 2-ports each, but they only cost $30 or so.  I have a dozen machines
-> at least with the 2-port SiiG PCI controllers in them and have had no
-> issues with linus drivers, etc.
->   
-There is an Addonics PCI card that will do what you want.
-http://www.addonics.com/products/host_controller/adsa3r5-e.asp . I have
-one of those.
 
-Advantages:
-- PCI V2.3 66MHz compliant. It will deploy 2.6Gbits/sec.
-- Low profile
-- RAID fetature
-- Support PMP
-- Esata
 
-Disadvantages:
-- Price
-- RAID needs to be set on Windows machine
 
-Check it out...
+--- On Thu, 17/9/09, Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at> =
+wrote:
 
-Rui
-
-> Greg
+> From: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
+> Subject: recommended 4port SATA controller ?
+> To: linux-raid@vger.kernel.org
+> Date: Thursday, 17 September, 2009, 12:44 PM
+> hi,
+>=20
+> I need to move my 4 disk raid5 array from a motherboard
+> with 4 onboard SATA ports to a mainboard with just 2 ports.
+> therefore I'm looking for a reliable and inexpensive 4port
+> PCI controller.
+>=20
+> the less raid features it has the better since I fear that
+> a raid controller may initially write some management
+> informationen (signatures etc.) to the disks and therefore
+> damage the linux raid5 setup.
+>=20
+> And, if possible, it should have low power consumption
+> since it is about to be used in a small server powered by
+> photovoltaic panels.
+>=20
+> any recommendations aprreciated.
+>=20
+> thanks and best regards.
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
->   
+> More majordomo info at=A0 http://vger.kernel.org/majordomo-info.html
+>=20
 
--- 
+Assuming PCI-E
 
-Regards,
-Rui Santos
+Adaptec 1430SA x4 Port SATA II (300mbps) PCI-E Raid Card *Oem*
+
+http://www.scan.co.uk/Products/Adaptec-1430SA-x4-Port-SATA-II-%28300mbp=
+s%29-PCI-E-Raid-Card-Oem
+
+if not then there also a plethora of other cards. Aria also do some VER=
+Y cheap PCI 2 port controllers - but I had problems with 2 of these in =
+at a time...
+
+-----------------------
+N: Jon Hardcastle
+E: Jon@eHardcastle.com
+'Do not worry about tomorrow, for tomorrow will bring worries of its ow=
+n.'
+-----------------------
 
 
+     =20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
