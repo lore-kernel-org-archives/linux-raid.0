@@ -1,76 +1,61 @@
-From: Jon Hardcastle <jd_hardcastle@yahoo.com>
-Subject: Re: recommended 4port SATA controller ?
-Date: Thu, 17 Sep 2009 07:57:31 -0700 (PDT)
-Message-ID: <671739.32513.qm@web51309.mail.re2.yahoo.com>
-References: <4AB22135.7030405@kaneda.iguw.tuwien.ac.at>
-Reply-To: Jon@eHardcastle.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: RAID1 assembled broken array
+Date: Thu, 17 Sep 2009 12:44:44 -0400
+Message-ID: <F52A8F4D-66B0-4F97-B2C9-6FF207817718@redhat.com>
+References: <h8ophd$n8p$6@ger.gmane.org> <9F2F4760-DF0C-4416-89AC-C689177AD4ED@redhat.com> <65549e07fd6559855af68b60783213c3.squirrel@neil.brown.name> <1253076634.7071.5.camel@kiste>
+Mime-Version: 1.0 (Apple Message framework v936)
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha1; boundary="Apple-Mail-74-20777423"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AB22135.7030405@kaneda.iguw.tuwien.ac.at>
+In-Reply-To: <1253076634.7071.5.camel@kiste>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
+To: Matthias Urlichs <matthias@urlichs.de>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--Apple-Mail-74-20777423
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 
+On Sep 16, 2009, at 12:50 AM, Matthias Urlichs wrote:
+> On Wed, 2009-09-16 at 07:01 +1000, NeilBrown wrote:
+>> 1.0 also protects from this problem.
+>
+> So what's the best way to update a 0.9 superblock to 1.0 format?
+>
+> mdadm --assemble --metadata=1.0 --update=summaries ... ?
 
+I don't think you can.  You just have to create a new array with the  
+new superblock.
 
---- On Thu, 17/9/09, Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at> =
-wrote:
-
-> From: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
-> Subject: recommended 4port SATA controller ?
-> To: linux-raid@vger.kernel.org
-> Date: Thursday, 17 September, 2009, 12:44 PM
-> hi,
->=20
-> I need to move my 4 disk raid5 array from a motherboard
-> with 4 onboard SATA ports to a mainboard with just 2 ports.
-> therefore I'm looking for a reliable and inexpensive 4port
-> PCI controller.
->=20
-> the less raid features it has the better since I fear that
-> a raid controller may initially write some management
-> informationen (signatures etc.) to the disks and therefore
-> damage the linux raid5 setup.
->=20
-> And, if possible, it should have low power consumption
-> since it is about to be used in a small server powered by
-> photovoltaic panels.
->=20
-> any recommendations aprreciated.
->=20
-> thanks and best regards.
-> --
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at=A0 http://vger.kernel.org/majordomo-info.html
->=20
-
-Assuming PCI-E
-
-Adaptec 1430SA x4 Port SATA II (300mbps) PCI-E Raid Card *Oem*
-
-http://www.scan.co.uk/Products/Adaptec-1430SA-x4-Port-SATA-II-%28300mbp=
-s%29-PCI-E-Raid-Card-Oem
-
-if not then there also a plethora of other cards. Aria also do some VER=
-Y cheap PCI 2 port controllers - but I had problems with 2 of these in =
-at a time...
-
------------------------
-N: Jon Hardcastle
-E: Jon@eHardcastle.com
-'Do not worry about tomorrow, for tomorrow will bring worries of its ow=
-n.'
------------------------
-
-
-     =20
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Doug Ledford <dledford@redhat.com>
+
+GPG KeyID: CFBFF194
+http://people.redhat.com/dledford
+
+InfiniBand Specific RPMS
+http://people.redhat.com/dledford/Infiniband
+
+
+
+
+
+--Apple-Mail-74-20777423
+content-type: application/pgp-signature; x-mac-type=70674453;
+	name=PGP.sig
+content-description: This is a digitally signed message part
+content-disposition: inline; filename=PGP.sig
+content-transfer-encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2.0.12 (Darwin)
+
+iEYEARECAAYFAkqyZ3wACgkQg6WylM+/8ZRexgCdGqCrkJ3zDem/SqNqEwktmuSB
+iDgAn1wFd9k0LEv9hvzfFW52ZvbrNrAF
+=IB6H
+-----END PGP SIGNATURE-----
+
+--Apple-Mail-74-20777423--
