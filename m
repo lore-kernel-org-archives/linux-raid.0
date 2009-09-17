@@ -1,35 +1,44 @@
-From: Max Waterman <davidmaxwaterman@fastmail.co.uk>
+From: Tapani Tarvainen <raid@tapanitarvainen.fi>
 Subject: Re: recommended 4port SATA controller ?
-Date: Thu, 17 Sep 2009 16:17:42 +0300
-Message-ID: <4AB236F6.3050705@fastmail.co.uk>
-References: <4AB22135.7030405@kaneda.iguw.tuwien.ac.at> <87f94c370909170549v156f9b23ie19f7204e21819f1@mail.gmail.com> <Pine.LNX.4.61.0909170903270.22812@soloth.lewis.org>
+Date: Thu, 17 Sep 2009 16:40:34 +0300
+Message-ID: <20090917134034.GA10485@musti.tarvainen.info>
+References: <4AB22135.7030405@kaneda.iguw.tuwien.ac.at> <87f94c370909170549v156f9b23ie19f7204e21819f1@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0909170903270.22812@soloth.lewis.org>
+Content-Disposition: inline
+In-Reply-To: <87f94c370909170549v156f9b23ie19f7204e21819f1@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jon Lewis wrote:
-> On Thu, 17 Sep 2009, Greg Freemyer wrote:
->
->> The support chips are not always available in all flavors of PCI, so
->> you need to specify which flavor PCI slots your mother board has.
->>
->> I don't recall seeing a non-raid 4-port "legacy PCI" controller, but I
->> can't say I've looked very hard.  Hopefully your motherboard has a
->> "PCI express" slot available.
->
-> Search newegg for promise sata and you'll find 4-port PCI non-raid 
-> SATA/SATA-II for about $70.
+On Thu, Sep 17, 2009 at 08:49:16AM -0400, Greg Freemyer (greg.freemyer@gmail.com) wrote:
 
-When I was looking for EIDE ones, I was finding RAID ones in jbod mode 
-would work (for some definition of 'work'), and ended up being cheaper, 
-if that's something that's important. Actually, I've been running one 
-for the last 4 years or so. IIRC, it's a Highpoint one.
+> I don't recall seeing a non-raid 4-port "legacy PCI" controller, but I
+> can't say I've looked very hard.  Hopefully your motherboard has a
+> "PCI express" slot available.
 
-YMMV
+Curiously, I've found 4-port PCI cards much more common
+than PCIe ones. In particular, Sil3114-based cards
+are ubiquitous and cheap (~US$20). Most of them have
+(fake)RAID bios but I've yet to see one where it could not
+be disabled or just ignored, at least if you don't
+need to boot off it. Fast they aren't but neither is PCI.
+There are also some 4-port Sil3124-based PCI cards, somewhat
+more expensive and presumably faster, but PCI is likely
+to be the bottleneck anyway.
 
-Max.
+But good, cheap 4-port PCIe cards are hard to find.
+There are several high-end cards that require x8 slot
+and cost a fortune, but very few x1 cards with 4 ports
+with good Linux support; Sunix 4400P is one (Marvell chipset).
+
+Nor do there seem to be any low-end (<$100 or so)
+x4 or x8 cards either; Lycom PE-124 looks promising,
+but it's eSATA only and no webshop seems to sell it.
+
+Of course, if you can spare two PCIe x1 slots it's easy:
+2-port Sil3132 -based cards are abundant, cheap, and work very well.
+
+-- 
+Tapani Tarvainen
