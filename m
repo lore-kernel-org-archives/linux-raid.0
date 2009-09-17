@@ -1,70 +1,41 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Formatting Raid5 device as NTFS
-Date: Thu, 17 Sep 2009 21:02:29 +0100
-Message-ID: <20090917200229.GA19611@cthulhu.home.robinhill.me.uk>
-References: <f5d1f90a0909171223h684e5f65k405fa319ab6be8d9@mail.gmail.com>
+From: "Sunpyo Hong" <sunpyo.hong@amac.com>
+Subject: Raid 5 Issue, cannot recognize EXT3 File system.
+Date: Thu, 17 Sep 2009 16:20:16 -0400
+Message-ID: <200909171620688.SM00612@trainer>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="dDRMvlgZJXvWKvBx"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <f5d1f90a0909171223h684e5f65k405fa319ab6be8d9@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I=92ve contacted just about everyone that knows a thing about RAID5, bu=
+t no
+one is really able to help me. Anyhow I=92ve read up a lot on RAID5 arr=
+ays and
+how to properly assemble them. However I=92ve run into a problem with a=
+ NAS
+system from WD that I just can=92t seem to figure out.
 
---dDRMvlgZJXvWKvBx
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I have a =BE disks in the array, 1 went down and is out of commission. =
+I=92ve
+been able to assemble my array through mdadm using =96assemble =96scan.=
+ However
+I cannot access the array due to the fact that the array cannot read a
+filesystem. Everytime I try to mount I get mount: wrong fs type=85 etc.=
+ I know
+that the FS is an ext3 FS. However I cannot seem to get this thing goin=
+g. I
+was wondering if anyone could point me in the right direction with this=
+=2E I
+can=92t seem to find anyone that is capable of solving this. I would
+appreciate any help. Thanks!
 
-On Thu Sep 17, 2009 at 12:23:22PM -0700, Linux Raid Study wrote:
+-Sunpyo
 
-> Hello:
->=20
-> I have to bundle 4 disks as a Raid5 device, export it to iSCSI
-> initiators and format it as NTFS.
->=20
-> What is better:
-> - Format individual disks as NTFS and then bundle them as Raid5 device
-> and export to initiator PCs
-> - Or bundle the disks first as Raid5 dev, export them and then format
-> the /dev/md0 device as NTFS
->=20
-> I get "write-protected" errors when I do the second option. Does it
-> mean formatting of raid5 device is not allowed?
-> Does Raid5 inherit the NTFS properties of individual disks (first option)?
->=20
-I don't see your first option working at all.  When you bundle the
-drives together, the resulting device will have totally scrambled the
-underlying NTFS filesystems.
-
-The second option is how md RAID is supposed to work - you bundle
-together the disks into a single array, then format that.  Where are you
-getting the "write-protected" errors?  Are you trying to format the
-exported iSCSI device from a remote system?  Certainly the RAID device
-can be formatted directly, but I've no idea how the iSCSI affects
-things.
-
-HTH,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---dDRMvlgZJXvWKvBx
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEARECAAYFAkqyldUACgkQShxCyD40xBIHRACfeE+GfSAsKxs2dAad0Vpi03Yu
-phQAoMWn04AW0b64Wlb7L9/9RIfkF0GM
-=/58P
------END PGP SIGNATURE-----
-
---dDRMvlgZJXvWKvBx--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
