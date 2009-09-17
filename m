@@ -1,251 +1,171 @@
-From: "Sunpyo Hong" <sunpyo.hong@amac.com>
-Subject: RE: Raid 5 Issue, cannot recognize EXT3 File system.
-Date: Thu, 17 Sep 2009 17:54:29 -0400
-Message-ID: <200909171754312.SM06100@trainer>
+From: Tim Bostrom <tbostrom@gmail.com>
+Subject: Re: RAID 5 array recovery - two drives errors in external enclosure
+Date: Thu, 17 Sep 2009 14:51:22 -0700
+Message-ID: <2267211f0909171451q547355a7sd26d3f984fd0bccf@mail.gmail.com>
+References: <2267211f0909171342g6ebf68a2y393daa587e59c714@mail.gmail.com>
+	<20090917212252.GC19611@cthulhu.home.robinhill.me.uk> <70ed7c3e0909171435u661eeccbte85f968e067709f9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: 
+In-Reply-To: <70ed7c3e0909171435u661eeccbte85f968e067709f9@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Robin Hill' <robin@robinhill.me.uk>, linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I am also able to see the filesystem of the NAS, however not the data
-partition. EX:
+I think the direct SATA connections ended up making them get reversed.
+sdb =3D sdf now
+sdc =3D sde now
+=2E.... I think....
 
-I can see the filesystem on:
-#ls /media/disk (which is the mount of the filesystem in the NAS) This =
-is
-also considered to be my /dev/md0, /dev/md2 is the data partition
+I labeled the drives as I pulled them out of the enclosure... I'll
+make sure they match up and then try your suggestions.  I just now
+noticed the chunk size issue as well.  <ugh>
 
------Original Message-----
-=46rom: Sunpyo Hong [mailto:sunpyo.hong@amac.com]=20
-Sent: Thursday, September 17, 2009 5:47 PM
-To: 'Robin Hill'; 'linux-raid@vger.kernel.org'
-Subject: RE: Raid 5 Issue, cannot recognize EXT3 File system.
 
-=46irst off, lemme tell you the initial problem. I had a WD ShareSpace =
-that
-had one of the disk go bad. They sent a replacement and it was suppose =
-to
-rebuild on its own, however after the build, the array went bad and it =
-was
-no longer able to see any of the files.=20
+-Tim
 
-I downloaded and tested the drives using windows data recovery tools I =
-saw
-that the ext3 was Linux FS and that using these tools would not help in=
- the
-recovery. However through the tools I was able to see and recover some =
-of
-the files, but the files themselves were usable. I confirmed with WD th=
+
+On Thu, Sep 17, 2009 at 2:35 PM, Majed B. <majedb@gmail.com> wrote:
+> Looking at your initial examine output, seems like the proper order i=
+s: bdce.
+>
+> If the hardware resets have gone after plugging into a normal PC case=
+,
+> with different SATA cables, then I'd say the cables in your external
+> enclosure might be the suspect here.
+>
+> As Robin said, make sure you have the disks in the proper original
+> order as they were previously and that the chunksize is the same as
+> before.
+>
+> This should do it: mdadm -C /dev/md0 -l 5 -n 5 -c 256 /dev/sd[bdce]1 =
+missing
+> (notice the order)
+>
+> On Fri, Sep 18, 2009 at 12:22 AM, Robin Hill <robin@robinhill.me.uk> =
+wrote:
+>> On Thu Sep 17, 2009 at 01:42:30PM -0700, Tim Bostrom wrote:
+>>
+>>> OK,
+>>>
+>>> Let me start off by saying - I panicked. =A0Rule #1 - don't panic. =
+=A0I
+>>> did. =A0Sorry.
+>>>
+>>> I have a RAID 5 array running on Fedora 10.
+>>> (Linux tera.teambostrom.com 2.6.27.30-170.2.82.fc10.i686 #1 SMP Mon
+>>> Aug 17 08:38:59 EDT 2009 i686 athlon i386 GNU/Linux)
+>>>
+>>> 5 drives in an external enclosure (AMS eSATA Venus T5). =A0It's a
+>>> Sil4726 inside the enclosure running to a Sil3132 controller via eS=
+ATA
+>>> in the desktop. =A0I had been running this setup for just over a ye=
+ar.
+>>> Was working fine. =A0 I just moved into a new home and had my serve=
+r
+>>> down for a while =A0- before I brought it back online, I got a "gre=
 at
-ext3 was in fact the FS and took steps to recover the data. These are t=
-he
-steps I took in order for me to assemble the raid.
-
-Right now I have 3/4 drives with the data. I did #mdadm --assemble --sc=
-an,
-which let me assemble the raid. However at this point I was not able to=
- see
-any of the files or mount the drive to the mount point it was once at. =
-I
-have also tried #mdadm --create with the array in the right order /w th=
+>>> idea" to blow out the dust from the enclosure using compressed air.
+>>> When I finally brought up the array again, I noticed that drives we=
+re
+>>> missing. =A0Tried re-adding the drives to the array and had some is=
+sues
+>>> - they seemed to get added but after a short time of rebuilding the
+>>> array, I would get a bunch of HW resets in dmesg and then the array
+>>> would kick out drives and stop.
+>>>
+>> <- much snippage ->
+>>
+>>> I popped the drives out of the enclosure and into the actual tower
+>>> case and connected each of them to its own SATA port. =A0The HW res=
+ets
+>>> seemed to go away, but I couldn't get the array to come back online=
+=2E
+>>> =A0Then I did the stupid panic (following someone's advice I should=
+n't
+>>> have).
+>>>
+>>> thinking I should just re-create the array, I did:
+>>>
+>>> mdadm --create /dev/md0 --level=3D5 --raid-devices=3D5 /dev/sd[b-f]=
+1
+>>>
+>>> Stupid me again - ignores the warning that it belongs to an array
+>>> already. =A0I let it build for a minute or so and then tried to mou=
+nt it
+>>> while rebuilding... and got error messages:
+>>>
+>>> EXT3-fs: unable to read superblock
+>>> EXT3-fs: md0: couldn't mount because of unsupported optional featur=
+es
+>>> (3fd18e00).
+>>>
+>>> Now - I'm at a loss. =A0I'm afraid to do anything else. =A0 I've be=
+en
+>>> viewing the FAQ and I have a few ideas, but I'm just more freaked. =
+=A0Is
+>>> there any hope? =A0What should I do next without causing more troub=
+le?
+>>>
+>> Looking at the mdadm output, there's a couple of possible errors.
+>> Firstly, your newly created array has a different chunksize than you=
+r
+>> original one. =A0Secondly, the drives may be in the wrong order. =A0=
+In
+>> either case, providing you don't _actually_ have any faulty drives, =
+then
+>> it should be (mostly) recoverable.
+>>
+>> Given the order you specified the drives in the create, sdf1 will be=
+ the
+>> partition that's been trashed by the rebuild, so you'll want to leav=
 e
-missing disk.=20
-
-Initially the --assemble --scan assembled the array /dev/md2 with the d=
-isks
-in the wrong order. I know because I physically saw where the disks wer=
-e in
-relation to the disk order and wrote down the disk order on every HD.
-
-Here's everything I could find in terms of information that you asked f=
-or.
-It's a lot.
-
-#dmesg
-[  339.440187] raid5: device sdb4 operational as raid disk 1
-[  339.440189] raid5: device sdd4 operational as raid disk 3
-[  339.440192] raid5: device sdc4 operational as raid disk 2
-[  339.440610] raid5: allocated 4219kB for md2
-[  339.440612] raid5: raid level 5 set md2 active with 3 out of 4 devic=
-es,
-algorithm 2
-[  339.440615] RAID5 conf printout:
-[  339.440617]  --- rd:4 wd:3
-[  339.440619]  disk 1, o:1, dev:sdb4
-[  339.440620]  disk 2, o:1, dev:sdc4
-[  339.440622]  disk 3, o:1, dev:sdd4
-[  339.440817]  md2: unknown partition table
-[  538.840033] kjournald starting.  Commit interval 5 seconds
-[  538.891844] EXT3 FS on md0, internal journal
-[  538.891849] EXT3-fs: mounted filesystem with ordered data mode.
-[  581.585031] VFS: Can't find ext4 filesystem on dev md2.
-[  587.056825] VFS: Can't find ext3 filesystem on dev md2.
-
-
-#fdisk -l
-WARNING: GPT (GUID Partition Table) detected on '/dev/sda'! The util fd=
-isk
-doesn't support GPT. Use GNU Parted.
-
-
-Disk /dev/sda: 2000.3 GB, 2000398934016 bytes
-255 heads, 63 sectors/track, 243201 cylinders
-Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
-Disk identifier: 0x00000000
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sda1               1      243202  1953514583+  ee  GPT
-
-Disk /dev/sdb: 2000.3 GB, 2000398934016 bytes
-255 heads, 63 sectors/track, 243201 cylinders
-Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
-Disk identifier: 0xdd07e5e3
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdb1               1          26      208844+  fd  Linux raid
-autodetect
-/dev/sdb2              27         156     1044225   fd  Linux raid
-autodetect
-/dev/sdb3             157         182      208845   fd  Linux raid
-autodetect
-/dev/sdb4             183      243201  1952050117+  fd  Linux raid
-autodetect
-
-Disk /dev/sdc: 2000.3 GB, 2000398934016 bytes
-255 heads, 63 sectors/track, 243201 cylinders
-Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
-Disk identifier: 0xdd07e5e4
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdc1               1          26      208844+  fd  Linux raid
-autodetect
-/dev/sdc2              27         156     1044225   fd  Linux raid
-autodetect
-/dev/sdc3             157         182      208845   fd  Linux raid
-autodetect
-/dev/sdc4             183      243201  1952050117+  fd  Linux raid
-autodetect
-
-Disk /dev/sdd: 2000.3 GB, 2000398934016 bytes
-255 heads, 63 sectors/track, 243201 cylinders
-Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
-Disk identifier: 0xdd07e5e2
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdd1               1          26      208844+  fd  Linux raid
-autodetect
-/dev/sdd2              27         156     1044225   fd  Linux raid
-autodetect
-/dev/sdd3             157         182      208845   fd  Linux raid
-autodetect
-/dev/sdd4             183      243201  1952050117+  fd  Linux raid
-autodetect
-
-Disk /dev/md0: 213 MB, 213778432 bytes
-2 heads, 4 sectors/track, 52192 cylinders
-Units =3D cylinders of 8 * 512 =3D 4096 bytes
-Disk identifier: 0x00000000
-
-Disk /dev/md0 doesn't contain a valid partition table
-
-Disk /dev/md2: 5996.6 GB, 5996697747456 bytes
-2 heads, 4 sectors/track, 1464037536 cylinders
-Units =3D cylinders of 8 * 512 =3D 4096 bytes
-Disk identifier: 0x00000000
-
-Disk /dev/md2 doesn't contain a valid partition table
+>> that out altogether for now.
+>>
+>> You need to try to recreate the array with the correct chunk size an=
+d
+>> with the remaining drives in different orders, running a read-only
+>> filesystem check each time until you find the correct order.
+>>
+>> So start with:
+>> =A0 =A0mdadm -C /dev/md0 -l 5 -n 5 -c 256 /dev/sd[bcde]1 missing
+>>
+>> Then repeat for every possible order of the four disks and "missing"=
+,
+>> stopping the array each time if the mount fails.
+>>
+>> When you've finally found the correct order, you can re-add sdf1 to =
+get
+>> the array back to normal.
+>>
+>> HTH,
+>> =A0 =A0Robin
+>> --
+>> =A0 =A0 ___
+>> =A0 =A0( ' } =A0 =A0 | =A0 =A0 =A0 Robin Hill =A0 =A0 =A0 =A0<robin@=
+robinhill.me.uk> |
+>> =A0 / / ) =A0 =A0 =A0| Little Jim says .... =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0|
+>> =A0// !! =A0 =A0 =A0 | =A0 =A0 =A0"He fallen in de water !!" =A0 =A0=
+ =A0 =A0 =A0 =A0 =A0 =A0 |
+>>
+>
+>
+>
+> --
+> =A0 =A0 =A0 Majed B.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
 
-#cat /proc/mdstat
-Personalities : [raid1] [raid6] [raid5] [raid4]=20
-md2 : active raid5 sdb4[1] sdd4[3] sdc4[2]
-      5856150144 blocks level 5, 64k chunk, algorithm 2 [4/3] [_UUU]
-     =20
-md0 : active raid1 sdd1[0] sdb1[2] sdc1[1]
-      208768 blocks [4/3] [UUU_]
-     =20
 
-#cat /etc/fstab
-aufs / aufs rw 0 0
-tmpfs /tmp tmpfs nosuid,nodev 0 0
-/dev/sda2 swap swap defaults 0 0
-/dev/sdb2 swap swap defaults 0 0
-/dev/sdc2 swap swap defaults 0 0
-/dev/sdd2 swap swap defaults 0 0
-
-
-#mount -t ext3 /dev/md2 /media/disk/shares
-mount: wrong fs type, bad option, bad superblock on /dev/md2,
-       missing codepage or helper program, or other error
-       In some cases useful info is found in syslog - try
-       dmesg | tail  or so
-
-#mdadm -Ds -v
-ARRAY /dev/md0 level=3Draid1 num-devices=3D4 metadata=3D00.90
-UUID=3D15e54255:f58be7ca:7f4a592f:038fedf2
-   devices=3D/dev/sdd1,/dev/sdc1,/dev/sdb1
-ARRAY /dev/md2 level=3Draid5 num-devices=3D4 metadata=3D00.90
-UUID=3D0b23d5e1:f5a27618:e368bf24:bd0fce41
-   devices=3D/dev/sdb4,/dev/sdc4,/dev/sdd4
-
-#mdadm -Es -v
-ARRAY /dev/md0 level=3Draid1 num-devices=3D4
-UUID=3D15e54255:f58be7ca:7f4a592f:038fedf2
-   devices=3D/dev/sdd1,/dev/sdc1,/dev/sdb1
-ARRAY /dev/md1 level=3Draid1 num-devices=3D4
-UUID=3D57cd5e76:0d56f114:50bd5336:4477d020
-   devices=3D/dev/sdd2,/dev/sdc2,/dev/sdb2
-ARRAY /dev/md2 level=3Draid5 num-devices=3D4
-UUID=3D0b23d5e1:f5a27618:e368bf24:bd0fce41
-   devices=3D/dev/sdd4,/dev/sdc4,/dev/sdb4
-
------Original Message-----
-=46rom: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Robin Hill
-Sent: Thursday, September 17, 2009 5:02 PM
-To: linux-raid@vger.kernel.org
-Subject: Re: Raid 5 Issue, cannot recognize EXT3 File system.
-
-On Thu Sep 17, 2009 at 04:20:16PM -0400, Sunpyo Hong wrote:
-
-> I've contacted just about everyone that knows a thing about RAID5, bu=
-t no
-> one is really able to help me. Anyhow I've read up a lot on RAID5 arr=
-ays
-and
-> how to properly assemble them. However I've run into a problem with a=
- NAS
-> system from WD that I just can't seem to figure out.
->=20
-> I have a =BE disks in the array, 1 went down and is out of commission=
-=2E  I've
-> been able to assemble my array through mdadm using --assemble --scan.
-However
-> I cannot access the array due to the fact that the array cannot read =
-a
-> filesystem. Everytime I try to mount I get mount: wrong fs type=85 et=
-c. I
-> know that the FS is an ext3 FS. However I cannot seem to get this
-> thing going. I was wondering if anyone could point me in the right
-> direction with this. I can't seem to find anyone that is capable of
-> solving this. I would appreciate any help. Thanks!
->=20
-What's the output of 'cat /proc/mdstat' after you assemble the array?
-And what exact error (and dmesg output) do you get when trying to mount
-it as ext3?
-
-Cheers,
-    Robin
 --=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
+-tim
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
