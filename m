@@ -1,126 +1,58 @@
-From: Linux Raid Study <linuxraid.study@gmail.com>
-Subject: Re: Formatting Raid5 device as NTFS
-Date: Thu, 17 Sep 2009 14:49:14 -0700
-Message-ID: <f5d1f90a0909171449u70b26cd5w4331c9aa6a13aa39@mail.gmail.com>
-References: <f5d1f90a0909171223h684e5f65k405fa319ab6be8d9@mail.gmail.com>
-	 <20090917200229.GA19611@cthulhu.home.robinhill.me.uk>
-	 <f5d1f90a0909171439x18555f61y8d6ab175c745473@mail.gmail.com>
-	 <70ed7c3e0909171443t68d81495y26acc8f5119d7aa3@mail.gmail.com>
+From: Matt Garman <matthew.garman@gmail.com>
+Subject: Re: recommended 4port SATA controller ?
+Date: Thu, 17 Sep 2009 16:52:40 -0500
+Message-ID: <20090917215240.GA418@sewage>
+References: <4AB22135.7030405@kaneda.iguw.tuwien.ac.at> <87f94c370909170549v156f9b23ie19f7204e21819f1@mail.gmail.com> <4AB24BFC.6070800@kaneda.iguw.tuwien.ac.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70ed7c3e0909171443t68d81495y26acc8f5119d7aa3@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <4AB24BFC.6070800@kaneda.iguw.tuwien.ac.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Majed B." <majedb@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
+Cc: Greg Freemyer <greg.freemyer@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-So by default, the /dev/md0 device has Rd/Wr permissions (set during
-mdadm --create ... cmd...)...is that correct?
+On Thu, Sep 17, 2009 at 04:47:24PM +0200, Rainer Fuegenstein wrote:
+> the plan is to replace this board with a more power-saving one as
+> soon  as the new intel atom plattfrom (pinewood? pinetrail?) comes
+> out in  2010/Q1 (hard to tell which  expansion slots the boards
+> will have then,  but I bet on PCI).  speed isn't an issue, but low
+> power consumption would be nice (but not  easy to find in
+> datasheets etc.) since the server is supposed to be  powered by
+> photovoltaic panels.
 
-Thanks.
+As others have mentioned, when doing SATA over PCI, the bottleneck
+will be the PCI bus.  IIRC, SATA2 spec supports up to 300 MB/s, and
+PCI is 133 (or 150) MB/s.  Realistically, modern spinning hard
+drives usually max out around 100 MB/s, so just two drives can
+saturate your PCI bus.  I think those numbers are reasonably close.
 
-On Thu, Sep 17, 2009 at 2:43 PM, Majed B. <majedb@gmail.com> wrote:
-> /dev/md0 is not mounted and it doesn't have a filesystem because you
-> didn't format the device after creating it.
->
-> After you have created the filesystem, run: mkfs.ntfs --fast /dev/md0
->
-> After that, you can mount it: mount /dev/md0 /mnt/windows
->
-> On Fri, Sep 18, 2009 at 12:39 AM, Linux Raid Study
-> <linuxraid.study@gmail.com> wrote:
->> Hi Robin:
->>
->> I use mdadm cmd to create Raid5 device and did following:
->>
->> #mdadm --create /dev/md0 --level=3D5 --assume-clean --raid-devices=3D=
-4
->> /dev/sda /dev/sdb /dev/sdc /dev/sdd
->>
->> #mdadm -w /dev/md0
->> mdadm: failed to set writable for /dev/md0: Device or resource busy
->>
->> ~ # mount
->> none on /proc type proc (rw)
->> none on /dev/shm type tmpfs (rw)
->> none on /dev/pts type devpts (rw,mode=3D600)
->> none on /sys type sysfs (rw)
->> none on /mnth type hugetlbfs (rw)
->>
->> As u would notice, /dev/md0 is yet mounted...not sure why the above =
-error....
->>
->> Thanks for ur help!
->>
->> On Thu, Sep 17, 2009 at 1:02 PM, Robin Hill <robin@robinhill.me.uk> =
-wrote:
->>> On Thu Sep 17, 2009 at 12:23:22PM -0700, Linux Raid Study wrote:
->>>
->>>> Hello:
->>>>
->>>> I have to bundle 4 disks as a Raid5 device, export it to iSCSI
->>>> initiators and format it as NTFS.
->>>>
->>>> What is better:
->>>> - Format individual disks as NTFS and then bundle them as Raid5 de=
-vice
->>>> and export to initiator PCs
->>>> - Or bundle the disks first as Raid5 dev, export them and then for=
-mat
->>>> the /dev/md0 device as NTFS
->>>>
->>>> I get "write-protected" errors when I do the second option. Does i=
-t
->>>> mean formatting of raid5 device is not allowed?
->>>> Does Raid5 inherit the NTFS properties of individual disks (first =
-option)?
->>>>
->>> I don't see your first option working at all. =C2=A0When you bundle=
- the
->>> drives together, the resulting device will have totally scrambled t=
-he
->>> underlying NTFS filesystems.
->>>
->>> The second option is how md RAID is supposed to work - you bundle
->>> together the disks into a single array, then format that. =C2=A0Whe=
-re are you
->>> getting the "write-protected" errors? =C2=A0Are you trying to forma=
-t the
->>> exported iSCSI device from a remote system? =C2=A0Certainly the RAI=
-D device
->>> can be formatted directly, but I've no idea how the iSCSI affects
->>> things.
->>>
->>> HTH,
->>> =C2=A0 =C2=A0Robin
->>> --
->>> =C2=A0 =C2=A0 ___
->>> =C2=A0 =C2=A0( ' } =C2=A0 =C2=A0 | =C2=A0 =C2=A0 =C2=A0 Robin Hill =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0<robin@robinhill.me.uk> |
->>> =C2=A0 / / ) =C2=A0 =C2=A0 =C2=A0| Little Jim says .... =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0|
->>> =C2=A0// !! =C2=A0 =C2=A0 =C2=A0 | =C2=A0 =C2=A0 =C2=A0"He fallen i=
-n de water !!" =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-|
->>>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.h=
-tml
->>
->
->
->
-> --
-> =C2=A0 =C2=A0 =C2=A0 Majed B.
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+But, if, for example, you are serving the data strictly over the
+network (i.e. a NAS box), a single Gigabit ethernet connection tops
+out at rougly 125 MB/s.  So in this case the network performance
+would shadow the reduced performance of the drives on the PCI bus.
+(Unless your network controller is also on the PCI bus, then you're
+hosed!  It's always good to check the block diagram of the
+motherboard.)
+
+Anyway, you asked for four ports, but how about eight?  I'm
+surprised no one has mentioned this yet---I'd consider it a bit of a
+"classic": Supermicro AOC-SAT2-MV8.
+
+    http://www.newegg.com/Product/Product.aspx?Item=N82E16815121009
+
+Eight SATA ports.  It's PCI-X, but I've used mine in regular 32-bit
+PCI slots on several different motherboards without any problems.
+Plenty of anecdotal evidence on the net as well of people using this
+card in 32-bit PCI slots.  Linux support is good (personal
+experience plus anecdotal).
+
+I can't speak to its power consumption; there are no heatsinks on
+the board, that should mean something.  I don't know, but I would
+guess that the PCI bus wasn't designed to provide a lot of power
+anyway.
+
+Hope that helps!
+Matt
+
