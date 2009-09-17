@@ -1,333 +1,208 @@
-From: "Majed B." <majedb@gmail.com>
+From: Linux Raid Study <linuxraid.study@gmail.com>
 Subject: Re: Raid5 Read Perf drop in 2.6.27
-Date: Thu, 17 Sep 2009 07:12:28 +0300
-Message-ID: <70ed7c3e0909162112h15da413cgfc1f47c544f96af9@mail.gmail.com>
+Date: Thu, 17 Sep 2009 00:50:36 -0700
+Message-ID: <f5d1f90a0909170050g31854d0cr6af063e27a9575cc@mail.gmail.com>
 References: <f5d1f90a0909091554u6d40b402ga7e9f58cabf21b57@mail.gmail.com>
-	<70ed7c3e0909091652m60b0ea9cp7000db919a639c35@mail.gmail.com>
-	<f5d1f90a0909091817g667d211djcf767714740102d@mail.gmail.com>
-	<70ed7c3e0909091827i745e2e38u6f8e246a0c9a49f@mail.gmail.com>
-	<f5d1f90a0909091845t744ce5cerdf00fd656ff21c09@mail.gmail.com>
-	<20090910172219.GB420@rap.rap.dk> <f5d1f90a0909161645y42390766pd3cd24cfe4e048f@mail.gmail.com>
+	 <70ed7c3e0909091652m60b0ea9cp7000db919a639c35@mail.gmail.com>
+	 <f5d1f90a0909091817g667d211djcf767714740102d@mail.gmail.com>
+	 <70ed7c3e0909091827i745e2e38u6f8e246a0c9a49f@mail.gmail.com>
+	 <f5d1f90a0909091845t744ce5cerdf00fd656ff21c09@mail.gmail.com>
+	 <20090910172219.GB420@rap.rap.dk>
+	 <f5d1f90a0909161645y42390766pd3cd24cfe4e048f@mail.gmail.com>
+	 <70ed7c3e0909162112h15da413cgfc1f47c544f96af9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=0003255596866f4c280473be3a0c
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f5d1f90a0909161645y42390766pd3cd24cfe4e048f@mail.gmail.com>
+In-Reply-To: <70ed7c3e0909162112h15da413cgfc1f47c544f96af9@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux Raid Study <linuxraid.study@gmail.com>
+To: "Majed B." <majedb@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---0003255596866f4c280473be3a0c
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Hi Majed:
 
-Attached is the diff file between the config files of kernels 21 & 27.
+I have compiled by kernel. 2.6.27 config has lot of new stuff - port
+multiplier/Sil3124/3132 support etc.
 
-I see a lot of DMA changes and schedulers.
+I see following SCHED/DMA related differences:
+CONFIG_IOSCHED_AS
+CONFIG_IOSCHED_CONFIG
+CONFIG_CLASSIS_RCV
 
-I've asked you before if you compiled your own kernel or do you use
-unmodified distro kernels?
+CONFIG_SCSI_DMA
 
-If you compile your own, then you could import the 21 config to the 27
-compile process and then compare the performance of the two kernels.
+Is there anything else that I missed?
 
-2009/9/17 Linux Raid Study <linuxraid.study@gmail.com>:
-> Hi:
+Thanks for ur time and help!
+
+
+On Wed, Sep 16, 2009 at 9:12 PM, Majed B. <majedb@gmail.com> wrote:
+> Attached is the diff file between the config files of kernels 21 & 27=
+=2E
 >
-> I tried to change the Raid5 stripe cache size by doing
-> "echo =C2=A0262144 > /sys/block/md0/md/stripe_cache_size"
-> But if I do "cat /sys/block/md0/md/stripe_cache_size", it still shows 102=
-4!
+> I see a lot of DMA changes and schedulers.
 >
-> Can someone please suggest how to increase stripe cache size?
+> I've asked you before if you compiled your own kernel or do you use
+> unmodified distro kernels?
 >
-> thanks!
+> If you compile your own, then you could import the 21 config to the 2=
+7
+> compile process and then compare the performance of the two kernels.
 >
->
-> 2009/9/10 Keld J=C3=B8rn Simonsen <keld@dkuug.dk>:
->> Hi
+> 2009/9/17 Linux Raid Study <linuxraid.study@gmail.com>:
+>> Hi:
 >>
->> There is some data on raid5 performance (and other raid types) at our
->> wiki at: http://linux-raid.osdl.org/index.php/Performance
+>> I tried to change the Raid5 stripe cache size by doing
+>> "echo  262144 > /sys/block/md0/md/stripe_cache_size"
+>> But if I do "cat /sys/block/md0/md/stripe_cache_size", it still show=
+s 1024!
 >>
->> When you have something you want to share with others, then we can add
->> your info to the data there, either by a URL or by direct inclusion in
->> the wiki.
+>> Can someone please suggest how to increase stripe cache size?
 >>
->> best regards
->> keld
+>> thanks!
 >>
->> On Wed, Sep 09, 2009 at 06:45:31PM -0700, Linux Raid Study wrote:
->>> I build/compile my own kernel..
+>>
+>> 2009/9/10 Keld J=C3=B8rn Simonsen <keld@dkuug.dk>:
+>>> Hi
 >>>
->>> Have you done any benchmarks for Read RAID5 perf?
+>>> There is some data on raid5 performance (and other raid types) at o=
+ur
+>>> wiki at: http://linux-raid.osdl.org/index.php/Performance
 >>>
->>> Thanks!
+>>> When you have something you want to share with others, then we can =
+add
+>>> your info to the data there, either by a URL or by direct inclusion=
+ in
+>>> the wiki.
 >>>
->>> On 9/9/09, Majed B. <majedb@gmail.com> wrote:
->>> > Well, that's my point. To make sure that your kernels are identical i=
-n
->>> > =C2=A0options, compare the .config files found in /usr/src/linux-<ver=
+>>> best regards
+>>> keld
+>>>
+>>> On Wed, Sep 09, 2009 at 06:45:31PM -0700, Linux Raid Study wrote:
+>>>> I build/compile my own kernel..
+>>>>
+>>>> Have you done any benchmarks for Read RAID5 perf?
+>>>>
+>>>> Thanks!
+>>>>
+>>>> On 9/9/09, Majed B. <majedb@gmail.com> wrote:
+>>>> > Well, that's my point. To make sure that your kernels are identi=
+cal in
+>>>> >  options, compare the .config files found in /usr/src/linux-<ver=
 sion>
->>> >
->>> > =C2=A0You may find changes and differences in areas like bluetooth,
->>> > =C2=A0wireless, ...etc. These don't matter.
->>> >
->>> > =C2=A0Did you compile your own kernel, or are you using one compiled =
+>>>> >
+>>>> >  You may find changes and differences in areas like bluetooth,
+>>>> >  wireless, ...etc. These don't matter.
+>>>> >
+>>>> >  Did you compile your own kernel, or are you using one compiled =
 for a
->>> > =C2=A0specific distro?
->>> >
->>> > =C2=A0On Thu, Sep 10, 2009 at 4:17 AM, Linux Raid
->>> >
->>> > Study<linuxraid.study@gmail.com> wrote:
->>> > =C2=A0> Yes - the setup is the same. The only thing that changes is t=
+>>>> >  specific distro?
+>>>> >
+>>>> >  On Thu, Sep 10, 2009 at 4:17 AM, Linux Raid
+>>>> >
+>>>> > Study<linuxraid.study@gmail.com> wrote:
+>>>> >  > Yes - the setup is the same. The only thing that changes is t=
 he kernel.
->>> > =C2=A0>
->>> > =C2=A0> I have 4 HDDs (2 from WD VelociRaptor 150GB/10k RPM and 2 fro=
+>>>> >  >
+>>>> >  > I have 4 HDDs (2 from WD VelociRaptor 150GB/10k RPM and 2 fro=
 m Seagate
->>> > =C2=A0> 320GB/7.2k RPM). =C2=A0The HDDs are connected using two Silic=
-on Image SATA
->>> > =C2=A0> controllers (Sil3132) connected to my host using PCIe.
->>> > =C2=A0>
->>> > =C2=A0> I use the default kernel scheduling scheme.
->>> > =C2=A0>
->>> > =C2=A0> Thanks!
->>> > =C2=A0>
->>> > =C2=A0> On 9/9/09, Majed B. <majedb@gmail.com> wrote:
->>> > =C2=A0>> Are you sure you're using the same Kernel Scheduler on both =
+>>>> >  > 320GB/7.2k RPM).  The HDDs are connected using two Silicon Im=
+age SATA
+>>>> >  > controllers (Sil3132) connected to my host using PCIe.
+>>>> >  >
+>>>> >  > I use the default kernel scheduling scheme.
+>>>> >  >
+>>>> >  > Thanks!
+>>>> >  >
+>>>> >  > On 9/9/09, Majed B. <majedb@gmail.com> wrote:
+>>>> >  >> Are you sure you're using the same Kernel Scheduler on both =
 kernels?
->>> > =C2=A0>>
->>> > =C2=A0>> =C2=A0Have you checked and verified that the same drivers ar=
-e being loaded?
->>> > =C2=A0>> =C2=A0(IDE vs. AHCI -- proprietary drivers vs. open source)
->>> > =C2=A0>>
->>> > =C2=A0>> =C2=A0This is interesting!
->>> > =C2=A0>>
->>> > =C2=A0>>
->>> > =C2=A0>> =C2=A0On Thu, Sep 10, 2009 at 1:54 AM, Linux Raid
->>> > =C2=A0>> =C2=A0Study<linuxraid.study@gmail.com> wrote:
->>> > =C2=A0>> =C2=A0> Hello:
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>> =C2=A0> I'm benchmarking RAID5 Read performance with 4 disks=
- and notice perf
->>> > =C2=A0>> =C2=A0> drop when using kernel 2.6.27.
->>> > =C2=A0>> =C2=A0> The perf with 2.6.27 is 150MB/s whereas with kernel =
-2.6.21 (and same
->>> > =C2=A0>> =C2=A0> setup), the perf is 180MB/s/
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>> =C2=A0> Some of the tests I have done:
->>> > =C2=A0>> =C2=A0> 1. I ran =C2=A0experiments using iozone also but not=
-ice that READ perf with
->>> > =C2=A0>> =C2=A0> RAID5 in 2.6.27 is ~30% less as compared to 2.6.21.
->>> > =C2=A0>> =C2=A0> Write perf is similar but Read is an issue.
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>> =C2=A0> 2. On 2.6.27, I played around with chunk size and bl=
-ocksize parameters
->>> > =C2=A0>> =C2=A0> and got ~5% improvement but not much. I used followi=
-ng cmds:
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>> =C2=A0> #mdadm --create /dev/md0 --level=3D5 --assume-clean =
---raid-devices=3D4
->>> > =C2=A0>> =C2=A0> /dev/sda /dev/sdb /dev/sdc /dev/sdd --chunk=3D32
->>> > =C2=A0>> =C2=A0> #mke2fs -b 4096 -E stride=3D8 /dev/md0
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>> =C2=A0> #time dd if=3D/dev/md0 of=3D/dev/null bs=3D94208 cou=
-nt=3D1024
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>> =C2=A0> Is this perf drop a known issue? Can someone please =
-recommend some
->>> > =C2=A0>> =C2=A0> performance tuning tips?
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>> =C2=A0> Thanks a lot for your time and help!
->>> > =C2=A0>>
->>> > =C2=A0>> > --
->>> > =C2=A0>> =C2=A0> To unsubscribe from this list: send the line "unsubs=
-cribe linux-raid" in
->>> > =C2=A0>> =C2=A0> the body of a message to majordomo@vger.kernel.org
->>> > =C2=A0>> =C2=A0> More majordomo info at =C2=A0http://vger.kernel.org/=
-majordomo-info.html
->>> > =C2=A0>> =C2=A0>
->>> > =C2=A0>>
->>> > =C2=A0>>
->>> > =C2=A0>>
->>> > =C2=A0>> =C2=A0--
->>> > =C2=A0>>
->>> > =C2=A0>> =C2=A0 =C2=A0 =C2=A0 =C2=A0Majed B.
->>> > =C2=A0>>
->>> > =C2=A0>
->>> >
->>> >
->>> >
->>> >
->>> > --
->>> >
->>> > =C2=A0 =C2=A0 =C2=A0 =C2=A0Majed B.
->>> >
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.html
+>>>> >  >>
+>>>> >  >>  Have you checked and verified that the same drivers are bei=
+ng loaded?
+>>>> >  >>  (IDE vs. AHCI -- proprietary drivers vs. open source)
+>>>> >  >>
+>>>> >  >>  This is interesting!
+>>>> >  >>
+>>>> >  >>
+>>>> >  >>  On Thu, Sep 10, 2009 at 1:54 AM, Linux Raid
+>>>> >  >>  Study<linuxraid.study@gmail.com> wrote:
+>>>> >  >>  > Hello:
+>>>> >  >>  >
+>>>> >  >>  > I'm benchmarking RAID5 Read performance with 4 disks and =
+notice perf
+>>>> >  >>  > drop when using kernel 2.6.27.
+>>>> >  >>  > The perf with 2.6.27 is 150MB/s whereas with kernel 2.6.2=
+1 (and same
+>>>> >  >>  > setup), the perf is 180MB/s/
+>>>> >  >>  >
+>>>> >  >>  >
+>>>> >  >>  >
+>>>> >  >>  > Some of the tests I have done:
+>>>> >  >>  > 1. I ran  experiments using iozone also but notice that R=
+EAD perf with
+>>>> >  >>  > RAID5 in 2.6.27 is ~30% less as compared to 2.6.21.
+>>>> >  >>  > Write perf is similar but Read is an issue.
+>>>> >  >>  >
+>>>> >  >>  > 2. On 2.6.27, I played around with chunk size and blocksi=
+ze parameters
+>>>> >  >>  > and got ~5% improvement but not much. I used following cm=
+ds:
+>>>> >  >>  >
+>>>> >  >>  > #mdadm --create /dev/md0 --level=3D5 --assume-clean --rai=
+d-devices=3D4
+>>>> >  >>  > /dev/sda /dev/sdb /dev/sdc /dev/sdd --chunk=3D32
+>>>> >  >>  > #mke2fs -b 4096 -E stride=3D8 /dev/md0
+>>>> >  >>  >
+>>>> >  >>  > #time dd if=3D/dev/md0 of=3D/dev/null bs=3D94208 count=3D=
+1024
+>>>> >  >>  >
+>>>> >  >>  >
+>>>> >  >>  > Is this perf drop a known issue? Can someone please recom=
+mend some
+>>>> >  >>  > performance tuning tips?
+>>>> >  >>  >
+>>>> >  >>  > Thanks a lot for your time and help!
+>>>> >  >>
+>>>> >  >> > --
+>>>> >  >>  > To unsubscribe from this list: send the line "unsubscribe=
+ linux-raid" in
+>>>> >  >>  > the body of a message to majordomo@vger.kernel.org
+>>>> >  >>  > More majordomo info at  http://vger.kernel.org/majordomo-=
+info.html
+>>>> >  >>  >
+>>>> >  >>
+>>>> >  >>
+>>>> >  >>
+>>>> >  >>  --
+>>>> >  >>
+>>>> >  >>        Majed B.
+>>>> >  >>
+>>>> >  >
+>>>> >
+>>>> >
+>>>> >
+>>>> >
+>>>> > --
+>>>> >
+>>>> >        Majed B.
+>>>> >
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-ra=
+id" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
 >>
 >
-
-
-
---=20
-       Majed B.
-
---0003255596866f4c280473be3a0c
-Content-Type: text/x-diff; charset=US-ASCII; name="diff.diff"
-Content-Disposition: attachment; filename="diff.diff"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fzozbqnb0
-
-LS0tIDIxCTIwMDktMDktMTcgMDU6NTA6NDQuMDkxMDg5ODgxICswMzAwCisrKyB1CTIwMDktMDkt
-MTcgMDY6MzE6MDEuNTMyMDkwNTYwICswMzAwCkBAIC0xLDIxICsxLDMwIEBACiBDT05GSUdfNjRC
-SVQ9eQorQ09ORklHXzY0QklUX1BIWVNfQUREUj15CiBDT05GSUdfODEzOVRPTz15CiBDT05GSUdf
-ODEzOVRPT19QSU89eQorQ09ORklHX0FOT05fSU5PREVTPXkKIENPTkZJR19BUkNIX0ZMQVRNRU1f
-RU5BQkxFPXkKIENPTkZJR19BUkNIX01BWV9IQVZFX1BDX0ZEQz15CitDT05GSUdfQVJDSF9QT1BV
-TEFURVNfTk9ERV9NQVA9eQogQ09ORklHX0FSQ0hfU1BBUlNFTUVNX0VOQUJMRT15CitDT05GSUdf
-QVJDSF9TVVBQT1JUU19PUFJPRklMRT15CiBDT05GSUdfQVNZTkNfQ09SRT15CiBDT05GSUdfQVNZ
-TkNfTUVNQ1BZPXkKK0NPTkZJR19BU1lOQ19QUT15CiBDT05GSUdfQVNZTkNfUFFYT1I9eQogQ09O
-RklHX0FTWU5DX1I2UkVDT1Y9eQorQ09ORklHX0FTWU5DX1JBSUQ2X1JFQ09WPXkKIENPTkZJR19B
-U1lOQ19YT1I9eQogQ09ORklHX0FUQT15CitDT05GSUdfQVRBX1NGRj15CiBDT05GSUdfQkFTRV9G
-VUxMPXkKIENPTkZJR19CSU5GTVRfRUxGMzI9eQogQ09ORklHX0JJTkZNVF9FTEY9eQogQ09ORklH
-X0JJTkZNVF9NSVNDPXkKIENPTkZJR19CSVRSRVZFUlNFPXkKK0NPTkZJR19CTEtfREVWPXkKIENP
-TkZJR19CTEtfREVWX0NNRDY0WD15CitDT05GSUdfQkxLX0RFVl9ETT15CiBDT05GSUdfQkxLX0RF
-Vl9JREU9eQogQ09ORklHX0JMS19ERVZfSURFQ0Q9eQogQ09ORklHX0JMS19ERVZfSURFRElTSz15
-CkBAIC0yOSwxMSArMzgsMTggQEAKIENPTkZJR19CTEtfREVWX1NEPXkKIENPTkZJR19CTEtfREVW
-X1ZJQTgyQ1hYWD15CiBDT05GSUdfQkxPQ0s9eQorQ09ORklHX0JMT0NLX0NPTVBBVD15CitDT05G
-SUdfQk9VTkNFPXkKIENPTkZJR19CUklER0U9eQogQ09ORklHX0JTRF9QUk9DRVNTX0FDQ1Q9eQor
-Q09ORklHX0JTRF9QUk9DRVNTX0FDQ1RfVjM9eQogQ09ORklHX0JVRz15CiBDT05GSUdfQlVJTERf
-RUxGNjQ9eQorQ09ORklHX0JVSUxEX0lEX0RJU0FCTEU9eQorQ09ORklHX0NFVlRfUjRLPXkKK0NP
-TkZJR19DTEFTU0lDX1JDVT15CiBDT05GSUdfQ09NUEFUPXkKK0NPTkZJR19DT01QQVRfQlJLPXkK
-IENPTkZJR19DUFVfQklHX0VORElBTj15CiBDT05GSUdfQ1BVX0hBU19QUkVGRVRDSD15CiBDT05G
-SUdfQ1BVX0hBU19TWU5DPXkKQEAgLTQ1LDI3ICs2MSw0NiBAQAogQ09ORklHX0NSQzMyPXkKIENP
-TkZJR19DUllQVE89eQogQ09ORklHX0NSWVBUT19BTEdBUEk9eQorQ09ORklHX0NSWVBUT19CTEtD
-SVBIRVI9eQorQ09ORklHX0NSWVBUT19DQkM9eQorQ09ORklHX0NSWVBUT19ERVM9eQogQ09ORklH
-X0NSWVBUT19IQVNIPXkKIENPTkZJR19DUllQVE9fSE1BQz15CitDT05GSUdfQ1JZUFRPX0hXPXkK
-IENPTkZJR19DUllQVE9fTUFOQUdFUj15CitDT05GSUdfQ1JZUFRPX01ENT15CiBDT05GSUdfREVC
-VUdfSU5GTz15CiBDT05GSUdfREVCVUdfS0VSTkVMPXkKIENPTkZJR19ERUZBVUxUX0NGUT15CitD
-T05GSUdfREVWS01FTT15CitDT05GSUdfREVWUE9SVD15CitDT05GSUdfRE1BREVWSUNFUz15CiBD
-T05GSUdfRE1BX0VOR0lORT15CitDT05GSUdfRE1fQ1JZUFQ9eQorQ09ORklHX0RNX01JUlJPUj15
-CitDT05GSUdfRE1fU05BUFNIT1Q9eQorQ09ORklHX0RNX1pFUk89eQogQ09ORklHX0ROT1RJRlk9
-eQogQ09ORklHX0RSTT15CiBDT05GSUdfRFJNX1JBREVPTj15CiBDT05GSUdfRFVNTVlfQ09OU09M
-RT15CiBDT05GSUdfRTEwMDA9eQorQ09ORklHX0UxMDAwRT15CiBDT05GSUdfRTEwMDBfTkFQST15
-CiBDT05GSUdfRUxGX0NPUkU9eQogQ09ORklHX0VNQkVEREVEPXkKIENPTkZJR19FTkFCTEVfTVVT
-VF9DSEVDSz15CitDT05GSUdfRU5BQkxFX1dBUk5fREVQUkVDQVRFRD15CiBDT05GSUdfRVBPTEw9
-eQorQ09ORklHX0VWRU5URkQ9eQogQ09ORklHX0VYUEVSSU1FTlRBTD15CiBDT05GSUdfRVhUMl9G
-Uz15CitDT05GSUdfRVhUMl9GU19QT1NJWF9BQ0w9eQorQ09ORklHX0VYVDJfRlNfWEFUVFI9eQog
-Q09ORklHX0VYVDNfRlM9eQorQ09ORklHX0VYVDNfRlNfUE9TSVhfQUNMPXkKIENPTkZJR19FWFQz
-X0ZTX1hBVFRSPXkKK0NPTkZJR19GQUlSX0dST1VQX1NDSEVEPXkKIENPTkZJR19GQVNUX0FDQ0VT
-U19UT19USFJFQURfUE9JTlRFUj15CiBDT05GSUdfRkFUX0ZTPXkKIENPTkZJR19GQj15CkBAIC04
-MSwzMiArMTE2LDU1IEBACiBDT05GSUdfRk9SQ0VEX0lOTElOSU5HPXkKIENPTkZJR19GUkFNRUJV
-RkZFUl9DT05TT0xFPXkKIENPTkZJR19GU19NQkNBQ0hFPXkKK0NPTkZJR19GU19QT1NJWF9BQ0w9
-eQogQ09ORklHX0ZVU0lPTj15CiBDT05GSUdfRlVTSU9OX1NBUz15CiBDT05GSUdfRlVURVg9eQog
-Q09ORklHX0dFTkVSSUNfQ0FMSUJSQVRFX0RFTEFZPXkKK0NPTkZJR19HRU5FUklDX0NMT0NLRVZF
-TlRTPXkKK0NPTkZJR19HRU5FUklDX0NMT0NLRVZFTlRTX0JVSUxEPXkKK0NPTkZJR19HRU5FUklD
-X0NNT1NfVVBEQVRFPXkKIENPTkZJR19HRU5FUklDX0ZJTkRfTkVYVF9CSVQ9eQogQ09ORklHX0dF
-TkVSSUNfSEFSRElSUVM9eQogQ09ORklHX0dFTkVSSUNfSFdFSUdIVD15CiBDT05GSUdfR0VORVJJ
-Q19JUlFfUFJPQkU9eQogQ09ORklHX0dFTkVSSUNfSVNBX0RNQT15CiBDT05GSUdfR0VORVJJQ19U
-SU1FPXkKK0NPTkZJR19HUk9VUF9TQ0hFRD15CitDT05GSUdfSEFSRFdBUkVfV0FUQ0hQT0lOVFM9
-eQorQ09ORklHX0hBU19ETUE9eQogQ09ORklHX0hBU19JT01FTT15CiBDT05GSUdfSEFTX0lPUE9S
-VD15CitDT05GSUdfSEFWRV9BUkNIX0tHREI9eQorQ09ORklHX0hBVkVfRlRSQUNFPXkKK0NPTkZJ
-R19IQVZFX0dFVF9DWUNMRVNfMzI9eQorQ09ORklHX0hBVkVfSURFPXkKIENPTkZJR19IQVZFX01F
-TU9SWV9QUkVTRU5UPXkKK0NPTkZJR19IQVZFX09QUk9GSUxFPXkKK0NPTkZJR19IQVZFX1RSQUNF
-X0NMT0NLPXkKK0NPTkZJR19IQVZFX1RSQUNFX0NMT0NLXzMyX1RPXzY0PXkKIENPTkZJR19ISUQ9
-eQorQ09ORklHX0hJRF9TVVBQT1JUPXkKIENPTkZJR19IT1RQTFVHPXkKIENPTkZJR19IVUdFVExC
-RlM9eQogQ09ORklHX0hVR0VUTEJfUEFHRT15CitDT05GSUdfSFdNT049eQorQ09ORklHX0hXVElN
-RVJfSE9PS1M9eQogQ09ORklHX0hXX0NPTlNPTEU9eQogQ09ORklHX0hXX0hBU19QQ0k9eQorQ09O
-RklHX0haXzEwMD15CiBDT05GSUdfSFpfMjUwPXkKIENPTkZJR19JMkM9eQogQ09ORklHX0kyQ19B
-TEdPQklUPXkKK0NPTkZJR19JMkNfQk9BUkRJTkZPPXkKIENPTkZJR19JMkNfQ0hBUkRFVj15CitD
-T05GSUdfSTJDX0hFTFBFUl9BVVRPPXkKIENPTkZJR19JREU9eQogQ09ORklHX0lERURJU0tfTVVM
-VElfTU9ERT15CiBDT05GSUdfSURFUENJX1NIQVJFX0lSUT15CitDT05GSUdfSURFX1BST0NfRlM9
-eQorQ09ORklHX0lLQ09ORklHPXkKK0NPTkZJR19JS0NPTkZJR19QUk9DPXkKIENPTkZJR19JTkVU
-PXkKIENPTkZJR19JTkVUX0RJQUc9eQogQ09ORklHX0lORVRfVENQX0RJQUc9eQpAQCAtMTIwLDEy
-ICsxNzgsMjAgQEAKIENPTkZJR19JTlBVVF9NT1VTRT15CiBDT05GSUdfSU5QVVRfTU9VU0VERVY9
-eQogQ09ORklHX0lOUFVUX01PVVNFREVWX1BTQVVYPXkKK0NPTkZJR19JT1NDSEVEX0FTPXkKIENP
-TkZJR19JT1NDSEVEX0NGUT15CitDT05GSUdfSU9TQ0hFRF9ERUFETElORT15CiBDT05GSUdfSU9T
-Q0hFRF9OT09QPXkKIENPTkZJR19JUF9GSUJfSEFTSD15CitDT05GSUdfSVBfTVJPVVRFPXkKIENP
-TkZJR19JUF9NVUxUSUNBU1Q9eQorQ09ORklHX0lQX1BJTVNNX1YxPXkKK0NPTkZJR19JUF9QSU1T
-TV9WMj15CiBDT05GSUdfSVBfUE5QPXkKK0NPTkZJR19JUF9QTlBfQk9PVFA9eQogQ09ORklHX0lQ
-X1BOUF9ESENQPXkKK0NPTkZJR19JUF9QTlBfUkFSUD15CitDT05GSUdfSVJRX0NQVT15CiBDT05G
-SUdfSVJRX1BFUl9DUFU9eQogQ09ORklHX0lTQT15CiBDT05GSUdfSVNPOTY2MF9GUz15CkBAIC0x
-MzcsNiArMjAzLDcgQEAKIENPTkZJR19KT0xJRVQ9eQogQ09ORklHX0tBTExTWU1TPXkKIENPTkZJ
-R19LRVlCT0FSRF9BVEtCRD15CitDT05GSUdfS01PRD15CiBDT05GSUdfTEVHQUNZX1BUWVM9eQog
-Q09ORklHX0xMQz15CiBDT05GSUdfTE9DS0Q9eQpAQCAtMTQ3LDYgKzIxNCw5IEBACiBDT05GSUdf
-TE9HT19MSU5VWF9DTFVUMjI0PXkKIENPTkZJR19NQUdJQ19TWVNSUT15CiBDT05GSUdfTUQ9eQor
-Q09ORklHX01EX0ZBVUxUWT15CitDT05GSUdfTURfTElORUFSPXkKK0NPTkZJR19NRF9NVUxUSVBB
-VEg9eQogQ09ORklHX01EX1JBSUQwPXkKIENPTkZJR19NRF9SQUlEMTA9eQogQ09ORklHX01EX1JB
-SUQxPXkKQEAgLTE1OCw2ICsyMjgsNyBAQAogQ09ORklHX01JUFMzMl9PMzI9eQogQ09ORklHX01J
-UFM9eQogQ09ORklHX01JUFNfTVRfRElTQUJMRUQ9eQorQ09ORklHX01JU0NfREVWSUNFUz15CiBD
-T05GSUdfTU1VPXkKIENPTkZJR19NT0RVTEVTPXkKIENPTkZJR19NT0RVTEVfVU5MT0FEPXkKQEAg
-LTE3MSw2ICsyNDIsNyBAQAogQ09ORklHX01URF9DRklfQU1EU1REPXkKIENPTkZJR19NVERfQ0ZJ
-X0dFT01FVFJZPXkKIENPTkZJR19NVERfQ0ZJX0kxPXkKK0NPTkZJR19NVERfQ0ZJX0kyPXkKIENP
-TkZJR19NVERfQ0ZJX05PU1dBUD15CiBDT05GSUdfTVREX0NGSV9VVElMPXkKIENPTkZJR19NVERf
-Q0hBUj15CkBAIC0xNzgsMTYgKzI1MCwyOSBAQAogQ09ORklHX01URF9HRU5fUFJPQkU9eQogQ09O
-RklHX01URF9KRURFQ1BST0JFPXkKIENPTkZJR19NVERfTUFQX0JBTktfV0lEVEhfMT15CitDT05G
-SUdfTVREX01BUF9CQU5LX1dJRFRIXzI9eQorQ09ORklHX01URF9NQVBfQkFOS19XSURUSF80PXkK
-K0NPTkZJR19NVERfTkFORD15CitDT05GSUdfTVREX05BTkRfSURTPXkKIENPTkZJR19NVERfUEFS
-VElUSU9OUz15CitDT05GSUdfTVREX1BIWVNNQVA9eQogQ09ORklHX01URF9TTFJBTT15CiBDT05G
-SUdfTkFUU0VNST15CiBDT05GSUdfTkVUPXkKK0NPTkZJR19ORVRDT05TT0xFPXkKIENPTkZJR19O
-RVRERVZJQ0VTPXkKK0NPTkZJR19ORVRERVZfMTAwMDA9eQorQ09ORklHX05FVERFVl8xMDAwPXkK
-K0NPTkZJR19ORVRQT0xMPXkKK0NPTkZJR19ORVRQT0xMX1RSQVA9eQorQ09ORklHX05FVFdPUktf
-RklMRVNZU1RFTVM9eQogQ09ORklHX05FVF9FVEhFUk5FVD15CiBDT05GSUdfTkVUX1BDST15CitD
-T05GSUdfTkVUX1BPTExfQ09OVFJPTExFUj15CiBDT05GSUdfTkZTX0NPTU1PTj15CiBDT05GSUdf
-TkZTX0ZTPXkKIENPTkZJR19ORlNfVjM9eQorQ09ORklHX05GU19WND15CiBDT05GSUdfTkxTPXkK
-IENPTkZJR19OTFNfQ09ERVBBR0VfNDM3PXkKIENPTkZJR19OTFNfSVNPODg1OV8xPXkKQEAgLTE5
-NSw4ICsyODAsMTEgQEAKIENPTkZJR19PUFJPRklMRT15CiBDT05GSUdfUEFDS0VUPXkKIENPTkZJ
-R19QQUNLRVRfTU1BUD15CitDT05GSUdfUEFHRUZMQUdTX0VYVEVOREVEPXkKIENPTkZJR19QQUdF
-X1NJWkVfNEtCPXkKIENPTkZJR19QQ0k9eQorQ09ORklHX1BDSV9ET01BSU5TPXkKK0NPTkZJR19Q
-Q0lfTEVHQUNZPXkKIENPTkZJR19QQ0lfTVNJPXkKIENPTkZJR19QTElTVD15CiBDT05GSUdfUE9T
-SVhfTVFVRVVFPXkKQEAgLTIwNSwxMiArMjkzLDE1IEBACiBDT05GSUdfUFJJTlRLPXkKIENPTkZJ
-R19QUk9DX0ZTPXkKIENPTkZJR19QUk9DX0tDT1JFPXkKK0NPTkZJR19QUk9DX1BBR0VfTU9OSVRP
-Uj15CiBDT05GSUdfUFJPQ19TWVNDVEw9eQogQ09ORklHX1BST0ZJTElORz15CiBDT05GSUdfUkFN
-RlM9eQorQ09ORklHX1JFTEFZPXkKIENPTkZJR19SRVBMQUNFX0VNVUxBVEVEX0FDQ0VTU19UT19U
-SFJFQURfUE9JTlRFUj15CiBDT05GSUdfUkVTT1VSQ0VTXzY0QklUPXkKIENPTkZJR19ST09UX05G
-Uz15CitDT05GSUdfUlBDU0VDX0dTU19LUkI1PXkKIENPTkZJR19SVENfQ0xBU1M9eQogQ09ORklH
-X1JUQ19ERUJVRz15CiBDT05GSUdfUlRDX0RSVl9EUzEzMDc9eQpAQCAtMjIyLDExICszMTMsMTcg
-QEAKIENPTkZJR19SVF9NVVRFWEVTPXkKIENPTkZJR19SV1NFTV9HRU5FUklDX1NQSU5MT0NLPXkK
-IENPTkZJR19TQVRBX01WPXkKK0NPTkZJR19TQVRBX1BNUD15CiBDT05GSUdfU0FUQV9TSUwyND15
-CitDT05GSUdfU0FUQV9TSUw9eQogQ09ORklHX1NDSEVEX05PX05PX09NSVRfRlJBTUVfUE9JTlRF
-Uj15CiBDT05GSUdfU0NTST15CitDT05GSUdfU0NTSV9ETUE9eQogQ09ORklHX1NDU0lfUFJPQ19G
-Uz15CiBDT05GSUdfU0NTSV9TQVNfQVRUUlM9eQorQ09ORklHX1NFQ0NPTVA9eQorQ09ORklHX1NF
-Q1VSSVRZPXkKK0NPTkZJR19TRUNVUklUWV9ORVRXT1JLPXkKIENPTkZJR19TRUxFQ1RfTUVNT1JZ
-X01PREVMPXkKIENPTkZJR19TRVJJQUxfODI1MD15CiBDT05GSUdfU0VSSUFMXzgyNTBfQ09OU09M
-RT15CkBAIC0yMzksMTYgKzMzNiwyMSBAQAogQ09ORklHX1NFUklPX0xJQlBTMj15CiBDT05GSUdf
-U0VSSU9fU0VSUE9SVD15CiBDT05GSUdfU0hNRU09eQorQ09ORklHX1NJR05BTEZEPXkKIENPTkZJ
-R19TS1kyPXkKIENPTkZJR19TTEFCPXkKK0NPTkZJR19TTEFCSU5GTz15CiBDT05GSUdfU01QPXkK
-IENPTkZJR19TUEFSU0VNRU09eQogQ09ORklHX1NQQVJTRU1FTV9NQU5VQUw9eQogQ09ORklHX1NQ
-QVJTRU1FTV9TVEFUSUM9eQorQ09ORklHX1NTQl9QT1NTSUJMRT15CiBDT05GSUdfU1RBQ0tUUkFD
-RV9TVVBQT1JUPXkKIENPTkZJR19TVEFOREFMT05FPXkKIENPTkZJR19TVE9QX01BQ0hJTkU9eQor
-Q09ORklHX1NUUD15CiBDT05GSUdfU1VOUlBDPXkKK0NPTkZJR19TVU5SUENfR1NTPXkKIENPTkZJ
-R19TV0FQPXkKIENPTkZJR19TV0FQX0lPX1NQQUNFPXkKIENPTkZJR19TWU5fQ09PS0lFUz15CkBA
-IC0yNTYsMTggKzM1OCwyNSBAQAogQ09ORklHX1NZU0NUTF9TWVNDQUxMPXkKIENPTkZJR19TWVNG
-Uz15CiBDT05GSUdfU1lTRlNfREVQUkVDQVRFRD15CitDT05GSUdfU1lTRlNfREVQUkVDQVRFRF9W
-Mj15CiBDT05GSUdfU1lTVklQQz15CiBDT05GSUdfU1lTVklQQ19DT01QQVQ9eQogQ09ORklHX1NZ
-U1ZJUENfU1lTQ1RMPXkKK0NPTkZJR19TWVNfSEFTX0VBUkxZX1BSSU5USz15CitDT05GSUdfU1lT
-X1I0S19DVkVUX0hXVElNRVI9eQogQ09ORklHX1NZU19TVVBQT1JUU18zMkJJVF9LRVJORUw9eQog
-Q09ORklHX1NZU19TVVBQT1JUU182NEJJVF9LRVJORUw9eQogQ09ORklHX1NZU19TVVBQT1JUU19B
-UkJJVF9IWj15CiBDT05GSUdfU1lTX1NVUFBPUlRTX0JJR19FTkRJQU49eQorQ09ORklHX1NZU19T
-VVBQT1JUU19EWU5BTUlDX0ZUUkFDRT15CiBDT05GSUdfU1lTX1NVUFBPUlRTX0hJR0hNRU09eQog
-Q09ORklHX1NZU19TVVBQT1JUU19LR0RCPXkKIENPTkZJR19TWVNfU1VQUE9SVFNfU01QPXkKIENP
-TkZJR19UQ1BfQ09OR19DVUJJQz15CitDT05GSUdfVEhFUk1BTD15CitDT05GSUdfVElNRVJGRD15
-CiBDT05GSUdfVE1QRlM9eQorQ09ORklHX1RSQUNFUE9JTlRTPXkKIENPTkZJR19UUkFDRV9JUlFG
-TEFHU19TVVBQT1JUPXkKIENPTkZJR19VTklYOThfUFRZUz15CiBDT05GSUdfVU5JWD15CkBAIC0y
-NzYsMjEgKzM4NSwyOSBAQAogQ09ORklHX1VTQl9BUkNIX0hBU19IQ0Q9eQogQ09ORklHX1VTQl9B
-UkNIX0hBU19PSENJPXkKIENPTkZJR19VU0JfREVWSUNFRlM9eQorQ09ORklHX1VTQl9ERVZJQ0Vf
-Q0xBU1M9eQogQ09ORklHX1VTQl9EV0NfT1RHPXkKK0NPTkZJR19VU0JfRFlOQU1JQ19NSU5PUlM9
-eQogQ09ORklHX1VTQl9FSENJX0hDRD15CiBDT05GSUdfVVNCX0hJRD15CitDT05GSUdfVVNCX0xJ
-QlVTVUFMPXkKIENPTkZJR19VU0JfTU9OPXkKIENPTkZJR19VU0JfT0hDSV9IQ0Q9eQogQ09ORklH
-X1VTQl9PSENJX0xJVFRMRV9FTkRJQU49eQogQ09ORklHX1VTQl9TVE9SQUdFPXkKK0NPTkZJR19V
-U0JfU1VQUE9SVD15CiBDT05GSUdfVVNCX1VIQ0lfSENEPXkKK0NPTkZJR19VU0VSX1NDSEVEPXkK
-K0NPTkZJR19VU0VfR0VORVJJQ19TTVBfSEVMUEVSUz15CiBDT05GSUdfVVNFX1JJX1hJX1BBR0Vf
-QklUUz15CiBDT05GSUdfVkZBVF9GUz15CiBDT05GSUdfVklBX1JISU5FPXkKIENPTkZJR19WSUFf
-UkhJTkVfTU1JTz15CitDT05GSUdfVklSVF9UT19CVVM9eQogQ09ORklHX1ZNX0VWRU5UX0NPVU5U
-RVJTPXkKIENPTkZJR19WVD15CiBDT05GSUdfVlRfQ09OU09MRT15CitDT05GSUdfV0FUQ0hET0c9
-eQogQ09ORklHX1dFQUtfT1JERVJJTkc9eQogQ09ORklHX1hGUk09eQogQ09ORklHX1hPUl9CTE9D
-S1M9eQo=
---0003255596866f4c280473be3a0c--
+>
+>
+> --
+>       Majed B.
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
