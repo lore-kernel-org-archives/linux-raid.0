@@ -1,27 +1,41 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: Formatting Raid5 device as NTFS
-Date: Fri, 18 Sep 2009 01:02:45 +0300
-Message-ID: <70ed7c3e0909171502m361c1aa1o59e8c3d95b3a563@mail.gmail.com>
-References: <f5d1f90a0909171223h684e5f65k405fa319ab6be8d9@mail.gmail.com>
-	<20090917200229.GA19611@cthulhu.home.robinhill.me.uk> <f5d1f90a0909171439x18555f61y8d6ab175c745473@mail.gmail.com>
-	<70ed7c3e0909171443t68d81495y26acc8f5119d7aa3@mail.gmail.com>
-	<f5d1f90a0909171449u70b26cd5w4331c9aa6a13aa39@mail.gmail.com>
+From: aristizb@ualberta.ca
+Subject: SET_BITMAP_FILE assembling raid1
+Date: Thu, 17 Sep 2009 16:07:18 -0600
+Message-ID: <20090917160718.15831qsk0zd6k2e8@webmail.ualberta.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f5d1f90a0909171449u70b26cd5w4331c9aa6a13aa39@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux Raid Study <linuxraid.study@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Yes.
+Hi,
 
-On Fri, Sep 18, 2009 at 12:49 AM, Linux Raid Study
-<linuxraid.study@gmail.com> wrote:
-> So by default, the /dev/md0 device has Rd/Wr permissions (set during
-> mdadm --create ... cmd...)...is that correct?
->
-> Thanks.
--- 
-       Majed B.
+After have stopped a raid1, I try to assemble it with one device and  
+its bitmap; but I received the following error message:
+
+$mdadm --assemble --force /dev/md2003 --bitmap=/tmp/md2003bm  
+/dev/syntropy21/ian_dvol_200_0_1
+
+mdadm: SET_BITMAP_FILE failed.
+
+After 5 minutes I retry the command and it succeeds, assembling the  
+raid without any problems.
+
+
+It looks like mdadm cannot use the file I specified for the external  
+bitmap, but this file is not in use by any other raid. Is there any  
+explanation on why assemble could fail to create the raid with the  
+specified bitmap?
+
+
+Thank you.
+
+
+
+Juan.
