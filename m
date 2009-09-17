@@ -1,52 +1,78 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: Raid 5 Issue, cannot recognize EXT3 File system.
-Date: Fri, 18 Sep 2009 00:26:41 +0300
-Message-ID: <70ed7c3e0909171426y320f74f9x9901ad5b1420f829@mail.gmail.com>
-References: <200909171620688.SM00612@trainer> <20090917210148.GB19611@cthulhu.home.robinhill.me.uk>
+From: Linux Raid Study <linuxraid.study@gmail.com>
+Subject: Re: Formatting Raid5 device as NTFS
+Date: Thu, 17 Sep 2009 14:39:24 -0700
+Message-ID: <f5d1f90a0909171439x18555f61y8d6ab175c745473@mail.gmail.com>
+References: <f5d1f90a0909171223h684e5f65k405fa319ab6be8d9@mail.gmail.com>
+	 <20090917200229.GA19611@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090917210148.GB19611@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <20090917200229.GA19611@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This NAS from WD, does it use Linux's software RAID?
-If not, you can't assemble it under Linux, because the RAID controller
-is using proprietary methods.
+Hi Robin:
 
-On Fri, Sep 18, 2009 at 12:01 AM, Robin Hill <robin@robinhill.me.uk> wr=
-ote:
-> On Thu Sep 17, 2009 at 04:20:16PM -0400, Sunpyo Hong wrote:
+I use mdadm cmd to create Raid5 device and did following:
+
+#mdadm --create /dev/md0 --level=3D5 --assume-clean --raid-devices=3D4
+/dev/sda /dev/sdb /dev/sdc /dev/sdd
+
+#mdadm -w /dev/md0
+mdadm: failed to set writable for /dev/md0: Device or resource busy
+
+~ # mount
+none on /proc type proc (rw)
+none on /dev/shm type tmpfs (rw)
+none on /dev/pts type devpts (rw,mode=3D600)
+none on /sys type sysfs (rw)
+none on /mnth type hugetlbfs (rw)
+
+As u would notice, /dev/md0 is yet mounted...not sure why the above err=
+or....
+
+Thanks for ur help!
+
+On Thu, Sep 17, 2009 at 1:02 PM, Robin Hill <robin@robinhill.me.uk> wro=
+te:
+> On Thu Sep 17, 2009 at 12:23:22PM -0700, Linux Raid Study wrote:
 >
->> I've contacted just about everyone that knows a thing about RAID5, b=
-ut no
->> one is really able to help me. Anyhow I've read up a lot on RAID5 ar=
-rays and
->> how to properly assemble them. However I've run into a problem with =
-a NAS
->> system from WD that I just can't seem to figure out.
+>> Hello:
 >>
->> I have a =C2=BE disks in the array, 1 went down and is out of commis=
-sion. =C2=A0I've
->> been able to assemble my array through mdadm using --assemble --scan=
-=2E However
->> I cannot access the array due to the fact that the array cannot read=
- a
->> filesystem. Everytime I try to mount I get mount: wrong fs type=E2=80=
-=A6 etc. I
->> know that the FS is an ext3 FS. However I cannot seem to get this
->> thing going. I was wondering if anyone could point me in the right
->> direction with this. I can't seem to find anyone that is capable of
->> solving this. I would appreciate any help. Thanks!
+>> I have to bundle 4 disks as a Raid5 device, export it to iSCSI
+>> initiators and format it as NTFS.
 >>
-> What's the output of 'cat /proc/mdstat' after you assemble the array?
-> And what exact error (and dmesg output) do you get when trying to mou=
-nt
-> it as ext3?
+>> What is better:
+>> - Format individual disks as NTFS and then bundle them as Raid5 devi=
+ce
+>> and export to initiator PCs
+>> - Or bundle the disks first as Raid5 dev, export them and then forma=
+t
+>> the /dev/md0 device as NTFS
+>>
+>> I get "write-protected" errors when I do the second option. Does it
+>> mean formatting of raid5 device is not allowed?
+>> Does Raid5 inherit the NTFS properties of individual disks (first op=
+tion)?
+>>
+> I don't see your first option working at all. =C2=A0When you bundle t=
+he
+> drives together, the resulting device will have totally scrambled the
+> underlying NTFS filesystems.
 >
-> Cheers,
+> The second option is how md RAID is supposed to work - you bundle
+> together the disks into a single array, then format that. =C2=A0Where=
+ are you
+> getting the "write-protected" errors? =C2=A0Are you trying to format =
+the
+> exported iSCSI device from a remote system? =C2=A0Certainly the RAID =
+device
+> can be formatted directly, but I've no idea how the iSCSI affects
+> things.
+>
+> HTH,
 > =C2=A0 =C2=A0Robin
 > --
 > =C2=A0 =C2=A0 ___
@@ -58,11 +84,6 @@ nt
 > =C2=A0// !! =C2=A0 =C2=A0 =C2=A0 | =C2=A0 =C2=A0 =C2=A0"He fallen in =
 de water !!" =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 |
 >
-
-
-
---=20
-       Majed B.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
