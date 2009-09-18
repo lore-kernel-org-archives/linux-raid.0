@@ -1,56 +1,106 @@
-From: Holger Kiehl <Holger.Kiehl@dwd.de>
-Subject: BUG: soft lockup in [md4_raid5:21137]
-Date: Fri, 18 Sep 2009 13:05:11 +0000 (GMT)
-Message-ID: <Pine.LNX.4.64.0909181255380.21814@diagnostix.dwd.de>
+From: Tim Bostrom <tbostrom@gmail.com>
+Subject: Re: RAID 5 array recovery - two drives errors in external enclosure
+Date: Fri, 18 Sep 2009 08:27:08 -0700
+Message-ID: <2267211f0909180827jbfa57acqadd308b4b889058c@mail.gmail.com>
+References: <2267211f0909171342g6ebf68a2y393daa587e59c714@mail.gmail.com>
+	<20090917212252.GC19611@cthulhu.home.robinhill.me.uk> <2267211f0909171611m4b4a0d02p81b80bc882a0855@mail.gmail.com>
+	<70ed7c3e0909171628w4040ae5cydf4335adb51f2b7d@mail.gmail.com>
+	<2267211f0909171654v766e658fn620b23268a2393a6@mail.gmail.com>
+	<0F9F69CA6B3942B1A44BC0B2D00AE139@m5> <2267211f0909172119w6de04e46m5fcfc5e6d35c0382@mail.gmail.com>
+	<20090918080706.GB22909@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20090918080706.GB22909@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello
+Is there any mdadm command that would have given any info or metadata
+from the previous array?  I have almost 9 months of SSH logging on my
+laptop that I use to manage the array.  Maybe there's some useful info
+left in the log that might help.
 
-I am using kernel.org kernel 2.6.31 and see the following errors in
-/var/log/messages:
+-Tim
 
-    Sep 18 03:49:06 hermes kernel: BUG: soft lockup - CPU#0 stuck for 61s! [md4_raid5:21137]
-    Sep 18 03:49:06 hermes kernel: Modules linked in: coretemp ipmi_devintf ipmi_si ipmi_msghandler bonding nf_conntrack_ftp binfmt_misc usbhid i2c_i801 i2c_core sg i5000_edac ehci_hcd uhci_hcd i5k_amb usbcore [last unloaded: microcode]
-    Sep 18 03:49:06 hermes kernel: CPU 0:
-    Sep 18 03:49:06 hermes kernel: Modules linked in: coretemp ipmi_devintf ipmi_si ipmi_msghandler bonding nf_conntrack_ftp binfmt_misc usbhid i2c_i801 i2c_core sg i5000_edac ehci_hcd uhci_hcd i5k_amb usbcore [last unloaded: microcode]
-    Sep 18 03:49:06 hermes kernel: Pid: 21137, comm: md4_raid5 Not tainted 2.6.31 #1 PRIMERGY RX300 S4
-    Sep 18 03:49:06 hermes kernel: RIP: 0010:[<ffffffff8135a668>]  [<ffffffff8135a668>] raid6_sse24_gen_syndrome+0xf9/0x251
-    Sep 18 03:49:06 hermes kernel: RSP: 0018:ffff88080d46bb50  EFLAGS: 00000246
-    Sep 18 03:49:06 hermes kernel: RAX: 0000000000000e80 RBX: ffff88080d46bb90 RCX: ffff8807e49e8000
-    Sep 18 03:49:06 hermes kernel: RDX: 0000000000000000 RSI: 0000000000000e80 RDI: ffff8807e49e9ea0
-    Sep 18 03:49:06 hermes kernel: RBP: ffffffff8102c66e R08: ffff8807e49e9e80 R09: 0000000000000ea0
-    Sep 18 03:49:06 hermes kernel: R10: 0000160000000000 R11: 6db6db6db6db6db7 R12: ffff88080d46bb40
-    Sep 18 03:49:06 hermes kernel: R13: ffffffff8102c4ce R14: 0000000000000c31 R15: 00000000812c6623
-    Sep 18 03:49:06 hermes kernel: FS:  0000000000000000(0000) GS:ffff880028035000(0000) knlGS:0000000000000000
-    Sep 18 03:49:06 hermes kernel: CS:  0010 DS: 0018 ES: 0018 CR0: 0000000080050033
-    Sep 18 03:49:06 hermes kernel: CR2: 000000000042e3a7 CR3: 0000000001001000 CR4: 00000000000426f0
-    Sep 18 03:49:06 hermes kernel: DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-    Sep 18 03:49:06 hermes kernel: DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-    Sep 18 03:49:06 hermes kernel: Call Trace:
-    Sep 18 03:49:06 hermes kernel: [<ffffffff8135d575>] ? compute_parity6+0x2d9/0x376
-    Sep 18 03:49:06 hermes kernel: [<ffffffff8135d783>] ? compute_block_1+0x171/0x1c6
-    Sep 18 03:49:06 hermes kernel: [<ffffffff8135f738>] ? handle_stripe+0xa85/0x1c24
-    Sep 18 03:49:06 hermes kernel: [<ffffffff81360cbd>] ? raid5d+0x3e6/0x439
-    Sep 18 03:49:06 hermes kernel: [<ffffffff8136aee5>] ? md_thread+0xfb/0x12d
-    Sep 18 03:49:06 hermes kernel: [<ffffffff8107fbdb>] ? autoremove_wake_function+0x0/0x5a
-    Sep 18 03:49:06 hermes kernel: [<ffffffff8136adea>] ? md_thread+0x0/0x12d
-    Sep 18 03:49:06 hermes kernel: [<ffffffff8107f7b7>] ? kthread+0x9b/0xa3
-    Sep 18 03:49:06 hermes kernel: [<ffffffff8102cbaa>] ? child_rip+0xa/0x20
-    Sep 18 03:49:06 hermes kernel: [<ffffffff8107f71c>] ? kthread+0x0/0xa3
-    Sep 18 03:49:06 hermes kernel: [<ffffffff8102cba0>] ? child_rip+0x0/0x20
+On Fri, Sep 18, 2009 at 1:07 AM, Robin Hill <robin@robinhill.me.uk> wro=
+te:
+> On Thu Sep 17, 2009 at 09:19:58PM -0700, Tim Bostrom wrote:
+>
+>> This seemed to work, though I'm still working through the permutatio=
+ns
+>> of the drive letters.
+>>
+>> I noticed that mdadm think that partition sde1 is ext2 filesystem on
+>> it. =A0See below:
+>>
+>> [root@tera tbostrom]# mdadm -C /dev/md0 -l 5 -n 5 -c 256 /dev/sdb1
+>> /dev/sdd1 /dev/sdc1 /dev/sde1 missing
+>> mdadm: /dev/sdb1 appears to be part of a raid array:
+>> =A0 =A0 level=3Draid5 devices=3D5 ctime=3DThu Sep 17 21:13:21 2009
+>> mdadm: /dev/sdd1 appears to be part of a raid array:
+>> =A0 =A0 level=3Draid5 devices=3D5 ctime=3DThu Sep 17 21:13:21 2009
+>> mdadm: /dev/sdc1 appears to be part of a raid array:
+>> =A0 =A0 level=3Draid5 devices=3D5 ctime=3DThu Sep 17 21:13:21 2009
+>> mdadm: /dev/sde1 appears to contain an ext2fs file system
+>> =A0 =A0 size=3D396408836K =A0mtime=3DMon Sep 21 03:41:16 2026
+>> mdadm: /dev/sde1 appears to be part of a raid array:
+>> =A0 =A0 level=3Draid5 devices=3D5 ctime=3DThu Sep 17 21:13:21 2009
+>> Continue creating array?
+>>
+>> What gives? =A0I tried popping sdf1 in there without creating the ar=
+ray
+>> - just to see what would happen and it thinks that sdf1 has ext2 as
+>> well.
+>>
+> That would suggest that sde1 is the first disk in the array (I think)=
+=2E
+>
+>> Still at a loss here. =A0I haven't worked through all the drive
+>> permutations. =A0In the meantime, I'll try that. =A0Does it make sen=
+se to
+>> try sdf1 in the permutation since the drive letters may have changed
+>> since moving from the enclosure? =A0I thought I put them back in the
+>> same order as the enclosure.
+>>
+> Definitely not - we know sdf1 has been re-written when you did the
+> initial --create after moving the drives out of the enclosure. =A0Thi=
+s
+> means it _definitely_ has invalid data on it.
+>
+> Unfortunately, without having the metadata information from the
+> _original_ array _after_ it has been moved from the enclosure, there'=
+s
+> no way of knowing what order the drives should be in. =A0I _think_ th=
+at
+> sde1 will be the first disk (as it shows up as an ext2 filesystem), b=
+ut
+> you'll really have to try every possible combination of the 5 devices
+> (the 4 partitions and "missing"). =A0You may be best scripting this (=
+or
+> searching to see whether someone's already done that) - there's 120
+> possible combinations to try.
+>
+> Cheers,
+> =A0 =A0Robin
+>
+> --
+> =A0 =A0 ___
+> =A0 =A0( ' } =A0 =A0 | =A0 =A0 =A0 Robin Hill =A0 =A0 =A0 =A0<robin@r=
+obinhill.me.uk> |
+> =A0 / / ) =A0 =A0 =A0| Little Jim says .... =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0 =A0 =A0 =A0|
+> =A0// !! =A0 =A0 =A0 | =A0 =A0 =A0"He fallen in de water !!" =A0 =A0 =
+=A0 =A0 =A0 =A0 =A0 =A0 |
+>
 
-This happens on fedora 11 on a data-check of RAID array md4. I get several
-of these, but the system keeps on running. Another system with the same
-setup and hardware seems to always lock up. md4 is a raid6 consisting of
-8 disks. There is absolutly no load on this array and it has an empty
-ext4 filesystem mounted.
 
-Any idea what is causing it? What else can I provide or do to solve this?
 
-Thanks,
-Holger
+--=20
+-tim
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
