@@ -1,134 +1,56 @@
-From: John Hughes <john@Calva.COM>
-Subject: Dumb questions about mdadm #1 - replacing broken disks - "slot" reuse?
-Date: Fri, 18 Sep 2009 14:13:44 +0200
-Message-ID: <4AB37978.5030403@Calva.COM>
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
+Subject: BUG: soft lockup in [md4_raid5:21137]
+Date: Fri, 18 Sep 2009 13:05:11 +0000 (GMT)
+Message-ID: <Pine.LNX.4.64.0909181255380.21814@diagnostix.dwd.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-mdadm version 2.6.7.2-3 on Debian Lenny, kernel  2.6.26-2-xen-amd64
+Hello
 
-I'm new to mdadm, all my experience with software raid/volume management 
-type systems has been with Vertas VxVM on UnixWare.
+I am using kernel.org kernel 2.6.31 and see the following errors in
+/var/log/messages:
 
-I'm replacing an existing UnixWare system by Linux and I'm trying to get 
-a feel for how to perform some simple operations.
+    Sep 18 03:49:06 hermes kernel: BUG: soft lockup - CPU#0 stuck for 61s! [md4_raid5:21137]
+    Sep 18 03:49:06 hermes kernel: Modules linked in: coretemp ipmi_devintf ipmi_si ipmi_msghandler bonding nf_conntrack_ftp binfmt_misc usbhid i2c_i801 i2c_core sg i5000_edac ehci_hcd uhci_hcd i5k_amb usbcore [last unloaded: microcode]
+    Sep 18 03:49:06 hermes kernel: CPU 0:
+    Sep 18 03:49:06 hermes kernel: Modules linked in: coretemp ipmi_devintf ipmi_si ipmi_msghandler bonding nf_conntrack_ftp binfmt_misc usbhid i2c_i801 i2c_core sg i5000_edac ehci_hcd uhci_hcd i5k_amb usbcore [last unloaded: microcode]
+    Sep 18 03:49:06 hermes kernel: Pid: 21137, comm: md4_raid5 Not tainted 2.6.31 #1 PRIMERGY RX300 S4
+    Sep 18 03:49:06 hermes kernel: RIP: 0010:[<ffffffff8135a668>]  [<ffffffff8135a668>] raid6_sse24_gen_syndrome+0xf9/0x251
+    Sep 18 03:49:06 hermes kernel: RSP: 0018:ffff88080d46bb50  EFLAGS: 00000246
+    Sep 18 03:49:06 hermes kernel: RAX: 0000000000000e80 RBX: ffff88080d46bb90 RCX: ffff8807e49e8000
+    Sep 18 03:49:06 hermes kernel: RDX: 0000000000000000 RSI: 0000000000000e80 RDI: ffff8807e49e9ea0
+    Sep 18 03:49:06 hermes kernel: RBP: ffffffff8102c66e R08: ffff8807e49e9e80 R09: 0000000000000ea0
+    Sep 18 03:49:06 hermes kernel: R10: 0000160000000000 R11: 6db6db6db6db6db7 R12: ffff88080d46bb40
+    Sep 18 03:49:06 hermes kernel: R13: ffffffff8102c4ce R14: 0000000000000c31 R15: 00000000812c6623
+    Sep 18 03:49:06 hermes kernel: FS:  0000000000000000(0000) GS:ffff880028035000(0000) knlGS:0000000000000000
+    Sep 18 03:49:06 hermes kernel: CS:  0010 DS: 0018 ES: 0018 CR0: 0000000080050033
+    Sep 18 03:49:06 hermes kernel: CR2: 000000000042e3a7 CR3: 0000000001001000 CR4: 00000000000426f0
+    Sep 18 03:49:06 hermes kernel: DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+    Sep 18 03:49:06 hermes kernel: DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+    Sep 18 03:49:06 hermes kernel: Call Trace:
+    Sep 18 03:49:06 hermes kernel: [<ffffffff8135d575>] ? compute_parity6+0x2d9/0x376
+    Sep 18 03:49:06 hermes kernel: [<ffffffff8135d783>] ? compute_block_1+0x171/0x1c6
+    Sep 18 03:49:06 hermes kernel: [<ffffffff8135f738>] ? handle_stripe+0xa85/0x1c24
+    Sep 18 03:49:06 hermes kernel: [<ffffffff81360cbd>] ? raid5d+0x3e6/0x439
+    Sep 18 03:49:06 hermes kernel: [<ffffffff8136aee5>] ? md_thread+0xfb/0x12d
+    Sep 18 03:49:06 hermes kernel: [<ffffffff8107fbdb>] ? autoremove_wake_function+0x0/0x5a
+    Sep 18 03:49:06 hermes kernel: [<ffffffff8136adea>] ? md_thread+0x0/0x12d
+    Sep 18 03:49:06 hermes kernel: [<ffffffff8107f7b7>] ? kthread+0x9b/0xa3
+    Sep 18 03:49:06 hermes kernel: [<ffffffff8102cbaa>] ? child_rip+0xa/0x20
+    Sep 18 03:49:06 hermes kernel: [<ffffffff8107f71c>] ? kthread+0x0/0xa3
+    Sep 18 03:49:06 hermes kernel: [<ffffffff8102cba0>] ? child_rip+0x0/0x20
 
-As I understand it to replace a failed disk (assuming no hot spares for 
-the moment) I just do:
+This happens on fedora 11 on a data-check of RAID array md4. I get several
+of these, but the system keeps on running. Another system with the same
+setup and hardware seems to always lock up. md4 is a raid6 consisting of
+8 disks. There is absolutly no load on this array and it has an empty
+ext4 filesystem mounted.
 
-    mdadm --manage /dev/md0 --remove /dev/failed-disk
-    mdadm --manage /dev/md0 --add /dev/new-disk
+Any idea what is causing it? What else can I provide or do to solve this?
 
-This works, but when I look at the results it looks rather ugly, the new 
-disk goes in a new "slot" in the raid superblock.  Is it the case that 
-every time I replace a disk I'm going to get a new slot?  Doesn't that 
-make the raid "superblock" grow without limit?
-
-Before:
-
-# cat /proc/mdstat 
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
-md0 : active raid10 sdw[11] sdg[10] sdv[9] sdf[8] sdu[7] sde[6] sdt[5] sdd[4] sds[3] sdc[2] sdr[1] sdb[0]
-      426970368 blocks super 1.2 64K chunks 2 near-copies [12/12] [UUUUUUUUUUUU]
-      bitmap: 1/204 pages [4KB], 1024KB chunk
-
-unused devices: <none>
-
-# mdadm --examine /dev/sdb:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 9477b121:204de4c4:a96d58e9:85746699
-           Name : caronia:testarray2  (local to host caronia)
-  Creation Time : Fri Sep 18 12:59:24 2009
-     Raid Level : raid10
-   Raid Devices : 12
-
- Avail Dev Size : 142323568 (67.87 GiB 72.87 GB)
-     Array Size : 853940736 (407.19 GiB 437.22 GB)
-  Used Dev Size : 142323456 (67.87 GiB 72.87 GB)
-    Data Offset : 144 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 64949ade:b6d618a8:f45a3b07:29ddc35e
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Fri Sep 18 13:38:41 2009
-       Checksum : 256ea9d4 - correct
-         Events : 4
-
-         Layout : near=2, far=1
-     Chunk Size : 64K
-
-    Array Slot : 0 (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
-   Array State : Uuuuuuuuuuuu
-
-
-After:
-
-# mdadm --manage /dev/md0 --fail /dev/sdc
-mdadm: set /dev/sdc faulty in /dev/md0
-# mdadm --manage /dev/md0 --remove /dev/sdc
-mdadm: hot removed /dev/sdc
-# mdadm --manage /dev/md0 --add /dev/sdh
-mdadm: added /dev/sdh
-
-[...]
-# cat /proc/mdstat 
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
-md0 : active raid10 sdh[12] sdw[11] sdg[10] sdv[9] sdf[8] sdu[7] sde[6] sdt[5] sdd[4] sds[3] sdr[1] sdb[0]
-      426970368 blocks super 1.2 64K chunks 2 near-copies [12/12] [UUUUUUUUUUUU]
-      bitmap: 0/204 pages [0KB], 1024KB chunk
-
-unused devices: <none>
-
-Eeew, /dev/sdh is in slot 12, where is slot 2?
-
-And:
-
-# mdadm --examine /dev/sdh
-/dev/sdh:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : 9477b121:204de4c4:a96d58e9:85746699
-           Name : caronia:testarray2  (local to host caronia)
-  Creation Time : Fri Sep 18 12:59:24 2009
-     Raid Level : raid10
-   Raid Devices : 12
-
- Avail Dev Size : 142323568 (67.87 GiB 72.87 GB)
-     Array Size : 853940736 (407.19 GiB 437.22 GB)
-  Used Dev Size : 142323456 (67.87 GiB 72.87 GB)
-    Data Offset : 144 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 31c4a4f5:7aef046d:8981c552:b63165c2
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Fri Sep 18 13:56:55 2009
-       Checksum : b09071e2 - correct
-         Events : 14
-
-         Layout : near=2, far=1
-     Chunk Size : 64K
-
-    Array Slot : 12 (0, 1, failed, 3, 4, 5, 6, 7, 8, 9, 10, 11, 2)
-   Array State : uuUuuuuuuuuu 1 failed
-
-
-Is it the case that every time I replace a disk I'm going to get a new 
-slot?  Doesn't that make the raid "superblock" grow without limit?
-
-
- 
-
- 
-
-
-
+Thanks,
+Holger
