@@ -1,58 +1,57 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: SET_BITMAP_FILE assembling raid1
-Date: Fri, 18 Sep 2009 16:47:36 +1000
-Message-ID: <19123.11528.751595.835367@notabene.brown>
-References: <20090917160718.15831qsk0zd6k2e8@webmail.ualberta.ca>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: RAID 5 array recovery - two drives errors in external enclosure
+Date: Fri, 18 Sep 2009 08:58:23 +0100
+Message-ID: <20090918075823.GA22909@cthulhu.home.robinhill.me.uk>
+References: <2267211f0909171342g6ebf68a2y393daa587e59c714@mail.gmail.com>
+ <20090917212252.GC19611@cthulhu.home.robinhill.me.uk>
+ <70ed7c3e0909171435u661eeccbte85f968e067709f9@mail.gmail.com>
+ <2267211f0909171451q547355a7sd26d3f984fd0bccf@mail.gmail.com>
+ <70ed7c3e0909171511j6403f51h722e54bb467792df@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="wRRV7LY7NUeQGEoC"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from aristizb@ualberta.ca on Thursday September 17
+Content-Disposition: inline
+In-Reply-To: <70ed7c3e0909171511j6403f51h722e54bb467792df@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: aristizb@ualberta.ca
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thursday September 17, aristizb@ualberta.ca wrote:
-> Hi,
-> 
-> After have stopped a raid1, I try to assemble it with one device and  
-> its bitmap; but I received the following error message:
-> 
-> $mdadm --assemble --force /dev/md2003 --bitmap=/tmp/md2003bm  
-> /dev/syntropy21/ian_dvol_200_0_1
-> 
-> mdadm: SET_BITMAP_FILE failed.
-> 
-> After 5 minutes I retry the command and it succeeds, assembling the  
-> raid without any problems.
-> 
-> 
-> It looks like mdadm cannot use the file I specified for the external  
-> bitmap, but this file is not in use by any other raid. Is there any  
-> explanation on why assemble could fail to create the raid with the  
-> specified bitmap?
 
-If it failed once and then succeeded later it is most like that md
-thought the file was already in use in some way.
+--wRRV7LY7NUeQGEoC
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-If so there should be a message in the kernel logs saying something
-like:
-  md2003: error: bitmap file is already in use
+On Fri Sep 18, 2009 at 01:11:14AM +0300, Majed B. wrote:
 
-Was there such a message?
+> If you run mdadm --examine /dev/sda you'll be able to see the disks'
+> order in the array (and the position of the disk you're
+> querying/examining). The faulty one is previously known as sdf. You
+> can find its new name by running --examine on all disks, and the one
+> that shows that all disks are healthy, is sdf.
+>=20
+Ideally, yes, but having run --create already, the RAID metadata no
+longer has any significance to the previous array configuration.
 
-NeilBrown
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
+--wRRV7LY7NUeQGEoC
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-> 
-> 
-> Thank you.
-> 
-> 
-> 
-> Juan.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+
+iEYEARECAAYFAkqzPZ4ACgkQShxCyD40xBIMhQCfYyr+7cxVFXBMoCUPB6ZFBFsJ
+5skAmwRYF8m5W3GZXUt5aXjWCv7Hg2MY
+=aNbZ
+-----END PGP SIGNATURE-----
+
+--wRRV7LY7NUeQGEoC--
