@@ -1,7 +1,7 @@
 From: Tim Bostrom <tbostrom@gmail.com>
 Subject: Re: RAID 5 array recovery - two drives errors in external enclosure
-Date: Thu, 17 Sep 2009 20:50:21 -0700
-Message-ID: <2267211f0909172050m5fb9e4e2m386296335dd59f32@mail.gmail.com>
+Date: Thu, 17 Sep 2009 21:19:58 -0700
+Message-ID: <2267211f0909172119w6de04e46m5fcfc5e6d35c0382@mail.gmail.com>
 References: <2267211f0909171342g6ebf68a2y393daa587e59c714@mail.gmail.com>
 	<20090917212252.GC19611@cthulhu.home.robinhill.me.uk> <2267211f0909171611m4b4a0d02p81b80bc882a0855@mail.gmail.com>
 	<70ed7c3e0909171628w4040ae5cydf4335adb51f2b7d@mail.gmail.com>
@@ -16,54 +16,55 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I just noticed that my bootable flag is set on two of the disks.
-Would that cause any issue?
+This seemed to work, though I'm still working through the permutations
+of the drive letters.
 
-Disk /dev/sdb: 1000.2 GB, 1000204886016 bytes
-255 heads, 63 sectors/track, 121601 cylinders
-Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
-Disk identifier: 0x000e1d5a
+I noticed that mdadm think that partition sde1 is ext2 filesystem on
+it.  See below:
 
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdb1   *           1      121601   976760001   fd  Linux raid auto=
-detect
+[root@tera tbostrom]# mdadm -C /dev/md0 -l 5 -n 5 -c 256 /dev/sdb1
+/dev/sdd1 /dev/sdc1 /dev/sde1 missing
+mdadm: /dev/sdb1 appears to be part of a raid array:
+    level=3Draid5 devices=3D5 ctime=3DThu Sep 17 21:13:21 2009
+mdadm: /dev/sdd1 appears to be part of a raid array:
+    level=3Draid5 devices=3D5 ctime=3DThu Sep 17 21:13:21 2009
+mdadm: /dev/sdc1 appears to be part of a raid array:
+    level=3Draid5 devices=3D5 ctime=3DThu Sep 17 21:13:21 2009
+mdadm: /dev/sde1 appears to contain an ext2fs file system
+    size=3D396408836K  mtime=3DMon Sep 21 03:41:16 2026
+mdadm: /dev/sde1 appears to be part of a raid array:
+    level=3Draid5 devices=3D5 ctime=3DThu Sep 17 21:13:21 2009
+Continue creating array?
 
-Disk /dev/sdc: 1000.2 GB, 1000204886016 bytes
-255 heads, 63 sectors/track, 121601 cylinders
-Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
-Disk identifier: 0x323eeffc
+What gives?  I tried popping sdf1 in there without creating the array
+- just to see what would happen and it thinks that sdf1 has ext2 as
+well.
 
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdc1               1      121601   976760001   fd  Linux raid auto=
-detect
+root@tera tbostrom]# mdadm -C /dev/md0 -l 5 -n 5 -c 256 /dev/sdc1
+/dev/sdb1 /dev/sde1 /dev/sdf1 missing
+mdadm: /dev/sdc1 appears to be part of a raid array:
+    level=3Draid5 devices=3D5 ctime=3DThu Sep 17 21:13:21 2009
+mdadm: /dev/sdb1 appears to be part of a raid array:
+    level=3Draid5 devices=3D5 ctime=3DThu Sep 17 21:13:21 2009
+mdadm: /dev/sde1 appears to contain an ext2fs file system
+    size=3D396408836K  mtime=3DMon Sep 21 03:41:16 2026
+mdadm: /dev/sde1 appears to be part of a raid array:
+    level=3Draid5 devices=3D5 ctime=3DThu Sep 17 21:13:21 2009
+mdadm: /dev/sdf1 appears to contain an ext2fs file system
+    size=3D-387928064K  mtime=3DWed Sep 16 16:26:42 2009
+mdadm: /dev/sdf1 appears to be part of a raid array:
+    level=3Draid5 devices=3D5 ctime=3DThu Sep 17 20:54:33 2009
+Continue creating array? no
+mdadm: create aborted.
 
-Disk /dev/sdd: 1000.2 GB, 1000204886016 bytes
-255 heads, 63 sectors/track, 121601 cylinders
-Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
-Disk identifier: 0xd98df0ac
 
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdd1               1      121601   976760001   fd  Linux raid auto=
-detect
+Still at a loss here.  I haven't worked through all the drive
+permutations.  In the meantime, I'll try that.  Does it make sense to
+try sdf1 in the permutation since the drive letters may have changed
+since moving from the enclosure?  I thought I put them back in the
+same order as the enclosure.
 
-Disk /dev/sde: 1000.2 GB, 1000204886016 bytes
-255 heads, 63 sectors/track, 121601 cylinders
-Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
-Disk identifier: 0x00000000
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sde1               1      121601   976760001   fd  Linux raid auto=
-detect
-
-Disk /dev/sdf: 1000.2 GB, 1000204886016 bytes
-255 heads, 63 sectors/track, 121601 cylinders
-Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
-Disk identifier: 0x0004c8a2
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdf1   *           1      121601   976760001   fd  Linux raid auto=
-detect
-[root@tera tbostrom]#
+-Tim
 
 
 On Thu, Sep 17, 2009 at 6:31 PM, Guy Watkins
