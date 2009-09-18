@@ -1,47 +1,29 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: Re-map disk sectors in userspace when rewriting after read errors
-Date: Fri, 18 Sep 2009 14:02:10 -0400
-Message-ID: <87f94c370909181102y25ee0ba9o833ea2f9c09ff8d7@mail.gmail.com>
-References: <h8nbt5$n8p$1@ger.gmane.org>
-	 <alpine.LFD.2.00.0909150810510.5083@sbhezbfg.of5.nffheflf.cev>
-	 <h8nfoe$n8p$3@ger.gmane.org>
-	 <alpine.LFD.2.00.0909150832000.5083@sbhezbfg.of5.nffheflf.cev>
-	 <h8nreb$n8p$4@ger.gmane.org> <87ws3z5iro.fsf@frosties.localdomain>
-	 <1253106813.17888.9.camel@localhost>
-	 <70ed7c3e0909180117v725982dr5c6a344586ba36eb@mail.gmail.com>
-	 <1253273738.9662.636.camel@kiste> <4AB3C6E0.7010908@anonymous.org.uk>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: [PATCH] barrier support for other md/raid levels
+Date: Fri, 18 Sep 2009 14:28:24 -0400
+Message-ID: <4AB3D148.3060607@redhat.com>
+References: <19123.9980.940255.937839@notabene.brown> <4AB372BA.6020101@redhat.com> <4D87015385157D4285D56CA6101072FF26C2CCB1@exchange07.valvesoftware.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AB3C6E0.7010908@anonymous.org.uk>
+In-Reply-To: <4D87015385157D4285D56CA6101072FF26C2CCB1@exchange07.valvesoftware.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Chris Green <cgreen@valvesoftware.com>
+Cc: Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, Tom Coughlan <coughlan@redhat.com>
 List-Id: linux-raid.ids
 
-All,
+On 09/18/2009 02:19 PM, Chris Green wrote:
+> It seems like what you'd need to robustly test barriers is some sort of barrier-supporting loopback device, which
+> acted correctly with barriers, but had worst-case behavior without them (buffering things for random arbitrarily long periods of time,
+> performing all operations in random order, etc).
+>
+>
+>    
 
-I keep forgetting to ask, but the subject of this thread makes me
-wonder if you guys are familiar with the hdparm features of
-"--make-bad-sector", "--read-sector", and "--write-sector".
+I think that it is pretty easy to get corruption (defined as fsck 
+issues) if we have non-working barriers and do power fail testing. It is 
+a bit tricky to automate that though but we are working on it,
 
-I don't know if any of those can be used to force a sector to be
-remapped, but I could see a user space process like:
+ric
 
-identify corrupt sector
-hdparm --make-bad-sector   (to get it as corrupt as linux knows how).
-calculate correct value
-write new value to sector the normal way (hopefully the drive will
-remap the bad sector)
-
-hdparm --read-sector will do a low level read of the sector, including
-the sector header and checksum as I understand it.  I'm not sure all
-that gets back to userspace.
-
-hdparm --write-sector will force a sector to be rewritten.  I don't
-believe it is meant to ever cause a sector remap.  Of course you never
-know what a disk drive is going to do for any given command.
-
-Mark Lord is of course the expert on all things hdparm.
-
-Greg
