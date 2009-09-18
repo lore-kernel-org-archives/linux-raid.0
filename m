@@ -1,75 +1,28 @@
-From: aristizb@ualberta.ca
-Subject: Re: SET_BITMAP_FILE assembling raid1
-Date: Fri, 18 Sep 2009 11:35:44 -0600
-Message-ID: <20090918113544.11084l0ma4v10u0w@webmail.ualberta.ca>
-References: <20090917160718.15831qsk0zd6k2e8@webmail.ualberta.ca>
-	<19123.11528.751595.835367@notabene.brown>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Re-map disk sectors in userspace when rewriting after read errors
+Date: Fri, 18 Sep 2009 18:44:00 +0100
+Message-ID: <4AB3C6E0.7010908@anonymous.org.uk>
+References: <h8nbt5$n8p$1@ger.gmane.org>	 <alpine.LFD.2.00.0909150810510.5083@sbhezbfg.of5.nffheflf.cev>	 <h8nfoe$n8p$3@ger.gmane.org>	 <alpine.LFD.2.00.0909150832000.5083@sbhezbfg.of5.nffheflf.cev>	 <h8nreb$n8p$4@ger.gmane.org> <87ws3z5iro.fsf@frosties.localdomain>	 <1253106813.17888.9.camel@localhost>	 <70ed7c3e0909180117v725982dr5c6a344586ba36eb@mail.gmail.com> <1253273738.9662.636.camel@kiste>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	DelSp=Yes	format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <19123.11528.751595.835367@notabene.brown>
-Content-Disposition: inline
+In-Reply-To: <1253273738.9662.636.camel@kiste>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Neil,
+On 18/09/2009 12:35, Matthias Urlichs wrote:
+[...]
+> If you run a check on a degraded array and the check runs into errors it
+> can't recover from, I assume that the disk will get kicked off and
+> you'll have a nonfunctional array instead.
 
-That is exactly the message I get in the kernel logs.
+No, I don't think so - at least with RAID-1, md doesn't drop the array 
+on errors on the one remaining functional disc, on the grounds that some 
+data is better than none, but I don't know whether the array gets 
+switched to read-only or what the situation is with other RAID levels.
 
-I tried ten times to assemble the array (waiting 2 seconds in between)  
-with no luck, but after 2-3 minutes it worked.
+Cheers,
 
-
-
-Quoting "Neil Brown" <neilb@suse.de>:
-
-> On Thursday September 17, aristizb@ualberta.ca wrote:
->> Hi,
->>
->> After have stopped a raid1, I try to assemble it with one device and
->> its bitmap; but I received the following error message:
->>
->> $mdadm --assemble --force /dev/md2003 --bitmap=/tmp/md2003bm
->> /dev/syntropy21/ian_dvol_200_0_1
->>
->> mdadm: SET_BITMAP_FILE failed.
->>
->> After 5 minutes I retry the command and it succeeds, assembling the
->> raid without any problems.
->>
->>
->> It looks like mdadm cannot use the file I specified for the external
->> bitmap, but this file is not in use by any other raid. Is there any
->> explanation on why assemble could fail to create the raid with the
->> specified bitmap?
->
-> If it failed once and then succeeded later it is most like that md
-> thought the file was already in use in some way.
->
-> If so there should be a message in the kernel logs saying something
-> like:
->   md2003: error: bitmap file is already in use
->
-> Was there such a message?
->
-> NeilBrown
->
->
->>
->>
->> Thank you.
->>
->>
->>
->> Juan.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
-
+John.
