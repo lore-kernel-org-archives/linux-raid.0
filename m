@@ -1,240 +1,335 @@
 From: Neil Brown <neilb@suse.de>
-Subject: PULL REQUEST - md updates for 2.6.32, mostly raid6 offload
-Date: Fri, 18 Sep 2009 15:41:32 +1000
-Message-ID: <19123.7564.203923.745681@notabene.brown>
+Subject: [PATCH] barrier support for other md/raid levels
+Date: Fri, 18 Sep 2009 16:21:48 +1000
+Message-ID: <19123.9980.940255.937839@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Ric Wheeler <rwheeler@redhat.com>
 List-Id: linux-raid.ids
 
 
-Hi Linus,
-  please pull md and related updates as below.
-  Most of this is support for offloading the RAID6 calculation onto
-  dedicated hardware, hence the crypto/async_tx and drives/dma
-  changes.  This makes RAID6 more consistent with RAID5 which already
-  supports XOR offload.
-  The only bit that is really from me is a couple of fixes for sparse
-  warnings, one of which was really an error. (It is a pity spares in
-  so noisy....)
+md/raid1 has handled barriers for quite some time, but the other
+md/raid levels don't.
+
+The recent thread about raid5 being fundamentally broken
+(http://lwn.net/Articles/349970/) made me decide it was about time to
+actually do something about this (it was always my hope that
+filesystems would do the sensible thing and all 'flush' at appropriate
+times, but it doesn't look like that is going to happen).
+
+This patch is the result (though it won't apply without one or two
+others, so safest to pull from
+    git://neil.brown.name/md md-scratch
+).  It adds barrier support for all other levels by:
+
+ - sending zero-length barriers to all devices
+ - sending the original request
+ - sending another load of zero-length barriers
+
+New requests are blocked while we wait for the barriers to all get
+processed.  This ensures the barrier request is properly ordered
+w.r.t. all other requests (but possibly makes things horribly
+slow...).
+
+I would really appreciate review of the approach, and testing of the
+result, if anyone is interested.  How to actually test that your
+barriers are doing the right thing is not clear to be, and at least
+testing that it doesn't break things or kill performance would be
+good.
 
 Thanks,
 NeilBrown
 
 
-The following changes since commit 0cc6d77e55eca9557bbe41bf2db94b31aa8fcb2a:
-  Linus Torvalds (1):
-        Merge branch 'x86-setup-for-linus' of git://git.kernel.org/.../tip/linux-2.6-tip
+From: NeilBrown <neilb@suse.de>
+Date: Fri, 18 Sep 2009 15:55:09 +1000
+Subject: [PATCH] md: support barrier requests on all personalities.
 
-are available in the git repository at:
+Previously barriers were only supported on RAID1.  This is because
+other levels requires synchronisation across all devices and so needed
+a different approach.
+Here is that approach.
 
-  git://neil.brown.name/md/ for-linus
+When a barrier arrives, we send a zero-length barrier to every active
+device.  When that completes we submit the barrier request itself
+(with the barrier flag cleared) and the submit a fresh load of
+zero length barriers.
 
-Atsushi Nemoto (1):
-      dmaengine: Move all map_sg/unmap_sg for slave channel to its client
+The barrier request itself is asynchronous, but any subsequent
+request will block until the barrier completes.
 
-Dan Williams (81):
-      Merge branch 'dmaengine' into async-tx-raid6
-      async_tx: rename zero_sum to val
-      async_tx: kill ASYNC_TX_DEP_ACK flag
-      async_tx: structify submission arguments, add scribble
-      async_xor: permit callers to pass in a 'dma/page scribble' region
-      md/raid6: release spare page at ->stop()
-      ioat: move to drivers/dma/ioat/
-      md/raid6: move the spare page to a percpu allocation
-      md/raid5,6: add percpu scribble region for buffer lists
-      async_tx: add sum check flags
-      async_tx: kill needless module_{init|exit}
-      async_tx: remove walk of tx->parent chain in dma_wait_for_async_tx
-      async_tx: add support for asynchronous GF multiplication
-      async_tx: add support for asynchronous RAID6 recovery operations
-      dmatest: add pq support
-      async_tx: raid6 recovery self test
-      iop-adma: cleanup iop_adma_run_tx_complete_actions
-      iop-adma: fix lockdep false positive
-      iop-adma: P+Q support for iop13xx adma engines
-      iop-adma: P+Q self test
-      md/raid5: factor out mark_uptodate from ops_complete_compute5
-      md/raid6: asynchronous raid6 operations
-      md/raid6: asynchronous handle_parity_check6
-      md/raid456: distribute raid processing over multiple cores
-      Merge commit 'v2.6.31-rc1' into dmaengine
-      ioat: move definitions to dma.h
-      ioat: convert ioat_probe to pcim/devm
-      ioat: cleanup some long deref chains and 80 column collisions
-      ioat: kill function prototype ifdef guards
-      ioat: split ioat_dma_probe into core/version-specific routines
-      ioat: fix type mismatch for ->dmacount
-      ioat: define descriptor control bit-field
-      ioat1: move descriptor allocation from submit to prep
-      ioat: fix self test interrupts
-      ioat: prepare the code for ioat[12]_dma_chan split
-      ioat2,3: convert to a true ring buffer
-      ioat1: kill unused unmap parameters
-      ioat: add some dev_dbg() calls
-      ioat: cleanup completion status reads
-      ioat: ignore reserved bits for chancnt and xfercap
-      ioat: preserve chanctrl bits when re-arming interrupts
-      ioat: ___devinit annotate the initialization paths
-      ioat1: trim ioat_dma_desc_sw
-      ioat: switch watchdog and reset handler from workqueue to timer
-      ioat2,3: dynamically resize descriptor ring
-      net_dma: poll for a descriptor after allocation failure
-      Merge branch 'md-raid6-accel' into ioat3.2
-      dmaengine: add fence support
-      dmaengine, async_tx: add a "no channel switch" allocator
-      dmaengine: cleanup unused transaction types
-      dmaengine, async_tx: support alignment checks
-      ioat2+: add fence support
-      ioat3: hardware version 3.2 register / descriptor definitions
-      ioat3: split ioat3 support to its own file, add memset
-      ioat: add 'ioat' sysfs attributes
-      ioat3: enable dca for completion writes
-      ioat3: xor support
-      ioat3: xor self test
-      ioat3: pq support
-      ioat3: support xor via pq descriptors
-      ioat3: interrupt descriptor support
-      ioat3: segregate raid engines
-      Merge branch 'ioat' into dmaengine
-      dw_dmac: implement a private tx_list
-      fsldma: implement a private tx_list
-      iop-adma: implement a private tx_list
-      ioat: implement a private tx_list
-      mv_xor: implement a private tx_list
-      at_hdmac: implement a private tx_list
-      txx9dmac: implement a private tx_list
-      dmaengine: kill tx_list
-      ioat2,3: cacheline align software descriptor allocations
-      Merge branch 'iop-raid6' into async-tx-next
-      Merge branch 'dmaengine' into async-tx-next
-      Merge commit 'md/for-linus' into async-tx-next
-      async_tx: remove HIGHMEM64G restriction
-      ioat: driver version 4.0
-      md/raid6: eliminate BUG_ON with side effect
-      md/raid6: cleanup ops_run_compute6_2
-      ioat2: clarify ring size limits
-      raid6test: fix stack overflow
+The reason for clearing the barrier flag is that a barrier request is
+allowed to fail.  If we pass a non-empty barrier through a striping
+raid level it is conceivable that part of it could succeed and part
+could fail.  That would be way to hard to deal with.
+So if the first run of zero length barriers succeed, we assume all is
+sufficiently well that we send the request and ignore errors in the
+second run of barriers.
 
-Ira Snyder (2):
-      fsldma: split apart external pause and request count features
-      fsldma: Add DMA_SLAVE support
+RAID5 needs extra care as write requests may not have been submitted
+to the underlying devices yet.  So we flush the stripe cache before
+proceeding with the barrier.
 
-Maciej Sosnowski (1):
-      dca: registering requesters in multiple dca domains
+Signed-off-by: NeilBrown <neilb@suse.de>
+---
+ drivers/md/linear.c    |    2 +-
+ drivers/md/md.c        |  111 +++++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/md/md.h        |   12 +++++
+ drivers/md/multipath.c |    2 +-
+ drivers/md/raid0.c     |    2 +-
+ drivers/md/raid10.c    |    2 +-
+ drivers/md/raid5.c     |    8 +++-
+ 7 files changed, 132 insertions(+), 7 deletions(-)
 
-NeilBrown (3):
-      md: remove sparse waring "symbol xxx shadows an earlier one"
-      md: remove sparse warnings about lock context.
-      Merge branch 'next' of git://git.kernel.org/.../djbw/async_tx into for-linus
+diff --git a/drivers/md/linear.c b/drivers/md/linear.c
+index 53607c1..80504a8 100644
+--- a/drivers/md/linear.c
++++ b/drivers/md/linear.c
+@@ -292,7 +292,7 @@ static int linear_make_request (struct request_queue *q, struct bio *bio)
+ 	int cpu;
+ 
+ 	if (unlikely(bio_barrier(bio))) {
+-		bio_endio(bio, -EOPNOTSUPP);
++		md_barrier_request(mddev, bio);
+ 		return 0;
+ 	}
+ 
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 8c41efe..820ae3b 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -217,12 +217,12 @@ static int md_make_request(struct request_queue *q, struct bio *bio)
+ 		return 0;
+ 	}
+ 	rcu_read_lock();
+-	if (mddev->suspended) {
++	if (mddev->suspended || mddev->barrier) {
+ 		DEFINE_WAIT(__wait);
+ 		for (;;) {
+ 			prepare_to_wait(&mddev->sb_wait, &__wait,
+ 					TASK_UNINTERRUPTIBLE);
+-			if (!mddev->suspended)
++			if (!mddev->suspended && !mddev->barrier)
+ 				break;
+ 			rcu_read_unlock();
+ 			schedule();
+@@ -264,10 +264,116 @@ static void mddev_resume(mddev_t *mddev)
+ 
+ int mddev_congested(mddev_t *mddev, int bits)
+ {
++	if (mddev->barrier)
++		return 1;
+ 	return mddev->suspended;
+ }
+ EXPORT_SYMBOL(mddev_congested);
+ 
++/*
++ * Generic barrier handling for md
++ */
++
++static void md_end_barrier(struct bio *bio, int err)
++{
++	mdk_rdev_t *rdev = bio->bi_private;
++	mddev_t *mddev = rdev->mddev;
++	if (err == -EOPNOTSUPP && mddev->barrier != (void*)1)
++		set_bit(BIO_EOPNOTSUPP, &mddev->barrier->bi_flags);
++
++	rdev_dec_pending(rdev, mddev);
++
++	if (atomic_dec_and_test(&mddev->flush_pending)) {
++		if (mddev->barrier == (void*)1) {
++			mddev->barrier = NULL;
++			wake_up(&mddev->sb_wait);
++		} else
++			schedule_work(&mddev->barrier_work);
++	}
++	bio_put(bio);
++}
++
++static void md_submit_barrier(struct work_struct *ws)
++{
++	mddev_t *mddev = container_of(ws, mddev_t, barrier_work);
++	struct bio *bio = mddev->barrier;
++
++	atomic_set(&mddev->flush_pending, 1);
++
++	if (!test_bit(BIO_EOPNOTSUPP, &bio->bi_flags)) {
++		mdk_rdev_t *rdev;
++
++		bio->bi_rw &= ~(1<<BIO_RW_BARRIER);
++		if (mddev->pers->make_request(mddev->queue, bio))
++			generic_make_request(bio);
++		mddev->barrier = (void*)1;
++		rcu_read_lock();
++		list_for_each_entry_rcu(rdev, &mddev->disks, same_set)
++			if (rdev->raid_disk >= 0 &&
++			    !test_bit(Faulty, &rdev->flags)) {
++				/* Take two references, one is dropped
++				 * when request finishes, one after
++				 * we reclaim rcu_read_lock
++				 */
++				struct bio *bi;
++				atomic_inc(&rdev->nr_pending);
++				atomic_inc(&rdev->nr_pending);
++				rcu_read_unlock();
++				bi = bio_alloc(GFP_KERNEL, 0);
++				bi->bi_end_io = md_end_barrier;
++				bi->bi_private = rdev;
++				bi->bi_bdev = rdev->bdev;
++				atomic_inc(&mddev->flush_pending);
++				submit_bio(WRITE_BARRIER, bi);
++				rcu_read_lock();
++				rdev_dec_pending(rdev, mddev);
++			}
++		rcu_read_unlock();
++	} else
++		bio_endio(bio, -EOPNOTSUPP);
++	if (atomic_dec_and_test(&mddev->flush_pending)) {
++		mddev->barrier = NULL;
++		wake_up(&mddev->sb_wait);
++	}
++}
++
++void md_barrier_request(mddev_t *mddev, struct bio *bio)
++{
++	mdk_rdev_t *rdev;
++
++	spin_lock_irq(&mddev->write_lock);
++	wait_event_lock_irq(mddev->sb_wait,
++			    !mddev->barrier,
++			    mddev->write_lock, /*nothing*/);
++	mddev->barrier = bio;
++	spin_unlock_irq(&mddev->write_lock);
++
++	atomic_set(&mddev->flush_pending, 1);
++	INIT_WORK(&mddev->barrier_work, md_submit_barrier);
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(rdev, &mddev->disks, same_set)
++		if (rdev->raid_disk >= 0 &&
++		    !test_bit(Faulty, &rdev->flags)) {
++			struct bio *bi;
++
++			atomic_inc(&rdev->nr_pending);
++			atomic_inc(&rdev->nr_pending);
++			rcu_read_unlock();
++			bi = bio_alloc(GFP_KERNEL, 0);
++			bi->bi_end_io = md_end_barrier;
++			bi->bi_private = rdev;
++			bi->bi_bdev = rdev->bdev;
++			atomic_inc(&mddev->flush_pending);
++			submit_bio(WRITE_BARRIER, bi);
++			rcu_read_lock();
++			rdev_dec_pending(rdev, mddev);
++		}
++	rcu_read_unlock();
++	if (atomic_dec_and_test(&mddev->flush_pending))
++		schedule_work(&mddev->barrier_work);
++}
++EXPORT_SYMBOL(md_barrier_request);
+ 
+ static inline mddev_t *mddev_get(mddev_t *mddev)
+ {
+@@ -374,6 +480,7 @@ static mddev_t * mddev_find(dev_t unit)
+ 	atomic_set(&new->openers, 0);
+ 	atomic_set(&new->active_io, 0);
+ 	spin_lock_init(&new->write_lock);
++	atomic_set(&new->flush_pending, 0);
+ 	init_waitqueue_head(&new->sb_wait);
+ 	init_waitqueue_head(&new->recovery_wait);
+ 	new->reshape_position = MaxSector;
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 5de3902..57ccc6f 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -291,6 +291,17 @@ struct mddev_s
+ 								*/
+ 
+ 	struct list_head		all_mddevs;
++
++	/* Generic barrier handling.
++	 * If there is a pending barrier request, all other
++	 * writes are blocked while the devices are flushed.
++	 * The last to finish a flush schedules a worker to
++	 * submit the barrier request (without the barrier flag),
++	 * then submit more flush requests.
++	 */
++	struct bio *barrier;
++	atomic_t flush_pending;
++	struct work_struct barrier_work;
+ };
+ 
+ 
+@@ -431,6 +442,7 @@ extern void md_done_sync(mddev_t *mddev, int blocks, int ok);
+ extern void md_error(mddev_t *mddev, mdk_rdev_t *rdev);
+ 
+ extern int mddev_congested(mddev_t *mddev, int bits);
++extern void md_barrier_request(mddev_t *mddev, struct bio *bio);
+ extern void md_super_write(mddev_t *mddev, mdk_rdev_t *rdev,
+ 			   sector_t sector, int size, struct page *page);
+ extern void md_super_wait(mddev_t *mddev);
+diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
+index ce4b4cd..f2bb20c 100644
+--- a/drivers/md/multipath.c
++++ b/drivers/md/multipath.c
+@@ -145,7 +145,7 @@ static int multipath_make_request (struct request_queue *q, struct bio * bio)
+ 	int cpu;
+ 
+ 	if (unlikely(bio_barrier(bio))) {
+-		bio_endio(bio, -EOPNOTSUPP);
++		md_barrier_request(mddev, bio);
+ 		return 0;
+ 	}
+ 
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index 08adcb0..87325c5 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -453,7 +453,7 @@ static int raid0_make_request(struct request_queue *q, struct bio *bio)
+ 	int cpu;
+ 
+ 	if (unlikely(bio_barrier(bio))) {
+-		bio_endio(bio, -EOPNOTSUPP);
++		md_barrier_request(mddev, bio);
+ 		return 0;
+ 	}
+ 
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 3868880..113b672 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -804,7 +804,7 @@ static int make_request(struct request_queue *q, struct bio * bio)
+ 	mdk_rdev_t *blocked_rdev;
+ 
+ 	if (unlikely(bio_barrier(bio))) {
+-		bio_endio(bio, -EOPNOTSUPP);
++		md_barrier_request(mddev, bio);
+ 		return 0;
+ 	}
+ 
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 584abea..7b6544e 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -3611,7 +3611,13 @@ static int make_request(struct request_queue *q, struct bio * bi)
+ 	int cpu, remaining;
+ 
+ 	if (unlikely(bio_barrier(bi))) {
+-		bio_endio(bi, -EOPNOTSUPP);
++		/* Drain all pending writes.  We only really need
++		 * to ensure they have been submitted, but this is
++		 * easier.
++		 */
++		mddev->pers->quiesce(mddev, 1);
++		mddev->pers->quiesce(mddev, 0);
++		md_barrier_request(mddev, bi);
+ 		return 0;
+ 	}
+ 
+-- 
+1.6.3.3
 
-Nobuhiro Iwamatsu (1):
-      dmaengine: sh: Add Support SuperH DMA Engine driver
-
-Roland Dreier (2):
-      Add MODULE_DEVICE_TABLE() so ioatdma module is autoloaded
-      I/OAT: Convert to PCI_VDEVICE()
-
-Stephen Hemminger (1):
-      dca: module load should not be an error message
-
-Tom Picard (1):
-      ioat3: ioat3.2 pci ids for Jasper Forest
-
-Yuri Tikhonov (5):
-      md/raid5,6: common schedule_reconstruction for raid5/6
-      md/raid6: asynchronous handle_stripe_fill6
-      md/raid6: asynchronous handle_stripe_dirtying6
-      md/raid6: asynchronous handle_stripe6
-      md/raid6: remove synchronous infrastructure
-
- Documentation/crypto/async-tx-api.txt              |   75 +-
- arch/arm/include/asm/hardware/iop3xx-adma.h        |   81 +-
- arch/arm/include/asm/hardware/iop_adma.h           |    3 +
- arch/arm/mach-iop13xx/include/mach/adma.h          |  119 ++-
- arch/arm/mach-iop13xx/setup.c                      |   17 +-
- arch/arm/plat-iop/adma.c                           |    4 +-
- arch/powerpc/include/asm/fsldma.h                  |  136 ++
- arch/sh/drivers/dma/Kconfig                        |   12 +-
- arch/sh/drivers/dma/Makefile                       |    3 +-
- arch/sh/include/asm/dma-sh.h                       |   13 +
- crypto/async_tx/Kconfig                            |    9 +
- crypto/async_tx/Makefile                           |    3 +
- crypto/async_tx/async_memcpy.c                     |   44 +-
- crypto/async_tx/async_memset.c                     |   43 +-
- crypto/async_tx/async_pq.c                         |  395 +++++
- crypto/async_tx/async_raid6_recov.c                |  455 +++++
- crypto/async_tx/async_tx.c                         |   87 +-
- crypto/async_tx/async_xor.c                        |  207 ++--
- crypto/async_tx/raid6test.c                        |  240 +++
- drivers/dca/dca-core.c                             |  124 ++-
- drivers/dma/Kconfig                                |   14 +-
- drivers/dma/Makefile                               |    4 +-
- drivers/dma/at_hdmac.c                             |   60 +-
- drivers/dma/at_hdmac_regs.h                        |    1 +
- drivers/dma/dmaengine.c                            |   94 +-
- drivers/dma/dmatest.c                              |   40 +
- drivers/dma/dw_dmac.c                              |   50 +-
- drivers/dma/dw_dmac_regs.h                         |    1 +
- drivers/dma/fsldma.c                               |  288 +++-
- drivers/dma/fsldma.h                               |    4 +-
- drivers/dma/ioat.c                                 |  202 ---
- drivers/dma/ioat/Makefile                          |    2 +
- drivers/dma/{ioat_dca.c => ioat/dca.c}             |   13 +-
- drivers/dma/ioat/dma.c                             | 1238 ++++++++++++++
- drivers/dma/ioat/dma.h                             |  337 ++++
- drivers/dma/ioat/dma_v2.c                          |  870 ++++++++++
- drivers/dma/ioat/dma_v2.h                          |  190 +++
- drivers/dma/ioat/dma_v3.c                          | 1220 ++++++++++++++
- drivers/dma/ioat/hw.h                              |  215 +++
- drivers/dma/ioat/pci.c                             |  210 +++
- .../dma/{ioatdma_registers.h => ioat/registers.h}  |   54 +-
- drivers/dma/ioat_dma.c                             | 1741 --------------------
- drivers/dma/ioatdma.h                              |  165 --
- drivers/dma/ioatdma_hw.h                           |   70 -
- drivers/dma/iop-adma.c                             |  491 +++++-
- drivers/dma/iovlock.c                              |   10 +
- drivers/dma/mv_xor.c                               |    7 +-
- drivers/dma/mv_xor.h                               |    4 +-
- drivers/dma/shdma.c                                |  786 +++++++++
- drivers/dma/shdma.h                                |   64 +
- drivers/dma/txx9dmac.c                             |   24 +-
- drivers/dma/txx9dmac.h                             |    1 +
- drivers/idle/i7300_idle.c                          |   20 +-
- drivers/md/Kconfig                                 |   26 +
- drivers/md/bitmap.c                                |    5 +-
- drivers/md/md.c                                    |   10 +-
- drivers/md/raid0.c                                 |    5 +-
- drivers/md/raid10.c                                |    2 +-
- drivers/md/raid5.c                                 | 1484 +++++++++++-------
- drivers/md/raid5.h                                 |   28 +-
- drivers/mmc/host/atmel-mci.c                       |    9 +-
- include/linux/async_tx.h                           |  129 ++-
- include/linux/dca.h                                |   11 +-
- include/linux/dmaengine.h                          |  179 ++-
- include/linux/pci_ids.h                            |   10 +
- 65 files changed, 9137 insertions(+), 3321 deletions(-)
- create mode 100644 arch/powerpc/include/asm/fsldma.h
- create mode 100644 crypto/async_tx/async_pq.c
- create mode 100644 crypto/async_tx/async_raid6_recov.c
- create mode 100644 crypto/async_tx/raid6test.c
- delete mode 100644 drivers/dma/ioat.c
- create mode 100644 drivers/dma/ioat/Makefile
- rename drivers/dma/{ioat_dca.c => ioat/dca.c} (98%)
- create mode 100644 drivers/dma/ioat/dma.c
- create mode 100644 drivers/dma/ioat/dma.h
- create mode 100644 drivers/dma/ioat/dma_v2.c
- create mode 100644 drivers/dma/ioat/dma_v2.h
- create mode 100644 drivers/dma/ioat/dma_v3.c
- create mode 100644 drivers/dma/ioat/hw.h
- create mode 100644 drivers/dma/ioat/pci.c
- rename drivers/dma/{ioatdma_registers.h => ioat/registers.h} (84%)
- delete mode 100644 drivers/dma/ioat_dma.c
- delete mode 100644 drivers/dma/ioatdma.h
- delete mode 100644 drivers/dma/ioatdma_hw.h
- create mode 100644 drivers/dma/shdma.c
- create mode 100644 drivers/dma/shdma.h
