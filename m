@@ -1,91 +1,71 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Raid 5 Issue, cannot recognize EXT3 File system.
-Date: Fri, 18 Sep 2009 09:13:13 +0100
-Message-ID: <20090918081313.GC22909@cthulhu.home.robinhill.me.uk>
-References: <20090917210148.GB19611@cthulhu.home.robinhill.me.uk>
- <200909171746569.SM04116@trainer>
+From: "Majed B." <majedb@gmail.com>
+Subject: Re: Re-map disk sectors in userspace when rewriting after read errors
+Date: Fri, 18 Sep 2009 11:17:27 +0300
+Message-ID: <70ed7c3e0909180117v725982dr5c6a344586ba36eb@mail.gmail.com>
+References: <h8nbt5$n8p$1@ger.gmane.org> <alpine.LFD.2.00.0909150810510.5083@sbhezbfg.of5.nffheflf.cev>
+	<h8nfoe$n8p$3@ger.gmane.org> <alpine.LFD.2.00.0909150832000.5083@sbhezbfg.of5.nffheflf.cev>
+	<h8nreb$n8p$4@ger.gmane.org> <87ws3z5iro.fsf@frosties.localdomain>
+	<1253106813.17888.9.camel@localhost>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="+xNpyl7Qekk2NvDX"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200909171746569.SM04116@trainer>
+In-Reply-To: <1253106813.17888.9.camel@localhost>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Matthias Urlichs <matthias@urlichs.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I've re-read this thread and I was wondering if: echo check >
+/sys/block/$array/md/sync_action would help me (and possibly Matthias)
+in any way.
 
---+xNpyl7Qekk2NvDX
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I have a RAID5 array of 8 disks running degraded on 7. One of the 7
+has bad sectors and the one that is not in the array also had bad
+sectors.
 
-On Thu Sep 17, 2009 at 05:46:33PM -0400, Sunpyo Hong wrote:
+I zeroed the one out of the array (with dd) and then cloned the one
+with bad sectors in the array to it using dd_rescue.
 
-> First off, lemme tell you the initial problem. I had a WD ShareSpace that
-> had one of the disk go bad. They sent a replacement and it was suppose to
-> rebuild on its own, however after the build, the array went bad and it was
-> no longer able to see any of the files.=20
->=20
-> I downloaded and tested the drives using windows data recovery tools I saw
-> that the ext3 was Linux FS and that using these tools would not help in t=
-he
-> recovery. However through the tools I was able to see and recover some of
-> the files, but the files themselves were usable. I confirmed with WD that
-> ext3 was in fact the FS and took steps to recover the data. These are the
-> steps I took in order for me to assemble the raid.
->=20
-> Right now I have 3/4 drives with the data. I did #mdadm --assemble --scan,
-> which let me assemble the raid. However at this point I was not able to s=
-ee
-> any of the files or mount the drive to the mount point it was once at. I
-> have also tried #mdadm --create with the array in the right order /w the
-> missing disk.=20
->=20
-> Initially the --assemble --scan assembled the array /dev/md2 with the dis=
-ks
-> in the wrong order. I know because I physically saw where the disks were =
-in
-> relation to the disk order and wrote down the disk order on every HD.
->=20
-This should not be possible - --assemble will read the metadata from the
-superblocks and determine the order the drives should be within the
-array.  The physical positioning/ordering is irrelevant here.  I suggest
-you recreate the array in the original order --assemble did (and hope
-that the chunk size used is the default).
+Later, I reassembled the array using the cloned disk instead of the ori=
+ginal.
 
-> #cat /proc/mdstat
-> Personalities : [raid1] [raid6] [raid5] [raid4]=20
-> md2 : active raid5 sdb4[1] sdd4[3] sdc4[2]
->       5856150144 blocks level 5, 64k chunk, algorithm 2 [4/3] [_UUU]
->      =20
-> md0 : active raid1 sdd1[0] sdb1[2] sdc1[1]
->       208768 blocks [4/3] [UUU_]
->      =20
-I find it somewhat odd that md0 and md2 have the drives in a different
-order.  Is this related to your recreating the array?  Admittedly, md0
-is only a RAID1 so the order doesn't actually matter, but if the arrays
-were created at the same time then the normal behaviour would be to use
-the same order in the create command.
+So now, I'm sure I still have inconsistencies, but would doing the
+action above force a correction? Also, would that work on a degraded
+array?
 
-Cheers,
-    Robin
+Thank you.
+
+On Wed, Sep 16, 2009 at 4:13 PM, Matthias Urlichs <matthias@urlichs.de>=
+ wrote:
+> On Wed, 2009-09-16 at 11:41 +0200, Goswin von Brederlow wrote:
+>> Alternatively write a re-map device-mapper target that reserves some
+>> space of the disk and remaps bad blocks itself.
+>>
+> That'd require some place to store the mapping so that the whole thin=
+g
+> still works after a reboot. Which should probably be on a different
+> disk.
+>
+> I tend to want to move (part of) that problem to userspace; you may w=
+ant
+> to do more than a simple remapping of a few blocks when that happens
+> (e.g. test-reading the surrounding area).
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+>
+
+
+
 --=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---+xNpyl7Qekk2NvDX
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEARECAAYFAkqzQRgACgkQShxCyD40xBLflgCcC9mzy3qqam4tXxZHEyMjge7L
-p5EAn19I7OgfuU1WjwPZNgQi3jQippBW
-=V01v
------END PGP SIGNATURE-----
-
---+xNpyl7Qekk2NvDX--
+       Majed B.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
