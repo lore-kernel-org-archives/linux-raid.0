@@ -1,129 +1,118 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: mdraid causing mvsas to lockup? (was: Re: recommended 4port SATA controller ?)
-Date: Fri, 18 Sep 2009 04:58:22 -0600
-Message-ID: <200909180458.22305.tfjellstrom@shaw.ca>
-References: <4AB22135.7030405@kaneda.iguw.tuwien.ac.at> <73e903670909171635r4e60cb7cj548ae6ad8b152e3e@mail.gmail.com> <200909171759.49606.tfjellstrom@shaw.ca>
-Reply-To: tfjellstrom@shaw.ca
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: Re-map disk sectors in userspace when rewriting after read
+ errors
+Date: Fri, 18 Sep 2009 12:15:11 +0100
+Message-ID: <20090918111511.GF22909@cthulhu.home.robinhill.me.uk>
+References: <h8nfoe$n8p$3@ger.gmane.org>
+ <alpine.LFD.2.00.0909150832000.5083@sbhezbfg.of5.nffheflf.cev>
+ <h8nreb$n8p$4@ger.gmane.org>
+ <87ws3z5iro.fsf@frosties.localdomain>
+ <1253106813.17888.9.camel@localhost>
+ <70ed7c3e0909180117v725982dr5c6a344586ba36eb@mail.gmail.com>
+ <20090918082851.GD22909@cthulhu.home.robinhill.me.uk>
+ <70ed7c3e0909180257hf13ba48va808b942deaba177@mail.gmail.com>
+ <20090918102234.GE22909@cthulhu.home.robinhill.me.uk>
+ <70ed7c3e0909180352m152e2237o2c449730660fc0ba@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="w3uUfsyyY1Pqa/ej"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200909171759.49606.tfjellstrom@shaw.ca>
+Content-Disposition: inline
+In-Reply-To: <70ed7c3e0909180352m152e2237o2c449730660fc0ba@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kristleifur =?iso-8859-1?q?Da=F0ason?= <kristleifur@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu September 17 2009, Thomas Fjellstrom wrote:
-> On Thu September 17 2009, Kristleifur Da=F0ason wrote:
-> > On Thu, Sep 17, 2009 at 11:02 PM, Thomas Fjellstrom <tfjellstrom@sh=
-aw.ca>
+
+--w3uUfsyyY1Pqa/ej
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Fri Sep 18, 2009 at 01:52:14PM +0300, Majed B. wrote:
+
+> Well, I think my case is different Matthias's and I can't reconstruct
+> the data anymore, as you said, Robin.
 >=20
-> wrote:
-> > > On Thu September 17 2009, John Bridges wrote:
-> > >> I'm a fan of the SuperMicro AOC-SAT2-MV8, great card.
-> > >> http://www.supermicro.com/products/accessories/addon/AOC-SAT2-MV=
-8.cfm
-> > >>
-> > >> It's an 8 port PCI-X card, works in both PCI and PCI-X slots.
-> > >>
-> > >> SATA2
-> > >>
-> > >> Drivers for Linux are stable, built in.
-> > >
-> > > Have you had any experience with the AOC-SASLP-MV8? I've got one =
-and
-> > > have been having no end of issues with it under linux.
-> > >
-> > > --
-> > > Thomas Fjellstrom
-> > > tfjellstrom@shaw.ca
-> > > --
-> >
-> > I have,
-> >
-> > or rather, I've tried to get an AOC-SASLP-MV8 card going. I think I
-> > can safely say that at least Linux kernel 2.6.31 is a requirement. =
-The
-> > card was basically useless with everything up to 2.6.30, then I tri=
-ed
-> > 2.6.31-rc5 on a whim and it kicked in. Built-in driver support, tha=
-t
-> > is. However it wasn't stable, it dropped disks when syncing a large
-> > array. I've been meaning to test on 2.6.31 final, and am pretty
-> > optimistic.
+> So this leaves me with a degraded array with bad sectors and a dodgy
+> filesystem.
 >=20
-> Yeah, the driver didn't appear till .30. I have 2.6.31-git4 installed=
- right
-> now, and no matter what I do, the controller starts spewing errors:
+> You see, I can mount the LVM Logical Volume (formatted with XFS), but
+> as soon as I hit some bad sectors, XFS complains and then one of the
+> array disks jump out.
+> Just now, one disk exited the array and renamed itself from sdg to sdj
+> .... (this is the first time this happens). According to smartctl -a
+> /dev/sdj, there are no bad sectors, but I still get this in
+> /var/log/messages
 >=20
-> [ 1455.698186] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc=3D =
-5
-> [ 1455.698196] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc=3D =
-5
-> ...
-> [ 1424.708085] end_request: I/O error, dev sdh, sector 3072
-> [ 1424.708106] sd 0:0:3:0: [sdh] Unhandled error code
-> [ 1424.708111] sd 0:0:3:0: [sdh] Result: hostbyte=3DDID_OK
-> driverbyte=3DDRIVER_TIMEOUT
-> [ 1424.708118] sd 0:0:3:0: [sdh] CDB: Read(10): 28 00 00 00 08 00 00 =
-04 00
->  00
+The renaming would suggest a hard bus reset - not what I'd expect with
+just a bad block.
+
+> Here's some info on smartctl -a /dev/sdg
+>   1 Raw_Read_Error_Rate     0x002f   200   200   051    Pre-fail
+> Always       -       0
+>   7 Seek_Error_Rate         0x002e   100   253   000    Old_age
+> Always       -       0
+> 196 Reallocated_Event_Count 0x0032   200   200   000    Old_age
+> Always       -       0
+> 197 Current_Pending_Sector  0x0032   200   200   000    Old_age
+> Always       -       0
+> 198 Offline_Uncorrectable   0x0030   200   200   000    Old_age
+> Offline      -       0
+> 199 UDMA_CRC_Error_Count    0x0032   200   200   000    Old_age
+> Always       -       0
+> 200 Multi_Zone_Error_Rate   0x0008   200   200   000    Old_age
+> Offline      -       0
 >=20
-> And thats with perfectly good disks, and with smartd/hddtemp disabled=
- (they
-> were causing one of my disks to barf).
+A lot of these are only updated via offline tests, so won't change in
+normal use, even if there are issues.  Have you run any SMART tests on
+the disk?  The long test usually shows a failure if the disk has read
+errors.
+
+> Plan B: Since I cloned the disk with bad sectors to another, what
+> would happen if I zeroed the damaged one then cloned the clone to it?!
 >=20
-> All I have to do is start a read from any disk, and after a few minut=
-es,
->  the card starts erroring out, and then dies.
+Depends on what the actual condition of the disk is.  The zeroing should
+remap any bad blocks though.
+
+> I do realize that there will be zeros in the areas of bad sectors, but
+> how will mdadm/md behave? Would a resync fail?
 >=20
-> It actually seems like it got more unstable from .30 to .31.
+mdadm doesn't care what data is on it, as long as the array metadata is
+valid.  Providing all disks are readable (and the new disk is writable)
+then a resync would certainly work - whether the filesystem will be
+usable afterwards depends on how many zeroed blocks there are and where
+they fall.
+
+> I can run fsck at that point and files residing on bad sectors will be
+> the only affected ones, correct?
 >=20
-> I've been trying to get some help with it on the lkml/ide/scsi lists =
-for a
-> while now, one person has tried to help, but thats about it.
->
+Files/directories yes - if the directory inodes get zeroed then all the
+files within the directory will be affected (renamed & moved to
+/lost+found).
 
-Very strange. I've found that reading from all 4 drives currently conne=
-cted to=20
-the controller at once, works. I have 4 dd commands, one reading off ea=
-ch=20
-drive, and so far no errors, the dd commands aren't locking up, and the=
-y are=20
-going full speed (120MB/s per drive).
-
-If however I attempt to bring up the md raid0 array ontop of these disk=
-s, the=20
-controller locks up, and all of the disks become inaccessible.
-
-Maybe it has something to do with it, but just as the system is booting=
-, I get=20
-the following, maybe related, maybe not:
-
-ata_id[5183]: HDIO_GET_IDENTITY failed for '/dev/block/8:96'
-ata_id[5188]: HDIO_GET_IDENTITY failed for '/dev/block/8:112'
-ata_id[5184]: HDIO_GET_IDENTITY failed for '/dev/block/8:80'
-
-(those map to sdg, sdh, and sdf in that order, no report for sde, the f=
-irst=20
-disk in the controller)
+I've had to do just this myself recently, and despite the low number of
+zeroed blocks, there was an awful lot of filesystem damage (I ended up
+restoring most of it from backup).
 
 
-> > -- Kristleifur
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
-
-
+    Robin
 --=20
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
+
+--w3uUfsyyY1Pqa/ej
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+
+iEYEARECAAYFAkqza74ACgkQShxCyD40xBKOjQCfd4v9Kqsk0QUoLAuDIGJv2uzA
+970AoJbbj1fJGo4J0OA5ZZcRT2f5i6L/
+=/fsL
+-----END PGP SIGNATURE-----
+
+--w3uUfsyyY1Pqa/ej--
