@@ -1,454 +1,240 @@
-From: Tim Bostrom <tbostrom@gmail.com>
-Subject: Re: RAID 5 array recovery - two drives errors in external enclosure
-Date: Thu, 17 Sep 2009 21:19:58 -0700
-Message-ID: <2267211f0909172119w6de04e46m5fcfc5e6d35c0382@mail.gmail.com>
-References: <2267211f0909171342g6ebf68a2y393daa587e59c714@mail.gmail.com>
-	<20090917212252.GC19611@cthulhu.home.robinhill.me.uk> <2267211f0909171611m4b4a0d02p81b80bc882a0855@mail.gmail.com>
-	<70ed7c3e0909171628w4040ae5cydf4335adb51f2b7d@mail.gmail.com>
-	<2267211f0909171654v766e658fn620b23268a2393a6@mail.gmail.com>
-	<0F9F69CA6B3942B1A44BC0B2D00AE139@m5>
+From: Neil Brown <neilb@suse.de>
+Subject: PULL REQUEST - md updates for 2.6.32, mostly raid6 offload
+Date: Fri, 18 Sep 2009 15:41:32 +1000
+Message-ID: <19123.7564.203923.745681@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <0F9F69CA6B3942B1A44BC0B2D00AE139@m5>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-This seemed to work, though I'm still working through the permutations
-of the drive letters.
 
-I noticed that mdadm think that partition sde1 is ext2 filesystem on
-it.  See below:
+Hi Linus,
+  please pull md and related updates as below.
+  Most of this is support for offloading the RAID6 calculation onto
+  dedicated hardware, hence the crypto/async_tx and drives/dma
+  changes.  This makes RAID6 more consistent with RAID5 which already
+  supports XOR offload.
+  The only bit that is really from me is a couple of fixes for sparse
+  warnings, one of which was really an error. (It is a pity spares in
+  so noisy....)
 
-[root@tera tbostrom]# mdadm -C /dev/md0 -l 5 -n 5 -c 256 /dev/sdb1
-/dev/sdd1 /dev/sdc1 /dev/sde1 missing
-mdadm: /dev/sdb1 appears to be part of a raid array:
-    level=3Draid5 devices=3D5 ctime=3DThu Sep 17 21:13:21 2009
-mdadm: /dev/sdd1 appears to be part of a raid array:
-    level=3Draid5 devices=3D5 ctime=3DThu Sep 17 21:13:21 2009
-mdadm: /dev/sdc1 appears to be part of a raid array:
-    level=3Draid5 devices=3D5 ctime=3DThu Sep 17 21:13:21 2009
-mdadm: /dev/sde1 appears to contain an ext2fs file system
-    size=3D396408836K  mtime=3DMon Sep 21 03:41:16 2026
-mdadm: /dev/sde1 appears to be part of a raid array:
-    level=3Draid5 devices=3D5 ctime=3DThu Sep 17 21:13:21 2009
-Continue creating array?
-
-What gives?  I tried popping sdf1 in there without creating the array
-- just to see what would happen and it thinks that sdf1 has ext2 as
-well.
-
-root@tera tbostrom]# mdadm -C /dev/md0 -l 5 -n 5 -c 256 /dev/sdc1
-/dev/sdb1 /dev/sde1 /dev/sdf1 missing
-mdadm: /dev/sdc1 appears to be part of a raid array:
-    level=3Draid5 devices=3D5 ctime=3DThu Sep 17 21:13:21 2009
-mdadm: /dev/sdb1 appears to be part of a raid array:
-    level=3Draid5 devices=3D5 ctime=3DThu Sep 17 21:13:21 2009
-mdadm: /dev/sde1 appears to contain an ext2fs file system
-    size=3D396408836K  mtime=3DMon Sep 21 03:41:16 2026
-mdadm: /dev/sde1 appears to be part of a raid array:
-    level=3Draid5 devices=3D5 ctime=3DThu Sep 17 21:13:21 2009
-mdadm: /dev/sdf1 appears to contain an ext2fs file system
-    size=3D-387928064K  mtime=3DWed Sep 16 16:26:42 2009
-mdadm: /dev/sdf1 appears to be part of a raid array:
-    level=3Draid5 devices=3D5 ctime=3DThu Sep 17 20:54:33 2009
-Continue creating array? no
-mdadm: create aborted.
+Thanks,
+NeilBrown
 
 
-Still at a loss here.  I haven't worked through all the drive
-permutations.  In the meantime, I'll try that.  Does it make sense to
-try sdf1 in the permutation since the drive letters may have changed
-since moving from the enclosure?  I thought I put them back in the
-same order as the enclosure.
+The following changes since commit 0cc6d77e55eca9557bbe41bf2db94b31aa8fcb2a:
+  Linus Torvalds (1):
+        Merge branch 'x86-setup-for-linus' of git://git.kernel.org/.../tip/linux-2.6-tip
 
--Tim
+are available in the git repository at:
 
+  git://neil.brown.name/md/ for-linus
 
-On Thu, Sep 17, 2009 at 6:31 PM, Guy Watkins
-<linux-raid@watkins-home.com> wrote:
-> It is the way you list the drives. =A0Look at this command:
-> # echo /dev/sd[bdce]1
-> /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1
->
-> Notice the output is not in the same order as in the command. =A0You =
-should
-> list each disk in the order you want. =A0Like this:
-> mdadm -C /dev/md0 -l 5 -n 5 -c 256 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev=
-/sde1
-> missing
->
-> I hope this helps.
->
-> } -----Original Message-----
-> } From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> } owner@vger.kernel.org] On Behalf Of Tim Bostrom
-> } Sent: Thursday, September 17, 2009 7:55 PM
-> } To: linux-raid
-> } Subject: Re: RAID 5 array recovery - two drives errors in external
-> } enclosure
-> }
-> } It's still showing the order that you had previously posted: =A0[bc=
-de]
-> } (see log below)
-> }
-> } It appears that trying different permutations isn't yielding any
-> } change. =A0I haven't tried every permutation, but are these command=
-s
-> } supposed to yield different effects? =A0They seem to always build t=
-he
-> } array as [bcde] no matter what. =A0Or should I be swapping around t=
-he
-> } cables on the drives?
-> }
-> } >> mdadm -C /dev/md0 -l 5 -n 5 -c 256 /dev/sd[bdce]1 missing
-> } >> mdadm -C /dev/md0 -l 5 -n 5 -c 256 /dev/sd[bdec]1 missing
-> } >> mdadm -C /dev/md0 -l 5 -n 5 -c 256 /dev/sd[becd]1 missing
-> }
-> }
-> } -Tim
-> }
-> } [root@tera ~]# mdadm --examine /dev/sdb1
-> } /dev/sdb1:
-> } =A0 =A0 =A0 =A0 =A0 Magic : a92b4efc
-> } =A0 =A0 =A0 =A0 Version : 0.90.00
-> } =A0 =A0 =A0 =A0 =A0 =A0UUID : 9fefb6ce:dcbfe649:f456b3f0:371e8bcc
-> } =A0 Creation Time : Thu Sep 17 16:13:45 2009
-> } =A0 =A0 =A0Raid Level : raid5
-> } =A0 Used Dev Size : 976759808 (931.51 GiB 1000.20 GB)
-> } =A0 =A0 =A0Array Size : 3907039232 (3726.04 GiB 4000.81 GB)
-> } =A0 =A0Raid Devices : 5
-> } =A0 Total Devices : 5
-> } Preferred Minor : 0
-> }
-> } =A0 =A0 Update Time : Thu Sep 17 16:13:45 2009
-> } =A0 =A0 =A0 =A0 =A0 State : clean
-> } =A0Active Devices : 4
-> } Working Devices : 4
-> } =A0Failed Devices : 1
-> } =A0 Spare Devices : 0
-> } =A0 =A0 =A0 =A0Checksum : 20f1deab - correct
-> } =A0 =A0 =A0 =A0 =A0Events : 1
-> }
-> } =A0 =A0 =A0 =A0 =A0Layout : left-symmetric
-> } =A0 =A0 =A0Chunk Size : 256K
-> }
-> } =A0 =A0 =A0 Number =A0 Major =A0 Minor =A0 RaidDevice State
-> } this =A0 =A0 0 =A0 =A0 =A0 8 =A0 =A0 =A0 17 =A0 =A0 =A0 =A00 =A0 =A0=
- =A0active sync =A0 /dev/sdb1
-> }
-> } =A0 =A00 =A0 =A0 0 =A0 =A0 =A0 8 =A0 =A0 =A0 17 =A0 =A0 =A0 =A00 =A0=
- =A0 =A0active sync =A0 /dev/sdb1
-> } =A0 =A01 =A0 =A0 1 =A0 =A0 =A0 8 =A0 =A0 =A0 33 =A0 =A0 =A0 =A01 =A0=
- =A0 =A0active sync =A0 /dev/sdc1
-> } =A0 =A02 =A0 =A0 2 =A0 =A0 =A0 8 =A0 =A0 =A0 49 =A0 =A0 =A0 =A02 =A0=
- =A0 =A0active sync =A0 /dev/sdd1
-> } =A0 =A03 =A0 =A0 3 =A0 =A0 =A0 8 =A0 =A0 =A0 65 =A0 =A0 =A0 =A03 =A0=
- =A0 =A0active sync =A0 /dev/sde1
-> } =A0 =A04 =A0 =A0 4 =A0 =A0 =A0 0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A04 =
-=A0 =A0 =A0faulty
-> }
-> }
-> }
-> } On Thu, Sep 17, 2009 at 4:28 PM, Majed B. <majedb@gmail.com> wrote:
-> } > Before creating the array, did you re-examine the disks with mdad=
-m and
-> } > made sure of each disk's position in the array?
-> } >
-> } > After your recabling, the disk names may have changed again.
-> } >
-> } > mdadm --examine /dev/sdb1
-> } >
-> } > =A0 =A0 =A0Number =A0 Major =A0 Minor =A0 RaidDevice State
-> } > this =A0 =A0 7 =A0 =A0 =A0 8 =A0 =A0 =A0 17 =A0 =A0 =A0 =A07 =A0 =
-=A0 =A0active sync =A0 /dev/sdb1
-> } >
-> } > =A0 0 =A0 =A0 0 =A0 =A0 =A0 8 =A0 =A0 =A0113 =A0 =A0 =A0 =A00 =A0=
- =A0 =A0active sync =A0 /dev/sdh1
-> } > =A0 1 =A0 =A0 1 =A0 =A0 =A0 8 =A0 =A0 =A0 97 =A0 =A0 =A0 =A01 =A0=
- =A0 =A0active sync =A0 /dev/sdg1
-> } > =A0 2 =A0 =A0 2 =A0 =A0 =A0 0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A02 =A0=
- =A0 =A0faulty removed
-> } > =A0 3 =A0 =A0 3 =A0 =A0 =A0 0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 =A03 =A0=
- =A0 =A0faulty removed
-> } > =A0 4 =A0 =A0 4 =A0 =A0 =A0 8 =A0 =A0 =A0 33 =A0 =A0 =A0 =A04 =A0=
- =A0 =A0active sync =A0 /dev/sdc1
-> } > =A0 5 =A0 =A0 5 =A0 =A0 =A0 8 =A0 =A0 =A0 65 =A0 =A0 =A0 =A05 =A0=
- =A0 =A0active sync =A0 /dev/sde1
-> } > =A0 6 =A0 =A0 6 =A0 =A0 =A0 8 =A0 =A0 =A0 49 =A0 =A0 =A0 =A06 =A0=
- =A0 =A0active sync =A0 /dev/sdd1
-> } > =A0 7 =A0 =A0 7 =A0 =A0 =A0 8 =A0 =A0 =A0 17 =A0 =A0 =A0 =A07 =A0=
- =A0 =A0active sync =A0 /dev/sdb1
-> } >
-> } > (That's the output of an array I'm working on)
-> } >
-> } > Notice the first line: *this* and then the value of RaidDevice. T=
-hat's
-> } > the position of the partition in the array. 0 is first, 1 is seco=
-nd,
-> } > and so on.
-> } >
-> } > In my case, the order is: sdh1,sdg1,missing,missing,sdc1,sde1,sdd=
-1,sdb1
-> } >
-> } > On Fri, Sep 18, 2009 at 2:11 AM, Tim Bostrom <tbostrom@gmail.com>=
- wrote:
-> } >> I re-cabled the drives so that they show up as the same drive le=
-tter
-> } >> as they were before when in the enclosure.
-> } >>
-> } >> I then went ahead and tried your idea of restarting the array. I=
- tried
-> } >> this first:
-> } >>
-> } >> mdadm -C /dev/md0 -l 5 -n 5 -c 256 /dev/sd[bcde]1 missing
-> } >>
-> } >> mount -o ro /dev/md0 /mnt/teradata
-> } >>
-> } >> /var/log/messages:
-> } >> -----------------
-> } >> Sep 17 16:07:09 tera kernel: md: bind<sdb1>
-> } >> Sep 17 16:07:09 tera kernel: md: bind<sdc1>
-> } >> Sep 17 16:07:09 tera kernel: md: bind<sdd1>
-> } >> Sep 17 16:07:09 tera kernel: md: bind<sde1>
-> } >> Sep 17 16:07:09 tera kernel: raid5: device sde1 operational as r=
-aid
-> } disk 3
-> } >> Sep 17 16:07:09 tera kernel: raid5: device sdd1 operational as r=
-aid
-> } disk 2
-> } >> Sep 17 16:07:09 tera kernel: raid5: device sdc1 operational as r=
-aid
-> } disk 1
-> } >> Sep 17 16:07:09 tera kernel: raid5: device sdb1 operational as r=
-aid
-> } disk 0
-> } >> Sep 17 16:07:09 tera kernel: raid5: allocated 5268kB for md0
-> } >> Sep 17 16:07:09 tera kernel: raid5: raid level 5 set md0 active =
-with 4
-> } >> out of 5 devices, algorithm 2
-> } >> Sep 17 16:07:09 tera kernel: RAID5 conf printout:
-> } >> Sep 17 16:07:09 tera kernel: --- rd:5 wd:4
-> } >> Sep 17 16:07:09 tera kernel: disk 0, o:1, dev:sdb1
-> } >> Sep 17 16:07:09 tera kernel: disk 1, o:1, dev:sdc1
-> } >> Sep 17 16:07:09 tera kernel: disk 2, o:1, dev:sdd1
-> } >> Sep 17 16:07:09 tera kernel: disk 3, o:1, dev:sde1
-> } >> Sep 17 16:07:56 tera kernel: EXT3-fs error (device md0):
-> } >> ext3_check_descriptors: Block bitmap for group 8064 not in group
-> } >> (block 532677632)!
-> } >> Sep 17 16:07:56 tera kernel: EXT3-fs: group descriptors corrupte=
-d!
-> } >> --------------------------------
-> } >>
-> } >>
-> } >> I then tried a few more permutations of the command:
-> } >> mdadm -C /dev/md0 -l 5 -n 5 -c 256 /dev/sd[bdce]1 missing
-> } >> mdadm -C /dev/md0 -l 5 -n 5 -c 256 /dev/sd[bdec]1 missing
-> } >> mdadm -C /dev/md0 -l 5 -n 5 -c 256 /dev/sd[becd]1 missing
-> } >>
-> } >> Every time I changed the order, it would still print the order t=
-he
-> } >> same in the log:
-> } >>
-> } >> Sep 17 16:02:52 tera kernel: md: bind<sdb1>
-> } >> Sep 17 16:02:52 tera kernel: md: bind<sdc1>
-> } >> Sep 17 16:02:52 tera kernel: md: bind<sdd1>
-> } >> Sep 17 16:02:52 tera kernel: md: bind<sde1>
-> } >> Sep 17 16:02:52 tera kernel: raid5: device sde1 operational as r=
-aid
-> } disk 3
-> } >> Sep 17 16:02:52 tera kernel: raid5: device sdd1 operational as r=
-aid
-> } disk 2
-> } >> Sep 17 16:02:52 tera kernel: raid5: device sdc1 operational as r=
-aid
-> } disk 1
-> } >> Sep 17 16:02:52 tera kernel: raid5: device sdb1 operational as r=
-aid
-> } disk 0
-> } >> Sep 17 16:02:52 tera kernel: raid5: allocated 5268kB for md0
-> } >> Sep 17 16:02:52 tera kernel: raid5: raid level 5 set md0 active =
-with 4
-> } >> out of 5 devices, algorithm 2
-> } >> Sep 17 16:02:52 tera kernel: RAID5 conf printout:
-> } >> Sep 17 16:02:52 tera kernel: --- rd:5 wd:4
-> } >> Sep 17 16:02:52 tera kernel: disk 0, o:1, dev:sdb1
-> } >> Sep 17 16:02:52 tera kernel: disk 1, o:1, dev:sdc1
-> } >> Sep 17 16:02:52 tera kernel: disk 2, o:1, dev:sdd1
-> } >> Sep 17 16:02:52 tera kernel: disk 3, o:1, dev:sde1
-> } >>
-> } >>
-> } >>
-> } >> Am I doing something wrong?
-> } >>
-> } >>
-> } >>
-> } >>
-> } >> On Thu, Sep 17, 2009 at 2:22 PM, Robin Hill <robin@robinhill.me.=
-uk>
-> } wrote:
-> } >>> On Thu Sep 17, 2009 at 01:42:30PM -0700, Tim Bostrom wrote:
-> } >>>
-> } >>>> OK,
-> } >>>>
-> } >>>> Let me start off by saying - I panicked. =A0Rule #1 - don't pa=
-nic. =A0I
-> } >>>> did. =A0Sorry.
-> } >>>>
-> } >>>> I have a RAID 5 array running on Fedora 10.
-> } >>>> (Linux tera.teambostrom.com 2.6.27.30-170.2.82.fc10.i686 #1 SM=
-P Mon
-> } >>>> Aug 17 08:38:59 EDT 2009 i686 athlon i386 GNU/Linux)
-> } >>>>
-> } >>>> 5 drives in an external enclosure (AMS eSATA Venus T5). =A0It'=
-s a
-> } >>>> Sil4726 inside the enclosure running to a Sil3132 controller v=
-ia
-> } eSATA
-> } >>>> in the desktop. =A0I had been running this setup for just over=
- a year.
-> } >>>> Was working fine. =A0 I just moved into a new home and had my =
-server
-> } >>>> down for a while =A0- before I brought it back online, I got a=
- "great
-> } >>>> idea" to blow out the dust from the enclosure using compressed=
- air.
-> } >>>> When I finally brought up the array again, I noticed that driv=
-es were
-> } >>>> missing. =A0Tried re-adding the drives to the array and had so=
-me issues
-> } >>>> - they seemed to get added but after a short time of rebuildin=
-g the
-> } >>>> array, I would get a bunch of HW resets in dmesg and then the =
-array
-> } >>>> would kick out drives and stop.
-> } >>>>
-> } >>> <- much snippage ->
-> } >>>
-> } >>>> I popped the drives out of the enclosure and into the actual t=
-ower
-> } >>>> case and connected each of them to its own SATA port. =A0The H=
-W resets
-> } >>>> seemed to go away, but I couldn't get the array to come back o=
-nline.
-> } >>>> =A0Then I did the stupid panic (following someone's advice I s=
-houldn't
-> } >>>> have).
-> } >>>>
-> } >>>> thinking I should just re-create the array, I did:
-> } >>>>
-> } >>>> mdadm --create /dev/md0 --level=3D5 --raid-devices=3D5 /dev/sd=
-[b-f]1
-> } >>>>
-> } >>>> Stupid me again - ignores the warning that it belongs to an ar=
-ray
-> } >>>> already. =A0I let it build for a minute or so and then tried t=
-o mount
-> } it
-> } >>>> while rebuilding... and got error messages:
-> } >>>>
-> } >>>> EXT3-fs: unable to read superblock
-> } >>>> EXT3-fs: md0: couldn't mount because of unsupported optional f=
-eatures
-> } >>>> (3fd18e00).
-> } >>>>
-> } >>>> Now - I'm at a loss. =A0I'm afraid to do anything else. =A0 I'=
-ve been
-> } >>>> viewing the FAQ and I have a few ideas, but I'm just more frea=
-ked.
-> } =A0Is
-> } >>>> there any hope? =A0What should I do next without causing more =
-trouble?
-> } >>>>
-> } >>> Looking at the mdadm output, there's a couple of possible error=
-s.
-> } >>> Firstly, your newly created array has a different chunksize tha=
-n your
-> } >>> original one. =A0Secondly, the drives may be in the wrong order=
-=2E =A0In
-> } >>> either case, providing you don't _actually_ have any faulty dri=
-ves,
-> } then
-> } >>> it should be (mostly) recoverable.
-> } >>>
-> } >>> Given the order you specified the drives in the create, sdf1 wi=
-ll be
-> } the
-> } >>> partition that's been trashed by the rebuild, so you'll want to=
- leave
-> } >>> that out altogether for now.
-> } >>>
-> } >>> You need to try to recreate the array with the correct chunk si=
-ze and
-> } >>> with the remaining drives in different orders, running a read-o=
-nly
-> } >>> filesystem check each time until you find the correct order.
-> } >>>
-> } >>> So start with:
-> } >>> =A0 =A0mdadm -C /dev/md0 -l 5 -n 5 -c 256 /dev/sd[bcde]1 missin=
-g
-> } >>>
-> } >>> Then repeat for every possible order of the four disks and "mis=
-sing",
-> } >>> stopping the array each time if the mount fails.
-> } >>>
-> } >>> When you've finally found the correct order, you can re-add sdf=
-1 to
-> } get
-> } >>> the array back to normal.
-> } >>>
-> } >>> HTH,
-> } >>> =A0 =A0Robin
-> } >>> --
-> } >>> =A0 =A0 ___
-> } >>> =A0 =A0( ' } =A0 =A0 | =A0 =A0 =A0 Robin Hill =A0 =A0 =A0 =A0<r=
-obin@robinhill.me.uk> |
-> } >>> =A0 / / ) =A0 =A0 =A0| Little Jim says .... =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0|
-> } >>> =A0// !! =A0 =A0 =A0 | =A0 =A0 =A0"He fallen in de water !!" =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 |
-> } >>>
-> } >>
-> } >>
-> } >>
-> } >> --
-> } >> -tim
-> } >> --
-> } >> To unsubscribe from this list: send the line "unsubscribe linux-=
-raid"
-> } in
-> } >> the body of a message to majordomo@vger.kernel.org
-> } >> More majordomo info at =A0http://vger.kernel.org/majordomo-info.=
-html
-> } >>
-> } >
-> } >
-> } >
-> } > --
-> } > =A0 =A0 =A0 Majed B.
-> } >
-> }
-> }
-> }
-> } --
-> } -tim
-> } --
-> } To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
-> } the body of a message to majordomo@vger.kernel.org
-> } More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
-l
->
->
+Atsushi Nemoto (1):
+      dmaengine: Move all map_sg/unmap_sg for slave channel to its client
 
+Dan Williams (81):
+      Merge branch 'dmaengine' into async-tx-raid6
+      async_tx: rename zero_sum to val
+      async_tx: kill ASYNC_TX_DEP_ACK flag
+      async_tx: structify submission arguments, add scribble
+      async_xor: permit callers to pass in a 'dma/page scribble' region
+      md/raid6: release spare page at ->stop()
+      ioat: move to drivers/dma/ioat/
+      md/raid6: move the spare page to a percpu allocation
+      md/raid5,6: add percpu scribble region for buffer lists
+      async_tx: add sum check flags
+      async_tx: kill needless module_{init|exit}
+      async_tx: remove walk of tx->parent chain in dma_wait_for_async_tx
+      async_tx: add support for asynchronous GF multiplication
+      async_tx: add support for asynchronous RAID6 recovery operations
+      dmatest: add pq support
+      async_tx: raid6 recovery self test
+      iop-adma: cleanup iop_adma_run_tx_complete_actions
+      iop-adma: fix lockdep false positive
+      iop-adma: P+Q support for iop13xx adma engines
+      iop-adma: P+Q self test
+      md/raid5: factor out mark_uptodate from ops_complete_compute5
+      md/raid6: asynchronous raid6 operations
+      md/raid6: asynchronous handle_parity_check6
+      md/raid456: distribute raid processing over multiple cores
+      Merge commit 'v2.6.31-rc1' into dmaengine
+      ioat: move definitions to dma.h
+      ioat: convert ioat_probe to pcim/devm
+      ioat: cleanup some long deref chains and 80 column collisions
+      ioat: kill function prototype ifdef guards
+      ioat: split ioat_dma_probe into core/version-specific routines
+      ioat: fix type mismatch for ->dmacount
+      ioat: define descriptor control bit-field
+      ioat1: move descriptor allocation from submit to prep
+      ioat: fix self test interrupts
+      ioat: prepare the code for ioat[12]_dma_chan split
+      ioat2,3: convert to a true ring buffer
+      ioat1: kill unused unmap parameters
+      ioat: add some dev_dbg() calls
+      ioat: cleanup completion status reads
+      ioat: ignore reserved bits for chancnt and xfercap
+      ioat: preserve chanctrl bits when re-arming interrupts
+      ioat: ___devinit annotate the initialization paths
+      ioat1: trim ioat_dma_desc_sw
+      ioat: switch watchdog and reset handler from workqueue to timer
+      ioat2,3: dynamically resize descriptor ring
+      net_dma: poll for a descriptor after allocation failure
+      Merge branch 'md-raid6-accel' into ioat3.2
+      dmaengine: add fence support
+      dmaengine, async_tx: add a "no channel switch" allocator
+      dmaengine: cleanup unused transaction types
+      dmaengine, async_tx: support alignment checks
+      ioat2+: add fence support
+      ioat3: hardware version 3.2 register / descriptor definitions
+      ioat3: split ioat3 support to its own file, add memset
+      ioat: add 'ioat' sysfs attributes
+      ioat3: enable dca for completion writes
+      ioat3: xor support
+      ioat3: xor self test
+      ioat3: pq support
+      ioat3: support xor via pq descriptors
+      ioat3: interrupt descriptor support
+      ioat3: segregate raid engines
+      Merge branch 'ioat' into dmaengine
+      dw_dmac: implement a private tx_list
+      fsldma: implement a private tx_list
+      iop-adma: implement a private tx_list
+      ioat: implement a private tx_list
+      mv_xor: implement a private tx_list
+      at_hdmac: implement a private tx_list
+      txx9dmac: implement a private tx_list
+      dmaengine: kill tx_list
+      ioat2,3: cacheline align software descriptor allocations
+      Merge branch 'iop-raid6' into async-tx-next
+      Merge branch 'dmaengine' into async-tx-next
+      Merge commit 'md/for-linus' into async-tx-next
+      async_tx: remove HIGHMEM64G restriction
+      ioat: driver version 4.0
+      md/raid6: eliminate BUG_ON with side effect
+      md/raid6: cleanup ops_run_compute6_2
+      ioat2: clarify ring size limits
+      raid6test: fix stack overflow
 
+Ira Snyder (2):
+      fsldma: split apart external pause and request count features
+      fsldma: Add DMA_SLAVE support
 
---=20
--tim
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Maciej Sosnowski (1):
+      dca: registering requesters in multiple dca domains
+
+NeilBrown (3):
+      md: remove sparse waring "symbol xxx shadows an earlier one"
+      md: remove sparse warnings about lock context.
+      Merge branch 'next' of git://git.kernel.org/.../djbw/async_tx into for-linus
+
+Nobuhiro Iwamatsu (1):
+      dmaengine: sh: Add Support SuperH DMA Engine driver
+
+Roland Dreier (2):
+      Add MODULE_DEVICE_TABLE() so ioatdma module is autoloaded
+      I/OAT: Convert to PCI_VDEVICE()
+
+Stephen Hemminger (1):
+      dca: module load should not be an error message
+
+Tom Picard (1):
+      ioat3: ioat3.2 pci ids for Jasper Forest
+
+Yuri Tikhonov (5):
+      md/raid5,6: common schedule_reconstruction for raid5/6
+      md/raid6: asynchronous handle_stripe_fill6
+      md/raid6: asynchronous handle_stripe_dirtying6
+      md/raid6: asynchronous handle_stripe6
+      md/raid6: remove synchronous infrastructure
+
+ Documentation/crypto/async-tx-api.txt              |   75 +-
+ arch/arm/include/asm/hardware/iop3xx-adma.h        |   81 +-
+ arch/arm/include/asm/hardware/iop_adma.h           |    3 +
+ arch/arm/mach-iop13xx/include/mach/adma.h          |  119 ++-
+ arch/arm/mach-iop13xx/setup.c                      |   17 +-
+ arch/arm/plat-iop/adma.c                           |    4 +-
+ arch/powerpc/include/asm/fsldma.h                  |  136 ++
+ arch/sh/drivers/dma/Kconfig                        |   12 +-
+ arch/sh/drivers/dma/Makefile                       |    3 +-
+ arch/sh/include/asm/dma-sh.h                       |   13 +
+ crypto/async_tx/Kconfig                            |    9 +
+ crypto/async_tx/Makefile                           |    3 +
+ crypto/async_tx/async_memcpy.c                     |   44 +-
+ crypto/async_tx/async_memset.c                     |   43 +-
+ crypto/async_tx/async_pq.c                         |  395 +++++
+ crypto/async_tx/async_raid6_recov.c                |  455 +++++
+ crypto/async_tx/async_tx.c                         |   87 +-
+ crypto/async_tx/async_xor.c                        |  207 ++--
+ crypto/async_tx/raid6test.c                        |  240 +++
+ drivers/dca/dca-core.c                             |  124 ++-
+ drivers/dma/Kconfig                                |   14 +-
+ drivers/dma/Makefile                               |    4 +-
+ drivers/dma/at_hdmac.c                             |   60 +-
+ drivers/dma/at_hdmac_regs.h                        |    1 +
+ drivers/dma/dmaengine.c                            |   94 +-
+ drivers/dma/dmatest.c                              |   40 +
+ drivers/dma/dw_dmac.c                              |   50 +-
+ drivers/dma/dw_dmac_regs.h                         |    1 +
+ drivers/dma/fsldma.c                               |  288 +++-
+ drivers/dma/fsldma.h                               |    4 +-
+ drivers/dma/ioat.c                                 |  202 ---
+ drivers/dma/ioat/Makefile                          |    2 +
+ drivers/dma/{ioat_dca.c => ioat/dca.c}             |   13 +-
+ drivers/dma/ioat/dma.c                             | 1238 ++++++++++++++
+ drivers/dma/ioat/dma.h                             |  337 ++++
+ drivers/dma/ioat/dma_v2.c                          |  870 ++++++++++
+ drivers/dma/ioat/dma_v2.h                          |  190 +++
+ drivers/dma/ioat/dma_v3.c                          | 1220 ++++++++++++++
+ drivers/dma/ioat/hw.h                              |  215 +++
+ drivers/dma/ioat/pci.c                             |  210 +++
+ .../dma/{ioatdma_registers.h => ioat/registers.h}  |   54 +-
+ drivers/dma/ioat_dma.c                             | 1741 --------------------
+ drivers/dma/ioatdma.h                              |  165 --
+ drivers/dma/ioatdma_hw.h                           |   70 -
+ drivers/dma/iop-adma.c                             |  491 +++++-
+ drivers/dma/iovlock.c                              |   10 +
+ drivers/dma/mv_xor.c                               |    7 +-
+ drivers/dma/mv_xor.h                               |    4 +-
+ drivers/dma/shdma.c                                |  786 +++++++++
+ drivers/dma/shdma.h                                |   64 +
+ drivers/dma/txx9dmac.c                             |   24 +-
+ drivers/dma/txx9dmac.h                             |    1 +
+ drivers/idle/i7300_idle.c                          |   20 +-
+ drivers/md/Kconfig                                 |   26 +
+ drivers/md/bitmap.c                                |    5 +-
+ drivers/md/md.c                                    |   10 +-
+ drivers/md/raid0.c                                 |    5 +-
+ drivers/md/raid10.c                                |    2 +-
+ drivers/md/raid5.c                                 | 1484 +++++++++++-------
+ drivers/md/raid5.h                                 |   28 +-
+ drivers/mmc/host/atmel-mci.c                       |    9 +-
+ include/linux/async_tx.h                           |  129 ++-
+ include/linux/dca.h                                |   11 +-
+ include/linux/dmaengine.h                          |  179 ++-
+ include/linux/pci_ids.h                            |   10 +
+ 65 files changed, 9137 insertions(+), 3321 deletions(-)
+ create mode 100644 arch/powerpc/include/asm/fsldma.h
+ create mode 100644 crypto/async_tx/async_pq.c
+ create mode 100644 crypto/async_tx/async_raid6_recov.c
+ create mode 100644 crypto/async_tx/raid6test.c
+ delete mode 100644 drivers/dma/ioat.c
+ create mode 100644 drivers/dma/ioat/Makefile
+ rename drivers/dma/{ioat_dca.c => ioat/dca.c} (98%)
+ create mode 100644 drivers/dma/ioat/dma.c
+ create mode 100644 drivers/dma/ioat/dma.h
+ create mode 100644 drivers/dma/ioat/dma_v2.c
+ create mode 100644 drivers/dma/ioat/dma_v2.h
+ create mode 100644 drivers/dma/ioat/dma_v3.c
+ create mode 100644 drivers/dma/ioat/hw.h
+ create mode 100644 drivers/dma/ioat/pci.c
+ rename drivers/dma/{ioatdma_registers.h => ioat/registers.h} (84%)
+ delete mode 100644 drivers/dma/ioat_dma.c
+ delete mode 100644 drivers/dma/ioatdma.h
+ delete mode 100644 drivers/dma/ioatdma_hw.h
+ create mode 100644 drivers/dma/shdma.c
+ create mode 100644 drivers/dma/shdma.h
