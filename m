@@ -1,44 +1,35 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: CPU util with and without Raid5
-Date: Sun, 20 Sep 2009 12:24:48 -0700
-Message-ID: <e9c3a7c20909201224h1cf62b73ie726711f0b484873@mail.gmail.com>
-References: <f5d1f90a0909181713x3cb99143raa9e64c27ccac999@mail.gmail.com>
+From: Matthias Urlichs <matthias@urlichs.de>
+Subject: Re: RAID 16?
+Date: Sun, 20 Sep 2009 19:44:00 +0000 (UTC)
+Message-ID: <h960lv$n8p$7@ger.gmane.org>
+References: <43E19FAB.4000603@cogweb.net>
+	<Pine.LNX.4.44.0602022119380.12829-100000@firewall2.tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f5d1f90a0909181713x3cb99143raa9e64c27ccac999@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux Raid Study <linuxraid.study@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Sep 18, 2009 at 5:13 PM, Linux Raid Study
-<linuxraid.study@gmail.com> wrote:
-> Hello:
->
-> I'm seeing some strangeness and want some insight.
->
-> Case #1:
-> I have 5 disks on my system and each is exported to a iSCSI initiator.
-> When I run IOMeter tool, I see CPU util of about 80% of my CPU for
-> Seq-Read operations.
->
-> Case #2:
-> If I bundle these 5 disks as Raid5, the performance is 20% lower as
-> compared to above case but the CPU util is only 30% for Seq Read
-> operations (as compared to 80% in case #1)
->
-> Can someone shed some light on this - why would CPU be lower in #2
-> (I'm using 2.6.27 kernel in both cases)?
+On Thu, 02 Feb 2006 21:32:44 -0500, Bill Davidsen wrote:
 
-You are not comparing equivalent configurations.  You are trying to
-compare the performance of 5-non-striped data disks in case1 to 4
-striped data disks in case2.  Also, asking for opinions on what might
-be causing performance differences is almost always the wrong
-approach.  Use a profiler, like oprofile in 2.6.27 or perf in recent
-kernels, to find the exact answer to where the cpu is spending its
-time for a given workload.  There are also tools like blktrace and
-seekwatcher that can help analyze block i/o performance.
+>> Would this work? Would it be better than RAID 15? We're looking for a
+>> very high redundancy system.
+> 
+> You only get the size of two drives with that! I think you would get the
+> same reliability and better performance with four RAID-1 mirror arrays
+> and RAID-5 over that. You still have to lose four drives to lose data,
+> but you get the size of three instead of two.
 
---
-Dan
+But in his case, the loss of any four disks is not a problem.
+
+Personally, in this case I'd build a simple RAID6 with two spares. You 
+can lose four disks (just not at the same time :-P ) and you still have 
+four disks' capacity.
+
+Of course, if you're worried about controller failure, a RAID1 built from 
+two RAID6 (one on each controller) is your only high-reliability option.
+
+-- 
+
