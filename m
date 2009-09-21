@@ -1,105 +1,212 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: LVM and Raid5
-Date: Mon, 21 Sep 2009 22:14:19 +0300
-Message-ID: <70ed7c3e0909211214p3f38a602s2b0fac77a3da5cc1@mail.gmail.com>
-References: <f5d1f90a0909160122j32569fb8g9e2a212532ea8604@mail.gmail.com>
-	<4AB22DA3.2090901@ziu.info> <170fa0d20909210733p2e3e797cvb60af2e9bd153fda@mail.gmail.com>
-	<f5d1f90a0909211038l2d450033p173fa17e3e5c5da1@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [git pull] ioat/async_tx fixes for 2.6.32
+Date: Mon, 21 Sep 2009 14:27:23 -0700
+Message-ID: <1253568443.27471.14.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f5d1f90a0909211038l2d450033p173fa17e3e5c5da1@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux Raid Study <linuxraid.study@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-lvm@redhat.com
+To: NeilBrown <neilb@suse.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>, Maciej Sosnowski <maciej.sosnowski@intel.com>
 List-Id: linux-raid.ids
 
-On Mon, Sep 21, 2009 at 8:38 PM, Linux Raid Study
-<linuxraid.study@gmail.com> wrote:
-> Can I use LVM2 with kernel 2.6.27?
->
-> Thanks everyone!
+Hi Neil,
 
-Can you be more specific?! If it's just in general, then yes. If you
-want to use with RAID, then also yes.
+Looks like Linus has not pulled your md tree yet.  So, please pull the
+async_tx.git/next tree again to get a few incremental updates.
+Specifically Andrew corrected my thinking regarding warnings from older
+compilers, and there are a few missing dma_unmap calls in the raid6
+recovery code.
 
->> On Mon, Sep 21, 2009 at 7:33 AM, Mike Snitzer <snitzer@gmail.com> wr=
-ote:
->> On Thu, Sep 17, 2009 at 8:37 AM, Michal Soltys <soltys@ziu.info> wro=
-te:
->>> Linux Raid Study wrote:
->>>>
->>>> Hello:
->>>>
->>>> Has someone experimented with LVM and Raid5 together (on say, 2.6.=
-27)?
->>>> Is there any performance drop if LVM/Raid5 are combined vs Raid5 a=
-lone?
->>>>
->>>> Thanks for your inputs!
->>>
->>> Few things to consider when setting up LVM on MD raid:
->>>
->>> - readahead set on lvm device
->>>
->>> It defaults to 256 on any LVM device, while MD will set it accordin=
-gly to
->>> the amount of disks present in the raid. If you do tests on a files=
-ystem,
->>> you may see significant differences due to that. YMMV depending on =
-the type
->>> of used benchmark(s).
->>>
->>> - filesystem awareness of underlying raid
->>>
->>> For example, xfs created on top of raid, will generally get the par=
-ameters
->>> right (stripe unit, stripe width), but if it's xfs on lvm on raid, =
-then it
->>> won't - you will have to provide them manually.
->>>
->>> - alignment between LVM chunks and MD chunks
->>>
->>> Make sure that extent area used for actual logical volumes start at=
- the
->>> boundary of stripe unit - you can adjust the LVM's metadata size du=
-ring
->>> pvcreate (by default it's 192KiB, so with non-default stripe unit i=
-t may
->>> cause issues, although I vaguely recall posts that current LVM is M=
-D aware
->>> during initialization). Of course LVM must itself start at the boun=
-dary for
->>> that to make any sense (and it doesn't have to be the case - for ex=
-ample if
->>> you use partitionable MD).
->>
->> All of the above have been resolved in recent LVM2 userspace (2.02.5=
-1
->> being the most recent release with all these addressed). =C2=A0The l=
-ast
->> issue you mention (partitionable MD alignment offset) is also resolv=
-ed
->> when a recent LVM2 is coupled with Linux 2.6.31 (which provides IO
->> Topology support).
->>
->> Mike
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
+Thanks,
+Dan
+
+---
+
+The following changes since commit 1b6df6930994d5d027375b07ac9da63644eb5758:
+  Dan Williams (1):
+        raid6test: fix stack overflow
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/async_tx.git next
+
+Andrew Morton (1):
+      drivers/dma/ioat/dma_v2.c: fix warnings
+
+Dan Williams (2):
+      ioat3: fix uninitialized var warnings
+      async_tx/raid6: add missing dma_unmap calls to the async fail case
+
+ crypto/async_tx/async_raid6_recov.c |   13 +++++++++++++
+ drivers/dma/ioat/dma_v2.c           |    5 +++--
+ drivers/dma/ioat/dma_v3.c           |   15 +++++++++------
+ 3 files changed, 25 insertions(+), 8 deletions(-)
+
+commit f477f5b3316f39c841aa121a219b82b3a56e7da7
+Author: Andrew Morton <akpm@linux-foundation.org>
+Date:   Mon Sep 21 09:17:58 2009 -0700
+
+    drivers/dma/ioat/dma_v2.c: fix warnings
+    
+    drivers/dma/ioat/dma_v2.c: In function 'ioat2_dma_prep_memcpy_lock':
+    drivers/dma/ioat/dma_v2.c:680: warning: 'hw' may be used uninitialized in this function
+    drivers/dma/ioat/dma_v2.c:681: warning: 'desc' may be used uninitialized in this function
+    
+    Cc: Maciej Sosnowski <maciej.sosnowski@intel.com>
+    Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+    Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+
+diff --git a/drivers/dma/ioat/dma_v2.c b/drivers/dma/ioat/dma_v2.c
+index 8fd0b59..96ffab7 100644
+--- a/drivers/dma/ioat/dma_v2.c
++++ b/drivers/dma/ioat/dma_v2.c
+@@ -692,7 +692,8 @@ ioat2_dma_prep_memcpy_lock(struct dma_chan *c, dma_addr_t dma_dest,
+ 		/* pass */;
+ 	else
+ 		return NULL;
+-	for (i = 0; i < num_descs; i++) {
++	i = 0;
++	do {
+ 		size_t copy = min_t(size_t, len, 1 << ioat->xfercap_log);
+ 
+ 		desc = ioat2_get_ring_ent(ioat, idx + i);
+@@ -707,7 +708,7 @@ ioat2_dma_prep_memcpy_lock(struct dma_chan *c, dma_addr_t dma_dest,
+ 		dst += copy;
+ 		src += copy;
+ 		dump_desc_dbg(ioat, desc);
+-	}
++	} while (++i < num_descs);
+ 
+ 	desc->txd.flags = flags;
+ 	desc->len = total_len;
+
+commit cdef57dbb618608bfffda2fc32c8d0a4012a1d3a
+Author: Dan Williams <dan.j.williams@intel.com>
+Date:   Mon Sep 21 09:22:29 2009 -0700
+
+    ioat3: fix uninitialized var warnings
+    
+    drivers/dma/ioat/dma_v3.c: In function 'ioat3_prep_memset_lock':
+    drivers/dma/ioat/dma_v3.c:439: warning: 'fill' may be used uninitialized in this function
+    drivers/dma/ioat/dma_v3.c:437: warning: 'desc' may be used uninitialized in this function
+    drivers/dma/ioat/dma_v3.c: In function '__ioat3_prep_xor_lock':
+    drivers/dma/ioat/dma_v3.c:489: warning: 'xor' may be used uninitialized in this function
+    drivers/dma/ioat/dma_v3.c:486: warning: 'desc' may be used uninitialized in this function
+    drivers/dma/ioat/dma_v3.c: In function '__ioat3_prep_pq_lock':
+    drivers/dma/ioat/dma_v3.c:631: warning: 'pq' may be used uninitialized in this function
+    drivers/dma/ioat/dma_v3.c:628: warning: 'desc' may be used uninitialized in this function
+    
+    gcc-4.0, unlike gcc-4.3, does not see that these variables are
+    initialized before use.  Convert the descriptor loops to do-while make
+    this initialization apparent.
+    
+    Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+
+diff --git a/drivers/dma/ioat/dma_v3.c b/drivers/dma/ioat/dma_v3.c
+index 3686ddd..35d1e33 100644
+--- a/drivers/dma/ioat/dma_v3.c
++++ b/drivers/dma/ioat/dma_v3.c
+@@ -448,7 +448,8 @@ ioat3_prep_memset_lock(struct dma_chan *c, dma_addr_t dest, int value,
+ 		/* pass */;
+ 	else
+ 		return NULL;
+-	for (i = 0; i < num_descs; i++) {
++	i = 0;
++	do {
+ 		size_t xfer_size = min_t(size_t, len, 1 << ioat->xfercap_log);
+ 
+ 		desc = ioat2_get_ring_ent(ioat, idx + i);
+@@ -463,7 +464,7 @@ ioat3_prep_memset_lock(struct dma_chan *c, dma_addr_t dest, int value,
+ 		len -= xfer_size;
+ 		dest += xfer_size;
+ 		dump_desc_dbg(ioat, desc);
+-	}
++	} while (++i < num_descs);
+ 
+ 	desc->txd.flags = flags;
+ 	desc->len = total_len;
+@@ -518,7 +519,8 @@ __ioat3_prep_xor_lock(struct dma_chan *c, enum sum_check_flags *result,
+ 		/* pass */;
+ 	else
+ 		return NULL;
+-	for (i = 0; i < num_descs; i += 1 + with_ext) {
++	i = 0;
++	do {
+ 		struct ioat_raw_descriptor *descs[2];
+ 		size_t xfer_size = min_t(size_t, len, 1 << ioat->xfercap_log);
+ 		int s;
+@@ -546,7 +548,7 @@ __ioat3_prep_xor_lock(struct dma_chan *c, enum sum_check_flags *result,
+ 		len -= xfer_size;
+ 		offset += xfer_size;
+ 		dump_desc_dbg(ioat, desc);
+-	}
++	} while ((i += 1 + with_ext) < num_descs);
+ 
+ 	/* last xor descriptor carries the unmap parameters and fence bit */
+ 	desc->txd.flags = flags;
+@@ -664,7 +666,8 @@ __ioat3_prep_pq_lock(struct dma_chan *c, enum sum_check_flags *result,
+ 		/* pass */;
+ 	else
+ 		return NULL;
+-	for (i = 0; i < num_descs; i += 1 + with_ext) {
++	i = 0;
++	do {
+ 		struct ioat_raw_descriptor *descs[2];
+ 		size_t xfer_size = min_t(size_t, len, 1 << ioat->xfercap_log);
+ 
+@@ -703,7 +706,7 @@ __ioat3_prep_pq_lock(struct dma_chan *c, enum sum_check_flags *result,
+ 
+ 		len -= xfer_size;
+ 		offset += xfer_size;
+-	}
++	} while ((i += 1 + with_ext) < num_descs);
+ 
+ 	/* last pq descriptor carries the unmap parameters and fence bit */
+ 	desc->txd.flags = flags;
+
+commit 1f6672d44c1ae7408b43c06170ec34eb0a0e9b9f
+Author: Dan Williams <dan.j.williams@intel.com>
+Date:   Mon Sep 21 10:47:40 2009 -0700
+
+    async_tx/raid6: add missing dma_unmap calls to the async fail case
+    
+    If we are unable to offload async_mult() or async_sum_product(), then
+    unmap the buffers before falling through to the synchronous path.
+    
+    Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+
+diff --git a/crypto/async_tx/async_raid6_recov.c b/crypto/async_tx/async_raid6_recov.c
+index 822a42d..6d73dde 100644
+--- a/crypto/async_tx/async_raid6_recov.c
++++ b/crypto/async_tx/async_raid6_recov.c
+@@ -55,6 +55,13 @@ async_sum_product(struct page *dest, struct page **srcs, unsigned char *coef,
+ 			async_tx_submit(chan, tx, submit);
+ 			return tx;
+ 		}
++
++		/* could not get a descriptor, unmap and fall through to
++		 * the synchronous path
++		 */
++		dma_unmap_page(dev, dma_dest[1], len, DMA_BIDIRECTIONAL);
++		dma_unmap_page(dev, dma_src[0], len, DMA_TO_DEVICE);
++		dma_unmap_page(dev, dma_src[1], len, DMA_TO_DEVICE);
+ 	}
+ 
+ 	/* run the operation synchronously */
+@@ -101,6 +108,12 @@ async_mult(struct page *dest, struct page *src, u8 coef, size_t len,
+ 			async_tx_submit(chan, tx, submit);
+ 			return tx;
+ 		}
++
++		/* could not get a descriptor, unmap and fall through to
++		 * the synchronous path
++		 */
++		dma_unmap_page(dev, dma_dest[1], len, DMA_BIDIRECTIONAL);
++		dma_unmap_page(dev, dma_src[0], len, DMA_TO_DEVICE);
+ 	}
+ 
+ 	/* no channel available, or failed to allocate a descriptor, so
 
 
-
---=20
-       Majed B.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
