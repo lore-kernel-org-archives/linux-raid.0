@@ -1,87 +1,57 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: RAID 5 array recovery - two drives errors in external enclosure
-Date: Mon, 21 Sep 2009 10:05:23 +0300
-Message-ID: <70ed7c3e0909210005t6530dbf7k7f1d14059dcd012e@mail.gmail.com>
-References: <2267211f0909171342g6ebf68a2y393daa587e59c714@mail.gmail.com>
-	<2267211f0909180912p745e4ea0idb5659cb54a6adce@mail.gmail.com>
-	<6b696870909180923m35f29fa2l857b6f6402eb20be@mail.gmail.com>
-	<2267211f0909181041o29d6f5eft1e260696c6ab9c57@mail.gmail.com>
-	<6b696870909181317x777e3c5dsdcf0e7709f9c4979@mail.gmail.com>
-	<2267211f0909181630r33fcdbe5hb0d158b9bf12924b@mail.gmail.com>
-	<70ed7c3e0909181637g35b31926ref7e4a16beaab73c@mail.gmail.com>
-	<1f0f1a960909181817s6ad0a3f3l386a478603e9fde8@mail.gmail.com>
-	<AFD5FB84146A49B186DAB822C95DE16D@m5> <2267211f0909202140m54039f77rce262283eb4e371@mail.gmail.com>
+From: Mike Snitzer <snitzer@gmail.com>
+Subject: Re: LVM and Raid5
+Date: Mon, 21 Sep 2009 10:33:49 -0400
+Message-ID: <170fa0d20909210733p2e3e797cvb60af2e9bd153fda@mail.gmail.com>
+References: <f5d1f90a0909160122j32569fb8g9e2a212532ea8604@mail.gmail.com>
+	 <4AB22DA3.2090901@ziu.info>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2267211f0909202140m54039f77rce262283eb4e371@mail.gmail.com>
+In-Reply-To: <4AB22DA3.2090901@ziu.info>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tim Bostrom <tbostrom@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Michal Soltys <soltys@ziu.info>
+Cc: Linux Raid Study <linuxraid.study@gmail.com>, linux-raid@vger.kernel.org, linux-lvm@redhat.com
 List-Id: linux-raid.ids
 
-> I received the error : mdadm: superblock on /dev/sdc1 doesn't match
-> others - assembly aborted.
+On Thu, Sep 17, 2009 at 8:37 AM, Michal Soltys <soltys@ziu.info> wrote:
+> Linux Raid Study wrote:
+>>
+>> Hello:
+>>
+>> Has someone experimented with LVM and Raid5 together (on say, 2.6.27)?
+>> Is there any performance drop if LVM/Raid5 are combined vs Raid5 alone?
+>>
+>> Thanks for your inputs!
+>
+> Few things to consider when setting up LVM on MD raid:
+>
+> - readahead set on lvm device
+>
+> It defaults to 256 on any LVM device, while MD will set it accordingly to
+> the amount of disks present in the raid. If you do tests on a filesystem,
+> you may see significant differences due to that. YMMV depending on the type
+> of used benchmark(s).
+>
+> - filesystem awareness of underlying raid
+>
+> For example, xfs created on top of raid, will generally get the parameters
+> right (stripe unit, stripe width), but if it's xfs on lvm on raid, then it
+> won't - you will have to provide them manually.
+>
+> - alignment between LVM chunks and MD chunks
+>
+> Make sure that extent area used for actual logical volumes start at the
+> boundary of stripe unit - you can adjust the LVM's metadata size during
+> pvcreate (by default it's 192KiB, so with non-default stripe unit it may
+> cause issues, although I vaguely recall posts that current LVM is MD aware
+> during initialization). Of course LVM must itself start at the boundary for
+> that to make any sense (and it doesn't have to be the case - for example if
+> you use partitionable MD).
 
-I got that when using an older version of mdadm (2.6.7.1). According
-to Neil, it's been fixed already so try using the latest version (3.0)
-and do this:
-mdadm -Af /dev/md0 /dev/sdf1 /dev/sdc1 /dev/sdb1 /dev/sdd1
+All of the above have been resolved in recent LVM2 userspace (2.02.51
+being the most recent release with all these addressed).  The last
+issue you mention (partitionable MD alignment offset) is also resolved
+when a recent LVM2 is coupled with Linux 2.6.31 (which provides IO
+Topology support).
 
-(No need to specify a missing one).
-
-I avoided creating another array. No matter what the situation is, it
-would be the last thing I'd ever do, because I want to keep the
-metadata as intact as possible to get the most info I can out of it to
-fix the situation.
-And my motherboard keeps changing names like crazy, so if I create a
-new array, I may not be able to find the original disks' order again
-(not easily).
-
-On Mon, Sep 21, 2009 at 7:40 AM, Tim Bostrom <tbostrom@gmail.com> wrote=
-:
-> Well, thank god I copied everything off the array this weekend, but s=
-trange:
->
-> I had gotten the array up finally with the correct order and missing =
-drive:
->
-> mdadm -C /dev/md0 -l 5 -n 5 -c 256 /dev/sdf1 /dev/sdc1 /dev/sdb1
-> /dev/sdd1 missing
->
-> ------------
-> After copying everything off, I power-cycled my server and tried to
-> bring the array back up again using:
->
-> mdadm -A /dev/md0 /dev/sdf1 /dev/sdc1 /dev/sdb1 /dev/sdd1 missing
->
-> I received the error : mdadm: superblock on /dev/sdc1 doesn't match
-> others - assembly aborted.
->
-> This is strange since I had this seemingly working and was able to
-> copy all the data offline this weekend.
-> Drives haven't changed order - I haven't unplugged anything or change=
-d
-> any cords.
->
-> Another issue of the command that worked before on the array:
-> mdadm -C /dev/md0 -l 5 -n 5 -c 256 /dev/sdf1 /dev/sdc1 /dev/sdb1
-> /dev/sdd1 missing
->
-> yields my old problem of not being able to mount.
-> EXT3-fs: md0: couldn't mount because of unsupported optional features
-> (3fd18e00).
-> mount: wrong fs type, bad option, bad superblock on /dev/md0,
-> =C2=A0 =C2=A0 =C2=A0 missing codepage or helper program, or other err=
-or
-> =C2=A0 =C2=A0 =C2=A0 In some cases useful info is found in syslog - t=
-ry
-> =C2=A0 =C2=A0 =C2=A0 dmesg | tail =C2=A0or so
---=20
-       Majed B.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Mike
