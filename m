@@ -1,56 +1,65 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Raid 5 Issue, cannot recognize EXT3 File system.
-Date: Mon, 21 Sep 2009 16:56:21 +0100
-Message-ID: <20090921155621.GA29813@cthulhu.home.robinhill.me.uk>
-References: <70ed7c3e0909171509k45d08dd6lbba9e15a710c3a43@mail.gmail.com>
- <200909211132543.SM05052@trainer>
+From: "Sunpyo Hong" <sunpyo.hong@amac.com>
+Subject: RE: Raid 5 Issue, cannot recognize EXT3 File system.
+Date: Mon, 21 Sep 2009 12:14:42 -0400
+Message-ID: <200909211214960.SM04344@trainer>
+References: <20090921155621.GA29813@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="T4sUOijqQbZv57TR"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200909211132543.SM05052@trainer>
+In-Reply-To: <20090921155621.GA29813@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Robin Hill' <robin@robinhill.me.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I am stopping and starting the array. I couldn't mount in both instances.
+The before is the initial assembly array that I force assembled through
+mdadm -Af. This assembled the raid, but couldn't see an ext3 file system.
 
---T4sUOijqQbZv57TR
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The after is when I recreated the array. Again I still could not mount.
+Again I stopped and started the array.
+
+Sunpyo Hong
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Robin Hill
+Sent: Monday, September 21, 2009 11:56 AM
+To: linux-raid@vger.kernel.org
+Subject: Re: Raid 5 Issue, cannot recognize EXT3 File system.
 
 On Mon Sep 21, 2009 at 11:32:17AM -0400, Sunpyo Hong wrote:
 
 > Here's some more info:
->=20
+> 
 > Before
 > root@ubuntu:/home/ubuntu# cat /proc/mdstat
-> Personalities : [raid1] [raid6] [raid5] [raid4]=20
+> Personalities : [raid1] [raid6] [raid5] [raid4] 
 > md2 : active raid5 sdb4[2] sdc4[1] sdd4[0]
 >       5856150144 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
->      =20
+>       
 > md0 : active raid1 sdd1[0] sdb1[2] sdc1[1]
 >       208768 blocks [4/3] [UUU_]
->=20
+> 
 What exactly is this "before"?  Is this the state of the array when you
 first connected (before trying anything else)?  If so, then this should
 be the correct device order and chunk size.
 
 Here md2 has the same device order as md0:
-    0 =3D> sdd
-    1 =3D> sdc
-    2 =3D> sdb
+    0 => sdd
+    1 => sdc
+    2 => sdb
 
 > Now.
 > root@ubuntu:/home/ubuntu# cat /proc/mdstat
-> Personalities : [raid1] [raid6] [raid5] [raid4]=20
+> Personalities : [raid1] [raid6] [raid5] [raid4] 
 > md2 : active raid5 sdd4[2] sdb4[1] sdc4[0]
 >       5856150144 blocks level 5, 64k chunk, algorithm 2 [4/3] [UUU_]
->      =20
+>       
 > md0 : active raid1 sdd1[0] sdb1[2] sdc1[1]
 >       208768 blocks [4/3] [UUU_]
->=20
+> 
 And here it has a different order.  If the array mounted fine in the
 "Before" state but doesn't now, then I'd say you need to recreate the
 array in the correct order.
@@ -91,7 +100,7 @@ array in the correct order.
 > [59527.884970] VFS: Can't find ext3 filesystem on dev md2.
 > [60189.928644] VFS: Can't find ext3 filesystem on dev md2.
 > [60649.834143] VFS: Can't find ext4 filesystem on dev md2.
->=20
+> 
 And this output appears to show it assembling the array in two different
 orders (both the "before" and "now" order), and failing to mount it in
 either.  Is this from a single boot or is this as you're stopping &
@@ -99,22 +108,9 @@ recreating the array?
 
 Cheers,
     Robin
---=20
-     ___       =20
+-- 
+     ___        
     ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
    / / )      | Little Jim says ....                            |
   // !!       |      "He fallen in de water !!"                 |
 
---T4sUOijqQbZv57TR
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEARECAAYFAkq3oiQACgkQShxCyD40xBInvwCg2Dq9bu5rmlMUpJQZjSTeO1F0
-upUAoKVaB5nZ9Lyky66O2ksY/FPjM0Kl
-=a0qE
------END PGP SIGNATURE-----
-
---T4sUOijqQbZv57TR--
