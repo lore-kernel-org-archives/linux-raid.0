@@ -1,76 +1,73 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] barrier support for other md/raid levels
-Date: Mon, 21 Sep 2009 08:57:05 +1000
-Message-ID: <19126.45889.852513.240712@notabene.brown>
-References: <19123.9980.940255.937839@notabene.brown>
-	<4AB372BA.6020101@redhat.com>
-	<4D87015385157D4285D56CA6101072FF26C2CCB1@exchange07.valvesoftware.com>
-	<4AB3D148.3060607@redhat.com>
-	<87f94c370909181138g197be2fegd4032778ca6d3351@mail.gmail.com>
-	<4AB3D4C8.1080602@redhat.com>
-	<70ed7c3e0909181318v879ab30h5ffdf8e0b57799b4@mail.gmail.com>
-	<b7b14cbb0909201448m37947934r2812ef89146b5b01@mail.gmail.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: External enclosure - USB : How are the drives presented for software RAID?
+Date: Sun, 20 Sep 2009 19:04:19 -0500
+Message-ID: <20090921000440406.WSNE17198@cdptpa-omta04.mail.rr.com>
+References: <2267211f0909171728n55cdb621l9948c54e01fc8ccc@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Clinton Lee Taylor on Sunday September 20
+In-Reply-To: <2267211f0909171728n55cdb621l9948c54e01fc8ccc@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Clinton Lee Taylor <clintonlee.taylor@gmail.com>
-Cc: "Majed B." <majedb@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sunday September 20, clintonlee.taylor@gmail.com wrote:
-> Greetings ...
+
+
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Tim Bostrom
+> Sent: Thursday, September 17, 2009 7:28 PM
+> To: linux-raid
+> Subject: External enclosure - USB : How are the drives presented for
+> software RAID?
 > 
-> 2009/9/18 Majed B. <majedb@gmail.com>:
-> > For what it's worth, I use XFS on one of my arrays, and whenever
-> > mounting it, I get this error:
-> >
-> > [ 2212.567725] Filesystem "dm-0": Disabling barriers, trial barrier write failed
-> >
-> > So I guess you could use XFS to run your tests.
->  I saw this meesage today, and remember both this thread and that on
-> my CentOS 5.4, which I have moved a RAID5/ext4 filesystem from a
-> Fedora 10 ...
+> I currently have a AMS Venus T5 external enclosure which is an eSATA
+> enclosure with Sil4726.  It came with Sil3132 for host controller.   I
+> use it for software RAID5 on Linux for storing documents, music, junk,
+> etc.  I noticed that when I boot my server, the first drive only shows
+> up in the BIOS.  Meaning, there needs to be driver support in order to
+> see all the drives and use RAID.
+
+	Generally speaking, this is untrue.  I have several systems which do
+not see all the drives in the BIOS but are recognized by the Linux drivers
+and are employed in RAID arrays.  It's true you would not be able to boot
+from an array using such drives, but it doesn't prevent them from being used
+in an array.
+
+> It got me thinking about using an external enclosure with USB as the
+> access method.  My question is - does anyone have any experience with
+> multi-drive enclosures with USB?  And how are the drives presented to
+> the PC?  Would each drive be seen without any driver?
+
+	I don't have any experience with such systems, but I expect the
+presentation would be implementation dependent.  That said, I think most
+manufacturers of such systems would probably present the array as a single
+drive.  Personally, I would shy away from such systems.
+
+> Reason I ask is:  I'm in the process of building a ESXi whitebox and
+> the 3132 SATA card isn't supported in ESXi.  So basically, I can't use
+> the 3132.  I couldn't find any inexpensive eSATA controllers that
+> support port multipliers.
+
+Do you mean in general or specifically supported by ESXi?  I don't know much
+about ESXi or its requirements, but inexpensive PM compatible eSATA
+controllers are not difficult to find.  I've used a number which are
+supported under Linux kernel 2.6.26
+
+> So I was thinking that USB storage support
+> would be the least common denominator and could possibly use an
+> external enclosure with USB.  I don't need a lot of throughput - I
+> literally use it for lite storage.  I use it on a 100Mb network
+> anyways so the 480Mbps USB2 would be more than OK.
 > 
->  I'm getting these reports in my message log ...
-> 
-> Sep 19 14:59:52 zeus kernel: JBD: barrier-based sync failed on md5 -
-> disabling barriers
-> Sep 19 15:06:12 zeus kernel: EXT4-fs: barriers enabled
-> 
->  Would this help with testing?
+> Thoughts?
 
-Yes.
-There are a number of questions that broad testing testing could help
-answer.
- - is the performance impact of this barrier support inline with the
-   performance impact of enabling barriers on a single device?
- - are there any unexpected interaction - e.g. does the array ever 
-   appear to lock up, either indefinitely or for an extended period of
-   time due to usage of barriers?
- - does this barrier support result in a correct ordering of requests
-   to media?  i.e. is it actually doing what I mean it to do.
+	Again, I don't know about any specific requirements of ESXi, but
+have you looked at any SiI 3124 based controllers?  PC Pitstop has a 4 port
+eSATA card for $89.  I've purchased Chinese clones locally (but both stores
+have websites and ship anywhere) for $45 - $65.  A quick search in Google
+Shopping for "siI3124 card" turned up a number of controllers ranging from
+$38 to $74.
 
-The first two can be tested by regular use of any barrier-enabled
-file-system on top of an md array with these patches applied.
-The third really requires much more elaborate tests involving randomly
-powering off the system and then checking the filesystem for the sort
-of inconsistencies that barriers aim to prevent.
-
-So yes, running ext4 (or XFS or ext3 with barriers enabled) on an md
-array with barrier support added would help in testing the first two.
-
-I have rebased the relevant patches against 2.6.31 to make it
-easier to test them in a clean environment - testing a current
-2.6.32-git would be too likely to result in unrelated problems.
-
-So pull from
-   git://neil.brown.name/md barriers
-to get v2.6.31 plus md barrier support, or download and apply
-http://neil.brown.name/git?p=md;a=commitdiff_plain;h=fdc57f371ba0e3c8ce1ac9c0c4586829141531f3
-http://neil.brown.name/git?p=md;a=commitdiff_plain;h=3467e61067ccd529e4b27b860a2d6cb29ea80766
-
-Thanks,
-NeilBrown
