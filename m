@@ -1,9 +1,9 @@
-From: "Majed B." <majedb@gmail.com>
+From: Ryan Wagoner <rswagoner@gmail.com>
 Subject: Re: Full use of varying drive sizes?
-Date: Tue, 22 Sep 2009 18:47:43 +0300
-Message-ID: <70ed7c3e0909220847x6bddc9bdsc56deef31acb19f@mail.gmail.com>
+Date: Tue, 22 Sep 2009 11:48:26 -0400
+Message-ID: <7d86ddb90909220848x3f4a952bx461f909c9d6be563@mail.gmail.com>
 References: <70ed7c3e0909220607y692e15a2s64aac9bd729422ef@mail.gmail.com>
-	<580026.57085.qm@web51303.mail.re2.yahoo.com>
+	 <580026.57085.qm@web51303.mail.re2.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
@@ -11,21 +11,19 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <580026.57085.qm@web51303.mail.re2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jon@ehardcastle.com
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, "Majed B." <majedb@gmail.com>
 List-Id: linux-raid.ids
 
-md checks its part only, as far as I know. It makes sense since it
-would be checking the integrity of the array's disks/partitions.
+It is only going to check the part of the drive used for that array.
+So on your 1TB drive with a 500GB partition allocated to the array
+only the 500GB part will be checked. Mdadm doesn't know about the rest
+of the drive and even if it did it is not like it can compare that
+space against anything.
 
-If you want the disks to undergo full check up, I'd suggest you run
-smartd and run both short self tests and offline tests. Offline tests
-take a very long time because they do thorough tests.
+Ryan
 
-Make sure you setup smartd to email you on reports/problems so that
-you can find bad sectors as soon as they happen and fix them asap.
-
-On Tue, Sep 22, 2009 at 6:38 PM, Jon Hardcastle <jd_hardcastle@yahoo.co=
-m> wrote:
+On Tue, Sep 22, 2009 at 11:38 AM, Jon Hardcastle
+<jd_hardcastle@yahoo.com> wrote:
 > Some good suggestions here, thanks guys.
 >
 > Do I >DID< imagine some built in support for making use of this space=
@@ -170,12 +168,13 @@ tml
 >
 >
 >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
 >
-
-
-
---=20
-       Majed B.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
