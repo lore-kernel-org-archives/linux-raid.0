@@ -1,63 +1,161 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: Raid 5 Issue, cannot recognize EXT3 File system.
-Date: Tue, 22 Sep 2009 18:23:54 +0300
-Message-ID: <70ed7c3e0909220823v40badc3fu4c11e8712028535b@mail.gmail.com>
-References: <20090921155621.GA29813@cthulhu.home.robinhill.me.uk>
-	<200909221115737.SM02380@trainer>
+From: Jon Hardcastle <jd_hardcastle@yahoo.com>
+Subject: Re: Full use of varying drive sizes?
+Date: Tue, 22 Sep 2009 08:38:39 -0700 (PDT)
+Message-ID: <580026.57085.qm@web51303.mail.re2.yahoo.com>
+References: <70ed7c3e0909220607y692e15a2s64aac9bd729422ef@mail.gmail.com>
+Reply-To: Jon@eHardcastle.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200909221115737.SM02380@trainer>
+In-Reply-To: <70ed7c3e0909220607y692e15a2s64aac9bd729422ef@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sunpyo Hong <sunpyo.hong@amac.com>
-Cc: Robin Hill <robin@robinhill.me.uk>, linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>, "Majed B." <majedb@gmail.com>
 List-Id: linux-raid.ids
 
-When the array is properly assembled, "sudo lvscan" should show any
-logical volumes. Maybe even without the array assembled.
+Some good suggestions here, thanks guys.
 
-If nothing shows up, then you don't have an LV configured.
+Do I >DID< imagine some built in support for making use of this space?
 
-On Tue, Sep 22, 2009 at 6:15 PM, Sunpyo Hong <sunpyo.hong@amac.com> wro=
-te:
->> I am stopping and starting the array. I couldn't mount in both insta=
-nces.
->> The before is the initial assembly array that I force assembled thro=
-ugh
->> mdadm -Af. This assembled the raid, but couldn't see an ext3 file sy=
-stem.
->
->>I haven't followed all of this thread, so maybe I missed something,
->>but have you considered the possibility that there is an LVM config
->>on the md array, and that the ext3 filesystem is inside a logical
->>volume?
->
->>NeilBrown
->
-> Hi Neil, I already checked with western digital and its support team.=
- What
-> they've told me is that the Raid is an EXT3 and is not LVM config on =
-the HD,
-> however knowing WD they might just say that so I'd fork over the cash=
- to get
-> my HD recovered for thousands of dollars from them. Is there a way I =
-can
-> check if it's LVM config-ed? Thanks!
->
->
+As a side note. when i do a repair or check on my array.. does it check=
+ the WHOLE DRIVE.. or just the part that is being used? I.e. in my case=
+=2E. I have a 1TB drive but only an array multiple of 500GB.. i'd like =
+to think it is checking the whole whack as it may have to take over som=
+e day...
+
+-----------------------
+N: Jon Hardcastle
+E: Jon@eHardcastle.com
+'Do not worry about tomorrow, for tomorrow will bring worries of its ow=
+n.'
+-----------------------
+
+
+--- On Tue, 22/9/09, Majed B. <majedb@gmail.com> wrote:
+
+> From: Majed B. <majedb@gmail.com>
+> Subject: Re: Full use of varying drive sizes?
+> To: "Linux RAID" <linux-raid@vger.kernel.org>
+> Date: Tuesday, 22 September, 2009, 2:07 PM
+> When I first put up a storage box, it
+> was built out of 4x 500GB disks,
+> later on, I expanded to 1TB disks.
+>=20
+> What I did was partition the 1TB disks into 2x 500GB
+> partitions, then
+> create 2 RAID arrays: Each array out of partitions:
+> md0: sda1, sdb1, sdc1, ...etc.
+> md1: sda2, sdb2, sdc2, ...etc.
+>=20
+> All of those below LVM.
+>=20
+> This worked for a while, but when more 1TB disks started
+> making way
+> into the array, performance dropped because the disk had to
+> read from
+> 2 partitions on the same disk, and even worse: When a disk
+> fail, both
+> arrays were affected, and things only got nastier and worse
+> with time.
+>=20
+> I would not recommend that you create arrays of partitions
+> that rely
+> on each other.
+>=20
+> I do find the JBOD -> Mirror approach suggested earlier
+> to be convenient though.
+>=20
+> On Tue, Sep 22, 2009 at 3:58 PM, John Robinson
+> <john.robinson@anonymous.org.uk>
+> wrote:
+> > On 22/09/2009 12:52, Kristleifur Da=C4=91ason wrote:
+> >>
+> >> On Tue, Sep 22, 2009 at 11:24 AM, Jon Hardcastle
+> >> <jd_hardcastle@yahoo.com>
+> wrote:
+> >>>
+> >>> Hey guys,
+> >>>
+> >>> I have an array made of many drive sizes
+> ranging from 500GB to 1TB and I
+> >>> appreciate that the array can only be a
+> multiple of the smallest - I use the
+> >>> differing sizes as i just buy the best value
+> drive at the time and hope that
+> >>> as i phase out the old drives I can '--grow'
+> the array. That is all fine and
+> >>> dandy.
+> >>>
+> >>> But could someone tell me, did I dream that
+> there might one day be
+> >>> support to allow you to actually use that
+> unused space in the array? Because
+> >>> that would be awesome! (if a little hairy re:
+> spare drives - have to be the
+> >>> size of the largest drive in the array
+> atleast..?) I have 3x500GB 2x750GB
+> >>> 1x1TB so I have 1TB of completely unused
+> space!
+> >>
+> >> Here's a thought:
+> >> Imaginary case: Say you have a 500, a 1000 and a
+> 1500 GB drive. You
+> >> could JBOD the 500 and the 1000 together and
+> mirror that against the
+> >> 1500GB.
+> >>
+> >> Disclaimer:
+> >> I don't know if it makes any sense to do this. I
+> haven't seen this
+> >> method mentioned before, IIRC. It may be too
+> esoteric to get any
+> >> press, or it may be simply stupid.
+> >
+> > Sure you can do that. In Jon's case, a RAID-5 across
+> all 6 discs using the
+> > first 500GB, leaving 2 x 250GB and 1x 500GB free. The
+> 2 x 250GB could be
+> > JBOD'ed together and mirrored against the 500GB,
+> giving another 500GB of
+> > usable storage. The two md arrays can in turn be
+> JBOD'ed or perhaps better
+> > LVM'ed together.
+> >
+> > Another approach would be to have another RAID-5
+> across the 3 larger drives,
+> > again providing an additional 500GB of usable storage,
+> this time leaving 1 x
+> > 250GB wasted, but available if another 1TB drive was
+> added. I think this may
+> > be the approach Netgear's X-RAID 2 takes to using
+> mixed-size discs:
+> > http://www.readynas.com/?p=3D656
+> >
+> > Cheers,
+> >
+> > John.
+> > --
+> > To unsubscribe from this list: send the line
+> "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.=
+html
+> >
+>=20
+>=20
+>=20
+> --=20
+> =C2=A0 =C2=A0 =C2=A0=C2=A0=C2=A0Majed B.
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+> More majordomo info at=C2=A0 http://vger.kernel.org/majordomo-info.ht=
 ml
->
+>=20
 
 
-
---=20
-       Majed B.
+     =20
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
