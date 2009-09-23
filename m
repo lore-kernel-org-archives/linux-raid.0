@@ -1,67 +1,88 @@
 From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Raid 5 Issue, cannot recognize EXT3 File system.
-Date: Wed, 23 Sep 2009 16:14:36 +0100
-Message-ID: <20090923151436.GB9409@cthulhu.home.robinhill.me.uk>
-References: <70ed7c3e0909221714n1ad1ef80oedf329f17f7dad1c@mail.gmail.com>
- <200909230956588.SM01420@trainer>
+Subject: Re: Remote NAS
+Date: Wed, 23 Sep 2009 16:29:27 +0100
+Message-ID: <20090923152927.GC9409@cthulhu.home.robinhill.me.uk>
+References: <20090923075710.GA9409@cthulhu.home.robinhill.me.uk>
+ <9510.91067.qm@web38801.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="qlTNgmc+xy1dBmNv"
+	protocol="application/pgp-signature"; boundary="Clx92ZfkiYIKRjnr"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200909230956588.SM01420@trainer>
+In-Reply-To: <9510.91067.qm@web38801.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---qlTNgmc+xy1dBmNv
+--Clx92ZfkiYIKRjnr
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Wed Sep 23, 2009 at 09:56:52AM -0400, Sunpyo Hong wrote:
+On Wed Sep 23, 2009 at 07:52:59AM -0700, adfas asd wrote:
 
-> I actually know the physical order of each HD. I was able to pull them out
-> of the NAS in the order specified in the NAS. (Each HD enclosure was
-> labeled) In the actual sata ports, this is what the hds are in.
 >=20
-> SATA 0: HD1
-> SATA 1: HD2
-> SATA 2: HD3
-> SATA 3: HD4
-> SATA 4: CD-ROM
+> --- On Wed, 9/23/09, Robin Hill <robin@robinhill.me.uk> wrote:
+> > > Commercial flagging is writing like hell to the array,
+> > according to
+> > > iotop.  I don't know how else to assess what's
+> > going on.  The drives
+> > > are constantly hammering, and my Myth menu moves get
+> > very slow during
+> > > flagging, even with the latest 2TB disk drives and
+> > RAID10.
+> > >=20
+> > Are you transcoding as well?  The flagging itself
+> > shouldn't write, but
+> > if you're transcoding as well (to cut the commercials) then
+> > it will have
+> > to write.  And slow menu moves would suggest
+> > database/CPU holdups -
+> > there should be no need to read from the recordings disk
+> > (actually, it
+> > may have to check the file exists, but that's it).=20
+> > You didn't say
+> > whether your database is on the array or not (if you're
+> > booting from the
+> > array then I'd guess so though).
 >=20
-> I think that linux reads the sata ports like.. 0 =3D sda, 1=3Dsdb.. etc. =
-So I
-> assume that HD1 =3D /dev/sda (missing), HD2 =3D /dev/sdb, HD3 =3D /dev/sd=
-c, HD4 =3D
-> /dev/sdd so a create command should look like this:
+> Not transcoding at the same time, just the standard commercial
+> flagging.  The drive light is constantly on.  CPU is pretty busy
+> (3GHz) reaching 180% when simultaneously flagging 2 videos.
 >=20
-> #mdadm -Cv -level=3D5 --raid-disks=3D4 missing /dev/sdb4 /dev/sdc4 /dev/s=
-dd4
+> The database in in the / partition of the array, and the videos are in
+> the /home partition on it.  No idea why the array is so busy.
 >=20
-> This is exactly how I wrote the create command. Again I knew the physical
-> order of the Raid and put them together in that order. Tell me if I'm doi=
-ng
-> something wrong.=20
->=20
-> I'll check out testdisk as well..
->=20
-The array order detected by the initial --assemble is (unless you have
-incredibly strong reason to believe otherwise) most likely to be the
-correct order, in which case the correct create command should be:
-    mdadm -Cv -l 5 -n 4 /dev/sdd4 /dev/sdc4 /dev/sdb4 missing
+If they're both on the array, then that's the problem.  The partitioning
+doesn't make difference to the issue - the drive heads are having to
+seek frantically between reading the data file and writing the database.
 
-I'd suggest re-creating the array in this order (ignoring the irrelevant
-"physical" ordering) before attempting any other recovery.
-Incidentally, does the --create command report that any of the disks
-contain an ext2/3 filesystem? This is usually reported for one of the
-drives.
+>=20
+> > If your aim is to improve performance then I'd recommend
+> > using a single
+> > (relatively small) drive for the main OS and database, and
+> > then one (or
+> > more) drives for the recordings.
+>=20
+> My goal is to have two large drives in the HTPC and two out in the
+> garage NASed, in RAID10 so that if my HTPC is stolen or there's a fire
+> I'll still have my data.  But no one here seems to know how to specify
+> the HTPC drives as one side of the mirror and the garage drives as the
+> other. =20
+>=20
+You have two drives in RAID10 currently, and you want to go to four.
+Are you meaning to increase the capacity as well or do you just want the
+two remote drives to be a mirror of your current two drives?
 
-However, given that the initially-assembled array failed to mount, I
-suspect you're hosed, and that whatever the ShareSpace did in attempting
-to rebuild the array has actually broken it completely.
+> Needless to say I'd like performance to be good, but that's starting
+> to look hopeless.
+>=20
+I'd recommend getting two smaller drives, and having two separate
+mirrored pairs - the smaller array for the OS and database and the
+larger one for recording.  Keep one of each size within the HTPC and one
+of each in the garage.  You can also use the write-mostly option to make
+the kernel read from the local drives where possible.
 
 Cheers,
     Robin
@@ -71,16 +92,16 @@ Cheers,
    / / )      | Little Jim says ....                            |
   // !!       |      "He fallen in de water !!"                 |
 
---qlTNgmc+xy1dBmNv
+--Clx92ZfkiYIKRjnr
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.11 (GNU/Linux)
 
-iEYEARECAAYFAkq6O1sACgkQShxCyD40xBJK2wCeOlCnmemxlfBLC4zJFAGy+gEW
-auwAn3WkVQembBP+RnetXYf7+zb+BhMp
-=fH83
+iEYEARECAAYFAkq6PtYACgkQShxCyD40xBIqYQCg0FentV3J3Y+UOooLlRtDrI6f
+aswAn2sAHMBZbr1m+tle603mokVQmQy7
+=jbYI
 -----END PGP SIGNATURE-----
 
---qlTNgmc+xy1dBmNv--
+--Clx92ZfkiYIKRjnr--
