@@ -1,49 +1,44 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Full use of varying drive sizes?
-Date: Wed, 23 Sep 2009 09:20:32 +0100
-Message-ID: <4AB9DA50.5040007@anonymous.org.uk>
-References: <697034.10751.qm@web51302.mail.re2.yahoo.com> <73e903670909220452r2c4098c5w321f65c103b68a83@mail.gmail.com> 	<4AB8C9D9.6060406@anonymous.org.uk> <70ed7c3e0909220607y692e15a2s64aac9bd729422ef@mail.gmail.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: Re: Remote NAS
+Date: Wed, 23 Sep 2009 11:13:28 +0200
+Message-ID: <20090923091328.GA19193@rap.rap.dk>
+References: <20090922200912.GA28999@cthulhu.home.robinhill.me.uk> <151287.16979.qm@web38804.mail.mud.yahoo.com> <20090923075710.GA9409@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70ed7c3e0909220607y692e15a2s64aac9bd729422ef@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20090923075710.GA9409@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Majed B." <majedb@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 22/09/2009 14:07, Majed B. wrote:
-> When I first put up a storage box, it was built out of 4x 500GB disks,
-> later on, I expanded to 1TB disks.
+On Wed, Sep 23, 2009 at 08:57:10AM +0100, Robin Hill wrote:
+> On Tue Sep 22, 2009 at 02:56:08PM -0700, adfas asd wrote:
 > 
-> What I did was partition the 1TB disks into 2x 500GB partitions, then
-> create 2 RAID arrays: Each array out of partitions:
-> md0: sda1, sdb1, sdc1, ...etc.
-> md1: sda2, sdb2, sdc2, ...etc.
-> 
-> All of those below LVM.
-> 
-> This worked for a while, but when more 1TB disks started making way
-> into the array, performance dropped because the disk had to read from
-> 2 partitions on the same disk, and even worse: When a disk fail, both
-> arrays were affected, and things only got nastier and worse with time.
+> > Thanks Robin.
+> > 
+> > --- On Tue, 9/22/09, Robin Hill <robin@robinhill.me.uk> wrote:
+> > > The BIOS boots from a single drive, and won't boot from RAID10, so
+> > > presumably you already have a non-RAID (or RAID-1) boot partition.
+> > 
+> > I have my only two drives set up as RAID10offset2 (WD 2TB each), and
+> > it boots just fine for some reason.
+> > 
+> Yes, with a 2-drive RAID10o2 layout, one of the drives contains all
+> blocks in normal order, the other doesn't (see
+> http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10)
+> so if the one drive fails then your system will be non-bootable.  A
+> RAID10n2 or RAID1 (the layout's the same) would be a better choice.
 
-Sorry, I don't quite see what you mean. Sure, if half your drives are 
-500GB and half are 1TB, and you therefore have 2 arrays on the 1TB 
-drives, with the arrays as PVs for LVM, and one filesystem over the lot, 
-you're going to get twice as many read/write ops on the larger drives, 
-but you'd get that just concatenating the drives with JBOD. I wasn't 
-suggesting you let LVM stripe across the arrays, though - that would be 
-performance suicide.
+There is a setup described at 
 
-> I would not recommend that you create arrays of partitions that rely
-> on each other.
+http://linux-raid.osdl.org/index.php/Preventing_against_a_failing_disk
 
-Again I don't see what you mean by "rely on each other", they're just 
-PVs to LVM.
+You can substitute raid10,o2 for raid10,f2 for the root partitions etc.
 
-Cheers,
+Anyway, raid10,f2 should be faster than raid10,o2, for at least reads,
+while for writes it is about the same performance given that you employ
+a file system.
 
-John.
-
+Best regards
+keld
