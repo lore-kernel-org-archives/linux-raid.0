@@ -1,44 +1,91 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
-Subject: Re: Remote NAS
-Date: Wed, 23 Sep 2009 11:13:28 +0200
-Message-ID: <20090923091328.GA19193@rap.rap.dk>
-References: <20090922200912.GA28999@cthulhu.home.robinhill.me.uk> <151287.16979.qm@web38804.mail.mud.yahoo.com> <20090923075710.GA9409@cthulhu.home.robinhill.me.uk>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: Full use of varying drive sizes?
+Date: Wed, 23 Sep 2009 12:07:02 +0200
+Message-ID: <87ocp2x9dl.fsf@frosties.localdomain>
+References: <697034.10751.qm@web51302.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090923075710.GA9409@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <697034.10751.qm@web51302.mail.re2.yahoo.com> (Jon Hardcastle's
+	message of "Tue, 22 Sep 2009 04:24:23 -0700 (PDT)")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jon@eHardcastle.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Sep 23, 2009 at 08:57:10AM +0100, Robin Hill wrote:
-> On Tue Sep 22, 2009 at 02:56:08PM -0700, adfas asd wrote:
-> 
-> > Thanks Robin.
-> > 
-> > --- On Tue, 9/22/09, Robin Hill <robin@robinhill.me.uk> wrote:
-> > > The BIOS boots from a single drive, and won't boot from RAID10, so
-> > > presumably you already have a non-RAID (or RAID-1) boot partition.
-> > 
-> > I have my only two drives set up as RAID10offset2 (WD 2TB each), and
-> > it boots just fine for some reason.
-> > 
-> Yes, with a 2-drive RAID10o2 layout, one of the drives contains all
-> blocks in normal order, the other doesn't (see
-> http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10)
-> so if the one drive fails then your system will be non-bootable.  A
-> RAID10n2 or RAID1 (the layout's the same) would be a better choice.
+Jon Hardcastle <jd_hardcastle@yahoo.com> writes:
 
-There is a setup described at 
+> Hey guys,
+>
+> I have an array made of many drive sizes ranging from 500GB to 1TB and I appreciate that the array can only be a multiple of the smallest - I use the differing sizes as i just buy the best value drive at the time and hope that as i phase out the old drives I can '--grow' the array. That is all fine and dandy.
+>
+> But could someone tell me, did I dream that there might one day be support to allow you to actually use that unused space in the array? Because that would be awesome! (if a little hairy re: spare drives - have to be the size of the largest drive in the array atleast..?) I have 3x500GB 2x750GB 1x1TB so I have 1TB of completely unused space!
+>
+> Cheers.
+>
+> Jon H
 
-http://linux-raid.osdl.org/index.php/Preventing_against_a_failing_disk
+I face the same problem as I buy new disks whenever I need more space
+and have the money.
 
-You can substitute raid10,o2 for raid10,f2 for the root partitions etc.
+I found a rather simple way to organize disks of different sizes into
+a set of software raids that gives the maximum size. The reasoning for
+this algorithm are as follows:
 
-Anyway, raid10,f2 should be faster than raid10,o2, for at least reads,
-while for writes it is about the same performance given that you employ
-a file system.
+1) 2 partitions of a disk must never be in the same raid set
 
-Best regards
-keld
+2) as many disks as possible in each raid set to minimize the loss for
+parity
+
+3) the number of disks in each raid set should be equal to give
+uniform amount of redundancy (same saftey for all data). Worst (and
+usual) case will be a difference of 1 disk.
+
+
+So here is the algorithm:
+
+1) Draw a box as wide as the largest disk and open ended towards the
+   bottom.
+
+2) Draw in each disk in order of size one right to the other.
+   When you hit the right side of the box continue in the next line.
+
+3) Go through the box left to right and draw a vertical line every
+   time one disk ends and another starts.
+
+4) Each sub-box creted thus represents one raid using the disks drawn
+   into it in the respective sizes present in the box.
+
+In your case you have 6 Disks: A (1TB), BC (750G), DEF(500G)
+
++----------+-----+-----+
+|AAAAAAAAAA|AAAAA|AAAAA|
+|BBBBBBBBBB|BBBBB|CCCCC|
+|CCCCCCCCCC|DDDDD|DDDDD|
+|EEEEEEEEEE|FFFFF|FFFFF|
+|  md0     | md1 | md2 |
+
+For raid5 this would give you:
+
+md0: sda1, sdb1, sdc1, sde1 (500G)  -> 1500G
+md1: sda2, sdb2, sdd1, sdf1 (250G)  ->  750G
+md2: sda3, sdc2, sdd2, sdf2 (250G)  ->  750G
+                                       -----
+                                       3000G total
+
+As spare you would probably want to always use the largest disk as
+only then it is completly unused and can power down.
+
+Note that in your case the fit is perfect with all raids having 4
+disks. This is not always the case. Worst case there is a difference
+of 1 between raids though.
+
+
+
+As a side node: Resizing when you get new disks might become tricky
+and involve shuffeling around a lot of data. You might want to split
+md0 into 2 raids with 250G partitiosn each assuming future disks will
+continue to be multiples of 250G.
+
+MfG
+        Goswin
