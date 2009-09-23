@@ -1,55 +1,98 @@
-From: Gabriele Trombetti <gabriele.trombetti@itb.cnr.it>
-Subject: Re: md data-check causes soft lockup
-Date: Tue, 22 Sep 2009 21:35:09 +0200
-Message-ID: <4AB926ED.4010900@itb.cnr.it>
-References: <4AB7C11E.60801@howardsilvan.com>
- <70ed7c3e0909211154y3e4abcadyf76822e60127dfad@mail.gmail.com>
- <4AB8E2A6.2020800@howardsilvan.com>
- <70ed7c3e0909220748y2e151ebv7f232cf2b7c79617@mail.gmail.com>
- <4AB8E661.8080706@howardsilvan.com>
- <20090922151925.GA20382@cthulhu.home.robinhill.me.uk>
+From: "Majed B." <majedb@gmail.com>
+Subject: Re: Raid 5 Issue, cannot recognize EXT3 File system.
+Date: Wed, 23 Sep 2009 03:14:17 +0300
+Message-ID: <70ed7c3e0909221714n1ad1ef80oedf329f17f7dad1c@mail.gmail.com>
+References: <70ed7c3e0909220823v40badc3fu4c11e8712028535b@mail.gmail.com>
+	<200909221442804.SM02380@trainer>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <20090922151925.GA20382@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <200909221442804.SM02380@trainer>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Sunpyo Hong <sunpyo.hong@amac.com>
+Cc: Robin Hill <robin@robinhill.me.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Robin Hill wrote:
-> On Tue Sep 22, 2009 at 07:59:45AM -0700, Lee Howard wrote:
+If you are sure that you have created the array with the proper order
+of disks (They MUST be in the correct order! Your disks may have
+changed their names for some reason -- verify that they are in
+order!!) and that you have assembled them properly, I would suggest
+you run a tool called "testdisk"
+
+You may have a corrupt filesystem, and testdisk would try to fix it.
+Also, to make sure that you have assembled the array in the correct
+order, and if the filesystem can't be fixed if it's corrupt, use a
+file-recovery tool like foremost or magicrescue and see if they
+recover your data.
+
+On Tue, Sep 22, 2009 at 9:42 PM, Sunpyo Hong <sunpyo.hong@amac.com> wro=
+te:
+> Nothing showed up when I did =C2=A0"sudo lvscan". I'm pretty much stu=
+mped.
 >
->   
->> Majed B. wrote:
->>     
->>> I must have missed that part. It may not work for your case, but worth trying.
->>>
->>> Perhaps Neil Brown, or someone involved could shed some light on this.
->>>
->>> If I remember correctly, those soft lockups were harmless anyway.
->>>   
->>>       
->> Not harmless for production use.  Yes, data is not harmed, and yes, the 
->> problem state does recover when the data-check finishes, but during the 
->> data-check the system is virtually unresponsive and all other use of the 
->> system is stalled.
+> -----Original Message-----
+> From: Majed B. [mailto:majedb@gmail.com]
+> Sent: Tuesday, September 22, 2009 11:24 AM
+> To: Sunpyo Hong
+> Cc: Robin Hill; linux-raid@vger.kernel.org
+> Subject: Re: Raid 5 Issue, cannot recognize EXT3 File system.
+>
+> When the array is properly assembled, "sudo lvscan" should show any
+> logical volumes. Maybe even without the array assembled.
+>
+> If nothing shows up, then you don't have an LV configured.
+>
+> On Tue, Sep 22, 2009 at 6:15 PM, Sunpyo Hong <sunpyo.hong@amac.com> w=
+rote:
+>>> I am stopping and starting the array. I couldn't mount in both inst=
+ances.
+>>> The before is the initial assembly array that I force assembled thr=
+ough
+>>> mdadm -Af. This assembled the raid, but couldn't see an ext3 file s=
+ystem.
 >>
->>     
-> Are you sure this is caused by these soft lockups, and that you're not
-> just running with too high a /sys/block/mdX/md/sync_speed_max setting?
-> I've had issues with this on some servers, where the I/O demand for the
-> sync/check is causing the system to become totally unresponsive.
->   
+>>>I haven't followed all of this thread, so maybe I missed something,
+>>>but have you considered the possibility that there is an LVM config
+>>>on the md array, and that the ext3 filesystem is inside a logical
+>>>volume?
+>>
+>>>NeilBrown
+>>
+>> Hi Neil, I already checked with western digital and its support team=
+=2E What
+>> they've told me is that the Raid is an EXT3 and is not LVM config on=
+ the
+> HD,
+>> however knowing WD they might just say that so I'd fork over the cas=
+h to
+> get
+>> my HD recovered for thousands of dollars from them. Is there a way I=
+ can
+>> check if it's LVM config-ed? Thanks!
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.h=
+tml
+>>
+>
+>
+>
+> --
+> =C2=A0 =C2=A0 =C2=A0 Majed B.
+>
+>
 
-That's correct for me in the sense that lowering sync_speed_max solves
-the problem, see my post, however I'd call it a bug if a value of
-sync_speed_max too high starves the system forever. The resync is
-supposed to be less prioritarian than normal I/O disk operations, but it
-doesn't happen this way. Also note that lowering the value of
-stripe_cache_size also solves the problem: how would this fit into your
-reasoning?
 
-(BTW I have not checked the mentioned patch yet, I'm not sure I can do
-that in a short time because our servers are into production now)
 
+--=20
+       Majed B.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
