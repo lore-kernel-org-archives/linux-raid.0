@@ -1,44 +1,56 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Raid 5 Issue, cannot recognize EXT3 File system.
-Date: Wed, 23 Sep 2009 15:42:43 +0100
-Message-ID: <4ABA33E3.4050403@anonymous.org.uk>
-References: <200909230956588.SM01420@trainer>
+From: adfas asd <chimera_god@yahoo.com>
+Subject: Re: Remote NAS
+Date: Wed, 23 Sep 2009 07:52:59 -0700 (PDT)
+Message-ID: <9510.91067.qm@web38801.mail.mud.yahoo.com>
+References: <20090923075710.GA9409@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200909230956588.SM01420@trainer>
+In-Reply-To: <20090923075710.GA9409@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Sunpyo Hong <sunpyo.hong@amac.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 23/09/2009 14:56, Sunpyo Hong wrote:
-> I actually know the physical order of each HD. I was able to pull them out
-> of the NAS in the order specified in the NAS. (Each HD enclosure was
-> labeled) In the actual sata ports, this is what the hds are in.
-> 
-> SATA 0: HD1
-> SATA 1: HD2
-> SATA 2: HD3
-> SATA 3: HD4
-> SATA 4: CD-ROM
-> 
-> I think that linux reads the sata ports like.. 0 = sda, 1=sdb.. etc. So I
-> assume that HD1 = /dev/sda (missing), HD2 = /dev/sdb, HD3 = /dev/sdc, HD4 =
-> /dev/sdd so a create command should look like this:
-> 
-> #mdadm -Cv -level=5 --raid-disks=4 missing /dev/sdb4 /dev/sdc4 /dev/sdd4
-> 
-> This is exactly how I wrote the create command. Again I knew the physical
-> order of the Raid and put them together in that order. Tell me if I'm doing
-> something wrong. 
 
-If HD1 is really missing, and you've rebooted, then HD2 will now be sda, 
-HD3 sdb, HD4 sdc, and your command is
+--- On Wed, 9/23/09, Robin Hill <robin@robinhill.me.uk> wrote:
+> > Commercial flagging is writing like hell to the array,
+> according to
+> > iotop.  I don't know how else to assess what's
+> going on.  The drives
+> > are constantly hammering, and my Myth menu moves get
+> very slow during
+> > flagging, even with the latest 2TB disk drives and
+> RAID10.
+> > 
+> Are you transcoding as well?  The flagging itself
+> shouldn't write, but
+> if you're transcoding as well (to cut the commercials) then
+> it will have
+> to write.  And slow menu moves would suggest
+> database/CPU holdups -
+> there should be no need to read from the recordings disk
+> (actually, it
+> may have to check the file exists, but that's it). 
+> You didn't say
+> whether your database is on the array or not (if you're
+> booting from the
+> array then I'd guess so though).
 
-#mdadm -Cv -level=5 --raid-disks=4 missing /dev/sda4 /dev/sdb4 /dev/sdc4
+Not transcoding at the same time, just the standard commercial flagging.  The drive light is constantly on.  CPU is pretty busy (3GHz) reaching 180% when simultaneously flagging 2 videos.
 
-Cheers,
+The database in in the / partition of the array, and the videos are in the /home partition on it.  No idea why the array is so busy.
 
-John.
+
+> If your aim is to improve performance then I'd recommend
+> using a single
+> (relatively small) drive for the main OS and database, and
+> then one (or
+> more) drives for the recordings.
+
+My goal is to have two large drives in the HTPC and two out in the garage NASed, in RAID10 so that if my HTPC is stolen or there's a fire I'll still have my data.  But no one here seems to know how to specify the HTPC drives as one side of the mirror and the garage drives as the other.  
+
+Needless to say I'd like performance to be good, but that's starting to look hopeless.
+
+
+
+      
