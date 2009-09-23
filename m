@@ -1,121 +1,107 @@
-From: "Guy Watkins" <linux-raid@watkins-home.com>
-Subject: RE: md data-check causes soft lockup
-Date: Tue, 22 Sep 2009 21:05:56 -0400
-Message-ID: <59D0ECEC8AC946CD9FF2782A9C182060@m5>
-References: <4AB7C11E.60801@howardsilvan.com> <70ed7c3e0909211154y3e4abcadyf76822e60127dfad@mail.gmail.com> <4AB8E2A6.2020800@howardsilvan.com> <70ed7c3e0909220748y2e151ebv7f232cf2b7c79617@mail.gmail.com> <4AB8E661.8080706@howardsilvan.com> <20090922151925.GA20382@cthulhu.home.robinhill.me.uk> <4AB926ED.4010900@itb.cnr.it> <70ed7c3e0909221716o3e6d841fj59c6b003374c7a94@mail.gmail.com>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: Remote NAS
+Date: Wed, 23 Sep 2009 08:57:10 +0100
+Message-ID: <20090923075710.GA9409@cthulhu.home.robinhill.me.uk>
+References: <20090922200912.GA28999@cthulhu.home.robinhill.me.uk>
+ <151287.16979.qm@web38804.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="0F1p//8PRICkK4MW"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70ed7c3e0909221716o3e6d841fj59c6b003374c7a94@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <151287.16979.qm@web38804.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "'Majed B.'" <majedb@gmail.com>, 'Gabriele Trombetti' <gabriele.trombetti@itb.cnr.it>
-Cc: 'linux-raid' <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-But if the applications are locked out, they can't demand anything.  I =
-have
-seen the same on my Linux server, but only with the 2.6 kernel.  The sa=
-me
-hardware with a 2.4 kernel was fine.  I have not seen this myself for a=
-t
-least 1 year, I assumed it was fixed.
 
-When I was locked out my putty session would not respond.  I don't thin=
-k it
-timed out, but recovered when the rebuild/resync was done.
+--0F1p//8PRICkK4MW
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-} -----Original Message-----
-} From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-} owner@vger.kernel.org] On Behalf Of Majed B.
-} Sent: Tuesday, September 22, 2009 8:17 PM
-} To: Gabriele Trombetti
-} Cc: linux-raid
-} Subject: Re: md data-check causes soft lockup
-}=20
-} Why would you lower the max value? You should keep the min value as
-} low as possible and md would drop to that automatically if there are
-} applications demanding access to the array.
-}=20
-} On Tue, Sep 22, 2009 at 10:35 PM, Gabriele Trombetti
-} <gabriele.trombetti@itb.cnr.it> wrote:
-} > Robin Hill wrote:
-} >>
-} >> On Tue Sep 22, 2009 at 07:59:45AM -0700, Lee Howard wrote:
-} >>
-} >>
-} >>>
-} >>> Majed B. wrote:
-} >>>
-} >>>>
-} >>>> I must have missed that part. It may not work for your case, but
-} worth
-} >>>> trying.
-} >>>>
-} >>>> Perhaps Neil Brown, or someone involved could shed some light on
-} this.
-} >>>>
-} >>>> If I remember correctly, those soft lockups were harmless anyway=
-=2E
-} >>>>
-} >>>
-} >>> Not harmless for production use. =A0Yes, data is not harmed, and =
-yes,
-} the
-} >>> problem state does recover when the data-check finishes, but duri=
-ng
-} the
-} >>> data-check the system is virtually unresponsive and all other use=
- of
-} the
-} >>> system is stalled.
-} >>>
-} >>>
-} >>
-} >> Are you sure this is caused by these soft lockups, and that you're=
- not
-} >> just running with too high a /sys/block/mdX/md/sync_speed_max sett=
-ing?
-} >> I've had issues with this on some servers, where the I/O demand fo=
-r the
-} >> sync/check is causing the system to become totally unresponsive.
-} >>
-} >
-} > That's correct for me in the sense that lowering sync_speed_max sol=
-ves
-} > the problem, see my post, however I'd call it a bug if a value of
-} > sync_speed_max too high starves the system forever. The resync is
-} > supposed to be less prioritarian than normal I/O disk operations, b=
-ut it
-} > doesn't happen this way. Also note that lowering the value of
-} > stripe_cache_size also solves the problem: how would this fit into =
-your
-} > reasoning?
-} >
-} > (BTW I have not checked the mentioned patch yet, I'm not sure I can=
- do
-} > that in a short time because our servers are into production now)
-} >
-} > --
-} > To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
-} > the body of a message to majordomo@vger.kernel.org
-} > More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
-l
-} >
-}=20
-}=20
-}=20
-} --
-}        Majed B.
-} --
-} To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-} the body of a message to majordomo@vger.kernel.org
-} More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Tue Sep 22, 2009 at 02:56:08PM -0700, adfas asd wrote:
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Thanks Robin.
+>=20
+> --- On Tue, 9/22/09, Robin Hill <robin@robinhill.me.uk> wrote:
+> > The BIOS boots from a single drive, and won't boot from RAID10, so
+> > presumably you already have a non-RAID (or RAID-1) boot partition.
+>=20
+> I have my only two drives set up as RAID10offset2 (WD 2TB each), and
+> it boots just fine for some reason.
+>=20
+Yes, with a 2-drive RAID10o2 layout, one of the drives contains all
+blocks in normal order, the other doesn't (see
+http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10)
+so if the one drive fails then your system will be non-bootable.  A
+RAID10n2 or RAID1 (the layout's the same) would be a better choice.
+
+> > > > What if I use the mobo's e-SATA port to add 5 external
+> > > > drives locally. This would require a port multiplier. I
+> > > > presume it would not be bootable, since a port multiplier
+> > > > needs OS support? Or would something go in initrd.img?=20
+> > > > Or would I need an individual boot drive to get things up?
+> > > > =20
+> > Depends on exactly how the BIOS sees is - some seem to see a single
+> > drive off the multiplier, so can boot off that one, whereas others
+> > won't see anything.  The initrd question is immaterial, as
+> > this is only read after the BIOS has called the boot loader, but
+> > certainly you could load any necessary drivers at that point.
+>=20
+> It's an Asus P5N7A-VM mobo, and of course Asus doesn't know the answer
+> to this question.  I have in mind the Addonics port "software"
+> multiplier, which is a pure hardware multiplexer.  (AD5SARPM-E with
+> eSATA & Sii3726 chip)
+>=20
+> I guess the answer is to just buy and try it.  Reluctant to though,
+> owing to the expense.  I am surprised no one else has tried this.
+>=20
+I certainly haven't anyway.  Is there any reason you can't leave a
+couple of drives internal though?  You could definitely boot from those
+then.
+> =20
+> > I'm not sure offset is really noticeably faster than far for
+> > writes. Commercial flagging shouldn't be writing to the recordings
+> > drive though - it's just inserting database metadata.  If your
+> > MythTV database is on the same array/drives then you'll certainly
+> > get a big gain from moving it to a separate disk.
+>=20
+> Commercial flagging is writing like hell to the array, according to
+> iotop.  I don't know how else to assess what's going on.  The drives
+> are constantly hammering, and my Myth menu moves get very slow during
+> flagging, even with the latest 2TB disk drives and RAID10.
+>=20
+Are you transcoding as well?  The flagging itself shouldn't write, but
+if you're transcoding as well (to cut the commercials) then it will have
+to write.  And slow menu moves would suggest database/CPU holdups -
+there should be no need to read from the recordings disk (actually, it
+may have to check the file exists, but that's it).  You didn't say
+whether your database is on the array or not (if you're booting from the
+array then I'd guess so though).
+
+If your aim is to improve performance then I'd recommend using a single
+(relatively small) drive for the main OS and database, and then one (or
+more) drives for the recordings.
+
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
+
+--0F1p//8PRICkK4MW
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+
+iEYEARECAAYFAkq51NUACgkQShxCyD40xBLZ1wCgrMTd+Z5KWbzHFuHuorTL+uZD
+tZUAoKNt/rAn0Ou5OqninU2x8m3iIzHk
+=S/G9
+-----END PGP SIGNATURE-----
+
+--0F1p//8PRICkK4MW--
