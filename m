@@ -1,76 +1,258 @@
-From: adfas asd <chimera_god@yahoo.com>
-Subject: Re: Remote NAS
-Date: Wed, 23 Sep 2009 16:08:05 -0700 (PDT)
-Message-ID: <719154.37165.qm@web38805.mail.mud.yahoo.com>
-References: <20090923200257.GA19027@cthulhu.home.robinhill.me.uk>
+From: Neil Brown <neilb@suse.de>
+Subject: PULL REQUEST - md updates for 2.6.32
+Date: Thu, 24 Sep 2009 14:29:04 +1000
+Message-ID: <19130.62864.703262.698625@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090923200257.GA19027@cthulhu.home.robinhill.me.uk>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753000AbZIXE2G@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
---- On Wed, 9/23/09, Robin Hill <robin@robinhill.me.uk> wrote:
-> Obviously, but in the case of a RAID1 mirror, then this is
-> immaterial
-> (as either side of the mirror is identical), and in the
-> RAID10 case it
-> is controlled by the position of the drives in the array
-> (which is
-> controlled by the order they're given in the create
-> statement).
-> 
-> > When I set up my NAS it's likely those remote drives
-> will be sdc and
-> > sdd (HTPC drives would be sda and sdb), so the RAID10
-> create order
-> > wouldn't help.
-> > 
-> Of course the create order helps - it's the _only_ way to
-> control what
-> chunks of the data go on which drive.  If your HTPC
-> ends up with local
-> drives sda and sdb, and remote drives sdc and sdd, then
-> do:
-> 
->     mdadm -C /dev/md0 -l 10 -p n2 -n 4 /dev/sda
-> /dev/sdc /dev/sdb /dev/sdd
-> 
-> Then you'll end up with a RAID10 with all data held on both
-> the sda/sdb
-> and sdc/sdd pairs (so either pair can drop out of the array
-> without
-> losing any data).  The data layout will be:
-> 
->     sda  sdb  sdc  sdd
->    
-> A1   A2   A1   A2
->    
-> A3   A4   A3   A4
->     ...
-> 
-> The equivalent happens for f2 or o2 arrays - though they're
-> not strictly
-> mirrored in those cases (they contain the same data but
-> with a differing
-> layout).
-> 
-> As I say though, this setup will still result in poor
-> performance as you
-> have the database and recordings on the same drives. 
-> And to make them
-> bootable you'd want to partition the drives first and
-> create a separate
-> 4-way RAID1 mirror for /boot.
 
-YIKES, I'd better read this when I'm -not- drunk...
+Hi Linus, 
+ it seems you missed my earlier PULL request .. or maybe you foresaw
+ that it wasn't completed and waited for a couple of extra patches...
 
-I take away that my main performance problem is in not separating by drive, the Myth database from the affected video.  Given these listserv transactions, I guess I have to resort to a 2.5" drive with the root filesystem and the Myth database, and the space-divided array for video storage.  I guess I can't RAID10 the root drive with the garage, as it might not be bootable, and you probably can't boot to a NAS drive anyway.   But this doesn't stop me from backing up the root drive onto the array.
+ In any case, please pull from my md tree as below.
+ Most of the changes are for support for offloading the RAID6
+ calculations into dedicated hardware, hence the crypto/async_tx
+ and drives/dma changes.
 
-It seems that I -can- control the role of the drives using your command above.  This is good news.
+ There are also a few unrelated and fairly minor improves to other
+ parts of md.
 
-I will reexamine this tomorrow... 
+Thanks,
+NeilBrown
 
 
-      
+
+The following changes since commit 7fa07729e439a6184bd824746d06a49cca553f15:
+  Linus Torvalds (1):
+        Merge branch 'perf-fixes-for-linus' of git://git.kernel.org/.../tip/linux-2.6-tip
+
+are available in the git repository at:
+
+  git://neil.brown.name/md/ for-linus
+
+Andrew Morton (1):
+      drivers/dma/ioat/dma_v2.c: fix warnings
+
+Atsushi Nemoto (1):
+      dmaengine: Move all map_sg/unmap_sg for slave channel to its client
+
+Dan Williams (83):
+      Merge branch 'dmaengine' into async-tx-raid6
+      async_tx: rename zero_sum to val
+      async_tx: kill ASYNC_TX_DEP_ACK flag
+      async_tx: structify submission arguments, add scribble
+      async_xor: permit callers to pass in a 'dma/page scribble' region
+      md/raid6: release spare page at ->stop()
+      ioat: move to drivers/dma/ioat/
+      md/raid6: move the spare page to a percpu allocation
+      md/raid5,6: add percpu scribble region for buffer lists
+      async_tx: add sum check flags
+      async_tx: kill needless module_{init|exit}
+      async_tx: remove walk of tx->parent chain in dma_wait_for_async_tx
+      async_tx: add support for asynchronous GF multiplication
+      async_tx: add support for asynchronous RAID6 recovery operations
+      dmatest: add pq support
+      async_tx: raid6 recovery self test
+      iop-adma: cleanup iop_adma_run_tx_complete_actions
+      iop-adma: fix lockdep false positive
+      iop-adma: P+Q support for iop13xx adma engines
+      iop-adma: P+Q self test
+      md/raid5: factor out mark_uptodate from ops_complete_compute5
+      md/raid6: asynchronous raid6 operations
+      md/raid6: asynchronous handle_parity_check6
+      md/raid456: distribute raid processing over multiple cores
+      Merge commit 'v2.6.31-rc1' into dmaengine
+      ioat: move definitions to dma.h
+      ioat: convert ioat_probe to pcim/devm
+      ioat: cleanup some long deref chains and 80 column collisions
+      ioat: kill function prototype ifdef guards
+      ioat: split ioat_dma_probe into core/version-specific routines
+      ioat: fix type mismatch for ->dmacount
+      ioat: define descriptor control bit-field
+      ioat1: move descriptor allocation from submit to prep
+      ioat: fix self test interrupts
+      ioat: prepare the code for ioat[12]_dma_chan split
+      ioat2,3: convert to a true ring buffer
+      ioat1: kill unused unmap parameters
+      ioat: add some dev_dbg() calls
+      ioat: cleanup completion status reads
+      ioat: ignore reserved bits for chancnt and xfercap
+      ioat: preserve chanctrl bits when re-arming interrupts
+      ioat: ___devinit annotate the initialization paths
+      ioat1: trim ioat_dma_desc_sw
+      ioat: switch watchdog and reset handler from workqueue to timer
+      ioat2,3: dynamically resize descriptor ring
+      net_dma: poll for a descriptor after allocation failure
+      Merge branch 'md-raid6-accel' into ioat3.2
+      dmaengine: add fence support
+      dmaengine, async_tx: add a "no channel switch" allocator
+      dmaengine: cleanup unused transaction types
+      dmaengine, async_tx: support alignment checks
+      ioat2+: add fence support
+      ioat3: hardware version 3.2 register / descriptor definitions
+      ioat3: split ioat3 support to its own file, add memset
+      ioat: add 'ioat' sysfs attributes
+      ioat3: enable dca for completion writes
+      ioat3: xor support
+      ioat3: xor self test
+      ioat3: pq support
+      ioat3: support xor via pq descriptors
+      ioat3: interrupt descriptor support
+      ioat3: segregate raid engines
+      Merge branch 'ioat' into dmaengine
+      dw_dmac: implement a private tx_list
+      fsldma: implement a private tx_list
+      iop-adma: implement a private tx_list
+      ioat: implement a private tx_list
+      mv_xor: implement a private tx_list
+      at_hdmac: implement a private tx_list
+      txx9dmac: implement a private tx_list
+      dmaengine: kill tx_list
+      ioat2,3: cacheline align software descriptor allocations
+      Merge branch 'iop-raid6' into async-tx-next
+      Merge branch 'dmaengine' into async-tx-next
+      Merge commit 'md/for-linus' into async-tx-next
+      async_tx: remove HIGHMEM64G restriction
+      ioat: driver version 4.0
+      md/raid6: eliminate BUG_ON with side effect
+      md/raid6: cleanup ops_run_compute6_2
+      ioat2: clarify ring size limits
+      raid6test: fix stack overflow
+      ioat3: fix uninitialized var warnings
+      async_tx/raid6: add missing dma_unmap calls to the async fail case
+
+Dmitry Monakhov (1):
+      md: raid-1/10: fix RW bits manipulation
+
+Ira Snyder (2):
+      fsldma: split apart external pause and request count features
+      fsldma: Add DMA_SLAVE support
+
+Maciej Sosnowski (1):
+      dca: registering requesters in multiple dca domains
+
+NeilBrown (6):
+      md: remove sparse waring "symbol xxx shadows an earlier one"
+      md: remove sparse warnings about lock context.
+      md: Improve name of threads created by md_register_thread
+      md: report device as congested when suspended
+      md: remove unnecessary memset from multipath.
+      Merge branch 'next' of git://git.kernel.org/.../djbw/async_tx into for-linus
+
+Nobuhiro Iwamatsu (1):
+      dmaengine: sh: Add Support SuperH DMA Engine driver
+
+Roland Dreier (2):
+      Add MODULE_DEVICE_TABLE() so ioatdma module is autoloaded
+      I/OAT: Convert to PCI_VDEVICE()
+
+Stephen Hemminger (1):
+      dca: module load should not be an error message
+
+Tom Picard (1):
+      ioat3: ioat3.2 pci ids for Jasper Forest
+
+Yuri Tikhonov (5):
+      md/raid5,6: common schedule_reconstruction for raid5/6
+      md/raid6: asynchronous handle_stripe_fill6
+      md/raid6: asynchronous handle_stripe_dirtying6
+      md/raid6: asynchronous handle_stripe6
+      md/raid6: remove synchronous infrastructure
+
+ Documentation/crypto/async-tx-api.txt              |   75 +-
+ arch/arm/include/asm/hardware/iop3xx-adma.h        |   81 +-
+ arch/arm/include/asm/hardware/iop_adma.h           |    3 +
+ arch/arm/mach-iop13xx/include/mach/adma.h          |  119 ++-
+ arch/arm/mach-iop13xx/setup.c                      |   17 +-
+ arch/arm/plat-iop/adma.c                           |    4 +-
+ arch/powerpc/include/asm/fsldma.h                  |  136 ++
+ arch/sh/drivers/dma/Kconfig                        |   12 +-
+ arch/sh/drivers/dma/Makefile                       |    3 +-
+ arch/sh/include/asm/dma-sh.h                       |   13 +
+ crypto/async_tx/Kconfig                            |    9 +
+ crypto/async_tx/Makefile                           |    3 +
+ crypto/async_tx/async_memcpy.c                     |   44 +-
+ crypto/async_tx/async_memset.c                     |   43 +-
+ crypto/async_tx/async_pq.c                         |  395 +++++
+ crypto/async_tx/async_raid6_recov.c                |  468 ++++++
+ crypto/async_tx/async_tx.c                         |   87 +-
+ crypto/async_tx/async_xor.c                        |  207 ++--
+ crypto/async_tx/raid6test.c                        |  240 +++
+ drivers/dca/dca-core.c                             |  124 ++-
+ drivers/dma/Kconfig                                |   14 +-
+ drivers/dma/Makefile                               |    4 +-
+ drivers/dma/at_hdmac.c                             |   60 +-
+ drivers/dma/at_hdmac_regs.h                        |    1 +
+ drivers/dma/dmaengine.c                            |   94 +-
+ drivers/dma/dmatest.c                              |   40 +
+ drivers/dma/dw_dmac.c                              |   50 +-
+ drivers/dma/dw_dmac_regs.h                         |    1 +
+ drivers/dma/fsldma.c                               |  288 +++-
+ drivers/dma/fsldma.h                               |    4 +-
+ drivers/dma/ioat.c                                 |  202 ---
+ drivers/dma/ioat/Makefile                          |    2 +
+ drivers/dma/{ioat_dca.c => ioat/dca.c}             |   13 +-
+ drivers/dma/ioat/dma.c                             | 1238 ++++++++++++++
+ drivers/dma/ioat/dma.h                             |  337 ++++
+ drivers/dma/ioat/dma_v2.c                          |  871 ++++++++++
+ drivers/dma/ioat/dma_v2.h                          |  190 +++
+ drivers/dma/ioat/dma_v3.c                          | 1223 ++++++++++++++
+ drivers/dma/ioat/hw.h                              |  215 +++
+ drivers/dma/ioat/pci.c                             |  210 +++
+ .../dma/{ioatdma_registers.h => ioat/registers.h}  |   54 +-
+ drivers/dma/ioat_dma.c                             | 1741 --------------------
+ drivers/dma/ioatdma.h                              |  165 --
+ drivers/dma/ioatdma_hw.h                           |   70 -
+ drivers/dma/iop-adma.c                             |  491 +++++-
+ drivers/dma/iovlock.c                              |   10 +
+ drivers/dma/mv_xor.c                               |    7 +-
+ drivers/dma/mv_xor.h                               |    4 +-
+ drivers/dma/shdma.c                                |  786 +++++++++
+ drivers/dma/shdma.h                                |   64 +
+ drivers/dma/txx9dmac.c                             |   24 +-
+ drivers/dma/txx9dmac.h                             |    1 +
+ drivers/idle/i7300_idle.c                          |   20 +-
+ drivers/md/Kconfig                                 |   26 +
+ drivers/md/bitmap.c                                |    5 +-
+ drivers/md/linear.c                                |    3 +
+ drivers/md/md.c                                    |   25 +-
+ drivers/md/md.h                                    |    1 +
+ drivers/md/multipath.c                             |    6 +-
+ drivers/md/raid0.c                                 |    8 +-
+ drivers/md/raid1.c                                 |   15 +-
+ drivers/md/raid10.c                                |   12 +-
+ drivers/md/raid5.c                                 | 1493 +++++++++++-------
+ drivers/md/raid5.h                                 |   28 +-
+ drivers/mmc/host/atmel-mci.c                       |    9 +-
+ include/linux/async_tx.h                           |  129 ++-
+ include/linux/dca.h                                |   11 +-
+ include/linux/dmaengine.h                          |  179 ++-
+ include/linux/pci_ids.h                            |   10 +
+ 69 files changed, 9199 insertions(+), 3338 deletions(-)
+ create mode 100644 arch/powerpc/include/asm/fsldma.h
+ create mode 100644 crypto/async_tx/async_pq.c
+ create mode 100644 crypto/async_tx/async_raid6_recov.c
+ create mode 100644 crypto/async_tx/raid6test.c
+ delete mode 100644 drivers/dma/ioat.c
+ create mode 100644 drivers/dma/ioat/Makefile
+ rename drivers/dma/{ioat_dca.c => ioat/dca.c} (98%)
+ create mode 100644 drivers/dma/ioat/dma.c
+ create mode 100644 drivers/dma/ioat/dma.h
+ create mode 100644 drivers/dma/ioat/dma_v2.c
+ create mode 100644 drivers/dma/ioat/dma_v2.h
+ create mode 100644 drivers/dma/ioat/dma_v3.c
+ create mode 100644 drivers/dma/ioat/hw.h
+ create mode 100644 drivers/dma/ioat/pci.c
+ rename drivers/dma/{ioatdma_registers.h => ioat/registers.h} (84%)
+ delete mode 100644 drivers/dma/ioat_dma.c
+ delete mode 100644 drivers/dma/ioatdma.h
+ delete mode 100644 drivers/dma/ioatdma_hw.h
+ create mode 100644 drivers/dma/shdma.c
+ create mode 100644 drivers/dma/shdma.h
