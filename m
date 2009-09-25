@@ -1,67 +1,67 @@
-From: mark delfman <markdelfman@googlemail.com>
-Subject: RAID0 fail monitoring
-Date: Fri, 25 Sep 2009 15:45:50 +0100
-Message-ID: <66781b10909250745o3c72fe53h6855bfd06682a002@mail.gmail.com>
+From: "Sunpyo Hong" <sunpyo.hong@amac.com>
+Subject: RE: Raid 5 Issue, cannot recognize EXT3 File system.
+Date: Fri, 25 Sep 2009 12:35:27 -0400
+Message-ID: <200909251235135.SM04440@trainer>
+References: <70ed7c3e0909221714n1ad1ef80oedf329f17f7dad1c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <70ed7c3e0909221714n1ad1ef80oedf329f17f7dad1c@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "'Majed B.'" <majedb@gmail.com>
+Cc: 'Robin Hill' <robin@robinhill.me.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi All...
+Needed some help with confirming something before I tried it. After
+analyzing my /dev/md2 with Testdisk, I was able to see parts of the old
+filesystem on my NAS! Very exciting seeing as I wasn't able to see anything
+for the past month or so. However I don't see any of the important files in
+any of the directory. It also seems to skip from 00% to 99% in seconds. This
+can't be possible since my HD size is 5.5TBs. When trying "Deeper Search" an
+error occurs and my raid fails. However when I recreate the raid, it's in a
+clean-degraded condition. (Which it originally was since one of the disks is
+missing.) I also get this saying:
 
-MD today is out performing many mid-level and above hardware raids and
-as such becoming more of a widely used tool.  So although I can see
-that this topic or =91hiccup=92 has been discussed a few times, I cant
-find a resolution or decision.
+"Partition sector doesn't have the endmark 0xAA55"
 
-Basically, there seems no way to tell a RAID0 error... I Know that it
-may seem obvious (your /dev/xxx dies), but as I say MD nowadays is
-presented to systems in all sorts of ways (i.e. MD > LVM > XFS > IET
-etc).  so the user may not even familiar with the MD or isolated...
-MDadm monitors all other raids well allowing messages to be emailed
-etc,.
+After reading around I heard that you're able to write a standard MBR and
+that would fix this problem. Only thing is I'm worried that by writing a
+standard MBR I would be deleting data.
 
-I think it would be good if MDadm could report  a R0 in any basic way..=
-=2E.
+Another error I get when running testdisk is I get a warning about the
+geometry:
 
-I am new to linux, so thought that I best define what I am doing /
-seeing in case I am just being stupid....
+"Warning: the current number of heads per cylinder is 2 but the correct
+value may be 32.
+You can use the Geometry menu to change this value. It's something to try if
+-Some partition are not found by testdisk"
 
-(mdadm ver 3.0)
+I heard changing your geometry is something that can potentially make your
+HDD unreadable, so I'm saving that for last. But any more clarifications on
+this error or anything else would be appreciated. I think I'm close, but
+this has been a long and arduous journey... Thanks.
 
-If drive fails on RAID0 then mdadm reports the array with faulty drive
-as =93Active=94
-
-1)	When I monitor the md device
-
-Mdadm =96monitor /dev/mdx
-
-I get the message =93DeviceDisappeared on /dev/mdx Wrong-Level=94
-
-I seem to get this message even when md device is in good state and
-not just when I have failed disk
-
-The previous thread that I read seemed to imply that this message is
-only on failed device status and on reading manual that is what I was
-expecting.
-
-Have  I misunderstood the manual?
+-Sunpyo
 
 
-If above is not the case then is there any effective way to monitor
-for RAID0 failure. I understand that md cannot do anything about
-failed disk, but it would be useful to know of md device failure
-before an application IO request.
+-----Original Message-----
+From: Majed B. [mailto:majedb@gmail.com] 
+Sent: Tuesday, September 22, 2009 8:14 PM
+To: Sunpyo Hong
+Cc: Robin Hill; linux-raid@vger.kernel.org
+Subject: Re: Raid 5 Issue, cannot recognize EXT3 File system.
 
+If you are sure that you have created the array with the proper order
+of disks (They MUST be in the correct order! Your disks may have
+changed their names for some reason -- verify that they are in
+order!!) and that you have assembled them properly, I would suggest
+you run a tool called "testdisk"
 
-Although md can do nothing about RAID0 failure there are layers
-sitting on top that are constantly dependent on knowing status of md
-device
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You may have a corrupt filesystem, and testdisk would try to fix it.
+Also, to make sure that you have assembled the array in the correct
+order, and if the filesystem can't be fixed if it's corrupt, use a
+file-recovery tool like foremost or magicrescue and see if they
+recover your data.
+
