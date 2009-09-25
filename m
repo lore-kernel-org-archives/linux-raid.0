@@ -1,49 +1,31 @@
-From: Chris Webb <chris@arachsys.com>
-Subject: Re: RAID1 assembled broken array
-Date: Fri, 25 Sep 2009 11:42:19 +0100
-Message-ID: <20090925104219.GG26094@arachsys.com>
-References: <h8ophd$n8p$6@ger.gmane.org>
- <9F2F4760-DF0C-4416-89AC-C689177AD4ED@redhat.com>
- <65549e07fd6559855af68b60783213c3.squirrel@neil.brown.name>
- <20090917082528.GO5174@skl-net.de>
- <19132.31575.349988.442763@notabene.brown>
+From: kwick <kwick@shiftmail.org>
+Subject: Re: md data-check causes soft lockup
+Date: Fri, 25 Sep 2009 13:01:50 +0200
+Message-ID: <4ABCA31E.7070303@shiftmail.org>
+References: <4AB7C11E.60801@howardsilvan.com>
+ <19132.26898.341533.52076@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <19132.31575.349988.442763@notabene.brown>
+In-reply-to: <19132.26898.341533.52076@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Andre Noll <maan@systemlinux.org>, Doug Ledford <dledford@redhat.com>, Matthias Urlichs <matthias@urlichs.de>, linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil Brown <neilb@suse.de> writes:
-
-> On Thursday September 17, maan@systemlinux.org wrote:
+Neil Brown wrote:
+> On Monday September 21, faxguy@howardsilvan.com wrote:
+>> http://lkml.org/lkml/2009/8/6/387
+>>     
 >
-> > BTW: Why are new arrays still created with 0.90 metadata format by
-> > default?
-> 
-> Because I'm a chicken....
-> 
-> I guess it probably is time ... but to we make the default 1.0, which
-> is compatible with people's expectations, to 1.1 which is generally a
-> safer approach (you cannot mount a bare device by mistake).
+> Thanks for the report.
+>
+> This patch...
+Dear Neil,
 
-One problem with 1.x metadata formats is that you can't assemble them at
-boot time without building an initrd/initramfs containing userspace to put
-them together. An md=0,xxx kernel argument only appears to work for 0.90
-superblocks. (Would you accept a patch to fix this; it doesn't feel like it
-should be particularly hard?)
+as you can see I reported a similar problem for raid-6 in this thread.
+Your patch apparently covers raid-1. Is it because this other patch
+http://osdir.com/ml/linux-raid/2009-09/msg00371.html
+covers my case? it's all fixed then?
 
-Another issue with 1.1 and 1.2 metadata is that you can't make a mirror out
-of sd*, install a bootloader (e.g. extlinux) on the md, and then boot the
-corresponding system. That said, I guess it wouldn't be hard to make a
-little 'mbr' that understands the data offset in the md 1.2 container, so if
-I'm honest, it's just laziness that keeps me using 0.90 where it works out
-of the box without the need to hack any bootloader code or create untidy
-partitions just for booting.
-
-Best wishes,
-
-Chris.
+Thank you
