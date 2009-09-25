@@ -1,39 +1,41 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: SET_BITMAP_FILE assembling raid1
-Date: Fri, 25 Sep 2009 17:37:17 +1000
-Message-ID: <19132.29485.603731.446483@notabene.brown>
-References: <20090917160718.15831qsk0zd6k2e8@webmail.ualberta.ca>
-	<19123.11528.751595.835367@notabene.brown>
-	<20090918113544.11084l0ma4v10u0w@webmail.ualberta.ca>
+Subject: Re: RAID1 assembled broken array
+Date: Fri, 25 Sep 2009 18:07:44 +1000
+Message-ID: <19132.31312.353493.453529@notabene.brown>
+References: <h8ophd$n8p$6@ger.gmane.org>
+	<9F2F4760-DF0C-4416-89AC-C689177AD4ED@redhat.com>
+	<65549e07fd6559855af68b60783213c3.squirrel@neil.brown.name>
+	<1253076634.7071.5.camel@kiste>
+	<F52A8F4D-66B0-4F97-B2C9-6FF207817718@redhat.com>
+	<1253207377.9662.551.camel@kiste>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from aristizb@ualberta.ca on Friday September 18
+In-Reply-To: message from Matthias Urlichs on Thursday September 17
 Sender: linux-raid-owner@vger.kernel.org
-To: aristizb@ualberta.ca
-Cc: linux-raid@vger.kernel.org
+To: Matthias Urlichs <matthias@urlichs.de>
+Cc: Doug Ledford <dledford@redhat.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Friday September 18, aristizb@ualberta.ca wrote:
-> Hi Neil,
+On Thursday September 17, matthias@urlichs.de wrote:
+> On Thu, 2009-09-17 at 12:44 -0400, Doug Ledford wrote:
+> > >> 1.0 also protects from this problem.
+> > >
+> > > So what's the best way to update a 0.9 superblock to 1.0 format?
+> > >
+> > > mdadm --assemble --metadata=1.0 --update=summaries ... ?
+> > 
+> > I don't think you can.  You just have to create a new array with the  
+> > new superblock.
+> > 
+> Hmm. Looks like you're right.
 > 
-> That is exactly the message I get in the kernel logs.
-> 
-> I tried ten times to assemble the array (waiting 2 seconds in between)  
-> with no luck, but after 2-3 minutes it worked.
-> 
+> Consider this to be a feature request, then. If 1.0 is more reasonable
+> than 0.9, there should be a "safe" upgrade path.
 
-That is very strange.
-That error message implies that the file is open by some other
-program... maybe you have a file browser (Konqueror? nautilus?) open
-on /tmp and when the bitmap file changes it opens it to have a look
-inside to produce a thumbnail, and that stops md from being able to
-use it?  That seems very unlikely though...
+Yes, definitely.  There should be.
 
-Maybe try
-  lsof /tmp/md2003bm
-
-to see if anything is using the file.
+Now if only there were more hours in the day.... :-)
 
 NeilBrown
