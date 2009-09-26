@@ -1,45 +1,37 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: RAID1 assembled broken array
-Date: Sat, 26 Sep 2009 14:01:00 +0100
-Message-ID: <4ABE108C.9030606@anonymous.org.uk>
-References: <h8ophd$n8p$6@ger.gmane.org> <9F2F4760-DF0C-4416-89AC-C689177AD4ED@redhat.com> <65549e07fd6559855af68b60783213c3.squirrel@neil.brown.name> <20090917082528.GO5174@skl-net.de> <19132.31575.349988.442763@notabene.brown> <20090926095834.GP5174@skl-net.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] md: stop using do_sync_mapping_range
+Date: Sat, 26 Sep 2009 17:11:19 +0200
+Message-ID: <20090926151119.GC11623@lst.de>
+References: <20090923131822.GA12287@lst.de> <20090923134715.GA15256@shareable.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090926095834.GP5174@skl-net.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20090923134715.GA15256@shareable.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Jamie Lokier <jamie@shareable.org>
+Cc: Christoph Hellwig <hch@lst.de>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 26/09/2009 10:58, Andre Noll wrote:
-> On 18:12, Neil Brown wrote:
->>> BTW: Why are new arrays still created with 0.90 metadata format by
->>> default?
->> Because I'm a chicken....
->>
->> I guess it probably is time ... but to we make the default 1.0, which
->> is compatible with people's expectations, to 1.1 which is generally a
->> safer approach (you cannot mount a bare device by mistake).
+On Wed, Sep 23, 2009 at 02:47:15PM +0100, Jamie Lokier wrote:
+> Christoph Hellwig wrote:
+> > -		do_sync_mapping_range(file->f_mapping, 0, LLONG_MAX,
+> > -				      SYNC_FILE_RANGE_WAIT_BEFORE |
+> > -				      SYNC_FILE_RANGE_WRITE |
+> > -				      SYNC_FILE_RANGE_WAIT_AFTER);
+> > +		filemap_write_and_wait(file->f_mapping);
+> >
+> > It's a very awkward way to write out all data and wait for it, so just
+> > call filemap_write_and_wait.  I still can't figure what the point of
+> > all this is, so a comment would surely be helpful.
 > 
-> People will soon have to use 1.x anyway as drives are getting bigger
-> than 2T. I'd vote for making 1.1 or 1.2 metadata the default for the
-> reasons Doug pointed out. Failing to mount the bare device if there
-> is a partition table is IMHO more important than meeting (broken)
-> expectations.
+> The SYNC_FILE_RANGE_WAIT_BEFORE is to make sure that writes which were
+> started before the most recent dirtying are completed before
+> initiating a second write on the same pages to make sure the most
+> recently dirty data is written.
 > 
-> Maybe we should depricate kernel-level autodetection at the same time
-> so that using an initramfs becomes mandatory for setups with / on md.
+> Does filemap_write_and_wait() do that?
 
-It already is deprecated; afaik all the recent distros already use an 
-initramfs, even if they still use 0.90 metadata.
-
-I second making this a priority to get into the next round of distro 
-updates, for all the reasons given. As soon as metadata version upgrade 
-facilities go in to mdadm, 0.90 metadata can also be deprecated and 
-perhaps mdadm can issue warnings, or at least the kernel autoassembly 
-code can start issuing warnings (if it doesn't already).
-
-Cheers,
-
-John.
+Yes, for WB_SYNC_ALL syncs write_cache_pages or the fs-specific
+equivalent waits for pages marked writeback before starting starting
+the writeout.
