@@ -1,45 +1,54 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] md: stop using do_sync_mapping_range
-Date: Sat, 26 Sep 2009 17:13:54 +0200
-Message-ID: <20090926151354.GD11623@lst.de>
-References: <20090923131822.GA12287@lst.de> <19130.42676.5539.459956@notabene.brown>
+From: Clinton Lee Taylor <clintonlee.taylor@gmail.com>
+Subject: Re: RAID1 assembled broken array
+Date: Sat, 26 Sep 2009 21:21:44 +0200
+Message-ID: <b7b14cbb0909261221v10a78615j4c6ee60876151c40@mail.gmail.com>
+References: <h8ophd$n8p$6@ger.gmane.org>
+	 <9F2F4760-DF0C-4416-89AC-C689177AD4ED@redhat.com>
+	 <65549e07fd6559855af68b60783213c3.squirrel@neil.brown.name>
+	 <20090917082528.GO5174@skl-net.de>
+	 <19132.31575.349988.442763@notabene.brown>
+	 <20090926095834.GP5174@skl-net.de> <4ABE108C.9030606@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <19130.42676.5539.459956@notabene.brown>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4ABE108C.9030606@anonymous.org.uk>
+Sender: linux-raid-owner@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Sep 24, 2009 at 08:52:36AM +1000, Neil Brown wrote:
-> On Wednesday September 23, hch@lst.de wrote:
-> > It's a very awkward way to write out all data and wait for it, so just
-> > call filemap_write_and_wait.  I still can't figure what the point of
-> > all this is, so a comment would surely be helpful.
-> 
-> When md/bitmap accesses a file, it uses bmap to find addresses and then
-> submit_bh to do IO, so it completely by-passes the page cache.
-> So this code is present to ensure that the page cache has no dirty
-> pages for the file before we start using the file.
-> 
-> I don't recall exactly why I used do_sync_mapping_range.  I suspect
-> that I looked at what "sys_fsync" used (do_fsync?) and found that
-> wasn't exported, so I looked at what sys_sync_file_range used, found
-> that was exported, and so used that.
-> 
-> Looking at the current state of the VFS, I think I would rather use
-> vfs_fsync.
+>>>> BTW: Why are new arrays still created with 0.90 metadata format by
+>>>> default?
+>>>
+>>> Because I'm a chicken....
+>>>
+>>> I guess it probably is time ... but to we make the default 1.0, which
+>>> is compatible with people's expectations, to 1.1 which is generally a
+>>> safer approach (you cannot mount a bare device by mistake).
+>>
+>> People will soon have to use 1.x anyway as drives are getting bigger
+>> than 2T. I'd vote for making 1.1 or 1.2 metadata the default for the
+>> reasons Doug pointed out. Failing to mount the bare device if there
+>> is a partition table is IMHO more important than meeting (broken)
+>> expectations.
+>>
+>> Maybe we should depricate kernel-level autodetection at the same time
+>> so that using an initramfs becomes mandatory for setups with / on md.
+>
+> It already is deprecated; afaik all the recent distros already use an
+> initramfs, even if they still use 0.90 metadata.
+>
+> I second making this a priority to get into the next round of distro
+> updates, for all the reasons given. As soon as metadata version upgrade
+> facilities go in to mdadm, 0.90 metadata can also be deprecated and perhaps
+> mdadm can issue warnings, or at least the kernel autoassembly code can start
+> issuing warnings (if it doesn't already).
 
-Using vfs_fsync is better, but using bmap is extremly dangerous, I'm
-kinda suprised how this managed to get sneaked in without notice.  bmap
-really is just an advisory interface as the mappings by change
-underneath all the time.  Some modern filesystems like btrfs really
-can't implement it at all.
+ All this talk of metadata 1.x, what about all the metadata 0.90 RAID
+array's out there?  What is needed for an upgrade or conversion?
+Would a conversion program need to understand the under lying
+filesystem?
 
-
-> So would you be happy with something like the following?
-
-It's at least a small improvement..
-
+Thanks
+Mailed
+LeeT
