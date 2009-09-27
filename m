@@ -1,199 +1,312 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: Re: mdraid causing mvsas to lockup?
-Date: Sat, 26 Sep 2009 21:34:13 -0600
-Message-ID: <200909262134.13267.tfjellstrom@shaw.ca>
-References: <4AB22135.7030405@kaneda.iguw.tuwien.ac.at> <200909181702.46109.tfjellstrom@shaw.ca> <200909211016.45679.tfjellstrom@shaw.ca>
-Reply-To: tfjellstrom@shaw.ca
+From: Konstantinos Skarlatos <k.skarlatos@gmail.com>
+Subject: Re: Full use of varying drive sizes?---maybe a new raid mode is the
+ answer?
+Date: Sun, 27 Sep 2009 15:26:35 +0300
+Message-ID: <4ABF59FB.40908@gmail.com>
+References: <228790.21625.qm@web51307.mail.re2.yahoo.com>	<4ABA8506.3080800@gmail.com> <19132.24233.852227.120095@notabene.brown>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200909211016.45679.tfjellstrom@shaw.ca>
+In-Reply-To: <19132.24233.852227.120095@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-raid@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: Jon@eHardcastle.com, Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon September 21 2009, Thomas Fjellstrom wrote:
-> On Fri September 18 2009, Thomas Fjellstrom wrote:
-> > On Fri September 18 2009, Thomas Fjellstrom wrote:
-> > > On Thu September 17 2009, Thomas Fjellstrom wrote:
-> > > > On Thu September 17 2009, Kristleifur Da=F0ason wrote:
-> > > > > On Thu, Sep 17, 2009 at 11:02 PM, Thomas Fjellstrom
-> > > > > <tfjellstrom@shaw.ca>
-> > > >
-> > > > wrote:
-> > > > > > On Thu September 17 2009, John Bridges wrote:
-> > > > > >> I'm a fan of the SuperMicro AOC-SAT2-MV8, great card.
-> > > > > >> http://www.supermicro.com/products/accessories/addon/AOC-S=
-AT2-MV
-> > > > > >>8. cf m
-> > > > > >>
-> > > > > >> It's an 8 port PCI-X card, works in both PCI and PCI-X slo=
-ts.
-> > > > > >>
-> > > > > >> SATA2
-> > > > > >>
-> > > > > >> Drivers for Linux are stable, built in.
-> > > > > >
-> > > > > > Have you had any experience with the AOC-SASLP-MV8? I've go=
-t one
-> > > > > > and have been having no end of issues with it under linux.
-> > > > > >
-> > > > > > --
-> > > > > > Thomas Fjellstrom
-> > > > > > tfjellstrom@shaw.ca
-> > > > > > --
-> > > > >
-> > > > > I have,
-> > > > >
-> > > > > or rather, I've tried to get an AOC-SASLP-MV8 card going. I t=
-hink I
-> > > > > can safely say that at least Linux kernel 2.6.31 is a require=
-ment.
-> > > > > The card was basically useless with everything up to 2.6.30, =
-then I
-> > > > > tried 2.6.31-rc5 on a whim and it kicked in. Built-in driver
-> > > > > support, that is. However it wasn't stable, it dropped disks =
-when
-> > > > > syncing a large array. I've been meaning to test on 2.6.31 fi=
-nal,
-> > > > > and am pretty optimistic.
-> > > >
-> > > > Yeah, the driver didn't appear till .30. I have 2.6.31-git4 ins=
-talled
-> > > > right now, and no matter what I do, the controller starts spewi=
-ng
-> > > > errors:
-> > > >
-> > > > [ 1455.698186] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:=
-rc=3D 5
-> > > > [ 1455.698196] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:=
-rc=3D 5
-> > > > ...
-> > > > [ 1424.708085] end_request: I/O error, dev sdh, sector 3072
-> > > > [ 1424.708106] sd 0:0:3:0: [sdh] Unhandled error code
-> > > > [ 1424.708111] sd 0:0:3:0: [sdh] Result: hostbyte=3DDID_OK
-> > > > driverbyte=3DDRIVER_TIMEOUT
-> > > > [ 1424.708118] sd 0:0:3:0: [sdh] CDB: Read(10): 28 00 00 00 08 =
-00 00
-> > > > 04 00 00
-> > > >
-> > > > And thats with perfectly good disks, and with smartd/hddtemp di=
-sabled
-> > > > (they were causing one of my disks to barf).
-> > > >
-> > > > All I have to do is start a read from any disk, and after a few
-> > > > minutes, the card starts erroring out, and then dies.
-> > > >
-> > > > It actually seems like it got more unstable from .30 to .31.
-> > > >
-> > > > I've been trying to get some help with it on the lkml/ide/scsi =
-lists
-> > > > for a while now, one person has tried to help, but thats about =
-it.
-> > >
-> > > Very strange. I've found that reading from all 4 drives currently
-> > > connected to the controller at once, works. I have 4 dd commands,=
- one
-> > > reading off each drive, and so far no errors, the dd commands are=
-n't
-> > > locking up, and they are going full speed (120MB/s per drive).
-> > >
-> > > If however I attempt to bring up the md raid0 array ontop of thes=
-e
-> > > disks, the controller locks up, and all of the disks become
-> > > inaccessible.
-> > >
-> > > Maybe it has something to do with it, but just as the system is
-> > > booting, I get the following, maybe related, maybe not:
-> > >
-> > > ata_id[5183]: HDIO_GET_IDENTITY failed for '/dev/block/8:96'
-> > > ata_id[5188]: HDIO_GET_IDENTITY failed for '/dev/block/8:112'
-> > > ata_id[5184]: HDIO_GET_IDENTITY failed for '/dev/block/8:80'
-> > >
-> > > (those map to sdg, sdh, and sdf in that order, no report for sde,=
- the
-> > > first disk in the controller)
-> >
-> > So I've let the controller and disks sit all day after finishing a =
-full
-> >  read test (dd if=3D/dev/sd[efgh] of=3D/dev/null bs=3D8M) with all =
-four 1TB
-> >  drives going at the same time, and I've had no errors at all. All =
-four
-> > dd commands finished without error, and went at full speed.
-> >
-> > If I attempt to activate an md raid0 array ontop of any disks on th=
-is
-> > controller the controller starts having a fit, and all disks are
-> >  inaccessible till a hard reset (the machine won't fully reboot, or=
- turn
-> >  off, as the "flushing scsi cache" or "shutting down LVM" steps wil=
-l hang
-> >  waiting on drives on the wedged controller.
-> >
-> > I would really like to get this fixed, if there's anything more I c=
-an do
-> > to help narrow down the problem further, I'll do my best.
->=20
-> Does anyone have a clue what might be wrong? Something I could check =
-into?
->  I have a couple system migrations to do, and this is blocking that. =
-(my
->  old array has been making "click" noises for a year now, and I'm afr=
-aid
->  it'll die at any time)
->=20
+Neil, thanks for your answer! I appreciate that you took the time to 
+look into this.
 
-After trying to get an array up on this card, it locked up again. (the =
-array=20
-that is:)
+So, what can people like me - who do not know how to program - do in 
+order to make something like this more likely to happen? create a new 
+thread here? post into forums like avsforums that are full of people 
+that would die to have something like this into linux? donate some money 
+or equipment? beg? :-)
 
-[ 1762.705866] sd 0:0:0:0: [sdc] Unhandled error code
-[ 1762.705873] sd 0:0:0:0: [sdc] Result: hostbyte=3DDID_OK=20
-driverbyte=3DDRIVER_TIMEOUT
-[ 1762.705882] sd 0:0:0:0: [sdc] CDB: Read(10): 28 00 00 00 01 77 00 02=
- c8 00
-[ 1947.698246] sd 0:0:0:0: [sdc] Unhandled error code
-[ 1947.698268] sd 0:0:0:0: [sdc] Result: hostbyte=3DDID_OK=20
-driverbyte=3DDRIVER_TIMEOUT
-[ 1947.698277] sd 0:0:0:0: [sdc] CDB: Read(10): 28 00 00 00 02 3f 00 00=
- 08 00
-[ 1947.698308] __ratelimit: 79 callbacks suppressed
+FWIW I can be a tester for any code that comes out.
 
-[13470.701276] sd 0:0:0:0: [sdc] Unhandled error code
-[13470.701283] sd 0:0:0:0: [sdc] Result: hostbyte=3DDID_OK=20
-driverbyte=3DDRIVER_TIMEOUT
-[13470.701292] sd 0:0:0:0: [sdc] CDB: Read(10): 28 00 00 00 00 00 00 00=
- 20 00
-[13470.701381] sd 0:0:1:0: [sdd] Unhandled error code
-[13470.701385] sd 0:0:1:0: [sdd] Result: hostbyte=3DDID_OK=20
-driverbyte=3DDRIVER_TIMEOUT
-[13470.701393] sd 0:0:1:0: [sdd] CDB: Read(10): 28 00 00 00 00 00 00 00=
- 20 00
-[13470.701458] sd 0:0:2:0: [sde] Unhandled error code
-[13470.701463] sd 0:0:2:0: [sde] Result: hostbyte=3DDID_OK=20
-driverbyte=3DDRIVER_TIMEOUT
-[13470.701470] sd 0:0:2:0: [sde] CDB: Read(10): 28 00 00 00 00 00 00 00=
- 20 00
-[13470.701523] sd 0:0:3:0: [sdf] Unhandled error code
-[13470.701527] sd 0:0:3:0: [sdf] Result: hostbyte=3DDID_OK=20
-driverbyte=3DDRIVER_TIMEOUT
-[13470.701535] sd 0:0:3:0: [sdf] CDB: Read(10): 28 00 00 00 00 00 00 00=
- 20 00
 
-then as the fan in my hot swap bay is failing, I decided to remove the =
-drives=20
-to get the unit to stop the fan. Then the entire system locked up hard,=
-=20
-keyboard LEDs blinking and everything.
+Best regards,
+Konstantinos Skarlatos
 
---=20
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Neil Brown wrote:
+> On Wednesday September 23, k.skarlatos@gmail.com wrote:
+>   
+>> Instead of doing all those things, I have a suggestion to make:
+>>
+>> Something that is like RAID 4 without striping.
+>>
+>> There are already 3 programs doing that, Unraid, Flexraid and disparity, 
+>> but putting this functionality into linux-raid would be tremendous. (the 
+>> first two work on linux and the third one is a command line windows 
+>> program that works fine under wine).
+>>
+>> The basic idea is this: Take any number of drives, with any capacity and 
+>> filesystem you like. Then provide the program with an empty disk at 
+>> least as large as your largest disk. The program creates parity data by 
+>> XORing together the disks sequentially block by block(or file by file), 
+>> until it reaches the end of the smallest one.(It XORs block 1 of disk A 
+>> with block1 of disk B, with block1 of disk C.... and writes the result 
+>> to block1 of Parity disk) Then it continues with the rest of the drives, 
+>> until it reaches the end of the last drive.
+>>
+>> Disk     A    B   C   D   E    P
+>> Block   1    1    1    1    1    1
+>> Block   2    2    2                2
+>> Block   3    3                      3
+>> Block   4                            4
+>>
+>> The great thing about this method is that when you lose one disk you can 
+>> get all your data back. when you lose two disks you only lose the data 
+>> on them, and not the whole array. New disks can be added and the parity 
+>> recalculated by reading only the new disk and the parity disk.
+>>
+>> Please consider adding this feature request, it would be a big plus for 
+>> linux if such a functionality existed, bringing many users from WHS and 
+>> ZFS here, as it especially caters to the needs of people that store 
+>> video and their movie collection at their home server.
+>>     
+>
+> This probably wouldn't be too hard.  There would be some awkwardnesses
+> though.
+> The whole array would be one device, so the 'obvious' way to present
+> the separate non-parity drives would be as partitions of that device.
+> However you would not then be able to re-partition the device.
+> You could use dm to partition the partitions I suppose.
+>
+> Another awkwardness would be that you would need to record somewhere
+> the size of each device so that when a device fails you can synthesis
+> a partition/device of the right size.  The current md metadata doesn't
+> have anywhere to store that sort of per-device data.  That is clearly
+> a solvable problem but finding an elegant solution might be a
+> challenge.
+>
+>
+> However this is not something I am likely to work on in the
+> foreseeable future.  If someone else would like to have a go I can
+> certainly make suggestions and review code.
+>
+> NeilBrown
+>
+>
+>
+>   
+>> Thanks for your time
+>>
+>>
+>> ABCDE for data drives, and P for parity
+>>
+>> Jon Hardcastle wrote:
+>>     
+>>> --- On Wed, 23/9/09, Goswin von Brederlow <goswin-v-b@web.de> wrote:
+>>>
+>>>   
+>>>       
+>>>> From: Goswin von Brederlow <goswin-v-b@web.de>
+>>>> Subject: Re: Full use of varying drive sizes?
+>>>> To: Jon@eHardcastle.com
+>>>> Cc: linux-raid@vger.kernel.org
+>>>> Date: Wednesday, 23 September, 2009, 11:07 AM
+>>>> Jon Hardcastle <jd_hardcastle@yahoo.com>
+>>>> writes:
+>>>>
+>>>>     
+>>>>         
+>>>>> Hey guys,
+>>>>>
+>>>>> I have an array made of many drive sizes ranging from
+>>>>>       
+>>>>>           
+>>>> 500GB to 1TB and I appreciate that the array can only be a
+>>>> multiple of the smallest - I use the differing sizes as i
+>>>> just buy the best value drive at the time and hope that as i
+>>>> phase out the old drives I can '--grow' the array. That is
+>>>> all fine and dandy.
+>>>>     
+>>>>         
+>>>>> But could someone tell me, did I dream that there
+>>>>>       
+>>>>>           
+>>>> might one day be support to allow you to actually use that
+>>>> unused space in the array? Because that would be awesome!
+>>>> (if a little hairy re: spare drives - have to be the size of
+>>>> the largest drive in the array atleast..?) I have 3x500GB
+>>>> 2x750GB 1x1TB so I have 1TB of completely unused space!
+>>>>     
+>>>>         
+>>>>> Cheers.
+>>>>>
+>>>>> Jon H
+>>>>>       
+>>>>>           
+>>>> I face the same problem as I buy new disks whenever I need
+>>>> more space
+>>>> and have the money.
+>>>>
+>>>> I found a rather simple way to organize disks of different
+>>>> sizes into
+>>>> a set of software raids that gives the maximum size. The
+>>>> reasoning for
+>>>> this algorithm are as follows:
+>>>>
+>>>> 1) 2 partitions of a disk must never be in the same raid
+>>>> set
+>>>>
+>>>> 2) as many disks as possible in each raid set to minimize
+>>>> the loss for
+>>>> parity
+>>>>
+>>>> 3) the number of disks in each raid set should be equal to
+>>>> give
+>>>> uniform amount of redundancy (same saftey for all data).
+>>>> Worst (and
+>>>> usual) case will be a difference of 1 disk.
+>>>>
+>>>>
+>>>> So here is the algorithm:
+>>>>
+>>>> 1) Draw a box as wide as the largest disk and open ended
+>>>> towards the
+>>>>    bottom.
+>>>>
+>>>> 2) Draw in each disk in order of size one right to the
+>>>> other.
+>>>>    When you hit the right side of the box
+>>>> continue in the next line.
+>>>>
+>>>> 3) Go through the box left to right and draw a vertical
+>>>> line every
+>>>>    time one disk ends and another starts.
+>>>>
+>>>> 4) Each sub-box creted thus represents one raid using the
+>>>> disks drawn
+>>>>    into it in the respective sizes present
+>>>> in the box.
+>>>>
+>>>> In your case you have 6 Disks: A (1TB), BC (750G),
+>>>> DEF(500G)
+>>>>
+>>>> +----------+-----+-----+
+>>>> |AAAAAAAAAA|AAAAA|AAAAA|
+>>>> |BBBBBBBBBB|BBBBB|CCCCC|
+>>>> |CCCCCCCCCC|DDDDD|DDDDD|
+>>>> |EEEEEEEEEE|FFFFF|FFFFF|
+>>>> |  md0     | md1 | md2 |
+>>>>
+>>>> For raid5 this would give you:
+>>>>
+>>>> md0: sda1, sdb1, sdc1, sde1 (500G)  -> 1500G
+>>>> md1: sda2, sdb2, sdd1, sdf1 (250G)  ->  750G
+>>>> md2: sda3, sdc2, sdd2, sdf2 (250G)  ->  750G
+>>>>                
+>>>>                
+>>>>        -----
+>>>>                
+>>>>                
+>>>>        3000G total
+>>>>
+>>>> As spare you would probably want to always use the largest
+>>>> disk as
+>>>> only then it is completly unused and can power down.
+>>>>
+>>>> Note that in your case the fit is perfect with all raids
+>>>> having 4
+>>>> disks. This is not always the case. Worst case there is a
+>>>> difference
+>>>> of 1 between raids though.
+>>>>
+>>>>
+>>>>
+>>>> As a side node: Resizing when you get new disks might
+>>>> become tricky
+>>>> and involve shuffeling around a lot of data. You might want
+>>>> to split
+>>>> md0 into 2 raids with 250G partitiosn each assuming future
+>>>> disks will
+>>>> continue to be multiples of 250G.
+>>>>
+>>>> MfG
+>>>>         Goswin
+>>>>
+>>>>     
+>>>>         
+>>> Yes,
+>>>
+>>> This is a great system. I did think about this when i first created my array but I was young and lacked the confidence to do much..
+>>>
+>>> So assuming I then purchased a 1.5TB drive the diagram would change to
+>>>
+>>> 6 Disks: A (1TB), BC (750G), DEF(500G), G(1.5TB)
+>>>
+>>> i) So i'd partition the drive up into 250GB chucks and add each chuck to md0~3
+>>>
+>>> +-----+-----+-----+-----+-----+-----+
+>>> |GGGGG|GGGGG|GGGGG|GGGGG|GGGGG|GGGGG|
+>>> |AAAAA|AAAAA|AAAAA|AAAAA|     |     |
+>>> |BBBBB|BBBBB|BBBBB|CCCCC|     |     |
+>>> |CCCCC|CCCCC|DDDDD|DDDDD|     |     |
+>>> |EEEEE|EEEEE|FFFFF|FFFFF|     |     |
+>>> |  md0| md1 | md2 | md3 | md4 | md5 |
+>>>
+>>>
+>>> ii) then I guess I'd have to relieve the E's from md0 and md1? giving (which I can do by failing the drives?) 
+>>> this would then kick in the use of the newly added G's?
+>>>
+>>> +-----+-----+-----+-----+-----+-----+
+>>> |GGGGG|GGGGG|GGGGG|GGGGG|GGGGG|GGGGG|
+>>> |AAAAA|AAAAA|AAAAA|AAAAA|EEEEE|EEEEE|
+>>> |BBBBB|BBBBB|BBBBB|CCCCC|FFFFF|FFFFF|
+>>> |CCCCC|CCCCC|DDDDD|DDDDD|     |     |
+>>> |XXXXX|XXXXX|XXXXX|XXXXX|     |     |
+>>> |  md0| md1 | md2 | md3 | md4 | md5 |
+>>>
+>>> iii) Repeat for the F's which would again trigger the rebuild using the G's.
+>>>
+>>> the end result is 6 arrays with 4 and 2 partions in respectively i.e.
+>>>
+>>>    +--1--+--2--+--3--+--4--+--5--+--6--+
+>>> sda|GGGGG|GGGGG|GGGGG|GGGGG|GGGGG|GGGGG|
+>>> sdb|AAAAA|AAAAA|AAAAA|AAAAA|EEEEE|EEEEE|
+>>> sdc|BBBBB|BBBBB|BBBBB|CCCCC|FFFFF|FFFFF|
+>>> sdd|CCCCC|CCCCC|DDDDD|DDDDD|     |     |
+>>> sde|  md0| md1 | md2 | md3 | md4 | md5 |
+>>>
+>>>
+>>> md0: sda1, sdb1, sdc1, sdd1 (250G)  -> 750G
+>>> md1: sda2, sdb2, sdc2, sdd2 (250G)  -> 750G
+>>> md2: sda3, sdb3, sdc3, sdd3 (250G)  -> 750G
+>>> md3: sda4, sdb4, sdc4, sdd4 (250G)  -> 750G
+>>> md4: sda5, sdb5, sdc5               -> 500G
+>>> md5: sda6, sdb6, sdc6               -> 500G
+>>>
+>>> Total                               -> 4000G
+>>>
+>>> I cant do the maths tho as my head hurts too much but is this quite wasteful with so many raid 5 arrays each time burning 1x250gb?
+>>>
+>>> Finally... i DID find a reference...
+>>>
+>>> check out: http://neil.brown.name/blog/20090817000931
+>>>
+>>> '
+>>> ...
+>>> It would also be nice to teach RAID5 to handle arrays with devices of different sizes. There are some complications there as you could have a hot spare that can replace some devices but not all. 
+>>> ...
+>>> '
+>>>
+>>>
+>>> -----------------------
+>>> N: Jon Hardcastle
+>>> E: Jon@eHardcastle.com
+>>> 'Do not worry about tomorrow, for tomorrow will bring worries of its own.'
+>>> -----------------------
+>>>
+>>>
+>>>
+>>>       
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>   
+>>>       
+
