@@ -1,312 +1,99 @@
-From: Konstantinos Skarlatos <k.skarlatos@gmail.com>
-Subject: Re: Full use of varying drive sizes?---maybe a new raid mode is the
- answer?
-Date: Sun, 27 Sep 2009 15:26:35 +0300
-Message-ID: <4ABF59FB.40908@gmail.com>
-References: <228790.21625.qm@web51307.mail.re2.yahoo.com>	<4ABA8506.3080800@gmail.com> <19132.24233.852227.120095@notabene.brown>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Remote NAS
+Date: Sun, 27 Sep 2009 14:39:35 -0500
+Message-ID: <20090927193914952.FCRF6584@cdptpa-omta02.mail.rr.com>
+References: <92388.79363.qm@web38807.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <19132.24233.852227.120095@notabene.brown>
+In-Reply-To: <92388.79363.qm@web38807.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Jon@eHardcastle.com, Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil, thanks for your answer! I appreciate that you took the time to 
-look into this.
-
-So, what can people like me - who do not know how to program - do in 
-order to make something like this more likely to happen? create a new 
-thread here? post into forums like avsforums that are full of people 
-that would die to have something like this into linux? donate some money 
-or equipment? beg? :-)
-
-FWIW I can be a tester for any code that comes out.
 
 
-Best regards,
-Konstantinos Skarlatos
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of adfas asd
+> Sent: Wednesday, September 16, 2009 11:22 AM
+> To: linux-raid@vger.kernel.org
+> Subject: Remote NAS
+> 
+> A couple questions about MD RAID10:
+> 
+> Right now I'm RAIDing two 2TB drives in RAID10offset2. Need to add some
+> drives and maybe I'll remote them using NAS (GB ethernet), for fire and
+> theft protection.
+> 
+> So could the BIOS actually boot this if 2 drives are in the machine and 2
+> are in the garage? Is there a way to specify in mdadm that the two in the
+> garage are mirrored from the two in the system?
+> 
+> Is GB ethernet NAS noticably slower than eSATA?  Is it reliable?
+> 
+> What if I use the mobo's e-SATA port to add 5 external drives locally.
+> This would require a port multiplier. I presume it would not be bootable,
+> since a port multiplier needs OS support? Or would something go in
+> initrd.img?  Or would I need an individual boot drive to get things up?
+> 
+> Using the array to store MythTV recordings (very large files), but when it
+> does commercial flagging (lots of writes) the array is so busy that GUI
+> response is very slow.  I've set readahead cache to optimal (4096, after
+> testing most sizes), so read should be OK.  I know far is optimized for
+> read, so I chose offset in hopes it would bring up write speed.  Is there
+> a way to speed up writes?
 
-Neil Brown wrote:
-> On Wednesday September 23, k.skarlatos@gmail.com wrote:
->   
->> Instead of doing all those things, I have a suggestion to make:
->>
->> Something that is like RAID 4 without striping.
->>
->> There are already 3 programs doing that, Unraid, Flexraid and disparity, 
->> but putting this functionality into linux-raid would be tremendous. (the 
->> first two work on linux and the third one is a command line windows 
->> program that works fine under wine).
->>
->> The basic idea is this: Take any number of drives, with any capacity and 
->> filesystem you like. Then provide the program with an empty disk at 
->> least as large as your largest disk. The program creates parity data by 
->> XORing together the disks sequentially block by block(or file by file), 
->> until it reaches the end of the smallest one.(It XORs block 1 of disk A 
->> with block1 of disk B, with block1 of disk C.... and writes the result 
->> to block1 of Parity disk) Then it continues with the rest of the drives, 
->> until it reaches the end of the last drive.
->>
->> Disk     A    B   C   D   E    P
->> Block   1    1    1    1    1    1
->> Block   2    2    2                2
->> Block   3    3                      3
->> Block   4                            4
->>
->> The great thing about this method is that when you lose one disk you can 
->> get all your data back. when you lose two disks you only lose the data 
->> on them, and not the whole array. New disks can be added and the parity 
->> recalculated by reading only the new disk and the parity disk.
->>
->> Please consider adding this feature request, it would be a big plus for 
->> linux if such a functionality existed, bringing many users from WHS and 
->> ZFS here, as it especially caters to the needs of people that store 
->> video and their movie collection at their home server.
->>     
->
-> This probably wouldn't be too hard.  There would be some awkwardnesses
-> though.
-> The whole array would be one device, so the 'obvious' way to present
-> the separate non-parity drives would be as partitions of that device.
-> However you would not then be able to re-partition the device.
-> You could use dm to partition the partitions I suppose.
->
-> Another awkwardness would be that you would need to record somewhere
-> the size of each device so that when a device fails you can synthesis
-> a partition/device of the right size.  The current md metadata doesn't
-> have anywhere to store that sort of per-device data.  That is clearly
-> a solvable problem but finding an elegant solution might be a
-> challenge.
->
->
-> However this is not something I am likely to work on in the
-> foreseeable future.  If someone else would like to have a go I can
-> certainly make suggestions and review code.
->
-> NeilBrown
->
->
->
->   
->> Thanks for your time
->>
->>
->> ABCDE for data drives, and P for parity
->>
->> Jon Hardcastle wrote:
->>     
->>> --- On Wed, 23/9/09, Goswin von Brederlow <goswin-v-b@web.de> wrote:
->>>
->>>   
->>>       
->>>> From: Goswin von Brederlow <goswin-v-b@web.de>
->>>> Subject: Re: Full use of varying drive sizes?
->>>> To: Jon@eHardcastle.com
->>>> Cc: linux-raid@vger.kernel.org
->>>> Date: Wednesday, 23 September, 2009, 11:07 AM
->>>> Jon Hardcastle <jd_hardcastle@yahoo.com>
->>>> writes:
->>>>
->>>>     
->>>>         
->>>>> Hey guys,
->>>>>
->>>>> I have an array made of many drive sizes ranging from
->>>>>       
->>>>>           
->>>> 500GB to 1TB and I appreciate that the array can only be a
->>>> multiple of the smallest - I use the differing sizes as i
->>>> just buy the best value drive at the time and hope that as i
->>>> phase out the old drives I can '--grow' the array. That is
->>>> all fine and dandy.
->>>>     
->>>>         
->>>>> But could someone tell me, did I dream that there
->>>>>       
->>>>>           
->>>> might one day be support to allow you to actually use that
->>>> unused space in the array? Because that would be awesome!
->>>> (if a little hairy re: spare drives - have to be the size of
->>>> the largest drive in the array atleast..?) I have 3x500GB
->>>> 2x750GB 1x1TB so I have 1TB of completely unused space!
->>>>     
->>>>         
->>>>> Cheers.
->>>>>
->>>>> Jon H
->>>>>       
->>>>>           
->>>> I face the same problem as I buy new disks whenever I need
->>>> more space
->>>> and have the money.
->>>>
->>>> I found a rather simple way to organize disks of different
->>>> sizes into
->>>> a set of software raids that gives the maximum size. The
->>>> reasoning for
->>>> this algorithm are as follows:
->>>>
->>>> 1) 2 partitions of a disk must never be in the same raid
->>>> set
->>>>
->>>> 2) as many disks as possible in each raid set to minimize
->>>> the loss for
->>>> parity
->>>>
->>>> 3) the number of disks in each raid set should be equal to
->>>> give
->>>> uniform amount of redundancy (same saftey for all data).
->>>> Worst (and
->>>> usual) case will be a difference of 1 disk.
->>>>
->>>>
->>>> So here is the algorithm:
->>>>
->>>> 1) Draw a box as wide as the largest disk and open ended
->>>> towards the
->>>>    bottom.
->>>>
->>>> 2) Draw in each disk in order of size one right to the
->>>> other.
->>>>    When you hit the right side of the box
->>>> continue in the next line.
->>>>
->>>> 3) Go through the box left to right and draw a vertical
->>>> line every
->>>>    time one disk ends and another starts.
->>>>
->>>> 4) Each sub-box creted thus represents one raid using the
->>>> disks drawn
->>>>    into it in the respective sizes present
->>>> in the box.
->>>>
->>>> In your case you have 6 Disks: A (1TB), BC (750G),
->>>> DEF(500G)
->>>>
->>>> +----------+-----+-----+
->>>> |AAAAAAAAAA|AAAAA|AAAAA|
->>>> |BBBBBBBBBB|BBBBB|CCCCC|
->>>> |CCCCCCCCCC|DDDDD|DDDDD|
->>>> |EEEEEEEEEE|FFFFF|FFFFF|
->>>> |  md0     | md1 | md2 |
->>>>
->>>> For raid5 this would give you:
->>>>
->>>> md0: sda1, sdb1, sdc1, sde1 (500G)  -> 1500G
->>>> md1: sda2, sdb2, sdd1, sdf1 (250G)  ->  750G
->>>> md2: sda3, sdc2, sdd2, sdf2 (250G)  ->  750G
->>>>                
->>>>                
->>>>        -----
->>>>                
->>>>                
->>>>        3000G total
->>>>
->>>> As spare you would probably want to always use the largest
->>>> disk as
->>>> only then it is completly unused and can power down.
->>>>
->>>> Note that in your case the fit is perfect with all raids
->>>> having 4
->>>> disks. This is not always the case. Worst case there is a
->>>> difference
->>>> of 1 between raids though.
->>>>
->>>>
->>>>
->>>> As a side node: Resizing when you get new disks might
->>>> become tricky
->>>> and involve shuffeling around a lot of data. You might want
->>>> to split
->>>> md0 into 2 raids with 250G partitiosn each assuming future
->>>> disks will
->>>> continue to be multiples of 250G.
->>>>
->>>> MfG
->>>>         Goswin
->>>>
->>>>     
->>>>         
->>> Yes,
->>>
->>> This is a great system. I did think about this when i first created my array but I was young and lacked the confidence to do much..
->>>
->>> So assuming I then purchased a 1.5TB drive the diagram would change to
->>>
->>> 6 Disks: A (1TB), BC (750G), DEF(500G), G(1.5TB)
->>>
->>> i) So i'd partition the drive up into 250GB chucks and add each chuck to md0~3
->>>
->>> +-----+-----+-----+-----+-----+-----+
->>> |GGGGG|GGGGG|GGGGG|GGGGG|GGGGG|GGGGG|
->>> |AAAAA|AAAAA|AAAAA|AAAAA|     |     |
->>> |BBBBB|BBBBB|BBBBB|CCCCC|     |     |
->>> |CCCCC|CCCCC|DDDDD|DDDDD|     |     |
->>> |EEEEE|EEEEE|FFFFF|FFFFF|     |     |
->>> |  md0| md1 | md2 | md3 | md4 | md5 |
->>>
->>>
->>> ii) then I guess I'd have to relieve the E's from md0 and md1? giving (which I can do by failing the drives?) 
->>> this would then kick in the use of the newly added G's?
->>>
->>> +-----+-----+-----+-----+-----+-----+
->>> |GGGGG|GGGGG|GGGGG|GGGGG|GGGGG|GGGGG|
->>> |AAAAA|AAAAA|AAAAA|AAAAA|EEEEE|EEEEE|
->>> |BBBBB|BBBBB|BBBBB|CCCCC|FFFFF|FFFFF|
->>> |CCCCC|CCCCC|DDDDD|DDDDD|     |     |
->>> |XXXXX|XXXXX|XXXXX|XXXXX|     |     |
->>> |  md0| md1 | md2 | md3 | md4 | md5 |
->>>
->>> iii) Repeat for the F's which would again trigger the rebuild using the G's.
->>>
->>> the end result is 6 arrays with 4 and 2 partions in respectively i.e.
->>>
->>>    +--1--+--2--+--3--+--4--+--5--+--6--+
->>> sda|GGGGG|GGGGG|GGGGG|GGGGG|GGGGG|GGGGG|
->>> sdb|AAAAA|AAAAA|AAAAA|AAAAA|EEEEE|EEEEE|
->>> sdc|BBBBB|BBBBB|BBBBB|CCCCC|FFFFF|FFFFF|
->>> sdd|CCCCC|CCCCC|DDDDD|DDDDD|     |     |
->>> sde|  md0| md1 | md2 | md3 | md4 | md5 |
->>>
->>>
->>> md0: sda1, sdb1, sdc1, sdd1 (250G)  -> 750G
->>> md1: sda2, sdb2, sdc2, sdd2 (250G)  -> 750G
->>> md2: sda3, sdb3, sdc3, sdd3 (250G)  -> 750G
->>> md3: sda4, sdb4, sdc4, sdd4 (250G)  -> 750G
->>> md4: sda5, sdb5, sdc5               -> 500G
->>> md5: sda6, sdb6, sdc6               -> 500G
->>>
->>> Total                               -> 4000G
->>>
->>> I cant do the maths tho as my head hurts too much but is this quite wasteful with so many raid 5 arrays each time burning 1x250gb?
->>>
->>> Finally... i DID find a reference...
->>>
->>> check out: http://neil.brown.name/blog/20090817000931
->>>
->>> '
->>> ...
->>> It would also be nice to teach RAID5 to handle arrays with devices of different sizes. There are some complications there as you could have a hot spare that can replace some devices but not all. 
->>> ...
->>> '
->>>
->>>
->>> -----------------------
->>> N: Jon Hardcastle
->>> E: Jon@eHardcastle.com
->>> 'Do not worry about tomorrow, for tomorrow will bring worries of its own.'
->>> -----------------------
->>>
->>>
->>>
->>>       
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>   
->>>       
+	I'm not running MythTv, but I faced similar challenges when building
+my video server.  RAID10 and similar solutions are great for many purposes,
+but there are some fundamental considerations when choosing an array setup
+in this situation which I think you should review carefully.
+
+	1. Clearly you are concerned about a loss of data should something
+catastrophic happen to one site or the other.  RAID mirroring certainly
+addresses such a concern.  However, no matter what the array topology, RAID
+systems are not fault free.  They are fault tolerant.  Of course, no system
+is perfectly fault free, but a RAID solution only addresses hardware
+failures.  By far the most common cause of data loss is not hardware
+failure, but human error.  A RAID system cannot prevent a user from
+accidentally overwriting data on an array.  Maddeningly, I lost several
+favorite programs on separate occasions due to such errors before I had a
+good backup solution in place.  I have only lost 1 program as a result of
+array issues - that after a RAID growth which went sour unknowingly and a
+subsequent write was corrupted.  The point I am making here is to prevent
+data loss, one really needs a backup solution in addition to whatever array
+solution one chooses.  You haven't mentioned a backup method (although
+perhaps you have one), so perhaps a better solution than mirroring on a NAS
+with the write mostly option would be to create a backup system in your
+garage and run an rsync on a regular basis in order to assure data
+retention.  That way, you have some period of time after having made a nasty
+error to easily correct it before it becomes etched in stone.  This also
+circumvents any performance issues associated with more complex RAID
+solutions.
+
+	2.  The nature of your data is a consideration.  As others have
+mentioned, you might want to break up your partition structure to
+accommodate the data types.  In particular, video data is huge, but does not
+need to be read or written very quickly.  MPEG-II data only streams
+typically at about 10 - 15 Mbps for 1080i, or at most 40 Mbps for 1080p
+video on average per stream.  MPEG-IV streams even more slowly.  Database
+writes and reads, however, are much, much smaller but can potentially fill a
+3000 Mbps pipe.  I really agree with others here that you need to carefully
+consider a different type of partition - perhaps not a RAID array at all -
+for your database.  I run a tarball task every day to backup all the
+important system data which is not on the RAID array over to a file on the
+array, which in turn gets backed up every morning at 04:00 via rsync to the
+remote backup system.  The video server employs a RAID6 array, and the
+backup a RAID5 array.  Both systems boot off small drives whose contents are
+copied to cold drives sitting on a shelf in case of boot drive failure.  In
+your case, I think I would personally employ the small boot drive plus an
+extra drive - perhaps a high performance 120G to 250G drive - just for your
+database.  If you really feel the need, you could mirror the database drive,
+but unless I am wrong, I think in your case the database can be easily
+rebuilt if it is reverted to an older copy, so I would think a daily rsync
+to your array would work well for you also.  The drives for the arrays can
+be very inexpensive low performance drives with as little power consumption
+as possible.
 
