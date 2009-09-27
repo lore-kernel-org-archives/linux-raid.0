@@ -1,59 +1,49 @@
 From: "Leslie Rhorer" <lrhorer@satx.rr.com>
 Subject: RE: Remote NAS
-Date: Sun, 27 Sep 2009 15:19:09 -0500
-Message-ID: <20090927201849401.FXKG6584@cdptpa-omta02.mail.rr.com>
-References: <20090923161045.GD9409@cthulhu.home.robinhill.me.uk>
+Date: Sun, 27 Sep 2009 15:44:49 -0500
+Message-ID: <20090927204429247.THVL26368@cdptpa-omta03.mail.rr.com>
+References: <20090923152927.GC9409@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20090923161045.GD9409@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <20090923152927.GC9409@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > > You have two drives in RAID10 currently, and you want to go
-> > > to four.
-> > > Are you meaning to increase the capacity as well or do you
-> > > just want the
-> > > two remote drives to be a mirror of your current two
-> > > drives?
+> > Not transcoding at the same time, just the standard commercial
+> > flagging.  The drive light is constantly on.  CPU is pretty busy
+> > (3GHz) reaching 180% when simultaneously flagging 2 videos.
 > >
-> > Both more capacity, and remote storage.
+> > The database in in the / partition of the array, and the videos are in
+> > the /home partition on it.  No idea why the array is so busy.
 > >
-> Okay, so you want the local drives to be (effectively) a RAID-0, and
-> then mirrored to the remote drives?
-> 
-> >
-> > > > Needless to say I'd like performance to be good, but
-> > > that's starting
-> > > > to look hopeless.
-> > > >
-> > > I'd recommend getting two smaller drives, and having two
-> > > separate
-> > > mirrored pairs - the smaller array for the OS and database
-> > > and the
-> > > larger one for recording.  Keep one of each size
-> > > within the HTPC and one
-> > > of each in the garage.  You can also use the
-> > > write-mostly option to make
-> > > the kernel read from the local drives where possible.
-> >
-> > But what I'm saying there doesn't seem to be a way in mdadm to specify
-> > --one side-- of the mirror here, and the other side, there.
-> >
-> I've no idea what you mean here.  You specify two block devices for the
-> mirror - what difference does it make where (or what) they are?  And if
+> If they're both on the array, then that's the problem.  The partitioning
+> doesn't make difference to the issue - the drive heads are having to
+> seek frantically between reading the data file and writing the database.
 
-	Well, he doesn't want to wind up with both a primary copy and a
-mirror copy of any of the drive elements in one physical location.
+	You are perfectly correct that having the database and the video
+files on the same array presents a very significant bottleneck, but I think
+something else must be going on, as well.  If the CPU were having to wait
+for drive seeks, then the CPU utilization would never be that high.  What's
+more, while I am not intimately familiar with MythTV's database structure, I
+don't think database writes are done very much.  Typically, in such
+applications, one only marks the audio / video transition points, where the
+video fades to black and the audio squelches and then again when a black
+transitions to live video.  The rest of time should ordinarily be spent
+entirely in memory (other than reading the video file, of course), analyzing
+the video data to search for such transitions and decide whether the
+transition in question is the entry or exit point for a group of
+commercials.  I would expect a write to the database would only occur after
+examining several minutes worth of video data - probably several seconds
+worth of reading video.
 
-> you want RAID10 then (in the create order) drives 0 and 2 are local and
-> 1 and 3 remote.
-
-	In his situation (assuming he doesn't take my advice and separate
-the remote system entirely), wouldn't he be better served to create a RAIDn
-array on both systems and then create a RAID1 from the local and NAS array
-with the write mostly option?
+	I cannot say for certain, but I suspect he might see significant
+performance gains by increasing the size of his memory and perhaps his swap
+partition, as well.  He also might do well to adjust the priority of the
+threads handling the commercial flagging.  He hasn't mentioned what his
+actual drive performance is, but his main complaint seems to me not to be
+drive system performance but CPU loading.
 
