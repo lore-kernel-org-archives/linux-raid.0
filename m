@@ -1,64 +1,42 @@
-From: sidmanm <sidmanm@yahoo.com>
-Subject: Cannnot umount to fix a corrupted Superblock on Buffalo Terastation
- (Linux) RAID 5
-Date: Tue, 29 Sep 2009 19:50:18 -0700 (PDT)
-Message-ID: <25674181.post@talk.nabble.com>
+From: Dylan Distasio <interzone@gmail.com>
+Subject: Slow network speeds between Linux RAID box and Windows PC
+Date: Tue, 29 Sep 2009 23:22:08 -0400
+Message-ID: <3513de790909292022hbff20ben3d758602f12970c1@mail.gmail.com>
+References: <3513de790909292020k79f6b83blf62e73aeb91d4681@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <3513de790909292020k79f6b83blf62e73aeb91d4681@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-I suspect that I have a corrupted Superblock, but am stuck with what I can do
-next....I have a Buffalo Terastation Pro that runs on Linux.  I tried to run
-xfs_repair, but xfs_repair wants me to umount; umount is busy, and am
-hesitant to umount -F....any guidance is greatly appreciated.
-
-Here's the log from my telnet session:
-
-TS-TGLE79 login: myroot
-root@TS-TGLE79:~# xfs_repair /dev/md1
-xfs_repair: warning - cannot get sector size from block device /dev/md1:
-Invalid argument
-Phase 1 - find and verify superblock...
-sb root inode value 18446744073709551615 (NULLFSINO) inconsistent with
-calculated value 256
-resetting superblock root inode pointer to 256
-sb realtime bitmap inode 18446744073709551615 (NULLFSINO) inconsistent with
-calculated value 257
-resetting superblock realtime bitmap ino pointer to 257
-sb realtime summary inode 18446744073709551615 (NULLFSINO) inconsistent with
-calculated value 258
-resetting superblock realtime summary ino pointer to 258
-Phase 2 - using internal log
-- zero log...
-ERROR: The filesystem has valuable metadata changes in a log which needs to
-be replayed. Mount the filesystem to replay the log, and unmount it before
-re-running xfs_repair. If you are unable to mount the filesystem, then use
-the -L option to destroy the log and attempt a repair.
-Note that destroying the log may cause corruption -- please attempt a mount
-of the filesystem before doing this.
-
-root@TS-TGLE79:~# mount
-/dev/md0 on / type auto (rw,noatime)
-proc on /proc type proc (rw)
-/dev/shm on /mnt/ram type tmpfs (rw,mode=1777,size=15m)
-/dev/ram1 on /tmp type ext2 (rw)
-devpts on /dev/pts type devpts (rw,gid=5,mode=620)
-/proc/bus/usb on /proc/bus/usb type usbdevfs (rw)
-
-root@TS-TGLE79:~# umount /dev/md0
-umount: /: device is busy
-
-Any guidance is greatly appreciated.
-
-Kind thanks,
-
-Michael
--- 
-View this message in context: http://www.nabble.com/Cannnot-umount-to-fix-a-corrupted-Superblock-on-Buffalo-Terastation-%28Linux%29-RAID-5-tp25674181p25674181.html
-Sent from the linux-raid mailing list archive at Nabble.com.
-
+I apologize that this question is not directly related to mdadm, but I
+thought some of the list might have experience in a mixed
+Linux/Windows environment. =A0I am running a mdadm RAID5 file server on
+a Ubuntu 8.04 Linux box on a gigabit LAN. =A0I am using a Highpoint 268=
+0
+card at PCI-E 4x as the controller (I have also tried the motherboard
+SATA connectors directly). =A0I am running SAMBA on this box to share m=
+y
+RAID5 with my main Windows PC running Windows 7 64 bit (although I
+have gotten similar results with Vista also).
+My question is related to what I consider slow speeds when reading
+from or writing to the array from my Windows box. =A0I get anywhere fro=
+m
+20-30MB/s in either direction when transferring a single large file (3
+GB as an example). =A0I haven't done detailed benchmarking on the array=
+,
+but spotchecks of file transfers from another drive on the same linux
+box are giving me speeds above 100MB/s for reads and writes.
+Does anyone have any suggestions for improving my speeds across the
+network? =A0I don't know if SAMBA is causing some kind of bottleneck or
+if Windows is not playing nice or if it's something with my network
+configuration, but I was hoping to get alot closer to saturating the
+gigabit connection. =A0Any help would be greatly appreciated.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
