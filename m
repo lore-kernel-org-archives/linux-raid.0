@@ -1,52 +1,61 @@
-From: Mikhail Yakshin <greycat@altlinux.org>
-Subject: Re: HW Raid Question
-Date: Thu, 1 Oct 2009 11:13:20 +0400
-Message-ID: <240e377b0910010013jfc2e891r6a461d555f95c79e@mail.gmail.com>
-References: <c268e4660909272103r3831e129m68c11899b11be222@mail.gmail.com>
-	 <70ed7c3e0909272339j2beb3de1rf3a925d207be1d8c@mail.gmail.com>
-	 <c268e4660909280807q1bfb805eu4ec7804901ea1fb6@mail.gmail.com>
-	 <240e377b0909290815q67cb2388w788be78adc84b1fe@mail.gmail.com>
-	 <c268e4660909290844h6a1c8640yd110b75a9f85d89b@mail.gmail.com>
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
+Subject: Re: BUG: soft lockup in [md4_raid5:21137]
+Date: Thu, 1 Oct 2009 13:41:49 +0000 (GMT)
+Message-ID: <Pine.LNX.4.64.0910011334100.6401@praktifix.dwd.de>
+References: <Pine.LNX.4.64.0909181255380.21814@diagnostix.dwd.de>
+ <e9c3a7c20909181055u5d66086chd199f48453c476d8@mail.gmail.com>
+ <Pine.LNX.4.64.0909290914330.24558@praktifix.dwd.de>
+ <e9c3a7c20909291806o6985259doc911012dd88dc76c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: MULTIPART/MIXED; BOUNDARY="646811178-1629444445-1254404509=:6401"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <c268e4660909290844h6a1c8640yd110b75a9f85d89b@mail.gmail.com>
+In-Reply-To: <e9c3a7c20909291806o6985259doc911012dd88dc76c@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Drew <drew.kay@gmail.com>
-Cc: "Majed B." <majedb@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
->> Which controller do you use exactly? We planned to add support for
->> growing/shrinking logical volumes to Einarc, but it's not quite ready
->> for prime time yet. It might be supported soon, though.
->
-> I have a mix of ServeRAID 6m & 7k controllers, both of which are
-> rebranded Adaptec.
+--646811178-1629444445-1254404509=:6401
+Content-Type: TEXT/PLAIN; charset=iso-8859-1; format=flowed
+Content-Transfer-Encoding: 8BIT
 
-Can you post results of lspci -vv for these controllers, please?
+On Tue, 29 Sep 2009, Dan Williams wrote:
 
->> What exactly do you want to replace? I guess you want to do some
->> procedure to gradually change all discs in the array and then grow a
->> logical disc? Like that:
+> On Tue, Sep 29, 2009 at 2:24 AM, Holger Kiehl <Holger.Kiehl@dwd.de> wrote:
+>> On Fri, 18 Sep 2009, Dan Williams wrote:
+>> __async_schedule+0x10e/0x130
+>>   Sep 29 09:02:15 apollo kernel: [<ffffffff8108ad7e>] ?
+>> async_schedule_domain+0x1c/0x32
+>>   Sep 29 09:02:15 apollo kernel: [<ffffffff81379852>] ? raid5d+0x3f8/0x44c
+>>   Sep 29 09:02:15 apollo kernel: [<ffffffff81446b68>] ?
+>> _spin_unlock_irqrestore+0x21/0x3c
+>>   Sep 29 09:02:15 apollo kernel: [<ffffffff81383db1>] ?
+>> md_thread+0x100/0x132
+>>   Sep 29 09:02:15 apollo kernel: [<ffffffff81084113>] ?
+>> autoremove_wake_function+0x0/0x5a
+>>   Sep 29 09:02:15 apollo kernel: [<ffffffff81383cb1>] ? md_thread+0x0/0x132
+>>   Sep 29 09:02:15 apollo kernel: [<ffffffff81083d04>] ? kthread+0x89/0x91
+>>   Sep 29 09:02:15 apollo kernel: [<ffffffff8102f36a>] ? child_rip+0xa/0x20
+>>   Sep 29 09:02:15 apollo kernel: [<ffffffff81083c7b>] ? kthread+0x0/0x91
+>>   Sep 29 09:02:15 apollo kernel: [<ffffffff8102f360>] ? child_rip+0x0/0x20
 >>
->> 1. Remove one small disc => array is degraded
->> 2. Add one bigger disc, rebuild array
->> 3. Repeat steps 1-2 for all discs
->> 4. Grow physical extents
->> 5. Grow logical volume
+>> The system also becomes very unresponsive. How can I fix this since it
+>> looks your patch does not apply to 2.6.32-rc1. Or is this another bug,
+>> since I have enabled CONFIG_MULTICORE_RAID456.
 >
-> Pretty much. These are typical IBM x236 servers that have all six
-> hotswap SCSI slots full of 36GB disks we're wanting to replace with
-> 146GB disks we've been given by a sister company. The disks are fine
-> having been tested by both myself and my counterpart.
+> This is a new issue with the (experimental) multicore implementation.
+> If you turn that off then you will be using the same single threaded
+> flow as 2.6.31.  If you want to play with the multicore option a bit
+> more the patch below should squelch the softlockup.  However, I
+> suspect we will need our own md specific thread pool because the
+> current implementation spends too much effort bouncing stripes between
+> the async thread pool and raid5d.
+>
+Thanks, for the patch. Then these softlockups go away, but performance
+is terrible (factor 6 slower with CONFIG_MULTICORE_RAID456).
 
-So, I guess you'd generally want to follow an outline I've posted
-above. Steps 1-3 are pretty much automated. You just need to do steps
-4 and 5. I might be able to answer if particular Adaptec supports this
-as soon as we'll understand what controller do you exactly have
-(Adaptec XXXX - ?).
-
--- 
-WBR, Mikhail Yakshin
+Holger
+--646811178-1629444445-1254404509=:6401--
