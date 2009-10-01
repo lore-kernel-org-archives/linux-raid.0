@@ -1,30 +1,36 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: software raid rebuilding and O_DIRECT access (xfs_repair) slowness
-Date: Fri, 02 Oct 2009 07:30:41 +1300
-Message-ID: <4AC4F551.2080606@sauce.co.nz>
-References: <200910011949.42542.a.miskiewicz@gmail.com>
+From: scjody@sun.com
+Subject: [patch 0/4] Journal guided resync and support
+Date: Thu, 01 Oct 2009 18:39:29 -0400
+Message-ID: <20091001223929.120106893@sun.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200910011949.42542.a.miskiewicz@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Content-Type: TEXT/PLAIN
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753841AbZJAWkO@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ext4@vger.kernel.org, linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Andreas Dilger <adilger@sun.com>
 List-Id: linux-raid.ids
 
-Arkadiusz Miskiewicz wrote:
+This is an updated implementation of journal guided resync, intended to be
+suitable for production systems.  This feature addresses the problem with RAID
+arrays that take too long to resync - similar to the existing MD write-intent
+bitmap feature, we resync only the stripes that were undergoing writes at the
+time of the crash.  Unlike write-intent bitmaps, our testing shows very little
+performance degredation as a result of the feature - around 3-5% vs around 30%
+for bitmaps.
 
-> The question is now why software raid is soo slow when device is accessed with 
-> O_DIRECT by xfs_repair? (that's hch guess on what's the problem). Is this bug, 
-> expected behaviour?
+This feature is based on work described in this paper:
+http://www.usenix.org/events/fast05/tech/denehy.html
 
-I would think that this is not unexpected - 2 disk bound tasks, one 
-(resync), which requires the heads to sequentially step cylinder by 
-cylinder from the beginning to the end.
+As a summary, we introduce a new data write mode known as declared mode.  This
+is based on ordered mode except that a list of blocks to be written during the
+current transaction is added to the journal before the blocks themselves are
+written to the disk.  Then, if the system crashes, we can resync only those
+blocks during journal replay and skip the rest of the resync of the RAID array.
 
-The other, xfs_repair, which is randomly seeking all heads all over the 
-platters.
+The changes consist of patches to ext3, jbd, MD, and the raid456 personality.
+These patches are currently against the RHEL 5 kernel 2.6.18-128.1.6.  Porting
+to ext4/jbd2 and a more modern kernel is a TODO item.
 
-Regards,
-
-Richard
+Cheers,
+Jody
