@@ -1,84 +1,35 @@
-From: Ben DJ <bendj095124367913213465@gmail.com>
-Subject: Re: A few remaining questions about installing to RAID-10
-Date: Thu, 1 Oct 2009 20:46:12 -0700
-Message-ID: <babafd2f0910012046i46f77e82lc1a75bbee3b1a6d8@mail.gmail.com>
-References: <babafd2f0910011827l2bc62facpc5fe15ab3994b512@mail.gmail.com>
-	<19141.28828.24109.570050@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 0/3] md fixes for 2.6.32-rc
+Date: Fri, 2 Oct 2009 14:13:07 +1000
+Message-ID: <19141.32211.742547.19481@notabene.brown>
+References: <20091002011747.24095.70355.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <19141.28828.24109.570050@notabene.brown>
+In-Reply-To: message from Dan Williams on Thursday October 1
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Dan Williams <dan.j.williams@intel.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Neil,
+On Thursday October 1, dan.j.williams@intel.com wrote:
+> Hi Neil,
+> 
+> A few fixes:
+> 1/ The multicore option is not ready for prime time
 
-On Thu, Oct 1, 2009 at 8:16 PM, Neil Brown <neilb@suse.de> wrote:
-> ...
+But it is already marked experimental...
+So do we really need to revert?  or is the current code broken beyond
+repair?
 
-Thanks for clearing things up for me.  Very helpful.
+> 2/ A fix for raid5 init failures
 
-Shame about not being able to boot from RAID-10 -- yet.  It'd make the
-setup simpler, I think.
+Yep, thanks!
 
-> I haven't used any of those installers in ages
+> 3/ A reminder that the fix you sent to Greg a while back has not found
+>    its way upstream.
 
-Just out of curiosity, what DO you use? A different installer (I
-notice you're at Suse), or a completely manual approach?
+I've nagged Greg about this, thanks.
 
-
-> I would probably go for 'c' as it is most flexible. =A0If, however, y=
-ou
-> are going to be hitting swap a lot, and cannot afford extra memory,
-> 'a' might be the better option.
-
-These are 8-24GB RAM boxes.  (c), then, should be OK.
-
-> 1.2 isn't "newer". =A01.0, 1.1, 1.2 are similar but put the metadata =
-in different places.
-> I has been suggested that we call them 1.end, 1.start and 1.offset (o=
-r
-> something like that) and while it might be a good idea, it hasn't
-> happened.
-
-I knew that metadata location was different between them, but had
-misunderstood that to be 'progress', with the newer version being
-'better'.
-
-> You almost certainly want 1.0 for /boot otherwise you probably won't =
-be able to boot.
-
-Glad you confirmed that!  I missed any docs that said "must be1.0 to bo=
-ot".
-
-> =A0I would suggest 1.1 for your RAID10.
-
-I'm guessing that's for performance reasons, and is no more/less
-'recoverable' in the case of a disaster?
-
->> (5) In whatever config is "best" in (3), above, is it still good
->> advice to install the bootlader into multiple MBRs? For example, if =
-I
->> extend the RAID-1 over all 4-disks, then, I install the loader into
->> all four MBRs?
->
-> Yes. =A0Else you might be able to boot if the first device dies.
-
-That's what I'll do.  I've not seen any examples of RAID-1 over
-4-disks.  Usually just 2.  Recovery process is the same for 4 vs 2,
-right?  I figure I won't get, or notice, much performance difference
-between 2- or 4- disk.  I just assume it'll be a bit more robust
-
-> Good luck,
-
-THanks!
-
-Ben
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+NeilBrown
