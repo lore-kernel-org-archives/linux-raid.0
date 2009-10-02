@@ -1,63 +1,57 @@
-From: Ben DJ <bendj095124367913213465@gmail.com>
-Subject: Re: A few remaining questions about installing to RAID-10
-Date: Fri, 2 Oct 2009 10:24:20 -0700
-Message-ID: <babafd2f0910021024m5fb72fc4k2304bf57e405f2fc@mail.gmail.com>
-References: <babafd2f0910012046i46f77e82lc1a75bbee3b1a6d8@mail.gmail.com>
-	<887103.5263.qm@web38801.mail.mud.yahoo.com> <babafd2f0910020754i4818043aw3d4a15e91eec9eb8@mail.gmail.com>
-	<20091002151504.GA22207@cthulhu.home.robinhill.me.uk> <babafd2f0910020846o22e7dd30l4a7be554770d0904@mail.gmail.com>
-	<20091002155919.GB22207@cthulhu.home.robinhill.me.uk> <babafd2f0910020931i5b38316dpc6351d5d6ed5211@mail.gmail.com>
-	<20091002170156.GA21401@cthulhu.home.robinhill.me.uk>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: [PATCH] md: Track raid5/6 statistics
+Date: Fri, 02 Oct 2009 13:51:28 -0400
+Message-ID: <4AC63DA0.3050406@tmr.com>
+References: <20090312205754.GH8732@clouds> <e9c3a7c20903141007h5fea439co70e4ea9ea4a10ec1@mail.gmail.com> <20090506200502.GK25233@clouds> <e9c3a7c20905070930n5b7bd3dcy3e837d17865d4540@mail.gmail.com> <20090511133602.GB30561@clouds> <4A0AC6C3.6020702@tmr.com> <20091002170121.GB22539@clouds>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091002170156.GA21401@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <20091002170121.GB22539@clouds>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jody McIntyre <scjody@sun.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-Hi Robin,
+Jody McIntyre wrote:
+> I finally got around to looking at the load average code and thinking how
+> it could be applied to tracking stripe cache usage, and unfortunately I
+> don't have any great ideas.
+>
+> What's useful to know is:
+>
+> 1. The current stripe_cache_active value, which can be sampled by a script
+> during heavy IO/resync/etc.  This is already available.
+>
+> 2. How often (relative to the amount of IO) we've had to block waiting for
+> a free stripe recently.  The "recently" part is hard to define and and not
+> implemented by current the current patch - it just reports the number of
+> events since the array was started, but we can collect statistics from
+> before and after a run and compare.
+>
+> 3. We've had a few customers using write-intent bitmaps lately, and our
+> "bit delayed" counter (the number of stripes currently on bitmap_list) has
+> been useful in assessing the impact of bitmaps / changes to bitmap chunk
+> size.  But it's not really a great measure of anything so I'm open to
+> suggestions.  I think "average amount of time an IO is delayed due to
+> bitmaps" would be nice and probably not too hard to implement, but I'm
+> worried about the performance impact of this.
+>
+> Also, there's still the open question of where we report these values other
+> than /proc/mdstat and I'm really open to suggestions.  If nobody has any
+> ideas, we'll just continue to patch raid5.c ourselves to extend
+> /proc/mdstat.
+>   
 
-On Fri, Oct 2, 2009 at 10:01 AM, Robin Hill <robin@robinhill.me.uk> wro=
-te:
-> Depends really - far isn't much slower on writes (the I/O elevator an=
-d
-> filesystem buffering help). =A0If you know /var will be write-mostly =
-(it's
-> often the default location for MySQL data files as well) then a near
-> layout may be better though.
+I would think in /sys would be a better place, anything which changes 
+/proc/mdstat is likely to break some script, and therefore be less 
+useful (and adoptable to mainline), where another file in /sys would be 
+really unlikely to cause an issue. People tend to look at what is in 
+known files, but ignore files which were not known at the time of script 
+creation. It tends to a messy tree of files, but rarely breaks existing 
+code.
 
-Ok, that's clear.  /var is typically a mix, it seems.  I may well
-create a second set of partitions for read-write on /data & /var/cache
-(I already put /tmp in tmpfs/RAM. /home I've mixed feeling about) --
-once I've convinced myself that the benefits really show up in the
-benchmarks.  And decide whether it's worth the complexity.   And, of
-course, then the which FS to use decisions (would prefer ZFS, but n/a.
- brtfs is promising but still experimental afaict.  ext4 &/or xfs may
-be my solutions); but that's for a different ML, I guess.
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  Unintended results are the well-earned reward for incompetence.
 
-> RAID-1 over N disks can survive N-1 drive failures. =A0Each disk hold=
-s a full copy of the data.
-
-I really need to stop confusing RAID-0/1 mirrors & stripes.  THanks.
-
-> Currently only RAID-1,4,5 and 6 support growing arrays (by either add=
-ing
-> spindles or increasing the capacity of each spindle). =A0There are pl=
-ans
-> to add this capability to other RAID levels but I'm not sure where th=
-is
-> sits on the priority list.
-
-Good to know.  With 4x1TB drives, I've got 2TB RAID-10 space to play
-with.  More than enough without worrying about the expansion too much.
- For now.
-
-Thanks.
-
-Ben
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
