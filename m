@@ -1,29 +1,38 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [patch 0/4] Journal guided resync and support
-Date: Fri, 02 Oct 2009 02:36:33 +0200
-Message-ID: <874oqitywe.fsf@basil.nowhere.org>
-References: <20091001223929.120106893@sun.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH 0/3] md fixes for 2.6.32-rc
+Date: Thu, 01 Oct 2009 18:18:20 -0700
+Message-ID: <20091002011747.24095.70355.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ext4-owner@vger.kernel.org>
-In-Reply-To: <20091001223929.120106893@sun.com> (scjody@sun.com's message of "Thu, 01 Oct 2009 18:39:29 -0400")
-Sender: linux-ext4-owner@vger.kernel.org
-To: scjody@sun.com
-Cc: linux-ext4@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Andreas Dilger <adilger@sun.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-scjody@sun.com writes:
->
-> The changes consist of patches to ext3, jbd, MD, and the raid456 personality.
-> These patches are currently against the RHEL 5 kernel 2.6.18-128.1.6.  Porting
-> to ext4/jbd2 and a more modern kernel is a TODO item.
+Hi Neil,
 
-The basic idea seems very cool, but the code would probably need
-porting to mainline before anything could be done with it on this
-list. Also most likely you would need a ext4 version.
-(my experience is that the ext3 maintainers don't accept new features
-anymore)
+A few fixes:
+1/ The multicore option is not ready for prime time
+2/ A fix for raid5 init failures
+3/ A reminder that the fix you sent to Greg a while back has not found
+   its way upstream.
 
--Andi
--- 
-ak@linux.intel.com -- Speaking for myself only.
+Thanks,
+Dan
+
+---
+
+Dan Williams (2):
+      Revert "md/raid456: distribute raid processing over multiple cores"
+      md/raid5: initialize conf->device_lock earlier
+
+NeilBrown (1):
+      Allow sysfs_notify_dirent to be called from interrupt context.
+
+
+ drivers/md/Kconfig |   11 ---------
+ drivers/md/raid5.c |   62 +++++++++++++---------------------------------------
+ fs/sysfs/file.c    |   14 +++++++-----
+ 3 files changed, 23 insertions(+), 64 deletions(-)
