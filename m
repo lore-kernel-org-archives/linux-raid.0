@@ -1,43 +1,62 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+From: Robin Hill <robin@robinhill.me.uk>
 Subject: Re: A few remaining questions about installing to RAID-10
-Date: Fri, 2 Oct 2009 09:51:41 +0200
-Message-ID: <20091002075141.GB2781@rap.rap.dk>
+Date: Fri, 2 Oct 2009 08:54:42 +0100
+Message-ID: <20091002075442.GA13523@cthulhu.home.robinhill.me.uk>
 References: <babafd2f0910011827l2bc62facpc5fe15ab3994b512@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="9amGYk9869ThD9tj"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <babafd2f0910011827l2bc62facpc5fe15ab3994b512@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ben DJ <bendj095124367913213465@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Oct 01, 2009 at 06:27:57PM -0700, Ben DJ wrote:
-> I'm setting up new linux boxes, hoping to install whatever OS I choose
-> to a software RAID array.
-> 
-> I've got 4 identical SATA drives, and would ideally like to use RAID-10.
-> 
-> I've read a bunch of slightly stale How-To docs, and have a few questions.
-> 
-> (1) Can Linux boot from /boot on RAID-10?  Oldest info I found said no
-> boot from RAID at all, then more recent docs said boot from RAID-1
-> works.  I found nothing on RAID-10.  What's the latest sccop on this?
 
-You can boot from a raid-10,n2 with the superblock last, standard
-raid10,n2 will do. But the normal thing is to boot from raid-1
+--9amGYk9869ThD9tj
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-There is a description of a setup at 
-http://linux-raid.osdl.org/index.php/Preventing_against_a_failing_disk
+On Thu Oct 01, 2009 at 06:27:57PM -0700, Ben DJ wrote:
 
 > (2) As far as I can tell, none of the installers in Centos, Ubuntu or
 > Opensuse are RAID-10 aware.  Seems like the sanest way to get setup
 > would be to boot from SystemRescueCD, do the partitioning and RAID
 > creation, then re-boot from an installer disk using the pre-setup
 > disks.
+>=20
+> Am I missing some other, simpler approach?
+>=20
+With OpenSUSE you can just switch to the second console at that point of
+the install and do the partitioning & RAID setup there (you can in text
+mode anyway, I've not used the graphical installer), then you just need
+to tell the installer to rescan the partition table and it'll pick up
+the new details.
 
-I have set up centos systems using the above guide.
+I'm pretty sure CentOS doesn't offer multiple consoles during the
+install so a SystemRescueCD/LiveCD will be needed there.  I've never
+used Ubuntu so I've no idea what it offers.
 
-best regards
-keld
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
+
+--9amGYk9869ThD9tj
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+
+iEYEARECAAYFAkrFscAACgkQShxCyD40xBKGnACfcAsOZhc/9lslZOJr+evBAu4q
+o2sAn2q1EdsiF3ida+q92EtpCpC+tIIx
+=0MIY
+-----END PGP SIGNATURE-----
+
+--9amGYk9869ThD9tj--
