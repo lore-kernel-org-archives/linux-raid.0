@@ -1,107 +1,93 @@
-From: Ben DJ <bendj095124367913213465@gmail.com>
-Subject: Re: A few remaining questions about installing to RAID-10
-Date: Fri, 2 Oct 2009 08:46:47 -0700
-Message-ID: <babafd2f0910020846o22e7dd30l4a7be554770d0904@mail.gmail.com>
-References: <babafd2f0910012046i46f77e82lc1a75bbee3b1a6d8@mail.gmail.com>
-	<887103.5263.qm@web38801.mail.mud.yahoo.com> <babafd2f0910020754i4818043aw3d4a15e91eec9eb8@mail.gmail.com>
-	<20091002151504.GA22207@cthulhu.home.robinhill.me.uk>
+From: Jody McIntyre <scjody@sun.com>
+Subject: Re: [patch 4/4] [ext3] Add journal guided resync (data=declared	mode)
+Date: Fri, 02 Oct 2009 11:53:43 -0400
+Message-ID: <20091002155343.GA22539@clouds>
+References: <20091001223929.120106893@sun.com>
+ <20091001224021.757201872@sun.com> <19141.23743.35576.466246@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091002151504.GA22207@cthulhu.home.robinhill.me.uk>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, keld@dkuug.dk, robin@robinhill.me.uk
+Content-Type: text/plain; CHARSET=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ext4-owner@vger.kernel.org>
+Content-disposition: inline
+In-reply-to: <19141.23743.35576.466246@notabene.brown>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-ext4@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Andreas Dilger <adilger@sun.com>
 List-Id: linux-raid.ids
 
-keld@dkuug.dk,robin@robinhill.me.uk
+On Fri, Oct 02, 2009 at 11:51:59AM +1000, Neil Brown wrote:
 
+> I have thought about this sort of thing from time to time and I have a
+> very different idea for how the necessary communication between the
+> filesystem and MD would happen.  I think my approach would completely
+> address this problem, and doesn't need to add any ioctls (which I am not
+> keen on).
+> 
+> I would add two new BIO_RW_ flags to be used with WRITE requests.
+> The first flag would mean "don't worry about a crash in the middle of
+> this write,  I will validate it after a crash before I rely on the
+> data."
+> The second would mean "last time I wrote data near here there might
+> have been a failure, be extra careful".
+> 
+> So the first flag would be used during normal filesystem writes for
+> every block that gets recorded in the journal, and for every write
+> to the journal.
+> 
+> The second flag is used after a crash to re-write every block that
+> could have been in-flight during the crash.  Some of those blocks will
+> be read from the journal and written to their proper home, other will
+> be read from wherever they are and written back there.
+> 
+> The first flag would be interpreted by MD as "don't set the bitmap
+> bit".  The second flag would be interpreted as "don't trust the
+> parity block, but do a reconstruct-write".
+> 
+> With this scheme you would still need a write-intent-bitmap on the MD
+> array, but no bits would ever be set if the filesystem were using the
+> new flags, so no performance impact.  You probably could run without a
+> bitmap, in which case the flag would me "don't mark the array as
+> active".
 
-Hi,
+That makes a lot of sense.  The original design used something similar to
+your second flag to do all the resync work.  I changed to an IOCTL approach
+because there's no good way for a flagged IO to return "the resync you
+requested could not be done so don't skip the automated resync."  But with
+your suggestion, there's no need to explicitly skip the automated resync at
+the end either - it just won't act on those blocks, assuming all blocks
+were previously written with the first flag.
 
-2009/10/2 Keld J=F8rn Simonsen <keld@dkuug.dk>:
-> raid10 is "new" and "dangerous" (FUD). Many people
-> do not know about raid10, and its wonders.
+I don't like the IOCTLs either :)
 
-So, the "usual suspects".
+> I'm not entirely sure about the second flag.  Maybe it would be better
+> to make it a flag for READ and have it mean "validate and correct any
+> redundancy information (duplicates or parity) for this block before
+> returning it.  Then we could have just one flag, which meant different
+> things for READ and WRITE.
 
-> if the raid type happens to be the same layout as  a non-raid partiti=
-on, it
-> works. raid10,n2 default layout (ver 0.90) is equivalent with non-rai=
-d,
-> as the raid superblock is in the end of the partition.
+Yes, it needs to be a READ flag to avoid an unnecessary read-write cycle.
+The list of declare blocks in the ext3 journal just lists the block
+numbers, not their contents (this is equivalent to data=ordered, not
+data=journaled).
 
-That makes sense, thanks. Not clear whether that's "officially
-supported" or "just lucky".
+It would be nice to also have a WRITE flag though, for those cases
+(metadata) where we do know what's being written to the block.
 
-Just to be ccertain, which metadata version, 0.90(default) or 1.0?
-According to the man page,
+In any case, I think it's less confusing to have two flags: the "don't
+worry about this block for now" flag and the "resync this block now" flag.
 
-	0, 0.90, default
-		 Use  the original 0.90 format superblock.  This format limits
-arrays to 28 component devices and limits
-		 component devices of levels 1 and greater to 2 terabytes.
+There's still one complication though, and an IOCTL may still be necessary:
+at fsck time, we need to perform a journal recovery from e2fsck (userland.)
+Clearly, resyncing the declared blocks (plus the journal and affected
+metadata blocks) must be done before e2fsck does any writes to these
+blocks.  An IOCTL seemed to be the best way to do that, but I'm open to
+other suggestions.
 
-	1, 1.0, 1.1, 1.2
-		 Use the new version-1 format superblock.  This has few
-restrictions.  The different sub-versions  store
-		 the  superblock  at  different  locations on the device, either at
-the end (for 1.0), at the start (for
-		 1.1) or 4K from the start (for 1.2).
+> What do you think?
 
-it's v 1.0 that specifically states the super block is "at the end".
-Will either/both work?
+I'll send a new patchset, hopefully today.
 
-On Fri, Oct 2, 2009 at 8:15 AM, Robin Hill <robin@robinhill.me.uk> wrot=
-e:
-> The main reason is that RAID-1 works across any number of disks (as
-> they're all identical) whereas RAID-10,nX working is an artifact of h=
-ow
-> that layout works for X drives (they end up being identical to RAID-1=
-).
+Cheers,
+Jody
 
-As X is a variable, according to the man page,
-
-  "The number is the number of copies of each datablock.  2 is normal,
-3 can be useful.
-   This number  can  be  at most equal to the number of devices in the
-array.  It does
-   not need to divide evenly into that number (e.g. it is perfectly
-legal to have an 'n2'
-   layout for an array with an odd number of devices)."
-
-does "RAID-10,nX working is an artifact" hold true for any X?
-
-If I've a 4-drive RAID-10 array that I want to have a bootable-/boot
-on, should X best be "normmal" 2, "useful" 3, or "unmentioned" 4?  As
-usual it seems that performance, redundancy/robustness, and space
-utilization, as well as just being able to boot, all have a part to
-play.
-
->> On Fri, Oct 2, 2009 at 12:54 AM, Robin Hill <robin@robinhill.me.uk> =
-wrote:
-> Yes, Alt-F2 will get you to the second console, Alt-F3 for the third =
-(or
-> Ctrl-Alt-F2 from within X).
-
-Just found the docs, too. Thanks!
-
-> It's the combination - RAID10,o2 for 2 drives results in one drive
-> having all data in normal order (so bootable) and the other having ev=
-ery
-> pair of chunks flipped.
-
-Sound like RAID10,n2 (or n3 or n4, in my case) is the right approach.
-
-> The Wikipedia entry for Non-standard RAID levels has diagrams
-
-=46ound it, Thanks.
-
-Thanks for the help & discussion!
-
-Ben
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> NeilBrown
