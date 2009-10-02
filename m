@@ -1,80 +1,60 @@
-From: Ben DJ <bendj095124367913213465@gmail.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
 Subject: Re: A few remaining questions about installing to RAID-10
-Date: Fri, 2 Oct 2009 07:54:04 -0700
-Message-ID: <babafd2f0910020754i4818043aw3d4a15e91eec9eb8@mail.gmail.com>
-References: <babafd2f0910012046i46f77e82lc1a75bbee3b1a6d8@mail.gmail.com>
-	<887103.5263.qm@web38801.mail.mud.yahoo.com>
+Date: Fri, 2 Oct 2009 17:06:41 +0200
+Message-ID: <20091002150641.GB4342@rap.rap.dk>
+References: <babafd2f0910012046i46f77e82lc1a75bbee3b1a6d8@mail.gmail.com> <887103.5263.qm@web38801.mail.mud.yahoo.com> <babafd2f0910020754i4818043aw3d4a15e91eec9eb8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <887103.5263.qm@web38801.mail.mud.yahoo.com>
+Content-Disposition: inline
+In-Reply-To: <babafd2f0910020754i4818043aw3d4a15e91eec9eb8@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: chimera_god@yahoo.com, keld@dkuug.dk, robin@robinhill.me.uk
-Cc: linux-raid@vger.kernel.org
+To: Ben DJ <bendj095124367913213465@gmail.com>
+Cc: chimera_god@yahoo.com, robin@robinhill.me.uk, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi everybody,
+On Fri, Oct 02, 2009 at 07:54:04AM -0700, Ben DJ wrote:
+> Hi everybody,
+>=20
+> 2009/10/2 Keld J=F8rn Simonsen <keld@dkuug.dk>:
+> > You can boot from a raid-10,n2 with the superblock last, standard
+> > raid10,n2 will do. But the normal thing is to boot from raid-1
+> >
+> > There is a description of a setup at
+> > http://linux-raid.osdl.org/index.php/Preventing_against_a_failing_d=
+isk
+>=20
+> Thanks for the URL.  Is there a reason that raid-1 is the "normal
+> thing"? Just popularity or something technical?
 
-2009/10/2 Keld J=F8rn Simonsen <keld@dkuug.dk>:
-> You can boot from a raid-10,n2 with the superblock last, standard
-> raid10,n2 will do. But the normal thing is to boot from raid-1
->
-> There is a description of a setup at
-> http://linux-raid.osdl.org/index.php/Preventing_against_a_failing_dis=
-k
+it is because raid1 is what traditionally worked. raid10,n2 will not wo=
+rk
+in some situations.  raid10 is "new" and "dangerous" (FUD). Many people
+do not know about raid10, and its wonders.
 
-Thanks for the URL.  Is there a reason that raid-1 is the "normal
-thing"? Just popularity or something technical?
+> In your reference it says "The root file system can be on another rai=
+d
+> than the /boot partition. We recommend an raid10,f2, as the root file
+> system will mostly be reads, and the raid10,f2 raid type is the
+> fastest for reads, while also sufficiently fast for writes. Other
+> relevant raid types would be raid10,o2 or raid1." and "a small /boot
+> partition. We recommend something like 200 MB on an ext3 raid1".
+>=20
+> How or why did you arrive at "raid-10,n2 with the superblock last"?
 
-In your reference it says "The root file system can be on another raid
-than the /boot partition. We recommend an raid10,f2, as the root file
-system will mostly be reads, and the raid10,f2 raid type is the
-fastest for reads, while also sufficiently fast for writes. Other
-relevant raid types would be raid10,o2 or raid1." and "a small /boot
-partition. We recommend something like 200 MB on an ext3 raid1".
+what lilo and grub really do is that they just read from one disk, so i=
+f
+the raid type happens to be the same layout as  a non-raid partition, i=
+t
+works. raid10,n2 default layout (ver 0.90) is equivalent with non-raid,
+as the raid superblock is in the end of the partition. I understand tha=
+t
+other versions of the superblock are put other places, such as in the
+beginning of the partition.
 
-How or why did you arrive at "raid-10,n2 with the superblock last"?
-
-On Fri, Oct 2, 2009 at 12:54 AM, Robin Hill <robin@robinhill.me.uk> wro=
-te:
-> With OpenSUSE you can just switch to the second console at that point=
- of
-
-I didn't know about the console switching option, thanks.  I'll look
-for docs on how to switch; I guess a F-key does the trick.  As far as
-you know, even though the graphical installers don't offer RAID-10
-config as an option, are they RAID-10 aware enough to correctly
-recognize/identify the array as RAID-10 after manual setup then
-rescan?
-
-SystemRescueCD approach still seems straightforward too, and can be
-doc'd as doable across any OS install.
-
-On Fri, Oct 2, 2009 at 5:30 AM, adfas asd <chimera_god@yahoo.com> wrote=
-:
-> I am booting just fine from a RAID10-o2 array, although I'm told I'm =
-not supposed to.
-
-Why "not supposed to"?  Is it the RAID 10? or the 'o2' that's the probl=
-em?
-
->I've unplugged each drive and tried it, and they boot just fine degrad=
-ed.
-
-That's great to hear.  Just curious, how many drives in your array at t=
-he time?
-
-> I followed this guide, to convert my -running- Debian system, and jus=
-t made a few substitutions for RAID10:
-> http://www.howtoforge.com/software-raid1-grub-boot-debian-etch
-
-Thanks for the additional URL.
-
-In all these cases /boot on RAID-10 was on its own partition, NOT on
-/boot in a LVM-on-RAID, right?
-
-Ben
+best regards
+keld
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
