@@ -1,49 +1,31 @@
-From: adfas asd <chimera_god@yahoo.com>
-Subject: Re: A few remaining questions about installing to RAID-10
-Date: Sat, 3 Oct 2009 07:12:55 -0700 (PDT)
-Message-ID: <275143.15844.qm@web38804.mail.mud.yahoo.com>
-References: <babafd2f0910020754i4818043aw3d4a15e91eec9eb8@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 0/3] md fixes for 2.6.32-rc
+Date: Sat, 03 Oct 2009 08:54:03 -0700
+Message-ID: <4AC7739B.9040209@intel.com>
+References: <20091002011747.24095.70355.stgit@dwillia2-linux.ch.intel.com> <19141.32211.742547.19481@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <babafd2f0910020754i4818043aw3d4a15e91eec9eb8@mail.gmail.com>
+In-Reply-To: <19141.32211.742547.19481@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---- On Fri, 10/2/09, Ben DJ <bendj095124367913213465@gmail.com> wrote:
-> On Fri, Oct 2, 2009 at 5:30 AM, adfas asd <chimera_god@yahoo.com>
-> wrote:
-> >I've unplugged each drive and tried it, and they boot
-> just fine degraded.
+Neil Brown wrote:
+> On Thursday October 1, dan.j.williams@intel.com wrote:
+>> Hi Neil,
+>>
+>> A few fixes:
+>> 1/ The multicore option is not ready for prime time
 > 
-> That's great to hear.  Just curious, how many drives
-> in your array at the time?
+> But it is already marked experimental...
+> So do we really need to revert?  or is the current code broken beyond
+> repair?
 
-Two disks, 2TB each.  RAID10-o2 means that there are two redundant copies of my data in the array, stored respectively on sda and sdb.
+On second thought perhaps it is salvageable.  I'll take a look at moving 
+the parallelism down from handle_stripe() to raid_run_ops().
 
- 
-> > I followed this guide, to convert my -running- Debian
-> system, and just made a few substitutions for RAID10:
-> > http://www.howtoforge.com/software-raid1-grub-boot-debian-etch
-> 
-> Thanks for the additional URL.
-> 
-> In all these cases /boot on RAID-10 was on its own
-> partition, NOT on
-> /boot in a LVM-on-RAID, right?
-
-I didn't use LVM, and don't trust layering of any technology.  My two-drive array was set up much as he recommended it: md1 - / (including /boot), md2 - swap, md3 - /home.  I am against any further fracturing of partitions, as modern disk drives have lots of space, and lots of parts becomes unmaintainable.
-
-I will say that this system appears to be a performance problem for me, as I run MythTV on / and have my videos in /home.  When Myth is scanning to eliminate commercials it must frantically sweep between / and /home, and overall system performance is impacted.  I am working on putting / on a dedicated high-performance 2.5" drive and keeping my videos on the array as they're much too large to back up.  In the process I'm also going to split the array so that one drive is in the PeeCee and the other is NASsed out in the garage in case of theft or fire.
-
-When I need more space (soon) I'll add two more drives, and still mirror them two copies, with one side of the mirror in the PeeCee (sda, sdb) and the other NASsed in the garage (sdc, sdd).
-
-What I know is that 'offset' will boot and fail over.  I don't know if 'far' will.  I also know that .90 will boot and fail over.  I don't know whether 1.x will.  When building the array I tried to use 1.2 (as I thought it was newest/best) but there was a bitch at the beginning of boot and it wouldn't boot (for other reasons) so I reverted to .90.  When I do it again I will likely use 1.0, given what I've recently learned here.
-
-I am still confused about the benefits of far vs offset.  Keld (the developer) says that although offset is newer, it's not necessarily better than far, only more compatible.  I have not found any rigorous performance comparisons of far vs offset.
-
-I am shocked to read that RAID10 is not expandable.  I will want to add disks in the future. I will want to add space, but not partitions.  Does this mean I'll have to completely rebuild the array?  Once your data gets to a certain size it becomes unmanageable to rebuild the array.
-
-
-      
+--
+Dan
