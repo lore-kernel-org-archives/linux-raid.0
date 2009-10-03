@@ -1,46 +1,33 @@
-From: David Rees <drees76@gmail.com>
-Subject: Re: RAID10 - migrating disks without failing/degrading array?
-Date: Fri, 2 Oct 2009 19:53:27 -0700
-Message-ID: <72dbd3150910021953l67ecd8ffk3d80d2a3699b04c7@mail.gmail.com>
-References: <72dbd3150910021122r474c43f6m2f1d953b5af9c3e0@mail.gmail.com>
-	<7d86ddb90910021836h537e2af6h552b7c89af37d612@mail.gmail.com>
+From: Igor Podlesny <for.poige+linux@gmail.com>
+Subject: Shifting 0xFD partition's end boundary && 0.90 format superblock ==
+	Bad Idea(?)
+Date: Sat, 3 Oct 2009 15:54:51 +0800
+Message-ID: <43d009740910030054l77b53dcdufa9d57f8339d16bb@mail.gmail.com>
+Reply-To: for.poige+linux@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7d86ddb90910021836h537e2af6h552b7c89af37d612@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ryan Wagoner <rswagoner@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-(Re-adding linux-raid to CC)
+	It looks like. :-)
+	
+	I have disk layout where RAID's partition is followed by non-RAID's.
+I was pretty sure that having deleted those non-RAID's partitions, and
+shifted RAID's partition end to occupy the whole disk would be a
+simple step, but having read man md(4) I figured out that 0.9 format
+superblock is located at the end of device. So, it seems the only way
+to follow is kicking partitions from the array, change theirs size,
+add them again (resyncing!) and all that for each RAID's component.
+Then Grow. Amen.
+	
+	Correct?
+	
+	Would using of version-1 (1.1 / 1.2) superblock made it simpler (just
+move partition end and run grow)?
+	
+	Are there some gotchas with version-1? Would kernel RAID autodetect work?
 
-On Fri, Oct 2, 2009 at 6:36 PM, Ryan Wagoner <rswagoner@gmail.com> wrot=
-e:
-> On Fri, Oct 2, 2009 at 2:22 PM, David Rees <drees76@gmail.com> wrote:
->> It seems like I should be able to add a drive as a directly
->> replacement for one of the drives I'm pulling out (so I temporarily
->> end up with 3-copies of that chunk instead of 2) until I pull
->> fail/remove the older disk. =A0If I was using RAID0 striped over RAI=
-D1
->> mirrors, for example, I know this is possible.
->>
->> Is this possible to do with RAID10?
->
-> You could stop the array and use dd to copy the old disks to the new
-> ones. Then just start up the array on the new disks.
-
-Yeah, that would work, but the goal is to do the migration without any =
-downtime.
-
-eSATA hot-swap even in inexpensive enclosures works pretty well these
-days.  There are slight hiccups as the drives get rescanned, but it's
-not too noticable.
-
--Dave
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+End of message. Next message?
