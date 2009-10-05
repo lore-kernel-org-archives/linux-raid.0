@@ -1,41 +1,43 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: ANNOUNCE: mdadm 3.0.1 - A tool for managing Soft RAID under Linux
-Date: Mon, 05 Oct 2009 13:47:12 +0400
-Message-ID: <4AC9C0A0.8070709@msgid.tls.msk.ru>
-References: <19132.27836.474548.540600@notabene.brown> <alpine.LNX.2.01.0910041514180.11684@filesrv1.baby-dragons.com>
+From: adfas asd <chimera_god@yahoo.com>
+Subject: RE: A few remaining questions about installing to RAID-10
+Date: Mon, 5 Oct 2009 06:58:54 -0700 (PDT)
+Message-ID: <427502.68563.qm@web38806.mail.mud.yahoo.com>
+References: <20091005045942600.WUNS18886@cdptpa-omta02.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.01.0910041514180.11684@filesrv1.baby-dragons.com>
+In-Reply-To: <20091005045942600.WUNS18886@cdptpa-omta02.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mr. James W. Laferriere wrote:
->     Hello Neil (& All) ,  Am I missing something here ?  I've not had 
-> much if any difficulties compiling mdadm ,  from -very- old distro. 
-> tooled boxen to very new ,  But ...
-[]
-> monitor.c: In function `signal_manager':
-> monitor.c:139: error: `SYS_tgkill' undeclared (first use in this function)
-> monitor.c:139: error: (Each undeclared identifier is reported only once
-> monitor.c:139: error: for each function it appears in.)
-> make: *** [monitor.o] Error 1
+
+
+--- On Sun, 10/4/09, Leslie Rhorer <lrhorer@satx.rr.com> wrote:
+> > I am
+> working on putting / on a
+> > dedicated high-performance 2.5" drive and keeping my
+> videos on the array
+> > as they're much too large to back up.
 > 
-> # uname -a
-> Linux ns3 2.6.30.6 #1 SMP Wed Sep 9 05:50:45 UTC 2009 i686 pentium3 i386 
-> GNU/Linux
+>     You've said that before, but it is
+> specious, as you are potentially
+> using more space to mirror them on a RAID array than you
+> would by
+> implementing a backup array.  You don't have a
+> separate backup, but they are
+> using more space on your proposed system than they would be
+> with my proposal
+> for you.  I also rather expect in the long run it may
+> be more of a
+> management hassle for you.  It's your decision, of
+> course.
 
-If you use that new kernel, how about updating kernel-headers
-to match your kernel?  SYS_tgkill comes from linux headers.
+I don't understand why you would say this.  Whether I set up a RAID1 in the garage and one in the house and RAID0 them, or just set up a RAID10, it should not have any impact on the space.  And more arrays means -more- management hassle, not less. 
 
-> # /usr/src/linux/scripts/ver_linux
+And I don't understand how you can set up an array without partitions?  Do you then LVM it and partition -that-? Is that actually possible?
 
-that's all fine except it does not show
-version of kernel headers installed on
-your system.  Or the "counterpart" from
-the glibc.
+ 
 
-/mjt
+
+      
