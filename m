@@ -1,80 +1,85 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: Re: ANNOUNCE: mdadm 3.0.1 - A tool for managing Soft RAID under
- Linux
-Date: Sun, 4 Oct 2009 15:16:56 -0800 (AKDT)
-Message-ID: <alpine.LNX.2.01.0910041514180.11684@filesrv1.baby-dragons.com>
-References: <19132.27836.474548.540600@notabene.brown>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: A few remaining questions about installing to RAID-10
+Date: Sun, 4 Oct 2009 23:59:41 -0500
+Message-ID: <20091005045942600.WUNS18886@cdptpa-omta02.mail.rr.com>
+References: <275143.15844.qm@web38804.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <19132.27836.474548.540600@notabene.brown>
+In-Reply-To: <275143.15844.qm@web38804.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
- 	Hello Neil (& All) ,  Am I missing something here ?  I've not had much 
-if any difficulties compiling mdadm ,  from -very- old distro. tooled boxen to 
-very new ,  But ...
+> I didn't use LVM, and don't trust layering of any technology.  My two-
+> drive array was set up much as he recommended it: md1 - / (including
+> /boot), md2 - swap, md3 - /home.  I am against any further fracturing of
+> partitions, as modern disk drives have lots of space, and lots of parts
+> becomes unmaintainable.
 
- 		Tia ,  JimL
+	Actually, I think for your situation, LVM might be a reasonable
+solution.  Regardless, I don't particularly recommend using any partitions
+at all.  I don't.  All of my arrays are on raw disks, and all of my file
+systems use the entire unpartitioned array.  Again, there can be good
+reasons for partitioning disks, but in your case I don't see any advantages.
 
-...snip...
-gcc  -o mdadm mdadm.o config.o mdstat.o  ReadMe.o util.o Manage.o Assemble.o 
-Build.o Create.o Detail.o Examine.o Grow.o Monitor.o dlink.o Kill.o Query.o 
-Incremental.o mdopen.o super0.o super1.o super-ddf.o super-intel.o bitmap.o 
-restripe.o sysfs.o sha1.o mapfile.o crc32.o sg_io.o msg.o platform-intel.o 
-probe_roms.o
-gcc -Wall -Werror -Wstrict-prototypes -ggdb -DSendmail=\""/usr/sbin/sendmail 
--t"\" -DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\"   -c 
--o mdmon.o mdmon.c
-gcc -Wall -Werror -Wstrict-prototypes -ggdb -DSendmail=\""/usr/sbin/sendmail 
--t"\" -DCONFFILE=\"/etc/mdadm.conf\" -DCONFFILE2=\"/etc/mdadm/mdadm.conf\"   -c 
--o monitor.o monitor.c
-monitor.c: In function `signal_manager':
-monitor.c:139: error: `SYS_tgkill' undeclared (first use in this function)
-monitor.c:139: error: (Each undeclared identifier is reported only once
-monitor.c:139: error: for each function it appears in.)
-make: *** [monitor.o] Error 1
+> I will say that this system appears to be a performance problem for me, as
+> I run MythTV on / and have my videos in /home.  When Myth is scanning to
+> eliminate commercials it must frantically sweep between / and /home, and
+> overall system performance is impacted.  I am working on putting / on a
+> dedicated high-performance 2.5" drive and keeping my videos on the array
+> as they're much too large to back up.
 
-# uname -a
-Linux ns3 2.6.30.6 #1 SMP Wed Sep 9 05:50:45 UTC 2009 i686 pentium3 i386 GNU/Linux
+	You've said that before, but it is specious, as you are potentially
+using more space to mirror them on a RAID array than you would by
+implementing a backup array.  You don't have a separate backup, but they are
+using more space on your proposed system than they would be with my proposal
+for you.  I also rather expect in the long run it may be more of a
+management hassle for you.  It's your decision, of course.
 
-# /usr/src/linux/scripts/ver_linux
-If some fields are empty or look unusual you may have an old version.
-Compare to the current minimal requirements in Documentation/Changes.
+> What I know is that 'offset' will boot and fail over.  I don't know if
+> 'far' will.  I also know that .90 will boot and fail over.  I don't know
+> whether 1.x will.  When building the array I tried to use 1.2 (as I
+> thought it was newest/best) but there was a bitch at the beginning of boot
+> and it wouldn't boot (for other reasons) so I reverted to .90.  When I do
+> it again I will likely use 1.0, given what I've recently learned here.
 
-Linux ns3 2.6.30.6 #1 SMP Wed Sep 9 05:50:45 UTC 2009 i686 pentium3 i386 
-GNU/Linux
+	Are you aware the .90 superblock limits the array to 28 devices,
+total, and the individual device size cannot exceed 2T?  This is probably
+not an issue for you right now, but in the not-so-distant future it could
+easily become so.  3T drives are supposed to come out quite soon, and
+easting up drives on each array the way you are using RAID10, 28 may start
+looking like a small number before too many months have passed.  If you
+insist on booting from the array, I suggest you look very carefully into the
+superblock structure.  1.0 and 1.2 may serve you better than 1.1, depending
+on exactly what you want to do and how you plan to do it.
 
-Gnu C                  3.4.6
-Gnu make               3.81
-binutils               2.15.92.0.2
-util-linux             2.12r
-mount                  2.12r
-module-init-tools      3.2.2
-e2fsprogs              1.38
-jfsutils               1.1.11
-reiserfsprogs          3.6.19
-xfsprogs               2.8.10
-pcmciautils            014
-pcmcia-cs              3.2.8
-quota-tools            3.13.
-PPP                    2.4.4
-Linux C Library        2.3.6
-Dynamic linker (ldd)   2.3.6
-Linux C++ Library      6.0.3
-Procps                 3.2.7
-Net-tools              1.60
-Kbd                    1.12
-oprofile               0.9.1
-Sh-utils               5.97
-udev                   097
-Modules Loaded         i2c_piix4
+	You also need to make sure the filesystem supports your needs in the
+future.
 
-  -- 
-+------------------------------------------------------------------+
-| James   W.   Laferriere | System    Techniques | Give me VMS     |
-| Network&System Engineer | 2133    McCullam Ave |  Give me Linux  |
-| babydr@baby-dragons.com | Fairbanks, AK. 99701 |   only  on  AXP |
-+------------------------------------------------------------------+
+> I am still confused about the benefits of far vs offset.  Keld (the
+> developer) says that although offset is newer, it's not necessarily better
+> than far, only more compatible.  I have not found any rigorous performance
+> comparisons of far vs offset.
+> 
+> I am shocked to read that RAID10 is not expandable.  I will want to add
+> disks in the future. I will want to add space, but not partitions.  Does
+> this mean I'll have to completely rebuild the array?  Once your data gets
+> to a certain size it becomes unmanageable to rebuild the array.
+
+	Well, there's more than one way to skin a cat, of course, but
+growing a RAID10 array through rebuilding is definitely a bit of a fiddle.
+I know Neil was looking at including RAID reshaping on RAID10 arrays, but I
+don't think it has been implemented.  Currently I think adding a drive is
+only available on RAID 1, 4, 5, and 6, or at least so the man page says for
+my copy of mdadm, which is 2.6.7.2.
+
+	For this and other reasons, I really think you would be better
+served in your situation to employ independent arrays, either RAID5, RAID6,
+or LVM,  in the house and in the garage.  Of course you could then include
+the two arrays in a RAID0 volume with write mostly.  Again, it's your
+choice.
+	
+
