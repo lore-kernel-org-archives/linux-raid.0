@@ -1,28 +1,54 @@
-From: Drew <drew.kay@gmail.com>
-Subject: Re: A few remaining questions about installing to RAID-10
-Date: Mon, 5 Oct 2009 09:19:03 -0700
-Message-ID: <c268e4660910050919x5cfc0fdbm5e42e2ec14957585@mail.gmail.com>
-References: <c268e4660910050849mc4bba01ifbb1a57caf59c41a@mail.gmail.com>
-	<177529.24520.qm@web38806.mail.mud.yahoo.com>
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Subject: Re: ANNOUNCE: mdadm 3.0.1 - A tool for managing Soft RAID under
+ Linux
+Date: Mon, 5 Oct 2009 09:40:47 -0800 (AKDT)
+Message-ID: <alpine.LNX.2.01.0910050939250.14238@filesrv1.baby-dragons.com>
+References: <19132.27836.474548.540600@notabene.brown> <alpine.LNX.2.01.0910041514180.11684@filesrv1.baby-dragons.com> <4AC9C0A0.8070709@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <177529.24520.qm@web38806.mail.mud.yahoo.com>
+In-Reply-To: <4AC9C0A0.8070709@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: adfas asd <chimera_god@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> ... But no journalling for crash recovery?
+ 	Hello Michael ,
 
-Journalling is a function of the filesystem, not the block devices.
-RAID is there to make sure you won't lose data if a physical disk
-dies.
+On Mon, 5 Oct 2009, Michael Tokarev wrote:
+> Mr. James W. Laferriere wrote:
+>>     Hello Neil (& All) ,  Am I missing something here ?  I've not had much 
+>> if any difficulties compiling mdadm ,  from -very- old distro. tooled boxen 
+>> to very new ,  But ...
+> []
+>> monitor.c: In function `signal_manager':
+>> monitor.c:139: error: `SYS_tgkill' undeclared (first use in this function)
+>> monitor.c:139: error: (Each undeclared identifier is reported only once
+>> monitor.c:139: error: for each function it appears in.)
+>> make: *** [monitor.o] Error 1
+>> 
+>> # uname -a
+>> Linux ns3 2.6.30.6 #1 SMP Wed Sep 9 05:50:45 UTC 2009 i686 pentium3 i386 
+>> GNU/Linux
+>
+> If you use that new kernel, how about updating kernel-headers
+> to match your kernel?  SYS_tgkill comes from linux headers.
+ 	Cool ,  Thank you .
 
+>> # /usr/src/linux/scripts/ver_linux
+>
+> that's all fine except it does not show
+> version of kernel headers installed on
+> your system.  Or the "counterpart" from
+> the glibc.
+> /mjt
+ 	Is there a Kernel provided tool to determine what versions of each are 
+in place on a system ?
 
-
+ 	Tia ,  JimL
 -- 
-Drew
-
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
++------------------------------------------------------------------+
+| James   W.   Laferriere | System    Techniques | Give me VMS     |
+| Network&System Engineer | 2133    McCullam Ave |  Give me Linux  |
+| babydr@baby-dragons.com | Fairbanks, AK. 99701 |   only  on  AXP |
++------------------------------------------------------------------+
