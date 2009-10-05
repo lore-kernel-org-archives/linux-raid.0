@@ -1,43 +1,47 @@
 From: adfas asd <chimera_god@yahoo.com>
 Subject: RE: A few remaining questions about installing to RAID-10
-Date: Mon, 5 Oct 2009 06:58:54 -0700 (PDT)
-Message-ID: <427502.68563.qm@web38806.mail.mud.yahoo.com>
-References: <20091005045942600.WUNS18886@cdptpa-omta02.mail.rr.com>
+Date: Mon, 5 Oct 2009 08:30:48 -0700 (PDT)
+Message-ID: <556491.46402.qm@web38805.mail.mud.yahoo.com>
+References: <20091005145711322.FNMG18886@cdptpa-omta02.mail.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091005045942600.WUNS18886@cdptpa-omta02.mail.rr.com>
+In-Reply-To: <20091005145711322.FNMG18886@cdptpa-omta02.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+WAT?!  How can I mount an unpartitioned/unformatted array?  This is more direct than using a filesystem, although there would be no journalling, right?  If I were to mount my small disk for / and the unpartitioned array as /home for example. 
+
+Seems like journalling/crash recovery is pretty vital.  Could not partitioning be recommendable?
 
 
---- On Sun, 10/4/09, Leslie Rhorer <lrhorer@satx.rr.com> wrote:
-> > I am
-> working on putting / on a
-> > dedicated high-performance 2.5" drive and keeping my
-> videos on the array
-> > as they're much too large to back up.
+--- On Mon, 10/5/09, Leslie Rhorer <lrhorer@satx.rr.com> wrote:
+> Partitions are not needed at all unless your underlying
+> topology requires
+> it:
 > 
->     You've said that before, but it is
-> specious, as you are potentially
-> using more space to mirror them on a RAID array than you
-> would by
-> implementing a backup array.  You don't have a
-> separate backup, but they are
-> using more space on your proposed system than they would be
-> with my proposal
-> for you.  I also rather expect in the long run it may
-> be more of a
-> management hassle for you.  It's your decision, of
-> course.
-
-I don't understand why you would say this.  Whether I set up a RAID1 in the garage and one in the house and RAID0 them, or just set up a RAID10, it should not have any impact on the space.  And more arrays means -more- management hassle, not less. 
-
-And I don't understand how you can set up an array without partitions?  Do you then LVM it and partition -that-? Is that actually possible?
-
- 
+> `mdadm --create --raid-devices=2 --metadata=1.0 --chunk=128
+> --level=1
+> /dev/md0 /dev/sda /dev/sdb`
+> 
+>     Will work just fine.  You can also
+> use LVM with raw disks.  Both
+> systems simply stitch together storage units provided by
+> the drive
+> subsystem, so any block device found in /dev can be
+> used.  Once the array is
+> assembled, it is not necessary to partition it, either,
+> again unless your
+> overlaying topology requires it.  On my systems, the
+> boot drives are
+> partitioned to allow booting into Windows if necessary, and
+> usually the swap
+> is also in a partition on the boot drive, but my arrays are
+> completely
+> un-partitioned.
+> 
+> 
 
 
       
