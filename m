@@ -1,25 +1,51 @@
-From: adfas asd <chimera_god@yahoo.com>
-Subject: NAS Remote Side of a Mirror
-Date: Mon, 5 Oct 2009 08:37:37 -0700 (PDT)
-Message-ID: <905067.19304.qm@web38806.mail.mud.yahoo.com>
+From: Drew <drew.kay@gmail.com>
+Subject: Re: A few remaining questions about installing to RAID-10
+Date: Mon, 5 Oct 2009 08:49:37 -0700
+Message-ID: <c268e4660910050849mc4bba01ifbb1a57caf59c41a@mail.gmail.com>
+References: <20091005145711322.FNMG18886@cdptpa-omta02.mail.rr.com>
+	<556491.46402.qm@web38805.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <556491.46402.qm@web38805.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: adfas asd <chimera_god@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm looking at setting up my RAID mirrored array so that one side of the mirror is in the HTPC and the other is NASsed in the garage, in case of theft or fire.
+> WAT?! =C2=A0How can I mount an unpartitioned/unformatted array? =C2=A0=
+This is more direct than using a filesystem, although there would be no=
+ journalling, right? =C2=A0If I were to mount my small disk for / and t=
+he unpartitioned array as /home for example.
 
-I am concerned about the boot process though, as the NASsed side will not be available until the network comes up.  Will the array be able to be patient for that and include that side once it comes up, and run not degraded?
+What's he's saying is that RAID and LVM do not need partitions to work
+properly. You can create a raid array on the raw(unpartitioned)
+/dev/sdX devices and then create a LVM volume group using a physical
+volume(PV) on a raw(unpartitioned) /dev/mdX (RAID) device.
 
-What if I lose my local side of the mirror?  Is failover possible to the NAS side?  (Assuming a separate boot disk with everything except /home, which is on the array)
+The filesystem still needs a partition/volume but that can created
+either by partitioning /dev/mdX *or* creating a logical volume in LVM.
 
-The only other technology I am aware of which can remote drives at distance is fibrechannel, and that's too expensive, so it seems I'm stuck with GB ethernet.  Are there in fact any other options?
+=46or example, on my system at home I use RAID-6 created using
+/dev/sd[b-f]. The resulting /dev/md0 acts as a physical volume for LVM
+and I've created several Logical Volumes aka "partitions" for the
+filesystems to reside in.
 
-Is it possible to bring up ethernet early in the boot process with initrd.img?
+> Seems like journalling/crash recovery is pretty vital. =C2=A0Could no=
+t partitioning be recommendable?
 
-Has anyone actually done any of this?
+See above. You still have a partition/volume of some sort where the
+filesystem is created.
 
 
-      
+--=20
+Drew
+
+"Nothing in life is to be feared. It is only to be understood."
+--Marie Curie
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
