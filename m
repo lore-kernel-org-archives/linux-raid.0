@@ -1,85 +1,155 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: A few remaining questions about installing to RAID-10
-Date: Sun, 4 Oct 2009 23:59:41 -0500
-Message-ID: <20091005045942600.WUNS18886@cdptpa-omta02.mail.rr.com>
-References: <275143.15844.qm@web38804.mail.mud.yahoo.com>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: Full use of varying drive sizes?---maybe a new raid mode is the answer?
+Date: Mon, 05 Oct 2009 11:06:40 +0200
+Message-ID: <87k4zanra7.fsf@frosties.localdomain>
+References: <228790.21625.qm@web51307.mail.re2.yahoo.com>
+	<4ABA8506.3080800@gmail.com> <87ske7s5lb.fsf@frosties.localdomain>
+	<4AC0C3EB.30606@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <275143.15844.qm@web38804.mail.mud.yahoo.com>
+In-Reply-To: <4AC0C3EB.30606@gmail.com> (Konstantinos Skarlatos's message of
+	"Mon, 28 Sep 2009 17:10:51 +0300")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Konstantinos Skarlatos <k.skarlatos@gmail.com>
+Cc: Goswin von Brederlow <goswin-v-b@web.de>, Jon@eHardcastle.com, linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-> I didn't use LVM, and don't trust layering of any technology.  My two-
-> drive array was set up much as he recommended it: md1 - / (including
-> /boot), md2 - swap, md3 - /home.  I am against any further fracturing of
-> partitions, as modern disk drives have lots of space, and lots of parts
-> becomes unmaintainable.
+Konstantinos Skarlatos <k.skarlatos@gmail.com> writes:
 
-	Actually, I think for your situation, LVM might be a reasonable
-solution.  Regardless, I don't particularly recommend using any partitions
-at all.  I don't.  All of my arrays are on raw disks, and all of my file
-systems use the entire unpartitioned array.  Again, there can be good
-reasons for partitioning disks, but in your case I don't see any advantages.
+> Goswin von Brederlow wrote:
+>> Konstantinos Skarlatos <k.skarlatos@gmail.com> writes:
+>>
+>>
+>>> Instead of doing all those things, I have a suggestion to make:
+>>>
+>>> Something that is like RAID 4 without striping.
+>>>
+>>> There are already 3 programs doing that, Unraid, Flexraid and
+>>> disparity, but putting this functionality into linux-raid would be
+>>> tremendous. (the first two work on linux and the third one is a
+>>> command line windows program that works fine under wine).
+>>>
+>>> The basic idea is this: Take any number of drives, with any capacity
+>>> and filesystem you like. Then provide the program with an empty disk
+>>> at least as large as your largest disk. The program creates parity
+>>> data by XORing together the disks sequentially block by block(or file
+>>> by file), until it reaches the end of the smallest one.(It XORs block
+>>> 1 of disk A with block1 of disk B, with block1 of disk C.... and
+>>> writes the result to block1 of Parity disk) Then it continues with the
+>>> rest of the drives, until it reaches the end of the last drive.
+>>>
+>>> Disk     A    B   C   D   E    P
+>>> Block   1    1    1    1    1    1
+>>> Block   2    2    2                2
+>>> Block   3    3                      3
+>>> Block   4                            4
+>>>
+>>> The great thing about this method is that when you lose one disk you
+>>> can get all your data back. when you lose two disks you only lose the
+>>> data on them, and not the whole array. New disks can be added and the
+>>> parity recalculated by reading only the new disk and the parity disk.
+>>>
+>>
+>> This has some problem though:
+>>
+>> 1) every wite is a read-modify-write
+>>    Well, for one thing this is slow.
+>>
+> Is that necessary? Why not read every other data disk at the same time
+> and calculate new parity blocks on the fly? granted, that would mean
+> spinning up every disk, so maybe this mode could be an option?
 
-> I will say that this system appears to be a performance problem for me, as
-> I run MythTV on / and have my videos in /home.  When Myth is scanning to
-> eliminate commercials it must frantically sweep between / and /home, and
-> overall system performance is impacted.  I am working on putting / on a
-> dedicated high-performance 2.5" drive and keeping my videos on the array
-> as they're much too large to back up.
+Reading one parity block and updating it is faster than reading X data
+blocks and recomputing the parity. Both in I/O and CPU terms.
 
-	You've said that before, but it is specious, as you are potentially
-using more space to mirror them on a RAID array than you would by
-implementing a backup array.  You don't have a separate backup, but they are
-using more space on your proposed system than they would be with my proposal
-for you.  I also rather expect in the long run it may be more of a
-management hassle for you.  It's your decision, of course.
+>> 2) every write is a read-modify-write of the parity disk
+>>    Even worse, all writes to independent disks bottleneck at the
+>>    parity disk.
+>> 3) every write is a read-modify-write of the parity disk    That
+>> poor parity disk. It can never catch a break, untill it
+>>    breaks. It is likely that it will break first.
+>>
+> No problem, a failed parity disk on this method is a much smaller
+> problem than a failed disk on a RAID 5
 
-> What I know is that 'offset' will boot and fail over.  I don't know if
-> 'far' will.  I also know that .90 will boot and fail over.  I don't know
-> whether 1.x will.  When building the array I tried to use 1.2 (as I
-> thought it was newest/best) but there was a bitch at the beginning of boot
-> and it wouldn't boot (for other reasons) so I reverted to .90.  When I do
-> it again I will likely use 1.0, given what I've recently learned here.
+But the reason they went from raid3/4 to raid5. :)
 
-	Are you aware the .90 superblock limits the array to 28 devices,
-total, and the individual device size cannot exceed 2T?  This is probably
-not an issue for you right now, but in the not-so-distant future it could
-easily become so.  3T drives are supposed to come out quite soon, and
-easting up drives on each array the way you are using RAID10, 28 may start
-looking like a small number before too many months have passed.  If you
-insist on booting from the array, I suggest you look very carefully into the
-superblock structure.  1.0 and 1.2 may serve you better than 1.1, depending
-on exactly what you want to do and how you plan to do it.
+>> 4) if the parity disk is larger than the 2nd largest disk it will
+>>    waste space
+>> 5) data at the start of the disk is more likely to fail than at the
+>>    end of a disk
+>>    (Say disks A and D fail then Block A1 is lost but A2-A4 are still
+>>    there)
+>>
+>> As for adding a new disks there are 2 cases:
+>>
+>> 1) adding a small disk
+>>    zero out the new disk and then the parity does not need to be updated
+>> 2) adding a large disk
+>>    zero out the new disk and then that becomes the parity disk
+>>
+> So the new disk gets a copy of the parity data of the previous parity disk?
 
-	You also need to make sure the filesystem supports your needs in the
-future.
+No, the old parity disk becomes a data disk that happens to initialy
+contain the parity of A, B, C, D, E. The new parity disk becomes all
+zero.
 
-> I am still confused about the benefits of far vs offset.  Keld (the
-> developer) says that although offset is newer, it's not necessarily better
-> than far, only more compatible.  I have not found any rigorous performance
-> comparisons of far vs offset.
-> 
-> I am shocked to read that RAID10 is not expandable.  I will want to add
-> disks in the future. I will want to add space, but not partitions.  Does
-> this mean I'll have to completely rebuild the array?  Once your data gets
-> to a certain size it becomes unmanageable to rebuild the array.
+Look at it this way: XORing disk A, B, C, D, E together gives
+P. XORing A, B, C, D, E, P together always gives 0. So by filling the
+new parity disk with zero you are computing the parity of A, B, C, D,
+E, P. Just more intelligently.
 
-	Well, there's more than one way to skin a cat, of course, but
-growing a RAID10 array through rebuilding is definitely a bit of a fiddle.
-I know Neil was looking at including RAID reshaping on RAID10 arrays, but I
-don't think it has been implemented.  Currently I think adding a drive is
-only available on RAID 1, 4, 5, and 6, or at least so the man page says for
-my copy of mdadm, which is 2.6.7.2.
+>>> Please consider adding this feature request, it would be a big plus
+>>> for linux if such a functionality existed, bringing many users from
+>>> WHS and ZFS here, as it especially caters to the needs of people that
+>>> store video and their movie collection at their home server.
+>>>
+>>> Thanks for your time
+>>>
+>>>
+>>> ABCDE for data drives, and P for parity
+>>>
+>>
+>> As a side note I like the idea of not striping, despide the uneven
+>> use. For home use the speed of a single disk is usualy sufficient but
+>> the noise of concurrent access to multiple disks is bothersome.
+> Have you tried the Seagate Barracuda LP's? totally silent! I have 8 of
+> them and i can assure you that they are perfect for large media
+> storage in a silent computer.
 
-	For this and other reasons, I really think you would be better
-served in your situation to employ independent arrays, either RAID5, RAID6,
-or LVM,  in the house and in the garage.  Of course you could then include
-the two arrays in a RAID0 volume with write mostly.  Again, it's your
-choice.
-	
+I buy when I need space and have the money (unfortunately that doesn't
+always coincide) and i use what I have. But it is interesting to see
+how newer disks are much quieter and I don't believe that is just age
+making old disks louder.
 
+>> Also
+>> for movie archives a lot of access will be reading and then the parity
+>> disk can rest. Disks can also be spun down more often. Only the disk
+>> containing the movie one currently watches need to be spinning. That
+>> could translate into real money saved on the electric bill.
+>>
+>>
+> I agree this is something mainly for home use, where reads exceed
+> writes by a large margin and when writes are done, they are done to
+> one or two disks at the same time at most.
+>> But I would still do this with my algorithm to get even amount of
+>> redunancy. One can then use partitions or lvm to split the overall
+>> raid device back into seperate drives if one wants to.
+>>
+> Yes I think that an option for merging the disks into a large one
+> would be nice, as long as data is still recoverable from individual
+> disks if for example 2 disks fail. One of the main advantages of not
+> stripping is that when things go haywire some data is still
+> recoverable, so please lets not lose that.
+
+That is just a matter of placing the partitions/volumes to not span
+multiple disks. With partitionable raids one could implement such a
+raid mode that would combine all disks into a single raid device but
+export each data disk back as a partition. One wouldn't be able to
+repartition that though. So not sure if I would want that in the
+driver layer. Not everyone will care about having each data disk
+seperate.
+
+MfG
+        Goswin
