@@ -1,47 +1,25 @@
 From: adfas asd <chimera_god@yahoo.com>
-Subject: RE: A few remaining questions about installing to RAID-10
-Date: Mon, 5 Oct 2009 08:30:48 -0700 (PDT)
-Message-ID: <556491.46402.qm@web38805.mail.mud.yahoo.com>
-References: <20091005145711322.FNMG18886@cdptpa-omta02.mail.rr.com>
+Subject: NAS Remote Side of a Mirror
+Date: Mon, 5 Oct 2009 08:37:37 -0700 (PDT)
+Message-ID: <905067.19304.qm@web38806.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091005145711322.FNMG18886@cdptpa-omta02.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-WAT?!  How can I mount an unpartitioned/unformatted array?  This is more direct than using a filesystem, although there would be no journalling, right?  If I were to mount my small disk for / and the unpartitioned array as /home for example. 
+I'm looking at setting up my RAID mirrored array so that one side of the mirror is in the HTPC and the other is NASsed in the garage, in case of theft or fire.
 
-Seems like journalling/crash recovery is pretty vital.  Could not partitioning be recommendable?
+I am concerned about the boot process though, as the NASsed side will not be available until the network comes up.  Will the array be able to be patient for that and include that side once it comes up, and run not degraded?
 
+What if I lose my local side of the mirror?  Is failover possible to the NAS side?  (Assuming a separate boot disk with everything except /home, which is on the array)
 
---- On Mon, 10/5/09, Leslie Rhorer <lrhorer@satx.rr.com> wrote:
-> Partitions are not needed at all unless your underlying
-> topology requires
-> it:
-> 
-> `mdadm --create --raid-devices=2 --metadata=1.0 --chunk=128
-> --level=1
-> /dev/md0 /dev/sda /dev/sdb`
-> 
->     Will work just fine.  You can also
-> use LVM with raw disks.  Both
-> systems simply stitch together storage units provided by
-> the drive
-> subsystem, so any block device found in /dev can be
-> used.  Once the array is
-> assembled, it is not necessary to partition it, either,
-> again unless your
-> overlaying topology requires it.  On my systems, the
-> boot drives are
-> partitioned to allow booting into Windows if necessary, and
-> usually the swap
-> is also in a partition on the boot drive, but my arrays are
-> completely
-> un-partitioned.
-> 
-> 
+The only other technology I am aware of which can remote drives at distance is fibrechannel, and that's too expensive, so it seems I'm stuck with GB ethernet.  Are there in fact any other options?
+
+Is it possible to bring up ethernet early in the boot process with initrd.img?
+
+Has anyone actually done any of this?
 
 
       
