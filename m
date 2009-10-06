@@ -1,47 +1,59 @@
-From: Drew <drew.kay@gmail.com>
-Subject: Re: A few remaining questions about installing to RAID-10
-Date: Mon, 5 Oct 2009 20:42:22 -0700
-Message-ID: <c268e4660910052042t25849cbbl41aa7b8754bf7950@mail.gmail.com>
-References: <c268e4660910051141r125e943csa91dad2ede6d41f5@mail.gmail.com>
-	<20091006005026746.OZOR12917@cdptpa-omta04.mail.rr.com>
+From: Rob Landley <rob@landley.net>
+Subject: Re: [PATCH 1/1] md: drivers/md/unroll.pl replaced with awk analog
+Date: Mon, 5 Oct 2009 23:44:46 -0500
+Message-ID: <200910052344.46809.rob@landley.net>
+References: <4aca1863.0a1ad00a.33bf.1017@mx.google.com> <200910051630.51039.rob@landley.net> <4ACA87DA.7000607@panix.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091006005026746.OZOR12917@cdptpa-omta04.mail.rr.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755999AbZJFEp1@vger.kernel.org>
+In-Reply-To: <4ACA87DA.7000607@panix.com>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: berk walker <berk@panix.com>
+Cc: Vladimir Dronnikov <dronnikov@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0Yep. =C2=A0Sure can. =C2=A0I've used LVM, =
-and for some applications it's
-> great. =C2=A0Indeed, as I mentioned, adfas might be well served with =
-LVM volumes
-> on each machine. =C2=A0It certainly would provide great performance, =
-although as
-> I also mentioned, I don't think drive performance is really his probl=
-em, per
-> se.
+On Monday 05 October 2009 18:57:14 berk walker wrote:
+> Rob Landley wrote:
+> > On Monday 05 October 2009 11:01:39 Vladimir Dronnikov wrote:
+> >> From: Vladimir Dronnikov <dronnikov@gmail.com>
+> >>
+> >> drivers/md/unroll.pl replaced by awk script to drop build-time
+> >> dependency on perl
+> >>
+> >> Signed-off-by: Vladimir Dronnikov <dronnikov@gmail.com>
+> >
+> > Acked-by: Rob Landley <rob@landley.net>
+> >
+> > We already discussed this on another mailing list, thread starts at:
+> >
+> > http://lists.impactlinux.com/pipermail/firmware-impactlinux.com/2009-Octo
+> >ber/000328.html
+> >
+> > I've added this as patch #4 in the perl removal series I've submitted
+> > during the last few merge windows.
+> >
+> > Thanks,
+> >
+> > Rob
+>
+> Why is perl being removed? [I know that I have missed a lot]
+> berk-
 
-I follow the threads on the MythTV list so I'd agree there are better
-ways to partition/RAID the system. The MythTV guys are, in many cases,
-pushing Terabytes of data through consumer grade SATA drives, RAID,
-LVM and high performance filesystems like JFS/XFS. It's amazing
-sometimes the extent they go to tuning their rigs to handle the
-various on-disk buffers and what not MythTV seems to use.
+Before 2.6.25 the kernel build had never used perl, and the first perl removal 
+patches were submitted for 2.6.26, so the real question is "why was it added, 
+and was it worth it?"
 
-Adfas: You may want to consider talking with the boys over at MythTV.
-If you want to tune your rig for MythTV those guys are the best ones
-to talk with as they know their app very well.
+There was a long thread on an earlier submission of the patches, which Alan 
+Cox concluded (as far as I'm concerned, unless Linus, Andrew Morton, or maybe 
+Al Viro want to weigh in) with this post:
 
+  http://lkml.indiana.edu/hypermail/linux/kernel/0901.1/02108.html
 
---=20
-Drew
+Archives are linked from there, you might have to check adjacent weeks too.
 
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Rob
+-- 
+Latency is more important than throughput. It's that simple. - Linus Torvalds
