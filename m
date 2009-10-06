@@ -1,44 +1,16 @@
-From: adfas asd <chimera_god@yahoo.com>
-Subject: Re: NAS Remote Side of a Mirror
-Date: Tue, 6 Oct 2009 08:36:45 -0700 (PDT)
-Message-ID: <177866.95801.qm@web38807.mail.mud.yahoo.com>
-References: <20091006152443.GA3151@cthulhu.home.robinhill.me.uk>
+From: Ben DJ <bendj095124367913213465@gmail.com>
+Subject: Re: A few remaining questions about installing to RAID-10
+Date: Tue, 6 Oct 2009 15:57:09 -0700
+Message-ID: <babafd2f0910061557peaafe86gbc29e48808d4e000@mail.gmail.com>
+References: <c268e4660910052042t25849cbbl41aa7b8754bf7950@mail.gmail.com>
+	<58095.57340.qm@web38805.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091006152443.GA3151@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <58095.57340.qm@web38805.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---- On Tue, 10/6/09, Robin Hill <robin@robinhill.me.uk> wrote:
-> > I am concerned about the boot process though, as the
-> NASsed side will
-> > not be available until the network comes up. 
-> Will the array be able
-> > to be patient for that and include that side once it
-> comes up, and run
-> > not degraded?
-> > 
-> The network can be brought up from within the initrd, so
-> there's no need
-> for the array to wait (that's even more trivial if you just
-> have /home
-> on the array as you suggest below).  Alternately, you
-> could use
-> write-intent bitmaps, in which case the resync should be
-> very quick (you
-> may want these anyway - depends how reliable the network
-> connection and
-> NAS is).
-
-Wow, this is good news.  I'll do some research.
-
-It's a freaky quantum world, when you don't even need a partition...
-
-Ya have write-intent bitmaps enabled already, thanks.
-
-
-
-
-      
+MythTV?  Go away, come back & it appears my thread's been hijacked
+without a 2nd thought  :-(
