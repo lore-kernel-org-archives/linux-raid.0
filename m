@@ -1,66 +1,51 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 0/3] md fixes for 2.6.32-rc
-Date: Wed, 7 Oct 2009 15:34:51 +1100
-Message-ID: <19148.6763.744052.261830@notabene.brown>
-References: <20091002011747.24095.70355.stgit@dwillia2-linux.ch.intel.com>
-	<19141.32211.742547.19481@notabene.brown>
-	<1254875779.16798.10.camel@dwillia2-linux.ch.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Dan Williams on Tuesday October 6
-Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 0/8] Add vsprintf extension %pU to print
+	UUID/GUIDs and use it
+Date: Tue,  6 Oct 2009 21:45:33 -0700
+Message-ID: <1254890742-28245-1-git-send-email-joe@perches.com>
+Return-path: <cluster-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/cluster-devel>,
+	<mailto:cluster-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/cluster-devel>
+List-Post: <mailto:cluster-devel@redhat.com>
+List-Help: <mailto:cluster-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/cluster-devel>,
+	<mailto:cluster-devel-request@redhat.com?subject=subscribe>
+Sender: cluster-devel-bounces@redhat.com
+Errors-To: cluster-devel-bounces@redhat.com
+To: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+Cc: cluster-devel@redhat.com, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, Neil Brown <neilb@suse.de>, Alex Elder <aelder@sgi.com>, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-raid@vger.kernel.org, Artem Bityutskiy <dedekind@infradead.org>, Laurent Pinchart <laurent.pinchart@skynet.be>, linux-mtd@lists.infradead.org, Matt Mackall <mpm@selenic.com>, linux-media@vger.kernel.org, Adrian Hunter <adrian.hunter@nokia.com>
 List-Id: linux-raid.ids
 
+Using %pU makes an x86 defconfig image a bit smaller
 
+before:	$ size vmlinux
+   text    data     bss     dec     hex filename
+6976022  679572 1359668 9015262  898fde vmlinux
 
-On Tuesday October 6, dan.j.williams@intel.com wrote:
-> >From 0496c92cf6ac1f4f7dde6d416707988991d87d41 Mon Sep 17 00:00:00 2001
-> From: Dan Williams <dan.j.williams@intel.com>
-> Date: Sat, 3 Oct 2009 13:47:05 -0700
-> Subject: [PATCH] md/raid456: downlevel multicore operations to raid_run_ops
-> 
-> The percpu conversion allowed a straightforward handoff of stripe
-> processing to the async subsytem that initially showed some modest gains
-> (+4%).  However, this model is too simplistic and leads to stripes
-> bouncing between raid5d and the async thread pool for every invocation
-> of handle_stripe().  As reported by Holger this can fall into a
-> pathological situation severely impacting throughput (6x performance
-> loss).
-> 
-> By downleveling the parallelism to raid_run_ops the pathological
-> stripe_head bouncing is eliminated.  This version still exhibits an
-> average 11% throughput loss for:
-> 
-> 	mdadm --create /dev/md0 /dev/sd[b-q] -n 16 -l 6
-> 	echo 1024 > /sys/block/md0/md/stripe_cache_size
-> 	dd if=/dev/zero of=/dev/md0 bs=1024k count=2048
-> 
-> ...but the results are at least stable and can be used as a base for
-> further multicore experimentation.
+after:	$ size vmlinux
+   text	   data	    bss	    dec	    hex	filename
+6975863	 679652	1359668	9015183	 898f8f	vmlinux
 
-Thanks.
+Joe Perches (8):
+  lib/vsprintf.c: Add %pU to print UUID/GUIDs
+  random.c: Use %pU to print UUIDs
+  drivers/firmware/dmi_scan.c: Use %pUB to print UUIDs
+  drivers/md/md.c: Use %pU to print UUIDs
+  drivers/media/video/uvc: Use %pUl to print UUIDs
+  fs/gfs2/sys.c: Use %pUB to print UUIDs
+  fs/ubifs: Use %pUB to print UUIDs
+  fs/xfs/xfs_log_recover.c: Use %pU to print UUIDs
 
-One little change needed:
-
-
->  static int grow_one_stripe(raid5_conf_t *conf)
->  {
->  	struct stripe_head *sh;
-> @@ -1213,6 +1243,9 @@ static int grow_one_stripe(raid5_conf_t *conf)
->  	memset(sh, 0, sizeof(*sh) + (conf->raid_disks-1)*sizeof(struct r5dev));
->  	sh->raid_conf = conf;
->  	spin_lock_init(&sh->lock);
-> +	#ifdef CONFIG_MULTICORE_RAID456
-> +	init_waitqueue_head(&sh->ops.wait_for_ops);
-> +	#endif
->  
->  	if (grow_buffers(sh, conf->raid_disks)) {
->  		shrink_buffers(sh, conf->raid_disks);
-
-This addition is needed in resize_stripes too.
-
-NeilBrown
+ drivers/char/random.c                |   10 +---
+ drivers/firmware/dmi_scan.c          |    5 +--
+ drivers/md/md.c                      |   16 ++------
+ drivers/media/video/uvc/uvc_ctrl.c   |   69 ++++++++++++++++------------------
+ drivers/media/video/uvc/uvc_driver.c |    7 +--
+ drivers/media/video/uvc/uvcvideo.h   |   10 -----
+ fs/gfs2/sys.c                        |   16 +------
+ fs/ubifs/debug.c                     |    9 +---
+ fs/ubifs/super.c                     |    7 +---
+ fs/xfs/xfs_log_recover.c             |   14 ++-----
+ lib/vsprintf.c                       |   62 ++++++++++++++++++++++++++++++-
+ 11 files changed, 114 insertions(+), 111 deletions(-)
