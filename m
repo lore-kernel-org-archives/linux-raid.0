@@ -1,67 +1,65 @@
-From: Asdo <asdo@shiftmail.org>
-Subject: Re: [PATCH 0/3] md fixes for 2.6.32-rc
-Date: Wed, 07 Oct 2009 20:33:23 +0200
-Message-ID: <4ACCDEF3.5000804@shiftmail.org>
-References: <20091002011747.24095.70355.stgit@dwillia2-linux.ch.intel.com>
- <19141.32211.742547.19481@notabene.brown>
- <1254875779.16798.10.camel@dwillia2-linux.ch.intel.com>
- <Pine.LNX.4.64.0910071141010.29237@diagnostix.dwd.de>
+From: adfas asd <chimera_god@yahoo.com>
+Subject: Re: NAS Remote Side of a Mirror
+Date: Wed, 7 Oct 2009 16:49:09 -0700 (PDT)
+Message-ID: <130273.20896.qm@web38804.mail.mud.yahoo.com>
+References: <905067.19304.qm@web38806.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <Pine.LNX.4.64.0910071141010.29237@diagnostix.dwd.de>
+In-Reply-To: <905067.19304.qm@web38806.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Holger Kiehl <Holger.Kiehl@dwd.de>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Holger Kiehl wrote:
-> On Tue, 6 Oct 2009, Dan Williams wrote:
->
->> ....
->> By downleveling the parallelism to raid_run_ops the pathological
->> stripe_head bouncing is eliminated.  This version still exhibits an
->> average 11% throughput....
->>
->> So we don't need a revert, this fixes up the unpredictability of the
->> original implementation.  It surprised me that the overhead of passing
->> raid_run_ops to the async thread pool amounted to an 11% performance
->> regression.  In any event I think this is a better baseline for future
->> multicore experimentation than the current implementation.
->>
-> Just to add some more information, I did try this patch with
-> 2.6.32-rc3-git1 and with the testing I am doing I get appr. 125%
-> performance regression. 
-Hi Holger
+OK, say I wanted to build this remote NAS box myself, rather than spending $750 for a Qnap. (http://qnap.com/pro_detail_feature.asp?p_id=110)  I find a good case, power supply, micro mobo, and cage, and install Linux and NX (remote desktop) on it.
+ 
+I need to share those drives over GbE with minimal software intervention. I'm not about to use bloatware like NFS or Samba. And sshfs or an SSH tunnel could not keep up the speeds I'd need. How do you suppose Qnap shares those drives? And provides all those other services?
+ 
+So looking at Qnap's update, it comes down as a disk img file, which I can not mount in loopback. Probably encrypted, and knowing them in AES256.
 
- From the above sentence it seems you get worse performance now than 
-with the original multicore implementation, while from the numbers below 
-it seems you get better performances now.
+Anyone built a remote NAS box?  How to share those drives with minimal software intervention?
 
-Which is correct?
 
-(BTW a performance regression higher than 100% is impossible :-) )
 
-> The tests I am doing is have several (appr. 60
-> process) sending via FTP or SFTP about 100000 small files (average size
-> below 4096 bytes) to localhost in a loop for 30 minutes. Here the
-> real numbers:
->
->  with multicore support enabled (with your patch)    3276.77 files per 
-> second
->  with multicore support enabled (without your patch) 1014.47 files per 
-> second
->  without multicore support                           7549.24 files per 
-> second
->
-> Holger
+--- On Mon, 10/5/09, adfas asd <chimera_god@yahoo.com> wrote:
 
-Also, could you tell us some details about your machine and the RAID?
-Like the model of CPU (Nehalems and AMDs have much faster memory access 
-than earlier intels) and if it's a single-cpu or a dual cpu mainboard...
-Amount of RAM
-also: stripe_cache_size current setting for your RAID
-Raid level, number of disks, chunk size, filesystem...
+> From: adfas asd <chimera_god@yahoo.com>
+> Subject: NAS Remote Side of a Mirror
+> To: linux-raid@vger.kernel.org
+> Date: Monday, October 5, 2009, 8:37 AM
+> I'm looking at setting up my RAID
+> mirrored array so that one side of the mirror is in the HTPC
+> and the other is NASsed in the garage, in case of theft or
+> fire.
+> 
+> I am concerned about the boot process though, as the NASsed
+> side will not be available until the network comes up. 
+> Will the array be able to be patient for that and include
+> that side once it comes up, and run not degraded?
+> 
+> What if I lose my local side of the mirror?  Is
+> failover possible to the NAS side?  (Assuming a
+> separate boot disk with everything except /home, which is on
+> the array)
+> 
+> The only other technology I am aware of which can remote
+> drives at distance is fibrechannel, and that's too
+> expensive, so it seems I'm stuck with GB ethernet.  Are
+> there in fact any other options?
+> 
+> Is it possible to bring up ethernet early in the boot
+> process with initrd.img?
+> 
+> Has anyone actually done any of this?
+> 
+> 
+>       
+> --
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Thank you!
 
+      
