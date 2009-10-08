@@ -1,47 +1,22 @@
-From: russ@vshift.com
+From: adfas asd <chimera_god@yahoo.com>
 Subject: Re: NAS Remote Side of a Mirror
-Date: Thu, 8 Oct 2009 13:12:17 +0000
-Message-ID: <559486643-1255008794-cardhu_decombobulator_blackberry.rim.net-57545935-@bda340.bisx.prod.on.blackberry>
-References: <905067.19304.qm@web38806.mail.mud.yahoo.com><130273.20896.qm@web38804.mail.mud.yahoo.com><20091008075106.GA17343@cthulhu.home.robinhill.me.uk>
-Reply-To: russ@vshift.com
+Date: Thu, 8 Oct 2009 06:55:06 -0700 (PDT)
+Message-ID: <55880.69302.qm@web38804.mail.mud.yahoo.com>
+References: <559486643-1255008794-cardhu_decombobulator_blackberry.rim.net-57545935-@bda340.bisx.prod.on.blackberry>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091008075106.GA17343@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <559486643-1255008794-cardhu_decombobulator_blackberry.rim.net-57545935-@bda340.bisx.prod.on.blackberry>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robin Hill <robin@robinhill.me.uk>, linux-raid-owner@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SGF2ZSB5b3UgZ3V5cyBsb29rZWQgYXQgbmV4ZW50YXN0b3I/ICBUaGV5IGhhdmUgYSAyVEIgZGV2
-ZWxvcGVyIGVkaXRpb24gYW5kIHN1cHBvcnQgYSBob3N0IG9mIHByb3RvY29scyB3aXRoIHByZXR0
-eSBkZWNlbnQgc3BlZWRzLiAgDQoNClRoZXkgdXNlIGEgc29sYXJpcyBrZXJuZWwsIHNvIHlvdSdk
-IG5lZWQgaGFyZHdhcmUgdGhhdCBzdXBwb3J0cyB0aGF0Lg0KDQpSdXNzDQpTZW50IGZyb20gbXkg
-VmVyaXpvbiBXaXJlbGVzcyBCbGFja0JlcnJ5DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
-DQpGcm9tOiBSb2JpbiBIaWxsIDxyb2JpbkByb2JpbmhpbGwubWUudWs+DQpEYXRlOglUaHUsIDgg
-T2N0IDIwMDkgMDg6NTE6MDcgDQpUbzogPGxpbnV4LXJhaWRAdmdlci5rZXJuZWwub3JnPg0KU3Vi
-amVjdDogUmU6IE5BUyBSZW1vdGUgU2lkZSBvZiBhIE1pcnJvcg0KDQpPbiBXZWQgT2N0IDA3LCAy
-MDA5IGF0IDA0OjQ5OjA5UE0gLTA3MDAsIGFkZmFzIGFzZCB3cm90ZToNCg0KPiBPSywgc2F5IEkg
-d2FudGVkIHRvIGJ1aWxkIHRoaXMgcmVtb3RlIE5BUyBib3ggbXlzZWxmLCByYXRoZXIgdGhhbg0K
-PiBzcGVuZGluZyAkNzUwIGZvciBhIFFuYXAuDQo+IChodHRwOi8vcW5hcC5jb20vcHJvX2RldGFp
-bF9mZWF0dXJlLmFzcD9wX2lkPTExMCkgIEkgZmluZCBhIGdvb2QgY2FzZSwNCj4gcG93ZXIgc3Vw
-cGx5LCBtaWNybyBtb2JvLCBhbmQgY2FnZSwgYW5kIGluc3RhbGwgTGludXggYW5kIE5YIChyZW1v
-dGUNCj4gZGVza3RvcCkgb24gaXQuDQo+ICANCj4gSSBuZWVkIHRvIHNoYXJlIHRob3NlIGRyaXZl
-cyBvdmVyIEdiRSB3aXRoIG1pbmltYWwgc29mdHdhcmUNCj4gaW50ZXJ2ZW50aW9uLiBJJ20gbm90
-IGFib3V0IHRvIHVzZSBibG9hdHdhcmUgbGlrZSBORlMgb3IgU2FtYmEuIEFuZA0KPiBzc2hmcyBv
-ciBhbiBTU0ggdHVubmVsIGNvdWxkIG5vdCBrZWVwIHVwIHRoZSBzcGVlZHMgSSdkIG5lZWQuIEhv
-dyBkbw0KPiB5b3Ugc3VwcG9zZSBRbmFwIHNoYXJlcyB0aG9zZSBkcml2ZXM/IEFuZCBwcm92aWRl
-cyBhbGwgdGhvc2Ugb3RoZXINCj4gc2VydmljZXM/DQo+ICANCj4gU28gbG9va2luZyBhdCBRbmFw
-J3MgdXBkYXRlLCBpdCBjb21lcyBkb3duIGFzIGEgZGlzayBpbWcgZmlsZSwgd2hpY2ggSQ0KPiBj
-YW4gbm90IG1vdW50IGluIGxvb3BiYWNrLiBQcm9iYWJseSBlbmNyeXB0ZWQsIGFuZCBrbm93aW5n
-IHRoZW0gaW4NCj4gQUVTMjU2Lg0KPiANCj4gQW55b25lIGJ1aWx0IGEgcmVtb3RlIE5BUyBib3g/
-ICBIb3cgdG8gc2hhcmUgdGhvc2UgZHJpdmVzIHdpdGggbWluaW1hbA0KPiBzb2Z0d2FyZSBpbnRl
-cnZlbnRpb24/DQo+IA0KVGhlIGxvd2VzdCBsZXZlbCBhcHByb2FjaCB3b3VsZCBwcm9iYWJseSBi
-ZSB0byBleHBvcnQgaXQgYXMgaVNDU0kgLSBJDQpkb24ndCBrbm93IHdoYXQgb3ZlcmhlYWQgdGhl
-IHNvZnR3YXJlIGluaXRpYXRvciBoYXMgZm9yIHRoYXQgKG9yIHdoYXQgYQ0KaGFyZHdhcmUgaW5p
-dGlhdG9yIHdvdWxkIGNvc3QpIHRob3VnaC4NCg0KQ2hlZXJzLA0KICAgIFJvYmluDQotLSANCl9f
-XyAgICAgICAgDQogICAgKCAnIH0gICAgIHwgICAgICAgUm9iaW4gSGlsbCAgICAgICAgPHJvYmlu
-QHJvYmluaGlsbC5tZS51az4gfA0KICAgLyAvICkgICAgICB8IExpdHRsZSBKaW0gc2F5cyAuLi4u
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwNCiAgLy8gISEgICAgICAgfCAgICAgICJIZSBm
-YWxsZW4gaW4gZGUgd2F0ZXIgISEiICAgICAgICAgICAgICAgICB8DQoNCg==
+--- On Thu, 10/8/09, russ@vshift.com <russ@vshift.com> wrote:
+> Have you guys looked at
+> nexentastor?  They have a 2TB developer edition and
+> support a host of protocols with pretty decent speeds. 
 
+Thanks, but I already have more than 2TB, and any more costs.  And although I like ZFS, it's not worth a whole 'nother OS for it.  Sticking with Debian until I get sick of all the bugs lately...
+
+
+      
