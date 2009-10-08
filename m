@@ -1,82 +1,54 @@
-From: Chris Green <cgreen@valvesoftware.com>
-Subject: RE: NAS Remote Side of a Mirror
-Date: Wed, 7 Oct 2009 17:50:32 -0700
-Message-ID: <4D87015385157D4285D56CA6101072FF2CB51276@exchange07.valvesoftware.com>
-References: <905067.19304.qm@web38806.mail.mud.yahoo.com>
- <130273.20896.qm@web38804.mail.mud.yahoo.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: raid1 running fine for years .. and then
+Date: Wed, 7 Oct 2009 23:54:29 -0400 (EDT)
+Message-ID: <alpine.DEB.2.00.0910072350440.30153@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <130273.20896.qm@web38804.mail.mud.yahoo.com>
-Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: 'adfas asd' <chimera_god@yahoo.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Why do you think samba would be a bad choice? I did a quick search for qnap benchmarks, and the numbers didn't look
-like anything special compared to my "generic pc + linux + software raid + samba + gbE" setup.
+Hello,
 
+I have 2 disks + 1 spare (3 total) in a raid-1 configuration, over the past
+3-4 weeks after 1-2 year of raid-1 (md), this is the second time this has
+happened:
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of adfas asd
-Sent: Wednesday, October 07, 2009 4:49 PM
-To: linux-raid@vger.kernel.org
-Subject: Re: NAS Remote Side of a Mirror
+[1538654.702201] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+[1538654.702209] ata1.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+[1538654.702210]          res 40/00:00:3c:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+[1538654.702213] ata1.00: status: { DRDY }
+[1538654.702217] ata1: hard resetting link
+[1538660.012018] ata1: link is slow to respond, please be patient (ready=0)
+[1538664.704019] ata1: COMRESET failed (errno=-16)
+[1538664.704024] ata1: hard resetting link
+[1538670.058008] ata1: link is slow to respond, please be patient (ready=0)
+[1538674.750009] ata1: COMRESET failed (errno=-16)
+[1538674.750015] ata1: hard resetting link
+[1538680.104031] ata1: link is slow to respond, please be patient (ready=0)
+[1538692.344014] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[1538692.348906] ata1.00: configured for UDMA/133
+[1538692.348929] ata1: EH complete
+[1538692.362731] end_request: I/O error, dev sdb, sector 293041531
+[1538692.362737] md: super_written gets error=-5, uptodate=0
+[1538692.362741] raid1: Disk failure on sdb3, disabling device.
 
-OK, say I wanted to build this remote NAS box myself, rather than spending $750 for a Qnap. (http://qnap.com/pro_detail_feature.asp?p_id=110)  I find a good case, power supply, micro mobo, and cage, and install Linux and NX (remote desktop) on it.
- 
-I need to share those drives over GbE with minimal software intervention. I'm not about to use bloatware like NFS or Samba. And sshfs or an SSH tunnel could not keep up the speeds I'd need. How do you suppose Qnap shares those drives? And provides all those other services?
- 
-So looking at Qnap's update, it comes down as a disk img file, which I can not mount in loopback. Probably encrypted, and knowing them in AES256.
+The smart statistics on the disk all show as OK and the short+long tests
+run successfully.
 
-Anyone built a remote NAS box?  How to share those drives with minimal software intervention?
+Anyone know what is going on here?
 
+rm --read-sector 293041531 /dev/sdb
 
+/dev/sdb:
+reading sector 293041531: succeeded
+..
+..
+< the data / numbers >
 
---- On Mon, 10/5/09, adfas asd <chimera_god@yahoo.com> wrote:
+The last time this happened, I wrote the disk with zeroes/badblocks/etc 
+and failed/removed then re-added it to the array without any issues, now, 
+3-4 weeks later, it has happened again.
 
-> From: adfas asd <chimera_god@yahoo.com>
-> Subject: NAS Remote Side of a Mirror
-> To: linux-raid@vger.kernel.org
-> Date: Monday, October 5, 2009, 8:37 AM
-> I'm looking at setting up my RAID
-> mirrored array so that one side of the mirror is in the HTPC
-> and the other is NASsed in the garage, in case of theft or
-> fire.
-> 
-> I am concerned about the boot process though, as the NASsed
-> side will not be available until the network comes up. 
-> Will the array be able to be patient for that and include
-> that side once it comes up, and run not degraded?
-> 
-> What if I lose my local side of the mirror?  Is
-> failover possible to the NAS side?  (Assuming a
-> separate boot disk with everything except /home, which is on
-> the array)
-> 
-> The only other technology I am aware of which can remote
-> drives at distance is fibrechannel, and that's too
-> expensive, so it seems I'm stuck with GB ethernet.  Are
-> there in fact any other options?
-> 
-> Is it possible to bring up ethernet early in the boot
-> process with initrd.img?
-> 
-> Has anyone actually done any of this?
-> 
-> 
->       
-> --
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
-      
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Justin.
