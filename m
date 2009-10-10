@@ -1,36 +1,49 @@
-From: Drew <drew.kay@gmail.com>
+From: adfas asd <chimera_god@yahoo.com>
 Subject: Re: NAS Remote Side of a Mirror
-Date: Sat, 10 Oct 2009 07:21:46 -0700
-Message-ID: <c268e4660910100721k206a0bdfn7421d0c101d01921@mail.gmail.com>
-References: <20091010071340176.ZFKE14562@cdptpa-omta03.mail.rr.com>
-	<39822.52296.qm@web38802.mail.mud.yahoo.com>
+Date: Sat, 10 Oct 2009 07:27:35 -0700 (PDT)
+Message-ID: <541099.71712.qm@web38806.mail.mud.yahoo.com>
+References: <c268e4660910100721k206a0bdfn7421d0c101d01921@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <39822.52296.qm@web38802.mail.mud.yahoo.com>
+In-Reply-To: <c268e4660910100721k206a0bdfn7421d0c101d01921@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: adfas asd <chimera_god@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Why do I say that? =C2=A0Because they -are- bloatware, and an unneces=
-sary fat layer in the system, with all the potential for error and secu=
-rity breach that implies. =C2=A0iSCSI is the way, in the 21st century.
+Thanks for the reference.
 
-Actually, iSCSI is far from secure. Google "iscsi security" and the
-first link that comes up is a pdf from a recent BlackHat convention.
-Give that a good read before you claim NFS & samba are bigger security
-risks then iSCSI.
+Of course I'll use iptables to ensure a connection only from the remote SAN to the HTPC.  I'd set up a tunnel, but that's likely to impact performance too much, especially with a 1.2GHz Atom.
 
 
---=20
-Drew
+--- On Sat, 10/10/09, Drew <drew.kay@gmail.com> wrote:
 
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> From: Drew <drew.kay@gmail.com>
+> Subject: Re: NAS Remote Side of a Mirror
+> To: "adfas asd" <chimera_god@yahoo.com>
+> Cc: linux-raid@vger.kernel.org
+> Date: Saturday, October 10, 2009, 7:21 AM
+> > Why do I say that?  Because
+> they -are- bloatware, and an unnecessary fat layer in the
+> system, with all the potential for error and security breach
+> that implies.  iSCSI is the way, in the 21st century.
+> 
+> Actually, iSCSI is far from secure. Google "iscsi security"
+> and the
+> first link that comes up is a pdf from a recent BlackHat
+> convention.
+> Give that a good read before you claim NFS & samba are
+> bigger security
+> risks then iSCSI.
+> 
+> 
+> -- 
+> Drew
+> 
+> "Nothing in life is to be feared. It is only to be
+> understood."
+> --Marie Curie
+> 
+
+
+      
