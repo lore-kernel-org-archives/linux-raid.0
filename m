@@ -1,22 +1,58 @@
-From: adfas asd <chimera_god@yahoo.com>
-Subject: Re: NAS Remote Side of a Mirror
-Date: Sat, 10 Oct 2009 07:30:09 -0700 (PDT)
-Message-ID: <720397.11688.qm@web38804.mail.mud.yahoo.com>
-References: <200910100828.00144.tfjellstrom@shaw.ca>
+From: "Thomas Fjellstrom" <tfjellstrom@shaw.ca>
+Subject: Re: MVSAS 1669:mvs_abort_task:rc= 5
+Date: Sat, 10 Oct 2009 09:56:19 -0600
+Message-ID: <200910100956.19241.tfjellstrom@shaw.ca>
+References: <200910091141.52303.tfjellstrom@shaw.ca>
+Reply-To: tfjellstrom@shaw.ca
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200910100828.00144.tfjellstrom@shaw.ca>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761788AbZJJP5H@vger.kernel.org>
+In-Reply-To: <200910091141.52303.tfjellstrom@shaw.ca>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel <linux-kernel@vger.kernel.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-raid.ids
 
---- On Sat, 10/10/09, Thomas Fjellstrom <tfjellstrom@shaw.ca> wrote:
-> iSCSI is also bloatware you know. If you want something
-> thin and light, try 
-> ATA Over Ethernet (AoE), or DRBD, or NBD.
+On Fri October 9 2009, Thomas Fjellstrom wrote:
+> Hi,
+> 
+> I've been trying to get an AOC-SASLP-MV8 card (pcie x4 2 port SAS card) to
+> work with linux for the past month or so. I've recently just RMAed my first
+> card, and tested the new one under linux, and I see the same problems.
+> 
+> The very first time I made a new array off the controller, formated (with
+>  xfs) and mounted the volume, it seemed to work. ioozone even seemed to run
+>  for a while. Sadly after a few minutes I got a stream of mvs_abort_task
+>  messages in dmesg, and any accesses to the volume, or any disks connected
+>  to the controller lock up.
+> 
+> After that I updated my 2.6.31 kernel to 2.6.32-rc3-git2 off of kernel.org,
+> and the volume fails to mount with the same mvs_abort_task messages.
+> 
+> I've attached my dmesg log from both attempts. dmesg1 is the first attempt,
+> dmesg2 is the second attempt on the newer kernel.
+> 
+> I would really appreciate some help with this.
+> 
 
-Apparently not.  As I say, MySQL performance tests show iSCSI is actually faster than DAS SCSI.
+I should also mention that if I attempt to remove any of the drives while the 
+card is in a hung state, the entire machine locks up with the keyboard LEDs 
+blinking.
 
+This does seem to be a rather serious error.
 
-      
+If there is more I can do to help track down the problems, please let me know. 
+I really need to get this to work (my current array is FULL, and may be 
+showing signs of failure) as soon as possible.
+
+I can pretty much wipe and reinstall everything at any point on this machine, 
+update/install new kernels, etc. I just don't have a null modem cable atm to 
+hook up a serial console to capture the errors on OOPSes.
+
+Thanks.
+
+-- 
+Thomas Fjellstrom
+tfjellstrom@shaw.ca
