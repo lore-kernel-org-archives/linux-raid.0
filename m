@@ -1,44 +1,36 @@
-From: adfas asd <chimera_god@yahoo.com>
-Subject: RE: NAS Remote Side of a Mirror
-Date: Sat, 10 Oct 2009 05:49:10 -0700 (PDT)
-Message-ID: <39822.52296.qm@web38802.mail.mud.yahoo.com>
+From: Drew <drew.kay@gmail.com>
+Subject: Re: NAS Remote Side of a Mirror
+Date: Sat, 10 Oct 2009 07:21:46 -0700
+Message-ID: <c268e4660910100721k206a0bdfn7421d0c101d01921@mail.gmail.com>
 References: <20091010071340176.ZFKE14562@cdptpa-omta03.mail.rr.com>
+	<39822.52296.qm@web38802.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091010071340176.ZFKE14562@cdptpa-omta03.mail.rr.com>
+In-Reply-To: <39822.52296.qm@web38802.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: adfas asd <chimera_god@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---- On Sat, 10/10/09, Leslie Rhorer <lrhorer@satx.rr.com> wrote:
->     I'm not familiar with NX.  Why not
-> X11?
+> Why do I say that? =C2=A0Because they -are- bloatware, and an unneces=
+sary fat layer in the system, with all the potential for error and secu=
+rity breach that implies. =C2=A0iSCSI is the way, in the 21st century.
 
-I tried to set up remote X a long time ago, but it was just too problematic.  NX does essentially the same thing, and has built-in security. (nomachine.com)  Works great, and is very fast.
- 
-
-> > I'm not about to use bloatware like NFS or Samba. And
-> sshfs or an SSH
-> > tunnel could not keep up the speeds I'd need. How do
-> you suppose Qnap
-> 
->     Why do you say that?  From what I
-> have seen of your requirements, it
-> doesn't sound like you will require very much at all in the
-> way of speed on
-> your array.
-
-Why do I say that?  Because they -are- bloatware, and an unnecessary fat layer in the system, with all the potential for error and security breach that implies.  iSCSI is the way, in the 21st century.
- 
-
->     Speaking of which, I never did see where
-> you posted the results of
-> any drive access metrics.
-
-I'm sure I mentioned these are the WD 2TB drives.  Straight read 77.7MB/s in RAID10offset.
+Actually, iSCSI is far from secure. Google "iscsi security" and the
+first link that comes up is a pdf from a recent BlackHat convention.
+Give that a good read before you claim NFS & samba are bigger security
+risks then iSCSI.
 
 
+--=20
+Drew
 
-
-      
+"Nothing in life is to be feared. It is only to be understood."
+--Marie Curie
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
