@@ -1,64 +1,62 @@
-From: Asdo <asdo@shiftmail.org>
-Subject: Re: [PATCH 0/3] md fixes for 2.6.32-rc
-Date: Sun, 11 Oct 2009 14:16:57 +0200
-Message-ID: <4AD1CCB9.3000301@shiftmail.org>
-References: <20091002011747.24095.70355.stgit@dwillia2-linux.ch.intel.com>
- <19141.32211.742547.19481@notabene.brown>
- <1254875779.16798.10.camel@dwillia2-linux.ch.intel.com>
- <Pine.LNX.4.64.0910071141010.29237@diagnostix.dwd.de>
- <4ACCDEF3.5000804@shiftmail.org>
- <Pine.LNX.4.64.0910080840420.22913@diagnostix.dwd.de>
+From: Jon Lewis <jlewis@lewis.org>
+Subject: Re: md: could not bd_claim hde1
+Date: Sun, 11 Oct 2009 08:55:17 -0400 (EDT)
+Message-ID: <Pine.LNX.4.61.0910110816130.22812@soloth.lewis.org>
+References: <Pine.LNX.4.61.0910102326250.22812@soloth.lewis.org>
+ <738ae0e0ab81ff72cc23b359d0011d1c.squirrel@neil.brown.name>
+ <Pine.LNX.4.61.0910110051270.22812@soloth.lewis.org> <4AD198E8.2070707@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <Pine.LNX.4.64.0910080840420.22913@diagnostix.dwd.de>
+In-Reply-To: <4AD198E8.2070707@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Holger Kiehl <Holger.Kiehl@dwd.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Holger Kiehl wrote:
-> Its a dual cpu mainboard with two Xeon X5460 and 32 GiB Ram.
+On Sun, 11 Oct 2009, Michael Tokarev wrote:
+
+>> # cat /proc/mounts
+>> rootfs / rootfs rw 0 0
+>> /dev/root / ext3 rw 0 0
 >
-Nice machine...
-Earlier intels though, with kinda slow RAM access (who knows if this has 
-something to do...)
-A few more observations:
+> That's what you get for using rh and their nash ;)
+>
+> What IS /dev/root?  How does your root device
+> is specified in initramfs -- by uuid/label?
 
->> also: stripe_cache_size current setting for your RAID
->> Raid level, number of disks, chunk size, filesystem...
-> Raid level is Raid6 over 8 disks (actually 16, which are made up of 8
-> HW Raid1 disks) and chunksize is 2048k. Here the output from /proc/mdstat
-Ok the filesystem appears to be aligned then (I am assuming you are not 
-using LVM, otherwise pls tell because there can be other tweaks)
+lrwxrwxrwx  1 root root 8 Oct  9 23:52 /dev/root -> /dev/md0
 
-I don't really know this multicore implementation, however here is one 
-thing you could try:
+title CentOS (2.6.9-34.ELsmp)
+         root (hd0,0)
+         kernel /boot/vmlinuz-2.6.9-34.ELsmp ro root=/dev/md0
+         initrd /boot/initrd-2.6.9-34.ELsmp.img
 
-The default stripe_cache_size might be too small for a multicore 
-implementation, considering that there might be many more in-flight 
-operations than with single-core (and even with single core it is 
-beneficial to raise it).
-What is the current value? (cat /sys/block/md4/md/stripe_cache_size)
-You can try:
-echo 32768 > /sys/block/md4/md/stripe_cache_size
+Pulling apart the initrd, the end of init does these commands
 
-You can also try to raise /sys/block/md4/md/nr_requests echoing a higher 
-value in it, but this operation hangs up the kernel immediately on our 
-machine with Ubuntu kernel 2.6.31 . This is actually a bug: Neil / Dan 
-are you aware of this bug? Is it fixed in 2.6.32?
+raidautorun /dev/md0
+raidautorun /dev/md1
+echo Creating root device
+mkrootdev /dev/root
+umount /sys
+echo Mounting root filesystem
+mount -o defaults --ro -t ext3 /dev/root /sysroot
+mount -t tmpfs --bind /dev /sysroot/dev
+echo Switching to new root
+switchroot /sysroot
+umount /initrd/dev
 
-Secondly, it's surprising that it is slower than single core. How busy 
-are the 8 cores you have, running on the MD threads (try htop) ? If you 
-see all 8 cores maxed, it's one kind of implementation problem, if you 
-see just 1-2 cores maxed, it's another kind...
+So, mkrootdev (nash) should be using /dev/md0 as the root fs device.
 
-Maybe stack traces can be used to see where the bottleneck is... I am 
-not a profiling expert actually, but you might try this
-cat /proc/12345/stack
-replace 12345 with the kernel threads for md: you can probably see the 
-PIDs with ps auxH | less or with htop (K option enabled)
-catting the stack many times should see where they are stuck for most of 
-the time
+I finally figured this out though.  The drives are on a Promise fast track 
+controller, but we don't use its softraid feature...we only use it as 
+additional PATA ports.  Apparently dmraid decided otherwise and had 
+activated the devices.  I was able to unload dm_raid, but dm_mod was "in 
+use" I suspect by the two devices.  dmraid -a n fixed that, and the 
+devices were free again and are going back into sync.
 
+----------------------------------------------------------------------
+  Jon Lewis                   |  I route
+  Senior Network Engineer     |  therefore you are
+  Atlantic Net                |
+_________ http://www.lewis.org/~jlewis/pgp for PGP public key_________
