@@ -1,43 +1,44 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: raid1 running fine for years .. and then
-Date: Mon, 12 Oct 2009 13:20:55 -0400 (EDT)
-Message-ID: <alpine.DEB.2.00.0910121320160.2020@p34.internal.lan>
-References: <alpine.DEB.2.00.0910072350440.30153@p34.internal.lan> <20091012160040.GE17021@aurora.pimp.org.za>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: xfs > md 50% write performance drop on .30+ kernel?
+Date: Tue, 13 Oct 2009 07:40:23 +1300
+Message-ID: <4AD37817.1000902@sauce.co.nz>
+References: <66781b10910120958k4afb637ejba79e4c23900c4da@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091012160040.GE17021@aurora.pimp.org.za>
+In-Reply-To: <66781b10910120958k4afb637ejba79e4c23900c4da@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael-John Turner <mj@mjturner.net>
-Cc: linux-raid@vger.kernel.org
+To: mark delfman <markdelfman@googlemail.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+mark delfman wrote:
+> Hi... in recent tests we are seeing a 50% drop in performance from
+> XFS>MD on a 2.6.30 kernel (compared to a 2.6.28 kernel)
 
+I can very loosely (based on very early testing and slightly different 
+hardware) agree.
 
-On Mon, 12 Oct 2009, Michael-John Turner wrote:
+A couple of 2.6.27.19-78.2.30.fc9.x86_64 machines - 8GB RAM LSI SAS 
+controller and 16 x WD RE3 750GB SATA md RAID6.
 
-> On Wed, Oct 07, 2009 at 11:54:29PM -0400, Justin Piszcz wrote:
->> The last time this happened, I wrote the disk with
->> zeroes/badblocks/etc and failed/removed then re-added it to the array
->> without any issues, now, 3-4 weeks later, it has happened again.
->
-> Rather strangely, this happened to me recently too. Exactly the same
-> SATA error yet nothing was in the SMART logs and the self-tests passed
-> perfectly. What model is the drive in question? Mine is a Samsung HD753LJ,
-> firmware version 1AA01109.
->
-> -mj
-> -- 
-> Michael-John Turner
-> mj@mjturner.net      <>     http://mjturner.net/
->
+With stripe cache set to 16384, I see dd writes of 590MB/s.
 
-Hello,
+Started testing a similar machine yesterday - 12GB RAM LSI SAS 
+controller and 16 x WD RE3 1TB SATA md RAID6.
 
-Drive is a 150GB raptor:
+With stripe cache set to 16384, I see dd writes of around 290MB/s and 
+when bumped up to 32768 (the maximum), it increases to 407MB.
 
-Device Model:     WDC WD1500ADFS-00SLR5
-Firmware Version: 21.07QR5
+Read performance is about the same as the older system - around 960MB/s.
 
-Justin.
+Both systems are using XFS with an external journal.
+
+As I say, early days - I've not compared scheduler etc. settings between 
+kernels, but somewhatr disappointing.
+
+Regards,
+
+Richard
 
