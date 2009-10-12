@@ -1,26 +1,30 @@
-From: Vladimir Dronnikov <dronnikov@gmail.com>
-Subject: Re: [PATCH 1/1] md: drivers/md/unroll.pl replaced with awk analog
-Date: Mon, 12 Oct 2009 10:46:31 +0400
-Message-ID: <6784529b0910112346s791113e3k1ee457589adfc3a2@mail.gmail.com>
-References: <4aca1863.0a1ad00a.33bf.1017@mx.google.com> <19146.30989.928233.393339@notabene.brown>
-	<6784529b0910052234x3d5c8ebblb1fc0b73d9dc1f82@mail.gmail.com>
-	<19154.50758.867045.191430@notabene.brown>
+From: Mike Snitzer <snitzer@gmail.com>
+Subject: Re: Load-balancing mirrors w/ asymmetric performance
+Date: Mon, 12 Oct 2009 10:22:24 -0400
+Message-ID: <170fa0d20910120722o2347f119g9e3c48b52bc4efef@mail.gmail.com>
+References: <f3177b9e0910041240h4dba8771vb5ba07216c9c8189@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <19154.50758.867045.191430@notabene.brown>
+In-Reply-To: <f3177b9e0910041240h4dba8771vb5ba07216c9c8189@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, rob@landley.net, firmware@impactlinux.com
+To: Chris Worley <worleys@gmail.com>
+Cc: linuxraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Sun, Oct 4, 2009 at 3:40 PM, Chris Worley <worleys@gmail.com> wrote:
+> When you mirror two devices, they may not have the same performance.
+> For example, if one device is local and the other remote.
 >
-> That's good, thanks.
-> I'll queue it up for 2.6.33.
+> There's nothing you can do about writes, as everything needs written.
 >
+> But, reads shouldn't be split 50/50: they should be balanced depending
+> relative performance of each mirror to optimize overall read
+> performance.
 
-Thanks!
+And MD already has the ability to flag the slow paths as write-mostly, see:
 
-Best regards,
---
-Vladimir
+mdadm ... --write-mostly
+
+There is also '--write-behind' support for devices that have been
+tagged as 'write-mostly'.
