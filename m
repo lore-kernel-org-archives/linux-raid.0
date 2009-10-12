@@ -1,72 +1,26 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: Re: MVSAS 1669:mvs_abort_task:rc= 5
-Date: Sun, 11 Oct 2009 16:58:13 -0600
-Message-ID: <200910111658.13639.tfjellstrom@shaw.ca>
-References: <200910091141.52303.tfjellstrom@shaw.ca> <4AD22532.9060001@univ-lille2.fr>
-Reply-To: tfjellstrom@shaw.ca
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 1/1] md: drivers/md/unroll.pl replaced with awk analog
+Date: Mon, 12 Oct 2009 17:01:42 +1100
+Message-ID: <19154.50758.867045.191430@notabene.brown>
+References: <4aca1863.0a1ad00a.33bf.1017@mx.google.com>
+	<19146.30989.928233.393339@notabene.brown>
+	<6784529b0910052234x3d5c8ebblb1fc0b73d9dc1f82@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4AD22532.9060001@univ-lille2.fr>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Christian Vilhelm <christian.vilhelm@univ-lille2.fr>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <James.Bottomley@suse.de>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753453AbZJLGBM@vger.kernel.org>
+In-Reply-To: message from Vladimir Dronnikov on Tuesday October 6
+Sender: linux-kernel-owner@vger.kernel.org
+To: Vladimir Dronnikov <dronnikov@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, rob@landley.net, firmware@impactlinux.com
 List-Id: linux-raid.ids
 
-On Sun October 11 2009, Christian Vilhelm wrote:
-> Thomas Fjellstrom wrote:
-> > Hi,
-> >
-> > I've been trying to get an AOC-SASLP-MV8 card (pcie x4 2 port SAS card)
-> > to work with linux for the past month or so. I've recently just RMAed my
-> > first card, and tested the new one under linux, and I see the same
-> > problems.
-> >
-> > The very first time I made a new array off the controller, formated (with
-> > xfs) and mounted the volume, it seemed to work. ioozone even seemed to
-> > run for a while. Sadly after a few minutes I got a stream of
-> > mvs_abort_task messages in dmesg, and any accesses to the volume, or any
-> > disks connected to the controller lock up.
-> >
-> > After that I updated my 2.6.31 kernel to 2.6.32-rc3-git2 off of
-> > kernel.org, and the volume fails to mount with the same mvs_abort_task
-> > messages.
+On Tuesday October 6, dronnikov@gmail.com wrote:
+> > Just a couple of little changes needed:
 > 
-> I have the exact same problem with another Marvell 88SE64xx based card,
-> namely an Areca ARC-1300ix-16 and the mvsas driver.
-> If the disks are just used alone, with a filesystem on them, all seems
-> to work fine. dd and badblocks run fine on them. Mounting them,
-> reading/writing work fine. The error seem to popup but rarely when
-> several disks are used simultaneously.
-> But, an absolute sure way to trigger the error is to assemble (or
-> create) a md raid array with the disks. I join a syslog extract from the
-> error. You can see it happens seconds after the array creation.
-> I tried :
-> 1) disabling the write cache on the disks => same error
-> 2) disabling NCQ : in mv_sas.h :
-> #define MV_DISABLE_NCQ  1
-> same error.
-> Afer a while, the devices handled by the card are just dropped from the
-> system and the card stops working at all, a reboot is necessary.
+> Right. I've sent the updated patch. Please, take a look.
 
-I have found that a proper reboot is impossible once the card/driver starts 
-misbehaving. Anything that tries to do anything with the md device, or any of 
-the component drives will hang. Even kernel threads it seems. A reboot or a 
-shutdown hangs when it tries to sync the md device, and ALT+SYSRQ+S/U both 
-hang. After the first Alt+sysrq+s it will register more of them, but it won't 
-print the "Emergency Sync Complete" message.
+That's good, thanks.
+I'll queue it up for 2.6.33.
 
-> Does anyone have a working config based on a Marvell 64xx card ?
-> 
-> I'm willing to explore solutions, patches or anything, just tell me what
-> to do to help.
-> 
-> Christian Vilhelm.
-> 
-
-
--- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
+NeilBrown
