@@ -1,90 +1,78 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: About seting up Raid5 on a four disk box.
-Date: Tue, 13 Oct 2009 16:54:44 -0400
-Message-ID: <4AD4E914.7080709@tmr.com>
-References: <hb1udb$6t1$1@ger.gmane.org>
+Subject: Re: recommended 4port SATA controller ?
+Date: Tue, 13 Oct 2009 17:19:33 -0400
+Message-ID: <4AD4EEE5.8040806@tmr.com>
+References: <4AB22135.7030405@kaneda.iguw.tuwien.ac.at> <87f94c370909170549v156f9b23ie19f7204e21819f1@mail.gmail.com> <4AB23978.8090706@grupopie.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <hb1udb$6t1$1@ger.gmane.org>
+In-Reply-To: <4AB23978.8090706@grupopie.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: ap23563m@gmx.com
-Cc: linux-raid@vger.kernel.org
+To: Rui Santos <rsantos@grupopie.com>
+Cc: Greg Freemyer <greg.freemyer@gmail.com>, Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Antonio Perez wrote:
-> If I'm posting to the wrong group, sorry. just point to the RTFM link.
->
-> This post is about setting up a Debian box with four disks (size should not 
-> be important, me thinks), let's assume that a Raid 5 is the correct type for 
-> the intended use.
->
+Rui Santos wrote:
+> Greg Freemyer wrote:
 >   
-It's not, brief explanation follows.
-
-You absolutely want your /boot to be raid-1 so it boots if the 1st drive 
-fails. You want to grub install in the MBR of each drive, by hand. The 
-boot will get the raid arrays going, so they can be raid-5, but read on.
-
-If this will be a desktop, make / raid-10, it will be much faster. If 
-you will be doing things which are big enough to trigger swap use, that 
-should be raid-10 as well, allocated on the outer part of the drive. You 
-other data can be in raid-5 partitions, if that's the balance of space 
-and reliability for you. If you will use ext4 read the man pages on 
-stripe= and stride= settings, they should match what you are doing. If 
-these are large drives, ext4 has some options you should understand, DO 
-NOT just let the installer create the filesystem, they are not yet 
-clever enough, don't ask intended use questions, etc.
-
-Read the comments on this stuff in the list archives, pick the ideas on 
-tuning which you find helpful, virtually any tuning you pick based on 
-projected use will beat the defaults.
-
-Late thought: raid-10 swap is seriously faster than raid-5, I don't know 
-if suspend works on it, I don't raid laptops or suspend servers. The 
-wisdom of the list may appear here. ;-)
-
-> Keeping aside LVM and/or layering of md (just for simplicity), and taking 
-> into account that /boot, / and maybe other areas should go in a Raid 1 
-> configuration, for booting reliability. I have three questions that perhaps 
-> you could help to clarify:
+>> On Thu, Sep 17, 2009 at 7:44 AM, Rainer Fuegenstein
+>> <rfu@kaneda.iguw.tuwien.ac.at> wrote:
+>>   
+>>     
+>>> hi,
+>>>
+>>> I need to move my 4 disk raid5 array from a motherboard with 4 onboard SATA
+>>> ports to a mainboard with just 2 ports. therefore I'm looking for a reliable
+>>> and inexpensive 4port PCI controller.
+>>>     
+>>>       
+>> Rainer,
+>>
+>> The support chips are not always available in all flavors of PCI, so
+>> you need to specify which flavor PCI slots your mother board has.
+>>
+>> I don't recall seeing a non-raid 4-port "legacy PCI" controller, but I
+>> can't say I've looked very hard.  Hopefully your motherboard has a
+>> "PCI express" slot available.
+>>
+>> If PCI is all you have, I would go with a pair of SiiG controllers.
+>> 2-ports each, but they only cost $30 or so.  I have a dozen machines
+>> at least with the 2-port SiiG PCI controllers in them and have had no
+>> issues with linus drivers, etc.
+>>   
+>>     
+> There is an Addonics PCI card that will do what you want.
+> http://www.addonics.com/products/host_controller/adsa3r5-e.asp . I have
+> one of those.
 >
-> 1.- Should the "rest of the disk" be only one partition?
-> I have read that making several partitions and setting several md disks:
-> 	sd[a..d]2 --> md1
-> 	sd[a..d]3 --> md2
-> 	sd[a..d]4 --> md3
-> would help with the rebuild time of each md, which sounds correct. It is 
-> also proposed that the md on the outer area of the disk would be faster 
-> allowing for better control of performance, assigning faster mds to the more 
-> used filesystems.
->
-> However, and this I don't know, those sda[2..4] are not really different 
-> devices (spindles) and reads to one md would conflict (or not?) with reads 
-> to the other mds.
->
-> Setting the whole disk as one partition would prevent any conflict but would 
-> take longer to rebuild and files would be spread over the whole area of the 
-> disk.
->
-> I really don't know the internals of md well enough to tell what advantages 
-> and problems one setup has over the other.
->
-> 2.- On the Raid 1: How many sectors to copy? 63?
-> On an update of grub code, core.img could change, which means that the first 
-> 63 sectors (to be on the safe side) of the disk which gets the update should 
-> be copied to the other 3 disks.
-> Or is it that the md code would mirror sectors 1-62 and only the MBR needs 
-> to be manually mirroed?
->
-> 2.- Is there a recomended way to trigger the said copy of question 2?
-> Where should a call to copy the MBR should be placed? On update-grub?
->
-> TIA
->
+> Advantages:
+> - PCI V2.3 66MHz compliant. It will deploy 2.6Gbits/sec.
 >   
 
+??? I don't know what they mean by "deploy," but I know what 133MB/s 
+means in the PCI bus standard, and 2.6Gbit isn't it. I suspect that's 
+max write speed for an N-way raid, N copies of the same data going to 
+each drive fed from memory at bus max, but it certainly doesn't mean 
+transfer between storage and memory. Sounds like a spec they put in 
+advertising, big meaningless (or nearly so) number. Factual, but not a 
+normal use case.
+
+> - Low profile
+> - RAID fetature
+> - Support PMP
+> - Esata
+>   
+
+Don't think that's what's desired, could be wrong.
+> Disadvantages:
+> - Price
+> - RAID needs to be set on Windows machine
+>
+> Check it out...
+>   
+
+Agree, my BS detector occasionally gets false positives.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
