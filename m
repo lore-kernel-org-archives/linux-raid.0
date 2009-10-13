@@ -1,31 +1,43 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs > md 50% write performance drop on .30+ kernel?
-Date: Tue, 13 Oct 2009 18:52:41 -0400
-Message-ID: <20091013225241.GA32197@infradead.org>
-References: <66781b10910120958k4afb637ejba79e4c23900c4da@mail.gmail.com> <20091013013352.GA24869@infradead.org> <66781b10910130406s4119985fg5db7679a2e9fd4f2@mail.gmail.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: raid1 running fine for years .. and then
+Date: Tue, 13 Oct 2009 19:51:24 -0400 (EDT)
+Message-ID: <alpine.DEB.2.00.0910131950220.29143@p34.internal.lan>
+References: <alpine.DEB.2.00.0910072350440.30153@p34.internal.lan> <20091012160040.GE17021@aurora.pimp.org.za> <alpine.DEB.2.00.0910121320160.2020@p34.internal.lan> <20091013114552.GC11085@aurora.pimp.org.za>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <66781b10910130406s4119985fg5db7679a2e9fd4f2@mail.gmail.com>
+In-Reply-To: <20091013114552.GC11085@aurora.pimp.org.za>
 Sender: linux-raid-owner@vger.kernel.org
-To: mark delfman <markdelfman@googlemail.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Michael-John Turner <mj@mjturner.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Oct 13, 2009 at 12:06:24PM +0100, mark delfman wrote:
-> A little more information which I ?think? seems to point at MD.....
-> 
-> Creating an EXT3 FS on an MD RAID also shows a circa 50% performance drop.
-> We have tried a multitude of RAID options (raid6/0 various chunks etc).
-> 
-> Using a hardware based raid XFS / EXT3 shows no performance drop
-> (although the hardware raid is significantly slower than MD in the
-> first place)
-> 
-> We are happy to keep testing and offering anything that could be
-> useful, we are just a little stuck thinking of anything else to do....
 
-Can you test with conv=direct added to the dd command lines?  If that
-shows the problems too it's probably writeback-related.  If not the
-problems must be somewhere lower in the stack.
+
+On Tue, 13 Oct 2009, Michael-John Turner wrote:
+
+> On Mon, Oct 12, 2009 at 01:20:55PM -0400, Justin Piszcz wrote:
+>> Drive is a 150GB raptor:
+>>
+>> Device Model:     WDC WD1500ADFS-00SLR5
+>> Firmware Version: 21.07QR5
+>
+> Hmm.... Doesn't seem drive related then. What kernel and SATA controller?
+> I'm using 2.6.26 and an ICH9R, with NCQ enabled.
+>
+> -mj
+> -- 
+> Michael-John Turner
+> mj@mjturner.net      <>     http://mjturner.net/
+>
+
+Hi,
+
+Found the issue, it was the drive.  I recently bought a new motherboard & 
+another 3ware raid card.  As soon as it began initializing the drive, the 
+re-allocated sectors started to shoot up.
+
+When I connected it back to the system board temporarily and ran a dd 
+against it-- it started erroring more.  In this case, it was a bad drive.
+
+Justin.
