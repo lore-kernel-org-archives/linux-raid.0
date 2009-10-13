@@ -1,60 +1,61 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Random bit flips - better data integrity needed [Was: Re: 	mismatch_count
- != 0 on multiple hosts]
-Date: Tue, 13 Oct 2009 17:45:26 -0400
-Message-ID: <4AD4F4F6.7010506@tmr.com>
-References: <87f94c370909190910s6992a671re507ddcf91ea623e@mail.gmail.com> <h9abqh$e1m$2@ger.gmane.org>
+From: mark delfman <markdelfman@googlemail.com>
+Subject: Re: xfs > md 50% write performance drop on .30+ kernel?
+Date: Tue, 13 Oct 2009 22:52:04 +0100
+Message-ID: <66781b10910131452n10f6e1c3t5522fe0d56a187b@mail.gmail.com>
+References: <66781b10910120958k4afb637ejba79e4c23900c4da@mail.gmail.com>
+	 <4AD3F64F.6070908@sauce.co.nz> <4AD454A0.3050704@shiftmail.org>
+	 <4AD4DAA4.4080703@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <h9abqh$e1m$2@ger.gmane.org>
+In-Reply-To: <4AD4DAA4.4080703@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matthias Urlichs <matthias@urlichs.de>
-Cc: linux-raid@vger.kernel.org
+To: Richard Scobie <richard@sauce.co.nz>
+Cc: Asdo <asdo@shiftmail.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Matthias Urlichs wrote:
-> On Sat, 19 Sep 2009 12:10:34 -0400, Greg Freemyer wrote:
->
->   
->> Specifically you could steal the second parity stripe from a raid 6
->> setup and replace it with this end-to-end data integrity checksum / crc.
->>     
->
-> If you're willing to add that kind of overhead, simply read all of the 
-> RAID6 stripes into memory and check whether they're consistent.
->
-> If not, it's easy to decide (for RAID6) whether the data or the parity is 
-> wrong: simply check both P and Q. If only one is broken, fix it. If both 
-> are, correct the data according to P and check if Q is now correct. If 
-> so, fix it. Otherwise the only thing you can do is to fail the whole 
-> array, and to alert the operator that they have major hardware issues. :-/
->
-> For RAID45, you can do the same, except that there's no way to fix any 
-> problems since you don't know whether data or parity is right. As the 
-> error may have crept in upon writing, rereading is of limited use.
->
-> For RAID1 (and maybe even multipath), the same idea applies; add majority 
-> rule when you have more than two disks.
->
-> Adding this kind of checking to the RAID456 driver should be rather easy 
-> for somebody who knows its internals. Its effect on read throughput is 
-> anyone's guess, of course.
->   
+This is the same experience we have, without a doubt the =91dumb=92 LSI
+SAS cards + MD are certainly faster and more flexible (actually, I
+should say MD is faster and more flexible).
 
-To do this right requires forcing the data to the platter, then reading 
-it back (from the platter, not cache) and checking it. Preferably 
-reading with ECC off to catch marginal data. In the 60's there were 
-drives with read-after-write heads, but the data density was so low you 
-could sprinkle oxide on the platter and see data patterns. I can't see 
-doing it that way with "heads" any more, but when solid state becomes 
-more mainstream it becomes possible with useful transfer rates.
+The LSI SAS2 chips scale up better via the expanders (even if the
+expanders / drives are SAS1)
 
-I have the feeling that someone had a patch to do that with a loopback 
-mount, but I can't find a pointer.
+BUT =96 problem with all this performance, is it is disappointing when
+we lose it on XFS :(
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  Unintended results are the well-earned reward for incompetence.
 
+
+
+On Tue, Oct 13, 2009 at 8:53 PM, Richard Scobie <richard@sauce.co.nz> w=
+rote:
+> Asdo wrote:
+>
+>> Do you think it was controller's overhead? I have heard mixed opinio=
+ns
+>> about 3wares. What are the fastest controllers around for MD-raid us=
+e?
+>
+> The fastest setup I have found have been LSI SAS cards - LSISAS3442E-=
+R, with
+> the onboard RAID firmware replaced with the IT firmware.
+>
+> This is connected to port expander based JBOD chassis loaded with eit=
+her
+> =A0SAS or SATA drives.
+>
+> Regards,
+>
+> Richard
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
