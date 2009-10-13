@@ -1,36 +1,56 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
+From: mark delfman <markdelfman@googlemail.com>
 Subject: Re: xfs > md 50% write performance drop on .30+ kernel?
-Date: Tue, 13 Oct 2009 12:34:27 +0200 (CEST)
-Message-ID: <alpine.DEB.1.10.0910131229400.5824@uplift.swm.pp.se>
-References: <66781b10910120958k4afb637ejba79e4c23900c4da@mail.gmail.com> <4AD3F64F.6070908@sauce.co.nz> <4AD454A0.3050704@shiftmail.org>
+Date: Tue, 13 Oct 2009 12:06:24 +0100
+Message-ID: <66781b10910130406s4119985fg5db7679a2e9fd4f2@mail.gmail.com>
+References: <66781b10910120958k4afb637ejba79e4c23900c4da@mail.gmail.com>
+	 <20091013013352.GA24869@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AD454A0.3050704@shiftmail.org>
+In-Reply-To: <20091013013352.GA24869@infradead.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>
-Cc: Richard Scobie <richard@sauce.co.nz>, linux-raid <linux-raid@vger.kernel.org>
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 13 Oct 2009, Asdo wrote:
+A little more information which I =91think=92 seems to point at MD.....
 
-> I have heard mixed opinions about 3wares. What are the fastest 
-> controllers around for MD-raid use?
+Creating an EXT3 FS on an MD RAID also shows a circa 50% performance dr=
+op.
+We have tried a multitude of RAID options (raid6/0 various chunks etc).
 
-The 3wares are not the fastest around, I don't even get the performance 
-you're describing. I use them because I can get them cheap on the used 
-market and because they're stable.
+Using a hardware based raid XFS / EXT3 shows no performance drop
+(although the hardware raid is significantly slower than MD in the
+first place)
 
-There are plenty of articles around describing read/write latency for the 
-3wares as one part of the problem. Just to put into perspective, I get 
-approx 5-10 megabyte/s write performance on a 3ware 9500S hw-raid5 with 
-ext3, whereas I get at least 10x times that for read. The performance with 
-dd directly to the device is 100+ megabyte/s though, it's just thru the fs 
-it is slow.
+We are happy to keep testing and offering anything that could be
+useful, we are just a little stuck thinking of anything else to do....
 
-The 3wares usually work better if you single disk them and use md, then I 
-get 30-50 megabyte/s write performance thru the fs anyway, which is what I 
-guess you do as well.
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+
+
+On Tue, Oct 13, 2009 at 2:33 AM, Christoph Hellwig <hch@infradead.org> =
+wrote:
+> On Mon, Oct 12, 2009 at 05:58:20PM +0100, mark delfman wrote:
+>> Hi... in recent tests we are seeing a 50% drop in performance from
+>> XFS>MD on a 2.6.30 kernel (compared to a 2.6.28 kernel)
+>>
+>> In short: =A0Performance to MD0 direct =3D circa 1.7GBsec (see below=
+), via
+>> xfs circa 850MBsec. =A0On previous system (2.6.28) there was no drop=
+ in
+>> performance (in fact often an increase).
+>>
+>> I am hopefully that this is simply a matter of barriers etc on the
+>> newer kernel and MD, but we have tried many options and nothing seem=
+s
+>> to change this so would very much appreciate advice.
+>
+> Did barrier support for RAID0 got introduced in 2.6.30?
+>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
