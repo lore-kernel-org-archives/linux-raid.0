@@ -1,85 +1,96 @@
-From: mark delfman <markdelfman@googlemail.com>
-Subject: Re: xfs > md 50% write performance drop on .30+ kernel?
-Date: Tue, 13 Oct 2009 16:15:55 +0100
-Message-ID: <66781b10910130815j3f8cc66al2ae03953aedb66ef@mail.gmail.com>
-References: <66781b10910120958k4afb637ejba79e4c23900c4da@mail.gmail.com>
-	 <20091013013352.GA24869@infradead.org>
-	 <66781b10910130406s4119985fg5db7679a2e9fd4f2@mail.gmail.com>
-	 <70ed7c3e0910130409r1e1350b6yabfdc3d4f5c51edf@mail.gmail.com>
-	 <66781b10910130412x309d9de2l574ba12a9ed4100a@mail.gmail.com>
-	 <70ed7c3e0910130415k4da86d18kd92dce5217b8600d@mail.gmail.com>
-	 <4AD48EFA.50303@shiftmail.org>
-	 <66781b10910130813u7f9ca010t7cd05214be729fff@mail.gmail.com>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: About seting up Raid5 on a four disk box.
+Date: Tue, 13 Oct 2009 16:23:04 +0100
+Message-ID: <20091013152304.GA19668@cthulhu.home.robinhill.me.uk>
+References: <hb1udb$6t1$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="fdj2RfSjLxBAspz7"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <66781b10910130813u7f9ca010t7cd05214be729fff@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <hb1udb$6t1$1@ger.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-PS - LSI havent publically released the SAS2 (non-raid) card as yet.
-They have just released the RAID version and will follow with the
-non-raid soon.
 
-Their chips are being used on some of the later server motherboards,
-so SAS2 is around but new.
+--fdj2RfSjLxBAspz7
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Tue Oct 13, 2009 at 09:13:13AM -0400, Antonio Perez wrote:
 
+> 1.- Should the "rest of the disk" be only one partition?
+> I have read that making several partitions and setting several md disks:
+> 	sd[a..d]2 --> md1
+> 	sd[a..d]3 --> md2
+> 	sd[a..d]4 --> md3
+> would help with the rebuild time of each md, which sounds correct. It is=
+=20
+> also proposed that the md on the outer area of the disk would be faster=
+=20
+> allowing for better control of performance, assigning faster mds to the m=
+ore=20
+> used filesystems.
+>=20
+> However, and this I don't know, those sda[2..4] are not really different=
+=20
+> devices (spindles) and reads to one md would conflict (or not?) with read=
+s=20
+> to the other mds.
+>=20
+Any reads to the same disk will conflict - whether they're on separate
+arrays or within a single array shouldn't make any difference (the IO
+elevator is set on the disk rather than the array, so I assume it will
+gather requests across all arrays).  md itself knows that the arrays
+share disks, so will ensure any maintenance tasks (resyncs, etc) only
+run on a single array at a time.
 
-On Tue, Oct 13, 2009 at 4:13 PM, mark delfman
-<markdelfman@googlemail.com> wrote:
-> We dont use 10 ports, we use 8 ports > 36 port expander. The 8 ports
-> act as a single wide port.
->
-> We are hitting a performance limit of circa 1.6 - 1.9GBsec regardless
-> of number of drives, so it max's at around 8 / 9 drives (with 15K).
-> RAID6 around 900MBsec i recall. =A0We expect more with emerging
-> expanders.
->
-> We were hoping to use DM MPIO to increase performance using multiple
-> cards and paths, but MPIO at best matches performance of a single
-> card, most likely pulls it down.... but this is a different topic i
-> guess.
->
-> XFS in the past has often increased performance - not allows on simpl=
-e
-> sequential writes, but FS's are a lot better at intelligently caching
-> data... so I am very keen to help in whatever way i can to resolve th=
-e
-> FS > MD performance problem.
->
-> Thanks again.... Mark
->
->
-> On Tue, Oct 13, 2009 at 3:30 PM, Asdo <asdo@shiftmail.org> wrote:
->>
->>> On Tue, Oct 13, 2009 at 2:12 PM, mark delfman
->>> <markdelfman@googlemail.com> wrote:
->>>
->>>>
->>>> We upgrading mainly because of support for the emerging LSI SAS2 c=
-ards
->>>> (which we are beta testing now)
->>>>
->>
->> What is this LSI SAS2 card you have with 10+ ports? The only 10+ por=
-ts LSI
->> card I see is the 84016E and it is a SAS1.
->>
->> You say the driver for such card is included in the vanilla kernel a=
-t
->> 2.6.30? That would be very nice... I grepped the 2.6.31 kernel sourc=
-e for
->> LSI cards but I can't find device strings such as 84016E ...
->>
->> Thank you
->>
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 2.- On the Raid 1: How many sectors to copy? 63?
+> On an update of grub code, core.img could change, which means that the fi=
+rst=20
+> 63 sectors (to be on the safe side) of the disk which gets the update sho=
+uld=20
+> be copied to the other 3 disks.
+> Or is it that the md code would mirror sectors 1-62 and only the MBR need=
+s=20
+> to be manually mirroed?
+>=20
+Not sure what you mean here.  If you have /boot on a RAID1 array then
+it's mirrored, so the stage1.5 and stage2 bootloaders get mirrored via
+that.  The stage1 bootloader is usually installed into the MBR, so only
+that needs replicating separately.
+
+> 2.- Is there a recomended way to trigger the said copy of question 2?
+> Where should a call to copy the MBR should be placed? On update-grub?
+>=20
+I always just rerun the grub install for each disk manually (see
+http://lists.us.dell.com/pipermail/linux-poweredge/2003-July/008898.html
+for example).  Automating it will depend on your distribution - if
+update-grub is what's called after a grub update (and it isn't
+overwritten by the update) then this would seem the logical place to do
+it.
+
+HTH,
+    Robin
+
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
+
+--fdj2RfSjLxBAspz7
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+
+iEYEARECAAYFAkrUm1cACgkQShxCyD40xBJd2gCePgw+7Hd1LpxFBVsWVO8OIHNb
+g9EAnAhTu5VdbBM/Sf5LDc65N7QZFp6Z
+=QmBT
+-----END PGP SIGNATURE-----
+
+--fdj2RfSjLxBAspz7--
