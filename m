@@ -1,8 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [mdadm PATCH 11/12] mdmon: exec(2) when the switchroot argument is
-	not "/"
-Date: Tue, 13 Oct 2009 19:11:12 -0700
-Message-ID: <20091014021111.31570.92486.stgit@dwillia2-linux.ch.intel.com>
+Subject: [mdadm PATCH 05/12] imsm: fix/support --update
+Date: Tue, 13 Oct 2009 19:10:41 -0700
+Message-ID: <20091014021041.31570.22953.stgit@dwillia2-linux.ch.intel.com>
 References: <20091014020739.31570.36408.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,48 +13,113 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, krzysztof.wojcik@intel.com, ed.ciechanowski@intel.com, maciej.patelczyk@intel.com
 List-Id: linux-raid.ids
 
-Try to execute mdmon from the target namespace.  When used for initramfs
-handovers we need to drop all references to the initramfs filesystem for
-that memory to be freed.
+Fix init_super_imsm() to return an empty mpb when info == NULL, and
+teach store_super_imsm() to simply write out the passed in mpb.
 
-Cc: Hans de Goede <hdegoede@redhat.com>
+Fixes: https://bugzilla.redhat.com/show_bug.cgi?id=523320
+
+Reported-by: Hans de Goede <hdegoede@redhat.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- mdmon.c |   23 +++++++++++++++++++++++
- 1 files changed, 23 insertions(+), 0 deletions(-)
+ super-intel.c |   54 ++++++++++++++++++++++++++----------------------------
+ 1 files changed, 26 insertions(+), 28 deletions(-)
 
-diff --git a/mdmon.c b/mdmon.c
-index 5f87e78..d3e8be5 100644
---- a/mdmon.c
-+++ b/mdmon.c
-@@ -369,6 +369,29 @@ int mdmon(char *devname, int devnum, int scan, char *switchroot)
+diff --git a/super-intel.c b/super-intel.c
+index 0e3ed89..eaf5b0b 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -2819,24 +2819,33 @@ static int init_super_imsm(struct supertype *st, mdu_array_info_t *info,
+ 	size_t mpb_size;
+ 	char *version;
  
- 	dprintf("starting mdmon for %s in %s\n",
- 		devname, switchroot ? : "/");
+-	if (!info) {
+-		st->sb = NULL;
+-		return 0;
+-	}
+ 	if (st->sb)
+-		return init_super_imsm_volume(st, info, size, name, homehost,
+-					      uuid);
++		return init_super_imsm_volume(st, info, size, name, homehost, uuid);
 +
-+	/* try to spawn mdmon instances from the target file system */
-+	if (switchroot && strcmp(switchroot, "/") != 0) {
-+		char path[1024];
-+		pid_t pid;
-+
-+		sprintf(path, "%s/sbin/mdmon", switchroot);
-+		switch (fork()) {
-+		case 0:
-+			execl(path, "mdmon", devname, NULL);
-+			exit(1);
-+		case -1:
-+			return 1;
-+		default:
-+			pid = wait(&status);
-+			if (pid > -1 && WIFEXITED(status) &&
-+			    WEXITSTATUS(status) == 0)
-+				return 0;
-+			else
-+				return 1;
-+		}
++	if (info)
++		mpb_size = disks_to_mpb_size(info->nr_disks);
++	else
++		mpb_size = 512;
+ 
+ 	super = alloc_super(1);
+-	if (!super)
+-		return 0;
+-	mpb_size = disks_to_mpb_size(info->nr_disks);
+-	if (posix_memalign(&super->buf, 512, mpb_size) != 0) {
++	if (super && posix_memalign(&super->buf, 512, mpb_size) != 0) {
+ 		free(super);
++		super = NULL;
 +	}
++	if (!super) {
++		fprintf(stderr, Name
++			": %s could not allocate superblock\n", __func__);
+ 		return 0;
+ 	}
++	memset(super->buf, 0, mpb_size);
+ 	mpb = super->buf;
+-	memset(mpb, 0, mpb_size); 
++	mpb->mpb_size = __cpu_to_le32(mpb_size);
++	st->sb = super;
 +
- 	mdfd = open_dev(devnum);
- 	if (mdfd < 0) {
- 		fprintf(stderr, "mdmon: %s: %s\n", devname,
++	if (info == NULL) {
++		/* zeroing superblock */
++		return 0;
++	}
+ 
+ 	mpb->attributes = MPB_ATTRIB_CHECKSUM_VERIFY;
+ 
+@@ -2844,9 +2853,7 @@ static int init_super_imsm(struct supertype *st, mdu_array_info_t *info,
+ 	strcpy(version, MPB_SIGNATURE);
+ 	version += strlen(MPB_SIGNATURE);
+ 	strcpy(version, MPB_VERSION_RAID0);
+-	mpb->mpb_size = mpb_size;
+ 
+-	st->sb = super;
+ 	return 1;
+ }
+ 
+@@ -3188,24 +3195,15 @@ static int write_init_super_imsm(struct supertype *st)
+ }
+ #endif
+ 
+-static int store_zero_imsm(struct supertype *st, int fd)
++static int store_super_imsm(struct supertype *st, int fd)
+ {
+-	unsigned long long dsize;
+-	void *buf;
+-
+-	get_dev_size(fd, NULL, &dsize);
+-
+-	/* first block is stored on second to last sector of the disk */
+-	if (lseek64(fd, dsize - (512 * 2), SEEK_SET) < 0)
+-		return 1;
++	struct intel_super *super = st->sb;
++	struct imsm_super *mpb = super ? super->anchor : NULL;
+ 
+-	if (posix_memalign(&buf, 512, 512) != 0)
++	if (!mpb)
+ 		return 1;
+ 
+-	memset(buf, 0, 512);
+-	if (write(fd, buf, 512) != 512)
+-		return 1;
+-	return 0;
++	return store_imsm_mpb(fd, mpb);
+ }
+ 
+ static int imsm_bbm_log_size(struct imsm_super *mpb)
+@@ -4914,7 +4912,7 @@ struct superswitch super_imsm = {
+ 
+ 	.load_super	= load_super_imsm,
+ 	.init_super	= init_super_imsm,
+-	.store_super	= store_zero_imsm,
++	.store_super	= store_super_imsm,
+ 	.free_super	= free_super_imsm,
+ 	.match_metadata_desc = match_metadata_desc_imsm,
+ 	.container_content = container_content_imsm,
 
