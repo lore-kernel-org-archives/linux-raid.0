@@ -1,96 +1,81 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [mdadm PATCH 09/12] Detail: export MD_UUID from mapfile
-Date: Tue, 13 Oct 2009 19:11:01 -0700
-Message-ID: <20091014021101.31570.15793.stgit@dwillia2-linux.ch.intel.com>
-References: <20091014020739.31570.36408.stgit@dwillia2-linux.ch.intel.com>
+Subject: [mdadm PATCH 00/12] External metadata updates and other fixes for
+	3.0.3
+Date: Tue, 13 Oct 2009 19:10:16 -0700
+Message-ID: <20091014020739.31570.36408.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091014020739.31570.36408.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, krzysztof.wojcik@intel.com, ed.ciechanowski@intel.com, maciej.patelczyk@intel.com
+Cc: linux-raid@vger.kernel.org, krzysztof.wojcik@intel.com, ed.ciechanowski@intel.com, maciej.patelczyk@intel.com
 List-Id: linux-raid.ids
 
-The load_super() from an mdadm --detail call may race against an mdmon
-update.  When this happens the load_super sees an inconsistent metadata
-block and returns an error.  The fallback path to use the map file
-contents lacks uuid reporting, so provide __fname_from_uuid for
-generically printing a uuid.
+Hi Neil,
 
-Reported-by: Hans de Goede <hdegoede@redhat.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- Detail.c |    5 +++++
- mdadm.h  |    1 +
- util.c   |   12 ++++++++----
- 3 files changed, 14 insertions(+), 4 deletions(-)
+The following changes are available at:
 
-diff --git a/Detail.c b/Detail.c
-index 001012a..1598a42 100644
---- a/Detail.c
-+++ b/Detail.c
-@@ -194,7 +194,12 @@ int Detail(char *dev, int brief, int export, int test, char *homehost)
- 				st->ss->export_detail_super(st);
- 		} else {
- 			struct map_ent *mp, *map = NULL;
-+			char nbuf[64];
- 			mp = map_by_devnum(&map, fd2devnum(fd));
-+			if (mp) {
-+				__fname_from_uuid(mp->uuid, 0, nbuf, ':');
-+				printf("MD_UUID=%s\n", nbuf+5);
-+			}
- 			if (mp && mp->path &&
- 			    strncmp(mp->path, "/dev/md/", 8) == 0)
- 				printf("MD_DEVNAME=%s\n", mp->path+8);
-diff --git a/mdadm.h b/mdadm.h
-index 04b87b8..8212a2c 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -810,6 +810,7 @@ extern void uuid_from_super(int uuid[4], mdp_super_t *super);
- extern const int uuid_match_any[4];
- extern int same_uuid(int a[4], int b[4], int swapuuid);
- extern void copy_uuid(void *a, int b[4], int swapuuid);
-+extern char *__fname_from_uuid(int id[4], int swap, char *buf, char sep);
- extern char *fname_from_uuid(struct supertype *st,
- 			     struct mdinfo *info, char *buf, char sep);
- extern unsigned long calc_csum(void *super, int bytes);
-diff --git a/util.c b/util.c
-index 4ccb1bb..98aedd0 100644
---- a/util.c
-+++ b/util.c
-@@ -269,17 +269,15 @@ void copy_uuid(void *a, int b[4], int swapuuid)
- 		memcpy(a, b, 16);
- }
- 
--char *fname_from_uuid(struct supertype *st, struct mdinfo *info, char *buf, char sep)
-+char *__fname_from_uuid(int id[4], int swap, char *buf, char sep)
- {
- 	int i, j;
--	int id;
- 	char uuid[16];
- 	char *c = buf;
- 	strcpy(c, "UUID-");
- 	c += strlen(c);
--	copy_uuid(uuid, info->uuid, st->ss->swapuuid);
-+	copy_uuid(uuid, id, swap);
- 	for (i = 0; i < 4; i++) {
--		id = uuid[i];
- 		if (i)
- 			*c++ = sep;
- 		for (j = 3; j >= 0; j--) {
-@@ -288,6 +286,12 @@ char *fname_from_uuid(struct supertype *st, struct mdinfo *info, char *buf, char
- 		}
- 	}
- 	return buf;
-+
-+}
-+
-+char *fname_from_uuid(struct supertype *st, struct mdinfo *info, char *buf, char sep)
-+{
-+	return __fname_from_uuid(info->uuid, st->ss->swapuuid, buf, sep);
- }
- 
- #ifndef MDASSEMBLE
+	git://github.com/djbw/mdadm.git
 
+The stand out change in the diffstat is the incorporation of the
+Option-ROM logic for handling arrays with different 'family numbers'.
+The scheme the Option-ROM uses to resolve conflicts is not completely
+amenable to mdadm's container scheme.  The end result is a corner case
+that requires user intervention.  The user will need to assign new
+container membership ids to prodigal disks that are returned to their
+system of origin.  More details in the commit log and code comments.
+
+Also notable are the changes to cleanup mdmon instance management.  I
+kept the status quo in deciding against implementing an "abstract
+namespace socket" for the control path.  Initramfs environments can take
+two paths:
+1/ Use the built-in 'newroot' option to hand off monitoring to an
+   mdmon binary launched from the target file system.  Currently Dracut
+   will not be able to use this method as its 'switch_root' command does
+   not allow an mdmon instance to be launched between $NEWROOT/dev and
+   $NEWROOT/sys being available and the initramfs exiting.
+2/ Keep the mdmon instance from the initramfs running until it can be
+   killed by the final-root initscripts.  The socket will not be available
+   so this should be done while the file system is still read only and
+   any writes from journal recovery have quiesced.
+
+In testing this I noticed that wait_for() (util.c) occasionally timed
+out on Fedora 11, but not Fedora 9.  Increasing the loop count to 50 got
+around the issue, but need to investigate what is holding up our
+requested symlink.
+
+Thanks,
+Dan
+
+Dan Williams (12):
+      imsm: cleanup disk status tests
+      imsm: kill close() of component device
+      imsm: disambiguate family_num
+      imsm: fix spare record writeout race
+      imsm: fix/support --update
+      ddf: prevent superblock being zeroed on --update
+      imsm: add --update=uuid support
+      imsm: regression test for prodigal array member scenario
+      Detail: export MD_UUID from mapfile
+      mdmon: avoid writes in the startup path for mdmon on root arrays
+      mdmon: exec(2) when the switchroot argument is not "/"
+      mdmon: preserve socket over chroot
+
+ Assemble.c                |    3 
+ Detail.c                  |    5 
+ managemon.c               |    6 
+ mdadm.c                   |    4 
+ mdadm.h                   |    8 
+ mdmon.c                   |  107 +++---
+ msg.c                     |   14 +
+ msg.h                     |    1 
+ super-ddf.c               |   27 +-
+ super-intel.c             |  799 ++++++++++++++++++++++++++++++++-------------
+ sysfs.c                   |    5 
+ tests/09imsm-assemble     |   46 +++
+ tests/env-09imsm-assemble |   32 ++
+ util.c                    |   12 -
+ 14 files changed, 780 insertions(+), 289 deletions(-)
+ create mode 100644 tests/09imsm-assemble
+ create mode 100644 tests/env-09imsm-assemble
