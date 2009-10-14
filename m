@@ -1,248 +1,69 @@
-From: Rob Becker <Rob.Becker@riverbed.com>
-Subject: [PATCH] Improve MD/raid10 handling of correctable read errors.
-Date: Wed, 14 Oct 2009 12:30:37 -0700
-Message-ID: <20091014193342.2472759F9D4@snarf.localhost>
+From: mark delfman <markdelfman@googlemail.com>
+Subject: Re: xfs > md 50% write performance drop on .30+ kernel?
+Date: Wed, 14 Oct 2009 20:34:38 +0100
+Message-ID: <66781b10910141234h5fbf5ac3k4adc347621dbc2a1@mail.gmail.com>
+References: <66781b10910120958k4afb637ejba79e4c23900c4da@mail.gmail.com>
+	 <20091013013352.GA24869@infradead.org>
+	 <66781b10910130406s4119985fg5db7679a2e9fd4f2@mail.gmail.com>
+	 <20091013225241.GA32197@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20091013225241.GA32197@infradead.org>
 Sender: linux-raid-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-We've noticed severe lasting performance degradation of our raid arrays when we have drives that yield large amounts of media errors. The raid10 module will queue each failed read for retry, and also will attempt call fix_read_error() to perform the read recovery.  Read recovery is performed while the array is frozen, so repeated recovery attempts can degrade the performance of the array for extended periods of time.
+Hi Chris... we tried the direct DD as requested and the problem is
+still there...
+1.3GBsec > 325MBsec  (even more dromatic)... hopefully this helps
+narrow it down?
 
-With this patch I propose adding a per md device max number of corrected read attempts.  Each rdev will maintain a count of read correction attempts in the rdev->read_errors field (not used currently for raid10). When we enter fix_read_error() we'll check the rdev associated with the r10_bio and if it exceeds the read_error threshold, we'll fail the rdev.
 
-In addition in this patch I add sysfs nodes (get/set) for the per md max_read_errors attribute, the rdev->read_errors attribute, and added some printk's to indicate when fix_read_error fails to repair an rdev.
+Write > MD
+linux-poly:~ # dd if=3D/dev/zero of=3D/dev/md0 oflag=3Ddirect bs=3D1M c=
+ount=3D20000
+20000+0 records in
+20000+0 records out
+20971520000 bytes (21 GB) copied, 15.7671 s, 1.3 GB/s
 
-For testing I used debugfs->fail_make_request to inject IO errors to the rdev while doing IO to the raid array.
 
-Steps to reproduce:
-1. create a 4 drive raid-10 array (md0 with rdev sd[abcd]2)
-2. set up fail_make_request to inject 2 errors with 100 probability to /dev/sda
-3. use sg_dd iflag=direct if=/dev/md0 of=/dev/null bs=512 count=1
-4. verify that the IO is redirected to the other mirror, and the sector is repaired.
-5. repeat the process MD will not fail the drive.
+Write > XFS > MD
+linux-poly:~ # dd if=3D/dev/zero of=3D/mnt/md0/test oflag=3Ddirect bs=3D=
+1M count=3D20000
+20000+0 records in
+20000+0 records out
+20971520000 bytes (21 GB) copied, 64.616 s, 325 MB/s
 
-with the changes above, when we hit 51 corrected read errors, md will fail sda2.
----
- drivers/md/md.c     |   51 +++++++++++++++++++++++++++++++++++++++++++
- drivers/md/md.h     |    4 +++
- drivers/md/raid10.c |   60 ++++++++++++++++++++++++++++++++++++++++++++++++--
- 3 files changed, 112 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 26ba42a..498b68c 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -68,6 +68,11 @@ static DECLARE_WAIT_QUEUE_HEAD(resync_wait);
- #define MD_BUG(x...) { printk("md: bug in file %s, line %d\n", __FILE__, __LINE__); md_print_devices(); }
- 
- /*
-+ * Default number of read corrections we'll attempt on an rdev
-+ * before ejecting it from the array.
-+ */
-+#define MD_DEFAULT_MAX_CORRECTED_READ_ERRORS 50
-+/*
-  * Current RAID-1,4,5 parallel reconstruction 'guaranteed speed limit'
-  * is 1000 KB/sec, so the extra system load does not show up that much.
-  * Increase it if you want to have more _guaranteed_ speed. Note that
-@@ -2195,6 +2200,27 @@ static struct rdev_sysfs_entry rdev_errors =
- __ATTR(errors, S_IRUGO|S_IWUSR, errors_show, errors_store);
- 
- static ssize_t
-+read_errors_show(mdk_rdev_t *rdev, char *page)
-+{
-+        return sprintf(page, "%d\n", atomic_read(&rdev->read_errors));
-+}
-+
-+static ssize_t
-+read_errors_store(mdk_rdev_t *rdev, const char *buf, size_t len)
-+{
-+        char *e;
-+        unsigned long n = simple_strtoul(buf, &e, 10);
-+        if (*buf && (*e == 0 || *e == '\n')) {
-+                atomic_set(&rdev->read_errors, n);
-+                return len;
-+        }
-+        return -EINVAL;
-+}
-+
-+static struct rdev_sysfs_entry rdev_read_errors =
-+__ATTR(read_errors, S_IRUGO, read_errors_show, read_errors_store);
-+
-+static ssize_t
- slot_show(mdk_rdev_t *rdev, char *page)
- {
- 	if (rdev->raid_disk < 0)
-@@ -2427,6 +2453,7 @@ static struct attribute *rdev_default_attrs[] = {
- 	&rdev_slot.attr,
- 	&rdev_offset.attr,
- 	&rdev_size.attr,
-+	&rdev_read_errors.attr,
- 	NULL,
- };
- static ssize_t
-@@ -3144,6 +3171,27 @@ array_state_store(mddev_t *mddev, const char *buf, size_t len)
- static struct md_sysfs_entry md_array_state =
- __ATTR(array_state, S_IRUGO|S_IWUSR, array_state_show, array_state_store);
- 
-+static ssize_t  
-+max_corrected_read_errors_show(mddev_t *mddev, char *page){
-+        return sprintf(page, "%d\n", atomic_read(&mddev->max_corrected_read_errors));
-+}               
-+        
-+static ssize_t  
-+max_corrected_read_errors_store(mddev_t *mddev, const char *buf, size_t len)
-+{
-+        char *e;
-+        unsigned long n = simple_strtoul(buf, &e, 10);
-+        if (*buf && (*e == 0 || *e == '\n')) {
-+                atomic_set(&mddev->max_corrected_read_errors, n);
-+                return len;
-+        }
-+        return -EINVAL;
-+}       
-+        
-+static struct md_sysfs_entry max_corr_read_errors =
-+__ATTR(max_read_errors, S_IRUGO|S_IWUSR, max_corrected_read_errors_show,
-+       max_corrected_read_errors_store);
-+
- static ssize_t
- null_show(mddev_t *mddev, char *page)
- {
-@@ -3769,6 +3817,7 @@ static struct attribute *md_default_attrs[] = {
- 	&md_array_state.attr,
- 	&md_reshape_position.attr,
- 	&md_array_size.attr,
-+	&max_corr_read_errors.attr,
- 	NULL,
- };
- 
-@@ -4185,6 +4234,8 @@ static int do_md_run(mddev_t * mddev)
- 		mddev->ro = 0;
- 
-  	atomic_set(&mddev->writes_pending,0);
-+        atomic_set(&mddev->max_corrected_read_errors,
-+                   MD_DEFAULT_MAX_CORRECTED_READ_ERRORS);
- 	mddev->safemode = 0;
- 	mddev->safemode_timer.function = md_safemode_timeout;
- 	mddev->safemode_timer.data = (unsigned long) mddev;
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index f184b69..526d1d9 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -290,6 +290,10 @@ struct mddev_s
- 								* eventually be settable by sysfs.
- 								*/
- 
-+	atomic_t 			max_corrected_read_errors; /* per md device value
-+								      indicating the maximum number of
-+								      read retries on an rd */
-+
- 	struct list_head		all_mddevs;
- };
- 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index 51c4c5c..471b161 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1444,6 +1444,38 @@ static void fix_read_error(conf_t *conf, mddev_t *mddev, r10bio_t *r10_bio)
- 	int sect = 0; /* Offset from r10_bio->sector */
- 	int sectors = r10_bio->sectors;
- 	mdk_rdev_t*rdev;
-+	int max_read_errors = atomic_read(&mddev->max_corrected_read_errors);
-+
-+        rcu_read_lock();
-+        {
-+                int d = r10_bio->devs[r10_bio->read_slot].devnum;
-+		unsigned int cur_read_error_count = 0;
-+                char b[BDEVNAME_SIZE];
-+
-+                rdev = rcu_dereference(conf->mirrors[d].rdev);
-+                atomic_inc(&rdev->read_errors);
-+		bdevname(rdev->bdev, b);
-+
-+                cur_read_error_count = atomic_read(&rdev->read_errors);
-+		if (test_bit(Faulty, &rdev->flags)) { 
-+			rcu_read_unlock();
-+			/* drive has already been failed, just ignore any
-+			   more fix_read_error() attempts */
-+			return;
-+		}
-+
-+                if (cur_read_error_count > max_read_errors) {
-+			rcu_read_unlock();
-+                        printk (KERN_NOTICE "raid10:%s: Raid device exceeded read_error threshold [cur %d:max %d]\n",
-+                                b, cur_read_error_count, max_read_errors);
-+			printk (KERN_NOTICE "raid10:%s: Failing raid device\n", b);
-+                        md_error(mddev, conf->mirrors[d].rdev);
-+			return;
-+                }
-+
-+        }
-+        rcu_read_unlock();
-+
- 	while(sectors) {
- 		int s = sectors;
- 		int sl = r10_bio->read_slot;
-@@ -1488,6 +1520,7 @@ static void fix_read_error(conf_t *conf, mddev_t *mddev, r10bio_t *r10_bio)
- 		/* write it back and re-read */
- 		rcu_read_lock();
- 		while (sl != r10_bio->read_slot) {
-+			char b[BDEVNAME_SIZE];
- 			int d;
- 			if (sl==0)
- 				sl = conf->copies;
-@@ -1503,9 +1536,19 @@ static void fix_read_error(conf_t *conf, mddev_t *mddev, r10bio_t *r10_bio)
- 						 r10_bio->devs[sl].addr +
- 						 sect + rdev->data_offset,
- 						 s<<9, conf->tmppage, WRITE)
--				    == 0)
-+				    == 0) {
- 					/* Well, this device is dead */
-+                                        printk(KERN_NOTICE
-+                                               "raid10:%s: read correction write failed"
-+                                               " (%d sectors at %llu on %s)\n",
-+                                               mdname(mddev), s,
-+                                               (unsigned long long)(sect+
-+                                                    rdev->data_offset),
-+                                               bdevname(rdev->bdev, b));
-+                                        printk(KERN_NOTICE "raid10:%s: failing drive\n",
-+                                               bdevname(rdev->bdev, b));
- 					md_error(mddev, rdev);
-+				}
- 				rdev_dec_pending(rdev, mddev);
- 				rcu_read_lock();
- 			}
-@@ -1526,10 +1569,20 @@ static void fix_read_error(conf_t *conf, mddev_t *mddev, r10bio_t *r10_bio)
- 				if (sync_page_io(rdev->bdev,
- 						 r10_bio->devs[sl].addr +
- 						 sect + rdev->data_offset,
--						 s<<9, conf->tmppage, READ) == 0)
-+						 s<<9, conf->tmppage, READ) == 0) {
- 					/* Well, this device is dead */
-+					printk(KERN_NOTICE
-+                                               "raid10:%s: unable to read back corrected sectors"
-+                                               " (%d sectors at %llu on %s)\n",
-+                                               mdname(mddev), s,
-+                                               (unsigned long long)(sect+
-+                                                    rdev->data_offset),
-+                                               bdevname(rdev->bdev, b));
-+					printk(KERN_NOTICE "raid10:%s: failing drive\n",
-+					       bdevname(rdev->bdev, b));
-+
- 					md_error(mddev, rdev);
--				else
-+				} else {
- 					printk(KERN_INFO
- 					       "raid10:%s: read error corrected"
- 					       " (%d sectors at %llu on %s)\n",
-@@ -1537,6 +1590,7 @@ static void fix_read_error(conf_t *conf, mddev_t *mddev, r10bio_t *r10_bio)
- 					       (unsigned long long)(sect+
- 					            rdev->data_offset),
- 					       bdevname(rdev->bdev, b));
-+				}
- 
- 				rdev_dec_pending(rdev, mddev);
- 				rcu_read_lock();
--- 
-1.5.6.1
 
+On Tue, Oct 13, 2009 at 11:52 PM, Christoph Hellwig <hch@infradead.org>=
+ wrote:
+> On Tue, Oct 13, 2009 at 12:06:24PM +0100, mark delfman wrote:
+>> A little more information which I ?think? seems to point at MD.....
+>>
+>> Creating an EXT3 FS on an MD RAID also shows a circa 50% performance=
+ drop.
+>> We have tried a multitude of RAID options (raid6/0 various chunks et=
+c).
+>>
+>> Using a hardware based raid XFS / EXT3 shows no performance drop
+>> (although the hardware raid is significantly slower than MD in the
+>> first place)
+>>
+>> We are happy to keep testing and offering anything that could be
+>> useful, we are just a little stuck thinking of anything else to do..=
+=2E.
+>
+> Can you test with conv=3Ddirect added to the dd command lines? =A0If =
+that
+> shows the problems too it's probably writeback-related. =A0If not the
+> problems must be somewhere lower in the stack.
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
