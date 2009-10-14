@@ -1,32 +1,56 @@
-From: Antonio Perez <ap23563m@gmx.com>
-Subject: Re: About seting up Raid5 on a four disk box.
-Date: Wed, 14 Oct 2009 10:53:43 -0400
-Message-ID: <hb4olr$6to$1@ger.gmane.org>
-References: <hb1udb$6t1$1@ger.gmane.org> <70ed7c3e0910130704l1f1f7f0ar66271d85295c667b@mail.gmail.com> <hb2470$rol$1@ger.gmane.org> <70ed7c3e0910130810r58ab391id2fbfdff6200dcd8@mail.gmail.com> <hb3qpa$6ep$1@ger.gmane.org> <70ed7c3e0910132340q1c4acdfbxa6938261088acca3@mail.gmail.com> <hb4hjp$cg8$1@ger.gmane.org> <70ed7c3e0910140641x74c12a75k6f00df2ed3cbade0@mail.gmail.com>
-Reply-To: ap23563m@gmx.com
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: raid1 running fine for years .. and then
+Date: Wed, 14 Oct 2009 11:01:04 -0400 (EDT)
+Message-ID: <alpine.DEB.2.00.0910141058340.23631@p34.internal.lan>
+References: <alpine.DEB.2.00.0910072350440.30153@p34.internal.lan> <20091012160040.GE17021@aurora.pimp.org.za> <alpine.DEB.2.00.0910121320160.2020@p34.internal.lan> <20091013114552.GC11085@aurora.pimp.org.za>
+ <alpine.DEB.2.00.0910131950220.29143@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7Bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.2.00.0910131950220.29143@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Michael-John Turner <mj@mjturner.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Majed B. wrote:
 
-> Your applications can request as much files as they want regardless of
-> their location, but the mechanical heads move together, so they can be
-> at a single location at a point of time reading a single stream of a
-> file (or multiple files if they were next to each other on the
-> physical platter).
 
-Yes that's completely correct, and it's the job of the "elevator" (*) on the 
-"md" code to decide which sector, and in what order, such sectors will be 
-serviced. If the "elevator" is aware of the underlying hardware, it will do 
-the right thing if there are several md or just one.
+On Tue, 13 Oct 2009, Justin Piszcz wrote:
 
-*(I am not an expert on this, is just what I got from Robin)
+>
+>
+> On Tue, 13 Oct 2009, Michael-John Turner wrote:
+>
+>> On Mon, Oct 12, 2009 at 01:20:55PM -0400, Justin Piszcz wrote:
+>>> Drive is a 150GB raptor:
+>>> 
+>>> Device Model:     WDC WD1500ADFS-00SLR5
+>>> Firmware Version: 21.07QR5
+>> 
+>> Hmm.... Doesn't seem drive related then. What kernel and SATA controller?
+>> I'm using 2.6.26 and an ICH9R, with NCQ enabled.
+>> 
+>> -mj
+>> -- 
+>> Michael-John Turner
+>> mj@mjturner.net      <>     http://mjturner.net/
+>> 
+>
+> Hi,
+>
+> Found the issue, it was the drive.  I recently bought a new motherboard & 
+> another 3ware raid card.  As soon as it began initializing the drive, the 
+> re-allocated sectors started to shoot up.
+>
+> When I connected it back to the system board temporarily and ran a dd against 
+> it-- it started erroring more.  In this case, it was a bad drive.
+>
+> Justin.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
--- 
-Antonio Perez
+But just FYI it was an ICH8R (965 chipset) and 2.6.31.x kernel.
 
