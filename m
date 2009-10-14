@@ -1,81 +1,178 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: Re: MVSAS 1669:mvs_abort_task:rc= 5
-Date: Tue, 13 Oct 2009 19:39:08 -0600
-Message-ID: <200910131939.09039.tfjellstrom@shaw.ca>
-References: <200910091141.52303.tfjellstrom@shaw.ca> <4AD22532.9060001@univ-lille2.fr> <200910111658.13639.tfjellstrom@shaw.ca>
-Reply-To: tfjellstrom@shaw.ca
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [mdadm PATCH 01/12] imsm: cleanup disk status tests
+Date: Tue, 13 Oct 2009 19:10:21 -0700
+Message-ID: <20091014021021.31570.90976.stgit@dwillia2-linux.ch.intel.com>
+References: <20091014020739.31570.36408.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200910111658.13639.tfjellstrom@shaw.ca>
+In-Reply-To: <20091014020739.31570.36408.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-raid@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <James.Bottomley@suse.de>, kewei@marvell.com
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org, krzysztof.wojcik@intel.com, ed.ciechanowski@intel.com, maciej.patelczyk@intel.com
 List-Id: linux-raid.ids
 
-On Sun October 11 2009, Thomas Fjellstrom wrote:
-> On Sun October 11 2009, Christian Vilhelm wrote:
-> > Thomas Fjellstrom wrote:
-> > > Hi,
-> > >
-> > > I've been trying to get an AOC-SASLP-MV8 card (pcie x4 2 port SAS card)
-> > > to work with linux for the past month or so. I've recently just RMAed
-> > > my first card, and tested the new one under linux, and I see the same
-> > > problems.
-> > >
-> > > The very first time I made a new array off the controller, formated
-> > > (with xfs) and mounted the volume, it seemed to work. ioozone even
-> > > seemed to run for a while. Sadly after a few minutes I got a stream of
-> > > mvs_abort_task messages in dmesg, and any accesses to the volume, or
-> > > any disks connected to the controller lock up.
-> > >
-> > > After that I updated my 2.6.31 kernel to 2.6.32-rc3-git2 off of
-> > > kernel.org, and the volume fails to mount with the same mvs_abort_task
-> > > messages.
-> >
-> > I have the exact same problem with another Marvell 88SE64xx based card,
-> > namely an Areca ARC-1300ix-16 and the mvsas driver.
-> > If the disks are just used alone, with a filesystem on them, all seems
-> > to work fine. dd and badblocks run fine on them. Mounting them,
-> > reading/writing work fine. The error seem to popup but rarely when
-> > several disks are used simultaneously.
-> > But, an absolute sure way to trigger the error is to assemble (or
-> > create) a md raid array with the disks. I join a syslog extract from the
-> > error. You can see it happens seconds after the array creation.
-> > I tried :
-> > 1) disabling the write cache on the disks => same error
-> > 2) disabling NCQ : in mv_sas.h :
-> > #define MV_DISABLE_NCQ  1
-> > same error.
-> > Afer a while, the devices handled by the card are just dropped from the
-> > system and the card stops working at all, a reboot is necessary.
-> 
-> I have found that a proper reboot is impossible once the card/driver starts
-> misbehaving. Anything that tries to do anything with the md device, or any
->  of the component drives will hang. Even kernel threads it seems. A reboot
->  or a shutdown hangs when it tries to sync the md device, and ALT+SYSRQ+S/U
->  both hang. After the first Alt+sysrq+s it will register more of them, but
->  it won't print the "Emergency Sync Complete" message.
-> 
-> > Does anyone have a working config based on a Marvell 64xx card ?
-> >
-> > I'm willing to explore solutions, patches or anything, just tell me what
-> > to do to help.
-> >
-> > Christian Vilhelm.
-> 
+Add is_failed(), is_configured(), and is_spare() helpers to clean up
+disk status flag testing.
 
-I'd really appreciate some assistance with this. The card is essentially 
-useless under linux, if not harmful (causes oopses and hangs) with the current 
-driver.
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ super-intel.c |   53 +++++++++++++++++++++++++++++------------------------
+ 1 files changed, 29 insertions(+), 24 deletions(-)
 
-My last weekly backup failed while creating the disk image due to my array 
-being low on space, I really need to get the new array up asap.
+diff --git a/super-intel.c b/super-intel.c
+index 07b0b90..9f57a68 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -612,6 +612,21 @@ static __u32 imsm_reserved_sectors(struct intel_super *super, struct dl *dl)
+ }
+ 
+ #ifndef MDASSEMBLE
++static int is_spare(struct imsm_disk *disk)
++{
++	return (disk->status & SPARE_DISK) == SPARE_DISK;
++}
++
++static int is_configured(struct imsm_disk *disk)
++{
++	return (disk->status & CONFIGURED_DISK) == CONFIGURED_DISK;
++}
++
++static int is_failed(struct imsm_disk *disk)
++{
++	return (disk->status & FAILED_DISK) == FAILED_DISK;
++}
++
+ static void print_imsm_dev(struct imsm_dev *dev, char *uuid, int disk_idx)
+ {
+ 	__u64 sz;
+@@ -676,7 +691,6 @@ static void print_imsm_disk(struct imsm_super *mpb, int index, __u32 reserved)
+ {
+ 	struct imsm_disk *disk = __get_imsm_disk(mpb, index);
+ 	char str[MAX_RAID_SERIAL_LEN + 1];
+-	__u32 s;
+ 	__u64 sz;
+ 
+ 	if (index < 0)
+@@ -685,10 +699,9 @@ static void print_imsm_disk(struct imsm_super *mpb, int index, __u32 reserved)
+ 	printf("\n");
+ 	snprintf(str, MAX_RAID_SERIAL_LEN + 1, "%s", disk->serial);
+ 	printf("  Disk%02d Serial : %s\n", index, str);
+-	s = disk->status;
+-	printf("          State :%s%s%s\n", s&SPARE_DISK ? " spare" : "",
+-					      s&CONFIGURED_DISK ? " active" : "",
+-					      s&FAILED_DISK ? " failed" : "");
++	printf("          State :%s%s%s\n", is_spare(disk) ? " spare" : "",
++					    is_configured(disk) ? " active" : "",
++					    is_failed(disk) ? " failed" : "");
+ 	printf("             Id : %08x\n", __le32_to_cpu(disk->scsi_id));
+ 	sz = __le32_to_cpu(disk->total_blocks) - reserved;
+ 	printf("    Usable Size : %llu%s\n", (unsigned long long)sz,
+@@ -1298,7 +1311,6 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info)
+ {
+ 	struct intel_super *super = st->sb;
+ 	struct imsm_disk *disk;
+-	__u32 s;
+ 
+ 	if (super->current_vol >= 0) {
+ 		getinfo_super_imsm_volume(st, info);
+@@ -1334,14 +1346,13 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info)
+ 		disk = &super->disks->disk;
+ 		info->data_offset = __le32_to_cpu(disk->total_blocks) - reserved;
+ 		info->component_size = reserved;
+-		s = disk->status;
+-		info->disk.state  = s & CONFIGURED_DISK ? (1 << MD_DISK_ACTIVE) : 0;
++		info->disk.state  = is_configured(disk) ? (1 << MD_DISK_ACTIVE) : 0;
+ 		/* we don't change info->disk.raid_disk here because
+ 		 * this state will be finalized in mdmon after we have
+ 		 * found the 'most fresh' version of the metadata
+ 		 */
+-		info->disk.state |= s & FAILED_DISK ? (1 << MD_DISK_FAULTY) : 0;
+-		info->disk.state |= s & SPARE_DISK ? 0 : (1 << MD_DISK_SYNC);
++		info->disk.state |= is_failed(disk) ? (1 << MD_DISK_FAULTY) : 0;
++		info->disk.state |= is_spare(disk) ? 0 : (1 << MD_DISK_SYNC);
+ 	}
+ 
+ 	/* only call uuid_from_super_imsm when this disk is part of a populated container,
+@@ -3444,7 +3455,6 @@ static struct mdinfo *container_content_imsm(struct supertype *st)
+ 			struct dl *d;
+ 			int idx;
+ 			int skip;
+-			__u32 s;
+ 			__u32 ord;
+ 
+ 			skip = 0;
+@@ -3456,9 +3466,7 @@ static struct mdinfo *container_content_imsm(struct supertype *st)
+ 
+ 			if (d == NULL)
+ 				skip = 1;
+-
+-			s = d ? d->disk.status : 0;
+-			if (s & FAILED_DISK)
++			if (d && is_failed(&d->disk))
+ 				skip = 1;
+ 			if (ord & IMSM_ORD_REBUILD)
+ 				skip = 1;
+@@ -3565,8 +3573,7 @@ static __u8 imsm_check_degraded(struct intel_super *super, struct imsm_dev *dev,
+ 				insync = 2;
+ 
+ 			disk = get_imsm_disk(super, idx);
+-			if (!disk || disk->status & FAILED_DISK ||
+-			    ord & IMSM_ORD_REBUILD)
++			if (!disk || is_failed(disk) || ord & IMSM_ORD_REBUILD)
+ 				insync--;
+ 
+ 			/* no in-sync disks left in this mirror the
+@@ -3616,8 +3623,7 @@ static int imsm_count_failed(struct intel_super *super, struct imsm_dev *dev)
+ 		idx = ord_to_idx(ord);
+ 
+ 		disk = get_imsm_disk(super, idx);
+-		if (!disk || disk->status & FAILED_DISK ||
+-		    ord & IMSM_ORD_REBUILD)
++		if (!disk || is_failed(disk) || ord & IMSM_ORD_REBUILD)
+ 			failed++;
+ 	}
+ 
+@@ -3676,7 +3682,7 @@ static int mark_failure(struct imsm_dev *dev, struct imsm_disk *disk, int idx)
+ 		return 0;
+ 
+ 	ord = __le32_to_cpu(map->disk_ord_tbl[slot]);
+-	if ((disk->status & FAILED_DISK) && (ord & IMSM_ORD_REBUILD))
++	if (is_failed(disk) && (ord & IMSM_ORD_REBUILD))
+ 		return 0;
+ 
+ 	disk->status |= FAILED_DISK;
+@@ -3877,7 +3883,7 @@ static struct dl *imsm_readd(struct intel_super *super, int idx, struct active_a
+ 		if (dl->index == i)
+ 			break;
+ 
+-	if (dl && dl->disk.status & FAILED_DISK)
++	if (dl && is_failed(&dl->disk))
+ 		dl = NULL;
+ 
+ 	if (dl)
+@@ -3915,11 +3921,10 @@ static struct dl *imsm_add_spare(struct intel_super *super, int slot,
+ 			continue;
+ 
+ 		/* skip in use or failed drives */
+-		if (dl->disk.status & FAILED_DISK || idx == dl->index ||
++		if (is_failed(&dl->disk) || idx == dl->index ||
+ 		    dl->index == -2) {
+ 			dprintf("%x:%x status (failed: %d index: %d)\n",
+-				dl->major, dl->minor,
+-				(dl->disk.status & FAILED_DISK) == FAILED_DISK, idx);
++				dl->major, dl->minor, is_failed(&dl->disk), idx);
+ 			continue;
+ 		}
+ 
+@@ -4221,7 +4226,7 @@ static void imsm_process_update(struct supertype *st,
+ 			if (i == u->slot)
+ 				continue;
+ 			disk = get_imsm_disk(super, get_imsm_disk_idx(dev, i));
+-			if (!disk || disk->status & FAILED_DISK)
++			if (!disk || is_failed(disk))
+ 				failed++;
+ 		}
+ 
 
-Thanks.
-
--- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
