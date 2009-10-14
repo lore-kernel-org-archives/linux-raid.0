@@ -1,8 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [mdadm PATCH 10/12] mdmon: avoid writes in the startup path for mdmon
-	on root arrays
-Date: Tue, 13 Oct 2009 19:11:06 -0700
-Message-ID: <20091014021106.31570.6034.stgit@dwillia2-linux.ch.intel.com>
+Subject: [mdadm PATCH 07/12] imsm: add --update=uuid support
+Date: Tue, 13 Oct 2009 19:10:51 -0700
+Message-ID: <20091014021051.31570.54396.stgit@dwillia2-linux.ch.intel.com>
 References: <20091014020739.31570.36408.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -11,192 +10,140 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20091014020739.31570.36408.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, krzysztof.wojcik@intel.com, ed.ciechanowski@intel.com, maciej.patelczyk@intel.com
+Cc: linux-raid@vger.kernel.org, krzysztof.wojcik@intel.com, ed.ciechanowski@intel.com, maciej.patelczyk@intel.com
 List-Id: linux-raid.ids
 
-When killing a previous monitor be careful not to cause writes to the
-filesystem until the reads necessary to get the monitor operational have
-completed.
+When disks have conflicting container memberships (same container ids
+but incompatible member arrays) --update=uuid can be used to move
+offenders to a new container id by changing 'orig_family_num'.
 
-The code is already prepared for errors creating the pid and socket
-files, so simply defer creation of these files until after the first
-call to manage().
+Note that this only supports random updates of the uuid as the actual
+uuid is synthesized.  We also need to communicate the new
+'orig_family_num' value to all disks involved in the update.  A new
+field 'update_private' is added to struct mdinfo to allow this
+information to be transmitted.
 
-Cc: Hans de Goede <hdegoede@redhat.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- managemon.c |    6 +++++
- mdmon.c     |   78 ++++++++++++++++++++++++-----------------------------------
- 2 files changed, 38 insertions(+), 46 deletions(-)
+ Assemble.c    |    3 +++
+ mdadm.h       |    5 +++++
+ super-intel.c |   51 +++++++++++++++++++++++++++++++++++++++------------
+ 3 files changed, 47 insertions(+), 12 deletions(-)
 
-diff --git a/managemon.c b/managemon.c
-index f9d545d..5958e18 100644
---- a/managemon.c
-+++ b/managemon.c
-@@ -680,6 +680,12 @@ void do_manager(struct supertype *container)
- 			read_sock(container);
+diff --git a/Assemble.c b/Assemble.c
+index 4578906..7da0905 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -565,6 +565,7 @@ int Assemble(struct supertype *st, char *mddev,
+ #endif
+ 	/* Ok, no bad inconsistancy, we can try updating etc */
+ 	bitmap_done = 0;
++	content->update_private = NULL;
+ 	for (tmpdev = devlist; tmpdev; tmpdev=tmpdev->next) if (tmpdev->used == 1) {
+ 		char *devname = tmpdev->devname;
+ 		struct stat stb;
+@@ -717,6 +718,8 @@ int Assemble(struct supertype *st, char *mddev,
+ 		}
+ 		devcnt++;
+ 	}
++	free(content->update_private);
++	content->update_private = NULL;
  
- 			if (container->sock < 0 || socket_hup_requested) {
-+				/* If this fails, we hope it already exists
-+				 * pid file lives in /var/run/mdadm/mdXX.pid
-+				 */
-+				mkdir("/var", 0600);
-+				mkdir("/var/run", 0600);
-+				mkdir("/var/run/mdadm", 0600);
- 				close(container->sock);
- 				container->sock = make_control_sock(container->devname);
- 				make_pidfile(container->devname, 0);
-diff --git a/mdmon.c b/mdmon.c
-index 31994d8..5f87e78 100644
---- a/mdmon.c
-+++ b/mdmon.c
-@@ -113,6 +113,14 @@ static struct superswitch *find_metadata_methods(char *vers)
- 	return NULL;
- }
+ 	if (devcnt == 0) {
+ 		fprintf(stderr, Name ": no devices found for %s\n",
+diff --git a/mdadm.h b/mdadm.h
+index 91ba624..04b87b8 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -153,6 +153,11 @@ struct mdinfo {
+ 	int			cache_size; /* size of raid456 stripe cache*/
+ 	int			mismatch_cnt;
+ 	char			text_version[50];
++	void 			*update_private; /* for passing metadata-format
++						  * specific update data
++						  * between successive calls to
++						  * update_super()
++						  */
  
-+static int test_pidfile(char *devname)
-+{
-+	char path[100];
-+	struct stat st;
-+
-+	sprintf(path, "/var/run/mdadm/%s.pid", devname);
-+	return stat(path, &st);
-+}
- 
- int make_pidfile(char *devname, int o_excl)
+ 	int container_member; /* for assembling external-metatdata arrays
+ 			       * This is to be used internally by metadata
+diff --git a/super-intel.c b/super-intel.c
+index eaf5b0b..110c4a8 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -1378,8 +1378,6 @@ static int update_super_imsm(struct supertype *st, struct mdinfo *info,
+ 			     char *update, char *devname, int verbose,
+ 			     int uuid_set, char *homehost)
  {
-@@ -149,26 +157,29 @@ int is_container_member(struct mdstat_ent *mdstat, char *container)
- 	return 1;
- }
- 
--void remove_pidfile(char *devname);
--static void try_kill_monitor(char *devname)
-+pid_t devname2mdmon(char *devname)
- {
- 	char buf[100];
-+	pid_t pid = -1;
- 	int fd;
--	pid_t pid;
--	struct mdstat_ent *mdstat;
- 
- 	sprintf(buf, "/var/run/mdadm/%s.pid", devname);
--	fd = open(buf, O_RDONLY);
-+	fd = open(buf, O_RDONLY|O_NOATIME);
- 	if (fd < 0)
--		return;
+-	/* FIXME */
 -
--	if (read(fd, buf, sizeof(buf)) < 0) {
--		close(fd);
--		return;
+ 	/* For 'assemble' and 'force' we need to return non-zero if any
+ 	 * change was made.  For others, the return value is ignored.
+ 	 * Update options are:
+@@ -1395,26 +1393,55 @@ static int update_super_imsm(struct supertype *st, struct mdinfo *info,
+ 	 *		linear only
+ 	 *  resync: mark as dirty so a resync will happen.
+ 	 *  name:  update the name - preserving the homehost
++	 *  uuid:  Change the uuid of the array to match watch is given
+ 	 *
+ 	 * Following are not relevant for this imsm:
+ 	 *  sparc2.2 : update from old dodgey metadata
+ 	 *  super-minor: change the preferred_minor number
+ 	 *  summaries:  update redundant counters.
+-	 *  uuid:  Change the uuid of the array to match watch is given
+ 	 *  homehost:  update the recorded homehost
+ 	 *  _reshape_progress: record new reshape_progress position.
+ 	 */
+-	int rv = 0;
+-	//struct intel_super *super = st->sb;
+-	//struct imsm_super *mpb = super->mpb;
++	int rv = 1;
++	struct intel_super *super = st->sb;
++	struct imsm_super *mpb;
+ 
+-	if (strcmp(update, "grow") == 0) {
 -	}
-+		return -1;
- 
-+	if (read(fd, buf, sizeof(buf)) > 0)
-+		sscanf(buf, "%d\n", &pid);
- 	close(fd);
--	pid = strtoul(buf, NULL, 10);
+-	if (strcmp(update, "resync") == 0) {
+-		/* dev->vol.dirty = 1; */
+-	}
++	/* we can only update container info */
++	if (!super || super->current_vol >= 0 || !super->anchor)
++		return 1;
 +
-+	return pid;
-+}
++	mpb = super->anchor;
 +
-+static void try_kill_monitor(pid_t pid, char *devname)
-+{
-+	char buf[100];
-+	int fd;
-+	struct mdstat_ent *mdstat;
++	if (strcmp(update, "uuid") == 0 && uuid_set && !info->update_private)
++		fprintf(stderr,
++			Name ": '--uuid' not supported for imsm metadata\n");
++	else if (strcmp(update, "uuid") == 0 && uuid_set && info->update_private) {
++		mpb->orig_family_num = *((__u32 *) info->update_private);
++		rv = 0;
++	} else if (strcmp(update, "uuid") == 0) {
++		__u32 *new_family = malloc(sizeof(*new_family));
++
++		/* update orig_family_number with the incoming random
++		 * data, report the new effective uuid, and store the
++		 * new orig_family_num for future updates.
++		 */
++		if (new_family) {
++			memcpy(&mpb->orig_family_num, info->uuid, sizeof(__u32));
++			uuid_from_super_imsm(st, info->uuid);
++			*new_family = mpb->orig_family_num;
++			info->update_private = new_family;
++			rv = 0;
++		}
++	} else if (strcmp(update, "assemble") == 0)
++		rv = 0;
++	else
++		fprintf(stderr,
++			Name ": '--update=%s' not supported for imsm metadata\n",
++			update);
  
- 	/* first rule of survival... don't off yourself */
- 	if (pid == getpid())
-@@ -197,7 +208,6 @@ static void try_kill_monitor(char *devname)
- 			WaitClean(buf, 0);
- 		}
- 	free_mdstat(mdstat);
--	remove_pidfile(devname);
+-	/* IMSM has no concept of UUID or homehost */
++	/* successful update? recompute checksum */
++	if (rv == 0)
++		mpb->check_sum = __le32_to_cpu(__gen_imsm_checksum(mpb));
+ 
+ 	return rv;
  }
- 
- void remove_pidfile(char *devname)
-@@ -355,6 +365,7 @@ int mdmon(char *devname, int devnum, int scan, char *switchroot)
- 	int pfd[2];
- 	int status;
- 	int ignore;
-+	pid_t victim = -1;
- 
- 	dprintf("starting mdmon for %s in %s\n",
- 		devname, switchroot ? : "/");
-@@ -400,6 +411,7 @@ int mdmon(char *devname, int devnum, int scan, char *switchroot)
- 	container->devname = devname;
- 	container->arrays = NULL;
- 	container->subarray[0] = 0;
-+	container->sock = -1;
- 
- 	if (!container->devname) {
- 		fprintf(stderr, "mdmon: failed to allocate container name string\n");
-@@ -464,12 +476,9 @@ int mdmon(char *devname, int devnum, int scan, char *switchroot)
- 
- 	if (switchroot) {
- 		/* we assume we assume that /sys /proc /dev are available in
--		 * the new root (see nash:setuproot)
--		 *
--		 * kill any monitors in the current namespace and change
--		 * to the new one
-+		 * the new root
- 		 */
--		try_kill_monitor(container->devname);
-+		victim = devname2mdmon(container->devname);
- 		if (chroot(switchroot) != 0) {
- 			fprintf(stderr, "mdmon: failed to chroot to '%s': %s\n",
- 				switchroot, strerror(errno));
-@@ -477,40 +486,15 @@ int mdmon(char *devname, int devnum, int scan, char *switchroot)
- 		}
- 	}
- 
--	/* If this fails, we hope it already exists 
--	 * pid file lives in /var/run/mdadm/mdXX.pid
--	 */
--	mkdir("/var", 0600);
--	mkdir("/var/run", 0600);
--	mkdir("/var/run/mdadm", 0600);
- 	ignore = chdir("/");
--	if (make_pidfile(container->devname, O_EXCL) < 0) {
-+	if (victim < 0 && test_pidfile(container->devname) == 0) {
- 		if (ping_monitor(container->devname) == 0) {
- 			fprintf(stderr, "mdmon: %s already managed\n",
- 				container->devname);
- 			exit(3);
--		} else {
--			int err;
--
--			/* cleanup the old monitor, this one is taking over */
--			try_kill_monitor(container->devname);
--			err = make_pidfile(container->devname, 0);
--			if (err < 0) {
--				fprintf(stderr, "mdmon: %s Cannot create pidfile\n",
--					container->devname);
--				if (err == -EROFS) {
--					/* FIXME implement a mechanism to
--					 * prevent duplicate monitor instances
--					 */
--					fprintf(stderr,
--						"mdmon: continuing on read-only file system\n");
--				} else
--					exit(3);
--			}
--		}
-+		} else if (victim < 0)
-+			victim = devname2mdmon(container->devname);
- 	}
--	container->sock = make_control_sock(container->devname);
--
- 	if (container->ss->load_super(container, mdfd, devname)) {
- 		fprintf(stderr, "mdmon: Cannot load metadata for %s\n",
- 			devname);
-@@ -544,6 +528,8 @@ int mdmon(char *devname, int devnum, int scan, char *switchroot)
- 		exit(2);
- 	}
- 
-+	if (victim > -1)
-+		try_kill_monitor(victim, container->devname);
- 	do_manager(container);
- 
- 	exit(0);
 
