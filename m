@@ -1,105 +1,132 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: About seting up Raid5 on a four disk box.
-Date: Wed, 14 Oct 2009 09:40:01 +0300
-Message-ID: <70ed7c3e0910132340q1c4acdfbxa6938261088acca3@mail.gmail.com>
-References: <hb1udb$6t1$1@ger.gmane.org> <70ed7c3e0910130704l1f1f7f0ar66271d85295c667b@mail.gmail.com>
-	<hb2470$rol$1@ger.gmane.org> <70ed7c3e0910130810r58ab391id2fbfdff6200dcd8@mail.gmail.com>
-	<hb3qpa$6ep$1@ger.gmane.org>
+From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
+Subject: Re: MVSAS 1669:mvs_abort_task:rc= 5
+Date: Wed, 14 Oct 2009 01:18:39 -0600
+Message-ID: <200910140118.39988.tfjellstrom@shaw.ca>
+References: <200910091141.52303.tfjellstrom@shaw.ca> <200910131939.09039.tfjellstrom@shaw.ca> <e938503f0910132151p20b42459v96800d889f3f63eb@mail.gmail.com>
+Reply-To: tfjellstrom@shaw.ca
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <hb3qpa$6ep$1@ger.gmane.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: ap23563m@gmx.com
-Cc: linux-raid@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <e938503f0910132151p20b42459v96800d889f3f63eb@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: andy yan <andyysj@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <James.Bottomley@suse.de>, kewei@marvell.com
 List-Id: linux-raid.ids
 
-I see.
+On Tue October 13 2009, andy yan wrote:
+> I will send you a patch for debugging this issue, please help to try and
+> send back the log, thanks!
 
-Well, whether MD is smart enough to rearrange a queue when the arrays
-are sharing disks or not, it still means that you can't run your
-processes in parallel.
+I will do whatever I can to help get this resolved :) I have some C skills, 
+but no kernel/device driver experience, so at the very least I should be able 
+to do builds and make small changes if needed, in addition to patching and 
+endless reboots ;D
 
-I did see MD put the arrays in queue during resyncs when I had a
-similar setup. I didn't benchmark the arrays at that time, so I don't
-have solid numbers of how much of a performance penalty that setup
-caused.
+> On Wed, Oct 14, 2009 at 9:39 AM, Thomas Fjellstrom 
+<tfjellstrom@shaw.ca>wrote:
+> > On Sun October 11 2009, Thomas Fjellstrom wrote:
+> > > On Sun October 11 2009, Christian Vilhelm wrote:
+> > > > Thomas Fjellstrom wrote:
+> > > > > Hi,
+> > > > >
+> > > > > I've been trying to get an AOC-SASLP-MV8 card (pcie x4 2 port SAS
+> >
+> > card)
+> >
+> > > > > to work with linux for the past month or so. I've recently just
+> > > > > RMAed my first card, and tested the new one under linux, and I see
+> > > > > the same problems.
+> > > > >
+> > > > > The very first time I made a new array off the controller, formated
+> > > > > (with xfs) and mounted the volume, it seemed to work. ioozone even
+> > > > > seemed to run for a while. Sadly after a few minutes I got a stream
+> >
+> > of
+> >
+> > > > > mvs_abort_task messages in dmesg, and any accesses to the volume,
+> > > > > or any disks connected to the controller lock up.
+> > > > >
+> > > > > After that I updated my 2.6.31 kernel to 2.6.32-rc3-git2 off of
+> > > > > kernel.org, and the volume fails to mount with the same
+> >
+> > mvs_abort_task
+> >
+> > > > > messages.
+> > > >
+> > > > I have the exact same problem with another Marvell 88SE64xx based
+> > > > card, namely an Areca ARC-1300ix-16 and the mvsas driver.
+> > > > If the disks are just used alone, with a filesystem on them, all
+> > > > seems to work fine. dd and badblocks run fine on them. Mounting them,
+> > > > reading/writing work fine. The error seem to popup but rarely when
+> > > > several disks are used simultaneously.
+> > > > But, an absolute sure way to trigger the error is to assemble (or
+> > > > create) a md raid array with the disks. I join a syslog extract from
+> >
+> > the
+> >
+> > > > error. You can see it happens seconds after the array creation.
+> > > > I tried :
+> > > > 1) disabling the write cache on the disks => same error
+> > > > 2) disabling NCQ : in mv_sas.h :
+> > > > #define MV_DISABLE_NCQ  1
+> > > > same error.
+> > > > Afer a while, the devices handled by the card are just dropped from
+> > > > the system and the card stops working at all, a reboot is necessary.
+> > >
+> > > I have found that a proper reboot is impossible once the card/driver
+> >
+> > starts
+> >
+> > > misbehaving. Anything that tries to do anything with the md device, or
+> >
+> > any
+> >
+> > >  of the component drives will hang. Even kernel threads it seems. A
+> >
+> > reboot
+> >
+> > >  or a shutdown hangs when it tries to sync the md device, and
+> >
+> > ALT+SYSRQ+S/U
+> >
+> > >  both hang. After the first Alt+sysrq+s it will register more of them,
+> >
+> > but
+> >
+> > >  it won't print the "Emergency Sync Complete" message.
+> > >
+> > > > Does anyone have a working config based on a Marvell 64xx card ?
+> > > >
+> > > > I'm willing to explore solutions, patches or anything, just tell me
+> >
+> > what
+> >
+> > > > to do to help.
+> > > >
+> > > > Christian Vilhelm.
+> >
+> > I'd really appreciate some assistance with this. The card is essentially
+> > useless under linux, if not harmful (causes oopses and hangs) with the
+> > current
+> > driver.
+> >
+> > My last weekly backup failed while creating the disk image due to my
+> > array being low on space, I really need to get the new array up asap.
+> >
+> > Thanks.
+> >
+> > --
+> > Thomas Fjellstrom
+> > tfjellstrom@shaw.ca
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-On Wed, Oct 14, 2009 at 9:23 AM, Antonio Perez <ap23563m@gmx.com> wrote=
-:
-> Majed B. wrote:
->
->> I think I already answered your question:
->>
->>> For desktop usage it's OK to use that setup since you won't be writ=
-ing
->>> to / and the other segments a lot at the same time.
->>
->>> If you're running an application which writes a lot of data to / an=
-d
->>> you require to read/write a lot of data of the rest of the disk, it
->>> will conflict and slow things down a lot.
->>>
->>> Basically, you're partitioning each disk and making each partition
->>> belong to an array.
->>
->> If you misunderstood part, or I did, let me know :)
->
-> Thanks Majeb. I believe I understand you.
->
-> This is what I get from your comment:
->
-> If the disks are setup with several partitions, and the corresponding
-> partitions belong to a md array as this:
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0sd[a..d]1 --> md1
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0sd[a..d]2 --> md2
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0sd[a..d]3 --> md3
->
-> If md1 is used as / and md2 is used as /home (or /data) there will be=
- no
-> concurrent reads to both places.
->
-> While this may be true, depending on the specific application, it is =
-not
-> what I am asking.
-> _____________________________________________________________________=
-___
->
-> The point is:
->
-> If md1 is used as /data1 and md2 is used as /data2 will it work?
->
-> Will the md system be aware that those are on the same disk (spindle)=
- and
-> use the correct queuing on the reads for the best reading speed possi=
-ble?
->
-> Or will md get confused on the correct read sequence causing addition=
-al head
-> seeks which will degrade overall performance.
->
-> Sorry if I confuse you more, this is not an "simple" question.
->
-> Please read Robin Hill answer. :-)
->
-> --
-> Antonio Perez
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
 
-
-
---=20
-       Majed B.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Thomas Fjellstrom
+tfjellstrom@shaw.ca
