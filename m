@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [mdadm PATCH 07/12] imsm: add --update=uuid support
-Date: Tue, 13 Oct 2009 19:10:51 -0700
-Message-ID: <20091014021051.31570.54396.stgit@dwillia2-linux.ch.intel.com>
+Subject: [mdadm PATCH 04/12] imsm: fix spare record writeout race
+Date: Tue, 13 Oct 2009 19:10:36 -0700
+Message-ID: <20091014021036.31570.80797.stgit@dwillia2-linux.ch.intel.com>
 References: <20091014020739.31570.36408.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,137 +13,166 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, krzysztof.wojcik@intel.com, ed.ciechanowski@intel.com, maciej.patelczyk@intel.com
 List-Id: linux-raid.ids
 
-When disks have conflicting container memberships (same container ids
-but incompatible member arrays) --update=uuid can be used to move
-offenders to a new container id by changing 'orig_family_num'.
+imsm_activate_spare() in the manager thread may race against
+write_super_imsm_spares() in the monitor thread.  Give
+write_super_imsm_spares() its own private mpb buffer to prevent
+confusing the manager.
 
-Note that this only supports random updates of the uuid as the actual
-uuid is synthesized.  We also need to communicate the new
-'orig_family_num' value to all disks involved in the update.  A new
-field 'update_private' is added to struct mdinfo to allow this
-information to be transmitted.
+This change uncovered cases where spares were not being assembled due to
+a failed metadata version number check.  Spares can freely associate
+across metadata version number, so reduce the scope of the version check
+in the spare assembly case.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- Assemble.c    |    3 +++
- mdadm.h       |    5 +++++
- super-intel.c |   51 +++++++++++++++++++++++++++++++++++++++------------
- 3 files changed, 47 insertions(+), 12 deletions(-)
+ super-intel.c |   59 ++++++++++++++++++++++++++++++++++-----------------------
+ 1 files changed, 35 insertions(+), 24 deletions(-)
 
-diff --git a/Assemble.c b/Assemble.c
-index 4578906..7da0905 100644
---- a/Assemble.c
-+++ b/Assemble.c
-@@ -565,6 +565,7 @@ int Assemble(struct supertype *st, char *mddev,
- #endif
- 	/* Ok, no bad inconsistancy, we can try updating etc */
- 	bitmap_done = 0;
-+	content->update_private = NULL;
- 	for (tmpdev = devlist; tmpdev; tmpdev=tmpdev->next) if (tmpdev->used == 1) {
- 		char *devname = tmpdev->devname;
- 		struct stat stb;
-@@ -717,6 +718,8 @@ int Assemble(struct supertype *st, char *mddev,
- 		}
- 		devcnt++;
- 	}
-+	free(content->update_private);
-+	content->update_private = NULL;
- 
- 	if (devcnt == 0) {
- 		fprintf(stderr, Name ": no devices found for %s\n",
-diff --git a/mdadm.h b/mdadm.h
-index 91ba624..04b87b8 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -153,6 +153,11 @@ struct mdinfo {
- 	int			cache_size; /* size of raid456 stripe cache*/
- 	int			mismatch_cnt;
- 	char			text_version[50];
-+	void 			*update_private; /* for passing metadata-format
-+						  * specific update data
-+						  * between successive calls to
-+						  * update_super()
-+						  */
- 
- 	int container_member; /* for assembling external-metatdata arrays
- 			       * This is to be used internally by metadata
 diff --git a/super-intel.c b/super-intel.c
-index eaf5b0b..110c4a8 100644
+index e53afbb..0e3ed89 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -1378,8 +1378,6 @@ static int update_super_imsm(struct supertype *st, struct mdinfo *info,
- 			     char *update, char *devname, int verbose,
- 			     int uuid_set, char *homehost)
- {
--	/* FIXME */
+@@ -1477,9 +1477,6 @@ static int compare_super_imsm(struct supertype *st, struct supertype *tst)
+                 return 0;
+         }
+ 
+-	if (memcmp(first->anchor->sig, sec->anchor->sig, MAX_SIGNATURE_LENGTH) != 0)
+-		return 3;
 -
- 	/* For 'assemble' and 'force' we need to return non-zero if any
- 	 * change was made.  For others, the return value is ignored.
- 	 * Update options are:
-@@ -1395,26 +1393,55 @@ static int update_super_imsm(struct supertype *st, struct mdinfo *info,
- 	 *		linear only
- 	 *  resync: mark as dirty so a resync will happen.
- 	 *  name:  update the name - preserving the homehost
-+	 *  uuid:  Change the uuid of the array to match watch is given
- 	 *
- 	 * Following are not relevant for this imsm:
- 	 *  sparc2.2 : update from old dodgey metadata
- 	 *  super-minor: change the preferred_minor number
- 	 *  summaries:  update redundant counters.
--	 *  uuid:  Change the uuid of the array to match watch is given
- 	 *  homehost:  update the recorded homehost
- 	 *  _reshape_progress: record new reshape_progress position.
+ 	/* if an anchor does not have num_raid_devs set then it is a free
+ 	 * floating spare
  	 */
--	int rv = 0;
--	//struct intel_super *super = st->sb;
--	//struct imsm_super *mpb = super->mpb;
-+	int rv = 1;
-+	struct intel_super *super = st->sb;
-+	struct imsm_super *mpb;
+@@ -1492,6 +1489,10 @@ static int compare_super_imsm(struct supertype *st, struct supertype *tst)
+ 		__u32 first_family = first->anchor->orig_family_num;
+ 		__u32 sec_family = sec->anchor->orig_family_num;
  
--	if (strcmp(update, "grow") == 0) {
--	}
--	if (strcmp(update, "resync") == 0) {
--		/* dev->vol.dirty = 1; */
--	}
-+	/* we can only update container info */
-+	if (!super || super->current_vol >= 0 || !super->anchor)
-+		return 1;
++		if (memcmp(first->anchor->sig, sec->anchor->sig,
++			   MAX_SIGNATURE_LENGTH) != 0)
++			return 3;
 +
-+	mpb = super->anchor;
-+
-+	if (strcmp(update, "uuid") == 0 && uuid_set && !info->update_private)
-+		fprintf(stderr,
-+			Name ": '--uuid' not supported for imsm metadata\n");
-+	else if (strcmp(update, "uuid") == 0 && uuid_set && info->update_private) {
-+		mpb->orig_family_num = *((__u32 *) info->update_private);
-+		rv = 0;
-+	} else if (strcmp(update, "uuid") == 0) {
-+		__u32 *new_family = malloc(sizeof(*new_family));
-+
-+		/* update orig_family_number with the incoming random
-+		 * data, report the new effective uuid, and store the
-+		 * new orig_family_num for future updates.
-+		 */
-+		if (new_family) {
-+			memcpy(&mpb->orig_family_num, info->uuid, sizeof(__u32));
-+			uuid_from_super_imsm(st, info->uuid);
-+			*new_family = mpb->orig_family_num;
-+			info->update_private = new_family;
-+			rv = 0;
-+		}
-+	} else if (strcmp(update, "assemble") == 0)
-+		rv = 0;
-+	else
-+		fprintf(stderr,
-+			Name ": '--update=%s' not supported for imsm metadata\n",
-+			update);
+ 		if (first_family == 0)
+ 			first_family = first->anchor->family_num;
+ 		if (sec_family == 0)
+@@ -1499,8 +1500,10 @@ static int compare_super_imsm(struct supertype *st, struct supertype *tst)
  
--	/* IMSM has no concept of UUID or homehost */
-+	/* successful update? recompute checksum */
-+	if (rv == 0)
-+		mpb->check_sum = __le32_to_cpu(__gen_imsm_checksum(mpb));
+ 		if (first_family != sec_family)
+ 			return 3;
++
+ 	}
  
- 	return rv;
++
+ 	/* if 'first' is a spare promote it to a populated mpb with sec's
+ 	 * family number
+ 	 */
+@@ -2976,39 +2979,48 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+ 	return 0;
  }
+ 
+-static int store_imsm_mpb(int fd, struct intel_super *super);
++static int store_imsm_mpb(int fd, struct imsm_super *mpb);
++
++static union {
++	char buf[512];
++	struct imsm_super anchor;
++} spare_record __attribute__ ((aligned(512)));
+ 
+ /* spare records have their own family number and do not have any defined raid
+  * devices
+  */
+ static int write_super_imsm_spares(struct intel_super *super, int doclose)
+ {
+-	struct imsm_super mpb_save;
+ 	struct imsm_super *mpb = super->anchor;
++	struct imsm_super *spare = &spare_record.anchor;
+ 	__u32 sum;
+ 	struct dl *d;
+ 
+-	mpb_save = *mpb;
+-	mpb->num_raid_devs = 0;
+-	mpb->num_disks = 1;
+-	mpb->mpb_size = sizeof(struct imsm_super);
+-	mpb->generation_num = __cpu_to_le32(1UL);
++	spare->mpb_size = __cpu_to_le32(sizeof(struct imsm_super)),
++	spare->generation_num = __cpu_to_le32(1UL),
++	spare->attributes = MPB_ATTRIB_CHECKSUM_VERIFY;
++	spare->num_disks = 1,
++	spare->num_raid_devs = 0,
++	spare->cache_size = mpb->cache_size,
++	spare->pwr_cycle_count = __cpu_to_le32(1),
++
++	snprintf((char *) spare->sig, MAX_SIGNATURE_LENGTH,
++		 MPB_SIGNATURE MPB_VERSION_RAID0);
+ 
+ 	for (d = super->disks; d; d = d->next) {
+ 		if (d->index != -1)
+ 			continue;
+ 
+-		mpb->disk[0] = d->disk;
+-		sum = __gen_imsm_checksum(mpb);
+-		mpb->family_num = __cpu_to_le32(sum);
+-		mpb->orig_family_num = 0;
+-		sum = __gen_imsm_checksum(mpb);
+-		mpb->check_sum = __cpu_to_le32(sum);
++		spare->disk[0] = d->disk;
++		sum = __gen_imsm_checksum(spare);
++		spare->family_num = __cpu_to_le32(sum);
++		spare->orig_family_num = 0;
++		sum = __gen_imsm_checksum(spare);
++		spare->check_sum = __cpu_to_le32(sum);
+ 
+-		if (store_imsm_mpb(d->fd, super)) {
++		if (store_imsm_mpb(d->fd, spare)) {
+ 			fprintf(stderr, "%s: failed for device %d:%d %s\n",
+ 				__func__, d->major, d->minor, strerror(errno));
+-			*mpb = mpb_save;
+ 			return 1;
+ 		}
+ 		if (doclose) {
+@@ -3017,7 +3029,6 @@ static int write_super_imsm_spares(struct intel_super *super, int doclose)
+ 		}
+ 	}
+ 
+-	*mpb = mpb_save;
+ 	return 0;
+ }
+ 
+@@ -3069,7 +3080,7 @@ static int write_super_imsm(struct intel_super *super, int doclose)
+ 	for (d = super->disks; d ; d = d->next) {
+ 		if (d->index < 0)
+ 			continue;
+-		if (store_imsm_mpb(d->fd, super))
++		if (store_imsm_mpb(d->fd, mpb))
+ 			fprintf(stderr, "%s: failed for device %d:%d %s\n",
+ 				__func__, d->major, d->minor, strerror(errno));
+ 		if (doclose) {
+@@ -4144,9 +4155,9 @@ static void imsm_set_disk(struct active_array *a, int n, int state)
+ 	}
+ }
+ 
+-static int store_imsm_mpb(int fd, struct intel_super *super)
++static int store_imsm_mpb(int fd, struct imsm_super *mpb)
+ {
+-	struct imsm_super *mpb = super->anchor;
++	void *buf = mpb;
+ 	__u32 mpb_size = __le32_to_cpu(mpb->mpb_size);
+ 	unsigned long long dsize;
+ 	unsigned long long sectors;
+@@ -4161,7 +4172,7 @@ static int store_imsm_mpb(int fd, struct intel_super *super)
+ 		if (lseek64(fd, dsize - (512 * (2 + sectors)), SEEK_SET) < 0)
+ 			return 1;
+ 
+-		if (write(fd, super->buf + 512, 512 * sectors) != 512 * sectors)
++		if (write(fd, buf + 512, 512 * sectors) != 512 * sectors)
+ 			return 1;
+ 	}
+ 
+@@ -4169,7 +4180,7 @@ static int store_imsm_mpb(int fd, struct intel_super *super)
+ 	if (lseek64(fd, dsize - (512 * 2), SEEK_SET) < 0)
+ 		return 1;
+ 
+-	if (write(fd, super->buf, 512) != 512)
++	if (write(fd, buf, 512) != 512)
+ 		return 1;
+ 
+ 	return 0;
 
