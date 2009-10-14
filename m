@@ -1,132 +1,102 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: Re: MVSAS 1669:mvs_abort_task:rc= 5
-Date: Wed, 14 Oct 2009 01:18:39 -0600
-Message-ID: <200910140118.39988.tfjellstrom@shaw.ca>
-References: <200910091141.52303.tfjellstrom@shaw.ca> <200910131939.09039.tfjellstrom@shaw.ca> <e938503f0910132151p20b42459v96800d889f3f63eb@mail.gmail.com>
-Reply-To: tfjellstrom@shaw.ca
+From: Antonio Perez <ap23563m@gmx.com>
+Subject: Re: About seting up Raid5 on a four disk box.
+Date: Wed, 14 Oct 2009 03:45:21 -0400
+Message-ID: <hb3vij$j47$1@ger.gmane.org>
+References: <hb1udb$6t1$1@ger.gmane.org> <20091013152304.GA19668@cthulhu.home.robinhill.me.uk>
+Reply-To: ap23563m@gmx.com
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <e938503f0910132151p20b42459v96800d889f3f63eb@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: andy yan <andyysj@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <James.Bottomley@suse.de>, kewei@marvell.com
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue October 13 2009, andy yan wrote:
-> I will send you a patch for debugging this issue, please help to try and
-> send back the log, thanks!
+Robin Hill wrote:
 
-I will do whatever I can to help get this resolved :) I have some C skills, 
-but no kernel/device driver experience, so at the very least I should be able 
-to do builds and make small changes if needed, in addition to patching and 
-endless reboots ;D
+> On Tue Oct 13, 2009 at 09:13:13AM -0400, Antonio Perez wrote:
+[snip]
+>> However, and this I don't know, those sda[2..4] are not really different
+>> devices (spindles) and reads to one md would conflict (or not?) with
+>> reads to the other mds.
 
-> On Wed, Oct 14, 2009 at 9:39 AM, Thomas Fjellstrom 
-<tfjellstrom@shaw.ca>wrote:
-> > On Sun October 11 2009, Thomas Fjellstrom wrote:
-> > > On Sun October 11 2009, Christian Vilhelm wrote:
-> > > > Thomas Fjellstrom wrote:
-> > > > > Hi,
-> > > > >
-> > > > > I've been trying to get an AOC-SASLP-MV8 card (pcie x4 2 port SAS
-> >
-> > card)
-> >
-> > > > > to work with linux for the past month or so. I've recently just
-> > > > > RMAed my first card, and tested the new one under linux, and I see
-> > > > > the same problems.
-> > > > >
-> > > > > The very first time I made a new array off the controller, formated
-> > > > > (with xfs) and mounted the volume, it seemed to work. ioozone even
-> > > > > seemed to run for a while. Sadly after a few minutes I got a stream
-> >
-> > of
-> >
-> > > > > mvs_abort_task messages in dmesg, and any accesses to the volume,
-> > > > > or any disks connected to the controller lock up.
-> > > > >
-> > > > > After that I updated my 2.6.31 kernel to 2.6.32-rc3-git2 off of
-> > > > > kernel.org, and the volume fails to mount with the same
-> >
-> > mvs_abort_task
-> >
-> > > > > messages.
-> > > >
-> > > > I have the exact same problem with another Marvell 88SE64xx based
-> > > > card, namely an Areca ARC-1300ix-16 and the mvsas driver.
-> > > > If the disks are just used alone, with a filesystem on them, all
-> > > > seems to work fine. dd and badblocks run fine on them. Mounting them,
-> > > > reading/writing work fine. The error seem to popup but rarely when
-> > > > several disks are used simultaneously.
-> > > > But, an absolute sure way to trigger the error is to assemble (or
-> > > > create) a md raid array with the disks. I join a syslog extract from
-> >
-> > the
-> >
-> > > > error. You can see it happens seconds after the array creation.
-> > > > I tried :
-> > > > 1) disabling the write cache on the disks => same error
-> > > > 2) disabling NCQ : in mv_sas.h :
-> > > > #define MV_DISABLE_NCQ  1
-> > > > same error.
-> > > > Afer a while, the devices handled by the card are just dropped from
-> > > > the system and the card stops working at all, a reboot is necessary.
-> > >
-> > > I have found that a proper reboot is impossible once the card/driver
-> >
-> > starts
-> >
-> > > misbehaving. Anything that tries to do anything with the md device, or
-> >
-> > any
-> >
-> > >  of the component drives will hang. Even kernel threads it seems. A
-> >
-> > reboot
-> >
-> > >  or a shutdown hangs when it tries to sync the md device, and
-> >
-> > ALT+SYSRQ+S/U
-> >
-> > >  both hang. After the first Alt+sysrq+s it will register more of them,
-> >
-> > but
-> >
-> > >  it won't print the "Emergency Sync Complete" message.
-> > >
-> > > > Does anyone have a working config based on a Marvell 64xx card ?
-> > > >
-> > > > I'm willing to explore solutions, patches or anything, just tell me
-> >
-> > what
-> >
-> > > > to do to help.
-> > > >
-> > > > Christian Vilhelm.
-> >
-> > I'd really appreciate some assistance with this. The card is essentially
-> > useless under linux, if not harmful (causes oopses and hangs) with the
-> > current
-> > driver.
-> >
-> > My last weekly backup failed while creating the disk image due to my
-> > array being low on space, I really need to get the new array up asap.
-> >
-> > Thanks.
-> >
-> > --
-> > Thomas Fjellstrom
-> > tfjellstrom@shaw.ca
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> Any reads to the same disk will conflict - whether they're on separate
+> arrays or within a single array shouldn't make any difference
 
+Perfect, you understood exactly what I was asking, thanks.
+
+> (the IO elevator is set on the disk rather than the array, so I assume
+> it will gather requests across all arrays).  md itself knows that the
+> arrays share disks, so will ensure any maintenance tasks (resyncs, etc)
+> only run on a single array at a time.
+
+Clear explanation, thanks.
+
+Then, the two consequences of dividing disks in several md are correct:
+
+1.- Will improve rebuild time, as each md is smaller.
+2.- Will allow to control if the md is in the outside (faster) disk area.
+
+Am I understanding you correctly?
+
+>> 2.- On the Raid 1: How many sectors to copy? 63?
+>> On an update of grub code, core.img could change, which means that the
+>> first 63 sectors (to be on the safe side) of the disk which gets the
+>> update should be copied to the other 3 disks.
+>> Or is it that the md code would mirror sectors 1-62 and only the MBR
+>> needs to be manually mirroed?
+
+> Not sure what you mean here.  If you have /boot on a RAID1 array then
+> it's mirrored, so the stage1.5 and stage2 bootloaders get mirrored via
+> that.  The stage1 bootloader is usually installed into the MBR, so only
+> that needs replicating separately.
+
+There are two areas of interest:
+
+1.- The "Boot disk area" including the MBR.:
+On the usual (at least for me) partition scheme, the first cylinder*, 
+Sectors (LBA) 0-62 [CHS 0/0/1 to 0/0/63] of the disk are left empty, except 
+for sector 0, a.k.a. MBR. That is called the disk boot area.
+Grub uses the sector 0 as the MBR and several sectors following it to embed 
+the booting code: core.img.
+
+2.- The "partition boot area":
+There is also an empty space at the beginning of each partition of 63 
+sectors. The first partition uses (LBA) 63-125 [CHS 0/1/0 to 0/1/63] for the 
+"partition boot area" therefore restoring alignment on the disk heads.
+Next partitions repeat this setup.
+This area is used to boot if grub is installed to sda1 instead of sda
+
+So, I assume that a RAID1 on "sd[a..d]1" will mirror the "Area 2" but will 
+not touch any of the "Area 1".
+
+Is this assumption correct?
+
+
+* note: it really feels ugly to speak of cylinders on this day and age, but 
+thats how the PC-style scheme works.
+
+>> 2.- Is there a recomended way to trigger the said copy of question 2?
+>> Where should a call to copy the MBR should be placed? On update-grub?
+
+> I always just rerun the grub install for each disk manually (see
+> http://lists.us.dell.com/pipermail/linux-poweredge/2003-July/008898.html
+> for example).
+
+That's the usual procedure on a first install, correct.
+
+> Automating it will depend on your distribution - if
+> update-grub is what's called after a grub update (and it isn't
+> overwritten by the update) then this would seem the logical place to do
+> it.
+
+I'll have to dig deeper to make any intelligent question, Thanks.
+
+> HTH,
+>     Robin
+
+It did a lot, thanks again!
 
 -- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
+Antonio Perez
+
