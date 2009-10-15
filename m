@@ -1,141 +1,90 @@
-From: Zdenek Behan <rain@matfyz.cz>
-Subject: [mdadm PATCH] Introduce a commandline option for setting RebuildNN
- increment size
-Date: Thu, 15 Oct 2009 16:25:16 +0200
-Message-ID: <4AD730CC.2010701@matfyz.cz>
+From: aristizb@ualberta.ca
+Subject: Re: dirty chunks on bitmap not clearing (RAID1)
+Date: Thu, 15 Oct 2009 09:15:40 -0600
+Message-ID: <20091015091540.198453j0u7mwl9s8@webmail.ualberta.ca>
+References: <20091014163943.15177bety75a30g0@webmail.ualberta.ca>
+	<70ff6a9cafb264616612d53002d9bd63.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080705020009000408010301"
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <70ff6a9cafb264616612d53002d9bd63.squirrel@neil.brown.name>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------080705020009000408010301
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Hi Neil.
 
-Hi folks,
+I am using mdadm 2.6.3 and the kernel is Ubuntu 2.6.24-24.
 
 
-I have been facing a problem of making a simple cgi GUI for working with
-md raid, and reporting back the information. I ended up using the
-monitor mode event mechanism for various things including updating the
-rebuild percentage. Soon after, people started complaining that 20%
-increments in progress are rather silly.
+Quoting NeilBrown <neilb@suse.de>:
 
-I noticed long ago in the list the thought/request that those increments
-may be a bit smaller. So, here's a patch (attachment) to allow sending
-RebuildNN events at any percent increment, specified on mdadm commandline.
+> On Thu, October 15, 2009 9:39 am, aristizb@ualberta.ca wrote:
+>> Hello,
+>>
+>> I have a RAID1 with 2 LVM disks and I am running into a strange
+>> situation where having the 2 disks connected to the array the bitmap
+>> never clears the dirty chunks.
+>
+> That shouldn't happen...
+> What versions of mdadm and the Linux kernel are you using?
+>
+> NeilBrown
+>
+>>
+>> I am assuming also that when a RAID1 is in write-through mode, the
+>> bitmap  indicates that all the data has made it to all the disks if
+>> there are no dirty chunks using mdadm --examine-bitmap.
+>>
+>> The output of cat /proc/mdstat is:
+>>
+>> md2060 : active raid1 dm-5[1] dm-6[0]
+>>        2252736 blocks [2/2] [UU]
+>>        bitmap: 1/275 pages [12KB], 4KB chunk, file: /tmp/md2060bm
+>>
+>>
+>> The output of mdadm --examine-bitmap /tmp/md2060bm is:
+>>
+>> Filename : md2060bm
+>>             Magic : 6d746962
+>>           Version : 4
+>>              UUID : ad5fb74c:bb1c654a:087b2595:8a5d04a9
+>>            Events : 12
+>>    Events Cleared : 12
+>>             State : OK
+>>         Chunksize : 4 KB
+>>            Daemon : 5s flush period
+>>        Write Mode : Normal
+>>         Sync Size : 2252736 (2.15 GiB 2.31 GB)
+>>            Bitmap : 563184 bits (chunks), 3 dirty (0.0%)
+>>
+>>
+>> Having the array under no IO, I waited 30 minutes but the dirty data
+>> never gets clear from the bitmap, so I presume  the disks are not in
+>> sync; but after I ran a block by block comparison of the two devices I
+>> found that they are equal.
+>>
+>> The superblocks and the external bitmap tell me that all the events
+>> are cleared, so I am confused on why the bitmap never goes to 0 dirty
+>> chunks.
+>>
+>> How can I tell if the disks are in sync?
+>>
+>>
+>> Thank you in advance for any help.
+>>
+>>
+>> --
+>> Juan Aristizabal
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+>
 
-Any comments? Is this a desirable feature? Anything I should change to
-make it acceptable?
-
-
-Regards,
-
-Zdenek Behan
-
---------------080705020009000408010301
-Content-Type: text/plain;
- name="git-rebuildincrement.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="git-rebuildincrement.patch"
-
-RnJvbSBkOTlhOTEyNWEwYjcxM2M5ZDBmMjM5MDMzMDg2MmQxNTUwMDIwNGE3IE1vbiBTZXAg
-MTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBaZGVuZWsgQmVoYW4gPHJhaW5AbWF0Znl6LmN6PgpE
-YXRlOiBXZWQsIDE0IE9jdCAyMDA5IDIyOjA2OjM5ICswMjAwClN1YmplY3Q6IFtQQVRDSF0g
-TW9uaXRvcjogYWRkIG9wdGlvbiB0byBzcGVjaWZ5IHJlYnVpbGQgaW5jcmVtZW50cywgaWUu
-IHRoZSBwZXJjZW50CiBpbmNyZW1lbnRzIGFmdGVyIHdoaWNoIFJlYnVpbGROTiBldmVudCBp
-cyBnZW5lcmF0ZWQKClRoaXMgaXMgcGFydGljdWxhcnkgdXNlZnVsIHdoZW4gdXNpbmcgLS1w
-cm9ncmFtIG9wdGlvbiwgcmF0aGVyIHRoYW4KKG9ubHkpIHN5c2xvZyBmb3IgYWxlcnRzLgoK
-U2lnbmVkLW9mZi1ieTogWmRlbmVrIEJlaGFuIDxyYWluQG1hdGZ5ei5jej4KLS0tCiBNb25p
-dG9yLmMgfCAgIDI2ICsrKysrKysrKysrKystLS0tLS0tLS0tLS0tCiBSZWFkTWUuYyAgfCAg
-ICAyICsrCiBtZGFkbS5jICAgfCAgIDEyICsrKysrKysrKystLQogbWRhZG0uaCAgIHwgICAg
-MiArLQogNCBmaWxlcyBjaGFuZ2VkLCAyNiBpbnNlcnRpb25zKCspLCAxNiBkZWxldGlvbnMo
-LSkKCmRpZmYgLS1naXQgYS9Nb25pdG9yLmMgYi9Nb25pdG9yLmMKaW5kZXggYWY0ODZkNy4u
-NjM0OTNiNyAxMDA2NDQKLS0tIGEvTW9uaXRvci5jCisrKyBiL01vbml0b3IuYwpAQCAtMzMs
-MTQgKzMzLDYgQEAKIHN0YXRpYyB2b2lkIGFsZXJ0KGNoYXIgKmV2ZW50LCBjaGFyICpkZXYs
-IGNoYXIgKmRpc2MsIGNoYXIgKm1haWxhZGRyLCBjaGFyICptYWlsZnJvbSwKIAkJICBjaGFy
-ICpjbWQsIGludCBkb3N5c2xvZyk7CiAKLXN0YXRpYyBjaGFyICpwZXJjZW50YWxlcnRzW10g
-PSB7Ci0JIlJlYnVpbGRTdGFydGVkIiwKLQkiUmVidWlsZDIwIiwKLQkiUmVidWlsZDQwIiwK
-LQkiUmVidWlsZDYwIiwKLQkiUmVidWlsZDgwIiwKLX07Ci0KIC8qIFRoZSBsYXJnZXN0IG51
-bWJlciBvZiBkaXNrcyBjdXJyZW50IGFycmF5cyBjYW4gbWFuYWdlIGlzIDM4NAogICogVGhp
-cyByZWFsbHkgc2hvdWxkIGJlIGR5bmFtaWNhbGx5LCBidXQgdGhhdCB3aWxsIGhhdmUgdG8g
-d2FpdAogICogQXQgbGVhc3QgaXQgaXNuJ3QgTURfU0JfRElTS1MuCkBAIC00OSw3ICs0MSw3
-IEBAIHN0YXRpYyBjaGFyICpwZXJjZW50YWxlcnRzW10gPSB7CiBpbnQgTW9uaXRvcihtZGRl
-dl9kZXZfdCBkZXZsaXN0LAogCSAgICBjaGFyICptYWlsYWRkciwgY2hhciAqYWxlcnRfY21k
-LAogCSAgICBpbnQgcGVyaW9kLCBpbnQgZGFlbW9uaXNlLCBpbnQgc2NhbiwgaW50IG9uZXNo
-b3QsCi0JICAgIGludCBkb3N5c2xvZywgaW50IHRlc3QsIGNoYXIqIHBpZGZpbGUpCisJICAg
-IGludCBkb3N5c2xvZywgaW50IHRlc3QsIGNoYXIqIHBpZGZpbGUsIGludCBpbmNyZW1lbnRz
-KQogewogCS8qCiAJICogRXZlcnkgZmV3IHNlY29uZHMsIHNjYW4gZXZlcnkgbWQgZGV2aWNl
-IGxvb2tpbmcgZm9yIGNoYW5nZXMKQEAgLTc3LDggKzY5LDggQEAgaW50IE1vbml0b3IobWRk
-ZXZfZGV2X3QgZGV2bGlzdCwKIAkgKiAgICAgIEFuIGFjdGl2ZSBkZXZpY2UgaGFkIGEgcmV2
-ZXJzZSB0cmFuc2l0aW9uCiAJICogICAgUmVidWlsZFN0YXJ0ZWQKIAkgKiAgICAgIHBlcmNl
-bnQgd2VudCBmcm9tIC0xIHRvICt2ZQotCSAqICAgIFJlYnVpbGQyMCBSZWJ1aWxkNDAgUmVi
-dWlsZDYwIFJlYnVpbGQ4MAotCSAqICAgICAgcGVyY2VudCB3ZW50IGZyb20gYmVsb3cgdG8g
-bm90LWJlbG93IHRoYXQgbnVtYmVyCisJICogICAgUmVidWlsZE5OCisJICogICAgICBwZXJj
-ZW50IHdlbnQgZnJvbSBiZWxvdyB0byBub3QtYmVsb3cgTk4lCiAJICogICAgRGV2aWNlRGlz
-YXBwZWFyZWQKIAkgKiAgICAgIENvdWxkbid0IGFjY2VzcyBhIGRldmljZSB3aGljaCB3YXMg
-cHJldmlvdXNseSB2aXNpYmxlCiAJICoKQEAgLTMxMSw5ICszMDMsMTcgQEAgaW50IE1vbml0
-b3IobWRkZXZfZGV2X3QgZGV2bGlzdCwKIAkJCWlmIChtc2UgJiYKIAkJCSAgICBzdC0+cGVy
-Y2VudCA+PSAwICYmCiAJCQkgICAgbXNlLT5wZXJjZW50ID49IDAgJiYKLQkJCSAgICAobXNl
-LT5wZXJjZW50IC8gMjApID4gKHN0LT5wZXJjZW50IC8gMjApKQotCQkJCWFsZXJ0KHBlcmNl
-bnRhbGVydHNbbXNlLT5wZXJjZW50LzIwXSwKKwkJCSAgICAobXNlLT5wZXJjZW50IC8gaW5j
-cmVtZW50cykgPiAoc3QtPnBlcmNlbnQgLyBpbmNyZW1lbnRzKSkgeworCQkJCWNoYXIgcGVy
-Y2VudGFsZXJ0WzE1XTsgLy8gIlJlYnVpbGROTiIgb3IgIlJlYnVpbGRTdGFydGVkIgorCisJ
-CQkJaWYoKG1zZS0+cGVyY2VudCAvIGluY3JlbWVudHMpID09IDApCisJCQkJCXNucHJpbnRm
-KHBlcmNlbnRhbGVydCwgMTUsICJSZWJ1aWxkU3RhcnRlZCIpOworCQkJCWVsc2UKKwkJCQkJ
-c25wcmludGYocGVyY2VudGFsZXJ0LCAxMSwgIlJlYnVpbGQlMDJkIiwgbXNlLT5wZXJjZW50
-KTsKKworCQkJCWFsZXJ0KHBlcmNlbnRhbGVydCwKIAkJCQkgICAgICBkZXYsIE5VTEwsIG1h
-aWxhZGRyLCBtYWlsZnJvbSwgYWxlcnRfY21kLCBkb3N5c2xvZyk7CisJCQl9CiAKIAkJCWlm
-IChtc2UgJiYKIAkJCSAgICBtc2UtPnBlcmNlbnQgPT0gLTEgJiYKZGlmZiAtLWdpdCBhL1Jl
-YWRNZS5jIGIvUmVhZE1lLmMKaW5kZXggOTBiNGRhZi4uM2U1M2U1NyAxMDA2NDQKLS0tIGEv
-UmVhZE1lLmMKKysrIGIvUmVhZE1lLmMKQEAgLTE3Niw2ICsxNzYsNyBAQCBzdHJ1Y3Qgb3B0
-aW9uIGxvbmdfb3B0aW9uc1tdID0gewogICAgIHsibWFpbCIsICAgICAgMSwgMCwgJ20nfSwK
-ICAgICB7InByb2dyYW0iLCAgIDEsIDAsICdwJ30sCiAgICAgeyJhbGVydCIsICAgICAxLCAw
-LCAncCd9LAorICAgIHsiaW5jcmVtZW50IiwgMSwgMCwgJ3InfSwKICAgICB7ImRlbGF5Iiwg
-ICAgIDEsIDAsICdkJ30sCiAgICAgeyJkYWVtb25pc2UiLCAwLCAwLCAnZid9LAogICAgIHsi
-ZGFlbW9uaXplIiwgMCwgMCwgJ2YnfSwKQEAgLTQ5NSw2ICs0OTYsNyBAQCBjaGFyIEhlbHBf
-bW9uaXRvcltdID0KICIgIC0tbWFpbD0gICAgICAgLW0gICA6IEFkZHJlc3MgdG8gbWFpbCBh
-bGVydHMgb2YgZmFpbHVyZSB0b1xuIgogIiAgLS1wcm9ncmFtPSAgICAtcCAgIDogUHJvZ3Jh
-bSB0byBydW4gd2hlbiBhbiBldmVudCBpcyBkZXRlY3RlZFxuIgogIiAgLS1hbGVydD0gICAg
-ICAgICAgIDogc2FtZSBhcyAtLXByb2dyYW1cbiIKKyIgIC0taW5jcmVtZW50PSAgLXIgICA6
-IFJlcG9ydCBSZWJ1aWxkTk4gZXZlbnRzIGluIHRoZSBnaXZlbiBpbmNyZW1lbnQuIGRlZmF1
-bHQ9MjBcbiIKICIgIC0tZGVsYXk9ICAgICAgLWQgICA6IHNlY29uZHMgb2YgZGVsYXkgYmV0
-d2VlbiBwb2xsaW5nIHN0YXRlLiBkZWZhdWx0PTYwXG4iCiAiICAtLWNvbmZpZz0gICAgIC1j
-ICAgOiBzcGVjaWZ5IGEgZGlmZmVyZW50IGNvbmZpZyBmaWxlXG4iCiAiICAtLXNjYW4gICAg
-ICAgIC1zICAgOiBmaW5kIG1haWwtYWRkcmVzcy9wcm9ncmFtIGluIGNvbmZpZyBmaWxlXG4i
-CmRpZmYgLS1naXQgYS9tZGFkbS5jIGIvbWRhZG0uYwppbmRleCBiYjNlNWJiLi5hN2M1Nzlj
-IDEwMDY0NAotLS0gYS9tZGFkbS5jCisrKyBiL21kYWRtLmMKQEAgLTg5LDYgKzg5LDcgQEAg
-aW50IG1haW4oaW50IGFyZ2MsIGNoYXIgKmFyZ3ZbXSkKIAlpbnQgcmVxdWlyZV9ob21laG9z
-dCA9IDE7CiAJY2hhciAqbWFpbGFkZHIgPSBOVUxMOwogCWNoYXIgKnByb2dyYW0gPSBOVUxM
-OworCWludCBpbmNyZW1lbnRzID0gMjA7CiAJaW50IGRlbGF5ID0gMDsKIAlpbnQgZGFlbW9u
-aXNlID0gMDsKIAljaGFyICpwaWRmaWxlID0gTlVMTDsKQEAgLTY5Nyw3ICs2OTgsMTQgQEAg
-aW50IG1haW4oaW50IGFyZ2MsIGNoYXIgKmFyZ3ZbXSkKIAkJCWVsc2UKIAkJCQlwcm9ncmFt
-ID0gb3B0YXJnOwogCQkJY29udGludWU7Ci0KKwkJY2FzZSBPKE1PTklUT1IsJ3InKTogLyog
-cmVidWlsZCBpbmNyZW1lbnRzICovCisJCQlpbmNyZW1lbnRzID0gYXRvaShvcHRhcmcpOwor
-CQkJaWYgKGluY3JlbWVudHM+OTkgfHwgaW5jcmVtZW50czwxKQorCQkJeworCQkJCWZwcmlu
-dGYoc3RkZXJyLCBOYW1lICI6IHBsZWFzZSBzcGVjaWZ5IHBvc2l0aXZlIGludGVnZXIgYmV0
-d2VlbiAxIGFuZCA5OSBhcyByZWJ1aWxkIGluY3JlbWVudHMuXG4iKTsKKwkJCQlleGl0KDIp
-OworCQkJfQorCQkJY29udGludWU7CQogCQljYXNlIE8oTU9OSVRPUiwnZCcpOiAvKiBkZWxh
-eSBpbiBzZWNvbmRzICovCiAJCWNhc2UgTyhHUk9XLCAnZCcpOgogCQljYXNlIE8oQlVJTEQs
-J2QnKTogLyogZGVsYXkgZm9yIGJpdG1hcCB1cGRhdGVzICovCkBAIC0xMzc3LDcgKzEzODUs
-NyBAQCBpbnQgbWFpbihpbnQgYXJnYywgY2hhciAqYXJndltdKQogCQl9CiAJCXJ2PSBNb25p
-dG9yKGRldmxpc3QsIG1haWxhZGRyLCBwcm9ncmFtLAogCQkJICAgIGRlbGF5P2RlbGF5OjYw
-LCBkYWVtb25pc2UsIHNjYW4sIG9uZXNob3QsCi0JCQkgICAgZG9zeXNsb2csIHRlc3QsIHBp
-ZGZpbGUpOworCQkJICAgIGRvc3lzbG9nLCB0ZXN0LCBwaWRmaWxlLCBpbmNyZW1lbnRzKTsK
-IAkJYnJlYWs7CiAKIAljYXNlIEdST1c6CmRpZmYgLS1naXQgYS9tZGFkbS5oIGIvbWRhZG0u
-aAppbmRleCA5MWJhNjI0Li5kYzdlYmU2IDEwMDY0NAotLS0gYS9tZGFkbS5oCisrKyBiL21k
-YWRtLmgKQEAgLTc0NCw3ICs3NDQsNyBAQCBleHRlcm4gaW50IEV4YW1pbmUobWRkZXZfZGV2
-X3QgZGV2bGlzdCwgaW50IGJyaWVmLCBpbnQgZXhwb3J0LCBpbnQgc2NhbiwKIGV4dGVybiBp
-bnQgTW9uaXRvcihtZGRldl9kZXZfdCBkZXZsaXN0LAogCQkgICBjaGFyICptYWlsYWRkciwg
-Y2hhciAqYWxlcnRfY21kLAogCQkgICBpbnQgcGVyaW9kLCBpbnQgZGFlbW9uaXNlLCBpbnQg
-c2NhbiwgaW50IG9uZXNob3QsCi0JCSAgIGludCBkb3N5c2xvZywgaW50IHRlc3QsIGNoYXIg
-KnBpZGZpbGUpOworCQkgICBpbnQgZG9zeXNsb2csIGludCB0ZXN0LCBjaGFyICpwaWRmaWxl
-LCBpbnQgaW5jcmVtZW50cyk7CiAKIGV4dGVybiBpbnQgS2lsbChjaGFyICpkZXYsIGludCBm
-b3JjZSwgaW50IHF1aWV0LCBpbnQgbm9leGNsKTsKIGV4dGVybiBpbnQgV2FpdChjaGFyICpk
-ZXYpOwotLSAKMS42LjAuNgoK
---------------080705020009000408010301--
