@@ -1,152 +1,70 @@
-From: Zdenek Behan <rain@matfyz.cz>
-Subject: Re: [mdadm PATCH] Introduce a commandline option for setting RebuildNN
- increment size
-Date: Fri, 16 Oct 2009 02:58:58 +0200
-Message-ID: <4AD7C552.1070806@matfyz.cz>
-References: <4AD730CC.2010701@matfyz.cz>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v0 1/2] DMA: fsldma: Disable DMA_INTERRUPT when Async_tx
+	enabled
+Date: Thu, 15 Oct 2009 18:25:14 -0700
+Message-ID: <e9c3a7c20910151825o67cd2712id91aead70f84987c@mail.gmail.com>
+References: <1255588866-4133-1-git-send-email-Vishnu@freescale.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000001010503080303040606"
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AD730CC.2010701@matfyz.cz>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1255588866-4133-1-git-send-email-Vishnu@freescale.com>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+To: Vishnu Suresh <Vishnu@freescale.com>
+Cc: herbert@gondor.apana.org.au, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-crypto@vger.kernel.org, Timur Tabi <timur@freescale.com>
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------000001010503080303040606
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+[ added Leo and Timur to the Cc ]
 
-Updated patch with Neil's comments.
+On Wed, Oct 14, 2009 at 11:41 PM, Vishnu Suresh <Vishnu@freescale.com> wrot=
+e:
+> This patch disables the use of DMA_INTERRUPT capability with Async_tx
+>
+> The fsldma produces a null transfer with DMA_INTERRUPT
+> capability when used with Async_tx. When RAID devices queue
+> a transaction via Async_tx, this =A0results in a hang.
+>
+> Signed-off-by: Vishnu Suresh <Vishnu@freescale.com>
+> ---
+> =A0drivers/dma/fsldma.c | =A0 =A06 ++++++
+> =A01 files changed, 6 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/dma/fsldma.c b/drivers/dma/fsldma.c
+> index 296f9e7..66d9b39 100644
+> --- a/drivers/dma/fsldma.c
+> +++ b/drivers/dma/fsldma.c
+> @@ -1200,7 +1200,13 @@ static int __devinit of_fsl_dma_probe(struct of_de=
+vice *dev,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0 =A0 =A0 =A0- fdev->reg.start + 1);
+>
+> =A0 =A0 =A0 =A0dma_cap_set(DMA_MEMCPY, fdev->common.cap_mask);
+> +#ifndef CONFIG_ASYNC_CORE
+> + =A0 =A0 =A0 /*
+> + =A0 =A0 =A0 =A0* The DMA_INTERRUPT async_tx is a NULL transfer, which w=
+ill
+> + =A0 =A0 =A0 =A0* triger a PE interrupt.
+> + =A0 =A0 =A0 =A0*/
+> =A0 =A0 =A0 =A0dma_cap_set(DMA_INTERRUPT, fdev->common.cap_mask);
+> +#endif
+> =A0 =A0 =A0 =A0dma_cap_set(DMA_SLAVE, fdev->common.cap_mask);
+> =A0 =A0 =A0 =A0fdev->common.device_alloc_chan_resources =3D fsl_dma_alloc=
+_chan_resources;
+> =A0 =A0 =A0 =A0fdev->common.device_free_chan_resources =3D fsl_dma_free_c=
+han_resources;
 
-1) I tried my best at making man page entry/corrections.
-2) I slightly disagree about second argument of snprintf having to be
-buffer size, not expected string length. But it's not a big deal, and I
-changed it to sizeof(...).
-3) Fixed whitespace I broke.
+You are basically saying that fsl_dma_prep_interrupt() is buggy.  Can
+that routine be fixed rather than this piecemeal solution?  If it
+cannot be fixed (i.e. hardware issue) then fsl_dma_prep_interrupt()
+should just be disabled/deleted altogether.
 
-I also noticed and fixed one opening brace where I originally broke
-local formatting convention.
-
-
-Regards,
-
-Zdenek
-
---------------000001010503080303040606
-Content-Type: text/plain;
- name="git-rebuildincrement2.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="git-rebuildincrement2.patch"
-
-RnJvbSBkOTlhOTEyNWEwYjcxM2M5ZDBmMjM5MDMzMDg2MmQxNTUwMDIwNGE3IE1vbiBTZXAg
-MTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBaZGVuZWsgQmVoYW4gPHJhaW5AbWF0Znl6LmN6PgpE
-YXRlOiBXZWQsIDE0IE9jdCAyMDA5IDIyOjA2OjM5ICswMjAwClN1YmplY3Q6IFtQQVRDSF0g
-TW9uaXRvcjogYWRkIG9wdGlvbiB0byBzcGVjaWZ5IHJlYnVpbGQgaW5jcmVtZW50cywgaWUu
-IHRoZSBwZXJjZW50CiBpbmNyZW1lbnRzIGFmdGVyIHdoaWNoIFJlYnVpbGROTiBldmVudCBp
-cyBnZW5lcmF0ZWQKClRoaXMgaXMgcGFydGljdWxhcnkgdXNlZnVsIHdoZW4gdXNpbmcgLS1w
-cm9ncmFtIG9wdGlvbiwgcmF0aGVyIHRoYW4KKG9ubHkpIHN5c2xvZyBmb3IgYWxlcnRzLgoK
-U2lnbmVkLW9mZi1ieTogWmRlbmVrIEJlaGFuIDxyYWluQG1hdGZ5ei5jej4KLS0tCmRpZmYg
-LS1naXQgYS9Nb25pdG9yLmMgYi9Nb25pdG9yLmMKaW5kZXggYWY0ODZkNy4uYjA4MDJmOCAx
-MDA2NDQKLS0tIGEvTW9uaXRvci5jCisrKyBiL01vbml0b3IuYwpAQCAtMzMsMTQgKzMzLDYg
-QEAKIHN0YXRpYyB2b2lkIGFsZXJ0KGNoYXIgKmV2ZW50LCBjaGFyICpkZXYsIGNoYXIgKmRp
-c2MsIGNoYXIgKm1haWxhZGRyLCBjaGFyICptYWlsZnJvbSwKIAkJICBjaGFyICpjbWQsIGlu
-dCBkb3N5c2xvZyk7CiAKLXN0YXRpYyBjaGFyICpwZXJjZW50YWxlcnRzW10gPSB7Ci0JIlJl
-YnVpbGRTdGFydGVkIiwKLQkiUmVidWlsZDIwIiwKLQkiUmVidWlsZDQwIiwKLQkiUmVidWls
-ZDYwIiwKLQkiUmVidWlsZDgwIiwKLX07Ci0KIC8qIFRoZSBsYXJnZXN0IG51bWJlciBvZiBk
-aXNrcyBjdXJyZW50IGFycmF5cyBjYW4gbWFuYWdlIGlzIDM4NAogICogVGhpcyByZWFsbHkg
-c2hvdWxkIGJlIGR5bmFtaWNhbGx5LCBidXQgdGhhdCB3aWxsIGhhdmUgdG8gd2FpdAogICog
-QXQgbGVhc3QgaXQgaXNuJ3QgTURfU0JfRElTS1MuCkBAIC00OSw3ICs0MSw3IEBAIHN0YXRp
-YyBjaGFyICpwZXJjZW50YWxlcnRzW10gPSB7CiBpbnQgTW9uaXRvcihtZGRldl9kZXZfdCBk
-ZXZsaXN0LAogCSAgICBjaGFyICptYWlsYWRkciwgY2hhciAqYWxlcnRfY21kLAogCSAgICBp
-bnQgcGVyaW9kLCBpbnQgZGFlbW9uaXNlLCBpbnQgc2NhbiwgaW50IG9uZXNob3QsCi0JICAg
-IGludCBkb3N5c2xvZywgaW50IHRlc3QsIGNoYXIqIHBpZGZpbGUpCisJICAgIGludCBkb3N5
-c2xvZywgaW50IHRlc3QsIGNoYXIqIHBpZGZpbGUsIGludCBpbmNyZW1lbnRzKQogewogCS8q
-CiAJICogRXZlcnkgZmV3IHNlY29uZHMsIHNjYW4gZXZlcnkgbWQgZGV2aWNlIGxvb2tpbmcg
-Zm9yIGNoYW5nZXMKQEAgLTc3LDggKzY5LDggQEAgaW50IE1vbml0b3IobWRkZXZfZGV2X3Qg
-ZGV2bGlzdCwKIAkgKiAgICAgIEFuIGFjdGl2ZSBkZXZpY2UgaGFkIGEgcmV2ZXJzZSB0cmFu
-c2l0aW9uCiAJICogICAgUmVidWlsZFN0YXJ0ZWQKIAkgKiAgICAgIHBlcmNlbnQgd2VudCBm
-cm9tIC0xIHRvICt2ZQotCSAqICAgIFJlYnVpbGQyMCBSZWJ1aWxkNDAgUmVidWlsZDYwIFJl
-YnVpbGQ4MAotCSAqICAgICAgcGVyY2VudCB3ZW50IGZyb20gYmVsb3cgdG8gbm90LWJlbG93
-IHRoYXQgbnVtYmVyCisJICogICAgUmVidWlsZE5OCisJICogICAgICBwZXJjZW50IHdlbnQg
-ZnJvbSBiZWxvdyB0byBub3QtYmVsb3cgTk4lCiAJICogICAgRGV2aWNlRGlzYXBwZWFyZWQK
-IAkgKiAgICAgIENvdWxkbid0IGFjY2VzcyBhIGRldmljZSB3aGljaCB3YXMgcHJldmlvdXNs
-eSB2aXNpYmxlCiAJICoKQEAgLTMxMSw5ICszMDMsMTcgQEAgaW50IE1vbml0b3IobWRkZXZf
-ZGV2X3QgZGV2bGlzdCwKIAkJCWlmIChtc2UgJiYKIAkJCSAgICBzdC0+cGVyY2VudCA+PSAw
-ICYmCiAJCQkgICAgbXNlLT5wZXJjZW50ID49IDAgJiYKLQkJCSAgICAobXNlLT5wZXJjZW50
-IC8gMjApID4gKHN0LT5wZXJjZW50IC8gMjApKQotCQkJCWFsZXJ0KHBlcmNlbnRhbGVydHNb
-bXNlLT5wZXJjZW50LzIwXSwKKwkJCSAgICAobXNlLT5wZXJjZW50IC8gaW5jcmVtZW50cykg
-PiAoc3QtPnBlcmNlbnQgLyBpbmNyZW1lbnRzKSkgeworCQkJCWNoYXIgcGVyY2VudGFsZXJ0
-WzE1XTsgLy8gIlJlYnVpbGROTiIgKDEwIGNoYXJzKSBvciAiUmVidWlsZFN0YXJ0ZWQiICgx
-NSBjaGFycykKKworCQkJCWlmKChtc2UtPnBlcmNlbnQgLyBpbmNyZW1lbnRzKSA9PSAwKQor
-CQkJCQlzbnByaW50ZihwZXJjZW50YWxlcnQsIHNpemVvZihwZXJjZW50YWxlcnQpLCAiUmVi
-dWlsZFN0YXJ0ZWQiKTsKKwkJCQllbHNlCisJCQkJCXNucHJpbnRmKHBlcmNlbnRhbGVydCwg
-c2l6ZW9mKHBlcmNlbnRhbGVydCksICJSZWJ1aWxkJTAyZCIsIG1zZS0+cGVyY2VudCk7CisK
-KwkJCQlhbGVydChwZXJjZW50YWxlcnQsCiAJCQkJICAgICAgZGV2LCBOVUxMLCBtYWlsYWRk
-ciwgbWFpbGZyb20sIGFsZXJ0X2NtZCwgZG9zeXNsb2cpOworCQkJfQogCiAJCQlpZiAobXNl
-ICYmCiAJCQkgICAgbXNlLT5wZXJjZW50ID09IC0xICYmCmRpZmYgLS1naXQgYS9SZWFkTWUu
-YyBiL1JlYWRNZS5jCmluZGV4IDkwYjRkYWYuLjNlNTNlNTcgMTAwNjQ0Ci0tLSBhL1JlYWRN
-ZS5jCisrKyBiL1JlYWRNZS5jCkBAIC0xNzYsNiArMTc2LDcgQEAgc3RydWN0IG9wdGlvbiBs
-b25nX29wdGlvbnNbXSA9IHsKICAgICB7Im1haWwiLCAgICAgIDEsIDAsICdtJ30sCiAgICAg
-eyJwcm9ncmFtIiwgICAxLCAwLCAncCd9LAogICAgIHsiYWxlcnQiLCAgICAgMSwgMCwgJ3An
-fSwKKyAgICB7ImluY3JlbWVudCIsIDEsIDAsICdyJ30sCiAgICAgeyJkZWxheSIsICAgICAx
-LCAwLCAnZCd9LAogICAgIHsiZGFlbW9uaXNlIiwgMCwgMCwgJ2YnfSwKICAgICB7ImRhZW1v
-bml6ZSIsIDAsIDAsICdmJ30sCkBAIC00OTUsNiArNDk2LDcgQEAgY2hhciBIZWxwX21vbml0
-b3JbXSA9CiAiICAtLW1haWw9ICAgICAgIC1tICAgOiBBZGRyZXNzIHRvIG1haWwgYWxlcnRz
-IG9mIGZhaWx1cmUgdG9cbiIKICIgIC0tcHJvZ3JhbT0gICAgLXAgICA6IFByb2dyYW0gdG8g
-cnVuIHdoZW4gYW4gZXZlbnQgaXMgZGV0ZWN0ZWRcbiIKICIgIC0tYWxlcnQ9ICAgICAgICAg
-ICA6IHNhbWUgYXMgLS1wcm9ncmFtXG4iCisiICAtLWluY3JlbWVudD0gIC1yICAgOiBSZXBv
-cnQgUmVidWlsZE5OIGV2ZW50cyBpbiB0aGUgZ2l2ZW4gaW5jcmVtZW50LiBkZWZhdWx0PTIw
-XG4iCiAiICAtLWRlbGF5PSAgICAgIC1kICAgOiBzZWNvbmRzIG9mIGRlbGF5IGJldHdlZW4g
-cG9sbGluZyBzdGF0ZS4gZGVmYXVsdD02MFxuIgogIiAgLS1jb25maWc9ICAgICAtYyAgIDog
-c3BlY2lmeSBhIGRpZmZlcmVudCBjb25maWcgZmlsZVxuIgogIiAgLS1zY2FuICAgICAgICAt
-cyAgIDogZmluZCBtYWlsLWFkZHJlc3MvcHJvZ3JhbSBpbiBjb25maWcgZmlsZVxuIgpkaWZm
-IC0tZ2l0IGEvbWRhZG0uOCBiL21kYWRtLjgKaW5kZXggN2YxOTkxOC4uNTVjYTNiYyAxMDA2
-NDQKLS0tIGEvbWRhZG0uOAorKysgYi9tZGFkbS44CkBAIC0xMjIxLDYgKzEyMjEsMTIgQEAg
-cmVkdWNlIHRoaXMgYXMgdGhlIGtlcm5lbCBhbGVydHMKIGltbWVkaWF0ZWx5IHdoZW4gdGhl
-cmUgaXMgYW55IGNoYW5nZS4KIAogLlRQCisuQlIgXC1yICIsICIgXC1cLWluY3JlbWVudAor
-R2l2ZSBhIHBlcmNlbnRhZ2UgaW5jcmVtZW50LgorLkkgbWRhZG0KK3dpbGwgZ2VuZXJhdGUg
-UmVidWlsZE5OIGV2ZW50cyB3aXRoIHRoZSBnaXZlbiBwZXJjZW50YWdlIGluY3JlbWVudC4K
-KworLlRQCiAuQlIgXC1mICIsICIgXC1cLWRhZW1vbmlzZQogVGVsbAogLkkgbWRhZG0KQEAg
-LTE4MTgsOCArMTgyNCwxMCBAQCBBbiBtZCBhcnJheSBzdGFydGVkIHJlY29uc3RydWN0aW9u
-LiAoc3lzbG9nIHByaW9yaXR5OiBXYXJuaW5nKQogLkJJIFJlYnVpbGQgTk4KIFdoZXJlCiAu
-SSBOTgotaXMgMjAsIDQwLCA2MCwgb3IgODAsIHRoaXMgaW5kaWNhdGVzIHRoYXQgcmVidWls
-ZCBoYXMgcGFzc2VkIHRoYXQgbWFueQotcGVyY2VudGFnZSBvZiB0aGUgdG90YWwuIChzeXNs
-b2cgcHJpb3JpdHk6IFdhcm5pbmcpCitpcyBhIHR3by1kaWdpdCBudW1iZXIgKGllLiAwNSwg
-NDgpLiBUaGlzIGluZGljYXRlcyB0aGF0IHJlYnVpbGQKK2hhcyBwYXNzZWQgdGhhdCBtYW55
-IHBlcmNlbnQgb2YgdGhlIHRvdGFsLiBUaGUgZXZlbnRzIGFyZSBnZW5lcmF0ZWQKK3dpdGgg
-Zml4ZWQgaW5jcmVtZW50IHNpbmNlIDAuIEluY3JlbWVudCBzaXplIG1heSBiZSBzcGVjaWZp
-ZWQgd2l0aAorYSBjb21tYW5kbGluZSBvcHRpb24uIChzeXNsb2cgcHJpb3JpdHk6IFdhcm5p
-bmcpCiAKIC5UUAogLkIgUmVidWlsZEZpbmlzaGVkCmRpZmYgLS1naXQgYS9tZGFkbS5jIGIv
-bWRhZG0uYwppbmRleCBiYjNlNWJiLi5jMWYxZmQ3IDEwMDY0NAotLS0gYS9tZGFkbS5jCisr
-KyBiL21kYWRtLmMKQEAgLTg5LDYgKzg5LDcgQEAgaW50IG1haW4oaW50IGFyZ2MsIGNoYXIg
-KmFyZ3ZbXSkKIAlpbnQgcmVxdWlyZV9ob21laG9zdCA9IDE7CiAJY2hhciAqbWFpbGFkZHIg
-PSBOVUxMOwogCWNoYXIgKnByb2dyYW0gPSBOVUxMOworCWludCBpbmNyZW1lbnRzID0gMjA7
-CiAJaW50IGRlbGF5ID0gMDsKIAlpbnQgZGFlbW9uaXNlID0gMDsKIAljaGFyICpwaWRmaWxl
-ID0gTlVMTDsKQEAgLTY5OCw2ICs2OTksMTQgQEAgaW50IG1haW4oaW50IGFyZ2MsIGNoYXIg
-KmFyZ3ZbXSkKIAkJCQlwcm9ncmFtID0gb3B0YXJnOwogCQkJY29udGludWU7CiAKKwkJY2Fz
-ZSBPKE1PTklUT1IsJ3InKTogLyogcmVidWlsZCBpbmNyZW1lbnRzICovCisJCQlpbmNyZW1l
-bnRzID0gYXRvaShvcHRhcmcpOworCQkJaWYgKGluY3JlbWVudHM+OTkgfHwgaW5jcmVtZW50
-czwxKSB7CisJCQkJZnByaW50ZihzdGRlcnIsIE5hbWUgIjogcGxlYXNlIHNwZWNpZnkgcG9z
-aXRpdmUgaW50ZWdlciBiZXR3ZWVuIDEgYW5kIDk5IGFzIHJlYnVpbGQgaW5jcmVtZW50cy5c
-biIpOworCQkJCWV4aXQoMik7CisJCQl9CisJCQljb250aW51ZTsKKwogCQljYXNlIE8oTU9O
-SVRPUiwnZCcpOiAvKiBkZWxheSBpbiBzZWNvbmRzICovCiAJCWNhc2UgTyhHUk9XLCAnZCcp
-OgogCQljYXNlIE8oQlVJTEQsJ2QnKTogLyogZGVsYXkgZm9yIGJpdG1hcCB1cGRhdGVzICov
-CkBAIC0xMzc3LDcgKzEzODYsNyBAQCBpbnQgbWFpbihpbnQgYXJnYywgY2hhciAqYXJndltd
-KQogCQl9CiAJCXJ2PSBNb25pdG9yKGRldmxpc3QsIG1haWxhZGRyLCBwcm9ncmFtLAogCQkJ
-ICAgIGRlbGF5P2RlbGF5OjYwLCBkYWVtb25pc2UsIHNjYW4sIG9uZXNob3QsCi0JCQkgICAg
-ZG9zeXNsb2csIHRlc3QsIHBpZGZpbGUpOworCQkJICAgIGRvc3lzbG9nLCB0ZXN0LCBwaWRm
-aWxlLCBpbmNyZW1lbnRzKTsKIAkJYnJlYWs7CiAKIAljYXNlIEdST1c6CmRpZmYgLS1naXQg
-YS9tZGFkbS5oIGIvbWRhZG0uaAppbmRleCA5MWJhNjI0Li5kYzdlYmU2IDEwMDY0NAotLS0g
-YS9tZGFkbS5oCisrKyBiL21kYWRtLmgKQEAgLTc0NCw3ICs3NDQsNyBAQCBleHRlcm4gaW50
-IEV4YW1pbmUobWRkZXZfZGV2X3QgZGV2bGlzdCwgaW50IGJyaWVmLCBpbnQgZXhwb3J0LCBp
-bnQgc2NhbiwKIGV4dGVybiBpbnQgTW9uaXRvcihtZGRldl9kZXZfdCBkZXZsaXN0LAogCQkg
-ICBjaGFyICptYWlsYWRkciwgY2hhciAqYWxlcnRfY21kLAogCQkgICBpbnQgcGVyaW9kLCBp
-bnQgZGFlbW9uaXNlLCBpbnQgc2NhbiwgaW50IG9uZXNob3QsCi0JCSAgIGludCBkb3N5c2xv
-ZywgaW50IHRlc3QsIGNoYXIgKnBpZGZpbGUpOworCQkgICBpbnQgZG9zeXNsb2csIGludCB0
-ZXN0LCBjaGFyICpwaWRmaWxlLCBpbnQgaW5jcmVtZW50cyk7CiAKIGV4dGVybiBpbnQgS2ls
-bChjaGFyICpkZXYsIGludCBmb3JjZSwgaW50IHF1aWV0LCBpbnQgbm9leGNsKTsKIGV4dGVy
-biBpbnQgV2FpdChjaGFyICpkZXYpOwo=
---------------000001010503080303040606--
+--
+Dan
