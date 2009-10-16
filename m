@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 10/11] md/async: don't pass a memory pointer as a page
-	pointer.
+Subject: [md PATCH 09/11] md: Fix handling of raid5 array which is being
+	reshaped to fewer devices.
 Date: Fri, 16 Oct 2009 16:49:19 +1100
-Message-ID: <20091016054919.24208.89478.stgit@notabene.brown>
+Message-ID: <20091016054919.24208.1181.stgit@notabene.brown>
 References: <20091016054316.24208.33818.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -11,156 +11,172 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20091016054316.24208.33818.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-md/raid6 passes a list of 'struct page *' to the async_tx routines,
-which then either DMA map them for offload, or take the page_address
-for CPU based calculations.
+When a raid5 (or raid6) array is being reshaped to have fewer devices,
+conf->raid_disks is the latter and hence smaller number of devices.
+However sometimes we want to use a number which is the total number of
+currently required devices - the larger of the 'old' and 'new' sizes.
+Before we implemented reducing the number of devices, this was always
+'new' i.e. ->raid_disks.
+Now we need max(raid_disks, previous_raid_disks) in those places.
 
-For RAID6 we sometime leave 'blanks' in the list of pages.
-For CPU based calcs, we want to treat theses as a page of zeros.
-For offloaded calculations, we simply don't pass a page to the
-hardware.
+This particularly affects assembling an array that was shutdown while
+in the middle of a reshape to fewer devices.
 
-Currently the 'blanks' are encoded as a pointer to
-raid6_empty_zero_page.  This is a 4096 byte memory region, not a
-'struct page'.  This is mostly handled correctly but is rather ugly.
-
-So change the code to pass and expect a NULL pointer for the blanks.
-When taking page_address of a page, we need to check for a NULL and
-in that case use raid6_empty_zero_page.
+md.c needs a similar fix when interpreting the md metadata.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- crypto/async_tx/async_pq.c          |   15 ++++-----------
- crypto/async_tx/async_raid6_recov.c |   16 +++++++++++-----
- drivers/md/raid5.c                  |    4 ++--
- 3 files changed, 17 insertions(+), 18 deletions(-)
+ drivers/md/md.c    |    2 +-
+ drivers/md/raid5.c |   37 ++++++++++++++++++-------------------
+ 2 files changed, 19 insertions(+), 20 deletions(-)
 
-diff --git a/crypto/async_tx/async_pq.c b/crypto/async_tx/async_pq.c
-index b88db6d..9ab1ce4 100644
---- a/crypto/async_tx/async_pq.c
-+++ b/crypto/async_tx/async_pq.c
-@@ -30,11 +30,6 @@
-  */
- static struct page *scribble;
- 
--static bool is_raid6_zero_block(struct page *p)
--{
--	return p == (void *) raid6_empty_zero_page;
--}
--
- /* the struct page *blocks[] parameter passed to async_gen_syndrome()
-  * and async_syndrome_val() contains the 'P' destination address at
-  * blocks[disks-2] and the 'Q' destination address at blocks[disks-1]
-@@ -83,7 +78,7 @@ do_async_gen_syndrome(struct dma_chan *chan, struct page **blocks,
- 	 * sources and update the coefficients accordingly
- 	 */
- 	for (i = 0, idx = 0; i < src_cnt; i++) {
--		if (is_raid6_zero_block(blocks[i]))
-+		if (blocks[i] == NULL)
- 			continue;
- 		dma_src[idx] = dma_map_page(dma->dev, blocks[i], offset, len,
- 					    DMA_TO_DEVICE);
-@@ -160,9 +155,9 @@ do_sync_gen_syndrome(struct page **blocks, unsigned int offset, int disks,
- 		srcs = (void **) blocks;
- 
- 	for (i = 0; i < disks; i++) {
--		if (is_raid6_zero_block(blocks[i])) {
-+		if (blocks[i] == NULL) {
- 			BUG_ON(i > disks - 3); /* P or Q can't be zero */
--			srcs[i] = blocks[i];
-+			srcs[i] = (void*)raid6_empty_zero_page;
- 		} else
- 			srcs[i] = page_address(blocks[i]) + offset;
- 	}
-@@ -290,12 +285,10 @@ async_syndrome_val(struct page **blocks, unsigned int offset, int disks,
- 		if (submit->flags & ASYNC_TX_FENCE)
- 			dma_flags |= DMA_PREP_FENCE;
- 		for (i = 0; i < disks; i++)
--			if (likely(blocks[i])) {
--				BUG_ON(is_raid6_zero_block(blocks[i]));
-+			if (likely(blocks[i]))
- 				dma_src[i] = dma_map_page(dev, blocks[i],
- 							  offset, len,
- 							  DMA_TO_DEVICE);
--			}
- 
- 		for (;;) {
- 			tx = device->device_prep_dma_pq_val(chan, pq, dma_src,
-diff --git a/crypto/async_tx/async_raid6_recov.c b/crypto/async_tx/async_raid6_recov.c
-index 6d73dde..8e30b6e 100644
---- a/crypto/async_tx/async_raid6_recov.c
-+++ b/crypto/async_tx/async_raid6_recov.c
-@@ -263,10 +263,10 @@ __2data_recov_n(int disks, size_t bytes, int faila, int failb,
- 	 * delta p and delta q
- 	 */
- 	dp = blocks[faila];
--	blocks[faila] = (void *)raid6_empty_zero_page;
-+	blocks[faila] = NULL;
- 	blocks[disks-2] = dp;
- 	dq = blocks[failb];
--	blocks[failb] = (void *)raid6_empty_zero_page;
-+	blocks[failb] = NULL;
- 	blocks[disks-1] = dq;
- 
- 	init_async_submit(submit, ASYNC_TX_FENCE, tx, NULL, NULL, scribble);
-@@ -338,7 +338,10 @@ async_raid6_2data_recov(int disks, size_t bytes, int faila, int failb,
- 
- 		async_tx_quiesce(&submit->depend_tx);
- 		for (i = 0; i < disks; i++)
--			ptrs[i] = page_address(blocks[i]);
-+			if (blocks[i] == NULL)
-+				ptrs[i] = (void*)raid6_empty_zero_page;
-+			else
-+				ptrs[i] = page_address(blocks[i]);
- 
- 		raid6_2data_recov(disks, bytes, faila, failb, ptrs);
- 
-@@ -398,7 +401,10 @@ async_raid6_datap_recov(int disks, size_t bytes, int faila,
- 
- 		async_tx_quiesce(&submit->depend_tx);
- 		for (i = 0; i < disks; i++)
--			ptrs[i] = page_address(blocks[i]);
-+			if (blocks[i] == NULL)
-+				ptrs[i] = (void*)raid6_empty_zero_page;
-+			else
-+				ptrs[i] = page_address(blocks[i]);
- 
- 		raid6_datap_recov(disks, bytes, faila, ptrs);
- 
-@@ -414,7 +420,7 @@ async_raid6_datap_recov(int disks, size_t bytes, int faila,
- 	 * Use the dead data page as temporary storage for delta q
- 	 */
- 	dq = blocks[faila];
--	blocks[faila] = (void *)raid6_empty_zero_page;
-+	blocks[faila] = NULL;
- 	blocks[disks-1] = dq;
- 
- 	/* in the 4 disk case we only need to perform a single source
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 26ba42a..10eb1fc 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2631,7 +2631,7 @@ static void analyze_sbs(mddev_t * mddev)
+ 			rdev->desc_nr = i++;
+ 			rdev->raid_disk = rdev->desc_nr;
+ 			set_bit(In_sync, &rdev->flags);
+-		} else if (rdev->raid_disk >= mddev->raid_disks) {
++		} else if (rdev->raid_disk >= (mddev->raid_disks - min(0, mddev->delta_disks))) {
+ 			rdev->raid_disk = -1;
+ 			clear_bit(In_sync, &rdev->flags);
+ 		}
 diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index c4366c9..dcd9e65 100644
+index d4ce51b..c4366c9 100644
 --- a/drivers/md/raid5.c
 +++ b/drivers/md/raid5.c
-@@ -720,7 +720,7 @@ static int set_syndrome_sources(struct page **srcs, struct stripe_head *sh)
+@@ -1238,22 +1238,22 @@ static void raid_run_ops(struct stripe_head *sh, unsigned long ops_request)
+ static int grow_one_stripe(raid5_conf_t *conf)
+ {
+ 	struct stripe_head *sh;
++	int disks = max(conf->raid_disks, conf->previous_raid_disks);
+ 	sh = kmem_cache_alloc(conf->slab_cache, GFP_KERNEL);
+ 	if (!sh)
+ 		return 0;
+-	memset(sh, 0, sizeof(*sh) + (conf->raid_disks-1)*sizeof(struct r5dev));
++	memset(sh, 0, sizeof(*sh) + (disks-1)*sizeof(struct r5dev));
+ 	sh->raid_conf = conf;
+ 	spin_lock_init(&sh->lock);
+ 	#ifdef CONFIG_MULTICORE_RAID456
+ 	init_waitqueue_head(&sh->ops.wait_for_ops);
+ 	#endif
+ 
+-	if (grow_buffers(sh, conf->raid_disks)) {
+-		shrink_buffers(sh, conf->raid_disks);
++	if (grow_buffers(sh, disks)) {
++		shrink_buffers(sh, disks);
+ 		kmem_cache_free(conf->slab_cache, sh);
+ 		return 0;
+ 	}
+-	sh->disks = conf->raid_disks;
+ 	/* we just created an active stripe so... */
+ 	atomic_set(&sh->count, 1);
+ 	atomic_inc(&conf->active_stripes);
+@@ -1265,7 +1265,7 @@ static int grow_one_stripe(raid5_conf_t *conf)
+ static int grow_stripes(raid5_conf_t *conf, int num)
+ {
+ 	struct kmem_cache *sc;
+-	int devs = conf->raid_disks;
++	int devs = max(conf->raid_disks, conf->previous_raid_disks);
+ 
+ 	sprintf(conf->cache_name[0],
+ 		"raid%d-%s", conf->level, mdname(conf->mddev));
+@@ -3540,9 +3540,10 @@ static void unplug_slaves(mddev_t *mddev)
+ {
+ 	raid5_conf_t *conf = mddev->private;
  	int i;
++	int devs = max(conf->raid_disks, conf->previous_raid_disks);
  
- 	for (i = 0; i < disks; i++)
--		srcs[i] = (void *)raid6_empty_zero_page;
-+		srcs[i] = NULL;
+ 	rcu_read_lock();
+-	for (i = 0; i < conf->raid_disks; i++) {
++	for (i = 0; i < devs; i++) {
+ 		mdk_rdev_t *rdev = rcu_dereference(conf->disks[i].rdev);
+ 		if (rdev && !test_bit(Faulty, &rdev->flags) && atomic_read(&rdev->nr_pending)) {
+ 			struct request_queue *r_queue = bdev_get_queue(rdev->bdev);
+@@ -4562,13 +4563,9 @@ raid5_size(mddev_t *mddev, sector_t sectors, int raid_disks)
  
- 	count = 0;
- 	i = d0_idx;
-@@ -816,7 +816,7 @@ ops_run_compute6_2(struct stripe_head *sh, struct raid5_percpu *percpu)
- 	 * slot number conversion for 'faila' and 'failb'
- 	 */
- 	for (i = 0; i < disks ; i++)
--		blocks[i] = (void *)raid6_empty_zero_page;
-+		blocks[i] = NULL;
- 	count = 0;
- 	i = d0_idx;
- 	do {
+ 	if (!sectors)
+ 		sectors = mddev->dev_sectors;
+-	if (!raid_disks) {
++	if (!raid_disks)
+ 		/* size is defined by the smallest of previous and new size */
+-		if (conf->raid_disks < conf->previous_raid_disks)
+-			raid_disks = conf->raid_disks;
+-		else
+-			raid_disks = conf->previous_raid_disks;
+-	}
++		raid_disks = min(conf->raid_disks, conf->previous_raid_disks);
+ 
+ 	sectors &= ~((sector_t)mddev->chunk_sectors - 1);
+ 	sectors &= ~((sector_t)mddev->new_chunk_sectors - 1);
+@@ -4669,7 +4666,7 @@ static int raid5_alloc_percpu(raid5_conf_t *conf)
+ 			}
+ 			per_cpu_ptr(conf->percpu, cpu)->spare_page = spare_page;
+ 		}
+-		scribble = kmalloc(scribble_len(conf->raid_disks), GFP_KERNEL);
++		scribble = kmalloc(conf->scribble_len, GFP_KERNEL);
+ 		if (!scribble) {
+ 			err = -ENOMEM;
+ 			break;
+@@ -4690,7 +4687,7 @@ static int raid5_alloc_percpu(raid5_conf_t *conf)
+ static raid5_conf_t *setup_conf(mddev_t *mddev)
+ {
+ 	raid5_conf_t *conf;
+-	int raid_disk, memory;
++	int raid_disk, memory, max_disks;
+ 	mdk_rdev_t *rdev;
+ 	struct disk_info *disk;
+ 
+@@ -4740,13 +4737,14 @@ static raid5_conf_t *setup_conf(mddev_t *mddev)
+ 	conf->bypass_threshold = BYPASS_THRESHOLD;
+ 
+ 	conf->raid_disks = mddev->raid_disks;
+-	conf->scribble_len = scribble_len(conf->raid_disks);
+ 	if (mddev->reshape_position == MaxSector)
+ 		conf->previous_raid_disks = mddev->raid_disks;
+ 	else
+ 		conf->previous_raid_disks = mddev->raid_disks - mddev->delta_disks;
++	max_disks = max(conf->raid_disks, conf->previous_raid_disks);
++	conf->scribble_len = scribble_len(max_disks);
+ 
+-	conf->disks = kzalloc(conf->raid_disks * sizeof(struct disk_info),
++	conf->disks = kzalloc(max_disks * sizeof(struct disk_info),
+ 			      GFP_KERNEL);
+ 	if (!conf->disks)
+ 		goto abort;
+@@ -4764,7 +4762,7 @@ static raid5_conf_t *setup_conf(mddev_t *mddev)
+ 
+ 	list_for_each_entry(rdev, &mddev->disks, same_set) {
+ 		raid_disk = rdev->raid_disk;
+-		if (raid_disk >= conf->raid_disks
++		if (raid_disk >= max_disks
+ 		    || raid_disk < 0)
+ 			continue;
+ 		disk = conf->disks + raid_disk;
+@@ -4796,7 +4794,7 @@ static raid5_conf_t *setup_conf(mddev_t *mddev)
+ 	}
+ 
+ 	memory = conf->max_nr_stripes * (sizeof(struct stripe_head) +
+-		 conf->raid_disks * ((sizeof(struct bio) + PAGE_SIZE))) / 1024;
++		 max_disks * ((sizeof(struct bio) + PAGE_SIZE))) / 1024;
+ 	if (grow_stripes(conf, conf->max_nr_stripes)) {
+ 		printk(KERN_ERR
+ 			"raid5: couldn't allocate %dkB for buffers\n", memory);
+@@ -4921,7 +4919,8 @@ static int run(mddev_t *mddev)
+ 		    test_bit(In_sync, &rdev->flags))
+ 			working_disks++;
+ 
+-	mddev->degraded = conf->raid_disks - working_disks;
++	mddev->degraded = (max(conf->raid_disks, conf->previous_raid_disks)
++			   - working_disks);
+ 
+ 	if (mddev->degraded > conf->max_degraded) {
+ 		printk(KERN_ERR "raid5: not enough operational devices for %s"
 
 
