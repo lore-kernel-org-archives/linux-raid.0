@@ -1,65 +1,69 @@
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: XFS mount failuer on RAID5
-Date: Fri, 16 Oct 2009 10:55:13 -0500
-Message-ID: <4AD89761.4000605@sandeen.net>
-References: <389deec70910152009i7656aaf2s9d929b8b68e4e740@mail.gmail.com> <4AD89128.2010206@sandeen.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Matthew Ingersoll <matth@digitalwest.net>
+Subject: active/active raid0
+Date: Fri, 16 Oct 2009 09:21:33 -0700
+Message-ID: <213B643B-ECBF-45E7-BC74-299766082AF8@digitalwest.net>
+References: <1255588866-4133-1-git-send-email-Vishnu@freescale.com> <e9c3a7c20910151825o67cd2712id91aead70f84987c@mail.gmail.com> <20091016153334.GA27401@ovro.caltech.edu>
+Mime-Version: 1.0 (Apple Message framework v936)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AD89128.2010206@sandeen.net>
+In-Reply-To: <20091016153334.GA27401@ovro.caltech.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: hank peng <pengxihan@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Eric Sandeen wrote:
-> hank peng wrote:
->> Hi, all:
->> I have a self-built board, cpu is MPC8548(PPC arch), kernel is based
->> on MPC8548CDS demo board, version is 2.6.23.
->> A SATA controller is conected to CPU via PCIX, and I have 3 disks
->> attached to it.
->>
-> ...
-> 
->> root@Storage:~# mkfs.xfs -f -ssize=4k /dev/vg/lvtest
->> Warning - device mapper device, but no dmsetup(8) found
->> Warning - device mapper device, but no dmsetup(8) found
->> meta-data=/dev/vg/lvtest         isize=256    agcount=4, 
->> agsize=6553600 blks
->>          =                       sectsz=4096  attr=2
->> data     =                       bsize=4096   blocks=26214400, imaxpct=25
->>          =                       sunit=0      swidth=0 blks
->> naming   =version 2              bsize=4096
->> log      =internal log           bsize=4096   blocks=12800, version=2
->>          =                       sectsz=4096  sunit=1 blks, lazy-count=0
->> realtime =none                   extsz=4096   blocks=0, rtextents=0
->> root@Storage:~# mkdir tmp
->> root@Storage:~# mount -t xfs /dev/vg/lvtest ./tmp/
->> Filesystem "dm-0": Disabling barriers, not supported by the underlying 
->> device
->> XFS mounting filesystem dm-0
->> XFS: totally zeroed log
->> Filesystem "dm-0": XFS internal error xlog_clear_stale_blocks(2) at
->> line 1252 of file fs/xfs/xfs_log_recover.c.  Caller 0xc018ec88
-> 
-> 
-> Can you try the patch that Andy Poling posted to the list just 
-> yesterday?  Slight longshot but it may be it.
-> 
-> Otherwise I will look at this in a bit; on the road today though.
-> 
-> -Eric
+I'm testing an active/active setup that uses md for raid0 and was  
+hoping for some feedback.
+The basic design has a storage device that runs vladed (aoe-storage)  
+and an aoe initiator (controller) that creates a raid0 using mdadm  
+from the aoe devices.  From there, lvm (clustered/clvm) slices out  
+storage for sharing block devices.  I don't want to concentrate on the  
+layers above that (clustered file systems, etc) but mainly the active/ 
+active portion of this interacting with raid0 (via md not lvm) and aoe.
 
-Actually you might try a newer xfsprogs and/or kernel; if I do this on a 
-loopback file, creating the same geometry as you have:
+Some diagrams that may help in understanding...
+-----
+"Physical" diagram:
 
-mkfs.xfs -dfile,name=fsfile,size=2621440b -lsize=12800b,lazy-count=0 
--ssize=4096
+(export network block devices [ iscsi, aoe, etc] )
+                -----------
+                /        \
+       active  /          \  active
+   +-------------+      +-------------+
+   | controller1 |      | controller2 |
+   +-------------+      +-------------+
+              \           /
+               +---------+
+                    |
+             +-------------+                    +-------------+
+             | aoe-storage | --- drbd raid1 --- |  secondary  |
+             +-------------+                    +-------------+
 
-it mounts fine w/ latest xfsprogs and a 2.6.30 kernel.
+-----
+Layer diagram:
++-----------------+
+| (net block dev) | controller1/2
++-----------------+
+| lvm2 clustered  | controller1/2
++-----------------+
+| md: linux-raid0 | controller1/2
++-----------------+
+|  aoe initiator  | controller1/2
++-----------------+
+|   aoe target    | aoe-storage
++-----------------+
 
--Eric
 
+My main concern is interaction with buffer cache and the consistencies  
+of the md devices between the controllers (probably not page cache  
+since these are block devices?).  Will direct/O_DIRECT bypass this  
+keeping the state of the data purely on the aoe-storage device?  I  
+have a test setup of this running with no issues so far connecting to  
+the controllers that run iscsi-target (iet) in blockio mode, thus  
+bypaassing buffer/page cache.
+
+Any feedback is appreciated.
+
+--
+Matth
 
