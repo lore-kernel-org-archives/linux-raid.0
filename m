@@ -1,7 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 06/11] md: drivers/md/unroll.pl replaced with awk analog
-Date: Fri, 16 Oct 2009 16:49:18 +1100
-Message-ID: <20091016054918.24208.57984.stgit@notabene.brown>
+Subject: [md PATCH 11/11] raid6/async_tx: handle holes in block list in
+	async_syndrome_val
+Date: Fri, 16 Oct 2009 16:49:19 +1100
+Message-ID: <20091016054919.24208.31586.stgit@notabene.brown>
 References: <20091016054316.24208.33818.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,258 +11,135 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20091016054316.24208.33818.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Vladimir Dronnikov <dronnikov@gmail.com>, NeilBrown <neilb@suse.de>
+Cc: Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-From: Vladimir Dronnikov <dronnikov@gmail.com>
+async_syndrome_val check the P and Q blocks used for RAID6
+calculations.
+With DDF raid6, some of the data blocks might be NULL, so
+this needs to be handled in the same way that async_gen_syndrome
+handles it.
 
-drivers/md/unroll.pl replaced by awk script to drop build-time
-dependency on perl
+As async_syndrome_val calls async_xor, also enhance async_xor
+to detect and skip NULL blocks in the list.
 
-Signed-off-by: Vladimir Dronnikov <dronnikov@gmail.com>
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- drivers/md/Makefile           |   22 +++++++++++----------
- drivers/md/raid6altivec.uc    |    2 +-
- drivers/md/raid6int.uc        |    2 +-
- drivers/md/raid6test/Makefile |   42 +++++++++++++++++++++--------------------
- drivers/md/unroll.awk         |   20 ++++++++++++++++++++
- drivers/md/unroll.pl          |   24 -----------------------
- 6 files changed, 54 insertions(+), 58 deletions(-)
- create mode 100644 drivers/md/unroll.awk
- delete mode 100644 drivers/md/unroll.pl
+ crypto/async_tx/async_pq.c  |   31 ++++++++++++++++++++++++-------
+ crypto/async_tx/async_xor.c |   18 +++++++++++-------
+ 2 files changed, 35 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/md/Makefile b/drivers/md/Makefile
-index 1dc4185..e355e7f 100644
---- a/drivers/md/Makefile
-+++ b/drivers/md/Makefile
-@@ -46,7 +46,7 @@ obj-$(CONFIG_DM_LOG_USERSPACE)	+= dm-log-userspace.o
- obj-$(CONFIG_DM_ZERO)		+= dm-zero.o
+diff --git a/crypto/async_tx/async_pq.c b/crypto/async_tx/async_pq.c
+index 9ab1ce4..43b1436 100644
+--- a/crypto/async_tx/async_pq.c
++++ b/crypto/async_tx/async_pq.c
+@@ -260,8 +260,10 @@ async_syndrome_val(struct page **blocks, unsigned int offset, int disks,
+ 						      len);
+ 	struct dma_device *device = chan ? chan->device : NULL;
+ 	struct dma_async_tx_descriptor *tx;
++	unsigned char coefs[disks-2];
+ 	enum dma_ctrl_flags dma_flags = submit->cb_fn ? DMA_PREP_INTERRUPT : 0;
+ 	dma_addr_t *dma_src = NULL;
++	int src_cnt = 0;
  
- quiet_cmd_unroll = UNROLL  $@
--      cmd_unroll = $(PERL) $(srctree)/$(src)/unroll.pl $(UNROLL) \
-+      cmd_unroll = $(AWK) -f$(srctree)/$(src)/unroll.awk -vN=$(UNROLL) \
-                    < $< > $@ || ( rm -f $@ && exit 1 )
+ 	BUG_ON(disks < 4);
  
- ifeq ($(CONFIG_ALTIVEC),y)
-@@ -59,56 +59,56 @@ endif
- 
- targets += raid6int1.c
- $(obj)/raid6int1.c:   UNROLL := 1
--$(obj)/raid6int1.c:   $(src)/raid6int.uc $(src)/unroll.pl FORCE
-+$(obj)/raid6int1.c:   $(src)/raid6int.uc $(src)/unroll.awk FORCE
- 	$(call if_changed,unroll)
- 
- targets += raid6int2.c
- $(obj)/raid6int2.c:   UNROLL := 2
--$(obj)/raid6int2.c:   $(src)/raid6int.uc $(src)/unroll.pl FORCE
-+$(obj)/raid6int2.c:   $(src)/raid6int.uc $(src)/unroll.awk FORCE
- 	$(call if_changed,unroll)
- 
- targets += raid6int4.c
- $(obj)/raid6int4.c:   UNROLL := 4
--$(obj)/raid6int4.c:   $(src)/raid6int.uc $(src)/unroll.pl FORCE
-+$(obj)/raid6int4.c:   $(src)/raid6int.uc $(src)/unroll.awk FORCE
- 	$(call if_changed,unroll)
- 
- targets += raid6int8.c
- $(obj)/raid6int8.c:   UNROLL := 8
--$(obj)/raid6int8.c:   $(src)/raid6int.uc $(src)/unroll.pl FORCE
-+$(obj)/raid6int8.c:   $(src)/raid6int.uc $(src)/unroll.awk FORCE
- 	$(call if_changed,unroll)
- 
- targets += raid6int16.c
- $(obj)/raid6int16.c:  UNROLL := 16
--$(obj)/raid6int16.c:  $(src)/raid6int.uc $(src)/unroll.pl FORCE
-+$(obj)/raid6int16.c:  $(src)/raid6int.uc $(src)/unroll.awk FORCE
- 	$(call if_changed,unroll)
- 
- targets += raid6int32.c
- $(obj)/raid6int32.c:  UNROLL := 32
--$(obj)/raid6int32.c:  $(src)/raid6int.uc $(src)/unroll.pl FORCE
-+$(obj)/raid6int32.c:  $(src)/raid6int.uc $(src)/unroll.awk FORCE
- 	$(call if_changed,unroll)
- 
- CFLAGS_raid6altivec1.o += $(altivec_flags)
- targets += raid6altivec1.c
- $(obj)/raid6altivec1.c:   UNROLL := 1
--$(obj)/raid6altivec1.c:   $(src)/raid6altivec.uc $(src)/unroll.pl FORCE
-+$(obj)/raid6altivec1.c:   $(src)/raid6altivec.uc $(src)/unroll.awk FORCE
- 	$(call if_changed,unroll)
- 
- CFLAGS_raid6altivec2.o += $(altivec_flags)
- targets += raid6altivec2.c
- $(obj)/raid6altivec2.c:   UNROLL := 2
--$(obj)/raid6altivec2.c:   $(src)/raid6altivec.uc $(src)/unroll.pl FORCE
-+$(obj)/raid6altivec2.c:   $(src)/raid6altivec.uc $(src)/unroll.awk FORCE
- 	$(call if_changed,unroll)
- 
- CFLAGS_raid6altivec4.o += $(altivec_flags)
- targets += raid6altivec4.c
- $(obj)/raid6altivec4.c:   UNROLL := 4
--$(obj)/raid6altivec4.c:   $(src)/raid6altivec.uc $(src)/unroll.pl FORCE
-+$(obj)/raid6altivec4.c:   $(src)/raid6altivec.uc $(src)/unroll.awk FORCE
- 	$(call if_changed,unroll)
- 
- CFLAGS_raid6altivec8.o += $(altivec_flags)
- targets += raid6altivec8.c
- $(obj)/raid6altivec8.c:   UNROLL := 8
--$(obj)/raid6altivec8.c:   $(src)/raid6altivec.uc $(src)/unroll.pl FORCE
-+$(obj)/raid6altivec8.c:   $(src)/raid6altivec.uc $(src)/unroll.awk FORCE
- 	$(call if_changed,unroll)
- 
- quiet_cmd_mktable = TABLE   $@
-diff --git a/drivers/md/raid6altivec.uc b/drivers/md/raid6altivec.uc
-index 699dfee..2654d5c 100644
---- a/drivers/md/raid6altivec.uc
-+++ b/drivers/md/raid6altivec.uc
-@@ -15,7 +15,7 @@
-  *
-  * $#-way unrolled portable integer math RAID-6 instruction set
-  *
-- * This file is postprocessed using unroll.pl
-+ * This file is postprocessed using unroll.awk
-  *
-  * <benh> hpa: in process,
-  * you can just "steal" the vec unit with enable_kernel_altivec() (but
-diff --git a/drivers/md/raid6int.uc b/drivers/md/raid6int.uc
-index f9bf9cb..d1e276a 100644
---- a/drivers/md/raid6int.uc
-+++ b/drivers/md/raid6int.uc
-@@ -15,7 +15,7 @@
-  *
-  * $#-way unrolled portable integer math RAID-6 instruction set
-  *
-- * This file is postprocessed using unroll.pl
-+ * This file is postprocessed using unroll.awk
-  */
- 
- #include <linux/raid/pq.h>
-diff --git a/drivers/md/raid6test/Makefile b/drivers/md/raid6test/Makefile
-index 58ffdf4..2874cbe 100644
---- a/drivers/md/raid6test/Makefile
-+++ b/drivers/md/raid6test/Makefile
-@@ -7,7 +7,7 @@ CC	 = gcc
- OPTFLAGS = -O2			# Adjust as desired
- CFLAGS	 = -I.. -I ../../../include -g $(OPTFLAGS)
- LD	 = ld
--PERL	 = perl
-+AWK	 = awk
- AR	 = ar
- RANLIB	 = ranlib
- 
-@@ -35,35 +35,35 @@ raid6.a: raid6int1.o raid6int2.o raid6int4.o raid6int8.o raid6int16.o \
- raid6test: test.c raid6.a
- 	$(CC) $(CFLAGS) -o raid6test $^
- 
--raid6altivec1.c: raid6altivec.uc ../unroll.pl
--	$(PERL) ../unroll.pl 1 < raid6altivec.uc > $@
-+raid6altivec1.c: raid6altivec.uc ../unroll.awk
-+	$(AWK) ../unroll.awk -vN=1 < raid6altivec.uc > $@
- 
--raid6altivec2.c: raid6altivec.uc ../unroll.pl
--	$(PERL) ../unroll.pl 2 < raid6altivec.uc > $@
-+raid6altivec2.c: raid6altivec.uc ../unroll.awk
-+	$(AWK) ../unroll.awk -vN=2 < raid6altivec.uc > $@
- 
--raid6altivec4.c: raid6altivec.uc ../unroll.pl
--	$(PERL) ../unroll.pl 4 < raid6altivec.uc > $@
-+raid6altivec4.c: raid6altivec.uc ../unroll.awk
-+	$(AWK) ../unroll.awk -vN=4 < raid6altivec.uc > $@
- 
--raid6altivec8.c: raid6altivec.uc ../unroll.pl
--	$(PERL) ../unroll.pl 8 < raid6altivec.uc > $@
-+raid6altivec8.c: raid6altivec.uc ../unroll.awk
-+	$(AWK) ../unroll.awk -vN=8 < raid6altivec.uc > $@
- 
--raid6int1.c: raid6int.uc ../unroll.pl
--	$(PERL) ../unroll.pl 1 < raid6int.uc > $@
-+raid6int1.c: raid6int.uc ../unroll.awk
-+	$(AWK) ../unroll.awk -vN=1 < raid6int.uc > $@
- 
--raid6int2.c: raid6int.uc ../unroll.pl
--	$(PERL) ../unroll.pl 2 < raid6int.uc > $@
-+raid6int2.c: raid6int.uc ../unroll.awk
-+	$(AWK) ../unroll.awk -vN=2 < raid6int.uc > $@
- 
--raid6int4.c: raid6int.uc ../unroll.pl
--	$(PERL) ../unroll.pl 4 < raid6int.uc > $@
-+raid6int4.c: raid6int.uc ../unroll.awk
-+	$(AWK) ../unroll.awk -vN=4 < raid6int.uc > $@
- 
--raid6int8.c: raid6int.uc ../unroll.pl
--	$(PERL) ../unroll.pl 8 < raid6int.uc > $@
-+raid6int8.c: raid6int.uc ../unroll.awk
-+	$(AWK) ../unroll.awk -vN=8 < raid6int.uc > $@
- 
--raid6int16.c: raid6int.uc ../unroll.pl
--	$(PERL) ../unroll.pl 16 < raid6int.uc > $@
-+raid6int16.c: raid6int.uc ../unroll.awk
-+	$(AWK) ../unroll.awk -vN=16 < raid6int.uc > $@
- 
--raid6int32.c: raid6int.uc ../unroll.pl
--	$(PERL) ../unroll.pl 32 < raid6int.uc > $@
-+raid6int32.c: raid6int.uc ../unroll.awk
-+	$(AWK) ../unroll.awk -vN=32 < raid6int.uc > $@
- 
- raid6tables.c: mktables
- 	./mktables > raid6tables.c
-diff --git a/drivers/md/unroll.awk b/drivers/md/unroll.awk
-new file mode 100644
-index 0000000..c6aa036
---- /dev/null
-+++ b/drivers/md/unroll.awk
-@@ -0,0 +1,20 @@
+@@ -280,20 +282,35 @@ async_syndrome_val(struct page **blocks, unsigned int offset, int disks,
+ 			 __func__, disks, len);
+ 		if (!P(blocks, disks))
+ 			dma_flags |= DMA_PREP_PQ_DISABLE_P;
++		else
++			pq[0] = dma_map_page(dev, P(blocks,disks),
++					     offset, len,
++					     DMA_TO_DEVICE);
+ 		if (!Q(blocks, disks))
+ 			dma_flags |= DMA_PREP_PQ_DISABLE_Q;
++		else
++			pq[1] = dma_map_page(dev, Q(blocks,disks),
++					     offset, len,
++					     DMA_TO_DEVICE);
 +
-+# This filter requires one command line option of form -vN=n
-+# where n must be a decimal number.
-+#
-+# Repeat each input line containing $$ n times, replacing $$ with 0...n-1.
-+# Replace each $# with n, and each $* with a single $.
-+
-+BEGIN {
-+	n = N + 0
-+}
-+{
-+	if (/\$\$/) { rep = n } else { rep = 1 }
-+	for (i = 0; i < rep; ++i) {
-+		tmp = $0
-+		gsub(/\$\$/, i, tmp)
-+		gsub(/\$\#/, n, tmp)
-+		gsub(/\$\*/, "$", tmp)
-+		print tmp
-+	}
-+}
-diff --git a/drivers/md/unroll.pl b/drivers/md/unroll.pl
-deleted file mode 100644
-index 3acc710..0000000
---- a/drivers/md/unroll.pl
-+++ /dev/null
-@@ -1,24 +0,0 @@
--#!/usr/bin/perl
--#
--# Take a piece of C code and for each line which contains the sequence $$
--# repeat n times with $ replaced by 0...n-1; the sequence $# is replaced
--# by the unrolling factor, and $* with a single $
--#
+ 		if (submit->flags & ASYNC_TX_FENCE)
+ 			dma_flags |= DMA_PREP_FENCE;
+-		for (i = 0; i < disks; i++)
+-			if (likely(blocks[i]))
+-				dma_src[i] = dma_map_page(dev, blocks[i],
+-							  offset, len,
+-							  DMA_TO_DEVICE);
++		for (i = 0; i < disks-2; i++)
++			if (likely(blocks[i])) {
++				dma_src[src_cnt] = dma_map_page(dev, blocks[i],
++								offset, len,
++								DMA_TO_DEVICE);
++				coefs[src_cnt] = raid6_gfexp[i];
++				src_cnt++;
++			}
++		pq[1] = dma_map_page(dev, Q(blocks,disks),
++				     offset, len,
++				     DMA_TO_DEVICE);
+ 
+ 		for (;;) {
+ 			tx = device->device_prep_dma_pq_val(chan, pq, dma_src,
+-							    disks - 2,
+-							    raid6_gfexp,
++							    src_cnt,
++							    coefs,
+ 							    len, pqres,
+ 							    dma_flags);
+ 			if (likely(tx))
+diff --git a/crypto/async_tx/async_xor.c b/crypto/async_tx/async_xor.c
+index b459a90..79182dc 100644
+--- a/crypto/async_tx/async_xor.c
++++ b/crypto/async_tx/async_xor.c
+@@ -44,20 +44,23 @@ do_async_xor(struct dma_chan *chan, struct page *dest, struct page **src_list,
+ 	void *cb_param_orig = submit->cb_param;
+ 	enum async_tx_flags flags_orig = submit->flags;
+ 	enum dma_ctrl_flags dma_flags;
+-	int xor_src_cnt;
++	int xor_src_cnt = 0;
+ 	dma_addr_t dma_dest;
+ 
+ 	/* map the dest bidrectional in case it is re-used as a source */
+ 	dma_dest = dma_map_page(dma->dev, dest, offset, len, DMA_BIDIRECTIONAL);
+ 	for (i = 0; i < src_cnt; i++) {
+ 		/* only map the dest once */
++		if (!src_list[i])
++			continue;
+ 		if (unlikely(src_list[i] == dest)) {
+-			dma_src[i] = dma_dest;
++			dma_src[xor_src_cnt++] = dma_dest;
+ 			continue;
+ 		}
+-		dma_src[i] = dma_map_page(dma->dev, src_list[i], offset,
+-					  len, DMA_TO_DEVICE);
++		dma_src[xor_src_cnt++] = dma_map_page(dma->dev, src_list[i], offset,
++						      len, DMA_TO_DEVICE);
+ 	}
++	src_cnt = xor_src_cnt;
+ 
+ 	while (src_cnt) {
+ 		submit->flags = flags_orig;
+@@ -123,7 +126,7 @@ do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
+ 	    int src_cnt, size_t len, struct async_submit_ctl *submit)
+ {
+ 	int i;
+-	int xor_src_cnt;
++	int xor_src_cnt = 0;
+ 	int src_off = 0;
+ 	void *dest_buf;
+ 	void **srcs;
+@@ -135,8 +138,9 @@ do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
+ 
+ 	/* convert to buffer pointers */
+ 	for (i = 0; i < src_cnt; i++)
+-		srcs[i] = page_address(src_list[i]) + offset;
 -
--($n) = @ARGV;
--$n += 0;
--
--while ( defined($line = <STDIN>) ) {
--    if ( $line =~ /\$\$/ ) {
--	$rep = $n;
--    } else {
--	$rep = 1;
--    }
--    for ( $i = 0 ; $i < $rep ; $i++ ) {
--	$tmp = $line;
--	$tmp =~ s/\$\$/$i/g;
--	$tmp =~ s/\$\#/$n/g;
--	$tmp =~ s/\$\*/\$/g;
--	print $tmp;
--    }
--}
++		if (src_list[i])
++			srcs[xor_src_cnt++] = page_address(src_list[i]) + offset;
++	src_cnt = xor_src_cnt;
+ 	/* set destination address */
+ 	dest_buf = page_address(dest) + offset;
+ 
 
 
