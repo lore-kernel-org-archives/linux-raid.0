@@ -1,8 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 11/11] raid6/async_tx: handle holes in block list in
-	async_syndrome_val
+Subject: [md PATCH 10/11] md/async: don't pass a memory pointer as a page
+	pointer.
 Date: Fri, 16 Oct 2009 16:49:19 +1100
-Message-ID: <20091016054919.24208.31586.stgit@notabene.brown>
+Message-ID: <20091016054919.24208.89478.stgit@notabene.brown>
 References: <20091016054316.24208.33818.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,132 +14,153 @@ To: linux-raid@vger.kernel.org
 Cc: Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-async_syndrome_val check the P and Q blocks used for RAID6
-calculations.
-With DDF raid6, some of the data blocks might be NULL, so
-this needs to be handled in the same way that async_gen_syndrome
-handles it.
+md/raid6 passes a list of 'struct page *' to the async_tx routines,
+which then either DMA map them for offload, or take the page_address
+for CPU based calculations.
 
-As async_syndrome_val calls async_xor, also enhance async_xor
-to detect and skip NULL blocks in the list.
+For RAID6 we sometime leave 'blanks' in the list of pages.
+For CPU based calcs, we want to treat theses as a page of zeros.
+For offloaded calculations, we simply don't pass a page to the
+hardware.
+
+Currently the 'blanks' are encoded as a pointer to
+raid6_empty_zero_page.  This is a 4096 byte memory region, not a
+'struct page'.  This is mostly handled correctly but is rather ugly.
+
+So change the code to pass and expect a NULL pointer for the blanks.
+When taking page_address of a page, we need to check for a NULL and
+in that case use raid6_empty_zero_page.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
 
- crypto/async_tx/async_pq.c  |   31 ++++++++++++++++++++++++-------
- crypto/async_tx/async_xor.c |   18 +++++++++++-------
- 2 files changed, 35 insertions(+), 14 deletions(-)
+ crypto/async_tx/async_pq.c          |   15 ++++-----------
+ crypto/async_tx/async_raid6_recov.c |   16 +++++++++++-----
+ drivers/md/raid5.c                  |    4 ++--
+ 3 files changed, 17 insertions(+), 18 deletions(-)
 
 diff --git a/crypto/async_tx/async_pq.c b/crypto/async_tx/async_pq.c
-index 9ab1ce4..43b1436 100644
+index b88db6d..9ab1ce4 100644
 --- a/crypto/async_tx/async_pq.c
 +++ b/crypto/async_tx/async_pq.c
-@@ -260,8 +260,10 @@ async_syndrome_val(struct page **blocks, unsigned int offset, int disks,
- 						      len);
- 	struct dma_device *device = chan ? chan->device : NULL;
- 	struct dma_async_tx_descriptor *tx;
-+	unsigned char coefs[disks-2];
- 	enum dma_ctrl_flags dma_flags = submit->cb_fn ? DMA_PREP_INTERRUPT : 0;
- 	dma_addr_t *dma_src = NULL;
-+	int src_cnt = 0;
+@@ -30,11 +30,6 @@
+  */
+ static struct page *scribble;
  
- 	BUG_ON(disks < 4);
+-static bool is_raid6_zero_block(struct page *p)
+-{
+-	return p == (void *) raid6_empty_zero_page;
+-}
+-
+ /* the struct page *blocks[] parameter passed to async_gen_syndrome()
+  * and async_syndrome_val() contains the 'P' destination address at
+  * blocks[disks-2] and the 'Q' destination address at blocks[disks-1]
+@@ -83,7 +78,7 @@ do_async_gen_syndrome(struct dma_chan *chan, struct page **blocks,
+ 	 * sources and update the coefficients accordingly
+ 	 */
+ 	for (i = 0, idx = 0; i < src_cnt; i++) {
+-		if (is_raid6_zero_block(blocks[i]))
++		if (blocks[i] == NULL)
+ 			continue;
+ 		dma_src[idx] = dma_map_page(dma->dev, blocks[i], offset, len,
+ 					    DMA_TO_DEVICE);
+@@ -160,9 +155,9 @@ do_sync_gen_syndrome(struct page **blocks, unsigned int offset, int disks,
+ 		srcs = (void **) blocks;
  
-@@ -280,20 +282,35 @@ async_syndrome_val(struct page **blocks, unsigned int offset, int disks,
- 			 __func__, disks, len);
- 		if (!P(blocks, disks))
- 			dma_flags |= DMA_PREP_PQ_DISABLE_P;
-+		else
-+			pq[0] = dma_map_page(dev, P(blocks,disks),
-+					     offset, len,
-+					     DMA_TO_DEVICE);
- 		if (!Q(blocks, disks))
- 			dma_flags |= DMA_PREP_PQ_DISABLE_Q;
-+		else
-+			pq[1] = dma_map_page(dev, Q(blocks,disks),
-+					     offset, len,
-+					     DMA_TO_DEVICE);
-+
+ 	for (i = 0; i < disks; i++) {
+-		if (is_raid6_zero_block(blocks[i])) {
++		if (blocks[i] == NULL) {
+ 			BUG_ON(i > disks - 3); /* P or Q can't be zero */
+-			srcs[i] = blocks[i];
++			srcs[i] = (void*)raid6_empty_zero_page;
+ 		} else
+ 			srcs[i] = page_address(blocks[i]) + offset;
+ 	}
+@@ -290,12 +285,10 @@ async_syndrome_val(struct page **blocks, unsigned int offset, int disks,
  		if (submit->flags & ASYNC_TX_FENCE)
  			dma_flags |= DMA_PREP_FENCE;
--		for (i = 0; i < disks; i++)
--			if (likely(blocks[i]))
--				dma_src[i] = dma_map_page(dev, blocks[i],
--							  offset, len,
--							  DMA_TO_DEVICE);
-+		for (i = 0; i < disks-2; i++)
-+			if (likely(blocks[i])) {
-+				dma_src[src_cnt] = dma_map_page(dev, blocks[i],
-+								offset, len,
-+								DMA_TO_DEVICE);
-+				coefs[src_cnt] = raid6_gfexp[i];
-+				src_cnt++;
-+			}
-+		pq[1] = dma_map_page(dev, Q(blocks,disks),
-+				     offset, len,
-+				     DMA_TO_DEVICE);
+ 		for (i = 0; i < disks; i++)
+-			if (likely(blocks[i])) {
+-				BUG_ON(is_raid6_zero_block(blocks[i]));
++			if (likely(blocks[i]))
+ 				dma_src[i] = dma_map_page(dev, blocks[i],
+ 							  offset, len,
+ 							  DMA_TO_DEVICE);
+-			}
  
  		for (;;) {
  			tx = device->device_prep_dma_pq_val(chan, pq, dma_src,
--							    disks - 2,
--							    raid6_gfexp,
-+							    src_cnt,
-+							    coefs,
- 							    len, pqres,
- 							    dma_flags);
- 			if (likely(tx))
-diff --git a/crypto/async_tx/async_xor.c b/crypto/async_tx/async_xor.c
-index b459a90..79182dc 100644
---- a/crypto/async_tx/async_xor.c
-+++ b/crypto/async_tx/async_xor.c
-@@ -44,20 +44,23 @@ do_async_xor(struct dma_chan *chan, struct page *dest, struct page **src_list,
- 	void *cb_param_orig = submit->cb_param;
- 	enum async_tx_flags flags_orig = submit->flags;
- 	enum dma_ctrl_flags dma_flags;
--	int xor_src_cnt;
-+	int xor_src_cnt = 0;
- 	dma_addr_t dma_dest;
+diff --git a/crypto/async_tx/async_raid6_recov.c b/crypto/async_tx/async_raid6_recov.c
+index 6d73dde..8e30b6e 100644
+--- a/crypto/async_tx/async_raid6_recov.c
++++ b/crypto/async_tx/async_raid6_recov.c
+@@ -263,10 +263,10 @@ __2data_recov_n(int disks, size_t bytes, int faila, int failb,
+ 	 * delta p and delta q
+ 	 */
+ 	dp = blocks[faila];
+-	blocks[faila] = (void *)raid6_empty_zero_page;
++	blocks[faila] = NULL;
+ 	blocks[disks-2] = dp;
+ 	dq = blocks[failb];
+-	blocks[failb] = (void *)raid6_empty_zero_page;
++	blocks[failb] = NULL;
+ 	blocks[disks-1] = dq;
  
- 	/* map the dest bidrectional in case it is re-used as a source */
- 	dma_dest = dma_map_page(dma->dev, dest, offset, len, DMA_BIDIRECTIONAL);
- 	for (i = 0; i < src_cnt; i++) {
- 		/* only map the dest once */
-+		if (!src_list[i])
-+			continue;
- 		if (unlikely(src_list[i] == dest)) {
--			dma_src[i] = dma_dest;
-+			dma_src[xor_src_cnt++] = dma_dest;
- 			continue;
- 		}
--		dma_src[i] = dma_map_page(dma->dev, src_list[i], offset,
--					  len, DMA_TO_DEVICE);
-+		dma_src[xor_src_cnt++] = dma_map_page(dma->dev, src_list[i], offset,
-+						      len, DMA_TO_DEVICE);
- 	}
-+	src_cnt = xor_src_cnt;
+ 	init_async_submit(submit, ASYNC_TX_FENCE, tx, NULL, NULL, scribble);
+@@ -338,7 +338,10 @@ async_raid6_2data_recov(int disks, size_t bytes, int faila, int failb,
  
- 	while (src_cnt) {
- 		submit->flags = flags_orig;
-@@ -123,7 +126,7 @@ do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
- 	    int src_cnt, size_t len, struct async_submit_ctl *submit)
- {
+ 		async_tx_quiesce(&submit->depend_tx);
+ 		for (i = 0; i < disks; i++)
+-			ptrs[i] = page_address(blocks[i]);
++			if (blocks[i] == NULL)
++				ptrs[i] = (void*)raid6_empty_zero_page;
++			else
++				ptrs[i] = page_address(blocks[i]);
+ 
+ 		raid6_2data_recov(disks, bytes, faila, failb, ptrs);
+ 
+@@ -398,7 +401,10 @@ async_raid6_datap_recov(int disks, size_t bytes, int faila,
+ 
+ 		async_tx_quiesce(&submit->depend_tx);
+ 		for (i = 0; i < disks; i++)
+-			ptrs[i] = page_address(blocks[i]);
++			if (blocks[i] == NULL)
++				ptrs[i] = (void*)raid6_empty_zero_page;
++			else
++				ptrs[i] = page_address(blocks[i]);
+ 
+ 		raid6_datap_recov(disks, bytes, faila, ptrs);
+ 
+@@ -414,7 +420,7 @@ async_raid6_datap_recov(int disks, size_t bytes, int faila,
+ 	 * Use the dead data page as temporary storage for delta q
+ 	 */
+ 	dq = blocks[faila];
+-	blocks[faila] = (void *)raid6_empty_zero_page;
++	blocks[faila] = NULL;
+ 	blocks[disks-1] = dq;
+ 
+ 	/* in the 4 disk case we only need to perform a single source
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index c4366c9..dcd9e65 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -720,7 +720,7 @@ static int set_syndrome_sources(struct page **srcs, struct stripe_head *sh)
  	int i;
--	int xor_src_cnt;
-+	int xor_src_cnt = 0;
- 	int src_off = 0;
- 	void *dest_buf;
- 	void **srcs;
-@@ -135,8 +138,9 @@ do_sync_xor(struct page *dest, struct page **src_list, unsigned int offset,
  
- 	/* convert to buffer pointers */
- 	for (i = 0; i < src_cnt; i++)
--		srcs[i] = page_address(src_list[i]) + offset;
--
-+		if (src_list[i])
-+			srcs[xor_src_cnt++] = page_address(src_list[i]) + offset;
-+	src_cnt = xor_src_cnt;
- 	/* set destination address */
- 	dest_buf = page_address(dest) + offset;
+ 	for (i = 0; i < disks; i++)
+-		srcs[i] = (void *)raid6_empty_zero_page;
++		srcs[i] = NULL;
  
+ 	count = 0;
+ 	i = d0_idx;
+@@ -816,7 +816,7 @@ ops_run_compute6_2(struct stripe_head *sh, struct raid5_percpu *percpu)
+ 	 * slot number conversion for 'faila' and 'failb'
+ 	 */
+ 	for (i = 0; i < disks ; i++)
+-		blocks[i] = (void *)raid6_empty_zero_page;
++		blocks[i] = NULL;
+ 	count = 0;
+ 	i = d0_idx;
+ 	do {
 
 
