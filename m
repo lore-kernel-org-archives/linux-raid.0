@@ -1,94 +1,84 @@
-From: "Ira W. Snyder" <iws@ovro.caltech.edu>
-Subject: Re: [PATCH v0 1/2] DMA: fsldma: Disable DMA_INTERRUPT when
- Async_tx enabled
-Date: Fri, 16 Oct 2009 08:33:34 -0700
-Message-ID: <20091016153334.GA27401@ovro.caltech.edu>
-References: <1255588866-4133-1-git-send-email-Vishnu@freescale.com>
- <e9c3a7c20910151825o67cd2712id91aead70f84987c@mail.gmail.com>
+From: mark delfman <markdelfman@googlemail.com>
+Subject: Re: MD write performance issue
+Date: Fri, 16 Oct 2009 16:46:12 +0100
+Message-ID: <66781b10910160846g1ff3e8ccq7c00a05442bb467a@mail.gmail.com>
+References: <66781b10910160145r59f3ea0cqc8632dbc3d92f833@mail.gmail.com>
+	 <4AD84E08.7020807@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760455AbZJPPeN@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <e9c3a7c20910151825o67cd2712id91aead70f84987c@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Vishnu Suresh <Vishnu@freescale.com>, herbert@gondor.apana.org.au, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-crypto@vger.kernel.org, Timur Tabi <timur@freescale.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4AD84E08.7020807@shiftmail.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Asdo <asdo@shiftmail.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Oct 15, 2009 at 06:25:14PM -0700, Dan Williams wrote:
-> [ added Leo and Timur to the Cc ]
->=20
-> On Wed, Oct 14, 2009 at 11:41 PM, Vishnu Suresh <Vishnu@freescale.com=
-> wrote:
-> > This patch disables the use of DMA_INTERRUPT capability with Async_=
-tx
-> >
-> > The fsldma produces a null transfer with DMA_INTERRUPT
-> > capability when used with Async_tx. When RAID devices queue
-> > a transaction via Async_tx, this =A0results in a hang.
-> >
-> > Signed-off-by: Vishnu Suresh <Vishnu@freescale.com>
-> > ---
-> > =A0drivers/dma/fsldma.c | =A0 =A06 ++++++
-> > =A01 files changed, 6 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/drivers/dma/fsldma.c b/drivers/dma/fsldma.c
-> > index 296f9e7..66d9b39 100644
-> > --- a/drivers/dma/fsldma.c
-> > +++ b/drivers/dma/fsldma.c
-> > @@ -1200,7 +1200,13 @@ static int __devinit of_fsl_dma_probe(struct=
- of_device *dev,
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0- fdev->reg.start + 1);
-> >
-> > =A0 =A0 =A0 =A0dma_cap_set(DMA_MEMCPY, fdev->common.cap_mask);
-> > +#ifndef CONFIG_ASYNC_CORE
-> > + =A0 =A0 =A0 /*
-> > + =A0 =A0 =A0 =A0* The DMA_INTERRUPT async_tx is a NULL transfer, w=
-hich will
-> > + =A0 =A0 =A0 =A0* triger a PE interrupt.
-> > + =A0 =A0 =A0 =A0*/
-> > =A0 =A0 =A0 =A0dma_cap_set(DMA_INTERRUPT, fdev->common.cap_mask);
-> > +#endif
-> > =A0 =A0 =A0 =A0dma_cap_set(DMA_SLAVE, fdev->common.cap_mask);
-> > =A0 =A0 =A0 =A0fdev->common.device_alloc_chan_resources =3D fsl_dma=
-_alloc_chan_resources;
-> > =A0 =A0 =A0 =A0fdev->common.device_free_chan_resources =3D fsl_dma_=
-free_chan_resources;
->=20
-> You are basically saying that fsl_dma_prep_interrupt() is buggy.  Can
-> that routine be fixed rather than this piecemeal solution?  If it
-> cannot be fixed (i.e. hardware issue) then fsl_dma_prep_interrupt()
-> should just be disabled/deleted altogether.
->=20
+Quick update on .30.x kernels... which are still showing MD reduced performance:
 
-=46or what it's worth, I've used the following code in the recent past,
-without any issues. This was on an 83xx, within the last few kernel
-releases. I haven't tried it on the latest -rc.
 
-Using device_prep_dma_memcpy() can trigger a callback as well, so the
-interrupt feature isn't strictly needed. Just attach the callback to th=
-e
-last memcpy operation.
+Linux linux-tlfp 2.6.30-vanilla #1 SMP Fri Oct 16 14:22:54 BST 2009
+x86_64 x86_64 x86_64 GNU/Linux
 
-static dma_cookie_t dma_async_interrupt(struct dma_chan *chan,
-                                        dma_async_tx_callback callback,
-                                        void *data)
-{
-        struct dma_device *dev =3D chan->device;
-        struct dma_async_tx_descriptor *tx;=20
+RAW: 1.1
+XFS 870 MB/s
 
-        /* Set up the DMA */
-        tx =3D dev->device_prep_dma_interrupt(chan, DMA_PREP_INTERRUPT)=
-;
-        if (!tx)
-                return -ENOMEM;
 
-        tx->callback =3D callback;
-        tx->callback_param =3D data;
 
-        return tx->tx_submit(tx);
-}
+Linux linux-tlfp 2.6.31.3-vanilla #1 SMP Fri Oct 16 14:52:09 BST 2009
+x86_64 x86_64 x86_64 GNU/Linux
 
-Ira
+RAW: 1.1
+XFS 920 MB/s
+
+
+linux-tlfp:/ # uname -a
+Linux linux-tlfp 2.6.31.2-vanilla #1 SMP Fri Oct 16 15:44:44 BST 2009
+x86_64 x86_64 x86_64 GNU/Linux
+
+
+RAW: 1.1
+XFS: 935 MB/s
+
+
+On Fri, Oct 16, 2009 at 11:42 AM, Asdo <asdo@shiftmail.org> wrote:
+> mark delfman wrote:
+>>
+>> After further work we are sure that there is a significant write
+>> performance issue with either the Kernel+MD or...
+>
+> Hm!
+> Pretty strange repeated ups and downs of the speed with increasing kernel
+> versions.
+>
+> Have you checked:
+> that compile options are the same (preferably by taking 2.6.31 compile
+> options and porting them down)
+> disk schedulers are the same
+> the test was long enough to level jitters, like 2-3 minutes
+> Also: looking at "iostat -x 1" during the transfer could show something...
+>
+> Apart from this, I confirm I noticed in my 2.6.31-rc? earlier tests, that
+> performances on xfs writes were very inconsistent :
+> These were my benchmarks (I wrote them on file at that time):
+>
+> Stripe_cache_size was 1024, 13 devices raid-5:
+>
+> bs=1M -> 206MB/s
+> bs=256K -> 229MB/s
+>
+> retrying soon after, identical settings:
+>
+> bs=1M -> 129MB/s
+> bs=256K -> 140MB/s
+>
+>
+> Transfer speed was hence very unreliable, depending on something that is not
+> clearly user visible... maybe dirty page cache? I thought that depending on
+> the exact amount of data being pushed out by the pdflush at the first round,
+> that would cause a sequence of read-modify-write stuff which would cause
+> further read-modify-write and further instability later on. But I was doing
+> that with raid-5 while you Mark are using raid-0 right? My theory doesn't
+> hold on raid-0.
+>
+>
+>
