@@ -1,48 +1,79 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: Re: Disappointing RAID10 Performance
-Date: Fri, 16 Oct 2009 20:30:27 +0200
-Message-ID: <4AD8BBC3.4030600@wpkg.org>
-References: <364346.70897.qm@web38808.mail.mud.yahoo.com>
+From: Chris Worley <worleys@gmail.com>
+Subject: Re: Load-balancing mirrors w/ asymmetric performance
+Date: Fri, 16 Oct 2009 13:07:50 -0600
+Message-ID: <f3177b9e0910161207n70eeddaar4157a2887fa55cdf@mail.gmail.com>
+References: <f3177b9e0910041240h4dba8771vb5ba07216c9c8189@mail.gmail.com>
+	 <170fa0d20910120722o2347f119g9e3c48b52bc4efef@mail.gmail.com>
+	 <f3177b9e0910120800y56d01e77u50c95c918e02d602@mail.gmail.com>
+	 <170fa0d20910121833s50776aaer6f5feefb47fc3028@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <364346.70897.qm@web38808.mail.mud.yahoo.com>
+In-Reply-To: <170fa0d20910121833s50776aaer6f5feefb47fc3028@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: adfas asd <chimera_god@yahoo.com>
+To: Mike Snitzer <snitzer@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-adfas asd wrote:
-> I was hoping to get better performance with RAID10 than from the raw disks, but that's turned out to not be the case.  Experimenting with the readahead buffer I get these bandwidths with the following command:
-> # time dd if={somelarge}.iso of=/dev/null bs={readahead size}
-> 
-> /dev/sd?
->  1024 71.3 MB/s
->  2048 71.2 MB/s
->  4096 77.7 MB/s
->  8192 69.4 MB/s
->  16384 76.6 MB/s
-> 
-> /dev/md2
->  1024  67.1
->  2048  69.1
->  4096  75.7
->  8192  64.9
->  16384 69.0
-> 
-> Using RAID10offset2 on 2 WD 2TB drives, and always the same input file.
-> 
-> Why would RAID10 performance be -poorer-? 
+On Mon, Oct 12, 2009 at 7:33 PM, Mike Snitzer <snitzer@gmail.com> wrote=
+:
+> On Mon, Oct 12, 2009 at 11:00 AM, Chris Worley <worleys@gmail.com> wr=
+ote:
+>> On Mon, Oct 12, 2009 at 8:22 AM, Mike Snitzer <snitzer@gmail.com> wr=
+ote:
+>>> On Sun, Oct 4, 2009 at 3:40 PM, Chris Worley <worleys@gmail.com> wr=
+ote:
+>>>> When you mirror two devices, they may not have the same performanc=
+e.
+>>>> For example, if one device is local and the other remote.
+>>>>
+>>>> There's nothing you can do about writes, as everything needs writt=
+en.
+>>>>
+>>>> But, reads shouldn't be split 50/50: they should be balanced depen=
+ding
+>>>> relative performance of each mirror to optimize overall read
+>>>> performance.
+>>>
+>>> And MD already has the ability to flag the slow paths as write-most=
+ly, see:
+>>>
+>>> mdadm ... --write-mostly
+>>>
+>>> There is also '--write-behind' support for devices that have been
+>>> tagged as 'write-mostly'.
+>>
+>> Will "write-mostly" optimize the "read", such that both devices will
+>> be accessed in proportion to their performance?
+>>
+>> The man page says:
+>>
+>> "...and means that the =92md=92 driver will avoid reading from these
+>> devices if at all possible."
+>>
+>> Even a slow device can take some of the load and increase performanc=
+e.
+>
+> AFAIK, with current MD raid1, reads are only balanced across all
+> non-'write-mostly' drives. Having raid1's reads be issued proportiona=
+l
+> to each underlying devices' performance is not currently possible.
+>
+> I'd imagine that the per-bdi dirty-page accounting of each underlying
+> device could be used to train raid1's reads (score each raid1 member
+> over time) but I'm not aware of any effort toward that end.
 
-If you only use your RAID-10 array for a single "dd if=bigfile 
-of=/dev/null" then yes, it does not give you much over mirroring.
+Off the top of my head: the user could control this w/ a per-device
+read queue depth.  Set it small for the remote and large for the
+local.  Let the use optimize for their case.
 
-If you start using your drives for two "dd if=bigfile[12] of=/dev/null" 
-at the same time, you will notice the difference.
-
-
-
--- 
-Tomasz Chmielewski
-http://wpkg.org
+Chris
+>
+> Mike
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
