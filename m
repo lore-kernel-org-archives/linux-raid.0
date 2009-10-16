@@ -1,115 +1,160 @@
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: XFS mount failuer on RAID5
-Date: Fri, 16 Oct 2009 04:30:26 -0400 (EDT)
-Message-ID: <alpine.DEB.2.00.0910160429540.2841@p34.internal.lan>
-References: <389deec70910152009i7656aaf2s9d929b8b68e4e740@mail.gmail.com>
+Subject: Re: Raid reconstructing and process hanging in D state
+Date: Fri, 16 Oct 2009 04:37:14 -0400 (EDT)
+Message-ID: <alpine.DEB.2.00.0910160436160.2841@p34.internal.lan>
+References: <Pine.LNX.4.64.0910160703260.2463@praktifix.dwd.de>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <389deec70910152009i7656aaf2s9d929b8b68e4e740@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: hank peng <pengxihan@gmail.com>
-Cc: xfs@oss.sgi.com, linux-raid <linux-raid@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751635AbZJPIhw@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0910160703260.2463@praktifix.dwd.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Holger Kiehl <Holger.Kiehl@dwd.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
+
+
+
+On Fri, 16 Oct 2009, Holger Kiehl wrote:
+
+> Hello
+>
+> I have a SW Raid6 over 8 disk with a plain 2.6.31.4 kernel. When the
+> raid is reconstructed I get a lot of process hanging for a long time
+> in D-state. In fact /var/log/messages shows the following errors:
+>
+>   Oct 16 04:09:01 hermes kernel: md: data-check of RAID array md3
+>   Oct 16 04:09:01 hermes kernel: md: minimum _guaranteed_  speed: 1000 
+> KB/sec/disk.
+>   Oct 16 04:09:01 hermes kernel: md: data-check of RAID array md1
+>   Oct 16 04:09:01 hermes kernel: md: minimum _guaranteed_  speed: 1000 
+> KB/sec/disk.
+>   Oct 16 04:09:01 hermes kernel: md: using maximum available idle IO 
+> bandwidth (but not more than 200000 KB/sec) for data-check.
+>   Oct 16 04:09:01 hermes kernel: md: using maximum available idle IO 
+> bandwidth (but not more than 200000 KB/sec) for data-check.
+>   Oct 16 04:09:01 hermes kernel: md: using 128k window, over a total of 
+> 70613632 blocks.
+>   Oct 16 04:09:01 hermes kernel: md: using 128k window, over a total of 
+> 70613632 blocks.
+>   Oct 16 04:09:01 hermes kernel: md: delaying data-check of md0 until md3 
+> has finished (they share one or more physical units)
+>   Oct 16 04:09:01 hermes kernel: md: delaying data-check of md2 until md0 
+> has finished (they share one or more physical units)
+>   Oct 16 04:09:01 hermes kernel: md: delaying data-check of md0 until md3 
+> has finished (they share one or more physical units)
+>   Oct 16 04:09:01 hermes kernel: md: data-check of RAID array md4
+>   Oct 16 04:09:01 hermes kernel: md: minimum _guaranteed_  speed: 1000 
+> KB/sec/disk.
+>   Oct 16 04:09:01 hermes kernel: md: using maximum available idle IO 
+> bandwidth (but not more than 200000 KB/sec) for data-check.
+>   Oct 16 04:09:01 hermes kernel: md: using 128k window, over a total of 
+> 292413440 blocks.
+>   Oct 16 04:12:06 hermes kernel: INFO: task pdflush:409 blocked for more 
+> than 120 seconds.
+>   Oct 16 04:12:06 hermes kernel: "echo 0 > 
+> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>   Oct 16 04:12:06 hermes kernel: pdflush       D ffff8800280910e8     0 
+> 409      2 0x00000000
+>   Oct 16 04:12:06 hermes kernel: ffff88083ced7aa0 0000000000000046 
+> 0000000000000000 ffffea001cc87148
+>   Oct 16 04:12:06 hermes kernel: ffff88083ced7a80 ffffffff81107530 
+> ffff88083c57e6f8 000000000000e0e8
+>   Oct 16 04:12:06 hermes kernel: ffff88083c57e6f8 0000000000011c80 
+> 0000000000011c80 00000001037141e6
+>   Oct 16 04:12:06 hermes kernel: Call Trace:
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff81107530>] ? 
+> __block_write_full_page+0x200/0x2f2
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff81182376>] 
+> start_this_handle+0x2dc/0x3b1
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff8107fb43>] ? 
+> autoremove_wake_function+0x0/0x5a
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff811825ee>] 
+> jbd2_journal_start+0xb2/0x101
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff81167fe5>] 
+> ext4_journal_start_sb+0x62/0xa1
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff8115c051>] 
+> ext4_da_writepages+0x1f1/0x430
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff810734d5>] ? 
+> lock_timer_base+0x3a/0x78
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff810b3816>] 
+> do_writepages+0x35/0x5b
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff810fec80>] 
+> writeback_single_inode+0x17c/0x37e
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff810a30b4>] ? 
+> delayacct_end+0x8c/0xad
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff810ff366>] 
+> generic_sync_sb_inodes+0x2b4/0x451
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff810ff644>] 
+> writeback_inodes+0x95/0xfe
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff810b3a36>] wb_kupdate+0xbb/0x142
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff810b4917>] ? pdflush+0x0/0x22b
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff810b4a47>] pdflush+0x130/0x22b
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff810b397b>] ? wb_kupdate+0x0/0x142
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff8107f71f>] kthread+0x9b/0xa3
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff8102ccaa>] child_rip+0xa/0x20
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff8107f684>] ? kthread+0x0/0xa3
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff8102cca0>] ? child_rip+0x0/0x20
+>   Oct 16 04:12:06 hermes kernel: INFO: task kjournald2:2166 blocked for more 
+> than 120 seconds.
+>   Oct 16 04:12:06 hermes kernel: "echo 0 > 
+> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>   Oct 16 04:12:06 hermes kernel: kjournald2    D ffff8800280c50e8     0 
+> 2166      2 0x00000000
+>   Oct 16 04:12:06 hermes kernel: ffff8808392cdcd0 0000000000000046 
+> 0000000000000000 ffffffff81058376
+>   Oct 16 04:12:06 hermes kernel: 0000000000000000 ffff88083930b0a0 
+> ffff88083a2b4a38 000000000000e0e8
+>   Oct 16 04:12:06 hermes kernel: ffff88083a2b4a38 0000000000011c80 
+> 0000000000011c80 0000000103713338
+>   Oct 16 04:12:06 hermes kernel: Call Trace:
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff81058376>] ? 
+> __wake_up_common+0x58/0xa2
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff811829f3>] 
+> jbd2_journal_commit_transaction+0x189/0x10e6
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff8105aee5>] ? 
+> __dequeue_entity+0x41/0x5d
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff8102a527>] ? 
+> __switch_to+0xce/0x2af
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff8106118d>] ? 
+> finish_task_switch+0x6d/0x116
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff810734d5>] ? 
+> lock_timer_base+0x3a/0x78
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff8107fb43>] ? 
+> autoremove_wake_function+0x0/0x5a
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff81073577>] ? 
+> try_to_del_timer_sync+0x64/0x82
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff81187505>] kjournald2+0x10e/0x23f
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff8107fb43>] ? 
+> autoremove_wake_function+0x0/0x5a
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff811873f7>] ? kjournald2+0x0/0x23f
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff8107f71f>] kthread+0x9b/0xa3
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff8102ccaa>] child_rip+0xa/0x20
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff8107f684>] ? kthread+0x0/0xa3
+>   Oct 16 04:12:06 hermes kernel: [<ffffffff8102cca0>] ? child_rip+0x0/0x20
+>
+> Lowering the reconstruction rate to 10000 in
+> /proc/sys/dev/raid/speed_limit_max solved the problem. But I was under
+> the impression that the raid code would lower this speed (to 
+> speed_limit_min?)
+> automatically when there are other process trying to access the device.
+> Are the other parameters one can tune so that the reconstruction does
+> not eat all the IO?
+>
+> Thanks,
+> Holger
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
 Hi,
 
-2.6.23.. can you retry with 2.6.32-rcX or 2.6.31 to see if you can 
-reproduce the problem?
+I have the same problem with mdadm/raid-1, if you do not limit the speed 
+in the speed_limit_min paramter, it will starve the I/O from all other 
+processes and result in the same problem you are having.
+
+But for me I'm not sure about the reconstruction-- this happens for me 
+during a raid verify/check.
 
 Justin.
-
-On Fri, 16 Oct 2009, hank peng wrote:
-
-> Hi, all:
-> I have a self-built board, cpu is MPC8548(PPC arch), kernel is based
-> on MPC8548CDS demo board, version is 2.6.23.
-> A SATA controller is conected to CPU via PCIX, and I have 3 disks
-> attached to it.
->
-> root@Storage:~# mdadm -C /dev/md0 -l5 -n3 /dev/sd{b,c,d}
-> root@Storage:~# cat /proc/mdstat
-> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
-> [raid4] [multipath]
-> md0 : active raid5 sdd[3] sdc[1] sdb[0]
->      490234624 blocks level 5, 64k chunk, algorithm 2 [3/2] [UU_]
->      [>....................]  recovery =  0.8% (1990404/245117312)
-> finish=83.3min speed=48603K/sec
->
-> unused devices: <none>
-> root@Storage:~# pvcreate /dev/md0
->  Physical volume "/dev/md0" successfully created
-> root@Storage:~# vgcreate vg /dev/md0
->  Volume group "vg" successfully created
-> root@Storage:~# lvcreate -L 100G -n lvtest vg
->  Logical volume "lvtest" created
-> root@Storage:~# mkfs.xfs -f -ssize=4k /dev/vg/lvtest
-> Warning - device mapper device, but no dmsetup(8) found
-> Warning - device mapper device, but no dmsetup(8) found
-> meta-data=/dev/vg/lvtest         isize=256    agcount=4, agsize=6553600 blks
->         =                       sectsz=4096  attr=2
-> data     =                       bsize=4096   blocks=26214400, imaxpct=25
->         =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096
-> log      =internal log           bsize=4096   blocks=12800, version=2
->         =                       sectsz=4096  sunit=1 blks, lazy-count=0
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> root@Storage:~# mkdir tmp
-> root@Storage:~# mount -t xfs /dev/vg/lvtest ./tmp/
-> Filesystem "dm-0": Disabling barriers, not supported by the underlying device
-> XFS mounting filesystem dm-0
-> XFS: totally zeroed log
-> Filesystem "dm-0": XFS internal error xlog_clear_stale_blocks(2) at
-> line 1252 of file fs/xfs/xfs_log_recover.c.  Caller 0xc018ec88
-> Call Trace:
-> [e8ab9a60] [c00091ec] show_stack+0x3c/0x1a0 (unreliable)
-> [e8ab9a90] [c017559c] xfs_error_report+0x50/0x60
-> [e8ab9aa0] [c018e84c] xlog_clear_stale_blocks+0xe4/0x1c8
-> [e8ab9ad0] [c018ec88] xlog_find_tail+0x358/0x494
-> [e8ab9b20] [c0190ba0] xlog_recover+0x20/0xf4
-> [e8ab9b40] [c018993c] xfs_log_mount+0x104/0x148
-> [e8ab9b60] [c01930f0] xfs_mountfs+0x8d4/0xd14
-> [e8ab9c00] [c0183f88] xfs_ioinit+0x38/0x4c
-> [e8ab9c20] [c019bf24] xfs_mount+0x458/0x470
-> [e8ab9c60] [c01b087c] vfs_mount+0x38/0x48
-> [e8ab9c70] [c01b052c] xfs_fs_fill_super+0x98/0x1f8
-> [e8ab9cf0] [c0076cec] get_sb_bdev+0x164/0x1a8
-> [e8ab9d40] [c01af3bc] xfs_fs_get_sb+0x1c/0x2c
-> [e8ab9d50] [c00769f8] vfs_kern_mount+0x58/0xe0
-> [e8ab9d70] [c0076ad0] do_kern_mount+0x40/0xf8
-> [e8ab9d90] [c008ee0c] do_mount+0x158/0x600
-> [e8ab9f10] [c008f344] sys_mount+0x90/0xe8
-> [e8ab9f40] [c0002320] ret_from_syscall+0x0/0x3c
-> XFS: failed to locate log tail
-> XFS: log mount/recovery failed: error 117
-> XFS: log mount failed
-> mount: mounting /dev/vg/lvtest on ./tmp/ failed: Structure needs cleaning
->
->
-> Interestingly, if remove "-ssize=4k" option in mkfs.xfs command, it is OK
-> root@Storage:~# mkfs.xfs -f  /dev/vg/lvtest
-> Warning - device mapper device, but no dmsetup(8) found
-> Warning - device mapper device, but no dmsetup(8) found
-> meta-data=/dev/vg/lvtest         isize=256    agcount=4, agsize=6553600 blks
->         =                       sectsz=512   attr=2
-> data     =                       bsize=4096   blocks=26214400, imaxpct=25
->         =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096
-> log      =internal log           bsize=4096   blocks=12800, version=2
->         =                       sectsz=512   sunit=0 blks, lazy-count=0
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> root@Storage:~# mount -t xfs /dev/vg/lvtest ./tmp/
-> Filesystem "dm-0": Disabling barriers, not supported by the underlying device
-> XFS mounting filesystem dm-0
->
-> I don't know when "-ssize=4k" option is added, what is difference?
->
->
-> -- 
-> The simplest is not all best but the best is surely the simplest!
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
->
