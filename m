@@ -1,84 +1,65 @@
-From: mark delfman <markdelfman@googlemail.com>
-Subject: Re: MD write performance issue
-Date: Fri, 16 Oct 2009 16:46:12 +0100
-Message-ID: <66781b10910160846g1ff3e8ccq7c00a05442bb467a@mail.gmail.com>
-References: <66781b10910160145r59f3ea0cqc8632dbc3d92f833@mail.gmail.com>
-	 <4AD84E08.7020807@shiftmail.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: XFS mount failuer on RAID5
+Date: Fri, 16 Oct 2009 10:55:13 -0500
+Message-ID: <4AD89761.4000605@sandeen.net>
+References: <389deec70910152009i7656aaf2s9d929b8b68e4e740@mail.gmail.com> <4AD89128.2010206@sandeen.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AD84E08.7020807@shiftmail.org>
+In-Reply-To: <4AD89128.2010206@sandeen.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: hank peng <pengxihan@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
 List-Id: linux-raid.ids
 
-Quick update on .30.x kernels... which are still showing MD reduced performance:
-
-
-Linux linux-tlfp 2.6.30-vanilla #1 SMP Fri Oct 16 14:22:54 BST 2009
-x86_64 x86_64 x86_64 GNU/Linux
-
-RAW: 1.1
-XFS 870 MB/s
-
-
-
-Linux linux-tlfp 2.6.31.3-vanilla #1 SMP Fri Oct 16 14:52:09 BST 2009
-x86_64 x86_64 x86_64 GNU/Linux
-
-RAW: 1.1
-XFS 920 MB/s
-
-
-linux-tlfp:/ # uname -a
-Linux linux-tlfp 2.6.31.2-vanilla #1 SMP Fri Oct 16 15:44:44 BST 2009
-x86_64 x86_64 x86_64 GNU/Linux
-
-
-RAW: 1.1
-XFS: 935 MB/s
-
-
-On Fri, Oct 16, 2009 at 11:42 AM, Asdo <asdo@shiftmail.org> wrote:
-> mark delfman wrote:
+Eric Sandeen wrote:
+> hank peng wrote:
+>> Hi, all:
+>> I have a self-built board, cpu is MPC8548(PPC arch), kernel is based
+>> on MPC8548CDS demo board, version is 2.6.23.
+>> A SATA controller is conected to CPU via PCIX, and I have 3 disks
+>> attached to it.
 >>
->> After further work we are sure that there is a significant write
->> performance issue with either the Kernel+MD or...
->
-> Hm!
-> Pretty strange repeated ups and downs of the speed with increasing kernel
-> versions.
->
-> Have you checked:
-> that compile options are the same (preferably by taking 2.6.31 compile
-> options and porting them down)
-> disk schedulers are the same
-> the test was long enough to level jitters, like 2-3 minutes
-> Also: looking at "iostat -x 1" during the transfer could show something...
->
-> Apart from this, I confirm I noticed in my 2.6.31-rc? earlier tests, that
-> performances on xfs writes were very inconsistent :
-> These were my benchmarks (I wrote them on file at that time):
->
-> Stripe_cache_size was 1024, 13 devices raid-5:
->
-> bs=1M -> 206MB/s
-> bs=256K -> 229MB/s
->
-> retrying soon after, identical settings:
->
-> bs=1M -> 129MB/s
-> bs=256K -> 140MB/s
->
->
-> Transfer speed was hence very unreliable, depending on something that is not
-> clearly user visible... maybe dirty page cache? I thought that depending on
-> the exact amount of data being pushed out by the pdflush at the first round,
-> that would cause a sequence of read-modify-write stuff which would cause
-> further read-modify-write and further instability later on. But I was doing
-> that with raid-5 while you Mark are using raid-0 right? My theory doesn't
-> hold on raid-0.
->
->
->
+> ...
+> 
+>> root@Storage:~# mkfs.xfs -f -ssize=4k /dev/vg/lvtest
+>> Warning - device mapper device, but no dmsetup(8) found
+>> Warning - device mapper device, but no dmsetup(8) found
+>> meta-data=/dev/vg/lvtest         isize=256    agcount=4, 
+>> agsize=6553600 blks
+>>          =                       sectsz=4096  attr=2
+>> data     =                       bsize=4096   blocks=26214400, imaxpct=25
+>>          =                       sunit=0      swidth=0 blks
+>> naming   =version 2              bsize=4096
+>> log      =internal log           bsize=4096   blocks=12800, version=2
+>>          =                       sectsz=4096  sunit=1 blks, lazy-count=0
+>> realtime =none                   extsz=4096   blocks=0, rtextents=0
+>> root@Storage:~# mkdir tmp
+>> root@Storage:~# mount -t xfs /dev/vg/lvtest ./tmp/
+>> Filesystem "dm-0": Disabling barriers, not supported by the underlying 
+>> device
+>> XFS mounting filesystem dm-0
+>> XFS: totally zeroed log
+>> Filesystem "dm-0": XFS internal error xlog_clear_stale_blocks(2) at
+>> line 1252 of file fs/xfs/xfs_log_recover.c.  Caller 0xc018ec88
+> 
+> 
+> Can you try the patch that Andy Poling posted to the list just 
+> yesterday?  Slight longshot but it may be it.
+> 
+> Otherwise I will look at this in a bit; on the road today though.
+> 
+> -Eric
+
+Actually you might try a newer xfsprogs and/or kernel; if I do this on a 
+loopback file, creating the same geometry as you have:
+
+mkfs.xfs -dfile,name=fsfile,size=2621440b -lsize=12800b,lazy-count=0 
+-ssize=4096
+
+it mounts fine w/ latest xfsprogs and a 2.6.30 kernel.
+
+-Eric
+
+
