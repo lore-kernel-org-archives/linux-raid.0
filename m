@@ -1,54 +1,44 @@
-From: Asdo <asdo@shiftmail.org>
-Subject: Re: MD write performance issue
-Date: Fri, 16 Oct 2009 12:42:16 +0200
-Message-ID: <4AD84E08.7020807@shiftmail.org>
-References: <66781b10910160145r59f3ea0cqc8632dbc3d92f833@mail.gmail.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: 2.6.31: xfs or md/raid1 bug in 2.6.31?
+Date: Fri, 16 Oct 2009 08:37:03 -0400 (EDT)
+Message-ID: <alpine.DEB.2.00.0910160832290.31450@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <66781b10910160145r59f3ea0cqc8632dbc3d92f833@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: mark delfman <markdelfman@googlemail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Return-path: <xfs-bounces@oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Sender: xfs-bounces@oss.sgi.com
+Errors-To: xfs-bounces@oss.sgi.com
+To: xfs@oss.sgi.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Cc: Alan Piszcz <ap@solarrain.com>
 List-Id: linux-raid.ids
 
-mark delfman wrote:
-> After further work we are sure that there is a significant write
-> performance issue with either the Kernel+MD or...
+Hi all,
 
-Hm!
-Pretty strange repeated ups and downs of the speed with increasing 
-kernel versions.
+Does anyone recall if there was a serious xfs bug in 2.6.31?
 
-Have you checked:
-that compile options are the same (preferably by taking 2.6.31 compile 
-options and porting them down)
-disk schedulers are the same
-the test was long enough to level jitters, like 2-3 minutes
-Also: looking at "iostat -x 1" during the transfer could show something...
+I saw xfsbufd/pdflush etc locked up and local file system access hung 
+whenever I tried to write a file to the filesystem, I ran a sysrq-t but 
+could not capture the output nor did I see anything obvious.
 
-Apart from this, I confirm I noticed in my 2.6.31-rc? earlier tests, 
-that performances on xfs writes were very inconsistent :
-These were my benchmarks (I wrote them on file at that time):
+System runs a md/raid1+xfs.
 
-Stripe_cache_size was 1024, 13 devices raid-5:
+Upgraded to 2.6.31.4, will have to see if it happens again.
 
-bs=1M -> 206MB/s
-bs=256K -> 229MB/s
+Was curious though if anyone recalled problems with this kernel 
+release/combination?
 
-retrying soon after, identical settings:
+Thanks,
 
-bs=1M -> 129MB/s
-bs=256K -> 140MB/s
+Justin.
 
-
-Transfer speed was hence very unreliable, depending on something that is 
-not clearly user visible... maybe dirty page cache? I thought that 
-depending on the exact amount of data being pushed out by the pdflush at 
-the first round, that would cause a sequence of read-modify-write stuff 
-which would cause further read-modify-write and further instability 
-later on. But I was doing that with raid-5 while you Mark are using 
-raid-0 right? My theory doesn't hold on raid-0.
-
-
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
