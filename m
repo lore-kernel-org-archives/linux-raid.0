@@ -1,44 +1,50 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: 2.6.31: xfs or md/raid1 bug in 2.6.31?
-Date: Fri, 16 Oct 2009 08:37:03 -0400 (EDT)
-Message-ID: <alpine.DEB.2.00.0910160832290.31450@p34.internal.lan>
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: XFS mount failuer on RAID5
+Date: Fri, 16 Oct 2009 10:28:40 -0500
+Message-ID: <4AD89128.2010206@sandeen.net>
+References: <389deec70910152009i7656aaf2s9d929b8b68e4e740@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Sender: xfs-bounces@oss.sgi.com
-Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
-Cc: Alan Piszcz <ap@solarrain.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <389deec70910152009i7656aaf2s9d929b8b68e4e740@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: hank peng <pengxihan@gmail.com>
+Cc: xfs@oss.sgi.com, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all,
+hank peng wrote:
+> Hi, all:
+> I have a self-built board, cpu is MPC8548(PPC arch), kernel is based
+> on MPC8548CDS demo board, version is 2.6.23.
+> A SATA controller is conected to CPU via PCIX, and I have 3 disks
+> attached to it.
+> 
+...
 
-Does anyone recall if there was a serious xfs bug in 2.6.31?
+> root@Storage:~# mkfs.xfs -f -ssize=4k /dev/vg/lvtest
+> Warning - device mapper device, but no dmsetup(8) found
+> Warning - device mapper device, but no dmsetup(8) found
+> meta-data=/dev/vg/lvtest         isize=256    agcount=4, agsize=6553600 blks
+>          =                       sectsz=4096  attr=2
+> data     =                       bsize=4096   blocks=26214400, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096
+> log      =internal log           bsize=4096   blocks=12800, version=2
+>          =                       sectsz=4096  sunit=1 blks, lazy-count=0
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> root@Storage:~# mkdir tmp
+> root@Storage:~# mount -t xfs /dev/vg/lvtest ./tmp/
+> Filesystem "dm-0": Disabling barriers, not supported by the underlying device
+> XFS mounting filesystem dm-0
+> XFS: totally zeroed log
+> Filesystem "dm-0": XFS internal error xlog_clear_stale_blocks(2) at
+> line 1252 of file fs/xfs/xfs_log_recover.c.  Caller 0xc018ec88
 
-I saw xfsbufd/pdflush etc locked up and local file system access hung 
-whenever I tried to write a file to the filesystem, I ran a sysrq-t but 
-could not capture the output nor did I see anything obvious.
 
-System runs a md/raid1+xfs.
+Can you try the patch that Andy Poling posted to the list just 
+yesterday?  Slight longshot but it may be it.
 
-Upgraded to 2.6.31.4, will have to see if it happens again.
+Otherwise I will look at this in a bit; on the road today though.
 
-Was curious though if anyone recalled problems with this kernel 
-release/combination?
-
-Thanks,
-
-Justin.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+-Eric
