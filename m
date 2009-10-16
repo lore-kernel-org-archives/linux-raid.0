@@ -1,75 +1,46 @@
-From: Christopher Chen <muffaleta@gmail.com>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
 Subject: Re: Disappointing RAID10 Performance
-Date: Fri, 16 Oct 2009 14:20:42 -0700
-Message-ID: <7bc80d500910161420p3e16e20bj7ee69ee1d3ac3a9f@mail.gmail.com>
+Date: Fri, 16 Oct 2009 23:27:49 +0200
+Message-ID: <20091016212749.GA997@rap.rap.dk>
 References: <364346.70897.qm@web38808.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <364346.70897.qm@web38808.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: adfas asd <chimera_god@yahoo.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sorry, I've looked at this again.
-
-It's plausible that md's read balancing would increase the read speed,
-but it appears that this is not the case. Are you using LVM? And the
-readahead for the block devices are set appropriately? Distro? Version
-of mdadm?
-
-cc
-
-On Fri, Oct 16, 2009 at 10:32 AM, adfas asd <chimera_god@yahoo.com> wro=
-te:
-> I was hoping to get better performance with RAID10 than from the raw =
-disks, but that's turned out to not be the case. =A0Experimenting with =
-the readahead buffer I get these bandwidths with the following command:
-> # time dd if=3D{somelarge}.iso of=3D/dev/null bs=3D{readahead size}
->
+On Fri, Oct 16, 2009 at 10:32:14AM -0700, adfas asd wrote:
+> I was hoping to get better performance with RAID10 than from the raw disks, but that's turned out to not be the case.  Experimenting with the readahead buffer I get these bandwidths with the following command:
+> # time dd if={somelarge}.iso of=/dev/null bs={readahead size}
+> 
 > /dev/sd?
-> =A01024 71.3 MB/s
-> =A02048 71.2 MB/s
-> =A04096 77.7 MB/s
-> =A08192 69.4 MB/s
-> =A016384 76.6 MB/s
->
+>  1024 71.3 MB/s
+>  2048 71.2 MB/s
+>  4096 77.7 MB/s
+>  8192 69.4 MB/s
+>  16384 76.6 MB/s
+> 
 > /dev/md2
-> =A01024 =A067.1
-> =A02048 =A069.1
-> =A04096 =A075.7
-> =A08192 =A064.9
-> =A016384 69.0
->
-> Using RAID10offset2 on 2 WD 2TB drives, and always the same input fil=
-e.
->
-> Why would RAID10 performance be -poorer-?
+>  1024  67.1
+>  2048  69.1
+>  4096  75.7
+>  8192  64.9
+>  16384 69.0
+> 
+> Using RAID10offset2 on 2 WD 2TB drives, and always the same input file.
+> 
+> Why would RAID10 performance be -poorer-? 
 > If it weren't for mirroring, this wouldn't be worth it.
->
->
->
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
 
+try with layout=far - it is good for reading big files, maybe a factor 2
+faster than layout=offset.
 
+More on performance:
+http://linux-raid.osdl.org/index.php/Performance
 
---=20
-Chris Chen <muffaleta@gmail.com>
-"The fact that yours is better than anyone else's
-is not a guarantee that it's any good."
--- Seen on a wall
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Best regards
+keld
