@@ -1,182 +1,92 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 09/11] md: Fix handling of raid5 array which is being
-	reshaped to fewer devices.
-Date: Fri, 16 Oct 2009 16:49:19 +1100
-Message-ID: <20091016054919.24208.1181.stgit@notabene.brown>
-References: <20091016054316.24208.33818.stgit@notabene.brown>
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
+Subject: Raid reconstructing and process hanging in D state
+Date: Fri, 16 Oct 2009 07:17:40 +0000 (GMT)
+Message-ID: <Pine.LNX.4.64.0910160703260.2463@praktifix.dwd.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091016054316.24208.33818.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: NeilBrown <neilb@suse.de>
+To: linux-raid <linux-raid@vger.kernel.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-When a raid5 (or raid6) array is being reshaped to have fewer devices,
-conf->raid_disks is the latter and hence smaller number of devices.
-However sometimes we want to use a number which is the total number of
-currently required devices - the larger of the 'old' and 'new' sizes.
-Before we implemented reducing the number of devices, this was always
-'new' i.e. ->raid_disks.
-Now we need max(raid_disks, previous_raid_disks) in those places.
+Hello
 
-This particularly affects assembling an array that was shutdown while
-in the middle of a reshape to fewer devices.
+I have a SW Raid6 over 8 disk with a plain 2.6.31.4 kernel. When the
+raid is reconstructed I get a lot of process hanging for a long time
+in D-state. In fact /var/log/messages shows the following errors:
 
-md.c needs a similar fix when interpreting the md metadata.
+    Oct 16 04:09:01 hermes kernel: md: data-check of RAID array md3
+    Oct 16 04:09:01 hermes kernel: md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+    Oct 16 04:09:01 hermes kernel: md: data-check of RAID array md1
+    Oct 16 04:09:01 hermes kernel: md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+    Oct 16 04:09:01 hermes kernel: md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for data-check.
+    Oct 16 04:09:01 hermes kernel: md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for data-check.
+    Oct 16 04:09:01 hermes kernel: md: using 128k window, over a total of 70613632 blocks.
+    Oct 16 04:09:01 hermes kernel: md: using 128k window, over a total of 70613632 blocks.
+    Oct 16 04:09:01 hermes kernel: md: delaying data-check of md0 until md3 has finished (they share one or more physical units)
+    Oct 16 04:09:01 hermes kernel: md: delaying data-check of md2 until md0 has finished (they share one or more physical units)
+    Oct 16 04:09:01 hermes kernel: md: delaying data-check of md0 until md3 has finished (they share one or more physical units)
+    Oct 16 04:09:01 hermes kernel: md: data-check of RAID array md4
+    Oct 16 04:09:01 hermes kernel: md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+    Oct 16 04:09:01 hermes kernel: md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for data-check.
+    Oct 16 04:09:01 hermes kernel: md: using 128k window, over a total of 292413440 blocks.
+    Oct 16 04:12:06 hermes kernel: INFO: task pdflush:409 blocked for more than 120 seconds.
+    Oct 16 04:12:06 hermes kernel: "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+    Oct 16 04:12:06 hermes kernel: pdflush       D ffff8800280910e8     0   409      2 0x00000000
+    Oct 16 04:12:06 hermes kernel: ffff88083ced7aa0 0000000000000046 0000000000000000 ffffea001cc87148
+    Oct 16 04:12:06 hermes kernel: ffff88083ced7a80 ffffffff81107530 ffff88083c57e6f8 000000000000e0e8
+    Oct 16 04:12:06 hermes kernel: ffff88083c57e6f8 0000000000011c80 0000000000011c80 00000001037141e6
+    Oct 16 04:12:06 hermes kernel: Call Trace:
+    Oct 16 04:12:06 hermes kernel: [<ffffffff81107530>] ? __block_write_full_page+0x200/0x2f2
+    Oct 16 04:12:06 hermes kernel: [<ffffffff81182376>] start_this_handle+0x2dc/0x3b1
+    Oct 16 04:12:06 hermes kernel: [<ffffffff8107fb43>] ? autoremove_wake_function+0x0/0x5a
+    Oct 16 04:12:06 hermes kernel: [<ffffffff811825ee>] jbd2_journal_start+0xb2/0x101
+    Oct 16 04:12:06 hermes kernel: [<ffffffff81167fe5>] ext4_journal_start_sb+0x62/0xa1
+    Oct 16 04:12:06 hermes kernel: [<ffffffff8115c051>] ext4_da_writepages+0x1f1/0x430
+    Oct 16 04:12:06 hermes kernel: [<ffffffff810734d5>] ? lock_timer_base+0x3a/0x78
+    Oct 16 04:12:06 hermes kernel: [<ffffffff810b3816>] do_writepages+0x35/0x5b
+    Oct 16 04:12:06 hermes kernel: [<ffffffff810fec80>] writeback_single_inode+0x17c/0x37e
+    Oct 16 04:12:06 hermes kernel: [<ffffffff810a30b4>] ? delayacct_end+0x8c/0xad
+    Oct 16 04:12:06 hermes kernel: [<ffffffff810ff366>] generic_sync_sb_inodes+0x2b4/0x451
+    Oct 16 04:12:06 hermes kernel: [<ffffffff810ff644>] writeback_inodes+0x95/0xfe
+    Oct 16 04:12:06 hermes kernel: [<ffffffff810b3a36>] wb_kupdate+0xbb/0x142
+    Oct 16 04:12:06 hermes kernel: [<ffffffff810b4917>] ? pdflush+0x0/0x22b
+    Oct 16 04:12:06 hermes kernel: [<ffffffff810b4a47>] pdflush+0x130/0x22b
+    Oct 16 04:12:06 hermes kernel: [<ffffffff810b397b>] ? wb_kupdate+0x0/0x142
+    Oct 16 04:12:06 hermes kernel: [<ffffffff8107f71f>] kthread+0x9b/0xa3
+    Oct 16 04:12:06 hermes kernel: [<ffffffff8102ccaa>] child_rip+0xa/0x20
+    Oct 16 04:12:06 hermes kernel: [<ffffffff8107f684>] ? kthread+0x0/0xa3
+    Oct 16 04:12:06 hermes kernel: [<ffffffff8102cca0>] ? child_rip+0x0/0x20
+    Oct 16 04:12:06 hermes kernel: INFO: task kjournald2:2166 blocked for more than 120 seconds.
+    Oct 16 04:12:06 hermes kernel: "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+    Oct 16 04:12:06 hermes kernel: kjournald2    D ffff8800280c50e8     0  2166      2 0x00000000
+    Oct 16 04:12:06 hermes kernel: ffff8808392cdcd0 0000000000000046 0000000000000000 ffffffff81058376
+    Oct 16 04:12:06 hermes kernel: 0000000000000000 ffff88083930b0a0 ffff88083a2b4a38 000000000000e0e8
+    Oct 16 04:12:06 hermes kernel: ffff88083a2b4a38 0000000000011c80 0000000000011c80 0000000103713338
+    Oct 16 04:12:06 hermes kernel: Call Trace:
+    Oct 16 04:12:06 hermes kernel: [<ffffffff81058376>] ? __wake_up_common+0x58/0xa2
+    Oct 16 04:12:06 hermes kernel: [<ffffffff811829f3>] jbd2_journal_commit_transaction+0x189/0x10e6
+    Oct 16 04:12:06 hermes kernel: [<ffffffff8105aee5>] ? __dequeue_entity+0x41/0x5d
+    Oct 16 04:12:06 hermes kernel: [<ffffffff8102a527>] ? __switch_to+0xce/0x2af
+    Oct 16 04:12:06 hermes kernel: [<ffffffff8106118d>] ? finish_task_switch+0x6d/0x116
+    Oct 16 04:12:06 hermes kernel: [<ffffffff810734d5>] ? lock_timer_base+0x3a/0x78
+    Oct 16 04:12:06 hermes kernel: [<ffffffff8107fb43>] ? autoremove_wake_function+0x0/0x5a
+    Oct 16 04:12:06 hermes kernel: [<ffffffff81073577>] ? try_to_del_timer_sync+0x64/0x82
+    Oct 16 04:12:06 hermes kernel: [<ffffffff81187505>] kjournald2+0x10e/0x23f
+    Oct 16 04:12:06 hermes kernel: [<ffffffff8107fb43>] ? autoremove_wake_function+0x0/0x5a
+    Oct 16 04:12:06 hermes kernel: [<ffffffff811873f7>] ? kjournald2+0x0/0x23f
+    Oct 16 04:12:06 hermes kernel: [<ffffffff8107f71f>] kthread+0x9b/0xa3
+    Oct 16 04:12:06 hermes kernel: [<ffffffff8102ccaa>] child_rip+0xa/0x20
+    Oct 16 04:12:06 hermes kernel: [<ffffffff8107f684>] ? kthread+0x0/0xa3
+    Oct 16 04:12:06 hermes kernel: [<ffffffff8102cca0>] ? child_rip+0x0/0x20
 
-Signed-off-by: NeilBrown <neilb@suse.de>
----
+Lowering the reconstruction rate to 10000 in
+/proc/sys/dev/raid/speed_limit_max solved the problem. But I was under
+the impression that the raid code would lower this speed (to speed_limit_min?)
+automatically when there are other process trying to access the device.
+Are the other parameters one can tune so that the reconstruction does
+not eat all the IO?
 
- drivers/md/md.c    |    2 +-
- drivers/md/raid5.c |   37 ++++++++++++++++++-------------------
- 2 files changed, 19 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 26ba42a..10eb1fc 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2631,7 +2631,7 @@ static void analyze_sbs(mddev_t * mddev)
- 			rdev->desc_nr = i++;
- 			rdev->raid_disk = rdev->desc_nr;
- 			set_bit(In_sync, &rdev->flags);
--		} else if (rdev->raid_disk >= mddev->raid_disks) {
-+		} else if (rdev->raid_disk >= (mddev->raid_disks - min(0, mddev->delta_disks))) {
- 			rdev->raid_disk = -1;
- 			clear_bit(In_sync, &rdev->flags);
- 		}
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index d4ce51b..c4366c9 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -1238,22 +1238,22 @@ static void raid_run_ops(struct stripe_head *sh, unsigned long ops_request)
- static int grow_one_stripe(raid5_conf_t *conf)
- {
- 	struct stripe_head *sh;
-+	int disks = max(conf->raid_disks, conf->previous_raid_disks);
- 	sh = kmem_cache_alloc(conf->slab_cache, GFP_KERNEL);
- 	if (!sh)
- 		return 0;
--	memset(sh, 0, sizeof(*sh) + (conf->raid_disks-1)*sizeof(struct r5dev));
-+	memset(sh, 0, sizeof(*sh) + (disks-1)*sizeof(struct r5dev));
- 	sh->raid_conf = conf;
- 	spin_lock_init(&sh->lock);
- 	#ifdef CONFIG_MULTICORE_RAID456
- 	init_waitqueue_head(&sh->ops.wait_for_ops);
- 	#endif
- 
--	if (grow_buffers(sh, conf->raid_disks)) {
--		shrink_buffers(sh, conf->raid_disks);
-+	if (grow_buffers(sh, disks)) {
-+		shrink_buffers(sh, disks);
- 		kmem_cache_free(conf->slab_cache, sh);
- 		return 0;
- 	}
--	sh->disks = conf->raid_disks;
- 	/* we just created an active stripe so... */
- 	atomic_set(&sh->count, 1);
- 	atomic_inc(&conf->active_stripes);
-@@ -1265,7 +1265,7 @@ static int grow_one_stripe(raid5_conf_t *conf)
- static int grow_stripes(raid5_conf_t *conf, int num)
- {
- 	struct kmem_cache *sc;
--	int devs = conf->raid_disks;
-+	int devs = max(conf->raid_disks, conf->previous_raid_disks);
- 
- 	sprintf(conf->cache_name[0],
- 		"raid%d-%s", conf->level, mdname(conf->mddev));
-@@ -3540,9 +3540,10 @@ static void unplug_slaves(mddev_t *mddev)
- {
- 	raid5_conf_t *conf = mddev->private;
- 	int i;
-+	int devs = max(conf->raid_disks, conf->previous_raid_disks);
- 
- 	rcu_read_lock();
--	for (i = 0; i < conf->raid_disks; i++) {
-+	for (i = 0; i < devs; i++) {
- 		mdk_rdev_t *rdev = rcu_dereference(conf->disks[i].rdev);
- 		if (rdev && !test_bit(Faulty, &rdev->flags) && atomic_read(&rdev->nr_pending)) {
- 			struct request_queue *r_queue = bdev_get_queue(rdev->bdev);
-@@ -4562,13 +4563,9 @@ raid5_size(mddev_t *mddev, sector_t sectors, int raid_disks)
- 
- 	if (!sectors)
- 		sectors = mddev->dev_sectors;
--	if (!raid_disks) {
-+	if (!raid_disks)
- 		/* size is defined by the smallest of previous and new size */
--		if (conf->raid_disks < conf->previous_raid_disks)
--			raid_disks = conf->raid_disks;
--		else
--			raid_disks = conf->previous_raid_disks;
--	}
-+		raid_disks = min(conf->raid_disks, conf->previous_raid_disks);
- 
- 	sectors &= ~((sector_t)mddev->chunk_sectors - 1);
- 	sectors &= ~((sector_t)mddev->new_chunk_sectors - 1);
-@@ -4669,7 +4666,7 @@ static int raid5_alloc_percpu(raid5_conf_t *conf)
- 			}
- 			per_cpu_ptr(conf->percpu, cpu)->spare_page = spare_page;
- 		}
--		scribble = kmalloc(scribble_len(conf->raid_disks), GFP_KERNEL);
-+		scribble = kmalloc(conf->scribble_len, GFP_KERNEL);
- 		if (!scribble) {
- 			err = -ENOMEM;
- 			break;
-@@ -4690,7 +4687,7 @@ static int raid5_alloc_percpu(raid5_conf_t *conf)
- static raid5_conf_t *setup_conf(mddev_t *mddev)
- {
- 	raid5_conf_t *conf;
--	int raid_disk, memory;
-+	int raid_disk, memory, max_disks;
- 	mdk_rdev_t *rdev;
- 	struct disk_info *disk;
- 
-@@ -4740,13 +4737,14 @@ static raid5_conf_t *setup_conf(mddev_t *mddev)
- 	conf->bypass_threshold = BYPASS_THRESHOLD;
- 
- 	conf->raid_disks = mddev->raid_disks;
--	conf->scribble_len = scribble_len(conf->raid_disks);
- 	if (mddev->reshape_position == MaxSector)
- 		conf->previous_raid_disks = mddev->raid_disks;
- 	else
- 		conf->previous_raid_disks = mddev->raid_disks - mddev->delta_disks;
-+	max_disks = max(conf->raid_disks, conf->previous_raid_disks);
-+	conf->scribble_len = scribble_len(max_disks);
- 
--	conf->disks = kzalloc(conf->raid_disks * sizeof(struct disk_info),
-+	conf->disks = kzalloc(max_disks * sizeof(struct disk_info),
- 			      GFP_KERNEL);
- 	if (!conf->disks)
- 		goto abort;
-@@ -4764,7 +4762,7 @@ static raid5_conf_t *setup_conf(mddev_t *mddev)
- 
- 	list_for_each_entry(rdev, &mddev->disks, same_set) {
- 		raid_disk = rdev->raid_disk;
--		if (raid_disk >= conf->raid_disks
-+		if (raid_disk >= max_disks
- 		    || raid_disk < 0)
- 			continue;
- 		disk = conf->disks + raid_disk;
-@@ -4796,7 +4794,7 @@ static raid5_conf_t *setup_conf(mddev_t *mddev)
- 	}
- 
- 	memory = conf->max_nr_stripes * (sizeof(struct stripe_head) +
--		 conf->raid_disks * ((sizeof(struct bio) + PAGE_SIZE))) / 1024;
-+		 max_disks * ((sizeof(struct bio) + PAGE_SIZE))) / 1024;
- 	if (grow_stripes(conf, conf->max_nr_stripes)) {
- 		printk(KERN_ERR
- 			"raid5: couldn't allocate %dkB for buffers\n", memory);
-@@ -4921,7 +4919,8 @@ static int run(mddev_t *mddev)
- 		    test_bit(In_sync, &rdev->flags))
- 			working_disks++;
- 
--	mddev->degraded = conf->raid_disks - working_disks;
-+	mddev->degraded = (max(conf->raid_disks, conf->previous_raid_disks)
-+			   - working_disks);
- 
- 	if (mddev->degraded > conf->max_degraded) {
- 		printk(KERN_ERR "raid5: not enough operational devices for %s"
-
-
+Thanks,
+Holger
