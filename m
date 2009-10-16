@@ -1,69 +1,38 @@
-From: Matthew Ingersoll <matth@digitalwest.net>
-Subject: active/active raid0
-Date: Fri, 16 Oct 2009 09:21:33 -0700
-Message-ID: <213B643B-ECBF-45E7-BC74-299766082AF8@digitalwest.net>
-References: <1255588866-4133-1-git-send-email-Vishnu@freescale.com> <e9c3a7c20910151825o67cd2712id91aead70f84987c@mail.gmail.com> <20091016153334.GA27401@ovro.caltech.edu>
-Mime-Version: 1.0 (Apple Message framework v936)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
+From: adfas asd <chimera_god@yahoo.com>
+Subject: Disappointing RAID10 Performance
+Date: Fri, 16 Oct 2009 10:32:14 -0700 (PDT)
+Message-ID: <364346.70897.qm@web38808.mail.mud.yahoo.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091016153334.GA27401@ovro.caltech.edu>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I'm testing an active/active setup that uses md for raid0 and was  
-hoping for some feedback.
-The basic design has a storage device that runs vladed (aoe-storage)  
-and an aoe initiator (controller) that creates a raid0 using mdadm  
-from the aoe devices.  From there, lvm (clustered/clvm) slices out  
-storage for sharing block devices.  I don't want to concentrate on the  
-layers above that (clustered file systems, etc) but mainly the active/ 
-active portion of this interacting with raid0 (via md not lvm) and aoe.
+I was hoping to get better performance with RAID10 than from the raw disks, but that's turned out to not be the case.  Experimenting with the readahead buffer I get these bandwidths with the following command:
+# time dd if={somelarge}.iso of=/dev/null bs={readahead size}
 
-Some diagrams that may help in understanding...
------
-"Physical" diagram:
+/dev/sd?
+ 1024 71.3 MB/s
+ 2048 71.2 MB/s
+ 4096 77.7 MB/s
+ 8192 69.4 MB/s
+ 16384 76.6 MB/s
 
-(export network block devices [ iscsi, aoe, etc] )
-                -----------
-                /        \
-       active  /          \  active
-   +-------------+      +-------------+
-   | controller1 |      | controller2 |
-   +-------------+      +-------------+
-              \           /
-               +---------+
-                    |
-             +-------------+                    +-------------+
-             | aoe-storage | --- drbd raid1 --- |  secondary  |
-             +-------------+                    +-------------+
+/dev/md2
+ 1024  67.1
+ 2048  69.1
+ 4096  75.7
+ 8192  64.9
+ 16384 69.0
 
------
-Layer diagram:
-+-----------------+
-| (net block dev) | controller1/2
-+-----------------+
-| lvm2 clustered  | controller1/2
-+-----------------+
-| md: linux-raid0 | controller1/2
-+-----------------+
-|  aoe initiator  | controller1/2
-+-----------------+
-|   aoe target    | aoe-storage
-+-----------------+
+Using RAID10offset2 on 2 WD 2TB drives, and always the same input file.
+
+Why would RAID10 performance be -poorer-? 
+If it weren't for mirroring, this wouldn't be worth it.
 
 
-My main concern is interaction with buffer cache and the consistencies  
-of the md devices between the controllers (probably not page cache  
-since these are block devices?).  Will direct/O_DIRECT bypass this  
-keeping the state of the data purely on the aoe-storage device?  I  
-have a test setup of this running with no issues so far connecting to  
-the controllers that run iscsi-target (iet) in blockio mode, thus  
-bypaassing buffer/page cache.
+ 
 
-Any feedback is appreciated.
 
---
-Matth
-
+      
