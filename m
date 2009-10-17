@@ -1,65 +1,51 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: Re: google ranking of our wiki, nbr 2 for "raid"
-Date: Sat, 17 Oct 2009 15:07:00 -0600
-Message-ID: <200910171507.00692.tfjellstrom@shaw.ca>
-References: <20091017163655.GA13476@rap.rap.dk> <9c496ddd5f673215903e7efc52b4a3d9.squirrel@neil.brown.name>
-Reply-To: tfjellstrom@shaw.ca
+From: "Majed B." <majedb@gmail.com>
+Subject: Re: Disappointing RAID10 Performance
+Date: Sun, 18 Oct 2009 00:35:48 +0300
+Message-ID: <70ed7c3e0910171435s53521b47ia7e88eaf62d65eb9@mail.gmail.com>
+References: <364346.70897.qm@web38808.mail.mud.yahoo.com> <4AD8BBC3.4030600@wpkg.org>
+	<4AD9ECE4.3090202@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <9c496ddd5f673215903e7efc52b4a3d9.squirrel@neil.brown.name>
+In-Reply-To: <4AD9ECE4.3090202@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Keld =?iso-8859-1?q?J=F8rn_Simonsen?= <keld@dkuug.dk>, linux-raid@vger.kernel.org
+To: Asdo <asdo@shiftmail.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat October 17 2009, NeilBrown wrote:
-> On Sun, October 18, 2009 3:36 am, Keld J=F8rn Simonsen wrote:
-> > Hi!
-> >
-> > When I google for "raid" (without "linux") we are now nbr 2 after
-> > wikipedia. Is that just my searches, or do others experience the sa=
-me
-> > thing?
->=20
-> I get it at number 26 when I google for just "raid". Odd.
->=20
-> > I would then say: Wow! A great step forward since we were nbr 120 o=
-r so
-> > for "linux raid" a couple of years ago.
->=20
-> When I google for
->    linux raid
-> the wiki is number 1!
->=20
-> NeilBrown
+dd supports writing to multiple devices at once, but not reading from
+multiple inputs.
 
-google returns different results to different people depending on a lot=
- of=20
-criteria (if you're logged in, didn't/did disable personalized searchin=
-g,=20
-country, etc)
-
-> > Best regards
-> > keld
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
+On Sat, Oct 17, 2009 at 7:12 PM, Asdo <asdo@shiftmail.org> wrote:
+> Tomasz Chmielewski wrote:
+>>
+>> If you start using your drives for two "dd if=3Dbigfile[12] of=3D/de=
+v/null" at
+>> the same time, you will notice the difference.
+>
+> OT: Does this dd line really work? I did see it elsewhere already but
+> doesn't appear to work for me: seems to see only the last if=3D. I do=
+n't think
+> multiple input or output files are supported.
+> For this kind of tests I was doing a for loop with background dd coma=
+nds (
+> trailing & ) IIRC
+> This would be a good dd feature to simplify linux-raid performance te=
+sting
+> though.
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid"=
  in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+>
+
 
 
 --=20
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
+       Majed B.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
