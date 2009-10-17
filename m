@@ -1,32 +1,23 @@
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-Subject: Re: Disappointing RAID10 Performance
-Date: Sat, 17 Oct 2009 18:20:24 +0200
-Message-ID: <4AD9EEC8.9000701@wpkg.org>
-References: <364346.70897.qm@web38808.mail.mud.yahoo.com> <4AD8BBC3.4030600@wpkg.org> <4AD9ECE4.3090202@shiftmail.org>
+From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@dkuug.dk>
+Subject: google ranking of our wiki, nbr 2 for "raid"
+Date: Sat, 17 Oct 2009 18:36:55 +0200
+Message-ID: <20091017163655.GA13476@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AD9ECE4.3090202@shiftmail.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Asdo wrote:
-> Tomasz Chmielewski wrote:
->> If you start using your drives for two "dd if=bigfile[12] 
->> of=/dev/null" at the same time, you will notice the difference.
-> 
-> OT: Does this dd line really work? I did see it elsewhere already but 
-> doesn't appear to work for me: seems to see only the last if=. 
+Hi!
 
-I don't think it does work.
+When I google for "raid" (without "linux") we are now nbr 2 after
+wikipedia. Is that just my searches, or do others experience the same
+thing?
 
-You see it everywhere because it's faster to write, and everyone gets 
-the idea what's this all about.
+I would then say: Wow! A great step forward since we were nbr 120 or so
+for "linux raid" a couple of years ago.
 
-
--- 
-Tomasz Chmielewski
-http://wpkg.org
+Best regards
+keld
