@@ -1,116 +1,167 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: 2.6.31+2.6.31.4: XFS - All I/O locks up to D-state after 24-48 hours
- (sysrq-t+w available)
-Date: Sat, 17 Oct 2009 18:34:57 -0400 (EDT)
-Message-ID: <alpine.DEB.2.00.0910171825270.16781@p34.internal.lan>
+From: mark delfman <markdelfman@googlemail.com>
+Subject: Re: MD write performance issue - found Catalyst patches
+Date: Sun, 18 Oct 2009 11:00:22 +0100
+Message-ID: <66781b10910180300j2006a4b7q21444bb27dd9434e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752928AbZJQWez@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com
-Cc: Alan Piszcz <ap@solarrain.com>
+Content-Type: multipart/mixed; boundary=0016364272288d92dd047632b259
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: =?ISO-8859-1?Q?Mattias_Hellstr=F6m?= <hellstrom.mattias@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, NeilBrown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Hello,
+--0016364272288d92dd047632b259
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: quoted-printable
 
-I have a system I recently upgraded from 2.6.30.x and after approximately 
-24-48 hours--sometimes longer, the system cannot write any more files to 
-disk (luckily though I can still write to /dev/shm) -- to which I have
-saved the sysrq-t and sysrq-w output:
+We have tracked the performance drop to the attached two commits in
+2.6.28.6.    The performance never fully recovers in later kernels so
+I presuming that the change in the write cache is still affecting MD
+today.
 
-http://home.comcast.net/~jpiszcz/20091017/sysrq-w.txt
-http://home.comcast.net/~jpiszcz/20091017/sysrq-t.txt
+The problem for us is that although we have slowly tracked it down, we
+have no understanding of linux at this level and simply wouldn=92t know
+where go from this point.
 
-Configuration:
+Considering this seems to only effect MD and not hardware based RAID
+(in our tests) I thought that this would be an appropriate place to
+post these patches and findings.
 
-$ cat /proc/mdstat 
-Personalities : [raid1] [raid6] [raid5] [raid4] 
-md1 : active raid1 sdb2[1] sda2[0]
-       136448 blocks [2/2] [UU]
+There are 2 patches which impact MD performance via a filesystem:
 
-md2 : active raid1 sdb3[1] sda3[0]
-       129596288 blocks [2/2] [UU]
+a) commit 66c85494570396661479ba51e17964b2c82b6f39 - write-back: fix
+nr_to_write counter
+b) commit fa76ac6cbeb58256cf7de97a75d5d7f838a80b32 - Fix page
+writeback thinko, causing Berkeley DB slowdown
 
-md3 : active raid5 sdj1[7] sdi1[6] sdh1[5] sdf1[3] sdg1[4] sde1[2] sdd1[1] sdc1[0]
-       5128001536 blocks level 5, 1024k chunk, algorithm 2 [8/8] [UUUUUUUU]
 
-md0 : active raid1 sdb1[1] sda1[0]
-       16787776 blocks [2/2] [UU]
+1) no patches applied into 2.6.28.5 kernel: write speed is 1.1 GB/s via xfs
+2) both patches are applied into 2.6.28.5 kernel: xfs drops to circa:
+680 MB/s (like in kernel 2.6.28.6 and later)
+3) put only one patch: 66c85494570396661479ba51e17964b2c82b6f39
+(write-back: fix nr_to_write counter) - performance goes down to circa
+780 MB/s
+4) put only one patch: fa76ac6cbeb58256cf7de97a75d5d7f838a80b32 (Fix
+page writeback thinko) - the performance is good: 1.1 GB/s (on XFS)
 
-$ mount
-/dev/md2 on / type xfs (rw,noatime,nobarrier,logbufs=8,logbsize=262144)
-tmpfs on /lib/init/rw type tmpfs (rw,nosuid,mode=0755)
-proc on /proc type proc (rw,noexec,nosuid,nodev)
-sysfs on /sys type sysfs (rw,noexec,nosuid,nodev)
-udev on /dev type tmpfs (rw,mode=0755)
-tmpfs on /dev/shm type tmpfs (rw,nosuid,nodev)
-devpts on /dev/pts type devpts (rw,noexec,nosuid,gid=5,mode=620)
-/dev/md1 on /boot type ext3 (rw,noatime)
-/dev/md3 on /r/1 type xfs (rw,noatime,nobarrier,logbufs=8,logbsize=262144)
-rpc_pipefs on /var/lib/nfs/rpc_pipefs type rpc_pipefs (rw)
-nfsd on /proc/fs/nfsd type nfsd (rw)
+change log for 28.6
+ftp://ftp.kernel.org/pub/linux/kernel/v2.6/ChangeLog-2.6.28.6
 
-Distribution: Debian Testing
-Arch: x86_64
 
-The problem occurs with 2.6.31 and I upgraded to 2.6.31.4 and the problem
-persists.
+Hopefully this helps to resolve this....
 
-Here is a snippet of two processes in D-state, the first was not doing 
-anything, the second was mrtg.
 
-[121444.684000] pickup        D 0000000000000003     0 18407   4521 0x00000000
-[121444.684000]  ffff880231dd2290 0000000000000086 0000000000000000 0000000000000000
-[121444.684000]  000000000000ff40 000000000000c8c8 ffff880176794d10 ffff880176794f90
-[121444.684000]  000000032266dd08 ffff8801407a87f0 ffff8800280878d8 ffff880176794f90
-[121444.684000] Call Trace:
-[121444.684000]  [<ffffffff810a742d>] ? free_pages_and_swap_cache+0x9d/0xc0
-[121444.684000]  [<ffffffff81454866>] ? __mutex_lock_slowpath+0xd6/0x160
-[121444.684000]  [<ffffffff814546ba>] ? mutex_lock+0x1a/0x40
-[121444.684000]  [<ffffffff810b26ef>] ? generic_file_llseek+0x2f/0x70
-[121444.684000]  [<ffffffff810b119e>] ? sys_lseek+0x7e/0x90
-[121444.684000]  [<ffffffff8109ffd2>] ? sys_munmap+0x52/0x80
-[121444.684000]  [<ffffffff8102c52b>] ? system_call_fastpath+0x16/0x1b
+Mark
 
-[121444.684000] rateup        D 0000000000000000     0 18538  18465 0x00000000
-[121444.684000]  ffff88023f8a8c10 0000000000000082 0000000000000000 ffff88023ea09ec8
-[121444.684000]  000000000000ff40 000000000000c8c8 ffff88023faace50 ffff88023faad0d0
-[121444.684000]  0000000300003e00 000000010720cc78 0000000000003e00 ffff88023faad0d0
-[121444.684000] Call Trace:
-[121444.684000]  [<ffffffff811f42e2>] ? xfs_buf_iorequest+0x42/0x90
-[121444.684000]  [<ffffffff811dd66d>] ? xlog_bdstrat_cb+0x3d/0x50
-[121444.684000]  [<ffffffff811db05b>] ? xlog_sync+0x20b/0x4e0
-[121444.684000]  [<ffffffff811dc44c>] ? xlog_state_sync+0x26c/0x2a0
-[121444.684000]  [<ffffffff810513e0>] ? default_wake_function+0x0/0x10
-[121444.684000]  [<ffffffff811dc4d1>] ? _xfs_log_force+0x51/0x80
-[121444.684000]  [<ffffffff811dc50b>] ? xfs_log_force+0xb/0x40
-[121444.684000]  [<ffffffff811a7223>] ? xfs_alloc_ag_vextent+0x123/0x130
-[121444.684000]  [<ffffffff811a7aa8>] ? xfs_alloc_vextent+0x368/0x4b0
-[121444.684000]  [<ffffffff811b41e8>] ? xfs_bmap_btalloc+0x598/0xa40
-[121444.684000]  [<ffffffff811b6a42>] ? xfs_bmapi+0x9e2/0x11a0
-[121444.684000]  [<ffffffff811dd7f0>] ? xlog_grant_push_ail+0x30/0xf0
-[121444.684000]  [<ffffffff811e8fd8>] ? xfs_trans_reserve+0xa8/0x220
-[121444.684000]  [<ffffffff811d805e>] ? xfs_iomap_write_allocate+0x23e/0x3b0
-[121444.684000]  [<ffffffff811f0daf>] ? __xfs_get_blocks+0x8f/0x220
-[121444.684000]  [<ffffffff811d8c00>] ? xfs_iomap+0x2c0/0x300
-[121444.684000]  [<ffffffff810d5b76>] ? __set_page_dirty+0x66/0xd0
-[121444.684000]  [<ffffffff811f0d15>] ? xfs_map_blocks+0x25/0x30
-[121444.684000]  [<ffffffff811f1e04>] ? xfs_page_state_convert+0x414/0x6c0
-[121444.684000]  [<ffffffff811f23b7>] ? xfs_vm_writepage+0x77/0x130
-[121444.684000]  [<ffffffff8108b21a>] ? __writepage+0xa/0x40
-[121444.684000]  [<ffffffff8108baff>] ? write_cache_pages+0x1df/0x3c0
-[121444.684000]  [<ffffffff8108b210>] ? __writepage+0x0/0x40
-[121444.684000]  [<ffffffff810b1533>] ? do_sync_write+0xe3/0x130
-[121444.684000]  [<ffffffff8108bd30>] ? do_writepages+0x20/0x40
-[121444.684000]  [<ffffffff81085abd>] ? __filemap_fdatawrite_range+0x4d/0x60
-[121444.684000]  [<ffffffff811f54dd>] ? xfs_flush_pages+0xad/0xc0
-[121444.684000]  [<ffffffff811ee907>] ? xfs_release+0x167/0x1d0
-[121444.684000]  [<ffffffff811f52b0>] ? xfs_file_release+0x10/0x20
-[121444.684000]  [<ffffffff810b2c0d>] ? __fput+0xcd/0x1e0
-[121444.684000]  [<ffffffff810af556>] ? filp_close+0x56/0x90
-[121444.684000]  [<ffffffff810af636>] ? sys_close+0xa6/0x100
-[121444.684000]  [<ffffffff8102c52b>] ? system_call_fastpath+0x16/0x1b
+2009/10/17 Mattias Hellstr=F6m <hellstrom.mattias@gmail.com>:
+> (If I were you) I would further test the revisions between the
+> following and then look at the changelog for the culprit. Looks like
+> versions after this are just trying to regain the missing speed.
+>
+> Linux linux-tlfp 2.6.27.14-vanilla #1 SMP Fri Oct 16 00:56:25 BST 2009
+> x86_64 x86_64 x86_64 GNU/Linux
+>
+> RAW: 1.1
+> XFS 1.1
+>
+> Linux linux-tlfp 2.6.27.20-vanilla #1 SMP Thu Oct 15 23:59:32 BST 2009
+> x86_64 x86_64 x86_64 GNU/Linux
+>
+> RAw 1.1 GB/s
+> XFS: 487 MB/s
+>
 
-Anyone know what is going on here?
+--0016364272288d92dd047632b259
+Content-Type: application/octet-stream;
+	name="fa76ac6cbeb58256cf7de97a75d5d7f838a80b32.patch"
+Content-Disposition: attachment;
+	filename="fa76ac6cbeb58256cf7de97a75d5d7f838a80b32.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_g0xmjzks0
 
-Justin.
+Y29tbWl0IGZhNzZhYzZjYmViNTgyNTZjZjdkZTk3YTc1ZDVkN2Y4MzhhODBiMzIKQXV0aG9yOiBO
+aWNrIFBpZ2dpbiA8bnBpZ2dpbkBzdXNlLmRlPgpEYXRlOiAgIFRodSBGZWIgMTIgMDQ6MzQ6MjMg
+MjAwOSArMDEwMAoKICAgIEZpeCBwYWdlIHdyaXRlYmFjayB0aGlua28sIGNhdXNpbmcgQmVya2Vs
+ZXkgREIgc2xvd2Rvd24KICAgIAogICAgY29tbWl0IDNhNGM2ODAwZjMxZWE4Mzk1NjI4YWY1ZTdl
+NDkwMjcwZWU1ZDA1ODUgdXBzdHJlYW0uCiAgICAKICAgIEEgYnVnIHdhcyBpbnRyb2R1Y2VkIGlu
+dG8gd3JpdGVfY2FjaGVfcGFnZXMgY3ljbGljIHdyaXRlb3V0IGJ5IGNvbW1pdAogICAgMzFhMTI2
+NjZkOGYwYzIyMjM1Mjk3ZTFjMTU3NWY4MjA2MTQ4MDAyOSAoIm1tOiB3cml0ZV9jYWNoZV9wYWdl
+cyBjeWNsaWMKICAgIGZpeCIpLiAgVGhlIGludGVudGlvbiAoYW5kIGNvbW1lbnRzKSBpcyB0aGF0
+IHdlIHNob3VsZCBjeWNsZSBiYWNrIGFuZAogICAgbG9vayBmb3IgbW9yZSBkaXJ0eSBwYWdlcyBh
+dCB0aGUgYmVnaW5uaW5nIG9mIHRoZSBmaWxlIGlmIHRoZXJlIGlzIG5vCiAgICBtb3JlIHdvcmsg
+dG8gYmUgZG9uZS4KICAgIAogICAgQnV0IHRoZSAhZG9uZSBjb25kaXRpb24gd2FzIGRyb3BwZWQg
+ZnJvbSB0aGUgdGVzdC4gIFRoaXMgbWVhbnMgdGhhdCBhbnkKICAgIHRpbWUgdGhlIHBhZ2Ugd3Jp
+dGVvdXQgbG9vcCBicmVha3MgKGVnLiAgZHVlIHRvIG5yX3RvX3dyaXRlID09IDApLCB3ZQogICAg
+d2lsbCBzZXQgaW5kZXggdG8gMCwgdGhlbiBnb3RvIGFnYWluLiAgVGhpcyB3aWxsIHNldCBkb25l
+X2luZGV4IHRvCiAgICBpbmRleCwgdGhlbiBmaW5kIGRvbmUgaXMgc2V0LCBzbyB3aWxsIHByb2Nl
+ZWQgdG8gdGhlIGVuZCBvZiB0aGUKICAgIGZ1bmN0aW9uLiAgV2hlbiB1cGRhdGluZyBtYXBwaW5n
+LT53cml0ZWJhY2tfaW5kZXggZm9yIGN5Y2xpYyB3cml0ZW91dCwKICAgIHdlIG5vdyB1c2UgZG9u
+ZV9pbmRleCA9PSAwLCBzbyB3ZSdyZSBhbHdheXMgY3ljbGluZyBiYWNrIHRvIDAuCiAgICAKICAg
+IFRoaXMgc2VlbWVkIHRvIGJlIGNhdXNpbmcgcmFuZG9tIG1tYXAgd3JpdGVzIChzbGFwYWRkIGFu
+ZCBpb3pvbmUpIHRvCiAgICBzdGFydCB3cml0aW5nIG1vcmUgcGFnZXMgZnJvbSB0aGUgTFJVIGFu
+ZCB3cml0ZW91dCB3b3VsZCBzbG93ZG93biwgYW5kCiAgICBjYXVzZWQgYnVnemlsbGEgZW50cnkK
+ICAgIAogICAgCWh0dHA6Ly9idWd6aWxsYS5rZXJuZWwub3JnL3Nob3dfYnVnLmNnaT9pZD0xMjYw
+NAogICAgCiAgICBhYm91dCBCZXJrZWxleSBEQiBzbG93aW5nIGRvd24gZHJhbWF0aWNhbGx5Lgog
+ICAgCiAgICBXaXRoIHRoaXMgcGF0Y2gsIGlvem9uZSByYW5kb20gd3JpdGUgcGVyZm9ybWFuY2Ug
+aXMgaW5jcmVhc2VkIG5lYXJseQogICAgNXggb24gbXkgc3lzdGVtIChpb3pvbmUgLUIgLXIgNGsg
+LXMgNjRrIC1zIDUxMm0gLXMgMTIwMG0gb24gZXh0MikuCiAgICAKICAgIFNpZ25lZC1vZmYtYnk6
+IE5pY2sgUGlnZ2luIDxucGlnZ2luQHN1c2UuZGU+CiAgICBSZXBvcnRlZC1hbmQtdGVzdGVkLWJ5
+OiBKYW4gS2FyYSA8amFja0BzdXNlLmN6PgogICAgU2lnbmVkLW9mZi1ieTogTGludXMgVG9ydmFs
+ZHMgPHRvcnZhbGRzQGxpbnV4LWZvdW5kYXRpb24ub3JnPgogICAgU2lnbmVkLW9mZi1ieTogR3Jl
+ZyBLcm9haC1IYXJ0bWFuIDxncmVna2hAc3VzZS5kZT4KCmRpZmYgLS1naXQgYS9tbS9wYWdlLXdy
+aXRlYmFjay5jIGIvbW0vcGFnZS13cml0ZWJhY2suYwppbmRleCAwOGQyYjk2Li4xMTQwMGVkIDEw
+MDY0NAotLS0gYS9tbS9wYWdlLXdyaXRlYmFjay5jCisrKyBiL21tL3BhZ2Utd3JpdGViYWNrLmMK
+QEAgLTk5Nyw3ICs5OTcsNyBAQCBjb250aW51ZV91bmxvY2s6CiAJCXBhZ2V2ZWNfcmVsZWFzZSgm
+cHZlYyk7CiAJCWNvbmRfcmVzY2hlZCgpOwogCX0KLQlpZiAoIWN5Y2xlZCkgeworCWlmICghY3lj
+bGVkICYmICFkb25lKSB7CiAJCS8qCiAJCSAqIHJhbmdlX2N5Y2xpYzoKIAkJICogV2UgaGl0IHRo
+ZSBsYXN0IHBhZ2UgYW5kIHRoZXJlIGlzIG1vcmUgd29yayB0byBiZSBkb25lOiB3cmFwCg==
+--0016364272288d92dd047632b259
+Content-Type: application/octet-stream;
+	name="66c85494570396661479ba51e17964b2c82b6f39.patch"
+Content-Disposition: attachment;
+	filename="66c85494570396661479ba51e17964b2c82b6f39.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_g0xmjzlo1
+
+Y29tbWl0IDY2Yzg1NDk0NTcwMzk2NjYxNDc5YmE1MWUxNzk2NGIyYzgyYjZmMzkKQXV0aG9yOiBB
+cnRlbSBCaXR5dXRza2l5IDxBcnRlbS5CaXR5dXRza2l5QG5va2lhLmNvbT4KRGF0ZTogICBNb24g
+RmViIDIgMTg6MzM6NDkgMjAwOSArMDIwMAoKICAgIHdyaXRlLWJhY2s6IGZpeCBucl90b193cml0
+ZSBjb3VudGVyCiAgICAKICAgIGNvbW1pdCBkY2Y2YTc5ZGRhNWNjMmEyYmVjMTgzZTUwZDgyOTAz
+MGMwOTcyYWFhIHVwc3RyZWFtLgogICAgCiAgICBDb21taXQgMDVmZTQ3OGRkMDRlMDJmYTIzMGMz
+MDVhYjliNTYxNjY2OTgyMWRkMyBpbnRyb2R1Y2VkIHNvbWUKICAgIEB3YmMtPm5yX3RvX3dyaXRl
+IGJyZWFrYWdlLgogICAgCiAgICBJdCBtYWRlIHRoZSBmb2xsb3dpbmcgY2hhbmdlczoKICAgICAx
+LiBEZWNyZW1lbnQgd2JjLT5ucl90b193cml0ZSBpbnN0ZWFkIG9mIG5yX3RvX3dyaXRlCiAgICAg
+Mi4gRGVjcmVtZW50IHdiYy0+bnJfdG9fd3JpdGUgX29ubHlfIGlmIHdiYy0+c3luY19tb2RlID09
+IFdCX1NZTkNfTk9ORQogICAgIDMuIElmIHN5bmNlZCBucl90b193cml0ZSBwYWdlcywgc3RvcCBv
+bmx5IGlmIGlmIHdiYy0+c3luY19tb2RlID09CiAgICAgICAgV0JfU1lOQ19OT05FLCBvdGhlcndp
+c2Uga2VlcCBnb2luZy4KICAgIAogICAgSG93ZXZlciwgYWNjb3JkaW5nIHRvIHRoZSBjb21taXQg
+bWVzc2FnZSwgdGhlIGludGVudGlvbiB3YXMgdG8gb25seSBtYWtlCiAgICBjaGFuZ2UgMy4gIENo
+YW5nZSAxIGlzIGEgYnVnLiAgQ2hhbmdlIDIgZG9lcyBub3Qgc2VlbSB0byBiZSBuZWNlc3Nhcnks
+CiAgICBhbmQgaXQgYnJlYWtzIFVCSUZTIGV4cGVjdGF0aW9ucywgc28gaWYgbmVlZGVkLCBpdCBz
+aG91bGQgYmUgZG9uZQogICAgc2VwYXJhdGVseSBsYXRlci4gIEFuZCBjaGFuZ2UgMiBkb2VzIG5v
+dCBzZWVtIHRvIGJlIGRvY3VtZW50ZWQgaW4gdGhlCiAgICBjb21taXQgbWVzc2FnZS4KICAgIAog
+ICAgVGhpcyBwYXRjaCBkb2VzIHRoZSBmb2xsb3dpbmc6CiAgICAgMS4gVW5kbyBjaGFuZ2VzIDEg
+YW5kIDIKICAgICAyLiBBZGQgYSBjb21tZW50IGV4cGxhaW5pbmcgY2hhbmdlIDMgKGl0IHZlcnkg
+dXNlZnVsIHRvIGhhdmUgY29tbWVudHMKICAgICAgICBpbiBfY29kZV8sIG5vdCBvbmx5IGluIHRo
+ZSBjb21taXQpLgogICAgCiAgICBTaWduZWQtb2ZmLWJ5OiBBcnRlbSBCaXR5dXRza2l5IDxBcnRl
+bS5CaXR5dXRza2l5QG5va2lhLmNvbT4KICAgIEFja2VkLWJ5OiBOaWNrIFBpZ2dpbiA8bnBpZ2dp
+bkBzdXNlLmRlPgogICAgQ2M6IEFuZHJldyBNb3J0b24gPGFrcG1AbGludXgtZm91bmRhdGlvbi5v
+cmc+CiAgICBTaWduZWQtb2ZmLWJ5OiBMaW51cyBUb3J2YWxkcyA8dG9ydmFsZHNAbGludXgtZm91
+bmRhdGlvbi5vcmc+CiAgICBTaWduZWQtb2ZmLWJ5OiBHcmVnIEtyb2FoLUhhcnRtYW4gPGdyZWdr
+aEBzdXNlLmRlPgoKZGlmZiAtLWdpdCBhL21tL3BhZ2Utd3JpdGViYWNrLmMgYi9tbS9wYWdlLXdy
+aXRlYmFjay5jCmluZGV4IDExNDAwZWQuLjBjNDEwMGUgMTAwNjQ0Ci0tLSBhL21tL3BhZ2Utd3Jp
+dGViYWNrLmMKKysrIGIvbW0vcGFnZS13cml0ZWJhY2suYwpAQCAtOTgxLDEzICs5ODEsMjIgQEAg
+Y29udGludWVfdW5sb2NrOgogCQkJCX0KICAJCQl9CiAKLQkJCWlmICh3YmMtPnN5bmNfbW9kZSA9
+PSBXQl9TWU5DX05PTkUpIHsKLQkJCQl3YmMtPm5yX3RvX3dyaXRlLS07Ci0JCQkJaWYgKHdiYy0+
+bnJfdG9fd3JpdGUgPD0gMCkgewotCQkJCQlkb25lID0gMTsKLQkJCQkJYnJlYWs7Ci0JCQkJfQor
+CQkJaWYgKG5yX3RvX3dyaXRlID4gMCkKKwkJCQlucl90b193cml0ZS0tOworCQkJZWxzZSBpZiAo
+d2JjLT5zeW5jX21vZGUgPT0gV0JfU1lOQ19OT05FKSB7CisJCQkJLyoKKwkJCQkgKiBXZSBzdG9w
+IHdyaXRpbmcgYmFjayBvbmx5IGlmIHdlIGFyZSBub3QKKwkJCQkgKiBkb2luZyBpbnRlZ3JpdHkg
+c3luYy4gSW4gY2FzZSBvZiBpbnRlZ3JpdHkKKwkJCQkgKiBzeW5jIHdlIGhhdmUgdG8ga2VlcCBn
+b2luZyBiZWNhdXNlIHNvbWVvbmUKKwkJCQkgKiBtYXkgYmUgY29uY3VycmVudGx5IGRpcnR5aW5n
+IHBhZ2VzLCBhbmQgd2UKKwkJCQkgKiBtaWdodCBoYXZlIHN5bmNlZCBhIGxvdCBvZiBuZXdseSBh
+cHBlYXJlZAorCQkJCSAqIGRpcnR5IHBhZ2VzLCBidXQgaGF2ZSBub3Qgc3luY2VkIGFsbCBvZiB0
+aGUKKwkJCQkgKiBvbGQgZGlydHkgcGFnZXMuCisJCQkJICovCisJCQkJZG9uZSA9IDE7CisJCQkJ
+YnJlYWs7CiAJCQl9CisKIAkJCWlmICh3YmMtPm5vbmJsb2NraW5nICYmIGJkaV93cml0ZV9jb25n
+ZXN0ZWQoYmRpKSkgewogCQkJCXdiYy0+ZW5jb3VudGVyZWRfY29uZ2VzdGlvbiA9IDE7CiAJCQkJ
+ZG9uZSA9IDE7Cg==
+--0016364272288d92dd047632b259--
