@@ -1,26 +1,26 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
+From: adfas asd <chimera_god@yahoo.com>
 Subject: Re: Disappointing RAID10 Performance
-Date: Sun, 18 Oct 2009 15:01:39 +0400
-Message-ID: <4ADAF593.2040906@msgid.tls.msk.ru>
-References: <364346.70897.qm@web38808.mail.mud.yahoo.com> <4AD8BBC3.4030600@wpkg.org> 	<4AD9ECE4.3090202@shiftmail.org> <70ed7c3e0910171435s53521b47ia7e88eaf62d65eb9@mail.gmail.com>
+Date: Sun, 18 Oct 2009 05:06:46 -0700 (PDT)
+Message-ID: <562792.28327.qm@web38806.mail.mud.yahoo.com>
+References: <7bc80d500910161420p3e16e20bj7ee69ee1d3ac3a9f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70ed7c3e0910171435s53521b47ia7e88eaf62d65eb9@mail.gmail.com>
+In-Reply-To: <7bc80d500910161420p3e16e20bj7ee69ee1d3ac3a9f@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Majed B." <majedb@gmail.com>
-Cc: Asdo <asdo@shiftmail.org>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Majed B. Wrote:
-> dd supports writing to multiple devices at once, but not reading from
-> multiple inputs.
+--- On Fri, 10/16/09, Christopher Chen <muffaleta@gmail.com> wrote:
+> It's plausible that md's read balancing would increase the
+> read speed,
+> but it appears that this is not the case. Are you using
+> LVM? And the
+> readahead for the block devices are set appropriately?
+> Distro? Version
+> of mdadm?
 
-Count me intrigued.  I re-read linux dd manual page, POSIX docs about
-dd and linux (coreutils) dd sources, and don't see the `multiple output'
-thing.  Care to show how to do that?
+No LVM, and readahead on sd? drives set for best performance.  Debian Testing with mdadm 3.0-2.
 
-Thanks.
 
-/mjt
+      
