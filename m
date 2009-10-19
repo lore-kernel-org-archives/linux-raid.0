@@ -1,69 +1,81 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: MD write performance issue - found Catalyst patches
-Date: Mon, 19 Oct 2009 09:39:04 +1100
-Message-ID: <58e9f79e43e947130a1af549c1de448b.squirrel@neil.brown.name>
-References: <66781b10910180300j2006a4b7q21444bb27dd9434e@mail.gmail.com>
+From: hank peng <pengxihan@gmail.com>
+Subject: Re: XFS mount failuer on RAID5
+Date: Mon, 19 Oct 2009 08:54:35 +0800
+Message-ID: <389deec70910181754xf671441vbb481ea48b63316@mail.gmail.com>
+References: <389deec70910152009i7656aaf2s9d929b8b68e4e740@mail.gmail.com>
+	 <4AD89128.2010206@sandeen.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <66781b10910180300j2006a4b7q21444bb27dd9434e@mail.gmail.com>
+In-Reply-To: <4AD89128.2010206@sandeen.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: mark delfman <markdelfman@googlemail.com>
-Cc: Mattias =?iso-8859-1?Q?Hellstr=F6m?= <hellstrom.mattias@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, October 18, 2009 9:00 pm, mark delfman wrote:
-> We have tracked the performance drop to the attached two commits in
-> 2.6.28.6.    The performance never fully recovers in later kernels so
-> I presuming that the change in the write cache is still affecting MD
-> today.
+2009/10/16 Eric Sandeen <sandeen@sandeen.net>:
+> hank peng wrote:
+>>
+>> Hi, all:
+>> I have a self-built board, cpu is MPC8548(PPC arch), kernel is based
+>> on MPC8548CDS demo board, version is 2.6.23.
+>> A SATA controller is conected to CPU via PCIX, and I have 3 disks
+>> attached to it.
+>>
+> ...
 >
-> The problem for us is that although we have slowly tracked it down, w=
-e
-> have no understanding of linux at this level and simply wouldn=92t kn=
-ow
-> where go from this point.
+>> root@Storage:~# mkfs.xfs -f -ssize=3D4k /dev/vg/lvtest
+>> Warning - device mapper device, but no dmsetup(8) found
+>> Warning - device mapper device, but no dmsetup(8) found
+>> meta-data=3D/dev/vg/lvtest =C2=A0 =C2=A0 =C2=A0 =C2=A0 isize=3D256 =C2=
+=A0 =C2=A0agcount=3D4, agsize=3D6553600
+>> blks
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =3D =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 sectsz=3D4096 =C2=A0attr=3D2
+>> data =C2=A0 =C2=A0 =3D =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 bsize=3D4096 =C2=A0 blocks=3D26214400, =
+imaxpct=3D25
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =3D =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 sunit=3D0 =C2=A0 =C2=A0 =C2=A0sw=
+idth=3D0 blks
+>> naming =C2=A0 =3Dversion 2 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0bsize=3D4096
+>> log =C2=A0 =C2=A0 =C2=A0=3Dinternal log =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 bsize=3D4096 =C2=A0 blocks=3D12800, version=3D2
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =3D =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 sectsz=3D4096 =C2=A0sunit=3D1 bl=
+ks, lazy-count=3D0
+>> realtime =3Dnone =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 extsz=3D4096 =C2=A0 blocks=3D0, rtextents=3D0
+>> root@Storage:~# mkdir tmp
+>> root@Storage:~# mount -t xfs /dev/vg/lvtest ./tmp/
+>> Filesystem "dm-0": Disabling barriers, not supported by the underlyi=
+ng
+>> device
+>> XFS mounting filesystem dm-0
+>> XFS: totally zeroed log
+>> Filesystem "dm-0": XFS internal error xlog_clear_stale_blocks(2) at
+>> line 1252 of file fs/xfs/xfs_log_recover.c. =C2=A0Caller 0xc018ec88
 >
-> Considering this seems to only effect MD and not hardware based RAID
-> (in our tests) I thought that this would be an appropriate place to
-> post these patches and findings.
 >
-> There are 2 patches which impact MD performance via a filesystem:
+> Can you try the patch that Andy Poling posted to the list just yester=
+day?
+> =C2=A0Slight longshot but it may be it.
 >
-> a) commit 66c85494570396661479ba51e17964b2c82b6f39 - write-back: fix
-> nr_to_write counter
-> b) commit fa76ac6cbeb58256cf7de97a75d5d7f838a80b32 - Fix page
-> writeback thinko, causing Berkeley DB slowdown
+> Otherwise I will look at this in a bit; on the road today though.
 >
->
-> 1) no patches applied into 2.6.28.5 kernel: write speed is 1.1 GB/s v=
-ia
-> xfs
-> 2) both patches are applied into 2.6.28.5 kernel: xfs drops to circa:
-> 680 MB/s (like in kernel 2.6.28.6 and later)
-> 3) put only one patch: 66c85494570396661479ba51e17964b2c82b6f39
-> (write-back: fix nr_to_write counter) - performance goes down to circ=
-a
-> 780 MB/s
-> 4) put only one patch: fa76ac6cbeb58256cf7de97a75d5d7f838a80b32 (Fix
-> page writeback thinko) - the performance is good: 1.1 GB/s (on XFS)
->
-> change log for 28.6
-> ftp://ftp.kernel.org/pub/linux/kernel/v2.6/ChangeLog-2.6.28.6
->
->
-> Hopefully this helps to resolve this....
+Reason is found, it is because there are some problem in our hardware
+XOR driver firmware. I am sure now it is not related with XFS.
+Thx to all you guys, we will try to fix it.
 
-Hopefully it will...
-Thanks for tracking this down.  It is certainly easier to work out what
-is happening when you have a small patch that makes the difference.
+> -Eric
+>
 
-I'll see what I (or others) can discover.
 
-Thanks,
-NeilBrown
 
+--=20
+The simplest is not all best but the best is surely the simplest!
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
