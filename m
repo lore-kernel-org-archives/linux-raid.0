@@ -1,48 +1,41 @@
 From: =?ISO-8859-2?Q?Pawe=B3_Brodacki?= <pawel.brodacki@googlemail.com>
-Subject: Re: [BUG] Soft lockups in 2.6.32-rc3
-Date: Mon, 19 Oct 2009 11:02:29 +0200
-Message-ID: <b95c1fdd0910190202y7bbceef7vbe6db2d5f6833a55@mail.gmail.com>
-References: <20091011201955.GA19308@uio.no>
+Subject: Re: HW Raid Question
+Date: Mon, 19 Oct 2009 12:18:31 +0200
+Message-ID: <b95c1fdd0910190318s25a8e630l4dcc27eaa291f2ba@mail.gmail.com>
+References: <c268e4660909272103r3831e129m68c11899b11be222@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091011201955.GA19308@uio.no>
+In-Reply-To: <c268e4660909272103r3831e129m68c11899b11be222@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Steinar H. Gunderson" <sgunderson@bigfoot.com>
-Cc: linux-raid@vger.kernel.org
+To: Drew <drew.kay@gmail.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-2009/10/11 Steinar H. Gunderson <sgunderson@bigfoot.com>:
-> Hello,
+2009/9/28 Drew <drew.kay@gmail.com>:
+> I know this isn't exactly a linux SW RAID question but I've exhausted
+> every place I can think of for an answer and you folks know your raid
+> so here goes.
 >
-> I've just upgraded from 2.6.31-rc8 to 2.6.32-rc3, and I thought I wou=
-ld turn
-> on the new multicore RAID-5 processing. I did, it booted up and start=
-ed
-> syncing RAIDs (since the last shutdown before that was not clean), an=
-d
-> started syncing at the minimum speed (1000 K/sec). I've seen this bef=
-ore, so
-> I upped it in /proc to about 100MB/sec minimum (which is well below w=
-hat I've
-> seen from that RAID; six 7200rpm SATA drives connected by SAS).
+> Do IBM's ServeRAID (rebranded Adaptec) controllers support growing a
+> online/active RAID array by replacing component disks with larger
+> ones? I've done this often enough with mdadm on my home servers but a=
+t
+> work we use IBM servers so I'm stuck.
 >
-> However, it never wanted to go above about 8-10MB/sec, and md4_raid5 =
-used
-> 100% CPU while I/O was extremely slow. Suddenly the serial console fl=
-ashed:
->
-< snip >
 
-Hi,
+Hi, Drew,
 
-I'm not savvy enough to read traces, but on surface it looks similar
-to a problem described in a thread started on the linux-raid list by
-Holger Kiehl on Oct. 16. (Raid reconstructing and process hanging in D
-state).
+You cannot grow an array on ServeRAID by replacing smaller drives with
+bigger ones. If you do such a replacement the drive size will be
+"clipped". That means if you have 5x36 GB drive, remove one, and put
+in a 140 GB drive, only 36 GB out of it will be used. I'm pretty sure
+this will also happen if you try to extend the array by adding bigger
+drives to the already existing array.
 
-Hope it helps.
+The only way is to tear the array down and re-define it with bigger dri=
+ves.
 
 Regards,
 Pawe=B3
