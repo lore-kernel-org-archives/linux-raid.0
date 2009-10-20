@@ -1,62 +1,62 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 2.6.31+2.6.31.4: XFS - All I/O locks up to D-state after 24-48
-	hours (sysrq-t+w available)
-Date: Tue, 20 Oct 2009 11:33:58 +1100
-Message-ID: <20091020003358.GW9464@discord.disaster>
-References: <alpine.DEB.2.00.0910171825270.16781@p34.internal.lan> <alpine.DEB.2.00.0910181607040.27363@p34.internal.lan> <20091019030456.GS9464@discord.disaster> <alpine.DEB.2.00.0910190431180.23395@p34.internal.lan>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: Raid 5 to raid 6 reshape failure after reboot
+Date: Tue, 20 Oct 2009 16:54:43 +1100
+Message-ID: <c57ee40d9e6139de2993fb18934837c2.squirrel@neil.brown.name>
+References: <20091018181033.0255346c@borg.bxl.tuxicoman.be>
+    <358606dfd356518f7fa42219f26082d2.squirrel@neil.brown.name>
+    <20091019155322.65b4287f@zombie>
+    <5744c797713398f21b00e5323ddeac1e.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758119AbZJTAeO@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.0910190431180.23395@p34.internal.lan>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5744c797713398f21b00e5323ddeac1e.squirrel@neil.brown.name>
+Sender: linux-raid-owner@vger.kernel.org
+To: Guy Martin <gmsoft@tuxicoman.be>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Oct 19, 2009 at 06:18:58AM -0400, Justin Piszcz wrote:
-> On Mon, 19 Oct 2009, Dave Chinner wrote:
->> On Sun, Oct 18, 2009 at 04:17:42PM -0400, Justin Piszcz wrote:
->>> It has happened again, all sysrq-X output was saved this time.
->> .....
+On Tue, October 20, 2009 7:05 am, NeilBrown wrote:
+> On Tue, October 20, 2009 12:53 am, Guy Martin wrote:
 >>
->> All pointing to log IO not completing.
+>> Hi Neil,
 >>
-....
-> So far I do not have a reproducible test case,
-
-Ok. What sort of load is being placed on the machine?
-
-> the only other thing not posted was the output of ps auxww during
-> the time of the lockup, not sure if it will help, but here it is:
+>> Same result with the latest commit after a reboot.
+>>
+>> Maybe the problem comes from the fact that I first try to assemble
+>> the array without providing a backup file ?
 >
-> USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
-> root         1  0.0  0.0  10320   684 ?        Ss   Oct16   0:00 init [2] 
-....
-> root       371  0.0  0.0      0     0 ?        R<   Oct16   0:01 [xfslogd/0]
-> root       372  0.0  0.0      0     0 ?        S<   Oct16   0:00 [xfslogd/1]
-> root       373  0.0  0.0      0     0 ?        S<   Oct16   0:00 [xfslogd/2]
-> root       374  0.0  0.0      0     0 ?        S<   Oct16   0:00 [xfslogd/3]
-> root       375  0.0  0.0      0     0 ?        R<   Oct16   0:00 [xfsdatad/0]
-> root       376  0.0  0.0      0     0 ?        S<   Oct16   0:00 [xfsdatad/1]
-> root       377  0.0  0.0      0     0 ?        S<   Oct16   0:03 [xfsdatad/2]
-> root       378  0.0  0.0      0     0 ?        S<   Oct16   0:01 [xfsdatad/3]
-> root       379  0.0  0.0      0     0 ?        S<   Oct16   0:00 [xfsconvertd/0]
-> root       380  0.0  0.0      0     0 ?        S<   Oct16   0:00 [xfsconvertd/1]
-> root       381  0.0  0.0      0     0 ?        S<   Oct16   0:00 [xfsconvertd/2]
-> root       382  0.0  0.0      0     0 ?        S<   Oct16   0:00 [xfsconvertd/3]
-.....
+> That should not cause a problem - mdadm will simply fail in that
+> case and leave you to do it 'right'.
+>
+> I assume it is the same backup file from before - not a file in /tmp
+> or something like that?
+>
+>>
+>> For reference I did the following :
+>> mdadm --create /dev/md0 -l 5 -n 3 /dev/sd[bdf]1
+>> mdadm --add /dev/md0 /dev/sde1
+>> [wait for the raid 5 to rebuild]
+>> mdadm --grow /dev/md0 --backup-file backup -l 6 -n 4
+>> [wait a few hours]
+>> reboot
+>> mdadm --assemble /dev/md0 /dev/sd[bdef]1
+>> mdadm --assemble /dev/md0 /dev/sd[bdef]1 --backup-file backup
+>>
+>> Any other output you'd need ?
+>
+> In general adding '-v' to '--assemble' is a good idea, but I doubt
+> it would give anything particularly useful in this case.
+> I'll try to reproduce your result and let you know how I go.
 
-It appears that both the xfslogd and the xfsdatad on CPU 0 are in
-the running state but don't appear to be consuming any significant
-CPU time. If they remain like this then I think that means they are
-stuck waiting on the run queue.  Do these XFS threads always appear
-like this when the hang occurs? If so, is there something else that
-is hogging CPU 0 preventing these threads from getting the CPU?
+I tried to reproduce this and failed - it works perfectly for me.
 
-Cheers,
+I have added some more tracing messages to --assemble which are enabled
+by --verbose.
+Could you please pull the latest devel-3.1 branch from my git tree and
+try the same assemble command but with --verbose at the end and report the
+result.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks.
+NeilBrown
+
