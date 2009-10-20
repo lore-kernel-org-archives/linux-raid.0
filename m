@@ -1,8 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [md PATCH 2/4] async_pq: kill a stray dma_map() call and other
-	cleanups
-Date: Tue, 20 Oct 2009 00:11:28 -0700
-Message-ID: <20091020071128.6489.17320.stgit@dwillia2-linux.ch.intel.com>
+Subject: [md PATCH 3/4] async_pq: rename scribble page
+Date: Tue, 20 Oct 2009 00:11:33 -0700
+Message-ID: <20091020071133.6489.2606.stgit@dwillia2-linux.ch.intel.com>
 References: <20091020070627.6489.4006.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,9 +13,10 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-- update the kernel doc for async_syndrome to indicate what NULL in the
-  source list means
-- whitespace fixups
+The global scribble page is used as a temporary destination buffer when
+disabling the P or Q result is requested.  The local scribble buffer
+contains memory for performing address conversions.  Rename the global
+variable to avoid confusion.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
@@ -24,50 +24,55 @@ Signed-off-by: Dan Williams <dan.j.williams@intel.com>
  1 files changed, 8 insertions(+), 7 deletions(-)
 
 diff --git a/crypto/async_tx/async_pq.c b/crypto/async_tx/async_pq.c
-index 43b1436..6047656 100644
+index 6047656..6b5cc4f 100644
 --- a/crypto/async_tx/async_pq.c
 +++ b/crypto/async_tx/async_pq.c
-@@ -181,10 +181,14 @@ do_sync_gen_syndrome(struct page **blocks, unsigned int offset, int disks,
-  * blocks[disks-1] to NULL.  When P or Q is omitted 'len' must be <=
-  * PAGE_SIZE as a temporary buffer of this size is used in the
-  * synchronous path.  'disks' always accounts for both destination
-- * buffers.
-+ * buffers.  If any source buffers (blocks[i] where i < disks - 2) are
-+ * set to NULL those buffers will be replaced with the raid6_zero_page
-+ * in the synchronous path and omitted in the hardware-asynchronous
-+ * path.
-  *
-  * 'blocks' note: if submit->scribble is NULL then the contents of
-- * 'blocks' may be overridden
-+ * 'blocks' may be overwritten to perform address conversions
-+ * (dma_map_page() or page_address()).
+@@ -26,9 +26,10 @@
+ #include <linux/async_tx.h>
+ 
+ /**
+- * scribble - space to hold throwaway P buffer for synchronous gen_syndrome
++ * pq_scribble_page - space to hold throwaway P or Q buffer for
++ * synchronous gen_syndrome
   */
- struct dma_async_tx_descriptor *
- async_gen_syndrome(struct page **blocks, unsigned int offset, int disks,
-@@ -283,13 +287,13 @@ async_syndrome_val(struct page **blocks, unsigned int offset, int disks,
- 		if (!P(blocks, disks))
- 			dma_flags |= DMA_PREP_PQ_DISABLE_P;
- 		else
--			pq[0] = dma_map_page(dev, P(blocks,disks),
-+			pq[0] = dma_map_page(dev, P(blocks, disks),
- 					     offset, len,
- 					     DMA_TO_DEVICE);
- 		if (!Q(blocks, disks))
- 			dma_flags |= DMA_PREP_PQ_DISABLE_Q;
- 		else
--			pq[1] = dma_map_page(dev, Q(blocks,disks),
-+			pq[1] = dma_map_page(dev, Q(blocks, disks),
- 					     offset, len,
- 					     DMA_TO_DEVICE);
+-static struct page *scribble;
++static struct page *pq_scribble_page;
  
-@@ -303,9 +307,6 @@ async_syndrome_val(struct page **blocks, unsigned int offset, int disks,
- 				coefs[src_cnt] = raid6_gfexp[i];
- 				src_cnt++;
- 			}
--		pq[1] = dma_map_page(dev, Q(blocks,disks),
--				     offset, len,
--				     DMA_TO_DEVICE);
+ /* the struct page *blocks[] parameter passed to async_gen_syndrome()
+  * and async_syndrome_val() contains the 'P' destination address at
+@@ -226,11 +227,11 @@ async_gen_syndrome(struct page **blocks, unsigned int offset, int disks,
+ 	async_tx_quiesce(&submit->depend_tx);
  
- 		for (;;) {
- 			tx = device->device_prep_dma_pq_val(chan, pq, dma_src,
+ 	if (!P(blocks, disks)) {
+-		P(blocks, disks) = scribble;
++		P(blocks, disks) = pq_scribble_page;
+ 		BUG_ON(len + offset > PAGE_SIZE);
+ 	}
+ 	if (!Q(blocks, disks)) {
+-		Q(blocks, disks) = scribble;
++		Q(blocks, disks) = pq_scribble_page;
+ 		BUG_ON(len + offset > PAGE_SIZE);
+ 	}
+ 	do_sync_gen_syndrome(blocks, offset, disks, len, submit);
+@@ -384,9 +385,9 @@ EXPORT_SYMBOL_GPL(async_syndrome_val);
+ 
+ static int __init async_pq_init(void)
+ {
+-	scribble = alloc_page(GFP_KERNEL);
++	pq_scribble_page = alloc_page(GFP_KERNEL);
+ 
+-	if (scribble)
++	if (pq_scribble_page)
+ 		return 0;
+ 
+ 	pr_err("%s: failed to allocate required spare page\n", __func__);
+@@ -396,7 +397,7 @@ static int __init async_pq_init(void)
+ 
+ static void __exit async_pq_exit(void)
+ {
+-	put_page(scribble);
++	put_page(pq_scribble_page);
+ }
+ 
+ module_init(async_pq_init);
 
