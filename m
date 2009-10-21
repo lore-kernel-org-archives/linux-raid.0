@@ -1,173 +1,116 @@
-From: "Suresh Vishnu-B05022" <Vishnu@freescale.com>
-Subject: RE: [PATCH v0 1/2] DMA: fsldma: Disable DMA_INTERRUPT when Async_tx
-	enabled
-Date: Tue, 20 Oct 2009 18:39:53 +0530
-Message-ID: <76952DF81420A349876E087D089DF03438B8C1@zin33exm21.fsl.freescale.net>
-References: <1255588866-4133-1-git-send-email-Vishnu@freescale.com>
-	<e9c3a7c20910151825o67cd2712id91aead70f84987c@mail.gmail.com>
-	<20091016153334.GA27401@ovro.caltech.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <20091016153334.GA27401@ovro.caltech.edu>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
-To: "Ira W. Snyder" <iws@ovro.caltech.edu>, Dan Williams <dan.j.williams@intel.com>
-Cc: herbert@gondor.apana.org.au, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-crypto@vger.kernel.org, Tabi Timur-B04825 <timur@freescale.com>
+From: Steven Haigh <netwiz@crc.id.au>
+Subject: BUG: soft lockup - CPU#0 stuck for 10s! [md2_raid1:358]
+Date: Wed, 21 Oct 2009 13:46:53 +1100
+Message-ID: <F574C415-FFB3-4BF0-A00F-85C8FC41691C@crc.id.au>
+Mime-Version: 1.0 (Apple Message framework v1076)
+Content-Type: text/plain; charset=us-ascii; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: Ira W. Snyder [mailto:iws@ovro.caltech.edu] =
+When trying to run a check using:
+	echo check > /sys/block/md2/md/sync_action
 
-> Sent: Friday, October 16, 2009 9:04 PM
-> To: Dan Williams
-> Cc: Suresh Vishnu-B05022; herbert@gondor.apana.org.au; =
+I got the following errors printed to the console:
 
-> linux-kernel@vger.kernel.org; linux-raid@vger.kernel.org; =
+Oct 21 13:31:03 wireless kernel: md: syncing RAID array md2
+Oct 21 13:31:03 wireless kernel: md: minimum _guaranteed_  
+reconstruction speed: 1000 KB/sec/disc.
+Oct 21 13:31:03 wireless kernel: md: using maximum available idle IO  
+bandwidth (but not more than 20000 KB/sec) for reconstruction.
+Oct 21 13:31:03 wireless kernel: md: using 128k window, over a total  
+of 300511808 blocks.
+BUG: soft lockup - CPU#0 stuck for 10s! [md2_raid1:358]
 
-> linuxppc-dev@ozlabs.org; linux-crypto@vger.kernel.org; Tabi =
+Pid: 358, comm:            md2_raid1
+EIP: 0060:[<c04ec1bc>] CPU: 0
+EIP is at memcmp+0xd/0x22
+  EFLAGS: 00000202    Not tainted  (2.6.18-164.el5 #1)
+EAX: 00000000 EBX: e2826fe0 ECX: d15f3fe0 EDX: 00000000
+ESI: 00000020 EDI: 00000090 EBP: f70b8e40 DS: 007b ES: 007b
+CR0: 8005003b CR2: 0806af70 CR3: 37872000 CR4: 000006d0
+  [<f8843c64>] raid1d+0x270/0xbea [raid1]
+  [<c0616870>] schedule+0x9cc/0xa55
+  [<c0616f33>] schedule_timeout+0x13/0x8c
+  [<c05a6b5e>] md_thread+0xdf/0xf5
+  [<c0434907>] autoremove_wake_function+0x0/0x2d
+  [<c05a6a7f>] md_thread+0x0/0xf5
+  [<c0434845>] kthread+0xc0/0xeb
+  [<c0434785>] kthread+0x0/0xeb
+  [<c0405c53>] kernel_thread_helper+0x7/0x10
+  =======================
+Oct 21 13:37:50 wireless kernel: BUG: soft lockup - CPU#0 stuck for  
+10s! [md2_raid1:358]
+Oct 21 13:37:50 wireless kernel:
+Oct 21 13:37:50 wireless kernel: Pid: 358, comm:            md2_raid1
+Oct 21 13:37:50 wireless kernel: EIP: 0060:[<c04ec1bc>] CPU: 0
+Oct 21 13:37:50 wireless kernel: EIP is at memcmp+0xd/0x22
+Oct 21 13:37:50 wireless kernel:  EFLAGS: 00000202    Not tainted   
+(2.6.18-164.el5 #1)
+Oct 21 13:37:50 wireless kernel: EAX: 00000000 EBX: e2826fe0 ECX:  
+d15f3fe0 EDX: 00000000
+Oct 21 13:37:50 wireless kernel: ESI: 00000020 EDI: 00000090 EBP:  
+f70b8e40 DS: 007b ES: 007b
+Oct 21 13:37:50 wireless kernel: CR0: 8005003b CR2: 0806af70 CR3:  
+37872000 CR4: 000006d0
+Oct 21 13:37:50 wireless kernel:  [<f8843c64>] raid1d+0x270/0xbea  
+[raid1]
+Oct 21 13:37:50 wireless kernel:  [<c0616870>] schedule+0x9cc/0xa55
+Oct 21 13:37:50 wireless kernel:  [<c0616f33>] schedule_timeout 
++0x13/0x8c
+Oct 21 13:37:50 wireless kernel:  [<c05a6b5e>] md_thread+0xdf/0xf5
+Oct 21 13:37:51 wireless kernel:  [<c0434907>] autoremove_wake_function 
++0x0/0x2d
+Oct 21 13:37:51 wireless kernel:  [<c05a6a7f>] md_thread+0x0/0xf5
+Oct 21 13:37:51 wireless kernel:  [<c0434845>] kthread+0xc0/0xeb
+Oct 21 13:37:51 wireless kernel:  [<c0434785>] kthread+0x0/0xeb
+Oct 21 13:37:51 wireless kernel:  [<c0405c53>] kernel_thread_helper 
++0x7/0x10
+Oct 21 13:37:51 wireless kernel:  =======================
 
-> Timur-B04825
-> Subject: Re: [PATCH v0 1/2] DMA: fsldma: Disable =
+This is using CentOS 5.3 with Kernel 2.6.18-164.el5 on an i686.
 
-> DMA_INTERRUPT when Async_tx enabled
-> =
+Is this a serious type error? Is there anything else I can supply to  
+diagnose things more?
 
-> On Thu, Oct 15, 2009 at 06:25:14PM -0700, Dan Williams wrote:
-> > [ added Leo and Timur to the Cc ]
-> > =
+# mdadm --detail /dev/md2
+/dev/md2:
+         Version : 00.90.03
+   Creation Time : Mon Feb 23 17:15:41 2009
+      Raid Level : raid1
+      Array Size : 300511808 (286.59 GiB 307.72 GB)
+   Used Dev Size : 300511808 (286.59 GiB 307.72 GB)
+    Raid Devices : 2
+   Total Devices : 2
+Preferred Minor : 2
+     Persistence : Superblock is persistent
 
-> > On Wed, Oct 14, 2009 at 11:41 PM, Vishnu Suresh =
+     Update Time : Wed Oct 21 13:46:28 2009
+           State : clean, resyncing
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
 
-> <Vishnu@freescale.com> wrote:
-> > > This patch disables the use of DMA_INTERRUPT capability with =
+  Rebuild Status : 5% complete
 
-> > > Async_tx
-> > >
-> > > The fsldma produces a null transfer with DMA_INTERRUPT capability =
+            UUID : fed99e3d:d08fdcc9:b9593a45:2cc09736
+          Events : 0.30584
 
-> > > when used with Async_tx. When RAID devices queue a =
+     Number   Major   Minor   RaidDevice State
+        0       3        3        0      active sync   /dev/hda3
+        1      22        3        1      active sync   /dev/hdc3
 
-> transaction via =
 
-> > > Async_tx, this =A0results in a hang.
-> > >
-> > > Signed-off-by: Vishnu Suresh <Vishnu@freescale.com>
-> > > ---
-> > > =A0drivers/dma/fsldma.c | =A0 =A06 ++++++
-> > > =A01 files changed, 6 insertions(+), 0 deletions(-)
-> > >
-> > > diff --git a/drivers/dma/fsldma.c b/drivers/dma/fsldma.c index =
+--
+Steven Haigh
 
-> > > 296f9e7..66d9b39 100644
-> > > --- a/drivers/dma/fsldma.c
-> > > +++ b/drivers/dma/fsldma.c
-> > > @@ -1200,7 +1200,13 @@ static int __devinit =
+Email: netwiz@crc.id.au
+Web: http://www.crc.id.au
+Phone: (03) 9001 6090 - 0412 935 897
 
-> of_fsl_dma_probe(struct =
 
-> > > of_device *dev,
-> > > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0 =A0 =A0 =A0 =A0 =A0- =
 
-> fdev->reg.start + =
 
-> > > 1);
-> > >
-> > > =A0 =A0 =A0 =A0dma_cap_set(DMA_MEMCPY, fdev->common.cap_mask);
-> > > +#ifndef CONFIG_ASYNC_CORE
-> > > + =A0 =A0 =A0 /*
-> > > + =A0 =A0 =A0 =A0* The DMA_INTERRUPT async_tx is a NULL transfer, =
-
-> which will
-> > > + =A0 =A0 =A0 =A0* triger a PE interrupt.
-> > > + =A0 =A0 =A0 =A0*/
-> > > =A0 =A0 =A0 =A0dma_cap_set(DMA_INTERRUPT, fdev->common.cap_mask);
-> > > +#endif
-> > > =A0 =A0 =A0 =A0dma_cap_set(DMA_SLAVE, fdev->common.cap_mask);
-> > > =A0 =A0 =A0 =A0fdev->common.device_alloc_chan_resources =3D =
-
-> > > fsl_dma_alloc_chan_resources;
-> > > =A0 =A0 =A0 =A0fdev->common.device_free_chan_resources =3D =
-
-> > > fsl_dma_free_chan_resources;
-> > =
-
-> > You are basically saying that fsl_dma_prep_interrupt() is =
-
-> buggy.  Can =
-
-> > that routine be fixed rather than this piecemeal solution?  If it =
-
-> > cannot be fixed (i.e. hardware issue) then fsl_dma_prep_interrupt() =
-
-> > should just be disabled/deleted altogether.
-We are working to fix this issue.
-> > =
-
-> =
-
-> For what it's worth, I've used the following code in the =
-
-> recent past, without any issues. This was on an 83xx, within =
-
-> the last few kernel releases. I haven't tried it on the latest -rc.
-This works fine as long as only DMA_MEMCPY is being used.
-The async_tx_channel_switch does not occur and the =
-
-device_prep_dma_interrupt is not called. =
-
-However, when a DMA_XOR capable device is exposed, =
-
-which is differnet from the DMA_MEMCPY/INTERRUPT device, this path is hit.
-
-Is it proper to schedule a dma_interrupt from the channel switch call, =
-
-even when the depend_tx and tx channels correspond to different devices?
-
-> =
-
-> Using device_prep_dma_memcpy() can trigger a callback as =
-
-> well, so the interrupt feature isn't strictly needed. Just =
-
-> attach the callback to the last memcpy operation.
-> =
-
-> static dma_cookie_t dma_async_interrupt(struct dma_chan *chan,
->                                         dma_async_tx_callback =
-
-> callback,
->                                         void *data) {
->         struct dma_device *dev =3D chan->device;
->         struct dma_async_tx_descriptor *tx; =
-
-> =
-
->         /* Set up the DMA */
->         tx =3D dev->device_prep_dma_interrupt(chan, DMA_PREP_INTERRUPT);
->         if (!tx)
->                 return -ENOMEM;
-> =
-
->         tx->callback =3D callback;
->         tx->callback_param =3D data;
-> =
-
->         return tx->tx_submit(tx);
-> }
-> =
-
-> Ira
-> =
-
-> =
