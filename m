@@ -1,67 +1,87 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Disappointing RAID10 Performance
-Date: Wed, 21 Oct 2009 19:26:14 -0400
-Message-ID: <4ADF9896.6090201@tmr.com>
-References: <715541.19877.qm@web38803.mail.mud.yahoo.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Raid 5 to raid 6 reshape failure after reboot
+Date: Thu, 22 Oct 2009 10:44:53 +1100
+Message-ID: <19167.40181.250468.925659@notabene.brown>
+References: <20091018181033.0255346c@borg.bxl.tuxicoman.be>
+	<358606dfd356518f7fa42219f26082d2.squirrel@neil.brown.name>
+	<20091019155322.65b4287f@zombie>
+	<5744c797713398f21b00e5323ddeac1e.squirrel@neil.brown.name>
+	<c57ee40d9e6139de2993fb18934837c2.squirrel@neil.brown.name>
+	<20091020103731.5dc611ff@zombie>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <715541.19877.qm@web38803.mail.mud.yahoo.com>
+In-Reply-To: message from Guy Martin on Tuesday October 20
 Sender: linux-raid-owner@vger.kernel.org
-To: adfas asd <chimera_god@yahoo.com>
+To: Guy Martin <gmsoft@tuxicoman.be>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-adfas asd wrote:
-> --- On Fri, 10/16/09, Rob Becker <Rob.Becker@riverbed.com> wrote:
->   
->>    What command did you use to create your
->> raid-10?
->>     
->
-> /
-> mdadm --create /dev/md0 --level=raid1 --chunk=256 --raid-disks=2 missing /dev/sdb1
-> swap
-> mdadm --create /dev/md1 --level=raid10 --layout=o2 --chunk=256 --raid-disks=2 missing /dev/sdb2
-> /home
-> mdadm --create /dev/md2 --level=raid10 --layout=o2 --chunk=1024 --raid-disks=2 missing /dev/sdb3
-> ... then copied files and later added the sda parts to the array. (RAID conversion on live system)
->
->   
-No wonder it's slow, you want two far copies, this is more or less 
-mirroring with only two drives. Using a large buffer size also helps, 
-you hurt your performance by limiting readahead. You can also use the 
-'blockdev' command (--setra) to increase your readahead on the array. 
-Just going to far should about double your speed, the other things may 
-help more.
->   
->>  You might try  
->> running iostat in parallel to see if the read_balancer is
->> properly  
->> balancing the reads between the two disks.
->>     
->
-> Don't understand this as I'm a bit of a n00b...
->
->
-> --- On Fri, 10/16/09, Tomasz Chmielewski <mangoo@wpkg.org> wrote:
->   
->> If you only use your RAID-10 array for a single "dd
->> if=bigfile of=/dev/null" then yes, it does not give you much
->> over mirroring.
->>
->> If you start using your drives for two "dd if=bigfile[12]
->> of=/dev/null" at the same time, you will notice the
->> difference.
->>     
->
-> OK so it was a fallacy to think this would help with large files, unless more than one is involved.
->   
+On Tuesday October 20, gmsoft@tuxicoman.be wrote:
+> 
+> Hi Neil,
+> 
+> Here is the output I've got :
+> 
+> bleh mdadm # ./mdadm --assemble /dev/md0 /dev/sd[bdef]1 --backup-file
+> backup  -v mdadm: looking for devices for /dev/md0
+> mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 0.
+> mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 1.
+> mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 3.
+> mdadm: /dev/sdf1 is identified as a member of /dev/md0, slot 2.
+> mdadm:/dev/md0 has an active reshape - checking if critical section
+> needs to be restored mdadm: too-old timestamp on backup-metadata on
+> backup mdadm: Failed to find backup of critical section
 
-You are misconfigured.
+Ahhh... I wondered a bit about that as I was adding the fprintf there,
+but it was along the lines of "this cannot happen", not "this is where
+the bug might be" :-)
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  Unintended results are the well-earned reward for incompetence.
+I see now what is happening.  I need to update the mtime every time I
+write the backup metadata (of course!).  I never tripped on this
+because I never let a reshape run for more than a few minutes.
 
+I have checked in a patch which updated the mtime properly, so it
+should now word for you.
+
+Thanks for helping make mdadm even better!
+
+NeilBrown
+
+
+
+> mdadm: Failed to restore critical section for reshape, sorry.
+> 
+> The backup file is of course the one I've been using for the grow
+> command.
+> 
+> The values I've got :
+>  - info->array.utime : 1256026602
+>  - bsb.mtime : 1256020033
+> 
+> My timezone is Europe/Brussels if that matters.
+> 
+> Removing this check makes the reshape continue and the array start
+> correctly.
+> 
+> Let me know if you want me to do some more tests.
+> 
+> HTH,
+>   Guy
+> 
+> 
+> On Tue, 20 Oct 2009 16:54:43 +1100
+> "NeilBrown" <neilb@suse.de> wrote:
+> 
+> > I tried to reproduce this and failed - it works perfectly for me.
+> > 
+> > I have added some more tracing messages to --assemble which are
+> > enabled by --verbose.
+> > Could you please pull the latest devel-3.1 branch from my git tree and
+> > try the same assemble command but with --verbose at the end and
+> > report the result.
+> > 
+> > Thanks.
+> > NeilBrown
+> > 
