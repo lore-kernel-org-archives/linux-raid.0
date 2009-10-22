@@ -1,40 +1,35 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: mdadm --detail showing annoying device
-Date: Thu, 22 Oct 2009 13:29:16 +0200
-Message-ID: <slrnhe0ggc.sn.Mario.Holbe@darkside.dyn.samba-tng.org>
-References: <alpine.DEB.2.00.0910171825270.16781@p34.internal.lan>
- <alpine.DEB.2.00.0910181607040.27363@p34.internal.lan>
- <20091019030456.GS9464@discord.disaster>
- <alpine.DEB.2.00.0910190431180.23395@p34.internal.lan>
- <20091020003358.GW9464@discord.disaster>
- <alpine.DEB.2.00.0910200431290.21878@p34.internal.lan>
- <alpine.DEB.2.00.0910210618210.10288@p34.internal.lan>
- <4ADF17EC.6090606@forumdesimages.fr>
- <19167.33065.766493.889406@notabene.brown>
+From: Kasper Sandberg <postmaster@metanurb.dk>
+Subject: Re: ANNOUNCE: mdadm 3.1 - A tool for managing Soft RAID under Linux
+Date: Thu, 22 Oct 2009 15:34:51 +0200
+Message-ID: <1256218491.11010.13.camel@localhost>
+References: <19167.52667.86006.270614@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <19167.52667.86006.270614@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown <neilb@suse.de> wrote:
-> On Wednesday October 21, stephane.bunel@forumdesimages.fr wrote:
->>         0       8        0        0      active sync   /dev/char/21:0
->>         1       8       16        1      active sync   /dev/char/21:1
-> What is a block device doing in /dev/char ???  There should only be
-> character devices in there.
+On Thu, 2009-10-22 at 14:12 +1100, Neil Brown wrote:
+> Hot on the heals of 3.0.3 I am pleased to announce the availability of
+>    mdadm version 3.1
+<snip>
+> You should only upgrade if you need to use, or which to test, these
+> features.
 
-major 21 are usually SCSI generic devices (/dev/sg) and they are char...
-crw-rw----  1 root root  21, 0 Oct 10 21:48 /dev/sg0
-crw-rw----  1 root root  21, 1 Oct 10 21:48 /dev/sg1
+Why is that? because its more untested than older versions, or because
+of some other thing? i guess what im asking is, should people that dont
+need these features keep on the older branches indefinitely, or just
+hold off for some more testing? (aka grab it when the distribution
+update arrives)
 
-The question is, why do they appear at mdadm --detail
-
-
-regards
-   Mario
--- 
-There are trivial truths and the great truths.
-The opposite of a trivial truth is plainly false.
-The opposite of a great truth is also true.
-                                    -- Niels Bohr
+> 	
+> NeilBrown 22nd October 2009
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
