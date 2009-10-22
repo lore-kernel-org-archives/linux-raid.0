@@ -1,248 +1,89 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [md PATCH 4/4] async_tx: fix asynchronous raid6 recovery for
-	ddf	layouts
-Date: Thu, 22 Oct 2009 14:17:30 -0700
-Message-ID: <1256246250.18128.8.camel@dwillia2-linux.ch.intel.com>
-References: <20091020070627.6489.4006.stgit@dwillia2-linux.ch.intel.com>
-	 <20091020071138.6489.73870.stgit@dwillia2-linux.ch.intel.com>
-	 <19167.39058.385807.420558@notabene.brown>
-	 <1256172134.11089.3.camel@dwillia2-linux.ch.intel.com>
-	 <19167.51056.547786.438852@notabene.brown>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: 2.6.31+2.6.31.4: XFS - All I/O locks up to D-state after 24-48
+ hours (sysrq-t+w available)
+Date: Thu, 22 Oct 2009 18:49:46 -0400 (EDT)
+Message-ID: <alpine.DEB.2.00.0910221849001.24576@p34.internal.lan>
+References: <alpine.DEB.2.00.0910171825270.16781@p34.internal.lan> <alpine.DEB.2.00.0910181607040.27363@p34.internal.lan> <20091019030456.GS9464@discord.disaster> <alpine.DEB.2.00.0910190431180.23395@p34.internal.lan> <20091020003358.GW9464@discord.disaster>
+ <alpine.DEB.2.00.0910200431290.21878@p34.internal.lan> <alpine.DEB.2.00.0910210618210.10288@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <19167.51056.547786.438852@notabene.brown>
+In-Reply-To: <alpine.DEB.2.00.0910210618210.10288@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
 List-Id: linux-raid.ids
 
-On Wed, 2009-10-21 at 19:46 -0700, Neil Brown wrote:
-> Looks like a real improvement, but I think you need to be comparing
-> non_zero_srcs to '2' or '3', not '4', or '5'??
-> 
-> How about this on top of what you had?  Equally untested.
-> 
-
-Nice.  Now tested with the ioatdma and iop-adma offload drivers via
-raid6test, 01raid6integ, and 07layouts.  Pushed back out to:
-
-     git://git.kernel.org/pub/scm/linux/kernel/git/djbw/md.git for-neil
-
-You will need to throw away the last pull as I replaced the commit in
-question with the patch below (for-neil is now at commit da17bf43).
-
-Thanks,
-Dan
-
----->
-async_tx: fix asynchronous raid6 recovery for ddf layouts
-
-From: Dan Williams <dan.j.williams@intel.com>
-
-The raid6 recovery code currently requires special handling of the
-4-disk and 5-disk recovery scenarios for the native layout.  Quoting
-from commit 0a82a623:
-
-     In these situations the default N-disk algorithm will present
-     0-source or 1-source operations to dma devices.  To cover for
-     dma devices where the minimum source count is 2 we implement
-     4-disk and 5-disk handling in the recovery code.
-
-The ddf layout presents disks=6 and disks=7 to the recovery code in
-these situations.  Instead of looking at the number of disks count the
-number of non-zero sources in the list and call the special case code
-when the number of non-failed sources is 0 or 1.
-
-[neilb@suse.de: replace 'ddf' flag with counting good sources]
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- crypto/async_tx/async_raid6_recov.c |   86 +++++++++++++++++++++++------------
- 1 files changed, 56 insertions(+), 30 deletions(-)
-
-diff --git a/crypto/async_tx/async_raid6_recov.c b/crypto/async_tx/async_raid6_recov.c
-index 8e30b6e..943f2ab 100644
---- a/crypto/async_tx/async_raid6_recov.c
-+++ b/crypto/async_tx/async_raid6_recov.c
-@@ -131,8 +131,8 @@ async_mult(struct page *dest, struct page *src, u8 coef, size_t len,
- }
- 
- static struct dma_async_tx_descriptor *
--__2data_recov_4(size_t bytes, int faila, int failb, struct page **blocks,
--	      struct async_submit_ctl *submit)
-+__2data_recov_4(int disks, size_t bytes, int faila, int failb,
-+		struct page **blocks, struct async_submit_ctl *submit)
- {
- 	struct dma_async_tx_descriptor *tx = NULL;
- 	struct page *p, *q, *a, *b;
-@@ -143,8 +143,8 @@ __2data_recov_4(size_t bytes, int faila, int failb, struct page **blocks,
- 	void *cb_param = submit->cb_param;
- 	void *scribble = submit->scribble;
- 
--	p = blocks[4-2];
--	q = blocks[4-1];
-+	p = blocks[disks-2];
-+	q = blocks[disks-1];
- 
- 	a = blocks[faila];
- 	b = blocks[failb];
-@@ -170,8 +170,8 @@ __2data_recov_4(size_t bytes, int faila, int failb, struct page **blocks,
- }
- 
- static struct dma_async_tx_descriptor *
--__2data_recov_5(size_t bytes, int faila, int failb, struct page **blocks,
--	      struct async_submit_ctl *submit)
-+__2data_recov_5(int disks, size_t bytes, int faila, int failb,
-+		struct page **blocks, struct async_submit_ctl *submit)
- {
- 	struct dma_async_tx_descriptor *tx = NULL;
- 	struct page *p, *q, *g, *dp, *dq;
-@@ -181,21 +181,22 @@ __2data_recov_5(size_t bytes, int faila, int failb, struct page **blocks,
- 	dma_async_tx_callback cb_fn = submit->cb_fn;
- 	void *cb_param = submit->cb_param;
- 	void *scribble = submit->scribble;
--	int uninitialized_var(good);
--	int i;
-+	int good_srcs, good, i;
- 
--	for (i = 0; i < 3; i++) {
-+	good_srcs = 0;
-+	good = -1;
-+	for (i = 0; i < disks-2; i++) {
-+		if (blocks[i] == NULL)
-+			continue;
- 		if (i == faila || i == failb)
- 			continue;
--		else {
--			good = i;
--			break;
--		}
-+		good = i;
-+		good_srcs++;
- 	}
--	BUG_ON(i >= 3);
-+	BUG_ON(good_srcs > 1);
- 
--	p = blocks[5-2];
--	q = blocks[5-1];
-+	p = blocks[disks-2];
-+	q = blocks[disks-1];
- 	g = blocks[good];
- 
- 	/* Compute syndrome with zero for the missing data pages
-@@ -323,6 +324,8 @@ struct dma_async_tx_descriptor *
- async_raid6_2data_recov(int disks, size_t bytes, int faila, int failb,
- 			struct page **blocks, struct async_submit_ctl *submit)
- {
-+	int non_zero_srcs, i;
-+
- 	BUG_ON(faila == failb);
- 	if (failb < faila)
- 		swap(faila, failb);
-@@ -334,12 +337,11 @@ async_raid6_2data_recov(int disks, size_t bytes, int faila, int failb,
- 	 */
- 	if (!submit->scribble) {
- 		void **ptrs = (void **) blocks;
--		int i;
- 
- 		async_tx_quiesce(&submit->depend_tx);
- 		for (i = 0; i < disks; i++)
- 			if (blocks[i] == NULL)
--				ptrs[i] = (void*)raid6_empty_zero_page;
-+				ptrs[i] = (void *) raid6_empty_zero_page;
- 			else
- 				ptrs[i] = page_address(blocks[i]);
- 
-@@ -350,19 +352,30 @@ async_raid6_2data_recov(int disks, size_t bytes, int faila, int failb,
- 		return NULL;
- 	}
- 
--	switch (disks) {
--	case 4:
-+	non_zero_srcs = 0;
-+	for (i = 0; i < disks-2 && non_zero_srcs < 4; i++)
-+		if (blocks[i])
-+			non_zero_srcs++;
-+	switch (non_zero_srcs) {
-+	case 0:
-+	case 1:
-+		/* There must be at least 2 sources - the failed devices. */
-+		BUG();
-+
-+	case 2:
- 		/* dma devices do not uniformly understand a zero source pq
- 		 * operation (in contrast to the synchronous case), so
--		 * explicitly handle the 4 disk special case
-+		 * explicitly handle the special case of a 4 disk array with
-+		 * both data disks missing.
- 		 */
--		return __2data_recov_4(bytes, faila, failb, blocks, submit);
--	case 5:
-+		return __2data_recov_4(disks, bytes, faila, failb, blocks, submit);
-+	case 3:
- 		/* dma devices do not uniformly understand a single
- 		 * source pq operation (in contrast to the synchronous
--		 * case), so explicitly handle the 5 disk special case
-+		 * case), so explicitly handle the special case of a 5 disk
-+		 * array with 2 of 3 data disks missing.
- 		 */
--		return __2data_recov_5(bytes, faila, failb, blocks, submit);
-+		return __2data_recov_5(disks, bytes, faila, failb, blocks, submit);
- 	default:
- 		return __2data_recov_n(disks, bytes, faila, failb, blocks, submit);
- 	}
-@@ -388,6 +401,7 @@ async_raid6_datap_recov(int disks, size_t bytes, int faila,
- 	dma_async_tx_callback cb_fn = submit->cb_fn;
- 	void *cb_param = submit->cb_param;
- 	void *scribble = submit->scribble;
-+	int good_srcs, good, i;
- 	struct page *srcs[2];
- 
- 	pr_debug("%s: disks: %d len: %zu\n", __func__, disks, bytes);
-@@ -397,7 +411,6 @@ async_raid6_datap_recov(int disks, size_t bytes, int faila,
- 	 */
- 	if (!scribble) {
- 		void **ptrs = (void **) blocks;
--		int i;
- 
- 		async_tx_quiesce(&submit->depend_tx);
- 		for (i = 0; i < disks; i++)
-@@ -413,6 +426,20 @@ async_raid6_datap_recov(int disks, size_t bytes, int faila,
- 		return NULL;
- 	}
- 
-+	good_srcs = 0;
-+	good = -1;
-+	for (i = 0; i < disks-2; i++) {
-+		if (i == faila)
-+			continue;
-+		if (blocks[i]) {
-+			good = i;
-+			good_srcs++;
-+			if (good_srcs > 1)
-+				break;
-+		}
-+	}
-+	BUG_ON(good_srcs == 0);
-+
- 	p = blocks[disks-2];
- 	q = blocks[disks-1];
- 
-@@ -423,11 +450,10 @@ async_raid6_datap_recov(int disks, size_t bytes, int faila,
- 	blocks[faila] = NULL;
- 	blocks[disks-1] = dq;
- 
--	/* in the 4 disk case we only need to perform a single source
--	 * multiplication
-+	/* in the 4-disk case we only need to perform a single source
-+	 * multiplication with the one good data block.
- 	 */
--	if (disks == 4) {
--		int good = faila == 0 ? 1 : 0;
-+	if (good_srcs == 1) {
- 		struct page *g = blocks[good];
- 
- 		init_async_submit(submit, ASYNC_TX_FENCE, tx, NULL, NULL,
 
 
+On Wed, 21 Oct 2009, Justin Piszcz wrote:
+
+>
+>
+> On Tue, 20 Oct 2009, Justin Piszcz wrote:
+>
+>
+>> 
+>> 
+>> On Tue, 20 Oct 2009, Dave Chinner wrote:
+>> 
+>>> On Mon, Oct 19, 2009 at 06:18:58AM -0400, Justin Piszcz wrote:
+>>>> On Mon, 19 Oct 2009, Dave Chinner wrote:
+>>>>> On Sun, Oct 18, 2009 at 04:17:42PM -0400, Justin Piszcz wrote:
+>>>>>> It has happened again, all sysrq-X output was saved this time.
+>>>>> .....
+>>>>> 
+>>>>> All pointing to log IO not completing.
+>>>>> 
+>>> ....
+>>>> So far I do not have a reproducible test case,
+>>> 
+>>> Ok. What sort of load is being placed on the machine?
+>> Hello, generally the load is low, it mainly serves out some samba shares.
+>> 
+>>> 
+>>> It appears that both the xfslogd and the xfsdatad on CPU 0 are in
+>>> the running state but don't appear to be consuming any significant
+>>> CPU time. If they remain like this then I think that means they are
+>>> stuck waiting on the run queue.  Do these XFS threads always appear
+>>> like this when the hang occurs? If so, is there something else that
+>>> is hogging CPU 0 preventing these threads from getting the CPU?
+>> Yes, the XFS threads show up like this on each time the kernel crashed.  So 
+>> far
+>> with 2.6.30.9 after ~48hrs+ it has not crashed.  So it appears to be some 
+>> issue
+>> between 2.6.30.9 and 2.6.31.x when this began happening.  Any 
+>> recommendations
+>> on how to catch this bug w/certain options enabled/etc?
+>> 
+>> 
+>>> 
+>>> Cheers,
+>>> 
+>>> Dave.
+>>> -- 
+>>> Dave Chinner
+>>> david@fromorbit.com
+>>> 
+>> 
+>
+> Uptime with 2.6.30.9:
+>
+> 06:18:41 up 2 days, 14:10, 14 users,  load average: 0.41, 0.21, 0.07
+>
+> No issues yet, so it first started happening in 2.6.(31).(x).
+>
+> Any further recommendations on how to debug this issue?  BTW: Do you view 
+> this
+> as an XFS bug or MD/VFS layer issue based on the logs/output thus far?
+>
+> Justin.
+>
+>
+
+Any other ideas?
+
+Currently stuck on 2.6.30.9.. (no issues, no lockups)-- Box normally has 
+no load at all either.. Has anyone else reported similar problems?
+
+Justin.
