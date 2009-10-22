@@ -1,70 +1,55 @@
-From: Stephane Bunel <stephane.bunel@forumdesimages.fr>
-Subject: Re: mdadm --detail showing annoying device
-Date: Thu, 22 Oct 2009 16:17:53 +0200
-Message-ID: <4AE06991.5040000@forumdesimages.fr>
-References: <alpine.DEB.2.00.0910171825270.16781@p34.internal.lan> <alpine.DEB.2.00.0910181607040.27363@p34.internal.lan> <20091019030456.GS9464@discord.disaster> <alpine.DEB.2.00.0910190431180.23395@p34.internal.lan> <20091020003358.GW9464@discord.disaster> <alpine.DEB.2.00.0910200431290.21878@p34.internal.lan> <alpine.DEB.2.00.0910210618210.10288@p34.internal.lan> <4ADF17EC.6090606@forumdesimages.fr> <19167.33065.766493.889406@notabene.brown> <slrnhe0ggc.sn.Mario.Holbe@darkside.dyn.samba-tng.org>
+From: Guy Martin <gmsoft@tuxicoman.be>
+Subject: Re: Raid 5 to raid 6 reshape failure after reboot
+Date: Thu, 22 Oct 2009 16:20:29 +0200
+Message-ID: <20091022162029.0cc2a1aa@zombie>
+References: <20091018181033.0255346c@borg.bxl.tuxicoman.be>
+	<358606dfd356518f7fa42219f26082d2.squirrel@neil.brown.name>
+	<20091019155322.65b4287f@zombie>
+	<5744c797713398f21b00e5323ddeac1e.squirrel@neil.brown.name>
+	<c57ee40d9e6139de2993fb18934837c2.squirrel@neil.brown.name>
+	<20091020103731.5dc611ff@zombie>
+	<19167.40181.250468.925659@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <slrnhe0ggc.sn.Mario.Holbe@darkside.dyn.samba-tng.org>
+In-Reply-To: <19167.40181.250468.925659@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mario 'BitKoenig' Holbe a =E9crit :
-> Neil Brown <neilb@suse.de> wrote:
->> On Wednesday October 21, stephane.bunel@forumdesimages.fr wrote:
->>>         0       8        0        0      active sync   /dev/char/21=
-:0
->>>         1       8       16        1      active sync   /dev/char/21=
-:1
->> What is a block device doing in /dev/char ???  There should only be
->> character devices in there.
->=20
-> major 21 are usually SCSI generic devices (/dev/sg) and they are char=
-=2E..
-> crw-rw----  1 root root  21, 0 Oct 10 21:48 /dev/sg0
-> crw-rw----  1 root root  21, 1 Oct 10 21:48 /dev/sg1
->=20
-> The question is, why do they appear at mdadm --detail
 
-   mdadm performs a physical walk to not follow symbolic links (cf nftw=
-(=20
-=46TW_PHYS ) in map_dev() ). But using stat() mdadm finaly follow the s=
-ymbolic=20
-link and so returns the same type/major/minor as the targeted link.
+Neil,
 
-   lstat() is identical to stat(), except that if path is a symbolic li=
-nk,=20
-then the link itself is stat-ed, not the file that it refers to.
+While redoing the reboot test, I've also noticed this :
+When I first issue the --grow command, I see the following in dmesg :
+[192752.106467] md: reshape of RAID array md0
+[192752.106473] md: minimum _guaranteed_  speed: 200000 KB/sec/disk.
+[192752.106479] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for reshape.
+
+The minimum guaranteed speed should be 1000KB/sec according to the
+entry in /proc/sys/dev/raid/speed_limit_min.
+
+Also, the performances are not really good. I have about 400K/sec according to /proc/mdstat.
+
+Now, if I stop the array and assemble it again, things are better. The output in dmesg displays the correct value :
+[193138.646204] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+[193138.646210] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for reshape.
+
+And perf are much better, I now get ~1500K/s which shrinks the time of the reshape from ~2 weeks to 'only' a few days.
+
+Any thoughts ?
+
+HTH,
+  Guy
 
 
-#ls -la /dev/char/21:0
-lrwxrwxrwx 1 root root 13 2009-10-16 18:12 /dev/char/21:0 -> ../raid_di=
-sk0
-
-Tested from Python:
- >>> import os, stat
-
-Using stat:
- >>> mode =3D os.stat( '/dev/char/21:0' )[ stat.ST_MODE ]
- >>> stat.S_ISBLK( mode )
-True
-
-using lstat():
- >>> mode =3D os.lstat( '/dev/char/21:0' )[ stat.ST_MODE ]
- >>> stat.S_ISBLK( mode )
-=46alse
+On Thu, 22 Oct 2009 10:44:53 +1100
+Neil Brown <neilb@suse.de> wrote:
 
 
-
-St=E9phane Bunel.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Thanks for helping make mdadm even better!
+> 
+> NeilBrown
+> 
