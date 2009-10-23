@@ -1,25 +1,31 @@
-From: Ben DJ <bendj095124367913213465@gmail.com>
+From: adfas asd <chimera_god@yahoo.com>
 Subject: Re: Is My Data DESTROYED?!
-Date: Fri, 23 Oct 2009 16:25:16 -0700
-Message-ID: <babafd2f0910231625t58b421d1w6c3eb6d7ed36f959@mail.gmail.com>
-References: <818410.23525.qm@web38801.mail.mud.yahoo.com> <4AE236B4.20103@tmr.com>
+Date: Fri, 23 Oct 2009 16:25:52 -0700 (PDT)
+Message-ID: <885316.78847.qm@web38805.mail.mud.yahoo.com>
+References: <4b85f6ec7a52d1a124696941b382c2b0.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AE236B4.20103@tmr.com>
+In-Reply-To: <4b85f6ec7a52d1a124696941b382c2b0.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Oct 23, 2009 at 4:05 PM, Bill Davidsen <davidsen@tmr.com> wrote:
-> Warning: I can only be polite and diplomatic to a limited number of
-> technically incompetent people each day. Today isn't your day.
+--- On Fri, 10/23/09, NeilBrown <neilb@suse.de> wrote:
+> Clearly md0 is degraded - one device is missing.
+> You need to find out why.  Then if you trust the
+> missing device to
+> keep working, add it back in (mdadm --add ...)
+> 
+> dmesg or /var/log/something might have hints as to what the
+> error
+> was that caused md to reject the device.
 
-Honestly.  Rather than swinging your privates in public, perhaps you
-might take your diatribe offlist?
+Thanks Neil, this is the first constructive advice all day.
 
-Some, including "adfas asd" I gather, are actually trying to learn
-something and get some work done.
+Klipper isn't working for some reason, so I can't post the exact error, but dmesg and /var/log/messages say md0 has an unknown partition table (this time for ext2), just like with the prior problem on md2 (with jfs).
 
-Thanks.
+
+
+
+      
