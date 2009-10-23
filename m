@@ -1,51 +1,56 @@
 From: berk walker <berk@panix.com>
 Subject: Re: Is My Data DESTROYED?!
-Date: Fri, 23 Oct 2009 19:49:30 -0400
-Message-ID: <4AE2410A.10603@panix.com>
-References: <70ed7c3e0910221840o795a61b9u77774725386868e2@mail.gmail.com>  <222314.82857.qm@web38801.mail.mud.yahoo.com>  <a43edf1b0910231332t48bb8357ib2bd9351a913fe5d@mail.gmail.com> <bb145bd20910231346h44c26b49x38af357e15d97597@mail.gmail.com> <Pine.GSO.4.64.0910232250100.5182@montezuma.acc.umu.se>
+Date: Fri, 23 Oct 2009 19:54:07 -0400
+Message-ID: <4AE2421F.3020001@panix.com>
+References: <151637.14659.qm@web38803.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <Pine.GSO.4.64.0910232250100.5182@montezuma.acc.umu.se>
+In-Reply-To: <151637.14659.qm@web38803.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mattias Wadenstein <maswan@acc.umu.se>
-Cc: Christian Pernegger <pernegger@gmail.com>, linux-raid@vger.kernel.org, adfas asd <chimera_god@yahoo.com>
+To: adfas asd <chimera_god@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mattias Wadenstein wrote:
-> On Fri, 23 Oct 2009, Christian Pernegger wrote:
+adfas asd wrote:
+> --- On Fri, 10/23/09, Billy Crook <billycrook@gmail.com> wrote:
+>> Google "backup service".
+>> Here's a new offsite backup service with unlimited transfer
+>> and
+>> unlimited storage, for just $5 a month. That could very
+>> realistically
+>> be cheaper than your cost in power, hvac, and failed drives
+>> if you use
+>> the service enough. http://www.backblaze.com/
 > 
->>> I believe you are confusing raid with backup.
->>
->> For lots of people the primary role of RAID is as a protection against
->> data-loss nowadays. Backups just aren't feasible/cost-effective
->> anymore for the amounts of data involved. Sticking your head in the
->> sand and repeating that mantra doesn't change that and it isn't
->> helping.
+> You know nothing of the legal and privacy issues, obviously.
 > 
-> Well, claiming that RAID will protect your data under all circumstances 
-> isn't helping either. Backups will actually protect against such things 
-> as rm -rf:ing the wrong directory or mkfs:ing the wrong device, etc. 
-> Things that RAID will never protect against.
 > 
-> And I don't see how backups aren't feasable, USB/network harddrives keep 
-> pace with in-box harddrive sizes just fine. Offsite backup might be 
-> trickier/costlier, so you might constrain those to just the data that 
-> you would be really sad to see gone if the house burns down (photo 
-> album, own creations, etc).
+>>> Great, that'll destroy all hope of getting the data
+>> back. You're
+>>> really something ...
+>> You took that out of context and you know it.  Come
+>> back when you've
+>> read the rest of the paragraph.  The filesystem is
+>> already gone.  It
+>> was gone when the machine became unresponsive.  Get a
+>> greif counselor,
+>> and some backup drives.
 > 
-> /Mattias Wadenstein
-> -- 
+> NO!  The filesystem was NOT already gone, but your 'advice' would have ensured that it was.
+> 
+> 
+> 
+> 
+> 
+>       
+> --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-Sir - Whereas Neil, et al, profess that RAID is NOT equal to BACKUP - 
-Most of us know that tape backup is VERY costly, in several ways, in our 
-multi-terrabyte situations. Your mention of USB/network solutions does 
-beg the obvious question-- How would one do USB/network solutions 
-without some degree of encoded backup, and trust?  BTW, worse yet is 
-implied trust in Cloud, eh?
+I am SO tired of this - stupid thread.  I am waiting for someone to say 
+what A S D REALLY means.
+b-
 
-And then, you say:
