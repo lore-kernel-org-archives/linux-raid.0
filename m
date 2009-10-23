@@ -1,66 +1,33 @@
-From: adfas asd <chimera_god@yahoo.com>
+From: Billy Crook <billycrook@gmail.com>
 Subject: Re: Is My Data DESTROYED?!
-Date: Sun, 25 Oct 2009 08:47:54 -0700 (PDT)
-Message-ID: <56508.9205.qm@web38802.mail.mud.yahoo.com>
-References: <20091025133858.GA23319@boogie.lpds.sztaki.hu>
+Date: Fri, 23 Oct 2009 17:46:06 -0500
+Message-ID: <a43edf1b0910231546y53fafdbdw6348cabc61afe40a@mail.gmail.com>
+References: <a43edf1b0910231444g4c02097dq36640a01689d95f1@mail.gmail.com>
+	<151637.14659.qm@web38803.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091025133858.GA23319@boogie.lpds.sztaki.hu>
+In-Reply-To: <151637.14659.qm@web38803.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: adfas asd <chimera_god@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---- On Sun, 10/25/09, Gabor Gombas <gombasg@sztaki.hu> wrote:
-> > I am shocked at all who think that human error is so
-> prevalent, and in
-> > fact obviates the case for RAID as backup.  I've
-> run Debian for 12
-> > years on all my personal servers and remember
-> literally only 3 or 4
-> > cases in that time where I muggered something up and
-> had to go to
-> > backup.  There must be alot of fsckups out
-> there...
-> 
-> Again, RAID is _not_ backup. "Backup" is something that can
-> retrieve a
-> file if you've deleted it or if you've accidentally
-> overwritten it. RAID
-> cannot do that.
+On Fri, Oct 23, 2009 at 17:00, adfas asd <chimera_god@yahoo.com> wrote:
+> --- On Fri, 10/23/09, Billy Crook <billycrook@gmail.com> wrote:
+> You know nothing of the legal and privacy issues, obviously.
 
-You are not understanding the words what are coming out of my mouf...
+You failed to ever mention any specific legal or privacy requirements.
+ But I doubt they specifically forbid using any service from any other
+company.
+
+Use encryption.  Or buy a few 2TB drives.  And "terabytes" is not a
+big word anymore.
 
 
-> > Now a backup by cron is nice and all, but what if it
-> silently fails in
-> > some obscure way?
-> 
-> There are a couple of golden rules about backups. One such
-> rule is that
-> you should check at regular intervals that your backup is
-> intact,
+On Fri, Oct 23, 2009 at 17:41, adfas asd <chimera_god@yahoo.com> wrote:
+> From your last post it's clear that you do not understand the sequence of events, so I hinted you directly in backchannel, but it now seems clear that I should not have protected you.
 
-LOL
-For terabytes?  Get real.  
-
-
-> > This is one thing I like about RAID or ZFS, it lets
-> > you know when anything's wrong.
-> 
-> No. They let you know when a limited set of errors
-> conditions occur.
-> Neither RAID nor ZFS will complain if you delete the wrong
-> file or if
-> you accidentally overwrite the show you've recorded
-> yesterday. A good
-> backup solution protects you from both.
-
-Again, you are not understanding.
- 
-
-
-
-
-
-      
+Good luck Mr. 'Chimera'!  Watch out for Bellerophon.  You're on your
+own now.  I'm surprised you got what you did given your spamming in
+the beginning.
