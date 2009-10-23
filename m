@@ -1,62 +1,51 @@
-From: "Majed B." <majedb@gmail.com>
+From: berk walker <berk@panix.com>
 Subject: Re: Is My Data DESTROYED?!
-Date: Sat, 24 Oct 2009 02:39:12 +0300
-Message-ID: <70ed7c3e0910231639r974424cv750c638356fbfc82@mail.gmail.com>
-References: <4b85f6ec7a52d1a124696941b382c2b0.squirrel@neil.brown.name>
-	<885316.78847.qm@web38805.mail.mud.yahoo.com>
+Date: Fri, 23 Oct 2009 19:49:30 -0400
+Message-ID: <4AE2410A.10603@panix.com>
+References: <70ed7c3e0910221840o795a61b9u77774725386868e2@mail.gmail.com>  <222314.82857.qm@web38801.mail.mud.yahoo.com>  <a43edf1b0910231332t48bb8357ib2bd9351a913fe5d@mail.gmail.com> <bb145bd20910231346h44c26b49x38af357e15d97597@mail.gmail.com> <Pine.GSO.4.64.0910232250100.5182@montezuma.acc.umu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <885316.78847.qm@web38805.mail.mud.yahoo.com>
+In-Reply-To: <Pine.GSO.4.64.0910232250100.5182@montezuma.acc.umu.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: adfas asd <chimera_god@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: Mattias Wadenstein <maswan@acc.umu.se>
+Cc: Christian Pernegger <pernegger@gmail.com>, linux-raid@vger.kernel.org, adfas asd <chimera_god@yahoo.com>
 List-Id: linux-raid.ids
 
-Perhaps the program utils for ext2 were uninstalled as well just like
-what happened to the JFS ones?
-
-Double check. Also, paste the errors in Google and look for similar inc=
-idents.
-
-On Sat, Oct 24, 2009 at 2:25 AM, adfas asd <chimera_god@yahoo.com> wrot=
-e:
-> --- On Fri, 10/23/09, NeilBrown <neilb@suse.de> wrote:
->> Clearly md0 is degraded - one device is missing.
->> You need to find out why. =C2=A0Then if you trust the
->> missing device to
->> keep working, add it back in (mdadm --add ...)
+Mattias Wadenstein wrote:
+> On Fri, 23 Oct 2009, Christian Pernegger wrote:
+> 
+>>> I believe you are confusing raid with backup.
 >>
->> dmesg or /var/log/something might have hints as to what the
->> error
->> was that caused md to reject the device.
->
-> Thanks Neil, this is the first constructive advice all day.
->
-> Klipper isn't working for some reason, so I can't post the exact erro=
-r, but dmesg and /var/log/messages say md0 has an unknown partition tab=
-le (this time for ext2), just like with the prior problem on md2 (with =
-jfs).
->
->
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
+>> For lots of people the primary role of RAID is as a protection against
+>> data-loss nowadays. Backups just aren't feasible/cost-effective
+>> anymore for the amounts of data involved. Sticking your head in the
+>> sand and repeating that mantra doesn't change that and it isn't
+>> helping.
+> 
+> Well, claiming that RAID will protect your data under all circumstances 
+> isn't helping either. Backups will actually protect against such things 
+> as rm -rf:ing the wrong directory or mkfs:ing the wrong device, etc. 
+> Things that RAID will never protect against.
+> 
+> And I don't see how backups aren't feasable, USB/network harddrives keep 
+> pace with in-box harddrive sizes just fine. Offsite backup might be 
+> trickier/costlier, so you might constrain those to just the data that 
+> you would be really sad to see gone if the house burns down (photo 
+> album, own creations, etc).
+> 
+> /Mattias Wadenstein
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+Sir - Whereas Neil, et al, profess that RAID is NOT equal to BACKUP - 
+Most of us know that tape backup is VERY costly, in several ways, in our 
+multi-terrabyte situations. Your mention of USB/network solutions does 
+beg the obvious question-- How would one do USB/network solutions 
+without some degree of encoded backup, and trust?  BTW, worse yet is 
+implied trust in Cloud, eh?
 
-
-
---=20
-       Majed B.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+And then, you say:
