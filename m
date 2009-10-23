@@ -1,75 +1,41 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: md software raid
-Date: Fri, 23 Oct 2009 10:38:20 +0100
-Message-ID: <20091023093820.GA7613@cthulhu.home.robinhill.me.uk>
-References: <26023091.post@talk.nabble.com>
+From: adfas asd <chimera_god@yahoo.com>
+Subject: Re: Is My Data DESTROYED?!
+Date: Fri, 23 Oct 2009 12:24:09 -0700 (PDT)
+Message-ID: <170350.56146.qm@web38803.mail.mud.yahoo.com>
+References: <70ed7c3e0910222014r7fee262csd67808c75a0aa179@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="qDbXVdCdHGoSgWSk"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <26023091.post@talk.nabble.com>
+In-Reply-To: <70ed7c3e0910222014r7fee262csd67808c75a0aa179@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Now I'm repeatedly getting this:
 
---qDbXVdCdHGoSgWSk
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This is an automatically generated mail message from mdadm
+running on hex
 
-On Fri Oct 23, 2009 at 02:11:09AM -0700, ian.d wrote:
+A DegradedArray event had been detected on md device /dev/md0.
 
->=20
-> hello
->=20
-> As a newbie to Linux kernel etc.
->=20
-> How do you tell which version of md software raid is included in a specif=
-ic
-> kernel version?
-> Is there a command to run which will return this info?
-> Is it possible to install different versions of md in different kernels?
->=20
-There's two separate components to Linux software RAID - the md code in
-the kernel, and the mdadm application which interfaces with it.  I very
-much doubt the kernel code is versioned at all, other than by the kernel
-version (or GIT version).  The mdadm application is versioned, and you
-can get the installed version by running 'mdadm -V'.
+Faithfully yours, etc.
 
-Some of the mdadm functionality will only work with newer kernel
-versions, but you should be able to run any version with any kernel
-(within reason anyway) and make use of the core functionality.  There
-may be some exceptions here, but they should be detailed in the release
-notes for specific versions.
+P.S. The /proc/mdstat file currently contains the following:
 
-As for changing the md version in the kernel - it may be possible, but
-generally there's a lot of work involved in back/forward porting code
-between kernel versions (because of changes to core structures, etc).
+Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4] [multipath] 
+md2 : active raid10 sdb3[0] sdc3[1]
+      1868558336 blocks 1024K chunks 2 offset-copies [2/2] [UU]
+      bitmap: 6/223 pages [24KB], 4096KB chunk
 
-Is there any particular reason you're asking this (e.g. needing to use
-some of the latest functionality with an older kernel)?  You may get
-a more definitive answer if you have a specific case.
+md1 : active (auto-read-only) raid10 sdb2[0] sdc2[1]
+      6297088 blocks 256K chunks 2 offset-copies [2/2] [UU]
+      bitmap: 0/193 pages [0KB], 16KB chunk
 
-HTH,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+md0 : active raid1 sdb1[0]
+      78654144 blocks [2/1] [U_]
+      bitmap: 2/151 pages [8KB], 256KB chunk
 
---qDbXVdCdHGoSgWSk
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+unused devices: <none>
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
 
-iEYEARECAAYFAkrheYwACgkQShxCyD40xBKXzQCguc4MePpikOFIu5SHcuGCAPea
-EhcAnjIZqtV12Lb2sM/sJJiQ3vAD8ygr
-=IwcQ
------END PGP SIGNATURE-----
-
---qDbXVdCdHGoSgWSk--
+      
