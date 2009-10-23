@@ -1,21 +1,92 @@
 From: adfas asd <chimera_god@yahoo.com>
-Subject: Is My Data DESTROYED?!
-Date: Thu, 22 Oct 2009 18:36:31 -0700 (PDT)
-Message-ID: <644518.48476.qm@web38804.mail.mud.yahoo.com>
+Subject: Re: Is My Data DESTROYED?!
+Date: Thu, 22 Oct 2009 19:04:56 -0700 (PDT)
+Message-ID: <222314.82857.qm@web38801.mail.mud.yahoo.com>
+References: <70ed7c3e0910221840o795a61b9u77774725386868e2@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <70ed7c3e0910221840o795a61b9u77774725386868e2@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Today I went in to my HTPC, to find it was hung and the drive light was stuck on.  After all attempts to revive it or switch to terminal 2 or 3 had failed I reset the system.  
+How could this possibly have happened?  The whole idea of RAID is so something like this won't happen.
 
-It rebooted to tell me that it cannot mount /home, the RAID10offset2 device. 
+I was using JFS.
 
-When I reboot in recovery mode and try to mount /dev/md0 manually it informs me there is an invalid superblock!  I shut down and unplugged each drive in turn, and /proc/mdstat shows the appropriate volume gone, but still can't mount the array.
+I've lost confidence now in mdadm.  I have too much data to back up practically, and am now at a loss.
 
-What has happened here?  Is all my data destroyed?
+
+--- On Thu, 10/22/09, Majed B. <majedb@gmail.com> wrote:
+
+> From: Majed B. <majedb@gmail.com>
+> Subject: Re: Is My Data DESTROYED?!
+> To: "adfas asd" <chimera_god@yahoo.com>
+> Cc: linux-raid@vger.kernel.org
+> Date: Thursday, October 22, 2009, 6:40 PM
+> Seems like your filesystem is
+> corrupted. Some filesystems have alternative superblocks.
+> 
+> you can mount your filesystem using an alternative
+> superblock using: mount -o sb=<offset>
+> You find the offset value by running a dry-run (test) of
+> mkfs on your drives. It will print multiple offsets for
+> superblocks.
+> 
+> 
+> 
+> On Fri, Oct 23, 2009 at 4:36 AM,
+> adfas asd <chimera_god@yahoo.com>
+> wrote:
+> 
+> 
+> Today I went in to my HTPC, to find it was hung and the
+> drive light was stuck on.  After all attempts to revive it
+> or switch to terminal 2 or 3 had failed I reset the system.
+> 
+> 
+> 
+> It rebooted to tell me that it cannot mount /home, the
+> RAID10offset2 device.
+> 
+> 
+> 
+> When I reboot in recovery mode and try to mount /dev/md0
+> manually it informs me there is an invalid superblock!  I
+> shut down and unplugged each drive in turn, and /proc/mdstat
+> shows the appropriate volume gone, but still can't mount
+> the array.
+> 
+> 
+> 
+> 
+> 
+> What has happened here?  Is all my data destroyed?
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> --
+> 
+> To unsubscribe from this list: send the line
+> "unsubscribe linux-raid" in
+> 
+> the body of a message to majordomo@vger.kernel.org
+> 
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+> 
+> 
+> -- 
+>        Majed B.
+> 
+> 
+> 
 
 
       
