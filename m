@@ -1,67 +1,42 @@
-From: berk walker <berk@panix.com>
+From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: Is My Data DESTROYED?!
-Date: Fri, 23 Oct 2009 20:13:56 -0400
-Message-ID: <4AE246C4.5000100@panix.com>
-References: <151637.14659.qm@web38803.mail.mud.yahoo.com> <4AE2421F.3020001@panix.com>
+Date: Fri, 23 Oct 2009 23:39:24 -0400
+Message-ID: <4AE276EC.5020506@tmr.com>
+References: <818410.23525.qm@web38801.mail.mud.yahoo.com> <4AE236B4.20103@tmr.com> <babafd2f0910231625t58b421d1w6c3eb6d7ed36f959@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AE2421F.3020001@panix.com>
+In-Reply-To: <babafd2f0910231625t58b421d1w6c3eb6d7ed36f959@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: adfas asd <chimera_god@yahoo.com>
+To: Ben DJ <bendj095124367913213465@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Somehow some dickhead managed to put everything wrongly quoted.  I vote 
-he be drowned.
+Ben DJ wrote:
+> On Fri, Oct 23, 2009 at 4:05 PM, Bill Davidsen <davidsen@tmr.com> wrote:
+>   
+>> Warning: I can only be polite and diplomatic to a limited number of
+>> technically incompetent people each day. Today isn't your day.
+>>     
+>
+> Honestly.  Rather than swinging your privates in public, perhaps you
+> might take your diatribe offlist?
+>
+> Some, including "adfas asd" I gather, are actually trying to learn
+> something and get some work done.
+>   
 
+I told him where and how to back up his data for about 8-10% of the 
+price he said it would cost. I explained (as several other have) why no 
+raid level is the same as a backup.
 
-berk walker wrote:
-> adfas asd wrote:
->> --- On Fri, 10/23/09, Billy Crook <billycrook@gmail.com> wrote:
->>> Google "backup service".
->>> Here's a new offsite backup service with unlimited transfer
->>> and
->>> unlimited storage, for just $5 a month. That could very
->>> realistically
->>> be cheaper than your cost in power, hvac, and failed drives
->>> if you use
->>> the service enough. http://www.backblaze.com/
->>
->> You know nothing of the legal and privacy issues, obviously.
->>
->>
->>>> Great, that'll destroy all hope of getting the data
->>> back. You're
->>>> really something ...
->>> You took that out of context and you know it.  Come
->>> back when you've
->>> read the rest of the paragraph.  The filesystem is
->>> already gone.  It
->>> was gone when the machine became unresponsive.  Get a
->>> greif counselor,
->>> and some backup drives.
->>
->> NO!  The filesystem was NOT already gone, but your 'advice' would have 
->> ensured that it was.
->>
->>
->>
->>
->>
->>       --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
-> I am SO tired of this - stupid thread.  I am waiting for someone to say 
-> what A S D REALLY means.
-> b-
-> 
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Sorry if that wasn't the thing you wanted to learn, but after it has 
+been explained multiple time, it doesn't seem to have been sinking in. 
+And clearly didn't this time. I won't waste my time trying to educate 
+people here any more.
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  Unintended results are the well-earned reward for incompetence.
 
