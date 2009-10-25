@@ -1,109 +1,116 @@
 From: "Leslie Rhorer" <lrhorer@satx.rr.com>
 Subject: RE: Is My Data DESTROYED?!
-Date: Sat, 24 Oct 2009 19:54:16 -0500
-Message-ID: <20091025005419510.XTVS12118@cdptpa-omta02.mail.rr.com>
-References: <516041.14853.qm@web38805.mail.mud.yahoo.com>
+Date: Sat, 24 Oct 2009 20:28:44 -0500
+Message-ID: <20091025012847745.ZOLG5890@cdptpa-omta01.mail.rr.com>
+References: <4AE236B4.20103@tmr.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <516041.14853.qm@web38805.mail.mud.yahoo.com>
+In-Reply-To: <4AE236B4.20103@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> When I was trying to find man for mkfs.jfs I discovered that jfsutils was
-> suddenly not installed.  I installed it and then could man mkfs.jfs .
+> Warning: I can only be polite and diplomatic to a limited number of
+> technically incompetent people each day. Today isn't your day.
+
+	Well...
+
+> That's like saying a bicycle is not as good as a frying pan. They are
+> totally different things, used for different reasons. A raid array is a
+> technique used to improve the performance or reliability of a single
+> dynamic copy of data. A backup is an independent copy of the data at
+> some point in time, and will continue to exist if the original is
+> damaged or destroyed.
 > 
-> I rebooted so I could plug in the second drive, and then md0 was getting
-> mounted on /home as it should.  Indeed I have all my data again.  I don't
-> understand what happened.
+> Note: a good backup will be off-site to prevent physical destruction.
 
-	Something erased or overwrote the data.  This is always a
-possibility whenever the system files are maintained on a read-write file
-system.  High reliability system place all their binaries and configuration
-files on read-only mounts.  The Tivo, for example, does this.  Everything
-(that is mounted) except /var is mounted read-only.  In order to make
-changes to any of the OS or application code, / has to be re-mounted as
-read-write.  It's a simple and elegant way of helping to prevent system
-corruption.  It does mean ordinary users cannot load software, and it means
-the sysadmin must remount the file system before attempting updates, but the
-former may be a good thing, and the latter is no big deal.
+	When possible, I like a multi-tiered approach.  The most common
+cause of data loss is human error.  By the same token, however, it is also
+completely harmless to the hardware. Well, usually.  I did once have an
+idiot raise the floor tile underneath one of my servers and then drop it.
+That was back in the days when a 300M (that's MEGABYTE, not GIGABYTE) drive
+cost $1000.  It was my personal system, too...
 
-> --- On Thu, 10/22/09, Majed B. <majedb@gmail.com> wrote:
+	I digress.
+
+	The point is, keeping a live backup system on-site for all data
+allows dumb-ass losses to be recovered extremely quickly.  For more critical
+data, the backup needs to be kept off-site.  This can be done with a
+"sneakernet" solution for best economy, or using a WAN connection.  Either
+way, recovering the data is going to be a bit slower, although a WAN
+connected system can recover a handful of modestly sized files quite
+quickly.  Hyper-critical data can go to vault storage, with no access except
+by a very small handful of authorized individuals.
+
+> One of the few things I liked about running servers for at&t was that
+> they actually had a "smoking hole recovery plan" requiring steps to
+> recover if the data center was physically destroyed. The only other
+> organization I have worked with who had that level of concern was a bank
+> in Ireland during "the troubles." My general data will survive loss of
+> my office and a two mile radius around it, my critical data will survive
+> lose off the continental US. Okay, I may take this too seriously. ;-)
+
+	Maybe, maybe not.  In either case, however, if the continental U.S.
+is lost, we have bigger problems.  :-)
+
+> > - Of course I wish that backing up could save many terabytes of data for
+> less than $10,000.  But that is not practical today.
+> >
+> >
+> Hogwash! You can get an eSATA array tower with four bays from Newegg for
+> <$200, 1TB drives for $85/ea on sale (mine are WD 'green' which run
+> about 10C cooler than Seagate or Hitachi), and have 3TB RAID-5 for
+> ~$600, capable of being daisy chained. Choice of built-in or software
+> raid. 2TB drives will add about $400, and with an independent copy of
+> the filesystem on a box you have backup. For another $400 you can have a
+> cheap 2nd system connected by Gbit network and be totally independent.
+
+	What's really silly is he already HAS this.  He is implementing
+RAID10 over two separate systems connected by a 1G Ethernet link.  The
+remote system is in his garage.  I keep telling him, "Forget the RAID10
+solution, and go with an independent system with backups managed via rsync."
+Then he complains about poor RAID10 performance and has a cow when he
+encounters a file system corruption (or what he thought was file system
+corruption).
+
+> > Fact:  I have terabytes of data that I want to keep from losing.
+> > Fact:  Disk drives have never been cheaper.
+> > Fact:  It is most cost-effective to save terabytes of data on disk
+> drives, if the proper regimen can be determined for safety.
+> >
 > 
-> > From: Majed B. <majedb@gmail.com>
-> > Subject: Re: Is My Data DESTROYED?!
-> > To: "adfas asd" <chimera_god@yahoo.com>
-> > Cc: linux-raid@vger.kernel.org
-> > Date: Thursday, October 22, 2009, 7:43 PM
-> > I don't know exactly what went wrong
-> > with your setup, so I can't tell
-> > why it's not mounting.
-> >
-> > Did you check the output of dmesg | tail after a failed
-> > mount?
-> >
-> > I'd suggest that you don't touch the disks, cables, nor the
-> > array.
-> >
-> > Try running sudo fsck /dev/md0
-> >
-> > On Fri, Oct 23, 2009 at 5:18 AM, adfas asd <chimera_god@yahoo.com>
-> > wrote:
-> > >
-> > > I don't understand exactly what it is to be done.  If
-> > I can mount using a different superblock, do I then remove
-> > one of the drives from the array so I can put that drive
-> > away with my data until I can buy another drive to back up
-> > the data to?  If so, how?
+> That means backup, sorry, stuff happens if you only have one copy.
 
-	You are confusing a failed file system with a failed drive.  One
-only replaces a drive if it has failed (or seems about to fail).  A
-corrupted file system (or other corrupted data) has nothing to do with RAID,
-unless of course a RAID failure causes the data corruption.  In this event,
-one must analyze the system very carefully to determine the cause of the
-corruption and devise a good means of recovering the array and as much data
-as can be recovered, not necessarily in that order.
+	Exactly.  He seems to have a logic-tight compartment wherein "hard
+drive" != "backup".  The most economical backup solutions by far right now
+are hard drive based.
 
-> > > How is it that the superblock on -both- drives got
-> > destroyed?  Isn't RAID10 supposed to be mirrored?
+> > Fact:  After one month's use mdadm RAID has resulted in a failure which
+> > could have been catastrophic had I not determined that somehow JFS
+> > functionality was destroyed.
 
-	You need to go back and read my earlier messages on the subject.
-Mirroring a drive will *NOT* prevent data corruption, no matter how it is
-mirrored.  Any data corruption will automatcialy be written to both drives,
-unless the failure is due to a bad sector on one of the drives.
+	OP: you have provided no evidence mdadm caused this.
 
-	Of course, as we now know, the file system "corruption" in your case
-was due to a loss of the JFS utilities.
+> > Fact:  Now one of my  arrays has gone into degraded mode for mysterious
+> > reasons, and we are so busy arguing about backups that no one can advise
+> > on what to do about this.
 
-> > > > How could this possibly have
-> > > > happened?  The whole idea of RAID is so
-> > something like this
-> > > > won't happen.
+	OP: The root cause is likely to be the same as that which degraded
+the array.  If you insist on recovering the array directly, we are going to
+need more diagnostics.  At a high level, if the suspect drive is bad, then
+it needs to be replaced and the array re-synced.  Another choice would be to
+divide up the array into two separate RAID0 arrays and fix the one with a
+bad drive.  This is an example of exactly what I meant when I told you this
+topology is going to be more difficult to manage than a pair of independent
+RAID0 or RAID5 arrays.
 
-	No, it isn't.  The whole idea of RAID is to increase storage
-capacity or to limit the impact to the system of a lost drive, or both.
+> I advise you to go to backup. If you can afford to have "terabytes of
+> data" you either live with losing it and just wonder when, or you go to
+> real backup.
 
-> > > > I've lost confidence now in mdadm.  I have too
-> > much
-> > > > data to back up practically, and am now at a
-> > loss.
-
-	You keep saying that, but it is fundamentally untrue.  If you have
-enough drives to implement a mirrored solution, then you also have enough
-for a backup solution.  Again and again I have advised you to abandon this
-strategy of a remote mirror and instead implement a main system and a backup
-system.  If you choose, you can make them a pair of high availability
-systems, although in your case (and mine) I think you would be better served
-by a simple backup system maintained using rsync.  You could purchase one
-extra drive to make the main system a RAID5 array.  That, or you could do
-what I did and purchase three extra drives to make the main array RAID6 and
-the backup array RAID5.  I'm a belt, suspenders, and both-hands-on-my-pants
-kind of guy.
-
-	At the very least, completely independent systems would have saved
-you the major coronary you had when you discovered the file system could not
-be mounted.
+	Or just convert his RAID10 array into two independent arrays and use
+one as a backup.
 
