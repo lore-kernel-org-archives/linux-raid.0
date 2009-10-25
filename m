@@ -1,33 +1,113 @@
-From: Billy Crook <billycrook@gmail.com>
-Subject: Re: Is My Data DESTROYED?!
-Date: Fri, 23 Oct 2009 17:46:06 -0500
-Message-ID: <a43edf1b0910231546y53fafdbdw6348cabc61afe40a@mail.gmail.com>
-References: <a43edf1b0910231444g4c02097dq36640a01689d95f1@mail.gmail.com>
-	<151637.14659.qm@web38803.mail.mud.yahoo.com>
+From: adfas asd <chimera_god@yahoo.com>
+Subject: RE: Is My Data DESTROYED?!
+Date: Sun, 25 Oct 2009 09:06:57 -0700 (PDT)
+Message-ID: <627672.61054.qm@web38803.mail.mud.yahoo.com>
+References: <20091025141659041.ENAX12118@cdptpa-omta02.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <151637.14659.qm@web38803.mail.mud.yahoo.com>
+In-Reply-To: <20091025141659041.ENAX12118@cdptpa-omta02.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: adfas asd <chimera_god@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Oct 23, 2009 at 17:00, adfas asd <chimera_god@yahoo.com> wrote:
-> --- On Fri, 10/23/09, Billy Crook <billycrook@gmail.com> wrote:
-> You know nothing of the legal and privacy issues, obviously.
+--- On Sun, 10/25/09, Leslie Rhorer <lrhorer@satx.rr.com> wrote:
+>     Half the files I have lost on my video
+> system were due to my
+> personal errors.  Absolutely none were due to drive
+> failures.  By a very
+> wide margin, the most common cause of data loss is human
+> error.  EVERY
+> SINGLE FILE THAT HAS EVER BEEN LOST SINCE THE FIRST DIGITAL
+> COMPUTER WAS
+> BUILT HAS BEEN DUE TO THERE NOT BEING A VALID BACKUP.
 
-You failed to ever mention any specific legal or privacy requirements.
- But I doubt they specifically forbid using any service from any other
-company.
-
-Use encryption.  Or buy a few 2TB drives.  And "terabytes" is not a
-big word anymore.
+Remember:  I, am not you.  I am trying to tell you *my* actual experience.
 
 
-On Fri, Oct 23, 2009 at 17:41, adfas asd <chimera_god@yahoo.com> wrote:
-> From your last post it's clear that you do not understand the sequence of events, so I hinted you directly in backchannel, but it now seems clear that I should not have protected you.
+>     Here is the e-mail sent by the daily
+> system backup:
+>     What's obscure about that?
 
-Good luck Mr. 'Chimera'!  Watch out for Bellerophon.  You're on your
-own now.  I'm surprised you got what you did given your spamming in
-the beginning.
+Well, it doesn't say for dead-bolt sure that there has been a backup and *full*incontravertible*successful*verify*.  If it does, it's not clear.  And what does it take to set up this emailed report?  And what backup system/script was used?
+
+
+>  It's also a simple matter to run a
+> compare between the two systems.  One can compare
+> every single file, or for
+> brevity one can easily compare only the most recently
+> created files.
+
+Yes yes, but how?
+
+
+> > I can imagine setting up a fancy-pants backup
+> > system then going about my life, and some quirk
+> happens on the next update
+> > which subtlely hoses my exotic backup system.  It
+> is desirable to have
+> > bolt-tight assurance of backed-up data.  (And
+> please don't bore us with
+> > 'nothing is for sure')
+> 
+>     Subtlely?  Such a thing is no more
+> likely (less so, in fact) with
+> the backup system than with the main system.  And what
+> is with the
+> characterization "exotic"?  Your backup system should
+> be as plain vanilla as
+> a system gets.  Load Debian (or whatever) with mail
+> support, load the
+> packages for NUT, rsync and ssh, configure them, and you're
+> done.
+
+Pfffff....
+I don't understand how NUT plays into this.
+
+>  Create
+> the wakeup / backup script on the main system, and you're
+> on your way.
+
+Wakeup script?  What sort of backup script?  I gather that very few have ever set up a comprehensive remote NAS backup system like this.
+
+
+> > Also I've noticed rsync mentioned several times. 
+> This seems to have
+> > facilities for incremental backups, but I've also read
+> that it is non-
+> > secure over networks and that we should use scp
+> instead.
+> 
+>     It's secure if you use ssh with
+> passphraseless keys as its transfer
+> mechanism.  Why are you worried about it if this is a
+> home LAN, though?  How
+> is someone gong to sniff your LAN, especially the link
+> between the two
+> hosts?
+
+I am told that use of OpenSSH vastly limits the bandwidth of the connection, due to encryption overhead.  Backups could cost more than 24 hours a day, and/or cut into CPU cycles needed for commercial-flagging.  So I'm looking for secure alternatives.
+
+And no I'm not too concerned with someone sniffing my LAN, but if practical security can be had I always use it.  For example I set up reverse SSH tunnels for MythTV, MySQL, and Squid.  No it's not mandatory, and it is difficult, but it is best-practice.
+
+
+> Unnecessary security
+> notwithstanding, however, ssh with passphraseless keys is a
+> great way to
+> manage the remote system, so I suggest implementing it
+> anyway.
+
+Naturally I do, with the built-in security of NX. (nomachine.com)
+
+
+>     Sure.  Lots of them.  I can't
+> think of any more straightforward than
+> rsync, though.
+
+Lots?  OK, I am asking for alternatives.
+
+
+
+
+
+      
