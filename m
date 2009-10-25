@@ -1,123 +1,105 @@
-From: Christopher Chen <muffaleta@gmail.com>
-Subject: Re: Is My Data DESTROYED?!
-Date: Sat, 24 Oct 2009 07:59:16 -0700
-Message-ID: <7bc80d500910240759x443e7a00n4fdcb41f60ec9d73@mail.gmail.com>
-References: <4AE276EC.5020506@tmr.com>
-	 <165717.22819.qm@web38804.mail.mud.yahoo.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Is My Data DESTROYED?!
+Date: Sat, 24 Oct 2009 19:22:30 -0500
+Message-ID: <20091025002234113.XGGN12118@cdptpa-omta02.mail.rr.com>
+References: <a43edf1b0910231444g4c02097dq36640a01689d95f1@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <165717.22819.qm@web38804.mail.mud.yahoo.com>
+In-Reply-To: <a43edf1b0910231444g4c02097dq36640a01689d95f1@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: adfas asd <chimera_god@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You're the guy with the two disk raid 10, right?
 
-That immediately makes my eyebrows furrow. If you have two disks, you
-may as well make a raid 1 and keep it simple. While JFS is not exactly
-new, this is foremost a list about mdadm and linux software raid, not
-necessarily JFS.
+> On Fri, Oct 23, 2009 at 15:46, Christian Pernegger <pernegger@gmail.com>
+> wrote:
+> > For lots of people the primary role of RAID is as a protection against
+> > data-loss nowadays.
+> 
+> Yeah.  Lots of people don't understand technology and have delusional
+> expectations of silver bullet happy pill solutions that make their
+> tummy feel good.  I am not one of them.  Sysadmins shouldn't have any
+> part in that either.
 
-Now, software raid is a funny thing. Some people love it, some people
-hate it, and I don't want to be in the same room with either. I've had
-great experiences with it, on raid sets of up to 56 disks at a time,
-and generally think it's great. However, like everything else, YOU CAN
-shoot yourself in the foot. Because it's a layered system, the kernel
-won't get in your way if you decide to, say, dd the underlying block
-devices and obliterate the superblock, or what have you.
+	Correct.  As I admonished adfas asd when he first said he was
+undertaking this method of storage, RAID is not fault-free.  It is fault
+tolerant.
 
-Part of this sounds like you're looking for best practices. I imagine
-that's why you made a raid 10, and why you're using JFS. It's probably
-why you've been fiddling around with blockdev --setra and all that
-too, maybe some elevator tweaks too. Not to get pedantic, but all
-these techniques and technologies were designed around specific
-workloads and hardware types. RAID 10 doesn't really win until you
-have 4 spindles and higher. I have no doubt that JFS is a great file
-system, but most people on here use ext3/4 and are happy with that
-too--and probably have more demanding workloads than you.
+> > Backups just aren't feasible/cost-effective
+> > anymore for the amounts of data involved.
+> 
+> Backups have never been more feasable, and it is only going to get
+> cheaper and easier.  Visit Newegg, microcenter, ebay.  Google "backup
+> service".
 
-The issue is, you're shooting in the dark unless you really understand
-what you want to do and why. You also said HTPC. Is this basically a
-large bucket for videos and other media? Some might say that's not as
-important to keep online as, say, your email or personal documents.
-It's your call. You also have to consider what kind of performance you
-need--you probably won't see a performance increase here because you
-only have two disks, and for redundancy every write will take place on
-two disks, and at best, every read will be interleaved.
+	The silliest part of this argument is that if one has enough drives
+for a mirrored solution, then one has enough drives - or nearly so - for a
+separate backup system.  The incremental cost for creating a second system
+vs. piling more drives in a single system for a mirrored solution is small.
+This is especially true for adfas asd, who is already going to be putting
+his mirror drives in a remote system in his garage.
 
-I'm going to go on a limb here and say for anyone (with data they want
-to preserve), no matter what, backups make sense and are cost
-effective. I'm going to be crazy and say that there's no reason that
-someone who thinks they can afford a 8TB disk array and dual SLI video
-cards, etc, etc, can't also consider some sort of disk or tape backup.
-Cumbersome? Can be. But having worked with datasets and filesystems
-that run into the hundreds of terabytes, and having backed them up to
-tape, it makes sense. If you have something on the order of tens of
-disks, sure, go ahead, take that next step and back them up somewhere
-else to another set of disks. If you have more disks, seriously
-consider tape--in terms of capacity and power consumption (and data
-integrity), tape wins.
+> > Sticking your head in the
+> > sand and repeating that mantra doesn't change that and it isn't
+> > helping.
+> 
+> That's odd.  I've always thought that those who imagined a raid array
+> as its own backup to be the ones with their heads in the sand.  The
+> reason people keep saying raid!=backup is because of those people who
+> keep thinking raid=backup.  "Mantra" it all you want.  Raid isn't
+> backup.  Ignoring that fact doesn't change it, and isn't helping.
 
-This is, of course, only really valid if you've got data worth preservi=
-ng.
+	Absolutely.  A backup helps to eliminate almost all forms of data
+loss to one extent or another.  A RAID solution fails completely to
+eliminate the most common vector for data loss: human error.  No matter how
+robust the RAID solution, however, and even discounting human error, there
+will still always be failure modes which can result in data loss.  Of
+course, the most obvious is a catastrophic event such as fire or flood.  The
+OP is looking to limit those effects by putting his mirrored drives in a
+separate system in his garage.
 
-And don't even get me started on "silent corruption" and bit rate
-errors on 2TB drives. But, heh, at least you didn't ask about raid 5
-or 6. :)
+> >> The easiest and cleanest solution is to dd the first and last 100mb or
+> >> so of the disks with /dev/zero.
+> >
+> > Great, that'll destroy all hope of getting the data back. You're
+> > really something ...
+> 
+> You took that out of context and you know it.  Come back when you've
+> read the rest of the paragraph.  The filesystem is already gone.  It
+> was gone when the machine became unresponsive.  Get a greif counselor,
+> and some backup drives.
 
-This stuff, when starting out, rewards experimentation, and failures
-(especially at home--this HTPC is at home, right?) are often great
-sources for learning. So, good luck!
+	Woah, now you are going too far in the other direction.  A lost
+filesystem does not necessarily mean an unrecoverable one.
 
-Cheers
+> > How about don't panic, post any and all error messages you're getting
+> > (dmesg) and wait?
+> 
+> Time is money.  It would be quicker to recreate the array and restore
+> from a backup than to wait on a mailing list.  He might also want to
 
-cc
+	Now that is completely untrue in many cases.  Restoring my system
+from backup can easily take 3 or 4 days.  Indeed, the last time I had to do
+it, the backup system also had an issue (my own fault), which caused the
+restore to take over 2 weeks.  Multi-terrabyte arrays take a long time to
+restore.  I expect my Video server and its backup to reach 30T each within
+the next two years.  The OP's is 4T, I think, and even that takes a while to
+restore.
 
-On Sat, Oct 24, 2009 at 5:01 AM, adfas asd <chimera_god@yahoo.com> wrot=
-e:
-> Actually it it your solution which seems best at this point. =A0But I=
-'ve been testing to see whether anyone else advocates it or another alt=
-ernative.
->
-> The division is stark; =A0some have been nothing but helpful, while o=
-thers have done nothing but complain. =A0You are the only one right bet=
-ween.
->
->
-> --- On Fri, 10/23/09, Bill Davidsen <davidsen@tmr.com> wrote:
->> I told him where and how to back up his data for about
->> 8-10% of the price he said it would cost. I explained (as
->> several other have) why no raid level is the same as a
->> backup.
->>
->> Sorry if that wasn't the thing you wanted to learn, but
->> after it has been explained multiple time, it doesn't seem
->> to have been sinking in. And clearly didn't this time. I
->> won't waste my time trying to educate people here any more.
->
->
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+> And filesystem corruption, which it sounds like this is.  Even fsck is
+> not guaranteed to recover files.  It will fix the filesystem, even if
+> that means truncating the / directory.
+> 
+> Here's a new offsite backup service with unlimited transfer and
+> unlimited storage, for just $5 a month. That could very realistically
+> be cheaper than your cost in power, hvac, and failed drives if you use
+> the service enough. http://www.backblaze.com/
+
+	Restoring over 10T of files on a less than 10 Mbps link?  I don't
+think so, especially not with ISPs starting to put caps of far less than 1G
+per month of data transfer.
 
 
-
---=20
-Chris Chen <muffaleta@gmail.com>
-"The fact that yours is better than anyone else's
-is not a guarantee that it's any good."
--- Seen on a wall
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
