@@ -1,113 +1,107 @@
-From: adfas asd <chimera_god@yahoo.com>
-Subject: RE: Is My Data DESTROYED?!
-Date: Sun, 25 Oct 2009 09:06:57 -0700 (PDT)
-Message-ID: <627672.61054.qm@web38803.mail.mud.yahoo.com>
-References: <20091025141659041.ENAX12118@cdptpa-omta02.mail.rr.com>
+From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
+Subject: Re: Is My Data DESTROYED?!
+Date: Sun, 25 Oct 2009 10:49:30 -0600
+Message-ID: <200910251049.30995.tfjellstrom@shaw.ca>
+References: <903282.80364.qm@web38803.mail.mud.yahoo.com>
+Reply-To: tfjellstrom@shaw.ca
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091025141659041.ENAX12118@cdptpa-omta02.mail.rr.com>
+In-Reply-To: <903282.80364.qm@web38803.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: adfas asd <chimera_god@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---- On Sun, 10/25/09, Leslie Rhorer <lrhorer@satx.rr.com> wrote:
->     Half the files I have lost on my video
-> system were due to my
-> personal errors.  Absolutely none were due to drive
-> failures.  By a very
-> wide margin, the most common cause of data loss is human
-> error.  EVERY
-> SINGLE FILE THAT HAS EVER BEEN LOST SINCE THE FIRST DIGITAL
-> COMPUTER WAS
-> BUILT HAS BEEN DUE TO THERE NOT BEING A VALID BACKUP.
-
-Remember:  I, am not you.  I am trying to tell you *my* actual experience.
-
-
->     Here is the e-mail sent by the daily
-> system backup:
->     What's obscure about that?
-
-Well, it doesn't say for dead-bolt sure that there has been a backup and *full*incontravertible*successful*verify*.  If it does, it's not clear.  And what does it take to set up this emailed report?  And what backup system/script was used?
-
-
->  It's also a simple matter to run a
-> compare between the two systems.  One can compare
-> every single file, or for
-> brevity one can easily compare only the most recently
-> created files.
-
-Yes yes, but how?
-
-
-> > I can imagine setting up a fancy-pants backup
-> > system then going about my life, and some quirk
-> happens on the next update
-> > which subtlely hoses my exotic backup system.  It
-> is desirable to have
-> > bolt-tight assurance of backed-up data.  (And
-> please don't bore us with
-> > 'nothing is for sure')
+On Sun October 25 2009, adfas asd wrote:
+> --- On Sat, 10/24/09, Christopher Chen <muffaleta@gmail.com> wrote:
+> > Part of this sounds like you're looking for best practices.
+> > I imagine
+> > that's why you made a raid 10, and why you're using JFS.
+> > It's probably
+> > why you've been fiddling around with blockdev --setra and
+> > all that
+> > too
 > 
->     Subtlely?  Such a thing is no more
-> likely (less so, in fact) with
-> the backup system than with the main system.  And what
-> is with the
-> characterization "exotic"?  Your backup system should
-> be as plain vanilla as
-> a system gets.  Load Debian (or whatever) with mail
-> support, load the
-> packages for NUT, rsync and ssh, configure them, and you're
-> done.
-
-Pfffff....
-I don't understand how NUT plays into this.
-
->  Create
-> the wakeup / backup script on the main system, and you're
-> on your way.
-
-Wakeup script?  What sort of backup script?  I gather that very few have ever set up a comprehensive remote NAS backup system like this.
-
-
-> > Also I've noticed rsync mentioned several times. 
-> This seems to have
-> > facilities for incremental backups, but I've also read
-> that it is non-
-> > secure over networks and that we should use scp
-> instead.
+> Exactly.
 > 
->     It's secure if you use ssh with
-> passphraseless keys as its transfer
-> mechanism.  Why are you worried about it if this is a
-> home LAN, though?  How
-> is someone gong to sniff your LAN, especially the link
-> between the two
-> hosts?
+> > The issue is, you're shooting in the dark unless you really
+> > understand
+> > what you want to do and why. You also said HTPC. Is this
+> > basically a
+> > large bucket for videos and other media?
+> 
+> Yes it's my video collection which I've worked long and hard to gather. 
+>  Your point is taken that it doesn't have to be hot online, but if it can
+>  why not?  I hate tape, and claim that it's obsolete.
+> 
+> I am shocked at all who think that human error is so prevalent, and in fact
+>  obviates the case for RAID as backup.  I've run Debian for 12 years on all
+>  my personal servers and remember literally only 3 or 4 cases in that time
+>  where I muggered something up and had to go to backup.  There must be alot
+>  of fsckups out there...
+> 
+> That said, I am now considering making the storage server in the garage a
+>  backup rather than a RAID.  This means I'll want it to go to sleep most of
+>  the time, and I'll need a mobo that does wake-on-LAN successfully and
+>  automatically.
+> 
+> Now a backup by cron is nice and all, but what if it silently fails in some
+>  obscure way?  This is one thing I like about RAID or ZFS, it lets you know
+>  when anything's wrong.  I can imagine setting up a fancy-pants backup
+>  system then going about my life, and some quirk happens on the next update
+>  which subtlely hoses my exotic backup system.  It is desirable to have
+>  bolt-tight assurance of backed-up data.  (And please don't bore us with
+>  'nothing is for sure')
 
-I am told that use of OpenSSH vastly limits the bandwidth of the connection, due to encryption overhead.  Backups could cost more than 24 hours a day, and/or cut into CPU cycles needed for commercial-flagging.  So I'm looking for secure alternatives.
+All I can say is I've been using RAID5 for a while now, and it surely isn't 
+any kind of backup solution. When I first started using it I figured it would 
+be "good enough" and it really REALLY isn't. A couple of times the array got 
+corrupted beyond repair, and another couple times PEBKAC errors hit the array 
+causing a total loss (each time loosing some important data, and 500G-1.5T of 
+video)
 
-And no I'm not too concerned with someone sniffing my LAN, but if practical security can be had I always use it.  For example I set up reverse SSH tunnels for MythTV, MySQL, and Squid.  No it's not mandatory, and it is difficult, but it is best-practice.
+Soon I intend to start up a "backup array" on a separate machine using raid6 
+or raid0+1, or even just LVM (I'm not sure I like how raid10 isn't re-
+sizable). Then I'll have my other arrays backed up to the backup array. And 
+then I'll backup the important (non video stuff) to DVDR and a remote webhost 
+(I really wish my upload was faster, currently uploading one of my backups 
+will take on the order of a day or so to upload).
+
+Long story short, RAID != Backup. It provides redundancy in case one (or more) 
+disks fail, it does not protect from PEBKAC errors (like assembling the array 
+wrong, or rm -fr /array), nor random bit flips caused by supposed cosmic rays, 
+and other factors (failing ram?). RAID5 will happily save whatever is in ram 
+at any given point and then XOR that, even if its wrong.
+
+> Seems like a sync process, and then a checksum process to compare drives
+>  and email a result, although minor files are changing all the time and I
+>  wouldn't want to be notified if /tmp has changed.
+> 
+> Also I've noticed rsync mentioned several times.  This seems to have
+>  facilities for incremental backups, but I've also read that it is
+>  non-secure over networks and that we should use scp instead.  But scp
+>  doesn't seem to have incremental attributes.  Yes, this is my home LAN,
+>  but I have a thing about security in and out.  Isn't there another way of
+>  syncing two disks (over a network)?
+> 
+
+rsync supports the use of ssh, so it should be fine. I use rsync+ssh to backup 
+all of the important documents and settings off of all of my machines. runs a 
+couple times a day using rsnapshot.
+
+> 
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 
-> Unnecessary security
-> notwithstanding, however, ssh with passphraseless keys is a
-> great way to
-> manage the remote system, so I suggest implementing it
-> anyway.
-
-Naturally I do, with the built-in security of NX. (nomachine.com)
-
-
->     Sure.  Lots of them.  I can't
-> think of any more straightforward than
-> rsync, though.
-
-Lots?  OK, I am asking for alternatives.
-
-
-
-
-
-      
+-- 
+Thomas Fjellstrom
+tfjellstrom@shaw.ca
