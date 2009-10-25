@@ -1,165 +1,135 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: Re: Is My Data DESTROYED?!
-Date: Sun, 25 Oct 2009 10:58:52 -0600
-Message-ID: <200910251058.52530.tfjellstrom@shaw.ca>
-References: <627672.61054.qm@web38803.mail.mud.yahoo.com>
-Reply-To: tfjellstrom@shaw.ca
+From: Bart Kus <me@bartk.us>
+Subject: Used Dev Size is wrong
+Date: Sun, 25 Oct 2009 09:56:15 -0700
+Message-ID: <4AE4832F.7010602@bartk.us>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <627672.61054.qm@web38803.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: adfas asd <chimera_god@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun October 25 2009, you wrote:
-> --- On Sun, 10/25/09, Leslie Rhorer <lrhorer@satx.rr.com> wrote:
-> >     Half the files I have lost on my video
-> > system were due to my
-> > personal errors.  Absolutely none were due to drive
-> > failures.  By a very
-> > wide margin, the most common cause of data loss is human
-> > error.  EVERY
-> > SINGLE FILE THAT HAS EVER BEEN LOST SINCE THE FIRST DIGITAL
-> > COMPUTER WAS
-> > BUILT HAS BEEN DUE TO THERE NOT BEING A VALID BACKUP.
-> 
-> Remember:  I, am not you.  I am trying to tell you *my* actual experience.
+Hello RAID gurus,
 
-Oh believe us, you will learn ;)
+I recently upgraded my MD 10x1TB RAID6 to a 10x2TB RAID6.  I did this by 
+replacing all the 1TB drives in the array with 2TB drives, no more than 
+2 at a time, and letting the array rebuild to assimilate the fresh 
+drive(s).  The array finished its last rebuild and showed an Array Size 
+of 8000GB, and a Used Dev Size of 2000GB.  Since this isn't the 16TB I 
+was looking for, I went through a grow operation:
 
-> >     Here is the e-mail sent by the daily
-> > system backup:
-> >     What's obscure about that?
-> 
-> Well, it doesn't say for dead-bolt sure that there has been a backup and
->  *full*incontravertible*successful*verify*.  If it does, it's not clear. 
->  And what does it take to set up this emailed report?  And what backup
->  system/script was used?
-> 
-> >  It's also a simple matter to run a
-> > compare between the two systems.  One can compare
-> > every single file, or for
-> > brevity one can easily compare only the most recently
-> > created files.
-> 
-> Yes yes, but how?
+# mdadm /dev/md4 -G -z max
 
-diff in binary mode? or maybe difftree, or a tool like it.
+This started a resync @ 50% complete and continued from there.  This had 
+the expected effect of increasing the reported Array Size to 16000GB, 
+but it also unexpectedly increased the Used Dev Size to 4000GB!  I'm 
+worried this incorrect size will lead to errors down the road.  What can 
+I do to correct this?  Here are the details of the case:
 
-> > > I can imagine setting up a fancy-pants backup
-> > > system then going about my life, and some quirk
-> >
-> > happens on the next update
-> >
-> > > which subtlely hoses my exotic backup system.  It
-> >
-> > is desirable to have
-> >
-> > > bolt-tight assurance of backed-up data.  (And
-> >
-> > please don't bore us with
-> >
-> > > 'nothing is for sure')
-> >
-> >     Subtlely?  Such a thing is no more
-> > likely (less so, in fact) with
-> > the backup system than with the main system.  And what
-> > is with the
-> > characterization "exotic"?  Your backup system should
-> > be as plain vanilla as
-> > a system gets.  Load Debian (or whatever) with mail
-> > support, load the
-> > packages for NUT, rsync and ssh, configure them, and you're
-> > done.
-> 
-> Pfffff....
-> I don't understand how NUT plays into this.
+jo dev # cat /proc/mdstat
+Personalities : [raid1] [raid6] [raid5] [raid4]
+md4 : active raid6 sdl1[13] sdj1[19] sdg1[18] sdd1[17] sdf1[16] sdc1[15] 
+sdi1[14] sde1[12] sdk1[11] sdh1[10]
+      15628094464 blocks super 1.2 level 6, 64k chunk, algorithm 2 
+[10/10] [UUUUUUUUUU]
+      [===========>.........]  resync = 55.6% (1087519792/1953511808) 
+finish=342.1min speed=42184K/sec
 
-Don't tell me you don't have a UPS :o
+# mdadm --detail /dev/md4
+/dev/md4:
+        Version : 1.02
+  Creation Time : Sun Aug 10 23:41:49 2008
+     Raid Level : raid6
+     Array Size : 15628094464 (14904.11 GiB 16003.17 GB)
+  Used Dev Size : 3907023616 (3726.03 GiB 4000.79 GB)
+   Raid Devices : 10
+  Total Devices : 10
+Preferred Minor : 4
+    Persistence : Superblock is persistent
 
-> >  Create
-> > the wakeup / backup script on the main system, and you're
-> > on your way.
-> 
-> Wakeup script?  What sort of backup script?
+    Update Time : Sun Oct 25 09:07:29 2009
+          State : active, resyncing
+ Active Devices : 10
+Working Devices : 10
+ Failed Devices : 0
+  Spare Devices : 0
 
-My cron scripts call a little script I wrote to use wakeonlan to wake up any 
-machine that might be asleep before trying to backup.
+     Chunk Size : 64K
 
-> I gather that very few have
->  ever set up a comprehensive remote NAS backup system like this.
+ Rebuild Status : 55% complete
 
-Its hardly comprehensive, and I'm sure plenty of people have done similar 
-things.
+           Name : 4
+           UUID : da14eb85:00658f24:80f7a070:b9026515
+         Events : 2901293
 
-Heck, I do weekly full backups to DVDR atm, and will soon add an entire NAS 
-backup array. In addition to the daily incremental.
+    Number   Major   Minor   RaidDevice State
+      15       8       33        0      active sync   /dev/sdc1
+      14       8      129        1      active sync   /dev/sdi1
+      12       8       65        2      active sync   /dev/sde1
+      16       8       81        3      active sync   /dev/sdf1
+      17       8       49        4      active sync   /dev/sdd1
+      18       8       97        5      active sync   /dev/sdg1
+      10       8      113        6      active sync   /dev/sdh1
+      19       8      145        7      active sync   /dev/sdj1
+      11       8      161        8      active sync   /dev/sdk1
+      13       8      177        9      active sync   /dev/sdl1
 
-> > > Also I've noticed rsync mentioned several times.
-> >
-> > This seems to have
-> >
-> > > facilities for incremental backups, but I've also read
-> >
-> > that it is non-
-> >
-> > > secure over networks and that we should use scp
-> >
-> > instead.
-> >
-> >     It's secure if you use ssh with
-> > passphraseless keys as its transfer
-> > mechanism.  Why are you worried about it if this is a
-> > home LAN, though?  How
-> > is someone gong to sniff your LAN, especially the link
-> > between the two
-> > hosts?
-> 
-> I am told that use of OpenSSH vastly limits the bandwidth of the
->  connection, due to encryption overhead.  Backups could cost more than 24
->  hours a day, and/or cut into CPU cycles needed for commercial-flagging. 
->  So I'm looking for secure alternatives.
+# uname -a
+Linux jo.bartk.us 2.6.29-gentoo-r5 #1 SMP Fri Jun 19 23:04:52 PDT 2009 
+x86_64 Intel(R) Pentium(R) D CPU 2.80GHz GenuineIntel GNU/Linux
 
-It's plenty fast.
+# mdadm --examine /dev/sdc1
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x0
+     Array UUID : da14eb85:00658f24:80f7a070:b9026515
+           Name : 4
+  Creation Time : Sun Aug 10 23:41:49 2008
+     Raid Level : raid6
+   Raid Devices : 10
 
-> And no I'm not too concerned with someone sniffing my LAN, but if practical
->  security can be had I always use it.  For example I set up reverse SSH
->  tunnels for MythTV, MySQL, and Squid.  No it's not mandatory, and it is
->  difficult, but it is best-practice.
-> 
-> > Unnecessary security
-> > notwithstanding, however, ssh with passphraseless keys is a
-> > great way to
-> > manage the remote system, so I suggest implementing it
-> > anyway.
-> 
-> Naturally I do, with the built-in security of NX. (nomachine.com)
-> 
-> >     Sure.  Lots of them.  I can't
-> > think of any more straightforward than
-> > rsync, though.
-> 
-> Lots?  OK, I am asking for alternatives.
-> 
+ Avail Dev Size : 3907023730 (1863.01 GiB 2000.40 GB)
+     Array Size : 31256188928 (14904.11 GiB 16003.17 GB)
+  Used Dev Size : 3907023616 (1863.01 GiB 2000.40 GB)
+    Data Offset : 272 sectors
+   Super Offset : 8 sectors
+          State : active
+    Device UUID : 56d9fdeb:5170f643:5d4c4a2b:b656838a
 
-The only one I found I like is rsnapshot. It happens to use rsync under the 
-hood. lets me setup hourly, daily, weekly, and monthly incrementals, and every 
-week I run a custom script that creates one or more ISOs out of the latest 
-daily incremental backup (rsnapshot stores each incremental as a full tree 
-using hard links, so it LOOKS like a full backup, but is still just a partial 
-backup).
+    Update Time : Sun Oct 25 09:07:29 2009
+       Checksum : c8785262 - correct
+         Events : 2901293
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+     Chunk Size : 64K
+
+    Array Slot : 15 (failed, failed, failed, failed, failed, failed, 
+failed, failed, failed, failed, 6, 8, 2, 9, 1, 0, 3, 4, 5, 7)
+   Array State : Uuuuuuuuuu 10 failed
+
+# fdisk /dev/sdc
+
+The number of cylinders for this disk is set to 243201.
+There is nothing wrong with that, but this is larger than 1024,
+and could in certain setups cause problems with:
+1) software that runs at boot time (e.g., old versions of LILO)
+2) booting and partitioning software from other OSs
+   (e.g., DOS FDISK, OS/2 FDISK)
+
+Command (m for help): p
+
+Disk /dev/sdc: 2000.3 GB, 2000398934016 bytes
+255 heads, 63 sectors/track, 243201 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x3a18d025
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdc1               1      243201  1953512001   fd  Linux raid 
+autodetect
 
 
--- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
+Thanks in advance for your help!
+
+--Bart
+
