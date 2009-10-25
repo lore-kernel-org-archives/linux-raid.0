@@ -1,39 +1,66 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Is My Data DESTROYED?!
-Date: Sun, 25 Oct 2009 08:06:17 -0500
-Message-ID: <20091025130621266.UKNB17264@cdptpa-omta04.mail.rr.com>
-References: <200910242326.07365.tfjellstrom@shaw.ca>
+From: Gabor Gombas <gombasg@sztaki.hu>
+Subject: Re: Is My Data DESTROYED?!
+Date: Sun, 25 Oct 2009 14:38:58 +0100
+Message-ID: <20091025133858.GA23319@boogie.lpds.sztaki.hu>
+References: <7bc80d500910240759x443e7a00n4fdcb41f60ec9d73@mail.gmail.com>
+ <903282.80364.qm@web38803.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200910242326.07365.tfjellstrom@shaw.ca>
+Content-Disposition: inline
+In-Reply-To: <903282.80364.qm@web38803.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: adfas asd <chimera_god@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Wouldn't you use some 'tar' like format on the tape so there's a file
-> index
+On Sun, Oct 25, 2009 at 05:46:04AM -0700, adfas asd wrote:
 
-	Not "tar like".  Tar.  "Tar" stands for "tape archive".  Without the
--f option, tar will write to the location specified by the TAPE environment
-variable (or stdout if the variable is not set).  Of course there are other
-utilities which can be used, such as cpio and fbackup, and I am sure some
-drives may have their own utilities.
+> I am shocked at all who think that human error is so prevalent, and in
+> fact obviates the case for RAID as backup.  I've run Debian for 12
+> years on all my personal servers and remember literally only 3 or 4
+> cases in that time where I muggered something up and had to go to
+> backup.  There must be alot of fsckups out there...
 
-> you can search without having to scan the entire tape? Then you can just
-> "ffwd" (seek) to the position. _should_ be lots faster than reading all of
-> the
-> data from the beginning to the files location trying to find it. Or maybe
-> there's something I'm missing about tapes?
+Again, RAID is _not_ backup. "Backup" is something that can retrieve a
+file if you've deleted it or if you've accidentally overwritten it. RAID
+cannot do that.
 
-	Many tape drives cannot seek any faster than they can read.  After
-all, a seek *IS* a read.  Even if a particular drive can seek faster than it
-can read, however, it will still take a significant amount of time to seek
-to the location and read the data.  How quickly depends on the drive, but
-under no circumstances will it be milliseconds, or even single-digit
-seconds.  High end tape drives of course are much faster than lower cost
-tape drives.  In the realm of what is within the budget of a consumer
-system, don't hold your breath waiting for the drive to find the data.
+RAID is only good for increasing your availability, which means that you
+have to restore data from backup _less often_, and you can survive _some_
+hardware errors without having to shut down the system and restoring
+everything from backup.
 
+> Now a backup by cron is nice and all, but what if it silently fails in
+> some obscure way?
+
+There are a couple of golden rules about backups. One such rule is that
+you should check at regular intervals that your backup is intact, and
+you can in fact restore your data from the backup. A good backup
+solution is never a "do it once and forget about it" kind of thing.
+
+> This is one thing I like about RAID or ZFS, it lets
+> you know when anything's wrong.
+
+No. They let you know when a limited set of errors conditions occur.
+Neither RAID nor ZFS will complain if you delete the wrong file or if
+you accidentally overwrite the show you've recorded yesterday. A good
+backup solution protects you from both.
+
+> Also I've noticed rsync mentioned several times.  This seems to have
+> facilities for incremental backups, but I've also read that it is
+> non-secure over networks and that we should use scp instead.  But scp
+> doesn't seem to have incremental attributes.  Yes, this is my home
+> LAN, but I have a thing about security in and out.  Isn't there
+> another way of syncing two disks (over a network)?
+
+I don't know what you have read but rsync over ssh is certainly secure
+enough.
+
+Gabor
+
+-- 
+     ---------------------------------------------------------
+     MTA SZTAKI Computer and Automation Research Institute
+                Hungarian Academy of Sciences
+     ---------------------------------------------------------
