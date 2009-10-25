@@ -1,76 +1,54 @@
-From: Christopher Chen <muffaleta@gmail.com>
+From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
 Subject: Re: Is My Data DESTROYED?!
-Date: Sat, 24 Oct 2009 23:15:57 -0700
-Message-ID: <7bc80d500910242315s69cc330atb6d910b28edb6f7e@mail.gmail.com>
-References: <20091025023059520.QFQH17264@cdptpa-omta04.mail.rr.com>
-	 <200910242326.07365.tfjellstrom@shaw.ca>
+Date: Sun, 25 Oct 2009 17:21:43 +1100
+Message-ID: <4AE3EE77.5090205@eyal.emu.id.au>
+References: <20091025023059520.QFQH17264@cdptpa-omta04.mail.rr.com> <200910242326.07365.tfjellstrom@shaw.ca> <E91E45A9B1BA49A0B4CB519A91F4494C@m5>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200910242326.07365.tfjellstrom@shaw.ca>
+In-Reply-To: <E91E45A9B1BA49A0B4CB519A91F4494C@m5>
 Sender: linux-raid-owner@vger.kernel.org
-To: tfjellstrom@shaw.ca
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Oct 24, 2009 at 10:26 PM, Thomas Fjellstrom <tfjellstrom@shaw.c=
-a> wrote:
-> On Sat October 24 2009, Leslie Rhorer wrote:
->> > On Sat, Oct 24, 2009 at 6:52 PM, Leslie Rhorer <lrhorer@satx.rr.co=
-m>
->> > I'm not so sure about the speed--you can stream 100MB/sec to a sin=
-gle
->> > tape drive, and if you have multiple in a library, it just scales
->> > horizontally.
->>
->> =A0 =A0 =A0 First of all, that assumes the tape is loaded and ready.=
- =A0It can
->> take hours or even days to retrieve a tape and load it. =A0Secondly,=
- while
->> =A0the tape can stream 100MB/sec, it isn't random access. =A0Finding=
- a 200 byte
->> =A0file in the middle of a 1T tape backup is going to take a while. =
-=A0Getting
->> =A0it from an online backup server takes perhaps 10ms after the admi=
-n
->> =A0finishes typing the copy command.
->
-> Wouldn't you use some 'tar' like format on the tape so there's a file=
- index
-> you can search without having to scan the entire tape? Then you can j=
-ust
-> "ffwd" (seek) to the position. _should_ be lots faster than reading a=
-ll of the
-> data from the beginning to the files location trying to find it. Or m=
-aybe
-> there's something I'm missing about tapes?
+Guy,
 
-Yeah, these are all concerns. The last few jobs I've been at have
-automatic libraries that hold about a hundred tapes, so, it wasn't
-much of an issue. The operator would swap them out on a daily basis,
-but there were always tapes ready. And, the library had at least four
-drives in it, so, you can imagine the aggregate throughput.
+'tar -R' does list the block# where a file starts (effectively an index).
+You then forward to the file-mark of your file and therein you seek to
+the desired block#. Other archiving tools also do this (e.g. afio which
+I prefer).
 
-Like I said before, this is a entirely different scale than what most
-people deal with.
+I used a script that automatically greps the tar listing to extract this
+info and extract the desired file from the tape. A few minues is all it
+took.
 
-Thomas, I think Leslie meant the seek time to get to the file. With
-most backup systems, file metadata is kept in databases so the catalog
-can be queried to find the right tape, etc, etc.
+But I use disks for backup these days...
 
-Anyway, yes, not really pertinent to the concerns of a guy with a 1G
-ethernet multi-room raid 10.
+cheers
 
-cc
+Guy Watkins wrote:
+> } -----Original Message-----
+> } From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> } owner@vger.kernel.org] On Behalf Of Thomas Fjellstrom
+> } Sent: Sunday, October 25, 2009 1:26 AM
+> } To: linux-raid@vger.kernel.org
+> } Subject: Re: Is My Data DESTROYED?!
+> } 
+> } On Sat October 24 2009, Leslie Rhorer wrote:
+  [trim]
+> } Wouldn't you use some 'tar' like format on the tape so there's a file
+> } index
+> } you can search without having to scan the entire tape? Then you can just
+> } "ffwd" (seek) to the position. _should_ be lots faster than reading all of
+> } the
+> } data from the beginning to the files location trying to find it. Or maybe
+> } there's something I'm missing about tapes?
+> 
+> tar does not have an index.  The file name comes just before the file.  I
+> use cpio and gzip.  But I write to a USB disk.  I have restored 1 file, and
+> it had to scan through the data to find the file.
+[trim]
 
---=20
-Chris Chen <muffaleta@gmail.com>
-"The fact that yours is better than anyone else's
-is not a guarantee that it's any good."
--- Seen on a wall
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Eyal Lebedinsky	(eyal@eyal.emu.id.au)
