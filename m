@@ -1,159 +1,76 @@
-From: "Guy Watkins" <linux-raid@watkins-home.com>
-Subject: RE: Is My Data DESTROYED?!
-Date: Sun, 25 Oct 2009 01:41:07 -0400
-Message-ID: <E91E45A9B1BA49A0B4CB519A91F4494C@m5>
-References: <20091025023059520.QFQH17264@cdptpa-omta04.mail.rr.com> <200910242326.07365.tfjellstrom@shaw.ca>
+From: Christopher Chen <muffaleta@gmail.com>
+Subject: Re: Is My Data DESTROYED?!
+Date: Sat, 24 Oct 2009 23:15:57 -0700
+Message-ID: <7bc80d500910242315s69cc330atb6d910b28edb6f7e@mail.gmail.com>
+References: <20091025023059520.QFQH17264@cdptpa-omta04.mail.rr.com>
+	 <200910242326.07365.tfjellstrom@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <200910242326.07365.tfjellstrom@shaw.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: tfjellstrom@shaw.ca, linux-raid@vger.kernel.org
+To: tfjellstrom@shaw.ca
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-} -----Original Message-----
-} From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-} owner@vger.kernel.org] On Behalf Of Thomas Fjellstrom
-} Sent: Sunday, October 25, 2009 1:26 AM
-} To: linux-raid@vger.kernel.org
-} Subject: Re: Is My Data DESTROYED?!
-} 
-} On Sat October 24 2009, Leslie Rhorer wrote:
-} > > On Sat, Oct 24, 2009 at 6:52 PM, Leslie Rhorer <lrhorer@satx.rr.com>
-} > >
-} > > wrote:
-} > > >> I'm going to go on a limb here and say for anyone (with data they
-} want
-} > > >> to preserve), no matter what, backups make sense and are cost
-} > > >> effective. I'm going to be crazy and say that there's no reason
-} that
-} > > >> someone who thinks they can afford a 8TB disk array and dual SLI
-} video
-} > > >> cards, etc, etc, can't also consider some sort of disk or tape
-} backup.
-} > > >
-} > > >        I agree with the disk backup, but not the tape.
-} > > >
-} > > >> Cumbersome? Can be. But having worked with datasets and filesystems
-} > > >
-} > > >        Cumberesome, slow, kludgy, and expensive.
-} > >
-} > > Well, like anything else, having a system helps. And by system I mean
-} > > a library, barcodes on all tapes, and a good tape storage system. Yes,
-} > > it involves Humans.
-} >
-} > 	Well, that wasn't quite my point, but it is another aspect of the
-} > issue.
-} >
-} > > >> that run into the hundreds of terabytes, and having backed them up
-} to
-} > > >> tape, it makes sense. If you have something on the order of tens of
-} > > >> disks, sure, go ahead, take that next step and back them up
-} somewhere
-} > > >> else to another set of disks. If you have more disks, seriously
-} > > >> consider tape--in terms of capacity and power consumption (and data
-} > > >> integrity), tape wins.
-} > > >
-} > > >        Power consumption, yes.  Capacity is a somewhat more complex
-} > > > problem, with a number of variables.  For speed, tapes lose
-} > >
-} > > disastrously.
-} > >
-} > > > For cost, hard drives win unless the array is very large.  For
-} > >
-} > > reliability
-} > >
-} > > > and availability, drives win hands down.  I've had quite a bit of
-} data
-} > >
-} > > lost
-} > >
-} > > > with bad tape sets, and the most persistent problems on my systems
-} > > > which
-} > >
-} > > do
-} > >
-} > > > use tapes involve the tape drives, even sans data loss.  Once
-} someone
-} > >
-} > > wiped
-} > >
-} > > > out a directory which someone up in corporate was backing up to
-} tape.
-} > >
-} > >  It
-} > >
-} > > > took 3 days to recover the directory, no doubt because no one could
-} > > > find
-} > >
-} > > the
-} > >
-} > > > tape.
-} > >
-} > > I'm not so sure about the speed--you can stream 100MB/sec to a single
-} > > tape drive, and if you have multiple in a library, it just scales
-} > > horizontally.
-} >
-} > 	First of all, that assumes the tape is loaded and ready.  It can
-} > take hours or even days to retrieve a tape and load it.  Secondly, while
-} >  the tape can stream 100MB/sec, it isn't random access.  Finding a 200
-} byte
-} >  file in the middle of a 1T tape backup is going to take a while.
-} Getting
-} >  it from an online backup server takes perhaps 10ms after the admin
-} >  finishes typing the copy command.
-} 
-} Wouldn't you use some 'tar' like format on the tape so there's a file
-} index
-} you can search without having to scan the entire tape? Then you can just
-} "ffwd" (seek) to the position. _should_ be lots faster than reading all of
-} the
-} data from the beginning to the files location trying to find it. Or maybe
-} there's something I'm missing about tapes?
+On Sat, Oct 24, 2009 at 10:26 PM, Thomas Fjellstrom <tfjellstrom@shaw.c=
+a> wrote:
+> On Sat October 24 2009, Leslie Rhorer wrote:
+>> > On Sat, Oct 24, 2009 at 6:52 PM, Leslie Rhorer <lrhorer@satx.rr.co=
+m>
+>> > I'm not so sure about the speed--you can stream 100MB/sec to a sin=
+gle
+>> > tape drive, and if you have multiple in a library, it just scales
+>> > horizontally.
+>>
+>> =A0 =A0 =A0 First of all, that assumes the tape is loaded and ready.=
+ =A0It can
+>> take hours or even days to retrieve a tape and load it. =A0Secondly,=
+ while
+>> =A0the tape can stream 100MB/sec, it isn't random access. =A0Finding=
+ a 200 byte
+>> =A0file in the middle of a 1T tape backup is going to take a while. =
+=A0Getting
+>> =A0it from an online backup server takes perhaps 10ms after the admi=
+n
+>> =A0finishes typing the copy command.
+>
+> Wouldn't you use some 'tar' like format on the tape so there's a file=
+ index
+> you can search without having to scan the entire tape? Then you can j=
+ust
+> "ffwd" (seek) to the position. _should_ be lots faster than reading a=
+ll of the
+> data from the beginning to the files location trying to find it. Or m=
+aybe
+> there's something I'm missing about tapes?
 
-tar does not have an index.  The file name comes just before the file.  I
-use cpio and gzip.  But I write to a USB disk.  I have restored 1 file, and
-it had to scan through the data to find the file.
+Yeah, these are all concerns. The last few jobs I've been at have
+automatic libraries that hold about a hundred tapes, so, it wasn't
+much of an issue. The operator would swap them out on a daily basis,
+but there were always tapes ready. And, the library had at least four
+drives in it, so, you can imagine the aggregate throughput.
 
-But back to your point.  I don't know of any open source software that can
-restore a file quickly from tape.  And with a disk backup, if you use a file
-system you can restore quickly.  But a file system wastes space.  That is
-why I use cpio and gzip.  I backup about 500GB to a file about 350GB.  But
-it really depends on how well your data compresses.
+Like I said before, this is a entirely different scale than what most
+people deal with.
 
-} 
-} > > But, where I was working, we were also duplicating tape sets for
-} > > offsite, which means there was two copies per backup set.
-} > >
-} > > Is this expensive? You betcha! But...you know. The bad old days of DDS
-} > > are also gone, so there's some rejoicing there.
-} >
-} > 	They may be for you.  I have to manage over 300 of the beasts on the
-} > same number of hosts.  What's worse, not only are the backups themselves
-} > often incompatible, the drives often can't even use the same tapes.  I
-} have
-} > to see to it a half dozen different tape types get stocked in 75
-} different
-} > cities.  Then I have to try to make sure the gopher in every city
-} remembers
-} > to replace the tape.
-} 
-} :(
-} 
-} > --
-} > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-} > the body of a message to majordomo@vger.kernel.org
-} > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-} >
-} 
-} 
-} --
-} Thomas Fjellstrom
-} tfjellstrom@shaw.ca
-} --
-} To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-} the body of a message to majordomo@vger.kernel.org
-} More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thomas, I think Leslie meant the seek time to get to the file. With
+most backup systems, file metadata is kept in databases so the catalog
+can be queried to find the right tape, etc, etc.
 
+Anyway, yes, not really pertinent to the concerns of a guy with a 1G
+ethernet multi-room raid 10.
+
+cc
+
+--=20
+Chris Chen <muffaleta@gmail.com>
+"The fact that yours is better than anyone else's
+is not a guarantee that it's any good."
+-- Seen on a wall
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
