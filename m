@@ -1,33 +1,27 @@
-From: Gabor Gombas <gombasg@sztaki.hu>
-Subject: Re: Is My Data DESTROYED?!
-Date: Sun, 25 Oct 2009 19:33:34 +0100
-Message-ID: <20091025183334.GA26531@boogie.lpds.sztaki.hu>
-References: <20091025133858.GA23319@boogie.lpds.sztaki.hu>
- <56508.9205.qm@web38802.mail.mud.yahoo.com>
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Subject: Re: md: md3 still in use.
+Date: Sun, 25 Oct 2009 10:57:22 -0800 (AKDT)
+Message-ID: <alpine.LNX.2.01.0910251056020.27885@filesrv1.baby-dragons.com>
+References: <alpine.LNX.2.01.0910250932510.27885@filesrv1.baby-dragons.com> <alpine.LNX.2.01.0910250944060.27885@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <56508.9205.qm@web38802.mail.mud.yahoo.com>
+In-Reply-To: <alpine.LNX.2.01.0910250944060.27885@filesrv1.baby-dragons.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: adfas asd <chimera_god@yahoo.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid maillist <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, Oct 25, 2009 at 08:47:54AM -0700, adfas asd wrote:
+ 	Hello All ,  Never mind I figured it out .  The array has been recently 
+rebuilt & the mdadm.conf had not been updated with the recent UUID's .
+ 	Sorry about the noise .
+ 		Tnx ,  JimL
 
-> LOL
-> For terabytes?  Get real.  
-
-A couple of terabytes of data is not that much, really. But in the end
-it all boils down to how much do you care about your data. If you _do_
-care, then _you_ must make regular and continuous efforts to keep it
-safe. There is no free lunch.
-
-Gabor
-
+On Sun, 25 Oct 2009, Mr. James W. Laferriere wrote:
+> 	Hello All ,  Soory about replying to myself ,  But here is some 
+> additional info .
 -- 
-     ---------------------------------------------------------
-     MTA SZTAKI Computer and Automation Research Institute
-                Hungarian Academy of Sciences
-     ---------------------------------------------------------
++------------------------------------------------------------------+
+| James   W.   Laferriere | System    Techniques | Give me VMS     |
+| Network&System Engineer | 2133    McCullam Ave |  Give me Linux  |
+| babydr@baby-dragons.com | Fairbanks, AK. 99701 |   only  on  AXP |
++------------------------------------------------------------------+
