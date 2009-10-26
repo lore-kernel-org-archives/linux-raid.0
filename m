@@ -1,38 +1,37 @@
-From: adfas asd <chimera_god@yahoo.com>
+From: "Darius S. Naqvi" <dnaqvi@datagardens.com>
 Subject: Re: Is My Data DESTROYED?!
-Date: Mon, 26 Oct 2009 05:56:51 -0700 (PDT)
-Message-ID: <755966.28481.qm@web38802.mail.mud.yahoo.com>
+Date: Mon, 26 Oct 2009 09:38:07 -0600 (MDT)
+Message-ID: <alpine.DEB.1.00.0910231744410.3525@darius>
+References: <406994.2318.qm@web38805.mail.mud.yahoo.com> <4AE22E28.207@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4AE22E28.207@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You know, I was worried that my main HTPC would be overloaded, with Myth commercial flagging, transcoding, and storage server operations like ssh encryption and checksumming.  
+On Fri, 23 Oct 2009, Bill Davidsen wrote:
 
-But clearly storage server operations should be carried out by the storage server.  This'll be a little qbox-f mini-ITX system in the garage in case of fire or theft.  So I could iSCSI the HTPC's RAID0 volume to the storage server, hopefully through an SSH tunnel, and the storage server could merrily do the rsync, checksumming, and whatever operations, while the HTPC does its proper jobs.  When not in use the storage server would sleep.  Sure, the storage server will be just an Atom or Geode, but as long as its operations don't take more than 24 hours it's OK.
+> adfas asd wrote:
+>> I can't find anything about a dry-run or test option in the man page for 
+>> mkfs.jfs .
+>> 
+>
+> You want fsck (check my filesystem) not mkfs (blow away all I have and create 
+> a new empty filesystem).
 
+I think he wants to know where the mkfs put the backup superblocks
+when the filesystem was made originally.  If you know where the backup
+superblocks are, you can tell mount to use one of them.  This is one way to recover from a corrupt superblock.
 
---- On Mon, 10/26/09, adfas asd <chimera_god@yahoo.com> wrote:
-> Thanks Doug, this was very
-> helpful.  I had seen the checksum option, but sometimes
-> something doesn't register as useful unless there is
-> independent confirmation. 
-> 
-> And understand that I am not 'shooting down' anything to be
-> obstinate;  I am testing and probing for the -best-
-> solution and systems, and hoping something good pops
-> out.  Some of the sensitive will take offense, but I
-> suggest that all benefit when we get substantive responses
-> such as yours.
-> 
-> I had tried afio and cpio in the past, but frankly could
-> not figure it out to use.  Seems like a good
-> concept.  Maybe it's been made more accessible by now,
-> or maybe I'm not as dumb.  BTW, I am a real estate
-> developer, not a coder.
+The way I've done this in the past was to issue mkfs with a flag (-n,
+I think) that meant, "don't make the filesystem, just tell me what you
+would do".  One of the thing that mkfs (actually, this was newfs on
+SunOS 4.1.x, which constructs a mkfs command for you) spits out on
+stdout is the list of backup superblocks.
 
-
-
-      
+-- 
+Darius S. Naqvi
+dnaqvi@datagardens.com
+http://www.datagardens.com
