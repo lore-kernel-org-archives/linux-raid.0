@@ -1,67 +1,75 @@
 From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
 Subject: Re: Is My Data DESTROYED?!
-Date: Mon, 26 Oct 2009 12:14:56 -0600
-Message-ID: <200910261214.56186.tfjellstrom@shaw.ca>
-References: <54075B33AEE94E7E965ACB64C976007E@m5> <EFC965352E0D46AE8F849753A9602B71@m5> <4AE5509E.5070507@eyal.emu.id.au>
+Date: Mon, 26 Oct 2009 12:21:23 -0600
+Message-ID: <200910261221.23711.tfjellstrom@shaw.ca>
+References: <755966.28481.qm@web38802.mail.mud.yahoo.com>
 Reply-To: tfjellstrom@shaw.ca
 Mime-Version: 1.0
 Content-Type: Text/Plain;
-  charset="utf-8"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AE5509E.5070507@eyal.emu.id.au>
+In-Reply-To: <755966.28481.qm@web38802.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+To: adfas asd <chimera_god@yahoo.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon October 26 2009, Eyal Lebedinsky wrote:
-> Guy,
+On Mon October 26 2009, adfas asd wrote:
+> You know, I was worried that my main HTPC would be overloaded, with Myth
+>  commercial flagging, transcoding, and storage server operations like ssh
+>  encryption and checksumming.
 > 
-> I use a hot-swap sata enclosure for my disk backup. Mine is installed in
-> one 5.25" slot, elsewhere I have used an external esata version of the
-> same thing. Cheap and gives me the full native speed of the disk.
+> But clearly storage server operations should be carried out by the storage
+>  server.  This'll be a little qbox-f mini-ITX system in the garage in case
+>  of fire or theft.  So I could iSCSI the HTPC's RAID0 volume to the storage
+>  server, hopefully through an SSH tunnel, and the storage server could
+>  merrily do the rsync, checksumming, and whatever operations, while the
+>  HTPC does its proper jobs.  When not in use the storage server would
+>  sleep.  Sure, the storage server will be just an Atom or Geode, but as
+>  long as its operations don't take more than 24 hours it's OK.
 
-I have one of those 4-in-3 bay converters, 4 hotswap 3.5" bays, in 3 5.25" 
-bays. Really rather nice. Probably get another one later.
+Issue there, you can not mount a regular filesystem twice. Which is what this 
+plan would entail. It'd be better if you just used rsync's native ssh support 
+to log in and copy entire directory trees of data.
 
-> cheers
-> 	Eyal
+The initial copy will take a while, but rsync will only copy files that are 
+new, or have changed by default, so subsequent rsync runs won't take very long 
+over GbE at all.
+
+on your backup box, you can just run:
+rsync -a user@mythtvbox:/mnt/raid0 /mnt/backup
+
+which tells rsync to copy all files under 'mythtvbox's /mnt/raid0 dir 
+recursively to /mnt/backup keeping all metadata including access times and 
+what not. (-a means archive, this way it will know when files have changed on 
+the remote mythtv box)
+
+hth.
+
+> --- On Mon, 10/26/09, adfas asd <chimera_god@yahoo.com> wrote:
+> > Thanks Doug, this was very
+> > helpful.  I had seen the checksum option, but sometimes
+> > something doesn't register as useful unless there is
+> > independent confirmation.
+> >
+> > And understand that I am not 'shooting down' anything to be
+> > obstinate;  I am testing and probing for the -best-
+> > solution and systems, and hoping something good pops
+> > out.  Some of the sensitive will take offense, but I
+> > suggest that all benefit when we get substantive responses
+> > such as yours.
+> >
+> > I had tried afio and cpio in the past, but frankly could
+> > not figure it out to use.  Seems like a good
+> > concept.  Maybe it's been made more accessible by now,
+> > or maybe I'm not as dumb.  BTW, I am a real estate
+> > developer, not a coder.
 > 
-> Guy Watkins wrote:
-> > } -----Original Message-----
-> > } From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> > } owner@vger.kernel.org] On Behalf Of Leslie Rhorer
-> > } Sent: Sunday, October 25, 2009 9:36 PM
-> > } To: linux-raid@vger.kernel.org
-> > } Subject: RE: Is My Data DESTROYED?!
-> > }
-> > } > Cool, I learned something.  Thanks.
-> > } >
-> > } > I use disks too.  Could "seek" using dd, but I also gzip my stuff and
-> > } use
-> > } > cpio.  :(  Anyway, I almost never need to restore a file.  :)
-> > }
-> > } 	I rather like fbackup combined with gzip, but I don't know if there
-> > } is a Linux port of fbackup.  I use fbackup to create a named index for
-> > } each
-> > } backup set, whether on disk or tape.  This makes it easy to see if a
-> > } particular file is on an archive without having to load the archive.
-> > }
-> >
-> > Where do you keep this index?  Hopefully not on the disk that needs to be
-> > restored.  :)
-> >
-> > I thought about it, for my needs I don't need an index.  You don't need
-> > an index for a full restore and I only need to restore once every few
-> > years. And so far, never needed a full restore, just a file or so.  I can
-> > live with a few hours to restore 1 file.  But I really need a faster
-> > backup.  My 500GB USB disks gives me about 15 MB/sec.  I don't know why
-> > it is so slow.  Should be able to do 40+.
-> >
-> > Oh, I did have a 22 tape library with a DLT-8000.  But it failed a few
-> > years ago.  Was really cool, but took forever to backup 300-400GB.  I
-> > guess my USB disk is about the same speed, and it takes forever too.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
 
 
