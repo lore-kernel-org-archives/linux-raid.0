@@ -1,50 +1,35 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: Re: Is My Data DESTROYED?!
-Date: Mon, 26 Oct 2009 21:15:59 -0600
-Message-ID: <200910262115.59160.tfjellstrom@shaw.ca>
-References: <20091027025048179.ITXN5890@cdptpa-omta01.mail.rr.com>
-Reply-To: tfjellstrom@shaw.ca
-Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Re: RAID5: *all* of my drives are now spares
+Date: Tue, 27 Oct 2009 10:30:03 +0100
+Message-ID: <slrnhedfcr.cca.Mario.Holbe@darkside.dyn.samba-tng.org>
+References: <2c2a4e250910261845w7e62274es63b5fcebdfce034e@mail.gmail.com>
+ <960e25b92f434569a5833ffda52a1f25.squirrel@neil.brown.name>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091027025048179.ITXN5890@cdptpa-omta01.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lrhorer@satx.rr.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon October 26 2009, Leslie Rhorer wrote:
-> > > I use a hot-swap sata enclosure for my disk backup. Mine is installed
-> > > in one 5.25" slot, elsewhere I have used an external esata version of
-> > > the same thing. Cheap and gives me the full native speed of the disk.
-> >
-> > I have one of those 4-in-3 bay converters, 4 hotswap 3.5" bays, in 3
-> > 5.25" bays. Really rather nice. Probably get another one later.
-> 
-> 	When I first went to SATA disks, I picked up a 12 bay multilane
-> enclosure from Norcotek coupled with a Highpoint SAS RAID controller.  It
-> was a disaster.  With a small number of drives in the enclosure, and with
-> some fiddling, I could get the system to be fairly stable.  Once I went
-> beyond 6 disks, however, it was an unending nightmare of problems.  I tried
-> everything, including gutting the Infiniband adapters and putting in port
-> multipliers, switching to mdadm.  Right about a year ago, I scrapped the
-> Norcotek enclosure and picked up a 12 bay port multiplier enclosure from PC
-> PitStop.  I've been thrilled with it.  They have a 20 bay enclosure which I
-> believe I am going to get to facilitate my next expansion, early next year.
+NeilBrown <neilb@suse.de> wrote:
+> On Tue, October 27, 2009 12:45 pm, John P Poet wrote:
+>> md3 : inactive sdk[0](S) sdf[1](S) sdg[2](S) sdj[4](S)
+>>       7814056960 blocks super 1.2
+> However the --examine shows that 3 of the 4 devices report a role
+> of 'spare'... which is odd because "--assemble --force" managed to
 
-A guy I know got a SuperMicro SC846E1-R900B case. 24 hotswap per chassis, with 
-the capability to chain in more of them to the same SAS adapter. Rather 
-impressive. I can't afford a $1200 case though, not yet.
+Hmmm, it's not. Yes, it's odd but not unusual for v1 metadata :)
+Please have a look at the thread starting with:
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+From: John Hughes <john@Calva.COM
+Subject: Dumb questions about mdadm #1 - replacing broken disks - "slot" reuse?
+Date: Fri, 18 Sep 2009 14:13:44 +0200
+Message-ID: <4AB37978.5030403@Calva.COM>
+
+John and me reported something that looks quite similar to me for v1
+metadata already (and the OP runs v1.2 metadata).
 
 
+regards
+   Mario
 -- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
+Ho ho ho! I am Santa Claus of Borg. Nice assimilation all together!
+
