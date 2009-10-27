@@ -1,23 +1,31 @@
-From: adfas asd <chimera_god@yahoo.com>
-Subject: Re: Is My Data DESTROYED?!
-Date: Tue, 27 Oct 2009 14:08:00 -0700 (PDT)
-Message-ID: <26389.71416.qm@web38808.mail.mud.yahoo.com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: md software raid
+Date: Wed, 28 Oct 2009 09:55:02 +1300
+Message-ID: <4AE75E26.1080303@sauce.co.nz>
+References: <26023091.post@talk.nabble.com> <20091023093820.GA7613@cthulhu.home.robinhill.me.uk> <000601ca56ee$f7a4d360$e6ee7a20$@com> <4AE75D87.60708@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4AE75D87.60708@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Ian Docherty <idiandocherty@googlemail.com>, 'Robin Hill' <robin@robinhill.me.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---- On Tue, 10/27/09, Christian Pernegger <pernegger@gmail.com> wrote:
-> Overkill much? Stick with something simple, it will serve
-> you better
-> in the end, especially when something fails. K.I.S.S.,
-> remember?
-> 
-> Just rsync the two boxes already, with or without ssh.
-
-So you're saying that rsync/rsnapshot can operate without the remote disk being shared?  I hadn't understood it that way.
+Bill Davidsen wrote:
 
 
-      
+> That's certainly a valid point, if you are stuck using xfs by preference 
+> or requirement. I have seen claims that 2.6.32 will be better, but I 
+> have no intention of testing it, having parted company with xfs a while 
+> ago.
+
+The OP of the thread metioned, was able to duplicate the slowdown using 
+ext3, so it probably has nothing to do with XFS.
+
+Regards,
+
+Richard
+
+
