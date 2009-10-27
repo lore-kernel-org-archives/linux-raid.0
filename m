@@ -1,51 +1,37 @@
-From: adfas asd <chimera_god@yahoo.com>
+From: Christian Pernegger <pernegger@gmail.com>
 Subject: Re: Is My Data DESTROYED?!
-Date: Tue, 27 Oct 2009 13:53:32 -0700 (PDT)
-Message-ID: <577070.18599.qm@web38807.mail.mud.yahoo.com>
-References: <4AE75BDB.1020908@tmr.com>
+Date: Tue, 27 Oct 2009 22:00:07 +0100
+Message-ID: <bb145bd20910271400m7d29af2p535c12c784a3b56c@mail.gmail.com>
+References: <1256656849.15137.126.camel@poledra.romunt.nl>
+	 <472064.4204.qm@web38802.mail.mud.yahoo.com>
+	 <7d86ddb90910271339ha3cf796g8fa58b798fd80dfd@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AE75BDB.1020908@tmr.com>
+In-Reply-To: <7d86ddb90910271339ha3cf796g8fa58b798fd80dfd@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-You're not understanding.
+>So sine iSCSI is out my next avenue of investigation is clustering filesystems.
 
-I plan for the **storage server** to mount the RAID0 volume on the HTPC (shared), so the **storage server** can do all backup and checking operations.  This should be a job for the storage server, not the HTPC.  The HTPC should/will perform all video duties.
+Overkill much? Stick with something simple, it will serve you better
+in the end, especially when something fails. K.I.S.S., remember?
 
-And NFS/Samba are out.  O-U-T, OUT.  Old-and-busted.  Useful like a washboard.  Many years ago I vowed that I would never learn two things:  automatic transmissions, and NFS.  I did learn and use Samba for some years, but now it is old-and-busted.  sshfs has served me well over the past year and a half, under rigorous conditions.  It is limited though by CPU consumption for encryption.  This is why I will investigate clustering filesystems and FUSE options.
+Just rsync the two boxes already, with or without ssh. That's assuming
+the data is mostly static (videos). If you have other data as well you
+might want to use rdiff-backup for that, as it can keep multiple
+versions.
 
+Get some kind of backplane for the disks so you can swap them out
+without powering down the box. (Not because you can't live with 10min
+downtime when a disk fails but because you don't want to spin down the
+*other* disks.)
 
---- On Tue, 10/27/09, Bill Davidsen <davidsen@tmr.com> wrote:
-> One more time, if you mount the backup copy on the main
-> server it will then be subject to the same failure issues as
-> a mirror. You want to use something like rsync to backup
-> over network, and the function of the backup server isn't
-> going to be to serve other than in case of emergency. You
-> don't want to serve, to mount, to do anything which will let
-> filesystem, OS, or user errors propagate to the backup
-> copy.
-> 
-> Other than the reliability issue if you mount, there's no
-> reason to avoid things like NFS, they are well tested but
-> not stagnant, getting significant upgrades a few years ago
-> and regular minor glitch fixes for corner cases. In general
-> cutting edge and reliable is not the most probable
-> combination. While NFS is widely used and maintained,
-> protocols like AFS, iSCSI and sshfs are used by fewer sites,
-> and perhaps more experienced administrators, so perhaps they
-> are less tested, particularly in the area of less than
-> optimal setup.
-> 
-> Boring and uneventful is what you want in a backup system.
-> 
-> -- Bill Davidsen <davidsen@tmr.com>
->  Unintended results are the well-earned reward for
-> incompetence.
-> 
-> 
+Bonus: If the primary server fails but its disks are fine you can just
+stick all of them in the backup server temporarily, boot and be up and
+running almost immediately.
 
+Cheers,
 
-      
+C.
