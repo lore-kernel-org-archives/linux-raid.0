@@ -1,24 +1,36 @@
 From: adfas asd <chimera_god@yahoo.com>
 Subject: Re: Is My Data DESTROYED?!
-Date: Tue, 27 Oct 2009 07:37:34 -0700 (PDT)
-Message-ID: <295369.82915.qm@web38803.mail.mud.yahoo.com>
-References: <200910262115.59160.tfjellstrom@shaw.ca>
+Date: Tue, 27 Oct 2009 07:40:52 -0700 (PDT)
+Message-ID: <235564.59062.qm@web38801.mail.mud.yahoo.com>
+References: <20091027143630.GF5585@boogie.lpds.sztaki.hu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200910262115.59160.tfjellstrom@shaw.ca>
+In-Reply-To: <20091027143630.GF5585@boogie.lpds.sztaki.hu>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---- On Mon, 10/26/09, Thomas Fjellstrom <tfjellstrom@shaw.ca> wrote:
-> A guy I know got a SuperMicro SC846E1-R900B case. 24
-> hotswap per chassis, with 
-> the capability to chain in more of them to the same SAS
-> adapter. Rather 
-> impressive. I can't afford a $1200 case though, not yet.
+--- On Tue, 10/27/09, Gabor Gombas <gombasg@sztaki.hu> wrote:
+> > Thanks.  But what I have in mind is serving the
+> HTPC's array (with
+> > videos)to the storage server via iSCSI. 
+> Hopefully the array can be
+> > mounted on the HTPS and still be served to the remote
+> storage server
+> > by iSCSI?
+> 
+> No. You either mount the fs locally _or_ export it via
+> iSCSI. You can't
+> do both simultaneously. If you want to access the files
+> from both
+> locations, you have to use NFS or Samba (or a distributed
+> file system,
+> but that's IMHO way too complicated for your setup).
 
-Yes, it looks like the SuperMicro 3-5 for me.
+Oh no.  Well I don't see the point of iSCSI then.
+
+I wouldn't even consider NFS or Samba because they are ancient bloatware.  I gather from a prior post that rsync has a remote ssh function.  If that's not the case then I guess it has to be sshfs.
 
 
 
