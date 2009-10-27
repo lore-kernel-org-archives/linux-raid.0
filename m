@@ -1,35 +1,77 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: RAID5: *all* of my drives are now spares
-Date: Tue, 27 Oct 2009 10:30:03 +0100
-Message-ID: <slrnhedfcr.cca.Mario.Holbe@darkside.dyn.samba-tng.org>
-References: <2c2a4e250910261845w7e62274es63b5fcebdfce034e@mail.gmail.com>
- <960e25b92f434569a5833ffda52a1f25.squirrel@neil.brown.name>
+From: "Ian Docherty" <idiandocherty@googlemail.com>
+Subject: RE: md software raid
+Date: Tue, 27 Oct 2009 10:19:27 -0000
+Message-ID: <000601ca56ee$f7a4d360$e6ee7a20$@com>
+References: <26023091.post@talk.nabble.com> <20091023093820.GA7613@cthulhu.home.robinhill.me.uk>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20091023093820.GA7613@cthulhu.home.robinhill.me.uk>
+Content-Language: en-gb
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Robin Hill' <robin@robinhill.me.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-NeilBrown <neilb@suse.de> wrote:
-> On Tue, October 27, 2009 12:45 pm, John P Poet wrote:
->> md3 : inactive sdk[0](S) sdf[1](S) sdg[2](S) sdj[4](S)
->>       7814056960 blocks super 1.2
-> However the --examine shows that 3 of the 4 devices report a role
-> of 'spare'... which is odd because "--assemble --force" managed to
-
-Hmmm, it's not. Yes, it's odd but not unusual for v1 metadata :)
-Please have a look at the thread starting with:
-
-From: John Hughes <john@Calva.COM
-Subject: Dumb questions about mdadm #1 - replacing broken disks - "slot" reuse?
-Date: Fri, 18 Sep 2009 14:13:44 +0200
-Message-ID: <4AB37978.5030403@Calva.COM>
-
-John and me reported something that looks quite similar to me for v1
-metadata already (and the OP runs v1.2 metadata).
 
 
-regards
-   Mario
--- 
-Ho ho ho! I am Santa Claus of Borg. Nice assimilation all together!
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Robin Hill
+> Sent: 23 October 2009 10:38
+> To: linux-raid@vger.kernel.org
+> Subject: Re: md software raid
+> 
+> On Fri Oct 23, 2009 at 02:11:09AM -0700, ian.d wrote:
+> 
+> >
+> > hello
+> >
+> > As a newbie to Linux kernel etc.
+> >
+> > How do you tell which version of md software raid is included in a
+> > specific kernel version?
+> > Is there a command to run which will return this info?
+> > Is it possible to install different versions of md in different
+> kernels?
+> >
+> There's two separate components to Linux software RAID - the md code in
+> the kernel, and the mdadm application which interfaces with it.  I very
+> much doubt the kernel code is versioned at all, other than by the
+> kernel version (or GIT version).  The mdadm application is versioned,
+> and you can get the installed version by running 'mdadm -V'.
+> 
+> Some of the mdadm functionality will only work with newer kernel
+> versions, but you should be able to run any version with any kernel
+> (within reason anyway) and make use of the core functionality.  There
+> may be some exceptions here, but they should be detailed in the release
+> notes for specific versions.
+> 
+> As for changing the md version in the kernel - it may be possible, but
+> generally there's a lot of work involved in back/forward porting code
+> between kernel versions (because of changes to core structures, etc).
+> 
+> Is there any particular reason you're asking this (e.g. needing to use
+> some of the latest functionality with an older kernel)?  You may get a
+> more definitive answer if you have a specific case.
+
+Thanks this info was very helpful.
+
+The reason I asked was because I have been following a thread re MD-XFS 50%
+write performance issue with different kernel releases and as performance is
+important to me  I was thinking it might be better for me to use an older
+kernel (2.6.28.4) but keeping md,mdadm functionality up to date 
+
+Ian.d
+
+
+> 
+> HTH,
+>     Robin
+> --
+>      ___
+>     ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+>    / / )      | Little Jim says ....                            |
+>   // !!       |      "He fallen in de water !!"                 |
 
