@@ -1,164 +1,72 @@
-From: John P Poet <jppoet@gmail.com>
-Subject: RAID5: *all* of my drives are now spares
-Date: Mon, 26 Oct 2009 19:45:21 -0600
-Message-ID: <2c2a4e250910261845w7e62274es63b5fcebdfce034e@mail.gmail.com>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: RAID5: *all* of my drives are now spares
+Date: Tue, 27 Oct 2009 13:23:16 +1100
+Message-ID: <960e25b92f434569a5833ffda52a1f25.squirrel@neil.brown.name>
+References: <2c2a4e250910261845w7e62274es63b5fcebdfce034e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <2c2a4e250910261845w7e62274es63b5fcebdfce034e@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: John P Poet <jppoet@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-After rebooting my computer, one of my RAID5 arrays would not
-assemble.  Only two of the four disks were showing as valid.  I tried
-to force the issue, but that did not work:
+On Tue, October 27, 2009 12:45 pm, John P Poet wrote:
+> After rebooting my computer, one of my RAID5 arrays would not
+> assemble.  Only two of the four disks were showing as valid.  I tried
+> to force the issue, but that did not work:
+>
+> # mdadm --assemble --metadata=1.2 --force /dev/md3 /dev/sdk /dev/sdj
+> /dev/sdg /dev/sdf
+> mdadm: /dev/md3 assembled from 2 drives - not enough to start the array.
+>
+> Then I noticed that /proc/mdstat was indicating that ALL of the drives
+> where spares:
+>
+> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> # cat /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> md3 : inactive sdk[0](S) sdf[1](S) sdg[2](S) sdj[4](S)
+>       7814056960 blocks super 1.2
+> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# mdadm --assemble --metadata=1.2 --force /dev/md3 /dev/sdk /dev/sdj
-/dev/sdg /dev/sdf
-mdadm: /dev/md3 assembled from 2 drives - not enough to start the array.
+When the array is 'inactive' everything always appears to be spare,
+so that isn't very significant.
 
-Then I noticed that /proc/mdstat was indicating that ALL of the drives
-where spares:
+However the --examine shows that 3 of the 4 devices report a role
+of 'spare'... which is odd because "--assemble --force" managed to
+find 2 devices that weren't spares.
+So it looks like you might have done some more things without telling
+us.
+Maybe the "--re-add" went in there...
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md3 : inactive sdk[0](S) sdf[1](S) sdg[2](S) sdj[4](S)
-      7814056960 blocks super 1.2
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Anyway, Looking at the 'Events' fields, /dev/sdf seems to have been
+failed for a while, so you should only be looking at
+the other 3, k, j, and g.
 
-If I examine each drive, they seem to be clean:
+k is device 0, what role the others have isn't clear.  Maybe some old
+kernel logs of the last time the array was successfully assembled will
+help.
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# mdadm --examine /dev/sd[kfgj]
-/dev/sdf:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : a49556f3:94cb1a5b:c8c89193:cf239a80
-           Name : 3
-  Creation Time : Tue Aug 18 20:28:47 2009
-     Raid Level : raid5
-   Raid Devices : 4
+My guess is that 'j' is device 3 so g would be 1 or 2.
 
- Avail Dev Size : 3907028896 (1863.02 GiB 2000.40 GB)
-     Array Size : 11721085440 (5589.05 GiB 6001.20 GB)
-  Used Dev Size : 3907028480 (1863.02 GiB 2000.40 GB)
-    Data Offset : 272 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : d2d0b8f1:e61e13c0:3720381b:b4f85e0d
+To get your data back you will need to recreate the array. So something like:
 
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Mon Oct 26 14:59:53 2009
-       Checksum : 4d5badd6 - correct
-         Events : 99508
+ mdadm -C /dev/md3 -e 1.2 -l 5 -n 4 -c 256 /dev/sdk /dev/sdg missing /dev/sdj
 
-         Layout : left-symmetric
-     Chunk Size : 256K
+This will change the metadata but not otherwise change the content of the
+devices.
+Use mdadm --examine to check that the data offset is still 272.
+If it is try to 'fsck -n' the device.  If all is fine you probably
+have your data back.  Mount the filesystem read-only and check it.
 
-   Device Role : spare
-   Array State : A..A ('A' == active, '.' == missing)
-/dev/sdg:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : a49556f3:94cb1a5b:c8c89193:cf239a80
-           Name : 3
-  Creation Time : Tue Aug 18 20:28:47 2009
-     Raid Level : raid5
-   Raid Devices : 4
+If that doesn't work, stop the array and create again with the devices
+in a different order.  e.g. /dev/sdk missing /dev/sdg /dev/sdj
 
- Avail Dev Size : 3907028896 (1863.02 GiB 2000.40 GB)
-     Array Size : 11721085440 (5589.05 GiB 6001.20 GB)
-  Used Dev Size : 3907028480 (1863.02 GiB 2000.40 GB)
-    Data Offset : 272 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : a3933e58:9793d274:88dbe01d:18f99a18
+One of the orders should work.
 
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Mon Oct 26 14:59:53 2009
-       Checksum : 7693f3bb - correct
-         Events : 1038178
+NeilBrown
 
-         Layout : left-symmetric
-     Chunk Size : 256K
 
-   Device Role : spare
-   Array State : A..A ('A' == active, '.' == missing)
-/dev/sdj:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : a49556f3:94cb1a5b:c8c89193:cf239a80
-           Name : 3
-  Creation Time : Tue Aug 18 20:28:47 2009
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 3907028896 (1863.02 GiB 2000.40 GB)
-     Array Size : 11721085440 (5589.05 GiB 6001.20 GB)
-  Used Dev Size : 3907028480 (1863.02 GiB 2000.40 GB)
-    Data Offset : 272 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 281a89c6:38ab1202:73deb60e:f49feb3e
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Mon Oct 26 14:59:53 2009
-       Checksum : 89453bae - correct
-         Events : 1038182
-
-         Layout : left-symmetric
-     Chunk Size : 256K
-
-   Device Role : spare
-   Array State : A..A ('A' == active, '.' == missing)
-/dev/sdk:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : a49556f3:94cb1a5b:c8c89193:cf239a80
-           Name : 3
-  Creation Time : Tue Aug 18 20:28:47 2009
-     Raid Level : raid5
-   Raid Devices : 4
-
- Avail Dev Size : 3907028896 (1863.02 GiB 2000.40 GB)
-     Array Size : 11721085440 (5589.05 GiB 6001.20 GB)
-  Used Dev Size : 3907028480 (1863.02 GiB 2000.40 GB)
-    Data Offset : 272 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : 4b6b6942:ed50c78c:a6ec918c:bac5d970
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Mon Oct 26 14:59:53 2009
-       Checksum : 3fa3667c - correct
-         Events : 1038182
-
-         Layout : left-symmetric
-     Chunk Size : 256K
-
-   Device Role : Active device 0
-   Array State : A..A ('A' == active, '.' == missing)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-/dev/sdk does not actually say "Device Role : spare".
-
-I tried to re-add the drives, but that also fails:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# mdadm --re-add /dev/md3 /dev/sdj
-mdadm: cannot get array info for /dev/md3
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Is there any way to recover the data?
-
-Thanks,
-
-John
--- 
-A: Because it messes up the order in which people normally read text.
-Q: Why is top-posting such a bad thing?
