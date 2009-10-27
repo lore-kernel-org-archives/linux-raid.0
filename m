@@ -1,35 +1,40 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Is My Data DESTROYED?!
-Date: Tue, 27 Oct 2009 21:11:27 +0000
-Message-ID: <4AE761FF.9080307@anonymous.org.uk>
-References: <26389.71416.qm@web38808.mail.mud.yahoo.com>
+From: Christopher Chen <muffaleta@gmail.com>
+Subject: Re: md software raid
+Date: Tue, 27 Oct 2009 14:15:14 -0700
+Message-ID: <7bc80d500910271415y33413ea9x53190bea9595c051@mail.gmail.com>
+References: <26023091.post@talk.nabble.com>
+	 <20091023093820.GA7613@cthulhu.home.robinhill.me.uk>
+	 <000601ca56ee$f7a4d360$e6ee7a20$@com> <4AE75D87.60708@tmr.com>
+	 <4AE75E26.1080303@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <26389.71416.qm@web38808.mail.mud.yahoo.com>
+In-Reply-To: <4AE75E26.1080303@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: adfas asd <chimera_god@yahoo.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Richard Scobie <richard@sauce.co.nz>
+Cc: Bill Davidsen <davidsen@tmr.com>, Ian Docherty <idiandocherty@googlemail.com>, Robin Hill <robin@robinhill.me.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 27/10/2009 21:08, adfas asd wrote:
-> --- On Tue, 10/27/09, Christian Pernegger <pernegger@gmail.com> wrote:
->> Overkill much? Stick with something simple, it will serve
->> you better
->> in the end, especially when something fails. K.I.S.S.,
->> remember?
->>
->> Just rsync the two boxes already, with or without ssh.
-> 
-> So you're saying that rsync/rsnapshot can operate without the remote disk being shared?  I hadn't understood it that way.
+On Tue, Oct 27, 2009 at 1:55 PM, Richard Scobie <richard@sauce.co.nz> wrote:
+> Bill Davidsen wrote:
+>
+>
+>> That's certainly a valid point, if you are stuck using xfs by preference
+>> or requirement. I have seen claims that 2.6.32 will be better, but I have no
+>> intention of testing it, having parted company with xfs a while ago.
+>
+> The OP of the thread metioned, was able to duplicate the slowdown using
+> ext3, so it probably has nothing to do with XFS.
 
-Yes, the r in rsync stands for remote...
+It probably has to do with the added writes...if they can try it with
+ext2 (yeah, yeah, yuck) they might see something.
 
-Perhaps if you'd try reading the f*cking manuals, and indeed listening 
-here, instead of trying to tell all the genuine experts here that you 
-know better?
+Especially if this is raid 5 or 6.
 
-Cheers,
+cc
 
-John.
+-- 
+Chris Chen <muffaleta@gmail.com>
+"The fact that yours is better than anyone else's
+is not a guarantee that it's any good."
+-- Seen on a wall
