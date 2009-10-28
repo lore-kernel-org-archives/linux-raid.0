@@ -1,26 +1,29 @@
-From: Bernd Schubert <bernd.schubert@fastmail.fm>
-Subject: Re: md software raid
-Date: Wed, 28 Oct 2009 17:06:46 +0100
-Message-ID: <200910281706.46264.bernd.schubert@fastmail.fm>
-References: <70ed7c3e0910271747o29e53a69l2b88de8d538284aa@mail.gmail.com> <4AE76D98.7000003@redhat.com> <4AE85E71.30807@redhat.com>
+From: Andrew Dunn <andrew.g.dunn@gmail.com>
+Subject: Benchmarking RAID6 and proper creation.
+Date: Wed, 28 Oct 2009 16:23:01 -0400
+Message-ID: <4AE8A825.4000802@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AE85E71.30807@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: Ric Wheeler <rwheeler@redhat.com>, Richard Scobie <richard@sauce.co.nz>, "Majed B." <majedb@gmail.com>, Leslie Rhorer <lrhorer@satx.rr.com>, linux-raid@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Eric Sandeen <esandeen@redhat.com>, Dave Chinner <david@fromorbit.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wednesday 28 October 2009, Eric Sandeen wrote:
+I have a system with 9 WD1001FALS drives in a RAID6 array right now,
+they are all addressed with AOC-USAS-L8i controller cards.
 
-> xfs_check is more or less deprecated; it is known to have large memory
-> requirements, and xfs_repair is the tool to use.
+I would like to test out the array's performance, I typically i/o large
+files (100MiB-100GiB) but when creating the array I left the chunk size
+alone and let mkfs.ext4 choose default settings (no special chunking or
+striping)
 
-What about adding a warning message to it then? I guess most people don't 
-check list archives first before using it. 
+Some of you are gurus who might be able to point me in the right
+direction for benchmarking and creating a proper array for my purposes.
 
+Thanks a ton for making linux raid so incredibly versatile and awesome!
 
-Thanks,
-Bernd
+-- 
+Andrew Dunn
+http://agdunn.net
+
