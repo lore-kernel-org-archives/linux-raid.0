@@ -1,66 +1,36 @@
-From: "Guy Watkins" <linux-raid@watkins-home.com>
-Subject: RE: md software raid
-Date: Tue, 27 Oct 2009 23:35:18 -0400
-Message-ID: <90A9A736F2D34AA2907A05658347BEC5@m5>
-References: <4D87015385157D4285D56CA6101072FF3A6675B8@exchange07.valvesoftware.com> <20091028030811708.FQZG2056@cdptpa-omta04.mail.rr.com> <4D87015385157D4285D56CA6101072FF3A6675B9@exchange07.valvesoftware.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: md software raid
+Date: Tue, 27 Oct 2009 23:50:46 -0400
+Message-ID: <20091028035046.GA19955@infradead.org>
+References: <70ed7c3e0910271747o29e53a69l2b88de8d538284aa@mail.gmail.com> <20091028005303577.NTSS9287@cdptpa-omta02.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4D87015385157D4285D56CA6101072FF3A6675B9@exchange07.valvesoftware.com>
+Content-Disposition: inline
+In-Reply-To: <20091028005303577.NTSS9287@cdptpa-omta02.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Chris Green' <cgreen@valvesoftware.com>, 'Leslie Rhorer' <lrhorer@satx.rr.com>, linux-raid@vger.kernel.org
+To: Leslie Rhorer <lrhorer@satx.rr.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If you just used the 300 dots per inch as 1 bit per dot, you could store
-15120000 (300*300*8*10.5) bits per side (assuming 1/4 inch border on 8.5x11
-paper 2 sided).  That is 1.8MB per page.  You would need 555556 pages.  That
-would stack 463 feet high (assuming 100 pages per inch).
+On Tue, Oct 27, 2009 at 07:52:56PM -0500, Leslie Rhorer wrote:
+> 
+> > Leslie,
+> > 
+> > How do you check xfs? xfs_check?
+> 
+> 	Yes.
+> 
+> > Why not use xfs_repair -n?
+> 
+> 	I guess the short answer is, "I didn't know it would make a
+> difference".  I take it, then, xfs_repair uses a completely different method
+> of scanning for errors than xfs_check, one whihcdoes not require so much
+> memory?  I find that a bit surprising.
 
-} -----Original Message-----
-} From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-} owner@vger.kernel.org] On Behalf Of Chris Green
-} Sent: Tuesday, October 27, 2009 11:12 PM
-} To: 'Leslie Rhorer'; linux-raid@vger.kernel.org
-} Subject: RE: md software raid
-} 
-} I was thinking 300dpi on letter paper gives you about 1mbyte, and you'd
-} bloat it by 2x for redundancy, using both sides of the paper.
-} But I guess 300 dpi is actually 300 dots per square inch, not 300 per
-} linear inch, which means its only 10s of k per page.
-} 
-} 
-} -----Original Message-----
-} From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-} owner@vger.kernel.org] On Behalf Of Leslie Rhorer
-} Sent: Tuesday, October 27, 2009 8:08 PM
-} To: linux-raid@vger.kernel.org
-} Subject: RE: md software raid
-} 
-} > I'm guessing you could get about a megabyte per sheet of paper this way.
-} 
-} 	You've got to be kidding!  At 72 points/in, a font size of 8 allows
-} for one byte and one space per inch, or about 10 bytes per line.  One can
-} fairly easily display 1KB per page, but nowhere near 1MB.
-} 
-} > So a 1TB drive would take up 1000000 sheets of paper. Looking at
-} > staples.com,
-} 
-} 	Make that more like a billion pages.  Remember, the entire Library
-} of Congress can fit on a 1T drive.
-} 
-} > it looks like that would cost you in the neighborhood of $8000. The ink
-} > cartridges
-} 
-} 	It's more like $8 million.
-} 
-} --
-} To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-} the body of a message to majordomo@vger.kernel.org
-} More majordomo info at  http://vger.kernel.org/majordomo-info.html
-} --
-} To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-} the body of a message to majordomo@vger.kernel.org
-} More majordomo info at  http://vger.kernel.org/majordomo-info.html
+xfs_repair is a separate program that is actually mainainted.  xfs_check
+is deprecated and we'll eventually remove it after porting one
+remaining checking pass over to xfs_repair (currently xfs_repair can't
+check the freespace btree but only fully rebuild them when in repair
+mode)
 
