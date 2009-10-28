@@ -1,40 +1,42 @@
-From: adfas asd <chimera_god@yahoo.com>
-Subject: Re: Is My Data DESTROYED?!
-Date: Tue, 27 Oct 2009 14:56:04 -0700 (PDT)
-Message-ID: <683385.8396.qm@web38805.mail.mud.yahoo.com>
-References: <bb145bd20910271431w33bab63cp2b3f4fcc26140ac@mail.gmail.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Is My Data DESTROYED?!
+Date: Tue, 27 Oct 2009 19:39:11 -0500
+Message-ID: <20091028003918054.PKIA6016@cdptpa-omta03.mail.rr.com>
+References: <bb145bd20910271400m7d29af2p535c12c784a3b56c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bb145bd20910271431w33bab63cp2b3f4fcc26140ac@mail.gmail.com>
+In-Reply-To: <bb145bd20910271400m7d29af2p535c12c784a3b56c@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---- On Tue, 10/27/09, Christian Pernegger <pernegger@gmail.com> wrote:
-> > Ah yes I remember now, Remote was not the issue...
->  Security is.
+> Just rsync the two boxes already, with or without ssh. That's assuming
+> the data is mostly static (videos). If you have other data as well you
+> might want to use rdiff-backup for that, as it can keep multiple
+> versions.
 > 
-> Which is why rsync can use ssh as a transport ...
+> Get some kind of backplane for the disks so you can swap them out
+> without powering down the box. (Not because you can't live with 10min
+> downtime when a disk fails but because you don't want to spin down the
+> *other* disks.)
 > 
-> (Beats me why you'd need "security" for video data on your
-> own LAN,
-> though. Well, maybe it's the principle of the thing.)
+> Bonus: If the primary server fails but its disks are fine you can just
+> stick all of them in the backup server temporarily, boot and be up and
+> running almost immediately.
 
-You can't understand why I'd want LAN security for my /home directory?  Why not?
+	Well, depending on the system and exactly what dies, it may be
+simpler just to fix or replace the server.  The big bonus comes when the
+primary array fails, though.  If the OS files and directories (/boot, /etc,
+/var, /home, etc.) are all on a separate drive system and the primary array
+contains only application data, then upon total failure of the primary
+array, one may simply umount the main array and use NFS to temporarily mount
+the remote file system wherever the primary array used to be.  The entire
+production system is then up and running as usual, while the sysadmin
+figures out what the heck went wrong with the primary array.  When the array
+is fixed, an rsync (hopefully a brief one) can copy all the new / changed
+files to the main array.  Then umount the NFS share and mount the main array
+again.
 
-
-> > But rigor and excellence require a certain amount of
-> pushing back.  This is something you have to
-> understand.
-> 
-> Ok, so you *are* just trolling.
-
-You apparently don't know what that means.
-
-I guess this conversation's over.  We're not making any more progress, and only petulance is emerging.  I've offered some novel concepts, but many here are apparently too proud to admit we have advanced this concept.  I won't fight you.  Everybody's loss.  IOW fsck it, I have enough to do a great system now, without insults.
-
-
-
-
-      
