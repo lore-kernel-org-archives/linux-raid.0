@@ -1,29 +1,37 @@
-From: Andrew Dunn <andrew.g.dunn@gmail.com>
-Subject: Benchmarking RAID6 and proper creation.
-Date: Wed, 28 Oct 2009 16:23:01 -0400
-Message-ID: <4AE8A825.4000802@gmail.com>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: md software raid
+Date: Thu, 29 Oct 2009 10:39:21 +1100
+Message-ID: <20091028233921.GH9464@discord.disaster>
+References: <70ed7c3e0910271747o29e53a69l2b88de8d538284aa@mail.gmail.com> <4AE76D98.7000003@redhat.com> <4AE85E71.30807@redhat.com> <200910281706.46264.bernd.schubert@fastmail.fm>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <200910281706.46264.bernd.schubert@fastmail.fm>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Bernd Schubert <bernd.schubert@fastmail.fm>
+Cc: Eric Sandeen <sandeen@redhat.com>, Ric Wheeler <rwheeler@redhat.com>, Richard Scobie <richard@sauce.co.nz>, "Majed B." <majedb@gmail.com>, Leslie Rhorer <lrhorer@satx.rr.com>, linux-raid@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Eric Sandeen <esandeen@redhat.com>
 List-Id: linux-raid.ids
 
-I have a system with 9 WD1001FALS drives in a RAID6 array right now,
-they are all addressed with AOC-USAS-L8i controller cards.
+On Wed, Oct 28, 2009 at 05:06:46PM +0100, Bernd Schubert wrote:
+> On Wednesday 28 October 2009, Eric Sandeen wrote:
+> 
+> > xfs_check is more or less deprecated; it is known to have large memory
+> > requirements, and xfs_repair is the tool to use.
+> 
+> What about adding a warning message to it then? I guess most people don't 
+> check list archives first before using it. 
 
-I would like to test out the array's performance, I typically i/o large
-files (100MiB-100GiB) but when creating the array I left the chunk size
-alone and let mkfs.ext4 choose default settings (no special chunking or
-striping)
+IIUC, the plan is to add the one set of checks to xfs_repair that it
+currently doesn't do (doesn't check free space trees because it
+simply rebuilds them from scratch during the repair process), then
+xfs_check will be changed to be wrapper around xfs_repair. i.e. the
+xfs_check command is most likely not going away, just changing
+implementation....
 
-Some of you are gurus who might be able to point me in the right
-direction for benchmarking and creating a proper array for my purposes.
+Cheers,
 
-Thanks a ton for making linux raid so incredibly versatile and awesome!
-
+Dave.
 -- 
-Andrew Dunn
-http://agdunn.net
-
+Dave Chinner
+david@fromorbit.com
