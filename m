@@ -1,66 +1,48 @@
 From: "Guy Watkins" <linux-raid@watkins-home.com>
-Subject: RE: Is My Data DESTROYED?!
-Date: Tue, 27 Oct 2009 23:14:09 -0400
-Message-ID: <EBF5DB322AB74BA4B855E41E9B04EE1E@m5>
-References: <4AE761FF.9080307@anonymous.org.uk> <903028.29093.qm@web38802.mail.mud.yahoo.com> <bb145bd20910271431w33bab63cp2b3f4fcc26140ac@mail.gmail.com>
+Subject: RE: md software raid
+Date: Tue, 27 Oct 2009 23:26:41 -0400
+Message-ID: <90A3FDA136DB4CA4A2C7F34010805951@m5>
+References: <70ed7c3e0910271810t368f3081g3db4411ab073b531@mail.gmail.com> <20091028021139012.SPRI6016@cdptpa-omta03.mail.rr.com> <70ed7c3e0910271926g5f72fa50sfa874bb0bf9f3d78@mail.gmail.com> <4D87015385157D4285D56CA6101072FF3A6675B8@exchange07.valvesoftware.com> <70ed7c3e0910271952o40f3cc3as34cfa88cd5d89279@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bb145bd20910271431w33bab63cp2b3f4fcc26140ac@mail.gmail.com>
+In-Reply-To: <70ed7c3e0910271952o40f3cc3as34cfa88cd5d89279@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
+To: "'Majed B.'" <majedb@gmail.com>, 'Chris Green' <cgreen@valvesoftware.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 } -----Original Message-----
 } From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-} owner@vger.kernel.org] On Behalf Of Christian Pernegger
-} Sent: Tuesday, October 27, 2009 5:31 PM
-} To: adfas asd
+} owner@vger.kernel.org] On Behalf Of Majed B.
+} Sent: Tuesday, October 27, 2009 10:52 PM
+} To: Chris Green
 } Cc: linux-raid@vger.kernel.org
-} Subject: Re: Is My Data DESTROYED?!
-}=20
-} > > Yes, the r in rsync stands for remote...
-} >
-} > Ah yes I remember now, Remote was not the issue... =A0Security is.
-}=20
-} Which is why rsync can use ssh as a transport ...
+} Subject: Re: md software raid
+} 
+} Thanks for the numbers Chris! I guess I kind of anticipated that,
+} which is why I suggested using a compressed form, sort of like
+} zip/rar...
+} 
+} Though if the data is mostly multimedia, then I guess it's pointless.
+} 
+} Punch-cards, anyone?
 
-lol he does not want anyone to steal his bootleg movies!
+1 TBytes on punch cards would stack 1,973 miles high.  Assuming 100 cards
+per inch and 80 bytes per card.  :)
 
-}=20
-} (Beats me why you'd need "security" for video data on your own LAN,
-} though. Well, maybe it's the principle of the thing.)
-}=20
-} > But rigor and excellence require a certain amount of pushing back. =
- This
-} is something you have to understand.
-}=20
-} Ok, so you *are* just trolling.
+} 
+} On Wed, Oct 28, 2009 at 5:45 AM, Chris Green <cgreen@valvesoftware.com>
+} wrote:
+} > I'm guessing you could get about a megabyte per sheet of paper this way.
+} > So a 1TB drive would take up 1000000 sheets of paper. Looking at
+} staples.com,
+} > it looks like that would cost you in the neighborhood of $8000. The ink
+} cartridges
+} > would probably cost more, not to mention the cost of a place to store it
+} :-)
+} --
+}        Majed B.
 
-I figured he was a troll about 2 days ago.  NFS outdated!  Lol  Just tu=
-nnel
-it with ssh.  Oh, ssh is not allowed.  If you want real security, you m=
-ust
-use an encrypted path.  If you don't care about encryption, just limit =
-the
-NFS mount to 1 IP address.
-
-But I think rsync would be the smart way to go.  Using ssh if you care
-enough about security.  I don't secure data over my network, but I do s=
-ecure
-access to my servers.  Don't care if my wife and kids figure out how to
-sniff the network.  Would be really happy if they knew what I was talki=
-ng
-about!  :)
-
-}=20
-} Cheers,
-}=20
-} C.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
