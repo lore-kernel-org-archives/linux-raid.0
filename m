@@ -1,111 +1,55 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
+From: Asdo <asdo@shiftmail.org>
 Subject: Re: MD write performance issue - found Catalyst patches
-Date: Thu, 29 Oct 2009 01:32:25 -0600
-Message-ID: <200910290132.26097.tfjellstrom@shaw.ca>
-References: <66781b10910180300j2006a4b7q21444bb27dd9434e@mail.gmail.com> <19177.14609.138378.581065@notabene.brown> <200910290048.28045.tfjellstrom@shaw.ca>
-Reply-To: tfjellstrom@shaw.ca
+Date: Thu, 29 Oct 2009 09:08:53 +0100
+Message-ID: <4AE94D95.4060303@shiftmail.org>
+References: <66781b10910180300j2006a4b7q21444bb27dd9434e@mail.gmail.com>
+ <19177.14609.138378.581065@notabene.brown>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200910290048.28045.tfjellstrom@shaw.ca>
+In-reply-to: <19177.14609.138378.581065@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: mark delfman <markdelfman@googlemail.com>, Mattias =?iso-8859-1?q?Hellstr=F6m?= <hellstrom.mattias@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, npiggin@suse.de
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu October 29 2009, Thomas Fjellstrom wrote:
-> On Thu October 29 2009, Neil Brown wrote:
-> > On Sunday October 18, markdelfman@googlemail.com wrote:
-> > > We have tracked the performance drop to the attached two commits =
-in
-> > > 2.6.28.6.    The performance never fully recovers in later kernel=
-s so
-> > > I presuming that the change in the write cache is still affecting=
- MD
-> > > today.
-> > >
-> > > The problem for us is that although we have slowly tracked it dow=
-n,
-> > > we have no understanding of linux at this level and simply wouldn=
-=92t
-> > > know where go from this point.
-> > >
-> > > Considering this seems to only effect MD and not hardware based R=
-AID
-> > > (in our tests) I thought that this would be an appropriate place =
-to
-> > > post these patches and findings.
-> > >
-> > > There are 2 patches which impact MD performance via a filesystem:
-> > >
-> > > a) commit 66c85494570396661479ba51e17964b2c82b6f39 - write-back: =
-fix
-> > > nr_to_write counter
-> > > b) commit fa76ac6cbeb58256cf7de97a75d5d7f838a80b32 - Fix page
-> > > writeback thinko, causing Berkeley DB slowdown
-> >
-> > I've had a look at this and asked around and I'm afraid there doesn=
-'t
-> > seem to be an easy answer.
-> >
-> > The most likely difference between 'before' and 'after' those patch=
-es
-> > is that more pages are being written per call to generic_writepages=
- in
-> > the 'before' case.  This would generally improve throughput,
-> > particularly with RAID5 which would get more full stripes.
-> >
-> > However that is largely a guess as the bugs which were fixed by the
-> > patch could interact in interesting ways with XFS (which decrements
-> > ->nr_to_write itself) and it isn't immediately clear to me that mor=
-e
-> > pages would be written...
-> >
-> > In any case, the 'after' code is clearly correct, so if throughput =
-can
-> > really be increased, the change should be somewhere else.
-> >
-> > What might be useful would be to instrument write_cache_pages to co=
-unt
-> > how many pages were written each time it calls.  You could either
-> > print this number out every time or, if that creates too much noise=
-,
-> > print out an average ever 512 calls or similar.
-> >
-> > Seeing how this differs with and without the patches in question co=
-uld
-> > help understand what is going one and provide hints for how to fix =
-it.
->=20
-> I don't suppose this causes "bursty" writeout like I've been seeing
->  lately? For some reason writes go full speed for a short while and t=
-hen
->  just stop for a short time, which averages out to 2-4x slower than w=
-hat
->  the array should be capable of.
+Neil Brown wrote:
+> I've had a look at this and asked around and I'm afraid there doesn't
+> seem to be an easy answer.
+>
+> The most likely difference between 'before' and 'after' those patches
+> is that more pages are being written per call to generic_writepages in
+> the 'before' case.  This would generally improve throughput,
+> particularly with RAID5 which would get more full stripes.
+>
+> However that is largely a guess as the bugs which were fixed by the
+> patch could interact in interesting ways with XFS (which decrements
+> ->nr_to_write itself) and it isn't immediately clear to me that more
+> pages would be written... 
+>
+> In any case, the 'after' code is clearly correct, so if throughput can
+> really be increased, the change should be somewhere else.
+>   
+Thank you Neil for looking into this
 
-At the very least, 2.6.26 doesn't have this issue. Speeds are lower tha=
-n I=20
-was expecting (350MB/s write, 450MB/s read), but no where near as bad a=
-s=20
-later kernels. and there is no "bursty" behaviour. speeds are fairly=20
-constant throughout testing.
-
-> > NeilBrown
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d"
-> > in the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
+How can "writing less pages" be more correct than "writing more pages"?
+I can see the first as an optimization to the second, however if this 
+reduces throughput then the optimization doesn't work...
+Isn't it possible to "fix" it so to write more pages and still be 
+semantically correct?
 
 
---=20
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thomas Fjellstrom wrote:
+> I don't suppose this causes "bursty" writeout like I've been seeing lately? 
+> For some reason writes go full speed for a short while and then just stop 
+> for a short time, which averages out to 2-4x slower than what the array 
+> should be capable of.
+>   
+I have definitely seen this bursty behaviour on 2.6.31.
+
+It would be interesting to know what are the CPUs doing or waiting for 
+in the pause times. But I am not a kernel expert :-( how could one check 
+this?
+
+Thank you
