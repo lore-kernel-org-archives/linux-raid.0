@@ -1,76 +1,111 @@
 From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: Re: small mdadm issue under debian
-Date: Thu, 29 Oct 2009 01:30:18 -0600
-Message-ID: <200910290130.18829.tfjellstrom@shaw.ca>
-References: <200910290124.59090.tfjellstrom@shaw.ca>
+Subject: Re: MD write performance issue - found Catalyst patches
+Date: Thu, 29 Oct 2009 01:32:25 -0600
+Message-ID: <200910290132.26097.tfjellstrom@shaw.ca>
+References: <66781b10910180300j2006a4b7q21444bb27dd9434e@mail.gmail.com> <19177.14609.138378.581065@notabene.brown> <200910290048.28045.tfjellstrom@shaw.ca>
 Reply-To: tfjellstrom@shaw.ca
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: Text/Plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200910290124.59090.tfjellstrom@shaw.ca>
+In-Reply-To: <200910290048.28045.tfjellstrom@shaw.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: mark delfman <markdelfman@googlemail.com>, Mattias =?iso-8859-1?q?Hellstr=F6m?= <hellstrom.mattias@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, npiggin@suse.de
 List-Id: linux-raid.ids
 
 On Thu October 29 2009, Thomas Fjellstrom wrote:
-> I've been trying to get mdadm to auto assemble my raid array for a while
-> now, and as I'm trying to test which kernels give me back some
->  performance (testing 2.6.26 right now), I find that with this kernel,
->  its happily auto assembling my 1.1 versioned metadata array. 3.6.30 does
->  not, nor does .31 or .32 for that matter. Same version of mdadm, for
->  some reason, when the mdadm-raid init script is run, it fails to
->  assemble the raid array I've specified in mdadm.conf. And again, it
->  automagically works with 2.6.26.
-> 
-> color me confused.
-> 
+> On Thu October 29 2009, Neil Brown wrote:
+> > On Sunday October 18, markdelfman@googlemail.com wrote:
+> > > We have tracked the performance drop to the attached two commits =
+in
+> > > 2.6.28.6.    The performance never fully recovers in later kernel=
+s so
+> > > I presuming that the change in the write cache is still affecting=
+ MD
+> > > today.
+> > >
+> > > The problem for us is that although we have slowly tracked it dow=
+n,
+> > > we have no understanding of linux at this level and simply wouldn=
+=92t
+> > > know where go from this point.
+> > >
+> > > Considering this seems to only effect MD and not hardware based R=
+AID
+> > > (in our tests) I thought that this would be an appropriate place =
+to
+> > > post these patches and findings.
+> > >
+> > > There are 2 patches which impact MD performance via a filesystem:
+> > >
+> > > a) commit 66c85494570396661479ba51e17964b2c82b6f39 - write-back: =
+fix
+> > > nr_to_write counter
+> > > b) commit fa76ac6cbeb58256cf7de97a75d5d7f838a80b32 - Fix page
+> > > writeback thinko, causing Berkeley DB slowdown
+> >
+> > I've had a look at this and asked around and I'm afraid there doesn=
+'t
+> > seem to be an easy answer.
+> >
+> > The most likely difference between 'before' and 'after' those patch=
+es
+> > is that more pages are being written per call to generic_writepages=
+ in
+> > the 'before' case.  This would generally improve throughput,
+> > particularly with RAID5 which would get more full stripes.
+> >
+> > However that is largely a guess as the bugs which were fixed by the
+> > patch could interact in interesting ways with XFS (which decrements
+> > ->nr_to_write itself) and it isn't immediately clear to me that mor=
+e
+> > pages would be written...
+> >
+> > In any case, the 'after' code is clearly correct, so if throughput =
+can
+> > really be increased, the change should be somewhere else.
+> >
+> > What might be useful would be to instrument write_cache_pages to co=
+unt
+> > how many pages were written each time it calls.  You could either
+> > print this number out every time or, if that creates too much noise=
+,
+> > print out an average ever 512 calls or similar.
+> >
+> > Seeing how this differs with and without the patches in question co=
+uld
+> > help understand what is going one and provide hints for how to fix =
+it.
+>=20
+> I don't suppose this causes "bursty" writeout like I've been seeing
+>  lately? For some reason writes go full speed for a short while and t=
+hen
+>  just stop for a short time, which averages out to 2-4x slower than w=
+hat
+>  the array should be capable of.
 
-I totally forgot:
+At the very least, 2.6.26 doesn't have this issue. Speeds are lower tha=
+n I=20
+was expecting (350MB/s write, 450MB/s read), but no where near as bad a=
+s=20
+later kernels. and there is no "bursty" behaviour. speeds are fairly=20
+constant throughout testing.
 
-root@natasha:/home/moose# mdadm --version
-mdadm - v3.0.3 - 22nd October 2009
-
-root@natasha:/home/moose# uname -a
-Linux natasha 2.6.26-2-amd64 #1 SMP Wed Aug 19 22:33:18 UTC 2009 x86_64 
-GNU/Linux
-
-root@natasha:/home/moose# mdadm -D /dev/md0
-/dev/md0:
-        Version : 1.01
-  Creation Time : Wed Oct 14 08:55:25 2009
-     Raid Level : raid5
-     Array Size : 3907049472 (3726.05 GiB 4000.82 GB)
-  Used Dev Size : 976762368 (931.51 GiB 1000.20 GB)
-   Raid Devices : 5
-  Total Devices : 5
-    Persistence : Superblock is persistent
-
-    Update Time : Thu Oct 29 01:28:10 2009
-          State : clean
- Active Devices : 5
-Working Devices : 5
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 512K
-
-           Name : natasha:0  (local to host natasha)
-           UUID : 7d0e9847:ec3a4a46:32b60a80:06d0ee1c
-         Events : 4952
-
-    Number   Major   Minor   RaidDevice State
-       0       8       64        0      active sync   /dev/sde
-       1       8       80        1      active sync   /dev/sdf
-       2       8       32        2      active sync   /dev/sdc
-       3       8       48        3      active sync   /dev/sdd
-       5       8       96        4      active sync   /dev/sdg
+> > NeilBrown
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-rai=
+d"
+> > in the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
 
 
-And I'm running Debian Sid.
-
--- 
+--=20
 Thomas Fjellstrom
 tfjellstrom@shaw.ca
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
