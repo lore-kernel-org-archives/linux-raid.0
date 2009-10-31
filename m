@@ -1,115 +1,75 @@
-From: mark delfman <markdelfman@googlemail.com>
-Subject: Re: MD write performance issue - found Catalyst patches
-Date: Sat, 31 Oct 2009 11:51:43 +0100
-Message-ID: <66781b10910310351x7bb721c4mfba765fe9789cd7b@mail.gmail.com>
-References: <66781b10910180300j2006a4b7q21444bb27dd9434e@mail.gmail.com>
-	 <19177.14609.138378.581065@notabene.brown>
-	 <4AE94D95.4060303@shiftmail.org>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: md[adm] device names
+Date: Sat, 31 Oct 2009 15:54:58 +0300
+Message-ID: <4AEC33A2.6050408@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AE94D95.4060303@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>
-Cc: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
+Cc: martin f krafft <madduck@madduck.net>
 List-Id: linux-raid.ids
 
-Thank you Neil... if the commits improve overall the stability of
-Linux then they are obviously important and hopefully there is another
-way to achieve the same results... as you say if we can see that there
-is an opportunity for significant performance gain (i think 600MBs
-extra is significant), it=92s maybe worth some thought.
+Hello.
 
-I would very much like to contribute to this and indeed ongoing
-developments, but the only hurdle i have is that i am storage focused,
-which means I work solely in storage environments (which is good) but
-also means i know very little about linux and dramatically less about
-programming (i have never even touched C for example).   I come from
-hardware based storage into the world of linux, so lag behind greatly
-in many ways.
+Mdadm 3.x introduced a subdirectory for all md-related
+deice nodes, /dev/md/.  (To be exact, that directory were
+introduced earlier, but starting with 3.x it's the default
+location).
 
-I do have current access to equipment in which we can gain the
-performance needed to see the effect of the commits (up to 600MBsec
-difference) but i have the lack of ability to implement the ideas
-which you have suggested.
+The question is, the short form: can we get the naming back?
+Or, at least, some plan for migration (with a justification
+as of _why_ the move)?
 
-I am hopeful that you or another member of this group could offer some
-advice / patch to implement the print options you suggested... if so i
-would happily allocated resource and time to do what i can to help
-with this.
+I tried new mdadm package on a Debian system.  And what
+I ended up is a complete mess.
 
-I appreciate that this group is generally aimed at those with linux
-experience, but hopefully i can still add some value whether simply
-with test equipment, comparisons or real life introduction for
-feedback etc.
+The system boots with root=UUID=xyz parameter, even if
+my /etc/fstab lists /dev/md1p1 as root device.
 
-The print options you suggested... are these a simple introduction?
-Could someone maybe offer a abc of how to add this?
+When it boots (during initramfs), the array gets assembled in
+/dev/md/d1, even if mdadm.conf lists /dev/md1.  So the
+mount(8) command lists root on /dev/md/d1p1.
 
+When udevd is re-scanning device nodes from real root, it
+creates /dev/md1 and not /dev/md/d1.
 
+When update-initramfs script runs, mdadm-related parts
+complains that there's no definition found for array
+/dev/md/1_0.
 
+I understand that some of that are Debian-specific, probably
+broken workarounds for the name change.  But the root cause
+is the renaming, it looks like.
 
+So the question is, the long form:
 
-On Thu, Oct 29, 2009 at 9:08 AM, Asdo <asdo@shiftmail.org> wrote:
-> Neil Brown wrote:
->>
->> I've had a look at this and asked around and I'm afraid there doesn'=
-t
->> seem to be an easy answer.
->>
->> The most likely difference between 'before' and 'after' those patche=
-s
->> is that more pages are being written per call to generic_writepages =
-in
->> the 'before' case. =A0This would generally improve throughput,
->> particularly with RAID5 which would get more full stripes.
->>
->> However that is largely a guess as the bugs which were fixed by the
->> patch could interact in interesting ways with XFS (which decrements
->> ->nr_to_write itself) and it isn't immediately clear to me that more
->> pages would be written...
->> In any case, the 'after' code is clearly correct, so if throughput c=
-an
->> really be increased, the change should be somewhere else.
->>
->
-> Thank you Neil for looking into this
->
-> How can "writing less pages" be more correct than "writing more pages=
-"?
-> I can see the first as an optimization to the second, however if this
-> reduces throughput then the optimization doesn't work...
-> Isn't it possible to "fix" it so to write more pages and still be
-> semantically correct?
->
->
-> Thomas Fjellstrom wrote:
->>
->> I don't suppose this causes "bursty" writeout like I've been seeing
->> lately? For some reason writes go full speed for a short while and t=
-hen just
->> stop for a short time, which averages out to 2-4x slower than what t=
-he array
->> should be capable of.
->>
->
-> I have definitely seen this bursty behaviour on 2.6.31.
->
-> It would be interesting to know what are the CPUs doing or waiting fo=
-r in
-> the pause times. But I am not a kernel expert :-( how could one check=
- this?
->
-> Thank you
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Why the rename to start with?  The kernel already knows
+  its devices by name, and uses _plain_ naming, without any
+  subdirectory: like /sys/block/md1, /proc/partitions and
+  so on.  I expect to find the names which are used by
+  kernel in /dev as-is.  Other tools expexts the same,
+  and some even complains and errors out if they can't
+  (notable lilo).  If we want subdirectory, how about
+  renaming them in the kernel?  But there aren't that
+  many md devices to justify the subdirectory, IMHO.
+
+  I understand about symbolic names (home, volume0,
+  backup etc) - those may go to /dev/md/home and so
+  on.  But can we please, pretty please, make these
+  a sumlinks to the real device nodes as kernel sees
+  them?  Like all the /dev/disk/by-xx/* symlinks are?
+  Since these are really just _aliases_ for the kernel
+  device names...
+
+  I can hear the famous "policy does not belong to the
+  kernel" thing here, the same way as with udev.  But
+  it didn't work out for several years of udev already,
+  and what we have now with mdadm is a _lack_ of policy
+  instead of _some_ policy, which is nothing more than
+  a big mess.
+
+This is getting out of control.
+
+/mjt
