@@ -1,77 +1,126 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: Re: unbelievably bad performance: 2.6.27.37 and raid6
-Date: Sun, 1 Nov 2009 13:41:40 -0600
-Message-ID: <200911011241.40735.tfjellstrom@shaw.ca>
-References: <cccedfc60910310855l5ca6c42aj503fb0e4fd6232ad@mail.gmail.com> <200910311243.35126.tfjellstrom@shaw.ca> <4AEDE38F.3080408@gmail.com>
-Reply-To: tfjellstrom@shaw.ca
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: raid disk failure, options?
+Date: Sun, 1 Nov 2009 18:19:31 -0500 (EST)
+Message-ID: <alpine.DEB.2.00.0911011818190.15187@p34.internal.lan>
+References: <200911011216.32196.tfjellstrom@shaw.ca>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AEDE38F.3080408@gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Dunn <andrew.g.dunn@gmail.com>
-Cc: Jon Nelson <jnelson-linux-raid@jamponi.net>, LinuxRaid <linux-raid@vger.kernel.org>, pernegger@gmail.com
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <200911011216.32196.tfjellstrom@shaw.ca>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Thomas Fjellstrom <tfjellstrom@shaw.ca>
+Cc: linux-raid@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun November 1 2009, Andrew Dunn wrote:
-> Are we to expect some resolution in newer kernels?
-
-I assume all of the new per-bdi-writeback work going on in .33+ will have a 
-large impact. At least I'm hoping.
-
-> I am going to rebuild my array (backup data and re-create) to modify the
-> chunk size this week. I hope to get a much higher performance when
-> increasing from 64k chunk size to 1024k.
-> 
-> Is there a way to modify chunk size in place or does the array need to
-> be re-created?
-
-This I'm not sure about. I'd like to be able to reshape to a new chunk size 
-for testing.
-
-> Thomas Fjellstrom wrote:
-> > On Sat October 31 2009, Jon Nelson wrote:
-> >> I have a 4 disk raid6. The disks are individually capable of (at
-> >> least) 75MB/s on average.
-> >> The raid6 looks like this:
-> >>
-> >> md0 : active raid6 sda4[0] sdc4[5] sdd4[4] sdb4[6]
-> >>       613409536 blocks super 1.1 level 6, 64k chunk, algorithm 2 [4/4]
-> >>  [UUUU]
-> >>
-> >> The raid serves basically as an lvm physical volume.
-> >>
-> >> While rsyncing a file from an ext3 filesystem to a jfs filesystem, I
-> >> am observing speeds in the 10-15MB/s range.
-> >> That seems really really slow.
-> >>
-> >> Using vmstat, I see similar numbers (I'm averaging a bit, I'll see
-> >> lows of 6MB/s and highs of 18-20MB/s, but these are infrequent.)
-> >> The system is, for the most part, otherwise unloaded.
-> >>
-> >> I looked at stripe_cache_size and increased it to 384 - no difference.
-> >> blockdev --getra reports 256 for all involved raid components.
-> >> I'm using the deadline I/O scheduler.
-> >>
-> >> Am I crazy?  Is 12.5MB/s (average) what I should expect, here?  What
-> >> might I look at here?
-> >
-> > I can't say I see numbers that bad.. But I do get 1/3 or less of the
-> > performance with .29, .30, .31, and .32 than I get with .26. I haven't
-> > tried any other kernels as these are the only ones I've been able to
-> > grab from apt ;)
-> >
-> > I get something on the order of 100MB/s write and read with newer
-> > kernels, with really bursty behaviour, and with .26, its not as fast as
-> > it COULD be, but at least I get 200-300MB/s, which is reasonable.
-> >
-> > Now if your two file systems are on the same LVM VG, that could have an
-> > impact on performance.
-> 
 
 
--- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
+On Sun, 1 Nov 2009, Thomas Fjellstrom wrote:
+
+> My main raid array just had a disk failure. I tried to hot remove the
+> device, and use the scsi bus rescan sysfs entries, but it seems to fail on
+> IDENTIFY.
+>
+> Can I assume my disk is dead?
+>
+>
+> [5015721.851044] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+> [5015721.851089] ata3.00: irq_stat 0x40000001
+> [5015721.851124] ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+> [5015721.851125]          res 71/04:03:80:01:32/00:00:00:00:00/e0 Emask 0x1
+> (device error)
+> [5015721.851193] ata3.00: status: { DRDY DF ERR }
+> [5015721.851225] ata3.00: error: { ABRT }
+> [5015726.848684] ata3.00: qc timeout (cmd 0xec)
+> [5015726.848729] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x5)
+> [5015726.848763] ata3.00: revalidation failed (errno=-5)
+> [5015726.848798] ata3: hard resetting link
+> [5015734.501527] ata3: softreset failed (device not ready)
+> [5015734.501565] ata3: failed due to HW bug, retry pmp=0
+> [5015734.665530] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [5015734.707085] ata3.00: both IDENTIFYs aborted, assuming NODEV
+> [5015734.707089] ata3.00: revalidation failed (errno=-2)
+> [5015739.664923] ata3: hard resetting link
+> [5015740.148277] ata3: softreset failed (device not ready)
+> [5015740.148314] ata3: failed due to HW bug, retry pmp=0
+> [5015740.313532] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [5015740.337129] ata3.00: both IDENTIFYs aborted, assuming NODEV
+> [5015740.337132] ata3.00: revalidation failed (errno=-2)
+> [5015740.337167] ata3.00: disabled
+> [5015740.337231] ata3: EH complete
+> [5015740.337275] sd 2:0:0:0: [sdc] Unhandled error code
+> [5015740.337308] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET
+> driverbyte=DRIVER_OK,SUGGEST_OK
+> [5015740.337372] end_request: I/O error, dev sdc, sector 1250258495
+> [5015740.337410] end_request: I/O error, dev sdc, sector 1250258495
+> [5015740.337445] md: super_written gets error=-5, uptodate=0
+> [5015740.337479] raid5: Disk failure on sdc1, disabling device.
+> [5015740.337480] raid5: Operation continuing on 3 devices.
+> [5015740.337569] sd 2:0:0:0: [sdc] Unhandled error code
+> [5015740.337601] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET
+> driverbyte=DRIVER_OK,SUGGEST_OK
+> [5015740.337665] end_request: I/O error, dev sdc, sector 480014231
+> [5015740.337710] sd 2:0:0:0: [sdc] Unhandled error code
+> [5015740.337742] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET
+> driverbyte=DRIVER_OK,SUGGEST_OK
+> [5015740.337806] end_request: I/O error, dev sdc, sector 1186573399
+> [5015740.337840] sd 2:0:0:0: [sdc] Unhandled error code
+> [5015740.337872] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET
+> driverbyte=DRIVER_OK,SUGGEST_OK
+> [5015740.337936] end_request: I/O error, dev sdc, sector 404014999
+> [5015740.371191] RAID5 conf printout:
+> [5015740.371226]  --- rd:4 wd:3
+> [5015740.371258]  disk 0, o:0, dev:sdc1
+> [5015740.371290]  disk 1, o:1, dev:sda1
+> [5015740.371322]  disk 2, o:1, dev:sdb1
+> [5015740.371353]  disk 3, o:1, dev:sdd1
+> [5015740.393516] RAID5 conf printout:
+> [5015740.393551]  --- rd:4 wd:3
+> [5015740.393583]  disk 1, o:1, dev:sda1
+> [5015740.393615]  disk 2, o:1, dev:sdb1
+> [5015740.393647]  disk 3, o:1, dev:sdd1
+>
+> ran: echo x > /sys/bus/scsi/devices/2\:0\:0\:0/delete
+>
+> [5016224.932073] sd 2:0:0:0: [sdc] Synchronizing SCSI cache
+> [5016224.932150] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET
+> driverbyte=DRIVER_OK,SUGGEST_OK
+> [5016224.932216] sd 2:0:0:0: [sdc] Stopping disk
+> [5016224.933192] sd 2:0:0:0: [sdc] START_STOP FAILED
+> [5016224.933227] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET
+> driverbyte=DRIVER_OK,SUGGEST_OK
+>
+> ran: echo "0 0 0" > /sys/class/scsi_host/host2/scan
+>
+> [5016463.173706] ata3: hard resetting link
+> [5016463.657520] ata3: softreset failed (device not ready)
+> [5016463.657557] ata3: failed due to HW bug, retry pmp=0
+> [5016463.821535] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [5016463.842475] ata3.00: both IDENTIFYs aborted, assuming NODEV
+> [5016463.842492] ata3: EH complete
+>
+> To be honest, I've been expecting this, I just had no idea which drive was
+> going to fail. For the past 6-12 months I've been hearing this rather loud
+> clicking noise coming from that machine, but I could never pin it down, it
+> only happened a couple times a day (and it wasn't heads parking).
+>
+> I'm tempted to try and reboot the machine, to see if the disk comes back.
+> But I'm worried the array might not come back (for whatever reason).
+>
+> -- 
+> Thomas Fjellstrom
+> tfjellstrom@shaw.ca
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+Looks like it but show smart stats as well-- they may show what/why is 
+failing, if not try to run a smart test (short) and see what the error is, 
+or if it passes successfully.
+
+smartctl -a /dev/disk
+
+or smartctl -d (cciss,3ware),drive -a /dev/device
+
+Justin.
