@@ -1,36 +1,59 @@
-From: Christian Pernegger <pernegger@gmail.com>
-Subject: Re: unbelievably bad performance: 2.6.27.37 and raid6
-Date: Mon, 2 Nov 2009 21:01:17 +0100
-Message-ID: <bb145bd20911021201k3338621ax1d7eb123614685c7@mail.gmail.com>
-References: <cccedfc60910310855l5ca6c42aj503fb0e4fd6232ad@mail.gmail.com>
-	 <bb145bd20910311259j7b2506c8v4e8907eb73598275@mail.gmail.com>
-	 <cccedfc60911021139o7cac1ad2rb70333d5fc8026e6@mail.gmail.com>
+From: Ben DJ <bendj095124367913213465@gmail.com>
+Subject: system update killed /boot RAID-1 array auto-assembly/mount. why?
+Date: Mon, 2 Nov 2009 12:24:53 -0800
+Message-ID: <babafd2f0911021224w6adf8453we7ba4f166102044f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <cccedfc60911021139o7cac1ad2rb70333d5fc8026e6@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> With 4 disks, the ability to sustain *any two* devices going bad is a big bonus.
-> Using raid10 with two copies (1 original, 1 duplicate) on 4 disks
-> gives me 50% space but I can only sustain *1* failed device. I'm
-> guessing I'd have to go with raid10 with three copies (1 original, 2
-> duplicate) which is even worse (2/3 space lost). Did I just calculate
-> that all wrong?
+Hi,
 
-No. No, that's fine, I hadn't thought of the fact that raid6 survives
-all 6 possible two disk failures while raid10 only survives 4.
-Still, raid6 with 4 disks seems a bit pathological / corner-casey to
-me and aside from that the md raid6 implementation is quite new. And
-you'll need backups either way. Personally, I'd feel safer with
-raid10. It's certainly faster.
+I've installed OpenSuse 11.2 RC2 to
 
-Cheers,
+  /boot on  4-disk RAID-1, super=1.0
+  /root  & (etc) on 4-disk RAID-10,f2 chunk=256, super=1.1
 
-C.
+It's been running fine.
 
-P.S.: About the only reason I can see to go with 4 disk raid6 is a
-planned capacity expansion in the near future.
+After a recent system upgrade via 'zypper dup', which completed
+without any apparent error, reboot failed.  /boot @ /dev/md0 was not
+mounting, and the RAID-1 wasn't even assembling.
+
+A full day of reading, and trying various repair-the-array solutions
+couldn't get me back.
+
+Although I was able to manually mount the array, and it fsck'ed ok, I
+couldn't get the array to auto-assemble.
+
+Finally, I deleted the array, repartitioned the drive, reinstalled
+kernel, grub and mdadm, and I'm back in business.  At the moment, the
+RAID-10 array is resyncing (not sure why):
+
+cat /proc/mdstat
+ Personalities : [raid10] [raid0] [raid1] [raid6] [raid5] [raid4] [linear]
+ md0 : active raid1 sda1[0] sdd1[3] sdc1[2] sdb1[1]
+       160604 blocks super 1.0 [4/4] [UUUU]
+
+ md1 : active raid10 sda2[0] sdd2[3] sdc2[2] sdb2[1]
+       1953198080 blocks super 1.1 256K chunks 2 far-copies [4/4] [UUUU]
+       [====>................]  resync = 23.8% (465007616/1953198080)
+finish=214.8min speed=115452K/sec
+
+ unused devices: <none>
+
+
+_Something_ happened at that system upgrade.  My mistake for not
+paying closer attention to what was going on.  My goal is to not let
+that happen again.
+
+Knowing that I'm not providing any helpful detail -- I don't have it
+atm -- can anyone speculate as to what might have happened @ the sys
+update to cause this?  If possible, I'd like to start with some clue
+as to what I'm watching out for.
+
+Thanks,
+
+BenDJ
