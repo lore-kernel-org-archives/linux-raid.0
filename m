@@ -1,49 +1,66 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: unbelievably bad performance: 2.6.27.37 and raid6
-Date: Mon, 2 Nov 2009 13:28:25 +1100
-Message-ID: <19182.17353.763258.508113@notabene.brown>
-References: <cccedfc60910310855l5ca6c42aj503fb0e4fd6232ad@mail.gmail.com>
-	<200911011241.40735.tfjellstrom@shaw.ca>
-	<da6356c80d046663baad24dd41b6e989.squirrel@neil.brown.name>
-	<200911011647.41259.tfjellstrom@shaw.ca>
-	<cccedfc60911011553k42a27ee9u7a67b8410d781f57@mail.gmail.com>
+From: martin f krafft <madduck@madduck.net>
+Subject: Re: md[adm] device names
+Date: Mon, 2 Nov 2009 09:24:24 +0100
+Message-ID: <20091102082424.GD7626@lapse.rw.madduck.net>
+References: <4AEC33A2.6050408@msgid.tls.msk.ru>
+ <19182.16585.929763.745870@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-ripemd160;
+	protocol="application/pgp-signature"; boundary="9dgjiU4MmWPVapMU"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Jon Nelson on Sunday November 1
+Content-Disposition: inline
+In-Reply-To: <19182.16585.929763.745870@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sunday November 1, jnelson-linux-raid@jamponi.net wrote:
-> On Sun, Nov 1, 2009 at 5:47 PM, Thomas Fjellstrom <tfjellstrom@shaw.c=
-a> wrote:
-> > On Sun November 1 2009, NeilBrown wrote:
->=20
-> >> Reshaping to a new chunksize is possible with the latest mdadm and
-> >> =A0kernel, but I would recommend waiting for mdadm-3.1.1 and 2.6.3=
-2.
-> >> With the current code, a device failure during reshape followed by=
- an
-> >> unclean shutdown while reshape is happening can lead to unrecovera=
-ble
-> >> data loss. =A0Even a clean shutdown before the shape finishes in t=
-hat case
-> >> might be a problem.
->=20
-> Do you know if the stable series 2.6.31.XX incorporates the appropria=
-te fixes?
 
-They haven't been written yet.....
-The kernel change is very small I think so it will go in to -stable.
-But I want to write the mdadm changes first (which are bigger) and be
-sure I don't need any other kernel changes.
+--9dgjiU4MmWPVapMU
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-NeilBrown
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+also sprach Neil Brown <neilb@suse.de> [2009.11.02.0315 +0100]:
+> Numbers are meaningless.  I would much rather have "/dev/md/home" or
+> "/dev/md/backup" or whatever.  But as I said, old names should still
+> work.
+
+=E2=80=A6 except sysfs exposes device names =C3=A0 la md1, right? I agree w=
+ith
+Michael that we should either have numbers or names, but not both.
+http://bugs.debian.org/553896 came in today, which is just another
+instance of confusion resulting from multiple choices.
+
+I personally don't have a problem with numbers; they are as
+meaningless or -full as partition numbers, and I used stuff like
+/dev/sda5 on my systems for decades without problems. The trend
+these days is dm/LVM, and that gives us decent names like
+/dev/mapper/home, and I see the benefit in moving towards
+/dev/md/home, but it needs to be done consistently, and either one
+or the other.
+
+--=20
+martin | http://madduck.net/ | http://two.sentenc.es/
+=20
+"if ever somethin' don't feel right to you, remember what pancho said
+ to the cisco kid...  `let's win, before we are dancing at the end of
+ a rope, without music.'"
+                                                             -- sailor
+=20
+spamtraps: madduck.bogus@madduck.net
+
+--9dgjiU4MmWPVapMU
+Content-Type: application/pgp-signature; name="digital_signature_gpg.asc"
+Content-Description: Digital signature (see http://martin-krafft.net/gpg/)
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEAREDAAYFAkrulzgACgkQIgvIgzMMSnVuNwCg4Tv38W3RzI1MvWC37XU8QTpi
+EM0AoIifnta7zD+QJ5opzkVdZn7aA5/o
+=T6HL
+-----END PGP SIGNATURE-----
+
+--9dgjiU4MmWPVapMU--
