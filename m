@@ -1,59 +1,92 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.31+2.6.31.4: XFS - All I/O locks up to D-state after 24-48
- hours (sysrq-t+w available)
-Date: Mon, 2 Nov 2009 16:46:10 -0500 (EST)
-Message-ID: <alpine.DEB.2.00.0910281915400.29166@p34.internal.lan>
-References: <alpine.DEB.2.00.0910171825270.16781@p34.internal.lan> <alpine.DEB.2.00.0910181607040.27363@p34.internal.lan> <20091019030456.GS9464@discord.disaster> <alpine.DEB.2.00.0910190431180.23395@p34.internal.lan> <20091020003358.GW9464@discord.disaster>
- <alpine.DEB.2.00.0910200431290.21878@p34.internal.lan> <alpine.DEB.2.00.0910210618210.10288@p34.internal.lan> <alpine.DEB.2.00.0910221849001.24576@p34.internal.lan> <alpine.DEB.2.00.0910260723150.22950@p34.internal.lan>
+From: Andrew Dunn <andrew.g.dunn@gmail.com>
+Subject: Setup for Performance
+Date: Mon, 02 Nov 2009 17:05:17 -0500
+Message-ID: <4AEF579D.5040803@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.0910260723150.22950@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I will preface this by saying I only need about 100MB/s out of my array
+because I access it via a gigabit crossover cable.
 
+I am backing up all of my information right now (~4TB) with the
+intention of re-creating this array with a larger chunk size and
+possibly tweaking the file system a little bit.
 
-On Mon, 26 Oct 2009, Justin Piszcz wrote:
+My original array was a raid6 of 9 WD caviar black drives, the chunk
+size was 64k. I use USAS-AOC-L8i controllers to address all of my drives
+and the TLER setting on the drives is enabled for 7 seconds.
 
->
->
-> On Thu, 22 Oct 2009, Justin Piszcz wrote:
->
->> 
->> Any other ideas?
->> 
->> Currently stuck on 2.6.30.9.. (no issues, no lockups)-- Box normally has no 
->> load at all either.. Has anyone else reported similar problems?
->> 
->> Justin.
->> 
->
-> --
->
-> Currently running 2.6.31-rc1 for 2 days now, no crashes, will go to -rc2 
-> later today and wait another 48 hours.
->
-> Justin.
->
->
+storrgie@ALEXANDRIA:~$ sudo mdadm -D /dev/md0
+/dev/md0:
+        Version : 00.90
+  Creation Time : Wed Oct 14 19:59:46 2009
+     Raid Level : raid6
+     Array Size : 6837319552 (6520.58 GiB 7001.42 GB)
+  Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
+   Raid Devices : 9
+  Total Devices : 9
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-Kernel report:
+    Update Time : Mon Nov  2 16:58:43 2009
+          State : active
+ Active Devices : 9
+Working Devices : 9
+ Failed Devices : 0
+  Spare Devices : 0
 
-2.6.31-rc1: no crash - uptime 2+ days
-2.6.31-rc2: no crash - uptime 2+ days
-2.6.31-rc3: no crash - uptime 2+ days
-2.6.31-rc4: no crash but network kept dropping out
-2.6.31-rc5: cannot test, service owner needs host available
-2.6.31-rc6: cannot test, service owner needs host available
-2.6.31-rc7: cannot test, service owner needs host available
-2.6.31-rc8: cannot test, service owner needs host available
-2.6.31-rc9: cannot test, service owner needs host available
-   2.6.31.x: locks up D-state
+     Chunk Size : 64K
 
-It would be somewhere between -rc4 and 2.6.31.x.
+           UUID : 53dadda1:c58785d5:613e2239:070da8c8 (local to host
+ALEXANDRIA)
+         Events : 0.649527
 
-Justin.
+    Number   Major   Minor   RaidDevice State
+       0       8       65        0      active sync   /dev/sde1
+       1       8       81        1      active sync   /dev/sdf1
+       2       8       97        2      active sync   /dev/sdg1
+       3       8      113        3      active sync   /dev/sdh1
+       4       8      129        4      active sync   /dev/sdi1
+       5       8      145        5      active sync   /dev/sdj1
+       6       8      161        6      active sync   /dev/sdk1
+       7       8      177        7      active sync   /dev/sdl1
+       8       8      193        8      active sync   /dev/sdm1
+
+I have noticed slow rebuilding time when I first created the array and
+intermittent lockups while writing large data sets.
+
+Per some reading I was thinking of adjusting my chunk size to 1024k, and
+trying to figure out the weird stuff required when creating a file system.
+
+Questions:
+
+Should I have the TLER on my drives enabled? (WDTLER, seven seconds)
+
+Is 1024k chunk size going to be a good choice for my purposes? (I store
+use this for storage of files that are 4MiB to 16GiB)
+
+Is ext4 the ideal file system for my purposes?
+
+Should I be investigating into the file system stripe size and chunk
+size or let mkfs choose these for me? If I need to, please be kind to
+point me in a good direction as I am new to this lower level file system
+stuff.
+
+Can I change the properties of my file system in place (ext4 or other)
+so that I can tweak the stripe size when I add more drives and grow the
+array?
+
+Should I be asking any other questions?
+
+Thanks a ton, this is the first mailing list I have ever subscribed, I
+am really excited to see what you all say.
+
+-- 
+Andrew Dunn
+http://agdunn.net
 
