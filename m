@@ -1,63 +1,43 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: Random MD Raid resyncs?
-Date: Tue, 3 Nov 2009 09:23:55 +1100
-Message-ID: <155cc2abd59adbec8b109a0602d7431d.squirrel@neil.brown.name>
-References: <f1ef83020911020655kf8935c5icf9aea31edb03c57@mail.gmail.com>
-    <f1ef83020911020657w1494e31ao716203f9fb9f0d8f@mail.gmail.com>
+From: Ben DJ <bendj095124367913213465@gmail.com>
+Subject: Re: system update killed /boot RAID-1 array auto-assembly/mount. why?
+Date: Mon, 2 Nov 2009 14:33:18 -0800
+Message-ID: <babafd2f0911021433j340add0bu5dae2c388efadfd6@mail.gmail.com>
+References: <babafd2f0911021224w6adf8453we7ba4f166102044f@mail.gmail.com>
+	<f1ef83020911021325uf1be098ia4567931771f88ae@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f1ef83020911020657w1494e31ao716203f9fb9f0d8f@mail.gmail.com>
+In-Reply-To: <f1ef83020911021325uf1be098ia4567931771f88ae@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jesse Wheeler <jwwstpete@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, November 3, 2009 1:57 am, Jesse Wheeler wrote:
-> All:
->
-> Thanks for the invaluable resource that is this mailing list. =A0I've
-> learned quite a bit over the space of this month.
->
-> I have the following configuration and question:
->
-=2E....
->
-> Nov =A02 09:15:42 fatboy dnsmasq[3648]: exiting on receipt of SIGTERM
-> Nov =A02 09:15:43 fatboy dnsmasq[6922]: started, version 2.45 cachesi=
-ze 150
-> Nov =A02 09:15:43 fatboy dnsmasq[6922]: compile time options: IPv6
-> GNU-getopt no-ISC-leasefile no-DBus no-I18N TFTP
-> Nov =A02 09:15:43 fatboy dnsmasq[6922]: using local addresses only fo=
-r
-> domain devotioconsulting.net
-> Nov =A02 09:15:43 fatboy dnsmasq[6922]: using nameserver 208.67.220.2=
-20#53
-> Nov =A02 09:15:43 fatboy dnsmasq[6922]: using nameserver 208.67.222.2=
-22#53
-> Nov =A02 09:15:43 fatboy dnsmasq[6922]: read /etc/hosts - 14 addresse=
-s
-> Nov =A02 09:21:04 fatboy kernel: md: syncing RAID array md1
+Jesse
 
-The only possible explanation for this that I can think
-of is the the array was started in 'auto-read-only' mode in which
-it will not write to the devices at all until a write request comes in
-through the top level device.  Once that write request arrives, md acce=
-pts
-that the array really is meant to be used and starts any resync etc tha=
-t
-might be needed.
+On Mon, Nov 2, 2009 at 1:25 PM, Jesse Wheeler <jwwstpete@gmail.com> wro=
+te:
+> I've observed some similar behavior on RAID-5 w/ SuSE Enterprise
+> Server 10.2 SP2 with our eDirectory boxes. =A0While this is different
+> from my current issue that I posted today, I will say that I have had
+> -- on average -- better luck with with RHEL based distributions than
+> SuSE variants.
 
-How is /dev/md1 used?  Is it possible that nothing tried to
-write to it until this moment?
+I can't say I've made any of those comparisons.  Given a choice, I'm
+sticking with openSUSE ...
 
-If it was something started by a cron job, it would not say
-"resync =3D" but rather 'check =3D' or 'repair =3D'.
+11.2's RAID behavior 'feels' a bit more fragile than it was on 11.1.
+That might be simply because I'm a bit paranoid now what with the
+recent FAIL.
 
-NeilBrown
+I'm trying to figure out if using kernel-desktop, rather than
+kernel-server, might have anything to do with this.  I'm guessing, but
+RAID1 + RAID10 is not your usual "desktop" config, so though it might
+be worth a check.  So far, I haven't found enough detail on the
+differences.
 
-
+BenDJ
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
