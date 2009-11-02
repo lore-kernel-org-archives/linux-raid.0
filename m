@@ -1,35 +1,25 @@
-From: Chris Worley <worleys@gmail.com>
-Subject: Unbelievably _good_ write performance: RHEL5.4 mirror
-Date: Mon, 2 Nov 2009 11:28:10 -0700
-Message-ID: <f3177b9e0911021028t1fea4ad2lb4cf87059d300a0c@mail.gmail.com>
+From: Christian Pernegger <pernegger@gmail.com>
+Subject: Re: unbelievably bad performance: 2.6.27.37 and raid6
+Date: Mon, 2 Nov 2009 19:51:50 +0100
+Message-ID: <bb145bd20911021051u177bbd7di17dd0d5d57ccd950@mail.gmail.com>
+References: <cccedfc60910310855l5ca6c42aj503fb0e4fd6232ad@mail.gmail.com>
+	 <4AEEF29C.10309@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4AEEF29C.10309@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linuxraid <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I expect RAID1 write performance to be, at best, the performance of
-the slowest drive.
+> It is really slow, recent kernels seem to be unsuitable for use as large
+> file servers, as the performance is, as you described it, "unbelievably
+> bad."
 
-I'm seeing twice the performance, as if it were a RAID0.  The read
-performance is 2x also, which is what I would expect.
+Is this raid6 specific? Because FWIW md performance has been fine (not
+great, but fine) on my little raid5/10 file servers. As soon as I add
+dm-crypt to the mix it all goes to hell, though.
 
-I'm using the incantation:
+Maybe it's a device-mapper thing? Is everybody affected using LVM?
 
-mdadm --create /dev/md0 --chunk=256 --level=1 --assume-clean
---raid-devices=2 /dev/sd[bc]
-
-I use "assume clean" on the fresh create, as there is no reason to
-sync the new drives.
-
-My "fio" test uses O_DIRECT with 64 threads, each with a queue depth
-of 64, running for 10 minutes.  All caching is disabled, and the NOOP
-scheduler is being used.  I run this test all the time, and can't
-imagine why it's getting such repeatably good write performance.
-
-Any ideas?
-
-Thanks,
-
-Chris
+C.
