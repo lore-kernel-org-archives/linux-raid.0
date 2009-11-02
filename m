@@ -1,92 +1,65 @@
-From: Andrew Dunn <andrew.g.dunn@gmail.com>
-Subject: Setup for Performance
-Date: Mon, 02 Nov 2009 17:05:17 -0500
-Message-ID: <4AEF579D.5040803@gmail.com>
+From: "NeilBrown" <neilb@suse.de>
+Subject: Re: Random MD Raid resyncs?
+Date: Tue, 3 Nov 2009 09:23:55 +1100
+Message-ID: <155cc2abd59adbec8b109a0602d7431d.squirrel@neil.brown.name>
+References: <f1ef83020911020655kf8935c5icf9aea31edb03c57@mail.gmail.com>
+    <f1ef83020911020657w1494e31ao716203f9fb9f0d8f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <f1ef83020911020657w1494e31ao716203f9fb9f0d8f@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jesse Wheeler <jwwstpete@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I will preface this by saying I only need about 100MB/s out of my array
-because I access it via a gigabit crossover cable.
+On Tue, November 3, 2009 1:57 am, Jesse Wheeler wrote:
+> All:
+>
+> Thanks for the invaluable resource that is this mailing list. =A0I've
+> learned quite a bit over the space of this month.
+>
+> I have the following configuration and question:
+>
+=2E....
+>
+> Nov =A02 09:15:42 fatboy dnsmasq[3648]: exiting on receipt of SIGTERM
+> Nov =A02 09:15:43 fatboy dnsmasq[6922]: started, version 2.45 cachesi=
+ze 150
+> Nov =A02 09:15:43 fatboy dnsmasq[6922]: compile time options: IPv6
+> GNU-getopt no-ISC-leasefile no-DBus no-I18N TFTP
+> Nov =A02 09:15:43 fatboy dnsmasq[6922]: using local addresses only fo=
+r
+> domain devotioconsulting.net
+> Nov =A02 09:15:43 fatboy dnsmasq[6922]: using nameserver 208.67.220.2=
+20#53
+> Nov =A02 09:15:43 fatboy dnsmasq[6922]: using nameserver 208.67.222.2=
+22#53
+> Nov =A02 09:15:43 fatboy dnsmasq[6922]: read /etc/hosts - 14 addresse=
+s
+> Nov =A02 09:21:04 fatboy kernel: md: syncing RAID array md1
 
-I am backing up all of my information right now (~4TB) with the
-intention of re-creating this array with a larger chunk size and
-possibly tweaking the file system a little bit.
+The only possible explanation for this that I can think
+of is the the array was started in 'auto-read-only' mode in which
+it will not write to the devices at all until a write request comes in
+through the top level device.  Once that write request arrives, md acce=
+pts
+that the array really is meant to be used and starts any resync etc tha=
+t
+might be needed.
 
-My original array was a raid6 of 9 WD caviar black drives, the chunk
-size was 64k. I use USAS-AOC-L8i controllers to address all of my drives
-and the TLER setting on the drives is enabled for 7 seconds.
+How is /dev/md1 used?  Is it possible that nothing tried to
+write to it until this moment?
 
-storrgie@ALEXANDRIA:~$ sudo mdadm -D /dev/md0
-/dev/md0:
-        Version : 00.90
-  Creation Time : Wed Oct 14 19:59:46 2009
-     Raid Level : raid6
-     Array Size : 6837319552 (6520.58 GiB 7001.42 GB)
-  Used Dev Size : 976759936 (931.51 GiB 1000.20 GB)
-   Raid Devices : 9
-  Total Devices : 9
-Preferred Minor : 0
-    Persistence : Superblock is persistent
+If it was something started by a cron job, it would not say
+"resync =3D" but rather 'check =3D' or 'repair =3D'.
 
-    Update Time : Mon Nov  2 16:58:43 2009
-          State : active
- Active Devices : 9
-Working Devices : 9
- Failed Devices : 0
-  Spare Devices : 0
+NeilBrown
 
-     Chunk Size : 64K
 
-           UUID : 53dadda1:c58785d5:613e2239:070da8c8 (local to host
-ALEXANDRIA)
-         Events : 0.649527
-
-    Number   Major   Minor   RaidDevice State
-       0       8       65        0      active sync   /dev/sde1
-       1       8       81        1      active sync   /dev/sdf1
-       2       8       97        2      active sync   /dev/sdg1
-       3       8      113        3      active sync   /dev/sdh1
-       4       8      129        4      active sync   /dev/sdi1
-       5       8      145        5      active sync   /dev/sdj1
-       6       8      161        6      active sync   /dev/sdk1
-       7       8      177        7      active sync   /dev/sdl1
-       8       8      193        8      active sync   /dev/sdm1
-
-I have noticed slow rebuilding time when I first created the array and
-intermittent lockups while writing large data sets.
-
-Per some reading I was thinking of adjusting my chunk size to 1024k, and
-trying to figure out the weird stuff required when creating a file system.
-
-Questions:
-
-Should I have the TLER on my drives enabled? (WDTLER, seven seconds)
-
-Is 1024k chunk size going to be a good choice for my purposes? (I store
-use this for storage of files that are 4MiB to 16GiB)
-
-Is ext4 the ideal file system for my purposes?
-
-Should I be investigating into the file system stripe size and chunk
-size or let mkfs choose these for me? If I need to, please be kind to
-point me in a good direction as I am new to this lower level file system
-stuff.
-
-Can I change the properties of my file system in place (ext4 or other)
-so that I can tweak the stripe size when I add more drives and grow the
-array?
-
-Should I be asking any other questions?
-
-Thanks a ton, this is the first mailing list I have ever subscribed, I
-am really excited to see what you all say.
-
--- 
-Andrew Dunn
-http://agdunn.net
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
