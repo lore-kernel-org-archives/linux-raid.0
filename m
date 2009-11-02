@@ -1,81 +1,104 @@
-From: NiftyFedora Mitch <niftyfedora@niftyegg.com>
-Subject: Re: Is My Data DESTROYED?!
-Date: Mon, 2 Nov 2009 14:53:54 -0800
-Message-ID: <1cd4f41f0911021453t7d3bf49dsb383528e1add2dc8@mail.gmail.com>
-References: <200910262115.59160.tfjellstrom@shaw.ca>
-	 <295369.82915.qm@web38803.mail.mud.yahoo.com>
+From: Jesse Wheeler <jwwstpete@gmail.com>
+Subject: Re: system update killed /boot RAID-1 array auto-assembly/mount. why?
+Date: Mon, 2 Nov 2009 18:36:10 -0500
+Message-ID: <f1ef83020911021536p725c33c2raa995b71d130270c@mail.gmail.com>
+References: <babafd2f0911021224w6adf8453we7ba4f166102044f@mail.gmail.com>
+	 <f1ef83020911021325uf1be098ia4567931771f88ae@mail.gmail.com>
+	 <babafd2f0911021433j340add0bu5dae2c388efadfd6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <295369.82915.qm@web38803.mail.mud.yahoo.com>
+In-Reply-To: <babafd2f0911021433j340add0bu5dae2c388efadfd6@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: adfas asd <chimera_god@yahoo.com>
+To: Ben DJ <bendj095124367913213465@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Oct 27, 2009 at 6:37 AM, adfas asd <chimera_god@yahoo.com> wrote:
-> --- On Mon, 10/26/09, Thomas Fjellstrom <tfjellstrom@shaw.ca> wrote:
->> A guy I know got a SuperMicro SC846E1-R900B case. 24
->> hotswap per chassis, with
->> the capability to chain in more of them to the same SAS
->> adapter. Rather
->> impressive. I can't afford a $1200 case though, not yet.
+Ben:
+
+> I can't say I've made any of those comparisons.  Given a choice, I'm
+> sticking with openSUSE ...
+
+Totally understandable :o).
+
+> That might be simply because I'm a bit paranoid now what with the
+> recent FAIL.
+
+That would make anyone nervous.  As someone who has lost quite a
+bit-o'-data within a span of a few years, I can understand that
+feeling.  Failures always suck.
+
+> I'm trying to figure out if using kernel-desktop, rather than
+> kernel-server, might have anything to do with this.  I'm guessing, bu=
+t
+> RAID1 + RAID10 is not your usual "desktop" config, so though it might
+> be worth a check.  So far, I haven't found enough detail on the
+> differences
+
+I just re-read your original post.  I guess I read too fast before I
+noticed that it was OpenSuSE 11.2 rather than the SLES distribution.
+=46or that, again, I apologize.  However, is this deployment for server
+purposes, desktop, or just learning your way around the Linux
+way-of-functioning?  Please keep in mind that OpenSuSE is Novell's
+equivalent of Red Hat's Fedora -- a proving ground/sandbox with some
+form of additional public QA before it makes it into their mainline
+Enterprise kernel.  I would shy away from anything that hasn't gone
+through a formal QA process before putting it into production use.
+
+Of course, I say that after a production CentOS install of 5.4 which
+is the equivalent of RHEL 5.4, of which Fedora 10 was derived.
+
+Point taken.  You've gotta love open source!
+
+Have you checked Novell's OpenSUSE mailing list and community forums?
+The last time I checked, there were a few people that were quite
+knowledgeable.  I might be able to give you some e-mail addressee's if
+you're at a dead-end.  If so, send me a msg off of list and I'd be
+glad to help you.
+
+In regards,
+
+--
+Jesse W. Wheeler
+Member-Owner
+Devotio Consulting, L.LC.
+--
+
+
+On Mon, Nov 2, 2009 at 5:33 PM, Ben DJ
+<bendj095124367913213465@gmail.com> wrote:
+> Jesse
 >
-> Yes, it looks like the SuperMicro 3-5 for me.
+> On Mon, Nov 2, 2009 at 1:25 PM, Jesse Wheeler <jwwstpete@gmail.com> w=
+rote:
+>> I've observed some similar behavior on RAID-5 w/ SuSE Enterprise
+>> Server 10.2 SP2 with our eDirectory boxes. =A0While this is differen=
+t
+>> from my current issue that I posted today, I will say that I have ha=
+d
+>> -- on average -- better luck with with RHEL based distributions than
+>> SuSE variants.
 >
+> I can't say I've made any of those comparisons. =A0Given a choice, I'=
+m
+> sticking with openSUSE ...
 >
-
-Adfas,
-
-It seems to me reading this long thread that some design and
-practice might have helped here.
-
-First Q: did you need a raid.
-Next Q: did you rehearse and practice recovery.
-Next Q; did you build a set of notes on how you built your RAID
-Next Q: did you write down your rehearsed recovery procedures.
-
-For HTPC I would not have build a RAID for a big storage
-resource.  I might have built it for speed.
-
-Having made lots of typos in my life I would not have built a
-RAID in lieu of  a backup tool and process.
-
-I would have built it as a set of individual disks
-and individual file systems.
-   a; a-bak
-   b; b-bak
-   etc.
-  OR
-   RaidA; RaidA-bak
-
-I would alternate between A and B on the record process
-and alternate a scripted rsync or cp based backup of data.
-The script is to eliminate typo errors in my environment
-and provide a log of what I did "Exactly".
-
-I would consider playback from N or N-bak depending on which
-device was not busy and if my software could be that smart.
-
-It seems to me that simplicity from the system admin point
-of view would win out in the design process.  Too often
-the design process ignores how difficult it is for a system
-admin to get it EXACTLY correct when it is something that
-is done once a year or less and depends on configuration
-and setup notes that are a year old, difficult to update
-or exist on the RAID itself.
-
-The number of times I have built some system setup
-that works for years and then years later needs an update
-or breaks....  boggles my mind and I have done it to myself
-and know better.
-
-Knowing RCS and friends helps!
-
-
-
-
-
--- 
-        NiftyFedora
-        T o m   M i t c h e l l
+> 11.2's RAID behavior 'feels' a bit more fragile than it was on 11.1.
+> That might be simply because I'm a bit paranoid now what with the
+> recent FAIL.
+>
+> I'm trying to figure out if using kernel-desktop, rather than
+> kernel-server, might have anything to do with this. =A0I'm guessing, =
+but
+> RAID1 + RAID10 is not your usual "desktop" config, so though it might
+> be worth a check. =A0So far, I haven't found enough detail on the
+> differences.
+>
+> BenDJ
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
