@@ -1,74 +1,34 @@
-From: Andrew Dunn <andrew.g.dunn@gmail.com>
-Subject: Re: unbelievably bad performance: 2.6.27.37 and raid6
-Date: Sun, 01 Nov 2009 18:55:24 -0500
-Message-ID: <4AEE1FEC.2090809@gmail.com>
-References: <cccedfc60910310855l5ca6c42aj503fb0e4fd6232ad@mail.gmail.com> <200911011241.40735.tfjellstrom@shaw.ca> <da6356c80d046663baad24dd41b6e989.squirrel@neil.brown.name> <200911011647.41259.tfjellstrom@shaw.ca>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: small mdadm issue under debian
+Date: Mon, 2 Nov 2009 13:03:09 +1100
+Message-ID: <19182.15837.879963.989788@notabene.brown>
+References: <200910290124.59090.tfjellstrom@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200911011647.41259.tfjellstrom@shaw.ca>
+In-Reply-To: message from Thomas Fjellstrom on Thursday October 29
 Sender: linux-raid-owner@vger.kernel.org
 To: tfjellstrom@shaw.ca
-Cc: NeilBrown <neilb@suse.de>, Jon Nelson <jnelson-linux-raid@jamponi.net>, LinuxRaid <linux-raid@vger.kernel.org>, pernegger@gmail.com
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Thanks for the update Neil, good to have something to look forward to.
+On Thursday October 29, tfjellstrom@shaw.ca wrote:
+> I've been trying to get mdadm to auto assemble my raid array for a while 
+> now, and as I'm trying to test which kernels give me back some performance 
+> (testing 2.6.26 right now), I find that with this kernel, its happily auto 
+> assembling my 1.1 versioned metadata array. 3.6.30 does not, nor does .31 or 
+> .32 for that matter. Same version of mdadm, for some reason, when the
+> mdadm-raid init script is run, it fails to assemble the raid array I've 
+> specified in mdadm.conf. And again, it automagically works with 2.6.26.
+> 
+> color me confused.
 
-I am using Ubuntu 9.10, hopefully the new kernel will be incorporated
-sometime in the near future. In the mean time I will back everything up
-and create the ARRAY all over again.
+Me too.
 
-Thomas Fjellstrom wrote:
-> On Sun November 1 2009, NeilBrown wrote:
->   
->> On Mon, November 2, 2009 6:41 am, Thomas Fjellstrom wrote:
->>     
->>> On Sun November 1 2009, Andrew Dunn wrote:
->>>       
->>>> Are we to expect some resolution in newer kernels?
->>>>         
->>> I assume all of the new per-bdi-writeback work going on in .33+ will
->>> have a
->>> large impact. At least I'm hoping.
->>>
->>>       
->>>> I am going to rebuild my array (backup data and re-create) to modify
->>>> the chunk size this week. I hope to get a much higher performance when
->>>> increasing from 64k chunk size to 1024k.
->>>>
->>>> Is there a way to modify chunk size in place or does the array need to
->>>> be re-created?
->>>>         
->>> This I'm not sure about. I'd like to be able to reshape to a new chunk
->>> size
->>> for testing.
->>>       
->> Reshaping to a new chunksize is possible with the latest mdadm and
->>  kernel, but I would recommend waiting for mdadm-3.1.1 and 2.6.32.
->> With the current code, a device failure during reshape followed by an
->> unclean shutdown while reshape is happening can lead to unrecoverable
->> data loss.  Even a clean shutdown before the shape finishes in that case
->> might be a problem.
->>     
->
-> That's good to know. Though I'm stuck with 2.6.26 till the performance 
-> regressions in the io and scheduling subsystems are solved.
->
->   
->> NeilBrown
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>     
->
->
->   
+Can you run the "mdadm" command that fails by hand and have it still
+fail?
+If so, can you run it with "-v" and post the result.
+Or maybe edit the script to add -v and see what it says.
 
--- 
-Andrew Dunn
-http://agdunn.net
-
+NeilBrown 
