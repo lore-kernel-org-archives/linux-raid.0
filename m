@@ -1,77 +1,89 @@
-From: "NeilBrown" <neilb@suse.de>
-Subject: Re: mdadm reshape stop, resume with alternate/moved backup file?
-Date: Tue, 3 Nov 2009 11:59:18 +1100
-Message-ID: <c7b2da7b9a40e206ea3324169cc00d9e.squirrel@neil.brown.name>
-References: <4877c76c0911021643x6f1a0e37h795963451e521d0c@mail.gmail.com>
-    <4877c76c0911021644r3e983f5bh5fa8d7b14a37b2ab@mail.gmail.com>
+From: Jesse Wheeler <jwwstpete@gmail.com>
+Subject: Re: system update killed /boot RAID-1 array auto-assembly/mount. why?
+Date: Mon, 2 Nov 2009 20:06:58 -0500
+Message-ID: <f1ef83020911021706v60cd2022rfbb2157303ddcea3@mail.gmail.com>
+References: <babafd2f0911021224w6adf8453we7ba4f166102044f@mail.gmail.com>
+	 <f1ef83020911021325uf1be098ia4567931771f88ae@mail.gmail.com>
+	 <babafd2f0911021433j340add0bu5dae2c388efadfd6@mail.gmail.com>
+	 <f1ef83020911021536p725c33c2raa995b71d130270c@mail.gmail.com>
+	 <babafd2f0911021609k752e0c5er63daca8f719ce49f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4877c76c0911021644r3e983f5bh5fa8d7b14a37b2ab@mail.gmail.com>
+In-Reply-To: <babafd2f0911021609k752e0c5er63daca8f719ce49f@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Evans <mjevans1983@gmail.com>
+To: Ben DJ <bendj095124367913213465@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, November 3, 2009 11:44 am, Michael Evans wrote:
-> In the past I'd only worked with software raid5, it used the temporar=
-y
-> file for a brief period at the beginning and then it was all
-> disk-bound.
->
-> I recently started a raid-6 takeover of one of my larger raid-5
-> arrays, it is running around 1/10th to 1/20th the speed I expect:
->
-> =A0=A0=A0=A0=A0 2909829120 blocks super 1.1 level 6, 128k chunk, algo=
-rithm 18
-> [8/7] [UUUUUUUU]
-> =A0=A0=A0=A0=A0 [=3D>...................]=A0 reshape =3D=A0 7.2% (353=
-59488/484971520)
-> finish=3D11057.6min speed=3D677K/sec
->
-> I suspect this is because another array sharing the same devices is
-> where I put the temporary file, and further that it might be waiting
-> for complete hardware syncs before proceeding.=A0 If that's the case =
-I
-> expect that using a small, currently unused, area on unrelated block
-> devices would speed the operation up by at least 5x.
->
-> Can I safely pause the current restripe process ( 1060 pts/... =A0=A0=
- SL
->  21:28 mdadm -G /dev/md52 -l6 --backup-file=3D/md52 ) with something
-> like kill 1060 and then re-invoke it with the backup file in another
-> location?=A0 Or would it be this increadiably slow anyway?
+Understood.  I wish you luck!
 
-1/ It is safe to stop the array, move the backup file, then reassemble
-  the array giving it the moved backup file.
-2/ This will actually be significantly faster even if the backup file i=
-s
-  on the same device as there is a bug which causes the size of the
-  data being backuped to be very small (and so very slow) when the resh=
-ape
-  is first started.  When the reshape is restarted this bug does not ap=
-ply
-  and you get the backup performed in larger chunks.
-3/ There is another bug where by if one of the devices in the array die=
-s
-  during the reshape, the backup process stops working correctly with t=
-he
-  result that the reshape goes much faster but the backup is completely
-  useless.  If you crash during the reshape after a failed device,
-  you will probably lose data.  If you try to stop and restart the
-  array after one device has failed, the restart will fail.  However
-  this is still the safest thing to do.  I will try to put out some
-  updates to mdadm so that you can reassemble the array safely in this
-  case (and of course, fix the problem so that the backup is maintained
-  throughout the entire run).
+On Mon, Nov 2, 2009 at 7:09 PM, Ben DJ
+<bendj095124367913213465@gmail.com> wrote:
+> Jesse,
+>
+> On Mon, Nov 2, 2009 at 3:36 PM, Jesse Wheeler <jwwstpete@gmail.com> w=
+rote:
+>> Please keep in mind that OpenSuSE is Novell's
+>> equivalent of Red Hat's Fedora -- a proving ground/sandbox with some
+>> form of additional public QA before it makes it into their mainline
+>> Enterprise kernel. =A0I would shy away from anything that hasn't gon=
+e
+>> through a formal QA process before putting it into production use.
+>
+> This box is a model for a next-gen 'production desktop' use around
+> here. =A0Typical users are a bit 'past middle' between Office Staff &
+> Kernel Hackers. =A0We're sticking with opensuse, as SLE* & Redhat/Cen=
+tos
+> seem generally too far behind a reasonable 'edge'. I know that there
+> will be issues; Compromises required.
+>
+> But that's a different discussion.
+>
+> I just need to get these 'mysterious' behaviors under control; or, at
+> least the causes understood.
+>
+> BenDJ
+>
 
-So yes, go ahead and move the file.  But if you get a device failure
-stop the reshape and ask me to help - I'll get something to you within
-24 hours - probably less but I have to allow for time zones...
 
-NeilBrown
 
+--=20
+Jesse W. Wheeler
+mailto: jwwstpete@gmail.com
+Charlotte, North Carolina - U.S.A.
+
+=3D=3D
+"I'm a white male, age 18 to 49. Everyone listens to me, no matter how
+dumb my suggestions are." --Homer Simpson
+
+"I really don't understand how bipartisanship is ever going to work
+when one of the parties is insane."-- John Cole
+
+"I defy the tyranny of precedent. I cannot afford the luxury of a
+closed mind. I go for anything new that might improve the past." --
+Clara Barton
+
+"Any dictator would admire the uniformity and obedience of the U.S.
+media." -- Noam Chomsky
+
+"We are called to speak for the weak, for the voiceless, for victims
+of our nation and for those it calls enemy...". -- Martin Luther King,
+"Beyond Vietnam"
+
+"Be yourself; everyone else is already taken." - Oscar Wilde
+
+* My Other Car is a Health Insurance Payment
+* My Car Has Better Insurance Than I Do
+* My Death Panel is an HMO
+* Underinsured Baby on Board
+* WWJD:   Who Would Jesus Deny? (Healthcare Reform Now!)
+
+"Quitbull with Lipstick: She's a gift that keeps on giving; an
+Everlasting Gobstopper of fail." -- SilentBrook on DKos talking about
+Palin
+=3D=3D
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
