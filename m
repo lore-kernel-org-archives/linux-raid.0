@@ -1,202 +1,72 @@
 From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: unbelievably bad performance: 2.6.27.37 and raid6
-Date: Tue, 3 Nov 2009 08:28:07 -0800
-Message-ID: <4877c76c0911030828k6c2e5b88s299a7f1b19abc198@mail.gmail.com>
-References: <cccedfc60910310855l5ca6c42aj503fb0e4fd6232ad@mail.gmail.com>
-	 <4AEEF29C.10309@tmr.com>
-	 <cccedfc60911020703s3188ebcsac867922f937bb39@mail.gmail.com>
-	 <9e52db7bed791d8c8f5653b1958b1874.squirrel@neil.brown.name>
-	 <4877c76c0911022209g60e40364i2cb82909e31f707d@mail.gmail.com>
-	 <763d89fcf9c0164cbe8b6245dc3d2d7f.squirrel@neil.brown.name>
-	 <87fx8viwoh.fsf@frosties.localdomain>
+Subject: Re: Unbelievably _good_ write performance: RHEL5.4 mirror
+Date: Tue, 3 Nov 2009 08:31:10 -0800
+Message-ID: <4877c76c0911030831q2ca99007lf3b9068de6be48b@mail.gmail.com>
+References: <f3177b9e0911021028t1fea4ad2lb4cf87059d300a0c@mail.gmail.com>
+	 <921ca19c0911030437s4ba6b2d9l24fe4d2c83029e9b@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87fx8viwoh.fsf@frosties.localdomain>
+In-Reply-To: <921ca19c0911030437s4ba6b2d9l24fe4d2c83029e9b@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: NeilBrown <neilb@suse.de>, Jon Nelson <jnelson-linux-raid@jamponi.net>, LinuxRaid <linux-raid@vger.kernel.org>
+To: Sujit K M <sjt.kar@gmail.com>
+Cc: Chris Worley <worleys@gmail.com>, linuxraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Nov 3, 2009 at 5:07 AM, Goswin von Brederlow <goswin-v-b@web.de=
-> wrote:
-> "NeilBrown" <neilb@suse.de> writes:
+Is it possible the data-set you are testing with is too small?  Modern
+drives have caches of around 32MB, your test might only be executing
+within the drive's caches.
+
+On Tue, Nov 3, 2009 at 4:37 AM, Sujit K M <sjt.kar@gmail.com> wrote:
+> This I think is an reported bug.
 >
->> A reshape is a fundamentally slow operation. =A0Each block needs to
->> be read and then written somewhere else so there is little opportuni=
-ty
->> for streaming.
->> An in-place reshape (i.e the array doesn't get bigger or smaller) is
->> even slower as we have to take a backup copy of each range of blocks
->> before writing them back out. =A0This limits streaming even more.
+> On Mon, Nov 2, 2009 at 11:58 PM, Chris Worley <worleys@gmail.com> wro=
+te:
+>> I expect RAID1 write performance to be, at best, the performance of
+>> the slowest drive.
 >>
->> It is possible to get it fast than it is by increasing the
->> array's stripe_cache_size and also increasing the 'backup' size
->> that mdadm uses. =A0mdadm-3.1.1 will try to do better in this respec=
-t.
->> However it will still be significantly slower than e.g. a resync.
+>> I'm seeing twice the performance, as if it were a RAID0. =A0The read
+>> performance is 2x also, which is what I would expect.
 >>
->> So reshape will always be slow. =A0It is a completely different issu=
-e
->> to filesystem activity on a RAID array being slow. =A0Recent reports=
- of
->> slowness are, I think, not directly related to md/raid. =A0It is eit=
-her
->> the filesystem or the VM or a combination of the two that causes
->> these slowdowns.
+>> I'm using the incantation:
 >>
+>> mdadm --create /dev/md0 --chunk=3D256 --level=3D1 --assume-clean
+>> --raid-devices=3D2 /dev/sd[bc]
 >>
->> NeilBrown
->
-> Now why is that? Lets leave out the case of an in-place
-> reshape. Nothing can be done to avoid making a backup of blocks
-> there, which severly limits the speed.
->
-> But the most common case should be growing an array. Lets look at the
-> first few steps or 3->4 disk raid5 reshape. Each step denotes a point
-> where a sync is required:
->
-> Step 0 =A0 =A0 =A0 =A0 Step 1 =A0 =A0 =A0 =A0 Step 2 =A0 =A0 =A0 =A0 =
-Step 3 =A0 =A0 =A0 =A0 Step 4
-> =A0A =A0B =A0C =A0D =A0 =A0 A =A0B =A0C =A0D =A0 =A0 A =A0B =A0C =A0D=
- =A0 =A0 A =A0B =A0C =A0D =A0 =A0 A =A0B =A0C =A0D
-> 00 01 =A0p =A0x =A0 =A000 01 02 =A0p =A0 =A000 01 02 =A0p =A0 =A000 0=
-1 02 =A0p =A0 =A000 01 02 =A0p
-> 02 =A0p 03 =A0x =A0 =A002 =A0p 03 =A0x =A0 =A003 04 =A0p 05 =A0 =A003=
- 04 =A0p 05 =A0 =A003 04 =A0p 05
-> =A0p 04 05 =A0x =A0 =A0 p 04 05 =A0x =A0 =A0 x =A0x =A0x =A0x =A0 =A0=
-06 =A0p 07 08 =A0 =A006 =A0p 07 08
-> 06 07 =A0p =A0x =A0 =A006 07 =A0p =A0x =A0 =A006 07 =A0p =A0x =A0 =A0=
- x =A0x =A0x =A0x =A0 =A0 p 09 10 11
-> 08 =A0p 09 =A0x =A0 =A008 =A0p 09 =A0x =A0 =A008 =A0p 09 =A0x =A0 =A0=
-08 =A0p 09 =A0x =A0 =A0 x =A0x =A0x =A0x
-> =A0p 10 11 =A0x =A0 =A0 p 10 11 =A0x =A0 =A0 p 10 11 =A0x =A0 =A0 p 1=
-0 11 =A0x =A0 =A0 x =A0x =A0x =A0x
-> 12 13 =A0p =A0x =A0 =A012 13 =A0p =A0x =A0 =A012 13 =A0p =A0x =A0 =A0=
-12 13 =A0p =A0x =A0 =A012 13 =A0p =A0x
-> 14 =A0p 15 =A0x =A0 =A014 =A0p 15 =A0x =A0 =A014 =A0p 15 =A0x =A0 =A0=
-14 =A0p 15 =A0x =A0 =A014 =A0p 15 =A0x
-> =A0p 16 17 =A0x =A0 =A0 p 16 17 =A0x =A0 =A0 p 16 17 =A0x =A0 =A0 p 1=
-6 17 =A0x =A0 =A0 p 16 17 =A0x
-> 18 19 =A0p =A0x =A0 =A018 19 =A0p =A0x =A0 =A018 19 =A0p =A0x =A0 =A0=
-18 19 =A0p =A0x =A0 =A018 19 =A0p =A0x
-> 20 =A0p 21 =A0x =A0 =A020 =A0p 21 =A0x =A0 =A020 =A0p 21 =A0x =A0 =A0=
-20 =A0p 21 =A0x =A0 =A020 =A0p 21 =A0x
-> =A0p 22 23 =A0x =A0 =A0 p 22 23 =A0x =A0 =A0 p 22 23 =A0x =A0 =A0 p 2=
-2 23 =A0x =A0 =A0 p 22 23 =A0x
-> 24 25 =A0p =A0x =A0 =A024 25 =A0p =A0x =A0 =A024 25 =A0p =A0x =A0 =A0=
-24 25 =A0p =A0x =A0 =A024 25 =A0p =A0x
-> 26 =A0p 27 =A0x =A0 =A026 =A0p 27 =A0x =A0 =A026 =A0p 27 =A0x =A0 =A0=
-26 =A0p 27 =A0x =A0 =A026 =A0p 27 =A0x
-> =A0p 28 29 =A0x =A0 =A0 p 28 29 =A0x =A0 =A0 p 28 29 =A0x =A0 =A0 p 2=
-8 29 =A0x =A0 =A0 p 28 29 =A0x
->
-> Step 5 =A0 =A0 =A0 =A0 Step 6 =A0 =A0 =A0 =A0 Step 7 =A0 =A0 =A0 =A0 =
-Step 8 =A0 =A0 =A0 =A0 Step 9
-> =A0A =A0B =A0C =A0D =A0 =A0 A =A0B =A0C =A0D =A0 =A0 A =A0B =A0C =A0D=
- =A0 =A0 A =A0B =A0C =A0D =A0 =A0 A =A0B =A0C =A0D
-> 00 01 02 =A0p =A0 =A000 01 02 =A0p =A0 =A000 01 02 =A0p =A0 =A000 01 =
-02 =A0p =A0 =A000 01 02 =A0p
-> 03 04 =A0p 05 =A0 =A003 04 =A0p 05 =A0 =A003 04 =A0p 05 =A0 =A003 04 =
-=A0p 05 =A0 =A003 04 =A0p 05
-> 06 =A0p 07 08 =A0 =A006 =A0p 07 08 =A0 =A006 =A0p 07 08 =A0 =A006 =A0=
-p 07 08 =A0 =A006 =A0p 07 08
-> =A0p 09 10 11 =A0 =A0 p 09 10 11 =A0 =A0 p 09 10 11 =A0 =A0 p 09 10 1=
-1 =A0 =A0 p 09 10 11
-> =A0x =A0x =A0x =A0x =A0 =A012 13 14 =A0p =A0 =A012 13 14 =A0p =A0 =A0=
-12 13 14 =A0p =A0 =A012 13 14 =A0p
-> =A0x =A0x =A0x =A0x =A0 =A015 16 =A0p 17 =A0 =A015 16 =A0p 17 =A0 =A0=
-15 16 =A0p 17 =A0 =A015 16 =A0p 17
-> 12 13 =A0p =A0x =A0 =A0 x =A0x =A0x =A0x =A0 =A018 =A0p 19 20 =A0 =A0=
-18 =A0p 19 20 =A0 =A018 =A0p 19 20
-> 14 =A0p 15 =A0x =A0 =A0 x =A0x =A0x =A0x =A0 =A0 p 21 22 23 =A0 =A0 p=
- 21 22 23 =A0 =A0 p 21 22 23
-> =A0p 16 17 =A0x =A0 =A0 x =A0x =A0x =A0x =A0 =A024 25 26 =A0p =A0 =A0=
-24 25 26 =A0p =A0 =A024 25 26 =A0p
-> 18 19 =A0p =A0x =A0 =A018 19 =A0p =A0x =A0 =A0 x =A0x =A0x =A0x =A0 =A0=
-27 28 =A0p 29 =A0 =A027 28 =A0p 29
-> 20 =A0p 21 =A0x =A0 =A020 =A0p 21 =A0x =A0 =A0 x =A0x =A0x =A0x =A0 =A0=
-30 =A0p 31 32 =A0 =A030 =A0p 31 32
-> =A0p 22 23 =A0x =A0 =A0 p 22 23 =A0x =A0 =A0 x =A0x =A0x =A0x =A0 =A0=
- p 33 34 35 =A0 =A0 p 33 34 35
-> 24 25 =A0p =A0x =A0 =A024 25 =A0p =A0x =A0 =A0 x =A0x =A0x =A0x =A0 =A0=
-36 37 38 =A0p =A0 =A036 37 38 =A0p
-> 26 =A0p 27 =A0x =A0 =A026 =A0p 27 =A0x =A0 =A026 =A0p 27 =A0x =A0 =A0=
- x =A0x =A0x =A0x =A0 =A039 40 =A0p 41
-> =A0p 28 29 =A0x =A0 =A0 p 28 29 =A0x =A0 =A0 p 28 29 =A0x =A0 =A0 x =A0=
-x =A0x =A0x =A0 =A042 =A0p 43 44
+>> I use "assume clean" on the fresh create, as there is no reason to
+>> sync the new drives.
+>>
+>> My "fio" test uses O_DIRECT with 64 threads, each with a queue depth
+>> of 64, running for 10 minutes. =A0All caching is disabled, and the N=
+OOP
+>> scheduler is being used. =A0I run this test all the time, and can't
+>> imagine why it's getting such repeatably good write performance.
+>>
+>> Any ideas?
+>>
+>> Thanks,
+>>
+>> Chris
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>>
 >
 >
-> In Step 0 and Step 1 the source and destination stripes overlap so a
-> backup is required. But at Step 2 you have a full stripe to work with
-> safely, at Step 4 2 stripes are save, Step 6 3 stripes and Step 7 4
-> stripes. As you go the safe region gets larger and larger requiring
-> less and less sync points.
 >
-> Idealy the raid reshape should read as much data from the source
-> stripes as possible in one go and then write it all out in one
-> go. Then rince and repeat. For a simple implementation why not do
-> this:
+> --
+> -- Sujit K M
 >
-> 1) read reshape-sync-size from proc/sys, default to 10% ram size
-> 2) sync-size =3D min(reshape-sync-size, size of safe region)
-> 3) setup internal mirror between old (read-write) and new stripes (wr=
-ite only)
-> 4) read source blocks into stripe cache
-> 5) compute new parity
-> 6) put stripe into write cache
-> 7) goto 3 until sync-size is reached
-> 8) sync blocks to disk
-> 9) record progress and remove internal mirror
-> 10) goto 1
+> blog(http://kmsujit.blogspot.com/)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
 >
-> Optionally in 9 you can skip recording the progress if the safe regio=
-n
-> is big enough for another read/write pass.
->
-> The important idea behind this would be that, given enough free ram,
-> there is a large linear read and large linear write alternating. Also=
-,
-> since the normal cache is used instead of the static stripe cache, if
-> there is not enough ram then writes will be flushed out prematurely.
-> This will lead to a degradation of performance but that is better tha=
-n
-> running out of memory.
->
-> I have 4GB on my desktop with at least 3GB free if I'm not doing
-> anything expensive. A raid-reshape should be able to do 3GB linear
-> read and write alternatively. But I would already be happy if it woul=
-d
-> do 256MB. There is lots of opportunity for streaming. It might justbe
-> hard to get the kernel IO system to cooperate.
->
-> MfG
-> =A0 =A0 =A0 =A0Goswin
->
-
-Skimming your message I agree with the major points, however you're
-only considering the best case scenario (which is how it probably
-should run for performance).  There is also the worst-case scenario
-where a device, driver, OS, or even power (supply lets say) fails in
-mid-operation.
-
-If there isn't a gap created due to the reshape (obviously it would
-continue to grow the more the reshape proceeds) then it's still an 'in
-place' operation (which I argue should be done in the largest block
-possible within memory, but with data backed up on a device).
-
-Growing operations obviously have free space on the new device, and
-further as the operation proceeds there will be a growing gap between
-the re-written data and the old copy of the data.
-
-Shrinking operations, counter-intuitively, also have a growing area of
-free space; at the end of the device.  Working backwards, after a
-given number of stripes, the operation should be just as safe, if in
-reverse, as a normal grow.
-
-In any of the three cases, the largest possible write window per
-device should be used to take advantage of the usual gains in speed.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
