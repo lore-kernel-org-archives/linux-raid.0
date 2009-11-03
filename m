@@ -1,43 +1,74 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Re: Ext3 sequential read performance drop 2.6.29 ->
-	2.6.30,2.6.31,...
-Date: Tue, 3 Nov 2009 05:06:45 -0500
-Message-ID: <20091103100645.GA13118@infradead.org>
-References: <20091013120955.6bd5844b@smartjog.com>
-	<20091102135554.b10ece3e.akpm@linux-foundation.org>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Beolach <beolach@gmail.com>
+Subject: Re: mdadm --detail showing annoying device
+Date: Tue, 3 Nov 2009 03:09:56 -0700
+Message-ID: <aebf5d970911030209l4a99c4f3xd0c4618dbcb5e41@mail.gmail.com>
+References: <alpine.DEB.2.00.0910171825270.16781@p34.internal.lan>
+	<alpine.DEB.2.00.0910190431180.23395@p34.internal.lan> <20091020003358.GW9464@discord.disaster>
+	<alpine.DEB.2.00.0910200431290.21878@p34.internal.lan> <alpine.DEB.2.00.0910210618210.10288@p34.internal.lan>
+	<4ADF17EC.6090606@forumdesimages.fr> <19167.33065.766493.889406@notabene.brown>
+	<4AE0408C.3090500@forumdesimages.fr> <19177.3970.674526.401872@notabene.brown>
+	<4AEFF9EB.2050502@forumdesimages.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <20091102135554.b10ece3e.akpm@linux-foundation.org>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: device-mapper development <dm-devel@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, Laurent CORBES <laurent.corbes@smartjog.com>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4AEFF9EB.2050502@forumdesimages.fr>
+Sender: linux-raid-owner@vger.kernel.org
+To: Stephane Bunel <stephane.bunel@forumdesimages.fr>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Nov 02, 2009 at 01:55:54PM -0800, Andrew Morton wrote:
-> On Tue, 13 Oct 2009 12:09:55 +0200
-> Laurent CORBES <laurent.corbes@smartjog.com> wrote:
-> 
-> > Hi all,
-> > 
-> > While benchmarking some systems I discover a big sequential read performance
-> > drop using ext3 on ~ big files. The drop seems to be introduced in 2.6.30. I'm
-> > testing with 2.6.28.6 -> 2.6.29.6 -> 2.6.30.4 -> 2.6.31.3.
-> 
-> Seems that large performance regressions aren't of interest to this
-> list :(
+On Tue, Nov 3, 2009 at 02:37, Stephane Bunel
+<stephane.bunel@forumdesimages.fr> wrote:
+> Neil Brown a =C3=A9crit :
+> (...)
+>
+>> On your system, /dev/char/21:0 is a block device (or a link to a blo=
+ck
+>> device) so there is clearly some sort of configuration error.
+>
+> All files in /dev/char are symlinks (see below). Rules are comming fr=
+om
+> Gentoo.
+>
+>> If you still cannot find it, maybe you could show us the change you
+>> made to udev.rules, and an 'ls -l' of '/dev/char'. =C2=A0That might =
+help
+>> shed some light on your situation.
+>
+> Considering mdadm is only involved by "real" block device file, why n=
+ot just
+> skipping symlink ?
+>
+> =C2=A0o Udev rules used to rename /dev/sd[ab]:
+>
+> #cat 65-persistent-block.rules
+> ENV{PHYSDEVPATH}=3D=3D"/devices/pci0000:00/0000:00:1f.2/host0/target0=
+:0:0/0:0:0:0",
+> NAME=3D"raid_disk0"
+>
+> ENV{PHYSDEVPATH}=3D=3D"/devices/pci0000:00/0000:00:1f.2/host1/target1=
+:0:0/1:0:0:0",
+> NAME=3D"raid_disk1"
+>
 
-No sure which list you mean, but dm-devel is for dm, not md.  We're also
-seeing similarly massive performance drops with md and ext3/xfs as
-already reported on the list.  Someone tracked it down to writeback
-changes as usual, but there it got stuck.
+Try prepending SUBSYSTEM=3D=3D"block" to those, so they they'll only ma=
+tch
+the (block) sd* devices, and not the (char) sg? devices:
+SUBSYSTEM=3D=3D"block",
+ENV{PHYSDEVPATH}=3D=3D"/devices/pci0000:00/0000:00:1f.2/host0/target0:0=
+:0/0:0:0:0",
+NAME=3D"raid_disk0"
+SUBSYSTEM=3D=3D"block",
+ENV{PHYSDEVPATH}=3D=3D"/devices/pci0000:00/0000:00:1f.2/host1/target1:0=
+:0/1:0:0:0",
+NAME=3D"raid_disk1"
+
+
+Good luck,
+Conway S. Smith
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
