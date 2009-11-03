@@ -1,39 +1,43 @@
-From: Gabor Gombas <gombasg@sztaki.hu>
-Subject: Re: Random MD Raid resyncs?
-Date: Tue, 3 Nov 2009 11:05:28 +0100
-Message-ID: <20091103100528.GG24791@boogie.lpds.sztaki.hu>
-References: <f1ef83020911020655kf8935c5icf9aea31edb03c57@mail.gmail.com>
- <f1ef83020911020657w1494e31ao716203f9fb9f0d8f@mail.gmail.com>
- <155cc2abd59adbec8b109a0602d7431d.squirrel@neil.brown.name>
- <f1ef83020911021540i4094fa1dqc87a6ff0b5b675f0@mail.gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Re: Ext3 sequential read performance drop 2.6.29 ->
+	2.6.30,2.6.31,...
+Date: Tue, 3 Nov 2009 05:06:45 -0500
+Message-ID: <20091103100645.GA13118@infradead.org>
+References: <20091013120955.6bd5844b@smartjog.com>
+	<20091102135554.b10ece3e.akpm@linux-foundation.org>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <dm-devel-bounces@redhat.com>
 Content-Disposition: inline
-In-Reply-To: <f1ef83020911021540i4094fa1dqc87a6ff0b5b675f0@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jesse Wheeler <jwwstpete@gmail.com>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+In-Reply-To: <20091102135554.b10ece3e.akpm@linux-foundation.org>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: device-mapper development <dm-devel@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-raid@vger.kernel.org, Laurent CORBES <laurent.corbes@smartjog.com>, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Nov 02, 2009 at 06:40:59PM -0500, Jesse Wheeler wrote:
+On Mon, Nov 02, 2009 at 01:55:54PM -0800, Andrew Morton wrote:
+> On Tue, 13 Oct 2009 12:09:55 +0200
+> Laurent CORBES <laurent.corbes@smartjog.com> wrote:
+> 
+> > Hi all,
+> > 
+> > While benchmarking some systems I discover a big sequential read performance
+> > drop using ext3 on ~ big files. The drop seems to be introduced in 2.6.30. I'm
+> > testing with 2.6.28.6 -> 2.6.29.6 -> 2.6.30.4 -> 2.6.31.3.
+> 
+> Seems that large performance regressions aren't of interest to this
+> list :(
 
-> AFAIK, any of the RAID devices are not mounted 'auto-read-only' by the
-> kernel.  I'll double check /etc/fstab, /var/log/messages, and
-> /var/log/dmesg when I get back to the site.  Unless there was a change
-> by the upstream vendor, I wouldn't mount a production filesystem in
-> that manner.  Of course, I've been surprised before!
-
-auto-read-only is an internal state of the RAID array, it has nothing to
-do with file systems. So you probably won't find anything in the
-locations you mention above; auto-read-only is only displayed in
-/proc/mdstat. Look at the mdadm man page and read the sections "Auto
-Assembly" and "INCREMENTAL MODE".
-
-Gabor
-
--- 
-     ---------------------------------------------------------
-     MTA SZTAKI Computer and Automation Research Institute
-                Hungarian Academy of Sciences
-     ---------------------------------------------------------
+No sure which list you mean, but dm-devel is for dm, not md.  We're also
+seeing similarly massive performance drops with md and ext3/xfs as
+already reported on the list.  Someone tracked it down to writeback
+changes as usual, but there it got stuck.
