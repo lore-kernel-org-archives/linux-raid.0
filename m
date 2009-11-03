@@ -1,91 +1,170 @@
-From: Jesse Wheeler <jwwstpete@gmail.com>
-Subject: Re: system update killed /boot RAID-1 array auto-assembly/mount. why?
-Date: Mon, 2 Nov 2009 20:06:58 -0500
-Message-ID: <f1ef83020911021706v60cd2022rfbb2157303ddcea3@mail.gmail.com>
-References: <babafd2f0911021224w6adf8453we7ba4f166102044f@mail.gmail.com>
-	 <f1ef83020911021325uf1be098ia4567931771f88ae@mail.gmail.com>
-	 <babafd2f0911021433j340add0bu5dae2c388efadfd6@mail.gmail.com>
-	 <f1ef83020911021536p725c33c2raa995b71d130270c@mail.gmail.com>
-	 <babafd2f0911021609k752e0c5er63daca8f719ce49f@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: MD write performance issue - found Catalyst patches
+Date: Tue, 3 Nov 2009 15:58:34 +1100
+Message-ID: <19183.47226.529417.743975@notabene.brown>
+References: <66781b10910180300j2006a4b7q21444bb27dd9434e@mail.gmail.com>
+	<19177.14609.138378.581065@notabene.brown>
+	<4AE94D95.4060303@shiftmail.org>
+	<66781b10910310351x7bb721c4mfba765fe9789cd7b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <babafd2f0911021609k752e0c5er63daca8f719ce49f@mail.gmail.com>
+In-Reply-To: message from mark delfman on Saturday October 31
 Sender: linux-raid-owner@vger.kernel.org
-To: Ben DJ <bendj095124367913213465@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: mark delfman <markdelfman@googlemail.com>
+Cc: Asdo <asdo@shiftmail.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Understood.  I wish you luck!
-
-On Mon, Nov 2, 2009 at 7:09 PM, Ben DJ
-<bendj095124367913213465@gmail.com> wrote:
-> Jesse,
->
-> On Mon, Nov 2, 2009 at 3:36 PM, Jesse Wheeler <jwwstpete@gmail.com> w=
-rote:
->> Please keep in mind that OpenSuSE is Novell's
->> equivalent of Red Hat's Fedora -- a proving ground/sandbox with some
->> form of additional public QA before it makes it into their mainline
->> Enterprise kernel. =A0I would shy away from anything that hasn't gon=
-e
->> through a formal QA process before putting it into production use.
->
-> This box is a model for a next-gen 'production desktop' use around
-> here. =A0Typical users are a bit 'past middle' between Office Staff &
-> Kernel Hackers. =A0We're sticking with opensuse, as SLE* & Redhat/Cen=
-tos
-> seem generally too far behind a reasonable 'edge'. I know that there
-> will be issues; Compromises required.
->
-> But that's a different discussion.
->
-> I just need to get these 'mysterious' behaviors under control; or, at
-> least the causes understood.
->
-> BenDJ
->
+On Saturday October 31, markdelfman@googlemail.com wrote:
+> 
+> I am hopeful that you or another member of this group could offer some
+> advice / patch to implement the print options you suggested... if so i
+> would happily allocated resource and time to do what i can to help
+> with this.
 
 
+I've spent a little while exploring this.
+It appears to very definitely be an XFS problem, interacting in
+interesting ways with the VM.
 
---=20
-Jesse W. Wheeler
-mailto: jwwstpete@gmail.com
-Charlotte, North Carolina - U.S.A.
+I built a 4-drive raid6 and did some simple testing on 2.6.28.5 and
+2.6.28.6 using each of xfs and ext2.
 
-=3D=3D
-"I'm a white male, age 18 to 49. Everyone listens to me, no matter how
-dumb my suggestions are." --Homer Simpson
+ext2 gives write throughput of 65MB/sec on .5 and 66MB/sec on .6
+xfs gives 86MB/sec on .5 and only 51MB/sec on .6
 
-"I really don't understand how bipartisanship is ever going to work
-when one of the parties is insane."-- John Cole
 
-"I defy the tyranny of precedent. I cannot afford the luxury of a
-closed mind. I go for anything new that might improve the past." --
-Clara Barton
+When write_cache_pages is called it calls 'writepage' some number of
+times.  On ext2, writepage will write at most one page.
+On xfs writepage will sometimes write multiple pages.
 
-"Any dictator would admire the uniformity and obedience of the U.S.
-media." -- Noam Chomsky
+I created a patch as below that prints (in a fairly cryptic way)
+the number of 'writepage' calls and the number of pages that XFS
+actually wrote.
 
-"We are called to speak for the weak, for the voiceless, for victims
-of our nation and for those it calls enemy...". -- Martin Luther King,
-"Beyond Vietnam"
+For ext2, the number of writepage calls is at most 1536 and averages
+around 140
 
-"Be yourself; everyone else is already taken." - Oscar Wilde
+For xfs with .5, there is usually only one call to writepage and it
+writes around 800 pages.
+For .6 there are about 200 calls to writepages but the achieve
+an average of about 700 pages together.
 
-* My Other Car is a Health Insurance Payment
-* My Car Has Better Insurance Than I Do
-* My Death Panel is an HMO
-* Underinsured Baby on Board
-* WWJD:   Who Would Jesus Deny? (Healthcare Reform Now!)
+So as you can see, there is very different behaviour.
 
-"Quitbull with Lipstick: She's a gift that keeps on giving; an
-Everlasting Gobstopper of fail." -- SilentBrook on DKos talking about
-Palin
-=3D=3D
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I notice a more recent patch in XFS in mainline which looks like a
+dirty hack to try to address this problem.
+
+I suggest you try that patch and/or take this to the XFS developers.
+
+NeilBrown
+
+
+
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 08d2b96..aa4bccc 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -875,6 +875,8 @@ int write_cache_pages(struct address_space *mapping,
+ 	int cycled;
+ 	int range_whole = 0;
+ 	long nr_to_write = wbc->nr_to_write;
++	long hidden_writes = 0;
++	long clear_writes = 0;
+ 
+ 	if (wbc->nonblocking && bdi_write_congested(bdi)) {
+ 		wbc->encountered_congestion = 1;
+@@ -961,7 +963,11 @@ continue_unlock:
+ 			if (!clear_page_dirty_for_io(page))
+ 				goto continue_unlock;
+ 
++			{ int orig_nr_to_write = wbc->nr_to_write;
+ 			ret = (*writepage)(page, wbc, data);
++			hidden_writes += orig_nr_to_write - wbc->nr_to_write;
++			clear_writes ++;
++			}
+ 			if (unlikely(ret)) {
+ 				if (ret == AOP_WRITEPAGE_ACTIVATE) {
+ 					unlock_page(page);
+@@ -1008,12 +1014,37 @@ continue_unlock:
+ 		end = writeback_index - 1;
+ 		goto retry;
+ 	}
++
+ 	if (!wbc->no_nrwrite_index_update) {
+ 		if (wbc->range_cyclic || (range_whole && nr_to_write > 0))
+ 			mapping->writeback_index = done_index;
+ 		wbc->nr_to_write = nr_to_write;
+ 	}
+ 
++	{ static int sum, cnt, max;
++	static unsigned long previous;
++	static int sum2, max2;
++	
++	sum += clear_writes;
++	cnt += 1;
++
++	if (max < clear_writes) max = clear_writes;
++
++	sum2 += hidden_writes;
++	if (max2 < hidden_writes) max2 = hidden_writes;
++
++	if (cnt > 100 && time_after(jiffies, previous + 10*HZ)) {
++		printk("write_page_cache: sum=%d cnt=%d max=%d mean=%d sum2=%d max2=%d mean2=%d\n",
++		       sum, cnt, max, sum/cnt,
++		       sum2, max2, sum2/cnt);
++		sum = 0;
++		cnt = 0;
++		max = 0;
++		max2 = 0;
++		sum2 = 0;
++		previous = jiffies;
++	}
++	}
+ 	return ret;
+ }
+ EXPORT_SYMBOL(write_cache_pages);
+
+
+------------------------------------------------------
+From c8a4051c3731b6db224482218cfd535ab9393ff8 Mon Sep 17 00:00:00 2001
+From: Eric Sandeen <sandeen@sandeen.net>
+Date: Fri, 31 Jul 2009 00:02:17 -0500
+Subject: [PATCH] xfs: bump up nr_to_write in xfs_vm_writepage
+
+VM calculation for nr_to_write seems off.  Bump it way
+up, this gets simple streaming writes zippy again.
+To be reviewed again after Jens' writeback changes.
+
+Signed-off-by: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+Cc: Chris Mason <chris.mason@oracle.com>
+Reviewed-by: Felix Blyakher <felixb@sgi.com>
+Signed-off-by: Felix Blyakher <felixb@sgi.com>
+---
+ fs/xfs/linux-2.6/xfs_aops.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
+index 7ec89fc..aecf251 100644
+--- a/fs/xfs/linux-2.6/xfs_aops.c
++++ b/fs/xfs/linux-2.6/xfs_aops.c
+@@ -1268,6 +1268,14 @@ xfs_vm_writepage(
+ 	if (!page_has_buffers(page))
+ 		create_empty_buffers(page, 1 << inode->i_blkbits, 0);
+ 
++
++	/*
++	 *  VM calculation for nr_to_write seems off.  Bump it way
++	 *  up, this gets simple streaming writes zippy again.
++	 *  To be reviewed again after Jens' writeback changes.
++	 */
++	wbc->nr_to_write *= 4;
++
+ 	/*
+ 	 * Convert delayed allocate, unwritten or unmapped space
+ 	 * to real space and flush out to disk.
+-- 
+1.6.4.3
+
