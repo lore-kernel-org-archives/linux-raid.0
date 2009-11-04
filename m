@@ -1,63 +1,54 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Successful RAID 6 setup
-Date: Wed, 4 Nov 2009 12:40:44 -0600
-Message-ID: <20091104184049356.ZIDJ2725@cdptpa-omta04.mail.rr.com>
-References: <4AF1C20C.4090902@gmail.com>
+From: jim owens <jowens@hp.com>
+Subject: Re: MD performance options: More =?windows-1252?Q?CPU=92s_or_?=
+ =?windows-1252?Q?more_Hz=92s=3F?=
+Date: Wed, 04 Nov 2009 14:09:43 -0500
+Message-ID: <4AF1D177.6020200@hp.com>
+References: <66781b10911040149q165edf1s94a86f179f9af9fc@mail.gmail.com>	 <4AF18A39.6010404@tmr.com>	 <66781b10911040634mcdc3c70jec3410c09003fb6c@mail.gmail.com>	 <4AF1A0B8.2080807@hp.com> <4AF1A1B4.2030405@hp.com>	 <4AF1A446.700@hp.com> <66781b10911040926i20ebdc5x27fa113562705890@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AF1C20C.4090902@gmail.com>
+In-Reply-To: <66781b10911040926i20ebdc5x27fa113562705890@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: mark delfman <markdelfman@googlemail.com>
+Cc: Bill Davidsen <davidsen@tmr.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> I will preface this by saying I only need about 100MB/s out of my array
-> because I access it via a gigabit crossover cable.
+mark delfman wrote:
+> I think this is a great point... i had not thought of the extra two
+> chunks of data being written... BUT, not sure if in this case it is
+> the limiter as we are using 12 drives.
 
-	That's certainly within the capabilities of a good setup.
+Disclaimer... I'm a filesystem guy not a raid guy, so someone
+who is may say I'm completely wrong.
 
-> I am backing up all of my information right now (~4TB) with the
-> intention of re-creating this array with a larger chunk size and
-> possibly tweaking the file system a little bit.
-> 
-> My original array was a raid6 of 9 WD caviar black drives, the chunk
-> size was 64k. I use USAS-AOC-L8i controllers to address all of my drives
-> and the TLER setting on the drives is enabled for 7 seconds.
+IMO 12 drives actually makes raid6 performance much worst.
 
-	I would recommend a larger chunk size.  I'm using 256K, and even
-512K or 1024K probably would not be excessive.
+Think it through, raid0 writes are substripe granularity,
+raid6 must either write all 12 (10 data, 2 check) stripes
+at once or if you write 1 stripe, read 9 data stripes to
+build and write the 2 check stripes.
 
-> storrgie@ALEXANDRIA:~$ sudo mdadm -D /dev/md0
-> /dev/md0:
->         Version : 00.90
+The problem is even if you have a good application sending
+writes in the 10-stripe-length-multiples of the set, the
+kernel layers may chunk it and deliver it to md in smaller
+random sizes.
 
-	I definitely recommend something other than 0.9, especially if this
-array is to grow a lot.
+Unless it is a single stream writing and md buffers the
+whole stripe set, writes will cause md reads.
 
-> I have noticed slow rebuilding time when I first created the array and
-> intermittent lockups while writing large data sets.
+And you will never have a single stream from a filesystem
+because metadata will be updated at some point.  You can
+minimize that by only doing overwrites.  Allocating writes
+are terrible in all filesystems because a lot of metadata
+has to be modified.  Metadata writes are also a performance
+killer because they are small (usually under 1 stripe) and
+always cause seeks.
 
-	Lock-ups are not good.  Investigate your kernel log.  A write-intent
-bitmap is recommended to reduce rebuild time.
+> the hardware does bottleneck at around 1.6GBs for writes (reaches this
+> with 8 / 9 drives).
 
-> Is ext4 the ideal file system for my purposes?
+So compare at 8 drives using raw writes of 6-stripe-lengths
+where raid0 uses a 4 transfers for each 3 raid6 transfers.
 
-	I'm using xfs.  YMMV.
-
-> Should I be investigating into the file system stripe size and chunk
-> size or let mkfs choose these for me? If I need to, please be kind to
-> point me in a good direction as I am new to this lower level file system
-> stuff.
-
-	I don/'t know specifically about ext4, but xfs did a fine job of
-assigning stripe and chunk size.
-
-> Can I change the properties of my file system in place (ext4 or other)
-> so that I can tweak the stripe size when I add more drives and grow the
-> array?
-
-	One can with xfs.  I expect ext4 may be the same.
-
-
+jim
