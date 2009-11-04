@@ -1,32 +1,79 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Migrating RAID 1 volumes to Dual ported disks.
-Date: Tue, 03 Nov 2009 20:32:15 +0100
-Message-ID: <87r5sf4d6o.fsf@frosties.localdomain>
-References: <ABFC24E4C13D81489F7F624E14891C865AA4C65E@uk-ex-mbx1.terastack.bluearc.com>
+From: Michael Evans <mjevans1983@gmail.com>
+Subject: Re: Unbelievably _good_ write performance: RHEL5.4 mirror
+Date: Tue, 3 Nov 2009 16:11:44 -0800
+Message-ID: <4877c76c0911031611h3572851avaed9870795db3d92@mail.gmail.com>
+References: <f3177b9e0911021028t1fea4ad2lb4cf87059d300a0c@mail.gmail.com>
+	 <921ca19c0911030437s4ba6b2d9l24fe4d2c83029e9b@mail.gmail.com>
+	 <4877c76c0911030831q2ca99007lf3b9068de6be48b@mail.gmail.com>
+	 <f3177b9e0911031129g2e0026f6s65275b8f684438f4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ABFC24E4C13D81489F7F624E14891C865AA4C65E@uk-ex-mbx1.terastack.bluearc.com>
-	(Simon Jackson's message of "Tue, 3 Nov 2009 16:01:54 +0000")
+In-Reply-To: <f3177b9e0911031129g2e0026f6s65275b8f684438f4@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Simon Jackson <sjackson@bluearc.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Chris Worley <worleys@gmail.com>
+Cc: Sujit K M <sjt.kar@gmail.com>, linuxraid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Simon Jackson <sjackson@bluearc.com> writes:
+On Tue, Nov 3, 2009 at 11:29 AM, Chris Worley <worleys@gmail.com> wrote=
+:
+> On Tue, Nov 3, 2009 at 9:31 AM, Michael Evans <mjevans1983@gmail.com>=
+ wrote:
+>> Is it possible the data-set you are testing with is too small? =A0Mo=
+dern
+>> drives have caches of around 32MB, your test might only be executing
+>> within the drive's caches.
+>
+> Cache is disabled on the drives, and disabled on the system by using
+> O_DIRECT on the benchmark. =A0I am seeing proper behavior using
+> synchronous writes, but that slows down performance too much.
+>
 
-> Hi.
->
-> I am currently using SATA drives in a RAID 1 configuration.  I am looking to use SAS drives instead of SATA.  As my first experiment I have plugged my SAS drive into a system and I have noticed that Linux sees the individual ports on the device as separate devices, so I have /dev/sdc and /dev/sdd which are both the same physical device.
->
-> So if I have a system with 2 SAS drives I am going to have 4 devices representing the two physical drives.  So my question is how do I create RAID 1 sets for partitions on these types of drive?  
->
-> My existing system carves 3 RAID 1 volumes from a pair of drives.  How do I translate this to the dual port SAS devices? 
->
-> Thanks Simon.
+I'm not familiar with O_DIRECT so I looked it up:
+http://www.kernel.org/doc/man-pages/online/pages/man2/open.2.html
 
-You would set up multipath to combine the two paths to the same disk
-as a single device and then run raid over that.
+It -appears- that O_DIRECT merely attempts to efficiently map
+transfers as full blocks/allocation units.  I see no mention, within
+the context of O_DIRECT of buffering or not (and presume it -is-
+buffered by default).
 
-MfG
-        Goswin
+This page provides additional detail:
+http://www.ukuug.org/events/linux2001/papers/html/AArcangeli-o_direct.h=
+tml
+
+It seems that O_DIRECT disables any kernel-side caches for operations,
+but does not modify any caching that might be performed by the
+underlying block devices.  O_DIRECT might not even be applicable with
+an MD/DM device.
+
+
+O_DIRECT (Since Linux 2.4.10)
+              Try to minimize cache effects of the I/O to and from
+this file.  In
+              general this will degrade performance, but it is useful i=
+n special
+              situations, such as when applications do their own
+caching.  File I/O
+              is done directly to/from user space buffers.  The
+O_DIRECT flag on its
+              own makes at an effort to transfer data synchronously,
+but does not
+              give the guarantees of the O_SYNC that data and
+necessary metadata are
+              transferred.  To guarantee synchronous I/O the O_SYNC
+must be used in
+              addition to O_DIRECT.  See NOTES below for further discus=
+sion.
+
+              A semantically similar (but deprecated) interface for
+block devices is
+              described in raw(8).
+
+As that quote from the manual states, to get the effect you desire you
+must use -both- O_DIRECT and O_SYNC.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
