@@ -1,86 +1,72 @@
-From: James Lee <james.lee@cantab.net>
-Subject: Slow raid5 grow performance, with iostat showing unexpected behavior
-Date: Wed, 4 Nov 2009 20:44:05 +0000
-Message-ID: <ef2613f30911041244h258de090sdc79612a08b38339@mail.gmail.com>
+From: mark delfman <markdelfman@googlemail.com>
+Subject: Re: MD write performance issue - found Catalyst patches
+Date: Wed, 4 Nov 2009 22:08:06 +0000
+Message-ID: <66781b10911041408ia450d18h7046fa2e0a8e18f8@mail.gmail.com>
+References: <66781b10910180300j2006a4b7q21444bb27dd9434e@mail.gmail.com>
+	 <19177.14609.138378.581065@notabene.brown>
+	 <4AE94D95.4060303@shiftmail.org>
+	 <66781b10910310351x7bb721c4mfba765fe9789cd7b@mail.gmail.com>
+	 <19183.47226.529417.743975@notabene.brown>
+	 <66781b10911030411y5bb32610lec72966f7cc09df@mail.gmail.com>
+	 <66781b10911040915t11a7f0c2td6a9ed5672935efb@mail.gmail.com>
+	 <4AF1D089.5080901@maine.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4AF1D089.5080901@maine.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Steve Cousins <steve.cousins@maine.edu>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all,
+Yes write cache is on the drives and the comparisons are all with the
+same hardware... apples for apples and no pears ;)
 
-I'm currently running a grow operation to add a third drive to a
-2-drive RAID5 array.  After increasing speed_limit_min and
-speed_limit_max, to large values, the reshape is progressing at a
-fairly constant 8 - 8.5 MB/s.  This isn't crazily slow, but I'd expect
-faster - I've had a bit of a dig and am seeing some unexpected
-behavior.
+Write is often faster (in my mind) simply because you can use a lot of
+write cache (in system)... whilst reads reads you are limited to what
+the drives can pull off.
 
-
-Here's what /proc/mdstat shows (md1 is the array being reshaped, sde2
-is the new device):
-
-james@james-server:~$ cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-[raid4] [raid10]
-md1 : active raid5 sde2[2] sdd2[0] sdf2[1]
-      419922944 blocks super 0.91 level 5, 64k chunk, algorithm 2 [3/3] [UUU]
-      [===>.................]  reshape = 18.5% (78052736/419922944)
-finish=688.5min speed=8272K/sec
-
-md0 : active raid5 sde1[3] sda1[0] sdg1[5] sdf1[4] sdd1[2] sdb1[1]
-      1562481280 blocks level 5, 64k chunk, algorithm 2 [6/6] [UUUUUU]
+I also guess that the FS's - mainly ext2 it seems is more effecient at
+implementing a read cache than a raw device, hence the slight
+performance increase.... but i just guessing to be honest
 
 
-I'd expect iostat to show reads and writes for sdd2 and sdf2, and
-writes for sde2, and not a lot else (the system is idle other than
-this reshape).  What it actually shows is:
-
-james@james-server:~$ iostat
-Linux 2.6.24-25-server (james-server)     11/04/2009
-
-avg-cpu:  %user   %nice %system %iowait  %steal   %idle
-           0.15    0.02    3.27    0.30    0.00   96.26
-
-Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrtn
-sda              12.91      7705.76         0.04  625173188       3224
-sdb              12.60      7705.81         0.03  625177270       2744
-md0               0.84         6.68         0.02     542154       1440
-sdc               0.56        11.55         4.94     937168     400472
-sdd              33.75     11604.87      1954.45  941509808  158565904
-sde              20.40         0.11      9658.00       9288  783558900
-sdf              32.18     11604.88      1954.46  941510562  158566272
-sdg              15.20      7705.83         0.03  625178358       2728
-md1               0.16         1.28         0.00     103608          0
-dm-0              0.99         7.92         0.02     642418       1440
 
 
-So we see what we'd expect for the three drives in the md1 array, but
-I also see reads on the drives in the md0 array (which isn't being
-reshaped, resynced, or read from).  That would presumably explain why
-the reshape is running more slowly than expected - assuming 7.8 MB/s
-is being read from each device in md0 (which includes partitions on
-the same drives as md1 devices) then sdd and sdf are going to be
-seeking like crazy reading data for the md0 array and the md1 array at
-the same time.  This is potentially also causing contention on the PCI
-bus.
-
-One thing which might be relevant is that I've got LVM on top of these
-arrays (each array is a PV, and the PVs form a single LV).  I'd have
-thought the reshape would have been transparent to LVM though.  Also
-I'd have thought that if something was genuinely trying to read data
-from md0, iostat would report reads on the array, which it doesn't.
-
-Any ideas?  How can I tell what's causing the reads to the devices in
-md0?  In case it's relevant, I'm running Ubuntu 8.04 with unmodified
-kernel and mdadm:
-
-james@james-server:~$ uname -r
-2.6.24-25-server
-james@james-server:~$ mdadm --version
-mdadm - v2.6.3 - 20th August 2007
-
-Thanks,
-James Lee
+On Wed, Nov 4, 2009 at 7:05 PM, Steve Cousins <steve.cousins@maine.edu>=
+ wrote:
+> mark delfman wrote:
+>>
+>> Some FS comparisons attached in pdf
+>>
+>> not sure what to make of them as yet, but worth posting
+>>
+>
+> I'm not sure either. Two things jump out.
+>
+> =A0 1. Why is raw RAID0 read performance slower than write performanc=
+e
+> =A0 2. Why is read performance with some file systems at or above raw=
+ read
+> performance?
+>
+> For number one, does this indicate that write caching is actually On =
+on the
+> drives?
+>
+> Are all tests truly apples-apples comparisons or were there other fac=
+tors in
+> there that aren't listed in the charts?
+>
+> I guess these issues might not have a lot to do with your main questi=
+on but
+> you might want to double-check the tests and numbers.
+>
+> Steve
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
