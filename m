@@ -1,59 +1,33 @@
 From: jim owens <jowens@hp.com>
 Subject: Re: MD performance options: More =?windows-1252?Q?CPU=92s_or_?=
  =?windows-1252?Q?more_Hz=92s=3F?=
-Date: Wed, 04 Nov 2009 10:45:56 -0500
-Message-ID: <4AF1A1B4.2030405@hp.com>
-References: <66781b10911040149q165edf1s94a86f179f9af9fc@mail.gmail.com>	 <4AF18A39.6010404@tmr.com> <66781b10911040634mcdc3c70jec3410c09003fb6c@mail.gmail.com> <4AF1A0B8.2080807@hp.com>
+Date: Wed, 04 Nov 2009 10:56:54 -0500
+Message-ID: <4AF1A446.700@hp.com>
+References: <66781b10911040149q165edf1s94a86f179f9af9fc@mail.gmail.com>	 <4AF18A39.6010404@tmr.com> <66781b10911040634mcdc3c70jec3410c09003fb6c@mail.gmail.com> <4AF1A0B8.2080807@hp.com> <4AF1A1B4.2030405@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AF1A0B8.2080807@hp.com>
+In-Reply-To: <4AF1A1B4.2030405@hp.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: mark delfman <markdelfman@googlemail.com>
 Cc: Bill Davidsen <davidsen@tmr.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 jim owens wrote:
-> mark delfman wrote:
->> Thank you Bill... maybe a silly question but doesn=92t the fact we c=
-an
->> achieve 1.6GBsec on MD RAID0 mean we have drive bandwidth available =
-to
->> MD to use?  To the block device (sas drives in this case) it does no=
-t
->> know if the data is been xor=92d or just striped, its just blocks of
->> data.  So wouldn=92t this mean that we know that MD RAID6 =91could=92
->> achieve up to 1.6GB if the software could send it out quicker?
->>
->> Hence my logic of =91deal with MD software aspects faster =3D faster=
- writes=92
->=20
-> Are your tests and assumptions valid... remember that raid6
-> will put 1.6GB of data on the drives for each 800MB of data
-> from the application in minimum 4 stripe mode (2 data stripes,
-> 1 P stripe, 1 Q stripe).
->=20
-> So the proper comparison of raid6 software overhead is to
-> run the same application writing a fixed large amount of data
-> to 4 drives at raid0 and the same 4 drives at raid6.
->=20
->   overhead =3D raid0_time * 2 - raid6_time;
+>> So the proper comparison of raid6 software overhead is to
+>> run the same application writing a fixed large amount of data
+>> to 4 drives at raid0 and the same 4 drives at raid6.
 
-UGH... wrote that backwards:
+Actually, it is probably better to run the application with
 
-overhead =3D raid6_time - raid0_time * 2;
+   2 X data to raid0 and 1 X data to raid6
 
-> Of course if you add more data stripes, the ratio of
-> user data to disk data gets better than 1/2.
->=20
-> jim
->=20
->=20
+so the amount of written disk data is the same.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+That way the comparison will remove the bus/disk difference
+caused by sending different amounts of data and:
+
+overhead = raid6_time - raid0_time;
+
+jim
