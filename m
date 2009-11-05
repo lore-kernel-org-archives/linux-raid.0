@@ -1,46 +1,49 @@
-From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: Doubt
-Date: Wed, 4 Nov 2009 23:42:14 -0800
-Message-ID: <4877c76c0911042342v7fcd67c4j120b2addf99eabba@mail.gmail.com>
-References: <d3540f4d0911042326o754d5f06qf958d8ab5b309e86@mail.gmail.com>
+From: KueiHuan Chen <kueihuan.chen@gmail.com>
+Subject: Data corruption after raid migration (raid5 to raid6 in 2.6.31 with
+	mdadm 3.1)
+Date: Thu, 5 Nov 2009 17:54:09 +0800
+Message-ID: <788014650911050154x1861b292i3ab221a9dec7adb0@mail.gmail.com>
+Reply-To: khchen@synology.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <d3540f4d0911042326o754d5f06qf958d8ab5b309e86@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Light King <thelightking@gmail.com>
+To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Your requirements are contradictory.  You want to span all your
-devices with a single storage system, but you do not want to use any
-devices for redundancy and expect the filing system on them to remain
-consistent should any of the devices fail.
+Dear Neil,
 
-That is simply impossible for file-systems, which is what block-device
-aggregation such as mdadm is designed to support.  Were you to loose
-any random device out of the four portions of the filesystem metadata
-as well as your actual data would be missing.  That may be tolerable
-for special cases (regularly sampled data, such as sensor outputs
-comes to mind, when you don't -require- the sensor data, but merely
-want to have it), however those cases are all application specific,
-not general solution.
+  I encounter a little problem when perform the raid5 to raid6
+migration. The result is data corruption if i stop the raid while
+reshape and then reassemble the raid. Here is the operation oder:
 
-One typical way a specific application might use four devices would be
-a round-robin method.  In this a list of currently online devices
-would be kept, then each cohesive unit would be stored to the next
-device in the list.  Should a device be added the list would grow,
-should a device fail (be removed) it would be taken out of the list.
+Environment : linux-2.6.31 . mdadm 3.1
 
-You have four choices then:
+=2E/mdadm -C /dev/md2 -R -amd -l5 -n4 /dev/sd[cdef]3 -z 1000000
+mkfs.ext3 /dev/md2
+mount /dev/md2 /volume1/
+cp /bin/* /volume1/
+=2E/mdadm /dev/md2 -a /dev/sdg3
+=2E/mdadm --grow --level=3D6 --layout=3Ddefault --backup-file=3D/root/b=
+ak2 /dev/md2
+umount /dev/md2
+=2E/mdadm -S /dev/md2  (Stop it before reshape end)
+=2E/mdadm -A /dev/md2 --backup-file=3D/root/bak2 /dev/sd[cdefg]3
+mount /dev/md2 /volume1=C2=A0 <--- This will cause an error that file
+system could not be mounted.
 
-1) What I described above
-2) A Raid 0 that gives you 100% storage, but all devices working or none.
-3) A Raid 1+0 or 10 (same idea different drivers) solution, you're
-already trying it and disliking it though.
-4) Raid 5; you spend more CPU but you use one of the devices for
-recovery data, so that you can tolerate a single failure.
-5) Technically you might also have raid 6; but I'm not counting it
-because you're already complaining about loosing 50% of your data and
-this has the addition of being slower (BUT surviving -literally- any 2
-devices, instead of any 1 device of the correct set.)
+  The interesting thing is if i don't stop the raid while reshape. The
+data will not corruption. Is it means the operations not permitted
+while the reshape process ?
+
+Thanks.
+
+Best Regards,
+KueiHuan-Chen
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
