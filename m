@@ -1,60 +1,51 @@
-From: Ben DJ <bendj095124367913213465@gmail.com>
-Subject: Re: Clarify /etc/mdadm.conf format and content?
-Date: Wed, 4 Nov 2009 23:21:54 -0800
-Message-ID: <babafd2f0911042321k4dfda707he80f40596fba2a3b@mail.gmail.com>
-References: <babafd2f0911042153y427d3194w520f2294f0ff7f53@mail.gmail.com>
-	<4877c76c0911042217r76d7e46cg4ceeb391e9098a6@mail.gmail.com>
+From: Light King <thelightking@gmail.com>
+Subject: Doubt
+Date: Thu, 5 Nov 2009 12:56:30 +0530
+Message-ID: <d3540f4d0911042326o754d5f06qf958d8ab5b309e86@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4877c76c0911042217r76d7e46cg4ceeb391e9098a6@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Evans <mjevans1983@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+i have four cf card and i have one pci based cf card
+contoller(addonics card with pata_sil6800 driver).when i am connecting
+this four cf card to addonics card(which has four slots for cf cards)
+and inserting this total hardware package to pci slot of pc in linux
+os it is showing four different block devices to me.So using mdadm
+2.6.3 software raid i am creating a raid device of level 0 . If one cf
+card from this hardware package getting failed the raid-device is
+becoming inactive .If i am trying to reactive the raid device using
+mdamd -R command it is giving a error of "memory cannot be allocated
+for the raid device " .The same thing i am trying with raid10 (our
+hardware only supports raid=A0 level 0 ,1,10) and if one cf card got
+failed we are abel to reactive the raid device.But=A0 the issue we are
+facing in raid10 is it is taking 50%(2-CF card out of 4) of total
+memory space as mirroring which is a loss for us .
 
-On Wed, Nov 4, 2009 at 10:17 PM, Michael Evans <mjevans1983@gmail.com> =
-wrote:
-> =A0 =A0 =A0 -U, --update=3Dhomehost
-> =A0 =A0 =A0 --auto-update-homehost
+So we dont want any kind of data recovery in our raid device (like
+raid0) but we want if one cf card failed also, the raid device should
+run or should reactive without any error(like raid10) but we should
+abel to use the total disk space (like raid0).
 
-The man pages suggest what to do when assembling/creating the array.
+or
 
-Since I've _got_ arrays already created, that are auto-assembled using
-the info IN mdadm.conf, I'm unclear as to how to change/correct the
-name=3D field.  Can you clarify?
-
-To my other question, http://man-wiki.net/index.php/8:mdadm#DEVICE_NAME=
-S says,
-
- The standard names for non-partitioned arrays  (the  only  sort  of  m=
-d
-      array available in 2.4 and earlier) either of
-
-             /dev/mdNN
-             /dev/md/NN
-
-      where  NN is a number.  The standard names for partitionable arra=
-ys (as
-      available from 2.6 onwards) is one of
-
-             /dev/md/dNN
-             /dev/md_dNN
+any idea to increase size of storage memory created by raid10 (50% is
+going waste due to mirroring and our hardware doesnot support raid5) .
 
 
-Since my arrays are each a single partition (the RAID-10 has LVMs on
-the single partition), I guess that the "either of"
 
-             /dev/mdNN
-             /dev/md/NN
+How we are simulating=A0 a cf card fail?
+answer: according to raid document=A0 "
+http://tldp.org/HOWTO/Software-RAID-HOWTO-6.html " if we switch of the
+system and remove a cf card ,it will simulate a disk failure .
 
-applies?  And, even if so, why do mdadm --examine & mdadm --detail use
-_different_ output formats?
+Please provid any help to me i will be kind of you.
+thanking you for your genuine support
 
-BenDJ
+ANSH
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
