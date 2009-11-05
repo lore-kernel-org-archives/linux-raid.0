@@ -1,23 +1,24 @@
-From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: Clarify /etc/mdadm.conf format and content?
-Date: Wed, 4 Nov 2009 23:31:20 -0800
-Message-ID: <4877c76c0911042331i15f53768s382512200f02c398@mail.gmail.com>
-References: <babafd2f0911042153y427d3194w520f2294f0ff7f53@mail.gmail.com>
-	 <4877c76c0911042217r76d7e46cg4ceeb391e9098a6@mail.gmail.com>
-	 <babafd2f0911042321k4dfda707he80f40596fba2a3b@mail.gmail.com>
+From: Iustin Pop <iusty@k1024.org>
+Subject: Re: Doubt
+Date: Thu, 5 Nov 2009 08:38:29 +0100
+Message-ID: <20091105073829.GA20678@teal.hq.k1024.org>
+References: <d3540f4d0911042326o754d5f06qf958d8ab5b309e86@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <babafd2f0911042321k4dfda707he80f40596fba2a3b@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <d3540f4d0911042326o754d5f06qf958d8ab5b309e86@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ben DJ <bendj095124367913213465@gmail.com>
+To: Light King <thelightking@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-To better cooperate with various initrd and recovery cd you should
-probably use a numeric only array name, as well as the /dev/mdX
-numbering scheme.
+On Thu, Nov 05, 2009 at 12:56:30PM +0530, Light King wrote:
+> So we dont want any kind of data recovery in our raid device (like
+> raid0) but we want if one cf card failed also, the raid device should
+> run or should reactive without any error(like raid10) but we should
+> abel to use the total disk space (like raid0).
 
-You should read the manuals more carefully, it is possible to update
-the name and/or homehost name for arrays DURING ASSEMBLY using the
-update option, hence my reference to the manual.
+Uh... you don't want to use any space for redundancy but you want redundancy??
+
+iustin
