@@ -1,43 +1,47 @@
-From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: Data corruption after raid migration (raid5 to raid6 in 2.6.31
-	with mdadm 3.1)
-Date: Thu, 5 Nov 2009 21:46:38 -0800
-Message-ID: <4877c76c0911052146w2b9b1362s7615925adb1763dc@mail.gmail.com>
-References: <788014650911050154x1861b292i3ab221a9dec7adb0@mail.gmail.com>
-	 <4877c76c0911050851y48da6e5did5d8fb39e8aad90b@mail.gmail.com>
-	 <788014650911051745v2f45cb09jbdaf0a8af26a4b24@mail.gmail.com>
+From: Neil Brown <nfbrown@novell.com>
+Subject: [ANNOUNCE] mdadm-3.1 has been withdrawn
+Date: Fri, 6 Nov 2009 17:45:40 +1100
+Message-ID: <19187.50708.551325.297625@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <788014650911051745v2f45cb09jbdaf0a8af26a4b24@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: khchen@synology.com
-Cc: neilb@suse.de, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Yeah, I did it the wrong way the first time and wound up with a raid-6
-array that expected one more drive than I had.  It would be a lot
-easier if I could have specified the target number of destination
-stripes and then also specified the number of parity stripes.
 
-I needed to reduce the added space back out, so that it could be added
-as a parity device instead of another data-device.
+Greetings.
 
-On Thu, Nov 5, 2009 at 5:45 PM, KueiHuan Chen <kueihuan.chen@gmail.com>=
- wrote:
-> Dear Michael,
->
-> =A0 Did you also reduce the raid disks ? That operation need 2.6.32 a=
-nd
-> later. Others such like level change is working at 2.6.31.
->
-> Thanks.
->
-> Best Regards,
-> KueiHuan-Chen
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ About a week ago I released mdadm-3.1
+ I have now 'withdrawn' it meaning that it doesn't appear on the
+ kernel.org mirrors any more, and I ask people not to use it.
+
+ The reason is that it is not as reliable at managing a raid[56]
+ reshape as I thought and it can corrupt data too easily.
+
+ In particular the 'backup' that is taken of the area being reshaped
+ gets restored to the wrong location when the array is stopped in the
+ middle of a reshape and reassembled.
+
+ If anyone has used mdadm-3.1 to reshape an array and has stopped and
+ restarted the array during that process (and I know some people have)
+ then it is very possible that some data in that filesystem has been
+ corrupted.  I would urge you do take whatever measures you can to
+ check for corruption.  An fsck at the very least would be advised.
+
+ The code in the devel-3.1 branch of my git tree
+ (git://neil.brown.name/mdadm) has this bug fixed as well as a number
+ of other improvements.  I will probably release it as 3.1.1 some time
+ next week.
+
+ Note that you need 2.6.32 for most of the reshape operations with the
+ new code.  This is because 2.6.31 does not handle a device failure
+ during reshape correctly and a subsequent crash can cause data to be
+ lost.  When the needed patches appear in a 2.6.31.y stable kernel. I
+ will adjust the requirement that mdadm imposes.
+
+ A big "thank you" to everyone who tested out this code and an even
+ bigger apology to anyone who has suffered data loss because of it.
+
+NeilBrown
