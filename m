@@ -1,33 +1,39 @@
-From: KueiHuan Chen <kueihuan.chen@gmail.com>
-Subject: Re: Data corruption after raid migration (raid5 to raid6 in 2.6.31
-	with mdadm 3.1)
-Date: Fri, 6 Nov 2009 09:45:12 +0800
-Message-ID: <788014650911051745v2f45cb09jbdaf0a8af26a4b24@mail.gmail.com>
-References: <788014650911050154x1861b292i3ab221a9dec7adb0@mail.gmail.com>
-	 <4877c76c0911050851y48da6e5did5d8fb39e8aad90b@mail.gmail.com>
-Reply-To: khchen@synology.com
+From: Neil Brown <nfbrown@novell.com>
+Subject: [PULL REQUEST] two more important md fixes for 2.6.32
+Date: Fri, 6 Nov 2009 15:05:06 +1100
+Message-ID: <19187.41074.873808.735683@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4877c76c0911050851y48da6e5did5d8fb39e8aad90b@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Evans <mjevans1983@gmail.com>
-Cc: neilb@suse.de, linux-raid@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, stable@kernel.org
 List-Id: linux-raid.ids
 
-Dear Michael,
 
-   Did you also reduce the raid disks ? That operation need 2.6.32 and
-later. Others such like level change is working at 2.6.31.
+Hi Linus,
+ please pull these two fixes.  They are needed for reliable
+RAID5->RAID6 reshape in a couple of less common scenarios (e.g. device
+failure during reshape).
+Both are suitable for 2.6.31.y stable too.
 
-Thanks.
-
-Best Regards,
-KueiHuan-Chen
+Thanks,
+NeilBrown
 
 
+The following changes since commit b6727b12dd2ffb4a890eb5b13a298230c29ba45d:
+  Linus Torvalds (1):
+        Merge git://git.kernel.org/.../gregkh/staging-2.6
 
-2009/11/6 Michael Evans <mjevans1983@gmail.com>:
-> My copy of mdadm 3.1 didn't want me to reshape to raid6 without using
-> linux-2.6.32 or later (I used the latest RC: 2.6.32-rc5-git5).
->
+are available in the git repository at:
+
+  git://neil.brown.name/md for-linus
+
+NeilBrown (2):
+      md: don't clear endpoint for resync when resync is interrupted.
+      md/raid5: make sure curr_sync_completes is uptodate when reshape starts
+
+ drivers/md/md.c    |    5 +++--
+ drivers/md/raid5.c |    2 ++
+ 2 files changed, 5 insertions(+), 2 deletions(-)
