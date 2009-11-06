@@ -1,30 +1,43 @@
-From: Neil Brown <nfbrown@novell.com>
-Subject: Re: MD write performance issue - found Catalyst patches
-Date: Fri, 6 Nov 2009 15:52:04 +1100
-Message-ID: <19187.43892.446870.865231@notabene.brown>
-References: <66781b10910180300j2006a4b7q21444bb27dd9434e@mail.gmail.com>
-	<19177.14609.138378.581065@notabene.brown>
-	<4AE94D95.4060303@shiftmail.org>
-	<66781b10910310351x7bb721c4mfba765fe9789cd7b@mail.gmail.com>
-	<19183.47226.529417.743975@notabene.brown>
-	<66781b10911030411y5bb32610lec72966f7cc09df@mail.gmail.com>
-	<66781b10911040915t11a7f0c2td6a9ed5672935efb@mail.gmail.com>
-	<4AF1B924.1060605@shiftmail.org>
-	<66781b10911050904m407d14d6t7d3bec12578d6500@mail.gmail.com>
-	<4AF322F6.3020802@shiftmail.org>
+From: Michael Evans <mjevans1983@gmail.com>
+Subject: Re: Data corruption after raid migration (raid5 to raid6 in 2.6.31
+	with mdadm 3.1)
+Date: Thu, 5 Nov 2009 21:46:38 -0800
+Message-ID: <4877c76c0911052146w2b9b1362s7615925adb1763dc@mail.gmail.com>
+References: <788014650911050154x1861b292i3ab221a9dec7adb0@mail.gmail.com>
+	 <4877c76c0911050851y48da6e5did5d8fb39e8aad90b@mail.gmail.com>
+	 <788014650911051745v2f45cb09jbdaf0a8af26a4b24@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Asdo on Thursday November 5
+In-Reply-To: <788014650911051745v2f45cb09jbdaf0a8af26a4b24@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>
-Cc: mark delfman <markdelfman@googlemail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: khchen@synology.com
+Cc: neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thursday November 5, asdo@shiftmail.org wrote:
-> incentive for upgrading (Neil, btw, is there any chance those lockups 
-> fixes get backported to mainstream 2.6.31.x?).
+Yeah, I did it the wrong way the first time and wound up with a raid-6
+array that expected one more drive than I had.  It would be a lot
+easier if I could have specified the target number of destination
+stripes and then also specified the number of parity stripes.
 
-That would be up to the XFS developers.  I suggest you consider asking
-them.
+I needed to reduce the added space back out, so that it could be added
+as a parity device instead of another data-device.
+
+On Thu, Nov 5, 2009 at 5:45 PM, KueiHuan Chen <kueihuan.chen@gmail.com>=
+ wrote:
+> Dear Michael,
+>
+> =A0 Did you also reduce the raid disks ? That operation need 2.6.32 a=
+nd
+> later. Others such like level change is working at 2.6.31.
+>
+> Thanks.
+>
+> Best Regards,
+> KueiHuan-Chen
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
