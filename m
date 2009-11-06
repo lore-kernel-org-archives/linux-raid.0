@@ -1,39 +1,58 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Is shrinking raid5 possible?
-Date: Fri, 06 Nov 2009 19:38:04 +0000
-Message-ID: <4AF47B1C.2010100@anonymous.org.uk>
-References: <44960C45.9050407@anu.edu.au>	<17558.10906.59066.196870@cse.unsw.edu.au> <449B3A80.4070602@tmr.com>	<17563.17224.85968.572754@cse.unsw.edu.au>	<bb145bd20606231116g7808e467w29a9bf273ba0df52@mail.gmail.com>	<17567.36792.303403.35943@cse.unsw.edu.au>	<bb145bd20606260433w2bafccfdu3448732f5b5c1c5f@mail.gmail.com>	<4564B5C3.9050501@idgmail.se> <20091106131740.GA30506@Toms.NET>	<4AF46BAF.3020900@anonymous.org.uk> <20091106183845.GB13412@Toms.NET> <87ljijqwn1.fsf@frosties.localdomain>
+From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
+Subject: Re: small mdadm issue under debian
+Date: Fri, 6 Nov 2009 14:18:56 -0700
+Message-ID: <200911061418.56978.tfjellstrom@shaw.ca>
+References: <200910290124.59090.tfjellstrom@shaw.ca> <19182.15837.879963.989788@notabene.brown>
+Reply-To: tfjellstrom@shaw.ca
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87ljijqwn1.fsf@frosties.localdomain>
+In-Reply-To: <19182.15837.879963.989788@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: Thomas Arthur Oehser <tom@toms.net>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 06/11/2009 19:30, Goswin von Brederlow wrote:
-> Thomas Arthur Oehser <tom@toms.net> writes:
->> On Fri, Nov 06, 2009 at 06:32:15PM +0000, John Robinson wrote:
-[...]
->>> Are you sure it hasn't already put a copy of the superblock in the right  
->>> place, within the <smaller> size, as well as leaving a copy at the end  
->>> of the original larger partition?
-[...]
->> Far as I can tell, no, because when I then shrink the partition, it can't
->> find the superblock.
+On Sun November 1 2009, you wrote:
+> On Thursday October 29, tfjellstrom@shaw.ca wrote:
+> > I've been trying to get mdadm to auto assemble my raid array for a
+> > while now, and as I'm trying to test which kernels give me back some
+> > performance (testing 2.6.26 right now), I find that with this kernel,
+> > its happily auto assembling my 1.1 versioned metadata array. 3.6.30
+> > does not, nor does .31 or .32 for that matter. Same version of mdadm,
+> > for some reason, when the mdadm-raid init script is run, it fails to
+> > assemble the raid array I've specified in mdadm.conf. And again, it
+> > automagically works with 2.6.26.
+> >
+> > color me confused.
 > 
-> And you would have to shrink it to exactly the right size to the block
-> so that the shrunk superblock ends up at the end of the resized
-> device. Something most people won't be able to do right.
+> Me too.
+> 
+> Can you run the "mdadm" command that fails by hand and have it still
+> fail?
+> If so, can you run it with "-v" and post the result.
+> Or maybe edit the script to add -v and see what it says.
 
-The thing is, I'm sure I've done it, and while I don't remember the 
-details, I don't think I had to either recreate the array nor drop and 
-re-add members. You're right though, getting the numbers right is the 
-tricky bit, because the filesystem's smaller than the md, which in turn 
-may be smaller than the partition, even when everything's "tight".
+I meant to get around to this, but it seems I had to "fast track" the 
+building of my new server, and it necessitated two new hard disks (raid0) 
+and a new debian install. And so far, it seems both the raid1 root, and 
+raid5 data arrays are properly building and mounting.
 
-Cheers,
+Sorry for the noise. If I see it again I'll try and figure it out.
 
-John.
+The only hint I might have is that it might have fixed itself when I added 
+raid5 to the initramfs modules file. Not sure though.
+
+> NeilBrown
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
+-- 
+Thomas Fjellstrom
+tfjellstrom@shaw.ca
