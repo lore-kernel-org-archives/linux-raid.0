@@ -1,84 +1,113 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Clarify /etc/mdadm.conf format and content?
-Date: Sat, 07 Nov 2009 12:06:40 -0500
-Message-ID: <4AF5A920.1020601@redhat.com>
-References: <babafd2f0911042153y427d3194w520f2294f0ff7f53@mail.gmail.com> 	<4877c76c0911042217r76d7e46cg4ceeb391e9098a6@mail.gmail.com> 	<babafd2f0911042321k4dfda707he80f40596fba2a3b@mail.gmail.com> 	<4877c76c0911042331i15f53768s382512200f02c398@mail.gmail.com> <babafd2f0911050824u327c2ca3y43ab557b52f9356@mail.gmail.com>
+Subject: Re: Successful RAID 6 setup
+Date: Sat, 07 Nov 2009 13:35:31 -0500
+Message-ID: <4AF5BDF3.8020907@redhat.com>
+References: <20091104184049356.ZIDJ2725@cdptpa-omta04.mail.rr.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
  protocol="application/pgp-signature";
- boundary="------------enigA4242D998DAFBD87D48F8EB5"
+ boundary="------------enigFB0EF021F80A5D3D5EC9BF78"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <babafd2f0911050824u327c2ca3y43ab557b52f9356@mail.gmail.com>
+In-Reply-To: <20091104184049356.ZIDJ2725@cdptpa-omta04.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ben DJ <bendj095124367913213465@gmail.com>
-Cc: Michael Evans <mjevans1983@gmail.com>, linux-raid@vger.kernel.org
+To: Leslie Rhorer <lrhorer@satx.rr.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigA4242D998DAFBD87D48F8EB5
+--------------enigFB0EF021F80A5D3D5EC9BF78
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On 11/05/2009 11:24 AM, Ben DJ wrote:
-> On Wed, Nov 4, 2009 at 11:31 PM, Michael Evans <mjevans1983@gmail.com> =
-wrote:
->> To better cooperate with various initrd and recovery cd you should
->> probably use a numeric only array name, as well as the /dev/mdX
->> numbering scheme.
+On 11/04/2009 01:40 PM, Leslie Rhorer wrote:
+>> I will preface this by saying I only need about 100MB/s out of my arra=
+y
+>> because I access it via a gigabit crossover cable.
 >=20
-> Ok.  That still doesn't address why different commands in mdadm
-> generate different numbering schemes.
+> 	That's certainly within the capabilities of a good setup.
+>=20
+>> I am backing up all of my information right now (~4TB) with the
+>> intention of re-creating this array with a larger chunk size and
+>> possibly tweaking the file system a little bit.
+>>
+>> My original array was a raid6 of 9 WD caviar black drives, the chunk
+>> size was 64k. I use USAS-AOC-L8i controllers to address all of my driv=
+es
+>> and the TLER setting on the drives is enabled for 7 seconds.
+>=20
+> 	I would recommend a larger chunk size.  I'm using 256K, and even
+> 512K or 1024K probably would not be excessive.
 
-The answer to that is technical implementation details.  Specifically,
-mdadm -D examines the actual raid array you pass in on the command line.
- Since the array is up and running, it knows *exactly* what you want the
-name to be because it's already using it.  For mdadm -E, it examines the
-superblock on the constituent device.  That superblock only has the name
-field to tell it what the device name is (and what it gets assembled as
-could be totally different if the mdadm.conf file spelled out that uuid
-as having another name).  So, it reports what the mdadm standard name
-would be if it were assembled without an mdadm.conf entry to tell it
-what it's supposed to be.
+OK, I've got some data that I'm not quite ready to send out yet, but it
+maps out the relationship between max_sectors_kb (largest request size a
+disk can process, which varies based upon scsi host adapter in question,
+but for SATA adapters is capped at and defaults to 512KB max per
+request) and chunk size for a raid0 array across 4 disks or 5 disks (I
+could run other array sizes too, and that's part of what I'm waiting on
+before sending the data out).  The point here being that a raid0 array
+will show up more of the md/lower layer block device interactions where
+as raid5/6 would muddy the waters with other stuff.  The results of the
+tests I ran were pretty conclusive that the sweet spot for chunk size is
+when chunk size is =3D=3D max_sectors_kb, and since SATA is the predomina=
+nt
+thing today and it defaults to 512K, that gives a 512K chunk as the
+sweet spot.  Given that the chunk size is generally about optimizing
+block device operations at the command/queue level, it should transfer
+directly to raid5/6 as well.
 
-> How do I change the name=3D spec'n?  Do I simply add something to
-> /etc/mdadm.conf and reboot?  Or do I need to init3, stop the LVM, stop
-> the array, assemble-with-update, change in mdadm.conf, then ,
-> re-mkinitrd?  Or, since mdadm.conf is ON root ON the arary do I need
-> to boot from a rescue disk, then complete all the steps?
+>> storrgie@ALEXANDRIA:~$ sudo mdadm -D /dev/md0
+>> /dev/md0:
+>>         Version : 00.90
+>=20
+> 	I definitely recommend something other than 0.9, especially if this
+> array is to grow a lot.
+>=20
+>> I have noticed slow rebuilding time when I first created the array and=
 
-When running mdadm -D or -E, the name it outputs is more informative
-than anything else.  If you save that output to mdadm.conf, then edit
-the ARRAY line to use another name, that name in the array line will
-trump the name produced by either mdadm -D or mdadm -E.  So, if you
-actually want to change the name of the array as it stands each time you
-boot up the machine, then you need to edit the mdadm.conf file to put
-the new name in, you need to edit the fstab file and change any
-references to the old name to the new name, you need to edit the
-grub.conf file (or if you have a different boot loader then the config
-file for whatever boot loader that it) and likewise change all
-references of the old name to the new name, and finally you will likely
-need to remake your initrd images so that they contain the updated
-mdadm.conf file and the updated name references.
+>> intermittent lockups while writing large data sets.
+>=20
+> 	Lock-ups are not good.  Investigate your kernel log.  A write-intent
+> bitmap is recommended to reduce rebuild time.
+>=20
+>> Is ext4 the ideal file system for my purposes?
+>=20
+> 	I'm using xfs.  YMMV.
+>=20
+>> Should I be investigating into the file system stripe size and chunk
+>> size or let mkfs choose these for me? If I need to, please be kind to
+>> point me in a good direction as I am new to this lower level file syst=
+em
+>> stuff.
+>=20
+> 	I don/'t know specifically about ext4, but xfs did a fine job of
+> assigning stripe and chunk size.
 
-Now, if you are talking about just changing the name of the array in the
-superblock, but leaving how it's referenced alone, then you can assemble
-the array with the --update=3Dname option and specify the new name.  As I=
+xfs pulls this out all on it's own, ext2/3/4 need to be told (and you
+need very recent ext utils to tell it both stripe and stride sizes).
 
-pointed out, this doesn't actually change what name the array gets
-created as.  The ARRAY line in mdadm.conf controls that.  However, be
-warned that if the ARRAY line in mdadm.conf references the old name,
-then now assembly will fail to work because you'll match the UUID of the
-array, but not the name, and mdadm will throw it out.  So, if the name=3D=
+>> Can I change the properties of my file system in place (ext4 or other)=
 
-option is in your mdadm.conf ARRAY line for the array, then changing the
-name of the array will require that you do everything I listed above to
-update the mdadm.conf file in your mkinitrds and such or else the system
-won't boot after you update the name in the superblock.  One last thing,
-if this is a / array, then since the only way to update the name is
-during assembly, you would have to boot the system from rescue CD and
-assemble the array by hand, or else modify the init script in an initrd
-image to do the update for you.  Neither of which is a necessarily easy
-task if you don't know what you are doing.
+>> so that I can tweak the stripe size when I add more drives and grow th=
+e
+>> array?
+>=20
+> 	One can with xfs.  I expect ext4 may be the same.
+
+Actually, this needs clarified somewhat.  You can tweak xfs in terms of
+the sunit and swidth settings.  This will effect new allocations *only*!
+ All of your existing data will still be wherever it was and if that
+happens to be not so well laid out for the new array, too bad.  For the
+ext filesystems, they use this information at filesystem creation time
+to lay out their block groups, inode tables, etc. in such a fashion that
+they are aligned to individual chunks and also so that they are *not*
+exactly stripe width apart from each other (which forces the metadata to
+reside on different disks and avoids the possible pathological case
+where you could accidentally end up with the metadata blocks always
+falling on the same disk in the array making that one disk a huge
+bottleneck to the rest of the array).  Once an ext filesystem is
+created, I don't think it uses the data much any longer, but I could be
+wrong.  However, I know that it won't be rearranged for your new layout,
+so you get what you get after you grow the fs.
 
 
 --=20
@@ -90,7 +119,7 @@ Infiniband specific RPMs available at
 	      http://people.redhat.com/dledford/Infiniband
 
 
---------------enigA4242D998DAFBD87D48F8EB5
+--------------enigFB0EF021F80A5D3D5EC9BF78
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: OpenPGP digital signature
 Content-Disposition: attachment; filename="signature.asc"
@@ -98,9 +127,9 @@ Content-Disposition: attachment; filename="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.9 (GNU/Linux)
 
-iEYEARECAAYFAkr1qSAACgkQg6WylM+/8ZSwSwCfdvBINNA5+4G9nYaL4lvBNI6u
-nkoAn36+8Y7ZTfnqWFYPniGQwApLEKGV
-=Z08y
+iEYEARECAAYFAkr1vfgACgkQg6WylM+/8ZRZQgCgqG5m+V6ZIDuzlNzMmBVOjpgv
+CNoAn2wpWno+g9kTzjRVanzH+Rbn0phf
+=w3cN
 -----END PGP SIGNATURE-----
 
---------------enigA4242D998DAFBD87D48F8EB5--
+--------------enigFB0EF021F80A5D3D5EC9BF78--
