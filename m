@@ -1,51 +1,46 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Raid Degradation best practices
-Date: Sat, 07 Nov 2009 16:02:12 +0100
-Message-ID: <874op6pedn.fsf@frosties.localdomain>
-References: <4AF41AFB.3000302@gmail.com>
-	<alpine.DEB.2.00.0911070650380.4559@p34.internal.lan>
-	<4AF57257.7010207@gmail.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: mismatch_cnt again
+Date: Sat, 07 Nov 2009 17:23:53 +0100
+Message-ID: <4AF59F19.1080409@lazy.lzy>
+References: <4AF4C247.6050303@eyal.emu.id.au> <4AF4D323.6020108@panix.com>	<4AF5268D.60900@eyal.emu.id.au>	<4877c76c0911070008m789507f8h799d419287740ca5@mail.gmail.com> <87tyx6tpcb.fsf@frosties.localdomain> <4AF58B20.3000409@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AF57257.7010207@gmail.com> (Andrew Dunn's message of "Sat, 07
-	Nov 2009 08:12:55 -0500")
+In-Reply-To: <4AF58B20.3000409@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Dunn <andrew.g.dunn@gmail.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, nfbrown@novell.com
+To: Doug Ledford <dledford@redhat.com>
+Cc: Goswin von Brederlow <goswin-v-b@web.de>, Michael Evans <mjevans1983@gmail.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Andrew Dunn <andrew.g.dunn@gmail.com> writes:
+On 11/07/2009 03:58 PM, Doug Ledford wrote:
+[...]
+> I'm very quickly starting to become dubious of the current mismatch_cnt
+> implementation.  I think a kernel patch is in order and I may just work
+> on that today.  Here's the deal: a non-0 mismatch count is worthless if
+> you don't also tell people *where* the mismatch is so they can
+> investigate it and correct it.
 
-> I am using RAID6, on 9 WD1001FALS drives.
->
-> The VERY important data is backed up to multiple external drives and
-> stored at a separate location.
->
-> I figured out my issue last night. I had an issue with the array where
-> it was doing the silly /dev/md_d0 thing, so when I stopped that and
-> started the new one I did '--assume-clean' then when I started copying
-> my information back to the array multiple devices dropped out. Their
-> SMART information passes just fine, so it must have been the array was
-> not clean.
+You're perfectly right.
 
---assume-clean just skips the resync. If the array is actualy not
-clean you just get an increased mismatch_cnt when you run a check and
-bad data when a disk fails. It never causes a disk to drop out.
+And this, again, fits in the discussion of RAID-6 error
+check and, potentially, repair.
 
-> This was my mistake, but in the future when I have a real drive failure
-> I was curious to see how you approach that issue.
+Ideally the log should tell which (RAID) address has a
+mismatch and, in case of RAID-6, if a specific device
+could be faulty at that position.
 
-Having bitmaps helps since when a disk temporarily drops out and you
-ad it back you only need to resync the bits that have changed. But
-that only reduces the window where another (or a third for raid6) disk
-failure is critical. If you get 3 failed disk, temporary or not, at
-the same time then your raid6 breaks and you need to put the pices
-back together yourself. Depending on each components state you might
-have data loss or corruption.
+This would be already quite a huge step forward in improving
+the overall reliability of the RAID sub-system.
 
-The best thing to do is to make sure your hardware is fit and does not
-just drop out for a minute.
+Side note: in F11 there is this cron.weekly raid-check, but
+nothing is reported (per email to root) in case of mismatch.
+Is there any plan to add a such a facility?
 
-MfG
-        Goswin
+Thanks.
+
+bye,
+
+-- 
+
+piergiorgio
