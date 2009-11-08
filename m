@@ -1,20 +1,31 @@
-From: Peter Rabbitson <rabbit+list@rabbit.us>
-Subject: Re: mismatch_cnt again
-Date: Sun, 08 Nov 2009 23:51:13 +0100
-Message-ID: <4AF74B61.6000102@rabbit.us>
-References: <4AF4C247.6050303@eyal.emu.id.au> <4AF4D323.6020108@panix.com>	<4AF5268D.60900@eyal.emu.id.au>	<4877c76c0911070008m789507f8h799d419287740ca5@mail.gmail.com>	<87tyx6tpcb.fsf@frosties.localdomain> <4AF58B20.3000409@redhat.com> <87iqdlaujb.fsf@frosties.localdomain>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: RAID 6 Failure follow up
+Date: Mon, 09 Nov 2009 11:59:05 +1300
+Message-ID: <4AF74D39.3000304@sauce.co.nz>
+References: <4AF6D0A9.6000901@gmail.com> <4AF6D461.3050109@gmail.com> <4AF6D5FD.2010602@gmail.com> <4AF70791.9080007@sauce.co.nz> <4AF741A9.80701@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87iqdlaujb.fsf@frosties.localdomain>
+In-Reply-To: <4AF741A9.80701@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: Doug Ledford <dledford@redhat.com>, Michael Evans <mjevans1983@gmail.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
+To: Andrew Dunn <andrew.g.dunn@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-My 2c on how to approach this subject without controversial auto-repair
-issues: http://marc.info/?l=linux-raid&m=120605458309825&w=2
-Also follow the thread to see Neil's reply
+Andrew Dunn wrote:
+> I am not, but this is quite interesting. What versions are affected? I
+> am in ubuntu 9.10.
 
-Cheers
+To my knowledge, there is no smartmontools version safe for use on these 
+LSI based controllers.
+
+You may run smartctl commands a few times and get away with it, but 
+eventually it will bite you.
+
+Losing 14 drives on a 16 drive array as a result, is no fun...
+
+Hopefully it will be fixed one day.
+
+Regards,
+
+Richard
