@@ -1,7 +1,7 @@
 From: Andrew Dunn <andrew.g.dunn@gmail.com>
 Subject: Re: RAID 6 Failure follow up
-Date: Sun, 08 Nov 2009 09:30:21 -0500
-Message-ID: <4AF6D5FD.2010602@gmail.com>
+Date: Sun, 08 Nov 2009 09:36:54 -0500
+Message-ID: <4AF6D786.6070505@gmail.com>
 References: <4AF6D0A9.6000901@gmail.com> <4AF6D461.3050109@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
@@ -9,44 +9,22 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <4AF6D461.3050109@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roger Heflin <rogerheflin@gmail.com>, robin@robinhill.me.uk
+To: Roger Heflin <rogerheflin@gmail.com>
 Cc: linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-storrgie@ALEXANDRIA:~$ dmesg | grep sdi
-[   31.019358] sd 11:0:0:0: [sdi] 1953525168 512-byte logical blocks:
-(1.00 TB/931 GiB)
-[   31.032233] sd 11:0:0:0: [sdi] Write Protect is off
-[   31.032235] sd 11:0:0:0: [sdi] Mode Sense: 73 00 00 08
-[   31.037483] sd 11:0:0:0: [sdi] Write cache: enabled, read cache:
-enabled, doesn't support DPO or FUA
-[   31.066991]  sdi:
-[   31.075719]  sdi1
-[   31.124713] sd 11:0:0:0: [sdi] Attached SCSI disk
-[   31.147407] md: bind<sdi1>
-[   31.712366] raid5: device sdi1 operational as raid disk 4
-[   31.713153]  disk 4, o:1, dev:sdi1
-[   33.112975]  disk 4, o:1, dev:sdi1
-[  297.528544] sd 11:0:0:0: [sdi] Sense Key : Recovered Error [current]
-[descriptor]
-[  297.528573] sd 11:0:0:0: [sdi] Add. Sense: ATA pass through
-information available
-[  297.591382] sd 11:0:0:0: [sdi] Sense Key : Recovered Error [current]
-[descriptor]
-[  297.591407] sd 11:0:0:0: [sdi] Add. Sense: ATA pass through
-information available
+[10:0:0:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sde
+[10:0:1:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdf
+[10:0:2:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdg
+[10:0:3:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdh
+[11:0:0:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdi
+[11:0:1:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdj
+[11:0:2:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdk
+[11:0:3:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdl
+[11:0:4:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdm
 
-I don't see anything glaring.
-
-You should be able to force an assembly anyway (using the --force flag)
-but I'd make sure you know exactly what the issue is first, otherwise
-this is likely to happen again.
-
-Do you think that the controller is dropping out? I know that I have 4
-drives on one controller (AOC-USAS-L8i) and 5 drives on the other
-controller (SAME make/model). but I think they are sequentially
-connected... as in sd[efghi] should be on one device and sd[jklm] should
-be on the other... any easy way to verify?
+So 4 drives dropped out on the second controller. But why didnt sdm go
+with them?
 
 Roger Heflin wrote:
 > Andrew Dunn wrote:
