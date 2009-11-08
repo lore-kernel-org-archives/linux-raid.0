@@ -1,38 +1,70 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re: RAID 6 Failure follow up
-Date: Sun, 08 Nov 2009 08:56:34 -0600
-Message-ID: <4AF6DC22.7010909@gmail.com>
-References: <4AF6D0A9.6000901@gmail.com> <4AF6D461.3050109@gmail.com> <4AF6D786.6070505@gmail.com>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: RAID down, dont know why!
+Date: Sun, 8 Nov 2009 15:01:57 +0000
+Message-ID: <20091108150157.GB11786@cthulhu.home.robinhill.me.uk>
+References: <4AF6CEFD.60309@gmail.com>
+ <20091108142238.GA11786@cthulhu.home.robinhill.me.uk>
+ <4AF6D494.2050207@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="vGgW1X5XWziG23Ko"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AF6D786.6070505@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <4AF6D494.2050207@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Dunn <andrew.g.dunn@gmail.com>
-Cc: linux-raid list <linux-raid@vger.kernel.org>
+To: linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Andrew Dunn wrote:
-> [10:0:0:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sde
-> [10:0:1:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdf
-> [10:0:2:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdg
-> [10:0:3:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdh
-> [11:0:0:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdi
-> [11:0:1:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdj
-> [11:0:2:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdk
-> [11:0:3:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdl
-> [11:0:4:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdm
-> 
-> So 4 drives dropped out on the second controller. But why didnt sdm go
-> with them?
-> 
->
 
-It is possible that by the time it got to checking the last drive that 
-the errors had cleared up, so sdm was ok with it checked.
+--vGgW1X5XWziG23Ko
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Sun Nov 08, 2009 at 09:24:20AM -0500, Andrew Dunn wrote:
+> Robin Hill wrote:
+> > On Sun Nov 08, 2009 at 09:00:29AM -0500, Andrew Dunn wrote:
+> >
+> >  =20
+> >> I just copied 4+ TiB of information to this array, restarted 5 times
+> >> and tried to access it.... What is going on?
+> >>
+> >> What kind of logs do you need, I really need help!
+> >>
+> >>    =20
+> > From the message you've posted, it looks like something has triggered
+> > the (simultaneous) removal of four drives from the array.  I'd check the
+> > dmesg output - it should provide some information.  I'd guess these four
+> > drives are all attached to the same controller (are they external or
+> > internal?), so possibly the controller reset (or for external drives, it
+> > could be a cable issue).
+> >
+> What would I be looking for on this? Its a lot to sift through.
+>=20
+> Currently just line-by-lining it.
+>=20
+Look for where the drives are being kicked out of the array (should be
+towards the bottom).  Just above that should be some error messages
+(often including bus resets).
 
-Is this on a port multiplier?
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
+--vGgW1X5XWziG23Ko
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+
+iEYEARECAAYFAkr23WUACgkQShxCyD40xBKMugCfQofgCZn15QvMDJOO3o5tjn4k
+Ej4Anii6r4iwau0LxLZmYEM4qv4m9Fef
+=fBnY
+-----END PGP SIGNATURE-----
+
+--vGgW1X5XWziG23Ko--
