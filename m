@@ -1,30 +1,20 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: Re: Intel Updates SSDs, Supports TRIM, Faster Writes
-Date: Sun, 8 Nov 2009 15:30:03 -0700
-Message-ID: <200911081530.03744.tfjellstrom@shaw.ca>
-References: <4AF7066C.1040507@tmr.com>
-Reply-To: tfjellstrom@shaw.ca
+From: Peter Rabbitson <rabbit+list@rabbit.us>
+Subject: Re: mismatch_cnt again
+Date: Sun, 08 Nov 2009 23:51:13 +0100
+Message-ID: <4AF74B61.6000102@rabbit.us>
+References: <4AF4C247.6050303@eyal.emu.id.au> <4AF4D323.6020108@panix.com>	<4AF5268D.60900@eyal.emu.id.au>	<4877c76c0911070008m789507f8h799d419287740ca5@mail.gmail.com>	<87tyx6tpcb.fsf@frosties.localdomain> <4AF58B20.3000409@redhat.com> <87iqdlaujb.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AF7066C.1040507@tmr.com>
+In-Reply-To: <87iqdlaujb.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: Doug Ledford <dledford@redhat.com>, Michael Evans <mjevans1983@gmail.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun November 8 2009, Bill Davidsen wrote:
-> For those of us playing with use of SSD for journals on ext[34], this
-> does have implications for RAID performance.
-> 
-> http://hardware.slashdot.org/story/09/10/27/1427209/Intel-Updates-SSDs-Su
-> pports-TRIM-Faster-Writes
-> 
+My 2c on how to approach this subject without controversial auto-repair
+issues: http://marc.info/?l=linux-raid&m=120605458309825&w=2
+Also follow the thread to see Neil's reply
 
-Just don't upgrade it till they fix the bugs ;)
-
--- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
+Cheers
