@@ -1,76 +1,82 @@
-From: Joe Landman <landman@scalableinformatics.com>
-Subject: Re: RAID 6 Failure follow up
-Date: Sun, 08 Nov 2009 13:34:05 -0500
-Message-ID: <4AF70F1D.4010604@scalableinformatics.com>
-References: <4AF6D0A9.6000901@gmail.com> <4AF6D461.3050109@gmail.com> <4AF6D5FD.2010602@gmail.com> <4AF70791.9080007@sauce.co.nz> <4AF70C61.5030301@gmail.com>
-Reply-To: landman@scalableinformatics.com
+From: Ryan Wagoner <rswagoner@gmail.com>
+Subject: Re: RAID down, dont know why!
+Date: Sun, 8 Nov 2009 17:08:33 -0500
+Message-ID: <7d86ddb90911081408k175257b8g42fff881a7d1b7a7@mail.gmail.com>
+References: <4AF6CEFD.60309@gmail.com>
+	 <20091108142238.GA11786@cthulhu.home.robinhill.me.uk>
+	 <4AF6D494.2050207@gmail.com>
+	 <20091108150157.GB11786@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AF70C61.5030301@gmail.com>
+In-Reply-To: <20091108150157.GB11786@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Dunn <andrew.g.dunn@gmail.com>
-Cc: Richard Scobie <richard@sauce.co.nz>, Roger Heflin <rogerheflin@gmail.com>, robin@robinhill.me.uk, linux-raid list <linux-raid@vger.kernel.org>, nfbrown@novell.com
+To: linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Andrew Dunn wrote:
-> New data now, I got this from dmesg when it went down again. Hopefully
-> there is some significance to you guys.
-> 
->> [14269.650381] sd 10:0:3:0: rejecting I/O to offline device
->> [14269.650453] sd 10:0:3:0: rejecting I/O to offline device
->> [14269.650524] sd 10:0:3:0: rejecting I/O to offline device
->> [14269.650595] sd 10:0:3:0: rejecting I/O to offline device
->> [14269.650672] sd 10:0:3:0: [sdh] Unhandled error code
->> [14269.650675] sd 10:0:3:0: [sdh] Result: hostbyte=DID_NO_CONNECT
-> driverbyte=DRIVER_OK
->> [14269.650680] end_request: I/O error, dev sdh, sector 1435085631
->> [14269.650749] raid5:md0: read error not correctable (sector
-> 1435085568 on sdh1).
->> [14269.650753] raid5: Disk failure on sdh1, disabling device.
->> [14269.650754] raid5: Operation continuing on 7 devices.
->> [14269.650886] raid5:md0: read error not correctable (sector
-> 1435085576 on sdh1).
->> [14269.650890] raid5:md0: read error not correctable (sector
-> 1435085584 on sdh1).
->> [14269.650894] raid5:md0: read error not correctable (sector
-> 1435085592 on sdh1).
+Is this the box on your blog at http://blog.agdunn.net/?p=3D391 ? If so
+those cards are to be used in the Supermicro UIO slot, which is
+basically just an inverted PCI Express slot. However since there is
+only one UIO slot per board they might have not tested compatibility
+with multiple in the same system.
 
-[...]
+I do have one of these boards installed on an Intel board without
+issue. I have had the 7 drives connected in mdadm RAID for almost 2
+years now with no dropouts. You might try a port multiplier since the
+card supports it and one drive isn't going to use the full bandwidth
+of a single SAS cable.
 
-I am not convinced this is a drive failure (yet).  You have 
-sdh,sdi,sdj,sdk,sdl,sdm all reporting errors or error recovery.
+Ryan
 
-This sounds like a physical backplane failure (is this on an expander 
-system? we have seen this/had this happen before), a cable to the SATA 
-card failing (we have seen this/had this happen before), or a power 
-supply issue (can't handle all the drives in constant operation, which 
-we have seen before as well).
-
-Driver issues are possible, but it is pursuing normal failure code 
-paths, so unless the driver is tickling the remove code on its own ...
-
-Smart could be offlining the drive, and having it non-responsive. 
-Something else could be doing that as well (vibration, power quality, ...)
-
-What does
-
-	hdparm -I /dev/sdh
-
-tell us?
-
-If nothing, we need to use sdparm to get some information.
-
-Joe
-
--- 
-Joseph Landman, Ph.D
-Founder and CEO
-Scalable Informatics, Inc.
-email: landman@scalableinformatics.com
-web  : http://scalableinformatics.com
-        http://scalableinformatics.com/jackrabbit
-phone: +1 734 786 8423 x121
-fax  : +1 866 888 3112
-cell : +1 734 612 4615
+On Sun, Nov 8, 2009 at 10:01 AM, Robin Hill <robin@robinhill.me.uk> wro=
+te:
+> On Sun Nov 08, 2009 at 09:24:20AM -0500, Andrew Dunn wrote:
+>> Robin Hill wrote:
+>> > On Sun Nov 08, 2009 at 09:00:29AM -0500, Andrew Dunn wrote:
+>> >
+>> >
+>> >> I just copied 4+ TiB of information to this array, restarted 5 ti=
+mes
+>> >> and tried to access it.... What is going on?
+>> >>
+>> >> What kind of logs do you need, I really need help!
+>> >>
+>> >>
+>> > From the message you've posted, it looks like something has trigge=
+red
+>> > the (simultaneous) removal of four drives from the array. =A0I'd c=
+heck the
+>> > dmesg output - it should provide some information. =A0I'd guess th=
+ese four
+>> > drives are all attached to the same controller (are they external =
+or
+>> > internal?), so possibly the controller reset (or for external driv=
+es, it
+>> > could be a cable issue).
+>> >
+>> What would I be looking for on this? Its a lot to sift through.
+>>
+>> Currently just line-by-lining it.
+>>
+> Look for where the drives are being kicked out of the array (should b=
+e
+> towards the bottom). =A0Just above that should be some error messages
+> (often including bus resets).
+>
+> Cheers,
+> =A0 =A0Robin
+> --
+> =A0 =A0 ___
+> =A0 =A0( ' } =A0 =A0 | =A0 =A0 =A0 Robin Hill =A0 =A0 =A0 =A0<robin@r=
+obinhill.me.uk> |
+> =A0 / / ) =A0 =A0 =A0| Little Jim says .... =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0 =A0 =A0 =A0|
+> =A0// !! =A0 =A0 =A0 | =A0 =A0 =A0"He fallen in de water !!" =A0 =A0 =
+=A0 =A0 =A0 =A0 =A0 =A0 |
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
