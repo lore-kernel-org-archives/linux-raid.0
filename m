@@ -1,7 +1,7 @@
 From: Andrew Dunn <andrew.g.dunn@gmail.com>
-Subject: RAID down, dont know why!
-Date: Sun, 08 Nov 2009 09:00:29 -0500
-Message-ID: <4AF6CEFD.60309@gmail.com>
+Subject: RAID 6 Failure follow up
+Date: Sun, 08 Nov 2009 09:07:37 -0500
+Message-ID: <4AF6D0A9.6000901@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
@@ -10,31 +10,92 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I just copied 4+ TiB of information to this array, restarted 5 times and tried to access it.... What is going on?
+This is kind of interesting:
 
-What kind of logs do you need, I really need help!
+storrgie@ALEXANDRIA:~$ sudo mdadm --assemble --force /dev/md0
+mdadm: no devices found for /dev/md0
 
+All of the devices are there in /dev, so I wanted to examine them:
 
-This is an automatically generated mail message from mdadm
-running on ALEXANDRIA
+storrgie@ALEXANDRIA:~$ sudo mdadm --examine /dev/sde1
+/dev/sde1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 397e0b3f:34cbe4cc:613e2239:070da8c8 (local to host
+ALEXANDRIA)
+  Creation Time : Fri Nov  6 07:06:34 2009
+     Raid Level : raid6
+  Used Dev Size : 976759808 (931.51 GiB 1000.20 GB)
+     Array Size : 6837318656 (6520.58 GiB 7001.41 GB)
+   Raid Devices : 9
+  Total Devices : 9
+Preferred Minor : 0
 
-A Fail event had been detected on md device /dev/md0.
+    Update Time : Sun Nov  8 08:57:04 2009
+          State : clean
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 4
+  Spare Devices : 0
+       Checksum : 4ff41c5f - correct
+         Events : 43
 
-It could be related to component device /dev/sdl1.
+     Chunk Size : 1024K
 
-Faithfully yours, etc.
+      Number   Major   Minor   RaidDevice State
+this     0       8       65        0      active sync   /dev/sde1
 
-P.S. The /proc/mdstat file currently contains the following:
+   0     0       8       65        0      active sync   /dev/sde1
+   1     1       8       81        1      active sync   /dev/sdf1
+   2     2       8       97        2      active sync   /dev/sdg1
+   3     3       8      113        3      active sync   /dev/sdh1
+   4     4       0        0        4      faulty removed
+   5     5       0        0        5      faulty removed
+   6     6       0        0        6      faulty removed
+   7     7       0        0        7      faulty removed
+   8     8       8      193        8      active sync   /dev/sdm1
 
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
-md0 : active raid6 sdl1[9](F) sdm1[8] sdi1[10](F) sdj1[11](F) sdk1[12](F) sdh1[3] sdf1[1] sdg1[2] sde1[0]
-      6837318656 blocks level 6, 1024k chunk, algorithm 2 [9/5] [UUUU____U]
-      
-md1 : active raid0 sdc1[1] sdb1[0]
-      586067072 blocks 64k chunks
-      
-unused devices: <none>
+First raid device shows the failures....
 
+One of the 'removed' devices:
+
+storrgie@ALEXANDRIA:~$ sudo mdadm --examine /dev/sdi1
+/dev/sdi1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 397e0b3f:34cbe4cc:613e2239:070da8c8 (local to host
+ALEXANDRIA)
+  Creation Time : Fri Nov  6 07:06:34 2009
+     Raid Level : raid6
+  Used Dev Size : 976759808 (931.51 GiB 1000.20 GB)
+     Array Size : 6837318656 (6520.58 GiB 7001.41 GB)
+   Raid Devices : 9
+  Total Devices : 9
+Preferred Minor : 0
+
+    Update Time : Sun Nov  8 08:53:30 2009
+          State : active
+ Active Devices : 9
+Working Devices : 9
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : 4ff41b2f - correct
+         Events : 21
+
+     Chunk Size : 1024K
+
+      Number   Major   Minor   RaidDevice State
+this     4       8      129        4      active sync   /dev/sdi1
+
+   0     0       8       65        0      active sync   /dev/sde1
+   1     1       8       81        1      active sync   /dev/sdf1
+   2     2       8       97        2      active sync   /dev/sdg1
+   3     3       8      113        3      active sync   /dev/sdh1
+   4     4       8      129        4      active sync   /dev/sdi1
+   5     5       8      145        5      active sync   /dev/sdj1
+   6     6       8      161        6      active sync   /dev/sdk1
+   7     7       8      177        7      active sync   /dev/sdl1
+   8     8       8      193        8      active sync   /dev/sdm1
 
 -- 
 Andrew Dunn
