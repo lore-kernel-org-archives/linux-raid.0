@@ -1,82 +1,50 @@
-From: Ryan Wagoner <rswagoner@gmail.com>
-Subject: Re: RAID down, dont know why!
-Date: Sun, 8 Nov 2009 17:08:33 -0500
-Message-ID: <7d86ddb90911081408k175257b8g42fff881a7d1b7a7@mail.gmail.com>
-References: <4AF6CEFD.60309@gmail.com>
-	 <20091108142238.GA11786@cthulhu.home.robinhill.me.uk>
-	 <4AF6D494.2050207@gmail.com>
-	 <20091108150157.GB11786@cthulhu.home.robinhill.me.uk>
+From: Andrew Dunn <andrew.g.dunn@gmail.com>
+Subject: Re: RAID 6 Failure follow up
+Date: Sun, 08 Nov 2009 17:09:45 -0500
+Message-ID: <4AF741A9.80701@gmail.com>
+References: <4AF6D0A9.6000901@gmail.com> <4AF6D461.3050109@gmail.com> <4AF6D5FD.2010602@gmail.com> <4AF70791.9080007@sauce.co.nz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091108150157.GB11786@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <4AF70791.9080007@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid list <linux-raid@vger.kernel.org>
+To: Richard Scobie <richard@sauce.co.nz>
+Cc: Roger Heflin <rogerheflin@gmail.com>, robin@robinhill.me.uk, linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Is this the box on your blog at http://blog.agdunn.net/?p=3D391 ? If so
-those cards are to be used in the Supermicro UIO slot, which is
-basically just an inverted PCI Express slot. However since there is
-only one UIO slot per board they might have not tested compatibility
-with multiple in the same system.
+I am not, but this is quite interesting. What versions are affected? I
+am in ubuntu 9.10.
 
-I do have one of these boards installed on an Intel board without
-issue. I have had the 7 drives connected in mdadm RAID for almost 2
-years now with no dropouts. You might try a port multiplier since the
-card supports it and one drive isn't going to use the full bandwidth
-of a single SAS cable.
-
-Ryan
-
-On Sun, Nov 8, 2009 at 10:01 AM, Robin Hill <robin@robinhill.me.uk> wro=
-te:
-> On Sun Nov 08, 2009 at 09:24:20AM -0500, Andrew Dunn wrote:
->> Robin Hill wrote:
->> > On Sun Nov 08, 2009 at 09:00:29AM -0500, Andrew Dunn wrote:
->> >
->> >
->> >> I just copied 4+ TiB of information to this array, restarted 5 ti=
-mes
->> >> and tried to access it.... What is going on?
->> >>
->> >> What kind of logs do you need, I really need help!
->> >>
->> >>
->> > From the message you've posted, it looks like something has trigge=
-red
->> > the (simultaneous) removal of four drives from the array. =A0I'd c=
-heck the
->> > dmesg output - it should provide some information. =A0I'd guess th=
-ese four
->> > drives are all attached to the same controller (are they external =
-or
->> > internal?), so possibly the controller reset (or for external driv=
-es, it
->> > could be a cable issue).
->> >
->> What would I be looking for on this? Its a lot to sift through.
->>
->> Currently just line-by-lining it.
->>
-> Look for where the drives are being kicked out of the array (should b=
-e
-> towards the bottom). =A0Just above that should be some error messages
-> (often including bus resets).
+Richard Scobie wrote:
+> Andrew Dunn wrote:
 >
-> Cheers,
-> =A0 =A0Robin
-> --
-> =A0 =A0 ___
-> =A0 =A0( ' } =A0 =A0 | =A0 =A0 =A0 Robin Hill =A0 =A0 =A0 =A0<robin@r=
-obinhill.me.uk> |
-> =A0 / / ) =A0 =A0 =A0| Little Jim says .... =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0|
-> =A0// !! =A0 =A0 =A0 | =A0 =A0 =A0"He fallen in de water !!" =A0 =A0 =
-=A0 =A0 =A0 =A0 =A0 =A0 |
+>> Do you think that the controller is dropping out? I know that I have 4
+>> drives on one controller (AOC-USAS-L8i) and 5 drives on the other
+>> controller (SAME make/model). but I think they are sequentially
+>> connected... as in sd[efghi] should be on one device and sd[jklm] should
+>> be on the other... any easy way to verify?
 >
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> If you are running smartd, cease doing so and do not use the smartctl
+> command on drives attached to these controllers - use causes drives to
+> be offlined.
+>
+> It appears the smartctl is broken with LSISAS 1068E based controllers.
+>
+> See:
+>
+> https://bugzilla.redhat.com/show_bug.cgi?id=452389
+>
+> and
+>
+> http://marc.info/?l=linux-scsi&m=125673590221135&w=2
+>
+> Regards,
+>
+> Richard
+>
+
+-- 
+Andrew Dunn
+http://agdunn.net
+
