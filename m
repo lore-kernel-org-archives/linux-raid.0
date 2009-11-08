@@ -1,60 +1,108 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: RAID down, dont know why!
-Date: Sun, 8 Nov 2009 14:22:38 +0000
-Message-ID: <20091108142238.GA11786@cthulhu.home.robinhill.me.uk>
-References: <4AF6CEFD.60309@gmail.com>
+From: Roger Heflin <rogerheflin@gmail.com>
+Subject: Re: RAID 6 Failure follow up
+Date: Sun, 08 Nov 2009 08:23:29 -0600
+Message-ID: <4AF6D461.3050109@gmail.com>
+References: <4AF6D0A9.6000901@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="5mCyUwZo2JvN/JJP"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4AF6CEFD.60309@gmail.com>
+In-Reply-To: <4AF6D0A9.6000901@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid list <linux-raid@vger.kernel.org>
+To: Andrew Dunn <andrew.g.dunn@gmail.com>
+Cc: linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Andrew Dunn wrote:
+> This is kind of interesting:
+> 
+> storrgie@ALEXANDRIA:~$ sudo mdadm --assemble --force /dev/md0
+> mdadm: no devices found for /dev/md0
+> 
+> All of the devices are there in /dev, so I wanted to examine them:
+> 
+> storrgie@ALEXANDRIA:~$ sudo mdadm --examine /dev/sde1
+> /dev/sde1:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 397e0b3f:34cbe4cc:613e2239:070da8c8 (local to host
+> ALEXANDRIA)
+>   Creation Time : Fri Nov  6 07:06:34 2009
+>      Raid Level : raid6
+>   Used Dev Size : 976759808 (931.51 GiB 1000.20 GB)
+>      Array Size : 6837318656 (6520.58 GiB 7001.41 GB)
+>    Raid Devices : 9
+>   Total Devices : 9
+> Preferred Minor : 0
+> 
+>     Update Time : Sun Nov  8 08:57:04 2009
+>           State : clean
+>  Active Devices : 5
+> Working Devices : 5
+>  Failed Devices : 4
+>   Spare Devices : 0
+>        Checksum : 4ff41c5f - correct
+>          Events : 43
+> 
+>      Chunk Size : 1024K
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     0       8       65        0      active sync   /dev/sde1
+> 
+>    0     0       8       65        0      active sync   /dev/sde1
+>    1     1       8       81        1      active sync   /dev/sdf1
+>    2     2       8       97        2      active sync   /dev/sdg1
+>    3     3       8      113        3      active sync   /dev/sdh1
+>    4     4       0        0        4      faulty removed
+>    5     5       0        0        5      faulty removed
+>    6     6       0        0        6      faulty removed
+>    7     7       0        0        7      faulty removed
+>    8     8       8      193        8      active sync   /dev/sdm1
+> 
+> First raid device shows the failures....
+> 
+> One of the 'removed' devices:
+> 
+> storrgie@ALEXANDRIA:~$ sudo mdadm --examine /dev/sdi1
+> /dev/sdi1:
+>           Magic : a92b4efc
+>         Version : 00.90.00
+>            UUID : 397e0b3f:34cbe4cc:613e2239:070da8c8 (local to host
+> ALEXANDRIA)
+>   Creation Time : Fri Nov  6 07:06:34 2009
+>      Raid Level : raid6
+>   Used Dev Size : 976759808 (931.51 GiB 1000.20 GB)
+>      Array Size : 6837318656 (6520.58 GiB 7001.41 GB)
+>    Raid Devices : 9
+>   Total Devices : 9
+> Preferred Minor : 0
+> 
+>     Update Time : Sun Nov  8 08:53:30 2009
+>           State : active
+>  Active Devices : 9
+> Working Devices : 9
+>  Failed Devices : 0
+>   Spare Devices : 0
+>        Checksum : 4ff41b2f - correct
+>          Events : 21
+> 
+>      Chunk Size : 1024K
+> 
+>       Number   Major   Minor   RaidDevice State
+> this     4       8      129        4      active sync   /dev/sdi1
+> 
+>    0     0       8       65        0      active sync   /dev/sde1
+>    1     1       8       81        1      active sync   /dev/sdf1
+>    2     2       8       97        2      active sync   /dev/sdg1
+>    3     3       8      113        3      active sync   /dev/sdh1
+>    4     4       8      129        4      active sync   /dev/sdi1
+>    5     5       8      145        5      active sync   /dev/sdj1
+>    6     6       8      161        6      active sync   /dev/sdk1
+>    7     7       8      177        7      active sync   /dev/sdl1
+>    8     8       8      193        8      active sync   /dev/sdm1
+> 
 
---5mCyUwZo2JvN/JJP
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Sun Nov 08, 2009 at 09:00:29AM -0500, Andrew Dunn wrote:
+Did you check dmesg and see if there were errors on those disks?
 
-> I just copied 4+ TiB of information to this array, restarted 5 times
-> and tried to access it.... What is going on?
->=20
-> What kind of logs do you need, I really need help!
->=20
-=46rom the message you've posted, it looks like something has triggered
-the (simultaneous) removal of four drives from the array.  I'd check the
-dmesg output - it should provide some information.  I'd guess these four
-drives are all attached to the same controller (are they external or
-internal?), so possibly the controller reset (or for external drives, it
-could be a cable issue).
 
-You should be able to force an assembly anyway (using the --force flag)
-but I'd make sure you know exactly what the issue is first, otherwise
-this is likely to happen again.
-
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---5mCyUwZo2JvN/JJP
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEARECAAYFAkr21C0ACgkQShxCyD40xBJEOgCgnS2SjUGP3IqRXT10t8iMJOxq
-XdsAoNUJjx9KPgmXUob+H4HQdX55OZHd
-=PDb3
------END PGP SIGNATURE-----
-
---5mCyUwZo2JvN/JJP--
