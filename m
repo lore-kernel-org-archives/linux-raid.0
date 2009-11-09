@@ -1,122 +1,108 @@
-From: "NeilBrown" <neilb@suse.de>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
 Subject: Re: mismatch_cnt again
-Date: Tue, 10 Nov 2009 08:50:49 +1100
-Message-ID: <df8de4eb79e2bf13d0e5c2c83cdc7cf1.squirrel@neil.brown.name>
-References: <4AF4C247.6050303@eyal.emu.id.au> <4AF4D323.6020108@panix.com>
-    <4AF5268D.60900@eyal.emu.id.au>
-    <4877c76c0911070008m789507f8h799d419287740ca5@mail.gmail.com>
-    <87tyx6tpcb.fsf@frosties.localdomain> <4AF58B20.3000409@redhat.com>
-    <87iqdlaujb.fsf@frosties.localdomain> <20091108160433.GA5338@lazy.lzy>
-    <4AF85DCB.3030909@tmr.com>
+Date: Mon, 9 Nov 2009 22:54:43 +0100
+Message-ID: <20091109215443.GA4143@lazy.lzy>
+References: <4AF4C247.6050303@eyal.emu.id.au> <4AF4D323.6020108@panix.com> <4AF5268D.60900@eyal.emu.id.au> <4877c76c0911070008m789507f8h799d419287740ca5@mail.gmail.com> <87tyx6tpcb.fsf@frosties.localdomain> <4AF58B20.3000409@redhat.com> <87iqdlaujb.fsf@frosties.localdomain> <4AF74B61.6000102@rabbit.us> <20091109185632.GA2723@lazy.lzy> <73ebdcee169f46611d411755f9aaca5b.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AF85DCB.3030909@tmr.com>
+Content-Disposition: inline
+In-Reply-To: <73ebdcee169f46611d411755f9aaca5b.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Goswin von Brederlow <goswin-v-b@web.de>, Doug Ledford <dledford@redhat.com>, Michael Evans <mjevans1983@gmail.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Peter Rabbitson <rabbit+list@rabbit.us>, Goswin von Brederlow <goswin-v-b@web.de>, Doug Ledford <dledford@redhat.com>, Michael Evans <mjevans1983@gmail.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, November 10, 2009 5:22 am, Bill Davidsen wrote:
-> Piergiorgio Sartor wrote:
->> Hi,
->>
->>
->>> But unless your drive firmware is broken the drive with only ever give
->>> the correct data or an error. Smart has a counter for blocks that have
->>> gone bad and will be fixed pending a write to them:
->>> Current_Pending_Sector.
->>>
->>> The only way the drive should be able to give you bad data is if
->>> multiple bits toggle in such a way that the ECC still fits.
->>>
->>
->> Not really, I've disks which are *perfect* in smart sense
->> and nevertheless I had mistmatch count.
->> This was a SW problem, I think now fixed, in RAID-10 code.
->>
->>
-> IIRC there still is an error in raid-1 code, in that data is written to
-> multiple drives without preventing modification of the memory between
-> writes. As I understand Neil's explanation, this happens (a) when memory
-> is being changed rapidly and frequently via memory mapped files, or (b)
-> writing via O_DIRECT, or (c) when raid-1 is being used for swap. I'm not
-> totally sure why the last one, but I have always seem mismatches on swap
-> in a system which is actually swapping. What is more troubling is that
-> if I do a hibernate, which writes to swap, and then force a boot from
-> other media to a Live-CD, doing a check of the swap array occasionally
-> shows a mismatch. That doesn't give me a secure feeling, although I have
-> never had an issue in practice, I was just curious.
+Well...
 
-I don't think this is really an error in the RAID1 code.
-The only thing that the RAID1 code could do differently is make a local
-copy of the data and then write that to all of the devices (a bit like
-RAID5 does so it can generate a parity block reliably).
-Doing this would introduce a performance penalty with not real
-benefit (the only benefit would be to stop long email threads about
-mismatch_cnt :-)
+> Is this an offer to submit a patch ?? :-)
 
-You could possibly argue that it is a weakness in the interface to block
-devices that the block device cannot ask for the buffer to be guaranteed
-to be stable for the duration of the write, but as there is little real
-need for that and it would probably be fairly hard to implement both
-efficiently and generally.
+almost, I was looking into RAID-6 for this, but unfortunately
+it seems I'll need external manpower too... :-)
 
-A filesystem is well placed to do this sort of thing and it is quite
-likely that BTRFS does something appropriate to ensure that the block
-checksums it creates are reliable.
-All the filesystem needs to do is forcibly unmap the page from any
-process address space and make sure it doesn't get remapped or otherwise
-modified until the write completes.
+> I disagree.  You do need a model.  The particular features of the
+> model would be the weight and wind-resistance of the person so that
+> you can estimate what extra wind resistance is needed to reduce terminal
+> velocity such that the impact will be something that the person's
+> legs can absorb.  So you also need the model to describe the legs
+> in enough detail so that a suitable target terminal velocity can
+> be determined.
 
-The (c) option is actually the most likely to cause inconsistencies.
-If a page is modified while being written out to swap, the swap
-system will effective forget that it ever tried to write it so
-any inconsistency is likely to remain (but never be read, so there
-is no problem).
-With a filesystem, if the page is changed while being written, it is
-very likely that the filesystem will try to write the page to the same
-location again, thus fixing the inconsistency.
+Well, sorry, but IMHO this is needed only when you design
+the parachute, not when you jump out of the plane.
 
-When suspend-to-disk writes to swap, it stops all changes from happening
-and then writes the data and waits for it to complete, so you will never
-find inconsistencies in blocks on swap that actually contain a
-suspend-to-disk image.
+It seems that here some people, including me, would have
+found useful such a feature.
+For example I've a RAID-10 which shows a mismatch_cnt of
+256, but everything seems to work fine.
+The disks are new, no SMART errors or else.
+Where the mismatch belong I do not know.
+What should I do? Try to fill up the MD device and then
+see if the mismatch is still there?
+It would be much better to know which file, if any, is
+affected and then take the proper countermeasures.
 
-NeilBrown
+At the moment, since everything runs fine, I do not dare
+to start a resync, since it will not be better than
+leaving the things like they're right now.
+I'm in the hope that some file creation or similar will fix
+the mismatch.
+Or do you have a better option?
 
+> If we proactively hand out parachutes that can just barely land a
+> small dog safely, then we aren't doing any people any favours,
+> and probably are making their situation less safe because they are
+> more likely to take a risk in the belief that their parachute
+> will protect them - which it might not.
 
+Do not over stretch the example.
+The parachute, in the MD case, will not remove any risk,
+it will simply help people to manage a damage, that might
+occure for any reasons, including SW bugs, better.
 
->
->> This means that, yes, there could be mismatches, without
->> any warning, from other sources than disks.
->> And these could be anywhere in the system.
->> I already mentioned, time ago, a cabling problem which was
->> leading to a similar result: wrong data on different disks,
->> without any warning or error from the HW layer.
->>
->> That is why it is important to know *where* the mismatch
->> occurs and, if possible, in which device component.
->> If it is an empty part of the FS, no problem, if it
->> belongs to a specific file, then it would be possible
->> to restore/recreate it.
->>
->> Of course, a tool will be needed telling which file is
->> using a certain block of the device.
->>
->
-> There are tools which claim to do that, or list blocks used in a given
-> file, which is not nearly as useful, but easier to do.
->
-> --
-> Bill Davidsen <davidsen@tmr.com>
->   "We can't solve today's problems by using the same thinking we
->    used in creating them." - Einstein
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I mean, will you swear that the actual RAID software will
+never cause, by its own, a mismatch between disks?
+I guess not.
+So, why not to give a mechanism to enable user to look
+further into mismatches and be able to take a proper action?
 
+> Certainly manpower is an issue - and it is pointless spending it
+> on something that you think sounds nice, but have no evidence that it
+> will actually address a real need.
+
+It seems some people, here, have this need.
+So, it is real.
+
+I see not only myself asking for such features like returning
+the block address of the mismatch count or trigger a *proper*
+repair instead of a random one.
+
+Frankly speaking, the whole resync/repair concept is, at the
+moment, a waste of manpower (when it was done), since repairing
+or not a RAID does not change the underlayining situation.
+It just sets the mismatch_cnt to zero, but if an error is
+present there are good chances it will still be there.
+And this is the problem: after the resync people will *feel*
+secure, people *feel* safe (because there is a "repair"),
+but in the end the risk is simply increased (as per your
+example about dog-parachute).
+
+Again, manpower is always an issue and priorities are needed,
+of course, but what if we vote, here, for such a feauture and
+then it turns out it is "most wanted"?
+
+Written that, since complaining alone does not help, how to
+proceed in the case I would like to print the MD block address
+of a mismatch? Which source code file would be more sensible
+to look into?
+
+Thanks for you attention and sorry for the rant,
+
+P.S.: I like very much the MD thing, that's the reason
+why I would like to see it improved.
+
+bye,
+
+-- 
+
+piergiorgio
