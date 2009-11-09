@@ -1,98 +1,43 @@
-From: Chris Worley <worleys@gmail.com>
-Subject: Re: Intel Updates SSDs, Supports TRIM, Faster Writes
-Date: Mon, 9 Nov 2009 09:59:38 -0700
-Message-ID: <f3177b9e0911090859j40a87433r342d2c49b46d015c@mail.gmail.com>
-References: <4AF7066C.1040507@tmr.com>
-	 <70ed7c3e0911081713m7184356buadd6b102fe4755e8@mail.gmail.com>
-	 <f3177b9e0911090837y6f40ee6dy2a88c963465e8718@mail.gmail.com>
-	 <70ed7c3e0911090842i167175a0q44fc5ad50a2f1759@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: MD performance options: More =?windows-1252?Q?CPU=92s_or_?=
+ =?windows-1252?Q?more_Hz=92s=3F?=
+Date: Mon, 09 Nov 2009 12:24:45 -0500
+Message-ID: <4AF8505D.9060007@tmr.com>
+References: <66781b10911040149q165edf1s94a86f179f9af9fc@mail.gmail.com> <4AF18A39.6010404@tmr.com> <4AF19216.30300@Calva.COM>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70ed7c3e0911090842i167175a0q44fc5ad50a2f1759@mail.gmail.com>
+In-Reply-To: <4AF19216.30300@Calva.COM>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Majed B." <majedb@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: John Hughes <john@Calva.COM>
+Cc: mark delfman <markdelfman@googlemail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Nov 9, 2009 at 9:42 AM, Majed B. <majedb@gmail.com> wrote:
-> Well, SATA uses SCSI emulation so I guess that's no problem, right?
-
-The only problem is SSD's put Solid State Storage (SSS) behind
-SATA/SAS controllers... while compatible w/ old disk technology, it
-severely limits performance (i.e. none of these SSD drives do even
-300MB/s... while SSS drives do 800MB/s).  While the initial 2.6.27
-drivers and ext4 "discard" worked very well with forward-thinking SSS
-not encumbered by old controller technology... but, SSD's were not
-able to handle it well:
-
-http://lwn.net/Articles/347511/
-
-So it looks like "design by committee" Linux is well behind Windows 7,
-while Linux contemplates slowing new technology down to optimize for
-ill-designed SSD's.
-
-Be glad "thumb drives" didn't try to be floppy-drive-compatible!!!
-
-Chris
->
-> On Mon, Nov 9, 2009 at 7:37 PM, Chris Worley <worleys@gmail.com> wrot=
-e:
->> On Sun, Nov 8, 2009 at 6:13 PM, Majed B. <majedb@gmail.com> wrote:
->>> The firmware which introduced the TRIM command was deemed buggy and
->>> has been pulled out.
->>>
->>> Are there any filesystems that are TRIM-aware?
+John Hughes wrote:
+> Bill Davidsen wrote:
+>> mark delfman wrote:
+>>> Hi... I am wondering if anyone can offer some advice on MD performance
+>>> related to CPU (speed and or cores).  
 >>
->> Ext4 (at that level in the kernel, it's referred to as "discard", it=
-'s
->> not TRIM until it's issued as a SCSI command).
->>
->> Chris
->>>
->>> On Sun, Nov 8, 2009 at 8:57 PM, Bill Davidsen <davidsen@tmr.com> wr=
-ote:
->>>> For those of us playing with use of SSD for journals on ext[34], t=
-his does
->>>> have implications for RAID performance.
->>>>
->>>> http://hardware.slashdot.org/story/09/10/27/1427209/Intel-Updates-=
-SSDs-Supports-TRIM-Faster-Writes
->>>>
->>>> --
->>>> Bill Davidsen <davidsen@tmr.com>
->>>> =A0Unintended results are the well-earned reward for incompetence.
->>>>
->>>>
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-ra=
-id" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.ht=
-ml
->>>>
->>>
->>>
->>>
->>> --
->>> =A0 =A0 =A0 Majed B.
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
-l
->>>
->>
->
->
->
-> --
-> =A0 =A0 =A0 Majed B.
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> You didn't ask: if you use ext[34] filesystems, there is a gain to be 
+>> had from tuning the stripe and stride parameters, at least for large 
+>> sequential io. My measurements were on 2.6.26, so are out of date, 
+>> but less head motion is always better. 
+> An external journal can be a huge win for ext3 if you are doing lots 
+> of file creates/deletes.  (Striped raid, i.e. raid0/raid5/raid6/raid10 
+> doesn't help the journal much as it is used sequentially.  In my tests 
+> putting the journal on a raid1 and the rest of the fs on a raid10 
+> makes things go much faster.  If you have enough disks of course :-))
+
+You might try mounting with data=journal and see what performance you 
+get with small reads and writes. Might surprise you. I hadn't thought of 
+using raid1 (or raid0 if speed is more important than survival), but I 
+have been playing with using SSD just for the journal. As you say, when 
+you do lots of creates or deletes it makes a big difference.
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "We can't solve today's problems by using the same thinking we
+   used in creating them." - Einstein
+
