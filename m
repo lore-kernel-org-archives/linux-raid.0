@@ -1,62 +1,45 @@
-From: Eyal Lebedinsky <eyal@eyal.emu.id.au>
-Subject: Re: mismatch_cnt again
-Date: Tue, 10 Nov 2009 09:03:26 +1100
-Message-ID: <4AF891AE.8090300@eyal.emu.id.au>
-References: <4AF4C247.6050303@eyal.emu.id.au>
+From: Andrew Dunn <andrew.g.dunn@gmail.com>
+Subject: Re: RAID down, dont know why!
+Date: Mon, 09 Nov 2009 17:03:37 -0500
+Message-ID: <4AF891B9.708@gmail.com>
+References: <4AF6CEFD.60309@gmail.com> <4AF6D099.5040407@scalableinformatics.com> <4AF6D0F8.80704@gmail.com> <4AF82DAC.4020307@harddata.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AF4C247.6050303@eyal.emu.id.au>
+In-Reply-To: <4AF82DAC.4020307@harddata.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid list <linux-raid@vger.kernel.org>
+To: Maurice Hilarius <maurice@harddata.com>
+Cc: landman@scalableinformatics.com, linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Thanks everyone,
+/dev/sdm did not drop out, and it is on the same cable as sd[kl]
 
-I wish to narrow down the issue to my question
-	Are there situations known to cause this without an actual hardware failure?
-
-Meaning, are there known *software* issues with this configuration
-	2.6.30.5-43.fc11.x86_64, ext3, raid5, sata, Adaptec 1430SA
-that can lead to a mismatch?
-
-It is not root, not swap, has weekly smartd scans and weekly (different days) raid
-'check's. Only report is a growing mismatch_cnt.
-
-I noted the raid1 as mentioned in the thread.
-
-cheers
-	Eyal
-
-Eyal Lebedinsky wrote:
-> For years I found the mismatch_cnt rising regularly every few weeks and 
-> could
-> never relate it to any evens.
-> 
-> I since replaced the computer, installed fedora 11 (was very old debian)
-> and only kept the array itself (ext3 on 5x1TB raid5). I had the raid
-> 'repair'ed to get it to mismatch_cnt=0.
-> 
-> I thought that I saw the last of these. I had a good run for almost three
-> months, then last week I saw the first mismatch_cnt=184. It was still so
-> on this weekly 'check'.
-> 
-> I cannot see any bad event logged.
-> 
-> Are there situations known to cause this without an actual hardware 
-> failure?
-> I know that this came up in the past (often) but I see little recent
-> discussion and wonder what the current status is.
-> 
-> For the last 6 weeks (my uptime) the machine runs
->     2.6.30.5-43.fc11.x86_64 #1 SMP
-> 
-> The raid holds data (no root or swap) used mostly as DVR (nothing heavy).
-> smartd checks each week and so far no errors. The disks are modern 1yo
-> "SAMSUNG HD103UJ".
-> 
-> TIA
+Maurice Hilarius wrote:
+> Andrew Dunn wrote:
+>> storrgie@ALEXANDRIA:~$ lsscsi  | grep sd[ijkl]
+>> [11:0:0:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdi
+>> [11:0:1:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdj
+>> [11:0:2:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdk
+>> [11:0:3:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdl
+>>   
+> Looks like cable got "jostled" and the 4 drives "dropped out" of the
+> RAID,
+> then it re-connected and now they show up as devs again.
+>
+>
+>
+> -- 
+> With our best regards,
+>
+> /Maurice W. Hilarius         Telephone: 01-780-456-9771
+> Hard Data Ltd.                FAX:          01-780-456-9772
+> 11060 - 166 Avenue         email:maurice@harddata.com
+> <mailto:email:maurice@harddata.com>
+> Edmonton, AB, Canada      T5X 1Y3/
+>
 
 -- 
-Eyal Lebedinsky	(eyal@eyal.emu.id.au)
+Andrew Dunn
+http://agdunn.net
+
