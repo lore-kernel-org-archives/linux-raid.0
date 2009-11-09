@@ -1,70 +1,40 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: mismatch_cnt again
-Date: Mon, 09 Nov 2009 13:22:03 -0500
-Message-ID: <4AF85DCB.3030909@tmr.com>
-References: <4AF4C247.6050303@eyal.emu.id.au> <4AF4D323.6020108@panix.com> <4AF5268D.60900@eyal.emu.id.au> <4877c76c0911070008m789507f8h799d419287740ca5@mail.gmail.com> <87tyx6tpcb.fsf@frosties.localdomain> <4AF58B20.3000409@redhat.com> <87iqdlaujb.fsf@frosties.localdomain> <20091108160433.GA5338@lazy.lzy>
+From: Drew <drew.kay@gmail.com>
+Subject: Re: Doubt
+Date: Mon, 9 Nov 2009 10:35:07 -0800
+Message-ID: <c268e4660911091035i77139339rd48941be2c6c06f7@mail.gmail.com>
+References: <d3540f4d0911042326o754d5f06qf958d8ab5b309e86@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091108160433.GA5338@lazy.lzy>
+In-Reply-To: <d3540f4d0911042326o754d5f06qf958d8ab5b309e86@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: Goswin von Brederlow <goswin-v-b@web.de>, Doug Ledford <dledford@redhat.com>, Michael Evans <mjevans1983@gmail.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
+To: Light King <thelightking@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Piergiorgio Sartor wrote:
-> Hi,
->
->   
->> But unless your drive firmware is broken the drive with only ever give
->> the correct data or an error. Smart has a counter for blocks that have
->> gone bad and will be fixed pending a write to them:
->> Current_Pending_Sector.
->>
->> The only way the drive should be able to give you bad data is if
->> multiple bits toggle in such a way that the ECC still fits.
->>     
->
-> Not really, I've disks which are *perfect* in smart sense
-> and nevertheless I had mistmatch count.
-> This was a SW problem, I think now fixed, in RAID-10 code.
->
->   
-IIRC there still is an error in raid-1 code, in that data is written to 
-multiple drives without preventing modification of the memory between 
-writes. As I understand Neil's explanation, this happens (a) when memory 
-is being changed rapidly and frequently via memory mapped files, or (b) 
-writing via O_DIRECT, or (c) when raid-1 is being used for swap. I'm not 
-totally sure why the last one, but I have always seem mismatches on swap 
-in a system which is actually swapping. What is more troubling is that 
-if I do a hibernate, which writes to swap, and then force a boot from 
-other media to a Live-CD, doing a check of the swap array occasionally 
-shows a mismatch. That doesn't give me a secure feeling, although I have 
-never had an issue in practice, I was just curious.
+> So we dont want any kind of data recovery in our raid device (like
+> raid0) but we want if one cf card failed also, the raid device should
+> run or should reactive without any error(like raid10) but we should
+> abel to use the total disk space (like raid0).
 
-> This means that, yes, there could be mismatches, without
-> any warning, from other sources than disks.
-> And these could be anywhere in the system.
-> I already mentioned, time ago, a cabling problem which was
-> leading to a similar result: wrong data on different disks,
-> without any warning or error from the HW layer.
->
-> That is why it is important to know *where* the mismatch
-> occurs and, if possible, in which device component.
-> If it is an empty part of the FS, no problem, if it
-> belongs to a specific file, then it would be possible
-> to restore/recreate it.
->
-> Of course, a tool will be needed telling which file is
-> using a certain block of the device.
->   
+I honestly don't think there is any sort of setup that will work as
+you described. If you want to have an array continue to function with
+missing devices, you *will* have to sacrifice some space. The closest
+type of block device I can think of which *might* achieve your goal is
+spanning. Basically it turns all four drives into one huge drive but
+doesn't stripe across them so *some* data will survive a device
+failure.
 
-There are tools which claim to do that, or list blocks used in a given 
-file, which is not nearly as useful, but easier to do.
+Even if you were use spanning (assuming mdadm supports it, haven't
+looked) and md doesn't complain when the device drops out, the
+filesystem will choke as soon as you tried to access the data on the
+missing device.
+
+What is the application that needs this configuration?
+
 
 -- 
-Bill Davidsen <davidsen@tmr.com>
-  "We can't solve today's problems by using the same thinking we
-   used in creating them." - Einstein
+Drew
 
+"Nothing in life is to be feared. It is only to be understood."
+--Marie Curie
