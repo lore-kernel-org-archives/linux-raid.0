@@ -1,33 +1,63 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: mismatch_cnt again
-Date: Mon, 09 Nov 2009 15:58:02 -0500
-Message-ID: <4AF8825A.50500@redhat.com>
-References: <4AF4C247.6050303@eyal.emu.id.au> <4AF4D323.6020108@panix.com>	<4AF5268D.60900@eyal.emu.id.au>	<4877c76c0911070008m789507f8h799d419287740ca5@mail.gmail.com> <87tyx6tpcb.fsf@frosties.localdomain> <4AF58B20.3000409@redhat.com> <4AF85B48.3050601@tmr.com>
+Subject: Re: [ANNOUNCE] mdadm-3.1 has been withdrawn
+Date: Mon, 09 Nov 2009 16:00:07 -0500
+Message-ID: <4AF882D7.4030503@redhat.com>
+References: <19187.50708.551325.297625@notabene.brown>    <4AF829B2.5090001@redhat.com> <423765b7af1be77f0a40dcbbb1f65c4b.squirrel@neil.brown.name>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
  protocol="application/pgp-signature";
- boundary="------------enig9325563E4CA6C1D60A2A00A7"
+ boundary="------------enigDCD84C2218F8732F410CB924"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AF85B48.3050601@tmr.com>
+In-Reply-To: <423765b7af1be77f0a40dcbbb1f65c4b.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Goswin von Brederlow <goswin-v-b@web.de>, Michael Evans <mjevans1983@gmail.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
+To: Neil F Brown <nfbrown@novell.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig9325563E4CA6C1D60A2A00A7
+--------------enigDCD84C2218F8732F410CB924
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On 11/09/2009 01:11 PM, Bill Davidsen wrote:
+On 11/09/2009 03:22 PM, Neil F Brown wrote:
+> On Tue, November 10, 2009 1:39 am, Doug Ledford wrote:
+>> On 11/06/2009 01:45 AM, Neil Brown wrote:
+>>>
+>>> Greetings.
+>>>
+>>>  About a week ago I released mdadm-3.1
+>>>  I have now 'withdrawn' it meaning that it doesn't appear on the
+>>>  kernel.org mirrors any more, and I ask people not to use it.
+>>
+>> Although the cause for this sucks, I was actually going to suggest tha=
+t
+>> since 3.1 is a version bump, that we take the opportunity to change a
+>> few defaults.  Like switching to version 1 superblocks instead of
+>> version 0 by default.  And changing the default chunk size to 512k
+>> instead of 64k.  The time has simply come for the 0->1 superblock
+>> change, and I have a good deal of data showing that for SATA disks at
+>> least, the 512k chunk size is the typical sweet  spot.
 >=20
-> Are you saying or implying that this palimpsest program will show
-> relocated sectors which the current tools (smartools) don't? If not,
-> what does this tool do other than what's surrently done by most people
-> using smartctl?
+> I had been toying with that idea myself - certainly of changing the
+> defaults soon.
+> I'm tempted to make the default metadata "1.1" though possibly not for
+> RAID1.  For RAID0,4,5,6,10 there is no value in having the metadata
+> at the end of the device.  For RAID1 there is as it makes booting off
+> any member easier.
+> Thoughts?
 
-Nah, it's just a slightly easier way to get the smart results.  If
-someone doesn't use smartools already anyway.
+While it makes booting off of a raid1 easier, raid1 is *precisely* the
+level that is prone to silent data corrupt due to the individual members
+being able to be mounted while not part of a running raid array.  I
+would make it default to 1.1 period, and force distros or other people
+to either A) update the boot loader to something that can handle a 1.1
+superblock (grub2 should be able to) or B) manually set it to 1.0 instead=
+=2E
+
+>=20
+> I'm certainly happy with increasing the chunksize to 512K.
+>=20
+> NeilBrown
 
 
 --=20
@@ -39,7 +69,7 @@ Infiniband specific RPMs available at
 	      http://people.redhat.com/dledford/Infiniband
 
 
---------------enig9325563E4CA6C1D60A2A00A7
+--------------enigDCD84C2218F8732F410CB924
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: OpenPGP digital signature
 Content-Disposition: attachment; filename="signature.asc"
@@ -47,9 +77,9 @@ Content-Disposition: attachment; filename="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.9 (GNU/Linux)
 
-iEYEARECAAYFAkr4gloACgkQg6WylM+/8ZRlsACgkt/fAdjnMCPbTihwwPNHF2gH
-aw8AnjhuBeB6+P2ttdBO5G4kGp1C+UhV
-=A8BH
+iEYEARECAAYFAkr4gtcACgkQg6WylM+/8ZRKSgCfXTFe6OuFWVvo1MxTWvnZHFli
+FhoAn0w4cd89k12hmgimgj+yEKdcCseM
+=DPUR
 -----END PGP SIGNATURE-----
 
---------------enig9325563E4CA6C1D60A2A00A7--
+--------------enigDCD84C2218F8732F410CB924--
