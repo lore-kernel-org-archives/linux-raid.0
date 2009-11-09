@@ -1,40 +1,62 @@
-From: Drew <drew.kay@gmail.com>
-Subject: Re: Doubt
-Date: Mon, 9 Nov 2009 10:35:07 -0800
-Message-ID: <c268e4660911091035i77139339rd48941be2c6c06f7@mail.gmail.com>
-References: <d3540f4d0911042326o754d5f06qf958d8ab5b309e86@mail.gmail.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: Intel Updates SSDs, Supports TRIM, Faster Writes
+Date: Mon, 9 Nov 2009 13:42:42 -0500
+Message-ID: <87f94c370911091042p16901956wdb2e0f9561b5eb30@mail.gmail.com>
+References: <4AF7066C.1040507@tmr.com>
+	 <70ed7c3e0911081713m7184356buadd6b102fe4755e8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <d3540f4d0911042326o754d5f06qf958d8ab5b309e86@mail.gmail.com>
+In-Reply-To: <70ed7c3e0911081713m7184356buadd6b102fe4755e8@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Light King <thelightking@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: "Majed B." <majedb@gmail.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> So we dont want any kind of data recovery in our raid device (like
-> raid0) but we want if one cf card failed also, the raid device should
-> run or should reactive without any error(like raid10) but we should
-> abel to use the total disk space (like raid0).
+On Sun, Nov 8, 2009 at 8:13 PM, Majed B. <majedb@gmail.com> wrote:
+> The firmware which introduced the TRIM command was deemed buggy and
+> has been pulled out.
+>
+> Are there any filesystems that are TRIM-aware?
+>
+> On Sun, Nov 8, 2009 at 8:57 PM, Bill Davidsen <davidsen@tmr.com> wrot=
+e:
+>> For those of us playing with use of SSD for journals on ext[34], thi=
+s does
+>> have implications for RAID performance.
+>>
+>> http://hardware.slashdot.org/story/09/10/27/1427209/Intel-Updates-SS=
+Ds-Supports-TRIM-Faster-Writes
+>>
+>> --
+>> Bill Davidsen <davidsen@tmr.com>
+> --
+> =A0 =A0 =A0 Majed B.
 
-I honestly don't think there is any sort of setup that will work as
-you described. If you want to have an array continue to function with
-missing devices, you *will* have to sacrifice some space. The closest
-type of block device I can think of which *might* achieve your goal is
-spanning. Basically it turns all four drives into one huge drive but
-doesn't stripe across them so *some* data will survive a device
-failure.
+Majed,
 
-Even if you were use spanning (assuming mdadm supports it, haven't
-looked) and md doesn't complain when the device drops out, the
-filesystem will choke as soon as you tried to access the data on the
-missing device.
+There are various ways to address the TRIM issue.
 
-What is the application that needs this configuration?
+My favorite is to have a once a day (or whatever) process invoked by
+cron that scans a filesystem for unused space, then calls trim on all
+of the unused chunks.
 
+Mark Lord had this working via fallocate calls from user space a
+couple months ago.
 
--- 
-Drew
+See <http://markmail.org/message/rytr4jqx52h2wftm>
 
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
+fyi: Mark Lord is the hdparm maintainer and I think you can get his
+userspace stuff from sourceforge.  I think the kernel code is already
+in vanilla.
+
+fyi2: I have not had my hands on a trim capable SSD so I have not
+tried Mark's code yet.
+
+Greg
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
