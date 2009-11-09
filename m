@@ -1,43 +1,37 @@
 From: Andrew Dunn <andrew.g.dunn@gmail.com>
-Subject: Re: RAID down, dont know why!
-Date: Mon, 09 Nov 2009 17:03:37 -0500
-Message-ID: <4AF891B9.708@gmail.com>
-References: <4AF6CEFD.60309@gmail.com> <4AF6D099.5040407@scalableinformatics.com> <4AF6D0F8.80704@gmail.com> <4AF82DAC.4020307@harddata.com>
+Subject: Re: RAID 6 Failure follow up
+Date: Mon, 09 Nov 2009 17:04:25 -0500
+Message-ID: <4AF891E9.3030901@gmail.com>
+References: <4AF6D0A9.6000901@gmail.com> <4AF6D461.3050109@gmail.com> <4AF6D5FD.2010602@gmail.com> <4AF70791.9080007@sauce.co.nz> <4AF741A9.80701@gmail.com> <4AF74D39.3000304@sauce.co.nz> <7d86ddb90911081845j675818a2vec1a5bd26d542024@mail.gmail.com> <20091109080910.GE18545@boogie.lpds.sztaki.hu> <4AF7EA17.1030504@gmail.com> <20091109113454.GB4492@boogie.lpds.sztaki.hu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AF82DAC.4020307@harddata.com>
+In-Reply-To: <20091109113454.GB4492@boogie.lpds.sztaki.hu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Maurice Hilarius <maurice@harddata.com>
-Cc: landman@scalableinformatics.com, linux-raid list <linux-raid@vger.kernel.org>
+To: Gabor Gombas <gombasg@sztaki.hu>
+Cc: Ryan Wagoner <rswagoner@gmail.com>, Richard Scobie <richard@sauce.co.nz>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-/dev/sdm did not drop out, and it is on the same cable as sd[kl]
+I am not experiencing this issue then. My devices are in /dev after the
+raid drop out. I can use smart scanning on them without issue also.
 
-Maurice Hilarius wrote:
-> Andrew Dunn wrote:
->> storrgie@ALEXANDRIA:~$ lsscsi  | grep sd[ijkl]
->> [11:0:0:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdi
->> [11:0:1:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdj
->> [11:0:2:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdk
->> [11:0:3:0]   disk    ATA      WDC WD1001FALS-0 0K05  /dev/sdl
->>   
-> Looks like cable got "jostled" and the 4 drives "dropped out" of the
-> RAID,
-> then it re-connected and now they show up as devs again.
+Gabor Gombas wrote:
+> On Mon, Nov 09, 2009 at 05:08:23AM -0500, Andrew Dunn wrote:
 >
+>   
+>> does it momentarily offline the disks? like they re-appear in /dev
+>> within moments? That would be similar behavior to what I am
+>> experiencing, the disks drop from the array, but they are in /dev by the
+>> time I get a chance to see them.
+>>     
 >
+> No, either the disks need to be physically removed and re-inserted, or
+> the machine needs to be rebooted.
 >
-> -- 
-> With our best regards,
+> Gabor
 >
-> /Maurice W. Hilarius         Telephone: 01-780-456-9771
-> Hard Data Ltd.                FAX:          01-780-456-9772
-> 11060 - 166 Avenue         email:maurice@harddata.com
-> <mailto:email:maurice@harddata.com>
-> Edmonton, AB, Canada      T5X 1Y3/
->
+>   
 
 -- 
 Andrew Dunn
