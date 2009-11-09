@@ -1,64 +1,60 @@
 From: Doug Ledford <dledford@redhat.com>
 Subject: Re: [ANNOUNCE] mdadm-3.1 has been withdrawn
-Date: Mon, 09 Nov 2009 16:00:07 -0500
-Message-ID: <4AF882D7.4030503@redhat.com>
-References: <19187.50708.551325.297625@notabene.brown>    <4AF829B2.5090001@redhat.com> <423765b7af1be77f0a40dcbbb1f65c4b.squirrel@neil.brown.name>
+Date: Mon, 09 Nov 2009 16:07:09 -0500
+Message-ID: <4AF8847D.8030303@redhat.com>
+References: <19187.50708.551325.297625@notabene.brown> <4AF829B2.5090001@redhat.com>  <4AF836F8.5040903@panix.com> <cccedfc60911090742x5ac85a5axcf93d5cb9f6f6539@mail.gmail.com> <alpine.DEB.1.10.0911091749320.22728@uplift.swm.pp.se>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
  protocol="application/pgp-signature";
- boundary="------------enigDCD84C2218F8732F410CB924"
+ boundary="------------enig86E569C25CBF68BE8EA183B5"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <423765b7af1be77f0a40dcbbb1f65c4b.squirrel@neil.brown.name>
+In-Reply-To: <alpine.DEB.1.10.0911091749320.22728@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil F Brown <nfbrown@novell.com>
-Cc: linux-raid@vger.kernel.org
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: Jon Nelson <jnelson-linux-raid@jamponi.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigDCD84C2218F8732F410CB924
+--------------enig86E569C25CBF68BE8EA183B5
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On 11/09/2009 03:22 PM, Neil F Brown wrote:
-> On Tue, November 10, 2009 1:39 am, Doug Ledford wrote:
->> On 11/06/2009 01:45 AM, Neil Brown wrote:
->>>
->>> Greetings.
->>>
->>>  About a week ago I released mdadm-3.1
->>>  I have now 'withdrawn' it meaning that it doesn't appear on the
->>>  kernel.org mirrors any more, and I ask people not to use it.
->>
->> Although the cause for this sucks, I was actually going to suggest tha=
-t
->> since 3.1 is a version bump, that we take the opportunity to change a
->> few defaults.  Like switching to version 1 superblocks instead of
->> version 0 by default.  And changing the default chunk size to 512k
->> instead of 64k.  The time has simply come for the 0->1 superblock
->> change, and I have a good deal of data showing that for SATA disks at
->> least, the 512k chunk size is the typical sweet  spot.
+On 11/09/2009 11:51 AM, Mikael Abrahamsson wrote:
+> On Mon, 9 Nov 2009, Jon Nelson wrote:
 >=20
-> I had been toying with that idea myself - certainly of changing the
-> defaults soon.
-> I'm tempted to make the default metadata "1.1" though possibly not for
-> RAID1.  For RAID0,4,5,6,10 there is no value in having the metadata
-> at the end of the device.  For RAID1 there is as it makes booting off
-> any member easier.
-> Thoughts?
+>> I've been using 1.1 for everything.  What's the current wisdom
+>> regarding 1.0 vs 1.1 or 1.2?
+>> I used 1.1 because that's also where filesystem metadata usually goes
+>> and therefore one might hope that the presence of the md metadata
+>> would prevent accidental identification of a raid volume as containing=
 
-While it makes booting off of a raid1 easier, raid1 is *precisely* the
-level that is prone to silent data corrupt due to the individual members
-being able to be mounted while not part of a running raid array.  I
-would make it default to 1.1 period, and force distros or other people
-to either A) update the boot loader to something that can handle a 1.1
-superblock (grub2 should be able to) or B) manually set it to 1.0 instead=
-=2E
-
+>> a filesystem.
 >=20
-> I'm certainly happy with increasing the chunksize to 512K.
->=20
-> NeilBrown
+> I like 1.2 because if you happen to write an MBR or something to the
+> drive, you don't lose the superblock.
 
+Of course, I recently had a bug report that I ended closing out as
+NOTABUG because of this very ability.  The person had arrays with 1.2
+superblocks, and they went to add a new disk, and all the existing disks
+had a specific partition layout, so he copied that to the new disk, then
+tried to add the partition to the raid array.  It kept returning "device
+too small for array".  Then, upon inspection, we come to see he has a
+1.2 superblock on the *entire* drive, which left the partition table
+intact, but the partition table is *pointless* because the array is on
+the whole disk devices.  This sort of confusion is bad.  So, while I
+could see making it 1.2 for partitions (so that boot sectors won't
+overwrite the superblock), I wouldn't make it 1.2 for whole disk
+devices, and in fact it might be wise to refuse to create 1.2
+superblocks on whole disk devices.  Just a thought.
+
+> With 1.2 I can also take the drive from a 3ware hw-raid (single drive i=
+n
+> 3ware bios) and put in a non-3ware (because the 3ware stores the
+> superblock at the end, so when you put it in a non-3ware the end has no=
+w
+> changed).
+
+1.1 should work just as well for this.
 
 --=20
 Doug Ledford <dledford@redhat.com>
@@ -69,7 +65,7 @@ Infiniband specific RPMs available at
 	      http://people.redhat.com/dledford/Infiniband
 
 
---------------enigDCD84C2218F8732F410CB924
+--------------enig86E569C25CBF68BE8EA183B5
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: OpenPGP digital signature
 Content-Disposition: attachment; filename="signature.asc"
@@ -77,9 +73,9 @@ Content-Disposition: attachment; filename="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.9 (GNU/Linux)
 
-iEYEARECAAYFAkr4gtcACgkQg6WylM+/8ZRKSgCfXTFe6OuFWVvo1MxTWvnZHFli
-FhoAn0w4cd89k12hmgimgj+yEKdcCseM
-=DPUR
+iEYEARECAAYFAkr4hH0ACgkQg6WylM+/8ZTOAwCeI3f7VENsGJid4JsgdL7y3Lha
+OYEAniF6DxATYcP+15j+OnGEcllVyMn6
+=fhHp
 -----END PGP SIGNATURE-----
 
---------------enigDCD84C2218F8732F410CB924--
+--------------enig86E569C25CBF68BE8EA183B5--
