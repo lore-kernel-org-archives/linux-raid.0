@@ -1,61 +1,57 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Successful RAID 6 setup
-Date: Mon, 09 Nov 2009 12:37:57 -0500
-Message-ID: <4AF85375.9@tmr.com>
-References: <20091104184049356.ZIDJ2725@cdptpa-omta04.mail.rr.com> 	<4AF5BDF3.8020907@redhat.com> <aebf5d970911072242l3876282fm93dc938dd3df1990@mail.gmail.com>
+Subject: Re: Doubt
+Date: Mon, 09 Nov 2009 12:48:58 -0500
+Message-ID: <4AF8560A.4020001@tmr.com>
+References: <d3540f4d0911042326o754d5f06qf958d8ab5b309e86@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <aebf5d970911072242l3876282fm93dc938dd3df1990@mail.gmail.com>
+In-Reply-To: <d3540f4d0911042326o754d5f06qf958d8ab5b309e86@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Beolach <beolach@gmail.com>
-Cc: Doug Ledford <dledford@redhat.com>, Leslie Rhorer <lrhorer@satx.rr.com>, linux-raid@vger.kernel.org
+To: Light King <thelightking@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Beolach wrote:
-> On Sat, Nov 7, 2009 at 11:35, Doug Ledford <dledford@redhat.com> wrote:
->   
->> On 11/04/2009 01:40 PM, Leslie Rhorer wrote:
->>     
->>>       I would recommend a larger chunk size.  I'm using 256K, and even
->>> 512K or 1024K probably would not be excessive.
->>>       
->> OK, I've got some data that I'm not quite ready to send out yet, but it
->> maps out the relationship between max_sectors_kb (largest request size a
->> disk can process, which varies based upon scsi host adapter in question,
->> but for SATA adapters is capped at and defaults to 512KB max per
->> request) and chunk size for a raid0 array across 4 disks or 5 disks (I
->> could run other array sizes too, and that's part of what I'm waiting on
->> before sending the data out).  The point here being that a raid0 array
->> will show up more of the md/lower layer block device interactions where
->> as raid5/6 would muddy the waters with other stuff.  The results of the
->> tests I ran were pretty conclusive that the sweet spot for chunk size is
->> when chunk size is == max_sectors_kb, and since SATA is the predominant
->> thing today and it defaults to 512K, that gives a 512K chunk as the
->> sweet spot.  Given that the chunk size is generally about optimizing
->> block device operations at the command/queue level, it should transfer
->> directly to raid5/6 as well.
->>
->>     
+Light King wrote:
+> i have four cf card and i have one pci based cf card
+> contoller(addonics card with pata_sil6800 driver).when i am connecting
+> this four cf card to addonics card(which has four slots for cf cards)
+> and inserting this total hardware package to pci slot of pc in linux
+> os it is showing four different block devices to me.So using mdadm
+> 2.6.3 software raid i am creating a raid device of level 0 . If one cf
+> card from this hardware package getting failed the raid-device is
+> becoming inactive .If i am trying to reactive the raid device using
+> mdamd -R command it is giving a error of "memory cannot be allocated
+> for the raid device " .The same thing i am trying with raid10 (our
+> hardware only supports raid  level 0 ,1,10) and if one cf card got
+> failed we are abel to reactive the raid device.But  the issue we are
+> facing in raid10 is it is taking 50%(2-CF card out of 4) of total
+> memory space as mirroring which is a loss for us .
 >
-> This only really applies for large sequential io loads, right?  I seem
-> to recall
-> smaller chunk sizes being more effective for smaller random io loads.
+> So we dont want any kind of data recovery in our raid device (like
+> raid0) but we want if one cf card failed also, the raid device should
+> run or should reactive without any error(like raid10) but we should
+> abel to use the total disk space (like raid0).
+>
+> or
+>
+> any idea to increase size of storage memory created by raid10 (50% is
+> going waste due to mirroring and our hardware doesnot support raid5) .
 >   
 
-Not true now (if it ever was). The operative limit here is seek time, 
-not transfer time. Back in the day of old and slow drives, hanging off 
-old and slow connections, the time to transfer the data was somewhat of 
-an issue. Current SATA drives and controllers have higher transfer 
-rates, and until SSD make seek times smaller bigger is better within reason.
+If I understand what you are asking, when one part of your array fails, 
+you want to throw away all the data on all the devices and create a new 
+array using the remaining functional devices. I guess you could run a 
+script to do that, but only if you put the controller in JBOD mode so 
+software raid can manipulate the individual devices. Then you could use 
+the drive fail event to trigger the script.
 
-Related question: that said, why is a six drive raid6 slower than a four 
-drive? On a small write all the data chunks have to be read, but that 
-can be done in parallel, so the limit should stay at the seek time of 
-the slowest drive. In practice it behaves as if the data chunks were 
-being read one at a time. Is that real, or just fallout from not a long 
-enough test to smooth out the data?
+If that isn't what you want, have a go at explaining what you want to 
+happen when a device fails. Bear in mind that with raid0 when any one 
+fails all of your data is gone. Period. You have traded capacity and 
+performance for reliability, so there is no recovery other than start 
+over using the working bits.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
