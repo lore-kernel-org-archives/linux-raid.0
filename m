@@ -1,40 +1,60 @@
-From: Gabor Gombas <gombasg@sztaki.hu>
-Subject: Re: RAID 6 Failure follow up
-Date: Mon, 9 Nov 2009 12:34:55 +0100
-Message-ID: <20091109113454.GB4492@boogie.lpds.sztaki.hu>
-References: <4AF6D0A9.6000901@gmail.com>
- <4AF6D461.3050109@gmail.com>
- <4AF6D5FD.2010602@gmail.com>
- <4AF70791.9080007@sauce.co.nz>
- <4AF741A9.80701@gmail.com>
- <4AF74D39.3000304@sauce.co.nz>
- <7d86ddb90911081845j675818a2vec1a5bd26d542024@mail.gmail.com>
- <20091109080910.GE18545@boogie.lpds.sztaki.hu>
- <4AF7EA17.1030504@gmail.com>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [ANNOUNCE] mdadm-3.1 has been withdrawn
+Date: Mon, 09 Nov 2009 09:39:46 -0500
+Message-ID: <4AF829B2.5090001@redhat.com>
+References: <19187.50708.551325.297625@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigED375E278C08606C750BC47A"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4AF7EA17.1030504@gmail.com>
+In-Reply-To: <19187.50708.551325.297625@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Dunn <andrew.g.dunn@gmail.com>
-Cc: Ryan Wagoner <rswagoner@gmail.com>, Richard Scobie <richard@sauce.co.nz>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Neil Brown <nfbrown@novell.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Nov 09, 2009 at 05:08:23AM -0500, Andrew Dunn wrote:
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigED375E278C08606C750BC47A
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-> does it momentarily offline the disks? like they re-appear in /dev
-> within moments? That would be similar behavior to what I am
-> experiencing, the disks drop from the array, but they are in /dev by the
-> time I get a chance to see them.
+On 11/06/2009 01:45 AM, Neil Brown wrote:
+>=20
+> Greetings.
+>=20
+>  About a week ago I released mdadm-3.1
+>  I have now 'withdrawn' it meaning that it doesn't appear on the
+>  kernel.org mirrors any more, and I ask people not to use it.
 
-No, either the disks need to be physically removed and re-inserted, or
-the machine needs to be rebooted.
+Although the cause for this sucks, I was actually going to suggest that
+since 3.1 is a version bump, that we take the opportunity to change a
+few defaults.  Like switching to version 1 superblocks instead of
+version 0 by default.  And changing the default chunk size to 512k
+instead of 64k.  The time has simply come for the 0->1 superblock
+change, and I have a good deal of data showing that for SATA disks at
+least, the 512k chunk size is the typical sweet  spot.
 
-Gabor
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+	      http://people.redhat.com/dledford
 
--- 
-     ---------------------------------------------------------
-     MTA SZTAKI Computer and Automation Research Institute
-                Hungarian Academy of Sciences
-     ---------------------------------------------------------
+Infiniband specific RPMs available at
+	      http://people.redhat.com/dledford/Infiniband
+
+
+--------------enigED375E278C08606C750BC47A
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkr4KbcACgkQg6WylM+/8ZSsSgCdEy1WbANDBkV3KWHHaKJzKj/V
+a4sAoIjXaThULlj66S1sYaFwptjeAK/x
+=nsOA
+-----END PGP SIGNATURE-----
+
+--------------enigED375E278C08606C750BC47A--
