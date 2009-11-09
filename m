@@ -1,21 +1,63 @@
-From: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Subject: mdadm 3.0.3 bug report
-Date: Mon, 9 Nov 2009 09:43:29 -0600
-Message-ID: <cccedfc60911090743m77b26b7bx98bf5d18b7e96311@mail.gmail.com>
+From: Chris Worley <worleys@gmail.com>
+Subject: Re: Intel Updates SSDs, Supports TRIM, Faster Writes
+Date: Mon, 9 Nov 2009 09:37:05 -0700
+Message-ID: <f3177b9e0911090837y6f40ee6dy2a88c963465e8718@mail.gmail.com>
+References: <4AF7066C.1040507@tmr.com>
+	 <70ed7c3e0911081713m7184356buadd6b102fe4755e8@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <70ed7c3e0911081713m7184356buadd6b102fe4755e8@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: LinuxRaid <linux-raid@vger.kernel.org>
+To: "Majed B." <majedb@gmail.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I tried to create a raid thusly:
-mdadm --create /dev/md3 --level=10 --layout=f2 --metadata=ddf
---raid-devices=2 --assume-clean /dev/sdc1 missing
-and while I got a non-zero exit code (1), I did not get an error
-message or any other indication of failure.
+On Sun, Nov 8, 2009 at 6:13 PM, Majed B. <majedb@gmail.com> wrote:
+> The firmware which introduced the TRIM command was deemed buggy and
+> has been pulled out.
+>
+> Are there any filesystems that are TRIM-aware?
 
-The misfeature is that I expected some sort of message.
+Ext4 (at that level in the kernel, it's referred to as "discard", it's
+not TRIM until it's issued as a SCSI command).
 
--- 
-Jon
+Chris
+>
+> On Sun, Nov 8, 2009 at 8:57 PM, Bill Davidsen <davidsen@tmr.com> wrot=
+e:
+>> For those of us playing with use of SSD for journals on ext[34], thi=
+s does
+>> have implications for RAID performance.
+>>
+>> http://hardware.slashdot.org/story/09/10/27/1427209/Intel-Updates-SS=
+Ds-Supports-TRIM-Faster-Writes
+>>
+>> --
+>> Bill Davidsen <davidsen@tmr.com>
+>> =A0Unintended results are the well-earned reward for incompetence.
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>>
+>
+>
+>
+> --
+> =A0 =A0 =A0 Majed B.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
