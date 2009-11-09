@@ -1,74 +1,45 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Clarify /etc/mdadm.conf format and content?
-Date: Mon, 9 Nov 2009 15:57:22 +1100
-Message-ID: <19191.41266.193710.349961@notabene.brown>
-References: <babafd2f0911042153y427d3194w520f2294f0ff7f53@mail.gmail.com>
-	<4877c76c0911042217r76d7e46cg4ceeb391e9098a6@mail.gmail.com>
-	<babafd2f0911042321k4dfda707he80f40596fba2a3b@mail.gmail.com>
-	<4877c76c0911042331i15f53768s382512200f02c398@mail.gmail.com>
-	<babafd2f0911050824u327c2ca3y43ab557b52f9356@mail.gmail.com>
-	<babafd2f0911050903y5a12f2c4r2a94dc9832ef944b@mail.gmail.com>
+From: Gabor Gombas <gombasg@sztaki.hu>
+Subject: Re: RAID 6 Failure follow up
+Date: Mon, 9 Nov 2009 09:09:11 +0100
+Message-ID: <20091109080910.GE18545@boogie.lpds.sztaki.hu>
+References: <4AF6D0A9.6000901@gmail.com>
+ <4AF6D461.3050109@gmail.com>
+ <4AF6D5FD.2010602@gmail.com>
+ <4AF70791.9080007@sauce.co.nz>
+ <4AF741A9.80701@gmail.com>
+ <4AF74D39.3000304@sauce.co.nz>
+ <7d86ddb90911081845j675818a2vec1a5bd26d542024@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Ben DJ on Thursday November 5
+Content-Disposition: inline
+In-Reply-To: <7d86ddb90911081845j675818a2vec1a5bd26d542024@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ben DJ <bendj095124367913213465@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Ryan Wagoner <rswagoner@gmail.com>
+Cc: Richard Scobie <richard@sauce.co.nz>, Andrew Dunn <andrew.g.dunn@gmail.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thursday November 5, bendj095124367913213465@gmail.com wrote:
-> Neil,
-> 
-> Reading your blog post,
-> 
->   "Auto-assembly mode for mdadm"
->    http://neil.brown.name/blog/20060521092609
-> 
-> Section "Bootstrapping" says
-> 
-> -------------
-> On problem with introducing this functionality is that people have
-> pre-existing array that aren't tagged with the host name. To help we
-> this we will have a new 'update' option of --assemble:
-> --update=homehost which will update the host information in the
-> superblock prior to assembly. This is usable fairly easily for
-> everything except an array holding a root filesystem. In order to
-> avoid needing to boot from different media, there will be an option
-> that can safely be used from an initramfs which will do the right
-> thing.
-> 
-> This will probably be called --auto-update-home-host.
-> 
-> This option is only meaningful when doing a hostname based auto
-> assembly. If the autoassembly process finds anything to assemble, the
-> option is ignored. However if nothing is found with the right host
-> name, then a second pass is made. On this pass, any md array that is
-> found is updated to belong to the current host, and is automatically
-> assembled.
-> 
-> Thus it should be safe to always run mdadm with
-> --auto-update-home-host in initramfs. It will only do its magic once,
-> and after that the arrays should always assemble properly.
-> -------------
-> 
-> That describes the situation I have -- an array holding the root file
-> system, that's not tagged with the hostname.
-> 
-> Can you please explain HOW one runs "with --auto-update-home-host in
-> initramfs" "to avoid needing to boot from different media"?  My
-> existing arrays are tagged with the wrong name, and I'm simply trying
-> to correct it.
+On Sun, Nov 08, 2009 at 09:45:40PM -0500, Ryan Wagoner wrote:
 
-You would need to modify the initramfs ... or get it to give you a
-shell prompt so you can run the commands by hand.
-The details of doing this depend very much on the distro and the
-content of the initramfs it creates.
+> This is interesting to hear as I have been using smartmontools on my
+> Supermicro LSI 1068E controller with the target firmware for 2 years
+> now on CentOS 5. I have 3 RAID 1 arrays across 2 drives, a RAID 5
+> drive across 3 drives, and a RAID 0 across 2 drives.
 
-If you want to change the name in an array that hold your root
-filesystem, your best approach would be to boot from a CDROM and 
-then use e.g.
-   mdadm --assemble /dev/md --update=name --name=foo:bar  /dev/list-of-devices
+[...]
 
-NeilBrown
+> uname -r
+> 2.6.18-128.4.1.el5
+
+Kernel version matters. With 2.6.22 we only got occassional complaints
+that the drives are not capable of SMART checks that were not true but
+were otherwise harmless. With 2.6.26 and 2.6.30, the controller offlines
+the disks.
+
+Gabor
+
+-- 
+     ---------------------------------------------------------
+     MTA SZTAKI Computer and Automation Research Institute
+                Hungarian Academy of Sciences
+     ---------------------------------------------------------
