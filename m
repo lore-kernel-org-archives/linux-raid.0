@@ -1,96 +1,58 @@
-From: Kasper Sandberg <postmaster@metanurb.dk>
-Subject: Re: Intel Updates SSDs, Supports TRIM, Faster Writes
-Date: Tue, 10 Nov 2009 10:42:11 +0100
-Message-ID: <1257846132.22155.155.camel@localhost>
-References: <4AF7066C.1040507@tmr.com>
-	 <70ed7c3e0911081713m7184356buadd6b102fe4755e8@mail.gmail.com>
-	 <f3177b9e0911090837y6f40ee6dy2a88c963465e8718@mail.gmail.com>
-	 <70ed7c3e0911090842i167175a0q44fc5ad50a2f1759@mail.gmail.com>
-	 <f3177b9e0911090859j40a87433r342d2c49b46d015c@mail.gmail.com>
+From: Andrew Dunn <andrew.g.dunn@gmail.com>
+Subject: Re: RAID 6 Failure follow up
+Date: Tue, 10 Nov 2009 05:55:53 -0500
+Message-ID: <4AF946B9.8040809@gmail.com>
+References: <4AF6D0A9.6000901@gmail.com> <4AF6D461.3050109@gmail.com> <4AF6D5FD.2010602@gmail.com> <4AF70791.9080007@sauce.co.nz> <4AF741A9.80701@gmail.com> <4AF74D39.3000304@sauce.co.nz> <7d86ddb90911081845j675818a2vec1a5bd26d542024@mail.gmail.com> <20091109080910.GE18545@boogie.lpds.sztaki.hu> <4AF7EA17.1030504@gmail.com> <20091109113454.GB4492@boogie.lpds.sztaki.hu>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f3177b9e0911090859j40a87433r342d2c49b46d015c@mail.gmail.com>
+In-Reply-To: <20091109113454.GB4492@boogie.lpds.sztaki.hu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Worley <worleys@gmail.com>
-Cc: "Majed B." <majedb@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: Gabor Gombas <gombasg@sztaki.hu>
+Cc: Ryan Wagoner <rswagoner@gmail.com>, Richard Scobie <richard@sauce.co.nz>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 2009-11-09 at 09:59 -0700, Chris Worley wrote:
-> On Mon, Nov 9, 2009 at 9:42 AM, Majed B. <majedb@gmail.com> wrote:
-> > Well, SATA uses SCSI emulation so I guess that's no problem, right?
-> 
-> The only problem is SSD's put Solid State Storage (SSS) behind
-> SATA/SAS controllers... while compatible w/ old disk technology, it
-> severely limits performance (i.e. none of these SSD drives do even
-> 300MB/s... while SSS drives do 800MB/s).  While the initial 2.6.27
-No, around 280MB/s... and obviously they dont do more, because of the
-simple limitation of the sata controllers.. this also means they dont
-need to do as many channels as other devices..
-> drivers and ext4 "discard" worked very well with forward-thinking SSS
-> not encumbered by old controller technology... but, SSD's were not
-> able to handle it well:
-> 
-> http://lwn.net/Articles/347511/
-> 
-> So it looks like "design by committee" Linux is well behind Windows 7,
-And how exactly does windows 7 handle this so much better?
-> while Linux contemplates slowing new technology down to optimize for
-> ill-designed SSD's.
-It does?
-> 
-> Be glad "thumb drives" didn't try to be floppy-drive-compatible!!!
-> 
-> Chris
-> >
-> > On Mon, Nov 9, 2009 at 7:37 PM, Chris Worley <worleys@gmail.com> wrote:
-> >> On Sun, Nov 8, 2009 at 6:13 PM, Majed B. <majedb@gmail.com> wrote:
-> >>> The firmware which introduced the TRIM command was deemed buggy and
-> >>> has been pulled out.
-> >>>
-> >>> Are there any filesystems that are TRIM-aware?
-> >>
-> >> Ext4 (at that level in the kernel, it's referred to as "discard", it's
-> >> not TRIM until it's issued as a SCSI command).
-> >>
-> >> Chris
-> >>>
-> >>> On Sun, Nov 8, 2009 at 8:57 PM, Bill Davidsen <davidsen@tmr.com> wrote:
-> >>>> For those of us playing with use of SSD for journals on ext[34], this does
-> >>>> have implications for RAID performance.
-> >>>>
-> >>>> http://hardware.slashdot.org/story/09/10/27/1427209/Intel-Updates-SSDs-Supports-TRIM-Faster-Writes
-> >>>>
-> >>>> --
-> >>>> Bill Davidsen <davidsen@tmr.com>
-> >>>>  Unintended results are the well-earned reward for incompetence.
-> >>>>
-> >>>>
-> >>>> --
-> >>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> >>>> the body of a message to majordomo@vger.kernel.org
-> >>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>>>
-> >>>
-> >>>
-> >>>
-> >>> --
-> >>>       Majed B.
-> >>> --
-> >>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> >>> the body of a message to majordomo@vger.kernel.org
-> >>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>>
-> >>
-> >
-> >
-> >
-> > --
-> >       Majed B.
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I am able to reproduce this smart error now. I have done it twice, so
+maybe other things are causing this also.
+
+When I scanned the devices this morning with smartctl via webmin I lost
+8 of the 9 drives. They are howerver still in my /dev folder.
+
+Now I sent out my logs from the first failure last night, smartctl was
+on the system... I dont know if ubuntu server's default smartd
+configuration makes it do periodic scans because I didnt change anything.
+
+I would hate to move back to 9.10 and see this problem again.
+
+Should I just not install smartmontools? This seems like a bad solution
+because now I wont be able to check the drives in advance for failures.
+
+Have you installed LSI's linux drivers? Some people say this solves
+their issue.
+
+From the logs sent out last night do you think it could be something else?
+
+Thanks a ton,
+
+Gabor Gombas wrote:
+> On Mon, Nov 09, 2009 at 05:08:23AM -0500, Andrew Dunn wrote:
+>
+>   
+>> does it momentarily offline the disks? like they re-appear in /dev
+>> within moments? That would be similar behavior to what I am
+>> experiencing, the disks drop from the array, but they are in /dev by the
+>> time I get a chance to see them.
+>>     
+>
+> No, either the disks need to be physically removed and re-inserted, or
+> the machine needs to be rebooted.
+>
+> Gabor
+>
+>   
+
+-- 
+Andrew Dunn
+http://agdunn.net
 
