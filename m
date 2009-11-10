@@ -1,36 +1,96 @@
-From: Peter Rabbitson <rabbit+list@rabbit.us>
-Subject: Re: mismatch_cnt again
-Date: Tue, 10 Nov 2009 10:09:17 +0100
-Message-ID: <4AF92DBD.5010102@rabbit.us>
-References: <4AF4C247.6050303@eyal.emu.id.au> <4AF4D323.6020108@panix.com>    <4AF5268D.60900@eyal.emu.id.au>    <4877c76c0911070008m789507f8h799d419287740ca5@mail.gmail.com>    <87tyx6tpcb.fsf@frosties.localdomain> <4AF58B20.3000409@redhat.com>    <87iqdlaujb.fsf@frosties.localdomain> <4AF74B61.6000102@rabbit.us>    <20091109185632.GA2723@lazy.lzy>    <73ebdcee169f46611d411755f9aaca5b.squirrel@neil.brown.name>    <20091109215443.GA4143@lazy.lzy> <d99ca9481d2471073484c5d43d493b4d.squirrel@neil.brown.name>
+From: Kasper Sandberg <postmaster@metanurb.dk>
+Subject: Re: Intel Updates SSDs, Supports TRIM, Faster Writes
+Date: Tue, 10 Nov 2009 10:42:11 +0100
+Message-ID: <1257846132.22155.155.camel@localhost>
+References: <4AF7066C.1040507@tmr.com>
+	 <70ed7c3e0911081713m7184356buadd6b102fe4755e8@mail.gmail.com>
+	 <f3177b9e0911090837y6f40ee6dy2a88c963465e8718@mail.gmail.com>
+	 <70ed7c3e0911090842i167175a0q44fc5ad50a2f1759@mail.gmail.com>
+	 <f3177b9e0911090859j40a87433r342d2c49b46d015c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <d99ca9481d2471073484c5d43d493b4d.squirrel@neil.brown.name>
+In-Reply-To: <f3177b9e0911090859j40a87433r342d2c49b46d015c@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: NeilBrown <neilb@suse.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Goswin von Brederlow <goswin-v-b@web.de>, Doug Ledford <dledford@redhat.com>, Michael Evans <mjevans1983@gmail.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
+To: Chris Worley <worleys@gmail.com>
+Cc: "Majed B." <majedb@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-NeilBrown wrote:
-> On Tue, November 10, 2009 8:54 am, Piergiorgio Sartor wrote:
-> <snip>
+On Mon, 2009-11-09 at 09:59 -0700, Chris Worley wrote:
+> On Mon, Nov 9, 2009 at 9:42 AM, Majed B. <majedb@gmail.com> wrote:
+> > Well, SATA uses SCSI emulation so I guess that's no problem, right?
 > 
-> check/repair is primarily about reading every block on every device,
-> and being ready to cope with read errors by overwriting with the
-> correct data.  This is known as scrubbing I believe.
-> I would normally just 'repair' every month or so.  If there are
-> discrepancies I would like them reported and fixed.  I they happen
-> often on a non-swap partition, I would like to knoe about it, otherwise
-> I would rather they were just fixed.
+> The only problem is SSD's put Solid State Storage (SSS) behind
+> SATA/SAS controllers... while compatible w/ old disk technology, it
+> severely limits performance (i.e. none of these SSD drives do even
+> 300MB/s... while SSS drives do 800MB/s).  While the initial 2.6.27
+No, around 280MB/s... and obviously they dont do more, because of the
+simple limitation of the sata controllers.. this also means they dont
+need to do as many channels as other devices..
+> drivers and ext4 "discard" worked very well with forward-thinking SSS
+> not encumbered by old controller technology... but, SSD's were not
+> able to handle it well:
+> 
+> http://lwn.net/Articles/347511/
+> 
+> So it looks like "design by committee" Linux is well behind Windows 7,
+And how exactly does windows 7 handle this so much better?
+> while Linux contemplates slowing new technology down to optimize for
+> ill-designed SSD's.
+It does?
+> 
+> Be glad "thumb drives" didn't try to be floppy-drive-compatible!!!
+> 
+> Chris
+> >
+> > On Mon, Nov 9, 2009 at 7:37 PM, Chris Worley <worleys@gmail.com> wrote:
+> >> On Sun, Nov 8, 2009 at 6:13 PM, Majed B. <majedb@gmail.com> wrote:
+> >>> The firmware which introduced the TRIM command was deemed buggy and
+> >>> has been pulled out.
+> >>>
+> >>> Are there any filesystems that are TRIM-aware?
+> >>
+> >> Ext4 (at that level in the kernel, it's referred to as "discard", it's
+> >> not TRIM until it's issued as a SCSI command).
+> >>
+> >> Chris
+> >>>
+> >>> On Sun, Nov 8, 2009 at 8:57 PM, Bill Davidsen <davidsen@tmr.com> wrote:
+> >>>> For those of us playing with use of SSD for journals on ext[34], this does
+> >>>> have implications for RAID performance.
+> >>>>
+> >>>> http://hardware.slashdot.org/story/09/10/27/1427209/Intel-Updates-SSDs-Supports-TRIM-Faster-Writes
+> >>>>
+> >>>> --
+> >>>> Bill Davidsen <davidsen@tmr.com>
+> >>>>  Unintended results are the well-earned reward for incompetence.
+> >>>>
+> >>>>
+> >>>> --
+> >>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> >>>> the body of a message to majordomo@vger.kernel.org
+> >>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >>>>
+> >>>
+> >>>
+> >>>
+> >>> --
+> >>>       Majed B.
+> >>> --
+> >>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> >>> the body of a message to majordomo@vger.kernel.org
+> >>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >>>
+> >>
+> >
+> >
+> >
+> > --
+> >       Majed B.
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Bingo - and according to the list archive many of us are getting mismatches
-without swap anywhere near the raid in question. The current situation is
-more akin to "Ok folks get in the plane, we're deploying in 2 hours, and
-btw your chute is not going to open and there is nothing you can do about
-it" How is that for a threat model :)
-
-Please someone step in and add *some* sort of reporting about which
-particular blocks are screwed, so a user can figure out which data is(about
-to) be lost.
