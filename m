@@ -1,175 +1,135 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: need help: corrupt files on one of my raids
-Date: Tue, 10 Nov 2009 18:34:13 +0300
-Message-ID: <70ed7c3e0911100734m31cd846t9987d6141d2513a6@mail.gmail.com>
-References: <4AF97388.5080907@langseid.no>
+From: Chris Worley <worleys@gmail.com>
+Subject: Re: Intel Updates SSDs, Supports TRIM, Faster Writes
+Date: Tue, 10 Nov 2009 08:39:43 -0700
+Message-ID: <f3177b9e0911100739p56a98992p26f9a42e8b689dcf@mail.gmail.com>
+References: <4AF7066C.1040507@tmr.com>
+	 <70ed7c3e0911081713m7184356buadd6b102fe4755e8@mail.gmail.com>
+	 <f3177b9e0911090837y6f40ee6dy2a88c963465e8718@mail.gmail.com>
+	 <70ed7c3e0911090842i167175a0q44fc5ad50a2f1759@mail.gmail.com>
+	 <f3177b9e0911090859j40a87433r342d2c49b46d015c@mail.gmail.com>
+	 <1257846132.22155.155.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AF97388.5080907@langseid.no>
+In-Reply-To: <1257846132.22155.155.camel@localhost>
 Sender: linux-raid-owner@vger.kernel.org
-To: Arild Langseid <arild@langseid.no>
-Cc: linux-raid@vger.kernel.org
+To: Kasper Sandberg <postmaster@metanurb.dk>
+Cc: "Majed B." <majedb@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-If you have smartmontools installed, run smartctl -a /dev/sdx
+On Tue, Nov 10, 2009 at 2:42 AM, Kasper Sandberg <postmaster@metanurb.d=
+k> wrote:
+> On Mon, 2009-11-09 at 09:59 -0700, Chris Worley wrote:
+>> On Mon, Nov 9, 2009 at 9:42 AM, Majed B. <majedb@gmail.com> wrote:
+>> > Well, SATA uses SCSI emulation so I guess that's no problem, right=
+?
+>>
+>> The only problem is SSD's put Solid State Storage (SSS) behind
+>> SATA/SAS controllers... while compatible w/ old disk technology, it
+>> severely limits performance (i.e. none of these SSD drives do even
+>> 300MB/s... while SSS drives do 800MB/s). =A0While the initial 2.6.27
+> No, around 280MB/s... and obviously they dont do more, because of the
+> simple limitation of the sata controllers.. this also means they dont
+> need to do as many channels as other devices..
 
-Look for any number that is bigger than 1 on these:
-Reallocated_Event_Count
-Current_Pending_Sector
-Offline_Uncorrectable
-UDMA_CRC_Error_Count
-Raw_Read_Error_Rate
-Reallocated_Sector_Ct
-Load_Retry_Count
+I'm not sure if you're agreeing or disagreeing here...
+280MB/s<300MB/s, due to the "compatibility" based design of SSD's,
+while SSS, w/o a legacy controller, can do 800MB/s out of a single
+drive.
 
-You may not have some of these. That's OK.
+>> drivers and ext4 "discard" worked very well with forward-thinking SS=
+S
+>> not encumbered by old controller technology... but, SSD's were not
+>> able to handle it well:
+>>
+>> http://lwn.net/Articles/347511/
+>>
+>> So it looks like "design by committee" Linux is well behind Windows =
+7,
+> And how exactly does windows 7 handle this so much better?
 
-If you don't have the package, install it, configure it to run short
-tests daily & long tests on weekends (on idle times).
-To run an immediate long test, issue this command: smartctl -t offline =
-/dev/sdx
+TRIM is in W7; NTFS support.  No Linux distro does.  And by the time
+"design by committee" gets through with it,we shouldn't have bothered.
 
-Note: An offline test is a long test and may take up to 20 hours. An
-offline test is required to get the numbers for the parameters above.
+>> while Linux contemplates slowing new technology down to optimize for
+>> ill-designed SSD's.
+> It does?
 
-If you're using ext3 filesystem, it would have automatically checked
-for bad sectors on the time of formatting the volume.
+Those that speak loudest in the kernel development (and contribute the
+most) work for companies like Intel that promote the slower,
+controller-based, SSD's.
 
-I would also suggest you run a fsck on your filesystems.
-
-On Tue, Nov 10, 2009 at 5:07 PM, Arild Langseid <arild@langseid.no> wro=
-te:
-> Hi all!
->
-> I have a strange problem with corrupted files on my raid1 volume. (A =
-raid5
-> volume on the same computer works just fine).
->
-> One of my raids (md1) is a raid1 with two 1TB sata drives.
-> I am running lvm on the raid and have two of the volumes on the raid =
-are:
-> /dev/vg0sata/lv0_bilderArchive
-> /dev/vg0sata/lv0_bilderProjects
-> (For your info: "bilder" in Norwegian is "pictures" in english)
->
-> What I want:
-> I want to use the lv0_bilderArchive to store my pictures unmodified a=
-nd
-> lv0_bilderProjects to hold my edited pictures and projects.
->
-> My problem is:
->
-> My files are corrupted. Usually the files (crw/cr2/jpg) are stored ok=
-, but
-> is corrupted later when new files/directories is added to the volume.
-> Sometimes the files are corrupted instantly at save-time.
->
-> I discovered this first when copying from my laptop to the server via=
- samba.
-> By testing I have found that this behavour also applies when I copy l=
-ocal on
-> the server from raid5 (md0) to the faulty raid1(md1) with cp -a.
->
-> I have tested with both reiserfs and ext3 filesystem. The file-corrup=
-tion
-> happens on both reiserfs and ext3.
->
-> One of my test-procedures was as follows:
-> 1. copied 21 pictures localy to the root of the lv0_bilderProjects vo=
-lume.
-> First 10 pictures, then 11 more by cp -a. All pictures survived and w=
-as
-> stored non-corrupted.
-> 2. Then I copied a whole directory-tree with cp -a to the lv0_bilderP=
-rojects
-> volume. Many pictures was corrupted, a few stored ok. All small text-=
-files
-> with exif-info seems ok. All files on the volume-root copied in 1) is=
- ok.
-> 3. Then I copied one more directory-tree. All pictures seems ok. Most=
-ly jpg
-> this time.
-> 4. Then I copied one more directory-tree, larger this time. Now the f=
-irst 21
-> pictures in the volume-root is corrupted. All of them - and some of t=
-hem in
-> a way that my browser can't show them at all but shows an error-messa=
-ge.
->
-> I think by my test that the samba, network and type of filesystem is =
-not the
-> source to my problems.
->
-> I have the same problem on all lvm-volumes on the raid in question (m=
-d1).
->
-> What's common and what's different on my to raids:
->
-> differences on the two raid-systems:
-> md0 (working correct) is a raid5, three ide-disks, 200GB each.
-> md1 (corrupted files) is a raid1, two sata-disks, 1TB each.
->
-> common:
-> I use lvm on both raid-devices to host my filesystems.
->
-> other useful information:
-> I use Debian:
-> creator:~# cat /proc/version
-> Linux version 2.6.18-6-686 (Debian 2.6.18.dfsg.1-26etch1) (dannf@debi=
-an.org)
-> (gcc version 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)) #1 SMP Th=
-u Nov 5
-> 16:28:13 UTC 2009
->
-> I have run apt-get update and apt-get upgrade, and all seems to be up=
-dated.
->
-> The sata disks are hosted on the motherboard: ABit NF7
-> The disks hosting the raid I have trouble with (md1) are Hitachi
-> Deskstar 1TB 16MB SATA2 7200RPM, 0A38016
->
-> The output from mdadm --detail /dev/md1 and cat /proc/mdstat seems ok=
-, but I
-> can post the results here at request. The same applies to the output =
-from
-> pvdisplay, vgdisplay and lvdisplay. They seems ok, but I can post at
-> request.
->
-> Due to the time to build a 1TB raid I have not tried to use the disks=
- in md1
-> without raiding them. Is it a good idea to tear the raid down and tes=
-t the
-> disks directly or does any of you have other ideas to test before I t=
-ake
-> this time consuming action?
+Chris
+>>
+>> Be glad "thumb drives" didn't try to be floppy-drive-compatible!!!
+>>
+>> Chris
+>> >
+>> > On Mon, Nov 9, 2009 at 7:37 PM, Chris Worley <worleys@gmail.com> w=
+rote:
+>> >> On Sun, Nov 8, 2009 at 6:13 PM, Majed B. <majedb@gmail.com> wrote=
+:
+>> >>> The firmware which introduced the TRIM command was deemed buggy =
+and
+>> >>> has been pulled out.
+>> >>>
+>> >>> Are there any filesystems that are TRIM-aware?
+>> >>
+>> >> Ext4 (at that level in the kernel, it's referred to as "discard",=
+ it's
+>> >> not TRIM until it's issued as a SCSI command).
+>> >>
+>> >> Chris
+>> >>>
+>> >>> On Sun, Nov 8, 2009 at 8:57 PM, Bill Davidsen <davidsen@tmr.com>=
+ wrote:
+>> >>>> For those of us playing with use of SSD for journals on ext[34]=
+, this does
+>> >>>> have implications for RAID performance.
+>> >>>>
+>> >>>> http://hardware.slashdot.org/story/09/10/27/1427209/Intel-Updat=
+es-SSDs-Supports-TRIM-Faster-Writes
+>> >>>>
+>> >>>> --
+>> >>>> Bill Davidsen <davidsen@tmr.com>
+>> >>>> =A0Unintended results are the well-earned reward for incompeten=
+ce.
+>> >>>>
+>> >>>>
+>> >>>> --
+>> >>>> To unsubscribe from this list: send the line "unsubscribe linux=
+-raid" in
+>> >>>> the body of a message to majordomo@vger.kernel.org
+>> >>>> More majordomo info at =A0http://vger.kernel.org/majordomo-info=
+=2Ehtml
+>> >>>>
+>> >>>
+>> >>>
+>> >>>
+>> >>> --
+>> >>> =A0 =A0 =A0 Majed B.
+>> >>> --
+>> >>> To unsubscribe from this list: send the line "unsubscribe linux-=
+raid" in
+>> >>> the body of a message to majordomo@vger.kernel.org
+>> >>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.=
+html
+>> >>>
+>> >>
+>> >
+>> >
+>> >
+>> > --
+>> > =A0 =A0 =A0 Majed B.
+>> >
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
 >
 >
-> Any ideas out there? Links to information I should read?
->
-> Thank heaven for my backup-routines including all copy on cold
-> harddrives both in my safe and off location :-D
->
-> Thanks for all help!
->
-> Best Regards,
-> Arild, Oslo, Norway
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
-
-
-
---=20
-       Majed B.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
