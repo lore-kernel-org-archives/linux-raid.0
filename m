@@ -1,58 +1,25 @@
-From: Chris Worley <worleys@gmail.com>
-Subject: Re: Intel Updates SSDs, Supports TRIM, Faster Writes
-Date: Tue, 10 Nov 2009 14:17:58 -0700
-Message-ID: <f3177b9e0911101317wcbae93fu71f56fc0142d7f5@mail.gmail.com>
-References: <4AF7066C.1040507@tmr.com>
-	 <70ed7c3e0911081713m7184356buadd6b102fe4755e8@mail.gmail.com>
-	 <f3177b9e0911090837y6f40ee6dy2a88c963465e8718@mail.gmail.com>
-	 <70ed7c3e0911090842i167175a0q44fc5ad50a2f1759@mail.gmail.com>
-	 <f3177b9e0911090859j40a87433r342d2c49b46d015c@mail.gmail.com>
-	 <yq1ljienxql.fsf@sermon.lab.mkp.net>
-	 <f3177b9e0911100922u435993behd0889ae284cf0ec4@mail.gmail.com>
-	 <yq11vk6nnrh.fsf@sermon.lab.mkp.net>
-	 <87f94c370911101301v4b71ce74hbd4ebd20e7ce2419@mail.gmail.com>
+From: Peter Rabbitson <rabbit+list@rabbit.us>
+Subject: Re: mismatch_cnt again
+Date: Tue, 10 Nov 2009 23:17:02 +0100
+Message-ID: <4AF9E65E.6070803@rabbit.us>
+References: <4AF4C247.6050303@eyal.emu.id.au> <4AF4D323.6020108@panix.com>    <4AF5268D.60900@eyal.emu.id.au>    <4877c76c0911070008m789507f8h799d419287740ca5@mail.gmail.com>    <87tyx6tpcb.fsf@frosties.localdomain> <4AF58B20.3000409@redhat.com>    <87iqdlaujb.fsf@frosties.localdomain> <20091108160433.GA5338@lazy.lzy>    <4AF85DCB.3030909@tmr.com> <df8de4eb79e2bf13d0e5c2c83cdc7cf1.squirrel@neil.brown.name> <4AF9AB6C.4010608@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87f94c370911101301v4b71ce74hbd4ebd20e7ce2419@mail.gmail.com>
+In-Reply-To: <4AF9AB6C.4010608@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Majed B." <majedb@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: NeilBrown <neilb@suse.de>, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Goswin von Brederlow <goswin-v-b@web.de>, Doug Ledford <dledford@redhat.com>, Michael Evans <mjevans1983@gmail.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Nov 10, 2009 at 2:01 PM, Greg Freemyer <greg.freemyer@gmail.com=
-> wrote:
-> On Tue, Nov 10, 2009 at 3:11 PM, Martin K. Petersen
-> <martin.petersen@oracle.com> wrote:
->>>>>>> "Chris" =3D=3D Chris Worley <worleys@gmail.com> writes:
->>
-> <snip>
->>
->> Chris> And I do appreciate all your work. =A0I fear, in this case, d=
-iscard
->> Chris> will be optimized for the slower technology... we won't be
->> Chris> getting all that's available from it.
->>
->> Discard isn't "optimized" for anything. =A0It's a command. =A0Filesy=
-stem
->> issues it, it gets sent to the storage device (DSM/TRIM, WRITE SAME,=
- or
->> UNMAP depending on target type).
->>
->
-> Martin,
->
-> I'm not sure that is right, but Chris is also wrong.
+Bill Davidsen wrote:
+> Well, I do get a *ton* of mismatches in swap, I just ran a check and got
+> 12032 in the mismatch count. Another raid1 on partitions of the same
+> drives showed 128, which still bothers me, since /boot hasn't changed in
+> months.
 
-I've not been happier to hear I'm wrong; I do hope you are right
-(there will be a switch for optimal approaches).
+I can answer the /boot part (I did a hexdiff on all the raid members to
+come up with this): http://marc.info/?l=linux-raid&m=120988628322707&w=2
 
-Thanks,
-
-Chris
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers
