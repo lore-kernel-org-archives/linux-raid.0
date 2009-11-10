@@ -1,33 +1,39 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Bitmap did not survive reboot
-Date: Mon, 9 Nov 2009 19:58:49 -0600
-Message-ID: <20091110015857583.WZXO3390@cdptpa-omta03.mail.rr.com>
-References: <20091110014415205.WMYE3390@cdptpa-omta03.mail.rr.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: [ANNOUNCE] mdadm-3.1 has been withdrawn
+Date: Tue, 10 Nov 2009 09:25:34 +0100 (CET)
+Message-ID: <alpine.DEB.1.10.0911100920510.22728@uplift.swm.pp.se>
+References: <19187.50708.551325.297625@notabene.brown> <4AF829B2.5090001@redhat.com>  <4AF836F8.5040903@panix.com> <cccedfc60911090742x5ac85a5axcf93d5cb9f6f6539@mail.gmail.com> <alpine.DEB.1.10.0911091749320.22728@uplift.swm.pp.se>
+ <4AF8847D.8030303@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091110014415205.WMYE3390@cdptpa-omta03.mail.rr.com>
+In-Reply-To: <4AF8847D.8030303@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> 	I had to reboot one of my Linux systems a few days ago (November 2)
-> because something was a little unstable, although RAID was AFAIK working
-> just fine.  This is not an online production system, so rather than try to
-> run down the culprit, I just rebooted the box.  Everything seemed to come
-> back up just fine, so I really didn't spend too much time checking
-> everything out.  Today one of the drives in the RAID5 array was kicked
-> out,
-> so I removed it and added it back.  It wasn't until I added the drive back
-> that I noticed the array no longer had a write-intent bitmap.  The array
-> had
-> an external bitmap, but it is no longer there, and I presume for some
-> reason
-> it was not registered when the box rebooted.  I don't see anything which
+On Mon, 9 Nov 2009, Doug Ledford wrote:
 
-	Oh, hey, I just looked at one of my other Linux systems which was
-shut down during a protracted power outage 16 days ago, and it, too, is
-missing its bitmap, presumably since it was brought back up.
+> Of course, I recently had a bug report that I ended closing out as 
+> NOTABUG because of this very ability.  The person had arrays with 1.2 
+> superblocks, and they went to add a new disk, and all the existing disks 
+> had a specific partition layout, so he copied that to the new disk, then 
+> tried to add the partition to the raid array.  It kept returning "device 
+> too small for array".  Then, upon inspection, we come to see he has a 
+> 1.2 superblock on the *entire* drive, which left the partition table 
+> intact, but the partition table is *pointless* because the array is on 
+> the whole disk devices.  This sort of confusion is bad.  So, while I 
+> could see making it 1.2 for partitions (so that boot sectors won't 
+> overwrite the superblock), I wouldn't make it 1.2 for whole disk 
+> devices, and in fact it might be wise to refuse to create 1.2 
+> superblocks on whole disk devices.  Just a thought.
 
+Well, same thing there, if you create a partition table you don't break 
+the superblock. Perhaps something needs to be able to discern between the 
+superblock being "whole disk" and on a partition? Personally I put 1.2 on 
+"whole disk" (no partition table at all), and I would really HATE this 
+possibility going away. I like it the way it is and feel comfortable with 
+it and I don't want 1.0 or 1.1 superblocks in my setup.
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
