@@ -1,25 +1,51 @@
-From: Peter Rabbitson <rabbit+list@rabbit.us>
-Subject: Re: mismatch_cnt again
-Date: Tue, 10 Nov 2009 23:17:02 +0100
-Message-ID: <4AF9E65E.6070803@rabbit.us>
-References: <4AF4C247.6050303@eyal.emu.id.au> <4AF4D323.6020108@panix.com>    <4AF5268D.60900@eyal.emu.id.au>    <4877c76c0911070008m789507f8h799d419287740ca5@mail.gmail.com>    <87tyx6tpcb.fsf@frosties.localdomain> <4AF58B20.3000409@redhat.com>    <87iqdlaujb.fsf@frosties.localdomain> <20091108160433.GA5338@lazy.lzy>    <4AF85DCB.3030909@tmr.com> <df8de4eb79e2bf13d0e5c2c83cdc7cf1.squirrel@neil.brown.name> <4AF9AB6C.4010608@tmr.com>
+From: Dexter Filmore <Dexter.Filmore@gmx.de>
+Subject: md0: unknown partition table - should I worry?
+Date: Tue, 10 Nov 2009 23:24:44 +0100
+Message-ID: <200911102324.47474.Dexter.Filmore@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed;
+  boundary="nextPart3010034.5QVFQQK2M2";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AF9AB6C.4010608@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: NeilBrown <neilb@suse.de>, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Goswin von Brederlow <goswin-v-b@web.de>, Doug Ledford <dledford@redhat.com>, Michael Evans <mjevans1983@gmail.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
-> Well, I do get a *ton* of mismatches in swap, I just ran a check and got
-> 12032 in the mismatch count. Another raid1 on partitions of the same
-> drives showed 128, which still bothers me, since /boot hasn't changed in
-> months.
+--nextPart3010034.5QVFQQK2M2
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-I can answer the /boot part (I did a hexdiff on all the raid members to
-come up with this): http://marc.info/?l=linux-raid&m=120988628322707&w=2
+Today md0 degraded (debian 5.0 i386, raid5, 5x500 samsung sata) so I checke=
+d=20
+the logs and noticed on each rebootI got this in /var/log/messages:
 
-Cheers
+md0: unknown partition table
+
+md0 is all LVM2 and volumes mount fine, so is this normal?=20
+
+
+=2D-=20
+=2D----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCS d--(+)@ s-:+ a C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
+w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@=20
+b++(+++) DI+++ D- G++ e* h>++ r* y?
+=2D-----END GEEK CODE BLOCK------
+
+--nextPart3010034.5QVFQQK2M2
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQBK+egvm6TdMk9WhQ0RAhugAJ0SYLDPPmRahQE54iVrYH/M61v41ACgpXhR
+OlVE/dy5TfCo9UfL6+eO3gY=
+=D4ry
+-----END PGP SIGNATURE-----
+
+--nextPart3010034.5QVFQQK2M2--
