@@ -1,206 +1,109 @@
-From: Kasper Sandberg <postmaster@metanurb.dk>
-Subject: Re: Intel Updates SSDs, Supports TRIM, Faster Writes
-Date: Tue, 10 Nov 2009 19:40:31 +0100
-Message-ID: <1257878431.22155.163.camel@localhost>
-References: <4AF7066C.1040507@tmr.com>
-	 <70ed7c3e0911081713m7184356buadd6b102fe4755e8@mail.gmail.com>
-	 <f3177b9e0911090837y6f40ee6dy2a88c963465e8718@mail.gmail.com>
-	 <70ed7c3e0911090842i167175a0q44fc5ad50a2f1759@mail.gmail.com>
-	 <f3177b9e0911090859j40a87433r342d2c49b46d015c@mail.gmail.com>
-	 <1257846132.22155.155.camel@localhost>
-	 <f3177b9e0911100739p56a98992p26f9a42e8b689dcf@mail.gmail.com>
-	 <70ed7c3e0911100743y55a1eef5p5705cd9cd1f1aa51@mail.gmail.com>
-	 <f3177b9e0911100758n2a663d16hc15a6c90e88346b7@mail.gmail.com>
-	 <70ed7c3e0911100801j2880965p7a5d6e03c74248dd@mail.gmail.com>
-	 <f3177b9e0911100818p36cbc0d9r56c95fa1f13ef46c@mail.gmail.com>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: bitmap chunk size
+Date: Tue, 10 Nov 2009 14:46:50 -0500
+Message-ID: <4AF9C32A.9000300@redhat.com>
+References: <alpine.DEB.1.00.0911100933160.10087@darius> <4AF9AA92.7030604@redhat.com> <alpine.DEB.1.00.0911101123480.12026@darius>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig24B926E2AC69764A1BA1AB93"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f3177b9e0911100818p36cbc0d9r56c95fa1f13ef46c@mail.gmail.com>
+In-Reply-To: <alpine.DEB.1.00.0911101123480.12026@darius>
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Worley <worleys@gmail.com>
-Cc: "Majed B." <majedb@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: "Darius S. Naqvi" <dnaqvi@datagardens.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 2009-11-10 at 09:18 -0700, Chris Worley wrote:
-> On Tue, Nov 10, 2009 at 9:01 AM, Majed B. <majedb@gmail.com> wrote:
-> > Which disks can provide 2ms response with a read of 250 MB/s and write
-> > of 170 MB/s other than SSDs?!
-> 
-> The drives I use average <50usecs latency at 4KB packets (properly
-> measured as the complete turn-around time of a single outstanding
-> I/O), 800MB/s reads and >600MB/s writes at 128KB blocks.
-> 
-> >
-> > Are you saying that it doesn't matter whether we use Linux or Windows
-> > with SSDs because the limitation is coming from the disk's controller
-> > itself?
-> 
-> To some degree, yes, when using SSD's behind a controller, the
-> controller is the biggest performance issue, and given they use
-> chicklets for processors, they all hamper performance given the speed
-> potential of the underlying storage.
-> 
-> As none of the enterprise distros are handling TRIM yet, W7 can claim
-> it was first, and putting together a TRIM-capable kernel is manual
-Except it wasnt, it may be earlier than the enterprise distros, but
-thats not first.
-> currently in Linux, and given only ext4 supports it (strangely, FAT
-> supported it, then the code was pulled... XFS may support it, but I
-> believe that's still in the works), you have the additional problem
-> that ext4 has some maturity issues.  Porting "discard" to ext2/3 would
-> not be too difficult, especially w/o journal considerations.
-And given W7 supports it, it is going to have the same issues which
-linux faces, i dont know what solution microsoft has chosen, but that
-doesnt mean linux shouldnt choose the best one..
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig24B926E2AC69764A1BA1AB93
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-> 
-> Chris
-> >
-> > On Tue, Nov 10, 2009 at 6:58 PM, Chris Worley <worleys@gmail.com> wrote:
-> >> On Tue, Nov 10, 2009 at 8:43 AM, Majed B. <majedb@gmail.com> wrote:
-> >>> Does that mean we won't be able to squeeze the juice out of Intel's
-> >>> Extreme SSDs on Linux?
-> >>
-> >> The limitation is in the design.  You'll be able to get as much
-> >> performance as they can offer, given the bad design (of putting SSS
-> >> behind legacy controllers).
-> >>
-> >>>
-> >>> What about those of us who use OpenFiler and build their own storage
-> >>> solutions? We won't be able to provide solutions based on these SSDs
-> >>> because the kernel support is crap?
-> >>
-> >> It's sub-optimal, written to make the best of a bad design, limiting
-> >> performance of good designs, but not crap.
-> >>
-> >>>
-> >>> I may have clients wanting to mix between SAS/SATA & SSD to load their
-> >>> main database on the SSDs, but now it seems pointless since the
-> >>> performance isn't gonna be that great :/
-> >>
-> >> You can still get much greater performance from SSS designed
-> >> correctly.  Just don't do SSD's.
-> >>
-> >> Chris
-> >>>
-> >>> On Tue, Nov 10, 2009 at 6:39 PM, Chris Worley <worleys@gmail.com> wrote:
-> >>>> On Tue, Nov 10, 2009 at 2:42 AM, Kasper Sandberg <postmaster@metanurb.dk> wrote:
-> >>>>> On Mon, 2009-11-09 at 09:59 -0700, Chris Worley wrote:
-> >>>>>> On Mon, Nov 9, 2009 at 9:42 AM, Majed B. <majedb@gmail.com> wrote:
-> >>>>>> > Well, SATA uses SCSI emulation so I guess that's no problem, right?
-> >>>>>>
-> >>>>>> The only problem is SSD's put Solid State Storage (SSS) behind
-> >>>>>> SATA/SAS controllers... while compatible w/ old disk technology, it
-> >>>>>> severely limits performance (i.e. none of these SSD drives do even
-> >>>>>> 300MB/s... while SSS drives do 800MB/s).  While the initial 2.6.27
-> >>>>> No, around 280MB/s... and obviously they dont do more, because of the
-> >>>>> simple limitation of the sata controllers.. this also means they dont
-> >>>>> need to do as many channels as other devices..
-> >>>>
-> >>>> I'm not sure if you're agreeing or disagreeing here...
-> >>>> 280MB/s<300MB/s, due to the "compatibility" based design of SSD's,
-> >>>> while SSS, w/o a legacy controller, can do 800MB/s out of a single
-> >>>> drive.
-> >>>>
-> >>>>>> drivers and ext4 "discard" worked very well with forward-thinking SSS
-> >>>>>> not encumbered by old controller technology... but, SSD's were not
-> >>>>>> able to handle it well:
-> >>>>>>
-> >>>>>> http://lwn.net/Articles/347511/
-> >>>>>>
-> >>>>>> So it looks like "design by committee" Linux is well behind Windows 7,
-> >>>>> And how exactly does windows 7 handle this so much better?
-> >>>>
-> >>>> TRIM is in W7; NTFS support.  No Linux distro does.  And by the time
-> >>>> "design by committee" gets through with it,we shouldn't have bothered.
-> >>>>
-> >>>>>> while Linux contemplates slowing new technology down to optimize for
-> >>>>>> ill-designed SSD's.
-> >>>>> It does?
-> >>>>
-> >>>> Those that speak loudest in the kernel development (and contribute the
-> >>>> most) work for companies like Intel that promote the slower,
-> >>>> controller-based, SSD's.
-> >>>>
-> >>>> Chris
-> >>>>>>
-> >>>>>> Be glad "thumb drives" didn't try to be floppy-drive-compatible!!!
-> >>>>>>
-> >>>>>> Chris
-> >>>>>> >
-> >>>>>> > On Mon, Nov 9, 2009 at 7:37 PM, Chris Worley <worleys@gmail.com> wrote:
-> >>>>>> >> On Sun, Nov 8, 2009 at 6:13 PM, Majed B. <majedb@gmail.com> wrote:
-> >>>>>> >>> The firmware which introduced the TRIM command was deemed buggy and
-> >>>>>> >>> has been pulled out.
-> >>>>>> >>>
-> >>>>>> >>> Are there any filesystems that are TRIM-aware?
-> >>>>>> >>
-> >>>>>> >> Ext4 (at that level in the kernel, it's referred to as "discard", it's
-> >>>>>> >> not TRIM until it's issued as a SCSI command).
-> >>>>>> >>
-> >>>>>> >> Chris
-> >>>>>> >>>
-> >>>>>> >>> On Sun, Nov 8, 2009 at 8:57 PM, Bill Davidsen <davidsen@tmr.com> wrote:
-> >>>>>> >>>> For those of us playing with use of SSD for journals on ext[34], this does
-> >>>>>> >>>> have implications for RAID performance.
-> >>>>>> >>>>
-> >>>>>> >>>> http://hardware.slashdot.org/story/09/10/27/1427209/Intel-Updates-SSDs-Supports-TRIM-Faster-Writes
-> >>>>>> >>>>
-> >>>>>> >>>> --
-> >>>>>> >>>> Bill Davidsen <davidsen@tmr.com>
-> >>>>>> >>>>  Unintended results are the well-earned reward for incompetence.
-> >>>>>> >>>>
-> >>>>>> >>>>
-> >>>>>> >>>> --
-> >>>>>> >>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> >>>>>> >>>> the body of a message to majordomo@vger.kernel.org
-> >>>>>> >>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>>>>> >>>>
-> >>>>>> >>>
-> >>>>>> >>>
-> >>>>>> >>>
-> >>>>>> >>> --
-> >>>>>> >>>       Majed B.
-> >>>>>> >>> --
-> >>>>>> >>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> >>>>>> >>> the body of a message to majordomo@vger.kernel.org
-> >>>>>> >>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>>>>> >>>
-> >>>>>> >>
-> >>>>>> >
-> >>>>>> >
-> >>>>>> >
-> >>>>>> > --
-> >>>>>> >       Majed B.
-> >>>>>> >
-> >>>>>> --
-> >>>>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> >>>>>> the body of a message to majordomo@vger.kernel.org
-> >>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>>>>
-> >>>>>
-> >>>>
-> >>>
-> >>>
-> >>>
-> >>> --
-> >>>       Majed B.
-> >>> --
-> >>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> >>> the body of a message to majordomo@vger.kernel.org
-> >>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >>>
-> >>
-> >
-> >
-> >
-> > --
-> >       Majed B.
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On 11/10/2009 01:36 PM, Darius S. Naqvi wrote:
+> On Tue, 10 Nov 2009, Doug Ledford wrote:
+>=20
+>> On 11/10/2009 11:39 AM, Darius S. Naqvi wrote:
+>>> Is there any possibility of having a bitmap chunk size of 512 bytes?
+>>> I know that mdadm rejects anything under 4k.  I fear that the
+>>> assumption of the 4k minimum is embedded fairly strongly in the code.=
 
+>>> Can my fear be alleviated?
+>>>
+>>
+>> If you're putting any normal filesystem (with a block size of 4k) on
+>> this, then it makes absolutely no sense to have a bitmap size less tha=
+n
+>> 4k as any given filesystem block is either dirty or clean, sub-block
+>> semantics make no sense in this scenario.  That said, unless you have =
+a
+>=20
+> Well, the mke2fs(8) man page says, "Valid block size values are 1024,
+> 2048 and 4096 bytes per block.  If omitted, mke2fs block-size is
+> heuristically determined by the file system size..."
+
+Yes, but you can always supply the -b option and tell it what you want.
+ I'm actually a little confused as to why you would quote this specific
+part of the man page then at the end of the mail ask how you can force
+block size on the filesystem...well, with this option you just quoted is
+how.
+
+> I always thought that filesystems typically used a block size of 4k,
+
+They do, especially if you use any of the modern distributions.  I think
+they all pass -b 4096 in when calling mke2fs.  But, even if they didn't,
+I think you need a pretty small filesystem before mke2fs will
+voluntarily grab a less than 4k block size.
+
+> but apparently there is no guarantee that that is the case.  Also, I'm
+> not sure what windows uses as a filesystem block size.  This is
+> important to me, because we're trying to use md raid 1's to
+> periodically synchronize blocks from a filesystem, and having
+> sub-chunk writes messes things up for us.  What we want is that a
+> whole chunk gets written, then we fiddle with things so that a
+> bitmap-driven resync copies those whole chunks.  The chunks were not
+> necessarily initialized before the write, so a sub-chunk write means
+> garbage data is copied in the remainder of the chunk.
+
+So?  If this is truly a raid1, and it wasn't initialized prior to use,
+and you copy a larger than write size chunk with garbage at the end, it
+doesn't matter, the other drive has garbage there too so you are just
+overwriting garbage with garbage.  The only reason it would ever matter
+if you copied garbage at the end is if you are trying to do a partial
+raid1, where they aren't really fully raid1 mirror copies, but you are
+using the bitmap to signal a sort of mask that you want copied and you
+want other parts untouched.   What you would be doing something like
+this for I don't know, but good luck getting it to work with the md
+raid1 code.  It simply isn't intended to be used in that way, and even
+if you manage to get it to work, I suspect it would be *VERY* fragile.
+
+> We've seen this problem occur in practice, meaning either filesystems
+> are not using 4k (or multiple thereof) chunks, or for some reason,
+> writes are not 4k-aligned.  Does anyone with more knowledge of
+> filesystems know about this?  Perhaps we can force block size and
+> alignment of filesystems to make this work.
+>=20
+
+
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+	      http://people.redhat.com/dledford
+
+Infiniband specific RPMs available at
+	      http://people.redhat.com/dledford/Infiniband
+
+
+--------------enig24B926E2AC69764A1BA1AB93
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkr5wyoACgkQg6WylM+/8ZRwkQCeNRznMrLPuxUzSfKjB/wer65n
+GfsAn0BnX4bcknMo3dyqRfoCcVkAGk1z
+=kxTq
+-----END PGP SIGNATURE-----
+
+--------------enig24B926E2AC69764A1BA1AB93--
