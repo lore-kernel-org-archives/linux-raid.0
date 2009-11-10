@@ -1,51 +1,105 @@
-From: Dexter Filmore <Dexter.Filmore@gmx.de>
-Subject: md0: unknown partition table - should I worry?
-Date: Tue, 10 Nov 2009 23:24:44 +0100
-Message-ID: <200911102324.47474.Dexter.Filmore@gmx.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Intel Updates SSDs, Supports TRIM, Faster Writes
+Date: Tue, 10 Nov 2009 17:35:12 -0500
+Message-ID: <yq1skcmm2jj.fsf@sermon.lab.mkp.net>
+References: <4AF7066C.1040507@tmr.com>
+	<70ed7c3e0911081713m7184356buadd6b102fe4755e8@mail.gmail.com>
+	<f3177b9e0911090837y6f40ee6dy2a88c963465e8718@mail.gmail.com>
+	<70ed7c3e0911090842i167175a0q44fc5ad50a2f1759@mail.gmail.com>
+	<f3177b9e0911090859j40a87433r342d2c49b46d015c@mail.gmail.com>
+	<yq1ljienxql.fsf@sermon.lab.mkp.net>
+	<f3177b9e0911100922u435993behd0889ae284cf0ec4@mail.gmail.com>
+	<yq11vk6nnrh.fsf@sermon.lab.mkp.net>
+	<f3177b9e0911101245o66702d06ja9bbe520f010553e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3010034.5QVFQQK2M2";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <f3177b9e0911101245o66702d06ja9bbe520f010553e@mail.gmail.com>
+	(Chris Worley's message of "Tue, 10 Nov 2009 13:45:52 -0700")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Chris Worley <worleys@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Majed B." <majedb@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---nextPart3010034.5QVFQQK2M2
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+>>>>> "Chris" == Chris Worley <worleys@gmail.com> writes:
 
-Today md0 degraded (debian 5.0 i386, raid5, 5x500 samsung sata) so I checke=
-d=20
-the logs and noticed on each rebootI got this in /var/log/messages:
+Chris> I'm not saying the SCSI protocol is bad, I'm saying the
+Chris> SAS/SATA/SCSI controllers, that have been optimized for years for
+Chris> rotating media, don't have the compute power to handle the sort
+Chris> of performance attainable with SSS.
 
-md0: unknown partition table
+And I'm saying that at least in the SCSI case that's untrue.  SAS and FC
+controllers are optimized for lots and lots of I/O because their main
+application is driving large storage arrays which have performance
+comparable to the solid state devices you mention.
 
-md0 is all LVM2 and volumes mount fine, so is this normal?=20
+In fact, many deployments use said SCSI controllers to drive RAM-based
+solid state storage devices which are faster than the flash-based
+devices we're talking about here.
 
 
-=2D-=20
-=2D----BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCS d--(+)@ s-:+ a C++++ UL++ P+>++ L+++>++++ E-- W++ N o? K-
-w--(---) !O M+ V- PS+ PE Y++ PGP t++(---)@ 5 X+(++) R+(++) tv--(+)@=20
-b++(+++) DI+++ D- G++ e* h>++ r* y?
-=2D-----END GEEK CODE BLOCK------
+Chris> Unless you try to coalesce it for a later time, which is what I
+Chris> hear is being done to compensate for slow controllers.
 
---nextPart3010034.5QVFQQK2M2
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+We don't coalesce.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
 
-iD8DBQBK+egvm6TdMk9WhQ0RAhugAJ0SYLDPPmRahQE54iVrYH/M61v41ACgpXhR
-OlVE/dy5TfCo9UfL6+eO3gY=
-=D4ry
------END PGP SIGNATURE-----
+Chris> True.  They limit the NAND performance based on the lack of
+Chris> performance of their ASIC and the controller.  
 
---nextPart3010034.5QVFQQK2M2--
+Interesting theory.
+
+I'm personally of the conviction that cheap SSDs suffer from amazingly
+poor FTL design rather than inherent hardware limitations.
+
+That's something intel got right with their drives.  The hardware itself
+is pretty unremarkable.
+
+
+Chris> That doesn't mean you can't get a lot better performance out of
+Chris> NAND, it just means they limited themselves to be compatible, and
+Chris> the kernel will implement a strategy that will optimize for the
+Chris> poor design.
+
+You are confusing limitations in interconnect technology with the
+properties of the protocols used.  There is no point in adding channels
+behind the ASIC to drive 12 Gbps of I/O if your host interface is 1.5
+Gbps SATA.  That has nothing to do with whether ATA and SCSI are
+suitable protocols.
+
+I'm arguing that the at least SCSI is a good protocol for sending
+commands to a block device.  Nothing prevents your flash-based block
+device from presenting a PCIe SCSI interface to the host and then do
+something completely different in the back.
+
+There's lots of warts in SCSI.  And I personally think that ATA TRIM was
+very poorly defined.  But I don't believe that these protocols are
+inherently bad for driving storage.  And I don't believe that coming up
+with a custom "block" interface will improve anything in the short term.
+Heck, the overhead of speaking SCSI is so low that even the thumb drive
+you brought up implements it.  At negligible cost.
+
+
+Chris> but you also believe the best way to do SSS was behind compatible
+Chris> legacy SAS/SATA devices optimized for old rotating media?
+
+You're the one claiming these "legacy" devices are optimized for
+rotating media.  I'm claiming there's nothing rotating about either
+protocol.
+
+Both express "do something to this range of blocks" in 16 bytes or less
++ a scatterlist describing memory.  That's a pretty efficient interface
+in my book.
+
+
+Chris> I'd run IOZone and fill the drive (as I recall ~200GB) w/ files
+Chris> and benchmark, which, at the end, IOZone would delete all the
+Chris> files created (in the hundreds), and the delete/discard process
+Chris> was no more time consuming than just the delete process (for
+Chris> everything on the drive).  This was w/ the original 2.6.27 and
+Chris> 2.6.28 ext4 "discard" implementations.
+
+And which device was this?  How did it implement discard?
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
