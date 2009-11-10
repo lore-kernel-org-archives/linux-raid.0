@@ -1,39 +1,36 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: [ANNOUNCE] mdadm-3.1 has been withdrawn
-Date: Tue, 10 Nov 2009 09:25:34 +0100 (CET)
-Message-ID: <alpine.DEB.1.10.0911100920510.22728@uplift.swm.pp.se>
-References: <19187.50708.551325.297625@notabene.brown> <4AF829B2.5090001@redhat.com>  <4AF836F8.5040903@panix.com> <cccedfc60911090742x5ac85a5axcf93d5cb9f6f6539@mail.gmail.com> <alpine.DEB.1.10.0911091749320.22728@uplift.swm.pp.se>
- <4AF8847D.8030303@redhat.com>
+From: Peter Rabbitson <rabbit+list@rabbit.us>
+Subject: Re: mismatch_cnt again
+Date: Tue, 10 Nov 2009 10:09:17 +0100
+Message-ID: <4AF92DBD.5010102@rabbit.us>
+References: <4AF4C247.6050303@eyal.emu.id.au> <4AF4D323.6020108@panix.com>    <4AF5268D.60900@eyal.emu.id.au>    <4877c76c0911070008m789507f8h799d419287740ca5@mail.gmail.com>    <87tyx6tpcb.fsf@frosties.localdomain> <4AF58B20.3000409@redhat.com>    <87iqdlaujb.fsf@frosties.localdomain> <4AF74B61.6000102@rabbit.us>    <20091109185632.GA2723@lazy.lzy>    <73ebdcee169f46611d411755f9aaca5b.squirrel@neil.brown.name>    <20091109215443.GA4143@lazy.lzy> <d99ca9481d2471073484c5d43d493b4d.squirrel@neil.brown.name>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AF8847D.8030303@redhat.com>
+In-Reply-To: <d99ca9481d2471073484c5d43d493b4d.squirrel@neil.brown.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Goswin von Brederlow <goswin-v-b@web.de>, Doug Ledford <dledford@redhat.com>, Michael Evans <mjevans1983@gmail.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 9 Nov 2009, Doug Ledford wrote:
+NeilBrown wrote:
+> On Tue, November 10, 2009 8:54 am, Piergiorgio Sartor wrote:
+> <snip>
+> 
+> check/repair is primarily about reading every block on every device,
+> and being ready to cope with read errors by overwriting with the
+> correct data.  This is known as scrubbing I believe.
+> I would normally just 'repair' every month or so.  If there are
+> discrepancies I would like them reported and fixed.  I they happen
+> often on a non-swap partition, I would like to knoe about it, otherwise
+> I would rather they were just fixed.
 
-> Of course, I recently had a bug report that I ended closing out as 
-> NOTABUG because of this very ability.  The person had arrays with 1.2 
-> superblocks, and they went to add a new disk, and all the existing disks 
-> had a specific partition layout, so he copied that to the new disk, then 
-> tried to add the partition to the raid array.  It kept returning "device 
-> too small for array".  Then, upon inspection, we come to see he has a 
-> 1.2 superblock on the *entire* drive, which left the partition table 
-> intact, but the partition table is *pointless* because the array is on 
-> the whole disk devices.  This sort of confusion is bad.  So, while I 
-> could see making it 1.2 for partitions (so that boot sectors won't 
-> overwrite the superblock), I wouldn't make it 1.2 for whole disk 
-> devices, and in fact it might be wise to refuse to create 1.2 
-> superblocks on whole disk devices.  Just a thought.
+Bingo - and according to the list archive many of us are getting mismatches
+without swap anywhere near the raid in question. The current situation is
+more akin to "Ok folks get in the plane, we're deploying in 2 hours, and
+btw your chute is not going to open and there is nothing you can do about
+it" How is that for a threat model :)
 
-Well, same thing there, if you create a partition table you don't break 
-the superblock. Perhaps something needs to be able to discern between the 
-superblock being "whole disk" and on a partition? Personally I put 1.2 on 
-"whole disk" (no partition table at all), and I would really HATE this 
-possibility going away. I like it the way it is and feel comfortable with 
-it and I don't want 1.0 or 1.1 superblocks in my setup.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+Please someone step in and add *some* sort of reporting about which
+particular blocks are screwed, so a user can figure out which data is(about
+to) be lost.
