@@ -1,7 +1,7 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: Intel Updates SSDs, Supports TRIM, Faster Writes
-Date: Tue, 10 Nov 2009 17:35:12 -0500
-Message-ID: <yq1skcmm2jj.fsf@sermon.lab.mkp.net>
+Date: Tue, 10 Nov 2009 17:56:26 -0500
+Message-ID: <yq1ocnam1k5.fsf@sermon.lab.mkp.net>
 References: <4AF7066C.1040507@tmr.com>
 	<70ed7c3e0911081713m7184356buadd6b102fe4755e8@mail.gmail.com>
 	<f3177b9e0911090837y6f40ee6dy2a88c963465e8718@mail.gmail.com>
@@ -10,96 +10,73 @@ References: <4AF7066C.1040507@tmr.com>
 	<yq1ljienxql.fsf@sermon.lab.mkp.net>
 	<f3177b9e0911100922u435993behd0889ae284cf0ec4@mail.gmail.com>
 	<yq11vk6nnrh.fsf@sermon.lab.mkp.net>
-	<f3177b9e0911101245o66702d06ja9bbe520f010553e@mail.gmail.com>
+	<87f94c370911101301v4b71ce74hbd4ebd20e7ce2419@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f3177b9e0911101245o66702d06ja9bbe520f010553e@mail.gmail.com>
-	(Chris Worley's message of "Tue, 10 Nov 2009 13:45:52 -0700")
+In-Reply-To: <87f94c370911101301v4b71ce74hbd4ebd20e7ce2419@mail.gmail.com>
+	(Greg Freemyer's message of "Tue, 10 Nov 2009 16:01:44 -0500")
 Sender: linux-raid-owner@vger.kernel.org
-To: Chris Worley <worleys@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Majed B." <majedb@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Chris Worley <worleys@gmail.com>, "Majed B." <majedb@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
->>>>> "Chris" == Chris Worley <worleys@gmail.com> writes:
+>>>>> "Greg" == Greg Freemyer <greg.freemyer@gmail.com> writes:
 
-Chris> I'm not saying the SCSI protocol is bad, I'm saying the
-Chris> SAS/SATA/SCSI controllers, that have been optimized for years for
-Chris> rotating media, don't have the compute power to handle the sort
-Chris> of performance attainable with SSS.
+Greg> I'm not sure where it ended up, but the big SSD / discard
+Greg> discussion of a few months ago talked about 3 kinds of solutions,
+Greg> and I thought the plan was to support all 3.
 
-And I'm saying that at least in the SCSI case that's untrue.  SAS and FC
-controllers are optimized for lots and lots of I/O because their main
-application is driving large storage arrays which have performance
-comparable to the solid state devices you mention.
-
-In fact, many deployments use said SCSI controllers to drive RAM-based
-solid state storage devices which are faster than the flash-based
-devices we're talking about here.
+We don't design for the past.
 
 
-Chris> Unless you try to coalesce it for a later time, which is what I
-Chris> hear is being done to compensate for slow controllers.
+Greg> 1) optimization 1 - A white-listed instant discard feature.  In
+Greg>    this methodology, the filesystems would immediately send
+Greg>    discard calls down to the block layer would send them on down
+Greg>    the block stack to the physical devices with very minimal
+Greg>    buffering.
 
-We don't coalesce.
+There's no whitelist.  That's just how it works.
 
-
-Chris> True.  They limit the NAND performance based on the lack of
-Chris> performance of their ASIC and the controller.  
-
-Interesting theory.
-
-I'm personally of the conviction that cheap SSDs suffer from amazingly
-poor FTL design rather than inherent hardware limitations.
-
-That's something intel got right with their drives.  The hardware itself
-is pretty unremarkable.
+Yes, there were a few crappy devices out there.  Windows 7 issuing TRIM
+commands in realtime made them instantly obsolete.  If future devices
+suck with Windows 7 nobody will buy them.
 
 
-Chris> That doesn't mean you can't get a lot better performance out of
-Chris> NAND, it just means they limited themselves to be compatible, and
-Chris> the kernel will implement a strategy that will optimize for the
-Chris> poor design.
+Greg> 2) optimization 2 - The block layer would accept those small
+Greg>    discards, but accumulate them for a short period.  (less than a
+Greg>    second was my impression).  Then coalesce them into larger
+Greg>    discards and send them down the block stack and eventually to
+Greg>    the physical device.
 
-You are confusing limitations in interconnect technology with the
-properties of the protocols used.  There is no point in adding channels
-behind the ASIC to drive 12 Gbps of I/O if your host interface is 1.5
-Gbps SATA.  That has nothing to do with whether ATA and SCSI are
-suitable protocols.
+SSDs are special in that they actually track map state on a per-logical
+block basis.  Other thinly provisioned devices track space in units
+ranging from 16-32-64KB up to megabytes.
 
-I'm arguing that the at least SCSI is a good protocol for sending
-commands to a block device.  Nothing prevents your flash-based block
-device from presenting a PCIe SCSI interface to the host and then do
-something completely different in the back.
+It's up to each block device to track the map space.  The way most
+arrays work is that they'll ignore the portions of the request that are
+not aligned to and a multiple of their internal allocation unit.
 
-There's lots of warts in SCSI.  And I personally think that ATA TRIM was
-very poorly defined.  But I don't believe that these protocols are
-inherently bad for driving storage.  And I don't believe that coming up
-with a custom "block" interface will improve anything in the short term.
-Heck, the overhead of speaking SCSI is so low that even the thumb drive
-you brought up implements it.  At negligible cost.
+The same applies to MD.  IOW, MD would only unmap the portions of the
+discard request that constitute entire stripes.  No keeping state
+required.
 
-
-Chris> but you also believe the best way to do SSS was behind compatible
-Chris> legacy SAS/SATA devices optimized for old rotating media?
-
-You're the one claiming these "legacy" devices are optimized for
-rotating media.  I'm claiming there's nothing rotating about either
-protocol.
-
-Both express "do something to this range of blocks" in 16 bytes or less
-+ a scatterlist describing memory.  That's a pretty efficient interface
-in my book.
+Jens just queued my patch which allows block devices to communicate
+their unmap granularity and alignment to the filesystems.  This means we
+can potentially use this to influence filesystem allocators.  For SCSI
+arrays these values are queried and passed up the stack.  MD can choose
+to manually set the granularity to its stripe size.
 
 
-Chris> I'd run IOZone and fill the drive (as I recall ~200GB) w/ files
-Chris> and benchmark, which, at the end, IOZone would delete all the
-Chris> files created (in the hundreds), and the delete/discard process
-Chris> was no more time consuming than just the delete process (for
-Chris> everything on the drive).  This was w/ the original 2.6.27 and
-Chris> 2.6.28 ext4 "discard" implementations.
+Greg> 3) optimization 3 - a background freespace scanner would run from
+Greg> time to time that scanned a filesystem for free blocks and send a
+Greg> discard / trim command down to the device.  This is what Mark Lord
+Greg> was working on.  His solution was primarily in user space and was
+Greg> controlled by cron.
 
-And which device was this?  How did it implement discard?
+I think that's a fine approach for legacy devices.  But as I said I
+think Windows 7 will root out all devices with poor TRIM performance
+pretty quickly.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
