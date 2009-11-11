@@ -1,90 +1,83 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: Re: Known-good LSI PCIe SAS HBAs?
-Date: Wed, 11 Nov 2009 04:47:12 -0700
-Message-ID: <200911110447.12647.tfjellstrom@shaw.ca>
-References: <73e903670911100854o1b48380apb5b0a86c44ae9dcb@mail.gmail.com> <200911110001.49910.tfjellstrom@shaw.ca> <73e903670911110309p6fc1cbe6x2481b61db3f7dd6d@mail.gmail.com>
-Reply-To: tfjellstrom@shaw.ca
+From: Andrew Dunn <andrew.g.dunn@gmail.com>
+Subject: Re: RAID 6 Failure follow up
+Date: Wed, 11 Nov 2009 07:34:10 -0500
+Message-ID: <4AFAAF42.2000503@gmail.com>
+References: <4AF6D0A9.6000901@gmail.com> <4AF6D461.3050109@gmail.com> <4AF6D5FD.2010602@gmail.com> <4AF70791.9080007@sauce.co.nz> <4AF741A9.80701@gmail.com> <4AF74D39.3000304@sauce.co.nz> <7d86ddb90911081845j675818a2vec1a5bd26d542024@mail.gmail.com> <20091109080910.GE18545@boogie.lpds.sztaki.hu> <4AF7EA17.1030504@gmail.com> <20091109113454.GB4492@boogie.lpds.sztaki.hu> <4AF946B9.8040809@gmail.com> <4AF94FCA.6040303@sarvision.nl>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <73e903670911110309p6fc1cbe6x2481b61db3f7dd6d@mail.gmail.com>
+In-Reply-To: <4AF94FCA.6040303@sarvision.nl>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kristleifur =?iso-8859-1?q?Da=F0ason?= <kristleifur@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Vincent Schut <schut@sarvision.nl>
+Cc: Gabor Gombas <gombasg@sztaki.hu>, Ryan Wagoner <rswagoner@gmail.com>, Richard Scobie <richard@sauce.co.nz>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed November 11 2009, Kristleifur Da=F0ason wrote:
-> On Wed, Nov 11, 2009 at 7:01 AM, Thomas Fjellstrom <tfjellstrom@shaw.=
-ca>=20
-wrote:
-> > On Tue November 10 2009, you wrote:
-> >> Hi,
-> >>
-> >> I'm looking to replace a problematic Marvell PCIe SAS JBOD control=
-ler
-> >> from Supermicro, type AOC-SASLP-MV8. (mdadm freaks out on it and t=
-he
-> >> controller drops the drives - there has been discussion of the pro=
-blem
-> >> on the list. Seems to be a mvsas driver problem but seems to surfa=
-ce
-> >> only under mdadm use.)
-> >>
-> >>...
-> >
-> > Not really an answer to your question, I got a snapshot of the in
-> > development driver that seems to work just fine. I haven't run smar=
-tctl
-> > on the controller much mind you, as it seems to freak out my onboar=
-d
-> > controller too (AMD SB750). I could attempt it, but I've recently j=
-ust
-> > switched over to that hardware for my main server, and I'm reluctan=
-t to
-> > try running smartctl on the array, as it'd probably require a reboo=
-t to
-> > get which ever disk back that might get dropped.
->=20
-> That's quite interesting.
-> Did you discuss this on a mailing list somewhere and have a link to
-> that discussion? Or would you be willing to forward a message to
-> honorable mr. driver guy? I'd love to try the patch before buying a
-> new controller.
+Thanks for your help, so far without smartctl installed I have had no
+issues... but it has only been about 12 hours.
 
-There seems to be something seriously wrong with the kernel.org mailing=
-=20
-lists. They seem to miss a bunch of messages that get sent out. Its hap=
-pened=20
-on several occasions now with not only my messages, but others as well,=
- on=20
-several different mailing lists, including lkml, linux-raid, linux-ide,=
- and=20
-linux-scsi.
+Could you send me your smatd.conf?
 
-The best I can do is a link to my reply to Andy Yan's message, since An=
-dy=20
-Yan's message is mysteriously not in any of the archives. And I'm prett=
-y=20
-sure I didn't get two copies so the one sent to the list's just disappe=
-ared.
+Vincent Schut wrote:
+> Andrew Dunn wrote:
+>> I am able to reproduce this smart error now. I have done it twice, so
+>> maybe other things are causing this also.
+>>
+>> When I scanned the devices this morning with smartctl via webmin I lost
+>> 8 of the 9 drives. They are howerver still in my /dev folder.
+>>
+>> Now I sent out my logs from the first failure last night, smartctl was
+>> on the system... I dont know if ubuntu server's default smartd
+>> configuration makes it do periodic scans because I didnt change
+>> anything.
+>>
+>> I would hate to move back to 9.10 and see this problem again.
+>>
+>> Should I just not install smartmontools? This seems like a bad solution
+>> because now I wont be able to check the drives in advance for failures.
+>>
+>> Have you installed LSI's linux drivers? Some people say this solves
+>> their issue.
+>>
+>> From the logs sent out last night do you think it could be something
+>> else?
+>>
+>> Thanks a ton,
+>
+> FWIW, I encountered the same issue, and seem to have found a viable
+> workaround by accessing the SATA disks on that LSI backplane as scsi
+> devices, e.g. by adding '-d scsi' to my smartctl/smartd.conf lines. No
+> more errors in the logs, no more drives being kicked out.
+> Though not as much info is available that way as when using de sata
+> driver ('-d sat', or automatically), like temperature is unavailable,
+> it does allow me to initiate the selftests and get their result, and
+> to monitor generic smart status of the drives. Quite enough for me.
+>
+> YMMV, though.
+>
+> Vincent.
+>>
+>> Gabor Gombas wrote:
+>>> On Mon, Nov 09, 2009 at 05:08:23AM -0500, Andrew Dunn wrote:
+>>>
+>>>  
+>>>> does it momentarily offline the disks? like they re-appear in /dev
+>>>> within moments? That would be similar behavior to what I am
+>>>> experiencing, the disks drop from the array, but they are in /dev
+>>>> by the
+>>>> time I get a chance to see them.
+>>>>     
+>>> No, either the disks need to be physically removed and re-inserted, or
+>>> the machine needs to be rebooted.
+>>>
+>>> Gabor
+>>>
+>>>   
+>>
+>
+>
 
-http://lkml.org/lkml/2009/10/14/76
+-- 
+Andrew Dunn
+http://agdunn.net
 
-> Thanks!
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
-
-
---=20
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
