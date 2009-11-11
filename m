@@ -1,27 +1,60 @@
-From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: need help: corrupt files on one of my raids
-Date: Tue, 10 Nov 2009 20:16:53 -0800
-Message-ID: <4877c76c0911102016k63f3e8ccled2b7f2a5cc3dffd@mail.gmail.com>
-References: <4AF97388.5080907@langseid.no>
-	 <70ed7c3e0911100734m31cd846t9987d6141d2513a6@mail.gmail.com>
-	 <4AF99159.4000800@langseid.no>
-	 <70ed7c3e0911101026k5e7ba489s6f3e492acc568d2f@mail.gmail.com>
-	 <4AF9CB19.7000803@langseid.no>
-	 <70ed7c3e0911101231r9e7e8b0nfcd94a60e5635831@mail.gmail.com>
-	 <4AF9D194.6000306@langseid.no>
-	 <70ed7c3e0911101829x48e6eb68o892ef11b2ff2d19@mail.gmail.com>
+From: "Majed B." <majedb@gmail.com>
+Subject: Re: Bitmap did not survive reboot
+Date: Wed, 11 Nov 2009 08:22:26 +0300
+Message-ID: <70ed7c3e0911102122l3565cfat7a35a8a649237f56@mail.gmail.com>
+References: <20091111033418841.IRLD6968@cdptpa-omta02.mail.rr.com>
+	<20091111034629287.IYTI6968@cdptpa-omta02.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70ed7c3e0911101829x48e6eb68o892ef11b2ff2d19@mail.gmail.com>
+In-Reply-To: <20091111034629287.IYTI6968@cdptpa-omta02.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Majed B." <majedb@gmail.com>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: Leslie Rhorer <lrhorer@satx.rr.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-One other thing besides what's already been mentioned.  You are seeing
-issues with Raid1 and -not- your Raid5 volume.  If you run mdadm -D
-/dev/md(whatever the number is) what version (for the superblock) is
-reported?  Preferably you will be using either superblock 1.1 or 1.2
-(preferably 1.1).  The only reason to use mdadm 1.0 or 0.9 are special
-cases, such as for /boot style volumes.
+Hello Leslie,
+
+If you have a temporary space for your data, I'd suggest you move it
+out and go for an internal bitmap solution. It certainly beats the
+patch work you're going to have to do on the startup scripts (and
+every time you update mdadm, or the distro).
+
+On Wed, Nov 11, 2009 at 6:46 AM, Leslie Rhorer <lrhorer@satx.rr.com> wr=
+ote:
+>> The mdadm-raid script starts up the
+>> RAID process, and the mdadm script runs the monitor. =C2=A0It seems =
+to me the
+>> only link which is really correct is the rcS.d/S25mdadm. =C2=A0At th=
+e very
+>> least
+>> I would think both the S99mdadm_monitor links should point to init.d=
+/mdadm
+>> (which, after all is the script which starts the monitor) and that
+>> rc2.d/S25mdadm-raid would point to init.d/mdadm, just as the
+>> rcS.d/S25mdadm-raid link does.
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0'Sorry, I meant to say, "rc2.d/S25mdadm-ra=
+id would point to
+> init.d/mdadm-raid, just as the rcS.d/S25mdadm-raid link does." =C2=A0=
+The naming
+> convention here is definitely confusing.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+>
+
+
+
+--=20
+       Majed B.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
