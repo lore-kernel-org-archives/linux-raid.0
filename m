@@ -1,50 +1,143 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Bitmap did not survive reboot
-Date: Wed, 11 Nov 2009 10:48:01 -0600
-Message-ID: <20091111164813467.BVCE15440@cdptpa-omta01.mail.rr.com>
-References: <20091111151946.GA29346@boogie.lpds.sztaki.hu>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: Intel Updates SSDs, Supports TRIM, Faster Writes
+Date: Wed, 11 Nov 2009 12:00:15 -0500
+Message-ID: <87f94c370911110900h776286d9xba8d7f696dec18c1@mail.gmail.com>
+References: <4AF7066C.1040507@tmr.com>
+	 <70ed7c3e0911081713m7184356buadd6b102fe4755e8@mail.gmail.com>
+	 <f3177b9e0911090837y6f40ee6dy2a88c963465e8718@mail.gmail.com>
+	 <70ed7c3e0911090842i167175a0q44fc5ad50a2f1759@mail.gmail.com>
+	 <f3177b9e0911090859j40a87433r342d2c49b46d015c@mail.gmail.com>
+	 <yq1ljienxql.fsf@sermon.lab.mkp.net>
+	 <f3177b9e0911100922u435993behd0889ae284cf0ec4@mail.gmail.com>
+	 <yq11vk6nnrh.fsf@sermon.lab.mkp.net>
+	 <87f94c370911101301v4b71ce74hbd4ebd20e7ce2419@mail.gmail.com>
+	 <yq1ocnam1k5.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091111151946.GA29346@boogie.lpds.sztaki.hu>
+In-Reply-To: <yq1ocnam1k5.fsf@sermon.lab.mkp.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Gabor Gombas' <gombasg@sztaki.hu>
-Cc: linux-raid@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Chris Worley <worleys@gmail.com>, "Majed B." <majedb@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> > RAID-Server:/etc# ll rcS.d/*md*
-> > lrwxrwxrwx 1 root root 20 2008-11-21 22:35 rcS.d/S25mdadm-raid ->
-> > ../init.d/mdadm-raid
-> > lrwxrwxrwx 1 root root 20 2008-12-27 18:35 rcS.d/S99mdadm_monitor ->
-> > ../init.d/mdadm-raid
-> > RAID-Server:/etc# ll rc2.d/*md*
-> > lrwxrwxrwx 1 root root 15 2008-11-21 22:35 rc2.d/S25mdadm ->
-> ../init.d/mdadm
-> > lrwxrwxrwx 1 root root 20 2008-12-27 18:36 rc2.d/S99mdadm_monitor ->
-> > ../init.d/mdadm-raid
-> 
-> What Debian version do you have? There are no mdadm_monitor links in
-> lenny, and I do not have etch systems anymore to check.
+On Tue, Nov 10, 2009 at 5:56 PM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>>>>>> "Greg" =3D=3D Greg Freemyer <greg.freemyer@gmail.com> writes:
+>
+> Greg> I'm not sure where it ended up, but the big SSD / discard
+> Greg> discussion of a few months ago talked about 3 kinds of solution=
+s,
+> Greg> and I thought the plan was to support all 3.
+>
+> We don't design for the past.
+>
+>
+> Greg> 1) optimization 1 - A white-listed instant discard feature. =A0=
+In
+> Greg> =A0 =A0this methodology, the filesystems would immediately send
+> Greg> =A0 =A0discard calls down to the block layer would send them on=
+ down
+> Greg> =A0 =A0the block stack to the physical devices with very minima=
+l
+> Greg> =A0 =A0buffering.
+>
+> There's no whitelist. =A0That's just how it works.
+>
+> Yes, there were a few crappy devices out there. =A0Windows 7 issuing =
+TRIM
+> commands in realtime made them instantly obsolete. =A0If future devic=
+es
+> suck with Windows 7 nobody will buy them.
+>
+>
+> Greg> 2) optimization 2 - The block layer would accept those small
+> Greg> =A0 =A0discards, but accumulate them for a short period. =A0(le=
+ss than a
+> Greg> =A0 =A0second was my impression). =A0Then coalesce them into la=
+rger
+> Greg> =A0 =A0discards and send them down the block stack and eventual=
+ly to
+> Greg> =A0 =A0the physical device.
+>
+> SSDs are special in that they actually track map state on a per-logic=
+al
+> block basis. =A0Other thinly provisioned devices track space in units
+> ranging from 16-32-64KB up to megabytes.
+>
+> It's up to each block device to track the map space. =A0The way most
+> arrays work is that they'll ignore the portions of the request that a=
+re
+> not aligned to and a multiple of their internal allocation unit.
+>
+> The same applies to MD. =A0IOW, MD would only unmap the portions of t=
+he
+> discard request that constitute entire stripes. =A0No keeping state
+> required.
+>
+> Jens just queued my patch which allows block devices to communicate
+> their unmap granularity and alignment to the filesystems. =A0This mea=
+ns we
+> can potentially use this to influence filesystem allocators. =A0For S=
+CSI
+> arrays these values are queried and passed up the stack. =A0MD can ch=
+oose
+> to manually set the granularity to its stripe size.
+>
+>
+> Greg> 3) optimization 3 - a background freespace scanner would run fr=
+om
+> Greg> time to time that scanned a filesystem for free blocks and send=
+ a
+> Greg> discard / trim command down to the device. =A0This is what Mark=
+ Lord
+> Greg> was working on. =A0His solution was primarily in user space and=
+ was
+> Greg> controlled by cron.
+>
+> I think that's a fine approach for legacy devices. =A0But as I said I
+> think Windows 7 will root out all devices with poor TRIM performance
+> pretty quickly.
+>
+> --
+> Martin K. Petersen =A0 =A0 =A0Oracle Linux Engineering
+>
 
-	Lenny.  I'm not sure where they came from.  It might even have been
-me playing around at some point, and I just forgot to delete them.  I did a
-lot of fiddling with mdadm about a year ago.
+Martin,
 
-> > 	Getting back to my dilema, however, I suppose I could simply create
-> > an /etc/rcS.d/S24mounthda4 script that explicitly mounts /dev/hda4 to
-> > /etc/mdadm/bitmap, or I could modify the init.d/mdadm-raid script to
-> > explicitly mount the /dev/hda partition if it is not already mounted.
-> > Editing the init.d/mdadm-raid script is a bit cleaner and perhaps
-> clearer,
-> > but any update to mdadm is liable to wipe out the modifications to the
-> > startup script.
-> 
-> In Debian, modifications to init scripts are preserved during upgrade
-> unless you explicitely request them to be overwritten.
+So for a workload mostly composed of small files residing on a MD raid
+4/5/6 setup, how is this supposed to work.  (ie. Tiffs, small word
+docs, pdfs, individual emails, etc.)
 
-	I didn't know that, but even so, it's probably at least somewhat
-better not to modify a script unless it's necessary, because the new package
-might have some important differences in the script.
+Most of the individual files will be less than one stripe wide, so
+when they are deleted I gather the discard range will be less than a
+stripe and therefore MD would ignore it in the simplest of
+implementations.  ie. Without coalescence at some point, MD will never
+forward discards to the hardware.
 
+Thus I would think for that workload, the nightly full freespace scan
+and discard would be the best solution.
+
+Thanks
+Greg
+
+
+--=20
+Greg Freemyer
+Head of EDD Tape Extraction and Processing team
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+Preservation and Forensic processing of Exchange Repositories White Pap=
+er -
+<http://www.norcrossgroup.com/forms/whitepapers/tng_whitepaper_fpe.html=
+>
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
