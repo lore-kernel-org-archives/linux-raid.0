@@ -1,141 +1,70 @@
 From: "Majed B." <majedb@gmail.com>
-Subject: Re: need help: corrupt files on one of my raids
-Date: Wed, 11 Nov 2009 05:29:25 +0300
-Message-ID: <70ed7c3e0911101829x48e6eb68o892ef11b2ff2d19@mail.gmail.com>
-References: <4AF97388.5080907@langseid.no> <70ed7c3e0911100734m31cd846t9987d6141d2513a6@mail.gmail.com>
-	<4AF99159.4000800@langseid.no> <70ed7c3e0911101026k5e7ba489s6f3e492acc568d2f@mail.gmail.com>
-	<4AF9CB19.7000803@langseid.no> <70ed7c3e0911101231r9e7e8b0nfcd94a60e5635831@mail.gmail.com>
-	<4AF9D194.6000306@langseid.no>
+Subject: Re: Intel Updates SSDs, Supports TRIM, Faster Writes
+Date: Wed, 11 Nov 2009 05:52:31 +0300
+Message-ID: <70ed7c3e0911101852n301cffc4wa69d299151bbc71f@mail.gmail.com>
+References: <4AF7066C.1040507@tmr.com> <f3177b9e0911090837y6f40ee6dy2a88c963465e8718@mail.gmail.com>
+	<70ed7c3e0911101031q7184315g24ba345dd30e55fd@mail.gmail.com>
+	<m3fx8m3rvd.fsf@mobydick.mine.nu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AF9D194.6000306@langseid.no>
+In-Reply-To: <m3fx8m3rvd.fsf@mobydick.mine.nu>
 Sender: linux-raid-owner@vger.kernel.org
-To: LinuxRaid <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-If you have no data on the volumes, would you mind formatting the
-volumes with a different filesystem? ext3/ext4/xfs and see if you
-still get data corruption.
+Thank you Mathieu for the input.
 
-On Tue, Nov 10, 2009 at 11:48 PM, Arild Langseid <arild@langseid.no> wr=
-ote:
-> Yes I have run a fsck:
->
-> ###########
-> reiserfsck --check started at Tue Nov 10 22:15:27 2009
-> ###########
-> Replaying journal..
-> Reiserfs journal '/dev/mapper/vg0sata-lv0_multimedia' in blocks [18..=
-8211]:
-> 0 transactions replayed
-> Checking internal tree..finished
-> Comparing bitmaps..finished
-> Checking Semantic tree:
-> finished
-> No corruptions found
-> There are on the filesystem:
-> =C2=A0 =C2=A0 =C2=A0 Leaves 82
-> =C2=A0 =C2=A0 =C2=A0 Internal nodes 1
-> =C2=A0 =C2=A0 =C2=A0 Directories 7
-> =C2=A0 =C2=A0 =C2=A0 Other files 101
-> =C2=A0 =C2=A0 =C2=A0 Data block pointers 77964 (0 of them are zero)
-> =C2=A0 =C2=A0 =C2=A0 Safe links 0
-> ###########
-> reiserfsck finished at Tue Nov 10 22:15:29 2009
-> ###########
->
-> Seems ok to me.
->
-> I will now run the offline checks you suggested earlier.
->
-> As it is not very clear that I have a raid problem as I first thought=
-=2E... is
-> there any other mailing list I should ask about my problem, or is it =
-ok to
-> continue here?
->
-> Best Regards,
-> Arild
->
-> Majed B. wrote:
+I have seen IBM DS4800 SANs doing 600MB/s-700MB/s using a bunch of
+148GB 15k RPM FC disks. though I haven't seen them being benchmarked
+for IOPS.
+
+I was reading an article from AnadTech yesterday that compared
+rotational media to SSDs and they ran some stress tests. In the end,
+they concluded that hardware RAID controllers were hampering the
+performance because they couldn't absorb the amount of requests coming
+at them from the SSDs. When they switched to software RAID (on Windows
+in their test), they got almost double the performance (RAID5, 8
+disks).
+
+You can see the numbers here: http://it.anandtech.com/IT/showdoc.aspx?i=
+=3D3532&p=3D9
+If you're interested in the whole article, you can go to the link
+above and go back to the main page using the index.
+
+On sequential read, they achieved 1257 MB/s on a RAID 5 setup. Quite
+impressive for those with video streaming applications.
+
+On Wed, Nov 11, 2009 at 2:03 AM, Mathieu Chouquet-Stringer
+<mchouque@free.fr> wrote:
+> majedb@gmail.com ("Majed B.") writes:
+>> Chris,
 >>
->> The numbers will be reported as zeros if you have never run an offli=
-ne
->> test before. Run it and then you'll get to see whether you have bad
->> sectors or not.
->>
->> Have you tried running a filesystem check? (fsck)
->>
->> On Tue, Nov 10, 2009 at 11:20 PM, Arild Langseid <arild@langseid.no>
->> wrote:
->>
->>>
->>> Hi and thanks again!
->>>
->>> I did not find the feature-list for my disk either. Instead I found=
- my
->>> smartmontools to be very old.
->>> I upgraded my Debian Etch to Debian Lenny (took some time....), and=
- now
->>> the
->>> smartctl works. I got lucky about the smart feature on my disks and
->>> motherboard.
->>>
->>> Output for /dev/sdb:
->>> =C2=A01 Raw_Read_Error_Rate =C2=A0 =C2=A0 0x000b =C2=A0 100 =C2=A0 =
-100 =C2=A0 016 =C2=A0 =C2=A0Pre-fail =C2=A0Always
->>> =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
->>> =C2=A05 Reallocated_Sector_Ct =C2=A0 0x0033 =C2=A0 100 =C2=A0 100 =C2=
-=A0 005 =C2=A0 =C2=A0Pre-fail =C2=A0Always
->>> =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
->>> 196 Reallocated_Event_Count 0x0032 =C2=A0 100 =C2=A0 100 =C2=A0 000=
- =C2=A0 =C2=A0Old_age =C2=A0 Always
->>> =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
->>> 197 Current_Pending_Sector =C2=A00x0022 =C2=A0 100 =C2=A0 100 =C2=A0=
- 000 =C2=A0 =C2=A0Old_age =C2=A0 Always
->>> =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
->>> 198 Offline_Uncorrectable =C2=A0 0x0008 =C2=A0 100 =C2=A0 100 =C2=A0=
- 000 =C2=A0 =C2=A0Old_age =C2=A0 Offline
->>> =C2=A0 - =C2=A0 =C2=A0 =C2=A0 0
->>> 199 UDMA_CRC_Error_Count =C2=A0 =C2=A00x000a =C2=A0 200 =C2=A0 200 =
-=C2=A0 000 =C2=A0 =C2=A0Old_age =C2=A0 Always
->>> =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
->>>
->>> SMART Error Log Version: 1
->>> No Errors Logged
->>>
->>> and /dev/sdc:
->>> =C2=A01 Raw_Read_Error_Rate =C2=A0 =C2=A0 0x000b =C2=A0 100 =C2=A0 =
-100 =C2=A0 016 =C2=A0 =C2=A0Pre-fail =C2=A0Always
->>> =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
->>> =C2=A05 Reallocated_Sector_Ct =C2=A0 0x0033 =C2=A0 100 =C2=A0 100 =C2=
-=A0 005 =C2=A0 =C2=A0Pre-fail =C2=A0Always
->>> =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
->>> 196 Reallocated_Event_Count 0x0032 =C2=A0 100 =C2=A0 100 =C2=A0 000=
- =C2=A0 =C2=A0Old_age =C2=A0 Always
->>> =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
->>> 197 Current_Pending_Sector =C2=A00x0022 =C2=A0 100 =C2=A0 100 =C2=A0=
- 000 =C2=A0 =C2=A0Old_age =C2=A0 Always
->>> =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
->>> 198 Offline_Uncorrectable =C2=A0 0x0008 =C2=A0 100 =C2=A0 100 =C2=A0=
- 000 =C2=A0 =C2=A0Old_age =C2=A0 Offline
->>> =C2=A0 - =C2=A0 =C2=A0 =C2=A0 0
->>> 199 UDMA_CRC_Error_Count =C2=A0 =C2=A00x000a =C2=A0 200 =C2=A0 200 =
-=C2=A0 000 =C2=A0 =C2=A0Old_age =C2=A0 Always
->>> =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
->>>
->>> SMART Error Log Version: 1
->>> No Errors Logged
->>>
->>> Seems ok to me. Do you agree?
->>>
->>> After upgrading to Debian Lenny - I still got corrupted files thoug=
-h :(
->>>
->>> Best Regards,
->>> Arild
+>> Do you mind sharing the drive models & controllers you're using that
+>> give you 800 MB/s?
+>
+> At work we reviewed different kind of fusion-io products (namely ioDr=
+ive
+> and ioDrive-Duo, 80GB and 640GB) and I could easily get 700 MB/s with
+> more than 100k iops (benched using fio)...
+>
+> http://kb.fusionio.com/KB/a29/verifying-linux-system-performance.aspx
+>
+> Their results are consistent with what I saw...
+>
+> I didn't like the binary like driver though...
+> --
+> Mathieu Chouquet-Stringer =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 mchouque@free.fr
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0The sun itself sees not till=
+ heaven clears.
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ -- William Shakespeare --
+>
+
+
+
 --=20
        Majed B.
 --
