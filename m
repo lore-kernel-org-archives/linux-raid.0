@@ -1,26 +1,28 @@
 From: "Leslie Rhorer" <lrhorer@satx.rr.com>
 Subject: RE: Bitmap did not survive reboot
-Date: Wed, 11 Nov 2009 08:54:31 -0600
-Message-ID: <20091111145440822.LFBV5263@cdptpa-omta04.mail.rr.com>
-References: <70ed7c3e0911110131o3819013fkf2d5096cfbb8d8c4@mail.gmail.com>
+Date: Wed, 11 Nov 2009 09:01:46 -0600
+Message-ID: <20091111150155475.WWUI3390@cdptpa-omta03.mail.rr.com>
+References: <20091111091609.GB9137@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70ed7c3e0911110131o3819013fkf2d5096cfbb8d8c4@mail.gmail.com>
+In-Reply-To: <20091111091609.GB9137@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: "'Majed B.'" <majedb@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > mount -t ext2 /dev/hda4 /etc/mdadm/bitmap
-> 
-> I would suggest you mount the partition using UUID, just in case one
-> day the disk decided to change its name, like what happened to me a
-> while back.
 
-	Yeah, I've had that happen with SATA drives quite a bit.  That's not
-a bad idea.
+> > If you have a temporary space for your data, I'd suggest you move it
+> > out and go for an internal bitmap solution. It certainly beats the
+> > patch work you're going to have to do on the startup scripts (and
+> > every time you update mdadm, or the distro).
+> >
+> There should be no need to move the data off - you can add an internal
+> bitmap using the --grow option.  An internal bitmap does have more of an
+> overhead than an external one though.
 
+	I thought I remembered reading in the man page than an internal
+bitmap could only be added when the array was created?  Is that incorrect?  
 
