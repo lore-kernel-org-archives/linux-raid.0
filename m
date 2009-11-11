@@ -1,66 +1,151 @@
 From: "Majed B." <majedb@gmail.com>
-Subject: Re: Intel Updates SSDs, Supports TRIM, Faster Writes
-Date: Wed, 11 Nov 2009 05:52:31 +0300
-Message-ID: <70ed7c3e0911101852n301cffc4wa69d299151bbc71f@mail.gmail.com>
-References: <4AF7066C.1040507@tmr.com> <f3177b9e0911090837y6f40ee6dy2a88c963465e8718@mail.gmail.com>
-	<70ed7c3e0911101031q7184315g24ba345dd30e55fd@mail.gmail.com>
-	<m3fx8m3rvd.fsf@mobydick.mine.nu>
+Subject: Re: IDE/RAID/AHCI setting in BIOS influcencing mdraid?
+Date: Wed, 11 Nov 2009 06:05:05 +0300
+Message-ID: <70ed7c3e0911101905m5f0bfbdbi5ae8a00576330abf@mail.gmail.com>
+References: <4AF9F415.9050809@ribosome.natur.cuni.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <m3fx8m3rvd.fsf@mobydick.mine.nu>
+In-Reply-To: <4AF9F415.9050809@ribosome.natur.cuni.cz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Thank you Mathieu for the input.
+Hello,
 
-I have seen IBM DS4800 SANs doing 600MB/s-700MB/s using a bunch of
-148GB 15k RPM FC disks. though I haven't seen them being benchmarked
-for IOPS.
+I won't be able to answer all your questions, but I can help with some:
 
-I was reading an article from AnadTech yesterday that compared
-rotational media to SSDs and they ran some stress tests. In the end,
-they concluded that hardware RAID controllers were hampering the
-performance because they couldn't absorb the amount of requests coming
-at them from the SSDs. When they switched to software RAID (on Windows
-in their test), they got almost double the performance (RAID5, 8
-disks).
+1) Each mode in the BIOS makes the devices behave differently. AHCI
+always improves performance for disks. My laptop was on IDE and its
+max throughput was 11 MB/s. When enabling AHCI, I got 30-35 MB/s out
+of the poor disk (5400 rpm).
 
-You can see the numbers here: http://it.anandtech.com/IT/showdoc.aspx?i=
-=3D3532&p=3D9
-If you're interested in the whole article, you can go to the link
-above and go back to the main page using the index.
+1 & 2) Intel storage matrix is fake RAID and its driver is horrible &
+slow. Avoid it like the plague!
+You'd be better off with software RAID or a hardware controller.
 
-On sequential read, they achieved 1257 MB/s on a RAID 5 setup. Quite
-impressive for those with video streaming applications.
+3) As far as I know, whenevr you create an array (in any way --
+software or hardware), array information is written to the disks, so
+when you switch from software RAID to hardware RAID, you may lose your
+array information, depending on where the information is written
+(beginning of the disk or at the end of it) -- if you have a
+filesystem already in place, that may be lost too.
+The above is also correct if you tried to create a new software RAID
+array but with a different superblock version (0.9 vs 1.x), since
+array information is written differently.
 
-On Wed, Nov 11, 2009 at 2:03 AM, Mathieu Chouquet-Stringer
-<mchouque@free.fr> wrote:
-> majedb@gmail.com ("Majed B.") writes:
->> Chris,
->>
->> Do you mind sharing the drive models & controllers you're using that
->> give you 800 MB/s?
+A quote from the mdadm manual:
+"1, 1.0, 1.1, 1.2: Use the new version-1 format superblock.  This has
+few restrictions.  The different sub-versions store the superblock at
+different locations on the device, either at the end (for 1.0), at the
+start (for 1.1) or 4K from the start (for 1.2)."
+
+On Wed, Nov 11, 2009 at 2:15 AM, Martin MOKREJ=C5=A0
+<mmokrejs@ribosome.natur.cuni.cz> wrote:
+> Hi,
+> =C2=A0after poking around the internet I cannot answer myself several=
+ questions.
+> Please somebody feel free to update the http://linux-raid.osdl.org/ p=
+ages
+> and the mdadm manpage to explain the differences. ;-)
 >
-> At work we reviewed different kind of fusion-io products (namely ioDr=
-ive
-> and ioDrive-Duo, 80GB and 640GB) and I could easily get 700 MB/s with
-> more than 100k iops (benched using fio)...
+> =C2=A01. Does the BIOS values, especially AHCI vs. RAID force for exa=
+mple the
+> ICH9R chip into different mode seen by linux kernel? Looks like that =
+=2E..
+> I have two machines and see there is a difference reported. Could tha=
+t
+> cause machine instability if the disks would be configured through md=
+adm
+> to be in RAID? Some kind of conflict?
 >
-> http://kb.fusionio.com/KB/a29/verifying-linux-system-performance.aspx
+> =C2=A0I see "impl RAID mode" vs. "SATA mode" in dmesg outputs on my m=
+achines:
+> host1: ahci 0000:00:1f.2: AHCI 0001.0200 32 slots 6 ports 3 Gbps 0x3f=
+ impl RAID mode
+> host2: ahci 0000:02:00.0: AHCI 0001.0000 32 slots 2 ports 3 Gbps 0x3 =
+impl SATA mode
 >
-> Their results are consistent with what I saw...
 >
-> I didn't like the binary like driver though...
+> =C2=A02. Selecting RAID mode in BIOS writes some Intel Storage Matrix=
+ label
+> somewhere into the disk, right? I think I read in mdadm manpage or si=
+milar about
+> "imsm" superblock format or something like that ... supported by mdra=
+id. I cannot
+> find it anymore. Does it mean that one could force mdadm to create th=
+e superblock
+> recognized by the ICH9R BIOS and in theory MS Win drivers from Intel?
+>
+>
+> =C2=A03. I have now 0.90 superblocks on two raid1 disc partitions /de=
+v/sd[a-b]1.
+> What happens if I go to BIOS of ICH9R and "remove the drives from the=
+ raid1" array?
+> Does that clear the "imsm?" superblock? Will that kill the 0.90 mdadm=
+ superblock
+> and destroy my linux mdraid?
+>
+>
+> =C2=A04. There is hardly a documentation available comparing and expl=
+aining
+> the difference between dmraid and mdraid. My understanding is that dm=
+raid
+> is used in linux/win dual-boot machines and is older implementation. =
+Does
+> use of the "imsm" superblock format under mdadm give the same possibi=
+lity?
+> BTW, arguably the best documentation is in lkml archives around here =
+=2E..:-)
+>
+> From: Neil Brown (neilb@cse.unsw.edu.au)
+> Date: Tue Nov 19 2002 - 23:09:18 EST
+> Subject: RFC - new raid superblock layout for md driver
+>
+> The thread is at http://lkml.indiana.edu/hypermail/linux/kernel/0211.=
+2/1108.html
+>
+>
+> =C2=A0 5. There is --zero-superblock option to mdadm(1) but the manpa=
+ge does not bother
+> to state how can one create one. Googling around I found that actuall=
+y --create
+> does not kill the current data if one supplies mdadm with the list of=
+ devices.
+> I would have to Google again to give you the link, sorry. ;-) This on=
+e is at least
+> somehow similar, probably the first where I saw a trick with the devi=
+cename "missing".
+> Something new to me. ;-)
+> http://ubuntu-ky.ubuntuforums.org/showthread.php?p=3D8286434
+>
+>
+> =C2=A0 6. mdadm -D /dev/mdX shows: =C2=A0 "Persistence : Superblock i=
+s persistent".
+> =C2=A0What I did not create the array with persistent block? How to c=
+reate one
+> additionally? I think the answer is in the previous point nr. 5. ;-)
+> Yes, would be nice if somebody placed into the manpage (your Wiki) a =
+kernel
+> command-line (for those who screwed their superblocks or want to stay=
+ on a safe side
+> if they manage so ...) example like this one from http://en.gentoo-wi=
+ki.com/wiki/Software_RAID_Install:
+>
+> Title gentoo-2.6.24-r3
+> root (hd0,0)
+> kernel /gentoo.2624r3 root=3D/dev/md5 md=3D5,/dev/sda5,/dev/sdb5
+>
+>
+> Thank you for any clarifications.
+> Martin
 > --
-> Mathieu Chouquet-Stringer =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 mchouque@free.fr
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0The sun itself sees not till=
- heaven clears.
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- -- William Shakespeare --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
 >
 
 
