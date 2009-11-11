@@ -1,79 +1,43 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: Bitmap did not survive reboot
-Date: Wed, 11 Nov 2009 12:31:44 +0300
-Message-ID: <70ed7c3e0911110131o3819013fkf2d5096cfbb8d8c4@mail.gmail.com>
-References: <70ed7c3e0911102122l3565cfat7a35a8a649237f56@mail.gmail.com>
-	<20091111081325702.LZCS6968@cdptpa-omta02.mail.rr.com>
+From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
+Subject: Re: Known-good LSI PCIe SAS HBAs?
+Date: Wed, 11 Nov 2009 11:09:54 +0000
+Message-ID: <73e903670911110309p6fc1cbe6x2481b61db3f7dd6d@mail.gmail.com>
+References: <73e903670911100854o1b48380apb5b0a86c44ae9dcb@mail.gmail.com>
+	 <200911110001.49910.tfjellstrom@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091111081325702.LZCS6968@cdptpa-omta02.mail.rr.com>
+In-Reply-To: <200911110001.49910.tfjellstrom@shaw.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lrhorer@satx.rr.com>
+To: tfjellstrom@shaw.ca
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> mount -t ext2 /dev/hda4 /etc/mdadm/bitmap
-
-I would suggest you mount the partition using UUID, just in case one
-day the disk decided to change its name, like what happened to me a
-while back.
-
-On Wed, Nov 11, 2009 at 11:13 AM, Leslie Rhorer <lrhorer@satx.rr.com> w=
-rote:
->> If you have a temporary space for your data, I'd suggest you move it
->> out and go for an internal bitmap solution. It certainly beats the
+On Wed, Nov 11, 2009 at 7:01 AM, Thomas Fjellstrom <tfjellstrom@shaw.ca> wrote:
+> On Tue November 10 2009, you wrote:
+>> Hi,
+>>
+>> I'm looking to replace a problematic Marvell PCIe SAS JBOD controller
+>> from Supermicro, type AOC-SASLP-MV8. (mdadm freaks out on it and the
+>> controller drops the drives - there has been discussion of the problem
+>> on the list. Seems to be a mvsas driver problem but seems to surface
+>> only under mdadm use.)
+>>
+>>...
 >
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0For 8 Terabytes of data? =C2=A0No, I don't=
-=2E =C2=A0I'm also not really keen on
-> interrupting the system ( in whatever fashion ) for six to eight days=
- while
-> I copy the data out and back or taking the primary copy offline while=
- I
-> re-do the array just so I can implement an internal bitmap. =C2=A0It'=
-s much
-> easier to handle the external situation one way or the other.
->
->> patch work you're going to have to do on the startup scripts (and
->> every time you update mdadm, or the distro).
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0That's why I am leaning strongly toward th=
-e lower value script,
-> which in fact I have already done. =C2=A0Of course, it's also trivial=
- to disable
-> it. =C2=A0Updating mdadm or the distro won't affect the mount script.=
- =C2=A0At most I
-> would only have to rename the link, and then only if the mdadm startu=
-p link
-> gets re-numbered, which is unlilkely. =C2=A0Creating the following sc=
-ript and one
-> symlink to it are hardly "patchwork" in any significant sense:
->
-> #! /bin/sh
-> # Explicitly mount /dev/hda4 prior to running mdadm so the write-inte=
-nt
-> # bitmap will be available to mdadm
->
-> echo Mounting RAID bitmap...
-> mount -t ext2 /dev/hda4 /etc/mdadm/bitmap
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
+> Not really an answer to your question, I got a snapshot of the in
+> development driver that seems to work just fine. I haven't run smartctl on
+> the controller much mind you, as it seems to freak out my onboard controller
+> too (AMD SB750). I could attempt it, but I've recently just switched over to
+> that hardware for my main server, and I'm reluctant to try running smartctl
+> on the array, as it'd probably require a reboot to get which ever disk back
+> that might get dropped.
 >
 
+That's quite interesting.
+Did you discuss this on a mailing list somewhere and have a link to
+that discussion? Or would you be willing to forward a message to
+honorable mr. driver guy? I'd love to try the patch before buying a
+new controller.
 
-
---=20
-       Majed B.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks!
