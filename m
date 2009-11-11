@@ -1,77 +1,145 @@
-From: =?UTF-8?B?TWFydGluIE1PS1JFSsWg?= <mmokrejs@ribosome.natur.cuni.cz>
-Subject: IDE/RAID/AHCI setting in BIOS influcencing mdraid?
-Date: Wed, 11 Nov 2009 00:15:33 +0100
-Message-ID: <4AF9F415.9050809@ribosome.natur.cuni.cz>
+From: "Majed B." <majedb@gmail.com>
+Subject: Re: need help: corrupt files on one of my raids
+Date: Wed, 11 Nov 2009 05:29:25 +0300
+Message-ID: <70ed7c3e0911101829x48e6eb68o892ef11b2ff2d19@mail.gmail.com>
+References: <4AF97388.5080907@langseid.no> <70ed7c3e0911100734m31cd846t9987d6141d2513a6@mail.gmail.com>
+	<4AF99159.4000800@langseid.no> <70ed7c3e0911101026k5e7ba489s6f3e492acc568d2f@mail.gmail.com>
+	<4AF9CB19.7000803@langseid.no> <70ed7c3e0911101231r9e7e8b0nfcd94a60e5635831@mail.gmail.com>
+	<4AF9D194.6000306@langseid.no>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4AF9D194.6000306@langseid.no>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid list <linux-raid@vger.kernel.org>
+To: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
-  after poking around the internet I cannot answer myself several questions.
-Please somebody feel free to update the http://linux-raid.osdl.org/ pages
-and the mdadm manpage to explain the differences. ;-)
+If you have no data on the volumes, would you mind formatting the
+volumes with a different filesystem? ext3/ext4/xfs and see if you
+still get data corruption.
 
-  1. Does the BIOS values, especially AHCI vs. RAID force for example the
-ICH9R chip into different mode seen by linux kernel? Looks like that ...
-I have two machines and see there is a difference reported. Could that
-cause machine instability if the disks would be configured through mdadm
-to be in RAID? Some kind of conflict?
-
-  I see "impl RAID mode" vs. "SATA mode" in dmesg outputs on my machines:
-host1: ahci 0000:00:1f.2: AHCI 0001.0200 32 slots 6 ports 3 Gbps 0x3f impl RAID mode
-host2: ahci 0000:02:00.0: AHCI 0001.0000 32 slots 2 ports 3 Gbps 0x3 impl SATA mode
-
-
-  2. Selecting RAID mode in BIOS writes some Intel Storage Matrix label
-somewhere into the disk, right? I think I read in mdadm manpage or similar about
-"imsm" superblock format or something like that ... supported by mdraid. I cannot
-find it anymore. Does it mean that one could force mdadm to create the superblock
-recognized by the ICH9R BIOS and in theory MS Win drivers from Intel?
-
-
-  3. I have now 0.90 superblocks on two raid1 disc partitions /dev/sd[a-b]1.
-What happens if I go to BIOS of ICH9R and "remove the drives from the raid1" array?
-Does that clear the "imsm?" superblock? Will that kill the 0.90 mdadm superblock
-and destroy my linux mdraid?
-
-
-  4. There is hardly a documentation available comparing and explaining
-the difference between dmraid and mdraid. My understanding is that dmraid
-is used in linux/win dual-boot machines and is older implementation. Does
-use of the "imsm" superblock format under mdadm give the same possibility?
-BTW, arguably the best documentation is in lkml archives around here ...:-)
-
-From: Neil Brown (neilb@cse.unsw.edu.au)
-Date: Tue Nov 19 2002 - 23:09:18 EST
-Subject: RFC - new raid superblock layout for md driver
-
-The thread is at http://lkml.indiana.edu/hypermail/linux/kernel/0211.2/1108.html
-
-
-   5. There is --zero-superblock option to mdadm(1) but the manpage does not bother
-to state how can one create one. Googling around I found that actually --create
-does not kill the current data if one supplies mdadm with the list of devices.
-I would have to Google again to give you the link, sorry. ;-) This one is at least
-somehow similar, probably the first where I saw a trick with the devicename "missing".
-Something new to me. ;-)
-http://ubuntu-ky.ubuntuforums.org/showthread.php?p=8286434
-
-
-   6. mdadm -D /dev/mdX shows:   "Persistence : Superblock is persistent".
-  What I did not create the array with persistent block? How to create one
-additionally? I think the answer is in the previous point nr. 5. ;-)
-Yes, would be nice if somebody placed into the manpage (your Wiki) a kernel
-command-line (for those who screwed their superblocks or want to stay on a safe side
-if they manage so ...) example like this one from http://en.gentoo-wiki.com/wiki/Software_RAID_Install:
-
-Title gentoo-2.6.24-r3
-root (hd0,0)
-kernel /gentoo.2624r3 root=/dev/md5 md=5,/dev/sda5,/dev/sdb5
-
-
-Thank you for any clarifications.
-Martin
+On Tue, Nov 10, 2009 at 11:48 PM, Arild Langseid <arild@langseid.no> wr=
+ote:
+> Yes I have run a fsck:
+>
+> ###########
+> reiserfsck --check started at Tue Nov 10 22:15:27 2009
+> ###########
+> Replaying journal..
+> Reiserfs journal '/dev/mapper/vg0sata-lv0_multimedia' in blocks [18..=
+8211]:
+> 0 transactions replayed
+> Checking internal tree..finished
+> Comparing bitmaps..finished
+> Checking Semantic tree:
+> finished
+> No corruptions found
+> There are on the filesystem:
+> =C2=A0 =C2=A0 =C2=A0 Leaves 82
+> =C2=A0 =C2=A0 =C2=A0 Internal nodes 1
+> =C2=A0 =C2=A0 =C2=A0 Directories 7
+> =C2=A0 =C2=A0 =C2=A0 Other files 101
+> =C2=A0 =C2=A0 =C2=A0 Data block pointers 77964 (0 of them are zero)
+> =C2=A0 =C2=A0 =C2=A0 Safe links 0
+> ###########
+> reiserfsck finished at Tue Nov 10 22:15:29 2009
+> ###########
+>
+> Seems ok to me.
+>
+> I will now run the offline checks you suggested earlier.
+>
+> As it is not very clear that I have a raid problem as I first thought=
+=2E... is
+> there any other mailing list I should ask about my problem, or is it =
+ok to
+> continue here?
+>
+> Best Regards,
+> Arild
+>
+> Majed B. wrote:
+>>
+>> The numbers will be reported as zeros if you have never run an offli=
+ne
+>> test before. Run it and then you'll get to see whether you have bad
+>> sectors or not.
+>>
+>> Have you tried running a filesystem check? (fsck)
+>>
+>> On Tue, Nov 10, 2009 at 11:20 PM, Arild Langseid <arild@langseid.no>
+>> wrote:
+>>
+>>>
+>>> Hi and thanks again!
+>>>
+>>> I did not find the feature-list for my disk either. Instead I found=
+ my
+>>> smartmontools to be very old.
+>>> I upgraded my Debian Etch to Debian Lenny (took some time....), and=
+ now
+>>> the
+>>> smartctl works. I got lucky about the smart feature on my disks and
+>>> motherboard.
+>>>
+>>> Output for /dev/sdb:
+>>> =C2=A01 Raw_Read_Error_Rate =C2=A0 =C2=A0 0x000b =C2=A0 100 =C2=A0 =
+100 =C2=A0 016 =C2=A0 =C2=A0Pre-fail =C2=A0Always
+>>> =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
+>>> =C2=A05 Reallocated_Sector_Ct =C2=A0 0x0033 =C2=A0 100 =C2=A0 100 =C2=
+=A0 005 =C2=A0 =C2=A0Pre-fail =C2=A0Always
+>>> =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
+>>> 196 Reallocated_Event_Count 0x0032 =C2=A0 100 =C2=A0 100 =C2=A0 000=
+ =C2=A0 =C2=A0Old_age =C2=A0 Always
+>>> =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
+>>> 197 Current_Pending_Sector =C2=A00x0022 =C2=A0 100 =C2=A0 100 =C2=A0=
+ 000 =C2=A0 =C2=A0Old_age =C2=A0 Always
+>>> =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
+>>> 198 Offline_Uncorrectable =C2=A0 0x0008 =C2=A0 100 =C2=A0 100 =C2=A0=
+ 000 =C2=A0 =C2=A0Old_age =C2=A0 Offline
+>>> =C2=A0 - =C2=A0 =C2=A0 =C2=A0 0
+>>> 199 UDMA_CRC_Error_Count =C2=A0 =C2=A00x000a =C2=A0 200 =C2=A0 200 =
+=C2=A0 000 =C2=A0 =C2=A0Old_age =C2=A0 Always
+>>> =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
+>>>
+>>> SMART Error Log Version: 1
+>>> No Errors Logged
+>>>
+>>> and /dev/sdc:
+>>> =C2=A01 Raw_Read_Error_Rate =C2=A0 =C2=A0 0x000b =C2=A0 100 =C2=A0 =
+100 =C2=A0 016 =C2=A0 =C2=A0Pre-fail =C2=A0Always
+>>> =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
+>>> =C2=A05 Reallocated_Sector_Ct =C2=A0 0x0033 =C2=A0 100 =C2=A0 100 =C2=
+=A0 005 =C2=A0 =C2=A0Pre-fail =C2=A0Always
+>>> =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
+>>> 196 Reallocated_Event_Count 0x0032 =C2=A0 100 =C2=A0 100 =C2=A0 000=
+ =C2=A0 =C2=A0Old_age =C2=A0 Always
+>>> =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
+>>> 197 Current_Pending_Sector =C2=A00x0022 =C2=A0 100 =C2=A0 100 =C2=A0=
+ 000 =C2=A0 =C2=A0Old_age =C2=A0 Always
+>>> =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
+>>> 198 Offline_Uncorrectable =C2=A0 0x0008 =C2=A0 100 =C2=A0 100 =C2=A0=
+ 000 =C2=A0 =C2=A0Old_age =C2=A0 Offline
+>>> =C2=A0 - =C2=A0 =C2=A0 =C2=A0 0
+>>> 199 UDMA_CRC_Error_Count =C2=A0 =C2=A00x000a =C2=A0 200 =C2=A0 200 =
+=C2=A0 000 =C2=A0 =C2=A0Old_age =C2=A0 Always
+>>> =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
+>>>
+>>> SMART Error Log Version: 1
+>>> No Errors Logged
+>>>
+>>> Seems ok to me. Do you agree?
+>>>
+>>> After upgrading to Debian Lenny - I still got corrupted files thoug=
+h :(
+>>>
+>>> Best Regards,
+>>> Arild
+--=20
+       Majed B.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
