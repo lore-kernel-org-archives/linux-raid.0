@@ -1,68 +1,77 @@
 From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
 Subject: Re: Known-good LSI PCIe SAS HBAs?
-Date: Wed, 11 Nov 2009 00:01:49 -0700
-Message-ID: <200911110001.49910.tfjellstrom@shaw.ca>
-References: <73e903670911100854o1b48380apb5b0a86c44ae9dcb@mail.gmail.com>
+Date: Wed, 11 Nov 2009 00:04:31 -0700
+Message-ID: <200911110004.31238.tfjellstrom@shaw.ca>
+References: <73e903670911100854o1b48380apb5b0a86c44ae9dcb@mail.gmail.com> <4AF9A89B.80400@sauce.co.nz>
 Reply-To: tfjellstrom@shaw.ca
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: Text/Plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <73e903670911100854o1b48380apb5b0a86c44ae9dcb@mail.gmail.com>
+In-Reply-To: <4AF9A89B.80400@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kristleifur =?iso-8859-1?q?Da=F0ason?= <kristleifur@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Richard Scobie <richard@sauce.co.nz>
+Cc: Kristleifur =?iso-8859-1?q?Da=F0ason?= <kristleifur@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue November 10 2009, you wrote:
-> Hi,
-> 
-> I'm looking to replace a problematic Marvell PCIe SAS JBOD controller
-> from Supermicro, type AOC-SASLP-MV8. (mdadm freaks out on it and the
-> controller drops the drives - there has been discussion of the problem
-> on the list. Seems to be a mvsas driver problem but seems to surface
-> only under mdadm use.)
-> 
-> It's a nice controller, but we have to get an array going, so I'm
-> shelving the Marvell card and getting a new one. I'll be using mdadm
-> raid5 / raid6 over the controller.
-> 
-> This one, LSI SAS 3081E-R, looks good with eight SAS ports for around
->  $200:
->  http://www.lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas
-> /internal/sas3081e-r/index.html
-> 
-> I can't find anything concrete regarding Linux, but I did find a
-> known-good confirmation for Solaris/ZFS here:
-> http://jmlittle.blogspot.com/2008/06/recommended-disk-controllers-for-zfs
-> .html
-> 
-> Can anyone confirm/deny that the PCIe JBOD controllers from LSI work
-> on Linux out of the box? Or give other recommendations for 8 port
-> controllers in the $150-$200 range? (Or thereabouts. It'd be great to
-> know about any known-good 4-port controllers for even up to $250.)
-> 
-> Thanks!
+On Tue November 10 2009, Richard Scobie wrote:
+> Kristleifur Da=F0ason wrote:
+> > Can anyone confirm/deny that the PCIe JBOD controllers from LSI wor=
+k
+> > on Linux out of the box? Or give other recommendations for 8 port
+> > controllers in the $150-$200 range? (Or thereabouts. It'd be great =
+to
+> > know about any known-good 4-port controllers for even up to $250.)
+>=20
+> You should have no problem at all. I have used a number of the:
+>=20
+> http://www.lsi.com/storage_home/products_home/host_bus_adapters/sas_h=
+bas/
+> combo/sas3442e-r/index.html
+>=20
+> controllers.
+>=20
+> The only thing to watch out for, as has been discussed in the last fe=
+w
+> days, is that use of smartmontools to monitor disk health on these 10=
+68
+> based cards, wll cause drives to be offlined, when used with recent
+>  kernels.
+>=20
+> Regards,
 
-Not really an answer to your question, I got a snapshot of the in 
-development driver that seems to work just fine. I haven't run smartctl on 
-the controller much mind you, as it seems to freak out my onboard controller 
-too (AMD SB750). I could attempt it, but I've recently just switched over to 
-that hardware for my main server, and I'm reluctant to try running smartctl 
-on the array, as it'd probably require a reboot to get which ever disk back 
-that might get dropped.
+Thats the problem he was trying to get away from. the MV8 controller li=
+kes=20
+to offline disks when a few smart commands arrive. at least with the ma=
+in=20
+kernel drivers. But then the main kernel mvsas drivers decide to give u=
+p if=20
+you even attempt to start a raid array on them. The controller locks up=
+ and=20
+you have to reboot. Most of the time a reboot even fails when it tries =
+to=20
+sync the block devices, so a hard reset is in order.
 
-I might try it later, but I don't even have smartmontools installed.
+But as I mentioned in a previous message, the driver snapshot I got fro=
+m a=20
+nice fellow seems to work fine now. I hope it gets into the kernel some=
+time=20
+soon.
 
-> -- Kristleifur
+> Richard
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+>=20
 
 
--- 
+--=20
 Thomas Fjellstrom
 tfjellstrom@shaw.ca
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
