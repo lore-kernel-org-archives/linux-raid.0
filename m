@@ -1,67 +1,120 @@
 From: greg@enjellic.com
-Subject: Re: [ANNOUNCE] mdadm-3.1 has been withdrawn
-Date: Thu, 12 Nov 2009 11:51:22 -0600
-Message-ID: <200911121751.nACHpMrQ011365@wind.enjellic.com>
-References: <nfbrown@novell.com>
+Subject: Re: mismatch_cnt again
+Date: Thu, 12 Nov 2009 13:20:13 -0600
+Message-ID: <200911121920.nACJKDew011818@wind.enjellic.com>
+References: <eyal@eyal.emu.id.au>
 Reply-To: greg@enjellic.com
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: "Neil F Brown" <nfbrown@novell.com>
-       "Re: [ANNOUNCE] mdadm-3.1 has been withdrawn" (Nov 10,  7:22am)
+In-Reply-To: Eyal Lebedinsky <eyal@eyal.emu.id.au>
+       "Re: mismatch_cnt again" (Nov 10,  9:03am)
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil F Brown <nfbrown@novell.com>, Doug Ledford <dledford@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
+Cc: neilb@suse.de
 List-Id: linux-raid.ids
 
-On Nov 10,  7:22am, "Neil F Brown" wrote:
-} Subject: Re: [ANNOUNCE] mdadm-3.1 has been withdrawn
+On Nov 10,  9:03am, Eyal Lebedinsky wrote:
+} Subject: Re: mismatch_cnt again
 
-Good morning to everyone, hope the week is progressing well.
+Good day to everyone.
 
-> On Tue, November 10, 2009 1:39 am, Doug Ledford wrote:
-> > On 11/06/2009 01:45 AM, Neil Brown wrote:
-> >>
-> >> Greetings.
-> >>
-> >>  About a week ago I released mdadm-3.1
-> >>  I have now 'withdrawn' it meaning that it doesn't appear on the
-> >>  kernel.org mirrors any more, and I ask people not to use it.
-> >
-> > Although the cause for this sucks, I was actually going to suggest that
-> > since 3.1 is a version bump, that we take the opportunity to change a
-> > few defaults.  Like switching to version 1 superblocks instead of
-> > version 0 by default.  And changing the default chunk size to 512k
-> > instead of 64k.  The time has simply come for the 0->1 superblock
-> > change, and I have a good deal of data showing that for SATA disks at
-> > least, the 512k chunk size is the typical sweet  spot.
+> Thanks everyone,
 
-> I had been toying with that idea myself - certainly of changing the
-> defaults soon.  I'm tempted to make the default metadata "1.1"
-> though possibly not for RAID1.  For RAID0,4,5,6,10 there is no value
-> in having the metadata at the end of the device.  For RAID1 there is
-> as it makes booting off any member easier.  Thoughts?
+> I wish to narrow down the issue to my question Are there situations
+> known to cause this without an actual hardware failure?
+>
+> Meaning, are there known *software* issues with this configuration
+> 	2.6.30.5-43.fc11.x86_64, ext3, raid5, sata, Adaptec 1430SA
+> that can lead to a mismatch?
+>
+> It is not root, not swap, has weekly smartd scans and weekly
+> (different days) raid 'check's. Only report is a growing
+> mismatch_cnt.
+>
+> I noted the raid1 as mentioned in the thread.
 
-It may be heresy but I would suggest that if the defaults change we
-should also implement support for auto-starting version 1.x devices,
-or some appropriate subset of them.
+I have concerns there is a big ugly issue waiting to rear its head in
+the Linux storage community.  Particularly after reading Martin's note
+about pages not being pinned through the duration of an I/O.
 
-I understand and appreciate the concerns of the userspace start
-community.  However, we do a lot of storage on very dedicated systems
-and I have spent far more time unsnarling systems with blown
-initrd/initramfs setups and other boot issues than I have recovering
-from starting RAID volumes on the wrong box.  Thats why I don't let
-udev anywhere near production machines and I am still living on 0.9
-metadata in spite of its limitations.
+Speaking directly to your concerns Eyal.  One of my staff members runs
+recent Fedora on his desktop with software RAID1.  On a brand new box
+shortly after installation he is noting large mismatch_cnt's on the
+RAID pairs.
 
-UNIX has always been about allowing people to shoot themselves in the
-foot if they so desire.  I think an acceptable compromise would be to
-move toward a default of disabled auto-detection with the option to
-turn on detection of all meta-data types if people choose to do that.
+He posted about the issue a month or so ago to the linux-raid list.
+He received no definitive responses other than some vague hand waving
+that ext3 could cause this.  I believe he is running ext4 on the RAID1
+volumes in question.
 
-> NeilBrown
+Interestingly enough a filesystem check comes up normal.  So there are
+mismatches but they do not seem to be manifesting themselves.  It
+would seem that others confirm this issue.
+
+More to the point we manage geographically mirrored storage systems.
+Linux initiators receive fiber-channel based block devices from two
+separate mirrors.  The block devices are used as the basis for a RAID1
+volume with persistent bitmaps.
+
+In the data-centers we have SCST based Linux storage targets.  The
+target 'disks' are LVM based logical volumes platformed on top of
+software RAID5 volumes.
+
+We are seeing, in some cases, large mismatch_cnts on the RAID1
+initiators.  Check runs on each of the two RAID5 target volumes show
+no mismatches.  So the mismatch is occuring at the RAID1 level and is
+independent of what is happening at the physical storage level.
+
+The filesystems on the RAID1 volumes are ext3 running under moderate
+to heavy load.  Initiator kernels, in general, have been reasonably
+new, 2.6.27.x and forward, with RHEL5 userspace.
+
+I suspect there are one or more subtle factors which are making the
+non-pinned pages more of an issue then what they appear to be at first
+analysis.  Jens and company have been putzing with the I/O schedulers
+and related issues.  One possible bit of hand waving is that all of
+this may be somehow confounded by elevator induced latencies.
+
+Our I/O latencies are longer due to the physical issues of shooting
+I/O through a fair amount of glass and multi-trunked switch
+architectures.  In addition we configure somewhat deeper queue depths
+on the targets which may compound the problem.  But that doesn't
+explain Eyal's and other's issues with this showing up on desktop
+systems.
+
+In any case I am convinced the problem is real and potentially
+significant.  What seems to be perplexing is why it isn't showing up
+as corrupted files and the like.  We are not hearing anything from the
+user side which would suggest manifestation of the problem.
+
+More troubling in my opinion is how widespread the problem might be
+and how do we fix it?  Automatic repair is problematic as has been
+discussed, particulary in the case of a two pair RAID1 volume.  I'm
+also equally apprehensive about doing a casino roll with data by
+blindly running a 'repair'.
+
+The obvious alternative is to compare the mismatches and figure out
+which block is correct.  Pragmatically a somewhat daunting task on
+potentially thousands of mismatches on multi-hundred gigabyte
+filesystems.  Much more so when one considers the qualitative
+assessment issue and the need to do this off-line to avoid Heisenberg
+issues.
+
+> cheers Eyal
+
+So I think the problem is real and one we need to respond to as a
+community sooner rather than later.  I shudder at the thought of an
+LWN or Slashdot article heralding the fact there might be silent
+corruption on thousands of filesystems around the planet... :-)(
+
+Neil/Martin what do you think?
+
+I'm happy to hunt if we can do anything from our end.
 
 Best wishes for a pleasant weekend to everyone.
 
-}-- End of excerpt from "Neil F Brown"
+Greg
+
+}-- End of excerpt from Eyal Lebedinsky
 
 As always,
 Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
@@ -70,7 +123,5 @@ Fargo, ND  58102            development.
 PH: 701-281-1686
 FAX: 701-281-3949           EMAIL: greg@enjellic.com
 ------------------------------------------------------------------------------
-"Join in the new game that's sweeping the country.  It's called
- `Bureaucracy`.  Everybody stands in a circle.  The first person to do
- anything loses."
-                                -- Steve RTFM Przepiora
+"If I'd listened to customers, I'd have given them a faster horse."
+                                -- Henry Ford
