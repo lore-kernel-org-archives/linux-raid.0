@@ -1,68 +1,77 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: removing nonexistent drive from array
-Date: Thu, 12 Nov 2009 20:53:03 +0000
-Message-ID: <20091112205303.GA983@cthulhu.home.robinhill.me.uk>
-References: <f19d625d0911121146x6235dcdfl4711f088efc3549b@mail.gmail.com>
+From: Janek Kozicki <janek_listy@wp.pl>
+Subject: Using 2.6.31 liveCD to grow (reshape) raid5 into raid6, then bacck
+ to old kernel?
+Date: Thu, 12 Nov 2009 22:03:51 +0100
+Message-ID: <20091112220351.22a2ad1b@atak.bl.pg.gda.pl>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="AqsLC8rIMeq19msA"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <f19d625d0911121146x6235dcdfl4711f088efc3549b@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
---AqsLC8rIMeq19msA
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I have an old debian etch backup server. It has 5 drives in raid4.
+I want to add a sixth drive to jump to raid6. I don't want to upgrade
+debian etch, because the server is working real fine, and doing an
+upgrade would be too much problems.
 
-On Thu Nov 12, 2009 at 10:46:38PM +0300, CoolCold wrote:
+Here it is:
 
-> Hello!
-> I have raid1 array built of 2 disks. One of drives failed, so i've
-> removed it and inserted another one. Old disk was /dev/sdc, new one
-> detected as /dev/sde, I've added it into array, recovery begun and
-> everything is fine except i can't remove the old one:
->=20
-> root@srv15:~# cat /proc/mdstat
-> Personalities : [raid1]
-> md3 : active raid1 sde3[2] sdd3[0] sdc3[3](F)
->       290720192 blocks [2/1] [U_]
->       [=3D>...................]  recovery =3D  5.9% (17269760/290720192)
-> finish=3D1229.9min speed=3D3703K/sec
->=20
-> root@srv15:~# mdadm /dev/md3 -r /dev/sdc3
-> mdadm: cannot find /dev/sdc3: No such file or directory
->=20
-> Didn't find anything in man about such case. Any ideas?
->=20
-The simplest option is to do:
-    mdadm /dev/md3 -r failed
+  backup:~# uname -a
+  Linux backup 2.6.24-etchnhalf.1-686 #1 SMP Sat Aug 15 16:51:49 UTC 2009 i686 GNU/Linux
 
-Alternatively, you could try creating a dummy /dev/sdc3 entry (using
-mknod).
+  backup:~# mdadm -D /dev/md1
+/dev/md1:
+        Version : 01.01.03
+  Creation Time : Fri Nov  2 23:35:37 2007
+     Raid Level : raid5
+     Array Size : 1933614592 (1844.04 GiB 1980.02 GB)
+    Device Size : 966807296 (461.01 GiB 495.01 GB)
+   Raid Devices : 5
+  Total Devices : 5
+Preferred Minor : 1
+    Persistence : Superblock is persistent
 
-HTH,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+  Intent Bitmap : Internal
 
---AqsLC8rIMeq19msA
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+    Update Time : Thu Nov 12 21:59:15 2009
+          State : active
+ Active Devices : 5
+Working Devices : 5
+ Failed Devices : 0
+  Spare Devices : 0
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
+         Layout : left-symmetric
+     Chunk Size : 128K
 
-iEYEARECAAYFAkr8da8ACgkQShxCyD40xBJ63ACgkrob2z5o+UkdH91uZ9q945fs
-rEMAoJLcrAabMgE6BlZ4dinbTJPRx6Q3
-=hWKZ
------END PGP SIGNATURE-----
+           Name : backup:1  (local to host backup)
+           UUID : 22f22c35:99613d52:31d407a6:55bdeb84
+         Events : 718938
 
---AqsLC8rIMeq19msA--
+    Number   Major   Minor   RaidDevice State
+       5      22        3        0      active sync   /dev/hdc3
+       1       8        3        1      active sync   /dev/sda3
+       3       3        3        2      active sync   /dev/hda3
+       4       8       35        3      active sync   /dev/sdc3
+       6       8       19        4      active sync   /dev/sdb3
+backup:~# 
+
+
+And so my plan is to get some liveCD with 2.6.31 (or maybe 2.6.32 ?).
+Connect the sixth drive, boot liveCD, perform the migration:
+
+mdadm --add /dev/md2 /dev/sdd3
+mdadm --grow /dev/md2 --level=raid6 --raid-disks=6
+
+Then reboot back into linux 2.6.24.
+
+Will this work?
+
+Will 2.6.24 understand such raid6 ?
+
+thanks a lot for your help
+-- 
+Janek Kozicki                                                         |
