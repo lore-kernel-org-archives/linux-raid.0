@@ -1,67 +1,67 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Using 2.6.31 liveCD to grow (reshape) raid5 into raid6, then
- bacck to old kernel?
-Date: Thu, 12 Nov 2009 21:14:56 +0000
-Message-ID: <20091112211456.GB983@cthulhu.home.robinhill.me.uk>
-References: <20091112220351.22a2ad1b@atak.bl.pg.gda.pl>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: [ANNOUNCE] mdadm-3.1 has been withdrawn
+Date: Thu, 12 Nov 2009 17:25:49 -0500
+Message-ID: <4AFC8B6D.7080603@tmr.com>
+References: <19187.50708.551325.297625@notabene.brown> <4AF829B2.5090001@redhat.com>  <4AF836F8.5040903@panix.com> <cccedfc60911090742x5ac85a5axcf93d5cb9f6f6539@mail.gmail.com> <alpine.DEB.1.10.0911091749320.22728@uplift.swm.pp.se> <4AF8847D.8030303@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="VrqPEDrXMn8OVzN4"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20091112220351.22a2ad1b@atak.bl.pg.gda.pl>
+In-Reply-To: <4AF8847D.8030303@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: Mikael Abrahamsson <swmike@swm.pp.se>, Jon Nelson <jnelson-linux-raid@jamponi.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Doug Ledford wrote:
+> On 11/09/2009 11:51 AM, Mikael Abrahamsson wrote:
+>   
+>> On Mon, 9 Nov 2009, Jon Nelson wrote:
+>>
+>>     
+>>> I've been using 1.1 for everything.  What's the current wisdom
+>>> regarding 1.0 vs 1.1 or 1.2?
+>>> I used 1.1 because that's also where filesystem metadata usually goes
+>>> and therefore one might hope that the presence of the md metadata
+>>> would prevent accidental identification of a raid volume as containing
+>>> a filesystem.
+>>>       
+>> I like 1.2 because if you happen to write an MBR or something to the
+>> drive, you don't lose the superblock.
+>>     
+>
+> Of course, I recently had a bug report that I ended closing out as
+> NOTABUG because of this very ability.  The person had arrays with 1.2
+> superblocks, and they went to add a new disk, and all the existing disks
+> had a specific partition layout, so he copied that to the new disk, then
+> tried to add the partition to the raid array.  It kept returning "device
+> too small for array".  Then, upon inspection, we come to see he has a
+> 1.2 superblock on the *entire* drive, which left the partition table
+> intact, but the partition table is *pointless* because the array is on
+> the whole disk devices.  This sort of confusion is bad.  So, while I
+> could see making it 1.2 for partitions (so that boot sectors won't
+> overwrite the superblock), I wouldn't make it 1.2 for whole disk
+> devices, and in fact it might be wise to refuse to create 1.2
+> superblocks on whole disk devices.  Just a thought.
+>
+>   
 
---VrqPEDrXMn8OVzN4
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I'm trying to wrap my head around this recommendation, and not doing 
+well. The end of the allocation area (partition, disk, array, whatever) 
+seems to be what users hit when they do a dd or some similar operation 
+without understanding it. And the from end is what they hit when they 
+"fix" the MBR or add a partition table because something said it was 
+missing. As for your friend, nothing is foolproof, and unless he tried 
+very hard he probably failed to damage anything in a way which couldn't 
+be readily fixed.
 
-On Thu Nov 12, 2009 at 10:03:51PM +0100, Janek Kozicki wrote:
+I like 1.2, I feel it's least likely to suffer collateral damage, and 
+the problems it causes seem to result in the type of behavior you 
+mention aboue, the system says "Can't, won't, you don't know what you're 
+doing."
 
-> Hi,
->=20
-> I have an old debian etch backup server. It has 5 drives in raid4.
-> I want to add a sixth drive to jump to raid6. I don't want to upgrade
-> debian etch, because the server is working real fine, and doing an
-> upgrade would be too much problems.
->=20
-> And so my plan is to get some liveCD with 2.6.31 (or maybe 2.6.32 ?).
-> Connect the sixth drive, boot liveCD, perform the migration:
->=20
-> mdadm --add /dev/md2 /dev/sdd3
-> mdadm --grow /dev/md2 --level=3Draid6 --raid-disks=3D6
->=20
-> Then reboot back into linux 2.6.24.
->=20
-> Will this work?
->=20
-> Will 2.6.24 understand such raid6 ?
->=20
-I don't think so, no.  It's not a standard RAID6 (as all the Q parity is
-on a single disk) so I think you need the newer kernel to understand it.
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "We can't solve today's problems by using the same thinking we
+   used in creating them." - Einstein
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---VrqPEDrXMn8OVzN4
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEARECAAYFAkr8es8ACgkQShxCyD40xBIhGACfbjaQALAwmmd3iXnO236zUcct
-XykAnjy45QZmu7zXRlNOUQVvbIX5WLAQ
-=vo0I
------END PGP SIGNATURE-----
-
---VrqPEDrXMn8OVzN4--
