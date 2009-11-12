@@ -1,64 +1,58 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [ANNOUNCE] mdadm-3.1 has been withdrawn
-Date: Thu, 12 Nov 2009 17:25:49 -0500
-Message-ID: <4AFC8B6D.7080603@tmr.com>
-References: <19187.50708.551325.297625@notabene.brown> <4AF829B2.5090001@redhat.com>  <4AF836F8.5040903@panix.com> <cccedfc60911090742x5ac85a5axcf93d5cb9f6f6539@mail.gmail.com> <alpine.DEB.1.10.0911091749320.22728@uplift.swm.pp.se> <4AF8847D.8030303@redhat.com>
+Subject: Re: mismatch_cnt again
+Date: Thu, 12 Nov 2009 17:40:05 -0500
+Message-ID: <4AFC8EC5.6060400@tmr.com>
+References: <4AF4C247.6050303@eyal.emu.id.au> <4AF4D323.6020108@panix.com>	<4AF5268D.60900@eyal.emu.id.au>	<4877c76c0911070008m789507f8h799d419287740ca5@mail.gmail.com>	<87tyx6tpcb.fsf@frosties.localdomain> <4AF58B20.3000409@redhat.com>	<87iqdlaujb.fsf@frosties.localdomain> <4AF74B61.6000102@rabbit.us>	<20091109185632.GA2723@lazy.lzy>	<73ebdcee169f46611d411755f9aaca5b.squirrel@neil.brown.name>	<20091109215443.GA4143@lazy.lzy>	<d99ca9481d2471073484c5d43d493b4d.squirrel@neil.brown.name>	<4AF92DBD.5010102@rabbit.us> <yq1tyx2o4td.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AF8847D.8030303@redhat.com>
+In-Reply-To: <yq1tyx2o4td.fsf@sermon.lab.mkp.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>, Jon Nelson <jnelson-linux-raid@jamponi.net>, linux-raid@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Peter Rabbitson <rabbit+list@rabbit.us>, NeilBrown <neilb@suse.de>, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Goswin von Brederlow <goswin-v-b@web.de>, Doug Ledford <dledford@redhat.com>, Michael Evans <mjevans1983@gmail.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Doug Ledford wrote:
-> On 11/09/2009 11:51 AM, Mikael Abrahamsson wrote:
->   
->> On Mon, 9 Nov 2009, Jon Nelson wrote:
->>
->>     
->>> I've been using 1.1 for everything.  What's the current wisdom
->>> regarding 1.0 vs 1.1 or 1.2?
->>> I used 1.1 because that's also where filesystem metadata usually goes
->>> and therefore one might hope that the presence of the md metadata
->>> would prevent accidental identification of a raid volume as containing
->>> a filesystem.
->>>       
->> I like 1.2 because if you happen to write an MBR or something to the
->> drive, you don't lose the superblock.
->>     
+Martin K. Petersen wrote:
+>>>>>> "Peter" == Peter Rabbitson <rabbit+list@rabbit.us> writes:
+>>>>>>             
 >
-> Of course, I recently had a bug report that I ended closing out as
-> NOTABUG because of this very ability.  The person had arrays with 1.2
-> superblocks, and they went to add a new disk, and all the existing disks
-> had a specific partition layout, so he copied that to the new disk, then
-> tried to add the partition to the raid array.  It kept returning "device
-> too small for array".  Then, upon inspection, we come to see he has a
-> 1.2 superblock on the *entire* drive, which left the partition table
-> intact, but the partition table is *pointless* because the array is on
-> the whole disk devices.  This sort of confusion is bad.  So, while I
-> could see making it 1.2 for partitions (so that boot sectors won't
-> overwrite the superblock), I wouldn't make it 1.2 for whole disk
-> devices, and in fact it might be wise to refuse to create 1.2
-> superblocks on whole disk devices.  Just a thought.
+> Peter> Bingo - and according to the list archive many of us are getting
+> Peter> mismatches without swap anywhere near the raid in question. The
+> Peter> current situation is more akin to "Ok folks get in the plane,
+> Peter> we're deploying in 2 hours, and btw your chute is not going to
+> Peter> open and there is nothing you can do about it" How is that for a
+> Peter> threat model :)
+>
+> Way back we used to lock pages down entirely for I/O submission.  At
+> some point the writeback bit was introduced to gate the page during the
+> actual (physical) write operation only.  That made locking trickier and
+> not all filesystems correctly adapted to this.  ext[234] in particular
+> have issues of varying degrees, somewhat amplified by their use of
+> buffer_heads to track buffers instead of pages.  See the recent thread
+> about corruption with ext4 in 2.6.32+ for examples of this.
+>
+> It's not just RAID consistency that breaks.  In the ext4 case above we
+> end up with garbled blocks being written to a single drive.
+>
+> Add data integrity protection to the mix (btrfs, DIX) and all hell
+> breaks loose if you change the buffer after the checksum has been
+> generated.  So while modifying pages in flight has kinda-sorta worked
+> for a while (i.e. the window of error is small) it's something we'll
+> simply have to stop doing to support new features in the storage stack.
+> You'll be glad to know there's discussion about merging the debug patch
+> (which marks pages read-only during writeback) into ext4.
+>
+> FWIW, XFS and btrfs both use the page writeback bit correctly and never
+> change a page while it is undergoing I/O.
 >
 >   
-
-I'm trying to wrap my head around this recommendation, and not doing 
-well. The end of the allocation area (partition, disk, array, whatever) 
-seems to be what users hit when they do a dd or some similar operation 
-without understanding it. And the from end is what they hit when they 
-"fix" the MBR or add a partition table because something said it was 
-missing. As for your friend, nothing is foolproof, and unless he tried 
-very hard he probably failed to damage anything in a way which couldn't 
-be readily fixed.
-
-I like 1.2, I feel it's least likely to suffer collateral damage, and 
-the problems it causes seem to result in the type of behavior you 
-mention aboue, the system says "Can't, won't, you don't know what you're 
-doing."
+That's necessary but not sufficient. To be done correctly it must be 
+protected by md as well. This is because arrays are used without a 
+filesystem by some applications, such as swap and database, to name the 
+most common cases. Data simply can't be correct on the drive if it is 
+allowed to change between the write system call and arrival on the 
+media, more so if a CRC or mirror is involved.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
