@@ -1,93 +1,82 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: mismatch_cnt again
-Date: Fri, 13 Nov 2009 13:37:18 +1100
-Message-ID: <19196.50782.113024.239657@notabene.brown>
-References: <4AF5268D.60900@eyal.emu.id.au>
-	<4877c76c0911070008m789507f8h799d419287740ca5@mail.gmail.com>
-	<87tyx6tpcb.fsf@frosties.localdomain>
-	<4AF58B20.3000409@redhat.com>
-	<87iqdlaujb.fsf@frosties.localdomain>
-	<4AF74B61.6000102@rabbit.us>
-	<20091109185632.GA2723@lazy.lzy>
-	<73ebdcee169f46611d411755f9aaca5b.squirrel@neil.brown.name>
-	<20091109215443.GA4143@lazy.lzy>
-	<d99ca9481d2471073484c5d43d493b4d.squirrel@neil.brown.name>
-	<20091110195222.GA2777@lazy.lzy>
+From: hank peng <pengxihan@gmail.com>
+Subject: Re: OOPS on MPC8548 board when writing RAID5 array
+Date: Fri, 13 Nov 2009 10:45:25 +0800
+Message-ID: <389deec70911121845p2b3bae9fob2bd8422e0fd011d@mail.gmail.com>
+References: <389deec70911100344j5969e834nc80a9fd330935ef3@mail.gmail.com>
+	<e9c3a7c20911121736ma9f8d72waa377c4b61b2f480@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: message from Piergiorgio Sartor on Tuesday November 10
-Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: Peter Rabbitson <rabbit+list@rabbit.us>, Goswin von Brederlow <goswin-v-b@web.de>, Doug Ledford <dledford@redhat.com>, Michael Evans <mjevans1983@gmail.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <e9c3a7c20911121736ma9f8d72waa377c4b61b2f480@mail.gmail.com>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, linuxppc-dev@ozlabs.org, Suresh Vishnu <Vishnu@freescale.com>
 List-Id: linux-raid.ids
 
-On Tuesday November 10, piergiorgio.sartor@nexgo.de wrote:
-> Hi again,
-> 
-> > It seems we might have been talking at cross-purposes.
-> > 
-> > When I wrote about the need for a threat model, it was in the
-> > context of automatically determining which block was most
-> > likely to be in error (e.g. voting with a 3-drive RAID1 or
-> > fancy arithmetic with RAID6).  I do not believe there is any
-> > value in doing that.  At least not automatically in the kernel
-> > with the aim of just repairing which block was decided to be
-> > most wrong.
-> > 
-> > You now seem to be talking about the ability to find out which
-> > blocks are inconsistent.  That is very different.  I do agree there
-> > is value in that.  Maybe it should appear in the kernel logs,
-> > or maybe we could store the information and report in via sysfs
-> > (the former would certainly be easier).
-> 
-> maybe there is a misunderstanding between us! :-)
-> 
-> Automatic repair *might* be a far end target, but I do
-> agree, this needs to be clarified deeply.
-> 
-> I see the thing similarly to a previous comment from a
-> fellow poster.
-> To do:
-> 1) detect which MD block is inconsistent
-> 2) detect, when possible, which device component is responsible
-> 3) trigger a repair action
-> 
-> This would be done all under user control, i.e. the user
-> will get the mismatch count, maybe with some hint on which
-> device could be guilty (RAID-6 or RAID-1/10 with multiple
-> redundancy) and then he could decide what to do.
-> 
-> The user will have full control and full *responsability*
-> on the action, but it will also be fully informed on what
-> the situation is.
-> 
-> The system will tell: block ABC is inconsistent, maybe
-> device /dev/sdX is guilty, you could: do nothing, resync
-> the parity, try to repair.
-
-I think just "block ABC is inconsistent" is sufficient.
-user-space can then quiesce that part of the array, read the relevant
-blocks, do any analysis that might be appropriate, and report to the
-admin. 
-
-> 
-> As I mentioned some times ago, I built a RAID-6, where
-> one disk, due to a strange cabling problem, was sometimes
-> returning wrong data (one bit flip, actually).
-> And this without any errors reported, i.e. a bit was
-> sometimes flipped, at the very end it seems, and it
-> was undetected by ECC/CRC/whatever.
-
-That is a very interesting threat scenario - occasional bit flip on
-read between media and memory.  I had a drive like that once.  One
-particular bit in the sector would fairly often return '1' no matter
-what had been written.  I had it in a RAID1 and it quickly made a mess
-of the filesystem.
-
-As you say, there is nothing that md can or should do about this
-except report that something odd is happening, which it does, and
-report where it is happening, which it does not.
-
-NeilBrown
+MjAwOS8xMS8xMyBEYW4gV2lsbGlhbXMgPGRhbi5qLndpbGxpYW1zQGludGVsLmNvbT46Cj4gSGkg
+SGFuaywKPgo+IFRoYW5rcyBmb3IgdGVzdGluZy4KPgo+IE9uIFR1ZSwgTm92IDEwLCAyMDA5IGF0
+IDQ6NDQgQU0sIGhhbmsgcGVuZyA8cGVuZ3hpaGFuQGdtYWlsLmNvbT4gd3JvdGU6Cj4+IENQVSBp
+cyBNUEM4NTQ4LCBrZXJuZWwgdmVyc2lvbiBpcyAyLjYuMzEuNSxDT05GSUdfRlNMX0RNQSBhbmQK
+Pj4gQ09ORklHX0FTWU5DX1RYX0RNQSBvcHRpb25zIGFyZSBhbGwgZW5hYmxlZC4KPj4gI21kYWRt
+IC1DIC9kZXYvbWQwIC0tYXNzdW1lLWNsZWFuIC1sNSAtbjMgL2Rldi9zZHthLGIsY30KPj4gI2Rk
+IGlmPS9kZXYvemVybyBvZj0vZGV2L21kMCBicz0xTSBjb3VudD0xMDAwCj4+IE9vcHM6IEV4Y2Vw
+dGlvbiBpbiBrZXJuZWwgbW9kZSwgc2lnOiA1IFsjMV0KPj4gTVBDODV4eCBDRFMKPj4gTW9kdWxl
+cyBsaW5rZWQgaW46Cj4+IE5JUDogYzAxYzQ1ZDggTFI6IGMwMWM0ZDQ4IENUUjogMDAwMDAwMDAK
+Pj4gUkVHUzogYzJkZDVjODAgVFJBUDogMDcwMCDCoCBOb3QgdGFpbnRlZCDCoCgyLjYuMzEuNSkK
+Pj4gTVNSOiAwMDAyOTAwMCA8RUUsTUUsQ0U+IMKgQ1I6IDIyMDA0MDI4IMKgWEVSOiAwMDAwMDAw
+MAo+PiBUQVNLID0gZTgyMGE1ODBbMzgwNF0gJ21kMF9yYWlkNScgVEhSRUFEOiBjMmRkNDAwMAo+
+PiBHUFIwMDogMDAwMDAwMDEgYzJkZDVkMzAgZTgyMGE1ODAgYzJmYjEwODggMDAwMDAwMDEgMDAw
+MDAwMDAgMDAwMDAwMDIgMDAwMDEwMDAKPj4gR1BSMDg6IDAwMDAwMDAxIGMwNDg1YTIwIDAwMDAw
+MDAwIGVmODA5MmY4IDIyMDAyMDI0IDU1NTU1NTU1IGMyZDY3ODcwIGMwMjgyZDJjCj4+IEdQUjE2
+OiAwMDAwMTAwMCBlODM1NWMwMCBjMmVmZjk2NCAwMDAwMDAwMCAwMDAwMDAwMCAwMDAwMDAxOSAw
+MTAwMDA0MCBjMmRkNWUwMAo+PiBHUFIyNDogYzJkZDVkZmMgMDAwMDAwMDEgYzJkZDVkYzAgYzA5
+OWM0MjAgMDAwMDAwMDAgYzJkNjc4MzggMDAwMDAwMDIgYzJkZDVkNTgKPj4gTklQIFtjMDFjNDVk
+OF0gYXN5bmNfdHhfcXVpZXNjZSsweDI4LzB4NzQKPiBbLi5dCj4+IEkgY2hlY2tlZCB0aGUga2Vy
+bmVsIHNvdXJjZSBjb2RlLCBhbmQgZmluZCB0aGF0IHRoaXMgT09QUyB3YXMgY2F1c2VkCj4+IGJ5
+IHRoZSBmb2xsb3dpbmcgQlVHX09OIGNvZGU6Cj4+IEl0IGlzIGluIGNyeXB0by9hc3luY190eC9h
+c3luY190eC5jOgo+PiB2b2lkIGFzeW5jX3R4X3F1aWVzY2Uoc3RydWN0IGRtYV9hc3luY190eF9k
+ZXNjcmlwdG9yICoqdHgpCj4+IHsKPj4gwqAgwqAgwqAgwqBpZiAoKnR4KSB7Cj4+IMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgLyogaWYgYWNrIGlzIGFscmVhZHkgc2V0IHRoZW4gd2UgY2Fubm90IGJl
+IHN1cmUKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgKiB3ZSBhcmUgcmVmZXJyaW5nIHRvIHRo
+ZSBjb3JyZWN0IG9wZXJhdGlvbgo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAqLwo+PiDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoEJVR19PTihhc3luY190eF90ZXN0X2FjaygqdHgpKTsKPj4gwqAg
+LyogT09QUyBvY2N1cmVkICovCj4KPiBZZXMsIHRoaXMgbG9va3MgbGlrZSBhIG1hbmlmZXN0YXRp
+b24gb2YgdGhlIGlzc3VlIEkgYnJvdWdodCB1cCBpbiBteQo+IHJldmlldyBvZiB0aGUgZHJpdmVy
+IFsxXS4gwqBUaGUgdGFsaXRvc19wcmVwX2RtYV94b3Igcm91dGluZSBpcyBhbHdheXMKPiBhY2tu
+b3dsZWRnaW5nIGl0cyBkZXNjcmlwdG9ycywgd2hpY2ggaXQgc2hvdWxkIG5vdCBiZWNhdXNlIHRo
+YXQgaXMgdGhlCj4gcmVzcG9uc2liaWxpdHkgb2YgdGhlIGNsaWVudCBvZiB0aGUgYXBpLiDCoFdo
+ZW4gdGhlIHJhaWQgY29kZSB0cmllcyB0bwo+IGF0dGFjaCBhIG1lbWNweSB0aGF0IGRlcGVuZHMg
+b24gdGhlIHhvciBpdCBzZWVzIHRoYXQgaXQgbmVlZHMgdG8KPiBzd2l0Y2ggdG8gZnJvbSB0YWxp
+dG9zIHRvIGZzbGRtYSAob3Igc29mdHdhcmUgaWYgZnNsZG1hIGlzIHR1cm5lZAo+IG9mZikuIMKg
+U2luY2UgdGFsaXRvcyBkb2VzIG5vdCBoYXZlIHRoZSBETUFfSU5URVJSVVBUIGNhcGFiaWxpdHkg
+dG8KPiB0cmlnZ2VyIHRoZSBjaGFubmVsIHN3aXRjaCB3ZSBuZWVkIHRvIHBlcmZvcm0gYSBzeW5j
+aHJvbm91cyB3YWl0IGZvcgo+IHRoZSB4b3IgdG8gY29tcGxldGUgYmVmb3JlIHN1Ym1pdHRpbmcg
+dGhlIG1lbWNweS4gwqBXaGVuIHRoZSBhY2sgYml0IGlzCj4gbm90IHNldCB0aGUgeG9yIGRlc2Ny
+aXB0b3IgbWlnaHQgYmUgcmVjeWNsZWQgYnkgdGhlIGRtYSBkZXZpY2UgZHJpdmVyCj4gd2hpbGUg
+d2UgYXJlIHdhaXRpbmcgZm9yIGl0LCBoZW5jZSB0aGUgQlVHX09OKCkuCj4KVGhhbmtzIGZvciBy
+ZXBseSwgRGFuLgpGb3Jnb3QgdG8gc2F5LCB3aGVuIHRoaXMgT09QUyBoYXBwZW5lZCwgSSBoYXZl
+IG5vdCBhcHBsaWVkIHRhbGl0b3MgWE9SCnBhdGNoLiBJIG9ubHkgZW5hYmxlZCBhc3luY194eCBh
+cGkgYW5kIEZTTF9ETUEsIHNvIGhlcmUKSSB0aGluayBYT1Igd2FzIGRvbmUgYnkgQ1BVIGFuZCBt
+ZW1jcHkgd2FzIGRvbmUgYnkgRE1BIHVzaW5nIGFzeW5jX3h4IGFwaS4KQW5vdGhlciBpbnRlcnNl
+dGluZyB0aGluZyBJIHNob3VsZCBzYXkgaXMgdGhhdCBJIGhhdmUgdHJpZWQgbGF0ZXN0CnN0YWJs
+ZSBrZXJuZWwgMi42LjMxLjYsIHRoaXMgcHJvYmxlbSBkaWRuJ3QgZXhpc3QuIEFmdGVyIEkgYXBw
+bGllZAp0YWxpdG9zIFhPUiBwYXRjaCwgaXQgd2FzIE9LIHRvby4gSSBjaGVja2VkIHRoZSByZWxh
+dGVkIHNvdWNlIGNvZGVzCmFuZCBpdCBzZWVtcyB0aGF0IHRoZXJlIHdlcmUgbm8gY2hhbmdlcyB3
+aGljaCBtYWtlIG1lIGZlZWwgdmVyeQpjb25mdXNlZC4KCkkgaGF2ZSBiZWVuIHRlc3RpbmcgbGF0
+ZXN0IHNlcmlhbHMgb2Yga2VybmVscyBhYm91dCBYT1IgcGF0Y2ggb24KTVBDODU0OCBib2FyZCBh
+bmQgSSBob3BlIEZyZWVzY2FsZSBndXlzIGFsc28gY2FuIGdpdmUgbWUgaGVscC4KCj4gLS0KPiBE
+YW4KPgo+IFNlZSB0aGUgZmluYWwgY29tbWVudDoKPiBbMV06IGh0dHA6Ly9tYXJjLmluZm8vP2w9
+bGludXgtcmFpZCZtPTEyNTY4NTY0MTQxMjExMiZ3PTIKPgoKCgotLSAKVGhlIHNpbXBsZXN0IGlz
+IG5vdCBhbGwgYmVzdCBidXQgdGhlIGJlc3QgaXMgc3VyZWx5IHRoZSBzaW1wbGVzdCEKX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KTGludXhwcGMtZGV2IG1h
+aWxpbmcgbGlzdApMaW51eHBwYy1kZXZAbGlzdHMub3psYWJzLm9yZwpodHRwczovL2xpc3RzLm96
+bGFicy5vcmcvbGlzdGluZm8vbGludXhwcGMtZGV2
