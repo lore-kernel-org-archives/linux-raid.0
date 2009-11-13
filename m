@@ -1,51 +1,48 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: mismatch_cnt again
-Date: Fri, 13 Nov 2009 12:12:45 -0500
-Message-ID: <yq1my2ql56a.fsf@sermon.lab.mkp.net>
-References: <4AF4C247.6050303@eyal.emu.id.au> <4AF4D323.6020108@panix.com>
-	<4AF5268D.60900@eyal.emu.id.au>
-	<4877c76c0911070008m789507f8h799d419287740ca5@mail.gmail.com>
-	<87tyx6tpcb.fsf@frosties.localdomain> <4AF58B20.3000409@redhat.com>
-	<87iqdlaujb.fsf@frosties.localdomain> <4AF74B61.6000102@rabbit.us>
-	<20091109185632.GA2723@lazy.lzy>
-	<73ebdcee169f46611d411755f9aaca5b.squirrel@neil.brown.name>
-	<20091109215443.GA4143@lazy.lzy>
-	<d99ca9481d2471073484c5d43d493b4d.squirrel@neil.brown.name>
-	<4AF92DBD.5010102@rabbit.us> <yq1tyx2o4td.fsf@sermon.lab.mkp.net>
-	<4AFC8EC5.6060400@tmr.com>
+From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
+Subject: Re: Known-good LSI PCIe SAS HBAs?
+Date: Fri, 13 Nov 2009 18:03:28 +0000
+Message-ID: <73e903670911131003i26f25b01xb6671684419d5c51@mail.gmail.com>
+References: <73e903670911100854o1b48380apb5b0a86c44ae9dcb@mail.gmail.com>
+	<200911110004.31238.tfjellstrom@shaw.ca> <4AFAFC75.3070307@sauce.co.nz>
+	<200911111151.09021.tfjellstrom@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AFC8EC5.6060400@tmr.com> (Bill Davidsen's message of "Thu, 12
-	Nov 2009 17:40:05 -0500")
+In-Reply-To: <200911111151.09021.tfjellstrom@shaw.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Peter Rabbitson <rabbit+list@rabbit.us>, NeilBrown <neilb@suse.de>, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Goswin von Brederlow <goswin-v-b@web.de>, Doug Ledford <dledford@redhat.com>, Michael Evans <mjevans1983@gmail.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
+To: tfjellstrom@shaw.ca
+Cc: Richard Scobie <richard@sauce.co.nz>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Bill" == Bill Davidsen <davidsen@tmr.com> writes:
+On Wed, Nov 11, 2009 at 6:51 PM, Thomas Fjellstrom <tfjellstrom@shaw.ca> wrote:
+>
+> On Wed November 11 2009, Richard Scobie wrote:
+> > Thomas Fjellstrom wrote:
+> > > Thats the problem he was trying to get away from. the MV8 controller
+> > > likes to offline disks when a few smart commands arrive. at least with
+> > > the main kernel drivers. But then the main kernel mvsas drivers decide
+> > > to give up if you even attempt to start a raid array on them. The
+> > > controller locks up and you have to reboot. Most of the time a reboot
+> > > even fails when it tries to sync the block devices, so a hard reset is
+> > > in order.
+> >
+> > OK, I did not know the Marvell controller also has a problem with
+> > smartmontools.
+>
+> Given the state of the in kernel drivers, its probably a driver issue.
+>
 
->> FWIW, XFS and btrfs both use the page writeback bit correctly and
->> never change a page while it is undergoing I/O.
->> 
->> 
-Bill> That's necessary but not sufficient. To be done correctly it must
-Bill> be protected by md as well. This is because arrays are used
-Bill> without a filesystem by some applications, such as swap and
-Bill> database, to name the most common cases. 
+Thanks for the replies, all.
 
-I agree that making MD RAID1 do a copy would be a quick fix.  But I
-don't see any reason to encourage what is essentially sloppy behavior at
-the top of the stack.  And then what if you stack MD/DM devices?  Do
-each layer do a copy?  I think that gets murky pretty quickly.
+I'll bet it's the driver - it doesn't feel quite right that a random
+external command can easily drop drives off the controller, be it
+smartmontools or mdadm.
 
-I'd much rather fix the cases where the top layers are broken.  And as I
-said there are several people working on this spurred by my work on the
-data integrity extensions.
+Thomas, I tried sending a private email to Andy Yan. I haven't got a
+reply, which kind of isn't surprising in this world of spam. Can I ask
+you for a referral - could you send him an email asking him if I can
+have the patch and how to test it?
 
-FWIW, databases on raw disk have gone out of fashion.  But it is true
-that applications that do direct I/O need to avoid updating buffers in
-flight.
+Also, to list-dwellers: I'd greatly appreciate further tips on PCIe SAS HBAs.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Thanks!
