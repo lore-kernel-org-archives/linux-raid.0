@@ -1,82 +1,50 @@
-From: hank peng <pengxihan@gmail.com>
-Subject: Re: OOPS on MPC8548 board when writing RAID5 array
-Date: Fri, 13 Nov 2009 10:45:25 +0800
-Message-ID: <389deec70911121845p2b3bae9fob2bd8422e0fd011d@mail.gmail.com>
-References: <389deec70911100344j5969e834nc80a9fd330935ef3@mail.gmail.com>
-	<e9c3a7c20911121736ma9f8d72waa377c4b61b2f480@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [patch 1/1] [mdadm] Add partition checks when creating a new array
+Date: Fri, 13 Nov 2009 13:49:24 +1100
+Message-ID: <19196.51508.947560.851117@notabene.brown>
+References: <EB332302649177439359CE520D92A0AF9F559760@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <e9c3a7c20911121736ma9f8d72waa377c4b61b2f480@mail.gmail.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, linuxppc-dev@ozlabs.org, Suresh Vishnu <Vishnu@freescale.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: message from Trela, Maciej on Thursday November 12
+Sender: linux-raid-owner@vger.kernel.org
+To: "Trela, Maciej" <Maciej.Trela@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-MjAwOS8xMS8xMyBEYW4gV2lsbGlhbXMgPGRhbi5qLndpbGxpYW1zQGludGVsLmNvbT46Cj4gSGkg
-SGFuaywKPgo+IFRoYW5rcyBmb3IgdGVzdGluZy4KPgo+IE9uIFR1ZSwgTm92IDEwLCAyMDA5IGF0
-IDQ6NDQgQU0sIGhhbmsgcGVuZyA8cGVuZ3hpaGFuQGdtYWlsLmNvbT4gd3JvdGU6Cj4+IENQVSBp
-cyBNUEM4NTQ4LCBrZXJuZWwgdmVyc2lvbiBpcyAyLjYuMzEuNSxDT05GSUdfRlNMX0RNQSBhbmQK
-Pj4gQ09ORklHX0FTWU5DX1RYX0RNQSBvcHRpb25zIGFyZSBhbGwgZW5hYmxlZC4KPj4gI21kYWRt
-IC1DIC9kZXYvbWQwIC0tYXNzdW1lLWNsZWFuIC1sNSAtbjMgL2Rldi9zZHthLGIsY30KPj4gI2Rk
-IGlmPS9kZXYvemVybyBvZj0vZGV2L21kMCBicz0xTSBjb3VudD0xMDAwCj4+IE9vcHM6IEV4Y2Vw
-dGlvbiBpbiBrZXJuZWwgbW9kZSwgc2lnOiA1IFsjMV0KPj4gTVBDODV4eCBDRFMKPj4gTW9kdWxl
-cyBsaW5rZWQgaW46Cj4+IE5JUDogYzAxYzQ1ZDggTFI6IGMwMWM0ZDQ4IENUUjogMDAwMDAwMDAK
-Pj4gUkVHUzogYzJkZDVjODAgVFJBUDogMDcwMCDCoCBOb3QgdGFpbnRlZCDCoCgyLjYuMzEuNSkK
-Pj4gTVNSOiAwMDAyOTAwMCA8RUUsTUUsQ0U+IMKgQ1I6IDIyMDA0MDI4IMKgWEVSOiAwMDAwMDAw
-MAo+PiBUQVNLID0gZTgyMGE1ODBbMzgwNF0gJ21kMF9yYWlkNScgVEhSRUFEOiBjMmRkNDAwMAo+
-PiBHUFIwMDogMDAwMDAwMDEgYzJkZDVkMzAgZTgyMGE1ODAgYzJmYjEwODggMDAwMDAwMDEgMDAw
-MDAwMDAgMDAwMDAwMDIgMDAwMDEwMDAKPj4gR1BSMDg6IDAwMDAwMDAxIGMwNDg1YTIwIDAwMDAw
-MDAwIGVmODA5MmY4IDIyMDAyMDI0IDU1NTU1NTU1IGMyZDY3ODcwIGMwMjgyZDJjCj4+IEdQUjE2
-OiAwMDAwMTAwMCBlODM1NWMwMCBjMmVmZjk2NCAwMDAwMDAwMCAwMDAwMDAwMCAwMDAwMDAxOSAw
-MTAwMDA0MCBjMmRkNWUwMAo+PiBHUFIyNDogYzJkZDVkZmMgMDAwMDAwMDEgYzJkZDVkYzAgYzA5
-OWM0MjAgMDAwMDAwMDAgYzJkNjc4MzggMDAwMDAwMDIgYzJkZDVkNTgKPj4gTklQIFtjMDFjNDVk
-OF0gYXN5bmNfdHhfcXVpZXNjZSsweDI4LzB4NzQKPiBbLi5dCj4+IEkgY2hlY2tlZCB0aGUga2Vy
-bmVsIHNvdXJjZSBjb2RlLCBhbmQgZmluZCB0aGF0IHRoaXMgT09QUyB3YXMgY2F1c2VkCj4+IGJ5
-IHRoZSBmb2xsb3dpbmcgQlVHX09OIGNvZGU6Cj4+IEl0IGlzIGluIGNyeXB0by9hc3luY190eC9h
-c3luY190eC5jOgo+PiB2b2lkIGFzeW5jX3R4X3F1aWVzY2Uoc3RydWN0IGRtYV9hc3luY190eF9k
-ZXNjcmlwdG9yICoqdHgpCj4+IHsKPj4gwqAgwqAgwqAgwqBpZiAoKnR4KSB7Cj4+IMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgLyogaWYgYWNrIGlzIGFscmVhZHkgc2V0IHRoZW4gd2UgY2Fubm90IGJl
-IHN1cmUKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgKiB3ZSBhcmUgcmVmZXJyaW5nIHRvIHRo
-ZSBjb3JyZWN0IG9wZXJhdGlvbgo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAqLwo+PiDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoEJVR19PTihhc3luY190eF90ZXN0X2FjaygqdHgpKTsKPj4gwqAg
-LyogT09QUyBvY2N1cmVkICovCj4KPiBZZXMsIHRoaXMgbG9va3MgbGlrZSBhIG1hbmlmZXN0YXRp
-b24gb2YgdGhlIGlzc3VlIEkgYnJvdWdodCB1cCBpbiBteQo+IHJldmlldyBvZiB0aGUgZHJpdmVy
-IFsxXS4gwqBUaGUgdGFsaXRvc19wcmVwX2RtYV94b3Igcm91dGluZSBpcyBhbHdheXMKPiBhY2tu
-b3dsZWRnaW5nIGl0cyBkZXNjcmlwdG9ycywgd2hpY2ggaXQgc2hvdWxkIG5vdCBiZWNhdXNlIHRo
-YXQgaXMgdGhlCj4gcmVzcG9uc2liaWxpdHkgb2YgdGhlIGNsaWVudCBvZiB0aGUgYXBpLiDCoFdo
-ZW4gdGhlIHJhaWQgY29kZSB0cmllcyB0bwo+IGF0dGFjaCBhIG1lbWNweSB0aGF0IGRlcGVuZHMg
-b24gdGhlIHhvciBpdCBzZWVzIHRoYXQgaXQgbmVlZHMgdG8KPiBzd2l0Y2ggdG8gZnJvbSB0YWxp
-dG9zIHRvIGZzbGRtYSAob3Igc29mdHdhcmUgaWYgZnNsZG1hIGlzIHR1cm5lZAo+IG9mZikuIMKg
-U2luY2UgdGFsaXRvcyBkb2VzIG5vdCBoYXZlIHRoZSBETUFfSU5URVJSVVBUIGNhcGFiaWxpdHkg
-dG8KPiB0cmlnZ2VyIHRoZSBjaGFubmVsIHN3aXRjaCB3ZSBuZWVkIHRvIHBlcmZvcm0gYSBzeW5j
-aHJvbm91cyB3YWl0IGZvcgo+IHRoZSB4b3IgdG8gY29tcGxldGUgYmVmb3JlIHN1Ym1pdHRpbmcg
-dGhlIG1lbWNweS4gwqBXaGVuIHRoZSBhY2sgYml0IGlzCj4gbm90IHNldCB0aGUgeG9yIGRlc2Ny
-aXB0b3IgbWlnaHQgYmUgcmVjeWNsZWQgYnkgdGhlIGRtYSBkZXZpY2UgZHJpdmVyCj4gd2hpbGUg
-d2UgYXJlIHdhaXRpbmcgZm9yIGl0LCBoZW5jZSB0aGUgQlVHX09OKCkuCj4KVGhhbmtzIGZvciBy
-ZXBseSwgRGFuLgpGb3Jnb3QgdG8gc2F5LCB3aGVuIHRoaXMgT09QUyBoYXBwZW5lZCwgSSBoYXZl
-IG5vdCBhcHBsaWVkIHRhbGl0b3MgWE9SCnBhdGNoLiBJIG9ubHkgZW5hYmxlZCBhc3luY194eCBh
-cGkgYW5kIEZTTF9ETUEsIHNvIGhlcmUKSSB0aGluayBYT1Igd2FzIGRvbmUgYnkgQ1BVIGFuZCBt
-ZW1jcHkgd2FzIGRvbmUgYnkgRE1BIHVzaW5nIGFzeW5jX3h4IGFwaS4KQW5vdGhlciBpbnRlcnNl
-dGluZyB0aGluZyBJIHNob3VsZCBzYXkgaXMgdGhhdCBJIGhhdmUgdHJpZWQgbGF0ZXN0CnN0YWJs
-ZSBrZXJuZWwgMi42LjMxLjYsIHRoaXMgcHJvYmxlbSBkaWRuJ3QgZXhpc3QuIEFmdGVyIEkgYXBw
-bGllZAp0YWxpdG9zIFhPUiBwYXRjaCwgaXQgd2FzIE9LIHRvby4gSSBjaGVja2VkIHRoZSByZWxh
-dGVkIHNvdWNlIGNvZGVzCmFuZCBpdCBzZWVtcyB0aGF0IHRoZXJlIHdlcmUgbm8gY2hhbmdlcyB3
-aGljaCBtYWtlIG1lIGZlZWwgdmVyeQpjb25mdXNlZC4KCkkgaGF2ZSBiZWVuIHRlc3RpbmcgbGF0
-ZXN0IHNlcmlhbHMgb2Yga2VybmVscyBhYm91dCBYT1IgcGF0Y2ggb24KTVBDODU0OCBib2FyZCBh
-bmQgSSBob3BlIEZyZWVzY2FsZSBndXlzIGFsc28gY2FuIGdpdmUgbWUgaGVscC4KCj4gLS0KPiBE
-YW4KPgo+IFNlZSB0aGUgZmluYWwgY29tbWVudDoKPiBbMV06IGh0dHA6Ly9tYXJjLmluZm8vP2w9
-bGludXgtcmFpZCZtPTEyNTY4NTY0MTQxMjExMiZ3PTIKPgoKCgotLSAKVGhlIHNpbXBsZXN0IGlz
-IG5vdCBhbGwgYmVzdCBidXQgdGhlIGJlc3QgaXMgc3VyZWx5IHRoZSBzaW1wbGVzdCEKX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KTGludXhwcGMtZGV2IG1h
-aWxpbmcgbGlzdApMaW51eHBwYy1kZXZAbGlzdHMub3psYWJzLm9yZwpodHRwczovL2xpc3RzLm96
-bGFicy5vcmcvbGlzdGluZm8vbGludXhwcGMtZGV2
+On Thursday November 12, Maciej.Trela@intel.com wrote:
+> Hello Neil,
+> I'm sending the patch that is connected with intel metadata compatibility.
+> 
+> The new code checks for existing partitions when creating an array.
+> If the metadata overwrites the last partition, the warning is shown to the user. The patch supports only MBR and GPT partition table types.
+> Despite the patch was implemented as IMSM compatibility issue I've decided to include the partition check for all metadata types as a generic code.
+> I would appreciate any feedback.
+
+Sorry for not responding the first time you posted this.
+
+I agree with the principle.  However I would rather not add code for
+reading different partition types to mdadm.  It would be much nicer if
+that code came from a library.
+Is there a good library that we could use?
+libparted might be a possibility, but it seems rather over-weight.
+/lib/libparted-1.9.so.12.0.0 is larger than /sbin/mdadm !!!
+
+Are there any other libraries for reading different partition tables?
+I guess we can open-code it if we have to but I'd be happy if another
+solution could be found.
+
+I should probably change to using libblkid to check for the various
+filesystem types...
+
+Is this check really relevant for anything other RAID1 array.  For any
+other level, the fact that the metadata lies inside or outside the
+current partitions is quite irrelevant as the old data will not be
+useful anyway.
+
+And I don't think it is sensible to report "unknown partition table".
+If there is no partition table, there is nothing to check.
+
+NeilBrown
+
