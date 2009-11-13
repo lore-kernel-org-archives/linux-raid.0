@@ -1,81 +1,36 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [patch 1/1][mdadm] Fix needed to enable RAID device creation on SAS devices.
-Date: Fri, 13 Nov 2009 20:35:45 +0100
-Message-ID: <20091113193545.GW21495@skl-net.de>
-References: <58C655507FA1494D95397652C4416F35CCF61201@irsmsx503.ger.corp.intel.com>
+From: Kurt Newman <kurt@lamer.org>
+Subject: Simple Raid-1 setup question
+Date: Fri, 13 Nov 2009 14:34:37 -0600
+Message-ID: <4AFDC2DD.9040002@lamer.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="yPlaimQd/TpiYx8R"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <58C655507FA1494D95397652C4416F35CCF61201@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Wojcik, Artur" <artur.wojcik@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+My questions are as follows:
 
---yPlaimQd/TpiYx8R
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+1) If you're creating a completely new array (e.g. raid-1) on new
+partitions that aren't formatted, do you still have to sync?  I'm having
+difficulty finding information on why and when a sync is needed.  I was
+under the impression a sync is only needed when there's existing
+information on one or more of the drives.
 
-On 10:43, Wojcik, Artur wrote:
-> -                               char path[200];
-> +                               char path[PATH_MAX];
+2) If there used to be information on each device, but has since been
+repartitioned, so that new partitions and a raid device can be
+created... is there any way to prevent mdadm from asking if you really
+want to create the array?  Using `--force' doesn't seem to help.
 
-PATH_MAX might be undefined if we're not using glibc. AFAIK the best
-one can do is something like
+mdadm: /dev/sda1 appears to contain an ext2fs file system
+   size=1464840K mtime=Fri Nov 13:04:09 2009
+mdadm: /dev/sdb1 appears to contain an ext2fs file system
+   size=1464840K mtime=Fri Nov 13:04:09 2009
+Continue creating array?
 
-	#ifdef PATH_MAX
-		path_max =3D PATH_MAX;
-	#else
-		/*
-		 * The result of pathconf(3) may be huge and unsuitable for
-		 * mallocing memory. OTOH pathconf(3) may return -1 to signify
-		 * that PATH_MAX is not bounded.
-		 */
-		path_max =3D pathconf(name, _PC_PATH_MAX);
-		if (path_max <=3D 0 || path_max >=3D 4096)
-			path_max =3D 4096;
-	#endif
+As a side note, there really isn't an existing ext3 fs on it, but there
+used to be.  To re-use the device, I issued the following commands:
+ > parted -s /dev/sda mklabel msdos
+ > parted -s /dev/sda mkpart primary ext3 0 1500
 
-
->                                 char vbuf[1024];
->                                 int nlen =3D strlen(sra->sys_name);
->                                 int dn;
->                                 if (de->d_name[0] =3D=3D '.')
->                                         continue;
-> -                               sprintf(path, "/sys/block/%s/md/metadata_=
-version",
-> +                               snprintf(path, PATH_MAX, "/sys/block/%s/m=
-d/metadata_version",
->                                         de->d_name);
->                                 if (load_sys(path, vbuf) < 0)
->                                         continue;
-
-If you are really paranoid, you have to terminate the buffer when
-using snprintf. Moreover, one should prefer sizeof(path) over the
-explicit PATH_MAX because if you ever change the size of path again,
-you avoid the risk to change it only in the definition of path but
-not in the snprintf() call.
-
-Best
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---yPlaimQd/TpiYx8R
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFK/bURWto1QDEAkw8RAiHaAJ0ZFx5obtiO510VklcDYXkxBhajwACeKrAh
-FcqIVVqwDEagjyTYcY6/UZI=
-=Gvqv
------END PGP SIGNATURE-----
-
---yPlaimQd/TpiYx8R--
