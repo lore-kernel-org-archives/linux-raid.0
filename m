@@ -1,43 +1,72 @@
-From: Neil Brown <neilb@suse.de>
-Subject: [PULL REQUEST] a few more md patches....
-Date: Fri, 13 Nov 2009 20:36:13 +1100
-Message-ID: <19197.10381.201071.987808@notabene.brown>
+From: Peter Rabbitson <rabbit+list@rabbit.us>
+Subject: Re: mismatch_cnt again
+Date: Fri, 13 Nov 2009 10:33:51 +0100
+Message-ID: <4AFD27FF.3070909@rabbit.us>
+References: <4AF5268D.60900@eyal.emu.id.au>	<4877c76c0911070008m789507f8h799d419287740ca5@mail.gmail.com>	<87tyx6tpcb.fsf@frosties.localdomain>	<4AF58B20.3000409@redhat.com>	<87iqdlaujb.fsf@frosties.localdomain>	<4AF74B61.6000102@rabbit.us>	<20091109185632.GA2723@lazy.lzy>	<73ebdcee169f46611d411755f9aaca5b.squirrel@neil.brown.name>	<20091109215443.GA4143@lazy.lzy>	<d99ca9481d2471073484c5d43d493b4d.squirrel@neil.brown.name>	<20091110195222.GA2777@lazy.lzy> <19196.50782.113024.239657@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <19196.50782.113024.239657@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Goswin von Brederlow <goswin-v-b@web.de>, Doug Ledford <dledford@redhat.com>, Michael Evans <mjevans1983@gmail.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Neil Brown wrote:
+> On Tuesday November 10, piergiorgio.sartor@nexgo.de wrote:
+>> Hi again,
+>>
+>>> It seems we might have been talking at cross-purposes.
+>>>
+>>> When I wrote about the need for a threat model, it was in the
+>>> context of automatically determining which block was most
+>>> likely to be in error (e.g. voting with a 3-drive RAID1 or
+>>> fancy arithmetic with RAID6).  I do not believe there is any
+>>> value in doing that.  At least not automatically in the kernel
+>>> with the aim of just repairing which block was decided to be
+>>> most wrong.
+>>>
+>>> You now seem to be talking about the ability to find out which
+>>> blocks are inconsistent.  That is very different.  I do agree there
+>>> is value in that.  Maybe it should appear in the kernel logs,
+>>> or maybe we could store the information and report in via sysfs
+>>> (the former would certainly be easier).
+>> maybe there is a misunderstanding between us! :-)
+>>
+>> Automatic repair *might* be a far end target, but I do
+>> agree, this needs to be clarified deeply.
+>>
+>> I see the thing similarly to a previous comment from a
+>> fellow poster.
+>> To do:
+>> 1) detect which MD block is inconsistent
+>> 2) detect, when possible, which device component is responsible
+>> 3) trigger a repair action
+>>
+>> This would be done all under user control, i.e. the user
+>> will get the mismatch count, maybe with some hint on which
+>> device could be guilty (RAID-6 or RAID-1/10 with multiple
+>> redundancy) and then he could decide what to do.
+>>
+>> The user will have full control and full *responsability*
+>> on the action, but it will also be fully informed on what
+>> the situation is.
+>>
+>> The system will tell: block ABC is inconsistent, maybe
+>> device /dev/sdX is guilty, you could: do nothing, resync
+>> the parity, try to repair.
+> 
+> I think just "block ABC is inconsistent" is sufficient.
+> user-space can then quiesce that part of the array, read the relevant
+> blocks, do any analysis that might be appropriate, and report to the
+> admin. 
 
-[I just realised that when I sent this to Linus a couple of hours ago
-I forgot to cc to linux-raid - sorry]
+Will there be an accompanying userspace tool to determine the physical
+device addresses of individual blocks representing the inconsitent MD
+block? Is there any way addresses of individual blocks can be reported
+right there by the kernel? I.e. figuring out which physical blocks make
+up a block in a raid -l 10 -n5 -pf3 is not an easy task, while the kernel
+alreayd knows what is where.
 
-I know it is getting late, but continued testing showed that an
-unclean shutdown during a RAID level migration can leave the array
-in a slightly inconsistent state.  If after that you get a device 
-failure, md may not respond exactly the right way.  There is room for
-data corruption in there.
-
-Thanks,
-NeilBrown
-
-
-The following changes since commit aa021baa3295fa6e3f367d80f8955dd5176656eb:
-  Linus Torvalds (1):
-        Merge git://git.kernel.org/.../mason/btrfs-unstable
-
-are available in the git repository at:
-
-  git://neil.brown.name/md for-linus
-
-NeilBrown (4):
-      md: factor out updating of 'recovery_offset'.
-      md: allow v0.91 metadata to record devices as being active but not in-sync.
-      Don't unconditionally set in_sync on newly added device in raid5_reshape
-      md/raid5: Allow dirty-degraded arrays to be assembled when only party is degraded.
-
- drivers/md/md.c    |   41 ++++++++++++++++++++-----
- drivers/md/raid5.c |   85 ++++++++++++++++++++++++++++++++++++++++++++++++----
- 2 files changed, 112 insertions(+), 14 deletions(-)
+Cheers
