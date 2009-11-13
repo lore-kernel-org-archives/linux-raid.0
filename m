@@ -1,141 +1,40 @@
-From: "lrhorer@satx.rr.com" <lrhorer@satx.rr.com>
-Subject: Re: Help - Urgent!!!
-Date: Thu, 12 Nov 2009 23:16:53 -0600
-Message-ID: <200911122316.53084.lrhorer@satx.rr.com>
-References: <200911122253.01626.lrhorer@satx.rr.com> <19196.60011.858158.550391@notabene.brown> <19196.60094.69339.36550@notabene.brown>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: mismatch_cnt again
+Date: Fri, 13 Nov 2009 06:19:31 +0100
+Message-ID: <87ocn7xaqk.fsf@frosties.localdomain>
+References: <eyal@eyal.emu.id.au>
+	<200911121920.nACJKDew011818@wind.enjellic.com>
+	<19196.50228.743428.552300@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <19196.60094.69339.36550@notabene.brown>
-Content-Disposition: inline
+In-Reply-To: <19196.50228.743428.552300@notabene.brown> (Neil Brown's message
+	of "Fri, 13 Nov 2009 13:28:04 +1100")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: greg@enjellic.com, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thursday 12 November 2009 11:12:30 pm you wrote:
-> mdadm -X /dev/list-of-devices
+Neil Brown <neilb@suse.de> writes:
 
+> On Thursday November 12, greg@enjellic.com wrote:
+>> 
+>> Neil/Martin what do you think?
+>
+> I think that if you found out which blocks were different and mapped
+> that back through the filesystem, you would find that those blocks are
+> not a part of any file, or possibly are part of a file that is
+> currently being written.
+>
+> I guess I need to start logging the error address so people can start
+> dealing with facts rather than fears.
+>
+> NeilBrown
 
-RAID-Server:/etc/cron.d# mdadm -X /dev/sd[a-j]
-        Filename : /dev/sda
-           Magic : 6d746962
-         Version : 4
-            UUID : 5ff10d73:a096195f:7a646bba:a68986ca
-          Events : 0
-  Events Cleared : 0
-           State : OK
-       Chunksize : 64 MB
-          Daemon : 5s flush period
-      Write Mode : Normal
-       Sync Size : 976762368 (931.51 GiB 1000.20 GB)
-          Bitmap : 14905 bits (chunks), 14904 dirty (100.0%)
-        Filename : /dev/sdb
-           Magic : 6d746962
-         Version : 4
-            UUID : 5ff10d73:a096195f:7a646bba:a68986ca
-          Events : 0
-  Events Cleared : 0
-           State : OK
-       Chunksize : 64 MB
-          Daemon : 5s flush period
-      Write Mode : Normal
-       Sync Size : 976762368 (931.51 GiB 1000.20 GB)
-          Bitmap : 14905 bits (chunks), 14904 dirty (100.0%)
-        Filename : /dev/sdc
-           Magic : 6d746962
-         Version : 4
-            UUID : 5ff10d73:a096195f:7a646bba:a68986ca
-          Events : 0
-  Events Cleared : 0
-           State : OK
-       Chunksize : 64 MB
-          Daemon : 5s flush period
-      Write Mode : Normal
-       Sync Size : 976762368 (931.51 GiB 1000.20 GB)
-          Bitmap : 14905 bits (chunks), 14904 dirty (100.0%)
-        Filename : /dev/sdd
-           Magic : 6d746962
-         Version : 4
-            UUID : 5ff10d73:a096195f:7a646bba:a68986ca
-          Events : 0
-  Events Cleared : 0
-           State : OK
-       Chunksize : 64 MB
-          Daemon : 5s flush period
-      Write Mode : Normal
-       Sync Size : 976762368 (931.51 GiB 1000.20 GB)
-          Bitmap : 14905 bits (chunks), 14904 dirty (100.0%)
-        Filename : /dev/sde
-           Magic : 6d746962
-         Version : 4
-            UUID : 5ff10d73:a096195f:7a646bba:a68986ca
-          Events : 0
-  Events Cleared : 0
-           State : OK
-       Chunksize : 64 MB
-          Daemon : 5s flush period
-      Write Mode : Normal
-       Sync Size : 976762368 (931.51 GiB 1000.20 GB)
-          Bitmap : 14905 bits (chunks), 14904 dirty (100.0%)
-        Filename : /dev/sdf
-           Magic : 6d746962
-         Version : 4
-            UUID : 5ff10d73:a096195f:7a646bba:a68986ca
-          Events : 0
-  Events Cleared : 0
-           State : OK
-       Chunksize : 64 MB
-          Daemon : 5s flush period
-      Write Mode : Normal
-       Sync Size : 976762368 (931.51 GiB 1000.20 GB)
-          Bitmap : 14905 bits (chunks), 14904 dirty (100.0%)
-        Filename : /dev/sdg
-           Magic : 6d746962
-         Version : 4
-            UUID : 5ff10d73:a096195f:7a646bba:a68986ca
-          Events : 0
-  Events Cleared : 0
-           State : OK
-       Chunksize : 64 MB
-          Daemon : 5s flush period
-      Write Mode : Normal
-       Sync Size : 976762368 (931.51 GiB 1000.20 GB)
-          Bitmap : 14905 bits (chunks), 14904 dirty (100.0%)
-        Filename : /dev/sdh
-           Magic : 6d746962
-         Version : 4
-            UUID : 5ff10d73:a096195f:7a646bba:a68986ca
-          Events : 0
-  Events Cleared : 0
-           State : OK
-       Chunksize : 64 MB
-          Daemon : 5s flush period
-      Write Mode : Normal
-       Sync Size : 976762368 (931.51 GiB 1000.20 GB)
-          Bitmap : 14905 bits (chunks), 14904 dirty (100.0%)
-        Filename : /dev/sdi
-           Magic : 6d746962
-         Version : 4
-            UUID : 5ff10d73:a096195f:7a646bba:a68986ca
-          Events : 0
-  Events Cleared : 0
-           State : OK
-       Chunksize : 64 MB
-          Daemon : 5s flush period
-      Write Mode : Normal
-       Sync Size : 976762368 (931.51 GiB 1000.20 GB)
-          Bitmap : 14905 bits (chunks), 14904 dirty (100.0%)
-        Filename : /dev/sdj
-           Magic : 6d746962
-         Version : 4
-            UUID : 5ff10d73:a096195f:7a646bba:a68986ca
-          Events : 0
-  Events Cleared : 0
-           State : OK
-       Chunksize : 64 MB
-          Daemon : 5s flush period
-      Write Mode : Normal
-       Sync Size : 976762368 (931.51 GiB 1000.20 GB)
-          Bitmap : 14905 bits (chunks), 14904 dirty (100.0%)
++1
+
+Even if only to debug where the mismatch comes from. Maybe it is the
+raid layer or the fs layer or swap. Currently we just can not tell.
+
+MfG
+        Goswin
