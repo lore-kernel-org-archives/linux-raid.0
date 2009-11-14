@@ -1,70 +1,68 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: Help - Urgent!!!
-Date: Sat, 14 Nov 2009 03:34:05 +0300
-Message-ID: <70ed7c3e0911131634l506e8c19o9f30886ae097c6ba@mail.gmail.com>
-References: <200911122253.01626.lrhorer@satx.rr.com> <200911130913.48292.lrhorer@satx.rr.com>
-	<19197.55846.756558.21650@notabene.brown> <200911131830.59009.lrhorer@satx.rr.com>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [ANNOUNCE] mdadm-3.1 has been withdrawn
+Date: Fri, 13 Nov 2009 22:32:24 -0500
+Message-ID: <4AFE24C8.10002@redhat.com>
+References: <19187.50708.551325.297625@notabene.brown>	 <4AF829B2.5090001@redhat.com>	 <423765b7af1be77f0a40dcbbb1f65c4b.squirrel@neil.brown.name> <e9c3a7c20911131554w28075d39mbc8bebc17a4ef260@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig035F22E5A88A429CFECDFEC3"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200911131830.59009.lrhorer@satx.rr.com>
+In-Reply-To: <e9c3a7c20911131554w28075d39mbc8bebc17a4ef260@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "lrhorer@satx.rr.com" <lrhorer@satx.rr.com>
-Cc: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Neil F Brown <nfbrown@novell.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hey there,
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig035F22E5A88A429CFECDFEC3
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Seems like this is an old bug. Check this:
-http://www.issociate.de/board/post/328238/Unable_to_add_write-intent_bi=
-tmap.html
+On 11/13/2009 06:54 PM, Dan Williams wrote:
+> On Mon, Nov 9, 2009 at 1:22 PM, Neil F Brown <nfbrown@novell.com> wrote=
+:
+>> I'm certainly happy with increasing the chunksize to 512K.
+>=20
+> Probably good for reads, but it makes it harder for the code to
+> collect full stripe writes.  I guess I should get some data to back
+> that up one of these days...
 
-I faced some weird problems before and when posting here, Neil Brown
-suggested that I try mdadm 3.0 -- I compiled and everything went
-smooth from there.
-
-On Sat, Nov 14, 2009 at 3:30 AM, lrhorer@satx.rr.com
-<lrhorer@satx.rr.com> wrote:
-> On Friday 13 November 2009 04:13:58 pm you wrote:
->> On Friday November 13, lrhorer@satx.rr.com wrote:
->> > > There is nothing to delete. =C2=A0Just try to add it again.
->> > > Though I would really like to know why it hangs. =C2=A0If that h=
-appens
->> > > again, see if alt-sysrq-T shows anything useful.
->> >
->> > =C2=A0 =C2=A0 sysrq?
->>
->> It is a key on the keyboard - up near "Prnt Scrn"
->>
->> Hold the 'alt' key, hold the 'sysrq' key, then type 't'.
->> It spews lot of stack traces on to the screen. =C2=A0It is really on=
-ly
->> useful with a series console, of if the machine is working well enou=
-gh
->> for all the text to go in to log files.
->>
->> alt-sysrq-P is less verbose and can also be useful.
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0I'm on an X login. =C2=A0It produces nothi=
-ng. =C2=A0Does it only work with a hung
-> command line?
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
-
+My data (which I have, not that I need to get :-P) suggests that it
+really doesn't matter.  For streaming writes, the buffer cache stores
+stuff up long enough to get a stripe write even when the stripe is huge.
+ For random writes, you don't normally get a full stripe no matter how
+long you wait or how small the stripe is.  I say this after looking at
+the various performance parameters of a timed 5 minute dbench run and
+also the random write time and rate of both 4k and 16k tiotest runs to
+raid arrays from 4 to 7 disks and with chunk sizes from 256k up to 1024k
+using ext2, ext3, ext4, and xfs filesystems.  From those test results,
+512k was roughly the sweet spot, streaming writes were effected far more
+than random writes by chunk size, and both were probably even more
+dependent on things other than chunk size (filesystem type and layout
+for instance).
 
 
 --=20
-       Majed B.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+	      http://people.redhat.com/dledford
+
+Infiniband specific RPMs available at
+	      http://people.redhat.com/dledford/Infiniband
+
+
+--------------enig035F22E5A88A429CFECDFEC3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkr+JMgACgkQg6WylM+/8ZRMTACdHXq4o9UgQo3VdH9eR8+PGbfr
+gvwAn3zO3pZrCIJs/PNWtQ+mlnXMVyrV
+=ZAiT
+-----END PGP SIGNATURE-----
+
+--------------enig035F22E5A88A429CFECDFEC3--
