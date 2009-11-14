@@ -1,25 +1,37 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [ANNOUNCE] mdadm-3.1 has been withdrawn
-Date: Fri, 13 Nov 2009 16:54:41 -0700
-Message-ID: <e9c3a7c20911131554w28075d39mbc8bebc17a4ef260@mail.gmail.com>
-References: <19187.50708.551325.297625@notabene.brown>
-	 <4AF829B2.5090001@redhat.com>
-	 <423765b7af1be77f0a40dcbbb1f65c4b.squirrel@neil.brown.name>
+From: "lrhorer@satx.rr.com" <lrhorer@satx.rr.com>
+Subject: Re: Help - Urgent!!!
+Date: Fri, 13 Nov 2009 18:30:58 -0600
+Message-ID: <200911131830.59009.lrhorer@satx.rr.com>
+References: <200911122253.01626.lrhorer@satx.rr.com> <200911130913.48292.lrhorer@satx.rr.com> <19197.55846.756558.21650@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <423765b7af1be77f0a40dcbbb1f65c4b.squirrel@neil.brown.name>
+In-Reply-To: <19197.55846.756558.21650@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil F Brown <nfbrown@novell.com>
-Cc: Doug Ledford <dledford@redhat.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Nov 9, 2009 at 1:22 PM, Neil F Brown <nfbrown@novell.com> wrote:
-> I'm certainly happy with increasing the chunksize to 512K.
+On Friday 13 November 2009 04:13:58 pm you wrote:
+> On Friday November 13, lrhorer@satx.rr.com wrote:
+> > > There is nothing to delete.  Just try to add it again.
+> > > Though I would really like to know why it hangs.  If that happens
+> > > again, see if alt-sysrq-T shows anything useful.
+> >
+> > 	sysrq?
+>
+> It is a key on the keyboard - up near "Prnt Scrn"
+>
+> Hold the 'alt' key, hold the 'sysrq' key, then type 't'.
+> It spews lot of stack traces on to the screen.  It is really only
+> useful with a series console, of if the machine is working well enough
+> for all the text to go in to log files.
+>
+> alt-sysrq-P is less verbose and can also be useful.
 
-Probably good for reads, but it makes it harder for the code to
-collect full stripe writes.  I guess I should get some data to back
-that up one of these days...
+	I'm on an X login.  It produces nothing.  Does it only work with a hung 
+command line?
 
---
-Dan
+
