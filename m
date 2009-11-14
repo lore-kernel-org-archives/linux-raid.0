@@ -1,61 +1,68 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: mismatch_cnt again
-Date: Sat, 14 Nov 2009 20:04:37 +0100
-Message-ID: <87lji92aii.fsf@frosties.localdomain>
-References: <4AF4C247.6050303@eyal.emu.id.au> <4AF4D323.6020108@panix.com>
-	<4AF5268D.60900@eyal.emu.id.au>
-	<4877c76c0911070008m789507f8h799d419287740ca5@mail.gmail.com>
-	<87tyx6tpcb.fsf@frosties.localdomain> <4AF58B20.3000409@redhat.com>
-	<87iqdlaujb.fsf@frosties.localdomain> <4AF74B61.6000102@rabbit.us>
-	<20091109185632.GA2723@lazy.lzy>
-	<73ebdcee169f46611d411755f9aaca5b.squirrel@neil.brown.name>
-	<20091109215443.GA4143@lazy.lzy>
-	<d99ca9481d2471073484c5d43d493b4d.squirrel@neil.brown.name>
-	<4AF92DBD.5010102@rabbit.us> <yq1tyx2o4td.fsf@sermon.lab.mkp.net>
-	<4AFC8EC5.6060400@tmr.com> <yq1my2ql56a.fsf@sermon.lab.mkp.net>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Help - Urgent!!!
+Date: Sat, 14 Nov 2009 15:45:02 -0600
+Message-ID: <20091114214504754.VURJ5263@cdptpa-omta04.mail.rr.com>
+References: <19197.1188.481294.873723@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <yq1my2ql56a.fsf@sermon.lab.mkp.net> (Martin K. Petersen's
-	message of "Fri, 13 Nov 2009 12:12:45 -0500")
+In-Reply-To: <19197.1188.481294.873723@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, Peter Rabbitson <rabbit+list@rabbit.us>, NeilBrown <neilb@suse.de>, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Goswin von Brederlow <goswin-v-b@web.de>, Doug Ledford <dledford@redhat.com>, Michael Evans <mjevans1983@gmail.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
+To: 'Neil Brown' <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org, 'Debian mdadm maintainers' <pkg-mdadm-devel@lists.alioth.debian.org>
 List-Id: linux-raid.ids
 
-"Martin K. Petersen" <martin.petersen@oracle.com> writes:
+> > 	Should I stop the arraya nd re-assemble it with -vvv?
+> >
+> > 	Also, what about my question about the bitmap?  Should I delete it,
+> despite
+> > the fact mdadm says there isn't one, or should I attempt to add it
+> again, or
+> > should I wait until I do the checkarrray?
+> >
+> 
+> There is nothing to delete.  Just try to add it again.
+> Though I would really like to know why it hangs.  If that happens
+> again, see if alt-sysrq-T shows anything useful.
 
->>>>>> "Bill" == Bill Davidsen <davidsen@tmr.com> writes:
->
->>> FWIW, XFS and btrfs both use the page writeback bit correctly and
->>> never change a page while it is undergoing I/O.
->>> 
->>> 
-> Bill> That's necessary but not sufficient. To be done correctly it must
-> Bill> be protected by md as well. This is because arrays are used
-> Bill> without a filesystem by some applications, such as swap and
-> Bill> database, to name the most common cases. 
->
-> I agree that making MD RAID1 do a copy would be a quick fix.  But I
-> don't see any reason to encourage what is essentially sloppy behavior at
-> the top of the stack.  And then what if you stack MD/DM devices?  Do
-> each layer do a copy?  I think that gets murky pretty quickly.
+	Well, it hasn't hung again, but now that I can catch my breath I can
+provide a little detail.  As I mentioned before, the original hang occurred
+when I first issued:
 
-Maybe as a quick debug the raid layer should make the page read-only
-and then watch what fails to write to it.
+`mdadm -G /dev/md0 -b internal --bitmap-chunk=65535`
 
-> I'd much rather fix the cases where the top layers are broken.  And as I
-> said there are several people working on this spurred by my work on the
-> data integrity extensions.
->
-> FWIW, databases on raw disk have gone out of fashion.  But it is true
-> that applications that do direct I/O need to avoid updating buffers in
-> flight.
+	Mdadm complained about the bitmap chunk being an incorrect size.  I
+don't know if it actually created a bitmap anyway using the default size, or
+what, but I assumed the error meant the bitmap was not created.  Going on
+this assumption, I immediately issued the command again, changing only the
+bitmap chunk size:
 
-Maybe a flag somewhere saying if the data is safe from writes or
-not. Default would be unsafe and md copies. A filesystem that works
-"right" sets the safe flag as would md after copying. That way
-anything lower in the stack (like another md) has the flag set.
+`mdadm -G /dev/md0 -b internal --bitmap-chunk=65536`
 
-MfG
-        Goswin
+	That's when it hung.  I tried stopping the array, but I couldn't
+umount the file system because it was dirty.  Any commands to mdadm - even
+informational ones and even 
+
+`cat /proc/mdadm`
+
+	would cause the xterm to hang.  Even a shutdown would not work.  I
+had to shut down  the server with the power switch.
+
+	When the system booted, mdadm would not assemble the array.  I think
+Neil has figured out why.  Subsequent attempts to assemble the array also
+failed, at least in part because /dev/md0 had been created without the array
+being active.  I deleted /dev/md0, but subsequent failed assembly attempts
+again created the file.  Finally I deleted the file once again and then
+assembled using
+
+`mdadm -A /dev/sd[a-j]`
+
+	and it worked, although the array was marked as dirty, and the first
+attempt to access it caused a resync.  When the resync was done, I fixed the
+"homehost" issue Neil had spotted and corrected /etc/mdadm/mdadm.conf to
+show all 10 drives.  Finally, I added back the bitmap, and now everything
+seems fine.  I rebooted the server, and it comes up with all 10 drives in an
+assembled array with an internal bitmap.
+
