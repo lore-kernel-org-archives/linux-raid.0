@@ -1,68 +1,63 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [ANNOUNCE] mdadm-3.1 has been withdrawn
-Date: Fri, 13 Nov 2009 22:32:24 -0500
-Message-ID: <4AFE24C8.10002@redhat.com>
-References: <19187.50708.551325.297625@notabene.brown>	 <4AF829B2.5090001@redhat.com>	 <423765b7af1be77f0a40dcbbb1f65c4b.squirrel@neil.brown.name> <e9c3a7c20911131554w28075d39mbc8bebc17a4ef260@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: mismatch_cnt again
+Date: Sat, 14 Nov 2009 12:01:55 -0500
+Message-ID: <4AFEE283.9040702@tmr.com>
+References: <4AF4C247.6050303@eyal.emu.id.au> <4AF4D323.6020108@panix.com>	<4AF5268D.60900@eyal.emu.id.au>	<4877c76c0911070008m789507f8h799d419287740ca5@mail.gmail.com>	<87tyx6tpcb.fsf@frosties.localdomain> <4AF58B20.3000409@redhat.com>	<87iqdlaujb.fsf@frosties.localdomain> <4AF74B61.6000102@rabbit.us>	<20091109185632.GA2723@lazy.lzy>	<73ebdcee169f46611d411755f9aaca5b.squirrel@neil.brown.name>	<20091109215443.GA4143@lazy.lzy>	<d99ca9481d2471073484c5d43d493b4d.squirrel@neil.brown.name>	<4AF92DBD.5010102@rabbit.us> <yq1tyx2o4td.fsf@sermon.lab.mkp.net>	<4AFC8EC5.6060400@tmr.com> <yq1my2ql56a.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig035F22E5A88A429CFECDFEC3"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e9c3a7c20911131554w28075d39mbc8bebc17a4ef260@mail.gmail.com>
+In-Reply-To: <yq1my2ql56a.fsf@sermon.lab.mkp.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Neil F Brown <nfbrown@novell.com>, linux-raid@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Peter Rabbitson <rabbit+list@rabbit.us>, NeilBrown <neilb@suse.de>, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Goswin von Brederlow <goswin-v-b@web.de>, Doug Ledford <dledford@redhat.com>, Michael Evans <mjevans1983@gmail.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig035F22E5A88A429CFECDFEC3
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Martin K. Petersen wrote:
+>>>>>> "Bill" == Bill Davidsen <davidsen@tmr.com> writes:
+>>>>>>             
+>
+>   
+>>> FWIW, XFS and btrfs both use the page writeback bit correctly and
+>>> never change a page while it is undergoing I/O.
+>>>
+>>>
+>>>       
+> Bill> That's necessary but not sufficient. To be done correctly it must
+> Bill> be protected by md as well. This is because arrays are used
+> Bill> without a filesystem by some applications, such as swap and
+> Bill> database, to name the most common cases. 
+>
+> I agree that making MD RAID1 do a copy would be a quick fix.  But I
+> don't see any reason to encourage what is essentially sloppy behavior at
+> the top of the stack.  And then what if you stack MD/DM devices?  Do
+> each layer do a copy?  I think that gets murky pretty quickly.
+>
+>   
+Which is why I suggested that the ideal implementation is COW, which in 
+most cases would need no copy unless the pages were attempted to be 
+modified. That requires some assumptions about how the buffers are 
+aligned vs. memory pages, and are hardware dependent to some extent. 
+It's not easy, but I never said it was. The question is if it is 
+*required* in some places, as determined by (a) good practice if the 
+overhead is low, or (b) user option for "safe even if slow."
 
-On 11/13/2009 06:54 PM, Dan Williams wrote:
-> On Mon, Nov 9, 2009 at 1:22 PM, Neil F Brown <nfbrown@novell.com> wrote=
-:
->> I'm certainly happy with increasing the chunksize to 512K.
->=20
-> Probably good for reads, but it makes it harder for the code to
-> collect full stripe writes.  I guess I should get some data to back
-> that up one of these days...
+> I'd much rather fix the cases where the top layers are broken.  And as I
+> said there are several people working on this spurred by my work on the
+> data integrity extensions.
+>
+> FWIW, databases on raw disk have gone out of fashion.  But it is true
+> that applications that do direct I/O need to avoid updating buffers in
+> flight.
+>   
 
-My data (which I have, not that I need to get :-P) suggests that it
-really doesn't matter.  For streaming writes, the buffer cache stores
-stuff up long enough to get a stripe write even when the stripe is huge.
- For random writes, you don't normally get a full stripe no matter how
-long you wait or how small the stripe is.  I say this after looking at
-the various performance parameters of a timed 5 minute dbench run and
-also the random write time and rate of both 4k and 16k tiotest runs to
-raid arrays from 4 to 7 disks and with chunk sizes from 256k up to 1024k
-using ext2, ext3, ext4, and xfs filesystems.  From those test results,
-512k was roughly the sweet spot, streaming writes were effected far more
-than random writes by chunk size, and both were probably even more
-dependent on things other than chunk size (filesystem type and layout
-for instance).
+May have gone out of fashion in new applications (I'm not sure I agree, 
+but as a talking point), but there are tons of old apps which are not 
+going to be updated any time soon, and any number of libraries which 
+mmap stuff and effect multiple applications.
 
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "We can't solve today's problems by using the same thinking we
+   used in creating them." - Einstein
 
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-	      http://people.redhat.com/dledford
-
-Infiniband specific RPMs available at
-	      http://people.redhat.com/dledford/Infiniband
-
-
---------------enig035F22E5A88A429CFECDFEC3
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkr+JMgACgkQg6WylM+/8ZRMTACdHXq4o9UgQo3VdH9eR8+PGbfr
-gvwAn3zO3pZrCIJs/PNWtQ+mlnXMVyrV
-=ZAiT
------END PGP SIGNATURE-----
-
---------------enig035F22E5A88A429CFECDFEC3--
