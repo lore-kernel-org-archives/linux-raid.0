@@ -1,62 +1,35 @@
-From: =?UTF-8?B?TWFydGluIE1PS1JFSsWg?= <mmokrejs@ribosome.natur.cuni.cz>
-Subject: Re: IDE/RAID/AHCI setting in BIOS influcencing mdraid?
-Date: Sun, 15 Nov 2009 22:28:43 +0100
-Message-ID: <4B00728B.40109@ribosome.natur.cuni.cz>
-References: <4AF9F415.9050809@ribosome.natur.cuni.cz> <20091112075203.GA22315@maude.comedia.it> <4AFC3299.3040702@ribosome.natur.cuni.cz> <4AFEE3EA.9080503@tmr.com>
+From: "Guy Watkins" <linux-raid@watkins-home.com>
+Subject: RE: mismatch_cnt again
+Date: Sun, 15 Nov 2009 17:29:17 -0500
+Message-ID: <DC9DEEF4919E420CB7CC2A160120D49A@m5>
+References: <87tyx6tpcb.fsf@frosties.localdomain> <4AF58B20.3000409@redhat.com> <87iqdlaujb.fsf@frosties.localdomain> <4AF74B61.6000102@rabbit.us> <20091109185632.GA2723@lazy.lzy> <73ebdcee169f46611d411755f9aaca5b.squirrel@neil.brown.name> <20091109215443.GA4143@lazy.lzy> <d99ca9481d2471073484c5d43d493b4d.squirrel@neil.brown.name> <20091110195222.GA2777@lazy.lzy> <19196.50782.113024.239657@notabene.brown> <20091115210542.GA6826@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AFEE3EA.9080503@tmr.com>
+In-Reply-To: <20091115210542.GA6826@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-raid list <linux-raid@vger.kernel.org>
+To: 'Piergiorgio Sartor' <piergiorgio.sartor@nexgo.de>, 'Neil Brown' <neilb@suse.de>
+Cc: 'Peter Rabbitson' <rabbit+list@rabbit.us>, 'Goswin von Brederlow' <goswin-v-b@web.de>, 'Doug Ledford' <dledford@redhat.com>, 'Michael Evans' <mjevans1983@gmail.com>, 'Eyal Lebedinsky' <eyal@eyal.emu.id.au>, 'linux-raid list' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Bill,
+I have been following this issue some, and I think this could be a cause for
+silent corruption on RAID5 and RAID6.  I don't think this has been
+mentioned, if so, sorry.
 
-Bill Davidsen wrote:
-> Martin MOKREJ=C5=A0 wrote:
->> Hi everybody,
->>
->> That is what happened to me. Two disks are not in an ICH9R array but=
- are
->> in raid0 under mdadm. Four disk are under raid10 under ICH9R while a=
-lso
->> under raid10 under mdadm.
->>  =20
->=20
-> Could you clarify that last sentence? It sounds as if you have two
-> independent arrays, using a controller for one and mdraid for the oth=
-er,
-> and they both use the same drives. Please tell me I'm misreading this=
-=2E..
+If data blocks can be changed in memory before written to disk, even if the
+data blocks that were changed were never needed again from the disk, the
+other related blocks in the stripe are at risk.  If the parity blocks are
+computed, then the 1 data block in memory is changed, then the blocks are
+written to disk, the parity would be wrong.  If a disk fails and is re-added
+or replaced, the data block in that stripe will be computed using the
+changed block giving a now corrupt value.  I am assuming the stripe has some
+data blocks that have needed data and at least 1 that was not needed, and
+that block that was not needed was changed before writing it to disk.  And
+the disk that failed did not have the block that had been changed.
 
-No, you read it correctly. ICH9R controller has 6 disks connected. Firs=
-t two
-do not have configured array "in BIOS" while latter 4 do have (RAID10).=
- That
-was my surprise as the machine uses md-array (the first two disks /dev/=
-sd[a-b]1
-in raid1, 0.9 superblock) while the latter four /dev/sd[c-f]1 as raid10=
- (0.9
-superblock as well). In other words, the four disks in raid10 are assig=
-ned twice,
-onder to ICH9R while also to md-raid10.
+I have a hard time conveying my thought in text.  I hope you understand me.
 
-I think that once I configured the BIOS stuff but used subsequently mda=
-dm to
-create the array under linux. Thus I believe I overwrote the "imsm" sup=
-erblock
-without even knowing (but then ICH9R BIOS would not report the RAID10 s=
-panning
-the four disks nowadays, right?).
+Thanks for reading.
 
-Thanks,
-Martin
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
