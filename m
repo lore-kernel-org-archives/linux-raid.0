@@ -1,56 +1,62 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: mismatch_cnt again
-Date: Sun, 15 Nov 2009 22:05:42 +0100
-Message-ID: <20091115210542.GA6826@lazy.lzy>
-References: <87tyx6tpcb.fsf@frosties.localdomain> <4AF58B20.3000409@redhat.com> <87iqdlaujb.fsf@frosties.localdomain> <4AF74B61.6000102@rabbit.us> <20091109185632.GA2723@lazy.lzy> <73ebdcee169f46611d411755f9aaca5b.squirrel@neil.brown.name> <20091109215443.GA4143@lazy.lzy> <d99ca9481d2471073484c5d43d493b4d.squirrel@neil.brown.name> <20091110195222.GA2777@lazy.lzy> <19196.50782.113024.239657@notabene.brown>
+From: =?UTF-8?B?TWFydGluIE1PS1JFSsWg?= <mmokrejs@ribosome.natur.cuni.cz>
+Subject: Re: IDE/RAID/AHCI setting in BIOS influcencing mdraid?
+Date: Sun, 15 Nov 2009 22:28:43 +0100
+Message-ID: <4B00728B.40109@ribosome.natur.cuni.cz>
+References: <4AF9F415.9050809@ribosome.natur.cuni.cz> <20091112075203.GA22315@maude.comedia.it> <4AFC3299.3040702@ribosome.natur.cuni.cz> <4AFEE3EA.9080503@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <19196.50782.113024.239657@notabene.brown>
+In-Reply-To: <4AFEE3EA.9080503@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Peter Rabbitson <rabbit+list@rabbit.us>, Goswin von Brederlow <goswin-v-b@web.de>, Doug Ledford <dledford@redhat.com>, Michael Evans <mjevans1983@gmail.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: linux-raid list <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi,
+Hi Bill,
 
-> I think just "block ABC is inconsistent" is sufficient.
-> user-space can then quiesce that part of the array, read the relevant
-> blocks, do any analysis that might be appropriate, and report to the
-> admin. 
+Bill Davidsen wrote:
+> Martin MOKREJ=C5=A0 wrote:
+>> Hi everybody,
+>>
+>> That is what happened to me. Two disks are not in an ICH9R array but=
+ are
+>> in raid0 under mdadm. Four disk are under raid10 under ICH9R while a=
+lso
+>> under raid10 under mdadm.
+>>  =20
+>=20
+> Could you clarify that last sentence? It sounds as if you have two
+> independent arrays, using a controller for one and mdraid for the oth=
+er,
+> and they both use the same drives. Please tell me I'm misreading this=
+=2E..
 
-personally I think user space is good for
-this kind of operations.
+No, you read it correctly. ICH9R controller has 6 disks connected. Firs=
+t two
+do not have configured array "in BIOS" while latter 4 do have (RAID10).=
+ That
+was my surprise as the machine uses md-array (the first two disks /dev/=
+sd[a-b]1
+in raid1, 0.9 superblock) while the latter four /dev/sd[c-f]1 as raid10=
+ (0.9
+superblock as well). In other words, the four disks in raid10 are assig=
+ned twice,
+onder to ICH9R while also to md-raid10.
 
-I think the point here is not if this kind of
-recovery should be in kernel space or not, but
-to have this kind of recovery.
+I think that once I configured the BIOS stuff but used subsequently mda=
+dm to
+create the array under linux. Thus I believe I overwrote the "imsm" sup=
+erblock
+without even knowing (but then ICH9R BIOS would not report the RAID10 s=
+panning
+the four disks nowadays, right?).
 
-> That is a very interesting threat scenario - occasional bit flip on
-> read between media and memory.  I had a drive like that once.  One
-> particular bit in the sector would fairly often return '1' no matter
-> what had been written.  I had it in a RAID1 and it quickly made a mess
-> of the filesystem.
+Thanks,
+Martin
 
-In my case, a further analisys showed that the "bits"
-where always *written* correctly, but the reading
-operation was, sometimes, flipping bits.
-
-This was especially nasty, because, without "resync"
-the array would have been always fine.
- 
-> As you say, there is nothing that md can or should do about this
-> except report that something odd is happening, which it does, and
-> report where it is happening, which it does not.
-
-Well, md specifically may or may not have the infrastructure
-to use the RAID-6 parity to correct this sort of issues.
-Nevertheless, using the RAID-6 double parity, in user or
-kernel space, is really one point for software RAID.
-
-bye,
-
--- 
-
-piergiorgio
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
