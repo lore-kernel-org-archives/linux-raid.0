@@ -1,43 +1,103 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: mismatch_cnt again
-Date: Tue, 17 Nov 2009 09:14:55 +1100
-Message-ID: <20091117091455.33c8757c@notabene.brown>
-References: <neilb@suse.de>
-	<200911162136.nAGLatPb028438@wind.enjellic.com>
+Subject: Re: RAID 5 rebuild fails with power interruption.
+Date: Tue, 17 Nov 2009 09:47:20 +1100
+Message-ID: <20091117094720.4c8736d7@notabene.brown>
+References: <8338BD137FF1B64EB341218BD702985E02AB8FCF@BLR-EC-MBX03.wipro.com>
+	<87y6m759o2.fsf@frosties.localdomain>
+	<8338BD137FF1B64EB341218BD702985E02AB90B8@BLR-EC-MBX03.wipro.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200911162136.nAGLatPb028438@wind.enjellic.com>
+In-Reply-To: <8338BD137FF1B64EB341218BD702985E02AB90B8@BLR-EC-MBX03.wipro.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: greg@enjellic.com
-Cc: Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
+To: senthilkumar.muthukalai@wipro.com
+Cc: goswin-v-b@web.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 16 Nov 2009 15:36:55 -0600
-greg@enjellic.com wrote:
+On Mon, 16 Nov 2009 16:00:38 +0530
+<senthilkumar.muthukalai@wipro.com> wrote:
 
-> If a scrub directive were to be implemented it would be beneficial to
-> make it interruptible.  A 'halt' or similar directive would shutdown
-> the scrub and latch the last block number which had been examined.
-> That would allow a scrub to be resumed from that point in a subsequent
-> session.
-> 
-> With some of these large block devices it is difficult to get through
-> an entire 'check/scrub' in whatever late night window is left after
-> backups have run.  The above infra-structure would allow userspace to
-> gate the checking into whatever windows are available for these types
-> of activities.
+> We face this problem in our NAS product where we handle RAID5.
+> In the below mentioned scenario, when RAID5 is rebuilding after
+> adding a disk, we reset the power.
+> Ideally when the system comes up, the RAID5 should have accepted the
+> disk but not in our case.
+> We get the 'kicking the non-fresh disk from array' message with the
+> boot message.
+> In our RAID init script we run 'mdadm -- Examine -- scan', followed by
+> 'mdadm --assemble'.
+> Could you pls help me to understand why this disk is being thrown out?
 
-This is already possible with check.
+It is because the metadata being used (v0.90) does not have the ability
+to record that a device is partially recoverred.   It can only record
+that a device is either a full member of the array, or is not a member
+of the array.  So until the recovery completes, the metadata only
+records that the device is not a member of the array.  So when you
+restart, you find that the device is not a member of the array.
 
-If you write 'idle' to 'sync_action', the check will stop.
-If you first read from 'sync_completed' and store that value,
-then before starting a new 'check', write the value to
-sync_max, then you get exactly what you are asking for, all
-easily done in a shell script.
-You can also set 'sync_max' if you like, thus you could e.g.
-quite easily have a cron job that scrubs 1/28th of the array each
-night based on the day of the month.
+
+> What could be the solution?
+
+Use 1.x metadata.  e.g. add
+   --metadata=1.1
+to your --create command.
+1.x metadata is able to record that a device is only partially
+recovered.  So when the array is restarted the device will be included
+and recovery will continue.
 
 NeilBrown
+
+
+> 
+> -----Original Message-----
+> From: goswin-v-b@web.de [mailto:goswin-v-b@web.de] 
+> Sent: Monday, November 16, 2009 10:49 AM
+> To: SenthilKumar Muthukalai (WT01 - Telecom Equipment)
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: RAID 5 rebuild fails with power interruption.
+> 
+> <senthilkumar.muthukalai@wipro.com> writes:
+> 
+> > Adding a subject line...
+> >
+> > -----Original Message-----
+> > From: SenthilKumar Muthukalai (WT01 - Telecom Equipment) 
+> > Sent: Monday, November 16, 2009 9:14 AM
+> > To: linux-raid@vger.kernel.org
+> > Subject: 
+> >
+> > Hi All,
+> >
+> > Could you pls help me out with the below problem?
+> >
+> > 1. Created a RAID5 with 3 disks.
+> > 2. Initial rebuild done.
+> > 3. Pulled out a disk from the array.
+> > 4. The array got degraded.
+> > 5. Added the disk back to the array with 'assemble' command.
+> > 6. The disk was successfully added and the array started rebuilding
+> > again.
+> > 7. While rebuilding, reset the power to the NAS box.
+> > 8. When the NAS box boot up, the RAID was in degraded with the added
+> > disk thrown out.
+> > 9. The boot messages say 'kicking out of the non-fresh disk from the
+> > array'.
+> >
+> > We tried '--force' option with the 'assemble' command but no
+> > success.
+> >
+> > Thanks,
+> > Senthil M
+> 
+> mdadm --add /dev/md0 /dev/sdc1
+> 
+> But normaly it should just continue the resync.
+> 
+> MfG
+>         Goswin
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"
+> in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
