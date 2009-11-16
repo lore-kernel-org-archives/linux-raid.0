@@ -1,104 +1,94 @@
-From: greg@enjellic.com
-Subject: Re: mismatch_cnt again
-Date: Mon, 16 Nov 2009 15:36:55 -0600
-Message-ID: <200911162136.nAGLatPb028438@wind.enjellic.com>
-References: <neilb@suse.de>
-Reply-To: greg@enjellic.com
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: best common practice in case of degraded array with read errors
+Date: Mon, 16 Nov 2009 22:07:22 +0000
+Message-ID: <20091116220722.GC14699@cthulhu.home.robinhill.me.uk>
+References: <alpine.DEB.1.10.0911162224530.14550@uplift.swm.pp.se>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="w7PDEPdKQumQfZlR"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: Neil Brown <neilb@suse.de>
-       "Re: mismatch_cnt again" (Nov 13,  1:28pm)
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.1.10.0911162224530.14550@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>, greg@enjellic.com
-Cc: Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Nov 13,  1:28pm, Neil Brown wrote:
-} Subject: Re: mismatch_cnt again
 
-Good afternoon to everyone, hope your week is starting well.
+--w7PDEPdKQumQfZlR
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> On Thursday November 12, greg@enjellic.com wrote:
-> > 
-> > Neil/Martin what do you think?
+On Mon Nov 16, 2009 at 10:32:30PM +0100, Mikael Abrahamsson wrote:
 
-> I think that if you found out which blocks were different and mapped
-> that back through the filesystem, you would find that those blocks
-> are not a part of any file, or possibly are part of a file that is
-> currently being written.
+>=20
+> Hello.
+>=20
+> I have a 6 drive raid5. One of the drives failed on me (totally), and whe=
+n=20
+> I replaced it (-add a new working drive) I had several sectors on another=
+=20
+> drive give me UNC errors, which made md kick that drive as well, and left=
+=20
+> me with a non-working array (with only 4 drives).
+>=20
+Are you running any regular array checks?  These should verify the
+readability of the drives (and accuracy of the checksums).  This type of
+failure's also why I've switched to RAID6 for most of my arrays.
 
-I can buy the issue of the mismatches being part of a file being
-written but that doesn't explain machines where the RAID1 array was
-initialized and allowed to synchronize and which now show persistent
-counts of mismatched sectors.
+> What is the best common practice to handle this scenario? Right now I'm=
+=20
+> dd_rescue:ing the drive with read errors to a (hopefully) working drive,=
+=20
+> and then when I plan to --assemble --force the array to get 5 working=20
+> drives (with a few zero:ed sectors where I guess I'll have corrupted=20
+> files, hopefully no important metadata), and then I plan --add a 6th driv=
+e=20
+> and have everything sync up and be back to "normal".
+>=20
+> Is there a better way? I don't really understand why kicking drives out o=
+f=20
+> the array when there aren't enough of them to keep going makes sense, is=
+=20
+> there some rationale I'm missing?
+>=20
+Technically, the best practice is probably to recreate the array from
+scratch (replacing any failed drives) and restore from backup.  Short of
+that, your approach would seem to be the best option.  I've done this in
+the past, though I ended up restoring pretty much everything from backup
+anyway (as I had no other way of verifying the integrity of the data).
 
-I can certainly buy the issue of the mismatches not being part of an
-active file.  I still think this leaves the issue of why the
-mismatches were generated unless we want to assume that whatever
-causes the mismatch only affects areas of the filesystem which don't
-have useful files.  Not a reassuring assumption.
+> I've also heard recommendations to write to the bad sectors on the=20
+> existing drive, but that scares me as well in case I write to the wrong=
+=20
+> place, which is why I went the dd_rescue route (I'm also hoping that it'l=
+l=20
+> retry a bit more and might be able to read the bad blocks...)
+>=20
+I'd leave that to later.  Once you've imaged the disk you can try
+SMART tests, read/write tests, etc. to verify whether there's actually a
+physical problem or not (and how much of one - a bad block or two might
+be acceptable, but a lot of them would point to a failing disk).  Until
+then you're better putting as little trust in the disk as possible.
 
-> I guess I need to start logging the error address so people can
-> start dealing with facts rather than fears.
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
-I think that would be a good starting point.  If for no other reason
-then to allow people to easily figure out the possible ramifications of a
-mismatch count.
+--w7PDEPdKQumQfZlR
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-One other issue to consider.  We have RAID1 volumes with mismatch
-counts over a wide variety of hardware platforms and Linux kernels.
-In all cases the number of mismatched blocks are an exact multiple of
-128.  That doesn't seem to suggest some type of random corruption.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
 
-This issue may all be innocuous but we have about the worst situation
-we could have.  An issue which may be generating false positives for
-potential corruption.  Amplified by the fact that major distributions
-are generating what will be interpreted as warning e-mails about their
-existence.  So even if the problem is innocuous the list is guaranteed
-to be spammed with these reports let alone your inbox.... :-)
+iEYEARECAAYFAksBzRkACgkQShxCyD40xBJ0gQCfcuy2+9U33IdGYyPi6Xm555Ob
+27MAoK8AzPQf/0NLd99GptntwRC0JR3/
+=XGYE
+-----END PGP SIGNATURE-----
 
-Just a thought in moving forward.
-
-The 'check' option is primarily useful for its role in scrubbing RAID*
-volumes with an eye toward making sure that silent corruption
-scenarios don't arise which would thwart a resync.  Particularly since
-you implemented the ability to attempt a sector re-write to trigger
-block re-allocations.  This is a nice deterministic repair mechanism
-which has fixed problems for us on a number of occassions.
-
-I think what is needed is a 'scrub' directive which carries out this
-function without incrementing mismatch counts and the like.  That
-would leave a possibly enhanced 'check' command to report on
-mismatches and carry out any remedial action, if any, that the group
-can think of.
-
-If a scrub directive were to be implemented it would be beneficial to
-make it interruptible.  A 'halt' or similar directive would shutdown
-the scrub and latch the last block number which had been examined.
-That would allow a scrub to be resumed from that point in a subsequent
-session.
-
-With some of these large block devices it is difficult to get through
-an entire 'check/scrub' in whatever late night window is left after
-backups have run.  The above infra-structure would allow userspace to
-gate the checking into whatever windows are available for these types
-of activities.
-
-> NeilBrown
-
-Hope the above comments are helpful.
-
-Best wishes for a productive week.
-
-}-- End of excerpt from Neil Brown
-
-As always,
-Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
-4206 N. 19th Ave.           Specializing in information infra-structure
-Fargo, ND  58102            development.
-PH: 701-281-1686
-FAX: 701-281-3949           EMAIL: greg@enjellic.com
-------------------------------------------------------------------------------
-"When I am working on a problem I never think about beauty.  I only
- think about how to solve the problem.  But when I have finished, if
- the solution is not beautiful, I know it is wrong."
-                                -- Buckminster Fuller
+--w7PDEPdKQumQfZlR--
