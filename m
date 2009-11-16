@@ -1,83 +1,37 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: raid10 layout for 2xSSDs
-Date: Tue, 17 Nov 2009 00:19:25 +0300
-Message-ID: <70ed7c3e0911161319u5d6fd6c7vf9d41fa2da96801b@mail.gmail.com>
-References: <1258381745.31633.35.camel@localhost> <7bc80d500911160808o4ca4d335gdeeb50fff61b2149@mail.gmail.com>
-	<1258405373.31633.49.camel@localhost>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: best common practice in case of degraded array with read errors
+Date: Mon, 16 Nov 2009 22:32:30 +0100 (CET)
+Message-ID: <alpine.DEB.1.10.0911162224530.14550@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1258405373.31633.49.camel@localhost>
 Sender: linux-raid-owner@vger.kernel.org
-To: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Wouldn't you be getting the same data twice? or would the kernel
-request the half the data from one disk & the other from the other
-disk? (file1-> chunk1@disk1 & chunk2@disk2, chunk3@disk1 &
-chunk3@disk2)
 
-On Tue, Nov 17, 2009 at 12:02 AM, Kasper Sandberg
-<postmaster@metanurb.dk> wrote:
->
-> On Mon, 2009-11-16 at 08:08 -0800, Christopher Chen wrote:
-> > On Mon, Nov 16, 2009 at 6:29 AM, Kasper Sandberg <postmaster@metanu=
-rb.dk> wrote:
-> > > Hello.
-> > >
-> > > I've been wanting to create a raid10 array of two SSDs, and I am
-> > > currently considering the layout.
-> > >
-> > > As i understand it, near layout is similar to raid1, and will onl=
-y
-> > > provide a speedup if theres 2 reads at the same time, not a singl=
-e
-> > > sequential read.
-> > >
-> > > so the choice is really between far and offset. As i see it, the
-> > > difference is, that offset tries to reduce the seeking for writin=
-g
-> > > compared to far, but that if you dont consider the seeking penalt=
-y,
-> > > average sequential write speed across the entire array should be =
-roughly
-> > > the same with offset and far, with offset perhaps being a tad mor=
-e
-> > > "stable", is this a correct assumption? if it is, that would mean=
- offset
-> > > provides a higher "garantueed" speed than far, but with a lower m=
-aximum
-> > > speed.
-> >
-> > Do you plan to have more than two devices in the array? Raid 10 isn=
-'t
-> no
-> > magic. If you don't have more than do devices, I suppose your seek
-> > time might be half for reads (and higher for writes), but you won't=
- be
-> > able to do any striping.
-> >
-> > I'm a bit confused as to the number of people popping in recently
-> > wanting to run raid 10 on two disk "arrays".
-> to get the doubled singlestream sequential read performance..
-> >
-> > cc
-> >
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
+Hello.
 
+I have a 6 drive raid5. One of the drives failed on me (totally), and when 
+I replaced it (-add a new working drive) I had several sectors on another 
+drive give me UNC errors, which made md kick that drive as well, and left 
+me with a non-working array (with only 4 drives).
 
+What is the best common practice to handle this scenario? Right now I'm 
+dd_rescue:ing the drive with read errors to a (hopefully) working drive, 
+and then when I plan to --assemble --force the array to get 5 working 
+drives (with a few zero:ed sectors where I guess I'll have corrupted 
+files, hopefully no important metadata), and then I plan --add a 6th drive 
+and have everything sync up and be back to "normal".
 
---
-=C2=A0 =C2=A0 =C2=A0 Majed B.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Is there a better way? I don't really understand why kicking drives out of 
+the array when there aren't enough of them to keep going makes sense, is 
+there some rationale I'm missing?
+
+I've also heard recommendations to write to the bad sectors on the 
+existing drive, but that scares me as well in case I write to the wrong 
+place, which is why I went the dd_rescue route (I'm also hoping that it'll 
+retry a bit more and might be able to read the bad blocks...)
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
