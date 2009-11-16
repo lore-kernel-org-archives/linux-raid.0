@@ -1,35 +1,116 @@
-From: "Guy Watkins" <linux-raid@watkins-home.com>
-Subject: RE: mismatch_cnt again
-Date: Sun, 15 Nov 2009 17:29:17 -0500
-Message-ID: <DC9DEEF4919E420CB7CC2A160120D49A@m5>
-References: <87tyx6tpcb.fsf@frosties.localdomain> <4AF58B20.3000409@redhat.com> <87iqdlaujb.fsf@frosties.localdomain> <4AF74B61.6000102@rabbit.us> <20091109185632.GA2723@lazy.lzy> <73ebdcee169f46611d411755f9aaca5b.squirrel@neil.brown.name> <20091109215443.GA4143@lazy.lzy> <d99ca9481d2471073484c5d43d493b4d.squirrel@neil.brown.name> <20091110195222.GA2777@lazy.lzy> <19196.50782.113024.239657@notabene.brown> <20091115210542.GA6826@lazy.lzy>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091115210542.GA6826@lazy.lzy>
-Sender: linux-raid-owner@vger.kernel.org
-To: 'Piergiorgio Sartor' <piergiorgio.sartor@nexgo.de>, 'Neil Brown' <neilb@suse.de>
-Cc: 'Peter Rabbitson' <rabbit+list@rabbit.us>, 'Goswin von Brederlow' <goswin-v-b@web.de>, 'Doug Ledford' <dledford@redhat.com>, 'Michael Evans' <mjevans1983@gmail.com>, 'Eyal Lebedinsky' <eyal@eyal.emu.id.au>, 'linux-raid list' <linux-raid@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 08/12] md: move compat_ioctl handling into md.c
+Date: Mon, 16 Nov 2009 00:27:03 +0000
+Message-ID: <1258331227-1694-9-git-send-email-arnd@arndb.de>
+References: <1258331227-1694-1-git-send-email-arnd@arndb.de>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753219AbZKPA3j@vger.kernel.org>
+In-Reply-To: <1258331227-1694-1-git-send-email-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, Neil Brown <neilb@suse.de>, Andre Noll <maan@systemlinux.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have been following this issue some, and I think this could be a cause for
-silent corruption on RAID5 and RAID6.  I don't think this has been
-mentioned, if so, sorry.
+The RAID ioctls are only implemented in md.c, so the
+handling for them should also be moved there from
+fs/compat_ioctl.c.
 
-If data blocks can be changed in memory before written to disk, even if the
-data blocks that were changed were never needed again from the disk, the
-other related blocks in the stripe are at risk.  If the parity blocks are
-computed, then the 1 data block in memory is changed, then the blocks are
-written to disk, the parity would be wrong.  If a disk fails and is re-added
-or replaced, the data block in that stripe will be computed using the
-changed block giving a now corrupt value.  I am assuming the stripe has some
-data blocks that have needed data and at least 1 that was not needed, and
-that block that was not needed was changed before writing it to disk.  And
-the disk that failed did not have the block that had been changed.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Cc: Neil Brown <neilb@suse.de>
+Cc: Andre Noll <maan@systemlinux.org>
+Cc: linux-raid@vger.kernel.org
+---
+ drivers/md/md.c   |   23 +++++++++++++++++++++++
+ fs/compat_ioctl.c |   23 -----------------------
+ 2 files changed, 23 insertions(+), 23 deletions(-)
 
-I have a hard time conveying my thought in text.  I hope you understand me.
-
-Thanks for reading.
-
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index e64c971..e4eebaf 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -44,6 +44,7 @@
+ #include <linux/random.h>
+ #include <linux/reboot.h>
+ #include <linux/file.h>
++#include <linux/compat.h>
+ #include <linux/delay.h>
+ #include <linux/raid/md_p.h>
+ #include <linux/raid/md_u.h>
+@@ -5503,6 +5504,25 @@ done:
+ abort:
+ 	return err;
+ }
++#ifdef CONFIG_COMPAT
++static int md_compat_ioctl(struct block_device *bdev, fmode_t mode,
++		    unsigned int cmd, unsigned long arg)
++{
++	switch (cmd) {
++	case HOT_REMOVE_DISK:
++	case HOT_ADD_DISK:
++	case SET_DISK_FAULTY:
++	case SET_BITMAP_FILE:
++		/* These take in integer arg, do not convert */
++		break;
++	default:
++		arg = (unsigned long)compat_ptr(arg);
++		break;
++	}
++
++	return md_ioctl(bdev, mode, cmd, arg);
++}
++#endif /* CONFIG_COMPAT */
+ 
+ static int md_open(struct block_device *bdev, fmode_t mode)
+ {
+@@ -5568,6 +5588,9 @@ static const struct block_device_operations md_fops =
+ 	.open		= md_open,
+ 	.release	= md_release,
+ 	.ioctl		= md_ioctl,
++#ifdef CONFIG_COMPAT
++	.compat_ioctl	= md_compat_ioctl,
++#endif
+ 	.getgeo		= md_getgeo,
+ 	.media_changed	= md_media_changed,
+ 	.revalidate_disk= md_revalidate,
+diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
+index b419459..8adfc08 100644
+--- a/fs/compat_ioctl.c
++++ b/fs/compat_ioctl.c
+@@ -837,24 +837,6 @@ COMPATIBLE_IOCTL(FIGETBSZ)
+ /* 'X' - originally XFS but some now in the VFS */
+ COMPATIBLE_IOCTL(FIFREEZE)
+ COMPATIBLE_IOCTL(FITHAW)
+-/* RAID */
+-COMPATIBLE_IOCTL(RAID_VERSION)
+-COMPATIBLE_IOCTL(GET_ARRAY_INFO)
+-COMPATIBLE_IOCTL(GET_DISK_INFO)
+-COMPATIBLE_IOCTL(PRINT_RAID_DEBUG)
+-COMPATIBLE_IOCTL(RAID_AUTORUN)
+-COMPATIBLE_IOCTL(CLEAR_ARRAY)
+-COMPATIBLE_IOCTL(ADD_NEW_DISK)
+-COMPATIBLE_IOCTL(SET_ARRAY_INFO)
+-COMPATIBLE_IOCTL(SET_DISK_INFO)
+-COMPATIBLE_IOCTL(WRITE_RAID_INFO)
+-COMPATIBLE_IOCTL(UNPROTECT_ARRAY)
+-COMPATIBLE_IOCTL(PROTECT_ARRAY)
+-COMPATIBLE_IOCTL(RUN_ARRAY)
+-COMPATIBLE_IOCTL(STOP_ARRAY)
+-COMPATIBLE_IOCTL(STOP_ARRAY_RO)
+-COMPATIBLE_IOCTL(RESTART_ARRAY_RW)
+-COMPATIBLE_IOCTL(GET_BITMAP_FILE)
+ COMPATIBLE_IOCTL(KDGETKEYCODE)
+ COMPATIBLE_IOCTL(KDSETKEYCODE)
+ COMPATIBLE_IOCTL(KDGKBTYPE)
+@@ -1450,11 +1432,6 @@ static long do_ioctl_trans(int fd, unsigned int cmd,
+ 	case TCSBRKP:
+ 	case TIOCMIWAIT:
+ 	case TIOCSCTTY:
+-	/* RAID */
+-	case HOT_REMOVE_DISK:
+-	case HOT_ADD_DISK:
+-	case SET_DISK_FAULTY:
+-	case SET_BITMAP_FILE:
+ 	/* Big K */
+ 	case KDSIGACCEPT:
+ 	case KIOCSOUND:
+-- 
+1.6.3.3
