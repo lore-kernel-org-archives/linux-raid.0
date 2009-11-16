@@ -1,59 +1,74 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [PATCH 08/12] md: move compat_ioctl handling into md.c
-Date: Mon, 16 Nov 2009 09:39:59 +0100
-Message-ID: <20091116083959.GN5174@skl-net.de>
-References: <1258331227-1694-1-git-send-email-arnd@arndb.de> <1258331227-1694-9-git-send-email-arnd@arndb.de>
+From: <senthilkumar.muthukalai@wipro.com>
+Subject: RE: RAID 5 rebuild fails with power interruption.
+Date: Mon, 16 Nov 2009 16:00:38 +0530
+Message-ID: <8338BD137FF1B64EB341218BD702985E02AB90B8@BLR-EC-MBX03.wipro.com>
+References: <8338BD137FF1B64EB341218BD702985E02AB8FCF@BLR-EC-MBX03.wipro.com> <87y6m759o2.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="sKEQ01CzIzwqenDk"
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1258331227-1694-9-git-send-email-arnd@arndb.de>
+Content-class: urn:content-classes:message
+In-Reply-To: <87y6m759o2.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: goswin-v-b@web.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+We face this problem in our NAS product where we handle RAID5.
+In the below mentioned scenario, when RAID5 is rebuilding after adding a
+disk, we reset the power.
+Ideally when the system comes up, the RAID5 should have accepted the
+disk but not in our case.
+We get the 'kicking the non-fresh disk from array' message with the boot
+message.
+In our RAID init script we run 'mdadm -- Examine -- scan', followed by
+'mdadm --assemble'.
+Could you pls help me to understand why this disk is being thrown out?
+What could be the solution?
 
---sKEQ01CzIzwqenDk
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+-----Original Message-----
+From: goswin-v-b@web.de [mailto:goswin-v-b@web.de] 
+Sent: Monday, November 16, 2009 10:49 AM
+To: SenthilKumar Muthukalai (WT01 - Telecom Equipment)
+Cc: linux-raid@vger.kernel.org
+Subject: Re: RAID 5 rebuild fails with power interruption.
 
-On 00:27, Arnd Bergmann wrote:
-> The RAID ioctls are only implemented in md.c, so the
-> handling for them should also be moved there from
-> fs/compat_ioctl.c.
->=20
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Cc: Neil Brown <neilb@suse.de>
-> Cc: Andre Noll <maan@systemlinux.org>
-> Cc: linux-raid@vger.kernel.org
-> ---
->  drivers/md/md.c   |   23 +++++++++++++++++++++++
->  fs/compat_ioctl.c |   23 -----------------------
->  2 files changed, 23 insertions(+), 23 deletions(-)
+<senthilkumar.muthukalai@wipro.com> writes:
 
-Looks good to me.
+> Adding a subject line...
+>
+> -----Original Message-----
+> From: SenthilKumar Muthukalai (WT01 - Telecom Equipment) 
+> Sent: Monday, November 16, 2009 9:14 AM
+> To: linux-raid@vger.kernel.org
+> Subject: 
+>
+> Hi All,
+>
+> Could you pls help me out with the below problem?
+>
+> 1. Created a RAID5 with 3 disks.
+> 2. Initial rebuild done.
+> 3. Pulled out a disk from the array.
+> 4. The array got degraded.
+> 5. Added the disk back to the array with 'assemble' command.
+> 6. The disk was successfully added and the array started rebuilding
+> again.
+> 7. While rebuilding, reset the power to the NAS box.
+> 8. When the NAS box boot up, the RAID was in degraded with the added
+> disk thrown out.
+> 9. The boot messages say 'kicking out of the non-fresh disk from the
+> array'.
+>
+> We tried '--force' option with the 'assemble' command but no success.
+>
+> Thanks,
+> Senthil M
 
-Acked-by: Andre Noll <maan@systemlinux.org>
+mdadm --add /dev/md0 /dev/sdc1
 
-Thanks
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
+But normaly it should just continue the resync.
 
---sKEQ01CzIzwqenDk
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFLAQ/fWto1QDEAkw8RAuL0AJ4ir4+rzAuas+GN7EfU6HkA+/zIbACcCEJD
-IDwMva4sSBQMIGEo1VgFroQ=
-=FNiY
------END PGP SIGNATURE-----
-
---sKEQ01CzIzwqenDk--
+MfG
+        Goswin
