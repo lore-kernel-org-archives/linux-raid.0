@@ -1,94 +1,51 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: best common practice in case of degraded array with read errors
-Date: Mon, 16 Nov 2009 22:07:22 +0000
-Message-ID: <20091116220722.GC14699@cthulhu.home.robinhill.me.uk>
-References: <alpine.DEB.1.10.0911162224530.14550@uplift.swm.pp.se>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: best common practice in case of degraded array with read
+ errors
+Date: Mon, 16 Nov 2009 23:15:45 +0100 (CET)
+Message-ID: <alpine.DEB.1.10.0911162309000.14550@uplift.swm.pp.se>
+References: <alpine.DEB.1.10.0911162224530.14550@uplift.swm.pp.se> <20091116220722.GC14699@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="w7PDEPdKQumQfZlR"
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.1.10.0911162224530.14550@uplift.swm.pp.se>
+In-Reply-To: <20091116220722.GC14699@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Robin Hill <robin@robinhill.me.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Mon, 16 Nov 2009, Robin Hill wrote:
 
---w7PDEPdKQumQfZlR
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> Are you running any regular array checks?  These should verify the 
+> readability of the drives (and accuracy of the checksums).  This type of 
+> failure's also why I've switched to RAID6 for most of my arrays.
 
-On Mon Nov 16, 2009 at 10:32:30PM +0100, Mikael Abrahamsson wrote:
+Yes, I'm running those checks (ubuntu default) and the array was fine a 
+week ago. I learnt that a few years back how important that is.
 
->=20
-> Hello.
->=20
-> I have a 6 drive raid5. One of the drives failed on me (totally), and whe=
-n=20
-> I replaced it (-add a new working drive) I had several sectors on another=
-=20
-> drive give me UNC errors, which made md kick that drive as well, and left=
-=20
-> me with a non-working array (with only 4 drives).
->=20
-Are you running any regular array checks?  These should verify the
-readability of the drives (and accuracy of the checksums).  This type of
-failure's also why I've switched to RAID6 for most of my arrays.
+> Technically, the best practice is probably to recreate the array from
+> scratch (replacing any failed drives) and restore from backup.  Short of
+> that, your approach would seem to be the best option.  I've done this in
+> the past, though I ended up restoring pretty much everything from backup
+> anyway (as I had no other way of verifying the integrity of the data).
 
-> What is the best common practice to handle this scenario? Right now I'm=
-=20
-> dd_rescue:ing the drive with read errors to a (hopefully) working drive,=
-=20
-> and then when I plan to --assemble --force the array to get 5 working=20
-> drives (with a few zero:ed sectors where I guess I'll have corrupted=20
-> files, hopefully no important metadata), and then I plan --add a 6th driv=
-e=20
-> and have everything sync up and be back to "normal".
->=20
-> Is there a better way? I don't really understand why kicking drives out o=
-f=20
-> the array when there aren't enough of them to keep going makes sense, is=
-=20
-> there some rationale I'm missing?
->=20
-Technically, the best practice is probably to recreate the array from
-scratch (replacing any failed drives) and restore from backup.  Short of
-that, your approach would seem to be the best option.  I've done this in
-the past, though I ended up restoring pretty much everything from backup
-anyway (as I had no other way of verifying the integrity of the data).
+Well, I don't really have a full backup and integrity of the files isn't a 
+real priority, so if I would have corrupted a few files it doesn't matter.
 
-> I've also heard recommendations to write to the bad sectors on the=20
-> existing drive, but that scares me as well in case I write to the wrong=
-=20
-> place, which is why I went the dd_rescue route (I'm also hoping that it'l=
-l=20
-> retry a bit more and might be able to read the bad blocks...)
->=20
-I'd leave that to later.  Once you've imaged the disk you can try
-SMART tests, read/write tests, etc. to verify whether there's actually a
-physical problem or not (and how much of one - a bad block or two might
-be acceptable, but a lot of them would point to a failing disk).  Until
-then you're better putting as little trust in the disk as possible.
+> I'd leave that to later.  Once you've imaged the disk you can try SMART 
+> tests, read/write tests, etc. to verify whether there's actually a 
+> physical problem or not (and how much of one - a bad block or two might 
+> be acceptable, but a lot of them would point to a failing disk).  Until 
+> then you're better putting as little trust in the disk as possible.
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+There is a problem with the drive, it's been having bad blocks before 
+which has been remapped (during the check phase), I was going to get it 
+replaced on warranty and I even purchased a replacement but before I got 
+around to all this, I ended up with a total of 2 completey dead drives and 
+one with errors.
 
---w7PDEPdKQumQfZlR
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+I'm seriously considering going RAID6, been pondering it for quite a 
+while, only thing that kept me back was that I wanted to migrate to RAID6 
+but the code wasn't really ready (as has been discussed here before).
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEARECAAYFAksBzRkACgkQShxCyD40xBJ0gQCfcuy2+9U33IdGYyPi6Xm555Ob
-27MAoK8AzPQf/0NLd99GptntwRC0JR3/
-=XGYE
------END PGP SIGNATURE-----
-
---w7PDEPdKQumQfZlR--
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
