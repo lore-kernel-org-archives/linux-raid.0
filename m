@@ -1,116 +1,121 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 08/12] md: move compat_ioctl handling into md.c
-Date: Mon, 16 Nov 2009 00:27:03 +0000
-Message-ID: <1258331227-1694-9-git-send-email-arnd@arndb.de>
-References: <1258331227-1694-1-git-send-email-arnd@arndb.de>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753219AbZKPA3j@vger.kernel.org>
-In-Reply-To: <1258331227-1694-1-git-send-email-arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [uml-user] [PATCH 00/12] move compat_ioctl handling into drivers
+Date: Mon, 16 Nov 2009 00:26:55 +0000
+Message-ID: <1258331227-1694-1-git-send-email-arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <user-mode-linux-user-bounces@lists.sourceforge.net>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/user-mode-linux-user>,
+	<mailto:user-mode-linux-user-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=user-mode-linux-user>
+List-Post: <mailto:user-mode-linux-user@lists.sourceforge.net>
+List-Help: <mailto:user-mode-linux-user-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/user-mode-linux-user>,
+	<mailto:user-mode-linux-user-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: user-mode-linux-user-bounces@lists.sourceforge.net
 To: linux-kernel@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, Neil Brown <neilb@suse.de>, Andre Noll <maan@systemlinux.org>, linux-raid@vger.kernel.org
+Cc: linux-usb@vger.kernel.org, user-mode-linux-user@lists.sourceforge.net, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Paul Clements <Paul.Clements@steeleye.com>, Andre Noll <maan@systemlinux.org>, Pavel Machek <pavel@suse.cz>, linux-i2c@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Jan Blunck <jblunck@suse.de>, Ian Kent <raven@themaw.net>, Nick Piggin <npiggin@suse.de>, user-mode-linux-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>, Alon Bar-Lev <alon.barlev@gmail.com>, Alan Stern <stern@rowland.harvard.edu>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Doug Gilbert <dgilbert@interlog.com>, David Vrabel <david.vrabel@csr.com>, Alexey Dobriyan <adobriyan@gmail.com>, Arnd Bergmann <arnd@arndb.de>, Jeff Dike <jdike@addtoit.com>, Oliver Neukum <oliver@neukum.org>, linux-raid@vger.kernel.org, Tejun
 List-Id: linux-raid.ids
 
-The RAID ioctls are only implemented in md.c, so the
-handling for them should also be moved there from
-fs/compat_ioctl.c.
+This is the second series of patches on compat_ioctl handling,
+moving compat handlers into more drivers. Most of these
+patches consist on a part that adds a compat_ioctl method
+in one driver and another part removing the respective
+section from fs/compat_ioctl.c. The fs/compat_ioctl.c
+portion depends on other patches[1], but the driver code can
+be applied independently.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Cc: Neil Brown <neilb@suse.de>
+If some of you feel responsible for the code I patched, please
+look at my changes and if they are ok, either take them into
+your tree or give me an Acked-by for them.
+
+I have tested the patches for sg, usbdevfs and autofs, which
+was easily done in qemu, but I'm lacking test cases for
+most of the other ones.
+
+	Arnd <><
+
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Cc: Alexey Dobriyan <adobriyan@gmail.com>
+Cc: Alon Bar-Lev <alon.barlev@gmail.com>
+Cc: Al Viro <viro@zeniv.linux.org.uk>
 Cc: Andre Noll <maan@systemlinux.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: autofs@linux.kernel.org
+Cc: "Ben Dooks (embedded platforms)" <ben-linux@fluff.org>
+Cc: David S. Miller <davem@davemloft.net>
+Cc: David Vrabel <david.vrabel@csr.com>
+Cc: Doug Gilbert <dgilbert@interlog.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Greg Kroah-Hartman <gregkh@suse.de>
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: Ian Kent <raven@themaw.net>
+Cc: James E.J. Bottomley <James.Bottomley@suse.de>
+Cc: Jan Blunck <jblunck@suse.de>
+Cc: "Jean Delvare (PC drivers, core)" <khali@linux-fr.org>
+Cc: Jeff Dike <jdike@addtoit.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>
+Cc: Kay Sievers <kay.sievers@vrfy.org>
+Cc: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
+Cc: linux-i2c@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 Cc: linux-raid@vger.kernel.org
----
- drivers/md/md.c   |   23 +++++++++++++++++++++++
- fs/compat_ioctl.c |   23 -----------------------
- 2 files changed, 23 insertions(+), 23 deletions(-)
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-usb@vger.kernel.org
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Neil Brown <neilb@suse.de>
+Cc: Nick Piggin <npiggin@suse.de>
+Cc: Oliver Neukum <oliver@neukum.org>
+Cc: Paul Clements <Paul.Clements@steeleye.com>
+Cc: Pavel Machek <pavel@suse.cz>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: user-mode-linux-devel@lists.sourceforge.net
+Cc: user-mode-linux-user@lists.sourceforge.net
+Cc: Wolfram Sang <w.sang@pengutronix.de>
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index e64c971..e4eebaf 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -44,6 +44,7 @@
- #include <linux/random.h>
- #include <linux/reboot.h>
- #include <linux/file.h>
-+#include <linux/compat.h>
- #include <linux/delay.h>
- #include <linux/raid/md_p.h>
- #include <linux/raid/md_u.h>
-@@ -5503,6 +5504,25 @@ done:
- abort:
- 	return err;
- }
-+#ifdef CONFIG_COMPAT
-+static int md_compat_ioctl(struct block_device *bdev, fmode_t mode,
-+		    unsigned int cmd, unsigned long arg)
-+{
-+	switch (cmd) {
-+	case HOT_REMOVE_DISK:
-+	case HOT_ADD_DISK:
-+	case SET_DISK_FAULTY:
-+	case SET_BITMAP_FILE:
-+		/* These take in integer arg, do not convert */
-+		break;
-+	default:
-+		arg = (unsigned long)compat_ptr(arg);
-+		break;
-+	}
-+
-+	return md_ioctl(bdev, mode, cmd, arg);
-+}
-+#endif /* CONFIG_COMPAT */
- 
- static int md_open(struct block_device *bdev, fmode_t mode)
- {
-@@ -5568,6 +5588,9 @@ static const struct block_device_operations md_fops =
- 	.open		= md_open,
- 	.release	= md_release,
- 	.ioctl		= md_ioctl,
-+#ifdef CONFIG_COMPAT
-+	.compat_ioctl	= md_compat_ioctl,
-+#endif
- 	.getgeo		= md_getgeo,
- 	.media_changed	= md_media_changed,
- 	.revalidate_disk= md_revalidate,
-diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
-index b419459..8adfc08 100644
---- a/fs/compat_ioctl.c
-+++ b/fs/compat_ioctl.c
-@@ -837,24 +837,6 @@ COMPATIBLE_IOCTL(FIGETBSZ)
- /* 'X' - originally XFS but some now in the VFS */
- COMPATIBLE_IOCTL(FIFREEZE)
- COMPATIBLE_IOCTL(FITHAW)
--/* RAID */
--COMPATIBLE_IOCTL(RAID_VERSION)
--COMPATIBLE_IOCTL(GET_ARRAY_INFO)
--COMPATIBLE_IOCTL(GET_DISK_INFO)
--COMPATIBLE_IOCTL(PRINT_RAID_DEBUG)
--COMPATIBLE_IOCTL(RAID_AUTORUN)
--COMPATIBLE_IOCTL(CLEAR_ARRAY)
--COMPATIBLE_IOCTL(ADD_NEW_DISK)
--COMPATIBLE_IOCTL(SET_ARRAY_INFO)
--COMPATIBLE_IOCTL(SET_DISK_INFO)
--COMPATIBLE_IOCTL(WRITE_RAID_INFO)
--COMPATIBLE_IOCTL(UNPROTECT_ARRAY)
--COMPATIBLE_IOCTL(PROTECT_ARRAY)
--COMPATIBLE_IOCTL(RUN_ARRAY)
--COMPATIBLE_IOCTL(STOP_ARRAY)
--COMPATIBLE_IOCTL(STOP_ARRAY_RO)
--COMPATIBLE_IOCTL(RESTART_ARRAY_RW)
--COMPATIBLE_IOCTL(GET_BITMAP_FILE)
- COMPATIBLE_IOCTL(KDGETKEYCODE)
- COMPATIBLE_IOCTL(KDSETKEYCODE)
- COMPATIBLE_IOCTL(KDGKBTYPE)
-@@ -1450,11 +1432,6 @@ static long do_ioctl_trans(int fd, unsigned int cmd,
- 	case TCSBRKP:
- 	case TIOCMIWAIT:
- 	case TIOCSCTTY:
--	/* RAID */
--	case HOT_REMOVE_DISK:
--	case HOT_ADD_DISK:
--	case SET_DISK_FAULTY:
--	case SET_BITMAP_FILE:
- 	/* Big K */
- 	case KDSIGACCEPT:
- 	case KIOCSOUND:
--- 
-1.6.3.3
+Arnd Bergmann (12):
+  arch/um: handle compat_ioctl in tty line driver
+  scsi/sg: move compat_ioctl handling into sg driver
+  autofs/autofs4: move compat_ioctl handling into fs
+  raw: partly fix compat_ioctl handling on non-x86
+  nbd: add compat_ioctl method
+  smbfs: do compat_ioctl handling in place
+  i2cdev: move compat_ioctl handling into driver
+  md: move compat_ioctl handling into md.c
+  lp: move compat_ioctl handling into lp.c
+  usbdevfs: move compat_ioctl handling to devio.c
+  hamradio/mkiss: fix typo in compat_ioctl
+  compat_ioctl: remove unused handlers
+
+ arch/um/drivers/line.c          |    6 +
+ arch/um/drivers/ssl.c           |    1 +
+ arch/um/drivers/stdio_console.c |    1 +
+ arch/um/include/shared/line.h   |    2 +
+ drivers/block/nbd.c             |    7 +-
+ drivers/char/lp.c               |  115 +++++++--
+ drivers/char/raw.c              |  157 ++++++++++---
+ drivers/i2c/i2c-dev.c           |  117 +++++++++
+ drivers/md/md.c                 |   23 ++
+ drivers/net/hamradio/mkiss.c    |    2 +-
+ drivers/scsi/sg.c               |  182 ++++++++++++++-
+ drivers/usb/core/devio.c        |  110 ++++++++-
+ fs/autofs/root.c                |   67 +++++-
+ fs/autofs4/root.c               |   69 +++++-
+ fs/compat_ioctl.c               |  504 +--------------------------------------
+ fs/smbfs/dir.c                  |    5 +-
+ fs/smbfs/file.c                 |    3 +-
+ fs/smbfs/ioctl.c                |   48 ++++-
+ fs/smbfs/proto.h                |    3 +-
+ include/linux/auto_fs.h         |    1 +
+ include/linux/usbdevice_fs.h    |   26 ++
+ kernel/trace/blktrace.c         |    1 +
+ 22 files changed, 856 insertions(+), 594 deletions(-)
+
+[1] http://patchwork.kernel.org/bundle/arnd/compat-ioctl-cleanup/?state=*
+
+------------------------------------------------------------------------------
+Let Crystal Reports handle the reporting - Free Crystal Reports 2008 30-Day 
+trial. Simplify your report design, integration and deployment - and focus on 
+what you do best, core application coding. Discover what's new with
+Crystal Reports now.  http://p.sf.net/sfu/bobj-july
