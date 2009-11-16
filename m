@@ -1,69 +1,59 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: mismatch_cnt again
-Date: Mon, 16 Nov 2009 12:37:47 +1100
-Message-ID: <20091116123747.29592212@notabene.brown>
-References: <87tyx6tpcb.fsf@frosties.localdomain>
-	<4AF58B20.3000409@redhat.com>
-	<87iqdlaujb.fsf@frosties.localdomain>
-	<4AF74B61.6000102@rabbit.us>
-	<20091109185632.GA2723@lazy.lzy>
-	<73ebdcee169f46611d411755f9aaca5b.squirrel@neil.brown.name>
-	<20091109215443.GA4143@lazy.lzy>
-	<d99ca9481d2471073484c5d43d493b4d.squirrel@neil.brown.name>
-	<20091110195222.GA2777@lazy.lzy>
-	<19196.50782.113024.239657@notabene.brown>
-	<20091115210542.GA6826@lazy.lzy>
-	<DC9DEEF4919E420CB7CC2A160120D49A@m5>
+Subject: Re: mdadm 3.0.3 bug report
+Date: Mon, 16 Nov 2009 13:39:52 +1100
+Message-ID: <19200.47992.724204.514237@notabene.brown>
+References: <cccedfc60911090743m77b26b7bx98bf5d18b7e96311@mail.gmail.com>
+	<e9c3a7c20911091647r4efae6ear9938cb3388775abe@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <DC9DEEF4919E420CB7CC2A160120D49A@m5>
+In-Reply-To: message from Dan Williams on Monday November 9
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy Watkins <linux-raid@watkins-home.com>
-Cc: 'Piergiorgio Sartor' <piergiorgio.sartor@nexgo.de>, 'Peter Rabbitson' <rabbit+list@rabbit.us>, 'Goswin von Brederlow' <goswin-v-b@web.de>, 'Doug Ledford' <dledford@redhat.com>, 'Michael Evans' <mjevans1983@gmail.com>, 'Eyal Lebedinsky' <eyal@eyal.emu.id.au>, 'linux-raid list' <linux-raid@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jon Nelson <jnelson-linux-raid@jamponi.net>, LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, 15 Nov 2009 17:29:17 -0500
-"Guy Watkins" <linux-raid@watkins-home.com> wrote:
+On Monday November 9, dan.j.williams@intel.com wrote:
+> On Mon, Nov 9, 2009 at 8:43 AM, Jon Nelson
+> <jnelson-linux-raid@jamponi.net> wrote:
+> > I tried to create a raid thusly:
+> > mdadm --create /dev/md3 --level=10 --layout=f2 --metadata=ddf
+> > --raid-devices=2 --assume-clean /dev/sdc1 missing
+> > and while I got a non-zero exit code (1), I did not get an error
+> > message or any other indication of failure.
+> >
+> > The misfeature is that I expected some sort of message.
 
-> I have been following this issue some, and I think this could be a
-> cause for silent corruption on RAID5 and RAID6.  I don't think this
-> has been mentioned, if so, sorry.
+Thanks for the report.  mdadm-3.1.1 will be more verbose.
 
-RAID1/RAID10 are very different from RAID5/RAID6
+In that particular case:
 
-RAID1/RAID10 can get 'mismatches' due to the particular behaviour
-of swap or filesystems.  However this doesn't matter (the blocks that
-are inconsistent are of no interest to the filesystem).
+mdadm: DDF does not support level 10 arrays
 
-RAID5/RAID6 is careful not to allow any mismatches to creep in
-due to any particular filesystem or swap activity.  This is because,
-as you say, those mismatches could be significant to the RAID
-algorithm even though they might be of no interest to the filesystem.
+If you try the same with --level=5
 
-mismatches can only occur in a RAID5/RAID6 due to a software bug
-in the md/raid code, or due to 'hardware errors' (including of course
-drive firmware errors etc).
+mdadm: ddf: Cannot create this array on device /dev/sdc1 - a container is required.
+
+
+> 
+> Yes, there should be a message that points out that the external
+> metadata formats ('ddf' and 'imsm') require a container to be created
+> first and then raid volumes are carved out of that container.  The
+> mdmon man page has a little blurb on containers.  The 'missing' option
+> is currently not supported for creating containers so you would need
+> to modify this to something like:
+
+I really should do something about supporting the 'missing' option,
+and in general being able to specify which devices in the container
+should be used....
+
+> 
+> mdadm --create /dev/md/ddf -e ddf /dev/sdc /dev/sdX -n 2
+> mdadm --create /dev/md/volume0 /dev/md/ddf --level=10 --layout=f2
+
+Except that ddf doesn't know "RAID10", it knows "RAID1E" with layouts
+of "ADJACENT" (like n2) or OFFSET (like o20).
+But mdadm/ddf doesn't handle RAID1E yet - I guess it should.
 
 NeilBrown
-
-
-> 
-> If data blocks can be changed in memory before written to disk, even
-> if the data blocks that were changed were never needed again from the
-> disk, the other related blocks in the stripe are at risk.  If the
-> parity blocks are computed, then the 1 data block in memory is
-> changed, then the blocks are written to disk, the parity would be
-> wrong.  If a disk fails and is re-added or replaced, the data block
-> in that stripe will be computed using the changed block giving a now
-> corrupt value.  I am assuming the stripe has some data blocks that
-> have needed data and at least 1 that was not needed, and that block
-> that was not needed was changed before writing it to disk.  And the
-> disk that failed did not have the block that had been changed.
-> 
-> I have a hard time conveying my thought in text.  I hope you
-> understand me.
-> 
-> Thanks for reading.
-
