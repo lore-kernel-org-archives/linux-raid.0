@@ -1,17 +1,24 @@
 From: <senthilkumar.muthukalai@wipro.com>
-Subject: (unknown)
-Date: Mon, 16 Nov 2009 09:14:11 +0530
-Message-ID: <8338BD137FF1B64EB341218BD702985E02AB8FCB@BLR-EC-MBX03.wipro.com>
+Subject: RAID 5 rebuild fails with power interruption.
+Date: Mon, 16 Nov 2009 09:26:15 +0530
+Message-ID: <8338BD137FF1B64EB341218BD702985E02AB8FCF@BLR-EC-MBX03.wipro.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="US-ASCII"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-class: urn:content-classes:message
-Subject: 
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+Adding a subject line...
+
+-----Original Message-----
+From: SenthilKumar Muthukalai (WT01 - Telecom Equipment) 
+Sent: Monday, November 16, 2009 9:14 AM
+To: linux-raid@vger.kernel.org
+Subject: 
 
 Hi All,
 
@@ -31,8 +38,6 @@ disk thrown out.
 array'.
 
 We tried '--force' option with the 'assemble' command but no success.
-
-Could you pls share your thought on this?
 
 Thanks,
 Senthil M
