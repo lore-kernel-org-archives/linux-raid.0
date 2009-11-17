@@ -1,53 +1,117 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: mismatch_cnt again
-Date: Tue, 17 Nov 2009 00:22:07 -0500
-Message-ID: <yq1d43hd8u8.fsf@sermon.lab.mkp.net>
-References: <4AF4C247.6050303@eyal.emu.id.au> <4AF4D323.6020108@panix.com>
-	<4AF5268D.60900@eyal.emu.id.au>
-	<4877c76c0911070008m789507f8h799d419287740ca5@mail.gmail.com>
-	<87tyx6tpcb.fsf@frosties.localdomain> <4AF58B20.3000409@redhat.com>
-	<87iqdlaujb.fsf@frosties.localdomain> <4AF74B61.6000102@rabbit.us>
-	<20091109185632.GA2723@lazy.lzy>
-	<73ebdcee169f46611d411755f9aaca5b.squirrel@neil.brown.name>
-	<20091109215443.GA4143@lazy.lzy>
-	<d99ca9481d2471073484c5d43d493b4d.squirrel@neil.brown.name>
-	<4AF92DBD.5010102@rabbit.us> <yq1tyx2o4td.fsf@sermon.lab.mkp.net>
-	<4AFC8EC5.6060400@tmr.com> <yq1my2ql56a.fsf@sermon.lab.mkp.net>
-	<87lji92aii.fsf@frosties.localdomain>
+From: <senthilkumar.muthukalai@wipro.com>
+Subject: RE: RAID 5 rebuild fails with power interruption.
+Date: Tue, 17 Nov 2009 12:00:46 +0530
+Message-ID: <8338BD137FF1B64EB341218BD702985E02AB9233@BLR-EC-MBX03.wipro.com>
+References: <8338BD137FF1B64EB341218BD702985E02AB8FCF@BLR-EC-MBX03.wipro.com><87y6m759o2.fsf@frosties.localdomain><8338BD137FF1B64EB341218BD702985E02AB90B8@BLR-EC-MBX03.wipro.com> <20091117094720.4c8736d7@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87lji92aii.fsf@frosties.localdomain> (Goswin von Brederlow's
-	message of "Sat, 14 Nov 2009 20:04:37 +0100")
+Content-class: urn:content-classes:message
+In-Reply-To: <20091117094720.4c8736d7@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Bill Davidsen <davidsen@tmr.com>, Peter Rabbitson <rabbit+list@rabbit.us>, NeilBrown <neilb@suse.de>, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Doug Ledford <dledford@redhat.com>, Michael Evans <mjevans1983@gmail.com>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, linux-raid list <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: goswin-v-b@web.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Goswin" == Goswin von Brederlow <goswin-v-b@web.de> writes:
+Hi Neil,
 
->> I agree that making MD RAID1 do a copy would be a quick fix.  But I
->> don't see any reason to encourage what is essentially sloppy behavior
->> at the top of the stack.  And then what if you stack MD/DM devices?
->> Do each layer do a copy?  I think that gets murky pretty quickly.
+We use metadata 1.2.
 
-Goswin> Maybe as a quick debug the raid layer should make the page
-Goswin> read-only and then watch what fails to write to it.
+Thanks,
+Senthil M
 
-That's essentially what the fs-level debug patches do.  The advantage is
-that you get a bit more information about the call path when you do it
-up there.
+-----Original Message-----
+From: Neil Brown [mailto:neilb@suse.de] 
+Sent: Tuesday, November 17, 2009 4:17 AM
+To: SenthilKumar Muthukalai (WT01 - Telecom Equipment)
+Cc: goswin-v-b@web.de; linux-raid@vger.kernel.org
+Subject: Re: RAID 5 rebuild fails with power interruption.
+
+On Mon, 16 Nov 2009 16:00:38 +0530
+<senthilkumar.muthukalai@wipro.com> wrote:
+
+> We face this problem in our NAS product where we handle RAID5.
+> In the below mentioned scenario, when RAID5 is rebuilding after
+> adding a disk, we reset the power.
+> Ideally when the system comes up, the RAID5 should have accepted the
+> disk but not in our case.
+> We get the 'kicking the non-fresh disk from array' message with the
+> boot message.
+> In our RAID init script we run 'mdadm -- Examine -- scan', followed by
+> 'mdadm --assemble'.
+> Could you pls help me to understand why this disk is being thrown out?
+
+It is because the metadata being used (v0.90) does not have the ability
+to record that a device is partially recoverred.   It can only record
+that a device is either a full member of the array, or is not a member
+of the array.  So until the recovery completes, the metadata only
+records that the device is not a member of the array.  So when you
+restart, you find that the device is not a member of the array.
 
 
-Goswin> Maybe a flag somewhere saying if the data is safe from writes or
-Goswin> not. Default would be unsafe and md copies. A filesystem that
-Goswin> works "right" sets the safe flag as would md after copying. That
-Goswin> way anything lower in the stack (like another md) has the flag
-Goswin> set.
+> What could be the solution?
 
-I actually have a patch kicking around in my guilt stack that implements
-such a flag.  Mostly because it appears nobody is interested in fixing
-ext2.
+Use 1.x metadata.  e.g. add
+   --metadata=1.1
+to your --create command.
+1.x metadata is able to record that a device is only partially
+recovered.  So when the array is restarted the device will be included
+and recovery will continue.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+NeilBrown
+
+
+> 
+> -----Original Message-----
+> From: goswin-v-b@web.de [mailto:goswin-v-b@web.de] 
+> Sent: Monday, November 16, 2009 10:49 AM
+> To: SenthilKumar Muthukalai (WT01 - Telecom Equipment)
+> Cc: linux-raid@vger.kernel.org
+> Subject: Re: RAID 5 rebuild fails with power interruption.
+> 
+> <senthilkumar.muthukalai@wipro.com> writes:
+> 
+> > Adding a subject line...
+> >
+> > -----Original Message-----
+> > From: SenthilKumar Muthukalai (WT01 - Telecom Equipment) 
+> > Sent: Monday, November 16, 2009 9:14 AM
+> > To: linux-raid@vger.kernel.org
+> > Subject: 
+> >
+> > Hi All,
+> >
+> > Could you pls help me out with the below problem?
+> >
+> > 1. Created a RAID5 with 3 disks.
+> > 2. Initial rebuild done.
+> > 3. Pulled out a disk from the array.
+> > 4. The array got degraded.
+> > 5. Added the disk back to the array with 'assemble' command.
+> > 6. The disk was successfully added and the array started rebuilding
+> > again.
+> > 7. While rebuilding, reset the power to the NAS box.
+> > 8. When the NAS box boot up, the RAID was in degraded with the added
+> > disk thrown out.
+> > 9. The boot messages say 'kicking out of the non-fresh disk from the
+> > array'.
+> >
+> > We tried '--force' option with the 'assemble' command but no
+> > success.
+> >
+> > Thanks,
+> > Senthil M
+> 
+> mdadm --add /dev/md0 /dev/sdc1
+> 
+> But normaly it should just continue the resync.
+> 
+> MfG
+>         Goswin
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"
+> in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
