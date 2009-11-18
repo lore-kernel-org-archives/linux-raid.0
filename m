@@ -1,71 +1,69 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: User space RAID
-Date: Wed, 18 Nov 2009 00:14:54 +0100
-Message-ID: <874oosn3pt.fsf@frosties.localdomain>
-References: <20091117193650.GA2748@lazy.lzy>
+From: Erwan MAS <erwan@mas.nom.fr>
+Subject: Raid10 layout
+Date: Wed, 18 Nov 2009 14:38:03 +0100
+Message-ID: <20091118133803.GH1863@voyageur.mas.nom.fr>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091117193650.GA2748@lazy.lzy> (Piergiorgio Sartor's message of
-	"Tue, 17 Nov 2009 20:37:23 +0100")
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Piergiorgio Sartor <piergiorgio.sartor@nexgo.de> writes:
+Hello ,
 
-> Hi all,
->
-> question for the experts.
->
-> It would be possible, excluding performances, to
-> build an user-space RAID system?
->
-> I mean, something like fuse does, with a user space
-> daemon to perform the math, especially for RAID-6,
-> and the rest, together with a small kernel module.
->
-> Or there are technical limitations which make this
-> approach impossible with the current architecture?
->
-> Just curious,
->
-> bye,
+I use md rai10 in 3 configurations :
+- with 2 devices in f2 layout
+- with 3 devices in f2 layout
+- with 4 devices in f2 layout
 
-You can use fuse to create a filesystem containing just one file,
-which represents your user-raid, and mount that loopback. Since you
-can already do it it can't be impossible. It just isn't optimal.
+With the help of ( http://en.wikipedia.org/wiki/Non-standard_RAID_levels#Linux_MD_RAID_10 ) , 
+i had validated the layout for 2 / 3 devices .
+Aka i read the block on the md device an i compare to each block on each physical devices .
+
+With my configuration with 4 devices , the comparaison does not work .
+
+Can someone explain me how to calculate the position of each chunk ?
 
 
-If you are truely interested then look at fuse and cuse and create a
-buse along the same lines. I have a few features I would like to see:
+My output of my md device :
 
-1) zero-copy (with splice()?)
-   Currently fuse calls read() to get the data for a write
-   request. This copies the data into the supplied buffer.
-   It would be better if one could splice() the data into a pipe and
-   then splice it back onto the actual device/file the data resides
-   on.
+/dev/md2:
+        Version : 00.90.03
+  Creation Time : Sun Jul  5 17:08:11 2009
+     Raid Level : raid10
+     Array Size : 527348736 (502.92 GiB 540.01 GB)
+  Used Dev Size : 263674624 (251.46 GiB 270.00 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 2
+    Persistence : Superblock is persistent
 
-2) async crypto api support
-   Some hardware has support for XOR or AES. The kernel has a nice API
-   for this supporting both software and hardware drivers. It would be
-   nice if one could interface with that API from userspace. For good
-   performance this should be zero-copy again. So one would just
-   splice the data into it and splice the result out of it.
+    Update Time : Wed Nov 18 14:35:41 2009
+          State : clean
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
 
-3) barrier support
-   Currently (last I checked) the loopback device has no barrier
-   support and I'm not sure how fuse should act on barriers.
-   A buse [Block device in User SpacE] (like fuse and cuse) should
-   have a callback for barriers and probably not use the loopback hack.
+         Layout : near=1, far=2
+     Chunk Size : 256K
+
+           UUID : e383a648:2d866213:bef1cd83:48bb11be
+         Events : 0.7603331
+
+    Number   Major   Minor   RaidDevice State
+       0       8        3        0      active sync   /dev/sda3
+       1       8       35        1      active sync   /dev/sdc3
+       2       8       19        2      active sync   /dev/sdb3
+       3       8       51        3      active sync   /dev/sdd3
 
 
-4) block ioctl support
-   Fuse has a callback for ioctls. Not sure if that is sufficient to
-   handle block ioctls or if something needs to be added there. But it
-   would be nice if one could request the size and geometry and so on.
 
-MfG
-        Goswin
+
+-- 
+     ____________________________________________________________
+    / Erwan MAS                                                 /\
+   | mailto:erwan@mas.nom.fr                                   |_/
+___|________________________________________________________   |
+\___________________________________________________________\__/
