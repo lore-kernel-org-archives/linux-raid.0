@@ -1,51 +1,29 @@
-From: Neil Brown <neilb@suse.de>
-Subject: ANNOUNCE: mdadm 3.1.1 - A tool for managing Soft RAID under Linux
-Date: Thu, 19 Nov 2009 16:14:47 +1100
-Message-ID: <19204.54343.875956.841213@notabene.brown>
+From: Beolach <beolach@gmail.com>
+Subject: Re: ANNOUNCE: mdadm 3.1.1 - A tool for managing Soft RAID under Linux
+Date: Wed, 18 Nov 2009 22:26:04 -0700
+Message-ID: <aebf5d970911182126x50d4f626s2155c55e89c33b70@mail.gmail.com>
+References: <19204.54343.875956.841213@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <19204.54343.875956.841213@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, Nov 18, 2009 at 22:14, Neil Brown <neilb@suse.de> wrote:
+>
+> =C2=A0- The default metadata is not v1.1.
+                                         ^^^
+Should that have been now instead of not?
 
 
-I am pleased to announce the availability of
-   mdadm version 3.1.1
-
-It is available at the usual places:
-   countrycode=xx.
-   http://www.${countrycode}kernel.org/pub/linux/utils/raid/mdadm/
-and via git at
-   git://neil.brown.name/mdadm
-   http://neil.brown.name/git?p=mdadm
-
-This is a bugfix release over 3.1, which was withdrawn due to serious
-bugs.  So it might be best to ignore 3.1 and say that this is a significant
-feature release over 3.0.x
-
-Significant changes are:
-  - RAID level conversion between RAID1, RAID5, and RAID6 are
-    possible were the kernel supports it (2.6.32 at least)
-  - online chunksize and layout changing for RAID5 and RAID6
-    where the kernel supports it.
-  - reduce the number of devices in a RAID4/5/6 array.
-
-  - The default metadata is not v1.1.  This metadata is stored at the
-    start of the device so is safer in many ways but could interfere with
-    boot loaded.  The old default (0.90) is still available and fully
-    supported.
-
-  - The default chunksize is now 512K rather than 64K.  This seems more
-    appropriate for modern devices.
-
-  - The default bitmap chunksize for internal bitmaps is now at least
-    64Meg as fine grained bitmaps tend to impact performance more for
-    little extra gain.
-
-This release is believed to be stable and you should feel free to
-upgrade to 3.1.1.
-
-NeilBrown 19th November 2009
+--
+Conway S. Smith
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
