@@ -1,56 +1,51 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Raid10 & Rhel
-Date: Thu, 19 Nov 2009 12:32:50 +1100
-Message-ID: <20091119123250.5f0474e1@notabene.brown>
-References: <20091118235110.GM1863@voyageur.mas.nom.fr>
+Subject: ANNOUNCE: mdadm 3.1.1 - A tool for managing Soft RAID under Linux
+Date: Thu, 19 Nov 2009 16:14:47 +1100
+Message-ID: <19204.54343.875956.841213@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091118235110.GM1863@voyageur.mas.nom.fr>
 Sender: linux-raid-owner@vger.kernel.org
-To: Erwan MAS <erwan@mas.nom.fr>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 19 Nov 2009 00:51:10 +0100
-Erwan MAS <erwan@mas.nom.fr> wrote:
 
-> Hello ,
-> 
-> I have found this bug in RehHat Bugzilla 
-> 
-> "md raid10 far layout resync corruption bug in rhel kernel
-> 2.6.18-92.1.13.el5"
-> 
-> https://bugzilla.redhat.com/show_bug.cgi?id=468379
-> 
-> 
-> The bug is not very verbose .
-> 
-> Someone have more information ?
-> 
-> 
 
-If you look in the kernel git history for that patch that is identified,
-you find it comes with a comment as below.
-Maybe that is the more information you want?  You aren't very specific.
+I am pleased to announce the availability of
+   mdadm version 3.1.1
 
-NeilBrown
+It is available at the usual places:
+   countrycode=xx.
+   http://www.${countrycode}kernel.org/pub/linux/utils/raid/mdadm/
+and via git at
+   git://neil.brown.name/mdadm
+   http://neil.brown.name/git?p=mdadm
 
-    [PATCH] md: fix raid10 recovery problem.
-    
-    There are two errors that can lead to recovery problems with raid10
-    when used in 'far' more (not the default).
-    
-    Due to a '>' instead of '>=' the wrong block is located which would
-    result in garbage being written to some random location, quite
-    possible outside the range of the device, causing the newly
-    reconstructed device to fail. 
-    The device size calculation had some rounding errors (it didn't
-    round when it should) and so recovery would go a few blocks too far
-    which would again cause a write to a random block address and
-    probably a device error. 
-    The code for working with device sizes was fairly confused and
-    spread out, so this has been tided up a bit.
-    
+This is a bugfix release over 3.1, which was withdrawn due to serious
+bugs.  So it might be best to ignore 3.1 and say that this is a significant
+feature release over 3.0.x
+
+Significant changes are:
+  - RAID level conversion between RAID1, RAID5, and RAID6 are
+    possible were the kernel supports it (2.6.32 at least)
+  - online chunksize and layout changing for RAID5 and RAID6
+    where the kernel supports it.
+  - reduce the number of devices in a RAID4/5/6 array.
+
+  - The default metadata is not v1.1.  This metadata is stored at the
+    start of the device so is safer in many ways but could interfere with
+    boot loaded.  The old default (0.90) is still available and fully
+    supported.
+
+  - The default chunksize is now 512K rather than 64K.  This seems more
+    appropriate for modern devices.
+
+  - The default bitmap chunksize for internal bitmaps is now at least
+    64Meg as fine grained bitmaps tend to impact performance more for
+    little extra gain.
+
+This release is believed to be stable and you should feel free to
+upgrade to 3.1.1.
+
+NeilBrown 19th November 2009
