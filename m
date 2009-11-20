@@ -1,38 +1,45 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 3/8] ioat2,3: disable asynchronous error notifications
-Date: Fri, 20 Nov 2009 00:06:29 -0700
-Message-ID: <20091120070629.13478.67985.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 1/8] ioat: silence "dca disabled" messages
+Date: Fri, 20 Nov 2009 00:06:19 -0700
+Message-ID: <20091120070619.13478.14991.stgit@dwillia2-linux.ch.intel.com>
 References: <20091120070506.13478.77838.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756319AbZKTHGb@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755877AbZKTHG2@vger.kernel.org>
 In-Reply-To: <20091120070506.13478.77838.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: linux-raid@vger.kernel.org, maciej.sosnowski@intel.com
 List-Id: linux-raid.ids
 
-Error interrupts and error completions may cause channel hangs, so
-poll the channel status register after a timeout.
+Turning off dca is not an "error", and the dca-enabled state can be
+viewed from sysfs.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/dma/ioat/registers.h |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+ drivers/dma/ioat/dca.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/dma/ioat/registers.h b/drivers/dma/ioat/registers.h
-index 63038e1..f015ec1 100644
---- a/drivers/dma/ioat/registers.h
-+++ b/drivers/dma/ioat/registers.h
-@@ -92,9 +92,7 @@
- #define IOAT_CHANCTRL_ERR_COMPLETION_EN		0x0004
- #define IOAT_CHANCTRL_INT_REARM			0x0001
- #define IOAT_CHANCTRL_RUN			(IOAT_CHANCTRL_INT_REARM |\
--						 IOAT_CHANCTRL_ERR_COMPLETION_EN |\
--						 IOAT_CHANCTRL_ANY_ERR_ABORT_EN |\
--						 IOAT_CHANCTRL_ERR_INT_EN)
-+						 IOAT_CHANCTRL_ANY_ERR_ABORT_EN)
+diff --git a/drivers/dma/ioat/dca.c b/drivers/dma/ioat/dca.c
+index 69d0261..14f0a78 100644
+--- a/drivers/dma/ioat/dca.c
++++ b/drivers/dma/ioat/dca.c
+@@ -98,7 +98,7 @@ static int dca_enabled_in_bios(struct pci_dev *pdev)
+ 	cpuid_level_9 = cpuid_eax(9);
+ 	res = test_bit(0, &cpuid_level_9);
+ 	if (!res)
+-		dev_err(&pdev->dev, "DCA is disabled in BIOS\n");
++		dev_dbg(&pdev->dev, "DCA is disabled in BIOS\n");
  
- #define IOAT_DMA_COMP_OFFSET			0x02	/* 16-bit DMA channel compatibility */
- #define IOAT_DMA_COMP_V1			0x0001	/* Compatibility with DMA version 1 */
+ 	return res;
+ }
+@@ -108,7 +108,7 @@ static int system_has_dca_enabled(struct pci_dev *pdev)
+ 	if (boot_cpu_has(X86_FEATURE_DCA))
+ 		return dca_enabled_in_bios(pdev);
+ 
+-	dev_err(&pdev->dev, "boot cpu doesn't have X86_FEATURE_DCA\n");
++	dev_dbg(&pdev->dev, "boot cpu doesn't have X86_FEATURE_DCA\n");
+ 	return 0;
+ }
+ 
