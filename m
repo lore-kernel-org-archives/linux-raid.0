@@ -1,21 +1,48 @@
-From: Andrew Burgess <aab@cichlid.com>
-Subject: Re: grow raid 6: different errors with mdadm 3.0.3 and 3.1
-Date: Tue, 24 Nov 2009 10:46:16 -0800
-Message-ID: <1259088376.4139.6@athlon>
+From: Andreas Dilger <adilger@sun.com>
+Subject: Re: [patch 0/5] Journal guided resync and support
+Date: Tue, 24 Nov 2009 11:51:34 -0700
+Message-ID: <856BC3CD-F483-4899-BCFE-0ACB59CED9BE@sun.com>
+References: <20091119212241.283629302@sun.com> <20091124114319.GA1397@ucw.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; DelSp=Yes; Format=Flowed
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-raid-owner@vger.kernel.org
-To: linux raid mailing list <linux-raid@vger.kernel.org>
+Content-Type: text/plain; CHARSET=US-ASCII; delsp=yes; format=flowed
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ext4-owner@vger.kernel.org>
+In-reply-to: <20091124114319.GA1397@ucw.cz>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Pavel Machek <pavel@ucw.cz>
+Cc: scjody@sun.com, linux-ext4@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/24/2009 10:21:39 AM, Andrew Burgess wrote:
+On 2009-11-24, at 04:43, Pavel Machek wrote:
+>> This is an updated implementation of journal guided resync,  
+>> intended to be suitable for production systems.  This feature  
+>> addresses the problem with RAID arrays that take too long to resync  
+>> - similar to the existing MD write-intent bitmap feature, we resync  
+>> only the stripes that were undergoing writes at the time of the  
+>> crash.  Unlike write-intent bitmaps, our testing shows very little  
+>> performance degredation as a result of the feature - around 3-5% vs  
+>> around 30%
+>> for bitmaps.
+>
+> Good. Now when fs know about raid and wise versa... perhaps it is time
+> to journal surrounding data on stripe so that power fails do not
+> destroy data on degraded raid5?
 
-> mdadm 3.1:
 
-oops, it seems to be 3.1.1 not 3.1
-from  
-http://neil.brown.name/git?p=mdadm;a=snapshot;h=40bc78f5cd292d90917cb0a8c177498a516494c3;sf=tgz
+That's an interesting idea.  I suspect this could be done more  
+efficiently by only journaling the parity block update, but there is  
+no way for the journal to address this block.
+
+That said, unfortunately Jody has no more time to work on these  
+patches (due to data ordering requirements Lustre can't use them), and  
+while they are functionally complete for RHEL5 + ext3, they need to be  
+ported to 2.6.current and ext4 by someone or they will die a silent  
+death.
+
+
+Cheers, Andreas
+--
+Andreas Dilger
+Sr. Staff Engineer, Lustre Group
+Sun Microsystems of Canada, Inc.
 
