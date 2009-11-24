@@ -1,48 +1,41 @@
-From: Andreas Dilger <adilger@sun.com>
-Subject: Re: [patch 0/5] Journal guided resync and support
-Date: Tue, 24 Nov 2009 11:51:34 -0700
-Message-ID: <856BC3CD-F483-4899-BCFE-0ACB59CED9BE@sun.com>
-References: <20091119212241.283629302@sun.com> <20091124114319.GA1397@ucw.cz>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Now [...] it is possible for raid5d to distribute stripe
+ handling  over multiple cores.
+Date: Wed, 25 Nov 2009 07:47:00 +1100
+Message-ID: <20091125074700.7b0f0989@notabene.brown>
+References: <43d009740911240952m5aa9aa5bp229705b5fda4f399@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; CHARSET=US-ASCII; delsp=yes; format=flowed
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ext4-owner@vger.kernel.org>
-In-reply-to: <20091124114319.GA1397@ucw.cz>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: scjody@sun.com, linux-ext4@vger.kernel.org, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <43d009740911240952m5aa9aa5bp229705b5fda4f399@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: for.poige+linux@gmail.com
+Cc: dan.j.williams@intel.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2009-11-24, at 04:43, Pavel Machek wrote:
->> This is an updated implementation of journal guided resync,  
->> intended to be suitable for production systems.  This feature  
->> addresses the problem with RAID arrays that take too long to resync  
->> - similar to the existing MD write-intent bitmap feature, we resync  
->> only the stripes that were undergoing writes at the time of the  
->> crash.  Unlike write-intent bitmaps, our testing shows very little  
->> performance degredation as a result of the feature - around 3-5% vs  
->> around 30%
->> for bitmaps.
+On Wed, 25 Nov 2009 00:52:06 +0700
+Igor Podlesny <for.poige+linux@gmail.com> wrote:
+
+>     Hello, Linux RAID people. :-)
+> 
+>     It ( http://tinyurl.com/raid-over-cores ) is quite an interesting
+> change due to it promises less latency and more bandwidth (does it
+> really?), but as far as I see, currently this feature is turned OFF:
+> CONFIG_MULTICORE_RAID456: "If unsure, say N".
+> 
+>     So, I'd like to ask the authors what are worst case scenarios when
+> having it turned ON?
+> 
+>     Is "kissing data good-bye" amongst one of them? :-)
 >
-> Good. Now when fs know about raid and wise versa... perhaps it is time
-> to journal surrounding data on stripe so that power fails do not
-> destroy data on degraded raid5?
 
+Worst case is that performance falls through the floor, or becomes
+very unpredictable, or possibly even hangs your machine (though that is
+unlikely).
+There is no reason to expect that enabling this config option will have
+any effect on data integrity.
 
-That's an interesting idea.  I suspect this could be done more  
-efficiently by only journaling the parity block update, but there is  
-no way for the journal to address this block.
+If you do experiment, please post your results.
 
-That said, unfortunately Jody has no more time to work on these  
-patches (due to data ordering requirements Lustre can't use them), and  
-while they are functionally complete for RHEL5 + ext3, they need to be  
-ported to 2.6.current and ext4 by someone or they will die a silent  
-death.
-
-
-Cheers, Andreas
---
-Andreas Dilger
-Sr. Staff Engineer, Lustre Group
-Sun Microsystems of Canada, Inc.
-
+NeilBrown
