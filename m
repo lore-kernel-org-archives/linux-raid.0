@@ -1,41 +1,30 @@
-From: Markus Doits <markus.doits@googlemail.com>
-Subject: Re: Raid10 disc-activity every five seconds
-Date: Tue, 24 Nov 2009 18:48:02 +0100
-Message-ID: <4B0C1C52.6060203@googlemail.com>
-References: <4B0BBDB4.1010403@googlemail.com> <4B0BBF89.6040400@anonymous.org.uk>
+From: Igor Podlesny <for.poige+linux@gmail.com>
+Subject: Now [...] it is possible for raid5d to distribute stripe handling
+	over multiple cores.
+Date: Wed, 25 Nov 2009 00:52:06 +0700
+Message-ID: <43d009740911240952m5aa9aa5bp229705b5fda4f399@mail.gmail.com>
+Reply-To: for.poige+linux@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B0BBF89.6040400@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
+To: dan.j.williams@intel.com, NeilBrown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 11/24/2009 12:12 PM, John Robinson wrote:
-> On 24/11/2009 11:04, Markus Doits wrote:
->> just wanted to silency my pc by reducing disk-activity. what bothers me
->> is: my disk "click" about every five seconds.
-> [...]
-> 
-> Try mounting the filesystem that's on md2 with the noatime option.
-> 
-> Cheers,
-> 
-> John.
-> 
+    Hello, Linux RAID people. :-)
 
-thanks for your reply, but they are already:
+    It ( http://tinyurl.com/raid-over-cores ) is quite an interesting
+change due to it promises less latency and more bandwidth (does it
+really?), but as far as I see, currently this feature is turned OFF:
+CONFIG_MULTICORE_RAID456: "If unsure, say N".
 
-/dev/mapper/eltarun-root on / type ext4 (rw,noatime,errors=remount-ro)
-/dev/mapper/eltarun-debian32 on /mnt/debian32 type ext4 (rw,noatime)
-/dev/mapper/eltarun-recordings on /mnt/recordings type ext4 (rw,noatime)
-/dev/mapper/eltarun-home on /home type ext4 (rw,noatime)
+    So, I'd like to ask the authors what are worst case scenarios when
+having it turned ON?
 
-this gave me another idea: besides the raid-volumes differ in their type
-(raid1/raid10), the raid10-volume is actually a lvm2-volume.
+    Is "kissing data good-bye" amongst one of them? :-)
 
-but since the process "[md2_raid10]" is triggering the activity, for me
-it still looks like the raid is the cause. any other ideas? any way to
-check why it is writing to the device?
+    Thanks!
+
+-- 
+End of message. Next message?
