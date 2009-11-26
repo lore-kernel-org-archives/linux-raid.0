@@ -1,83 +1,47 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: grow raid 6: different errors with mdadm 3.0.3 and 3.1
-Date: Thu, 26 Nov 2009 14:22:27 +1100
-Message-ID: <20091126142227.496da980@notabene.brown>
-References: <1259086899.4139.4@athlon>
+From: <senthilkumar.muthukalai@wipro.com>
+Subject: RE: RAID 5 rebuild fails with power interruption.
+Date: Thu, 26 Nov 2009 11:56:48 +0530
+Message-ID: <8338BD137FF1B64EB341218BD702985E02B43F85@BLR-EC-MBX03.wipro.com>
+References: <8338BD137FF1B64EB341218BD702985E02AB8FCF@BLR-EC-MBX03.wipro.com><87y6m759o2.fsf@frosties.localdomain><8338BD137FF1B64EB341218BD702985E02AB90B8@BLR-EC-MBX03.wipro.com><20091117094720.4c8736d7@notabene.brown><8338BD137FF1B64EB341218BD702985E02AB9233@BLR-EC-MBX03.wipro.com><20091118163655.2ef3f00d@notabene.brown><8338BD137FF1B64EB341218BD702985E02B43A2A@BLR-EC-MBX03.wipro.com><20091125131413.51a37b79@notabene.brown><8338BD137FF1B64EB341218BD702985E02B43EC7@BLR-EC-MBX03.wipro.com> <20091126075847.3a736e16@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1259086899.4139.4@athlon>
+Content-class: urn:content-classes:message
+In-Reply-To: <20091126075847.3a736e16@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Burgess <aab@cichlid.com>
-Cc: linux raid mailing list <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 24 Nov 2009 10:21:39 -0800
-Andrew Burgess <aab@cichlid.com> wrote:
-
-> 
-> mdadm 3.0.3:
-> 
-> # mdadm -v /dev/md1 --grow --raid-devices=15
-> mdadm: Need to backup 19968K of critical section..
-> mdadm: /dev/md1: failed to save critical region
-> 
-> mdadm 3.1:
-> 
-> sudo ./mdadm -G /dev/md1 --raid-devices=15
-> mdadm: this change will reduce the size of the array.
->         use --grow --array-size first to truncate array.
->         e.g. mdadm --grow /dev/md1 --array-size 928142080
-> 
-> Hmmm. Can I just echo something into /proc to make this happen?
-> (assuming these are both mdadm bugs)
-> 
-> Or should I try another mdadm? I googled and a problem like #1
-> occured to someone using 3.0 and they worked around by using
-> 2.6.7. But I'm starting to get nervous that mdadm may really be
-> trying to stop me from doing something dumb...
-
-Thanks for the report.
-There appears to be a big in mdadm-3.1.1 such that the new 
-array size gets truncated to 32bits in this calculation so
-it looks like it is getting smaller.
-
-The following patch will fix it, and can also be collected
-from my git tree (git://neil.brown.name/md).
+Oh sorry... That's a typo...
+Its 2.16.8.
+Anyways, thanks for the help.
+Let me try to backport as you say.
 
 Thanks,
+Senthil M
+
+-----Original Message-----
+From: Neil Brown [mailto:neilb@suse.de] 
+Sent: Thursday, November 26, 2009 2:29 AM
+To: SenthilKumar Muthukalai (WT01 - Telecom Equipment)
+Cc: linux-raid@vger.kernel.org
+Subject: Re: RAID 5 rebuild fails with power interruption.
+
+On Wed, 25 Nov 2009 19:50:47 +0530
+<senthilkumar.muthukalai@wipro.com> wrote:
+
+> Neil,
+> 
+> The patch you have provided doesn't seem to go with the code we use.
+> We use the md driver that comes with linux-1.16.8 source code.
+> Could you pls suggest the changes for this version of md?
+
+I have no idea what you mean by "linux-1.16.8".
+My patch is against the latest main-line kernel with is 2.6.32-rc7 or
+something close to that.  I only provide patches against mainline.
+If you need it backported to an earlier kernel, that is up to you.
+
 NeilBrown
-
-From 2ed4f75388f99968be58097941a9704f6e42d701 Mon Sep 17 00:00:00 2001
-From: NeilBrown <neilb@suse.de>
-Date: Thu, 26 Nov 2009 14:19:26 +1100
-Subject: [PATCH] Grow: avoid truncation error when checking size of array.
-
-array.size is only 32bit so it is not safe to multiply it
-up before casting to (long long).
-Actually, we shouldn't be using array.size here at all, but that
-will get fixed in a subsequent patch.
-
-Reported-by: Andrew Burgess <aab@cichlid.com>
-Signed-off-by: NeilBrown <neilb@suse.de>
----
- Grow.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/Grow.c b/Grow.c
-index 7764bdb..a654d4e 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -891,7 +891,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
- 		}
- 
- 		/* Check that we can hold all the data */
--		size = ndata * array.size;
-+		size = ndata * (long long)array.size;
- 		get_dev_size(fd, NULL, &array_size);
- 		if (size < (array_size/1024)) {
- 			fprintf(stderr, Name ": this change will reduce the size of the array.\n"
--- 
-1.6.4.3
-
