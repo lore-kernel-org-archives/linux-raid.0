@@ -1,44 +1,27 @@
-From: Asdo <asdo@shiftmail.org>
-Subject: Re: Help on first dangerous scrub / suggestions
-Date: Thu, 26 Nov 2009 15:13:19 +0100
-Message-ID: <4B0E8CFF.1080106@shiftmail.org>
-References: <4B0E7111.20202@shiftmail.org>
- <alpine.DEB.1.10.0911261459330.14550@uplift.swm.pp.se>
+From: Michael Guntsche <mike@it-loops.com>
+Subject: RAID5 Disk access question
+Date: Thu, 26 Nov 2009 15:29:19 +0100
+Message-ID: <20091126142919.GA25044@gibson.comsick.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <alpine.DEB.1.10.0911261459330.14550@uplift.swm.pp.se>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mikael Abrahamsson wrote:
-> On Thu, 26 Nov 2009, Asdo wrote:
->
->> Now I am scared about initiating the first scrub because if it turns 
->> out that 3 areas in different disks have bad sectors I think am gonna 
->> lose the whole array.
->
-> What kernel are you using?
->
-> As of 2.6.15 or so, sending "repair" (or "resync", I don't remember 
-> exactly) to the md will read all data and if there is bad data, parity 
-> will be used to write to the bad sector (it shouldn't kick the disk).
->
-> <http://linux-raid.osdl.org/index.php/RAID_Administration>
->
-Kernel is ubuntu kernel 2.6.24 .
-In the page you are linking I don't see mention of the fact that drives 
-won't be kicked with a "repair" or "check".
-In fact regarding "check" this is written:
-  'check' just reads everything and doesn't trigger any writes unless a 
-read error is detected, in which case the normal read-error handing 
-kicks in.
-"normal error handling" seems to suggest that if the read error is 
-uncorrectable the drive will be kicked. You don't think so?
+Hi list,
 
-Thank you
+I am running a RAID5 setup here for 3 years now. Reading the mail "Raid10 disc-activity every five seconds" in the ML archives made me curious what my system was doing since I already noticed that it was accessing the disks quite often.
+Running lm-profiler I saw that md1_raid5 was continuously accessing
+(every second) my disks even when the system was idle. 
+Furthermore it showed that it was always accessing the same block on all devices at the same time. 
+It turned out that this is the RAID superblock. Now my question. 
+Is this normal behaviour even if NO writes are taking place on
+the Raid itself?
 
+Please CC me on replies since I am not subscribed to the list.
+
+Kind regards,
+Michael
 
