@@ -1,45 +1,20 @@
-From: Kasper Sandberg <postmaster@metanurb.dk>
-Subject: Re: Question for Neil/Superblocks
-Date: Fri, 27 Nov 2009 23:22:22 +0100
-Message-ID: <1259360542.31633.188.camel@localhost>
-References: <alpine.DEB.2.00.0911271624450.30813@p34.internal.lan>
+From: aaa bbb <ilana90@013net.net>
+Subject: Hello
+Date: Fri, 27 Nov 2009 23:36:17 +0000 (GMT)
+Message-ID: <f709a0203712.4b106271__10101.215405348$1259384593$gmane$org@netvision.net.il>
+Reply-To: missojita@rediffmail.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.0911271624450.30813@p34.internal.lan>
+Content-language: en
+Content-disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, 2009-11-27 at 16:27 -0500, Justin Piszcz wrote:
-> Hi Neil,
-> 
-> A couple of things, recently I tried to make a new system (MDADM/latest/SW 
-> RAID1) and noticed that GRUB & LILO still only support 0.90 superblocks. 
-> This leads me to my next question.
-> 
-> Will the newer superblocks be supported? I ask this due to my final 
-> question.
-> 
-> With 0.90 superblocks, I have never seen any array (raid1,raid5,raid6) try 
-> to correct a read-error, but when I made an array with 1.2 superblocks 
-> (not the boot volume of course) using VelociRaptors, great for testing 
-> crap disks that don't work in read, I did see it try to correct read 
-> errors!  I was wondering if that is only applicable to superblocks >= 
-> 1.x+?
-> 
-> I know you can build yourself an initrd/miniroot so/on/so forth but its 
-> nice when you can just build a kernel, run lilo and have it auto-detect 
-> the raid1 volumes and boot accordingly (as you can with 0.90 superblocks).
-have a separate boot partition raid1....
 
 
-> 
-> Justin.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Hello
+How are you today? I hope you are fine.If so thank be to God almighty.My name is Miss Ojita,26 years, single girl looking for honest and nice person. whom i can partner with. i have the sum of $7,000,000.00(Seven Million US Dollars) which i intend to use for business purpose.I would like to know you more,most especially what you like and what you dislike, I don't care about your colour or ethnicity, I'm sending you this beautiful mail, with a wish for much happiness.I am looking forward to hear from you,
+Love from,
+Ojita
