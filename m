@@ -1,55 +1,32 @@
-From: "Tirumala Reddy Marri" <tmarri@amcc.com>
-Subject: RE: [PATCH v2] ppc440spe-adma: adds updated ppc440spe adma driver
-Date: Mon, 30 Nov 2009 10:17:09 -0800
-Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C08642D18@SDCEXCHANGE01.ad.amcc.com>
-References: <1259186722-15012-1-git-send-email-agust@denx.de><AC5E1C3367E37D44970B81A6ADD1DA2C08642A43@SDCEXCHANGE01.ad.amcc.com>
-	<20091127112641.5bcb9009@wker>
+From: Keld Simonsen <keld@keldix.com>
+Subject: Re: Reed Solomon coding based Raid?
+Date: Sat, 28 Nov 2009 19:57:32 +0100
+Message-ID: <20091128185732.GA15674@light.rap.dk>
+References: <4B113E90.50904@xs4all.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <20091127112641.5bcb9009@wker>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
-To: Anatolij Gustschin <agust@denx.de>
-Cc: wd@denx.de, dzu@denx.de, Yuri Tikhonov <yur@emcraft.com>, linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, dan.j.williams@intel.com
+Content-Type: text/plain; charset=iso-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4B113E90.50904@xs4all.nl>
+Sender: linux-raid-owner@vger.kernel.org
+To: John Hendrikx <hjohn@xs4all.nl>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Sorry I meant drver/. Probably you should consider how the iop-dma is
-done. 
+On Sat, Nov 28, 2009 at 04:15:28PM +0100, John Hendrikx wrote:
+> I was wondering if there is support for a raid level where one can 
+> choose the redundancy level.  Raid 5 allows for one redundant drive, 
+> Raid 6 for two, but there's no raid level that would support arbitrary 
+> redundancy (even to the point of allowing one to add extra redundancy 
+> later on, by simply putting spare drives to immediate use).
+> 
+> I'm just a casual Software Raid user, and have been using Raid 6 for a 
+> small 8 TB array for a few years now and I realize that there's quite 
+> some CPU overhead involved for such redundancy, but for my purposes 
+> speed is not a relevant concern (10 MB/sec is enough).
 
------Original Message-----
-From: Anatolij Gustschin [mailto:agust@denx.de] 
-Sent: Friday, November 27, 2009 2:27 AM
-To: Tirumala Reddy Marri
-Cc: linux-raid@vger.kernel.org; wd@denx.de; dzu@denx.de; Yuri Tikhonov;
-linuxppc-dev@ozlabs.org; dan.j.williams@intel.com
-Subject: Re: [PATCH v2] ppc440spe-adma: adds updated ppc440spe adma
-driver
+Actually you can choose the number of copies in raid10, via the -n
+option. 
 
-"Tirumala Reddy Marri" <tmarri@amcc.com> wrote:
-
-> Why are we having separate directory for 440spe. Can this be
-generalized
-> arch/dma/ppc4xx/ppc4xx_dma.c ?
-
-currently there is only tested support for 440spe. If the driver
-will be extended to support other CPUs, then the renaming can be
-done while adding support for other CPUs. 'arch/' is not correct,
-it should be 'driver/'.
-
-Best regards,
-Anatolij
-
---
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: +49-8142-66989-0 Fax: +49-8142-66989-80  Email: office@denx.de
+Best regards
+keld
