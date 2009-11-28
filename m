@@ -1,20 +1,26 @@
-From: aaa bbb <ilana90@013net.net>
-Subject: Hello
-Date: Fri, 27 Nov 2009 23:36:17 +0000 (GMT)
-Message-ID: <f709a0203712.4b106271__10101.215405348$1259384593$gmane$org@netvision.net.il>
-Reply-To: missojita@rediffmail.com
+From: John Hendrikx <hjohn@xs4all.nl>
+Subject: Reed Solomon coding based Raid?
+Date: Sat, 28 Nov 2009 16:15:28 +0100
+Message-ID: <4B113E90.50904@xs4all.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-language: en
-Content-disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+I was wondering if there is support for a raid level where one can 
+choose the redundancy level.  Raid 5 allows for one redundant drive, 
+Raid 6 for two, but there's no raid level that would support arbitrary 
+redundancy (even to the point of allowing one to add extra redundancy 
+later on, by simply putting spare drives to immediate use).
+
+I'm just a casual Software Raid user, and have been using Raid 6 for a 
+small 8 TB array for a few years now and I realize that there's quite 
+some CPU overhead involved for such redundancy, but for my purposes 
+speed is not a relevant concern (10 MB/sec is enough).
+
+--John
 
 
-Hello
-How are you today? I hope you are fine.If so thank be to God almighty.My name is Miss Ojita,26 years, single girl looking for honest and nice person. whom i can partner with. i have the sum of $7,000,000.00(Seven Million US Dollars) which i intend to use for business purpose.I would like to know you more,most especially what you like and what you dislike, I don't care about your colour or ethnicity, I'm sending you this beautiful mail, with a wish for much happiness.I am looking forward to hear from you,
-Love from,
-Ojita
