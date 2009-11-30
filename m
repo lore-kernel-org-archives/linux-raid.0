@@ -1,39 +1,35 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Reed Solomon coding based Raid?
-Date: Mon, 30 Nov 2009 13:36:03 +0100
-Message-ID: <87eing42bw.fsf@frosties.localdomain>
-References: <4B113E90.50904@xs4all.nl> <1259423300.31633.190.camel@localhost>
-	<1f808b4a0911280943x4ab781dbq28a11a2e3a77598a@mail.gmail.com>
-	<4B129855.5050702@gmail.com>
+From: Farkas Levente <lfarkas@lfarkas.org>
+Subject: /etc/cron.weekly/99-raid-check
+Date: Mon, 30 Nov 2009 14:08:56 +0100
+Message-ID: <4B13C3E8.4090106@lfarkas.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B129855.5050702@gmail.com> (Andrew Dunn's message of "Sun, 29
-	Nov 2009 10:50:45 -0500")
 Sender: linux-raid-owner@vger.kernel.org
-To: Andrew Dunn <andrew.g.dunn@gmail.com>
-Cc: Peter Chacko <peterchacko35@gmail.com>, Kasper Sandberg <postmaster@metanurb.dk>, John Hendrikx <hjohn@xs4all.nl>, linux-raid <linux-raid@vger.kernel.org>
+To: CentOS mailing list <centos@centos.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Andrew Dunn <andrew.g.dunn@gmail.com> writes:
+hi,
+it's been a few weeks since rhel/centos 5.4 released and there were many
+discussion about this new "feature" the weekly raid partition check.
+we've got a lot's of server with raid1 system and i already try to
+configure them not to send these messages, but i'm not able ie. i
+already add to the SKIP_DEVS all of my swap partitions (since i read it
+on linux-kernel list that there can be mismatch_cnt even though i still
+not understand why?). but even the data partitions (ie. all of my
+servers all raid1 partitions) produce this error (ie. ther mismatch_cnt
+is never 0 at the weekend). and this cause all of my raid1 partitions
+are rebuild during the weekend. and i don't like it:-(
+so my questions:
+- is it a real bug in the raid1 system?
+- is it a real bug in my disk which runs raid (not really believe since
+it's dozens of servers)?
+- the /etc/cron.weekly/99-raid-check is wrong in rhel/centos-5.4?
+or what's the problem?
+can someone enlighten me?
+thanks in advance.
+regards.
 
-> I have been toying with the idea of an open source project to achieve
-> a more generalized functional spec. than what symform has created. I
-> was thinking of calling it RAINcloud (redundant array of independent
-> nodes)
->
-> I started drawing up the requirements over the holiday weekend.
-
-Would that be nodes as in different systems? In that case you should
-check glusterfs and provide a raincloud module for it.
-
-On the other hand if nodes is just local disks glusterfs might still
-be a good way to implement and test your algorithm before putting it
-into the kernel.
-
-MfG
-        Goswin
-
-PS: Isn't the Reed Solomon for x+1 disks == XOR and x+2 disks p+q
-parity? I.e. raid4/5/6 are Reed Solomon are just the first 2 cases for
-Reed Solomon.
+-- 
+  Levente                               "Si vis pacem para bellum!"
