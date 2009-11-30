@@ -1,68 +1,39 @@
-From: Simon Jackson <sjackson@bluearc.com>
-Subject: RE: Question for Neil/Superblocks
-Date: Mon, 30 Nov 2009 08:48:02 +0000
-Message-ID: <ABFC24E4C13D81489F7F624E14891C8661538D17@uk-ex-mbx1.terastack.bluearc.com>
-References: <alpine.DEB.2.00.0911271624450.30813@p34.internal.lan>
- <1259360542.31633.188.camel@localhost>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: Reed Solomon coding based Raid?
+Date: Mon, 30 Nov 2009 13:36:03 +0100
+Message-ID: <87eing42bw.fsf@frosties.localdomain>
+References: <4B113E90.50904@xs4all.nl> <1259423300.31633.190.camel@localhost>
+	<1f808b4a0911280943x4ab781dbq28a11a2e3a77598a@mail.gmail.com>
+	<4B129855.5050702@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1259360542.31633.188.camel@localhost>
-Content-Language: en-US
+In-Reply-To: <4B129855.5050702@gmail.com> (Andrew Dunn's message of "Sun, 29
+	Nov 2009 10:50:45 -0500")
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Andrew Dunn <andrew.g.dunn@gmail.com>
+Cc: Peter Chacko <peterchacko35@gmail.com>, Kasper Sandberg <postmaster@metanurb.dk>, John Hendrikx <hjohn@xs4all.nl>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> With 0.90 superblocks, I have never seen any array (raid1,raid5,raid6) try 
-> to correct a read-error, but when I made an array with 1.2 superblocks 
-> (not the boot volume of course) using VelociRaptors, great for testing 
-> crap disks that don't work in read, I did see it try to correct read 
-> errors!  I was wondering if that is only applicable to superblocks >= 
-> 1.x+?
+Andrew Dunn <andrew.g.dunn@gmail.com> writes:
 
-Is this actually true that RAID 1 volumes with 0.90 Superblock will not do read recovery?
+> I have been toying with the idea of an open source project to achieve
+> a more generalized functional spec. than what symform has created. I
+> was thinking of calling it RAINcloud (redundant array of independent
+> nodes)
+>
+> I started drawing up the requirements over the holiday weekend.
 
+Would that be nodes as in different systems? In that case you should
+check glusterfs and provide a raincloud module for it.
 
+On the other hand if nodes is just local disks glusterfs might still
+be a good way to implement and test your algorithm before putting it
+into the kernel.
 
------Original Message-----
-From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Kasper Sandberg
-Sent: 27 November 2009 22:22
-To: Justin Piszcz
-Cc: linux-raid
-Subject: Re: Question for Neil/Superblocks
+MfG
+        Goswin
 
-On Fri, 2009-11-27 at 16:27 -0500, Justin Piszcz wrote:
-> Hi Neil,
-> 
-> A couple of things, recently I tried to make a new system (MDADM/latest/SW 
-> RAID1) and noticed that GRUB & LILO still only support 0.90 superblocks. 
-> This leads me to my next question.
-> 
-> Will the newer superblocks be supported? I ask this due to my final 
-> question.
-> 
-> With 0.90 superblocks, I have never seen any array (raid1,raid5,raid6) try 
-> to correct a read-error, but when I made an array with 1.2 superblocks 
-> (not the boot volume of course) using VelociRaptors, great for testing 
-> crap disks that don't work in read, I did see it try to correct read 
-> errors!  I was wondering if that is only applicable to superblocks >= 
-> 1.x+?
-> 
-> I know you can build yourself an initrd/miniroot so/on/so forth but its 
-> nice when you can just build a kernel, run lilo and have it auto-detect 
-> the raid1 volumes and boot accordingly (as you can with 0.90 superblocks).
-have a separate boot partition raid1....
-
-
-> 
-> Justin.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+PS: Isn't the Reed Solomon for x+1 disks == XOR and x+2 disks p+q
+parity? I.e. raid4/5/6 are Reed Solomon are just the first 2 cases for
+Reed Solomon.
