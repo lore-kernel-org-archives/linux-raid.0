@@ -1,74 +1,68 @@
-From: Andrew Dunn <andrew.g.dunn@gmail.com>
-Subject: Re: Reed Solomon coding based Raid?
-Date: Sun, 29 Nov 2009 10:50:45 -0500
-Message-ID: <4B129855.5050702@gmail.com>
-References: <4B113E90.50904@xs4all.nl> <1259423300.31633.190.camel@localhost> <1f808b4a0911280943x4ab781dbq28a11a2e3a77598a@mail.gmail.com>
+From: Simon Jackson <sjackson@bluearc.com>
+Subject: RE: Question for Neil/Superblocks
+Date: Mon, 30 Nov 2009 08:48:02 +0000
+Message-ID: <ABFC24E4C13D81489F7F624E14891C8661538D17@uk-ex-mbx1.terastack.bluearc.com>
+References: <alpine.DEB.2.00.0911271624450.30813@p34.internal.lan>
+ <1259360542.31633.188.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1f808b4a0911280943x4ab781dbq28a11a2e3a77598a@mail.gmail.com>
+In-Reply-To: <1259360542.31633.188.camel@localhost>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Chacko <peterchacko35@gmail.com>
-Cc: Kasper Sandberg <postmaster@metanurb.dk>, John Hendrikx <hjohn@xs4all.nl>, linux-raid <linux-raid@vger.kernel.org>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I have been toying with the idea of an open source project to achieve a 
-more generalized functional spec. than what symform has created. I was 
-thinking of calling it RAINcloud (redundant array of independent nodes)
+> With 0.90 superblocks, I have never seen any array (raid1,raid5,raid6) try 
+> to correct a read-error, but when I made an array with 1.2 superblocks 
+> (not the boot volume of course) using VelociRaptors, great for testing 
+> crap disks that don't work in read, I did see it try to correct read 
+> errors!  I was wondering if that is only applicable to superblocks >= 
+> 1.x+?
 
-I started drawing up the requirements over the holiday weekend.
+Is this actually true that RAID 1 volumes with 0.90 Superblock will not do read recovery?
 
-Peter Chacko wrote:
-> symform, a startup create 32 parity stipes of 64 original stripes, and
-> distribute the fragments in different geographies.
->
-> they call it, RAID-96 And apparently reed-solomon coded.
->
-> http://www.symform.com/features-benefits.aspx
->
-> thanks
->
-> On Sat, Nov 28, 2009 at 9:18 PM, Kasper Sandberg <postmaster@metanurb.dk> wrote:
->   
->> As far as i know, theres not support for this, however, i do believe
->> raid6 uses reed-solomon.
->>
->> On Sat, 2009-11-28 at 16:15 +0100, John Hendrikx wrote:
->>     
->>> I was wondering if there is support for a raid level where one can
->>> choose the redundancy level.  Raid 5 allows for one redundant drive,
->>> Raid 6 for two, but there's no raid level that would support arbitrary
->>> redundancy (even to the point of allowing one to add extra redundancy
->>> later on, by simply putting spare drives to immediate use).
->>>
->>> I'm just a casual Software Raid user, and have been using Raid 6 for a
->>> small 8 TB array for a few years now and I realize that there's quite
->>> some CPU overhead involved for such redundancy, but for my purposes
->>> speed is not a relevant concern (10 MB/sec is enough).
->>>
->>> --John
->>>
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>       
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>     
+
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Kasper Sandberg
+Sent: 27 November 2009 22:22
+To: Justin Piszcz
+Cc: linux-raid
+Subject: Re: Question for Neil/Superblocks
+
+On Fri, 2009-11-27 at 16:27 -0500, Justin Piszcz wrote:
+> Hi Neil,
+> 
+> A couple of things, recently I tried to make a new system (MDADM/latest/SW 
+> RAID1) and noticed that GRUB & LILO still only support 0.90 superblocks. 
+> This leads me to my next question.
+> 
+> Will the newer superblocks be supported? I ask this due to my final 
+> question.
+> 
+> With 0.90 superblocks, I have never seen any array (raid1,raid5,raid6) try 
+> to correct a read-error, but when I made an array with 1.2 superblocks 
+> (not the boot volume of course) using VelociRaptors, great for testing 
+> crap disks that don't work in read, I did see it try to correct read 
+> errors!  I was wondering if that is only applicable to superblocks >= 
+> 1.x+?
+> 
+> I know you can build yourself an initrd/miniroot so/on/so forth but its 
+> nice when you can just build a kernel, run lilo and have it auto-detect 
+> the raid1 volumes and boot accordingly (as you can with 0.90 superblocks).
+have a separate boot partition raid1....
+
+
+> 
+> Justin.
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->   
 
--- 
-Andrew Dunn
-http://agdunn.net
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
