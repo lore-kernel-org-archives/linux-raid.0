@@ -1,91 +1,109 @@
-From: Neil Brown <neilb@suse.de>
-Subject: [PULL REQUEST] room for one more md patch in 2.6.32??
-Date: Tue, 1 Dec 2009 17:55:55 +1100
-Message-ID: <19220.48635.156324.840990@notabene.brown>
+From: Artur Wojcik <artur.wojcik@intel.com>
+Subject: Re: [patch 1/1][mdadm] Fix needed to enable RAID volumes on SAS
+ devices (version 2).
+Date: Tue, 1 Dec 2009 12:52:05 +0100
+Message-ID: <1259668325.2798.127.camel@awojcik-linux>
+References: <58C655507FA1494D95397652C4416F35CCF61201@irsmsx503.ger.corp.intel.com>
+	 <20091113193545.GW21495@skl-net.de>
+	 <1259593942.3178.123.camel@awojcik-linux>
+	 <e9c3a7c20911301156k7fc7fac7i33c8de14b0bb4d23@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <e9c3a7c20911301156k7fc7fac7i33c8de14b0bb4d23@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>, Greg KH <gregkh@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Andre Noll <maan@systemlinux.org>, Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
+Hi Dan,
+Thank you for your comments. All you suggestions I will incorporate in
+next version of a patch. Please see my comments below.
 
-Hi Linus / Greg,
- While reading code I found a bug in raid1 that can cause it handle
- read errors poorly.  It can sometimes report an error to the
- filesystem when it shouldn't have done.
- This bug was introduced in 2.6.29 and the patch is suitable for any
- -stable since then that it still active.
+> better alternative is to use the "stg mail" command from Stacked GIT
+> which, among other things, will format the patch according to akpm's
+> "perfect patch" guidelines [1].
 
-thanks,
-NeilBrown
+Definitely I should follow your suggestion.
 
+> > @@ -899,19 +900,12 @@ static int imsm_enumerate_ports(const char
+> > *hba_path, int port_count, int host_b
+> >                }
+> >
+> >                /* retrieve the scsi device type */
+> > -               if (asprintf(&device, "/sys/dev/block/%d:%d/device/xxxxxxx", major,
+> > minor) < 0) {
+> > -                       if (verbose)
+> > -                               fprintf(stderr, Name ": failed to allocate 'device'\n");
+> > -                       err = 2;
+> > -                       break;
+> > -               }
+> > -               sprintf(device, "/sys/dev/block/%d:%d/device/type", major, minor);
+> > +               str_fmt(device, "/sys/dev/block/%d:%d/device/type", major, minor);
+> 
+> Admittedly this change isn't needed because asprintf has guaranteed
+> that the buffer is large enough, but I can see why you made the change
+> if the goal is eradication of all sprintf calls.
 
-The following changes since commit a9366e61b03f55a6e009e687ad10e706714c9907:
-  Linus Torvalds (1):
-        Merge git://git.infradead.org/users/dwmw2/iommu-2.6.32
+Yes, that is my intention and if you are ok with this I would keep it.
 
-are available in the git repository at:
+> > @@ -1425,6 +1428,36 @@ void append_metadata_update(struct supertype *st,
+> > void *buf, int len)
+> >  }
+> >  #endif /* MDASSEMBLE */
+> >
+> > +/* Copyright (C) 2009 Intel Corporation. All rights reserved.
+> > + *
+> 
+> It is not conventional to claim copyright on a per function basis.
 
-  git://neil.brown.name/md/ for-linus
+These are Intel guidelines, but I clarify this with Intel SQA.
 
-NeilBrown (1):
-      md: revert incorrect fix for read error handling in raid1.
+> > + * This function formats a string according to format pattern. The
+> > buffer is
+> > + * always null terminated even if source string does not fit in
+> > destination
+> > + * buffer. The function returns -1 in case of an error and this means
+> > + * either one of the input parameters is NULL or there's not enough
+> > space in
+> > + * destination buffer to fit even a single character. Otherwise the
+> > function
+> > + * returns the number of character put in the destination buffer.
+> > + */
+> > +int __str_fmt(char *buf, size_t buf_size, const char *fmt, ...)
+> > +{
+> > +       va_list vl;
+> > +
+> > +       if (((int)(--buf_size)) <= 0) {
+> 
+> This seems wrong.  Why check buf_size? Just let the normal return
+> value from vnsprintf indicate if the buffer is too small.  Also it
+> clips potentially valid sizes that appear negative when casting from
+> size_t to int.
 
- drivers/md/raid1.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+You right. I assumed no one will request buffers bigger then INT_MAX,
+but this is wrong assumption. I agree the better solution is to let
+vnsprintf() function to resolve this issue.
 
+> > +extern int __str_fmt(char *buf, size_t buf_size, const char *fmt, ...)
+> > +       __attribute__((format(printf, 3, 4)));
+> 
+> I don't like that this function silently does not work with pointers,
+> and its name belies the fact that it does checking in addition to
+> formatting.
+> 
+> Perhaps something can be done with gcc builtins for this case.  Have
+> you looked into __builtin_object_size, __builtin___snprintf_chk and
+> friends.  The goal being to use these builtins to:
+> 
+> 1/ Get a compile time warning when an overflow is detected (currently
+> supported by the builtins)
+> 2/ Get a compile time warning if the bounds cannot be checked at
+> compile time (would need some investigation)
 
+I will investigate this and correct the patch.
+--
+Artur
 
-From d0e260782c3702a009645c3caa02e381dab8798b Mon Sep 17 00:00:00 2001
-From: NeilBrown <neilb@suse.de>
-Date: Tue, 1 Dec 2009 17:30:59 +1100
-Subject: [PATCH] md: revert incorrect fix for read error handling in raid1.
-
-commit 4706b349f was a forward port of a fix that was needed
-for SLES10.  But in fact it is not needed in mainline because
-the earlier commit dd00a99e7a fixes the same problem in a
-better way.
-Further, this commit introduces a bug in the way it interacts with
-the automatic read-error-correction.  If, after a read error is
-successfully corrected, the same disk is chosen to re-read - the
-re-read won't be attempted but an error will be returned instead.
-
-After reverting that commit, there is the possibility that a
-read error on a read-only array (where read errors cannot
-be corrected as that requires a write) will repeatedly read the same
-device and continue to get an error.
-So in the "Array is readonly" case, fail the drive immediately on
-a read error.
-
-Signed-off-by: NeilBrown <neilb@suse.de>
-Cc: stable@kernel.org
----
- drivers/md/raid1.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index a053423..e07ce2e 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1650,11 +1650,12 @@ static void raid1d(mddev_t *mddev)
- 					       r1_bio->sector,
- 					       r1_bio->sectors);
- 				unfreeze_array(conf);
--			}
-+			} else
-+				md_error(mddev,
-+					 conf->mirrors[r1_bio->read_disk].rdev);
- 
- 			bio = r1_bio->bios[r1_bio->read_disk];
--			if ((disk=read_balance(conf, r1_bio)) == -1 ||
--			    disk == r1_bio->read_disk) {
-+			if ((disk=read_balance(conf, r1_bio)) == -1) {
- 				printk(KERN_ALERT "raid1: %s: unrecoverable I/O"
- 				       " read error for block %llu\n",
- 				       bdevname(bio->bi_bdev,b),
--- 
-1.6.4.3
 
