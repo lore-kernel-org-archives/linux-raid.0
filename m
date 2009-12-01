@@ -1,57 +1,91 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: MAX IOPS - s/w scaling issues?
-Date: Tue, 1 Dec 2009 07:05:33 +0300
-Message-ID: <70ed7c3e0911302005g1684e02ftc7246e805467a5e2@mail.gmail.com>
-References: <7E302F0A-135C-434F-8D56-A71B625106FA@gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: [PULL REQUEST] room for one more md patch in 2.6.32??
+Date: Tue, 1 Dec 2009 17:55:55 +1100
+Message-ID: <19220.48635.156324.840990@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7E302F0A-135C-434F-8D56-A71B625106FA@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Arun Jagatheesan <arun.jagatheesan@gmail.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>, Greg KH <gregkh@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Keep an eye on CPU and RAM utilization. You may be hitting a bottleneck=
- there.
 
-Have you tried changing the queue depth of each SSD?
-This may be of interest to you: http://linux-raid.osdl.org/index.php/Pe=
-rformance
+Hi Linus / Greg,
+ While reading code I found a bug in raid1 that can cause it handle
+ read errors poorly.  It can sometimes report an error to the
+ filesystem when it shouldn't have done.
+ This bug was introduced in 2.6.29 and the patch is suitable for any
+ -stable since then that it still active.
 
-On Tue, Dec 1, 2009 at 5:24 AM, Arun Jagatheesan
-<arun.jagatheesan@gmail.com> wrote:
->
-> We are trying some experiments on our linux raid. We are having bottl=
-eneck in scaling the RAID after ~250K IOPS. =C2=A0Is there a known issu=
-e of s/w max limit or is it simply an issue of configuration?
->
-> We have (16 x 64G) SSDs on a RAID0. Our IOPS on this RAID0 stops at 2=
-50K (even with lesser or more SSD drives). =C2=A0 =C2=A0Whereas we get =
-540K IOPS with the same number of SSDs (RAW no RAID). We find a linear =
-scale-up for each SSD we add to RAID0 until we reach ~250K IOPS limit. =
-After the RAID0 reaches this limit, its just a straight line plateau wi=
-th no increase in performance.
->
-> Is there any known issue of the maximum IOPS the s/w can handle?
->
-> Cheers,
-> Arun
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
+thanks,
+NeilBrown
+
+
+The following changes since commit a9366e61b03f55a6e009e687ad10e706714c9907:
+  Linus Torvalds (1):
+        Merge git://git.infradead.org/users/dwmw2/iommu-2.6.32
+
+are available in the git repository at:
+
+  git://neil.brown.name/md/ for-linus
+
+NeilBrown (1):
+      md: revert incorrect fix for read error handling in raid1.
+
+ drivers/md/raid1.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
 
 
---
-=C2=A0 =C2=A0 =C2=A0 Majed B.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+From d0e260782c3702a009645c3caa02e381dab8798b Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.de>
+Date: Tue, 1 Dec 2009 17:30:59 +1100
+Subject: [PATCH] md: revert incorrect fix for read error handling in raid1.
+
+commit 4706b349f was a forward port of a fix that was needed
+for SLES10.  But in fact it is not needed in mainline because
+the earlier commit dd00a99e7a fixes the same problem in a
+better way.
+Further, this commit introduces a bug in the way it interacts with
+the automatic read-error-correction.  If, after a read error is
+successfully corrected, the same disk is chosen to re-read - the
+re-read won't be attempted but an error will be returned instead.
+
+After reverting that commit, there is the possibility that a
+read error on a read-only array (where read errors cannot
+be corrected as that requires a write) will repeatedly read the same
+device and continue to get an error.
+So in the "Array is readonly" case, fail the drive immediately on
+a read error.
+
+Signed-off-by: NeilBrown <neilb@suse.de>
+Cc: stable@kernel.org
+---
+ drivers/md/raid1.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index a053423..e07ce2e 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1650,11 +1650,12 @@ static void raid1d(mddev_t *mddev)
+ 					       r1_bio->sector,
+ 					       r1_bio->sectors);
+ 				unfreeze_array(conf);
+-			}
++			} else
++				md_error(mddev,
++					 conf->mirrors[r1_bio->read_disk].rdev);
+ 
+ 			bio = r1_bio->bios[r1_bio->read_disk];
+-			if ((disk=read_balance(conf, r1_bio)) == -1 ||
+-			    disk == r1_bio->read_disk) {
++			if ((disk=read_balance(conf, r1_bio)) == -1) {
+ 				printk(KERN_ALERT "raid1: %s: unrecoverable I/O"
+ 				       " read error for block %llu\n",
+ 				       bdevname(bio->bi_bdev,b),
+-- 
+1.6.4.3
+
