@@ -1,12 +1,14 @@
 From: =?UTF-8?Q?Lucian_=C8=98andor?= <lucisandor@gmail.com>
 Subject: RAID5 demise or coma? after re-creating with a spare
-Date: Fri, 4 Dec 2009 14:46:39 -0500
-Message-ID: <c775b4470912041146rcff477bj97e86eca5bdb2dfa@mail.gmail.com>
+Date: Fri, 4 Dec 2009 14:53:01 -0500
+Message-ID: <c775b4470912041153o252b1800i29a36e793e7bed33@mail.gmail.com>
+References: <c775b4470912041146rcff477bj97e86eca5bdb2dfa@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <c775b4470912041146rcff477bj97e86eca5bdb2dfa@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 Hi all,
@@ -18,7 +20,7 @@ Now Linux boots, but RAIDs are, of course, dead. I tried to re-create
 the arrays, but I cannot recall the correct order and my attempts
 failed. I believe that the partitions are OK, because I don't recall
 re-creating without "missing", but surely the superblocks are damaged
-and certanily most of them are zero now.
+and certainly most of them are zero now.
 Is there a short way to recover the degraded RAIDs without knowing the
 order of drives? I have 6 drives in one (including "missing"), that
 gives 720 permutations. Also, clearing the superblocks is recoverable,
