@@ -1,51 +1,55 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID5 demise or coma? after re-creating with a spare
-Date: Sat, 5 Dec 2009 08:12:31 +1100
-Message-ID: <20091205081231.22625302@notabene.brown>
-References: <c775b4470912041146rcff477bj97e86eca5bdb2dfa@mail.gmail.com>
+From: Matthieu Patou <mat@matws.net>
+Subject: Random IO with md raid
+Date: Sat, 05 Dec 2009 01:31:22 +0300
+Message-ID: <4B198DBA.5000906@matws.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <c775b4470912041146rcff477bj97e86eca5bdb2dfa@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Lucian =?UTF-8?B?yJhhbmRvcg==?= <lucisandor@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 4 Dec 2009 14:46:39 -0500
-Lucian =C8=98andor <lucisandor@gmail.com> wrote:
+Hello,
 
-> Hi all,
-> There is a problem with my Linux installation, and the drives get
-> renamed and reordered all the time. Now, it just happened that the tw=
-o
-> degraded RAID5s won't return to life. The system would not boot, so I
-> panicked and deleted: fstab, mdadm.conf, and some of the superblocks.
-> Now Linux boots, but RAIDs are, of course, dead. I tried to re-create
-> the arrays, but I cannot recall the correct order and my attempts
-> failed. I believe that the partitions are OK, because I don't recall
-> re-creating without "missing", but surely the superblocks are damaged
-> and certanily most of them are zero now.
-> Is there a short way to recover the degraded RAIDs without knowing th=
-e
-> order of drives? I have 6 drives in one (including "missing"), that
-> gives 720 permutations. Also, clearing the superblocks is recoverable=
-,
-> isn't it?
+I'm reviewing one new server with a 3ware 9690 controller where I've got 
+a couple of sata drives connected.
 
-Yes, 720 permutations.  But you can probably write a script
-to generate them all ... how good are your programming skills?
-Use "--assume-clean" to create the array so that it doesn't
-auto-resync.  Then "fsck -n" to see of the data is even close
-to correct.
+In order to see how software raid behave in comparaison with a the raid 
+controller I setup 3 volume:
 
-And why would you think that erasing the superblocks is a recoverable
-operation?  It isn't.
+* 1 raid 1 volume of 2 1TB hard drive
+* 2 single volume of 1 TB hard drive each
 
-NeilBrown
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I assemble the 2 single volume in a raid 1 volume
+
+Both are formatted in XFS mounted noatime and nobarrier.
+
+Sequentials reads and writes are quite similar between software raid and 
+3ware raid.
+
+But when it comes to random writes and random reads I find something 
+strange.
+
+The memory is 1G so I made iozone use 2G file with 4k block
+
+On 3ware (in operation by second)
+Random read:  193
+Random write: 1232
+
+On md
+Random read:  178
+Random write: 361
+
+First I am bit worried that I can manage to get such good random result 
+with the 3ware card I guess I am seeing some cache effect (there is 256 
+MB on the card)
+Also I'm surprised that the software raid is not able to take advantage 
+of this cache effect in the same proportion (1 to 4).
+
+I've been searching internet for tips on raid tunning but it turns out 
+it's mostly for sequential access (ie. like readahead).
+
+Does anyone has an any idea ?
+
+Matthieu.
