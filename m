@@ -1,7 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 07/22] md/raid1: add takeover support for raid5->raid1
+Subject: [md PATCH 09/22] md: collect bitmap-specific fields into one
+	structure.
 Date: Fri, 04 Dec 2009 17:48:02 +1100
-Message-ID: <20091204064802.10264.37738.stgit@notabene.brown>
+Message-ID: <20091204064802.10264.32105.stgit@notabene.brown>
 References: <20091204064559.10264.37619.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -12,327 +13,293 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-A 2-device raid5 array can now be converted to raid1.
+In preparation for making bitmap fields configurable via sysfs,
+start tidying up by making a single structure to contain the
+configuration fields.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
- drivers/md/raid1.c |  193 +++++++++++++++++++++++++++++++---------------------
- drivers/md/raid1.h |    5 +
- 2 files changed, 121 insertions(+), 77 deletions(-)
+ drivers/md/bitmap.c |    8 +++--
+ drivers/md/md.c     |   75 +++++++++++++++++++++++++++------------------------
+ drivers/md/md.h     |   21 +++++++-------
+ 3 files changed, 54 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 35b2d86..18da334 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -677,6 +677,7 @@ static void raise_barrier(conf_t *conf)
- static void lower_barrier(conf_t *conf)
+diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
+index a39f632..4c70a01 100644
+--- a/drivers/md/bitmap.c
++++ b/drivers/md/bitmap.c
+@@ -1610,16 +1610,16 @@ int bitmap_create(mddev_t *mddev)
+ 	sector_t blocks = mddev->resync_max_sectors;
+ 	unsigned long chunks;
+ 	unsigned long pages;
+-	struct file *file = mddev->bitmap_file;
++	struct file *file = mddev->bitmap_info.file;
+ 	int err;
+ 	sector_t start;
+ 
+ 	BUILD_BUG_ON(sizeof(bitmap_super_t) != 256);
+ 
+-	if (!file && !mddev->bitmap_offset) /* bitmap disabled, nothing to do */
++	if (!file && !mddev->bitmap_info.offset) /* bitmap disabled, nothing to do */
+ 		return 0;
+ 
+-	BUG_ON(file && mddev->bitmap_offset);
++	BUG_ON(file && mddev->bitmap_info.offset);
+ 
+ 	bitmap = kzalloc(sizeof(*bitmap), GFP_KERNEL);
+ 	if (!bitmap)
+@@ -1633,7 +1633,7 @@ int bitmap_create(mddev_t *mddev)
+ 	bitmap->mddev = mddev;
+ 
+ 	bitmap->file = file;
+-	bitmap->offset = mddev->bitmap_offset;
++	bitmap->offset = mddev->bitmap_info.offset;
+ 	if (file) {
+ 		get_file(file);
+ 		/* As future accesses to this file will use bmap,
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index ffe92db..b989189 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -865,7 +865,7 @@ struct super_type  {
+  */
+ int md_check_no_bitmap(mddev_t *mddev)
  {
- 	unsigned long flags;
-+	BUG_ON(conf->barrier <= 0);
- 	spin_lock_irqsave(&conf->resync_lock, flags);
- 	conf->barrier--;
- 	spin_unlock_irqrestore(&conf->resync_lock, flags);
-@@ -1960,74 +1961,48 @@ static sector_t raid1_size(mddev_t *mddev, sector_t sectors, int raid_disks)
- 	return mddev->dev_sectors;
- }
+-	if (!mddev->bitmap_file && !mddev->bitmap_offset)
++	if (!mddev->bitmap_info.file && !mddev->bitmap_info.offset)
+ 		return 0;
+ 	printk(KERN_ERR "%s: bitmaps are not supported for %s\n",
+ 		mdname(mddev), mddev->pers->name);
+@@ -993,8 +993,8 @@ static int super_90_validate(mddev_t *mddev, mdk_rdev_t *rdev)
+ 		mddev->raid_disks = sb->raid_disks;
+ 		mddev->dev_sectors = sb->size * 2;
+ 		mddev->events = ev1;
+-		mddev->bitmap_offset = 0;
+-		mddev->default_bitmap_offset = MD_SB_BYTES >> 9;
++		mddev->bitmap_info.offset = 0;
++		mddev->bitmap_info.default_offset = MD_SB_BYTES >> 9;
  
--static int run(mddev_t *mddev)
-+static conf_t *setup_conf(mddev_t *mddev)
+ 		if (mddev->minor_version >= 91) {
+ 			mddev->reshape_position = sb->reshape_position;
+@@ -1028,8 +1028,9 @@ static int super_90_validate(mddev_t *mddev, mdk_rdev_t *rdev)
+ 		mddev->max_disks = MD_SB_DISKS;
+ 
+ 		if (sb->state & (1<<MD_SB_BITMAP_PRESENT) &&
+-		    mddev->bitmap_file == NULL)
+-			mddev->bitmap_offset = mddev->default_bitmap_offset;
++		    mddev->bitmap_info.file == NULL)
++			mddev->bitmap_info.offset =
++				mddev->bitmap_info.default_offset;
+ 
+ 	} else if (mddev->pers == NULL) {
+ 		/* Insist on good event counter while assembling */
+@@ -1146,7 +1147,7 @@ static void super_90_sync(mddev_t *mddev, mdk_rdev_t *rdev)
+ 	sb->layout = mddev->layout;
+ 	sb->chunk_size = mddev->chunk_sectors << 9;
+ 
+-	if (mddev->bitmap && mddev->bitmap_file == NULL)
++	if (mddev->bitmap && mddev->bitmap_info.file == NULL)
+ 		sb->state |= (1<<MD_SB_BITMAP_PRESENT);
+ 
+ 	sb->disks[0].state = (1<<MD_DISK_REMOVED);
+@@ -1224,7 +1225,7 @@ super_90_rdev_size_change(mdk_rdev_t *rdev, sector_t num_sectors)
  {
- 	conf_t *conf;
--	int i, j, disk_idx;
--	mirror_info_t *disk;
- 	mdk_rdev_t *rdev;
-+	int err = -ENOMEM;
-+	mirror_info_t *disk;
-+	int i;
+ 	if (num_sectors && num_sectors < rdev->mddev->dev_sectors)
+ 		return 0; /* component must fit device */
+-	if (rdev->mddev->bitmap_offset)
++	if (rdev->mddev->bitmap_info.offset)
+ 		return 0; /* can't move bitmap */
+ 	rdev->sb_start = calc_dev_sboffset(rdev->bdev);
+ 	if (!num_sectors || num_sectors > rdev->sb_start)
+@@ -1403,8 +1404,8 @@ static int super_1_validate(mddev_t *mddev, mdk_rdev_t *rdev)
+ 		mddev->raid_disks = le32_to_cpu(sb->raid_disks);
+ 		mddev->dev_sectors = le64_to_cpu(sb->size);
+ 		mddev->events = ev1;
+-		mddev->bitmap_offset = 0;
+-		mddev->default_bitmap_offset = 1024 >> 9;
++		mddev->bitmap_info.offset = 0;
++		mddev->bitmap_info.default_offset = 1024 >> 9;
+ 		
+ 		mddev->recovery_cp = le64_to_cpu(sb->resync_offset);
+ 		memcpy(mddev->uuid, sb->set_uuid, 16);
+@@ -1412,8 +1413,9 @@ static int super_1_validate(mddev_t *mddev, mdk_rdev_t *rdev)
+ 		mddev->max_disks =  (4096-256)/2;
  
--	if (mddev->level != 1) {
--		printk("raid1: %s: raid level not set to mirroring (%d)\n",
--		       mdname(mddev), mddev->level);
--		goto out;
--	}
--	if (mddev->reshape_position != MaxSector) {
--		printk("raid1: %s: reshape_position set but not supported\n",
--		       mdname(mddev));
--		goto out;
--	}
--	/*
--	 * copy the already verified devices into our private RAID1
--	 * bookkeeping area. [whatever we allocate in run(),
--	 * should be freed in stop()]
--	 */
- 	conf = kzalloc(sizeof(conf_t), GFP_KERNEL);
--	mddev->private = conf;
- 	if (!conf)
--		goto out_no_mem;
-+		goto abort;
+ 		if ((le32_to_cpu(sb->feature_map) & MD_FEATURE_BITMAP_OFFSET) &&
+-		    mddev->bitmap_file == NULL )
+-			mddev->bitmap_offset = (__s32)le32_to_cpu(sb->bitmap_offset);
++		    mddev->bitmap_info.file == NULL )
++			mddev->bitmap_info.offset =
++				(__s32)le32_to_cpu(sb->bitmap_offset);
  
- 	conf->mirrors = kzalloc(sizeof(struct mirror_info)*mddev->raid_disks,
- 				 GFP_KERNEL);
- 	if (!conf->mirrors)
--		goto out_no_mem;
-+		goto abort;
+ 		if ((le32_to_cpu(sb->feature_map) & MD_FEATURE_RESHAPE_ACTIVE)) {
+ 			mddev->reshape_position = le64_to_cpu(sb->reshape_position);
+@@ -1507,8 +1509,8 @@ static void super_1_sync(mddev_t *mddev, mdk_rdev_t *rdev)
+ 	sb->level = cpu_to_le32(mddev->level);
+ 	sb->layout = cpu_to_le32(mddev->layout);
  
- 	conf->tmppage = alloc_page(GFP_KERNEL);
- 	if (!conf->tmppage)
--		goto out_no_mem;
-+		goto abort;
+-	if (mddev->bitmap && mddev->bitmap_file == NULL) {
+-		sb->bitmap_offset = cpu_to_le32((__u32)mddev->bitmap_offset);
++	if (mddev->bitmap && mddev->bitmap_info.file == NULL) {
++		sb->bitmap_offset = cpu_to_le32((__u32)mddev->bitmap_info.offset);
+ 		sb->feature_map = cpu_to_le32(MD_FEATURE_BITMAP_OFFSET);
+ 	}
  
--	conf->poolinfo = kmalloc(sizeof(*conf->poolinfo), GFP_KERNEL);
-+	conf->poolinfo = kzalloc(sizeof(*conf->poolinfo), GFP_KERNEL);
- 	if (!conf->poolinfo)
--		goto out_no_mem;
--	conf->poolinfo->mddev = NULL;
-+		goto abort;
- 	conf->poolinfo->raid_disks = mddev->raid_disks;
- 	conf->r1bio_pool = mempool_create(NR_RAID1_BIOS, r1bio_pool_alloc,
- 					  r1bio_pool_free,
- 					  conf->poolinfo);
- 	if (!conf->r1bio_pool)
--		goto out_no_mem;
-+		goto abort;
-+
- 	conf->poolinfo->mddev = mddev;
+@@ -1575,7 +1577,7 @@ super_1_rdev_size_change(mdk_rdev_t *rdev, sector_t num_sectors)
+ 		max_sectors -= rdev->data_offset;
+ 		if (!num_sectors || num_sectors > max_sectors)
+ 			num_sectors = max_sectors;
+-	} else if (rdev->mddev->bitmap_offset) {
++	} else if (rdev->mddev->bitmap_info.offset) {
+ 		/* minor version 0 with bitmap we can't move */
+ 		return 0;
+ 	} else {
+@@ -4522,12 +4524,12 @@ out:
+ 		printk(KERN_INFO "md: %s stopped.\n", mdname(mddev));
  
- 	spin_lock_init(&conf->device_lock);
--	mddev->queue->queue_lock = &conf->device_lock;
+ 		bitmap_destroy(mddev);
+-		if (mddev->bitmap_file) {
+-			restore_bitmap_write_access(mddev->bitmap_file);
+-			fput(mddev->bitmap_file);
+-			mddev->bitmap_file = NULL;
++		if (mddev->bitmap_info.file) {
++			restore_bitmap_write_access(mddev->bitmap_info.file);
++			fput(mddev->bitmap_info.file);
++			mddev->bitmap_info.file = NULL;
+ 		}
+-		mddev->bitmap_offset = 0;
++		mddev->bitmap_info.offset = 0;
+ 
+ 		/* make sure all md_delayed_delete calls have finished */
+ 		flush_scheduled_work();
+@@ -4753,7 +4755,7 @@ static int get_array_info(mddev_t * mddev, void __user * arg)
+ 	info.state         = 0;
+ 	if (mddev->in_sync)
+ 		info.state = (1<<MD_SB_CLEAN);
+-	if (mddev->bitmap && mddev->bitmap_offset)
++	if (mddev->bitmap && mddev->bitmap_info.offset)
+ 		info.state = (1<<MD_SB_BITMAP_PRESENT);
+ 	info.active_disks  = insync;
+ 	info.working_disks = working;
+@@ -5111,23 +5113,23 @@ static int set_bitmap_file(mddev_t *mddev, int fd)
+ 	if (fd >= 0) {
+ 		if (mddev->bitmap)
+ 			return -EEXIST; /* cannot add when bitmap is present */
+-		mddev->bitmap_file = fget(fd);
++		mddev->bitmap_info.file = fget(fd);
+ 
+-		if (mddev->bitmap_file == NULL) {
++		if (mddev->bitmap_info.file == NULL) {
+ 			printk(KERN_ERR "%s: error: failed to get bitmap file\n",
+ 			       mdname(mddev));
+ 			return -EBADF;
+ 		}
+ 
+-		err = deny_bitmap_write_access(mddev->bitmap_file);
++		err = deny_bitmap_write_access(mddev->bitmap_info.file);
+ 		if (err) {
+ 			printk(KERN_ERR "%s: error: bitmap file is already in use\n",
+ 			       mdname(mddev));
+-			fput(mddev->bitmap_file);
+-			mddev->bitmap_file = NULL;
++			fput(mddev->bitmap_info.file);
++			mddev->bitmap_info.file = NULL;
+ 			return err;
+ 		}
+-		mddev->bitmap_offset = 0; /* file overrides offset */
++		mddev->bitmap_info.offset = 0; /* file overrides offset */
+ 	} else if (mddev->bitmap == NULL)
+ 		return -ENOENT; /* cannot remove what isn't there */
+ 	err = 0;
+@@ -5142,11 +5144,11 @@ static int set_bitmap_file(mddev_t *mddev, int fd)
+ 		mddev->pers->quiesce(mddev, 0);
+ 	}
+ 	if (fd < 0) {
+-		if (mddev->bitmap_file) {
+-			restore_bitmap_write_access(mddev->bitmap_file);
+-			fput(mddev->bitmap_file);
++		if (mddev->bitmap_info.file) {
++			restore_bitmap_write_access(mddev->bitmap_info.file);
++			fput(mddev->bitmap_info.file);
+ 		}
+-		mddev->bitmap_file = NULL;
++		mddev->bitmap_info.file = NULL;
+ 	}
+ 
+ 	return err;
+@@ -5213,8 +5215,8 @@ static int set_array_info(mddev_t * mddev, mdu_array_info_t *info)
+ 		mddev->flags         = 0;
+ 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
+ 
+-	mddev->default_bitmap_offset = MD_SB_BYTES >> 9;
+-	mddev->bitmap_offset = 0;
++	mddev->bitmap_info.default_offset = MD_SB_BYTES >> 9;
++	mddev->bitmap_info.offset = 0;
+ 
+ 	mddev->reshape_position = MaxSector;
+ 
+@@ -5314,7 +5316,7 @@ static int update_array_info(mddev_t *mddev, mdu_array_info_t *info)
+ 	int state = 0;
+ 
+ 	/* calculate expected state,ignoring low bits */
+-	if (mddev->bitmap && mddev->bitmap_offset)
++	if (mddev->bitmap && mddev->bitmap_info.offset)
+ 		state |= (1 << MD_SB_BITMAP_PRESENT);
+ 
+ 	if (mddev->major_version != info->major_version ||
+@@ -5373,9 +5375,10 @@ static int update_array_info(mddev_t *mddev, mdu_array_info_t *info)
+ 			/* add the bitmap */
+ 			if (mddev->bitmap)
+ 				return -EEXIST;
+-			if (mddev->default_bitmap_offset == 0)
++			if (mddev->bitmap_info.default_offset == 0)
+ 				return -EINVAL;
+-			mddev->bitmap_offset = mddev->default_bitmap_offset;
++			mddev->bitmap_info.offset =
++				mddev->bitmap_info.default_offset;
+ 			mddev->pers->quiesce(mddev, 1);
+ 			rv = bitmap_create(mddev);
+ 			if (rv)
+@@ -5390,7 +5393,7 @@ static int update_array_info(mddev_t *mddev, mdu_array_info_t *info)
+ 			mddev->pers->quiesce(mddev, 1);
+ 			bitmap_destroy(mddev);
+ 			mddev->pers->quiesce(mddev, 0);
+-			mddev->bitmap_offset = 0;
++			mddev->bitmap_info.offset = 0;
+ 		}
+ 	}
+ 	md_update_sb(mddev, 1);
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 77f0aad..94a8e51 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -280,16 +280,17 @@ struct mddev_s
+ 	unsigned int                    max_write_behind; /* 0 = sync */
+ 
+ 	struct bitmap                   *bitmap; /* the bitmap for the device */
+-	struct file			*bitmap_file; /* the bitmap file */
+-	long				bitmap_offset; /* offset from superblock of
+-							* start of bitmap. May be
+-							* negative, but not '0'
+-							*/
+-	long				default_bitmap_offset; /* this is the offset to use when
+-								* hot-adding a bitmap.  It should
+-								* eventually be settable by sysfs.
+-								*/
 -
- 	list_for_each_entry(rdev, &mddev->disks, same_set) {
--		disk_idx = rdev->raid_disk;
-+		int disk_idx = rdev->raid_disk;
- 		if (disk_idx >= mddev->raid_disks
- 		    || disk_idx < 0)
- 			continue;
- 		disk = conf->mirrors + disk_idx;
++	struct {
++		struct file		*file; /* the bitmap file */
++		long			offset; /* offset from superblock of
++						 * start of bitmap. May be
++						 * negative, but not '0'
++						 */
++		long			default_offset; /* this is the offset to use when
++							 * hot-adding a bitmap.  It should
++							 * eventually be settable by sysfs.
++							 */
++	} bitmap_info;
+ 	struct list_head		all_mddevs;
  
- 		disk->rdev = rdev;
--		disk_stack_limits(mddev->gendisk, rdev->bdev,
--				  rdev->data_offset << 9);
--		/* as we don't honour merge_bvec_fn, we must never risk
--		 * violating it, so limit ->max_sector to one PAGE, as
--		 * a one page request is never in violation.
--		 */
--		if (rdev->bdev->bd_disk->queue->merge_bvec_fn &&
--		    queue_max_sectors(mddev->queue) > (PAGE_SIZE>>9))
--			blk_queue_max_sectors(mddev->queue, PAGE_SIZE>>9);
- 
- 		disk->head_position = 0;
- 	}
-@@ -2041,8 +2016,7 @@ static int run(mddev_t *mddev)
- 	bio_list_init(&conf->pending_bio_list);
- 	bio_list_init(&conf->flushing_bio_list);
- 
--
--	mddev->degraded = 0;
-+	conf->last_used = -1;
- 	for (i = 0; i < conf->raid_disks; i++) {
- 
- 		disk = conf->mirrors + i;
-@@ -2050,38 +2024,97 @@ static int run(mddev_t *mddev)
- 		if (!disk->rdev ||
- 		    !test_bit(In_sync, &disk->rdev->flags)) {
- 			disk->head_position = 0;
--			mddev->degraded++;
- 			if (disk->rdev)
- 				conf->fullsync = 1;
--		}
-+		} else if (conf->last_used < 0)
-+			/*
-+			 * The first working device is used as a
-+			 * starting point to read balancing.
-+			 */
-+			conf->last_used = i;
- 	}
--	if (mddev->degraded == conf->raid_disks) {
-+
-+	err = -EIO;
-+	if (conf->last_used < 0) {
- 		printk(KERN_ERR "raid1: no operational mirrors for %s\n",
--			mdname(mddev));
--		goto out_free_conf;
-+		       mdname(mddev));
-+		goto abort;
- 	}
--	if (conf->raid_disks - mddev->degraded == 1)
--		mddev->recovery_cp = MaxSector;
-+	err = -ENOMEM;
-+	conf->thread = md_register_thread(raid1d, mddev, NULL);
-+	if (!conf->thread) {
-+		printk(KERN_ERR
-+		       "raid1: couldn't allocate thread for %s\n",
-+		       mdname(mddev));
-+		goto abort;
-+	}
-+
-+	return conf;
-+
-+ abort:
-+	if (conf) {
-+		if (conf->r1bio_pool)
-+			mempool_destroy(conf->r1bio_pool);
-+		kfree(conf->mirrors);
-+		safe_put_page(conf->tmppage);
-+		kfree(conf->poolinfo);
-+		kfree(conf);
-+	}
-+	return ERR_PTR(err);
-+}
- 
-+static int run(mddev_t *mddev)
-+{
-+	conf_t *conf;
-+	int i;
-+	mdk_rdev_t *rdev;
-+
-+	if (mddev->level != 1) {
-+		printk("raid1: %s: raid level not set to mirroring (%d)\n",
-+		       mdname(mddev), mddev->level);
-+		return -EIO;
-+	}
-+	if (mddev->reshape_position != MaxSector) {
-+		printk("raid1: %s: reshape_position set but not supported\n",
-+		       mdname(mddev));
-+		return -EIO;
-+	}
- 	/*
--	 * find the first working one and use it as a starting point
--	 * to read balancing.
-+	 * copy the already verified devices into our private RAID1
-+	 * bookkeeping area. [whatever we allocate in run(),
-+	 * should be freed in stop()]
- 	 */
--	for (j = 0; j < conf->raid_disks &&
--		     (!conf->mirrors[j].rdev ||
--		      !test_bit(In_sync, &conf->mirrors[j].rdev->flags)) ; j++)
--		/* nothing */;
--	conf->last_used = j;
-+	if (mddev->private == NULL)
-+		conf = setup_conf(mddev);
-+	else
-+		conf = mddev->private;
- 
-+	if (IS_ERR(conf))
-+		return PTR_ERR(conf);
- 
--	mddev->thread = md_register_thread(raid1d, mddev, NULL);
--	if (!mddev->thread) {
--		printk(KERN_ERR
--		       "raid1: couldn't allocate thread for %s\n",
--		       mdname(mddev));
--		goto out_free_conf;
-+	mddev->queue->queue_lock = &conf->device_lock;
-+	list_for_each_entry(rdev, &mddev->disks, same_set) {
-+		disk_stack_limits(mddev->gendisk, rdev->bdev,
-+				  rdev->data_offset << 9);
-+		/* as we don't honour merge_bvec_fn, we must never risk
-+		 * violating it, so limit ->max_sector to one PAGE, as
-+		 * a one page request is never in violation.
-+		 */
-+		if (rdev->bdev->bd_disk->queue->merge_bvec_fn &&
-+		    queue_max_sectors(mddev->queue) > (PAGE_SIZE>>9))
-+			blk_queue_max_sectors(mddev->queue, PAGE_SIZE>>9);
- 	}
- 
-+	mddev->degraded = 0;
-+	for (i=0; i < conf->raid_disks; i++)
-+		if (conf->mirrors[i].rdev == NULL ||
-+		    !test_bit(In_sync, &conf->mirrors[i].rdev->flags) ||
-+		    test_bit(Faulty, &conf->mirrors[i].rdev->flags))
-+			mddev->degraded++;
-+
-+	if (conf->raid_disks - mddev->degraded == 1)
-+		mddev->recovery_cp = MaxSector;
-+
- 	if (mddev->recovery_cp != MaxSector)
- 		printk(KERN_NOTICE "raid1: %s is not clean"
- 		       " -- starting background reconstruction\n",
-@@ -2090,9 +2123,14 @@ static int run(mddev_t *mddev)
- 		"raid1: raid set %s active with %d out of %d mirrors\n",
- 		mdname(mddev), mddev->raid_disks - mddev->degraded, 
- 		mddev->raid_disks);
-+
- 	/*
- 	 * Ok, everything is just fine now
- 	 */
-+	mddev->thread = conf->thread;
-+	conf->thread = NULL;
-+	mddev->private = conf;
-+
- 	md_set_array_sectors(mddev, raid1_size(mddev, 0, 0));
- 
- 	mddev->queue->unplug_fn = raid1_unplug;
-@@ -2100,23 +2138,6 @@ static int run(mddev_t *mddev)
- 	mddev->queue->backing_dev_info.congested_data = mddev;
- 	md_integrity_register(mddev);
- 	return 0;
--
--out_no_mem:
--	printk(KERN_ERR "raid1: couldn't allocate memory for %s\n",
--	       mdname(mddev));
--
--out_free_conf:
--	if (conf) {
--		if (conf->r1bio_pool)
--			mempool_destroy(conf->r1bio_pool);
--		kfree(conf->mirrors);
--		safe_put_page(conf->tmppage);
--		kfree(conf->poolinfo);
--		kfree(conf);
--		mddev->private = NULL;
--	}
--out:
--	return -EIO;
- }
- 
- static int stop(mddev_t *mddev)
-@@ -2302,6 +2323,23 @@ static void raid1_quiesce(mddev_t *mddev, int state)
- 	}
- }
- 
-+static void *raid1_takeover(mddev_t *mddev)
-+{
-+	/* raid1 can take over:
-+	 *  raid5 with 2 devices, any layout or chunk size
-+	 */
-+	if (mddev->level == 5 && mddev->raid_disks == 2) {
-+		conf_t *conf;
-+		mddev->new_level = 1;
-+		mddev->new_layout = 0;
-+		mddev->new_chunk_sectors = 0;
-+		conf = setup_conf(mddev);
-+		if (!IS_ERR(conf))
-+			conf->barrier = 1;
-+		return conf;
-+	}
-+	return ERR_PTR(-EINVAL);
-+}
- 
- static struct mdk_personality raid1_personality =
- {
-@@ -2321,6 +2359,7 @@ static struct mdk_personality raid1_personality =
- 	.size		= raid1_size,
- 	.check_reshape	= raid1_reshape,
- 	.quiesce	= raid1_quiesce,
-+	.takeover	= raid1_takeover,
- };
- 
- static int __init raid_init(void)
-diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
-index e87b84d..5f2d443 100644
---- a/drivers/md/raid1.h
-+++ b/drivers/md/raid1.h
-@@ -59,6 +59,11 @@ struct r1_private_data_s {
- 
- 	mempool_t *r1bio_pool;
- 	mempool_t *r1buf_pool;
-+
-+	/* When taking over an array from a different personality, we store
-+	 * the new thread here until we fully activate the array.
-+	 */
-+	struct mdk_thread_s	*thread;
- };
- 
- typedef struct r1_private_data_s conf_t;
+ 	/* Generic barrier handling.
 
 
