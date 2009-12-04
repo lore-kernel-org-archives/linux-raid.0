@@ -1,8 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 22/22] md: integrate spares into array at earliest
-	opportunity.
+Subject: [md PATCH 21/22] md: move compat_ioctl handling into md.c
 Date: Fri, 04 Dec 2009 17:48:02 +1100
-Message-ID: <20091204064802.10264.89008.stgit@notabene.brown>
+Message-ID: <20091204064802.10264.47435.stgit@notabene.brown>
 References: <20091204064559.10264.37619.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -11,63 +10,105 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20091204064559.10264.37619.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: Andre Noll <maan@systemlinux.org>, Arnd Bergmann <arnd@arndb.de>
 List-Id: linux-raid.ids
 
-As v1.x metadata can record that a member of the array is
-not completely recovered, it make sense to record that a
-spare has become a regular member of the array at the earliest
-opportunity.
-So remove the tests on "recovery_offset > 0" in super_1_sync
-as they really aren't needed, and schedule a metadata update
-immediately after adding spares to a degraded array.
+From: Arnd Bergmann <arnd@arndb.de>
 
-This means that if a crash happens immediately after a recovery
-starts, the new device will be included in the array and recovery will
-continue from wherever it was up to.  Previously this didn't happen
-unless recovery was at least 1/16 of the way through.
+The RAID ioctls are only implemented in md.c, so the
+handling for them should also be moved there from
+fs/compat_ioctl.c.
 
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Cc: Neil Brown <neilb@suse.de>
+Cc: Andre Noll <maan@systemlinux.org>
+Cc: linux-raid@vger.kernel.org
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
- drivers/md/md.c |   13 ++++++-------
- 1 files changed, 6 insertions(+), 7 deletions(-)
+ drivers/md/md.c   |   23 +++++++++++++++++++++++
+ fs/compat_ioctl.c |   22 ----------------------
+ 2 files changed, 23 insertions(+), 22 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index c4a0e59..8f70166 100644
+index 5111587..c4a0e59 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -1523,12 +1523,10 @@ static void super_1_sync(mddev_t *mddev, mdk_rdev_t *rdev)
+@@ -44,6 +44,7 @@
+ #include <linux/random.h>
+ #include <linux/reboot.h>
+ #include <linux/file.h>
++#include <linux/compat.h>
+ #include <linux/delay.h>
+ #include <linux/raid/md_p.h>
+ #include <linux/raid/md_u.h>
+@@ -5681,6 +5682,25 @@ done:
+ abort:
+ 	return err;
+ }
++#ifdef CONFIG_COMPAT
++static int md_compat_ioctl(struct block_device *bdev, fmode_t mode,
++		    unsigned int cmd, unsigned long arg)
++{
++	switch (cmd) {
++	case HOT_REMOVE_DISK:
++	case HOT_ADD_DISK:
++	case SET_DISK_FAULTY:
++	case SET_BITMAP_FILE:
++		/* These take in integer arg, do not convert */
++		break;
++	default:
++		arg = (unsigned long)compat_ptr(arg);
++		break;
++	}
++
++	return md_ioctl(bdev, mode, cmd, arg);
++}
++#endif /* CONFIG_COMPAT */
  
- 	if (rdev->raid_disk >= 0 &&
- 	    !test_bit(In_sync, &rdev->flags)) {
--		if (rdev->recovery_offset > 0) {
--			sb->feature_map |=
--				cpu_to_le32(MD_FEATURE_RECOVERY_OFFSET);
--			sb->recovery_offset =
--				cpu_to_le64(rdev->recovery_offset);
--		}
-+		sb->feature_map |=
-+			cpu_to_le32(MD_FEATURE_RECOVERY_OFFSET);
-+		sb->recovery_offset =
-+			cpu_to_le64(rdev->recovery_offset);
- 	}
- 
- 	if (mddev->reshape_position != MaxSector) {
-@@ -1562,7 +1560,7 @@ static void super_1_sync(mddev_t *mddev, mdk_rdev_t *rdev)
- 			sb->dev_roles[i] = cpu_to_le16(0xfffe);
- 		else if (test_bit(In_sync, &rdev2->flags))
- 			sb->dev_roles[i] = cpu_to_le16(rdev2->raid_disk);
--		else if (rdev2->raid_disk >= 0 && rdev2->recovery_offset > 0)
-+		else if (rdev2->raid_disk >= 0)
- 			sb->dev_roles[i] = cpu_to_le16(rdev2->raid_disk);
- 		else
- 			sb->dev_roles[i] = cpu_to_le16(0xffff);
-@@ -6777,6 +6775,7 @@ static int remove_and_add_spares(mddev_t *mddev)
- 						       nm, mdname(mddev));
- 					spares++;
- 					md_new_event(mddev);
-+					set_bit(MD_CHANGE_DEVS, &mddev->flags);
- 				} else
- 					break;
- 			}
+ static int md_open(struct block_device *bdev, fmode_t mode)
+ {
+@@ -5746,6 +5766,9 @@ static const struct block_device_operations md_fops =
+ 	.open		= md_open,
+ 	.release	= md_release,
+ 	.ioctl		= md_ioctl,
++#ifdef CONFIG_COMPAT
++	.compat_ioctl	= md_compat_ioctl,
++#endif
+ 	.getgeo		= md_getgeo,
+ 	.media_changed	= md_media_changed,
+ 	.revalidate_disk= md_revalidate,
+diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
+index d84e705..ad485ba 100644
+--- a/fs/compat_ioctl.c
++++ b/fs/compat_ioctl.c
+@@ -1912,28 +1912,6 @@ COMPATIBLE_IOCTL(FIGETBSZ)
+ /* 'X' - originally XFS but some now in the VFS */
+ COMPATIBLE_IOCTL(FIFREEZE)
+ COMPATIBLE_IOCTL(FITHAW)
+-/* RAID */
+-COMPATIBLE_IOCTL(RAID_VERSION)
+-COMPATIBLE_IOCTL(GET_ARRAY_INFO)
+-COMPATIBLE_IOCTL(GET_DISK_INFO)
+-COMPATIBLE_IOCTL(PRINT_RAID_DEBUG)
+-COMPATIBLE_IOCTL(RAID_AUTORUN)
+-COMPATIBLE_IOCTL(CLEAR_ARRAY)
+-COMPATIBLE_IOCTL(ADD_NEW_DISK)
+-ULONG_IOCTL(HOT_REMOVE_DISK)
+-COMPATIBLE_IOCTL(SET_ARRAY_INFO)
+-COMPATIBLE_IOCTL(SET_DISK_INFO)
+-COMPATIBLE_IOCTL(WRITE_RAID_INFO)
+-COMPATIBLE_IOCTL(UNPROTECT_ARRAY)
+-COMPATIBLE_IOCTL(PROTECT_ARRAY)
+-ULONG_IOCTL(HOT_ADD_DISK)
+-ULONG_IOCTL(SET_DISK_FAULTY)
+-COMPATIBLE_IOCTL(RUN_ARRAY)
+-COMPATIBLE_IOCTL(STOP_ARRAY)
+-COMPATIBLE_IOCTL(STOP_ARRAY_RO)
+-COMPATIBLE_IOCTL(RESTART_ARRAY_RW)
+-COMPATIBLE_IOCTL(GET_BITMAP_FILE)
+-ULONG_IOCTL(SET_BITMAP_FILE)
+ /* Big K */
+ COMPATIBLE_IOCTL(PIO_FONT)
+ COMPATIBLE_IOCTL(GIO_FONT)
 
 
