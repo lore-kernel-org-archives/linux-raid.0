@@ -1,7 +1,7 @@
 From: hank peng <pengxihan@gmail.com>
 Subject: Re: about raid5 recovery when created
-Date: Tue, 8 Dec 2009 21:49:48 +0800
-Message-ID: <389deec70912080549h1b22489es612235ad29354d6b@mail.gmail.com>
+Date: Tue, 8 Dec 2009 21:52:14 +0800
+Message-ID: <389deec70912080552r363e6412j9b10ebed5481ebeb@mail.gmail.com>
 References: <389deec70912080501u6c6bc90ei2d34ef245a1dae9e@mail.gmail.com>
 	 <20091208131446.GA21130@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
@@ -31,17 +31,16 @@ List-Id: linux-raid.ids
 te
 > to all disks. =C2=A0Most systems will be I/O limited rather than CPU =
 limited,
+My CPU is an embedded arch, 1.3GHz, single core, so CPU usage is import=
+ant.
+In low-end NAS box, I think, this requirment is normal.
+
 > so the current approach works better. =C2=A0If you want to zero the d=
 isks
 > then do this before creating the array - you can then use --assume-cl=
 ean
 > to skip the resync process.
 >
-I think --assume-clean is used mostly when doing performance test and
-can't be used when creating a raid5 array using new disk, because
-later read and write operation make assumption that all stripe is
-XORed. Correct me if I am wrong.
-
 > Cheers,
 > =C2=A0 =C2=A0Robin
 > --
