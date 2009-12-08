@@ -1,87 +1,82 @@
-From: hank peng <pengxihan@gmail.com>
-Subject: Re: about raid5 recovery when created
-Date: Tue, 8 Dec 2009 22:03:09 +0800
-Message-ID: <389deec70912080603w47d7fda3jf021af169ac1c48c@mail.gmail.com>
-References: <389deec70912080501u6c6bc90ei2d34ef245a1dae9e@mail.gmail.com>
-	 <20091208131446.GA21130@cthulhu.home.robinhill.me.uk>
-	 <389deec70912080549h1b22489es612235ad29354d6b@mail.gmail.com>
-	 <20091208135600.GB21130@cthulhu.home.robinhill.me.uk>
+From: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Subject: invalid bitmap magic on *just removed* device
+Date: Tue, 8 Dec 2009 10:46:38 -0600
+Message-ID: <cccedfc60912080846k6cdf4813j1017f3a480c1dc3b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091208135600.GB21130@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-2009/12/8 Robin Hill <robin@robinhill.me.uk>:
-> On Tue Dec 08, 2009 at 09:49:48PM +0800, hank peng wrote:
->
->> 2009/12/8 Robin Hill <robin@robinhill.me.uk>:
->> > On Tue Dec 08, 2009 at 09:01:23PM +0800, hank peng wrote:
->> >
->> >> Hi, all:
->> >> As we know, when a raid5 array is created, recovery will be going=
- on
->> >> which involves some read, one xor and one write. Since there is n=
-o
->> >> real data in the disk at the time, besides, if I am willing to wa=
-it
->> >> for recovery to complete and then use this raid5, how about addin=
-g
->> >> support for a fast recovery method? Right now, what is in my mind=
- is
->> >> zero all disks which belong to this raid5. I think it will increa=
-se
->> >> raid5 recovery speed when created and decrease CPU usage, since a=
-ll
->> >> zero is also XORed.
->> >> What do raid developers think?
->> >>
->> > It'll decrease CPU usage but increase I/O - you're now needing to =
-write
->> > to all disks. =C2=A0Most systems will be I/O limited rather than C=
-PU limited,
->> > so the current approach works better. =C2=A0If you want to zero th=
-e disks
->> > then do this before creating the array - you can then use --assume=
--clean
->> > to skip the resync process.
->> >
->> I think --assume-clean is used mostly when doing performance test an=
-d
->> can't be used when creating a raid5 array using new disk, because
->> later read and write operation make assumption that all stripe is
->> XORed. Correct me if I am wrong.
->>
-> You're correct - that's why I said to zero all the disks first so the
-> XOR data is all correct.
->
-I think this function is better to be implemented in kernel raid
-layer, not in user space(for example using dd command).
-In this way, we can get good performance and lower cpu usage, also, we
-can make this function be part of raid code so that it can be managed
-by mdadm
-> Cheers,
-> =C2=A0 =C2=A0Robin
-> --
-> =C2=A0 =C2=A0 ___
-> =C2=A0 =C2=A0( ' } =C2=A0 =C2=A0 | =C2=A0 =C2=A0 =C2=A0 Robin Hill =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0<robin@robinhill.me.uk> |
-> =C2=A0 / / ) =C2=A0 =C2=A0 =C2=A0| Little Jim says .... =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0|
-> =C2=A0// !! =C2=A0 =C2=A0 =C2=A0 | =C2=A0 =C2=A0 =C2=A0"He fallen in =
-de water !!" =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 |
->
+I added a device, /dev/nbd0, to a level1 software raid.
+After it was done recovering, I --failed and --remove the device.
+Now mdadm -X claims the device has an invalid bitmap:
 
 
+turnip:~ # mdadm -X /dev/nbd0
+        Filename : /dev/nbd0
+           Magic : 00007fee
+mdadm: invalid bitmap magic 0x7fee, the bitmap file appears to be corrupted
+         Version : 524288
+mdadm: unknown bitmap version 524288, either the bitmap file is
+corrupted or you need to upgrade your tools
+turnip:~ #
 
---=20
-The simplest is not all best but the best is surely the simplest!
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+kernel 2.6.31.5, openSUSE 11.2, mdadm 3.0.2 (25 Sep 09)
+
+I seem to have encountered this before - as I recall, the remove and
+then re-add the bitmap to the device while all components were
+present.
+NOTE: after the recovery finished, all 2 of 2 devices were present.
+
+mdadm -X /dev/sde (the other device in the raid) looks like this:
+
+        Filename : /dev/sde
+           Magic : 6d746962
+         Version : 4
+            UUID : 75e9d8ba:47cfeb96:431070f1:84d3b1f3
+          Events : 109186
+  Events Cleared : 104694
+           State : OK
+       Chunksize : 256 KB
+          Daemon : 5s flush period
+      Write Mode : Normal
+       Sync Size : 72612988 (69.25 GiB 74.36 GB)
+          Bitmap : 283645 bits (chunks), 4481 dirty (1.6%)
+
+
+and mdadm --detail /dev/md12 looks like this:
+
+/dev/md12:
+        Version : 1.01
+  Creation Time : Wed Jun 17 12:09:11 2009
+     Raid Level : raid1
+     Array Size : 72612988 (69.25 GiB 74.36 GB)
+  Used Dev Size : 72612988 (69.25 GiB 74.36 GB)
+   Raid Devices : 2
+  Total Devices : 1
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Tue Dec  8 10:41:20 2009
+          State : active, degraded
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 0
+  Spare Devices : 0
+
+           Name : turnip:12  (local to host turnip)
+           UUID : 75e9d8ba:47cfeb96:431070f1:84d3b1f3
+         Events : 109186
+
+    Number   Major   Minor   RaidDevice State
+       0       8       64        0      active sync   /dev/sde
+       1       0        0        1      removed
+
+
+Ideas?
+
+-- 
+Jon
