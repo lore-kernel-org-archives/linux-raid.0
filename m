@@ -1,65 +1,130 @@
-From: hank peng <pengxihan@gmail.com>
-Subject: Re: about raid5 recovery when created
-Date: Tue, 8 Dec 2009 21:52:14 +0800
-Message-ID: <389deec70912080552r363e6412j9b10ebed5481ebeb@mail.gmail.com>
-References: <389deec70912080501u6c6bc90ei2d34ef245a1dae9e@mail.gmail.com>
-	 <20091208131446.GA21130@cthulhu.home.robinhill.me.uk>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [md PATCH 04/22] md: support barrier requests on all personalities.
+Date: Tue, 8 Dec 2009 14:54:42 +0100
+Message-ID: <20091208135442.GR5174@skl-net.de>
+References: <20091204064559.10264.37619.stgit@notabene.brown> <20091204064802.10264.60521.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="HSfddtAs2KjjielS"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091208131446.GA21130@cthulhu.home.robinhill.me.uk>
+Content-Disposition: inline
+In-Reply-To: <20091204064802.10264.60521.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2009/12/8 Robin Hill <robin@robinhill.me.uk>:
-> On Tue Dec 08, 2009 at 09:01:23PM +0800, hank peng wrote:
->
->> Hi, all:
->> As we know, when a raid5 array is created, recovery will be going on
->> which involves some read, one xor and one write. Since there is no
->> real data in the disk at the time, besides, if I am willing to wait
->> for recovery to complete and then use this raid5, how about adding
->> support for a fast recovery method? Right now, what is in my mind is
->> zero all disks which belong to this raid5. I think it will increase
->> raid5 recovery speed when created and decrease CPU usage, since all
->> zero is also XORed.
->> What do raid developers think?
->>
-> It'll decrease CPU usage but increase I/O - you're now needing to wri=
-te
-> to all disks. =C2=A0Most systems will be I/O limited rather than CPU =
-limited,
-My CPU is an embedded arch, 1.3GHz, single core, so CPU usage is import=
-ant.
-In low-end NAS box, I think, this requirment is normal.
 
-> so the current approach works better. =C2=A0If you want to zero the d=
-isks
-> then do this before creating the array - you can then use --assume-cl=
-ean
-> to skip the resync process.
->
-> Cheers,
-> =C2=A0 =C2=A0Robin
-> --
-> =C2=A0 =C2=A0 ___
-> =C2=A0 =C2=A0( ' } =C2=A0 =C2=A0 | =C2=A0 =C2=A0 =C2=A0 Robin Hill =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0<robin@robinhill.me.uk> |
-> =C2=A0 / / ) =C2=A0 =C2=A0 =C2=A0| Little Jim says .... =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0|
-> =C2=A0// !! =C2=A0 =C2=A0 =C2=A0 | =C2=A0 =C2=A0 =C2=A0"He fallen in =
-de water !!" =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 |
->
+--HSfddtAs2KjjielS
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On 17:48, NeilBrown wrote:
+> When a barrier arrives, we send a zero-length barrier to every active
+> device.  When that completes - and if the original request was not
+> empty -  we submit the barrier request itself (with the barrier flag
+> cleared) and the submit a fresh load of zero length barriers.
 
+s/the/then
 
+> +/*
+> + * Generic barrier handling for md
+> + */
+> +
+> +static void md_end_barrier(struct bio *bio, int err)
+> +{
+> +	mdk_rdev_t *rdev =3D bio->bi_private;
+> +	mddev_t *mddev =3D rdev->mddev;
+> +	if (err =3D=3D -EOPNOTSUPP && mddev->barrier !=3D (void*)1)
+
+How about
+
+	#define POST_REQUEST_BARRIER ((void*)1)
+
+?
+
+> +		rcu_read_lock();
+> +		list_for_each_entry_rcu(rdev, &mddev->disks, same_set)
+> +			if (rdev->raid_disk >=3D 0 &&
+> +			    !test_bit(Faulty, &rdev->flags)) {
+> +				/* Take two references, one is dropped
+> +				 * when request finishes, one after
+> +				 * we reclaim rcu_read_lock
+> +				 */
+> +				struct bio *bi;
+> +				atomic_inc(&rdev->nr_pending);
+> +				atomic_inc(&rdev->nr_pending);
+> +				rcu_read_unlock();
+> +				bi =3D bio_alloc(GFP_KERNEL, 0);
+> +				bi->bi_end_io =3D md_end_barrier;
+> +				bi->bi_private =3D rdev;
+> +				bi->bi_bdev =3D rdev->bdev;
+> +				atomic_inc(&mddev->flush_pending);
+> +				submit_bio(WRITE_BARRIER, bi);
+> +				rcu_read_lock();
+> +				rdev_dec_pending(rdev, mddev);
+> +			}
+> +		rcu_read_unlock();
+
+Calling atomic_inc() twice isn't an atomic operation any more. If
+this doesn't matter (because all modifications of rdev->nr_pending
+are supposed to happen within RCU read-side critical sections) then
+why is rdev->nr_pending an atomic_t at all?
+
+> +void md_barrier_request(mddev_t *mddev, struct bio *bio)
+> +{
+> +	mdk_rdev_t *rdev;
+> +
+> +	spin_lock_irq(&mddev->write_lock);
+> +	wait_event_lock_irq(mddev->sb_wait,
+> +			    !mddev->barrier,
+> +			    mddev->write_lock, /*nothing*/);
+> +	mddev->barrier =3D bio;
+> +	spin_unlock_irq(&mddev->write_lock);
+> +
+> +	atomic_set(&mddev->flush_pending, 1);
+> +	INIT_WORK(&mddev->barrier_work, md_submit_barrier);
+> +
+> +	rcu_read_lock();
+> +	list_for_each_entry_rcu(rdev, &mddev->disks, same_set)
+> +		if (rdev->raid_disk >=3D 0 &&
+> +		    !test_bit(Faulty, &rdev->flags)) {
+> +			struct bio *bi;
+> +
+> +			atomic_inc(&rdev->nr_pending);
+> +			atomic_inc(&rdev->nr_pending);
+> +			rcu_read_unlock();
+> +			bi =3D bio_alloc(GFP_KERNEL, 0);
+> +			bi->bi_end_io =3D md_end_barrier;
+> +			bi->bi_private =3D rdev;
+> +			bi->bi_bdev =3D rdev->bdev;
+> +			atomic_inc(&mddev->flush_pending);
+> +			submit_bio(WRITE_BARRIER, bi);
+> +			rcu_read_lock();
+> +			rdev_dec_pending(rdev, mddev);
+> +		}
+> +	rcu_read_unlock();
+
+This loop is identical to the one above, so it might make sense
+to put it into a separate function.
+
+Regards
+Andre
 --=20
-The simplest is not all best but the best is surely the simplest!
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--HSfddtAs2KjjielS
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFLHlqiWto1QDEAkw8RAq2uAKCqbTOJz/wxyddT+SDyV4r7nEto5wCgqpUD
+tHWptThGcdwXhUEi/9eVbMg=
+=iZCz
+-----END PGP SIGNATURE-----
+
+--HSfddtAs2KjjielS--
