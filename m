@@ -1,56 +1,49 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [patch 0/1][mdadm] Fix needed to enable RAID volumes on SAS devices
- (version 2).
-Date: Wed, 09 Dec 2009 11:12:55 -0700
-Message-ID: <4B1FE8A7.9090806@intel.com>
-References: <58C655507FA1494D95397652C4416F35CCF61201@irsmsx503.ger.corp.intel.com>	 <20091113193545.GW21495@skl-net.de>	 <1259593933.3178.122.camel@awojcik-linux>	 <20091208163744.7ea0eef9@notabene.brown> <1260380511.27877.25.camel@awojcik-linux>
+From: "Patrick J. LoPresti" <lopresti@gmail.com>
+Subject: Combining OCFS2 with Linux software RAID-0?
+Date: Wed, 9 Dec 2009 15:03:11 -0800
+Message-ID: <23986fd90912091503r3c671448va4d8637edfab472b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1260380511.27877.25.camel@awojcik-linux>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Wojcik, Artur" <artur.wojcik@intel.com>
-Cc: Neil Brown <neilb@suse.de>, Andre Noll <maan@systemlinux.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: ocfs2-users@oss.oracle.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Wojcik, Artur wrote:
->> And I don't like the introduction of a new header file just to store one or 2
->> definitions.  Just put new definitions in mdadm.h  Keep It Simple.
-> 
-> Sorry but I don't agree. At the moment the source code of mdadm/mdmon is
-> not simple.
+Is it possible to run an OCFS2 file system on top of Linux software RAID?
 
-Adding a new header file for a few definitions does not reduce complexity.
+Here is my situation.  I have four identical disk chassis that perform
+hardware RAID internally.  Each chassis has a pair of fiber channel
+ports, and I can assign the same LUN to both ports.  I want to connect
+all of these chassis to two Linux systems.  I want the two Linux
+systems to share a file system that is striped across all four chassis
+for performance.
 
-> It's quite complicated. It is hard to analyze how the
-> control flows and there's a lot of data and code redundancy in it. In my
-> opinion "refactorization" is what this code needs. Splitting code into
-> files would be helpful, too.
+I know I can use software RAID (mdadm) to do RAID-0 striping across
+the four chassis on a single machine; I have tried this, it works
+fine, and the performance is tremendous.  I also know I can use OCFS2
+to create a single filesystem on a single chassis that is shared
+between my two Linux systems.  What I want is to combine these two
+things.
 
-The current file split is pretty simple and self explanatory.  Each 
-major operating mode of mdadm has its own file.
+Suse's documentation
+(http://www.novell.com/documentation/sles11/stor_admin/?page=/documentation/sles11/stor_admin/data/raidyast.html)
+says:
 
-I will say that there are some long functions like Assemble() that could 
-use some helper routines to split the major stages.  If only to add 
-documentation points and clarify the current working set of parameters. 
-  That being said I have only had to touch Assemble.c a handful of 
-times, so the cost-benefit ratio of doing this refactoring never became < 1.
+"IMPORTANT:Software RAID is not supported underneath clustered file
+systems such as OCFS2, because RAID does not support concurrent
+activation. If you want RAID for OCFS2, you need the RAID to be
+handled by the storage subsystem."
 
-If you find some redundant code that would be a good starting point for 
-simplification patches.
+Because my disk chassis already perform hardware RAID-5, I only need
+Linux to do the striping (RAID-0) in software.  So for me, there is no
+issue about "which node should rebuild the RAID" etc.  I understand
+that Linux md stores meta-data on the partitions and is not cluster
+aware, but will this create problems for OCFS2 even if it is just RAID
+0?
 
->> I am perfectly happy with making 'buf' larger as appropriate, even making it
->> PATH_MAX in some cases.
->> I would be happy with more use of asprinf.
->> I would be happy adding checks before certain critical sprintf calls that
->> the result will not exceed the buffer.
-> 
-> I did not use asprintf function, because it's GNU specific. I had an
-> impression that one may try to build mdmdm using non-GNU toolchain.
+Has anybody tried something like this?  Are there alternative RAID-0
+solutions for Linux that would be expected to work?
 
-It is safe to assume that mdadm will always run on a system with glibc, 
-uclibc, or an equivalent library that has an asprintf() implementation.
+Thank you.
 
---
-Dan
+ - Pat
