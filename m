@@ -1,100 +1,70 @@
 From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: about raid5 recovery when created
-Date: Wed, 9 Dec 2009 00:30:41 -0800
-Message-ID: <4877c76c0912090030r266337afs394ecec463555258@mail.gmail.com>
-References: <389deec70912080501u6c6bc90ei2d34ef245a1dae9e@mail.gmail.com>
-	 <20091208131446.GA21130@cthulhu.home.robinhill.me.uk>
-	 <389deec70912080549h1b22489es612235ad29354d6b@mail.gmail.com>
-	 <20091208135600.GB21130@cthulhu.home.robinhill.me.uk>
-	 <389deec70912080603w47d7fda3jf021af169ac1c48c@mail.gmail.com>
+Subject: Idea for new RAID type - background extended recovery information
+Date: Wed, 9 Dec 2009 01:06:50 -0800
+Message-ID: <4877c76c0912090106i684924edn7915c6609ab574f5@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <389deec70912080603w47d7fda3jf021af169ac1c48c@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Dec 8, 2009 at 6:03 AM, hank peng <pengxihan@gmail.com> wrote:
-> 2009/12/8 Robin Hill <robin@robinhill.me.uk>:
->> On Tue Dec 08, 2009 at 09:49:48PM +0800, hank peng wrote:
->>
->>> 2009/12/8 Robin Hill <robin@robinhill.me.uk>:
->>> > On Tue Dec 08, 2009 at 09:01:23PM +0800, hank peng wrote:
->>> >
->>> >> Hi, all:
->>> >> As we know, when a raid5 array is created, recovery will be goin=
-g on
->>> >> which involves some read, one xor and one write. Since there is =
-no
->>> >> real data in the disk at the time, besides, if I am willing to w=
-ait
->>> >> for recovery to complete and then use this raid5, how about addi=
-ng
->>> >> support for a fast recovery method? Right now, what is in my min=
-d is
->>> >> zero all disks which belong to this raid5. I think it will incre=
-ase
->>> >> raid5 recovery speed when created and decrease CPU usage, since =
-all
->>> >> zero is also XORed.
->>> >> What do raid developers think?
->>> >>
->>> > It'll decrease CPU usage but increase I/O - you're now needing to=
- write
->>> > to all disks. =A0Most systems will be I/O limited rather than CPU=
- limited,
->>> > so the current approach works better. =A0If you want to zero the =
-disks
->>> > then do this before creating the array - you can then use --assum=
-e-clean
->>> > to skip the resync process.
->>> >
->>> I think --assume-clean is used mostly when doing performance test a=
-nd
->>> can't be used when creating a raid5 array using new disk, because
->>> later read and write operation make assumption that all stripe is
->>> XORed. Correct me if I am wrong.
->>>
->> You're correct - that's why I said to zero all the disks first so th=
-e
->> XOR data is all correct.
->>
-> I think this function is better to be implemented in kernel raid
-> layer, not in user space(for example using dd command).
-> In this way, we can get good performance and lower cpu usage, also, w=
-e
-> can make this function be part of raid code so that it can be managed
-> by mdadm
->> Cheers,
->> =A0 =A0Robin
->> --
->> =A0 =A0 ___
->> =A0 =A0( ' } =A0 =A0 | =A0 =A0 =A0 Robin Hill =A0 =A0 =A0 =A0<robin@=
-robinhill.me.uk> |
->> =A0 / / ) =A0 =A0 =A0| Little Jim says .... =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0|
->> =A0// !! =A0 =A0 =A0 | =A0 =A0 =A0"He fallen in de water !!" =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 |
->>
->
->
->
-> --
-> The simplest is not all best but the best is surely the simplest!
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+Summary:
 
-How about documenting this better?  'zeroing all underlying devices
-then creating with --assume-clean' will be clean because the parity
-algorithm is even (or similar to 'even parity')?
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+New raid level between 0 and 1; version tracking and 'bad sector'
+recovery parity.
+
+Rational:
+* For that extra .001% assurance that could be the difference between
+a few bad sectors and otherwise valid data.
+* Possibility to 'inform' upper layers about stale/bad checksum copies
+of data; thus allowing improvement of recovery decisions.
+
+Rambling train of thought:
+
+One of the main problems that still remains unsolved with current RAID
+operations is determining which set of data has gone bad.  The most
+obvious choice is to use a data recovery scheme like PAR2 uses, which
+keeps a checksum for every storage segment.  However that conflicts
+with the 'zero it before creation and assume-clean works' idea.  It
+also very likely has extremely poor write performance.  However it may
+be sufficient to use a different approach.
+
+If stripes still in memory are buffered the parity update might be
+deferred.  Additional stripes or an external (hopefully independent)
+logging device/file could be provided to record any pending changes.
+Any modification which flushes an entire stripe to disk needn't be
+logged once all the data had been written, so a separate ring buffer
+for that section might be a good performance idea.  Ideally lots of
+small, stripe-clustered changes could be buffered until they could be
+combined in to a single recalculation and write; or at least until
+idle cpu/io allowed them to be written anyway.
+
+In addition to the per-stripe approaches deferring the calculations
+might allow for the PAR2 style method to work as well.  A second
+extended recovery data-set could be stored which would add to the
+existing stripes of whatever type. It would only be updated by
+explicit request, or during lulls in activity.  Storing N-1 (or less)
+recovery units might also allow for a copy of that device's blocks or
+all device's blocks to be stored.  That would allow easier
+verification of data-version and consistency.  A more bold approach
+then also presents it's self.  Using the other parity blocks in
+conjunction with the extended set.  It would mean far worse on the fly
+recovery, but the trade-off would be the ability to recover from more
+partial disk failure/unreadable sector scenarios.  However in my mind
+it seems a better trade to use an extra .001% of each storage device
+to gain that tiny extra assurance against all normal parity units PLUS
+one bad sector on a data drive crippling everything.  Also, again, the
+consistency/version data would make determining which chunk to replace
+far easier.
+
+Given the zeros operation, a sparse (zero filled) device could be made
+and then cleaned up by the first recovery process with but a single
+information message in the system log.  "Detected newly assembled
+pre-zeroed device, filling in missing checksum values.".  All of the
+checksums would be the same and could be calculated at compile time.
+The parity values might differ, depending on the algorithm, but could
+assuredly be cached at runtime, leading to a series of easy to process
+asynchronous writes.  Storing ranges of sparse information would
+likely defer the write operation until after all reads are completed
+anyway.
