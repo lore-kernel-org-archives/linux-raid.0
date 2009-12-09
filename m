@@ -1,62 +1,57 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Growing Linear RAID
-Date: Wed, 9 Dec 2009 15:30:02 +0000
-Message-ID: <20091209153002.GA5586@cthulhu.home.robinhill.me.uk>
-References: <8338BD137FF1B64EB341218BD702985E02C8C03B@BLR-EC-MBX03.wipro.com>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: Random IO with md raid
+Date: Wed, 09 Dec 2009 17:36:18 +0100
+Message-ID: <87hbs03y0t.fsf@frosties.localdomain>
+References: <4B198DBA.5000906@matws.net> <4B1A6C28.20800@shiftmail.org>
+	<4B1D88D2.9000001@matws.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="azLHFNyN32YCQGCU"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <8338BD137FF1B64EB341218BD702985E02C8C03B@BLR-EC-MBX03.wipro.com>
+In-Reply-To: <4B1D88D2.9000001@matws.net> (Matthieu Patou's message of "Tue,
+	08 Dec 2009 01:59:30 +0300")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Matthieu Patou <mat@matws.net>
+Cc: Asdo <asdo@shiftmail.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+Matthieu Patou <mat@matws.net> writes:
 
---azLHFNyN32YCQGCU
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> On 05/12/2009 17:20, Asdo wrote:
+>> Matthieu Patou wrote:
+>>> * 1 raid 1 volume of 2 1TB hard drive
+>> Are these drives also on the 3ware?
+> I suppose that you are speaking of the 2 single drives. If so yes they
+> are also connected to the 3ware controller, they are not exported as
+> jbod but as seperate hard drives.
+> Are they exported as jbod?
+>>> * 2 single volume of 1 TB hard drive each
+>>> ...
+>>> Does anyone has an any idea ?
+>>
+>> Try anticipatory, deadline and noop schedulers on disks (not CFQ)
+>> Try setting readahead to exactly 4K, or set it to lowest possible value
+> I tried all the different scheduler both with 4K and with the default
+> value and I still have raid1 software that do 1/2 or 1/3 of the raid1
+> hardware for random write I/O.
+>> (I'm not sure what is best), since this is random access...
+>> Increase stripe_cache_size as high as you can, p
+> So for raid1 there is no stripe_cache_size so I didn't set it ...
+>> Let us/me know the results afterwards...
+>
+> I also made a simple tests with the CFQ scheduler without any other
+> tunning but turning of the controller cache and at this moment the
+> results of the RAID1 hardware and the RAID1 software are very close.
+> Looks like linux is not able to use the onboard cache of controller as
+> efficiently as the 3ware controller it self at least for random IO.
+>
+> Any other ideas ?
+>
+> Matthieu
 
-On Wed Dec 09, 2009 at 08:31:54PM +0530, senthilkumar.muthukalai@wipro.com =
-wrote:
+Software raid1 will write twice as much data. That means twice as much
+data goes over the system bus and into the controler cache.
+Effectively you have halve the cache size. Maybe that is all you see.
 
-> Hi,
->=20
-> I am trying to add a disk to a Linear Raid which was created with 2
-> disks.
-> We use linux-2.6.18 and mdadm-2.6.4.
-> I guess these support the above mentioned disk addition.
->=20
-Why do you guess this?  The manual page should tell you exactly what's
-supported, and even mdadm 3.1.1 makes no mention of support for growing
-linear RAID:
+MfG
+        Goswin
 
-        Currently supported growth options including changing the active
-        size of component devices and  changing  the  number  of active
-        devices  in RAID levels 1/4/5/6, changing the RAID level between
-        1, 5, and 6, changing the chunk size and layout  for RAID5  and
-        RAID5, as well as adding or removing a write-intent bitmap
-
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---azLHFNyN32YCQGCU
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEARECAAYFAksfwnoACgkQShxCyD40xBJyowCfbiAeg1hhGATNm96WtN8fwZNO
-ljEAnj4LljZ1EtaEz5f8+KembkWJfHy9
-=NbHw
------END PGP SIGNATURE-----
-
---azLHFNyN32YCQGCU--
