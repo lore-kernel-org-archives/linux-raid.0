@@ -1,84 +1,62 @@
-From: <senthilkumar.muthukalai@wipro.com>
-Subject: Growing Linear RAID
-Date: Wed, 9 Dec 2009 20:31:54 +0530
-Message-ID: <8338BD137FF1B64EB341218BD702985E02C8C03B@BLR-EC-MBX03.wipro.com>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: Growing Linear RAID
+Date: Wed, 9 Dec 2009 15:30:02 +0000
+Message-ID: <20091209153002.GA5586@cthulhu.home.robinhill.me.uk>
+References: <8338BD137FF1B64EB341218BD702985E02C8C03B@BLR-EC-MBX03.wipro.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="azLHFNyN32YCQGCU"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+Content-Disposition: inline
+In-Reply-To: <8338BD137FF1B64EB341218BD702985E02C8C03B@BLR-EC-MBX03.wipro.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
 
-I am trying to add a disk to a Linear Raid which was created with 2
-disks.
-We use linux-2.6.18 and mdadm-2.6.4.
-I guess these support the above mentioned disk addition.
-But I get the error quoted below.
-Could you pls guide me?
+--azLHFNyN32YCQGCU
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Observations
-------------
+On Wed Dec 09, 2009 at 08:31:54PM +0530, senthilkumar.muthukalai@wipro.com =
+wrote:
 
-[root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow -n 3 /dev/sata3 
-mdadm: --size, --raiddisks, and --add are exclusing in --grow mode
-[root@NAS00226b1755a0 ~]# 
-[root@NAS00226b1755a0 ~]# 
-[root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow -n 3            
-mdadm: linear array /dev/md0 cannot be reshaped.
-[root@NAS00226b1755a0 ~]# 
-[root@NAS00226b1755a0 ~]# 
-[root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow --add /dev/sata3     
-mdadm: Cannot add new disk to this array
-[root@NAS00226b1755a0 ~]# 
-[root@NAS00226b1755a0 ~]# 
-[root@NAS00226b1755a0 ~]# mdadm /dev/md0 --add /dev/sata3
-mdadm: add new device failed for /dev/sata3 as 2: No space left on
-device
-[root@NAS00226b1755a0 ~]# 
-[root@NAS00226b1755a0 ~]# 
-[root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow -n 3 --add /dev/sata3
-mdadm: --size, --raiddisks, and --add are exclusing in --grow mode
-[root@NAS00226b1755a0 ~]# 
-[root@NAS00226b1755a0 ~]# 
-[root@NAS00226b1755a0 ~]# cat /proc/mdstat 
-Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
-[raid4] 
-md0 : active linear sdb[1] sda[0]
-      444265856 blocks super 1.2 32k rounding
-      
-unused devices: <none>
-[root@NAS00226b1755a0 ~]# mdadm -D /dev/md0 
-/dev/md0:
-        Version : 01.02.03
-  Creation Time : Wed Dec  9 03:02:50 2009
-     Raid Level : linear
-     Array Size : 444265856 (423.68 GiB 454.93 GB)
-   Raid Devices : 2
-  Total Devices : 2
-Preferred Minor : 0
-    Persistence : Superblock is persistent
+> Hi,
+>=20
+> I am trying to add a disk to a Linear Raid which was created with 2
+> disks.
+> We use linux-2.6.18 and mdadm-2.6.4.
+> I guess these support the above mentioned disk addition.
+>=20
+Why do you guess this?  The manual page should tell you exactly what's
+supported, and even mdadm 3.1.1 makes no mention of support for growing
+linear RAID:
 
-    Update Time : Wed Dec  9 03:02:50 2009
-          State : clean
- Active Devices : 2
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 0
+        Currently supported growth options including changing the active
+        size of component devices and  changing  the  number  of active
+        devices  in RAID levels 1/4/5/6, changing the RAID level between
+        1, 5, and 6, changing the chunk size and layout  for RAID5  and
+        RAID5, as well as adding or removing a write-intent bitmap
 
-       Rounding : 32K
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
-           Name : 0
-           UUID : 041dce1e:adafc8da:525455fe:5a9d950f
-         Events : 0
+--azLHFNyN32YCQGCU
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-    Number   Major   Minor   RaidDevice State
-       0       8        0        0      active sync   /dev/sata1
-       1       8       16        1      active sync   /dev/sata2
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
 
-Thanks,
-Senthil M
+iEYEARECAAYFAksfwnoACgkQShxCyD40xBJyowCfbiAeg1hhGATNm96WtN8fwZNO
+ljEAnj4LljZ1EtaEz5f8+KembkWJfHy9
+=NbHw
+-----END PGP SIGNATURE-----
+
+--azLHFNyN32YCQGCU--
