@@ -1,90 +1,56 @@
-From: Heinz Mauelshagen <heinzm@redhat.com>
-Subject: Re: [PATCH v2 1/1] dm-raid45
-Date: Wed, 09 Dec 2009 18:47:20 +0100
-Message-ID: <1260380840.9639.99.camel@o>
-References: <1259243112-28175-1-git-send-email-heinzm@redhat.com>
-	<e9c3a7c20912081638w39469743n76b4114b840f1c43@mail.gmail.com>
-Reply-To: heinzm@redhat.com, device-mapper development <dm-devel@redhat.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [patch 0/1][mdadm] Fix needed to enable RAID volumes on SAS devices
+ (version 2).
+Date: Wed, 09 Dec 2009 11:12:55 -0700
+Message-ID: <4B1FE8A7.9090806@intel.com>
+References: <58C655507FA1494D95397652C4416F35CCF61201@irsmsx503.ger.corp.intel.com>	 <20091113193545.GW21495@skl-net.de>	 <1259593933.3178.122.camel@awojcik-linux>	 <20091208163744.7ea0eef9@notabene.brown> <1260380511.27877.25.camel@awojcik-linux>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <e9c3a7c20912081638w39469743n76b4114b840f1c43@mail.gmail.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: device-mapper development <dm-devel@redhat.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1260380511.27877.25.camel@awojcik-linux>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Wojcik, Artur" <artur.wojcik@intel.com>
+Cc: Neil Brown <neilb@suse.de>, Andre Noll <maan@systemlinux.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-On Tue, 2009-12-08 at 17:38 -0700, Dan Williams wrote:
-> On Thu, Nov 26, 2009 at 6:45 AM,  <heinzm@redhat.com> wrote:
-> > From: Heinz Mauelshagen <heinzm@redhat.com>
-> >
-> > Neil et al.,
-> >
-> > finally got around to creating a followup (interim) patch, which allows
-> > for changing the xor algorithn at runtime via the message interface,
-> > hence allowing to test if the xor unrole optimization around the
-> > supported algorithms is performing better than the assembler
-> > optimized one in the kernel.
+Wojcik, Artur wrote:
+>> And I don't like the introduction of a new header file just to store one or 2
+>> definitions.  Just put new definitions in mdadm.h  Keep It Simple.
 > 
-> Now that perf is available it would be good to get some comparative
-> cache utilization statistics on the two approaches.
+> Sorry but I don't agree. At the moment the source code of mdadm/mdmon is
+> not simple.
 
-I'd appreciate it.
-Do you have any time to spend on this comparison ?
+Adding a new header file for a few definitions does not reduce complexity.
 
->  The assembly
-> routines make an attempt to avoid polluting L2 (however the memcpy's
-> into the cache do not).
-> 
-> > If we can prove my findings rigth, we could move those into
-> > the crypto subsystem xor.
-> >
-> > Syntax:
-> > -------
-> > dmsetup message $MappedDevice 0 xor $Algorithm $Chunks
-> >
-> > $MappedDevice = whatever name you picked during creation
-> > $Algorithm = { "xor_8", "xor_16", "xor_32", "xor_64", "xor_blocks" }
-> > $Chunks = 2..N # N being the amount of stripes (eg. 5 with 5 disks)
-> >
-> > Patch applies to clean mainline git 2.6.32-rc8.
-> >
-> > Regards,
-> > Heinz
-> >
-> > Signed-off-by: Heinz Mauelshagen <heinzm@redhat.com>
-> > ---
-> >  drivers/md/Kconfig             |    9 +
-> >  drivers/md/Makefile            |    2 +
-> >  drivers/md/dm-memcache.c       |  301 +++
-> >  drivers/md/dm-memcache.h       |   68 +
-> >  drivers/md/dm-raid45.c         | 4720 ++++++++++++++++++++++++++++++++++++++++
-> 
-> Where did the investigation of reusing md/raid5.c [1] end up?  This
-> would simultaneously enable hardware accelerated raid6 for dmraid.
+> It's quite complicated. It is hard to analyze how the
+> control flows and there's a lot of data and code redundancy in it. In my
+> opinion "refactorization" is what this code needs. Splitting code into
+> files would be helpful, too.
 
-Not far. Got distracted by other activities and haven't heard back from
-Neil after submitting this dm-raid45 patch (which makes it simple to
-test various parameter sets w/o reloading mappings).
+The current file split is pretty simple and self explanatory.  Each 
+major operating mode of mdadm has its own file.
 
-Heinz
+I will say that there are some long functions like Assemble() that could 
+use some helper routines to split the major stages.  If only to add 
+documentation points and clarify the current working set of parameters. 
+  That being said I have only had to touch Assemble.c a handful of 
+times, so the cost-benefit ratio of doing this refactoring never became < 1.
 
+If you find some redundant code that would be a good starting point for 
+simplification patches.
+
+>> I am perfectly happy with making 'buf' larger as appropriate, even making it
+>> PATH_MAX in some cases.
+>> I would be happy with more use of asprinf.
+>> I would be happy adding checks before certain critical sprintf calls that
+>> the result will not exceed the buffer.
 > 
-> --
-> Dan
-> 
-> [1] http://marc.info/?l=dm-devel&m=124567352518676&w=2
-> 
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
+> I did not use asprintf function, because it's GNU specific. I had an
+> impression that one may try to build mdmdm using non-GNU toolchain.
+
+It is safe to assume that mdadm will always run on a system with glibc, 
+uclibc, or an equivalent library that has an asprintf() implementation.
+
+--
+Dan
