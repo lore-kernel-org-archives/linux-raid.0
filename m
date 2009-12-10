@@ -1,45 +1,62 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Growing Linear RAID
-Date: Thu, 10 Dec 2009 12:34:37 +1100
-Message-ID: <20091210123437.63cbc24b@notabene.brown>
-References: <8338BD137FF1B64EB341218BD702985E02C8C03B@BLR-EC-MBX03.wipro.com>
-	<20091209153002.GA5586@cthulhu.home.robinhill.me.uk>
+Subject: Re: Combining OCFS2 with Linux software RAID-0?
+Date: Thu, 10 Dec 2009 12:37:03 +1100
+Message-ID: <20091210123703.71b47ce7@notabene.brown>
+References: <23986fd90912091503r3c671448va4d8637edfab472b@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091209153002.GA5586@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <23986fd90912091503r3c671448va4d8637edfab472b@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robin Hill <robin@robinhill.me.uk>
-Cc: linux-raid@vger.kernel.org
+To: "Patrick J. LoPresti" <lopresti@gmail.com>
+Cc: ocfs2-users@oss.oracle.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 9 Dec 2009 15:30:02 +0000
-Robin Hill <robin@robinhill.me.uk> wrote:
+On Wed, 9 Dec 2009 15:03:11 -0800
+"Patrick J. LoPresti" <lopresti@gmail.com> wrote:
 
-> On Wed Dec 09, 2009 at 08:31:54PM +0530, senthilkumar.muthukalai@wipro.com wrote:
+> Is it possible to run an OCFS2 file system on top of Linux software RAID?
 > 
-> > Hi,
-> > 
-> > I am trying to add a disk to a Linear Raid which was created with 2
-> > disks.
-> > We use linux-2.6.18 and mdadm-2.6.4.
-> > I guess these support the above mentioned disk addition.
-> > 
-> Why do you guess this?  The manual page should tell you exactly what's
-> supported, and even mdadm 3.1.1 makes no mention of support for growing
-> linear RAID:
+> Here is my situation.  I have four identical disk chassis that perform
+> hardware RAID internally.  Each chassis has a pair of fiber channel
+> ports, and I can assign the same LUN to both ports.  I want to connect
+> all of these chassis to two Linux systems.  I want the two Linux
+> systems to share a file system that is striped across all four chassis
+> for performance.
 > 
->         Currently supported growth options including changing the active
->         size of component devices and  changing  the  number  of active
->         devices  in RAID levels 1/4/5/6, changing the RAID level between
->         1, 5, and 6, changing the chunk size and layout  for RAID5  and
->         RAID5, as well as adding or removing a write-intent bitmap
+> I know I can use software RAID (mdadm) to do RAID-0 striping across
+> the four chassis on a single machine; I have tried this, it works
+> fine, and the performance is tremendous.  I also know I can use OCFS2
+> to create a single filesystem on a single chassis that is shared
+> between my two Linux systems.  What I want is to combine these two
+> things.
 > 
->
+> Suse's documentation
+> (http://www.novell.com/documentation/sles11/stor_admin/?page=/documentation/sles11/stor_admin/data/raidyast.html)
+> says:
+> 
+> "IMPORTANT:Software RAID is not supported underneath clustered file
+> systems such as OCFS2, because RAID does not support concurrent
+> activation. If you want RAID for OCFS2, you need the RAID to be
+> handled by the storage subsystem."
+> 
+> Because my disk chassis already perform hardware RAID-5, I only need
+> Linux to do the striping (RAID-0) in software.  So for me, there is no
+> issue about "which node should rebuild the RAID" etc.  I understand
+> that Linux md stores meta-data on the partitions and is not cluster
+> aware, but will this create problems for OCFS2 even if it is just RAID
+> 0?
+> 
+> Has anybody tried something like this?  Are there alternative RAID-0
+> solutions for Linux that would be expected to work?
 
-Hmm... guess I should update that documentation, shouldn't I .....
 
-Adding a device to a linear is supported since 2.6.18.
+For RAID0 or LINEAR, this should work - give it a try.
+
+If it doesn't work in some way, let me know and I'll see about fixing it.
+
+It might work for RAID1 one day to, but is unlikely to ever work for 
+RAID5.
 
 NeilBrown
