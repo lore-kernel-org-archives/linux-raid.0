@@ -1,50 +1,40 @@
-From: Asdo <asdo@shiftmail.org>
-Subject: Re: Disappointing performance of copy (MD raid + XFS)
-Date: Thu, 10 Dec 2009 02:16:35 +0100
-Message-ID: <4B204BF3.1000600@shiftmail.org>
-References: <4B204334.1000605@shiftmail.org> <4B204783.7040109@shiftmail.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Growing Linear RAID
+Date: Thu, 10 Dec 2009 12:33:53 +1100
+Message-ID: <20091210123353.66100b41@notabene.brown>
+References: <8338BD137FF1B64EB341218BD702985E02C8C03B@BLR-EC-MBX03.wipro.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <4B204783.7040109@shiftmail.org>
+In-Reply-To: <8338BD137FF1B64EB341218BD702985E02C8C03B@BLR-EC-MBX03.wipro.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: xfs@oss.sgi.com
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: senthilkumar.muthukalai@wipro.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Asdo wrote:
-> Asdo wrote:
->> and I think I have seen around 10MB/sec when they are of 500KB (this 
->> transfer at 10MB/sec was in parallel with another faster one however). 
-> Yes I definitely confirm: right now I have just 1 rsync copy running, 
-> it's in a zone where files are around 500KB on average, and it's going 
-> at 9 MB/sec.
-> Stack traces of the writer process conform to what I have posted in my 
-> previous email, even now that the writer is the only process using the 
-> destination array.
-Excuse me, I am going nuts...
-In this case of 9MB/sec for 500KB files, stack traces on the writer are 
-indeed very similar to what I have posted, but the relative frequency of 
-the two type of stack traces is different:
-20%: waiting on the reader (this almost never happened when using 
-multiple parallel rsyncs)
-50%: xlog_state_get_iclog_space+0xed/0x2d0
-30%: xfs_buf_lock+0x1e/0x60
+On Wed, 9 Dec 2009 20:31:54 +0530
+<senthilkumar.muthukalai@wipro.com> wrote:
+
+> Hi,
+> 
+> I am trying to add a disk to a Linear Raid which was created with 2
+> disks.
+> We use linux-2.6.18 and mdadm-2.6.4.
+> I guess these support the above mentioned disk addition.
+
+Yes, should work.  This functionality was introduced in 
+2.6.18.
 
 
-The reader is waiting either on select (on the writer I guess) or on this:
-  [<ffffffff810da74d>] sync_page+0x3d/0x50
-  [<ffffffff810da769>] sync_page_killable+0x9/0x40
-  [<ffffffff810da682>] __lock_page_killable+0x62/0x70
-  [<ffffffff810db8be>] T.768+0x1ee/0x440            
-  [<ffffffff810dbbc6>] generic_file_aio_read+0xb6/0x1d0
-  [<ffffffffa031cd95>] xfs_read+0x115/0x2a0 [xfs]     
-  [<ffffffffa031832b>] xfs_file_aio_read+0x5b/0x70 [xfs]
-  [<ffffffff8111ec32>] do_sync_read+0xf2/0x130         
-  [<ffffffff8111f215>] vfs_read+0xb5/0x1a0             
-  [<ffffffff8111f81c>] sys_read+0x4c/0x80              
-  [<ffffffff81012002>] system_call_fastpath+0x16/0x1b  
-  [<ffffffffffffffff>] 0xffffffffffffffff              
+> root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow --add /dev/sata3  
 
+This is the correct usage but,
+   
+> mdadm: Cannot add new disk to this array
 
+This indicates that something went wrong.
+
+Do you get any messages in the kernel logs at this point?
+
+NeilBrown
