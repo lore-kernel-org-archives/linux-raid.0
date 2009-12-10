@@ -1,181 +1,46 @@
-From: Asdo <asdo@shiftmail.org>
-Subject: Disappointing performance of copy (MD raid + XFS)
-Date: Thu, 10 Dec 2009 01:39:16 +0100
-Message-ID: <4B204334.1000605@shiftmail.org>
+From: Michael Evans <mjevans1983@gmail.com>
+Subject: Re: Idea for new RAID type - background extended recovery information
+Date: Wed, 9 Dec 2009 16:45:47 -0800
+Message-ID: <4877c76c0912091645w449cb652k73b2958e9159d77b@mail.gmail.com>
+References: <4877c76c0912090106i684924edn7915c6609ab574f5@mail.gmail.com>
+	 <alpine.DEB.1.10.0912091143350.23464@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.0912091143350.23464@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: xfs@oss.sgi.com
+To: Mikael Abrahamsson <swmike@swm.pp.se>
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all,
+On Wed, Dec 9, 2009 at 2:53 AM, Mikael Abrahamsson <swmike@swm.pp.se> wrote:
+> Generally, my experience has been that total disk failures are fairly rare,
+> instead with the much larger disks today, I get single block/sector
+> failures, meaning 512 bytes (or 4 k, I don't remember) can't be read. Is
+> there any data to support this?
+>
 
-I'm copying a bagzillion of files (14TB) from a 26disk MD-raid 6 array 
-to a 16disk MD-raid 6 array.
-Filesystems are XFS for both arrays.
-Kernel is 2.6.31 ubuntu generic-14
-Performance is very disappointing, going from 150MB/sec to 22MB/sec 
-depending apparently to the size of files it encounters. 150MB/sec is 
-when files are 40-80MB in size, 22MB/sec is when files are 1MB in size 
-on average, and I think I have seen around 10MB/sec when they are of 
-500KB (this transfer at 10MB/sec was in parallel with another faster one 
-however).
-Doing multiple rsync transfers simultaneously for different files of the 
-filesystem does increase the speed, up to a point however, and even 
-launching 5 of them I am not able to bring it above 150MB/sec (that's 
-the average: it's actually very unstable).
+I agree with this failure mode.  I've seen occasional disk failures;
+usually on single drive systems, far more often are either single
+failures; or in the case of laptops (and possibly also hard drives
+running in more seismically active areas) occasional runs of
+head-crashes.  In the case of a head-crash it would be a _VERY_ good
+idea to copy the data off first then recover it, but one would expect
+only a moderate volume of poison data.  Having a layer to identify
+which data is suspect, and potentially provide recovery information
+would be a great idea.  In my use cases I'd probably dedicate an
+entire stripe for every 64 that are backed by it.  Changing any
+information within that 64 stripe section would result in a change to
+the parity data, but that layer needn't be updated constantly, during
+idle periods would be a sufficient safety net, so long as it was
+automated; the list of checksums would of course be updated with the
+same operation.
 
-Already tried tweaking: stripe_cache_size, readahead, elevator type and 
-its parameters, increasing elevator queue length, some parameters in 
-/proc/sys/fs/xfs (randomly without understanding much of the xfs params 
-actually), and /proc/sys/vm/*dirty* parameters .
-Mount options for destination initially were defaults, then I tried to 
-change them via remount to rw,nodiratime,relatime,largeio but without 
-much improvements.
-The above are the best results I could obtain.
+So there would be three basic functions:
 
-Firstly I tried copying with cp and then with rsync. Not much difference 
-between the two.
-
-Rsync is nicer to monitor because it splits in 2 processes, one reads 
-only, the other one only writes.
-
-So I have repeatedly catted /proc/pid/stack for the reader and writer 
-processes: the *writer* is the bottleneck, and 90% of the times it is 
-stuck in one of the following stacktraces:
-
-    [<ffffffffa02ff41d>] xlog_state_get_iclog_space+0xed/0x2d0 
-[xfs]                  
-    [<ffffffffa02ff76c>] xlog_write+0x16c/0x630 
-[xfs]                                 
-    [<ffffffffa02ffc6a>] xfs_log_write+0x3a/0x70 
-[xfs]                                
-    [<ffffffffa030b6d7>] _xfs_trans_commit+0x197/0x3b0 
-[xfs]                          
-    [<ffffffffa030ff15>] xfs_free_eofblocks+0x265/0x270 
-[xfs]                         
-    [<ffffffffa031090d>] xfs_release+0x10d/0x1c0 
-[xfs]                                
-    [<ffffffffa0318200>] xfs_file_release+0x10/0x20 
-[xfs]                             
-    [<ffffffff81120700>] 
-__fput+0xf0/0x210                                            
-    [<ffffffff8112083d>] 
-fput+0x1d/0x30                                               
-    [<ffffffff8111cab8>] 
-filp_close+0x58/0x90                                         
-    [<ffffffff8111cba9>] 
-sys_close+0xb9/0x110                                         
-    [<ffffffff81012002>] 
-system_call_fastpath+0x16/0x1b                               
-    [<ffffffffffffffff>] 0xffffffffffffffff              
-
----------
-
-    [<ffffffff8107d6cc>] 
-down+0x3c/0x50                                               
-    [<ffffffffa03176ee>] xfs_buf_lock+0x1e/0x60 
-[xfs]                                 
-    [<ffffffffa0317869>] _xfs_buf_find+0x139/0x230 
-[xfs]                              
-    [<ffffffffa03179bb>] xfs_buf_get_flags+0x5b/0x170 
-[xfs]                           
-    [<ffffffffa0317ae3>] xfs_buf_read_flags+0x13/0xa0 
-[xfs]                           
-    [<ffffffffa030c9d1>] xfs_trans_read_buf+0x1c1/0x300 
-[xfs]                         
-    [<ffffffffa02e26c9>] xfs_da_do_buf+0x279/0x6f0 
-[xfs]                              
-    [<ffffffffa02e2bb5>] xfs_da_read_buf+0x25/0x30 
-[xfs]                              
-    [<ffffffffa02e7157>] xfs_dir2_block_addname+0x47/0x970 
-[xfs]                      
-    [<ffffffffa02e5e9a>] xfs_dir_createname+0x13a/0x1b0 
-[xfs]                         
-    [<ffffffffa0309816>] xfs_rename+0x576/0x660 
-[xfs]                                 
-    [<ffffffffa031add1>] xfs_vn_rename+0x61/0x70 
-[xfs]                                
-    [<ffffffff81128766>] 
-vfs_rename_other+0xc6/0x100                                  
-    [<ffffffff81129b29>] 
-vfs_rename+0x109/0x280                                       
-    [<ffffffff8112b722>] 
-sys_renameat+0x252/0x280                                     
-    [<ffffffff8112b766>] 
-sys_rename+0x16/0x20                                         
-    [<ffffffff81012002>] 
-system_call_fastpath+0x16/0x1b                               
-    [<ffffffffffffffff>] 
-0xffffffffffffffff                                           
-
-----------
-
-    [<ffffffff8107d6cc>] 
-down+0x3c/0x50                                                                                 
- 
-    [<ffffffffa03176ee>] xfs_buf_lock+0x1e/0x60 
-[xfs]                                                                    
-    [<ffffffffa0317869>] _xfs_buf_find+0x139/0x230 
-[xfs]                                                                 
-    [<ffffffffa03179bb>] xfs_buf_get_flags+0x5b/0x170 
-[xfs]                                                              
-    [<ffffffffa0317ae3>] xfs_buf_read_flags+0x13/0xa0 
-[xfs]                                                              
-    [<ffffffffa030c9d1>] xfs_trans_read_buf+0x1c1/0x300 
-[xfs]                                                            
-    [<ffffffffa02e26c9>] xfs_da_do_buf+0x279/0x6f0 
-[xfs]                                                                 
-    [<ffffffffa02e2bb5>] xfs_da_read_buf+0x25/0x30 
-[xfs]                                                                 
-    [<ffffffffa02e960b>] xfs_dir2_leaf_addname+0x4b/0x8b0 
-[xfs]                                                          
-    [<ffffffffa02e5ee3>] xfs_dir_createname+0x183/0x1b0 
-[xfs]                                                            
-    [<ffffffffa030fa4b>] xfs_create+0x45b/0x5f0 
-[xfs]                                                                    
-    [<ffffffffa031af4b>] xfs_vn_mknod+0xab/0x1c0 
-[xfs]                                                                   
-    [<ffffffffa031b07b>] xfs_vn_create+0xb/0x10 
-[xfs]                                                                    
-    [<ffffffff8112967f>] 
-vfs_create+0xaf/0xd0                                                                           
- 
-    [<ffffffff8112975c>] 
-__open_namei_create+0xbc/0x100                                                                 
- 
-    [<ffffffff8112ccd6>] 
-do_filp_open+0x9e6/0xac0                                                                       
- 
-    [<ffffffff8111cc64>] 
-do_sys_open+0x64/0x160                                                                         
- 
-    [<ffffffff8111cd8b>] 
-sys_open+0x1b/0x20                                                                             
- 
-    [<ffffffff81012002>] 
-system_call_fastpath+0x16/0x1b                                                                 
- 
-    [<ffffffffffffffff>] 0xffffffffffffffff         
-
-The xfs_buf_lock trace is more common (about 3 to 1) than the 
-xlog_state_get_iclog_space trace.
-
-I don't really understand what are these buffers mentioned in the last 
-stack traces (xfs_buf_*)... anybody cares to explain? Is this 
-performance bottleneck really related to the disks or the contention on 
-buffers locking is e.g. entirely in memory and it's stuck for some other 
-reason? Can I assign more memory to xfs so to have more buffers? I have 
-32GB ram and it's all free... I also have 8 cores BTW.
-
-The controllers I'm using are 3ware 9650SE so there is a word around 
-that they are not optimal in terms of latency, but I didn't expect them 
-to be SO bad. Also I'm not sure latency is the bottleneck here because 
-XFS could buffer writes and flush just every lots of seconds, and I'm 
-pretty sure cp and rsync never do fsync/fdatasync themselves
-
-Thanks in advance for any insight.
-Asdo
+1) Determine if chunks are the expected checksum.
+2) Determine if chunks are the correct version (to provide upper
+layers with atomic storage).
+3) Provide low-density recovery data.  Not enough to protect against a
+disk loss, but whatever scale of safety net between 0 and 100% of a
+drive is desired.
