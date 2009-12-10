@@ -1,72 +1,61 @@
-From: Radovan Makovsky <radovan.makovsky@gmail.com>
-Subject: It is possible to recover data after incorrect assemble of the RAID5?
-Date: Thu, 10 Dec 2009 11:29:31 +0100
-Message-ID: <4B20CD8B.1040809@gmail.com>
+From: <senthilkumar.muthukalai@wipro.com>
+Subject: RE: Growing Linear RAID
+Date: Thu, 10 Dec 2009 17:33:58 +0530
+Message-ID: <8338BD137FF1B64EB341218BD702985E02C8C21E@BLR-EC-MBX03.wipro.com>
+References: <8338BD137FF1B64EB341218BD702985E02C8C03B@BLR-EC-MBX03.wipro.com><20091210123353.66100b41@notabene.brown><8338BD137FF1B64EB341218BD702985E02C8C165@BLR-EC-MBX03.wipro.com> <20091210203008.69cbbe97@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <20091210203008.69cbbe97@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
+Thanks Neil.
+Let me try the patch.
 
-I did a silly mistake when i tried to assemble array back to the raid5 
-with 3 drives in total.
+- Senthil M
 
-What i did:
+-----Original Message-----
+From: Neil Brown [mailto:neilb@suse.de] 
+Sent: Thursday, December 10, 2009 3:00 PM
+To: SenthilKumar Muthukalai (WT01 - Telecom Equipment)
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Growing Linear RAID
 
--I found some errors in smart. So i removed first disk from raid:
+On Thu, 10 Dec 2009 13:54:29 +0530
+<senthilkumar.muthukalai@wipro.com> wrote:
 
-mdadm --fail /dev/md0 /dev/sda7
-mdadm --remove /dev/md0 /dev/sda7
+> Neil,
+> 
+> I get only the following message under /var/log/
+> 
+> [root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow --add /dev/sata3 
+> mdadm: Cannot add new disk to this array
+> 
+> Dec  9 20:37:58 NAS00226b1755a0 kernel: md: export_rdev(sdc)
+> 
+> [root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow --add /dev/sata4
+> mdadm: Cannot add new disk to this array
+> 
+> Dec  9 20:38:30 NAS00226b1755a0 kernel: md: export_rdev(sdd)
+>
 
--Than i run badblocks with these parameters:
+Thanks - that narrows it down quite a bit.
 
-badblocks -svw /dev/sda                           
+I think that if you run mdadm under 'strace' you will find that the
+ioctl
+fails with ENOSPC.
+It seems that growing a linear array didn't work reliably until 2.6.22.
 
--Output of the command i never saw, but it should look like this:
-     
-Checking for bad blocks in read-write 
-mode                                   
- From block 0 to 
-65535                                                        
-Testing with pattern 0xaa: 
-done                                              
-Reading and comparing: 0 0.00% done, 0:00 
-elapsed                            
-1                                                                             
+You need 
 
-2                  
-.
-.
-65535
-done
-Testing with pattern 0x55: done
-Reading and comparing: done
-Testing with pattern 0xff: done
-Reading and comparing: done
-Testing with pattern 0x00: done
-Reading and comparing: done
-Pass completed, 65536 bad blocks found.
+  commit a778b73ff793d34c0082f76110f73a7754915067
 
--During the test something happened and server crashed. I boot live cd 
-for recovery.
+to make it work properly.
 
--First i copied partition table from second disk to first disk.
-
--I tested following commands on test data and for mine shame they were 
-successful on test data but not on live data:
-
-|mdadm -Cv /dev/md0 -lraid5 -n3 /dev/sd[abc]7|
-
-I do not understand how i could overlook assemble in documentation.
-
-Question is. It is possible if i exactly know what was on the first disk 
-in time of creation of array recover the data. If yes it is possible in 
-human life? What tools can be used for this?
-
-BR
-
-Radovan
+NeilBrown
