@@ -1,26 +1,87 @@
-From: Bruce Miller <subscribe@brmiller.ca>
-Subject: Sensible settings for a three (or four) device RAID 10 f2 array using recent SATA II disks
-Date: Wed, 9 Dec 2009 19:59:45 -0800 (PST)
-Message-ID: <990246.33965.qm@web88304.mail.re4.yahoo.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: Disappointing performance of copy (MD raid + XFS)
+Date: Wed, 09 Dec 2009 22:16:32 -0600
+Message-ID: <4B207620.3060605@sandeen.net>
+References: <4B204334.1000605@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4B204334.1000605@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Asdo <asdo@shiftmail.org>
+Cc: xfs@oss.sgi.com, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I would welcome comments on sensible chunk and stripe settings to use for my first venture into RAID which I will be setting up over the upcoming holiday quiet period. The array will be setup as a Linux MD RAID 10 f2. It will have either three 500GB SATA II 7200rpm physical drives or possibly 2 x 500GB drives plus 1 x 1TB SATA II 10Krpm drive divided into two 500GB partitions for a total of four devices.
+Asdo wrote:
+> Hi all,
+> 
+> I'm copying a bagzillion of files (14TB) from a 26disk MD-raid 6 array
+> to a 16disk MD-raid 6 array.
+> Filesystems are XFS for both arrays.
+> Kernel is 2.6.31 ubuntu generic-14
+> Performance is very disappointing, going from 150MB/sec to 22MB/sec
+> depending apparently to the size of files it encounters. 150MB/sec is
+> when files are 40-80MB in size, 22MB/sec is when files are 1MB in size
+> on average, and I think I have seen around 10MB/sec when they are of
+> 500KB (this transfer at 10MB/sec was in parallel with another faster one
+> however).
+> Doing multiple rsync transfers simultaneously for different files of the
+> filesystem does increase the speed, up to a point however, and even
+> launching 5 of them I am not able to bring it above 150MB/sec (that's
+> the average: it's actually very unstable).
+> 
+> Already tried tweaking: stripe_cache_size, readahead, elevator type and
+> its parameters, increasing elevator queue length, some parameters in
+> /proc/sys/fs/xfs (randomly without understanding much of the xfs params
+> actually), and /proc/sys/vm/*dirty* parameters .
+> Mount options for destination initially were defaults, then I tried to
+> change them via remount to rw,nodiratime,relatime,largeio but without
+> much improvements.
 
-I have decided on this setup from almost two years of lurking on this list. I will be working my way studiously through 50 pages of the wiki overview on the linuxfoundation.org website before I begin any actual setup. Even so, I would welcome a message off-list from a more expert user ready to field a question from a first-timer.
+A few things come to mind.
 
-Personal background: I am recently retired. I have never been an IT professional; on the other hand, as an amateur, I have been happily breaking alpha and beta software for the last 27 years --- that is, from long before GUIs migrated from PARC into the commercial world. I pride myself on being a quick study. The primary goals of setting up a RAID array are education and performance. BTW, I do not confuse RAID with backup and have religion on the importance of multilayered onsite and offsite backup. My strategy has just been tested less than a week ago by the sudden (and apparently irretrievable) failure of the data drive on my primary workstation. It is this workstation which I will rebuild over Christmas with a RAID array; the fallback old desktop computer is just not as pleasant to work
-  on <grin>.
+For large filesystems such as this, xfs restricts inode locations such that
+inode numbers will stay below 32 bits (the number reflects the disk location).
+This has the tendency to skew inodes & data away from each other, and copying
+a lot of little files will probably get plenty seeky for you.  This may explain
+why little files are so much slower than larger ones.
 
- 
---
-Bruce Miller, Ottawa, Ontario, Canada
-bruce@brmiller.ca; (613) 745-1151
+If you mount with -o inode64, new inodes are free to roam the filesystem, and
+stay nearer to their data blocks.  This won't help on the read side though
+if you've got an existing filesystem.  Note that not all 32-bit applications
+cope well with > 32-bit inode numbers, though.
 
-A conservative is a man with two perfectly good legs who, however, has never learned to walk forward.
-- Franklin D. Roosevelt
+Also, you need to be sure that your filesystem geometry is well-aligned to
+the raid geometry, but if this is MD software raid, that should have happened
+automatically.
+
+You might also want to see how fragmented your source files are; if they
+are highly fragmented, this would reduce performance as you seek around to
+get to the pieces.  xfs_bmap will tell you this info.
+
+You might try running blktrace on the source & target block devices to see
+what your IOs look like; you can use seekwatcher to graph the results
+(or just use seekwatcher to run the whole show).  Nasty IO patterns could
+certainly kill performance.
+
+You might also try each piece; see how fast your reads can go, and your
+writes, independently.
+
+-Eric
+
+> The above are the best results I could obtain.
+> 
+> Firstly I tried copying with cp and then with rsync. Not much difference
+> between the two.
+> 
+> Rsync is nicer to monitor because it splits in 2 processes, one reads
+> only, the other one only writes.
+> 
+> So I have repeatedly catted /proc/pid/stack for the reader and writer
+> processes: the *writer* is the bottleneck, and 90% of the times it is
+> stuck in one of the following stacktraces:
+> 
+
+...
 
