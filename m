@@ -1,76 +1,66 @@
-From: hank peng <pengxihan@gmail.com>
-Subject: Is this a bitmap bug on RAID5?
-Date: Thu, 10 Dec 2009 15:57:52 +0800
-Message-ID: <389deec70912092357i2519c5basc376bd3565f53d7f@mail.gmail.com>
+From: <senthilkumar.muthukalai@wipro.com>
+Subject: RE: Growing Linear RAID
+Date: Thu, 10 Dec 2009 13:54:29 +0530
+Message-ID: <8338BD137FF1B64EB341218BD702985E02C8C165@BLR-EC-MBX03.wipro.com>
+References: <8338BD137FF1B64EB341218BD702985E02C8C03B@BLR-EC-MBX03.wipro.com> <20091210123353.66100b41@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <20091210123353.66100b41@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi, All:
-Today, I encountered this problem and don't know whether it is a bug.
-# uname -a
-Linux Storage 2.6.31.6 #7 Thu Dec 10 15:24:00 CST 2009 ppc unknown
-# mdadm -C /dev/md0 --bitmap=internal -l5 -n3 /dev/sd{b1,c1,d1}
-mdadm: /dev/sdb1 appears to be part of a raid array:
-    level=raid5 devices=3 ctime=Thu Dec 10 15:45:48 2009
-mdadm: /dev/sdc1 appears to be part of a raid array:
-    level=raid5 devices=3 ctime=Thu Dec 10 15:45:48 2009
-mdadm: /dev/sdd1 appears to be part of a raid array:
-    level=raid5 devices=3 ctime=Thu Dec 10 15:45:48 2009
-Continue creating array? y
-mdadm: array /dev/md0 started.
-# cat /proc/mdstat
-Personalities : [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
-md0 : active raid5 sdd1[3] sdc1[1] sdb1[0]
-      5879552 blocks level 5, 64k chunk, algorithm 2 [3/2] [UU_]
-      [===>.................]  recovery = 15.7% (462848/2939776)
-finish=2.0min speed=20125K/sec
-      bitmap: 0/180 pages [0KB], 8KB chunk
+Neil,
 
-unused devices: <none>
+I get only the following message under /var/log/
 
-#dd if=/dev/zero of=/dev/md0 bs=1M count=1000
+[root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow --add /dev/sata3 
+mdadm: Cannot add new disk to this array
 
-When dd is going on, I cat /proc/mdstat
-# cat /proc/mdstat
-Personalities : [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
-md0 : active raid5 sdd1[3] sdc1[1] sdb1[0]
-      5879552 blocks level 5, 64k chunk, algorithm 2 [3/2] [UU_]
-      [========>............]  recovery = 44.1% (1297280/2939776)
-finish=3.3min speed=8166K/sec
-      bitmap: 6/180 pages [24KB], 8KB chunk
+Dec  9 20:37:58 NAS00226b1755a0 kernel: md: export_rdev(sdc)
 
-After dd completed, I cat /proc/mdstat:
-# cat /proc/mdstat
-Personalities : [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
-md0 : active raid5 sdd1[2] sdc1[1] sdb1[0]
-      5879552 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
-      bitmap: 32/180 pages [128KB], 8KB chunk
+[root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow --add /dev/sata4
+mdadm: Cannot add new disk to this array
 
-unused devices: <none>
+Dec  9 20:38:30 NAS00226b1755a0 kernel: md: export_rdev(sdd)
 
-Some time later, I cat /proc/mdstat again:
-# cat /proc/mdstat
-Personalities : [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
-md0 : active raid5 sdd1[2] sdc1[1] sdb1[0]
-      5879552 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
-      bitmap: 32/180 pages [128KB], 8KB chunk
+Thanks,
+Senthil M
 
-unused devices: <none>
+-----Original Message-----
+From: Neil Brown [mailto:neilb@suse.de] 
+Sent: Thursday, December 10, 2009 7:04 AM
+To: SenthilKumar Muthukalai (WT01 - Telecom Equipment)
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Growing Linear RAID
 
-As you noticed, the value before slash in "bitmap: 32/180 pages "
-never changed. I think it should be zero after date is written into
-disk.
+On Wed, 9 Dec 2009 20:31:54 +0530
+<senthilkumar.muthukalai@wipro.com> wrote:
+
+> Hi,
+> 
+> I am trying to add a disk to a Linear Raid which was created with 2
+> disks.
+> We use linux-2.6.18 and mdadm-2.6.4.
+> I guess these support the above mentioned disk addition.
+
+Yes, should work.  This functionality was introduced in 
+2.6.18.
 
 
+> root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow --add /dev/sata3  
 
+This is the correct usage but,
+   
+> mdadm: Cannot add new disk to this array
 
-unused devices: <none>
+This indicates that something went wrong.
 
+Do you get any messages in the kernel logs at this point?
 
-
--- 
-The simplest is not all best but the best is surely the simplest!
+NeilBrown
