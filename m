@@ -1,46 +1,24 @@
-From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: Idea for new RAID type - background extended recovery information
-Date: Wed, 9 Dec 2009 16:45:47 -0800
-Message-ID: <4877c76c0912091645w449cb652k73b2958e9159d77b@mail.gmail.com>
-References: <4877c76c0912090106i684924edn7915c6609ab574f5@mail.gmail.com>
-	 <alpine.DEB.1.10.0912091143350.23464@uplift.swm.pp.se>
+From: Asdo <asdo@shiftmail.org>
+Subject: Re: Disappointing performance of copy (MD raid + XFS)
+Date: Thu, 10 Dec 2009 01:57:39 +0100
+Message-ID: <4B204783.7040109@shiftmail.org>
+References: <4B204334.1000605@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.0912091143350.23464@uplift.swm.pp.se>
+In-reply-to: <4B204334.1000605@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
+To: xfs@oss.sgi.com
 Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Dec 9, 2009 at 2:53 AM, Mikael Abrahamsson <swmike@swm.pp.se> wrote:
-> Generally, my experience has been that total disk failures are fairly rare,
-> instead with the much larger disks today, I get single block/sector
-> failures, meaning 512 bytes (or 4 k, I don't remember) can't be read. Is
-> there any data to support this?
->
-
-I agree with this failure mode.  I've seen occasional disk failures;
-usually on single drive systems, far more often are either single
-failures; or in the case of laptops (and possibly also hard drives
-running in more seismically active areas) occasional runs of
-head-crashes.  In the case of a head-crash it would be a _VERY_ good
-idea to copy the data off first then recover it, but one would expect
-only a moderate volume of poison data.  Having a layer to identify
-which data is suspect, and potentially provide recovery information
-would be a great idea.  In my use cases I'd probably dedicate an
-entire stripe for every 64 that are backed by it.  Changing any
-information within that 64 stripe section would result in a change to
-the parity data, but that layer needn't be updated constantly, during
-idle periods would be a sufficient safety net, so long as it was
-automated; the list of checksums would of course be updated with the
-same operation.
-
-So there would be three basic functions:
-
-1) Determine if chunks are the expected checksum.
-2) Determine if chunks are the correct version (to provide upper
-layers with atomic storage).
-3) Provide low-density recovery data.  Not enough to protect against a
-disk loss, but whatever scale of safety net between 0 and 100% of a
-drive is desired.
+Asdo wrote:
+> and I think I have seen around 10MB/sec when they are of 500KB (this 
+> transfer at 10MB/sec was in parallel with another faster one however). 
+Yes I definitely confirm: right now I have just 1 rsync copy running, 
+it's in a zone where files are around 500KB on average, and it's going 
+at 9 MB/sec.
+Stack traces of the writer process conform to what I have posted in my 
+previous email, even now that the writer is the only process using the 
+destination array.
