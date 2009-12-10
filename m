@@ -1,48 +1,32 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Growing Linear RAID
-Date: Thu, 10 Dec 2009 20:30:08 +1100
-Message-ID: <20091210203008.69cbbe97@notabene.brown>
-References: <8338BD137FF1B64EB341218BD702985E02C8C03B@BLR-EC-MBX03.wipro.com>
-	<20091210123353.66100b41@notabene.brown>
-	<8338BD137FF1B64EB341218BD702985E02C8C165@BLR-EC-MBX03.wipro.com>
+From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
+Subject: Re: Disappointing performance of copy (MD raid + XFS)
+Date: Thu, 10 Dec 2009 09:44:28 +0000
+Message-ID: <73e903670912100144k2675754n2ef688a944364b42@mail.gmail.com>
+References: <4B204334.1000605@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8338BD137FF1B64EB341218BD702985E02C8C165@BLR-EC-MBX03.wipro.com>
+In-Reply-To: <4B204334.1000605@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: senthilkumar.muthukalai@wipro.com
-Cc: linux-raid@vger.kernel.org
+To: Asdo <asdo@shiftmail.org>
+Cc: xfs@oss.sgi.com, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, 10 Dec 2009 13:54:29 +0530
-<senthilkumar.muthukalai@wipro.com> wrote:
-
-> Neil,
-> 
-> I get only the following message under /var/log/
-> 
-> [root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow --add /dev/sata3 
-> mdadm: Cannot add new disk to this array
-> 
-> Dec  9 20:37:58 NAS00226b1755a0 kernel: md: export_rdev(sdc)
-> 
-> [root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow --add /dev/sata4
-> mdadm: Cannot add new disk to this array
-> 
-> Dec  9 20:38:30 NAS00226b1755a0 kernel: md: export_rdev(sdd)
+On Thu, Dec 10, 2009 at 12:39 AM, Asdo <asdo@shiftmail.org> wrote:
+> Hi all,
 >
+> I'm copying a bagzillion of files (14TB) from a 26disk MD-raid 6 array to a
+> 16disk MD-raid 6 array.
+> Filesystems are XFS for both arrays.
+> Kernel is 2.6.31 ubuntu generic-14
+> Performance is very disappointing, going from 150MB/sec to 22MB/sec
+> depending apparently to the size of files it encounters. 150MB/sec is when
+> files are 40-80MB in size, 22MB/sec is when files are 1MB in size on
+> average, and I think I have seen around 10MB/sec when they are of 500KB
+> (this transfer at 10MB/sec was in parallel with another faster one however).
 
-Thanks - that narrows it down quite a bit.
+This may not be related, but I have had some general problems
+regarding transfer rates in Ubuntu. Using a vanilla kernel seemed to
+help: http://kernel.ubuntu.com/~kernel-ppa/mainline/
 
-I think that if you run mdadm under 'strace' you will find that the ioctl
-fails with ENOSPC.
-It seems that growing a linear array didn't work reliably until 2.6.22.
-
-You need 
-
-  commit a778b73ff793d34c0082f76110f73a7754915067
-
-to make it work properly.
-
-NeilBrown
+-- Kristleifur
