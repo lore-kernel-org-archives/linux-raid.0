@@ -1,49 +1,61 @@
-From: Harold Pritchett <harold@uga.edu>
-Subject: Installing Red Hat Enterprise Linux on Dell Hardware Raid
-Date: Thu, 10 Dec 2009 09:49:10 -0500
-Message-ID: <4B210A66.2010302@uga.edu>
-Reply-To: harold@uga.edu
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: Installing Red Hat Enterprise Linux on Dell Hardware Raid
+Date: Thu, 10 Dec 2009 15:11:37 +0000
+Message-ID: <20091210151137.GA13641@cthulhu.home.robinhill.me.uk>
+References: <4B210A66.2010302@uga.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="WIyZ46R2i8wDzkSu"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4B210A66.2010302@uga.edu>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have ordered the following server from Dell:
 
-PowerEdge T610
-	Tower Chassis for Up to Eight 3.5-Inch Hard Drives
-	No Operating System
-	Intel Xeon E5504, 2.0Ghz, 4M Cache, 800MHz Max Mem
-	6GB Memory (3x2GB), 1333MHz Dual Ranked UDIMMs for 1 Processor, Optimi=
-zed
-	Embedded Broadcom=AE NetXtreme II 5709 Gigabit Ethernet NIC
-	PERC 6/i SAS RAID Controller, 2x4 Connectors, Internal, PCIe, 256MB Ca=
-che
-		(4) 250GB 7.2K RPM SATA 3.5" Hot Plug Hard Drive
-		RAID 6 for PERC 6/i Controller
-	DVD-ROM, SATA, Internal
-	Electronic System Documentation, OpenManage DVD Kit with DMC
+--WIyZ46R2i8wDzkSu
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I wish to install Red Hat Enterprise Linux 5.4 on this using hardware r=
-aid-6.
-I have four 250 GB drives and four additional hot swap bays for future =
-expansion.
+On Thu Dec 10, 2009 at 09:49:10AM -0500, Harold Pritchett wrote:
 
-What do I need to do this?  Instructions? Drivers? 32 vs 64 bit?
+> I wish to install Red Hat Enterprise Linux 5.4 on this using hardware rai=
+d-6.
+> I have four 250 GB drives and four additional hot swap bays for future
+> expansion.
+>=20
+> What do I need to do this?  Instructions? Drivers? 32 vs 64 bit?
+>=20
+> Any assistance would be appreciated.
+>=20
+This is mostly a software RAID list, but this looks straightforward
+enough.  The specs you listed show that you've specified the RAID-6
+setup, so it should arrive pre-configured.  If not, you'll need to set
+it up via the controller BIOS (should pop up a message at boot time).
+The drivers should be included with RHEL5, and with 6GB RAM I'd say
+you'd want 64-bit (there's little reason to go for 32-bit over 64-bit
+nowadays).
 
-Any assistance would be appreciated.
+HTH,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
-Thanks
+--WIyZ46R2i8wDzkSu
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-Harold
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
 
+iEYEARECAAYFAkshD6kACgkQShxCyD40xBLPpQCgjZGvngcG3KyyZoHkk+++sxhC
+M90An2bAE+Bwa5sXbKEsN3sxlri/K+z/
+=mfWe
+-----END PGP SIGNATURE-----
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--WIyZ46R2i8wDzkSu--
