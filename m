@@ -1,356 +1,42 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [md PATCH 04/22] md: support barrier requests on all
- personalities.
-Date: Thu, 10 Dec 2009 17:25:22 +1100
-Message-ID: <20091210172522.26ff48b5@notabene.brown>
-References: <20091204064559.10264.37619.stgit@notabene.brown>
-	<20091204064802.10264.60521.stgit@notabene.brown>
-	<20091208135442.GR5174@skl-net.de>
+From: Gabor Gombas <gombasg@sztaki.hu>
+Subject: Re: Disappointing performance of copy (MD raid + XFS)
+Date: Thu, 10 Dec 2009 08:28:22 +0100
+Message-ID: <20091210072822.GA29161@boogie.lpds.sztaki.hu>
+References: <4B204334.1000605@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091208135442.GR5174@skl-net.de>
+Content-Disposition: inline
+In-Reply-To: <4B204334.1000605@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
-Cc: linux-raid@vger.kernel.org
+To: Asdo <asdo@shiftmail.org>
+Cc: xfs@oss.sgi.com, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 8 Dec 2009 14:54:42 +0100
-Andre Noll <maan@systemlinux.org> wrote:
+On Thu, Dec 10, 2009 at 01:39:16AM +0100, Asdo wrote:
 
-Thanks again.
-I have made most of the changes you suggest.
+> I'm copying a bagzillion of files (14TB) from a 26disk MD-raid 6
+> array to a 16disk MD-raid 6 array.
+> Filesystems are XFS for both arrays.
+[...]
+> So I have repeatedly catted /proc/pid/stack for the reader and
+> writer processes: the *writer* is the bottleneck, and 90% of the
+> times it is stuck in one of the following stacktraces:
 
-> > +		rcu_read_lock();
-> > +		list_for_each_entry_rcu(rdev, &mddev->disks, same_set)
-> > +			if (rdev->raid_disk >= 0 &&
-> > +			    !test_bit(Faulty, &rdev->flags)) {
-> > +				/* Take two references, one is dropped
-> > +				 * when request finishes, one after
-> > +				 * we reclaim rcu_read_lock
-> > +				 */
-> > +				struct bio *bi;
-> > +				atomic_inc(&rdev->nr_pending);
-> > +				atomic_inc(&rdev->nr_pending);
-> > +				rcu_read_unlock();
-> > +				bi = bio_alloc(GFP_KERNEL, 0);
-> > +				bi->bi_end_io = md_end_barrier;
-> > +				bi->bi_private = rdev;
-> > +				bi->bi_bdev = rdev->bdev;
-> > +				atomic_inc(&mddev->flush_pending);
-> > +				submit_bio(WRITE_BARRIER, bi);
-> > +				rcu_read_lock();
-> > +				rdev_dec_pending(rdev, mddev);
-> > +			}
-> > +		rcu_read_unlock();
-> 
-> Calling atomic_inc() twice isn't an atomic operation any more. If
-> this doesn't matter (because all modifications of rdev->nr_pending
-> are supposed to happen within RCU read-side critical sections) then
-> why is rdev->nr_pending an atomic_t at all?
+What does iostat say about the disk utilization during the copy?
 
-Calling atomic_inc() twice is still two atomic operations, and that is what I
-need.
-The important thing is that the read-modify-write cycle of atomic_inc isn't
-interrupted, so if two thread both do atomic_inc at the same time the result
-really is adding 2, not just adding one.
+IMHO copying a large amount of relatively small files means lots of
+metadata operations which in turn means lots of small, scattered writes.
+For parity RAID, that kind of load is a killer since writes smaller than
+the stripe size will turn into "read all disks - modify the stripe -
+write it back".
 
-Multiple RCU read-side blocks can run at the same time on different
-processors - so we definitely need to protection of 'atomic_'.
+Use RAID10 if you want good performance for that kind of load.
 
-Here is the new version of the patch - thanks.
+Gabor
 
-NeilBrown
-
-From 87d04b8950f80e77b376531506cae08387578f64 Mon Sep 17 00:00:00 2001
-From: NeilBrown <neilb@suse.de>
-Date: Tue, 1 Dec 2009 17:49:51 +1100
-Subject: [PATCH] md: support barrier requests on all personalities.
-
-Previously barriers were only supported on RAID1.  This is because
-other levels requires synchronisation across all devices and so needed
-a different approach.
-Here is that approach.
-
-When a barrier arrives, we send a zero-length barrier to every active
-device.  When that completes - and if the original request was not
-empty -  we submit the barrier request itself (with the barrier flag
-cleared) and then submit a fresh load of zero length barriers.
-
-The barrier request itself is asynchronous, but any subsequent
-request will block until the barrier completes.
-
-The reason for clearing the barrier flag is that a barrier request is
-allowed to fail.  If we pass a non-empty barrier through a striping
-raid level it is conceivable that part of it could succeed and part
-could fail.  That would be way too hard to deal with.
-So if the first run of zero length barriers succeed, we assume all is
-sufficiently well that we send the request and ignore errors in the
-second run of barriers.
-
-RAID5 needs extra care as write requests may not have been submitted
-to the underlying devices yet.  So we flush the stripe cache before
-proceeding with the barrier.
-
-Note that the second set of zero-length barriers are submitted
-immediately after the original request is submitted.  Thus when
-a personality finds mddev->barrier to be set during make_request,
-it should not return from make_request until the corresponding
-per-device request(s) have been queued.
-
-That will be done in later patches.
-
-Signed-off-by: NeilBrown <neilb@suse.de>
----
- drivers/md/linear.c    |    2 +-
- drivers/md/md.c        |  105 +++++++++++++++++++++++++++++++++++++++++++++++-
- drivers/md/md.h        |   12 +++++
- drivers/md/multipath.c |    2 +-
- drivers/md/raid0.c     |    2 +-
- drivers/md/raid10.c    |    2 +-
- drivers/md/raid5.c     |    8 +++-
- 7 files changed, 126 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/md/linear.c b/drivers/md/linear.c
-index 1ceceb3..3b3f77c 100644
---- a/drivers/md/linear.c
-+++ b/drivers/md/linear.c
-@@ -292,7 +292,7 @@ static int linear_make_request (struct request_queue *q, struct bio *bio)
- 	int cpu;
- 
- 	if (unlikely(bio_rw_flagged(bio, BIO_RW_BARRIER))) {
--		bio_endio(bio, -EOPNOTSUPP);
-+		md_barrier_request(mddev, bio);
- 		return 0;
- 	}
- 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index eaf0a92..c94b6cd 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -217,12 +217,12 @@ static int md_make_request(struct request_queue *q, struct bio *bio)
- 		return 0;
- 	}
- 	rcu_read_lock();
--	if (mddev->suspended) {
-+	if (mddev->suspended || mddev->barrier) {
- 		DEFINE_WAIT(__wait);
- 		for (;;) {
- 			prepare_to_wait(&mddev->sb_wait, &__wait,
- 					TASK_UNINTERRUPTIBLE);
--			if (!mddev->suspended)
-+			if (!mddev->suspended && !mddev->barrier)
- 				break;
- 			rcu_read_unlock();
- 			schedule();
-@@ -264,10 +264,110 @@ static void mddev_resume(mddev_t *mddev)
- 
- int mddev_congested(mddev_t *mddev, int bits)
- {
-+	if (mddev->barrier)
-+		return 1;
- 	return mddev->suspended;
- }
- EXPORT_SYMBOL(mddev_congested);
- 
-+/*
-+ * Generic barrier handling for md
-+ */
-+
-+#define POST_REQUEST_BARRIER ((void*)1)
-+
-+static void md_end_barrier(struct bio *bio, int err)
-+{
-+	mdk_rdev_t *rdev = bio->bi_private;
-+	mddev_t *mddev = rdev->mddev;
-+	if (err == -EOPNOTSUPP && mddev->barrier != POST_REQUEST_BARRIER)
-+		set_bit(BIO_EOPNOTSUPP, &mddev->barrier->bi_flags);
-+
-+	rdev_dec_pending(rdev, mddev);
-+
-+	if (atomic_dec_and_test(&mddev->flush_pending)) {
-+		if (mddev->barrier == POST_REQUEST_BARRIER) {
-+			/* This was a post-request barrier */
-+			mddev->barrier = NULL;
-+			wake_up(&mddev->sb_wait);
-+		} else
-+			/* The pre-request barrier has finished */
-+			schedule_work(&mddev->barrier_work);
-+	}
-+	bio_put(bio);
-+}
-+
-+static void submit_barriers(mddev_t *mddev)
-+{
-+	mdk_rdev_t *rdev;
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(rdev, &mddev->disks, same_set)
-+		if (rdev->raid_disk >= 0 &&
-+		    !test_bit(Faulty, &rdev->flags)) {
-+			/* Take two references, one is dropped
-+			 * when request finishes, one after
-+			 * we reclaim rcu_read_lock
-+			 */
-+			struct bio *bi;
-+			atomic_inc(&rdev->nr_pending);
-+			atomic_inc(&rdev->nr_pending);
-+			rcu_read_unlock();
-+			bi = bio_alloc(GFP_KERNEL, 0);
-+			bi->bi_end_io = md_end_barrier;
-+			bi->bi_private = rdev;
-+			bi->bi_bdev = rdev->bdev;
-+			atomic_inc(&mddev->flush_pending);
-+			submit_bio(WRITE_BARRIER, bi);
-+			rcu_read_lock();
-+			rdev_dec_pending(rdev, mddev);
-+		}
-+	rcu_read_unlock();
-+}
-+
-+static void md_submit_barrier(struct work_struct *ws)
-+{
-+	mddev_t *mddev = container_of(ws, mddev_t, barrier_work);
-+	struct bio *bio = mddev->barrier;
-+
-+	atomic_set(&mddev->flush_pending, 1);
-+
-+	if (test_bit(BIO_EOPNOTSUPP, &bio->bi_flags))
-+		bio_endio(bio, -EOPNOTSUPP);
-+	else if (bio->bi_size == 0)
-+		/* an empty barrier - all done */
-+		bio_endio(bio, 0);
-+	else {
-+		bio->bi_rw &= ~(1<<BIO_RW_BARRIER);
-+		if (mddev->pers->make_request(mddev->queue, bio))
-+			generic_make_request(bio);
-+		mddev->barrier = POST_REQUEST_BARRIER;
-+		submit_barriers(mddev);
-+	}
-+	if (atomic_dec_and_test(&mddev->flush_pending)) {
-+		mddev->barrier = NULL;
-+		wake_up(&mddev->sb_wait);
-+	}
-+}
-+
-+void md_barrier_request(mddev_t *mddev, struct bio *bio)
-+{
-+	spin_lock_irq(&mddev->write_lock);
-+	wait_event_lock_irq(mddev->sb_wait,
-+			    !mddev->barrier,
-+			    mddev->write_lock, /*nothing*/);
-+	mddev->barrier = bio;
-+	spin_unlock_irq(&mddev->write_lock);
-+
-+	atomic_set(&mddev->flush_pending, 1);
-+	INIT_WORK(&mddev->barrier_work, md_submit_barrier);
-+
-+	submit_barriers(mddev);
-+
-+	if (atomic_dec_and_test(&mddev->flush_pending))
-+		schedule_work(&mddev->barrier_work);
-+}
-+EXPORT_SYMBOL(md_barrier_request);
- 
- static inline mddev_t *mddev_get(mddev_t *mddev)
- {
-@@ -375,6 +475,7 @@ static mddev_t * mddev_find(dev_t unit)
- 	atomic_set(&new->openers, 0);
- 	atomic_set(&new->active_io, 0);
- 	spin_lock_init(&new->write_lock);
-+	atomic_set(&new->flush_pending, 0);
- 	init_waitqueue_head(&new->sb_wait);
- 	init_waitqueue_head(&new->recovery_wait);
- 	new->reshape_position = MaxSector;
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 9e2c412..0569e8f 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -292,6 +292,17 @@ struct mddev_s
- 	struct mutex			bitmap_mutex;
- 
- 	struct list_head		all_mddevs;
-+
-+	/* Generic barrier handling.
-+	 * If there is a pending barrier request, all other
-+	 * writes are blocked while the devices are flushed.
-+	 * The last to finish a flush schedules a worker to
-+	 * submit the barrier request (without the barrier flag),
-+	 * then submit more flush requests.
-+	 */
-+	struct bio *barrier;
-+	atomic_t flush_pending;
-+	struct work_struct barrier_work;
- };
- 
- 
-@@ -432,6 +443,7 @@ extern void md_done_sync(mddev_t *mddev, int blocks, int ok);
- extern void md_error(mddev_t *mddev, mdk_rdev_t *rdev);
- 
- extern int mddev_congested(mddev_t *mddev, int bits);
-+extern void md_barrier_request(mddev_t *mddev, struct bio *bio);
- extern void md_super_write(mddev_t *mddev, mdk_rdev_t *rdev,
- 			   sector_t sector, int size, struct page *page);
- extern void md_super_wait(mddev_t *mddev);
-diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
-index ee7646f..cbc0a99 100644
---- a/drivers/md/multipath.c
-+++ b/drivers/md/multipath.c
-@@ -145,7 +145,7 @@ static int multipath_make_request (struct request_queue *q, struct bio * bio)
- 	int cpu;
- 
- 	if (unlikely(bio_rw_flagged(bio, BIO_RW_BARRIER))) {
--		bio_endio(bio, -EOPNOTSUPP);
-+		md_barrier_request(mddev, bio);
- 		return 0;
- 	}
- 
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index d3a4ce0..122d07a 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -453,7 +453,7 @@ static int raid0_make_request(struct request_queue *q, struct bio *bio)
- 	int cpu;
- 
- 	if (unlikely(bio_rw_flagged(bio, BIO_RW_BARRIER))) {
--		bio_endio(bio, -EOPNOTSUPP);
-+		md_barrier_request(mddev, bio);
- 		return 0;
- 	}
- 
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index c2cb7b8..2fbf867 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -804,7 +804,7 @@ static int make_request(struct request_queue *q, struct bio * bio)
- 	mdk_rdev_t *blocked_rdev;
- 
- 	if (unlikely(bio_rw_flagged(bio, BIO_RW_BARRIER))) {
--		bio_endio(bio, -EOPNOTSUPP);
-+		md_barrier_request(mddev, bio);
- 		return 0;
- 	}
- 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index d29215d..ecf89c8 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3866,7 +3866,13 @@ static int make_request(struct request_queue *q, struct bio * bi)
- 	int cpu, remaining;
- 
- 	if (unlikely(bio_rw_flagged(bi, BIO_RW_BARRIER))) {
--		bio_endio(bi, -EOPNOTSUPP);
-+		/* Drain all pending writes.  We only really need
-+		 * to ensure they have been submitted, but this is
-+		 * easier.
-+		 */
-+		mddev->pers->quiesce(mddev, 1);
-+		mddev->pers->quiesce(mddev, 0);
-+		md_barrier_request(mddev, bi);
- 		return 0;
- 	}
- 
 -- 
-1.6.5.4
-
+     ---------------------------------------------------------
+     MTA SZTAKI Computer and Automation Research Institute
+                Hungarian Academy of Sciences
+     ---------------------------------------------------------
