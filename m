@@ -1,66 +1,48 @@
-From: <senthilkumar.muthukalai@wipro.com>
-Subject: RE: Growing Linear RAID
-Date: Thu, 10 Dec 2009 13:54:29 +0530
-Message-ID: <8338BD137FF1B64EB341218BD702985E02C8C165@BLR-EC-MBX03.wipro.com>
-References: <8338BD137FF1B64EB341218BD702985E02C8C03B@BLR-EC-MBX03.wipro.com> <20091210123353.66100b41@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Growing Linear RAID
+Date: Thu, 10 Dec 2009 20:30:08 +1100
+Message-ID: <20091210203008.69cbbe97@notabene.brown>
+References: <8338BD137FF1B64EB341218BD702985E02C8C03B@BLR-EC-MBX03.wipro.com>
+	<20091210123353.66100b41@notabene.brown>
+	<8338BD137FF1B64EB341218BD702985E02C8C165@BLR-EC-MBX03.wipro.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <20091210123353.66100b41@notabene.brown>
+In-Reply-To: <8338BD137FF1B64EB341218BD702985E02C8C165@BLR-EC-MBX03.wipro.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
+To: senthilkumar.muthukalai@wipro.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil,
-
-I get only the following message under /var/log/
-
-[root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow --add /dev/sata3 
-mdadm: Cannot add new disk to this array
-
-Dec  9 20:37:58 NAS00226b1755a0 kernel: md: export_rdev(sdc)
-
-[root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow --add /dev/sata4
-mdadm: Cannot add new disk to this array
-
-Dec  9 20:38:30 NAS00226b1755a0 kernel: md: export_rdev(sdd)
-
-Thanks,
-Senthil M
-
------Original Message-----
-From: Neil Brown [mailto:neilb@suse.de] 
-Sent: Thursday, December 10, 2009 7:04 AM
-To: SenthilKumar Muthukalai (WT01 - Telecom Equipment)
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Growing Linear RAID
-
-On Wed, 9 Dec 2009 20:31:54 +0530
+On Thu, 10 Dec 2009 13:54:29 +0530
 <senthilkumar.muthukalai@wipro.com> wrote:
 
-> Hi,
+> Neil,
 > 
-> I am trying to add a disk to a Linear Raid which was created with 2
-> disks.
-> We use linux-2.6.18 and mdadm-2.6.4.
-> I guess these support the above mentioned disk addition.
-
-Yes, should work.  This functionality was introduced in 
-2.6.18.
-
-
-> root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow --add /dev/sata3  
-
-This is the correct usage but,
-   
+> I get only the following message under /var/log/
+> 
+> [root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow --add /dev/sata3 
 > mdadm: Cannot add new disk to this array
+> 
+> Dec  9 20:37:58 NAS00226b1755a0 kernel: md: export_rdev(sdc)
+> 
+> [root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow --add /dev/sata4
+> mdadm: Cannot add new disk to this array
+> 
+> Dec  9 20:38:30 NAS00226b1755a0 kernel: md: export_rdev(sdd)
+>
 
-This indicates that something went wrong.
+Thanks - that narrows it down quite a bit.
 
-Do you get any messages in the kernel logs at this point?
+I think that if you run mdadm under 'strace' you will find that the ioctl
+fails with ENOSPC.
+It seems that growing a linear array didn't work reliably until 2.6.22.
+
+You need 
+
+  commit a778b73ff793d34c0082f76110f73a7754915067
+
+to make it work properly.
 
 NeilBrown
