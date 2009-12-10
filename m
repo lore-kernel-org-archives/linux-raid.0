@@ -1,116 +1,181 @@
-From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: about raid5 recovery when created
-Date: Wed, 9 Dec 2009 15:29:33 -0800
-Message-ID: <4877c76c0912091529wcb7eel7b1e3c0bb9abc19f@mail.gmail.com>
-References: <389deec70912080501u6c6bc90ei2d34ef245a1dae9e@mail.gmail.com>
-	 <20091208131446.GA21130@cthulhu.home.robinhill.me.uk>
-	 <389deec70912080549h1b22489es612235ad29354d6b@mail.gmail.com>
-	 <20091208135600.GB21130@cthulhu.home.robinhill.me.uk>
-	 <389deec70912080603w47d7fda3jf021af169ac1c48c@mail.gmail.com>
-	 <4877c76c0912090030r266337afs394ecec463555258@mail.gmail.com>
-	 <389deec70912090330l73d04696v1d23dbe74423d15b@mail.gmail.com>
+From: Asdo <asdo@shiftmail.org>
+Subject: Disappointing performance of copy (MD raid + XFS)
+Date: Thu, 10 Dec 2009 01:39:16 +0100
+Message-ID: <4B204334.1000605@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <389deec70912090330l73d04696v1d23dbe74423d15b@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: hank peng <pengxihan@gmail.com>, linux-raid@vger.kernel.org
+To: xfs@oss.sgi.com
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Dec 9, 2009 at 3:30 AM, hank peng <pengxihan@gmail.com> wrote:
-> 2009/12/9 Michael Evans <mjevans1983@gmail.com>:
->> On Tue, Dec 8, 2009 at 6:03 AM, hank peng <pengxihan@gmail.com> wrot=
-e:
->>> 2009/12/8 Robin Hill <robin@robinhill.me.uk>:
->>>> On Tue Dec 08, 2009 at 09:49:48PM +0800, hank peng wrote:
->>>>
->>>>> 2009/12/8 Robin Hill <robin@robinhill.me.uk>:
->>>>> > On Tue Dec 08, 2009 at 09:01:23PM +0800, hank peng wrote:
->>>>> >
->>>>> >> Hi, all:
->>>>> >> As we know, when a raid5 array is created, recovery will be go=
-ing on
->>>>> >> which involves some read, one xor and one write. Since there i=
-s no
->>>>> >> real data in the disk at the time, besides, if I am willing to=
- wait
->>>>> >> for recovery to complete and then use this raid5, how about ad=
-ding
->>>>> >> support for a fast recovery method? Right now, what is in my m=
-ind is
->>>>> >> zero all disks which belong to this raid5. I think it will inc=
-rease
->>>>> >> raid5 recovery speed when created and decrease CPU usage, sinc=
-e all
->>>>> >> zero is also XORed.
->>>>> >> What do raid developers think?
->>>>> >>
->>>>> > It'll decrease CPU usage but increase I/O - you're now needing =
-to write
->>>>> > to all disks. =A0Most systems will be I/O limited rather than C=
-PU limited,
->>>>> > so the current approach works better. =A0If you want to zero th=
-e disks
->>>>> > then do this before creating the array - you can then use --ass=
-ume-clean
->>>>> > to skip the resync process.
->>>>> >
->>>>> I think --assume-clean is used mostly when doing performance test=
- and
->>>>> can't be used when creating a raid5 array using new disk, because
->>>>> later read and write operation make assumption that all stripe is
->>>>> XORed. Correct me if I am wrong.
->>>>>
->>>> You're correct - that's why I said to zero all the disks first so =
-the
->>>> XOR data is all correct.
->>>>
->>> I think this function is better to be implemented in kernel raid
->>> layer, not in user space(for example using dd command).
->>> In this way, we can get good performance and lower cpu usage, also,=
- we
->>> can make this function be part of raid code so that it can be manag=
-ed
->>> by mdadm
->>>> Cheers,
->>>> =A0 =A0Robin
->>>> --
->>>> =A0 =A0 ___
->>>> =A0 =A0( ' } =A0 =A0 | =A0 =A0 =A0 Robin Hill =A0 =A0 =A0 =A0<robi=
-n@robinhill.me.uk> |
->>>> =A0 / / ) =A0 =A0 =A0| Little Jim says .... =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0|
->>>> =A0// !! =A0 =A0 =A0 | =A0 =A0 =A0"He fallen in de water !!" =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 |
->>>>
->>>
->>>
->>>
->>> --
->>> The simplest is not all best but the best is surely the simplest!
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
-l
->>>
->>
->> How about documenting this better? =A0'zeroing all underlying device=
-s
->'Lost in translation'
->> then creating with --assume-clean' will be clean because the parity
->> algorithm is even (or similar to 'even parity')?
->> --
+Hi all,
 
-Maybe this will translate more easily.
+I'm copying a bagzillion of files (14TB) from a 26disk MD-raid 6 array 
+to a 16disk MD-raid 6 array.
+Filesystems are XFS for both arrays.
+Kernel is 2.6.31 ubuntu generic-14
+Performance is very disappointing, going from 150MB/sec to 22MB/sec 
+depending apparently to the size of files it encounters. 150MB/sec is 
+when files are 40-80MB in size, 22MB/sec is when files are 1MB in size 
+on average, and I think I have seen around 10MB/sec when they are of 
+500KB (this transfer at 10MB/sec was in parallel with another faster one 
+however).
+Doing multiple rsync transfers simultaneously for different files of the 
+filesystem does increase the speed, up to a point however, and even 
+launching 5 of them I am not able to bring it above 150MB/sec (that's 
+the average: it's actually very unstable).
 
-The documentation should be more explicit.  "When the devices the RAID
-is made of are filled with zero's before RAID creation --assume-clean
-can be used because the parity will already be correct."
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Already tried tweaking: stripe_cache_size, readahead, elevator type and 
+its parameters, increasing elevator queue length, some parameters in 
+/proc/sys/fs/xfs (randomly without understanding much of the xfs params 
+actually), and /proc/sys/vm/*dirty* parameters .
+Mount options for destination initially were defaults, then I tried to 
+change them via remount to rw,nodiratime,relatime,largeio but without 
+much improvements.
+The above are the best results I could obtain.
+
+Firstly I tried copying with cp and then with rsync. Not much difference 
+between the two.
+
+Rsync is nicer to monitor because it splits in 2 processes, one reads 
+only, the other one only writes.
+
+So I have repeatedly catted /proc/pid/stack for the reader and writer 
+processes: the *writer* is the bottleneck, and 90% of the times it is 
+stuck in one of the following stacktraces:
+
+    [<ffffffffa02ff41d>] xlog_state_get_iclog_space+0xed/0x2d0 
+[xfs]                  
+    [<ffffffffa02ff76c>] xlog_write+0x16c/0x630 
+[xfs]                                 
+    [<ffffffffa02ffc6a>] xfs_log_write+0x3a/0x70 
+[xfs]                                
+    [<ffffffffa030b6d7>] _xfs_trans_commit+0x197/0x3b0 
+[xfs]                          
+    [<ffffffffa030ff15>] xfs_free_eofblocks+0x265/0x270 
+[xfs]                         
+    [<ffffffffa031090d>] xfs_release+0x10d/0x1c0 
+[xfs]                                
+    [<ffffffffa0318200>] xfs_file_release+0x10/0x20 
+[xfs]                             
+    [<ffffffff81120700>] 
+__fput+0xf0/0x210                                            
+    [<ffffffff8112083d>] 
+fput+0x1d/0x30                                               
+    [<ffffffff8111cab8>] 
+filp_close+0x58/0x90                                         
+    [<ffffffff8111cba9>] 
+sys_close+0xb9/0x110                                         
+    [<ffffffff81012002>] 
+system_call_fastpath+0x16/0x1b                               
+    [<ffffffffffffffff>] 0xffffffffffffffff              
+
+---------
+
+    [<ffffffff8107d6cc>] 
+down+0x3c/0x50                                               
+    [<ffffffffa03176ee>] xfs_buf_lock+0x1e/0x60 
+[xfs]                                 
+    [<ffffffffa0317869>] _xfs_buf_find+0x139/0x230 
+[xfs]                              
+    [<ffffffffa03179bb>] xfs_buf_get_flags+0x5b/0x170 
+[xfs]                           
+    [<ffffffffa0317ae3>] xfs_buf_read_flags+0x13/0xa0 
+[xfs]                           
+    [<ffffffffa030c9d1>] xfs_trans_read_buf+0x1c1/0x300 
+[xfs]                         
+    [<ffffffffa02e26c9>] xfs_da_do_buf+0x279/0x6f0 
+[xfs]                              
+    [<ffffffffa02e2bb5>] xfs_da_read_buf+0x25/0x30 
+[xfs]                              
+    [<ffffffffa02e7157>] xfs_dir2_block_addname+0x47/0x970 
+[xfs]                      
+    [<ffffffffa02e5e9a>] xfs_dir_createname+0x13a/0x1b0 
+[xfs]                         
+    [<ffffffffa0309816>] xfs_rename+0x576/0x660 
+[xfs]                                 
+    [<ffffffffa031add1>] xfs_vn_rename+0x61/0x70 
+[xfs]                                
+    [<ffffffff81128766>] 
+vfs_rename_other+0xc6/0x100                                  
+    [<ffffffff81129b29>] 
+vfs_rename+0x109/0x280                                       
+    [<ffffffff8112b722>] 
+sys_renameat+0x252/0x280                                     
+    [<ffffffff8112b766>] 
+sys_rename+0x16/0x20                                         
+    [<ffffffff81012002>] 
+system_call_fastpath+0x16/0x1b                               
+    [<ffffffffffffffff>] 
+0xffffffffffffffff                                           
+
+----------
+
+    [<ffffffff8107d6cc>] 
+down+0x3c/0x50                                                                                 
+ 
+    [<ffffffffa03176ee>] xfs_buf_lock+0x1e/0x60 
+[xfs]                                                                    
+    [<ffffffffa0317869>] _xfs_buf_find+0x139/0x230 
+[xfs]                                                                 
+    [<ffffffffa03179bb>] xfs_buf_get_flags+0x5b/0x170 
+[xfs]                                                              
+    [<ffffffffa0317ae3>] xfs_buf_read_flags+0x13/0xa0 
+[xfs]                                                              
+    [<ffffffffa030c9d1>] xfs_trans_read_buf+0x1c1/0x300 
+[xfs]                                                            
+    [<ffffffffa02e26c9>] xfs_da_do_buf+0x279/0x6f0 
+[xfs]                                                                 
+    [<ffffffffa02e2bb5>] xfs_da_read_buf+0x25/0x30 
+[xfs]                                                                 
+    [<ffffffffa02e960b>] xfs_dir2_leaf_addname+0x4b/0x8b0 
+[xfs]                                                          
+    [<ffffffffa02e5ee3>] xfs_dir_createname+0x183/0x1b0 
+[xfs]                                                            
+    [<ffffffffa030fa4b>] xfs_create+0x45b/0x5f0 
+[xfs]                                                                    
+    [<ffffffffa031af4b>] xfs_vn_mknod+0xab/0x1c0 
+[xfs]                                                                   
+    [<ffffffffa031b07b>] xfs_vn_create+0xb/0x10 
+[xfs]                                                                    
+    [<ffffffff8112967f>] 
+vfs_create+0xaf/0xd0                                                                           
+ 
+    [<ffffffff8112975c>] 
+__open_namei_create+0xbc/0x100                                                                 
+ 
+    [<ffffffff8112ccd6>] 
+do_filp_open+0x9e6/0xac0                                                                       
+ 
+    [<ffffffff8111cc64>] 
+do_sys_open+0x64/0x160                                                                         
+ 
+    [<ffffffff8111cd8b>] 
+sys_open+0x1b/0x20                                                                             
+ 
+    [<ffffffff81012002>] 
+system_call_fastpath+0x16/0x1b                                                                 
+ 
+    [<ffffffffffffffff>] 0xffffffffffffffff         
+
+The xfs_buf_lock trace is more common (about 3 to 1) than the 
+xlog_state_get_iclog_space trace.
+
+I don't really understand what are these buffers mentioned in the last 
+stack traces (xfs_buf_*)... anybody cares to explain? Is this 
+performance bottleneck really related to the disks or the contention on 
+buffers locking is e.g. entirely in memory and it's stuck for some other 
+reason? Can I assign more memory to xfs so to have more buffers? I have 
+32GB ram and it's all free... I also have 8 cores BTW.
+
+The controllers I'm using are 3ware 9650SE so there is a word around 
+that they are not optimal in terms of latency, but I didn't expect them 
+to be SO bad. Also I'm not sure latency is the bottleneck here because 
+XFS could buffer writes and flush just every lots of seconds, and I'm 
+pretty sure cp and rsync never do fsync/fdatasync themselves
+
+Thanks in advance for any insight.
+Asdo
