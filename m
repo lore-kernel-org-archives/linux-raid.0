@@ -1,61 +1,49 @@
-From: <senthilkumar.muthukalai@wipro.com>
-Subject: RE: Growing Linear RAID
-Date: Thu, 10 Dec 2009 17:33:58 +0530
-Message-ID: <8338BD137FF1B64EB341218BD702985E02C8C21E@BLR-EC-MBX03.wipro.com>
-References: <8338BD137FF1B64EB341218BD702985E02C8C03B@BLR-EC-MBX03.wipro.com><20091210123353.66100b41@notabene.brown><8338BD137FF1B64EB341218BD702985E02C8C165@BLR-EC-MBX03.wipro.com> <20091210203008.69cbbe97@notabene.brown>
+From: Harold Pritchett <harold@uga.edu>
+Subject: Installing Red Hat Enterprise Linux on Dell Hardware Raid
+Date: Thu, 10 Dec 2009 09:49:10 -0500
+Message-ID: <4B210A66.2010302@uga.edu>
+Reply-To: harold@uga.edu
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <20091210203008.69cbbe97@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks Neil.
-Let me try the patch.
+I have ordered the following server from Dell:
 
-- Senthil M
+PowerEdge T610
+	Tower Chassis for Up to Eight 3.5-Inch Hard Drives
+	No Operating System
+	Intel Xeon E5504, 2.0Ghz, 4M Cache, 800MHz Max Mem
+	6GB Memory (3x2GB), 1333MHz Dual Ranked UDIMMs for 1 Processor, Optimi=
+zed
+	Embedded Broadcom=AE NetXtreme II 5709 Gigabit Ethernet NIC
+	PERC 6/i SAS RAID Controller, 2x4 Connectors, Internal, PCIe, 256MB Ca=
+che
+		(4) 250GB 7.2K RPM SATA 3.5" Hot Plug Hard Drive
+		RAID 6 for PERC 6/i Controller
+	DVD-ROM, SATA, Internal
+	Electronic System Documentation, OpenManage DVD Kit with DMC
 
------Original Message-----
-From: Neil Brown [mailto:neilb@suse.de] 
-Sent: Thursday, December 10, 2009 3:00 PM
-To: SenthilKumar Muthukalai (WT01 - Telecom Equipment)
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Growing Linear RAID
+I wish to install Red Hat Enterprise Linux 5.4 on this using hardware r=
+aid-6.
+I have four 250 GB drives and four additional hot swap bays for future =
+expansion.
 
-On Thu, 10 Dec 2009 13:54:29 +0530
-<senthilkumar.muthukalai@wipro.com> wrote:
+What do I need to do this?  Instructions? Drivers? 32 vs 64 bit?
 
-> Neil,
-> 
-> I get only the following message under /var/log/
-> 
-> [root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow --add /dev/sata3 
-> mdadm: Cannot add new disk to this array
-> 
-> Dec  9 20:37:58 NAS00226b1755a0 kernel: md: export_rdev(sdc)
-> 
-> [root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow --add /dev/sata4
-> mdadm: Cannot add new disk to this array
-> 
-> Dec  9 20:38:30 NAS00226b1755a0 kernel: md: export_rdev(sdd)
->
+Any assistance would be appreciated.
 
-Thanks - that narrows it down quite a bit.
+Thanks
 
-I think that if you run mdadm under 'strace' you will find that the
-ioctl
-fails with ENOSPC.
-It seems that growing a linear array didn't work reliably until 2.6.22.
+Harold
 
-You need 
 
-  commit a778b73ff793d34c0082f76110f73a7754915067
-
-to make it work properly.
-
-NeilBrown
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
