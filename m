@@ -1,75 +1,38 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: Re: mdadm creating raid5 with all spare disks
-Date: Fri, 11 Dec 2009 06:33:09 -0700
-Message-ID: <200912110633.09495.tfjellstrom@shaw.ca>
-References: <1D0665FE-138F-480F-9872-48C94CEBC5C2@mac.com> <4B2196B0.2090604@sauce.co.nz> <6E2CD5BC-5F08-44A0-869C-1875DF5CCA9F@mac.com>
-Reply-To: tfjellstrom@shaw.ca
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Combining OCFS2 with Linux software RAID-0?
+Date: Fri, 11 Dec 2009 14:37:09 +0100
+Message-ID: <20091211133709.GA8992@maude.comedia.it>
+References: <23986fd90912091503r3c671448va4d8637edfab472b@mail.gmail.com> <20091210123703.71b47ce7@notabene.brown> <20091211071526.GA4062@maude.comedia.it> <20091211073002.311FDEA195C@gemini.denx.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6E2CD5BC-5F08-44A0-869C-1875DF5CCA9F@mac.com>
+Content-Disposition: inline
+In-Reply-To: <20091211073002.311FDEA195C@gemini.denx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matt Tehonica <matt.tehonica@mac.com>
-Cc: Richard Scobie <richard@sauce.co.nz>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu December 10 2009, Matt Tehonica wrote:
-> On Dec 10, 2009, at 7:47 PM, Richard Scobie <richard@sauce.co.nz> wrote:
-> > Matthew Tehonica wrote:
-> >> After about 5 minutes, I try to cat /proc/mdstat again and it just
-> >> freezes and sits there with the cursor flashing.  At this point, I
-> >> can do anything with mdadm, not even like a --detail on another
-> >> array on the system.  Just sits there and flashes.  I've tried with
-> >> a bunch of different disks and same thing all the time.  Here is a
-> >> section from my kern.log.  Dec 10 19:01:07 ghostrider kernel: [
-> >> 1338.011320 ] /build/buildd/linux-2.6.31/drivers/scsi/mvsas/mv_sas.c
-> >> 1669:mvs_abort_task:rc= 5
-> >> Dec 10 19:01:07 ghostrider kernel: [ 1338.011330] /build/buildd/
-> >> linux-2.6.31/drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
-> >> Dec 10 19:01:07 ghostrider kernel: [ 1338.011343] /build/buildd/
-> >> linux-2.6.31/drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
-> >> Dec 10 19:01:07 ghostrider kernel: [ 1338.011349] /build/buildd/
-> >> linux-2.6.31/drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
-> >> Dec 10 19:01:07 ghostrider kernel: [ 1338.011443] /build/buildd/
-> >> linux-2.6.31/drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
-> >> Dec 10 19:01:07 ghostrider kernel: [ 1338.011449] /build/buildd/
-> >> linux-2.6.31/drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
-> >> Dec 10 19:01:07 ghostrider kernel: [ 1338.011461] end_request: I/O
-> >> error, dev sdf, sector 0
-> >> Dec 10 19:01:07 ghostrider kernel: [ 1338.011472] md: super_written
-> >> gets error=-5, uptodate=0
-> >
-> > Looks like the drives are being dropped by the controller.
-> >
-> > I believe there was some recent discussion here about mv_sas, md and
-> > failures under heavy I/O load.
-> >
-> > Regards,
-> >
-> > Richard
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-
-> > raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> Thanks Richard!  After some more review I found many people with this
-> problem and appears the linux-scsi devs submitted patches mid last
-> month. Building the latest kernel as we speak!
+On Fri, Dec 11, 2009 at 08:30:02AM +0100, Wolfgang Denk wrote:
+>Dear Luca Berra,
+>
+>In message <20091211071526.GA4062@maude.comedia.it> you wrote:
+>>
+>> While in similar setups, data protection should be handled by the
+>> storage system, raid 1 has its uses in a failover setup with two sites.
+>
+>Would one not rather use something like DRBD for such a szenario? And
+>OCFS2 on top of that?
 
-I'd be one of them ;) I have a somewhat old copy of the new mvsas drivers, 
-and have been running a 5x1TB raid5 array for about a month now and haven't 
-had any problems (other than 2.6.31 being horribly io bound).
+it depends, if i have an high speed (i.e. FC) link between the two site
+i might want to avoid the overhead, besides if we have more than one
+node for site, would drbd work?
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+L.
 
 -- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
