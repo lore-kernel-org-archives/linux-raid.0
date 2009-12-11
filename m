@@ -1,45 +1,43 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v3] ppc440spe-adma: adds updated ppc440spe adma driver
-Date: Thu, 10 Dec 2009 23:22:28 -0700
-Message-ID: <4B21E524.4010601@intel.com>
-References: <1259858161-15315-1-git-send-email-agust@denx.de>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Combining OCFS2 with Linux software RAID-0?
+Date: Fri, 11 Dec 2009 08:15:26 +0100
+Message-ID: <20091211071526.GA4062@maude.comedia.it>
+References: <23986fd90912091503r3c671448va4d8637edfab472b@mail.gmail.com> <20091210123703.71b47ce7@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1259858161-15315-1-git-send-email-agust@denx.de>
+Content-Disposition: inline
+In-Reply-To: <20091210123703.71b47ce7@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Anatolij Gustschin <agust@denx.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linuxppc-dev@ozlabs.org" <linuxppc-dev@ozlabs.org>, "wd@denx.de" <wd@denx.de>, "dzu@denx.de" <dzu@denx.de>, Yuri Tikhonov <yur@emcraft.com>, Josh Boyer <jwboyer@linux.vnet.ibm.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Anatolij Gustschin wrote:
-> This patch adds new version of the PPC440SPe ADMA driver.
-> 
-> Signed-off-by: Yuri Tikhonov <yur@emcraft.com>
-> Signed-off-by: Anatolij Gustschin <agust@denx.de>
-> ---
-> 
-> Changes since v2:
->  - Correct Sign-offs order.
->  - Place the driver in 'drivers/dma/ppc4xx' directory
->    as there are wishes to extend the driver to support
->    other CPUs (PPC460EX) later.
->  - Don't duplicate directory name in the driver file names.
->  - Perform checks for 'len' > PAGE_SIZE cases while
->    looking for suitable channel for async operations
->    so that there will be a fallback to synchronous path
->    if a user of the api should ever submit pq_val requests
->    with 'len' > PAGE_SIZE.
-> 
+On Thu, Dec 10, 2009 at 12:37:03PM +1100, Neil Brown wrote:
+>On Wed, 9 Dec 2009 15:03:11 -0800
+>> Has anybody tried something like this?  Are there alternative RAID-0
+>> solutions for Linux that would be expected to work?
+>
+>For RAID0 or LINEAR, this should work - give it a try.
+>
+_with_ a superblock? or without?
+what happens if one node modifies the superblock while the other is
+running.
 
-Ok, please split the katmai.dts fixups to a separate patch to send to 
-Josh as this patch has picked up new conflicts with his tree.  It also 
-appears that this is not based on my next branch [1] because the 
-Makefile and Kconfig updates collide with the coh driver.  Fix that up 
-and I'll apply this for my pull request for 2.6.33.
+>It might work for RAID1 one day to, but is unlikely to ever work for 
+>RAID5.
+With an external metadata handler i believe it would be possible to
+support up to raid1, maybe 10.
 
-Thanks,
-Dan
+While in similar setups, data protection should be handled by the
+storage system, raid 1 has its uses in a failover setup with two sites.
+I don't see a real use for raid5/6 in such scenarios.
 
-[1] git://git.kernel.org/pub/scm/linux/kernel/git/djbw/async_tx.git next
+L.
+
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
