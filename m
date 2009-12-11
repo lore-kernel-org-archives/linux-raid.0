@@ -1,93 +1,158 @@
-From: Neil Brown <neilb@suse.de>
-Subject: [PULL REQUEST] md updates for 2.6.33 merge window
-Date: Fri, 11 Dec 2009 13:37:30 +1100
-Message-ID: <19233.45162.919445.731210@notabene.brown>
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: Disappointing performance of copy (MD raid + XFS)
+Date: Thu, 10 Dec 2009 21:20:08 -0600
+Message-ID: <4B21BA68.4060205@sandeen.net>
+References: <4B204334.1000605@shiftmail.org> <4B207620.3060605@sandeen.net> <4B21A34C.9090100@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4B21A34C.9090100@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Asdo <asdo@shiftmail.org>
+Cc: xfs@oss.sgi.com, linux-raid <linux-raid@vger.kernel.org>, =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>, Gabor Gombas <gombasg@sztaki.hu>
 List-Id: linux-raid.ids
 
+Asdo wrote:
+> Eric Sandeen wrote:
+> Gabor Gombas wrote:
+> Kristleifur Da=F0ason wrote:
+> [CUT]
+>=20
+> Thank you guys for your help
+>=20
+> I have done further investigation.
+>=20
+> I still have not checked how performances are with very small files a=
+nd
+> multiple simultaneous rsyncs.
+>=20
+> I have checked the other problem I had which I was mentioning, that I
+> couldn't go more than 150MB/sec even with large files and multiple
+> simultaneous transfers.
+> I confirm this one and I have narrowed the problem: two XFS defaults
+> (optimizations) actually damage the performances.
+>=20
+> The first and most important is the aligned writes: cat /proc/mounts
+> lists this (autodetected) stripe size: "sunit=3D2048,swidth=3D28672" =
+=2E My
+> chunks are is 1MB and I have 16 disks in raid-6 so 14 data disks. Do =
+you
+> think it's correct? xfs_info lists blocks as 4k and sunit and swidth =
+are
+> in 4k blocks and have a very different value. Please do not use the s=
+ame
+> name "sunit"/"swidth" to mean 2 different things in 2 different place=
+s,
+> it can confuse the user (me!)
 
-Greetings,
+granted, this is confusing.
 
- here is my offering for 2.6.33, to bring more goodness (and less
- badness?) to md/RAID.
+the /proc/mounts units are in 512-byte sectors.  So 2048 is 1M; 28672/2=
+048
+is 14, so that all looks right.
 
- Probably the most significant thing is that we now support barriers
- on all raid levels, so I expect to hear complaints that RAID5 just
- got slower :-(
+> Anyway that's not the problem: I have tried to specify other values i=
+n
+> my mount (in particular I tried the values sunit and swidth should ha=
+ve
+> had if blocks were 4k), but ANY xfs aligned mount kills the performan=
+ces
+> for me.=20
 
- There are also some changes to write-intent-bitmap handling so that
- the bitmaps can be inspected and manipulated through sysfs.
+certainly any wrong alignment would ;)
 
- and it is possible to convert a 2-disk RAID5 to RAID1 (so if you
- converted a RAID1 to RAID5 by mistake, you can now convert it back).
+> I have to specify "noalign" in my mount to go fast. (Also note
+> this option cannot be changed on mount -o remount. I have to unmount.=
+)
 
- ... as well as the usual mix of minor improvements and little bug
- fixes.
+so noalign is faster than the defaults?  hm.
 
-Thanks,
-NeilBrown
+> The other default feature that kills performances for me is the
+> rotorstep. I have to max it out at 255 in order to have good
+> performances. Actually it is reasonable that a higher rotorstep shoul=
+d
+> be faster... why is 1 the default? Why it even exists? With low value=
+s
+> the await (iostat -x 1) increases, I guess because of the seeks, and
+> stripe_cache_active stays higher, because there are less filled strip=
+es.
 
+this is related to the inode64 mount option I mentioned, which I guess =
+you
+haven't tested?   rotorstep affects how often new AGs are chosen in
+the 32-bit inode mode.  I'm not sure why 1 is the default, perhaps
+this should be changed.
 
-The following changes since commit 3067e02f8f3ae2f3f02ba76400d03b8bcb4942b0:
-  Linus Torvalds (1):
-        Merge branch 'acpica' of git://git.kernel.org/.../lenb/linux-acpi-2.6
+> If I use noalign and rotorstep at 255 I am able to go at 325 MB/sec o=
+n
+> average (16 parallel transfers of 7MB files) while with defaults I go=
+ at
+> about 90 MB/sec.
 
-are available in the git repository at:
+It might be nice to do some blktracing to see what's actually
+hitting the disk.
 
-  git://neil.brown.name/md for-linus
+Are you running on the entire md device, or is it partitioned?
+If you have partitioned your device with something so that the partitio=
+ns
+are not stripe-aligned, maybe that throws everything off.
 
-Arnd Bergmann (1):
-      md: move compat_ioctl handling into md.c
+Maybe you can post your partition info if any, as well as the actual
+raid geometry as reported by md.
 
-NeilBrown (22):
-      md/bitmap: protect against bitmap removal while being updated.
-      md/raid5: remove some sparse warnings.
-      md: remove sparse warning:symbol XXX was not declared.
-      md: adjust resync_min usefully when resync aborts.
-      md: don't reset curr_resync_completed after an interrupted resync
-      md: support barrier requests on all personalities.
-      md/raid5: don't complete make_request on barrier until writes are scheduled
-      md: add honouring of suspend_{lo,hi} to raid1.
-      md/raid1: add takeover support for raid5->raid1
-      md: collect bitmap-specific fields into one structure.
-      md: move offset, daemon_sleep and chunksize out of bitmap structure
-      md: change daemon_sleep to be in 'jiffies' rather than 'seconds'.
-      md: remove needless setting of thread->timeout in raid10_quiesce
-      md: support bitmap offset appropriate for external-metadata arrays.
-      md: factor out parsing of fixed-point numbers
-      md: support updating bitmap parameters via sysfs.
-      md/bitmap: move setting of daemon_lastrun out of bitmap_read_sb
-      md: Support write-intent bitmaps with externally managed metadata.
-      md/bitmap: update dirty flag when bitmap bits are explicitly set.
-      md: add MODULE_DESCRIPTION for all md related modules.
-      md: revise Kconfig help for MD_MULTIPATH
-      md: integrate spares into array at earliest opportunity.
+> Also with noalign and rotorstep at 255 the stripe_cache_size stays
+> usually in the lower half (below 16000 out of 32000) while with defau=
+lts
+> it's stuck for most of the time at the maximum and processes are stuc=
+k
+> sleeping in MD locks for this reason.
+>=20
+> Do you have any knowledge of sunit/swidth alignment mechanism being
+> broken on 2.6.31 or more specifically 2.6.31 ubuntu generic-14 ?
 
-Robert Becker (2):
-      md/raid10: print more useful messages on device failure.
-      raid: improve MD/raid10 handling of correctable read errors.
+nope, don't use ubuntu, and AFAIK stripe alignment is just fine upstrea=
+m.
 
- Documentation/md.txt    |   45 +++++
- drivers/md/Kconfig      |    9 +-
- drivers/md/bitmap.c     |  449 +++++++++++++++++++++++++++++++++++++++++------
- drivers/md/bitmap.h     |   19 +--
- drivers/md/faulty.c     |    1 +
- drivers/md/linear.c     |    3 +-
- drivers/md/md.c         |  344 ++++++++++++++++++++++++++++--------
- drivers/md/md.h         |   51 ++++--
- drivers/md/multipath.c  |    3 +-
- drivers/md/raid0.c      |    3 +-
- drivers/md/raid1.c      |  217 +++++++++++++++--------
- drivers/md/raid1.h      |    5 +
- drivers/md/raid10.c     |  116 +++++++++++--
- drivers/md/raid5.c      |   63 +++++--
- drivers/md/raid6algos.c |   20 +--
- fs/compat_ioctl.c       |   22 ---
- include/linux/raid/pq.h |   19 ++
- 17 files changed, 1077 insertions(+), 312 deletions(-)
+> (Kristleifur thank you I have seen your mention of the Ubuntu vs vani=
+lla
+> kernel, I will try a vanilla one but right now I can't. However now I
+> have narrowed the problem so XFS people might want to watch at the
+> alignment problem more specifically)
+>=20
+> Regarding my previous post I still would like to know what are those
+> stack traces I posted in my previous post: what are the functions
+> xlog_state_get_iclog_space+0xed/0x2d0 [xfs]  and
+> xfs_buf_lock+0x1e/0x60 [xfs]
+> and what are they waiting for...
+> these are still the place where processes get stuck, even after havin=
+g
+> worked around the alignment/rotorstep problem...
+>=20
+> And then a few questions on inode64:
+> - if I start using inode64, do I have to remember to use inode64 on
+> every subsequent mount for the life for that filesystem? Or does it
+> write it in some filesystem info region that the option has been used
+> once, so it applies the inode64 by itself on subsequent mounts?
+
+Unfortunately it's not a superblock features, though IMHO it should
+be; so yes, you need to mount with it always.  Leaving it out won't
+harm your filesystem, it'll just put you back in 32-bit-inode mode.
+Just put it in your fstab.
+
+> - if I use a 64bit linux distro, will ALL userland programs
+> automatically support 64bit inodes or do I have to continuously pay
+> attention and risk to damage my data?
+
+all 64-bit applications should be just fine.
+
+-Eric
+
+> Thanks for your help
+>=20
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
