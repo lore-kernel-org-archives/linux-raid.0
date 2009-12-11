@@ -1,29 +1,19 @@
-From: Josh Boyer <jwboyer@linux.vnet.ibm.com>
-Subject: Re: [PATCH 2/2 v4] powerpc/44x: Extend Katmai dts for ADMA and
-	RAID56 support
-Date: Fri, 11 Dec 2009 10:51:04 -0500
-Message-ID: <20091211155104.GB8458@zod.rchland.ibm.com>
-References: <1260538793-6655-1-git-send-email-agust@denx.de> <1260538793-6655-2-git-send-email-agust@denx.de>
+From: Matthew Tehonica <matt.tehonica@mac.com>
+Subject: Where to get patches for mvsas bug?
+Date: Fri, 11 Dec 2009 10:42:51 -0500
+Message-ID: <140794921580727151477054071505012511769-Webmail@me.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1260538793-6655-2-git-send-email-agust@denx.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Anatolij Gustschin <agust@denx.de>
-Cc: linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, dan.j.williams@intel.com, wd@denx.de, dzu@denx.de, Yuri Tikhonov <yur@emcraft.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-raid@vfer.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Dec 11, 2009 at 02:39:53PM +0100, Anatolij Gustschin wrote:
->Add nodes for PPC440SPe DMA, I2O, XOR engines and Memory
->Queue module which are used in the updated PPC440SPe ADMA
->driver. Also extend plb ranges property to specify address
->ranges for DMA0/1 and I2O engines.
->
->Signed-off-by: Yuri Tikhonov <yur@emcraft.com>
->Signed-off-by: Anatolij Gustschin <agust@denx.de>
+Hi all,
 
-I've queued this up in my next branch.  I'll probably send this to Ben in the
-next few days as the DTS changes are pretty independent of the actual driver.
+I'm having an issue with my new SASLP-MV8 card where I'm getting the errors: drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5 and the drives are being dropped.  I know there are some patches to apply that seem to fix this since it hasn't made it to a new kernel yet but can someone tell me where to find these patches?  I have searched everywhere and can't seem to find them.
 
-josh
+Thanks!
+Matt
