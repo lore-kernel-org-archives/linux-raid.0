@@ -1,68 +1,64 @@
-From: "Cat'Killer" <catkiller@gmail.com>
-Subject: RAID 5 build time optimization question and experiments.
-Date: Fri, 11 Dec 2009 14:55:31 +0000
-Message-ID: <ad15b8920912110655k62c8b6ber8b366731cf1e85f3@mail.gmail.com>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: RAID 5 build time optimization question and experiments.
+Date: Fri, 11 Dec 2009 15:29:38 +0000
+Message-ID: <20091211152938.GA5857@cthulhu.home.robinhill.me.uk>
+References: <ad15b8920912110655k62c8b6ber8b366731cf1e85f3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="SLDf9lqlvOQaIe6s"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <ad15b8920912110655k62c8b6ber8b366731cf1e85f3@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi All,
 
-I am currently needing to build a RAID 5 on ten large 1TB Disks in
-several different systems, that will come over time.
+--SLDf9lqlvOQaIe6s
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The systems are all running exactly the same linux version and mdadm
-tools, as well as being exactly the same hardware, and are populated
-with exactly the same drives (same capacity, manufacturer model and
-batch).
+On Fri Dec 11, 2009 at 02:55:31PM +0000, Cat'Killer wrote:
 
-Creating a RAID 5 array on each of these devices will take approx
-15Hours+, which led me to think of the following procedure/experiment
-to create them faster.
+> I found a way using Doug Gilbert's great sg3utils to zero all these
+> disks in a very efficient manner, using sgp_dd, at near drive
+> bandwidth, and proceeded to zero all the disks fully in about 4 hours!
+>=20
+> Once done, I then created a RAID 5 on 10 disks, waited for the rebuild
+> to complete, stopped the array using mdadm, and dumped each of the
+> RAID's components superblocks to files.
+>=20
+<-snip->
+> The create worked fine and I waited for the rebuild to be complete
+> before stopping the array and dumping the SBs.
+>=20
+> I then proceeded to write these same superblocks to 10 new similar
+> disks in a different system.
+>
+You could just do the create with --assume-clean, which should take very
+little time at all.  If the drives were zeroed initially then this will
+give you valid parity data.
 
-I found a way using Doug Gilbert's great sg3utils to zero all these
-disks in a very efficient manner, using sgp_dd, at near drive
-bandwidth, and proceeded to zero all the disks fully in about 4 hours!
+Cheers,
+    Robin
 
-Once done, I then created a RAID 5 on 10 disks, waited for the rebuild
-to complete, stopped the array using mdadm, and dumped each of the
-RAID's components superblocks to files.
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
-The command used for the RAID 5 creation was the following:
+--SLDf9lqlvOQaIe6s
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-mdadm --create -vvv --force --run --metadata=1.2 /dev/md/d0 --level=5
---size=35879936 --chunk=64 --name=0125465 -n10 --bitmap=internal
---bitmap-chunk=4096 --layout=ls /dev/sde2 /dev/sdj2 /dev/sdf2
-/dev/sdg2 /dev/sdb2 /dev/sdc2 /dev/sdh2 /dev/sdi2 /dev/sdd2 /dev/sda2
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
 
-The create worked fine and I waited for the rebuild to be complete
-before stopping the array and dumping the SBs.
+iEYEARECAAYFAksiZWEACgkQShxCyD40xBJygQCfVmvQxuJX0oD21LnJLjO3VKze
+xC4AnibaRJPNz/1nuUmYl08V7LrhjWPi
+=KzQ4
+-----END PGP SIGNATURE-----
 
-I then proceeded to write these same superblocks to 10 new similar
-disks in a different system, and used the following command to
-assemble the array:
-
-bin/mdadm/mdadm --assemble -vvv --force /dev/md/d0 --run
---name=0125465 /dev/sde2 /dev/sdj2 /dev/sdf2 /dev/sdg2 /dev/sdb2
-/dev/sdc2 /dev/sdh2 /dev/sdi2 /dev/sdd2 /dev/sda2
-
-This subsequently led to my new array to be instantly online with no
-rebuild required.
-
-I figured this whole procedure would work since the disks are
-completely zeroed, the parity information should be zero anyways on
-the drives.  Since zeroing all these drives took me 4 hours, I would
-save nearly 10 hours for any
-subsequent array I would need to build in the future, just by zeroing
-their components and dd-ing the SBs onto them.
-
-Do you think this method has its flaws? Do you think the data on it
-should be safe? How about the bitmap, would that be safe as long as
-the superblock has been copied, or should I copy this over too?
-
-Thanks in advance.
-
-Ben.
+--SLDf9lqlvOQaIe6s--
