@@ -1,59 +1,49 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Combining OCFS2 with Linux software RAID-0?
-Date: Fri, 11 Dec 2009 18:33:33 +1100
-Message-ID: <20091211183333.09b48bbd@notabene.brown>
-References: <23986fd90912091503r3c671448va4d8637edfab472b@mail.gmail.com>
-	<20091210123703.71b47ce7@notabene.brown>
-	<20091211071526.GA4062@maude.comedia.it>
+From: Andre Tomt <andre@tomt.net>
+Subject: Re: mdadm creating raid5 with all spare disks
+Date: Fri, 11 Dec 2009 10:08:44 +0100
+Message-ID: <4B220C1C.1040902@tomt.net>
+References: <1D0665FE-138F-480F-9872-48C94CEBC5C2@mac.com> <20091211071006.56270ebf@notabene.brown> <91296851101702456968380052308470713510-Webmail@me.com> <4B2196B0.2090604@sauce.co.nz> <6E2CD5BC-5F08-44A0-869C-1875DF5CCA9F@mac.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091211071526.GA4062@maude.comedia.it>
+In-Reply-To: <6E2CD5BC-5F08-44A0-869C-1875DF5CCA9F@mac.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Luca Berra <bluca@comedia.it>
-Cc: linux-raid@vger.kernel.org
+To: Matt Tehonica <matt.tehonica@mac.com>
+Cc: Richard Scobie <richard@sauce.co.nz>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, 11 Dec 2009 08:15:26 +0100
-Luca Berra <bluca@comedia.it> wrote:
+On 11.12.2009 02:01, Matt Tehonica wrote:
+> On Dec 10, 2009, at 7:47 PM, Richard Scobie <richard@sauce.co.nz> wro=
+te:
+<snip>
+>> Looks like the drives are being dropped by the controller.
+>>
+>> I believe there was some recent discussion here about mv_sas, md and
+>> failures under heavy I/O load.
+>
+> Thanks Richard! After some more review I found many people with this
+> problem and appears the linux-scsi devs submitted patches mid last
+> month. Building the latest kernel as we speak!
 
-> On Thu, Dec 10, 2009 at 12:37:03PM +1100, Neil Brown wrote:
-> >On Wed, 9 Dec 2009 15:03:11 -0800
-> >> Has anybody tried something like this?  Are there alternative RAID-0
-> >> solutions for Linux that would be expected to work?
-> >
-> >For RAID0 or LINEAR, this should work - give it a try.
-> >
-> _with_ a superblock? or without?
+=46YI; The fixes has not made it to mainline yet so 2.6.32 and 2.6.33-g=
+it=20
+is still broken with this driver. Not sure if they've landed in some=20
+scsi tree yet but manually applying patches 1-6 from the linux-scsi=20
+mailing list worked for me, at least to the point that it is now usable=
+=20
+(patch 7 is for some libsas change not in 2.6.32).
 
-Either.
+On a related note, mptsas driver also seems to have issues with newer=20
+HBA's. Non-RAID SAS HBA's doesn't seem to be in a very good shape in=20
+Linux nowadays. Might give a mpt2sas driven controller a spin soon,=20
+curious on how that pans out..
 
-> what happens if one node modifies the superblock while the other is
-> running.
-
-Once a RAID0 has been created, there is never any need to modify the
-superblock, and I'm fairly sure we don't.
-
-> 
-> >It might work for RAID1 one day to, but is unlikely to ever work for 
-> >RAID5.
-> With an external metadata handler i believe it would be possible to
-> support up to raid1, maybe 10.
-
-That is the idea, yes.
-
-> 
-> While in similar setups, data protection should be handled by the
-> storage system, raid 1 has its uses in a failover setup with two sites.
-> I don't see a real use for raid5/6 in such scenarios.
-
-If I had 16 nodes, each with a local device and a fast interconnect, I might
-want to have a filesystem that spanned all of the devices but survived the
-failure of any two nodes.  Then having a stripe/parity layout across the
-devices would be useful.
-However I think the only way to get good performance would be to require that
-the filesystem does full-stripe writes every time.
-So I think that would look more like a clusterised ZFS ... but who knows.
-
-NeilBrown
+--=20
+Andr=E9
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
