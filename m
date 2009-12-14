@@ -1,16 +1,31 @@
 From: "Tirumala Reddy Marri" <tmarri@amcc.com>
-Subject: e2fsck question
-Date: Mon, 14 Dec 2009 14:43:31 -0800
-Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C087E7906@SDCEXCHANGE01.ad.amcc.com>
+Subject: e2fsck  + RAID-5 disk fail test question
+Date: Mon, 14 Dec 2009 15:09:22 -0800
+Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C087E791D@SDCEXCHANGE01.ad.amcc.com>
+References: <AC5E1C3367E37D44970B81A6ADD1DA2C087E7906@SDCEXCHANGE01.ad.amcc.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-class: urn:content-classes:message
+In-Reply-To: <AC5E1C3367E37D44970B81A6ADD1DA2C087E7906@SDCEXCHANGE01.ad.amcc.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Tirumala Reddy Marri <tmarri@amcc.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
+
+To be more specific. Is it ok to see error during e2fcsk test after the
+disk forced to fail in RAID-5.
+Regards,
+Marri
+
+-----Original Message-----
+From: linux-raid-owner@vger.kernel.org
+[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Tirumala Reddy
+Marri
+Sent: Monday, December 14, 2009 2:44 PM
+To: linux-raid@vger.kernel.org
+Subject: e2fsck question
 
 
 All,
@@ -33,3 +48,7 @@ there is problem with my setup ?
 
 Thanks and Regards,
 Marri
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
