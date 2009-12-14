@@ -1,99 +1,45 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: Spurious HD convictions
-Date: Mon, 14 Dec 2009 23:06:31 +0300
-Message-ID: <70ed7c3e0912141206p65005aeegf663183c946dec7b@mail.gmail.com>
-References: <200912122144.53709.lrhorer@satx.rr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 1/1] md: expose behind writes counter
+Date: Tue, 15 Dec 2009 08:32:09 +1100
+Message-ID: <20091215083209.1ea23291@notabene.brown>
+References: <4B266E40.4080202@steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200912122144.53709.lrhorer@satx.rr.com>
+In-Reply-To: <4B266E40.4080202@steeleye.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "lrhorer@satx.rr.com" <lrhorer@satx.rr.com>
-Cc: linux-raid@vger.kernel.org
+To: Paul Clements <paul.clements@steeleye.com>
+Cc: Linux Raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Leslie,
+On Mon, 14 Dec 2009 11:56:32 -0500
+Paul Clements <paul.clements@steeleye.com> wrote:
 
-I was wondering if you were able to stop the weird behavior with your d=
-isks.
-
-On Sun, Dec 13, 2009 at 6:44 AM, lrhorer@satx.rr.com
-<lrhorer@satx.rr.com> wrote:
-> Hmm. =C2=A0I don't see how it could be either the PS or the PMs, sinc=
-e the drives
-> were moved to a new enclosure when the problem started happening, yet=
- the
-> problem persists. =C2=A0The new chassis has all new PMs and of course=
- a new PS,
-> and the problem is happening across multiple PMs. =C2=A0In addition, =
-if NCQ is the
-> problem, why has it just started happening? =C2=A0This system has bee=
-n up and
-> running for the better part of a year. =C2=A0Regardless, I have disab=
-led NCQ by
-> executing `echo 1 > /sys/block/sd[a-g]/device/queue_depth`, and I am
-> attempting a repair action again. =C2=A0We'll see how it goes.
->
->> Hi Leslie,
->>
->> According to some of the links here:
->> http://www.google.com/search?hl=3Den&q=3Dfailed+to+read+SCR+1+(Emask=
-%3D0x40)
->>
->> It seem to be either the Power Supply Unit (PSU) or the Port Multipl=
-ier
->> (PM).
->>
->> A quick workaround seem to be disabling NCQ on all affected devices.
->>
->> On Sun, Dec 13, 2009 at 5:02 AM, lrhorer@satx.rr.com
->> <lrhorer@satx.rr.com> wrote:
->> >
->> > =C2=A0 =C2=A0 =C2=A0 =C2=A0What's happening here? =C2=A0Suddenly, =
-my backup server is suffering
->> apparently
->> > spurious hard drive convictions. =C2=A0The server is running RAID5=
- on 7 disks
->> > under md. =C2=A0It has been running well for months, but suddenly =
-it has
->> started
->> > kicking drives from the array when under moderately heavy read or =
-write
->> > loads. =C2=A0The thing is, it isn't convicting any particular driv=
-e
->> repeatedly,
->> > and the drives are not showing any errors under SMART. =C2=A0This =
-is a PM
->> system,
->> > and I have tried changing the drive adapters, changing the PMs, ch=
-anging
->> > cables, moving the drives around, and moving them out of the CPU
->> enclosure to
->> > a new external chassis. =C2=A0The convictions are not occurring on=
- any one
->> > channel, over any one particular PM, or over any particular cable.
->> =C2=A0Since
->> > this started happening, I have been unable to get all the way thro=
-ugh a
->> > resync before the array dumps at least one of the drives. =C2=A0He=
-re is a
->> sample
->> > from the kernel log during one of the convictions:
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
+> This is a very simple patch that exposes the behind_writes counter of an 
+> md array via a sysfs entry. This is helpful when tuning the value of 
+> behind_writes. Knowing, for instance, the maximum value over time allows 
+> one to set a proper upper value for an array.
 >
 
+Hi Paul,
+ while I can see that this information could be useful, I wonder if this is
+ the best way of accessing it.
+ I imagine that the count of behind_writes would change quite quickly, so you
+ would need to sample it at quite a high rate to get a meaningful number.
 
+ I'm very conscious that the 'active_stripes' number provided by RAID5 is
+ close to useful as it almost always reads a 'zero' even when the array is
+ quite busy.
 
---=20
-       Majed B.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ Maybe having a sysfs attribute that reports the maximum value, and allow
+ that maximum to be reset by writing to the attribute?
+
+ Or possibly a counter reporting the number of requests that were not
+ treated as 'write_behind' because the max had been reached.  Then you could
+ increase the max_write_behind until the counter stopped increasing - or it's
+ rate of increase dropped to an acceptable level.
+
+ Does any of that work for you?
+
+NeilBrown
