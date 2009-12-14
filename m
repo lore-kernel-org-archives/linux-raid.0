@@ -1,70 +1,96 @@
-From: "Trela, Maciej" <Maciej.Trela@intel.com>
-Subject: RE: [patch 1/1] [mdadm] Add partition checks when creating a new
- array
-Date: Mon, 14 Dec 2009 11:33:01 +0000
-Message-ID: <EB332302649177439359CE520D92A0AFA284AFFC@irsmsx503.ger.corp.intel.com>
-References: <EB332302649177439359CE520D92A0AF9F559760@irsmsx503.ger.corp.intel.com>
- <19196.51508.947560.851117@notabene.brown>
- <20091120170350.GA20882@maude.comedia.it> <4B241E28.8060706@shiftmail.org>
+From: Vishnu Suresh <Vishnu@freescale.com>
+Subject: [PATCH v1] fsldma: Delete DMA_INTERRUPT capability
+Date: Mon, 14 Dec 2009 19:00:23 +0530
+Message-ID: <1260797423-7352-1-git-send-email-Vishnu@freescale.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B241E28.8060706@shiftmail.org>
-Content-Language: en-US
-Sender: linux-raid-owner@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>, Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.>
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+To: linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dan.j.williams@intel.com
+Cc: Vishnu Suresh <Vishnu@freescale.com>, B04825@freescale.com, R58472@freescale.com
 List-Id: linux-raid.ids
 
+The DMA_INTERRUPT is a NULL transfer, triggering a
+Programming Error. Though this Error is handled in
+the driver with the fix given in "fsldma: Fix the DMA
+halt when using DMA_INTERRUPT async_tx transfer."
+<f79abb627f033c85a6088231f20c85bc4a9bd757>,
+the RAID5 operation, which initiated the transaction
+via Async_tx, hangs.
 
+Hence, this patch removes the DMA_INTERRUPT capability
+and the associated code from the driver.
 
-> -----Original Message-----
-> From: Asdo [mailto:asdo@shiftmail.org]
-> Sent: Saturday, December 12, 2009 11:50 PM
-> To: Neil Brown; Trela, Maciej; linux-raid@vger.kernel.org; Williams,
-> Dan J; Ciechanowski, Ed
-> Subject: Re: [patch 1/1] [mdadm] Add partition checks when creating a
-> new array
-> 
-> Luca Berra wrote:
-> > On Fri, Nov 13, 2009 at 01:49:24PM +1100, Neil Brown wrote:
-> >> Is there a good library that we could use?
-> >> libparted might be a possibility, but it seems rather over-weight.
-> >> /lib/libparted-1.9.so.12.0.0 is larger than /sbin/mdadm !!!
-> >>
-> >> Are there any other libraries for reading different partition
-> tables?
-> >> I guess we can open-code it if we have to but I'd be happy if
-> another
-> >> solution could be found.
-> >
-> > i don't think so,
-> > but there are two tools
-> > partx from util-linux
-> > kpartix from multipath-tools (which is based on the former)
-> >
-> > so we could either grab code from those or just invoke
-> > partx -l (i believe every distro installs util-linux by default)
-> >
-> > L.
-> 
-> I'm probably missing something obvious but...
-> why don't you use the kernel directly to detect if there are partitions
-> on the device?
-> 
-> Like if the user wants to make a raid on /dev/sdg but the device
-> /dev/sdg1 exists, that's a problem, you fail the creation. (*)
-> 
+Signed-off-by: Vishnu Suresh <Vishnu@freescale.com>
+---
+Changes with respect to v0
+o. The functionality is removed instead of disabling as
+   per comments
+o. Rebased to linux-next as of 20091214
 
-It is ok to create an array if partition exists on a device.
-We just want to check if the metadata will overwrite the existing partition data.
-If there is not enough space for metadata, the user will be warned.
-However, this check is reasonable only if the user may want to preserve the partition data,
-like when creating Raid1...
+ drivers/dma/fsldma.c |   31 -------------------------------
+ 1 files changed, 0 insertions(+), 31 deletions(-)
 
-Regards,
-Maciek.
-
-
-
-
+diff --git a/drivers/dma/fsldma.c b/drivers/dma/fsldma.c
+index 296f9e7..272097a 100644
+--- a/drivers/dma/fsldma.c
++++ b/drivers/dma/fsldma.c
+@@ -449,35 +449,6 @@ static void fsl_dma_free_chan_resources(struct dma_chan *chan)
+ 	fsl_chan->desc_pool = NULL;
+ }
+ 
+-static struct dma_async_tx_descriptor *
+-fsl_dma_prep_interrupt(struct dma_chan *chan, unsigned long flags)
+-{
+-	struct fsl_dma_chan *fsl_chan;
+-	struct fsl_desc_sw *new;
+-
+-	if (!chan)
+-		return NULL;
+-
+-	fsl_chan = to_fsl_chan(chan);
+-
+-	new = fsl_dma_alloc_descriptor(fsl_chan);
+-	if (!new) {
+-		dev_err(fsl_chan->dev, "No free memory for link descriptor\n");
+-		return NULL;
+-	}
+-
+-	new->async_tx.cookie = -EBUSY;
+-	new->async_tx.flags = flags;
+-
+-	/* Insert the link descriptor to the LD ring */
+-	list_add_tail(&new->node, &new->tx_list);
+-
+-	/* Set End-of-link to the last link descriptor of new list*/
+-	set_ld_eol(fsl_chan, new);
+-
+-	return &new->async_tx;
+-}
+-
+ static struct dma_async_tx_descriptor *fsl_dma_prep_memcpy(
+ 	struct dma_chan *chan, dma_addr_t dma_dest, dma_addr_t dma_src,
+ 	size_t len, unsigned long flags)
+@@ -1200,11 +1171,9 @@ static int __devinit of_fsl_dma_probe(struct of_device *dev,
+ 						- fdev->reg.start + 1);
+ 
+ 	dma_cap_set(DMA_MEMCPY, fdev->common.cap_mask);
+-	dma_cap_set(DMA_INTERRUPT, fdev->common.cap_mask);
+ 	dma_cap_set(DMA_SLAVE, fdev->common.cap_mask);
+ 	fdev->common.device_alloc_chan_resources = fsl_dma_alloc_chan_resources;
+ 	fdev->common.device_free_chan_resources = fsl_dma_free_chan_resources;
+-	fdev->common.device_prep_dma_interrupt = fsl_dma_prep_interrupt;
+ 	fdev->common.device_prep_dma_memcpy = fsl_dma_prep_memcpy;
+ 	fdev->common.device_is_tx_complete = fsl_dma_is_complete;
+ 	fdev->common.device_issue_pending = fsl_dma_memcpy_issue_pending;
+-- 
+1.6.4.2
