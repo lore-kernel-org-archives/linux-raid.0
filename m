@@ -1,66 +1,79 @@
-From: "Tirumala Reddy Marri" <tmarri@amcc.com>
-Subject: RE: e2fsck + RAID-5 disk fail test question
-Date: Tue, 15 Dec 2009 14:38:40 -0800
-Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C087E7BC4@SDCEXCHANGE01.ad.amcc.com>
-References: <AC5E1C3367E37D44970B81A6ADD1DA2C087E7906@SDCEXCHANGE01.ad.amcc.com> <AC5E1C3367E37D44970B81A6ADD1DA2C087E791D@SDCEXCHANGE01.ad.amcc.com> <70ed7c3e0912141939v48e59cbboaab04124f2936575@mail.gmail.com>
+From: Ben DJ <bendj095124367913213465@gmail.com>
+Subject: RAID-10 array won't auto-assemble @ boot of a Xen Guest; Works just
+	fine 'manually' ... Any ideas?
+Date: Tue, 15 Dec 2009 15:58:00 -0800
+Message-ID: <babafd2f0912151558y513b589ay5e43080ef8e697d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <70ed7c3e0912141939v48e59cbboaab04124f2936575@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Majed B." <majedb@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-IFRoaXMgIGRlZmluaXRlbHkgZ29vZCB0b29sLiBJIHRyaWVkIHRvIHJ1biB0aGUgY29tbWFuZCB5
-b3Ugc3VnZ2VzdGVkICJzbWFydGN0bCAtYSAvZGV2L3NkYSIgLiBJdCBjb21wbGFpbnMgIkVSUk9S
-IFNNQVJUIHN0YXR1cyBjb21tYW5kIGZhaWxlZCIuIEFsc28gSSBzZWUgZmlsZSBzeXN0ZW0gZXJy
-b3JzIG9ubHkgaW4gY2FzZSBvZiBkaXNrIGZhaWx1cmUgdGVzdC4gSWYgSSBmYWlsIHRoZSBkcml2
-ZSB3aGVuIHRoZXJlIGlzIG5vIElPICwgbm8gZmlsZSBzeXN0ZW0gY29ycnVwdGlvbiBzZWVuLg0K
-DQogSSBhbSB1c2luZyBIVyBhY2NlbGVyYXRpb24gQURNQSBiYXNlZCBtZWNoYW5pc20gZm9yIFJB
-SUQtNS4NCg0KUmVnYXJkcywNCk1hcnJpDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpG
-cm9tOiBNYWplZCBCLiBbbWFpbHRvOm1hamVkYkBnbWFpbC5jb21dIA0KU2VudDogTW9uZGF5LCBE
-ZWNlbWJlciAxNCwgMjAwOSA3OjM5IFBNDQpUbzogVGlydW1hbGEgUmVkZHkgTWFycmkNCkNjOiBs
-aW51eC1yYWlkQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUmU6IGUyZnNjayArIFJBSUQtNSBk
-aXNrIGZhaWwgdGVzdCBxdWVzdGlvbg0KDQpUaGUgZXJyb3JzIG9uIHRoZSBmaWxlc3lzdGVtIGFy
-ZSBub3QgcmVsYXRlZCB0byB0aGUgUkFJRCBzZXR1cCBub3IgdGhlDQpmYWlsdXJlLiBZb3UgbWln
-aHQgaGF2ZSBoYWQgdGhvc2UgZXJyb3JzIHdoaWxlIHRoZSBhcnJheSB3YXMgd29ya2luZy4NCg0K
-SSBzdWdnZXN0IHlvdSBpbnN0YWxsIHNtYXJ0bW9udG9vbHMgYW5kIHJ1biBzbWFydGN0bCAtYSAv
-ZGV2L3NkeCBvbg0KZWFjaCBkaXNrIG9uIHRoZSBhcnJheSBhbmQgc2VlIGlmIHlvdSBoYXZlIEFU
-QSBvciBDUkMgZXJyb3JzLiBUaGVzZQ0KaW5kaWNhdGUgY2FibGUgaXNzdWVzIHVzdWFsbHkuIFNF
-Q1RPUiBlcnJvcnMgaW5kaWNhdGUgcGh5c2ljYWwgZGFtYWdlDQpvbiB0aGUgZGlzayAoYmFkIHNl
-Y3RvcnMpLg0KDQpPbiBUdWUsIERlYyAxNSwgMjAwOSBhdCAyOjA5IEFNLCBUaXJ1bWFsYSBSZWRk
-eSBNYXJyaSA8dG1hcnJpQGFtY2MuY29tPiB3cm90ZToNCj4gVG8gYmUgbW9yZSBzcGVjaWZpYy4g
-SXMgaXQgb2sgdG8gc2VlIGVycm9yIGR1cmluZyBlMmZjc2sgdGVzdCBhZnRlciB0aGUNCj4gZGlz
-ayBmb3JjZWQgdG8gZmFpbCBpbiBSQUlELTUuDQo+IFJlZ2FyZHMsDQo+IE1hcnJpDQo+DQo+IC0t
-LS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4LXJhaWQtb3duZXJAdmdlci5r
-ZXJuZWwub3JnDQo+IFttYWlsdG86bGludXgtcmFpZC1vd25lckB2Z2VyLmtlcm5lbC5vcmddIE9u
-IEJlaGFsZiBPZiBUaXJ1bWFsYSBSZWRkeQ0KPiBNYXJyaQ0KPiBTZW50OiBNb25kYXksIERlY2Vt
-YmVyIDE0LCAyMDA5IDI6NDQgUE0NCj4gVG86IGxpbnV4LXJhaWRAdmdlci5rZXJuZWwub3JnDQo+
-IFN1YmplY3Q6IGUyZnNjayBxdWVzdGlvbg0KPg0KPg0KPiBBbGwsDQo+IMKgTXkgcXVlc3Rpb24g
-aXMgLCBhZnRlciBkaXNrIGZvcmNlIHRvIGZhaWwgaW4gUkFJRC01IGlzIGl0IG9rIHRvIHNlZQ0K
-PiBpLW5vZGUgZXJyb3JzIGR1cmluZyBlMmZzY2sgY2hlY2sgdG8gc2VlIGlmIHRoZXJlIGFyZSBl
-cnJvcnMgYW5kIGZpeA0KPiB0aGVtID8NCj4NCj4gSGVyZSBpcyBpbiBkZXRhaWwgd2hhdCBJIGRp
-ZC4NCj4gwqBJIGhhdmUgUkFJRC01IHNldHVwIHdpdGggNCBkcml2ZXMuIFRoaXMgdXNpbmcgUG93
-ZXJQQyBiYXNlZCBTT0Mgd2l0aA0KPiBYT1IgYWNjZWxlcmF0aW9uLiBJIHdhcyB0ZXN0aW5nIHRo
-ZSBSQUlELTUgZGlzayBmYWlsIHRlc3QgdXNpbmcgIm1kYWRtDQo+IC1mIC9kZXYvc2RhIC9kZXYv
-bWQwIi4gwqBJIGluc3RhbGxlZCBFeHQtMyBmaWxlIHN5c3RlbSBvbiAvZGV2L21kMCB0aGVuDQo+
-IHJhbiBhICJkZCIgY29tbWFuZCB0byBkbyB0aGUgdHJhZmZpYyB0ZXN0LiBUaGVuIEkgZmFpbCB0
-aGUgZHJpdmVyLiBBZnRlcg0KPiBmZXcgc2Vjb25kcyBJIHVubW91bnRlZCB0aGUgZHJpdmUgYW5k
-IHJhbiAiZTJmc2NrIC1jIC9kZXYvbWQwIiB0byBjaGVjaw0KPiB0aGUgY29uc2lzdGVuY3kuIMKg
-SSBzZWUgdGhlcmUgZTJmY3NrIGNvbXBsYWlucyB0aGF0IHRoZXJlIGlzIHNvbWUNCj4gaW5zaXN0
-ZW5jeSBpbiBpbm9kZXMsIGJsb2NrIGV0YyBhbmQgdGhleSBpdCBzYXlzIGl0IGlzIGNvcnJlY3Rp
-bmcgaXQuDQo+DQo+DQo+IElmIHRoZXJlIGFyZSBmaWxlIHN5c3RlbSBpbmNvbnNpc3RlbmNpZXMg
-YW5kIGdvdCByZXBhaXJlZCwgeW91IHRoaW5rDQo+IHRoZXJlIGlzIHByb2JsZW0gd2l0aCBteSBz
-ZXR1cCA/DQo+DQo+IFRoYW5rcyBhbmQgUmVnYXJkcywNCj4gTWFycmkNCj4gLS0NCj4gVG8gdW5z
-dWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4
-LXJhaWQiIGluDQo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJu
-ZWwub3JnDQo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgwqBodHRwOi8vdmdlci5rZXJuZWwub3Jn
-L21ham9yZG9tby1pbmZvLmh0bWwNCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxp
-c3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXJhaWQiIGluDQo+IHRoZSBib2R5
-IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jk
-b21vIGluZm8gYXQgwqBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwN
-Cj4NCg0KDQoNCi0tIA0KICAgICAgIE1hamVkIEIuDQo=
+Hi
+
+I've had my OpenSuse 11.2 box booting from /boot-on-RAID1 +
+everything+else-on-RAID10 for awhile now with no issues.
+
+I recently started experimenting with virtualized servers using Xen.
+
+Piecing together a bunch of disjointed advice/instructions, I've set
+up a Guest as a server that I want to use as a RAID-ed NAS.  In the
+Guest/NAS the NAS's "/", swap & boot are all raw devices passed from
+the Xen Host.
+
+For the NAS storage, I have a Passed-through SATA/JBD pci-card that
+I've connected external drives to.
+
+I can boot the Guest, see the PCI card, create a RAID-10 array across
+those external drives, create & mount LVMs with FSs on them, and
+reqd/write ok.  In other words, everything works just as expected.
+
+Except, after rebooting the Guest, the raid array is not started.  I
+can re-assemble it, and rescan/mount the vols on it etc, but can't get
+the setup to 'stick' across reboot.  :-/
+
+This is what I've stored for auto-assembly,
+
+cat /etc/mdadm
+	DEVICE /dev/sd[abcd]1
+	ARRAY /dev/md0 metadata=1.01 name=TESTNAS:0 UUID=b23...
+
+
+and, from the NAS Guest's logs,
+
+cat boot.msg | grep -i raid
+<6>[   20.614724] md: raid0 personality registered for level 0
+<6>[   20.618933] md: raid1 personality registered for level 1
+<4>[   20.711986] raid6: int64x1   2386 MB/s
+<4>[   20.779991] raid6: int64x2   3375 MB/s
+<4>[   20.847994] raid6: int64x4   2456 MB/s
+<4>[   20.915984] raid6: int64x8   2201 MB/s
+<4>[   20.983976] raid6: sse2x1    3581 MB/s
+<4>[   21.051979] raid6: sse2x2    5624 MB/s
+<4>[   21.119978] raid6: sse2x4    6276 MB/s
+<4>[   21.120691] raid6: using algorithm sse2x4 (6276 MB/s)
+<6>[   21.123798] md: raid6 personality registered for level 6
+<6>[   21.124550] md: raid5 personality registered for level 5
+<6>[   21.125245] md: raid4 personality registered for level 4
+<6>[   21.129319] md: raid10 personality registered for level 10
+<notice -- Dec 16 07:34:54.215943000> service boot.device-mapper
+done<notice -- Dec 16 07:34:54.216238000> service boot.dmraid
+startWaiting for udev to settle...
+Activating dmraid...
+no raid disks
+<notice -- Dec 16 07:34:54.523702000> service boot.dmraid done<notice
+-- Dec 16 07:34:54.524007000> service boot.lvm startSetting up
+hostname 'TESTNAS'done
+
+I have no idea what I've missed, or even what to look for here.  I
+basically followed the same procedures that work flawlessly for me for
+my non-virtualized box. :-/  Any suggestions as to what I need to do
+to get the RAID-10 recognized/built @ boot of the Xen Guest?  I have a
+nagging suspicion that since this RAID array does not contain "/" or
+"root" it's not being 'looked for' ... but nothing to back that up,
+yet.
+
+Thanks,
+
+BenDJ
