@@ -1,89 +1,59 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: e2fsck + RAID-5 disk fail test question
-Date: Tue, 15 Dec 2009 06:39:03 +0300
-Message-ID: <70ed7c3e0912141939v48e59cbboaab04124f2936575@mail.gmail.com>
-References: <AC5E1C3367E37D44970B81A6ADD1DA2C087E7906@SDCEXCHANGE01.ad.amcc.com>
-	<AC5E1C3367E37D44970B81A6ADD1DA2C087E791D@SDCEXCHANGE01.ad.amcc.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [GIT PATCH 0/2] external-metadata recovery checkpointing for
+	2.6.33
+Date: Mon, 14 Dec 2009 21:19:38 -0700
+Message-ID: <e9c3a7c20912142019j280a243csf8c39a73fc3d0b06@mail.gmail.com>
+References: <20091213041123.12532.15225.stgit@dwillia2-linux.ch.intel.com>
+	 <20091214150725.49de72f1@notabene.brown>
+	 <1260837478.23193.33.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AC5E1C3367E37D44970B81A6ADD1DA2C087E791D@SDCEXCHANGE01.ad.amcc.com>
+In-Reply-To: <1260837478.23193.33.camel@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tirumala Reddy Marri <tmarri@amcc.com>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-The errors on the filesystem are not related to the RAID setup nor the
-failure. You might have had those errors while the array was working.
-
-I suggest you install smartmontools and run smartctl -a /dev/sdx on
-each disk on the array and see if you have ATA or CRC errors. These
-indicate cable issues usually. SECTOR errors indicate physical damage
-on the disk (bad sectors).
-
-On Tue, Dec 15, 2009 at 2:09 AM, Tirumala Reddy Marri <tmarri@amcc.com>=
- wrote:
-> To be more specific. Is it ok to see error during e2fcsk test after t=
-he
-> disk forced to fail in RAID-5.
-> Regards,
-> Marri
+On Mon, Dec 14, 2009 at 5:37 PM, Dan Williams <dan.j.williams@intel.com=
+> wrote:
+> On Sun, 2009-12-13 at 21:07 -0700, Neil Brown wrote:
+>> +static ssize_t recovery_start_store(mdk_rdev_t *rdev, const char *b=
+uf, size_t len)
+>> +{
+>> + =A0 =A0 unsigned long long recovery_start;
+>> +
+>> + =A0 =A0 if (cmd_match(buf, "none"))
+>> + =A0 =A0 =A0 =A0 =A0 =A0 recovery_start =3D MaxSector;
+>> + =A0 =A0 else if (strict_strtoull(buf, 10, &recovery_start))
+>> + =A0 =A0 =A0 =A0 =A0 =A0 return -EINVAL;
+>> +
+>> + =A0 =A0 if (rdev->mddev->pers &&
+>> + =A0 =A0 =A0 =A0 rdev->raid_disk >=3D 0)
+>> + =A0 =A0 =A0 =A0 =A0 =A0 return -EBUSY;
 >
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org
-> [mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Tirumala Reddy
-> Marri
-> Sent: Monday, December 14, 2009 2:44 PM
-> To: linux-raid@vger.kernel.org
-> Subject: e2fsck question
->
->
-> All,
-> =C2=A0My question is , after disk force to fail in RAID-5 is it ok to=
- see
-> i-node errors during e2fsck check to see if there are errors and fix
-> them ?
->
-> Here is in detail what I did.
-> =C2=A0I have RAID-5 setup with 4 drives. This using PowerPC based SOC=
- with
-> XOR acceleration. I was testing the RAID-5 disk fail test using "mdad=
-m
-> -f /dev/sda /dev/md0". =C2=A0I installed Ext-3 file system on /dev/md=
-0 then
-> ran a "dd" command to do the traffic test. Then I fail the driver. Af=
-ter
-> few seconds I unmounted the drive and ran "e2fsck -c /dev/md0" to che=
-ck
-> the consistency. =C2=A0I see there e2fcsk complains that there is som=
+> Ok, I had a chance to test this out and have a question about how you
+> envisioned mdmon handling this restriction which is a bit tighter tha=
+n
+> what I had before. =A0The prior version allowed updates as long as th=
 e
-> insistency in inodes, block etc and they it says it is correcting it.
+> array was read-only. =A0This version forces recovery_start to be writ=
+ten
+> at sysfs_add_disk() time (before 'slot' is written). The conceptual
+> problem I ran into was a race between ->activate_spare() determining =
+the
+> last valid checkpoint and the monitor thread starting up the array:
 >
->
-> If there are file system inconsistencies and got repaired, you think
-> there is problem with my setup ?
->
-> Thanks and Regards,
-> Marri
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
+> ->activate_spare(): read recovery checkpoint
+> ( array becomes read/write )
+> ( array becomes dirty, checkpoint invalidated )
+> sysfs_add_disk(): write invalid recovery checkpoint
+> ( recovery starts from the wrong location )
 
-
-
---=20
-       Majed B.
+On second thought, if we get to activate_spare() it's already too
+late.  Moving this to mdadm at assembly time (prior to setting
+readonly) is a better approach.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
