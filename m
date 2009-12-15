@@ -1,56 +1,53 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: Spurious HD convictions
-Date: Tue, 15 Dec 2009 11:47:04 +0300
-Message-ID: <70ed7c3e0912150047v1d3284dbk35282f8916d0ba4f@mail.gmail.com>
-References: <70ed7c3e0912141206p65005aeegf663183c946dec7b@mail.gmail.com>
-	<4b271970.5e44f10a.484f.ffffdd07SMTPIN_ADDED@mx.google.com>
+From: stuart-b-uk <stuart.buckell@googlemail.com>
+Subject: RAID-5 Degraded, Seemed to have lost files? Please help!
+Date: Tue, 15 Dec 2009 02:26:13 -0800 (PST)
+Message-ID: <26792453.post@talk.nabble.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4b271970.5e44f10a.484f.ffffdd07SMTPIN_ADDED@mx.google.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-As far as I know, the numbers in between define the queue depth of
-commands sent to the disks.
 
-It's a matter of whether you want the disk(s) firmware to manage
-sorting & executing the commands (when the queue is > 1) or not. In
-all cases, as far as I know, the kernel does the sorting before
-sending the commands to the disk(s). So if you notice better
-performance (when the array is stable) with the queue=3D1, then keep it
-that way.
+Hello,
 
-On Tue, Dec 15, 2009 at 8:06 AM, Leslie Rhorer <lrhorer@satx.rr.com> wr=
-ote:
->> Hi Leslie,
->>
->> I was wondering if you were able to stop the weird behavior with you=
-r
->> disks.
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0It seems to have done so, yes. =C2=A0I've =
-looked around the web trying to
-> find some additional info, but I've come up empty handed. =C2=A0Perha=
-ps someone
-> here can answer at least one of my questions? =C2=A0I know that putti=
-ng a value
-> of 32 into /sys/block/<driveID>/device/queue_depth fully enables NCQ,=
- and
-> putting a value of 1 there disables NCQ. =C2=A0What do all the number=
-s in between
-> do?
->
->
+We have a RAID-5  4x 250GB SATA running on an Intel SATA Hardware Raid
+controller.
 
+Yesterday a drive failed, which was replaced, however we did not have
+another matching drive, therefore it didn't like what it saw and wouldn't
+rebuild.
 
+Someone accessed files over HTTP and for some reason the filesystem went
+into readonly mode.
 
---=20
-       Majed B.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The system is now degradding to 3 drives Raid-5, and is at 20% after 12
+hours.
+
+The problem we have is a critical folder exists but has nothing inside it,
+except a few question marks when the directory is listed via bash.
+
+My question is:-
+
+1) Is it likely after the raid has gone from 750GB to 495GB that we will
+ever see these files again?
+2) Can you recommend any recovery software which might be able to get these
+files back?
+3) Has anyone experienced random loss of files from a rebuild of RAID-5
+before?
+
+I appreciate the importance of backing up, unfortunately, this is the only
+folder in the system that wasn't set up in the backup routine properly, and
+yes, Murphy struck again...
+
+Thanks to anyone who can help,
+
+Regards,
+
+Stuart
+-- 
+View this message in context: http://old.nabble.com/RAID-5-Degraded%2C-Seemed-to-have-lost-files--Please-help%21-tp26792453p26792453.html
+Sent from the linux-raid mailing list archive at Nabble.com.
+
