@@ -1,41 +1,56 @@
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: Disappointing performance of copy (MD raid + XFS)
-Date: Tue, 15 Dec 2009 10:53:23 -0600
-Message-ID: <4B27BF03.6090602@sandeen.net>
-References: <4B204334.1000605@shiftmail.org> <4B207620.3060605@sandeen.net>	 <4B21A34C.9090100@shiftmail.org>  <20091211032610.GH30608@discord.disaster> <1260895872.7209.46.camel@localhost>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [GIT PATCH 0/2] external-metadata recovery checkpointing for
+	2.6.33
+Date: Tue, 15 Dec 2009 11:03:06 -0700
+Message-ID: <e9c3a7c20912151003y942a4aex803e1e6722f23f31@mail.gmail.com>
+References: <20091213041123.12532.15225.stgit@dwillia2-linux.ch.intel.com>
+	 <20091214150725.49de72f1@notabene.brown>
+	 <1260837478.23193.33.camel@dwillia2-linux.ch.intel.com>
+	 <e9c3a7c20912142019j280a243csf8c39a73fc3d0b06@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1260895872.7209.46.camel@localhost>
+In-Reply-To: <e9c3a7c20912142019j280a243csf8c39a73fc3d0b06@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kasper Sandberg <postmaster@metanurb.dk>
-Cc: Dave Chinner <david@fromorbit.com>, Asdo <asdo@shiftmail.org>, linux-raid <linux-raid@vger.kernel.org>, =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>, Gabor Gombas <gombasg@sztaki.hu>, xfs@oss.sgi.com
+To: Neil Brown <neilb@suse.de>
+Cc: "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Kasper Sandberg wrote:
-> On Fri, 2009-12-11 at 14:26 +1100, Dave Chinner wrote:
->> On Fri, Dec 11, 2009 at 02:41:32AM +0100, Asdo wrote:
->>> I have checked the other problem I had which I was mentioning, that I  
-> <snip>
->>> Also with noalign and rotorstep at 255 the stripe_cache_size stays  
->>> usually in the lower half (below 16000 out of 32000) while with defaults  
->>> it's stuck for most of the time at the maximum and processes are stuck  
->>> sleeping in MD locks for this reason.
->> That really does sound like a misaligned filesystem - the stripe
->> cache will grow larger the more RMW cycles that need to be
->> performed...
-> Sorry to interrupt, I would very much like to see if my array/xfs is
-> properly aligned and all that stuff which has been mentioned inhere,
-> could any of you please post the things required to check? filesystem is
-> straight on md raid6, debian lenny.
-> 
-> 
-> <snip>
-> 
+On Mon, Dec 14, 2009 at 9:19 PM, Dan Williams <dan.j.williams@intel.com=
+> wrote:
+> On second thought, if we get to activate_spare() it's already too
+> late. =A0Moving this to mdadm at assembly time (prior to setting
+> readonly) is a better approach.
+>
 
-use xfs_info on your mountpoint, and compare the stripe unit and width
-to what md tells you.  xfs_info stripe unit/width output is in fs blocks
-units.
+Problem.  slot_store() in the array inactive case currently does:
 
--Eric
+                /* assume it is working */
+                clear_bit(Faulty, &rdev->flags);
+                clear_bit(WriteMostly, &rdev->flags);
+                set_bit(In_sync, &rdev->flags);
+                sysfs_notify_dirent(rdev->sysfs_state);
+
+i.e. sets the disk insync even if we specified a recovery_start <
+MaxSector.  If userspace can guarantee that the array stays inactive
+then it can write to 'recovery_start' after 'slot' and catch attempts
+to cold_add() out-of-sync disks on pre-2.6.33 kernels, but that gives
+a window of invalid configuration.  The other fix is to remove the
+set_bit(In_sync), and then for the pre-2.6.33 case userspace would
+need to disallow adding out-of-sync disks and force them through the
+hot_add() case.  This is how mdadm/mdmon currently operates, but that
+is a surprising ABI quirk when switching to/from 2.6.33.  A third
+option is to allow recovery_start_store to be modified while the array
+is read only. Although not my favorite, because it requires tricky
+mdmon logic to catch activate_spare() attempts before the monitor
+thread starts touching the array, it has the benefit of not changing
+any old behavior and no window of invalid configuration.  Thoughts??
+
+--
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
