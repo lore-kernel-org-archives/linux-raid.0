@@ -1,76 +1,66 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v0] Crypto: Talitos: re-initialize async_tx descriptors
-Date: Tue, 15 Dec 2009 11:23:40 -0700
-Message-ID: <4B27D42C.8070309@intel.com>
-References: <1260797602-7476-1-git-send-email-Vishnu@freescale.com> <e9c3a7c20912142329j6603402ah2963d075419efa1c@mail.gmail.com> <76952DF81420A349876E087D089DF034562C75@zin33exm21.fsl.freescale.net>
+From: "Tirumala Reddy Marri" <tmarri@amcc.com>
+Subject: RE: e2fsck + RAID-5 disk fail test question
+Date: Tue, 15 Dec 2009 14:38:40 -0800
+Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C087E7BC4@SDCEXCHANGE01.ad.amcc.com>
+References: <AC5E1C3367E37D44970B81A6ADD1DA2C087E7906@SDCEXCHANGE01.ad.amcc.com> <AC5E1C3367E37D44970B81A6ADD1DA2C087E791D@SDCEXCHANGE01.ad.amcc.com> <70ed7c3e0912141939v48e59cbboaab04124f2936575@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-crypto-owner@vger.kernel.org>
-In-Reply-To: <76952DF81420A349876E087D089DF034562C75@zin33exm21.fsl.freescale.net>
-Sender: linux-crypto-owner@vger.kernel.org
-To: Suresh Vishnu-B05022 <B05022@freescale.com>
-Cc: "linuxppc-dev@ozlabs.org" <linuxppc-dev@ozlabs.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>, "herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>, Tabi Timur-B04825 <B04825@freescale.com>, Li Yang-R58472 <r58472@freescale.com>, Ira Snyder <iws@ovro.caltech.edu>
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <70ed7c3e0912141939v48e59cbboaab04124f2936575@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Majed B." <majedb@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Suresh Vishnu-B05022 wrote:
->  > On Mon, Dec 14, 2009 at 6:33 AM, Vishnu Suresh <Vishnu@freescale.com> 
-> wrote:
->  > > The async_tx descriptors contains dangling pointers.
->  > > Hence, re-initialize them to NULL before use.
->  > >
->  > > Signed-off-by: Vishnu Suresh <Vishnu@freescale.com>
->  > > ---
->  > > o. Rebased to linux-next as of 20091214
->  > >
->  > >  drivers/crypto/talitos.c |    3 +++
->  > >  1 files changed, 3 insertions(+), 0 deletions(-)
->  > >
->  > > diff --git a/drivers/crypto/talitos.c b/drivers/crypto/talitos.c
->  > > index 87f06be..9e261c6 100644
->  > > --- a/drivers/crypto/talitos.c
->  > > +++ b/drivers/crypto/talitos.c
->  > > @@ -952,6 +952,9 @@ static struct dma_async_tx_descriptor * 
-> talitos_prep_dma_xor(
->  > >                return NULL;
->  > >        }
->  > >        dma_async_tx_descriptor_init(&new->async_tx, &xor_chan->common);
->  > > +       new->async_tx.parent = NULL;
->  > > +       new->async_tx.next = NULL;
->  > > +
->  > >
->  > >        desc = &new->hwdesc;
->  > >        /* Set destination: Last pointer pair */
-> 
->  > These two values are owned by the async_tx api, drivers are not
->  > supposed to touch them.
-> I have sent this patch and the similar one for fsldma seperately,
-> so that if the changes are needed and can be done in 
-> dma_async_tx_descriptor_init(),
-> these patches can be ignored. 
->  > Both iop_adma and the new ppx4xx driver
->  > (which use the async_tx channel switching capability) get away without
->  > touching these fields which makes me suspect there is a
->  > misunderstanding/bug somewhere else in the talitos implementation.
-> 
-> This bug does not occur on all the platforms. The occurrance is random.
-> This occurs when a channel switch between two different devices are 
-> present.
-> This same initialization is required in case of fsldma as well. 
-> In case of fsldma/talitosXOR, there are two DMA channels (on same 
-> device) and single XOR channel (on another device).
-> 
-> When used without fsldma, this driver works fine.
-> Does iop_adma and ppx4xx work in similar enviroment?
-
-Yes, iop_adma when running on iop3xx hardware has one xor channel and 
-two memcpy channels.
-
-The bug may very well be in the fsldma driver, but the workarounds are 
-just band aids.  I would be more comfortable with dropping the three 
-workaround patches and simply adding "depends on !FSL_DMA" to the 
-CRYPTO_DEV_TALITOS option until the true fix can be developed.
-
---
-Dan
-
+IFRoaXMgIGRlZmluaXRlbHkgZ29vZCB0b29sLiBJIHRyaWVkIHRvIHJ1biB0aGUgY29tbWFuZCB5
+b3Ugc3VnZ2VzdGVkICJzbWFydGN0bCAtYSAvZGV2L3NkYSIgLiBJdCBjb21wbGFpbnMgIkVSUk9S
+IFNNQVJUIHN0YXR1cyBjb21tYW5kIGZhaWxlZCIuIEFsc28gSSBzZWUgZmlsZSBzeXN0ZW0gZXJy
+b3JzIG9ubHkgaW4gY2FzZSBvZiBkaXNrIGZhaWx1cmUgdGVzdC4gSWYgSSBmYWlsIHRoZSBkcml2
+ZSB3aGVuIHRoZXJlIGlzIG5vIElPICwgbm8gZmlsZSBzeXN0ZW0gY29ycnVwdGlvbiBzZWVuLg0K
+DQogSSBhbSB1c2luZyBIVyBhY2NlbGVyYXRpb24gQURNQSBiYXNlZCBtZWNoYW5pc20gZm9yIFJB
+SUQtNS4NCg0KUmVnYXJkcywNCk1hcnJpDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpG
+cm9tOiBNYWplZCBCLiBbbWFpbHRvOm1hamVkYkBnbWFpbC5jb21dIA0KU2VudDogTW9uZGF5LCBE
+ZWNlbWJlciAxNCwgMjAwOSA3OjM5IFBNDQpUbzogVGlydW1hbGEgUmVkZHkgTWFycmkNCkNjOiBs
+aW51eC1yYWlkQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUmU6IGUyZnNjayArIFJBSUQtNSBk
+aXNrIGZhaWwgdGVzdCBxdWVzdGlvbg0KDQpUaGUgZXJyb3JzIG9uIHRoZSBmaWxlc3lzdGVtIGFy
+ZSBub3QgcmVsYXRlZCB0byB0aGUgUkFJRCBzZXR1cCBub3IgdGhlDQpmYWlsdXJlLiBZb3UgbWln
+aHQgaGF2ZSBoYWQgdGhvc2UgZXJyb3JzIHdoaWxlIHRoZSBhcnJheSB3YXMgd29ya2luZy4NCg0K
+SSBzdWdnZXN0IHlvdSBpbnN0YWxsIHNtYXJ0bW9udG9vbHMgYW5kIHJ1biBzbWFydGN0bCAtYSAv
+ZGV2L3NkeCBvbg0KZWFjaCBkaXNrIG9uIHRoZSBhcnJheSBhbmQgc2VlIGlmIHlvdSBoYXZlIEFU
+QSBvciBDUkMgZXJyb3JzLiBUaGVzZQ0KaW5kaWNhdGUgY2FibGUgaXNzdWVzIHVzdWFsbHkuIFNF
+Q1RPUiBlcnJvcnMgaW5kaWNhdGUgcGh5c2ljYWwgZGFtYWdlDQpvbiB0aGUgZGlzayAoYmFkIHNl
+Y3RvcnMpLg0KDQpPbiBUdWUsIERlYyAxNSwgMjAwOSBhdCAyOjA5IEFNLCBUaXJ1bWFsYSBSZWRk
+eSBNYXJyaSA8dG1hcnJpQGFtY2MuY29tPiB3cm90ZToNCj4gVG8gYmUgbW9yZSBzcGVjaWZpYy4g
+SXMgaXQgb2sgdG8gc2VlIGVycm9yIGR1cmluZyBlMmZjc2sgdGVzdCBhZnRlciB0aGUNCj4gZGlz
+ayBmb3JjZWQgdG8gZmFpbCBpbiBSQUlELTUuDQo+IFJlZ2FyZHMsDQo+IE1hcnJpDQo+DQo+IC0t
+LS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4LXJhaWQtb3duZXJAdmdlci5r
+ZXJuZWwub3JnDQo+IFttYWlsdG86bGludXgtcmFpZC1vd25lckB2Z2VyLmtlcm5lbC5vcmddIE9u
+IEJlaGFsZiBPZiBUaXJ1bWFsYSBSZWRkeQ0KPiBNYXJyaQ0KPiBTZW50OiBNb25kYXksIERlY2Vt
+YmVyIDE0LCAyMDA5IDI6NDQgUE0NCj4gVG86IGxpbnV4LXJhaWRAdmdlci5rZXJuZWwub3JnDQo+
+IFN1YmplY3Q6IGUyZnNjayBxdWVzdGlvbg0KPg0KPg0KPiBBbGwsDQo+IMKgTXkgcXVlc3Rpb24g
+aXMgLCBhZnRlciBkaXNrIGZvcmNlIHRvIGZhaWwgaW4gUkFJRC01IGlzIGl0IG9rIHRvIHNlZQ0K
+PiBpLW5vZGUgZXJyb3JzIGR1cmluZyBlMmZzY2sgY2hlY2sgdG8gc2VlIGlmIHRoZXJlIGFyZSBl
+cnJvcnMgYW5kIGZpeA0KPiB0aGVtID8NCj4NCj4gSGVyZSBpcyBpbiBkZXRhaWwgd2hhdCBJIGRp
+ZC4NCj4gwqBJIGhhdmUgUkFJRC01IHNldHVwIHdpdGggNCBkcml2ZXMuIFRoaXMgdXNpbmcgUG93
+ZXJQQyBiYXNlZCBTT0Mgd2l0aA0KPiBYT1IgYWNjZWxlcmF0aW9uLiBJIHdhcyB0ZXN0aW5nIHRo
+ZSBSQUlELTUgZGlzayBmYWlsIHRlc3QgdXNpbmcgIm1kYWRtDQo+IC1mIC9kZXYvc2RhIC9kZXYv
+bWQwIi4gwqBJIGluc3RhbGxlZCBFeHQtMyBmaWxlIHN5c3RlbSBvbiAvZGV2L21kMCB0aGVuDQo+
+IHJhbiBhICJkZCIgY29tbWFuZCB0byBkbyB0aGUgdHJhZmZpYyB0ZXN0LiBUaGVuIEkgZmFpbCB0
+aGUgZHJpdmVyLiBBZnRlcg0KPiBmZXcgc2Vjb25kcyBJIHVubW91bnRlZCB0aGUgZHJpdmUgYW5k
+IHJhbiAiZTJmc2NrIC1jIC9kZXYvbWQwIiB0byBjaGVjaw0KPiB0aGUgY29uc2lzdGVuY3kuIMKg
+SSBzZWUgdGhlcmUgZTJmY3NrIGNvbXBsYWlucyB0aGF0IHRoZXJlIGlzIHNvbWUNCj4gaW5zaXN0
+ZW5jeSBpbiBpbm9kZXMsIGJsb2NrIGV0YyBhbmQgdGhleSBpdCBzYXlzIGl0IGlzIGNvcnJlY3Rp
+bmcgaXQuDQo+DQo+DQo+IElmIHRoZXJlIGFyZSBmaWxlIHN5c3RlbSBpbmNvbnNpc3RlbmNpZXMg
+YW5kIGdvdCByZXBhaXJlZCwgeW91IHRoaW5rDQo+IHRoZXJlIGlzIHByb2JsZW0gd2l0aCBteSBz
+ZXR1cCA/DQo+DQo+IFRoYW5rcyBhbmQgUmVnYXJkcywNCj4gTWFycmkNCj4gLS0NCj4gVG8gdW5z
+dWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4
+LXJhaWQiIGluDQo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJu
+ZWwub3JnDQo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgwqBodHRwOi8vdmdlci5rZXJuZWwub3Jn
+L21ham9yZG9tby1pbmZvLmh0bWwNCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxp
+c3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXJhaWQiIGluDQo+IHRoZSBib2R5
+IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jk
+b21vIGluZm8gYXQgwqBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwN
+Cj4NCg0KDQoNCi0tIA0KICAgICAgIE1hamVkIEIuDQo=
