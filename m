@@ -1,46 +1,49 @@
-From: "Tirumala Reddy Marri" <tmarri@amcc.com>
-Subject: RE: RAID-5 degraded mode question
-Date: Wed, 16 Dec 2009 13:29:21 -0800
-Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C087E7EA7@SDCEXCHANGE01.ad.amcc.com>
-References: <AC5E1C3367E37D44970B81A6ADD1DA2C087E7E75@SDCEXCHANGE01.ad.amcc.com> <20091216211237.GA16981@cthulhu.home.robinhill.me.uk>
+From: Kim Phillips <kim.phillips@freescale.com>
+Subject: Re: [PATCH v2 2/2] Crypto: Talitos: Support for Async_tx XOR
+ offload
+Date: Wed, 16 Dec 2009 16:41:44 -0600
+Message-ID: <20091216164144.daff5468.kim.phillips@freescale.com>
+References: <1260977698-4076-1-git-send-email-Vishnu@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <20091216211237.GA16981@cthulhu.home.robinhill.me.uk>
-Sender: linux-raid-owner@vger.kernel.org
-To: Robin Hill <robin@robinhill.me.uk>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-crypto-owner@vger.kernel.org>
+In-Reply-To: <1260977698-4076-1-git-send-email-Vishnu@freescale.com>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Vishnu Suresh <Vishnu@freescale.com>
+Cc: linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dan.j.williams@intel.com, linux-crypto@vger.kernel.org, herbert@gondor.apana.org.au, B04825@freescale.com, R58472@freescale.com, Dipen Dudhat <Dipen.Dudhat@freescale.com>, Maneesh Gupta <Maneesh.Gupta@freescale.com>
 List-Id: linux-raid.ids
 
+On Wed, 16 Dec 2009 21:04:58 +0530
+Vishnu Suresh <Vishnu@freescale.com> wrote:
 
-Thanks for the response.
+> Expose Talitos's XOR functionality to be used for
+> RAID Parity calculation via the Async_tx layer.
+> 
+> Known Issue:
+> When used with fsldma, random crashes are observed
+> on some platforms. Hence, inter-operability with fsldma
+> is currently disabled
+> 
+> Thanks to Surender Kumar and Lee Nipper for their help in
+> realising this driver
+> 
+> Signed-off-by: Kim Phillips <kim.phillips@freescale.com>
+> Signed-off-by: Dipen Dudhat <Dipen.Dudhat@freescale.com>
+> Signed-off-by: Maneesh Gupta <Maneesh.Gupta@freescale.com>
+> Signed-off-by: Vishnu Suresh <Vishnu@freescale.com>
+> ---
+> Changes with respect to v1 as per comments received
+> o. Rebased to linux-next as of 20091216
+> o. The selection is based exclusive of fsldma
+> o. Intoduced a new Kernel Configuration variable
+>    *. This enables selecting the Cryptographic functionality
+>       of Talitos along with fsldma.
+>    *. Disables the XOR parity calculation offload, if fsldma enabled
+>       either as kernel in-built or as a module
+>    *. Once the inter-operability with fsldma is resolved, this option
+>       can be removed
 
->>  Also as soon as disk failed md drivers marks that drive as faulty
-and 
->> continue operation in degraded mode right ? Is there a way to get out
+wait, why can't the interoperability bug be fixed in the first place?
 
->> the degraded mode without adding spare drive. Assuming we have 5 disk
-
->> system with one failed drive.
->> 
->I'm not sure what you want to happen here.  The only way to get out of
-degraded mode is to replace the drive in the >array (if it's not
-actually faulty then you can add it back, otherwise you need to add a
-new drive).
->What were you thinking might happen otherwise?
-
-
-I was thinking we can recover from this using re-sync or resize .After
-running IO to degraded (RAID-5) /dev/md0, I am seeing an issue where
-e2fsck reports inconsistent file system and corrects it. I am trying to
-debug  to see if the issue is because of data not being written or
-reading wrong data in degraded mode. 
-
-I guess problem happening during the write. Reason is , after ran e2fsck
-I don't see inconsistency any more.
-
-Regards,
-Marri
-
+Kim
