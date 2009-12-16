@@ -1,64 +1,64 @@
-From: <senthilkumar.muthukalai@wipro.com>
-Subject: RE: Growing Linear RAID
-Date: Wed, 16 Dec 2009 16:32:30 +0530
-Message-ID: <8338BD137FF1B64EB341218BD702985E02C8C9BF@BLR-EC-MBX03.wipro.com>
-References: <8338BD137FF1B64EB341218BD702985E02C8C03B@BLR-EC-MBX03.wipro.com><20091210123353.66100b41@notabene.brown><8338BD137FF1B64EB341218BD702985E02C8C165@BLR-EC-MBX03.wipro.com> <20091210203008.69cbbe97@notabene.brown>
+From: "Majed B." <majedb@gmail.com>
+Subject: Re: RAID5 / 6 Growth
+Date: Wed, 16 Dec 2009 14:21:28 +0300
+Message-ID: <70ed7c3e0912160321m39861a1ex84de114dc9a6b961@mail.gmail.com>
+References: <70ed7c3e0912152237v3b7bf25cg54c70eb61101a60a@mail.gmail.com>
+	<8D.4A.01567.8F4982B4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <20091210203008.69cbbe97@notabene.brown>
+In-Reply-To: <8D.4A.01567.8F4982B4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
+To: Leslie Rhorer <lrhorer@satx.rr.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil,
+Oh, I thought this was a backup system. I always ramp up the speed on
+min & max to have the resync & reshapes finish fast, but at the loss
+of performance during that.
 
-I applied the patch but the disk is getting added as a spare.
-Pls guide me here.
+You mentioned that you've unmounted the filesystem, so why does it
+make a different if you max the speed? Or do you have other services
+running?
 
-Thanks,
-Senthil M
+I think at the time I needed a new mdadm, I downloaded 3.0 which is
+the stable one for now (3.1 was pulled -- donno about 3.1.1).
 
------Original Message-----
-From: Neil Brown [mailto:neilb@suse.de] 
-Sent: Thursday, December 10, 2009 3:00 PM
-To: SenthilKumar Muthukalai (WT01 - Telecom Equipment)
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Growing Linear RAID
-
-On Thu, 10 Dec 2009 13:54:29 +0530
-<senthilkumar.muthukalai@wipro.com> wrote:
-
-> Neil,
-> 
-> I get only the following message under /var/log/
-> 
-> [root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow --add /dev/sata3 
-> mdadm: Cannot add new disk to this array
-> 
-> Dec  9 20:37:58 NAS00226b1755a0 kernel: md: export_rdev(sdc)
-> 
-> [root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow --add /dev/sata4
-> mdadm: Cannot add new disk to this array
-> 
-> Dec  9 20:38:30 NAS00226b1755a0 kernel: md: export_rdev(sdd)
+On Wed, Dec 16, 2009 at 11:06 AM, Leslie Rhorer <lrhorer@satx.rr.com> w=
+rote:
+>> Have you made sure that the value of
+>> /proc/sys/dev/raid/speed_limit_min is high enough? (200000 means 200
+>
+> High enough? =C2=A0Wouldn't a higher speed limit mean more stress on =
+the systems?
+> Its value is 1000.
+>
+>> MB/s) along with /proc/sys/dev/raid/speed_limit_max?
+>
+> It's 200,000
+>
+>> I interrupted an array resyncing a couple of times without issues.
+>> Only one time I interrupted an array during growth process and I had
+>> an old version of mdadm (2.6.3) which didn't support resuming that. =
+I
+>> think Neil told me that 2.6.9 is the minimum requirement to resume.
+>
+> It's 2.6.7.2. =C2=A0Debian does not admit new software into its distr=
+o until they
+> are rock hard stable, unless it is a bug fix release. =C2=A0I guess I=
+'ll have to
+> wait a few more days.
+>
+>
 >
 
-Thanks - that narrows it down quite a bit.
 
-I think that if you run mdadm under 'strace' you will find that the
-ioctl
-fails with ENOSPC.
-It seems that growing a linear array didn't work reliably until 2.6.22.
 
-You need 
-
-  commit a778b73ff793d34c0082f76110f73a7754915067
-
-to make it work properly.
-
-NeilBrown
+--=20
+       Majed B.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
