@@ -1,65 +1,37 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: [SOLVED] RAID-10 array won't auto-assemble @ boot of a Xen
- Guest; Works just fine 'manually' ... Any ideas?
-Date: Wed, 16 Dec 2009 16:20:13 +0000
-Message-ID: <20091216162013.GC15689@cthulhu.home.robinhill.me.uk>
+From: Ben DJ <bendj095124367913213465@gmail.com>
+Subject: Re: [SOLVED] RAID-10 array won't auto-assemble @ boot of a Xen Guest;
+	Works just fine 'manually' ... Any ideas?
+Date: Wed, 16 Dec 2009 09:30:43 -0800
+Message-ID: <babafd2f0912160930r6a30d741p6ff3aad960a91b@mail.gmail.com>
 References: <babafd2f0912151558y513b589ay5e43080ef8e697d@mail.gmail.com>
- <babafd2f0912151705sbda2f50i84ca88433713888d@mail.gmail.com>
- <20091216091615.GB15689@cthulhu.home.robinhill.me.uk>
- <babafd2f0912160810p34e43a6ao93dae8a576bfcb75@mail.gmail.com>
+	<babafd2f0912151705sbda2f50i84ca88433713888d@mail.gmail.com>
+	<20091216091615.GB15689@cthulhu.home.robinhill.me.uk> <babafd2f0912160810p34e43a6ao93dae8a576bfcb75@mail.gmail.com>
+	<20091216162013.GC15689@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="+nBD6E3TurpgldQp"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <babafd2f0912160810p34e43a6ao93dae8a576bfcb75@mail.gmail.com>
+In-Reply-To: <20091216162013.GC15689@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+> A check of the manual page shows that on openSUSE, the command would be:
+>    chkconfig --list --allservices | grep -i boot
+>
+> Boot services are hidden by default, so you need the --allservices (or
+> -A) switch to show them.
 
---+nBD6E3TurpgldQp
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Learned something new, thanks.
 
-On Wed Dec 16, 2009 at 08:10:01AM -0800, Ben DJ wrote:
+"Something" auto-enabled those services -- particularly boot.md -- on
+the box on which "/" & "/boot" were installed to RAID.  I'm gonna
+guess the installation process itself took care of that.
 
-> >> =A0 chkconfig -- list | grep -i boot
-> >> =A0 =A0 list: unknown service
-> >>
-> > What about if you leave out the space between the dashes and the list
-> > option?
->=20
-> Still not there.
->=20
-> > chkconfig --list | grep -i boot
-> >
->=20
-A check of the manual page shows that on openSUSE, the command would be:
-    chkconfig --list --allservices | grep -i boot
+I've yet to find/notice an opensuse doc that says I need to manually
+enable that -- with 20-20 hindsight, makes sense.
 
-Boot services are hidden by default, so you need the --allservices (or
--A) switch to show them.
+All working now, and procedure noted.
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+Thanks.
 
---+nBD6E3TurpgldQp
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEARECAAYFAkspCL0ACgkQShxCyD40xBKrbwCg4axVVktmI0uCSPQtAZ+WHYtu
-5jwAn0hbkJBh0wwD3XXOByTs9WeyMS6g
-=nuvr
------END PGP SIGNATURE-----
-
---+nBD6E3TurpgldQp--
+BenDJ
