@@ -1,58 +1,64 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: [SOLVED] RAID-10 array won't auto-assemble @ boot of a Xen
- Guest; Works just fine 'manually' ... Any ideas?
-Date: Wed, 16 Dec 2009 09:16:15 +0000
-Message-ID: <20091216091615.GB15689@cthulhu.home.robinhill.me.uk>
-References: <babafd2f0912151558y513b589ay5e43080ef8e697d@mail.gmail.com>
- <babafd2f0912151705sbda2f50i84ca88433713888d@mail.gmail.com>
+From: <senthilkumar.muthukalai@wipro.com>
+Subject: RE: Growing Linear RAID
+Date: Wed, 16 Dec 2009 16:32:30 +0530
+Message-ID: <8338BD137FF1B64EB341218BD702985E02C8C9BF@BLR-EC-MBX03.wipro.com>
+References: <8338BD137FF1B64EB341218BD702985E02C8C03B@BLR-EC-MBX03.wipro.com><20091210123353.66100b41@notabene.brown><8338BD137FF1B64EB341218BD702985E02C8C165@BLR-EC-MBX03.wipro.com> <20091210203008.69cbbe97@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="GID0FwUMdk1T2AWN"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <babafd2f0912151705sbda2f50i84ca88433713888d@mail.gmail.com>
+Content-class: urn:content-classes:message
+In-Reply-To: <20091210203008.69cbbe97@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: neilb@suse.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Neil,
 
---GID0FwUMdk1T2AWN
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I applied the patch but the disk is getting added as a spare.
+Pls guide me here.
 
-On Tue Dec 15, 2009 at 05:05:18PM -0800, Ben DJ wrote:
+Thanks,
+Senthil M
 
-> Apparently, when NOT a "/" or "/boot" drive, the RAID arrays need
->=20
->   chkconfig boot.md on
->=20
-> which, strangely, doesn't show up at all in,
->=20
->   chkconfig -- list | grep -i boot
->     list: unknown service
->=20
-What about if you leave out the space between the dashes and the list
-option?
+-----Original Message-----
+From: Neil Brown [mailto:neilb@suse.de] 
+Sent: Thursday, December 10, 2009 3:00 PM
+To: SenthilKumar Muthukalai (WT01 - Telecom Equipment)
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Growing Linear RAID
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+On Thu, 10 Dec 2009 13:54:29 +0530
+<senthilkumar.muthukalai@wipro.com> wrote:
 
---GID0FwUMdk1T2AWN
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+> Neil,
+> 
+> I get only the following message under /var/log/
+> 
+> [root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow --add /dev/sata3 
+> mdadm: Cannot add new disk to this array
+> 
+> Dec  9 20:37:58 NAS00226b1755a0 kernel: md: export_rdev(sdc)
+> 
+> [root@NAS00226b1755a0 ~]# mdadm /dev/md0 --grow --add /dev/sata4
+> mdadm: Cannot add new disk to this array
+> 
+> Dec  9 20:38:30 NAS00226b1755a0 kernel: md: export_rdev(sdd)
+>
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
+Thanks - that narrows it down quite a bit.
 
-iEYEARECAAYFAksopV4ACgkQShxCyD40xBI1pACgvXL6HNlL6jgvB4PY/Uq/QfQ+
-T7EAniE37C77n+VcA9Nhas1wIKiONItc
-=bJ6c
------END PGP SIGNATURE-----
+I think that if you run mdadm under 'strace' you will find that the
+ioctl
+fails with ENOSPC.
+It seems that growing a linear array didn't work reliably until 2.6.22.
 
---GID0FwUMdk1T2AWN--
+You need 
+
+  commit a778b73ff793d34c0082f76110f73a7754915067
+
+to make it work properly.
+
+NeilBrown
