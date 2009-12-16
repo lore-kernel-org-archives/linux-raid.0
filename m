@@ -1,62 +1,69 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: RAID5 / 6 Growth
-Date: Wed, 16 Dec 2009 14:21:28 +0300
-Message-ID: <70ed7c3e0912160321m39861a1ex84de114dc9a6b961@mail.gmail.com>
-References: <70ed7c3e0912152237v3b7bf25cg54c70eb61101a60a@mail.gmail.com>
-	<8D.4A.01567.8F4982B4@cdptpa-omtalb.mail.rr.com>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: Random IO with md raid
+Date: Wed, 16 Dec 2009 12:32:20 +0100
+Message-ID: <87zl5j6tob.fsf@frosties.localdomain>
+References: <4B198DBA.5000906@matws.net> <4B1A6C28.20800@shiftmail.org>
+	<4B1D88D2.9000001@matws.net> <87hbs03y0t.fsf@frosties.localdomain>
+	<4B260000.3040703@matws.net>
+	<4877c76c0912140213u3dab2fcfxfd7ed1b4ff79f4ad@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8D.4A.01567.8F4982B4@cdptpa-omtalb.mail.rr.com>
+In-Reply-To: <4877c76c0912140213u3dab2fcfxfd7ed1b4ff79f4ad@mail.gmail.com>
+	(Michael Evans's message of "Mon, 14 Dec 2009 02:13:39 -0800")
 Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lrhorer@satx.rr.com>
-Cc: linux-raid@vger.kernel.org
+To: Michael Evans <mjevans1983@gmail.com>
+Cc: Matthieu Patou <mat@matws.net>, Goswin von Brederlow <goswin-v-b@web.de>, Asdo <asdo@shiftmail.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Oh, I thought this was a backup system. I always ramp up the speed on
-min & max to have the resync & reshapes finish fast, but at the loss
-of performance during that.
+Michael Evans <mjevans1983@gmail.com> writes:
 
-You mentioned that you've unmounted the filesystem, so why does it
-make a different if you max the speed? Or do you have other services
-running?
+> On Mon, Dec 14, 2009 at 1:06 AM, Matthieu Patou <mat@matws.net> wrote=
+:
+>> Hello Goswin,
+>>> Software raid1 will write twice as much data. That means twice as m=
+uch
+>>> data goes over the system bus and into the controler cache.
+>>> Effectively you have halve the cache size. Maybe that is all you se=
+e.
+>>>
+>>> MfG
+>>> =A0 =A0 =A0 =A0 =A0Goswin
+>>>
+>> Your idea seems logical, and I took a few hours today to verify it a=
+nd it's
+>> the case as accessing the disk without software raid leads to almost=
+ the
+>> same result as with hardware raid.
+>>
+>> Matthieu.
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>>
+>
+> Thinking about it, the doubling of data going over the system bus par=
+t
+> is correct.  You must still push the operation out to each device's
+> buffer.  However for -most- modern systems the system-bus will not be
+> the bottleneck for a reasonable number of drives.
+>
+> Further the later half which I'd skimmed over the first time is
+> utterly incorrect.  Each drive would still only see the commands
+> targeting that drive.  That should be virtually the same if not
+> identical to the single-drive case.
 
-I think at the time I needed a new mdadm, I downloaded 3.0 which is
-the stable one for now (3.1 was pulled -- donno about 3.1.1).
+The controler itself has cache. And that is shared between all drives.
 
-On Wed, Dec 16, 2009 at 11:06 AM, Leslie Rhorer <lrhorer@satx.rr.com> w=
-rote:
->> Have you made sure that the value of
->> /proc/sys/dev/raid/speed_limit_min is high enough? (200000 means 200
->
-> High enough? =C2=A0Wouldn't a higher speed limit mean more stress on =
-the systems?
-> Its value is 1000.
->
->> MB/s) along with /proc/sys/dev/raid/speed_limit_max?
->
-> It's 200,000
->
->> I interrupted an array resyncing a couple of times without issues.
->> Only one time I interrupted an array during growth process and I had
->> an old version of mdadm (2.6.3) which didn't support resuming that. =
-I
->> think Neil told me that 2.6.9 is the minimum requirement to resume.
->
-> It's 2.6.7.2. =C2=A0Debian does not admit new software into its distr=
-o until they
-> are rock hard stable, unless it is a bug fix release. =C2=A0I guess I=
-'ll have to
-> wait a few more days.
->
->
->
+> The two most likely bottlenecks are single-drive write speed, and any
+> IO barriers that are used to ensure file system consistency in the
+> event of sudden interruption.
 
-
-
---=20
-       Majed B.
+MfG
+        Goswin
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
