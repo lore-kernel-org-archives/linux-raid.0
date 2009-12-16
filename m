@@ -1,92 +1,75 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [GIT PATCH 0/2] external-metadata recovery checkpointing for
- 2.6.33
-Date: Wed, 16 Dec 2009 16:16:13 +1100
-Message-ID: <20091216161613.226a6a38@notabene.brown>
-References: <20091213041123.12532.15225.stgit@dwillia2-linux.ch.intel.com>
-	<20091214150725.49de72f1@notabene.brown>
-	<1260837478.23193.33.camel@dwillia2-linux.ch.intel.com>
-	<e9c3a7c20912142019j280a243csf8c39a73fc3d0b06@mail.gmail.com>
-	<e9c3a7c20912151003y942a4aex803e1e6722f23f31@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [GIT PULL] dmaengine update for 2.6.33
+Date: Tue, 15 Dec 2009 22:33:44 -0700
+Message-ID: <1260941624.29274.44.camel@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e9c3a7c20912151003y942a4aex803e1e6722f23f31@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 15 Dec 2009 11:03:06 -0700
-Dan Williams <dan.j.williams@intel.com> wrote:
+Hi Linus, please pull from:
 
-> On Mon, Dec 14, 2009 at 9:19 PM, Dan Williams <dan.j.williams@intel.c=
-om> wrote:
-> > On second thought, if we get to activate_spare() it's already too
-> > late. =C2=A0Moving this to mdadm at assembly time (prior to setting
-> > readonly) is a better approach.
-> >
->=20
-> Problem.  slot_store() in the array inactive case currently does:
->=20
->                 /* assume it is working */
->                 clear_bit(Faulty, &rdev->flags);
->                 clear_bit(WriteMostly, &rdev->flags);
->                 set_bit(In_sync, &rdev->flags);
->                 sysfs_notify_dirent(rdev->sysfs_state);
->=20
-> i.e. sets the disk insync even if we specified a recovery_start <
-> MaxSector.  If userspace can guarantee that the array stays inactive
-> then it can write to 'recovery_start' after 'slot' and catch attempts
-> to cold_add() out-of-sync disks on pre-2.6.33 kernels, but that gives
-> a window of invalid configuration.  The other fix is to remove the
-> set_bit(In_sync), and then for the pre-2.6.33 case userspace would
-> need to disallow adding out-of-sync disks and force them through the
-> hot_add() case.  This is how mdadm/mdmon currently operates, but that
-> is a surprising ABI quirk when switching to/from 2.6.33.  A third
-> option is to allow recovery_start_store to be modified while the arra=
-y
-> is read only. Although not my favorite, because it requires tricky
-> mdmon logic to catch activate_spare() attempts before the monitor
-> thread starts touching the array, it has the benefit of not changing
-> any old behavior and no window of invalid configuration.  Thoughts??
+  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/async_tx.git next
 
-I'm tempted to wait a bit longer and see if you find a solution,
-as you seem to be progressing quite well :-)  But I won't.
+...to receive a couple new drivers, coh and ppc440spe-adma (raid offload
+engine), and a collection of fixes from Guennadi.  There are a few more
+shdma fixes pending from Guennadi, but the original driver author wanted
+a bit more time to review / test, so I'm obliging.  These have been in
+linux-next for a few releases.
 
-I imagine there are two cases:
- 1/ assembling an array from devices some of which might be partially
-    recovered,
- 2/ re-adding a device to an array which is already active.
+Thanks,
+Dan
 
-In the first case, mdadm would:
-   - add the disk (write to new_dev)
-   - set the slot  - this sets 'In_sync'
-   - set the recovery_start - this clears 'In_sync' as required.
 
-In the second case either mdadm or mdmon would:
-   - write 'frozen' to sync_action, which would inhibit any call
-             to remove_and_add_spares
-   - add the disk
-   - set recovery_start
-   - set the slot
-   - write 'recover' to sync_action
+Anatolij Gustschin (1):
+      ppc440spe-adma: adds updated ppc440spe adma driver
 
-It is unfortunate that the setting of 'slot' and 'recovery_start'
-must be in different orders in the different cases, but maybe that
-isn't a tragedy.
+Guennadi Liakhovetski (4):
+      sh: DMA driver has to specify its alignment requirements
+      dmaengine: fix dmatest to verify minimum transfer length and test buffer size
+      sh: stylistic improvements for the DMA driver
+      dmaengine: clarify the meaning of the DMA_CTRL_ACK flag
 
-Possibly I could change slot_store in the pers=3D=3DNULL case to not
-set In_sync if recovery_offset were not MaxSector, but
-I'm not sure it is worth the effort.
+H Hartley Sweeten (1):
+      iop-adma.c: use resource_size()
 
-Does that answer your concerns?
+Linus Walleij (1):
+      Add COH 901 318 DMA block driver v5
 
-NeilBrown
+ .../powerpc/dts-bindings/4xx/ppc440spe-adma.txt    |   93 +
+ arch/arm/mach-u300/include/mach/coh901318.h        |  281 ++
+ arch/powerpc/include/asm/async_tx.h                |   47 +
+ arch/powerpc/include/asm/dcr-regs.h                |   23 +
+ drivers/dma/Kconfig                                |   18 +
+ drivers/dma/Makefile                               |    2 +
+ drivers/dma/coh901318.c                            | 1325 ++++++
+ drivers/dma/coh901318_lli.c                        |  318 ++
+ drivers/dma/coh901318_lli.h                        |  124 +
+ drivers/dma/dmatest.c                              |   16 +-
+ drivers/dma/iop-adma.c                             |    4 +-
+ drivers/dma/ppc4xx/Makefile                        |    1 +
+ drivers/dma/ppc4xx/adma.c                          | 5027 ++++++++++++++++++++
+ drivers/dma/ppc4xx/adma.h                          |  195 +
+ drivers/dma/ppc4xx/dma.h                           |  223 +
+ drivers/dma/ppc4xx/xor.h                           |  110 +
+ drivers/dma/shdma.c                                |   36 +-
+ drivers/dma/shdma.h                                |   14 +-
+ include/linux/dmaengine.h                          |    2 +-
+ 19 files changed, 7828 insertions(+), 31 deletions(-)
+ create mode 100644 Documentation/powerpc/dts-bindings/4xx/ppc440spe-adma.txt
+ create mode 100644 arch/arm/mach-u300/include/mach/coh901318.h
+ create mode 100644 arch/powerpc/include/asm/async_tx.h
+ create mode 100644 drivers/dma/coh901318.c
+ create mode 100644 drivers/dma/coh901318_lli.c
+ create mode 100644 drivers/dma/coh901318_lli.h
+ create mode 100644 drivers/dma/ppc4xx/Makefile
+ create mode 100644 drivers/dma/ppc4xx/adma.c
+ create mode 100644 drivers/dma/ppc4xx/adma.h
+ create mode 100644 drivers/dma/ppc4xx/dma.h
+ create mode 100644 drivers/dma/ppc4xx/xor.h
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
