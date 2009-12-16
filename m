@@ -1,45 +1,94 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: RAID5 / 6 Growth
-Date: Wed, 16 Dec 2009 14:25:09 +0100
-Message-ID: <87eimv6oga.fsf@frosties.localdomain>
-References: <8D.4A.01567.8F4982B4@cdptpa-omtalb.mail.rr.com>
+From: Vishnu Suresh <Vishnu@freescale.com>
+Subject: [PATCH v2 1/2] fsldma: Delete DMA_INTERRUPT capability
+Date: Wed, 16 Dec 2009 21:04:29 +0530
+Message-ID: <1260977669-4036-1-git-send-email-Vishnu@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8D.4A.01567.8F4982B4@cdptpa-omtalb.mail.rr.com> (Leslie Rhorer's
-	message of "Wed, 16 Dec 2009 02:06:09 -0600")
-Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lrhorer@satx.rr.com>
-Cc: "'Majed B.'" <majedb@gmail.com>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+To: linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dan.j.williams@intel.com
+Cc: Vishnu Suresh <Vishnu@freescale.com>, B04825@freescale.com, R58472@freescale.com
 List-Id: linux-raid.ids
 
-"Leslie Rhorer" <lrhorer@satx.rr.com> writes:
+The DMA_INTERRUPT is a NULL transfer, triggering a
+Programming Error. Though this Error is handled in
+the driver with the fix given in "fsldma: Fix the DMA
+halt when using DMA_INTERRUPT async_tx transfer."
+<f79abb627f033c85a6088231f20c85bc4a9bd757>,
+the RAID5 operation, which initiated the transaction
+via Async_tx, hangs.
 
->> Have you made sure that the value of
->> /proc/sys/dev/raid/speed_limit_min is high enough? (200000 means 200
->
-> High enough?  Wouldn't a higher speed limit mean more stress on the systems?
-> Its value is 1000.
+Hence, this patch removes the DMA_INTERRUPT capability
+and the associated code from the driver.
 
-A higher min value will block more normal IO (if there is
-any). Raising min is usefull to ensure the job gets done in a certain
-time, to not let normal IO slow down a rebuild too much.
+Signed-off-by: Vishnu Suresh <Vishnu@freescale.com>
+---
+Changes with respect to v1
+o. Rebased to linux-next as of 20091216
 
->> MB/s) along with /proc/sys/dev/raid/speed_limit_max?
->
-> It's 200,000
+ drivers/dma/fsldma.c |   31 -------------------------------
+ 1 files changed, 0 insertions(+), 31 deletions(-)
 
-I only ever had to tune this once when too much IO would deadlock an
-external enclosure. Otherwise keep this really high so it uses all
-idle IO there is.
-
-
-
-As to your initial question: Being able to keep the filesystem mounted
-and used is the whole point of having online growing of the raid
-system. If that weren't save then there would be no point to it as you
-could just as well stop the raid if you already umounted it and grow
-it offline.
-
-MfG,
-        Goswin
+diff --git a/drivers/dma/fsldma.c b/drivers/dma/fsldma.c
+index 296f9e7..272097a 100644
+--- a/drivers/dma/fsldma.c
++++ b/drivers/dma/fsldma.c
+@@ -449,35 +449,6 @@ static void fsl_dma_free_chan_resources(struct dma_chan *chan)
+ 	fsl_chan->desc_pool = NULL;
+ }
+ 
+-static struct dma_async_tx_descriptor *
+-fsl_dma_prep_interrupt(struct dma_chan *chan, unsigned long flags)
+-{
+-	struct fsl_dma_chan *fsl_chan;
+-	struct fsl_desc_sw *new;
+-
+-	if (!chan)
+-		return NULL;
+-
+-	fsl_chan = to_fsl_chan(chan);
+-
+-	new = fsl_dma_alloc_descriptor(fsl_chan);
+-	if (!new) {
+-		dev_err(fsl_chan->dev, "No free memory for link descriptor\n");
+-		return NULL;
+-	}
+-
+-	new->async_tx.cookie = -EBUSY;
+-	new->async_tx.flags = flags;
+-
+-	/* Insert the link descriptor to the LD ring */
+-	list_add_tail(&new->node, &new->tx_list);
+-
+-	/* Set End-of-link to the last link descriptor of new list*/
+-	set_ld_eol(fsl_chan, new);
+-
+-	return &new->async_tx;
+-}
+-
+ static struct dma_async_tx_descriptor *fsl_dma_prep_memcpy(
+ 	struct dma_chan *chan, dma_addr_t dma_dest, dma_addr_t dma_src,
+ 	size_t len, unsigned long flags)
+@@ -1200,11 +1171,9 @@ static int __devinit of_fsl_dma_probe(struct of_device *dev,
+ 						- fdev->reg.start + 1);
+ 
+ 	dma_cap_set(DMA_MEMCPY, fdev->common.cap_mask);
+-	dma_cap_set(DMA_INTERRUPT, fdev->common.cap_mask);
+ 	dma_cap_set(DMA_SLAVE, fdev->common.cap_mask);
+ 	fdev->common.device_alloc_chan_resources = fsl_dma_alloc_chan_resources;
+ 	fdev->common.device_free_chan_resources = fsl_dma_free_chan_resources;
+-	fdev->common.device_prep_dma_interrupt = fsl_dma_prep_interrupt;
+ 	fdev->common.device_prep_dma_memcpy = fsl_dma_prep_memcpy;
+ 	fdev->common.device_is_tx_complete = fsl_dma_is_complete;
+ 	fdev->common.device_issue_pending = fsl_dma_memcpy_issue_pending;
+-- 
+1.6.4.2
