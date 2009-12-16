@@ -1,44 +1,39 @@
 From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Spurious HD convictions
-Date: Wed, 16 Dec 2009 09:13:31 +0000
-Message-ID: <20091216091331.GA15689@cthulhu.home.robinhill.me.uk>
-References: <70ed7c3e0912141206p65005aeegf663183c946dec7b@mail.gmail.com>
- <FD.42.04641.7F2782B4@cdptpa-omtalb.mail.rr.com>
+Subject: Re: [SOLVED] RAID-10 array won't auto-assemble @ boot of a Xen
+ Guest; Works just fine 'manually' ... Any ideas?
+Date: Wed, 16 Dec 2009 09:16:15 +0000
+Message-ID: <20091216091615.GB15689@cthulhu.home.robinhill.me.uk>
+References: <babafd2f0912151558y513b589ay5e43080ef8e697d@mail.gmail.com>
+ <babafd2f0912151705sbda2f50i84ca88433713888d@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="xHFwDpU9dbj6ez1V"
+	protocol="application/pgp-signature"; boundary="GID0FwUMdk1T2AWN"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <FD.42.04641.7F2782B4@cdptpa-omtalb.mail.rr.com>
+In-Reply-To: <babafd2f0912151705sbda2f50i84ca88433713888d@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
---xHFwDpU9dbj6ez1V
+--GID0FwUMdk1T2AWN
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Tue Dec 15, 2009 at 11:41:03PM -0600, Leslie Rhorer wrote:
+On Tue Dec 15, 2009 at 05:05:18PM -0800, Ben DJ wrote:
 
-> 	It seems to have done so, yes.  I've looked around the web trying to
-> find some additional info, but I've come up empty handed.  Perhaps someone
-> here can answer at least one of my questions?  I know that putting a value
-> of 32 into /sys/block/<driveID>/device/queue_depth fully enables NCQ, and
-> putting a value of 1 there disables NCQ.  What do all the numbers in betw=
-een
-> do?
+> Apparently, when NOT a "/" or "/boot" drive, the RAID arrays need
 >=20
-I believe the value sets the allowed queue length.  A value of 1 thus
-effectively disables queueing.  Most ATA drives have a maximum queue
-depth of 32 so this is usually set for fully enabling it (though I
-believe it's recommended only to use 31 - this seems to be the default).
-If you set it to 32 and the drive has a shorter maximum queue, the
-kernel will use the drive's maximum instead.
-
-Setting any value is permitted, there's just generally little point in
-doing so.
+>   chkconfig boot.md on
+>=20
+> which, strangely, doesn't show up at all in,
+>=20
+>   chkconfig -- list | grep -i boot
+>     list: unknown service
+>=20
+What about if you leave out the space between the dashes and the list
+option?
 
 Cheers,
     Robin
@@ -48,16 +43,16 @@ Cheers,
    / / )      | Little Jim says ....                            |
   // !!       |      "He fallen in de water !!"                 |
 
---xHFwDpU9dbj6ez1V
+--GID0FwUMdk1T2AWN
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.11 (GNU/Linux)
 
-iEYEARECAAYFAksopLoACgkQShxCyD40xBLlGQCglin5flE0lbmMQRNslM1/Wiy5
-1t4AniRMODPkHzY9bHH0Hbk5x30DFyjs
-=3zgp
+iEYEARECAAYFAksopV4ACgkQShxCyD40xBI1pACgvXL6HNlL6jgvB4PY/Uq/QfQ+
+T7EAniE37C77n+VcA9Nhas1wIKiONItc
+=bJ6c
 -----END PGP SIGNATURE-----
 
---xHFwDpU9dbj6ez1V--
+--GID0FwUMdk1T2AWN--
