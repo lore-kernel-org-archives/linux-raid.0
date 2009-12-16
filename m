@@ -1,29 +1,28 @@
 From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RAID5 / 6 Growth
-Date: Tue, 15 Dec 2009 23:40:48 -0600
-Message-ID: <50.42.04641.7E2782B4@cdptpa-omtalb.mail.rr.com>
+Subject: RE: Spurious HD convictions
+Date: Tue, 15 Dec 2009 23:41:03 -0600
+Message-ID: <FD.42.04641.7F2782B4@cdptpa-omtalb.mail.rr.com>
+References: <70ed7c3e0912141206p65005aeegf663183c946dec7b@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <70ed7c3e0912141206p65005aeegf663183c946dec7b@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "'Majed B.'" <majedb@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+> Hi Leslie,
+> 
+> I was wondering if you were able to stop the weird behavior with your
+> disks.
 
-	I just purchased 2 new drives to add to a RAID5 and RAID6 array,
-respectively.  I have already added the 8th drive to the RAID5 array and
-begun the growth.  The critical phase has been completed.  For safety, I
-umounted the array before I started the growth processs.  At the rate the
-data is being read and written to the drives, the resync is going to take a
-very long time - about 4 days.  I'd rather not have the array down that
-long, unless it's really necessary.  Is there any greater amount of jeopardy
-to a RAID5 array during the growth (once the critical phase is complete)
-than under ordinary circumstances?  That is to say, will losing a drive
-during the resync wreak havoc on the data?
-
-	Once I am done upgrading the RAID5 array, I'm going to add a drive
-to the RAID6 array.  'Same question, there.  Will the loss of 2 drives
-during the resync cause a loss of data?
+	It seems to have done so, yes.  I've looked around the web trying to
+find some additional info, but I've come up empty handed.  Perhaps someone
+here can answer at least one of my questions?  I know that putting a value
+of 32 into /sys/block/<driveID>/device/queue_depth fully enables NCQ, and
+putting a value of 1 there disables NCQ.  What do all the numbers in between
+do?
 
