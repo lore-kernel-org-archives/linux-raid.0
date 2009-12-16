@@ -1,35 +1,90 @@
-From: Ben DJ <bendj095124367913213465@gmail.com>
-Subject: Re: [SOLVED] RAID-10 array won't auto-assemble @ boot of a Xen Guest;
-	Works just fine 'manually' ... Any ideas?
-Date: Tue, 15 Dec 2009 19:36:55 -0800
-Message-ID: <babafd2f0912151936m7e3b32eao9b1f67311e834988@mail.gmail.com>
-References: <babafd2f0912151558y513b589ay5e43080ef8e697d@mail.gmail.com>
-	<babafd2f0912151705sbda2f50i84ca88433713888d@mail.gmail.com>
-	<4682D2657DA742B0838DD4B7B0F67ED3@m5>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [GIT PATCH 0/2] external-metadata recovery checkpointing for
+ 2.6.33
+Date: Wed, 16 Dec 2009 16:16:13 +1100
+Message-ID: <20091216161613.226a6a38@notabene.brown>
+References: <20091213041123.12532.15225.stgit@dwillia2-linux.ch.intel.com>
+	<20091214150725.49de72f1@notabene.brown>
+	<1260837478.23193.33.camel@dwillia2-linux.ch.intel.com>
+	<e9c3a7c20912142019j280a243csf8c39a73fc3d0b06@mail.gmail.com>
+	<e9c3a7c20912151003y942a4aex803e1e6722f23f31@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4682D2657DA742B0838DD4B7B0F67ED3@m5>
+In-Reply-To: <e9c3a7c20912151003y942a4aex803e1e6722f23f31@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Guy Watkins <linux-raid@watkins-home.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Dec 15, 2009 at 6:25 PM, Guy Watkins
-<linux-raid@watkins-home.com> wrote:
-> My guess is that is specific to your distribution.
->
-> One of my systems does not even have chkconfig (Debian). =A0The other=
- does not
-> have boot.md (FC10).
+On Tue, 15 Dec 2009 11:03:06 -0700
+Dan Williams <dan.j.williams@intel.com> wrote:
 
-Good to know.  Not really surprising ... these sort things rarely seem
-to be 'standardized', or even well-documented.
+> On Mon, Dec 14, 2009 at 9:19 PM, Dan Williams <dan.j.williams@intel.c=
+om> wrote:
+> > On second thought, if we get to activate_spare() it's already too
+> > late. =C2=A0Moving this to mdadm at assembly time (prior to setting
+> > readonly) is a better approach.
+> >
+>=20
+> Problem.  slot_store() in the array inactive case currently does:
+>=20
+>                 /* assume it is working */
+>                 clear_bit(Faulty, &rdev->flags);
+>                 clear_bit(WriteMostly, &rdev->flags);
+>                 set_bit(In_sync, &rdev->flags);
+>                 sysfs_notify_dirent(rdev->sysfs_state);
+>=20
+> i.e. sets the disk insync even if we specified a recovery_start <
+> MaxSector.  If userspace can guarantee that the array stays inactive
+> then it can write to 'recovery_start' after 'slot' and catch attempts
+> to cold_add() out-of-sync disks on pre-2.6.33 kernels, but that gives
+> a window of invalid configuration.  The other fix is to remove the
+> set_bit(In_sync), and then for the pre-2.6.33 case userspace would
+> need to disallow adding out-of-sync disks and force them through the
+> hot_add() case.  This is how mdadm/mdmon currently operates, but that
+> is a surprising ABI quirk when switching to/from 2.6.33.  A third
+> option is to allow recovery_start_store to be modified while the arra=
+y
+> is read only. Although not my favorite, because it requires tricky
+> mdmon logic to catch activate_spare() attempts before the monitor
+> thread starts touching the array, it has the benefit of not changing
+> any old behavior and no window of invalid configuration.  Thoughts??
 
-Thanks,
+I'm tempted to wait a bit longer and see if you find a solution,
+as you seem to be progressing quite well :-)  But I won't.
 
-BenDJ
+I imagine there are two cases:
+ 1/ assembling an array from devices some of which might be partially
+    recovered,
+ 2/ re-adding a device to an array which is already active.
+
+In the first case, mdadm would:
+   - add the disk (write to new_dev)
+   - set the slot  - this sets 'In_sync'
+   - set the recovery_start - this clears 'In_sync' as required.
+
+In the second case either mdadm or mdmon would:
+   - write 'frozen' to sync_action, which would inhibit any call
+             to remove_and_add_spares
+   - add the disk
+   - set recovery_start
+   - set the slot
+   - write 'recover' to sync_action
+
+It is unfortunate that the setting of 'slot' and 'recovery_start'
+must be in different orders in the different cases, but maybe that
+isn't a tragedy.
+
+Possibly I could change slot_store in the pers=3D=3DNULL case to not
+set In_sync if recovery_offset were not MaxSector, but
+I'm not sure it is worth the effort.
+
+Does that answer your concerns?
+
+NeilBrown
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
