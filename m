@@ -1,55 +1,224 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: RAID5 / 6 Growth
-Date: Thu, 17 Dec 2009 09:27:54 +0000
-Message-ID: <4B29F99A.2000709@anonymous.org.uk>
-References: <1C.0E.01567.69E892B4@cdptpa-omtalb.mail.rr.com>
+From: "Majed B." <majedb@gmail.com>
+Subject: Re: reconstruct raid superblock
+Date: Thu, 17 Dec 2009 13:35:23 +0300
+Message-ID: <70ed7c3e0912170235m3af05859x9c0472d4c7d2f370@mail.gmail.com>
+References: <549053140912161953x665f84cbnc457c45e47ac2a97@mail.gmail.com>
+	<70ed7c3e0912162117n3617556p3a8decef94f33a1c@mail.gmail.com>
+	<70ed7c3e0912162121v5df1b972x6d9176bdf7e27401@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1C.0E.01567.69E892B4@cdptpa-omtalb.mail.rr.com>
+In-Reply-To: <70ed7c3e0912162121v5df1b972x6d9176bdf7e27401@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lrhorer@satx.rr.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Carl Karsten <carl@personnelware.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 17/12/2009 01:51, Leslie Rhorer wrote:
-[...]
->> As to your initial question: Being able to keep the filesystem mounted
->> and used is the whole point of having online growing of the raid
->> system. If that weren't save then there would be no point to it as you
->> could just as well stop the raid if you already umounted it and grow
->> it offline.
-> 
-> 	I know that is the point of the utility.  My question boils down to,
-> "How safe is it to avail one's self of the capability if it is not essential
-> to have the array mounted for the duration?"  I don't particularly like
-> having the array unavailable (especially not for nearly 5 days), but I
-> prefer that to risking data loss, or especially risking irretrievably losing
-> the entire array.  The question is particularly pertinent given the fact the
-> growth is going to take nearly 5 days (a lot can happen in 5 days), and the
-> fact the system was having the rather squirrelly issue a few days back which
-> seems - emphasis on SEEMS - to have been resolved by disabling NCQ.  What
-> happens if the system kicks a couple of drives, especially if one drive gets
-> kicked, a bunch of data gets written and then a few minutes later another
-> drive gets kicked?  In particular, what if neither of the two drives that
-> get kicked are the new drive?
+I have misread the information you've provided, so allow me to correct =
+myself:
 
-Well, what happens if two drives get kicked in normal use over the 
-course of 5 days? I think you're being overly cautious, and I'll try to 
-explain why.
+You're running a RAID6 array, with 2 disks lost/failed. Any disk loss
+after that will cause data loss since you have no redundancy (2 disks
+died).
 
-The reshape only reduces redundancy during the "critical section". After 
-that, you're as redundant as usual and can tolerate a drive failure. On 
-RAID-6, 2 drive failures. A reshape should be considerably safer than 
-doing a resync to a replacement drive, because in the reshape case if 
-you get bad sectors md can regenerate the data from the parity info.
+I believe it's still possible to reassemble the array, but you only
+need to remove the MBR. See this page for information:
+http://www.cyberciti.biz/faq/linux-how-to-uninstall-grub/
+dd if=3D/dev/null of=3D/dev/sdX bs=3D446 count=3D1
 
-Do you regularly run a check on your array? Or have you done one 
-recently? And does the SMART info on all your drives look OK? These 
-should be the case before attempting any reshape anyway, so I'd say just 
-keep the partition mounted.
+Before proceeding, provide the output of cat /proc/mdstat
+Is the array currently running degraded or is it suspended?
+What happened to the spare disk assigned? Did it finish resyncing
+before you installed grub on the wrong disk?
 
-Cheers,
+On Thu, Dec 17, 2009 at 8:21 AM, Majed B. <majedb@gmail.com> wrote:
+> If your other disks are sane and you are able to run a degraded array=
+,=C2=A0 then
+> you can remove grub using dd then re-add the disk to the array.
+>
+> To clear the first 1MB of the disk:
+> dd if=3D/dev/zero of=3D/dev/sdx bs=3D1M count=3D1
+> Replace sdx with the disk name that has grub.
+>
+> On Dec 17, 2009 6:53 AM, "Carl Karsten" <carl@personnelware.com> wrot=
+e:
+>
+> I took over a box that had 1 ide boot drive, 6 sata raid drives (4
+> internal, 2 external.) =C2=A0I believe the 2 externals were redundant=
+, so
+> could be removed. =C2=A0so I did, and mkfs-ed them. =C2=A0then I inst=
+alled
+> ubuntu to the ide, and installed grub to sda, which turns out to be
+> the first sata. =C2=A0which would be fine if the raid was on sda1, bu=
+t it
+> is on sda, and now the raid wont' assemble. =C2=A0no surprise, and I =
+do
+> have a backup of the data spread across 5 external drives. =C2=A0but =
+before
+> I =C2=A0abandon the array, I am wondering if I can fix it by recreati=
+ng
+> mdadm's metatdata on sda, given I have sd[bcd] to work with.
+>
+> any suggestions?
+>
+> root@dhcp128:~# mdadm --examine /dev/sd[abcd]
+> mdadm: No md superblock detected on /dev/sda.
+> /dev/sdb:
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0Magic : a92b4efc
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Version : 00.90.00
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 UUID : 8d0cf436:3fc2d2ef:93d71b24:=
+b036cc6b
+> =C2=A0Creation Time : Wed Mar 25 21:04:08 2009
+> =C2=A0 =C2=A0 Raid Level : raid6
+> =C2=A0Used Dev Size : 1465137408 (1397.26 GiB 1500.30 GB)
+> =C2=A0 =C2=A0 Array Size : 5860549632 (5589.06 GiB 6001.20 GB)
+> =C2=A0 Raid Devices : 6
+> =C2=A0Total Devices : 6
+> Preferred Minor : 0
+>
+> =C2=A0 =C2=A0Update Time : Tue Mar 31 23:08:02 2009
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0State : clean
+> =C2=A0Active Devices : 5
+> Working Devices : 6
+> =C2=A0Failed Devices : 1
+> =C2=A0Spare Devices : 1
+> =C2=A0 =C2=A0 =C2=A0 Checksum : a4fbb93a - correct
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 Events : 8430
+>
+> =C2=A0 =C2=A0 Chunk Size : 64K
+>
+> =C2=A0 =C2=A0 =C2=A0Number =C2=A0 Major =C2=A0 Minor =C2=A0 RaidDevic=
+e State
+> this =C2=A0 =C2=A0 6 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 16 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A06 =C2=A0 =C2=A0 =C2=A0spare =C2=A0 /dev/sdb
+>
+> =C2=A0 0 =C2=A0 =C2=A0 0 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A00 =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0active sync =C2=
+=A0 /dev/sda
+> =C2=A0 1 =C2=A0 =C2=A0 1 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 =
+64 =C2=A0 =C2=A0 =C2=A0 =C2=A01 =C2=A0 =C2=A0 =C2=A0active sync =C2=A0 =
+/dev/sde
+> =C2=A0 2 =C2=A0 =C2=A0 2 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 =
+32 =C2=A0 =C2=A0 =C2=A0 =C2=A02 =C2=A0 =C2=A0 =C2=A0active sync =C2=A0 =
+/dev/sdc
+> =C2=A0 3 =C2=A0 =C2=A0 3 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 =
+48 =C2=A0 =C2=A0 =C2=A0 =C2=A03 =C2=A0 =C2=A0 =C2=A0active sync =C2=A0 =
+/dev/sdd
+> =C2=A0 4 =C2=A0 =C2=A0 4 =C2=A0 =C2=A0 =C2=A0 0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A00 =C2=A0 =C2=A0 =C2=A0 =C2=A04 =C2=A0 =C2=A0 =C2=A0faulty removed
+> =C2=A0 5 =C2=A0 =C2=A0 5 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 =
+80 =C2=A0 =C2=A0 =C2=A0 =C2=A05 =C2=A0 =C2=A0 =C2=A0active sync
+> =C2=A0 6 =C2=A0 =C2=A0 6 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 =
+16 =C2=A0 =C2=A0 =C2=A0 =C2=A06 =C2=A0 =C2=A0 =C2=A0spare =C2=A0 /dev/s=
+db
+> /dev/sdc:
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0Magic : a92b4efc
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Version : 00.90.00
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 UUID : 8d0cf436:3fc2d2ef:93d71b24:=
+b036cc6b
+> =C2=A0Creation Time : Wed Mar 25 21:04:08 2009
+> =C2=A0 =C2=A0 Raid Level : raid6
+> =C2=A0Used Dev Size : 1465137408 (1397.26 GiB 1500.30 GB)
+> =C2=A0 =C2=A0 Array Size : 5860549632 (5589.06 GiB 6001.20 GB)
+> =C2=A0 Raid Devices : 6
+> =C2=A0Total Devices : 4
+> Preferred Minor : 0
+>
+> =C2=A0 =C2=A0Update Time : Sun Jul 12 11:31:47 2009
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0State : clean
+> =C2=A0Active Devices : 4
+> Working Devices : 4
+> =C2=A0Failed Devices : 2
+> =C2=A0Spare Devices : 0
+> =C2=A0 =C2=A0 =C2=A0 Checksum : a59452db - correct
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 Events : 580158
+>
+> =C2=A0 =C2=A0 Chunk Size : 64K
+>
+> =C2=A0 =C2=A0 =C2=A0Number =C2=A0 Major =C2=A0 Minor =C2=A0 RaidDevic=
+e State
+> this =C2=A0 =C2=A0 2 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 32 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A02 =C2=A0 =C2=A0 =C2=A0active sync =C2=A0 /dev/s=
+dc
+>
+> =C2=A0 0 =C2=A0 =C2=A0 0 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A00 =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0active sync =C2=
+=A0 /dev/sda
+> =C2=A0 1 =C2=A0 =C2=A0 1 =C2=A0 =C2=A0 =C2=A0 0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A00 =C2=A0 =C2=A0 =C2=A0 =C2=A01 =C2=A0 =C2=A0 =C2=A0faulty removed
+> =C2=A0 2 =C2=A0 =C2=A0 2 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 =
+32 =C2=A0 =C2=A0 =C2=A0 =C2=A02 =C2=A0 =C2=A0 =C2=A0active sync =C2=A0 =
+/dev/sdc
+> =C2=A0 3 =C2=A0 =C2=A0 3 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 =
+48 =C2=A0 =C2=A0 =C2=A0 =C2=A03 =C2=A0 =C2=A0 =C2=A0active sync =C2=A0 =
+/dev/sdd
+> =C2=A0 4 =C2=A0 =C2=A0 4 =C2=A0 =C2=A0 =C2=A0 0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A00 =C2=A0 =C2=A0 =C2=A0 =C2=A04 =C2=A0 =C2=A0 =C2=A0faulty removed
+> =C2=A0 5 =C2=A0 =C2=A0 5 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 =
+96 =C2=A0 =C2=A0 =C2=A0 =C2=A05 =C2=A0 =C2=A0 =C2=A0active sync
+> /dev/sdd:
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0Magic : a92b4efc
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Version : 00.90.00
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 UUID : 8d0cf436:3fc2d2ef:93d71b24:=
+b036cc6b
+> =C2=A0Creation Time : Wed Mar 25 21:04:08 2009
+> =C2=A0 =C2=A0 Raid Level : raid6
+> =C2=A0Used Dev Size : 1465137408 (1397.26 GiB 1500.30 GB)
+> =C2=A0 =C2=A0 Array Size : 5860549632 (5589.06 GiB 6001.20 GB)
+> =C2=A0 Raid Devices : 6
+> =C2=A0Total Devices : 4
+> Preferred Minor : 0
+>
+> =C2=A0 =C2=A0Update Time : Sun Jul 12 11:31:47 2009
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0State : clean
+> =C2=A0Active Devices : 4
+> Working Devices : 4
+> =C2=A0Failed Devices : 2
+> =C2=A0Spare Devices : 0
+> =C2=A0 =C2=A0 =C2=A0 Checksum : a59452ed - correct
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 Events : 580158
+>
+> =C2=A0 =C2=A0 Chunk Size : 64K
+>
+> =C2=A0 =C2=A0 =C2=A0Number =C2=A0 Major =C2=A0 Minor =C2=A0 RaidDevic=
+e State
+> this =C2=A0 =C2=A0 3 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 48 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A03 =C2=A0 =C2=A0 =C2=A0active sync =C2=A0 /dev/s=
+dd
+>
+> =C2=A0 0 =C2=A0 =C2=A0 0 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A00 =C2=A0 =C2=A0 =C2=A0 =C2=A00 =C2=A0 =C2=A0 =C2=A0active sync =C2=
+=A0 /dev/sda
+> =C2=A0 1 =C2=A0 =C2=A0 1 =C2=A0 =C2=A0 =C2=A0 0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A00 =C2=A0 =C2=A0 =C2=A0 =C2=A01 =C2=A0 =C2=A0 =C2=A0faulty removed
+> =C2=A0 2 =C2=A0 =C2=A0 2 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 =
+32 =C2=A0 =C2=A0 =C2=A0 =C2=A02 =C2=A0 =C2=A0 =C2=A0active sync =C2=A0 =
+/dev/sdc
+> =C2=A0 3 =C2=A0 =C2=A0 3 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 =
+48 =C2=A0 =C2=A0 =C2=A0 =C2=A03 =C2=A0 =C2=A0 =C2=A0active sync =C2=A0 =
+/dev/sdd
+> =C2=A0 4 =C2=A0 =C2=A0 4 =C2=A0 =C2=A0 =C2=A0 0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A00 =C2=A0 =C2=A0 =C2=A0 =C2=A04 =C2=A0 =C2=A0 =C2=A0faulty removed
+> =C2=A0 5 =C2=A0 =C2=A0 5 =C2=A0 =C2=A0 =C2=A0 8 =C2=A0 =C2=A0 =C2=A0 =
+96 =C2=A0 =C2=A0 =C2=A0 =C2=A05 =C2=A0 =C2=A0 =C2=A0active sync
+>
+> --
+> Carl K
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+>
 
-John.
+
+
+--=20
+       Majed B.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
