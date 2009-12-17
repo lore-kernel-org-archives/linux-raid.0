@@ -1,28 +1,51 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v2 2/2] Crypto: Talitos: Support for Async_tx XOR offload
-Date: Thu, 17 Dec 2009 10:44:26 -0700
-Message-ID: <4B2A6DFA.6000504@intel.com>
-References: <1260977698-4076-1-git-send-email-Vishnu@freescale.com> <20091216164144.daff5468.kim.phillips@freescale.com> <2868C8CF-584B-4FA7-9C3B-2FACEF77527E@kernel.crashing.org> <4B296394.9010709@intel.com> <20091217170958.GE18271@ovro.caltech.edu>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: RAID5 / 6 Growth
+Date: Thu, 17 Dec 2009 12:53:09 -0500
+Message-ID: <4B2A7005.7030409@tmr.com>
+References: <8D.4A.01567.8F4982B4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091217170958.GE18271@ovro.caltech.edu>
+In-Reply-To: <8D.4A.01567.8F4982B4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Ira W. Snyder" <iws@ovro.caltech.edu>
-Cc: Kumar Gala <galak@kernel.crashing.org>, "herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>, "B04825@freescale.com" <B04825@freescale.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linuxppc-dev@ozlabs.org" <linuxppc-dev@ozlabs.org>, Vishnu Suresh <Vishnu@freescale.com>, "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>, Dipen Dudhat <Dipen.Dudhat@freescale.com>, Maneesh Gupta <Maneesh.Gupta@freescale.com>, "R58472@freescale.com" <R58472@freescale.com>
+To: Leslie Rhorer <lrhorer@satx.rr.com>
+Cc: "'Majed B.'" <majedb@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Ira W. Snyder wrote:
-> Yes, I have used the device_prep_dma_interrupt() functionality quite a
-> while back. However, I found it to be pretty much useless.
+Leslie Rhorer wrote:
+>> Have you made sure that the value of
+>> /proc/sys/dev/raid/speed_limit_min is high enough? (200000 means 200
+>>     
+>
+> High enough?  Wouldn't a higher speed limit mean more stress on the systems?
+> Its value is 1000.
+>
+>   
+>> MB/s) along with /proc/sys/dev/raid/speed_limit_max?
+>>     
+>
+> It's 200,000
+>
+>   
+What are you actually seeing for rebuild speed? Pushing the min up 
+shouldn't matter with the max set high, but if you're not getting 
+something like 200MB rebuild there's an issue of some kind. What's the 
+stripe cache size?
+>> I interrupted an array resyncing a couple of times without issues.
+>> Only one time I interrupted an array during growth process and I had
+>> an old version of mdadm (2.6.3) which didn't support resuming that. I
+>> think Neil told me that 2.6.9 is the minimum requirement to resume.
+>>     
+>
+> It's 2.6.7.2.  Debian does not admit new software into its distro until they
+> are rock hard stable, unless it is a bug fix release.  I guess I'll have to
+> wait a few more days.
+>   
 
-The specific case it is needed for Talitos/raid is a channel switch 
-interrupt.  The interrupt causes the cleanup operation to be run which 
-will kick off any pending dependent operations on the xor channel.  In 
-the raid case we only have callbacks at the end of a chain, so we need 
-the interrupt to kick the engine in an operation chain like 
-xor->copy->xor->callback.
 
---
-Dan
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "We can't solve today's problems by using the same thinking we
+   used in creating them." - Einstein
+
