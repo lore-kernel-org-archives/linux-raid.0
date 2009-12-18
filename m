@@ -1,39 +1,73 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: RAID5 / 6 Growth
-Date: Thu, 17 Dec 2009 19:46:30 -0600
-Message-ID: <FE.2C.04641.7FEDA2B4@cdptpa-omtalb.mail.rr.com>
-References: <4B2A7005.7030409@tmr.com>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: RAID5 / 6 Growth
+Date: Fri, 18 Dec 2009 13:27:05 +0100
+Message-ID: <87hbroqxgm.fsf@frosties.localdomain>
+References: <1C.0E.01567.69E892B4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B2A7005.7030409@tmr.com>
+In-Reply-To: <1C.0E.01567.69E892B4@cdptpa-omtalb.mail.rr.com> (Leslie Rhorer's
+	message of "Wed, 16 Dec 2009 19:51:18 -0600")
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Bill Davidsen' <davidsen@tmr.com>
-Cc: linux-raid@vger.kernel.org
+To: Leslie Rhorer <lrhorer@satx.rr.com>
+Cc: goswin-v-b@web.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > High enough?  Wouldn't a higher speed limit mean more stress on the
-> systems?
-> > Its value is 1000.
-> >
-> >
-> >> MB/s) along with /proc/sys/dev/raid/speed_limit_max?
-> >>
-> >
-> > It's 200,000
-> >
-> >
-> What are you actually seeing for rebuild speed? Pushing the min up
+"Leslie Rhorer" <lrhorer@satx.rr.com> writes:
 
-	About 5 Mbps read per drive and 3.8 MBps write per drive.  With NCQ
-enabled, I was getting about 35MBps reads during the resync.  With NCQ
-disabled, I was getting about 25 MBps reads.
+>> > High enough?  Wouldn't a higher speed limit mean more stress on the
+>> systems?
+>> > Its value is 1000.
+>> 
+>> A higher min value will block more normal IO (if there is
+>> any).
+>
+> 	No, not really.  All the system that is currently being grown does
+> is incrementally rsync the data from the main server every morning.  The
+> main server, which will be grown after this server is done, is another
+> matter.
+>
+>> Raising min is usefull to ensure the job gets done in a certain
+>> time, to not let normal IO slow down a rebuild too much.
+>
+> 	OK, but like I said, for the most part there isn't any other I/O.
+>  
+>> >> MB/s) along with /proc/sys/dev/raid/speed_limit_max?
+>> >
+>> > It's 200,000
+>> 
+>> I only ever had to tune this once when too much IO would deadlock an
+>> external enclosure. Otherwise keep this really high so it uses all
+>> idle IO there is.
+>
+> 	200MBps is far more than the system can handle.  These are consumer
+> class drives on a relatively inexpensive 4 port controller feeding a Port
+> Multiplier chassis.
+>
+>> As to your initial question: Being able to keep the filesystem mounted
+>> and used is the whole point of having online growing of the raid
+>> system. If that weren't save then there would be no point to it as you
+>> could just as well stop the raid if you already umounted it and grow
+>> it offline.
+>
+> 	I know that is the point of the utility.  My question boils down to,
+> "How safe is it to avail one's self of the capability if it is not essential
+> to have the array mounted for the duration?"  I don't particularly like
+> having the array unavailable (especially not for nearly 5 days), but I
+> prefer that to risking data loss, or especially risking irretrievably losing
+> the entire array.  The question is particularly pertinent given the fact the
+> growth is going to take nearly 5 days (a lot can happen in 5 days), and the
+> fact the system was having the rather squirrelly issue a few days back which
+> seems - emphasis on SEEMS - to have been resolved by disabling NCQ.  What
+> happens if the system kicks a couple of drives, especially if one drive gets
+> kicked, a bunch of data gets written and then a few minutes later another
+> drive gets kicked?  In particular, what if neither of the two drives that
+> get kicked are the new drive?
 
-> shouldn't matter with the max set high, but if you're not getting
-> something like 200MB rebuild there's an issue of some kind. What's the
-> stripe cache size?
+It should just keep going. I don't see how having the filesystem in
+use will have any influence there other than adding a little more load
+on the disks. Reshaping is heavy on the drive. Lots of reads, writes
+and seeks. A daily rsync probably doesn't even register as extra load.
 
-Linux reports 256 on both systems.
-
+MfG
+        Goswin
