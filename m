@@ -1,73 +1,84 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: RAID5 / 6 Growth
-Date: Fri, 18 Dec 2009 13:27:05 +0100
-Message-ID: <87hbroqxgm.fsf@frosties.localdomain>
-References: <1C.0E.01567.69E892B4@cdptpa-omtalb.mail.rr.com>
+From: "Li Yang-R58472" <r58472@freescale.com>
+Subject: RE: [PATCH v2 2/2] Crypto: Talitos: Support for Async_tx XOR offload
+Date: Fri, 18 Dec 2009 22:46:27 +0800
+Message-ID: <3A45394FD742FA419B760BB8D398F9ED01059523@zch01exm26.fsl.freescale.net>
+References: <1260977698-4076-1-git-send-email-Vishnu@freescale.com>
+	<20091216164144.daff5468.kim.phillips@freescale.com>
+	<2868C8CF-584B-4FA7-9C3B-2FACEF77527E@kernel.crashing.org>
+	<4B296394.9010709@intel.com>
+	<20091217170958.GE18271@ovro.caltech.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1C.0E.01567.69E892B4@cdptpa-omtalb.mail.rr.com> (Leslie Rhorer's
-	message of "Wed, 16 Dec 2009 19:51:18 -0600")
-Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lrhorer@satx.rr.com>
-Cc: goswin-v-b@web.de, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <20091217170958.GE18271@ovro.caltech.edu>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+To: "Ira W. Snyder" <iws@ovro.caltech.edu>, Dan Williams <dan.j.williams@intel.com>
+Cc: herbert@gondor.apana.org.au, Suresh Vishnu-B05022 <B05022@freescale.com>, Tabi Timur-B04825 <B04825@freescale.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-crypto@vger.kernel.org, Gupta Maneesh-B18878 <B18878@freescale.com>, Dudhat Dipen-B09055 <B09055@freescale.com>
 List-Id: linux-raid.ids
 
-"Leslie Rhorer" <lrhorer@satx.rr.com> writes:
 
->> > High enough?  Wouldn't a higher speed limit mean more stress on the
->> systems?
->> > Its value is 1000.
+>Subject: Re: [PATCH v2 2/2] Crypto: Talitos: Support for 
+>Async_tx XOR offload
+>
+>On Wed, Dec 16, 2009 at 03:47:48PM -0700, Dan Williams wrote:
+>> Kumar Gala wrote:
+>> >>> Changes with respect to v1 as per comments received o. 
+>Rebased to 
+>> >>> linux-next as of 20091216 o. The selection is based exclusive of 
+>> >>> fsldma o. Intoduced a new Kernel Configuration variable
+>> >>>   *. This enables selecting the Cryptographic functionality
+>> >>>      of Talitos along with fsldma.
+>> >>>   *. Disables the XOR parity calculation offload, if 
+>fsldma enabled
+>> >>>      either as kernel in-built or as a module
+>> >>>   *. Once the inter-operability with fsldma is resolved, 
+>this option
+>> >>>      can be removed
+>> >> wait, why can't the interoperability bug be fixed in the 
+>first place?
+>> > 
+>> > I agree w/Kim.  We need to better understand what the bug 
+>is and how to reproduce it so we can get to the root cause.
+>> > 
+>> > Paper taping over it by disabling fsldma is not the right solution.
 >> 
->> A higher min value will block more normal IO (if there is
->> any).
->
-> 	No, not really.  All the system that is currently being grown does
-> is incrementally rsync the data from the main server every morning.  The
-> main server, which will be grown after this server is done, is another
-> matter.
->
->> Raising min is usefull to ensure the job gets done in a certain
->> time, to not let normal IO slow down a rebuild too much.
->
-> 	OK, but like I said, for the most part there isn't any other I/O.
->  
->> >> MB/s) along with /proc/sys/dev/raid/speed_limit_max?
->> >
->> > It's 200,000
+>> Hopefully this prompts fsldma authors to get involved because the 
+>> interoperability issue has been out there without comment*, just 
+>> band-aids, since October.
 >> 
->> I only ever had to tune this once when too much IO would deadlock an
->> external enclosure. Otherwise keep this really high so it uses all
->> idle IO there is.
+>> --
+>> Dan
+>> 
+>> * well one comment from Ira saying the interrupt 
+>functionality worked 
+>> for him.
 >
-> 	200MBps is far more than the system can handle.  These are consumer
-> class drives on a relatively inexpensive 4 port controller feeding a Port
-> Multiplier chassis.
+>Yes, I have used the device_prep_dma_interrupt() functionality 
+>quite a while back. However, I found it to be pretty much 
+>useless. Any functionality I need is covered by adding a 
+>callback to the last DMA
+>memcpy() operation. Since the operations happen in-order, I 
+>can be sure that the entire set of memcpy()s cas completed. I 
+>never needed the capability to generate an interrupt without a 
+>memcpy().
 >
->> As to your initial question: Being able to keep the filesystem mounted
->> and used is the whole point of having online growing of the raid
->> system. If that weren't save then there would be no point to it as you
->> could just as well stop the raid if you already umounted it and grow
->> it offline.
->
-> 	I know that is the point of the utility.  My question boils down to,
-> "How safe is it to avail one's self of the capability if it is not essential
-> to have the array mounted for the duration?"  I don't particularly like
-> having the array unavailable (especially not for nearly 5 days), but I
-> prefer that to risking data loss, or especially risking irretrievably losing
-> the entire array.  The question is particularly pertinent given the fact the
-> growth is going to take nearly 5 days (a lot can happen in 5 days), and the
-> fact the system was having the rather squirrelly issue a few days back which
-> seems - emphasis on SEEMS - to have been resolved by disabling NCQ.  What
-> happens if the system kicks a couple of drives, especially if one drive gets
-> kicked, a bunch of data gets written and then a few minutes later another
-> drive gets kicked?  In particular, what if neither of the two drives that
-> get kicked are the new drive?
+>I agree that the fsldma driver could use some love. There are 
+>places where I am still not confident in the locking. Perhaps 
+>I can find some time over Christmas to work on it, but I need 
+>someone with 85xx/86xx hardware to test the changes. I only 
+>have 83xx hardware.
 
-It should just keep going. I don't see how having the filesystem in
-use will have any influence there other than adding a little more load
-on the disks. Reshaping is heavy on the drive. Lots of reads, writes
-and seeks. A daily rsync probably doesn't even register as extra load.
+I can also help with the 85xx testing when I finish the busy project
+soon.
 
-MfG
-        Goswin
+- Leo
