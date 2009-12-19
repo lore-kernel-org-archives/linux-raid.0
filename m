@@ -1,40 +1,46 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Typical RAID5 transfer speeds
-Date: Sat, 19 Dec 2009 11:43:20 +0000
-Message-ID: <4B2CBC58.5020902@anonymous.org.uk>
-References: <B26AD6F5-45F6-4CC6-AE63-E4253E60076C@mac.com> <200912190205.04407.bs_lists@aakef.fastmail.fm>
+From: Jakob-Tobias Winter <jakob-tobias.winter@1und1.de>
+Subject: metadata update
+Date: Sat, 19 Dec 2009 13:09:03 +0100
+Message-ID: <4B2CC25F.1090308@1und1.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature";
+	boundary="------------enigCAEB328C03569474188BC217"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <200912190205.04407.bs_lists@aakef.fastmail.fm>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bernd Schubert <bs_lists@aakef.fastmail.fm>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 19/12/2009 01:05, Bernd Schubert wrote:
-> On Saturday 19 December 2009, Matt Tehonica wrote:
->> I have a 4 disk RAID5 using a 2048K chunk size and using XFS
-> 
-> 4 disks is a bad idea. You should have 2^n data disks, but you have 2^1 + 1 = 
-> 3 data disks. As parity information are calculated in the power of two and 
-> blocks are written in the power of two
+--------------enigCAEB328C03569474188BC217
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Sorry, but where did you get that from? p = d1 xor d2 xor d3 has nothing 
-to do with powers of two, and I'm sure blocks are written whenever they 
-need to be, not in powers of two.
+Hey there,
 
-> you probably have read operations, 
-> when you only want to write.
+my raidsets are still using 0.91 and I might want to upgrade to the
+newer metadata. - The system is running kernel 2.6.32.1 x86_64 with
+mdadm v3.0.3.
 
-That will depend on how much data you're trying to write. With 3 data 
-discs and a 2M chunk size, writes in multiples of 6M won't need reads. 
-Writing a 25M file would therefore write 4 stripes and need to read to 
-do the last 1M. With 4 data discs, it'd be 8M multiples, and you'd write 
-3 stripes and need a read to do the last 1M. No difference.
+Are there benefits to upgrading or should I stay with my current
+metadata version?
 
-Cheers,
+Cheers
 
-John.
+Tobias
 
+
+--------------enigCAEB328C03569474188BC217
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iEYEARECAAYFAksswmIACgkQ2CMMiSvcNgVt0ACePjLnVY0bgzJRkdwErVZWUVD3
+F8YAoKKMy+EiCKOT/dFOe9eGnanmmPX5
+=RSAl
+-----END PGP SIGNATURE-----
+
+--------------enigCAEB328C03569474188BC217--
