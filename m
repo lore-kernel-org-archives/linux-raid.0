@@ -1,46 +1,40 @@
-From: Jakob-Tobias Winter <jakob-tobias.winter@1und1.de>
-Subject: metadata update
-Date: Sat, 19 Dec 2009 13:09:03 +0100
-Message-ID: <4B2CC25F.1090308@1und1.de>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: RAID5 / 6 Growth
+Date: Sat, 19 Dec 2009 12:21:06 -0600
+Message-ID: <2F.73.01567.6991D2B4@cdptpa-omtalb.mail.rr.com>
+References: <27.2B.01550.F982C2B4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature";
-	boundary="------------enigCAEB328C03569474188BC217"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <27.2B.01550.F982C2B4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---------------enigCAEB328C03569474188BC217
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Well, the RAID growth completed on the backup system, but now when I attempt
+to mount the XFS file system, mount returns the error "mount: Structure
+needs cleaning".  When I issue the xfs_repair command, I get this:
 
-Hey there,
+Backup:/boot/grub# xfs_repair -v /dev/md0
+Phase 1 - find and verify superblock...
+        - block cache size set to 28616 entries
+Phase 2 - using internal log
+        - zero log...
+zero_log: head block 38584 tail block 38504
+ERROR: The filesystem has valuable metadata changes in a log which needs to
+be replayed.  Mount the filesystem to replay the log, and unmount it before
+re-running xfs_repair.  If you are unable to mount the filesystem, then use
+the -L option to destroy the log and attempt a repair.
+Note that destroying the log may cause corruption -- please attempt a mount
+of the filesystem before doing this.
 
-my raidsets are still using 0.91 and I might want to upgrade to the
-newer metadata. - The system is running kernel 2.6.32.1 x86_64 with
-mdadm v3.0.3.
+	The file system was shut down cleanly with umount prior to starting
+the growth, but xfs still seems to think the file system is dirty and the
+journal needs to be replayed.  Running xfs_repair with the -n command shows
+the file system has a few errors.  Before I purge the log and potentially
+lose a few files, is there something else I should try under mdadm to
+possibly fix teh array structure?  (I doubt it, but I wanted to check with
+others more knowledgeable than I before I proceed.)
 
-Are there benefits to upgrading or should I stay with my current
-metadata version?
-
-Cheers
-
-Tobias
-
-
---------------enigCAEB328C03569474188BC217
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iEYEARECAAYFAksswmIACgkQ2CMMiSvcNgVt0ACePjLnVY0bgzJRkdwErVZWUVD3
-F8YAoKKMy+EiCKOT/dFOe9eGnanmmPX5
-=RSAl
------END PGP SIGNATURE-----
-
---------------enigCAEB328C03569474188BC217--
