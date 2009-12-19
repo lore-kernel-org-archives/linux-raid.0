@@ -1,39 +1,39 @@
 From: "Leslie Rhorer" <lrhorer@satx.rr.com>
 Subject: RE: RAID5 / 6 Growth
-Date: Fri, 18 Dec 2009 19:12:31 -0600
-Message-ID: <A1.8A.01567.2882C2B4@cdptpa-omtalb.mail.rr.com>
-References: <4B2A7005.7030409@tmr.com>
+Date: Fri, 18 Dec 2009 19:13:00 -0600
+Message-ID: <27.2B.01550.F982C2B4@cdptpa-omtalb.mail.rr.com>
+References: <70ed7c3e0912160321m39861a1ex84de114dc9a6b961@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B2A7005.7030409@tmr.com>
+In-Reply-To: <70ed7c3e0912160321m39861a1ex84de114dc9a6b961@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Bill Davidsen' <davidsen@tmr.com>
+To: "'Majed B.'" <majedb@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > High enough?  Wouldn't a higher speed limit mean more stress on the
-> systems?
-> > Its value is 1000.
-> >
-> >
-> >> MB/s) along with /proc/sys/dev/raid/speed_limit_max?
-> >>
-> >
-> > It's 200,000
-> >
-> >
-> What are you actually seeing for rebuild speed? Pushing the min up
+> Oh, I thought this was a backup system. I always ramp up the speed on
+> min & max to have the resync & reshapes finish fast, but at the loss
+> of performance during that.
 
-	About 5 Mbps read per drive and 3.8 MBps write per drive.  With NCQ
-enabled, I was getting about 35MBps reads during the resync.  With NCQ
-disabled, I was getting about 25 MBps reads.
+	One of them, the one resyncing right now, is a backup system.  When
+it is done, I will grow the main server.  I don't want to have both
+performing potentially sensitive operations simultaneously.
 
-> shouldn't matter with the max set high, but if you're not getting
-> something like 200MB rebuild there's an issue of some kind. What's the
-> stripe cache size?
+> You mentioned that you've unmounted the filesystem, so why does it
+> make a different if you max the speed? Or do you have other services
+> running?
 
-Linux reports 256 on both systems.
+	It probably doesn't matter on the backup, but the point is I would
+rather not have it unmounted for the better part of 5 days.  I would rather
+not go nearly 5 days without a valid backup, if I can avoid it.  Ordinarily
+rsync runs every morning.
+
+> I think at the time I needed a new mdadm, I downloaded 3.0 which is
+> the stable one for now (3.1 was pulled -- donno about 3.1.1).
+
+	Unless there is some compelling reason to download 3.0, I think I
+will wait for it to be included in the stable distro of Debian.
 
