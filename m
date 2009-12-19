@@ -1,44 +1,47 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: RAID5 / 6 Growth
-Date: Sat, 19 Dec 2009 15:05:37 -0600
-Message-ID: <D6.C4.01550.4204D2B4@cdptpa-omtalb.mail.rr.com>
-References: <70ed7c3e0912191232k7deb3a3p40ddd6bc1bdfd3ae@mail.gmail.com>
+From: Roger Heflin <rogerheflin@gmail.com>
+Subject: Re: Typical RAID5 transfer speeds
+Date: Sat, 19 Dec 2009 15:35:45 -0600
+Message-ID: <4B2D4731.3090702@gmail.com>
+References: <B26AD6F5-45F6-4CC6-AE63-E4253E60076C@mac.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70ed7c3e0912191232k7deb3a3p40ddd6bc1bdfd3ae@mail.gmail.com>
+In-Reply-To: <B26AD6F5-45F6-4CC6-AE63-E4253E60076C@mac.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Matt Tehonica <matt.tehonica@mac.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> I understand what you're aiming at finding, unfortunately I can't
-> think of anything that would cause a corruption apart from bad cables
-> or bad sectors.
-
-	Well, me, either, but the question at hand isn't so much, "What
-caused it?" as it is, "Is there something (above and beyond the resync which
-was already done) I can do to verify the health of the underlying array
-before proceeding?"
+Matt Tehonica wrote:
+> I have a 4 disk RAID5 using a 2048K chunk size and using XFS 
+> filesystem.  Typical file size is about 2GB-5GB. I usually get around 
+> 50MB/sec transfer speed when writting files to the array. Is this 
+> typcial or is it below normal?  A friend has a 20 disk RAID6 using the 
+> same filesystem and chunk size and gets around 150MB/sec. Any input on 
+> this??
 > 
-> Perhaps the file system was dirty before growing the array and the
-> growth process emphasized the problems. You said you unmounted the
-> filesystem, but did you try to mount it just to check, or run
+> Thanks,
+> Matt
 
-	Yes,I did.
+Speed depends on how the disks are connected to the system, and how 
+many disks there are per connection, and what kind of disks they are.
 
-> xfs_repair before growing to make sure the filesystem is clean?
+If your friend had a 20 disk raid6 on one 4port sata pci-32bit/33mhz 
+card with port multipliers his total throughput would be <110mb/second 
+reads or writes, if your friend had 20 disks on 10+ port pcie-x16 
+cards his total possible speed would be much much higher, reads would 
+be expected to be 18x(rawdiskrate) if the machine could handle it.
 
-	No, it mounted just fine, and I could read the array, so I didn't go
-any further.  I then shut down all the network accesses, did a `sync`, and
-then umounted the array.  I didn't bother to actually check for dirty pages.
+Also newer disks are faster than older disks.
 
-> > I'm out of ideas, for now. I haven't encountered such problems with
-> XFS & software RAID before, and I hope someone has an answer to your
-> problem, as I, and maybe others, might probably face it later.
+1.5tb disks read/write at 125-130+ MB/second on a fast port.
+1.5tb disks read/write at 75-80 MB/second on a PCI-32bit/33mhz port.
+500gb disks read/write at 75-80 MB/second on a PCI-32bit/33mhz port.
+250gb disks read/write at 50-55 MB/second on a fast port.
 
-	I've had similar problems when growing an array before, but this is
-the first time I have grown an array under mdadm and also the first time
-under xfs.
-
+And those PCI-32bit/33mhz ports are with only a single disk, put more 
+than one on there, and the io rates drop...so 2 disk on 
+pci-32bit/33mhz (old PCI) port will have <50MB/second each no matter 
+how fast the disk is, put 3 on there and each disk is down to 33mhz, 4 
+25MB/second or less.
