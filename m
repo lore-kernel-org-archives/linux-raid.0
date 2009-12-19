@@ -1,39 +1,67 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: RAID5 / 6 Growth
-Date: Fri, 18 Dec 2009 19:13:00 -0600
-Message-ID: <27.2B.01550.F982C2B4@cdptpa-omtalb.mail.rr.com>
-References: <70ed7c3e0912160321m39861a1ex84de114dc9a6b961@mail.gmail.com>
+From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
+Subject: Re: Typical RAID5 transfer speeds
+Date: Sat, 19 Dec 2009 01:30:42 -0700
+Message-ID: <200912190130.42585.tfjellstrom@shaw.ca>
+References: <B26AD6F5-45F6-4CC6-AE63-E4253E60076C@mac.com> <200912190205.04407.bs_lists@aakef.fastmail.fm>
+Reply-To: tfjellstrom@shaw.ca
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70ed7c3e0912160321m39861a1ex84de114dc9a6b961@mail.gmail.com>
+In-Reply-To: <200912190205.04407.bs_lists@aakef.fastmail.fm>
 Sender: linux-raid-owner@vger.kernel.org
-To: "'Majed B.'" <majedb@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Bernd Schubert <bs_lists@aakef.fastmail.fm>
+Cc: Matt Tehonica <matt.tehonica@mac.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> Oh, I thought this was a backup system. I always ramp up the speed on
-> min & max to have the resync & reshapes finish fast, but at the loss
-> of performance during that.
+On Fri December 18 2009, Bernd Schubert wrote:
+> On Saturday 19 December 2009, Matt Tehonica wrote:
+> > I have a 4 disk RAID5 using a 2048K chunk size and using XFS
+> 
+> 4 disks is a bad idea. You should have 2^n data disks, but you have 2^1 +
+>  1 = 3 data disks. As parity information are calculated in the power of
+>  two and blocks are written in the power of two, you probably have read
+>  operations, when you only want to write.
+> 
+> > filesystem.  Typical file size is about 2GB-5GB. I usually get around
+> > 50MB/sec transfer speed when writting files to the array. Is this
+> > typcial or is it below normal?  A friend has a 20 disk RAID6 using the
+> > same filesystem and chunk size and gets around 150MB/sec. Any input on
+> > this??
+> 
+> I would remove two disks, to get 16 + 2 drives (2^4). Performance
+>  probably would be limited by CPU speed then. 150MB/s for 18 drives is
+>  also bad, this is only the performance of two single raid0 drives.
 
-	One of them, the one resyncing right now, is a backup system.  When
-it is done, I will grow the main server.  I don't want to have both
-performing potentially sensitive operations simultaneously.
+I'd have to agree. My 5 disk raid5 array gets me 200-400MB/s, depending on 
+the kernel. I'm using a 512K chunk size, formatted with XFS, with 32 AGs, 
+and xfs_info reporting: sunit=128 swidth=512 blks (which should be 
+right...), and mounted with: 
+noatime,nodiratime,logbufs=8,allocsize=512m,largeio,swalloc
 
-> You mentioned that you've unmounted the filesystem, so why does it
-> make a different if you max the speed? Or do you have other services
-> running?
+oh, not quite 200MB/s, iozone is showing 112MB/s write, and 300MB/s read. 
+I'm pretty sure that has something to do with the writeback stuff though, 
+and aught to be improved in 2.6.32+ (I have yet to find a good time to 
+upgrade my server). I know I have seen the SAS card, and an initial array 
+handle more throughput than that when I was first testing stuff months and 
+months ago. It was more like 200-350 write, and 400-550 read.
 
-	It probably doesn't matter on the backup, but the point is I would
-rather not have it unmounted for the better part of 5 days.  I would rather
-not go nearly 5 days without a valid backup, if I can avoid it.  Ordinarily
-rsync runs every morning.
+But yeah, 50MB/s is pretty bad for a raid array. The individual disks in my 
+array are all capable of more than that each.  (Yes, I know raid5 will not 
+give a linear improvement when adding more drives, but it aught to be a heck 
+of a lot better than a decrease in performance)
 
-> I think at the time I needed a new mdadm, I downloaded 3.0 which is
-> the stable one for now (3.1 was pulled -- donno about 3.1.1).
+> 
+> Cheers,
+> Bernd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-	Unless there is some compelling reason to download 3.0, I think I
-will wait for it to be included in the stable distro of Debian.
 
+-- 
+Thomas Fjellstrom
+tfjellstrom@shaw.ca
