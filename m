@@ -1,69 +1,77 @@
-From: "Majed B." <majedb@gmail.com>
-Subject: Re: RAID5 / 6 Growth
-Date: Sun, 20 Dec 2009 02:59:29 +0300
-Message-ID: <70ed7c3e0912191559i75bdc191p55a93568b18f1652@mail.gmail.com>
-References: <88.03.04641.B353D2B4@cdptpa-omtalb.mail.rr.com>
-	<4B2D6447.1070406@anonymous.org.uk>
+From: Michael Evans <mjevans1983@gmail.com>
+Subject: Re: Typical RAID5 transfer speeds
+Date: Sat, 19 Dec 2009 20:21:50 -0800
+Message-ID: <4877c76c0912192021s2c3da63au57f5dcb0391b3eb3@mail.gmail.com>
+References: <B26AD6F5-45F6-4CC6-AE63-E4253E60076C@mac.com>
+	 <4B2D4731.3090702@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B2D6447.1070406@anonymous.org.uk>
+In-Reply-To: <4B2D4731.3090702@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Roger Heflin <rogerheflin@gmail.com>
+Cc: Matt Tehonica <matt.tehonica@mac.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-John,
-
-I grew software RAID arrays with XFS on top without issues before. I
-tried with the filesystem both mounted and unmounted. Never had a
-problem. And XFS can't be grown unless it's mounted, so the size of
-the block device is not the one causing the issue here, as the size of
-the block device (array) is larger than what the filesystem is
-occupying, which is normal.
-
-After mounting the filesystem, the admin can increase the size of the
-=46S to fit the newly expanded array size.
-
-On Sun, Dec 20, 2009 at 2:39 AM, John Robinson
-<john.robinson@anonymous.org.uk> wrote:
-> On 19/12/2009 20:19, Leslie Rhorer wrote:
-> [...]
->>>
->>> The reason why you can't mount even though repair suggests you do
->>> might be because of a bug in xfsprogs/libs not a complete corruptio=
-n
->>> in the filesystem itself.
+On Sat, Dec 19, 2009 at 1:35 PM, Roger Heflin <rogerheflin@gmail.com> w=
+rote:
+> Matt Tehonica wrote:
 >>
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0It's possible, I guess, but the diagnosti=
-cs seem pretty coherent.
->> Running xfs_repair in test mode finds a small but reasonable number =
-of
->> issues.
+>> I have a 4 disk RAID5 using a 2048K chunk size and using XFS filesys=
+tem.
+>> =A0Typical file size is about 2GB-5GB. I usually get around 50MB/sec=
+ transfer
+>> speed when writting files to the array. Is this typcial or is it bel=
+ow
+>> normal? =A0A friend has a 20 disk RAID6 using the same filesystem an=
+d chunk
+>> size and gets around 150MB/sec. Any input on this??
+>>
+>> Thanks,
+>> Matt
 >
-> Please excuse me if this is a stupid question, but is it possible any=
- of the
-> apparent issues could be caused by the block device underneath the
-> filesystem having changed size, so the filesystem's in some sense the=
- wrong
-> size now?
+> Speed depends on how the disks are connected to the system, and how m=
+any
+> disks there are per connection, and what kind of disks they are.
 >
-> Cheers,
+> If your friend had a 20 disk raid6 on one 4port sata pci-32bit/33mhz =
+card
+> with port multipliers his total throughput would be <110mb/second rea=
+ds or
+> writes, if your friend had 20 disks on 10+ port pcie-x16 cards his to=
+tal
+> possible speed would be much much higher, reads would be expected to =
+be
+> 18x(rawdiskrate) if the machine could handle it.
 >
-> John.
+> Also newer disks are faster than older disks.
 >
+> 1.5tb disks read/write at 125-130+ MB/second on a fast port.
+> 1.5tb disks read/write at 75-80 MB/second on a PCI-32bit/33mhz port.
+> 500gb disks read/write at 75-80 MB/second on a PCI-32bit/33mhz port.
+> 250gb disks read/write at 50-55 MB/second on a fast port.
+>
+> And those PCI-32bit/33mhz ports are with only a single disk, put more=
+ than
+> one on there, and the io rates drop...so 2 disk on pci-32bit/33mhz (o=
+ld PCI)
+> port will have <50MB/second each no matter how fast the disk is, put =
+3 on
+> there and each disk is down to 33mhz, 4 25MB/second or less.
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid"=
  in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
 >
 
-
-
---=20
-       Majed B.
+Speaking of 16x 16 port cards, why is it that it's so difficult to
+find an 8 or 16 port 4 or 8/16x pcie adapter?  A good 1xpci-e to 2x
+SATA costs like 25 to 50 USD.  Given the reduction in duplicate
+components, it should not be hard to make a card with 8 ports for 100
+USD or less right?  I don't even want any intelligence, just normal
+disk to PCI-E lane connectin would be fine.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
