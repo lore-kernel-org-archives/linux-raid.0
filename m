@@ -1,60 +1,65 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
+From: Roger Heflin <rogerheflin@gmail.com>
 Subject: Re: Typical RAID5 transfer speeds
-Date: Sun, 20 Dec 2009 09:03:44 -0700
-Message-ID: <200912200903.44435.tfjellstrom@shaw.ca>
-References: <B26AD6F5-45F6-4CC6-AE63-E4253E60076C@mac.com> <200912200255.16513.tfjellstrom@shaw.ca> <4B2E3A54.5050009@tomt.net>
-Reply-To: tfjellstrom@shaw.ca
+Date: Sun, 20 Dec 2009 12:28:43 -0600
+Message-ID: <4B2E6CDB.3000707@gmail.com>
+References: <B26AD6F5-45F6-4CC6-AE63-E4253E60076C@mac.com>	 <4B2D4731.3090702@gmail.com> <4877c76c0912192021s2c3da63au57f5dcb0391b3eb3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B2E3A54.5050009@tomt.net>
+In-Reply-To: <4877c76c0912192021s2c3da63au57f5dcb0391b3eb3@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Andre Tomt <andre@tomt.net>
-Cc: Michael Evans <mjevans1983@gmail.com>, Roger Heflin <rogerheflin@gmail.com>, Matt Tehonica <matt.tehonica@mac.com>, linux-raid@vger.kernel.org
+To: Michael Evans <mjevans1983@gmail.com>
+Cc: Matt Tehonica <matt.tehonica@mac.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun December 20 2009, Andre Tomt wrote:
-> On 20.12.2009 10:55, Thomas Fjellstrom wrote:
-> > While the driver support isn't "perfect"*, I have an AOC-SASLP-MV8, a 2
-> > port SAS 4x PCI-e card. (with SAS->SATA converters, its an 8 port SATA
-> > card)
-> >
-> > When I was running some tests on individual drives, and watching
-> > iostat, I saw over 500MB/s combined throughput, and that was with only
-> > 5 drives. Theoretically it should be capable of 1GB/s given its a x4
-> > card. Theoretically.
-> >
-> > At the very least, the card should be more than capable of providing
-> > enough bandwidth for all 8 ports to be filled with regular mechanical
-> > hard drives (sans port expanders).
+Michael Evans wrote:
+> On Sat, Dec 19, 2009 at 1:35 PM, Roger Heflin <rogerheflin@gmail.com> wrote:
+>> Matt Tehonica wrote:
+>>> I have a 4 disk RAID5 using a 2048K chunk size and using XFS filesystem.
+>>>  Typical file size is about 2GB-5GB. I usually get around 50MB/sec transfer
+>>> speed when writting files to the array. Is this typcial or is it below
+>>> normal?  A friend has a 20 disk RAID6 using the same filesystem and chunk
+>>> size and gets around 150MB/sec. Any input on this??
+>>>
+>>> Thanks,
+>>> Matt
+>> Speed depends on how the disks are connected to the system, and how many
+>> disks there are per connection, and what kind of disks they are.
+>>
+>> If your friend had a 20 disk raid6 on one 4port sata pci-32bit/33mhz card
+>> with port multipliers his total throughput would be <110mb/second reads or
+>> writes, if your friend had 20 disks on 10+ port pcie-x16 cards his total
+>> possible speed would be much much higher, reads would be expected to be
+>> 18x(rawdiskrate) if the machine could handle it.
+>>
+>> Also newer disks are faster than older disks.
+>>
+>> 1.5tb disks read/write at 125-130+ MB/second on a fast port.
+>> 1.5tb disks read/write at 75-80 MB/second on a PCI-32bit/33mhz port.
+>> 500gb disks read/write at 75-80 MB/second on a PCI-32bit/33mhz port.
+>> 250gb disks read/write at 50-55 MB/second on a fast port.
+>>
+>> And those PCI-32bit/33mhz ports are with only a single disk, put more than
+>> one on there, and the io rates drop...so 2 disk on pci-32bit/33mhz (old PCI)
+>> port will have <50MB/second each no matter how fast the disk is, put 3 on
+>> there and each disk is down to 33mhz, 4 25MB/second or less.
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
 > 
-> Having tried it connected directly to the north bridge, it seems to top
-> out at ~650-700MB/s (also using Windows driver). Which is not too bad
-> for a pcie 1.0 x4 card, but unfortunatly will only manage to saturate
-> about ~5 modern mechanical drives (currently at 120-130MB/s each for
-> SATA 7200rpm), if high sequential performance is all you're looking for.
-> 
-> Currently I solved that by having 4 drives from the array on that card,
-> and populating the last four ports with with drives that are seldomly
-> used and when used get mostly random i/o but still needs a port ;-)
-> 
-> Still good value for money, indeed.
-
-I tried it on windows, and the tests were abysmal. worse than anything linux 
-gave. Maybe it was windows's dynamic disks raid sucking, but it was 
-horrible. I ran a disk benchmark test on it, and the whole suite of tests 
-should have been able to finish after 12 hours, but after about 24, it 
-wasn't even done the first read test.
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Speaking of 16x 16 port cards, why is it that it's so difficult to
+> find an 8 or 16 port 4 or 8/16x pcie adapter?  A good 1xpci-e to 2x
+> SATA costs like 25 to 50 USD.  Given the reduction in duplicate
+> components, it should not be hard to make a card with 8 ports for 100
+> USD or less right?  I don't even want any intelligence, just normal
+> disk to PCI-E lane connectin would be fine.
 > 
 
+I am pretty sure it is lack of need.
 
--- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
+I believe someone mentioned supermicro has a 8 port pcie-x4 card, that 
+is in the $100 range, but the driver for it is kind of new and has 
+some issues at this time.
