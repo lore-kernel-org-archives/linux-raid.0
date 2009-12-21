@@ -1,75 +1,35 @@
 From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Typical RAID5 transfer speeds
-Date: Mon, 21 Dec 2009 14:06:21 +0100
-Message-ID: <87d428o4s2.fsf@frosties.localdomain>
-References: <F7.42.01550.D172D2B4@cdptpa-omtalb.mail.rr.com>
+Subject: Re: Booting from RAID1
+Date: Mon, 21 Dec 2009 14:15:18 +0100
+Message-ID: <878wcwo4d5.fsf@frosties.localdomain>
+References: <E7.83.01470.A77BD2B4@cdptpa-omtalb.mail.rr.com>
+	<4877c76c0912192243x5d7281begc9a94242d476a20f@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <F7.42.01550.D172D2B4@cdptpa-omtalb.mail.rr.com> (Leslie Rhorer's
-	message of "Sat, 19 Dec 2009 13:18:50 -0600")
+In-Reply-To: <4877c76c0912192243x5d7281begc9a94242d476a20f@mail.gmail.com>
+	(Michael Evans's message of "Sat, 19 Dec 2009 22:43:45 -0800")
 Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lrhorer@satx.rr.com>
-Cc: linux-raid@vger.kernel.org
+To: Michael Evans <mjevans1983@gmail.com>
+Cc: Leslie Rhorer <lrhorer@satx.rr.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-"Leslie Rhorer" <lrhorer@satx.rr.com> writes:
+Michael Evans <mjevans1983@gmail.com> writes:
 
->> On 19/12/2009 01:05, Bernd Schubert wrote:
->> > On Saturday 19 December 2009, Matt Tehonica wrote:
->> >> I have a 4 disk RAID5 using a 2048K chunk size and using XFS
->> >
->> > 4 disks is a bad idea. You should have 2^n data disks, but you have 2^1
->> + 1 =
->> > 3 data disks. As parity information are calculated in the power of two
->> and
->> > blocks are written in the power of two
->> 
->> Sorry, but where did you get that from? p = d1 xor d2 xor d3 has nothing
->> to do with powers of two, and I'm sure blocks are written whenever they
->> need to be, not in powers of two.
+> Advice point 2; which my howto should mention: For boot devices you'll
+> probably want to use the 1.0 mdadm label format (not 1.1 or 1.2, which
+> are the same but change where the label is stored) for just the boot
+> raid 1.0 only.  It will also mention some things you should be extra
+> careful about...
 >
-> 	Yeah, I was scratching my head over that one, too.  It sounded bogus
-> to me, but I didn't want to open my mouth, so to speak, when I was unsure of
-> myself.  Being far from expert in the matter, I can't be certain, but I
-> surely can think of no reason why writes would occur in powers of two, or
-> even be more efficient because of it.
-
-But d1/2/3 and p are 2^n bytes large. So a stripe is 3*2^n byte while
-the filesystem alignes its data to 2^m boundaries usualy.
-
-So writes of 1/2/4/8/16/32/64 MB sequentially are more likely than
-3/6/12/24/48 MB. Often a (large) write will have a partial stripe at
-the start and end of the request.
-
->> > you probably have read operations,
->> > when you only want to write.
->> 
->> That will depend on how much data you're trying to write. With 3 data
->> discs and a 2M chunk size, writes in multiples of 6M won't need reads.
-
-That assumes the filesystem puts a 6M sequential write to 6M
-sequential blocks. I.e. is not fragmented. That never lasts long.
-
->> Writing a 25M file would therefore write 4 stripes and need to read to
->> do the last 1M. With 4 data discs, it'd be 8M multiples, and you'd write
->> 3 stripes and need a read to do the last 1M. No difference.
+> Like mounting the bare devices in that raid set by mistake.
 >
-> 	I hadn't really considered this before, and I am curious.  Of course
-> there is no reason for md to read a stripe marked as being in use if the
-> data to be written will fill an entire stripe.  However, does it only apply
-> this logic if the data will completely fill a stripe?  The most efficient
-> use of disk space of course will be accomplished if the system reads the
-> potential partially used target stripe whenever the write buffer contains
-> even 1 chunk less than a full stripe, but the most efficient write speeds
-> will only check on writing to a partially used stripe if the write buffer
-> contains less than half a stripe worth of data.  Does anyone know which is
-> the case?
+> Oh, and you'll also very likely want grub to read the /boot
+> filesystem, which is why it must be on a partition followed by the
+> raid header, instead of a partition containing a raid header and raid
+> protected partition.  That use is OK since grub operates read-only.
 
-I only know that in the raid6 case it always reads all data blocks and
-recomputes the parity while raid5 iirc can update the parity by xoring
-the old and new data block without having to read all data blocks of a
-stripe. But I have no idea where the cutoff would be for this.
+How far is the support for all superblock formats in grub2?
 
 MfG
         Goswin
