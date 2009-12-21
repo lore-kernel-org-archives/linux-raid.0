@@ -1,71 +1,65 @@
 From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: RAID-5 degraded mode question
-Date: Mon, 21 Dec 2009 13:41:28 +0100
-Message-ID: <87ljgwo5xj.fsf@frosties.localdomain>
-References: <AC5E1C3367E37D44970B81A6ADD1DA2C087E7E75@SDCEXCHANGE01.ad.amcc.com>
-	<20091216211237.GA16981@cthulhu.home.robinhill.me.uk>
-	<AC5E1C3367E37D44970B81A6ADD1DA2C087E7EA7@SDCEXCHANGE01.ad.amcc.com>
+Subject: Re: Raid 10 LVM JFS Seeking performance help
+Date: Mon, 21 Dec 2009 13:56:44 +0100
+Message-ID: <87hbrko583.fsf@frosties.localdomain>
+References: <7eea85cf0912171549u58a4c64foc4cb96a388ddbd06@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AC5E1C3367E37D44970B81A6ADD1DA2C087E7EA7@SDCEXCHANGE01.ad.amcc.com>
-	(Tirumala Reddy Marri's message of "Wed, 16 Dec 2009 13:29:21 -0800")
+In-Reply-To: <7eea85cf0912171549u58a4c64foc4cb96a388ddbd06@mail.gmail.com>
+	(Chris's message of "Thu, 17 Dec 2009 15:49:18 -0800")
 Sender: linux-raid-owner@vger.kernel.org
-To: Tirumala Reddy Marri <tmarri@amcc.com>
-Cc: Robin Hill <robin@robinhill.me.uk>, linux-raid@vger.kernel.org
+To: Chris <cmtimegn@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-"Tirumala Reddy Marri" <tmarri@amcc.com> writes:
+Chris <cmtimegn@gmail.com> writes:
 
-> Thanks for the response.
+> I have a pair of servers serving 10MB-100MB files.=C2=A0 Each server =
+has
+> 12x 7200 SaS 750GB Drives.=C2=A0 When I look at iostat I see the avgr=
+q-sz
+> is 8.0 always.=C2=A0 I think this has to do with the fact my LVM PE S=
+ize is
+> 4096 with JFS on top of that.=C2=A0=C2=A0=C2=A0 Best I can tell the f=
+act I have so
+> many rrqm/s is not great and the reason I have that many is because m=
+y
+> avgrq-sz is 8.0.=C2=A0 I have been trying to grasp how I should come =
+up
+> with the best chunk and PE for more performance.
 >
->>>  Also as soon as disk failed md drivers marks that drive as faulty
-> and 
->>> continue operation in degraded mode right ? Is there a way to get out
->
->>> the degraded mode without adding spare drive. Assuming we have 5 disk
->
->>> system with one failed drive.
->>> 
->>I'm not sure what you want to happen here.  The only way to get out of
-> degraded mode is to replace the drive in the >array (if it's not
-> actually faulty then you can add it back, otherwise you need to add a
-> new drive).
->>What were you thinking might happen otherwise?
->
->
-> I was thinking we can recover from this using re-sync or resize .After
+> Switch from n2 to f2 raid10?
+> How do I calculate where I need to go from here with Chunk Size and P=
+E size?
 
-Theoretically you could shrink the array by one disk and then use that
-spare disk to resync the parity. But that is a lengthy process with a
-lot higher failure chance than resyncing to a new disk. Note that you
-also need to shrink the filesystem on the raid first adding even more
-stress and failure chance. So I really wouldn't recommend that.
+2 far copies means each disk is split into 2 partitions, lets call
+them sda1/2, sdb1/2, ... Then sda1, sdb2 form a raid1 (md1) and sdb1,
+sdc2 form a second raid1 (md2), ..... Last md1, md2, ... are combined
+as raid0. That all is done internaly and more flexible. The above is
+just so you can visualize the layout. Writes will always go to sdX1
+and sd(X+1)2. Reads should always go to sdX1, which is usualy the
+faster part on rotating disks.
 
-> running IO to degraded (RAID-5) /dev/md0, I am seeing an issue where
-> e2fsck reports inconsistent file system and corrects it. I am trying to
-> debug  to see if the issue is because of data not being written or
-> reading wrong data in degraded mode. 
->
-> I guess problem happening during the write. Reason is , after ran e2fsck
-> I don't see inconsistency any more.
->
-> Regards,
-> Marri
+You need to optimize the raid0 part and, probably way more important,
+the alignment of your data access. If everything is aligned nicely
+each request should be fully serviced by a single disk given your
+small request size. And the seeks should be evenly spread out between
+the disks with each disk seeking every 12 reads or twice every 6
+writes (or less). Check if you are seeking more than is expected.
 
-A degraded raid5 might get corrupted if your system crashes. If you
-are writing to one of the remaining disks then it also needs to update
-the parity block simultaneously. If it crashed between writing the
-data and the parity then the data block on the failed drive will
-appear changed. I'm not sure though if the raid will even assemble on
-its own in such a case though. It might just complain about not having
-enough in-sync disks.
-
-Apart from that there should never be any corruption unless one of
-your disks returns bad data on read.
+Also, on a lower level, make sure your raid does not start on a
+partition starting at sector 63 (which is still the default in many
+partitioning progs). That easily results in bad alignment causing 4k
+chunks to land on 2 sectors. But you need to test that with your
+specific drive to see if it really is a problem.
 
 MfG
         Goswin
 
-PS: This is not a bug in linux raid but a fundamental limitation of
-raid.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
