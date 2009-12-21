@@ -1,39 +1,76 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: metadata update
-Date: Mon, 21 Dec 2009 09:11:47 +1100
-Message-ID: <20091221091147.743fd728@notabene.brown>
-References: <4B2CC25F.1090308@1und1.de>
+From: Michael Evans <mjevans1983@gmail.com>
+Subject: Re: Booting from RAID1
+Date: Sun, 20 Dec 2009 16:39:04 -0800
+Message-ID: <4877c76c0912201639q6afb2c36m6eb374f87d5188fc@mail.gmail.com>
+References: <4877c76c0912200115q4c91512cj119ff23f7d662d16@mail.gmail.com>
+	 <67.C8.01567.DC44E2B4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B2CC25F.1090308@1und1.de>
+In-Reply-To: <67.C8.01567.DC44E2B4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jakob-Tobias Winter <jakob-tobias.winter@1und1.de>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Leslie Rhorer <lrhorer@satx.rr.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 19 Dec 2009 13:09:03 +0100
-Jakob-Tobias Winter <jakob-tobias.winter@1und1.de> wrote:
+On Sun, Dec 20, 2009 at 7:37 AM, Leslie Rhorer <lrhorer@satx.rr.com> wr=
+ote:
+>> >> Oh, and you'll also very likely want grub to read the /boot
+>> >> filesystem, which is why it must be on a partition followed by th=
+e
+>> >> raid header, instead of a partition containing a raid header and =
+raid
+>> >> protected partition. =A0That use is OK since grub operates read-o=
+nly.
+>> >
+>> > =A0 =A0 =A0 =A0I think I follow you, here. =A0IOW, partition the d=
+rive, create the
+>> md
+>> > target, and then format the RAID array, right? =A0Or are you sayin=
+g one
+>> should
+>> > format the partition and then create the RAID array on top of it?
+>> >
+>> >
+>>
+>> It works much more cleanly if you create the RAID array first, and
+>> then use the container it provides;
+>
+> =A0 =A0 =A0 =A0Now I definitely don't follow you. =A0Are you saying o=
+ne should create
+> an array from the raw drive, partition it, format the first partition=
+, then
+> create secondary arrays from the second and third partition, and fina=
+lly
+> format the second and third array?
+>
+>> this way the end of your file-system does not overlap the raid super=
+-
+>> block.
+>
+> =A0 =A0 =A0 =A0I can follow that - there's a danger of wiping or movi=
+ng the mdadm
+> superblock if it is contained in the filesystem, but it seems to me
+> partitioning the drive and then creating the array from a partition, =
+as I
+> first suggested, will accomplish that just fine.
+>
+>
 
-> Hey there,
-> 
-> my raidsets are still using 0.91 and I might want to upgrade to the
-> newer metadata. - The system is running kernel 2.6.32.1 x86_64 with
-> mdadm v3.0.3.
+It is an option to partition it after the fact; however generally it's
+better to partition it first, and then apply whatever raid level you
+like to each partition.
 
-0.91 is only used during a reshape - e.g. adding a device to a RAID5.
-Once the reshape completes it will revert to 0.90.
-
-> 
-> Are there benefits to upgrading or should I stay with my current
-> metadata version?
-
-You cannot upgrade the metadata on an array.  You can only create a new array
-with new metadata.
-If you create a new array with current mdadm you will get v1.1 metadata.
-
-If what you have works, there is no need to change it.
-
-NeilBrown
-
+You misunderstand on the second half; the danger is that both the
+'filesystem' and 'mdadm superblock' attempt to use the whole device.
+That may appear to work for a while, but there is danger that the
+filesystem could grow and store data in the same place the mdadm
+superblock is; depending on if the filesystem or mdadm then filesystem
+within the device was used this will either fail, or destroy the raid
+information block.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
