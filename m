@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 06/13] imsm: cleanup print_imsm_dev()
-Date: Tue, 22 Dec 2009 16:59:50 -0700
-Message-ID: <20091222235950.31628.7990.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 07/13] mdmon: cleanup manage_member() leak
+Date: Tue, 22 Dec 2009 16:59:55 -0700
+Message-ID: <20091222235955.31628.72779.stgit@dwillia2-linux.ch.intel.com>
 References: <20091222235807.31628.23231.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,51 +13,129 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com
 List-Id: linux-raid.ids
 
-When printing the migration state there is no need to print "migrating".
-The fact that the state is non-idle should be enough indication.
+free() the results of activate_spare().
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
 
- super-intel.c |   19 ++++++++++---------
- 1 files changed, 10 insertions(+), 9 deletions(-)
+ managemon.c |   85 ++++++++++++++++++++++++++++++++++++-----------------------
+ 1 files changed, 52 insertions(+), 33 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index 2d5796f..ab8172d 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -669,23 +669,24 @@ static void print_imsm_dev(struct imsm_dev *dev, char *uuid, int disk_idx)
- 	printf("     Chunk Size : %u KiB\n",
- 		__le16_to_cpu(map->blocks_per_strip) / 2);
- 	printf("       Reserved : %d\n", __le32_to_cpu(dev->reserved_blocks));
--	printf("  Migrate State : %s", dev->vol.migr_state ? "migrating" : "idle\n");
-+	printf("  Migrate State : ");
- 	if (dev->vol.migr_state) {
- 		if (migr_type(dev) == MIGR_INIT)
--			printf(": initializing\n");
-+			printf("initialize\n");
- 		else if (migr_type(dev) == MIGR_REBUILD)
--			printf(": rebuilding\n");
-+			printf("rebuild\n");
- 		else if (migr_type(dev) == MIGR_VERIFY)
--			printf(": check\n");
-+			printf("check\n");
- 		else if (migr_type(dev) == MIGR_GEN_MIGR)
--			printf(": general migration\n");
-+			printf("general migration\n");
- 		else if (migr_type(dev) == MIGR_STATE_CHANGE)
--			printf(": state change\n");
-+			printf("state change\n");
- 		else if (migr_type(dev) == MIGR_REPAIR)
--			printf(": repair\n");
-+			printf("repair\n");
- 		else
--			printf(": <unknown:%d>\n", migr_type(dev));
--	}
-+			printf("<unknown:%d>\n", migr_type(dev));
-+	} else
-+		printf("idle\n");
- 	printf("      Map State : %s", map_state_str[map->map_state]);
- 	if (dev->vol.migr_state) {
- 		struct imsm_map *map = get_imsm_map(dev, 1);
+diff --git a/managemon.c b/managemon.c
+index 5958e18..19effe4 100644
+--- a/managemon.c
++++ b/managemon.c
+@@ -209,16 +209,22 @@ struct metadata_update *update_queue = NULL;
+ struct metadata_update *update_queue_handled = NULL;
+ struct metadata_update *update_queue_pending = NULL;
+ 
+-void check_update_queue(struct supertype *container)
++static void free_updates(struct metadata_update **update)
+ {
+-	while (update_queue_handled) {
+-		struct metadata_update *this = update_queue_handled;
+-		update_queue_handled = this->next;
++	while (*update) {
++		struct metadata_update *this = *update;
++
++		*update = this->next;
+ 		free(this->buf);
+-		if (this->space)
+-			free(this->space);
++		free(this->space);
+ 		free(this);
+ 	}
++}
++
++void check_update_queue(struct supertype *container)
++{
++	free_updates(&update_queue_handled);
++
+ 	if (update_queue == NULL &&
+ 	    update_queue_pending) {
+ 		update_queue = update_queue_pending;
+@@ -376,8 +382,9 @@ static void manage_member(struct mdstat_ent *mdstat,
+ 
+ 	if (a->check_degraded) {
+ 		struct metadata_update *updates = NULL;
+-		struct mdinfo *newdev;
++		struct mdinfo *newdev = NULL;
+ 		struct active_array *newa;
++		struct mdinfo *d;
+ 
+ 		a->check_degraded = 0;
+ 
+@@ -385,34 +392,46 @@ static void manage_member(struct mdstat_ent *mdstat,
+ 		 * to check.
+ 		 */
+ 		newdev = a->container->ss->activate_spare(a, &updates);
+-		if (newdev) {
+-			struct mdinfo *d;
+-			/* Cool, we can add a device or several. */
+-			newa = duplicate_aa(a);
+-			/* suspend recovery - maybe not needed */
+-
+-			/* Add device to array and set offset/size/slot.
+-			 * and open files for each newdev */
+-			for (d = newdev; d ; d = d->next) {
+-				struct mdinfo *newd;
+-				if (sysfs_add_disk(&newa->info, d, 0) < 0)
+-					continue;
+-				newd = malloc(sizeof(*newd));
+-				*newd = *d;
+-				newd->next = newa->info.devs;
+-				newa->info.devs = newd;
+-
+-				newd->state_fd = sysfs_open(a->devnum,
+-							    newd->sys_name,
+-							    "state");
+-				newd->prev_state
+-					= read_dev_state(newd->state_fd);
+-				newd->curr_state = newd->prev_state;
++		if (!newdev)
++			return;
++
++		newa = duplicate_aa(a);
++		if (!newa)
++			goto out;
++		/* Cool, we can add a device or several. */
++
++		/* Add device to array and set offset/size/slot.
++		 * and open files for each newdev */
++		for (d = newdev; d ; d = d->next) {
++			struct mdinfo *newd;
++
++			newd = malloc(sizeof(*newd));
++			if (!newd)
++				continue;
++			if (sysfs_add_disk(&newa->info, d, 0) < 0) {
++				free(newd);
++				continue;
+ 			}
+-			queue_metadata_update(updates);
+-			replace_array(a->container, a, newa);
+-			sysfs_set_str(&a->info, NULL, "sync_action", "recover");
++			*newd = *d;
++			newd->next = newa->info.devs;
++			newa->info.devs = newd;
++
++			newd->state_fd = sysfs_open(a->devnum, newd->sys_name,
++						    "state");
++			newd->prev_state = read_dev_state(newd->state_fd);
++			newd->curr_state = newd->prev_state;
++		}
++		queue_metadata_update(updates);
++		updates = NULL;
++		replace_array(a->container, a, newa);
++		sysfs_set_str(&a->info, NULL, "sync_action", "recover");
++ out:
++		while (newdev) {
++			d = newdev->next;
++			free(newdev);
++			newdev = d;
+ 		}
++		free_updates(&updates);
+ 	}
+ }
+ 
 
