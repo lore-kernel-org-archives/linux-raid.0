@@ -1,53 +1,48 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: smartchecks of raid members
-Date: Tue, 22 Dec 2009 00:45:07 +0000
-Message-ID: <4B301693.3070905@anonymous.org.uk>
-References: <1261429250.7944.2249.camel@ezra>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH] md: make recovery started by do_md_run() visible via
+	sync_action
+Date: Mon, 21 Dec 2009 18:18:36 -0700
+Message-ID: <20091222011305.27523.26165.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1261429250.7944.2249.camel@ezra>
 Sender: linux-raid-owner@vger.kernel.org
-To: Daniel Reurich <daniel@centurion.net.nz>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de
+Cc: ed.ciechanowski@intel.com, marcin.labun@intel.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 21/12/2009 21:00, Daniel Reurich wrote:
-> Is it safe and can it easily be done to put a raid1 member volume into
-> "write mostly && write behind" mode temporarily while doing a SMART full
-> disk check on that disk?
+By default md_do_sync() will perform recovery if no other actions are
+specified.  However, action_show() relies on MD_RECOVERY_RECOVER to be
+set otherwise it returns 'idle'.  So, add a missing set
+MD_RECOVERY_RECOVER when starting recovery.
 
-A little Googling reveals this slightly old blog post from Neil Brown 
-http://neil.brown.name/blog/20050727141521-011 which says:
-> If you write "writemostly" to /sys/mdX/md/dev-YYYY/state it will turn on write-mostly for that device. You can turn it off with "-writemostly".
-> 
-> "Writebehind" is a function of the bitmap. You cannot current change this directly online, but you can remove the current bitmap and add a new one with write-behind enabled. 
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+Hi Neil,
 
-Sounds like write-mostly is easy enough to enable on-the-fly while 
-write-behind is trickier and risks more - if you need a bitmap, you 
-probably don't want to be removing it on a running server. Also, iirc 
-there was a buglet which could cause an oops when removing a bitmap due 
-to a race condition, though iirc again that's been found and fixed recently.
+One more to finish off recovery checkpoint support.  Without this mdmon
+never notices that the array was rebuilding and never marks the
+completion.  I did not see any urgency to workaround this in the mdadm
+patchset, but let me know if you think a "kernel version > 2.6.33-rcX"
+check is warranted.
 
-Resuming what Daniel Reurich wrote:
-> I believe this may help with the smart check as it stops the
-> interruptions caused by reads from the disk, and the writes will be
-> delayed and hopefully committed in larger chunks less often.  I also
-> this will allow the server to perform better by not blocking until the
-> writes on the disk being checked return.
-> 
-> Is the only risk the delay between a write being completed as far as the
-> process is concerned and the write being committed to the disk being
-> smart checked?
+Thanks,
+Dan
 
-Well, yes, but that risk is reducing your redundancy while you thrash 
-one of your disks. I think if I were you I might try only enabling 
-write-mostly to see if that got the S.M.A.R.T. disc check done quickly 
-enough while the server was quietish, and perhaps only checking one disc 
-per quiet period.
+ drivers/md/md.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Cheers,
-
-John.
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 1cc5f2d..fa93de0 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -4286,6 +4286,7 @@ static int do_md_run(mddev_t * mddev)
+ 		if (spares && mddev->pers->sync_request) {
+ 			mddev->recovery = 0;
+ 			set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
++			set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+ 			mddev->sync_thread = md_register_thread(md_do_sync,
+ 								mddev,
+ 								"resync");
 
