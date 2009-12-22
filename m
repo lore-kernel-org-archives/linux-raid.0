@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 01/13] imsm: catch attempt to auto-layout zero-length arrays
-Date: Tue, 22 Dec 2009 16:59:24 -0700
-Message-ID: <20091222235924.31628.63038.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 02/13] imsm: honor orom constraints for auto-layout
+Date: Tue, 22 Dec 2009 16:59:29 -0700
+Message-ID: <20091222235929.31628.32471.stgit@dwillia2-linux.ch.intel.com>
 References: <20091222235807.31628.23231.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,82 +13,92 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com
 List-Id: linux-raid.ids
 
-When -z is omitted reserve_space() looks to satisfy a zero length
-allocation which lo and behold is equal to the amount of free space on a
-full disk.  So, catch maxsize == 0 and simplify the return value from
-merge_extents() to always equal amount of free space (no benefit to
-having a special case ~0ULL == error).
+Factor out the orom checking bits to validate_geometry_imsm_orom() and
+share it between validate_geometry_imsm_volume() and the entry path to
+reserve_space().
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
 
- super-intel.c |   21 ++++++++++++---------
- 1 files changed, 12 insertions(+), 9 deletions(-)
+ super-intel.c |   52 +++++++++++++++++++++++++++++++++-------------------
+ 1 files changed, 33 insertions(+), 19 deletions(-)
 
 diff --git a/super-intel.c b/super-intel.c
-index 2e119f8..6fe5e0d 100644
+index 6fe5e0d..4372ab4 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -3333,7 +3333,7 @@ static unsigned long long merge_extents(struct intel_super *super, int sum_exten
- 	unsigned long reserve;
+@@ -3421,6 +3421,34 @@ static int is_raid_level_supported(const struct imsm_orom *orom, int level, int
+ }
  
- 	if (!e)
--		return ~0ULL; /* error */
+ #define pr_vrb(fmt, arg...) (void) (verbose && fprintf(stderr, Name fmt, ##arg))
++static int
++validate_geometry_imsm_orom(struct intel_super *super, int level, int layout,
++			    int raiddisks, int chunk, int verbose)
++{
++	if (!is_raid_level_supported(super->orom, level, raiddisks)) {
++		pr_vrb(": platform does not support raid%d with %d disk%s\n",
++			level, raiddisks, raiddisks > 1 ? "s" : "");
 +		return 0;
- 
- 	/* coalesce and sort all extents. also, check to see if we need to
- 	 * reserve space between member arrays
-@@ -3376,17 +3376,23 @@ static unsigned long long merge_extents(struct intel_super *super, int sum_exten
- 	} while (e[i-1].size);
- 	free(e);
- 
-+	if (maxsize == 0)
++	}
++	if (super->orom && level != 1 &&
++	    !imsm_orom_has_chunk(super->orom, chunk)) {
++		pr_vrb(": platform does not support a chunk size of: %d\n", chunk);
 +		return 0;
++	}
++	if (layout != imsm_level_to_layout(level)) {
++		if (level == 5)
++			pr_vrb(": imsm raid 5 only supports the left-asymmetric layout\n");
++		else if (level == 10)
++			pr_vrb(": imsm raid 10 only supports the n2 layout\n");
++		else
++			pr_vrb(": imsm unknown layout %#x for this raid level %d\n",
++				layout, level);
++		return 0;
++	}
 +
-+	/* FIXME assumes volume at offset 0 is the first volume in a
-+	 * container
-+	 */
- 	if (start_extent > 0)
- 		reserve = IMSM_RESERVED_SECTORS; /* gap between raid regions */
- 	else
- 		reserve = 0;
- 
- 	if (maxsize < reserve)
--		return ~0ULL;
-+		return 0;
- 
- 	super->create_offset = ~((__u32) 0);
- 	if (start + reserve > super->create_offset)
--		return ~0ULL; /* start overflows create_offset */
-+		return 0; /* start overflows create_offset */
- 	super->create_offset = start + reserve;
- 
- 	return maxsize - reserve;
-@@ -3569,15 +3575,11 @@ static int validate_geometry_imsm_volume(struct supertype *st, int level,
- 			i += dl->extent_cnt;
- 
- 	maxsize = merge_extents(super, i);
--	if (maxsize < size) {
-+	if (maxsize < size || maxsize == 0) {
- 		if (verbose)
- 			fprintf(stderr, Name ": not enough space after merge (%llu < %llu)\n",
- 				maxsize, size);
++	return 1;
++}
++
+ /* validate_geometry_imsm_volume - lifted from validate_geometry_ddf_bvd 
+  * FIX ME add ahci details
+  */
+@@ -3443,26 +3471,8 @@ static int validate_geometry_imsm_volume(struct supertype *st, int level,
+ 	if (!super)
  		return 0;
--	} else if (maxsize == ~0ULL) {
--		if (verbose)
--			fprintf(stderr, Name ": failed to merge %d extents\n", i);
+ 
+-	if (!is_raid_level_supported(super->orom, level, raiddisks)) {
+-		pr_vrb(": platform does not support raid%d with %d disk%s\n",
+-			level, raiddisks, raiddisks > 1 ? "s" : "");
++	if (!validate_geometry_imsm_orom(super, level, layout, raiddisks, chunk, verbose))
+ 		return 0;
+-	}
+-	if (super->orom && level != 1 &&
+-	    !imsm_orom_has_chunk(super->orom, chunk)) {
+-		pr_vrb(": platform does not support a chunk size of: %d\n", chunk);
 -		return 0;
- 	}
+-	}
+-	if (layout != imsm_level_to_layout(level)) {
+-		if (level == 5)
+-			pr_vrb(": imsm raid 5 only supports the left-asymmetric layout\n");
+-		else if (level == 10)
+-			pr_vrb(": imsm raid 10 only supports the n2 layout\n");
+-		else
+-			pr_vrb(": imsm unknown layout %#x for this raid level %d\n",
+-				layout, level);
+-		return 0;
+-	}
  
- 	*freesize = maxsize;
-@@ -3634,7 +3636,8 @@ static int reserve_space(struct supertype *st, int raiddisks,
- 
- 	if (cnt < raiddisks ||
- 	    (super->orom && used && used != raiddisks) ||
--	    maxsize < minsize) {
-+	    maxsize < minsize ||
-+	    maxsize == 0) {
- 		fprintf(stderr, Name ": not enough devices with space to create array.\n");
- 		return 0; /* No enough free spaces large enough */
- 	}
+ 	if (!dev) {
+ 		/* General test:  make sure there is space for
+@@ -3689,6 +3699,10 @@ static int validate_geometry_imsm(struct supertype *st, int level, int layout,
+ 			 * created.  add_to_super and getinfo_super
+ 			 * detect when autolayout is in progress.
+ 			 */
++			if (!validate_geometry_imsm_orom(st->sb, level, layout,
++							 raiddisks, chunk,
++							 verbose))
++				return 0;
+ 			return reserve_space(st, raiddisks, size, chunk, freesize);
+ 		}
+ 		return 1;
 
