@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 05/13] util: fix devnum2devname for devnum == 0
-Date: Tue, 22 Dec 2009 16:59:45 -0700
-Message-ID: <20091222235945.31628.1713.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 06/13] imsm: cleanup print_imsm_dev()
+Date: Tue, 22 Dec 2009 16:59:50 -0700
+Message-ID: <20091222235950.31628.7990.stgit@dwillia2-linux.ch.intel.com>
 References: <20091222235807.31628.23231.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,25 +13,51 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com
 List-Id: linux-raid.ids
 
-devnum 0 is md0 no md_d-1
+When printing the migration state there is no need to print "migrating".
+The fact that the state is non-idle should be enough indication.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
 
- util.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ super-intel.c |   19 ++++++++++---------
+ 1 files changed, 10 insertions(+), 9 deletions(-)
 
-diff --git a/util.c b/util.c
-index a0e4bcf..d49a4ed 100644
---- a/util.c
-+++ b/util.c
-@@ -1210,7 +1210,7 @@ int set_array_info(int mdfd, struct supertype *st, struct mdinfo *info)
- char *devnum2devname(int num)
- {
- 	char name[100];
--	if (num > 0)
-+	if (num >= 0)
- 		sprintf(name, "md%d", num);
- 	else
- 		sprintf(name, "md_d%d", -1-num);
+diff --git a/super-intel.c b/super-intel.c
+index 2d5796f..ab8172d 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -669,23 +669,24 @@ static void print_imsm_dev(struct imsm_dev *dev, char *uuid, int disk_idx)
+ 	printf("     Chunk Size : %u KiB\n",
+ 		__le16_to_cpu(map->blocks_per_strip) / 2);
+ 	printf("       Reserved : %d\n", __le32_to_cpu(dev->reserved_blocks));
+-	printf("  Migrate State : %s", dev->vol.migr_state ? "migrating" : "idle\n");
++	printf("  Migrate State : ");
+ 	if (dev->vol.migr_state) {
+ 		if (migr_type(dev) == MIGR_INIT)
+-			printf(": initializing\n");
++			printf("initialize\n");
+ 		else if (migr_type(dev) == MIGR_REBUILD)
+-			printf(": rebuilding\n");
++			printf("rebuild\n");
+ 		else if (migr_type(dev) == MIGR_VERIFY)
+-			printf(": check\n");
++			printf("check\n");
+ 		else if (migr_type(dev) == MIGR_GEN_MIGR)
+-			printf(": general migration\n");
++			printf("general migration\n");
+ 		else if (migr_type(dev) == MIGR_STATE_CHANGE)
+-			printf(": state change\n");
++			printf("state change\n");
+ 		else if (migr_type(dev) == MIGR_REPAIR)
+-			printf(": repair\n");
++			printf("repair\n");
+ 		else
+-			printf(": <unknown:%d>\n", migr_type(dev));
+-	}
++			printf("<unknown:%d>\n", migr_type(dev));
++	} else
++		printf("idle\n");
+ 	printf("      Map State : %s", map_state_str[map->map_state]);
+ 	if (dev->vol.migr_state) {
+ 		struct imsm_map *map = get_imsm_map(dev, 1);
 
