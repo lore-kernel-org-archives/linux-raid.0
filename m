@@ -1,137 +1,95 @@
-From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: RAID-5 degraded mode question
-Date: Tue, 22 Dec 2009 13:59:27 -0800
-Message-ID: <4877c76c0912221359p658351d1ga7808c2217274525@mail.gmail.com>
-References: <AC5E1C3367E37D44970B81A6ADD1DA2C087E7E75@SDCEXCHANGE01.ad.amcc.com>
-	 <20091216211237.GA16981@cthulhu.home.robinhill.me.uk>
-	 <AC5E1C3367E37D44970B81A6ADD1DA2C087E7EA7@SDCEXCHANGE01.ad.amcc.com>
-	 <87ljgwo5xj.fsf@frosties.localdomain>
-	 <4877c76c0912212251j22a09138o4cb2f5fe84b9d13b@mail.gmail.com>
-	 <87aaxbruxf.fsf@frosties.localdomain>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: imsm woes (and a small bug in mdadm)
+Date: Tue, 22 Dec 2009 16:57:49 -0700
+Message-ID: <e9c3a7c20912221557p18bb5675ofb148af3164d7c9c@mail.gmail.com>
+References: <20091222175128.GA18191@maude.comedia.it>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87aaxbruxf.fsf@frosties.localdomain>
+In-Reply-To: <20091222175128.GA18191@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: Tirumala Reddy Marri <tmarri@amcc.com>, Robin Hill <robin@robinhill.me.uk>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Dec 22, 2009 at 5:37 AM, Goswin von Brederlow <goswin-v-b@web.d=
-e> wrote:
-> Michael Evans <mjevans1983@gmail.com> writes:
+On Tue, Dec 22, 2009 at 10:51 AM, Luca Berra <bluca@comedia.it> wrote:
+> Note for Neil/Dan:
+> This email could be long and boring, the attached patch prevents a
+> segfault on 3.0.3 and 3.1.1, at least have a look at it.
 >
->> On Mon, Dec 21, 2009 at 4:41 AM, Goswin von Brederlow <goswin-v-b@we=
-b.de> wrote:
->>> "Tirumala Reddy Marri" <tmarri@amcc.com> writes:
->>>
->>>> Thanks for the response.
->>>>
->>>>>> =A0Also as soon as disk failed md drivers marks that drive as fa=
-ulty
->>>> and
->>>>>> continue operation in degraded mode right ? Is there a way to ge=
-t out
->>>>
->>>>>> the degraded mode without adding spare drive. Assuming we have 5=
- disk
->>>>
->>>>>> system with one failed drive.
->>>>>>
->>>>>I'm not sure what you want to happen here. =A0The only way to get =
-out of
->>>> degraded mode is to replace the drive in the >array (if it's not
->>>> actually faulty then you can add it back, otherwise you need to ad=
-d a
->>>> new drive).
->>>>>What were you thinking might happen otherwise?
->>>>
->>>>
->>>> I was thinking we can recover from this using re-sync or resize .A=
-fter
->>>
->>> Theoretically you could shrink the array by one disk and then use t=
-hat
->>> spare disk to resync the parity. But that is a lengthy process with=
- a
->>> lot higher failure chance than resyncing to a new disk. Note that y=
-ou
->>> also need to shrink the filesystem on the raid first adding even mo=
-re
->>> stress and failure chance. So I really wouldn't recommend that.
->>>
->>>> running IO to degraded (RAID-5) /dev/md0, I am seeing an issue whe=
-re
->>>> e2fsck reports inconsistent file system and corrects it. I am tryi=
-ng to
->>>> debug =A0to see if the issue is because of data not being written =
-or
->>>> reading wrong data in degraded mode.
->>>>
->>>> I guess problem happening during the write. Reason is , after ran =
-e2fsck
->>>> I don't see inconsistency any more.
->>>>
->>>> Regards,
->>>> Marri
->>>
->>> A degraded raid5 might get corrupted if your system crashes. If you
->>> are writing to one of the remaining disks then it also needs to upd=
-ate
->>> the parity block simultaneously. If it crashed between writing the
->>> data and the parity then the data block on the failed drive will
->>> appear changed. I'm not sure though if the raid will even assemble =
-on
->>> its own in such a case though. It might just complain about not hav=
-ing
->>> enough in-sync disks.
->>>
->>> Apart from that there should never be any corruption unless one of
->>> your disks returns bad data on read.
->>>
->>> MfG
->>> =A0 =A0 =A0 =A0Goswin
->>>
->>> PS: This is not a bug in linux raid but a fundamental limitation of
->>> raid.
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
-l
->>>
->>
->> You're forgetting the every horrid possibility of failed/corrupted
->> hardware. =A0I've had IO cards go bad due to a prior bug that let an
->> experimental 'debugging' option in the kernel write to random memory
->> locations in the rare case of an unusual error. =A0Not just the
->> occasional rare chance of a buffer being corrupted, but the actual
->> hardware going bad. =A0One of the cards could not even be recovered =
-by
->> an attempt at software-flashing the firmware (it must have been too
->> far gone for the utility to recognize, and replacing it was the leas=
-t
->> expensive route remaining).
->>
->> However in general I've seen hardware that's actually failing will
->> tend to do so with enough grace to either outright refuse to operate=
-,
->> or operate with obvious and persistent symptoms.
+> Hello,
+> I have this system at home I use for dev/testing/leisure/whatever.
+> it has an asus mb with an embedded intel 82801 sata fakeraid (imsm) with
+> two WD10EADS 1T disks.
+> I created a mirrored container with two volumes, first one windows the
+> second linux.
+> Yesterday windows crashed, no surprise there, the surprise was that
+> after the crash the controller marked the first drive as failed, instead
+> of running the usual verify.
+> I readded the drive from the windows storage manager console, and since
+> it told me rebuild would take 50+ hours i decided to leave it going.
+> (the windows software is idiotic, it tries to rebuild both volumes in
+> parallel)
+> In the morning i found the drive failed rebuild, so i replaced it (will
+> do some tests on it and rma when i have spare time).
+> In order to avoid waiting 50 hours to see if it finished i decided to
+> try rebuilding it under linux, the linux box used dmraid instead of
+> mdadm and was obviously unable to boot (did i ever mention redhat/fedora
+> mkinitrd sucks).
+
+Things get better with dracut.
+
+> I booted linux from a rescue cd and rebuilt the raid using mdadm 3.0.2.
+> It took only 3 hours.
+> now real trouble started
+> After reboot the intel bios showed both drives as "Offline Member"
+> back to the rescue cd. mdadm 3.0.2 activated the container but the two
+> volumes were activated using only /dev/sda (NOTE: this is the new drive
+> i put in this same morning, not the old one)
+> Seeing that mdadm 3.0.3 had some fixes related to imsm i built that
+> instead and tried activating the array. unfortunately it segfaulted,
+> tried 3.1.1: same segfault
+> fire gdb, bt
+> found in super-intel.c around line 2430 a call to
+> disk_list_get with the serial of /dev/sdb as first argument, which fails
+> returning null.
+> created the attached patch and rebuilt mdadm.
+> still it activated the container with two drives and the volume with
+> only one.
+> i lost my patience and mdadm -r /dev/md/imsm0 /dev/sdb, mdadm -a ....
 >
-> And how is that relevant to the raid-5 being degraded? If the hardwar=
-e
-> goes bad you just get errors no matter what.
+> it is now rebuilding
 >
-> MfG
-> =A0 =A0 =A0 =A0Goswin
+> i still have to see what bios thinks of the raid when i reboot
 >
 
-It could be the reason the array degraded; but yes, if the hardware
-fails your data is lost/at extreme risk regardless.
+Everything looks back in order now, let me know if the bios/Windows
+has any problems with it.
+
+>
+> attached, besides the patch are
+> mdadm -Dsvv and mdadm -Esvv before and after the hot-remove-add, in case
+> someone has an idea about what might had happened.
+>
+
+Thanks for the report.  I hit that segfault recently as well, and your
+fix is correct.
+
+Is sdb the drive you replaced, or the original drive?  The 'before'
+record on sdb shows that it is a single disk array with only sda's
+serial number in the disk list(?), it also shows that sda has a higher
+generation number.  It looks like things are back on track with the
+latest code because we selected sda (highest generation number),
+omitted sdb because it was not part of sda's disk list, and modified
+the family number to mark the rebuild as the bios expects.
+
+The bios marked both disks as offline because they both wanted to be
+the same family number, but they had no information about each other
+in their records, so it needed user intervention to clear the
+conflict.  It would have been nice to see the state of the metadata
+after the crash, but before the old mdadm [1] touched it as I believe
+that is where the confusion started.
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dan
+
+[1]: http://git.kernel.org/?p=linux/kernel/git/djbw/mdadm.git;a=commitdiff;h=a2b9798159755b6f5e867fae0dd3e25af59fc85e
