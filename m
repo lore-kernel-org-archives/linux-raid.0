@@ -1,57 +1,137 @@
-From: Brett Russ <bruss@netezza.com>
-Subject: Re: bug/race in md causing device to wedge in busy state
-Date: Tue, 22 Dec 2009 16:48:53 -0500
-Message-ID: <hgres6$20r$1@ger.gmane.org>
-References: <4B2983AE.8020002@netezza.com>
+From: Michael Evans <mjevans1983@gmail.com>
+Subject: Re: RAID-5 degraded mode question
+Date: Tue, 22 Dec 2009 13:59:27 -0800
+Message-ID: <4877c76c0912221359p658351d1ga7808c2217274525@mail.gmail.com>
+References: <AC5E1C3367E37D44970B81A6ADD1DA2C087E7E75@SDCEXCHANGE01.ad.amcc.com>
+	 <20091216211237.GA16981@cthulhu.home.robinhill.me.uk>
+	 <AC5E1C3367E37D44970B81A6ADD1DA2C087E7EA7@SDCEXCHANGE01.ad.amcc.com>
+	 <87ljgwo5xj.fsf@frosties.localdomain>
+	 <4877c76c0912212251j22a09138o4cb2f5fe84b9d13b@mail.gmail.com>
+	 <87aaxbruxf.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B2983AE.8020002@netezza.com>
+In-Reply-To: <87aaxbruxf.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: Tirumala Reddy Marri <tmarri@amcc.com>, Robin Hill <robin@robinhill.me.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/16/2009 08:04 PM, Brett Russ wrote:
-> I'm seeing cases where an attempted remove of a manually faulted disk
-> from an existing RAID unit can fail with mdadm reporting "Device or
-> resource busy". I've reduced the problem down to the smallest set that
-> reliably reproduces the issue:
+On Tue, Dec 22, 2009 at 5:37 AM, Goswin von Brederlow <goswin-v-b@web.d=
+e> wrote:
+> Michael Evans <mjevans1983@gmail.com> writes:
 >
-> Starting with 2 drives (a,b), each with at least 3 partitions:
-> 1) create 3 raid1 md's on the drives using the 3 partitions
-> 2) fault & remove drive b from each of the 3 md's
-> 3) zero the superblock on b so it forgets where it came from (or use a
-> third drive c...) and add drive b back to each of the 3 md's
-> 4) fault & remove drive b from each of the 3 md's
+>> On Mon, Dec 21, 2009 at 4:41 AM, Goswin von Brederlow <goswin-v-b@we=
+b.de> wrote:
+>>> "Tirumala Reddy Marri" <tmarri@amcc.com> writes:
+>>>
+>>>> Thanks for the response.
+>>>>
+>>>>>> =A0Also as soon as disk failed md drivers marks that drive as fa=
+ulty
+>>>> and
+>>>>>> continue operation in degraded mode right ? Is there a way to ge=
+t out
+>>>>
+>>>>>> the degraded mode without adding spare drive. Assuming we have 5=
+ disk
+>>>>
+>>>>>> system with one failed drive.
+>>>>>>
+>>>>>I'm not sure what you want to happen here. =A0The only way to get =
+out of
+>>>> degraded mode is to replace the drive in the >array (if it's not
+>>>> actually faulty then you can add it back, otherwise you need to ad=
+d a
+>>>> new drive).
+>>>>>What were you thinking might happen otherwise?
+>>>>
+>>>>
+>>>> I was thinking we can recover from this using re-sync or resize .A=
+fter
+>>>
+>>> Theoretically you could shrink the array by one disk and then use t=
+hat
+>>> spare disk to resync the parity. But that is a lengthy process with=
+ a
+>>> lot higher failure chance than resyncing to a new disk. Note that y=
+ou
+>>> also need to shrink the filesystem on the raid first adding even mo=
+re
+>>> stress and failure chance. So I really wouldn't recommend that.
+>>>
+>>>> running IO to degraded (RAID-5) /dev/md0, I am seeing an issue whe=
+re
+>>>> e2fsck reports inconsistent file system and corrects it. I am tryi=
+ng to
+>>>> debug =A0to see if the issue is because of data not being written =
+or
+>>>> reading wrong data in degraded mode.
+>>>>
+>>>> I guess problem happening during the write. Reason is , after ran =
+e2fsck
+>>>> I don't see inconsistency any more.
+>>>>
+>>>> Regards,
+>>>> Marri
+>>>
+>>> A degraded raid5 might get corrupted if your system crashes. If you
+>>> are writing to one of the remaining disks then it also needs to upd=
+ate
+>>> the parity block simultaneously. If it crashed between writing the
+>>> data and the parity then the data block on the failed drive will
+>>> appear changed. I'm not sure though if the raid will even assemble =
+on
+>>> its own in such a case though. It might just complain about not hav=
+ing
+>>> enough in-sync disks.
+>>>
+>>> Apart from that there should never be any corruption unless one of
+>>> your disks returns bad data on read.
+>>>
+>>> MfG
+>>> =A0 =A0 =A0 =A0Goswin
+>>>
+>>> PS: This is not a bug in linux raid but a fundamental limitation of
+>>> raid.
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-rai=
+d" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
+l
+>>>
+>>
+>> You're forgetting the every horrid possibility of failed/corrupted
+>> hardware. =A0I've had IO cards go bad due to a prior bug that let an
+>> experimental 'debugging' option in the kernel write to random memory
+>> locations in the rare case of an unusual error. =A0Not just the
+>> occasional rare chance of a buffer being corrupted, but the actual
+>> hardware going bad. =A0One of the cards could not even be recovered =
+by
+>> an attempt at software-flashing the firmware (it must have been too
+>> far gone for the utility to recognize, and replacing it was the leas=
+t
+>> expensive route remaining).
+>>
+>> However in general I've seen hardware that's actually failing will
+>> tend to do so with enough grace to either outright refuse to operate=
+,
+>> or operate with obvious and persistent symptoms.
 >
-> The problem was originally seen sporadically during the remove part of
-> step 2, but is *very* reproducible in the remove part of step 4. I
-> attribute this to the fact that there's guaranteed I/O happening during
-> this step.
+> And how is that relevant to the raid-5 being degraded? If the hardwar=
+e
+> goes bad you just get errors no matter what.
 >
-> Now here's the catch. If I change step 4 to:
-> 4a) fault drive b from each of the 3 md's
-> 4b) remove drive b from each of the 3 md's
-> then the removes haven't yet been seen to fail with BUSY yet (i.e. no
-> issues).
+> MfG
+> =A0 =A0 =A0 =A0Goswin
 >
-> But my scripts currently do this instead for each md:
-> 4a) fault drive b from md
-> 4b) sleep 0-10 seconds
-> 4c) remove drive b md
-> which will fail on the remove from one of the md's, almost guaranteed.
-> It seems odd to me that no amount of sleeping in between these steps can
-> allow me to reliably remove a faulted member of an array.
 
-Neil et al,
-
-Would you expect to see a dependency across md devices on the same 
-spindle which would affect a device remove like this?
-
-I have to assume it's a bug since the condition doesn't clear up even 
-after removing the rest of the devices on the spindle, i.e. the 
-partition permanently reports busy.
-
--Brett
-
+It could be the reason the array degraded; but yes, if the hardware
+fails your data is lost/at extreme risk regardless.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
