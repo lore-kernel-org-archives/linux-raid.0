@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 08/13] mdmon: cleanup resync_start
-Date: Tue, 22 Dec 2009 17:00:00 -0700
-Message-ID: <20091223000000.31628.20014.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 10/13] Introduce MaxSector
+Date: Tue, 22 Dec 2009 17:00:10 -0700
+Message-ID: <20091223000010.31628.3425.stgit@dwillia2-linux.ch.intel.com>
 References: <20091222235807.31628.23231.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,216 +13,143 @@ To: neilb@suse.de
 Cc: linux-raid@vger.kernel.org, ed.ciechanowski@intel.com, marcin.labun@intel.com
 List-Id: linux-raid.ids
 
-We don't need to sprinkle reads of this attribute all over the place,
-just once at the entry of read_and_act().  Also, the mdinfo structure
-for the array already has a 'resync_start' member, so just reuse that.
-Finally, rename get_resync_start() to read_resync_start to make it
-consistent with the other sysfs accessors in monitor.c.
+Replace occurrences of ~0ULL to make it clear we are talking about maximal
+resync/recovery position.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
 
- managemon.c   |    1 -
- mdmon.h       |    7 ++-----
- monitor.c     |   19 ++++++-------------
- super-ddf.c   |    8 ++++----
- super-intel.c |    9 ++++-----
- 5 files changed, 16 insertions(+), 28 deletions(-)
+ Create.c      |    2 +-
+ mdadm.h       |    1 +
+ monitor.c     |    2 +-
+ super-ddf.c   |    4 ++--
+ super-intel.c |    8 ++++----
+ super1.c      |    6 +++---
+ 6 files changed, 12 insertions(+), 11 deletions(-)
 
-diff --git a/managemon.c b/managemon.c
-index 19effe4..e77f045 100644
---- a/managemon.c
-+++ b/managemon.c
-@@ -541,7 +541,6 @@ static void manage_new(struct mdstat_ent *mdstat,
- 	new->info.state_fd = sysfs_open(new->devnum, NULL, "array_state");
- 	new->resync_start_fd = sysfs_open(new->devnum, NULL, "resync_start");
- 	new->metadata_fd = sysfs_open(new->devnum, NULL, "metadata_version");
--	get_resync_start(new);
- 	dprintf("%s: inst: %d action: %d state: %d\n", __func__, atoi(inst),
- 		new->action_fd, new->info.state_fd);
- 
-diff --git a/mdmon.h b/mdmon.h
-index 7cfee35..4494085 100644
---- a/mdmon.h
-+++ b/mdmon.h
-@@ -39,8 +39,6 @@ struct active_array {
- 	int check_degraded; /* flag set by mon, read by manage */
- 
- 	int devnum;
--
--	unsigned long long resync_start;
- };
- 
- /*
-@@ -73,7 +71,6 @@ extern int socket_hup_requested;
- extern int sigterm;
- 
- int read_dev_state(int fd);
--int get_resync_start(struct active_array *a);
- int is_container_member(struct mdstat_ent *mdstat, char *container);
- 
- struct mdstat_ent *mdstat_read(int hold, int start);
-@@ -85,9 +82,9 @@ extern int monitor_loop_cnt;
- /* helper routine to determine resync completion since MaxSector is a
-  * moving target
-  */
--static inline int is_resync_complete(struct active_array *a)
-+static inline int is_resync_complete(struct mdinfo *array)
- {
--	if (a->resync_start >= a->info.component_size)
-+	if (array->resync_start >= array->component_size)
- 		return 1;
- 	return 0;
- }
+diff --git a/Create.c b/Create.c
+index 5b01b63..1ae7f92 100644
+--- a/Create.c
++++ b/Create.c
+@@ -527,7 +527,7 @@ int Create(struct supertype *st, char *mddev,
+ 	     assume_clean
+ 		) {
+ 		info.array.state = 1; /* clean, but one+ drive will be missing*/
+-		info.resync_start = ~0ULL;
++		info.resync_start = MaxSector;
+ 	} else {
+ 		info.array.state = 0; /* not clean, but no errors */
+ 		info.resync_start = 0;
+diff --git a/mdadm.h b/mdadm.h
+index 7b75540..9cf15c4 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -149,6 +149,7 @@ struct mdinfo {
+ 	union {
+ 		unsigned long long resync_start; /* per-array resync position */
+ 		unsigned long long recovery_start; /* per-device rebuild position */
++		#define MaxSector  (~0ULL) /* resync/recovery complete position */
+ 	};
+ 	unsigned long		safe_mode_delay; /* ms delay to mark clean */
+ 	int			new_level, delta_disks, new_layout, new_chunk;
 diff --git a/monitor.c b/monitor.c
-index 0cafc3a..a8e0af3 100644
+index 58752a8..81fef49 100644
 --- a/monitor.c
 +++ b/monitor.c
-@@ -66,23 +66,20 @@ static int read_attr(char *buf, int len, int fd)
- 	return n;
- }
- 
--int get_resync_start(struct active_array *a)
-+static unsigned long long read_resync_start(int fd)
- {
- 	char buf[30];
- 	int n;
- 
--	n = read_attr(buf, 30, a->resync_start_fd);
-+	n = read_attr(buf, 30, fd);
+@@ -75,7 +75,7 @@ static unsigned long long read_resync_start(int fd)
  	if (n <= 0)
--		return n;
-+		return 0;
+ 		return 0;
  	if (strncmp(buf, "none", 4) == 0)
--		a->resync_start = ~0ULL;
-+		return ~0ULL;
+-		return ~0ULL;
++		return MaxSector;
  	else
--		a->resync_start = strtoull(buf, NULL, 10);
--
--	return 1;
-+		return strtoull(buf, NULL, 10);
+ 		return strtoull(buf, NULL, 10);
  }
- 
--
- static enum array_state read_state(int fd)
- {
- 	char buf[20];
-@@ -208,6 +205,7 @@ static int read_and_act(struct active_array *a)
- 
- 	a->curr_state = read_state(a->info.state_fd);
- 	a->curr_action = read_action(a->action_fd);
-+	a->info.resync_start = read_resync_start(a->resync_start_fd);
- 	for (mdi = a->info.devs; mdi ; mdi = mdi->next) {
- 		mdi->next_state = 0;
- 		if (mdi->state_fd >= 0)
-@@ -217,13 +215,11 @@ static int read_and_act(struct active_array *a)
- 	if (a->curr_state <= inactive &&
- 	    a->prev_state > inactive) {
- 		/* array has been stopped */
--		get_resync_start(a);
- 		a->container->ss->set_array_state(a, 1);
- 		a->next_state = clear;
- 		deactivate = 1;
- 	}
- 	if (a->curr_state == write_pending) {
--		get_resync_start(a);
- 		a->container->ss->set_array_state(a, 0);
- 		a->next_state = active;
- 		dirty = 1;
-@@ -236,7 +232,6 @@ static int read_and_act(struct active_array *a)
- 		dirty = 1;
- 	}
- 	if (a->curr_state == clean) {
--		get_resync_start(a);
- 		a->container->ss->set_array_state(a, 1);
- 	}
- 	if (a->curr_state == active ||
-@@ -253,7 +248,6 @@ static int read_and_act(struct active_array *a)
- 			/* explicit request for readonly array.  Leave it alone */
- 			;
- 		} else {
--			get_resync_start(a);
- 			if (a->container->ss->set_array_state(a, 2))
- 				a->next_state = read_auto; /* array is clean */
- 			else {
-@@ -271,7 +265,6 @@ static int read_and_act(struct active_array *a)
- 		 * until the array goes inactive or readonly though.
- 		 * Just check if we need to fiddle spares.
- 		 */
--		get_resync_start(a);
- 		a->container->ss->set_array_state(a, a->curr_state <= clean);
- 		check_degraded = 1;
- 	}
 diff --git a/super-ddf.c b/super-ddf.c
-index fe83642..f5eb816 100644
+index f5eb816..8c3f4be 100644
 --- a/super-ddf.c
 +++ b/super-ddf.c
-@@ -3066,7 +3066,7 @@ static int ddf_set_array_state(struct active_array *a, int consistent)
- 	if (consistent == 2) {
- 		/* Should check if a recovery should be started FIXME */
- 		consistent = 1;
--		if (!is_resync_complete(a))
-+		if (!is_resync_complete(&a->info))
- 			consistent = 0;
- 	}
- 	if (consistent)
-@@ -3078,9 +3078,9 @@ static int ddf_set_array_state(struct active_array *a, int consistent)
+@@ -1433,7 +1433,7 @@ static void getinfo_super_ddf_bvd(struct supertype *st, struct mdinfo *info)
+ 	    (ddf->virt->entries[info->container_member].init_state
+ 	     & DDF_initstate_mask)
+ 	    == DDF_init_full)
+-		info->resync_start = ~0ULL;
++		info->resync_start = MaxSector;
  
- 	old = ddf->virt->entries[inst].init_state;
- 	ddf->virt->entries[inst].init_state &= ~DDF_initstate_mask;
--	if (is_resync_complete(a))
-+	if (is_resync_complete(&a->info))
- 		ddf->virt->entries[inst].init_state |= DDF_init_full;
--	else if (a->resync_start == 0)
-+	else if (a->info.resync_start == 0)
- 		ddf->virt->entries[inst].init_state |= DDF_init_not;
- 	else
- 		ddf->virt->entries[inst].init_state |= DDF_init_quick;
-@@ -3088,7 +3088,7 @@ static int ddf_set_array_state(struct active_array *a, int consistent)
- 		ddf->updates_pending = 1;
+ 	uuid_from_super_ddf(st, info->uuid);
  
- 	dprintf("ddf mark %d %s %llu\n", inst, consistent?"clean":"dirty",
--		a->resync_start);
-+		a->info.resync_start);
- 	return consistent;
- }
- 
+@@ -2921,7 +2921,7 @@ static struct mdinfo *container_content_ddf(struct supertype *st)
+ 			this->resync_start = 0;
+ 		} else {
+ 			this->array.state = 1;
+-			this->resync_start = ~0ULL;
++			this->resync_start = MaxSector;
+ 		}
+ 		memcpy(this->name, ddf->virt->entries[i].name, 16);
+ 		this->name[16]=0;
 diff --git a/super-intel.c b/super-intel.c
-index ab8172d..4072fc8 100644
+index 4072fc8..4bb1990 100644
 --- a/super-intel.c
 +++ b/super-intel.c
-@@ -4108,12 +4108,12 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
- 	}
- 		
- 	if (consistent == 2 &&
--	    (!is_resync_complete(a) ||
-+	    (!is_resync_complete(&a->info) ||
- 	     map_state != IMSM_T_STATE_NORMAL ||
- 	     dev->vol.migr_state))
- 		consistent = 0;
+@@ -1271,7 +1271,7 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info)
+ 		/* FIXME add curr_migr_unit to resync_start conversion */
+ 		info->resync_start = 0;
+ 	else
+-		info->resync_start = ~0ULL;
++		info->resync_start = MaxSector;
  
--	if (is_resync_complete(a)) {
-+	if (is_resync_complete(&a->info)) {
- 		/* complete intialization / resync,
- 		 * recovery and interrupted recovery is completed in
- 		 * ->set_disk
-@@ -4125,7 +4125,7 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
+ 	strncpy(info->name, (char *) dev->volume, MAX_RAID_SERIAL_LEN);
+ 	info->name[MAX_RAID_SERIAL_LEN] = 0;
+@@ -3482,7 +3482,7 @@ static int validate_geometry_imsm_volume(struct supertype *st, int level,
+ 		 * offset
+ 		 */
+ 		unsigned long long minsize = size;
+-		unsigned long long start_offset = ~0ULL;
++		unsigned long long start_offset = MaxSector;
+ 		int dcnt = 0;
+ 		if (minsize == 0)
+ 			minsize = MPB_SECTOR_CNT + IMSM_RESERVED_SECTORS;
+@@ -3498,7 +3498,7 @@ static int validate_geometry_imsm_volume(struct supertype *st, int level,
+ 				esize = e[i].start - pos;
+ 				if (esize >= minsize)
+ 					found = 1;
+-				if (found && start_offset == ~0ULL) {
++				if (found && start_offset == MaxSector) {
+ 					start_offset = pos;
+ 					break;
+ 				} else if (found && pos != start_offset) {
+@@ -3856,7 +3856,7 @@ static struct mdinfo *container_content_imsm(struct supertype *st)
+ 			 * FIXME handle dirty degraded
+ 			 */
+ 			if (skip && !dev->vol.dirty)
+-				this->resync_start = ~0ULL;
++				this->resync_start = MaxSector;
+ 			if (skip)
+ 				continue;
+ 
+diff --git a/super1.c b/super1.c
+index 2c992a4..85bb598 100644
+--- a/super1.c
++++ b/super1.c
+@@ -659,9 +659,9 @@ static int update_super1(struct supertype *st, struct mdinfo *info,
+ 		switch(__le32_to_cpu(sb->level)) {
+ 		case 5: case 4: case 6:
+ 			/* need to force clean */
+-			if (sb->resync_offset != ~0ULL)
++			if (sb->resync_offset != MaxSector)
+ 				rv = 1;
+-			sb->resync_offset = ~0ULL;
++			sb->resync_offset = MaxSector;
  		}
- 	} else if (!is_resyncing(dev) && !failed) {
- 		/* mark the start of the init process if nothing is failed */
--		dprintf("imsm: mark resync start (%llu)\n", a->resync_start);
-+		dprintf("imsm: mark resync start\n");
- 		if (map->map_state == IMSM_T_STATE_UNINITIALIZED)
- 			migrate(dev, IMSM_T_STATE_NORMAL, MIGR_INIT);
- 		else
-@@ -4137,8 +4137,7 @@ static int imsm_set_array_state(struct active_array *a, int consistent)
- 
- 	/* mark dirty / clean */
- 	if (dev->vol.dirty != !consistent) {
--		dprintf("imsm: mark '%s' (%llu)\n",
--			consistent ? "clean" : "dirty", a->resync_start);
-+		dprintf("imsm: mark '%s'\n", consistent ? "clean" : "dirty");
- 		if (consistent)
- 			dev->vol.dirty = 0;
- 		else
+ 	}
+ 	if (strcmp(update, "assemble")==0) {
+@@ -855,7 +855,7 @@ static int init_super1(struct supertype *st, mdu_array_info_t *info,
+ 	sb->utime = sb->ctime;
+ 	sb->events = __cpu_to_le64(1);
+ 	if (info->state & (1<<MD_SB_CLEAN))
+-		sb->resync_offset = ~0ULL;
++		sb->resync_offset = MaxSector;
+ 	else
+ 		sb->resync_offset = 0;
+ 	sb->max_dev = __cpu_to_le32((1024- sizeof(struct mdp_superblock_1))/
 
