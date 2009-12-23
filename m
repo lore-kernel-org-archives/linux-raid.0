@@ -1,82 +1,107 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: mdadm 3.1.1: level change won't start
-Date: Wed, 23 Dec 2009 17:47:43 -0600
-Message-ID: <0B.0F.01470.82CA23B4@cdptpa-omtalb.mail.rr.com>
-References: <73e903670912202039y1a38df60qdbfbb8623c3f8856@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: raid0 not growable?
+Date: Thu, 24 Dec 2009 10:54:24 +1100
+Message-ID: <20091224105424.62c41b25@notabene>
+References: <73e903670912230552n226e9052q182174cba32f3c54@mail.gmail.com>
+	<20091224094557.1ae96a0d@notabene>
+	<73e903670912231528u6d3cd2ekd0fa4ade06adbcf5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <73e903670912202039y1a38df60qdbfbb8623c3f8856@mail.gmail.com>
+In-Reply-To: <73e903670912231528u6d3cd2ekd0fa4ade06adbcf5@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Michael Evans' <mjevans1983@gmail.com>
-Cc: 'linux-raid' <linux-raid@vger.kernel.org>
+To: Kristleifur =?UTF-8?B?RGHDsGFzb24=?= <kristleifur@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> >> Three questions -
-> >>
-> >> 1. What does the stuff about "metadata format 1.10 unknown" mean?
-> >> Notice the "super 1.1" vs. "metadata 1.01" vs. "metadata format 1.=
-10"
-> >> disrepancy between mdsat, --detail and --grow output.
-> >>
-> >> 2. Am I doing something wrong? :)
-> >>
-> >> 3. How can I get more info about what is causing the failure to
-> >> initialize the growth?
-> >>
-> >> Thanks!
-> >>
-> >> -- Kristleifur
-> >>
-> >>
-> >> (P.s., I'm cc-ing this directly to Neil Brown as the maintainer of
-> >> mdadm. I hope that isn't rude of me.)
-> >> --
+On Wed, 23 Dec 2009 23:28:37 +0000
+Kristleifur Da=C3=B0ason <kristleifur@gmail.com> wrote:
+
+> On Wed, Dec 23, 2009 at 10:45 PM, Neil Brown <neilb@suse.de> wrote:
+> > On Wed, 23 Dec 2009 13:52:54 +0000
+> > Kristleifur Da=C3=B0ason <kristleifur@gmail.com> wrote:
 > >
+> >> Hi,
+> >>
+> >> I'm running a raid0 array over a couple of raid6 arrays. I had pla=
+nned
+> >> on growing the arrays in time, and now turns out to be the time.
+> >>
+> >> To my chagrin, searches indicate that raid0 isn't growable. Can an=
+yone
+> >> confirm this before I wipe and reconfigure?
 > >
-> > I thought there were three metadata variants for 1.x: 1.0 1.1 and 1=
-=2E2
-> > =A0Maybe the extra 1 or 0 at the end refers to a reshape in progres=
-s?
+> > That is correct, you cannot currently grow md/raid0.
+> >
+> > If the two raid6 arrays are exactly the same size, then you
+> > could grow the two raid6 arrays, create a new raid0 over them
+> > with the same block size and all your data will still be there.
+> > But if they are not the same size, that won't work.
+> >
+> > NeilBrown
 > >
 >=20
-> Thanks for the reply. FWIW, I intended the array to have metadata
-> format 1.1 when I created it. I've noticed these "1.01" messages
-> before, so I believe it's not due to the reshape. However, I'm
-> thinking the funny metadata might be interfering with the reshape
-> somehow.
+> Many thanks for the reply. (Re-cc'd to the linux-raid list. Hope that=
+'s OK.)
 
-	I'm getting the same thing on one of my systems and not on the
-other:
+Certainly.  I didn't mean to drop linux-raid - I must have clicked the =
+wrong
+button.
 
-RAID-Server:/etc/rcS.d# mdadm -V
-mdadm - v2.6.7.2 - 14th November 2008
-RAID-Server:/etc/rcS.d# mdadm --detail --scan
-ARRAY /dev/md0 level=3Draid6 num-devices=3D10 metadata=3D01.02 spares=3D=
-1
-name=3DRAID-Server:0 UUID=3D5ff10d73:a096195f:7a646bba:a68986ca
+>=20
+> 1.
+> The raid6 arrays are exactly alike. Do I just do a create a new raid0
+> with the right size, device count and chunk-size parameters? I trust
+> your advice, but I am also certain of my own foolishness. I can't
+> fully picture what happens to the data on the array -- Specifically,
+> I'm thinking about whether to use --assume-clean or not. The
+> documentation says not. I am guessing that a newly-created raid0
+> doesn't do any syncing/resyncing anyway - it just sets up the array
+> structure and metadata and I am left to my own devices to fill it wit=
+h
+> data.
+>=20
+> Current chunksize is 256 and metadata is 1.1. So it's just a "mdadm
+> --create /dev/md_bigraid0 --level=3D0 --raid-devices=3D2 --metadata=3D=
+1.1
+> --chunksize=3D256 /dev/md_raid6a /dev/md_raid6b", right?
 
-Backup:/etc/initramfs-tools# mdadm -V
-mdadm - v2.6.7.2 - 14th November 2008
-Backup:/etc/initramfs-tools# mdadm --detail --scan
-mdadm: metadata format 01.02 unknown, ignored.
-mdadm: metadata format 01.02 unknown, ignored.
-mdadm: metadata format 01.02 unknown, ignored.
-mdadm: metadata format 01.00 unknown, ignored.
-ARRAY /dev/md0 level=3Draid5 num-devices=3D8 metadata=3D01.02 name=3D'B=
-ackup':0
-UUID=3D940ae4e4:04057ffc:5e92d2fb:63e3efb7
-ARRAY /dev/md3 level=3Draid1 num-devices=3D2 metadata=3D01.02 spares=3D=
-1
-name=3D'Backup':3 UUID=3D3615c4a2:33786b6d:b13863d9:458cd054
-ARRAY /dev/md2 level=3Draid1 num-devices=3D2 metadata=3D01.02 spares=3D=
-1
-name=3D'Backup':2 UUID=3Dd45ff663:9e53774c:6fcf9968:21692025
-ARRAY /dev/md1 level=3Draid1 num-devices=3D2 metadata=3D01.00 name=3D'B=
-ackup':1
-UUID=3Dd6a2c60b:7345e957:05aefe0b:f8d1527f
+Yes... there is a possible complication though.
+With 1.1 metadata mdadm reserves some space between the end of the meta=
+data
+and the start of the data for a bitmap - even for raid0 which cannot ha=
+ve
+a bitmap.  The amount of space reserved is affected by the size of the
+devices.
+So it is possible that the "data offset" will be different.
+You should check the data offset before and after.  If it is different,=
+ we
+will have to hack mdadm to allow you to set the data offset manually.
 
+>=20
+> 2.
+> I have a JFS filesystem on the big raid0. Once I have the bigger raid=
+0
+> built, I assume that I would first do a read-only fsck.jfs, which wil=
+l
+> succeed if I did everything correctly. Then I do a remount with the
+> "resize" option to JFS to finally grow the JFS filesystem.
+
+Sounds right (though I've never used jfs).
+
+>=20
+> --
+>=20
+> Sincere thanks. I hope I shall be able to contribute something
+> meaningful to mdadm when the company is richer and my time is freer :=
+)
+> In the meantime, is there any preferred way of donating to mdadm or
+> sponsoring it?
+>
+Just use it and report any issues you have, as you have done.
+
+NeilBrown
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
