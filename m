@@ -1,107 +1,89 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: raid0 not growable?
-Date: Thu, 24 Dec 2009 10:54:24 +1100
-Message-ID: <20091224105424.62c41b25@notabene>
-References: <73e903670912230552n226e9052q182174cba32f3c54@mail.gmail.com>
-	<20091224094557.1ae96a0d@notabene>
-	<73e903670912231528u6d3cd2ekd0fa4ade06adbcf5@mail.gmail.com>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: Linux MD RAID 1 read performance tunning
+Date: Thu, 24 Dec 2009 10:03:50 +0100
+Message-ID: <87d424rbex.fsf@frosties.localdomain>
+References: <8e04b5820912220834m595f1aa6sf0071f99b4a5a144@mail.gmail.com>
+	<20091222165225.GA2684@rap.rap.dk>
+	<8e04b5820912220908s233c3bf9yf0fa9ba8deda693b@mail.gmail.com>
+	<20091222182248.GA5719@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <73e903670912231528u6d3cd2ekd0fa4ade06adbcf5@mail.gmail.com>
+In-Reply-To: <20091222182248.GA5719@rap.rap.dk> (Keld Jorn Simonsen's message
+	of "Tue, 22 Dec 2009 20:22:49 +0200")
 Sender: linux-raid-owner@vger.kernel.org
-To: Kristleifur =?UTF-8?B?RGHDsGFzb24=?= <kristleifur@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Keld Jorn Simonsen <keld@keldix.com>
+Cc: "Ciprian Dorin, Craciun" <ciprian.craciun@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 23 Dec 2009 23:28:37 +0000
-Kristleifur Da=C3=B0ason <kristleifur@gmail.com> wrote:
+Keld J=F8rn Simonsen <keld@keldix.com> writes:
 
-> On Wed, Dec 23, 2009 at 10:45 PM, Neil Brown <neilb@suse.de> wrote:
-> > On Wed, 23 Dec 2009 13:52:54 +0000
-> > Kristleifur Da=C3=B0ason <kristleifur@gmail.com> wrote:
-> >
-> >> Hi,
-> >>
-> >> I'm running a raid0 array over a couple of raid6 arrays. I had pla=
-nned
-> >> on growing the arrays in time, and now turns out to be the time.
-> >>
-> >> To my chagrin, searches indicate that raid0 isn't growable. Can an=
-yone
-> >> confirm this before I wipe and reconfigure?
-> >
-> > That is correct, you cannot currently grow md/raid0.
-> >
-> > If the two raid6 arrays are exactly the same size, then you
-> > could grow the two raid6 arrays, create a new raid0 over them
-> > with the same block size and all your data will still be there.
-> > But if they are not the same size, that won't work.
-> >
-> > NeilBrown
-> >
->=20
-> Many thanks for the reply. (Re-cc'd to the linux-raid list. Hope that=
-'s OK.)
-
-Certainly.  I didn't mean to drop linux-raid - I must have clicked the =
-wrong
-button.
-
->=20
-> 1.
-> The raid6 arrays are exactly alike. Do I just do a create a new raid0
-> with the right size, device count and chunk-size parameters? I trust
-> your advice, but I am also certain of my own foolishness. I can't
-> fully picture what happens to the data on the array -- Specifically,
-> I'm thinking about whether to use --assume-clean or not. The
-> documentation says not. I am guessing that a newly-created raid0
-> doesn't do any syncing/resyncing anyway - it just sets up the array
-> structure and metadata and I am left to my own devices to fill it wit=
-h
-> data.
->=20
-> Current chunksize is 256 and metadata is 1.1. So it's just a "mdadm
-> --create /dev/md_bigraid0 --level=3D0 --raid-devices=3D2 --metadata=3D=
-1.1
-> --chunksize=3D256 /dev/md_raid6a /dev/md_raid6b", right?
-
-Yes... there is a possible complication though.
-With 1.1 metadata mdadm reserves some space between the end of the meta=
-data
-and the start of the data for a bitmap - even for raid0 which cannot ha=
-ve
-a bitmap.  The amount of space reserved is affected by the size of the
-devices.
-So it is possible that the "data offset" will be different.
-You should check the data offset before and after.  If it is different,=
- we
-will have to hack mdadm to allow you to set the data offset manually.
-
->=20
-> 2.
-> I have a JFS filesystem on the big raid0. Once I have the bigger raid=
-0
-> built, I assume that I would first do a read-only fsck.jfs, which wil=
+> On Tue, Dec 22, 2009 at 07:08:25PM +0200, Ciprian Dorin, Craciun wrot=
+e:
+>> 2009/12/22 Keld J=F8rn Simonsen <keld@keldix.com>:
+>> > On Tue, Dec 22, 2009 at 06:34:55PM +0200, Ciprian Dorin, Craciun w=
+rote:
+>> >> =A0 =A0 Hello all!
+>> >>
+>> >> =A0 =A0 I've created a 64G RAID 1 matrix from 3 real disks. (I in=
+tend to
+>> >> use this as a target for backups.)
+>> >> =A0 =A0 Now while playing around with this array, I've observed t=
+hat the
+>> >> read performance is quite low because it always reads from the di=
+sk in
+>> >> the first slot (which happens to be the slowest...)
+>> >>
+>> >> =A0 =A0 So my questions are:
+>> >> =A0 =A0 * is there any way to tell the MD driver to load-balance =
+the reads
+>> >> between the three disks?
+>> >
+>> > It does not make sense to do distributed reading in raid1 for sequ=
+ential
+>> > files. This is because it will not be faster to read from more dri=
+ves,
+>> > as this will only make the reading from one drive skipping blocks =
+on
+>> > that drive. In other words, in the time you use for skipping block=
+s on
+>> > one drive, you could just as well have read the blocks. So then be=
+tter
+>> > just read all the blocks off one drive, and then do other possible=
+ IO
+>> > from other drives.
+>>=20
+>>     Aha. It makes sens now. But, does it mean that if I have paralle=
 l
-> succeed if I did everything correctly. Then I do a remount with the
-> "resize" option to JFS to finally grow the JFS filesystem.
-
-Sounds right (though I've never used jfs).
-
->=20
-> --
->=20
-> Sincere thanks. I hope I shall be able to contribute something
-> meaningful to mdadm when the company is richer and my time is freer :=
-)
-> In the meantime, is there any preferred way of donating to mdadm or
-> sponsoring it?
+>> IO's (from different read operations) they are going to be distribut=
+ed
+>> between the disks?
 >
-Just use it and report any issues you have, as you have done.
+> It should, but I am not fully sure it does.
+> But try it out with two concurrent reads of two big files, and then
+> watch it with iostat=20
+>
+> Best regards
+> keld
 
-NeilBrown
+Actualy the kernel remembers the last read/write position for each
+raid1 component and then uses the one which is nearest.
+
+And when you read at 2/3 different positions at the same time then it
+will use different components for each an use the same ones for
+subsequent reads (as they will be nearer).
+
+Try
+
+dd if=3D/dev/md0 of=3D/dev/null bs=3D1M cunt=3D1024 skip=3D0 &
+dd if=3D/dev/md0 of=3D/dev/null bs=3D1M cunt=3D1024 skip=3D1024 &
+dd if=3D/dev/md0 of=3D/dev/null bs=3D1M cunt=3D1024 skip=3D2048
+
+They should more or less get the same speed as a single dd.
+
+MfG
+        Goswin
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
