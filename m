@@ -1,99 +1,105 @@
 From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: fsck problems.  Can't restore raid
-Date: Sat, 26 Dec 2009 12:47:55 -0600
-Message-ID: <B4.00.01567.F5A563B4@cdptpa-omtalb.mail.rr.com>
-References: <1261797167.10448.100.camel@vibe>
+Subject: RE: RAID 1 Disk added as faulty
+Date: Sat, 26 Dec 2009 13:16:08 -0600
+Message-ID: <4E.F2.01550.BF0663B4@cdptpa-omtalb.mail.rr.com>
+References: <78.6E.04641.43CB53B4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1261797167.10448.100.camel@vibe>
+In-Reply-To: <78.6E.04641.43CB53B4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Rick Bragg' <rbragg@gmnet.net>, 'Linux RAID' <linux-raid@vger.kernel.org>
+To: 'linux-raid' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
-	I take it from your post the drives are not partitioned, and the
-RAID array consists of raw disk members?  First, check the superblocks of
-the md devices:
+	I have another, possibly related, question.  I did a bit of snooping
+around, and all six devices that are members of one of the RAID 1 arrays
+report the same thing:
 
-	`mdadm --examine /dev/sda`, etc.  If 2 or more of the superblocks
-are corrupt, then that's your problem.  If not, then it should be possible
-to get the array mounted one way or the other.  Once you get the array
-assembled again, then you can repair it, if need be.  Once that is done, you
-can repair the file system if it is corrupted.  Once everything is clean,
-you can mount the file system, and if necessary attempt to recover any lost
-files.
+    Array Slot : 1 (failed, 1, 0)
+   Array State : Uu 1 failed
+
+	(The array slot of course is either 1 or 2, depending on the
+specific device.) Why does the superblock report something as being failed?
+All the devices and the arrays themselves all show clean.  Running a repair
+on the array has no effect on the status.  This same report is generated on
+all twelve drive partitions that are part of RAID1 arrays.  One one system,
+both hard drives are PATA drives.  On the other, one is PATA, the other
+SATA.  I only attempted to issue the -W directive on the mixed PATA / SATA
+system.
 
 > -----Original Message-----
 > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Rick Bragg
-> Sent: Friday, December 25, 2009 9:13 PM
-> To: Linux RAID
-> Subject: Re: fsck problems. Can't restore raid
-> 
-> On Fri, 2009-12-25 at 21:47 -0500, Rick Bragg wrote:
-> > On Fri, 2009-12-25 at 20:33 -0500, Rick Bragg wrote:
-> > > Hi,
-> > >
-> > > I have a raid 10 array and for some reason the system went down and I
-> > > can't get it back.
-> > >
-> > > during re-boot, I get the following error:
-> > >
-> > > The superblock could not be read or does not describe a correct ext2
-> > > filesystem.  If the device is valid and it really contains an ext2
-> > > filesystem (and not swap or ufs or something else), then the
-> superblock
-> > > is corrupt, and you might try running e2fsck with an alternate
-> > > superblock:
-> > >     e2fsck -b 8193 <device>
-> > >
-> > > I have tried everything I can think of and I can't seem to do an fsck
-> or
-> > > repair the file system.
-> > >
-> > > what can I do?
-> > >
-> > > Thanks
-> > > Rick
-> > >
-> >
-> >
-> > More info:
-> >
-> > My array is made up of /dev/sda, sdb, sdc, and sdd.  However they are
-> > not mounted right now.  My OS is booted off of /dev/sde.  I am running
-> > ubuntu 9.04
-> >
-> > mdadm -Q --detail /dev/md0
-> > mdadm: md device /dev/md0 does not appear to be active.
-> >
-> > Where do I take if from here?  I'm not up on this as much as I should be
-> > at all.  In fact I am quite a newbe to this... Any help would be greatly
-> > appreciated.
-> >
-> > Thanks
-> > Rick
-> >
+> owner@vger.kernel.org] On Behalf Of Leslie Rhorer
+> Sent: Saturday, December 26, 2009 1:33 AM
+> To: 'linux-raid'
+> Subject: RAID 1 Disk added as faulty
 > 
 > 
-> Here is even more info:
+> Merry Christmas all,
 > 
-> # mdadm --assemble --scan
-> mdadm: /dev/md0 assembled from 2 drives - not enough to start the array.
+> 	I have a bit of a puzzling problem.  I have a set of three
+> partitions on a SATA hard drive all set up as second members of three RAID
+> 1
+> arrays with the first members missing.  I have a PATA drive partitioned in
+> precisely the same way as the SATA drive, and I am attempting to add the
+> PATA drive's partitions to the respective existing RAID 1 arrays.  I can
+> add
+> the partitions with `mdadm /dev/mdx --add  /dev/hdax` (x = 1, 2, 3), and
+> everything works just fine.  The thing is, however, for rather obvious
+> reasons I would prefer the PATA partitions to be write-mostly.  If I add
+> the
+> partitions to the array and then try to make the PATA partitions
+> write-mostly with the command `mdadm /dev/mdx -W /dev/hdax`, mdadm doesn't
+> complain, but it also doesn't appear to make the hdax partitions
+> write-mostly.  (Or at least it does not report them as such.)  OTOH, if I
+> start with a fresh partition with no existing superblock and use the
+> command
+> `mdadm /dev/mdx --add -W /dev/hdax`, mdadm adds the partition and marks it
+> as write-mostly, but immediately fails the partition.  If I remove the
+> partition and re-add it without zeroing the superblock, it again adds it
+> as
+> a faulty spare:
 > 
-> # mdadm --assemble /dev/sda /dev/sdb /dev/sdc /dev/sdd
-> mdadm: cannot open device /dev/sdb: Device or resource busy
-> mdadm: /dev/sdb has no superblock - assembly aborted
+> /dev/md1:
+>         Version : 01.00
+>   Creation Time : Wed Dec 23 23:46:28 2009
+>      Raid Level : raid1
+>      Array Size : 401580 (392.23 MiB 411.22 MB)
+>   Used Dev Size : 401580 (392.23 MiB 411.22 MB)
+>    Raid Devices : 2
+>   Total Devices : 2
+> Preferred Minor : 1
+>     Persistence : Superblock is persistent
 > 
-> Is my array toast?
-> What can I do?
+>   Intent Bitmap : Internal
 > 
-> Thanks
-> Rick
+>     Update Time : Sat Dec 26 01:12:41 2009
+>           State : active, degraded
+>  Active Devices : 1
+> Working Devices : 1
+>  Failed Devices : 1
+>   Spare Devices : 0
+> 
+>            Name : 'RAID-Server':1
+>            UUID : 76e8e11d:e0183c3c:404cb86a:19a7cb3d
+>          Events : 188
+> 
+>     Number   Major   Minor   RaidDevice State
+>        0       0        0        0      removed
+>        1       8        1        1      active sync   /dev/sda1
+> 
+>        2       3        1        -      faulty writemostly spare
+> /dev/hda1
 > 
 > 
-
+> 	How can I add these partitions as write-mostly members of the RAID 1
+> arrays?
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
