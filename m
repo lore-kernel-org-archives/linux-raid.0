@@ -1,57 +1,211 @@
-From: Rick Bragg <lists@gmnet.net>
+From: Rick Bragg <rbragg@gmnet.net>
 Subject: Re: fsck problems.  Can't restore raid
-Date: Fri, 25 Dec 2009 21:47:31 -0500
-Message-ID: <1261795651.10448.97.camel@vibe>
+Date: Fri, 25 Dec 2009 22:12:47 -0500
+Message-ID: <1261797167.10448.100.camel@vibe>
 References: <1261791227.10448.88.camel@vibe>
+	 <1261795651.10448.97.camel@vibe>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature"; boundary="=-q1sK26ObUfuo+4StnTNu"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1261791227.10448.88.camel@vibe>
+In-Reply-To: <1261795651.10448.97.camel@vibe>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, 2009-12-25 at 20:33 -0500, Rick Bragg wrote:
-> Hi,
-> 
-> I have a raid 10 array and for some reason the system went down and I
-> can't get it back.  
-> 
-> during re-boot, I get the following error:
-> 
-> The superblock could not be read or does not describe a correct ext2
-> filesystem.  If the device is valid and it really contains an ext2
-> filesystem (and not swap or ufs or something else), then the superblock
-> is corrupt, and you might try running e2fsck with an alternate
-> superblock:
->     e2fsck -b 8193 <device>
-> 
-> I have tried everything I can think of and I can't seem to do an fsck or
-> repair the file system.
-> 
-> what can I do?
-> 
+
+--=-q1sK26ObUfuo+4StnTNu
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, 2009-12-25 at 21:47 -0500, Rick Bragg wrote:
+> On Fri, 2009-12-25 at 20:33 -0500, Rick Bragg wrote:
+> > Hi,
+> >=20
+> > I have a raid 10 array and for some reason the system went down and I
+> > can't get it back.=20=20
+> >=20
+> > during re-boot, I get the following error:
+> >=20
+> > The superblock could not be read or does not describe a correct ext2
+> > filesystem.  If the device is valid and it really contains an ext2
+> > filesystem (and not swap or ufs or something else), then the superblock
+> > is corrupt, and you might try running e2fsck with an alternate
+> > superblock:
+> >     e2fsck -b 8193 <device>
+> >=20
+> > I have tried everything I can think of and I can't seem to do an fsck or
+> > repair the file system.
+> >=20
+> > what can I do?
+> >=20
+> > Thanks
+> > Rick
+> >=20
+>=20
+>=20
+> More info:
+>=20
+> My array is made up of /dev/sda, sdb, sdc, and sdd.  However they are
+> not mounted right now.  My OS is booted off of /dev/sde.  I am running
+> ubuntu 9.04
+>=20
+> mdadm -Q --detail /dev/md0
+> mdadm: md device /dev/md0 does not appear to be active.
+>=20
+> Where do I take if from here?  I'm not up on this as much as I should be
+> at all.  In fact I am quite a newbe to this... Any help would be greatly
+> appreciated.
+>=20
 > Thanks
 > Rick
-> 
+>=20
 
 
-More info:
+Here is even more info:
 
-My array is made up of /dev/sda, sdb, sdc, and sdd.  However they are
-not mounted right now.  My OS is booted off of /dev/sde.  I am running
-ubuntu 9.04
+# mdadm --assemble --scan
+mdadm: /dev/md0 assembled from 2 drives - not enough to start the array.
 
-mdadm -Q --detail /dev/md0
-mdadm: md device /dev/md0 does not appear to be active.
+# mdadm --assemble /dev/sda /dev/sdb /dev/sdc /dev/sdd
+mdadm: cannot open device /dev/sdb: Device or resource busy
+mdadm: /dev/sdb has no superblock - assembly aborted
 
-Where do I take if from here?  I'm not up on this as much as I should be
-at all.  In fact I am quite a newbe to this... Any help would be greatly
-appreciated.
+Is my array toast?
+What can I do?
 
 Thanks
 Rick
 
 
+
+
+--=-q1sK26ObUfuo+4StnTNu
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEH
+AQAAoIIRNzCCBN0wggPFoAMCAQICEHGS++YZX6xNEoV0cTSiGKcwDQYJKoZI
+hvcNAQEFBQAwezELMAkGA1UEBhMCR0IxGzAZBgNVBAgMEkdyZWF0ZXIgTWFu
+Y2hlc3RlcjEQMA4GA1UEBwwHU2FsZm9yZDEaMBgGA1UECgwRQ29tb2RvIENB
+IExpbWl0ZWQxITAfBgNVBAMMGEFBQSBDZXJ0aWZpY2F0ZSBTZXJ2aWNlczAe
+Fw0wNDAxMDEwMDAwMDBaFw0yODEyMzEyMzU5NTlaMIGuMQswCQYDVQQGEwJV
+UzELMAkGA1UECBMCVVQxFzAVBgNVBAcTDlNhbHQgTGFrZSBDaXR5MR4wHAYD
+VQQKExVUaGUgVVNFUlRSVVNUIE5ldHdvcmsxITAfBgNVBAsTGGh0dHA6Ly93
+d3cudXNlcnRydXN0LmNvbTE2MDQGA1UEAxMtVVROLVVTRVJGaXJzdC1DbGll
+bnQgQXV0aGVudGljYXRpb24gYW5kIEVtYWlsMIIBIjANBgkqhkiG9w0BAQEF
+AAOCAQ8AMIIBCgKCAQEAsjmFpPJ9q0E7YkY3rs3BYHW8OWX5ShpHornMSMxq
+mNVNNRm5pELlzkniii8efNIxB8dOtINknS4p1aJkxIW9hVE1eaROaJB7HHqk
+kqgX8pgV8pPMyaQylbsMTzC9mKALi+VuG6JG+ni8om+rWV6lL8/K2m2qL+us
+obNqqrcuZzWLeeEeaYji5kbNoKXqvgvOdjp6Dpvq/NonWz1zHyLmSGHGTPNp
+saguG7bUMSAsvIKKjqQOpdeJQ/wWWq8dcdcRWdq6hw2v+vPhwvCkxWeM1tZU
+Ot4KpLoDd7NlyP0e03RiqhjKaJMeoYV+9Udly/hNVyh00jT/MLbu9mIwFIws
+6wIDAQABo4IBJzCCASMwHwYDVR0jBBgwFoAUoBEKIz6W8Qfs4q8p74Klf9Aw
+pLQwHQYDVR0OBBYEFImCZ33EnSZwAEu0UEh83j2uBG59MA4GA1UdDwEB/wQE
+AwIBBjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdJQQWMBQGCCsGAQUFBwMCBggr
+BgEFBQcDBDARBgNVHSAECjAIMAYGBFUdIAAwewYDVR0fBHQwcjA4oDagNIYy
+aHR0cDovL2NybC5jb21vZG9jYS5jb20vQUFBQ2VydGlmaWNhdGVTZXJ2aWNl
+cy5jcmwwNqA0oDKGMGh0dHA6Ly9jcmwuY29tb2RvLm5ldC9BQUFDZXJ0aWZp
+Y2F0ZVNlcnZpY2VzLmNybDARBglghkgBhvhCAQEEBAMCAQYwDQYJKoZIhvcN
+AQEFBQADggEBAJ2Vyzy4fqUJxB6/C8LHdo45PJTGEKpPDMngq4RdiVTgZTvz
+bRx8NywlVF+WIfw3hJGdFdwUT4HPVB1rbEVgxy35l1FM+WbKPKCCjKbI8OLp
+1Er57D9Wyd12jMOCAU9sAPMeGmF0BEcDqcZAV5G8ZSLFJ2dPV9tkWtmNH7qG
+L/QGrpxp7en0zykX2OBKnxogL5dMUbtGB8SKN04g4wkxaMeexIud6H4RvDJo
+EJYRmETYKlFgTYjrdDrfQwYyyDlWjDoRUtNBpEMD9O3vMyfbOeAUTibJ2PU5
+4om4k123KSZB6rObroP8d3XK6Mq1/uJlSmM+RMTQw16Hc6mYHK9/FX8wggYn
+MIIFD6ADAgECAhAKesuiwXKeLPrQu/WXrP0VMA0GCSqGSIb3DQEBBQUAMIGu
+MQswCQYDVQQGEwJVUzELMAkGA1UECBMCVVQxFzAVBgNVBAcTDlNhbHQgTGFr
+ZSBDaXR5MR4wHAYDVQQKExVUaGUgVVNFUlRSVVNUIE5ldHdvcmsxITAfBgNV
+BAsTGGh0dHA6Ly93d3cudXNlcnRydXN0LmNvbTE2MDQGA1UEAxMtVVROLVVT
+RVJGaXJzdC1DbGllbnQgQXV0aGVudGljYXRpb24gYW5kIEVtYWlsMB4XDTA5
+MTAyNDAwMDAwMFoXDTEwMTAyNDIzNTk1OVowgdkxNTAzBgNVBAsTLENvbW9k
+byBUcnVzdCBOZXR3b3JrIC0gUEVSU09OQSBOT1QgVkFMSURBVEVEMUYwRAYD
+VQQLEz1UZXJtcyBhbmQgQ29uZGl0aW9ucyBvZiB1c2U6IGh0dHA6Ly93d3cu
+Y29tb2RvLm5ldC9yZXBvc2l0b3J5MR8wHQYDVQQLExYoYykyMDAzIENvbW9k
+byBMaW1pdGVkMRYwFAYDVQQDEw1SaWNoYXJkIEJyYWdnMR8wHQYJKoZIhvcN
+AQkBFhByYnJhZ2dAZ21uZXQubmV0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
+MIIBCgKCAQEAynPLqfMxLoOVnhZ7M7VZdH/M+mbashu/QSsrBEt2AIhlH4rm
+Xg4KJXQp19xw1XMLCG6U+sMJ7D4gGrmU7CKTdaR5YpGd1YsfaRqrfJ3irZgk
+FoyfucejIannwqBVei4jZXvsilkKWztXG9S81pDVRjYrrwKydqo1exLjvi6g
+ip7SXbP0yIDkv0gvUSvJTzURotPNpeO7WXtaGTvxGrQc9lqEgMGQZh83TkP4
+F9+Uz8BqwMV/58kRWGwTXBZM/YjhVxwroJhQ8D/9Odg67ZfyMQGhP5zUF9i9
+vR+qjUmBIn5ETSdwTxdSngc7MS/D+uXIALuQE9xsXNYsqjQBvIW8DQIDAQAB
+o4ICEjCCAg4wHwYDVR0jBBgwFoAUiYJnfcSdJnAAS7RQSHzePa4Ebn0wHQYD
+VR0OBBYEFBz8I4dqLRvUK6hl17l74UFOppkDMA4GA1UdDwEB/wQEAwIFoDAM
+BgNVHRMBAf8EAjAAMCAGA1UdJQQZMBcGCCsGAQUFBwMEBgsrBgEEAbIxAQMF
+AjARBglghkgBhvhCAQEEBAMCBSAwRgYDVR0gBD8wPTA7BgwrBgEEAbIxAQIB
+AQEwKzApBggrBgEFBQcCARYdaHR0cHM6Ly9zZWN1cmUuY29tb2RvLm5ldC9D
+UFMwgaUGA1UdHwSBnTCBmjBMoEqgSIZGaHR0cDovL2NybC5jb21vZG9jYS5j
+b20vVVROLVVTRVJGaXJzdC1DbGllbnRBdXRoZW50aWNhdGlvbmFuZEVtYWls
+LmNybDBKoEigRoZEaHR0cDovL2NybC5jb21vZG8ubmV0L1VUTi1VU0VSRmly
+c3QtQ2xpZW50QXV0aGVudGljYXRpb25hbmRFbWFpbC5jcmwwbAYIKwYBBQUH
+AQEEYDBeMDYGCCsGAQUFBzAChipodHRwOi8vY3J0LmNvbW9kb2NhLmNvbS9V
+VE5BQUFDbGllbnRDQS5jcnQwJAYIKwYBBQUHMAGGGGh0dHA6Ly9vY3NwLmNv
+bW9kb2NhLmNvbTAbBgNVHREEFDASgRByYnJhZ2dAZ21uZXQubmV0MA0GCSqG
+SIb3DQEBBQUAA4IBAQB00QiD6PgnzgnOzjKr+tYOAyX414Ro4RHd98wqCSqd
+RX7Fp3saASC2zwwJAa+x8GBuoBRZ9Pt+pghzK1OEgcYXwObj4cPKdYTPriDX
+x8U00q+VVSluWxGDPFuHVee+pg7gtMvi9DTGM7pfr2BLPEOW6jxxVe0eEQQ5
+cQ4r30JnTqS5ijRtnFeBAkRj+jXwQk1P6mbGskr0eKsrkxNfTe7ulMx0Ljq8
+R03+WyP0P2s1g97+9BZGm53HM/NL9bWpElK7DsdEZ234nPOpVnxQrLPK1ae2
+akNebQBFQMjdbqc7JTKLr41lmaUThPQneQDMSDxhpAhqtHXcMK5vhuaPrX5e
+MIIGJzCCBQ+gAwIBAgIQCnrLosFyniz60Lv1l6z9FTANBgkqhkiG9w0BAQUF
+ADCBrjELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAlVUMRcwFQYDVQQHEw5TYWx0
+IExha2UgQ2l0eTEeMBwGA1UEChMVVGhlIFVTRVJUUlVTVCBOZXR3b3JrMSEw
+HwYDVQQLExhodHRwOi8vd3d3LnVzZXJ0cnVzdC5jb20xNjA0BgNVBAMTLVVU
+Ti1VU0VSRmlyc3QtQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBFbWFpbDAe
+Fw0wOTEwMjQwMDAwMDBaFw0xMDEwMjQyMzU5NTlaMIHZMTUwMwYDVQQLEyxD
+b21vZG8gVHJ1c3QgTmV0d29yayAtIFBFUlNPTkEgTk9UIFZBTElEQVRFRDFG
+MEQGA1UECxM9VGVybXMgYW5kIENvbmRpdGlvbnMgb2YgdXNlOiBodHRwOi8v
+d3d3LmNvbW9kby5uZXQvcmVwb3NpdG9yeTEfMB0GA1UECxMWKGMpMjAwMyBD
+b21vZG8gTGltaXRlZDEWMBQGA1UEAxMNUmljaGFyZCBCcmFnZzEfMB0GCSqG
+SIb3DQEJARYQcmJyYWdnQGdtbmV0Lm5ldDCCASIwDQYJKoZIhvcNAQEBBQAD
+ggEPADCCAQoCggEBAMpzy6nzMS6DlZ4WezO1WXR/zPpm2rIbv0ErKwRLdgCI
+ZR+K5l4OCiV0KdfccNVzCwhulPrDCew+IBq5lOwik3WkeWKRndWLH2kaq3yd
+4q2YJBaMn7nHoyGp58KgVXouI2V77IpZCls7VxvUvNaQ1UY2K68CsnaqNXsS
+474uoIqe0l2z9MiA5L9IL1EryU81EaLTzaXju1l7Whk78Rq0HPZahIDBkGYf
+N05D+BfflM/AasDFf+fJEVhsE1wWTP2I4VccK6CYUPA//TnYOu2X8jEBoT+c
+1BfYvb0fqo1JgSJ+RE0ncE8XUp4HOzEvw/rlyAC7kBPcbFzWLKo0AbyFvA0C
+AwEAAaOCAhIwggIOMB8GA1UdIwQYMBaAFImCZ33EnSZwAEu0UEh83j2uBG59
+MB0GA1UdDgQWBBQc/COHai0b1CuoZde5e+FBTqaZAzAOBgNVHQ8BAf8EBAMC
+BaAwDAYDVR0TAQH/BAIwADAgBgNVHSUEGTAXBggrBgEFBQcDBAYLKwYBBAGy
+MQEDBQIwEQYJYIZIAYb4QgEBBAQDAgUgMEYGA1UdIAQ/MD0wOwYMKwYBBAGy
+MQECAQEBMCswKQYIKwYBBQUHAgEWHWh0dHBzOi8vc2VjdXJlLmNvbW9kby5u
+ZXQvQ1BTMIGlBgNVHR8EgZ0wgZowTKBKoEiGRmh0dHA6Ly9jcmwuY29tb2Rv
+Y2EuY29tL1VUTi1VU0VSRmlyc3QtQ2xpZW50QXV0aGVudGljYXRpb25hbmRF
+bWFpbC5jcmwwSqBIoEaGRGh0dHA6Ly9jcmwuY29tb2RvLm5ldC9VVE4tVVNF
+UkZpcnN0LUNsaWVudEF1dGhlbnRpY2F0aW9uYW5kRW1haWwuY3JsMGwGCCsG
+AQUFBwEBBGAwXjA2BggrBgEFBQcwAoYqaHR0cDovL2NydC5jb21vZG9jYS5j
+b20vVVROQUFBQ2xpZW50Q0EuY3J0MCQGCCsGAQUFBzABhhhodHRwOi8vb2Nz
+cC5jb21vZG9jYS5jb20wGwYDVR0RBBQwEoEQcmJyYWdnQGdtbmV0Lm5ldDAN
+BgkqhkiG9w0BAQUFAAOCAQEAdNEIg+j4J84Jzs4yq/rWDgMl+NeEaOER3ffM
+KgkqnUV+xad7GgEgts8MCQGvsfBgbqAUWfT7fqYIcytThIHGF8Dm4+HDynWE
+z64g18fFNNKvlVUpblsRgzxbh1XnvqYO4LTL4vQ0xjO6X69gSzxDluo8cVXt
+HhEEOXEOK99CZ06kuYo0bZxXgQJEY/o18EJNT+pmxrJK9HirK5MTX03u7pTM
+dC46vEdN/lsj9D9rNYPe/vQWRpudxzPzS/W1qRJSuw7HRGdt+JzzqVZ8UKyz
+ytWntmpDXm0ARUDI3W6nOyUyi6+NZZmlE4T0J3kAzEg8YaQIarR13DCub4bm
+j61+XjGCA/wwggP4AgEBMIHDMIGuMQswCQYDVQQGEwJVUzELMAkGA1UECBMC
+VVQxFzAVBgNVBAcTDlNhbHQgTGFrZSBDaXR5MR4wHAYDVQQKExVUaGUgVVNF
+UlRSVVNUIE5ldHdvcmsxITAfBgNVBAsTGGh0dHA6Ly93d3cudXNlcnRydXN0
+LmNvbTE2MDQGA1UEAxMtVVROLVVTRVJGaXJzdC1DbGllbnQgQXV0aGVudGlj
+YXRpb24gYW5kIEVtYWlsAhAKesuiwXKeLPrQu/WXrP0VMAkGBSsOAwIaBQCg
+ggINMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8X
+DTA5MTIyNjAzMTI0N1owIwYJKoZIhvcNAQkEMRYEFKBiqfLY7e1/cXqkeU7d
+bZaU0gf2MIHUBgkrBgEEAYI3EAQxgcYwgcMwga4xCzAJBgNVBAYTAlVTMQsw
+CQYDVQQIEwJVVDEXMBUGA1UEBxMOU2FsdCBMYWtlIENpdHkxHjAcBgNVBAoT
+FVRoZSBVU0VSVFJVU1QgTmV0d29yazEhMB8GA1UECxMYaHR0cDovL3d3dy51
+c2VydHJ1c3QuY29tMTYwNAYDVQQDEy1VVE4tVVNFUkZpcnN0LUNsaWVudCBB
+dXRoZW50aWNhdGlvbiBhbmQgRW1haWwCEAp6y6LBcp4s+tC79Zes/RUwgdYG
+CyqGSIb3DQEJEAILMYHGoIHDMIGuMQswCQYDVQQGEwJVUzELMAkGA1UECBMC
+VVQxFzAVBgNVBAcTDlNhbHQgTGFrZSBDaXR5MR4wHAYDVQQKExVUaGUgVVNF
+UlRSVVNUIE5ldHdvcmsxITAfBgNVBAsTGGh0dHA6Ly93d3cudXNlcnRydXN0
+LmNvbTE2MDQGA1UEAxMtVVROLVVTRVJGaXJzdC1DbGllbnQgQXV0aGVudGlj
+YXRpb24gYW5kIEVtYWlsAhAKesuiwXKeLPrQu/WXrP0VMA0GCSqGSIb3DQEB
+AQUABIIBAMPm6OLdG9/qz3xlm42s9rtF+9qY2FivF1UBtFNcVXKhiuG7T2F7
+BWN0H1KRtWzMVZdoZSk55IQpOadV4+ACSWIZ9Q3NLz14sXuUA+c86rr0dRlQ
+rU9M/YaXV7icr7MmVkAon17DHtoBTyCiICOjN8CuWCkpHBn5u6yOfWxuZbGi
+ck/pJH1AiQD/0cGx4PFDgyJSlbll6Dx5xsJMQ2Cf9GLBgBGGvq7EpIfzP+pa
+hkOLn2gTiYD2mn0cf7USVod+HX14kpZC1kR2vJJa3jdqW9pCUXFhyvOEw0KV
+XN4sSd491G4qecYkxmtT4BXTzo6tIAYlK6S0x5eKn1Mn/Ads/vYAAAAAAAA=
+
+--=-q1sK26ObUfuo+4StnTNu--
 
