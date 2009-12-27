@@ -1,17 +1,15 @@
-From: Green Mountain Network Info <info@gmnet.net>
+From: Rick Bragg <lists@gmnet.net>
 Subject: RE: fsck problems.  Can't restore raid
-Date: Sat, 26 Dec 2009 16:59:15 -0500
-Message-ID: <1261864755.10448.1255.camel@vibe>
+Date: Sat, 26 Dec 2009 20:01:35 -0500
+Message-ID: <1261875695.10448.1335.camel@vibe>
 References: <59.77.01567.9BC763B4@cdptpa-omtalb.mail.rr.com>
-Reply-To: info@gmnet.net
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <59.77.01567.9BC763B4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lrhorer@satx.rr.com>
-Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 Hi,
@@ -163,9 +161,6 @@ Also, for the controlers, I am using a couple of Promise cards:
 If any of this stands out as something really wrong, please let me know.
 Thanks again so much for your help!
 rick
-
-
-
 
 
 
@@ -417,13 +412,7 @@ On Sat, 2009-12-26 at 15:14 -0600, Leslie Rhorer wrote:
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Green Mountain Network
-PO Box 1462
-Burlington, VT 05402
-802.264.4851
-info@gmnet.net
+> 
 
 
 
