@@ -1,102 +1,285 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: ext3 on a RAID1 going read only?
-Date: Sun, 27 Dec 2009 14:01:33 +0100
-Message-ID: <877hs8k1ua.fsf@frosties.localdomain>
-References: <A7F4432C-B748-4C21-B2D7-D303C6E74344@crc.id.au>
-	<3B0B3DB1-76F2-4420-9879-89A0E39D6C0F@crc.id.au>
+From: Rick Bragg <lists@gmnet.net>
+Subject: RE: fsck problems.  Can't restore raid
+Date: Sun, 27 Dec 2009 13:41:25 -0500
+Message-ID: <1261939285.10448.3328.camel@vibe>
+References: <07.C2.04641.40BF63B4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3B0B3DB1-76F2-4420-9879-89A0E39D6C0F@crc.id.au> (Steven Haigh's
-	message of "Sat, 26 Dec 2009 10:35:59 +1100")
+In-Reply-To: <07.C2.04641.40BF63B4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steven Haigh <netwiz@crc.id.au>
-Cc: linux-raid@vger.kernel.org
+To: Leslie Rhorer <lrhorer@satx.rr.com>
+Cc: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Steven Haigh <netwiz@crc.id.au> writes:
+Thanks again Leslie,  I threaded my responses below.
 
-> On 26/12/2009, at 10:17 AM, Steven Haigh wrote:
->
->> Hi guys,
->> 
->> Not 100% sure where to go with this one.... I've been having an issue with a particular server where after 30 days or so of uptime the / partition will go readonly after spitting the following to the console:
->> 
->> EXT3-fs error (device md2): ext3_xattr_block_list: inode 4932068: bad block 9873979
->> Aborting journal on device md2.
->> Dec 25 18:17:27 wireless kernel: EXT3-fs error (device md2): ext3_xattr_block_list: inode 4932068: bad block 9873979
->> Dec 25 18:17:27 wireless kernel: Aborting journal on device md2.
->> ext3_abort called.
->> Dec 25 18:17:27 EXT3-fs error (device md2): ext3_journal_start_sb: wireless kernel:Detected aborted journal ext3_abort called.
->> Remounting filesystem read-only
->> Dec 25 18:17:27 wireless kernel: EXT3-fs error (device md2): ext3_journal_start_sb: Detected aborted journal
->> Dec 25 18:17:27 wireless kernel: Remounting filesystem read-only
->> EXT3-fs error (device md2): ext3_xattr_block_list: inode 4932068: bad block 9873979
->> Dec 25 18:17:36 wireless kernel: EXT3-fs error (device md2): ext3_xattr_block_list: inode 4932068: bad block 9873979
->> 
->> I'm a bit confused here as from what I understand, if there are bad blocks on a disk the disk should be kicked from the array - however ext3 seems to figure out there's a bad block by itself and nominates /dev/md2 as the culprit...
->> 
->> Can anyone shine some light on what is going on here - as I'm not quite as cluey with this stuff as I probably should be ;)
->
-> I should also mention that this is using CentOS 5.4 with kernel 2.6.18-164.9.1.el5. A few more details:
->
-> # mdadm -Q --detail /dev/md2
-> /dev/md2:
->         Version : 0.90
->   Creation Time : Mon Feb 23 17:15:41 2009
->      Raid Level : raid1
->      Array Size : 300511808 (286.59 GiB 307.72 GB)
->   Used Dev Size : 300511808 (286.59 GiB 307.72 GB)
->    Raid Devices : 2
->   Total Devices : 2
-> Preferred Minor : 2
->     Persistence : Superblock is persistent
->
->     Update Time : Sat Dec 26 10:34:23 2009
->           State : clean
->  Active Devices : 2
-> Working Devices : 2
->  Failed Devices : 0
->   Spare Devices : 0
->
->            UUID : fed99e3d:d08fdcc9:b9593a45:2cc09736
->          Events : 0.30586
->
->     Number   Major   Minor   RaidDevice State
->        0       3        3        0      active sync   /dev/hda3
->        1      22        3        1      active sync   /dev/hdc3
->
-> # cat /proc/mdstat 
-> Personalities : [raid1] 
-> md0 : active raid1 hdc1[1] hda1[0]
->       521984 blocks [2/2] [UU]
->       
-> md1 : active raid1 hdc2[1] hda2[0]
->       10482304 blocks [2/2] [UU]
->       
-> md3 : active raid1 hdc4[1] hda4[0]
->       1052160 blocks [2/2] [UU]
->       
-> md2 : active raid1 hdc3[1] hda3[0]
->       300511808 blocks [2/2] [UU]
->       
-> unused devices: <none>
+On Sun, 2009-12-27 at 00:13 -0600, Leslie Rhorer wrote:
+> > # mdadm --examine /dev/sdb1
+> > mdadm: No md superblock detected on /dev/sdb1.
+> > 
+> > (Does this mean that sdb1 is bad? or is that OK?)
+> 
+> 	It doesn't necessarily mean the drive is bad, but the superblock is
+> gone.  Are you having mdadm monitor your array(s) and send informational
+> messages to you upon RAID events?  If not, then what may have happened is
+> you lost the superblock on sdb1 and at some other time - before or after -
+> lost the sda drive.  Once both events had taken place, your array is toast.
+Right, I need to set up monitoring...
 
-Sounds like a block with bad data that doesn't give an IO error. The
-raid layer can't see that the data is bad but the filesystem
-recognises that the data makes no sense.
+> 
+> 	All may not be lost, however.  First of all, take care when
+> re-arranging not to lose track of which drive was which at the outset.  In
+> fact, other than the sda drive, you might be best served not to move
+> anything.  Take special care if the system re-assigns drive letters, as it
+> can easily do.
+So should I just "move" the A drive? and try to fire it back up?
 
-First I would run a check on the raid to see if the contents of both
-drives differ. Then I would take one drive out of the raid and run
-badblocks in read-write mode on it. Then resync and repeat with the
-other drive.
+> 
+> 	When you created your array, one of the steps you should have taken
+> was to put the drive configuration into /etc/mdadm.conf.  In particular, you
+> may need to attempt to re-create the array by mimicking the original command
+> used to create the array, basically zeroing out the superblocks and starting
+> again from scratch.  If you do it correctly, and are careful, it may be
+> possible to recover the array.  Note, however, the array parameters must
+> match the original configuration exactly, including the role each drive
+> plays in the array.  If you get them out of line, you can really destroy all
+> the data.
+> 
+> 	What are the contents of /etc/mdadm.conf?
+> 
 
-If none of those show error I would backup, format and restore and
-pray.
+mdadm.conf contains this:
+ARRAY /dev/md0 level=raid10 num-devices=4 UUID=3d93e545:c8d5baec:24e6b15c:676eb40f
 
-MfG
-        Goswin
+So, by re-creating, do you mean I should try to run the "mdadm --create"
+command again the same way I did back when I created the array
+originally? Will that wipe out my data?
 
-PS: Why is your / not read-only?
-PPS: run http://mrvn.homeip.net/fstest/
+
+
+Also, here is my output from smart tests:  Does this shed any more light
+on anything?  I'm not sure what the "Remaining" and "LifeTime" fiends
+mean...
+
+# smartctl -l selftest /dev/sda
+smartctl version 5.38 [i686-pc-linux-gnu] Copyright (C) 2002-8 Bruce Allen
+Home page is http://smartmontools.sourceforge.net/
+
+Standard Inquiry (36 bytes) failed [No such device]
+Retrying with a 64 byte Standard Inquiry
+Standard Inquiry (64 bytes) failed [No such device]
+A mandatory SMART command failed: exiting. To continue, add one or more '-T permissive' options.
+
+
+# smartctl -l selftest /dev/sdb
+smartctl version 5.38 [i686-pc-linux-gnu] Copyright (C) 2002-8 Bruce Allen
+Home page is http://smartmontools.sourceforge.net/
+
+=== START OF READ SMART DATA SECTION ===
+SMART Self-test log structure revision number 1
+Num  Test_Description    Status                  Remaining  LifeTime(hours)  LBA_of_first_error
+# 1  Extended offline    Completed: read failure       90%      7963         543357
+
+
+
+# smartctl -l selftest /dev/sdc
+smartctl version 5.38 [i686-pc-linux-gnu] Copyright (C) 2002-8 Bruce Allen
+Home page is http://smartmontools.sourceforge.net/
+
+=== START OF READ SMART DATA SECTION ===
+SMART Self-test log structure revision number 1
+Num  Test_Description    Status                  Remaining  LifeTime(hours)  LBA_of_first_error
+# 1  Extended offline    Completed without error       00%      7964         -
+
+
+# smartctl -l selftest /dev/sdd
+smartctl version 5.38 [i686-pc-linux-gnu] Copyright (C) 2002-8 Bruce Allen
+Home page is http://smartmontools.sourceforge.net/
+
+=== START OF READ SMART DATA SECTION ===
+SMART Self-test log structure revision number 1
+Num  Test_Description    Status                  Remaining  LifeTime(hours)  LBA_of_first_error
+# 1  Extended offline    Completed without error       00%      7965         -
+
+
+
+
+
+This is strange, now I am getting info from mdadm --examine that is
+different than before...
+
+# mdadm --examine /dev/sda
+mdadm: No md superblock detected on /dev/sda.
+
+# mdadm --examine /dev/sda1
+/dev/sda1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 3d93e545:c8d5baec:24e6b15c:676eb40f (local to host
+smoke)
+  Creation Time : Wed Jan 28 14:58:49 2009
+     Raid Level : raid10
+  Used Dev Size : 488383936 (465.76 GiB 500.11 GB)
+     Array Size : 976767872 (931.52 GiB 1000.21 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 0
+
+    Update Time : Thu Dec 24 19:25:40 2009
+          State : active
+ Active Devices : 3
+Working Devices : 3
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : edcd7fb8 - correct
+         Events : 1131433
+
+         Layout : near=2, far=1
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     0       8        1        0      active sync   /dev/sda1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       0        0        1      faulty removed
+   2     2       8       33        2      active sync   /dev/sdc1
+   3     3       8       49        3      active sync   /dev/sdd1
+
+
+
+# mdadm --examine /dev/sdb
+mdadm: No md superblock detected on /dev/sdb.
+
+# mdadm --examine /dev/sdb1
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 3d93e545:c8d5baec:24e6b15c:676eb40f (local to host
+smoke)
+  Creation Time : Wed Jan 28 14:58:49 2009
+     Raid Level : raid10
+  Used Dev Size : 488383936 (465.76 GiB 500.11 GB)
+     Array Size : 976767872 (931.52 GiB 1000.21 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 0
+
+    Update Time : Wed Dec 16 15:33:13 2009
+          State : clean
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+       Checksum : edc67464 - correct
+         Events : 687460
+
+         Layout : near=2, far=1
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     1       8       17        1      active sync   /dev/sdb1
+
+   0     0       8        1        0      active sync   /dev/sda1
+   1     1       8       17        1      active sync   /dev/sdb1
+   2     2       8       33        2      active sync   /dev/sdc1
+   3     3       8       49        3      active sync   /dev/sdd1
+
+
+
+# mdadm --examine /dev/sdc
+mdadm: No md superblock detected on /dev/sdc.
+
+# mdadm --examine /dev/sdc1
+/dev/sdc1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 3d93e545:c8d5baec:24e6b15c:676eb40f (local to host
+smoke)
+  Creation Time : Wed Jan 28 14:58:49 2009
+     Raid Level : raid10
+  Used Dev Size : 488383936 (465.76 GiB 500.11 GB)
+     Array Size : 976767872 (931.52 GiB 1000.21 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 0
+
+    Update Time : Thu Dec 24 19:25:58 2009
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : eddec3ad - correct
+         Events : 1131438
+
+         Layout : near=2, far=1
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     2       8       33        2      active sync   /dev/sdc1
+
+   0     0       0        0        0      removed
+   1     1       0        0        1      faulty removed
+   2     2       8       33        2      active sync   /dev/sdc1
+   3     3       8       49        3      active sync   /dev/sdd1
+
+
+
+# mdadm --examine /dev/sdd
+mdadm: No md superblock detected on /dev/sdd.
+
+# mdadm --examine /dev/sdd1
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 00.90.00
+           UUID : 3d93e545:c8d5baec:24e6b15c:676eb40f (local to host
+smoke)
+  Creation Time : Wed Jan 28 14:58:49 2009
+     Raid Level : raid10
+  Used Dev Size : 488383936 (465.76 GiB 500.11 GB)
+     Array Size : 976767872 (931.52 GiB 1000.21 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 0
+
+    Update Time : Thu Dec 24 19:25:58 2009
+          State : clean
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 1
+  Spare Devices : 0
+       Checksum : eddec3bf - correct
+         Events : 1131438
+
+         Layout : near=2, far=1
+     Chunk Size : 64K
+
+      Number   Major   Minor   RaidDevice State
+this     3       8       49        3      active sync   /dev/sdd1
+
+   0     0       0        0        0      removed
+   1     1       0        0        1      faulty removed
+   2     2       8       33        2      active sync   /dev/sdc1
+   3     3       8       49        3      active sync   /dev/sdd1
+
+
+
+Thanks again for all your help!
+Rick
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
