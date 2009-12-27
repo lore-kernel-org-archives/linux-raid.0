@@ -1,45 +1,48 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: fsck problems.  Can't restore raid
-Date: Sun, 27 Dec 2009 00:13:21 -0600
-Message-ID: <07.C2.04641.40BF63B4@cdptpa-omtalb.mail.rr.com>
-References: <1261875695.10448.1335.camel@vibe>
+From: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
+Subject: 99-raid-check (was: raid5: cannot start dirty degraded array)
+Date: Sun, 27 Dec 2009 13:57:38 +0100
+Message-ID: <13610270181.20091227135738@kaneda.iguw.tuwien.ac.at>
+References: <579884013.20091223125023@kaneda.iguw.tuwien.ac.at>
+ <512145787.20091223180308@kaneda.iguw.tuwien.ac.at>
+ <alpine.DEB.2.00.0912231322060.18793@p34.internal.lan>
+ <200912240940.40713.tfjellstrom@shaw.ca>
+Reply-To: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1261875695.10448.1335.camel@vibe>
+In-Reply-To: <200912240940.40713.tfjellstrom@shaw.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Rick Bragg' <lists@gmnet.net>, 'Linux RAID' <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> # mdadm --examine /dev/sdb1
-> mdadm: No md superblock detected on /dev/sdb1.
-> 
-> (Does this mean that sdb1 is bad? or is that OK?)
+addendum:
 
-	It doesn't necessarily mean the drive is bad, but the superblock is
-gone.  Are you having mdadm monitor your array(s) and send informational
-messages to you upon RAID events?  If not, then what may have happened is
-you lost the superblock on sdb1 and at some other time - before or after -
-lost the sda drive.  Once both events had taken place, your array is toast.
+after backing up data for 30 hours off the degraded array, replacing
+sda and after another 50 hours resync the raid5 was healthy again. for
+about 8 hours when again it was syncing.
 
-	All may not be lost, however.  First of all, take care when
-re-arranging not to lose track of which drive was which at the outset.  In
-fact, other than the sda drive, you might be best served not to move
-anything.  Take special care if the system re-assigns drive letters, as it
-can easily do.
+and then I discovered at least a small part of the mystery:
 
-	When you created your array, one of the steps you should have taken
-was to put the drive configuration into /etc/mdadm.conf.  In particular, you
-may need to attempt to re-create the array by mimicking the original command
-used to create the array, basically zeroing out the superblocks and starting
-again from scratch.  If you do it correctly, and are careful, it may be
-possible to recover the array.  Note, however, the array parameters must
-match the original configuration exactly, including the role each drive
-plays in the array.  If you get them out of line, you can really destroy all
-the data.
+centos 5 runs a script /etc/cron.weekly/99-raid-check (once a week of
+course) which (since a few months) triggers a re-sync of the array
+(which then runs for another 50 hours at a system load of around 8.0).
 
-	What are the contents of /etc/mdadm.conf?
+I always noticed that it resynced without a drive marked "faulty" in
+/proc/mdstat, but I never really took it seriously. And being away so
+often I never realized that it always started at sunday 4:20 in the
+night.
+rebooting during the resync stops it and the system behaves normally
+again.
 
+If I interpret the text in /etc/sysconfig/raid-check correctly, I'd
+better leave 99-raid-check running (for 50 hours ... :-( ), check
+the value of /sys/block/md0/md/mismatch_cnt and if it contains other
+than 0, I'd better get worried?
+
+and, catching up with a previous suggestion in this thread: is it safe
+to run a smrtctl long selftest on each disk while the raid is mounted
+& active? long selftest is supposed to take about 4 hours (per disk).
+
+tnx & cu
 
