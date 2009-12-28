@@ -1,38 +1,33 @@
-From: Drew <drew.kay@gmail.com>
-Subject: Re: Tools for Hardware Raid?
-Date: Mon, 28 Dec 2009 07:45:37 -0800
-Message-ID: <c268e4660912280745v3e405203la9e6f602361e6132@mail.gmail.com>
-References: <1262014433.25079.212.camel@vibe>
+From: "Sosnowski, Maciej" <maciej.sosnowski@intel.com>
+Subject: RE: [PATCH 1/3] ioat3: fix p-disabled q-continuation
+Date: Mon, 28 Dec 2009 16:08:47 +0000
+Message-ID: <129600E5E5FB004392DDC3FB599660D7CB3710B9@irsmsx504.ger.corp.intel.com>
+References: <20091223002518.32335.27768.stgit@dwillia2-linux.ch.intel.com>
+ <20091223002555.32335.85860.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1262014433.25079.212.camel@vibe>
-Sender: linux-raid-owner@vger.kernel.org
-To: Rick Bragg <lists@gmnet.net>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751884AbZL1QIy@vger.kernel.org>
+In-Reply-To: <20091223002555.32335.85860.stgit@dwillia2-linux.ch.intel.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: "stable@kernel.org" <stable@kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> I have a Dell 1900 with a perc5 raid controller
-<snip>
-> I'm wondering how I can monitor the disks, etc...
+Williams, Dan J wrote:
+> When continuing a pq calculation the driver needs 3 extra sources.  The
+> driver can perform a 3 source calculation with a single descriptor, but
+> needs an extended descriptor to process up to 8 sources in one
+> operation.  However, in the p-disabled case only one extra source is
+> needed.  When continuing a p-disabled operation there are occasions
+> (i.e. 0 < src_cnt % 8 < 3) where the tail operation does not need an
+> extended descriptor.  Properly account for this fact otherwise invalid
+> 'dmacount' values will be written to hardware usually causing the
+> channel to halt with 'invalid descriptor' errors.
+> 
+> Cc: <stable@kernel.org>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
 
-Most hardware RAID manufacturers have software you can download that
-interfaces with the raid controller to monitor and/or make changes to
-the underlying controller.
-
-At work we use IBM servers which have a java based app called
-ServeRAID that allows me to monitor the underlying RAID array, as well
-as create new arrays while the system is live, which I have set to
-notify me if something goes wrong.
-
-That said, I don't know about Dell but our IBM's also have an orange
-indicator light on the drive bays so if a drive is kicked I can see it
-first thing when I get into the office to swap tapes. That's usually
-the first warning I get that something is amiss.
-
-
--- 
-Drew
-
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
+Acked-by: Maciej Sosnowski <maciej.sosnowski@intel.com>
