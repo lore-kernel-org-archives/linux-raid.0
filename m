@@ -1,47 +1,33 @@
-From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
-Subject: Re: Raid 5 to 6 is it do-able/safe?
-Date: Tue, 29 Dec 2009 13:38:33 +0000
-Message-ID: <73e903670912290538k5242bf07ob15a15fe508d1b66@mail.gmail.com>
-References: <305721.15040.qm@web51302.mail.re2.yahoo.com> <alpine.DEB.1.10.0912291308010.27231@uplift.swm.pp.se>
-	<4B3A04C3.5070804@anonymous.org.uk>
+From: Drew <drew.kay@gmail.com>
+Subject: Re: Tools for Hardware Raid?
+Date: Tue, 29 Dec 2009 06:52:12 -0800
+Message-ID: <c268e4660912290652y3b211393rd703ae6a64dec16b@mail.gmail.com>
+References: <c268e4660912280745v3e405203la9e6f602361e6132@mail.gmail.com>
+	<0B.48.07989.3DF493B4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B3A04C3.5070804@anonymous.org.uk>
+In-Reply-To: <0B.48.07989.3DF493B4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Leslie Rhorer <lrhorer@satx.rr.com>
+Cc: Rick Bragg <lists@gmnet.net>, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Dec 29, 2009 at 1:31 PM, John Robinson
-<john.robinson@anonymous.org.uk> wrote:
->
-> On 29/12/2009 12:08, Mikael Abrahamsson wrote:
->>
->> On Tue, 29 Dec 2009, Jon Hardcastle wrote:
->>
->>> I run gentoo with kernel 2.6.22-gentoo-r8
->>>
->>> to convert my 6 drive +1 spare raid 5 to a 7 drive raid 6?
->>
->> No, you need at least kernel 2.6.32 to migrate from raid5 to raid6.
->
-> But if you don't want to run 2.6.32 permanently/on your live system, iirc you can just run it to do the migration, and once the migration and reshape have completed, you can go back to your production kernel.
->
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0The thick clouds of rolling smoke and the =
+open flames might also
+> lend a clue... =C2=A0:-)
 
-Besides the kernel version issues, this type of migration is
-definitely possible and should be safe. I just did one of these before
-christmas - grew a 3 or 4-disk RAID-5 into a 6-disk RAID-6, all on
-1.5TB drives. Lots of fun nail-biting moments watching /proc/mdstat!
-As it turned out, the thing just started, went about its business, and
-finished in a quiet and refined manner. Now my arrays are vast and
-comfortably redundant ...
+If I see that we're beyond replacing drives. ;-)
 
-Just give yourself a set of big, physical reminders to update your
-mdadm.conf when the reshape / relevel is done.
 
-And you really, preferably ought to back your data up before you do
-this. Even though the rearrangement will probably work just fine.
+--=20
+Drew
 
-Merry everything!
-
--- Kristleifur
+"Nothing in life is to be feared. It is only to be understood."
+--Marie Curie
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
