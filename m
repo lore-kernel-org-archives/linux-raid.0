@@ -1,41 +1,67 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
+From: "Andrea Dell'Amico" <adellam@sevenseas.org>
 Subject: Re: Tools for Hardware Raid?
-Date: Tue, 29 Dec 2009 15:53:40 +0000
-Message-ID: <4B3A2604.3040201@anonymous.org.uk>
-References: <c268e4660912280745v3e405203la9e6f602361e6132@mail.gmail.com> 	<0B.48.07989.3DF493B4@cdptpa-omtalb.mail.rr.com> <c268e4660912290652y3b211393rd703ae6a64dec16b@mail.gmail.com>
+Date: Tue, 29 Dec 2009 19:42:35 +0100
+Message-ID: <1262112155.2607.47.camel@localhost>
+References: <1262014433.25079.212.camel@vibe>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-r6ZKy+ig+ECXfA2xavCZ"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <c268e4660912290652y3b211393rd703ae6a64dec16b@mail.gmail.com>
+In-Reply-To: <1262014433.25079.212.camel@vibe>
 Sender: linux-raid-owner@vger.kernel.org
-To: Drew <drew.kay@gmail.com>
+To: Rick Bragg <lists@gmnet.net>
 Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 29/12/2009 14:52, Drew wrote:
->>        The thick clouds of rolling smoke and the open flames might also
->> lend a clue...  :-)
-> 
-> If I see that we're beyond replacing drives. ;-)
 
-Not necessarily... I had a server once that was badly damaged in a fire, 
-though not one that started inside the machine. The fire was an 
-electrical one behind the machine, with the result that the motherboard 
-and PSU were destroyed. The machine had two hard drives in a RAID-1 at 
-the front, and one of them fared better, in that despite the scorch 
-marks and smoky residue, it still worked. As a result the firm concerned 
-were up and running again the same morning - once I'd found some nice 
-people at IBM who whipped up a suitable replacement and gave it to a 
-same day courier.
+--=-r6ZKy+ig+ECXfA2xavCZ
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Of course I replaced the scorched drive the next day, once the array had 
-rebuilt onto a fresh drive.
+On Mon, 2009-12-28 at 10:33 -0500, Rick Bragg wrote:
+> Hi,
+>=20
+> Since my latest disaster was caused be me not monitoring raid disks, I
+> was wondering about tools for monitoring hardware based raid systems?
+>=20
+> I have a Dell 1900 with a perc5 raid controller
+>=20
+> # lspci
+> 02:0e.0 RAID bus controller: Dell PowerEdge Expandable RAID controller 5
+>=20
+> It is set up as RAID 10
+>=20
+> I tried running smartctl on it, but that does not even work because the
+> system sees the array as just one disk.
+>=20
+> I'm wondering how I can monitor the disks, etc...
+>=20
+> Any advice?
 
-Sadly this is OT as the array concerned was on an IBM ServeRAID hardware 
-RAID adapter.
+At http://linux.dell.com/ you can find firmware updates and the software
+needed to monitor every piece of hardware of your server.
 
-Cheers,
+> Thanks
+> Rick
 
-John.
+ciao
+andrea
+--=20
+Andrea Dell'Amico - <http://www.link.it/>
+
+
+--=-r6ZKy+ig+ECXfA2xavCZ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQCVAwUASzpNlnRv13Ch/b4ZAQIHDwP/TabWoCSHdwens0z8Lc/lzJfWzX+hr9dI
+B3B8yG7ADXpKsCXaQgRz5e42BpiCx2vENhQYmtdjWFIueq+gXSwIk8xKYzcVN3x6
+YuCKwYiMbFtJSPqd1gbBxcSCj39t7nfL2uS/lJQXBdMdeqdpjstZv+mCwhuYWyNU
+TcXiyxu9Emo=
+=+CWl
+-----END PGP SIGNATURE-----
+
+--=-r6ZKy+ig+ECXfA2xavCZ--
 
