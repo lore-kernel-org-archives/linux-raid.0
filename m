@@ -1,142 +1,87 @@
-From: Matt Garman <matthew.garman@gmail.com>
-Subject: Re: raid0/jbod/lvm, sorta?
-Date: Wed, 30 Dec 2009 08:15:55 -0600
-Message-ID: <20091230141555.GA26135@septictank.raw-sewage.fake>
-References: <20091230000357.GA23485@septictank.raw-sewage.fake> <52.81.08392.151EA3B4@cdptpa-omtalb.mail.rr.com>
+From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
+Subject: Re: raid0 not growable?
+Date: Wed, 30 Dec 2009 15:25:06 +0000
+Message-ID: <73e903670912300725g20dc1746mf51db90a7e90e929@mail.gmail.com>
+References: <73e903670912230552n226e9052q182174cba32f3c54@mail.gmail.com>
+	<20091224094557.1ae96a0d@notabene> <73e903670912231528u6d3cd2ekd0fa4ade06adbcf5@mail.gmail.com>
+	<20091224105424.62c41b25@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <52.81.08392.151EA3B4@cdptpa-omtalb.mail.rr.com>
+In-Reply-To: <20091224105424.62c41b25@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lrhorer@satx.rr.com>, linux-raid <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Dec 29, 2009 at 11:12:42PM -0600, Leslie Rhorer wrote:
-> > I.e., similar to RAID-0, but if one drive dies, all data (but
-> > that on the failed drive) is still readily available?
-> 
-> I can't imagine why anyone would want this.  If your data isn't
-> important - and the fact one is sanguine about losing any random
-> fraction of it argues this quite strongly - then RAID 0 fits the
-> bill.  If maintaining the data is important, then one needs
-> redundancy.
+On Wed, Dec 23, 2009 at 11:54 PM, Neil Brown <neilb@suse.de> wrote:
+> On Wed, 23 Dec 2009 23:28:37 +0000
+> Kristleifur Da=F0ason <kristleifur@gmail.com> wrote:
+>
+>> On Wed, Dec 23, 2009 at 10:45 PM, Neil Brown <neilb@suse.de> wrote:
+>> > On Wed, 23 Dec 2009 13:52:54 +0000
+>> > Kristleifur Da=F0ason <kristleifur@gmail.com> wrote:
+>> >
+>> >> Hi,
+>> >>
+>> >> I'm running a raid0 array over a couple of raid6 arrays. I had pl=
+anned
+>> >> on growing the arrays in time, and now turns out to be the time.
+>> >>
+>> > If the two raid6 arrays are exactly the same size, then you
+>> > could grow the two raid6 arrays, create a new raid0 over them
+>> > with the same block size and all your data will still be there.
+>> > But if they are not the same size, that won't work.
+>>
+>> Current chunksize is 256 and metadata is 1.1. So it's just a "mdadm
+>> --create /dev/md_bigraid0 --level=3D0 --raid-devices=3D2 --metadata=3D=
+1.1
+>> --chunksize=3D256 /dev/md_raid6a /dev/md_raid6b", right?
+>
+> Yes... there is a possible complication though.
+> With 1.1 metadata mdadm reserves some space between the end of the me=
+tadata
+> and the start of the data for a bitmap - even for raid0 which cannot =
+have
+> a bitmap. =A0The amount of space reserved is affected by the size of =
+the
+> devices.
+> So it is possible that the "data offset" will be different.
+> You should check the data offset before and after. =A0If it is differ=
+ent, we
+> will have to hack mdadm to allow you to set the data offset manually.
 
-Well, I do have real backups.  So in my vision, I wouldn't really be
-losing data, just temporarily without it.
 
-The point was to minimize data restore in the case of a failure.
-Say I have a 10 x 1 GB RAID-0 array.  That's 10 GB I have to restore
-in the case of a drive failure.  In my scenario, I only have to
-restore 1 GB.
+Thank you for the replies, Neil and everybody.
 
-> > I currently have a four-disc RAID5 device for media storage.
-> > The typical usage pattern is few writes, many reads, lots of
-> > idle time.  I got to thinking, with proper backups, RAID really
-> > only buys me availability or performance, neither of which are a
-> > priority.
-> 
-> RAID 0 provides neither, and is designed only to provide
-> additional storage capacity.
+As we rise from Christmas, bloated to satisfaction, we are in spirits
+to grow the RAID. Following your information about the bitmap size and
+the data offset, I had a quick dig through the mdadm 3.1.1 source [1].
 
-I was under the impression that most people used RAID-0 for the
-performance benefits?  I.e., multiple spindles.
+In "super1.c:static unsigned long choose_bm_space(unsigned long
+devsize)", it says "if the device is bigger than 8Gig, save 64k for
+bitmap usage, if bigger than 200Gig, save 128k".
 
-> > So I have four discs constantly running, using a fair amount of
-> > power.  And I need more space, so the power consumption only
-> > goes up.
-> 
-> Get lower power drives.  WD green drives use much less power than
-> any other drive I have tried, but if you find drives with even
-> lower consumption, go with them.  Of course, SSDs have even lower
-> power consumption, but are quite expensive.
+In this case, I have two raid6 devices under the raid0. I have grown
+the raid6 devices from ~3TB to ~6TB each. Unless I am mistaken, the
+devices are far bigger than the threshold to the 128k bitmap size,
+both before and after growth. Hence, I believe I am guaranteed an
+identical bitmap size and hence an identical data offset.
 
-Those are exactly what I have. :) See notes[1] below.
+And in theory, this case is closed. Thank you, all.
 
-> > and (2) I felt that having all four discs spinup
-> > was too much wear and tear on the drives, when, in principle, only
-> > one drive needed to spin up.
-> 
-> This isn't generally going to be true.  First of all, the odds are
-> moderately high the data you seek is going to span multiple
-> drives, even if it is not striped.
+-- Kristleifur
 
-In my vision, each file would be strictly written to only one
-physical device.
 
-> Secondly, at a very minimum the superblocks and directory
-> structures are going to have to be read multiple times.  These are
-> very likely to span 2 or 3 drives or even more.
-
-While I'm dreaming, I might as well add that either this information
-is mirrored across all drives and/or cached in RAM.  :)
-
-> > I know I could do this manually with symlinks.  E.g., have a
-> > directory like /bigstore that contains symlinks into
-> > /mnt/drive1, /mnt/drive2, /mnt/drive3, etc.
-> 
-> Well, that would work for reading the files, but not for much
-> else.  File creations would be almost nightmarish, and file writes
-> would be fraught with disaster.  What happens when the "array" has
-> plenty of space, but one drive has less than enough to write the
-> entire file?  In general, one cannot know a-priori how much space
-> a file will take unless it is simply being copied from one place
-
-I guess I didn't think about the general file writing case.  For me,
-99% of all files are put on my array via simple copy.  So the exact
-file size is known in advance.
-
-In the general file creation/file writing case, I guess I'd just
-pick the drive with the most free space, and start writing.  If that
-drive runs out of space, writes simply fail.  Although, I can see
-how this would drive people insane, seeing their file writes fail
-when, "df" says they have plenty of free space!  (Maybe, for the
-purposes of tools like "df", free space would be equal to the
-largest amount of free space on a single drive.  E.g., if you have
-9 drives with 1 GB free, and 1 with 2 GB free, df says you have 2 GB
-free.)
-
-> to another.  For that matter, what happens when all 10 drives in
-> the array have 1G left on them, and one wishes to write a 5G file?
-
-You have to buy a new drive, delete files off an existing drive, or
-maybe even have some fancy "defrag"-like utility that shuffles whole
-files around the drives.
-
-> I think the very limited benefits of what you seek are far
-> outweighed by the pitfalls and trouble of implementing it.  It
-> might be possible to cache the drive structures somewhere and then
-> attempt to only spin up the required drives, but a fragmented
-> semi-array is a really bad idea, if you ask me.  Even attempting
-> the former woud require a much closer association between the file
-> systems and the underlying arrays than is now the case, and
-> perhaps moreso than is prudent.
-
-Now that you point out the more general use cases of what I was
-describing, I agree it's definitely not trivial.  I wasn't really
-suggesting someone go off and implement this, as much as seeing if
-something already existed.  I'll probably look into the UnionFS, as
-many people suggested.  Or, for my narrow requirements, I could
-probably get away with manual management and some simple scripts.  I
-might not even need that, as, e.g., MythTV can be pointed to a root
-directory and find all files below (at least for pre-existing
-files).  <shrug>
-
-[1] Regarding the WD GreenPower drives.  I don't get the full
-    benefit of these drives, because the "head parking" feature of
-    those drives doesn't really work for me.  I started a discussion
-    on this a while ago, but the gist is: the heads will
-    park/unload, but only briefly.  Generally within five minutes,
-    something causes them to unpark.  I was unable to track down
-    what caused that.
-
-    Said discussion was titled "linux disc access when idle", on
-    this mailing list:
-    http://marc.info/?l=linux-raid&m=125078611926294&w=2
-
-    Even without the head parking, they are still among the lowest
-    powered drives, although the 5900rpm drives from Seagate and
-    5400rpm "EcoGreen" from Samsung are similar.  This according to
-    SilentPCReview.com, whose results are consistent with my
-    experience.
-
+[1] Turns out that Textmate on OS X is a very nice tool for studying
+open sourcecode. The times I have dug through source before, I've
+usually gotten lost in the trees. Textmate was refreshing - it felt
+like the source was levitating in my hand, elegantly twisting and
+turned and revealing itself. Textmate is just an editor of course, but
+it's comfortable to the point of being magical.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
