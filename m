@@ -1,77 +1,78 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re: raid0/jbod/lvm, sorta?
-Date: Tue, 29 Dec 2009 18:43:39 -0600
-Message-ID: <4B3AA23B.8060502@gmail.com>
-References: <20091230000357.GA23485@septictank.raw-sewage.fake>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH] md: make recovery started by do_md_run() visible via
+ sync_action
+Date: Wed, 30 Dec 2009 12:37:14 +1100
+Message-ID: <20091230123714.6c1c8571@notabene.brown>
+References: <20091222011305.27523.26165.stgit@dwillia2-linux.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091230000357.GA23485@septictank.raw-sewage.fake>
+In-Reply-To: <20091222011305.27523.26165.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matt Garman <matthew.garman@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: ed.ciechanowski@intel.com, marcin.labun@intel.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Matt Garman wrote:
-> Is there a way, with Linux md (or maybe lvm) to create a single mass
-> storage device from many physical drives, but with the property that
-> if one drive fails, all data isn't lost, AND no redundancy?
-> 
-> I.e., similar to RAID-0, but if one drive dies, all data (but that
-> on the failed drive) is still readily available?
-> 
-> Motivation:
-> 
-> I currently have a four-disc RAID5 device for media storage.  The
-> typical usage pattern is few writes, many reads, lots of idle time.
-> I got to thinking, with proper backups, RAID really only buys me
-> availability or performance, neither of which are a priority.
-> Modern single-disc speed is more than enough, and high-availability
-> isn't a requirement for a home media server.
-> 
-> So I have four discs constantly running, using a fair amount of
-> power.  And I need more space, so the power consumption only goes
-> up.
-> 
-> I experimented a while with letting the drives spindown (hdparm -S),
-> but (1) it was obnoxious waiting for all four discs to spinup when I
-> wanted the data (they spunup in series---good for the power supply,
-> bad for latency); and (2) I felt that having all four discs spinup
-> was too much wear and tear on the drives, when, in principle, only
-> one drive needed to spin up.
-> 
-> I got to thinking, I could just have a bunch of individual drives,
-> let them all spindown, and when data is needed, only spinup the one
-> drive that has the data I want.  Less wear and tear overall, lower
-> overall power consumption, and lower access latency (compared to the
-> whole RAID spinup).
-> 
-> I know I could do this manually with symlinks.  E.g., have a
-> directory like /bigstore that contains symlinks into /mnt/drive1,
-> /mnt/drive2, /mnt/drive3, etc.  And then if one drive dies, the
-> whole store isn't trashed.  This seems fairly simple, so I wonder if
-> there's not some automatic way to do it.  Hence, this email.  :)
-> 
-> Thanks for any thoughts or suggestions!
-> Matt
->
+On Mon, 21 Dec 2009 18:18:36 -0700
+Dan Williams <dan.j.williams@intel.com> wrote:
 
-I was thinking the best way would be to use the raid5 like you are, 
-but have a "cache" drive/device, the cache device has all filesystem 
-entries but only points over to the other data (HSM system), and then 
-when you try to read one of the files it spins things up and copies 
-that file onto cache (when done with the copy the raid array spins 
-down).    Same thing would be done on recording ... it writes to the 
-cache device and when either the cache is getting close to full moves 
-off/syncs the new files onto the raid array, and/or moves all of the 
-"new" files off every so often via a cron job.
+> By default md_do_sync() will perform recovery if no other actions are
+> specified.  However, action_show() relies on MD_RECOVERY_RECOVER to be
+> set otherwise it returns 'idle'.  So, add a missing set
+> MD_RECOVERY_RECOVER when starting recovery.
+> 
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+> Hi Neil,
+> 
+> One more to finish off recovery checkpoint support.  Without this mdmon
+> never notices that the array was rebuilding and never marks the
+> completion.  I did not see any urgency to workaround this in the mdadm
+> patchset, but let me know if you think a "kernel version > 2.6.33-rcX"
+> check is warranted.
 
-Now, exactly how to write a kernel module or some other service to 
-manage this I am not sure about, but it would in my case allow me to 
-spin down a number of spindles for a large portion of the day...and 
-those things run 5-10w/spindle, so alot of power.
+Thanks Dan.
+This is "obviously correct" and I have queued it.
+However...
+I wonder if we want that code in do_md_run at all.
+It claims to be there because if we leave the recovery to
+md_check_recovery, then it will remove and re-add the spares,
+and this will lose the recovery_offset information.
 
-If someone has ideas of where to start or some program/kernel modules 
-to start with or knows of something that would already do this, it 
-would seem useful.
+However presumably the same problem applies to recovery_offset
+information that we set manually.  Won't the call to
+remove_and_add_spares() lose that information too?
+
+I think we need to make sure that remove_and_add_spares
+doesn't lose information that we want to keep, and then
+remove this code from do_md_run.
+
+So my first question is:  did the current code really work for you?
+It looks like it would zero recovery_offset in remove_and_add_spares ??
+
+No, I don't think you want a kernel-version test just for this.
+
+Thanks,
+NeilBrown
+
+> 
+> Thanks,
+> Dan
+> 
+>  drivers/md/md.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/md/md.c b/drivers/md/md.c
+> index 1cc5f2d..fa93de0 100644
+> --- a/drivers/md/md.c
+> +++ b/drivers/md/md.c
+> @@ -4286,6 +4286,7 @@ static int do_md_run(mddev_t * mddev)
+>  		if (spares && mddev->pers->sync_request) {
+>  			mddev->recovery = 0;
+>  			set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
+> +			set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+>  			mddev->sync_thread = md_register_thread(md_do_sync,
+>  								mddev,
+>  								"resync");
+
