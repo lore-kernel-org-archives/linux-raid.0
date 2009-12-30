@@ -1,65 +1,122 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] md: make recovery started by do_md_run() visible via
- sync_action
-Date: Wed, 30 Dec 2009 15:17:23 +1100
-Message-ID: <20091230151723.4c5e31de@notabene.brown>
-References: <20091222011305.27523.26165.stgit@dwillia2-linux.ch.intel.com>
-	<20091230123714.6c1c8571@notabene.brown>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: RAID 1 Disk added as faulty
+Date: Tue, 29 Dec 2009 23:19:55 -0600
+Message-ID: <49.BC.07778.103EA3B4@cdptpa-omtalb.mail.rr.com>
+References: <4E.F2.01550.BF0663B4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091230123714.6c1c8571@notabene.brown>
+In-Reply-To: <4E.F2.01550.BF0663B4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Dan Williams <dan.j.williams@intel.com>, ed.ciechanowski@intel.com, marcin.labun@intel.com, linux-raid@vger.kernel.org
+To: 'linux-raid' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 30 Dec 2009 12:37:14 +1100
-Neil Brown <neilb@suse.de> wrote:
 
-> On Mon, 21 Dec 2009 18:18:36 -0700
-> Dan Williams <dan.j.williams@intel.com> wrote:
-> 
-> > By default md_do_sync() will perform recovery if no other actions are
-> > specified.  However, action_show() relies on MD_RECOVERY_RECOVER to be
-> > set otherwise it returns 'idle'.  So, add a missing set
-> > MD_RECOVERY_RECOVER when starting recovery.
-> > 
-> > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> > ---
-> > Hi Neil,
-> > 
-> > One more to finish off recovery checkpoint support.  Without this mdmon
-> > never notices that the array was rebuilding and never marks the
-> > completion.  I did not see any urgency to workaround this in the mdadm
-> > patchset, but let me know if you think a "kernel version > 2.6.33-rcX"
-> > check is warranted.
-> 
-> Thanks Dan.
-> This is "obviously correct" and I have queued it.
-> However...
-> I wonder if we want that code in do_md_run at all.
-> It claims to be there because if we leave the recovery to
-> md_check_recovery, then it will remove and re-add the spares,
-> and this will lose the recovery_offset information.
-> 
-> However presumably the same problem applies to recovery_offset
-> information that we set manually.  Won't the call to
-> remove_and_add_spares() lose that information too?
-> 
-> I think we need to make sure that remove_and_add_spares
-> doesn't lose information that we want to keep, and then
-> remove this code from do_md_run.
-> 
-> So my first question is:  did the current code really work for you?
-> It looks like it would zero recovery_offset in remove_and_add_spares ??
+	Hello?  Anyone?  Can someone tell me why mdadm won't add the PATA
+drive as Write mostly, or why it claims one of the members is failed?
 
-I figured it out myself.
-Since commit dfc7064500061677720fa26352963c772d3ebe6b (2.6.26)
-->hot_remove_disk will refuse to remove devices that are not failed, unless
-recovery is impossible.
-So since then, this code in do_md_run is not needed.
-I'll remove it.
+> 	I have another, possibly related, question.  I did a bit of snooping
+> around, and all six devices that are members of one of the RAID 1 arrays
+> report the same thing:
+> 
+>     Array Slot : 1 (failed, 1, 0)
+>    Array State : Uu 1 failed
+> 
+> 	(The array slot of course is either 1 or 2, depending on the
+> specific device.) Why does the superblock report something as being
+> failed?
+> All the devices and the arrays themselves all show clean.  Running a
+> repair
+> on the array has no effect on the status.  This same report is generated
+> on
+> all twelve drive partitions that are part of RAID1 arrays.  One one
+> system,
+> both hard drives are PATA drives.  On the other, one is PATA, the other
+> SATA.  I only attempted to issue the -W directive on the mixed PATA / SATA
+> system.
+> 
+> > -----Original Message-----
+> > From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> > owner@vger.kernel.org] On Behalf Of Leslie Rhorer
+> > Sent: Saturday, December 26, 2009 1:33 AM
+> > To: 'linux-raid'
+> > Subject: RAID 1 Disk added as faulty
+> >
+> >
+> > Merry Christmas all,
+> >
+> > 	I have a bit of a puzzling problem.  I have a set of three
+> > partitions on a SATA hard drive all set up as second members of three
+> RAID
+> > 1
+> > arrays with the first members missing.  I have a PATA drive partitioned
+> in
+> > precisely the same way as the SATA drive, and I am attempting to add the
+> > PATA drive's partitions to the respective existing RAID 1 arrays.  I can
+> > add
+> > the partitions with `mdadm /dev/mdx --add  /dev/hdax` (x = 1, 2, 3), and
+> > everything works just fine.  The thing is, however, for rather obvious
+> > reasons I would prefer the PATA partitions to be write-mostly.  If I add
+> > the
+> > partitions to the array and then try to make the PATA partitions
+> > write-mostly with the command `mdadm /dev/mdx -W /dev/hdax`, mdadm
+> doesn't
+> > complain, but it also doesn't appear to make the hdax partitions
+> > write-mostly.  (Or at least it does not report them as such.)  OTOH, if
+> I
+> > start with a fresh partition with no existing superblock and use the
+> > command
+> > `mdadm /dev/mdx --add -W /dev/hdax`, mdadm adds the partition and marks
+> it
+> > as write-mostly, but immediately fails the partition.  If I remove the
+> > partition and re-add it without zeroing the superblock, it again adds it
+> > as
+> > a faulty spare:
+> >
+> > /dev/md1:
+> >         Version : 01.00
+> >   Creation Time : Wed Dec 23 23:46:28 2009
+> >      Raid Level : raid1
+> >      Array Size : 401580 (392.23 MiB 411.22 MB)
+> >   Used Dev Size : 401580 (392.23 MiB 411.22 MB)
+> >    Raid Devices : 2
+> >   Total Devices : 2
+> > Preferred Minor : 1
+> >     Persistence : Superblock is persistent
+> >
+> >   Intent Bitmap : Internal
+> >
+> >     Update Time : Sat Dec 26 01:12:41 2009
+> >           State : active, degraded
+> >  Active Devices : 1
+> > Working Devices : 1
+> >  Failed Devices : 1
+> >   Spare Devices : 0
+> >
+> >            Name : 'RAID-Server':1
+> >            UUID : 76e8e11d:e0183c3c:404cb86a:19a7cb3d
+> >          Events : 188
+> >
+> >     Number   Major   Minor   RaidDevice State
+> >        0       0        0        0      removed
+> >        1       8        1        1      active sync   /dev/sda1
+> >
+> >        2       3        1        -      faulty writemostly spare
+> > /dev/hda1
+> >
+> >
+> > 	How can I add these partitions as write-mostly members of the RAID 1
+> > arrays?
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-NeilBrown
