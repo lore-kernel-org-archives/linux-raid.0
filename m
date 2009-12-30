@@ -1,54 +1,64 @@
-From: Billy Crook <billycrook@gmail.com>
-Subject: Re: raid0 not growable?
-Date: Wed, 30 Dec 2009 00:26:26 -0600
-Message-ID: <a43edf1b0912292226l6327d9ecu7d7f0fb1aca4633e@mail.gmail.com>
-References: <73e903670912230552n226e9052q182174cba32f3c54@mail.gmail.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: RAID 1 Disk added as faulty
+Date: Wed, 30 Dec 2009 00:39:38 -0600
+Message-ID: <6E.31.08392.1B5FA3B4@cdptpa-omtalb.mail.rr.com>
+References: <20091230164203.12fcfe61@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <73e903670912230552n226e9052q182174cba32f3c54@mail.gmail.com>
+In-Reply-To: <20091230164203.12fcfe61@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: 'Neil Brown' <neilb@suse.de>
+Cc: 'linux-raid' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Dec 23, 2009 at 07:52, Kristleifur Da=F0ason
-<kristleifur@gmail.com> wrote:
-> Hi,
->
-> I'm running a raid0 array over a couple of raid6 arrays. I had planne=
-d
-> on growing the arrays in time, and now turns out to be the time.
->
-> To my chagrin, searches indicate that raid0 isn't growable. Can anyon=
-e
-> confirm this before I wipe and reconfigure?
+> As for why you cannot add the PATA drive - it seems to fail, implying a
+> write error when writing to it???
 
-Not that this would solve your particular problem, but for the future,
-or if you do wipe and reconfigure, I would recommend:
+	It doesn't seem to fail.  I can add it without the Write mostly
+switch and it does fine...
 
-When you don't want your individual raid6 arrays to be any larger
-(because you don't want to further increase the probability of
-failure), don't use raid0 on top of multiple raid6 arrays.  Use LVM.
-Make each raid6 array a PV.  Add them all to one VG.  Then make one
-LV, specifying striping.  Remember that lvm extent size is NOT the
-size of lvm's striping.
+	Well, I'll be hornswaggled!  I just tried it again and this time it
+worked.  I tried it several times before on all three partitions, and it
+would always mark the partition faulty when I used the -W switch.
 
-lvcreate -i3 -I4 -l 50%FREE -n lv_bigfast vg_arrays /dev/md3 /dev/md4 /=
-dev/md5
-will create a logical volume named lv_bigfast using 50% of all free
-space in the volume group vg_arrays; split evenly between three
-contributing physical volumes md[345] (each say an 8 2TB disk raid6
-array), and striped in 4kb slices.  Adjust as you see fit.  Over time,
-you can add more md# arrays, and grow the LV and its filesystem while
-its in use.  You can even (if you have enough freespace, shrink the
-PVs, pop a disk out of each, add some more component disks, and narrow
-your disk failure domains (the number of disks in each underlying
-raid6 array) on the fly without disrupting service.  It will be far
-from instantaneous, but it beats disrupting service.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> More info (logs etc) required.
+
+	When I looked previously and again just now, I don't see anything
+unusual from then:
+
+Dec 23 11:36:24 Backup kernel: [  551.023531] md: recovery of RAID array md1
+Dec 23 11:36:24 Backup kernel: [  551.023531] md: minimum _guaranteed_
+speed: 1000 KB/sec/disk.
+Dec 23 11:36:24 Backup kernel: [  551.023531] md: using maximum available
+idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
+Dec 23 11:36:24 Backup kernel: [  551.023531] md: using 128k window, over a
+total of 6144816 blocks.
+Dec 23 11:37:04 Backup kernel: [  595.374568] md: bind<hda2>
+Dec 23 11:37:05 Backup kernel: [  595.686827] md: delaying recovery of md2
+until md1 has finished (they share one or more physical units)
+Dec 23 11:37:16 Backup kernel: [  608.666908] md: bind<hda3>
+Dec 23 11:37:17 Backup kernel: [  608.951395] md: delaying recovery of md3
+until md1 has finished (they share one or more physical units)
+Dec 23 11:43:28 Backup kernel: [ 1014.009182] md: md1: recovery done.
+Dec 23 11:43:28 Backup kernel: [ 1014.117880] md: delaying recovery of md3
+until md2 has finished (they share one or more physical units)
+Dec 23 11:43:28 Backup kernel: [ 1014.117493] md: recovery of RAID array md2
+Dec 23 11:43:28 Backup kernel: [ 1014.117496] md: minimum _guaranteed_
+speed: 1000 KB/sec/disk.
+Dec 23 11:43:28 Backup kernel: [ 1014.117498] md: using maximum available
+idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
+Dec 23 11:43:28 Backup kernel: [ 1014.117502] md: using 128k window, over a
+total of 277442414 blocks.
+Dec 23 18:11:30 Backup kernel: [25686.451020] md: md2: recovery done.
+Dec 23 18:11:30 Backup kernel: [25686.627333] md: recovery of RAID array md3
+Dec 23 18:11:30 Backup kernel: [25686.627333] md: minimum _guaranteed_
+speed: 1000 KB/sec/disk.
+Dec 23 18:11:30 Backup kernel: [25686.627333] md: using maximum available
+idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
+Dec 23 18:11:30 Backup kernel: [25686.627333] md: using 128k window, over a
+total of 204796548 blocks.
+Dec 23 22:16:36 Backup kernel: [41884.541659] md: md3: recovery done.
+
