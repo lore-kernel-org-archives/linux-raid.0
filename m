@@ -1,39 +1,23 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID 1 Disk added as faulty
-Date: Wed, 30 Dec 2009 19:52:46 +1100
-Message-ID: <20091230195246.46b02a03@notabene.brown>
-References: <6E.31.08392.1B5FA3B4@cdptpa-omtalb.mail.rr.com>
-	<C3.9D.08510.FCEFA3B4@cdptpa-omtalb.mail.rr.com>
+From: Jan Ceuleers <jan.ceuleers@computer.org>
+Subject: Re: raid0/jbod/lvm, sorta?
+Date: Wed, 30 Dec 2009 10:31:38 +0100
+Message-ID: <4B3B1DFA.3090308@computer.org>
+References: <20091230000357.GA23485@septictank.raw-sewage.fake> <alpine.DEB.1.10.0912300712090.27231@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <C3.9D.08510.FCEFA3B4@cdptpa-omtalb.mail.rr.com>
+In-Reply-To: <alpine.DEB.1.10.0912300712090.27231@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lrhorer@satx.rr.com>
-Cc: 'linux-raid' <linux-raid@vger.kernel.org>
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: Matt Garman <matthew.garman@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 30 Dec 2009 01:18:32 -0600
-"Leslie Rhorer" <lrhorer@satx.rr.com> wrote:
+Mikael Abrahamsson wrote:
+> Unionfs will do this for you.
 
-> 	Oops!  'Sorry, I was on  the wrong server.  The server with the PATA
-> drives also allowed me to add with a -W switch this time, but the logs on it
-> show even less:
+The requirements stated "few writes", not "no writes".
 
-:-)
+Correct me if I'm wrong, but I think that unionfs only allows writes to the highest-precedence branch. So writes to the store would all end up on one disk.
 
-Can you do:
-
-mdadm /dev/md1 -f /dev/hda1
-mdadm /dev/md1 -r /dev/hda1
-mdadm -D /dev/md1
-mdadm -E /dev/hda1
-mdadm /dev/md1 -a -W /dev/hda1
-mdadm -D /dev/md1
-mdadm -E /dev/hda1
-
-and show me all the output along with kernel log messages
-generated at the time.
-
-NeilBrown
+Jan
