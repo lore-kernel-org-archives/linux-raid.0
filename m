@@ -1,78 +1,96 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] md: make recovery started by do_md_run() visible via
- sync_action
-Date: Wed, 30 Dec 2009 12:37:14 +1100
-Message-ID: <20091230123714.6c1c8571@notabene.brown>
-References: <20091222011305.27523.26165.stgit@dwillia2-linux.ch.intel.com>
+Subject: Re: about raid5 recovery when created
+Date: Wed, 30 Dec 2009 13:55:02 +1100
+Message-ID: <20091230135502.6a21441f@notabene.brown>
+References: <20091210145931.46ccbfe4@notabene.brown>
+	<g3143w7eigolu0x2ziUYAxe124vaj_firegpg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20091222011305.27523.26165.stgit@dwillia2-linux.ch.intel.com>
+In-Reply-To: <g3143w7eigolu0x2ziUYAxe124vaj_firegpg@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: ed.ciechanowski@intel.com, marcin.labun@intel.com, linux-raid@vger.kernel.org
+To: mjevans1983@gmail.com
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 21 Dec 2009 18:18:36 -0700
-Dan Williams <dan.j.williams@intel.com> wrote:
 
-> By default md_do_sync() will perform recovery if no other actions are
-> specified.  However, action_show() relies on MD_RECOVERY_RECOVER to be
-> set otherwise it returns 'idle'.  So, add a missing set
-> MD_RECOVERY_RECOVER when starting recovery.
-> 
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
-> Hi Neil,
-> 
-> One more to finish off recovery checkpoint support.  Without this mdmon
-> never notices that the array was rebuilding and never marks the
-> completion.  I did not see any urgency to workaround this in the mdadm
-> patchset, but let me know if you think a "kernel version > 2.6.33-rcX"
-> check is warranted.
+Thanks.  I have applied this patch.
 
-Thanks Dan.
-This is "obviously correct" and I have queued it.
-However...
-I wonder if we want that code in do_md_run at all.
-It claims to be there because if we leave the recovery to
-md_check_recovery, then it will remove and re-add the spares,
-and this will lose the recovery_offset information.
-
-However presumably the same problem applies to recovery_offset
-information that we set manually.  Won't the call to
-remove_and_add_spares() lose that information too?
-
-I think we need to make sure that remove_and_add_spares
-doesn't lose information that we want to keep, and then
-remove this code from do_md_run.
-
-So my first question is:  did the current code really work for you?
-It looks like it would zero recovery_offset in remove_and_add_spares ??
-
-No, I don't think you want a kernel-version test just for this.
-
-Thanks,
 NeilBrown
 
-> 
-> Thanks,
-> Dan
-> 
->  drivers/md/md.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 1cc5f2d..fa93de0 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -4286,6 +4286,7 @@ static int do_md_run(mddev_t * mddev)
->  		if (spares && mddev->pers->sync_request) {
->  			mddev->recovery = 0;
->  			set_bit(MD_RECOVERY_RUNNING, &mddev->recovery);
-> +			set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
->  			mddev->sync_thread = md_register_thread(md_do_sync,
->  								mddev,
->  								"resync");
 
+
+On Wed, 9 Dec 2009 21:52:18 -0800 (PST)
+mjevans1983@gmail.com wrote:
+
+> On Wed, Dec 9, 2009 at 7:59 PM, Neil Brown <neilb@suse.de> wrote:
+> > On Wed, 9 Dec 2009 19:34:04 -0800
+> > Michael Evans <mjevans1983@gmail.com> wrote:
+> >
+> >> On Wed, Dec 9, 2009 at 5:43 PM, Neil Brown <neilb@suse.de> wrote:
+> >> > On Wed, 9 Dec 2009 19:29:04 +0800
+> >> > hank peng <pengxihan@gmail.com> wrote:
+> >> >
+> >> >> I think it is better to implement this function in kernel's md =
+layer.
+> >> >> I wonder what Neil Brown think of this?
+> >> >
+> >> > I don't think it is worth the effort.
+> >> > You probably would save some CPU time as you don't need to XOR, =
+but as has
+> >> > been said, we are usually IO bound, not CPU bound.
+> >> >
+> >> > With the current arrangement, you can start using the array imme=
+diately - you
+> >> > don't have to wait for the initial recovery to complete.
+> >> > If you zeroed all devices at create time, you would have to wait=
+ for that to
+> >> > complete before using the array.
+> >> >
+> >> > So I see very little gain, and significant cost.
+> >> >
+> >> > NeilBrown
+> >> >
+> >> >
+> >>
+> >> When I assemble an array I tend to have checked the devices before
+> >> hand; it would not be difficult to make the final pass a zeroing p=
+ass
+> >> if I knew I could vastly speed up post-assembly performance. =C2=A0=
+As I
+> >> stated, it's merely a lack of clarity in the documentation.
+> >
+> > If you would like to create a patch against the man page, I would b=
+e happy to
+> > accept it.
+> >
+> > NeilBrown
+> >
+>=20
+> diff --git a/mdadm.8 b/mdadm.8
+> index f8f240a..29e098b 100644
+> --- a/mdadm.8
+> +++ b/mdadm.8
+> @@ -648,6 +648,12 @@ data will be affected unless you actually write =
+to the array.  It can
+>  also be used when creating a RAID1 or RAID10 if you want to avoid th=
+e
+>  initial resync, however this practice \(em while normally safe \(em =
+is not
+>  recommended.  Use this only if you really know what you are doing.
+> +.IP
+> +When the devices that will be part of a new array were filled
+> +with zeros before creation the operator knows the array is
+> +actually clean. If that is the case, such as after running
+> +badblocks, this argument can be used to tell mdadm the
+> +facts the operator knows.
+>=20
+>  .TP
+>  .BR \-\-backup\-file=3D
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
