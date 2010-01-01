@@ -1,9 +1,8 @@
-From: Joe Landman <landman@scalableinformatics.com>
+From: Roger Heflin <rogerheflin@gmail.com>
 Subject: Re: Size limitation?
-Date: Fri, 01 Jan 2010 16:32:43 -0500
-Message-ID: <4B3E69FB.9020604@scalableinformatics.com>
+Date: Fri, 01 Jan 2010 15:42:35 -0600
+Message-ID: <4B3E6C4B.20604@gmail.com>
 References: <201001011457.24334.mmclagan@invlogic.com>
-Reply-To: landman@scalableinformatics.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -23,22 +22,22 @@ Michael McLagan wrote:
 > The problem is that with 10 drives (300GB SCSI), the array is coming up 
 > with 500GB of space?!?  I did an experiment and when the array size 
 > exceeds 2TB, it fails/wraps?
+> 
+> Is there a solution (simple or otherwise) for this?  The machine runs 
+> 2.6.29.5 (anything later causes the machine to lock up :( ).  I'm not 
+> sure if mdadm or the kernel is the problem either.
+> 
+> Any suggestions appreciated (please CC me on replies).
+> 
+>    Michael
+> 
+>
 
-Is this a 32 bit machine?
+Just guessing it is a mdadm bug.
 
-	uname -a
+I have a 32-bit 2.6.27.5 machine with mdadm 2.6.7 and mine is showing 
+an array size of 4.5tb correctly, so 2.6.29 should be just fine.
 
-might help.
-
-
-
--- 
-Joseph Landman, Ph.D
-Founder and CEO
-Scalable Informatics Inc.
-email: landman@scalableinformatics.com
-web  : http://scalableinformatics.com
-        http://scalableinformatics.com/jackrabbit
-phone: +1 734 786 8423 x121
-fax  : +1 866 888 3112
-cell : +1 734 612 4615
+Check mdadm --version and see what version that you have of that, you 
+might also mount up the array and do "cat /proc/mdstat" and see what 
+size the kernel reports.
