@@ -1,40 +1,44 @@
-From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
+From: Joe Landman <landman@scalableinformatics.com>
 Subject: Re: Size limitation?
-Date: Fri, 1 Jan 2010 21:31:48 +0000
-Message-ID: <73e903671001011331jd4d1fbau306e61f89c8b9009@mail.gmail.com>
-References: <201001011457.24334.mmclagan@invlogic.com> <73e903671001011328t24405d6oaf418d2b75cd42ca@mail.gmail.com>
+Date: Fri, 01 Jan 2010 16:32:43 -0500
+Message-ID: <4B3E69FB.9020604@scalableinformatics.com>
+References: <201001011457.24334.mmclagan@invlogic.com>
+Reply-To: landman@scalableinformatics.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <73e903671001011328t24405d6oaf418d2b75cd42ca@mail.gmail.com>
+In-Reply-To: <201001011457.24334.mmclagan@invlogic.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: mmclagan+reply@invlogic.com
+To: mmclagan+reply@invlogic.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Jan 1, 2010 at 9:28 PM, Kristleifur Da=F0ason
-<kristleifur@gmail.com> wrote:
-> On Fri, Jan 1, 2010 at 7:57 PM, Michael McLagan <mmclagan@invlogic.co=
-m> wrote:
->> Hello,
->>
->> =A0 I'm trying to set up a large array but isn't working. =A0I tried
->> Googling size limits, etc and came up empty.
->>
->> Any suggestions appreciated
->
+Michael McLagan wrote:
+> Hello,
+> 
+>    I'm trying to set up a large array but isn't working.  I tried 
+> Googling size limits, etc and came up empty.
+> 
+> The problem is that with 10 drives (300GB SCSI), the array is coming up 
+> with 500GB of space?!?  I did an experiment and when the array size 
+> exceeds 2TB, it fails/wraps?
 
-Ah, one more thing,
-also try creating an actual filesystem on the weirdly "small" array.
-Who knows, the size might only be misreported to mdadm. If you do get
-the correct size of filesystem, well, at least it's useful to know.
-I'd be uneasy about deploying it into production in that state, but
-it's good info to have.
+Is this a 32 bit machine?
 
--- Kristleifur
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	uname -a
+
+might help.
+
+
+
+-- 
+Joseph Landman, Ph.D
+Founder and CEO
+Scalable Informatics Inc.
+email: landman@scalableinformatics.com
+web  : http://scalableinformatics.com
+        http://scalableinformatics.com/jackrabbit
+phone: +1 734 786 8423 x121
+fax  : +1 866 888 3112
+cell : +1 734 612 4615
