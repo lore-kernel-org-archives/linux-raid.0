@@ -1,10 +1,10 @@
 From: mjevans1983@gmail.com
 Subject: Re: Size limitation?
-Date: Sun, 3 Jan 2010 15:34:04 -0800 (PST)
-Message-ID: <g40glrn1m2ajny4w1hUYAxe124vaj_firegpg@mail.gmail.com>
+Date: Sun, 3 Jan 2010 15:34:00 -0800 (PST)
+Message-ID: <g40gloecsm81fex9s1UYAxe124vaj_firegpg@mail.gmail.com>
 References: <20100103203336.GM21495@skl-net.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="-----firegpg0710eqg40glrpbao62y4cqzz"
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="-----firegpg0710eqg40glof34m14gaaxmq"
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20100103203336.GM21495@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
@@ -13,7 +13,7 @@ Cc: Zdenek Behan <rain@matfyz.cz>, Michael McLagan <mmclagan@invlogic.com>, linu
 List-Id: linux-raid.ids
 
 This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
--------firegpg0710eqg40glrpbao62y4cqzz
+-------firegpg0710eqg40glof34m14gaaxmq
 Content-Type: text/plain; format=flowed; charset=UTF-8
 Content-Transfer-Encoding: base64
 
@@ -40,7 +40,7 @@ ZSwgSSdtIG5vdCB0aGUgb25lIHRoYXQgdGhhdCBoYWQgdGhpcyBpc3N1ZSAoTW9zdGx5IGJlY2F1
 c2UgNjQgYml0IHN5c3RlbXMgaGF2ZSBhbHdheXMgaGFkIExCRCBzdXBwb3J0IG5hdGl2ZWx5IGFu
 ZCBJJ3ZlIG5ldmVyIHVzZWQgYSA+NTAwR0Igc2luZ2xlIGRyaXZlIG9yIHJhaWQgb24gYSAzMiBi
 aXQgc3lzdGVtKS4=
--------firegpg0710eqg40glrpbao62y4cqzz
+-------firegpg0710eqg40glof34m14gaaxmq
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: OpenPGP digital signature
 Content-Disposition: attachment; filename="signature.asc"
@@ -49,10 +49,10 @@ Content-Disposition: attachment; filename="signature.asc"
 Version: GnuPG v1.4.9 (GNU/Linux)
 Comment: Use GnuPG with Firefox : http://getfiregpg.org (Version: 0.7.10)
 
-iEYEARECAAYFAktBKWwACgkQRENSwT7+76RrFgCfQjNSrTEzqIFDfbxK8np3MBhs
-T1gAoKHZpBl1piFriyEt/9Rth12qaJ1f
-=gsQY
+iEYEARECAAYFAktBKWgACgkQRENSwT7+76RZbQCdG2uHYzY6SSi0IbdY1R7R4rAZ
+8OsAnRgSzLHOkom+5e3SX55JAeTSf5yZ
+=G6yl
 -----END PGP SIGNATURE-----
 
--------firegpg0710eqg40glrpbao62y4cqzz--
+-------firegpg0710eqg40glof34m14gaaxmq--
 
