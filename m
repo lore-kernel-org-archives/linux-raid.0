@@ -1,80 +1,98 @@
-From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
-Subject: Re: RAID5 broke during reshape...
-Date: Sun, 03 Jan 2010 00:18:05 +0100
-Message-ID: <1262474286.10047.51.camel@michal-laptop.sawicz.net>
-References: <1262451347.10047.14.camel@michal-laptop.sawicz.net>
-	 <70ed7c3e1001020933x7ac028a5n42af404eb5e23e30@mail.gmail.com>
-	 <1262454630.10047.23.camel@michal-laptop.sawicz.net>
-	 <70ed7c3e1001021001g7e7a17b6ufb431ddfd563eae6@mail.gmail.com>
-	 <1262456799.10047.33.camel@michal-laptop.sawicz.net>
-	 <70ed7c3e1001021036l73f6194ek8b553bd08f9893d@mail.gmail.com>
+From: Jon Hardcastle <jd_hardcastle@yahoo.com>
+Subject: Re: Raid 5 to 6 reshape q
+Date: Sun, 3 Jan 2010 10:07:50 -0800 (PST)
+Message-ID: <657593.18711.qm@web51308.mail.re2.yahoo.com>
+References: <73e903671001020419x47a07e69ucb5a01b99dc1fc03@mail.gmail.com>
+Reply-To: Jon@eHardcastle.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-HQD7xvJwUuZEfA4DXGOc"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70ed7c3e1001021036l73f6194ek8b553bd08f9893d@mail.gmail.com>
+In-Reply-To: <73e903671001020419x47a07e69ucb5a01b99dc1fc03@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Majed B." <majedb@gmail.com>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: Jon@ehardcastle.com, =?iso-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-HQD7xvJwUuZEfA4DXGOc
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-Dnia 2010-01-02, sob o godzinie 21:36 +0300, Majed B. pisze:
-> From the error mdadm reported, the array's been converted to a 5-disk
-> one and it's trying to assemble it with 2 disks only which won't work.
 
-Of course. Is there a way to force-assemble an array with an arbitrary
-sequence of devices? Also, according to mdadm -E on the disks, the array
-wasn't actually grown to 5 devices:
+--- On Sat, 2/1/10, Kristleifur Da=F0ason <kristleifur@gmail.com> wrote=
+:
 
-> Raid Devices : 4
+> From: Kristleifur Da=F0ason <kristleifur@gmail.com>
+> Subject: Re: Raid 5 to 6 reshape q
+> To: Jon@ehardcastle.com
+> Cc: linux-raid@vger.kernel.org
+> Date: Saturday, 2 January, 2010, 12:19
+> On Sat, Jan 2, 2010 at 8:52 AM, Jon
+> Hardcastle <jd_hardcastle@yahoo.com>
+> wrote:
+> > Hi guys, thanks for your help getting me going with
+> this over the last week. I kicked it off last night and all
+> is well.
+> > ...
+> > The only Q i have is it seems to be abit slow?
+> > ...
+> > md4 : active raid6 sdg1[4] sdf1[0] sde1[1] sdd1[2]
+> sdc1[5] sdb1[3] sda1[6]
+> > =A0 =A0 =A02441919680 blocks super 0.91 level 6, 64k
+> chunk, algorithm 18 [7/6] [UUUUUU_]
+> > =A0 =A0 =A0[=3D=3D=3D>.................] =A0reshape =3D 17.9%
+> (87600896/488383936) finish=3D2881.3min speed=3D2317K/sec
+>=20
+> That's very slow. An order of magnitude too slow in my
+> view. I was
+> initially seeing speeds like this during my recent reshape,
+> but got it
+> up to around 30MBps. I can't recall exactly what I did to
+> get it
+> running better - it was the equivalent of giving the
+> television a good
+> whack - but I seem to recall that increasing the md stripe
+> cache size
+> helped the most.
+>=20
+> I don't currently have access to my work computer where the
+> command
+> history lives, so this is all I have for now. If I find
+> anything more
+> to try, I'll chime in.
+>=20
+> -- Kristleifur
+> --
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at=A0 http://vger.kernel.org/majordomo-info.html
+>=20
 
-Also, the size of the array:
+Well it is trundling along at about that speed still if only i had know=
+ that if i was adding 2 drives it would be much quciker as i plan to ad=
+d another drive at the end of the week! i figured it was more to potent=
+ially go wrong!
 
-> Array Size : 5860558848 (2794.53 GiB 3000.61 GB)
+Anyways if you can suggest any commands that might speed it up i'd be v=
+ery grateful!
 
-suggests the array is actually still a 4-disk one, so 3 working disks
-should constitute a degraded array. I understand that while the array
-was being reshaped, data was moved onto the 4th disk, too, so all the 4
-devices will be needed to recover. Why was sdf marked as a spare and
-kicked out, I can't understand.
 
-> I faced interruption during a grow process before, and re-issuing the
-> grow command worked for me, but I suggest you run all the tests
-> possible now and wait till more people reply to your email.=20
+-----------------------
+N: Jon Hardcastle
+E: Jon@eHardcastle.com
+'Do not worry about tomorrow, for tomorrow will bring worries of its ow=
+n.'
 
-sdh reported one unreadable sector. That suggests everything else should
-be possible to recover, right?
+***********
+Please note, I am phasing out jd_hardcastle AT yahoo.com and replacing =
+it with jon AT eHardcastle.com
+***********
 
-BTW, bad sectors, as bad as they are, usually don't mean the disk
-failing completely, wouldn't it be better for the array to shut down
-with a huge warning that it will fail if this disk gets more errors
-instead of breaking the array if there're no spares available?
+-----------------------
 
-Also, does the mentioned smartd polling/testing reduce the probability
-of the array failing? If the sectors are marked bad, the controller will
-simply redirect requests to them, right? So the disk wouldn't be marked
-as failed, but smartd will report problems early?
 
---=20
-Regards
-Micha=C5=82 (Saviq) Sawicz
-
---=-HQD7xvJwUuZEfA4DXGOc
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: To jest =?UTF-8?Q?cz=C4=99=C5=9B=C4=87?=
- =?UTF-8?Q?_wiadomo=C5=9Bci?= podpisana cyfrowo
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEABECAAYFAks/1C0ACgkQzQlUjpZYlbfiTwCgrkjOEog9PMy204Gj3+KeMWqn
-MfoAoJZhsg5mN9V5V8gBPyinP9mgkfvF
-=u1uI
------END PGP SIGNATURE-----
-
---=-HQD7xvJwUuZEfA4DXGOc--
-
+     =20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
