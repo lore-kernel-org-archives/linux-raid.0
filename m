@@ -1,69 +1,58 @@
-From: Peter Rabbitson <rabbit+list@rabbit.us>
-Subject: Re: Raid 5 to 6 reshape q
-Date: Sun, 03 Jan 2010 21:34:43 +0100
-Message-ID: <4B40FF63.3090302@rabbit.us>
-References: <73e903671001020419x47a07e69ucb5a01b99dc1fc03@mail.gmail.com> 	<657593.18711.qm@web51308.mail.re2.yahoo.com> <a43edf1b1001031214m6a4bea69ja17508b7da41efbd@mail.gmail.com>
+From: mjevans1983@gmail.com
+Subject: Re: Size limitation?
+Date: Sun, 3 Jan 2010 15:33:59 -0800 (PST)
+Message-ID: <g40glnqsykz0g7f4o2UYAxe124vaj_firegpg@mail.gmail.com>
+References: <20100103203336.GM21495@skl-net.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="-----firegpg0710eqg40glnsj5jqpjikd2q"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <a43edf1b1001031214m6a4bea69ja17508b7da41efbd@mail.gmail.com>
+In-Reply-To: <20100103203336.GM21495@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Billy Crook <billycrook@gmail.com>
-Cc: Jon@ehardcastle.com, =?UTF-8?B?S3Jpc3RsZWlmdXIgRGHDsGFzb24=?= <kristleifur@gmail.com>, linux-raid@vger.kernel.org
+To: Andre Noll <maan@systemlinux.org>
+Cc: Zdenek Behan <rain@matfyz.cz>, Michael McLagan <mmclagan@invlogic.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Billy Crook wrote:
-> Here's a couple trivial scripts I've used to pause execution until a
-> sync is completed.  They are handy for when you want to do multiple
-> grow operations, each no sooner than after the previous completed.
-> Modify for your own purposes.
-> 
-> [root@Eight bin]# cat raid-wait-till-sync-finish
-> #! /bin/bash
-> 
-> export interval=300
-> 
-> if [[ $1 -gt 0 ]]
-> then
-> 	interval=$1
-> fi
-> 
-> echo -n Checking every ${interval} seconds for raid sync to finish.
-> 
-> while [[ $( cat /sys/block/md*/md/sync_action | \
->             grep -v idle | \
->             wc -l ) -gt 0 ]]
-> do
-> 	echo -n .
-> 	sleep ${interval}
-> done
-> 
-> echo Raid System Healthy!
-> 
-> exit 0
-> [root@Eight bin]# cat raid-wait-till-all-healthy
-> #! /bin/bash
-> 
-> export clean=no
-> while [[ $clean==no ]]
-> do
-> 	#set clean to yes
-> 	clean=yes
-> 
-> 	#Give each array the chance to set clean to no
-> 	for array in `ls -1 /sys/block/md*/md -d`
-> 	do
-> 		
-> 		if [[ $( cat $array/raid_disks ) -gt $( ls -1 $array/ | grep
-> ^rd[0-9]*$ | wc -l ) ]]
-> 		then
-> 			echo $array is still unclean
-> 			clean=no
-> 		fi
-> 	done
-> 	sleep 5
-> done
-> 
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+-------firegpg0710eqg40glnsj5jqpjikd2q
+Content-Type: text/plain; format=flowed; charset=UTF-8
+Content-Transfer-Encoding: base64
 
-Both of these can be replaced by mdadm --wait $device
+T24gU3VuLCBKYW4gMywgMjAxMCBhdCAxMjozMyBQTSwgQW5kcmUgTm9sbCA8bWFhbkBzeXN0ZW1s
+aW51eC5vcmc+IHdyb3RlOg0KPiBPbiAwMDozMCwgWmRlbmVrIEJlaGFuIHdyb3RlOg0KPj4gT24g
+MDEvMDEvMjAxMCAwODo1NyBQTSwgTWljaGFlbCBNY0xhZ2FuIHdyb3RlOg0KPj4gPiDCoCDCoEkn
+bSB0cnlpbmcgdG8gc2V0IHVwIGEgbGFyZ2UgYXJyYXkgYnV0IGlzbid0IHdvcmtpbmcuIMKgSSB0
+cmllZA0KPj4gPiBHb29nbGluZyBzaXplIGxpbWl0cywgZXRjIGFuZCBjYW1lIHVwIGVtcHR5Lg0K
+Pj4gPg0KPj4gPiBUaGUgcHJvYmxlbSBpcyB0aGF0IHdpdGggMTAgZHJpdmVzICgzMDBHQiBTQ1NJ
+KSwgdGhlIGFycmF5IGlzIGNvbWluZyB1cA0KPj4gPiB3aXRoIDUwMEdCIG9mIHNwYWNlPyE/IMKg
+SSBkaWQgYW4gZXhwZXJpbWVudCBhbmQgd2hlbiB0aGUgYXJyYXkgc2l6ZQ0KPj4gPiBleGNlZWRz
+IDJUQiwgaXQgZmFpbHMvd3JhcHM/DQo+PiA+DQo+PiBKdXN0IGN1cmlvdXMsIGRpZCB5b3UgY29t
+cGlsZSB5b3VyIGtlcm5lbCB3aXRoIExCRCAoTGFyZ2UgQmxvY2sgRGV2aWNlKQ0KPj4gc3VwcG9y
+dD8NCj4NCj4gSnVwLCBtaXNzaW5nIExCRCBzdXBwb3J0IHdvdWxkIGV4cGxhaW4gd2hhdCBNaWNo
+YWVsIGlzIHNlZWluZy4gVGhhdA0KPiBiZWdzIHRoZSBxdWVzdGlvbiB3aHkgbWQgaGFwcGlseSBj
+cmVhdGVzIGFycmF5cyA+IDJUIG9uIGEga2VybmVsDQo+IHdpdG91dCBMQkQgc3VwcG9ydC4uDQo+
+DQo+IEFuZHJlDQo+IC0tDQo+IFRoZSBvbmx5IHBlcnNvbiB3aG8gYWx3YXlzIGdvdCBoaXMgd29y
+ayBkb25lIGJ5IEZyaWRheSB3YXMgUm9iaW5zb24gQ3J1c29lDQo+DQo+IC0tLS0tQkVHSU4gUEdQ
+IFNJR05BVFVSRS0tLS0tDQo+IFZlcnNpb246IEdudVBHIHYxLjQuMSAoR05VL0xpbnV4KQ0KPg0K
+PiBpRDhEQlFGTFFQOGdXdG8xUURFQWt3OFJBZzJvQUo5NWNHNlpNZEVzMnRnMXBkRkJReVFRaWw4
+d2xRQ2RIbDhXDQo+IGo2amQ1Um9HWGtiRW1LVjlKL2J3YWUwPQ0KPiA9aEI5Rg0KPiAtLS0tLUVO
+RCBQR1AgU0lHTkFUVVJFLS0tLS0NCj4NCj4NCg0KVGhlcmUgYXJlIHR3byBNaWNoYWVsJ3MgaGVy
+ZSwgSSdtIG5vdCB0aGUgb25lIHRoYXQgdGhhdCBoYWQgdGhpcyBpc3N1ZSAoTW9zdGx5IGJlY2F1
+c2UgNjQgYml0IHN5c3RlbXMgaGF2ZSBhbHdheXMgaGFkIExCRCBzdXBwb3J0IG5hdGl2ZWx5IGFu
+ZCBJJ3ZlIG5ldmVyIHVzZWQgYSA+NTAwR0Igc2luZ2xlIGRyaXZlIG9yIHJhaWQgb24gYSAzMiBi
+aXQgc3lzdGVtKS4=
+-------firegpg0710eqg40glnsj5jqpjikd2q
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Use GnuPG with Firefox : http://getfiregpg.org (Version: 0.7.10)
+
+iEYEARECAAYFAktBKWcACgkQRENSwT7+76SoUgCgm3EdymEFQ7YkoE68YcsYoeS/
+bKMAn1KW57Z69O2tfscYu/a7Fbp1h1Ex
+=bF+1
+-----END PGP SIGNATURE-----
+
+-------firegpg0710eqg40glnsj5jqpjikd2q--
+
