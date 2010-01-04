@@ -1,38 +1,39 @@
-From: Khelben Blackstaff <eye.of.the.8eholder@gmail.com>
-Subject: Re: Alignment of RAID on specific boundary
-Date: Mon, 4 Jan 2010 23:51:33 +0200
-Message-ID: <7b3edae11001041351o141b2616x381e2e671f4a2987@mail.gmail.com>
-References: <7b3edae11001041130n42d053fcpc4923b22278c5671@mail.gmail.com>
-	 <72dbd3151001041314w511385deh38b54add67e098e0@mail.gmail.com>
+From: Adam Megacz <adam@megacz.com>
+Subject: anybody using the gc-ramdisk?
+Date: Mon, 04 Jan 2010 21:16:51 +0000
+Message-ID: <xuu2aawtfu4c.fsf@nowhere.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <72dbd3151001041314w511385deh38b54add67e098e0@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Rees <drees76@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Mr. Rees and thank you for replying.
 
-I have read this post and it is very good but it mentions alignment
-of the partitions using special CHS values and LVM/ext4 options.
+Has anybody tried using the GC-Ramdisk (aka iRAM -- four DDR DIMMs on a
+PCI card with a battery backup)
 
-My partitions and both LUKS/LVM are aligned properly (at least i think
-they are). I am worried about the alignment of RAID itself.
+  http://www.gigabyte.com.tw/Products/Storage/Products_Overview.aspx?ProductID=2180
+  http://en.wikipedia.org/wiki/I-RAM
 
-2010/1/4 David Rees <drees76@gmail.com>:
-> On Mon, Jan 4, 2010 at 11:30 AM, Khelben Blackstaff
-> <eye.of.the.8eholder@gmail.com> wrote:
->> Is there a way to make the RAID data start at a particular offset ?
->> (In my case 512 sectors) ?
->
-> http://thunk.org/tytso/blog/2009/02/20/aligning-filesystems-to-an-ssds-erase-block-size/
->
-> May have to tweak your fdisk parameters a bit.
->
-> Don't worry about aligning your /boot partition since you don't
-> read/write from that much.
->
-> -Dave
->
+Performance is much better than flash memories, but the price per
+gigabyte is much greater and maximum capacity is far less.  It's really
+closer to the nvram cache on a hardware raid card than an SSD.  The fact
+that it loses data after 16 hours without power is a little worrisome,
+although it uses a standard nimh battery so you can replace that with
+something that lasts a lot longer...
+
+Anyways, I'd be interested in hearing about anybody's experience with it.
+
+I'm thinking of using this for my md write intent bitmap and ext4
+journal, with "-o data=ordered" so close() and fsync() return as soon as
+the data hits the DIMMs -- no need to wait for the disk to rotate around.
+
+Any comments?
+
+So often I hear debates about "hardware raid" versus "software raid"
+which are actually debates over whether or not you ought to have some
+sort of battery-backed write cache around.
+
+  - a
+
