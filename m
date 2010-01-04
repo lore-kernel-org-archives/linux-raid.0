@@ -1,162 +1,53 @@
-From: <senthilkumar.muthukalai@wipro.com>
-Subject: RE: Growing Linear RAID
-Date: Mon, 4 Jan 2010 14:03:54 +0530
-Message-ID: <8338BD137FF1B64EB341218BD702985E02D283C4@BLR-EC-MBX03.wipro.com>
-References: <8338BD137FF1B64EB341218BD702985E02C8C03B@BLR-EC-MBX03.wipro.com><20091210123353.66100b41@notabene.brown><8338BD137FF1B64EB341218BD702985E02C8C165@BLR-EC-MBX03.wipro.com><20091210203008.69cbbe97@notabene.brown><8338BD137FF1B64EB341218BD702985E02C8C9BF@BLR-EC-MBX03.wipro.com> <20091217101435.4bc51a69@notabene.brown>
+From: "Tirumala Reddy Marri" <tmarri@amcc.com>
+Subject: Question about ADMA + RAID5 in the event of disk failure
+Date: Mon, 4 Jan 2010 09:16:04 -0800
+Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C08882F60@SDCEXCHANGE01.ad.amcc.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: Tirumala Reddy Marri <tmarri@amcc.com>, linux-raid@vger.kernel.org, dan.j.williams@intel.com
 List-Id: linux-raid.ids
 
-Hi Neil,
 
-In addition to the below mentioned details, I would like to add the
-details of the patch suggested by you earlier.
+Hi Dan,
+=A0 I have question about what ADMA + RAID-5 and disk failure. In the e=
+vent of disk failure what would happen to the descriptors which are que=
+ued up the DMA engine for XOR operation ?=20
+This is what I am trying.
+1. Create RAID-5 using 4 disks.
+2. Install xfs file system and mount it.
+3. Force the disk failure using mdadm -f /dev/md0 /dev/sdc
+4. Then hot remove the drive mdadm -r /dev/md0 /dev/sdc
+5. Un-mount the /dev/md0. Then run file system check using xfs_repair -=
+L /dev/md0.=20
 
-commit a778b73ff793d34c0082f76110f73a7754915067.
 
-The below mentioned observations were made after applying this patch.
+I see messages as shown below. These messages doesn't show up if I don'=
+t use ADMA. But there seem to be no data loss. But still I there seem t=
+o be a some kind of data inconsistency.
 
-Kindly help.
 
-New year wishes.
+Regards,
+Marri
 
-Thanks,
-Senthil M
 
------Original Message-----
-From: SenthilKumar Muthukalai (WT01 - Telecom Equipment) 
-Sent: Wednesday, December 23, 2009 10:03 PM
-To: Neil Brown
-Cc: linux-raid@vger.kernel.org
-Subject: RE: Growing Linear RAID
+----- messages ---
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+=A0=A0=A0=A0=A0=A0=A0 - zero log...
+=A0=A0=A0=A0=A0=A0=A0 - scan filesystem freespace and inode maps...
+bad magic # 0x83e1001c in inobt block 22/47
+expected level 0 got 14369 in inobt block 22/47
+dubious inode btree block header 22/47
+badly aligned inode rec (starting inode =3D 6375867046)
+bad starting inode # (6375867046 (0x16 0x7c0802a6)) in ino rec, skippin=
+g rec
 
-Hi Neil,
-
-Upgrading the kernel is quite impossible as there are lots of
-open-source packages bundled in our NAS product which would need
-enormous testing and effort to check the compliance of the fixes and
-features that had gone in all these days, if we upgrade.
-
-Kindly check the observations stated below and see if you can help.
-We have linux-2.6.18 and mdadm-2.6.4.
-
-[root@NAS0018f8056151 /]#
-[root@NAS0018f8056151 /]# cat /proc/mdstat
-Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
-[raid4]
-md0 : active linear sdb[0]
-      156290880 blocks super 1.2 32k rounding
-
-unused devices: <none>
-[root@NAS0018f8056151 /]#
-[root@NAS0018f8056151 /]# mdadm -D /dev/md0
-/dev/md0:
-        Version : 01.02.03
-  Creation Time : Wed Dec 23 07:45:42 2009
-     Raid Level : linear
-     Array Size : 156290880 (149.05 GiB 160.04 GB)
-   Raid Devices : 1
-  Total Devices : 1
-Preferred Minor : 0
-    Persistence : Superblock is persistent
-
-    Update Time : Wed Dec 23 07:45:42 2009
-          State : clean
- Active Devices : 1
-Working Devices : 1
- Failed Devices : 0
-  Spare Devices : 0
-
-       Rounding : 32K
-
-           Name : 0
-           UUID : df516a9e:356dc2c0:851c942d:ccab4bda
-         Events : 0
-
-    Number   Major   Minor   RaidDevice State
-       0       8       16        0      active sync   /dev/sata1
-[root@NAS0018f8056151 /]#
-[root@NAS0018f8056151 /]#
-[root@NAS0018f8056151 /]# mdadm --grow /dev/md0 --add /dev/sata2
-md: bind<sda>
-[root@NAS0018f8056151 /]#
-[root@NAS0018f8056151 /]#
-[root@NAS0018f8056151 /]# cat /proc/mdstat
-Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
-[raid4]
-md0 : active linear sda[1](S) sdb[0]
-      156290880 blocks super 1.2 32k rounding
-
-unused devices: <none>
-[root@NAS0018f8056151 /]#
-[root@NAS0018f8056151 /]# mdadm -D /dev/md0
-/dev/md0:
-        Version : 01.02.03
-  Creation Time : Wed Dec 23 07:45:42 2009
-     Raid Level : linear
-     Array Size : 156290880 (149.05 GiB 160.04 GB)
-   Raid Devices : 1
-  Total Devices : 2
-Preferred Minor : 0
-    Persistence : Superblock is persistent
-
-    Update Time : Wed Dec 23 07:45:42 2009
-          State : clean
- Active Devices : 1
-Working Devices : 2
- Failed Devices : 0
-  Spare Devices : 1
-
-       Rounding : 32K
-
-           Name : 0
-           UUID : df516a9e:356dc2c0:851c942d:ccab4bda
-         Events : 0
-
-    Number   Major   Minor   RaidDevice State
-       0       8       16        0      active sync   /dev/sata1
-
-       1       8        0        -      spare   /dev/sata2
-
-Thanks,
-Senthil M
-
------Original Message-----
-From: Neil Brown [mailto:neilb@suse.de] 
-Sent: Thursday, December 17, 2009 4:45 AM
-To: SenthilKumar Muthukalai (WT01 - Telecom Equipment)
-Cc: linux-raid@vger.kernel.org
-Subject: Re: Growing Linear RAID
-
-On Wed, 16 Dec 2009 16:32:30 +0530
-<senthilkumar.muthukalai@wipro.com> wrote:
-
-> Neil,
-> 
-> I applied the patch but the disk is getting added as a spare.
-> Pls guide me here.
->
-
-While I would like to help, it is hard to justify spending much time
-getting
-something working on an old kernel.  Maybe you should try to resolve
-whatever
-issues are keeping you from upgrading to a newer kernel.
-
-At the very least, you would need to provide me with a lot more
-information
-about what if happening.  Exactly what patch you applies, exactly what
-command you run, exactly what the output is, exactly what kernel
-messages you
-get, and exactly what the content of "/proc/mdstat" is both before and
-after.
-Even with that I cannot promise anything.
-
-NeilBrown
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
