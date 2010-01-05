@@ -1,64 +1,69 @@
 From: Khelben Blackstaff <eye.of.the.8eholder@gmail.com>
 Subject: Re: Alignment of RAID on specific boundary
-Date: Tue, 5 Jan 2010 15:02:04 +0200
-Message-ID: <7b3edae11001050502x69afeab8t57d704af0cd7ce30@mail.gmail.com>
+Date: Tue, 5 Jan 2010 15:44:10 +0200
+Message-ID: <7b3edae11001050544p4f99d7dbq83b72e385151c27@mail.gmail.com>
 References: <7b3edae11001041130n42d053fcpc4923b22278c5671@mail.gmail.com>
-	 <72dbd3151001041314w511385deh38b54add67e098e0@mail.gmail.com>
-	 <7b3edae11001041351o141b2616x381e2e671f4a2987@mail.gmail.com>
-	 <13153813.Bnqmn4ZX5I@rnqqfki.eternal-september.org>
+	 <4877c76c1001042257h49103054t977de11410eb65c6@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <13153813.Bnqmn4ZX5I@rnqqfki.eternal-september.org>
+In-Reply-To: <4877c76c1001042257h49103054t977de11410eb65c6@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: ap23563m@gmx.com
+To: Michael Evans <mjevans1983@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-2010/1/5 Michal Soltys <soltys@ziu.info>:
-> Michael Evans wrote:
+2010/1/5 Michael Evans <mjevans1983@gmail.com>:
+> On Mon, Jan 4, 2010 at 11:30 AM, Khelben Blackstaff
+> <eye.of.the.8eholder@gmail.com> wrote:
 >
-> Regarding lvm, you can use --dataalignment and --metadatasize for that
-> purpose. Recent lvm versions, when creating directly on md raid (and
-> assuming recent kernel), should align themselves automatically:
+> You want the RAID data chunks aligned so that they start on a 512byte
+> sector address that fulfills (sector & 0xFF) =3D=3D 0.
 >
-> http://www.redhat.com/archives/linux-lvm/2009-September/msg00092.html
+> Format 1.1 will reserve the space at the beginning, and I have just c=
+hecked;
 >
-
-Yes, i used the latest lvm and it aligned correctly automatically. I am
-interested in aligning the RAID itself.
-
-2010/1/5 Antonio Perez <ap23563m@gmx.com>:
->> I have read this post and it is very good but it mentions alignment
->> of the partitions using special CHS values and LVM/ext4 options.
+> 00000400 =C2=A000 00 00 00 00 00 00 00 =C2=A000 00 00 00 00 00 00 00 =
+=C2=A0|................|
+> *
+> 00003000 =C2=A0(LVM2 header)
 >
-> Yes, and that seems to be the only way to align partitions to a 128k
-> boundary. You do need to use such rules to create aligned partitions.
+> It starts the LVM2 header after 0x3000 bytes (64K chunk size); I'd
+> hope to see it around 0x10000.
 >
-> Then, you need to align RAID created from such partitions to 128k Blocks, by
-> setting the chunk-size to 128k: "mdadm --chunk=128k" ( well, a multiple of
-> that, anyway ).
+> It looks like the data isn't padded up to the desired offset.
 >
-> And, then, align LVM ( with the --dataalignment option for pvcreate ) and
-> the Filesystem ( with the -E stripe-width= to the mkfs command ) to such
-> boundaries as well. That applies to ext3 AND ext4 filesystems AFAIK.
+> I agree, it would be useful to have an option to specify the offset o=
+f
+> the first data chunk.
 >
 
-These non-default CHS values are used with MBR partitioning scheme
-to make aligning easy. fdisk (when it is ran without the -u option) aligns
-partitions on a cylinder boundary and because the cylinder size is a multiple
-of 128K all the partitions (except the first) are automatically aligned.
-But i use GPT so i don't need them. If you read my original post i manually
-created the partitions to be aligned with 128K.
+Thank you for bringing hexdump to my attention. I had completely
+forgot to run it. After reading your post i thought to run hexdump too.
 
-As for the RAID, i chose the default 512K chunk which is multiple of 128K
-so this is fine too. But i read in the "mdadm -E" output that there is a
-"136 sectors data offset". If i understand this correctly the start of the
-md device is 136 sectors from the start of the underlying partition. This
-breaks the alignment with the partition and all correct alignments on top
-of RAID.
+I wrote 10MB of 1s (0x31 in HEX) to both partitions. So "0x31"
+means "space untouched by mdadm". Then created the array
+and wrote 10KB of 2s (0x32) to it. So "0x32" means "actual data".
+The hexdump output is the following:
 
-There is of course possibility that i didn't understand it correctly and
-this "data offset" means something else. Mr. Brown can clariffy that.
+0000110 FFFF FFFF FFFF FFFF
+*
+0000400 3131 3131 3131 3131
+*
+0011000 3232 3232 3232 3232
 
-Thank you again for your time.
+The data written by mdadm (the superblock i guess) ends at 0x400
+like you posted. So the v1.1 raid superblock has 1K size i guess.
+In my case the payload starts at 0x11000 (the space between 0x400
+and 0x11000 is maybe where the bitmap lives ?)
+
+0x11000 =3D 69632 bytes =3D 136 sectors
+
+Then my understanding of "data offset" is correct. I need to move
+this offset from 136 sectors to 512 sectors.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
