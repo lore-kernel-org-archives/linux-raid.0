@@ -1,35 +1,81 @@
-From: Alessandro Baretta <alexbaretta@gmail.com>
-Subject: Re: Linear mode: array size is less than sum of sizes
-Date: Wed, 6 Jan 2010 23:14:54 +0100
-Message-ID: <f4143ac21001061414jc5584e3n2015d0e93c2d8d3c@mail.gmail.com>
-References: <f4143ac21001051021o45110f1fi833fc03bf9bae4a@mail.gmail.com>
-	 <4B439BC8.1030908@anonymous.org.uk>
+From: Antonio Perez <ap23563m@gmx.com>
+Subject: Re: embedding area is unusually small... (GRUB2 on software RAID1)
+Date: Wed, 06 Jan 2010 18:23:07 -0400
+Message-ID: <1894585.O4pOeKWFqe@rnqqfki.eternal-september.org>
+References: <1262825627.g6ATheBPQY@rnqqfki.eternal-september.org> <932657.98441.qm@web88207.mail.re2.yahoo.com>
+Reply-To: ap23563m@gmx.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B439BC8.1030908@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
-Cc: "john.robinson" <john.robinson@anonymous.org.uk>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi again John.
+Lapohos Tibor wrote:
 
-On Tue, Jan 5, 2010 at 9:06 PM, John Robinson
-<john.robinson@anonymous.org.uk> wrote:
->
-> I don't really know how safe it is, but I don't like your 16002-sector
-> thingy. If you're going to do this I can't help thinking you should
-> duplicate the real partition table, showing the partition starting on sector
-> 63, so you want 63 extra sectors, not 16002. You might do it using a file on
-> your filesystem via loopback instead of messing about with a silly
-> 1-cylinder partition.
+[...]
+>> > should I create all the partitions first and build
+>> > them into so many /dev/md[01234] devices separately maybe?
 
-You were right. No way to get the Windows bootloader to even try
-starting up Windows unless the windows partition is exactly at the
-safe offset from as it is in the original drive. Too bad that Windows
-dies with a BSOD while booting... That's with qemu-kvm 0.11.0 and
-Linux 2.6.30 on Debian Sneezy. Oh, well. I'll just try to avoid
-booting into Windows...
+>> I could tell you what seems to be a reasonable setup IMO:
+>> 200Mb --> {sda1,sdb1} --> md1 --> RAID1 --> use as /boot
+>> 5Gb   --> {sda2,sdb2} --> md2 --> RAID1 --> use as /
+>> ...
+> 
+> ....and that's exactly what is also on my list, and your suggestion
+> enforces my thoughts, thanks. Nevertheless, it still does not explain to
+> me whether multiple md devices with more underlying disk partitions or
+> more md partitions with fewer underlying disk partitions are the way to
+> go. To be absolutely clear, is the
+> 
+> /dev/sd[ab]1 => /dev/md0 => /dev/md0p[123...] [RAID1]
+> /dev/sd[ab]2 => /dev/md1 => /dev/md1p[123...] [RAID0]
 
-Alex
+I never meant to say to re-partition the md device!!
+Why is that needed in a small 200 MByte partition?
+I really like the a KISS approach.
+ 
+> or the
+
+> /dev/sd[ab][123...] => /dev/md[012...] [RAID1,RAID0]
+
+> setup the most stable, efficient and robust solution? The way I see it,
+> there shall be a difference somewhere, somehow, right? About the first
+> one, thanks to Michael E. pointing it out, we already know that one has to
+> take care about choosing the patritions.
+
+I can't say what differences or efficiency is there, but it doesn't work!!
+So, what does it matter?
+Boot your system with the SIMPLE two RAID I stated above, and then, play as 
+you wish with as many raid levels and sub-partitions as you want with the 
+*rest* of the disks.
+ 
+> Furthermore, I think that the gain in speed of RAID0 would start vanishing
+> if disk access is required on the RAID1 side all at the same time.
+
+> In fact, the whole system's efficiency would degrade. The only way out
+> would be to use 4 disks as
+> 
+> /dev/sd[ab]1 => /dev/md0 => /dev/md0p[123...] [RAID1]
+> /dev/sd[cd]1 => /dev/md1 => /dev/md1p[123...] [RAID0]
+> 
+> Right? Keep in mind that I am not after what RAID10 can offer. I can
+> afford giving up the data safety on the RAID0 side in exchange for speed.
+
+Yes, right. Do you have four disks?
+
+>> Having only two disks means to use only RAID1. RAID0 is too
+>> risky IMO as any disk failure means a complete loss of data.
+
+> I will be developing a numerical electromagnetics code, that will do quite
+> some number crunching and dumping with 4xTesla C1060 GPUs. I will need the
+> RAID0 for that purpose, for a scratch space, if you will. So it is a must
+> have for me.
+
+I was just warning about a possible loss of data, if that is not an issue in 
+your system, do set up as many RAID0 as you need.
+
+-- 
+Antonio Perez
+
