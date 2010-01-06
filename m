@@ -1,12 +1,12 @@
 From: Lapohos Tibor <tibor.lapohos@rogers.com>
-Subject: (unknown)
-Date: Wed, 6 Jan 2010 06:19:38 -0800 (PST)
-Message-ID: <600349.38000.qm@web88207.mail.re2.yahoo.com>
+Subject: embedding area is unusually small... (GRUB2 on software RAID1)
+Date: Wed, 6 Jan 2010 06:23:57 -0800 (PST)
+Message-ID: <844035.90831.qm@web88203.mail.re2.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 Hello, 
