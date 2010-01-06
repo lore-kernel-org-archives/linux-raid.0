@@ -1,27 +1,35 @@
-From: Billy Crook <billycrook@gmail.com>
-Subject: Re: Stupid question regarding RAID-1 access pattern
-Date: Wed, 6 Jan 2010 16:13:55 -0600
-Message-ID: <a43edf1b1001061413p6d3689f0u9be7bc35c8892cd5@mail.gmail.com>
-References: <4B44EB58.2090400@northarc.com> <20100106213723.GA12318@cthulhu.home.robinhill.me.uk>
+From: Alessandro Baretta <alexbaretta@gmail.com>
+Subject: Re: Linear mode: array size is less than sum of sizes
+Date: Wed, 6 Jan 2010 23:14:54 +0100
+Message-ID: <f4143ac21001061414jc5584e3n2015d0e93c2d8d3c@mail.gmail.com>
+References: <f4143ac21001051021o45110f1fi833fc03bf9bae4a@mail.gmail.com>
+	 <4B439BC8.1030908@anonymous.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100106213723.GA12318@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <4B439BC8.1030908@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
+Cc: "john.robinson" <john.robinson@anonymous.org.uk>
 List-Id: linux-raid.ids
 
-On Wed, Jan 6, 2010 at 15:37, Robin Hill <robin@robinhill.me.uk> wrote:
-> I doubt this would help much really. =A0If you're reading sequential =
-data
-> then it's pretty much as quick to keep reading as to seek to the next
-> chunk.
+Hi again John.
 
-Could it hurt [performance]?  SSDs will only become more common, and
-they haven't any seek penalty.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Tue, Jan 5, 2010 at 9:06 PM, John Robinson
+<john.robinson@anonymous.org.uk> wrote:
+>
+> I don't really know how safe it is, but I don't like your 16002-sector
+> thingy. If you're going to do this I can't help thinking you should
+> duplicate the real partition table, showing the partition starting on sector
+> 63, so you want 63 extra sectors, not 16002. You might do it using a file on
+> your filesystem via loopback instead of messing about with a silly
+> 1-cylinder partition.
+
+You were right. No way to get the Windows bootloader to even try
+starting up Windows unless the windows partition is exactly at the
+safe offset from as it is in the original drive. Too bad that Windows
+dies with a BSOD while booting... That's with qemu-kvm 0.11.0 and
+Linux 2.6.30 on Debian Sneezy. Oh, well. I'll just try to avoid
+booting into Windows...
+
+Alex
