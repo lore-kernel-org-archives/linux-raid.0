@@ -1,7 +1,7 @@
 From: dong wu <dongwucs@gmail.com>
-Subject: linux-raid raid5 delaying write
-Date: Thu, 7 Jan 2010 20:18:14 +0800
-Message-ID: <6c394cc31001070418w60785400v77e0e7a47b0732fc@mail.gmail.com>
+Subject: when read error ,where do we rewrite?
+Date: Thu, 7 Jan 2010 20:41:20 +0800
+Message-ID: <6c394cc31001070441r1287f635q9c58dc836ce488b7@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -9,17 +9,11 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hello,
-In the source code,in order to collect multiple write requests,first
-add the requests to delayed_list,
-then use plug/unplug to wait.During the waiting time,if other requests
-arrive to full a stripe_head buffer,
-then compute parity and send write request to low level to deal.
-If not so, the requests will be set pre-read mark
-stripe_preread_active,then send pre-read request to low level.
-I want to know if up level send read request and later a write request
-arrive to write the same place of read request before,
-will the read request be canceled and return the data of write request?
+when read error and can rewrite,where do we rewrite?
+It can't be rewrited to the old block.
+It should be rewrite to other place,where can we find the 'other place'?
+In the source code,I don't find the place that should be rewrited to.
 
-Best Regards
+
+
 Dong Wu
