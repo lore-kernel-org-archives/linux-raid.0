@@ -1,29 +1,58 @@
-From: Lapohos Tibor <tibor.lapohos@rogers.com>
-Subject: Re: embedding area is unusually small... (GRUB2 on software RAID1)
-Date: Thu, 7 Jan 2010 06:59:23 -0800 (PST)
-Message-ID: <812101.52805.qm@web88205.mail.re2.yahoo.com>
-References: <1894585.O4pOeKWFqe@rnqqfki.eternal-september.org>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Stupid question regarding RAID-1 access pattern
+Date: Thu, 7 Jan 2010 09:17:23 -0600
+Message-ID: <33.95.19578.10BF54B4@cdptpa-omtalb.mail.rr.com>
+References: <4B44EB58.2090400@northarc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1894585.O4pOeKWFqe@rnqqfki.eternal-september.org>
+In-Reply-To: <4B44EB58.2090400@northarc.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Curt Hartung' <curt@northarc.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks for all your help again.
 
-Things worked out nicely, and they left me wondering about what had really happened.
 
-Trial #1:
-I wiped out the disks, repartitioned them using fdisk starting the first partition at the 2nd cylinder to obtain sd[ab][12], and made md0 = sd[ab]1 and md1 = sd[ab]2. Installed GRUB2 without a problem.
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Curt Hartung
+> Sent: Wednesday, January 06, 2010 1:58 PM
+> To: linux-raid@vger.kernel.org
+> Subject: Stupid question regarding RAID-1 access pattern
+> 
+> Tried to ferret out the answer to this myself and so far so bad.
+> 
+> This just 'popped in there' while I was optimizing something completely
+> different... in a RAID-1, writes have to be mirrored of course, thats
+> what RAID-1 is, but for reads, could they not be sped up by a
+> significant amount if a storage pattern was chosen such that large
+> blocks of data were "striped" in an in-order/out-of-order scheme? In
+> other words, store all the data on both drives, but in huge (2x cache
+> size) -ish blocks that might allow 50% of a given [large] access to come
+> from each drive, with trivial [smaller] reads always coming from one or
+> the other chosen at random.
+> 
+> Downside, I know, is that the data would be organized ina  way only the
+> raid subsystem would understand, so the niceness of pulling a mirrored
+> drive out of service and it being a literal copy of the otehr drive
+> would be lost, but for such a speedup I'd be willing to pay the price of
+> always having to access it as a failed set (worst case) through the
+> md-daemon.
+> 
+> Am I off into the weeds?
 
-Trial #2:
-Then I repeated this very same thing, only this time I further partitioned the md[01] drives. The GRUB installation worked, again. The only problem was that before needing the root partition to become available the kernel would not detect the RAID partititons, only the arrays. So md0p1 was not available to be mounted, and this way I would need an initrd in the process.
-
-Trial #3!!
-I repeated Trial #1, by starting the firsst partition at the first cylinder. It worked! Therefore, I'm suspecting that cfdisk could have been the culprit the first time. How, I don't know.
-
-Thanks again for all the attention you gave me,
-Tibor
+	I think either you may be expressing yourself incorrectly, or else
+you are not thinking through the process.  If both drive are identical in
+type, then reading from either one is going to take the same amount of time.
+If one drive is inherently slower than the other, then one may employ the
+write-mostly parameter of RAID so that it generally only reads from the
+faster drive.  The only performance benefit would be observed by performing
+ordered non-sequential seeks on alternate drives, and I believe md already
+does that.  There is no benefit gained to set up a formal "stripe"
+architecture, but, for example, if the system calls for seeks to cylinders
+1000, 1001, 1002, 1003, 768, 769, and 770, then the best performance would
+be gained by issuing seeks to 1000 - 1003 on one drive and 768 - 770 on the
+other.
 
