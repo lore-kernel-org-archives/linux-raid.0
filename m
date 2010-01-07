@@ -1,60 +1,39 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Stupid question regarding RAID-1 access pattern
-Date: Wed, 6 Jan 2010 23:10:04 +0000
-Message-ID: <20100106231004.GA4351@cthulhu.home.robinhill.me.uk>
-References: <4B44EB58.2090400@northarc.com>
- <20100106213723.GA12318@cthulhu.home.robinhill.me.uk>
- <a43edf1b1001061413p6d3689f0u9be7bc35c8892cd5@mail.gmail.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Linear mode: array size is less than sum of sizes
+Date: Thu, 07 Jan 2010 00:33:12 +0000
+Message-ID: <4B452BC8.5030103@anonymous.org.uk>
+References: <f4143ac21001051021o45110f1fi833fc03bf9bae4a@mail.gmail.com>	 <4B439BC8.1030908@anonymous.org.uk> <f4143ac21001061414jc5584e3n2015d0e93c2d8d3c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="EeQfGwPcQSOJBaQU"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <a43edf1b1001061413p6d3689f0u9be7bc35c8892cd5@mail.gmail.com>
+In-Reply-To: <f4143ac21001061414jc5584e3n2015d0e93c2d8d3c@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Alessandro Baretta <alexbaretta@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On 06/01/2010 22:14, Alessandro Baretta wrote:
+> On Tue, Jan 5, 2010 at 9:06 PM, John Robinson
+> <john.robinson@anonymous.org.uk> wrote:
+>> [...] If you're going to do this I can't help thinking you should
+>> duplicate the real partition table, showing the partition starting on sector
+>> 63, so you want 63 extra sectors, not 16002.
+[...]
+> You were right. No way to get the Windows bootloader to even try
+> starting up Windows unless the windows partition is exactly at the
+> safe offset from as it is in the original drive.
 
---EeQfGwPcQSOJBaQU
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I had a feeling it might; I think there's another copy of the partition 
+description inside the partition somewhere, at least involved in the 
+boot process. Not sure though. You may also have problems if you don't 
+have the right drivers to match the virtual environment in your Windows 
+startup.
 
-On Wed Jan 06, 2010 at 04:13:55PM -0600, Billy Crook wrote:
-
-> On Wed, Jan 6, 2010 at 15:37, Robin Hill <robin@robinhill.me.uk> wrote:
-> > I doubt this would help much really. =A0If you're reading sequential da=
-ta
-> > then it's pretty much as quick to keep reading as to seek to the next
-> > chunk.
->=20
-> Could it hurt [performance]?  SSDs will only become more common, and
-> they haven't any seek penalty.
->=20
-Probably not, with SSDs, but we've already got RAID10 which, if I'm not
-mistaken, does pretty much what you're describing (if not, can you
-provide some diagrams of what the layout you're thinking of would look
-like).
+Anyway, you could still have a go at concatenating two partitions with 
+dmsetup.
 
 Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
 
---EeQfGwPcQSOJBaQU
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+John.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEARECAAYFAktFGEwACgkQShxCyD40xBIK4gCg4KUn+do4l7ay/4OnYocdfIyU
-82AAoNCdeOfy8QFqiZBqHVPrJmdnq3wm
-=KbKy
------END PGP SIGNATURE-----
-
---EeQfGwPcQSOJBaQU--
