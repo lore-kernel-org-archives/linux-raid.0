@@ -1,39 +1,25 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Linear mode: array size is less than sum of sizes
-Date: Thu, 07 Jan 2010 00:33:12 +0000
-Message-ID: <4B452BC8.5030103@anonymous.org.uk>
-References: <f4143ac21001051021o45110f1fi833fc03bf9bae4a@mail.gmail.com>	 <4B439BC8.1030908@anonymous.org.uk> <f4143ac21001061414jc5584e3n2015d0e93c2d8d3c@mail.gmail.com>
+From: dong wu <dongwucs@gmail.com>
+Subject: linux-raid raid5 delaying write
+Date: Thu, 7 Jan 2010 20:18:14 +0800
+Message-ID: <6c394cc31001070418w60785400v77e0e7a47b0732fc@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <f4143ac21001061414jc5584e3n2015d0e93c2d8d3c@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Alessandro Baretta <alexbaretta@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 06/01/2010 22:14, Alessandro Baretta wrote:
-> On Tue, Jan 5, 2010 at 9:06 PM, John Robinson
-> <john.robinson@anonymous.org.uk> wrote:
->> [...] If you're going to do this I can't help thinking you should
->> duplicate the real partition table, showing the partition starting on sector
->> 63, so you want 63 extra sectors, not 16002.
-[...]
-> You were right. No way to get the Windows bootloader to even try
-> starting up Windows unless the windows partition is exactly at the
-> safe offset from as it is in the original drive.
+hello,
+In the source code,in order to collect multiple write requests,first
+add the requests to delayed_list,
+then use plug/unplug to wait.During the waiting time,if other requests
+arrive to full a stripe_head buffer,
+then compute parity and send write request to low level to deal.
+If not so, the requests will be set pre-read mark
+stripe_preread_active,then send pre-read request to low level.
+I want to know if up level send read request and later a write request
+arrive to write the same place of read request before,
+will the read request be canceled and return the data of write request?
 
-I had a feeling it might; I think there's another copy of the partition 
-description inside the partition somewhere, at least involved in the 
-boot process. Not sure though. You may also have problems if you don't 
-have the right drivers to match the virtual environment in your Windows 
-startup.
-
-Anyway, you could still have a go at concatenating two partitions with 
-dmsetup.
-
-Cheers,
-
-John.
-
+Best Regards
+Dong Wu
