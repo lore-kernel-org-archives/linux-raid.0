@@ -1,53 +1,29 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: when read error ,where do we rewrite?
-Date: Thu, 7 Jan 2010 13:18:56 +0000
-Message-ID: <20100107131855.GA10915@cthulhu.home.robinhill.me.uk>
-References: <6c394cc31001070441r1287f635q9c58dc836ce488b7@mail.gmail.com>
+From: Lapohos Tibor <tibor.lapohos@rogers.com>
+Subject: Re: embedding area is unusually small... (GRUB2 on software RAID1)
+Date: Thu, 7 Jan 2010 06:59:23 -0800 (PST)
+Message-ID: <812101.52805.qm@web88205.mail.re2.yahoo.com>
+References: <1894585.O4pOeKWFqe@rnqqfki.eternal-september.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="sm4nu43k4a2Rpi4c"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <6c394cc31001070441r1287f635q9c58dc836ce488b7@mail.gmail.com>
+In-Reply-To: <1894585.O4pOeKWFqe@rnqqfki.eternal-september.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Thanks for all your help again.
 
---sm4nu43k4a2Rpi4c
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Things worked out nicely, and they left me wondering about what had really happened.
 
-On Thu Jan 07, 2010 at 08:41:20PM +0800, dong wu wrote:
+Trial #1:
+I wiped out the disks, repartitioned them using fdisk starting the first partition at the 2nd cylinder to obtain sd[ab][12], and made md0 = sd[ab]1 and md1 = sd[ab]2. Installed GRUB2 without a problem.
 
-> when read error and can rewrite,where do we rewrite?
-> It can't be rewrited to the old block.
-> It should be rewrite to other place,where can we find the 'other place'?
-> In the source code,I don't find the place that should be rewrited to.
->=20
-It's rewritten to the same block - it's up to the low-level device (the
-disk) to attempt a write and transparently remap the block if the write
-fails.
+Trial #2:
+Then I repeated this very same thing, only this time I further partitioned the md[01] drives. The GRUB installation worked, again. The only problem was that before needing the root partition to become available the kernel would not detect the RAID partititons, only the arrays. So md0p1 was not available to be mounted, and this way I would need an initrd in the process.
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+Trial #3!!
+I repeated Trial #1, by starting the firsst partition at the first cylinder. It worked! Therefore, I'm suspecting that cfdisk could have been the culprit the first time. How, I don't know.
 
---sm4nu43k4a2Rpi4c
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+Thanks again for all the attention you gave me,
+Tibor
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEARECAAYFAktF3z8ACgkQShxCyD40xBL2SACePJTCXbfRiA67sFHITqI9uzvD
-KSIAoLjHvql8cWiRBc9Nb/q6RmK70q7f
-=0u/J
------END PGP SIGNATURE-----
-
---sm4nu43k4a2Rpi4c--
