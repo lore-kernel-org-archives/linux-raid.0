@@ -1,63 +1,70 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: [HELP]Have you solved "2.6.23.1: mdadm/raid5 hung/d-state"
- problem?
-Date: Fri, 8 Jan 2010 10:48:47 -0500 (EST)
-Message-ID: <alpine.DEB.2.00.1001081047010.18176@p34.internal.lan>
-References: <389deec71001072129r71ef27bened0b68b641a4e782@mail.gmail.com>  <alpine.DEB.2.00.1001080624001.3241@p34.internal.lan> <389deec71001080746g3227f2bcwab0fa2f8ff0c925c@mail.gmail.com>
+From: Tim Bock <jtbock@daylight.com>
+Subject: Question about raid robustness when disk fails
+Date: Fri, 08 Jan 2010 10:39:45 -0700
+Message-ID: <1262972385.8962.159.camel@kije>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <389deec71001080746g3227f2bcwab0fa2f8ff0c925c@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: hank peng <pengxihan@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Hello,
 
-If I did not reply then I either did not apply the patch, it did not solve 
-the problem or I upgraded to a newer kernel, I honestly do not remember.
+	I built a raid-1 + lvm setup on a Dell 2950 in December 2008.  The OS
+disk (ubuntu server 8.04) is not part of the raid.  Raid is 4 disks + 1
+hot spare (all raid disks are sata, 1TB Seagates).
 
-But if you read through the thread, Neil noted that it has been fixed in 
-the patches here:
-http://lkml.indiana.edu/hypermail/linux/kernel/0711.0/1092.html
+	Worked like a charm for ten months, and then had some kind of disk
+problem in October which drove the load average to 13.  Initially tried
+a reboot, but system would not come all of the way back up.  Had to boot
+single-user and comment out the RAID entry.  System came up, I manually
+failed/removed the offending disk, added the RAID entry back to fstab,
+rebooted, and things proceeded as I would expect.  Replaced offending
+drive.
 
-Justin.
+	In early December, had a hiccup on a drive in a different slot.  Load
+average again near 13.  Issued reboot, which proceeded normally until
+the "unmounting local filesystems" stage, and then just seemed to hang.
+Eventually just pushed power button.  The subsequent boot took about
+twenty minutes (journal recovery and fsck), but seemed to come up ok.
 
-On Fri, 8 Jan 2010, hank peng wrote:
+From the log:
+Dec 9 02:06:10 fs1 kernel: [6185521.188847] mptbase: ioc0:
+LogInfo(0x31080000): Originator={PL}, Code={SATA NCQ Fail All Commands
+After Error}, SubCode(0x0000) 
+Dec 9 02:06:10 fs1 kernel: [6185521.189287] sd 2:0:1:0: [sdb] Result:
+hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK 
+Dec 9 02:06:10 fs1 kernel: [6185521.189294] sd 2:0:1:0: [sdb] Sense
+Key : Medium Error [current] 
+Dec 9 02:06:10 fs1 kernel: [6185521.189299] Info fld=0x2e78894 
+Dec 9 02:06:10 fs1 kernel: [6185521.189302] sd 2:0:1:0: [sdb] Add.
+Sense: Unrecovered read error 
+Dec 9 02:06:10 fs1 kernel: [6185521.189309] end_request: I/O error, dev
+sdb, sector 48728212
 
-> 2010/1/8 Justin Piszcz <jpiszcz@lucidpixels.com>:
->> Hi,
->>
->> Run the latest kernel, (2.6.32.x) and try it out, see if it fixes the
->> problem, 2.6.23.1 is very old.
->>
->
-> I planed to try 2.6.31.6, but it is better if it can be fixed under
-> 2.6.23 because our product is tested under this version of kernel for
-> a long time.
-> Who knows what else problem will be caused if we upgraded kernel.
-> Have you applied this patch and have a try?
->> Justin.
->>
->> On Fri, 8 Jan 2010, hank peng wrote:
->>
->>> Hi:
->>> I encountered a serious problem about RAID5 in kernel 2.6.23 which you
->>> have posted in linux-raid mailing
->>> list:http://lkml.indiana.edu/hypermail/linux/kernel/0711.0/0992.html
->>> I wonder whether you have solved the problem after applying the patch
->>> provided by Dan Williams?
->>>
->>>
->>>
->>> --
->>> The simplest is not all best but the best is surely the simplest!
->>>
->>
->
->
->
-> -- 
-> The simplest is not all best but the best is surely the simplest!
->
+Ok, so looks like the drive is having some problems, maybe failing.
+Noted, but I have a hot spare which should take over in the event of a
+failure, yes?
+
+Things moved along fine until Dec 23.  Same drive and symptoms as
+earlier that month, but this time it did not come up on its own when
+rebooted.  Had to comment out the RAID while in single-user mode,
+reboot, manually fail/remove drive, and then it finally started syncing
+with the spare as expected.  From smartctl, the last command before the
+error was READ FPDMA QUEUED (this was the same for all five of the most
+recent errors reported by SMART, and all essentially at the same time).
+
+So it appears I have another bad disk, though smartctl reports that the
+drive passes the extended self-test.  My question (at long last) is
+this:  In all three cases, why didn't the raid fail the drive and start
+using the spare (without my help)?  I guess I'm not clear on what kind
+of failures the raid will detect/survive (beyond the obvious, like
+failure of a disk and its mirror or bus failure).  Is there some
+configuration piece I have missed?
+
+Thanks for any enlightenment...
+
+Tim
+
