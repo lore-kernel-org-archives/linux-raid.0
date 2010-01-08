@@ -1,43 +1,80 @@
-From: "spren.gm@gmail.com" <spren.gm@gmail.com>
-Subject: Re: why is md/raid5 sequential write speed so slow?
-Date: Fri, 8 Jan 2010 13:39:21 +0800
-Message-ID: <201001081339187349051@gmail.com>
-References: <6c394cc31001072119l2619d8aap627164d34eec6806@mail.gmail.com>
+From: Michael Evans <mjevans1983@gmail.com>
+Subject: Re: when read error ,where do we rewrite?
+Date: Thu, 7 Jan 2010 22:35:29 -0800
+Message-ID: <4877c76c1001072235m2790209exe0601e410889d52f@mail.gmail.com>
+References: <6c394cc31001070441r1287f635q9c58dc836ce488b7@mail.gmail.com>
+	 <20100107131855.GA10915@cthulhu.home.robinhill.me.uk>
+	 <6c394cc31001072054v7368cc05kb7005b39d00c1c07@mail.gmail.com>
+	 <6c394cc31001072059t2669afa8l5fed42ff77b3c134@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <6c394cc31001072059t2669afa8l5fed42ff77b3c134@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: dong wu <dongwucs@gmail.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: dong wu <dongwucs@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> from:dong wu
->I have made a test in my server!
->raid5 capacity:80G,  disks:9
->IO type                        IOPS                   speed(M/s)
->1024k seq write            40.67                   40.67
->512k seq write              70.89                   39.45
->256k seq write             36.02                    34.00
->128k seq write             134.19                   16.77
->64k seq write               232.26                   14.52
->32k seq write              160.23                    5.01
->16k seq write              148.48                    2.32
->8k seq write                151.05                   1.18
->4k seq write                151.39                   0.59
->2k seq write                 290.90                  0.57
->1k seq write                 526.21                  0.51
->512B seq write             1076.60                0.53
+On Thu, Jan 7, 2010 at 8:59 PM, dong wu <dongwucs@gmail.com> wrote:
+> In the source code of raid5,when write error,it faulty the disk,not r=
+emap
+> the block. why do it use "remap the block"?
 >
->I don't know why raid5 seq write is so slow.
->Does delaying write cause this?
+> 2010/1/8, dong wu <dongwucs@gmail.com>:
+>> If it is written to the same block,will it read error again?
+>> when read error,the low-level attempts a write and remap the block i=
+f
+>> the write fails.
+>> where does it remap?
+>> Is there any spare block in the disk for remap when read or write er=
+ror occurs?
+>>
+>> 2010/1/7, Robin Hill <robin@robinhill.me.uk>:
+>> > On Thu Jan 07, 2010 at 08:41:20PM +0800, dong wu wrote:
+>> >
+>> > > when read error and can rewrite,where do we rewrite?
+>> > > It can't be rewrited to the old block.
+>> > > It should be rewrite to other place,where can we find the 'other=
+ place'?
+>> > > In the source code,I don't find the place that should be rewrite=
+d to.
+>> > >
+>> > It's rewritten to the same block - it's up to the low-level device=
+ (the
+>> > disk) to attempt a write and transparently remap the block if the =
+write
+>> > fails.
+>> >
+>> > Cheers,
+>> > =A0 =A0Robin
+>> > --
+>> > =A0 =A0 ___
+>> > =A0 =A0( ' } =A0 =A0 | =A0 =A0 =A0 Robin Hill =A0 =A0 =A0 =A0<robi=
+n@robinhill.me.uk> |
+>> > =A0 / / ) =A0 =A0 =A0| Little Jim says .... =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0|
+>> > =A0// !! =A0 =A0 =A0 | =A0 =A0 =A0"He fallen in de water !!"
+>> >
+>> >
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
 >
-well, 
-(1) is raid5 degraded ,recovering or resyncing ?
-(2) how is the speed of members ?
-(3) how do you test that (tools) and how is the cpu utilization during test?
-(4) it seems that you used partitions of disks as raid members, any other read/write operations on other partitions ?
-(5) try to set /sys/block/mdX/md/stripe_cache_size larger
-(6) XOR calculation too slow?
 
-------------------				 
-spren.gm@gmail.com
-2010-01-08
-
-
+Modern mass storage devices provide an /abstraction/ of a linear
+storage device which needn't actually be so.  On most of them data
+plus some extra parity for recovery are stored; if the drive has
+unusual trouble reading the data back, it will try to get a good
+read/repair and then use another, spare (reserved), area on the device
+in place of the one that 'went bad'.  This is actually a major problem
+for cryptographic/security concerns, and is one possible metric in
+S.M.A.R.T. data that can indicate a failing drive.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
