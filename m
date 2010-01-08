@@ -1,35 +1,41 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: linux-raid raid5 delaying write
-Date: Thu, 7 Jan 2010 10:44:09 -0700
-Message-ID: <e9c3a7c21001070944iea98871tb2b42e942c14b87@mail.gmail.com>
-References: <6c394cc31001070418w60785400v77e0e7a47b0732fc@mail.gmail.com>
+From: dong wu <dongwucs@gmail.com>
+Subject: Re: when read error ,where do we rewrite?
+Date: Fri, 8 Jan 2010 12:54:01 +0800
+Message-ID: <6c394cc31001072054v7368cc05kb7005b39d00c1c07@mail.gmail.com>
+References: <6c394cc31001070441r1287f635q9c58dc836ce488b7@mail.gmail.com>
+	 <20100107131855.GA10915@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6c394cc31001070418w60785400v77e0e7a47b0732fc@mail.gmail.com>
+In-Reply-To: <20100107131855.GA10915@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: dong wu <dongwucs@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jan 7, 2010 at 5:18 AM, dong wu <dongwucs@gmail.com> wrote:
-> hello,
-> In the source code,in order to collect multiple write requests,first
-> add the requests to delayed_list,
-> then use plug/unplug to wait.During the waiting time,if other requests
-> arrive to full a stripe_head buffer,
-> then compute parity and send write request to low level to deal.
-> If not so, the requests will be set pre-read mark
-> stripe_preread_active,then send pre-read request to low level.
-> I want to know if up level send read request and later a write request
-> arrive to write the same place of read request before,
-> will the read request be canceled and return the data of write request?
+If it is written to the same block,will it read error again?
+when read error,the low-level attempts a write and remap the block if
+the write fails.
+where does it remap?
+Is there any spare block in the disk for remap when read or write error occurs?
 
-No, it is up to the filesystem or whatever code is above the RAID to
-enforce ordering.  In order to guarantee that a read returns the data
-from a previous write you either need to wait for the write to
-complete, or with recent kernels send a barrier request to flush the
-write.
-
---
-Dan
+2010/1/7, Robin Hill <robin@robinhill.me.uk>:
+> On Thu Jan 07, 2010 at 08:41:20PM +0800, dong wu wrote:
+>
+> > when read error and can rewrite,where do we rewrite?
+> > It can't be rewrited to the old block.
+> > It should be rewrite to other place,where can we find the 'other place'?
+> > In the source code,I don't find the place that should be rewrited to.
+> >
+> It's rewritten to the same block - it's up to the low-level device (the
+> disk) to attempt a write and transparently remap the block if the write
+> fails.
+>
+> Cheers,
+>    Robin
+> --
+>     ___
+>    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+>   / / )      | Little Jim says ....                            |
+>  // !!       |      "He fallen in de water !!"                 |
+>
+>
