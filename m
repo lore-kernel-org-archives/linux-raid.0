@@ -1,22 +1,44 @@
-From: hank peng <pengxihan@gmail.com>
-Subject: Can I skip recovery for RAID5 in this way?
-Date: Sat, 9 Jan 2010 12:23:51 +0800
-Message-ID: <389deec71001082023h21bdb12dg548b62d12d1c6c35@mail.gmail.com>
+From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
+Subject: Re: Can I skip recovery for RAID5 in this way?
+Date: Sat, 09 Jan 2010 06:00:01 +0100
+Message-ID: <1263013201.2304.128.camel@michal-laptop.sawicz.net>
+References: <389deec71001082023h21bdb12dg548b62d12d1c6c35@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-vg3xdJpKTTcHy1EA+3U4"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <389deec71001082023h21bdb12dg548b62d12d1c6c35@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: hank peng <pengxihan@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-For my platform, recovery when creating a raid5 array or adding a new
-disk to a degraded raid5 array is not only time-consuming but also cpu
-cost. I am thinking now when every write into a raid5 stripe, if we
-only use reconstruct_write method, can I use this way to skip
-recovery?
-BTW, my appliation mainly focus on sequential write and I can also
-limit the number of disks in raid5.
-Please correct me if I am wrong, maybe my way is stupid.
 
--- 
-The simplest is not all best but the best is surely the simplest!
+--=-vg3xdJpKTTcHy1EA+3U4
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Dnia 2010-01-09, sob o godzinie 12:23 +0800, hank peng pisze:
+> Please correct me if I am wrong, maybe my way is stupid.
+
+You'd lose redundancy this way. If any of the other disks fail, there
+would be not enough data to recover.
+
+--=20
+Cheers
+Micha=C5=82 (Saviq) Sawicz
+
+--=-vg3xdJpKTTcHy1EA+3U4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: To jest =?UTF-8?Q?cz=C4=99=C5=9B=C4=87?=
+ =?UTF-8?Q?_wiadomo=C5=9Bci?= podpisana cyfrowo
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
+
+iEYEABECAAYFAktIDVEACgkQzQlUjpZYlbctlQCfWi6OZ2TWDnDd7WU0SJMaggt7
+BB0AoM6KWv2hUDl48IojyeuF/PzphRNc
+=+HrE
+-----END PGP SIGNATURE-----
+
+--=-vg3xdJpKTTcHy1EA+3U4--
+
