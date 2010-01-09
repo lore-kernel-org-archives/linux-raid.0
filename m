@@ -1,31 +1,38 @@
-From: Keld =?iso-8859-1?Q?J=F8rn?= Simonsen <keld@keldix.com>
-Subject: Re: SSD & mechanical disc in RAID 1
-Date: Sat, 9 Jan 2010 21:23:26 +0200
-Message-ID: <20100109192326.GB16383@rap.rap.dk>
-References: <7a329d911001090953j17829cd9qca0888fbcd7b4805@mail.gmail.com>
+From: "Tirumala Reddy Marri" <tmarri@amcc.com>
+Subject: RE: Can I skip recovery for RAID5 in this way?
+Date: Sat, 9 Jan 2010 13:03:13 -0800
+Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C089897FE@SDCEXCHANGE01.ad.amcc.com>
+References: <389deec71001082023h21bdb12dg548b62d12d1c6c35@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <7a329d911001090953j17829cd9qca0888fbcd7b4805@mail.gmail.com>
+Content-class: urn:content-classes:message
+In-Reply-To: <389deec71001082023h21bdb12dg548b62d12d1c6c35@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wil Reichert <wil.reichert@gmail.com>
-Cc: linux raid <linux-raid@vger.kernel.org>
+To: hank peng <pengxihan@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, Jan 09, 2010 at 09:53:11AM -0800, Wil Reichert wrote:
-> Has anyone ever tried putting an SSD and a mechanical disc in RAID 1
-> using write-mostly?  The goal would be to extol the speed & latency
-> virtues of an SSD while retaining the integrity of the traditional
-> storage.  Would this setup even work as I expect it to?
-
-
-I think you are better served by trying out RAID10 in the far or offset
-layouts. RAID1 would per se not gain from the low latency times of 
-SSD. RAID1 should function the same with hard disk as with SSD, 
-and with hard disk it would not make sense to multiplex reading
-of a file, as skipping and reading a block essentially takes the same
-time.
-
-Best regards
-Keld
+SSBhbSBub3Qgc3VyZSByZWNvdmVyIHNsb3dzIGRvd24gLiBCdXQgZm9yIHN1cmUgZGVncmFkZWQg
+bW9kZSBwZXJmb3JtYW5jZSB3aWxsIGJlIGxvd2VyLCBlc3BlY2lhbGx5IHJlYWQgcGVyZm9ybWFu
+Y2Ugd2lsbCBiZSB3b3JzZSBhcyBkYXRhIG5lZWQgdG8gYmUgcmVjb3ZlcmVkL2NvbXB1dGVkLiBT
+YW1lIHdpdGggcmVjb3ZlcnkgbW9kZSBmb3IgcmVhZC4gQnV0IHdyaXRlIHBlcmZvcm1hbmNlIHNo
+b3VsZCBub3QgYWZmZWN0ZWQuIE1heSBiZSBJIGFtIHdyb25nLg0KDQotLS0tLU9yaWdpbmFsIE1l
+c3NhZ2UtLS0tLQ0KRnJvbTogbGludXgtcmFpZC1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0
+bzpsaW51eC1yYWlkLW93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIGhhbmsgcGVu
+Zw0KU2VudDogRnJpZGF5LCBKYW51YXJ5IDA4LCAyMDEwIDg6MjQgUE0NClRvOiBsaW51eC1yYWlk
+DQpTdWJqZWN0OiBDYW4gSSBza2lwIHJlY292ZXJ5IGZvciBSQUlENSBpbiB0aGlzIHdheT8NCg0K
+Rm9yIG15IHBsYXRmb3JtLCByZWNvdmVyeSB3aGVuIGNyZWF0aW5nIGEgcmFpZDUgYXJyYXkgb3Ig
+YWRkaW5nIGEgbmV3DQpkaXNrIHRvIGEgZGVncmFkZWQgcmFpZDUgYXJyYXkgaXMgbm90IG9ubHkg
+dGltZS1jb25zdW1pbmcgYnV0IGFsc28gY3B1DQpjb3N0LiBJIGFtIHRoaW5raW5nIG5vdyB3aGVu
+IGV2ZXJ5IHdyaXRlIGludG8gYSByYWlkNSBzdHJpcGUsIGlmIHdlDQpvbmx5IHVzZSByZWNvbnN0
+cnVjdF93cml0ZSBtZXRob2QsIGNhbiBJIHVzZSB0aGlzIHdheSB0byBza2lwDQpyZWNvdmVyeT8N
+CkJUVywgbXkgYXBwbGlhdGlvbiBtYWlubHkgZm9jdXMgb24gc2VxdWVudGlhbCB3cml0ZSBhbmQg
+SSBjYW4gYWxzbw0KbGltaXQgdGhlIG51bWJlciBvZiBkaXNrcyBpbiByYWlkNS4NClBsZWFzZSBj
+b3JyZWN0IG1lIGlmIEkgYW0gd3JvbmcsIG1heWJlIG15IHdheSBpcyBzdHVwaWQuDQoNCi0tIA0K
+VGhlIHNpbXBsZXN0IGlzIG5vdCBhbGwgYmVzdCBidXQgdGhlIGJlc3QgaXMgc3VyZWx5IHRoZSBz
+aW1wbGVzdCENCi0tDQpUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGlu
+ZSAidW5zdWJzY3JpYmUgbGludXgtcmFpZCIgaW4NCnRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBt
+YWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQpNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8v
+dmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg==
