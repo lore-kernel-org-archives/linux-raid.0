@@ -1,38 +1,43 @@
-From: "Tirumala Reddy Marri" <tmarri@amcc.com>
-Subject: RE: Can I skip recovery for RAID5 in this way?
-Date: Sat, 9 Jan 2010 13:03:13 -0800
-Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C089897FE@SDCEXCHANGE01.ad.amcc.com>
-References: <389deec71001082023h21bdb12dg548b62d12d1c6c35@mail.gmail.com>
+From: =?ISO-8859-2?Q?Marcin_Miros=B3aw?= <marcin@mejor.pl>
+Subject: mdadm-3.1.1 segfaults when mdadm -G -Z
+Date: Sun, 10 Jan 2010 13:13:46 +0100
+Message-ID: <4B49C47A.9060800@mejor.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <389deec71001082023h21bdb12dg548b62d12d1c6c35@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: hank peng <pengxihan@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SSBhbSBub3Qgc3VyZSByZWNvdmVyIHNsb3dzIGRvd24gLiBCdXQgZm9yIHN1cmUgZGVncmFkZWQg
-bW9kZSBwZXJmb3JtYW5jZSB3aWxsIGJlIGxvd2VyLCBlc3BlY2lhbGx5IHJlYWQgcGVyZm9ybWFu
-Y2Ugd2lsbCBiZSB3b3JzZSBhcyBkYXRhIG5lZWQgdG8gYmUgcmVjb3ZlcmVkL2NvbXB1dGVkLiBT
-YW1lIHdpdGggcmVjb3ZlcnkgbW9kZSBmb3IgcmVhZC4gQnV0IHdyaXRlIHBlcmZvcm1hbmNlIHNo
-b3VsZCBub3QgYWZmZWN0ZWQuIE1heSBiZSBJIGFtIHdyb25nLg0KDQotLS0tLU9yaWdpbmFsIE1l
-c3NhZ2UtLS0tLQ0KRnJvbTogbGludXgtcmFpZC1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0
-bzpsaW51eC1yYWlkLW93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIGhhbmsgcGVu
-Zw0KU2VudDogRnJpZGF5LCBKYW51YXJ5IDA4LCAyMDEwIDg6MjQgUE0NClRvOiBsaW51eC1yYWlk
-DQpTdWJqZWN0OiBDYW4gSSBza2lwIHJlY292ZXJ5IGZvciBSQUlENSBpbiB0aGlzIHdheT8NCg0K
-Rm9yIG15IHBsYXRmb3JtLCByZWNvdmVyeSB3aGVuIGNyZWF0aW5nIGEgcmFpZDUgYXJyYXkgb3Ig
-YWRkaW5nIGEgbmV3DQpkaXNrIHRvIGEgZGVncmFkZWQgcmFpZDUgYXJyYXkgaXMgbm90IG9ubHkg
-dGltZS1jb25zdW1pbmcgYnV0IGFsc28gY3B1DQpjb3N0LiBJIGFtIHRoaW5raW5nIG5vdyB3aGVu
-IGV2ZXJ5IHdyaXRlIGludG8gYSByYWlkNSBzdHJpcGUsIGlmIHdlDQpvbmx5IHVzZSByZWNvbnN0
-cnVjdF93cml0ZSBtZXRob2QsIGNhbiBJIHVzZSB0aGlzIHdheSB0byBza2lwDQpyZWNvdmVyeT8N
-CkJUVywgbXkgYXBwbGlhdGlvbiBtYWlubHkgZm9jdXMgb24gc2VxdWVudGlhbCB3cml0ZSBhbmQg
-SSBjYW4gYWxzbw0KbGltaXQgdGhlIG51bWJlciBvZiBkaXNrcyBpbiByYWlkNS4NClBsZWFzZSBj
-b3JyZWN0IG1lIGlmIEkgYW0gd3JvbmcsIG1heWJlIG15IHdheSBpcyBzdHVwaWQuDQoNCi0tIA0K
-VGhlIHNpbXBsZXN0IGlzIG5vdCBhbGwgYmVzdCBidXQgdGhlIGJlc3QgaXMgc3VyZWx5IHRoZSBz
-aW1wbGVzdCENCi0tDQpUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGlu
-ZSAidW5zdWJzY3JpYmUgbGludXgtcmFpZCIgaW4NCnRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBt
-YWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQpNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8v
-dmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg==
+Hello,
+I tried to grow array size (i resized /dev/sdc5-> resync->remove
+/dev/sda6 -> resize /dev/sda6 -> resync-> curent situation )
+and i got segfault:
+
+# cat /proc/mdstat
+md6 : active raid1 sdc5[1](W) sda7[0]
+      125001664 blocks [2/2] [UU]
+      bitmap: 16/239 pages [64KB], 256KB chunk
+
+# gdb /sbin/mdadm
+[...]
+<http://bugs.gentoo.org/>...
+Reading symbols from
+/var/tmp/portage/sys-fs/mdadm-3.1.1/work/mdadm-3.1.1/mdadm...done.
+(gdb) run  -G -Z /dev/md6
+Starting program:
+/var/tmp/portage/sys-fs/mdadm-3.1.1/work/mdadm-3.1.1/mdadm -G -Z /dev/md6
+
+Program received signal SIGSEGV, Segmentation fault.
+0xb7f067f8 in strcmp () from /lib/libc.so.6
+(gdb) bt
+#0  0xb7f067f8 in strcmp () from /lib/libc.so.6
+#1  0x0804b70b in main (argc=4, argv=0xbffff3f4) at mdadm.c:408
+(gdb)
+
+$  uname -r
+2.6.32-gentoo-r1
+
+May i get any suggestions?
+Regards
