@@ -1,52 +1,47 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: Re: raid failure question
-Date: Mon, 11 Jan 2010 13:44:14 -0700
-Message-ID: <201001111344.14347.tfjellstrom@shaw.ca>
-References: <1263232840.8962.193.camel@kije> <70ed7c3e1001111008y76b49b8bve2b636c90efa4a72@mail.gmail.com>
-Reply-To: tfjellstrom@shaw.ca
-Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+From: Doug Ledford <dledford@redhat.com>
+Subject: [[Patch mdadm] 5/5] Fix segfault when the AUTO keyword is used in the config file
+Date: Mon, 11 Jan 2010 15:38:14 -0500
+Message-ID: <1263242294-5353-6-git-send-email-dledford@redhat.com>
+References: <1263242294-5353-1-git-send-email-dledford@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70ed7c3e1001111008y76b49b8bve2b636c90efa4a72@mail.gmail.com>
+In-Reply-To: <1263242294-5353-1-git-send-email-dledford@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Majed B." <majedb@gmail.com>
-Cc: Tim Bock <jtbock@daylight.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: Doug Ledford <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-On Mon January 11 2010, Majed B. wrote:
-> Voltage spikes, disks heating (monitored by smartd) & sector
-> corruption (monitored by smartd) are what I can think of for the time
-> being.
+Signed-off-by: Doug Ledford <dledford@redhat.com>
+---
+ config.c |   11 ++++++++++-
+ 1 files changed, 10 insertions(+), 1 deletions(-)
 
-Would that actually make it so a hot spare wouldn't get used automatically? 
-I thought the point of a hot spare was to take over for a failed disk /no 
-matter what/. Doesn't really make much sense is many of the more common 
-error cases cause a hot spare to be ignored.
-
-> On Mon, Jan 11, 2010 at 9:00 PM, Tim Bock <jtbock@daylight.com> wrote:
-> > Hello,
-> >
-> > Excluding the obvious multi-disk or bus failures, can anyone describe
-> > what type of disk failure a raid cannot detect/recover from?
-> >
-> > I have had two disk failures over the last three months, and in spite
-> > of having a hot spare, manual intervention was required each time to
-> > make the raid usable again.  I'm just not sure if I'm not setting
-> > something up right, or if there is some other issue.
-> >
-> > Thanks for any comments or suggestions.
-> >
-> > Tim
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid"
-> > in the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
+diff --git a/config.c b/config.c
+index c962afd..2943221 100644
+--- a/config.c
++++ b/config.c
+@@ -677,12 +677,21 @@ void homehostline(char *line)
+ static char *auto_options = NULL;
+ void autoline(char *line)
+ {
++	char *w;
++
+ 	if (auto_options) {
+ 		fprintf(stderr, Name ": AUTO line may only be give once."
+ 			"  Subsequent lines ignored\n");
+ 		return;
+ 	}
+-	auto_options = line;		
++
++	auto_options = dl_strdup(line);		
++	dl_init(auto_options);
++
++	for (w=dl_next(line); w != line ; w=dl_next(w)) {
++		char *w2 = dl_strdup(w);
++		dl_add(auto_options, w2);
++	}
+ }
+ 
+ int loaded = 0;
 -- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
+1.6.5.2
+
