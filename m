@@ -1,7 +1,7 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: [[Patch mdadm] 5/5] Fix segfault when the AUTO keyword is used in the config file
-Date: Mon, 11 Jan 2010 15:38:14 -0500
-Message-ID: <1263242294-5353-6-git-send-email-dledford@redhat.com>
+Subject: [[Patch mdadm] 3/5] We don't like %02d as a metadata format specifier, it confuses us when we read the output back later
+Date: Mon, 11 Jan 2010 15:38:12 -0500
+Message-ID: <1263242294-5353-4-git-send-email-dledford@redhat.com>
 References: <1263242294-5353-1-git-send-email-dledford@redhat.com>
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <1263242294-5353-1-git-send-email-dledford@redhat.com>
@@ -12,36 +12,40 @@ List-Id: linux-raid.ids
 
 Signed-off-by: Doug Ledford <dledford@redhat.com>
 ---
- config.c |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletions(-)
+ Detail.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/config.c b/config.c
-index c962afd..2943221 100644
---- a/config.c
-+++ b/config.c
-@@ -677,12 +677,21 @@ void homehostline(char *line)
- static char *auto_options = NULL;
- void autoline(char *line)
- {
-+	char *w;
-+
- 	if (auto_options) {
- 		fprintf(stderr, Name ": AUTO line may only be give once."
- 			"  Subsequent lines ignored\n");
- 		return;
- 	}
--	auto_options = line;		
-+
-+	auto_options = dl_strdup(line);		
-+	dl_init(auto_options);
-+
-+	for (w=dl_next(line); w != line ; w=dl_next(w)) {
-+		char *w2 = dl_strdup(w);
-+		dl_add(auto_options, w2);
-+	}
- }
+diff --git a/Detail.c b/Detail.c
+index 0e47a05..ba07c83 100644
+--- a/Detail.c
++++ b/Detail.c
+@@ -174,7 +174,7 @@ int Detail(char *dev, int brief, int export, int test, char *homehost)
+ 			if (sra && sra->array.major_version < 0)
+ 				printf("MD_METADATA=%s\n", sra->text_version);
+ 			else
+-				printf("MD_METADATA=%d.%02d\n",
++				printf("MD_METADATA=%d.%d\n",
+ 				       array.major_version, array.minor_version);
+ 		}
+ 		
+@@ -226,7 +226,7 @@ int Detail(char *dev, int brief, int export, int test, char *homehost)
+ 			if (sra && sra->array.major_version < 0)
+ 				printf(" metadata=%s", sra->text_version);
+ 			else
+-				printf(" metadata=%d.%02d",
++				printf(" metadata=%d.%d",
+ 				       array.major_version, array.minor_version);
+ 		}
  
- int loaded = 0;
+@@ -259,7 +259,7 @@ int Detail(char *dev, int brief, int export, int test, char *homehost)
+ 		if (sra && sra->array.major_version < 0)
+ 			printf("        Version : %s\n", sra->text_version);
+ 		else
+-			printf("        Version : %d.%02d\n",
++			printf("        Version : %d.%d\n",
+ 			       array.major_version, array.minor_version);
+ 		}
+ 
 -- 
 1.6.5.2
 
