@@ -1,30 +1,39 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: No resync
-Date: Mon, 11 Jan 2010 22:52:43 -0600
-Message-ID: <C6.49.19471.1200C4B4@cdptpa-omtalb.mail.rr.com>
-References: <4B4BFE34.9090501@sauce.co.nz>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: No resync
+Date: Tue, 12 Jan 2010 17:58:10 +1300
+Message-ID: <4B4C0162.5040807@sauce.co.nz>
+References: <C6.49.19471.1200C4B4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B4BFE34.9090501@sauce.co.nz>
+In-Reply-To: <C6.49.19471.1200C4B4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Richard Scobie' <richard@sauce.co.nz>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Richard Scobie
-> Sent: Monday, January 11, 2010 10:45 PM
-> To: linux-raid@vger.kernel.org
-> Subject: No resync
-> 
-> Is there a way to  force assemble a stopped array that has too many
-> failed devices, while disabling the resync that would normally occur?
+Leslie Rhorer wrote:
 
-	Well, of course if the array has too few members to start (even
-after the --force), then it won't start and thus won't recync, but assuming
-one has enough targets to assemble and run the array, I believe
---asume-clean will do what you want.  It's in the man page.
+>> Is there a way to  force assemble a stopped array that has too many
+>> failed devices, while disabling the resync that would normally occur?
+>
+> 	Well, of course if the array has too few members to start (even
+> after the --force), then it won't start and thus won't recync, but assuming
+> one has enough targets to assemble and run the array, I believe
+> --asume-clean will do what you want.  It's in the man page.
+>
+
+By using force as part of an assemble, all failed devices set to healty 
+again and a resync is immediately started.
+
+According to the man page --asume-clean is not an available option for 
+assemble.
+
+I have tried --read-only but that is not an otion either.
+
+I need to reassemble without resyncing so I can fsck first.
+
+Regards,
+
+Richard
 
