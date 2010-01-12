@@ -1,52 +1,71 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: Minor mdadm fixes
-Date: Tue, 12 Jan 2010 06:21:43 +0100
-Message-ID: <20100112052143.GP21495@skl-net.de>
-References: <1263242294-5353-1-git-send-email-dledford@redhat.com> <alpine.LNX.2.01.1001111541200.3360@filesrv1.baby-dragons.com> <20100112031027.GL7517@skl-net.de> <4B4BEE48.1000305@redhat.com> <20100112043933.GO21495@skl-net.de> <4B4BFEA8.7020607@redhat.com>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: No resync
+Date: Tue, 12 Jan 2010 08:37:54 +0000
+Message-ID: <20100112083753.GA9891@cthulhu.home.robinhill.me.uk>
+References: <C6.49.19471.1200C4B4@cdptpa-omtalb.mail.rr.com>
+ <4B4C0162.5040807@sauce.co.nz>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="+hZIELbchok2+JHy"
+	protocol="application/pgp-signature"; boundary="KsGdsel6WgEHnImy"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4B4BFEA8.7020607@redhat.com>
+In-Reply-To: <4B4C0162.5040807@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: "Mr. James W. Laferriere" <babydr@baby-dragons.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---+hZIELbchok2+JHy
+--KsGdsel6WgEHnImy
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On 23:46, Doug Ledford wrote:
-> > Just out of interest: Why does mdmon need the restart at all?
+On Tue Jan 12, 2010 at 05:58:10PM +1300, Richard Scobie wrote:
+
+> Leslie Rhorer wrote:
 >=20
-> Because of the design and limitation of page cache.  If you start a long
-> running program from the initramfs, then the page cache usage will pin
-> the initramfs in memory.  You need to reexec the program from the hard
-> drive so that the initramfs can be freed.  Of course, this is all
-> because superblock handling for imsm superblocks is in user
-> space...<grumble, grumble, grumble>.
+> >> Is there a way to  force assemble a stopped array that has too many
+> >> failed devices, while disabling the resync that would normally occur?
+> >
+> > 	Well, of course if the array has too few members to start (even
+> > after the --force), then it won't start and thus won't recync, but assu=
+ming
+> > one has enough targets to assemble and run the array, I believe
+> > --asume-clean will do what you want.  It's in the man page.
+> >
+>=20
+> By using force as part of an assemble, all failed devices set to healty=
+=20
+> again and a resync is immediately started.
+>=20
+> According to the man page --asume-clean is not an available option for=20
+> assemble.
+>=20
+> I have tried --read-only but that is not an otion either.
+>=20
+> I need to reassemble without resyncing so I can fsck first.
+>=20
+You probably need to start it with missing members then, so it's able to
+run but not to resync.
 
-You could copy the mdmon executable to /dev and execute it there :)
-
-Andre
+Cheers,
+    Robin
 --=20
-The only person who always got his work done by Friday was Robinson Crusoe
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
---+hZIELbchok2+JHy
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+--KsGdsel6WgEHnImy
+Content-Type: application/pgp-signature
 Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
+Version: GnuPG v2.0.11 (GNU/Linux)
 
-iD8DBQFLTAbnWto1QDEAkw8RAhbtAJ9/KryTEiUBGtGJ5o8qjakYkfUYmwCfSvVS
-aITQNff3lkMMEPBLu+Wv5sc=
-=nGgm
+iEYEARECAAYFAktMNOEACgkQShxCyD40xBKI2wCfYCyI1oZBoPwXlccSTP3OT9Nv
+NBAAmwcfAQp+16WHPgsGFAi3IJxA1FV3
+=omED
 -----END PGP SIGNATURE-----
 
---+hZIELbchok2+JHy--
+--KsGdsel6WgEHnImy--
