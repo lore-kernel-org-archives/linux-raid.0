@@ -1,71 +1,45 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: No resync
-Date: Tue, 12 Jan 2010 08:37:54 +0000
-Message-ID: <20100112083753.GA9891@cthulhu.home.robinhill.me.uk>
-References: <C6.49.19471.1200C4B4@cdptpa-omtalb.mail.rr.com>
- <4B4C0162.5040807@sauce.co.nz>
+From: Roger Heflin <rogerheflin@gmail.com>
+Subject: Re: raid failure question
+Date: Tue, 12 Jan 2010 06:08:15 -0600
+Message-ID: <4B4C662F.3010305@gmail.com>
+References: <1263232840.8962.193.camel@kije> <20100111205332.GA24486@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="KsGdsel6WgEHnImy"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4B4C0162.5040807@sauce.co.nz>
+In-Reply-To: <20100111205332.GA24486@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Robin Hill wrote:
+> On Mon Jan 11, 2010 at 11:00:40AM -0700, Tim Bock wrote:
+> 
+>> Hello,
+>>
+>> Excluding the obvious multi-disk or bus failures, can anyone describe
+>> what type of disk failure a raid cannot detect/recover from?
+>>
+>> I have had two disk failures over the last three months, and in spite of
+>> having a hot spare, manual intervention was required each time to make
+>> the raid usable again.  I'm just not sure if I'm not setting something
+>> up right, or if there is some other issue.
+>>
+>> Thanks for any comments or suggestions.
+>>
+> Any failure where the disk doesn't actually return an error (within a
+> reasonable time).  For example, consumer grade disks often have very
+> long retry times - this can mean the array in unusable for a long time
+> until the disk eventually fails the read.
+> 
+> If the disk actually returns an error then, AFAIK, the RAID array should
+> always be able to recover from it.
+> 
+> Cheers,
+>     Robin
 
---KsGdsel6WgEHnImy
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The OS will time the disk out at about 30 seconds if it does not 
+answer, and then the disk gets treated as "BAD".
 
-On Tue Jan 12, 2010 at 05:58:10PM +1300, Richard Scobie wrote:
-
-> Leslie Rhorer wrote:
->=20
-> >> Is there a way to  force assemble a stopped array that has too many
-> >> failed devices, while disabling the resync that would normally occur?
-> >
-> > 	Well, of course if the array has too few members to start (even
-> > after the --force), then it won't start and thus won't recync, but assu=
-ming
-> > one has enough targets to assemble and run the array, I believe
-> > --asume-clean will do what you want.  It's in the man page.
-> >
->=20
-> By using force as part of an assemble, all failed devices set to healty=
-=20
-> again and a resync is immediately started.
->=20
-> According to the man page --asume-clean is not an available option for=20
-> assemble.
->=20
-> I have tried --read-only but that is not an otion either.
->=20
-> I need to reassemble without resyncing so I can fsck first.
->=20
-You probably need to start it with missing members then, so it's able to
-run but not to resync.
-
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---KsGdsel6WgEHnImy
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEARECAAYFAktMNOEACgkQShxCyD40xBKI2wCfYCyI1oZBoPwXlccSTP3OT9Nv
-NBAAmwcfAQp+16WHPgsGFAi3IJxA1FV3
-=omED
------END PGP SIGNATURE-----
-
---KsGdsel6WgEHnImy--
+On fiber channel this is a fairly common type of failure, if something 
+fails in the fabric such that the disk can no longer talk to the machine.
