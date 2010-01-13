@@ -1,66 +1,155 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: No resync
-Date: Wed, 13 Jan 2010 07:27:20 +1300
-Message-ID: <4B4CBF08.30700@sauce.co.nz>
-References: <C6.49.19471.1200C4B4@cdptpa-omtalb.mail.rr.com> <4B4C0162.5040807@sauce.co.nz> <20100112083753.GA9891@cthulhu.home.robinhill.me.uk>
+From: Brett King <king.br@gmail.com>
+Subject: mdadm 3.1.1 / 2.6.32 - trouble reducing active devices in 13TB RAID6
+Date: Wed, 13 Jan 2010 16:00:10 +1100
+Message-ID: <8cf253381001122100u70560392hfe6de0e8844116e3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100112083753.GA9891@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Robin Hill wrote:
+Hello,
+I'm using the new mdadm-3.1.1 and kernel 2.6.32 on a 13x 1TB RAID6
+array and need to reduce the number of active devices in order to
+eventually decommission this array.
 
-> You probably need to start it with missing members then, so it's able to
-> run but not to resync.
+I'm currently unable to do this however, please see below:
 
-This is not an option in assemble mode either. It looks as though the 
-array has to be recreated. I'm not sure why any of these options are not 
-provided for assemble.
+array:~ # uname -a
+Linux array 2.6.32-41-default #1 SMP 2009-12-11 11:05:24 -0500 x86_64
+x86_64 x86_64 GNU/Linux
 
-Anyway, in the end I did an "assemble --force" after stopping what was 
-left (5 drives dropped from a 16 drive RAID6), and it strated but did 
-not initiate a resync.
+array:~ # mdadm -V
+mdadm - v3.1.1 - 19th November 2009
 
-Perhaps the behaviour here has changed, because I'm sure when I've done 
-this in the past, it resyncs straight away.
+array:~ # mdadm -D /dev/md0
+/dev/md0:
+        Version : 0.90
+  Creation Time : Fri Apr  4 21:17:09 2008
+     Raid Level : raid6
+     Array Size : 10744387456 (10246.65 GiB 11002.25 GB)
+  Used Dev Size : 976762496 (931.51 GiB 1000.20 GB)
+   Raid Devices : 13
+  Total Devices : 13
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-There were some somewhat strange errors in the log:
+    Update Time : Wed Jan 13 13:43:05 2010
+          State : clean
+ Active Devices : 13
+Working Devices : 13
+ Failed Devices : 0
+  Spare Devices : 0
 
-Jan 12 17:09:09 sam kernel: end_request: I/O error, dev sdf, sector 
-1953182527
-Jan 12 17:09:09 sam kernel: md: super_written gets error=-5, uptodate=0
-Jan 12 17:09:09 sam kernel: raid5: Disk failure on sdf1, disabling device.
-Jan 12 17:09:09 sam kernel: raid5: Operation continuing on 15 devices.
-Jan 12 17:09:09 sam kernel: end_request: I/O error, dev sdh, sector 
-1953182527
-Jan 12 17:09:09 sam kernel: md: super_written gets error=-5, uptodate=0
-Jan 12 17:09:09 sam kernel: raid5: Disk failure on sdh1, disabling device.
-Jan 12 17:09:09 sam kernel: raid5: Operation continuing on 14 devices.
-Jan 12 17:09:09 sam kernel: end_request: I/O error, dev sdg, sector 
-1953182527
-Jan 12 17:09:09 sam kernel: md: super_written gets error=-5, uptodate=0
-Jan 12 17:09:09 sam kernel: raid5: Disk failure on sdg1, disabling device.
-Jan 12 17:09:09 sam kernel: raid5: Operation continuing on 13 devices.
-Jan 12 17:09:09 sam kernel: end_request: I/O error, dev sdp, sector 
-1953182527
-Jan 12 17:09:09 sam kernel: md: super_written gets error=-5, uptodate=0
-Jan 12 17:09:09 sam kernel: raid5: Disk failure on sdp1, disabling device.
-Jan 12 17:09:09 sam kernel: raid5: Operation continuing on 12 devices.
-Jan 12 17:09:09 sam kernel: end_request: I/O error, dev sdr, sector 
-1953182527
-Jan 12 17:09:09 sam kernel: md: super_written gets error=-5, uptodate=0
-Jan 12 17:09:09 sam kernel: raid5: Disk failure on sdr1, disabling device.
-Jan 12 17:09:09 sam kernel: raid5: Operation continuing on 11 devices.
+         Layout : left-symmetric
+     Chunk Size : 64K
 
-The cause is a controller problem, but after the first 2 drives were 
-disabled, I don't know why there were "raid5: Operation continuing 
-on..." messages as another 3 drives were offlined. A RAID6 array should 
-stop when a third device fails.
+           UUID : 251f6c00:b15f5541:4eb0bc47:eeccb517
+         Events : 0.6050151
 
-Regards,
+    Number   Major   Minor   RaidDevice State
+       0       8        0        0      active sync   /dev/sda
+       1       8       16        1      active sync   /dev/sdb
+       2       8       32        2      active sync   /dev/sdc
+       3       8      224        3      active sync   /dev/sdo
+       4       8       64        4      active sync   /dev/sde
+       5       8       80        5      active sync   /dev/sdf
+       6       8       96        6      active sync   /dev/sdg
+       7       8      112        7      active sync   /dev/sdh
+       8       8      144        8      active sync   /dev/sdj
+       9       8      160        9      active sync   /dev/sdk
+      10       8      176       10      active sync   /dev/sdl
+      11       8      192       11      active sync   /dev/sdm
+      12       8      208       12      active sync   /dev/sdn
+array:~ #
 
-Richard
+## Reduce array size by 1x member disk in order to verify data will
+remain accessible after reducing array. There is a reiser filesystem
+directly on this MD device, already resized to ~300GB below the
+reduced array size:
+
+array:~ # mdadm -G /dev/md0 --array-size 9767624960 (short size option
+-Z segfaults as already discussed)
+
+## Verify new array size is now @ sum of 10x member disks:
+
+array:~ # mdadm -D /dev/md0
+/dev/md0:
+        Version : 0.90
+  Creation Time : Fri Apr  4 21:17:09 2008
+     Raid Level : raid6
+     Array Size : 9767624960 (9315.13 GiB 10002.05 GB)
+  Used Dev Size : 976762496 (931.51 GiB 1000.20 GB)
+   Raid Devices : 13
+  Total Devices : 13
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Wed Jan 13 15:06:33 2010
+          State : active
+ Active Devices : 13
+Working Devices : 13
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+           UUID : 251f6c00:b15f5541:4eb0bc47:eeccb517
+         Events : 0.6050154
+
+    Number   Major   Minor   RaidDevice State
+       0       8        0        0      active sync   /dev/sda
+       1       8       16        1      active sync   /dev/sdb
+       2       8       32        2      active sync   /dev/sdc
+       3       8      224        3      active sync   /dev/sdo
+       4       8       64        4      active sync   /dev/sde
+       5       8       80        5      active sync   /dev/sdf
+       6       8       96        6      active sync   /dev/sdg
+       7       8      112        7      active sync   /dev/sdh
+       8       8      144        8      active sync   /dev/sdj
+       9       8      160        9      active sync   /dev/sdk
+      10       8      176       10      active sync   /dev/sdl
+      11       8      192       11      active sync   /dev/sdm
+      12       8      208       12      active sync   /dev/sdn
+array:~ #
+
+## Mount / verify file checksums etc - all OK
+
+## Attempt to reduce number of active devices in array by 1x:
+
+array:~ # mdadm -G /dev/md0 -n 12 --backup-file /tmp/md0-backup
+mdadm: this change will reduce the size of the array.
+       use --grow --array-size first to truncate array.
+       e.g. mdadm --grow /dev/md0 --array-size 1177690368
+
+## The suggested value of '--array-size' here doesn't make sense; plus
+when trying to reduce to a different number of active devices (e.g.
+11x, invalid), this number changes:
+
+array:~ # mdadm -G /dev/md0 -n 11 --backup-file /tmp/md0-backup
+mdadm: this change will reduce the size of the array.
+       use --grow --array-size first to truncate array.
+       e.g. mdadm --grow /dev/md0 --array-size 200927872
+
+## Attempting to reduce to 10x active devices (invalid) gives a
+different result again:
+
+array:~ # mdadm -G /dev/md0 -n 10 --backup-file /tmp/md0-backup
+mdadm: Need to backup 5632K of critical section..
+array:~ #
+
+## However (almost) nothing happens - the backup-file does get written
+however there is no rebuild initiated and the array stays the same
+size.
+
+Testing this in a VM with 128MB loopback devices works as expected and
+the filesystem / data survives.
+
+Any ideas ? I saw there was mention recently of a patch to mdadm-3.1.1
+which resolves a 32-bit number affecting growing of a RAID6, could
+this also be the issue here ?
+
+Thanks in advance,
+Brett.
