@@ -1,66 +1,30 @@
-From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: non-fresh data unavailable bug
-Date: Thu, 14 Jan 2010 11:24:03 -0800
-Message-ID: <4877c76c1001141124m1d3fcfcdmffc3df97d1b504a@mail.gmail.com>
-References: <hinc60$fnh$1@ger.gmane.org>
+From: Adrian Bridgett <adrian@smop.co.uk>
+Subject: growing RAID(1) without a resync
+Date: Thu, 14 Jan 2010 19:29:53 +0000
+Message-ID: <20100114192953.GC22267@ash.smop.co.uk>
+Reply-To: adrian@smop.co.uk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <hinc60$fnh$1@ger.gmane.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Brett Russ <bruss@netezza.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jan 14, 2010 at 7:10 AM, Brett Russ <bruss@netezza.com> wrote:
-> Slightly related to my last message here Re:non-fresh behavior, we ha=
-ve seen
-> cases where the following happens:
-> * healthy 2 disk raid1 (disks A & B) incurs a problem with disk B
-> * disk B is removed, unit is now degraded
-> * replacement disk C is added; recovery from A to C begins
-> * during recovery, disk A incurs a brief lapse in connectivity. =A0At=
- this
-> point C is still up yet only has a partial copy of the data.
-> * a subsequent assemble operation on the raid1 results in disk A bein=
-g
-> kicked out as non-fresh, yet C is allowed in.
->
-> This presents quite a data-unavailability problem and basically requi=
-res
-> recognizing the situation and hand assembling the array with disk A (=
-only)
-> first, then adding C back in. =A0Unfortunately this situation is hard=
- to
-> reproduce and we don't have a dump of the 'mdadm --examine' output fo=
-r it
-> yet.
->
-> Any thoughts on this while we try to get a better reproduction case?
->
-> Thanks,
-> Brett
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+I've just resized my MD array at home and wondered if there is a way
+to grow it without the long resync time - i.e. assuming it's clean.
 
-I believe the desired and logical behavior here is to refuse running
-an incomplete array unless explicitly forced to do so.  Incremental
-assembly might be what you're seeing.
+I found this:
+http://www.issociate.de/board/post/493770/Assume-clean_for_md_grow.html
 
-The only way to access the data from those devices, presuming that
-without the device that had the hiccup your array is incomplete, would
-be to force assembly with the older device included and hope.  I very
-much recommend running it read-only until you can determine which
-assembly pattern produces the most viable results.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Where Neil says that it's not (well, not without some deep hacking) -
+I wondered if the status had changed.
+
+I had a look for an MD "roadmap" just in case but couldn't see one :-)
+
+Thanks,
+
+Adrian
+-- 
+bitcube.co.uk - Expert Linux infrastructure consultancy
+Puppet, Debian, Red Hat, Ubuntu, CentOS
