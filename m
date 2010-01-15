@@ -1,56 +1,58 @@
-From: sylarrrrrrr@aim.com
-Subject: How to load preexisting ntfs partitions that are on an Intel Matrix Raid 1
- or 5 ?
-Date: Thu, 14 Jan 2010 15:09:22 -0500
-Message-ID: <8CC636C98CCAF21-295C-17C7@webmail-d049.sysops.aol.com>
-References: <8CC636345AA2F7E-295C-545@webmail-d049.sysops.aol.com>
+From: Brett Russ <bruss@netezza.com>
+Subject: Re: non-fresh data unavailable bug
+Date: Fri, 15 Jan 2010 10:36:39 -0500
+Message-ID: <hiq226$n6t$1@ger.gmane.org>
+References: <hinc60$fnh$1@ger.gmane.org> <4877c76c1001141124m1d3fcfcdmffc3df97d1b504a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <8CC636345AA2F7E-295C-545@webmail-d049.sysops.aol.com>
+In-Reply-To: <4877c76c1001141124m1d3fcfcdmffc3df97d1b504a@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  How to load preexisting ntfs partitions that are on an Intel Matrix=20
-Raid 1 or 5 ?
+On 01/14/2010 02:24 PM, Michael Evans wrote:
+> On Thu, Jan 14, 2010 at 7:10 AM, Brett Russ<bruss@netezza.com>  wrote:
+>> Slightly related to my last message here Re:non-fresh behavior, we have seen
+>> cases where the following happens:
+>> * healthy 2 disk raid1 (disks A&  B) incurs a problem with disk B
+>> * disk B is removed, unit is now degraded
+>> * replacement disk C is added; recovery from A to C begins
+>> * during recovery, disk A incurs a brief lapse in connectivity.  At this
+>> point C is still up yet only has a partial copy of the data.
+>> * a subsequent assemble operation on the raid1 results in disk A being
+>> kicked out as non-fresh, yet C is allowed in.
+>
+> I believe the desired and logical behavior here is to refuse running
+> an incomplete array unless explicitly forced to do so.  Incremental
+> assembly might be what you're seeing.
 
-I must also know that the loading of the partitions in linux will not=20
-damage them.
-Is the Intel Matrix Raid feature safe ?
+This brings up a good point.  I didn't mention that the assemble in the 
+last step above was forced.  Thus, the "bug" I'm reporting is that under 
+duress, mdadm/md chose to assemble the array with a partially recovered 
+(but "newer") member instead of the older member which was the recovery 
+*source* for the newer member.
 
+What I think should happen is members that are *destinations* for 
+recovery should *never* receive a higher event count, timestamp, or any 
+other marking than the recovery sources.  By definition they are 
+incomplete and can't be trusted, thus they should never trump a complete 
+member during assemble.  I would assume the code already does this but 
+perhaps there is a hole.
 
+One other piece of information that may be relevant--we're using 2 
+member RAID1 units with one member marked write-mostly.  At this time, I 
+don't have the specifics for which member (A or B) was the write-mostly 
+member in the example above, but I can find that out.
 
+> I very much recommend running it read-only until you can determine which
+> assembly pattern produces the most viable results.
 
-I tried with the latest Knoppix 6.2 LiveCD, but the device was not=20
-seenautomatically,=C2=A0 in /dev/mapper I found too many entries, which=
- made=20
-mesuspicious that my raids are not recognized well.
+Good tip.  We were able to manually recover the array in the case 
+outlined above, now we're looking back to fixing the kernel to prevent 
+it happening again.
 
-Packages versions in my Knoppix:
+Thanks,
+Brett
 
-ii  mdadm                                  3.0.3-2                     =
-=20
-      tool to administer Linux MD arrays (software
-
-ii  linux-image-2.6.31.6                   2.6.31.6-10.00.Custom       =
-=20
-      Linux kernel binary image for version 2.6.31
-
-
-
-More details of packages and versions are at:
-
-http://ftp.uni-kl.de/pub/linux/knoppix/packages.txt
-
-
-
-
- =20
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
