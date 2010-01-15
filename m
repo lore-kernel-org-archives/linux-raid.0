@@ -1,58 +1,38 @@
-From: Brett Russ <bruss@netezza.com>
-Subject: Re: non-fresh data unavailable bug
-Date: Fri, 15 Jan 2010 10:36:39 -0500
-Message-ID: <hiq226$n6t$1@ger.gmane.org>
-References: <hinc60$fnh$1@ger.gmane.org> <4877c76c1001141124m1d3fcfcdmffc3df97d1b504a@mail.gmail.com>
+From: "Timothy D. Lenz" <tlenz@vorgon.com>
+Subject: unknown partition table starting with 2.6.28
+Date: Fri, 15 Jan 2010 16:58:06 -0700
+Message-ID: <4B51010E.9090800@vorgon.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4877c76c1001141124m1d3fcfcdmffc3df97d1b504a@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 01/14/2010 02:24 PM, Michael Evans wrote:
-> On Thu, Jan 14, 2010 at 7:10 AM, Brett Russ<bruss@netezza.com>  wrote:
->> Slightly related to my last message here Re:non-fresh behavior, we have seen
->> cases where the following happens:
->> * healthy 2 disk raid1 (disks A&  B) incurs a problem with disk B
->> * disk B is removed, unit is now degraded
->> * replacement disk C is added; recovery from A to C begins
->> * during recovery, disk A incurs a brief lapse in connectivity.  At this
->> point C is still up yet only has a partial copy of the data.
->> * a subsequent assemble operation on the raid1 results in disk A being
->> kicked out as non-fresh, yet C is allowed in.
->
-> I believe the desired and logical behavior here is to refuse running
-> an incomplete array unless explicitly forced to do so.  Incremental
-> assembly might be what you're seeing.
+I am trying to update my kernel from 2.6.26.8 to the current .32. 
+Starting at .27 I get an acpi conflict:
 
-This brings up a good point.  I didn't mention that the assemble in the 
-last step above was forced.  Thus, the "bug" I'm reporting is that under 
-duress, mdadm/md chose to assemble the array with a partially recovered 
-(but "newer") member instead of the older member which was the recovery 
-*source* for the newer member.
+ACPI: Power Button (CM) [PWRB]
+i2c-adapter i2c-0: nForce2 SMBus adapter at 0x1c00
+ACPI: I/O resource nForce2_smbus [0x1c40-0x1c7f] conflicts with ACPI 
+region SM01 [0x1c40-0x1c45]
+ACPI: Device needs an ACPI driver
+i2c-adapter i2c-1: nForce2 SMBus adapter at 0x1c40
+ACPI: Expecting a [Reference] package element, found type 0
+thermal LNXTHERM:01: registered as thermal_zone0
 
-What I think should happen is members that are *destinations* for 
-recovery should *never* receive a higher event count, timestamp, or any 
-other marking than the recovery sources.  By definition they are 
-incomplete and can't be trusted, thus they should never trump a complete 
-member during assemble.  I would assume the code already does this but 
-perhaps there is a hole.
+Starting with .28 I am getting an error about unknown partition table 
+for all 3 md's. md0 is boot and main programs, md1 is swap, md2 is 
+mostly recordings storage for vdr. All 3 are raid 1 and raid is built in.
 
-One other piece of information that may be relevant--we're using 2 
-member RAID1 units with one member marked write-mostly.  At this time, I 
-don't have the specifics for which member (A or B) was the write-mostly 
-member in the example above, but I can find that out.
+dmesg for .28 boot: http://pastebin.com/m1a459731
+dmesg for .29 boot: http://pastebin.com/m419d7207
 
-> I very much recommend running it read-only until you can determine which
-> assembly pattern produces the most viable results.
 
-Good tip.  We were able to manually recover the array in the case 
-outlined above, now we're looking back to fixing the kernel to prevent 
-it happening again.
+I tried to go directly to .32.2 but it didn't even mount md2. But that 
+might have been an error by me. So was stepping through kernels to see 
+where/if it stopped mounting.
 
-Thanks,
-Brett
-
+The acpi error was known and seemed to effect all nforce chipset boards. 
+I'm hoping that one is fixed.
