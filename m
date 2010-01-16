@@ -1,38 +1,70 @@
-From: "Timothy D. Lenz" <tlenz@vorgon.com>
-Subject: unknown partition table starting with 2.6.28
-Date: Fri, 15 Jan 2010 16:58:06 -0700
-Message-ID: <4B51010E.9090800@vorgon.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: How to load preexisting ntfs partitions that are on an Intel
+	Matrix Raid 1 or 5 ?
+Date: Sat, 16 Jan 2010 10:08:49 +0100
+Message-ID: <20100116090848.GA21855@maude.comedia.it>
+References: <8CC636345AA2F7E-295C-545@webmail-d049.sysops.aol.com> <8CC636C98CCAF21-295C-17C7@webmail-d049.sysops.aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <8CC636C98CCAF21-295C-17C7@webmail-d049.sysops.aol.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: ataraid-list@redhat.com
 List-Id: linux-raid.ids
 
-I am trying to update my kernel from 2.6.26.8 to the current .32. 
-Starting at .27 I get an acpi conflict:
+On Thu, Jan 14, 2010 at 03:09:22PM -0500, sylarrrrrrr@aim.com wrote:
+>  How to load preexisting ntfs partitions that are on an Intel Matrix =
+Raid 1=20
+> or 5 ?
 
-ACPI: Power Button (CM) [PWRB]
-i2c-adapter i2c-0: nForce2 SMBus adapter at 0x1c00
-ACPI: I/O resource nForce2_smbus [0x1c40-0x1c7f] conflicts with ACPI 
-region SM01 [0x1c40-0x1c45]
-ACPI: Device needs an ACPI driver
-i2c-adapter i2c-1: nForce2 SMBus adapter at 0x1c40
-ACPI: Expecting a [Reference] package element, found type 0
-thermal LNXTHERM:01: registered as thermal_zone0
+either with md or dmraid + ntfs-3g
 
-Starting with .28 I am getting an error about unknown partition table 
-for all 3 md's. md0 is boot and main programs, md1 is swap, md2 is 
-mostly recordings storage for vdr. All 3 are raid 1 and raid is built in.
+> I must also know that the loading of the partitions in linux will not=
+=20
+> damage them.
+> Is the Intel Matrix Raid feature safe ?
+which one?
+dmraid i have no info, just tried it once,
+mdadm: check the archives of this list
+3.0.2 is broken
+3.0.3 fixes some bugs
+many more bug fixes are in git and will be in 3.1.2 i believe.
 
-dmesg for .28 boot: http://pastebin.com/m1a459731
-dmesg for .29 boot: http://pastebin.com/m419d7207
+> I tried with the latest Knoppix 6.2 LiveCD, but the device was not=20
+> seenautomatically,=A0 in /dev/mapper I found too many entries, which =
+made=20
+> mesuspicious that my raids are not recognized well.
 
+/dev/mapper is dmraid not mdadm,
+besides that what do you mean with two many?
+show evidence (dmsetup ls, dmraid -c, etc)
+and maybe send it to ataraid-list@redhat.com, which deals with dmraid
+> Packages versions in my Knoppix:
+>
+> ii  mdadm                                  3.0.3-2                   =
+      =20
+>  tool to administer Linux MD arrays (software
+>
+> ii  linux-image-2.6.31.6                   2.6.31.6-10.00.Custom     =
+      =20
+>  Linux kernel binary image for version 2.6.31
+>
+>
+>
 
-I tried to go directly to .32.2 but it didn't even mount md2. But that 
-might have been an error by me. So was stepping through kernels to see 
-where/if it stopped mounting.
-
-The acpi error was known and seemed to effect all nforce chipset boards. 
-I'm hoping that one is fixed.
+--=20
+Luca Berra -- bluca@comedia.it
+          Communication Media & Services S.r.l.
+   /"\
+   \ /     ASCII RIBBON CAMPAIGN
+    X        AGAINST HTML MAIL
+   / \
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
