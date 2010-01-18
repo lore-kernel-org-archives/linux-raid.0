@@ -1,73 +1,94 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: non-fresh data unavailable bug
-Date: Mon, 18 Jan 2010 16:32:51 +1300
-Message-ID: <20100118163251.28b6a84e@notabene>
-References: <hinc60$fnh$1@ger.gmane.org>
-	<4877c76c1001141124m1d3fcfcdmffc3df97d1b504a@mail.gmail.com>
-	<hiq226$n6t$1@ger.gmane.org>
+Subject: Re: No resync
+Date: Mon, 18 Jan 2010 16:48:31 +1300
+Message-ID: <20100118164831.48fca98f@notabene>
+References: <C6.49.19471.1200C4B4@cdptpa-omtalb.mail.rr.com>
+	<4B4C0162.5040807@sauce.co.nz>
+	<20100112083753.GA9891@cthulhu.home.robinhill.me.uk>
+	<4B4CBF08.30700@sauce.co.nz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <hiq226$n6t$1@ger.gmane.org>
+In-Reply-To: <4B4CBF08.30700@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Brett Russ <bruss@netezza.com>
+To: Richard Scobie <richard@sauce.co.nz>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 15 Jan 2010 10:36:39 -0500
-Brett Russ <bruss@netezza.com> wrote:
+On Wed, 13 Jan 2010 07:27:20 +1300
+Richard Scobie <richard@sauce.co.nz> wrote:
 
-> On 01/14/2010 02:24 PM, Michael Evans wrote:
-> > On Thu, Jan 14, 2010 at 7:10 AM, Brett Russ<bruss@netezza.com>  wrote:
-> >> Slightly related to my last message here Re:non-fresh behavior, we have seen
-> >> cases where the following happens:
-> >> * healthy 2 disk raid1 (disks A&  B) incurs a problem with disk B
-> >> * disk B is removed, unit is now degraded
-> >> * replacement disk C is added; recovery from A to C begins
-> >> * during recovery, disk A incurs a brief lapse in connectivity.  At this
-> >> point C is still up yet only has a partial copy of the data.
-> >> * a subsequent assemble operation on the raid1 results in disk A being
-> >> kicked out as non-fresh, yet C is allowed in.
-> >
-> > I believe the desired and logical behavior here is to refuse running
-> > an incomplete array unless explicitly forced to do so.  Incremental
-> > assembly might be what you're seeing.
+> Robin Hill wrote:
 > 
-> This brings up a good point.  I didn't mention that the assemble in the 
-> last step above was forced.  Thus, the "bug" I'm reporting is that under 
-> duress, mdadm/md chose to assemble the array with a partially recovered 
-> (but "newer") member instead of the older member which was the recovery 
-> *source* for the newer member.
+> > You probably need to start it with missing members then, so it's able to
+> > run but not to resync.
 > 
-> What I think should happen is members that are *destinations* for 
-> recovery should *never* receive a higher event count, timestamp, or any 
-> other marking than the recovery sources.  By definition they are 
-> incomplete and can't be trusted, thus they should never trump a complete 
-> member during assemble.  I would assume the code already does this but 
-> perhaps there is a hole.
+> This is not an option in assemble mode either. It looks as though the 
+> array has to be recreated. I'm not sure why any of these options are not 
+> provided for assemble.
 > 
-> One other piece of information that may be relevant--we're using 2 
-> member RAID1 units with one member marked write-mostly.  At this time, I 
-> don't have the specifics for which member (A or B) was the write-mostly 
-> member in the example above, but I can find that out.
-> 
-> > I very much recommend running it read-only until you can determine which
-> > assembly pattern produces the most viable results.
-> 
-> Good tip.  We were able to manually recover the array in the case 
-> outlined above, now we're looking back to fixing the kernel to prevent 
-> it happening again.
->
+> Anyway, in the end I did an "assemble --force" after stopping what was 
+> left (5 drives dropped from a 16 drive RAID6), and it strated but did 
+> not initiate a resync.
 
+This is what I would expect.  When mdadm need to "fix" the array to get it to
+assemble, it does the minimum work necessary to get the data available.  That
+means that it normally won't add any 'redundant' data so no resync will
+happen. (RAID10 is a bit of an exception for complex reasons that I don't
+want to go in to at the moment).
 
-Thanks for the report.  It sounds like a real problem.
-I'm travelling at the moment so reproducing it would be a challenge.
-If you are able to, can you report the output of
-  mdadm -E /dev/list-of-devices
-at the key points in the process, and also add "-v" to any
-mdadm --assemble
-command you use, and report the output?
+> 
+> Perhaps the behaviour here has changed, because I'm sure when I've done 
+> this in the past, it resyncs straight away.
 
-Thanks,
+I would be surprised... (but that does happen).
+
+> 
+> There were some somewhat strange errors in the log:
+> 
+> Jan 12 17:09:09 sam kernel: end_request: I/O error, dev sdf, sector 
+> 1953182527
+> Jan 12 17:09:09 sam kernel: md: super_written gets error=-5, uptodate=0
+> Jan 12 17:09:09 sam kernel: raid5: Disk failure on sdf1, disabling device.
+> Jan 12 17:09:09 sam kernel: raid5: Operation continuing on 15 devices.
+> Jan 12 17:09:09 sam kernel: end_request: I/O error, dev sdh, sector 
+> 1953182527
+> Jan 12 17:09:09 sam kernel: md: super_written gets error=-5, uptodate=0
+> Jan 12 17:09:09 sam kernel: raid5: Disk failure on sdh1, disabling device.
+> Jan 12 17:09:09 sam kernel: raid5: Operation continuing on 14 devices.
+> Jan 12 17:09:09 sam kernel: end_request: I/O error, dev sdg, sector 
+> 1953182527
+> Jan 12 17:09:09 sam kernel: md: super_written gets error=-5, uptodate=0
+> Jan 12 17:09:09 sam kernel: raid5: Disk failure on sdg1, disabling device.
+> Jan 12 17:09:09 sam kernel: raid5: Operation continuing on 13 devices.
+> Jan 12 17:09:09 sam kernel: end_request: I/O error, dev sdp, sector 
+> 1953182527
+> Jan 12 17:09:09 sam kernel: md: super_written gets error=-5, uptodate=0
+> Jan 12 17:09:09 sam kernel: raid5: Disk failure on sdp1, disabling device.
+> Jan 12 17:09:09 sam kernel: raid5: Operation continuing on 12 devices.
+> Jan 12 17:09:09 sam kernel: end_request: I/O error, dev sdr, sector 
+> 1953182527
+> Jan 12 17:09:09 sam kernel: md: super_written gets error=-5, uptodate=0
+> Jan 12 17:09:09 sam kernel: raid5: Disk failure on sdr1, disabling device.
+> Jan 12 17:09:09 sam kernel: raid5: Operation continuing on 11 devices.
+> 
+> The cause is a controller problem, but after the first 2 drives were 
+> disabled, I don't know why there were "raid5: Operation continuing 
+> on..." messages as another 3 drives were offlined. A RAID6 array should 
+> stop when a third device fails.
+
+Yes it should .... I really should tidy that code up.
+
 NeilBrown
+
+
+> 
+> Regards,
+> 
+> Richard
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
