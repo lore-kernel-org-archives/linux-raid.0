@@ -1,60 +1,47 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: How to load preexisting ntfs partitions that are on an Intel
-	Matrix Raid 1 or 5 ?
-Date: Mon, 18 Jan 2010 08:53:15 +0100
-Message-ID: <20100118075315.GB28405@maude.comedia.it>
-References: <8CC636345AA2F7E-295C-545@webmail-d049.sysops.aol.com> <8CC636C98CCAF21-295C-17C7@webmail-d049.sysops.aol.com> <20100116090848.GA21855@maude.comedia.it> <8CC64CAEA9C15A3-938C-10EBD@webmail-m048.sysops.aol.com>
+From: Stephan Stachurski <ses1984@gmail.com>
+Subject: Can't re-assemble successfully after creation, initial sync and
+	reboot
+Date: Mon, 18 Jan 2010 12:33:56 -0500
+Message-ID: <959332b61001180933n638b9255k5aa540be024f2e6f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <8CC64CAEA9C15A3-938C-10EBD@webmail-m048.sysops.aol.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Jan 16, 2010 at 08:57:03AM -0500, sylarrrrrrr@aim.com wrote:
-> OK So this is the mdadm mailing list, and the /dev/mapper is irrelevant 
-> here, right? So ...
->
-> How do I load my existing raid arrays with mdadm?
+I'm having problems with an array that I just created. It's a raid
+level 5 with 4 devices using all of the default settings. I'm using
+the version of mdadm that's included in ubuntu 9.10 repositories.
 
-first make sure they have not been claimed by dmraid.
-issuing "dmraid -an" should suffice
-then just run "mdadm -As".
-looking at /proc/mdstat you should see a container device (or array
-using windows driver terminology) and the actual
-raid volume.
-under /dev/md you should also find meaningful device names and device
-file for the partitions contained in the volume.
+When I reboot the machine, /proc/mdstat shows this:
+md_d0 : inactive sdc[2](S)
 
-<snip>
+I can stop the device, and attempt the --assemble the array correctly,
+but something still is wrong:
 
-> PS. I am not next to that machine right now, but I have 3 raid devices on 
-> it and in the /dev/mapper there were about 6 or 8 devices some of which had 
-> similar names and consecutive numbers e.g. xxxxxxxxxxxxx_System1 
-> xxxxxxxxxxxxx_System2 xxxxxxxxxxxxx_System3 while my partition on one of 
-> the raid devices was called System and was raid 1 of two disks.
+$ sudo mdadm --stop /dev/md_d0
+mdadm: stopped /dev/md_d0
+$ sudo mdadm --assemble /dev/md0 -fv /dev/sda /dev/sdb /dev/sdc /dev/sdd
+mdadm: looking for devices for /dev/md0
+mdadm: /dev/sda is identified as a member of /dev/md0, slot 0.
+mdadm: /dev/sdb is identified as a member of /dev/md0, slot 1.
+mdadm: /dev/sdc is identified as a member of /dev/md0, slot 2.
+mdadm: /dev/sdd is identified as a member of /dev/md0, slot 3.
+mdadm: added /dev/sdb to /dev/md0 as 1
+mdadm: added /dev/sdc to /dev/md0 as 2
+mdadm: added /dev/sdd to /dev/md0 as 3
+mdadm: added /dev/sda to /dev/md0 as 0
+mdadm: /dev/md0 has been started with 3 drives (out of 4).
+$ sudo cat /proc/mdstat
+md0: active raid5 sda[0] sdc[2] sdb[1]
+2930287488 blocks level 5, 128k chunk, algorithm 2 [4/3] [UUU_]
 
-please quote either above or below, it is a pain to read if you quote in
-the middle.
-That said, you use the term 'device' above with two differemt meanings,
-and i am not quite sure of what you intend.
-please elaborate on "I have 3 raid devices"
-- 3 hard disks in the container (array)
-- a container with three volumes
+md_d0: inactive sdd[3](S)
+976762496 blocks
 
-then you probably mix partition and volume
-xxxxxxxxxxxxx_System1 is the first partition on volume System of Array
-xxxxxxxxxxxxx (unfortunately arrays dont have meaningful names)
-xxxxxxxxxxxxx_System2 is the second partition ....
-and so on
-
-
--- 
-Luca Berra -- bluca@comedia.it
-         Communication Media & Services S.r.l.
-  /"\
-  \ /     ASCII RIBBON CAMPAIGN
-   X        AGAINST HTML MAIL
-  / \
+Why, if it correctly identifies the devices that are members of
+/dev/md0, and then adds them to /dev/md0, do I not get the complete
+array?
+--
+Stephan E Stachurski
