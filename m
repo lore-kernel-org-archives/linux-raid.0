@@ -1,94 +1,60 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: No resync
-Date: Mon, 18 Jan 2010 16:48:31 +1300
-Message-ID: <20100118164831.48fca98f@notabene>
-References: <C6.49.19471.1200C4B4@cdptpa-omtalb.mail.rr.com>
-	<4B4C0162.5040807@sauce.co.nz>
-	<20100112083753.GA9891@cthulhu.home.robinhill.me.uk>
-	<4B4CBF08.30700@sauce.co.nz>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: How to load preexisting ntfs partitions that are on an Intel
+	Matrix Raid 1 or 5 ?
+Date: Mon, 18 Jan 2010 08:53:15 +0100
+Message-ID: <20100118075315.GB28405@maude.comedia.it>
+References: <8CC636345AA2F7E-295C-545@webmail-d049.sysops.aol.com> <8CC636C98CCAF21-295C-17C7@webmail-d049.sysops.aol.com> <20100116090848.GA21855@maude.comedia.it> <8CC64CAEA9C15A3-938C-10EBD@webmail-m048.sysops.aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B4CBF08.30700@sauce.co.nz>
+Content-Disposition: inline
+In-Reply-To: <8CC64CAEA9C15A3-938C-10EBD@webmail-m048.sysops.aol.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 13 Jan 2010 07:27:20 +1300
-Richard Scobie <richard@sauce.co.nz> wrote:
+On Sat, Jan 16, 2010 at 08:57:03AM -0500, sylarrrrrrr@aim.com wrote:
+> OK So this is the mdadm mailing list, and the /dev/mapper is irrelevant 
+> here, right? So ...
+>
+> How do I load my existing raid arrays with mdadm?
 
-> Robin Hill wrote:
-> 
-> > You probably need to start it with missing members then, so it's able to
-> > run but not to resync.
-> 
-> This is not an option in assemble mode either. It looks as though the 
-> array has to be recreated. I'm not sure why any of these options are not 
-> provided for assemble.
-> 
-> Anyway, in the end I did an "assemble --force" after stopping what was 
-> left (5 drives dropped from a 16 drive RAID6), and it strated but did 
-> not initiate a resync.
+first make sure they have not been claimed by dmraid.
+issuing "dmraid -an" should suffice
+then just run "mdadm -As".
+looking at /proc/mdstat you should see a container device (or array
+using windows driver terminology) and the actual
+raid volume.
+under /dev/md you should also find meaningful device names and device
+file for the partitions contained in the volume.
 
-This is what I would expect.  When mdadm need to "fix" the array to get it to
-assemble, it does the minimum work necessary to get the data available.  That
-means that it normally won't add any 'redundant' data so no resync will
-happen. (RAID10 is a bit of an exception for complex reasons that I don't
-want to go in to at the moment).
+<snip>
 
-> 
-> Perhaps the behaviour here has changed, because I'm sure when I've done 
-> this in the past, it resyncs straight away.
+> PS. I am not next to that machine right now, but I have 3 raid devices on 
+> it and in the /dev/mapper there were about 6 or 8 devices some of which had 
+> similar names and consecutive numbers e.g. xxxxxxxxxxxxx_System1 
+> xxxxxxxxxxxxx_System2 xxxxxxxxxxxxx_System3 while my partition on one of 
+> the raid devices was called System and was raid 1 of two disks.
 
-I would be surprised... (but that does happen).
+please quote either above or below, it is a pain to read if you quote in
+the middle.
+That said, you use the term 'device' above with two differemt meanings,
+and i am not quite sure of what you intend.
+please elaborate on "I have 3 raid devices"
+- 3 hard disks in the container (array)
+- a container with three volumes
 
-> 
-> There were some somewhat strange errors in the log:
-> 
-> Jan 12 17:09:09 sam kernel: end_request: I/O error, dev sdf, sector 
-> 1953182527
-> Jan 12 17:09:09 sam kernel: md: super_written gets error=-5, uptodate=0
-> Jan 12 17:09:09 sam kernel: raid5: Disk failure on sdf1, disabling device.
-> Jan 12 17:09:09 sam kernel: raid5: Operation continuing on 15 devices.
-> Jan 12 17:09:09 sam kernel: end_request: I/O error, dev sdh, sector 
-> 1953182527
-> Jan 12 17:09:09 sam kernel: md: super_written gets error=-5, uptodate=0
-> Jan 12 17:09:09 sam kernel: raid5: Disk failure on sdh1, disabling device.
-> Jan 12 17:09:09 sam kernel: raid5: Operation continuing on 14 devices.
-> Jan 12 17:09:09 sam kernel: end_request: I/O error, dev sdg, sector 
-> 1953182527
-> Jan 12 17:09:09 sam kernel: md: super_written gets error=-5, uptodate=0
-> Jan 12 17:09:09 sam kernel: raid5: Disk failure on sdg1, disabling device.
-> Jan 12 17:09:09 sam kernel: raid5: Operation continuing on 13 devices.
-> Jan 12 17:09:09 sam kernel: end_request: I/O error, dev sdp, sector 
-> 1953182527
-> Jan 12 17:09:09 sam kernel: md: super_written gets error=-5, uptodate=0
-> Jan 12 17:09:09 sam kernel: raid5: Disk failure on sdp1, disabling device.
-> Jan 12 17:09:09 sam kernel: raid5: Operation continuing on 12 devices.
-> Jan 12 17:09:09 sam kernel: end_request: I/O error, dev sdr, sector 
-> 1953182527
-> Jan 12 17:09:09 sam kernel: md: super_written gets error=-5, uptodate=0
-> Jan 12 17:09:09 sam kernel: raid5: Disk failure on sdr1, disabling device.
-> Jan 12 17:09:09 sam kernel: raid5: Operation continuing on 11 devices.
-> 
-> The cause is a controller problem, but after the first 2 drives were 
-> disabled, I don't know why there were "raid5: Operation continuing 
-> on..." messages as another 3 drives were offlined. A RAID6 array should 
-> stop when a third device fails.
-
-Yes it should .... I really should tidy that code up.
-
-NeilBrown
+then you probably mix partition and volume
+xxxxxxxxxxxxx_System1 is the first partition on volume System of Array
+xxxxxxxxxxxxx (unfortunately arrays dont have meaningful names)
+xxxxxxxxxxxxx_System2 is the second partition ....
+and so on
 
 
-> 
-> Regards,
-> 
-> Richard
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
