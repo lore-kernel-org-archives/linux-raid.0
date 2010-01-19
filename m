@@ -1,46 +1,41 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [[Patch mdadm] 1/5] Make the IMSM_DEVNAME_AS_SERIAL option work
-	when creating containers. This allows a person to testing using loopback
-	devices that don't support serial number queries.
-Date: Mon, 18 Jan 2010 22:47:33 -0700
-Message-ID: <e9c3a7c21001182147o487e5f7ar7b474766d538580f@mail.gmail.com>
-References: <1263242294-5353-1-git-send-email-dledford@redhat.com>
-	 <1263242294-5353-2-git-send-email-dledford@redhat.com>
-	 <e9c3a7c21001181413p60e0322byd97844d3f30a0715@mail.gmail.com>
-	 <4B55112F.4090403@redhat.com>
-	 <e9c3a7c21001182042k1a88e21fpc64ff0bb75ff5854@mail.gmail.com>
-	 <4B5543CC.3060901@redhat.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: [[Patch mdadm] 2/5] Move the files mdmon opens into /dev/ to
+	support handoff after pivotroot
+Date: Tue, 19 Jan 2010 08:21:54 +0100
+Message-ID: <20100119072154.GC2891@maude.comedia.it>
+References: <1263242294-5353-1-git-send-email-dledford@redhat.com> <1263242294-5353-3-git-send-email-dledford@redhat.com> <20100119110930.107ca42e@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B5543CC.3060901@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20100119110930.107ca42e@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jan 18, 2010 at 10:31 PM, Doug Ledford <dledford@redhat.com> wr=
-ote:
-> Ah, OK. =A0I did say we had been carrying this around in our SRPM for=
- a
-> while, I just hadn't tried removing it since it was necessary.
+On Tue, Jan 19, 2010 at 11:09:30AM +1300, Neil Brown wrote:
+>On Mon, 11 Jan 2010 15:38:11 -0500
+>Doug Ledford <dledford@redhat.com> wrote:
+>
+>> Signed-off-by: Doug Ledford <dledford@redhat.com>
+>
+>I really really don't like this.
+>I wasn't very keen on allowing the map file to be found in /dev,
+>but this it just too ugly.
+>
+>I understand there is a problem here, but I don't like this approach to a
+>solution.  I'll give it more though when I get home from LCA2010 and see
+>what I can come up with.
+>
+I'll try holding my breath till then :)
+well, actually i'll use Doug's patch until a better solution is found.
 
-No worries, I suspected as much.
+L.
 
-> I take
-> it you are implying that that changeset is the one that rendered it n=
-o
-> longer necessary?
-
-Nah, this is just a recent point before Neil applied this patch.  I
-did a quick look for the commit that fixed this, but nothing popped
-out.
-
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
