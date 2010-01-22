@@ -1,39 +1,54 @@
-From: Asdo <asdo@shiftmail.org>
-Subject: Re: Why does one get mismatches?
-Date: Fri, 22 Jan 2010 17:34:29 +0100
-Message-ID: <4B59D395.9020604@shiftmail.org>
-References: <141903.28627.qm@web51308.mail.re2.yahoo.com>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: SSD & mechanical disc in RAID 1
+Date: Fri, 22 Jan 2010 17:37:00 +0100
+Message-ID: <87bpgmyu37.fsf@frosties.localdomain>
+References: <7a329d911001090953j17829cd9qca0888fbcd7b4805@mail.gmail.com>
+	<20100109192326.GB16383@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <141903.28627.qm@web51308.mail.re2.yahoo.com>
+In-Reply-To: <20100109192326.GB16383@rap.rap.dk> (Keld Jorn Simonsen's message
+	of "Sat, 9 Jan 2010 21:23:26 +0200")
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon@eHardcastle.com
-Cc: linux-raid@vger.kernel.org, Brett Russ <bruss@netezza.com>
+To: Keld Jorn Simonsen <keld@keldix.com>
+Cc: Wil Reichert <wil.reichert@gmail.com>, linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Jon Hardcastle wrote:
-> <SNIP>
->   
->> Note that if your md device is not in a read-only mode that
->> the member states may be changing underneath you as you run
->> the above command. Therefore, you should either stop the
->> device then run the commands, or at least have the device in
->> a read-only mode first.
->>
->> -BR
->>
->>     
->
-> I have just tried this - i umounted all LV and then deactivated the VG. I set to read-only but now any attempt to echo check > sync_action results in
->
-> 'write error: device or resource busy'
->
-> any clues/
->   
+Keld J=F8rn Simonsen <keld@keldix.com> writes:
 
-I think running check or repair is not supported with the MD array set 
-read-only.
-I remember Neil Brown himself saying that, and I seem to recall I have 
-also seen this in the source code.
+> On Sat, Jan 09, 2010 at 09:53:11AM -0800, Wil Reichert wrote:
+>> Has anyone ever tried putting an SSD and a mechanical disc in RAID 1
+>> using write-mostly?  The goal would be to extol the speed & latency
+>> virtues of an SSD while retaining the integrity of the traditional
+>> storage.  Would this setup even work as I expect it to?
+>
+>
+> I think you are better served by trying out RAID10 in the far or offs=
+et
+> layouts. RAID1 would per se not gain from the low latency times of=20
+> SSD. RAID1 should function the same with hard disk as with SSD,=20
+> and with hard disk it would not make sense to multiplex reading
+> of a file, as skipping and reading a block essentially takes the same
+> time.
+>
+> Best regards
+> Keld
+
+With raid10 in the far or offset layout every (large) read and write
+would always access both the SSD and rotating disk. That would make
+every operation wait for the rotating disk to seek.
+
+
+I think his initial idea of raid1 is verry good. With write-mostly all
+reads should come from the fast SSD. I would also add write-behind.
+That way writes will not wait for the rotating disk and get the full
+SSD speed as well.
+
+MfG
+        Goswin
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
