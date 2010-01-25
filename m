@@ -1,62 +1,36 @@
-From: "Majed B." <majedb@gmail.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
 Subject: Re: Swapping a disk without degrading an array
-Date: Mon, 25 Jan 2010 15:25:58 +0300
-Message-ID: <70ed7c3e1001250425n6b6136ddr261a95042584df72@mail.gmail.com>
-References: <1264421475.30742.49.camel@test.apertos.eu>
+Date: Mon, 25 Jan 2010 13:53:16 +0100 (CET)
+Message-ID: <alpine.DEB.1.10.1001251350100.15329@uplift.swm.pp.se>
+References: <1264421475.30742.49.camel@test.apertos.eu> <70ed7c3e1001250425n6b6136ddr261a95042584df72@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1264421475.30742.49.camel@test.apertos.eu>
+In-Reply-To: <70ed7c3e1001250425n6b6136ddr261a95042584df72@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?Q?Micha=C5=82_Sawicz?= <michal@sawicz.net>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: "Majed B." <majedb@gmail.com>
+Cc: =?ISO-8859-2?Q?Micha=B3_Sawicz?= <michal@sawicz.net>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-There's a technique called active spare, and is already available on
-some hardware RAID controllers. It keeps the hot spare in sync with
-the array, such that in an event of a disk failure, the spare kicks-in
-immediately without wasting time for a resync.
+On Mon, 25 Jan 2010, Majed B. wrote:
 
-I think what you're proposing is similar to the following scenario:
-array0: (assume raid5): disk0, disk1, disk2, disk3(spare)
-array1: (raid1): disk0, disk3
+> Though I'm not sure if it's feasible to nest raids or have a disk to be 
+> a member of 2 arrays at the same time.
 
-Though I'm not sure if it's feasible to nest raids or have a disk to
-be a member of 2 arrays at the same time.
+I think the proposal is for the scenario when a drive is being upgraded to 
+a larger sized drive.
 
-I think it was proposed before, but I donno about its priority.
+So:
 
-2010/1/25 Micha=C5=82 Sawicz <michal@sawicz.net>:
-> Hi list,
->
-> This is something I've discussed on IRC and we achieved a conclusion
-> that this might be useful, but somewhat limited use-case count might =
-not
-> warrant the effort to be implemented.
->
-> What I have in mind is allowing a member of an array to be paired wit=
-h a
-> spare while the array is on-line. The spare disk would then be filled
-> with exactly the same data and would, in the end, replace the active
-> member. The replaced disk could then be hot-removed without the array
-> ever going into degraded mode.
->
-> I wanted to start a discussion whether this at all makes sense, what =
-can
-> be the use cases etc.
->
-> --
-> Cheers
-> Micha=C5=82 (Saviq) Sawicz
->
+1 Add spare X
+2 Tell mdadm to replace drive N with the new spare
+3 Information on N is now copied to X online
+4 When copy is done, N and X contains the same info, and N is now 
+converted to spare by mdadm
+5 Hot-remove N
 
+This means if I want to upgrade from size to size+X drives I can do that 
+without ever degrading the array.
 
-
---=20
-       Majed B.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
