@@ -1,36 +1,35 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Swapping a disk without degrading an array
-Date: Mon, 25 Jan 2010 13:53:16 +0100 (CET)
-Message-ID: <alpine.DEB.1.10.1001251350100.15329@uplift.swm.pp.se>
-References: <1264421475.30742.49.camel@test.apertos.eu> <70ed7c3e1001250425n6b6136ddr261a95042584df72@mail.gmail.com>
+From: Jon Hardcastle <jd_hardcastle@yahoo.com>
+Subject: Thrashing a drive to flush out problems..
+Date: Mon, 25 Jan 2010 06:26:46 -0800 (PST)
+Message-ID: <77733.15823.qm@web51302.mail.re2.yahoo.com>
+Reply-To: Jon@eHardcastle.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70ed7c3e1001250425n6b6136ddr261a95042584df72@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Majed B." <majedb@gmail.com>
-Cc: =?ISO-8859-2?Q?Micha=B3_Sawicz?= <michal@sawicz.net>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 25 Jan 2010, Majed B. wrote:
+Hi guys can anyone recommend a tool for thrashing the b*ll*cks of a drive in  way that isn't destructive to the data?
 
-> Though I'm not sure if it's feasible to nest raids or have a disk to be 
-> a member of 2 arrays at the same time.
+I was thinking badblocks with -w but it is destructive and i dont want to do anything that will potentially lower the integrity of my array? (Even tho it is raid6 :) )
 
-I think the proposal is for the scenario when a drive is being upgraded to 
-a larger sized drive.
+There must be some bonnie esk tool that will read/write every combination to every block but keep the data safe after to flush out any sector issues etc.
 
-So:
+Cheers.
 
-1 Add spare X
-2 Tell mdadm to replace drive N with the new spare
-3 Information on N is now copied to X online
-4 When copy is done, N and X contains the same info, and N is now 
-converted to spare by mdadm
-5 Hot-remove N
 
-This means if I want to upgrade from size to size+X drives I can do that 
-without ever degrading the array.
+-----------------------
+N: Jon Hardcastle
+E: Jon@eHardcastle.com
+'Do not worry about tomorrow, for tomorrow will bring worries of its own.'
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+***********
+Please note, I am phasing out jd_hardcastle AT yahoo.com and replacing it with jon AT eHardcastle.com
+***********
+
+-----------------------
+
+
+      
