@@ -1,107 +1,123 @@
-From: greg@enjellic.com
-Subject: Re: Why does one get mismatches?
-Date: Mon, 25 Jan 2010 14:43:54 -0600
-Message-ID: <201001252043.o0PKhseR027690@wind.enjellic.com>
-References: <lfarkas@lfarkas.org>
-Reply-To: greg@enjellic.com
+From: aragonx@dcsnow.com
+Subject: Several steps to death
+Date: Mon, 25 Jan 2010 16:21:57 -0500
+Message-ID: <55f050077e86adeb1f4acca87cace12b.squirrel@www.dcsnow.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: Farkas Levente <lfarkas@lfarkas.org>
-       "Re: Why does one get mismatches?" (Jan 21, 12:48pm)
 Sender: linux-raid-owner@vger.kernel.org
-To: Farkas Levente <lfarkas@lfarkas.org>, Steven Haigh <netwiz@crc.id.au>
-Cc: Asdo <asdo@shiftmail.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Jan 21, 12:48pm, Farkas Levente wrote:
-} Subject: Re: Why does one get mismatches?
+Hello all,
 
-Good afternoon to everyone, hope the week is starting well.
+I have a RAID 5 array that was created on Fedora 9 that just holds user
+files (Samba share).  Everything was fine until a kernel upgrade and
+motherboard failure made it impossible for me to boot.  After a new
+motherboard and an upgrade to Fedora 12, my array is toast.
 
-> On 01/21/2010 11:52 AM, Steven Haigh wrote:
-> > On Thu, 21 Jan 2010 09:08:42 +0100, Asdo<asdo@shiftmail.org>  wrote:
-> >> Steven Haigh wrote:
-> >>> On Wed, 20 Jan 2010 17:43:45 -0500, Brett Russ<bruss@netezza.com>
-> > wrote:
-> >>>
-> >>> CUT!
-> >> Might that be a problem of the disks/controllers?
-> >> Jon and Steven, what hardware do you have?
-> >
-> > I'm running some fairly old hardware on this particular server. It's a
-> > dual P3 1Ghz.
-> >
-> > After running a repair on /dev/md2, I now see:
-> > # cat /sys/block/md2/md/mismatch_cnt
-> > 1536
-> >
-> > Again, no smart errors, nothing to indicate a disk problem at all :(
-> >
-> > As this really keeps killing the machine and it is a live system - the
-> > only thing I can really think of doing is to break the RAID and just rsync
-> > the drives twice daily :\
+The problems are my own.  I was not paying enough attention to the data
+and more on the OS.  So what happened was what was originally a 5 disk
+RAID 5 array was somehow detected as a RAID 5 array with 4 disks + 1
+spare.  It mounted and started a rebuild.  It was somewhere around 40%
+before I noticed it.
 
-> the same happened with many people. and we all hate it since it
-> cause a huge load at all weekend on most of our servers:-( according
-> to redhat it's not a bug:-(
+So my question is, can I get this data back or is it gone?
 
-The RAID check/mismatch_count is an example of well intentioned
-technology suffering from 'featuritis' by the distributions which is,
-as I predicted a couple of times in this forum, causing all sorts of
-angst and problems throughout the world.  I've had some posts on this
-subject but will summarize in the hopes of giving some background
-information which will be useful to people.
+If I try to mount it now, with the correct configuration I get the
+following error:
 
-There is an issue in the kernel which causes these mismatches.  The
-problem seems to be particularly bad with RAID1 arrays.  The
-contention is that these mismatches are 'harmless' because they only
-occur in areas of the filesystems which are not being used.
+mdadm --create /dev/md0 --level=5 --spare-devices=0 --raid-devices=5
+/dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1
 
-The best description is that the buffers containing the data to be
-written are not 'pinned' all the way down the I/O stack.  This can
-cause the contents of a buffer to be changed while in transit through
-the I/O stack.  Thus one copy of a mirror gets a buffer written to it
-different then the other side of the mirror.
+cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md0 : active raid5 sdf1[5] sde1[3] sdd1[2] sdc1[1] sdb1[0]
+      2930287616 blocks level 5, 64k chunk, algorithm 2 [5/4] [UUUU_]
+      [>....................]  recovery =  0.1% (1255864/732571904)
+finish=155.2min speed=78491K/sec
 
-I've read reasoned discussions about why this occurs with swap over
-RAID1 and why its harmless.  I've set to see the same type of reasoned
-discussion as to why it is not problematic with a filesystem over
-RAID1.  There has been some discussion that its due to high levels of
-MMAP activity on the filesystem.
+unused devices: <none>
 
-We have confirmed, that at least with RAID1, this all occurs with no
-physical corruption on the 'disk drives'.  We implement geographically
-mirror storage with RAID1 against two separate data-centers.  At each
-data-center the RAID1 'block-device' are RAID5 volumes.  These latter
-volumes check out with no errors/mismatch counts etc.  So the issue is
-at the RAID1 data abstraction layer.
+mount -t ext4 -o usrquota,grpquota,acl,user_xattr /dev/md0 /home/data
 
-There do not appear to be any tools which allow one to determine
-'where' the mismatches are.  Such a tool, or logging by the kernel,
-would be useful for people who want to verify what files, if any, are
-affected by the mismatch.  Otherwise running a 'repair' results in the
-RAID1 code arbitraily deciding which of the two blocks is the
-'correct' one.
+mdadm -E /dev/sdb1
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 0.90.00
+           UUID : 18928390:76024ba7:d9fdb3bf:6408b6d2 (local to host server)
+  Creation Time : Mon Jan 25 16:14:08 2010
+     Raid Level : raid5
+  Used Dev Size : 732571904 (698.64 GiB 750.15 GB)
+     Array Size : 2930287616 (2794.54 GiB 3000.61 GB)
+   Raid Devices : 5
+  Total Devices : 6
+Preferred Minor : 0
 
-So thats sort of a thumbnail sketch of what is going on.  The fact the
-distributions chose to implement this without understanding the issues
-it presents is a bit problematic.
+    Update Time : Mon Jan 25 16:14:08 2010
+          State : clean
+ Active Devices : 4
+Working Devices : 5
+ Failed Devices : 1
+  Spare Devices : 1
+       Checksum : 382dc6ea - correct
+         Events : 1
 
->    Levente                               "Si vis pacem para bellum!"
+         Layout : left-symmetric
+     Chunk Size : 64K
 
-Hopefully this information is helpful.
+      Number   Major   Minor   RaidDevice State
+this     0       8       17        0      active sync   /dev/sdb1
 
-Greg
+   0     0       8       17        0      active sync   /dev/sdb1
+   1     1       8       33        1      active sync   /dev/sdc1
+   2     2       8       49        2      active sync   /dev/sdd1
+   3     3       8       65        3      active sync   /dev/sde1
+   4     0       0        0        0      spare
+   5     5       8       81        5      spare   /dev/sdf1
 
-}-- End of excerpt from Farkas Levente
 
-As always,
-Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
-4206 N. 19th Ave.           Specializing in information infra-structure
-Fargo, ND  58102            development.
-PH: 701-281-1686
-FAX: 701-281-3949           EMAIL: greg@enjellic.com
-------------------------------------------------------------------------------
-"I am returning this otherwise good typing paper to you because
- someone has printed gibberish all over it and put your name at the
- top.
-                                -- English Professor, Ohio University
+Here is what is in /var/log/messages
+
+Jan 25 16:14:08 server kernel: md: bind<sdb1>
+Jan 25 16:14:08 server kernel: md: bind<sdc1>
+Jan 25 16:14:08 server kernel: md: bind<sdd1>
+Jan 25 16:14:08 server kernel: md: bind<sde1>
+Jan 25 16:14:08 server kernel: md: bind<sdf1>
+Jan 25 16:14:09 server kernel: raid5: device sde1 operational as raid disk 3
+Jan 25 16:14:09 server kernel: raid5: device sdd1 operational as raid disk 2
+Jan 25 16:14:09 server kernel: raid5: device sdc1 operational as raid disk 1
+Jan 25 16:14:09 server kernel: raid5: device sdb1 operational as raid disk 0
+Jan 25 16:14:09 server kernel: raid5: allocated 5332kB for md0
+Jan 25 16:14:09 server kernel: raid5: raid level 5 set md0 active with 4
+out of 5 devices, algorithm 2
+Jan 25 16:14:09 server kernel: RAID5 conf printout:
+Jan 25 16:14:09 server kernel: --- rd:5 wd:4
+Jan 25 16:14:09 server kernel: disk 0, o:1, dev:sdb1
+Jan 25 16:14:09 server kernel: disk 1, o:1, dev:sdc1
+Jan 25 16:14:09 server kernel: disk 2, o:1, dev:sdd1
+Jan 25 16:14:09 server kernel: disk 3, o:1, dev:sde1
+Jan 25 16:14:09 server kernel: md0: detected capacity change from 0 to
+3000614518784
+Jan 25 16:14:09 server kernel: md0: unknown partition table
+Jan 25 16:14:09 server kernel: RAID5 conf printout:
+Jan 25 16:14:09 server kernel: --- rd:5 wd:4
+Jan 25 16:14:09 server kernel: disk 0, o:1, dev:sdb1
+Jan 25 16:14:09 server kernel: disk 1, o:1, dev:sdc1
+Jan 25 16:14:09 server kernel: disk 2, o:1, dev:sdd1
+Jan 25 16:14:09 server kernel: disk 3, o:1, dev:sde1
+Jan 25 16:14:09 server kernel: disk 4, o:1, dev:sdf1
+Jan 25 16:14:09 server kernel: md: recovery of RAID array md0
+Jan 25 16:14:09 server kernel: md: minimum _guaranteed_  speed: 1000
+KB/sec/disk.
+Jan 25 16:14:09 server kernel: md: using maximum available idle IO
+bandwidth (but not more than 200000 KB/sec) for recovery.
+Jan 25 16:14:09 server kernel: md: using 128k window, over a total of
+732571904 blocks.
+Jan 25 16:15:12 server kernel: EXT4-fs (md0): VFS: Can't find ext4 filesystem
+
+Thank you in advance.
+
+---
+Will Y.
