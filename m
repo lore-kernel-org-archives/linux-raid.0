@@ -1,57 +1,54 @@
-From: Anatolij Gustschin <agust@denx.de>
-Subject: [PATCH] dmatest: correct raid6 pq test
-Date: Mon, 25 Jan 2010 09:15:03 +0100
-Message-ID: <1264407303-14264-1-git-send-email-agust@denx.de>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: Zeroing multiple superblocks
+Date: Mon, 25 Jan 2010 10:52:21 +0100
+Message-ID: <20100125095221.GV21495@skl-net.de>
+References: <20100122200924.GA29183@psychosis.jim.sh>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="fH+ug0VWbLbTAXDy"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20100122200924.GA29183@psychosis.jim.sh>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Anatolij Gustschin <agust@denx.de>
+To: Jim Paris <jim@jtan.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The number of pq sources specified by module parameter "pq_sources"
-is always forced odd to fit into dmatest's destination verificaton
-scheme. But number of pq sources and coefficients as passed to the
-driver's prep_dma_pq() is not adjusted accordingly.
 
-Fix it now to get correct testing results in the case passed
-"pq_sources" parameter is even.
+--fH+ug0VWbLbTAXDy
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Anatolij Gustschin <agust@denx.de>
----
- drivers/dma/dmatest.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+On 15:09, Jim Paris wrote:
 
-diff --git a/drivers/dma/dmatest.c b/drivers/dma/dmatest.c
-index 8b90516..cc0f329 100644
---- a/drivers/dma/dmatest.c
-+++ b/drivers/dma/dmatest.c
-@@ -237,7 +237,7 @@ static int dmatest_func(void *data)
- 	dma_cookie_t		cookie;
- 	enum dma_status		status;
- 	enum dma_ctrl_flags 	flags;
--	u8			pq_coefs[pq_sources];
-+	u8			pq_coefs[pq_sources + 1];
- 	int			ret;
- 	int			src_cnt;
- 	int			dst_cnt;
-@@ -257,7 +257,7 @@ static int dmatest_func(void *data)
- 	} else if (thread->type == DMA_PQ) {
- 		src_cnt = pq_sources | 1; /* force odd to ensure dst = src */
- 		dst_cnt = 2;
--		for (i = 0; i < pq_sources; i++)
-+		for (i = 0; i < src_cnt; i++)
- 			pq_coefs[i] = 1;
- 	} else
- 		goto err_srcs;
-@@ -355,7 +355,7 @@ static int dmatest_func(void *data)
- 			for (i = 0; i < dst_cnt; i++)
- 				dma_pq[i] = dma_dsts[i] + dst_off;
- 			tx = dev->device_prep_dma_pq(chan, dma_pq, dma_srcs,
--						     pq_sources, pq_coefs,
-+						     src_cnt, pq_coefs,
- 						     len, flags);
- 		}
- 
--- 
-1.5.6.3
+> I guess the only way to be fully safe with the current approach is to
+> do a zero-superblock over and over until it complains.
 
+mdadm --zero-superblock tries to guess the location of the superblock.
+If more than one superblock is found, the one with the latest creation
+time is being zeroed. So yes, the method you describe works and I think
+it is the most reliable way to remove all superblocks of a device.
+
+Maybe we could teach mdadm --zero-superblock to honor the --metadata=3Dx
+option which would zero-out the region of the device where the
+version-x superblock is located.
+
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--fH+ug0VWbLbTAXDy
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFLXWnVWto1QDEAkw8RArwiAJ0W+OgaUjJQa0K6ykaeyQ26G++JZACgqXXF
+6kfq6qBVJXLXLZXdxT5h888=
+=GBcA
+-----END PGP SIGNATURE-----
+
+--fH+ug0VWbLbTAXDy--
