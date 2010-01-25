@@ -1,32 +1,71 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
+From: Jon Hardcastle <jd_hardcastle@yahoo.com>
 Subject: Re: Fw: Why does one get mismatches?
-Date: Mon, 25 Jan 2010 11:37:04 +0100
-Message-ID: <87y6jmxygf.fsf@frosties.localdomain>
-References: <644690.69223.qm@web51302.mail.re2.yahoo.com>
+Date: Mon, 25 Jan 2010 02:52:58 -0800 (PST)
+Message-ID: <957236.22933.qm@web51307.mail.re2.yahoo.com>
+References: <87y6jmxygf.fsf@frosties.localdomain>
+Reply-To: Jon@eHardcastle.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <644690.69223.qm@web51302.mail.re2.yahoo.com> (Jon Hardcastle's
-	message of "Mon, 25 Jan 2010 02:07:11 -0800 (PST)")
+In-Reply-To: <87y6jmxygf.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
 To: Jon@eHardcastle.com
 Cc: Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jon Hardcastle <jd_hardcastle@yahoo.com> writes:
+--- On Mon, 25/1/10, Goswin von Brederlow <goswin-v-b@web.de> wrote:
 
-> Now the array is completely dismantled and I am running bad blocks on the drives but I am on the last 2 of the 7 drives and I still have no leads. No bad blocks, no offline uncorrectable, no pending sectors no dmesg errors no nothing. I have absolutely no leads what so ever.
->
-> The only thing i have left to try is a full Mem test and disconnect and reseat the additional sata controllers, oh and buy 7 new sata cables incase 1 is bad.
+> From: Goswin von Brederlow <goswin-v-b@web.de>
+> Subject: Re: Fw: Why does one get mismatches?
+> To: Jon@eHardcastle.com
+> Cc: "Goswin von Brederlow" <goswin-v-b@web.de>, linux-raid@vger.kerne=
+l.org
+> Date: Monday, 25 January, 2010, 10:37
+> Jon Hardcastle <jd_hardcastle@yahoo.com>
+> writes:
+>=20
+> > Now the array is completely dismantled and I am
+> running bad blocks on the drives but I am on the last 2 of
+> the 7 drives and I still have no leads. No bad blocks, no
+> offline uncorrectable, no pending sectors no dmesg errors no
+> nothing. I have absolutely no leads what so ever.
+> >
+> > The only thing i have left to try is a full Mem test
+> and disconnect and reseat the additional sata controllers,
+> oh and buy 7 new sata cables incase 1 is bad.
+>=20
+> The problem with badblocks is that it writes the same
+> pattern
+> everywhere. If the problem is that data gets read/written
+> to the wrong
+> block then that will not show up.
+>=20
+> Try formating each drive and run fstest [1] on it. Or some
+> other test
+> that verifies data integrity using different patterns per
+> block.
+>=20
+> MfG
+> =A0 =A0 =A0 =A0 Goswin
+>=20
+> [1] http://mrvn.homeip.net/fstest/
+>=20
 
-The problem with badblocks is that it writes the same pattern
-everywhere. If the problem is that data gets read/written to the wrong
-block then that will not show up.
+This is going to be a time consuming process as i'll have to remove and=
+ read from the array each drive 1 at a time then resync.=20
 
-Try formating each drive and run fstest [1] on it. Or some other test
-that verifies data integrity using different patterns per block.
+Thanks for the link, but could a similar result be achieved with the -w=
+ option for badblocks? or perhaps a dd if=3D/dev/urandom? hmm scratch t=
+hat the urandom wont work as you need to read AND write.
 
-MfG
-        Goswin
+Just a worry as i clearly have mismatches and therefore corrupted data.
 
-[1] http://mrvn.homeip.net/fstest/
+
+
+     =20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
