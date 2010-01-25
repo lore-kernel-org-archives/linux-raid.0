@@ -1,50 +1,62 @@
-From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
-Subject: Swapping a disk without degrading an array
-Date: Mon, 25 Jan 2010 13:11:15 +0100
-Message-ID: <1264421475.30742.49.camel@test.apertos.eu>
+From: "Majed B." <majedb@gmail.com>
+Subject: Re: Swapping a disk without degrading an array
+Date: Mon, 25 Jan 2010 15:25:58 +0300
+Message-ID: <70ed7c3e1001250425n6b6136ddr261a95042584df72@mail.gmail.com>
+References: <1264421475.30742.49.camel@test.apertos.eu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-O9ceYwEJfEWNxwos7seF"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1264421475.30742.49.camel@test.apertos.eu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: =?UTF-8?Q?Micha=C5=82_Sawicz?= <michal@sawicz.net>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+There's a technique called active spare, and is already available on
+some hardware RAID controllers. It keeps the hot spare in sync with
+the array, such that in an event of a disk failure, the spare kicks-in
+immediately without wasting time for a resync.
 
---=-O9ceYwEJfEWNxwos7seF
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I think what you're proposing is similar to the following scenario:
+array0: (assume raid5): disk0, disk1, disk2, disk3(spare)
+array1: (raid1): disk0, disk3
 
-Hi list,
+Though I'm not sure if it's feasible to nest raids or have a disk to
+be a member of 2 arrays at the same time.
 
-This is something I've discussed on IRC and we achieved a conclusion
-that this might be useful, but somewhat limited use-case count might not
-warrant the effort to be implemented.
+I think it was proposed before, but I donno about its priority.
 
-What I have in mind is allowing a member of an array to be paired with a
-spare while the array is on-line. The spare disk would then be filled
-with exactly the same data and would, in the end, replace the active
-member. The replaced disk could then be hot-removed without the array
-ever going into degraded mode.
+2010/1/25 Micha=C5=82 Sawicz <michal@sawicz.net>:
+> Hi list,
+>
+> This is something I've discussed on IRC and we achieved a conclusion
+> that this might be useful, but somewhat limited use-case count might =
+not
+> warrant the effort to be implemented.
+>
+> What I have in mind is allowing a member of an array to be paired wit=
+h a
+> spare while the array is on-line. The spare disk would then be filled
+> with exactly the same data and would, in the end, replace the active
+> member. The replaced disk could then be hot-removed without the array
+> ever going into degraded mode.
+>
+> I wanted to start a discussion whether this at all makes sense, what =
+can
+> be the use cases etc.
+>
+> --
+> Cheers
+> Micha=C5=82 (Saviq) Sawicz
+>
 
-I wanted to start a discussion whether this at all makes sense, what can
-be the use cases etc.
+
 
 --=20
-Cheers
-Micha=C5=82 (Saviq) Sawicz
-
---=-O9ceYwEJfEWNxwos7seF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: To jest =?UTF-8?Q?cz=C4=99=C5=9B=C4=87?=
- =?UTF-8?Q?_wiadomo=C5=9Bci?= podpisana cyfrowo
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEABECAAYFAktdimMACgkQzQlUjpZYlbekGgCeP4/0zaPyDcKMlcnXHhFIm99A
-uiMAnjZ8pNNK2sis+bXiKHFHow0jx6Jf
-=whQA
------END PGP SIGNATURE-----
-
---=-O9ceYwEJfEWNxwos7seF--
-
+       Majed B.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
