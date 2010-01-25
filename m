@@ -1,61 +1,62 @@
-From: anoneironaut84 <anoneironaut@hotmail.com>
-Subject: Linear RAID failure.  How to recreate?
-Date: Sun, 24 Jan 2010 19:25:23 -0800 (PST)
-Message-ID: <27301741.post@talk.nabble.com>
+From: Michael Evans <mjevans1983@gmail.com>
+Subject: Growing raid 5 to 6; /proc/mdstat reports a strange value?
+Date: Sun, 24 Jan 2010 19:49:31 -0800
+Message-ID: <4877c76c1001241949p20089932saae123a1c2871ac0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+mdX : active raid5 sdd1[8](S) sdb1[7](S) sdf8[0] sdl8[4] sdk2[5]
+sdc1[6] sdj6[3] sdi8[1]
+     Y blocks super 1.1 level 5, 128k chunk, algorithm 2 [6/6] [UUUUUU]
 
-Hey all,
+# mdadm --grow /dev/mdX --level=6 --raid-devices=8
+--backup-file=/root/mdX.backupfile
 
-     I'm just wondering if there is any way to recreate a linear array.  For
-example in a simple two disk linear RAID array if one disk fail if I replace
-the old drive with a working drive can I stop the linear RAID array, format
-the simple device nodes and recreate the array?  I tried to do something
-like this but failed:
+mdX : active raid6 sdd1[8] sdb1[7] sdf8[0] sdl8[4] sdk2[5] sdc1[6]
+sdj6[3] sdi8[1]
+     Y blocks super 1.1 level 6, 128k chunk, algorithm 18 [8/9] [UUUUUU_U]
+     [>....................]  reshape =  0.0% (33920/484971520)
+finish=952.6min speed=8480K/sec
 
-bash# mdadm --manage /dev/md1 -f /dev/sda2
-mdadm: set /dev/sda2 faulty in /dev/md1
-bash# mdadm --manage /dev/md1 -f /dev/sdb2
-mdadm: set /dev/sdb2 faulty in /dev/md1
-bash# cat /proc/mdstat
-Personalities : [linear] [raid1]
-md1 : active linear sdb2[1] sda2[0]
-      957216768 blocks 64k rounding
+!!! mdadm 3.1.1 I wanted an 8 device raid-6;  Why do you show 9?
 
-md0 : active raid1 sdb1[1]
-      9775424 blocks [2/1] [_U]
+What is it showing me now???
 
-unused devices: <none>
-bash# mdadm --manage /dev/md1 -r /dev/sdb2
-mdadm: hot remove failed for /dev/sdb2: Device or resource busy
-bash# mdadm --manage /dev/md1 -r /dev/sda2
-mdadm: hot remove failed for /dev/sda2: Device or resource busy
-bash# mdadm --manage /dev/md1 -fr /dev/sda2
-mdadm: hot remove failed for /dev/sda2: Device or resource busy
-bash# mdadm --manage --stop /dev/md1
-mdadm: fail to stop array /dev/md1: Device or resource busy
-bash# fuser -m /dev/md1
-bash# fuser -m /dev/sda2
-bash# fuser -m /dev/sdb2
-bash# mdadm --manage --stop /dev/md1
-mdadm: fail to stop array /dev/md1: Device or resource busy
-bash-2.05b# lsof | grep md1
-bash-2.05b#
+blocks super 1.1 level 6, 128k chunk, algorithm 2 [8/10] [UUUUUUUU]
 
-Would appreciate some input.
+mdadm --detail /dev/mdX
+/dev/mdX:
+       Version : 1.01
+    Raid Level : raid6
+    Array Size : 6z ()
+ Used Dev Size : z ()
+  Raid Devices : 8
+ Total Devices : 8
+   Persistence : Superblock is persistent
 
-Thanks!
+   Update Time : Sun Jan 24 14:40:32 2010
+         State : clean
+Active Devices : 8
+Working Devices : 8
+Failed Devices : 0
+ Spare Devices : 0
 
--JD
+        Layout : left-symmetric
+    Chunk Size : 128K
 
-PS  My system is RHEL-4 running on the 2.6.22 kernel.
--- 
-View this message in context: http://old.nabble.com/Linear-RAID-failure.--How-to-recreate--tp27301741p27301741.html
-Sent from the linux-raid mailing list archive at Nabble.com.
+   Number   Major   Minor   RaidDevice State
+      0       8        .        0      active sync   /dev/sdf
+      1       8        .        1      active sync   /dev/sdi
+      3       8        .        2      active sync   /dev/sdj
+      6       8        .        3      active sync   /dev/sdc
+      5       8        .        4      active sync   /dev/sdk
+      4       8        .        5      active sync   /dev/sdl
+      8       8        .        6      active sync   /dev/sdd
+      7       8        .        7      active sync   /dev/sdb
 
+... Did it actually do what I want but just show me the wrong result
+with kernel 2.6.32-gentoo-r2
