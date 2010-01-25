@@ -1,118 +1,61 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Fw: Why does one get mismatches?
-Date: Mon, 25 Jan 2010 00:13:09 +0100
-Message-ID: <878wbn85bu.fsf@frosties.localdomain>
-References: <65698.36235.qm@web51306.mail.re2.yahoo.com>
+From: anoneironaut84 <anoneironaut@hotmail.com>
+Subject: Linear RAID failure.  How to recreate?
+Date: Sun, 24 Jan 2010 19:25:23 -0800 (PST)
+Message-ID: <27301741.post@talk.nabble.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <65698.36235.qm@web51306.mail.re2.yahoo.com> (Jon Hardcastle's
-	message of "Sun, 24 Jan 2010 09:40:42 -0800 (PST)")
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon@eHardcastle.com
-Cc: Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jon Hardcastle <jd_hardcastle@yahoo.com> writes:
 
-> --- On Fri, 22/1/10, Goswin von Brederlow <goswin-v-b@web.de> wrote:
->
->> From: Goswin von Brederlow <goswin-v-b@web.de>
->> Subject: Re: Fw: Why does one get mismatches?
->> To: Jon@eHardcastle.com
->> Cc: linux-raid@vger.kernel.org
->> Date: Friday, 22 January, 2010, 18:13
->> Jon Hardcastle <jd_hardcastle@yahoo.com>
->> writes:
->>=20
->> > --- On Tue, 19/1/10, Jon Hardcastle <jd_hardcastle@yahoo.com>
->> wrote:
->> >
->> >> From: Jon Hardcastle <jd_hardcastle@yahoo.com>
->> >> Subject: Why does one get mismatches?
->> >> To: linux-raid@vger.kernel.org
->> >> Date: Tuesday, 19 January, 2010, 10:04
->> >> Hi,
->> >>=20
->> >> I kicked off a check/repair cycle on my machine
->> after i
->> >> moved the phyiscal ordering of my drives around
->> and I am now
->> >> on my second check/repair cycle and it has kept
->> finding
->> >> mismatches.
->> >>=20
->> >> Is it correct that the mismatch value after a
->> repair was
->> >> needed should equal the value present after a
->> check? What if
->> >> it doesn't? What does it mean if another check
->> STILL reveals
->> >> mismatches?
->> >>=20
->> >> I had something similar after i reshaped from raid
->> 5 to 6 i
->> >> had to run check/repair/check/repair several times
->> before i
->> >> got my 0.
->> >>=20
->> >>=20
->> >
->> > Guys,
->> >
->> > Anyone got any suggestions here? I am now on my ~5
->> check/repair and after a reboot the first check is still
->> returning 8.
->> >
->> > All i have done is move the drives around. It is the
->> same controllers/cables/etc=20
->> >
->> > I really dont like the seeming random nature of what
->> can/does/has caused the mismatches?
->>=20
->> There is some unknown corruption going on with raid1 that
->> causes
->> mismatches but it is believed that it will never occur on
->> any used
->> block. Swapping is a likely cause.
->>=20
->> Any swap device on the raid? Try turning that off.
->> If that doesn't help try umounting filesystems or
->> remounting RO.
->>=20
->> MfG
->> =A0 =A0 =A0 =A0 Goswin
->
-> Hello, my usual savior Goswin!
->
-> The deal is it is a 7 drive raid 6 array. it has LVM on it and is not=
- used for swapping. I have umounted all LV's and still got mismatches, =
-i run smartctl --test=3Dlong on all drives - nothing. I have now disman=
-tled the array and am 3/4 the way through 'badblocks -svn' on each of t=
-he component drive. I have a hunch that it may be a dodgy SATA cable bu=
-t have no evidence. No errors in log, nothing on dmesg.
->
-> Is there any way to get more information? I am starting to think this=
- is more happened since i changed from raid 5 to 6..... which i did < 1=
- month ago.
->
-> The only lead i have is that whilst doing the bad blocks 1 drive ran =
-at ~10~15MB/s whereas the rest are going at ~30 i have another identica=
-l model drive coming up so i will see if that one is slow too. But the =
-lack of logging info is not helpful and worrying! and the prospect of s=
-ilent corruption a big worry!
+Hey all,
 
-You did run a repair pass and not just repeated check passes, right?
-Check itself only counts the mismatches but does not correct them.
-If the raid is unused (vgchange -a n) and you do first repair and then
-check then that definetly should not find any mismatches.
+     I'm just wondering if there is any way to recreate a linear array.  For
+example in a simple two disk linear RAID array if one disk fail if I replace
+the old drive with a working drive can I stop the linear RAID array, format
+the simple device nodes and recreate the array?  I tried to do something
+like this but failed:
 
-MfG
+bash# mdadm --manage /dev/md1 -f /dev/sda2
+mdadm: set /dev/sda2 faulty in /dev/md1
+bash# mdadm --manage /dev/md1 -f /dev/sdb2
+mdadm: set /dev/sdb2 faulty in /dev/md1
+bash# cat /proc/mdstat
+Personalities : [linear] [raid1]
+md1 : active linear sdb2[1] sda2[0]
+      957216768 blocks 64k rounding
 
-        Goswin
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+md0 : active raid1 sdb1[1]
+      9775424 blocks [2/1] [_U]
+
+unused devices: <none>
+bash# mdadm --manage /dev/md1 -r /dev/sdb2
+mdadm: hot remove failed for /dev/sdb2: Device or resource busy
+bash# mdadm --manage /dev/md1 -r /dev/sda2
+mdadm: hot remove failed for /dev/sda2: Device or resource busy
+bash# mdadm --manage /dev/md1 -fr /dev/sda2
+mdadm: hot remove failed for /dev/sda2: Device or resource busy
+bash# mdadm --manage --stop /dev/md1
+mdadm: fail to stop array /dev/md1: Device or resource busy
+bash# fuser -m /dev/md1
+bash# fuser -m /dev/sda2
+bash# fuser -m /dev/sdb2
+bash# mdadm --manage --stop /dev/md1
+mdadm: fail to stop array /dev/md1: Device or resource busy
+bash-2.05b# lsof | grep md1
+bash-2.05b#
+
+Would appreciate some input.
+
+Thanks!
+
+-JD
+
+PS  My system is RHEL-4 running on the 2.6.22 kernel.
+-- 
+View this message in context: http://old.nabble.com/Linear-RAID-failure.--How-to-recreate--tp27301741p27301741.html
+Sent from the linux-raid mailing list archive at Nabble.com.
+
