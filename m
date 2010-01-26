@@ -1,47 +1,48 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Question about raid robustness when disk fails
-Date: Tue, 26 Jan 2010 08:29:53 +0100
-Message-ID: <87hbq9s4r2.fsf@frosties.localdomain>
-References: <1262972385.8962.159.camel@kije>
-	<87hbqeyua9.fsf@frosties.localdomain> <1264436547.3015.24.camel@kije>
-	<87636qqdia.fsf@frosties.localdomain>
-	<1264443165.30742.73.camel@test.apertos.eu>
+From: Asdo <asdo@shiftmail.org>
+Subject: Re: Several steps to death
+Date: Tue, 26 Jan 2010 10:28:29 +0100
+Message-ID: <4B5EB5BD.7070406@shiftmail.org>
+References: <55f050077e86adeb1f4acca87cace12b.squirrel@www.dcsnow.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1264443165.30742.73.camel@test.apertos.eu> (Micha's message of
-	"Mon, 25 Jan 2010 19:12:45 +0100")
+In-reply-to: <55f050077e86adeb1f4acca87cace12b.squirrel@www.dcsnow.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Micha Sawicz <michal@sawicz.net>
-Cc: Goswin von Brederlow <goswin-v-b@web.de>, Tim Bock <jtbock@daylight.com>, linux-raid@vger.kernel.org
+To: aragonx@dcsnow.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Micha=C5=82 Sawicz <michal@sawicz.net> writes:
-
-> Dnia 2010-01-25, pon o godzinie 18:51 +0100, Goswin von Brederlow pis=
-ze:
->> The only values I would keep a close eye on is remapped sectors and
->> pending sectors. Anything else gives nice graphs but I always feel i=
-s
->> totaly useless. And even the pending sectors are !=3D 0 on one drive
->> while
->> badblocks reports no errors on repeated passes. The drive just doesn=
-'t
->> seem to reduce the count when it successfully remaps a sector.=20
+aragonx@dcsnow.com wrote:
+> If I try to mount it now, with the correct configuration I get the
+> following error:
 >
-> I read today that Samsungs show that behavior. Maybe this is the case=
-?
+> mdadm --create /dev/md0 --level=5 --spare-devices=0 --raid-devices=5
+> /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1
+>
+> ...
+>   
 
-I usualy buy one or at most 2 new disks at a time so my drives are all
-different makes and models. Might verry well be a samsung drive that ha=
-s
-that behaviour.
+I think this is the point where you destroyed your data. Probably the 
+devices were not specified in the exact order as before: in this command 
+you specified the array with increasing letters order but if you changed 
+the mainboard, drives won't be detected in the same order as with the 
+old mainboard.
 
-MfG
-        Goswin
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Previously when you thought it was detected as 4 disks + 1 spare, I 
+believe instead it was just doing a resync because the array was stale, 
+probably the old mainboard broke when it was writing something. Hadn't 
+you entered the above --create command, your data would presumably still 
+be there. You didn't try mounting it, did you?
+
+At the current state of things, I'm not sure if you can get your data 
+out of there.
+
+In theory if you stop the current resync, try to recreate it in all 
+possible permutations of 5 drives using --assume-clean during creation 
+so to prevent any resyncs (and just mount readonly!) then try mounting 
+it or try fsck -n to see if data makes sense, you might be able to get 
+data out of it. I have never tried this technique, I read it from a post 
+by Neil Brown in this ML, date 12/04/2009 10:12 PM, subject "Re: RAID5 
+demise or coma? after re-creating with a spare" try looking for it in 
+the archives
