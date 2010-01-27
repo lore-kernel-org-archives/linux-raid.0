@@ -1,57 +1,63 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
+From: Asdo <asdo@shiftmail.org>
 Subject: Re: Read errors on raid5 ignored, array still clean .. then disaster !!
-Date: Wed, 27 Jan 2010 10:01:18 +0100
-Message-ID: <87zl3z2a75.fsf@frosties.localdomain>
+Date: Wed, 27 Jan 2010 10:01:36 +0100
+Message-ID: <4B6000F0.2000405@shiftmail.org>
 References: <4B5F6C73.30707@texsoft.it>
-	<20100127074138.GA9607@maude.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100127074138.GA9607@maude.comedia.it> (Luca Berra's message of
-	"Wed, 27 Jan 2010 08:41:38 +0100")
+In-reply-to: <4B5F6C73.30707@texsoft.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Giovanni Tessore <giotex@texsoft.it>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Luca Berra <bluca@comedia.it> writes:
+Giovanni Tessore wrote:
+> This could (and for me did) bring to big disasters!
+> Suppose you have a 4 disk raid with 2 spare disk ready for recovery
+> There are lot of read errors on disk 1, but md silently recovers them 
+> whitout marking disk as faulty (as it did for me)
+> Disk 3 fails
+> md adds one of the spare disks, and starts resync
+> resync fails due to the read errors on disk 1
+> everything is lost! till having 2 spare disks!!!???
+> This is no fault tollerance ... it's fault creation!!!
 
-> On Tue, Jan 26, 2010 at 11:28:03PM +0100, Giovanni Tessore wrote:
->> Is this some kind of bug?
-> No
->> Is there any way to configure raid in order to have devices marked
->> faulty on read errors (at least when they clearly become too many)?
-> I don't think so
->> This could (and for me did) bring to big disasters!
-> Don't agree with you, you had all the info from syslog
-> You should have run smart tests on the disks and proactively replace a
-> failing disk.
->
->> In a post of some months ago of a person who had a similar problem,
->> I read as reply that ignoring the read errors is the wanted
->> behaviour of md ... but I can't believe this!!
->
-> it does _not_ ignore read errors in case of read errors mdadm rewrites
-> the erroring sector, and only if
-> this fails it will kick the member out of the array.
-> with modern drives it is possible to have some failed sector, which the
-> drive firmware will reallocate on write (all modern drives have a range
-> of sectors reserved for this very purpose)
-> mdadm does not do any bookkeeping on reallocated_sector_count per drive
-> the drive does. the data can be accessed with smartctl
-> drives showing excessive reallocated_sector_count should be replaced.
->
-> Consider the following scenario:
-> raid5 (sda,b,c,d)
-> sda has a read error, mdadm kicks it immediately from the array
-> a few minutes/hours later sdc fails completely
-> lost data and no time to react, that is far worse than having 50 days of
-> warnings and ignoring them.
+Other than monitoring & proactively replacing the disk as Luca suggests, 
+the thing that you (probably) have missed is periodically performing scrubs.
 
-Plus you should have run the raid check as a cron job. In Debian that is
-done per default on every first sunday of a month at 3am. The check
-reads every stripe from all disks and checks that the parity
-matches. That would have caused all read errors of sda to be repaired
-or, when the drive runs out of sectors to remap to, kicked the drive.
+See man md for "check" or "repair".
 
-MfG
-        Goswin
+With scrubs, your errors in /dev/sdf and /dev/sdb would have been 
+detected long time ago, and the disk in the worst shape would have run 
+out of reallocation sectors and be kicked long time ago when the other 
+disk was still relatively in good shape.
+
+Double failures (in different positions of different disks) are 
+relatively likely if you don't scrub the array. If you scrub the array 
+they are much less likely.
+
+That said, you might still be able to get data out of your array:
+
+1 - reassemble it, possibly with --force if normal reassemble refuses to 
+work  (*)
+2 - immediately stop the resync by writing "idle" on 
+/sys/block/mdX/md/sync_action
+3 - immediately set it as readonly: mdadm --readonly /dev/sdX
+4 - mount the array (w/ readonly mount) and get data out of it with rsyncs
+
+The purpose of 2 and 3 is to stop the resync (your array is not clean). 
+I hope one of those two does it. You should not see progress with cat 
+/dev/mdstat after those two steps.
+
+#3 also should prevent further resyncs to start, which normally start 
+when you hit an unreadable sector. Remember that if the rsync starts, at 
+98% of it your array will go down.
+
+Let us know
+
+(*) I don't suggest to use --create and --assume-clean like you did, 
+it's much more dangerous than --assemble --force. Was it really needed? 
+Really --assemble --force doesn't work?
+
