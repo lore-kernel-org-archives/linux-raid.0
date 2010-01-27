@@ -1,40 +1,49 @@
-From: Thomas Backlund <tmb@mandriva.org>
-Subject: kernel BUG at fs/scache.c:670
-Date: Thu, 28 Jan 2010 01:01:25 +0200
-Message-ID: <4B60C5C5.3040604@mandriva.org>
+From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
+Subject: Re: How To Grow Using 'mdadm' Utility
+Date: Thu, 28 Jan 2010 00:29:37 +0100
+Message-ID: <1264634977.1928.13.camel@test.apertos.eu>
+References: <d80f793f1001271056i1127fbcege5b4dd4a3927576@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753543Ab0A0XBa@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: ataraid-list@redhat.com, linux-raid@vger.kernel.org
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-GCu3zpBA+wEi3oxC33Pw"
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <d80f793f1001271056i1127fbcege5b4dd4a3927576@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Carlos Williams <carloswill@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi, (please cc me on response)
 
+--=-GCu3zpBA+wEi3oxC33Pw
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-I'm hitting a kernel BUG at fs/scache.c:670 bug using dmraid on 2.6.32 
-and 2.6.33-rc5-git2 kernels:
+Dnia 2010-01-27, =C5=9Bro o godzinie 13:56 -0500, Carlos Williams pisze:
+> I checked out the 'man' page for 'mdadm' utility and I think I am
+> wanting to use the 'mdadm --grow' command but I don't really know what
+> I am doing here and the man page is a nice reference but I am looking
+> for more guidance. Can anyone please tell me what is the proper way to
+> get my desired result?=20
 
-Distro: Mandriva Linux Cooker
-Arch: x86_64
+See http://scotgate.org/2006/07/03/growing-a-raid5-array-mdadm/
 
-Hardware: Intel ICH10R with 4 x 500GB disks in biosraid10,
-System has 8GB ram
+You can check the status of your arrays by 'cat /proc/mdstat'.
 
-OOPS: http://tmb.mine.nu/Mandriva/Cooker/bugs/fs-dcache-bug/dsc00918.jpg
-config: http://tmb.mine.nu/Mandriva/Cooker/bugs/fs-dcache-bug/x86_64.config
+--=20
+Cheers
+Micha=C5=82 (Saviq) Sawicz
 
-This happends on 2.6.33-rc5-git2, 2.6.32, and seems to be as old as 
-2.6.32-rc1.
+--=-GCu3zpBA+wEi3oxC33Pw
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: To jest =?UTF-8?Q?cz=C4=99=C5=9B=C4=87?=
+ =?UTF-8?Q?_wiadomo=C5=9Bci?= podpisana cyfrowo
 
-2.6.31 is the latest kernel that actually boots on this system.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
 
-I tried to bisect between 2.6.31 and 2.6.32-rc1, but it failed...
+iEYEABECAAYFAktgzGAACgkQzQlUjpZYlbcecgCg1wpEaMN6iGmv8Lmq65oJIP16
+OZ0AoIeRTLWhE5rlr8DviF0qCBjl3s8N
+=1yTT
+-----END PGP SIGNATURE-----
 
-Now before I start a second bisect, I decided to post here in case some 
-one has some suggestions / pointers...
+--=-GCu3zpBA+wEi3oxC33Pw--
 
---
-Thomas
