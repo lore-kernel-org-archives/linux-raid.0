@@ -1,74 +1,89 @@
-From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
-Subject: Re: Building RAID5 w/o a Hot Spare
-Date: Wed, 27 Jan 2010 16:34:50 +0100
-Message-ID: <1264606490.1928.5.camel@test.apertos.eu>
-References: <d80f793f1001270626s3ec1791ma0b5da4b87a31e34@mail.gmail.com>
-	 <1264603005.1928.3.camel@test.apertos.eu>
-	 <d80f793f1001270641k29430f12r59b9f9fa02966ea0@mail.gmail.com>
+From: Giovanni Tessore <giotex@texsoft.it>
+Subject: Re: Read errors on raid5 ignored, array still clean .. then disaster
+ !!
+Date: Wed, 27 Jan 2010 17:15:05 +0100
+Message-ID: <4B606689.8060608@texsoft.it>
+References: <4B5F6C73.30707@texsoft.it> <4B6000F0.2000405@shiftmail.org> <4B6010F5.6030702@texsoft.it> <4B601A5F.9050301@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-2y32oxjPP9pZ4Mzj7WiQ"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <d80f793f1001270641k29430f12r59b9f9fa02966ea0@mail.gmail.com>
+In-Reply-To: <4B601A5F.9050301@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Carlos Williams <carloswill@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
---=-2y32oxjPP9pZ4Mzj7WiQ
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> Also is it possible that you experienced an electricity surge or a 
+> physical shock on the computer?
+No, the machine is well protected by a good UPS unit.
 
-Dnia 2010-01-27, =C5=9Bro o godzinie 09:41 -0500, Carlos Williams pisze:
-> 2010/1/27 Micha=C5=82 Sawicz <michal@sawicz.net>:
-> > I'm not sure I understand what you want to achieve. A 'spare' disk
-> is
-> > one that isn't used until any of the other fail, then the spare
-> replaces
-> > the failed one. The term 'hot spare' is used to identify a disk that
-> is
-> > a mirror of one of the other drives, but there's no support for that
-> in
-> > Linux Software-RAID.
->=20
-> I am sorry because I think I was using the wrong terminology then. I
-> want to use all 4 disks to be an active member or the RAID5 /dev/md0.
-> I wanted to make sure the command I posted in my original post was not
-> going to use 3 partitions for active members of RAID5 on /dev/md0 and
-> use the 4th drive as a 'spare device' in case one of the three drives
-> fail. I don't want that. I just want 4 active / working devices for
-> /dev/md0.
->=20
-> >> mdadm --create /dev/md0 --level=3D5
-> --raid-devices=3D4 /dev/sda2 /dev/sdb2
-> >> /dev/sdc2 /dev/sdd2
-> >
-> > This will create a RAID5 array of 4 devices, yes. Capacity will be 3
-> x
-> > sd?2. Failure of any one of those disks will not harm the data.
->=20
-> OK. I think that answers my questions. Thanks for your help!
 
-Great.
+I had a look to the kernel's sources (2.6.24, I'll check later latest 
+kernel)
+I'm not a kernel's expert, I didn't need to take a deep look inside it 
+before, but:
 
-Please keep the mailing list in the loop.
 
---=20
-Cheers
-Micha=C5=82 (Saviq) Sawicz
+Into drivers/md/raid5.c :
 
---=-2y32oxjPP9pZ4Mzj7WiQ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: To jest =?UTF-8?Q?cz=C4=99=C5=9B=C4=87?=
- =?UTF-8?Q?_wiadomo=C5=9Bci?= podpisana cyfrowo
+raid5_end_read_request()
+{ ...
+else if (atomic_read(&rdev->read_errors) > conf->max_nr_stripes)
+    printk(KERN_WARNING "raid5:%s: Too many read errors, failing device 
+%s.\n", mdname(conf->mddev), bdn);
+... }
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
+It surely keeps track of how many read errors occured! So, the driver 
+detects recovered read errors and counts them!
+Later in the same source:
 
-iEYEABECAAYFAktgXRoACgkQzQlUjpZYlbcRSQCgh0xnDorOIxtKUZw6+a9xWkq/
-85cAoKYuaYRufPYoPj3uoU0BmWD8Njx3
-=o7Ks
------END PGP SIGNATURE-----
+int run(mddev_t *mddev)
+{ ...
+conf->max_nr_stripes = NR_STRIPES;
+... }
 
---=-2y32oxjPP9pZ4Mzj7WiQ--
+Looks like it statically sets a limit of 256 recovered read errors 
+before setting the device as faulty.
+
+Moreover, from the *Documentation/md.txt* file itself, it states that 
+for each md device into /sys/block there is a directory for each 
+physical device composing the array, like /sys/block/md0/md/dev-sda1, 
+each directory containing many device's parameter, and among them:
+
+...
+errors
+        An approximate count of read errors that have been detected on
+        this device but have not caused the device to be evicted from
+        the array (either because they were corrected or because they
+        happened while the array was read-only).  When using version-1
+        metadata, this value persists across restarts of the array.
+...
+
+So the info on how many read errors occured on device is collected and 
+available!
+
+I would suggest the following, that *would surely help a lot in 
+preventing disasters* like mine:
+
+- it seems that the max number of read errors allowed is set statically 
+into raid5.c by "conf->max_nr_stripes = NR_STRIPES;" to 256, eventually 
+let it be configurable by an entry into /sys/block/mdXX
+- let /proc/mdstat report clearly how many read errors occurred per 
+device, if any
+- let mdadm be configurable in monitor mode to trigger alerts when the 
+number of read errors for a device changes or goes > n
+- explain clearly in the how-to and other user's documentation what's 
+the behaviour of the raid towards read errors; after a fast survey among 
+my colleagues, i have noticed nobody was aware of this, and all of them 
+were sure that raid had the same behaviour for both write and read errors!
+
+I examined kernel source 2.6.24 and mdadm 2.6.3, maybe into newer 
+versions this already happens; if so, sorry.
+My knowledge of linux-raud implementation is not good (otherwise I would 
+anwser here, not ask :P ), but maybe I can help.
+
+Thanks
+
+Giovanni
 
