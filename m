@@ -1,79 +1,56 @@
-From: Matt Garman <matthew.garman@gmail.com>
+From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
 Subject: Re: How can I tell what drive is sdb?
-Date: Wed, 27 Jan 2010 08:29:50 -0600
-Message-ID: <bdd6985b1001270629g38a371abtd513ec54d2feb77f@mail.gmail.com>
+Date: Wed, 27 Jan 2010 14:30:34 +0000
+Message-ID: <73e903671001270630j4d0f6d12tf78ee870622bb8c3@mail.gmail.com>
 References: <1264601024.29409.19.camel@thor>
-	 <bdd6985b1001270609m477799dpdcd625180efaed02@mail.gmail.com>
-	 <4B604B2B.7070602@computer.org>
-	 <18879E40-1CB7-47B0-90C5-1F4483729E3D@crc.id.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18879E40-1CB7-47B0-90C5-1F4483729E3D@crc.id.au>
+In-Reply-To: <1264601024.29409.19.camel@thor>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steven Haigh <netwiz@crc.id.au>
+To: Rick Bragg <lists@gmnet.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jan 27, 2010 at 8:21 AM, Steven Haigh <netwiz@crc.id.au> wrote:
+On Wed, Jan 27, 2010 at 2:03 PM, Rick Bragg <lists@gmnet.net> wrote:
+> Hi,
 >
-> On 28/01/2010, at 1:18 AM, Jan Ceuleers wrote:
+> I have a system with raid10 running Ubuntu 8.10. =A0It uses a
+> "promise"card
 >
->> Matt Garman wrote:
->>>> Is there a way to identify what drive is what?
->>>
->>> Sometimes you can infer from dmesg. =A0E.g., type "dmesg | less" th=
-en
->>> scroll until you see where sdb is initialized; it might show the mo=
-del
->>> and serial number of the drive.
->>>
->>> Another approach is to use smartctl, i.e.: "sudo smartctl -a
->>> /dev/sdb". =A0This will definitely show you the model and serial nu=
-mber.
->>> You can also use hdparm for the same effect: "sudo hdparm -I
->>> /dev/sdb".
->>>
->>> I'm sure there's more ways, but those are the first that come to mi=
-nd.
->>
->> I'm guessing that the OP is looking for ways to identify disks witho=
-ut disassembling them all.
->>
->> In the networking world, you can ask the system to tell you which ne=
-twork interface is which, by blinking the network LEDs (using ethtool -=
-p). Is there something similar for disks?
+> # lsusb
+> ..
+> 01:02.0 Mass storage controller: Promise Technology, Inc. PDC40718 (S=
+ATA
+> 300 TX4) (rev 02)
+> ..
 >
-> I used a similar method. I have a SATA enclosure that takes 3 x 5.25"=
- bays and gives me 4 x hot swap SATA bays.
+> I have 4 identical disks on it and they show up as /dev/sda, b, c, an=
+d
+> d.
 >
-> As each bay has a power and an activity LED I can do something simple=
- like:
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0dd if=3D/dev/sdb of=3D=
-/dev/null
+> However, sdb needs to be replaced. =A0How can I tell which drive is s=
+db?
+> Is there a way to identify what drive is what?
 >
-> The bay that has sdb will have a constantly on activity light.
+> Thanks
+> Rick
 >
-> If you don't have enclosures, then this becomes somewhat difficult.
 
-Depending on how the drives are mounted and their proximity to one
-another, in the absence of LEDs, you might be able to listen to and/or
-feel the drives will running dd, and possibly determine which is
-which.
+I think you can use the wonderful 'lshw' utility for this. It tells
+you what serial numbers the disks have, and then you can look at the
+labels on the drives to see which one has what serial number.
 
-Another tedious approach: use smartctl or hdparm as suggested above to
-get an initial mapping of /dev/sdX to serial number.  Then, disconnect
-the SATA cable of all but one drive, and reboot.  Now look at what
-/dev/sda's serial number is, and compare that to the initial mapping.
-Eventually /dev/sda will correspond to /dev/sdb when all drives are
-connected.
+If this doesn't work out, you can PROBABLY stop the array and PROBABLY
+hotswap the disks in and out, running 'watch -n0 -d "dmesg | tail"' to
+see what the kernel says. It will tell you what drive you have just
+unplugged. But if you do this - BE CAREFUL - and I can't vouch that
+this is OK as I've never done this. I'm only guessing at theory.
 
-If the controller supports hotswap, you could do something similar
-without so many reboots.
+Good luck!
 
-This scheme makes the assumption that it's easier to pull SATA cables
-than just look at the drive's serial numbers.
+-- Kristleifur
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
