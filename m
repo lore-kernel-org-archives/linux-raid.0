@@ -1,58 +1,48 @@
-From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
+From: Carlos Williams <carloswill@gmail.com>
 Subject: Re: Building RAID5 w/o a Hot Spare
-Date: Wed, 27 Jan 2010 15:46:17 +0100
-Message-ID: <1264603577.1928.4.camel@test.apertos.eu>
+Date: Wed, 27 Jan 2010 09:49:04 -0500
+Message-ID: <d80f793f1001270649q117571afn4c6cb0cbd4676af5@mail.gmail.com>
 References: <d80f793f1001270626s3ec1791ma0b5da4b87a31e34@mail.gmail.com>
+	 <1264603005.1928.3.camel@test.apertos.eu>
+	 <d80f793f1001270641k29430f12r59b9f9fa02966ea0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-B45X+rgv5W6pqu5l4q7v"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <d80f793f1001270626s3ec1791ma0b5da4b87a31e34@mail.gmail.com>
+In-Reply-To: <d80f793f1001270641k29430f12r59b9f9fa02966ea0@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+2010/1/27 Micha=C5=82 Sawicz <michal@sawicz.net>:
+> I'm not sure I understand what you want to achieve. A 'spare' disk is
+> one that isn't used until any of the other fail, then the spare repla=
+ces
+> the failed one. The term 'hot spare' is used to identify a disk that =
+is
+> a mirror of one of the other drives, but there's no support for that =
+in
+> Linux Software-RAID.
 
---=-B45X+rgv5W6pqu5l4q7v
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I am sorry because I think I was using the wrong terminology then. I
+want to use all 4 disks to be an active member or the RAID5 /dev/md0.
+I wanted to make sure the command I posted in my original post was not
+going to use 3 partitions for active members of RAID5 on /dev/md0 and
+use the 4th drive as a 'spare device' in case one of the three drives
+fail. I don't want that. I just want 4 active / working devices for
+/dev/md0.
 
-Dnia 2010-01-27, =C5=9Bro o godzinie 09:26 -0500, Carlos Williams pisze:
-> I am building a Linux system which has 4 identical 'fd' partitions on
-> each of the 4 drives. I don't want to use the 4th partition or disk if
-> you would like to call it as a 'hot spare'. I would like to span the
-> entire array over the 4 drives. My question is does my command look
-> correct for doing so?
+>> mdadm --create /dev/md0 --level=3D5 --raid-devices=3D4 /dev/sda2 /de=
+v/sdb2
+>> /dev/sdc2 /dev/sdd2
+>
+> This will create a RAID5 array of 4 devices, yes. Capacity will be 3 =
+x
+> sd?2. Failure of any one of those disks will not harm the data.
 
-I'm not sure I understand what you want to achieve. A 'spare' disk is
-one that isn't used until any of the other fail, then the spare replaces
-the failed one. The term 'hot spare' is used to identify a disk that is
-a mirror of one of the other drives, but there's no support for that in
-Linux Software-RAID.
-
-> mdadm --create /dev/md0 --level=3D5 --raid-devices=3D4 /dev/sda2 /dev/sdb=
-2
-> /dev/sdc2 /dev/sdd2=20
-
-This will create a RAID5 array of 4 devices, yes. Capacity will be 3 x
-sd?2. Failure of any one of those disks will not harm the data.
-
---=20
-Cheers
-Micha=C5=82 (Saviq) Sawicz
-
-
---=-B45X+rgv5W6pqu5l4q7v
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: To jest =?UTF-8?Q?cz=C4=99=C5=9B=C4=87?=
- =?UTF-8?Q?_wiadomo=C5=9Bci?= podpisana cyfrowo
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEABECAAYFAktgUbkACgkQzQlUjpZYlbclIQCgyuVdMXZVtVd9jx0Y2J/K1R7m
-iAYAn0dOUr5QHOB5BbYIGPOBOSg2ZvMV
-=zx+T
------END PGP SIGNATURE-----
-
---=-B45X+rgv5W6pqu5l4q7v--
-
+OK. I think that answers my questions. Thanks for your help!
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
