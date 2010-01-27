@@ -1,68 +1,86 @@
-From: Maarten <maarten@ultratux.net>
-Subject: Re: woes with... mdadm ?
-Date: Wed, 27 Jan 2010 19:30:29 +0100
-Message-ID: <4B608645.8030102@ultratux.net>
-References: <4B5F6C5D.8020202@ultratux.net> <4877c76c1001262014w6219132ew552b092dab9aba62@mail.gmail.com>
+From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
+Subject: Array over arrays - how to autoassemble correctly?
+Date: Wed, 27 Jan 2010 18:32:57 +0000
+Message-ID: <73e903671001271032q1802c678i860744c72e2a92f3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary=001485f33abad07221047e29a2e6
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4877c76c1001262014w6219132ew552b092dab9aba62@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+--001485f33abad07221047e29a2e6
+Content-Type: text/plain; charset=ISO-8859-1
 
-Hi Michael, thanks for your reply
+Hi all,
 
-Michael Evans wrote:
-> Lets validate some basics first:
-> 
-> 1, 2) Have you stress-tested your CPU and ram?
+I'm running a RAID-60 array with mdadm. There are two RAID6 arrays,
+/dev/md/d0 and d1, and then a RAID0 "meta-array" over that,
+/dev/md/tank.
 
-Depending on your definition of such a test, yes. For starters, I've 
-installed Gentoo with it & on it. I reckon no bad CPU and/or RAM would 
-ever survive compiling of gcc, glibc and the kernel along with some 100 
-other packages.  However, because DIMMs were swapped since then I did a 
-10-hour memtest86 today to be doubly sure: no errors.
+What happens on boot is that the d0 and d1 arrays are assembled, but
+the tank array isn't - Ubuntu drops me to a root shell because it
+couldn't find the tank partition for mounting from fstab. However, I
+just have to do a simple 'mdadm --assemble --scan', and the tank array
+pops up instantly and everything is fine.
 
-> 3: the CRC is off only on two nibbles (between bits 4 and 11); and
-> nowhere else.  That usually doesn't happen with CRCs.
+How do I instruct mdadm to wait for d0 and d1 and do kind of a second
+assembly pass to construct tank over them?
 
-Okay... But I'm not sure what that points to exactly...
+/proc/mdstat, output of 'mdadm --detail --scan' and
+/etc/mdadm/mdadm.conf are included. I hope that's enough background
+information.
 
-> 3) >> In the past I had some similar SATA controllers become corrupted
-> by some test-debugging code in an older version of the kernel.  Even
-> if the devices firmware is up to date TRY REFLASHING/'updating' THEM.
+Thanks!
 
-I'm not saying that's a bad idea, but just to clarify things: two of 
-those 5 controllers plus the port replicator have been bought new just 
-last week. No chance there is corruption there, I'd say. I'll swap the 
-disks to not previously used cards and rerun some tests.
+-- Kristleifur
 
-> 4) Have you run S.M.A.R.T. self tests
+--001485f33abad07221047e29a2e6
+Content-Type: text/plain; charset=US-ASCII; name="proc.mdstat.txt"
+Content-Disposition: attachment; filename="proc.mdstat.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_g4yg9ud30
 
-Not yet but of the 6 disks used, 4 of them are fresh new 1 TB drives. 
-The two used for the raid1 test were older 320 GB drives.
+UGVyc29uYWxpdGllcyA6IFtsaW5lYXJdIFttdWx0aXBhdGhdIFtyYWlkMF0gW3JhaWQxXSBbcmFp
+ZDZdIFtyYWlkNV0gW3JhaWQ0XSBbcmFpZDEwXQptZDEyNyA6IGFjdGl2ZSByYWlkMCBtZF9kMFsw
+XSBtZF9kMVsxXQogICAgICAxMTcyMDMxNDM2OCBibG9ja3Mgc3VwZXIgMS4xIDI1NmsgY2h1bmtz
+CgptZF9kMCA6IGFjdGl2ZSByYWlkNiBzZGgxWzJdIHNkZzFbMF0gc2RtMVs0XSBzZGsxWzVdIHNk
+ajFbM10gc2RpMVsxXQogICAgICA1ODYwMTU3NDQwIGJsb2NrcyBzdXBlciAxLjEgbGV2ZWwgNiwg
+MjU2ayBjaHVuaywgYWxnb3JpdGhtIDIgWzYvNl0gW1VVVVVVVV0KCm1kX2QxIDogYWN0aXZlIHJh
+aWQ2IHNkZjFbMV0gc2RlMVswXSBzZGwxWzNdIHNkZDFbNl0gc2RjMVs1XSBzZGIxWzRdCiAgICAg
+IDU4NjAxNTc0NDAgYmxvY2tzIHN1cGVyIDEuMSBsZXZlbCA2LCAyNTZrIGNodW5rLCBhbGdvcml0
+aG0gMiBbNi82XSBbVVVVVVVVXQoKdW51c2VkIGRldmljZXM6IDxub25lPgoK
+--001485f33abad07221047e29a2e6
+Content-Type: text/plain; charset=US-ASCII; name="mdadm.detail.scan.txt"
+Content-Disposition: attachment; filename="mdadm.detail.scan.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_g4yg9vfy1
 
-In any case I have a large stockpile of both SATA cards of 5+ different 
-makes, and many (15+) smaller disks of previously used arrays (<250GB). 
-So I can easily repeat this with any arbitrary combination of devices. 
-And they can't be all bad. But for now I have reproduced it only with 
-two setups, yes. I'll change the setup to get more reliable results.
+QVJSQVkgL2Rldi9tZC9kMSBtZXRhZGF0YT0xLjAxIG5hbWU9bWFtbWE6ZDEgVVVJRD1kYTU0NzAy
+MjowNDJhNmY2ODpkNWZlMjUxZTo1ZTg5ZjI2MwpBUlJBWSAvZGV2L21kL2QwIG1ldGFkYXRhPTEu
+MDEgbmFtZT1tYW1tYTpkMCBVVUlEPTdmOThlOTI2OjIwNmE4ZWJlOjU5ZmM4ZDdiOjQ2NDRhODgz
+CkFSUkFZIC9kZXYvbWQvdGFuayBtZXRhZGF0YT0xLjAxIG5hbWU9bWFtbWE6dGFuayBVVUlEPTZm
+OThhN2E4OmQ3YjUwMTgxOjU4N2MyN2QxOjU5ZDZkMTM3Cgo=
+--001485f33abad07221047e29a2e6
+Content-Type: text/plain; charset=US-ASCII; name="mdadm.conf.txt"
+Content-Disposition: attachment; filename="mdadm.conf.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_g4yg9w8n2
 
-> 5) If possible badblocks as well; once you've verified everything else.
-
-I appreciate you want to eliminate all possible sources of error but can 
-I just say this does not look like a problem with the disk reliability?
-Not that I consider myself an expert, but in the 12 years I've been 
-using md raid I have not had such weird failures. And the chances of it 
-happening on 3 separate drives, all in exactly the same manner, are 
-really fairly slim.
-
-> Those are all possible and easy to test for causes of data-corruption.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+IyBtZGFkbS5jb25mCiMKCiMgYnkgZGVmYXVsdCwgc2NhbiBhbGwgcGFydGl0aW9ucyAoL3Byb2Mv
+cGFydGl0aW9ucykgZm9yIE1EIHN1cGVyYmxvY2tzLgojIGFsdGVybmF0aXZlbHksIHNwZWNpZnkg
+ZGV2aWNlcyB0byBzY2FuLCB1c2luZyB3aWxkY2FyZHMgaWYgZGVzaXJlZC4KREVWSUNFIHBhcnRp
+dGlvbnMgL2Rldi9tZC9kMCAvZGV2L21kL2QxCgojIGF1dG8tY3JlYXRlIGRldmljZXMgd2l0aCBE
+ZWJpYW4gc3RhbmRhcmQgcGVybWlzc2lvbnMKIyBDUkVBVEUgb3duZXI9cm9vdCBncm91cD1kaXNr
+IG1vZGU9MDY2MCBhdXRvPW1kcAoKIyBhdXRvbWF0aWNhbGx5IHRhZyBuZXcgYXJyYXlzIGFzIGJl
+bG9uZ2luZyB0byB0aGUgbG9jYWwgc3lzdGVtCkhPTUVIT1NUIDxzeXN0ZW0+CgojIGRlZmluaXRp
+b25zIG9mIGV4aXN0aW5nIE1EIGFycmF5cwoKQVJSQVkgL2Rldi9tZC9kMCBtZXRhZGF0YT0xLjEg
+bmFtZT1tYW1tYTpkMCBVVUlEPTdmOThlOTI2OjIwNmE4ZWJlOjU5ZmM4ZDdiOjQ2NDRhODgzIGxl
+dmVsPXJhaWQ2IG51bS1kZXZpY2VzPTYgIyBjb250YWluZXI9NmY5OGE3YTg6ZDdiNTAxODE6NTg3
+YzI3ZDE6NTlkNmQxMzcKCkFSUkFZIC9kZXYvbWQvZDEgbWV0YWRhdGE9MS4xIG5hbWU9bWFtbWE6
+ZDEgVVVJRD1kYTU0NzAyMjowNDJhNmY2ODpkNWZlMjUxZTo1ZTg5ZjI2MyBsZXZlbD1yYWlkNiBu
+dW0tZGV2aWNlcz02ICMgY29udGFpbmVyPTZmOThhN2E4OmQ3YjUwMTgxOjU4N2MyN2QxOjU5ZDZk
+MTM3CgpBUlJBWSAvZGV2L21kL3RhbmsgbWV0YWRhdGE9MS4xIG5hbWU9bWFtbWE6dGFuayBVVUlE
+PTZmOThhN2E4OmQ3YjUwMTgxOjU4N2MyN2QxOjU5ZDZkMTM3IGxldmVsPXJhaWQwIG51bS1kZXZp
+Y2VzPTIgZGV2aWNlcz0vZGV2L21kL2QwLC9kZXYvbWQvZDEKCg==
+--001485f33abad07221047e29a2e6--
