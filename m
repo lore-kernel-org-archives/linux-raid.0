@@ -1,94 +1,36 @@
 From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: How can I tell what drive is sdb?
-Date: Wed, 27 Jan 2010 16:12:07 +0100
-Message-ID: <87sk9r37lk.fsf@frosties.localdomain>
-References: <1264601024.29409.19.camel@thor>
-	<bdd6985b1001270609m477799dpdcd625180efaed02@mail.gmail.com>
-	<4B604B2B.7070602@computer.org>
-	<18879E40-1CB7-47B0-90C5-1F4483729E3D@crc.id.au>
-	<bdd6985b1001270629g38a371abtd513ec54d2feb77f@mail.gmail.com>
+Subject: Re: Building RAID5 w/o a Hot Spare
+Date: Wed, 27 Jan 2010 16:14:06 +0100
+Message-ID: <87ockf37i9.fsf@frosties.localdomain>
+References: <d80f793f1001270626s3ec1791ma0b5da4b87a31e34@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <bdd6985b1001270629g38a371abtd513ec54d2feb77f@mail.gmail.com>
-	(Matt Garman's message of "Wed, 27 Jan 2010 08:29:50 -0600")
+In-Reply-To: <d80f793f1001270626s3ec1791ma0b5da4b87a31e34@mail.gmail.com>
+	(Carlos Williams's message of "Wed, 27 Jan 2010 09:26:50 -0500")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Carlos Williams <carloswill@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Matt Garman <matthew.garman@gmail.com> writes:
+Carlos Williams <carloswill@gmail.com> writes:
 
-> On Wed, Jan 27, 2010 at 8:21 AM, Steven Haigh <netwiz@crc.id.au> wrot=
-e:
->>
->> On 28/01/2010, at 1:18 AM, Jan Ceuleers wrote:
->>
->>> Matt Garman wrote:
->>>>> Is there a way to identify what drive is what?
->>>>
->>>> Sometimes you can infer from dmesg. =A0E.g., type "dmesg | less" t=
-hen
->>>> scroll until you see where sdb is initialized; it might show the m=
-odel
->>>> and serial number of the drive.
->>>>
->>>> Another approach is to use smartctl, i.e.: "sudo smartctl -a
->>>> /dev/sdb". =A0This will definitely show you the model and serial n=
-umber.
->>>> You can also use hdparm for the same effect: "sudo hdparm -I
->>>> /dev/sdb".
->>>>
->>>> I'm sure there's more ways, but those are the first that come to m=
-ind.
->>>
->>> I'm guessing that the OP is looking for ways to identify disks with=
-out disassembling them all.
->>>
->>> In the networking world, you can ask the system to tell you which n=
-etwork interface is which, by blinking the network LEDs (using ethtool =
--p). Is there something similar for disks?
->>
->> I used a similar method. I have a SATA enclosure that takes 3 x 5.25=
-" bays and gives me 4 x hot swap SATA bays.
->>
->> As each bay has a power and an activity LED I can do something simpl=
-e like:
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0dd if=3D/dev/sdb of=3D=
-/dev/null
->>
->> The bay that has sdb will have a constantly on activity light.
->>
->> If you don't have enclosures, then this becomes somewhat difficult.
+> I am building a Linux system which has 4 identical 'fd' partitions on
+> each of the 4 drives. I don't want to use the 4th partition or disk if
+> you would like to call it as a 'hot spare'. I would like to span the
+> entire array over the 4 drives. My question is does my command look
+> correct for doing so?
 >
-> Depending on how the drives are mounted and their proximity to one
-> another, in the absence of LEDs, you might be able to listen to and/o=
-r
-> feel the drives will running dd, and possibly determine which is
-> which.
+> mdadm --create /dev/md0 --level=5 --raid-devices=4 /dev/sda2 /dev/sdb2
+> /dev/sdc2 /dev/sdd2
+>
+> I shouldn't have to specify any additional flags in the 'mdadm'
+> command to make sure it uses all 4 drives as the RAID5 array, right?
 
-Shut down the raid arry (or just don't access it), set the spin down
-time to 10s with hdparm and run dd if=3D/dev/sdb of=3D/dev/null. All bu=
-t sdb
-should spin down and then you should be able to hear/feel the activity.
-
-Some drives also have a small led onboard which you see if you run the
-system opened.
+No, it will use 4 drives as specified. Linux mdadm doesn't get ideas on
+its own. It does what you tell it to do. :)
 
 MfG
         Goswin
 
-PS: If you have to take the system offline and disassemble the drives t=
-o
-find the right one then write down the serial number for each drive and
-stick is some place visible when reassembled. If you lack space a color
-coded dot or a number combined with a lookup table for color/numer ->
-serial is also helpfull.
-
-MfG
-        Goswin
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+PS: sda2 is usualy not the 4th partition on a drive
