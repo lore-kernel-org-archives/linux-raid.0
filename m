@@ -1,112 +1,91 @@
-From: Giovanni Tessore <giotex@texsoft.it>
-Subject: Re: Read errors on raid5 ignored, array still clean .. then disaster
- !!
-Date: Wed, 27 Jan 2010 11:09:57 +0100
-Message-ID: <4B6010F5.6030702@texsoft.it>
-References: <4B5F6C73.30707@texsoft.it> <4B6000F0.2000405@shiftmail.org>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: Question about raid robustness when disk fails
+Date: Wed, 27 Jan 2010 11:25:53 +0100
+Message-ID: <87wrz3zvwu.fsf@frosties.localdomain>
+References: <1262972385.8962.159.camel@kije>
+	<87hbqeyua9.fsf@frosties.localdomain>
+	<7d86ddb91001261619kbb77697t2660e5b8cc44535d@mail.gmail.com>
+	<4877c76c1001262022p369eac60s639d87cad743ff94@mail.gmail.com>
+	<87vden2a2a.fsf@frosties.localdomain> <4B6005DC.7070701@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B6000F0.2000405@shiftmail.org>
+In-Reply-To: <4B6005DC.7070701@shiftmail.org> (asdo@shiftmail.org's message of
+	"Wed, 27 Jan 2010 10:22:36 +0100")
 Sender: linux-raid-owner@vger.kernel.org
 To: Asdo <asdo@shiftmail.org>
-Cc: linux-raid@vger.kernel.org
+Cc: Goswin von Brederlow <goswin-v-b@web.de>, Michael Evans <mjevans1983@gmail.com>, Ryan Wagoner <rswagoner@gmail.com>, Tim Bock <jtbock@daylight.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Firstable, thanks for the many replies :-)
+Asdo <asdo@shiftmail.org> writes:
 
->> This could (and for me did) bring to big disasters!
->> Suppose you have a 4 disk raid with 2 spare disk ready for recovery
->> There are lot of read errors on disk 1, but md silently recovers them 
->> whitout marking disk as faulty (as it did for me)
->> Disk 3 fails
->> md adds one of the spare disks, and starts resync
->> resync fails due to the read errors on disk 1
->> everything is lost! till having 2 spare disks!!!???
->> This is no fault tollerance ... it's fault creation!!!
+> Goswin von Brederlow wrote:
+>> Michael Evans <mjevans1983@gmail.com> writes:
+>>
+>>> Why doesn't the kernel issue a pessimistic alternate 'read' path (on
+>>> the other drives needed to obtain the data) if the ideal method is
+>>> late.  It would be more useful for time-sensitive/worst case buffering
+>>> to be able to customize when to 'give up' dynamically.
+>>>
+>>
+>> That is a verry good question. I look forward to seeing patches for this
+>> from you. :) I think it isn't done because nobody has bothered to write
+>> the code yet but maybe I'm wrong and it would make the code too
+>> complicated.
+>>
 >
-> Other than monitoring & proactively replacing the disk as Luca 
-> suggests, the thing that you (probably) have missed is periodically 
-> performing scrubs.
+> This is probably more complicated than allowing a timeout to be set at
+> the MD layer or block-device layer, isn't it?
+
+There is a timeout at various levels already but for example the scsi
+specs alow for quite some time till you give up, as in a minute. You
+would certainly want something much much smaller here.
+
+So from the top of my head here is what I imagine you need: You would
+need to set a timeout for reading a block. Then once the timeout is
+reached you need to read the rest of the stripe if not available
+already. Do you ready every block in a stripe or just enough to get the
+data? You might not need all blocks, e.g. a 3 way raid1 or a raid6
+doesn't need all blocks. But then you have another timeout situation
+there.
+
+So lets say we read all blocks for simplicity sake. Then you might have
+scheduled more reads than you need and when enough reads were
+successfull you should not wait for the rest but return the data
+imediatly. Late arrivals from extra reads (or the original) you then
+have to also handle. Or do you cancel them? Also the original read might
+succeed before the extra reads return.
+
+It might also be wise to notice when additional reads are slower than
+the original and if that happens often then increase the initial timeout
+slightly. But a warning for the admin would do to so he can adjust the
+timeout himself.
+
+
+I don't think setting the timeout for the initial read will be
+complicated but handling the alternatives will be not trivial. If yo
+implement it you probably find more problems along the way.
+
+> Which would be just as good I think.
 >
-> See man md for "check" or "repair".
->
-> With scrubs, your errors in /dev/sdf and /dev/sdb would have been 
-> detected long time ago, and the disk in the worst shape would have run 
-> out of reallocation sectors and be kicked long time ago when the other 
-> disk was still relatively in good shape.
-I didn't setup smart monitoring... Luca is right.
-But I dont like the idea that md relies on another tool, that could be 
-not installed or correctly configured, to warn the user on potential 
-critical situations which involve directly itself.
+> Is it possible to cancel a SATA/SCSI command that is being executed by
+> the drive?
+> (it's probably feasible only with NCQ disabled anyway, but it's easy
+> to disable NCQ)
 
- From the logs, it results that it did a "check" on md3 the 4 january 
-(first read errors at beginning of december, failure of other disk 18 
-january); no read error occurred.
-Looks like it did not help much :(
-Maybe I was just very unluky
+Do you want to do that? I would rather have the drive keep trying and
+return an error if it can't read so the raid layer rewrites the blocks
+causing it to be remapped. I do not want to wait for that but I want it
+to happen.
 
->
-> Double failures (in different positions of different disks) are 
-> relatively likely if you don't scrub the array. If you scrub the array 
-> they are much less likely.
->
-> That said, you might still be able to get data out of your array:
->
-> 1 - reassemble it, possibly with --force if normal reassemble refuses 
-> to work  (*)
-> 2 - immediately stop the resync by writing "idle" on 
-> /sys/block/mdX/md/sync_action
-> 3 - immediately set it as readonly: mdadm --readonly /dev/sdX
-> 4 - mount the array (w/ readonly mount) and get data out of it with 
-> rsyncs
->
-> The purpose of 2 and 3 is to stop the resync (your array is not 
-> clean). I hope one of those two does it. You should not see progress 
-> with cat /dev/mdstat after those two steps.
->
-> #3 also should prevent further resyncs to start, which normally start 
-> when you hit an unreadable sector. Remember that if the rsync starts, 
-> at 98% of it your array will go down.
->
-> Let us know
-I recovered the array in degraded mode with:
+> It's a pity we have to rely on TLER, this narrows the choice of drives
+> a lot...
 
-mdadm --create /dev/md3 --assume-clean --level=5 --raid-devices=6 
---spare-devices=0 /dev/sda4 /dev/sdb4 /dev/sdc4 /dev/sdd4 /dev/sde4 missing
+I don't. I just acknowledge the limitation and accept the downtime to
+find and remove a broken but not properly failed disk. I use raid so I
+don't loose my data when a disk fails, not primarily for availability.
+So far I had one case in 10 years where a failing disk took down my
+system.
 
-setting md3 readonly and mounting readonly.
-Obviously when a read error occurs on sdb, it goes again offline and I 
-have to repeat the procedure
-It does not resync as I run in degraded mode (missing in place of 
-/dev/sdf4).
-
-I'm saving not all data, but many.
-
-Which I complain most, is the 'silent' manage of the recovered read errors.
-I think it would be very apreciated, not only by me, if a warning could 
-be issued (by md, no others, as it says and manages the read error) to 
-inform the admin that a problem may face.
-In 2 years of 24/7 activity, none of the other 5 disks in the array gave 
-a single read error; just sdb started giving many in december (while sdf 
-failed suddenly at one shot).
-In my experience, when a disk begins to give read errors, it's better to 
-replace it as soon as possible (with a disk which has done some burn in, 
-and which is tested to be ok).
-As raid is meant to be redundant, maybe some redundant warning on 
-recoverable read errors could be useful too.
-Because which is a recoverable read error if all other disk are ok, it 
-becomes a fatal error if another disk fails.
-
-By the way I'm having a look at the md kernel source.
-It look like raid5 is hard configured to set a device faulty if it gives 
- > 256 recoverable read errors.
-Would be nice if this could be configurable into /proc/sys/md
-
-I'll follow a more detailed post on this point.
-
-Thanks again.
-
-Giovanni
-
+MfG
+        Goswin
