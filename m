@@ -1,41 +1,31 @@
-From: Matt Garman <matthew.garman@gmail.com>
+From: Jan Ceuleers <jan.ceuleers@computer.org>
 Subject: Re: How can I tell what drive is sdb?
-Date: Wed, 27 Jan 2010 08:09:17 -0600
-Message-ID: <bdd6985b1001270609m477799dpdcd625180efaed02@mail.gmail.com>
-References: <1264601024.29409.19.camel@thor>
+Date: Wed, 27 Jan 2010 15:18:19 +0100
+Message-ID: <4B604B2B.7070602@computer.org>
+References: <1264601024.29409.19.camel@thor> <bdd6985b1001270609m477799dpdcd625180efaed02@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1264601024.29409.19.camel@thor>
+In-Reply-To: <bdd6985b1001270609m477799dpdcd625180efaed02@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rick Bragg <lists@gmnet.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jan 27, 2010 at 8:03 AM, Rick Bragg <lists@gmnet.net> wrote:
-> I have 4 identical disks on it and they show up as /dev/sda, b, c, an=
-d
-> d.
->
-> However, sdb needs to be replaced. =A0How can I tell which drive is s=
-db?
-> Is there a way to identify what drive is what?
+Matt Garman wrote:
+>> Is there a way to identify what drive is what?
+> 
+> Sometimes you can infer from dmesg.  E.g., type "dmesg | less" then
+> scroll until you see where sdb is initialized; it might show the model
+> and serial number of the drive.
+> 
+> Another approach is to use smartctl, i.e.: "sudo smartctl -a
+> /dev/sdb".  This will definitely show you the model and serial number.
+>  You can also use hdparm for the same effect: "sudo hdparm -I
+> /dev/sdb".
+> 
+> I'm sure there's more ways, but those are the first that come to mind.
 
-Sometimes you can infer from dmesg.  E.g., type "dmesg | less" then
-scroll until you see where sdb is initialized; it might show the model
-and serial number of the drive.
+I'm guessing that the OP is looking for ways to identify disks without disassembling them all.
 
-Another approach is to use smartctl, i.e.: "sudo smartctl -a
-/dev/sdb".  This will definitely show you the model and serial number.
- You can also use hdparm for the same effect: "sudo hdparm -I
-/dev/sdb".
-
-I'm sure there's more ways, but those are the first that come to mind.
-
--Matt
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+In the networking world, you can ask the system to tell you which network interface is which, by blinking the network LEDs (using ethtool -p). Is there something similar for disks?
