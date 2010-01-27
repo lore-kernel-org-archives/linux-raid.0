@@ -1,36 +1,67 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: Read errors on raid5 ignored, array still clean .. then disaster
-  !!
-Date: Thu, 28 Jan 2010 08:33:47 +1300
-Message-ID: <4B60951B.5050002@sauce.co.nz>
-References: <4B5F6C73.30707@texsoft.it> <4B6000F0.2000405@shiftmail.org> <4B6010F5.6030702@texsoft.it>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Array over arrays - how to autoassemble correctly?
+Date: Wed, 27 Jan 2010 20:41:39 +0100
+Message-ID: <20100127194139.GA18250@maude.comedia.it>
+References: <73e903671001271032q1802c678i860744c72e2a92f3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B6010F5.6030702@texsoft.it>
+Content-Disposition: inline
+In-Reply-To: <73e903671001271032q1802c678i860744c72e2a92f3@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Giovanni Tessore <giotex@texsoft.it>
-Cc: Asdo <asdo@shiftmail.org>, linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Giovanni Tessore wrote:
+On Wed, Jan 27, 2010 at 06:32:57PM +0000, Kristleifur Da=F0ason wrote:
+># mdadm.conf
+>#
+>
+># by default, scan all partitions (/proc/partitions) for MD superblock=
+s.
+># alternatively, specify devices to scan, using wildcards if desired.
+>DEVICE partitions /dev/md/d0 /dev/md/d1
+>
+># auto-create devices with Debian standard permissions
+># CREATE owner=3Droot group=3Ddisk mode=3D0660 auto=3Dmdp
+>
+># automatically tag new arrays as belonging to the local system
+>HOMEHOST <system>
+>
+># definitions of existing MD arrays
+>
+>ARRAY /dev/md/d0 metadata=3D1.1 name=3Dmamma:d0 UUID=3D7f98e926:206a8e=
+be:59fc8d7b:4644a883 level=3Draid6 num-devices=3D6 # container=3D6f98a7=
+a8:d7b50181:587c27d1:59d6d137
+>
+>ARRAY /dev/md/d1 metadata=3D1.1 name=3Dmamma:d1 UUID=3Dda547022:042a6f=
+68:d5fe251e:5e89f263 level=3Draid6 num-devices=3D6 # container=3D6f98a7=
+a8:d7b50181:587c27d1:59d6d137
+>
+>ARRAY /dev/md/tank metadata=3D1.1 name=3Dmamma:tank UUID=3D6f98a7a8:d7=
+b50181:587c27d1:59d6d137 level=3Draid0 num-devices=3D2 devices=3D/dev/m=
+d/d0,/dev/md/d1
+>
 
-> I didn't setup smart monitoring... Luca is right.
-> But I dont like the idea that md relies on another tool, that could be
-> not installed or correctly configured, to warn the user on potential
-> critical situations which involve directly itself.
+this kind of setup should be working without any issue on recent mdadm
+try removing
+DEVICE partitions /dev/md/d0 /dev/md/d1
+and the "devices=3D/dev/md/d0,/dev/md/d1" from mdadm.conf
+and let it discover things on boot by itself
 
-Or you build systems around a controller* that works with smartd, only 
-to find that smartd support breaks in later kernel versions and finding 
-suitable replacements has proven difficult. :(
+L.
 
-*LSI SAS
 
-http://marc.info/?l=linux-scsi&m=125293858330877&w=2
-
-https://bugzilla.redhat.com/show_bug.cgi?id=512613
-
-Regards,
-
-Richard
+--=20
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
