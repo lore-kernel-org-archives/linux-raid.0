@@ -1,62 +1,52 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Building RAID5 w/o a Hot Spare
-Date: Wed, 27 Jan 2010 14:53:13 +0000
-Message-ID: <20100127145313.GA31715@cthulhu.home.robinhill.me.uk>
-References: <d80f793f1001270626s3ec1791ma0b5da4b87a31e34@mail.gmail.com>
- <1264603577.1928.4.camel@test.apertos.eu>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: Read errors on raid5 ignored, array still clean .. then disaster !!
+Date: Wed, 27 Jan 2010 16:06:26 +0100
+Message-ID: <87wrz337v1.fsf@frosties.localdomain>
+References: <4B5F6C73.30707@texsoft.it> <4B6000F0.2000405@shiftmail.org>
+	<4B6010F5.6030702@texsoft.it> <4B601A5F.9050301@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="k+w/mQv8wyuph6w0"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1264603577.1928.4.camel@test.apertos.eu>
+In-Reply-To: <4B601A5F.9050301@shiftmail.org> (asdo@shiftmail.org's message of
+	"Wed, 27 Jan 2010 11:50:07 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Asdo <asdo@shiftmail.org> writes:
 
---k+w/mQv8wyuph6w0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> Giovanni Tessore wrote:
+>> I didn't setup smart monitoring... Luca is right.
+>> But I dont like the idea that md relies on another tool, that could
+>> be not installed or correctly configured, to warn the user on
+>> potential critical situations which involve directly itself.
+>>
+>> From the logs, it results that it did a "check" on md3 the 4 january
+>> (first read errors at beginning of december, failure of other disk
+>> 18 january); no read error occurred.
+>> Looks like it did not help much :(
+>> Maybe I was just very unluky
+>
+> It's strange... quite unlucky I'd say...
+> Maybe the check needs to be run more frequently, like weekly.
+> (Asdo taking notes... :-D)
+> I also am not expert of this kind of statistics.
+> FWIW I have seen two hardware raid controllers, and they do the scrub
+> weekly by default. I don't know if they also run SMART tests.
+>
+> Also is it possible that you experienced an electricity surge or a
+> physical shock on the computer?
+>
+> Obviously smart checks also help.
+>
+> Good luck
+> Asdo
 
-On Wed Jan 27, 2010 at 03:46:17PM +0100, Micha=C5=82 Sawicz wrote:
+Or the check just does not report errors.
 
-> Dnia 2010-01-27, =C5=9Bro o godzinie 09:26 -0500, Carlos Williams pisze:
-> > I am building a Linux system which has 4 identical 'fd' partitions on
-> > each of the 4 drives. I don't want to use the 4th partition or disk if
-> > you would like to call it as a 'hot spare'. I would like to span the
-> > entire array over the 4 drives. My question is does my command look
-> > correct for doing so?
->=20
-> I'm not sure I understand what you want to achieve. A 'spare' disk is
-> one that isn't used until any of the other fail, then the spare replaces
-> the failed one. The term 'hot spare' is used to identify a disk that is
-> a mirror of one of the other drives, but there's no support for that in
-> Linux Software-RAID.
->=20
-A hot spare is one that's plugged in, powered up, and available for use
-(a cold spare is sat on a shelf).  At least, that's the only way I've
-ever heard the terminology used.
+You need to read your syslog/kernel log to see read errors and check the
+mismatch count after a check. Not all distributions do report mismatch
+count != 0 after a check. Most don't I think.
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
-
---k+w/mQv8wyuph6w0
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEARECAAYFAktgU1gACgkQShxCyD40xBLgBgCg0/UNTGRridK++gbVcpOqolma
-RDkAni8DxARcZ8CwJ0PUQOlJCzu3uU2P
-=RPnP
------END PGP SIGNATURE-----
-
---k+w/mQv8wyuph6w0--
+MfG
+        Goswin
