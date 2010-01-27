@@ -1,58 +1,36 @@
-From: Carlos Williams <carloswill@gmail.com>
-Subject: How To Grow Using 'mdadm' Utility
-Date: Wed, 27 Jan 2010 13:56:07 -0500
-Message-ID: <d80f793f1001271056i1127fbcege5b4dd4a3927576@mail.gmail.com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: Read errors on raid5 ignored, array still clean .. then disaster
+  !!
+Date: Thu, 28 Jan 2010 08:33:47 +1300
+Message-ID: <4B60951B.5050002@sauce.co.nz>
+References: <4B5F6C73.30707@texsoft.it> <4B6000F0.2000405@shiftmail.org> <4B6010F5.6030702@texsoft.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4B6010F5.6030702@texsoft.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Giovanni Tessore <giotex@texsoft.it>
+Cc: Asdo <asdo@shiftmail.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I would like to know what is the proper syntax for creating / growing
-my RAID5 array with 3 disks and 0 spare to 4 disks and 0 spare? Right
-now my RAID5 array on my system appears as follows:
+Giovanni Tessore wrote:
 
-/dev/md0:
-        Version : 0.90
-  Creation Time : Wed Jan 27 08:15:03 2010
-     Raid Level : raid5
-     Array Size : 480391552 (458.14 GiB 491.92 GB)
-  Used Dev Size : 240195776 (229.07 GiB 245.96 GB)
-   Raid Devices : 3
-  Total Devices : 3
-Preferred Minor : 0
-    Persistence : Superblock is persistent
+> I didn't setup smart monitoring... Luca is right.
+> But I dont like the idea that md relies on another tool, that could be
+> not installed or correctly configured, to warn the user on potential
+> critical situations which involve directly itself.
 
-    Update Time : Wed Jan 27 13:47:49 2010
-          State : clean, degraded, recovering
- Active Devices : 2
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 1
+Or you build systems around a controller* that works with smartd, only 
+to find that smartd support breaks in later kernel versions and finding 
+suitable replacements has proven difficult. :(
 
-         Layout : left-symmetric
-     Chunk Size : 64K
+*LSI SAS
 
- Rebuild Status : 10% complete
+http://marc.info/?l=linux-scsi&m=125293858330877&w=2
 
-           UUID : e3c1e8b3:5a1b141f:af88d4a5:584f0b5f
-         Events : 0.347
+https://bugzilla.redhat.com/show_bug.cgi?id=512613
 
-    Number   Major   Minor   RaidDevice State
-       0       8        2        0      active sync   /dev/sda2
-       1       8       18        1      active sync   /dev/sdb2
-       3       8       34        2      spare rebuilding   /dev/sdc2
+Regards,
 
-I have an identical drive and want to make /dev/sdd2 a active member
-of the RAID5 array which should expand my disk storage capacity.
-
-I checked out the 'man' page for 'mdadm' utility and I think I am
-wanting to use the 'mdadm --grow' command but I don't really know what
-I am doing here and the man page is a nice reference but I am looking
-for more guidance. Can anyone please tell me what is the proper way to
-get my desired result?
-
-*PS*
-I understand right now my RAID5 is syncing and should probably wait
-until all three drives are synced.
+Richard
