@@ -1,86 +1,58 @@
-From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
-Subject: Array over arrays - how to autoassemble correctly?
-Date: Wed, 27 Jan 2010 18:32:57 +0000
-Message-ID: <73e903671001271032q1802c678i860744c72e2a92f3@mail.gmail.com>
+From: Carlos Williams <carloswill@gmail.com>
+Subject: How To Grow Using 'mdadm' Utility
+Date: Wed, 27 Jan 2010 13:56:07 -0500
+Message-ID: <d80f793f1001271056i1127fbcege5b4dd4a3927576@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=001485f33abad07221047e29a2e6
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---001485f33abad07221047e29a2e6
-Content-Type: text/plain; charset=ISO-8859-1
+I would like to know what is the proper syntax for creating / growing
+my RAID5 array with 3 disks and 0 spare to 4 disks and 0 spare? Right
+now my RAID5 array on my system appears as follows:
 
-Hi all,
+/dev/md0:
+        Version : 0.90
+  Creation Time : Wed Jan 27 08:15:03 2010
+     Raid Level : raid5
+     Array Size : 480391552 (458.14 GiB 491.92 GB)
+  Used Dev Size : 240195776 (229.07 GiB 245.96 GB)
+   Raid Devices : 3
+  Total Devices : 3
+Preferred Minor : 0
+    Persistence : Superblock is persistent
 
-I'm running a RAID-60 array with mdadm. There are two RAID6 arrays,
-/dev/md/d0 and d1, and then a RAID0 "meta-array" over that,
-/dev/md/tank.
+    Update Time : Wed Jan 27 13:47:49 2010
+          State : clean, degraded, recovering
+ Active Devices : 2
+Working Devices : 3
+ Failed Devices : 0
+  Spare Devices : 1
 
-What happens on boot is that the d0 and d1 arrays are assembled, but
-the tank array isn't - Ubuntu drops me to a root shell because it
-couldn't find the tank partition for mounting from fstab. However, I
-just have to do a simple 'mdadm --assemble --scan', and the tank array
-pops up instantly and everything is fine.
+         Layout : left-symmetric
+     Chunk Size : 64K
 
-How do I instruct mdadm to wait for d0 and d1 and do kind of a second
-assembly pass to construct tank over them?
+ Rebuild Status : 10% complete
 
-/proc/mdstat, output of 'mdadm --detail --scan' and
-/etc/mdadm/mdadm.conf are included. I hope that's enough background
-information.
+           UUID : e3c1e8b3:5a1b141f:af88d4a5:584f0b5f
+         Events : 0.347
 
-Thanks!
+    Number   Major   Minor   RaidDevice State
+       0       8        2        0      active sync   /dev/sda2
+       1       8       18        1      active sync   /dev/sdb2
+       3       8       34        2      spare rebuilding   /dev/sdc2
 
--- Kristleifur
+I have an identical drive and want to make /dev/sdd2 a active member
+of the RAID5 array which should expand my disk storage capacity.
 
---001485f33abad07221047e29a2e6
-Content-Type: text/plain; charset=US-ASCII; name="proc.mdstat.txt"
-Content-Disposition: attachment; filename="proc.mdstat.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_g4yg9ud30
+I checked out the 'man' page for 'mdadm' utility and I think I am
+wanting to use the 'mdadm --grow' command but I don't really know what
+I am doing here and the man page is a nice reference but I am looking
+for more guidance. Can anyone please tell me what is the proper way to
+get my desired result?
 
-UGVyc29uYWxpdGllcyA6IFtsaW5lYXJdIFttdWx0aXBhdGhdIFtyYWlkMF0gW3JhaWQxXSBbcmFp
-ZDZdIFtyYWlkNV0gW3JhaWQ0XSBbcmFpZDEwXQptZDEyNyA6IGFjdGl2ZSByYWlkMCBtZF9kMFsw
-XSBtZF9kMVsxXQogICAgICAxMTcyMDMxNDM2OCBibG9ja3Mgc3VwZXIgMS4xIDI1NmsgY2h1bmtz
-CgptZF9kMCA6IGFjdGl2ZSByYWlkNiBzZGgxWzJdIHNkZzFbMF0gc2RtMVs0XSBzZGsxWzVdIHNk
-ajFbM10gc2RpMVsxXQogICAgICA1ODYwMTU3NDQwIGJsb2NrcyBzdXBlciAxLjEgbGV2ZWwgNiwg
-MjU2ayBjaHVuaywgYWxnb3JpdGhtIDIgWzYvNl0gW1VVVVVVVV0KCm1kX2QxIDogYWN0aXZlIHJh
-aWQ2IHNkZjFbMV0gc2RlMVswXSBzZGwxWzNdIHNkZDFbNl0gc2RjMVs1XSBzZGIxWzRdCiAgICAg
-IDU4NjAxNTc0NDAgYmxvY2tzIHN1cGVyIDEuMSBsZXZlbCA2LCAyNTZrIGNodW5rLCBhbGdvcml0
-aG0gMiBbNi82XSBbVVVVVVVVXQoKdW51c2VkIGRldmljZXM6IDxub25lPgoK
---001485f33abad07221047e29a2e6
-Content-Type: text/plain; charset=US-ASCII; name="mdadm.detail.scan.txt"
-Content-Disposition: attachment; filename="mdadm.detail.scan.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_g4yg9vfy1
-
-QVJSQVkgL2Rldi9tZC9kMSBtZXRhZGF0YT0xLjAxIG5hbWU9bWFtbWE6ZDEgVVVJRD1kYTU0NzAy
-MjowNDJhNmY2ODpkNWZlMjUxZTo1ZTg5ZjI2MwpBUlJBWSAvZGV2L21kL2QwIG1ldGFkYXRhPTEu
-MDEgbmFtZT1tYW1tYTpkMCBVVUlEPTdmOThlOTI2OjIwNmE4ZWJlOjU5ZmM4ZDdiOjQ2NDRhODgz
-CkFSUkFZIC9kZXYvbWQvdGFuayBtZXRhZGF0YT0xLjAxIG5hbWU9bWFtbWE6dGFuayBVVUlEPTZm
-OThhN2E4OmQ3YjUwMTgxOjU4N2MyN2QxOjU5ZDZkMTM3Cgo=
---001485f33abad07221047e29a2e6
-Content-Type: text/plain; charset=US-ASCII; name="mdadm.conf.txt"
-Content-Disposition: attachment; filename="mdadm.conf.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_g4yg9w8n2
-
-IyBtZGFkbS5jb25mCiMKCiMgYnkgZGVmYXVsdCwgc2NhbiBhbGwgcGFydGl0aW9ucyAoL3Byb2Mv
-cGFydGl0aW9ucykgZm9yIE1EIHN1cGVyYmxvY2tzLgojIGFsdGVybmF0aXZlbHksIHNwZWNpZnkg
-ZGV2aWNlcyB0byBzY2FuLCB1c2luZyB3aWxkY2FyZHMgaWYgZGVzaXJlZC4KREVWSUNFIHBhcnRp
-dGlvbnMgL2Rldi9tZC9kMCAvZGV2L21kL2QxCgojIGF1dG8tY3JlYXRlIGRldmljZXMgd2l0aCBE
-ZWJpYW4gc3RhbmRhcmQgcGVybWlzc2lvbnMKIyBDUkVBVEUgb3duZXI9cm9vdCBncm91cD1kaXNr
-IG1vZGU9MDY2MCBhdXRvPW1kcAoKIyBhdXRvbWF0aWNhbGx5IHRhZyBuZXcgYXJyYXlzIGFzIGJl
-bG9uZ2luZyB0byB0aGUgbG9jYWwgc3lzdGVtCkhPTUVIT1NUIDxzeXN0ZW0+CgojIGRlZmluaXRp
-b25zIG9mIGV4aXN0aW5nIE1EIGFycmF5cwoKQVJSQVkgL2Rldi9tZC9kMCBtZXRhZGF0YT0xLjEg
-bmFtZT1tYW1tYTpkMCBVVUlEPTdmOThlOTI2OjIwNmE4ZWJlOjU5ZmM4ZDdiOjQ2NDRhODgzIGxl
-dmVsPXJhaWQ2IG51bS1kZXZpY2VzPTYgIyBjb250YWluZXI9NmY5OGE3YTg6ZDdiNTAxODE6NTg3
-YzI3ZDE6NTlkNmQxMzcKCkFSUkFZIC9kZXYvbWQvZDEgbWV0YWRhdGE9MS4xIG5hbWU9bWFtbWE6
-ZDEgVVVJRD1kYTU0NzAyMjowNDJhNmY2ODpkNWZlMjUxZTo1ZTg5ZjI2MyBsZXZlbD1yYWlkNiBu
-dW0tZGV2aWNlcz02ICMgY29udGFpbmVyPTZmOThhN2E4OmQ3YjUwMTgxOjU4N2MyN2QxOjU5ZDZk
-MTM3CgpBUlJBWSAvZGV2L21kL3RhbmsgbWV0YWRhdGE9MS4xIG5hbWU9bWFtbWE6dGFuayBVVUlE
-PTZmOThhN2E4OmQ3YjUwMTgxOjU4N2MyN2QxOjU5ZDZkMTM3IGxldmVsPXJhaWQwIG51bS1kZXZp
-Y2VzPTIgZGV2aWNlcz0vZGV2L21kL2QwLC9kZXYvbWQvZDEKCg==
---001485f33abad07221047e29a2e6--
+*PS*
+I understand right now my RAID5 is syncing and should probably wait
+until all three drives are synced.
