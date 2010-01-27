@@ -1,58 +1,58 @@
-From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
-Subject: Re: How can I tell what drive is sdb?
-Date: Wed, 27 Jan 2010 14:30:34 +0000
-Message-ID: <73e903671001270630j4d0f6d12tf78ee870622bb8c3@mail.gmail.com>
-References: <1264601024.29409.19.camel@thor>
+From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
+Subject: Re: Building RAID5 w/o a Hot Spare
+Date: Wed, 27 Jan 2010 15:46:17 +0100
+Message-ID: <1264603577.1928.4.camel@test.apertos.eu>
+References: <d80f793f1001270626s3ec1791ma0b5da4b87a31e34@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-B45X+rgv5W6pqu5l4q7v"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1264601024.29409.19.camel@thor>
+In-Reply-To: <d80f793f1001270626s3ec1791ma0b5da4b87a31e34@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rick Bragg <lists@gmnet.net>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Jan 27, 2010 at 2:03 PM, Rick Bragg <lists@gmnet.net> wrote:
-> Hi,
->
-> I have a system with raid10 running Ubuntu 8.10. =A0It uses a
-> "promise"card
->
-> # lsusb
-> ..
-> 01:02.0 Mass storage controller: Promise Technology, Inc. PDC40718 (S=
-ATA
-> 300 TX4) (rev 02)
-> ..
->
-> I have 4 identical disks on it and they show up as /dev/sda, b, c, an=
-d
-> d.
->
-> However, sdb needs to be replaced. =A0How can I tell which drive is s=
-db?
-> Is there a way to identify what drive is what?
->
-> Thanks
-> Rick
->
 
-I think you can use the wonderful 'lshw' utility for this. It tells
-you what serial numbers the disks have, and then you can look at the
-labels on the drives to see which one has what serial number.
+--=-B45X+rgv5W6pqu5l4q7v
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-If this doesn't work out, you can PROBABLY stop the array and PROBABLY
-hotswap the disks in and out, running 'watch -n0 -d "dmesg | tail"' to
-see what the kernel says. It will tell you what drive you have just
-unplugged. But if you do this - BE CAREFUL - and I can't vouch that
-this is OK as I've never done this. I'm only guessing at theory.
+Dnia 2010-01-27, =C5=9Bro o godzinie 09:26 -0500, Carlos Williams pisze:
+> I am building a Linux system which has 4 identical 'fd' partitions on
+> each of the 4 drives. I don't want to use the 4th partition or disk if
+> you would like to call it as a 'hot spare'. I would like to span the
+> entire array over the 4 drives. My question is does my command look
+> correct for doing so?
 
-Good luck!
+I'm not sure I understand what you want to achieve. A 'spare' disk is
+one that isn't used until any of the other fail, then the spare replaces
+the failed one. The term 'hot spare' is used to identify a disk that is
+a mirror of one of the other drives, but there's no support for that in
+Linux Software-RAID.
 
--- Kristleifur
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> mdadm --create /dev/md0 --level=3D5 --raid-devices=3D4 /dev/sda2 /dev/sdb=
+2
+> /dev/sdc2 /dev/sdd2=20
+
+This will create a RAID5 array of 4 devices, yes. Capacity will be 3 x
+sd?2. Failure of any one of those disks will not harm the data.
+
+--=20
+Cheers
+Micha=C5=82 (Saviq) Sawicz
+
+
+--=-B45X+rgv5W6pqu5l4q7v
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: To jest =?UTF-8?Q?cz=C4=99=C5=9B=C4=87?=
+ =?UTF-8?Q?_wiadomo=C5=9Bci?= podpisana cyfrowo
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
+
+iEYEABECAAYFAktgUbkACgkQzQlUjpZYlbclIQCgyuVdMXZVtVd9jx0Y2J/K1R7m
+iAYAn0dOUr5QHOB5BbYIGPOBOSg2ZvMV
+=zx+T
+-----END PGP SIGNATURE-----
+
+--=-B45X+rgv5W6pqu5l4q7v--
+
