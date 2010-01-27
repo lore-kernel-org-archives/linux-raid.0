@@ -1,72 +1,74 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Question about raid robustness when disk fails
-Date: Wed, 27 Jan 2010 16:34:30 +0100
-Message-ID: <87fx5r36k9.fsf@frosties.localdomain>
-References: <1262972385.8962.159.camel@kije>
-	<87hbqeyua9.fsf@frosties.localdomain>
-	<7d86ddb91001261619kbb77697t2660e5b8cc44535d@mail.gmail.com>
-	<4877c76c1001262022p369eac60s639d87cad743ff94@mail.gmail.com>
-	<87vden2a2a.fsf@frosties.localdomain> <4B6005DC.7070701@shiftmail.org>
-	<87wrz3zvwu.fsf@frosties.localdomain> <4B6018EC.7090805@shiftmail.org>
+From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
+Subject: Re: Building RAID5 w/o a Hot Spare
+Date: Wed, 27 Jan 2010 16:34:50 +0100
+Message-ID: <1264606490.1928.5.camel@test.apertos.eu>
+References: <d80f793f1001270626s3ec1791ma0b5da4b87a31e34@mail.gmail.com>
+	 <1264603005.1928.3.camel@test.apertos.eu>
+	 <d80f793f1001270641k29430f12r59b9f9fa02966ea0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-2y32oxjPP9pZ4Mzj7WiQ"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B6018EC.7090805@shiftmail.org> (asdo@shiftmail.org's message of
-	"Wed, 27 Jan 2010 11:43:56 +0100")
+In-Reply-To: <d80f793f1001270641k29430f12r59b9f9fa02966ea0@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>
-Cc: Goswin von Brederlow <goswin-v-b@web.de>, linux-raid <linux-raid@vger.kernel.org>
+To: Carlos Williams <carloswill@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Asdo <asdo@shiftmail.org> writes:
 
-> Goswin von Brederlow wrote:
->>> Is it possible to cancel a SATA/SCSI command that is being executed by
->>> the drive?
->>> (it's probably feasible only with NCQ disabled anyway, but it's easy
->>> to disable NCQ)
->>>
->>
->> Do you want to do that? I would rather have the drive keep trying and
->> return an error if it can't read so the raid layer rewrites the blocks
->> causing it to be remapped. I do not want to wait for that but I want it
->> to happen.
->>
-> So you want that to happen in the background?
-> Not that much benefit for that to happen in the background, imho.
-> Why not just having an error returned after a timeout, and normal MD
-> read-error-recovery procedure kicking in? (recomputation from parity
-> and rewrite of the damaged block)
+--=-2y32oxjPP9pZ4Mzj7WiQ
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Because the drive might just had a seek error and needs to reposition
-its head. It might have been accessed on another partition and have a
-read error there taking time. Or just multiple reads on the
-partition. The drive taking long doesn't mean THIS read is broken.
+Dnia 2010-01-27, =C5=9Bro o godzinie 09:41 -0500, Carlos Williams pisze:
+> 2010/1/27 Micha=C5=82 Sawicz <michal@sawicz.net>:
+> > I'm not sure I understand what you want to achieve. A 'spare' disk
+> is
+> > one that isn't used until any of the other fail, then the spare
+> replaces
+> > the failed one. The term 'hot spare' is used to identify a disk that
+> is
+> > a mirror of one of the other drives, but there's no support for that
+> in
+> > Linux Software-RAID.
+>=20
+> I am sorry because I think I was using the wrong terminology then. I
+> want to use all 4 disks to be an active member or the RAID5 /dev/md0.
+> I wanted to make sure the command I posted in my original post was not
+> going to use 3 partitions for active members of RAID5 on /dev/md0 and
+> use the 4th drive as a 'spare device' in case one of the three drives
+> fail. I don't want that. I just want 4 active / working devices for
+> /dev/md0.
+>=20
+> >> mdadm --create /dev/md0 --level=3D5
+> --raid-devices=3D4 /dev/sda2 /dev/sdb2
+> >> /dev/sdc2 /dev/sdd2
+> >
+> > This will create a RAID5 array of 4 devices, yes. Capacity will be 3
+> x
+> > sd?2. Failure of any one of those disks will not harm the data.
+>=20
+> OK. I think that answers my questions. Thanks for your help!
 
-If you kick of a read-error-recovery and get another error on another
-drive then your raid will be down as well. Better not risk that.
+Great.
 
->>> It's a pity we have to rely on TLER, this narrows the choice of drives
->>> a lot...
->>>
->>
->> I don't. I just acknowledge the limitation and accept the downtime
-> The time might be so long that MD or the controller can drop the
-> entire drive.
-> It didn't happen to me but I think I read something like this on this ML...
+Please keep the mailing list in the loop.
 
-Downtime as in I had to shut down the system hard and remove a drive at
-a time till it would boot again when I came home in the evening.
+--=20
+Cheers
+Micha=C5=82 (Saviq) Sawicz
 
-If it just hangs for 5 minutes till it kicks a drive but then continious
-running I still call that a success.
+--=-2y32oxjPP9pZ4Mzj7WiQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: To jest =?UTF-8?Q?cz=C4=99=C5=9B=C4=87?=
+ =?UTF-8?Q?_wiadomo=C5=9Bci?= podpisana cyfrowo
 
->> to
->> find and remove a broken but not properly failed disk. I use raid so I
->> don't loose my data when a disk fails, not primarily for availability.
->> So far I had one case in 10 years where a failing disk took down my
->> system.
->>
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
 
-MfG
-        Goswin
+iEYEABECAAYFAktgXRoACgkQzQlUjpZYlbcRSQCgh0xnDorOIxtKUZw6+a9xWkq/
+85cAoKYuaYRufPYoPj3uoU0BmWD8Njx3
+=o7Ks
+-----END PGP SIGNATURE-----
+
+--=-2y32oxjPP9pZ4Mzj7WiQ--
+
