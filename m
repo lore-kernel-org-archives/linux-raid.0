@@ -1,51 +1,65 @@
-From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
-Subject: Re: How To Grow Using 'mdadm' Utility
-Date: Thu, 28 Jan 2010 16:59:23 +0100
-Message-ID: <1264694363.1928.30.camel@test.apertos.eu>
-References: <d80f793f1001271056i1127fbcege5b4dd4a3927576@mail.gmail.com>
-	 <1264634977.1928.13.camel@test.apertos.eu>
-	 <d80f793f1001280658k487be15emc0a6d23c9d013957@mail.gmail.com>
-	 <1264691314.1928.27.camel@test.apertos.eu>
-	 <d80f793f1001280713j5b0ee689m1c4c455403c64928@mail.gmail.com>
-	 <1264692194.1928.29.camel@test.apertos.eu>
-	 <d80f793f1001280750n68257e18n3e79ec0d68b5ac18@mail.gmail.com>
+From: Artur Wojcik <artur.wojcik@intel.com>
+Subject: [mdadm PATCH 0/2] Improvement: new logging library for mdadm/mdmon
+Date: Thu, 28 Jan 2010 17:04:04 +0100
+Message-ID: <20100128155922.32091.12709.stgit@awojcik-linux>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-+naCnAmEGrr5yLlYfop3"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <d80f793f1001280750n68257e18n3e79ec0d68b5ac18@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Carlos Williams <carloswill@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
+The following two patches contains the new method of logging messages
+in mdadm and mdmon applications. The first patch is just the library,
+and the second patch is the proposal on how to use the library in the
+applications.
 
---=-+naCnAmEGrr5yLlYfop3
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+As for the library, please let me know if detailed explanation is required.
 
-Dnia 2010-01-28, czw o godzinie 10:50 -0500, Carlos Williams pisze:
-> I can do "shutdown -r -F now" from my regular system. During this
-> reboot a fsck will be forced. Will that be enough?=20
+---
 
-You would still need resize2fs to run on a running, mounted FS - it's
-slow and smells of trouble.
+Artur Wojcik (2):
+      Improvement: new logging facility.
+      Improvement: Replace fprintf functions with log_* functions.
 
---=20
-Pozdrawiam
-Micha=C5=82 (Saviq) Sawicz
 
---=-+naCnAmEGrr5yLlYfop3
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: To jest =?UTF-8?Q?cz=C4=99=C5=9B=C4=87?=
- =?UTF-8?Q?_wiadomo=C5=9Bci?= podpisana cyfrowo
+ Assemble.c    |  382 +++++++++++++++--------------------
+ Build.c       |   65 +++---
+ Create.c      |  206 ++++++++-----------
+ Detail.c      |   39 ++--
+ Examine.c     |   11 +
+ Grow.c        |  333 +++++++++++++++++-------------
+ Incremental.c |  229 ++++++++-------------
+ Kill.c        |   21 +-
+ Makefile      |    6 -
+ Manage.c      |  163 ++++++---------
+ Monitor.c     |  107 +++++-----
+ Query.c       |    2
+ ReadMe.c      |   18 ++
+ bitmap.c      |   35 +--
+ config.c      |  142 ++++++-------
+ log.c         |  625 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ log.h         |  148 +++++++++++++
+ managemon.c   |   10 -
+ mdadm.c       |  556 +++++++++++++++++++++++++++++++++++----------------
+ mdadm.h       |   78 ++++---
+ mdmon.c       |   45 ++--
+ mdopen.c      |   39 ++--
+ mdstat.c      |    2
+ monitor.c     |   29 +--
+ super-ddf.c   |  185 +++++++----------
+ super-intel.c |  366 ++++++++++++++-------------------
+ super0.c      |   68 ++----
+ super1.c      |   53 ++---
+ sysfs.c       |   24 +-
+ test          |    0
+ util.c        |   22 +-
+ 31 files changed, 2396 insertions(+), 1613 deletions(-)
+ create mode 100644 log.c
+ create mode 100644 log.h
+ mode change 100644 => 100755 test
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEABECAAYFAkthtFsACgkQzQlUjpZYlbeLIwCfThvvbzVJLOUeLl02YUefEIbG
-dUMAmwQBmF/7T0Kf74U9YrjB/FCPLjMv
-=Y96+
------END PGP SIGNATURE-----
-
---=-+naCnAmEGrr5yLlYfop3--
-
+---
+Artur Wojcik
