@@ -1,69 +1,53 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [md PATCH 05/22] md/raid5: don't complete make_request on
- barrieruntil writes are scheduled
-Date: Thu, 28 Jan 2010 13:44:22 +1100
-Message-ID: <20100128134422.5c7c947e@notabene>
-References: <20091204064802.10264.6658.stgit@notabene.brown>
-	<AC5E1C3367E37D44970B81A6ADD1DA2C08AE0A83@SDCEXCHANGE01.ad.amcc.com>
+From: Yuehai Xu <yuehaixu@gmail.com>
+Subject: The huge different performance of sequential read between RAID0 and
+	RAID5
+Date: Wed, 27 Jan 2010 22:16:12 -0500
+Message-ID: <100eff551001271916y116de081la77982f4b5a03c73@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AC5E1C3367E37D44970B81A6ADD1DA2C08AE0A83@SDCEXCHANGE01.ad.amcc.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tirumala Reddy Marri <tmarri@amcc.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: yhxu@wayne.edu
 List-Id: linux-raid.ids
 
-On Thu, 21 Jan 2010 13:07:44 -0800
-"Tirumala Reddy Marri" <tmarri@amcc.com> wrote:
+Hi,
 
-> I tried these patches and I still don=E2=80=99t see barriers working.=
- Do I have to enable to device mapper to see the effect ?
->=20
-> =20
+When I use IOZONE to test sequential read performance, I notice the
+result between RAID0 and RAID5 is totally different.
 
-You would need to be sure that the component devices of md0 honour barr=
-iers.
-So try the same test on each component.  If they all work but md0 doesn=
-'t,
-then ask again and I will look into it.
+Below is the message from cat /proc/mdstat:
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+md0 : active raid5 sdh1[7] sdg1[5] sdf1[4] sde1[3] sdd1[2] sdc1[1] sdb1[0]
+      631353600 blocks level 5, 64k chunk, algorithm 2 [7/6] [UUUUUU_]
+      [======>..............]  recovery = 30.6% (32202272/105225600)
+finish=14.7min speed=82429K/sec
 
-You would need to give more details, like what sort of array md0 is, wh=
-at it's
-component are, and exactly what kernel you are using.
+unused devices: <none>
 
-NeilBrown
+The first question is that why the recovery is done after every time I
+setup RAID5? I use such command to setup RAID5:
+mdadm --create /dev/md0 --level=5 --raid-devices=7 /dev/sdb1 /dev/sdc1
+/dev/sdd1 /dev/sde1 /dev/sdf1 /dev/sdg1 /dev/sdh1
 
+Anyway, after the recovery, I start to test. I divide 10 partitions in
+RAID5 and RAID0, the mount info is:
+/dev/md0p5             38G  817M   35G   3% /mnt/md0p5
+/dev/md0p6             38G  817M   35G   3% /mnt/md0p6
+/dev/md0p7             38G  817M   35G   3% /mnt/md0p7
+/dev/md0p8             38G  817M   35G   3% /mnt/md0p8
+/dev/md0p9             38G  817M   35G   3% /mnt/md0p9
+/dev/md0p10            38G  817M   35G   3% /mnt/md0p10
+/dev/md0p11            38G  817M   35G   3% /mnt/md0p11
+/dev/md0p12            38G  817M   35G   3% /mnt/md0p12
+/dev/md0p13            38G  817M   35G   3% /mnt/md0p13
+/dev/md0p14            38G  817M   35G   3% /mnt/md0p14
 
->=20
-> =20
->=20
-> -------- log -----
->=20
-> ~ #=20
->=20
-> ~ # mount -o barrier=3D1 /dev/md0 /mnt/tmpmnt/
->=20
-> kjournald starting.  Commit interval 5 seconds
->=20
-> EXT3 FS on md0, internal journal
->=20
-> EXT3-fs: mounted filesystem with writeback data mode.
->=20
-> ~ # touch /mnt/tmpmnt/test
->=20
-> ~ # sync
->=20
-> JBD: barrier-based sync failed on md0 - disabling barriers
->=20
-> ~ #
->=20
-> =20
->=20
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Then I start IOZONE which starts 10 processes to do the sequential
+read(iozone -i 1). Each process read 640M file on each partition. The
+throughput of RAID0 is about 180M/s, while the throughput of RAID5 is
+just 43M/s. Why the performance between RAID0 and RAID5 is so
+different?
+
+Yuehai
