@@ -1,36 +1,56 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [dm-devel] [BUG] kernel 2.6.32.x hangs during boot process
-Date: Thu, 28 Jan 2010 13:25:28 -0500
-Message-ID: <20100128182528.GA29926@infradead.org>
-References: <d2deb3241001160158r4baed1e1t7e8f6642de018b4c@mail.gmail.com> <20100122160740.6c16c22d.akpm@linux-foundation.org> <20100128134205.352044bd@notabene> <4B612F89.7020503@ce.jp.nec.com>
+From: Carlos Williams <carloswill@gmail.com>
+Subject: Re-arranged Drives in MDADM?
+Date: Thu, 28 Jan 2010 13:58:20 -0500
+Message-ID: <d80f793f1001281058g60228b6bo7fc001fcfedd4487@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4B612F89.7020503@ce.jp.nec.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: Fran?ois Figarola <francois.figarola@i-consult.fr>, hch@infradead.org, device-mapper development <dm-devel@redhat.com>, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux-raid@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jan 28, 2010 at 03:32:41PM +0900, Jun'ichi Nomura wrote:
-> When MS_RDONLY, both freeze_bdev and thaw_bdev call deactivate_locked_super,
-> which seems wrong. The change was introduced with the commit below:
-> 
->   commit 4504230a71566785a05d3e6b53fa1ee071b864eb
->   Author: Christoph Hellwig <hch@lst.de>
->   Date:   Mon Aug 3 23:28:35 2009 +0200
-> 
->   freeze_bdev: grab active reference to frozen superblocks
-> 
-> With the attached patch, both remount-ro and remount-rw are
-> rejected as EBUSY on freezed device as expected.
-> 
-> Christoph, do you think this is the right fix?
+I new system was built today and I don't understand why the drives are
+out of order. I don't think it matters but I wanted to ask here. I am
+100% sure I specified /dev/sdd2 to be my spare device but when I now
+check mdadm, it does not appear this way...
 
-Indeed, this looks wrong in my original code, and the patch looks like
-the correct fix.  Thanks a lot!
+[root@tuna ~]# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 0.90
+  Creation Time : Thu Jan 28 06:59:49 2010
+     Raid Level : raid5
+     Array Size : 480391552 (458.14 GiB 491.92 GB)
+  Used Dev Size : 240195776 (229.07 GiB 245.96 GB)
+   Raid Devices : 3
+  Total Devices : 4
+Preferred Minor : 0
+    Persistence : Superblock is persistent
+
+    Update Time : Thu Jan 28 13:50:40 2010
+          State : clean
+ Active Devices : 3
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 1
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+           UUID : c935f1cc:af72fc84:c89aa428:f91eeb1b
+         Events : 0.471
+
+    Number   Major   Minor   RaidDevice State
+       0       8        2        0      active sync   /dev/sda2
+       1       8       18        1      active sync   /dev/sdb2
+       2       8       50        2      active sync   /dev/sdd2
+
+       3       8       34        -      spare   /dev/sdc2
 
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
+As you can see it has my /dev/sdc2 instead of /dev/sdd2 as my spare.
+The problem is the drives are physically labeled on the chasis and I
+was wondering why it did this and also can it be fixed. Can I move
+/dev/sdd2 from number '2' position to my spare and then move /dev/sdc2
+as an active member of the raid? The /dev/md0 is my entire / partition
+so anything that requires me stopping the RAID becomes a little
+difficult.
