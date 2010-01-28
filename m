@@ -1,67 +1,61 @@
-From: Carlos Williams <carloswill@gmail.com>
-Subject: Re: How To Grow Using 'mdadm' Utility
-Date: Thu, 28 Jan 2010 09:58:16 -0500
-Message-ID: <d80f793f1001280658k487be15emc0a6d23c9d013957@mail.gmail.com>
-References: <d80f793f1001271056i1127fbcege5b4dd4a3927576@mail.gmail.com>
-	 <1264634977.1928.13.camel@test.apertos.eu>
+From: Gabor Gombas <gombasg@sztaki.hu>
+Subject: Re: The huge different performance of sequential read between
+ RAID0 and RAID5
+Date: Thu, 28 Jan 2010 15:41:19 +0100
+Message-ID: <20100128144118.GB17369@twister.selfip.org>
+References: <100eff551001271916y116de081la77982f4b5a03c73@mail.gmail.com>
+ <20100128070606.GD3098@boogie.lpds.sztaki.hu>
+ <100eff551001280631h7de01ba6n52d79fdfcea9445e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-2
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1264634977.1928.13.camel@test.apertos.eu>
+Content-Disposition: inline
+In-Reply-To: <100eff551001280631h7de01ba6n52d79fdfcea9445e@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Yuehai Xu <yuehaixu@gmail.com>
+Cc: linux-raid@vger.kernel.org, yhxu@wayne.edu
 List-Id: linux-raid.ids
 
-2010/1/27 Micha=C5=82 Sawicz <michal@sawicz.net>:
-> See http://scotgate.org/2006/07/03/growing-a-raid5-array-mdadm/
->
-> You can check the status of your arrays by 'cat /proc/mdstat'.
+On Thu, Jan 28, 2010 at 09:31:23AM -0500, Yuehai Xu wrote:
 
-Thank you both for the links. The 1st one made me laugh...
+> >> md0 : active raid5 sdh1[7] sdg1[5] sdf1[4] sde1[3] sdd1[2] sdc1[1]=
+ sdb1[0]
+> >> =A0 =A0 =A0 631353600 blocks level 5, 64k chunk, algorithm 2 [7/6]=
+ [UUUUUU_]
+[...]
 
-I am not lazy as I did Google that but I wasn't sure about the last
-two commands for expanding the file system and I didn't know how dated
-that material was so I decided to ask here on the list.
+> I don't think any of my drive fail because there is no "F" in my
+> /proc/mdstat output
 
-Now my extra (4th disk) has been added and grown into my RAID5 array
-as shown below:
+It's not failed, it's simply missing. Either it was unavailable when th=
+e
+array was assembled, or you've explicitely created/assembled the array
+with a missing drive.
 
-[root@tuna ~]# mdadm --detail /dev/md0
-/dev/md0:
-        Version : 0.90
-  Creation Time : Wed Jan 27 08:15:03 2010
-     Raid Level : raid5
-     Array Size : 720587328 (687.21 GiB 737.88 GB)
-  Used Dev Size : 240195776 (229.07 GiB 245.96 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 0
-    Persistence : Superblock is persistent
+> How do you know my RAID5 array has one drive missing?
 
-    Update Time : Thu Jan 28 08:35:24 2010
-          State : active
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
+Look at the above output: there are just 6 of the 7 drives available,
+and the underscore also means a missing drive.=20
 
-         Layout : left-symmetric
-     Chunk Size : 64K
+> I tried to setup RAID5 with 5 disks, 3 disks, after each setup,
+> recovery has always been done.
 
-           UUID : e3c1e8b3:5a1b141f:af88d4a5:584f0b5f
-         Events : 0.1810
+Of course.
 
-    Number   Major   Minor   RaidDevice State
-       0       8        2        0      active sync   /dev/sda2
-       1       8       18        1      active sync   /dev/sdb2
-       2       8       34        2      active sync   /dev/sdc2
-       3       8       50        3      active sync   /dev/sdd2
+> However, if I format my md0 with such command:
+> mkfs.ext3 -b 4096 -E stride=3D16 -E stripe-width=3D*** /dev/XXXX, the
+> performance for RAID5 becomes usual, at about 200~300M/s.
 
-Now my /dev/md0 RAID5 array is mounted to my / partition. I still need
-to expand the file system to make use of the extra space, right? I
-simply added the drive and empty partition table into the RAID...I
-still don't have a file system on it yet, do I?
+I suppose in that case you had all the disks present in the array.
+
+Gabor
+
+--=20
+     ---------------------------------------------------------
+     MTA SZTAKI Computer and Automation Research Institute
+                Hungarian Academy of Sciences
+     ---------------------------------------------------------
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
