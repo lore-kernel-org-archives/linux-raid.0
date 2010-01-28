@@ -1,113 +1,167 @@
-From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: Question about raid robustness when disk fails
-Date: Thu, 28 Jan 2010 03:52:56 -0800
-Message-ID: <4877c76c1001280352q475a3416m2bfda127596df9d@mail.gmail.com>
-References: <1262972385.8962.159.camel@kije>
-	 <87hbqeyua9.fsf@frosties.localdomain>
-	 <7d86ddb91001261619kbb77697t2660e5b8cc44535d@mail.gmail.com>
-	 <4877c76c1001262022p369eac60s639d87cad743ff94@mail.gmail.com>
-	 <87vden2a2a.fsf@frosties.localdomain> <4B6005DC.7070701@shiftmail.org>
-	 <87wrz3zvwu.fsf@frosties.localdomain> <4B6018EC.7090805@shiftmail.org>
-	 <87fx5r36k9.fsf@frosties.localdomain>
+From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
+Subject: 'Array state: ... 1 failed', but array clean?
+Date: Thu, 28 Jan 2010 13:09:25 +0100
+Message-ID: <1264680565.1928.20.camel@test.apertos.eu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-CTHGUwsqhexSJtKRf7r2"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87fx5r36k9.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: Asdo <asdo@shiftmail.org>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Jan 27, 2010 at 7:34 AM, Goswin von Brederlow <goswin-v-b@web.de> wrote:
-> Asdo <asdo@shiftmail.org> writes:
-> If you kick of a read-error-recovery and get another error on another
-> drive then your raid will be down as well. Better not risk that.
->
 
-I mostly only disagree with this point; everything else is more a
-choice of tuning.  Different applications having different desires.
-
-If a read is late, it might be a good idea to force a full stripe
-recheck and alert the administrator about the latency/failure.
-
-Current raid levels do not have a way of validating blocks
-individually or even as part of a larger data set other than the
-stripe; raid 5 has only one set of redundant data, but no way of
-determining for sure which data-unit is bad.  Likely the 'slow' drive
-should be presumed bad, and the rest of the stripe recalculated.  If
-the drive returned data it should be compared to the calculation's
-result.  If the data matches then it managed a clean read, but a
-re-write should be issued anyway to ensure that the data really is
-over-written.  The problem is the case where the data doesn't match,
-but we lack another parity chunk (to validate against the computed
-recovery data) due to using a single recovery stripe and no
-validation.
-
-Suddenly we have two potentially valid solutions and no way of
-determining which is correct.  The question is which source you
-believe is less likely to have an error: a single potentially faulty
-drive that has returned a maybe error-corrected read (which has
-certain odds of being correct), or a set of other drives that happened
-to return data a little more quickly, but which all also have an
-inherent risk (though less /per drive/) of error.  My gut reaction is
-that the more nominally timed and reacting drives /likely/ are the
-correct source, but that there is still an unquantified risk of
-failure.
-
-Of course, this is also a slightly moot point; in the above model we'd
-have received one or the other first and already passed it to the next
-layer.  A simpler approach would be to presume a soft failure on
-timeout and unconditionally follow the re-computation path; only
-dropping it if one of those drives also had an error or timeout.
+--=-CTHGUwsqhexSJtKRf7r2
+Content-Type: multipart/mixed; boundary="=-aDRTd7Yqf8ptwdTtfKHh"
 
 
+--=-aDRTd7Yqf8ptwdTtfKHh
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The highly risk adverse or truly paranoid might willingly sacrifice
-just a little more storage to 'make extra sure' that the data is
-correct; which would greatly simplify the risks outlined above.
+Hi,
 
-Going with the default chunk size of 64k, that's 128 x 512bytes.  512
-/ 4 = 128 chunks for 32bit checksums, 512/16 = 32 for 128 bit
-checksums, or 16 for 256 bit ones.  A proposed reduction in capacity,
-respectively (and truncated, not rounded), to 99.993%, 99.975%, and
-99.951% of the otherwise usable storage space. (Using
-(SectorsPerChunk*ChunksThatFit)/(SectorsPerChunk*ChunksThatFit+1) to
-give the data that would fit in the same sized 'old space' but first
-making the 'old space' one sector larger to simplify the calculation.
-Obviously the offsets and packing change if you choose a larger sector
-size but keep the chunk size the same.)
+Can anyone please explain this to me:
 
-With multi-core systems I don't see a major downside on the extra
-processing workload, but I do see the disk bottle-neck as a downside.
-The most natural read pattern would be to slurp up the remaining
-sectors to the CRC payload on each drive.  For large streamed files
-the effect is likely good.  For databases and small-file tasks that
-cache poorly this would probably be bad.
+> # cat /proc/mdstat
+>=20
+> Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]=20
+> md2 : active raid5 sdf1[0] sde1[5] sdb1[6] sda1[3] sdd1[2] sdc1[4]
+>       4883799040 blocks super 1.1 level 5, 256k chunk, algorithm 2
+> [6/6] [UUUUUU]
 
-Just arbitrarily making the chunk one sector larger only drops the
-storage ratio to 99.224% and eliminates that problem (plus provides
-the remainder of those sectors to dedicate to additional payload).
+Everything looks peachy, but:
 
-The error detection/recovery payload could better be expressed as
-taking the minimum (and most frequently occurring) form of device
-block size; but tunable up from there just as chunk size is.  This way
-it could work for media that doesn't suffer seek time, but does have
-data-alignment issues.
+> # mdadm -E /dev/sda1
+> [...]
+>     Array Slot : 3 (0, failed, 2, 3, 1, 5, 4)
+>    Array State : uuuUuu 1 failed
+
+Where does this 'failed' come from? Oh, and it's like that on all
+members. Is my array safe as /proc/mdstat says?
+
+See attached file for full info from mdadm -E for all the drives.
+
+--=20
+Pozdrawiam
+Micha=C5=82 (Saviq) Sawicz
+
+--=-aDRTd7Yqf8ptwdTtfKHh
+Content-Disposition: attachment; filename="md2"
+Content-Type: text/plain; name="md2"; charset="UTF-8"
+Content-Transfer-Encoding: base64
+
+UGVyc29uYWxpdGllcyA6IFtyYWlkMF0gW3JhaWQxXSBbcmFpZDZdIFtyYWlkNV0gW3JhaWQ0XSBb
+cmFpZDEwXSANCm1kMiA6IGFjdGl2ZSByYWlkNSBzZGYxWzBdIHNkZTFbNV0gc2RiMVs2XSBzZGEx
+WzNdIHNkZDFbMl0gc2RjMVs0XQ0KICAgICAgNDg4Mzc5OTA0MCBibG9ja3Mgc3VwZXIgMS4xIGxl
+dmVsIDUsIDI1NmsgY2h1bmssIGFsZ29yaXRobSAyIFs2LzZdIFtVVVVVVVVdDQogICAgICANCnVu
+dXNlZCBkZXZpY2VzOiA8bm9uZT4NCg0Kcm9vdEBzeXNyZXNjY2QgL21udC9iaWcgJSBtZGFkbSAt
+RSAvZGV2L3NkYTENCi9kZXYvc2RhMToNCiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjDQogICAg
+ICAgIFZlcnNpb24gOiAxLjENCiAgICBGZWF0dXJlIE1hcCA6IDB4MA0KICAgICBBcnJheSBVVUlE
+IDogOWNlNDFmOTQ6NzQ4OWE3ZjI6Njg5N2U0YjU6MjY5YzhiM2INCiAgICAgICAgICAgTmFtZSA6
+IG1lZGlhOjINCiAgQ3JlYXRpb24gVGltZSA6IFN1biBKYW4gMjQgMjE6MzI6NTggMjAxMA0KICAg
+ICBSYWlkIExldmVsIDogcmFpZDUNCiAgIFJhaWQgRGV2aWNlcyA6IDYNCg0KIEF2YWlsIERldiBT
+aXplIDogMTk1MzUxOTczOCAoOTMxLjUxIEdpQiAxMDAwLjIwIEdCKQ0KICAgICBBcnJheSBTaXpl
+IDogOTc2NzU5ODA4MCAoNDY1Ny41NSBHaUIgNTAwMS4wMSBHQikNCiAgVXNlZCBEZXYgU2l6ZSA6
+IDE5NTM1MTk2MTYgKDkzMS41MSBHaUIgMTAwMC4yMCBHQikNCiAgICBEYXRhIE9mZnNldCA6IDI2
+NCBzZWN0b3JzDQogICBTdXBlciBPZmZzZXQgOiAwIHNlY3RvcnMNCiAgICAgICAgICBTdGF0ZSA6
+IGNsZWFuDQogICAgRGV2aWNlIFVVSUQgOiA1ZDVlZGE4ZDowYTUxMWQ4ZjpiNWNiZGZjMTo2MjU1
+M2U0Ng0KDQogICAgVXBkYXRlIFRpbWUgOiBUaHUgSmFuIDI4IDEyOjAyOjQ3IDIwMTANCiAgICAg
+ICBDaGVja3N1bSA6IDc1ZWU4NzMxIC0gY29ycmVjdA0KICAgICAgICAgRXZlbnRzIDogNjQ1MDM2
+DQoNCiAgICAgICAgIExheW91dCA6IGxlZnQtc3ltbWV0cmljDQogICAgIENodW5rIFNpemUgOiAy
+NTZLDQoNCiAgICBBcnJheSBTbG90IDogMyAoMCwgZmFpbGVkLCAyLCAzLCAxLCA1LCA0KQ0KICAg
+QXJyYXkgU3RhdGUgOiB1dXVVdXUgMSBmYWlsZWQNCg0Kcm9vdEBzeXNyZXNjY2QgL21udC9iaWcg
+JSBtZGFkbSAtRSAvZGV2L3NkYjENCi9kZXYvc2RiMToNCiAgICAgICAgICBNYWdpYyA6IGE5MmI0
+ZWZjDQogICAgICAgIFZlcnNpb24gOiAxLjENCiAgICBGZWF0dXJlIE1hcCA6IDB4MA0KICAgICBB
+cnJheSBVVUlEIDogOWNlNDFmOTQ6NzQ4OWE3ZjI6Njg5N2U0YjU6MjY5YzhiM2INCiAgICAgICAg
+ICAgTmFtZSA6IG1lZGlhOjINCiAgQ3JlYXRpb24gVGltZSA6IFN1biBKYW4gMjQgMjE6MzI6NTgg
+MjAxMA0KICAgICBSYWlkIExldmVsIDogcmFpZDUNCiAgIFJhaWQgRGV2aWNlcyA6IDYNCg0KIEF2
+YWlsIERldiBTaXplIDogMTk1MzUxOTczOCAoOTMxLjUxIEdpQiAxMDAwLjIwIEdCKQ0KICAgICBB
+cnJheSBTaXplIDogOTc2NzU5ODA4MCAoNDY1Ny41NSBHaUIgNTAwMS4wMSBHQikNCiAgVXNlZCBE
+ZXYgU2l6ZSA6IDE5NTM1MTk2MTYgKDkzMS41MSBHaUIgMTAwMC4yMCBHQikNCiAgICBEYXRhIE9m
+ZnNldCA6IDI2NCBzZWN0b3JzDQogICBTdXBlciBPZmZzZXQgOiAwIHNlY3RvcnMNCiAgICAgICAg
+ICBTdGF0ZSA6IGNsZWFuDQogICAgRGV2aWNlIFVVSUQgOiBkYjJlNWFlMDphOThjMTQ4Mzo2YjMz
+Nzc4MjpkODA3MTJmNw0KDQogICAgVXBkYXRlIFRpbWUgOiBUaHUgSmFuIDI4IDEyOjAyOjU0IDIw
+MTANCiAgICAgICBDaGVja3N1bSA6IDJkZDBhZDg1IC0gY29ycmVjdA0KICAgICAgICAgRXZlbnRz
+IDogNjQ1MDM2DQoNCiAgICAgICAgIExheW91dCA6IGxlZnQtc3ltbWV0cmljDQogICAgIENodW5r
+IFNpemUgOiAyNTZLDQoNCiAgICBBcnJheSBTbG90IDogNiAoMCwgZmFpbGVkLCAyLCAzLCAxLCA1
+LCA0KQ0KICAgQXJyYXkgU3RhdGUgOiB1dXV1VXUgMSBmYWlsZWQNCg0Kcm9vdEBzeXNyZXNjY2Qg
+L21udC9iaWcgJSBtZGFkbSAtRSAvZGV2L3NkYzENCi9kZXYvc2RjMToNCiAgICAgICAgICBNYWdp
+YyA6IGE5MmI0ZWZjDQogICAgICAgIFZlcnNpb24gOiAxLjENCiAgICBGZWF0dXJlIE1hcCA6IDB4
+MA0KICAgICBBcnJheSBVVUlEIDogOWNlNDFmOTQ6NzQ4OWE3ZjI6Njg5N2U0YjU6MjY5YzhiM2IN
+CiAgICAgICAgICAgTmFtZSA6IG1lZGlhOjINCiAgQ3JlYXRpb24gVGltZSA6IFN1biBKYW4gMjQg
+MjE6MzI6NTggMjAxMA0KICAgICBSYWlkIExldmVsIDogcmFpZDUNCiAgIFJhaWQgRGV2aWNlcyA6
+IDYNCg0KIEF2YWlsIERldiBTaXplIDogMTk1MzUxOTczOCAoOTMxLjUxIEdpQiAxMDAwLjIwIEdC
+KQ0KICAgICBBcnJheSBTaXplIDogOTc2NzU5ODA4MCAoNDY1Ny41NSBHaUIgNTAwMS4wMSBHQikN
+CiAgVXNlZCBEZXYgU2l6ZSA6IDE5NTM1MTk2MTYgKDkzMS41MSBHaUIgMTAwMC4yMCBHQikNCiAg
+ICBEYXRhIE9mZnNldCA6IDI2NCBzZWN0b3JzDQogICBTdXBlciBPZmZzZXQgOiAwIHNlY3RvcnMN
+CiAgICAgICAgICBTdGF0ZSA6IGNsZWFuDQogICAgRGV2aWNlIFVVSUQgOiBiNGNkMmM2NToyOTUw
+MmQ2MjowOGExMjcxNjplMmYxNTlhMA0KDQogICAgVXBkYXRlIFRpbWUgOiBUaHUgSmFuIDI4IDEy
+OjAyOjU0IDIwMTANCiAgICAgICBDaGVja3N1bSA6IGNlYjQ2NzgxIC0gY29ycmVjdA0KICAgICAg
+ICAgRXZlbnRzIDogNjQ1MDM2DQoNCiAgICAgICAgIExheW91dCA6IGxlZnQtc3ltbWV0cmljDQog
+ICAgIENodW5rIFNpemUgOiAyNTZLDQoNCiAgICBBcnJheSBTbG90IDogNCAoMCwgZmFpbGVkLCAy
+LCAzLCAxLCA1LCA0KQ0KICAgQXJyYXkgU3RhdGUgOiB1VXV1dXUgMSBmYWlsZWQNCg0Kcm9vdEBz
+eXNyZXNjY2QgL21udC9iaWcgJSBtZGFkbSAtRSAvZGV2L3NkZDENCi9kZXYvc2RkMToNCiAgICAg
+ICAgICBNYWdpYyA6IGE5MmI0ZWZjDQogICAgICAgIFZlcnNpb24gOiAxLjENCiAgICBGZWF0dXJl
+IE1hcCA6IDB4MA0KICAgICBBcnJheSBVVUlEIDogOWNlNDFmOTQ6NzQ4OWE3ZjI6Njg5N2U0YjU6
+MjY5YzhiM2INCiAgICAgICAgICAgTmFtZSA6IG1lZGlhOjINCiAgQ3JlYXRpb24gVGltZSA6IFN1
+biBKYW4gMjQgMjE6MzI6NTggMjAxMA0KICAgICBSYWlkIExldmVsIDogcmFpZDUNCiAgIFJhaWQg
+RGV2aWNlcyA6IDYNCg0KIEF2YWlsIERldiBTaXplIDogMTk1MzUxOTczOCAoOTMxLjUxIEdpQiAx
+MDAwLjIwIEdCKQ0KICAgICBBcnJheSBTaXplIDogOTc2NzU5ODA4MCAoNDY1Ny41NSBHaUIgNTAw
+MS4wMSBHQikNCiAgVXNlZCBEZXYgU2l6ZSA6IDE5NTM1MTk2MTYgKDkzMS41MSBHaUIgMTAwMC4y
+MCBHQikNCiAgICBEYXRhIE9mZnNldCA6IDI2NCBzZWN0b3JzDQogICBTdXBlciBPZmZzZXQgOiAw
+IHNlY3RvcnMNCiAgICAgICAgICBTdGF0ZSA6IGNsZWFuDQogICAgRGV2aWNlIFVVSUQgOiA4ZTZh
+OWY1NzphMzNmZDZlYjplYjg1MTRmYzoyNDdiMzYyYg0KDQogICAgVXBkYXRlIFRpbWUgOiBUaHUg
+SmFuIDI4IDEyOjAyOjU0IDIwMTANCiAgICAgICBDaGVja3N1bSA6IGJiOTk2MWY5IC0gY29ycmVj
+dA0KICAgICAgICAgRXZlbnRzIDogNjQ1MDM2DQoNCiAgICAgICAgIExheW91dCA6IGxlZnQtc3lt
+bWV0cmljDQogICAgIENodW5rIFNpemUgOiAyNTZLDQoNCiAgICBBcnJheSBTbG90IDogMiAoMCwg
+ZmFpbGVkLCAyLCAzLCAxLCA1LCA0KQ0KICAgQXJyYXkgU3RhdGUgOiB1dVV1dXUgMSBmYWlsZWQN
+Cg0Kcm9vdEBzeXNyZXNjY2QgL21udC9iaWcgJSBtZGFkbSAtRSAvZGV2L3NkZTENCi9kZXYvc2Rl
+MToNCiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjDQogICAgICAgIFZlcnNpb24gOiAxLjENCiAg
+ICBGZWF0dXJlIE1hcCA6IDB4MA0KICAgICBBcnJheSBVVUlEIDogOWNlNDFmOTQ6NzQ4OWE3ZjI6
+Njg5N2U0YjU6MjY5YzhiM2INCiAgICAgICAgICAgTmFtZSA6IG1lZGlhOjINCiAgQ3JlYXRpb24g
+VGltZSA6IFN1biBKYW4gMjQgMjE6MzI6NTggMjAxMA0KICAgICBSYWlkIExldmVsIDogcmFpZDUN
+CiAgIFJhaWQgRGV2aWNlcyA6IDYNCg0KIEF2YWlsIERldiBTaXplIDogMTk1MzUxOTczOCAoOTMx
+LjUxIEdpQiAxMDAwLjIwIEdCKQ0KICAgICBBcnJheSBTaXplIDogOTc2NzU5ODA4MCAoNDY1Ny41
+NSBHaUIgNTAwMS4wMSBHQikNCiAgVXNlZCBEZXYgU2l6ZSA6IDE5NTM1MTk2MTYgKDkzMS41MSBH
+aUIgMTAwMC4yMCBHQikNCiAgICBEYXRhIE9mZnNldCA6IDI2NCBzZWN0b3JzDQogICBTdXBlciBP
+ZmZzZXQgOiAwIHNlY3RvcnMNCiAgICAgICAgICBTdGF0ZSA6IGNsZWFuDQogICAgRGV2aWNlIFVV
+SUQgOiA1ZDVlZGE4ZDowYTUxMWQ4ZjpiNWNiZGZjMTo2MjU1M2U0Ng0KDQogICAgVXBkYXRlIFRp
+bWUgOiBUaHUgSmFuIDI4IDEyOjAyOjU0IDIwMTANCiAgICAgICBDaGVja3N1bSA6IDc1ZWU4NzNh
+IC0gY29ycmVjdA0KICAgICAgICAgRXZlbnRzIDogNjQ1MDM2DQoNCiAgICAgICAgIExheW91dCA6
+IGxlZnQtc3ltbWV0cmljDQogICAgIENodW5rIFNpemUgOiAyNTZLDQoNCiAgICBBcnJheSBTbG90
+IDogNSAoMCwgZmFpbGVkLCAyLCAzLCAxLCA1LCA0KQ0KICAgQXJyYXkgU3RhdGUgOiB1dXV1dVUg
+MSBmYWlsZWQNCg0Kcm9vdEBzeXNyZXNjY2QgL21udC9iaWcgJSBtZGFkbSAtRSAvZGV2L3NkZjEN
+Ci9kZXYvc2RmMToNCiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjDQogICAgICAgIFZlcnNpb24g
+OiAxLjENCiAgICBGZWF0dXJlIE1hcCA6IDB4MA0KICAgICBBcnJheSBVVUlEIDogOWNlNDFmOTQ6
+NzQ4OWE3ZjI6Njg5N2U0YjU6MjY5YzhiM2INCiAgICAgICAgICAgTmFtZSA6IG1lZGlhOjINCiAg
+Q3JlYXRpb24gVGltZSA6IFN1biBKYW4gMjQgMjE6MzI6NTggMjAxMA0KICAgICBSYWlkIExldmVs
+IDogcmFpZDUNCiAgIFJhaWQgRGV2aWNlcyA6IDYNCg0KIEF2YWlsIERldiBTaXplIDogMTk1MzUx
+OTczOCAoOTMxLjUxIEdpQiAxMDAwLjIwIEdCKQ0KICAgICBBcnJheSBTaXplIDogOTc2NzU5ODA4
+MCAoNDY1Ny41NSBHaUIgNTAwMS4wMSBHQikNCiAgVXNlZCBEZXYgU2l6ZSA6IDE5NTM1MTk2MTYg
+KDkzMS41MSBHaUIgMTAwMC4yMCBHQikNCiAgICBEYXRhIE9mZnNldCA6IDI2NCBzZWN0b3JzDQog
+ICBTdXBlciBPZmZzZXQgOiAwIHNlY3RvcnMNCiAgICAgICAgICBTdGF0ZSA6IGNsZWFuDQogICAg
+RGV2aWNlIFVVSUQgOiBmYmRkODk3Nzo1YzZhMGIxMzpmMWY3OTJjYjo2MDM5ZWU3MA0KDQogICAg
+VXBkYXRlIFRpbWUgOiBUaHUgSmFuIDI4IDEyOjAyOjU0IDIwMTANCiAgICAgICBDaGVja3N1bSA6
+IDE3ZWYzMDVmIC0gY29ycmVjdA0KICAgICAgICAgRXZlbnRzIDogNjQ1MDM2DQoNCiAgICAgICAg
+IExheW91dCA6IGxlZnQtc3ltbWV0cmljDQogICAgIENodW5rIFNpemUgOiAyNTZLDQoNCiAgICBB
+cnJheSBTbG90IDogMCAoMCwgZmFpbGVkLCAyLCAzLCAxLCA1LCA0KQ0KICAgQXJyYXkgU3RhdGUg
+OiBVdXV1dXUgMSBmYWlsZWQNCnJvb3RAc3lzcmVzY2NkIC9tbnQvYmlnICUgDQoNCg==
 
 
-From a logical view both the existing MD/RAID and these additional
-validity/recovery (likely what the unused space in the per-chunk
-checksum storage model could be filled with) methods should exist in
-some kind of block device reliability layer.  The type of reliability
-that MD currently provides would be a simple whole-partition/device
-approach.  The kind of reliability that BTRFS and ZFS aim for are a
-more granular approach.  Obviously a place where code and complexity
-can be reduced by using a common interface and consolidating code.
-Additional related improvements might also be exposed via that
-interface.
+--=-aDRTd7Yqf8ptwdTtfKHh--
 
-Is that something others would value as a valid contribution?  I'm
-actually thinking of looking in to this, but don't really want to
-expend the effort if it's unlikely to be anything more than a local
-patch trying to anchor me to the past (when I'm not at least being
-paid to continually port it forward).
+--=-CTHGUwsqhexSJtKRf7r2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: To jest =?UTF-8?Q?cz=C4=99=C5=9B=C4=87?=
+ =?UTF-8?Q?_wiadomo=C5=9Bci?= podpisana cyfrowo
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
+
+iEYEABECAAYFAkthfnUACgkQzQlUjpZYlbeHGwCfcbc8e482l68XNuao8s676913
+zLMAn11Q2RvddoKnUHWXYypwbOToDdA/
+=x/kU
+-----END PGP SIGNATURE-----
+
+--=-CTHGUwsqhexSJtKRf7r2--
+
