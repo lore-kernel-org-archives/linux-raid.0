@@ -1,38 +1,59 @@
-From: Gabor Gombas <gombasg@sztaki.hu>
-Subject: Re: The huge different performance of sequential read between
- RAID0 and   RAID5
-Date: Thu, 28 Jan 2010 08:06:06 +0100
-Message-ID: <20100128070606.GD3098@boogie.lpds.sztaki.hu>
-References: <100eff551001271916y116de081la77982f4b5a03c73@mail.gmail.com>
+From: Jon Hardcastle <jd_hardcastle@yahoo.com>
+Subject: Re: How can I tell what drive is sdb?
+Date: Thu, 28 Jan 2010 01:00:36 -0800 (PST)
+Message-ID: <640128.89077.qm@web51302.mail.re2.yahoo.com>
+References: <1264601024.29409.19.camel@thor>
+Reply-To: Jon@eHardcastle.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <100eff551001271916y116de081la77982f4b5a03c73@mail.gmail.com>
+In-Reply-To: <1264601024.29409.19.camel@thor>
 Sender: linux-raid-owner@vger.kernel.org
-To: Yuehai Xu <yuehaixu@gmail.com>
-Cc: linux-raid@vger.kernel.org, yhxu@wayne.edu
+To: linux-raid@vger.kernel.org, Rick Bragg <lists@gmnet.net>
 List-Id: linux-raid.ids
 
-On Wed, Jan 27, 2010 at 10:16:12PM -0500, Yuehai Xu wrote:
+--- On Wed, 27/1/10, Rick Bragg <lists@gmnet.net> wrote:
 
-> md0 : active raid5 sdh1[7] sdg1[5] sdf1[4] sde1[3] sdd1[2] sdc1[1] sdb1[0]
->       631353600 blocks level 5, 64k chunk, algorithm 2 [7/6] [UUUUUU_]
-[...]
-> Then I start IOZONE which starts 10 processes to do the sequential
-> read(iozone -i 1). Each process read 640M file on each partition. The
-> throughput of RAID0 is about 180M/s, while the throughput of RAID5 is
-> just 43M/s. Why the performance between RAID0 and RAID5 is so
-> different?
+> From: Rick Bragg <lists@gmnet.net>
+> Subject: How can I tell what drive is sdb?
+> To: linux-raid@vger.kernel.org
+> Date: Wednesday, 27 January, 2010, 14:03
+> Hi,
+>=20
+> I have a system with raid10 running Ubuntu 8.10.=A0 It
+> uses a
+> "promise"card
+>=20
+> # lsusb
+> ..
+> 01:02.0 Mass storage controller: Promise Technology, Inc.
+> PDC40718 (SATA
+> 300 TX4) (rev 02)
+> ..
+>=20
+> I have 4 identical disks on it and they show up as
+> /dev/sda, b, c, and
+> d.
+>=20
+> However, sdb needs to be replaced.=A0 How can I tell
+> which drive is sdb?
+> Is there a way to identify what drive is what?
+>=20
+> Thanks
+> Rick
+>=20
 
-You have a degraded RAID5 array with one drive missing, meaning the data
-has to be recalculated from parity all the time. That obviously kills
-performance.
+I had this problem, and and as it is a mare removing the drives to iden=
+tify what one is what.. When i needed to reorganise my physical drive o=
+rder i took the liberty of writing on the sides/back of each drive a sh=
+ort incrementing ID that tallys to a spreadsheet of serial numbers that=
+ i gleaned from smartctl.
 
-Gabor
 
--- 
-     ---------------------------------------------------------
-     MTA SZTAKI Computer and Automation Research Institute
-                Hungarian Academy of Sciences
-     ---------------------------------------------------------
+     =20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
