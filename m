@@ -1,67 +1,73 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: How To Grow Using 'mdadm' Utility
-Date: Thu, 28 Jan 2010 16:18:31 +0000
-Message-ID: <20100128161831.GB23933@cthulhu.home.robinhill.me.uk>
-References: <d80f793f1001271056i1127fbcege5b4dd4a3927576@mail.gmail.com>
- <1264634977.1928.13.camel@test.apertos.eu>
- <d80f793f1001280658k487be15emc0a6d23c9d013957@mail.gmail.com>
- <1264691314.1928.27.camel@test.apertos.eu>
- <d80f793f1001280713j5b0ee689m1c4c455403c64928@mail.gmail.com>
- <1264692194.1928.29.camel@test.apertos.eu>
- <d80f793f1001280750n68257e18n3e79ec0d68b5ac18@mail.gmail.com>
- <1264694363.1928.30.camel@test.apertos.eu>
- <d80f793f1001280805w3f7dee29n8afdb287494d7673@mail.gmail.com>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: [mdadm PATCH] Kill: fix when zeroing busy devices.
+Date: Thu, 28 Jan 2010 17:31:57 +0100
+Message-ID: <20100128163157.GT7517@skl-net.de>
+References: <20100128154844.31790.44309.stgit@awojcik-linux>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="O5XBE6gyVG5Rl6Rj"
+	protocol="application/pgp-signature"; boundary="PVZB3C997XEKXh6G"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <d80f793f1001280805w3f7dee29n8afdb287494d7673@mail.gmail.com>
+In-Reply-To: <20100128154844.31790.44309.stgit@awojcik-linux>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Artur Wojcik <artur.wojcik@intel.com>
+Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
 
---O5XBE6gyVG5Rl6Rj
+--PVZB3C997XEKXh6G
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Thu Jan 28, 2010 at 11:05:33AM -0500, Carlos Williams wrote:
-
-> Thanks all. Last question. If I have my system as 3 disks in RAID5
-> array and the 4th disk as a hot spare. Do I still need to format the
-> 4th disk with a filesystem (ext4)? Or will that occur when the
-> software discovers a disaster in the RAID volume and then starts to
-> sync the 'hot spare' into the degraded array to take the place of the
-> failed drive?
+On 16:48, Artur Wojcik wrote:
+> mdadm should not wait indefinitely when it trys to reset
+> superblock on device which is busy (cannot be opened).
 >=20
-> The 4th disk does have a 'fd' (RAID) partition table created but no
-> file system. Just trying to understand how that would work...
+> Signed-off-by: Artur Wojcik <artur.wojcik@intel.com>
+> ---
+>  Kill.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 >=20
-No, you don't need a filesystem.  The recovery process will use the data
-on the remaining disks to calculate what data was on the failed drive,
-and write that to the spare.  This data will include the filesystem (or
-parts thereof).
+> diff --git a/Kill.c b/Kill.c
+> index 63442a6..a65b865 100644
+> --- a/Kill.c
+> +++ b/Kill.c
+> @@ -46,7 +46,7 @@ int Kill(char *dev, struct supertype *st, int force, in=
+t quiet, int noexcl)
+>  			fprintf(stderr, Name ": Couldn't open %s for write - not zeroing\n",
+>  				dev);
+>  		close(fd);
+> -		return 1;
+> +		return 2;
+>  	}
+>  	if (st =3D=3D NULL)
+>  		st =3D guess_super(fd);
 
-Cheers,
-    Robin
+Jup.
+
+	Acked-by: Andre Noll <maan@systemlinux.org>
+
+BTW: Mind to kill the close(fd) as well (as fd is negative) while
+we're at it? A comment that explains the meaning of the return value
+would also be nice.
+
+Thanks
+Andre
 --=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+The only person who always got his work done by Friday was Robinson Crusoe
 
---O5XBE6gyVG5Rl6Rj
-Content-Type: application/pgp-signature
+--PVZB3C997XEKXh6G
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
+Version: GnuPG v1.4.1 (GNU/Linux)
 
-iEYEARECAAYFAkthuNYACgkQShxCyD40xBKhMQCeM5vVFox9oSeaWlgDsnLoizYr
-qyEAn37uwSi9yreMSiYkqhS2VSIZRdTm
-=47Tl
+iD8DBQFLYbv9Wto1QDEAkw8RAnppAJ9+YdcZYHBPBn2GhT6L+qb7hoPqJACcCjDA
+2AlarZ5ZLxW4TkFSpp8d8Rc=
+=6y4c
 -----END PGP SIGNATURE-----
 
---O5XBE6gyVG5Rl6Rj--
+--PVZB3C997XEKXh6G--
