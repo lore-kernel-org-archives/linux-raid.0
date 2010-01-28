@@ -1,56 +1,57 @@
-From: Carlos Williams <carloswill@gmail.com>
-Subject: Re-arranged Drives in MDADM?
-Date: Thu, 28 Jan 2010 13:58:20 -0500
-Message-ID: <d80f793f1001281058g60228b6bo7fc001fcfedd4487@mail.gmail.com>
+From: "Tirumala Reddy Marri" <tmarri@amcc.com>
+Subject: RE: Why does one get mismatches?
+Date: Thu, 28 Jan 2010 11:03:59 -0800
+Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C08AE18C4@SDCEXCHANGE01.ad.amcc.com>
+References: <201001252043.o0PKhseR027690@wind.enjellic.com><27F5783C-96DC-4B04-A3EF-D5E7F5F1DD6B@crc.id.au><AC5E1C3367E37D44970B81A6ADD1DA2C08AE1690@SDCEXCHANGE01.ad.amcc.com><AC5E1C3367E37D44970B81A6ADD1DA2C08AE1842@SDCEXCHANGE01.ad.amcc.com> <87iqamxf4l.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <87iqamxf4l.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: goswin-v-b@web.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I new system was built today and I don't understand why the drives are
-out of order. I don't think it matters but I wanted to ask here. I am
-100% sure I specified /dev/sdd2 to be my spare device but when I now
-check mdadm, it does not appear this way...
+I just tried and miss-match count is zero. Interesting, is XOR engine
+doing something wrong ? . Then I ran a test where I raw-write the file
+to /dev/md0. Then did the raw-read for the same size. In this case XOR
+matched as expected. Then I failed a drive using "mdadm -f /dev/md0
+/dev/sda". Then I read the same size data again from /dev/md0. And
+checksum matches too. 
+What is this mean XOR engine is doing right thing. But "chec/repair"
+test is not functioning properly with XOR-engine ?
 
-[root@tuna ~]# mdadm --detail /dev/md0
-/dev/md0:
-        Version : 0.90
-  Creation Time : Thu Jan 28 06:59:49 2010
-     Raid Level : raid5
-     Array Size : 480391552 (458.14 GiB 491.92 GB)
-  Used Dev Size : 240195776 (229.07 GiB 245.96 GB)
-   Raid Devices : 3
-  Total Devices : 4
-Preferred Minor : 0
-    Persistence : Superblock is persistent
-
-    Update Time : Thu Jan 28 13:50:40 2010
-          State : clean
- Active Devices : 3
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 1
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-           UUID : c935f1cc:af72fc84:c89aa428:f91eeb1b
-         Events : 0.471
-
-    Number   Major   Minor   RaidDevice State
-       0       8        2        0      active sync   /dev/sda2
-       1       8       18        1      active sync   /dev/sdb2
-       2       8       50        2      active sync   /dev/sdd2
-
-       3       8       34        -      spare   /dev/sdc2
+Or is this something to do with  how the buffers are handled ? may they
+are cached ?
 
 
-As you can see it has my /dev/sdc2 instead of /dev/sdd2 as my spare.
-The problem is the drives are physically labeled on the chasis and I
-was wondering why it did this and also can it be fixed. Can I move
-/dev/sdd2 from number '2' position to my spare and then move /dev/sdc2
-as an active member of the raid? The /dev/md0 is my entire / partition
-so anything that requires me stopping the RAID becomes a little
-difficult.
+-Marri
+
+
+
+-----Original Message-----
+From: goswin-v-b@web.de [mailto:goswin-v-b@web.de] 
+Sent: Thursday, January 28, 2010 10:24 AM
+To: Tirumala Reddy Marri
+Cc: linux-raid@vger.kernel.org
+Subject: Re: Why does one get mismatches?
+
+"Tirumala Reddy Marri" <tmarri@amcc.com> writes:
+
+> I have noticed that if I zero the /dev/md0 using "dd if=/dev/zero
+> of=/dev/md0 bs=4k count=64k". Then I run the "echo check >
+> /sys/block/md0/md/sync_action", no mismatch_cnt reported.  If I use
+> "if=/some/file" then I see miss match count to set to huge number.
+>
+> I am testing with small RAID-5 size for quick testing.  How a reliable
+> is this test ? I am using HW accelerated XOR engine for RAID-5.
+
+Have you tried without?
+
+Maybe the XOR engine creates garbage.
+
+MfG
+        Goswin
