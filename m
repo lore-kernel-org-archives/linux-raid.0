@@ -1,32 +1,61 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [mdadm PATCH 0/2] Improvement: new logging library for
- mdadm/mdmon
-Date: Fri, 29 Jan 2010 20:52:42 +1100
-Message-ID: <20100129205242.62e4049d@notabene>
-References: <20100128155922.32091.12709.stgit@awojcik-linux>
+Subject: Re: [mdadm PATCH] Kill: fix when zeroing busy devices.
+Date: Fri, 29 Jan 2010 21:02:02 +1100
+Message-ID: <20100129210202.35b20639@notabene>
+References: <20100128154844.31790.44309.stgit@awojcik-linux>
+	<20100128163157.GT7517@skl-net.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100128155922.32091.12709.stgit@awojcik-linux>
+In-Reply-To: <20100128163157.GT7517@skl-net.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Artur Wojcik <artur.wojcik@intel.com>
-Cc: linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
+To: Andre Noll <maan@systemlinux.org>
+Cc: Artur Wojcik <artur.wojcik@intel.com>, linux-raid@vger.kernel.org, dan.j.williams@intel.com, ed.ciechanowski@intel.com
 List-Id: linux-raid.ids
 
-On Thu, 28 Jan 2010 17:04:04 +0100
-Artur Wojcik <artur.wojcik@intel.com> wrote:
+On Thu, 28 Jan 2010 17:31:57 +0100
+Andre Noll <maan@systemlinux.org> wrote:
 
-> The following two patches contains the new method of logging messages
-> in mdadm and mdmon applications. The first patch is just the library,
-> and the second patch is the proposal on how to use the library in the
-> applications.
+> On 16:48, Artur Wojcik wrote:
+> > mdadm should not wait indefinitely when it trys to reset
+> > superblock on device which is busy (cannot be opened).
+
+Thanks.
+
+> > 
+> > Signed-off-by: Artur Wojcik <artur.wojcik@intel.com>
+> > ---
+> >  Kill.c |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/Kill.c b/Kill.c
+> > index 63442a6..a65b865 100644
+> > --- a/Kill.c
+> > +++ b/Kill.c
+> > @@ -46,7 +46,7 @@ int Kill(char *dev, struct supertype *st, int force, int quiet, int noexcl)
+> >  			fprintf(stderr, Name ": Couldn't open %s for write - not zeroing\n",
+> >  				dev);
+> >  		close(fd);
+> > -		return 1;
+> > +		return 2;
+> >  	}
+> >  	if (st == NULL)
+> >  		st = guess_super(fd);
 > 
-> As for the library, please let me know if detailed explanation is required.
+> Jup.
 > 
+> 	Acked-by: Andre Noll <maan@systemlinux.org>
+> 
+> BTW: Mind to kill the close(fd) as well (as fd is negative) while
+> we're at it? A comment that explains the meaning of the return value
+> would also be nice.
 
-Detailed explanations are always necessary.
+Done and done.
 
-I'd probably need a lot of convincing to add something like this to mdadm.
+I really don't know why the loop in mdadm.c cared about the different
+possible return values - I cannot see any justification for it.
 
+Thanks,
 NeilBrown
+
