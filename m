@@ -1,46 +1,38 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: woes with... mdadm ?
-Date: Fri, 29 Jan 2010 21:42:59 +1100
-Message-ID: <20100129214259.27409fd8@notabene>
-References: <4B5F6C5D.8020202@ultratux.net>
+Subject: Re: Read errors on raid5 ignored, array still clean .. then
+ disaster !!
+Date: Fri, 29 Jan 2010 21:48:52 +1100
+Message-ID: <20100129214852.00e565c4@notabene>
+References: <4B5F6C73.30707@texsoft.it>
+	<20100127074138.GA9607@maude.comedia.it>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B5F6C5D.8020202@ultratux.net>
+In-Reply-To: <20100127074138.GA9607@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Maarten <maarten@ultratux.net>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Luca Berra <bluca@comedia.it>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 26 Jan 2010 23:27:41 +0100
-Maarten <maarten@ultratux.net> wrote:
+On Wed, 27 Jan 2010 08:41:38 +0100
+Luca Berra <bluca@comedia.it> wrote:
 
-> Hi Folks,
-> 
-> I'm having no end of trouble with a freshly built x86_64 system. After 
-> reboots checksums are corrupted, I cannot add drives back in, etc. I've 
-> downgraded from mdadm 3.0 to 2.6.8 but that doesn't change anything. 
-> First of all, maybe I'm missing something obvious. Does anyone spot an 
-> error in the following ?
-> 
+> On Tue, Jan 26, 2010 at 11:28:03PM +0100, Giovanni Tessore wrote:
+> > Is this some kind of bug?  
+> No
 
-It looks to me like you have a very nasty hardware problem somewhere,
-possibly in a sata controller, but I cannot be sure.
 
-You write data out to the disk and read it back in, and find you have
-slightly different data.  This is showing up as a wrong checksum.
+I'm not sure I agree.
+If a device is generating lots of read errors, we really should do something
+proactive about that.
+If there is a hot spare, then building onto that while keeping the original
+active (yes, still on the todo list) would be a good thing to do.
 
-You results are begin confused by the fact that writes are cached and when
-you read you might be reading from the device or you might be reading from
-the cache.
+v1.x metadata allows the number of corrected errors to be recorded across
+restarts so a real long-term value can be used as a trigger.
 
-I would suggest that you write a known pattern to the device.
-Flush all caches
-   echo 3 > /proc/sys/vm/drop_caches
-then read back and compare.
-That should confirm that it is a device problem..
-
-I cannot think of anything else that would explain your symptoms.
+So there certainly are useful improvements that could be made here.
 
 NeilBrown
+
