@@ -1,113 +1,158 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Swapping a disk without degrading an array
-Date: Fri, 29 Jan 2010 22:19:04 +1100
-Message-ID: <20100129221904.439e2afe@notabene>
-References: <1264421475.30742.49.camel@test.apertos.eu>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: The huge different performance of sequential read between RAID0  and RAID5
+Date: Fri, 29 Jan 2010 12:53:24 +0100
+Message-ID: <873a1p86vf.fsf@frosties.localdomain>
+References: <100eff551001271916y116de081la77982f4b5a03c73@mail.gmail.com>
+	<20100128070606.GD3098@boogie.lpds.sztaki.hu>
+	<100eff551001280631h7de01ba6n52d79fdfcea9445e@mail.gmail.com>
+	<20100128144118.GB17369@twister.selfip.org>
+	<100eff551001280655r2e173286nfca3dbf688609571@mail.gmail.com>
+	<20100128152755.GA23933@cthulhu.home.robinhill.me.uk>
+	<4877c76c1001282205m280049b8y34253fc8f5062d0f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1264421475.30742.49.camel@test.apertos.eu>
+In-Reply-To: <4877c76c1001282205m280049b8y34253fc8f5062d0f@mail.gmail.com>
+	(Michael Evans's message of "Thu, 28 Jan 2010 22:05:47 -0800")
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?TWljaGHFgg==?= Sawicz <michal@sawicz.net>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Michael Evans <mjevans1983@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 25 Jan 2010 13:11:15 +0100
-Micha=C5=82 Sawicz <michal@sawicz.net> wrote:
+Michael Evans <mjevans1983@gmail.com> writes:
 
-> Hi list,
->=20
-> This is something I've discussed on IRC and we achieved a conclusion
-> that this might be useful, but somewhat limited use-case count might =
-not
-> warrant the effort to be implemented.
->=20
-> What I have in mind is allowing a member of an array to be paired wit=
-h a
-> spare while the array is on-line. The spare disk would then be filled
-> with exactly the same data and would, in the end, replace the active
-> member. The replaced disk could then be hot-removed without the array
-> ever going into degraded mode.
->=20
-> I wanted to start a discussion whether this at all makes sense, what =
-can
-> be the use cases etc.
->=20
-
-As has been noted, this is a really good idea.  It just doesn't seem to=
- get
-priority.  Volunteers ???
-
-So time to start:  with a little design work.
-
-1/ The start of the array *must* be recorded in the metadata.  It we tr=
-y to
-   create a transparent whole-device copy then we could get confused la=
-ter.
-   So let's (For now) decide not to support 0.90 metadata, and support =
+> On Thu, Jan 28, 2010 at 7:27 AM, Robin Hill <robin@robinhill.me.uk> w=
+rote:
+>> On Thu Jan 28, 2010 at 09:55:05AM -0500, Yuehai Xu wrote:
+>>
+>>> 2010/1/28 Gabor Gombas <gombasg@sztaki.hu>:
+>>> > On Thu, Jan 28, 2010 at 09:31:23AM -0500, Yuehai Xu wrote:
+>>> >
+>>> >> >> md0 : active raid5 sdh1[7] sdg1[5] sdf1[4] sde1[3] sdd1[2] sd=
+c1[1] sdb1[0]
+>>> >> >> =A0 =A0 =A0 631353600 blocks level 5, 64k chunk, algorithm 2 =
+[7/6] [UUUUUU_]
+>>> > [...]
+>>> >
+>>> >> I don't think any of my drive fail because there is no "F" in my
+>>> >> /proc/mdstat output
+>>> >
+>>> > It's not failed, it's simply missing. Either it was unavailable w=
+hen the
+>>> > array was assembled, or you've explicitely created/assembled the =
+array
+>>> > with a missing drive.
+>>>
+>>> I noticed that, thanks! Is it usual that at the beginning of each
+>>> setup, there is one missing drive?
+>>>
+>> Yes - in order to make the array available as quickly as possible, i=
+t is
+>> initially created as a degraded array. =A0The recovery is then run t=
+o
+>> add in the extra disk. =A0Otherwise all disks would need to be writt=
+en
+>> before the array became available.
+>>
+>>> >
+>>> >> How do you know my RAID5 array has one drive missing?
+>>> >
+>>> > Look at the above output: there are just 6 of the 7 drives availa=
+ble,
+>>> > and the underscore also means a missing drive.
+>>> >
+>>> >> I tried to setup RAID5 with 5 disks, 3 disks, after each setup,
+>>> >> recovery has always been done.
+>>> >
+>>> > Of course.
+>>> >
+>>> >> However, if I format my md0 with such command:
+>>> >> mkfs.ext3 -b 4096 -E stride=3D16 -E stripe-width=3D*** /dev/XXXX=
+, the
+>>> >> performance for RAID5 becomes usual, at about 200~300M/s.
+>>> >
+>>> > I suppose in that case you had all the disks present in the array=
+=2E
+>>>
+>>> Yes, I did my test after the recovery, in that case, does the "miss=
+ing
+>>> drive" hurt the performance?
+>>>
+>> If you had a missing drive in the array when running the test, then =
 this
-   in 1.x metadata with:
-     - a new feature_flag saying that live spares are present
-     - the high bit set in dev_roles[] means that this device is a live=
- spare
-       and is only in_sync up to 'recovery_offset'
+>> would definitely affect the performance (as the array would need to =
+do
+>> parity calculations for most stripes). =A0However, as you've not act=
+ually
+>> given the /proc/mdstat output for the array post-recovery then I don=
+'t
+>> know whether or not this was the case.
+>>
+>> Generally, I wouldn't expect the RAID5 array to be that much slower =
+than
+>> a RAID0. =A0You'd best check that the various parameters (chunk size=
+,
+>> stripe cache size, readahead, etc) are the same for both arrays, as
+>> these can have a major impact on performance.
+>>
+>> Cheers,
+>> =A0 =A0Robin
+>> --
+>> =A0 =A0 ___
+>> =A0 =A0( ' } =A0 =A0 | =A0 =A0 =A0 Robin Hill =A0 =A0 =A0 =A0<robin@=
+robinhill.me.uk> |
+>> =A0 / / ) =A0 =A0 =A0| Little Jim says .... =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0|
+>> =A0// !! =A0 =A0 =A0 | =A0 =A0 =A0"He fallen in de water !!" =A0 =A0=
+ =A0 =A0 =A0 =A0 =A0 =A0 |
+>>
+>
+> A more valid test that could be run would follow:
+>
+> Assemble all the test drives as a raid-5 array (you can zero the
+> drives any way you like and then --assume-clean if they really are al=
+l
+> zeros) and let the resync complete.
+>
+> Run any tests you like.
+>
+> Stop and --zero-superblock on the array.
+>
+> Create a striped array (raid 0) using all but one of the test drives.
+>
+> Since you dropped the drive's worth of storage that would be dedicate=
+d
+> to parity in the raid-5 setup you're now benchmarking the same number
+> of /data/ storage drives; but have saved one drive's worth of recover=
+y
+> data (at cost of risking your data if any single drive fails).
+>
+> Still, run the same benchmarks.
+>
+> Why is this valid instead of throwing all the drives at it in raid-0
+> mode as well?  It provides the same resulting storage size.
+>
+>
+> What I suspect you'll find is very similar read performance and
+> measurably, though perhaps tolerable, worse write performance from
+> raid-5.
 
-2/ in sysfs we currently identify devices with a symlink
-     md/rd$N -> dev-$X
-   for live-spare devices, this would be
-     md/ls$N -> dev-$X
+In raid5 mode each drive will read 5*64k data and then skip 64k and
+repeat. And skipping such a small chunk of data means waiting till it
+has rotated below the head. So each drive only gives 5/6th of its linea=
+r
+speed. As a result the 6 disks raid5 should be 5/6th of the speed of a =
+5
+disk raid0 assuming the controler and bus are fast enough.
 
-3/ We create a live spare by writing 'live-spare' to md/dev-$X/state
-   and an appropriate value to md/dev-$X/recovery_start before setting
-   md/dev-$X/slot
+A larger chunk size can mean skipping the parity chunk skips a
+cylinder. But larger chunk size makes it less likely reads are spread
+over all/multiple disks. So you might loose more than you gain.
 
-4/ When a device is failed, if there was a live spare is instantly take=
-s
-   the place of the failed device.
+MfG
+        Goswin
 
-5/ This needs to be implemented separately in raid10 and raid456.
-   raid1 doesn't really need live spares  but I wouldn't be totally aga=
-inst
-   implementing them if it seemed helpful.
-
-6/ There is no dynamic read balancing between a device and its live-spa=
-re.
-   If the live spare is in-sync up to the end of the read, we read from=
- the
-   live-spare, else from the main device.
-
-7/ writes transparently go to both the device and the live-spare, wheth=
-er they
-   are normal data writes or resync writes or whatever.
-
-8/ In raid5.h struct r5dev needs a second 'struct bio' and a second
-   'struct bio_vec'.
-   'struct disk_info' needs a second mdk_rdev_t.
-
-9/ in raid10.h mirror_info needs another mdk_rdev_t and the anon struct=
- in=20
-   r10bio_s needs another 'struct bio *'.
-
-10/ Both struct r5dev and r10bio_s need some counter or flag so we can =
-know
-    when both writes have completed.
-
-11/ For both r5 and r10, the 'recover' process need to be enhanced to j=
-ust
-    read from the main device when a live-spare is being built.
-    Obviously if this fail there needs to be a fall-back to read from
-    elsewhere.
-
-Probably lots more details, but that might be enough to get me (or some=
-one)
-started one day.
-
-There would be lots of work to do in mdadm too of course to report on t=
-hese
-extensions and to assemble arrays with live-spares..
-
-NeilBrown
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
