@@ -1,74 +1,97 @@
-From: Jon Hardcastle <jd_hardcastle@yahoo.com>
-Subject: Re: Why does one get mismatches?
-Date: Fri, 29 Jan 2010 07:37:05 -0800 (PST)
-Message-ID: <166572.83607.qm@web51301.mail.re2.yahoo.com>
-References: <874om6m0z5.fsf@frosties.localdomain>
-Reply-To: Jon@eHardcastle.com
+From: Artur Wojcik <artur.wojcik@intel.com>
+Subject: Re: [mdadm PATCH 0/2] Improvement: new logging library for
+ mdadm/mdmon
+Date: Fri, 29 Jan 2010 17:06:28 +0100
+Message-ID: <1264781188.2788.99.camel@awojcik-linux>
+References: <20100128155922.32091.12709.stgit@awojcik-linux>
+	 <20100129205242.62e4049d@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <874om6m0z5.fsf@frosties.localdomain>
+In-Reply-To: <20100129205242.62e4049d@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, Goswin von Brederlow <goswin-v-b@web.de>
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
---- On Thu, 28/1/10, Goswin von Brederlow <goswin-v-b@web.de> wrote:
+On Fri, 2010-01-29 at 09:52 +0000, Neil Brown wrote:
+> I'd probably need a lot of convincing to add something like this to mdadm.
+> 
 
-> From: Goswin von Brederlow <goswin-v-b@web.de>
-> Subject: Re: Why does one get mismatches?
-> To: linux-raid@vger.kernel.org
-> Date: Thursday, 28 January, 2010, 20:24
-> "Tirumala Reddy Marri" <tmarri@amcc.com>
-> writes:
->=20
-> > I just tried and miss-match count is zero.
-> Interesting, is XOR engine
-> > doing something wrong ? . Then I ran a test where I
-> raw-write the file
-> > to /dev/md0. Then did the raw-read for the same size.
-> In this case XOR
-> > matched as expected. Then I failed a drive using
-> "mdadm -f /dev/md0
-> > /dev/sda". Then I read the same size data again from
-> /dev/md0. And
-> > checksum matches too.=20
-> > What is this mean XOR engine is doing right thing. But
-> "chec/repair"
-> > test is not functioning properly with XOR-engine ?
-> >
-> > Or is this something to do with=A0 how the buffers
-> are handled ? may they
-> > are cached ?
-> >
-> >
-> > -Marri
->=20
-> No idea. But if everything works without the XOR engine and
-> gives
-> mismatches with then I would think there is a software or
-> hardware error
-> there and not in the cable or disks.
->=20
-> MfG
-> =A0 =A0 =A0 =A0 Goswin
-> --
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at=A0 http://vger.kernel.org/majordomo-info.html
->=20
+I did not expect this patch to be accepted without convincing you or at
+least without a lot of explanations :). What interest you the most?
 
-i think my RAM is fecked - does that sound like a possible cause? memte=
-st86 gives PAGES of red errors when run but the POST gives nothing and =
-the machine boots.... it has 512MB
+The reason for this improvement/patch is:
 
-i have some more on order as a speculative..=20
+1) to unify the way mdadm and mdmon log messages,
+2) to have logs from mdadm and mdmon applications at the same time, 
+3) to be able to capture log messages when system is booting, 
+4) to simplify the source code. 
+
+This all should improve problem diagnosis/resolution (complete log) and
+reduce the complexity of source code (one function call, less parameters
+in parent function) and simpler code is easier to maintain.
+
+This is only the library, the next step would be to clean up the logs
+i.e. mdmon does not log much. I started this in 2nd patch. 
+
+BTW. I have a problem with patch 2/2 - it didn't appear on the list. I
+tried sending it several times - is it too big?. However you should
+receive it on your mailbox, if not please let me know. 
+
+The second patch is only a proposal on how to incorporate the logging
+library into mdmon/mdmadm.
+
+At the moment all I can ask you is to try it first. The command line
+works as before i.e. -v[v[v]] increases the level of verbosity and
+'quiet' makes no output on terminal console only (mdadm still will be
+logging to file and to syslog). 
+
+The command line does not work for mdadm yet.
+
+The logs are redirected to terminal console, syslog and log file with a
+single function call.
+
+There are new command line options, use them to on/off certain group of
+logs and change verbosity level. The new commands are
+
+--log-alert=[list of hives comma separated; all - for all hives]
+--log-fatal=[same as above]
+--log-error=[same as above]
+--log-warn=[same as above]
+--log-notice=[same as above]
+--log-info=[same as above]
+--log-debug=[same as above]
+
+If no argument is given (optarg is null) then verbosity is changed for
+generic hive only.
+
+There will be command line options options added soon to redirect the
+log messages.
+
+Here's the list of hives: generic, io, super, ddf, mode, imsm, deamon,
+all
+
+generic - command line parser and config file parser
+
+io - e.g. file acces errors, file seek errors, etc.
+
+super - log messages related to super0 and super1.
+
+ddf - log messages related to DDF volumes and containers only.
+
+mode - log messages related to mode operations (Assemble, Create, Build,
+etc) - the logs visualizing the stages of an algorithm.
+
+imsm - the logs from all Intel modules.
+
+deamon - the logs from mdmon deamon process and from monitor proces of
+mdadm.
+
+all - means 'perform an operation on all hives'
+
+Thanks,
+Artur
 
 
-     =20
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
