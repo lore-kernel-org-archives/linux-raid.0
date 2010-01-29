@@ -1,7 +1,7 @@
 From: "Trela, Maciej" <Maciej.Trela@intel.com>
-Subject: [PATCH 2/3] mdadm: IMSM metadata compatibility issues
-Date: Fri, 29 Jan 2010 14:54:59 +0000
-Message-ID: <F2A46F4A087B8547923AD59C289DC90E01D1622B@irsmsx002.ger.corp.intel.com>
+Subject: [PATCH 3/3] mdadm: add support for takeover from Raid10 to Raid0
+Date: Fri, 29 Jan 2010 14:55:15 +0000
+Message-ID: <F2A46F4A087B8547923AD59C289DC90E01D1622C@irsmsx002.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -15,206 +15,141 @@ List-Id: linux-raid.ids
 
 Signed-off-by: Maciej Trela <maciej.trela@intel.com>
 ---
- super-intel.c |  152 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 files changed, 148 insertions(+), 4 deletions(-)
+ Grow.c |  114 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 113 insertions(+), 1 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c
-index 1bb721e..07bef6b 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -3345,14 +3345,133 @@ static int write_super_imsm_spares(struct intel_super *super, int doclose)
- 	return 0;
- }
- 
--static int write_super_imsm(struct intel_super *super, int doclose)
-+static int make_mpb_imsm_compatible(struct supertype *st, struct imsm_super *mpb)
- {
-+	struct intel_super *super = st->sb;
-+	struct imsm_map *map;
-+	struct active_array *a;
-+ 	__u8 *src, *dst;
-+ 	__u32 orig_mpb_size = mpb->mpb_size;
-+	__u32 mpb_size = sizeof(struct imsm_super) - sizeof(struct imsm_disk);
-+	__u32 sum;
-+	int i, bytes_to_copy, spares = 0;
-+	struct dl *d;
-+
-+	/* Make sure that there is missing disk */
-+	if (super->missing == NULL)
-+	  return -1;
-+
-+	/* Decrease the number of disks - 
-+	   missing disk will not be exposed to the user*/
-+	mpb->num_disks--;
-+	
-+	/* Create MBP disk table */
-+	mpb_size += sizeof(struct imsm_disk) * mpb->num_disks;
-+	for (d = super->disks; d; d = d->next) {
-+		if (d->index == -1)
-+			spares++;
-+		else
-+			mpb->disk[d->index] = d->disk;
-+	}
-+	
-+	/* Iterate through the imsm devices */
-+	for (i = 0; i < mpb->num_raid_devs; i++) {
-+
-+		struct imsm_dev *dev = __get_imsm_dev(mpb, i);
-+		imsm_copy_dev(dev, get_imsm_dev(super, i));
-+
-+		/* Find layout of the current aray */
-+		for (a = st->arrays; a; a = a->next)
-+			if (a->info.container_member == i)
-+				break;
-+
-+		/* Process the first map */
-+		map = get_imsm_map(dev, 0);
-+		if ((map->raid_level == 5) && (a->info.array.layout == ALGORITHM_PARITY_N)) {
-+
-+			/* get the pointer to the rest of the metadata */
-+			src = (__u8*)map + sizeof_imsm_map(map);
-+
-+			/* change the level and disk number to be compatible with IMSM */
-+			map->raid_level = 0;
-+			map->num_members--;
-+
-+			/* get the updated pointer to the rest of the metadata */
-+			dst = (__u8*)map + sizeof_imsm_map(map);
-+			/* Now move the rest of the metadata to be properly aligned */
-+			bytes_to_copy = orig_mpb_size - (src - (__u8*)mpb);
-+			if (bytes_to_copy > 0)
-+				memmove(dst, src, bytes_to_copy);
-+		}
-+
-+		/* Process the second map if needed */
-+		if (dev->vol.migr_state != IMSM_T_STATE_NORMAL) {
-+
-+			map = get_imsm_map(dev, 1);
-+			if ((map->raid_level == 5) && (a->info.array.layout == ALGORITHM_PARITY_N)) {
-+
-+				/* change the level and disk number to be compatible with IMSM */
-+				map->raid_level = 0;
-+				map->num_members--;
-+			}
-+		}
-+		mpb_size += sizeof_imsm_dev(dev, 0);
-+	}
-+	mpb_size += __le32_to_cpu(mpb->bbm_log_size);
-+	mpb->mpb_size = __cpu_to_le32(mpb_size);
-+
-+	/* recalculate checksum */
-+	sum = __gen_imsm_checksum(mpb);
-+	mpb->check_sum = __cpu_to_le32(sum);
-+
-+	return 0;
-+}
-+
-+static int is_mpb_imsm_compatible(struct supertype *st, struct imsm_super *mpb)
-+{
-+    int i;
-+
-+	/* Iterate through the imsm devices */
-+    for (i = 0; i < mpb->num_raid_devs; i++) {
-+		struct imsm_dev *dev;
-+		struct imsm_map *map;
-+		struct active_array *a;
-+		dev = __get_imsm_dev(mpb, i);
-+
-+		/* Find layout of the current aray */
-+		for (a = st->arrays; a; a = a->next)
-+		{
-+			if (a->info.container_member == i)
-+				break;
-+		}
-+		/* Get first map */
-+		map = get_imsm_map(dev, 0);
-+		if ((map->raid_level == 5) && (a->info.array.layout == ALGORITHM_PARITY_N))	{
-+			/* This leve/layout is not compatible with IMSM */
-+			return 0;
-+		}
-+		if (dev->vol.migr_state != IMSM_T_STATE_NORMAL) {
-+			/* Get second map */
-+			map = get_imsm_map(dev, 1);
-+			if ((map->raid_level == 5) && (a->info.array.layout == ALGORITHM_PARITY_N))	{
-+				/* This leve/layout is not compatible with IMSM */
-+				return 0;
-+			}
-+		}
-+	}
-+	return 1;
-+}
-+
-+static int write_super_imsm(struct supertype *st, int doclose)
-+{
-+	struct intel_super *super = st->sb;
- 	struct imsm_super *mpb = super->anchor;
-+	struct imsm_super *tmp_mpb = NULL;
- 	struct dl *d;
- 	__u32 generation;
- 	__u32 sum;
- 	int spares = 0;
--	int i;
-+	int i, buflen;
- 	__u32 mpb_size = sizeof(struct imsm_super) - sizeof(struct imsm_disk);
- 
- 	/* 'generation' is incremented everytime the metadata is written */
-@@ -3389,6 +3508,27 @@ static int write_super_imsm(struct intel_super *super, int doclose)
- 	sum = __gen_imsm_checksum(mpb);
- 	mpb->check_sum = __cpu_to_le32(sum);
- 
-+	/* The mpb is generated and ready to be flushed to disks.
-+	 * Check configuration for compatibility with IMSM
-+	 * The following configurations should be handled here:
-+	 * N-drive Raid 4 => will be written as N-1 Raid0
-+	 */
-+	if (!is_mpb_imsm_compatible(st, mpb)) {
-+		buflen = ROUND_UP(super->anchor->mpb_size, 512);
-+		if (posix_memalign((void**)&tmp_mpb, 512, buflen) != 0) {
-+			fprintf(stderr,
-+					Name ": unable to allocate %zu byte mpb buffer\n",
-+					super->len);
-+			return 1;
-+		}
-+		/* Copy the current mpb */
-+		memcpy(tmp_mpb, mpb, buflen);
-+		/* Translate mpb to be IMSM compatible */
-+		make_mpb_imsm_compatible(st, tmp_mpb);
-+		/* From now mpb will point to the new meta */
-+		mpb = tmp_mpb;
-+	}
-+
- 	/* write the mpb for disks that compose raid devices */
- 	for (d = super->disks; d ; d = d->next) {
- 		if (d->index < 0)
-@@ -3402,6 +3542,10 @@ static int write_super_imsm(struct intel_super *super, int doclose)
- 		}
+diff --git a/Grow.c b/Grow.c
+index d00b980..aa6c3b3 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -540,7 +540,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+ 			"       Please use a newer kernel\n");
+ 		return 1;
  	}
- 
-+	/* Free temporary mpb */
-+	if (tmp_mpb)
-+		free(tmp_mpb);
+-	sra = sysfs_read(fd, 0, GET_LEVEL | GET_VERSION);
++	sra = sysfs_read(fd, 0, GET_VERSION | GET_LEVEL | GET_DEVS | GET_STATE);
+ 	frozen = freeze_array(sra);
+ 	if (frozen < 0) {
+ 		fprintf(stderr, Name ": %s is performing resync/recovery and cannot"
+@@ -581,6 +581,118 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+ 		if (size == 0)
+ 			size = array.size;
+ 	}
 +
- 	if (spares)
- 		return write_super_imsm_spares(super, doclose);
- 
-@@ -3497,7 +3641,7 @@ static int write_init_super_imsm(struct supertype *st)
- 
- 		return rv;
- 	} else
--		return write_super_imsm(st->sb, 1);
-+		return write_super_imsm(st, 1);
- }
- #endif
- 
-@@ -4570,7 +4714,7 @@ static void imsm_sync_metadata(struct supertype *container)
- 	if (!super->updates_pending)
- 		return;
- 
--	write_super_imsm(super, 0);
-+	write_super_imsm(container, 0);
- 
- 	super->updates_pending = 0;
- }
++	/* ========= check for Raid10 -> Raid0 conversion =============== 
++	 * current implemenation assumes that far_copies must be 1
++	 * and disks number must be even
++	 */
++	if ((level == 0) && (array.level == 10) &&
++	    ((array.layout >> 8) == 1) && !(array.raid_disks & 1))
++	{
++		int container_fd;
++		st = super_by_fd(fd);
++
++		if ((st != NULL) && (st->ss->external)) {
++			int dn = devname2devnum(sra->text_version + 1);
++			container_fd = open_dev_excl(dn);
++			if (container_fd < 0) {
++				fprintf(stderr, Name ": Cannot get exclusive access "
++						"to container.\n");
++				rv=1;				
++				goto release;
++			}
++		}
++		
++		int max_disks = MD_SB_DISKS; /* just a default */
++		if (st != NULL)
++			max_disks = st->max_devs;
++
++		/* Prepare temporary disk table */
++		struct mdinfo *de;
++		mdu_disk_info_t *disks;
++		disks = malloc(max_disks * sizeof(mdu_disk_info_t));
++		if (!disks) {
++			fprintf(stderr, Name ": malloc failed: grow aborted\n");
++			rv = 1;
++			goto release;
++		}		
++		for (d=0; d<max_disks; d++) {
++			disks[d].state = (1<<MD_DISK_REMOVED);
++			disks[d].major = disks[d].minor = 0;
++			disks[d].number = disks[d].raid_disk = d;
++		}
++
++		/* initialize temporary disk table with current devices*/
++		for (de=sra->devs; de; de=de->next) {
++			if (de->disk.raid_disk >= 0 && de->disk.raid_disk < array.raid_disks)
++				disks[de->disk.raid_disk] = de->disk;
++		}
++		
++		/* Get near_copies */
++		int nr_of_copies = array.layout & 0xff;
++		int in_sync, copies;
++		in_sync = copies = nr_of_copies;		
++
++		/* Find devices that will be removed from the array */
++		for (d=0; d<max_disks; d++) {
++			if (disks[d].state & (1<<MD_DISK_REMOVED))
++				continue;
++			/* Count in_sync copies */
++			if (!(disks[d].state & (1<<MD_DISK_SYNC))) {
++				in_sync--;
++			}
++			copies--;
++			if (!copies) {				
++				/* We reached end of "mirrored" set of devices */
++				if (!in_sync) {
++					/* The array is failed and cannot be reshaped */
++					free(disks);
++					return 1;
++				}
++				
++				int i, remove_all = 0;
++				/* Now mark all disks to be removed as faulty (leave only one in_sync disk) */
++				for (i=(d-nr_of_copies+1); i<=d; i++) {
++					if (remove_all)
++						disks[i].state |= (1<<MD_DISK_FAULTY);
++					else {
++						if (disks[i].state & (1<<MD_DISK_SYNC)) {
++							/* this will be the candidate for Raid 0, leave it */
++							remove_all = 1;
++							continue;
++						} else {
++							/* make sure it will be removed */
++							disks[i].state |= (1<<MD_DISK_FAULTY);
++						}
++					}				
++				}
++				/* update in_sync and copies for the next set of devices */
++				in_sync = copies = nr_of_copies;
++			}
++		}
++		
++		/* Remove unwanted devices from the array */
++		for (de=sra->devs; de; de=de->next) {
++			d = de->disk.raid_disk;
++			if (disks[d].state & (1<< MD_DISK_FAULTY))
++			{
++				sysfs_set_str(sra, de, "state", "faulty");
++				sysfs_set_str(sra, de, "slot", "none");
++				sysfs_set_str(sra, de, "state", "remove");
++			}
++		}
++		
++		if (disks) {
++			free(disks);
++			disks = NULL;
++		}
++		/* ping mdmon */
++		if ((st != NULL) && (st->ss->external)) {
++		    int devnum = fd2devnum(container_fd);
++		    ping_monitor(devnum2devname(devnum));
++		    close(container_fd);
++		}		
++	}
+ 	
+ 	/* ======= set level =========== */
+ 	if (level != UnSet && level != array.level) {
 -- 
 1.6.3.3
 
