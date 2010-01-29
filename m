@@ -1,48 +1,27 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: 2 drives failed, one "active", one with wrong event count
-Date: Fri, 29 Jan 2010 05:17:10 +0100 (CET)
-Message-ID: <alpine.DEB.1.10.1001290502140.15329@uplift.swm.pp.se>
-References: <alpine.DEB.1.10.1001280952060.15329@uplift.swm.pp.se>
+From: Michael Evans <mjevans1983@gmail.com>
+Subject: Re: woes with... mdadm ?
+Date: Thu, 28 Jan 2010 20:58:32 -0800
+Message-ID: <4877c76c1001282058s6931a9e2tbe0da4ef67428680@mail.gmail.com>
+References: <4B5F6C5D.8020202@ultratux.net>
+	 <4877c76c1001262014w6219132ew552b092dab9aba62@mail.gmail.com>
+	 <4B608645.8030102@ultratux.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.1001280952060.15329@uplift.swm.pp.se>
+In-Reply-To: <4B608645.8030102@ultratux.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Maarten <maarten@ultratux.net>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, 28 Jan 2010, Mikael Abrahamsson wrote:
+The point about the CRC being only slightly off is that usually a
+change in the data-set produces a much larger variation.  It could be
+only a single bit or two near the end.
 
-> I have a ubuntu 9.04 system with the default mdadm and kernel (2.6.28).
+The point about stress-testing the CPU/RAM is to validate that those
+are known clean in as close to a high-temp real load environment as
+possible.
 
-I thought this might be a driver issue, so I tried upgrading to 9.10 which 
-contains kernel 2.6.31 and mdadm 2.6.7.1. It seems the sw was unrelated, 
-because now during the night three drives were kicked, so I now have 6 
-drives, 3 "State: clean", 3 are "State: active", 1 of the "active" ones 
-has a different event count. The array shows similar problems, sometimes 
-it will assemble will all 6 drives being (S)pares, sometimes it'll 
-assemble with 5 drives and shows as "inactive" in /proc/mdstat.
-
-After finding 
-<http://www.linuxquestions.org/questions/linux-general-1/raid5-with-mdadm-does-not-ron-or-rebuild-505361/> 
-I tried this:
-
-root@ub:~# cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
-md0 : inactive sdd[0] sdf[7] sdc[4] sdb[2] sdg[6]
-       9767572240 blocks super 1.2
-
-unused devices: <none>
-root@ub:~# cat /sys/block/md0/md/array_state
-inactive
-root@ub:~# echo "clean" > /sys/block/md0/md/array_state
--bash: echo: write error: Invalid argument
-root@ub:~# cat /sys/block/md0/md/array_state
-inactive
-
-Still no go. Anyone who can help me what might be going wrong here, I 
-mean, that a drive is stuck in "active" can't be a very weird event 
-state?
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+That would then point to corruption on the cables or drives.  Which
+you can diagnose more easily individually instead of as part of an
+array.
