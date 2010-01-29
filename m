@@ -1,60 +1,50 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Growing raid 5 to 6; /proc/mdstat reports a strange value?
-Date: Fri, 29 Jan 2010 23:23:34 +1100
-Message-ID: <20100129232334.45a4103c@notabene>
-References: <4877c76c1001241949p20089932saae123a1c2871ac0@mail.gmail.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: 2 drives failed, one "active", one with wrong event count
+Date: Fri, 29 Jan 2010 13:27:39 +0100 (CET)
+Message-ID: <alpine.DEB.1.10.1001291326430.15329@uplift.swm.pp.se>
+References: <alpine.DEB.1.10.1001280952060.15329@uplift.swm.pp.se> <alpine.DEB.1.10.1001290502140.15329@uplift.swm.pp.se> <20100129211719.04595761@notabene> <alpine.DEB.1.10.1001291306170.15329@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4877c76c1001241949p20089932saae123a1c2871ac0@mail.gmail.com>
+In-Reply-To: <alpine.DEB.1.10.1001291306170.15329@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Evans <mjevans1983@gmail.com>
+To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 24 Jan 2010 19:49:31 -0800
-Michael Evans <mjevans1983@gmail.com> wrote:
+On Fri, 29 Jan 2010, Mikael Abrahamsson wrote:
 
-> mdX : active raid5 sdd1[8](S) sdb1[7](S) sdf8[0] sdl8[4] sdk2[5]
-> sdc1[6] sdj6[3] sdi8[1]
->      Y blocks super 1.1 level 5, 128k chunk, algorithm 2 [6/6] [UUUUUU]
-> 
-> # mdadm --grow /dev/mdX --level=6 --raid-devices=8
-> --backup-file=/root/mdX.backupfile
-> 
-> mdX : active raid6 sdd1[8] sdb1[7] sdf8[0] sdl8[4] sdk2[5] sdc1[6]
-> sdj6[3] sdi8[1]
->      Y blocks super 1.1 level 6, 128k chunk, algorithm 18 [8/9] [UUUUUU_U]
->      [>....................]  reshape =  0.0% (33920/484971520)
-> finish=952.6min speed=8480K/sec
-> 
-> !!! mdadm 3.1.1 I wanted an 8 device raid-6;  Why do you show 9?
+> On Fri, 29 Jan 2010, Neil Brown wrote:
+>
+>> 1/ I think you are hitting and mdadm bug in "--assemble --force" that was
+>>   fixed in 2.6.8. (git commit 4e9a6ff778cdc58dc).
+>
+> Thanks, I'll try to upgrade mdadm.
 
-That is weird isn't it.  It is showing that 8 devices are in the array, of
-which 9 are working.  That cannot be right.
-More worrying is that the second last device claim to not be present, which
-doesn't seem right.
+Yes, that solved the problem. Thanks a bunch!
 
+root@ub:~/mdadm-3.1.1# ./mdadm --assemble /dev/md0
+mdadm: /dev/md0 assembled from 5 drives - not enough to start the array 
+while not clean - consider --force.
+root@ub:~/mdadm-3.1.1# cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] 
+[raid4] [raid10]
+md0 : inactive sdd[0](S) sdf[7](S) sde[8](S) sdc[4](S) sdb[2](S) sdg[6](S)
+       11721086688 blocks super 1.2
 
-> 
-> What is it showing me now???
-> 
-> blocks super 1.1 level 6, 128k chunk, algorithm 2 [8/10] [UUUUUUUU]
-> 
+unused devices: <none>
+root@ub:~/mdadm-3.1.1# ./mdadm --stop /dev/md0
+mdadm: stopped /dev/md0
+root@ub:~/mdadm-3.1.1# ./mdadm --assemble --force /dev/md0
+mdadm: /dev/md0 has been started with 5 drives (out of 6).
+root@ub:~/mdadm-3.1.1# cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] 
+[raid4] [raid10]
+md0 : active raid5 sde[8] sdd[0] sdf[7] sdc[4] sdb[2] sdg[6]
+       9767572160 blocks super 1.2 level 5, 64k chunk, algorithm 2 [6/5] [UUUU_U]
+       [>....................]  recovery =  0.2% (5726592/1953514432) finish=468.1min speed=69341K/sec
 
-So now of the 8 devices, 10 are working!!  At least all are present.
+unused devices: <none>
 
-
-> ... Did it actually do what I want but just show me the wrong result
-> with kernel 2.6.32-gentoo-r2
-
-Some simple testing suggests it did do what you want, but reported something
-silly in /proc/mdstat.
-
-I'll see if I can work out what is happening.
-
-Thanks for the report.
-
-NeilBrown
-
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
