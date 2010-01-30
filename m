@@ -1,111 +1,57 @@
-From: Jon Hardcastle <jd_hardcastle@yahoo.com>
-Subject: Re: Why does one get mismatches?
-Date: Sat, 30 Jan 2010 02:39:10 -0800 (PST)
-Message-ID: <446144.76775.qm@web51305.mail.re2.yahoo.com>
-References: <87fx5owjsz.fsf@frosties.localdomain>
-Reply-To: Jon@eHardcastle.com
+From: Giovanni Tessore <giotex@texsoft.it>
+Subject: Re: Read errors on raid5 ignored, array still clean .. then disaster
+ !!
+Date: Sat, 30 Jan 2010 11:55:18 +0100
+Message-ID: <4B641016.9080300@texsoft.it>
+References: <4B5F6C73.30707@texsoft.it>	<20100127074138.GA9607@maude.comedia.it> <20100129214852.00e565c4@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87fx5owjsz.fsf@frosties.localdomain>
+In-Reply-To: <20100129214852.00e565c4@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon@eHardcastle.com, Goswin von Brederlow <goswin-v-b@web.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Here are the lines I added to my drivers/md/md.c , function md_seq_show, 
+to let /proc/mdstat show read errors on devices, if any:
 
---- On Fri, 29/1/10, Goswin von Brederlow <goswin-v-b@web.de> wrote:
+    } else if (rdev->raid_disk < 0)
+        seq_printf(seq, "(S)"); /* spare */
 
-> From: Goswin von Brederlow <goswin-v-b@web.de>
-> Subject: Re: Why does one get mismatches?
-> To: Jon@eHardcastle.com
-> Cc: linux-raid@vger.kernel.org
-> Date: Friday, 29 January, 2010, 23:52
-> Jon Hardcastle <jd_hardcastle@yahoo.com>
-> writes:
->=20
-> > --- On Thu, 28/1/10, Goswin von Brederlow <goswin-v-b@web.de>
-> wrote:
-> >
-> >> From: Goswin von Brederlow <goswin-v-b@web.de>
-> >> Subject: Re: Why does one get mismatches?
-> >> To: linux-raid@vger.kernel.org
-> >> Date: Thursday, 28 January, 2010, 20:24
-> >> "Tirumala Reddy Marri" <tmarri@amcc.com>
-> >> writes:
-> >>=20
-> >> > I just tried and miss-match count is zero.
-> >> Interesting, is XOR engine
-> >> > doing something wrong ? . Then I ran a test
-> where I
-> >> raw-write the file
-> >> > to /dev/md0. Then did the raw-read for the
-> same size.
-> >> In this case XOR
-> >> > matched as expected. Then I failed a drive
-> using
-> >> "mdadm -f /dev/md0
-> >> > /dev/sda". Then I read the same size data
-> again from
-> >> /dev/md0. And
-> >> > checksum matches too.=20
-> >> > What is this mean XOR engine is doing right
-> thing. But
-> >> "chec/repair"
-> >> > test is not functioning properly with
-> XOR-engine ?
-> >> >
-> >> > Or is this something to do with=A0 how the
-> buffers
-> >> are handled ? may they
-> >> > are cached ?
-> >> >
-> >> >
-> >> > -Marri
-> >>=20
-> >> No idea. But if everything works without the XOR
-> engine and
-> >> gives
-> >> mismatches with then I would think there is a
-> software or
-> >> hardware error
-> >> there and not in the cable or disks.
-> >>=20
-> >> MfG
-> >> =A0 =A0 =A0 =A0 Goswin
-> >> --
-> >> To unsubscribe from this list: send the line
-> "unsubscribe
-> >> linux-raid" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at=A0 http://vger.kernel.org/majordomo-info.ht=
-ml
-> >>=20
-> >
-> > i think my RAM is fecked - does that sound like a
-> possible cause? memtest86 gives PAGES of red errors when run
-> but the POST gives nothing and the machine boots.... it has
-> 512MB
-> >
-> > i have some more on order as a speculative..=20
->=20
-> If memtest gives errors you certainly have errors. The
-> reverse isn't
-> allways true.
->=20
-> MfG
-> =A0 =A0 =A0 =A0 Goswin
->=20
++  if (atomic_read(&rdev->read_errors) ||
++      atomic_read(&rdev->corrected_errors) )
++        seq_printf(seq, "(R:%u:%u)",
++            (unsigned int) atomic_read(&rdev->read_errors),
++            (unsigned int) atomic_read(&rdev->corrected_errors));
 
-Might have been a false alarm.. both the new chip and old one in an ass=
-ortment of slots give the errors - upgrade from memtest86 3.3 to 3.5 an=
-d the errors go away.
+        sectors += rdev->sectors;
+    }
 
 
-     =20
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Into md.h i see:
+
+atomic_t  read_errors;   
+/* number of consecutive read errors that we have tried to ignore. */
+atomic_t corrected_errors;
+/* number of corrected read errors, for reporting to userspace and 
+storing in superblock. */
+
+Ok for the second.. but I'm not sure about the meaning of the first 
+one... and seems it's not reported by /sys/block/mdXX/dev-YY .. can it 
+just be ignored?
+
+Sample output:
+
+md0 : active raid5 sdb1[1](R:0:36) sda1[0] sdc1[2]
+      4192768 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+
+Regards
+Giovanni
+
+-- 
+Yours faithfully.
+
+Giovanni Tessore
+
+
