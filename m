@@ -1,49 +1,61 @@
-From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
-Subject: Re: raid10 How do I tell what side of the mirror a disk is on?
-Date: Sat, 30 Jan 2010 01:13:12 +0100
-Message-ID: <1264810392.1880.5.camel@michal-laptop.sawicz.net>
-References: <1264777247.29409.64.camel@thor>
-	 <87k4v0wjx1.fsf@frosties.localdomain>
+From: Ryan Wagoner <rswagoner@gmail.com>
+Subject: Re: Moved drives between machines... now, MIA.
+Date: Fri, 29 Jan 2010 23:23:59 -0500
+Message-ID: <7d86ddb91001292023x5986f9e6j5d9c2e4e62d5be06@mail.gmail.com>
+References: <b54b3e55942c56b2ec1f69d80f54eaea.squirrel@webmail.jots.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-AhbXPIDWu8AhX7LVKFfj"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87k4v0wjx1.fsf@frosties.localdomain>
+In-Reply-To: <b54b3e55942c56b2ec1f69d80f54eaea.squirrel@webmail.jots.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
+To: Ken D'Ambrosio <ken@jots.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Fri, Jan 29, 2010 at 1:52 PM, Ken D'Ambrosio <ken@jots.org> wrote:
+> Okay, so I swapped six drives from one machine to another. =A0I was v=
+ery,
+> very careful to ensure that the drives were plugged in in the
+> corresponding order that they'd been plugged in in the first machine.
+> Now, fdisk shows no partitions in two of my three mirrors. =A0This fi=
+lls me
+> with a distinct lack of warmth and fuzziness. =A0/etc/mdadm/mdadm.con=
+f
+> addresses the two (MIA) mirrors with /dev/sd[abef]1 designators, whic=
+h
+> can, of course, get jumbled in a transition. =A0Any tips on how to go
+> forward would be gratefully appreciated -- I *really* don't want to h=
+ave
+> to go to backups.
+>
+> Thanks!
+>
+> -Ken
+>
+>
+> --
+> This message has been scanned for viruses and
+> dangerous content by MailScanner, and is
+> believed to be clean.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
---=-AhbXPIDWu8AhX7LVKFfj
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+You did make a new mdadm.conf with the correct devices for each array
+right? If not try running and seeing if your arrays come up. If they
+do then copy /tmp/mdadm.conf to /etc/mdadm/mdadm.conf
 
-Dnia 2010-01-30, sob o godzinie 00:50 +0100, Goswin von Brederlow pisze:
-> Does it matter? If one disk fails you know the next disk failure has a
-> 33+% chance of data loss and knowing which disk will be critical
-> doesn't
-> change that.=20
+mdadm --examine --scan --config=3Dpartitions > /tmp/mdadm.conf
+mdadm --assemble --scan --config=3D/tmp/mdadm.conf
 
-For me it was important when I needed to have the array running (root
-fs) with only 2 disks out of 4 (not enough controllers). It would be
-nice to be able to tell which are mirrors, which are striped.
-
---=20
-Cheers
-Micha=C5=82 (Saviq) Sawicz
-
---=-AhbXPIDWu8AhX7LVKFfj
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: To jest =?UTF-8?Q?cz=C4=99=C5=9B=C4=87?=
- =?UTF-8?Q?_wiadomo=C5=9Bci?= podpisana cyfrowo
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEABECAAYFAktjeZgACgkQzQlUjpZYlbdgXACgo7aN0Z7LLYswPVpV8UtmW/FO
-M5EAoMig9NZQ7BcZ/4oDNZSKsPcS0o7u
-=6gR4
------END PGP SIGNATURE-----
-
---=-AhbXPIDWu8AhX7LVKFfj--
-
+Ryan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
