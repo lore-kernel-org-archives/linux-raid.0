@@ -1,43 +1,42 @@
-From: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>
-Subject: 2.6.33-rc6 regression: mdadm Unknown cmd 800c0910 (RAID_VERSION)
-Date: Sat, 30 Jan 2010 22:53:55 +0200
-Message-ID: <20100130205353.GA3168@redhat.com>
+From: Asdo <asdo@shiftmail.org>
+Subject: Re: feature suggestion to handle read errors during re-sync of raid5
+Date: Sat, 30 Jan 2010 22:09:41 +0100
+Message-ID: <4B64A015.6080904@shiftmail.org>
+References: <alpine.DEB.1.10.1001301331560.15329@uplift.swm.pp.se>
+ <4B6471A1.2070407@texsoft.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-reply-to: <4B6471A1.2070407@texsoft.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, neilb@suse.de, linux-raid@vger.kernel.org, dm-devel@redhat.com, arnd@arndb.de, maan@systemlinux.org
+To: Giovanni Tessore <giotex@texsoft.it>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Under 2.6.33-rcX (at least rc5 and rc6, didn't check earlier versions),
-I started seeing these messages in dmesg (I do not see these messages on 2.6.32):
+Giovanni Tessore wrote:
+> I supposed that modern hard drives' firmware would recover and 
+> relocate dying sectors by its own (using smart and other techs), and 
+> that the OS gets read errors only when the drive is actually in very 
+> bad shape and can't cope with the problem, and it's time to trash it.
+The disk must find the dying sector somehow.
 
-[   16.528951] ioctl32(mdadm:2243): Unknown cmd fd(3) cmd(800c0910){t:09;sz:12} arg(ffb7f9c4) on /dev/sda9
-[   16.529570] ioctl32(mdadm:2243): Unknown cmd fd(3) cmd(800c0910){t:09;sz:12} arg(ffb7f9e4) on /dev/sda9
-[   16.553175] ioctl32(mdadm:2243): Unknown cmd fd(3) cmd(800c0910){t:09;sz:12} arg(ffb7f9c4) on /dev/sda7
-[   16.553846] ioctl32(mdadm:2243): Unknown cmd fd(3) cmd(800c0910){t:09;sz:12} arg(ffb7f9e4) on /dev/sda7
-[   16.577349] ioctl32(mdadm:2243): Unknown cmd fd(3) cmd(800c0910){t:09;sz:12} arg(ffb7f9c4) on /dev/sda6
-[   16.577954] ioctl32(mdadm:2243): Unknown cmd fd(3) cmd(800c0910){t:09;sz:12} arg(ffb7f9e4) on /dev/sda6
-[   16.684570] ioctl32(mdadm:2243): Unknown cmd fd(3) cmd(800c0910){t:09;sz:12} arg(ffb7f9c4) on /dev/sda5
-[   16.695916] ioctl32(mdadm:2243): Unknown cmd fd(3) cmd(800c0910){t:09;sz:12} arg(ffb7f9e4) on /dev/sda5
-[   16.702729] ioctl32(mdadm:2243): Unknown cmd fd(3) cmd(800c0910){t:09;sz:12} arg(ffb7f9c4) on /dev/sda2
-[   16.702743] ioctl32(mdadm:2243): Unknown cmd fd(3) cmd(800c0910){t:09;sz:12} arg(ffb7f9e4) on /dev/sda2
-[   16.747168] ioctl32(mdadm:2243): Unknown cmd fd(3) cmd(800c0910){t:09;sz:12} arg(ffb7f9c4) on /dev/sda1
-[   16.747786] ioctl32(mdadm:2243): Unknown cmd fd(3) cmd(800c0910){t:09;sz:12} arg(ffb7f9e4) on /dev/sda1
+It will certainly find it if you scrub the array often, and at that time 
+relocate it (by itself or by MD means). If the disk is very smart (I'm 
+not sure how many disks really do this) it can relocate during read, if 
+it finds that the sector has a partial read error which is still 
+correctable with the internal reed-solomon algorithm. Otherwise it will 
+report the read error to Linux and MD will regenerate parity and write 
+over the sector. At that point the sector will be relocated.
 
-I am running 32 bit userspace on 64 bit kernel.
+I'm not sure SMART test performs a surface scan so I would rely on MD 
+scrubs for that.
 
-I do not observe any ill effects, possibly because I do not really use raid.
+> Having the OS recover and rewrite the sectors makes me feel back in 
+> the past, when under DOS we used PCTools and other utilities to do 
+> this recovery stuff on ST-506 drives .... and this works well on raid, 
+> but in sinlge disk configuration, shouldn't these be data loss?
+The OS rewrites the sector ONLY if the disk is in a raid setup. 
+Otherwise how could it guess the data that should be in that sector, if 
+the disk itself cannot?
 
-The command in question seems to be RAID_VERSION.
-
-I have verified that reverting
-aa98aa31987ad9831711ae71ea2270228ab62532
-makes the errors go away.
-
-Didn't yet bother opening a bugzilla for this, let me know if I should.
-
--- 
-MST
