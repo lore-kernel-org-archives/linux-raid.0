@@ -1,82 +1,43 @@
-From: Thomas Backlund <tmb@mandriva.org>
-Subject: Re: [BUGFIX] [PATCH] freeze_bdev: don't deactivate successfully frozen
- MS_RDONLY sb
-Date: Sat, 30 Jan 2010 20:44:57 +0200
-Message-ID: <4B647E29.7060606@mandriva.org>
-References: <d2deb3241001160158r4baed1e1t7e8f6642de018b4c@mail.gmail.com> <20100122160740.6c16c22d.akpm@linux-foundation.org> <20100128134205.352044bd@notabene> <4B612F89.7020503@ce.jp.nec.com> <20100128182528.GA29926@infradead.org> <4B623236.90003@ce.jp.nec.com>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: feature suggestion to handle read errors during re-sync of raid5
+Date: Sat, 30 Jan 2010 19:59:16 +0100
+Message-ID: <874om3l8qj.fsf@frosties.localdomain>
+References: <alpine.DEB.1.10.1001301331560.15329@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754200Ab0A3SpG@vger.kernel.org>
-In-Reply-To: <4B623236.90003@ce.jp.nec.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "tmb@mandriva.org" <tmb@mandriva.org>, Fran?ois Figarola <francois.figarola@i-consult.fr>, device-mapper development <dm-devel@redhat.com>, Neil Brown <neilb@suse.de>, Andrew Morton <akpm@linux-foundation.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, "stable@kernel.org" <stable@kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.1001301331560.15329@uplift.swm.pp.se> (Mikael
+	Abrahamsson's message of "Sat, 30 Jan 2010 13:37:56 +0100 (CET)")
+Sender: linux-raid-owner@vger.kernel.org
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-29.01.2010 02:56, Jun'ichi Nomura skrev:
-> Thanks Thomas and Christoph for testing and review.
-> I removed 'smp_wmb()' before up_write from the previous patch,
-> since up_write() should have necessary ordering constraints.
-> (I.e. the change of s_frozen is visible to others after up_write)
-> I'm quite sure the change is harmless but if you are uncomfortable
-> with Tested-by/Reviewed-by on the modified patch, please remove them.
->
+Mikael Abrahamsson <swmike@swm.pp.se> writes:
 
-I've just verified that this patch works as intended on both 2.6.32 and 
-2.6.33-rc6, so for me it's still OK.
+> So, a couple of times I've been having the problem of something going
+> wrong on raid5, drive being kicked, thus has a lower event number,
+> re-add, during the sync a single block on one of the other drives has
+> a read error (surprisingly common on WD20EADS 2TB drives), resync
+> stops, I have to take down the array, ddrescue the whole read error
+> drive to another drive, I lose that block, start up the array
+> degraded, and then add the drive again.
 >
-> If MS_RDONLY, freeze_bdev should just up_write(s_umount) instead of
-> deactivate_locked_super().
-> Also, keep sb->s_frozen consistent so that remount can check the frozen state.
+> It would be nice if there was an option that when re-sync:ing a drive
+> which earlier belonged to the array, if there is a read error on
+> another drive, just use the parity from the drive being added (in my
+> case it's highly likely it'll be valid, and if it's not, then I
+> haven't lost anything anyway, because the read error block is gone
+> anyway).
 >
-> Otherwise a crash reported here can happen:
-> http://lkml.org/lkml/2010/1/16/37
-> http://lkml.org/lkml/2010/1/28/53
->
->
-> This patch should be applied for 2.6.32 stable series, too.
->
-> Reviewed-by: Christoph Hellwig<hch@lst.de>
-> Tested-by: Thomas Backlund<tmb@mandriva.org>
-> Signed-off-by: Jun'ichi Nomura<j-nomura@ce.jp.nec.com>
-> Cc: stable@kernel.org
->
-> diff --git a/fs/block_dev.c b/fs/block_dev.c
-> index 73d6a73..d11d028 100644
-> --- a/fs/block_dev.c
-> +++ b/fs/block_dev.c
-> @@ -246,7 +246,8 @@ struct super_block *freeze_bdev(struct block_device *bdev)
->   	if (!sb)
->   		goto out;
->   	if (sb->s_flags&  MS_RDONLY) {
-> -		deactivate_locked_super(sb);
-> +		sb->s_frozen = SB_FREEZE_TRANS;
-> +		up_write(&sb->s_umount);
->   		mutex_unlock(&bdev->bd_fsfreeze_mutex);
->   		return sb;
->   	}
-> @@ -307,7 +308,7 @@ int thaw_bdev(struct block_device *bdev, struct super_block *sb)
->   	BUG_ON(sb->s_bdev != bdev);
->   	down_write(&sb->s_umount);
->   	if (sb->s_flags&  MS_RDONLY)
-> -		goto out_deactivate;
-> +		goto out_unfrozen;
->
->   	if (sb->s_op->unfreeze_fs) {
->   		error = sb->s_op->unfreeze_fs(sb);
-> @@ -321,11 +322,11 @@ int thaw_bdev(struct block_device *bdev, struct super_block *sb)
->   		}
->   	}
->
-> +out_unfrozen:
->   	sb->s_frozen = SB_UNFROZEN;
->   	smp_wmb();
->   	wake_up(&sb->s_wait_unfrozen);
->
-> -out_deactivate:
->   	if (sb)
->   		deactivate_locked_super(sb);
->   out_unlock:
-> .
->
+> Does this make sense? It would of course be nice if the md layer could
+> see the difference between sata timeouts and UNC errors, because UNC
+> really means something is wrong, whereas sata timeouts might be
+> transient problem (?).
+
+Ever looked into adding bitmaps? That way it only syncs the parts where
+something changed, is done within minutes and unlikely do get another
+error.
+
+MfG
+        Goswin
