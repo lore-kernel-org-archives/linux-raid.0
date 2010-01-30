@@ -1,29 +1,53 @@
-From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: Moved drives between machines... now, MIA.
-Date: Fri, 29 Jan 2010 23:27:12 -0800
-Message-ID: <4877c76c1001292327i68b3044at245c4f19913475ff@mail.gmail.com>
-References: <b54b3e55942c56b2ec1f69d80f54eaea.squirrel@webmail.jots.org>
-	 <7d86ddb91001292023x5986f9e6j5d9c2e4e62d5be06@mail.gmail.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Read errors on raid5 ignored, array still clean .. then
+	disaster !!
+Date: Sat, 30 Jan 2010 08:54:37 +0100
+Message-ID: <20100130075436.GA15471@maude.comedia.it>
+References: <4B5F6C73.30707@texsoft.it> <20100127074138.GA9607@maude.comedia.it> <20100129214852.00e565c4@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7d86ddb91001292023x5986f9e6j5d9c2e4e62d5be06@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20100129214852.00e565c4@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ryan Wagoner <rswagoner@gmail.com>
-Cc: Ken D'Ambrosio <ken@jots.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-1) look at your syslog / dmesg to see what auto-detection and initial
-tries by your configuration said.
-2) You probably want something like I keep as a backup in my
-initrd/initramfs images:
+On Fri, Jan 29, 2010 at 09:48:52PM +1100, Neil Brown wrote:
+>On Wed, 27 Jan 2010 08:41:38 +0100
+>Luca Berra <bluca@comedia.it> wrote:
+>
+>> On Tue, Jan 26, 2010 at 11:28:03PM +0100, Giovanni Tessore wrote:
+>> > Is this some kind of bug?  
+>> No
+>
+>
+>I'm not sure I agree.
+>If a device is generating lots of read errors, we really should do something
+>proactive about that.
+>If there is a hot spare, then building onto that while keeping the original
+>active (yes, still on the todo list) would be a good thing to do.
+>
+>v1.x metadata allows the number of corrected errors to be recorded across
+>restarts so a real long-term value can be used as a trigger.
+uhm, should we use an absolute value here, or should we consider the
+ratio of read errors over time. Or both?
+the former would indicate a disk that is degrading slowly over time
+the latter migh be a symptom of a disk that will die very soon.
+we also need to control the threshold on a per device base via sysfs
+(eg mdX/md/dev-FOO/maximum_tolerated_read_errors)
 
-/sbin/mdadm --examine --scan /dev/[sh]d* /dev/mapper/* >
-/etc/mdadm.conf.OR.SOME.FILE
-/sbin/mdadm --assemble --scan --no-degraded
---config=/etc/mdadm.conf.OR.SOME.FILE
+>So there certainly are useful improvements that could be made here.
+I don't deny that, but i would not define as bugs features that are not
+yet designed/implemented.
 
-If you drop the .OR.SOME.FILE you don't need to specify a non-default
-config.  You also don't need to specify any config if you explicitly
-name your devices: I'm asking mdadm to examine every block device (and
-partition on such) that I think even possibly could be a raid member.
+L.
+
+
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
