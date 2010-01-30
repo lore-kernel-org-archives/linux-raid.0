@@ -1,31 +1,44 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: feature suggestion to handle read errors during re-sync of
- raid5
-Date: Sat, 30 Jan 2010 23:25:16 +0100 (CET)
-Message-ID: <alpine.DEB.1.10.1001302323050.15329@uplift.swm.pp.se>
-References: <alpine.DEB.1.10.1001301331560.15329@uplift.swm.pp.se> <4B6471A1.2070407@texsoft.it> <4B6482BD.6090102@anonymous.org.uk> <alpine.DEB.1.10.1001302228540.15329@uplift.swm.pp.se> <4B64ACD9.7020207@shiftmail.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: compat_ioctl: ignore RAID_VERSION ioctl
+Date: Sat, 30 Jan 2010 23:02:10 +0100
+Message-ID: <201001302302.10574.arnd@arndb.de>
+References: <20100130205353.GA3168@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B64ACD9.7020207@shiftmail.org>
+In-Reply-To: <20100130205353.GA3168@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Michael S. Tsirkin" <m.s.tsirkin@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, neilb@suse.de, linux-raid@vger.kernel.org, dm-devel@redhat.com, maan@systemlinux.org
 List-Id: linux-raid.ids
 
-On Sat, 30 Jan 2010, Asdo wrote:
+md ioctls are now handled by the md driver itself, but mdadm
+may call RAID_VERSION on other devices as well. Mark the command
+as IGNORE_IOCTL so this fails silently rather than printing
+an annoying message.
 
-> Anyone knows if the error rate is so high on those drives too?
-> Do they also use 4k sectors? Mikael, how do you find this out?
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
 
-http://www.anandtech.com/storage/showdoc.aspx?i=3691
+On Saturday 30 January 2010, Michael S. Tsirkin wrote:
+> Under 2.6.33-rcX (at least rc5 and rc6, didn't check earlier versions),
+> I started seeing these messages in dmesg (I do not see these messages on 2.6.32):
+> 
+> [   16.528951] ioctl32(mdadm:2243): Unknown cmd fd(3) cmd(800c0910){t:09;sz:12} arg(ffb7f9c4) on /dev/sda9
 
-Guess you have to look at the data sheet.
+Does this help?
 
-> Is the 4k sectors a RMW emulation as written in
->   http://lwn.net/Articles/322777/
-> or Linux sees them really as 4k block devices?
+--- a/fs/compat_ioctl.c
++++ b/fs/compat_ioctl.c
+@@ -1038,6 +1038,8 @@ COMPATIBLE_IOCTL(FIOQSIZE)
+ #ifdef CONFIG_BLOCK
+ /* loop */
+ IGNORE_IOCTL(LOOP_CLR_FD)
++/* md calls this on random blockdevs */
++IGNORE_IOCTL(RAID_VERSION)
+ /* SG stuff */
+ COMPATIBLE_IOCTL(SG_SET_TIMEOUT)
+ COMPATIBLE_IOCTL(SG_GET_TIMEOUT)
 
-I think you can choose (jumper). Default is 512b block emulation.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
