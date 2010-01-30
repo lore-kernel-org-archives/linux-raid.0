@@ -1,57 +1,43 @@
 From: Giovanni Tessore <giotex@texsoft.it>
-Subject: Re: feature suggestion to handle read errors during re-sync of raid5
-Date: Sat, 30 Jan 2010 18:51:29 +0100
-Message-ID: <4B6471A1.2070407@texsoft.it>
-References: <alpine.DEB.1.10.1001301331560.15329@uplift.swm.pp.se>
+Subject: Re: Read errors on raid5 ignored, array still clean .. then disaster
+ !!
+Date: Sat, 30 Jan 2010 19:44:30 +0100
+Message-ID: <4B647E0E.6050609@texsoft.it>
+References: <4B5F6C73.30707@texsoft.it>	<20100127074138.GA9607@maude.comedia.it> <20100129214852.00e565c4@notabene>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.1001301331560.15329@uplift.swm.pp.se>
+In-Reply-To: <20100129214852.00e565c4@notabene>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Mikael Abrahamsson wrote:
->
-> So, a couple of times I've been having the problem of something going 
-> wrong on raid5, drive being kicked, thus has a lower event number, 
-> re-add, during the sync a single block on one of the other drives has 
-> a read error (surprisingly common on WD20EADS 2TB drives), resync 
-> stops, I have to take down the array, ddrescue the whole read error 
-> drive to another drive, I lose that block, start up the array 
-> degraded, and then add the drive again.
-> It would be nice if there was an option that when re-sync:ing a drive 
-> which earlier belonged to the array, if there is a read error on 
-> another drive, just use the parity from the drive being added (in my 
-> case it's highly likely it'll be valid, and if it's not, then I 
-> haven't lost anything anyway, because the read error block is gone 
-> anyway).
 
-I had similar problem recently and I'm debating on another thread on 
-read errors too.
-I think that your proposal can be useful to recover from panic 
-situation, and surely would have helped me to recover from disaster: my 
-failed drive was not 100% dead, and if I could use it to correct read 
-errors from the other disk, I would save lot of time, pain and angriness.
-But also I think some work must be done on read errors policy for raid, 
-to avoid these situations to present, where possible.
+>>> Is this some kind of bug?  
+>>>       
+>> No
+>>     
+> I'm not sure I agree.
+>   
 
-Btw, I've a doubt:
-You say that these errors are common on these drives.
-In another post I read that 'with modern drives it is possible to have 
-some failed sector'.
+Hm funny ... I just read now from md's man:
 
-I supposed that modern hard drives' firmware would recover and relocate 
-dying sectors by its own (using smart and other techs), and that the OS 
-gets read errors only when the drive is actually in very bad shape and 
-can't cope with the problem, and it's time to trash it. Having the OS 
-recover and rewrite the sectors makes me feel back in the past, when 
-under DOS we used PCTools and other utilities to do this recovery stuff 
-on ST-506 drives .... and this works well on raid, but in sinlge disk 
-configuration, shouldn't these be data loss?
+"In  kernels  prior to about 2.6.15, a read error would cause the same 
+effect as a write error.  In later kernels, a read-error will instead 
+cause md to attempt a recovery by overwriting the bad block. .... "
 
-I'm confused... how much are modern disks reliable?
+So things have changed since 2.6.15 ... I was not so wrong to expect 
+"the old behaviour" and to be disappointed.
+But something important was missing during this change imho:
+1) let the old behaviour be the default: add 
+/sys/block/mdXX/max_correctale_read_errors, with default to 0.
+2) let the new behaviour be the default, but update mdadm and 
+/proc/mdstat to report read error events.
+
+I think the situation is now quite clear.
+Thanks
 
 -- 
 Cordiali saluti.
