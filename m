@@ -1,57 +1,56 @@
-From: Giovanni Tessore <giotex@texsoft.it>
-Subject: Re: Read errors on raid5 ignored, array still clean .. then disaster
- !!
-Date: Sat, 30 Jan 2010 11:55:18 +0100
-Message-ID: <4B641016.9080300@texsoft.it>
-References: <4B5F6C73.30707@texsoft.it>	<20100127074138.GA9607@maude.comedia.it> <20100129214852.00e565c4@notabene>
+From: Robin Hill <robin@robinhill.me.uk>
+Subject: Re: raid10 How do I tell what side of the mirror a disk is on?
+Date: Sat, 30 Jan 2010 11:01:09 +0000
+Message-ID: <20100130110109.GA14000@cthulhu.home.robinhill.me.uk>
+References: <1264777247.29409.64.camel@thor>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="UlVJffcvxoiEqYs2"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100129214852.00e565c4@notabene>
+Content-Disposition: inline
+In-Reply-To: <1264777247.29409.64.camel@thor>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Here are the lines I added to my drivers/md/md.c , function md_seq_show, 
-to let /proc/mdstat show read errors on devices, if any:
 
-    } else if (rdev->raid_disk < 0)
-        seq_printf(seq, "(S)"); /* spare */
+--UlVJffcvxoiEqYs2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-+  if (atomic_read(&rdev->read_errors) ||
-+      atomic_read(&rdev->corrected_errors) )
-+        seq_printf(seq, "(R:%u:%u)",
-+            (unsigned int) atomic_read(&rdev->read_errors),
-+            (unsigned int) atomic_read(&rdev->corrected_errors));
+On Fri Jan 29, 2010 at 10:00:47AM -0500, Rick Bragg wrote:
 
-        sectors += rdev->sectors;
-    }
+> Another puzzle is with raid10, there are 2 used in a stripe, then that
+> stripe is mirrored with the other 2.  My question is how can I tell
+> "what 2 disks can fail?"  In other words, how can I tell for example if
+> sda and b are stiped? and that c and d are a mirror of a and b?  How can
+> I see what is happening with that?  Is there a way to tell? =20
+>=20
+Reading the RAID10 documentation (man md, or check Wikipedia), with
+four disks the adjacent disks should always contain the same data.  So
+for sda, sdb, sdc, sdd (in that order in the array), you can lose one of
+sda/sdb and one of sdc/sdd.  This holds for any layout (near, far or
+offset) with the default 2 copies.
 
+Cheers,
+    Robin
+--=20
+     ___       =20
+    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
+   / / )      | Little Jim says ....                            |
+  // !!       |      "He fallen in de water !!"                 |
 
-Into md.h i see:
+--UlVJffcvxoiEqYs2
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-atomic_t  read_errors;   
-/* number of consecutive read errors that we have tried to ignore. */
-atomic_t corrected_errors;
-/* number of corrected read errors, for reporting to userspace and 
-storing in superblock. */
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
 
-Ok for the second.. but I'm not sure about the meaning of the first 
-one... and seems it's not reported by /sys/block/mdXX/dev-YY .. can it 
-just be ignored?
+iEYEARECAAYFAktkEXQACgkQShxCyD40xBKbYQCfSBmQmowHPXKo7u/EjEHFSWVI
+AqUAn0wLdM1WBMkMKZQ4KH1HvseY6fVZ
+=+Im/
+-----END PGP SIGNATURE-----
 
-Sample output:
-
-md0 : active raid5 sdb1[1](R:0:36) sda1[0] sdc1[2]
-      4192768 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
-
-Regards
-Giovanni
-
--- 
-Yours faithfully.
-
-Giovanni Tessore
-
-
+--UlVJffcvxoiEqYs2--
