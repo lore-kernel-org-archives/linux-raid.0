@@ -1,79 +1,64 @@
 From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: Growing raid 5 to 6; /proc/mdstat reports a strange value?
-Date: Fri, 29 Jan 2010 23:07:51 -0800
-Message-ID: <4877c76c1001292307u6432d638w810322ba1da3a379@mail.gmail.com>
-References: <4877c76c1001241949p20089932saae123a1c2871ac0@mail.gmail.com>
-	 <20100129232334.45a4103c@notabene>
+Subject: Re: RAID5 on broken RocketRaid 1640 - data format?
+Date: Fri, 29 Jan 2010 23:15:47 -0800
+Message-ID: <4877c76c1001292315y16b4a8eay8e73a9d35727506d@mail.gmail.com>
+References: <73e903671001291155g761f2dc8rb6e02541525929ba@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100129232334.45a4103c@notabene>
+In-Reply-To: <73e903671001291155g761f2dc8rb6e02541525929ba@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Jan 29, 2010 at 4:23 AM, Neil Brown <neilb@suse.de> wrote:
-> On Sun, 24 Jan 2010 19:49:31 -0800
-> Michael Evans <mjevans1983@gmail.com> wrote:
+On Fri, Jan 29, 2010 at 11:55 AM, Kristleifur Da=F0ason
+<kristleifur@gmail.com> wrote:
+> Hi,
 >
->> mdX : active raid5 sdd1[8](S) sdb1[7](S) sdf8[0] sdl8[4] sdk2[5]
->> sdc1[6] sdj6[3] sdi8[1]
->> =A0 =A0 =A0Y blocks super 1.1 level 5, 128k chunk, algorithm 2 [6/6]=
- [UUUUUU]
->>
->> # mdadm --grow /dev/mdX --level=3D6 --raid-devices=3D8
->> --backup-file=3D/root/mdX.backupfile
->>
->> mdX : active raid6 sdd1[8] sdb1[7] sdf8[0] sdl8[4] sdk2[5] sdc1[6]
->> sdj6[3] sdi8[1]
->> =A0 =A0 =A0Y blocks super 1.1 level 6, 128k chunk, algorithm 18 [8/9=
-] [UUUUUU_U]
->> =A0 =A0 =A0[>....................] =A0reshape =3D =A00.0% (33920/484=
-971520)
->> finish=3D952.6min speed=3D8480K/sec
->>
->> !!! mdadm 3.1.1 I wanted an 8 device raid-6; =A0Why do you show 9?
+> A good pal of mine once had a 4x400GB RAID5 array running on a
+> RocketRaid 1640 controller. The controller broke, and due to
+> complexity and his understandable lack of RAID expertise, the drives
+> are sitting in a drawer. I want to try to help.
 >
-> That is weird isn't it. =A0It is showing that 8 devices are in the ar=
-ray, of
-> which 9 are working. =A0That cannot be right.
-> More worrying is that the second last device claim to not be present,=
- which
-> doesn't seem right.
+> Do you excellent list dwellers know what data format the 1640 uses on
+> the disks? Is there any Linux RAID tool that can work with the data
+> off the disks?
 >
+> In case it's relevant, the system was running Windows, and there was =
+a
+> single NTFS filesystem over the array. I'm pretty sure the array was
+> created on the BIOS side.
 >
->>
->> What is it showing me now???
->>
->> blocks super 1.1 level 6, 128k chunk, algorithm 2 [8/10] [UUUUUUUU]
->>
->
-> So now of the 8 devices, 10 are working!! =A0At least all are present=
-=2E
->
->
->> ... Did it actually do what I want but just show me the wrong result
->> with kernel 2.6.32-gentoo-r2
->
-> Some simple testing suggests it did do what you want, but reported so=
-mething
-> silly in /proc/mdstat.
->
-> I'll see if I can work out what is happening.
->
-> Thanks for the report.
->
-> NeilBrown
->
+> Many thanks!
+> -- Kristleifur
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
 >
 
-As a follow-up:
-* Looking at the device via mdadm --detail /dev/mdX (while still
-invalid in /proc/mdstat) showed the correct information.
-* When I stopped and re-started the array the information in
-/proc/mdstat was valid.
+Load the drives in to a computer as spare drives, DO NOT WRITE TO THEM
+(make sure your OS doesn't try to automount either).
+
+Try mdadm --examine on the raw devices and any partitions you can see.
+
+If mdadm recognizes the meta-data format there is a very good chance
+the array can be brought online, try to do that in read-only mode
+(read the mdadm manual).
+
+Examine the result, it may contain partitions or a filesystem that can
+be mounted via something like ntfs-3g.  If you get that far I
+recommend running a CHECK on the array (Before making it read/write)
+and validating that there are no errors.  If you get errors you /may/
+want to make a backup of the entire device.
+
+I know that old drives from a 4-port hardware raid card I used one
+time kept showing meta-data (in the syslog) unknown/not recognized,
+but I don't believe it was a highpoint 1640.  There have also been
+improvements since then.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
