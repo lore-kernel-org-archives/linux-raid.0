@@ -1,64 +1,63 @@
 From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: RAID5 on broken RocketRaid 1640 - data format?
-Date: Fri, 29 Jan 2010 23:15:47 -0800
-Message-ID: <4877c76c1001292315y16b4a8eay8e73a9d35727506d@mail.gmail.com>
-References: <73e903671001291155g761f2dc8rb6e02541525929ba@mail.gmail.com>
+Subject: Re: [mdadm PATCH 0/2] Improvement: new logging library for
+	mdadm/mdmon
+Date: Fri, 29 Jan 2010 23:19:56 -0800
+Message-ID: <4877c76c1001292319s526ed6e4l1ff66509286a759c@mail.gmail.com>
+References: <20100128155922.32091.12709.stgit@awojcik-linux>
+	 <20100129205242.62e4049d@notabene>
+	 <1264781188.2788.99.camel@awojcik-linux> <4B635FE7.4040908@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <73e903671001291155g761f2dc8rb6e02541525929ba@mail.gmail.com>
+In-Reply-To: <4B635FE7.4040908@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "Wojcik, Artur" <artur.wojcik@intel.com>, Neil Brown <neilb@suse.de>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Jan 29, 2010 at 11:55 AM, Kristleifur Da=F0ason
-<kristleifur@gmail.com> wrote:
-> Hi,
+On Fri, Jan 29, 2010 at 2:23 PM, Dan Williams <dan.j.williams@intel.com=
+> wrote:
+> Wojcik, Artur wrote:
+>>
+>> On Fri, 2010-01-29 at 09:52 +0000, Neil Brown wrote:
+>>>
+>>> I'd probably need a lot of convincing to add something like this to
+>>> mdadm.
+>>>
+>>
+>> I did not expect this patch to be accepted without convincing you or=
+ at
+>> least without a lot of explanations :). What interest you the most?
+>>
+>> The reason for this improvement/patch is:
+>>
+>> 1) to unify the way mdadm and mdmon log messages,
 >
-> A good pal of mine once had a 4x400GB RAID5 array running on a
-> RocketRaid 1640 controller. The controller broke, and due to
-> complexity and his understandable lack of RAID expertise, the drives
-> are sitting in a drawer. I want to try to help.
+> Unification implies code reduction, this is currently just code movem=
+ent.
 >
-> Do you excellent list dwellers know what data format the 1640 uses on
-> the disks? Is there any Linux RAID tool that can work with the data
-> off the disks?
+>> 2) to have logs from mdadm and mdmon applications at the same time
+>> 3) to be able to capture log messages when system is booting, 4) to
+>> simplify the source code.
 >
-> In case it's relevant, the system was running Windows, and there was =
-a
-> single NTFS filesystem over the array. I'm pretty sure the array was
-> created on the BIOS side.
->
-> Many thanks!
-> -- Kristleifur
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+> The only one that would be interesting from a debug perspective is 3,=
+ but
+> syslog is not available in the initramfs and I currently do not see h=
+ow it
+> would be much better than just redirecting the console to the serial =
+port
+> and logging it there. =A0The dprintf() calls in mdmon are sometimes u=
+seful,
+> but I am skeptical of needing those on all the time.
 >
 
-Load the drives in to a computer as spare drives, DO NOT WRITE TO THEM
-(make sure your OS doesn't try to automount either).
+3) If you're worried about the kernel messages look in to netconsole.
 
-Try mdadm --examine on the raw devices and any partitions you can see.
-
-If mdadm recognizes the meta-data format there is a very good chance
-the array can be brought online, try to do that in read-only mode
-(read the mdadm manual).
-
-Examine the result, it may contain partitions or a filesystem that can
-be mounted via something like ntfs-3g.  If you get that far I
-recommend running a CHECK on the array (Before making it read/write)
-and validating that there are no errors.  If you get errors you /may/
-want to make a backup of the entire device.
-
-I know that old drives from a 4-port hardware raid card I used one
-time kept showing meta-data (in the syslog) unknown/not recognized,
-but I don't believe it was a highpoint 1640.  There have also been
-improvements since then.
+If you're worried about where system logs go after startup, isn't that
+what the various syslog daemons are for (in fact on my 24/7 linux
+system my syslog /captures/ netconsole logs from any other machine I
+care to set up sending from)?
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
