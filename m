@@ -1,33 +1,56 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: feature suggestion to handle read errors during re-sync of raid5
-Date: Sat, 30 Jan 2010 13:37:56 +0100 (CET)
-Message-ID: <alpine.DEB.1.10.1001301331560.15329@uplift.swm.pp.se>
+From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
+Subject: Re: raid10 How do I tell what side of the mirror a disk is on?
+Date: Sat, 30 Jan 2010 15:09:29 +0100
+Message-ID: <1264860569.1880.10.camel@michal-laptop.sawicz.net>
+References: <1264777247.29409.64.camel@thor>
+	 <87k4v0wjx1.fsf@frosties.localdomain>
+	 <1264810392.1880.5.camel@michal-laptop.sawicz.net>
+	 <4877c76c1001292322u2f01d47auaa6041cd701e4176@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-TEr+D8gif86OMQmQd82y"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4877c76c1001292322u2f01d47auaa6041cd701e4176@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Michael Evans <mjevans1983@gmail.com>
+Cc: Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
-So, a couple of times I've been having the problem of something going 
-wrong on raid5, drive being kicked, thus has a lower event number, re-add, 
-during the sync a single block on one of the other drives has a read error 
-(surprisingly common on WD20EADS 2TB drives), resync stops, I have to take 
-down the array, ddrescue the whole read error drive to another drive, I 
-lose that block, start up the array degraded, and then add the drive 
-again.
+--=-TEr+D8gif86OMQmQd82y
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-It would be nice if there was an option that when re-sync:ing a drive 
-which earlier belonged to the array, if there is a read error on another 
-drive, just use the parity from the drive being added (in my case it's 
-highly likely it'll be valid, and if it's not, then I haven't lost 
-anything anyway, because the read error block is gone anyway).
+Dnia 2010-01-29, pi=C4=85 o godzinie 23:22 -0800, Michael Evans pisze:
+> As was noted in another reply recently; write down drive serial
+> numbers.  Drive serial numbers can be obtained online via tools like
+> smartctl or hdparm (read their manuals, they're useful tools).
 
-Does this make sense? It would of course be nice if the md layer could see 
-the difference between sata timeouts and UNC errors, because UNC really 
-means something is wrong, whereas sata timeouts might be transient 
-problem (?).
+That I knew already, and I knew which disks are which, but there was no
+way to tell which of them are mirrored, which are striped.
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+> In your case you have a 50% chance of finding a working combination
+> the first time, and swapping only one cable from a disk that is
+> connected to one that's not would resolve the issue.=20
+
+Yes, of course - I even got it the first time, but still - it would be
+nice to be sure from /proc/mdstat or mdadm -E.
+
+--=20
+Cheers
+Micha=C5=82 (Saviq) Sawicz
+
+--=-TEr+D8gif86OMQmQd82y
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: To jest =?UTF-8?Q?cz=C4=99=C5=9B=C4=87?=
+ =?UTF-8?Q?_wiadomo=C5=9Bci?= podpisana cyfrowo
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
+
+iEYEABECAAYFAktkPZkACgkQzQlUjpZYlbd5/wCcCOsDEE4woT0QUVvS8+jdqKvX
+bvcAmQH6I8exogJayATHwagJLM+D0vtl
+=RBkS
+-----END PGP SIGNATURE-----
+
+--=-TEr+D8gif86OMQmQd82y--
+
