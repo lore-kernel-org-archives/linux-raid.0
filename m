@@ -1,80 +1,49 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Why does one get mismatches?
-Date: Sat, 30 Jan 2010 00:52:28 +0100
-Message-ID: <87fx5owjsz.fsf@frosties.localdomain>
-References: <166572.83607.qm@web51301.mail.re2.yahoo.com>
+From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
+Subject: Re: raid10 How do I tell what side of the mirror a disk is on?
+Date: Sat, 30 Jan 2010 01:13:12 +0100
+Message-ID: <1264810392.1880.5.camel@michal-laptop.sawicz.net>
+References: <1264777247.29409.64.camel@thor>
+	 <87k4v0wjx1.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-AhbXPIDWu8AhX7LVKFfj"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <166572.83607.qm@web51301.mail.re2.yahoo.com> (Jon Hardcastle's
-	message of "Fri, 29 Jan 2010 07:37:05 -0800 (PST)")
+In-Reply-To: <87k4v0wjx1.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon@eHardcastle.com
+To: Goswin von Brederlow <goswin-v-b@web.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jon Hardcastle <jd_hardcastle@yahoo.com> writes:
 
-> --- On Thu, 28/1/10, Goswin von Brederlow <goswin-v-b@web.de> wrote:
->
->> From: Goswin von Brederlow <goswin-v-b@web.de>
->> Subject: Re: Why does one get mismatches?
->> To: linux-raid@vger.kernel.org
->> Date: Thursday, 28 January, 2010, 20:24
->> "Tirumala Reddy Marri" <tmarri@amcc.com>
->> writes:
->>=20
->> > I just tried and miss-match count is zero.
->> Interesting, is XOR engine
->> > doing something wrong ? . Then I ran a test where I
->> raw-write the file
->> > to /dev/md0. Then did the raw-read for the same size.
->> In this case XOR
->> > matched as expected. Then I failed a drive using
->> "mdadm -f /dev/md0
->> > /dev/sda". Then I read the same size data again from
->> /dev/md0. And
->> > checksum matches too.=20
->> > What is this mean XOR engine is doing right thing. But
->> "chec/repair"
->> > test is not functioning properly with XOR-engine ?
->> >
->> > Or is this something to do with=A0 how the buffers
->> are handled ? may they
->> > are cached ?
->> >
->> >
->> > -Marri
->>=20
->> No idea. But if everything works without the XOR engine and
->> gives
->> mismatches with then I would think there is a software or
->> hardware error
->> there and not in the cable or disks.
->>=20
->> MfG
->> =A0 =A0 =A0 =A0 Goswin
->> --
->> To unsubscribe from this list: send the line "unsubscribe
->> linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at=A0 http://vger.kernel.org/majordomo-info.html
->>=20
->
-> i think my RAM is fecked - does that sound like a possible cause? mem=
-test86 gives PAGES of red errors when run but the POST gives nothing an=
-d the machine boots.... it has 512MB
->
-> i have some more on order as a speculative..=20
+--=-AhbXPIDWu8AhX7LVKFfj
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-If memtest gives errors you certainly have errors. The reverse isn't
-allways true.
+Dnia 2010-01-30, sob o godzinie 00:50 +0100, Goswin von Brederlow pisze:
+> Does it matter? If one disk fails you know the next disk failure has a
+> 33+% chance of data loss and knowing which disk will be critical
+> doesn't
+> change that.=20
 
-MfG
-        Goswin
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+For me it was important when I needed to have the array running (root
+fs) with only 2 disks out of 4 (not enough controllers). It would be
+nice to be able to tell which are mirrors, which are striped.
+
+--=20
+Cheers
+Micha=C5=82 (Saviq) Sawicz
+
+--=-AhbXPIDWu8AhX7LVKFfj
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: To jest =?UTF-8?Q?cz=C4=99=C5=9B=C4=87?=
+ =?UTF-8?Q?_wiadomo=C5=9Bci?= podpisana cyfrowo
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
+
+iEYEABECAAYFAktjeZgACgkQzQlUjpZYlbdgXACgo7aN0Z7LLYswPVpV8UtmW/FO
+M5EAoMig9NZQ7BcZ/4oDNZSKsPcS0o7u
+=6gR4
+-----END PGP SIGNATURE-----
+
+--=-AhbXPIDWu8AhX7LVKFfj--
+
