@@ -1,80 +1,110 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re: Read errors on raid5 ignored, array still clean .. then disaster
- !!
-Date: Sun, 31 Jan 2010 08:08:05 -0600
-Message-ID: <4B658EC5.9020004@gmail.com>
-References: <4B5F6C73.30707@texsoft.it> <20100127074138.GA9607@maude.comedia.it> <20100129214852.00e565c4@notabene> <4B647E0E.6050609@texsoft.it> <4B64A779.6070809@shiftmail.org> <4B64B0C1.1040503@texsoft.it> <4B64DB75.70607@gmail.com> <4B655F63.2000705@texsoft.it>
+From: Asdo <asdo@shiftmail.org>
+Subject: Re: Read errors on raid5 ignored, array still clean .. then disaster !!
+Date: Sun, 31 Jan 2010 15:31:22 +0100
+Message-ID: <4B65943A.4040800@shiftmail.org>
+References: <4B5F6C73.30707@texsoft.it>
+ <20100127074138.GA9607@maude.comedia.it> <20100129214852.00e565c4@notabene>
+ <4B647E0E.6050609@texsoft.it> <4B64A779.6070809@shiftmail.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B655F63.2000705@texsoft.it>
+In-reply-to: <4B64A779.6070809@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Giovanni Tessore <giotex@texsoft.it>
-Cc: linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
 List-Id: linux-raid.ids
 
-Giovanni Tessore wrote:
-> 
->> I have never seen a properly good disk that gets that high of error 
->> rate actually exposed to the OS.  I have dealt with >5000 disk for 
->> several years of history on the 5000+ disks.
-> I have experience with not so many disks, but I was used that they are 
-> quite reliable, and that the first read error reported to OS is symptom 
-> of an incominc failure; I always replaced them in such case, and this is 
-> why I am so amazed that kernel 2.6.15 changed the way it manages read 
-> errors (as also Asdo said, it's ok for raid-6, but unsafe for raid-5, 1, 
-> 4, 10).
+Asdo wrote:
+> Giovanni Tessore wrote:
+>> Hm funny ... I just read now from md's man:
+>>
+>> "In  kernels  prior to about 2.6.15, a read error would cause the 
+>> same effect as a write error.  In later kernels, a read-error will 
+>> instead cause md to attempt a recovery by overwriting the bad block. 
+>> .... "
+>>
+>> So things have changed since 2.6.15 ... I was not so wrong to expect 
+>> "the old behaviour" and to be disappointed.
+>> [CUT]
+>
+> I have the feeling the current behaviour is the correct one at least 
+> for RAID-6.
+>
+> [CUT]
+>
+> This is with RAID-6.
+>
+> RAID-5 unfortunately is inherently insecure, here is why:
+> If one drive gets kicked, MD starts recovering to a spare.
+> At that point any single read error during the regeneration (that's a 
+> scrub) will fail the array.
+> This is a problem that cannot be overcome in theory.
+> Even with the old algorithm, any sector failed after the last scrub 
+> will take the array down when one disk is kicked (array will go down 
+> during recovery).
+> So you would need to scrub continuously, or you would need 
+> hyper-reliable disks.
+>
+> Yes, kicking a drive as soon as it presents the first unreadable 
+> sector can be a strategy for trying to select hyper-reliable disks...
+>
+> Ok after all I might agree this can be a reasonable strategy for 
+> raid1,4,5...
+>
+> I'd also agree that with 1.x superblock it would be desirable to be 
+> able to set the maximum number of corrected read errors before a drive 
+> is kicked, which could be set by default to 0 for raid 1,4,5 and to... 
+> I don't know... 20 (50? 100?) for raid-6.
+>
+> Actually I believe the drives should be kicked for this threshold only 
+> AFTER the end of the scrub, so that they are used for parity 
+> computation till the end of the scrub. I would suggest to check for 
+> this threshold at the end of each scrub, not before, and during normal 
+> array operation only if a scrub/resync is not in progress (will be 
+> checked at the end anyway).
+>
+> Thank you
 
-Good disks to rescan, and replace the bad blocks before you see them, 
-if you help the disks by doing your own scan then things are better.
+I can add that this situation with raid 1,4,5,10 would be greatly 
+ameliorated when the hot-device-replace feature gets implemented.
+The failures of raid 1,4,5,10 are due to the zero redundancy you get in 
+the time frame from when a drive is kicked to the end of the regeneration.
+However if the hot-device-replace feature is added, and gets linked to 
+the drive-kicking process, the problem would disappear.
 
-> 
-> Actually I had not a single read error since 2-3 years on my systems, 
-> but now ... in a week, I had 4 disk failed (yes... another one since I 
-> started this thread!!) ... it's 30% of the total disks in my systems ... 
-> so I'm really puzzled out ... I don't know what to trust ... I'm just in 
-> the hands of God
+Ideally instead of kicking (=failing) a drive directly, the 
+hot-device-replace feature would be triggered, so the new drive would be 
+replicated from the one being kicked (a few damaged blocks can be read 
+from parity in case of read error from the disk being replaced, but 
+don't "fail" the drive during the replace process just for this) In this 
+way you get 1 redundancy instead of zero during rebuild, and the chances 
+of the array going down during the rebuild process are pratically nullified.
 
-That tells me you have one of those "bad" lots.  If the disks start 
-failing in mass in <3-4 years it is usually a bad lot.  You can 
-manually scan (read) the whole disk, and if the sectors take weeks to 
-go bad then the normal disk reallocation will prevent errors (if you 
-are scanning faster than they go fully bad--the disk will replace when 
-the error rate is high, but not so high that the disk can internally 
-reconstruct the data).   The more often that you scan, the higher rate 
-of sectors going bad can be corrected.
+I think the "hot-device-replace" action can replace the "fail" action in 
+the most used scenarios, which is the drive being kicked due to:
+1 - unrecoverable read error (end of relocation sectors available)
+2 - surpassing the threshold for max corrected read errors (see above, 
+if/when this gets implemented on 1.x superblock)
 
-The reason that md rewrites and does not knock out the read errors, is 
-when you get a read error you do not know if you can read the other 
-disks.   Consider that if you have 5 crappy disks that have say 1000 
-read errors per disk, the chance of one of the other of disks having 
-the same sector bad is fairly small.  But given that one disk has a 
-read error, the odds of another disk also having a read error is alot 
-more likely, especially if none of the other disks have been read in 
-several months.
+The reason for why #2 is feasible is trivial
 
-What kind of disks are they?   And were you doing checks on the arrays 
-and if so how often?  If you never do checks then a sector won't get 
-check and moved before it goes fully bad, and can have months of not 
-being read to go completely bad.
+#1 is more difficult (and it's useless to implement this if threshold 
+for max corrected read errors gets implemented, because such threshold 
+would trigger before the first unrecoverable read error happens), but I 
+think it's still feasible. This would be the algorithm: you don't kick 
+the drive, you ignore the write error on the bad disk (the correct data 
+for that block can still be stored on the parity). Then you immediately 
+trigger the hot-device-replace. When the scrub of the bad disk reaches 
+the damaged sector, that one will be unreadable (I hope that it will not 
+return the old data), but data can be read from the parity so the 
+regeneration process can continue. So it should work, I think.
 
->> Nothing in the error rate indicated that behavior, so if you get a bad 
->> lot it will be very bad, if you don't get a bad lot you very likely 
->> won't have issues.   Now including the bad lots data into the overall 
->> error rate, may result in the error rate being that high, but you luck 
->> will depend on if you have a good or bad lot.
-> My disks are form same manufacturer as size, but different lot, as 
-> bought in different times, and different models.
-> Systems are well protected by UPS and in different places!
-> ... my unluky week .. or I have a big EM storm over here...
-> I've recall to duty old 120G disks to save some data.
+One case when you cannot replace the "fail" with "hot-device-replace" is 
+when a disk dies suddenly (e.g. the electronic part dies). Maybe the 
+"hot-device-replace" could still be triggered first, but then if the bad 
+drive turns out to be completely unresponsive (timeout? number of 
+commands without response?) you fall back on "fail".
 
-The same manufacturer process usually extends over different sizes 
-(same underlying platter density), and over several months.   The last 
-time I saw the issue 160gb, and 250 gb enterprise and non-enterprise 
-disks will all affected.   The symptom was that the sectors went bad 
-really really fast, I would suspect that there was a process issues 
-with either the design, manufacturer, or quality control of the 
-platter that resulting in the platters going bad at a much higher rate 
-than expected.
+Thank you
+Asdo
