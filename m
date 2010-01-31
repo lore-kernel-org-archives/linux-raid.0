@@ -1,178 +1,65 @@
-From: "Tirumala Reddy Marri" <tmarri@amcc.com>
-Subject: RE: Why does one get mismatches?
-Date: Thu, 28 Jan 2010 09:20:29 -0800
-Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C08AE1842@SDCEXCHANGE01.ad.amcc.com>
-References: <201001252043.o0PKhseR027690@wind.enjellic.com> <27F5783C-96DC-4B04-A3EF-D5E7F5F1DD6B@crc.id.au> <AC5E1C3367E37D44970B81A6ADD1DA2C08AE1690@SDCEXCHANGE01.ad.amcc.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: 2 drives failed, one "active", one with wrong event count
+Date: Mon, 1 Feb 2010 09:37:13 +1100
+Message-ID: <20100201093713.7ee33041@notabene.brown>
+References: <alpine.DEB.1.10.1001280952060.15329@uplift.swm.pp.se>
+	<alpine.DEB.1.10.1001290502140.15329@uplift.swm.pp.se>
+	<20100129211719.04595761@notabene>
+	<alpine.DEB.1.10.1001291306170.15329@uplift.swm.pp.se>
+	<alpine.DEB.1.10.1001291326430.15329@uplift.swm.pp.se>
+	<alpine.DEB.1.10.1001301546400.15329@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <AC5E1C3367E37D44970B81A6ADD1DA2C08AE1690@SDCEXCHANGE01.ad.amcc.com>
+In-Reply-To: <alpine.DEB.1.10.1001301546400.15329@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tirumala Reddy Marri <tmarri@amcc.com>, Steven Haigh <netwiz@crc.id.au>, linux-raid@vger.kernel.org
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I have noticed that if I zero the /dev/md0 using "dd if=/dev/zero
-of=/dev/md0 bs=4k count=64k". Then I run the "echo check >
-/sys/block/md0/md/sync_action", no mismatch_cnt reported.  If I use
-"if=/some/file" then I see miss match count to set to huge number.
+On Sat, 30 Jan 2010 22:20:34 +0100 (CET)
+Mikael Abrahamsson <swmike@swm.pp.se> wrote:
 
-I am testing with small RAID-5 size for quick testing.  How a reliable
-is this test ? I am using HW accelerated XOR engine for RAID-5.
-
-
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Tirumala Reddy
-Marri
-Sent: Wednesday, January 27, 2010 1:54 PM
-To: Steven Haigh; linux-raid@vger.kernel.org
-Subject: RE: Why does one get mismatches?
-
-I ran  echo check > /sys/bloc/md0/md/sync_action after I ran the "echo
-repair > /sys/block/md0/md/sync_action" .
-I am seeing whole bunch of mismatch errors like 1233072 .  I am using
-RAID-5 array though.
-
-
-
------Original Message-----
-From: linux-raid-owner@vger.kernel.org
-[mailto:linux-raid-owner@vger.kernel.org] On Behalf Of Steven Haigh
-Sent: Monday, January 25, 2010 2:49 PM
-To: linux-raid@vger.kernel.org
-Subject: Re: Why does one get mismatches?
-
-
-On 26/01/2010, at 7:43 AM, greg@enjellic.com wrote:
-
-> On Jan 21, 12:48pm, Farkas Levente wrote:
-> } Subject: Re: Why does one get mismatches?
+> On Fri, 29 Jan 2010, Mikael Abrahamsson wrote:
 > 
-> Good afternoon to everyone, hope the week is starting well.
+> > Yes, that solved the problem. Thanks a bunch!
 > 
->> On 01/21/2010 11:52 AM, Steven Haigh wrote:
->>> On Thu, 21 Jan 2010 09:08:42 +0100, Asdo<asdo@shiftmail.org>  wrote:
->>>> Steven Haigh wrote:
->>>>> On Wed, 20 Jan 2010 17:43:45 -0500, Brett Russ<bruss@netezza.com>
->>> wrote:
->>>>> 
->>>>> CUT!
->>>> Might that be a problem of the disks/controllers?
->>>> Jon and Steven, what hardware do you have?
->>> 
->>> I'm running some fairly old hardware on this particular server. It's
-a
->>> dual P3 1Ghz.
->>> 
->>> After running a repair on /dev/md2, I now see:
->>> # cat /sys/block/md2/md/mismatch_cnt
->>> 1536
->>> 
->>> Again, no smart errors, nothing to indicate a disk problem at all :(
->>> 
->>> As this really keeps killing the machine and it is a live system -
-the
->>> only thing I can really think of doing is to break the RAID and just
-rsync
->>> the drives twice daily :\
+> Now I have another problem. Last time one other drive was kicked out 
+> during the resync due to UNC read errors. I ddrescued this drive to 
+> another drive on another system, and inserted the drive I copied to. So 
+> basically I have 5 drives which contain valid information of which one has 
+> a lower event count, and one drive being resync:ed. This state doesn't 
+> seem to be ok...
 > 
->> the same happened with many people. and we all hate it since it
->> cause a huge load at all weekend on most of our servers:-( according
->> to redhat it's not a bug:-(
+> I guess if I removed the drive being resync:ed to and assembled it with 
+> --force it would update the event count of sdh (the copy of the drive that 
+> previously had read errors) and all would be fine. The bad part is that I 
+> don't really know which of the drives was being resync:ed to. Is this 
+> indicated by the "feature map" (guess 0x2 means partially sync:ed).
+
+0x2 means "the 'recovery_offset' fields is valid" which does correlate well
+with "is partially sync:ed".
+
 > 
-> The RAID check/mismatch_count is an example of well intentioned
-> technology suffering from 'featuritis' by the distributions which is,
-> as I predicted a couple of times in this forum, causing all sorts of
-> angst and problems throughout the world.  I've had some posts on this
-> subject but will summarize in the hopes of giving some background
-> information which will be useful to people.
+> (6 hrs later: Ok, I physically removed the 0x2 drive and used --assemble 
+> --force and then I added a different drive and that seemed to work)
 > 
-> There is an issue in the kernel which causes these mismatches.  The
-> problem seems to be particularly bad with RAID1 arrays.  The
-> contention is that these mismatches are 'harmless' because they only
-> occur in areas of the filesystems which are not being used.
-> 
-> The best description is that the buffers containing the data to be
-> written are not 'pinned' all the way down the I/O stack.  This can
-> cause the contents of a buffer to be changed while in transit through
-> the I/O stack.  Thus one copy of a mirror gets a buffer written to it
-> different then the other side of the mirror.
-> 
-> I've read reasoned discussions about why this occurs with swap over
-> RAID1 and why its harmless.  I've set to see the same type of reasoned
-> discussion as to why it is not problematic with a filesystem over
-> RAID1.  There has been some discussion that its due to high levels of
-> MMAP activity on the filesystem.
-> 
-> We have confirmed, that at least with RAID1, this all occurs with no
-> physical corruption on the 'disk drives'.  We implement geographically
-> mirror storage with RAID1 against two separate data-centers.  At each
-> data-center the RAID1 'block-device' are RAID5 volumes.  These latter
-> volumes check out with no errors/mismatch counts etc.  So the issue is
-> at the RAID1 data abstraction layer.
-> 
-> There do not appear to be any tools which allow one to determine
-> 'where' the mismatches are.  Such a tool, or logging by the kernel,
-> would be useful for people who want to verify what files, if any, are
-> affected by the mismatch.  Otherwise running a 'repair' results in the
-> RAID1 code arbitraily deciding which of the two blocks is the
-> 'correct' one.
-> 
-> So thats sort of a thumbnail sketch of what is going on.  The fact the
-> distributions chose to implement this without understanding the issues
-> it presents is a bit problematic.
-> 
->>   Levente                               "Si vis pacem para bellum!"
-> 
-> Hopefully this information is helpful.
-> 
-> Greg
+> I don't know what the default action should be when there is a partially 
+> resync:ed drive and a drive with lower event count, but I tend to lean 
+> towards that it should take the drive with the lower event count and 
+> insert it, and then start sync:ing to the 0x2 drive. This might require 
+> some new options to mdadm to handle this behaviour?
 
-Hi Greg and all,
+You might know that nothing has been written to the array since the device
+with the lower event count was removed, but md doesn't know that.  Any device
+with an old event count could have old and so cannot be trusted (unless you
+assemble with --force meaning that you are taking responsibility).
 
-The funny part is that I believe the mismatches aren't happening in the
-empty space of the filesystem - as it seems that the errors are causing
-the ext3 journal to abort and force the filesystem into readonly in my
-particular situation.
+My planned way to address this situation is to store a bad-block-list per
+device and when we get an unrecoverable failure, record the address in the
+bad-block-list and continue as best we can.
 
-It is interesting that I do not get any mismatches on md0, md1 or md3 -
-only md2.
-
-md0 = /boot
-md1 = swap
-md2 = /
-md3 = /tmp
-
-I ran weekly checks on the all four RAID1 arrays and ONLY md2 had a
-problem with mismatches, which also had a habit of going readonly -
-therefore I don't believe the part of common belief that this problem
-only affects empty parts of the filesystem.
-
-I have also done just about every test to the disks that I can think of
-with no errors to be found - leaving only the md layer to be suspect.
-
---
-Steven Haigh
-
-Email: netwiz@crc.id.au
-Web: http://www.crc.id.au
-Phone: (03) 9001 6090 - 0412 935 897
-Fax: (03) 8338 0299
+NeilBrown
 
 
-
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
