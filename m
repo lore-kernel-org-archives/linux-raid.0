@@ -1,49 +1,31 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Swapping a disk without degrading an array
-Date: Sun, 31 Jan 2010 18:32:22 +0100
-Message-ID: <87ockai3ix.fsf@frosties.localdomain>
-References: <1264421475.30742.49.camel@test.apertos.eu>
-	<20100129221904.439e2afe@notabene>
-	<87tyu4zzxo.fsf@frosties.localdomain> <4B65A2EB.1000506@shiftmail.org>
-	<20100131163355.GA25622@twister.home>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: feature suggestion to handle read errors during re-sync of
+ raid5
+Date: Sun, 31 Jan 2010 18:56:33 +0100 (CET)
+Message-ID: <alpine.DEB.1.10.1001311854530.15329@uplift.swm.pp.se>
+References: <alpine.DEB.1.10.1001301331560.15329@uplift.swm.pp.se> <4B6471A1.2070407@texsoft.it> <4B6482BD.6090102@anonymous.org.uk> <alpine.DEB.1.10.1001302228540.15329@uplift.swm.pp.se> <4B65AD05.5050000@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100131163355.GA25622@twister.home> (Gabor Gombas's message of
-	"Sun, 31 Jan 2010 17:33:55 +0100")
+In-Reply-To: <4B65AD05.5050000@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Gabor Gombas <gombasg@sztaki.hu>
-Cc: Asdo <asdo@shiftmail.org>, Goswin von Brederlow <goswin-v-b@web.de>, linux-raid <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Gabor Gombas <gombasg@sztaki.hu> writes:
+On Sun, 31 Jan 2010, John Robinson wrote:
 
-> On Sun, Jan 31, 2010 at 04:34:03PM +0100, Asdo wrote:
+> iirc part of the point of moving to 4K sectors is to improve the error 
+> correction to something like 1 in 10^20 or 22 without losing storage 
+> density, partly by using what was lost before in inter-sector gaps and 
+> partly because you can do better with more bits of ECC over more data.
 >
->> 1/ The live-spare gets filled of data without recording anything on
->> any superblocks. If there is a power failure and reboot, the new MD
->> will know nothing about this. The process has to be restarted.
->
-> IMHO MD must know about the copy and it must know not to use the new
-> device before the copying is completed. Otherwise after a reboot mdadm
-> may either import the new half-written spare instead of the real one if
-> the superblock is already copied, or other tools like LVM may start
-> using the new half-written spare instead of the RAID if the MD
-> superblock is still missing.
->
-> Gabor
+> Frankly I wish they'd sacrificed a little storage density and improved the 
+> error rate a long time ago.
 
-No that is exactly what he means to avoid.
+Looking at the data sheet for WD20EADS and WD20EARS they both have 10^15 
+"non-recoverable read errors per bits read", so at least in the data sheet 
+nothing has really changed in the error rate aspect.
 
-His suggestion is that at the start the metadata area of the life-spare
-is kept as is, being a simple unused spare. Only the in-memory data
-records that it actualy is a live-spare and only the data part of the
-device is mirrored.
-
-Then at the end you remove the old disk, add the live-spare and record
-the change in the metadata of all drives in an semi atomic way. If
-anything interrupts the operation before this the live-spare will still
-be recorgnised as normal spare when the raid is reassembled.
-
-MfG
-        Goswin
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
