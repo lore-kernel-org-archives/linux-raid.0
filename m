@@ -1,41 +1,74 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [[Patch mdadm] 2/5] Move the files mdmon opens into /dev/ to
- support handoff after pivotroot
-Date: Mon, 01 Feb 2010 15:32:29 -0500
-Message-ID: <4B673A5D.2010901@tmr.com>
-References: <1263242294-5353-1-git-send-email-dledford@redhat.com>	<1263242294-5353-3-git-send-email-dledford@redhat.com> <20100119110930.107ca42e@notabene> <4B55F138.7060008@redhat.com>
+From: David Lethe <david@santools.com>
+Subject: Re: raid failure question
+Date: Mon, 1 Feb 2010 14:29:00 -0600
+Message-ID: <EB9469C209DB064DA15714214B92D5167D9C84F5E4@34093-MBX-C09.mex07a.mlsrvr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B55F138.7060008@redhat.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Doug Ledford wrote:
-> On 01/18/2010 05:09 PM, Neil Brown wrote:
->   
->
->> I understand there is a problem here, but I don't like this approach to a
->> solution.  I'll give it more though when I get home from LCA2010 and see
->> what I can come up with.
->>     
->
-> Feel free to come up with something different.  But, if your solution
-> involves maintaining an additional read/write mount area in deference to
-> a long dead unix tradition, I'm just going to shake my head and patch
-> your solution away to something sane.
->
->   
-I don't understand you argument here. Not the one where you say you're 
-going to ignore Neil and do what you want because you can, I understand 
-that, but the "additional read/write mount area" part, isn't /var/run 
-r/w on all systems now? Could you clarify why this is "additional" here?
+- bad block on surviving disk during a rebuild gives partial unrecoverable data loss.
+- bugs in firmware can be devastating, like NCQ TCQ problems,
+-Humans
 
+-----Original Message-----
+
+From:  "Bill Davidsen" <davidsen@tmr.com>
+Subj:  Re: raid failure question
+Date:  Mon Feb 1, 2010 2:21 pm
+Size:  1K
+To:  "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+
+Robin Hill wrote: 
+> On Mon Jan 11, 2010 at 11:00:40AM -0700, Tim Bock wrote: 
+> 
+>    
+>> Hello, 
+>> 
+>> Excluding the obvious multi-disk or bus failures, can anyone describe 
+>> what type of disk failure a raid cannot detect/recover from? 
+>> 
+>> I have had two disk failures over the last three months, and in spite of 
+>> having a hot spare, manual intervention was required each time to make 
+>> the raid usable again.  I'm just not sure if I'm not setting something 
+>> up right, or if there is some other issue. 
+>> 
+>> Thanks for any comments or suggestions. 
+>> 
+>>      
+> Any failure where the disk doesn't actually return an error (within a 
+> reasonable time).  For example, consumer grade disks often have very 
+> long retry times - this can mean the array in unusable for a long time 
+> until the disk eventually fails the read. 
+> 
+> If the disk actually returns an error then, AFAIK, the RAID array should 
+> always be able to recover from it. 
+>    
+ 
+The problem is that the admin should be able to set a timeout after  
+which recovery takes place even if the drive hasn't returned a bad  
+status. And some form of counter could be kept such that after a number  
+of these the drive is failed. There is no solution, Neil says the  
+timeout should be in the driver, the driver writers say that if it hurts  
+md the timeout should be there. Everyone points the finger at some other  
+code and says "there." 
+ 
+This is not lazyness or buck passing, Neil feels that md is not the  
+place, but putting it elsewhere causes other problems. Until someone  
+says "perfect is the enemy of good enough" and puts a timer where it  
+will solve the problem, this behavior will continue. 
+ 
+--  
+Bill Davidsen <davidsen@tmr.com> 
+  "We can't solve today's problems by using the same thinking we 
+   used in creating them." - Einstein 
+ 
 -- 
-Bill Davidsen <davidsen@tmr.com>
-  "We can't solve today's problems by using the same thinking we
-   used in creating them." - Einstein
+To unsubscribe from this list: send the line "unsubscribe linux-raid" in 
+the body of a message to majordomo@vger.kernel.org 
+More majordomo info at  http://vger.kernel.org/majordomo-info.html 
 
