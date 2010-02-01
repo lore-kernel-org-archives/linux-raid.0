@@ -1,61 +1,47 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Fw: Why does one get mismatches?
-Date: Mon, 01 Feb 2010 16:18:23 -0500
-Message-ID: <4B67451F.8040206@tmr.com>
-References: <869541.92104.qm@web51304.mail.re2.yahoo.com>
+Subject: Re: Zeroing multiple superblocks
+Date: Mon, 01 Feb 2010 16:22:25 -0500
+Message-ID: <4B674611.2030402@tmr.com>
+References: <20100122200924.GA29183@psychosis.jim.sh>	<20100125095221.GV21495@skl-net.de> <20100129233111.5c9cc1d0@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <869541.92104.qm@web51304.mail.re2.yahoo.com>
+In-Reply-To: <20100129233111.5c9cc1d0@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon@eHardcastle.com
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Andre Noll <maan@systemlinux.org>, Jim Paris <jim@jtan.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Jon Hardcastle wrote:
-> --- On Tue, 19/1/10, Jon Hardcastle <jd_hardcastle@yahoo.com> wrote:
+Neil Brown wrote:
+> On Mon, 25 Jan 2010 10:52:21 +0100
+> Andre Noll <maan@systemlinux.org> wrote:
 >
 >   
->> From: Jon Hardcastle <jd_hardcastle@yahoo.com>
->> Subject: Why does one get mismatches?
->> To: linux-raid@vger.kernel.org
->> Date: Tuesday, 19 January, 2010, 10:04
->> Hi,
->>
->> I kicked off a check/repair cycle on my machine after i
->> moved the phyiscal ordering of my drives around and I am now
->> on my second check/repair cycle and it has kept finding
->> mismatches.
->>
->> Is it correct that the mismatch value after a repair was
->> needed should equal the value present after a check? What if
->> it doesn't? What does it mean if another check STILL reveals
->> mismatches?
->>
->> I had something similar after i reshaped from raid 5 to 6 i
->> had to run check/repair/check/repair several times before i
->> got my 0.
->>
+>> On 15:09, Jim Paris wrote:
 >>
 >>     
+>>> I guess the only way to be fully safe with the current approach is to
+>>> do a zero-superblock over and over until it complains.
+>>>       
+>> mdadm --zero-superblock tries to guess the location of the superblock.
+>> If more than one superblock is found, the one with the latest creation
+>> time is being zeroed. So yes, the method you describe works and I think
+>> it is the most reliable way to remove all superblocks of a device.
+>>
+>> Maybe we could teach mdadm --zero-superblock to honor the --metadata=x
+>> option which would zero-out the region of the device where the
+>> version-x superblock is located.
+>>     
 >
-> Guys,
->
-> Anyone got any suggestions here? I am now on my ~5 check/repair and after a reboot the first check is still returning 8.
->
-> All i have done is move the drives around. It is the same controllers/cables/etc 
->
-> I really dont like the seeming random nature of what can/does/has caused the mismatches?
+> Latest mdadm has this feature.
+> And if --metadata= isn't given, it repeatedly trying to find and zero a
+> superblock until no more superblocks can be found.
 >   
 
-If you have an ext[34] filesystem on this array, try mounting it 
-data=journal (yes it will slow down, this is a TEST). I did limited 
-testing using this, and it appeared to solve the problem, at least for 
-eight hours I had to test.
-
-Comment: when there is a three way RAID-1, why doesn't repair *vote* on 
-the correct value instead of just making a guess?
+That would be potentially a bad thing, people do run things like RAID1+5 
+and might want to clear on block and save the other, still possibly part 
+of a running array, one. I'm not sure that's a safe default behavior.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
