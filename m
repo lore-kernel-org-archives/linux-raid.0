@@ -1,83 +1,65 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Zeroing multiple superblocks
-Date: Tue, 2 Feb 2010 08:44:31 +1100
-Message-ID: <20100202084431.5cb261aa@notabene.brown>
-References: <20100122200924.GA29183@psychosis.jim.sh>
-	<20100125095221.GV21495@skl-net.de>
-	<20100129233111.5c9cc1d0@notabene>
-	<4B674611.2030402@tmr.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Building RAID5 w/o a Hot Spare
+Date: Mon, 01 Feb 2010 16:45:48 -0500
+Message-ID: <4B674B8C.9010200@tmr.com>
+References: <d80f793f1001270626s3ec1791ma0b5da4b87a31e34@mail.gmail.com> <1264603577.1928.4.camel@test.apertos.eu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B674611.2030402@tmr.com>
+In-Reply-To: <1264603577.1928.4.camel@test.apertos.eu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Andre Noll <maan@systemlinux.org>, Jim Paris <jim@jtan.com>, linux-raid@vger.kernel.org
+To: =?UTF-8?B?TWljaGHFgiBTYXdpY3o=?= <michal@sawicz.net>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 01 Feb 2010 16:22:25 -0500
-Bill Davidsen <davidsen@tmr.com> wrote:
+Micha=C5=82 Sawicz wrote:
+> Dnia 2010-01-27, =C5=9Bro o godzinie 09:26 -0500, Carlos Williams pis=
+ze:
+>  =20
+>> I am building a Linux system which has 4 identical 'fd' partitions o=
+n
+>> each of the 4 drives. I don't want to use the 4th partition or disk =
+if
+>> you would like to call it as a 'hot spare'. I would like to span the
+>> entire array over the 4 drives. My question is does my command look
+>> correct for doing so?
+>>    =20
+>
+> I'm not sure I understand what you want to achieve. A 'spare' disk is
+> one that isn't used until any of the other fail, then the spare repla=
+ces
+> the failed one. The term 'hot spare' is used to identify a disk that =
+is
+> a mirror of one of the other drives, but there's no support for that =
+in
+> Linux Software-RAID.
+>
+>  =20
+>> mdadm --create /dev/md0 --level=3D5 --raid-devices=3D4 /dev/sda2 /de=
+v/sdb2
+>> /dev/sdc2 /dev/sdd2=20
+>>    =20
+>
+> This will create a RAID5 array of 4 devices, yes. Capacity will be 3 =
+x
+> sd?2. Failure of any one of those disks will not harm the data.
+>
+>  =20
+A hot spare is in and spinning, or at least powered up, ready to use=20
+with software. And software raid does support putting a raid, such as=20
+raid-1 or even raid-5, or members which are raid-1 with a write mostly=20
+drive and ready to go.
 
-> Neil Brown wrote:
-> > On Mon, 25 Jan 2010 10:52:21 +0100
-> > Andre Noll <maan@systemlinux.org> wrote:
-> >
-> >   
-> >> On 15:09, Jim Paris wrote:
-> >>
-> >>     
-> >>> I guess the only way to be fully safe with the current approach is to
-> >>> do a zero-superblock over and over until it complains.
-> >>>       
-> >> mdadm --zero-superblock tries to guess the location of the superblock.
-> >> If more than one superblock is found, the one with the latest creation
-> >> time is being zeroed. So yes, the method you describe works and I think
-> >> it is the most reliable way to remove all superblocks of a device.
-> >>
-> >> Maybe we could teach mdadm --zero-superblock to honor the --metadata=x
-> >> option which would zero-out the region of the device where the
-> >> version-x superblock is located.
-> >>     
-> >
-> > Latest mdadm has this feature.
-> > And if --metadata= isn't given, it repeatedly trying to find and zero a
-> > superblock until no more superblocks can be found.
-> >   
-> 
-> That would be potentially a bad thing, people do run things like RAID1+5 
-> and might want to clear on block and save the other, still possibly part 
-> of a running array, one. I'm not sure that's a safe default behavior.
-> 
+--=20
+Bill Davidsen <davidsen@tmr.com>
+  "We can't solve today's problems by using the same thinking we
+   used in creating them." - Einstein
 
-The situation you describe would not normally cause any problems.
-"mdadm --zero-superblock" only erases metadata that looks like valid
-metadata at a valid location.
-If you have a disk (sda) inside a RAID5 (md0) inside a RAID1 (md1),
-then:
-   mdadm --zero-superblock /dev/sda
-would only see the metadata for the RAID5 and so would only clear that.
-   mdadm --zero-superblock /dev/md0
-would only see the metadata for the RAID1 and so would only clear that.
-   mdadm --zero-superblock /dev/md1
-would not see any metadata.
 
-However, if you used v1.0 metadata for the RAID1, and v1.1 metadata for
-the RAID5, then
-   mdadm --zero-superblock /dev/sda
-
-would see both and could erase both.
-But then 
-   mdadm --assemble
-would also see both and get equally confused.
-
-Also  if you are erasing the RAID5 metadata from sda, then it won't be
-inclued in the RAID5, so it won't be included indirectly in the RAID1, so
-remove the RAID1 metadata as well is no loss.
-
-So I really don't think there is a problem here.   However if you can
-describe a credible case which will cause a problem, I'd be very happy to
-consider it.
-
-Thanks,
-NeilBrown
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
