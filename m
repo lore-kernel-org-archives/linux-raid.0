@@ -1,77 +1,83 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [[Patch mdadm] 2/5] Move the files mdmon opens into /dev/ to
- support handoff after pivotroot
-Date: Mon, 01 Feb 2010 16:32:16 -0500
-Message-ID: <4B674860.7080604@redhat.com>
-References: <1263242294-5353-1-git-send-email-dledford@redhat.com>	<1263242294-5353-3-git-send-email-dledford@redhat.com> <20100119110930.107ca42e@notabene> <4B55F138.7060008@redhat.com> <4B673A5D.2010901@tmr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Zeroing multiple superblocks
+Date: Tue, 2 Feb 2010 08:44:31 +1100
+Message-ID: <20100202084431.5cb261aa@notabene.brown>
+References: <20100122200924.GA29183@psychosis.jim.sh>
+	<20100125095221.GV21495@skl-net.de>
+	<20100129233111.5c9cc1d0@notabene>
+	<4B674611.2030402@tmr.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigE553705043FDD58B692EE945"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B673A5D.2010901@tmr.com>
+In-Reply-To: <4B674611.2030402@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Bill Davidsen <davidsen@tmr.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+Cc: Andre Noll <maan@systemlinux.org>, Jim Paris <jim@jtan.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigE553705043FDD58B692EE945
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On Mon, 01 Feb 2010 16:22:25 -0500
+Bill Davidsen <davidsen@tmr.com> wrote:
 
-On 02/01/2010 03:32 PM, Bill Davidsen wrote:
-> Doug Ledford wrote:
->> On 01/18/2010 05:09 PM, Neil Brown wrote:
->> =20
->>> I understand there is a problem here, but I don't like this approach
->>> to a
->>> solution.  I'll give it more though when I get home from LCA2010 and =
-see
->>> what I can come up with.
->>>    =20
->>
->> Feel free to come up with something different.  But, if your solution
->> involves maintaining an additional read/write mount area in deference =
-to
->> a long dead unix tradition, I'm just going to shake my head and patch
->> your solution away to something sane.
->>
->>  =20
-> I don't understand you argument here. Not the one where you say you're
-> going to ignore Neil and do what you want because you can, I understand=
+> Neil Brown wrote:
+> > On Mon, 25 Jan 2010 10:52:21 +0100
+> > Andre Noll <maan@systemlinux.org> wrote:
+> >
+> >   
+> >> On 15:09, Jim Paris wrote:
+> >>
+> >>     
+> >>> I guess the only way to be fully safe with the current approach is to
+> >>> do a zero-superblock over and over until it complains.
+> >>>       
+> >> mdadm --zero-superblock tries to guess the location of the superblock.
+> >> If more than one superblock is found, the one with the latest creation
+> >> time is being zeroed. So yes, the method you describe works and I think
+> >> it is the most reliable way to remove all superblocks of a device.
+> >>
+> >> Maybe we could teach mdadm --zero-superblock to honor the --metadata=x
+> >> option which would zero-out the region of the device where the
+> >> version-x superblock is located.
+> >>     
+> >
+> > Latest mdadm has this feature.
+> > And if --metadata= isn't given, it repeatedly trying to find and zero a
+> > superblock until no more superblocks can be found.
+> >   
+> 
+> That would be potentially a bad thing, people do run things like RAID1+5 
+> and might want to clear on block and save the other, still possibly part 
+> of a running array, one. I'm not sure that's a safe default behavior.
+> 
 
-> that, but the "additional read/write mount area" part, isn't /var/run
-> r/w on all systems now? Could you clarify why this is "additional" here=
-?
->=20
+The situation you describe would not normally cause any problems.
+"mdadm --zero-superblock" only erases metadata that looks like valid
+metadata at a valid location.
+If you have a disk (sda) inside a RAID5 (md0) inside a RAID1 (md1),
+then:
+   mdadm --zero-superblock /dev/sda
+would only see the metadata for the RAID5 and so would only clear that.
+   mdadm --zero-superblock /dev/md0
+would only see the metadata for the RAID1 and so would only clear that.
+   mdadm --zero-superblock /dev/md1
+would not see any metadata.
 
-It's not necessarily read/write in the initrd time frame, and putting
-the mdadm files there means it would have to be.  We didn't make these
-changes because we wanted to, we made them because using mdadm raid
-arrays for the root filesystem combined with incremental assembly or
-with imsm raid devices was broken otherwise.
+However, if you used v1.0 metadata for the RAID1, and v1.1 metadata for
+the RAID5, then
+   mdadm --zero-superblock /dev/sda
 
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-	      http://people.redhat.com/dledford
+would see both and could erase both.
+But then 
+   mdadm --assemble
+would also see both and get equally confused.
 
-Infiniband specific RPMs available at
-	      http://people.redhat.com/dledford/Infiniband
+Also  if you are erasing the RAID5 metadata from sda, then it won't be
+inclued in the RAID5, so it won't be included indirectly in the RAID1, so
+remove the RAID1 metadata as well is no loss.
 
+So I really don't think there is a problem here.   However if you can
+describe a credible case which will cause a problem, I'd be very happy to
+consider it.
 
---------------enigE553705043FDD58B692EE945
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAktnSGUACgkQg6WylM+/8ZTBKACgpp5a8veNX67pTgxtv81WQks+
-V4wAnjqHZgL5IJ2kyclXe1Kl+ydBoQWw
-=7SqX
------END PGP SIGNATURE-----
-
---------------enigE553705043FDD58B692EE945--
+Thanks,
+NeilBrown
