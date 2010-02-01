@@ -1,72 +1,58 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: SSD & mechanical disc in RAID 1
-Date: Mon, 01 Feb 2010 15:06:32 -0500
-Message-ID: <4B673448.4080002@tmr.com>
-References: <7a329d911001090953j17829cd9qca0888fbcd7b4805@mail.gmail.com>	<20100109192326.GB16383@rap.rap.dk> <87bpgmyu37.fsf@frosties.localdomain>
+Subject: Re: raid failure question
+Date: Mon, 01 Feb 2010 15:19:25 -0500
+Message-ID: <4B67374D.1030007@tmr.com>
+References: <1263232840.8962.193.camel@kije> <20100111205332.GA24486@cthulhu.home.robinhill.me.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87bpgmyu37.fsf@frosties.localdomain>
+In-Reply-To: <20100111205332.GA24486@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: Keld Jorn Simonsen <keld@keldix.com>, Wil Reichert <wil.reichert@gmail.com>, linux raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Goswin von Brederlow wrote:
-> Keld J=F8rn Simonsen <keld@keldix.com> writes:
+Robin Hill wrote:
+> On Mon Jan 11, 2010 at 11:00:40AM -0700, Tim Bock wrote:
 >
->  =20
->> On Sat, Jan 09, 2010 at 09:53:11AM -0800, Wil Reichert wrote:
->>    =20
->>> Has anyone ever tried putting an SSD and a mechanical disc in RAID =
-1
->>> using write-mostly?  The goal would be to extol the speed & latency
->>> virtues of an SSD while retaining the integrity of the traditional
->>> storage.  Would this setup even work as I expect it to?
->>>      =20
->> I think you are better served by trying out RAID10 in the far or off=
-set
->> layouts. RAID1 would per se not gain from the low latency times of=20
->> SSD. RAID1 should function the same with hard disk as with SSD,=20
->> and with hard disk it would not make sense to multiplex reading
->> of a file, as skipping and reading a block essentially takes the sam=
-e
->> time.
+>   
+>> Hello,
 >>
->> Best regards
->> Keld
->>    =20
+>> Excluding the obvious multi-disk or bus failures, can anyone describe
+>> what type of disk failure a raid cannot detect/recover from?
+>>
+>> I have had two disk failures over the last three months, and in spite of
+>> having a hot spare, manual intervention was required each time to make
+>> the raid usable again.  I'm just not sure if I'm not setting something
+>> up right, or if there is some other issue.
+>>
+>> Thanks for any comments or suggestions.
+>>
+>>     
+> Any failure where the disk doesn't actually return an error (within a
+> reasonable time).  For example, consumer grade disks often have very
+> long retry times - this can mean the array in unusable for a long time
+> until the disk eventually fails the read.
 >
-> With raid10 in the far or offset layout every (large) read and write
-> would always access both the SSD and rotating disk. That would make
-> every operation wait for the rotating disk to seek.
->
->
-> I think his initial idea of raid1 is verry good. With write-mostly al=
-l
-> reads should come from the fast SSD. I would also add write-behind.
-> That way writes will not wait for the rotating disk and get the full
-> SSD speed as well.
->  =20
+> If the disk actually returns an error then, AFAIK, the RAID array should
+> always be able to recover from it.
+>   
 
-I had an SSD waiting to be deployed, and I tried putting a journal on i=
-t=20
-and using a mount with data=3Djournal. Supposedly when the data is writ=
-ten=20
-to the journal the write will be "complete" and effective write speed=20
-for many small random writes will be higher. I don't have the results=20
-handy, but they were not so great that I went out and got another SDD.
+The problem is that the admin should be able to set a timeout after 
+which recovery takes place even if the drive hasn't returned a bad 
+status. And some form of counter could be kept such that after a number 
+of these the drive is failed. There is no solution, Neil says the 
+timeout should be in the driver, the driver writers say that if it hurts 
+md the timeout should be there. Everyone points the finger at some other 
+code and says "there."
 
---=20
+This is not lazyness or buck passing, Neil feels that md is not the 
+place, but putting it elsewhere causes other problems. Until someone 
+says "perfect is the enemy of good enough" and puts a timer where it 
+will solve the problem, this behavior will continue.
+
+-- 
 Bill Davidsen <davidsen@tmr.com>
   "We can't solve today's problems by using the same thinking we
    used in creating them." - Einstein
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
