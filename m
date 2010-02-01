@@ -1,49 +1,32 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re: feature suggestion to handle read errors during re-sync of raid5
-Date: Sun, 31 Jan 2010 19:30:57 -0600
-Message-ID: <4B662ED1.3060003@gmail.com>
-References: <alpine.DEB.1.10.1001301331560.15329@uplift.swm.pp.se> <4B6471A1.2070407@texsoft.it> <4B6482BD.6090102@anonymous.org.uk> <alpine.DEB.1.10.1001302228540.15329@uplift.swm.pp.se> <4B65AD05.5050000@anonymous.org.uk> <alpine.DEB.1.10.1001311854530.15329@uplift.swm.pp.se>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: 2 drives failed, one "active", one with wrong event count
+Date: Mon, 1 Feb 2010 08:13:24 +0100 (CET)
+Message-ID: <alpine.DEB.1.10.1002010810440.31777@uplift.swm.pp.se>
+References: <alpine.DEB.1.10.1001280952060.15329@uplift.swm.pp.se> <alpine.DEB.1.10.1001290502140.15329@uplift.swm.pp.se> <20100129211719.04595761@notabene> <alpine.DEB.1.10.1001291306170.15329@uplift.swm.pp.se> <alpine.DEB.1.10.1001291326430.15329@uplift.swm.pp.se>
+ <alpine.DEB.1.10.1001301546400.15329@uplift.swm.pp.se> <20100201093713.7ee33041@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.1001311854530.15329@uplift.swm.pp.se>
+In-Reply-To: <20100201093713.7ee33041@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: John Robinson <john.robinson@anonymous.org.uk>, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mikael Abrahamsson wrote:
-> On Sun, 31 Jan 2010, John Robinson wrote:
-> 
->> iirc part of the point of moving to 4K sectors is to improve the error 
->> correction to something like 1 in 10^20 or 22 without losing storage 
->> density, partly by using what was lost before in inter-sector gaps and 
->> partly because you can do better with more bits of ECC over more data.
->>
->> Frankly I wish they'd sacrificed a little storage density and improved 
->> the error rate a long time ago.
-> 
-> Looking at the data sheet for WD20EADS and WD20EARS they both have 10^15 
-> "non-recoverable read errors per bits read", so at least in the data 
-> sheet nothing has really changed in the error rate aspect.
-> 
+On Mon, 1 Feb 2010, Neil Brown wrote:
 
-Based on my experience, I am not sure how sensible that parameter is 
-without a time constraint added to it, unless the parameter applies to 
-the underlying patter, and means it is still correctable and does not 
-represent a error reported back by the disk to the user.
+> You might know that nothing has been written to the array since the 
+> device with the lower event count was removed, but md doesn't know that. 
+> Any device with an old event count could have old and so cannot be 
+> trusted (unless you assemble with --force meaning that you are taking 
+> responsibility).
 
-Bit errors seem more likely the longer a sector has set since being 
-written.  I would be not expect to see errors if you read the entire 
-disk, and then reread it 1x a day for a year, but if you read the disk 
-once, let it sit spinning for a year without any reads and read it 
-again, this will almost certainly get a read error.    When you keep 
-rereading it, when the bits start to go bad the disk should move it 
-long before data loss happens, but if you only read it 1x a year, it 
-is likely that when you find the data bad there will be too many bad 
-bits, beyond being able to correct it.
+I did use --force, but it seems in the state "one drive with lower event 
+count and another one with 0x2", the event count on the drive isn't 
+forcably updated and since there is a 0x2 drive, the array isn't started.
 
+I had the same situation again this morning (changing controller next), 
+but this time I had bitmaps enabled so recovery of the array with 
+--assemble --force took just a few seconds. Really nice.
 
-
-
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
