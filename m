@@ -1,93 +1,45 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Why does one get mismatches?
-Date: Mon, 01 Feb 2010 16:10:15 -0500
-Message-ID: <4B674337.4090900@tmr.com>
-References: <166572.83607.qm@web51301.mail.re2.yahoo.com>
+From: David Rees <drees76@gmail.com>
+Subject: Re: SSD & mechanical disc in RAID 1
+Date: Mon, 1 Feb 2010 13:10:52 -0800
+Message-ID: <72dbd3151002011310g57fa9b66j2798aa0acde199b2@mail.gmail.com>
+References: <7a329d911001090953j17829cd9qca0888fbcd7b4805@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <166572.83607.qm@web51301.mail.re2.yahoo.com>
+In-Reply-To: <7a329d911001090953j17829cd9qca0888fbcd7b4805@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jon@eHardcastle.com
-Cc: linux-raid@vger.kernel.org, Goswin von Brederlow <goswin-v-b@web.de>
+To: Wil Reichert <wil.reichert@gmail.com>
+Cc: linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Jon Hardcastle wrote:
-> --- On Thu, 28/1/10, Goswin von Brederlow <goswin-v-b@web.de> wrote:
->
->   
->> From: Goswin von Brederlow <goswin-v-b@web.de>
->> Subject: Re: Why does one get mismatches?
->> To: linux-raid@vger.kernel.org
->> Date: Thursday, 28 January, 2010, 20:24
->> "Tirumala Reddy Marri" <tmarri@amcc.com>
->> writes:
->>
->>     
->>> I just tried and miss-match count is zero.
->>>       
->> Interesting, is XOR engine
->>     
->>> doing something wrong ? . Then I ran a test where I
->>>       
->> raw-write the file
->>     
->>> to /dev/md0. Then did the raw-read for the same size.
->>>       
->> In this case XOR
->>     
->>> matched as expected. Then I failed a drive using
->>>       
->> "mdadm -f /dev/md0
->>     
->>> /dev/sda". Then I read the same size data again from
->>>       
->> /dev/md0. And
->>     
->>> checksum matches too. 
->>> What is this mean XOR engine is doing right thing. But
->>>       
->> "chec/repair"
->>     
->>> test is not functioning properly with XOR-engine ?
->>>
->>> Or is this something to do with  how the buffers
->>>       
->> are handled ? may they
->>     
->>> are cached ?
->>>
->>>
->>> -Marri
->>>       
->> No idea. But if everything works without the XOR engine and
->> gives
->> mismatches with then I would think there is a software or
->> hardware error
->> there and not in the cable or disks.
->>
->> MfG
->>         Goswin
->> --
->> To unsubscribe from this list: send the line "unsubscribe
->> linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>     
->
-> i think my RAM is fecked - does that sound like a possible cause? memtest86 gives PAGES of red errors when run but the POST gives nothing and the machine boots.... it has 512MB
->
-> i have some more on order as a speculative.. 
->   
+On Sat, Jan 9, 2010 at 9:53 AM, Wil Reichert <wil.reichert@gmail.com> w=
+rote:
+> Has anyone ever tried putting an SSD and a mechanical disc in RAID 1
+> using write-mostly? =A0The goal would be to extol the speed & latency
+> virtues of an SSD while retaining the integrity of the traditional
+> storage. =A0Would this setup even work as I expect it to?
 
-I would bet that your RAM is broken. Any errors indicate bad RAM, no 
-errors indicate no persistent error. Scrap that RAM. More will make the 
-machine faster, too.
+I have such a setup using a 30GB OCZ Vertex and an old 120GB Seagate
+7200.7 (IDE!).
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "We can't solve today's problems by using the same thinking we
-   used in creating them." - Einstein
+Read performance is exactly as you'd expect - very fast as all reads
+come from the SSD so it's as fast as the SSD (though I haven't
+benchmarked it to verify).  At least my seat of the pants (SOTP)
+measurement in comparison to other SSDs seems very similar.
 
+Write performance is also what you'd expect, the same as an old IDE dri=
+ve.
+
+=46or a budget setup, it does what I expected it to.
+
+I suspect that if you used write-behind with a write-intent bitmap
+stored only on the SSD, you'd get some of that performance back, but
+potentially lose a bit of reliability.
+
+-Dave
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
