@@ -1,114 +1,65 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 1/3] md:Add support for Raid0->Raid5 takeover
-Date: Mon, 1 Feb 2010 10:58:06 +1100
-Message-ID: <20100201105806.62e4dd94@notabene.brown>
-References: <F2A46F4A087B8547923AD59C289DC90E01D16226@irsmsx002.ger.corp.intel.com>
+Subject: Re: [PATCH 2/3] md: Add support for Raid5->Raid0 and Raid10->Raid0
+ takeover
+Date: Mon, 1 Feb 2010 11:05:49 +1100
+Message-ID: <20100201110549.162aa9f5@notabene.brown>
+References: <F2A46F4A087B8547923AD59C289DC90E01D16227@irsmsx002.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <F2A46F4A087B8547923AD59C289DC90E01D16226@irsmsx002.ger.corp.intel.com>
+In-Reply-To: <F2A46F4A087B8547923AD59C289DC90E01D16227@irsmsx002.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: "Trela, Maciej" <Maciej.Trela@intel.com>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-On Fri, 29 Jan 2010 14:54:03 +0000
+On Fri, 29 Jan 2010 14:54:10 +0000
 "Trela, Maciej" <Maciej.Trela@intel.com> wrote:
 
-> Hello Neil, I'm sending patches with new takeover transitions proposal:
-> 0->5(4), 5(4)->0, 10->0, 0->10.
-> 
-> Regards,
-> Maciek
-> 
-> 
-> Signed-off-by: Maciej Trela <maciej.trela@intel.com>
-> ---
->  drivers/md/raid5.c |   50 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 files changed, 50 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-> index e84204e..0fe78ea 100644
-> --- a/drivers/md/raid5.c
-> +++ b/drivers/md/raid5.c
-> @@ -5614,6 +5614,39 @@ static void raid5_quiesce(mddev_t *mddev, int state)
->  }
->  
->  
-> +static void *raid5_takeover_raid0(mddev_t *mddev)
+
+> +static void *raid0_takeover_raid10(mddev_t *mddev)
 > +{
-> +	int chunksect;
-> +	
-> +	if (mddev->degraded > 0) {
-> +	    printk(KERN_ERR "ERROR: Raid0 with degraded disks!: %d\n", mddev->degraded);
+> +	mdk_rdev_t *rdev;
+> +
+> +	/* Check layout: 
+> +	 *  assuming that far_copies is 1 and disks number is even 
+> +	 *  also all mirrors must be already degraded
+> +	 */
+> +	if ((mddev->layout >> 8) != 1) {
+> +	    printk(KERN_ERR "error: Raid0 cannot takover layout: %x\n", mddev->layout);
+> +		return ERR_PTR(-EINVAL);
+> +	}
+> +	if (mddev->raid_disks & 1) {
+> +	    printk(KERN_ERR "error: Raid0 cannot takover Raid10 with odd disk number.\n");
+> +		return ERR_PTR(-EINVAL);
+> +	}
+> +	if (mddev->degraded != (mddev->raid_disks>>1)) {
+> +	    printk(KERN_ERR "error: All mirrors must be already degraded!\n");
 > +		return ERR_PTR(-EINVAL);
 > +	}
 > +	
-> +	chunksect = 64*2; /* 64K by default */
-> +
-> +	/* The array must be an exact multiple of chunksize */
-> +	while (chunksect && (mddev->array_sectors & (chunksect-1)))
-> +		chunksect >>= 1;
-> +
-> +	if ((chunksect<<9) < STRIPE_SIZE) {
-> +		/* array size does not allow a suitable chunk size */
-> +		return ERR_PTR(-EINVAL);
-> +	}
-
-This is wrong.  The chunksize for RAID5 must be exactly the same as the
-chunksize for RAID0.  There is no place for guessing.
-
-
-
-> +	
-> +	mddev->new_level = 5;
-> +	mddev->new_layout = ALGORITHM_PARITY_N;
-> +	mddev->new_chunk_sectors = chunksect;
-> +	mddev->degraded++;
-> +	mddev->raid_disks++;
-> +	mddev->delta_disks++;
+> +	/* Set new parameters */
+> +	mddev->new_level = 0;
+> +	mddev->raid_disks -= mddev->degraded;
+> +	mddev->delta_disks = -mddev->degraded;
+> +	mddev->degraded = 0;
 > +	/* make sure it will be not marked as dirty */
 > +	mddev->recovery_cp = MaxSector;
 > +
-> +	return setup_conf(mddev);
-> +}
-> +
-> +
->  static void *raid5_takeover_raid1(mddev_t *mddev)
->  {
->  	int chunksect;
-> @@ -5737,12 +5770,29 @@ static int raid6_check_reshape(mddev_t *mddev)
->  
->  static void *raid5_takeover(mddev_t *mddev)
->  {
-> +	mdk_rdev_t *rdev;
-> +	sector_t sectors, dev_sectors;
-> +
->  	/* raid5 can take over:
->  	 *  raid0 - if all devices are the same - make it a raid4 layout
->  	 *  raid1 - if there are two drives.  We need to know the chunk size
->  	 *  raid4 - trivial - just use a raid4 layout.
->  	 *  raid6 - Providing it is a *_6 layout
->  	 */
-> +	if (mddev->level == 0) {
-> +		/* make sure all devices are the same (only one zone is supported) */
-> +		sectors = mddev->dev_sectors;
-> +		sector_div(sectors, mddev->chunk_sectors);
-> +		list_for_each_entry(rdev, &mddev->disks, same_set) {
-> +			dev_sectors = rdev->sectors;
-> +			sector_div(dev_sectors, mddev->chunk_sectors);
-> +			if (dev_sectors != sectors) {
-> +				printk("error: cannot takeover raid 0 with different dev sizes.\n");
-> +				return ERR_PTR(-EINVAL);
-> +			}
-> +		}
-> +		return raid5_takeover_raid0(mddev);
+> +	list_for_each_entry(rdev, &mddev->disks, same_set) {	
+> +		rdev->raid_disk /= 2;
 > +	}
 
-I would rather you just look inside the raid0_private_data to see tha
-nr_strip_zones is zero.
 
+You assume here that near_copies is 2, but you never check for that.
 
-Thanks,
+Also - and this applies to raid5 and raid10 - the devices may not be all the
+same size.  raid5 and raid10 will just use the size of the smallest device,
+but raid0 won't.  For for a seamless conversion, you need to handle the case
+that the devices are not the same size.  Either disallow that case, or make
+use of the extra space.
+
 NeilBrown
+
+
