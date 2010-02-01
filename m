@@ -1,45 +1,64 @@
-From: David Rees <drees76@gmail.com>
-Subject: Re: SSD & mechanical disc in RAID 1
-Date: Mon, 1 Feb 2010 13:10:52 -0800
-Message-ID: <72dbd3151002011310g57fa9b66j2798aa0acde199b2@mail.gmail.com>
-References: <7a329d911001090953j17829cd9qca0888fbcd7b4805@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Fw: Why does one get mismatches?
+Date: Mon, 01 Feb 2010 16:18:23 -0500
+Message-ID: <4B67451F.8040206@tmr.com>
+References: <869541.92104.qm@web51304.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7a329d911001090953j17829cd9qca0888fbcd7b4805@mail.gmail.com>
+In-Reply-To: <869541.92104.qm@web51304.mail.re2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Wil Reichert <wil.reichert@gmail.com>
-Cc: linux raid <linux-raid@vger.kernel.org>
+To: Jon@eHardcastle.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Jan 9, 2010 at 9:53 AM, Wil Reichert <wil.reichert@gmail.com> w=
-rote:
-> Has anyone ever tried putting an SSD and a mechanical disc in RAID 1
-> using write-mostly? =A0The goal would be to extol the speed & latency
-> virtues of an SSD while retaining the integrity of the traditional
-> storage. =A0Would this setup even work as I expect it to?
+Jon Hardcastle wrote:
+> --- On Tue, 19/1/10, Jon Hardcastle <jd_hardcastle@yahoo.com> wrote:
+>
+>   
+>> From: Jon Hardcastle <jd_hardcastle@yahoo.com>
+>> Subject: Why does one get mismatches?
+>> To: linux-raid@vger.kernel.org
+>> Date: Tuesday, 19 January, 2010, 10:04
+>> Hi,
+>>
+>> I kicked off a check/repair cycle on my machine after i
+>> moved the phyiscal ordering of my drives around and I am now
+>> on my second check/repair cycle and it has kept finding
+>> mismatches.
+>>
+>> Is it correct that the mismatch value after a repair was
+>> needed should equal the value present after a check? What if
+>> it doesn't? What does it mean if another check STILL reveals
+>> mismatches?
+>>
+>> I had something similar after i reshaped from raid 5 to 6 i
+>> had to run check/repair/check/repair several times before i
+>> got my 0.
+>>
+>>
+>>     
+>
+> Guys,
+>
+> Anyone got any suggestions here? I am now on my ~5 check/repair and after a reboot the first check is still returning 8.
+>
+> All i have done is move the drives around. It is the same controllers/cables/etc 
+>
+> I really dont like the seeming random nature of what can/does/has caused the mismatches?
+>   
 
-I have such a setup using a 30GB OCZ Vertex and an old 120GB Seagate
-7200.7 (IDE!).
+If you have an ext[34] filesystem on this array, try mounting it 
+data=journal (yes it will slow down, this is a TEST). I did limited 
+testing using this, and it appeared to solve the problem, at least for 
+eight hours I had to test.
 
-Read performance is exactly as you'd expect - very fast as all reads
-come from the SSD so it's as fast as the SSD (though I haven't
-benchmarked it to verify).  At least my seat of the pants (SOTP)
-measurement in comparison to other SSDs seems very similar.
+Comment: when there is a three way RAID-1, why doesn't repair *vote* on 
+the correct value instead of just making a guess?
 
-Write performance is also what you'd expect, the same as an old IDE dri=
-ve.
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "We can't solve today's problems by using the same thinking we
+   used in creating them." - Einstein
 
-=46or a budget setup, it does what I expected it to.
-
-I suspect that if you used write-behind with a write-intent bitmap
-stored only on the SSD, you'd get some of that performance back, but
-potentially lose a bit of reliability.
-
--Dave
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
