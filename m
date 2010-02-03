@@ -1,121 +1,70 @@
 From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: problem changing raid level with Ubuntu 10.04 / 2.6.32 / mdadm
+Subject: Re: problem changing raid level with Ubuntu 10.04 / 2.6.32 / mdadm
  3.1.1
-Date: Wed, 3 Feb 2010 20:05:13 +0100 (CET)
-Message-ID: <alpine.DEB.1.10.1002031944020.31777@uplift.swm.pp.se>
+Date: Wed, 3 Feb 2010 20:12:32 +0100 (CET)
+Message-ID: <alpine.DEB.1.10.1002032009410.31777@uplift.swm.pp.se>
+References: <alpine.DEB.1.10.1002031944020.31777@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.1002031944020.31777@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, 3 Feb 2010, Mikael Abrahamsson wrote:
 
-I tested to go from raid5 to raid6 and grow it at the same time as per an 
-article I read that Niel Brown wrote, but I'm having trouble.
+> Am I missing something?
 
-Am I missing something?
+Seems I was, it works properly without bitmap. I first removed the bitmap, 
+i first grew it to 4 drives while still being raid5, then I added a 6th 
+drive and did this:
 
-root@swmike-test:~/mdadm-3.1.1# uname -a
-Linux swmike-test 2.6.32-12-generic #16-Ubuntu SMP Wed Jan 27 18:34:19 UTC 2010 i686 GNU/Linux
-
-root@swmike-test:~/mdadm-3.1.1# cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] 
-[raid4] [raid10]
-md0 : active raid5 sdg[5](S) sdf[4](S) sde[3] sdc[1] sdb2[0]
-       4208896 blocks super 1.2 level 5, 64k chunk, algorithm 2 [3/3] [UUU]
-       bitmap: 0/9 pages [0KB], 128KB chunk
-
-root@swmike-test:~/mdadm-3.1.1# ./mdadm --grow /dev/md0 --level=6 --raid-disks=5
+root@swmike-test:~/mdadm-3.1.1# ./mdadm --grow /dev/md0 --level=6 --raid-disks=6
 mdadm level of /dev/md0 changed to raid6
-mdadm: Need to backup 384K of critical section..
-mdadm: Cannot set device shape for /dev/md0
-mdadm: aborting level change
+mdadm: Need to backup 768K of critical section..
 
-[ 7172.535609] raid5: device sde operational as raid disk 2
-[ 7172.535613] raid5: device sdc operational as raid disk 1
-[ 7172.535615] raid5: device sdb2 operational as raid disk 0
-[ 7172.535965] raid5: allocated 4222kB for md0
-[ 7172.557813] 2: w=1 pa=0 pr=4 m=2 a=18 r=4 op1=0 op2=0
-[ 7172.557817] 1: w=2 pa=0 pr=4 m=2 a=18 r=4 op1=0 op2=0
-[ 7172.557819] 0: w=3 pa=0 pr=4 m=2 a=18 r=4 op1=0 op2=0
-[ 7172.557822] raid5: raid level 6 set md0 active with 3 out of 4 devices, algorithm 18
-[ 7172.557825] RAID5 conf printout:
-[ 7172.557826]  --- rd:4 wd:3
-[ 7172.557829]  disk 0, o:1, dev:sdb2
-[ 7172.557831]  disk 1, o:1, dev:sdc
-[ 7172.557832]  disk 2, o:1, dev:sde
-[ 7173.066112] raid5: device sde operational as raid disk 2
-[ 7173.066115] raid5: device sdc operational as raid disk 1
-[ 7173.066118] raid5: device sdb2 operational as raid disk 0
-[ 7173.066424] raid5: allocated 3179kB for md0
-[ 7173.101841] 2: w=1 pa=0 pr=3 m=1 a=2 r=3 op1=0 op2=0
-[ 7173.101845] 1: w=2 pa=0 pr=3 m=1 a=2 r=3 op1=0 op2=0
-[ 7173.101847] 0: w=3 pa=0 pr=3 m=1 a=2 r=3 op1=0 op2=0
-[ 7173.101850] raid5: raid level 5 set md0 active with 3 out of 3 devices, algorithm 2
-[ 7173.101852] RAID5 conf printout:
-[ 7173.101853]  --- rd:3 wd:3
-[ 7173.101855]  disk 0, o:1, dev:sdb2
-[ 7173.101857]  disk 1, o:1, dev:sdc
-[ 7173.101859]  disk 2, o:1, dev:sde
+[  499.564157] raid5: device sdb2 operational as raid disk 0
+[  499.564160] raid5: device sdg operational as raid disk 3
+[  499.564162] raid5: device sde operational as raid disk 2
+[  499.564165] raid5: device sdc operational as raid disk 1
+[  499.564583] raid5: allocated 5265kB for md0
+[  499.592869] 0: w=1 pa=0 pr=5 m=2 a=18 r=5 op1=0 op2=0
+[  499.592873] 3: w=2 pa=0 pr=5 m=2 a=18 r=5 op1=0 op2=0
+[  499.592875] 2: w=3 pa=0 pr=5 m=2 a=18 r=5 op1=0 op2=0
+[  499.592878] 1: w=4 pa=0 pr=5 m=2 a=18 r=5 op1=0 op2=0
+[  499.592881] raid5: raid level 6 set md0 active with 4 out of 5 devices, algorithm 18
+[  499.592883] RAID5 conf printout:
+[  499.592885]  --- rd:5 wd:4
+[  499.592887]  disk 0, o:1, dev:sdb2
+[  499.592890]  disk 1, o:1, dev:sdc
+[  499.592891]  disk 2, o:1, dev:sde
+[  499.592893]  disk 3, o:1, dev:sdg
+[  500.274685] RAID5 conf printout:
+[  500.274689]  --- rd:6 wd:5
+[  500.274691]  disk 0, o:1, dev:sdb2
+[  500.274694]  disk 1, o:1, dev:sdc
+[  500.274696]  disk 2, o:1, dev:sde
+[  500.274697]  disk 3, o:1, dev:sdg
+[  500.274699]  disk 4, o:1, dev:sdh
+[  500.274705] RAID5 conf printout:
+[  500.274706]  --- rd:6 wd:5
+[  500.274708]  disk 0, o:1, dev:sdb2
+[  500.274710]  disk 1, o:1, dev:sdc
+[  500.274711]  disk 2, o:1, dev:sde
+[  500.274713]  disk 3, o:1, dev:sdg
+[  500.274715]  disk 4, o:1, dev:sdh
+[  500.274716]  disk 5, o:1, dev:sdf
+[  500.274764] md: reshape of RAID array md0
+[  500.274768] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+[  500.274770] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for reshape.
+[  500.274777] md: using 128k window, over a total of 2104448 blocks.
 
-root@swmike-test:~/mdadm-3.1.1# cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] 
-[raid4] [raid10]
-md0 : active raid5 sdg[5](S) sdf[4](S) sde[3] sdc[1] sdb2[0]
-       4208896 blocks super 1.2 level 5, 64k chunk, algorithm 2 [3/3] [UUU]
-       bitmap: 0/9 pages [0KB], 128KB chunk
+That seems to have worked just fine...
 
-So I thought I'd try to just test the level change:
-
-root@swmike-test:~/mdadm-3.1.1# ./mdadm --grow /dev/md0 --level=6 --raid-disks=4 --backup-file=/backup-file
-mdadm level of /dev/md0 changed to raid6
-mdadm: Cannot set device shape for /dev/md0
-mdadm: aborting level change
-
-[ 7554.027702] raid5: device sde operational as raid disk 2
-[ 7554.027705] raid5: device sdc operational as raid disk 1
-[ 7554.027708] raid5: device sdb2 operational as raid disk 0
-[ 7554.028067] raid5: allocated 4222kB for md0
-[ 7554.040795] 2: w=1 pa=0 pr=4 m=2 a=18 r=4 op1=0 op2=0
-[ 7554.040798] 1: w=2 pa=0 pr=4 m=2 a=18 r=4 op1=0 op2=0
-[ 7554.040801] 0: w=3 pa=0 pr=4 m=2 a=18 r=4 op1=0 op2=0
-[ 7554.040804] raid5: raid level 6 set md0 active with 3 out of 4 devices, algorithm 18
-[ 7554.040806] RAID5 conf printout:
-[ 7554.040808]  --- rd:4 wd:3
-[ 7554.040810]  disk 0, o:1, dev:sdb2
-[ 7554.040812]  disk 1, o:1, dev:sdc
-[ 7554.040814]  disk 2, o:1, dev:sde
-[ 7555.517552] raid5: device sde operational as raid disk 2
-[ 7555.517555] raid5: device sdc operational as raid disk 1
-[ 7555.517558] raid5: device sdb2 operational as raid disk 0
-[ 7555.517890] raid5: allocated 3179kB for md0
-[ 7555.549619] 2: w=1 pa=0 pr=3 m=1 a=2 r=3 op1=0 op2=0
-[ 7555.549622] 1: w=2 pa=0 pr=3 m=1 a=2 r=3 op1=0 op2=0
-[ 7555.549625] 0: w=3 pa=0 pr=3 m=1 a=2 r=3 op1=0 op2=0
-[ 7555.549627] raid5: raid level 5 set md0 active with 3 out of 3 devices, algorithm 2
-[ 7555.549629] RAID5 conf printout:
-[ 7555.549631]  --- rd:3 wd:3
-[ 7555.549633]  disk 0, o:1, dev:sdb2
-[ 7555.549635]  disk 1, o:1, dev:sdc
-[ 7555.549637]  disk 2, o:1, dev:sde
-
-root@swmike-test:~/mdadm-3.1.1# ./mdadm --grow /dev/md0 --raid-disks=4
-mdadm: Need to backup 384K of critical section..
-mdadm: Cannot set device shape for /dev/md0: Device or resource busy
-
-[ 7616.412076] md: couldn't update array info. -16
-
-What could cause this? It doesn't work with the one ubuntu is shipping 
-either:
-
-root@swmike-test:~# mdadm --version
-mdadm - v2.6.7.1 - 15th October 2008
-root@swmike-test:~# mdadm --grow /dev/md0 --raid-disks=4
-mdadm: Need to backup 384K of critical section..
-mdadm: Cannot set device size/shape for /dev/md0: Device or resource busy
-
-[ 7746.764080] md: couldn't update array info. -16
+Any reason this doesn't work with a bitmap, and if it doesn't, then 
+perhaps this should be documented somewhere or at least mdadm should throw 
+an error message?
 
 -- 
 Mikael Abrahamsson    email: swmike@swm.pp.se
