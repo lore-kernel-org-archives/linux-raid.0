@@ -1,51 +1,32 @@
-From: <senthilkumar.muthukalai@wipro.com>
-Subject: Global sparing
-Date: Thu, 4 Feb 2010 18:48:16 +0530
-Message-ID: <8338BD137FF1B64EB341218BD702985E0303DE20@BLR-EC-MBX03.wipro.com>
+From: Bernd Schubert <bernd.schubert@fastmail.fm>
+Subject: Re: [[Patch mdadm] 2/5] Move the files mdmon opens into /dev/ to support handoff after pivotroot
+Date: Thu, 4 Feb 2010 14:50:13 +0100
+Message-ID: <201002041450.14139.bernd.schubert@fastmail.fm>
+References: <1263242294-5353-1-git-send-email-dledford@redhat.com> <4B6847EA.8010509@tmr.com> <4B686CC0.4030103@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+In-Reply-To: <4B686CC0.4030103@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: Bill Davidsen <davidsen@tmr.com>, Michael Evans <mjevans1983@gmail.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tuesday 02 February 2010, Doug Ledford wrote:
+> On 02/02/2010 10:42 AM, Bill Davidsen wrote:
+> > Michael Evans wrote:
+> > It seems as if a lot of work
+> > and overhead is being generated for the applications, just to save a
+> > tiny bit of work for the people implementing a new boot procedure.
+> >
+> > (cd /dev .run && find . -depth | cpio -pdm /var/run; cd -; rmdir
+> > /dev/.run)
 
-Hi,
+What about to use "mount --move" from /var/run of the initrams to final 
+/var/run before the chroot command?
 
-Can anyone help me to understand the global sharing with the below
-context?
-I have two degraded RAID1s say md0 and md1 with one disk active on each.
-Both the arrays were originally built with 2 disks.
-I am enabling global sharing.
-When I add a disk to md0, it gets rebuilt.
-When I add one more disk to md0, it gets added as a spare.
-The md1, which is also degraded, is not able to grab the global spare
-from md0 which is sitting idle until md0 finishes rebuilding.
-Is this by policy/concept of global sharing that the spare is shared
-after rebuilding?
 
-Also I am trying to change mdadm-2.6.4 to make it shared immediately as
-follows.
-
---- mdadm-2.6.4/Monitor.c.orig  2010-02-03 16:58:50.000000000 +0530
-+++ mdadm-2.6.4/Monitor.c       2010-02-03 16:59:47.000000000 +0530
-@@ -469,7 +469,7 @@
-                                for (st2=statelist ; st2 ;
-st2=st2->next)
-                                        if (st2 != st &&
-                                            st2->spare > 0 &&
--                                           st2->active == st2->raid &&
-+                                           st2->working >= st2->raid &&
-                                            st2->spare_group != NULL &&
-                                            strcmp(st->spare_group,
-st2->spare_group) == 0) {
-                                                /* try to remove and add
-*/
-
-Is this change valid and complete?
-
-Thanks,
-Senthil M
+Cheers,
+Bernd
