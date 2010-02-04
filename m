@@ -1,30 +1,51 @@
-From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
-Subject: Re: problem changing raid level with Ubuntu 10.04 / 2.6.32 / mdadm
-	3.1.1
-Date: Thu, 4 Feb 2010 08:31:53 +0000
-Message-ID: <73e903671002040031ra853431mf34654b70b28bac9@mail.gmail.com>
-References: <alpine.DEB.1.10.1002031944020.31777@uplift.swm.pp.se>
-	<alpine.DEB.1.10.1002032009410.31777@uplift.swm.pp.se>
+From: <senthilkumar.muthukalai@wipro.com>
+Subject: Global sparing
+Date: Thu, 4 Feb 2010 18:48:16 +0530
+Message-ID: <8338BD137FF1B64EB341218BD702985E0303DE20@BLR-EC-MBX03.wipro.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.1002032009410.31777@uplift.swm.pp.se>
+Content-class: urn:content-classes:message
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Feb 3, 2010 at 7:12 PM, Mikael Abrahamsson <swmike@swm.pp.se> wrote:
->
-> Any reason this doesn't work with a bitmap, and if it doesn't, then perhaps
-> this should be documented somewhere or at least mdadm should throw an error
-> message?
 
-Hi, I just wanted to say 'me too' ... I was doing a similar reshape and indeed
-the bitmap stopped me. I only figured it out because I came across a random
-blog post somewhere saying "turn off the bitmap first".
+Hi,
 
-So as not to just spam the list with me-toos, this is another verification that
-A) the reshaping works super, and B) it needs some assorted printf()s.
+Can anyone help me to understand the global sharing with the below
+context?
+I have two degraded RAID1s say md0 and md1 with one disk active on each.
+Both the arrays were originally built with 2 disks.
+I am enabling global sharing.
+When I add a disk to md0, it gets rebuilt.
+When I add one more disk to md0, it gets added as a spare.
+The md1, which is also degraded, is not able to grab the global spare
+from md0 which is sitting idle until md0 finishes rebuilding.
+Is this by policy/concept of global sharing that the spare is shared
+after rebuilding?
 
--- Kristleifur
+Also I am trying to change mdadm-2.6.4 to make it shared immediately as
+follows.
+
+--- mdadm-2.6.4/Monitor.c.orig  2010-02-03 16:58:50.000000000 +0530
++++ mdadm-2.6.4/Monitor.c       2010-02-03 16:59:47.000000000 +0530
+@@ -469,7 +469,7 @@
+                                for (st2=statelist ; st2 ;
+st2=st2->next)
+                                        if (st2 != st &&
+                                            st2->spare > 0 &&
+-                                           st2->active == st2->raid &&
++                                           st2->working >= st2->raid &&
+                                            st2->spare_group != NULL &&
+                                            strcmp(st->spare_group,
+st2->spare_group) == 0) {
+                                                /* try to remove and add
+*/
+
+Is this change valid and complete?
+
+Thanks,
+Senthil M
