@@ -1,70 +1,159 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: problem changing raid level with Ubuntu 10.04 / 2.6.32 / mdadm
- 3.1.1
-Date: Wed, 3 Feb 2010 20:12:32 +0100 (CET)
-Message-ID: <alpine.DEB.1.10.1002032009410.31777@uplift.swm.pp.se>
-References: <alpine.DEB.1.10.1002031944020.31777@uplift.swm.pp.se>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: 2 drives failed, one "active", one with wrong event count
+Date: Thu, 4 Feb 2010 12:03:12 +1100
+Message-ID: <20100204120312.57e40158@notabene.brown>
+References: <alpine.DEB.1.10.1001280952060.15329@uplift.swm.pp.se>
+	<alpine.DEB.1.10.1001290502140.15329@uplift.swm.pp.se>
+	<20100129211719.04595761@notabene>
+	<alpine.DEB.1.10.1001291306170.15329@uplift.swm.pp.se>
+	<alpine.DEB.1.10.1001291326430.15329@uplift.swm.pp.se>
+	<alpine.DEB.1.10.1001301546400.15329@uplift.swm.pp.se>
+	<20100201093713.7ee33041@notabene.brown>
+	<alpine.DEB.1.10.1002010810440.31777@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.1002031944020.31777@uplift.swm.pp.se>
+In-Reply-To: <alpine.DEB.1.10.1002010810440.31777@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 3 Feb 2010, Mikael Abrahamsson wrote:
+On Mon, 1 Feb 2010 08:13:24 +0100 (CET)
+Mikael Abrahamsson <swmike@swm.pp.se> wrote:
 
-> Am I missing something?
+> On Mon, 1 Feb 2010, Neil Brown wrote:
+> 
+> > You might know that nothing has been written to the array since the 
+> > device with the lower event count was removed, but md doesn't know that. 
+> > Any device with an old event count could have old and so cannot be 
+> > trusted (unless you assemble with --force meaning that you are taking 
+> > responsibility).
+> 
+> I did use --force, but it seems in the state "one drive with lower event 
+> count and another one with 0x2", the event count on the drive isn't 
+> forcably updated and since there is a 0x2 drive, the array isn't started.
+> 
+> I had the same situation again this morning (changing controller next), 
+> but this time I had bitmaps enabled so recovery of the array with 
+> --assemble --force took just a few seconds. Really nice.
+> 
 
-Seems I was, it works properly without bitmap. I first removed the bitmap, 
-i first grew it to 4 drives while still being raid5, then I added a 6th 
-drive and did this:
+Right... I understand now.
 
-root@swmike-test:~/mdadm-3.1.1# ./mdadm --grow /dev/md0 --level=6 --raid-disks=6
-mdadm level of /dev/md0 changed to raid6
-mdadm: Need to backup 768K of critical section..
+Fixed with the following patch which will be in 3.1.2.
 
-[  499.564157] raid5: device sdb2 operational as raid disk 0
-[  499.564160] raid5: device sdg operational as raid disk 3
-[  499.564162] raid5: device sde operational as raid disk 2
-[  499.564165] raid5: device sdc operational as raid disk 1
-[  499.564583] raid5: allocated 5265kB for md0
-[  499.592869] 0: w=1 pa=0 pr=5 m=2 a=18 r=5 op1=0 op2=0
-[  499.592873] 3: w=2 pa=0 pr=5 m=2 a=18 r=5 op1=0 op2=0
-[  499.592875] 2: w=3 pa=0 pr=5 m=2 a=18 r=5 op1=0 op2=0
-[  499.592878] 1: w=4 pa=0 pr=5 m=2 a=18 r=5 op1=0 op2=0
-[  499.592881] raid5: raid level 6 set md0 active with 4 out of 5 devices, algorithm 18
-[  499.592883] RAID5 conf printout:
-[  499.592885]  --- rd:5 wd:4
-[  499.592887]  disk 0, o:1, dev:sdb2
-[  499.592890]  disk 1, o:1, dev:sdc
-[  499.592891]  disk 2, o:1, dev:sde
-[  499.592893]  disk 3, o:1, dev:sdg
-[  500.274685] RAID5 conf printout:
-[  500.274689]  --- rd:6 wd:5
-[  500.274691]  disk 0, o:1, dev:sdb2
-[  500.274694]  disk 1, o:1, dev:sdc
-[  500.274696]  disk 2, o:1, dev:sde
-[  500.274697]  disk 3, o:1, dev:sdg
-[  500.274699]  disk 4, o:1, dev:sdh
-[  500.274705] RAID5 conf printout:
-[  500.274706]  --- rd:6 wd:5
-[  500.274708]  disk 0, o:1, dev:sdb2
-[  500.274710]  disk 1, o:1, dev:sdc
-[  500.274711]  disk 2, o:1, dev:sde
-[  500.274713]  disk 3, o:1, dev:sdg
-[  500.274715]  disk 4, o:1, dev:sdh
-[  500.274716]  disk 5, o:1, dev:sdf
-[  500.274764] md: reshape of RAID array md0
-[  500.274768] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[  500.274770] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for reshape.
-[  500.274777] md: using 128k window, over a total of 2104448 blocks.
+Thanks,
+NeilBrown
 
-That seems to have worked just fine...
+commit 921d9e164fd3f6203d1b0cf2424b793043afd001
+Author: NeilBrown <neilb@suse.de>
+Date:   Thu Feb 4 12:02:09 2010 +1100
 
-Any reason this doesn't work with a bitmap, and if it doesn't, then 
-perhaps this should be documented somewhere or at least mdadm should throw 
-an error message?
+    Assemble: fix --force assembly of v1.x arrays which are recovering.
+    
+    1.x metadata allows a device to be a member of the array while it
+    is still recoverying.  So it is a working member, but is not
+    completely in-sync.
+    
+    mdadm/assemble does not understand this distinction and assumes that a
+    work member is fully in-sync for the purpose of determining if there
+    are enough in-sync devices for the array to be functional.
+    
+    So collect the 'recovery_start' value from the metadata and use it in
+    assemble when determining how useful a given device is.
+    
+    Reported-by: Mikael Abrahamsson <swmike@swm.pp.se>
+    Signed-off-by: NeilBrown <neilb@suse.de>
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+diff --git a/Assemble.c b/Assemble.c
+index 7f90048..e4d6181 100644
+--- a/Assemble.c
++++ b/Assemble.c
+@@ -800,7 +800,8 @@ int Assemble(struct supertype *st, char *mddev,
+ 		if (devices[j].i.events+event_margin >=
+ 		    devices[most_recent].i.events) {
+ 			devices[j].uptodate = 1;
+-			if (i < content->array.raid_disks) {
++			if (i < content->array.raid_disks &&
++			    devices[j].i.recovery_start == MaxSector) {
+ 				okcnt++;
+ 				avail[i]=1;
+ 			} else
+@@ -822,6 +823,7 @@ int Assemble(struct supertype *st, char *mddev,
+ 			int j = best[i];
+ 			if (j>=0 &&
+ 			    !devices[j].uptodate &&
++			    devices[j].i.recovery_start == MaxSector &&
+ 			    (chosen_drive < 0 ||
+ 			     devices[j].i.events
+ 			     > devices[chosen_drive].i.events))
+diff --git a/super-ddf.c b/super-ddf.c
+index 3e30229..870efd8 100644
+--- a/super-ddf.c
++++ b/super-ddf.c
+@@ -1369,6 +1369,7 @@ static void getinfo_super_ddf(struct supertype *st, struct mdinfo *info)
+ 	info->disk.state = (1 << MD_DISK_SYNC) | (1 << MD_DISK_ACTIVE);
+ 
+ 
++	info->recovery_start = MaxSector;
+ 	info->reshape_active = 0;
+ 	info->name[0] = 0;
+ 
+@@ -1427,6 +1428,7 @@ static void getinfo_super_ddf_bvd(struct supertype *st, struct mdinfo *info)
+ 
+ 	info->container_member = ddf->currentconf->vcnum;
+ 
++	info->recovery_start = MaxSector;
+ 	info->resync_start = 0;
+ 	if (!(ddf->virt->entries[info->container_member].state
+ 	      & DDF_state_inconsistent)  &&
+diff --git a/super-intel.c b/super-intel.c
+index 91479a2..bbdcb51 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -1452,6 +1452,7 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info)
+ 	info->data_offset	  = __le32_to_cpu(map->pba_of_lba0);
+ 	info->component_size	  = __le32_to_cpu(map->blocks_per_member);
+ 	memset(info->uuid, 0, sizeof(info->uuid));
++	info->recovery_start = MaxSector;
+ 
+ 	if (map->map_state == IMSM_T_STATE_UNINITIALIZED || dev->vol.dirty) {
+ 		info->resync_start = 0;
+@@ -1559,6 +1560,7 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info)
+ 	info->disk.number = -1;
+ 	info->disk.state = 0;
+ 	info->name[0] = 0;
++	info->recovery_start = MaxSector;
+ 
+ 	if (super->disks) {
+ 		__u32 reserved = imsm_reserved_sectors(super, super->disks);
+diff --git a/super0.c b/super0.c
+index 0485a3a..5c6b7d7 100644
+--- a/super0.c
++++ b/super0.c
+@@ -372,6 +372,7 @@ static void getinfo_super0(struct supertype *st, struct mdinfo *info)
+ 
+ 	uuid_from_super0(st, info->uuid);
+ 
++	info->recovery_start = MaxSector;
+ 	if (sb->minor_version > 90 && (sb->reshape_position+1) != 0) {
+ 		info->reshape_active = 1;
+ 		info->reshape_progress = sb->reshape_position;
+diff --git a/super1.c b/super1.c
+index 85bb598..40fbb81 100644
+--- a/super1.c
++++ b/super1.c
+@@ -612,6 +612,11 @@ static void getinfo_super1(struct supertype *st, struct mdinfo *info)
+ 	strncpy(info->name, sb->set_name, 32);
+ 	info->name[32] = 0;
+ 
++	if (sb->feature_map & __le32_to_cpu(MD_FEATURE_RECOVERY_OFFSET))
++		info->recovery_start = __le32_to_cpu(sb->recovery_offset);
++	else
++		info->recovery_start = MaxSector;
++
+ 	if (sb->feature_map & __le32_to_cpu(MD_FEATURE_RESHAPE_ACTIVE)) {
+ 		info->reshape_active = 1;
+ 		info->reshape_progress = __le64_to_cpu(sb->reshape_position);
