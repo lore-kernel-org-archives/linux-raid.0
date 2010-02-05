@@ -1,80 +1,48 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: unknown partition table starting with 2.6.28
-Date: Thu, 04 Feb 2010 19:33:37 -0500
-Message-ID: <4B6B6761.1020108@tmr.com>
-References: <4B51010E.9090800@vorgon.com> <4B51B46A.4080302@anonymous.org.uk> <4B673DAE.3040806@tmr.com> <4B67FF12.5070004@anonymous.org.uk> <4B6B6579.40900@tmr.com>
+From: Keld Simonsen <keld@keldix.com>
+Subject: Re: recovering a mirrored arry.
+Date: Fri, 5 Feb 2010 02:19:28 +0100
+Message-ID: <20100205011928.GA12630@light.rap.dk>
+References: <20100203025758.GA12925@light.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B6B6579.40900@tmr.com>
+Content-Disposition: inline
+In-Reply-To: <20100203025758.GA12925@light.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen wrote:
-> John Robinson wrote:
->> On 01/02/2010 20:46, Bill Davidsen wrote:
->>> John Robinson wrote:
->>>> On 15/01/2010 23:58, Timothy D. Lenz wrote:
->>>>> I am trying to update my kernel from 2.6.26.8 to the current .32. 
->>>> [...]
->>>>> Starting with .28 I am getting an error about unknown partition 
->>>>> table for all 3 md's. md0 is boot and main programs, md1 is swap, 
->>>>> md2 is mostly recordings storage for vdr. All 3 are raid 1 and 
->>>>> raid is built in.
->>>>
->>>> Your md devices aren't partitioned so you can quite safely ignore 
->>>> the warning. See also 
->>>> http://marc.info/?l=linux-raid&m=125797242110594&w=2
->>>
->>> To clarify that a bit, the kernel can use several partition formats, 
->>> and something in the partitions looks like a partition table but not 
->>> a *valid* partition table. So the kernel warns that it doesn't 
->>> recognize the table.
->>>
->>> I suspect that using a different superblock type would change 
->>> (probably eliminate) this, putting the md information at the start 
->>> of the partition, of in a bit or whatever makes the kernel happy. 
->>> The kernel would make us happy if it checked for a valid md 
->>> superblock at the *end* of the partition, but there may be reasons 
->>> why that's undesirable.
->>>
->>> Finally, I'm less willing than John to say you can ignore it, any 
->>> time something comes close enough to working (in an undesired way) 
->>> to generate an error message, if there's a simple way to be sure the 
->>> kernel doesn't try to use random data as a partition table, you 
->>> might well want to take a step to prevent a problem now.
->>>
->>> I believe it arises out of all arrays being partitionable recently, 
->>> again the details don't come to mid, I've been pretty head down on 
->>> another project since November.
->>
->> I don't think this analysis is correct. Yes, the situation has arisen 
->> out of all arrays - in fact all block devices - being partitionable, 
->> but the warning's not because of something that looks like a dodgy 
->> partition table, it is precisely what it says, a statement that the 
->> device does not contain a valid partition table. I am essentially 
->> repeating the contents of Doug Ledford's earlier post to this list, 
->> to which I referred above.
->
-> But the question is, *should* it contain a valid partition table, or 
-> even anything which looks enough like a partition table to have the 
-> kernel look at it hard enough to think it's invalid? I have several 
-> devices on one system which contain essentially random data, and I 
-> don't see this, so I assume that my data never looks enough like a 
-> partition table to trigger this. At least to 2.6.33-rc6, which I did 
-> boot.
->
-On reflection I may not have said this clearly. I have block devices 
-which do not have partition tables and which do not trigger this 
-message. Therefore something is triggering this message, beyond the lack 
-of a partition table. My thought is that it may be some logic called 
-when the array is assembled, and some data on the array.
+On Wed, Feb 03, 2010 at 03:57:58AM +0100, Keld Simonsen wrote:
+Hi
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "We can't solve today's problems by using the same thinking we
-   used in creating them." - Einstein
 
+can anybody help me with this? I am stuck with recovering my system here.
+is it a sensible thing ro do?
+
+best regards
+keld
+
+> Hi
+> 
+> I got 2 arrays in error of the raid10 type.
+> 
+> I think this is because my motherboard died, and then the fs were
+> corrupted.
+> 
+> My thoughts were that actually one of the copies could be correct.
+> So I would like to try out the consistency of each part of the raid10
+> (it is 2-partition arrays), and then if I find one that is consistent, then
+> resync the faulty one with the good one.
+> 
+> How do I do this?
+> 
+> it seems that I cannot just assemble an array with a missing part.
+> If I assemble the full array, is there then a risk of the bad one
+> corrupting the good one? And can I declare one of the disks faulty
+> then test the other one, then declare nbr 2 disk for faulty and 
+> declare the first one as good?
+> 
+> I dont see anything on the wiki on this.
+> 
+> best regards
+> keld
