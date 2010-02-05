@@ -1,81 +1,44 @@
-From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
-Subject: Re: recovering a mirrored arry.
-Date: Fri, 5 Feb 2010 16:25:02 +0000
-Message-ID: <73e903671002050825j2ae06fabjc7ec2b1e8fb85135@mail.gmail.com>
-References: <20100203025758.GA12925@light.rap.dk> <20100205011928.GA12630@light.rap.dk>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: If your using large Sata drives in raid 5/6 ....
+Date: Fri, 05 Feb 2010 16:59:43 +0000
+Message-ID: <4B6C4E7F.2080501@anonymous.org.uk>
+References: <87f94c371002021440o3b30414bk3a7ccf9d2fa9b8af@mail.gmail.com> <87f94c371002021446y38dce6fds6acca2b4919ad773@mail.gmail.com> <4B698365.1040007@anonymous.org.uk> <4B6C3B7D.2090502@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100205011928.GA12630@light.rap.dk>
+In-Reply-To: <4B6C3B7D.2090502@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Keld Simonsen <keld@keldix.com>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Feb 5, 2010 at 1:19 AM, Keld Simonsen <keld@keldix.com> wrote:
-> On Wed, Feb 03, 2010 at 03:57:58AM +0100, Keld Simonsen wrote:
-> Hi
->
->
-> can anybody help me with this? I am stuck with recovering my system h=
-ere.
-> is it a sensible thing ro do?
->
-> best regards
-> keld
->
->> Hi
+On 05/02/2010 15:38, Bill Davidsen wrote:
+> John Robinson wrote:
+[...]
+>> What sums I've done, on the basis of a 1 in 10^15 bit unrecoverable 
+>> error rate, suggest you've a 1 in 63 chance of getting an 
+>> uncorrectable error while reading the whole surface of their 2TB disc. 
+>> Read the whole disc 44 times and you've a 50/50 chance of hitting an 
+>> uncorrectable error.
 >>
->> I got 2 arrays in error of the raid10 type.
->>
->> I think this is because my motherboard died, and then the fs were
->> corrupted.
->>
->> My thoughts were that actually one of the copies could be correct.
->> So I would like to try out the consistency of each part of the raid1=
-0
->> (it is 2-partition arrays), and then if I find one that is consisten=
-t, then
->> resync the faulty one with the good one.
->>
->> How do I do this?
->>
->> it seems that I cannot just assemble an array with a missing part.
->> If I assemble the full array, is there then a risk of the bad one
->> corrupting the good one? And can I declare one of the disks faulty
->> then test the other one, then declare nbr 2 disk for faulty and
->> declare the first one as good?
->>
->> I dont see anything on the wiki on this.
->>
->> best regards
->> keld
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+> Rethink that, virtually all errors happen during write, reading is 
+> non-destructive, in terms of what's on the drive. So it's valid after 
+> write or it isn't, but having been written correctly, other than 
+> failures in the media (including mechanical parts) or electronics, the 
+> chances of "going bad" are probably vanishingly small.
 
+They're quite small, at 1 in 10^15 bits read. On 1GB discs, you probably 
+could call it vanishingly small. But now with 1TB and larger discs, I 
+wouldn't characterise it as vanishingly small. It's entirely on the 
+basis of the given specs that I did my calculations.
 
-I wish I could help more, but check out this from the mdadm man page:
+Bear in mind that the operation of the disc is now deliberately designed 
+to use ECC all the time. Have a look at the vast numbers you get from 
+the SMART data for ECC errors corrected. I just checked a 160GB 
+single-platter disc with 4500 power-on hours; it quotes 200,000,000 
+hardware ECC errors recovered.
 
-       To create a "degraded" array in which some devices are missing,
-simply give
-       the word "missing" in place of a device name.  This  will
-cause  mdadm  to
-       leave  the  corresponding  slot  in  the array empty.  For a
-RAID4 or RAID5
-       array at most one slot can be "missing"; for a  RAID6  array
-at  most  two
-       slots.   For a RAID1 array, only one real device needs to be
-given.  All of
-       the others can be "missing".
+Cheers,
 
-Hope this helps!
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+John.
+
