@@ -1,125 +1,124 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: recovering a mirrored arry.
-Date: Fri, 5 Feb 2010 22:42:25 +0000
-Message-ID: <20100205224225.GA8099@cthulhu.home.robinhill.me.uk>
-References: <20100203025758.GA12925@light.rap.dk>
- <20100205011928.GA12630@light.rap.dk>
- <73e903671002050825j2ae06fabjc7ec2b1e8fb85135@mail.gmail.com>
- <20100205185043.GA6956@light.rap.dk>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [[Patch mdadm] 2/5] Move the files mdmon opens into /dev/ to
+ 	support handoff after pivotroot
+Date: Sat, 06 Feb 2010 12:51:02 -0500
+Message-ID: <4B6DAC06.6060909@redhat.com>
+References: <1263242294-5353-1-git-send-email-dledford@redhat.com>	 <1263242294-5353-3-git-send-email-dledford@redhat.com>	 <20100119110930.107ca42e@notabene> <4B55F138.7060008@redhat.com>	 <20100204174009.6072ec07@notabene.brown> <4B6B15B3.8030205@redhat.com> <e9c3a7c21002041504w17565653m5a8b8cd90543cf1e@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="sdtB3X0nJg68CQEu"
+ protocol="application/pgp-signature";
+ boundary="------------enigBD008D7C2D5FE580462B7221"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100205185043.GA6956@light.rap.dk>
+In-Reply-To: <e9c3a7c21002041504w17565653m5a8b8cd90543cf1e@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, initramfs@vger.kernel.org, martin f krafft <madduck@debian.org>, Michal Marek <mmarek@suse.de>, Hans de Goede <hdegoede@redhat.com>, Bill Nottingham <notting@redhat.com>
 List-Id: linux-raid.ids
 
-
---sdtB3X0nJg68CQEu
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigBD008D7C2D5FE580462B7221
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On Fri Feb 05, 2010 at 07:50:44PM +0100, Keld Simonsen wrote:
+On 02/04/2010 06:04 PM, Dan Williams wrote:
+> On Thu, Feb 4, 2010 at 11:45 AM, Doug Ledford <dledford@redhat.com> wro=
+te:
+>> To be fair, if post-hoc versus initial made any difference what so eve=
+r,
+>> then so would the fact that I wouldn't have chosen to have these files=
 
-> On Fri, Feb 05, 2010 at 04:25:02PM +0000, Kristleifur Da=F0ason wrote:
-> > On Fri, Feb 5, 2010 at 1:19 AM, Keld Simonsen <keld@keldix.com> wrote:
-> > > On Wed, Feb 03, 2010 at 03:57:58AM +0100, Keld Simonsen wrote:
-> > > Hi
-> > >
-> > >
-> > > can anybody help me with this? I am stuck with recovering my system h=
-ere.
-> > > is it a sensible thing ro do?
-> > >
-> > > best regards
-> > > keld
-> > >
-> > >> Hi
-> > >>
-> > >> I got 2 arrays in error of the raid10 type.
-> > >>
-> > >> I think this is because my motherboard died, and then the fs were
-> > >> corrupted.
-> > >>
-> > >> My thoughts were that actually one of the copies could be correct.
-> > >> So I would like to try out the consistency of each part of the raid10
-> > >> (it is 2-partition arrays), and then if I find one that is consisten=
-t, then
-> > >> resync the faulty one with the good one.
-> > >>
-> > >> How do I do this?
-> > >>
-> > >> it seems that I cannot just assemble an array with a missing part.
-> > >> If I assemble the full array, is there then a risk of the bad one
-> > >> corrupting the good one? And can I declare one of the disks faulty
-> > >> then test the other one, then declare nbr 2 disk for faulty and
-> > >> declare the first one as good?
-> > >>
-> > >> I dont see anything on the wiki on this.
-> > >>
-> > >> best regards
-> > >> keld
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
-> > >
-> >=20
-> >=20
-> > I wish I could help more, but check out this from the mdadm man page:
-> >=20
-> >        To create a "degraded" array in which some devices are missing,
-> > simply give
-> >        the word "missing" in place of a device name.  This  will
-> > cause  mdadm  to
-> >        leave  the  corresponding  slot  in  the array empty.  For a
-> > RAID4 or RAID5
-> >        array at most one slot can be "missing"; for a  RAID6  array
-> > at  most  two
-> >        slots.   For a RAID1 array, only one real device needs to be
-> > given.  All of
-> >        the others can be "missing".
+>> exist at all.  I would have made incremental assembly work without a m=
+ap
+>> file and I would have made imsm superblock handling be in the kernel.
+>> So, I'm dealing with the consequences of decisions I didn't make and
+>> wouldn't have made.  I don't think it's then fair to put some sort of
+>> 'premeditated' versus 'dealing with the situation' bias on my response=
+=2E
 >=20
-> I tried missing, but mdadm said that it could not find missing as a devic=
-e,
-> for assemble mode.
+> On the argument about where to place the mdmon files I am now torn
+> between the "Neil" and "Doug" positions, but on the decision of where
+> to place imsm superblock handling I stand behind the design decision
+> to put it in userspace.
 >=20
-No, as the manual page says, "missing" is only used for creating an
-array, not for assembling.
+> 1/ If you take a look at native md superblock support you see that the
+> support code is duplicated between kernel-space and user space, having
+> it all handled in userspace means only one code base to maintain
+> (elegant aspect #1).
 
-If you only give a single device in the assemble command then mdadm
-_ought_ to only use that to assemble the array.  I'm not 100% sure that
-it does it though - probably worth testing with loopback devices first.
+Elegance is in the eye of the beholder.  More on that in a minute.
 
-The other option would be to use "create" to create new degraded arrays
-containing only the single disks.  You'd need to make sure you used the
-same settings as for the old array though.
+> 2/ The kernel can simply worry about the *mechanism* of providing raid
+> while all the assembly *policy* and support for any number of
+> superblock formats is relegated to where policy belongs (elegant
+> aspect #2).
 
-Alternately, physically disconnect the drives in turn and assemble the
-array with the single drive.
+I would argue that dirty/clean state manipulation is *not* policy and
+*is* mechanism.  So, by your definition of what should be in the kernel
+combined with my definition of what dirty/clean state manipulation is,
+the solution is not only not elegant, it's flat incorrect.
 
-Cheers,
-    Robin
+> 2a/ This simply follows in the path of the design decision to not
+> support in-kernel auto-assembly of version-1 superblocks which started
+> the requirement to use an initramfs to boot software raid.  (this is a
+> not so elegant aspect because it mandates an initramfs to boot, but I
+> don't think a general purpose distro can ever get away from that
+> requirement).
+
+I'm fine with needing mdadm to assemble the device.  I'm not fine with
+needing mdmon once it's assembled.
+
+> I will say that needing to touch several software packages (kernel,
+> initramfs, initscripts, mdadm) to get imsm superblock support has
+> added some excitement to the process in the short term.  Long term I
+> think the elegant aspects of the decision will prove their worth.
+
+I will say that needing to touch multiple software packages might not be
+a bad thing, but think of *how* they had to be changed.  We had to add
+special exceptions for mdmon all over the place: kernel scheduler (for
+suspend/resume, mdmon can't be frozen like the rest of user space or
+else writing our suspend to disk image doesn't work), initramfs,
+initscripts after initramfs, initscripts on halt, SELinux.  In all these
+cases, we had to take something that we want to keep simple and add
+special case rules and exceptions for mdmon.  That pretty solidly says
+that while this arrangement may have been elegant for *you*, it was not
+elegant in the overall grand scheme of things.
+
+What would have been smart was to leave array creation, assembly,
+verfication, and modification to user space, but to put *all* of the
+raid mechanics, including superblock clean/dirty state processing and
+array shut down capabilities, in the kernel.  Had you done that, I would
+have called your solution elegant.
+
+It's at this point that I feel obliged to mention that, in terms of this
+whole big argument, the incremental map file has at least some amount of
+sense belonging in /dev, it's really the mdmon .pid and .sock files that
+don't, and those files wouldn't even exist had you designed things as I
+mention here.  It's the fact that you have two files per device that you
+should be placing in a specific place on the filesystem in order for
+them to be useful and adhere to standards yet the program they belong to
+needs to exist outside the context of any filesystem that I think is
+pretty strong evidence of the inelegance of this design.
+
 --=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+	      http://people.redhat.com/dledford
 
---sdtB3X0nJg68CQEu
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+Infiniband specific RPMs available at
+	      http://people.redhat.com/dledford/Infiniband
+
+
+--------------enigBD008D7C2D5FE580462B7221
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.14 (GNU/Linux)
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-iEYEARECAAYFAktsntEACgkQShxCyD40xBLstgCeNI96DO3m9JYeRLZaKNf4VwXX
-CfAAmwfTjJmD8bPWI9+ROdh2Hc1jX+jL
-=hFaZ
+iEYEARECAAYFAkttrAYACgkQg6WylM+/8ZTNFACeOuItYPGEp3RGHQH4y7eS+sD1
+feMAoKxJTVKBFH4KghHh8CT5p4ySh+69
+=uHhz
 -----END PGP SIGNATURE-----
 
---sdtB3X0nJg68CQEu--
+--------------enigBD008D7C2D5FE580462B7221--
