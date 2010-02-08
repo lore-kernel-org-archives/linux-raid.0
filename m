@@ -1,61 +1,80 @@
-From: =?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?=
-	<stefan.huebner@stud.tu-ilmenau.de>
-Subject: Re: recovery problems, might be driver-related
-Date: Mon, 08 Feb 2010 07:49:03 +0100
-Message-ID: <4B6FB3DF.9090208@stud.tu-ilmenau.de>
-References: <4B6EC24A.9040703@stud.tu-ilmenau.de> <20100208165200.3758520a@notabene.brown>
-Reply-To: stefan.huebner@stud.tu-ilmenau.de
+From: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [[Patch mdadm] 2/5] Move the files mdmon opens into /dev/ to
+ 	support handoff after pivotroot
+Date: Mon, 08 Feb 2010 10:32:53 -0500
+Message-ID: <4B702EA5.3030103@redhat.com>
+References: <1263242294-5353-1-git-send-email-dledford@redhat.com>	 <1263242294-5353-3-git-send-email-dledford@redhat.com>	 <20100119110930.107ca42e@notabene> <4B55F138.7060008@redhat.com>	 <20100204174009.6072ec07@notabene.brown> <4B6B15B3.8030205@redhat.com>	 <e9c3a7c21002041504w17565653m5a8b8cd90543cf1e@mail.gmail.com>	 <4B6DAC06.6060909@redhat.com> <e9c3a7c21002061307le6f5d56ked4fa3711bdd2367@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100208165200.3758520a@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig8C2EC1085F7E56718E20F071"
+Return-path: <initramfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <e9c3a7c21002061307le6f5d56ked4fa3711bdd2367-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: initramfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Neil Brown <neilb-l3A5Bk7waGM@public.gmane.org>, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, initramfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, martin f krafft <madduck-8fiUuRrzOP0dnm+yROfE0A@public.gmane.org>, Michal Marek <mmarek-l3A5Bk7waGM@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Bill Nottingham <notting-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-raid.ids
 
-Neil Brown schrieb:
-> On Sun, 07 Feb 2010 14:38:18 +0100
-> [...]
-> mdadm only checks the superblock at the start of the device to see if=
- it
-> looks like an ext3 filesystem.  So if an md array has a valid filesys=
-tem,
-> then it is very likely that at least one of the devices in the array =
-will
-> appear to have a valid filesystem to mdadm.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig8C2EC1085F7E56718E20F071
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Indeed that makes perfect sense.
->=20
->[...]
->=20
-> Maybe there was meant to be another layer between the md array and th=
-e
-> filesystem - maybe LVM ??  If there should have been an LVM and wasn'=
-t the
-> filesystem would definitely look very corrupt even though the superbl=
-ock
-> might appear to be in the right place.
->=20
+On 02/06/2010 04:07 PM, Dan Williams wrote:
 
-Well, there's no need to tell me - the guys in taiwan just don't do it
-on their NAS Devices.  But thanks for the hint.  I recall that the
-successful data-recoveries were on a Thecus N5200, which does indeed us=
-e
-lvm (to separate iSCSI-space, userspace, config-space, etc.)
+> This comment makes me see Neil's argument in a different light,
+> (hopefully I am not mischaracterizing it), but essentially we are
+> waiting for the standards to catch up with this new class of program.
+> FUSE, CUSE, and mdmon belong to a class of programs that move
+> traditionally exclusive kernel space functionality to userspace.
+> Debian's /lib/init/rw looks to be a response to this grey area of the
+> standards (not that I have any familiarity with the LSB).
 
->=20
-> NeilBrown
->=20
-Bottom-line: the customer's RAIDs were just f**ked, they should have ha=
-d
-taken drive-health more seriously... And the Vendor's code should get
-"normalized" so that FS-checking in regular intervals takes place...
+So if we want to argue that the standards are simply behind the times,
+and we need to do something that makes sense regardless of the
+standards, then I don't think anything in /dev or /lib makes sense.  The
+files that need to be created pre-rw-root are varied in their type and
+purpose between different things.  What we really need is simply an
+early boot /tmp area.  So, why not make a top level directory that
+clearly delineates this nature?  Something like /pre-init or /early-tmp
+or whatever?  Or possibly /tmp/pre-boot or /tmp/pre-init or
+/tmp/pre-pivot-root (the pre-pivot-root naming is awfully linux
+specific, so maybe /tmp/pre-init or /tmp/pre-boot would be better for
+possible standards acceptance later)?  I was thinking that mdmon's files
+would be stuck there, but then I remembered that we are doing option #3
+for mdmon, restarting after the system is up and running, so only the
+mdmon instances from the initramfs would put their files there, the
+final ones would be on the real /var/run area.  So, since as far as I
+know the mdmon .sock files were the only pre-boot files that couldn't be
+moved later (but effectively get moved by restarting mdmon after r/w
+/var/run), any and all files in /tmp/pre-pivot-root should be removed
+once the system is up and running, and quite possibly the filesystem
+could be entirely done away with.  At least then the naming would be to
+Neil's satisfaction I think, and mine.  And personally, when the
+standards are simply behind the times, I have no problem blazing ahead
+and letting them catch up when they get off their asses.
 
-Thanks for the help,
-Stefan H=FCbner
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--=20
+Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+              GPG KeyID: CFBFF194
+	      http://people.redhat.com/dledford
+
+Infiniband specific RPMs available at
+	      http://people.redhat.com/dledford/Infiniband
+
+
+--------------enig8C2EC1085F7E56718E20F071
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAktwLqUACgkQg6WylM+/8ZSVmQCeIJKALtegyzSsEVkKCN0YLSdW
+AiIAnieaeua4ah9dD0D0P4Jtg6MJ0bIf
+=zQpi
+-----END PGP SIGNATURE-----
+
+--------------enig8C2EC1085F7E56718E20F071--
