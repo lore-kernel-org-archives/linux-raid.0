@@ -1,56 +1,32 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: teeny but significant typo in latest mdadm ANNOUNCE
-Date: Mon, 8 Feb 2010 16:37:25 +1100
-Message-ID: <20100208163725.1572d27c@notabene.brown>
-References: <20100201145508.R6679@cisco.com>
+Subject: Re: problem changing raid level with Ubuntu 10.04 / 2.6.32 / mdadm
+ 3.1.1
+Date: Mon, 8 Feb 2010 16:42:53 +1100
+Message-ID: <20100208164253.4e6277fb@notabene.brown>
+References: <alpine.DEB.1.10.1002031944020.31777@uplift.swm.pp.se>
+	<alpine.DEB.1.10.1002032009410.31777@uplift.swm.pp.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100201145508.R6679@cisco.com>
+In-Reply-To: <alpine.DEB.1.10.1002032009410.31777@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: LJ Wobker <lwobker@cisco.com>
+To: Mikael Abrahamsson <swmike@swm.pp.se>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 1 Feb 2010 14:55:08 -0500
-LJ Wobker <lwobker@cisco.com> wrote:
+On Wed, 3 Feb 2010 20:12:32 +0100 (CET)
+Mikael Abrahamsson <swmike@swm.pp.se> wrote:
 
-> I'm looking at:
-> 
-> http://www.kernel.org/pub/linux/utils/raid/mdadm/ANNOUNCE
-> 
-> which says the following:
-> 
->   - The default metadata is not v1.1.  This metadata is stored at the
->     start of the device so is safer in many ways but could interfere with
->     boot loaded.  The old default (0.90) is still available and fully
->     supported.
-> 
-> 
-> I'm about 99.5% sure that this should read 
-> 	"The default metadata is *now* v1.1"  
-> rather than 
-> 	"The default metadata is *not* v1.1"
-> 
-> ordinarily I'd think this completely trollish behavior, but since the
-> 1-letter typo changes what the sentence means, I figured I'd bring it up.
-> ;-)
-> 
-> --lj
 
-Thanks.  I've just fixed in on kernel.org
+> Any reason this doesn't work with a bitmap, and if it doesn't, then 
+> perhaps this should be documented somewhere or at least mdadm should throw 
+> an error message?
+> 
+
+It doesn't work with a bitmap because md is not able to resize the bitmap
+which might be needed when resizing an array.
+The next release of mdadm should provide a more helpful message.
+I'll look in to ways of getting md to resize the bitmap.
 
 NeilBrown
-
-
-> 
-> -------------------------------------------------------------------------
-> Lawrence J. Wobker   "Highly trained network monkey"    lwobker@cisco.com
-> CCIE #5020                  Technical Marketing Engineer, ASR 9000 Series
-> -------------------------------------------------------------------------
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
