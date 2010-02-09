@@ -1,44 +1,38 @@
-From: russ@vshift.com
+From: Dawning Sky <the.dawning.sky@gmail.com>
 Subject: Re: Disk I/O error while rebuilding an md raid-5 array
-Date: Tue, 9 Feb 2010 00:25:21 +0000
-Message-ID: <486752759-1265675036-cardhu_decombobulator_blackberry.rim.net-545244119-@bda837.bisx.prod.on.blackberry>
-Reply-To: russ@vshift.com
+Date: Mon, 8 Feb 2010 16:45:31 -0800
+Message-ID: <adf93d751002081645o2906c43fnc8468c81747fdd3c@mail.gmail.com>
+References: <adf93d751002081523y1b9de656kdbba276b3dbc6af4@mail.gmail.com>
+	 <87f94c371002081604g37984161h2ba65bd193714780@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <87f94c371002081604g37984161h2ba65bd193714780@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>, linux-raid-owner@vger.kernel.org, Dawning Sky <the.dawning.sky@gmail.com>
+To: Greg Freemyer <greg.freemyer@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-SSBoYWQgbm8gaWRlYSB0aGUgb2RkcyB3ZXJlIHRoYXQgYmFkLiAgVGltZSB0byBzd2l0Y2ggdG8g
-emZzLi4uDQoNClJ1c3MNCi0tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLS0NCkZyb206IEdyZWcg
-RnJlZW15ZXINClNlbmRlcjogbGludXgtcmFpZC1vd25lckB2Z2VyLmtlcm5lbC5vcmcNClRvOiBE
-YXduaW5nIFNreQ0KQ2M6IGxpbnV4LXJhaWRAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTog
-RGlzayBJL08gZXJyb3Igd2hpbGUgcmVidWlsZGluZyBhbiBtZCByYWlkLTUgYXJyYXkNClNlbnQ6
-IEZlYiA4LCAyMDEwIDc6MDQgUE0NCg0KPg0KPiBQUywgaWYgaW4gdGhlIGVuZCBJIGhhdmUgdG8g
-YnVpbGQgYSBuZXcgYXJyYXksIEknbGwgcHJvYmFibHkgZ28gd2l0aCBhDQo+IHJhaWQgNiBpbnN0
-ZWFkLg0KDQpBZ3JlZWQsIHNvbWVvbmUgcmVjZW50bHkgcG9zdGVkIHRoYXQgZm9yIGEgcmFpZC01
-IGNvbXBvc2VkIG9mIDFUQg0KZHJpdmVzIHRoZSBvZGRzIG9mIGEgcmVidWlsZCBmYWlsdXJlIGFy
-ZSAxIGluIDY3IGV2ZW4gaWYgdGhlIHJlbWFpbmluZw0KZHJpdmVzIGFyZSB3aXRoaW4gc3BlYy4g
-IChpZS4gdGhlIHVucmVjb3ZlcmFibGUgYml0IGVycm9yIHJhdGUgaXMNCnNsb3dpbmcgc3VjY3Vt
-YmluZyB0byB0aGUgZXZlciBpbmNyZWFzaW5nIHNpemUgb2YgZHJpdmVzLikNCg0KWW91IGhhdmUg
-NTAwR0IgZHJpdmVzLCBidXQgeW91IGhhdmUgMyBsZWZ0IHRvIHJlYnVpbGQgZnJvbSwgc28gdGhh
-dCdzDQoxLjUgVEIgeW91ciB0cnlpbmcgdG8gcmVhZC4gIEknbSBub3Qgc3VyZSBob3cgdGhlIG9y
-aWdpbmFsIGNhbGN1bGF0aW9uDQp3YXMgZG9uZSwgc28geW91ciBvZGRzIG9mIGZhaWxlZCByZWJ1
-aWxkIHdlcmUgZWl0aGVyIDEgaW4gMTM0IG9yIGFib3V0DQoxIGluIDQyLiAgRWl0aGVyIG5vdCB2
-ZXJ5IGdvb2QgZm9yIHNvbWV0aGluZyB0aGF0IGlzIHN1cHBvc2VkIHRvDQpwcm90ZWN0IHlvdXIg
-ZGF0YS4NCg0KR3JlZw0KLS0gDQpHcmVnIEZyZWVteWVyDQpIZWFkIG9mIEVERCBUYXBlIEV4dHJh
-Y3Rpb24gYW5kIFByb2Nlc3NpbmcgdGVhbQ0KTGl0aWdhdGlvbiBUcmlhZ2UgU29sdXRpb25zIFNw
-ZWNpYWxpc3QNCmh0dHA6Ly93d3cubGlua2VkaW4uY29tL2luL2dyZWdmcmVlbXllcg0KUHJlc2Vy
-dmF0aW9uIGFuZCBGb3JlbnNpYyBwcm9jZXNzaW5nIG9mIEV4Y2hhbmdlIFJlcG9zaXRvcmllcyBX
-aGl0ZSBQYXBlciAtDQo8aHR0cDovL3d3dy5ub3Jjcm9zc2dyb3VwLmNvbS9mb3Jtcy93aGl0ZXBh
-cGVycy90bmdfd2hpdGVwYXBlcl9mcGUuaHRtbD4NCg0KVGhlIE5vcmNyb3NzIEdyb3VwDQpUaGUg
-SW50ZXJzZWN0aW9uIG9mIEV2aWRlbmNlICYgVGVjaG5vbG9neQ0KaHR0cDovL3d3dy5ub3Jjcm9z
-c2dyb3VwLmNvbQ0KLS0NClRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBs
-aW5lICJ1bnN1YnNjcmliZSBsaW51eC1yYWlkIiBpbg0KdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRv
-IG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCk1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6
-Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KDQoNClNlbnQgZnJvbSBteSBW
-ZXJpem9uIFdpcmVsZXNzIEJsYWNrQmVycnk=
+On Mon, Feb 8, 2010 at 4:04 PM, Greg Freemyer <greg.freemyer@gmail.com>=
+ wrote:
+>>
+>> PS, if in the end I have to build a new array, I'll probably go with=
+ a
+>> raid 6 instead.
+>
+> Agreed, someone recently posted that for a raid-5 composed of 1TB
+> drives the odds of a rebuild failure are 1 in 67 even if the remainin=
+g
+> drives are within spec. =A0(ie. the unrecoverable bit error rate is
+> slowing succumbing to the ever increasing size of drives.)
 
+Has anyone done similar calculation for raid-6?
+
+>
+> Greg
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
