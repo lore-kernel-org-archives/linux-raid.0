@@ -1,147 +1,56 @@
-From: Keld Simonsen <keld@keldix.com>
-Subject: Re: recovering a mirrored arry.
-Date: Tue, 9 Feb 2010 12:52:28 +0100
-Message-ID: <20100209115228.GA20363@light.rap.dk>
-References: <20100203025758.GA12925@light.rap.dk> <20100205011928.GA12630@light.rap.dk> <73e903671002050825j2ae06fabjc7ec2b1e8fb85135@mail.gmail.com> <20100205185043.GA6956@light.rap.dk> <20100205224225.GA8099@cthulhu.home.robinhill.me.uk>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Disk I/O error while rebuilding an md raid-5 array
+Date: Tue, 09 Feb 2010 11:57:06 +0000
+Message-ID: <4B714D92.2090802@anonymous.org.uk>
+References: <adf93d751002081523y1b9de656kdbba276b3dbc6af4@mail.gmail.com> <87f94c371002081604g37984161h2ba65bd193714780@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100205224225.GA8099@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <87f94c371002081604g37984161h2ba65bd193714780@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: Dawning Sky <the.dawning.sky@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Feb 05, 2010 at 10:42:25PM +0000, Robin Hill wrote:
-> On Fri Feb 05, 2010 at 07:50:44PM +0100, Keld Simonsen wrote:
->=20
-> > On Fri, Feb 05, 2010 at 04:25:02PM +0000, Kristleifur Da=F0ason wro=
-te:
-> > > On Fri, Feb 5, 2010 at 1:19 AM, Keld Simonsen <keld@keldix.com> w=
-rote:
-> > > > On Wed, Feb 03, 2010 at 03:57:58AM +0100, Keld Simonsen wrote:
-> > > > Hi
-> > > >
-> > > >
-> > > > can anybody help me with this? I am stuck with recovering my sy=
-stem here.
-> > > > is it a sensible thing ro do?
-> > > >
-> > > > best regards
-> > > > keld
-> > > >
-> > > >> Hi
-> > > >>
-> > > >> I got 2 arrays in error of the raid10 type.
-> > > >>
-> > > >> I think this is because my motherboard died, and then the fs w=
-ere
-> > > >> corrupted.
-> > > >>
-> > > >> My thoughts were that actually one of the copies could be corr=
-ect.
-> > > >> So I would like to try out the consistency of each part of the=
- raid10
-> > > >> (it is 2-partition arrays), and then if I find one that is con=
-sistent, then
-> > > >> resync the faulty one with the good one.
-> > > >>
-> > > >> How do I do this?
-> > > >>
-> > > >> it seems that I cannot just assemble an array with a missing p=
-art.
-> > > >> If I assemble the full array, is there then a risk of the bad =
-one
-> > > >> corrupting the good one? And can I declare one of the disks fa=
-ulty
-> > > >> then test the other one, then declare nbr 2 disk for faulty an=
-d
-> > > >> declare the first one as good?
-> > > >>
-> > > >> I dont see anything on the wiki on this.
-> > > >>
-> > > >> best regards
-> > > >> keld
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux=
--raid" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at =A0http://vger.kernel.org/majordomo-info=
-=2Ehtml
-> > > >
-> > >=20
-> > >=20
-> > > I wish I could help more, but check out this from the mdadm man p=
-age:
-> > >=20
-> > >        To create a "degraded" array in which some devices are mis=
-sing,
-> > > simply give
-> > >        the word "missing" in place of a device name.  This  will
-> > > cause  mdadm  to
-> > >        leave  the  corresponding  slot  in  the array empty.  For=
- a
-> > > RAID4 or RAID5
-> > >        array at most one slot can be "missing"; for a  RAID6  arr=
-ay
-> > > at  most  two
-> > >        slots.   For a RAID1 array, only one real device needs to =
-be
-> > > given.  All of
-> > >        the others can be "missing".
-> >=20
-> > I tried missing, but mdadm said that it could not find missing as a=
- device,
-> > for assemble mode.
-> >=20
-> No, as the manual page says, "missing" is only used for creating an
-> array, not for assembling.
->=20
-> If you only give a single device in the assemble command then mdadm
-> _ought_ to only use that to assemble the array.  I'm not 100% sure th=
-at
-> it does it though - probably worth testing with loopback devices firs=
-t.
->=20
-> The other option would be to use "create" to create new degraded arra=
-ys
-> containing only the single disks.  You'd need to make sure you used t=
-he
-> same settings as for the old array though.
->=20
-> Alternately, physically disconnect the drives in turn and assemble th=
-e
-> array with the single drive.
->=20
-> Cheers,
->     Robin
-> --=20
->      ___       =20
->     ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
->    / / )      | Little Jim says ....                            |
->   // !!       |      "He fallen in de water !!"                 |
+On 09/02/2010 00:04, Greg Freemyer wrote:
+>> PS, if in the end I have to build a new array, I'll probably go with a
+>> raid 6 instead.
+> 
+> Agreed, someone recently posted that for a raid-5 composed of 1TB
+> drives the odds of a rebuild failure are 1 in 67 even if the remaining
+> drives are within spec.  (ie. the unrecoverable bit error rate is
+> slowing succumbing to the ever increasing size of drives.)
 
+Actually the odds were 1 in 67 of an unrecoverable read error while 
+reading 2TB of data, if the odds were 1 in 10^15 per bit read[1], which 
+was the worst-case spec offered by Western Digital. Others disagreed 
+with my analysis, and I may be wrong.
 
-I tried a number of ways to trick mdadm to assemble the raid with only
-one partition. It seems like mdadm -A neither accepts a "missing"
-argument nor just a single device. But the following worked.
+This was nothing to do with RAID, but my suggestion followed on that 
+RAID-5 was now only useful for defending against unrecoverable errors, 
+and not dead drives, and if you wanted to defend against dead drives as 
+well you need RAID-6.
 
-I changed the "DEVICES" entry in mdadm.conf . to not list the device
-that I wanted to exclude. I could then assemble and fsck each of the
-parts of the mirrored array (changing mdadm DEVICES to exclude the
-appropiate device).
+> You have 500GB drives, but you have 3 left to rebuild from, so that's
+> 1.5 TB your trying to read.  I'm not sure how the original calculation
+> was done, so your odds of failed rebuild were either 1 in 134 or about
+> 1 in 42.  Either not very good for something that is supposed to
+> protect your data.
 
-And with good result! One of the devices were badly damaged, while the
-other was intact! So long, so good.
+Actually there are 4 to read from - the original sde is still available. 
+This would be a situation where I think having the hot-rebuild facility 
+recently discussed on this list would be ideal, as if you can't read the 
+data from the drive you're hot-replacing, you then get a second chance 
+to read it from the rest of the drives using the parity information, and 
+the odds of an unrecoverable read error at the same LBA on two drives is 
+smaller - but I can't remember that bit of the probability course I did 
+years ago to work out exactly what it is.
 
-Is this sufficiently interesting to warrant an entry on the wiki?
+Cheers,
 
-Best regards
-keld
+John.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[1] If the probability of an error while reading 1 bit is p, then the 
+probability of an error while reading n bits is 1-(1-p)^n. In this case 
+p=1E-15, n=1.6E13 and you need a scientific calculator to do the sum.
