@@ -1,7 +1,7 @@
 From: "Trela, Maciej" <Maciej.Trela@intel.com>
-Subject: [mdadm PATCH 2/3] IMSM metadata compatibility issues
-Date: Wed, 10 Feb 2010 16:24:39 +0000
-Message-ID: <BE2BFE91933D1B4089447C64486040800156E6A9@irsmsx503.ger.corp.intel.com>
+Subject: FW: [mdadm PATCH 2/3] IMSM metadata compatibility issues
+Date: Wed, 10 Feb 2010 16:32:27 +0000
+Message-ID: <BE2BFE91933D1B4089447C64486040800156E6D7@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
@@ -127,4 +127,4 @@ dHVybiB3cml0ZV9zdXBlcl9pbXNtKHN0LCAxKTsNCiB9DQogI2VuZGlmDQogDQpAQCAtNDU2OSw3
 ICs0NzEyLDcgQEAgc3RhdGljIHZvaWQgaW1zbV9zeW5jX21ldGFkYXRhKHN0cnVjdCBzdXBlcnR5
 cGUgKmNvbnRhaW5lcikNCiAJaWYgKCFzdXBlci0+dXBkYXRlc19wZW5kaW5nKQ0KIAkJcmV0dXJu
 Ow0KIA0KLQl3cml0ZV9zdXBlcl9pbXNtKHN1cGVyLCAwKTsNCisJd3JpdGVfc3VwZXJfaW1zbShj
-b250YWluZXIsIDApOw0KIA0KIAlzdXBlci0+dXBkYXRlc19wZW5kaW5nID0gMDsNCiB9DQoNCg==
+b250YWluZXIsIDApOw0KIA0KIAlzdXBlci0+dXBkYXRlc19wZW5kaW5nID0gMDsNCiB9DQoNCg0K
