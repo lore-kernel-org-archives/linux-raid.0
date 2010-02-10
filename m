@@ -1,76 +1,120 @@
-From: Neil Brown <neilb-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [[Patch mdadm] 2/5] Move the files mdmon opens into /dev/ to
- support handoff after pivotroot
-Date: Wed, 10 Feb 2010 12:33:21 +1100
-Message-ID: <20100210123321.324e5de6@notabene.brown>
-References: <1263242294-5353-3-git-send-email-dledford@redhat.com>
-	<20100119110930.107ca42e@notabene>
-	<4B55F138.7060008@redhat.com>
-	<20100204174009.6072ec07@notabene.brown>
-	<4B6B15B3.8030205@redhat.com>
-	<e9c3a7c21002041504w17565653m5a8b8cd90543cf1e@mail.gmail.com>
-	<4B6DAC06.6060909@redhat.com>
-	<e9c3a7c21002061307le6f5d56ked4fa3711bdd2367@mail.gmail.com>
-	<4B702EA5.3030103@redhat.com>
-	<20100209083838.6568cac0@notabene.brown>
-	<20100209021949.GB11780@lapse.rw.madduck.net>
-	<4B71C6CA.3010407@redhat.com>
-	<alpine.LNX.2.01.1002091553580.10004@filesrv1.baby-dragons.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Growing raid 5 to 6; /proc/mdstat reports a strange value?
+Date: Wed, 10 Feb 2010 13:12:55 +1100
+Message-ID: <20100210131255.7cd8ccdb@notabene.brown>
+References: <4877c76c1001241949p20089932saae123a1c2871ac0@mail.gmail.com>
+	<20100129232334.45a4103c@notabene>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <initramfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.LNX.2.01.1002091553580.10004-pIN9qAC4yfKseEBmXaVrNB5FPEiCeG3sAL8bYrjMMd8@public.gmane.org>
-Sender: initramfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Mr. James W. Laferriere" <babydr-hujCQpUib4khwW3g317DAQ@public.gmane.org>
-Cc: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-raid maillist <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, initramfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Marek <mmarek-l3A5Bk7waGM@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Bill Nottingham <notting-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100129232334.45a4103c@notabene>
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Michael Evans <mjevans1983@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 9 Feb 2010 15:58:52 -0900 (AKST)
-"Mr. James W. Laferriere" <babydr-hujCQpUib4khwW3g317DAQ@public.gmane.org> wrote:
+On Fri, 29 Jan 2010 23:23:34 +1100
+Neil Brown <neilb@suse.de> wrote:
 
->  	Hello Doug ,
+> On Sun, 24 Jan 2010 19:49:31 -0800
+> Michael Evans <mjevans1983@gmail.com> wrote:
 > 
-> On Tue, 9 Feb 2010, Doug Ledford wrote:
-> > On 02/08/2010 09:19 PM, martin f krafft wrote:
-> ...snip...
-> >> I am all for finding a solution that works, but I don't think it's
-> >> as easy as "the standards are slow, so let's just forge ahead with
-> >> mdadm only and give them something to standardise".
-> >>
-> >> I wouldn't mind avoiding all the bikeshedding, and maybe it'll just
-> >> work, but having to change things later might possibly be a lot of
-> >> trouble ? after all, we don't want to break people's systems then.
-> >
-> > I don't think so.  Once it's all set up, any future change should be no
-> > more than a coordinate package update cycle where initscripts, mkinitrd,
-> > dracut, and a few other select packages that use the locations are all
-> > updated simultaneously.
+> > mdX : active raid5 sdd1[8](S) sdb1[7](S) sdf8[0] sdl8[4] sdk2[5]
+> > sdc1[6] sdj6[3] sdi8[1]
+> >      Y blocks super 1.1 level 5, 128k chunk, algorithm 2 [6/6] [UUUUUU]
+> > 
+> > # mdadm --grow /dev/mdX --level=6 --raid-devices=8
+> > --backup-file=/root/mdX.backupfile
+> > 
+> > mdX : active raid6 sdd1[8] sdb1[7] sdf8[0] sdl8[4] sdk2[5] sdc1[6]
+> > sdj6[3] sdi8[1]
+> >      Y blocks super 1.1 level 6, 128k chunk, algorithm 18 [8/9] [UUUUUU_U]
+> >      [>....................]  reshape =  0.0% (33920/484971520)
+> > finish=952.6min speed=8480K/sec
+> > 
+> > !!! mdadm 3.1.1 I wanted an 8 device raid-6;  Why do you show 9?
 > 
->  	The key words in the above are: 'select packages' & 'simultaneously' .
->  	How is the community of linux distributors going to accomplish this ?
->  	Heck some of the distributors don't even use the same names for packages 
-> that do exactly the same thing .
-> 
->  	The Simultainity is going to hurt alot more than is mentioned here .
+> That is weird isn't it.  It is showing that 8 devices are in the array, of
+> which 9 are working.  That cannot be right.
+> More worrying is that the second last device claim to not be present, which
+> doesn't seem right.
 
-Simultaneity only needs to be within one host, not across all distros.  I
-don't think it should be that hard to manage.
+The second last device being missing is actually correct.  The '_' doesn't
+actually mean "missing" but just "not completely in-sync".
+When you converted from RAID5 to RAID6 it added the 7th device which clearly
+was not in-sync.
+Then converting to an 8-device array added the 8th device, but as the array
+was not expecting any data to be on this device it is by definition
+in-sync and so represented by "U".
 
-> 
->  	But that said ,  the idea of a /'name' area for this is imo a very good 
-> thing .  Rather hiding it below others .
+The only problem is that it says "9" are in-sync where it should say "7"
+are.
+The following patch, which I have submitted upstream, fixes this.
 
-Thanks.
-
-One idea that has occurred to me is that maybe /sys is the right place to put
-this stuff!!!  If only sysfs directories could be writeable, I could write the
-pid file in /sys/class/block/md0/md/mdmon.pid and create a socket with a
-similar name.
-I could of course get the md module to create a file called "mdmon.pid" and
-allow it to be read and written much like a normal file.  But I don't think I
-want to do that - and I couldn't use that solution for the socket in any case.
-
-Not a short-term solution, but something to keep in mind longer-term maybe...
+Thanks again for the report.
 
 NeilBrown
+
+
+Author: NeilBrown <neilb@suse.de>
+Date:   Tue Feb 9 12:31:47 2010 +1100
+
+    md: fix 'degraded' calculation when starting a reshape.
+    
+    This code was written long ago when it was not possible to
+    reshape a degraded array.  Now it is so the current level of
+    degraded-ness needs to be taken in to account.  Also newly addded
+    devices should only reduce degradedness if they are deemed to be
+    in-sync.
+    
+    In particular, if you convert a RAID5 to a RAID6, and increase the
+    number of devices at the same time, then the 5->6 conversion will
+    make the array degraded so the current code will produce a wrong
+    value for 'degraded' - "-1" to be precise.
+    
+    If the reshape runs to completion end_reshape will calculate a correct
+    new value for 'degraded', but if a device fails during the reshape an
+    incorrect decision might be made based on the incorrect value of
+    "degraded".
+    
+    This patch is suitable for 2.6.32-stable and if they are still open,
+    2.6.31-stable and 2.6.30-stable as well.
+    
+    Cc: stable@kernel.org
+    Reported-by: Michael Evans <mjevans1983@gmail.com>
+    Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index e84204e..b5629c3 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -5464,11 +5464,11 @@ static int raid5_start_reshape(mddev_t *mddev)
+ 		    !test_bit(Faulty, &rdev->flags)) {
+ 			if (raid5_add_disk(mddev, rdev) == 0) {
+ 				char nm[20];
+-				if (rdev->raid_disk >= conf->previous_raid_disks)
++				if (rdev->raid_disk >= conf->previous_raid_disks) {
+ 					set_bit(In_sync, &rdev->flags);
+-				else
++					added_devices++;
++				} else
+ 					rdev->recovery_offset = 0;
+-				added_devices++;
+ 				sprintf(nm, "rd%d", rdev->raid_disk);
+ 				if (sysfs_create_link(&mddev->kobj,
+ 						      &rdev->kobj, nm))
+@@ -5480,9 +5480,12 @@ static int raid5_start_reshape(mddev_t *mddev)
+ 				break;
+ 		}
+ 
++	/* When a reshape changes the number of devices, ->degraded
++	 * is measured against the large of the pre and post number of
++	 * devices.*/
+ 	if (mddev->delta_disks > 0) {
+ 		spin_lock_irqsave(&conf->device_lock, flags);
+-		mddev->degraded = (conf->raid_disks - conf->previous_raid_disks)
++		mddev->degraded += (conf->raid_disks - conf->previous_raid_disks)
+ 			- added_devices;
+ 		spin_unlock_irqrestore(&conf->device_lock, flags);
+ 	}
