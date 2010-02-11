@@ -1,34 +1,93 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 2.6.32.3 x86_64 - XFS hangs, all I/O to D-state bug (again)
-Date: Thu, 11 Feb 2010 09:56:32 -0500
-Message-ID: <20100211145632.GA16912@infradead.org>
-References: <alpine.DEB.2.00.1002110903080.25392@p34.internal.lan> <20100211145123.GA13114@infradead.org>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: Why does one get mismatches?
+Date: Thu, 11 Feb 2010 19:12:04 +0100
+Message-ID: <20100211181204.GA2792@lazy.lzy>
+References: <869541.92104.qm@web51304.mail.re2.yahoo.com>
+ <4B67451F.8040206@tmr.com>
+ <20100202093738.44b4fece@notabene.brown>
+ <4B684087.50001@tmr.com>
+ <20100211161444.7a0ea7bb@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20100211145123.GA13114@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, xfs@oss.sgi.com, Alan Piszcz <ap@solarrain.com>
+In-Reply-To: <20100211161444.7a0ea7bb@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Bill Davidsen <davidsen@tmr.com>, Jon@eHardcastle.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Feb 11, 2010 at 09:51:23AM -0500, Christoph Hellwig wrote:
-> Can you check if this still happens with the patch below?
+Hi all,
 
-Or the 2.6.32 variant of it:
+> > This whole discussion simply shows that for RAID-1 software RAID is less 
+> > reliable than hardware RAID (no, I don't mean fake-RAID), because it 
+> > doesn't pin the data buffer until all copies are written.
+> > 
+> 
+> That doesn't make it less reliable.  It just makes it more confusing.
 
-Index: xfs/fs/xfs/linux-2.6/xfs_buf.c
-===================================================================
---- xfs.orig/fs/xfs/linux-2.6/xfs_buf.c	2010-02-11 15:52:14.442003504 +0100
-+++ xfs/fs/xfs/linux-2.6/xfs_buf.c	2010-02-11 15:52:33.172024387 +0100
-@@ -1182,8 +1182,7 @@ _xfs_buf_ioapply(
- 		bp->b_flags &= ~_XBF_RUN_QUEUES;
- 		rw = (bp->b_flags & XBF_WRITE) ? WRITE_SYNC : READ_SYNC;
- 	} else {
--		rw = (bp->b_flags & XBF_WRITE) ? WRITE :
--		     (bp->b_flags & XBF_READ_AHEAD) ? READA : READ;
-+		rw = (bp->b_flags & XBF_WRITE) ? WRITE : READ;
- 	}
- 
- 	/* Special code path for reading a sub page size buffer in --
+well, sorry to say, but it makes it useless.
+
+The problem is: how can we be sure that the FS really
+plays tricks only with blocks which will be unused?
+
+In other words, either there should be an agreed and
+confirmed interface between caller (FS) and called (MD),
+handling the situation properly (i.e. the FS will not
+do these pranks), or the called (MD) should be robust
+agains all possible nasty things the caller (FS) can do.
+
+Because what will happen if someone introduces a new
+FS which works fine with all, but software RAID?
+
+Similarly, I've some, identical, PCs, with RAID-10 f2.
+
+Starting with Fedora 12, there is a weekly check of
+the RAID array (with email notification, BTW without
+mismatch count...).
+
+On these PCs I get mismatches, sometimes.
+Checking the mismatch count I found out that this is
+changing, sometimes a bit more, sometimes a bit less (o zero).
+
+Now, IMHO the check is completely useless and even annoying.
+
+I've got mismatches, changing, but I do not know how
+serious these are.
+
+Not good... I could have lost data or not, and I do
+not know...
+
+> But for a more complete discussion on raid recovery and when it might be
+> sensible to "vote" among the blocks, see
+>    http://neil.brown.name/blog/20100211050355
+> 
+
+Nice, discussion.
+Expecially the clarification about the unclean shutdown event.
+This could be, in effect, a killer for the majority select
+(or RAID-6 reconstrunction) decision.
+
+I personally agree with the conclusion of your conclusion.
+Anyway, I miss, or I did not get, one more point.
+
+Specifically, the "smart recovery" should be composed by
+two steps. One is detecting where the problems are.
+This means not only the stripe, but, in case of RAID-6,
+also the *potential* component (HDD) of the array.
+
+Reason is that, as I already wrote some times ago,
+there is a *huge* difference between having all the
+mismatches *potentially* on one single component, or
+spread around several.
+
+The first case clearly gives more information and allows
+a better judgment of the situation.
+
+Thanks,
+
+bye,
+
+-- 
+
+piergiorgio
