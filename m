@@ -1,14 +1,12 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+From: Bryan Mesich <bryan.mesich@ndsu.edu>
 Subject: Re: Why does one get mismatches?
-Date: Thu, 11 Feb 2010 19:12:04 +0100
-Message-ID: <20100211181204.GA2792@lazy.lzy>
-References: <869541.92104.qm@web51304.mail.re2.yahoo.com>
- <4B67451F.8040206@tmr.com>
- <20100202093738.44b4fece@notabene.brown>
- <4B684087.50001@tmr.com>
- <20100211161444.7a0ea7bb@notabene.brown>
+Date: Thu, 11 Feb 2010 11:51:33 -0600
+Message-ID: <20100211175133.GA30187@atlantis.cc.ndsu.nodak.edu>
+References: <869541.92104.qm@web51304.mail.re2.yahoo.com> <4B67451F.8040206@tmr.com> <20100202093738.44b4fece@notabene.brown> <4B684087.50001@tmr.com> <20100211161444.7a0ea7bb@notabene.brown>
+Reply-To: Bryan Mesich <bryan.mesich@ndsu.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="+HP7ph2BbKc20aGI"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <20100211161444.7a0ea7bb@notabene.brown>
@@ -17,77 +15,56 @@ To: Neil Brown <neilb@suse.de>
 Cc: Bill Davidsen <davidsen@tmr.com>, Jon@eHardcastle.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
 
-> > This whole discussion simply shows that for RAID-1 software RAID is less 
-> > reliable than hardware RAID (no, I don't mean fake-RAID), because it 
+--+HP7ph2BbKc20aGI
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, Feb 11, 2010 at 04:14:44PM +1100, Neil Brown wrote:
+> > This whole discussion simply shows that for RAID-1 software RAID is les=
+s=20
+> > reliable than hardware RAID (no, I don't mean fake-RAID), because it=20
 > > doesn't pin the data buffer until all copies are written.
-> > 
-> 
+>=20
 > That doesn't make it less reliable.  It just makes it more confusing.
 
-well, sorry to say, but it makes it useless.
+I agree that linux software RAID is no less reliable than
+hardware RAID with regards to the above conversation.  It's
+however confusing to have a counter that indicates there are
+problems with a RAID 1 array when in fact there is not.
 
-The problem is: how can we be sure that the FS really
-plays tricks only with blocks which will be unused?
+I (and I'm sure others) value your expertise on this matter, but
+it's hard to feel at ease when the car you're driving across the
+country has the check engine light on.  In this case, I believe the=20
+mechanic when you say the car is okay, but it might be difficult=20
+for others to believe as I do.
 
-In other words, either there should be an agreed and
-confirmed interface between caller (FS) and called (MD),
-handling the situation properly (i.e. the FS will not
-do these pranks), or the called (MD) should be robust
-agains all possible nasty things the caller (FS) can do.
+I rely heavily on software RAID as I'm sure many others are.  I
+believe this is quite evident in the amount of email that has been
+circulated about the mismatch_cnt "problem".  IMO, a users perception=20
+of reliability is really the root of the problem in this case. No
+one who depends on this stuff wants to see weakness.  Those who
+do are going to be concerned.  Especially those who are running
+distributions such as RedHat/Fedora that do weekly checks on the=20
+arrays.=20
 
-Because what will happen if someone introduces a new
-FS which works fine with all, but software RAID?
+Neil, you had mentioned some time ago that you were going to
+create a patch that would show where the mismatches were located
+on disk.  Did you do this and if so where can I find the patch?
 
-Similarly, I've some, identical, PCs, with RAID-10 f2.
+Bryan
 
-Starting with Fedora 12, there is a weekly check of
-the RAID array (with email notification, BTW without
-mismatch count...).
+--+HP7ph2BbKc20aGI
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
-On these PCs I get mismatches, sometimes.
-Checking the mismatch count I found out that this is
-changing, sometimes a bit more, sometimes a bit less (o zero).
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
 
-Now, IMHO the check is completely useless and even annoying.
+iEYEARECAAYFAkt0Q6UACgkQlSl3SAlkhEeKnACeIRADGA307ZE/GgvkP2qOPkjD
+IXwAn2fLt/669JW0Hu1LlBJgGORXopZd
+=0iJC
+-----END PGP SIGNATURE-----
 
-I've got mismatches, changing, but I do not know how
-serious these are.
-
-Not good... I could have lost data or not, and I do
-not know...
-
-> But for a more complete discussion on raid recovery and when it might be
-> sensible to "vote" among the blocks, see
->    http://neil.brown.name/blog/20100211050355
-> 
-
-Nice, discussion.
-Expecially the clarification about the unclean shutdown event.
-This could be, in effect, a killer for the majority select
-(or RAID-6 reconstrunction) decision.
-
-I personally agree with the conclusion of your conclusion.
-Anyway, I miss, or I did not get, one more point.
-
-Specifically, the "smart recovery" should be composed by
-two steps. One is detecting where the problems are.
-This means not only the stripe, but, in case of RAID-6,
-also the *potential* component (HDD) of the array.
-
-Reason is that, as I already wrote some times ago,
-there is a *huge* difference between having all the
-mismatches *potentially* on one single component, or
-spread around several.
-
-The first case clearly gives more information and allows
-a better judgment of the situation.
-
-Thanks,
-
-bye,
-
--- 
-
-piergiorgio
+--+HP7ph2BbKc20aGI--
