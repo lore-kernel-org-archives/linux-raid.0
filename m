@@ -1,64 +1,136 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: Re: Linux mdadm superblock question.
-Date: Fri, 12 Feb 2010 12:53:53 -0900 (AKST)
-Message-ID: <alpine.LNX.2.01.1002121247280.3504@filesrv1.baby-dragons.com>
-References: <alpine.DEB.2.00.1002111758350.12031@p34.internal.lan> <4877c76c1002111752h23e14f7aibe58a89181e6f493@mail.gmail.com> <20100212090632.GA17020@cthulhu.home.robinhill.me.uk>
+From: Dmitry Teytelman <dim@dimtel.com>
+Subject: Can this setup be saved?
+Date: Fri, 12 Feb 2010 17:56:08 -0800
+Message-ID: <c98f60c41002121756j5e8cd32fwdc2cd22ba553d241@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100212090632.GA17020@cthulhu.home.robinhill.me.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Robin Hill <robin@robinhill.me.uk>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
- 	Hello Robin ,
+Hello,
 
-On Fri, 12 Feb 2010, Robin Hill wrote:
-> On Thu Feb 11, 2010 at 05:52:41PM -0800, Michael Evans wrote:
->
->> On Thu, Feb 11, 2010 at 3:00 PM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
->>> Hi,
->>>
->>> I may be converting a host to ext4 and was curious, is 0.90 still the only
->>> superblock version for mdadm/raid-1 that you can boot from without having to
->>> create an initrd/etc?
->>>
->>> Are there any benefits to using a superblock > 0.90 for a raid-1 boot volume
->>> < 2TB?
->>>
->>> Justin.
->>
->> You need the superblock at the end of the partition:  If you read the
->> manual that is clearly either version 0.90 OR 1.0 (NOT 1.1 and also
->> NOT 1.2; those use the same superblock layout but different
->> locations).
->>
-> You also need it to be auto-assembled by the kernel, which is only
-> version 0.90.
->
-> As for benefits, there's a number of benefits of 1.x over 0.90 - I don't
-> think any of them are terribly important for a small boot partition
-> though.  There's also benefits to having an initrd anyway.
->
-> Cheers,
->    Robin
+I've made a mess of my raid setup and am desperately trying to save
+it. The setup is RAID-5 on 3 SATA disks. Problems started with one of
+the disks getting unrecoverable read errors. Unfortunately I was away
+on a trip and the machine was used by my family while this was going
+on :(
 
- 	One can use the 'append=""' functionality of lilo & I am user that 
-Grub2(and family) has some method of doing the same .
- 	ie:
-append=" md=1,/dev/sda1,/dev/sdb1,/dev/sdc1,/dev/sdd1 md=2,/dev/sda2,/dev/sdb2,/dev/sdc2,/dev/sdd2 md=3,/dev/sda3,/dev/sdb3 md=4,/dev/sda4,/dev/sdb4 vt.default_utf8=0 sysrq_always_enabled=1"
+Array consists of three devices: /dev/sda2, /dev/sdc2, and /dev/sdd2.
+When I got back from the trip I found the following:
 
- 	Not sure if this would be usable with a 1.1+ version of the MD headers .
+1. Two disks were removed from the array, leaving only /dev/sda2;
+2. When either of the two was added, the array would start;
+3. One combination of two disks (/dev/sda2 + /dev/sdd2) aproduced a
+running /dev/md0 with a proper ext3 filesystem seen on the drive (even
+passing fsck);
 
- 	I'd really like to see a REAL case that shows a good example of the use 
-of initrd that absolutely can NOT be done only because of someones 
-unwillingness to create it in the kernel or to allow others too .
+At this point I added /dev/sdc2 and the reconstruction started.
+However did not complete, since /dev/sdd2 has unrecoverable errors.
+Reading the list archives I figured I need another drive to ddrescue
+/dev/sdd2, then perform the reconstruction.
 
- 		Hth ,  JimL
+However at some point during/after the reconstruction the situation
+has changed. Now both /dev/sdc2 and /dev/sdd2 are marked as spare
+drives (see mdadm -E output below) and I cannot start the array. I
+think /dev/sdd2 should be in sync with /dev/sda2, but how can I bring
+it back (it used to be device 2)?
+
+/dev/sda2:
+          Magic : a92b4efc
+        Version : 0.90.01
+           UUID : bd5c2dc0:f76e5f10:a98c4de7:f2020715
+  Creation Time : Fri Jun 17 11:47:44 2005
+     Raid Level : raid5
+  Used Dev Size : 486375808 (463.84 GiB 498.05 GB)
+     Array Size : 972751616 (927.69 GiB 996.10 GB)
+   Raid Devices : 3
+  Total Devices : 1
+Preferred Minor : 0
+
+    Update Time : Fri Feb 12 14:07:35 2010
+          State : active
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 2
+  Spare Devices : 0
+       Checksum : a4cd0c48 - correct
+         Events : 2125155
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     0       8        2        0      active sync   /dev/sda2
+
+   0     0       8        2        0      active sync   /dev/sda2
+   1     1       0        0        1      faulty removed
+   2     2       0        0        2      faulty removed
+
+/dev/sdc2:
+          Magic : a92b4efc
+        Version : 0.90.01
+           UUID : bd5c2dc0:f76e5f10:a98c4de7:f2020715
+  Creation Time : Fri Jun 17 11:47:44 2005
+     Raid Level : raid5
+  Used Dev Size : 486375808 (463.84 GiB 498.05 GB)
+     Array Size : 972751616 (927.69 GiB 996.10 GB)
+   Raid Devices : 3
+  Total Devices : 1
+Preferred Minor : 0
+
+    Update Time : Fri Feb 12 10:30:00 2010
+          State : active
+ Active Devices : 1
+Working Devices : 1
+ Failed Devices : 2
+  Spare Devices : 0
+       Checksum : a4ccd973 - correct
+         Events : 2125153
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     4       8        2       -1      spare   /dev/sdc2
+
+   0     0       8       34        0      active sync   /dev/sda2
+   1     1       0        0        1      faulty removed
+   2     2       0        0        2      faulty removed
+
+/dev/sdd2:
+          Magic : a92b4efc
+        Version : 0.90.01
+           UUID : bd5c2dc0:f76e5f10:a98c4de7:f2020715
+  Creation Time : Fri Jun 17 11:47:44 2005
+     Raid Level : raid5
+  Used Dev Size : 486375808 (463.84 GiB 498.05 GB)
+     Array Size : 972751616 (927.69 GiB 996.10 GB)
+   Raid Devices : 3
+  Total Devices : 2
+Preferred Minor : 0
+
+    Update Time : Fri Feb 12 10:36:05 2010
+          State : active
+ Active Devices : 1
+Working Devices : 2
+ Failed Devices : 2
+  Spare Devices : 1
+       Checksum : a4ccdb48 - correct
+         Events : 2125154
+
+         Layout : left-symmetric
+     Chunk Size : 128K
+
+      Number   Major   Minor   RaidDevice State
+this     3       8       50        3      spare   /dev/sdd2
+
+   0     0       8       34        0      active sync   /dev/sda2
+   1     1       0        0        1      faulty removed
+   2     2       0        0        2      faulty removed
+   3     3       8       50        3      spare   /dev/sdd2
+
+
 -- 
-+------------------------------------------------------------------+
-| James   W.   Laferriere | System    Techniques | Give me VMS     |
-| Network&System Engineer | 3237     Holden Road |  Give me Linux  |
-| babydr@baby-dragons.com | Fairbanks, AK. 99709 |   only  on  AXP |
-+------------------------------------------------------------------+
+Dmitry Teytelman
