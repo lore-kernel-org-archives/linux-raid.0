@@ -1,61 +1,54 @@
-From: Giovanni Tessore <giotex@texsoft.it>
+From: "H. Peter Anvin" <hpa@zytor.com>
 Subject: Re: Linux mdadm superblock question.
-Date: Sat, 13 Feb 2010 11:06:17 +0100
-Message-ID: <4B767999.1070902@texsoft.it>
-References: <alpine.DEB.2.00.1002111758350.12031@p34.internal.lan>	 <4B7664AC.4080504@texsoft.it>	 <4877c76c1002130126m7ff93c33m5159eb4e554d22b4@mail.gmail.com>	 <4B767249.2070305@texsoft.it> <4877c76c1002130140x65cb2b24ydcb57913c6d89b64@mail.gmail.com>
+Date: Sat, 13 Feb 2010 11:58:03 -0800
+Message-ID: <4B77044B.1020609@zytor.com>
+References: <alpine.DEB.2.00.1002111758350.12031@p34.internal.lan> <4877c76c1002111752h23e14f7aibe58a89181e6f493@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4877c76c1002130140x65cb2b24ydcb57913c6d89b64@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4877c76c1002111752h23e14f7aibe58a89181e6f493@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michael Evans <mjevans1983@gmail.com>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-
->>>> I recently reinstalled my systems, and I had to use superblock 0.9 to be
->>>> able to boot ext4 from raid-1 (kernel 2.6.31 - grub2 1.97-beta4).
->>>> I didn't go deep with it as I was quite in hurry, so I'm not sure if it
->>>> depends by grub2 or by kernel's md autodetection at boot.
->>>> I used superblock 1.1 for the others md devices.
->>>>         
->>> mdadm 1.0 block devices, since stored at the end, can still be used
->>> /read only/ the same way that 0.90 devices were used before grub knew
->>> how to talk to them.  By looking at the underlying block devices and
->>> ignoring their tails.  This does however only hold for raid-1 layouts
->>> with the 1.0 or 0.90 format labels.
->>>       
->> I guessed so, infact I created superblock 1.0 for the raid-1 devices md0
->> (root) and md1 (swap), while 1.1 for the others .. but it didn't work and I
->> had to revert to 0.9 for root and swap ...
+On 02/11/2010 05:52 PM, Michael Evans wrote:
+> On Thu, Feb 11, 2010 at 3:00 PM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+>> Hi,
 >>
->>     
->
-> Just a guess, but did you tell grub root was /dev/md0 or did you say
-> root was /dev/sd(whatever backs md0) ?
->   
+>> I may be converting a host to ext4 and was curious, is 0.90 still the only
+>> superblock version for mdadm/raid-1 that you can boot from without having to
+>> create an initrd/etc?
+>>
+>> Are there any benefits to using a superblock > 0.90 for a raid-1 boot volume
+>> < 2TB?
+>>
+>> Justin.
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+> 
+> You need the superblock at the end of the partition:  If you read the
+> manual that is clearly either version 0.90 OR 1.0 (NOT 1.1 and also
+> NOT 1.2; those use the same superblock layout but different
+> locations).
 
-Root was set to (md0), I followed the installer of the distro (ubuntu 
-9.10 srv) and also tried manually with update-grub and then grub-install 
-/dev/sda, grub-install /dev/sdb, grub-install /dev/sdc (3 disk raid-1)
-Both failed with superblock 1.0, giving a message like 'missing mapping 
-of device /dev/md0', infact into /boot/grub/device.map it was missing 
-(even for 0.9), but also adding it ( (md0) /dev/md0 )didn't help, giving 
-other error messages.
+0.9 has the *serious* problem that it is hard to distinguish a whole-volume
 
-Btw, even if I missed something, the point is:
-- with 0.9 it worked painless
-- with 1.0 it didn't work
-donno if it dependes by distro, kernel of md, but some different 
-behaviour relative to superblock 0.9 and 1.0 existed.
-I didn't investigate further as I was in extreme hurry to setup the system.
+However, apparently mdadm recently switched to a 1.1 default.  I
+strongly urge Neil to change that to either 1.0 and 1.2, as I have
+started to get complaints from users that they have made RAID volumes
+with newer mdadm which apparently default to 1.1, and then want to boot
+from them (without playing MBR games like Grub does.)  I have to tell
+them that they have to regenerate their disks -- the superblock occupies
+the boot sector and there is nothing I can do about it.  It's the same
+pathology XFS has.
 
-Regards
+	-hpa
 
 -- 
-Cordiali saluti.
-Yours faithfully.
-
-Giovanni Tessore
-
-
+H. Peter Anvin, Intel Open Source Technology Center
+I work for Intel.  I don't speak on their behalf.
