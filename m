@@ -1,35 +1,40 @@
-From: Gabor Gombas <gombasg@digikabel.hu>
+From: "H. Peter Anvin" <hpa@zytor.com>
 Subject: Re: Linux mdadm superblock question.
-Date: Sun, 14 Feb 2010 22:16:27 +0100
-Message-ID: <20100214211627.GA15313@twister.home>
-References: <201002140251.59668.volkerarmin@googlemail.com>
- <4877c76c1002132002s20d942c3i7cee5418cdcf369c@mail.gmail.com>
- <201002141940.35716.volkerarmin@googlemail.com>
- <4B7846B2.1030303@anonymous.org.uk>
+Date: Sun, 14 Feb 2010 13:18:16 -0800
+Message-ID: <4B786898.8030309@zytor.com>
+References: <alpine.DEB.2.00.1002111758350.12031@p34.internal.lan> <4877c76c1002111752h23e14f7aibe58a89181e6f493@mail.gmail.com> <4B77044B.1020609@zytor.com> <alpine.DEB.2.00.1002131507260.31103@p34.internal.lan> <4B7719C1.1060400@zytor.com> <4B785C49.7010105@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4B7846B2.1030303@anonymous.org.uk>
+In-Reply-To: <4B785C49.7010105@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Volker Armin Hemmann <volkerarmin@googlemail.com>, Michael Evans <mjevans1983@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Asdo <asdo@shiftmail.org>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Michael Evans <mjevans1983@gmail.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Feb 14, 2010 at 06:53:38PM +0000, John Robinson wrote:
+On 02/14/2010 12:25 PM, Asdo wrote:
+> I don't understand...
+> In a system we have, the root filesystem on a raid-6 which is on second
+> (and last) partitions of many disks.
+> It always assembled correctly, it never tried to assemble the whole device.
+> (on the first partition there is a raid1 with boot)
+> So what's the problem exactly with not marking the beginning?
 
-> True, but afaik every distro uses an initrd/initramfs and bundles
-> tools making it easy to manage and customise them, so what's the
-> problem?
+In Fedora 12, for example, Dracut tries to make the distinction between
+whole RAID device and a partition device, and utterly fails -- often
+resulting in data loss.
 
-Distro provided initramfs generators have a bad habit assuming you
-patch/build your kernel like the distro does. If you want to use a
-vanilla kernel with different things built in/built as modules/not built
-at all, then you can get nasty surprises, and debugging can be rather
-painful.
+With a pointer to the beginning this would have been a trivial thing to
+detect.
 
-My current view is if you use a distro kernel, then you should also use
-an initramfs (in fact you do not have a choice). But if you want to
-build your own kernel, then you should get rid of the initramfs.
+IMO it would make sense to support autoassemble for 1.0 superblocks, and
+making them the default.  The purpose would be to get everyone off 0.9.
+ However, *any* default is better than 1.1.
 
-Gabor
+	-hpa
+
+-- 
+H. Peter Anvin, Intel Open Source Technology Center
+I work for Intel.  I don't speak on their behalf.
+
