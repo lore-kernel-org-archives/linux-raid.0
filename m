@@ -1,40 +1,65 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
 Subject: Re: Linux mdadm superblock question.
-Date: Sun, 14 Feb 2010 13:18:16 -0800
-Message-ID: <4B786898.8030309@zytor.com>
-References: <alpine.DEB.2.00.1002111758350.12031@p34.internal.lan> <4877c76c1002111752h23e14f7aibe58a89181e6f493@mail.gmail.com> <4B77044B.1020609@zytor.com> <alpine.DEB.2.00.1002131507260.31103@p34.internal.lan> <4B7719C1.1060400@zytor.com> <4B785C49.7010105@shiftmail.org>
+Date: Sun, 14 Feb 2010 19:26:54 -0200
+Message-ID: <20100214212654.GC15722@khazad-dum.debian.net>
+References: <201002140251.59668.volkerarmin@googlemail.com>
+ <4877c76c1002132002s20d942c3i7cee5418cdcf369c@mail.gmail.com>
+ <20100214193406.GA15722@khazad-dum.debian.net>
+ <4B786154.8090103@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B785C49.7010105@shiftmail.org>
-Sender: linux-raid-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4B786154.8090103@shiftmail.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Asdo <asdo@shiftmail.org>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Michael Evans <mjevans1983@gmail.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Michael Evans <mjevans1983@gmail.com>, Volker Armin Hemmann <volkerarmin@googlemail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/14/2010 12:25 PM, Asdo wrote:
-> I don't understand...
-> In a system we have, the root filesystem on a raid-6 which is on second
-> (and last) partitions of many disks.
-> It always assembled correctly, it never tried to assemble the whole device.
-> (on the first partition there is a raid1 with boot)
-> So what's the problem exactly with not marking the beginning?
+On Sun, 14 Feb 2010, Asdo wrote:
+> >In my experience, every time we moved critical codepaths to userspace, we
+> >ended up decreasing the *overall* system reliability.
+> I don't see it like this.
+> You have the same chance to screw up the system by making mistakes
+> in the files in /etc, in the networking config, the firewall, the
+> server applications...
 
-In Fedora 12, for example, Dracut tries to make the distinction between
-whole RAID device and a partition device, and utterly fails -- often
-resulting in data loss.
+Those don't require a reboot test to verify, and are far easier to rollback.
 
-With a pointer to the beginning this would have been a trivial thing to
-detect.
+Also, they can (and SHOULD) be done on testbeds.  While the kind of screwup
+where an initramfs decides to bite you hard, usually cannot (they tend to
+happen when things already went horribly wrong).
 
-IMO it would make sense to support autoassemble for 1.0 superblocks, and
-making them the default.  The purpose would be to get everyone off 0.9.
- However, *any* default is better than 1.1.
+> (note: I speak for Debian/Ubuntu, redhat's initramfs I think is more messy.)
+> 1.x autodetection worked great for me in initramfs. Basically you
+> only need /etc/mdadm/mdadm.conf copied to initramfs (via
+> update-initramfs), the rest is done by Debian/Ubuntu standard
+> initramfs procedure.
 
-	-hpa
+Yeah, cute.  What happens when the initrd is not updated for whatever
+reason?  That is a new failure mode that doesn't exist with 0.9 and kernel
+autorun.
+
+It boils down to whether failure modes new to 1.x without autorun are more
+likely to happen than the failure modes that are specific to 0.9 with
+autorun.
+
+IME, the 0.9 ones are less likely to happen, and I have been through quite a
+few incidents involving boot problems.  Experience told me that initrds are
+far more prone to operator errors than the kernel autorun.  Debian's
+*stable* initramfs creators have not screwed up on me yet, but I am well
+aware that they could.
+
+> Also consider 1.x allows to choose which arrays are autoassembled
+> (hostname written in the array name equal to hostname in the machine
+> or specified in mdadm.conf): this is more precise than 0.9 which
+> autoassembles all, I think.
+
+That can be either a good or bad thing depending on the situation, so I
+would never use it to count for (or against) 1.x or 0.9.
 
 -- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
-
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
