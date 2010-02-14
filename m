@@ -1,33 +1,35 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+From: Gabor Gombas <gombasg@digikabel.hu>
 Subject: Re: Linux mdadm superblock question.
-Date: Sun, 14 Feb 2010 19:14:13 -0200
-Message-ID: <20100214211413.GB15722@khazad-dum.debian.net>
+Date: Sun, 14 Feb 2010 22:16:27 +0100
+Message-ID: <20100214211627.GA15313@twister.home>
 References: <201002140251.59668.volkerarmin@googlemail.com>
  <4877c76c1002132002s20d942c3i7cee5418cdcf369c@mail.gmail.com>
- <20100214193406.GA15722@khazad-dum.debian.net>
- <4877c76c1002141207s7bac4275xd12ed75e46a670c4@mail.gmail.com>
+ <201002141940.35716.volkerarmin@googlemail.com>
+ <4B7846B2.1030303@anonymous.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4877c76c1002141207s7bac4275xd12ed75e46a670c4@mail.gmail.com>
+In-Reply-To: <4B7846B2.1030303@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Evans <mjevans1983@gmail.com>
-Cc: Volker Armin Hemmann <volkerarmin@googlemail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Volker Armin Hemmann <volkerarmin@googlemail.com>, Michael Evans <mjevans1983@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 14 Feb 2010, Michael Evans wrote:
-> Maybe you'd like a simple, easy to customize initramfs creator.
+On Sun, Feb 14, 2010 at 06:53:38PM +0000, John Robinson wrote:
 
-If the distro doesn't use it (as its default initramfs creator, even), it is
-a lot more chance for breakage.  Less testing, and all that...
+> True, but afaik every distro uses an initrd/initramfs and bundles
+> tools making it easy to manage and customise them, so what's the
+> problem?
 
-And if I am deploying a specific kernel in a server, you better believe it
-is important enough that all due care will be taken so that it won't need an
-initrd to mount the root filesystem to begin with ;-)
+Distro provided initramfs generators have a bad habit assuming you
+patch/build your kernel like the distro does. If you want to use a
+vanilla kernel with different things built in/built as modules/not built
+at all, then you can get nasty surprises, and debugging can be rather
+painful.
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+My current view is if you use a distro kernel, then you should also use
+an initramfs (in fact you do not have a choice). But if you want to
+build your own kernel, then you should get rid of the initramfs.
+
+Gabor
