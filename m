@@ -1,37 +1,51 @@
 From: Asdo <asdo@shiftmail.org>
 Subject: Re: Linux mdadm superblock question.
-Date: Sun, 14 Feb 2010 21:25:45 +0100
-Message-ID: <4B785C49.7010105@shiftmail.org>
-References: <alpine.DEB.2.00.1002111758350.12031@p34.internal.lan>
- <4877c76c1002111752h23e14f7aibe58a89181e6f493@mail.gmail.com>
- <4B77044B.1020609@zytor.com>
- <alpine.DEB.2.00.1002131507260.31103@p34.internal.lan>
- <4B7719C1.1060400@zytor.com>
+Date: Sun, 14 Feb 2010 21:47:16 +0100
+Message-ID: <4B786154.8090103@shiftmail.org>
+References: <201002140251.59668.volkerarmin@googlemail.com>
+ <4877c76c1002132002s20d942c3i7cee5418cdcf369c@mail.gmail.com>
+ <20100214193406.GA15722@khazad-dum.debian.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <4B7719C1.1060400@zytor.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, Michael Evans <mjevans1983@gmail.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-reply-to: <20100214193406.GA15722@khazad-dum.debian.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Michael Evans <mjevans1983@gmail.com>, Volker Armin Hemmann <volkerarmin@googlemail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-H. Peter Anvin wrote:
-> On 02/13/2010 12:07 PM, Justin Piszcz wrote:
+Henrique de Moraes Holschuh wrote:
+> On Sat, 13 Feb 2010, Michael Evans wrote:
 >   
-> 0.90 has a very bad problem, which is that it is hard to distinguish
-> between a RAID partition at the end of volume and a full RAID device.
-> This is because 0.90 doesn't actually tell you the start of the device.
+>> I remember hearing that 1.x had /no/ plans for kernel level
+>> auto-detection ever.  That can be accomplished in early-userspace
+>> leaving the code in the kernel much less complex, and therefore far
+>> more reliable.
+>>     
 >
-> Then, of course, there are a lot of limitations on size, number of
-> devices, and so on in 0.90.
+> Yes, it is far more reliable kernel side, if only because it doesn't do
+> anything.
 >
-> 	-hpa
+> But the userspace reliability is _not_ good.  initrds are a source of
+> problems the moment things start to go wrong, and that's when they are not
+> the problem themselves.
+>
+> And the end result is a system that needs manual intervention to get its
+> root filesystem back.
+>
+> In my experience, every time we moved critical codepaths to userspace, we
+> ended up decreasing the *overall* system reliability.
 >   
-I don't understand...
-In a system we have, the root filesystem on a raid-6 which is on second 
-(and last) partitions of many disks.
-It always assembled correctly, it never tried to assemble the whole device.
-(on the first partition there is a raid1 with boot)
-So what's the problem exactly with not marking the beginning?
+I don't see it like this.
+You have the same chance to screw up the system by making mistakes in 
+the files in /etc, in the networking config, the firewall, the server 
+applications...
+(note: I speak for Debian/Ubuntu, redhat's initramfs I think is more messy.)
+1.x autodetection worked great for me in initramfs. Basically you only 
+need /etc/mdadm/mdadm.conf copied to initramfs (via update-initramfs), 
+the rest is done by Debian/Ubuntu standard initramfs procedure.
+Also consider 1.x allows to choose which arrays are autoassembled 
+(hostname written in the array name equal to hostname in the machine or 
+specified in mdadm.conf): this is more precise than 0.9 which 
+autoassembles all, I think.
