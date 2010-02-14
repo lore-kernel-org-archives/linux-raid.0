@@ -1,31 +1,40 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
 Subject: Re: Linux mdadm superblock question.
-Date: Sun, 14 Feb 2010 18:53:38 +0000
-Message-ID: <4B7846B2.1030303@anonymous.org.uk>
-References: <201002140251.59668.volkerarmin@googlemail.com> <4877c76c1002132002s20d942c3i7cee5418cdcf369c@mail.gmail.com> <201002141940.35716.volkerarmin@googlemail.com>
+Date: Sun, 14 Feb 2010 17:34:06 -0200
+Message-ID: <20100214193406.GA15722@khazad-dum.debian.net>
+References: <201002140251.59668.volkerarmin@googlemail.com>
+ <4877c76c1002132002s20d942c3i7cee5418cdcf369c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201002141940.35716.volkerarmin@googlemail.com>
+Content-Disposition: inline
+In-Reply-To: <4877c76c1002132002s20d942c3i7cee5418cdcf369c@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Volker Armin Hemmann <volkerarmin@googlemail.com>
-Cc: Michael Evans <mjevans1983@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Michael Evans <mjevans1983@gmail.com>
+Cc: Volker Armin Hemmann <volkerarmin@googlemail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 14/02/2010 18:40, Volker Armin Hemmann wrote:
-> On Sonntag 14 Februar 2010, you wrote:
-> 
->> In other words, 'auto-detection' for 1.x format devices is using an
->> initrd/initramfs.
-> 
-> which makes 1.x format useless for everybody who does not want to deal with 
-> initrd/initramfs.
+On Sat, 13 Feb 2010, Michael Evans wrote:
+> I remember hearing that 1.x had /no/ plans for kernel level
+> auto-detection ever.  That can be accomplished in early-userspace
+> leaving the code in the kernel much less complex, and therefore far
+> more reliable.
 
-True, but afaik every distro uses an initrd/initramfs and bundles tools 
-making it easy to manage and customise them, so what's the problem?
+Yes, it is far more reliable kernel side, if only because it doesn't do
+anything.
 
-Cheers,
+But the userspace reliability is _not_ good.  initrds are a source of
+problems the moment things start to go wrong, and that's when they are not
+the problem themselves.
 
-John.
+And the end result is a system that needs manual intervention to get its
+root filesystem back.
 
+In my experience, every time we moved critical codepaths to userspace, we
+ended up decreasing the *overall* system reliability.
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
