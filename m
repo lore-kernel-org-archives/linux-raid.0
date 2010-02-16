@@ -1,79 +1,54 @@
 From: Neil Brown <neilb@suse.de>
 Subject: Re: Linux mdadm superblock question.
-Date: Tue, 16 Feb 2010 11:38:17 +1100
-Message-ID: <20100216113817.5a1d1227@notabene.brown>
+Date: Tue, 16 Feb 2010 11:50:36 +1100
+Message-ID: <20100216115036.0f6b7bb6@notabene.brown>
 References: <alpine.DEB.2.00.1002111758350.12031@p34.internal.lan>
-	<4877c76c1002111752h23e14f7aibe58a89181e6f493@mail.gmail.com>
-	<4B77044B.1020609@zytor.com>
-	<alpine.DEB.2.00.1002131507260.31103@p34.internal.lan>
-	<4B7719C1.1060400@zytor.com>
-	<4B785C49.7010105@shiftmail.org>
-	<4B786898.8030309@zytor.com>
-	<4B788525.6000608@grumpydevil.homelinux.org>
-	<alpine.LNX.2.01.1002141839210.12929@filesrv1.baby-dragons.com>
-	<20100215071243.GA5068@maude.comedia.it>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100215071243.GA5068@maude.comedia.it>
+In-Reply-To: <alpine.DEB.2.00.1002111758350.12031@p34.internal.lan>
 Sender: linux-raid-owner@vger.kernel.org
-To: Luca Berra <bluca@comedia.it>
-Cc: linux-raid@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 15 Feb 2010 08:12:43 +0100
-Luca Berra <bluca@comedia.it> wrote:
+On Thu, 11 Feb 2010 18:00:23 -0500 (EST)
+Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
 
-> On Sun, Feb 14, 2010 at 06:40:31PM -0900, Mr. James W. Laferriere wrote:
-> > On Mon, 15 Feb 2010, Rudy Zijlstra wrote:
-> >> H. Peter Anvin wrote:
-> >>> IMO it would make sense to support autoassemble for 1.0 superblocks, and
-> sorry kernel autodetect is borked
+> Hi,
 > 
-> >>> making them the default.  The purpose would be to get everyone off 0.9.
-> >>>  However, *any* default is better than 1.1.
+> I may be converting a host to ext4 and was curious, is 0.90 still the only 
+> superblock version for mdadm/raid-1 that you can boot from without having 
+> to create an initrd/etc?
 > 
-> there has been a discussion on what format should be made as the
-> default, under the subject: "[ANNOUNCE] mdadm-3.1 has been withdrawn",
-> iirc 1.1 was chosen as the default, versus 1.2, because it puts the
-> superblock at the very same place as the partition table, thus
-> preventing any possible confusion between partitioned disk and whole
-> disk md. (yes someone managed to put both a whole disk 1.2 superblock
-> and a valid partition table on the same device....)
-> 
-> >> As long is autodetect is supported in the kernel, i am willing to upgrade 
-> >> to 1.0 superblocks. BUT i need the autodetect in the kernel, as i refuse 
-> it wont be implemented
-> 
-> >> to use initrd for production servers.
-> > 	I also have to agree with Rudy in this matter .
-> >
-> then use kernel command line
+> Are there any benefits to using a superblock > 0.90 for a raid-1 boot 
+> volume < 2TB?
 
-I cannot agree with this recommendation.
-Using a kernel command line like:
+The only noticeable differences that I can think of are:
+ 1/ If you reboot during recovery of a spare, then 0.90 will restart the
+    recovery at the start, while 1.x will restart from where it was up to.
+ 2/ The /sys/class/block/mdXX/md/dev-YYY/errors counter is reset on each
+    re-assembly with 0.90, but is preserved across stop/start with 1.x
+ 3/ If your partition starts on a multiple of 64K from the start of the
+    device and is the last partition and contains 0.90 metadata, then
+    mdadm can get confused by it.
+ 4/ If you move the devices to a host with a different arch and different
+    byte-ordering, then extra effort will be needed to see the array for
+    0.90, but not for 1.x
 
-   md=0,/dev/sda1,/dev/sdb1
+I suspect none of these is a big issue.
 
-will assemble v1.x arrays without an initrd.  However it depends on the device
-names (sda, sdb) being stable.  If you also have an 'sdc', and sda dies in
-such a way that it cannot be seen at all, then on the next reboot, md will
-try to assemble sdb1 and sdc1 (which have now been renamed to sda1 and sdb1)
-and this will fail.  So it works when everything else is working, but can
-then fail exactly when you need it the most.
+It is likely that future extensions will only be supported on 1.x metadata.
+For example I hope to add support for storing a bad-block list, so that a
+read error during recovery will only be fatal for that block, not the whole
+recovery process.  This is unlikely ever to be supported on 0.90.  However
+it may not be possible to hot-enable it on 1.x either, depending on how much
+space has been reserved for extra metadata, so there is no guarantee that
+using 1.x now makes you future-proof.
 
-There are other edge cases that can confuse autodetect as well.  I put a lot
-of effort into getting the assembly algorithms in mdadm to be as robust as I
-could make them, and I really recommend using mdadm to assemble all arrays,
-through an initrd if / is an md array.
-
-If you really don't want to trust a distro initrd, then the mdadm source code
-contains instructions for building a minimal initramfs which just runs mdadm
-to assemble the root device, then mounts and pivot_roots to that.
-
-If people have problems with initramfs, then I recommend filing bug reports
-rather than simply choosing not to use it.  It isn't going to go away.
+And yes, 0.90 is still the only superblock version that supports in-kernel
+autodetect, and I have no intention of adding in-kernel autodetect for any
+other version.
 
 NeilBrown
-
