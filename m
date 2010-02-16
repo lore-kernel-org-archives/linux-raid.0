@@ -1,57 +1,43 @@
-From: Dawning Sky <the.dawning.sky@gmail.com>
-Subject: Re: Auto Checking Raid 6 crashes my system
-Date: Tue, 16 Feb 2010 09:16:09 -0800
-Message-ID: <adf93d751002160916r5414b3e9qf3e6e19e2e9b83a0@mail.gmail.com>
-References: <adf93d751002152104w52b329fdx9eb54719f1c8587a@mail.gmail.com>
-	 <73e903671002160537m571a48e1v6e652410554e8a49@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Linux mdadm superblock question.
+Date: Tue, 16 Feb 2010 12:18:22 -0500
+Message-ID: <4B7AD35E.7000405@tmr.com>
+References: <201002140251.59668.volkerarmin@googlemail.com> <4877c76c1002132002s20d942c3i7cee5418cdcf369c@mail.gmail.com> <201002141940.35716.volkerarmin@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <73e903671002160537m571a48e1v6e652410554e8a49@mail.gmail.com>
+In-Reply-To: <201002141940.35716.volkerarmin@googlemail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Volker Armin Hemmann <volkerarmin@googlemail.com>
+Cc: Michael Evans <mjevans1983@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Feb 16, 2010 at 5:37 AM, Kristleifur Da=F0ason
-<kristleifur@gmail.com> wrote:
-> On Tue, Feb 16, 2010 at 5:04 AM, Dawning Sky <the.dawning.sky@gmail.c=
-om> wrote:
->> Hi,
->>
->> I just build a brand new md raid-6 with 5 disks. =A0And on Fedora 12=
-,
->> the auto checking of md devices via a weekly cron job is enabled by
->> default. =A0It performs the checking by echo "check" into
->> /sys/block/mdX/md/sync_action. =A0But after a while, the kernel just
->> crashes, without finishing checking the raid device or leaving
->> anything in the messages file.
->>
->> For now, I've disable the raid-check cron job. =A0The kernel version=
- I'm
->> running is 2.6.31.12-174.2.3.fc12.x86_64.
->>
->> Thanks,
->>
->> DS
+Volker Armin Hemmann wrote:
+> On Sonntag 14 Februar 2010, you wrote:
 >
+>   
+>> In other words, 'auto-detection' for 1.x format devices is using an
+>> initrd/initramfs.
+>>     
 >
-> Hi,
->
-> I encountered similar issues because of a faulty mvsas driver that
-> flaked out under the load. What hardware do you have?
+> which makes 1.x format useless for everybody who does not want to deal with 
+> initrd/initramfs.
+>   
 
-I'm using the onboard sata chip, which I believe is nVidia, and the
-driver is nv_sata.
+You make this sound like some major big deal. are you running your own 
+distribution? In most cases mkinitrd does the right thing when you "make 
+install" the kernel, and if you are doing something in the build so 
+complex that it needs options, you really should understand the options 
+and be sure you're doing what you want.
 
->
-> -- Kristleifur
->
+Generally this involves preloading a module or two, and if you need it 
+every time you probably should have built it in, anyway.
 
-DS
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+My opinion...
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "We can't solve today's problems by using the same thinking we
+   used in creating them." - Einstein
+
