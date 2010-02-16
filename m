@@ -1,38 +1,54 @@
-From: martin f krafft <madduck@debian.org>
-Subject: mdadm FAQ (was: Linux mdadm superblock question.)
-Date: Wed, 17 Feb 2010 09:09:38 +1300
-Message-ID: <20100216200938.GK16347@lapse.rw.madduck.net>
-References: <alpine.DEB.2.00.1002111758350.12031@p34.internal.lan>
- <20100216115036.0f6b7bb6@notabene.brown>
- <alpine.DEB.2.00.1002160807370.31195@p34.internal.lan>
+From: Volker Armin Hemmann <volkerarmin@googlemail.com>
+Subject: Re: Linux mdadm superblock question.
+Date: Tue, 16 Feb 2010 22:06:32 +0100
+Message-ID: <201002162206.32797.volkerarmin@googlemail.com>
+References: <201002140251.59668.volkerarmin@googlemail.com> <201002141940.35716.volkerarmin@googlemail.com> <4B7AD35E.7000405@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.1002160807370.31195@p34.internal.lan>
+In-Reply-To: <4B7AD35E.7000405@tmr.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Michael Evans <mjevans1983@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-also sprach Justin Piszcz <jpiszcz@lucidpixels.com> [2010.02.17.0214 +1300]:
-> Thanks for the response, this is exactly what I was looking for
-> and probably should be put in a FAQ.
+On Dienstag 16 Februar 2010, Bill Davidsen wrote:
+> Volker Armin Hemmann wrote:
+> > On Sonntag 14 Februar 2010, you wrote:
+> >> In other words, 'auto-detection' for 1.x format devices is using a=
+n
+> >> initrd/initramfs.
+> >=20
+> > which makes 1.x format useless for everybody who does not want to d=
+eal
+> > with initrd/initramfs.
+>=20
+> You make this sound like some major big deal. are you running your ow=
+n
+> distribution? In most cases mkinitrd does the right thing when you "m=
+ake
+> install" the kernel, and if you are doing something in the build so
+> complex that it needs options, you really should understand the optio=
+ns
+> and be sure you're doing what you want.
+>=20
+> Generally this involves preloading a module or two, and if you need i=
+t
+> every time you probably should have built it in, anyway.
+>=20
+> My opinion...
 
-I'd be more than happy to push my FAQ[0], possibly fused with my
-"recipes", upstream and would welcome anyone who wanted to help out.
+I am running my own kernels - and of course everything that is needed t=
+o boot=20
+and get the basic system up is built in. Why should I make the disk dri=
+vers=20
+modules?=20
+That does not make sense.
 
-0. http://git.debian.org/?p=pkg-mdadm/mdadm.git;a=blob;f=debian/FAQ;hb=HEAD
-1. http://git.debian.org/?p=pkg-mdadm/mdadm.git;a=blob;f=debian/README.recipes;hb=HEAD
+And the reason is simple: even when the system is completely fucked up,=
+ I want=20
+a kernel that is able to boot until init=3D/bin/bb takes over.
 
--- 
- .''`.   martin f. krafft <madduck@d.o>      Related projects:
-: :'  :  proud Debian developer               http://debiansystem.info
-`. `'`   http://people.debian.org/~madduck    http://vcs-pkg.org
-  `-  Debian - when you have better things to do than fixing systems
- 
-"literature always anticipates life.
- it does not copy it, but moulds it to its purpose.
- the nineteenth century, as we know it,
- is largely an invention of balzac."
-                                                        -- oscar wilde
+Gl=FCck Auf
+Volker
