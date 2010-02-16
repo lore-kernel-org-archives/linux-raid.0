@@ -1,78 +1,57 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Linux mdadm superblock question.
-Date: Tue, 16 Feb 2010 12:05:05 -0500
-Message-ID: <4B7AD041.4060305@tmr.com>
-References: <alpine.DEB.2.00.1002111758350.12031@p34.internal.lan>	<4877c76c1002111752h23e14f7aibe58a89181e6f493@mail.gmail.com>	<4B77044B.1020609@zytor.com> <20100216112708.4a863f86@notabene.brown> <4B79F3CE.5030907@zytor.com>
+From: Dawning Sky <the.dawning.sky@gmail.com>
+Subject: Re: Auto Checking Raid 6 crashes my system
+Date: Tue, 16 Feb 2010 09:16:09 -0800
+Message-ID: <adf93d751002160916r5414b3e9qf3e6e19e2e9b83a0@mail.gmail.com>
+References: <adf93d751002152104w52b329fdx9eb54719f1c8587a@mail.gmail.com>
+	 <73e903671002160537m571a48e1v6e652410554e8a49@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B79F3CE.5030907@zytor.com>
+In-Reply-To: <73e903671002160537m571a48e1v6e652410554e8a49@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Neil Brown <neilb@suse.de>, Michael Evans <mjevans1983@gmail.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-H. Peter Anvin wrote:
-> On 02/15/2010 04:27 PM, Neil Brown wrote:
->   
->> When mdadm defaults to 1.0 for a RAID1 it prints a warning to the effect that
->> the array might not be suitable to store '/boot', and requests confirmation.
+On Tue, Feb 16, 2010 at 5:37 AM, Kristleifur Da=F0ason
+<kristleifur@gmail.com> wrote:
+> On Tue, Feb 16, 2010 at 5:04 AM, Dawning Sky <the.dawning.sky@gmail.c=
+om> wrote:
+>> Hi,
 >>
->> So I assume that the people who are having this problem either do not read,
->> or are using some partitioning tool that runs mdadm under the hood using
->> "--run" to avoid the need for confirmation.  It would be nice to confirm if
->> that was the case, and find out what tool is being used.
->>     
->
-> My guess is that they are using the latter.  However, some of it is
-> probably also a matter of not planning ahead, or not understanding the
-> error message.  I'll forward one email privately (don't want to forward
-> a private email to a list.)
->
->   
->> If an array is not being used for /boot (or /) then I still think that 1.1 is
->> the better choice as it removes the possibility for confusion over partition
->> tables.
+>> I just build a brand new md raid-6 with 5 disks. =A0And on Fedora 12=
+,
+>> the auto checking of md devices via a weekly cron job is enabled by
+>> default. =A0It performs the checking by echo "check" into
+>> /sys/block/mdX/md/sync_action. =A0But after a while, the kernel just
+>> crashes, without finishing checking the raid device or leaving
+>> anything in the messages file.
 >>
->> I guess I could try defaulting to 1.2 in a partition, and 1.1 on a
->> whole-device.  That might be a suitable compromise.
->>     
+>> For now, I've disable the raid-check cron job. =A0The kernel version=
+ I'm
+>> running is 2.6.31.12-174.2.3.fc12.x86_64.
+>>
+>> Thanks,
+>>
+>> DS
 >
-> In some ways, 1.1 is even more toxic on a whole-device, since that means
-> that it is physically impossible to boot off of it -- the hardware will
-> only ever read the first sector (MBR).
 >
->   
-That is either a problem or a solution, depending which bad behavior you 
-are trying hardest to avoid.
->> How do people cope with XFS??
->>     
+> Hi,
 >
-> There are three options:
->
-> a) either don't boot from it (separate /boot);
->   
-And certainly there are other reasons to do that...
-> b) use a bootloader which installs in the MBR and
-> hopefully-unpartitioned disk areas (e.g. Grub);
-> c) use a nonstandard custom MBR.
->
-> Neither (b) or (c), of course, allow for chainloading from another OS
-> install and thus are bad for interoperability.
->   
+> I encountered similar issues because of a faulty mvsas driver that
+> flaked out under the load. What hardware do you have?
 
-I'm not really sure what you're getting at here, I use grub in MBR and 
-then add chain loader stanzas to grub.conf for many things, usually an 
-alternate Linux release, or to have 32/64 of the same release handy for 
-testing, and always memtest from the boot menu. Even Win98SP2 on one 
-machine, since that works very poorly under KVM. (ask Avi if you care 
-why, something about what it does in real mode). In any case, I don't 
-see the chain loader issue, unless you mean to reboot out of some other 
-OS into Linux.
+I'm using the onboard sata chip, which I believe is nVidia, and the
+driver is nv_sata.
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "We can't solve today's problems by using the same thinking we
-   used in creating them." - Einstein
+>
+> -- Kristleifur
+>
 
+DS
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
