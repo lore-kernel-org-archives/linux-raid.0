@@ -1,78 +1,37 @@
-From: Volker Armin Hemmann <volkerarmin@googlemail.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
 Subject: Re: Linux mdadm superblock question.
-Date: Tue, 16 Feb 2010 23:18:33 +0100
-Message-ID: <201002162318.33950.volkerarmin@googlemail.com>
-References: <201002140251.59668.volkerarmin@googlemail.com> <201002162206.32797.volkerarmin@googlemail.com> <20100216220020.GA1036@emergent.ellipticsemi.com>
+Date: Tue, 16 Feb 2010 15:30:04 -0800
+Message-ID: <4B7B2A7C.5000405@zytor.com>
+References: <alpine.DEB.2.00.1002111758350.12031@p34.internal.lan>	<4877c76c1002111752h23e14f7aibe58a89181e6f493@mail.gmail.com>	<4B77044B.1020609@zytor.com> <20100216112708.4a863f86@notabene.brown> <4B79F3CE.5030907@zytor.com> <4B7AD041.4060305@tmr.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20100216220020.GA1036@emergent.ellipticsemi.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>, Michael Evans <mjevans1983@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Nick Bowler <nbowler@elliptictech.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4B7AD041.4060305@tmr.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Neil Brown <neilb@suse.de>, Michael Evans <mjevans1983@gmail.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Dienstag 16 Februar 2010, Nick Bowler wrote:
-> On 22:06 Tue 16 Feb     , Volker Armin Hemmann wrote:
-> > On Dienstag 16 Februar 2010, Bill Davidsen wrote:
-> > > Volker Armin Hemmann wrote:
-> > > > On Sonntag 14 Februar 2010, you wrote:
-> > > >> In other words, 'auto-detection' for 1.x format devices is usi=
-ng an
-> > > >> initrd/initramfs.
-> > > >=20
-> > > > which makes 1.x format useless for everybody who does not want =
-to
-> > > > deal with initrd/initramfs.
-> > >=20
-> > > You make this sound like some major big deal. are you running you=
-r own
-> > > distribution? In most cases mkinitrd does the right thing when yo=
-u
-> > > "make install" the kernel, and if you are doing something in the =
-build
-> > > so complex that it needs options, you really should understand th=
-e
-> > > options and be sure you're doing what you want.
-> > >=20
-> > > Generally this involves preloading a module or two, and if you ne=
-ed it
-> > > every time you probably should have built it in, anyway.
-> > >=20
-> > > My opinion...
-> >=20
-> > I am running my own kernels - and of course everything that is need=
-ed to
-> > boot and get the basic system up is built in. Why should I make the=
- disk
-> > drivers modules?
-> > That does not make sense.
->=20
-> I agree that it makes little sense to make something a module when yo=
-u
-> can't unload it anyway, but...
->=20
-> > And the reason is simple: even when the system is completely fucked=
- up, I
-> > want a kernel that is able to boot until init=3D/bin/bb takes over.
->=20
-> I put a complete set of recovery tools into my initramfses so that wh=
-en
-> the system is completely fucked up, I have a kernel that is able to b=
-oot
-> until rdinit=3D/bin/zsh (or /bin/bb, if you prefer) takes over.
->=20
-> This has the added advantage of working when the root filesystem cann=
-ot
-> be mounted at all: a scenario which does not seem too far-fetched whe=
-n
-> the filesystem is located on a raid array.
+On 02/16/2010 09:05 AM, Bill Davidsen wrote:
+> 
+> I'm not really sure what you're getting at here, I use grub in MBR and 
+> then add chain loader stanzas to grub.conf for many things, usually an 
+> alternate Linux release, or to have 32/64 of the same release handy for 
+> testing, and always memtest from the boot menu. Even Win98SP2 on one 
+> machine, since that works very poorly under KVM. (ask Avi if you care 
+> why, something about what it does in real mode). In any case, I don't 
+> see the chain loader issue, unless you mean to reboot out of some other 
+> OS into Linux.
+> 
 
-and what do you do if you have to boot from a cd/usb stick and need to =
-access=20
-the raid?
+That's one of many uses, yes
 
-Simple with auto assembling. Not so much without.
+Presumably the reason you don't have problems is because the partitions
+you chainload aren't RAID partitions with 1.1 superblocks, or you're
+specifying an explicit offset for your chainloads (Grub syntax allows that.)
 
-Gl=FCck Auf,
-Volker
+Either which way, it's a good example of the usage model.  Chainloading
+is important for a lot of people.
+
+	-hpa
