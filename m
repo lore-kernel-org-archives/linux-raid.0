@@ -1,58 +1,203 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: Linux mdadm superblock question.
-Date: Mon, 15 Feb 2010 17:24:30 -0800
-Message-ID: <4B79F3CE.5030907@zytor.com>
-References: <alpine.DEB.2.00.1002111758350.12031@p34.internal.lan>	<4877c76c1002111752h23e14f7aibe58a89181e6f493@mail.gmail.com>	<4B77044B.1020609@zytor.com> <20100216112708.4a863f86@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: MD: "sync_action" issues: pausing resync/recovery automatically
+ restarts.
+Date: Tue, 16 Feb 2010 12:26:16 +1100
+Message-ID: <20100216122616.6ea5c0e4@notabene.brown>
+References: <4B73F1F0.1030800@mpstor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20100216112708.4a863f86@notabene.brown>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Michael Evans <mjevans1983@gmail.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4B73F1F0.1030800@mpstor.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Benjamin ESTRABAUD <be@mpstor.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/15/2010 04:27 PM, Neil Brown wrote:
+On Thu, 11 Feb 2010 12:02:56 +0000
+Benjamin ESTRABAUD <be@mpstor.com> wrote:
+
+> Hi everybody,
 > 
-> When mdadm defaults to 1.0 for a RAID1 it prints a warning to the effect that
-> the array might not be suitable to store '/boot', and requests confirmation.
+> I am getting a weird issue when I am writing values to 
+> "/sys/block/mdX/md/sync_action".
+> For instance, I would like to pause a resync or/and a recovery when they 
+> are happening.
+> I create a RAID 5 as follow:
 > 
-> So I assume that the people who are having this problem either do not read,
-> or are using some partitioning tool that runs mdadm under the hood using
-> "--run" to avoid the need for confirmation.  It would be nice to confirm if
-> that was the case, and find out what tool is being used.
-
-My guess is that they are using the latter.  However, some of it is
-probably also a matter of not planning ahead, or not understanding the
-error message.  I'll forward one email privately (don't want to forward
-a private email to a list.)
-
-> If an array is not being used for /boot (or /) then I still think that 1.1 is
-> the better choice as it removes the possibility for confusion over partition
-> tables.
+> mdadm --create -vvv --force --run --metadata=1.2 /dev/md/d0 --level=5 
+> --size=9429760 --chunk=64 --name=1056856 -n5 --bitmap=internal 
+> --bitmap-chunk=4096 --layout=ls /dev/sde2 /dev/sdb2 /dev/sdc2 /dev/sdf2 
+> /dev/sdd2
 > 
-> I guess I could try defaulting to 1.2 in a partition, and 1.1 on a
-> whole-device.  That might be a suitable compromise.
+> The RAID is resyncing:
+> 
+> # cat /proc/mdstat
+> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+> md_d0 : active raid5 sdd2[4] sdf2[3] sdc2[2] sdb2[1] sde2[0]
+>       37719040 blocks super 1.2 level 5, 64k chunk, algorithm 2 [5/5] 
+> [UUUUU]
+>       [====>................]  resync = 22.2% (2101824/9429760) 
+> finish=2.6min speed=46186K/sec
+>       bitmap: 1/1 pages [64KB], 4096KB chunk
+> 
+> unused devices: <none>
+> 
+> I then decide to pause its resync:
+> 
+> # echo idle > /sys/block/md_d0/md/sync_action
+> 
+> The RAID resync should have paused by now, let's check the sys properties:
+> 
+> # cat /sys/block/md_d0/md/sync_action
+> resync
+> 
+> The resync seems to have not stopped/restarted, let's check dmesg:
+> 
+> [157287.049715] raid5: raid level 5 set md_d0 active with 5 out of 5 
+> devices, algorithm 2
+> [157287.057601] RAID5 conf printout:
+> [157287.060909]  --- rd:5 wd:5
+> [157287.063700]  disk 0, o:1, dev:sde2
+> [157287.067182]  disk 1, o:1, dev:sdb2
+> [157287.070664]  disk 2, o:1, dev:sdc2
+> [157287.074147]  disk 3, o:1, dev:sdf2
+> [157287.077628]  disk 4, o:1, dev:sdd2
+> [157287.086813] md_d0: bitmap initialized from disk: read 1/1 pages, set 
+> 2303 bits
+> [157287.094134] created bitmap (1 pages) for device md_d0
+> [157287.113475] md: resync of RAID array md_d0
+> [157287.117650] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+> [157287.123555] md: using maximum available idle IO bandwidth (but not 
+> more than 200000 KB/sec) for resync.
+> [157287.133011] md: using 2048k window, over a total of 9429760 blocks.
+> [157345.158535] md: md_do_sync() got signal ... exiting
+> [157345.166057] md: checkpointing resync of md_d0.
+> [157345.179819] md: resync of RAID array md_d0
+> [157345.183993] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+> [157345.189899] md: using maximum available idle IO bandwidth (but not 
+> more than 200000 KB/sec) for resync.
+> [157345.199353] md: using 2048k window, over a total of 9429760 blocks.
+> 
+> The resync seem to stop at some stage since:
+> 
+> [157345.158535] md: md_do_sync() got signal ... exiting
+> 
+> But it seems to be restarting right after this:
+> 
+> [157345.179819] md: resync of RAID array md_d0
+> 
+> I read in the md.txt documentation that pausing a resync could sometimes 
+> not work if a n event or trigger was triggering it to automatically 
+> restart. However, I don't think I have any trigger that would cause it 
+> to restart.
+> it then builds perfectly fine.
+> 
+> I now want to check if the same issue occurs while recovering, after 
+> all, I especially want to be able to pause a recovery, while I don't 
+> really need to pause/restart resyncs.
+> 
+> Let's say I pull a disk from the bay, fail it and remove it as follow:
+> 
+> # mdadm --fail /dev/md/d0 /dev/sde2
+> mdadm: set /dev/sde2 faulty in /dev/md/d0
+> 
+> # mdadm --remove /dev/md/d0 /dev/sde2
+> mdadm: hot removed /dev/sde2
+> 
+> Now let's add a spare:
+> 
+> # /opt/soma/bin/mdadm/mdadm --add /dev/md/d0 /dev/sda2  
+> raid manager: added /dev/sda2
+> 
+> The RAID is now recovering:
+> 
+> # cat /proc/mdstat
+> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
+> md_d0 : active raid5 sda2[5] sdd2[4] sdf2[3] sdc2[2] sdb2[1]
+>       37719040 blocks super 1.2 level 5, 64k chunk, algorithm 2 [5/4] 
+> [_UUUU]
+>       [>....................]  recovery =  1.7% (169792/9429760) 
+> finish=0.9min speed=169792K/sec
+>       bitmap: 0/1 pages [0KB], 4096KB chunk
+> 
+> unused devices: <none>
+> 
+> # cat /sys/block/md_d0/md/sync_action
+> recover
+> 
+> Let's try and stop this recovery:
+> 
+> # echo idle > /sys/block/md_d0/md/sync_action
+> 
+> [157641.618291]  disk 3, o:1, dev:sdf2
+> [157641.621774]  disk 4, o:1, dev:sdd2
+> [157641.632057] md: recovery of RAID array md_d0
+> [157641.636413] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+> [157641.642314] md: using maximum available idle IO bandwidth (but not 
+> more than 200000 KB/sec) for recovery.
+> [157641.651940] md: using 2048k window, over a total of 9429760 blocks.
+> [157657.120722] md: md_do_sync() got signal ... exiting
+> [157657.267055] RAID5 conf printout:
+> [157657.270381]  --- rd:5 wd:4
+> [157657.273171]  disk 0, o:1, dev:sda2
+> [157657.276650]  disk 1, o:1, dev:sdb2
+> [157657.280129]  disk 2, o:1, dev:sdc2
+> [157657.283605]  disk 3, o:1, dev:sdf2
+> [157657.287087]  disk 4, o:1, dev:sdd2
+> [157657.290568] RAID5 conf printout:
+> [157657.293876]  --- rd:5 wd:4
+> [157657.296660]  disk 0, o:1, dev:sda2
+> [157657.300139]  disk 1, o:1, dev:sdb2
+> [157657.303615]  disk 2, o:1, dev:sdc2
+> [157657.307096]  disk 3, o:1, dev:sdf2
+> [157657.310579]  disk 4, o:1, dev:sdd2
+> [157657.320835] md: recovery of RAID array md_d0
+> [157657.325194] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+> [157657.331091] md: using maximum available idle IO bandwidth (but not 
+> more than 200000 KB/sec) for recovery.
+> [157657.340713] md: using 2048k window, over a total of 9429760 blocks.
+> [157657.347047] md: resuming recovery of md_d0 from checkpoint.
+> 
+> I am getting the same issue, the recovery stops, but restarts 200 
+> milliseconds later.
 
-In some ways, 1.1 is even more toxic on a whole-device, since that means
-that it is physically impossible to boot off of it -- the hardware will
-only ever read the first sector (MBR).
+So clearly the resync is pausing - for 200milliseconds....
 
-> How do people cope with XFS??
+'idle' is only really useful to top a 'check' or 'repair'.
+A 'sync' or 'recovery' md really wants to do, so whenever it seems to be
+needed it, it does it.
 
-There are three options:
+What you want is "frozen" which is only available since 2.6.31.
 
-a) either don't boot from it (separate /boot);
-b) use a bootloader which installs in the MBR and
-hopefully-unpartitioned disk areas (e.g. Grub);
-c) use a nonstandard custom MBR.
+> 
+> This clearly indicates that some sort of trigger is automatically 
+> restarting the resync and recovery, but I have no clue as of what could 
+> it be.
+> 
+> Would anyone here had a similar experience with trying to stop resyncs? 
+> Is there a "magic" variable that would enable or disable automatic 
+> restart of resync/recoveries?
+> 
+> Would anyone know of a standard event or trigger that would cause a 
+> resync or recovery to automatically restart?
+> 
+> Thank you very much in advance for your help.
+> 
+> My Kernel version is:
+> 
+> 2.6.26.3
+>
 
-Neither (b) or (c), of course, allow for chainloading from another OS
-install and thus are bad for interoperability.
+So with that kernel, you cannot freeze a recovery.
 
-	-hpa
+Why do you want to?
 
--- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
+A possible option is the mark the array read-only 
+   "mdadm  --read-only /dev/mdXX".
+
+This doesn't work if the array is mounted, but does stop any recovery from
+happening.
+
+NeilBrown
+
