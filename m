@@ -1,63 +1,54 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Linux mdadm superblock question.
-Date: Tue, 16 Feb 2010 12:24:20 -0500
-Message-ID: <4B7AD4C4.4090209@tmr.com>
-References: <alpine.DEB.2.00.1002111758350.12031@p34.internal.lan> <20100216115036.0f6b7bb6@notabene.brown>
+Subject: Re: Slow(?) raid5 to raid6 reshape speed
+Date: Tue, 16 Feb 2010 12:34:48 -0500
+Message-ID: <4B7AD738.6080503@tmr.com>
+References: <ee1fb9c4204eafc9daffb4341d0de646@rw23.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100216115036.0f6b7bb6@notabene.brown>
+In-Reply-To: <ee1fb9c4204eafc9daffb4341d0de646@rw23.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michael <michael@rw23.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Thu, 11 Feb 2010 18:00:23 -0500 (EST)
-> Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+Michael wrote:
+> Hello,
+>
+> iam reshaping my 4-drive raid5 to a 5-drive raid6, but the speed is a
+> little slow.
+>
+> md2 : active raid6 sdc3[0] sdg3[4] sdf3[3] sda3[2] sdd3[1]
+>       2898182016 blocks super 0.91 level 6, 64k chunk, algorithm 18 [5/4]
+> [UUUU_]
+>       [======>..............]  reshape = 34.2% (330530816/966060672)
+> finish=2897.5min speed=3655K/sec
+>
+> i know it is a expensive process, but my system near-to-idle, so there may
+> be something wrong.
+> with top, i can see there is no noticable cpu load caused by the md2_raid6
+> process or any other.
+> with iotop, i can see mdadm reading and writing a little data once a
+> secound, but not continuous.
+>
+> i think the kernel's raid io is not visible at iotop or iam wrong?
+>
+> i have moved the --backup-file from my usb drive to a internal ide hard
+> drive and gained 800k/sec more speed.
+> ~3000-4000k/sec are not so bad that the reshaping takes forever, but could
+> be faster, right?
+>
+> i have tried playing around with sync_speed_min and sync_speed_max without
+> any result.
+> setting the stripe_cache to 8192 or something did not show a real
+> performance gain.
 >
 >   
->> Hi,
->>
->> I may be converting a host to ext4 and was curious, is 0.90 still the only 
->> superblock version for mdadm/raid-1 that you can boot from without having 
->> to create an initrd/etc?
->>
->> Are there any benefits to using a superblock > 0.90 for a raid-1 boot 
->> volume < 2TB?
->>     
->
-> The only noticeable differences that I can think of are:
->  1/ If you reboot during recovery of a spare, then 0.90 will restart the
->     recovery at the start, while 1.x will restart from where it was up to.
->  2/ The /sys/class/block/mdXX/md/dev-YYY/errors counter is reset on each
->     re-assembly with 0.90, but is preserved across stop/start with 1.x
->  3/ If your partition starts on a multiple of 64K from the start of the
->     device and is the last partition and contains 0.90 metadata, then
->     mdadm can get confused by it.
->   
+You can go larger than that, double it or try 32k. I have heard reports 
+of evil at 64k, I wouldn't go there other than with test data.
 
-Given that 4k sector drives make that a lot more likely that it used to 
-be, I suspect some effort will be needed to address this sooner or later.
-
->  4/ If you move the devices to a host with a different arch and different
->     byte-ordering, then extra effort will be needed to see the array for
->     0.90, but not for 1.x
->
-> I suspect none of these is a big issue.
->
-> It is likely that future extensions will only be supported on 1.x metadata.
-> For example I hope to add support for storing a bad-block list, so that a
-> read error during recovery will only be fatal for that block, not the whole
-> recovery process.  This is unlikely ever to be supported on 0.90.  However
-> it may not be possible to hot-enable it on 1.x either, depending on how much
-> space has been reserved for extra metadata, so there is no guarantee that
-> using 1.x now makes you future-proof.
->
-> And yes, 0.90 is still the only superblock version that supports in-kernel
-> autodetect, and I have no intention of adding in-kernel autodetect for any
-> other version.
+> is my speed bad, good, normal? any ideas how to "tune" it a bit?
 >   
 
 
