@@ -1,54 +1,56 @@
-From: Bodo Eggert <7eggert@web.de>
-Subject: Re: Linux mdadm superblock question.
-Date: Tue, 16 Feb 2010 22:10:07 +0100
-Message-ID: <E1NhUgJ-0004Tn-Qv@be1.7eggert.dyndns.org>
-References: <edBWa-K7-9@gated-at.bofh.it> <edDXX-3XC-7@gated-at.bofh.it> <edRHA-7bL-13@gated-at.bofh.it> <eezfA-4N7-11@gated-at.bofh.it>
-Reply-To: 7eggert@gmx.de
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Why does one get mismatches?
+Date: Tue, 16 Feb 2010 16:25:25 -0500
+Message-ID: <4B7B0D45.7040801@tmr.com>
+References: <869541.92104.qm@web51304.mail.re2.yahoo.com> <4B67451F.8040206@tmr.com> <20100202093738.44b4fece@notabene.brown> <4B684087.50001@tmr.com> <20100211161444.7a0ea7bb@notabene.brown> <20100211175133.GA30187@atlantis.cc.ndsu.nodak.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>, Volker Armin Hemmann <volkerarmin@googlemail.com>, Michael Evans <mjevans1983@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100211175133.GA30187@atlantis.cc.ndsu.nodak.edu>
+Sender: linux-raid-owner@vger.kernel.org
+To: Bryan Mesich <bryan.mesich@ndsu.edu>, Neil Brown <neilb@suse.de>, Jon@eHardcastle.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Bill Davidsen <davidsen@tmr.com> wrote:
-> Volker Armin Hemmann wrote:
->> On Sonntag 14 Februar 2010, you wrote:
+Bryan Mesich wrote:
+> On Thu, Feb 11, 2010 at 04:14:44PM +1100, Neil Brown wrote:
+>   
+>>> This whole discussion simply shows that for RAID-1 software RAID is less 
+>>> reliable than hardware RAID (no, I don't mean fake-RAID), because it 
+>>> doesn't pin the data buffer until all copies are written.
+>>>       
+>> That doesn't make it less reliable.  It just makes it more confusing.
+>>     
+>
+> I agree that linux software RAID is no less reliable than
+> hardware RAID with regards to the above conversation.  It's
+> however confusing to have a counter that indicates there are
+> problems with a RAID 1 array when in fact there is not.
+>   
 
->>> In other words, 'auto-detection' for 1.x format devices is using an
->>> initrd/initramfs.
->>>     
->>
->> which makes 1.x format useless for everybody who does not want to deal with
->> initrd/initramfs.
->>   
-> 
-> You make this sound like some major big deal. are you running your own
-> distribution? In most cases mkinitrd does the right thing when you "make
-> install" the kernel,
+Sorry, but real hardware raid is more reliable than software raid, and 
+Neil's justification for not doing smart recovery mentions it. Note this 
+referes to real hardware raid, not fakeraid which is just some firmware 
+in a BIOS to use the existing hardware.
 
-I don't know what "make install" will do, so I'll have to expect random
-results.
+The issue lies with data changing between write to multiple drives. In 
+hardware raid the data traverses the memory bus once, only once, and 
+goes into cache in the controller, from which it is written to all 
+mirrored drives. With software raid an individual write is done to each 
+drive, and if the data in the buffer changes between writes to one drive 
+or the other you get different values. Neil may be convinced that the OS 
+somehow "knows" which of the mirror copies is correct, ie. most recent, 
+and never uses the stale data, but if that information was really 
+available reads would always return the latest value and it wouldn't be 
+possible to read the same file multiple times and get different MD5sums. 
+It would also be possible to do a stable smart recovery by propagating 
+the most recent copy to the other mirror drives.
 
-I don't expect it to copy bzimage to /boot/linux-version-commentfrommymind,
-point the "ln" or "lt" entry (depending on if I want to upgrade or to test
-a new kernel) in lilo.conf to the new kernel and to run lilo -R ln.
+I hoped that mounting data=journal would lead to consistency, that seems 
+not to be true either.
 
-I don't expect it to sftp the kernel from my build machine to my server, either.
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "We can't solve today's problems by using the same thinking we
+   used in creating them." - Einstein
 
-I expect it to move ~/bin/umount (a wrapper around /bin/umount fusermount -u
-and smbumount) to initrd:/bin/umount. It might also create an initrd with a
-passwordless rescue mode. Or it will use a minimal shell, and in case of
-trouble, I have to fight the shell, too. In short: I expect it to backstab me.
-(As a bonus, you can't read about rdinit= if you encounter your first initrd-ed
- system and init=/bin/sh does not work.)
-
-> and if you are doing something in the build so 
-> complex that it needs options, you really should understand the options
-> and be sure you're doing what you want.
-
-What I do is the most simple thing you can do. No initrd no cry. That's why I
-have to use the 0.9 format. This - and the fact that my distribution defaults
-to using the 1.0 format - is what I discovered after upgrading my system last
-time.
