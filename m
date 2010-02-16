@@ -1,65 +1,30 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Linux mdadm superblock question.
-Date: Tue, 16 Feb 2010 08:14:21 -0500 (EST)
-Message-ID: <alpine.DEB.2.00.1002160807370.31195@p34.internal.lan>
-References: <alpine.DEB.2.00.1002111758350.12031@p34.internal.lan> <20100216115036.0f6b7bb6@notabene.brown>
+From: Michael <michael@rw23.de>
+Subject: Re: =?UTF-8?Q?Slow=28=3F=29=20raid=35=20to=20raid=36=20reshape=20speed?=
+Date: Tue, 16 Feb 2010 14:31:23 +0100
+Message-ID: <40406f373328e5e0bc56a2faab153086@rw23.de>
+References: <ee1fb9c4204eafc9daffb4341d0de646@rw23.de> <alpine.DEB.1.10.1002161251570.4986@uplift.swm.pp.se> <afb99b76feb4fad30a4f43fb46ea3e4d@rw23.de> <alpine.DEB.1.10.1002161334170.4986@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20100216115036.0f6b7bb6@notabene.brown>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.1002161334170.4986@uplift.swm.pp.se>
+Sender: linux-raid-owner@vger.kernel.org
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: Linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+it already is and was all the time:
 
+[root@raw ~]cat /sys/block/md2/md/sync_speed_*
+200000 (system)
+200000 (local)
 
-On Tue, 16 Feb 2010, Neil Brown wrote:
+so that's not the limit. any other ideas?
 
-> On Thu, 11 Feb 2010 18:00:23 -0500 (EST)
-> Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
->
->> Hi,
->>
->> I may be converting a host to ext4 and was curious, is 0.90 still the only
->> superblock version for mdadm/raid-1 that you can boot from without having
->> to create an initrd/etc?
->>
->> Are there any benefits to using a superblock > 0.90 for a raid-1 boot
->> volume < 2TB?
->
-> The only noticeable differences that I can think of are:
-> 1/ If you reboot during recovery of a spare, then 0.90 will restart the
->    recovery at the start, while 1.x will restart from where it was up to.
-> 2/ The /sys/class/block/mdXX/md/dev-YYY/errors counter is reset on each
->    re-assembly with 0.90, but is preserved across stop/start with 1.x
-> 3/ If your partition starts on a multiple of 64K from the start of the
->    device and is the last partition and contains 0.90 metadata, then
->    mdadm can get confused by it.
-> 4/ If you move the devices to a host with a different arch and different
->    byte-ordering, then extra effort will be needed to see the array for
->    0.90, but not for 1.x
->
-> I suspect none of these is a big issue.
->
-> It is likely that future extensions will only be supported on 1.x metadata.
-> For example I hope to add support for storing a bad-block list, so that a
-> read error during recovery will only be fatal for that block, not the whole
-> recovery process.  This is unlikely ever to be supported on 0.90.  However
-> it may not be possible to hot-enable it on 1.x either, depending on how much
-> space has been reserved for extra metadata, so there is no guarantee that
-> using 1.x now makes you future-proof.
->
-> And yes, 0.90 is still the only superblock version that supports in-kernel
-> autodetect, and I have no intention of adding in-kernel autodetect for any
-> other version.
->
-> NeilBrown
->
-
-Hi Neil,
-
-Thanks for the response, this is exactly what I was looking for and 
-probably should be put in a FAQ.
-
-Justin.
+On Tue, 16 Feb 2010 13:34:36 +0100 (CET), Mikael Abrahamsson
+<swmike@swm.pp.se> wrote:
+> On Tue, 16 Feb 2010, Michael wrote:
+> 
+>> so this is not 100%, right?
+> 
+> I'd increase speed_min more.
