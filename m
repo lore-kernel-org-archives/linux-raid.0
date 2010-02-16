@@ -1,80 +1,60 @@
-From: Steven Haigh <netwiz@crc.id.au>
-Subject: Re: Why does one get =?UTF-8?Q?mismatches=3F?=
-Date: Wed, 17 Feb 2010 08:38:11 +1100
-Message-ID: <6db64f7872286165ac1fd3436e9d6476@localhost>
-References: <869541.92104.qm@web51304.mail.re2.yahoo.com> <4B67451F.8040206@tmr.com> <20100202093738.44b4fece@notabene.brown> <4B684087.50001@tmr.com> <20100211161444.7a0ea7bb@notabene.brown> <20100211175133.GA30187@atlantis.cc.ndsu.nodak.edu> <4B7B0D45.7040801@tmr.com>
+From: Nick Bowler <nbowler@elliptictech.com>
+Subject: Re: Linux mdadm superblock question.
+Date: Tue, 16 Feb 2010 17:00:20 -0500
+Message-ID: <20100216220020.GA1036@emergent.ellipticsemi.com>
+References: <201002140251.59668.volkerarmin@googlemail.com>
+ <201002141940.35716.volkerarmin@googlemail.com>
+ <4B7AD35E.7000405@tmr.com>
+ <201002162206.32797.volkerarmin@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B7B0D45.7040801@tmr.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Bryan Mesich <bryan.mesich@ndsu.edu>, Neil Brown <neilb@suse.de>, Jon@eHardcastle.com, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <201002162206.32797.volkerarmin@googlemail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Volker Armin Hemmann <volkerarmin@googlemail.com>
+Cc: Bill Davidsen <davidsen@tmr.com>, Michael Evans <mjevans1983@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 16 Feb 2010 16:25:25 -0500, Bill Davidsen <davidsen@tmr.com>
-wrote:
-> Bryan Mesich wrote:
->> On Thu, Feb 11, 2010 at 04:14:44PM +1100, Neil Brown wrote:
->>   
->>>> This whole discussion simply shows that for RAID-1 software RAID is
->>>> less
->>>> reliable than hardware RAID (no, I don't mean fake-RAID), because it 
->>>> doesn't pin the data buffer until all copies are written.
->>>>       
->>> That doesn't make it less reliable.  It just makes it more confusing.
->>>     
->>
->> I agree that linux software RAID is no less reliable than
->> hardware RAID with regards to the above conversation.  It's
->> however confusing to have a counter that indicates there are
->> problems with a RAID 1 array when in fact there is not.
->>   
+On 22:06 Tue 16 Feb     , Volker Armin Hemmann wrote:
+> On Dienstag 16 Februar 2010, Bill Davidsen wrote:
+> > Volker Armin Hemmann wrote:
+> > > On Sonntag 14 Februar 2010, you wrote:
+> > >> In other words, 'auto-detection' for 1.x format devices is using an
+> > >> initrd/initramfs.
+> > > 
+> > > which makes 1.x format useless for everybody who does not want to deal
+> > > with initrd/initramfs.
+> > 
+> > You make this sound like some major big deal. are you running your own
+> > distribution? In most cases mkinitrd does the right thing when you "make
+> > install" the kernel, and if you are doing something in the build so
+> > complex that it needs options, you really should understand the options
+> > and be sure you're doing what you want.
+> > 
+> > Generally this involves preloading a module or two, and if you need it
+> > every time you probably should have built it in, anyway.
+> > 
+> > My opinion...
 > 
-> Sorry, but real hardware raid is more reliable than software raid, and 
-> Neil's justification for not doing smart recovery mentions it. Note this
+> I am running my own kernels - and of course everything that is needed to boot 
+> and get the basic system up is built in. Why should I make the disk drivers 
+> modules? 
+> That does not make sense.
 
-> referes to real hardware raid, not fakeraid which is just some firmware 
-> in a BIOS to use the existing hardware.
-> 
-> The issue lies with data changing between write to multiple drives. In 
-> hardware raid the data traverses the memory bus once, only once, and 
-> goes into cache in the controller, from which it is written to all 
-> mirrored drives. With software raid an individual write is done to each 
-> drive, and if the data in the buffer changes between writes to one drive
+I agree that it makes little sense to make something a module when you
+can't unload it anyway, but...
 
-> or the other you get different values. Neil may be convinced that the OS
+> And the reason is simple: even when the system is completely fucked up, I want 
+> a kernel that is able to boot until init=/bin/bb takes over.
 
-> somehow "knows" which of the mirror copies is correct, ie. most recent, 
-> and never uses the stale data, but if that information was really 
-> available reads would always return the latest value and it wouldn't be 
-> possible to read the same file multiple times and get different MD5sums.
+I put a complete set of recovery tools into my initramfses so that when
+the system is completely fucked up, I have a kernel that is able to boot
+until rdinit=/bin/zsh (or /bin/bb, if you prefer) takes over.
 
-> It would also be possible to do a stable smart recovery by propagating 
-> the most recent copy to the other mirror drives.
-> 
-> I hoped that mounting data=journal would lead to consistency, that seems
-
-> not to be true either.
-
-I agree Bill, there is an issue with the software RAID1 when it comes down
-to some hardware. I have one machine where the ONLY way to stop the root
-filesystem going readonly due to journal issues is to remove RAID. Having
-RAID1 enabled gives silent corruption of both data and the journal at
-seemingly random times.
-
-I can see the data corruption from running a verify between RPM and data
-on the drive. Reinstalling these packages fixes things - until something
-random things get corrupted next time.
-
-The myth that data corruption in RAID1 ONLY happens to swap and/or unused
-space on a drive is absolute rubbish.
+This has the added advantage of working when the root filesystem cannot
+be mounted at all: a scenario which does not seem too far-fetched when
+the filesystem is located on a raid array.
 
 -- 
-Steven Haigh
- 
-Email: netwiz@crc.id.au
-Web: http://www.crc.id.au
-Phone: (03) 9001 6090 - 0412 935 897
-Fax: (03) 8338 0299
+Nick Bowler, Elliptic Technologies (http://www.elliptictech.com/)
