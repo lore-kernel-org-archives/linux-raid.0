@@ -1,46 +1,72 @@
-From: Dmitry Teytelman <dim@dimtel.com>
-Subject: Re: Can this setup be saved?
-Date: Mon, 15 Feb 2010 06:02:56 -0800
-Message-ID: <c98f60c41002150602n1f9d1534of558045d7b7a563e@mail.gmail.com>
-References: <c98f60c41002121756j5e8cd32fwdc2cd22ba553d241@mail.gmail.com>
-	 <4877c76c1002121813h410900by1c398c80e2aa0635@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Linux mdadm superblock question.
+Date: Tue, 16 Feb 2010 11:27:08 +1100
+Message-ID: <20100216112708.4a863f86@notabene.brown>
+References: <alpine.DEB.2.00.1002111758350.12031@p34.internal.lan>
+	<4877c76c1002111752h23e14f7aibe58a89181e6f493@mail.gmail.com>
+	<4B77044B.1020609@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4877c76c1002121813h410900by1c398c80e2aa0635@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4B77044B.1020609@zytor.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Michael Evans <mjevans1983@gmail.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello all,
+On Sat, 13 Feb 2010 11:58:03 -0800
+"H. Peter Anvin" <hpa@zytor.com> wrote:
 
-On Fri, Feb 12, 2010 at 18:13, Michael Evans <mjevans1983@gmail.com> wrote:
-> On Fri, Feb 12, 2010 at 5:56 PM, Dmitry Teytelman <dim@dimtel.com> wrote:
->>
->> However at some point during/after the reconstruction the situation
->> has changed. Now both /dev/sdc2 and /dev/sdd2 are marked as spare
->> drives (see mdadm -E output below) and I cannot start the array. I
->> think /dev/sdd2 should be in sync with /dev/sda2, but how can I bring
->> it back (it used to be device 2)?
->
-> It sounds like you've reached the point where you've done something
-> silly and need to try to recover what you can.
->
-> READ THIS SITE CAREFULLY; perform READ ONLY recovery, and see if you
-> can find a permutation that can be mounted read only and READ with
-> valid data;
+> On 02/11/2010 05:52 PM, Michael Evans wrote:
+> > On Thu, Feb 11, 2010 at 3:00 PM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+> >> Hi,
+> >>
+> >> I may be converting a host to ext4 and was curious, is 0.90 still the only
+> >> superblock version for mdadm/raid-1 that you can boot from without having to
+> >> create an initrd/etc?
+> >>
+> >> Are there any benefits to using a superblock > 0.90 for a raid-1 boot volume
+> >> < 2TB?
+> >>
+> >> Justin.
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >>
+> > 
+> > You need the superblock at the end of the partition:  If you read the
+> > manual that is clearly either version 0.90 OR 1.0 (NOT 1.1 and also
+> > NOT 1.2; those use the same superblock layout but different
+> > locations).
+> 
+> 0.9 has the *serious* problem that it is hard to distinguish a whole-volume
+> 
+> However, apparently mdadm recently switched to a 1.1 default.  I
+> strongly urge Neil to change that to either 1.0 and 1.2, as I have
+> started to get complaints from users that they have made RAID volumes
+> with newer mdadm which apparently default to 1.1, and then want to boot
+> from them (without playing MBR games like Grub does.)  I have to tell
+> them that they have to regenerate their disks -- the superblock occupies
+> the boot sector and there is nothing I can do about it.  It's the same
+> pathology XFS has.
 
-I am back on the air!!! Th critical step was the use of "mdadm
---create" with a missing drive. I knew the proper order for the two
-drives that were in sync. One of them (/dev/sdd) was failing, so it
-was ddrescue-d onto a new drive prior to any repairs. Performing
-"mdadm --create" brought the RAID device back to life. I checked that
-the data looked OK (read-only). Then I went ahead and added the third
-drive to the array. Soon a fully reconstructed device was up and
-running. Failed drives are heading back to Hitachi :)
+When mdadm defaults to 1.0 for a RAID1 it prints a warning to the effect that
+the array might not be suitable to store '/boot', and requests confirmation.
 
-Thanks to the group for rapid response and critically important bits
-of information!
+So I assume that the people who are having this problem either do not read,
+or are using some partitioning tool that runs mdadm under the hood using
+"--run" to avoid the need for confirmation.  It would be nice to confirm if
+that was the case, and find out what tool is being used.
 
--- 
-Dmitry Teytelman
+If an array is not being used for /boot (or /) then I still think that 1.1 is
+the better choice as it removes the possibility for confusion over partition
+tables.
+
+I guess I could try defaulting to 1.2 in a partition, and 1.1 on a
+whole-device.  That might be a suitable compromise.
+
+How do people cope with XFS??
+
+NeilBrown
