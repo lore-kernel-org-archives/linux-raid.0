@@ -1,30 +1,46 @@
-From: Michael <michael@rw23.de>
-Subject: Re: =?UTF-8?Q?Slow=28=3F=29=20raid=35=20to=20raid=36=20reshape=20speed?=
-Date: Tue, 16 Feb 2010 14:31:23 +0100
-Message-ID: <40406f373328e5e0bc56a2faab153086@rw23.de>
-References: <ee1fb9c4204eafc9daffb4341d0de646@rw23.de> <alpine.DEB.1.10.1002161251570.4986@uplift.swm.pp.se> <afb99b76feb4fad30a4f43fb46ea3e4d@rw23.de> <alpine.DEB.1.10.1002161334170.4986@uplift.swm.pp.se>
+From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
+Subject: Re: Auto Checking Raid 6 crashes my system
+Date: Tue, 16 Feb 2010 13:37:51 +0000
+Message-ID: <73e903671002160537m571a48e1v6e652410554e8a49@mail.gmail.com>
+References: <adf93d751002152104w52b329fdx9eb54719f1c8587a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.1002161334170.4986@uplift.swm.pp.se>
+In-Reply-To: <adf93d751002152104w52b329fdx9eb54719f1c8587a@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Linux raid <linux-raid@vger.kernel.org>
+To: Dawning Sky <the.dawning.sky@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-it already is and was all the time:
+On Tue, Feb 16, 2010 at 5:04 AM, Dawning Sky <the.dawning.sky@gmail.com=
+> wrote:
+> Hi,
+>
+> I just build a brand new md raid-6 with 5 disks. =A0And on Fedora 12,
+> the auto checking of md devices via a weekly cron job is enabled by
+> default. =A0It performs the checking by echo "check" into
+> /sys/block/mdX/md/sync_action. =A0But after a while, the kernel just
+> crashes, without finishing checking the raid device or leaving
+> anything in the messages file.
+>
+> For now, I've disable the raid-check cron job. =A0The kernel version =
+I'm
+> running is 2.6.31.12-174.2.3.fc12.x86_64.
+>
+> Thanks,
+>
+> DS
 
-[root@raw ~]cat /sys/block/md2/md/sync_speed_*
-200000 (system)
-200000 (local)
 
-so that's not the limit. any other ideas?
+Hi,
 
-On Tue, 16 Feb 2010 13:34:36 +0100 (CET), Mikael Abrahamsson
-<swmike@swm.pp.se> wrote:
-> On Tue, 16 Feb 2010, Michael wrote:
-> 
->> so this is not 100%, right?
-> 
-> I'd increase speed_min more.
+I encountered similar issues because of a faulty mvsas driver that
+flaked out under the load. What hardware do you have?
+
+-- Kristleifur
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
