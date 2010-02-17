@@ -1,40 +1,59 @@
-From: Nick Bowler <nbowler@elliptictech.com>
-Subject: Re: Linux mdadm superblock question.
-Date: Wed, 17 Feb 2010 13:10:16 -0500
-Message-ID: <20100217181016.GA14983@emergent.ellipticsemi.com>
-References: <201002140251.59668.volkerarmin@googlemail.com>
- <4877c76c1002132002s20d942c3i7cee5418cdcf369c@mail.gmail.com>
- <201002141940.35716.volkerarmin@googlemail.com>
- <4B7AD35E.7000405@tmr.com>
- <alpine.LNX.2.01.1002161541370.24961@filesrv1.baby-dragons.com>
- <20100217130103.3ca65ef3@notabene.brown>
- <f73f7ab81002162234t531203ccue1f9ecc839c8ae42@mail.gmail.com>
- <4B7BB927.5000305@grumpydevil.homelinux.org>
- <f73f7ab81002170822j7e61455o6bee33d95c9648a1@mail.gmail.com>
- <alpine.DEB.2.00.1002170932010.4721@asgard.lang.hm>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: RAID partition starting sector (... 63?)
+Date: Wed, 17 Feb 2010 13:13:42 -0500
+Message-ID: <87f94c371002171013x53acb705kf0d4f194e211fb27@mail.gmail.com>
+References: <73e903671002170713g397742b8l109773b4c20825ce@mail.gmail.com>
+	 <yq1bpfnga3l.fsf@sermon.lab.mkp.net>
+	 <87r5ojon3j.fsf@frosties.localdomain>
+	 <yq17hqbg78q.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.1002170932010.4721@asgard.lang.hm>
-Sender: linux-kernel-owner@vger.kernel.org
-To: david@lang.hm
-Cc: Kyle Moffett <kyle@moffetthome.net>, Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, Neil Brown <neilb@suse.de>, "Mr. James W. Laferriere" <babydr@baby-dragons.com>, Bill Davidsen <davidsen@tmr.com>, Volker Armin Hemmann <volkerarmin@googlemail.com>, Michael Evans <mjevans1983@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <yq17hqbg78q.fsf@sermon.lab.mkp.net>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Goswin von Brederlow <goswin-v-b@web.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 09:41 Wed 17 Feb     , david@lang.hm wrote:
-> for a distro that is trying to make one kernel image run on every
-> possible type of hardware features like initramfs (and udev, modeules,
-> etc) are wonderful.
-> 
-> however for people who run systems that are known ahead of time and
-> static (and who build their own kernels instead of just relying on the
-> distro default kernel), all of this is unnessesary complication, which
-> leaves more room for problems to creep in.
+On Wed, Feb 17, 2010 at 11:24 AM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>>>>>> "Goswin" =3D=3D Goswin von Brederlow <goswin-v-b@web.de> writes:
+>
+> Goswin> Newer windows starts the first partition at 1M, which gives g=
+ood
+> Goswin> alignment in nearly every situation.
+>
+> Correction: Windows aligns the first partition at 1MB + whatever
+> alignment is reported by the storage device.
+>
+> Recent fdisk and parted to do the same.
+>
+> --
+> Martin K. Petersen =A0 =A0 =A0Oracle Linux Engineering
 
-Such people can easily construct an initramfs containing busybox and
-mdadm with a shell script hardcoded to mount their root fs and run
-switch_root.  It's a ~10 minute jobbie that only needs to be done once.
+Martin,
 
--- 
-Nick Bowler, Elliptic Technologies (http://www.elliptictech.com/)
+I assume this is through the relatively new /sysfs interface.  Is
+mdraid now advertising its preferred stripe alignments through /sysfs?
+
+Thanks
+Greg
+--=20
+Greg Freemyer
+Head of EDD Tape Extraction and Processing team
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+Preservation and Forensic processing of Exchange Repositories White Pap=
+er -
+<http://www.norcrossgroup.com/forms/whitepapers/tng_whitepaper_fpe.html=
+>
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
