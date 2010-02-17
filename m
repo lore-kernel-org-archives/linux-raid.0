@@ -1,39 +1,47 @@
-From: Nick Bowler <nbowler@elliptictech.com>
-Subject: Re: Linux mdadm superblock question.
-Date: Wed, 17 Feb 2010 09:25:45 -0500
-Message-ID: <20100217142545.GA12165@emergent.ellipticsemi.com>
-References: <201002140251.59668.volkerarmin@googlemail.com>
- <201002162206.32797.volkerarmin@googlemail.com>
- <20100216220020.GA1036@emergent.ellipticsemi.com>
- <201002162318.33950.volkerarmin@googlemail.com>
+From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
+Subject: RAID partition starting sector (... 63?)
+Date: Wed, 17 Feb 2010 15:13:46 +0000
+Message-ID: <73e903671002170713g397742b8l109773b4c20825ce@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <201002162318.33950.volkerarmin@googlemail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Volker Armin Hemmann <volkerarmin@googlemail.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, Michael Evans <mjevans1983@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 23:18 Tue 16 Feb     , Volker Armin Hemmann wrote:
-> On Dienstag 16 Februar 2010, Nick Bowler wrote:
-> > I put a complete set of recovery tools into my initramfses so that when
-> > the system is completely fucked up, I have a kernel that is able to boot
-> > until rdinit=/bin/zsh (or /bin/bb, if you prefer) takes over.
-> > 
-> > This has the added advantage of working when the root filesystem cannot
-> > be mounted at all: a scenario which does not seem too far-fetched when
-> > the filesystem is located on a raid array.
-> 
-> and what do you do if you have to boot from a cd/usb stick and need to access 
-> the raid?
-> 
-> Simple with auto assembling. Not so much without.
+Hi,
 
-The same initramfs can be used on a CD or USB stick.  If you were
-referring to using someone else's CD or USB stick, then obviously
-mdadm will need to be available.
+I remember seeing some discussion on what sector a partition starts
+on. Many programs create partitions that start on sector 63, which
+doesn't really make any intuitive sense to me. I just lost a disk from
+of a RAID10 array and was thinking I'd try to understand this issue as
+I have to do some disk/block/partition wrangling anyway.
 
--- 
-Nick Bowler, Elliptic Technologies (http://www.elliptictech.com/)
+From a discussion from linux-raid titled "Raid 10 LVM JFS Seeking
+performance help", I found the following:
+
+On Mon, Dec 21, 2009 at 12:56 PM, Goswin von Brederlow
+<goswin-v-b@web.de> wrote:
+>
+> Also, on a lower level, make sure your raid does not start on a
+> partition starting at sector 63 (which is still the default in many
+> partitioning progs). That easily results in bad alignment causing 4k
+> chunks to land on 2 sectors. But you need to test that with your
+> specific drive to see if it really is a problem.
+>
+
+Hmm ... In short: Do I want to have a partition start on any
+particular sector? Especially in the case where I want to ...
+- build a RAID10 with partitions (i.e. not with raw devices)
+- using ~256K chunks
+- and have a nice JFS filesystem on top of it.
+
+Starting on sector 64 feels conceptually "prettier" than Sector 63,
+but I can't picture the case where it behaves any different. Except
+perhaps when GRUB expects stuff to begin at sector 63, making a mess
+if we're starting at sector 64. Though it *should* work OK, of course.
+
+Anyways ... Any tips on a subtle matter most well appreciated.
+Especially tell me if I'm overthinking, please. Thanks.
+
+-- Kristleifur
