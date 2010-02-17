@@ -1,100 +1,54 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Why does one get mismatches?
-Date: Thu, 18 Feb 2010 10:05:47 +1100
-Message-ID: <20100218100547.7aecdc34@notabene.brown>
-References: <869541.92104.qm@web51304.mail.re2.yahoo.com>
-	<4B67451F.8040206@tmr.com>
-	<20100202093738.44b4fece@notabene.brown>
-	<4B684087.50001@tmr.com>
-	<20100211161444.7a0ea7bb@notabene.brown>
-	<20100211175133.GA30187@atlantis.cc.ndsu.nodak.edu>
-	<4B7B0D45.7040801@tmr.com>
-	<6db64f7872286165ac1fd3436e9d6476@localhost>
+Subject: Re: Linux mdadm superblock question.
+Date: Thu, 18 Feb 2010 10:10:35 +1100
+Message-ID: <20100218101035.3a104fed@notabene.brown>
+References: <alpine.DEB.2.00.1002111758350.12031@p34.internal.lan>
+	<4877c76c1002111752h23e14f7aibe58a89181e6f493@mail.gmail.com>
+	<4B77044B.1020609@zytor.com>
+	<20100216112708.4a863f86@notabene.brown>
+	<4B7A6FA3.5080009@texsoft.it>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6db64f7872286165ac1fd3436e9d6476@localhost>
+In-Reply-To: <4B7A6FA3.5080009@texsoft.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steven Haigh <netwiz@crc.id.au>
-Cc: Bill Davidsen <davidsen@tmr.com>, Bryan Mesich <bryan.mesich@ndsu.edu>, Jon@eHardcastle.com, linux-raid@vger.kernel.org
+To: Giovanni Tessore <giotex@texsoft.it>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 17 Feb 2010 08:38:11 +1100
-Steven Haigh <netwiz@crc.id.au> wrote:
+On Tue, 16 Feb 2010 11:12:51 +0100
+Giovanni Tessore <giotex@texsoft.it> wrote:
 
-> On Tue, 16 Feb 2010 16:25:25 -0500, Bill Davidsen <davidsen@tmr.com>
-> wrote:
-> > Bryan Mesich wrote:
-> >> On Thu, Feb 11, 2010 at 04:14:44PM +1100, Neil Brown wrote:
-> >>   
-> >>>> This whole discussion simply shows that for RAID-1 software RAID is
-> >>>> less
-> >>>> reliable than hardware RAID (no, I don't mean fake-RAID), because it 
-> >>>> doesn't pin the data buffer until all copies are written.
-> >>>>       
-> >>> That doesn't make it less reliable.  It just makes it more confusing.
-> >>>     
-> >>
-> >> I agree that linux software RAID is no less reliable than
-> >> hardware RAID with regards to the above conversation.  It's
-> >> however confusing to have a counter that indicates there are
-> >> problems with a RAID 1 array when in fact there is not.
-> >>   
-> > 
-> > Sorry, but real hardware raid is more reliable than software raid, and 
-> > Neil's justification for not doing smart recovery mentions it. Note this
+> Neil Brown wrote:
+> > When mdadm defaults to 1.0 for a RAID1 it prints a warning to the effect that
+> > the array might not be suitable to store '/boot', and requests confirmation.
+> >
+> > So I assume that the people who are having this problem either do not read,
+> > or are using some partitioning tool that runs mdadm under the hood using
+> > "--run" to avoid the need for confirmation.  It would be nice to confirm if
+> > that was the case, and find out what tool is being used.
+> >   
 > 
-> > referes to real hardware raid, not fakeraid which is just some firmware 
-> > in a BIOS to use the existing hardware.
-> > 
-> > The issue lies with data changing between write to multiple drives. In 
-> > hardware raid the data traverses the memory bus once, only once, and 
-> > goes into cache in the controller, from which it is written to all 
-> > mirrored drives. With software raid an individual write is done to each 
-> > drive, and if the data in the buffer changes between writes to one drive
-> 
-> > or the other you get different values. Neil may be convinced that the OS
-> 
-> > somehow "knows" which of the mirror copies is correct, ie. most recent, 
-> > and never uses the stale data, but if that information was really 
-> > available reads would always return the latest value and it wouldn't be 
-> > possible to read the same file multiple times and get different MD5sums.
-> 
-> > It would also be possible to do a stable smart recovery by propagating 
-> > the most recent copy to the other mirror drives.
-> > 
-> > I hoped that mounting data=journal would lead to consistency, that seems
-> 
-> > not to be true either.
-> 
-> I agree Bill, there is an issue with the software RAID1 when it comes down
-> to some hardware. I have one machine where the ONLY way to stop the root
-> filesystem going readonly due to journal issues is to remove RAID. Having
-> RAID1 enabled gives silent corruption of both data and the journal at
-> seemingly random times.
-> 
-> I can see the data corruption from running a verify between RPM and data
-> on the drive. Reinstalling these packages fixes things - until something
-> random things get corrupted next time.
-
-Sounds very much like dodgy drives.
-
-> 
-> The myth that data corruption in RAID1 ONLY happens to swap and/or unused
-> space on a drive is absolute rubbish.
+> I created it manually with
+> mdadm --create /dev/md0 --metadata=1.0 --level=1 --raid-devices=3 
+> /dev/sd[abc]1
+> but got no warning or confirmation request (mdadm - v2.6.7.1 - 15th 
+> October 2008), I guess due to old version.
 > 
 
-Absolute rubbish does seem to be a suitable phrase here.
-There is no question of data corruption.
-When memory changes between being written to one device and to another, this
-does not cause corruption, only inconsistency.   Either the block will be
-written again consistently soon, or it will never be read.
-If the host crashes before the blocks are made consistent, then the 
-inconsistency will not be visible as the resync will fix it.
+No - due to your actions not matching my description.
 
-If you are getting any corruption, then it is NOT due to this facet of the
-RAID1 implementation - it due to something else.
-My guess is bad hardware - anywhere from memory to hard drive.
+I said "when mdadm defaults to 1.0", though I should have said 
+"...defaults to 1.1".  Sorry about that.
+In any case, you didn't let it default to anything, so you presumably know
+what you are doing.
+And no v2.6.7.1 will never default to 1.1 so it will never give the message.
+But v3.1.1 will default to 1.1 and when it does, it will print the message.
 
 NeilBrown
+
+
+> Regards
+> 
+
