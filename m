@@ -1,86 +1,90 @@
-From: Bryan Mesich <bryan.mesich@ndsu.edu>
-Subject: Re: Why does one get mismatches?
-Date: Tue, 16 Feb 2010 21:19:03 -0600
-Message-ID: <20100217031903.GA26028@atlantis.cc.ndsu.nodak.edu>
-References: <869541.92104.qm@web51304.mail.re2.yahoo.com> <4B67451F.8040206@tmr.com> <20100202093738.44b4fece@notabene.brown> <4B684087.50001@tmr.com> <20100211161444.7a0ea7bb@notabene.brown> <20100211175133.GA30187@atlantis.cc.ndsu.nodak.edu> <4B7B0D45.7040801@tmr.com> <6db64f7872286165ac1fd3436e9d6476@localhost>
-Reply-To: Bryan Mesich <bryan.mesich@ndsu.edu>
+From: Keld Simonsen <keld@keldix.com>
+Subject: Re: Map Block number from hdd to md
+Date: Wed, 17 Feb 2010 05:34:38 +0200
+Message-ID: <20100217033438.GA8228@rap.rap.dk>
+References: <7362c3826262551b46e9b0bb1a777633@rw23.de> <20100216122014.18696241@notabene.brown> <20100216040252.GA28729@rap.rap.dk> <20100216043841.GA28967@rap.rap.dk> <6a4b5c4af12e9b35347e7d325e4eee13@rw23.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ew6BAiZeqk4r7MaW"
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <6db64f7872286165ac1fd3436e9d6476@localhost>
+In-Reply-To: <6a4b5c4af12e9b35347e7d325e4eee13@rw23.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Steven Haigh <netwiz@crc.id.au>
-Cc: Bill Davidsen <davidsen@tmr.com>, Neil Brown <neilb@suse.de>, Jon@eHardcastle.com, linux-raid@vger.kernel.org
+To: Michael <michael@rw23.de>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Tue, Feb 16, 2010 at 11:57:00AM +0100, Michael wrote:
+> Hi Keld,
+> 
+> if you do a smartctl -A on /dev/sdX you sould see something under
+> Current_Pending_Sector and Offline_Uncorrectable.
+> Your hard drive replaces the bad blocks with spare blocks as far as you
+> are write something to them.
+> 
+> i have solved the resync issue by using
+> dd if=/dev/zero of=/dev/sdX bs=512 seek=<bad-block-number> count=1
+> 
+> you can test the block number to be really bad by
+> dd if=/dev/sdX of=/dev/null bs=512 skip=<bad-block-number> count=1
+> if that command causes a input/output error, the block is bad.
 
---ew6BAiZeqk4r7MaW
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Yes, that cleared some errors, but unfortunately not all.
+That is one divice had 72bad blocks beforehand, and 44 afterwaeds, and
+the other had 9 beforehand, and 5 after.
 
-On Wed, Feb 17, 2010 at 08:38:11AM +1100, Steven Haigh wrote:
-> On Tue, 16 Feb 2010 16:25:25 -0500, Bill Davidsen <davidsen@tmr.com> wrot=
-e:
-> > The issue lies with data changing between write to multiple drives. In=
-=20
-> > hardware raid the data traverses the memory bus once, only once, and=20
-> > goes into cache in the controller, from which it is written to all=20
-> > mirrored drives. With software raid an individual write is done to each=
-=20
-> > drive, and if the data in the buffer changes between writes to one drive
-> > or the other you get different values. Neil may be convinced that the OS
-> > somehow "knows" which of the mirror copies is correct, ie. most recent,=
-=20
-> > and never uses the stale data, but if that information was really=20
-> > available reads would always return the latest value and it wouldn't be=
-=20
-> > possible to read the same file multiple times and get different MD5sums.
+The second dd command actuallly did not report any bad blocks, but a
+selective badblocks command did.
 
-[snip...]
+Anyway, is there something about Samsung disks not having spare blocks 
+for this?
 
-> I agree Bill, there is an issue with the software RAID1 when it comes down
-> to some hardware. I have one machine where the ONLY way to stop the root
-> filesystem going readonly due to journal issues is to remove RAID. Having
-> RAID1 enabled gives silent corruption of both data and the journal at
-> seemingly random times.
 
-Maybe I missed something earlier in this thread...and if so I apologize.
-However, I was not aware of anyone reporting FS corruption due do software
-RAID 1.  Needless to say, a serious problem if occurring.
+> in fact, with each block, you have "lost" 512 bytes of data. your problem
+> is very simular to mine.
+> after overwriting the bad blocks, all should be fine again.
+> 
+> you sould be able to "repair" all that bad blocks by a little xor'ing
+> script/program mentioned by neil brown.
+> if would be nice to have such a script where you can tell which
+> block/chunk is wrong and to which device to write to (and to read from).
+> with that program, the bad block will be overwritten with the (hopefully)
+> valid data and become functional again.
 
-At work, we use software RAID 1 on the majority of our production servers
-and have never seen problems as you describe.  I'm not trying to
-discredit you...just that we have had not seen similar results.=20
+yes, I still would like to find the inode in the raid file system from 
+the bad block on a physical disk.
 
-> I can see the data corruption from running a verify between RPM and data
-> on the drive. Reinstalling these packages fixes things - until something
-> random things get corrupted next time.
+> i also think this is a very common issue, that after a 1disk failue a 2nd
+> disk fails at resync because of bad blocks.
+> this could be prevented by doing a long smart check once a week or
+> something, but i did not had the idea to do that till today :)
 
-For curiosity sake, what kind of files did RPM report as being corrupt
-after running the verify?  The reason I ask as that I would expect user
-data to be corrupt before system files as they are typically written to
-disk at install/update  and never written to again.  Or maybe there is a
-reason...correct me if I'm wrong ;)
+I will do some description of this on the wiki, in a while. Others may
+also contribute, you are most welcome to write something up for the
+wiki.
 
-In my last post, I asked Neil if he had a patch that would indicate where
-the mis-matches exist on disk.  Have you found a way to correlate the
-mis-matches with your FS corruption? =20
-
-Bryan
-
---ew6BAiZeqk4r7MaW
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkt7YCcACgkQlSl3SAlkhEezUgCeMbFVgQAt+PRJamq+/WOWKcpA
-f78AnA0P1mdNVFGcqmh2kqGxn/L1CL+3
-=NXjJ
------END PGP SIGNATURE-----
-
---ew6BAiZeqk4r7MaW--
+> On Tue, 16 Feb 2010 06:38:41 +0200, Keld Simonsen <keld@keldix.com> wrote:
+> > Further to my problems described below I dreamt up something that could
+> > solve my problem, till I got new disks installed.
+> > 
+> > I am actually alive with a raid5 with 2 malfunctioning devices -
+> > something that is impossible...  And I think I could be revived.
+> > And I think it is not an uncommon situation.
+> > 
+> > I have badblocks. But only about 60 blocks on one drive and 10 on the
+> > other, out of 4 drives. It is an error rate of about 1 out of 20,000
+> > or 99,995 % good data rate. If I could resync both the erroneous drives,
+> > and
+> > avoid the badblocks in the process, I would be safe (for some time). 
+> > 
+> > So if resync could be told to avoid the badblocks, and the file system
+> > in question also could be told to avoid the blocks then I could be in
+> > the air. I was then thinking of a userland resync process - no need to
+> > change the kernel, just install new mdadm and friends. Is that doable
+> > and useful?
+> > 
+> > best regards
+> > keld
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
