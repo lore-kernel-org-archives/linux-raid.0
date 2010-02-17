@@ -1,51 +1,141 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: RAID partition starting sector (... 63?)
-Date: Wed, 17 Feb 2010 17:15:12 +0100
-Message-ID: <87r5ojon3j.fsf@frosties.localdomain>
-References: <73e903671002170713g397742b8l109773b4c20825ce@mail.gmail.com>
-	<yq1bpfnga3l.fsf@sermon.lab.mkp.net>
+From: Kyle Moffett <kyle@moffetthome.net>
+Subject: Re: Linux mdadm superblock question.
+Date: Wed, 17 Feb 2010 11:22:45 -0500
+Message-ID: <f73f7ab81002170822j7e61455o6bee33d95c9648a1@mail.gmail.com>
+References: <201002140251.59668.volkerarmin@googlemail.com>
+	<4877c76c1002132002s20d942c3i7cee5418cdcf369c@mail.gmail.com>
+	<201002141940.35716.volkerarmin@googlemail.com> <4B7AD35E.7000405@tmr.com>
+	<alpine.LNX.2.01.1002161541370.24961@filesrv1.baby-dragons.com>
+	<20100217130103.3ca65ef3@notabene.brown> <f73f7ab81002162234t531203ccue1f9ecc839c8ae42@mail.gmail.com>
+	<4B7BB927.5000305@grumpydevil.homelinux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <yq1bpfnga3l.fsf@sermon.lab.mkp.net> (Martin K. Petersen's
-	message of "Wed, 17 Feb 2010 10:23:10 -0500")
+In-Reply-To: <4B7BB927.5000305@grumpydevil.homelinux.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>
+Cc: Neil Brown <neilb@suse.de>, "Mr. James W. Laferriere" <babydr@baby-dragons.com>, Bill Davidsen <davidsen@tmr.com>, Volker Armin Hemmann <volkerarmin@googlemail.com>, Michael Evans <mjevans1983@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-"Martin K. Petersen" <martin.petersen@oracle.com> writes:
-
->>>>>> "Kristleifur" =3D=3D Kristleifur Da=C3=B0ason <kristleifur@gmail=
-=2Ecom> writes:
+On Wed, Feb 17, 2010 at 04:38, Rudy Zijlstra
+<rudy@grumpydevil.homelinux.org> wrote:
+> Kyle Moffett wrote:
+>> On Tue, Feb 16, 2010 at 21:01, Neil Brown <neilb@suse.de> wrote:
+>>> I will not be removing 0.90 or auto-assemble from the kernel in the
+>>> foreseeable future.
+>>> None the less, I recommend weaning yourself from your dependence on=
+ it.
+>>> initramfs is the future, embrace it.
+>>>
+>>
+>> What are people's reasons for pushback against initramfs? =C2=A0I've=
+ heard
+>> lots of claims that "it's not trustworthy" and "it breaks", but in 7
+>> years of running bootable software RAID boxes on weird architectures
+>> (even running Debian unstable) I have only once or twice had initram=
+fs
+>> problems.
+>>
+>> As a software capability, initramfs makes it possible to use
+>> *anything* as a root filesystem, no matter what is necessary to set =
+it
+>> up. =C2=A0For example, I have seen somebody use DRBD (essentially ne=
+twork
+>> RAID-1) as a root filesystem with a few custom hook scripts added to
+>> the initramfs-tools configs. =C2=A0Other examples include using Sun =
+ZFS as
+>> a root fs via an initramfs FUSE daemon, a feat which even Solaris
+>> could not accomplish at the time. =C2=A0Encrypted root filesystems a=
+lso
+>> require an initramfs to prompt for encryption keys and decrypt the
+>> block device. =C2=A0Multipath block devices are another example.
 >
-> Kristleifur> Starting on sector 64 feels conceptually "prettier" than
-> Kristleifur> Sector 63, but I can't picture the case where it behaves
-> Kristleifur> any different. Except perhaps when GRUB expects stuff to
-> Kristleifur> begin at sector 63, making a mess if we're starting at
-> Kristleifur> sector 64. Though it *should* work OK, of course.
+> We are looking at 2 different use-cases i think.
 >
-> The alignment only matters if your underlying storage is using a bloc=
-k
-> size bigger than 512 bytes internally.  Common examples of that would=
- be
-> one of the new SATA drives with 4KB physical blocks or a hardware RAI=
-D
-> device.
+> for the power-user system manager, who manages all his servers and ha=
+s
+> knowledgeable backup, initrd may indeed work as above.
+>
+> I have to keep in mind, that when there is a problem while i am trave=
+lling
+> (and that happens), there is no sys-admin present. Also, i am support=
+ing
+> systems remote where no-one has the knowledge to debug using a initrd=
+=2E In
+> such cases, initrd is an additional step. And each additional step is=
+ an
+> additional source of mistakes.
 
-Or disks (flash, SSD, ...) with 64k erase block size.
+Actually, a properly built initramfs gives you far more reliable
+behavior even without a local sysadmin.  For example, most
+graphical-boot tools are designed to be built into an initramfs; I
+have seen some prototype initramfs images which provide end-user
+accessible GUI boot menus and other tools which function reliably even
+when your root filesystem is inaccessible.
 
-Newer windows starts the first partition at 1M, which gives good
-alignment in nearly every situation. Raids usualy have a chunk size
-between 4k and 1M so they align too.
+> 1/ distro tools assume that the kernel being build will run on that m=
+achine.
+> For servers this is often not true. There are very valid security rea=
+sons to
+> exclude compilation capability from many servers.
 
-=46or grub(2) it can make a difference to start the first partition lat=
-er
-as it then has more space for its second stage.
+As Frans Pop states, this is entirely untrue for (at the very least)
+Debian.  The "initramfs-tools" package present there works regardless
+of where I obtain my kernel.  If I use the "make-kpkg" Debian tool
+when building my kernel (regardless of where it is built), then the
+resulting package will automatically generate an appropriate initramfs
+image when installed.  If for some reason I install a kernel by hand I
+can very trivially build the necessary initramfs with this command:
 
-MfG
-        Goswin
+update-initramfs -c -k 2.6.32-mykernel01
 
+In the event that you need to "customize" the initramfs for some
+reason, you can simply do so.  When the "update-initramfs" tool is
+next run, it will report that the user has customized that image and
+avoid modifying it.  If you wish to return to the autogenerated
+initramfs you can simply run this command:
+
+update-initramfs -u -t -k 2.6.32-2-amd64
+
+> 2/ For most small shops, there is need for RAID (disks are fallible, =
+shop
+> cannot do without server), the RAID should work without being visible=
+=2E If
+> there is a problem with the RAID that causes auto-assemble to break, =
+it
+> means i need to travel (>100KM) to trouble shoot. The simpler the set=
+up, the
+> more i like it. This is also why i almost always use HW raid for the =
+system
+> partitions. The ones i use have userland tools in Linux which warn on=
+ disk
+> failure, ensure auto rebuild, etc...
+> Still, for large storage needs it is SW RAID over SATA.
+>
+> 3/ for my home systems, if i need to remote-support to get things wor=
+king
+> again (i am often travelling for my work), the added layer of initrd =
+is an
+> added layer of possible mistakes.
+
+You are actually just setting yourself up for problems.  RAID
+autoassembly has bad corner cases when disks disappear between reboots
+(which happens with failing disk head assemblies).  In that case it
+will fail to find its root filesystem or wait forever for the last
+disk to show up.  I have had even *worse* problems (including
+corruption of unrelated logical volumes) with many hardware RAID
+controllers, even those from big-name server vendors such as HP and
+Dell.
+
+To contrast, an initramfs is configurable to prompt the user,
+automatically degrade the array after a small delay, or even play a
+kazoo if desired :-D.  One of these days I may get around to building
+myself a small GUI wrapper around mdadm on an initramfs which allows a
+user to manually recover from RAID problems.
+
+Cheers,
+Kyle Moffett
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
