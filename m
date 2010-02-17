@@ -1,37 +1,54 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
+From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
 Subject: Re: Linux mdadm superblock question.
-Date: Tue, 16 Feb 2010 15:30:04 -0800
-Message-ID: <4B7B2A7C.5000405@zytor.com>
-References: <alpine.DEB.2.00.1002111758350.12031@p34.internal.lan>	<4877c76c1002111752h23e14f7aibe58a89181e6f493@mail.gmail.com>	<4B77044B.1020609@zytor.com> <20100216112708.4a863f86@notabene.brown> <4B79F3CE.5030907@zytor.com> <4B7AD041.4060305@tmr.com>
+Date: Tue, 16 Feb 2010 16:03:43 -0900 (AKST)
+Message-ID: <alpine.LNX.2.01.1002161541370.24961@filesrv1.baby-dragons.com>
+References: <201002140251.59668.volkerarmin@googlemail.com> <4877c76c1002132002s20d942c3i7cee5418cdcf369c@mail.gmail.com> <201002141940.35716.volkerarmin@googlemail.com> <4B7AD35E.7000405@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B7AD041.4060305@tmr.com>
-Sender: linux-raid-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4B7AD35E.7000405@tmr.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Bill Davidsen <davidsen@tmr.com>
-Cc: Neil Brown <neilb@suse.de>, Michael Evans <mjevans1983@gmail.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Volker Armin Hemmann <volkerarmin@googlemail.com>, Michael Evans <mjevans1983@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 02/16/2010 09:05 AM, Bill Davidsen wrote:
-> 
-> I'm not really sure what you're getting at here, I use grub in MBR and 
-> then add chain loader stanzas to grub.conf for many things, usually an 
-> alternate Linux release, or to have 32/64 of the same release handy for 
-> testing, and always memtest from the boot menu. Even Win98SP2 on one 
-> machine, since that works very poorly under KVM. (ask Avi if you care 
-> why, something about what it does in real mode). In any case, I don't 
-> see the chain loader issue, unless you mean to reboot out of some other 
-> OS into Linux.
-> 
+ 	Hello Bill ,
 
-That's one of many uses, yes
+On Tue, 16 Feb 2010, Bill Davidsen wrote:
+> Volker Armin Hemmann wrote:
+>> On Sonntag 14 Februar 2010, you wrote:
+>>> In other words, 'auto-detection' for 1.x format devices is using an
+>>> initrd/initramfs.
+>>
+>> which makes 1.x format useless for everybody who does not want to deal with 
+>> initrd/initramfs.
+>
+> You make this sound like some major big deal. are you running your own 
+> distribution? In most cases mkinitrd does the right thing when you "make 
+> install" the kernel, and if you are doing something in the build so complex 
+> that it needs options, you really should understand the options and be sure 
+> you're doing what you want.
+>
+> Generally this involves preloading a module or two, and if you need it every 
+> time you probably should have built it in, anyway.
+>
+> My opinion...
+ 	My Opinion as well .  That is one of the many reasons why I have my '/' 
+autoassemble .  And do to this I am permanently stuck at 0.90 version of the 
+raid table .  No big shakes for that .  But at sometime in the past there was a 
+discussion to have the 0.90 raid table be removed ,  NOW THAT SCARES THE H?LL 
+OUT OF ME .  So far Neil has not done so .
 
-Presumably the reason you don't have problems is because the partitions
-you chainload aren't RAID partitions with 1.1 superblocks, or you're
-specifying an explicit offset for your chainloads (Grub syntax allows that.)
+ 	I am unaware of any record from Neil or other maintainer(s) of the 
+/md/ device tree saying that they will not remove the 0.90 table and the 
+autoassembly functions there .  I'd very much like to hear a statement saying 
+there will not be a removal of the autoassembly functions for 0.90 raid table 
+from the kernel tree .
 
-Either which way, it's a good example of the usage model.  Chainloading
-is important for a lot of people.
-
-	-hpa
+ 		Tia ,  JimL
+-- 
++------------------------------------------------------------------+
+| James   W.   Laferriere | System    Techniques | Give me VMS     |
+| Network&System Engineer | 3237     Holden Road |  Give me Linux  |
+| babydr@baby-dragons.com | Fairbanks, AK. 99709 |   only  on  AXP |
++------------------------------------------------------------------+
