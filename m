@@ -1,65 +1,98 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Linux mdadm superblock question.
-Date: Thu, 18 Feb 2010 04:40:16 +0100
-Message-ID: <87ocjn9ppb.fsf@frosties.localdomain>
-References: <201002140251.59668.volkerarmin@googlemail.com>
-	<4877c76c1002132002s20d942c3i7cee5418cdcf369c@mail.gmail.com>
-	<201002141940.35716.volkerarmin@googlemail.com>
-	<4B7AD35E.7000405@tmr.com>
-	<alpine.LNX.2.01.1002161541370.24961@filesrv1.baby-dragons.com>
-	<20100217130103.3ca65ef3@notabene.brown>
-	<f73f7ab81002162234t531203ccue1f9ecc839c8ae42@mail.gmail.com>
-	<f73f7ab81002162234t531203ccue1f9ecc839c8ae42@mail.gmail.com>
-	<4B7BB927.5000305@grumpydevil.homelinux.org>
-	<201002171426.47981.elendil@planet.nl>
-	<20100217205406.GA13287@twister.home>
+From: Keld Simonsen <keld@keldix.com>
+Subject: Re: Map Block number from hdd to md
+Date: Thu, 18 Feb 2010 05:12:56 +0100
+Message-ID: <20100218041256.GA22274@light.rap.dk>
+References: <7362c3826262551b46e9b0bb1a777633@rw23.de> <20100216122014.18696241@notabene.brown> <84f3bb2dd3f8170f1e80df476770bdb5@rw23.de> <20100218104755.5c03a8b9@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100217205406.GA13287@twister.home> (Gabor Gombas's message of
-	"Wed, 17 Feb 2010 21:54:06 +0100")
+Content-Disposition: inline
+In-Reply-To: <20100218104755.5c03a8b9@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Frans Pop <elendil@planet.nl>
-Cc: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, kyle@moffetthome.net, neilb@suse.de, babydr@baby-dragons.com, davidsen@tmr.com, volkerarmin@googlemail.com, mjevans1983@gmail.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Michael <michael@rw23.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Gabor Gombas <gombasg@digikabel.hu> writes:
+On Thu, Feb 18, 2010 at 10:47:55AM +1100, Neil Brown wrote:
+> On Tue, 16 Feb 2010 12:14:38 +0100
+> Michael <michael@rw23.de> wrote:
+> 
+> > On Tue, 16 Feb 2010 12:20:14 +1100, Neil Brown <neilb@suse.de> wrote:
+> > >> is there any method to find that bad block in context of the raid block
+> > >> device? reading all files is not a good option on large raidsets.
+> > >> level 5, 64k chunk, algorithm 2
+> > > 
+> > > It isn't that hard.  The code is in drivers/md/raid5.c in the
+> > kernel.....
+> > > 
+> > > Rather than trying to describe in general, give me the block number,
+> > > device,
+> > > and "mdadm --examine" of that device, and I'll tell you how I get the
+> > > answer.
+> > 
+> > 
+> > the bad block number was 122060740 sec.
+> > 
+> > [root@raw sqla]mdadm --examine /dev/sda3
+> > /dev/sda3:
+> >           Magic : a92b4efc
+> >         Version : 0.91.00
+> >            UUID : 9815a2c6:c83a9a53:2a8015ce:9d8e5e8c (local to host raw)
+> >   Creation Time : Thu Feb 11 16:01:12 2010
+> >      Raid Level : raid6
+> >   Used Dev Size : 966060672 (921.31 GiB 989.25 GB)
+> >      Array Size : 2898182016 (2763.92 GiB 2967.74 GB)
+> >    Raid Devices : 5
+> >   Total Devices : 5
+> > Preferred Minor : 2
+> > 
+> >   Reshape pos'n : 974014464 (928.89 GiB 997.39 GB)
+> >      New Layout : left-symmetric
+> > 
+> >     Update Time : Tue Feb 16 11:58:37 2010
+> >           State : clean
+> >  Active Devices : 5
+> > Working Devices : 5
+> >  Failed Devices : 0
+> >   Spare Devices : 0
+> >        Checksum : 16372b12 - correct
+> >          Events : 363519
+> > 
+> >          Layout : left-symmetric-6
+> >      Chunk Size : 64K
+> 
+> So...
+> There is no Data Offset give, so it is zero.  so the block is 122060740
+> sectors into the data area of the devices.
+> Chunksize if 64k (128 sectors), so 
+> 122060740 / 128 == 953599 remainder 68.
+> So Stripe number 953599, and sector 68 of device '2' of that stripe.
+> 
+> A stripe had 4 disks when raid5, 5 when raid6, so 3 data drives.
+> So stripe 953599 is 953599 * 3 * 128 sectors from the start of the
+> array. i.e. 366182016 sectors.
+> 
+> In the raid5 layout:
+> 4 drives, so 4 different stripe layouts.
+> 953599 % 4 == 3, so it is layout 3 (of 0, 1, 2, 3).
+> Looking at the code in raid5.c for LEFT_SYMMETRIC 
+> The parity disk is disk 0. The data disks follow that,
+> so device '2' holds data chunk '1'.
+> So we add 1 full chunk plus the 68 sectors of the partial chunk.
+> i.e. that sector is 366182016 + 128 + 68
+>  or sector 366182212 in the array.
+> 
+> After the conversion to RAID6, there are 5 drives so 5 stripe layouts.
+> 953599 % 5 == 4, so layout 4
+> So 'P' is device 0, 'Q' is device 1, D0 is device 2 etc.
+> So sda3 is the first data disk in the stripe, so there are no full stripes to
+> add, just the partial stripe.
+> 366182016 + 68 == 366182084
 
-> On Wed, Feb 17, 2010 at 02:26:46PM +0100, Frans Pop wrote:
->
->> That's simply not true, at least not for Debian. If you actually use the 
->> distro tools [1] the only assumptions are made at kernel *installation* 
->> time, not at kernel build time.
->
-> And that's why network-booted diskless clients and virtual guests have
-> all sort of useless modules loaded; the HW where the kernel package was
-> installed in this case is very different from the HW where the kernel
-> will run. If only there were a switch to prohibit ever looking at the
-> current machine's configuration when generating the initramfs...
+Sounds like it would be nice to have a program to calculate this :-)
 
-From my experience you must boot up your client/guest and install the
-kernel in there. Then copy the kernel and initrmafs over to the boot
-server for use.
+Seriously, Neil, would it be possible to lift out the code from the
+kernel to make a small utility - for salvaging raid file systems?
 
-Initramfs was never designed to generate an image for another system, or
-worse, for a pool of different systems. You can probably make it work on
-a case by case basis but that wasn't thought of during the design phase.
-
-Interesting idea though.
-
->> I've been using initramfs-tools generated initrds for years without 
->> problems, and that includes "root on LVM on LUKS encrypted partition" 
->> and "root on LVM on RAID" setups.
->
-> I've tried a couple of times to use a Debian-built initramfs with a
-> custom built kernel. The kernel worked fine without an initramfs (it had
-> everything built in), but it did not boot with the initramfs.
->
-> Gabor
-
-'make-kpkg ... --initrd kernel-image' should build you your custom
-kernel with all the magic required to generate a working initramfs.
-If not then please do file bugs.
-
-MfG
-        Goswin
+best regards
+keld
