@@ -1,7 +1,7 @@
-From: martin f krafft <madduck@madduck.net>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
 Subject: Re: (boot time consequences of) Linux mdadm superblock question.
-Date: Thu, 18 Feb 2010 12:50:13 +1300
-Message-ID: <20100217235013.GB2628@lapse.rw.madduck.net>
+Date: Thu, 18 Feb 2010 00:58:09 -0200
+Message-ID: <20100218025809.GA20358@khazad-dum.debian.net>
 References: <201002140251.59668.volkerarmin@googlemail.com>
  <alpine.DEB.2.00.1002170932010.4721@asgard.lang.hm>
  <20100217181016.GA14983@emergent.ellipticsemi.com>
@@ -10,8 +10,7 @@ References: <201002140251.59668.volkerarmin@googlemail.com>
  <alpine.DEB.2.00.1002171040350.4721@asgard.lang.hm>
  <20100218102407.49f73d67@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-ripemd160;
-	protocol="application/pgp-signature"; boundary="JYK4vJDZwFMowpUq"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <20100218102407.49f73d67@notabene.brown>
@@ -20,58 +19,22 @@ To: Neil Brown <neilb@suse.de>
 Cc: david@lang.hm, Nick Bowler <nbowler@elliptictech.com>, Volker Armin Hemmann <volkerarmin@googlemail.com>, Kyle Moffett <kyle@moffetthome.net>, Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, "Mr. James W. Laferriere" <babydr@baby-dragons.com>, Bill Davidsen <davidsen@tmr.com>, Michael Evans <mjevans1983@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thu, 18 Feb 2010, Neil Brown wrote:
+> Using user-space autodetection, you can plug "mdadm -I" into udev, and have
+> arrays assembled as they are found, and filesystems mounted as arrays are
+> assembled, and then you just have to wait for the root filesystem to appear,
+> not for "all devices".
 
---JYK4vJDZwFMowpUq
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Is this ready for testing somewhere?  initramfs+mdadm.conf is operator-error
+bait, proper auto-assemble that does away with the requirement of an
+up-to-date mdadm.conf inside the initrd would help a great deal, there.
 
-also sprach Neil Brown <neilb@suse.de> [2010.02.18.1224 +1300]:
-> Using user-space autodetection, you can plug "mdadm -I" into udev,
-> and have arrays assembled as they are found, and filesystems
-> mounted as arrays are assembled, and then you just have to wait
-> for the root filesystem to appear, not for "all devices".
+It will need something like LVM has to blacklist/whitelist what device
+classes it will scan for superblocks though, or it will eventually cause a
+lot of trouble.
 
-The mdadm experimental package offers this via debconf (default off
-for now). I would appreciate testers =E2=80=94 I literally whacked this up
-on a rainy Sunday with an hangover, and while it seems to work fine,
-it's probably got warts.
-
-If you don't run Debian or a derivative, you can get the files from
-debian/initramfs/* in git://git.debian.org/pkg-mdadm/mdadm.git or
-
-  http://git.debian.org/?p=3Dpkg-mdadm/mdadm.git;a=3Dtree;f=3Ddebian/initra=
-mfs;hb=3DHEAD
-
-don't be scared off by the complexity, incremental assembly actually
-bypasses most of the (shell) code in both scripts.
-
-> Yes, you could make the in-kernel autodetection smarter so it
-> doesn't have to wait quite so long, but that would make it quite
-> a bit more complex, and it is harder to maintain the complexity in
-> the kernel.
-
-It is definitely a user-space task, if you ask me.
-
---=20
-martin | http://madduck.net/ | http://two.sentenc.es/
-=20
-windows 2000: designed for the internet.
-the internet: designed for unix.
-=20
-spamtraps: madduck.bogus@madduck.net
-
---JYK4vJDZwFMowpUq
-Content-Type: application/pgp-signature; name="digital_signature_gpg.asc"
-Content-Description: Digital signature (see http://martin-krafft.net/gpg/)
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEAREDAAYFAkt8gLQACgkQIgvIgzMMSnX31gCgy6xXKt/qdAtOcEfl5uFHQ2wH
-KRQAmgJlYtZvetg1fvKAHVr3Vlhv5rOe
-=g9Sp
------END PGP SIGNATURE-----
-
---JYK4vJDZwFMowpUq--
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
