@@ -1,75 +1,56 @@
-From: martin f krafft <madduck@madduck.net>
-Subject: Re: (boot time consequences of) Linux mdadm superblock question.
-Date: Thu, 18 Feb 2010 16:26:10 +1300
-Message-ID: <20100218032610.GB1991@lapse.rw.madduck.net>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Subject: Re: Linux mdadm superblock question.
+Date: Thu, 18 Feb 2010 04:33:34 +0100
+Message-ID: <87sk8z9q0h.fsf@frosties.localdomain>
 References: <201002140251.59668.volkerarmin@googlemail.com>
- <alpine.DEB.2.00.1002170932010.4721@asgard.lang.hm>
- <20100217181016.GA14983@emergent.ellipticsemi.com>
- <201002171927.07051.volkerarmin@googlemail.com>
- <20100217183703.GA15446@emergent.ellipticsemi.com>
- <alpine.DEB.2.00.1002171040350.4721@asgard.lang.hm>
- <20100218102407.49f73d67@notabene.brown>
- <20100218025809.GA20358@khazad-dum.debian.net>
+	<4877c76c1002132002s20d942c3i7cee5418cdcf369c@mail.gmail.com>
+	<201002141940.35716.volkerarmin@googlemail.com>
+	<4B7AD35E.7000405@tmr.com>
+	<alpine.LNX.2.01.1002161541370.24961@filesrv1.baby-dragons.com>
+	<20100217130103.3ca65ef3@notabene.brown>
+	<f73f7ab81002162234t531203ccue1f9ecc839c8ae42@mail.gmail.com>
+	<4B7BB927.5000305@grumpydevil.homelinux.org>
+	<f73f7ab81002170822j7e61455o6bee33d95c9648a1@mail.gmail.com>
+	<alpine.DEB.2.00.1002170932010.4721@asgard.lang.hm>
+	<20100217181016.GA14983@emergent.ellipticsemi.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-ripemd160;
-	protocol="application/pgp-signature"; boundary="eJnRUKwClWJh1Khz"
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100218025809.GA20358@khazad-dum.debian.net>
-Sender: linux-raid-owner@vger.kernel.org
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Neil Brown <neilb@suse.de>, david@lang.hm, Nick Bowler <nbowler@elliptictech.com>, Volker Armin Hemmann <volkerarmin@googlemail.com>, Kyle Moffett <kyle@moffetthome.net>, Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, "Mr. James W. Laferriere" <babydr@baby-dragons.com>, Bill Davidsen <davidsen@tmr.com>, Michael Evans <mjevans1983@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20100217181016.GA14983@emergent.ellipticsemi.com> (Nick Bowler's
+	message of "Wed, 17 Feb 2010 13:10:16 -0500")
+Sender: linux-kernel-owner@vger.kernel.org
+To: david@lang.hm
+Cc: Kyle Moffett <kyle@moffetthome.net>, Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, Neil Brown <neilb@suse.de>, "Mr. James W. Laferriere" <babydr@baby-dragons.com>, Bill Davidsen <davidsen@tmr.com>, Volker Armin Hemmann <volkerarmin@googlemail.com>, Michael Evans <mjevans1983@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Nick Bowler <nbowler@elliptictech.com> writes:
 
---eJnRUKwClWJh1Khz
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> On 09:41 Wed 17 Feb     , david@lang.hm wrote:
+>> for a distro that is trying to make one kernel image run on every
+>> possible type of hardware features like initramfs (and udev, modeules,
+>> etc) are wonderful.
+>> 
+>> however for people who run systems that are known ahead of time and
+>> static (and who build their own kernels instead of just relying on the
+>> distro default kernel), all of this is unnessesary complication, which
+>> leaves more room for problems to creep in.
+>
+> Such people can easily construct an initramfs containing busybox and
+> mdadm with a shell script hardcoded to mount their root fs and run
+> switch_root.  It's a ~10 minute jobbie that only needs to be done once.
 
-also sprach Henrique de Moraes Holschuh <hmh@hmh.eng.br> [2010.02.18.1558 +=
-1300]:
-> > Using user-space autodetection, you can plug "mdadm -I" into
-> > udev, and have arrays assembled as they are found, and
-> > filesystems mounted as arrays are assembled, and then you just
-> > have to wait for the root filesystem to appear, not for "all
-> > devices".
->=20
-> Is this ready for testing somewhere?  initramfs+mdadm.conf is
-> operator-error bait, proper auto-assemble that does away with the
-> requirement of an up-to-date mdadm.conf inside the initrd would
-> help a great deal, there.
+Except when mdadm, cryptsetup, lvm change you need to update it.
+Esspecially when you set up a new system that might have newer
+metadata.
 
-Debian experimental. But so far, I was unable to get rid of
-mdadm.conf because it only works without the info in that file if
-the homehost is correctly encoded in the metadata. So the challenge
-I am facing is http://bugs.debian.org/567468.
+Also at least Debian doesn't (yet) support a common initramfs for their
+kernel packaging. You either build a kernel without need for one or you
+have a per kernel initramfs that is automatically build and updated
+whenever anything in the initrmafs changes. Not often, but still too
+often, the initramfs then doesn't work.
 
-> It will need something like LVM has to blacklist/whitelist what
-> device classes it will scan for superblocks though, or it will
-> eventually cause a lot of trouble.
+Does any other distribution allow building kernel image rpms that will
+use a common initramfs for all kernels?
 
-We rely on linux-base reporting the FS type as linux_raid_member and
-mdadm -E finding the metadata if that's the case.
-
---=20
-martin | http://madduck.net/ | http://two.sentenc.es/
-=20
-sex an und f=FCr sich ist reine selbstbefriedigung.
-=20
-spamtraps: madduck.bogus@madduck.net
-
---eJnRUKwClWJh1Khz
-Content-Type: application/pgp-signature; name="digital_signature_gpg.asc"
-Content-Description: Digital signature (see http://martin-krafft.net/gpg/)
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEAREDAAYFAkt8s1IACgkQIgvIgzMMSnWHQwCgxsXATcFIh5XcQWyCGLHcTG14
-hq0An2lCvJ56GV6uHkzw5p1cF2mnnrY1
-=ag4b
------END PGP SIGNATURE-----
-
---eJnRUKwClWJh1Khz--
+MfG
+        Goswin
