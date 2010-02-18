@@ -1,78 +1,57 @@
-From: Ian Dall <ian@beware.dropbear.id.au>
+From: Nick Bowler <nbowler@elliptictech.com>
 Subject: Re: Linux mdadm superblock question.
-Date: Thu, 18 Feb 2010 19:57:03 +1030
-Message-ID: <1266485223.25367.29.camel@sibyl.beware.dropbear.id.au>
-References: <201002140251.59668.volkerarmin@googlemail.com>
-	 <201002162206.32797.volkerarmin@googlemail.com>
-	 <20100216220020.GA1036@emergent.ellipticsemi.com>
-	 <201002162318.33950.volkerarmin@googlemail.com>
+Date: Thu, 18 Feb 2010 09:12:30 -0500
+Message-ID: <20100218141230.GA26473@emergent.ellipticsemi.com>
+References: <201002141940.35716.volkerarmin@googlemail.com>
+ <4B7AD35E.7000405@tmr.com>
+ <alpine.LNX.2.01.1002161541370.24961@filesrv1.baby-dragons.com>
+ <20100217130103.3ca65ef3@notabene.brown>
+ <f73f7ab81002162234t531203ccue1f9ecc839c8ae42@mail.gmail.com>
+ <4B7BB927.5000305@grumpydevil.homelinux.org>
+ <f73f7ab81002170822j7e61455o6bee33d95c9648a1@mail.gmail.com>
+ <alpine.DEB.2.00.1002170932010.4721@asgard.lang.hm>
+ <20100217181016.GA14983@emergent.ellipticsemi.com>
+ <87sk8z9q0h.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201002162318.33950.volkerarmin@googlemail.com>
+Content-Disposition: inline
+In-Reply-To: <87sk8z9q0h.fsf@frosties.localdomain>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Volker Armin Hemmann <volkerarmin@googlemail.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, Michael Evans <mjevans1983@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Nick Bowler <nbowler@elliptictech.com>
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: david@lang.hm, Kyle Moffett <kyle@moffetthome.net>, Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, Neil Brown <neilb@suse.de>, "Mr. James W. Laferriere" <babydr@baby-dragons.com>, Bill Davidsen <davidsen@tmr.com>, Volker Armin Hemmann <volkerarmin@googlemail.com>, Michael Evans <mjevans1983@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 2010-02-16 at 23:18 +0100, Volker Armin Hemmann wrote:
-> On Dienstag 16 Februar 2010, Nick Bowler wrote:
-> > On 22:06 Tue 16 Feb     , Volker Armin Hemmann wrote:
-> > > On Dienstag 16 Februar 2010, Bill Davidsen wrote:
-> > > > Volker Armin Hemmann wrote:
-> > > > > On Sonntag 14 Februar 2010, you wrote:
-> > > > >> In other words, 'auto-detection' for 1.x format devices is using an
-> > > > >> initrd/initramfs.
-> > > > > 
-> > > > > which makes 1.x format useless for everybody who does not want to
-> > > > > deal with initrd/initramfs.
-> > > > 
-> > > > You make this sound like some major big deal. are you running your own
-> > > > distribution? In most cases mkinitrd does the right thing when you
-> > > > "make install" the kernel, and if you are doing something in the build
-> > > > so complex that it needs options, you really should understand the
-> > > > options and be sure you're doing what you want.
-> > > > 
-> > > > Generally this involves preloading a module or two, and if you need it
-> > > > every time you probably should have built it in, anyway.
-> > > > 
-> > > > My opinion...
-> > > 
-> > > I am running my own kernels - and of course everything that is needed to
-> > > boot and get the basic system up is built in. Why should I make the disk
-> > > drivers modules?
-> > > That does not make sense.
-> > 
-> > I agree that it makes little sense to make something a module when you
-> > can't unload it anyway, but...
-> > 
-> > > And the reason is simple: even when the system is completely fucked up, I
-> > > want a kernel that is able to boot until init=/bin/bb takes over.
-> > 
-> > I put a complete set of recovery tools into my initramfses so that when
-> > the system is completely fucked up, I have a kernel that is able to boot
-> > until rdinit=/bin/zsh (or /bin/bb, if you prefer) takes over.
-> > 
-> > This has the added advantage of working when the root filesystem cannot
-> > be mounted at all: a scenario which does not seem too far-fetched when
-> > the filesystem is located on a raid array.
+On 04:33 Thu 18 Feb     , Goswin von Brederlow wrote:
+> Nick Bowler <nbowler@elliptictech.com> writes:
 > 
-> and what do you do if you have to boot from a cd/usb stick and need to access 
-> the raid?
+> > On 09:41 Wed 17 Feb     , david@lang.hm wrote:
+> >> however for people who run systems that are known ahead of time and
+> >> static (and who build their own kernels instead of just relying on the
+> >> distro default kernel), all of this is unnessesary complication, which
+> >> leaves more room for problems to creep in.
+> >
+> > Such people can easily construct an initramfs containing busybox and
+> > mdadm with a shell script hardcoded to mount their root fs and run
+> > switch_root.  It's a ~10 minute jobbie that only needs to be done once.
 > 
-> Simple with auto assembling. Not so much without.
+> Except when mdadm, cryptsetup, lvm change you need to update it.
+> Esspecially when you set up a new system that might have newer
+> metadata.
 
-I'm not sure what the problem is. I've had to do this (because the disk
-with grub on the MBR was the one that failed - now I put grub on them
-all).
+I meant "once per system".  One typically doesn't _need_ to update the
+mdadm in the initramfs, as long as it's capable of assembling the root
+array.
 
-I booted of the fedora install disk in rescue mode. Told it not to try
-and mount any system disks, got into a shell and ran mdadm -As 
+> Also at least Debian doesn't (yet) support a common initramfs for their
+> kernel packaging. You either build a kernel without need for one or you
+> have a per kernel initramfs that is automatically build and updated
+> whenever anything in the initrmafs changes. Not often, but still too
+> often, the initramfs then doesn't work.
 
-I'm not sure what else a kernel auto-assemble would be expected to do
-that mdadm -As wouldn't...
-
+The scenario was when users configure and build their own kernel.  These
+users are presumably capable of using grub's "initrd" command or the
+CONFIG_INITRAMFS_SOURCE kernel option.
 
 -- 
-Ian Dall <ian@beware.dropbear.id.au>
+Nick Bowler, Elliptic Technologies (http://www.elliptictech.com/)
