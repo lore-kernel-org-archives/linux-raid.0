@@ -1,57 +1,41 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: (boot time consequences of) Linux mdadm superblock question.
-Date: Thu, 18 Feb 2010 16:34:48 +1100
-Message-ID: <20100218163448.0d3f3107@notabene.brown>
-References: <20100217181016.GA14983@emergent.ellipticsemi.com>
-	<201002171927.07051.volkerarmin@googlemail.com>
-	<20100217183703.GA15446@emergent.ellipticsemi.com>
-	<alpine.DEB.2.00.1002171040350.4721@asgard.lang.hm>
-	<20100218102407.49f73d67@notabene.brown>
-	<20100218025809.GA20358@khazad-dum.debian.net>
-	<20100218032610.GB1991@lapse.rw.madduck.net>
-	<1266465801.11568.183.camel@localhost.localdomain>
-	<20100218044004.GC5136@lapse.rw.madduck.net>
-	<20100218161012.704b43a6@notabene.brown>
-	<20100218052145.GA7178@lapse.rw.madduck.net>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Linux mdadm superblock question.
+Date: Thu, 18 Feb 2010 08:51:30 +0100
+Message-ID: <20100218075130.GB12592@maude.comedia.it>
+References: <201002141940.35716.volkerarmin@googlemail.com> <4B7AD35E.7000405@tmr.com> <alpine.LNX.2.01.1002161541370.24961@filesrv1.baby-dragons.com> <20100217130103.3ca65ef3@notabene.brown> <f73f7ab81002162234t531203ccue1f9ecc839c8ae42@mail.gmail.com> <4B7BB927.5000305@grumpydevil.homelinux.org> <f73f7ab81002170822j7e61455o6bee33d95c9648a1@mail.gmail.com> <alpine.DEB.2.00.1002170932010.4721@asgard.lang.hm> <20100217181016.GA14983@emergent.ellipticsemi.com> <87sk8z9q0h.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100218052145.GA7178@lapse.rw.madduck.net>
+Content-Disposition: inline
+In-Reply-To: <87sk8z9q0h.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: martin f krafft <madduck@madduck.net>
-Cc: Daniel Reurich <daniel@centurion.net.nz>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 18 Feb 2010 18:21:45 +1300
-martin f krafft <madduck@madduck.net> wrote:
+On Thu, Feb 18, 2010 at 04:33:34AM +0100, Goswin von Brederlow wrote:
+>Nick Bowler <nbowler@elliptictech.com> writes:
+>Also at least Debian doesn't (yet) support a common initramfs for their
+>kernel packaging. You either build a kernel without need for one or you
+>have a per kernel initramfs that is automatically build and updated
+>whenever anything in the initrmafs changes. Not often, but still too
+>often, the initramfs then doesn't work.
+>
+>Does any other distribution allow building kernel image rpms that will
+>use a common initramfs for all kernels?
 
-> also sprach Neil Brown <neilb@suse.de> [2010.02.18.1810 +1300]:
-> > You would put it in /etc/mdadm.conf
-> > The format would be something like:
-> > 
-> >   ARRAY /dev/md/root uuid=xxxx:xxxx:xxxx:xxxx
-> > 
-> > and any array found with that uuid would be assembled as /dev/md/root
-> 
-> No, we mean using the UUID of the root filesystem (vol_id, not
-> mdadm's UUID) as the homehost identifier, instead of the hostname.
-> 
+you can do something like this with dracut
+actually you need two initrds, one kernel independant that contains
+scripts and binaries
+the other one, kernel dependant that contains modules (you can skip it
+if you don't need modules to mount root)
+then use grub commandline to load both
 
-You can set homehost to anything you like, in mdadm.conf or on the command
-line..
+L.
 
-But it would be rather awkward to store the uuid of the root filesystem in
-the metadata for the array that stores the root filesystem (and so is created
-before the root filesystem)...
-
-Are you suggesting that when mdadm finds some bits that looks like the form
-an array it should test-assemble it, look inside for a filesystem, extra the
-uuid of that filesystem and compare against some known uuid before deciding
-whether to assemble that array or not?  I hope not.
-
-So I don't think I know what is really being proposed.
-
-??
-
-NeilBrown
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
