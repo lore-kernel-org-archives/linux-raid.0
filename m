@@ -1,7 +1,7 @@
 From: martin f krafft <madduck@madduck.net>
 Subject: Re: (boot time consequences of) Linux mdadm superblock question.
-Date: Thu, 18 Feb 2010 18:21:45 +1300
-Message-ID: <20100218052145.GA7178@lapse.rw.madduck.net>
+Date: Thu, 18 Feb 2010 18:22:41 +1300
+Message-ID: <20100218052241.GB7178@lapse.rw.madduck.net>
 References: <20100217181016.GA14983@emergent.ellipticsemi.com>
  <201002171927.07051.volkerarmin@googlemail.com>
  <20100217183703.GA15446@emergent.ellipticsemi.com>
@@ -11,45 +11,48 @@ References: <20100217181016.GA14983@emergent.ellipticsemi.com>
  <20100218032610.GB1991@lapse.rw.madduck.net>
  <1266465801.11568.183.camel@localhost.localdomain>
  <20100218044004.GC5136@lapse.rw.madduck.net>
- <20100218161012.704b43a6@notabene.brown>
+ <1266470264.11568.191.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-ripemd160;
-	protocol="application/pgp-signature"; boundary="k+w/mQv8wyuph6w0"
+	protocol="application/pgp-signature"; boundary="5/uDoXvLw7AC5HRs"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20100218161012.704b43a6@notabene.brown>
+In-Reply-To: <1266470264.11568.191.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Daniel Reurich <daniel@centurion.net.nz>, linux-raid <linux-raid@vger.kernel.org>
+To: Daniel Reurich <daniel@centurion.net.nz>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
 
---k+w/mQv8wyuph6w0
-Content-Type: text/plain; charset=us-ascii
+--5/uDoXvLw7AC5HRs
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-also sprach Neil Brown <neilb@suse.de> [2010.02.18.1810 +1300]:
-> You would put it in /etc/mdadm.conf
-> The format would be something like:
+also sprach Daniel Reurich <daniel@centurion.net.nz> [2010.02.18.1817 +1300=
+]:
+> > This is a great idea. While I would still have to store that UUID in
+> > the initrd, as you say, it's 99% likely to remain constant, and when
+> > it changes, it's 99% likely that the admin is doing something that
+> > will require more work, so we can resort to 100% hoping that s/he
+> > knows what she's doing.
 >=20
->   ARRAY /dev/md/root uuid=3Dxxxx:xxxx:xxxx:xxxx
->=20
-> and any array found with that uuid would be assembled as /dev/md/root
+> It'd already be there if they used it in /etc/fstab.  (I wish they would
+> as it would solve a whole lot of other media portability problems as
+> well, but that's another issue.)
 
-No, we mean using the UUID of the root filesystem (vol_id, not
-mdadm's UUID) as the homehost identifier, instead of the hostname.
+/etc/fstab is not copied into the initrd.
 
 --=20
 martin | http://madduck.net/ | http://two.sentenc.es/
 =20
-"never speak disrespectfully of society.
- only people who can't get into it do that."
-                                                        -- oscar wilde
+"the duration of passion is proportionate
+ with the original resistance of the woman."
+                                                   -- honor=E9 de balzac
 =20
 spamtraps: madduck.bogus@madduck.net
 
---k+w/mQv8wyuph6w0
+--5/uDoXvLw7AC5HRs
 Content-Type: application/pgp-signature; name="digital_signature_gpg.asc"
 Content-Description: Digital signature (see http://martin-krafft.net/gpg/)
 Content-Disposition: inline
@@ -57,9 +60,9 @@ Content-Disposition: inline
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iEYEAREDAAYFAkt8zmkACgkQIgvIgzMMSnWB0gCfVbPnN7SJ+SiSXBMDn8C5UV8b
-BXYAoNnDCisjhSDatqUIFkzLhSz8s7ak
-=HFyO
+iEYEAREDAAYFAkt8zqAACgkQIgvIgzMMSnUj3gCg1nwD2zxOzY6z3BhnHBqKrczN
+ToQAoMneqYaonsDBWxPUNCxA4dy187OG
+=WpX+
 -----END PGP SIGNATURE-----
 
---k+w/mQv8wyuph6w0--
+--5/uDoXvLw7AC5HRs--
