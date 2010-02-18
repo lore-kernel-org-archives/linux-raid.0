@@ -1,68 +1,57 @@
-From: martin f krafft <madduck@madduck.net>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: (boot time consequences of) Linux mdadm superblock question.
-Date: Thu, 18 Feb 2010 18:22:41 +1300
-Message-ID: <20100218052241.GB7178@lapse.rw.madduck.net>
+Date: Thu, 18 Feb 2010 16:34:48 +1100
+Message-ID: <20100218163448.0d3f3107@notabene.brown>
 References: <20100217181016.GA14983@emergent.ellipticsemi.com>
- <201002171927.07051.volkerarmin@googlemail.com>
- <20100217183703.GA15446@emergent.ellipticsemi.com>
- <alpine.DEB.2.00.1002171040350.4721@asgard.lang.hm>
- <20100218102407.49f73d67@notabene.brown>
- <20100218025809.GA20358@khazad-dum.debian.net>
- <20100218032610.GB1991@lapse.rw.madduck.net>
- <1266465801.11568.183.camel@localhost.localdomain>
- <20100218044004.GC5136@lapse.rw.madduck.net>
- <1266470264.11568.191.camel@localhost.localdomain>
+	<201002171927.07051.volkerarmin@googlemail.com>
+	<20100217183703.GA15446@emergent.ellipticsemi.com>
+	<alpine.DEB.2.00.1002171040350.4721@asgard.lang.hm>
+	<20100218102407.49f73d67@notabene.brown>
+	<20100218025809.GA20358@khazad-dum.debian.net>
+	<20100218032610.GB1991@lapse.rw.madduck.net>
+	<1266465801.11568.183.camel@localhost.localdomain>
+	<20100218044004.GC5136@lapse.rw.madduck.net>
+	<20100218161012.704b43a6@notabene.brown>
+	<20100218052145.GA7178@lapse.rw.madduck.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-ripemd160;
-	protocol="application/pgp-signature"; boundary="5/uDoXvLw7AC5HRs"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1266470264.11568.191.camel@localhost.localdomain>
+In-Reply-To: <20100218052145.GA7178@lapse.rw.madduck.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Daniel Reurich <daniel@centurion.net.nz>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: martin f krafft <madduck@madduck.net>
+Cc: Daniel Reurich <daniel@centurion.net.nz>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+On Thu, 18 Feb 2010 18:21:45 +1300
+martin f krafft <madduck@madduck.net> wrote:
 
---5/uDoXvLw7AC5HRs
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> also sprach Neil Brown <neilb@suse.de> [2010.02.18.1810 +1300]:
+> > You would put it in /etc/mdadm.conf
+> > The format would be something like:
+> > 
+> >   ARRAY /dev/md/root uuid=xxxx:xxxx:xxxx:xxxx
+> > 
+> > and any array found with that uuid would be assembled as /dev/md/root
+> 
+> No, we mean using the UUID of the root filesystem (vol_id, not
+> mdadm's UUID) as the homehost identifier, instead of the hostname.
+> 
 
-also sprach Daniel Reurich <daniel@centurion.net.nz> [2010.02.18.1817 +1300=
-]:
-> > This is a great idea. While I would still have to store that UUID in
-> > the initrd, as you say, it's 99% likely to remain constant, and when
-> > it changes, it's 99% likely that the admin is doing something that
-> > will require more work, so we can resort to 100% hoping that s/he
-> > knows what she's doing.
->=20
-> It'd already be there if they used it in /etc/fstab.  (I wish they would
-> as it would solve a whole lot of other media portability problems as
-> well, but that's another issue.)
+You can set homehost to anything you like, in mdadm.conf or on the command
+line..
 
-/etc/fstab is not copied into the initrd.
+But it would be rather awkward to store the uuid of the root filesystem in
+the metadata for the array that stores the root filesystem (and so is created
+before the root filesystem)...
 
---=20
-martin | http://madduck.net/ | http://two.sentenc.es/
-=20
-"the duration of passion is proportionate
- with the original resistance of the woman."
-                                                   -- honor=E9 de balzac
-=20
-spamtraps: madduck.bogus@madduck.net
+Are you suggesting that when mdadm finds some bits that looks like the form
+an array it should test-assemble it, look inside for a filesystem, extra the
+uuid of that filesystem and compare against some known uuid before deciding
+whether to assemble that array or not?  I hope not.
 
---5/uDoXvLw7AC5HRs
-Content-Type: application/pgp-signature; name="digital_signature_gpg.asc"
-Content-Description: Digital signature (see http://martin-krafft.net/gpg/)
-Content-Disposition: inline
+So I don't think I know what is really being proposed.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+??
 
-iEYEAREDAAYFAkt8zqAACgkQIgvIgzMMSnUj3gCg1nwD2zxOzY6z3BhnHBqKrczN
-ToQAoMneqYaonsDBWxPUNCxA4dy187OG
-=WpX+
------END PGP SIGNATURE-----
-
---5/uDoXvLw7AC5HRs--
+NeilBrown
