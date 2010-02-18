@@ -1,41 +1,139 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Linux mdadm superblock question.
-Date: Thu, 18 Feb 2010 08:51:30 +0100
-Message-ID: <20100218075130.GB12592@maude.comedia.it>
-References: <201002141940.35716.volkerarmin@googlemail.com> <4B7AD35E.7000405@tmr.com> <alpine.LNX.2.01.1002161541370.24961@filesrv1.baby-dragons.com> <20100217130103.3ca65ef3@notabene.brown> <f73f7ab81002162234t531203ccue1f9ecc839c8ae42@mail.gmail.com> <4B7BB927.5000305@grumpydevil.homelinux.org> <f73f7ab81002170822j7e61455o6bee33d95c9648a1@mail.gmail.com> <alpine.DEB.2.00.1002170932010.4721@asgard.lang.hm> <20100217181016.GA14983@emergent.ellipticsemi.com> <87sk8z9q0h.fsf@frosties.localdomain>
+From: Dawning Sky <the.dawning.sky@gmail.com>
+Subject: Re: Auto Checking Raid 6 crashes my system
+Date: Thu, 18 Feb 2010 00:28:05 -0800
+Message-ID: <adf93d751002180028o401b5d8an4520aea1baa2b122@mail.gmail.com>
+References: <adf93d751002152104w52b329fdx9eb54719f1c8587a@mail.gmail.com>
+	 <73e903671002160537m571a48e1v6e652410554e8a49@mail.gmail.com>
+	 <adf93d751002160916r5414b3e9qf3e6e19e2e9b83a0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87sk8z9q0h.fsf@frosties.localdomain>
+In-Reply-To: <adf93d751002160916r5414b3e9qf3e6e19e2e9b83a0@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Feb 18, 2010 at 04:33:34AM +0100, Goswin von Brederlow wrote:
->Nick Bowler <nbowler@elliptictech.com> writes:
->Also at least Debian doesn't (yet) support a common initramfs for their
->kernel packaging. You either build a kernel without need for one or you
->have a per kernel initramfs that is automatically build and updated
->whenever anything in the initrmafs changes. Not often, but still too
->often, the initramfs then doesn't work.
+I tried to reproduce the crash.  First I echoed "check" into
+/sys/block/md127/md/sync_action under the single mode and the array
+finished checking.  Then I booted into init 3 and repeated the same
+thing and got the following error on the screen and the computer hung.
+ I had to manually type the error since I had no way to copy/paste, so
+there might be a few typos.
+
+
+UG: unable to handle kernel paging request at 000000006a312c50
+IP: [<ffffffff810402a8>] task_rq_lock_0x3c/0x7e
+PGD 0
+Oops: 0000 [#1] SMP
+last sysfs file: /sys/devices/virtual/block/md127/md/sync_speed
+CPU 1
+Modules linked: fuse ipt_MASQUERADE iptable_nat nf_nat bridge stp llc
+nfsd lockd nfs_acl auth_rpcgss exportfs autofs4 hwmon_vid sunrpc
+cpufreq_ondemand powernow_k8 freq_table ipv6 nf_conntrack_netbios_ns
+ext2 kvm_amd kvm uinput snd_hda_codec_analog usblp snd_hda_intel
+snd_hda_codec snd_hwdep snd_seq snd_seq_device snd_pcm snd_timer snd
+forcedeth amd64_edac_mod ppdev soundcore edac_core i2c_nforce2
+snd_page_alloc parport_pc k8temp serio_raw parport asusatk0110 raid456
+raid6_pq async_xor async_tx xor dm_multipath ata_generic pata_jmicron
+firewire_ohci firewire_core crc_itu_t pata_amd pata_acpi sata_nv
+usb_storage nouveau ttm drm_kms_helper drm i2c_algo_bit i2c_core [last
+unloaded: scsi_wait_scan]
+Pid: 523, comm: md127_raid5 Not tainted 2.6.31.12-174.2.3.fc12.x86_64
+#1 System Product Name
+RIP: 0010:[<ffffffff810402a8>] [<ffffffff810402a8>] task_rq_lock+0x3c/0=
+x7e
+RSP: 0010:ffff8801155d5c10 EFLAGS: 00010046
+RAX: 000000001d1836b0 RBX: 0000000000015600 RCX: 0000000000000000
+RDX: 0000000000000046 RSI: ffff8801155d5c58 RDI: ffff8800dc4c2f00
+RBP: ffff8801155d5c30 R08: 0000000000000000 R09: 0000000000000001
+R10: ffff880115cb64e8 R11: 6db6db6db6db6db7 R12: ffff8801155d5c58
+R13: ffff8800dc4c2f00 R14: 0000000000015600 R15: 0000000000000000
+=46S: 00007f66cc00c780(0000) GS: ffff88002803c000(0000) knlGS: 00000000=
+00000000
+CS: 0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+CR2: 000000006a312c50 CR3: 0000000001001000 CR4: 00000000000006e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process md127_raid5 (pid: 523, threadinfo ffff8801155d4000, task
+ffff880115daaf00)
+Stack:
+ ffff8800dc4c2f00 0000000000000000 0000000000000003 ffff8801155d5c58
+<0> ffff8801155d5c90 ffffffff8104ae7d
+[drm] nouveau 0000:07:00.0: GPU lockup - switching to software fbcon
+ ffff880115fc4c00 ffff880115a45400
+<0> ffff88011809e400 00000000000000046 ffff888115cb64e8 000000000000000=
+1
+Call Trace:
+ [<ffffffff8104ae7d>] try_to_wake_up+0x9a/0x2de
+ [<ffffffff8104b0d3>] default_wake_function+0x12/0x14
+ [<ffffffff8103c237>] __wake_up_common+0x4e/0x84
+ [<ffffffff810400cd>] __wake_up+0x39/0x4d
+ [<ffffffffa017ce72>] __release_stripe+0x115/0x147 [raid456]
+ [<ffffffffa017ced9>] release_stripe+0x35/0x49 [raid456]
+ [<ffffffffa0182cd8>] raid5d+0x44e/0x563 [raid456]
+ [<ffffffff8141c285>] ? schedule_timeout+0xb3/0xe3
+ [<ffffffff8105c236>] ? process_timeout+0x0/0x10
+ [<ffffffff8133deef>] md_thread+0xf1/0x10f
+ [<ffffffff81067b37>] ? autoremove_wake_function+0x0/0x39
+ [<ffffffff8133ddfe>] ? md_thread+0x0/0x10f
+ [<ffffffff810677b5>] kthread+0x91/0x99
+ [<ffffffff81022daa>] child_rip+0xa/0x20
+ [<ffffffff81067724>] ? kthread+0x0/0x99
+ [<ffffffff81012da0>] ? child_rip+0x0/0x20
+Code: c7 c3 00 56 01 00 49 89 fd 49 89 f4 9c 58 66 66 90 66 90 48 89
+c2 fa 66 66 90 66 66 90 49 89 14 24 49 8b 45 08 49 89 de 8b 40 18 <4c>
+03 34 c5 d0 76 6f 81 4c 89 f7 e8 ac d3 3d 00 49 8b 45 08 8b
+RIP [<ffffffff810402a8>] task_rq_lock+0x3c/0x7e
+ RSP <ffff8801155d5c10>
+CR2: 000000006a312c50
+---[ end trace 6c5abd1701cc36a0 ]---
+BUG: unable to handle kernel
+
+
+On Tue, Feb 16, 2010 at 9:16 AM, Dawning Sky <the.dawning.sky@gmail.com=
+> wrote:
+> On Tue, Feb 16, 2010 at 5:37 AM, Kristleifur Da=F0ason
+> <kristleifur@gmail.com> wrote:
+>> On Tue, Feb 16, 2010 at 5:04 AM, Dawning Sky <the.dawning.sky@gmail.=
+com> wrote:
+>>> Hi,
+>>>
+>>> I just build a brand new md raid-6 with 5 disks. =A0And on Fedora 1=
+2,
+>>> the auto checking of md devices via a weekly cron job is enabled by
+>>> default. =A0It performs the checking by echo "check" into
+>>> /sys/block/mdX/md/sync_action. =A0But after a while, the kernel jus=
+t
+>>> crashes, without finishing checking the raid device or leaving
+>>> anything in the messages file.
+>>>
+>>> For now, I've disable the raid-check cron job. =A0The kernel versio=
+n I'm
+>>> running is 2.6.31.12-174.2.3.fc12.x86_64.
+>>>
+>>> Thanks,
+>>>
+>>> DS
+>>
+>>
+>> Hi,
+>>
+>> I encountered similar issues because of a faulty mvsas driver that
+>> flaked out under the load. What hardware do you have?
 >
->Does any other distribution allow building kernel image rpms that will
->use a common initramfs for all kernels?
-
-you can do something like this with dracut
-actually you need two initrds, one kernel independant that contains
-scripts and binaries
-the other one, kernel dependant that contains modules (you can skip it
-if you don't need modules to mount root)
-then use grub commandline to load both
-
-L.
-
--- 
-Luca Berra -- bluca@comedia.it
-         Communication Media & Services S.r.l.
-  /"\
-  \ /     ASCII RIBBON CAMPAIGN
-   X        AGAINST HTML MAIL
-  / \
+> I'm using the onboard sata chip, which I believe is nVidia, and the
+> driver is nv_sata.
+>
+>>
+>> -- Kristleifur
+>>
+>
+> DS
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
