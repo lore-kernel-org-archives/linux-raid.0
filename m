@@ -1,57 +1,76 @@
-From: Nick Bowler <nbowler@elliptictech.com>
-Subject: Re: Linux mdadm superblock question.
-Date: Thu, 18 Feb 2010 09:12:30 -0500
-Message-ID: <20100218141230.GA26473@emergent.ellipticsemi.com>
-References: <201002141940.35716.volkerarmin@googlemail.com>
- <4B7AD35E.7000405@tmr.com>
- <alpine.LNX.2.01.1002161541370.24961@filesrv1.baby-dragons.com>
- <20100217130103.3ca65ef3@notabene.brown>
- <f73f7ab81002162234t531203ccue1f9ecc839c8ae42@mail.gmail.com>
- <4B7BB927.5000305@grumpydevil.homelinux.org>
- <f73f7ab81002170822j7e61455o6bee33d95c9648a1@mail.gmail.com>
- <alpine.DEB.2.00.1002170932010.4721@asgard.lang.hm>
- <20100217181016.GA14983@emergent.ellipticsemi.com>
- <87sk8z9q0h.fsf@frosties.localdomain>
+From: martin f krafft <madduck@madduck.net>
+Subject: Re: (boot time consequences of) Linux mdadm superblock question.
+Date: Fri, 19 Feb 2010 13:42:37 +1300
+Message-ID: <20100219004237.GC25162@lapse.rw.madduck.net>
+References: <20100217183703.GA15446@emergent.ellipticsemi.com>
+ <alpine.DEB.2.00.1002171040350.4721@asgard.lang.hm>
+ <20100218102407.49f73d67@notabene.brown>
+ <20100218025809.GA20358@khazad-dum.debian.net>
+ <20100218032610.GB1991@lapse.rw.madduck.net>
+ <1266465801.11568.183.camel@localhost.localdomain>
+ <20100218044004.GC5136@lapse.rw.madduck.net>
+ <20100218161012.704b43a6@notabene.brown>
+ <20100218052145.GA7178@lapse.rw.madduck.net>
+ <20100218163448.0d3f3107@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-ripemd160;
+	protocol="application/pgp-signature"; boundary="69pVuxX8awAiJ7fD"
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <87sk8z9q0h.fsf@frosties.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: david@lang.hm, Kyle Moffett <kyle@moffetthome.net>, Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, Neil Brown <neilb@suse.de>, "Mr. James W. Laferriere" <babydr@baby-dragons.com>, Bill Davidsen <davidsen@tmr.com>, Volker Armin Hemmann <volkerarmin@googlemail.com>, Michael Evans <mjevans1983@gmail.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org
+In-Reply-To: <20100218163448.0d3f3107@notabene.brown>
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Daniel Reurich <daniel@centurion.net.nz>, linux-raid <linux-raid@vger.kernel.org>, 567468@bugs.debian.org
 List-Id: linux-raid.ids
 
-On 04:33 Thu 18 Feb     , Goswin von Brederlow wrote:
-> Nick Bowler <nbowler@elliptictech.com> writes:
-> 
-> > On 09:41 Wed 17 Feb     , david@lang.hm wrote:
-> >> however for people who run systems that are known ahead of time and
-> >> static (and who build their own kernels instead of just relying on the
-> >> distro default kernel), all of this is unnessesary complication, which
-> >> leaves more room for problems to creep in.
-> >
-> > Such people can easily construct an initramfs containing busybox and
-> > mdadm with a shell script hardcoded to mount their root fs and run
-> > switch_root.  It's a ~10 minute jobbie that only needs to be done once.
-> 
-> Except when mdadm, cryptsetup, lvm change you need to update it.
-> Esspecially when you set up a new system that might have newer
-> metadata.
 
-I meant "once per system".  One typically doesn't _need_ to update the
-mdadm in the initramfs, as long as it's capable of assembling the root
-array.
+--69pVuxX8awAiJ7fD
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> Also at least Debian doesn't (yet) support a common initramfs for their
-> kernel packaging. You either build a kernel without need for one or you
-> have a per kernel initramfs that is automatically build and updated
-> whenever anything in the initrmafs changes. Not often, but still too
-> often, the initramfs then doesn't work.
+also sprach Neil Brown <neilb@suse.de> [2010.02.18.1834 +1300]:
+> But it would be rather awkward to store the uuid of the root
+> filesystem in the metadata for the array that stores the root
+> filesystem (and so is created before the root filesystem)...
 
-The scenario was when users configure and build their own kernel.  These
-users are presumably capable of using grub's "initrd" command or the
-CONFIG_INITRAMFS_SOURCE kernel option.
+True. You'd have to update the superblock UUID right after creation
+of the filesystem. That doesn't sound like a robust strategy to
+making mdadm.conf optional.
 
--- 
-Nick Bowler, Elliptic Technologies (http://www.elliptictech.com/)
+> Are you suggesting that when mdadm finds some bits that looks like
+> the form an array it should test-assemble it, look inside for
+> a filesystem, extra the uuid of that filesystem and compare
+> against some known uuid before deciding whether to assemble that
+> array or not?  I hope not.
+
+Hehe, that would be fun, wouldn't it? ;)
+
+> So I don't think I know what is really being proposed.
+
+I really would like to make mdadm.conf optional and still have
+things work incrementally from initrd.
+
+--=20
+martin | http://madduck.net/ | http://two.sentenc.es/
+=20
+stupidity management for the superuser
+is a user space issue in unix systems.
+                                                           -- alan cox
+=20
+spamtraps: madduck.bogus@madduck.net
+
+--69pVuxX8awAiJ7fD
+Content-Type: application/pgp-signature; name="digital_signature_gpg.asc"
+Content-Description: Digital signature (see http://martin-krafft.net/gpg/)
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEAREDAAYFAkt93n0ACgkQIgvIgzMMSnWFfwCdEgxDjg29KjX1akVRbnt+9N9x
+NO0An2qGJtjFpRrNLnp0JREG0I+9u5Qc
+=fits
+-----END PGP SIGNATURE-----
+
+--69pVuxX8awAiJ7fD--
