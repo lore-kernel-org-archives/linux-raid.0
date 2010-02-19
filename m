@@ -1,82 +1,37 @@
-From: Daniel Reurich <daniel@centurion.net.nz>
-Subject: Re: (boot time consequences of) Linux mdadm superblock question.
-Date: Fri, 19 Feb 2010 15:51:15 +1300
-Message-ID: <1266547875.11568.1552.camel@localhost.localdomain>
-References: <20100217183703.GA15446@emergent.ellipticsemi.com>
-	 <alpine.DEB.2.00.1002171040350.4721@asgard.lang.hm>
-	 <20100218102407.49f73d67@notabene.brown>
-	 <20100218025809.GA20358@khazad-dum.debian.net>
-	 <20100218032610.GB1991@lapse.rw.madduck.net>
-	 <1266465801.11568.183.camel@localhost.localdomain>
-	 <20100218044004.GC5136@lapse.rw.madduck.net>
-	 <20100218161012.704b43a6@notabene.brown>
-	 <20100218052145.GA7178@lapse.rw.madduck.net>
-	 <20100218163448.0d3f3107@notabene.brown>
-	 <20100219004237.GC25162@lapse.rw.madduck.net>
+From: Michael Evans <mjevans1983@gmail.com>
+Subject: Re: Linux mdadm superblock question.
+Date: Fri, 19 Feb 2010 01:04:02 -0800
+Message-ID: <4877c76c1002190104x3c801023x3ba2e3c7a11fcdf7@mail.gmail.com>
+References: <201002141940.35716.volkerarmin@googlemail.com>
+	 <alpine.LNX.2.01.1002161541370.24961@filesrv1.baby-dragons.com>
+	 <20100217130103.3ca65ef3@notabene.brown>
+	 <f73f7ab81002162234t531203ccue1f9ecc839c8ae42@mail.gmail.com>
+	 <4B7BB927.5000305@grumpydevil.homelinux.org>
+	 <f73f7ab81002170822j7e61455o6bee33d95c9648a1@mail.gmail.com>
+	 <alpine.DEB.2.00.1002170932010.4721@asgard.lang.hm>
+	 <20100217181016.GA14983@emergent.ellipticsemi.com>
+	 <87sk8z9q0h.fsf@frosties.localdomain>
+	 <20100218141230.GA26473@emergent.ellipticsemi.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100219004237.GC25162@lapse.rw.madduck.net>
+In-Reply-To: <20100218141230.GA26473@emergent.ellipticsemi.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: martin f krafft <madduck@madduck.net>
-Cc: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>, 567468@bugs.debian.org
+To: Goswin von Brederlow <goswin-v-b@web.de>, david@lang.hm, Kyle Moffett <kyle@moffetthome.net>, Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, Neil Brown <neilb@suse.de>, Mr. James W
 List-Id: linux-raid.ids
 
-On Fri, 2010-02-19 at 13:42 +1300, martin f krafft wrote:
-> also sprach Neil Brown <neilb@suse.de> [2010.02.18.1834 +1300]:
-> > But it would be rather awkward to store the uuid of the root
-> > filesystem in the metadata for the array that stores the root
-> > filesystem (and so is created before the root filesystem)...
-> 
-> True. You'd have to update the superblock UUID right after creation
-> of the filesystem. That doesn't sound like a robust strategy to
-> making mdadm.conf optional.
-> 
-> > Are you suggesting that when mdadm finds some bits that looks like
-> > the form an array it should test-assemble it, look inside for
-> > a filesystem, extra the uuid of that filesystem and compare
-> > against some known uuid before deciding whether to assemble that
-> > array or not?  I hope not.
-> 
-> Hehe, that would be fun, wouldn't it? ;)
-> 
-> > So I don't think I know what is really being proposed.
-> 
-> I really would like to make mdadm.conf optional and still have
-> things work incrementally from initrd.
-> 
-But if a generated 'system uuid' value (I just suggested the root fs
-UUID because it would be highly unlikely to be unchanged, and nobody
-would be likely to fiddle with it) was copied into a file
-called /etc/system_uuid and copied into the initrd, then we could add
-put into mdadms hook script in initramfs-tools, to verify and update the
-homehost variable in the boot time required raid volumes when ever a new
-initrd is installed.  (This generally happens on debian whenever a
-kernel is installed and mdadm is installed or upgraded.
+I actually much prefer building my own kernel for servers and
+higher-end workstations.  I like having all the core drivers needed to
+'get running' in there; even if the more delicate but static logic of
+how to track down and assemble/unlock the drives is in the initramfs
+image.
 
-As an added protection we could include checks in mdadm shutdown script
-a check that warns when mdadm.conf doesn't exist and
-the /etc/system_uuid doesn't match the homehost value in the boottime
-assembled raid volumes.  If we did use the root filesystem UUID for
-this, we could compare that as well.
+The only really annoying issue I've had with my custom initramfs
+creator is getting it 'chained' by various distros auto-initramfs
+update triggers so that it can grab the version of modules that match
+a given kernel.  I have several ways in mind to work around that issue
+at various steps, but no known userbase to support besides my self and
+thus less motivation to work on that task.
 
-It would be useful to have a tool similar to /bin/hostname that could be
-used to create|read|verify|update the system uuid, which would update
-all the relevant locations which store and check against this system
-uuid.
-
-One could expect LVM would be another prime candidate for system uuid
-usage to bind vg's to the host for boot.
-
-But maybe I'm just getting a bit carried away here.  
-
- 
--- 
-Daniel Reurich.
-
-Centurion Computer Technology (2005) Ltd
-Mobile 021 797 722
-
-
-
+Everything else of course works exactly the same as long as the
+configuration hasn't changed on the host system.
