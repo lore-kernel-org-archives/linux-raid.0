@@ -1,37 +1,51 @@
-From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: Linux mdadm superblock question.
-Date: Fri, 19 Feb 2010 01:04:02 -0800
-Message-ID: <4877c76c1002190104x3c801023x3ba2e3c7a11fcdf7@mail.gmail.com>
-References: <201002141940.35716.volkerarmin@googlemail.com>
-	 <alpine.LNX.2.01.1002161541370.24961@filesrv1.baby-dragons.com>
-	 <20100217130103.3ca65ef3@notabene.brown>
-	 <f73f7ab81002162234t531203ccue1f9ecc839c8ae42@mail.gmail.com>
-	 <4B7BB927.5000305@grumpydevil.homelinux.org>
-	 <f73f7ab81002170822j7e61455o6bee33d95c9648a1@mail.gmail.com>
-	 <alpine.DEB.2.00.1002170932010.4721@asgard.lang.hm>
-	 <20100217181016.GA14983@emergent.ellipticsemi.com>
-	 <87sk8z9q0h.fsf@frosties.localdomain>
-	 <20100218141230.GA26473@emergent.ellipticsemi.com>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: (boot time consequences of) Linux mdadm superblock question.
+Date: Fri, 19 Feb 2010 10:16:19 +0100
+Message-ID: <20100219091619.GA2964@lazy.lzy>
+References: <alpine.DEB.2.00.1002171040350.4721@asgard.lang.hm>
+ <20100218102407.49f73d67@notabene.brown>
+ <20100218025809.GA20358@khazad-dum.debian.net>
+ <20100218032610.GB1991@lapse.rw.madduck.net>
+ <1266465801.11568.183.camel@localhost.localdomain>
+ <20100218044004.GC5136@lapse.rw.madduck.net>
+ <20100218161012.704b43a6@notabene.brown>
+ <20100218052145.GA7178@lapse.rw.madduck.net>
+ <20100218163448.0d3f3107@notabene.brown>
+ <20100219004237.GC25162@lapse.rw.madduck.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100218141230.GA26473@emergent.ellipticsemi.com>
+Content-Disposition: inline
+In-Reply-To: <20100219004237.GC25162@lapse.rw.madduck.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>, david@lang.hm, Kyle Moffett <kyle@moffetthome.net>, Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, Neil Brown <neilb@suse.de>, Mr. James W
+To: Neil Brown <neilb@suse.de>, Daniel Reurich <daniel@centurion.net.nz>, linux-raid <linux-raid@vger.kernel.org>, 567468@bugs.debian.org
 List-Id: linux-raid.ids
 
-I actually much prefer building my own kernel for servers and
-higher-end workstations.  I like having all the core drivers needed to
-'get running' in there; even if the more delicate but static logic of
-how to track down and assemble/unlock the drives is in the initramfs
-image.
+Hi,
 
-The only really annoying issue I've had with my custom initramfs
-creator is getting it 'chained' by various distros auto-initramfs
-update triggers so that it can grab the version of modules that match
-a given kernel.  I have several ways in mind to work around that issue
-at various steps, but no known userbase to support besides my self and
-thus less motivation to work on that task.
+> True. You'd have to update the superblock UUID right after creation
+> of the filesystem. That doesn't sound like a robust strategy to
+> making mdadm.conf optional.
 
-Everything else of course works exactly the same as long as the
-configuration hasn't changed on the host system.
+it seems that, with "dracut", "mdadm.conf" is optional.
+
+There is the kernel boot paramenter "rd_NO_MDADMCONF",
+which forces "dracut" to do not use the "mdadm.conf" in
+the initramfs image.
+
+This seems to work also if / is on mdX.
+
+I just tried it, and it was running fine. I did not check
+the details, i.e. I've no proof "dracut" was not cheating.
+
+My impression is that it uses the "mdadm -I" functionality.
+
+There are other interesting kernel boot options, like:
+
+rd_MD_UUID=<md uuid>
+
+bye,
+
+-- 
+
+piergiorgio
