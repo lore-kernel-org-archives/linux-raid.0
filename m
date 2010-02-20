@@ -1,61 +1,80 @@
 From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Why does one get mismatches?
-Date: Sat, 20 Feb 2010 05:27:34 +0100
-Message-ID: <87k4u8zg3t.fsf@frosties.localdomain>
-References: <869541.92104.qm@web51304.mail.re2.yahoo.com>
-	<4B67451F.8040206@tmr.com> <20100202093738.44b4fece@notabene.brown>
-	<4B684087.50001@tmr.com> <20100211161444.7a0ea7bb@notabene.brown>
-	<20100211175133.GA30187@atlantis.cc.ndsu.nodak.edu>
-	<4B7B0D45.7040801@tmr.com>
-	<6db64f7872286165ac1fd3436e9d6476@localhost>
-	<20100218100547.7aecdc34@notabene.brown>
-	<20100219151809.GB4995@lazy.lzy>
-	<20100220090208.06c1130f@notabene.brown>
-	<4B7F2013.4070905@shiftmail.org>
+Subject: Maybe crazy idea for reshaping: Instant/On-Demand reshaping
+Date: Sat, 20 Feb 2010 06:27:54 +0100
+Message-ID: <87zl34xyqt.fsf@frosties.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B7F2013.4070905@shiftmail.org> (asdo@shiftmail.org's message of
-	"Sat, 20 Feb 2010 00:34:43 +0100")
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Asdo <asdo@shiftmail.org> writes:
+Hi,
 
-> Thank you for your explanation Neil,
->
-> Neil Brown wrote:
->> When memory changes between being written to one device and to another, this
->> does not cause corruption, only inconsistency. Either the block will be
->> written again consistently soon, or it will never be read.
->
-> This is the crucial part...
->
-> Why would the filesystem reuse the same memory without rewriting the
-> *same* block?
->
-> Can the same memory area be used for another block?
-> If yes, I understand. If not, no I don't understand why the block is
-> not eventually rewritten to contain equal data on both disks.
->
-> Is this a power-fail-in-the-middle thing, or it can happen even when
-> the power is always on?
+last night I started a reshape of a raid5 array. Now I got up and it is
+still over 15 hours till the reshape is done. That got me thinking.
+Since I haven't had my coffee yet let me use you as a sounding board.
 
-The check is usualy done with the filesystem mounted and in use. So one
-case would be that the block got written, changed and then checked
-before the FS decided to flush the dirty block again.
 
-The other scenario suggested in the past is that the block was written,
-changed and then the file deleted, making the block unused, before it
-got flushed again. The filesystem then sees no need to write a dirty but
-unused block so it never gets rewritten. It never gets read either so
-that  is safe.
+1) Wouldn't it be great if during reshape the size of the raid would
+gradualy increase?
 
-> Do I understand correctly that raid-456 is instead safe
-> ("no-mismatch") because it copies the memory region?
->
-> Thank you
+As the reshape progresses and data moves from X to X+1 disks it creates
+free space. So why can't one increase the device size gradually to
+include that space?
+
+Unfortunately the space it frees is needed to reshape the later
+stripes. As it reshapes a window of free space moves from the start of
+the disks to the end of the disks. For the device size to grow the place
+where the new stripe would land after reshaping needs to be free and
+that means the window of free space must have moved far enough to
+include that place. That means X/(X+1) of the data has already been
+copied. Only while copying the last 1/(X+1) of data could the size
+increase. That would still be a plus.
+
+Note: After all the data has been copied, when the window of free space
+has reached the end of the disks, there is still work to do. The window
+of free space contains random data and needs to be resynced or zeroed so
+the parity of the future stripes is correct. For the size to increase
+gradually that resync/zeroing would have to be interleaved with copying
+the remaining data.
+
+
+2) With the existing reshape a gradual size increase is impossible
+untill late in the reshape. Could we do better?
+
+The problem with increasing the size before the reshape is done is that
+there is existing data where our new free space is going to be. Maybe we
+could move the data away as needed. Whenever something writes to a new
+stripe that still contains old data we move the old stripe to its new
+place. That would require information where old data is. Something like
+a bitmap. We might not get stripe granularity but that is ok.
+
+It gets bit more complex. Moving a chunk of old data means writing data
+to new stripes. They can contain old data as well requiring a recursion.
+But old data always gets copied to lower blocks. Assuming we finished
+some reshaping at the start of the disks (at least some critical section
+must be done) then eventually we hit a region that was already reshaped.
+As the reshape progresses it will take less and less recursions.
+
+Note: reads from stripes with old data would return all 0.
+
+Note 2: writing to a stripe can write to the old stripe if that wasn't
+respahed yet.
+
+Note 3: there would still be a normal reshape process that goes from
+start to end on each disk, it would just run in parallel with the
+on-demand copying.
+
+Writing to a new stripe that hasn't yet been reshaped will be horribly
+slow at first and gradually become faster as the reshape progresses.
+Also as more new stripes get written there will be more and more chunks
+in the middle of the disks that have been reshaped so the recursion will
+not have to go to the fully reshaped region at the start of the disk
+every time.
+
+
+So what do you think? Is this lack of cafein speaking?
 
 MfG
         Goswin
