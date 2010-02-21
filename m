@@ -1,54 +1,43 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Maybe crazy idea for reshaping: Instant/On-Demand reshaping
-Date: Sun, 21 Feb 2010 13:21:27 +1100
-Message-ID: <20100221132127.6e49afd3@notabene.brown>
-References: <87zl34xyqt.fsf@frosties.localdomain>
-	<20100220194020.5d1689e6@notabene.brown>
-	<87mxz46vj2.fsf@frosties.localdomain>
+From: chris <tknchris@gmail.com>
+Subject: Weird Issue with raid 5+0
+Date: Sat, 20 Feb 2010 23:33:23 -0500
+Message-ID: <31e44a111002202033m4a9dfba9yf8aef62b8b39933a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87mxz46vj2.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Goswin von Brederlow <goswin-v-b@web.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 20 Feb 2010 11:39:29 +0100
-Goswin von Brederlow <goswin-v-b@web.de> wrote:
+Hello,
 
-> Neil Brown <neilb@suse.de> writes:
-> 
-> > On Sat, 20 Feb 2010 06:27:54 +0100
-> > Goswin von Brederlow <goswin-v-b@web.de> wrote:
-> >> So what do you think? Is this lack of cafein speaking?
-> >
-> > I think your cost-benefit trade-off is way off balance on the cost side.
-> >
-> > This sort of complexity really belongs in a filesystem, not in a a block
-> > device.
-> >
-> > NeilBrown
-> 
-> So you are saying I should be using zfs instead of ext3+raid5. :)
+I am trying to setup a raid 5+0 on 6 1TB sata disks. I created the
+arrays like so:
 
-No, I'm saying that you should fund me for a year or two so I can stop
-worrying about bug fixing and md features, and can finish writing the
-filesystem that I have been working on for over a decade.  It will,
-naturally, be able to to everything including cure the common cold.
+mdadm --create /dev/md2 --level=5 --raid-devices=2 /dev/sda /dev/sdb /dev/sdc
+mdadm --create /dev/md3 --level=5 --raid-devices=2 /dev/sdd /dev/sde /dev/sdf
+mdadm --create /dev/md4 --level=0 --raid-devices=2 /dev/md2 /dev/md3
 
-NeilBrown
+The arrays create and sync fine, then I put lvm on top and create a
+volume group and everything seems fine. I created 2 logical volumes
+and formatted them with filesystems and initially didn't realize
+anything was wrong. After running 2 virtual machines on them for a
+while  I noticed the vm's were reporting bad blocks on the volume. I
+looked in the dom0 dmesg and found tons of messages such as:
 
+[444905.674655] raid0_make_request bug: can't convert block across
+chunks or bigger than 64k 69314431 4
 
-> 
-> When I read up on zfs last year it could not do any reshaping at
-> all. You could only add new pools but not reshape an existing one.
-> 
-> MfG
->         Goswin
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Chunksize for both raid5's and the raid0 is 64k so it would appear the
+issue is not that the chunk size is greater than 64k. I also find it
+hard to believe it could be any kind of lvm issue simply because the
+message in dmesg clearly shows its related to the raid0.
 
+Any ideas on what I'm missing here would be greatly appreciated. I
+would imagine it is some kind of alignment between block and chunk
+sizes but I can't seem to figure it out :)
+
+More detailed information including raid information and errors is at
+http://pastebin.com/f6a52db74
+
+- chris
