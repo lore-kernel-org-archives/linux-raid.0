@@ -1,50 +1,57 @@
 From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Maybe crazy idea for reshaping: Instant/On-Demand reshaping
-Date: Sun, 21 Feb 2010 12:14:26 +0100
-Message-ID: <87eikeu9gt.fsf@frosties.localdomain>
-References: <87zl34xyqt.fsf@frosties.localdomain>
-	<20100220194020.5d1689e6@notabene.brown>
-	<87mxz46vj2.fsf@frosties.localdomain>
-	<20100221132127.6e49afd3@notabene.brown>
+Subject: Re: Why does one get mismatches?
+Date: Sun, 21 Feb 2010 12:13:02 +0100
+Message-ID: <87iq9qu9j5.fsf@frosties.localdomain>
+References: <869541.92104.qm@web51304.mail.re2.yahoo.com>
+	<4B67451F.8040206@tmr.com> <20100202093738.44b4fece@notabene.brown>
+	<4B684087.50001@tmr.com> <20100211161444.7a0ea7bb@notabene.brown>
+	<20100211175133.GA30187@atlantis.cc.ndsu.nodak.edu>
+	<4B7B0D45.7040801@tmr.com>
+	<6db64f7872286165ac1fd3436e9d6476@localhost>
+	<20100218100547.7aecdc34@notabene.brown>
+	<20100219151809.GB4995@lazy.lzy>
+	<20100220090208.06c1130f@notabene.brown>
+	<4B7F2013.4070905@shiftmail.org> <87k4u8zg3t.fsf@frosties.localdomain>
+	<4B7FC3A7.10104@shiftmail.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100221132127.6e49afd3@notabene.brown> (Neil Brown's message of
-	"Sun, 21 Feb 2010 13:21:27 +1100")
+In-Reply-To: <4B7FC3A7.10104@shiftmail.org> (asdo@shiftmail.org's message of
+	"Sat, 20 Feb 2010 12:12:39 +0100")
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
+To: Asdo <asdo@shiftmail.org>
 Cc: Goswin von Brederlow <goswin-v-b@web.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown <neilb@suse.de> writes:
+Asdo <asdo@shiftmail.org> writes:
 
-> On Sat, 20 Feb 2010 11:39:29 +0100
-> Goswin von Brederlow <goswin-v-b@web.de> wrote:
->
->> Neil Brown <neilb@suse.de> writes:
->> 
->> > On Sat, 20 Feb 2010 06:27:54 +0100
->> > Goswin von Brederlow <goswin-v-b@web.de> wrote:
->> >> So what do you think? Is this lack of cafein speaking?
->> >
->> > I think your cost-benefit trade-off is way off balance on the cost side.
->> >
->> > This sort of complexity really belongs in a filesystem, not in a a block
->> > device.
->> >
->> > NeilBrown
->> 
->> So you are saying I should be using zfs instead of ext3+raid5. :)
->
-> No, I'm saying that you should fund me for a year or two so I can stop
-> worrying about bug fixing and md features, and can finish writing the
-> filesystem that I have been working on for over a decade.  It will,
-> naturally, be able to to everything including cure the common cold.
->
-> NeilBrown
+> Goswin von Brederlow wrote:
+>> The check is usualy done with the filesystem mounted and in use. So one
+>> case would be that the block got written, changed and then checked
+>> before the FS decided to flush the dirty block again.
+>>
+>> The other scenario suggested in the past is that the block was written,
+>> changed and then the file deleted, making the block unused,
+> This is not enough to cause the problem if I understand correctly, it
+> also needs to change value at this point, right?
+> So how can it change value... is the same buffer used for another block?
 
-Any design specs for it? I might not be able to fund you but I might be
-able to voluneer some man-hours.
+open tempfile
+write tempfile
+raid1 starts to commit the block
+write some more changing the block
+ raid1 writes the 2nd copy of the block
+delete file
+fs never recommits the dirty page
+
+Personally I don't really buy that scenario. At least not in the
+frequency mismatches occur.
+
+>> before it
+>> got flushed again. The filesystem then sees no need to write a dirty but
+>> unused block so it never gets rewritten. It never gets read either so
+>> that  is safe.
+>>
 
 MfG
         Goswin
