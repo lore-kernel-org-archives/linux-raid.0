@@ -1,7 +1,7 @@
 From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
 Subject: Re: Why does one get mismatches?
-Date: Mon, 22 Feb 2010 14:30:44 +0100
-Message-ID: <20100222133044.GA3507@lazy.lzy>
+Date: Mon, 22 Feb 2010 14:44:22 +0100
+Message-ID: <20100222134422.GA3559@lazy.lzy>
 References: <20100218100547.7aecdc34@notabene.brown>
  <20100219151809.GB4995@lazy.lzy>
  <20100220090208.06c1130f@notabene.brown>
@@ -22,42 +22,26 @@ To: Asdo <asdo@shiftmail.org>
 Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Guy Watkins <linux-raid@watkins-home.com>, 'Goswin von Brederlow' <goswin-v-b@web.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+Hi again,
 
-> Even "nothing"?
-> Why?
+forgot one thing...
 
-for the following reasons:
+I've some PCs where those mismatches shows up, sometimes
+more, sometime less, sometimes nothing.
 
-1) the "check" command is useless if there are mismatches,
-harmful or harmless they could be
-2) the mirroring concept implies *identical* mirrors, not
-identical only if the upper layer decides so
-3) if a filesystem has a small bug, this will not be catched
-later, that is, it could be the filesystem causes a *wrong*
-mismatch (like there are correct ones)
-4) in general, it is not safe to offer a mirroring which is
-not always mirroring properly
+All these PCs have the filesystem (ext3) directly on
+the RAID drive.
 
-> 
-> Here we are talking about "nothing".
-> 
-> Or so it seems.
+I've one more PC, where there is a LVM layer inbetween.
 
-As I wrote, it does not matter, it is just not correct
-to rely on the good will of other pieces of software to
-guarantee the RAID-1 is working properly.
-The RAID-1 should work properly because it does work
-properly, not because the filesystem is kind enough to
-allow it to work properly.
+In this PC, which has also different HW (the others are
+all identical), I never saw mismatches.
+I can imagine the LVM takes care of handling properly
+the memory buffers.
 
-This could be a system design problem, not and MD one, of
-course, so I'm stating the Neil or others should fix the
-MD, what I'm writing is that it is astonishing to me
-that things work this way (or "walk this way").
+Can anyone confirm this?
 
-That's it, I'm just surprised to learn such situations
-are present.
+Thanks,
 
 bye,
 
