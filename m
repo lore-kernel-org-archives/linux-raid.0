@@ -1,55 +1,60 @@
-From: "Stefan G. Weichinger" <lists@xunil.at>
-Subject: Re: emergency call for help: raid5 fallen apart
-Date: Wed, 24 Feb 2010 20:54:37 +0100
-Message-ID: <4B8583FD.8090406@xunil.at>
-References: <4B853DB7.1060406@xunil.at> <4B854040.5080603@xunil.at> <20100224152228.GB11039@cthulhu.home.robinhill.me.uk> <4B85467C.5020008@xunil.at> <4B855621.5010000@xunil.at> <4B855987.1010605@xunil.at> <20100224170951.GC11039@cthulhu.home.robinhill.me.uk> <4B856372.6000900@xunil.at> <20100224181219.GA8043@cthulhu.home.robinhill.me.uk>
-Reply-To: lists@xunil.at
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Why does one get mismatches?
+Date: Thu, 25 Feb 2010 08:32:03 +1100
+Message-ID: <20100225083203.4936ee63@notabene.brown>
+References: <869541.92104.qm@web51304.mail.re2.yahoo.com>
+	<4B67451F.8040206@tmr.com>
+	<20100202093738.44b4fece@notabene.brown>
+	<4B684087.50001@tmr.com>
+	<20100211161444.7a0ea7bb@notabene.brown>
+	<20100211175133.GA30187@atlantis.cc.ndsu.nodak.edu>
+	<4B7B0D45.7040801@tmr.com>
+	<6db64f7872286165ac1fd3436e9d6476@localhost>
+	<20100218100547.7aecdc34@notabene.brown>
+	<4B853BBF.7000607@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100224181219.GA8043@cthulhu.home.robinhill.me.uk>
+In-Reply-To: <4B853BBF.7000607@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Steven Haigh <netwiz@crc.id.au>, Bryan Mesich <bryan.mesich@ndsu.edu>, Jon@eHardcastle.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Am 24.02.2010 19:12, schrieb Robin Hill:
+On Wed, 24 Feb 2010 09:46:23 -0500
+Bill Davidsen <davidsen@tmr.com> wrote:
 
->> mdadm --stop /dev/md4
->>
->> ddrescue /dev/sda4 /dev/sdd4
->>
->> mdadm --assemble --force /dev/md4 /dev/sdb4 /dev/sdd4
->>
->> ??
->>
-> Yes, that'd be what I'd recommend - the ddrescue will only need to make
-> a single pass across sda4 (except for failed blocks of course), so will
-> have the lowest risk of exacerbating the disk problems.  Of course, the
-> practicality of doing the assemble will depend on the number of
-> unreadable blocks found by ddrescue.
+> > There is no question of data corruption.
+> > When memory changes between being written to one device and to another, this
+> > does not cause corruption, only inconsistency.   Either the block will be
+> > written again consistently soon, or it will never be read.
+> >     
+> 
+> Just what is it that rewrites the data block? The user program doesn't 
+> know it's needed, the filesystem, if any, doesn't know it's needed, and 
+> as far as I can tell md doesn't do checksum before issuing the write and 
+> after the last write is done. Doesn't make a copy and write from that. 
+> So what sees that the data has changed and rewrites it?
+> 
 
-I decided to somehow roll back.
+The filesystem re-writes the block, though probably it is more accurate to
+say 'the page cache' rewrites the block (the page cache is essentially just a
+library of code that the filesystem uses).
 
-As far as we see we lose 1.5 hrs of work done by some people ... thanks
-to the rsnapshots ...
+When a page is changed, its 'Dirty' flag is set.
+Before a page is written out, the Dirty flag is cleared.
+So if a page is written differently to two devices, then it must have been
+changed after the Dirty flag was clear, so the Dirty flag will be set, so the
+page cache will try to write it out again (after about 30 seconds or at
+unmount time).
 
-The LV containing the VM was/is healthy, I was able to copy the
-vm-directory fine and the VM boots and runs. No work lost here.
+When accessing a block device directly ( > /dev/md0 ) the page cache is still
+used and will still write out any page that has the Dirty flag set.
 
-So far I don't use that flaky md4 for now ... doing the ddrescue would
-take quite some time and this box has to be UP tomorrow.
+If you open /dev/md0 with O_DIRECT there is no page cache involved and so no
+setting of Dirty flags.  So you could engineer a situation with O_DIRECT
+that writes different data to the two devices, but you would have to try
+fairly hard.
 
-And additionally I wouldn't know about the result.
-
-I'll decide how to proceed tomorrow. For now the data and the function
-for tomorrow comes first, even without full RAID now. So I restore stuff
-now ...
-
-I am somehow tired and exhausted now and not willing to risk what I have
-got now.
-
-> Good luck!
->     Robin
-
-Thanks a lot ... Stefan
+NeilBrown
