@@ -1,7 +1,7 @@
 From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: [mdadm PATCH 9/11] Enable OLCE for external IMSM metadata
-Date: Wed, 24 Feb 2010 07:47:09 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D1016F65CF@irsmsx503.ger.corp.intel.com>
+Subject: [mdadm PATCH 4/11] Enable OLCE for external IMSM metadata
+Date: Wed, 24 Feb 2010 07:46:15 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D1016F65C8@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -12,172 +12,174 @@ To: "Neil Brown (neilb@suse.de)" <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-From 26e5fea37d6370fca6fc2495ec5e43401464615e Mon Sep 17 00:00:00 2001
+From 18fdca0e6ffbedab216f82952b5109826f4235fe Mon Sep 17 00:00:00 2001
 From: Adam Kwolek <adam.kwolek@intel.com>
-Date: Thu, 18 Feb 2010 11:10:01 +0100
-Subject: [PATCH] OLCE: OLCE works on whole container for IMSM
+Date: Thu, 18 Feb 2010 11:07:06 +0100
+Subject: [PATCH] OLCE: Use takeover for add spare to Raid0
 
 Changes to be committed:
-	modified:   Grow.c
+	modified:   Manage.c
 
-IMSM requires that we perform OLCE for all arrays that belongs
-to container. It should be made in sequential way due to single
-copy area in metadata.
-
-When OLCE is performed for particular array
-mdadm will invoke OLCE for all arrays in container.
+Use takeover for add spare to Raid0
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
- Grow.c |  121 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 121 insertions(+), 0 deletions(-)
+ Manage.c |  114 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 113 insertions(+), 1 deletions(-)
 
-diff --git a/Grow.c b/Grow.c
-index 9b82b6f..862d82f 100644
---- a/Grow.c
-+++ b/Grow.c
-@@ -42,6 +42,117 @@
-  ***********************************************************/
- #define OLCE_ADDITIONAL_SPACE		10
+diff --git a/Manage.c b/Manage.c
+index 0b991d0..5ae4967 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -31,6 +31,110 @@
+ #define START_MD     		_IO (MD_MAJOR, 2)
+ #define STOP_MD      		_IO (MD_MAJOR, 3)
  
-+void OLCE_waitReshape(struct mdinfo *sra, int orig_level)
-+{
-+	int fd;
-+	char action[20];
 +
++struct mdinfo * takeover5to0(struct mdinfo * sra)
++{
 +	if (sra) {
-+		fd = sysfs_get_fd(sra, NULL, "sync_action");
-+		do {
-+			if (orig_level == UnSet) {
-+				fd_set rfds;
-+				FD_ZERO(&rfds);
-+				FD_SET(fd, &rfds);
-+				select(fd+1, NULL, NULL, &rfds, NULL);
++		char *c;
++		c = map_num(pers, 0);
++		if (c != NULL) {
++			int err;
++			err = sysfs_set_str(sra, NULL, "level", c);
++			if (err) {
++				fprintf(stderr, Name ": %s: could not set level "
++					"to %s for external super.\n",
++					sra->sys_name, c);
++				sysfs_free(sra);
++				sra = NULL;
 +			}
-+			else sleep (2);
-+		
-+			if (sysfs_fd_get_str(fd, action, 20) < 0) {
-+				close(fd);
-+				return;
-+			}
-+		} while  (strncmp(action, "reshape", 7) == 0);
++		}
++		sysfs_free(sra);
++		sra = NULL;
 +	}
++	return sra;
 +}
 +
 +
-+char *OLCE_GetNextVolume(int fd, int raid_disks, char *retBuf)
++struct mdinfo * takeover0to5(int fd)
 +{
-+	char *retVal = NULL;
++	struct mdinfo * retVal = NULL;
++	int devnum;
++	struct mdinfo *sra = NULL;;
 +	struct supertype *st = NULL;
++	int dev_fd = -1;
 +
-+	if ((retBuf) && (fd >-1)) {
-+		st = super_by_fd(fd);
-+		if (st != NULL) {
-+			if (st->ss->external) {
-+				int container_fd = -1;
-+				int dn;
-+				struct mdinfo *sra = NULL; 
++	devnum = fd2devnum(fd);
++	
++	if (fd > -1) {
++		sra = sysfs_read(fd, 0, GET_VERSION);
++		if (sra) {
++			st = super_by_fd(fd);
++			
++			if ((sra->array.major_version == -1) &&
++			    (strncmp(sra->text_version, "imsm", 4) == 0) &&
++			    st && st->ss->external) {
++				struct mdinfo *info;
++				dprintf("OLCE: IMSM external meta detected\n");
 +
-+				sra =sysfs_read(fd, 0, GET_VERSION);
-+				if (sra) {
-+					dn = devname2devnum(sra->text_version + 1);
-+					sysfs_free(sra);
-+					sra = NULL; 
-+					container_fd = open_dev_excl(dn);
-+					if (container_fd > -1) {
-+						sra = sysfs_read(container_fd, 0, GET_VERSION);
-+						if (sra) {
-+							if ((sra->array.major_version == -1) &&
-+							    (strncmp(sra->text_version, "imsm", 4) == 0)) {
-+								/* Check OLCE IMSM limitation */
-+								struct mdinfo *retInfo;
-+								struct mdinfo *info;
-+								dprintf("OLCE: IMSM external meta detected\n");
++				st->ss->load_super(st, fd, NULL);
++				for (info = st->ss->container_content(st); info; info = info->next) {
++					if (info->array.level == 0) {
++						char devName[1024];
 +
-+								st->ss->load_super(st, container_fd, NULL);
-+								retInfo = st->ss->container_content(st);
-+								if (retInfo) {
-+									for (info = retInfo ; info; info = info->next) {
-+										if ((info->array.level ==0) ||
-+										    (info->array.level ==5)){
-+											int delta_disks = raid_disks - info->array.raid_disks;
-+											if (delta_disks>0) {
-+												sprintf(retBuf, "/dev/md/%s",  info->name);
-+												retVal = retBuf;
-+												break;
-+											}
-+										}
-+									}
-+								}
-+							}
++						sprintf( devName, "/dev/md/%s",info->name);
++						dev_fd = open_mddev(devName , 1);
++
++						if (dev_fd > -1) {
 +							sysfs_free(sra);
-+							sra = NULL;
++							sra = sysfs_read(dev_fd, 0, GET_VERSION);
++							if (sra) {
++								char *c;
++								int err;
++
++								c = map_num(pers, 5 );
++								if (c == NULL)
++									break;
++
++								err = sysfs_set_str(sra, NULL,
++									"level", c);
++								if (err) {
++									fprintf(stderr, Name 
++										": %s: could not set level to "
++										"%s for external super.\n",
++										sra->sys_name, c);
++									break;
++								}
++								retVal = sra; /* return to this raid level */
++								sra = NULL;   /* do not release */
++								
++								/* send update with return level
++								 * return lelel tells monitor to:
++								 * - after reshape return automatically to this level
++								 * - if return level is set do not activate spares
++								 */
++
++								/* start mdmon after takeover */
++								if (!mdmon_running(devnum)) {
++									/* if mdmon is not running, start it */
++									start_mdmon(devnum);
++									ping_monitor(devnum2devname(devnum));
++									sleep(1);
++								}
++								break;
++							}
 +						}
-+						close(container_fd);
 +					}
 +				}
 +			}
-+			st->ss->free_super(st);
++			if (sra) sysfs_free(sra);
++			sra = NULL;
++			if (dev_fd >= 0) close (dev_fd);
 +		}
 +	}
 +	return retVal;
++
 +}
 +
-+int OLCE_processNextVolume(char *devname, int quiet, char *backup_file,
-+	long long size, int level, char *layout_str, int chunksize, int raid_disks,
-+	struct mdinfo *sra, int orig_level)
-+{
-+	int fd;
-+	char nextVolumeBuf[100];
-+	char *nextVolume;
-+	int retVal = 0;
-+
-+	fd = open(devname, O_RDONLY | O_DIRECT);
-+	if (fd > -1) {
-+		nextVolume = OLCE_GetNextVolume(fd, raid_disks, nextVolumeBuf);
-+		close (fd);
-+
-+		if (nextVolume) {
-+			fd = open_mddev(nextVolume, 1);
-+			if (fd > -1) {
-+				size = -1;
-+				OLCE_waitReshape( sra, orig_level);
-+				retVal = Grow_reshape(nextVolume, fd, quiet, backup_file, size,
-+						level, layout_str, chunksize, raid_disks);
-+				close (fd);
-+			}
-+		}
-+	}
-+	return retVal;
-+}
-+
- int OLCE_AllowProceed(int fd)
+ int Manage_ro(char *devname, int fd, int readonly)
  {
- 	int retVal = 0;
-@@ -621,6 +732,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
- 	unsigned long long array_size;
- 	int changed = 0;
- 	int done;
-+	int raid_disks2 = raid_disks;
+ 	/* switch to readonly or rw
+@@ -685,10 +789,15 @@ int Manage_subdevs(char *devname, int fd,
+ 						dv->devname);
+ 					return 1;
+ 				}
++				/* OLCE: Raid 0 add spare via takeover */
++				struct mdinfo *return_raid0_sra = NULL;
++				/* try to perform takeover if needed */
++				return_raid0_sra = takeover0to5(container_fd);
  
- 	struct mdinfo *sra;
- 	struct mdinfo *sd;
-@@ -1545,6 +1657,15 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
- 						devname, c);
- 			}
- 			
-+			if (done >= 0) {
-+				OLCE_processNextVolume(devname, quiet, backup_file, size, level, 
-+							layout_str, chunksize, raid_disks2,
-+							sra, orig_level);
-+			} else {
-+				fprintf(stderr, Name ": Operation for device %s returns error.\n",
-+						devname);
-+			}
-+			
- 			sysfs_free(sra);
- 			sra = NULL;
- 			exit(0);
+ 				if (!mdmon_running(devnum)) {
+ 					fprintf(stderr, Name ": add failed for %s: mdmon not running\n",
+ 						dv->devname);
++					return_raid0_sra = takeover5to0(return_raid0_sra);
+ 					close(container_fd);
+ 					return 1;
+ 				}
+@@ -697,6 +806,7 @@ int Manage_subdevs(char *devname, int fd,
+ 				if (!sra) {
+ 					fprintf(stderr, Name ": add failed for %s: sysfs_read failed\n",
+ 						dv->devname);
++					return_raid0_sra = takeover5to0(return_raid0_sra);
+ 					close(container_fd);
+ 					return 1;
+ 				}
+@@ -709,10 +819,12 @@ int Manage_subdevs(char *devname, int fd,
+ 				if (sysfs_add_disk(sra, &new_mdi, 0) != 0) {
+ 					fprintf(stderr, Name ": add new device to external metadata"
+ 						" failed for %s\n", dv->devname);
++					return_raid0_sra = takeover5to0(return_raid0_sra);
+ 					close(container_fd);
+ 					return 1;
+ 				}
+-				
++				return_raid0_sra = takeover5to0(return_raid0_sra);
++
+ 				ping_monitor(devnum2devname(devnum));
+ 				sysfs_free(sra);
+ 				sra = NULL;
 -- 
 1.6.0.2
 
