@@ -1,7 +1,7 @@
 From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: [md PATCH 7/8] Enable OLCE for external IMSM metadata
-Date: Wed, 24 Feb 2010 07:44:06 +0000
-Message-ID: <905EDD02F158D948B186911EB64DB3D1016F65BF@irsmsx503.ger.corp.intel.com>
+Subject: [mdadm PATCH 0/11] Enable OLCE for external IMSM metadata
+Date: Wed, 24 Feb 2010 07:44:33 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D1016F65C1@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -12,39 +12,50 @@ To: "Neil Brown (neilb@suse.de)" <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-From c16036b925f2929df6eaabeaa451fc5361ec7f0f Mon Sep 17 00:00:00 2001
-From: Adam Kwolek <adam.kwolek@intel.com>
-Date: Thu, 18 Feb 2010 11:27:51 +0100
-Subject: [PATCH] OLCE: Fix for bio I/O error
+The following patch series enables OLCE (On-Line Capacity Expansion) functionality for external IMSM metadata.
 
-Changes to be committed:
-	modified:   raid5.c
-During OLCE/reshape when delta_disks is greatrer than 0, none of request was rescheduled.
-This leads to bio I/O error as requests confilcts with reshape process
+Please note that this patch series requires takeover functionality.
 
-Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
- drivers/md/raid5.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 724798e..656a852 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -3920,6 +3920,13 @@ static int make_request(struct request_queue *q, struct bio * bi)
- 					spin_unlock_irq(&conf->device_lock);
- 					schedule();
- 					goto retry;
-+				} else {
-+					if ((mddev->delta_disks > 0) &&
-+					    (logical_sector < conf->reshape_safe)) {
-+						spin_unlock_irq(&conf->device_lock);
-+						schedule();
-+						goto retry;
-+					}
- 				}
- 			}
- 			spin_unlock_irq(&conf->device_lock);
+Adam Kwolek (11):
+      OLCE: Rebuild FIX
+      OLCE: Workaround for mdstat problems
+      OLCE: OLCE works on whole container for IMSM
+      OLCE: Add OLCE Limitations
+      OLCE: use takeover to raid5 for raid0 OLCE
+      OLCE: OLCE implementation
+      OLCE: Prepare takeover for OLCE
+      OLCE: Use takeover for add spare to Raid0
+      OLCE: abuf, bbuf buffer managment fix
+      OLCE: Before OLCE code cleanup and add checks
+      OLCE: Add show_meta()
+
+
+ mdadm/mdadm/Assemble.c       |   14 -
+ mdadm/mdadm/Create.c         |   10 
+ mdadm/mdadm/Detail.c         |   11 -
+ mdadm/mdadm/Grow.c           |  571 ++++++++++++++++++++++++--
+ mdadm/mdadm/Incremental.c    |   28 +
+ mdadm/mdadm/Manage.c         |  188 +++++++--
+ mdadm/mdadm/Monitor.c        |   23 +
+ mdadm/mdadm/config.c         |   49 +-
+ mdadm/mdadm/dlink.c          |   17 +
+ mdadm/mdadm/managemon.c      |  295 +++++++++++--
+ mdadm/mdadm/mapfile.c        |   23 +
+ mdadm/mdadm/mdadm.h          |    1 
+ mdadm/mdadm/mdmon.c          |    7 
+ mdadm/mdadm/mdmon.h          |   13 +
+ mdadm/mdadm/mdopen.c         |    4 
+ mdadm/mdadm/mdstat.c         |   26 +
+ mdadm/mdadm/monitor.c        |  164 +++++++
+ mdadm/mdadm/msg.c            |   10 
+ mdadm/mdadm/platform-intel.c |    9 
+ mdadm/mdadm/restripe.c       |   12 -
+ mdadm/mdadm/super-intel.c    |  919 ++++++++++++++++++++++++++++++++++--------
+ mdadm/mdadm/sysfs.c          |   60 ++-
+ mdadm/mdadm/util.c           |  187 ++++++---
+ 23 files changed, 2177 insertions(+), 464 deletions(-)
+
 -- 
-1.6.0.2
-
+Adam Kwolek
