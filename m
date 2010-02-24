@@ -1,119 +1,92 @@
 From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: Why does one get mismatches?
-Date: Wed, 24 Feb 2010 09:46:23 -0500
-Message-ID: <4B853BBF.7000607@tmr.com>
-References: <869541.92104.qm@web51304.mail.re2.yahoo.com>	<4B67451F.8040206@tmr.com>	<20100202093738.44b4fece@notabene.brown>	<4B684087.50001@tmr.com>	<20100211161444.7a0ea7bb@notabene.brown>	<20100211175133.GA30187@atlantis.cc.ndsu.nodak.edu>	<4B7B0D45.7040801@tmr.com>	<6db64f7872286165ac1fd3436e9d6476@localhost> <20100218100547.7aecdc34@notabene.brown>
+Date: Wed, 24 Feb 2010 09:54:17 -0500
+Message-ID: <4B853D99.1040902@tmr.com>
+References: <869541.92104.qm@web51304.mail.re2.yahoo.com>	<4B67451F.8040206@tmr.com>	<20100202093738.44b4fece@notabene.brown>	<4B684087.50001@tmr.com>	<20100211161444.7a0ea7bb@notabene.brown>	<20100211175133.GA30187@atlantis.cc.ndsu.nodak.edu>	<4B7B0D45.7040801@tmr.com>	<6db64f7872286165ac1fd3436e9d6476@localhost>	<20100218100547.7aecdc34@notabene.brown>	<20100219151809.GB4995@lazy.lzy> <20100220090208.06c1130f@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100218100547.7aecdc34@notabene.brown>
+In-Reply-To: <20100220090208.06c1130f@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: Steven Haigh <netwiz@crc.id.au>, Bryan Mesich <bryan.mesich@ndsu.edu>, Jon@eHardcastle.com, linux-raid@vger.kernel.org
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Steven Haigh <netwiz@crc.id.au>, Bryan Mesich <bryan.mesich@ndsu.edu>, Jon@eHardcastle.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Neil Brown wrote:
-> On Wed, 17 Feb 2010 08:38:11 +1100
-> Steven Haigh <netwiz@crc.id.au> wrote:
+> md is not in a position to lock the page - there is simply no way it can stop
+> the filesystem from changing it.
+> The only thing it could do would be to make a copy, then write the copy out.
+> This would incur a performance cost.
 >
 >   
->> On Tue, 16 Feb 2010 16:25:25 -0500, Bill Davidsen <davidsen@tmr.com>
->> wrote:
->>     
->>> Bryan Mesich wrote:
->>>       
->>>> On Thu, Feb 11, 2010 at 04:14:44PM +1100, Neil Brown wrote:
->>>>   
->>>>         
->>>>>> This whole discussion simply shows that for RAID-1 software RAID is
->>>>>> less
->>>>>> reliable than hardware RAID (no, I don't mean fake-RAID), because it 
->>>>>> doesn't pin the data buffer until all copies are written.
->>>>>>       
->>>>>>             
->>>>> That doesn't make it less reliable.  It just makes it more confusing.
->>>>>     
->>>>>           
->>>> I agree that linux software RAID is no less reliable than
->>>> hardware RAID with regards to the above conversation.  It's
->>>> however confusing to have a counter that indicates there are
->>>> problems with a RAID 1 array when in fact there is not.
->>>>   
->>>>         
->>> Sorry, but real hardware raid is more reliable than software raid, and 
->>> Neil's justification for not doing smart recovery mentions it. Note this
->>>       
->>> referes to real hardware raid, not fakeraid which is just some firmware 
->>> in a BIOS to use the existing hardware.
->>>
->>> The issue lies with data changing between write to multiple drives. In 
->>> hardware raid the data traverses the memory bus once, only once, and 
->>> goes into cache in the controller, from which it is written to all 
->>> mirrored drives. With software raid an individual write is done to each 
->>> drive, and if the data in the buffer changes between writes to one drive
->>>       
->>> or the other you get different values. Neil may be convinced that the OS
->>>       
->>> somehow "knows" which of the mirror copies is correct, ie. most recent, 
->>> and never uses the stale data, but if that information was really 
->>> available reads would always return the latest value and it wouldn't be 
->>> possible to read the same file multiple times and get different MD5sums.
->>>       
->>> It would also be possible to do a stable smart recovery by propagating 
->>> the most recent copy to the other mirror drives.
->>>
->>> I hoped that mounting data=journal would lead to consistency, that seems
->>>       
->>> not to be true either.
->>>       
->> I agree Bill, there is an issue with the software RAID1 when it comes down
->> to some hardware. I have one machine where the ONLY way to stop the root
->> filesystem going readonly due to journal issues is to remove RAID. Having
->> RAID1 enabled gives silent corruption of both data and the journal at
->> seemingly random times.
->>
->> I can see the data corruption from running a verify between RPM and data
->> on the drive. Reinstalling these packages fixes things - until something
->> random things get corrupted next time.
+Two thoughts on that - one is that for critical data, give me the option 
+at array start time, make the copy, slow the performance and make it 
+more consistent. My second thought is that a checksum of the page before 
+initiating write and after all writes are complete might be less of a 
+performance hit, and still could detect that the buffer had changed.
+>> It seems to me, maybe I'm wrong, not a so safe design.
 >>     
 >
-> Sounds very much like dodgy drives.
+> I think you are wrong.
 >
 >   
->> The myth that data corruption in RAID1 ONLY happens to swap and/or unused
->> space on a drive is absolute rubbish.
+> This is correct.  However it would be equally correct if you were talking
+> about s normal disk drive rather than a RAID1 pair.
+> If the filesystem changes the page (or allows it to change) while a write is
+> pending, then it cannot know what actual data was written.  So it must write
+> the block out again before it ever reads it in.
+> RAID1 is no different to any other device in this respect.
+>
+>
+>   
+>> In other words, would it be better, for the md layer,
+>> to be robust against these kind of threats?
 >>
 >>     
 >
-> Absolute rubbish does seem to be a suitable phrase here.
-> There is no question of data corruption.
-> When memory changes between being written to one device and to another, this
-> does not cause corruption, only inconsistency.   Either the block will be
-> written again consistently soon, or it will never be read.
->   
-
-Just what is it that rewrites the data block? The user program doesn't 
-know it's needed, the filesystem, if any, doesn't know it's needed, and 
-as far as I can tell md doesn't do checksum before issuing the write and 
-after the last write is done. Doesn't make a copy and write from that. 
-So what sees that the data has changed and rewrites it?
-
-> If the host crashes before the blocks are made consistent, then the 
-> inconsistency will not be visible as the resync will fix it.
+> Possibly, but at what cost?
+> There are two ways that I can imagine to 'solve' this issue.
 >
-> If you are getting any corruption, then it is NOT due to this facet of the
-> RAID1 implementation - it due to something else.
-> My guess is bad hardware - anywhere from memory to hard drive.
+> 1/ always copy the page before writing.  This would incur a significant
+>   overhead, both in the complexity of pre-allocation memory and in the
+>   delay taken to perform the copy.  And it would very rarely be actually
+>   needed.
+> 2/ Have the filesystem protect the page from changes while it is being
+>    written.  This is quite possible for the filesystem to do (while it
+>    is impossible for md to do).  There could be some performance
+>    cost with memory-mapped pages as they would need to be unmapped,
+>    but there would be no significant cost for reads, writes, and filesystem
+>    metadata operations.
 >   
 
-Having switched an array from three way raid-1 to raid-6, using the same 
-kernel, utilities, and hardware, I can speak to that. When I first 
-started to run checks, I took the array offline to do repair, and 
-usually saw ~12k mismatches by the end of a week. After changing the 
-array to raid-6 I never had a mismatch again. Therefore, while hardware 
-clearly can be a factor, it is unlikely to be the cause of all mismatch 
-events.
+Your next section somewhat mirrors my thought on md checking the data 
+after write to be sure it didn't change.
+
+>    Further, any filesystem that wants to make use of the integrity checks
+>    that newer drives provide (where the filesystem provides a 'checksum' for
+>    the block which gets passed all the way down and written to storage, and
+>    returned on a read) will need to do this anyway.  So it is likely the in
+>    the near future all significant filesystems will provide all the
+>    guarantees md needs or order to simply do nothing different.
+>
+> So my feeling is that md is doing the best thing already.
+>
+> I believe 'swap' will always be an issue as unmapping swap pages during write
+> could be a serious performance cost.  It might be that the best thing to do
+> with swap is to somehow mark the area of an array used for swap as "don't
+> care" so md never bothers to resync it, and never reports inconsistencies
+> there, as they really are not an issue.
+>
+> NeilBrown
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>   
+
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
