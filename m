@@ -1,75 +1,33 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+From: John Robinson <john.robinson@anonymous.org.uk>
 Subject: Re: Why does one get mismatches?
-Date: Thu, 25 Feb 2010 09:41:41 +0100
-Message-ID: <20100225084141.GA2927@lazy.lzy>
-References: <4B684087.50001@tmr.com>
- <20100211161444.7a0ea7bb@notabene.brown>
- <20100211175133.GA30187@atlantis.cc.ndsu.nodak.edu>
- <4B7B0D45.7040801@tmr.com>
- <6db64f7872286165ac1fd3436e9d6476@localhost>
- <20100218100547.7aecdc34@notabene.brown>
- <4B853BBF.7000607@tmr.com>
- <yq1ocjemx46.fsf@sermon.lab.mkp.net>
- <20100224185106.GA5426@lazy.lzy>
- <20100225092106.5b7dd6ba@notabene.brown>
+Date: Thu, 25 Feb 2010 08:47:59 +0000
+Message-ID: <4B86393F.4040707@anonymous.org.uk>
+References: <869541.92104.qm@web51304.mail.re2.yahoo.com>	<4B67451F.8040206@tmr.com>	<20100202093738.44b4fece@notabene.brown>	<4B684087.50001@tmr.com>	<20100211161444.7a0ea7bb@notabene.brown>	<20100211175133.GA30187@atlantis.cc.ndsu.nodak.edu>	<4B7B0D45.7040801@tmr.com>	<6db64f7872286165ac1fd3436e9d6476@localhost>	<20100218100547.7aecdc34@notabene.brown>	<4B853BBF.7000607@tmr.com> <20100225083203.4936ee63@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100225092106.5b7dd6ba@notabene.brown>
+In-Reply-To: <20100225083203.4936ee63@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bill Davidsen <davidsen@tmr.com>, Steven Haigh <netwiz@crc.id.au>, Bryan Mesich <bryan.mesich@ndsu.edu>, Jon@eHardcastle.com, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
+On 24/02/2010 21:32, Neil Brown wrote:
+[...]
+> If you open /dev/md0 with O_DIRECT there is no page cache involved and so no
+> setting of Dirty flags.  So you could engineer a situation with O_DIRECT
+> that writes different data to the two devices, but you would have to try
+> fairly hard.
 
-> I certainly believe you.
+Hang on. O_DIRECT sets off all sort of alarm bells for me, not that I 
+understand it properly. Of course there's O_DIRECT on files too. Linus 
+Torvalds is quite outspoken about it: http://kerneltrap.org/node/7563
 
-thank you!
+Could we be seeing mismatches because applications are opening their 
+files with O_DIRECT in a (perhaps misguided) attempt to get better 
+performance?
 
-> That is really odd!  Both the kernel ext3 module (triggered by '-text3')
-> and the 'mount' program use exactly the same test - look for the magic
-> number in the superblock at 1K into the device.
+Cheers,
 
-Today I tried: blkid -p /dev/md1 (this time the live CD
-autoassembled the md device) and it returned something
-like: ambivalent result (probably more than one filesystem...)
+John.
 
-Strange thing is that, the HDDs were brand new, no older
-partitions or filesystem were there.
-
-Anyway, I've one small correction, the RAID is not 10 f2,
-on this PC, but (due to different installation) a RAID-1
-with superblock 0.9 and the device partitions are set
-to 0xFD (RAID autoassemble).
- 
-> Would you be able to get the first 4K from each device in the raid10:
->    dd if=/dev/whatever of=/tmp/whatever bs=1K count=4
-> 
-> and the tar/gz those up and send them to me.  That might give some clue.
-> Unless the raid metadata is 1.1 or 1.2 - then I would need blocks further in
-> the device, as the 'data offset'.
-> The --detail output of the array might help too.
-
-I dumped the first 4K of each device, they're identical
-(so no mismatch there, at least), I'll send them to you,
-together with the detail output.
- 
-> > Running a fsck did not find anything wrong, but it did
-> > not repair anything too.
-> 
-> Did you use "fsck -f" ??
-
-Yep.
- 
-> Until we know what is wrong, it is hard to suggest a fix.
-
-Thanks a lot (also because this could turn out to be unrelated
-with this mailing list).
-
-bye,
-
--- 
-
-piergiorgio
