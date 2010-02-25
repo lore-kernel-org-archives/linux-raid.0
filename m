@@ -1,92 +1,58 @@
 From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: md homehost
-Date: Thu, 25 Feb 2010 08:16:14 +0100
-Message-ID: <87eik94wg1.fsf@frosties.localdomain>
-References: <20100218044004.GC5136@lapse.rw.madduck.net>
-	<20100218161012.704b43a6@notabene.brown>
-	<20100218052145.GA7178@lapse.rw.madduck.net>
-	<20100218163448.0d3f3107@notabene.brown>
-	<20100219004237.GC25162@lapse.rw.madduck.net>
-	<20100219091619.GA2964@lazy.lzy>
-	<20100221174007.GB19058@lapse.rw.madduck.net>
-	<20100221201304.GB2570@lazy.lzy>
-	<20100222091632.GE2641@lapse.rw.madduck.net>
-	<20100223133028.279e0174@notabene.brown>
-	<20100223062700.GB19666@lapse.rw.madduck.net>
-	<20100224111006.7024c84e@notabene.brown>
-	<87d3zulpj7.fsf@frosties.localdomain>
-	<20100225093018.12d3e14d@notabene.brown>
+Subject: Re: Why does one get mismatches?
+Date: Thu, 25 Feb 2010 08:22:10 +0100
+Message-ID: <87aaux4w65.fsf@frosties.localdomain>
+References: <869541.92104.qm@web51304.mail.re2.yahoo.com>
+	<4B67451F.8040206@tmr.com> <20100202093738.44b4fece@notabene.brown>
+	<4B684087.50001@tmr.com> <20100211161444.7a0ea7bb@notabene.brown>
+	<20100211175133.GA30187@atlantis.cc.ndsu.nodak.edu>
+	<4B7B0D45.7040801@tmr.com>
+	<6db64f7872286165ac1fd3436e9d6476@localhost>
+	<20100218100547.7aecdc34@notabene.brown> <4B853BBF.7000607@tmr.com>
+	<20100225083203.4936ee63@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100225093018.12d3e14d@notabene.brown> (Neil Brown's message of
-	"Thu, 25 Feb 2010 09:30:18 +1100")
+In-Reply-To: <20100225083203.4936ee63@notabene.brown> (Neil Brown's message of
+	"Thu, 25 Feb 2010 08:32:03 +1100")
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: Goswin von Brederlow <goswin-v-b@web.de>, martin f krafft <madduck@madduck.net>, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, 567468@bugs.debian.org, Daniel Reurich <daniel@centurion.net.nz>, linux-raid <linux-raid@vger.kernel.org>
+Cc: Bill Davidsen <davidsen@tmr.com>, Steven Haigh <netwiz@crc.id.au>, Bryan Mesich <bryan.mesich@ndsu.edu>, Jon@eHardcastle.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Neil Brown <neilb@suse.de> writes:
 
-> On Wed, 24 Feb 2010 14:41:16 +0100
-> Goswin von Brederlow <goswin-v-b@web.de> wrote:
+> On Wed, 24 Feb 2010 09:46:23 -0500
+> Bill Davidsen <davidsen@tmr.com> wrote:
 >
->> Neil Brown <neilb@suse.de> writes:
+>> > There is no question of data corruption.
+>> > When memory changes between being written to one device and to another, this
+>> > does not cause corruption, only inconsistency.   Either the block will be
+>> > written again consistently soon, or it will never be read.
+>> >     
 >> 
->> > On Tue, 23 Feb 2010 07:27:00 +0100
->> > martin f krafft <madduck@madduck.net> wrote:
->> >> The only issue homehost protects against, I think, is machines that
->> >> use /dev/md0 directly from grub.conf or fstab.
->> >
->> > That is exactly correct.  If no code or config file depends on a name like
->> > /dev/mdX or /dev/md/foo, then you don't need to be concerned about the whole
->> > homehost thing.
->> > You can either mount by fs-uuid, or mount e.g.
->> >    /dev/disk/by-id/md-uuid-8fd0af3f:4fbb94ea:12cc2127:f9855db5 
+>> Just what is it that rewrites the data block? The user program doesn't 
+>> know it's needed, the filesystem, if any, doesn't know it's needed, and 
+>> as far as I can tell md doesn't do checksum before issuing the write and 
+>> after the last write is done. Doesn't make a copy and write from that. 
+>> So what sees that the data has changed and rewrites it?
 >> 
->> What if you have two raids (one local, one from the other hosts that
->> broke down) and both have LVM on it with /dev/vg/root?
->> 
->> Shouldn't it only assemble the local raid (as md0 or whatever) and then
->> only start the local volume group? If it assembles the remote raid as
->> /dev/md127 as well then lvm will have problems and the boot will likely
->> (even randomly) go wrong since only one VG can be activated.
->> 
->> I think it is pretty common for admins to configure LVM to the same
->> volume group name on different systems. So if you consider raids being
->> pluged into other systems please keep this in mind.
 >
-> You are entirely correct.  However lvm problems are not my problems.
+> The filesystem re-writes the block, though probably it is more accurate to
+> say 'the page cache' rewrites the block (the page cache is essentially just a
+> library of code that the filesystem uses).
 >
-> It has always been my position that the best way to configure md is to
-> explicitly list your arrays in mdadm.conf.  But people seem to not like this
-> and want it to all be 'automatic'.  So I do my best to make it as automatic
-> as possible but still remove as many of the possible confusion that this can
-> cause as possible.  But I cannot remove them all.
->
-> If you move disks around and boot and lvm gets confused because there are two
-> things call "/dev/vg/root", then I'm sorry but there is nothing I can do
-> about that.  If you had an mdadm.conf which listed you md arrays, and had
->    auto -all
-> then you can be sure that mdadm would not be contributing to this problem.
->
-> NeilBrown
+> When a page is changed, its 'Dirty' flag is set.
+> Before a page is written out, the Dirty flag is cleared.
+> So if a page is written differently to two devices, then it must have been
+> changed after the Dirty flag was clear, so the Dirty flag will be set, so the
+> page cache will try to write it out again (after about 30 seconds or at
+> unmount time).
 
-Yes you can do something about it: Only start the raid arrays with the
-correct homehost.
-
-If the homehost is only used to decide wether the prefered minor in the
-metadata is used for the device name then I feel the feature is entirely
-useless. It would only help in "stupid" configurations, i.e. when you
-use the device name directly.
-
-Another scenario where starting a raid with the wrong homehost would be
-bad is when the raid is degraded and you have a global spare. You
-probably wouldn't want the global spare of one host to be used to repair
-a raid of another host.
+So maybe MD could check the dirty flag after write and then output a
+warning so we can track down the issue. MD could also rewrite the page
+prior to setting the disks in-sync until the dirty bit is clear after a
+write.
 
 MfG
         Goswin
-
-PS: If a raid is not listed in mdadm.conf doesn't it currently start too
-but the name can be random?
