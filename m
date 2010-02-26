@@ -1,86 +1,60 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm 3.1.1  fails to hot remove device - No such device or
- address
-Date: Sat, 27 Feb 2010 07:42:33 +1100
-Message-ID: <20100227074233.65f90d97@notabene.brown>
-References: <D27CA15508148C428A25104ADEFAAC8105728535@CORPUSMX50C.corp.emc.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Why does one get mismatches?
+Date: Fri, 26 Feb 2010 15:48:58 -0500
+Message-ID: <4B8833BA.4010503@tmr.com>
+References: <869541.92104.qm@web51304.mail.re2.yahoo.com>	<4B67451F.8040206@tmr.com>	<20100202093738.44b4fece@notabene.brown>	<4B684087.50001@tmr.com>	<20100211161444.7a0ea7bb@notabene.brown>	<20100211175133.GA30187@atlantis.cc.ndsu.nodak.edu>	<4B7B0D45.7040801@tmr.com>	<6db64f7872286165ac1fd3436e9d6476@localhost>	<20100218100547.7aecdc34@notabene.brown>	<20100219151809.GB4995@lazy.lzy>	<20100220090208.06c1130f@notabene.brown>	<4B853D99.1040902@tmr.com> <20100225083748.42f024aa@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <D27CA15508148C428A25104ADEFAAC8105728535@CORPUSMX50C.corp.emc.com>
+In-Reply-To: <20100225083748.42f024aa@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Foster_Brian@emc.com
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Steven Haigh <netwiz@crc.id.au>, Bryan Mesich <bryan.mesich@ndsu.edu>, Jon@eHardcastle.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 26 Feb 2010 08:37:51 -0500
-Foster_Brian@emc.com wrote:
+Neil Brown wrote:
+> On Wed, 24 Feb 2010 09:54:17 -0500
+> Bill Davidsen <davidsen@tmr.com> wrote:
+>
+>   
+>> Neil Brown wrote:
+>>     
+>>> md is not in a position to lock the page - there is simply no way it can stop
+>>> the filesystem from changing it.
+>>> The only thing it could do would be to make a copy, then write the copy out.
+>>> This would incur a performance cost.
+>>>
+>>>     
+>>>       
+>> Two thoughts on that - one is that for critical data, give me the option 
+>> at array start time, make the copy, slow the performance and make it 
+>> more consistent. My second thought is that a checksum of the page before 
+>> initiating write and after all writes are complete might be less of a 
+>> performance hit, and still could detect that the buffer had changed.
+>>     
+>
+>
+> The idea of calculating a checksum before and after certainly has some merit,
+> if we could choose a checksum algorithm which was sufficiently strong and
+> sufficiently fast, though in many cases a large part of the cost would just be
+> bringing the page contents into cache - twice.
+>
+> It has the advantage over copying the page of not needing to allocate extra
+> memory.
+>
+> If someone wanted to try an prototype this and see how it goes, I'd be happy
+> to advise....
+>   
 
-> Hi Neil,
-> 
-> We run mdadm in a NAS framework and recently updated to 3.1.1 after
-> using older revs for quite some time. We recently observed an issue
-> where we've been unable to hot remove a failed device from an array,
-> where that member device has been physically removed from the system.
-> 'mdadm /dev/md# -r /dev/sdg#' returns a "No such device or address
-> error."
-> 
-> It turns out this occurs due to the dev_open() call added in the code
-> referenced below. The hot remove works as expected if we revert this
-> change with the patch shown below. Was the dev_open() added for some
-> functional reason I'm not aware of (i.e., are we now breaking some other
-> error path by doing this)? For future reference, is there a better way
-> to handle the situation where the member device is physically gone? Note
-> that we currently have a static set of devnodes; no udev or anything
-> like that. Thanks.
+Disagree if you wish, but MD5 should be fine for this. While it is not 
+cryptographically strong on files, where the size can be changed and 
+evil doers can calculate values to add at the end of the data, it should 
+be adequate on data of unchanging size. It's cheap, fast, and readily 
+available.
 
-Thanks for the report.  I have put it on my list of things to check before
-releasing 3.1.2.  The switch to use 'dev_open' was to allow ->devname to be
-e.g. "8:32" which is used by the spare-group code in Monitor.c.
-However it is a regression and I will give some thought to fixing it.
-
-However the "recommended" way of removing devices which have been detached is:
-   mdadm /dev/md# -r detached
-
-NeilBrown
-
-
-> 
-> Brian
-> 
-> diff -urpN mdadm-3.1.1/Manage.c mdadm-3.1.1_b/Manage.c
-> --- mdadm-3.1.1/Manage.c	2009-11-19 00:13:29.000000000 -0500
-> +++ mdadm-3.1.1_b/Manage.c	2010-02-26 07:51:24.000000000 -0500
-> @@ -424,19 +424,12 @@ int Manage_subdevs(char *devname, int fd
->  		} else {
->  			j = 0;
->  
-> -			tfd = dev_open(dv->devname, O_RDONLY);
-> -			if (tfd < 0 || fstat(tfd, &stb) != 0) {
-> -				fprintf(stderr, Name ": cannot find %s:
-> %s\n",
-> -					dv->devname, strerror(errno));
-> -				if (tfd >= 0)
-> -					close(tfd);
-> +			if (stat(dv->devname, &stb)) {
-> +				fprintf(stderr, Name ": cannot find %s:
-> %s\n", dv->devname, strerror(errno));
->  				return 1;
->  			}
-> -			close(tfd);
->  			if ((stb.st_mode & S_IFMT) != S_IFBLK) {
-> -				fprintf(stderr, Name ": %s is not a "
-> -					"block device.\n",
-> -					dv->devname);
-> +				fprintf(stderr, Name ": %s is not a
-> block device.\n", dv->devname);
->  				return 1;
->  			}
->  		}
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "We can't solve today's problems by using the same thinking we
+   used in creating them." - Einstein
 
