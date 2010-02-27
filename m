@@ -1,58 +1,88 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: mdadm software raid + ext4, capped at ~350MiB/s limitation/bug?
-Date: Sat, 27 Feb 2010 08:47:48 -0500 (EST)
-Message-ID: <alpine.DEB.2.00.1002270840410.27192@p34.internal.lan>
+From: Luca Berra <bluca@comedia.it>
+Subject: [mdadm PATCH 2/3] fix compiler warnings
+Date: Sat, 27 Feb 2010 14:53:03 +0100
+Message-ID: <20100227135303.GA24207@maude.comedia.it>
+References: <cover.1267264723.git.bluca@comedia.it>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
-Return-path: <linux-ext4-owner@vger.kernel.org>
-Sender: linux-ext4-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org
-Cc: Alan Piszcz <ap@solarrain.com>
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <cover.1267264723.git.bluca@comedia.it>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Neil Brown (neilb@suse.de)" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+one instance of uninitialized variable.
+unused results from read/write which we don't care about.
+one instance of unused result from posix-memalign which is checked
+further down in the code.
 
-I have two separate systems and with ext4 I cannot get speeds greater than 
-~350MiB/s when using ext4 as the filesystem on top of a raid5 or raid0. 
-It appears to be a bug with ext4 (or its just that ext4 is slower for this
-test)?
+Signed-off-by: Luca Berra <bluca@comedia.it>
+---
+   Grow.c     |    7 ++++---
+   mdmon.c    |    2 +-
+   restripe.c |    2 +-
+   3 files changed, 6 insertions(+), 5 deletions(-)
 
-Each system runs 2.6.33 x86_64.
+diff --git a/Grow.c b/Grow.c
+index 74b63b6..5806fc3 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -1096,7 +1096,7 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
+   			/* set them all just in case some old 'new_*' value
+   			 * persists from some earlier problem
+   			 */
+-			int err;
++			int err = 0;
+   			if (sysfs_set_num(sra, NULL, "chunk_size", nchunk) < 0)
+   				rv = 1, err = errno;
+   			if (!rv && sysfs_set_num(sra, NULL, "layout", nlayout) < 0)
+@@ -1414,8 +1414,9 @@ int wait_backup(struct mdinfo *sra,
+   
+   static void fail(char *msg)
+   {
+-	write(2, msg, strlen(msg));
+-	write(2, "\n", 1);
++	ssize_t rc;
++	rc = write(2, msg, strlen(msg));
++	rc = write(2, "\n", 1);
+   	exit(1);
+   }
+   
+diff --git a/mdmon.c b/mdmon.c
+index 31d45fd..70fbd0b 100644
+--- a/mdmon.c
++++ b/mdmon.c
+@@ -176,7 +176,7 @@ static void try_kill_monitor(pid_t pid, char *devname, int sock)
+   	fl = fcntl(sock, F_GETFL, 0);
+   	fl &= ~O_NONBLOCK;
+   	fcntl(sock, F_SETFL, fl);
+-	read(sock, buf, 100);
++	n = read(sock, buf, 100);
+   }
+   
+   void remove_pidfile(char *devname)
+diff --git a/restripe.c b/restripe.c
+index f673206..d885e76 100644
+--- a/restripe.c
++++ b/restripe.c
+@@ -565,7 +565,7 @@ int restore_stripes(int *dest, unsigned long long *offsets,
+   
+   	int data_disks = raid_disks - (level == 0 ? 0 : level <= 5 ? 1 : 2);
+   
+-	posix_memalign((void**)&stripe_buf, 4096, raid_disks * chunk_size);
++	i = posix_memalign((void**)&stripe_buf, 4096, raid_disks * chunk_size);
+   	if (zero == NULL) {
+   		zero = malloc(chunk_size);
+   		if (zero)
+-- 
+1.7.0
 
-Can someone please confirm?
-
-Here is ext4:
-
-# dd if=/dev/zero of=bigfile bs=1M count=10240
-10240+0 records in
-10240+0 records out
-10737418240 bytes (11 GB) copied, 29.8556 s, 360 MB/s
-
-The result is the same regardless of the RAID type (RAID-5 or RAID-0)
-
-Note, this is not a bandwidth problem:
-
-# dd if=/dev/zero of=/dev/md0 bs=1M count=10240
-10240+0 records in
-10240+0 records out
-10737418240 bytes (11 GB) copied, 17.6871 s, 607 MB/s
-
-With XFS:
-
-p63:~# mkfs.xfs -f /dev/md0
-p63:~# mount /dev/md0 /r1
-p63:~# cd /r1
-10240+0 records in
-10240+0 records out
-10737418240 bytes (11 GB) copied, 17.6078 s, 610 MB/s
-
-NOTE: With a HW raid controller (OR using XFS), I can get > 500 MiB/s, 
-this problem only occurs with SW raid (Linux/mdadm).
-
-Example (3ware 9650SE-16PML RAID-6, 15 drives (using EXT4)
-$ dd if=/dev/zero of=bigfile bs=1M count=10240
-10240+0 records in
-10240+0 records out
-10737418240 bytes (11 GB) copied, 21.1729 s, 507 MB/s
-
-Justin.
+-- 
+Luca Berra -- bluca@comedia.it
+          Communication Media & Services S.r.l.
+   /"\
+   \ /     ASCII RIBBON CAMPAIGN
+    X        AGAINST HTML MAIL
+   / \
