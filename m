@@ -1,35 +1,35 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: [mdadm PATCH 1/2] fix mdmon option parsing
-Date: Sat, 27 Feb 2010 16:21:02 +0100
-Message-ID: <20100227152102.GA20936@maude.comedia.it>
-References: <cover.1267282753.git.bluca@comedia.it> <1-2.1267282753.git.bluca@comedia.it>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1-2.1267282753.git.bluca@comedia.it>
-Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Cc: "Neil Brown (neilb@suse.de)" <neilb@suse.de>
+From: Andrea Gelmini <andrea.gelmini@gelma.net>
+Subject: [PATCH 41/66] drivers/md/linear.h: Checkpatch cleanup
+Date: Sat, 27 Feb 2010 17:51:22 +0100
+Message-ID: <1267289508-31031-42-git-send-email-andrea.gelmini@gelma.net>
+References: <1267289508-31031-1-git-send-email-andrea.gelmini@gelma.net>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1267289508-31031-1-git-send-email-andrea.gelmini@gelma.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Andrea Gelmini <andrea.gelmini@gelma.net>, Neil Brown <neilb@suse.de>, Sandeep K Sinha <sandeepksinha@gmail.com>, Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Feb 27, 2010 at 04:07:04PM +0100, Luca Berra wrote:
-> --- a/mdmon.c
-> +++ b/mdmon.c
-> @@ -244,7 +244,7 @@ static int do_fork(void)
->   void usage(void)
->  {
-> -	fprintf(stderr, "Usage: mdmon /device/name/for/container [target_dir]\n");
-> +	fprintf(stderr, "Usage: mdmon [--all] [--takeover] CONTAINER");
-oops, i missed a "\n" above
->  	exit(2);
->  }
->  @@ -262,15 +262,20 @@ int main(int argc, char *argv[])
+drivers/md/linear.h:12: ERROR: open brace '{' following struct go on the same line
 
+Signed-off-by: Andrea Gelmini <andrea.gelmini@gelma.net>
+---
+ drivers/md/linear.h |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/md/linear.h b/drivers/md/linear.h
+index 0ce29b6..3860fd8 100644
+--- a/drivers/md/linear.h
++++ b/drivers/md/linear.h
+@@ -8,8 +8,7 @@ struct dev_info {
+ 
+ typedef struct dev_info dev_info_t;
+ 
+-struct linear_private_data
+-{
++struct linear_private_data {
+ 	sector_t		array_sectors;
+ 	dev_info_t		disks[0];
+ 	struct rcu_head		rcu;
 -- 
-Luca Berra -- bluca@comedia.it
-         Communication Media & Services S.r.l.
-  /"\
-  \ /     ASCII RIBBON CAMPAIGN
-   X        AGAINST HTML MAIL
-  / \
+1.7.0.90.g251a4
