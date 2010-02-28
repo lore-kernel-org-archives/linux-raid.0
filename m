@@ -1,60 +1,69 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: [mdadm PATCH 0/2] *** mdmon fixes ***
-Date: Sun, 28 Feb 2010 18:37:06 +0100
-Message-ID: <20100228173706.GA32492@maude.comedia.it>
-References: <cover.1267282753.git.bluca@comedia.it> <20100228144123.GA24781@maude.comedia.it> <4B8A8EAF.4000309@tmr.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: mdadm software raid + ext4, capped at ~350MiB/s
+ limitation/bug?
+Date: Sun, 28 Feb 2010 15:03:00 -0500 (EST)
+Message-ID: <alpine.DEB.2.00.1002281502080.12671@p34.internal.lan>
+References: <alpine.DEB.2.00.1002270840410.27192@p34.internal.lan>  <20100228080100.092c24c2@notabene.brown>  <alpine.DEB.2.00.1002271624480.12663@p34.internal.lan>  <4B89B44A.70005@tmr.com>  <alpine.DEB.2.00.1002280444530.16775@p34.internal.lan>
+ <170fa0d21002280633x2ea6a281tf53996834c46d831@mail.gmail.com> <alpine.DEB.2.00.1002281000120.22822@p34.internal.lan> <4B8A8D68.1020809@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4B8A8EAF.4000309@tmr.com>
-Sender: linux-raid-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-ext4-owner@vger.kernel.org>
+In-Reply-To: <4B8A8D68.1020809@tmr.com>
+Sender: linux-ext4-owner@vger.kernel.org
 To: Bill Davidsen <davidsen@tmr.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Cc: Mike Snitzer <snitzer@gmail.com>, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
 List-Id: linux-raid.ids
 
-On Sun, Feb 28, 2010 at 10:41:35AM -0500, Bill Davidsen wrote:
-> Luca Berra wrote:
->> On Sat, Feb 27, 2010 at 04:05:40PM +0100, Luca Berra wrote:
->>> These close a couple of issues with mdmon.
->>> I don't claim to understand all of the code yet, but a cursory look 
->>> leaves me
->>> with the feeling that there are multiple ways it could still fail
->> As foreseen it does actually fail...
->>
->> someone might remember my flaky dual boot system with imsm array
->> it crashed again, badly
->> result
->> mdmon is still running from ALT_RUN, since / is corrupted and cannot be
->> mounted read-write
->> but mdadm command looks for mdmon only in VAR_RUN
->> so a new bunch of patches is due.
->> these apply over the two preceding patches
+
+
+On Sun, 28 Feb 2010, Bill Davidsen wrote:
+
+> Justin Piszcz wrote:
+>> 
+>> 
+>> On Sun, 28 Feb 2010, Mike Snitzer wrote:
+>> 
+>>> On Sun, Feb 28, 2010 at 4:45 AM, Justin Piszcz <jpiszcz@lucidpixels.com> 
+>>> wrote:
+>> 
+>> [ .. ]
+>> 
+>>> 
+>>> How did you format the ext3 and ext4 filesystems?
+>>> 
+>>> Did you use mkfs.ext[34] -E stride and stripe-width accordingly?
+>>> AFAIK even older versions of mkfs.xfs will probe for this info but
+>>> older mkfs.ext[34] won't (though new versions of mkfs.ext[34] will,
+>>> using the Linux "topology" info).
+>> 
+>> Yes and it did not make any difference:
+>> http://lkml.org/lkml/2010/2/27/77
+>> 
+>> Incase anyone else wants to try too, you can calculate by hand, or if you
+>> are in a hurry, I found this useful:
+>> http://busybox.net/~aldot/mkfs_stride.html
+>> 
+>> I believe there is something fundamentally wrong with ext4 when performing 
+>> large sequential I/O when writing, esp. after Ted's comments.
+>> 
+>> Justin.
+>> 
+>> -- 
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> 
+> I'm going to have to do some testing now, I just tested ext4 against the raw 
+> speed of the device (single device test) and they were quite close to 
+> identical. I'm going to order one more drive to bring my test setup up to 
+> five devices, and do some testing on how it behaves.
 >
-> Rather than adding complexity to the code, would it not be easier to just 
+> More later.
 
-I too feel this code is complex and difficult to get right and maintain.
-But my patch set just fixes the problems with the current
-implementation, it does not deal with Neil's design choiches.
-(well, except last one which opens a way out for people that don't agree
-with Neil on the ALT_RUN thing)
+Thanks, let me know how it goes, I see the same thing, on a single hard 
+drive, there is little difference between EXT4 and XFS:
+http://permalink.gmane.org/gmane.linux.kernel/955357
 
-> mount a tmpfs on VAR_RUN since it is ephemeral anyway and is not valid 
-> across boots? It seems more reasonable to put the exception handling in the 
-> system with the exception than in production code.
-I don't get your point, are we trying to address the same issue?
+However, when multiple disks are involved, it is a different story.
 
-If it were me i'd put the socket in /dev and the pid file in /var/run.
-Leaving the job of moving state files from initramfs /var/run to real
-/var/run to initramfs and init scripts distro specific code.
-
-L.
-
-
--- 
-Luca Berra -- bluca@comedia.it
-         Communication Media & Services S.r.l.
-  /"\
-  \ /     ASCII RIBBON CAMPAIGN
-   X        AGAINST HTML MAIL
-  / \
+Justin.
