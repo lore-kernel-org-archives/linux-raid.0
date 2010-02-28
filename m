@@ -1,8 +1,8 @@
 From: Luca Berra <bluca@comedia.it>
-Subject: [mdadm PATCH 5/9] mdmon: mdmon_pid should return pid from either
-	dir
-Date: Sun, 28 Feb 2010 15:43:40 +0100
-Message-ID: <20100228144340.GD24781@maude.comedia.it>
+Subject: [mdadm PATCH 6/9] mdmon: connect_monitor should use socket from
+	either dir
+Date: Sun, 28 Feb 2010 15:44:24 +0100
+Message-ID: <20100228144424.GE24781@maude.comedia.it>
 References: <cover.1267282753.git.bluca@comedia.it> <20100228144123.GA24781@maude.comedia.it>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1; format=flowed
@@ -14,92 +14,103 @@ To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 Cc: "Neil Brown (neilb@suse.de)" <neilb@suse.de>
 List-Id: linux-raid.ids
 
-mdmon_pid is called by mdmon_running to check if mdmon is running, so
-the pid file should be checked in either VAR_RUN or ALT_RUN
+connect_monitor is called by ping_monitor in various places
+the socket should be checked in either VAR_RUN or ALT_RUN
 
 Signed-off-by: Luca Berra <bluca@comedia.it>
 ---
-  mdadm.h |    2 +-
-  mdmon.c |    6 +++---
-  util.c  |   14 ++++++++++++--
-  3 files changed, 16 insertions(+), 6 deletions(-)
+  mdmon.c |    2 +-
+  msg.c   |   15 ++++++++++++---
+  msg.h   |    2 +-
+  util.c  |    2 +-
+  4 files changed, 15 insertions(+), 6 deletions(-)
 
-diff --git a/mdadm.h b/mdadm.h
-index df3a056..7efa8bf 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -897,7 +897,7 @@ extern int open_container(int fd);
-  
-  extern char *pid_dir;
-  extern int mdmon_running(int devnum);
--extern int mdmon_pid(int devnum);
-+extern int mdmon_pid(int devnum, const char *pid_dir);
-  extern int check_env(char *name);
-  extern __u32 random32(void);
-  extern int start_mdmon(int devnum);
 diff --git a/mdmon.c b/mdmon.c
-index 57fd492..3410e84 100644
+index 3410e84..3627a80 100644
 --- a/mdmon.c
 +++ b/mdmon.c
-@@ -441,10 +441,10 @@ static int mdmon(char *devname, int devnum, int must_fork, int takeover)
-  	sigaction(SIGPIPE, &act, NULL);
-  
-  	if (takeover) {
--		victim = mdmon_pid(container->devnum);
-+		victim = mdmon_pid(container->devnum, pid_dir);
-  		if (victim < 0) {
-  			pid_dir = ALT_RUN;
--			victim = mdmon_pid(container->devnum);
-+			victim = mdmon_pid(container->devnum, pid_dir);
+@@ -447,7 +447,7 @@ static int mdmon(char *devname, int devnum, int must_fork, int takeover)
+  			victim = mdmon_pid(container->devnum, pid_dir);
   		}
   		if (victim >= 0)
-  			victim_sock = connect_monitor(container->devname);
-@@ -467,7 +467,7 @@ static int mdmon(char *devname, int devnum, int must_fork, int takeover)
-  			exit(3);
-  		}
-  		/* if there is a pid file, kill whoever is there just in case */
--		victim = mdmon_pid(container->devnum);
-+		victim = mdmon_pid(container->devnum, NULL);
+-			victim_sock = connect_monitor(container->devname);
++			victim_sock = connect_monitor(container->devname, pid_dir);
   	}
-  	if (container->ss->load_super(container, mdfd, devname)) {
-  		fprintf(stderr, "mdmon: Cannot load metadata for %s\n",
-diff --git a/util.c b/util.c
-index 2fe566d..50e04bf 100644
---- a/util.c
-+++ b/util.c
-@@ -1465,12 +1465,22 @@ int fd2devnum(int fd)
   
-  char *pid_dir = VAR_RUN;
+  	ignore = chdir("/");
+diff --git a/msg.c b/msg.c
+index d2d8445..78a7964 100644
+--- a/msg.c
++++ b/msg.c
+@@ -138,7 +138,7 @@ int wait_reply(int fd, int tmo)
+  	return receive_message(fd, &msg, tmo);
+  }
   
--int mdmon_pid(int devnum)
-+int mdmon_pid(int devnum, const char *pid_dir)
+-int connect_monitor(char *devname)
++int connect_monitor(char *devname, const char *pid_dir)
   {
   	char path[100];
-  	char pid[10];
-  	int fd;
-  	int n;
-+
+  	int sfd;
+@@ -147,6 +147,15 @@ int connect_monitor(char *devname)
+  	int pos;
+  	char *c;
+  
 +	/* if pid_dir is null try to detect it */
 +	if (!pid_dir) {
-+		n = mdmon_pid(devnum, VAR_RUN);
-+		if (n >= 0)
-+			return n;
++		sfd = connect_monitor(devname, VAR_RUN);
++		if (sfd >= 0)
++			return sfd;
 +		else
-+			return mdmon_pid(devnum, ALT_RUN);
++			return connect_monitor(devname, ALT_RUN);
 +	}
 +
-  	sprintf(path, "%s/%s.pid", pid_dir, devnum2devname(devnum));
-  	fd = open(path, O_RDONLY | O_NOATIME, 0);
-  
-@@ -1485,7 +1495,7 @@ int mdmon_pid(int devnum)
-  
-  int mdmon_running(int devnum)
+  	pos = sprintf(path, "%s/", pid_dir);
+  	if (is_subarray(devname)) {
+  		devname++;
+@@ -199,7 +208,7 @@ int fping_monitor(int sfd)
+  /* give the monitor a chance to update the metadata */
+  int ping_monitor(char *devname)
   {
--	int pid = mdmon_pid(devnum);
-+	int pid = mdmon_pid(devnum, NULL);
-  	if (pid <= 0)
-  		return 0;
-  	if (kill(pid, 0) == 0)
+-	int sfd = connect_monitor(devname);
++	int sfd = connect_monitor(devname, NULL);
+  	int err = fping_monitor(sfd);
+  
+  	close(sfd);
+@@ -213,7 +222,7 @@ int ping_monitor(char *devname)
+   */
+  int ping_manager(char *devname)
+  {
+-	int sfd = connect_monitor(devname);
++	int sfd = connect_monitor(devname, NULL);
+  	struct metadata_update msg = { .len = -1 };
+  	int err = 0;
+  
+diff --git a/msg.h b/msg.h
+index f8e89fd..46299db 100644
+--- a/msg.h
++++ b/msg.h
+@@ -25,7 +25,7 @@ extern int receive_message(int fd, struct metadata_update *msg, int tmo);
+  extern int send_message(int fd, struct metadata_update *msg, int tmo);
+  extern int ack(int fd, int tmo);
+  extern int wait_reply(int fd, int tmo);
+-extern int connect_monitor(char *devname);
++extern int connect_monitor(char *devname, const char *pid_dir);
+  extern int ping_monitor(char *devname);
+  extern int fping_monitor(int sock);
+  extern int ping_manager(char *devname);
+diff --git a/util.c b/util.c
+index 50e04bf..c22886b 100644
+--- a/util.c
++++ b/util.c
+@@ -1585,7 +1585,7 @@ int flush_metadata_updates(struct supertype *st)
+  		return -1;
+  	}
+  
+-	sfd = connect_monitor(devnum2devname(st->container_dev));
++	sfd = connect_monitor(devnum2devname(st->container_dev), NULL);
+  	if (sfd < 0)
+  		return -1;
+  
 -- 
 1.7.0
 
