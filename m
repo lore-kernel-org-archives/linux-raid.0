@@ -1,111 +1,58 @@
-From: Mike Snitzer <snitzer@gmail.com>
-Subject: Re: mdadm software raid + ext4, capped at ~350MiB/s limitation/bug?
-Date: Sun, 28 Feb 2010 09:33:52 -0500
-Message-ID: <170fa0d21002280633x2ea6a281tf53996834c46d831@mail.gmail.com>
-References: <alpine.DEB.2.00.1002270840410.27192@p34.internal.lan>
-	 <20100228080100.092c24c2@notabene.brown>
-	 <alpine.DEB.2.00.1002271624480.12663@p34.internal.lan>
-	 <4B89B44A.70005@tmr.com>
-	 <alpine.DEB.2.00.1002280444530.16775@p34.internal.lan>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: [mdadm PATCH 0/2] *** mdmon fixes ***
+Date: Sun, 28 Feb 2010 15:41:23 +0100
+Message-ID: <20100228144123.GA24781@maude.comedia.it>
+References: <cover.1267282753.git.bluca@comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ext4-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1002280444530.16775@p34.internal.lan>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <cover.1267282753.git.bluca@comedia.it>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Neil Brown (neilb@suse.de)" <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, Feb 28, 2010 at 4:45 AM, Justin Piszcz <jpiszcz@lucidpixels.com=
-> wrote:
->
->
-> On Sat, 27 Feb 2010, Bill Davidsen wrote:
->
->> Justin Piszcz wrote:
->>>
->>>
->>> On Sun, 28 Feb 2010, Neil Brown wrote:
->>>
->>>> On Sat, 27 Feb 2010 08:47:48 -0500 (EST)
->>>> Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
->>>>
->>>>> Hello,
->>>>>
->>>>> I have two separate systems and with ext4 I cannot get speeds gre=
-ater
->>>>> than
->>>>> ~350MiB/s when using ext4 as the filesystem on top of a raid5 or =
-raid0.
->>>>> It appears to be a bug with ext4 (or its just that ext4 is slower=
- for
->>>>> this
->>>>> test)?
->>>>>
->>>>> Each system runs 2.6.33 x86_64.
->>>>
->>>> Could be related to the recent implementation of IO barriers in md=
-=2E
->>>> Can you try mounting your filesystem with
->>>> =A0-o barrier=3D0
->>>>
->>>> and see how that changes the result.
->>>>
->>>> NeilBrown
->>>
->>> Hi Neil,
->>>
->>> Thanks for the suggestion, it has been used here:
->>> http://lkml.org/lkml/2010/2/27/66
->>>
->>> Looks like an EXT4 issue as XFS does ~600MiB/s..?
->>>
->>> Its strange though, on a single hard disk, I get approximately the =
-same
->>> speed for XFS and EXT4, but when it comes to scaling across multipl=
-e disks,
->>> in RAID-0 or RAID-5 (tested), there is a performance problem as it =
-hits a
->>> performance problem at ~350MiB/s. =A0I tried multiple chunk sizes b=
-ut
->>> nothing
->>> seemed to made a difference (whether 64KiB or 1024KiB), XFS perform=
-s at
->>> 500-600MiB/s no matter what and EXT4 does not exceed ~350MiB/s.
->>>
->>> Is there anyone on any of the lists that gets > 350MiB/s on a mdadm=
-/sw
->>> raid
->>> with EXT4?
->>>
->>> A single raw disk, no partitions:
->>> p63:~# dd if=3D/dev/zero of=3D/dev/sdm bs=3D1M count=3D10240
->>> 10240+0 records in
->>> 10240+0 records out
->>> 10737418240 bytes (11 GB) copied, 92.4249 s, 116 MB/s
->>
->> I hate to say it, but I don't think this measures anything useful. W=
-hen I
->> was doing similar things I got great variabilty in my results until =
-I
->> learned about the fdatasync option so you measure the actual speed t=
-o the
->> destination and not the disk cache. After that my results were far s=
-lower
->> and reproducible.
->
-> fdatasync:
-> http://lkml.indiana.edu/hypermail/linux/kernel/1002.3/01507.html
+On Sat, Feb 27, 2010 at 04:05:40PM +0100, Luca Berra wrote:
+> These close a couple of issues with mdmon.
+> I don't claim to understand all of the code yet, but a cursory look leaves me
+> with the feeling that there are multiple ways it could still fail
+As foreseen it does actually fail...
 
-How did you format the ext3 and ext4 filesystems?
+someone might remember my flaky dual boot system with imsm array
+it crashed again, badly
+result
+mdmon is still running from ALT_RUN, since / is corrupted and cannot be
+mounted read-write
+but mdadm command looks for mdmon only in VAR_RUN
+so a new bunch of patches is due.
+these apply over the two preceding patches
 
-Did you use mkfs.ext[34] -E stride and stripe-width accordingly?
-AFAIK even older versions of mkfs.xfs will probe for this info but
-older mkfs.ext[34] won't (though new versions of mkfs.ext[34] will,
-using the Linux "topology" info).
---
-To unsubscribe from this list: send the line "unsubscribe linux-ext4" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+3/9 add missing newline to mdmon usage message
+4/9 mdmon: check select a writable pid_dir
+5/9 mdmon: mdmon_pid should return pid from either dir
+6/9 mdmon: connect_monitor should use socket from either dir
+7/9 mdmon: move pid_dir to mdmon.c
+8/9 mdmon: rework startup and takeover logic
+
+and after I spent a good deal of time fixing the above I was bitten by
+the mdmon socket in /var/run/mdadm at shutdown time again. So i added:
+
+9/9 allow redefinition of VAR_RUN
+
+But I respectfully ask to reconsider the placement of mdmon socket and
+keep it somewere under /, allowing people to unmount /var.
+I don't get why putting sockets in /dev is considered wrong and we must
+run through multiple hoops to put those under /var when we already have
+sockets in /dev and no-one ever questioned syslogd for doing so.
+
+Regards,
+L.
+
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
