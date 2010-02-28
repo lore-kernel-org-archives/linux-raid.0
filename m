@@ -1,84 +1,95 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: mdadm software raid + ext4, capped at ~350MiB/s
- limitation/bug?
-Date: Sat, 27 Feb 2010 16:30:39 -0500 (EST)
-Message-ID: <alpine.DEB.2.00.1002271624480.12663@p34.internal.lan>
-References: <alpine.DEB.2.00.1002270840410.27192@p34.internal.lan> <20100228080100.092c24c2@notabene.brown>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Why does one get mismatches?
+Date: Sat, 27 Feb 2010 19:01:20 -0500
+Message-ID: <4B89B250.1060707@tmr.com>
+References: <869541.92104.qm@web51304.mail.re2.yahoo.com>	 <6db64f7872286165ac1fd3436e9d6476@localhost>	 <20100218100547.7aecdc34@notabene.brown>	 <20100219151809.GB4995@lazy.lzy>	 <20100220090208.06c1130f@notabene.brown> <4B853D99.1040902@tmr.com>	 <20100225083748.42f024aa@notabene.brown> <4B8833BA.4010503@tmr.com>	 <20100227080938.6540f041@notabene.brown>	 <4B884930.1070205@shiftmail.org> <4877c76c1002262201h31051c44r9d756e4969a71fbb@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20100228080100.092c24c2@notabene.brown>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4877c76c1002262201h31051c44r9d756e4969a71fbb@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Michael Evans <mjevans1983@gmail.com>
+Cc: Asdo <asdo@shiftmail.org>, Neil Brown <neilb@suse.de>, Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, Steven Haigh <netwiz@crc.id.au>, Bryan Mesich <bryan.mesich@ndsu.edu>, Jon@ehardcastle.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-On Sun, 28 Feb 2010, Neil Brown wrote:
-
-> On Sat, 27 Feb 2010 08:47:48 -0500 (EST)
-> Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
->
->> Hello,
+Michael Evans wrote:
+> On Fri, Feb 26, 2010 at 2:20 PM, Asdo <asdo@shiftmail.org> wrote:
+>   
+>> Neil Brown wrote:
+>>     
+>>> Actually, I'm no longer convinced that the checksumming idea would work.
+>>> If a mem-mapped page were written, that the app is updating every
+>>> millisecond (i.e. less than the write latency), then every time a write
+>>> completed the checksum would be different so we would have to reschedule
+>>> the
+>>> write, which would not be the correct behaviour at all.
+>>> So I think that the only way to address this in the md layer is to copy
+>>> the data and write the copy.  There is already code to copy the data for
+>>> write-behind that could possible be leveraged to do a copy always.
+>>>
+>>>       
+>> The concerns of slowdowns with copy could be addressed by making the copy a
+>> runtime choice triggered by a sysctl interface, a file in /sys/block/mdX/md/
+>> interface where one can echo "1" to enable copies for this type of raid. Or
+>> better 1 could be the default (slower but safer, or if not safer, at least
+>> to avoid needless questions on mismatches on this ML by new users, and to
+>> allow detection of REAL mismatches which can be due to cabling or defective
+>> disks) and echoing 0 would increase performances at the cost of seeing lots
+>> of false positive mismatches.
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >>
->> I have two separate systems and with ext4 I cannot get speeds greater than
->> ~350MiB/s when using ext4 as the filesystem on top of a raid5 or raid0.
->> It appears to be a bug with ext4 (or its just that ext4 is slower for this
->> test)?
->>
->> Each system runs 2.6.33 x86_64.
+>>     
 >
-> Could be related to the recent implementation of IO barriers in md.
-> Can you try mounting your filesystem with
->   -o barrier=0
->
-> and see how that changes the result.
->
-> NeilBrown
+> Isn't there some way of making the page copy-on-write using hardware
+> and/or an in-kernel structure?  Ideally copying could be avoided
+> /unless/ there is change.  That way each operation looks like an
+> atomic commit.
+>   
 
-Hi Neil,
+As I think about this, one idea was to add a write-in-progress flag, so 
+that the filesystem, or library, or whatever would know not to change 
+the page. That would mean that every filesystem would need to be 
+enhanced, or that the "safe write" would be optional on a per-filesystem 
+level. Implementation of O_DIRECT could do it, or not, and there could 
+be a safe way to write.
 
-Thanks for the suggestion, it has been used here:
-http://lkml.org/lkml/2010/2/27/66
+However, it occurs to me that there are several other levels involved, 
+and so it could be better but not perfect. While md could flag the start 
+and finish of write, you then need to have the next level, the device 
+driver, do the same thing, so md knows when the data need not be frozen. 
+"But wait, there's more," as they say, the device driver need to track 
+when the data are transferred to the actual device, and the device needs 
+to report when the data actually hit the platter, or you could still 
+have possible mismatches.
 
-Looks like an EXT4 issue as XFS does ~600MiB/s..?
+All of that reminds us of the discussion of barriers, and flush cache 
+commands, and other performance impacting practices. So in the long run 
+I think the most effective solution, one which has the highest 
+improvement at the lowest cost in performance, is a copy. Now if Neil 
+liked my idea of doing a checksum before and after a write, and a copy 
+only in the cases where the data had changed, the impact could be pretty 
+small.
 
-Its strange though, on a single hard disk, I get approximately the same 
-speed for XFS and EXT4, but when it comes to scaling across multiple disks,
-in RAID-0 or RAID-5 (tested), there is a performance problem as it hits a
-performance problem at ~350MiB/s.  I tried multiple chunk sizes but nothing
-seemed to made a difference (whether 64KiB or 1024KiB), XFS performs at
-500-600MiB/s no matter what and EXT4 does not exceed ~350MiB/s.
+All that depends on two things, Neil thinking the whole thing is worth 
+doing, and no one finding a flaw in my proposal to do a checksum rather 
+than a copy each time.
 
-Is there anyone on any of the lists that gets > 350MiB/s on a mdadm/sw raid
-with EXT4?
+And to return to your original question, no. Hardware COW works on 
+memory pages, a buffer could span pages and a write to a page might not 
+be in the part of the page used for the i/o buffer. So as nice as that 
+would be, I don't think the hardware supports it. And even if you could, 
+the COW needs to be done in the layer which tries to change the buffer, 
+so md would set COW and the filesystem would have to deal with it. I am 
+pretty sure that's a layering violation, big time. The advisory "write 
+in progress" flag might be acceptable, it's information the f/s can use 
+or not.
 
-A single raw disk, no partitions:
-p63:~# dd if=/dev/zero of=/dev/sdm bs=1M count=10240
-10240+0 records in
-10240+0 records out
-10737418240 bytes (11 GB) copied, 92.4249 s, 116 MB/s
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "We can't solve today's problems by using the same thinking we
+   used in creating them." - Einstein
 
-A single raw disk formatted with XFS, no partitions:
-p63:~# mkfs.xfs /dev/sdm > /dev/null 2>&1 
-p63:~# mount /dev/sdm -o nobarrier,noatime /r1
-p63:/r1# dd if=/dev/zero of=file bs=1M count=10240
-10240+0 records in
-10240+0 records out
-10737418240 bytes (11 GB) copied, 85.7782 s, 125 MB/s
-
-A single raw disk formatted with EXT4, no partitions:
-p63:~# mkfs.ext4 /dev/sdm > /dev/null 2>&1
-p63:~# mount /dev/sdm -o nobarrier,noatime /r1
-p63:/r1# dd if=/dev/zero of=file bs=1M count=10240
-10737418240 bytes (11 GB) copied, 85.1501 s, 126 MB/s
-p63:/r1#
-
-EXT2 vs. EXT3 vs. EXT4
-http://lkml.org/lkml/2010/2/27/77
-
-XFS tests: (550-600MiB/s)
-http://linux.derkeiler.com/Mailing-Lists/Kernel/2010-02/msg10572.html
-
-Justin.
