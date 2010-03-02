@@ -1,61 +1,37 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: [mdadm PATCH 1/3] fix gcc warnings about strict-aliasing rules
-Date: Tue, 02 Mar 2010 10:40:21 +0300
-Message-ID: <4B8CC0E5.4040004@msgid.tls.msk.ru>
-References: <20100227135338.GB24207@maude.comedia.it>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: [mdadm PATCH 1/2] fix mdmon option parsing
+Date: Tue, 2 Mar 2010 08:42:06 +0100
+Message-ID: <20100302074206.GB28827@maude.comedia.it>
+References: <cover.1267282753.git.bluca@comedia.it> <1-2.1267282753.git.bluca@comedia.it> <20100302164034.48e6da62@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100227135338.GB24207@maude.comedia.it>
+Content-Disposition: inline
+In-Reply-To: <20100302164034.48e6da62@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Neil Brown (neilb@suse.de)" <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Luca Berra <bluca@comedia.it>
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Luca Berra wrong:
-> Signed-off-by: Luca Berra <bluca@comedia.it>
-> ---
->   util.c |    4 ++--
->   1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/util.c b/util.c
-> index 68f048d..1def2a0 100644
-> --- a/util.c
-> +++ b/util.c
-> @@ -1160,7 +1160,7 @@ static int get_gpt_last_partition_end(int fd,
-> unsigned long long *endofpart)
->       entry_size = __le32_to_cpu(buf[GPT_ENTRY_SIZE_OFFSET]);
->         /* Check GPT signature*/
-> -    if (*((__u64*)buf) != GPT_SIGNATURE_MAGIC)
-> +    if ((__u64)buf[0] != GPT_SIGNATURE_MAGIC)
+On Tue, Mar 02, 2010 at 04:40:34PM +1100, Neil Brown wrote:
+>On Sat, 27 Feb 2010 16:07:04 +0100
+>Luca Berra <bluca@comedia.it> wrote:
+>
+>> running mdmon --takeover --all resulted in a segfault.
+>> also hide "--takeover" from ps and update usage message.
+>
+>Why do you want to hide the "--takeover" ???
+After takeover there is no difference between a normal mdmon and one
+that took over, but thinking twice it does not hide very well if we run
+"mdmon --takeover --all" versus "mdmon --all --takeover", and maybe
+someone is interested in seeing if takeover did work, so you can ignore
+this.
 
-This looks wrong.
+L.
 
-buf is an array of unsigned char.  Before, we converted the
-whole thing to a pointer to u64 and took the first element
-at that address, u64 size.  Now after the change, we take
-first _byte_ of the array, convert it to u64 (adding leading
-zeros) and compare with a large number.
-
-Does it actually work?
-
->           return -1;
->         /* sanity checks */
-> @@ -1178,7 +1178,7 @@ static int get_gpt_last_partition_end(int fd,
-> unsigned long long *endofpart)
->           /* is this valid partition? */
->           if (memcmp(part->type_guid, empty_gpt_entry, 16) != 0) {
->               /* check the last lba for the current partition */
-> -            curr_part_end = __le64_to_cpu(*(__u64*)part->ending_lba);
-> +            curr_part_end = __le64_to_cpu((__u64)part->ending_lba[0]);
-
-And the same thing here as well.
-
-Thanks!
-
-/mjt
-
->               if (curr_part_end > *endofpart)
->                   *endofpart = curr_part_end;
->           }
-
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
