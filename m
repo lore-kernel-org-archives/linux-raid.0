@@ -1,59 +1,50 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Chunk size for SSD
-Date: Wed, 3 Mar 2010 07:22:07 +1100
-Message-ID: <20100303072207.5d698723@notabene.brown>
-References: <20100302190843.GA2446@lazy.lzy>
+From: Asdo <asdo@shiftmail.org>
+Subject: Re: Why does one get mismatches?
+Date: Wed, 03 Mar 2010 00:27:25 +0100
+Message-ID: <4B8D9EDD.2080300@shiftmail.org>
+References: <20100218100547.7aecdc34@notabene.brown> <4B853BBF.7000607@tmr.com>
+ <yq1ocjemx46.fsf@sermon.lab.mkp.net> <20100225083936.07cd48ad@notabene.brown>
+ <20100228080949.GA30574@maude.comedia.it>
+ <20100302160100.621f9811@notabene.brown>
+ <20100302073624.GA28827@maude.comedia.it>
+ <4877c76c1003020204r477e942fo8ada66e1e9426295@mail.gmail.com>
+ <20100302110232.GA14131@maude.comedia.it> <4B8D5581.8070509@shiftmail.org>
+ <20100302185216.GB2243@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100302190843.GA2446@lazy.lzy>
+In-reply-to: <20100302185216.GB2243@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
 To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 2 Mar 2010 20:08:43 +0100
-Piergiorgio Sartor <piergiorgio.sartor@nexgo.de> wrote:
+Piergiorgio Sartor wrote:
+> Hi,
+>   
+>> Now it would be interesting to understand why the mismatches don't
+>> happen when LVM is above MD-raid!?
+>>     
+>
+> well, maybe LVM copies the buffer, and after it
+> plays it nice with MD, i.e. no changes on the fly.
+>   
 
-> Hi all,
-> 
-> I know the topic might have already been discussed,
-> but some points are still unclear to me.
-> 
-> Assuming to build a RAID-10 with two SSD, someone
-> mentioned that the proper chunk size should be
-> the erase block size, usually 128K.
-> 
-> Are these 128K a guessed value or there is a way
-> to know the erase block size from the device itself?
-> 
-> Second question, assuming metadata 1.1 is used, do
-> the chunks start with a chunk-size aligment?
-> I mean, in a RAID-10, with 1.1 metadata, does the
-> effective storage area start at a multiple of 128K,
-> if a chunk of 128K is used?
+LVM copies the buffer!?
+I don't think so...
+LVM is near-zero overhead, so I would be surprised if it copied the buffer.
+Also I don't think it was needed in their case, except maybe if there is 
+an I/O at the boundary of a logical volume or LVM stripe, which would 
+certainly be a mistake at requestor side.
+LVM also does not merge requests AFAIR. (visible with mdstat -x 1)
 
-No - with 1.1 and 1.2 metadata there are no guarantees about alignment of the 
-start of the data section.  That is something that I plan to fix
-in 3.1.2.
+> Or maybe, it is just one system that behaves
+> properly with LVM over MD.
+>   
 
-> 
-> BTW, what if there is a partition under the RAID,
-> this will offset (how much?) the start of the RAID.
+hmm maybe...
 
-It depends on the tool you use the create the partition.  Some enforce an
-alignment on cylinders, others give you complete control.
-I think 'sfdisk' is one of the most flexible.
-
-NeilBrown
-
-> 
-> In general, would it be possible to specify an
-> alligment for the effective storage area of the RAID?
-> 
-> Thanks a lot in advance,
-> 
-> bye,
-> 
+But me also I have never seen mismatches and the only raid-1's I have 
+are above LVM. (except /boot but that's almost never modified)
 
