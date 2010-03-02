@@ -1,81 +1,61 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Why does one get mismatches?
-Date: Tue, 2 Mar 2010 08:36:24 +0100
-Message-ID: <20100302073624.GA28827@maude.comedia.it>
-References: <20100211161444.7a0ea7bb@notabene.brown> <20100211175133.GA30187@atlantis.cc.ndsu.nodak.edu> <4B7B0D45.7040801@tmr.com> <6db64f7872286165ac1fd3436e9d6476@localhost> <20100218100547.7aecdc34@notabene.brown> <4B853BBF.7000607@tmr.com> <yq1ocjemx46.fsf@sermon.lab.mkp.net> <20100225083936.07cd48ad@notabene.brown> <20100228080949.GA30574@maude.comedia.it> <20100302160100.621f9811@notabene.brown>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: [mdadm PATCH 1/3] fix gcc warnings about strict-aliasing rules
+Date: Tue, 02 Mar 2010 10:40:21 +0300
+Message-ID: <4B8CC0E5.4040004@msgid.tls.msk.ru>
+References: <20100227135338.GB24207@maude.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100302160100.621f9811@notabene.brown>
+In-Reply-To: <20100227135338.GB24207@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Neil Brown (neilb@suse.de)" <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Luca Berra <bluca@comedia.it>
 List-Id: linux-raid.ids
 
-On Tue, Mar 02, 2010 at 04:01:00PM +1100, Neil Brown wrote:
->On Sun, 28 Feb 2010 09:09:49 +0100
->Luca Berra <bluca@comedia.it> wrote:
->
->> On Thu, Feb 25, 2010 at 08:39:36AM +1100, Neil Brown wrote:
->> >On Wed, 24 Feb 2010 11:12:09 -0500
->> >"Martin K. Petersen" <martin.petersen@oracle.com> wrote:
->> >
->> >> So realistically both disk blocks are wrong and there's a window until
->> >> the new, correct block is written.  That window will only cause problems
->> >> if there is a crash and we'll need to recover.  My main concern here is
->> >> how big the discrepancy between the disks can get, and whether we'll end
->> >> up corrupting the filesystem during recovery because we could
->> >> potentially be matching metadata from one disk with journal entries from
->> >> another.
->> >
->> >After a crash, md will only read from one of the devices (the first) until a
->> >resync has completed.  So there should be no room for more confusion than you
->> >would expect on a single device.
->> 
->> After thinking more about this i could come up with another concern
->> about write ordering.
->> 
->> example
->> app writes block A, B, C
->> md writes A on both disks
->> md writes B on disk1
->> app writes B again (B')
->> md writes B' on disk2
->> now md would write B' again on both disks, but the system crashes
->> (note, C is never written due to crash)
->> 
->> Disk 1 contains A and B in the correct order, it is missing C and B' but we
->> dont care, app should be able to recover from a crash
->> 
->> Disk 2 contains A and B', but they are wrongly ordered because C is
->> missing
->> 
->> If in the above case A and C are data blocks and B contains a journal
->> related to A and C, booting from disk 2 could result in inconsistent
->> data.
->> 
->> can the above really happen?
->> would using barriers remove the above concern?
->> am i missing something else?
->
->These is no inconsistency here that a filesystem would not equally expect
->from a single device.
->After the crash-while-writing B', it should expect to see either B or B',
->and it does, depending on which device is primary.
->
->Nothing to see here.
-I will try to explain better,
-the problem is not related to the confusion between B or B'
+Luca Berra wrong:
+> Signed-off-by: Luca Berra <bluca@comedia.it>
+> ---
+>   util.c |    4 ++--
+>   1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/util.c b/util.c
+> index 68f048d..1def2a0 100644
+> --- a/util.c
+> +++ b/util.c
+> @@ -1160,7 +1160,7 @@ static int get_gpt_last_partition_end(int fd,
+> unsigned long long *endofpart)
+>       entry_size = __le32_to_cpu(buf[GPT_ENTRY_SIZE_OFFSET]);
+>         /* Check GPT signature*/
+> -    if (*((__u64*)buf) != GPT_SIGNATURE_MAGIC)
+> +    if ((__u64)buf[0] != GPT_SIGNATURE_MAGIC)
 
-the problem is that on one disk we have B' _without_ C.
+This looks wrong.
 
-Regards,
-L.
+buf is an array of unsigned char.  Before, we converted the
+whole thing to a pointer to u64 and took the first element
+at that address, u64 size.  Now after the change, we take
+first _byte_ of the array, convert it to u64 (adding leading
+zeros) and compare with a large number.
 
--- 
-Luca Berra -- bluca@comedia.it
-         Communication Media & Services S.r.l.
-  /"\
-  \ /     ASCII RIBBON CAMPAIGN
-   X        AGAINST HTML MAIL
-  / \
+Does it actually work?
+
+>           return -1;
+>         /* sanity checks */
+> @@ -1178,7 +1178,7 @@ static int get_gpt_last_partition_end(int fd,
+> unsigned long long *endofpart)
+>           /* is this valid partition? */
+>           if (memcmp(part->type_guid, empty_gpt_entry, 16) != 0) {
+>               /* check the last lba for the current partition */
+> -            curr_part_end = __le64_to_cpu(*(__u64*)part->ending_lba);
+> +            curr_part_end = __le64_to_cpu((__u64)part->ending_lba[0]);
+
+And the same thing here as well.
+
+Thanks!
+
+/mjt
+
+>               if (curr_part_end > *endofpart)
+>                   *endofpart = curr_part_end;
+>           }
+
