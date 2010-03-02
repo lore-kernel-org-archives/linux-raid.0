@@ -1,56 +1,81 @@
-From: Asdo <asdo@shiftmail.org>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
 Subject: Re: Why does one get mismatches?
-Date: Tue, 02 Mar 2010 19:14:25 +0100
-Message-ID: <4B8D5581.8070509@shiftmail.org>
-References: <4B7B0D45.7040801@tmr.com>
+Date: Tue, 2 Mar 2010 19:49:40 +0100
+Message-ID: <20100302184940.GA2243@lazy.lzy>
+References: <20100211175133.GA30187@atlantis.cc.ndsu.nodak.edu>
+ <4B7B0D45.7040801@tmr.com>
  <6db64f7872286165ac1fd3436e9d6476@localhost>
- <20100218100547.7aecdc34@notabene.brown> <4B853BBF.7000607@tmr.com>
- <yq1ocjemx46.fsf@sermon.lab.mkp.net> <20100225083936.07cd48ad@notabene.brown>
- <20100228080949.GA30574@maude.comedia.it>
- <20100302160100.621f9811@notabene.brown>
- <20100302073624.GA28827@maude.comedia.it>
- <4877c76c1003020204r477e942fo8ada66e1e9426295@mail.gmail.com>
- <20100302110232.GA14131@maude.comedia.it>
+ <20100218100547.7aecdc34@notabene.brown>
+ <4B853BBF.7000607@tmr.com>
+ <yq1ocjemx46.fsf@sermon.lab.mkp.net>
+ <20100224185106.GA5426@lazy.lzy>
+ <20100225092106.5b7dd6ba@notabene.brown>
+ <20100225084141.GA2927@lazy.lzy>
+ <20100302155700.68236f28@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <20100302110232.GA14131@maude.comedia.it>
+Content-Disposition: inline
+In-Reply-To: <20100302155700.68236f28@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bill Davidsen <davidsen@tmr.com>, Steven Haigh <netwiz@crc.id.au>, Bryan Mesich <bryan.mesich@ndsu.edu>, Jon@eHardcastle.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Luca Berra wrote:
->>>
->>> I will try to explain better,
->>> the problem is not related to the confusion between B or B'
->>>
->>> the problem is that on one disk we have B' _without_ C.
->>>
->> You're demanding full atomic commits; this is precisely what journals
->> and /barriers/ are for.
->>
->> Are you are bypassing them in a quest for performance and paying for
->> it on crashes?
->> Or is this a hardware bug?
->> Or is it some glitch in the block device layering leading to barrier
->> requests not being honored?
-> I just asked for confirmation that with /barriers/ the scenario above
-> would not happen.
->
+Hi,
 
-I think so, that it would not happen: the filesystem would stay 
-consistent. (while the mismatches could still happen)
+> Thanks.  I finally had a look at these (sorry for delay).
 
-The problem is that the barriers were introduced in all md raids in the 
-2.6.33 (just released), and also I have read XFS has a major performance 
-drop with barriers activated. People will be tempted to disable 
-barriers. AFAIR the performance drop was visible with 1 disk alone, 
-imagine now with RAID. And I expect similar performance drops with other 
-filesystems, correct me if I am wrong.
+well, thank you for having a look at the thing.
 
-Now it would be interesting to understand why the mismatches don't 
-happen when LVM is above MD-raid!?
-The mechanisms presented up to now on this ML for mismatches don't 
-explain why on LVM the same issue doesn't show up. I think.
-So you might want to use raid-1 and raid-10 under LVM, just in case....
+> If you run "file" on one of the dumps, it tells you:
+> 
+> $ file disk1.raw 
+> disk1.raw: Minix filesystem
+> 
+> Which isn't expected.  I would expect something like
+> $ file xxx
+> xxx: Linux rev 1.0 ext3 filesystem data, UUID=fe55fe6f-0412-4a0a-852d-a0e21767aa35 (needs journal recovery) (large files)
+> 
+> for an ext3 filesystem.
+> 
+> Looking at /usr/share/misc/magic, it seems that a Minix filesystem is defined
+> by:
+> 0x410	leshort		0x137f		Minix filesystem
+> 
+> i.e. the 2 bytes at 0x410 into the device are 0x137f, which exactly what we
+> find in your dump.
+> 
+> 0x410 in an ext3 superblock is the lower bytes of "s_free_inodes_count", the
+> count of free inodes.
+> Your actual number is 14881663, which is 0x00E3137F.
+
+Ah! But this means there is a bug somewhere...
+ 
+> So if you just add or remove a file, the number of free inodes should change,
+> and your filesystem will no longer look like a Minix filesystem and
+> your problems should go away.
+
+Uhm, OK, I just re-created the MD and the FS, so I took
+also the opportunity to increase the chunk size to 512K
+and use RAID-10.
+ 
+> I guess libblkid et-al should do more sanity checks on the superblock before
+> deciding that it really belongs to some particular filesystem.
+
+So, should one of us file a bug report somewhere?
+
+I mean, it is not only (lib)blkid, but also "file"
+which seems to be confused.
+BTW, "file" does not seem to use libblkid.
+
+> But I'm happy - this clearly isn't a raid problem.
+
+That's certainly good news, thanks again for
+the explanation, I learned something today!
+
+bye,
+
+-- 
+
+piergiorgio
