@@ -1,69 +1,97 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: mdadm software raid + ext4, capped at ~350MiB/s
- limitation/bug?
-Date: Sun, 28 Feb 2010 15:03:00 -0500 (EST)
-Message-ID: <alpine.DEB.2.00.1002281502080.12671@p34.internal.lan>
-References: <alpine.DEB.2.00.1002270840410.27192@p34.internal.lan>  <20100228080100.092c24c2@notabene.brown>  <alpine.DEB.2.00.1002271624480.12663@p34.internal.lan>  <4B89B44A.70005@tmr.com>  <alpine.DEB.2.00.1002280444530.16775@p34.internal.lan>
- <170fa0d21002280633x2ea6a281tf53996834c46d831@mail.gmail.com> <alpine.DEB.2.00.1002281000120.22822@p34.internal.lan> <4B8A8D68.1020809@tmr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Why does one get mismatches?
+Date: Tue, 2 Mar 2010 15:57:00 +1100
+Message-ID: <20100302155700.68236f28@notabene.brown>
+References: <4B684087.50001@tmr.com>
+	<20100211161444.7a0ea7bb@notabene.brown>
+	<20100211175133.GA30187@atlantis.cc.ndsu.nodak.edu>
+	<4B7B0D45.7040801@tmr.com>
+	<6db64f7872286165ac1fd3436e9d6476@localhost>
+	<20100218100547.7aecdc34@notabene.brown>
+	<4B853BBF.7000607@tmr.com>
+	<yq1ocjemx46.fsf@sermon.lab.mkp.net>
+	<20100224185106.GA5426@lazy.lzy>
+	<20100225092106.5b7dd6ba@notabene.brown>
+	<20100225084141.GA2927@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-ext4-owner@vger.kernel.org>
-In-Reply-To: <4B8A8D68.1020809@tmr.com>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Mike Snitzer <snitzer@gmail.com>, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100225084141.GA2927@lazy.lzy>
+Sender: linux-raid-owner@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Bill Davidsen <davidsen@tmr.com>, Steven Haigh <netwiz@crc.id.au>, Bryan Mesich <bryan.mesich@ndsu.edu>, Jon@eHardcastle.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thu, 25 Feb 2010 09:41:41 +0100
+Piergiorgio Sartor <piergiorgio.sartor@nexgo.de> wrote:
 
+> Hi,
+> 
+> > I certainly believe you.
+> 
+> thank you!
+> 
+> > That is really odd!  Both the kernel ext3 module (triggered by '-text3')
+> > and the 'mount' program use exactly the same test - look for the magic
+> > number in the superblock at 1K into the device.
+> 
+> Today I tried: blkid -p /dev/md1 (this time the live CD
+> autoassembled the md device) and it returned something
+> like: ambivalent result (probably more than one filesystem...)
+> 
+> Strange thing is that, the HDDs were brand new, no older
+> partitions or filesystem were there.
+> 
+> Anyway, I've one small correction, the RAID is not 10 f2,
+> on this PC, but (due to different installation) a RAID-1
+> with superblock 0.9 and the device partitions are set
+> to 0xFD (RAID autoassemble).
+>  
+> > Would you be able to get the first 4K from each device in the raid10:
+> >    dd if=/dev/whatever of=/tmp/whatever bs=1K count=4
+> > 
+> > and the tar/gz those up and send them to me.  That might give some clue.
+> > Unless the raid metadata is 1.1 or 1.2 - then I would need blocks further in
+> > the device, as the 'data offset'.
+> > The --detail output of the array might help too.
+> 
+> I dumped the first 4K of each device, they're identical
+> (so no mismatch there, at least), I'll send them to you,
+> together with the detail output.
 
-On Sun, 28 Feb 2010, Bill Davidsen wrote:
+Thanks.  I finally had a look at these (sorry for delay).
 
-> Justin Piszcz wrote:
->> 
->> 
->> On Sun, 28 Feb 2010, Mike Snitzer wrote:
->> 
->>> On Sun, Feb 28, 2010 at 4:45 AM, Justin Piszcz <jpiszcz@lucidpixels.com> 
->>> wrote:
->> 
->> [ .. ]
->> 
->>> 
->>> How did you format the ext3 and ext4 filesystems?
->>> 
->>> Did you use mkfs.ext[34] -E stride and stripe-width accordingly?
->>> AFAIK even older versions of mkfs.xfs will probe for this info but
->>> older mkfs.ext[34] won't (though new versions of mkfs.ext[34] will,
->>> using the Linux "topology" info).
->> 
->> Yes and it did not make any difference:
->> http://lkml.org/lkml/2010/2/27/77
->> 
->> Incase anyone else wants to try too, you can calculate by hand, or if you
->> are in a hurry, I found this useful:
->> http://busybox.net/~aldot/mkfs_stride.html
->> 
->> I believe there is something fundamentally wrong with ext4 when performing 
->> large sequential I/O when writing, esp. after Ted's comments.
->> 
->> Justin.
->> 
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> 
-> I'm going to have to do some testing now, I just tested ext4 against the raw 
-> speed of the device (single device test) and they were quite close to 
-> identical. I'm going to order one more drive to bring my test setup up to 
-> five devices, and do some testing on how it behaves.
->
-> More later.
+If you run "file" on one of the dumps, it tells you:
 
-Thanks, let me know how it goes, I see the same thing, on a single hard 
-drive, there is little difference between EXT4 and XFS:
-http://permalink.gmane.org/gmane.linux.kernel/955357
+$ file disk1.raw 
+disk1.raw: Minix filesystem
 
-However, when multiple disks are involved, it is a different story.
+Which isn't expected.  I would expect something like
+$ file xxx
+xxx: Linux rev 1.0 ext3 filesystem data, UUID=fe55fe6f-0412-4a0a-852d-a0e21767aa35 (needs journal recovery) (large files)
 
-Justin.
+for an ext3 filesystem.
+
+Looking at /usr/share/misc/magic, it seems that a Minix filesystem is defined
+by:
+0x410	leshort		0x137f		Minix filesystem
+
+i.e. the 2 bytes at 0x410 into the device are 0x137f, which exactly what we
+find in your dump.
+
+0x410 in an ext3 superblock is the lower bytes of "s_free_inodes_count", the
+count of free inodes.
+Your actual number is 14881663, which is 0x00E3137F.
+
+So if you just add or remove a file, the number of free inodes should change,
+and your filesystem will no longer look like a Minix filesystem and
+your problems should go away.
+
+I guess libblkid et-al should do more sanity checks on the superblock before
+deciding that it really belongs to some particular filesystem.
+
+But I'm happy - this clearly isn't a raid problem.
+
+NeilBrown
+
