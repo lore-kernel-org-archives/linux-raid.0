@@ -1,114 +1,64 @@
-From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: Raid1 backup solution.
-Date: Tue, 2 Mar 2010 02:24:22 -0800
-Message-ID: <4877c76c1003020224r18faa044g26fab219f84c4044@mail.gmail.com>
-References: <1267523407.5869.1181.camel@localhost.localdomain>
-	 <1267524355.5869.1188.camel@localhost.localdomain>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Why does one get mismatches?
+Date: Tue, 2 Mar 2010 12:02:32 +0100
+Message-ID: <20100302110232.GA14131@maude.comedia.it>
+References: <4B7B0D45.7040801@tmr.com> <6db64f7872286165ac1fd3436e9d6476@localhost> <20100218100547.7aecdc34@notabene.brown> <4B853BBF.7000607@tmr.com> <yq1ocjemx46.fsf@sermon.lab.mkp.net> <20100225083936.07cd48ad@notabene.brown> <20100228080949.GA30574@maude.comedia.it> <20100302160100.621f9811@notabene.brown> <20100302073624.GA28827@maude.comedia.it> <4877c76c1003020204r477e942fo8ada66e1e9426295@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1267524355.5869.1188.camel@localhost.localdomain>
+Content-Disposition: inline
+In-Reply-To: <4877c76c1003020204r477e942fo8ada66e1e9426295@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Daniel Reurich <daniel@centurion.net.nz>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Mar 2, 2010 at 2:05 AM, Daniel Reurich <daniel@centurion.net.nz=
-> wrote:
-> On Tue, 2010-03-02 at 22:50 +1300, Daniel Reurich wrote:
->> Hi Guys.
+On Tue, Mar 02, 2010 at 02:04:47AM -0800, Michael Evans wrote:
+>On Mon, Mar 1, 2010 at 11:36 PM, Luca Berra <bluca@comedia.it> wrote:
+>> On Tue, Mar 02, 2010 at 04:01:00PM +1100, Neil Brown wrote:
+>>>> Disk 1 contains A and B in the correct order, it is missing C and B' but
+>>>> we
+>>>> dont care, app should be able to recover from a crash
+>>>>
+>>>> Disk 2 contains A and B', but they are wrongly ordered because C is
+>>>> missing
+>>>>
+>>>> If in the above case A and C are data blocks and B contains a journal
+>>>> related to A and C, booting from disk 2 could result in inconsistent
+>>>> data.
+>>>>
+>>>> can the above really happen?
+>>>> would using barriers remove the above concern?
+>>>> am i missing something else?
+>>>
+>>> These is no inconsistency here that a filesystem would not equally expect
+>>> from a single device.
+>>> After the crash-while-writing B', it should expect to see either B or B',
+>>> and it does, depending on which device is primary.
+>>>
+>>> Nothing to see here.
 >>
->> I'm considering implementing a rotating offsite backup solution usin=
-g
->> raid 1. =A0This solution uses 1 or more internal drives and 2 extern=
-al
->> e-sata harddrives. =A0The raid setup would be a whole disk partition=
-able
->> raid1 volume.
+>> I will try to explain better,
+>> the problem is not related to the confusion between B or B'
 >>
->> The idea is that by swapping the external drives, =A0I can have a
->> boot-able ready to run offsite backup of the machine, as well as
->> redundancy on the machine itself. =A0Backups of the important data w=
-ould
->> be replicated via an incremental daily backup process onto the raid
->> volume itself.
+>> the problem is that on one disk we have B' _without_ C.
 >>
->> The part that concerns me is how to get a clean removal of the drive
->> being swapped out, and how will the raid handle having a stale drive
->> inserted/re-added.
->>
->> I have been considering a couple of ways to handle this:
->>
->> 1) Power the machine down to swap the drives. =A0This has the advant=
-age
->> that the backup is always in a clean bootable state with filesystem
->> consistency pretty much guaranteed.
->>
->> 2) Use mdadm to fail and remove the drives, and then re-add the newl=
-y
->> attached stale drive. =A0(Perhaps a udev rule could be made handle t=
-he
->> re-add). =A0The disadvantage is this will potentially leave the back=
-up
-> with an inconsistent filesystem and possibly have some corrupted file=
-s
-> unless there is a way to programmatically queisce all write filesyste=
-m
-> write activity and sync the disk before the removal.
+>You're demanding full atomic commits; this is precisely what journals
+>and /barriers/ are for.
 >
->> It will also mark the drive as failed and require mdadm --re-add to
->> insert the spare drive. =A0 =A0 =A0It's advantage is that the machin=
-e
->> doesn't need to be turned off.
->>
->> 3) Hot pull the drive e-sata cable, then power down the drive. =A0Th=
-is is
->> likely to leave the filesystems in really nasty state if there just
->> happens to be a write going on at the time.
->
-> Actually scrap 3 as on re-reading it goes against all sensibility.
->>
->> My preference is for option 2 as option 1 may not always be feasible=
- due
->> to the downtime, but I'm wondering about how best to handle the re-a=
-dd,
->> as I suspect that the metadata on the failed then removed drive, wou=
-ld
->> make it more difficult to re-add the drive into the array.
->>
->> If option 1 was used (cold swap), how would md handle assembly with =
-the
->> stale but not failed member disk? =A0Would it simply force a resync,=
- or
->> would it fail the disk and require manual intervention to re-add it.
->>
->> Any thoughts on my hair brained scheme would be appreciated.
->>
->> Daniel Reurich.
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+>Are you are bypassing them in a quest for performance and paying for
+>it on crashes?
+>Or is this a hardware bug?
+>Or is it some glitch in the block device layering leading to barrier
+>requests not being honored?
+I just asked for confirmation that with /barriers/ the scenario above
+would not happen.
 
-Why don't you just sync ; sync; sync; wait a few seconds and then
-mdadm --fail /dev/whatever the device you want to remove is; then
-actually remove it from the array?
+L.
 
-In the event you need to boot or read from the failed 'snapshot' of
-the array you can add --force to the mdadm --assemble to cause it to
-accept the failed member as a valid array member (just make sure there
-are no other members of that array present).  It will then become the
-current master set for that fork of your storage versions.  If you
-need to add that drive back to the original array be sure to
---zero-superblock for that device first, otherwise the versions may
-confuse things.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
