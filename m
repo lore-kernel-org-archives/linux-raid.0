@@ -1,8 +1,9 @@
 From: Neil Brown <neilb@suse.de>
 Subject: Re: Why does one get mismatches?
-Date: Tue, 2 Mar 2010 15:57:00 +1100
-Message-ID: <20100302155700.68236f28@notabene.brown>
-References: <4B684087.50001@tmr.com>
+Date: Tue, 2 Mar 2010 16:01:00 +1100
+Message-ID: <20100302160100.621f9811@notabene.brown>
+References: <20100202093738.44b4fece@notabene.brown>
+	<4B684087.50001@tmr.com>
 	<20100211161444.7a0ea7bb@notabene.brown>
 	<20100211175133.GA30187@atlantis.cc.ndsu.nodak.edu>
 	<4B7B0D45.7040801@tmr.com>
@@ -10,88 +11,68 @@ References: <4B684087.50001@tmr.com>
 	<20100218100547.7aecdc34@notabene.brown>
 	<4B853BBF.7000607@tmr.com>
 	<yq1ocjemx46.fsf@sermon.lab.mkp.net>
-	<20100224185106.GA5426@lazy.lzy>
-	<20100225092106.5b7dd6ba@notabene.brown>
-	<20100225084141.GA2927@lazy.lzy>
+	<20100225083936.07cd48ad@notabene.brown>
+	<20100228080949.GA30574@maude.comedia.it>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100225084141.GA2927@lazy.lzy>
+In-Reply-To: <20100228080949.GA30574@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Bill Davidsen <davidsen@tmr.com>, Steven Haigh <netwiz@crc.id.au>, Bryan Mesich <bryan.mesich@ndsu.edu>, Jon@eHardcastle.com, linux-raid@vger.kernel.org
+To: Luca Berra <bluca@comedia.it>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 25 Feb 2010 09:41:41 +0100
-Piergiorgio Sartor <piergiorgio.sartor@nexgo.de> wrote:
+On Sun, 28 Feb 2010 09:09:49 +0100
+Luca Berra <bluca@comedia.it> wrote:
 
-> Hi,
+> On Thu, Feb 25, 2010 at 08:39:36AM +1100, Neil Brown wrote:
+> >On Wed, 24 Feb 2010 11:12:09 -0500
+> >"Martin K. Petersen" <martin.petersen@oracle.com> wrote:
+> >
+> >> So realistically both disk blocks are wrong and there's a window until
+> >> the new, correct block is written.  That window will only cause problems
+> >> if there is a crash and we'll need to recover.  My main concern here is
+> >> how big the discrepancy between the disks can get, and whether we'll end
+> >> up corrupting the filesystem during recovery because we could
+> >> potentially be matching metadata from one disk with journal entries from
+> >> another.
+> >
+> >After a crash, md will only read from one of the devices (the first) until a
+> >resync has completed.  So there should be no room for more confusion than you
+> >would expect on a single device.
 > 
-> > I certainly believe you.
+> After thinking more about this i could come up with another concern
+> about write ordering.
 > 
-> thank you!
+> example
+> app writes block A, B, C
+> md writes A on both disks
+> md writes B on disk1
+> app writes B again (B')
+> md writes B' on disk2
+> now md would write B' again on both disks, but the system crashes
+> (note, C is never written due to crash)
 > 
-> > That is really odd!  Both the kernel ext3 module (triggered by '-text3')
-> > and the 'mount' program use exactly the same test - look for the magic
-> > number in the superblock at 1K into the device.
+> Disk 1 contains A and B in the correct order, it is missing C and B' but we
+> dont care, app should be able to recover from a crash
 > 
-> Today I tried: blkid -p /dev/md1 (this time the live CD
-> autoassembled the md device) and it returned something
-> like: ambivalent result (probably more than one filesystem...)
+> Disk 2 contains A and B', but they are wrongly ordered because C is
+> missing
 > 
-> Strange thing is that, the HDDs were brand new, no older
-> partitions or filesystem were there.
+> If in the above case A and C are data blocks and B contains a journal
+> related to A and C, booting from disk 2 could result in inconsistent
+> data.
 > 
-> Anyway, I've one small correction, the RAID is not 10 f2,
-> on this PC, but (due to different installation) a RAID-1
-> with superblock 0.9 and the device partitions are set
-> to 0xFD (RAID autoassemble).
->  
-> > Would you be able to get the first 4K from each device in the raid10:
-> >    dd if=/dev/whatever of=/tmp/whatever bs=1K count=4
-> > 
-> > and the tar/gz those up and send them to me.  That might give some clue.
-> > Unless the raid metadata is 1.1 or 1.2 - then I would need blocks further in
-> > the device, as the 'data offset'.
-> > The --detail output of the array might help too.
-> 
-> I dumped the first 4K of each device, they're identical
-> (so no mismatch there, at least), I'll send them to you,
-> together with the detail output.
+> can the above really happen?
+> would using barriers remove the above concern?
+> am i missing something else?
 
-Thanks.  I finally had a look at these (sorry for delay).
+These is no inconsistency here that a filesystem would not equally expect
+from a single device.
+After the crash-while-writing B', it should expect to see either B or B',
+and it does, depending on which device is primary.
 
-If you run "file" on one of the dumps, it tells you:
-
-$ file disk1.raw 
-disk1.raw: Minix filesystem
-
-Which isn't expected.  I would expect something like
-$ file xxx
-xxx: Linux rev 1.0 ext3 filesystem data, UUID=fe55fe6f-0412-4a0a-852d-a0e21767aa35 (needs journal recovery) (large files)
-
-for an ext3 filesystem.
-
-Looking at /usr/share/misc/magic, it seems that a Minix filesystem is defined
-by:
-0x410	leshort		0x137f		Minix filesystem
-
-i.e. the 2 bytes at 0x410 into the device are 0x137f, which exactly what we
-find in your dump.
-
-0x410 in an ext3 superblock is the lower bytes of "s_free_inodes_count", the
-count of free inodes.
-Your actual number is 14881663, which is 0x00E3137F.
-
-So if you just add or remove a file, the number of free inodes should change,
-and your filesystem will no longer look like a Minix filesystem and
-your problems should go away.
-
-I guess libblkid et-al should do more sanity checks on the superblock before
-deciding that it really belongs to some particular filesystem.
-
-But I'm happy - this clearly isn't a raid problem.
+Nothing to see here.
 
 NeilBrown
-
