@@ -1,72 +1,81 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [mdadm PATCH 1/2] fix mdmon option parsing
-Date: Tue, 2 Mar 2010 16:40:34 +1100
-Message-ID: <20100302164034.48e6da62@notabene.brown>
-References: <cover.1267282753.git.bluca@comedia.it>
-	<1-2.1267282753.git.bluca@comedia.it>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Why does one get mismatches?
+Date: Tue, 2 Mar 2010 08:36:24 +0100
+Message-ID: <20100302073624.GA28827@maude.comedia.it>
+References: <20100211161444.7a0ea7bb@notabene.brown> <20100211175133.GA30187@atlantis.cc.ndsu.nodak.edu> <4B7B0D45.7040801@tmr.com> <6db64f7872286165ac1fd3436e9d6476@localhost> <20100218100547.7aecdc34@notabene.brown> <4B853BBF.7000607@tmr.com> <yq1ocjemx46.fsf@sermon.lab.mkp.net> <20100225083936.07cd48ad@notabene.brown> <20100228080949.GA30574@maude.comedia.it> <20100302160100.621f9811@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1-2.1267282753.git.bluca@comedia.it>
+Content-Disposition: inline
+In-Reply-To: <20100302160100.621f9811@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Luca Berra <bluca@comedia.it>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 27 Feb 2010 16:07:04 +0100
-Luca Berra <bluca@comedia.it> wrote:
+On Tue, Mar 02, 2010 at 04:01:00PM +1100, Neil Brown wrote:
+>On Sun, 28 Feb 2010 09:09:49 +0100
+>Luca Berra <bluca@comedia.it> wrote:
+>
+>> On Thu, Feb 25, 2010 at 08:39:36AM +1100, Neil Brown wrote:
+>> >On Wed, 24 Feb 2010 11:12:09 -0500
+>> >"Martin K. Petersen" <martin.petersen@oracle.com> wrote:
+>> >
+>> >> So realistically both disk blocks are wrong and there's a window until
+>> >> the new, correct block is written.  That window will only cause problems
+>> >> if there is a crash and we'll need to recover.  My main concern here is
+>> >> how big the discrepancy between the disks can get, and whether we'll end
+>> >> up corrupting the filesystem during recovery because we could
+>> >> potentially be matching metadata from one disk with journal entries from
+>> >> another.
+>> >
+>> >After a crash, md will only read from one of the devices (the first) until a
+>> >resync has completed.  So there should be no room for more confusion than you
+>> >would expect on a single device.
+>> 
+>> After thinking more about this i could come up with another concern
+>> about write ordering.
+>> 
+>> example
+>> app writes block A, B, C
+>> md writes A on both disks
+>> md writes B on disk1
+>> app writes B again (B')
+>> md writes B' on disk2
+>> now md would write B' again on both disks, but the system crashes
+>> (note, C is never written due to crash)
+>> 
+>> Disk 1 contains A and B in the correct order, it is missing C and B' but we
+>> dont care, app should be able to recover from a crash
+>> 
+>> Disk 2 contains A and B', but they are wrongly ordered because C is
+>> missing
+>> 
+>> If in the above case A and C are data blocks and B contains a journal
+>> related to A and C, booting from disk 2 could result in inconsistent
+>> data.
+>> 
+>> can the above really happen?
+>> would using barriers remove the above concern?
+>> am i missing something else?
+>
+>These is no inconsistency here that a filesystem would not equally expect
+>from a single device.
+>After the crash-while-writing B', it should expect to see either B or B',
+>and it does, depending on which device is primary.
+>
+>Nothing to see here.
+I will try to explain better,
+the problem is not related to the confusion between B or B'
 
-> running mdmon --takeover --all resulted in a segfault.
-> also hide "--takeover" from ps and update usage message.
+the problem is that on one disk we have B' _without_ C.
 
-Why do you want to hide the "--takeover" ???
+Regards,
+L.
 
-(the rest makes sense, thanks).
-
-NeilBrown
-
-> 
-> Signed-off-by: Luca Berra <bluca@comedia.it>
-> ---
->   mdmon.c |   13 +++++++++----
->   1 files changed, 9 insertions(+), 4 deletions(-)
-> 
-> diff --git a/mdmon.c b/mdmon.c
-> index 70fbd0b..d593ebc 100644
-> --- a/mdmon.c
-> +++ b/mdmon.c
-> @@ -244,7 +244,7 @@ static int do_fork(void)
->   
->   void usage(void)
->   {
-> -	fprintf(stderr, "Usage: mdmon /device/name/for/container [target_dir]\n");
-> +	fprintf(stderr, "Usage: mdmon [--all] [--takeover] CONTAINER");
->   	exit(2);
->   }
->   
-> @@ -262,15 +262,20 @@ int main(int argc, char *argv[])
->   
->   	for (arg = 1; arg < argc; arg++) {
->   		if (strcmp(argv[arg], "--all") == 0 ||
-> -		    strcmp(argv[arg], "/proc/mdstat") == 0)
-> +		    strcmp(argv[arg], "/proc/mdstat") == 0) {
-> +			container_name = argv[arg];
->   			all = 1;
-> -		else if (strcmp(argv[arg], "--takeover") == 0)
-> +		} else if (strcmp(argv[arg], "--takeover") == 0) {
-> +			/* hide the --takeover arg from commandline */
-> +			memset(argv[arg], 0, strlen(argv[arg]));
->   			takeover = 1;
-> -		else if (container_name == NULL)
-> +		} else if (container_name == NULL)
->   			container_name = argv[arg];
->   		else
->   			usage();
->   	}
-> +	if (container_name == NULL)
-> +		usage();
->   
->   	if (all) {
->   		struct mdstat_ent *mdstat, *e;
-
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
