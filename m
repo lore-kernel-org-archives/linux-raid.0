@@ -1,67 +1,56 @@
 From: Asdo <asdo@shiftmail.org>
-Subject: Internal controllers for md-raid
-Date: Tue, 02 Mar 2010 19:11:29 +0100
-Message-ID: <4B8D54D1.3010000@shiftmail.org>
+Subject: Re: Why does one get mismatches?
+Date: Tue, 02 Mar 2010 19:14:25 +0100
+Message-ID: <4B8D5581.8070509@shiftmail.org>
+References: <4B7B0D45.7040801@tmr.com>
+ <6db64f7872286165ac1fd3436e9d6476@localhost>
+ <20100218100547.7aecdc34@notabene.brown> <4B853BBF.7000607@tmr.com>
+ <yq1ocjemx46.fsf@sermon.lab.mkp.net> <20100225083936.07cd48ad@notabene.brown>
+ <20100228080949.GA30574@maude.comedia.it>
+ <20100302160100.621f9811@notabene.brown>
+ <20100302073624.GA28827@maude.comedia.it>
+ <4877c76c1003020204r477e942fo8ada66e1e9426295@mail.gmail.com>
+ <20100302110232.GA14131@maude.comedia.it>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-reply-to: <20100302110232.GA14131@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
-excuse me if I resurrect this topic again.
+Luca Berra wrote:
+>>>
+>>> I will try to explain better,
+>>> the problem is not related to the confusion between B or B'
+>>>
+>>> the problem is that on one disk we have B' _without_ C.
+>>>
+>> You're demanding full atomic commits; this is precisely what journals
+>> and /barriers/ are for.
+>>
+>> Are you are bypassing them in a quest for performance and paying for
+>> it on crashes?
+>> Or is this a hardware bug?
+>> Or is it some glitch in the block device layering leading to barrier
+>> requests not being honored?
+> I just asked for confirmation that with /barriers/ the scenario above
+> would not happen.
+>
 
-We need to buy some controllers for internal RAID (=same chassis as the 
-mainboard) with lots of ports: at least 16.
+I think so, that it would not happen: the filesystem would stay 
+consistent. (while the mismatches could still happen)
 
-Would be for MD RAID use (no HW raid).
+The problem is that the barriers were introduced in all md raids in the 
+2.6.33 (just released), and also I have read XFS has a major performance 
+drop with barriers activated. People will be tempted to disable 
+barriers. AFAIR the performance drop was visible with 1 disk alone, 
+imagine now with RAID. And I expect similar performance drops with other 
+filesystems, correct me if I am wrong.
 
-We have WD RE3 SATA drives, so SAS is not necessary. BTW the differences 
-between SATA and SAS are not yet that clear to me especially for 
-internal arrays i.e. no expanders.
-
-The driver should be in the mainstream kernel otherwise upgrading or 
-using a new kernel is a pain. This seems to exclude all new LSI 
-controllers, which have been suggested on this linux-raid ML: by 
-grepping the 2.6.33 sources it seems I can't find drivers for LSI 84016E 
-16internal ports, nor for the LSI SAS 9200-8e which was suggested in 
-this ML.
-
-@ people using LSI SAS cards: how can you use the latest kernel? Latest 
-driver I see at the website is for RHEL5 and SLES10 so would be 2.6.16. 
-You are forced to use such an old kernel?
-
-We also need hot-swap, or "warm" swap whatever... I mean it's OK to type 
-commands at the console but we mustn't need to reboot the machine to see 
-new drives.
-
-Looking around I have found the following controllers:
-
-    Areca ARC-1680ix-24 - (24int + 4 ext) - $1130
-    Areca ARC-1300ix-16  (16int + 4ext) - $330
-    Areca ARC-1280ML (24int) - (probably surpassed by the 1680ix) - $1100
-    Adaptec 51645 - (16int + 4ext) - $800
-    Intel SRCSASPH16I  (16int) - $630
-    3ware 9650SE  -16ML or -24M8: $850 or $1000
-
-3wares 9650SE we already have them: they are stable but it seems to me 
-that they are slow, especially for random I/O.
-
-The Areca ARC-1300ix-16 is very cheap but I read of big troubles with 
-that card or the  using the same Marvell chipset. I think there is a 
-discussion still going in linux-scsi. I'll try to follow there.
-
-For the Intel SRCSASPH16I card I don't see the driver mentioned 
-explicitly in the kernel sources. The card uses two LSI SAS1068 
-controllers for which I do see the driver in the kernel souces but I 
-don't know if this is enough to support the Intel card at least as an 
-HBA (no HW RAID). Linux-scsi people do you know?
-
-Regarding the Areca Adaptec cards (except the 1300ix), anybody having 
-any experience with these brands can comment on stability and speed on 
-linux MD raid?
-
-Thanks for your suggestions
-Asdo
+Now it would be interesting to understand why the mismatches don't 
+happen when LVM is above MD-raid!?
+The mechanisms presented up to now on this ML for mismatches don't 
+explain why on LVM the same issue doesn't show up. I think.
+So you might want to use raid-1 and raid-10 under LVM, just in case....
