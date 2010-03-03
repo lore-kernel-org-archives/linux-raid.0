@@ -1,51 +1,60 @@
-From: Robert Minvielle <robert@lite3d.com>
-Subject: Re: mdadm question
-Date: Tue, 2 Mar 2010 21:05:53 -0600 (CST)
-Message-ID: <1002081872.2738.1267585553566.JavaMail.root@mail1>
-References: <2127483366.2736.1267585385014.JavaMail.root@mail1>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [mdadm PATCH 1/3] fix gcc warnings about strict-aliasing rules
+Date: Wed, 3 Mar 2010 15:19:57 +1100
+Message-ID: <20100303151957.217fdf0b@notabene.brown>
+References: <20100227135338.GB24207@maude.comedia.it>
+	<4B8CC0E5.4040004@msgid.tls.msk.ru>
+	<20100302074811.GC28827@maude.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2127483366.2736.1267585385014.JavaMail.root@mail1>
+In-Reply-To: <20100302074811.GC28827@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Luca Berra <bluca@comedia.it>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
------ "Neil Brown" <neilb@suse.de> wrote:
+On Tue, 2 Mar 2010 08:48:11 +0100
+Luca Berra <bluca@comedia.it> wrote:
 
-> On Tue, 2 Mar 2010 19:15:04 -0600 (CST)
-> Using old software on new hardware....
-> When using Debian, I would recommend the -testing version for new
-> hardware....
-> (not that I am prepared to back-up that recommendation with support).
+> On Tue, Mar 02, 2010 at 10:40:21AM +0300, Michael Tokarev wrote:
+> >Luca Berra wrong:
+> >> Signed-off-by: Luca Berra <bluca@comedia.it>
+> >> ---
+> >>   util.c |    4 ++--
+> >>   1 files changed, 2 insertions(+), 2 deletions(-)
+> >> 
+> >> diff --git a/util.c b/util.c
+> >> index 68f048d..1def2a0 100644
+> >> --- a/util.c
+> >> +++ b/util.c
+> >> @@ -1160,7 +1160,7 @@ static int get_gpt_last_partition_end(int fd,
+> >> unsigned long long *endofpart)
+> >>       entry_size = __le32_to_cpu(buf[GPT_ENTRY_SIZE_OFFSET]);
+> >>         /* Check GPT signature*/
+> >> -    if (*((__u64*)buf) != GPT_SIGNATURE_MAGIC)
+> >> +    if ((__u64)buf[0] != GPT_SIGNATURE_MAGIC)
+> >
+> >This looks wrong.
+> >
+> >buf is an array of unsigned char.  Before, we converted the
+> >whole thing to a pointer to u64 and took the first element
+> >at that address, u64 size.  Now after the change, we take
+> >first _byte_ of the array, convert it to u64 (adding leading
+> >zeros) and compare with a large number.
 > 
-> However I suspect Debian5 should be able to be made to work with your
-> setup.
-
-Hrmm, will look into that. 
-
+> you are correct, this is obviously wrong, i wonder what i was thinking.
 > 
-> The default metadata layout has a maximum of 28 devices.  If you want
-> more,
-> add
->    --metadata=1.0
-> 
-> You won't be able to use in-kernel autodetect, but you shouldn't need
-> to with
-> Debian, even at that vintage.
-> 
+> any idea on how to get this right?
+> sscanf? union?
 
-Argh, I see the note now in the man page. I missed it. Funny that google
-did not return that/man page/etc when I searched for things like "maximum number of
-drives in mdadm array" etc. 
+I fixed it with:
 
+ __u64* buf64;
 
+ ....
+ buf64 = (__u64*)buf;
+ if (buf64[0] != ....).....
 
-> I'm surprised it didn't work with '2', or did you mean "42" ?
-> 
-
-Yes, sorry for the confusion. 
-
-Thanks. 
+NeilBrown
