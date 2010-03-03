@@ -1,87 +1,126 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: mdadm question
-Date: Tue, 2 Mar 2010 19:45:19 -0600
-Message-ID: <BE.6B.06903.23FBD8B4@cdptpa-omtalb.mail.rr.com>
-References: <214245121.2733.1267578904402.JavaMail.root@mail1>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [mdadm PATCH 5/9] mdmon: mdmon_pid should return pid from
+ either dir
+Date: Wed, 3 Mar 2010 12:50:31 +1100
+Message-ID: <20100303125031.4ae998cb@notabene.brown>
+References: <cover.1267282753.git.bluca@comedia.it>
+	<20100228144123.GA24781@maude.comedia.it>
+	<20100228144340.GD24781@maude.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <214245121.2733.1267578904402.JavaMail.root@mail1>
+In-Reply-To: <20100228144340.GD24781@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Robert Minvielle' <robert@lite3d.com>, linux-raid@vger.kernel.org
+To: Luca Berra <bluca@comedia.it>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Robert Minvielle
-> Sent: Tuesday, March 02, 2010 7:15 PM
-> To: linux-raid@vger.kernel.org
-> Subject: mdadm question
-> 
-> 
-> I am trying to setup a new raid array on a debian box, and I have not run
-> into
-> this problem before. I could not find a mdadm list, so I will ask here. If
-> this
-> is totally off topic, please disregard.
-> 
-> 
-> I am attempting to setup a raid 6 array, but this is failing so I backing
-> down
-> to a no-frills raid 5 array. The system is Debian5, stock kernel, stock
-> everything.
-> The mdadm is the stock debian, pulled with apt-get, version 2.6.7.
-> The machine in question has one IDE drive for linux, and 45 SATA drives.
+On Sun, 28 Feb 2010 15:43:40 +0100
+Luca Berra <bluca@comedia.it> wrote:
 
-	I think that's your problem.  The default for 2.6.7 is a version .90
-superblock.  The .90 superblock is limited to 28 devices in the array.  Ise
-a version 1.x superblock, instead.
+> mdmon_pid is called by mdmon_running to check if mdmon is running, so
+> the pid file should be checked in either VAR_RUN or ALT_RUN
 
-> Debian
-> sees all of the drives, and I have fdisked all of them with one partition
-> of type
-> fd (Linux autodetect raid). fdisk -l /dev/sd[a-z] /dev/sdaa[a-s] shows
-> them all
-> with no problems.
-> 
-> The issue is that when I do a
-> 
-> mdadm --create /dev/md0 --level=5 --raid-devices=45 /dev/sd[a-z]1
-> /dev/sda[a-s]1
+I don't agree with this.
 
-	Make that:
-` mdadm --create /dev/md0 --level=5 --raid-devices=45 --metadata=1.x`
-/dev/sd[a-z]1  /dev/sda[a-s]1
+The only time that any code should care about ALT_RUN is when mdmon is
+starting.  It chooses VAR_RUN or ALT_RUN to use, and possibly looks for an
+old instance to kill.
 
-	where x is 0, 1, or 2 and I think you'll be fine.  See the man page.
- 
-> to create a raid array with no spares, all defaults, it returns with
+When starting mdmon without "--takeover", if it decided to use VAR_RUN, it
+would not check ALT_RUN to see if an old mdmon was running.  So I have
+replaced you patch with a patch to include that extra check when starting
+mdmon without --takeover.
+Maybe that is the case you intended to address??
+
+Thanks,
+NeilBrown
+
+
+
 > 
-> invalid number of raid devices.
+> Signed-off-by: Luca Berra <bluca@comedia.it>
+> ---
+>   mdadm.h |    2 +-
+>   mdmon.c |    6 +++---
+>   util.c  |   14 ++++++++++++--
+>   3 files changed, 16 insertions(+), 6 deletions(-)
 > 
-> I have searched the web to no avail. --verbose does not increase
-> verbosity. There
-> are no debug switches (that I know of) to mdadm. log files show nothing.
-> Leaving off
-> --raid-devices=45 does nothing. Changing the number of devices just for
-> fun does
-> nothing. (45,44,43,2,whatever). I am not sure if this is a problem with
-> this version
-> in debian, the number of drives that I have, or the setup. I have done
-> this before
-> (with a few less drives) with no problems.
-> 
-> Any suggestions would be appreciated.
-> 
-> Thanks.
-> 
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> diff --git a/mdadm.h b/mdadm.h
+> index df3a056..7efa8bf 100644
+> --- a/mdadm.h
+> +++ b/mdadm.h
+> @@ -897,7 +897,7 @@ extern int open_container(int fd);
+>   
+>   extern char *pid_dir;
+>   extern int mdmon_running(int devnum);
+> -extern int mdmon_pid(int devnum);
+> +extern int mdmon_pid(int devnum, const char *pid_dir);
+>   extern int check_env(char *name);
+>   extern __u32 random32(void);
+>   extern int start_mdmon(int devnum);
+> diff --git a/mdmon.c b/mdmon.c
+> index 57fd492..3410e84 100644
+> --- a/mdmon.c
+> +++ b/mdmon.c
+> @@ -441,10 +441,10 @@ static int mdmon(char *devname, int devnum, int must_fork, int takeover)
+>   	sigaction(SIGPIPE, &act, NULL);
+>   
+>   	if (takeover) {
+> -		victim = mdmon_pid(container->devnum);
+> +		victim = mdmon_pid(container->devnum, pid_dir);
+>   		if (victim < 0) {
+>   			pid_dir = ALT_RUN;
+> -			victim = mdmon_pid(container->devnum);
+> +			victim = mdmon_pid(container->devnum, pid_dir);
+>   		}
+>   		if (victim >= 0)
+>   			victim_sock = connect_monitor(container->devname);
+> @@ -467,7 +467,7 @@ static int mdmon(char *devname, int devnum, int must_fork, int takeover)
+>   			exit(3);
+>   		}
+>   		/* if there is a pid file, kill whoever is there just in case */
+> -		victim = mdmon_pid(container->devnum);
+> +		victim = mdmon_pid(container->devnum, NULL);
+>   	}
+>   	if (container->ss->load_super(container, mdfd, devname)) {
+>   		fprintf(stderr, "mdmon: Cannot load metadata for %s\n",
+> diff --git a/util.c b/util.c
+> index 2fe566d..50e04bf 100644
+> --- a/util.c
+> +++ b/util.c
+> @@ -1465,12 +1465,22 @@ int fd2devnum(int fd)
+>   
+>   char *pid_dir = VAR_RUN;
+>   
+> -int mdmon_pid(int devnum)
+> +int mdmon_pid(int devnum, const char *pid_dir)
+>   {
+>   	char path[100];
+>   	char pid[10];
+>   	int fd;
+>   	int n;
+> +
+> +	/* if pid_dir is null try to detect it */
+> +	if (!pid_dir) {
+> +		n = mdmon_pid(devnum, VAR_RUN);
+> +		if (n >= 0)
+> +			return n;
+> +		else
+> +			return mdmon_pid(devnum, ALT_RUN);
+> +	}
+> +
+>   	sprintf(path, "%s/%s.pid", pid_dir, devnum2devname(devnum));
+>   	fd = open(path, O_RDONLY | O_NOATIME, 0);
+>   
+> @@ -1485,7 +1495,7 @@ int mdmon_pid(int devnum)
+>   
+>   int mdmon_running(int devnum)
+>   {
+> -	int pid = mdmon_pid(devnum);
+> +	int pid = mdmon_pid(devnum, NULL);
+>   	if (pid <= 0)
+>   		return 0;
+>   	if (kill(pid, 0) == 0)
 
