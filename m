@@ -1,108 +1,60 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [mdadm PATCH 2/2] fix mdmon takeover
-Date: Wed, 3 Mar 2010 11:52:53 +1100
-Message-ID: <20100303115253.48645cfb@notabene.brown>
+Subject: Re: [mdadm PATCH 4/9] mdmon: check select a writable pid_dir
+Date: Wed, 3 Mar 2010 12:07:14 +1100
+Message-ID: <20100303120714.5577d74c@notabene.brown>
 References: <cover.1267282753.git.bluca@comedia.it>
-	<2-2.1267282753.git.bluca@comedia.it>
+	<20100228144123.GA24781@maude.comedia.it>
+	<20100228144257.GC24781@maude.comedia.it>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <2-2.1267282753.git.bluca@comedia.it>
+In-Reply-To: <20100228144257.GC24781@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
 To: Luca Berra <bluca@comedia.it>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, 27 Feb 2010 16:07:51 +0100
+On Sun, 28 Feb 2010 15:42:57 +0100
 Luca Berra <bluca@comedia.it> wrote:
 
-> there are two cases that would result in two mdmon processes for the
-> same array
-> takeover not detecting pid file in ALT_RUN
-> if running mdmon a second time without "--takeover"
+> Check that either VAR_DIR or ALT_DIR is actually writable before
+> selecting it.
+
+Why would e.g. /var/run/mdadm exist but not be writable?  Sounds like a
+serious mis-configuration.
+
+Nevertheless, it is safer this way.
+I personally avoid using 'access' unless I am running setuid and want to
+check what the real-uid would be allowed to do, as that is what 'access'
+is for.
+So I changed this code to test writability by calling make_pidfile - i.e.
+actually doing the write.
+
+Thanks,
+NeilBrown
+
+
 > 
 > Signed-off-by: Luca Berra <bluca@comedia.it>
 > ---
->   mdmon.c |   10 +++++++++-
->   msg.c   |    2 +-
->   util.c  |    4 ++--
->   3 files changed, 12 insertions(+), 4 deletions(-)
+>   mdmon.c |    4 ++--
+>   1 files changed, 2 insertions(+), 2 deletions(-)
 > 
 > diff --git a/mdmon.c b/mdmon.c
-> index d593ebc..a2b7946 100644
+> index 11b4f32..57fd492 100644
 > --- a/mdmon.c
 > +++ b/mdmon.c
-> @@ -441,7 +441,6 @@ static int mdmon(char *devname, int devnum, int must_fork, int takeover)
->   	sigaction(SIGPIPE, &act, NULL);
->   
->   	if (takeover) {
-> -		pid_dir = VAR_RUN;
->   		victim = mdmon_pid(container->devnum);
->   		if (victim < 0) {
->   			pid_dir = ALT_RUN;
-
-Is this just a micro-optimisation? or does it have some real functional
-significance?
-
-> @@ -453,6 +452,15 @@ static int mdmon(char *devname, int devnum, int must_fork, int takeover)
->   
->   	ignore = chdir("/");
->   	if (victim < 0) {
-> +		pid_dir = ALT_RUN;
-> +		if (ping_monitor(container->devname) == 0) {
-> +			fprintf(stderr, "mdmon: %s already managed\n",
-> +				container->devname);
-> +			if (!takeover)
-> +				fprintf(stderr, "\trun mdmon --takeover instead\n");
-> +			exit(3);
-> +		}
-> +		pid_dir = VAR_RUN;
->   		if (ping_monitor(container->devname) == 0) {
->   			fprintf(stderr, "mdmon: %s already managed\n",
->   				container->devname);
-
-I don't understand this.  We always know where the pid file is, why do we
-have to check again?
-
-> diff --git a/msg.c b/msg.c
-> index cc07b96..d2d8445 100644
-> --- a/msg.c
-> +++ b/msg.c
-> @@ -147,7 +147,7 @@ int connect_monitor(char *devname)
->   	int pos;
->   	char *c;
->   
-> -	pos = sprintf(path, "%s/", VAR_RUN);
-> +	pos = sprintf(path, "%s/", pid_dir);
->   	if (is_subarray(devname)) {
->   		devname++;
->   		c = strchr(devname, '/');
-
-This is correct, thanks.
-
-> diff --git a/util.c b/util.c
-> index 1def2a0..2fe566d 100644
-> --- a/util.c
-> +++ b/util.c
-> @@ -1475,11 +1475,11 @@ int mdmon_pid(int devnum)
->   	fd = open(path, O_RDONLY | O_NOATIME, 0);
->   
->   	if (fd < 0)
-> -		return 0;
-> +		return -1;
->   	n = read(fd, pid, 9);
->   	close(fd);
->   	if (n <= 0)
-> -		return 0;
-> +		return -1;
->   	return atoi(pid);
->   }
->   
-
-This is needed too.
-For now I'll keep just the last two chunks.
-
-Thanks.
-NeilBrown
+> @@ -480,9 +480,9 @@ static int mdmon(char *devname, int devnum, int must_fork, int takeover)
+>   	 */
+>   	if (victim > 0)
+>   		remove_pidfile(devname);
+> -	if (mkdir(VAR_RUN, 0600) >= 0 || errno == EEXIST)
+> +	if (mkdir(VAR_RUN, 0600) >= 0 || (errno == EEXIST && access(VAR_RUN, W_OK) >= 0))
+>   		pid_dir = VAR_RUN;
+> -	else if (mkdir(ALT_RUN, 0600) >= 0 || errno == EEXIST)
+> +	else if (mkdir(ALT_RUN, 0600) >= 0 || (errno == EEXIST && access(ALT_RUN, W_OK) >= 0))
+>   		pid_dir = ALT_RUN;
+>   	else {
+>   		fprintf(stderr, "mdmon: Neither %s nor %s are writable\n"
 
