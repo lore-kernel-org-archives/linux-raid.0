@@ -1,138 +1,51 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm 3.1.1 feedback
-Date: Wed, 3 Mar 2010 13:01:50 +1100
-Message-ID: <20100303130150.7ce572ee@notabene.brown>
-References: <4B8D69DB.5010002@bellsouth.net>
+From: Robert Minvielle <robert@lite3d.com>
+Subject: Re: mdadm question
+Date: Tue, 2 Mar 2010 21:05:53 -0600 (CST)
+Message-ID: <1002081872.2738.1267585553566.JavaMail.root@mail1>
+References: <2127483366.2736.1267585385014.JavaMail.root@mail1>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B8D69DB.5010002@bellsouth.net>
+In-Reply-To: <2127483366.2736.1267585385014.JavaMail.root@mail1>
 Sender: linux-raid-owner@vger.kernel.org
-To: Csaba Biegl <bieglc@bellsouth.net>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 02 Mar 2010 13:41:15 -0600
-Csaba Biegl <bieglc@bellsouth.net> wrote:
+----- "Neil Brown" <neilb@suse.de> wrote:
 
-> Neil (and possibly others),
+> On Tue, 2 Mar 2010 19:15:04 -0600 (CST)
+> Using old software on new hardware....
+> When using Debian, I would recommend the -testing version for new
+> hardware....
+> (not that I am prepared to back-up that recommendation with support).
 > 
-> Thanks for your recent work on the new in-kernel and mdadm features that 
-> allow the use of non-native RAID metadata formats with Linux software 
-> RAID. I recently put it to the test on two different machines. Below are 
-> my experiences. Hopefully you will find them useful.
-> 
-> Machines:
-> 
-> #1: HP XW8400 with 6 port Intel SATA controller, supports IMSM. 5x250GB 
-> SATA drives, set up in BIOS as RAID5, with single virtual array.
-> 
-> #2: Supermicro server with X7DCA-3 motherboard. SATA array connnected to 
-> integrated LSI 1068E SAS controller. MB has LSI software RAID feature 
-> enabled (DDF). 8x500GB SATA drives, set up in BIOS as RAID5, with 
-> multiple virtual arrays.
-> 
-> Both machines dual boot WinXP Pro 64 and 64 bit Linux, the latter being 
-> the Slackware 13.0 distro.
-> 
-> Observations:
-> 
-> 1) On machine #1 mdadm release versions 3.0.3 and 3.1.1 both fail to 
-> start mdmon, therefore assembled RAID is read only. Checked out latest 
-> git version of mdadm, runs array fine. After this I did not even bother 
-> with release versions of mdadm on machine #2.
+> However I suspect Debian5 should be able to be made to work with your
+> setup.
 
-Fair enough.  Hopefully 3.1.2 will be out soon with all this fixed.
+Hrmm, will look into that. 
 
 > 
-> 2) On machine #2 mdadm assembles the DDF BIOS created array fine, 
-> however upon shutdown it somehow updates the metadata in a way that the 
-> BIOS does not recognize the arrays any more. But booting Linux again -- 
-> of course not from the freshly trashed RAID :-( -- the array can be 
-> re-assembled using mdadm.
-
-That is going to be hard to track down.  Maybe I have some checksum
-wrong but don't verify it properly when reading the metadata ...
-
-Can you get me the output of "mdadm --examine" on each individual device
-after the BIOS has just created the array, and again after mdadm has
-made a mess and the BIOS doesn't recognise it any more?
-
+> The default metadata layout has a maximum of 28 devices.  If you want
+> more,
+> add
+>    --metadata=1.0
 > 
-> 3) The latest git version of mdmon has some command line processing bugs 
-> that will crash the program if no container is given on the command line 
-> (i.e. "mdmon --all --takeover", etc..). Patch attached.
-
-This has been fixed, thanks.
-
-> 
-> 4) The static linked version of mdmon crashes in the forked daemon 
-> process. According to "gdb mdmon core", the crash is in one of the 
-> signal handlers ("wake_me") which gets called with an invalid stack 
-> pointer. To me it looks like this is not mdmon's problem but rather a 
-> brain-dead static libc. Did not try other environments, so I do not know 
-> whether this is Slackware and/or 64 bit specific.
-
-You are probably right.  I probably won't try to track this down.
-
-
-> 
-> Question:
-> 
-> I chose a startup/initrd approach somewhat different than what is 
-> suggested in the documentation. It is based on the fact that the RAID 
-> array can be assembled in read-only mode just by "mdadm" without an 
-> available "mdmon". Relevant steps from the initrd's init script:
-
-You should be sure to test if this works after a crash - i.e. when the
-filesystem is inconsistent.
-
-In this situation, ext3fs will replay the journal even if the filesystem is
-mounted read-only, so it will want to write to the device, thus necessitating 
-mdmon.
-
-If you do experiment with this, let us know how it goes please.
-
-Thanks,
-NeilBrown
-
-
-> 
->    mdadm -Es > /etc/mdadm.conf
->    mdadm -As
->    mount -r /dev/mdXpY /mnt
->    mount -n -t tmpfs initrw /mnt/lib/init/rw
->    mkdir -p /mnt/lib/init/rw/mdadm
->    for dev in /dev/md/ddf* /dev/md/imsm*; do mdmon $dev; done
->    switch_root /mnt /sbin/init
-> 
-> With the following links/files in place on the initrd:
-> 
->    /sbin/mdadm     # statically linked
->    /sbin/mdmon -> /mnt/sbin/mdmon
->    /lib64/*.so    ->   /mnt/lib64/*.so        # libraries needed by the 
-> dynamically linked mdmon
->    /var/run/mdadm -> /mnt/init/rw/mdadm
->    /init/rw/mdadm -> /mnt/init/rw/mdadm
-> 
-> And the final system also has this:
-> 
->    /var/run/mdadm -> /lib/init/rw/mdadm
-> 
-> So this approach allows me to run the final system's copy of mdmon, 
-> without ever having to use the '--takeover' stuff. And the mdmon 
-> "status" files are always in the same place. And /var can be unmounted 
-> during shutdown. Anything wrong with this? So far working fine for me...
-> 
-> Thanks,
-> 
-> Csaba Biegl
-> bieglc@bellsouth.net
-> 
-> 
-> 
-> 
-> 
+> You won't be able to use in-kernel autodetect, but you shouldn't need
+> to with
+> Debian, even at that vintage.
 > 
 
+Argh, I see the note now in the man page. I missed it. Funny that google
+did not return that/man page/etc when I searched for things like "maximum number of
+drives in mdadm array" etc. 
+
+
+
+> I'm surprised it didn't work with '2', or did you mean "42" ?
+> 
+
+Yes, sorry for the confusion. 
+
+Thanks. 
