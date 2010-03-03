@@ -1,86 +1,138 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [mdadm PATCH 9/9] allow redefinition of VAR_RUN
-Date: Wed, 3 Mar 2010 12:53:37 +1100
-Message-ID: <20100303125337.41a844bf@notabene.brown>
-References: <cover.1267282753.git.bluca@comedia.it>
-	<20100228144123.GA24781@maude.comedia.it>
-	<20100228144616.GH24781@maude.comedia.it>
+Subject: Re: mdadm 3.1.1 feedback
+Date: Wed, 3 Mar 2010 13:01:50 +1100
+Message-ID: <20100303130150.7ce572ee@notabene.brown>
+References: <4B8D69DB.5010002@bellsouth.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100228144616.GH24781@maude.comedia.it>
+In-Reply-To: <4B8D69DB.5010002@bellsouth.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Luca Berra <bluca@comedia.it>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Csaba Biegl <bieglc@bellsouth.net>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 28 Feb 2010 15:46:16 +0100
-Luca Berra <bluca@comedia.it> wrote:
+On Tue, 02 Mar 2010 13:41:15 -0600
+Csaba Biegl <bieglc@bellsouth.net> wrote:
 
-> having mdmon socket under var is painful at shutdown time
+> Neil (and possibly others),
+> 
+> Thanks for your recent work on the new in-kernel and mdadm features that 
+> allow the use of non-native RAID metadata formats with Linux software 
+> RAID. I recently put it to the test on two different machines. Below are 
+> my experiences. Hopefully you will find them useful.
+> 
+> Machines:
+> 
+> #1: HP XW8400 with 6 port Intel SATA controller, supports IMSM. 5x250GB 
+> SATA drives, set up in BIOS as RAID5, with single virtual array.
+> 
+> #2: Supermicro server with X7DCA-3 motherboard. SATA array connnected to 
+> integrated LSI 1068E SAS controller. MB has LSI software RAID feature 
+> enabled (DDF). 8x500GB SATA drives, set up in BIOS as RAID5, with 
+> multiple virtual arrays.
+> 
+> Both machines dual boot WinXP Pro 64 and 64 bit Linux, the latter being 
+> the Slackware 13.0 distro.
+> 
+> Observations:
+> 
+> 1) On machine #1 mdadm release versions 3.0.3 and 3.1.1 both fail to 
+> start mdmon, therefore assembled RAID is read only. Checked out latest 
+> git version of mdadm, runs array fine. After this I did not even bother 
+> with release versions of mdadm on machine #2.
 
-Thanks.  I have applied this after some minor modifications, just as
-removing the "ifdef" stuff from Makefile and adding some commentary.
+Fair enough.  Hopefully 3.1.2 will be out soon with all this fixed.
+
+> 
+> 2) On machine #2 mdadm assembles the DDF BIOS created array fine, 
+> however upon shutdown it somehow updates the metadata in a way that the 
+> BIOS does not recognize the arrays any more. But booting Linux again -- 
+> of course not from the freshly trashed RAID :-( -- the array can be 
+> re-assembled using mdadm.
+
+That is going to be hard to track down.  Maybe I have some checksum
+wrong but don't verify it properly when reading the metadata ...
+
+Can you get me the output of "mdadm --examine" on each individual device
+after the BIOS has just created the array, and again after mdadm has
+made a mess and the BIOS doesn't recognise it any more?
+
+> 
+> 3) The latest git version of mdmon has some command line processing bugs 
+> that will crash the program if no container is given on the command line 
+> (i.e. "mdmon --all --takeover", etc..). Patch attached.
+
+This has been fixed, thanks.
+
+> 
+> 4) The static linked version of mdmon crashes in the forked daemon 
+> process. According to "gdb mdmon core", the crash is in one of the 
+> signal handlers ("wake_me") which gets called with an invalid stack 
+> pointer. To me it looks like this is not mdmon's problem but rather a 
+> brain-dead static libc. Did not try other environments, so I do not know 
+> whether this is Slackware and/or 64 bit specific.
+
+You are probably right.  I probably won't try to track this down.
+
+
+> 
+> Question:
+> 
+> I chose a startup/initrd approach somewhat different than what is 
+> suggested in the documentation. It is based on the fact that the RAID 
+> array can be assembled in read-only mode just by "mdadm" without an 
+> available "mdmon". Relevant steps from the initrd's init script:
+
+You should be sure to test if this works after a crash - i.e. when the
+filesystem is inconsistent.
+
+In this situation, ext3fs will replay the journal even if the filesystem is
+mounted read-only, so it will want to write to the device, thus necessitating 
+mdmon.
+
+If you do experiment with this, let us know how it goes please.
 
 Thanks,
 NeilBrown
 
 
 > 
-> Signed-off-by: Luca Berra <bluca@comedia.it>
-> ---
->   Makefile |    8 ++++++--
->   mdadm.h  |    2 ++
->   mdmon.c  |    3 ---
->   3 files changed, 8 insertions(+), 5 deletions(-)
+>    mdadm -Es > /etc/mdadm.conf
+>    mdadm -As
+>    mount -r /dev/mdXpY /mnt
+>    mount -n -t tmpfs initrw /mnt/lib/init/rw
+>    mkdir -p /mnt/lib/init/rw/mdadm
+>    for dev in /dev/md/ddf* /dev/md/imsm*; do mdmon $dev; done
+>    switch_root /mnt /sbin/init
 > 
-> diff --git a/Makefile b/Makefile
-> index 1836b4b..1fffb26 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -62,9 +62,13 @@ CONFFILEFLAGS = -DCONFFILE=\"$(CONFFILE)\" -DCONFFILE2=\"$(CONFFILE2)\"
->   # from early boot to late boot.
->   # If you don't have /lib/init/rw you might want to use /dev/.something
->   #  e.g. make ALT_RUN=/dev/.mdadm
-> -ALT_RUN = /lib/init/rw
-> +ifdef ALT_RUN
->   ALTFLAGS = -DALT_RUN=\"$(ALT_RUN)\"
-> -CFLAGS = $(CWFLAGS) $(CXFLAGS) -DSendmail=\""$(MAILCMD)"\" $(CONFFILEFLAGS) $(ALTFLAGS)
-> +endif
-> +ifdef VAR_RUN
-> +VARFLAGS = -DVAR_RUN=\"$(VAR_RUN)\"
-> +endif
-> +CFLAGS = $(CWFLAGS) $(CXFLAGS) -DSendmail=\""$(MAILCMD)"\" $(CONFFILEFLAGS) $(ALTFLAGS) $(VARFLAGS)
->   
->   # If you want a static binary, you might uncomment these
->   # LDFLAGS = -static
-> diff --git a/mdadm.h b/mdadm.h
-> index 825e3c2..2ad4a0e 100644
-> --- a/mdadm.h
-> +++ b/mdadm.h
-> @@ -68,7 +68,9 @@ extern __off64_t lseek64 __P ((int __fd, __off64_t __offset, int __whence));
->   #define DEFAULT_BITMAP_DELAY 5
->   #define DEFAULT_MAX_WRITE_BEHIND 256
->   
-> +#ifndef VAR_RUN
->   #define VAR_RUN "/var/run/mdadm"
-> +#endif /* VAR_RUN */
->   /* ALT_RUN should be somewhere that persists across the pivotroot
->    * from early boot to late boot.
->    * If you don't have /lib/init/rw you might want to use /dev/.something
-> diff --git a/mdmon.c b/mdmon.c
-> index b823a8c..6570637 100644
-> --- a/mdmon.c
-> +++ b/mdmon.c
-> @@ -477,9 +477,6 @@ static int mdmon(char *devname, int devnum, int must_fork, int takeover)
->   		remove_pidfile(devname);
->   	}
->   	if (mkdir(VAR_RUN, 0600) >= 0 || (errno == EEXIST && access(VAR_RUN, W_OK) >= 0)) {
-> -		/* try to clean up when we are finished with ALT_RUN dir */
-> -		if (pid_dir != NULL)
-> -			rmdir(pid_dir);
->   		pid_dir = VAR_RUN;
->   		remove_pidfile(devname);
->   	}
+> With the following links/files in place on the initrd:
+> 
+>    /sbin/mdadm     # statically linked
+>    /sbin/mdmon -> /mnt/sbin/mdmon
+>    /lib64/*.so    ->   /mnt/lib64/*.so        # libraries needed by the 
+> dynamically linked mdmon
+>    /var/run/mdadm -> /mnt/init/rw/mdadm
+>    /init/rw/mdadm -> /mnt/init/rw/mdadm
+> 
+> And the final system also has this:
+> 
+>    /var/run/mdadm -> /lib/init/rw/mdadm
+> 
+> So this approach allows me to run the final system's copy of mdmon, 
+> without ever having to use the '--takeover' stuff. And the mdmon 
+> "status" files are always in the same place. And /var can be unmounted 
+> during shutdown. Anything wrong with this? So far working fine for me...
+> 
+> Thanks,
+> 
+> Csaba Biegl
+> bieglc@bellsouth.net
+> 
+> 
+> 
+> 
+> 
+> 
 
