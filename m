@@ -1,31 +1,38 @@
-From: Thomas Jarosch <thomas.jarosch@intra2net.com>
-Subject: Re: I am an idiot (power failure during chunk resize, no backup file)
-Date: Thu, 4 Mar 2010 14:51:21 +0100
-Message-ID: <201003041451.21279.thomas.jarosch@intra2net.com>
-References: <68c4f7e31003040437u233f8eb6q6d7351dba50578be@mail.gmail.com>
+From: "Ken D'Ambrosio" <ken@jots.org>
+Subject: RAID MIA.  Again.  (Kinda.)
+Date: Thu, 4 Mar 2010 11:12:29 -0500 (EST)
+Message-ID: <ef2f0a4210283390480f4adbd9a547de.squirrel@webmail.jots.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <68c4f7e31003040437u233f8eb6q6d7351dba50578be@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Alex,
+Hey, all.  I had a problem a month or so ago where I had three mirrors,
+and one of them went AWOL after a system migration.  Finally got as much
+as I could back, created a RAID-5 of four of the 1.5 TB disks, put
+everything on it, recovered more from backup, and was feeling pretty good.
 
-On Thursday, 4. March 2010 13:37:54 you wrote:
-> Yes I am using LVM.  I'm not entirely sure how to go about messing
-> with the mounting as you describe, I've never had to do it.  Is this
-> with the mount command?  I do keep getting an error from lvm,
-> "incorrect metadata area header checksum", with both chunk=64 and
-> chunk=256 during the recreate.
+Then the power went out.
 
-Try to create a raw copy of those discs if your budget allows it
-before you start fooling around. That way you won't damage
-the real array any further and you can "experiment".
-Your data should be worth it.
+Now, now RAID-5.  Or, rather, mdadm sees that there are RAID partitions,
+and starts; fdisk shows me an unpartitioned disk.  Which is, essentially,
+the exact same thing I had happen last time.  (Except that, this time, I
+*know* my mdadm.conf is correct, because it hasn't changed -- but, for the
+hell of it, I did a "mdadm --detail --scan", and it matches.)
 
-Cheers,
-Thomas
+WTF?  Am I too stupid for software RAID?  Is there something really
+obvious I'm missing?  Any help at all would be most graciously accepted.
+
+Thanks,
+
+-Ken
+
+
+-- 
+This message has been scanned for viruses and
+dangerous content by MailScanner, and is
+believed to be clean.
+
