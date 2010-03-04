@@ -1,49 +1,89 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID MIA.  Again.  (Kinda.)
-Date: Fri, 5 Mar 2010 07:50:16 +1100
-Message-ID: <20100305075016.51e98363@notabene.brown>
-References: <ef2f0a4210283390480f4adbd9a547de.squirrel@webmail.jots.org>
+From: Michael Evans <mjevans1983@gmail.com>
+Subject: Re: Removing drives
+Date: Thu, 4 Mar 2010 14:45:35 -0800
+Message-ID: <4877c76c1003041445g2ac9aaf6ua5fac64db975da1@mail.gmail.com>
+References: <4B8F26AF.7080308@vorgon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ef2f0a4210283390480f4adbd9a547de.squirrel@webmail.jots.org>
+In-Reply-To: <4B8F26AF.7080308@vorgon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ken D'Ambrosio <ken@jots.org>
+To: "Timothy D. Lenz" <tlenz@vorgon.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 4 Mar 2010 11:12:29 -0500 (EST)
-"Ken D'Ambrosio" <ken@jots.org> wrote:
+On Wed, Mar 3, 2010 at 7:19 PM, Timothy D. Lenz <tlenz@vorgon.com> wrot=
+e:
+> Some time back I started setting up a couple of vdr computers with ra=
+id. The
+> one with 3 500gb drives, I setup 2 raid 1 partitions with 1 spare fo =
+boot
+> and swap and used the rest of the 3 drives for a raid5 array. I had p=
+roblems
+> getting it to boot, and it was advised to change the raid 1 arrays to=
+ 3
+> mirror which I did. Bu I got busy with other things and never tried t=
+o
+> switch it to boot from the arrays. Since then I aquired a 4th drive s=
+ame
+> size and model. I want to change md0/1 back to 2 drive mirrors and ch=
+ange
+> md2 from raid5 to raid1 freeing up a drive which I then want use to w=
+ith the
+> new drive to create another raid1 array. Before I can install the new=
+ drive,
+> I need to get it booting from md0 so I can remove the old ide drive.
+>
+> I figure I need to shrink md0 and md1 and then fail the 3rd drive in =
+each of
+> those 2 arrays before changing them to 2 drive arrays? I find lots of=
+ stuff
+> about adding drives, but not much about removing the drives or how to=
+ change
+> them back to 2 drive arrays.
+>
+> Once md0 and md1 are back to 2 drives and it's booting, then I'll ins=
+tall
+> and format the new drive and copy the contents of md2 over. Then I ne=
+ed to
+> remake md2 as a 2 drive raid1. Then copy the data back and i'll have =
+2
+> drives to make md3.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-> Hey, all.  I had a problem a month or so ago where I had three mirrors,
-> and one of them went AWOL after a system migration.  Finally got as much
-> as I could back, created a RAID-5 of four of the 1.5 TB disks, put
-> everything on it, recovered more from backup, and was feeling pretty good.
-> 
-> Then the power went out.
-> 
-> Now, now RAID-5.  Or, rather, mdadm sees that there are RAID partitions,
-> and starts; fdisk shows me an unpartitioned disk.  Which is, essentially,
-> the exact same thing I had happen last time.  (Except that, this time, I
-> *know* my mdadm.conf is correct, because it hasn't changed -- but, for the
-> hell of it, I did a "mdadm --detail --scan", and it matches.)
-> 
-> WTF?  Am I too stupid for software RAID?  Is there something really
-> obvious I'm missing?  Any help at all would be most graciously accepted.
+Let's divide that problem up in to more manageable chunks.
 
-You missed the bit where you provide concrete information rather than
-vaguaries.
+1) Boot - This is small and trivial to backup and restore.
+2) Swap - Not often /required/ and thus can be disabled and erased.
+3) Raid5 - Your data, which you want to convert from Raid5 to Raid1 sto=
+rage.
 
-I'm guessing that you created the array over whole-devices, and then
-partitioned the array - is that correct?
-If fdisk shows you an unpartitioned array, maybe just the partition table is
-corrupt.   Seems strange.
+The absolute easiest (and safest) thing to do is to backup your data,
+verify the backup, then erase all the disks and start clean.
 
-To so that I/we don't have to guess, please give exact commands that you run
-and the exact output so we have access to the same information as you.
+Otherwise the issues will have to be handled in the listed order:
 
-Too much data is much much better than not enough.
+1) Boot
+If you are using 'Grub 2' (non grub legacy) then it wants EITHER mdadm
+label 0.90 OR the option beneath.
+Otherwise you must use mdadm label format 0.90 or, IIRC 1.0 (metadata
+at the end of the area), and specify the device not as /dev/mdX but as
+one of the member devices.  You will have to manually mirror or
+duplicate the install sections.
 
-NeilBrown
+2) swapoff, mdadm -S the device
 
+3) Maybe someone else can help with the takeover?  In any event we DO
+need more directions.  You're trying to go from 2 usable drives worth
+of storage to 1, which isn't going to work.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
