@@ -1,89 +1,31 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID MIA.  Again.  (Kinda.)
-Date: Fri, 5 Mar 2010 12:30:28 +1100
-Message-ID: <20100305123028.55a34c14@notabene.brown>
-References: <ef2f0a4210283390480f4adbd9a547de.squirrel@webmail.jots.org>
-	<20100305075016.51e98363@notabene.brown>
-	<b305ada429c44b2b62b03c101f7ecf0a.squirrel@webmail.jots.org>
+From: Benjamin Kingston <ben@bencloud.net>
+Subject: VERY slow mdadm recovery speed 12KB/s
+Date: Thu, 4 Mar 2010 22:27:49 -0700
+Message-ID: <a889ac7d1003042127j3c3e7928y107126aff1c9a6e8@mail.gmail.com>
+References: <a889ac7d1003042123x7473976dw8ffe2af6f2844afc@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <b305ada429c44b2b62b03c101f7ecf0a.squirrel@webmail.jots.org>
+In-Reply-To: <a889ac7d1003042123x7473976dw8ffe2af6f2844afc@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ken D'Ambrosio <ken@jots.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 4 Mar 2010 17:00:10 -0500 (EST)
-"Ken D'Ambrosio" <ken@jots.org> wrote:
+I did some musical HDDs to get my "best" drives to hold a critical md
+device, then one failed after a power surge. So I bought a new disk
+and added it, then accidentally marked it as failed in the middle of
+recovery. I then removed the disk and added it again. I got the
+message "/dev/sdd re-added to /dev/md1"
 
-> On Thu, March 4, 2010 3:50 pm, Neil Brown wrote:
-> > On Thu, 4 Mar 2010 11:12:29 -0500 (EST)
-> > "Ken D'Ambrosio" <ken@jots.org> wrote:
-> 
-> [bad things happened to Ken's RAID-5 here]
-> 
-> >
-> > You missed the bit where you provide concrete information rather than
-> > vaguaries.
-> 
-> Humble apologies; I'm not well-enough versed with the intricacies of Linux
-> RAID to know what's appropriate and not.
-> 
-> > I'm guessing that you created the array over whole-devices, and then
-> > partitioned the array - is that correct? If fdisk shows you an
-> > unpartitioned array, maybe just the partition table is corrupt.   Seems
-> > strange.
-> 
-> Actually, no.  These were created using /dev/sd[abcd]2 -- I saved off
-> space on sd[abcd]1 for swap, /tmp, etc.  Done via the Ubuntu installer, if
-> that makes a difference.  For the record, all the /dev/sd[abcd]1 non-RAID
-> partitions look fine.
-> 
-> > To so that I/we don't have to guess, please give exact commands that you
-> > run and the exact output so we have access to the same information as you.
-> 
-> Well, I rebooted, and was surprised that nothing RAID-esque came up. 
-> Since my OS is on one of the afore-mentioned non-RAIDed partitions, the
-> OS, itself, booted, but none of the RAID partitions mounted.  I tried to
-> mount, and failed.  That's when I checked the RAID device, /dev/md0. 
-> fdisk showed it lacking any partitions, but the mdadm.conf file hadn't
-> been touched for a couple of weeks, so I was pretty sure nothing there had
-> changed.  On the off chance that the SCSI drives had re-ordered
-> themselves, I went through all 24 permutations of
-> mdadm --assemble /dev/md0 /dev/sda2 /dev/sdb2 /dev/sdc2 /dev/sdd2
-> since I wasn't sure if the drive order was significant.  All of them
-> "worked," inasmuch as they created /dev/md0, but in all cases it was
-> partitionless.  I also tried mdadm --detail --scan, to verify that it
-> matched UUIDs with those in the /etc/mdadm.conf file, and it did (the
-> array line looks thusly:
-> ARRAY /dev/md0 level=raid5 num-devices=4
-> UUID=1e89645a:7e24dcef:9e77d54f:077a6a6f  )
-> 
-> 
-> > Too much data is much much better than not enough.
-> 
-> Granted... but, sometimes -- especially when learning -- there can be a
-> bad signal:noise ratio.  Tends to make me hesitant when I'm a (relative)
-> newbie to a given topic.  That being said, I *think* I've figured out what
-> I should be doing, but I also think I did it.  Did I miss something?
+When I do a cat /proc/mdstat the recovery speed is at 55KB/s and
+subsequent views of /proc/mdstat show that the speed goes all the way
+to 12KB/s or lower. I've since removed and re-added the drive a few
+times, but the same thing happens every time and if I leave everything
+alone while it resyncs, my CPU usage sky rockets to something like
+16.8 23.4 40.5.
 
-Which part of "please give exact commands that you
-run and the exact output"
-Did you have trouble with?
+Any help would be really appreciated as I don't want to loose the
+"good" drive. I know both have good speeds, because I can write at
+4MB/s to ext4/luks on md1 and 15MB/s on /dev/sdd with dd.
 
-Try this:
-
-cat /etc/fstab
-cat /etc/mdadm.conf
-mdadm -Esvv
-mdadm -Asv
-blkid -p /dev/md*
-
-And include all the output.
-
-(sorry if I seem grumpy, but I'm a bit tired which makes it harder to appear
-polite).
-
-NeilBrown
+P.S. could someone also explain to me the difference between md0 and md_d0?
