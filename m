@@ -1,96 +1,132 @@
 From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: RAID MIA. Again. (Kinda.)
-Date: Fri, 5 Mar 2010 12:05:32 -0800
-Message-ID: <4877c76c1003051205i23998a72xc9df3174c1e7fd17@mail.gmail.com>
-References: <ef2f0a4210283390480f4adbd9a547de.squirrel@webmail.jots.org>
-	 <20100305075016.51e98363@notabene.brown>
-	 <b305ada429c44b2b62b03c101f7ecf0a.squirrel@webmail.jots.org>
-	 <20100305123028.55a34c14@notabene.brown>
-	 <a65d84c03d315f1aea40641238f25625.squirrel@webmail.jots.org>
+Subject: Re: Removing drives
+Date: Fri, 5 Mar 2010 12:22:41 -0800
+Message-ID: <4877c76c1003051222i584bdb19r65002981060a6360@mail.gmail.com>
+References: <4B8F26AF.7080308@vorgon.com>
+	 <4877c76c1003041445g2ac9aaf6ua5fac64db975da1@mail.gmail.com>
+	 <4B9154C0.7060200@vorgon.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <a65d84c03d315f1aea40641238f25625.squirrel@webmail.jots.org>
+In-Reply-To: <4B9154C0.7060200@vorgon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ken D'Ambrosio <ken@jots.org>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: "Timothy D. Lenz" <tlenz@vorgon.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Mar 5, 2010 at 7:24 AM, Ken D'Ambrosio <ken@jots.org> wrote:
-> On Thu, March 4, 2010 8:30 pm, Neil Brown wrote:
->> Try this:
->>
->>
->> cat /etc/fstab cat /etc/mdadm.conf mdadm -Esvv mdadm -Asv blkid -p /=
-dev/md*
->>
->> And include all the output.
+On Fri, Mar 5, 2010 at 11:00 AM, Timothy D. Lenz <tlenz@vorgon.com> wro=
+te:
+> Current setup, 3 500gb sata drives, each with 3 partitions.
+> The first partition of each drive make up raid1 md0 boot and most sof=
+tware
+> The next partition of each drive make up raid1 md1 swap
+> The 3rd partition of each drive make up raid5 md2 main data storage
 >
-> See attached. =A0Note that fstab is essentially irrelevant; I'd mount=
-ed by
-> hand, and was going to add the entry after I got the server back in t=
+> There is also a 40gb ide drive with 2 partitions, boot/software and s=
+wap. It
+> was used for install and setup. But I never got boot changed over to =
+md0. So
+> currently md0 is not in use. md0 and md2 are mounted to folders on th=
+e 40gb
+> so a precopy to md0 could be made before booting with a cd and copyin=
+g what
+> ever is left that needs coping. and to use md2.
+>
+> Current
+> # /etc/fstab: static file system information.
+> #
+> # <file system> <mount point> =A0 <type> =A0<options> =A0 =A0 =A0 <du=
+mp> =A0<pass>
+> proc =A0 =A0 =A0 =A0 =A0 =A0/proc =A0 =A0 =A0 =A0 =A0 proc =A0 =A0def=
+aults =A0 =A0 =A0 =A00 =A0 =A0 =A0 0
+> /dev/hda1 =A0 =A0 =A0 / =A0 =A0 =A0 =A0 =A0 =A0 =A0 ext3 =A0 =A0defau=
+lts,errors=3Dremount-ro 0 =A0 =A0 =A0 1
+> /dev/hda5 =A0 =A0 =A0 none =A0 =A0 =A0 =A0 =A0 =A0swap =A0 =A0sw =A0 =
+=A0 =A0 =A0 =A0 =A0 =A00 =A0 =A0 =A0 0
+> /dev/md0 =A0 =A0 =A0 =A0/mnt/md0 =A0 =A0 =A0 =A0ext3 =A0 =A0defaults =
+=A0 =A0 =A0 =A00 =A0 =A0 =A0 0
+> /dev/md2 =A0 =A0 =A0 =A0/mnt/md2 =A0 =A0 =A0 =A0ext3 =A0 =A0defaults =
+=A0 =A0 =A0 =A00 =A0 =A0 =A0 0
+> /dev/hdb =A0 =A0 =A0 =A0/media/cdrom0 =A0 udf,iso9660 user,noauto =A0=
+ =A0 0 =A0 =A0 =A0 0
+> /dev/fd0 =A0 =A0 =A0 =A0/media/floppy0 =A0auto =A0 =A0rw,user,noauto =
+=A00 =A0 =A0 =A0 0
+>
+> I want to change md0 and md1 from 3 drive mirriors to 2 drive mirrors=
+=2E
+>
+> Finish changing over to booting from md0, move swap to md1 and move t=
 he
-> server room.
+> mount point for md2 to md0
 >
->> (sorry if I seem grumpy, but I'm a bit tired which makes it harder t=
-o
->> appear polite).
+> Remove the the ide drive to free up space for the 4th 500gb drive.
 >
-> Know what you mean; got four hours', myself, due to a virtualization
-> migration.
+> Copy md2 over to the new 500gb temparally.
 >
-> For the record, I've got my backup tapes ordered (again) -- if you ca=
-n
-> tell me what I did wrong, that would be almost as satisfying as getti=
-ng
-> the data back.
+> Get rid of the current md2 freeing up the 3rd drive since it was alre=
+ady
+> taken out of the mirrors above.
 >
-> Thanks,
+> Make a new md2 raid1 with the remaining space of the first 2 sata dri=
+ves.
 >
-> -Ken
-> --
-> This message has been scanned for viruses and
-> dangerous content by MailScanner, and is
-> believed to be clean.
+> Move the data from the 4th drive back to the new md2
 >
+> Repartition the 3rd drive to 1 partition same as the 4th drive.
+>
+> Make raid1 md3 from the 3rd and 4th drives.
+>
+> It's the steps/commands to change md0 and md1 from 3 drive mirrors to=
+ 2
+> drive mirrors that I'm not sure about. Though now looking at fstab I =
+see I
+> never even switched over the swap. So I guess, those to arrays would =
+be
+> rebuilt. So it's more how to do that without messing with md2.
+>
+> The computer is still on grub1. I haven't updated it it.
 >
 
-Here's a stab at it. I've never tried to do it like this and haven't
-glanced at the code so I can't be sure, but this seems to be the most
-likely suspect:
+So you have:
 
-#ARRAY /dev/md0 level=3Draid5 num-devices=3D4 devices=3Dsda2,sdb2,sdd2,=
-sdc2
+[3-devices]
+Raid 1: Unused
+Raid 1: Unused
+Raid 5: Used - 3 disks
 
-Your commented out version seems to specify this mapping
-0,sda2
-1,sdb2
-2,sdd2
-3,sdc2
+[1-device]
+Boot + swap
 
-However the array is detected like this by uuid alone (I re-ordered
-the entries so they're easier to read):
+Just swapoff the raid-swap you want to re-create, then:
+mdadm -S /dev/md(swap)
+mdadm -S /dev/md(boot)
+mdadm --zero-superblock /dev/devices in those arrays
 
-mdadm: /dev/sdb2 is identified as a member of /dev/md0, slot 0.
-mdadm: /dev/sdc2 is identified as a member of /dev/md0, slot 1.
-mdadm: /dev/sda2 is identified as a member of /dev/md0, slot 2.
-mdadm: /dev/sdd2 is identified as a member of /dev/md0, slot 3.
-mdadm: added /dev/sdb2 to /dev/md0 as 0
-mdadm: added /dev/sdc2 to /dev/md0 as 1
-mdadm: added /dev/sda2 to /dev/md0 as 2
-mdadm: added /dev/sdd2 to /dev/md0 as 3
-mdadm: /dev/md0 has been started with 4 drives.
+Repartition those two areas of the disks as necessary.
 
-This corresponds to:
+Create new boot and swap partitions.
+=46or boot make SURE you use either -e 0.90 OR -e 1.0 .   Given the
+nature of /boot I'd say use -e 0.90 on it.
+=46or everything else, including swap use -e 1.1 and optionally
+write-intent bitmaps.
 
-0,sdb2
-1,sdc2
-2,sda2
-3,sdd2
+At this point you should be able to move /boot and your swap off of
+the 40gb drive; just remember to re-install grub and that your BIOS
+likely sets the boot drive as bios-drive 0 regardless of which SDA/HDA
+linux sees it as.  This is what the device.map file is used to tell
+grub.
 
-Note how the drives are out of order?  Thus the reason for  only using
-UUID and NOT explicitly specifying an ordering?
+
+I lost exactly what you wanted the result to look like amid a long
+list of steps you /thought/ you needed to make to get there and
+references to md numbers that only have meaning to you.  However it
+seems that you were mostly stuck getting to this point, so you might
+be able to determine a plan using the data you've yet to share with
+the rest of us with that 40gb drive out of the equation.
+
+Remember that you can't reshape raid10 yet, but you can start raid10
+with 'missing' devices (and add in the spares later).
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
