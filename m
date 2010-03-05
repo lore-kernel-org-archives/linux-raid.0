@@ -1,297 +1,121 @@
-From: "Ken D'Ambrosio" <ken@jots.org>
-Subject: Re: RAID MIA.  Again.  (Kinda.)
-Date: Fri, 5 Mar 2010 10:24:55 -0500 (EST)
-Message-ID: <a65d84c03d315f1aea40641238f25625.squirrel@webmail.jots.org>
-References: <ef2f0a4210283390480f4adbd9a547de.squirrel@webmail.jots.org>
-    <20100305075016.51e98363@notabene.brown>
-    <b305ada429c44b2b62b03c101f7ecf0a.squirrel@webmail.jots.org>
-    <20100305123028.55a34c14@notabene.brown>
+From: "Timothy D. Lenz" <tlenz@vorgon.com>
+Subject: Re: Removing drives
+Date: Fri, 05 Mar 2010 12:00:16 -0700
+Message-ID: <4B9154C0.7060200@vorgon.com>
+References: <4B8F26AF.7080308@vorgon.com> <4877c76c1003041445g2ac9aaf6ua5fac64db975da1@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;boundary="----=_20100305102454_39885"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100305123028.55a34c14@notabene.brown>
+In-Reply-To: <4877c76c1003041445g2ac9aaf6ua5fac64db975da1@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Ken D'Ambrosio <ken@jots.org>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Current setup, 3 500gb sata drives, each with 3 partitions.
+The first partition of each drive make up raid1 md0 boot and most software
+The next partition of each drive make up raid1 md1 swap
+The 3rd partition of each drive make up raid5 md2 main data storage
 
-------=_20100305102454_39885
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8bit
+There is also a 40gb ide drive with 2 partitions, boot/software and 
+swap. It was used for install and setup. But I never got boot changed 
+over to md0. So currently md0 is not in use. md0 and md2 are mounted to 
+folders on the 40gb so a precopy to md0 could be made before booting 
+with a cd and copying what ever is left that needs coping. and to use md2.
 
-On Thu, March 4, 2010 8:30 pm, Neil Brown wrote:
-> Try this:
+Current
+# /etc/fstab: static file system information.
+#
+# <file system> <mount point>   <type>  <options>       <dump>  <pass>
+proc            /proc           proc    defaults        0       0
+/dev/hda1       /               ext3    defaults,errors=remount-ro 0       1
+/dev/hda5       none            swap    sw              0       0
+/dev/md0        /mnt/md0        ext3    defaults        0       0
+/dev/md2        /mnt/md2        ext3    defaults        0       0
+/dev/hdb        /media/cdrom0   udf,iso9660 user,noauto     0       0
+/dev/fd0        /media/floppy0  auto    rw,user,noauto  0       0
+
+I want to change md0 and md1 from 3 drive mirriors to 2 drive mirrors.
+
+Finish changing over to booting from md0, move swap to md1 and move the 
+mount point for md2 to md0
+
+Remove the the ide drive to free up space for the 4th 500gb drive.
+
+Copy md2 over to the new 500gb temparally.
+
+Get rid of the current md2 freeing up the 3rd drive since it was already 
+taken out of the mirrors above.
+
+Make a new md2 raid1 with the remaining space of the first 2 sata drives.
+
+Move the data from the 4th drive back to the new md2
+
+Repartition the 3rd drive to 1 partition same as the 4th drive.
+
+Make raid1 md3 from the 3rd and 4th drives.
+
+It's the steps/commands to change md0 and md1 from 3 drive mirrors to 2 
+drive mirrors that I'm not sure about. Though now looking at fstab I see 
+I never even switched over the swap. So I guess, those to arrays would 
+be rebuilt. So it's more how to do that without messing with md2.
+
+The computer is still on grub1. I haven't updated it it.
+
+On 3/4/2010 3:45 PM, Michael Evans wrote:
+> On Wed, Mar 3, 2010 at 7:19 PM, Timothy D. Lenz<tlenz@vorgon.com>  wrote:
+>> Some time back I started setting up a couple of vdr computers with raid. The
+>> one with 3 500gb drives, I setup 2 raid 1 partitions with 1 spare fo boot
+>> and swap and used the rest of the 3 drives for a raid5 array. I had problems
+>> getting it to boot, and it was advised to change the raid 1 arrays to 3
+>> mirror which I did. Bu I got busy with other things and never tried to
+>> switch it to boot from the arrays. Since then I aquired a 4th drive same
+>> size and model. I want to change md0/1 back to 2 drive mirrors and change
+>> md2 from raid5 to raid1 freeing up a drive which I then want use to with the
+>> new drive to create another raid1 array. Before I can install the new drive,
+>> I need to get it booting from md0 so I can remove the old ide drive.
+>>
+>> I figure I need to shrink md0 and md1 and then fail the 3rd drive in each of
+>> those 2 arrays before changing them to 2 drive arrays? I find lots of stuff
+>> about adding drives, but not much about removing the drives or how to change
+>> them back to 2 drive arrays.
+>>
+>> Once md0 and md1 are back to 2 drives and it's booting, then I'll install
+>> and format the new drive and copy the contents of md2 over. Then I need to
+>> remake md2 as a 2 drive raid1. Then copy the data back and i'll have 2
+>> drives to make md3.
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
 >
+> Let's divide that problem up in to more manageable chunks.
 >
-> cat /etc/fstab cat /etc/mdadm.conf mdadm -Esvv mdadm -Asv blkid -p /dev/md*
+> 1) Boot - This is small and trivial to backup and restore.
+> 2) Swap - Not often /required/ and thus can be disabled and erased.
+> 3) Raid5 - Your data, which you want to convert from Raid5 to Raid1 storage.
 >
-> And include all the output.
-
-See attached.  Note that fstab is essentially irrelevant; I'd mounted by
-hand, and was going to add the entry after I got the server back in the
-server room.
-
-> (sorry if I seem grumpy, but I'm a bit tired which makes it harder to
-> appear polite).
-
-Know what you mean; got four hours', myself, due to a virtualization
-migration.
-
-For the record, I've got my backup tapes ordered (again) -- if you can
-tell me what I did wrong, that would be almost as satisfying as getting
-the data back.
-
-Thanks,
-
--Ken
--- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
-
-
-------=_20100305102454_39885
-Content-Type: text/plain; name="fdisk.txt"
-Content-Transfer-Encoding: 8bit
-Content-Disposition: attachment; filename="fdisk.txt"
-
-Disk /dev/md0 doesn't contain a valid partition table
-
-Disk /dev/md0: 4410.9 GB, 4410904805376 bytes
-2 heads, 4 sectors/track, 1076881056 cylinders
-Units = cylinders of 8 * 512 = 4096 bytes
-Disk identifier: 0x00000000
-
-------=_20100305102454_39885
-Content-Type: application/octet-stream; name="mdadm.conf"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="mdadm.conf"
-
-IyBtZGFkbS5jb25mCiMKIyBQbGVhc2UgcmVmZXIgdG8gbWRhZG0uY29uZig1
-KSBmb3IgaW5mb3JtYXRpb24gYWJvdXQgdGhpcyBmaWxlLgojCgojIGJ5IGRl
-ZmF1bHQsIHNjYW4gYWxsIHBhcnRpdGlvbnMgKC9wcm9jL3BhcnRpdGlvbnMp
-IGZvciBNRCBzdXBlcmJsb2Nrcy4KIyBhbHRlcm5hdGl2ZWx5LCBzcGVjaWZ5
-IGRldmljZXMgdG8gc2NhbiwgdXNpbmcgd2lsZGNhcmRzIGlmIGRlc2lyZWQu
-CkRFVklDRSBwYXJ0aXRpb25zCgojIGF1dG8tY3JlYXRlIGRldmljZXMgd2l0
-aCBEZWJpYW4gc3RhbmRhcmQgcGVybWlzc2lvbnMKQ1JFQVRFIG93bmVyPXJv
-b3QgZ3JvdXA9ZGlzayBtb2RlPTA2NjAgYXV0bz15ZXMKCiMgYXV0b21hdGlj
-YWxseSB0YWcgbmV3IGFycmF5cyBhcyBiZWxvbmdpbmcgdG8gdGhlIGxvY2Fs
-IHN5c3RlbQpIT01FSE9TVCA8c3lzdGVtPgoKIyBpbnN0cnVjdCB0aGUgbW9u
-aXRvcmluZyBkYWVtb24gd2hlcmUgdG8gc2VuZCBtYWlsIGFsZXJ0cwpNQUlM
-QUREUiByb290CgojIGRlZmluaXRpb25zIG9mIGV4aXN0aW5nIE1EIGFycmF5
-cwoKQVJSQVkgL2Rldi9tZDAgbGV2ZWw9cmFpZDUgbnVtLWRldmljZXM9NCBV
-VUlEPTFlODk2NDVhOjdlMjRkY2VmOjllNzdkNTRmOjA3N2E2YTZmCgojQVJS
-QVkgL2Rldi9tZDAgbGV2ZWw9cmFpZDUgbnVtLWRldmljZXM9NCBkZXZpY2Vz
-PXNkYTIsc2RiMixzZGQyLHNkYzIKCiMgVGhpcyBmaWxlIHdhcyBhdXRvLWdl
-bmVyYXRlZCBvbiBUaHUsIDExIEZlYiAyMDEwIDIxOjU2OjE2ICswMDAwCiMg
-YnkgbWtjb25mICRJZCQK
-
-------=_20100305102454_39885
-Content-Type: text/plain; name="mdadm-Asv.txt"
-Content-Transfer-Encoding: 8bit
-Content-Disposition: attachment; filename="mdadm-Asv.txt"
-
-mdadm: looking for devices for /dev/md0
-mdadm: cannot open device /dev/sde1: Device or resource busy
-mdadm: /dev/sde1 has wrong uuid.
-mdadm: cannot open device /dev/sde: Device or resource busy
-mdadm: /dev/sde has wrong uuid.
-mdadm: no RAID superblock on /dev/sdd1
-mdadm: /dev/sdd1 has wrong uuid.
-mdadm: no RAID superblock on /dev/sdd
-mdadm: /dev/sdd has wrong uuid.
-mdadm: cannot open device /dev/sdc1: Device or resource busy
-mdadm: /dev/sdc1 has wrong uuid.
-mdadm: cannot open device /dev/sdc: Device or resource busy
-mdadm: /dev/sdc has wrong uuid.
-mdadm: cannot open device /dev/sdb1: Device or resource busy
-mdadm: /dev/sdb1 has wrong uuid.
-mdadm: cannot open device /dev/sdb: Device or resource busy
-mdadm: /dev/sdb has wrong uuid.
-mdadm: cannot open device /dev/sda1: Device or resource busy
-mdadm: /dev/sda1 has wrong uuid.
-mdadm: cannot open device /dev/sda: Device or resource busy
-mdadm: /dev/sda has wrong uuid.
-mdadm: cannot open device /dev/loop1: Device or resource busy
-mdadm: /dev/loop1 has wrong uuid.
-mdadm: cannot open device /dev/loop0: Device or resource busy
-mdadm: /dev/loop0 has wrong uuid.
-mdadm: /dev/sdd2 is identified as a member of /dev/md0, slot 3.
-mdadm: /dev/sdc2 is identified as a member of /dev/md0, slot 1.
-mdadm: /dev/sdb2 is identified as a member of /dev/md0, slot 0.
-mdadm: /dev/sda2 is identified as a member of /dev/md0, slot 2.
-mdadm: added /dev/sdc2 to /dev/md0 as 1
-mdadm: added /dev/sda2 to /dev/md0 as 2
-mdadm: added /dev/sdd2 to /dev/md0 as 3
-mdadm: added /dev/sdb2 to /dev/md0 as 0
-mdadm: /dev/md0 has been started with 4 drives.
-mdadm: looking for devices for further assembly
-mdadm: no recogniseable superblock on /dev/block/9:0
-mdadm: cannot open device /dev/sde1: Device or resource busy
-mdadm: cannot open device /dev/sde: Device or resource busy
-mdadm: cannot open device /dev/sdd2: Device or resource busy
-mdadm: no recogniseable superblock on /dev/sdd1
-mdadm: cannot open device /dev/sdd: Device or resource busy
-mdadm: cannot open device /dev/sdc2: Device or resource busy
-mdadm: cannot open device /dev/sdc1: Device or resource busy
-mdadm: cannot open device /dev/sdc: Device or resource busy
-mdadm: cannot open device /dev/sdb2: Device or resource busy
-mdadm: cannot open device /dev/sdb1: Device or resource busy
-mdadm: cannot open device /dev/sdb: Device or resource busy
-mdadm: cannot open device /dev/sda2: Device or resource busy
-mdadm: cannot open device /dev/sda1: Device or resource busy
-mdadm: cannot open device /dev/sda: Device or resource busy
-mdadm: cannot open device /dev/loop1: Device or resource busy
-mdadm: cannot open device /dev/loop0: Device or resource busy
-------=_20100305102454_39885
-Content-Type: text/plain; name="mdadm-Esvv.txt"
-Content-Transfer-Encoding: 8bit
-Content-Disposition: attachment; filename="mdadm-Esvv.txt"
-
-mdadm: No md superblock detected on /dev/block/9:0.
-mdadm: No md superblock detected on /dev/sde1.
-mdadm: No md superblock detected on /dev/sde.
-mdadm: No md superblock detected on /dev/sdd1.
-mdadm: No md superblock detected on /dev/sdd.
-mdadm: No md superblock detected on /dev/sdc1.
-mdadm: No md superblock detected on /dev/sdc.
-mdadm: No md superblock detected on /dev/sdb1.
-mdadm: No md superblock detected on /dev/sdb.
-mdadm: No md superblock detected on /dev/sda1.
-mdadm: No md superblock detected on /dev/sda.
-mdadm: No md superblock detected on /dev/loop1.
-mdadm: No md superblock detected on /dev/loop0.
-/dev/sdd2:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 1e89645a:7e24dcef:9e77d54f:077a6a6f
-  Creation Time : Thu Feb  4 20:54:58 2010
-     Raid Level : raid5
-  Used Dev Size : 1435841408 (1369.33 GiB 1470.30 GB)
-     Array Size : 4307524224 (4107.98 GiB 4410.90 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 0
-
-    Update Time : Fri Mar  5 07:04:06 2010
-          State : clean
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : d85ef7b3 - correct
-         Events : 35041
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     3       8       50        3      active sync   /dev/sdd2
-
-   0     0       8       18        0      active sync   /dev/sdb2
-   1     1       8       34        1      active sync   /dev/sdc2
-   2     2       8        2        2      active sync   /dev/sda2
-   3     3       8       50        3      active sync   /dev/sdd2
-/dev/sdc2:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 1e89645a:7e24dcef:9e77d54f:077a6a6f
-  Creation Time : Thu Feb  4 20:54:58 2010
-     Raid Level : raid5
-  Used Dev Size : 1435841408 (1369.33 GiB 1470.30 GB)
-     Array Size : 4307524224 (4107.98 GiB 4410.90 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 0
-
-    Update Time : Fri Mar  5 07:04:06 2010
-          State : clean
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : d85ef79f - correct
-         Events : 35041
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     1       8       34        1      active sync   /dev/sdc2
-
-   0     0       8       18        0      active sync   /dev/sdb2
-   1     1       8       34        1      active sync   /dev/sdc2
-   2     2       8        2        2      active sync   /dev/sda2
-   3     3       8       50        3      active sync   /dev/sdd2
-/dev/sdb2:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 1e89645a:7e24dcef:9e77d54f:077a6a6f
-  Creation Time : Thu Feb  4 20:54:58 2010
-     Raid Level : raid5
-  Used Dev Size : 1435841408 (1369.33 GiB 1470.30 GB)
-     Array Size : 4307524224 (4107.98 GiB 4410.90 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 0
-
-    Update Time : Fri Mar  5 07:04:06 2010
-          State : clean
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : d85ef78d - correct
-         Events : 35041
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     0       8       18        0      active sync   /dev/sdb2
-
-   0     0       8       18        0      active sync   /dev/sdb2
-   1     1       8       34        1      active sync   /dev/sdc2
-   2     2       8        2        2      active sync   /dev/sda2
-   3     3       8       50        3      active sync   /dev/sdd2
-/dev/sda2:
-          Magic : a92b4efc
-        Version : 00.90.00
-           UUID : 1e89645a:7e24dcef:9e77d54f:077a6a6f
-  Creation Time : Thu Feb  4 20:54:58 2010
-     Raid Level : raid5
-  Used Dev Size : 1435841408 (1369.33 GiB 1470.30 GB)
-     Array Size : 4307524224 (4107.98 GiB 4410.90 GB)
-   Raid Devices : 4
-  Total Devices : 4
-Preferred Minor : 0
-
-    Update Time : Fri Mar  5 07:04:06 2010
-          State : clean
- Active Devices : 4
-Working Devices : 4
- Failed Devices : 0
-  Spare Devices : 0
-       Checksum : d85ef781 - correct
-         Events : 35041
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     2       8        2        2      active sync   /dev/sda2
-
-   0     0       8       18        0      active sync   /dev/sdb2
-   1     1       8       34        1      active sync   /dev/sdc2
-   2     2       8        2        2      active sync   /dev/sda2
-   3     3       8       50        3      active sync   /dev/sdd2
-------=_20100305102454_39885
-Content-Type: text/plain; name="blkid.txt"
-Content-Transfer-Encoding: 8bit
-Content-Disposition: attachment; filename="blkid.txt"
-
-/dev/md0: UUID="d6158445-e38e-4942-9395-e1bd29935d22" TYPE="xfs" USAGE="filesystem" 
-------=_20100305102454_39885--
-
-
+> The absolute easiest (and safest) thing to do is to backup your data,
+> verify the backup, then erase all the disks and start clean.
+>
+> Otherwise the issues will have to be handled in the listed order:
+>
+> 1) Boot
+> If you are using 'Grub 2' (non grub legacy) then it wants EITHER mdadm
+> label 0.90 OR the option beneath.
+> Otherwise you must use mdadm label format 0.90 or, IIRC 1.0 (metadata
+> at the end of the area), and specify the device not as /dev/mdX but as
+> one of the member devices.  You will have to manually mirror or
+> duplicate the install sections.
+>
+> 2) swapoff, mdadm -S the device
+>
+> 3) Maybe someone else can help with the takeover?  In any event we DO
+> need more directions.  You're trying to go from 2 usable drives worth
+> of storage to 1, which isn't going to work.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
