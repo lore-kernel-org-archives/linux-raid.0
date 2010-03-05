@@ -1,57 +1,98 @@
-From: Goswin von Brederlow <goswin-v-b@web.de>
-Subject: Re: Does MD solve write hole issue for RAID5/RAID6?
-Date: Fri, 05 Mar 2010 20:32:14 +0100
-Message-ID: <87wrxqy37l.fsf@frosties.localdomain>
-References: <d19eda751003030417o3a7ec761ua54e93875002410a@mail.gmail.com>
-	<4B8E66E5.9050606@shiftmail.org>
+From: Michael Evans <mjevans1983@gmail.com>
+Subject: Re: RAID MIA. Again. (Kinda.)
+Date: Fri, 5 Mar 2010 12:05:32 -0800
+Message-ID: <4877c76c1003051205i23998a72xc9df3174c1e7fd17@mail.gmail.com>
+References: <ef2f0a4210283390480f4adbd9a547de.squirrel@webmail.jots.org>
+	 <20100305075016.51e98363@notabene.brown>
+	 <b305ada429c44b2b62b03c101f7ecf0a.squirrel@webmail.jots.org>
+	 <20100305123028.55a34c14@notabene.brown>
+	 <a65d84c03d315f1aea40641238f25625.squirrel@webmail.jots.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B8E66E5.9050606@shiftmail.org> (asdo@shiftmail.org's message of
-	"Wed, 03 Mar 2010 14:40:53 +0100")
+In-Reply-To: <a65d84c03d315f1aea40641238f25625.squirrel@webmail.jots.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>
-Cc: rj <ratnadeep@gmail.com>, linux-raid@vger.kernel.org
+To: Ken D'Ambrosio <ken@jots.org>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Asdo <asdo@shiftmail.org> writes:
-
-> rj wrote:
->> Hi,
->> I wanted to know if md solves write hole issue for RAID5/RAID6?
-
-It is unsolvable without a crash persistant journal. Hardware raids have
-battery backed cache for that but a fast disk would also work. But no
-support for this in linux software raid.
-
-> No but the filesystem can do that, ext3/4 and XFS in particular, if
-> well aligned on the RAID, if you are creating new files and not
-> updating old files (i.e. doesn't work for databases).
-> For full write hole avoidance you need to wait for Btrfs (and I don't
-> know the state of raid-5/6 on btrfs), or use ZFS on Solaris or Freebsd.
-
-No raid5/6 in btrfs. Needs major restructuring of the on-disk data for
-that.
-
-ZFS on the other hand uses what they call raid-x. Which is a raid5 with
-copy-on-write semantic. Any write to a virtual block will write to a new
-physical block and update the parity to a new physical block too. Only
-once that was written is the stripe atomically changed to the new
-physical location. So no hole there.
-
-There is also a zfs-fuse implementation for linux.
-
->> Also, does md support RAID 50 level ?
+On Fri, Mar 5, 2010 at 7:24 AM, Ken D'Ambrosio <ken@jots.org> wrote:
+> On Thu, March 4, 2010 8:30 pm, Neil Brown wrote:
+>> Try this:
 >>
-> Not directly, but you can create that manually by overlaying a raid 0
-> over 1+ raid5's.
+>>
+>> cat /etc/fstab cat /etc/mdadm.conf mdadm -Esvv mdadm -Asv blkid -p /=
+dev/md*
+>>
+>> And include all the output.
+>
+> See attached. =A0Note that fstab is essentially irrelevant; I'd mount=
+ed by
+> hand, and was going to add the entry after I got the server back in t=
+he
+> server room.
+>
+>> (sorry if I seem grumpy, but I'm a bit tired which makes it harder t=
+o
+>> appear polite).
+>
+> Know what you mean; got four hours', myself, due to a virtualization
+> migration.
+>
+> For the record, I've got my backup tapes ordered (again) -- if you ca=
+n
+> tell me what I did wrong, that would be almost as satisfying as getti=
+ng
+> the data back.
+>
+> Thanks,
+>
+> -Ken
+> --
+> This message has been scanned for viruses and
+> dangerous content by MailScanner, and is
+> believed to be clean.
+>
+>
 
-And by layering one raid over others you can get any level you like,
-even 14065 if you like (and have enought disks).
+Here's a stab at it. I've never tried to do it like this and haven't
+glanced at the code so I can't be sure, but this seems to be the most
+likely suspect:
 
-For raid50 I would suggest LVM over raid5 with striping though. Raid 0
-is somewhat pointless when compared with all the extra flexibility LVM
-gives you on top of striping.
+#ARRAY /dev/md0 level=3Draid5 num-devices=3D4 devices=3Dsda2,sdb2,sdd2,=
+sdc2
 
-MfG
-        Goswin
+Your commented out version seems to specify this mapping
+0,sda2
+1,sdb2
+2,sdd2
+3,sdc2
+
+However the array is detected like this by uuid alone (I re-ordered
+the entries so they're easier to read):
+
+mdadm: /dev/sdb2 is identified as a member of /dev/md0, slot 0.
+mdadm: /dev/sdc2 is identified as a member of /dev/md0, slot 1.
+mdadm: /dev/sda2 is identified as a member of /dev/md0, slot 2.
+mdadm: /dev/sdd2 is identified as a member of /dev/md0, slot 3.
+mdadm: added /dev/sdb2 to /dev/md0 as 0
+mdadm: added /dev/sdc2 to /dev/md0 as 1
+mdadm: added /dev/sda2 to /dev/md0 as 2
+mdadm: added /dev/sdd2 to /dev/md0 as 3
+mdadm: /dev/md0 has been started with 4 drives.
+
+This corresponds to:
+
+0,sdb2
+1,sdc2
+2,sda2
+3,sdd2
+
+Note how the drives are out of order?  Thus the reason for  only using
+UUID and NOT explicitly specifying an ordering?
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
