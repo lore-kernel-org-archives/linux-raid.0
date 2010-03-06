@@ -1,18 +1,19 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
+From: Asdo <asdo@shiftmail.org>
 Subject: Re: What RAID type and why?
-Date: Sat, 6 Mar 2010 17:33:09 -0500
-Message-ID: <87f94c371003061433x404a8c2fgcb61f817af6ecb1@mail.gmail.com>
+Date: Sun, 07 Mar 2010 00:03:41 +0100
+Message-ID: <4B92DF4D.5070802@shiftmail.org>
 References: <5bdc1c8b1003061402n1281b64es9fa597b8bc714bd5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5bdc1c8b1003061402n1281b64es9fa597b8bc714bd5@mail.gmail.com>
+In-reply-to: <5bdc1c8b1003061402n1281b64es9fa597b8bc714bd5@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Mark Knecht <markknecht@gmail.com>
 Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, Mar 6, 2010 at 5:02 PM, Mark Knecht <markknecht@gmail.com> wrote:
+Mark Knecht wrote:
 > First post. I've never used RAID but am thinking about it and looking
 > for newbie-level info. Thanks in advance.
 >
@@ -36,50 +37,44 @@ On Sat, Mar 6, 2010 at 5:02 PM, Mark Knecht <markknecht@gmail.com> wrote:
 > How critical is it going forward with Linux RAID solutions to be able
 > to get exactly the same drives in the future? 1TB today is 4TB a year
 > from now, etc.
->
+>   
+Hi Mark
+
+I'll reply to just a few points.
+
+You don't need the same drives, only a few requirements:
+
+1 - The drives need to play well with the controller. Do some tests. 
+There were rare cases of certain drives being dropped by certain 
+controllers e.g. on high I/O. Just do some tests before putting valuable 
+data in. Maybe look at the HCL list for your controller before buying.
+
+2 - the new drives need to be at least as large as the old ones. Extra 
+space will be wasted (ok not exactly, you can use the extra space for 
+other purposes). Speed is not relevant for bare functionality.
+
+3 - It's better if new drives are not slower than the older drives. 
+Everything moves at the speed of the slowest drive.
+
+4 - Better to take raid-edition or enterprise-grade drives, especially 
+because they usually have RTL "recovery time limit" also called TLER 
+(time limited error recovery). Go google for it to understand why it is 
+useful in RAID.
+
 > With an 8 core processor (high-end Intel Core i7 probably) do I need
 > to worry much about CPU usage doing RAID? I suspect not and I don't
 > really want to get into hardware RAID controllers unless critically
 > necessary which I suspect it isn't.
->
-> Anyway, if there's a document around somewhere that helps a newbie
-> like me I'd sure appreciate finding out about it.
->
-> Thanks,
-> Mark
+>   
 
-I'm not sure about a newbie doc, but here's some basics:
+I think for a 5 disks raid array the CPU power is still not the limiting 
+factor. Especially not in the fast raids like raid10. Note that only 1 
+core will be used for RAID parity computation for raid456. All cores 
+will be used for handling interrupts from the drives though.
 
-You haven't said what kind of i/o rates you expect, nor how much
-storage you need.
+Difficult to suggest what RAID you should use. We don't know access 
+patterns, speed requirements, value of your data.
 
-At a minimum I would build a 3-disk raid 6.  raid 6 does a lot of i/o
-which may be a problem.
+Minimum for redundancy is raid-1 on 2 drives.
 
-Raid-5 is out of favor for me due to issues people are seeing with
-discrete bad sectors with the remaining drives after you have a drive
-failure.  raid-6 tolerates those much better.  Even raid 10 is not as
-robust as raid 6 and with the current generation drives robustness in
-the raid solution is more important than ever.
 
-But raid 6 uses 2 parity drives, so you'll only get 1TB of useable
-space from a 3-disk raid 6 made from 1TB drives.
-
-mdraid just requires replacement disks be bigger than the old disk
-you're replacing.
-
-You might consider layering LVM on top of mdraid to help you manage
-the array as it grows.
-
-Greg
--- 
-Greg Freemyer
-Head of EDD Tape Extraction and Processing team
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-Preservation and Forensic processing of Exchange Repositories White Paper -
-<http://www.norcrossgroup.com/forms/whitepapers/tng_whitepaper_fpe.html>
-
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
