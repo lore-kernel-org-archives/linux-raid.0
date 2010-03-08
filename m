@@ -1,211 +1,170 @@
-From: Benjamin ESTRABAUD <be@mpstor.com>
-Subject: Fast failing a disk.
-Date: Tue, 09 Mar 2010 15:29:16 +0000
-Message-ID: <4B96694C.5000602@mpstor.com>
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: Re: [Xen-devel] Re: Weird Issue with raid 5+0
+Date: Mon, 8 Mar 2010 12:29:15 -0500
+Message-ID: <20100308172915.GE4568@phenom.dumpdata.com>
+References: <31e44a111002202033m4a9dfba9yf8aef62b8b39933a@mail.gmail.com> <20100221164805.5bdc2d60@notabene.brown> <31e44a111002202326x407c814dsaa60e51a8a0ff049@mail.gmail.com> <20100221191640.39b68b01@notabene.brown> <20100308165021.6529fe6d@notabene.brown> <31e44a111003080735t4ddf7c63uaa517ad6522cca67@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <31e44a111003080735t4ddf7c63uaa517ad6522cca67@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: chris <tknchris@gmail.com>, neilb@suse.de
+Cc: Xen-Devel List <xen-devel@lists.xensource.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Everyone,
+On Mon, Mar 08, 2010 at 10:35:57AM -0500, chris wrote:
+> I forwarding this to xen-devel because it appears to be a bug in dom0=
+ kernel.
+>=20
+> I recently experienced a strange issue with software raid1+0 under Xe=
+n
+> on a new machine. I was getting corruption in my guest volumes and
+> tons of kernel messages such as:
+>=20
+> [305044.571962] raid0_make_request bug: can't convert block across
+> chunks or bigger than 64k 14147455 4
+>=20
+> The full thread is located at http://marc.info/?t=3D126672694700001&r=
+=3D1&w=3D2
+> Detailed output at http://pastebin.com/f6a52db74
+>=20
+> It appears after speaking with the linux-raid mailing list that this
+> is due a bug which has been fixed but the fix is not included in the
+> dom0 kernel. I'm not sure what sources kernel 2.6.26-2-xen-amd64 is
+> based on, but since xenlinux is still at 2.6.18 I was assuming that
+> this bug would still exist.
+>=20
+> My questions for xen-devel are:
+>=20
+> Can you tell me if there is any dom0 kernel where this issue is fixed=
+?
 
-In case of a RAID 5 on a few disks, with a disk pulled from the 
-enclosure at some stage, we get a disk failure.
+Not there yet.
 
-If doing only reads on the RAID 5 array, the time it takes between the 
-actual physical removal of the disk and the disk being failed by md is 
-about 4 seconds on my system.
+> Is there anything I can do to help get this resolved? Testing? Patchi=
+ng?
 
-I am trying, using scripting, to speed up this 4 seconds.
+It looks to me that the patch hasn't reached the latest Linux tree. Nor
+the stable branch. I believe once it gets there we would pull it in
+automatically.
 
-The problem being that it takes 4 seconds to fail a disk because we 
-probably need that much time to determine for sure that the disk has 
-really failed or is really gone, I am using the LSI SAS MPT Fusion 
-driver to detect when the physical disk phy has gone offline (which 
-happens in near real time), and from there, I send a "./mdadm --fail 
-/dev/md/dX /dev/sdX" command to mdadm immediately after detecting this 
-failure.
+The patch at http://marc.info/?l=3Dlinux-raid&m=3D126802743419044&w=3D2=
+ looks
+to be quite safe so it should be easy for you to pull it and apply it t=
+o
+your sources?
 
-This is therefore much much much faster than waiting for all the 
-timeouts present in sd/md.
+Neil, any idea when this patch might land in Greg KH's tree (2.6.32) or
+upstream?
 
-It is non dangerous too since when a disk phy has gone offline, it is 
-physically offline, no need to use any timeouts or retry.
-
-All the above work fine and would solve my problem of speeding up the 
-failing of a disk except that when I send the --fail command immediately 
-after the disk has been removed from the enclosure, the md array seems 
-to loop into a "resync" mode instead of reconfiguring itself as a 
-degraded array.
-
-Here is a copy of dmesg showing the phenomenon:
-
-[  744.631035] ioc2 Event: 0xf
-[  745.452060] ioc2 Event: SAS_DISCOVERY
-[  745.465349] ioc2: Phy 13 Handle a sas addr: 0x50015b22300009e0 is now 
-offline
-[  745.485209] ioc2 Event: SAS_DISCOVERY
-[  745.693492] raid5: Disk failure on sdg2, disabling device.
-[  745.693497] raid5: Operation continuing on 4 devices.
-[  745.718787] md: recovery of RAID array md_d0
-[  745.723047] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[  745.728862] md: using maximum available idle IO bandwidth (but not 
-more than 200000 KB/sec) for recovery.
-[  745.738402] md: using 2048k window, over a total of 9429760 blocks.
-[  745.744655] md: resuming recovery of md_d0 from checkpoint.
-[  745.756660] md: md_d0: recovery done.
-[  745.761900] RAID5 conf printout:
-[  745.765148]  --- rd:5 wd:4
-[  745.767855]  disk 0, o:1, dev:sdd2
-[  745.771243]  disk 1, o:1, dev:sda2
-[  745.774634]  disk 2, o:1, dev:sdc2
-[  745.778029]  disk 3, o:0, dev:sdg2
-[  745.781424]  disk 4, o:1, dev:sdb2
-[  745.799202] md: recovery of RAID array md_d0
-[  745.803460] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[  745.809275] md: using maximum available idle IO bandwidth (but not 
-more than 200000 KB/sec) for recovery.
-[  745.818814] md: using 2048k window, over a total of 9429760 blocks.
-[  745.825066] md: resuming recovery of md_d0 from checkpoint.
-[  745.837066] md: md_d0: recovery done.
-[  745.842872] RAID5 conf printout:
-[  745.846187]  --- rd:5 wd:4
-[  745.848890]  disk 0, o:1, dev:sdd2
-[  745.852281]  disk 1, o:1, dev:sda2
-[  745.855673]  disk 2, o:1, dev:sdc2
-[  745.859064]  disk 3, o:0, dev:sdg2
-[  745.862459]  disk 4, o:1, dev:sdb2
-[  745.919801] md: recovery of RAID array md_d0
-[  745.924090] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[  745.929949] md: using maximum available idle IO bandwidth (but not 
-more than 200000 KB/sec) for recovery.
-[  745.939491] md: using 2048k window, over a total of 9429760 blocks.
-[  745.945742] md: resuming recovery of md_d0 from checkpoint.
-[  745.957745] md: md_d0: recovery done.
-[  746.149794] RAID5 conf printout:
-[  746.153051]  --- rd:5 wd:4
-[  746.155752]  disk 0, o:1, dev:sdd2
-[  746.159151]  disk 1, o:1, dev:sda2
-[  746.162543]  disk 2, o:1, dev:sdc2
-[  746.165939]  disk 3, o:0, dev:sdg2
-[  746.169334]  disk 4, o:1, dev:sdb2
-[  746.369081] md: cannot remove active disk sdg2 from md_d0 ...
-[  746.374866] md: recovery of RAID array md_d0
-[  746.379129] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[  746.384949] md: using maximum available idle IO bandwidth (but not 
-more than 200000 KB/sec) for recovery.
-[  746.394489] md: using 2048k window, over a total of 9429760 blocks.
-[  746.400794] md: resuming recovery of md_d0 from checkpoint.
-[  746.412814] md: md_d0: recovery done.
-[  746.436268] md: cannot remove active disk sdg2 from md_d0 ...
-[  746.491071] RAID5 conf printout:
-[  746.494321]  --- rd:5 wd:4
-[  746.497027]  disk 0, o:1, dev:sdd2
-[  746.500420]  disk 1, o:1, dev:sda2
-[  746.503811]  disk 2, o:1, dev:sdc2
-[  746.507202]  disk 3, o:0, dev:sdg2
-[  746.510598]  disk 4, o:1, dev:sdb2
-[  746.594835] md: recovery of RAID array md_d0
-[  746.599097] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[  746.604915] md: using maximum available idle IO bandwidth (but not 
-more than 200000 KB/sec) for recovery.
-[  746.614453] md: using 2048k window, over a total of 9429760 blocks.
-[  746.620698] md: resuming recovery of md_d0 from checkpoint.
-[  746.632689] md: md_d0: recovery done.
-[  746.683892] RAID5 conf printout:
-[  746.687118]  --- rd:5 wd:4
-[  746.689825]  disk 0, o:1, dev:sdd2
-[  746.693224]  disk 1, o:1, dev:sda2
-[  746.696617]  disk 2, o:1, dev:sdc2
-[  746.700012]  disk 3, o:0, dev:sdg2
-[  746.703404]  disk 4, o:1, dev:sdb2
-[  746.733530] md: recovery of RAID array md_d0
-[  746.737820] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[  746.743635] md: using maximum available idle IO bandwidth (but not 
-more than 200000 KB/sec) for recovery.
-[  746.753171] md: using 2048k window, over a total of 9429760 blocks.
-[  746.759419] md: resuming recovery of md_d0 from checkpoint.
-[  746.771432] md: md_d0: recovery done.
-[  746.821801] RAID5 conf printout:
-[  746.825049]  --- rd:5 wd:4
-[  746.827754]  disk 0, o:1, dev:sdd2
-[  746.831150]  disk 1, o:1, dev:sda2
-[  746.834545]  disk 2, o:1, dev:sdc2
-[  746.837940]  disk 3, o:0, dev:sdg2
-[  746.841336]  disk 4, o:1, dev:sdb2
-[  746.853983] md: recovery of RAID array md_d0
-[  746.858270] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[  746.864088] md: using maximum available idle IO bandwidth (but not 
-more than 200000 KB/sec) for recovery.
-[  746.873627] md: using 2048k window, over a total of 9429760 blocks.
-[  746.879872] md: resuming recovery of md_d0 from checkpoint.
-[  746.891885] md: md_d0: recovery done.
-[  746.942047] RAID5 conf printout:
-[  746.945301]  --- rd:5 wd:4
-[  746.948008]  disk 0, o:1, dev:sdd2
-[  746.951398]  disk 1, o:1, dev:sda2
-[  746.954788]  disk 2, o:1, dev:sdc2
-[  746.958183]  disk 3, o:0, dev:sdg2
-[  746.961579]  disk 4, o:1, dev:sdb2
-[  746.974231] md: recovery of RAID array md_d0
-[  746.978521] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[  746.984339] md: using maximum available idle IO bandwidth (but not 
-more than 200000 KB/sec) for recovery.
-[  746.993887] md: using 2048k window, over a total of 9429760 blocks.
-[  747.000136] md: resuming recovery of md_d0 from checkpoint.
-[  747.012149] md: md_d0: recovery done.
-[  747.062726] RAID5 conf printout:
-[  747.065976]  --- rd:5 wd:4
-[  747.068683]  disk 0, o:1, dev:sdd2
-[  747.072075]  disk 1, o:1, dev:sda2
-[  747.075468]  disk 2, o:1, dev:sdc2
-[  747.078859]  disk 3, o:0, dev:sdg2
-[  747.082253]  disk 4, o:1, dev:sdb2
-[  747.202204] md: recovery of RAID array md_d0
-[  747.206499] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[  747.212317] md: using maximum available idle IO bandwidth (but not 
-more than 200000 KB/sec) for recovery.
-[  747.221855] md: using 2048k window, over a total of 9429760 blocks.
-[  747.228107] md: resuming recovery of md_d0 from checkpoint.
-[  747.240122] md: md_d0: recovery done.
-[  747.291282] RAID5 conf printout:
-[  747.294530]  --- rd:5 wd:4
-[  747.297238]  disk 0, o:1, dev:sdd2
-[  747.300636]  disk 1, o:1, dev:sda2
-[  747.304026]  disk 2, o:1, dev:sdc2
-[  747.307418]  disk 3, o:0, dev:sdg2
-
-
-... This continues until precisely 4 seconds, the same time it takes if 
-not sending the command to fail the disk before md does it 
-automatically, at which point the sd device is kicked out and the array 
-becomes degraded, or too many IO errors are detected by md and the same 
-fate happens.
-
-On the other hand, the interesting point is that trying to do the above 
-while also doing read IOs but without physically pulling a disk (just 
-using --fail on a disk that is present, healthy, and running the read 
-IOs too), everything works fine.
-
-It seems that if you decide to send a --fail command to a disk that is 
-currently in the sd or md path for error checking and/or recovery, the 
-fail command will not be ignored but will instead trigger an endless 
-loop of recoveries (in the above case, the recoveries are very fast 
-since we are running read only IOs), and will succeed once the normal 
-error checking has completed and decided to expell or kick the device out.
-
-Would anybody know what it causing this, and if there is a way around it?
-
-The command used to create the RAID is the following:
-
-"mdadm --create -vvv --force --run --metadata=1.2 /dev/md/d0 --level=5 
---size=9429760 --chunk=64 --name=test_01 -n5 --bitmap=internal 
---bitmap-chunk=4096 --layout=ls /dev/sdd2 /dev/sda2 /dev/sdc2 /dev/sdg2 
-/dev/sdb2"
-
-Thank you very much in advance!
-
-Ben.
+>=20
+> - chrris
+>=20
+> On Mon, Mar 8, 2010 at 12:50 AM, Neil Brown <neilb@suse.de> wrote:
+> > On Sun, 21 Feb 2010 19:16:40 +1100
+> > Neil Brown <neilb@suse.de> wrote:
+> >
+> >> On Sun, 21 Feb 2010 02:26:42 -0500
+> >> chris <tknchris@gmail.com> wrote:
+> >>
+> >> > That is exactly what I didn't want to hear :( I am running
+> >> > 2.6.26-2-xen-amd64. Are you sure its a kernel problem and nothin=
+g to
+> >> > do with my chunk/block sizes? If this is a bug what versions are
+> >> > affected, I'll build a new domU kernel and see if I can get it w=
+orking
+> >> > there.
+> >> >
+> >> > - chris
+> >>
+> >> I'm absolutely sure it is a kernel bug.
+> >
+> > And I think I now know what the bug is.
+> >
+> > A patch was recently posted to dm-devel which I think addresses exa=
+ctly this
+> > problem.
+> >
+> > I reproduce it below.
+> >
+> > NeilBrown
+> >
+> > -------------------
+> > If the lower device exposes a merge_bvec_fn,
+> > dm_set_device_limits() restricts max_sectors
+> > to PAGE_SIZE "just to be safe".
+> >
+> > This is not sufficient, however.
+> >
+> > If someone uses bio_add_page() to add 8 disjunct 512 byte partial
+> > pages to a bio, it would succeed, but could still cross a border
+> > of whatever restrictions are below us (e.g. raid10 stripe boundary)=
+=2E
+> > An attempted bio_split() would not succeed, because bi_vcnt is 8.
+> >
+> > One example that triggered this frequently is the xen io layer.
+> >
+> > raid10_make_request bug: can't convert block across chunks or bigge=
+r than 64k 209265151 1
+> >
+> > Signed-off-by: Lars <lars.ellenberg@linbit.com>
+> >
+> >
+> > ---
+> > =A0drivers/md/dm-table.c | =A0 12 ++++++++++--
+> > =A01 files changed, 10 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+> > index 4b22feb..c686ff4 100644
+> > --- a/drivers/md/dm-table.c
+> > +++ b/drivers/md/dm-table.c
+> > @@ -515,14 +515,22 @@ int dm_set_device_limits(struct dm_target *ti=
+, struct dm_dev *dev,
+> >
+> > =A0 =A0 =A0 =A0/*
+> > =A0 =A0 =A0 =A0 * Check if merge fn is supported.
+> > - =A0 =A0 =A0 =A0* If not we'll force DM to use PAGE_SIZE or
+> > + =A0 =A0 =A0 =A0* If not we'll force DM to use single bio_vec of P=
+AGE_SIZE or
+> > =A0 =A0 =A0 =A0 * smaller I/O, just to be safe.
+> > =A0 =A0 =A0 =A0 */
+> >
+> > - =A0 =A0 =A0 if (q->merge_bvec_fn && !ti->type->merge)
+> > + =A0 =A0 =A0 if (q->merge_bvec_fn && !ti->type->merge) {
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0limits->max_sectors =3D
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0min_not_zero(limits-=
+>max_sectors,
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 (unsigned int) (PAGE_SIZE >> 9));
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Restricting max_sectors is not eno=
+ugh.
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* If someone uses bio_add_page to =
+add 8 disjunct 512 byte
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* partial pages to a bio, it would=
+ succeed,
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* but could still cross a border o=
+f whatever restrictions
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* are below us (e.g. raid0 stripe =
+boundary). =A0An attempted
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* bio_split() would not succeed, b=
+ecause bi_vcnt is 8. */
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 limits->max_segments =3D 1;
+> > + =A0 =A0 =A0 }
+> > =A0 =A0 =A0 =A0return 0;
+> > =A0}
+> > =A0EXPORT_SYMBOL_GPL(dm_set_device_limits);
+> > --
+> > 1.6.3.3
+> >
+>=20
+> _______________________________________________
+> Xen-devel mailing list
+> Xen-devel@lists.xensource.com
+> http://lists.xensource.com/xen-devel
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
