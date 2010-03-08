@@ -1,145 +1,70 @@
-From: chris <tknchris@gmail.com>
-Subject: Re: Weird Issue with raid 5+0
-Date: Mon, 8 Mar 2010 10:35:57 -0500
-Message-ID: <31e44a111003080735t4ddf7c63uaa517ad6522cca67@mail.gmail.com>
-References: <31e44a111002202033m4a9dfba9yf8aef62b8b39933a@mail.gmail.com>
-	<20100221164805.5bdc2d60@notabene.brown>
-	<31e44a111002202326x407c814dsaa60e51a8a0ff049@mail.gmail.com>
-	<20100221191640.39b68b01@notabene.brown>
-	<20100308165021.6529fe6d@notabene.brown>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: discard + LVM
+Date: Mon, 8 Mar 2010 11:54:45 -0500
+Message-ID: <170fa0d21003080854l1c7e8a76w277b1d1ce51da2e@mail.gmail.com>
+References: <4B922929.5020006@zappa.cx> <4B933BD6.80100@redhat.com>
+	 <yq18wa4c9qn.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-Return-path: <xen-devel-bounces@lists.xensource.com>
-In-Reply-To: <20100308165021.6529fe6d@notabene.brown>
-List-Unsubscribe: <http://lists.xensource.com/mailman/listinfo/xen-devel>,
-	<mailto:xen-devel-request@lists.xensource.com?subject=unsubscribe>
-List-Post: <mailto:xen-devel@lists.xensource.com>
-List-Help: <mailto:xen-devel-request@lists.xensource.com?subject=help>
-List-Subscribe: <http://lists.xensource.com/mailman/listinfo/xen-devel>,
-	<mailto:xen-devel-request@lists.xensource.com?subject=subscribe>
-Sender: xen-devel-bounces@lists.xensource.com
-Errors-To: xen-devel-bounces@lists.xensource.com
-To: Xen-Devel List <xen-devel@lists.xensource.com>
-Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <yq18wa4c9qn.fsf@sermon.lab.mkp.net>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, Andreas Sundstrom <sunkan@zappa.cx>, linux-ext4@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-raid.ids
 
-I forwarding this to xen-devel because it appears to be a bug in dom0 kerne=
-l.
+On Sun, Mar 7, 2010 at 12:38 PM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>>>>>> "Eric" =3D=3D Eric Sandeen <sandeen@redhat.com> writes:
+>
+> Eric> Andreas Sundstrom wrote:
+>>> Hi..
+>>>
+>>> I have an OCZ agility SSD drive with FW 1.5 that supports the TRIM
+>>> command.
+>>>
+>>> I can see that it works on a plain partition. =A0But it does not se=
+em
+>>> to work together with LVM.
+>>>
+>>> So I'm wondering if this is expected and whether it is something th=
+at
+>>> will be worked on to get fixed?
+>
+> Eric> It is expected, as lvm is not yet passing discard requests.
+>
+> I'm working on this. =A0Missed the 2.6.34 merge window so I'm aiming =
+at
+> 2.6.35.
 
-I recently experienced a strange issue with software raid1+0 under Xen
-on a new machine. I was getting corruption in my guest volumes and
-tons of kernel messages such as:
+Hey Martin,
 
-[305044.571962] raid0_make_request bug: can't convert block across
-chunks or bigger than 64k 14147455 4
+We've been scoping the work associated with adding discard support to
+DM (afaik MD would need comparable infrastructure, e.g.: spliting
+discard requests).
 
-The full thread is located at http://marc.info/?t=3D126672694700001&r=3D1&w=
-=3D2
-Detailed output at http://pastebin.com/f6a52db74
+There is a fair amount of complexity associated with this work.
+Especially when you look to support discards for some of the more
+advanced DM targets.  Discard support for the 'linear' target is the
+relatively low hanging fruit.  The 'striped' target gets more
+interesting (having to split the discard into multiple discards to
+submit to the appropriate underlying devices in the striped volume).
 
-It appears after speaking with the linux-raid mailing list that this
-is due a bug which has been fixed but the fix is not included in the
-dom0 kernel. I'm not sure what sources kernel 2.6.26-2-xen-amd64 is
-based on, but since xenlinux is still at 2.6.18 I was assuming that
-this bug would still exist.
+One thought was we might have a block layer hook along the lines of
+the q->merge_bvec_fn (similar but hopefully less
+problematic/controversial).  Christoph removed a hook that was vaguely
+like this, but posed allocation problems, with linux-2.6 commit:
+c15227de132f
 
-My questions for xen-devel are:
+Please feel free to share your patches/design with dm-devel.  (I'll
+also check with Alasdair to see about making the dm-devel filtering
+less prone to eat mail)
 
-Can you tell me if there is any dom0 kernel where this issue is fixed?
-Is there anything I can do to help get this resolved? Testing? Patching?
-
-- chrris
-
-On Mon, Mar 8, 2010 at 12:50 AM, Neil Brown <neilb@suse.de> wrote:
-> On Sun, 21 Feb 2010 19:16:40 +1100
-> Neil Brown <neilb@suse.de> wrote:
->
->> On Sun, 21 Feb 2010 02:26:42 -0500
->> chris <tknchris@gmail.com> wrote:
->>
->> > That is exactly what I didn't want to hear :( I am running
->> > 2.6.26-2-xen-amd64. Are you sure its a kernel problem and nothing to
->> > do with my chunk/block sizes? If this is a bug what versions are
->> > affected, I'll build a new domU kernel and see if I can get it working
->> > there.
->> >
->> > - chris
->>
->> I'm absolutely sure it is a kernel bug.
->
-> And I think I now know what the bug is.
->
-> A patch was recently posted to dm-devel which I think addresses exactly t=
-his
-> problem.
->
-> I reproduce it below.
->
-> NeilBrown
->
-> -------------------
-> If the lower device exposes a merge_bvec_fn,
-> dm_set_device_limits() restricts max_sectors
-> to PAGE_SIZE "just to be safe".
->
-> This is not sufficient, however.
->
-> If someone uses bio_add_page() to add 8 disjunct 512 byte partial
-> pages to a bio, it would succeed, but could still cross a border
-> of whatever restrictions are below us (e.g. raid10 stripe boundary).
-> An attempted bio_split() would not succeed, because bi_vcnt is 8.
->
-> One example that triggered this frequently is the xen io layer.
->
-> raid10_make_request bug: can't convert block across chunks or bigger than=
- 64k 209265151 1
->
-> Signed-off-by: Lars <lars.ellenberg@linbit.com>
->
->
-> ---
-> =A0drivers/md/dm-table.c | =A0 12 ++++++++++--
-> =A01 files changed, 10 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-> index 4b22feb..c686ff4 100644
-> --- a/drivers/md/dm-table.c
-> +++ b/drivers/md/dm-table.c
-> @@ -515,14 +515,22 @@ int dm_set_device_limits(struct dm_target *ti, stru=
-ct dm_dev *dev,
->
-> =A0 =A0 =A0 =A0/*
-> =A0 =A0 =A0 =A0 * Check if merge fn is supported.
-> - =A0 =A0 =A0 =A0* If not we'll force DM to use PAGE_SIZE or
-> + =A0 =A0 =A0 =A0* If not we'll force DM to use single bio_vec of PAGE_SI=
-ZE or
-> =A0 =A0 =A0 =A0 * smaller I/O, just to be safe.
-> =A0 =A0 =A0 =A0 */
->
-> - =A0 =A0 =A0 if (q->merge_bvec_fn && !ti->type->merge)
-> + =A0 =A0 =A0 if (q->merge_bvec_fn && !ti->type->merge) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0limits->max_sectors =3D
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0min_not_zero(limits->max_s=
-ectors,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (=
-unsigned int) (PAGE_SIZE >> 9));
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Restricting max_sectors is not enough.
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* If someone uses bio_add_page to add 8 =
-disjunct 512 byte
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* partial pages to a bio, it would succe=
-ed,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* but could still cross a border of what=
-ever restrictions
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* are below us (e.g. raid0 stripe bounda=
-ry). =A0An attempted
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* bio_split() would not succeed, because=
- bi_vcnt is 8. */
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 limits->max_segments =3D 1;
-> + =A0 =A0 =A0 }
-> =A0 =A0 =A0 =A0return 0;
-> =A0}
-> =A0EXPORT_SYMBOL_GPL(dm_set_device_limits);
-> --
-> 1.6.3.3
->
+Thanks!
+Mike
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
