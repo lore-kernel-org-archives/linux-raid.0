@@ -1,82 +1,54 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID MIA.  Again.  (Kinda.)
-Date: Wed, 10 Mar 2010 06:49:09 +1100
-Message-ID: <20100310064909.4ff1fc60@notabene.brown>
-References: <ef2f0a4210283390480f4adbd9a547de.squirrel@webmail.jots.org>
-	<20100305075016.51e98363@notabene.brown>
-	<b305ada429c44b2b62b03c101f7ecf0a.squirrel@webmail.jots.org>
-	<20100305123028.55a34c14@notabene.brown>
-	<a65d84c03d315f1aea40641238f25625.squirrel@webmail.jots.org>
-	<20100306073703.2e44d2f6@notabene.brown>
-	<6efdda840bff85f8b8ec053808afa5dd.squirrel@webmail.jots.org>
+Subject: [PULL REQUEST] minor md updates for 2.6.34
+Date: Wed, 10 Mar 2010 09:52:02 +1100
+Message-ID: <19350.53522.385933.467438@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <6efdda840bff85f8b8ec053808afa5dd.squirrel@webmail.jots.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Ken D'Ambrosio <ken@jots.org>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 9 Mar 2010 09:43:48 -0500 (EST)
-"Ken D'Ambrosio" <ken@jots.org> wrote:
 
-> On Fri, March 5, 2010 3:37 pm, Neil Brown wrote:
-> > mount /dev/md0 /somewhere
-> >
-> > ??
-> 
-> Sorry this took so long; I've been busy dying from Martian Death Flu. 
-> So... I tried what you suggested.
-> 
-> And it worked.
-> 
-> WTF?!
-> 
-> How can you mount something that doesn't show a partition in fdisk?  I'm
-> -very-, -very- confused here.  Grateful, yes, but confused.  Is this
-> something I'm just not "getting?"
+Hi Linus,
 
-Yes, this something you are just "not getting", but it is very simple so
-won't take a moment to explain.
+Yes, I know I missed the boat, and I won't lose any sleep if this
+doesn't get accepted, but here are a few minor improvements that I
+would rather were in than not.
 
-A partition table is simply a description of how to divide a disk drive up
-into smaller units.  In stead of 1 big device, you appear to have several
-small devices.
-You can create a filesystem on any of these things - the big device, or any
-of the smaller devices.
+I have another bugfix coming (relating to merge_bvec_fn handling) but
+I'm not confident I have that right yet so it'll some later as a
+separate 'bugfix'.
 
-You can use fdisk to divide /dev/sda up into /dev/sda1, /dev/sda2, etc, but
-you don't have to.  You can "mkfs /dev/sda" if you like.
-Similarly, you can devide /dev/md0 up into /dev/md0p1, /dev/md0p2, with
-fdisk, but you don't have to.
-Commonly, people use /dev/sda1 rather than /dev/sda, and
-  /dev/md0 rather than /dev/md0p1.
-But this is just common practice, not enforced (that it wasn't long ago
-when /dev/md0p1 could not be created, but that isn't important here).
-
-A partition table does add one byte of extra information - a partition type.
-This is a hint as to what sort of thing is stored in the partition.  However
-that hint is not widely used in Linux.  I think some installers use it to
-automagically find 'swap' and maybe 'root', but that is about it.  For many
-purposes the partition type can be ignored.
-
-When you created your filesystem, you must have created it on /dev/md0, not
-on a partition.
-
-Hope it is all clear now.
-
+Thanks,
 NeilBrown
 
 
-> 
-> Thanks much, regardless, for the pointer -- don't know if I would ever
-> have tried mounting it without a partition showing.
-> 
-> *confused but happy*
-> 
-> -Ken
-> 
-> 
+The following changes since commit 25cf84cf377c0aae5dbcf937ea89bc7893db5176:
+  Linus Torvalds (1):
+        Merge git://git.kernel.org/.../amit/virtio-console
 
+are available in the git repository at:
+
+  git://neil.brown.name/md/ for-linus
+
+H Hartley Sweeten (1):
+      drivers/md: Remove unnecessary casts of void *
+
+NeilBrown (1):
+      md: remove some dead fields from mddev_s
+
+Paul Clements (1):
+      md: expose max value of behind writes counter
+
+ drivers/md/bitmap.c    |   37 ++++++++++++++++++++++++++++++++-----
+ drivers/md/bitmap.h    |    1 +
+ drivers/md/faulty.c    |    6 +++---
+ drivers/md/md.h        |    3 ---
+ drivers/md/multipath.c |    2 +-
+ drivers/md/raid1.c     |    8 ++++----
+ drivers/md/raid10.c    |    8 ++++----
+ drivers/md/raid5.c     |   10 +++++-----
+ 8 files changed, 50 insertions(+), 25 deletions(-)
