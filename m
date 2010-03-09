@@ -1,95 +1,74 @@
-From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: 3 disk RAID1?
-Date: Mon, 8 Mar 2010 19:17:16 -0800
-Message-ID: <4877c76c1003081917q5e6e9973vd4cc4124c511c57f@mail.gmail.com>
-References: <5bdc1c8b1003081719h37f02cb9rbdc4bb6064e4c3d7@mail.gmail.com>
-	 <BB.BD.21054.3B3A59B4@cdptpa-omtalb.mail.rr.com>
+From: rj <ratnadeep@gmail.com>
+Subject: Re: Does MD solve write hole issue for RAID5/RAID6?
+Date: Tue, 9 Mar 2010 08:44:05 +0530
+Message-ID: <d19eda751003081914sae34e1fv9d923e6be0bc658d@mail.gmail.com>
+References: <d19eda751003030417o3a7ec761ua54e93875002410a@mail.gmail.com>
+	 <4B8E66E5.9050606@shiftmail.org> <87wrxqy37l.fsf@frosties.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BB.BD.21054.3B3A59B4@cdptpa-omtalb.mail.rr.com>
+In-Reply-To: <87wrxqy37l.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lrhorer@satx.rr.com>
-Cc: Mark Knecht <markknecht@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: Asdo <asdo@shiftmail.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Quite odd, my AMD64 asus mobos work just fine.  Of course I have been
-avoiding all NForce chipsets for years.
+okay, thanks guys !
 
-Maybe you should set the BIOS so that the discs are presented as AHCI d=
-evices?
-
-On Mon, Mar 8, 2010 at 5:26 PM, Leslie Rhorer <lrhorer@satx.rr.com> wro=
-te:
+On Sat, Mar 6, 2010 at 1:02 AM, Goswin von Brederlow <goswin-v-b@web.de=
+> wrote:
+> Asdo <asdo@shiftmail.org> writes:
 >
+>> rj wrote:
+>>> Hi,
+>>> I wanted to know if md solves write hole issue for RAID5/RAID6?
 >
->> -----Original Message-----
->> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
->> owner@vger.kernel.org] On Behalf Of Mark Knecht
->> Sent: Monday, March 08, 2010 7:19 PM
->> To: Kristleifur Da=C5=A1ason
->> Cc: Linux-RAID
->> Subject: Re: 3 disk RAID1?
->>
->> On Mon, Mar 8, 2010 at 2:18 PM, Kristleifur Da=C5=A1ason
->> <kristleifur@gmail.com> wrote:
->> <SNIP>
->> >>
->> >> When in doubt, read the manual two or three more times.
->> >>
->> >> This might also help you: http://wiki.tldp.org/LVM-on-RAID =C2=A0=
-I wrote
->> >> some background comparison sections when I made that...
->> >
->> > Good advice.
->> >
->> > The contents of the manual didn't really stick for me until I'd
->> > actually *done* the tasks I was trying to figure out. The beautifu=
-l
->> > and classic Catch-22 of learning new things. So I somewhat
->> > empathically suggest you obtain a virtual machine program and star=
-t up
->> > a few disposable virtual machines. (VirtualBox is pretty good and =
-also
->> > free.) Try creating some RAID's on VM's and getting them to boot, =
-try
->> > failing a device and readding it, etc.
->> >
->> > And keep the manual in a window next to the virtual machine's wind=
-ow :)
->> >
->> > -- Kristleifur
->> >
->>
->> Exactly what I'm working on this afternoon. I've not created many VM=
-'s
->> from scratch so there's a learning curve there, but potentially maki=
-ng
->> the hard drives virtual in the new VM setup and then applying RAID t=
-o
->> them seems like a good way to practice.
->>
->> Additionally I'm going to purchase maybe 3 or 4 drives and then see
->> about using the other SATA ports on my desktop motherboard to create
->> additional storage that I can get some real performance numbers on.
+> It is unsolvable without a crash persistant journal. Hardware raids h=
+ave
+> battery backed cache for that but a fast disk would also work. But no
+> support for this in linux software raid.
 >
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0Your mileage may definitely vary, but neit=
-her of the servers on
-> which I run mdadm have motherboards which allow mdadm to recognize th=
-e
-> drives. =C2=A0For both of them, only drives 0 and 1 are properly reco=
-gnized by
-> Linux. =C2=A0I had to purchase SATA controllers for both. =C2=A0Both =
-are Asus AMD-64
-> motherboards.
+>> No but the filesystem can do that, ext3/4 and XFS in particular, if
+>> well aligned on the RAID, if you are creating new files and not
+>> updating old files (i.e. doesn't work for databases).
+>> For full write hole avoidance you need to wait for Btrfs (and I don'=
+t
+>> know the state of raid-5/6 on btrfs), or use ZFS on Solaris or Freeb=
+sd.
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
+> No raid5/6 in btrfs. Needs major restructuring of the on-disk data fo=
+r
+> that.
+>
+> ZFS on the other hand uses what they call raid-x. Which is a raid5 wi=
+th
+> copy-on-write semantic. Any write to a virtual block will write to a =
+new
+> physical block and update the parity to a new physical block too. Onl=
+y
+> once that was written is the stripe atomically changed to the new
+> physical location. So no hole there.
+>
+> There is also a zfs-fuse implementation for linux.
+>
+>>> Also, does md support RAID 50 level ?
+>>>
+>> Not directly, but you can create that manually by overlaying a raid =
+0
+>> over 1+ raid5's.
+>
+> And by layering one raid over others you can get any level you like,
+> even 14065 if you like (and have enought disks).
+>
+> For raid50 I would suggest LVM over raid5 with striping though. Raid =
+0
+> is somewhat pointless when compared with all the extra flexibility LV=
+M
+> gives you on top of striping.
+>
+> MfG
+> =A0 =A0 =A0 =A0Goswin
 >
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
