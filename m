@@ -1,47 +1,64 @@
-From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
+From: Asdo <asdo@shiftmail.org>
 Subject: Re: possible bus loading problem during resync
-Date: Tue, 9 Mar 2010 10:30:24 +0000
-Message-ID: <73e903671003090230y135d104cte15e07604b85b8aa@mail.gmail.com>
+Date: Tue, 09 Mar 2010 12:00:17 +0100
+Message-ID: <4B962A41.50207@shiftmail.org>
 References: <4B95EB5E.5090702@vorgon.com>
+ <73e903671003090230y135d104cte15e07604b85b8aa@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B95EB5E.5090702@vorgon.com>
+In-reply-to: <73e903671003090230y135d104cte15e07604b85b8aa@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>, "Timothy D. Lenz" <tlenz@vorgon.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Mar 9, 2010 at 6:31 AM, Timothy D. Lenz <tlenz@vorgon.com> wrote:
-> I'm working on 2 systems that are mainly for running vdr. I've had these
-> running somewhat for awhile with raid. But a couple nights ago as I was
-> quitting for the night, I noticed one of the computers drive light staying
-> on. I had just made some changes to xine and didn't know if something had
-> crashed. Turned on the TV and found the video was freezing for 10-20secs
-> every 10-20secs. Logging in using putty and winscp I found it very sluggish
-> to respond.Starting top I found it was doing the regular array check/resync.
-> The process was using about 64% cpu and cpu was staying at idle speed
-> (1000Mhz). These computers use Athlon64 x2 cpu's. A problem with the AN2
-> socket systems is that when the cpu is throttled back, it also slows the
-> bus. This has been found to be a problem on boards with integrated graphics
-> when using nvidia's vdpau for hardware video decoding because they use
-> system ram. The fix is to set the lower speed limit to 1800Mhz and/or change
-> the up_threshold to ~50% . However, I am using PCIe video cards and so up
-> till now have not had a problem.
+Kristleifur Da=F0ason wrote:
+> On Tue, Mar 9, 2010 at 6:31 AM, Timothy D. Lenz <tlenz@vorgon.com> wr=
+ote:
+>  =20
+>> I'm working on 2 systems that are mainly for running vdr. I've had t=
+hese
+>> running somewhat for awhile with raid. But a couple nights ago as I =
+was
+>> quitting for the night, I noticed one of the computers drive light s=
+taying
+>> on. I had just made some changes to xine and didn't know if somethin=
+g had
+>> crashed. Turned on the TV and found the video was freezing for 10-20=
+secs
+>> every 10-20secs. Logging in using putty and winscp I found it very s=
+luggish
+>> to respond.Starting top I found it was doing the regular array check=
+/resync.......
+>> --
+>>    =20
 >
-> I stopped vdr, but putty and winscp where still sluggish. This tells me that
-> it is loading the bus so much that both the video card and the network is
-> effected. it would also effect any tuner cards interfering with any
-> recording that may be going on at the time. I change the up_threshold from
-> the default 95% to 50% which should kick the speed up when it's syncing. But
-> I'm not sure that will be enough. Could there be some other setting that is
-> wrong raising the priority of the process? Seems like this would be a
-> problem for any system having raid maintenance bring the system to its
-> knees. The eta to finish was 75 minutes.
-> --
+>
+> Sorry about the incredibly brief answer: Not to dismiss other issues,
+> but that behavior seems like exactly what I've seen when a disk has
+> been failing.
+>  =20
 
+If that is true, how does that happen, the driver is hung? But anyway,=20
+how can such things happen when there is more than one CPU-core?
 
-Sorry about the incredibly brief answer: Not to dismiss other issues,
-but that behavior seems like exactly what I've seen when a disk has
-been failing.
+try disabling NCQ by echo 1 > /sys/block/sdX/device/queue_depth for all=
+=20
+drives. After doing this, at most 1 request can be issued to one drive=20
+until the drive has serviced such request.
 
--- Kristleifur
+After doing this, firstly I'd say the sluggishness should disappear, at=
+=20
+least on SSH when not touching the disks. And then you can look with=20
+"iostat -x 1": probably the bad drive will have a service time (svctm)=20
+or await much worse than the others.
+
+Just guesses, correct me if I'm wrong
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
