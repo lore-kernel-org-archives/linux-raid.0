@@ -1,64 +1,47 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: 3 disk RAID1?
-Date: Mon, 8 Mar 2010 17:19:09 -0800
-Message-ID: <5bdc1c8b1003081719h37f02cb9rbdc4bb6064e4c3d7@mail.gmail.com>
-References: <5bdc1c8b1003081239l32c5653fs8347179e23c0a287@mail.gmail.com>
-	 <20100308205803.GA31731@cthulhu.home.robinhill.me.uk>
-	 <5bdc1c8b1003081304n7a59e99ej1f66078090980f06@mail.gmail.com>
-	 <4877c76c1003081411p3c729c89q3d908d07f19b0857@mail.gmail.com>
-	 <73e903671003081418g13861e21pa412f46995ad9781@mail.gmail.com>
+From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
+Subject: Re: possible bus loading problem during resync
+Date: Tue, 9 Mar 2010 10:30:24 +0000
+Message-ID: <73e903671003090230y135d104cte15e07604b85b8aa@mail.gmail.com>
+References: <4B95EB5E.5090702@vorgon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <73e903671003081418g13861e21pa412f46995ad9781@mail.gmail.com>
+In-Reply-To: <4B95EB5E.5090702@vorgon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?Q?Kristleifur_Da=C3=B0ason?= <kristleifur@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Mar 8, 2010 at 2:18 PM, Kristleifur Da=C3=B0ason
-<kristleifur@gmail.com> wrote:
-<SNIP>
->>
->> When in doubt, read the manual two or three more times.
->>
->> This might also help you: http://wiki.tldp.org/LVM-on-RAID =C2=A0I w=
-rote
->> some background comparison sections when I made that...
+On Tue, Mar 9, 2010 at 6:31 AM, Timothy D. Lenz <tlenz@vorgon.com> wrote:
+> I'm working on 2 systems that are mainly for running vdr. I've had these
+> running somewhat for awhile with raid. But a couple nights ago as I was
+> quitting for the night, I noticed one of the computers drive light staying
+> on. I had just made some changes to xine and didn't know if something had
+> crashed. Turned on the TV and found the video was freezing for 10-20secs
+> every 10-20secs. Logging in using putty and winscp I found it very sluggish
+> to respond.Starting top I found it was doing the regular array check/resync.
+> The process was using about 64% cpu and cpu was staying at idle speed
+> (1000Mhz). These computers use Athlon64 x2 cpu's. A problem with the AN2
+> socket systems is that when the cpu is throttled back, it also slows the
+> bus. This has been found to be a problem on boards with integrated graphics
+> when using nvidia's vdpau for hardware video decoding because they use
+> system ram. The fix is to set the lower speed limit to 1800Mhz and/or change
+> the up_threshold to ~50% . However, I am using PCIe video cards and so up
+> till now have not had a problem.
 >
-> Good advice.
->
-> The contents of the manual didn't really stick for me until I'd
-> actually *done* the tasks I was trying to figure out. The beautiful
-> and classic Catch-22 of learning new things. So I somewhat
-> empathically suggest you obtain a virtual machine program and start u=
-p
-> a few disposable virtual machines. (VirtualBox is pretty good and als=
-o
-> free.) Try creating some RAID's on VM's and getting them to boot, try
-> failing a device and readding it, etc.
->
-> And keep the manual in a window next to the virtual machine's window =
-:)
->
-> -- Kristleifur
->
+> I stopped vdr, but putty and winscp where still sluggish. This tells me that
+> it is loading the bus so much that both the video card and the network is
+> effected. it would also effect any tuner cards interfering with any
+> recording that may be going on at the time. I change the up_threshold from
+> the default 95% to 50% which should kick the speed up when it's syncing. But
+> I'm not sure that will be enough. Could there be some other setting that is
+> wrong raising the priority of the process? Seems like this would be a
+> problem for any system having raid maintenance bring the system to its
+> knees. The eta to finish was 75 minutes.
+> --
 
-Exactly what I'm working on this afternoon. I've not created many VM's
-from scratch so there's a learning curve there, but potentially making
-the hard drives virtual in the new VM setup and then applying RAID to
-them seems like a good way to practice.
 
-Additionally I'm going to purchase maybe 3 or 4 drives and then see
-about using the other SATA ports on my desktop motherboard to create
-additional storage that I can get some real performance numbers on.
+Sorry about the incredibly brief answer: Not to dismiss other issues,
+but that behavior seems like exactly what I've seen when a disk has
+been failing.
 
-Thanks!
-
-- Mark
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- Kristleifur
