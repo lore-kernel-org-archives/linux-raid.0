@@ -1,170 +1,45 @@
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: Re: [Xen-devel] Re: Weird Issue with raid 5+0
-Date: Mon, 8 Mar 2010 12:29:15 -0500
-Message-ID: <20100308172915.GE4568@phenom.dumpdata.com>
-References: <31e44a111002202033m4a9dfba9yf8aef62b8b39933a@mail.gmail.com> <20100221164805.5bdc2d60@notabene.brown> <31e44a111002202326x407c814dsaa60e51a8a0ff049@mail.gmail.com> <20100221191640.39b68b01@notabene.brown> <20100308165021.6529fe6d@notabene.brown> <31e44a111003080735t4ddf7c63uaa517ad6522cca67@mail.gmail.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: RAID MIA.  Again.  (Kinda.)
+Date: Tue, 09 Mar 2010 16:29:12 +0000
+Message-ID: <4B967758.60006@anonymous.org.uk>
+References: <ef2f0a4210283390480f4adbd9a547de.squirrel@webmail.jots.org>    <20100305075016.51e98363@notabene.brown>    <b305ada429c44b2b62b03c101f7ecf0a.squirrel@webmail.jots.org>    <20100305123028.55a34c14@notabene.brown>    <a65d84c03d315f1aea40641238f25625.squirrel@webmail.jots.org>    <20100306073703.2e44d2f6@notabene.brown> <6efdda840bff85f8b8ec053808afa5dd.squirrel@webmail.jots.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <31e44a111003080735t4ddf7c63uaa517ad6522cca67@mail.gmail.com>
+In-Reply-To: <6efdda840bff85f8b8ec053808afa5dd.squirrel@webmail.jots.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: chris <tknchris@gmail.com>, neilb@suse.de
-Cc: Xen-Devel List <xen-devel@lists.xensource.com>, linux-raid@vger.kernel.org
+To: Ken D'Ambrosio <ken@jots.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Mar 08, 2010 at 10:35:57AM -0500, chris wrote:
-> I forwarding this to xen-devel because it appears to be a bug in dom0=
- kernel.
->=20
-> I recently experienced a strange issue with software raid1+0 under Xe=
-n
-> on a new machine. I was getting corruption in my guest volumes and
-> tons of kernel messages such as:
->=20
-> [305044.571962] raid0_make_request bug: can't convert block across
-> chunks or bigger than 64k 14147455 4
->=20
-> The full thread is located at http://marc.info/?t=3D126672694700001&r=
-=3D1&w=3D2
-> Detailed output at http://pastebin.com/f6a52db74
->=20
-> It appears after speaking with the linux-raid mailing list that this
-> is due a bug which has been fixed but the fix is not included in the
-> dom0 kernel. I'm not sure what sources kernel 2.6.26-2-xen-amd64 is
-> based on, but since xenlinux is still at 2.6.18 I was assuming that
-> this bug would still exist.
->=20
-> My questions for xen-devel are:
->=20
-> Can you tell me if there is any dom0 kernel where this issue is fixed=
-?
+On 09/03/2010 14:43, Ken D'Ambrosio wrote:
+> On Fri, March 5, 2010 3:37 pm, Neil Brown wrote:
+>> mount /dev/md0 /somewhere
+>>
+>> ??
+> 
+> Sorry this took so long; I've been busy dying from Martian Death Flu. 
+> So... I tried what you suggested.
+> 
+> And it worked.
+> 
+> WTF?!
+> 
+> How can you mount something that doesn't show a partition in fdisk?  I'm
+> -very-, -very- confused here.  Grateful, yes, but confused.  Is this
+> something I'm just not "getting?"
 
-Not there yet.
+Yes, I think so. You can potentially make and mount a filesystem on any 
+block device. That could be a whole disc or a partition, or it could be 
+something else. There are various tools for making new block devices 
+over the top of others, for example you can use LVM, md or dm. Then 
+there are yet more tools for making block devices out of other stuff, 
+like loopback and nbd. All these new block devices may in turn be 
+partitioned, but they don't have to be. In fact partitioning is just a 
+simple way of splitting a block device up into other smaller block devices.
 
-> Is there anything I can do to help get this resolved? Testing? Patchi=
-ng?
+Cheers,
 
-It looks to me that the patch hasn't reached the latest Linux tree. Nor
-the stable branch. I believe once it gets there we would pull it in
-automatically.
+John.
 
-The patch at http://marc.info/?l=3Dlinux-raid&m=3D126802743419044&w=3D2=
- looks
-to be quite safe so it should be easy for you to pull it and apply it t=
-o
-your sources?
-
-Neil, any idea when this patch might land in Greg KH's tree (2.6.32) or
-upstream?
-
->=20
-> - chrris
->=20
-> On Mon, Mar 8, 2010 at 12:50 AM, Neil Brown <neilb@suse.de> wrote:
-> > On Sun, 21 Feb 2010 19:16:40 +1100
-> > Neil Brown <neilb@suse.de> wrote:
-> >
-> >> On Sun, 21 Feb 2010 02:26:42 -0500
-> >> chris <tknchris@gmail.com> wrote:
-> >>
-> >> > That is exactly what I didn't want to hear :( I am running
-> >> > 2.6.26-2-xen-amd64. Are you sure its a kernel problem and nothin=
-g to
-> >> > do with my chunk/block sizes? If this is a bug what versions are
-> >> > affected, I'll build a new domU kernel and see if I can get it w=
-orking
-> >> > there.
-> >> >
-> >> > - chris
-> >>
-> >> I'm absolutely sure it is a kernel bug.
-> >
-> > And I think I now know what the bug is.
-> >
-> > A patch was recently posted to dm-devel which I think addresses exa=
-ctly this
-> > problem.
-> >
-> > I reproduce it below.
-> >
-> > NeilBrown
-> >
-> > -------------------
-> > If the lower device exposes a merge_bvec_fn,
-> > dm_set_device_limits() restricts max_sectors
-> > to PAGE_SIZE "just to be safe".
-> >
-> > This is not sufficient, however.
-> >
-> > If someone uses bio_add_page() to add 8 disjunct 512 byte partial
-> > pages to a bio, it would succeed, but could still cross a border
-> > of whatever restrictions are below us (e.g. raid10 stripe boundary)=
-=2E
-> > An attempted bio_split() would not succeed, because bi_vcnt is 8.
-> >
-> > One example that triggered this frequently is the xen io layer.
-> >
-> > raid10_make_request bug: can't convert block across chunks or bigge=
-r than 64k 209265151 1
-> >
-> > Signed-off-by: Lars <lars.ellenberg@linbit.com>
-> >
-> >
-> > ---
-> > =A0drivers/md/dm-table.c | =A0 12 ++++++++++--
-> > =A01 files changed, 10 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-> > index 4b22feb..c686ff4 100644
-> > --- a/drivers/md/dm-table.c
-> > +++ b/drivers/md/dm-table.c
-> > @@ -515,14 +515,22 @@ int dm_set_device_limits(struct dm_target *ti=
-, struct dm_dev *dev,
-> >
-> > =A0 =A0 =A0 =A0/*
-> > =A0 =A0 =A0 =A0 * Check if merge fn is supported.
-> > - =A0 =A0 =A0 =A0* If not we'll force DM to use PAGE_SIZE or
-> > + =A0 =A0 =A0 =A0* If not we'll force DM to use single bio_vec of P=
-AGE_SIZE or
-> > =A0 =A0 =A0 =A0 * smaller I/O, just to be safe.
-> > =A0 =A0 =A0 =A0 */
-> >
-> > - =A0 =A0 =A0 if (q->merge_bvec_fn && !ti->type->merge)
-> > + =A0 =A0 =A0 if (q->merge_bvec_fn && !ti->type->merge) {
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0limits->max_sectors =3D
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0min_not_zero(limits-=
->max_sectors,
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 (unsigned int) (PAGE_SIZE >> 9));
-> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Restricting max_sectors is not eno=
-ugh.
-> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* If someone uses bio_add_page to =
-add 8 disjunct 512 byte
-> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* partial pages to a bio, it would=
- succeed,
-> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* but could still cross a border o=
-f whatever restrictions
-> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* are below us (e.g. raid0 stripe =
-boundary). =A0An attempted
-> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* bio_split() would not succeed, b=
-ecause bi_vcnt is 8. */
-> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 limits->max_segments =3D 1;
-> > + =A0 =A0 =A0 }
-> > =A0 =A0 =A0 =A0return 0;
-> > =A0}
-> > =A0EXPORT_SYMBOL_GPL(dm_set_device_limits);
-> > --
-> > 1.6.3.3
-> >
->=20
-> _______________________________________________
-> Xen-devel mailing list
-> Xen-devel@lists.xensource.com
-> http://lists.xensource.com/xen-devel
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
