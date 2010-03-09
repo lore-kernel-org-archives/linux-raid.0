@@ -1,80 +1,78 @@
-From: chris <tknchris@gmail.com>
-Subject: Re: Re: Weird Issue with raid 5+0
-Date: Mon, 8 Mar 2010 19:48:53 -0500
-Message-ID: <31e44a111003081648uf0b7af2o2ece4ffbff80c749@mail.gmail.com>
-References: <31e44a111002202033m4a9dfba9yf8aef62b8b39933a@mail.gmail.com>
-	<20100221164805.5bdc2d60@notabene.brown>
-	<31e44a111002202326x407c814dsaa60e51a8a0ff049@mail.gmail.com>
-	<20100221191640.39b68b01@notabene.brown>
-	<20100308165021.6529fe6d@notabene.brown>
-	<31e44a111003080735t4ddf7c63uaa517ad6522cca67@mail.gmail.com>
-	<4B9587B2.5050700@goop.org>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: 3 disk RAID1?
+Date: Mon, 8 Mar 2010 19:26:06 -0600
+Message-ID: <BB.BD.21054.3B3A59B4@cdptpa-omtalb.mail.rr.com>
+References: <5bdc1c8b1003081719h37f02cb9rbdc4bb6064e4c3d7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-Return-path: <xen-devel-bounces@lists.xensource.com>
-In-Reply-To: <4B9587B2.5050700@goop.org>
-List-Unsubscribe: <http://lists.xensource.com/mailman/listinfo/xen-devel>,
-	<mailto:xen-devel-request@lists.xensource.com?subject=unsubscribe>
-List-Post: <mailto:xen-devel@lists.xensource.com>
-List-Help: <mailto:xen-devel-request@lists.xensource.com?subject=help>
-List-Subscribe: <http://lists.xensource.com/mailman/listinfo/xen-devel>,
-	<mailto:xen-devel-request@lists.xensource.com?subject=subscribe>
-Sender: xen-devel-bounces@lists.xensource.com
-Errors-To: xen-devel-bounces@lists.xensource.com
-To: Jeremy Fitzhardinge <jeremy@goop.org>
-Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>, Xen-Devel List <xen-devel@lists.xensource.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <5bdc1c8b1003081719h37f02cb9rbdc4bb6064e4c3d7@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: 'Mark Knecht' <markknecht@gmail.com>
+Cc: 'Linux-RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I will test with xenlinux 2.6.18, as far as pv_ops dom0 does this work
-with any version of the hypervisor? The current system is running 3.2
-which is pretty old so I just assumed pv_ops wouldn't be a
-possibility.
 
- -chris
 
-On Mon, Mar 8, 2010 at 6:26 PM, Jeremy Fitzhardinge <jeremy@goop.org> wrote=
-:
-> On 03/08/2010 07:35 AM, chris wrote:
->>
->> I forwarding this to xen-devel because it appears to be a bug in dom0
->> kernel.
->>
->> I recently experienced a strange issue with software raid1+0 under Xen
->> on a new machine. I was getting corruption in my guest volumes and
->> tons of kernel messages such as:
->>
->> [305044.571962] raid0_make_request bug: can't convert block across
->> chunks or bigger than 64k 14147455 4
->>
->> The full thread is located at http://marc.info/?t=3D126672694700001&r=3D=
-1&w=3D2
->> Detailed output at http://pastebin.com/f6a52db74
->>
->> It appears after speaking with the linux-raid mailing list that this
->> is due a bug which has been fixed but the fix is not included in the
->> dom0 kernel. I'm not sure what sources kernel 2.6.26-2-xen-amd64 is
->> based on, but since xenlinux is still at 2.6.18 I was assuming that
->> this bug would still exist.
->>
->
-> There are a number of possible dom0 kernel in use. =A0The xen.org 2.6.18-=
-xen
-> tree is still maintained on a bugfix basis. =A0Are you seeing the problem=
- with
-> 2.6.18-xen?
->
-> I don't know what 2.6.26-2-xen-amd64 is, but I'm guessing from the name i=
-t
-> is a Debian kernel. =A0I don't know what its provenance is, but it is not=
- a
-> xen.org supported kernel; if a fix is needed you should file a bug agains=
-t
-> your distro.
->
-> Modern Xen kernels are based on 2.6.31.x and 2.6.32.x. =A0See
-> http://wiki.xensource.com/xenwiki/XenParavirtOps and
-> http://wiki.xensource.com/xenwiki/XenDom0Kernels for more details.
->
-> =A0 =A0J
->
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Mark Knecht
+> Sent: Monday, March 08, 2010 7:19 PM
+> To: Kristleifur Da=F0ason
+> Cc: Linux-RAID
+> Subject: Re: 3 disk RAID1?
+>=20
+> On Mon, Mar 8, 2010 at 2:18 PM, Kristleifur Da=F0ason
+> <kristleifur@gmail.com> wrote:
+> <SNIP>
+> >>
+> >> When in doubt, read the manual two or three more times.
+> >>
+> >> This might also help you: http://wiki.tldp.org/LVM-on-RAID =A0I wr=
+ote
+> >> some background comparison sections when I made that...
+> >
+> > Good advice.
+> >
+> > The contents of the manual didn't really stick for me until I'd
+> > actually *done* the tasks I was trying to figure out. The beautiful
+> > and classic Catch-22 of learning new things. So I somewhat
+> > empathically suggest you obtain a virtual machine program and start=
+ up
+> > a few disposable virtual machines. (VirtualBox is pretty good and a=
+lso
+> > free.) Try creating some RAID's on VM's and getting them to boot, t=
+ry
+> > failing a device and readding it, etc.
+> >
+> > And keep the manual in a window next to the virtual machine's windo=
+w :)
+> >
+> > -- Kristleifur
+> >
+>=20
+> Exactly what I'm working on this afternoon. I've not created many VM'=
+s
+> from scratch so there's a learning curve there, but potentially makin=
+g
+> the hard drives virtual in the new VM setup and then applying RAID to
+> them seems like a good way to practice.
+>=20
+> Additionally I'm going to purchase maybe 3 or 4 drives and then see
+> about using the other SATA ports on my desktop motherboard to create
+> additional storage that I can get some real performance numbers on.
+
+	Your mileage may definitely vary, but neither of the servers on
+which I run mdadm have motherboards which allow mdadm to recognize the
+drives.  For both of them, only drives 0 and 1 are properly recognized =
+by
+Linux.  I had to purchase SATA controllers for both.  Both are Asus AMD=
+-64
+motherboards.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
