@@ -1,54 +1,55 @@
 From: Neil Brown <neilb@suse.de>
-Subject: [PULL REQUEST] minor md updates for 2.6.34
-Date: Wed, 10 Mar 2010 09:52:02 +1100
-Message-ID: <19350.53522.385933.467438@notabene.brown>
+Subject: Re: activating spares
+Date: Wed, 10 Mar 2010 20:18:09 +1100
+Message-ID: <20100310201809.03217bfd@notabene.brown>
+References: <20100310074343.GA26813@light.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100310074343.GA26813@light.rap.dk>
+Sender: linux-raid-owner@vger.kernel.org
+To: Keld Simonsen <keld@keldix.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, 10 Mar 2010 08:43:43 +0100
+Keld Simonsen <keld@keldix.com> wrote:
 
-Hi Linus,
+> Hi
+> 
+> I made a raid10,f2 arrray (actually 2 arrays) with only one
+> active disk, one missing. This was after 2 disks were found faulty,
+> and I then copied the data from my faulty raid to the new  raid, and
+> installed my other new 2 TB disk. I added the new disk with
+>      mdadm /dev/md9 --add /dev/sdg1
+> and it was then listed as a spare. I wanted to activate it, and thought
+> that --add ing it would automatically start resyncing, but no...
+> I then tried to force resyncing by 
+>      mdadm -A /dev/md9 --update resync
+> but it did not work either. Now I am lost. How do I activate the spare?
+> 
+> kernel 2.6.12 mdadm v1.12.0
 
-Yes, I know I missed the boat, and I won't lose any sleep if this
-doesn't get accepted, but here are a few minor improvements that I
-would rather were in than not.
+Wow, that's OLD!..
+Maybe try a newer kernel, it has probably been fixed.
 
-I have another bugfix coming (relating to merge_bvec_fn handling) but
-I'm not confident I have that right yet so it'll some later as a
-separate 'bugfix'.
+Yes, --adding the device could cause it to store recovery.  I do recall there
+have been a few different situations that caused that not to work, but I
+don't recall the details.
 
-Thanks,
+If you have a service contract, complain to your vendor.  If not, upgraded to 
+something a bit less than 5 years old ;-)
+
+sorry I cannot be more helpful.
+
 NeilBrown
 
+> 
+> best regards
+> keld
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-The following changes since commit 25cf84cf377c0aae5dbcf937ea89bc7893db5176:
-  Linus Torvalds (1):
-        Merge git://git.kernel.org/.../amit/virtio-console
-
-are available in the git repository at:
-
-  git://neil.brown.name/md/ for-linus
-
-H Hartley Sweeten (1):
-      drivers/md: Remove unnecessary casts of void *
-
-NeilBrown (1):
-      md: remove some dead fields from mddev_s
-
-Paul Clements (1):
-      md: expose max value of behind writes counter
-
- drivers/md/bitmap.c    |   37 ++++++++++++++++++++++++++++++++-----
- drivers/md/bitmap.h    |    1 +
- drivers/md/faulty.c    |    6 +++---
- drivers/md/md.h        |    3 ---
- drivers/md/multipath.c |    2 +-
- drivers/md/raid1.c     |    8 ++++----
- drivers/md/raid10.c    |    8 ++++----
- drivers/md/raid5.c     |   10 +++++-----
- 8 files changed, 50 insertions(+), 25 deletions(-)
