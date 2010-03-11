@@ -1,45 +1,50 @@
-From: Carlos Mennens <carloswill@gmail.com>
-Subject: Creating RAID5 w/ Hotspare?
-Date: Thu, 11 Mar 2010 09:55:57 -0500
-Message-ID: <d80f793f1003110655m4b49f1c3x36c8aef817c62d72@mail.gmail.com>
+From: =?UTF-8?Q?Micha=C5=82?= Sawicz <michal@sawicz.net>
+Subject: Re: Creating RAID5 w/ Hotspare?
+Date: Thu, 11 Mar 2010 16:59:05 +0100
+Message-ID: <1268323145.2481.17.camel@michal-laptop.sawicz.net>
+References: <d80f793f1003110655m4b49f1c3x36c8aef817c62d72@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-W6vKg1Pkkvz5gfEmEYZC"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <d80f793f1003110655m4b49f1c3x36c8aef817c62d72@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mdadm <linux-raid@vger.kernel.org>
+To: Carlos Mennens <carloswill@gmail.com>
+Cc: Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I have a machine that supports 4 S-ATA drives. I have all identical
-drives in each slot. I am asking for someone to please tell me how I
-can create a RAID5 array on Linux and then also have the 4th drive
-(/dev/sdd) as a hot spare for any of the three drives in the array /
-volume?
 
-I did the following:
+--=-W6vKg1Pkkvz5gfEmEYZC
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-/device = type @ parition size
+Dnia 2010-03-11, czw o godzinie 09:55 -0500, Carlos Mennens pisze:
+> Is that correct above or would I 1st have to partition the /dev/sdd
+> drive?=20
 
-/dev/sda1 = fd @ 100 MB (bootable for /boot)
-/dev/sda2 = fd @ 1 GB (Going to be used for Swap)
-/dev/sda3 = fd @ 300 GB (Going to be used for /)
+To use it without partitioning, you would have to define a spare-group
+and only add this disk to one of the arrays, it would then be moved
+where needed.
 
-Now I make the same thing for /dev/sdb & /dev/sdc. I DON'T PARTITION
-OR FORMAT /dev/sdd.
+But this way only one of the arrays would be able to use the disk as a
+spare. If you partitioned it, all three could move to the spare disk and
+you could replace a faulty one.
 
-Now I am creating my RAID and this is where I am confused. How do I
-correctly issue the 'mdadm' command to create the volumes for my
-filesystem and also utilize /dev/sdd as a hot spare?
+--=20
+Pozdrawiam
+Micha=C5=82 (Saviq) Sawicz
 
-(/boot)
-mdadm --create /dev/md0 --level=1 --raid-devices=3 /dev/sda1 /dev/sdb1
-/dev/sdc1 --spare-devices=1 /dev/sdd
+--=-W6vKg1Pkkvz5gfEmEYZC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: To jest =?UTF-8?Q?cz=C4=99=C5=9B=C4=87?=
+ =?UTF-8?Q?_wiadomo=C5=9Bci?= podpisana cyfrowo
 
-(Swap)
-mdadm --create /dev/md1 --level=1 --raid-devices=3 /dev/sda2 /dev/sdb2
-/dev/sdc2 --spare-devices=1 /dev/sdd
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
 
-(/)
-mdadm --create /dev/md2 --level=5 --raid-devices=3 /dev/sda3 /dev/sdb3
-/dev/sdc3 --spare-devices=1 /dev/sdd
+iEYEABECAAYFAkuZE0kACgkQzQlUjpZYlbditQCgxCQgZn1WSqnmY59KbV3T3eV/
+cGEAnAnViXqIz0y4Ux3WnOakmSYtz+cX
+=7pkY
+-----END PGP SIGNATURE-----
 
-Is that correct above or would I 1st have to partition the /dev/sdd drive?
+--=-W6vKg1Pkkvz5gfEmEYZC--
+
