@@ -1,58 +1,41 @@
-From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
-Subject: Re: possible bus loading problem during resync
-Date: Fri, 12 Mar 2010 11:43:07 +0000
-Message-ID: <73e903671003120343m26999ddle5e01286eebbc93f@mail.gmail.com>
-References: <4B95EB5E.5090702@vorgon.com> <73e903671003090230y135d104cte15e07604b85b8aa@mail.gmail.com>
-	<4B962A41.50207@shiftmail.org> <871vfrcsk1.fsf@frosties.localdomain>
-	<4B9A1ED0.7060902@shiftmail.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Resize RAID-0?
+Date: Fri, 12 Mar 2010 22:53:21 +1100
+Message-ID: <20100312225321.7581e324@notabene.brown>
+References: <23986fd91003111939w102813c6r8d1b51a387784a71@mail.gmail.com>
+	<4B9A1A3A.6000209@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B9A1ED0.7060902@shiftmail.org>
+In-Reply-To: <4B9A1A3A.6000209@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>
-Cc: Goswin von Brederlow <goswin-v-b@web.de>, "Timothy D. Lenz" <tlenz@vorgon.com>, linux-raid <linux-raid@vger.kernel.org>
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: "Patrick J. LoPresti" <lopresti@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Mar 12, 2010 at 11:00 AM, Asdo <asdo@shiftmail.org> wrote:
->
->>> If that is true, how does that happen, the driver is hung? But anyway,
->>> how can such things happen when there is more than one CPU-core?
->>>
->>
->> A drive produces an error, the whole controler hangs and resets all
->> ports, all drives have to finish being reset before any IO can continue.
->> Hapens easily enough.
->>
->
-> Ok but this is a multi-core CPU and he said Putty and WinSCP were hung.
-> Ok for WinSCP... but Putty?
->
-> Timothy is Putty hung on array check even on NCQ disabled?
->
-> What is the resync speed? If it is very high it could be a CPU starvation
-> but it's strange with only 2 drives. If it is very low I am not sure.
-> Are disks write caches enabled?
->
-> I am not able to spot any problem from your iostat or dmesg.
-> Note: yes the iostat -x 1 was supposed to be captured during resync.
-> Trigger a resync manually for the test. You can start it with echo check and
-> stop it with echo idle > /sys/block/mdX/md/sync_action
->
+On Fri, 12 Mar 2010 10:40:58 +0000
+John Robinson <john.robinson@anonymous.org.uk> wrote:
 
-I find "gnome-disk-utility" A.K.A. "palimpsest" to be a very good
-heuristic to tell whether any drives are giving me physical trouble.
-If there is a high remapped-sector-count or if Palimpsest otherwise
-thinks a drive is suspect, there is a good chance that any unexplained
-slowdowns in the machine are due to that drive.
+> On 12/03/2010 03:39, Patrick J. LoPresti wrote:
+> > From reading the documentation and source code, I gather "mdadm
+> > --grow" is not supported for RAID-0 devices.
+> > 
+> > In my application, I am using md RAID-0 to stripe among several
+> > (identical) hardware RAID-0 chassis.  I would like to extend my setup
+> > by adding another chassis, but apparently, I cannot (?).
+> 
+> If I remember correctly, there were patches posted to this list recently 
+> to add support for reshaping RAID-0, and for migrating from RAID-0 to 
+> other RAID levels, but I don't remember whether they've made it in to 
+> the kernel/mdadm yet. I recommend a trawl through the last few months' 
+> archives.
 
-If nothing more, it's a cheap way to get more information.
+I'll save you the effort.  No they haven't.
 
-(My way of getting Palimpsest to check out drives in a machine that
-doesn't have the program available in its installed distro
-repositories is to run Ubuntu 9.10 from an USB stick. Boot, and up
-comes Palimpsest.)
+The current plan is to support reshaping RAID-0 but converting the
+RAID0 to a degraded RAID4, then reshaping it, then converting back.
 
-Hope this helps. Best of luck.
+But the code isn't ready yet.
 
--- Kristleifur
+NeilBrown
