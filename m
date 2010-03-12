@@ -1,60 +1,50 @@
-From: "Majed B." <majedb@gmail.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
 Subject: Re: Reshaping the length of devices
-Date: Fri, 12 Mar 2010 18:20:39 +0300
-Message-ID: <70ed7c3e1003120720q6e2e9b7bxf2f66fdb8cb892e2@mail.gmail.com>
-References: <4B9A5A7B.4070105@shiftmail.org>
+Date: Fri, 12 Mar 2010 16:54:41 +0000
+Message-ID: <4B9A71D1.108@anonymous.org.uk>
+References: <678411.30301.qm@web51307.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B9A5A7B.4070105@shiftmail.org>
+In-Reply-To: <678411.30301.qm@web51307.mail.re2.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I think it depends on how you migrate to the new disks. The best
-option would be to have one partition use all the space on the new
-(larger) disks, and replace a disk in the array with the new disk &
-wait for it to sync. Do the same for all disks.
+On 12/03/2010 15:18, Jon Hardcastle wrote:
+> 
+> 
+> --- On Fri, 12/3/10, Asdo <asdo@shiftmail.org> wrote:
+> 
+>> From: Asdo <asdo@shiftmail.org>
+>> Subject: Reshaping the length of devices
+>> To: "linux-raid" <linux-raid@vger.kernel.org>
+>> Date: Friday, 12 March, 2010, 15:15
+>> I am wondering... is it possible to
+>> reshape the length of the underlying devices with MD raid?
+>>
+>> I mean like in the case one buys larger disks: after moving
+>> the raid partitions to the new disks half of them is still
+>> free. So one might want to extend the raid partitions to the
+>> end of the disks instead of creating another array in the
+>> free space.
+>>
+>> I have searched the linux-raid mailing list history but I
+>> couldn't find this topic.
+>>
+>> Thanks in advance
+> 
+> As long as the size of ALL underlying devices have increased you can --grow=MAX to the a multiple of the now smallest drive.
 
-You'll end up with a working array, where each disk has 1 partition
-but the total size of the array is only consuming half the capacity.
+Hmm, that reminds me I was meaning to ask - before I have to go to a 
+customer's premises and try it - if I have a CentOS 5 system with 0.90 
+metadata and type fd partitions with RAID-5 over 3 discs, and I want to 
+grow it by replacing the drives, if I dd small partitions onto larger 
+ones and reboot, will the system recognise the RAID-5 - which now has 
+its metadata somewhere in the middle of the paritions not at the end - 
+so that I can then --grow?
 
-After that just use --growth and it'll expand the array to the max
-available capacity from the disks.
+Cheers,
 
-On Fri, Mar 12, 2010 at 6:15 PM, Asdo <asdo@shiftmail.org> wrote:
-> I am wondering... is it possible to reshape the length of the underly=
-ing
-> devices with MD raid?
->
-> I mean like in the case one buys larger disks: after moving the raid
-> partitions to the new disks half of them is still free. So one might =
-want to
-> extend the raid partitions to the end of the disks instead of creatin=
-g
-> another array in the free space.
->
-> I have searched the linux-raid mailing list history but I couldn't fi=
-nd this
-> topic.
->
-> Thanks in advance
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
-
-
-
---=20
-       Majed B.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+John.
