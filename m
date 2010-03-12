@@ -1,32 +1,42 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Resize RAID-0?
-Date: Fri, 12 Mar 2010 10:40:58 +0000
-Message-ID: <4B9A1A3A.6000209@anonymous.org.uk>
-References: <23986fd91003111939w102813c6r8d1b51a387784a71@mail.gmail.com>
+From: Asdo <asdo@shiftmail.org>
+Subject: Re: possible bus loading problem during resync
+Date: Fri, 12 Mar 2010 12:00:32 +0100
+Message-ID: <4B9A1ED0.7060902@shiftmail.org>
+References: <4B95EB5E.5090702@vorgon.com>
+ <73e903671003090230y135d104cte15e07604b85b8aa@mail.gmail.com>
+ <4B962A41.50207@shiftmail.org> <871vfrcsk1.fsf@frosties.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <23986fd91003111939w102813c6r8d1b51a387784a71@mail.gmail.com>
+In-reply-to: <871vfrcsk1.fsf@frosties.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Patrick J. LoPresti" <lopresti@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Goswin von Brederlow <goswin-v-b@web.de>
+Cc: Kristleifur Daoason <kristleifur@gmail.com>, "Timothy D. Lenz" <tlenz@vorgon.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12/03/2010 03:39, Patrick J. LoPresti wrote:
-> From reading the documentation and source code, I gather "mdadm
-> --grow" is not supported for RAID-0 devices.
-> 
-> In my application, I am using md RAID-0 to stripe among several
-> (identical) hardware RAID-0 chassis.  I would like to extend my setup
-> by adding another chassis, but apparently, I cannot (?).
 
-If I remember correctly, there were patches posted to this list recently 
-to add support for reshaping RAID-0, and for migrating from RAID-0 to 
-other RAID levels, but I don't remember whether they've made it in to 
-the kernel/mdadm yet. I recommend a trawl through the last few months' 
-archives.
+>> If that is true, how does that happen, the driver is hung? But anyway,
+>> how can such things happen when there is more than one CPU-core?
+>>     
+>
+> A drive produces an error, the whole controler hangs and resets all
+> ports, all drives have to finish being reset before any IO can continue.
+> Hapens easily enough.
+>   
+Ok but this is a multi-core CPU and he said Putty and WinSCP were hung.
+Ok for WinSCP... but Putty?
 
-Cheers,
+Timothy is Putty hung on array check even on NCQ disabled?
 
-John.
+What is the resync speed? If it is very high it could be a CPU 
+starvation but it's strange with only 2 drives. If it is very low I am 
+not sure.
+Are disks write caches enabled?
+
+I am not able to spot any problem from your iostat or dmesg.
+Note: yes the iostat -x 1 was supposed to be captured during resync.
+Trigger a resync manually for the test. You can start it with echo check 
+and stop it with echo idle > /sys/block/mdX/md/sync_action
+
+
