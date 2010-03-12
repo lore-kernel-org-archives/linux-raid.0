@@ -1,73 +1,144 @@
-From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: Resize RAID-0?
-Date: Thu, 11 Mar 2010 21:17:36 -0800
-Message-ID: <4877c76c1003112117q55547296oabfd3925496b33c@mail.gmail.com>
-References: <23986fd91003111939w102813c6r8d1b51a387784a71@mail.gmail.com>
+From: Jonathan Gordon <jonathan.kinobe@gmail.com>
+Subject: Problems recovering from a raid1 failure
+Date: Thu, 11 Mar 2010 23:51:18 -0800
+Message-ID: <910019881003112351y2fb108abw55fef9da81a5435f@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <23986fd91003111939w102813c6r8d1b51a387784a71@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Patrick J. LoPresti" <lopresti@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Mar 11, 2010 at 7:39 PM, Patrick J. LoPresti <lopresti@gmail.co=
-m> wrote:
-> From reading the documentation and source code, I gather "mdadm
-> --grow" is not supported for RAID-0 devices.
->
-> In my application, I am using md RAID-0 to stripe among several
-> (identical) hardware RAID-0 chassis. =A0I would like to extend my set=
-up
-> by adding another chassis, but apparently, I cannot (?).
->
-> The next time I build a system like this, is there any way to get wha=
-t
-> I want using Linux? =A0That is, striping among devices, no parity, bu=
-t
-> with the ability to grow in the future?
->
-> Thanks!
->
-> =A0- Pat
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+Upon reboot, my machine began recovering from a raid1 failure.
+Querying mdadm yielded the following:
 
-I THINK that LVM may allow you to do that.  I know the newer version
-of the labels supports /mixing/ how many stripes are in a given
-segment of storage. You may be able to, via some slightly non-trivial
-complexity but with existing commands and a little free space, shuffle
-your data out of an M device set of storage in to an N device set of
-storage striping.
+jgordon@kubuntu:~$ sudo mdadm --detail /dev/md0
+[sudo] password for jgordon:
+/dev/md0:
+       Version : 00.90
+ Creation Time : Mon Sep 11 06:35:17 2006
+    Raid Level : raid1
+    Array Size : 242187776 (230.97 GiB 248.00 GB)
+ Used Dev Size : 242187776 (230.97 GiB 248.00 GB)
+  Raid Devices : 2
+ Total Devices : 2
+Preferred Minor : 0
+   Persistence : Superblock is persistent
 
-I don't actually see any technical reason why restriping raid0 or
-another raid level to any other should be impossible to support. I
-just don't believe the feature currently exists, and possibly that the
-metadata might need changes to allow for different segments of backing
-storage and use within the same md container.  However were it even
-possible to store two types then only a small critical window would
-need backup, and everything else could sync to the largest portion of
-non-overlap.  The worse case would be same size to same size reshape;
-a literal nightmare performance wise since the whole set would be a
-critical section.  Even reserving a fraction of a megabyte at creation
-time would at least allow the operation on /that/ to be done as a
-non-critical section.  Alternatively if a write-intent map were in use
-it could instead be destroyed and it's space used for the critical
-section.  The map might then flop between front and back during
-different reshapes or shifts.
+   Update Time : Thu Mar 11 18:09:25 2010
+         State : clean, degraded, recovering
+ Active Devices : 1
+Working Devices : 2
+ Failed Devices : 0
+ Spare Devices : 1
 
-I just got done glancing at a few locations (website, documentation,
-and kernel code) and didn't see anything like a representation of what
-the metablock might look like, so I can't say for sure if looks like I
-expect from the behavior.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ Rebuild Status : 26% complete
+
+          UUID : 7fd22081:c39cb3e4:21109eec:10ecdf10
+        Events : 0.5260272
+
+   Number   Major   Minor   RaidDevice State
+      2       8        1        0      spare rebuilding   /dev/sda1
+      1       8       17        1      active sync   /dev/sdb1
+
+After some time, the rebuild seemed to complete, but the State seemed
+to switch alternately between "active, degraded" and "clean,
+degraded". Addiontally, the state for /dev/sda1 seems to continue to
+stay in "spare rebuilding". This is the current output:
+
+jgordon@kubuntu:~$ sudo mdadm -D /dev/md0
+[sudo] password for jgordon:
+/dev/md0:
+       Version : 00.90
+ Creation Time : Mon Sep 11 06:35:17 2006
+    Raid Level : raid1
+    Array Size : 242187776 (230.97 GiB 248.00 GB)
+ Used Dev Size : 242187776 (230.97 GiB 248.00 GB)
+  Raid Devices : 2
+ Total Devices : 2
+Preferred Minor : 0
+   Persistence : Superblock is persistent
+
+   Update Time : Thu Mar 11 23:07:59 2010
+         State : clean, degraded
+ Active Devices : 1
+Working Devices : 2
+ Failed Devices : 0
+ Spare Devices : 1
+
+          UUID : 7fd22081:c39cb3e4:21109eec:10ecdf10
+        Events : 0.5273340
+
+   Number   Major   Minor   RaidDevice State
+      2       8        1        0      spare rebuilding   /dev/sda1
+      1       8       17        1      active sync   /dev/sdb1
+
+Additionally, /var/log/kern.log is getting filled with the following:
+
+Mar 11 19:19:14 jigme kernel: [ 6596.236366] ata4: EH complete
+Mar 11 19:19:16 jigme kernel: [ 6598.104676] ata4.00: exception Emask
+0x0 SAct 0x0 SErr 0x0 action 0x0
+Mar 11 19:19:16 jigme kernel: [ 6598.104683] ata4.00: BMDMA stat 0x24
+Mar 11 19:19:16 jigme kernel: [ 6598.104692] ata4.00: cmd
+25/00:08:ff:b0:e0/00:00:15:00:00/e0 tag 0 dma 4096 in
+Mar 11 19:19:16 jigme kernel: [ 6598.104694]          res
+51/40:00:04:b1:e0/40:00:15:00:00/e0 Emask 0x9 (media error)
+Mar 11 19:19:16 jigme kernel: [ 6598.104698] ata4.00: status: { DRDY ERR }
+Mar 11 19:19:16 jigme kernel: [ 6598.104702] ata4.00: error: { UNC }
+Mar 11 19:19:16 jigme kernel: [ 6598.120352] ata4.00: configured for UDMA/133
+Mar 11 19:19:16 jigme kernel: [ 6598.120371] sd 3:0:0:0: [sdb]
+Unhandled sense code
+Mar 11 19:19:16 jigme kernel: [ 6598.120375] sd 3:0:0:0: [sdb] Result:
+hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Mar 11 19:19:16 jigme kernel: [ 6598.120380] sd 3:0:0:0: [sdb] Sense
+Key : Medium Error [current] [descriptor]
+Mar 11 19:19:16 jigme kernel: [ 6598.120388] Descriptor sense data
+with sense descriptors (in hex):
+Mar 11 19:19:16 jigme kernel: [ 6598.120392]         72 03 11 04 00 00
+00 0c 00 0a 80 00 00 00 00 00
+Mar 11 19:19:16 jigme kernel: [ 6598.120412]         15 e0 b1 04
+Mar 11 19:19:16 jigme kernel: [ 6598.120420] sd 3:0:0:0: [sdb] Add.
+Sense: Unrecovered read error - auto reallocate failed
+Mar 11 19:19:16 jigme kernel: [ 6598.120428] end_request: I/O error,
+dev sdb, sector 367046916
+Mar 11 19:19:16 jigme kernel: [ 6598.120446] ata4: EH complete
+Mar 11 19:19:16 jigme kernel: [ 6598.120744] raid1: sdb: unrecoverable
+I/O read error for block 367046784
+Mar 11 19:19:17 jigme kernel: [ 6599.164052] md: md0: recovery done.
+Mar 11 19:19:17 jigme kernel: [ 6599.460124] RAID1 conf printout:
+Mar 11 19:19:17 jigme kernel: [ 6599.460145]  --- wd:1 rd:2
+Mar 11 19:19:17 jigme kernel: [ 6599.460160]  disk 0, wo:1, o:1, dev:sda1
+Mar 11 19:19:17 jigme kernel: [ 6599.460170]  disk 1, wo:0, o:1, dev:sdb1
+Mar 11 19:19:17 jigme kernel: [ 6599.460178] RAID1 conf printout:
+Mar 11 19:19:17 jigme kernel: [ 6599.460185]  --- wd:1 rd:2
+Mar 11 19:19:17 jigme kernel: [ 6599.460195]  disk 0, wo:1, o:1, dev:sda1
+Mar 11 19:19:17 jigme kernel: [ 6599.460204]  disk 1, wo:0, o:1, dev:sdb1
+Mar 11 19:19:22 jigme kernel: [ 6604.165111] RAID1 conf printout:
+Mar 11 19:19:22 jigme kernel: [ 6604.165117]  --- wd:1 rd:2
+Mar 11 19:19:22 jigme kernel: [ 6604.165122]  disk 0, wo:1, o:1, dev:sda1
+Mar 11 19:19:22 jigme kernel: [ 6604.165125]  disk 1, wo:0, o:1, dev:sdb1
+Mar 11 19:19:22 jigme kernel: [ 6604.165128] RAID1 conf printout:
+Mar 11 19:19:22 jigme kernel: [ 6604.165131]  --- wd:1 rd:2
+Mar 11 19:19:22 jigme kernel: [ 6604.165134]  disk 0, wo:1, o:1, dev:sda1
+Mar 11 19:19:22 jigme kernel: [ 6604.165137]  disk 1, wo:0, o:1, dev:sdb1
+...
+Mar 11 23:16:28 jigme kernel: [20830.889380] RAID1 conf printout:
+Mar 11 23:16:28 jigme kernel: [20830.889386]  --- wd:1 rd:2
+Mar 11 23:16:28 jigme kernel: [20830.889391]  disk 0, wo:1, o:1, dev:sda1
+Mar 11 23:16:28 jigme kernel: [20830.889394]  disk 1, wo:0, o:1, dev:sdb1
+Mar 11 23:16:28 jigme kernel: [20830.889397] RAID1 conf printout:
+Mar 11 23:16:28 jigme kernel: [20830.889399]  --- wd:1 rd:2
+Mar 11 23:16:28 jigme kernel: [20830.889403]  disk 0, wo:1, o:1, dev:sda1
+Mar 11 23:16:28 jigme kernel: [20830.889406]  disk 1, wo:0, o:1, dev:sdb1
+
+The "RAID1 conf printout:" messages appear every few seconds or so.
+
+Machine info:
+
+jgordon@kubuntu:~$ uname -a
+Linux kubuntu 2.6.31-20-386 #57-Ubuntu SMP Mon Feb 8 11:42:49 UTC 2010
+i686 GNU/Linux
+
+Any idea what I can do to resolve this?
+
+Thanks!
