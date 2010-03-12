@@ -1,26 +1,23 @@
 From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Reshaping the length of devices
-Date: Fri, 12 Mar 2010 17:37:07 +0000
-Message-ID: <4B9A7BC3.7080702@anonymous.org.uk>
-References: <678411.30301.qm@web51307.mail.re2.yahoo.com> <4B9A71D1.108@anonymous.org.uk> <70ed7c3e1003120908h21c40695pc562ca660420a451@mail.gmail.com>
+Subject: Growing after replacing with larger discs
+Date: Fri, 12 Mar 2010 17:39:47 +0000
+Message-ID: <4B9A7C63.6090202@anonymous.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70ed7c3e1003120908h21c40695pc562ca660420a451@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Majed B." <majedb@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 12/03/2010 17:08, Majed B. wrote:
-> John, don't hijack the thread.
-> 
-> Post your question in a separate email.
-
-Well, I didn't think I was wildly off-topic for the thread, but OK.
+Before I have to go to a customer's premises and try it, I wanted to ask 
+if anyone had already done anything like this: I have a CentOS 5 system 
+with 0.90 metadata and type fd partitions with RAID-5 over 3 discs. I 
+want to grow it by replacing the drives. If I dd the small partitions 
+onto larger ones on the new discs, then reboot, will the system 
+recognise the RAID-5 - which now has its metadata somewhere in the 
+middle of the paritions not at the end - so that I can then --grow?
 
 Cheers,
 
 John.
-
