@@ -1,50 +1,65 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Reshaping the length of devices
-Date: Fri, 12 Mar 2010 16:54:41 +0000
-Message-ID: <4B9A71D1.108@anonymous.org.uk>
-References: <678411.30301.qm@web51307.mail.re2.yahoo.com>
+From: "Patrick J. LoPresti" <lopresti@gmail.com>
+Subject: Re: Resize RAID-0?
+Date: Fri, 12 Mar 2010 09:03:01 -0800
+Message-ID: <23986fd91003120903s77c36c37lb3f3f770c9457091@mail.gmail.com>
+References: <23986fd91003111939w102813c6r8d1b51a387784a71@mail.gmail.com>
+	 <73e903671003120336m36718a31m1c4ce760c42dbc75@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <678411.30301.qm@web51307.mail.re2.yahoo.com>
+In-Reply-To: <73e903671003120336m36718a31m1c4ce760c42dbc75@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 12/03/2010 15:18, Jon Hardcastle wrote:
-> 
-> 
-> --- On Fri, 12/3/10, Asdo <asdo@shiftmail.org> wrote:
-> 
->> From: Asdo <asdo@shiftmail.org>
->> Subject: Reshaping the length of devices
->> To: "linux-raid" <linux-raid@vger.kernel.org>
->> Date: Friday, 12 March, 2010, 15:15
->> I am wondering... is it possible to
->> reshape the length of the underlying devices with MD raid?
->>
->> I mean like in the case one buys larger disks: after moving
->> the raid partitions to the new disks half of them is still
->> free. So one might want to extend the raid partitions to the
->> end of the disks instead of creating another array in the
->> free space.
->>
->> I have searched the linux-raid mailing list history but I
->> couldn't find this topic.
->>
->> Thanks in advance
-> 
-> As long as the size of ALL underlying devices have increased you can --grow=MAX to the a multiple of the now smallest drive.
+=46irst, thanks to everyone for the helpful responses.
 
-Hmm, that reminds me I was meaning to ask - before I have to go to a 
-customer's premises and try it - if I have a CentOS 5 system with 0.90 
-metadata and type fd partitions with RAID-5 over 3 discs, and I want to 
-grow it by replacing the drives, if I dd small partitions onto larger 
-ones and reboot, will the system recognise the RAID-5 - which now has 
-its metadata somewhere in the middle of the paritions not at the end - 
-so that I can then --grow?
+On Fri, Mar 12, 2010 at 3:36 AM, Kristleifur Da=F0ason
+<kristleifur@gmail.com> wrote:
+>
+> I agree with others on the list - I believe that LVM will perform wel=
+l
+> as a flexible stripe wrangler on top of mdadm arrays. For instance
+> some LVM striping over mdadm parity-based stuff underneath.
 
-Cheers,
+I made a typo in my original post, so let me clarify.  In my
+configuration, I have a pair of dual-channel FC HBA cards.  I
+currently have three hardware RAID-5 chassis connected to three of the
+HBA channels, and I am using Linux md to perform RAID-0 striping
+across the channels.  This gives me very high performance -- 800
+MiB/sec sustained reads and writes, for hundreds of gigabytes, using
+XFS -- at very modest CPU utiliziation.
 
-John.
+What I want is to connect a fourth, identical hardware RAID chassis to
+the fourth HBA channel and then re-stripe the md RAID-0 across all
+four units.  I now understand that this is not currently supported.
+
+> Do you want to add a whole new stripe device, so changing the
+> coarse-scale layout, or grow the underlying data containers?
+
+New stripe device.
+
+> As you are running striped, I assume that the data is either
+> perishable or backed up.
+
+My data is all reproducible.  (The system spends its time processing
+large volumes of data that originated somewhere else.)  We are using
+underlying RAID-5 chassis to improve MTBF, not to prevent data loss.
+
+> I'd suggest you look into moving to LVM.
+
+Thanks to Michael Evans and to you for this suggestion; I will investig=
+ate LVM.
+
+Thanks once again to everyone who responded.  The world of Linux RAID
+may be "gas-lit and magical", but in many ways the support is superior
+to any commercial product I have seen.
+
+ - Pat
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
