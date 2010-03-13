@@ -1,54 +1,65 @@
-From: Joachim Otahal <Jou@gmx.net>
-Subject: md devices: Suggestion for in place time and checksum within the
- RAID
-Date: Sun, 14 Mar 2010 00:00:37 +0100
-Message-ID: <4B9C1915.9080009@gmx.net>
+From: Carlos Mennens <carloswill@gmail.com>
+Subject: Re: RAID1 On 3 Drives
+Date: Sat, 13 Mar 2010 18:18:48 -0500
+Message-ID: <d80f793f1003131518u2bfe77e9k52ef77e3d2c68360@mail.gmail.com>
+References: <4B9C11FB.7040604@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4B9C11FB.7040604@gmx.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Current Situation in RAID:
-If a drive fails silently and is giving out wrong data instead of read 
-errors there is no way to detect that corruption (no fun, I had that a 
-few times already).
-Even in RAID1 with three drives there is no "two over three" voting 
-mechanism.
+I am glad I asked! Thanks for all the info. Now my question next is if
+I am creating a 3 disk raid with a 1 disk spare, do I need to use any
+special 'mdadm' parameters besides what u see below for /boot (Grub)?
 
-A workaround for that problem would be:
-Adding one sector to each chunk to store the time (in nanoseconds 
-resolution) + CRC or ECC value of the whole stripe, making it possible 
-to see and handle such errors below the filesystem level.
-Time in nanoseconds only to differ between those many writes that 
-actually happen, it does not really matter how precise the time actually 
-is, just every stripe update should have a different time value from the 
-previous update.
-It would be an easy way to know which chunks are actually the latest (or 
-which contain correct data in case one out of three+ chunks has a wrong 
-time upon reading). A random uniqe ID or counter could also do the job 
-of the time value if anyone prefers, but I doubt since the collision 
-possibility would be higher.
-The use of CRC or ECC or whatever hash should be obvious, their 
-existence would make it easy to detect drive degration, even in a RAID0 
-or LINEAR.
-Bad side: Adding this might break the on the fly raid expansion 
-capabilities. A workaround might be using 8K(+ one sector) chunks by 
-default upon creation or the need to specify the chunk size on creation 
-(like 8k+1 sector) if future expansion capabilities are actually wanted 
-with RAID0/4/5/6, but that is a different issue anyway.
+# mdadm --create /dev/md0 --level=1 --raid-devices=3 /dev/sda1
+/dev/sdb1 /dev/sdc1 --spare-devices=1 /dev/sdd1
 
-Question:
-Will RAID4/5/6 in the future use the parity upon read too? Currently it 
-would not detect wrong data reads from the parity chunk, resulting in a 
-disaster when it is actually needed.
+Anything else I should add to the above command for my /boot partition?
 
-Do those plans already exist and my post was completely useless?
+On 3/13/10, Joachim Otahal <Jou@gmx.net> wrote:
+> On Sun, Mar 14, 2010 at 12:06 AM, Carlos Mennens<carloswill@gmail.com>
+> wrote:
+>>  I was told by my distributions Wiki page that Grub doesn't support
+>>  RAID 5 or RAID 6 so I would need to create a volume with three disks
+>>  and set the level to RAID 1:
+>>
+>>  # mdadm --create /dev/md1 --level=1 --raid-devices=3 /dev/sda1
+>>  /dev/sdb1 /dev/sdc1 --spare-devices=1 /dev/sdd1
+>>
+>>  Is this possible to mirror three identical drive partitions? I was
+>>  talking to some co-workers and was told that I could only pair two
+>>  drives on RAID 1.
+>>
+>>  Can anyone please help me understand this?
+>
+> /boot must be RAID1 (or a normal partition), everything else can be
+> RAIDwhatever. Grub has no problems reading /boot from a mirrors.
+>
+> It is possible to make RAID1 to use more than two drives and keep the all
+> active. In your case it is a matter of "believe" whether a spare is better
+> or actually using all four actively in your raid, I prefer the latter.
+> I have heavily tested more than two only with files via loopback yet, two
+> drive, three drives, four drives and more. It does work, the testfile
+> generated out of urandom kept the correct hash value throughout all my sick
+> testings.
+> The quick test with three SATA drives worked too, but it was just for the
+> fun to see whether grub pukes or works (works if you don't forget the grub
+> setup for drive 2, 3 etc).
+> My plan is: Use RAID1 with 4 drives (quad-mirroring) for /boot or / and
+> raid10 or raid5 for the data upon my next linux server upgrade.
+>
+> Joachim Otahal
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Sorry that I cannot give patches, my last kernel patch + compile was 
-2.2.26, since then I never compiled a kernel.
-
-Joachim Otahal
-
+-- 
+Sent from my mobile device
