@@ -1,22 +1,60 @@
-From: "Patrick J. LoPresti" <lopresti@gmail.com>
-Subject: Re: Resize RAID-0?
-Date: Fri, 12 Mar 2010 16:09:43 -0800
-Message-ID: <23986fd91003121609o19b9fd6s22e3711c9d9c8455@mail.gmail.com>
-References: <23986fd91003111939w102813c6r8d1b51a387784a71@mail.gmail.com>
-	 <73e903671003120336m36718a31m1c4ce760c42dbc75@mail.gmail.com>
-	 <23986fd91003120903s77c36c37lb3f3f770c9457091@mail.gmail.com>
+From: Kapetanakis Giannis <bilias@edu.physics.uoc.gr>
+Subject: Re: large filesystem corruptions
+Date: Sat, 13 Mar 2010 02:29:21 +0200
+Message-ID: <4B9ADC61.7080007@edu.physics.uoc.gr>
+References: <4B9A9D81.3000009@edu.physics.uoc.gr> <4B9AA5AC.9090005@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <23986fd91003120903s77c36c37lb3f3f770c9457091@mail.gmail.com>
+In-Reply-To: <4B9AA5AC.9090005@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Addendum (for the archives).
+On 12/03/10 22:35, Ric Wheeler wrote:
 
-EVMS claims to support this:
+> This is probably an issue with the early version of ext4 you are using -
+> note that the support for ext4 > 16TB is still gated by some work done
+> up in the tools chain.
+>
+> Have you tried xfs?
+>
+> regards,
+>
+> Ric
 
-http://evms.sourceforge.net/user_guide/#resizeraid0
+Thanks for answering,
 
- - Pat
+My filesystem would be 15 TB < 16 TB.
+GFS also crashed and burned so are you sure that this
+this is a problem with ext4?
+Would Fedora and newer kernel be better?
+
+On my tests the crashing filesystem was 7TB.
+When I added a second fs of 2 TB on lvm, so total > 8TB
+I had the crash.
+
+I did a new test now and didn't use GFT partitions
+but the whole physical/logical drives
+
+sdb -
+     | ---> md0 ---> LVM ---> ext4 filesystems
+sdc -
+
+all sdb, sdc, md0 are gpt labeled without gpt partitions
+inside. No crash so far but without any data written.
+
+Maybe the gpt partitions did the bad thing?
+Can md0 use large gpt drives with no partitions?
+can lvm2 use large raid device with no partition pv?
+
+I could try XFS but i'm not familiar with it,
+so I wouldn't know the optimized values for
+such a large fs
+
+regards,
+
+Giannis
+
