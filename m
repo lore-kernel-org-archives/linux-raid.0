@@ -1,34 +1,108 @@
-From: Kapetanakis Giannis <bilias@edu.physics.uoc.gr>
-Subject: Re: large filesystem corruptions
-Date: Sun, 14 Mar 2010 05:26:43 +0200
-Message-ID: <4B9C5773.9020804@edu.physics.uoc.gr>
-References: <4B9A9D81.3000009@edu.physics.uoc.gr> <4B9AA5AC.9090005@redhat.com> <4B9ADC61.7080007@edu.physics.uoc.gr> <4B9C23AC.5010404@tmr.com>
+From: "Majed B." <majedb@gmail.com>
+Subject: Re: RAID1 On 3 Drives
+Date: Sun, 14 Mar 2010 06:30:35 +0300
+Message-ID: <70ed7c3e1003131930ucd1898vae8edc49ece03740@mail.gmail.com>
+References: <d80f793f1003131306i1eb1d839w5552e048001e6193@mail.gmail.com>
+	<20100314082649.187dae9a@notabene.brown> <70ed7c3e1003131331g14e30331k8b97520c906431fd@mail.gmail.com>
+	<20100314085056.5ea95f95@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B9C23AC.5010404@tmr.com>
+In-Reply-To: <20100314085056.5ea95f95@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 14/03/10 01:45, Bill Davidsen wrote:
+Thank you Neil for the valuable clarification :)
 
-> I did not notice the LVM on your first post, it's far enough down that I
-> missed it. I would be suspicious that the problem is in LVM rather than
-> md, but if you're going for a new install soon it's probably not worth
-> checking.
+On Sun, Mar 14, 2010 at 12:50 AM, Neil Brown <neilb@suse.de> wrote:
+> On Sun, 14 Mar 2010 00:31:01 +0300
+> "Majed B." <majedb@gmail.com> wrote:
 >
-> If you have video issues with FC12 you may need to run the vesa driver
-> as a quick solution. There have been learning experiences in the video
-> drivers in recent kernels, not just Fedora.
+>> Neil,
+>>
+>> Since when was this possible? I always thought that it had to have a=
+n
+>> even number of disks.
+>
+> md has never imposed a 2-drive restriction on raid1. =C2=A0That would=
+ be fairly
+> pointless.
+>
+> Requiring an even number of devices would also be pointless.
+>
+> The term "mirror" is possibly a cause of confusion as it suggests an =
+original
+> and a copy. =C2=A0It also suggests that the copy is reflected in some=
+ way.
+> Neither of these are true.
+> RAID1 stores multiple copies of the same data. =C2=A0All copies are e=
+qual. =C2=A0You can
+> have as many or as few of them as you like. =C2=A01, 2, 3, 4, ....
+> NeilBrown
+>
+>
+>>
+>> On Sun, Mar 14, 2010 at 12:26 AM, Neil Brown <neilb@suse.de> wrote:
+>> > On Sat, 13 Mar 2010 16:06:38 -0500
+>> > Carlos Mennens <carloswill@gmail.com> wrote:
+>> >
+>> >> I was told by my distributions Wiki page that Grub doesn't suppor=
+t
+>> >> RAID 5 or RAID 6 so I would need to create a volume with three di=
+sks
+>> >> and set the level to RAID 1:
+>> >>
+>> >> # mdadm --create /dev/md1 --level=3D1 --raid-devices=3D3 /dev/sda=
+1
+>> >> /dev/sdb1 /dev/sdc1 --spare-devices=3D1 /dev/sdd1
+>> >>
+>> >> Is this possible to mirror three identical drive partitions? I wa=
+s
+>> >> talking to some co-workers and was told that I could only pair tw=
+o
+>> >> drives on RAID 1.
+>> >
+>> > Your co-workers are wrong, at least for md raid. =C2=A0With md, a =
+RAID1 can have
+>> > any number of devices from 1 upwards - the limit varies in differe=
+nt
+>> > situations but is at least 28.
+>> >
+>> > Try it and see.
+>> >
+>> > NeilBrown
+>> >
+>> >>
+>> >> Can anyone please help me understand this?
+>> >> --
+>> >> To unsubscribe from this list: send the line "unsubscribe linux-r=
+aid" in
+>> >> the body of a message to majordomo@vger.kernel.org
+>> >> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-inf=
+o.html
+>> >
+>> > --
+>> > To unsubscribe from this list: send the line "unsubscribe linux-ra=
+id" in
+>> > the body of a message to majordomo@vger.kernel.org
+>> > More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info=
+=2Ehtml
+>> >
+>>
+>>
+>>
+>
+>
 
-No it's not the LVM layer.
-I have crashes without LVM as well.
 
-gpt label is also corrupted, so my guesses go
-to raid layer (that's why i posted here in the first place)
-or maybe the driver-adaptec.
 
-Giannis
-
+--=20
+       Majed B.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
