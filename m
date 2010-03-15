@@ -1,32 +1,25 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: RAID1 On 3 Drives
-Date: Sun, 14 Mar 2010 22:09:41 +0100
-Message-ID: <20100314210941.GA16890@maude.comedia.it>
-References: <d80f793f1003131306i1eb1d839w5552e048001e6193@mail.gmail.com> <70ed7c3e1003131321t48686cb5l33a10b8708b27dd7@mail.gmail.com> <d80f793f1003131324r3d43881cqe2c3b396db6ecff9@mail.gmail.com>
+From: Simon Matthews <simon.d.matthews@gmail.com>
+Subject: Adding disks with raid to existing raid system.
+Date: Sun, 14 Mar 2010 22:23:46 -0800
+Message-ID: <40b437201003142323g7b0f4e48wb9d58b963f12e988@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <d80f793f1003131324r3d43881cqe2c3b396db6ecff9@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mdadm <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, Mar 13, 2010 at 04:24:33PM -0500, Carlos Mennens wrote:
->On Sat, Mar 13, 2010 at 4:21 PM, Majed B. <majedb@gmail.com> wrote:
->> RAID is called mirror: You need 2 drives: The original and the mirror.
->>
->> You can make a RAID1 array of 2 disks + 1 spare if you wish.
->
->So the WIki on RAID configuration is incorrect, right?
-how comes my home server as a raid1 /boot made of four (4) drives ?
+I have just built a system and have it booting off a software raid
+partition. The raid sets use devices /dev/md0, /dev/hd1, /dev/md2,
+/dev/md3.
 
-L.
+I now need to transfer some additional disks to this system. These
+disks are presently in another system where they host a number of raid
+sets, currently also /dev/md0 - /dev/md4.
 
--- 
-Luca Berra -- bluca@comedia.it
-         Communication Media & Services S.r.l.
-  /"\
-  \ /     ASCII RIBBON CAMPAIGN
-   X        AGAINST HTML MAIL
-  / \
+I need to ensure that the data on the raid set that I am adding to the
+system is not lost. However, clearly, I can't have the raid sets on
+these disks come up as /dev/md0-md4. How do I ensure this and have
+these raid sets come up on /dev/md5 and higher?
+
+Simon
