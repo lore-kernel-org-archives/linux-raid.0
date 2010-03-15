@@ -1,51 +1,75 @@
-From: Simon Matthews <simon.d.matthews@gmail.com>
-Subject: Re: Why do arrays start without some components?
-Date: Mon, 15 Mar 2010 14:26:52 -0700
-Message-ID: <40b437201003151426h7bc721e2m69242c044a074e24@mail.gmail.com>
-References: <40b437201003151326t39be3b2hc3df6f79802b9b7e@mail.gmail.com>
-	 <4B9EA0E8.3020301@shiftmail.org>
+From: Joachim Otahal <Jou@gmx.net>
+Subject: Re: md devices: Suggestion for in place time and checksum within
+ the RAID
+Date: Mon, 15 Mar 2010 22:28:43 +0100
+Message-ID: <4B9EA68B.70705@gmx.net>
+References: <4B9C1915.9080009@gmx.net> <4B9C2800.7070802@tmr.com> <4B9C3B12.5070401@gmx.net> <20100314102049.GB13486@light.rap.dk> <4B9CCF7A.4010809@gmx.net> <20100314130348.GA14141@light.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B9EA0E8.3020301@shiftmail.org>
+In-Reply-To: <20100314130348.GA14141@light.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>
-Cc: linux-raid@vger.kernel.org
+To: Keld Simonsen <keld@keldix.com>
+Cc: Bill Davidsen <davidsen@tmr.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Mar 15, 2010 at 2:04 PM, Asdo <asdo@shiftmail.org> wrote:
-> Simon Matthews wrote:
->>
->> I have a couple of machines on which this is happening now --
->>
->> When the machine boots, the RAID arrays (RAID 1) start, but each array
->> only has one component device. I can add the other component again
->> (using mdadm --add ... ) and the array will sync up, but next time it
->> boots, I have to do the same once more.
->>
->> Why is this and how do I fix it?
->>
->
-> Might that be a /etc/mdadm/mdadm.conf in the initramfs listing fewer devices
-> than it should?
-> I am not sure (because in this case maybe it shouldn't autoassemble the
-> array at all), but have a look by unpacking your initramfs. If yes, update
-> it.
+Keld Simonsen schrieb:
+> Interesting! I would like to see your scripts....
+>    
+I did not realize how OLD that script was until I saw it today, I could 
+not leave it that way, here is a revised and less embarrassing version, 
+easy to extent to bang you with emails on a raid error too, but 
+southpark is on TV now:
 
-I don't have an initramfs. This is a Gentoo system and I built the
-kernel with all the drivers required to boot built in. This includes
-RAID support.
+#!/bin/sh
+HEALTHFILE="/tmp/healthcheck.mdstat"
+HARDDRIVES="/dev/sda /dev/sdb /dev/sdc /dev/sdd"
+SENDEMAILCOMMAND="/usr/local/sbin/sendEmail.pl <commandline-here>"
+[ -f ${HEALTHFILE}.1 ] && /bin/rm -f ${HEALTHFILE}.1
+[ -f ${HEALTHFILE}.0 ] && /bin/mv ${HEALTHFILE}.0 ${HEALTHFILE}.1
+/usr/bin/touch ${HEALTHFILE}.1
+/bin/cat /proc/mdstat > ${HEALTHFILE}.0
+/usr/bin/diff ${HEALTHFILE}.0 ${HEALTHFILE}.1 > /dev/null
+if [ $? == 1 ] ; then
+   ${SENDEMAILCOMMAND} -u "RAID Status" < ${HEALTHFILE}.0
+fi
 
-> Or could that be a controller that shows the disks to the kernel too late...
-> do you have multiple controllers?
+HEALTHFILE="/var/log/healthcheck.smartctl"
+[ -f ${HEALTHFILE}.1 ] && /bin/rm -f ${HEALTHFILE}.1
+[ -f ${HEALTHFILE}.0 ] && /bin/mv ${HEALTHFILE}.0 ${HEALTHFILE}.1
+/usr/bin/touch ${HEALTHFILE}.1
+echo "SMART info:"> ${HEALTHFILE}.0
+EMAILSUBJECT="SMART Status, Reallocated Sector Count"
+for X in ${HARDDRIVES} ; do
+   Y="`/usr/local/sbin/smartctl --all ${X} | /bin/grep -i 
+Reallocated_Sector_Ct`"
+   if [ "${Y}" != "" ] ; then
+     /bin/echo "${X}     ${Y}">> ${HEALTHFILE}.0
+     if [ "`/usr/local/sbin/smartctl --all ${X} | /bin/grep -o 'No 
+Errors Logged'`" == "No Errors Logged" ] ; then
+       /bin/echo "${X}    No Errors Logged">> ${HEALTHFILE}.0
+     else
+       EMAILSUBJECT="SMART ERRORS LOGGED, Reallocated Sector Count"
+       [ -f ${HEALTHFILE}.1 ] && /bin/rm -f ${HEALTHFILE}.1
+       /usr/bin/touch ${HEALTHFILE}.1
+       /bin/echo 
+"------------------------------------------------------------------------">> 
+${HEALTHFILE}.0
+       /bin/echo "${X}">> ${HEALTHFILE}.0
+       /usr/local/sbin/smartctl --all ${X} | /bin/grep -i -A 999 "SMART 
+Error Log" >> ${HEALTHFILE}.0
+       /bin/echo 
+"------------------------------------------------------------------------">> 
+${HEALTHFILE}.0
+     fi
+   fi
+done
+/usr/bin/diff ${HEALTHFILE}.0 ${HEALTHFILE}.1 > /dev/null
+if [ $? == 1 ] ; then
+   ${SENDEMAILCOMMAND} -u "${EMAILSUBJECT}" < ${HEALTHFILE}.0
+fi
 
-I don't think so, on one machine they are SATA drives, but only one controller.
+regards,
 
-But, perhaps on the other machine, this may be happening, since the
-drive that includes the component that is left out of the array is on
-an add-in controller. On this machine, the problematic array uses IDE
-drives for its components.
-
-Simon
-
->
+Joachim Otahal
