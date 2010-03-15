@@ -1,82 +1,141 @@
-From: "Wojcik, Krzysztof" <krzysztof.wojcik@intel.com>
-Subject: [mdadm PATCH] Cli options check added- check for disk duplicates
-Date: Mon, 15 Mar 2010 10:58:00 +0000
-Message-ID: <BE2BFE91933D1B4089447C644860408001A28646@irsmsx503.ger.corp.intel.com>
+From: Iain Rauch <groups@email.iain.rauch.co.uk>
+Subject: Re: How to fix Current_Pending_Sector?
+Date: Mon, 15 Mar 2010 11:20:15 +0000
+Message-ID: <C7C3C86F.110A1%groups@email.iain.rauch.co.uk>
+References: <4B992054.9020903@stud.tu-ilmenau.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <4B992054.9020903@stud.tu-ilmenau.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: "neilb@suse.de" <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Cc: "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>
+To: st0ff@npl.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From aace200890a17805ffc556d729e494eb1b2bf2bf Mon Sep 17 00:00:00 2001
-From: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
-Date: Thu, 11 Mar 2010 10:30:56 +0100
-Subject: [PATCH] Cli options check added- check for disk duplicates
+> Am 11.03.2010 13:25, schrieb Iain Rauch:
+>>> On Thu, Mar 11, 2010 at 3:51 AM, Iain Rauch
+>>> <groups@email.iain.rauch.co.uk> wrote:
+>>>> Smartd emailed me to say I have "1 Currently unreadable (pending) sectors".
+>>>> This actually happened for two disks now.
+>>>> 
+>>>> I ran a check and then a repair on my array and they both gave mismatch_cnt
+>>>> of 8.
+>>>> 
+>>>> I ran a long self-test on both and they completed without error with no
+>>>> errors logged. Yet the 'Current_Pending_Sector' is still 1 on both, and one
+>>>> disk also has a 'UDMA_CRC_Error_Count' of 1.
+>>>> 
+>>>> I ran 'hdrecover' on both and they are both telling me "Couldn't recover
+>>>> sector 2930277168". It's asking if I want to overwrite it with zeros to fix
+>>>> it, but I would assume this will damage my array?
+>>>> 
+>>>> The disk sizes are 1500301910016 bytes and I use 1500250M partition sizes
+>>>> for the array components. Does that sector fall outside my partition, and
+>>>> hence would it be safe to overwrite it with zeros?
+>>>> 
+>>>> Also, why did I have a mismatch_cnt? I haven't run another check since I
+>>>> did
+>>>> the repair, as I wanted to fix the pending sector.
+>>>> 
+>>>> BTW, I have a 15 drive RAID6.
+>>>> 
+>>> 
+>>> If you are running RAID6 and it can read from all but two drives then
+>>> it should still be able to calculate whatever would match the
+>>> remaining (presumed good) reads to fill the later two drives.  RECENT
+>>> kernels will try to write over failed sectors automatically; and only
+>>> kick the drive if the write fails.
+>>> 
+>>> Please provide more information.
+>>> 
+>>> Kernel version
+>>> mdadm version
+>>> 
+>>> Information about how the source block devices are split up before
+>>> mdadm sees them, and any related messages from the system-log.  The
+>>> relevant section should be near the end of a dmesg output when you've
+>>> just completed a check or repair.  Your syslog probably already
+>>> captured the same data and stored it elsewhere.
+>> 
+>> I thought doing the repair was supposed to fix the issue, but it didn't seem
+>> to touch it. I wonder if it is outside what md sees, but then how would it
+>> have been noticed as unreadable? And is it coincidence that both drives have
+>> the same unreadable sector?
+>> 
+>> root@Edna:/home/iain# uname -a
+>> Linux Edna 2.6.28-16-server #57-Ubuntu SMP Wed Nov 11 10:34:04 UTC 2009
+>> x86_64 GNU/Linux
+>> root@Edna:/home/iain# mdadm -V
+>> mdadm - v2.6.9 - 10th March 2009
+>> 
+>> I paste the end of messages below. There's loads of that all the way through
+>> doing the repair so I'm not sure how to filter out the useful bits.
+>> 
+>> 
+>> Iain
+>> [...]
+> 
+> Hi Iain,
+> 
+> the "Current_pending_sectors" is a smart attribute which gets
+> incremented during online (reading and writing sectors) AND offline
+> drive scanning (also called SMART Data Collection), when the drive finds
+> out a sector cannot be correctly read at the first try (offline data
+> collection) or after applying various error-correction techniques.
+> The easiest way to get rid of this problem: dd a sector of zeros onto
+> the broken sector, then fail the drive, re-add it.  Now wait until the
+> resync is done.
+> The fact I'm not sure about is: should one fail and re-add both drives
+> at once?  As by that the redundancy would get lost...
+> 
+> Speaking about redundancy: our rule of thumb (at xtivate.de) is "each 4
+> drives need one redundancy" - so a redundancy of 2 with 15 drives is
+> kind of playing with your luck...
+> 
+> Good luck,
+> Stefan
 
-This fix does not allow to create array with duplicated disk.
+Well, I failed one of the drives and allowed 'hdrecover' to overwrite the
+unreadable sector, but it still couldn't fix it. Here's its report:
 
-Signed-off-by: Krzysztof Wojcik <krzysztof.wojcik@intel.com>
----
- mdadm.c |    4 ++++
- mdadm.h |    1 +
- util.c  |   16 ++++++++++++++++
- 3 files changed, 21 insertions(+), 0 deletions(-)
+Wiping sector 2930277168...
+Checking sector is now readable...
+I still couldn't read the sector!
+I'm sorry, but even writing to the sector hasn't fixed it - there's nothing
+more I can do!
+Summary:
+  1 bad sectors found
+  of those 0 were recovered
+  and 1 could not be recovered and were destroyed causing data loss
 
-diff --git a/mdadm.c b/mdadm.c
-index d5e34c0..87588ae 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -980,6 +980,10 @@ int main(int argc, char *argv[])
- 			fprintf(stderr, Name ": an md device must be given in this mode\n");
- 			exit(2);
- 		}
-+        if (check_duplicates(devlist)) {
-+            fprintf(stderr, Name ": There are duplicated disks in command line options\n");
-+            exit(2);
-+        }
- 		if ((int)ident.super_minor == -2 && autof) {
- 			fprintf(stderr, Name ": --super-minor=dev is incompatible with --auto\n");
- 			exit(2);
-diff --git a/mdadm.h b/mdadm.h
-index 362b66b..ad43a53 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -888,6 +888,7 @@ unsigned long long min_recovery_start(struct mdinfo *array);
- extern char *human_size(long long bytes);
- extern char *human_size_brief(long long bytes);
- extern void print_r10_layout(int layout);
-+extern int check_duplicates(mddev_dev_t dlist);
- 
- #define NoMdDev (1<<23)
- extern int find_free_devnum(int use_partitions);
-diff --git a/util.c b/util.c
-index d292a66..8a03c12 100644
---- a/util.c
-+++ b/util.c
-@@ -1645,3 +1645,19 @@ void append_metadata_update(struct supertype *st, void *buf, int len)
- unsigned int __invalid_size_argument_for_IOC = 0;
- #endif
- 
-+/* Check is there no duplicated disks in command line options */
-+int check_duplicates(mddev_dev_t dlist) {
-+    mddev_dev_t dev1, dev2;
-+    /* Skip first element because this is array name */
-+    dev1 = dlist->next;
-+    while (dev1) {
-+        dev2 = dev1->next;
-+        while (dev2) {
-+            if (strcmp(dev1->devname, dev2->devname) == 0) 
-+                return 1;
-+            dev2 = dev2->next;
-+        }
-+        dev1 = dev1->next;
-+    }
-+    return 0; 
-+}
--- 
-1.6.3.3
+The 'Current_Pending_Sector' was still 1, so I dd zero onto the whole drive.
+I guess I could have just done part of it, but I suppose that verified the
+whole drive 'works'. It only took ~5 hours. Funnily enough this did fix the
+Current_pending_sectors count back to zero. Still no error reports in the
+SMART data, and 'Reallocated_Event_Count' didn't go up - shouldn't that have
+gone up to one?
+
+I re-partitoned and added it to the array and it rebuilt fine in ~12 hours.
+
+Repeated the process with the second drive and everything's back to normal.
+
+The drive that had the 'UDMA_CRC_Error_Count' still says 1, but I don't
+think I need to worry about that?
+
+In direct reply to Stefan:
+
+I think you meant to dd zeros onto the drive /after/ failing it - would have
+caused corruption otherwise?
+
+I definitely think it made sense to do one at a time.
+
+One parity drive for every four seems a bit extreme, especially when you
+have a backup (which I don't). I'm fairly happy with 15 drives in RAID 6. I
+had 24 drives before, and that did give me a few problems :p Just need to
+keep the drives healthy. (Array scrubs, SMART tests etc).
+
+
+Iain
+
 
