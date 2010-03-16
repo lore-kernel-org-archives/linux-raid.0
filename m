@@ -1,32 +1,54 @@
-From: Simon Matthews <simon.d.matthews@gmail.com>
-Subject: Re: Why do arrays start without some components?
-Date: Tue, 16 Mar 2010 08:48:14 -0700
-Message-ID: <40b437201003160848h72c29f38o341c8de2879898eb@mail.gmail.com>
-References: <40b437201003151326t39be3b2hc3df6f79802b9b7e@mail.gmail.com>
-	 <4B9EA0E8.3020301@shiftmail.org>
-	 <40b437201003151426h7bc721e2m69242c044a074e24@mail.gmail.com>
-	 <40b437201003152234g7db90026k92d663bb3f10aaaf@mail.gmail.com>
-	 <70ed7c3e1003160108x4407b129r95102d3930c49c92@mail.gmail.com>
+From: Nicolae Mihalache <mache@abcpages.com>
+Subject: slow sequential read on partitioned raid6
+Date: Tue, 16 Mar 2010 20:05:45 +0100
+Message-ID: <4B9FD689.8060700@abcpages.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <70ed7c3e1003160108x4407b129r95102d3930c49c92@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Majed B." <majedb@gmail.com>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Mar 16, 2010 at 1:08 AM, Majed B. <majedb@gmail.com> wrote:
-> If you are unable to access a certain disk, that disk has most likely failed.
+Hello,
 
-No. I can add the partitions of the disk to the various RAID sets to
-which they belong.
+I have created a partitioned raid6 array over 6x1TB SATA disks using the
+command (from memory): mdadm --create --auto=mdp --level=6
+--raid-devices /dev/md_d1 /dev/sd[b-g].
 
->
-> Also, did you change the partition types to "FD" (RAID Autodetect)?
-> I once forgot to do that and that affected partition kept jumping out
-> of the array.
+When I run a sequential read test using
+dd if=/dev/md_d1p1 of=/dev/null bs=1M
+I get low read speeds of around 80MB/s but only when the partition is
+mounted.
 
-No. Partition types are correct.
+If I unmount, the speed is around 350MB/s. The filesystems I tried are
+ext3 and xfs.
+ 
+The partitions have been created with gparted, the partition table being
+of type GPT.
 
-Simon
+If I create normal /dev/sdx1 partitions on each disk and then make a
+/dev/md1 raid6 array over them, the read speed is ok.
+
+I played with different read ahead settings and while they changed the
+read speed, it's only marginally around the values reported above.
+
+Can somebody explain what is the difference when accessing a raw disk
+when it is mounted or not? Also when playing with those read ahead
+settings it was not clear how/if the read ahead of the individual disks
+are taken into account.
+
+When setting big values of read ahead, I could see with iostat that tps
+for the individual disks is double when accessing the mounted disk as
+opposed to when accessing it unmounted (despite the speed being three
+times lower).
+It's like when accessing the mounted partition, it reads some other
+parts of the disks. I could not find a way to print the blocks read from
+the individual disks. The sysctl vm.block_dump=1 makes the kernel print
+the block numbers on the md array but not on the components of the array.
+
+The system is debian 5 with kernel 2.6.26-2-686.
+
+Thanks for any hint on how to further debug the problem.
+
+nicolae
