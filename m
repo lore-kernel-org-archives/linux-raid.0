@@ -1,96 +1,24 @@
-From: Nicolae Mihalache <mache@abcpages.com>
-Subject: Re: slow sequential read on partitioned raid6
-Date: Wed, 17 Mar 2010 00:16:29 +0100
-Message-ID: <4BA0114D.9050405@abcpages.com>
-References: <4B9FD689.8060700@abcpages.com> <20100317092219.35393819@notabene.brown>
+From: colli419@umn.edu
+Subject: RAID Problem
+Date: 16 Mar 2010 18:32:39 -0500
+Message-ID: <Gophermail.2.0.1003161832390.28616@vs-a.tc.umn.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; format=flowed; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100317092219.35393819@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 03/16/2010 11:22 PM, Neil Brown wrote:
-> On Tue, 16 Mar 2010 20:05:45 +0100
-> Nicolae Mihalache <mache@abcpages.com> wrote:
->   
->> Hello,
->>
->> I have created a partitioned raid6 array over 6x1TB SATA disks using the
->> command (from memory): mdadm --create --auto=mdp --level=6
->> --raid-devices /dev/md_d1 /dev/sd[b-g].
->>
->> When I run a sequential read test using
->> dd if=/dev/md_d1p1 of=/dev/null bs=1M
->> I get low read speeds of around 80MB/s but only when the partition is
->> mounted.
->>
->> If I unmount, the speed is around 350MB/s. The filesystems I tried are
->> ext3 and xfs.
->>     
->
-> Thanks for reporting this.
->
-> I just did some testing and I get the reverse!!
->
-> When a filesystem is mounted I get 135MB/s.  When it isn't mounted
-> I get 64MB/s.
->
-> I cannot think what could cause this.  I will have to explore.
-> Can you please double check you results and confirm that it definitely
-> is  faster then unmounted.
->   
-I'm positive that it's slow when mounted, that's how I discovered the
-problem. See below (I recreated the array over 1/10 of the original
-disks to be able to test easier).
-In fact the highest speed I get when accessing directly the entire disk
-even when one partition is mounted.
+Hello, I am having problems with my RAID as follows:
 
+I installed the drives in an old computer and created the RAID and it 
+worked great. When I tried to install the same RAID set in a new computer I 
+could get it to mount manually with some messing around but couldn't get it 
+to mount automatically as in the old machine. I was wondering if zeroing 
+the superblocks and trying to re-create the RAID would be a good idea. The 
+data that is stored on the drives should otherwise be intact because I had 
+it running just fine the other day. Any help at all would be most 
+appreciated.
 
-bacula:~# cat /proc/mdstat
-Personalities : [raid1] [raid6] [raid5] [raid4]
-md_d1 : active raid6 sdg1[5] sdf1[4] sde1[3] sdd1[2] sdc1[1] sdb1[0]
-      390668288 blocks level 6, 64k chunk, algorithm 2 [6/6] [UUUUUU]
-
-md2 : active raid1 sdi1[0] sdj1[1]
-      1462750272 blocks [2/2] [UU]
-
-unused devices: <none>
-
-bacula:~# parted  /dev/md_d1
-GNU Parted 1.8.8
-Using /dev/md_d1
-Welcome to GNU Parted! Type 'help' to view a list of commands.
-(parted) print
-Model: Unknown (unknown)
-Disk /dev/md_d1: 400GB
-Sector size (logical/physical): 512B/512B
-Partition Table: gpt
-
-Number  Start   End     Size    File system  Name     Flags
- 1      17.4kB  50.0GB  50.0GB  ext3         primary
-
-(parted) quit
-
-bacula:~# umount /dev/md_d1p1
-umount: /dev/md_d1p1: not mounted
-
-bacula:~# dd if=/dev/md_d1p1 of=/dev/null bs=1M count=10000
-10000+0 records in
-10000+0 records out
-10485760000 bytes (10 GB) copied, 37.4938 s, 280 MB/s
-
-bacula:~# mount /dev/md_d1p1 /mnt
-
-bacula:~# dd if=/dev/md_d1p1 of=/dev/null bs=1M count=10000
-10000+0 records in
-10000+0 records out
-10485760000 bytes (10 GB) copied, 132.894 s, 78.9 MB/s
-
-bacula:~# dd if=/dev/md_d1 of=/dev/null bs=1M count=10000
-10000+0 records in
-10000+0 records out
-10485760000 bytes (10 GB) copied, 28.222 s, 372 MB/s
+Thank you so much,
+Michael Collins
