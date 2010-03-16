@@ -1,28 +1,55 @@
-From: Simon Matthews <simon.d.matthews@gmail.com>
-Subject: Re: One raid array does not show up with mdadm --examine --scan
-Date: Mon, 15 Mar 2010 14:41:46 -0700
-Message-ID: <40b437201003151441t1f2b78cfg901ccae97c893456@mail.gmail.com>
-References: <40b437201003151113i15ad2a57y3b4f3ac4e18a8ad6@mail.gmail.com>
+From: Michael Evans <mjevans1983@gmail.com>
+Subject: Re: Adding disks with raid to existing raid system.
+Date: Mon, 15 Mar 2010 17:36:04 -0800
+Message-ID: <4877c76c1003151836r56d03faeh50d8bfd1bb2925cf@mail.gmail.com>
+References: <40b437201003142323g7b0f4e48wb9d58b963f12e988@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40b437201003151113i15ad2a57y3b4f3ac4e18a8ad6@mail.gmail.com>
+In-Reply-To: <40b437201003142323g7b0f4e48wb9d58b963f12e988@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Simon Matthews <simon.d.matthews@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Mar 15, 2010 at 11:13 AM, Simon Matthews
+On Sun, Mar 14, 2010 at 10:23 PM, Simon Matthews
 <simon.d.matthews@gmail.com> wrote:
-> On my newly built machine, in which all filesystems are on RAID array,
-> one of the arrays does not show up with the command:
-> mdadm --examine --scan
+> I have just built a system and have it booting off a software raid
+> partition. The raid sets use devices /dev/md0, /dev/hd1, /dev/md2,
+> /dev/md3.
 >
-> Why is this? And is there anything I can do to fix it?
+> I now need to transfer some additional disks to this system. These
+> disks are presently in another system where they host a number of rai=
+d
+> sets, currently also /dev/md0 - /dev/md4.
+>
+> I need to ensure that the data on the raid set that I am adding to th=
+e
+> system is not lost. However, clearly, I can't have the raid sets on
+> these disks come up as /dev/md0-md4. How do I ensure this and have
+> these raid sets come up on /dev/md5 and higher?
+>
+> Simon
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
+Either use an mdadm.conf to specify the mapping of UUID to md device
+(which will over-ride any auto-detected requests), or use the
+home-host fallback.  Obviously the administrator specifying how they'd
+prefer mdadm to assemble the drives is preferable.
 
-I suspect that I may have found an answer to this question -- the
-array that does not show up is formed from partitions that are logical
-partitions instead of primary partitions. I'll try deleting the
-partitions and re-creating as primary.
-
-Simon
+You will probably want to regenerate your initrd; if you are using
+auto-assembly on root without an initrd, I highly suggest upgrading to
+use an initrd/initramfs.  You might find this one easy to customize
+for your needs if your distribution lacks one or you dislike the one
+it generates: http://sourceforge.net/projects/aeuio/
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
