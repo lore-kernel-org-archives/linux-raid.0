@@ -1,59 +1,52 @@
-From: Simon Matthews <simon.d.matthews@gmail.com>
-Subject: Re: Why do arrays start without some components?
-Date: Mon, 15 Mar 2010 22:34:19 -0700
-Message-ID: <40b437201003152234g7db90026k92d663bb3f10aaaf@mail.gmail.com>
-References: <40b437201003151326t39be3b2hc3df6f79802b9b7e@mail.gmail.com>
-	 <4B9EA0E8.3020301@shiftmail.org>
-	 <40b437201003151426h7bc721e2m69242c044a074e24@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: [PULL REQUEST] md bug fix relating to merge_bvec_fn
+Date: Tue, 16 Mar 2010 17:11:26 +1100
+Message-ID: <19359.8462.660720.717447@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40b437201003151426h7bc721e2m69242c044a074e24@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Mar 15, 2010 at 1:26 PM, Simon Matthews
-<simon.d.matthews@gmail.com> wrote:
-> On Mon, Mar 15, 2010 at 2:04 PM, Asdo <asdo@shiftmail.org> wrote:
->> Simon Matthews wrote:
->>>
->>> I have a couple of machines on which this is happening now --
->>>
->>> When the machine boots, the RAID arrays (RAID 1) start, but each array
->>> only has one component device. I can add the other component again
->>> (using mdadm --add ... ) and the array will sync up, but next time it
->>> boots, I have to do the same once more.
->>>
->>> Why is this and how do I fix it?
->>>
->>
->> Might that be a /etc/mdadm/mdadm.conf in the initramfs listing fewer devices
->> than it should?
->> I am not sure (because in this case maybe it shouldn't autoassemble the
->> array at all), but have a look by unpacking your initramfs. If yes, update
->> it.
->
-> I don't have an initramfs. This is a Gentoo system and I built the
-> kernel with all the drivers required to boot built in. This includes
-> RAID support.
->
->> Or could that be a controller that shows the disks to the kernel too late...
->> do you have multiple controllers?
->
-> I don't think so, on one machine they are SATA drives, but only one controller.
->
-> But, perhaps on the other machine, this may be happening, since the
-> drive that includes the component that is left out of the array is on
-> an add-in controller. On this machine, the problematic array uses IDE
-> drives for its components.
 
-Replying to my own email -- bad form, I know. However, some additional
-information. The components that do form the degraded array on boot up
-on the all-SATA machine are all /dev/sdbX and the missing components
-are all /dev/sdaX. I think this makes it unlikely that the controller
-is showing the disks to the kernel too late, since I think it is
-likely that the /dev/sdaX disks are shown first.
+When an md device stacks on top of a device which defines a
+merge_bvec_fn, the md device must either call that function to check
+that bios aren't created which are 'too big' (often a difficult thing
+to do) or must ensure the bios never have more than a single page.
 
-Simon
+It came up in a recent discussion on dm-devel that the current
+approach of limiting a request to PAGE_SIZE is not sufficient as you
+could have several sub-page buffers.
+
+So this patch changes to the use max_segments and
+segment_boundary_mask to ensure there is only a single page - or part
+there of - in a bio if an underlying device has a merge_bvec_fn.
+
+This can affect 'xen' installations particularly.
+
+This patch is tagged for -stable.
+
+Thanks,
+NeilBrown
+
+
+The following changes since commit 25cf84cf377c0aae5dbcf937ea89bc7893db5176:
+  Linus Torvalds (1):
+        Merge git://git.kernel.org/.../amit/virtio-console
+
+are available in the git repository at:
+
+  git://neil.brown.name/md/ for-linus
+
+NeilBrown (1):
+      md: deal with merge_bvec_fn in component devices better.
+
+ drivers/md/linear.c    |   12 +++++++-----
+ drivers/md/multipath.c |   20 ++++++++++++--------
+ drivers/md/raid0.c     |   13 +++++++------
+ drivers/md/raid1.c     |   28 +++++++++++++++++-----------
+ drivers/md/raid10.c    |   28 +++++++++++++++++-----------
+ 5 files changed, 60 insertions(+), 41 deletions(-)
