@@ -1,52 +1,96 @@
-From: Neil Brown <neilb@suse.de>
-Subject: [PULL REQUEST] md bug fix relating to merge_bvec_fn
-Date: Tue, 16 Mar 2010 17:11:26 +1100
-Message-ID: <19359.8462.660720.717447@notabene.brown>
+From: "Majed B." <majedb@gmail.com>
+Subject: Re: Why do arrays start without some components?
+Date: Tue, 16 Mar 2010 11:08:51 +0300
+Message-ID: <70ed7c3e1003160108x4407b129r95102d3930c49c92@mail.gmail.com>
+References: <40b437201003151326t39be3b2hc3df6f79802b9b7e@mail.gmail.com>
+	<4B9EA0E8.3020301@shiftmail.org> <40b437201003151426h7bc721e2m69242c044a074e24@mail.gmail.com>
+	<40b437201003152234g7db90026k92d663bb3f10aaaf@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <40b437201003152234g7db90026k92d663bb3f10aaaf@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org
+To: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+If you are unable to access a certain disk, that disk has most likely f=
+ailed.
 
-When an md device stacks on top of a device which defines a
-merge_bvec_fn, the md device must either call that function to check
-that bios aren't created which are 'too big' (often a difficult thing
-to do) or must ensure the bios never have more than a single page.
+Also, did you change the partition types to "FD" (RAID Autodetect)?
+I once forgot to do that and that affected partition kept jumping out
+of the array.
 
-It came up in a recent discussion on dm-devel that the current
-approach of limiting a request to PAGE_SIZE is not sufficient as you
-could have several sub-page buffers.
+On Tue, Mar 16, 2010 at 8:34 AM, Simon Matthews
+<simon.d.matthews@gmail.com> wrote:
+> On Mon, Mar 15, 2010 at 1:26 PM, Simon Matthews
+> <simon.d.matthews@gmail.com> wrote:
+>> On Mon, Mar 15, 2010 at 2:04 PM, Asdo <asdo@shiftmail.org> wrote:
+>>> Simon Matthews wrote:
+>>>>
+>>>> I have a couple of machines on which this is happening now --
+>>>>
+>>>> When the machine boots, the RAID arrays (RAID 1) start, but each a=
+rray
+>>>> only has one component device. I can add the other component again
+>>>> (using mdadm --add ... ) and the array will sync up, but next time=
+ it
+>>>> boots, I have to do the same once more.
+>>>>
+>>>> Why is this and how do I fix it?
+>>>>
+>>>
+>>> Might that be a /etc/mdadm/mdadm.conf in the initramfs listing fewe=
+r devices
+>>> than it should?
+>>> I am not sure (because in this case maybe it shouldn't autoassemble=
+ the
+>>> array at all), but have a look by unpacking your initramfs. If yes,=
+ update
+>>> it.
+>>
+>> I don't have an initramfs. This is a Gentoo system and I built the
+>> kernel with all the drivers required to boot built in. This includes
+>> RAID support.
+>>
+>>> Or could that be a controller that shows the disks to the kernel to=
+o late...
+>>> do you have multiple controllers?
+>>
+>> I don't think so, on one machine they are SATA drives, but only one =
+controller.
+>>
+>> But, perhaps on the other machine, this may be happening, since the
+>> drive that includes the component that is left out of the array is o=
+n
+>> an add-in controller. On this machine, the problematic array uses ID=
+E
+>> drives for its components.
+>
+> Replying to my own email -- bad form, I know. However, some additiona=
+l
+> information. The components that do form the degraded array on boot u=
+p
+> on the all-SATA machine are all /dev/sdbX and the missing components
+> are all /dev/sdaX. I think this makes it unlikely that the controller
+> is showing the disks to the kernel too late, since I think it is
+> likely that the /dev/sdaX disks are shown first.
+>
+> Simon
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+>
 
-So this patch changes to the use max_segments and
-segment_boundary_mask to ensure there is only a single page - or part
-there of - in a bio if an underlying device has a merge_bvec_fn.
-
-This can affect 'xen' installations particularly.
-
-This patch is tagged for -stable.
-
-Thanks,
-NeilBrown
 
 
-The following changes since commit 25cf84cf377c0aae5dbcf937ea89bc7893db5176:
-  Linus Torvalds (1):
-        Merge git://git.kernel.org/.../amit/virtio-console
-
-are available in the git repository at:
-
-  git://neil.brown.name/md/ for-linus
-
-NeilBrown (1):
-      md: deal with merge_bvec_fn in component devices better.
-
- drivers/md/linear.c    |   12 +++++++-----
- drivers/md/multipath.c |   20 ++++++++++++--------
- drivers/md/raid0.c     |   13 +++++++------
- drivers/md/raid1.c     |   28 +++++++++++++++++-----------
- drivers/md/raid10.c    |   28 +++++++++++++++++-----------
- 5 files changed, 60 insertions(+), 41 deletions(-)
+--=20
+       Majed B.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
