@@ -1,82 +1,96 @@
-From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: Sysfs update frequency
-Date: Tue, 16 Mar 2010 16:03:08 -0700
-Message-ID: <4877c76c1003161603n26d29db5s2b3d271ca5698ee0@mail.gmail.com>
-References: <150c16851003161432gf38c0f5o1cc957435efd4c3e@mail.gmail.com>
-	 <20100317085256.6caee9bb@notabene.brown>
-	 <150c16851003161525g50e09917rfa9b53be3a500978@mail.gmail.com>
+From: Nicolae Mihalache <mache@abcpages.com>
+Subject: Re: slow sequential read on partitioned raid6
+Date: Wed, 17 Mar 2010 00:16:29 +0100
+Message-ID: <4BA0114D.9050405@abcpages.com>
+References: <4B9FD689.8060700@abcpages.com> <20100317092219.35393819@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <150c16851003161525g50e09917rfa9b53be3a500978@mail.gmail.com>
+In-Reply-To: <20100317092219.35393819@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Maggard <jmaggard10@gmail.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Mar 16, 2010 at 3:25 PM, Justin Maggard <jmaggard10@gmail.com> =
-wrote:
-> On Tue, Mar 16, 2010 at 2:52 PM, Neil Brown <neilb@suse.de> wrote:
->> On Tue, 16 Mar 2010 14:32:55 -0700
->> Justin Maggard <jmaggard10@gmail.com> wrote:
+On 03/16/2010 11:22 PM, Neil Brown wrote:
+> On Tue, 16 Mar 2010 20:05:45 +0100
+> Nicolae Mihalache <mache@abcpages.com> wrote:
+>   
+>> Hello,
 >>
->>> I've noticed on recent kernels that /sys/block/md?/md/sync_complete=
-d
->>> seems to rarely get updated. =A0What is the expected update interva=
-l?
->>> For me, it seems to only update about once every 6% or so during th=
-e
->>> resync. =A0Of course, /proc/mdstat has the actual current progress.
+>> I have created a partitioned raid6 array over 6x1TB SATA disks using the
+>> command (from memory): mdadm --create --auto=mdp --level=6
+>> --raid-devices /dev/md_d1 /dev/sd[b-g].
 >>
->> The expected update time is every 6% - actually 1/16 which is 6.25%.
+>> When I run a sequential read test using
+>> dd if=/dev/md_d1p1 of=/dev/null bs=1M
+>> I get low read speeds of around 80MB/s but only when the partition is
+>> mounted.
 >>
->> sync_completed includes a guarantee that all blocks before this poin=
-t really
->> have been processed. =A0The number in /proc/mdstat is less precise. =
-=A0The much
->> of the array has been resynced, but due to the possibility of out-of=
--order
->> completion of writes they may not be a contiguous series of blocks.
->>
->> Providing the guarantee (which is needed for externally-managed meta=
-data)
->> requires briefly stalling the resync, so I didn't want to do it more=
- often.
->> I could possibly make it time-bases instead of size-based though.
->>
->> Is this a problem for you?
->>
+>> If I unmount, the speed is around 350MB/s. The filesystems I tried are
+>> ext3 and xfs.
+>>     
 >
-> Thanks for the info. =A0No, it's not much of a problem, really. =A0Ju=
-st
-> seemed strange that an array of 2TB disks could resync for an hour
-> with no update to sync_completed. =A0I thought I remembered older
-> kernels updating a lot more frequently, but I could be wrong about
-> that. =A0So I take it that point is where the resync would resume if =
-the
-> system was rebooted?
+> Thanks for reporting this.
 >
-> -Justin
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+> I just did some testing and I get the reverse!!
 >
+> When a filesystem is mounted I get 135MB/s.  When it isn't mounted
+> I get 64MB/s.
+>
+> I cannot think what could cause this.  I will have to explore.
+> Can you please double check you results and confirm that it definitely
+> is  faster then unmounted.
+>   
+I'm positive that it's slow when mounted, that's how I discovered the
+problem. See below (I recreated the array over 1/10 of the original
+disks to be able to test easier).
+In fact the highest speed I get when accessing directly the entire disk
+even when one partition is mounted.
 
-Rather than a time basis would it be possible to have a sysfs
-paramater which could be tuned via write?
 
-Candidates for this would be something like:
+bacula:~# cat /proc/mdstat
+Personalities : [raid1] [raid6] [raid5] [raid4]
+md_d1 : active raid6 sdg1[5] sdf1[4] sde1[3] sdd1[2] sdc1[1] sdb1[0]
+      390668288 blocks level 6, 64k chunk, algorithm 2 [6/6] [UUUUUU]
 
-sync_flushes_per_action (fractional unit, every 1/N of the device)
+md2 : active raid1 sdi1[0] sdj1[1]
+      1462750272 blocks [2/2] [UU]
 
-OR
+unused devices: <none>
 
-sync_flush_stripes
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+bacula:~# parted  /dev/md_d1
+GNU Parted 1.8.8
+Using /dev/md_d1
+Welcome to GNU Parted! Type 'help' to view a list of commands.
+(parted) print
+Model: Unknown (unknown)
+Disk /dev/md_d1: 400GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+
+Number  Start   End     Size    File system  Name     Flags
+ 1      17.4kB  50.0GB  50.0GB  ext3         primary
+
+(parted) quit
+
+bacula:~# umount /dev/md_d1p1
+umount: /dev/md_d1p1: not mounted
+
+bacula:~# dd if=/dev/md_d1p1 of=/dev/null bs=1M count=10000
+10000+0 records in
+10000+0 records out
+10485760000 bytes (10 GB) copied, 37.4938 s, 280 MB/s
+
+bacula:~# mount /dev/md_d1p1 /mnt
+
+bacula:~# dd if=/dev/md_d1p1 of=/dev/null bs=1M count=10000
+10000+0 records in
+10000+0 records out
+10485760000 bytes (10 GB) copied, 132.894 s, 78.9 MB/s
+
+bacula:~# dd if=/dev/md_d1 of=/dev/null bs=1M count=10000
+10000+0 records in
+10000+0 records out
+10485760000 bytes (10 GB) copied, 28.222 s, 372 MB/s
