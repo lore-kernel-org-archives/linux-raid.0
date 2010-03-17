@@ -1,146 +1,73 @@
-From: Nicolae Mihalache <mache@abcpages.com>
-Subject: Re: slow sequential read on partitioned raid6
-Date: Wed, 17 Mar 2010 09:23:03 +0100
-Message-ID: <4BA09167.9080709@abcpages.com>
-References: <4B9FD689.8060700@abcpages.com>	 <20100317092219.35393819@notabene.brown>  <4BA0114D.9050405@abcpages.com> <1268783497.3781.14.camel@localhost.localdomain>
+From: Randy Terbush <randy@terbush.org>
+Subject: RAID Class Drives`
+Date: Wed, 17 Mar 2010 07:48:08 -0600
+Message-ID: <7db987b31003170648j19e3346bi1050e703ef8c811c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1268783497.3781.14.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I created a second 100GB partition on all the disks and then made a
-normal /dev/md1 raid6 array out of them, and the results I get:
-bacula:~# dd if=/dev/zero of=/mnt1/test-file bs=1M count=10000
-10000+0 records in
-10000+0 records out
-10485760000 bytes (10 GB) copied, 72.6303 s, 144 MB/s
+Greetings RAIDers,
 
-bacula:~# dd if=/mnt1/test-file of=/dev/null bs=1M count=10000
-10000+0 records in
-10000+0 records out
-10485760000 bytes (10 GB) copied, 29.1241 s, 360 MB/s
+Apologies if this topic has been thrashed here before. Google is not
+showing me much love on the topic and that which I have found does not
+convey consensus. So I am coming to the experts to get the verdict.
 
-I really believe it's something with the partitioned array.
-/proc/devices shows:
+Recent event: I spent a fair amount of time on the line with Seagate
+support yesterday who informed me that their desktop drives will not
+work in a RAID array. Now I may have been living in a cave for the
+past 20 years, but I always had a modem.
 
-Block devices:
-  ...
-  9 md
-  ...
-253 mdp
+As I started to dig into this a bit more looking for info on TLER,
+ERC, etc. from my understanding, these "RAID class" drives simply
+don't have the same level of error correction as the "desktop"
+alternative and instead report back to the RAID controller immediately
+instead of dawdling with fixing the problem themselves.
 
+If this is true, then I can understand where this might cause a RAID
+system some problems. However, I do not understand why the RAID system
+cannot detect the type of drive it is dealing with and either disable
+the behavior on the drive or allow more time for the drive to respond
+before kicking it out of the array.
 
-All the md_d1 partitions have major number 253. I don't know if this
-means something but maybe there is a bug in the mdp driver (or whatever
-is called).
+Just to give some background on how I got to this point, but not to
+distract from the main question, here is where I have been...
 
-nicolae
-Daniel Reurich wrote:
-> On Wed, 2010-03-17 at 00:16 +0100, Nicolae Mihalache wrote:
->   
->> On 03/16/2010 11:22 PM, Neil Brown wrote:
->>     
->>> On Tue, 16 Mar 2010 20:05:45 +0100
->>> Nicolae Mihalache <mache@abcpages.com> wrote:
->>>   
->>>       
->>>> Hello,
->>>>
->>>> I have created a partitioned raid6 array over 6x1TB SATA disks using the
->>>> command (from memory): mdadm --create --auto=mdp --level=6
->>>> --raid-devices /dev/md_d1 /dev/sd[b-g].
->>>>
->>>> When I run a sequential read test using
->>>> dd if=/dev/md_d1p1 of=/dev/null bs=1M
->>>> I get low read speeds of around 80MB/s but only when the partition is
->>>> mounted.
->>>>
->>>> If I unmount, the speed is around 350MB/s. The filesystems I tried are
->>>> ext3 and xfs.
->>>>     
->>>>         
->>> Thanks for reporting this.
->>>
->>> I just did some testing and I get the reverse!!
->>>
->>> When a filesystem is mounted I get 135MB/s.  When it isn't mounted
->>> I get 64MB/s.
->>>
->>> I cannot think what could cause this.  I will have to explore.
->>> Can you please double check you results and confirm that it definitely
->>> is  faster then unmounted.
->>>   
->>>       
->> I'm positive that it's slow when mounted, that's how I discovered the
->> problem. See below (I recreated the array over 1/10 of the original
->> disks to be able to test easier).
->> In fact the highest speed I get when accessing directly the entire disk
->> even when one partition is mounted.
->>
->>
->> bacula:~# cat /proc/mdstat
->> Personalities : [raid1] [raid6] [raid5] [raid4]
->> md_d1 : active raid6 sdg1[5] sdf1[4] sde1[3] sdd1[2] sdc1[1] sdb1[0]
->>       390668288 blocks level 6, 64k chunk, algorithm 2 [6/6] [UUUUUU]
->>
->> md2 : active raid1 sdi1[0] sdj1[1]
->>       1462750272 blocks [2/2] [UU]
->>
->> unused devices: <none>
->>
->> bacula:~# parted  /dev/md_d1
->> GNU Parted 1.8.8
->> Using /dev/md_d1
->> Welcome to GNU Parted! Type 'help' to view a list of commands.
->> (parted) print
->> Model: Unknown (unknown)
->> Disk /dev/md_d1: 400GB
->> Sector size (logical/physical): 512B/512B
->> Partition Table: gpt
->>
->> Number  Start   End     Size    File system  Name     Flags
->>  1      17.4kB  50.0GB  50.0GB  ext3         primary
->>
->> (parted) quit
->>
->> bacula:~# umount /dev/md_d1p1
->> umount: /dev/md_d1p1: not mounted
->>
->> bacula:~# dd if=/dev/md_d1p1 of=/dev/null bs=1M count=10000
->> 10000+0 records in
->> 10000+0 records out
->> 10485760000 bytes (10 GB) copied, 37.4938 s, 280 MB/s
->>
->> bacula:~# mount /dev/md_d1p1 /mnt
->>
->> bacula:~# dd if=/dev/md_d1p1 of=/dev/null bs=1M count=10000
->> 10000+0 records in
->> 10000+0 records out
->> 10485760000 bytes (10 GB) copied, 132.894 s, 78.9 MB/s
->>
->> bacula:~# dd if=/dev/md_d1 of=/dev/null bs=1M count=10000
->> 10000+0 records in
->> 10000+0 records out
->> 10485760000 bytes (10 GB) copied, 28.222 s, 372 MB/s
->>     
->
-> Why are you trying directly from the block devices when they contain a
-> mounted filesystem?  Surely the fs layer would be holding a locks on the
-> block device causing it to slow down raw layer access.
->
-> Might I suggest you should be reading files that are located within the
-> mounted filesystem.
->
-> I suggest you try this in the mounted filesystem:
->
-> dd if=/dev/zero of=/mnt/test-file bs=1M count=10000
-> dd if=/mnt/test-file of=/dev/null bs=1M
-> rm /mnt/test-file
->
-> I hope this helps.
->   
+Over past 5 years, have been struggling with a 4 drive mdraid array
+configured for RAID5. This is not a busy system by any stretch. Just a
+media server for my own personal use. Started out using the SATA
+headers on the MB. Gave up and bought a cheapy hardware RAID
+controller. Thought better of that decision and went back to software
+RAID using the hardware RAID controller as a SATA expansion card. Gave
+up on that and went back to the SATA headers on the MB (had replaced
+the MB along the way).
 
+Over that period, threw out original 4 drives and replaced them with
+newer bigger Seagate Barracudas. Bought snazzier and snazzier cables
+along the way. Discovered a firmware upgrade for the Barracudas that I
+thought had recently fixed the problem.
+
+After speaking with Seagate yesterday, I booted off of the SeaTools
+image and ran tests on all drives. The two suspect drives did have
+errors that were corrected by the test software. But alas, attempting
+to reassemble this array fails, dropping one drive to failed spare
+status and another to spare which has been the behavior I have been
+fighting for years.
+
+So the question becomes, do I try it again with the replacement drives
+that Seagate is sending me, or do I hang them in my "desktop" and
+spend the money for RAID Class drives? (I've grown tired of this
+learning experience and would like to just have a dependable storage
+system)
+
+And to tag onto that question, is there any reason why mdraid cannot
+detect these "lesser" drives and behave differently?
+
+Why would these drives be developing errors as a result of their
+tortuous experience in a RAID array?
+
+Thanks for any light you can shed on this issue.
+
+-Randy
