@@ -1,54 +1,60 @@
-From: Matt Garman <matthew.garman@gmail.com>
-Subject: OT: sas controllers/expanders and "desktop" drives?
-Date: Wed, 17 Mar 2010 09:36:02 -0500
-Message-ID: <20100317143602.GA18298@septictank.raw-sewage.fake>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: Utility of IOATDMA for RAID5.
+Date: Wed, 17 Mar 2010 11:48:40 -0700
+Message-ID: <e9c3a7c21003171148r214c537es2e27fdf05a62c1a8@mail.gmail.com>
+References: <201003112109.o2BL9eJB003728@wind.enjellic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <201003112109.o2BL9eJB003728@wind.enjellic.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>
+To: greg@enjellic.com
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thu, Mar 11, 2010 at 2:09 PM,  <greg@enjellic.com> wrote:
+> Hi Dan, hope this note finds your week going well.
+>
+> We are starting to bring Nehalem/XEON server motherboards which have
+> the onboard DMA I/O offload support into our shop as part of our
+> current purchasing round. =A0We have spun up a 2.6.32 kernel for test=
+ing
+> and have been able to load the modules etc.
+>
+> We use SCST to implement geographically isolated storage mirrors. =A0=
+We
+> primarily use RAID5 since our redundancy architecture gives us a bit
+> of luxury which a single RAID5 implementation would not.
+>
+> If I understand things correctly your current work supports RAID6
+> only. =A0Are there are any plans to support RAID5? =A0Or perhaps more
+> correctly is there any utility to supporting RAID5 given the memory
+> speeds and core counts which are now available?
 
-Hello,
+Both raid5 and raid6 offload is supported by md and the ioatdma
+driver.  However not all platforms have the raid offload capability.
+This capability is enabled on the recently announced Jasper Forest[1]
+platform.  On an enabled platform (with a 2.6.32 kernel and the
+ioatdma driver loaded) the following command will display the presence
+of xor and pq offload capabilities:
 
-For building a Linux md system with many disks, I've been looking at
-the LSI SAS 3081E-R controller card[1] with the SuperMicro
-846TQ-R900B chassis[2].  The SAS3018E card looks like it has a
-mature open-source Linux driver.  The chassis has a SAS expander;
-I'm not sure which one (but I have a question in to SuperMicro).
+# cat /sys/class/dma/dma*/quickdata/cap
+copy pq pq_val xor xor_val fill intr
+copy pq pq_val xor xor_val fill intr
+copy intr
+copy intr
+copy intr
+copy intr
+copy intr
+copy intr
 
-Anyway, my question is this: has anyone used this setup, or one
-like it (sas controller + sas expander) with "desktop" class drives?
-The web research I've done suggests that most SAS controllers and
-expanders are targeted at the enterprise market, and therefore,
-aren't guaranteed to work with the (significantly cheaper) desktop
-drives.
+--
+Dan
 
-For example, from the FAQ for that SuperMicro chassis[3]:
-
-    Question: We want to use the new Seagate 1.5TB ST31500341AS
-    drives in combination with a storage solution based on your
-    846TQ chassis, is this compatible?
-
-    Answer: This ST31500341AS hard drive is designed to be a Desktop
-    type hard drive, not an Enterprise hard drive which is needed in
-    this setup.  We don't recommend this combination, so please use
-    the Seagate 1TB ST31000340NS drive instead. This drive is an
-    Enterprise drive and validated for our 846TQ chassis.
-
-In short, we want to build a server with 24 drives.  The desktop
-drives are significantly cheaper than the enterprise drives.  But
-getting 24 ports is cheapest with these SAS controllers + expanders.
-
-Thanks,
-Matt
-
-
-[1] http://www.lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas/lsisas3081er/index.html
-
-[2] http://www.supermicro.com/products/chassis/4U/846/SC846TQ-R900.cfm
-
-[3] http://www.supermicro.com/support/faqs/faq.cfm?faq=8230
-
+[1]: http://edc.intel.com/Platforms/Xeon-C5500-C3500-3420/
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
