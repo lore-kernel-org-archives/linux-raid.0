@@ -1,54 +1,40 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: How to fix Current_Pending_Sector?
-Date: Thu, 18 Mar 2010 17:47:13 -0400
-Message-ID: <87f94c371003181447w2147cb87h41d8b16613ee1471@mail.gmail.com>
-References: <4B992054.9020903@stud.tu-ilmenau.de>
-	 <C7C3C86F.110A1%groups@email.iain.rauch.co.uk>
-	 <72dbd3151003181237v6ebf87b7i4ec9563f6bfde758@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Possibility for a parallel relaxed RAID?
+Date: Fri, 19 Mar 2010 08:54:14 +1100
+Message-ID: <20100319085414.6cdddd29@notabene.brown>
+References: <4BA27898.4010907@panix.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <72dbd3151003181237v6ebf87b7i4ec9563f6bfde758@mail.gmail.com>
+In-Reply-To: <4BA27898.4010907@panix.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Rees <drees76@gmail.com>
-Cc: Iain Rauch <groups@email.iain.rauch.co.uk>, st0ff@npl.de, linux-raid@vger.kernel.org
+To: Berkey B Walker <berk@panix.com>
+Cc: linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, Mar 18, 2010 at 3:37 PM, David Rees <drees76@gmail.com> wrote:
-> On Mon, Mar 15, 2010 at 4:20 AM, Iain Rauch
-> <groups@email.iain.rauch.co.uk> wrote:
->> The 'Current_Pending_Sector' was still 1, so I dd zero onto the whol=
-e drive.
->> I guess I could have just done part of it, but I suppose that verifi=
-ed the
->> whole drive 'works'. It only took ~5 hours. Funnily enough this did =
-fix the
->> Current_pending_sectors count back to zero. Still no error reports i=
-n the
->> SMART data, and 'Reallocated_Event_Count' didn't go up - shouldn't t=
-hat have
->> gone up to one?
->
-> No - the drive was able to successfully write to the sector it was
-> unable to read from. =A0If the write had failed, it would have
-> reallocated the sector.
->
-> -Dave
+On Thu, 18 Mar 2010 15:01:44 -0400
+Berkey B Walker <berk@panix.com> wrote:
 
-Dave,
+> There maybe many folks out there who want to use RAID on their personal, 
+> non-production systems.  Assuming access and thru-put values are not 
+> critical a problem might be "You can't use Desktop drives for RAID".  
+> Which, I think, most of us know is not really true, but - - If the 
+> timing issues were to be relaxed, allowing the drive to fix itself, 
+> before being kicked by the md process, might not the average Joe be 
+> better served?  There is a big difference between going a mile and 
+> buying a commodity drive, and being "up" in an hour vs. finding a 
+> working system, going online, paying price+, and getting/paying fast 
+> shipping. Which might resolve the issue in days instead of hours.
+> 
+> Any possibility of a parallel, less critical to drive response, release 
+> of md?  Or a patch to allow same?
 
-Most sector writes are blind (ie. non-verified).
+This is not a function of 'md'.  md has no timeouts for drives responding.
+It just submits a request and waits for a success/fail reply.
 
-Is your theory that if the sector is marked as a Pending_Bad_Sector a
-write is done, but it is verified, and a reallocate only occurs if the
-verify fails?
+It may be a function of the lower level SATA/SCSI/FC/whatever driver.  You
+would do better to ask the developers of those drivers, maybe start with the
+maintainer of libata.
 
-I've never heard that theory, but it makes great sense.
-
-Greg
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+NeilBrown
