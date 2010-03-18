@@ -1,29 +1,28 @@
-From: Berkey B Walker <berk@panix.com>
-Subject: Possibility for a parallel relaxed RAID?
-Date: Thu, 18 Mar 2010 15:01:44 -0400
-Message-ID: <4BA27898.4010907@panix.com>
+From: David Rees <drees76@gmail.com>
+Subject: Re: How to fix Current_Pending_Sector?
+Date: Thu, 18 Mar 2010 12:37:36 -0700
+Message-ID: <72dbd3151003181237v6ebf87b7i4ec9563f6bfde758@mail.gmail.com>
+References: <4B992054.9020903@stud.tu-ilmenau.de> <C7C3C86F.110A1%groups@email.iain.rauch.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <C7C3C86F.110A1%groups@email.iain.rauch.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux raid <linux-raid@vger.kernel.org>
+To: Iain Rauch <groups@email.iain.rauch.co.uk>
+Cc: st0ff@npl.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-There maybe many folks out there who want to use RAID on their personal, 
-non-production systems.  Assuming access and thru-put values are not 
-critical a problem might be "You can't use Desktop drives for RAID".  
-Which, I think, most of us know is not really true, but - - If the 
-timing issues were to be relaxed, allowing the drive to fix itself, 
-before being kicked by the md process, might not the average Joe be 
-better served?  There is a big difference between going a mile and 
-buying a commodity drive, and being "up" in an hour vs. finding a 
-working system, going online, paying price+, and getting/paying fast 
-shipping. Which might resolve the issue in days instead of hours.
+On Mon, Mar 15, 2010 at 4:20 AM, Iain Rauch
+<groups@email.iain.rauch.co.uk> wrote:
+> The 'Current_Pending_Sector' was still 1, so I dd zero onto the whole drive.
+> I guess I could have just done part of it, but I suppose that verified the
+> whole drive 'works'. It only took ~5 hours. Funnily enough this did fix the
+> Current_pending_sectors count back to zero. Still no error reports in the
+> SMART data, and 'Reallocated_Event_Count' didn't go up - shouldn't that have
+> gone up to one?
 
-Any possibility of a parallel, less critical to drive response, release 
-of md?  Or a patch to allow same?
+No - the drive was able to successfully write to the sector it was
+unable to read from.  If the write had failed, it would have
+reallocated the sector.
 
-Thanks
-Berk Walker berkatpanixperiodcom
-
+-Dave
