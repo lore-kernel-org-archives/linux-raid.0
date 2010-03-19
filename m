@@ -1,35 +1,47 @@
-From: jin zhencheng <zhenchengjin@gmail.com>
-Subject: BUG:write data to degrade raid5
-Date: Fri, 19 Mar 2010 18:29:28 +0800
-Message-ID: <de04351e1003190329l2f33447bhe37b963bd4b48c70@mail.gmail.com>
+From: Aryeh Gregor <Simetrical+list@gmail.com>
+Subject: Re: RAID Class Drives`
+Date: Fri, 19 Mar 2010 12:43:15 -0400
+Message-ID: <7c2a12e21003190943t546ade49u2294310ed7d9921e@mail.gmail.com>
+References: <7db987b31003170648j19e3346bi1050e703ef8c811c@mail.gmail.com>
+	 <4BA258AD.5020605@gmx.net> <4BA33284.7000304@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4BA33284.7000304@anonymous.org.uk>
+Sender: linux-raid-owner@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: Joachim Otahal <Jou@gmx.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hi;
+On Fri, Mar 19, 2010 at 4:15 AM, John Robinson
+<john.robinson@anonymous.org.uk> wrote:
+> Do you have a reference for this? Most drives' operating temperature =
+range
+> is specified up to 55=C2=B0C, sometimes higher for enterprise drives,=
+ without any
+> indication (apart from common sense perhaps) that running them this h=
+ot
+> reduces lifespan.
 
-i use kernel is 2.6.26.2
+Google's study of >100,000 disks over 9 months or so
+<http://labs.google.com/papers/disk_failures.html> suggests that
+hotter drives don't fail much more often:
 
-what i do as follow:
+". . . failures do not increase when the average temperature
+increases. In fact, there is a clear trend showing that lower
+temperatures are associated with higher failure rates.  Only at very
+high temperatures is there a slight reversal of this trend." (page 5
+of PDF)
 
-1, I create a raid5:
-mdadm -C /dev/md5 -l 5 -n 4 /dev/sda /dev/sdb /dev/sdc  /dev/sdd
---metadata=1.0 --assume-clean
+"We can conclude that at moderate temperature ranges it is likely that
+there are other effects which affect failure rates much more strongly
+than temperatures do." (page 6)
 
-2, dd if=/dev/zero of=/dev/md5 bs=1M &
-
-write data to this raid5
-
-3, mdadm --manage /dev/md5 -f /dev/sda
-
-4 mdadm --manage  /dev/md5 -f /dev/sdb
-
-if i faild 2 disks ,then the OS kernel display OOP error and kernel down
-
-
-do somebody know why ?
-
-Is MD/RAID5 bug ?
+They were using SATA and PATA consumer drives, 5400 RPM to 7200 RPM,
+80 to 400 GB, put into production in or after 2001 (from page 3).
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
