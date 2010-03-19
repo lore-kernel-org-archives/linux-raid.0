@@ -1,64 +1,48 @@
 From: Joachim Otahal <Jou@gmx.net>
-Subject: Re: RAID Class Drives`
-Date: Fri, 19 Mar 2010 19:14:50 +0100
-Message-ID: <4BA3BF1A.2060905@gmx.net>
-References: <7db987b31003170648j19e3346bi1050e703ef8c811c@mail.gmail.com>	 <4BA258AD.5020605@gmx.net> <4BA33284.7000304@anonymous.org.uk> <7c2a12e21003190943t546ade49u2294310ed7d9921e@mail.gmail.com>
+Subject: Re: BUG:write data to degrade raid5
+Date: Fri, 19 Mar 2010 19:20:42 +0100
+Message-ID: <4BA3C07A.8030204@gmx.net>
+References: <de04351e1003190329l2f33447bhe37b963bd4b48c70@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7c2a12e21003190943t546ade49u2294310ed7d9921e@mail.gmail.com>
+In-Reply-To: <de04351e1003190329l2f33447bhe37b963bd4b48c70@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Aryeh Gregor <Simetrical+list@gmail.com>
-Cc: John Robinson <john.robinson@anonymous.org.uk>, linux-raid@vger.kernel.org
+To: jin zhencheng <zhenchengjin@gmail.com>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Aryeh Gregor schrieb:
-> On Fri, Mar 19, 2010 at 4:15 AM, John Robinson
-> <john.robinson@anonymous.org.uk>  wrote:
->   =20
->> Do you have a reference for this? Most drives' operating temperature=
- range
->> is specified up to 55=C2=B0C, sometimes higher for enterprise drives=
-, without any
->> indication (apart from common sense perhaps) that running them this =
-hot
->> reduces lifespan.
->>     =20
-> Google's study of>100,000 disks over 9 months or so
-> <http://labs.google.com/papers/disk_failures.html>  suggests that
-> hotter drives don't fail much more often:
->   =20
-Thanks for the link.
-That study was referred to as a comparison to the current situation. Bu=
-t=20
-google only tested up to 400 GB in that statistic, and I DO remember=20
-that my old 160GB to 500 GB drives were all a lot hotter than any of my=
-=20
-current drives. Those Samsung 1TB drives only reached 35=C2=B0C during =
-last=20
-hot summer, but I did let the fan rotate faster during the summer.
+jin zhencheng schrieb:
+> hi;
+>
+> i use kernel is 2.6.26.2
+>
+> what i do as follow:
+>
+> 1, I create a raid5:
+> mdadm -C /dev/md5 -l 5 -n 4 /dev/sda /dev/sdb /dev/sdc  /dev/sdd
+> --metadata=1.0 --assume-clean
+>
+> 2, dd if=/dev/zero of=/dev/md5 bs=1M&
+>
+> write data to this raid5
+>
+> 3, mdadm --manage /dev/md5 -f /dev/sda
+>
+> 4 mdadm --manage  /dev/md5 -f /dev/sdb
+>
+> if i faild 2 disks ,then the OS kernel display OOP error and kernel down
+>
+> do somebody know why ?
+>
+> Is MD/RAID5 bug ?
+>    
 
-Current real world data of my drives (Windows main machine, room=20
-temperature is 23=C2=B0C right now):
-SAMSUNG 1 TB 27=C2=B0C (HD103UJ)
-WD 1 TB 30=C2=B0C (WD10 EACS-00ZJBO)
-WD 750 GB 34=C2=B0C (WD75 00AACS-00ZJBO)
-SAMSUNG 1 TB 25=C2=B0C (HD103UJ)
-
-Linux Server (mirrored drives):
-SEAGATE 1,5 TB 34=C2=B0C (ST31500341AS)
-SEAGATE 1,5 TB 34=C2=B0C (ST31500341AS) <- this one will probably fail =
-in one=20
-or one and a half year if the realloc-sector count continues to develop=
-=20
-this way.
+RAID5 can only tolerate ONE drive to fail of ALL members. If you want to 
+be able to fail two drives you will have to use RAID6 or RAID5 with one 
+hot-spare (and give it time to rebuild before failing the second drive).
+PLEASE read the documentation on raid levels, like on wikipedia.
 
 Joachim Otahal
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
