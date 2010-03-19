@@ -1,49 +1,71 @@
-From: Mattias Wadenstein <maswan@acc.umu.se>
+From: Joachim Otahal <Jou@gmx.net>
 Subject: Re: RAID Class Drives`
-Date: Fri, 19 Mar 2010 17:53:25 +0100 (MET)
-Message-ID: <Pine.GSO.4.64.1003191747300.15546@montezuma.acc.umu.se>
-References: <7db987b31003170648j19e3346bi1050e703ef8c811c@mail.gmail.com>
- <4BA258AD.5020605@gmx.net> <4BA33284.7000304@anonymous.org.uk>
- <7c2a12e21003190943t546ade49u2294310ed7d9921e@mail.gmail.com>
+Date: Fri, 19 Mar 2010 18:53:33 +0100
+Message-ID: <4BA3BA1D.50206@gmx.net>
+References: <7db987b31003170648j19e3346bi1050e703ef8c811c@mail.gmail.com> <4BA258AD.5020605@gmx.net> <4BA33284.7000304@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1;
+Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7c2a12e21003190943t546ade49u2294310ed7d9921e@mail.gmail.com>
+In-Reply-To: <4BA33284.7000304@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Aryeh Gregor <Simetrical+list@gmail.com>
-Cc: John Robinson <john.robinson@anonymous.org.uk>, Joachim Otahal <Jou@gmx.net>, linux-raid@vger.kernel.org
+To: John Robinson <john.robinson@anonymous.org.uk>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 19 Mar 2010, Aryeh Gregor wrote:
-
-> On Fri, Mar 19, 2010 at 4:15 AM, John Robinson
-> <john.robinson@anonymous.org.uk> wrote:
->> Do you have a reference for this? Most drives' operating temperature=
- range
->> is specified up to 55=B0C, sometimes higher for enterprise drives, w=
-ithout any
->> indication (apart from common sense perhaps) that running them this =
-hot
->> reduces lifespan.
+John Robinson schrieb:
+> On 18/03/2010 16:45, Joachim Otahal wrote:
+>> [...]  You should take care of the temperature of the drives,
+>> 30=B0C to 35=B0C is preferred, above 35=B0C the lifespan goes down, =
+over=20
+>> 40=B0C rapidly down.
 >
-> Google's study of >100,000 disks over 9 months or so
-> <http://labs.google.com/papers/disk_failures.html> suggests that
-> hotter drives don't fail much more often:
+> Do you have a reference for this? Most drives' operating temperature=20
+> range is specified up to 55=B0C, sometimes higher for enterprise driv=
+es,=20
+> without any indication (apart from common sense perhaps) that running=
+=20
+> them this hot reduces lifespan.
 >
-> ". . . failures do not increase when the average temperature
-> increases. In fact, there is a clear trend showing that lower
-> temperatures are associated with higher failure rates.  Only at very
-> high temperatures is there a slight reversal of this trend." (page 5
-> of PDF)
+> Cheers,
+>
+> John.
+>
+About a half year ago the german publisher c't did this testing (or=20
+reported from a big testing, cannot remember) what the best temperature=
+=20
+of desktop drives is. The statistic varied from drive to drive since=20
+some are less than 5=B0C over room temperature, others are 15=B0C or mo=
+re=20
+over room temperature (of course mounted behind a silent fan which keep=
+s=20
+the air moving, no turbine mode).
+The result was that 10=B0C and 15=B0C are not good for the drives. The=20
+"perfect sweet spot" changes from drive to drive (even within on=20
+manufacturer), but all of them had their sweet spot somewhere around=20
+20=B0C to to 35=B0C with variation in the range of measurement error.
+Some drives has a higher failure rate at 40=B0C, for some 55=B0C was no=
+=20
+problem at all and showed no real change in the failure rate. The last=20
+two examples were the extreme cases.
 
-Do check out figure 5 though, I wouldn't run the drives hotter than=20
-40-45=B0C based on that which does seem to indicate that hot drives don=
-'t=20
-last as long. But then again, so would running them at <30=B0C...
+Some of my drives are 2=B0C above room temperature, others are 12=B0C o=
+ver=20
+room temperature. Sine I really take care that non reaches 40=B0C even =
+in=20
+summer the failure rate got down from "every few month" to once in the =
+3=20
+years which is the time I really take care of the drive temperatures.=20
+There are 6 drives currently in use from 750GB (the hottest of all my=20
+drives) up to 1.5 TB in my private machines, only one of them shows a=20
+gradual change in the SMART values (reallocated sector count), which=20
+mean it will probably fail in about 1.5 years if the error rate stays=20
+constant. At work (at least the two machines 100% under my control) I=20
+had the same effect, keep the HD's cool and they will live long, let=20
+them get over 40=B0C and be ready to replace them soon.
 
-/Mattias Wadenstein
+Joachim Otahal
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
