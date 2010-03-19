@@ -1,42 +1,49 @@
-From: Nicolae Mihalache <mache@abcpages.com>
-Subject: Re: slow sequential read on partitioned raid6
-Date: Fri, 19 Mar 2010 07:47:42 +0100
-Message-ID: <4BA31E0E.3070306@abcpages.com>
-References: <4B9FD689.8060700@abcpages.com>	 <20100317092219.35393819@notabene.brown>	 <4BA0114D.9050405@abcpages.com>	 <1268783497.3781.14.camel@localhost.localdomain>	 <4BA09167.9080709@abcpages.com> <4877c76c1003171940y5bc70260mac7784452b2d4d7c@mail.gmail.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Minor mdadm fixes
+Date: Fri, 19 Mar 2010 08:01:53 +0100
+Message-ID: <20100319070153.GA12455@maude.comedia.it>
+References: <4BA2DDB2.2040508@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4877c76c1003171940y5bc70260mac7784452b2d4d7c@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <4BA2DDB2.2040508@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Evans <mjevans1983@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Actually my problem as written in the subject of the mail was that the
-sequential read was slow. Somebody suggested to use a file instead of
-the raw partition. If the file was detected as sparse (who does that??),
-it would be even faster to read not slower.
+On Thu, Mar 18, 2010 at 10:13:06PM -0400, Doug Ledford wrote:
+>Second: mdadm-3.1.2-mapfile.patch
+>Problem: Neil's support for putting the mdadm map file wherever you need
+>it is nice, but one place in particular needs a special case.
+>Specifically, mdadm already creates /dev/md if needed to store symlinks,
+>or in the case of mdmon needing to create pid/sock files (if ALT_RUN is
+why on earth do you want to set ALT_RUN=/dev/md ?
+it is messy enough as it is, let's keep assuming /dev/md contains only
+array device files.
 
-nicolae
+besides that you will discover that the only way to make mdmon work is 
+setting VAR_RUN and ALT_RUN to the same value, something we can
+guarantee to be writable even in the direst situation, and i'd keep
+/dev/.mdadm
+
+>Fourth: mdadm-3.1.2-mapname.patch
+>Feature: If we are able to easily select the location of the mapfile via
+>the use of ALT_RUN at compile time, it makes sense to also be able to
+this "hunt the mapfile" thing is already ugly as it is, why do we need
+an ALT_MAPNAME? if there was any value (except for allowing to set
+ALT_RUN to /dev/md) to having the mapfile named differently, just force
+it to be called mdadm.map everywere (or incremental.map so the name
+reflects the need for the file existance)
+
+L.
 
 
-On 03/18/2010 03:40 AM, Michael Evans wrote:
-> First off, why not use a hard disk benchmark utility (their names
-> escape me aside from Bonnie++) which has these issues worked out?
->
-> Second, if you absolutely must try to do a benchmark with basic tools
-> (that buffer and use cache) try this:
->
-> dd if=/dev/zero bs=1M count=10000 | tr '\0' 't' > testfile
-> dd if=testfile of=/dev/null bs=1M
->
-> You may note that you'll be writing a file with Ts instead of a file
-> with 0's; my method should not be detected as sparse, where as the
-> case with zeros probably will be detected as sparse and simply not
-> stored.
->
-> If in doubt you can check the size of the file on disk with ls -ls
-> If I'm reading the output correctly the left most column (size on
-> disk) is in kilobyte units, even on a 4kb cluster EXT4 filesystem
 
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
