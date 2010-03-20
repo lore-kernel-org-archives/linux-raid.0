@@ -1,77 +1,81 @@
-From: Joachim Otahal <Jou@gmx.net>
-Subject: Re: BUG:write data to degrade raid5
-Date: Fri, 19 Mar 2010 19:37:21 +0100
-Message-ID: <4BA3C461.5060209@gmx.net>
-References: <de04351e1003190329l2f33447bhe37b963bd4b48c70@mail.gmail.com> 	<4BA3C07A.8030204@gmx.net> <73e903671003191123h1b7e1196v336265842f1b29e5@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: OT: sas controllers/expanders and "desktop" drives?
+Date: Sat, 20 Mar 2010 11:34:19 -0400
+Message-ID: <4BA4EAFB.1050302@tmr.com>
+References: <20100317143602.GA18298@septictank.raw-sewage.fake>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <73e903671003191123h1b7e1196v336265842f1b29e5@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
-Cc: jin zhencheng <zhenchengjin@gmail.com>, neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100317143602.GA18298@septictank.raw-sewage.fake>
+Sender: linux-raid-owner@vger.kernel.org
+To: Matt Garman <matthew.garman@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Kristleifur Da=F0ason schrieb:
-> On Fri, Mar 19, 2010 at 6:20 PM, Joachim Otahal <Jou@gmx.net=20
-> <mailto:Jou@gmx.net>> wrote:
+Matt Garman wrote:
+> Hello,
 >
->     jin zhencheng schrieb:
+> For building a Linux md system with many disks, I've been looking at
+> the LSI SAS 3081E-R controller card[1] with the SuperMicro
+> 846TQ-R900B chassis[2].  The SAS3018E card looks like it has a
+> mature open-source Linux driver.  The chassis has a SAS expander;
+> I'm not sure which one (but I have a question in to SuperMicro).
 >
->         hi;
+> Anyway, my question is this: has anyone used this setup, or one
+> like it (sas controller + sas expander) with "desktop" class drives?
+> The web research I've done suggests that most SAS controllers and
+> expanders are targeted at the enterprise market, and therefore,
+> aren't guaranteed to work with the (significantly cheaper) desktop
+> drives.
 >
->         i use kernel is 2.6.26.2
+> For example, from the FAQ for that SuperMicro chassis[3]:
 >
->         what i do as follow:
+>     Question: We want to use the new Seagate 1.5TB ST31500341AS
+>     drives in combination with a storage solution based on your
+>     846TQ chassis, is this compatible?
 >
->         1, I create a raid5:
->         mdadm -C /dev/md5 -l 5 -n 4 /dev/sda /dev/sdb /dev/sdc  /dev/=
-sdd
->         --metadata=3D1.0 --assume-clean
+>     Answer: This ST31500341AS hard drive is designed to be a Desktop
+>     type hard drive, not an Enterprise hard drive which is needed in
+>     this setup.  We don't recommend this combination, so please use
+>     the Seagate 1TB ST31000340NS drive instead. This drive is an
+>     Enterprise drive and validated for our 846TQ chassis.
 >
->         2, dd if=3D/dev/zero of=3D/dev/md5 bs=3D1M&
->
->         write data to this raid5
->
->         3, mdadm --manage /dev/md5 -f /dev/sda
->
->         4 mdadm --manage  /dev/md5 -f /dev/sdb
->
->         if i faild 2 disks ,then the OS kernel display OOP error and
->         kernel down
->
->         do somebody know why ?
->
->         Is MD/RAID5 bug ?
->
->
->     RAID5 can only tolerate ONE drive to fail of ALL members. If you
->     want to be able to fail two drives you will have to use RAID6 or
->     RAID5 with one hot-spare (and give it time to rebuild before
->     failing the second drive).
->     PLEASE read the documentation on raid levels, like on wikipedia.
+> In short, we want to build a server with 24 drives.  The desktop
+> drives are significantly cheaper than the enterprise drives.  But
+> getting 24 ports is cheapest with these SAS controllers + expanders.
 >
 >
-> That is true,
->
-> but should we get a kernel oops and crash if two RAID5 drives are=20
-> failed? (THAT part looks like a bug!)
->
-> Jin, can you try a newer kernel, and a newer mdadm?
->
-> -- Kristleifur
-You are probably right.
-My kernel version is "Debian 2.6.26-21lenny4", and I had no oopses=20
-during my hot-plug testing one the hardware I use md on. I think it may=
-=20
-be the driver for his chips.
+>   
+I have the feeling that what they meant is that the drives have firmware 
+intended for desktop use and will not work well in RAID usage. This has 
+been discussed here before, the desktop drives have firmware which tries 
+repeatedly to recover data on a failed read, and which therefore may 
+hang for 20-30 sec before reporting an error or finally returning the 
+data without an error indication.
 
-Jin:
+Until/unless Neil changes his idea that timeout should be in the driver 
+or the driver, these drives work poorly with RAID.
 
-Did you really use the whole drives for testing or loopback files or=20
-partitions on the drives? I never did my hot-plug testings with whole=20
-drives being in an array, only with partitions.
+Note, this is just the way I read the reply, and there may be a way to 
+tell the firmware to fast fail, depending on tools and firmware.
 
-Joachim Otahal
+> [1] http://www.lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas/lsisas3081er/index.html
+>
+> [2] http://www.supermicro.com/products/chassis/4U/846/SC846TQ-R900.cfm
+>
+> [3] http://www.supermicro.com/support/faqs/faq.cfm?faq=8230
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>   
+
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "We can't solve today's problems by using the same thinking we
+   used in creating them." - Einstein
+
