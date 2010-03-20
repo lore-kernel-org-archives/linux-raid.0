@@ -1,81 +1,51 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: OT: sas controllers/expanders and "desktop" drives?
-Date: Sat, 20 Mar 2010 11:34:19 -0400
-Message-ID: <4BA4EAFB.1050302@tmr.com>
-References: <20100317143602.GA18298@septictank.raw-sewage.fake>
+Subject: Re: BUG:write data to degrade raid5
+Date: Sat, 20 Mar 2010 11:50:47 -0400
+Message-ID: <4BA4EED7.5070700@tmr.com>
+References: <de04351e1003190329l2f33447bhe37b963bd4b48c70@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100317143602.GA18298@septictank.raw-sewage.fake>
-Sender: linux-raid-owner@vger.kernel.org
-To: Matt Garman <matthew.garman@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <de04351e1003190329l2f33447bhe37b963bd4b48c70@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jin zhencheng <zhenchengjin@gmail.com>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Matt Garman wrote:
-> Hello,
+jin zhencheng wrote:
+> hi;
 >
-> For building a Linux md system with many disks, I've been looking at
-> the LSI SAS 3081E-R controller card[1] with the SuperMicro
-> 846TQ-R900B chassis[2].  The SAS3018E card looks like it has a
-> mature open-source Linux driver.  The chassis has a SAS expander;
-> I'm not sure which one (but I have a question in to SuperMicro).
+> i use kernel is 2.6.26.2
 >
-> Anyway, my question is this: has anyone used this setup, or one
-> like it (sas controller + sas expander) with "desktop" class drives?
-> The web research I've done suggests that most SAS controllers and
-> expanders are targeted at the enterprise market, and therefore,
-> aren't guaranteed to work with the (significantly cheaper) desktop
-> drives.
+> what i do as follow:
 >
-> For example, from the FAQ for that SuperMicro chassis[3]:
+> 1, I create a raid5:
+> mdadm -C /dev/md5 -l 5 -n 4 /dev/sda /dev/sdb /dev/sdc  /dev/sdd
+> --metadata=1.0 --assume-clean
 >
->     Question: We want to use the new Seagate 1.5TB ST31500341AS
->     drives in combination with a storage solution based on your
->     846TQ chassis, is this compatible?
+> 2, dd if=/dev/zero of=/dev/md5 bs=1M &
 >
->     Answer: This ST31500341AS hard drive is designed to be a Desktop
->     type hard drive, not an Enterprise hard drive which is needed in
->     this setup.  We don't recommend this combination, so please use
->     the Seagate 1TB ST31000340NS drive instead. This drive is an
->     Enterprise drive and validated for our 846TQ chassis.
+> write data to this raid5
 >
-> In short, we want to build a server with 24 drives.  The desktop
-> drives are significantly cheaper than the enterprise drives.  But
-> getting 24 ports is cheapest with these SAS controllers + expanders.
+> 3, mdadm --manage /dev/md5 -f /dev/sda
+>
+> 4 mdadm --manage  /dev/md5 -f /dev/sdb
+>
+> if i faild 2 disks ,then the OS kernel display OOP error and kernel down
 >
 >
->   
-I have the feeling that what they meant is that the drives have firmware 
-intended for desktop use and will not work well in RAID usage. This has 
-been discussed here before, the desktop drives have firmware which tries 
-repeatedly to recover data on a failed read, and which therefore may 
-hang for 20-30 sec before reporting an error or finally returning the 
-data without an error indication.
-
-Until/unless Neil changes his idea that timeout should be in the driver 
-or the driver, these drives work poorly with RAID.
-
-Note, this is just the way I read the reply, and there may be a way to 
-tell the firmware to fast fail, depending on tools and firmware.
-
-> [1] http://www.lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas/lsisas3081er/index.html
+> do somebody know why ?
 >
-> [2] http://www.supermicro.com/products/chassis/4U/846/SC846TQ-R900.cfm
->
-> [3] http://www.supermicro.com/support/faqs/faq.cfm?faq=8230
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> Is MD/RAID5 bug ?
 >   
 
+I would usually say that any kernel OOPS is a bug, but in this case, 
+what are you running your Linux on, given that you just trashed the 
+first four drives? While it's possible to run off of other drives, you 
+have to make an effort to configure Linux to do so.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
   "We can't solve today's problems by using the same thinking we
    used in creating them." - Einstein
-
