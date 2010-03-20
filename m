@@ -1,51 +1,62 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: BUG:write data to degrade raid5
-Date: Sat, 20 Mar 2010 11:50:47 -0400
-Message-ID: <4BA4EED7.5070700@tmr.com>
-References: <de04351e1003190329l2f33447bhe37b963bd4b48c70@mail.gmail.com>
+Subject: Re: RAID1 On 3 Drives
+Date: Sat, 20 Mar 2010 12:08:40 -0400
+Message-ID: <4BA4F308.8010303@tmr.com>
+References: <4B9C11FB.7040604@gmx.net>	 <d80f793f1003131518u2bfe77e9k52ef77e3d2c68360@mail.gmail.com>	 <4B9C24B6.7040507@tmr.com> <d80f793f1003150530y1b229f43s1f140f91ab74f3e8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <de04351e1003190329l2f33447bhe37b963bd4b48c70@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jin zhencheng <zhenchengjin@gmail.com>
-Cc: neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <d80f793f1003150530y1b229f43s1f140f91ab74f3e8@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Carlos Mennens <carloswill@gmail.com>
+Cc: Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-jin zhencheng wrote:
-> hi;
+Carlos Mennens wrote:
+> On Sat, Mar 13, 2010 at 6:50 PM, Bill Davidsen <davidsen@tmr.com> wrote:
+>   
+>> Having a spare on raid-1 is fairly pointless, it hurts performance and buys
+>> you nothing. Having one more copy of the data built and ready serves you
+>> better.
+>>     
 >
-> i use kernel is 2.6.26.2
+> Can you explain this as I find this interesting. How does having a
+> /boot partition on 3 drives with 1 spare hurt performance? Are you
+> saying that I would get better drive performance if I had all 4 disk
+> partitions active members of my RAID1 /boot? I just don't understand
+> how the 4th disk doing nothing but acting as a spare would hinder
+> performance.
 >
-> what i do as follow:
->
-> 1, I create a raid5:
-> mdadm -C /dev/md5 -l 5 -n 4 /dev/sda /dev/sdb /dev/sdc  /dev/sdd
-> --metadata=1.0 --assume-clean
->
-> 2, dd if=/dev/zero of=/dev/md5 bs=1M &
->
-> write data to this raid5
->
-> 3, mdadm --manage /dev/md5 -f /dev/sda
->
-> 4 mdadm --manage  /dev/md5 -f /dev/sdb
->
-> if i faild 2 disks ,then the OS kernel display OOP error and kernel down
->
->
-> do somebody know why ?
->
-> Is MD/RAID5 bug ?
+>   
+In RAID-1 any drive which is a member of the array is already a spare, 
+they are all the same. So if a drive failed you would just stop using 
+it. Having a spare makes no sense, since the spare would be rebuilt 
+using the same data it would have contained as a member of the array. 
+Note that while the "spare" is being rebuilt the array will be quite 
+busy and response will be poor, not an issue if /boot is the only thing 
+on the drives, but more of an issue if the array just uses partitions 
+and the thrashing of a spare rebuild slows other arrays on the same drives.
+
+Finally, RAID-1 supposedly will read from an unbusy drive if there are 
+multiple reads against the array, allowing overlapping of seek and 
+transfer. That's only an issue for /boot if you are trying for a ten 
+second boot time, but it applies to all RAID-1 arrays.
+
+> Secondly, if the above statement also applies to my / partition? Would
+> you suggest using all 4 drives as active partitions in a RAID5 array
+> too? If I have a 3 disk RAID5 and one hot spare, do you think I would
+> get less performance value for my configuration?
 >   
 
-I would usually say that any kernel OOPS is a bug, but in this case, 
-what are you running your Linux on, given that you just trashed the 
-first four drives? While it's possible to run off of other drives, you 
-have to make an effort to configure Linux to do so.
+No, because the drives are not all the same, so you can't keep a copy of 
+just the drive ready to fail next. For RAID-[456&10] you want at least 
+one spare for reliability and fast return to full performance.
+
+Ask again if I didn't give enough detail.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
   "We can't solve today's problems by using the same thinking we
    used in creating them." - Einstein
+
