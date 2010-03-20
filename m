@@ -1,54 +1,54 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Sysfs update frequency
-Date: Sat, 20 Mar 2010 12:48:28 -0400
-Message-ID: <4BA4FC5C.7060502@tmr.com>
-References: <150c16851003161432gf38c0f5o1cc957435efd4c3e@mail.gmail.com> <20100317085256.6caee9bb@notabene.brown>
+Subject: Re: RAID Problem
+Date: Sat, 20 Mar 2010 12:55:19 -0400
+Message-ID: <4BA4FDF7.8000401@tmr.com>
+References: <Gophermail.2.0.1003161832390.28616@vs-a.tc.umn.edu> <20100317110943.793c8e7b@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100317085256.6caee9bb@notabene.brown>
+In-Reply-To: <20100317110943.793c8e7b@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: Justin Maggard <jmaggard10@gmail.com>, linux-raid@vger.kernel.org
+Cc: colli419@umn.edu, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 Neil Brown wrote:
-> On Tue, 16 Mar 2010 14:32:55 -0700
-> Justin Maggard <jmaggard10@gmail.com> wrote:
+> On 16 Mar 2010 18:32:39 -0500
+> colli419@umn.edu wrote:
 >
 >   
->> I've noticed on recent kernels that /sys/block/md?/md/sync_completed
->> seems to rarely get updated.  What is the expected update interval?
->> For me, it seems to only update about once every 6% or so during the
->> resync.  Of course, /proc/mdstat has the actual current progress.
+>> Hello, I am having problems with my RAID as follows:
+>>
+>> I installed the drives in an old computer and created the RAID and it 
+>> worked great. When I tried to install the same RAID set in a new computer I 
+>> could get it to mount manually with some messing around but couldn't get it 
+>> to mount automatically as in the old machine. I was wondering if zeroing 
+>> the superblocks and trying to re-create the RAID would be a good idea. The 
+>> data that is stored on the drives should otherwise be intact because I had 
+>> it running just fine the other day. Any help at all would be most 
+>> appreciated.
+>>
 >>     
 >
-> The expected update time is every 6% - actually 1/16 which is 6.25%.
+> You haven't provides a lot of concrete information, like error messages
+> during boot or "mdadm -E" output of devices or even kernel/mdadm versions, so
+> I can only guess, but my guess would be that you can fix it by assembling
+> the array with "--update=homehost"
 >
-> sync_completed includes a guarantee that all blocks before this point really
-> have been processed.  The number in /proc/mdstat is less precise.  The much
-> of the array has been resynced, but due to the possibility of out-of-order
-> completion of writes they may not be a contiguous series of blocks.
+> i.e.
+>    mdadm --assemble /dev/mdwhatever  \
+>    --update=homehost /dev/device1 /dev/device2 ....
 >
 >   
-Couldn't you just track the outstanding writes by LBA (or similar) and 
-report that the completion is one less than the lowest write still 
-outstanding? Since you would only do it when the user requests it, I 
-don't think the overhead of a list scan or similar would be a show 
-stopper. Or is that approach too simplistic?
 
-> Providing the guarantee (which is needed for externally-managed metadata)
-> requires briefly stalling the resync, so I didn't want to do it more often.
-> I could possibly make it time-bases instead of size-based though.
->   
+My take on hostname is that it causes more users problems than it helps, 
+and that it would have been better as an option to the assemble function 
+for those who actually need that checking. More people have little RAID 
+USB boxes than have some shared storage.
 
-Is perfect accuracy needed, just as long as you don't promise to have 
-synced more than you have? Are you using barriers to be sure the data is 
-all the way to the platter, or is your stall just "to the device" 
-anyway? Like any snapshot of a dynamic process, by the time you get the 
-information it's out of date in any case, so I think a "at least this 
-much has moved to the device" value would serve.
+Do *NOT* read this as a suggestion to change, just a comment on it as an 
+example of "unintended results."
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
