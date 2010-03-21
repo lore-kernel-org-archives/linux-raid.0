@@ -1,46 +1,35 @@
-From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
-Subject: Re: Problem converting from raid5 to raid6
-Date: Sun, 21 Mar 2010 12:21:02 +0000
-Message-ID: <73e903671003210521o5fe2e11cyf1fb6ef0f2f0b8f0@mail.gmail.com>
-References: <20100321030107.GA18586@csy.ca> <4877c76c1003210328s313155c5u7c6e829d33f38abe@mail.gmail.com>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: BUG:write data to degrade raid5
+Date: Sun, 21 Mar 2010 10:04:26 -0300
+Message-ID: <20100321130426.GB15746@khazad-dum.debian.net>
+References: <de04351e1003190329l2f33447bhe37b963bd4b48c70@mail.gmail.com>
+ <4BA3C07A.8030204@gmx.net>
+ <73e903671003191123h1b7e1196v336265842f1b29e5@mail.gmail.com>
+ <4BA3C461.5060209@gmx.net>
+ <de04351e1003210329w21f4731as3597245562a390d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4877c76c1003210328s313155c5u7c6e829d33f38abe@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shane W <shane-kernel@csy.ca>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <de04351e1003210329w21f4731as3597245562a390d@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jin zhencheng <zhenchengjin@gmail.com>
+Cc: Joachim Otahal <Jou@gmx.net>, Kristleifur =?iso-8859-1?Q?Da=F0ason?= <kristleifur@gmail.com>, neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Mar 21, 2010 at 10:28 AM, Michael Evans <mjevans1983@gmail.com> wrote:
-> On Sat, Mar 20, 2010 at 8:01 PM, Shane W <shane-kernel@csy.ca> wrote:
->> Hello all,
->>
->> I am trying to convert a 5 disk raid5 array to a 6 disk
->> raid6 but am having no luck. I first added the 6th disk as
->> a spare then
->> mdadm --grow /dev/md3 --level 6
->> mdadm level of /dev/md3 changed to raid6
->> mdadm: /dev/md3: Something wrong - reshape aborted
->> mdadm: aborting level change
->>
->> dmesg doesn't show an error and neither does mdadm beyond
->> "something wrong". Is this supported?
->>
->> mdadm 3.1.1 Linux 2.6.32.8 x86_64.
->>
->> Thanks,
->> Shane
+On Sun, 21 Mar 2010, jin zhencheng wrote:
+> ths for your test on "Debian 2.6.26-21lenny4".
+> if you want to see the oop ,you should always write to the raid5 ,and
+> pull 2 disks out.maybe you can see the error
+> 
+> i think no matter what i do ,even if i pull out all the disk , kernel
+> should not oop.
 
-+1 on the critical section backup
+You don't have swap (file or partition, doesn't matter) on that RAID, do
+you?
 
-And some bonus info: If you have a write-intent bitmap on the RAID5
-array, you may have to get the bitmap out of the way of the reshape.
-This one got me for a while. (I'm not sure about all cases, but I
-believe you have to turn the bitmap off. I had an _internal_ bitmap,
-turned it off, and only then my reshape kicked into gear. Remember to
-turn it back on :) )
-
-Good luck!
-
--- Kristleifur
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
