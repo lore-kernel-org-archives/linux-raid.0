@@ -1,26 +1,36 @@
-From: Tom Carlson <twigathy@gmail.com>
-Subject: Re: mdadm problem
-Date: Sun, 21 Mar 2010 18:51:48 +0000
-Message-ID: <1f0f1a961003211151l2a30b256g471c60cc61d14ec2@mail.gmail.com>
-References: <4BA664BA.20505@gemmill.name>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: mdadm RAID and drives spinning up/down
+Date: Sun, 21 Mar 2010 14:40:02 -0700
+Message-ID: <5bdc1c8b1003211440n7e0b7848s7c069c3394d487a3@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BA664BA.20505@gemmill.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Graeme Gemmill <graeme@gemmill.name>
-Cc: linux-raid@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 21 March 2010 18:26, Graeme Gemmill <graeme@gemmill.name> wrote
-some stuff....
-> Some RAID expertise would be very welcome!
+I'm moving forward on my first machine using RAID. This will be a
+fairly lightly used home server storing MythTV recordings and backups
+coming from other Linux machine. Due to the light workload I expect
+there will be times, sometimes lasting hours or maybe days, when the
+drives are unused and might (should?) spin down. Additionally with
+everyone trying to save power and be 'green' more and more drives
+probably do this by design anyway.
 
-I'm no expert... but I think you need to do the following:
-mdadm --stop /dev/md127
-mdadm --zero-superblock /dev/sd[a-c]
-mdadm --create /dev/md0 --level=5 --raid-devices=3 /dev/sda1 /dev/sdb1 /dev/sdc1
+OK, so never having build a RAID array and knowing nothing about this
+I'm curious about how mdadm handles this sort of thing. If the drives,
+using something like hdparm to set parameters, have times that shut
+them down for a while, when the system needs them spinning again are
+there ways to buffer write data and delay read data until everything
+is ready to roll again? I.e. - it's the middle of the night and Myth
+wants to start a recording. Everything is shut down and not it needs
+to start.
 
-All the best,
+Is it a problem if one drive spins up more slowly? Could that fool the
+RAID software into thinking the drive has died when it's actually just
+asleep?
 
-T
+Sorry for such newbish questions.
+
+Thanks,
+Mark
