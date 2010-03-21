@@ -1,35 +1,53 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: BUG:write data to degrade raid5
-Date: Sun, 21 Mar 2010 10:04:26 -0300
-Message-ID: <20100321130426.GB15746@khazad-dum.debian.net>
-References: <de04351e1003190329l2f33447bhe37b963bd4b48c70@mail.gmail.com>
- <4BA3C07A.8030204@gmx.net>
- <73e903671003191123h1b7e1196v336265842f1b29e5@mail.gmail.com>
- <4BA3C461.5060209@gmx.net>
- <de04351e1003210329w21f4731as3597245562a390d@mail.gmail.com>
+From: Randy Terbush <randy@terbush.org>
+Subject: Drives re-added as spares instead of put back into array in rebuild
+	mode
+Date: Sun, 21 Mar 2010 08:44:25 -0600
+Message-ID: <7db987b31003210744x7f5991c0y9e1bb6f94da38570@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <de04351e1003210329w21f4731as3597245562a390d@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jin zhencheng <zhenchengjin@gmail.com>
-Cc: Joachim Otahal <Jou@gmx.net>, Kristleifur =?iso-8859-1?Q?Da=F0ason?= <kristleifur@gmail.com>, neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, 21 Mar 2010, jin zhencheng wrote:
-> ths for your test on "Debian 2.6.26-21lenny4".
-> if you want to see the oop ,you should always write to the raid5 ,and
-> pull 2 disks out.maybe you can see the error
-> 
-> i think no matter what i do ,even if i pull out all the disk , kernel
-> should not oop.
+I had two drives that were dropped from this four drive array.
+After going through failing, removing and re-adding the drives, I am
+left with the following state. The two drives that were re-added are
+sitting as spares and there is no rebuilding activity going on. Can
+someone explain where I am going wrong?
 
-You don't have swap (file or partition, doesn't matter) on that RAID, do
-you?
+mdadm --detail --scan /dev/md0
+/dev/md0:
+        Version : 1.01
+  Creation Time : Wed Mar 17 15:27:33 2010
+     Raid Level : raid5
+     Array Size : 1465127424 (1397.25 GiB 1500.29 GB)
+  Used Dev Size : 488375808 (465.75 GiB 500.10 GB)
+   Raid Devices : 4
+  Total Devices : 4
+    Persistence : Superblock is persistent
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+  Intent Bitmap : Internal
+
+    Update Time : Sun Mar 21 08:26:09 2010
+          State : active, degraded
+ Active Devices : 2
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 2
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+           Name : hifi:0  (local to host hifi)
+           UUID : b411b304:6385f171:26f07cb1:3c2b03de
+         Events : 1300
+
+    Number   Major   Minor   RaidDevice State
+       0       8       17        0      active sync   /dev/sdb1
+       1       0        0        1      removed
+       2       0        0        2      removed
+       4       8       65        3      active sync   /dev/sde1
+
+       1       8       33        -      spare   /dev/sdc1
+       2       8       49        -      spare   /dev/sdd1
