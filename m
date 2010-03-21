@@ -1,101 +1,46 @@
-From: jin zhencheng <zhenchengjin@gmail.com>
-Subject: Re: BUG:write data to degrade raid5
-Date: Sun, 21 Mar 2010 18:29:53 +0800
-Message-ID: <de04351e1003210329w21f4731as3597245562a390d@mail.gmail.com>
-References: <de04351e1003190329l2f33447bhe37b963bd4b48c70@mail.gmail.com>
-	 <4BA3C07A.8030204@gmx.net>
-	 <73e903671003191123h1b7e1196v336265842f1b29e5@mail.gmail.com>
-	 <4BA3C461.5060209@gmx.net>
+From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
+Subject: Re: Problem converting from raid5 to raid6
+Date: Sun, 21 Mar 2010 12:21:02 +0000
+Message-ID: <73e903671003210521o5fe2e11cyf1fb6ef0f2f0b8f0@mail.gmail.com>
+References: <20100321030107.GA18586@csy.ca> <4877c76c1003210328s313155c5u7c6e829d33f38abe@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-9
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4BA3C461.5060209@gmx.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joachim Otahal <Jou@gmx.net>
-Cc: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>, neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4877c76c1003210328s313155c5u7c6e829d33f38abe@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Shane W <shane-kernel@csy.ca>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-hi Joachim Otahal:
+On Sun, Mar 21, 2010 at 10:28 AM, Michael Evans <mjevans1983@gmail.com> wrote:
+> On Sat, Mar 20, 2010 at 8:01 PM, Shane W <shane-kernel@csy.ca> wrote:
+>> Hello all,
+>>
+>> I am trying to convert a 5 disk raid5 array to a 6 disk
+>> raid6 but am having no luck. I first added the 6th disk as
+>> a spare then
+>> mdadm --grow /dev/md3 --level 6
+>> mdadm level of /dev/md3 changed to raid6
+>> mdadm: /dev/md3: Something wrong - reshape aborted
+>> mdadm: aborting level change
+>>
+>> dmesg doesn't show an error and neither does mdadm beyond
+>> "something wrong". Is this supported?
+>>
+>> mdadm 3.1.1 Linux 2.6.32.8 x86_64.
+>>
+>> Thanks,
+>> Shane
 
-ths for your test on "Debian 2.6.26-21lenny4".
-if you want to see the oop ,you should always write to the raid5 ,and
-pull 2 disks out.maybe you can see the error
++1 on the critical section backup
 
-i think no matter what i do ,even if i pull out all the disk , kernel
-should not oop.
+And some bonus info: If you have a write-intent bitmap on the RAID5
+array, you may have to get the bitmap out of the way of the reshape.
+This one got me for a while. (I'm not sure about all cases, but I
+believe you have to turn the bitmap off. I had an _internal_ bitmap,
+turned it off, and only then my reshape kicked into gear. Remember to
+turn it back on :) )
 
+Good luck!
 
-On Sat, Mar 20, 2010 at 2:37 AM, Joachim Otahal <Jou@gmx.net> wrote:
-> Kristleifur Da=F0ason schrieb:
->>
->> On Fri, Mar 19, 2010 at 6:20 PM, Joachim Otahal <Jou@gmx.net
->> <mailto:Jou@gmx.net>> wrote:
->>
->> =A0 =A0jin zhencheng schrieb:
->>
->> =A0 =A0 =A0 =A0hi;
->>
->> =A0 =A0 =A0 =A0i use kernel is 2.6.26.2
->>
->> =A0 =A0 =A0 =A0what i do as follow:
->>
->> =A0 =A0 =A0 =A01, I create a raid5:
->> =A0 =A0 =A0 =A0mdadm -C /dev/md5 -l 5 -n 4 /dev/sda /dev/sdb /dev/sd=
-c =A0/dev/sdd
->> =A0 =A0 =A0 =A0--metadata=3D1.0 --assume-clean
->>
->> =A0 =A0 =A0 =A02, dd if=3D/dev/zero of=3D/dev/md5 bs=3D1M&
->>
->> =A0 =A0 =A0 =A0write data to this raid5
->>
->> =A0 =A0 =A0 =A03, mdadm --manage /dev/md5 -f /dev/sda
->>
->> =A0 =A0 =A0 =A04 mdadm --manage =A0/dev/md5 -f /dev/sdb
->>
->> =A0 =A0 =A0 =A0if i faild 2 disks ,then the OS kernel display OOP er=
-ror and
->> =A0 =A0 =A0 =A0kernel down
->>
->> =A0 =A0 =A0 =A0do somebody know why ?
->>
->> =A0 =A0 =A0 =A0Is MD/RAID5 bug ?
->>
->>
->> =A0 =A0RAID5 can only tolerate ONE drive to fail of ALL members. If =
-you
->> =A0 =A0want to be able to fail two drives you will have to use RAID6=
- or
->> =A0 =A0RAID5 with one hot-spare (and give it time to rebuild before
->> =A0 =A0failing the second drive).
->> =A0 =A0PLEASE read the documentation on raid levels, like on wikiped=
-ia.
->>
->>
->> That is true,
->>
->> but should we get a kernel oops and crash if two RAID5 drives are fa=
-iled?
->> (THAT part looks like a bug!)
->>
->> Jin, can you try a newer kernel, and a newer mdadm?
->>
->> -- Kristleifur
->
-> You are probably right.
-> My kernel version is "Debian 2.6.26-21lenny4", and I had no oopses du=
-ring my
-> hot-plug testing one the hardware I use md on. I think it may be the =
-driver
-> for his chips.
->
-> Jin:
->
-> Did you really use the whole drives for testing or loopback files or
-> partitions on the drives? I never did my hot-plug testings with whole=
- drives
-> being in an array, only with partitions.
->
-> Joachim Otahal
->
->
+-- Kristleifur
