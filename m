@@ -1,39 +1,44 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: OT: sas controllers/expanders and "desktop" drives?
-Date: Sun, 21 Mar 2010 08:24:31 +1300
-Message-ID: <4BA520EF.2030600@sauce.co.nz>
-References: <20100317143602.GA18298@septictank.raw-sewage.fake> <4BA4EAFB.1050302@tmr.com> <20100320164748.GA31221@septictank.raw-sewage.fake>
+From: Simon Matthews <simon.d.matthews@gmail.com>
+Subject: Re: One raid array does not show up with mdadm --examine --scan
+Date: Sat, 20 Mar 2010 17:24:47 -0700
+Message-ID: <40b437201003201724m7fd4883cg3f7bbedb281a891b@mail.gmail.com>
+References: <40b437201003151113i15ad2a57y3b4f3ac4e18a8ad6@mail.gmail.com>
+	 <40b437201003151441t1f2b78cfg901ccae97c893456@mail.gmail.com>
+	 <4BA4F486.4020209@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100320164748.GA31221@septictank.raw-sewage.fake>
+In-Reply-To: <4BA4F486.4020209@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Matt Garman <matthew.garman@gmail.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, linux-raid <linux-raid@vger.kernel.org>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Matt Garman wrote:
+On Sat, Mar 20, 2010 at 9:15 AM, Bill Davidsen <davidsen@tmr.com> wrote:
+> Simon Matthews wrote:
+>>
+>> On Mon, Mar 15, 2010 at 11:13 AM, Simon Matthews
+>> <simon.d.matthews@gmail.com> wrote:
+>>
+>>>
+>>> On my newly built machine, in which all filesystems are on RAID array,
+>>> one of the arrays does not show up with the command:
+>>> mdadm --examine --scan
+>>>
+>>> Why is this? And is there anything I can do to fix it?
+>>>
+>>
+>>
+>> I suspect that I may have found an answer to this question -- the
+>> array that does not show up is formed from partitions that are logical
+>> partitions instead of primary partitions. I'll try deleting the
+>> partitions and re-creating as primary.
+>>
+>>
+>
+> That's not it, I just checked and mine show up just fine, even with an old
+> kernel and mdadm.
 
-> As for RAID usage (md or hardware): just to be clear, my
-> understanding is that the biggest problem is that, even if the
-> desktop drives work fine for non-RAID use, they'll still be
-> "difficult" in an array.  That is, they take too long to report
-> errors, and thus get kicked out of the array.
+I have destroyed and re-created the arrays and the problem has gone away.
 
-Another important, (from a performance perspective), feature of the 
-enterprise drives which will be factor in your setup, is that they are 
-optimised for use in a high vibration environment (RAFF in Western 
-Digital parlance), unlike desktop drives.
-
-The following illustrates the problem in a somewhat humourous way:
-
-http://www.youtube.com/watch?v=tDacjrSCeq4
-
-While the desktop drives will work, throughput and seek times may be 
-compromised due to vibration and resonance effects from many drives in 
-one enclosure.
-
-Regards,
-
-Richard
+Simon
