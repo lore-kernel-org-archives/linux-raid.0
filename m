@@ -1,29 +1,39 @@
-From: Shane W <shane-kernel@csy.ca>
-Subject: Problem converting from raid5 to raid6
-Date: Sat, 20 Mar 2010 20:01:07 -0700
-Message-ID: <20100321030107.GA18586@csy.ca>
+From: Randy Terbush <randy@terbush.org>
+Subject: Different output from mdadm --scan
+Date: Sat, 20 Mar 2010 23:07:14 -0600
+Message-ID: <7db987b31003202207w76068ed1ub3e139317d9e13aa@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello all,
+Can someone explain why the following different outputs from the two
+mdadm --scan commands and which one is the appropriate entry in
+mdadm.conf?
 
-I am trying to convert a 5 disk raid5 array to a 6 disk
-raid6 but am having no luck. I first added the 6th disk as
-a spare then
-mdadm --grow /dev/md3 --level 6
-mdadm level of /dev/md3 changed to raid6
-mdadm: /dev/md3: Something wrong - reshape aborted
-mdadm: aborting level change
+mdadm --version
+mdadm - v3.1.1 - 19th November 2009
 
-dmesg doesn't show an error and neither does mdadm beyond
-"something wrong". Is this supported?
+#=A0mdadm --examine --scan /dev/sd*
+ARRAY /dev/md/0 metadata=3D1.1 UUID=3Db411b304:6385f171:26f07cb1:3c2b03=
+de
+name=3Dhifi:0
 
-mdadm 3.1.1 Linux 2.6.32.8 x86_64.
+#=A0mdadm --detail --scan
+ARRAY /dev/md0 metadata=3D1.01 name=3Dhifi:0
+UUID=3Db411b304:6385f171:26f07cb1:3c2b03de
 
-Thanks,
-Shane
+metadata attribute being the primary difference.
+
+Thanks
+
+--
+Randy
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
