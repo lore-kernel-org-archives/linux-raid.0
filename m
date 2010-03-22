@@ -1,57 +1,45 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: mdadm RAID and drives spinning up/down
-Date: Sun, 21 Mar 2010 22:01:34 +0000
-Message-ID: <4BA6973E.7080401@anonymous.org.uk>
-References: <5bdc1c8b1003211440n7e0b7848s7c069c3394d487a3@mail.gmail.com>
+From: jin zhencheng <zhenchengjin@gmail.com>
+Subject: Re: BUG:write data to degrade raid5
+Date: Mon, 22 Mar 2010 09:41:38 +0800
+Message-ID: <de04351e1003211841i3c3070b1ob033ee09a21dc8f1@mail.gmail.com>
+References: <de04351e1003190329l2f33447bhe37b963bd4b48c70@mail.gmail.com>
+	 <4BA3C07A.8030204@gmx.net>
+	 <73e903671003191123h1b7e1196v336265842f1b29e5@mail.gmail.com>
+	 <4BA3C461.5060209@gmx.net>
+	 <de04351e1003210329w21f4731as3597245562a390d@mail.gmail.com>
+	 <20100321130426.GB15746@khazad-dum.debian.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5bdc1c8b1003211440n7e0b7848s7c069c3394d487a3@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Mark Knecht <markknecht@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20100321130426.GB15746@khazad-dum.debian.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Joachim Otahal <Jou@gmx.net>, =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>, neilb@suse.de, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 21/03/2010 21:40, Mark Knecht wrote:
-> I'm moving forward on my first machine using RAID. This will be a
-> fairly lightly used home server storing MythTV recordings and backups
-> coming from other Linux machine. Due to the light workload I expect
-> there will be times, sometimes lasting hours or maybe days, when the
-> drives are unused and might (should?) spin down. Additionally with
-> everyone trying to save power and be 'green' more and more drives
-> probably do this by design anyway.
-> 
-> OK, so never having build a RAID array and knowing nothing about this
-> I'm curious about how mdadm handles this sort of thing. If the drives,
-> using something like hdparm to set parameters, have times that shut
-> them down for a while, when the system needs them spinning again are
-> there ways to buffer write data and delay read data until everything
-> is ready to roll again? I.e. - it's the middle of the night and Myth
-> wants to start a recording. Everything is shut down and not it needs
-> to start.
-> 
-> Is it a problem if one drive spins up more slowly? Could that fool the
-> RAID software into thinking the drive has died when it's actually just
-> asleep?
-> 
-> Sorry for such newbish questions.
+don't have swap on the RAID.
 
-I think the answer to this is much the same as the other thread about 
-using "RAID-class" drives: md doesn't set timeouts itself, so whether 
-things work or not depends on whether the device driver underneath fails 
-reads while a drive is waking up.
-
-I'd say if you can make single drives sleep and spin up again without 
-problems, you can make md arrays do it - because the Linux md layer 
-knows nothing about it.
-
-The ReadyNAS, formerly from Infrant but now from Netgear, does precisely 
-this and works well, and uses Linux md, but I don't know whether they've 
-tuned anything. It's open source of course, so it might be worth taking 
-a look.
-
-Cheers,
-
-John.
-
+On Sun, Mar 21, 2010 at 9:04 PM, Henrique de Moraes Holschuh
+<hmh@hmh.eng.br> wrote:
+> On Sun, 21 Mar 2010, jin zhencheng wrote:
+>> ths for your test on "Debian 2.6.26-21lenny4".
+>> if you want to see the oop ,you should always write to the raid5 ,an=
+d
+>> pull 2 disks out.maybe you can see the error
+>>
+>> i think no matter what i do ,even if i pull out all the disk , kerne=
+l
+>> should not oop.
+>
+> You don't have swap (file or partition, doesn't matter) on that RAID,=
+ do
+> you?
+>
+> --
+> =A0"One disk to rule them all, One disk to find them. One disk to bri=
+ng
+> =A0them all and in the darkness grind them. In the Land of Redmond
+> =A0where the shadows lie." -- The Silicon Valley Tarot
+> =A0Henrique Holschuh
+>
