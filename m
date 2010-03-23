@@ -1,45 +1,33 @@
-From: Eric Shubert <ejs@shubes.net>
-Subject: Re: RAID Class Drives`
-Date: Tue, 23 Mar 2010 10:45:24 -0700
-Message-ID: <hoaunl$uvk$2@dough.gmane.org>
-References: <7c2a12e21003190943t546ade49u2294310ed7d9921e@mail.gmail.com> <38.31.05956.E4417AB4@cdptpa-omtalb.mail.rr.com> <ho85sp$jug$1@dough.gmane.org> <4BA81827.7040606@wasp.net.au>
+From: Peter Kieser <peter@kieser.ca>
+Subject: Re: Mixing 512-byte sector, and 4096-byte sector drives
+Date: Tue, 23 Mar 2010 11:53:50 -0700
+Message-ID: <4BA90E3E.7050602@kieser.ca>
+References: <4BA7FFA9.7040303@kieser.ca> <7a329d911003221711r153693f6jdaec0b4f4b3d634@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BA81827.7040606@wasp.net.au>
+In-Reply-To: <7a329d911003221711r153693f6jdaec0b4f4b3d634@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Wil Reichert <wil.reichert@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Brad Campbell wrote:
-> Eric Shubert wrote:
-> 
->> I had a few drives running at about 55C for a couple years, with no 
->> failures (knock wood). These were used drives before being put into 
->> that environment, so they arguably had already survived the "infant 
->> mortality syndrome" that the google study identified. Would I 
->> recommend running drives at 55C? No, but I wouldn't be too concerned 
->> about it either.
-> 
-> I know of at least one manufacturer who voids the warranty if the drive 
-> exceeds 55 Degrees.
+On 3/22/2010 5:11 PM, Wil Reichert wrote:
+> On Mon, Mar 22, 2010 at 4:39 PM, Peter Kieser<peter@kieser.ca>  wrote:
+>> Do I need to set the "XP" jumper on pins 7-8 to play nicely with the other
+>> 512-byte sector drives in my array, or will mdraid be okay with the
+>> 4096-byte sector drive? Will there be a performance penalty adding the drive
+>> to my array?
+>>      
+> Did you create your RAID on the device or on a partition?  If its on
+> the entire device then you should be fine, tho this might depend on
+> which metadata format you are using&  where its located on the disc
+> (not sure how the metadata effects data alignment).
+>    
 
-Care to name names? (Inquiring minds want to know!)
+I created the RAID directly on the device, I have replaced the drive and 
+the new 4096-byte drive seems to be playing nicely with the other drives 
+in the array after the resync completed.
 
-> I have a couple of drives here that have the 
-> "Exceeded 55 degrees" mark permanently recorded in their SMART data now. 
-> Having said that, I've not had issues with them yet (they only have 
-> about 14,000 hours on them).
-> 
-> I'd wager that extended running at elevated temperatures has the 
-> potential to affect the bearing lubricant, but it's just an hunch. I've 
-> never killed a drive from overtemp (and in a couple of cases I actually 
-> tried).
-
-That would be my guess as well, although I'm sure that there are high 
-temp lubes available. Just depends on what the mfr uses.
-
--- 
--Eric 'shubes'
-
+-Peter
