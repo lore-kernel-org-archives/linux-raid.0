@@ -1,51 +1,74 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: BUG:write data to degrade raid5
-Date: Tue, 23 Mar 2010 14:16:46 +1100
-Message-ID: <20100323141646.2cfa68a3@notabene.brown>
-References: <de04351e1003190329l2f33447bhe37b963bd4b48c70@mail.gmail.com>
+Subject: Re: Sysfs update frequency
+Date: Tue, 23 Mar 2010 14:22:21 +1100
+Message-ID: <20100323142221.6d7f7ac7@notabene.brown>
+References: <150c16851003161432gf38c0f5o1cc957435efd4c3e@mail.gmail.com>
+	<20100317085256.6caee9bb@notabene.brown>
+	<4BA4FC5C.7060502@tmr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <de04351e1003190329l2f33447bhe37b963bd4b48c70@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jin zhencheng <zhenchengjin@gmail.com>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4BA4FC5C.7060502@tmr.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Justin Maggard <jmaggard10@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 19 Mar 2010 18:29:28 +0800
-jin zhencheng <zhenchengjin@gmail.com> wrote:
+On Sat, 20 Mar 2010 12:48:28 -0400
+Bill Davidsen <davidsen@tmr.com> wrote:
 
-> hi;
-> 
-> i use kernel is 2.6.26.2
-> 
-> what i do as follow:
-> 
-> 1, I create a raid5:
-> mdadm -C /dev/md5 -l 5 -n 4 /dev/sda /dev/sdb /dev/sdc  /dev/sdd
-> --metadata=1.0 --assume-clean
-> 
-> 2, dd if=/dev/zero of=/dev/md5 bs=1M &
-> 
-> write data to this raid5
-> 
-> 3, mdadm --manage /dev/md5 -f /dev/sda
-> 
-> 4 mdadm --manage  /dev/md5 -f /dev/sdb
-> 
-> if i faild 2 disks ,then the OS kernel display OOP error and kernel down
-> 
-> 
-> do somebody know why ?
-> 
-> Is MD/RAID5 bug ?
+> Neil Brown wrote:
+> > On Tue, 16 Mar 2010 14:32:55 -0700
+> > Justin Maggard <jmaggard10@gmail.com> wrote:
+> >
+> >   
+> >> I've noticed on recent kernels that /sys/block/md?/md/sync_completed
+> >> seems to rarely get updated.  What is the expected update interval?
+> >> For me, it seems to only update about once every 6% or so during the
+> >> resync.  Of course, /proc/mdstat has the actual current progress.
+> >>     
+> >
+> > The expected update time is every 6% - actually 1/16 which is 6.25%.
+> >
+> > sync_completed includes a guarantee that all blocks before this point really
+> > have been processed.  The number in /proc/mdstat is less precise.  The much
+> > of the array has been resynced, but due to the possibility of out-of-order
+> > completion of writes they may not be a contiguous series of blocks.
+> >
+> >   
+> Couldn't you just track the outstanding writes by LBA (or similar) and 
+> report that the completion is one less than the lowest write still 
+> outstanding? Since you would only do it when the user requests it, I 
+> don't think the overhead of a list scan or similar would be a show 
+> stopper. Or is that approach too simplistic?
 
-Certainly this is a bug.
-2.6.26 is quite old now - it is possible that the bug has already been fixed.
-If you are able to post the oops message - possibly use a digital camera to
-get a photograph - then I can probably explain what is happening and whether
-it has been fixed.
+I'd have to create a data structure to which I add and remove these LBAs at a
+significant rate.  It isn't really worth the effort.
 
-Thanks,
+> 
+> > Providing the guarantee (which is needed for externally-managed metadata)
+> > requires briefly stalling the resync, so I didn't want to do it more often.
+> > I could possibly make it time-bases instead of size-based though.
+> >   
+> 
+> Is perfect accuracy needed, just as long as you don't promise to have 
+> synced more than you have? Are you using barriers to be sure the data is 
+> all the way to the platter, or is your stall just "to the device" 
+> anyway? Like any snapshot of a dynamic process, by the time you get the 
+> information it's out of date in any case, so I think a "at least this 
+> much has moved to the device" value would serve.
+> 
+
+The information may be used to update metadata, so it is critical that it
+doesn't say more than is true.  It is safe for it to say less than is true.
+
+A metadata update would always be preceded by a barrier so that the data on
+the device is consistent.
+
+"at least this much has moved" isn't much good if it only tells us how many
+blocks, not which ones.
+The value in sync_completed says "at least all the blocks up to this one have
+been synced" which is exactly the information that I want.
+
 NeilBrown
