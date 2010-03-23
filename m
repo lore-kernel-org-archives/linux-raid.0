@@ -1,34 +1,45 @@
-From: Drew <drew.kay@gmail.com>
-Subject: Re: Controlled shut-down of mdadm
-Date: Tue, 23 Mar 2010 10:28:31 -0700
-Message-ID: <c268e4661003231028v5562e31etf967a87cbd6c4f74@mail.gmail.com>
-References: <4BA8EDC0.4060506@gemmill.name>
+From: Eric Shubert <ejs@shubes.net>
+Subject: Re: RAID Class Drives`
+Date: Tue, 23 Mar 2010 10:45:24 -0700
+Message-ID: <hoaunl$uvk$2@dough.gmane.org>
+References: <7c2a12e21003190943t546ade49u2294310ed7d9921e@mail.gmail.com> <38.31.05956.E4417AB4@cdptpa-omtalb.mail.rr.com> <ho85sp$jug$1@dough.gmane.org> <4BA81827.7040606@wasp.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BA8EDC0.4060506@gemmill.name>
+In-Reply-To: <4BA81827.7040606@wasp.net.au>
 Sender: linux-raid-owner@vger.kernel.org
-To: Graeme Gemmill <graeme@gemmill.name>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> On the (hopefully) rare occasions when my RAID server gets shut down, is it
-> necessary or desirable to execute a mdadm --stop command in a shut-down
-> script? Applications on other PCs may have files open, and if a prolonged
-> mains break triggers a UPS shutdown, then there may be data loss (not that
-> I'm running a reactor or a bank!).
+Brad Campbell wrote:
+> Eric Shubert wrote:
+> 
+>> I had a few drives running at about 55C for a couple years, with no 
+>> failures (knock wood). These were used drives before being put into 
+>> that environment, so they arguably had already survived the "infant 
+>> mortality syndrome" that the google study identified. Would I 
+>> recommend running drives at 55C? No, but I wouldn't be too concerned 
+>> about it either.
+> 
+> I know of at least one manufacturer who voids the warranty if the drive 
+> exceeds 55 Degrees.
 
-Assuming by "other PCs" you mean you're sharing files to other
-machines using CIFS (samba) or NFS, I wouldn't worry too much. Most
-distro's usually do a shutdown of services before they stop the local
-filesystems and raid array so any 'loss' of data is usually caused by
-a user who hasn't saved their files before the server went offline.
-Once the clients have been disconnected, the shutdown should handle
-stopping the raid array just fine.
+Care to name names? (Inquiring minds want to know!)
 
+> I have a couple of drives here that have the 
+> "Exceeded 55 degrees" mark permanently recorded in their SMART data now. 
+> Having said that, I've not had issues with them yet (they only have 
+> about 14,000 hours on them).
+> 
+> I'd wager that extended running at elevated temperatures has the 
+> potential to affect the bearing lubricant, but it's just an hunch. I've 
+> never killed a drive from overtemp (and in a couple of cases I actually 
+> tried).
+
+That would be my guess as well, although I'm sure that there are high 
+temp lubes available. Just depends on what the mfr uses.
 
 -- 
-Drew
+-Eric 'shubes'
 
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
