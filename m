@@ -1,37 +1,51 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: RAID Class Drives`
-Date: Tue, 23 Mar 2010 09:23:51 +0800
-Message-ID: <4BA81827.7040606@wasp.net.au>
-References: <7c2a12e21003190943t546ade49u2294310ed7d9921e@mail.gmail.com> <38.31.05956.E4417AB4@cdptpa-omtalb.mail.rr.com> <ho85sp$jug$1@dough.gmane.org>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: BUG:write data to degrade raid5
+Date: Tue, 23 Mar 2010 14:16:46 +1100
+Message-ID: <20100323141646.2cfa68a3@notabene.brown>
+References: <de04351e1003190329l2f33447bhe37b963bd4b48c70@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ho85sp$jug$1@dough.gmane.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Eric Shubert <ejs@shubes.net>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <de04351e1003190329l2f33447bhe37b963bd4b48c70@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jin zhencheng <zhenchengjin@gmail.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Eric Shubert wrote:
+On Fri, 19 Mar 2010 18:29:28 +0800
+jin zhencheng <zhenchengjin@gmail.com> wrote:
 
-> I had a few drives running at about 55C for a couple years, with no 
-> failures (knock wood). These were used drives before being put into that 
-> environment, so they arguably had already survived the "infant mortality 
-> syndrome" that the google study identified. Would I recommend running 
-> drives at 55C? No, but I wouldn't be too concerned about it either.
+> hi;
+> 
+> i use kernel is 2.6.26.2
+> 
+> what i do as follow:
+> 
+> 1, I create a raid5:
+> mdadm -C /dev/md5 -l 5 -n 4 /dev/sda /dev/sdb /dev/sdc  /dev/sdd
+> --metadata=1.0 --assume-clean
+> 
+> 2, dd if=/dev/zero of=/dev/md5 bs=1M &
+> 
+> write data to this raid5
+> 
+> 3, mdadm --manage /dev/md5 -f /dev/sda
+> 
+> 4 mdadm --manage  /dev/md5 -f /dev/sdb
+> 
+> if i faild 2 disks ,then the OS kernel display OOP error and kernel down
+> 
+> 
+> do somebody know why ?
+> 
+> Is MD/RAID5 bug ?
 
-I know of at least one manufacturer who voids the warranty if the drive exceeds 55 Degrees. I have a 
-couple of drives here that have the "Exceeded 55 degrees" mark permanently recorded in their SMART 
-data now. Having said that, I've not had issues with them yet (they only have about 14,000 hours on 
-them).
+Certainly this is a bug.
+2.6.26 is quite old now - it is possible that the bug has already been fixed.
+If you are able to post the oops message - possibly use a digital camera to
+get a photograph - then I can probably explain what is happening and whether
+it has been fixed.
 
-I'd wager that extended running at elevated temperatures has the potential to affect the bearing 
-lubricant, but it's just an hunch. I've never killed a drive from overtemp (and in a couple of cases 
-I actually tried).
-
-Brad
--- 
-Dolphins are so intelligent that within a few weeks they can
-train Americans to stand at the edge of the pool and throw them
-fish.
+Thanks,
+NeilBrown
