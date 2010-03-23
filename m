@@ -1,74 +1,40 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Sysfs update frequency
-Date: Tue, 23 Mar 2010 14:22:21 +1100
-Message-ID: <20100323142221.6d7f7ac7@notabene.brown>
-References: <150c16851003161432gf38c0f5o1cc957435efd4c3e@mail.gmail.com>
-	<20100317085256.6caee9bb@notabene.brown>
-	<4BA4FC5C.7060502@tmr.com>
+From: Randy Terbush <randy@terbush.org>
+Subject: Questions regarding startup of imsm container
+Date: Mon, 22 Mar 2010 21:56:01 -0600
+Message-ID: <7db987b31003222056i46c42112s541ba949821a6759@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BA4FC5C.7060502@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Justin Maggard <jmaggard10@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 20 Mar 2010 12:48:28 -0400
-Bill Davidsen <davidsen@tmr.com> wrote:
+Having a go at building a raid5 array using the new imsm support and
+having good luck keeping drives in the array, etc. Nice work. I have a
+few questions though as I am having some trouble figuring out how to
+properly start this container.
 
-> Neil Brown wrote:
-> > On Tue, 16 Mar 2010 14:32:55 -0700
-> > Justin Maggard <jmaggard10@gmail.com> wrote:
-> >
-> >   
-> >> I've noticed on recent kernels that /sys/block/md?/md/sync_completed
-> >> seems to rarely get updated.  What is the expected update interval?
-> >> For me, it seems to only update about once every 6% or so during the
-> >> resync.  Of course, /proc/mdstat has the actual current progress.
-> >>     
-> >
-> > The expected update time is every 6% - actually 1/16 which is 6.25%.
-> >
-> > sync_completed includes a guarantee that all blocks before this point really
-> > have been processed.  The number in /proc/mdstat is less precise.  The much
-> > of the array has been resynced, but due to the possibility of out-of-order
-> > completion of writes they may not be a contiguous series of blocks.
-> >
-> >   
-> Couldn't you just track the outstanding writes by LBA (or similar) and 
-> report that the completion is one less than the lowest write still 
-> outstanding? Since you would only do it when the user requests it, I 
-> don't think the overhead of a list scan or similar would be a show 
-> stopper. Or is that approach too simplistic?
+# mdadm --version
+mdadm - v3.1.2 - 10th March 2010
 
-I'd have to create a data structure to which I add and remove these LBAs at a
-significant rate.  It isn't really worth the effort.
+# mdadm -Es
+ARRAY metadata=imsm UUID=30223250:76fd248b:50280919:0836b7f0
+ARRAY /dev/md/Volume0 container=30223250:76fd248b:50280919:0836b7f0
+member=0 UUID=8a4ae452:da1e7832:70ecf895:eb58229c
 
-> 
-> > Providing the guarantee (which is needed for externally-managed metadata)
-> > requires briefly stalling the resync, so I didn't want to do it more often.
-> > I could possibly make it time-bases instead of size-based though.
-> >   
-> 
-> Is perfect accuracy needed, just as long as you don't promise to have 
-> synced more than you have? Are you using barriers to be sure the data is 
-> all the way to the platter, or is your stall just "to the device" 
-> anyway? Like any snapshot of a dynamic process, by the time you get the 
-> information it's out of date in any case, so I think a "at least this 
-> much has moved to the device" value would serve.
-> 
+# ls -l /dev/md/
+total 0
+lrwxrwxrwx 1 root root 6 Mar 22 20:54 0 -> ../md0
+lrwxrwxrwx 1 root root 8 Mar 22 20:54 127 -> ../md127
+lrwxrwxrwx 1 root root 8 Mar 22 20:54 Volume0_0 -> ../md127
 
-The information may be used to update metadata, so it is critical that it
-doesn't say more than is true.  It is safe for it to say less than is true.
+As you can see, the name for the link in /dev/md does not agree with
+the name that the Examine is coming up with.
 
-A metadata update would always be preceded by a barrier so that the data on
-the device is consistent.
+Is it better to just forgo the ARRAY statements and go with an AUTO +imsm?
 
-"at least this much has moved" isn't much good if it only tells us how many
-blocks, not which ones.
-The value in sync_completed says "at least all the blocks up to this one have
-been synced" which is exactly the information that I want.
+And last, does the concept of a write-intent bitmap make sense on an
+imsm container? If so, I get a segv if trying to run mdadm /dev/mdX
+-Gb internal on either device.
 
-NeilBrown
+Thanks for your help
