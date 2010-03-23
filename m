@@ -1,78 +1,70 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH] (Re: Questions regarding startup of imsm container)
-Date: Tue, 23 Mar 2010 16:06:39 -0700
-Message-ID: <e9c3a7c21003231606s388d26e6gba266e6a44281973@mail.gmail.com>
+From: Randy Terbush <randy@terbush.org>
+Subject: Re: Questions regarding startup of imsm container
+Date: Tue, 23 Mar 2010 17:25:53 -0600
+Message-ID: <7db987b31003231625obb9f3c5r986988defdf68a08@mail.gmail.com>
 References: <7db987b31003222056i46c42112s541ba949821a6759@mail.gmail.com>
-	 <20100323080419.GA9374@maude.comedia.it>
+	<e9c3a7c21003231401p55d4e392u22b062aaf464b1da@mail.gmail.com>
+	<7db987b31003231441j56733b15wd111c4aa22e9eccc@mail.gmail.com>
+	<4BA93DBB.6000503@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100323080419.GA9374@maude.comedia.it>
+In-Reply-To: <4BA93DBB.6000503@intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org, neilb@suse.de
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Mar 23, 2010 at 1:04 AM, Luca Berra <bluca@comedia.it> wrote:
-> The attached patch completely disables bitmap support for arrays with
-> externally managed metadata.
+Thanks Dan, a few more steps forward here. I suspect I know the
+answer, but will see what you suggest.
 
-It should be possible to use an external bitmap, but that requires
-that you have storage separate from the raid array.
+On Tue, Mar 23, 2010 at 4:16 PM, Dan Williams <dan.j.williams@intel.com=
+> wrote:
+> This shows that Gentoo is most likely not including mdmon in their in=
+itramfs
+> environment. =A0mdadm assembles the array readonly, but then mdmon is=
+ required
+> to mark the array writable.
 
-# mdadm --grow --bitmap=$(pwd)/test --force /dev/md125
-# cat /proc/mdstat
-Personalities : [raid1] [raid0]
-md125 : active raid1 loop1[1] loop0[0]
-      100143 blocks super external:/md127/0 [2/2] [UU]
-      bitmap: 13/13 pages [52KB], 4KB chunk, file: /root/test
+Looks like you are correct and current installation packages on Gentoo
+have apparently not dealt with these changes. mdmon is not getting
+started and is not being attempted anywhere.
 
-md127 : inactive loop1[1](S) loop0[0](S)
-      418 blocks super external:imsm
+I don't run an initrd, so attempted to start mdmon after the mdadm -As
+runs. This is apparently too early in the process as I get the
+following:
 
-unused devices: <none>
+* Starting up RAID devices ...
+ [ ok ]
+mdmon: Neither /var/run nor /lib/init/rw are writable
+       cannot create .pid or .sock files.  Aborting
+ * Setting up the Logical Volume Manager ...
+ [ ok ]
+ * Checking local filesystems  ...
+HOME-vg0: clean, 13/3276800 files, 256151/52428800 blocks
+Warning... fsck.ext4 for device /dev/mapper/vg0-home exited with signal=
+ 11.
+SVN-vg0: clean, 191/1638400 files, 153087/26214400 blocks
+Warning... fsck.ext4 for device /dev/mapper/vg0-svn exited with signal =
+11.
+ARCHIVE-vg0: clean, 12/1638400 files, 152150/26214400 blocks
 
+So it appears the start of mdmon needs to wait until we have a rw
+filesystem mounted. Not entirely sure if it is related, but as you can
+see above, fsck blows up trying to check the filesystems on this
+array. That appears to clear itself up once mdmon is running. After
+starting mdmon by hand, the resync begins and I can successfully run
+fsck on these partitions.
 
-> on a style note, i do not like having the struct superswitch, which is a
-> collection of function pointers which is then instanced with only some
-> of the pointers initialized, it forces having to check at runtime if
-> they are or not.
+So looks like I have a chicken and egg problem that I suspect may be
+solved by creating an initramfs. I took a quick pass at dracut but
+could not convince it to add mdmon. Any hints appreciated as I go back
+to dig for more info.
 
-In some cases this is a 'feature' as it is an optional implementation
-detail of the metadata format whether it supports, or wants to
-override a given operation.  See ->default_layout() and
-->detail_platform().  Another example is the small collection of
-operations that are only applicable for mdmon to use.
-
-I think something like this untested patch would be more appropriate
-to fix the issue at hand.
-
-diff --git a/bitmap.c b/bitmap.c
-index 088e37d..054a507 100644
---- a/bitmap.c
-+++ b/bitmap.c
-@@ -227,6 +227,12 @@ bitmap_info_t *bitmap_file_read(char *filename,
-int brief, struct supertype **st
-                if (!st) {
-                        /* just look at device... */
-                        lseek(fd, 0, 0);
-+               } else if (!st->ss->locate_bitmap) {
-+                       fprintf(stderr, Name
-+                               ": %s-metadata arrays do not support
-an internal bitmap\n",
-+                               st->ss->name);
-+                       close(fd);
-+                       return NULL;
-                } else {
-                        st->ss->locate_bitmap(st, fd);
-                }
-
-
-> a possible solution would be to wrap every call of these into a macro
-> that check for NULL before, but how do you return the correct return
-> type from that?
-
-We need to fix up all the locations that assume md-metadata, once that
-is done a macro is not needed.
-
+Thanks again for the assistance.
 --
-Dan
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
