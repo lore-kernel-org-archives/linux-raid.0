@@ -1,122 +1,71 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Minor mdadm fixes
-Date: Tue, 23 Mar 2010 21:28:08 +0100
-Message-ID: <20100323202807.GA2325@maude.comedia.it>
-References: <4BA2DDB2.2040508@redhat.com> <20100319070153.GA12455@maude.comedia.it> <4BA9146A.2050901@redhat.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: Questions regarding startup of imsm container
+Date: Tue, 23 Mar 2010 14:01:28 -0700
+Message-ID: <e9c3a7c21003231401p55d4e392u22b062aaf464b1da@mail.gmail.com>
+References: <7db987b31003222056i46c42112s541ba949821a6759@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4BA9146A.2050901@redhat.com>
+In-Reply-To: <7db987b31003222056i46c42112s541ba949821a6759@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Randy Terbush <randy@terbush.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Mar 23, 2010 at 03:20:10PM -0400, Doug Ledford wrote:
->On 03/19/2010 03:01 AM, Luca Berra wrote:
->> On Thu, Mar 18, 2010 at 10:13:06PM -0400, Doug Ledford wrote:
->>> Second: mdadm-3.1.2-mapfile.patch
->>> Problem: Neil's support for putting the mdadm map file wherever you need
->>> it is nice, but one place in particular needs a special case.
->>> Specifically, mdadm already creates /dev/md if needed to store symlinks,
->>> or in the case of mdmon needing to create pid/sock files (if ALT_RUN is
->> why on earth do you want to set ALT_RUN=/dev/md ?
+On Mon, Mar 22, 2010 at 8:56 PM, Randy Terbush <randy@terbush.org> wrote:
+> Having a go at building a raid5 array using the new imsm support and
+> having good luck keeping drives in the array, etc. Nice work. I have a
+> few questions though as I am having some trouble figuring out how to
+> properly start this container.
 >
->Because on Fedora /lib/init/rw doesn't exist, and neither does any other
->early rw area other than /dev, and it's too late to create a new one, so
-Neither in Mandriva for that matter.
-
->I need to use someplace in /dev.  However, I agree with Neil that if you
->are hiding things under . names then you are admitting something isn't
->right.  So, I'm perfectly happy putting the map file in /dev/md as I
->think it has a perfect right to exist there.
-besides the fact that it is perfectly clear that something is wrong, i
-am not vehemently opposing that.
-
->> it is messy enough as it is, let's keep assuming /dev/md contains only
->> array device files.
+> # mdadm --version
+> mdadm - v3.1.2 - 10th March 2010
 >
->I don't know how many arrays you have on your system, but I would hardly
->call /dev/md messy.
-I did not mean /dev/md is messy, I meant the code for locating the map
-file is messy, and the code for handling the mdmon pid and socket is
-messy....
-
-for that matter on my test rig i have quite a few file in there
-/dev/md/imsm0
-/dev/md/Volume0
-/dev/md/Volume0p1
-....
-/dev/md/Volume1
-/dev/md/Volume1p1
-...
-
->> besides that you will discover that the only way to make mdmon work is
->> setting VAR_RUN and ALT_RUN to the same value,
+> # mdadm -Es
+> ARRAY metadata=imsm UUID=30223250:76fd248b:50280919:0836b7f0
+> ARRAY /dev/md/Volume0 container=30223250:76fd248b:50280919:0836b7f0
+> member=0 UUID=8a4ae452:da1e7832:70ecf895:eb58229c
 >
->[ citation needed ]
-
-two issues:
-1) see the thread on this ml starting with:
-[mdadm PATCH 5/9] mdmon: mdmon_pid should return pid from either dir
-in practice mdadm looks for the mdmon pid and socket in VAR_RUN, but
-until takeover the pid and socket are in ALT_RUN, this means you cannot
-do array maintainance until /var is mounted rw.
-(been there, done that, had to mount a tmpfs on /var and mount --bind
-/dev/.mdadm /var/run/mdadm to fix the array)
-Neil refused that patch, but allowed redefinition of VAR_RUN, and i did
-not insist.
-
-2) having to keep /var/run mounted during shutdown is a PITA, and iirc
-you (redhat) were opposed to having mdmon files in /var/run/mdadm, last
-time the issue was discussed here.
-
->> something we can
->> guarantee to be writable even in the direst situation, and i'd keep
->> /dev/.mdadm
+> # ls -l /dev/md/
+> total 0
+> lrwxrwxrwx 1 root root 6 Mar 22 20:54 0 -> ../md0
+> lrwxrwxrwx 1 root root 8 Mar 22 20:54 127 -> ../md127
+> lrwxrwxrwx 1 root root 8 Mar 22 20:54 Volume0_0 -> ../md127
 >
->There is no guarantee /dev/.mdadm exists on a clean install, where as I
->have made sure that all possible places that might need /dev/md will
->create it if it doesn't exist.  Hence, the direst of situations is
->handled better with /dev/md than with /dev/.mdadm
-yes, in mdmon.c ALT_RUN is created before usage, in mapfile.c it is not,
-adding an mkdir there would be useful, independent of what we set
-ALT_RUN to.
+> As you can see, the name for the link in /dev/md does not agree with
+> the name that the Examine is coming up with.
 
->>> Fourth: mdadm-3.1.2-mapname.patch
->>> Feature: If we are able to easily select the location of the mapfile via
->>> the use of ALT_RUN at compile time, it makes sense to also be able to
->> this "hunt the mapfile" thing is already ugly as it is, why do we need
->> an ALT_MAPNAME?
->
->Because /dev/md/map is too easy a name to conflict with a legitimate md
->array device name, and that's what it defaults to if you set ALT_RUN to
->/dev/md.
->
->> if there was any value (except for allowing to set
->> ALT_RUN to /dev/md) to having the mapfile named differently, just force
->> it to be called mdadm.map everywere (or incremental.map so the name
->> reflects the need for the file existance)
->
->Except I set it to md-device-map.  Aside from not conflicting with md
->device names, the map file name is mostly irrelevant except to indicate
->to people perusing the directory what the file is for as nothing uses it
->besides mdadm and mdadm will gladly use it with whatever name you call
->it as it both creates and uses the file from the same compile time
->configuration setting.
-I know all this, what i meant is:
-why do you feel there is a need for ALT_MAPNAME, would not it be easier
-to just define a MAPFILE_NAME with a fixed path and avoid the open_map
-juggling in mapfile.c, there is no need for that code, since, as you
-state: "mdadm both creates and uses the file from the same compile time
-configuration setting."
+It looks like your array was auto-assembled without the help of a
+configuration file (what distribution are you using?).  When there is
+no configuration file mdadm will append _<num> to indicate that this
+might be a foreign array (i.e. an array from another system).  The
+only way the imsm code knows that the array is local is by having an
+up to date mdadm.conf file with all your local arrays listed.
 
-L.
+If you add the following lines to your configuration file:
+ARRAY /dev/md0 UUID=30223250:76fd248b:50280919:0836b7f0
+ARRAY /dev/md/Volume0 UUID=8a4ae452:da1e7832:70ecf895:eb58229c
 
--- 
-Luca Berra -- bluca@comedia.it
-         Communication Media & Services S.r.l.
-  /"\
-  \ /     ASCII RIBBON CAMPAIGN
-   X        AGAINST HTML MAIL
-  / \
+You should get the expected name.  Note that the arrays might be being
+assembled by your initramfs environment.  So you may need to re-run
+mkinitrd after modifying mdadm.conf.
+
+> Is it better to just forgo the ARRAY statements and go with an AUTO +imsm?
+
+If you don't mind the naming discrepancy then you can keep your current setup.
+
+> And last, does the concept of a write-intent bitmap make sense on an
+> imsm container? If so, I get a segv if trying to run mdadm /dev/mdX
+> -Gb internal on either device.
+
+That should be disallowed for imsm rather than segfault, I'll take a
+look at addressing that.  The current write-intent bitmap
+implementation is only compatible with native md-metadata for an
+internal bitmap.  However, you should still be able to use an external
+bitmap with imsm.  The imsm internal equivalent "dirty-stripe journal"
+is still on the to do list.
+
+> Thanks for your help
+
+Thanks for the report,
+Dan
