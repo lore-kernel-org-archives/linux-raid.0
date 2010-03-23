@@ -1,39 +1,37 @@
-From: Wil Reichert <wil.reichert@gmail.com>
-Subject: Re: Mixing 512-byte sector, and 4096-byte sector drives
-Date: Mon, 22 Mar 2010 17:11:44 -0700
-Message-ID: <7a329d911003221711r153693f6jdaec0b4f4b3d634@mail.gmail.com>
-References: <4BA7FFA9.7040303@kieser.ca>
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: RAID Class Drives`
+Date: Tue, 23 Mar 2010 09:23:51 +0800
+Message-ID: <4BA81827.7040606@wasp.net.au>
+References: <7c2a12e21003190943t546ade49u2294310ed7d9921e@mail.gmail.com> <38.31.05956.E4417AB4@cdptpa-omtalb.mail.rr.com> <ho85sp$jug$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BA7FFA9.7040303@kieser.ca>
+In-Reply-To: <ho85sp$jug$1@dough.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Kieser <peter@kieser.ca>
+To: Eric Shubert <ejs@shubes.net>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Mar 22, 2010 at 4:39 PM, Peter Kieser <peter@kieser.ca> wrote:
-> Hello,
->
-> I have a 6-drive RAID6 of WD15EADS (512-byte sector) drives. One of the
-> drives is failing, and I have been forced to buy a WD15EARS (4096-byte
-> sector) drive to replace the failing drive, and it has the new "advanced
-> format" technology.
->
-> Do I need to set the "XP" jumper on pins 7-8 to play nicely with the other
-> 512-byte sector drives in my array, or will mdraid be okay with the
-> 4096-byte sector drive? Will there be a performance penalty adding the drive
-> to my array?
+Eric Shubert wrote:
 
-Did you create your RAID on the device or on a partition?  If its on
-the entire device then you should be fine, tho this might depend on
-which metadata format you are using & where its located on the disc
-(not sure how the metadata effects data alignment).  If you used a
-standard partitioning tool its likely your partitions start on sector
-63.  This can be confirmed via an fdisk -l on your other drives.  If
-that's the case then you'll probably want to use the offest jumper.
-How the drive will behave with the others I have no idea.  If after
-you add the drive and your write speeds drop dramatically then
-something is misaligned.
+> I had a few drives running at about 55C for a couple years, with no 
+> failures (knock wood). These were used drives before being put into that 
+> environment, so they arguably had already survived the "infant mortality 
+> syndrome" that the google study identified. Would I recommend running 
+> drives at 55C? No, but I wouldn't be too concerned about it either.
 
-Wil
+I know of at least one manufacturer who voids the warranty if the drive exceeds 55 Degrees. I have a 
+couple of drives here that have the "Exceeded 55 degrees" mark permanently recorded in their SMART 
+data now. Having said that, I've not had issues with them yet (they only have about 14,000 hours on 
+them).
+
+I'd wager that extended running at elevated temperatures has the potential to affect the bearing 
+lubricant, but it's just an hunch. I've never killed a drive from overtemp (and in a couple of cases 
+I actually tried).
+
+Brad
+-- 
+Dolphins are so intelligent that within a few weeks they can
+train Americans to stand at the edge of the pool and throw them
+fish.
