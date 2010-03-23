@@ -1,86 +1,78 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: (Re: Questions regarding startup of imsm container)
-Date: Tue, 23 Mar 2010 15:41:02 -0700
-Message-ID: <e9c3a7c21003231541u705b60a1w9388a8225275dfa4@mail.gmail.com>
+Subject: Re: [PATCH] (Re: Questions regarding startup of imsm container)
+Date: Tue, 23 Mar 2010 16:06:39 -0700
+Message-ID: <e9c3a7c21003231606s388d26e6gba266e6a44281973@mail.gmail.com>
 References: <7db987b31003222056i46c42112s541ba949821a6759@mail.gmail.com>
 	 <20100323080419.GA9374@maude.comedia.it>
-	 <7db987b31003230558l5993817fwb283c66bbf3633e9@mail.gmail.com>
-	 <7db987b31003230733n127ed0e2u35bbd1de3cb57733@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7db987b31003230733n127ed0e2u35bbd1de3cb57733@mail.gmail.com>
+In-Reply-To: <20100323080419.GA9374@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Randy Terbush <randy@terbush.org>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, neilb@suse.de
 List-Id: linux-raid.ids
 
-On Tue, Mar 23, 2010 at 7:33 AM, Randy Terbush <randy@terbush.org> wrot=
-e:
-> To follow-up this startup challenge... here is what I am getting.
->
-> mdraid is being started with mdadm -As
->
-> I have the following in mdadm.conf
->
-> HOMEHOST Volume0
-> #DEVICE /dev/sd[bcde]
-> AUTO +imsm hifi:0 -all
-> ARRAY metadata=3Dimsm UUID=3D30223250:76fd248b:50280919:0836b7f0
-> ARRAY /dev/md/Volume0 container=3D30223250:76fd248b:50280919:0836b7f0
-> member=3D0 UUID=3D8a4ae452:da1e7832:70ecf895:eb58229c
->
-> The following devices are being created.
->
-> # ls -l /dev/md/
-> total 0
-> lrwxrwxrwx 1 root root 6 Mar 23 08:10 0 -> ../md0
-> lrwxrwxrwx 1 root root 8 Mar 23 08:17 126 -> ../md126
-> lrwxrwxrwx 1 root root 8 Mar 23 08:17 127 -> ../md127
-> lrwxrwxrwx 1 root root 8 Mar 23 08:17 imsm0 -> ../md127
-> lrwxrwxrwx 1 root root 8 Mar 23 08:17 Volume0 -> ../md126
->
-> cat /proc/mdstat
-> Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5] [ra=
-id4]
-> md126 : active raid5 sdb[3] sdc[2] sdd[1] sde[0]
-> =A0 =A0 =A02930280448 blocks super external:/md127/0 level 5, 64k chu=
-nk,
-> algorithm 0 [4/4] [UUUU]
-> =A0 =A0 =A0[>....................] =A0resync =3D =A01.8% (18285824/97=
-6760320)
-> finish=3D182.6min speed=3D87464K/sec
->
-> md127 : inactive sde[3](S) sdb[2](S) sdc[1](S) sdd[0](S)
-> =A0 =A0 =A09028 blocks super external:imsm
->
-> unused devices: <none>
->
-> So the container device is getting moved from md0 to md127. Not sure =
-why.
+On Tue, Mar 23, 2010 at 1:04 AM, Luca Berra <bluca@comedia.it> wrote:
+> The attached patch completely disables bitmap support for arrays with
+> externally managed metadata.
 
-You didn't specify a device name for it in the configuration file so
-mdadm picked one for you.
+It should be possible to use an external bitmap, but that requires
+that you have storage separate from the raid array.
 
-> And would sure like to have a write-intent bitmap active to avoid thi=
-s
-> resync issue which seems to be happening way too frequently.
+# mdadm --grow --bitmap=$(pwd)/test --force /dev/md125
+# cat /proc/mdstat
+Personalities : [raid1] [raid0]
+md125 : active raid1 loop1[1] loop0[0]
+      100143 blocks super external:/md127/0 [2/2] [UU]
+      bitmap: 13/13 pages [52KB], 4KB chunk, file: /root/test
 
-This could also be a problem with your distribution not taking care of
-mdmon properly at shutdown.  The shutdown scripts need to keep mdmon
-alive over the final "remounting rootfs readonly" event and wait for
-it to mark the array/metadata clean.  Otherwise there is a good chance
-that the array will be left dirty and require a resync at startup.
+md127 : inactive loop1[1](S) loop0[0](S)
+      418 blocks super external:imsm
 
-Also note that recent versions of mdadm (3.1.2) and the kernel
-(2.6.33) can checkpoint imsm resyncs so at least it will not start
-over from the beginning when you reboot in the middle of a resync.
+unused devices: <none>
+
+
+> on a style note, i do not like having the struct superswitch, which is a
+> collection of function pointers which is then instanced with only some
+> of the pointers initialized, it forces having to check at runtime if
+> they are or not.
+
+In some cases this is a 'feature' as it is an optional implementation
+detail of the metadata format whether it supports, or wants to
+override a given operation.  See ->default_layout() and
+->detail_platform().  Another example is the small collection of
+operations that are only applicable for mdmon to use.
+
+I think something like this untested patch would be more appropriate
+to fix the issue at hand.
+
+diff --git a/bitmap.c b/bitmap.c
+index 088e37d..054a507 100644
+--- a/bitmap.c
++++ b/bitmap.c
+@@ -227,6 +227,12 @@ bitmap_info_t *bitmap_file_read(char *filename,
+int brief, struct supertype **st
+                if (!st) {
+                        /* just look at device... */
+                        lseek(fd, 0, 0);
++               } else if (!st->ss->locate_bitmap) {
++                       fprintf(stderr, Name
++                               ": %s-metadata arrays do not support
+an internal bitmap\n",
++                               st->ss->name);
++                       close(fd);
++                       return NULL;
+                } else {
+                        st->ss->locate_bitmap(st, fd);
+                }
+
+
+> a possible solution would be to wrap every call of these into a macro
+> that check for NULL before, but how do you return the correct return
+> type from that?
+
+We need to fix up all the locations that assume md-metadata, once that
+is done a macro is not needed.
 
 --
 Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
