@@ -1,40 +1,40 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: async/X threads and rebuild slowdown
-Date: Tue, 23 Mar 2010 14:08:45 -0700
-Message-ID: <e9c3a7c21003231408re62cd32q484fc26f326865b2@mail.gmail.com>
-References: <hnnu9c$tsj$1@dough.gmane.org>
-	 <318b7ac71003160624m16aad423lddca62c31021b104@mail.gmail.com>
-	 <4B9F8C76.9010702@anonymous.org.uk>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: 3-drive RAID1 for my low use home server?
+Date: Tue, 23 Mar 2010 14:37:26 -0700
+Message-ID: <5bdc1c8b1003231437q1cbeabex85833be0a59e3357@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4B9F8C76.9010702@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Tao Guo <glorioustao@gmail.com>, Jeremy Sanders <jeremy@jeremysanders.net>, linux-raid@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, Mar 16, 2010 at 6:49 AM, John Robinson
-<john.robinson@anonymous.org.uk> wrote:
-> On 16/03/2010 13:24, Tao Guo wrote:
->>
->> I also meet this problem in several of my machines. If I change back
->> to kernel 2.6.18, it is
->> OK, but in 2.6.32 kernel, the performance is really poor.
->>
->> At last I found a solution, set CONFIG_MULTICORE_RAID456=n when
->> compiling raid456 module,
->> then everything goes normal. My machines do have multicore cpu, so it
->> is weird :<
->> Maybe there is something wrong with the CONFIG_MULTICORE_RAID456 enabled
->> code?
->
-> I remember it being discussed on this list, so yes I think there is or was.
->
+Hi,
+   Just triple checking what I think I've learned here before I start
+loading Gentoo. Parts are arriving and I'm staring to put them
+together to build a combo low-use server (backups and MythTV) as well
+as desktop for my wife. I can do anything up to 6 drives but want the
+RAID to survive in the face of possibly two drive failure. This is all
+low bandwidth stuff.
 
-fyi,
+   I'm fairly focused at this point on doing RAID1 using 3 drives.
+Unless I hear differently I believe a 3-drive RAID1 could survive 2
+drive failures, and as well any single drive could be taken to another
+machine or even placed in an external USB/eSATA drive container in the
+event of some major motherboard failure. Is any of that incorrect?
 
-https://bugzilla.redhat.com/show_bug.cgi?id=575897
+   Also, along the way folks have mentioned hot spares but I'm not
+seeing that a hot spare does much for RAID1. Am I incorrect about
+that? Granted, I guess the rebuild starts automatically and maybe
+that's worth it, but I'm thinking that mdadm can probably let me know
+fairly quickly that I need to do some work. I've purchased 6 drives so
+I'll have 2 or 3 spares around and I can do a hot spare but I don't
+see the value in spinning the drive for a year burning power and
+wearing the drive out vs. just putting it on the shelf and keeping it
+in reserve for a rainy day.
 
---
-Dan
+   Off to start tearing into packaging. Thanks in advance again for
+all the great info I've gotten so far.
+
+Cheers,
+Mark
