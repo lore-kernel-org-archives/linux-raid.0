@@ -1,143 +1,91 @@
-From: Chris Mason <chris.mason@oracle.com>
-Subject: Re: [RFC PATCH 0/2] more raid456 thread pool experimentation
-Date: Wed, 24 Mar 2010 15:31:56 -0400
-Message-ID: <20100324193156.GH5021@think>
-References: <20100324144904.15371.2317.stgit@dwillia2-linux>
- <20100324155154.GG5021@think>
- <e9c3a7c21003241106h10d1bc1am22b40fef4a335f70@mail.gmail.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: Sysfs update frequency
+Date: Wed, 24 Mar 2010 15:49:28 -0400
+Message-ID: <4BAA6CC8.8030908@tmr.com>
+References: <150c16851003161432gf38c0f5o1cc957435efd4c3e@mail.gmail.com>	<20100317085256.6caee9bb@notabene.brown>	<4BA4FC5C.7060502@tmr.com> <20100323142221.6d7f7ac7@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <e9c3a7c21003241106h10d1bc1am22b40fef4a335f70@mail.gmail.com>
+In-Reply-To: <20100323142221.6d7f7ac7@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Justin Maggard <jmaggard10@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Mar 24, 2010 at 11:06:40AM -0700, Dan Williams wrote:
-> On Wed, Mar 24, 2010 at 8:51 AM, Chris Mason <chris.mason@oracle.com>=
- wrote:
-> > On Wed, Mar 24, 2010 at 07:53:10AM -0700, Dan Williams wrote:
-> >> The current implementation with the async thread pool ends up spre=
-ading
-> >> the work over too many threads. =A0The btrfs workqueue is targeted=
- at high
-> >> cpu utilization works and has a threshold mechanism to limit threa=
-d
-> >> spawning. =A0Unfortunately it still ends up increasing cpu utiliza=
-tion
-> >> without a comparable improvement in throughput. =A0Here are the nu=
-mbers
-> >> relative to the multicore disabled case:
-> >>
-> >> idle_thresh =A0 throughput =A0 =A0 =A0cycles
-> >> 4 =A0 =A0 =A0 =A0 =A0 =A0 +0% =A0 =A0 =A0 =A0 =A0 =A0 +102%
-> >> 64 =A0 =A0 =A0 =A0 =A0 =A0+4% =A0 =A0 =A0 =A0 =A0 =A0 +63%
-> >> 128 =A0 =A0 =A0 =A0 =A0 +1% =A0 =A0 =A0 =A0 =A0 =A0 +45%
-> >
-> > Interesting, do the btrfs workqueues improve things? =A0Or do you t=
-hink they are
-> > just a better base for more tuning?
->=20
-> Both, throughput falls off a cliff with the async thread pool, and
-> there are more knobs to turn in this implementation.
+Neil Brown wrote:
+> On Sat, 20 Mar 2010 12:48:28 -0400
+> Bill Davidsen <davidsen@tmr.com> wrote:
+>
+>   
+>> Neil Brown wrote:
+>>     
+>>> On Tue, 16 Mar 2010 14:32:55 -0700
+>>> Justin Maggard <jmaggard10@gmail.com> wrote:
+>>>
+>>>   
+>>>       
+>>>> I've noticed on recent kernels that /sys/block/md?/md/sync_completed
+>>>> seems to rarely get updated.  What is the expected update interval?
+>>>> For me, it seems to only update about once every 6% or so during the
+>>>> resync.  Of course, /proc/mdstat has the actual current progress.
+>>>>     
+>>>>         
+>>> The expected update time is every 6% - actually 1/16 which is 6.25%.
+>>>
+>>> sync_completed includes a guarantee that all blocks before this point really
+>>> have been processed.  The number in /proc/mdstat is less precise.  The much
+>>> of the array has been resynced, but due to the possibility of out-of-order
+>>> completion of writes they may not be a contiguous series of blocks.
+>>>
+>>>   
+>>>       
+>> Couldn't you just track the outstanding writes by LBA (or similar) and 
+>> report that the completion is one less than the lowest write still 
+>> outstanding? Since you would only do it when the user requests it, I 
+>> don't think the overhead of a list scan or similar would be a show 
+>> stopper. Or is that approach too simplistic?
+>>     
+>
+> I'd have to create a data structure to which I add and remove these LBAs at a
+> significant rate.  It isn't really worth the effort.
+>
+>   
+I thought the current data on outstanding writes could be scanned. 
+Clearly you have the information somewhere, and while a scan item by 
+item is ugly and slow, it's in memory and all done only on user request, 
+so overall overhead is minimal.
+>>> Providing the guarantee (which is needed for externally-managed metadata)
+>>> requires briefly stalling the resync, so I didn't want to do it more often.
+>>> I could possibly make it time-bases instead of size-based though.
+>>>   
+>>>       
+>> Is perfect accuracy needed, just as long as you don't promise to have 
+>> synced more than you have? Are you using barriers to be sure the data is 
+>> all the way to the platter, or is your stall just "to the device" 
+>> anyway? Like any snapshot of a dynamic process, by the time you get the 
+>> information it's out of date in any case, so I think a "at least this 
+>> much has moved to the device" value would serve.
+>>
+>>     
+>
+> The information may be used to update metadata, so it is critical that it
+> doesn't say more than is true.  It is safe for it to say less than is true.
+>
+> A metadata update would always be preceded by a barrier so that the data on
+> the device is consistent.
+>
+> "at least this much has moved" isn't much good if it only tells us how many
+> blocks, not which ones.
+> The value in sync_completed says "at least all the blocks up to this one have
+> been synced" which is exactly the information that I want.
+>
+>   
+That's why I wanted the LBA of the last contiguous sector written, the 
+lowest LBA initiated but not completed is one greater than that.
 
-Ok, it's really interesting that we're only getting you 4% faster tput,
-at 63% more cycles.  That looks like something more than just cache
-affinity, but at least for btrfs I always had bigger problems than
-affinity, so I haven't dug into that part yet.
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "We can't solve today's problems by using the same thinking we
+   used in creating them." - Einstein
 
->=20
-> > I had always hoped to find more users for the work queues and tried=
- to
-> > keep btrfs specific features out of them. =A0The place I didn't ent=
-irely
-> > succeed was in the spin locks, the ordered queues take regular spin
-> > locks to avoid turning off irqs where btrfs always does things outs=
-ide
-> > of interrupt time. =A0Doesn't look like raid needs the ordered queu=
-es so
-> > this should work pretty well.
-> >
-> >>
-> >> This appears to show that something more fundamental needs to happ=
-en to
-> >> take advantage of percpu raid processing. =A0More profiling is nee=
-ded, but
-> >> the suspects in my mind are conf->device_lock contention and the f=
-act
-> >> that all work is serialized through conf->handle_list with no meth=
-od for
-> >> encouraging stripe_head to thread affinity.
-> >
-> > The big place I'd suggest to look inside the btrfs async-thread.c f=
-or
-> > optimization is the worker_loop(). =A0For work that tends to be bur=
-sty and
-> > relatively short, we can have worker threads finish their work fair=
-ly
-> > quickly and go to sleep, only to be woken up very quickly again wit=
-h
-> > another big batch of work. =A0The worker_loop code tries to wait ar=
-ound
-> > for a while, but the tuning here was btrfs specific.
-> >
-> > It might also help to tune the find_worker and next_worker code to =
-prefer
-> > giving work to threads that are running but almost done with their
-> > queue. =A0Maybe they can be put onto a special hot list as they get=
- near
-> > the end of their queue.
-> >
->=20
-> Thanks I'll take a look at these suggestions.  For these optimization=
-s
-> to have a chance I think we need stripes to maintain affinity with th=
-e
-> first core that picks up the work.  Currently all stripes take a trip
-> through the single-threaded raid5d when their reference count drops t=
-o
-> zero, only to be immediately reissued to the thread pool potentially
-> on a different core (but I need to back this assumption up with more
-> profiling).
-
-Well, I'd definitely say the pool is going to give you a random
-core.
-
->=20
-> > There's a rule somewhere that patches renaming things must have rep=
-lies
-> > questioning the new name. =A0The first reply isn't actually allowed=
- to
-> > suggest a better name, which is good because I'm not very good at
-> > that kind of thing.
-> >
-> > Really though, btr_queue is fine by me, but don't feel obligated to=
- keep
-> > some variation of btrfs in the name ;)
->=20
-> btr_queue seemed to make sense since it's spreading work like "butter=
-" :-).
-
-Grin, it doesn't take many butter jokes to sell me.  Careful though, yo=
-u
-can't have just one buttery thread pool.  Just wait, you'll think of
-good reasons to add another real soon.
-
-Speaking of which, you want to use the atomic thread starting helper.
-Basically kthread_run does GFP allocations that can wait on disk, and
-if you're the disk it is waiting on things can go badly in a hurry.
-
-We should probably integrate a single kthread run helper thread into th=
-e
-pools instead of forcing people to make their own.  I'll take a look.
-
--chris
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
