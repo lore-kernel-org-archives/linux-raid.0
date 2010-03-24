@@ -1,92 +1,64 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH] (Re: Questions regarding startup of imsm container)
-Date: Wed, 24 Mar 2010 07:49:46 -0700
-Message-ID: <e9c3a7c21003240749y2d8cf545r74b2307ae5dcda0@mail.gmail.com>
-References: <7db987b31003222056i46c42112s541ba949821a6759@mail.gmail.com>
-	 <20100323080419.GA9374@maude.comedia.it>
-	 <20100324115749.1ac9d6f8@notabene.brown>
+Subject: [RFC PATCH 0/2] more raid456 thread pool experimentation
+Date: Wed, 24 Mar 2010 07:53:10 -0700
+Message-ID: <20100324144904.15371.2317.stgit@dwillia2-linux>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100324115749.1ac9d6f8@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Luca Berra <bluca@comedia.it>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+Sender: linux-btrfs-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Mar 23, 2010 at 5:57 PM, Neil Brown <neilb@suse.de> wrote:
-> On Tue, 23 Mar 2010 09:04:19 +0100
-> Luca Berra <bluca@comedia.it> wrote:
->
->> On Mon, Mar 22, 2010 at 09:56:01PM -0600, Randy Terbush wrote:
->> >Having a go at building a raid5 array using the new imsm support an=
-d
->> >having good luck keeping drives in the array, etc. Nice work. I hav=
-e a
->> >few questions though as I am having some trouble figuring out how t=
-o
->> >properly start this container.
->> >
->> ># mdadm --version
->> >mdadm - v3.1.2 - 10th March 2010
->> >
->> ># mdadm -Es
->> >ARRAY metadata=3Dimsm UUID=3D30223250:76fd248b:50280919:0836b7f0
->> >ARRAY /dev/md/Volume0 container=3D30223250:76fd248b:50280919:0836b7=
-f0
->> >member=3D0 UUID=3D8a4ae452:da1e7832:70ecf895:eb58229c
->> >
->> ># ls -l /dev/md/
->> >total 0
->> >lrwxrwxrwx 1 root root 6 Mar 22 20:54 0 -> ../md0
->> >lrwxrwxrwx 1 root root 8 Mar 22 20:54 127 -> ../md127
->> >lrwxrwxrwx 1 root root 8 Mar 22 20:54 Volume0_0 -> ../md127
->> >
->> >As you can see, the name for the link in /dev/md does not agree wit=
-h
->> >the name that the Examine is coming up with.
->> please read mdadm.conf manpage, under the section "HOMEHOST"
->>
->> >Is it better to just forgo the ARRAY statements and go with an AUTO=
- +imsm?
->> >
->> >And last, does the concept of a write-intent bitmap make sense on a=
-n
->> >imsm container? If so, I get a segv if trying to run mdadm /dev/mdX
->> >-Gb internal on either device.
->>
->> i don't believe it makes sense at all, surely imsm do not support an
->> internal bitmap (no provisioning for it in the metadata)
->>
->> The attached patch completely disables bitmap support for arrays wit=
-h
->> externally managed metadata.
->
-> Thanks for the patch. =A0However I would prefer to disable bitmap sup=
-port for
-> those metadata formats which report that they don't support it.
-> Thus the following patch.
->
-> Thanks,
-> NeilBrown
->
->
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!st->ss->add_internal_bitmap) {
-[..]
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (st->ss->add_internal_bitmap =3D=3D =
-NULL) {
-[..]
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 } else if (!st->ss->locate_bitmap) {
+The current implementation with the async thread pool ends up spreading
+the work over too many threads.  The btrfs workqueue is targeted at high
+cpu utilization works and has a threshold mechanism to limit thread
+spawning.  Unfortunately it still ends up increasing cpu utilization
+without a comparable improvement in throughput.  Here are the numbers
+relative to the multicore disabled case:
 
-The smallest of nits, or maybe just a clarification.  I believe you
-have said in the past that you prefer the readability of
-positive-logic if statements where possible.
+idle_thresh	throughput	cycles
+4		+0%		+102%
+64		+4%		+63%
+128		+1%		+45%
 
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This appears to show that something more fundamental needs to happen to
+take advantage of percpu raid processing.  More profiling is needed, but
+the suspects in my mind are conf->device_lock contention and the fact
+that all work is serialized through conf->handle_list with no method for
+encouraging stripe_head to thread affinity.
+
+The idle_thresh parameter translates to the number of stripes that can
+be in a thread's backlog before new work spills over into a new thread.
+The current implementation via async is effectively using a threshold of
+zero which ends up impacting throughput due to excessive cpu utilization
+and thread creation.  I do not think we need any more experimentation
+before declaring the current implementation broken.
+
+---
+
+Dan Williams (2):
+      btrq: uplevel the btrfs thread pool for md/raid456 usage
+      md/raid456: switch to btrq for multicore operation
+
+
+ drivers/md/Kconfig       |    1 
+ drivers/md/raid5.c       |   79 +++++++++++++----------
+ drivers/md/raid5.h       |   13 ++--
+ fs/btrfs/Kconfig         |    1 
+ fs/btrfs/Makefile        |    2 -
+ fs/btrfs/ctree.h         |   22 +++---
+ fs/btrfs/disk-io.c       |  157 +++++++++++++++++++++++-----------------------
+ fs/btrfs/extent-tree.c   |    7 +-
+ fs/btrfs/inode.c         |   18 +++--
+ fs/btrfs/relocation.c    |   22 +++---
+ fs/btrfs/volumes.c       |   12 ++--
+ fs/btrfs/volumes.h       |    4 +
+ include/linux/btrqueue.h |   36 +++++------
+ lib/Kconfig              |    6 ++
+ lib/Makefile             |    2 +
+ lib/btrqueue.c           |  119 ++++++++++++++++++-----------------
+ 16 files changed, 265 insertions(+), 236 deletions(-)
+ rename fs/btrfs/async-thread.h => include/linux/btrqueue.h (76%)
+ rename fs/btrfs/async-thread.c => lib/btrqueue.c (82%)
+
