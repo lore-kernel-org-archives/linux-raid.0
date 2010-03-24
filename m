@@ -1,86 +1,104 @@
-From: Randy Terbush <randy@terbush.org>
-Subject: Re: Questions regarding startup of imsm container
-Date: Tue, 23 Mar 2010 18:23:03 -0600
-Message-ID: <7db987b31003231723tac48bf5ocb3723522dc54417@mail.gmail.com>
-References: <7db987b31003222056i46c42112s541ba949821a6759@mail.gmail.com>
-	<e9c3a7c21003231401p55d4e392u22b062aaf464b1da@mail.gmail.com>
-	<7db987b31003231441j56733b15wd111c4aa22e9eccc@mail.gmail.com>
-	<4BA93DBB.6000503@intel.com> <7db987b31003231625obb9f3c5r986988defdf68a08@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Minor mdadm fixes
+Date: Wed, 24 Mar 2010 11:27:40 +1100
+Message-ID: <20100324112740.6b67b287@notabene.brown>
+References: <4BA2DDB2.2040508@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <7db987b31003231625obb9f3c5r986988defdf68a08@mail.gmail.com>
+In-Reply-To: <4BA2DDB2.2040508@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux raid <linux-raid@vger.kernel.org>
+To: Doug Ledford <dledford@redhat.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Update on progress....
+On Thu, 18 Mar 2010 22:13:06 -0400
+Doug Ledford <dledford@redhat.com> wrote:
 
-I have managed to hack together a dracut created initramfs that has me
-able to boot and has resolved all boot issues. Will let this thing
-have a few hours of resyncing and see if external bitmap comes back
-and how it handles the reboot.
+> I have several minor fixes against the 3.1.2 mdadm.
 
-Thanks again for the assistance.
+Thanks!
 
-On Tue, Mar 23, 2010 at 5:25 PM, Randy Terbush <randy@terbush.org> wrot=
-e:
-> Thanks Dan, a few more steps forward here. I suspect I know the
-> answer, but will see what you suggest.
->
-> On Tue, Mar 23, 2010 at 4:16 PM, Dan Williams <dan.j.williams@intel.c=
-om> wrote:
->> This shows that Gentoo is most likely not including mdmon in their i=
-nitramfs
->> environment. =A0mdadm assembles the array readonly, but then mdmon i=
-s required
->> to mark the array writable.
->
-> Looks like you are correct and current installation packages on Gento=
-o
-> have apparently not dealt with these changes. mdmon is not getting
-> started and is not being attempted anywhere.
->
-> I don't run an initrd, so attempted to start mdmon after the mdadm -A=
-s
-> runs. This is apparently too early in the process as I get the
-> following:
->
-> * Starting up RAID devices ...
-> =A0[ ok ]
-> mdmon: Neither /var/run nor /lib/init/rw are writable
-> =A0 =A0 =A0 cannot create .pid or .sock files. =A0Aborting
-> =A0* Setting up the Logical Volume Manager ...
-> =A0[ ok ]
-> =A0* Checking local filesystems =A0...
-> HOME-vg0: clean, 13/3276800 files, 256151/52428800 blocks
-> Warning... fsck.ext4 for device /dev/mapper/vg0-home exited with sign=
-al 11.
-> SVN-vg0: clean, 191/1638400 files, 153087/26214400 blocks
-> Warning... fsck.ext4 for device /dev/mapper/vg0-svn exited with signa=
-l 11.
-> ARCHIVE-vg0: clean, 12/1638400 files, 152150/26214400 blocks
->
-> So it appears the start of mdmon needs to wait until we have a rw
-> filesystem mounted. Not entirely sure if it is related, but as you ca=
-n
-> see above, fsck blows up trying to check the filesystems on this
-> array. That appears to clear itself up once mdmon is running. After
-> starting mdmon by hand, the resync begins and I can successfully run
-> fsck on these partitions.
->
-> So looks like I have a chicken and egg problem that I suspect may be
-> solved by creating an initramfs. I took a quick pass at dracut but
-> could not convince it to add mdmon. Any hints appreciated as I go bac=
-k
-> to dig for more info.
->
-> Thanks again for the assistance.
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> First attachment: mdadm-3.1.1-endian.patch
+> Problem: on ppc arches mdadm would fail to assemble arrays if you used
+> mdadm -Db /dev/<array> to populate the ARRAY line in mdadm.conf.  This
+> is because the code in Detail.c calls fname_from_uuid() which honors the
+> swapuuid setting in the superblock switch struct.  This is great for ddf
+> and imsm superblocks which call fname_from_uuid() all over the place and
+> are therefore consistent.  However, super1.c does *not* call
+> fname_from_uuid()...ever.  And super1.c does *not* perform the byte
+> swapping as per swapuuid in the switch struct.  At least not on
+> *display*, but it *does* honor swapuuid on actual analysis of the uuid
+> in terms of figuring out matches.  So, if you attempt to change the
+> value of swapuuid in the super1 switch struct, then uuid's never match
+> what's printed out (aka, the output of -D and -E both fail to match
+> against the detected uuid when assembling, although at least -D and -E
+> are now consistent).  Instead, I did a simple (and gross) hack to ignore
+> swapuuid in fname_from_uuid() only for version 1 superblocks.  The other
+> alternative might be to make super1.c call fname_from_uuid() all over
+> the place instead of printing things out itself, but that would involve
+> struct changes as the way it stores/accesses uuids in super1 is not per
+> char like fname_from_uuid and that's precisely part of the problem.
+
+Ohh, that is horrible isn't it.
+I have applied your patch but I very much hope to "fix" the problem in a more
+comprehensive way so that your fix will disappear.
+I suspect that I will change the common code to use an array of bytes and do
+any conversion from u32[4] to u8[1] in the per-metadata code.
+
+> 
+> Second: mdadm-3.1.2-mapfile.patch
+> Problem: Neil's support for putting the mdadm map file wherever you need
+> it is nice, but one place in particular needs a special case.
+> Specifically, mdadm already creates /dev/md if needed to store symlinks,
+> or in the case of mdmon needing to create pid/sock files (if ALT_RUN is
+> set to /dev/md).  This creates an expectation in udev and friends that
+> mdadm will create /dev/md when needed, period.  We need it if we place
+> the mapfile in /dev/md prior to any symlinks or mdmon files being
+> created, so special case that one location in order to make us
+> consistent with both mdmon and mdopen.  If we don't, we will fail to
+> create our mapfile.
+
+I thought udev always created the directory if it was needed, and always
+removed it if it became empty after deleting an entry.  But I have no strong
+basis for believing that.
+
+However I do think that mdadm should create the directory in this case - not
+any parents, but if they exist and are writeable, then create the directory.
+
+So I modified you patch to do that when creating the mapfile (not when
+reading it).
+
+> 
+> Third: mdadm-3.1.2-rebuild.patch
+> Problem: The above issue pointed out a different issue.  Specifically,
+> if we can't open our mapfile, then we call RebuildMap, and at the end of
+> the rebuild, we trigger a new change event on the raid device.  Well, if
+> the write of the new map file failed because the directory we wanted to
+> write into didn't exist, this creates an infinite loop where udev calls
+> mdadm, mdadm fails to open file, mdadm rebuils map, mdadm fails to write
+> new map, but mdadm triggers a change event to cause udev to rerun mdadm
+> on the belief that the map file *was* updated.  So, if we fail to write
+> the new mapfile, don't signal a change event, let the situation drop.
+> This avoids the infinite loop.
+
+Very appropriate - thanks.
+
+> 
+> Fourth: mdadm-3.1.2-mapname.patch
+> Feature: If we are able to easily select the location of the mapfile via
+> the use of ALT_RUN at compile time, it makes sense to also be able to
+> set the filename.  This way you can make it something obvious such as
+> /dev/md + md-device-map which makes the file name both unlikely to
+> conflict with a device name (where as I could see map conflicting in
+> certain specialized scenarios, like the array holding map data at the
+> local governmental office) and obvious in purpose.
+> 
+> 
+
+Seems reasonable.  I've included that patch too.
+
+Thanks a lot,
+NeilBrown
