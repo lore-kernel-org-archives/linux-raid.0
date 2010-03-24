@@ -1,104 +1,115 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Minor mdadm fixes
-Date: Wed, 24 Mar 2010 11:27:40 +1100
-Message-ID: <20100324112740.6b67b287@notabene.brown>
-References: <4BA2DDB2.2040508@redhat.com>
+Subject: Re: [PATCH] (Re: Questions regarding startup of imsm container)
+Date: Wed, 24 Mar 2010 11:57:49 +1100
+Message-ID: <20100324115749.1ac9d6f8@notabene.brown>
+References: <7db987b31003222056i46c42112s541ba949821a6759@mail.gmail.com>
+	<20100323080419.GA9374@maude.comedia.it>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BA2DDB2.2040508@redhat.com>
+In-Reply-To: <20100323080419.GA9374@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Luca Berra <bluca@comedia.it>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 18 Mar 2010 22:13:06 -0400
-Doug Ledford <dledford@redhat.com> wrote:
+On Tue, 23 Mar 2010 09:04:19 +0100
+Luca Berra <bluca@comedia.it> wrote:
 
-> I have several minor fixes against the 3.1.2 mdadm.
-
-Thanks!
-
+> On Mon, Mar 22, 2010 at 09:56:01PM -0600, Randy Terbush wrote:
+> >Having a go at building a raid5 array using the new imsm support and
+> >having good luck keeping drives in the array, etc. Nice work. I have a
+> >few questions though as I am having some trouble figuring out how to
+> >properly start this container.
+> >
+> ># mdadm --version
+> >mdadm - v3.1.2 - 10th March 2010
+> >
+> ># mdadm -Es
+> >ARRAY metadata=imsm UUID=30223250:76fd248b:50280919:0836b7f0
+> >ARRAY /dev/md/Volume0 container=30223250:76fd248b:50280919:0836b7f0
+> >member=0 UUID=8a4ae452:da1e7832:70ecf895:eb58229c
+> >
+> ># ls -l /dev/md/
+> >total 0
+> >lrwxrwxrwx 1 root root 6 Mar 22 20:54 0 -> ../md0
+> >lrwxrwxrwx 1 root root 8 Mar 22 20:54 127 -> ../md127
+> >lrwxrwxrwx 1 root root 8 Mar 22 20:54 Volume0_0 -> ../md127
+> >
+> >As you can see, the name for the link in /dev/md does not agree with
+> >the name that the Examine is coming up with.
+> please read mdadm.conf manpage, under the section "HOMEHOST"
 > 
-> First attachment: mdadm-3.1.1-endian.patch
-> Problem: on ppc arches mdadm would fail to assemble arrays if you used
-> mdadm -Db /dev/<array> to populate the ARRAY line in mdadm.conf.  This
-> is because the code in Detail.c calls fname_from_uuid() which honors the
-> swapuuid setting in the superblock switch struct.  This is great for ddf
-> and imsm superblocks which call fname_from_uuid() all over the place and
-> are therefore consistent.  However, super1.c does *not* call
-> fname_from_uuid()...ever.  And super1.c does *not* perform the byte
-> swapping as per swapuuid in the switch struct.  At least not on
-> *display*, but it *does* honor swapuuid on actual analysis of the uuid
-> in terms of figuring out matches.  So, if you attempt to change the
-> value of swapuuid in the super1 switch struct, then uuid's never match
-> what's printed out (aka, the output of -D and -E both fail to match
-> against the detected uuid when assembling, although at least -D and -E
-> are now consistent).  Instead, I did a simple (and gross) hack to ignore
-> swapuuid in fname_from_uuid() only for version 1 superblocks.  The other
-> alternative might be to make super1.c call fname_from_uuid() all over
-> the place instead of printing things out itself, but that would involve
-> struct changes as the way it stores/accesses uuids in super1 is not per
-> char like fname_from_uuid and that's precisely part of the problem.
-
-Ohh, that is horrible isn't it.
-I have applied your patch but I very much hope to "fix" the problem in a more
-comprehensive way so that your fix will disappear.
-I suspect that I will change the common code to use an array of bytes and do
-any conversion from u32[4] to u8[1] in the per-metadata code.
-
+> >Is it better to just forgo the ARRAY statements and go with an AUTO +imsm?
+> >
+> >And last, does the concept of a write-intent bitmap make sense on an
+> >imsm container? If so, I get a segv if trying to run mdadm /dev/mdX
+> >-Gb internal on either device.
 > 
-> Second: mdadm-3.1.2-mapfile.patch
-> Problem: Neil's support for putting the mdadm map file wherever you need
-> it is nice, but one place in particular needs a special case.
-> Specifically, mdadm already creates /dev/md if needed to store symlinks,
-> or in the case of mdmon needing to create pid/sock files (if ALT_RUN is
-> set to /dev/md).  This creates an expectation in udev and friends that
-> mdadm will create /dev/md when needed, period.  We need it if we place
-> the mapfile in /dev/md prior to any symlinks or mdmon files being
-> created, so special case that one location in order to make us
-> consistent with both mdmon and mdopen.  If we don't, we will fail to
-> create our mapfile.
-
-I thought udev always created the directory if it was needed, and always
-removed it if it became empty after deleting an entry.  But I have no strong
-basis for believing that.
-
-However I do think that mdadm should create the directory in this case - not
-any parents, but if they exist and are writeable, then create the directory.
-
-So I modified you patch to do that when creating the mapfile (not when
-reading it).
-
+> i don't believe it makes sense at all, surely imsm do not support an
+> internal bitmap (no provisioning for it in the metadata)
 > 
-> Third: mdadm-3.1.2-rebuild.patch
-> Problem: The above issue pointed out a different issue.  Specifically,
-> if we can't open our mapfile, then we call RebuildMap, and at the end of
-> the rebuild, we trigger a new change event on the raid device.  Well, if
-> the write of the new map file failed because the directory we wanted to
-> write into didn't exist, this creates an infinite loop where udev calls
-> mdadm, mdadm fails to open file, mdadm rebuils map, mdadm fails to write
-> new map, but mdadm triggers a change event to cause udev to rerun mdadm
-> on the belief that the map file *was* updated.  So, if we fail to write
-> the new mapfile, don't signal a change event, let the situation drop.
-> This avoids the infinite loop.
+> The attached patch completely disables bitmap support for arrays with
+> externally managed metadata.
 
-Very appropriate - thanks.
+Thanks for the patch.  However I would prefer to disable bitmap support for
+those metadata formats which report that they don't support it.
+Thus the following patch.
 
-> 
-> Fourth: mdadm-3.1.2-mapname.patch
-> Feature: If we are able to easily select the location of the mapfile via
-> the use of ALT_RUN at compile time, it makes sense to also be able to
-> set the filename.  This way you can make it something obvious such as
-> /dev/md + md-device-map which makes the file name both unlikely to
-> conflict with a device name (where as I could see map conflicting in
-> certain specialized scenarios, like the array holding map data at the
-> local governmental office) and obvious in purpose.
-> 
-> 
-
-Seems reasonable.  I've included that patch too.
-
-Thanks a lot,
+Thanks,
 NeilBrown
+
+
+diff --git a/Create.c b/Create.c
+index 909ac5d..8f6e6e7 100644
+--- a/Create.c
++++ b/Create.c
+@@ -651,6 +651,11 @@ int Create(struct supertype *st, char *mddev,
+ 			fprintf(stderr, Name ": internal bitmaps not supported by this kernel.\n");
+ 			goto abort;
+ 		}
++		if (!st->ss->add_internal_bitmap) {
++			fprintf(stderr, Name ": internal bitmaps not supported with %s metadata\n",
++				st->ss->name);
++			goto abort;
++		}
+ 		if (!st->ss->add_internal_bitmap(st, &bitmap_chunk,
+ 						 delay, write_behind,
+ 						 bitmapsize, 1, major_num)) {
+diff --git a/Grow.c b/Grow.c
+index 6264996..053a372 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -288,6 +288,11 @@ int Grow_addbitmap(char *devname, int fd, char *file, int chunk, int delay, int
+ 		return 1;
+ 	} else if (strcmp(file, "internal") == 0) {
+ 		int d;
++		if (st->ss->add_internal_bitmap == NULL) {
++			fprintf(stderr, Name ": Internal bitmaps not supported "
++				"with %s metadata\n", st->ss->name);
++			return 1;
++		}
+ 		for (d=0; d< st->max_devs; d++) {
+ 			mdu_disk_info_t disk;
+ 			char *dv;
+diff --git a/bitmap.c b/bitmap.c
+index 088e37d..beef2dc 100644
+--- a/bitmap.c
++++ b/bitmap.c
+@@ -227,9 +227,13 @@ bitmap_info_t *bitmap_file_read(char *filename, int brief, struct supertype **st
+ 		if (!st) {
+ 			/* just look at device... */
+ 			lseek(fd, 0, 0);
+-		} else {
++		} else if (!st->ss->locate_bitmap) {
++			fprintf(stderr, Name ": No bitmap possible with %s metadata\n",
++				st->ss->name);
++			return NULL;
++		} else
+ 			st->ss->locate_bitmap(st, fd);
+-		}
++
+ 		ioctl(fd, BLKFLSBUF, 0); /* make sure we read current data */
+ 		*stp = st;
+ 	} else {
