@@ -1,64 +1,83 @@
-From: =?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?=
-	<stefan.huebner@stud.tu-ilmenau.de>
-Subject: Re: TLER / CCTL timeout handling
-Date: Wed, 24 Mar 2010 22:54:41 +0100
-Message-ID: <4BAA8A21.8050601@stud.tu-ilmenau.de>
-References: <4BA93C3F.2070208@gmail.com>
-Reply-To: st0ff@npl.de
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Raid Containers
+Date: Thu, 25 Mar 2010 09:22:51 +1100
+Message-ID: <20100325092251.3a599a6e@notabene.brown>
+References: <1269466029.5759.668.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BA93C3F.2070208@gmail.com>
+In-Reply-To: <1269466029.5759.668.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nebojsa Trpkovic <trx.lists@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Daniel Reurich <daniel@centurion.net.nz>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Am 23.03.2010 23:10, schrieb Nebojsa Trpkovic:
-> Hello.
-> 
-> I've found interesting text about TLER / CCTL
-> (http://en.wikipedia.org/wiki/Time-Limited_Error_Recovery )
+On Thu, 25 Mar 2010 10:27:09 +1300
+Daniel Reurich <daniel@centurion.net.nz> wrote:
 
-You might want to read on inside the ATA8-ACS, section about SCT Transport.
+> Hi.
 > 
-> on desktop class drives:
-> http://forums.storagereview.com/index.php/topic/28333-tler-cctl/
-> 
-> So, the question is:
-> 
-> If I make my drive report back it failed to read the requested sector,
-> how that report will be handeled?
+> I'm wanting to know are containers properly supported now in mdadm and
+> recent kernels (I assume using only 1.X metadata)?
 
-As far as I understood in recent answers to my questions: as expected.
-> 
-> Will Linux software RAID be aware of that report and start some action
-> (rebuilding affected stripe or at least whole array, reallocating bad
-> sectors along the way) ?
-> 
-Indeed.  Michael Tokarev answered to me on 2/9/10:
-"On failed _read_ it tries to
-reconstruct data from other disk drives and writes the reconstructed
-data back to the drive where read failed.  If the _write_ fails md will
-drop the disk."
+I think we have some confusion over terminology here.
 
-This means: if read fails and the drive does not report back, the
-following reconstructing write calls will fail, too.  The disk gets
-dropped, because it (most probably) is still doing its error recovery on
-the former read request and by that not responding.
+In the mdadm documentation I use the word "container" to mean a collection of
+devices which all share a set of metadata which describes one or more arrays.
 
-If you enable ERC read timeouts, it'll report a media error (or
-something similar), but honour the write request.  If you give the ERC
-write timeout a value that is not too small and also not too large (i.e.
-it shouldn't timeout the write-operation from the view of the kernel),
-it will either fix the pending sector, or reallocate it.  If the ERC
-write timeout value is too small, it'll very aggressively reallocate
-sectors - which should not be the intention, as there are very few spare
-sectors (compared to the amount of sectors in total - only a few thousand).
+Thus a single 0.90 of 1.x array is in a sense a 'container' but is not
+normally referred to as one.  More significantly a set of devices using
+Intel's IMSM metadata or the "industry standard" DDF metadata form a
+container.  In each case the member arrays cannot be treated as completely
+independent as there is a single piece of metadata which describes them all.
+
+Thus for example you could have 2 drives: the first 500GB of each form a
+RAID0 set, the following 499.9GB form a RAID1 pair, and at the end there is
+some metadata which describes both arrays.
+When mdadm assembles this it creates a 'container' array which covers just
+the metadata and serves as a handle to refer to the who set.  There are also
+two 'real' arrays  (raid0 and raid1) which manage the data.
+
+This native metadata (0.90 or 1.x) each set of metadata describes exactly one
+array, so the extra level of 'containers' is not needed.  A similar situation
+to the above could be formed by partitioning both drives in to 2 500GB
+partitions and creating a RAID0 over  the first 2 and an independent RAID1
+over the last two.
+
+If you want to have a number of e.g. RAID1 arrays on the same pair of devices
+you can do this in two ways using native metadata:
+1/ partition the arrays and create a separate RAID1 over each pair of
+ partitions.
+2/ create a single RAID1 over the two whole devices and then partition that
+ raid1 and create different filesystems (or swap space) in the different
+ partitions.
+
+For a management point of view, 2 is easier as you can remove just one
+device, then add just one device when replacing a faulty device.
+
+However many GUI partitions do not understand that approach, and boot loaders
+can also have problems with it - you really need solid support from the
+distro.
+
+I'm guessing that when you say "container" above you are really talking about
+option 2 here.  This is better referred to as "partitioned RAID".
+
 > 
-> Thank you.
-> Nebojsa Trpkovic
+> I'm wondering if containers might make a better approach than
+> partitioning and creating separate raid volumes.  My thoughts are that
+> maybe using containers potentially simplify the management of drives, to
+> simply adding new or replacement drives to the raid container and having
+> them added into degraded arrays automatically or as spares (for live
+> migration when it gets implemented).
 
-You're welcome, and all the best,
-Stefan
+If I understand your use of the word correctly, then yes it would simplify
+management.  However if you want to boot from the array you might run in to
+problems there.
+
+> 
+> Is there any more documentation around on the usage of containers in md?
+
+Probably not...
+
+NeilBrown
