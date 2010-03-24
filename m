@@ -1,50 +1,64 @@
-From: Randy Terbush <randy@terbush.org>
-Subject: Re: (Re: Questions regarding startup of imsm container)
-Date: Wed, 24 Mar 2010 15:35:42 -0600
-Message-ID: <7db987b31003241435l5bf834cav716f904a119de642@mail.gmail.com>
-References: <7db987b31003222056i46c42112s541ba949821a6759@mail.gmail.com>
-	<20100323080419.GA9374@maude.comedia.it> <7db987b31003230558l5993817fwb283c66bbf3633e9@mail.gmail.com>
-	<7db987b31003230733n127ed0e2u35bbd1de3cb57733@mail.gmail.com>
-	<e9c3a7c21003231541u705b60a1w9388a8225275dfa4@mail.gmail.com>
+From: =?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?=
+	<stefan.huebner@stud.tu-ilmenau.de>
+Subject: Re: TLER / CCTL timeout handling
+Date: Wed, 24 Mar 2010 22:54:41 +0100
+Message-ID: <4BAA8A21.8050601@stud.tu-ilmenau.de>
+References: <4BA93C3F.2070208@gmail.com>
+Reply-To: st0ff@npl.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e9c3a7c21003231541u705b60a1w9388a8225275dfa4@mail.gmail.com>
+In-Reply-To: <4BA93C3F.2070208@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>, linux-raid@vger.kernel.org
+To: Nebojsa Trpkovic <trx.lists@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Mar 23, 2010 at 4:41 PM, Dan Williams <dan.j.williams@intel.com=
-> wrote:
->> And would sure like to have a write-intent bitmap active to avoid th=
-is
->> resync issue which seems to be happening way too frequently.
->
-> This could also be a problem with your distribution not taking care o=
-f
-> mdmon properly at shutdown. =A0The shutdown scripts need to keep mdmo=
-n
-> alive over the final "remounting rootfs readonly" event and wait for
-> it to mark the array/metadata clean. =A0Otherwise there is a good cha=
-nce
-> that the array will be left dirty and require a resync at startup.
->
-> Also note that recent versions of mdadm (3.1.2) and the kernel
-> (2.6.33) can checkpoint imsm resyncs so at least it will not start
-> over from the beginning when you reboot in the middle of a resync.
+Am 23.03.2010 23:10, schrieb Nebojsa Trpkovic:
+> Hello.
+> 
+> I've found interesting text about TLER / CCTL
+> (http://en.wikipedia.org/wiki/Time-Limited_Error_Recovery )
 
-Does this functionality just work with the described version
-combination, or is there something that needs to be done to activate
-this behavior?
+You might want to read on inside the ATA8-ACS, section about SCT Transport.
+> 
+> on desktop class drives:
+> http://forums.storagereview.com/index.php/topic/28333-tler-cctl/
+> 
+> So, the question is:
+> 
+> If I make my drive report back it failed to read the requested sector,
+> how that report will be handeled?
 
-On a semi-related not, I believe I have worked out all of the startup
-and shutdown issues and do have a imsm RAID configured that will now
-survive a reboot without going int resync. However, I still am not
-able to convince the array at startup to reconnect the external
-write-intent bitmap. Is there some magic here that I am missing?
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+As far as I understood in recent answers to my questions: as expected.
+> 
+> Will Linux software RAID be aware of that report and start some action
+> (rebuilding affected stripe or at least whole array, reallocating bad
+> sectors along the way) ?
+> 
+Indeed.  Michael Tokarev answered to me on 2/9/10:
+"On failed _read_ it tries to
+reconstruct data from other disk drives and writes the reconstructed
+data back to the drive where read failed.  If the _write_ fails md will
+drop the disk."
+
+This means: if read fails and the drive does not report back, the
+following reconstructing write calls will fail, too.  The disk gets
+dropped, because it (most probably) is still doing its error recovery on
+the former read request and by that not responding.
+
+If you enable ERC read timeouts, it'll report a media error (or
+something similar), but honour the write request.  If you give the ERC
+write timeout a value that is not too small and also not too large (i.e.
+it shouldn't timeout the write-operation from the view of the kernel),
+it will either fix the pending sector, or reallocate it.  If the ERC
+write timeout value is too small, it'll very aggressively reallocate
+sectors - which should not be the intention, as there are very few spare
+sectors (compared to the amount of sectors in total - only a few thousand).
+> 
+> Thank you.
+> Nebojsa Trpkovic
+
+You're welcome, and all the best,
+Stefan
