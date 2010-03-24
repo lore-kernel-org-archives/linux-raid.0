@@ -1,67 +1,24 @@
-From: Chris Mason <chris.mason@oracle.com>
-Subject: Re: [RFC PATCH 0/2] more raid456 thread pool experimentation
-Date: Wed, 24 Mar 2010 11:51:54 -0400
-Message-ID: <20100324155154.GG5021@think>
-References: <20100324144904.15371.2317.stgit@dwillia2-linux>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Another take on replacing failed raid drives
+Date: Wed, 24 Mar 2010 13:06:35 -0400
+Message-ID: <4BAA469B.3050001@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-btrfs-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100324144904.15371.2317.stgit@dwillia2-linux>
-Sender: linux-btrfs-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Mar 24, 2010 at 07:53:10AM -0700, Dan Williams wrote:
-> The current implementation with the async thread pool ends up spreading
-> the work over too many threads.  The btrfs workqueue is targeted at high
-> cpu utilization works and has a threshold mechanism to limit thread
-> spawning.  Unfortunately it still ends up increasing cpu utilization
-> without a comparable improvement in throughput.  Here are the numbers
-> relative to the multicore disabled case:
-> 
-> idle_thresh	throughput	cycles
-> 4		+0%		+102%
-> 64		+4%		+63%
-> 128		+1%		+45%
+I stumbled on this description of replacing a drive in a raid array. I 
+share it because different takes on a subject are usesful, and because 
+he had multiple arrays using partitions of the failed drive, rather than 
+a partitioned array.
 
-Interesting, do the btrfs workqueues improve things?  Or do you think they are
-just a better base for more tuning?
+http://blogs.techrepublic.com.com/opensource/?p=1368
 
-I had always hoped to find more users for the work queues and tried to
-keep btrfs specific features out of them.  The place I didn't entirely
-succeed was in the spin locks, the ordered queues take regular spin
-locks to avoid turning off irqs where btrfs always does things outside
-of interrupt time.  Doesn't look like raid needs the ordered queues so
-this should work pretty well.
-
-> 
-> This appears to show that something more fundamental needs to happen to
-> take advantage of percpu raid processing.  More profiling is needed, but
-> the suspects in my mind are conf->device_lock contention and the fact
-> that all work is serialized through conf->handle_list with no method for
-> encouraging stripe_head to thread affinity.
-
-The big place I'd suggest to look inside the btrfs async-thread.c for
-optimization is the worker_loop().  For work that tends to be bursty and
-relatively short, we can have worker threads finish their work fairly
-quickly and go to sleep, only to be woken up very quickly again with
-another big batch of work.  The worker_loop code tries to wait around
-for a while, but the tuning here was btrfs specific.
-
-It might also help to tune the find_worker and next_worker code to prefer
-giving work to threads that are running but almost done with their
-queue.  Maybe they can be put onto a special hot list as they get near
-the end of their queue.
-
-There's a rule somewhere that patches renaming things must have replies
-questioning the new name.  The first reply isn't actually allowed to
-suggest a better name, which is good because I'm not very good at
-that kind of thing.
-
-Really though, btr_queue is fine by me, but don't feel obligated to keep
-some variation of btrfs in the name ;)
-
--chris
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "We can't solve today's problems by using the same thinking we
+   used in creating them." - Einstein
 
