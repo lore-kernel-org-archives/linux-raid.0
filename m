@@ -1,31 +1,34 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: [PATCH] (Re: Questions regarding startup of imsm container)
-Date: Wed, 24 Mar 2010 07:12:11 +0100
-Message-ID: <20100324061211.GA18699@maude.comedia.it>
-References: <7db987b31003222056i46c42112s541ba949821a6759@mail.gmail.com> <20100323080419.GA9374@maude.comedia.it> <20100324115749.1ac9d6f8@notabene.brown>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: 2.6.33.1: RAID multi-core processing experimental option is
+ broken.
+Date: Wed, 24 Mar 2010 07:50:19 -0400 (EDT)
+Message-ID: <alpine.DEB.2.00.1003240745350.5602@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100324115749.1ac9d6f8@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Mar 24, 2010 at 11:57:49AM +1100, Neil Brown wrote:
->On Tue, 23 Mar 2010 09:04:19 +0100
->Thanks for the patch.  However I would prefer to disable bitmap support for
->those metadata formats which report that they don't support it.
->Thus the following patch.
-It is more reasonable, as Dan confirmed external bitmaps should work,
-which i was unsure at the beginning.
+Hi,
 
-L.
+2.6.33.1/x86_64 on an e6700 processor:
 
--- 
-Luca Berra -- bluca@comedia.it
-         Communication Media & Services S.r.l.
-  /"\
-  \ /     ASCII RIBBON CAMPAIGN
-   X        AGAINST HTML MAIL
-  / \
+If you accidentally check [*] for Multi-core processing, the speed is
+about 5MiB/s and there are some 254 processes.
+
+When its not enabled, the speed goes back to normal and there are no longer
+200-300 processes running, I have reproduced this on multiple machines now.
+
+Enable this option in the kernel, boot the new kernel, do some raid i/o
+operations/or a check/resync to the array and it will be 1/4 the speed when
+multi-core processing is enabled.
+   | |    [ ]       RAID-4/RAID-5/RAID-6 Multicore processing (EXPERIMENTAL| |
+
+With it disabled, we're good:
+md0 : active raid6 sdg1[5] sde1[3] sdf1[4] sdd1[2] sdc1[1] sdb1[0]
+       1562834944 blocks level 6, 64k chunk, algorithm 2 [6/6] [UUUUUU]
+       [========>............]  resync = 44.5% (173910976/390708736) finish=178.3min speed=20253K/sec
+
+Justin.
