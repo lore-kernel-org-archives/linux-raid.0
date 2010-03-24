@@ -1,59 +1,92 @@
-From: Eric Shubert <ejs@shubes.net>
-Subject: Re: 3-drive RAID1 for my low use home server?
-Date: Wed, 24 Mar 2010 07:49:19 -0700
-Message-ID: <hod8pf$imk$1@dough.gmane.org>
-References: <5bdc1c8b1003231437q1cbeabex85833be0a59e3357@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH] (Re: Questions regarding startup of imsm container)
+Date: Wed, 24 Mar 2010 07:49:46 -0700
+Message-ID: <e9c3a7c21003240749y2d8cf545r74b2307ae5dcda0@mail.gmail.com>
+References: <7db987b31003222056i46c42112s541ba949821a6759@mail.gmail.com>
+	 <20100323080419.GA9374@maude.comedia.it>
+	 <20100324115749.1ac9d6f8@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5bdc1c8b1003231437q1cbeabex85833be0a59e3357@mail.gmail.com>
+In-Reply-To: <20100324115749.1ac9d6f8@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Luca Berra <bluca@comedia.it>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mark Knecht wrote:
-> Hi,
->    Just triple checking what I think I've learned here before I start
-> loading Gentoo. Parts are arriving and I'm staring to put them
-> together to build a combo low-use server (backups and MythTV) as well
-> as desktop for my wife. I can do anything up to 6 drives but want the
-> RAID to survive in the face of possibly two drive failure. This is all
-> low bandwidth stuff.
-> 
->    I'm fairly focused at this point on doing RAID1 using 3 drives.
-> Unless I hear differently I believe a 3-drive RAID1 could survive 2
-> drive failures, and as well any single drive could be taken to another
-> machine or even placed in an external USB/eSATA drive container in the
-> event of some major motherboard failure. Is any of that incorrect?
+On Tue, Mar 23, 2010 at 5:57 PM, Neil Brown <neilb@suse.de> wrote:
+> On Tue, 23 Mar 2010 09:04:19 +0100
+> Luca Berra <bluca@comedia.it> wrote:
+>
+>> On Mon, Mar 22, 2010 at 09:56:01PM -0600, Randy Terbush wrote:
+>> >Having a go at building a raid5 array using the new imsm support an=
+d
+>> >having good luck keeping drives in the array, etc. Nice work. I hav=
+e a
+>> >few questions though as I am having some trouble figuring out how t=
+o
+>> >properly start this container.
+>> >
+>> ># mdadm --version
+>> >mdadm - v3.1.2 - 10th March 2010
+>> >
+>> ># mdadm -Es
+>> >ARRAY metadata=3Dimsm UUID=3D30223250:76fd248b:50280919:0836b7f0
+>> >ARRAY /dev/md/Volume0 container=3D30223250:76fd248b:50280919:0836b7=
+f0
+>> >member=3D0 UUID=3D8a4ae452:da1e7832:70ecf895:eb58229c
+>> >
+>> ># ls -l /dev/md/
+>> >total 0
+>> >lrwxrwxrwx 1 root root 6 Mar 22 20:54 0 -> ../md0
+>> >lrwxrwxrwx 1 root root 8 Mar 22 20:54 127 -> ../md127
+>> >lrwxrwxrwx 1 root root 8 Mar 22 20:54 Volume0_0 -> ../md127
+>> >
+>> >As you can see, the name for the link in /dev/md does not agree wit=
+h
+>> >the name that the Examine is coming up with.
+>> please read mdadm.conf manpage, under the section "HOMEHOST"
+>>
+>> >Is it better to just forgo the ARRAY statements and go with an AUTO=
+ +imsm?
+>> >
+>> >And last, does the concept of a write-intent bitmap make sense on a=
+n
+>> >imsm container? If so, I get a segv if trying to run mdadm /dev/mdX
+>> >-Gb internal on either device.
+>>
+>> i don't believe it makes sense at all, surely imsm do not support an
+>> internal bitmap (no provisioning for it in the metadata)
+>>
+>> The attached patch completely disables bitmap support for arrays wit=
+h
+>> externally managed metadata.
+>
+> Thanks for the patch. =A0However I would prefer to disable bitmap sup=
+port for
+> those metadata formats which report that they don't support it.
+> Thus the following patch.
+>
+> Thanks,
+> NeilBrown
+>
+>
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!st->ss->add_internal_bitmap) {
+[..]
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (st->ss->add_internal_bitmap =3D=3D =
+NULL) {
+[..]
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 } else if (!st->ss->locate_bitmap) {
 
-All sounds right to me. Just be sure that the array is defined with 3 
-drives and no spares.
+The smallest of nits, or maybe just a clarification.  I believe you
+have said in the past that you prefer the readability of
+positive-logic if statements where possible.
 
->    Also, along the way folks have mentioned hot spares but I'm not
-> seeing that a hot spare does much for RAID1. Am I incorrect about
-> that?
-
-Right. The only thing it would buy you is a little write performance, 
-but you'd lose a little read performance, and take a performance hit 
-if/when one drive goes off.
-
-> Granted, I guess the rebuild starts automatically and maybe
-> that's worth it, but I'm thinking that mdadm can probably let me know
-> fairly quickly that I need to do some work. I've purchased 6 drives so
-> I'll have 2 or 3 spares around and I can do a hot spare but I don't
-> see the value in spinning the drive for a year burning power and
-> wearing the drive out vs. just putting it on the shelf and keeping it
-> in reserve for a rainy day.
-
-Just one thought here. There is a certain "infant mortality syndrome" 
-that drives experience (according to google study). I would rotate 
-drives from the shelf into service after a year or so, while they're 
-still under warranty (assuming 3yr warranty). If the warranty period is 
-less than 2yr, rotate them sooner.
-
-NJoy!
-
--- 
--Eric 'shubes'
-
+--
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
