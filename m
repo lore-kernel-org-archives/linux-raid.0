@@ -1,115 +1,94 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Auto Rebuild on hot-plug
-Date: Thu, 25 Mar 2010 14:10:05 +0000
-Message-ID: <4BAB6EBD.2030503@anonymous.org.uk>
+From: "Labun, Marcin" <Marcin.Labun@intel.com>
+Subject: RE: Auto Rebuild on hot-plug
+Date: Thu, 25 Mar 2010 15:04:58 +0000
+Message-ID: <905EDD02F158D948B186911EB64DB3D11C510278@irsmsx503.ger.corp.intel.com>
 References: <20100325113543.0e2124c5@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20100325113543.0e2124c5@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Doug Ledford <dledford@redhat.com>, Dan Williams <dan.j.williams@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, linux-raid@vger.kernel.org, Bill Davidsen <davidsen@tmr.com>
+To: Neil Brown <neilb@suse.de>, Doug Ledford <dledford@redhat.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Bill Davidsen <davidsen@tmr.com>
 List-Id: linux-raid.ids
 
-On 25/03/2010 00:35, Neil Brown wrote:
-> Greetings.
->  I find myself in the middle of two separate off-list conversations on the
->  same topic and it has reached the point where I think the conversations
->  really need to be unite and brought on-list.
+Thank you for bringing-up this design.
+
 > 
->  So here is my current understanding and thoughts.
+>   Probably the most important first step is to determine a configuration
+>   syntax and be sure it is broad enough to cover all needs.
 > 
->  The topic is about making rebuild after a failure easier.  It strikes me as
->  particularly relevant after the link  Bill Davidsen recently forwards to the
->  list:
+>   I'm thinking:
+>     DOMAIN path=glob-pattern metadata=type  hotplug=mode  spare-group=name
 > 
->        http://blogs.techrepublic.com.com/opensource/?p=1368
+>   I explicitly have "path=" in case we find there is a need to identify
+>   devices some other way - maybe by control vendor:device or some other
+>   content-based approach
+>   The spare-group name is inherited by any array with devices in this
+>   domain as long as that doesn't result it in having two different
+>   spare-group names.
+>   I'm not sure if "metadata=" is really needed.  If all the arrays that
+> use
+>   these devices have the same metadata, it would be redundant to list it
+> here.
+
+I think that metadata keyword can be used to identify scope of devices to which the DOMAIN line applies.
+For instance we could have:
+DOMAIN path=glob-pattern metadata=imsm hotplug=mode1  spare-group=name1
+DOMAIN path=glob-pattern metadata=0.90 hotplug=mode2  spare-group=name2
+
+Keywords: 
+Path, metadata and spare-group shall define to which arrays the hotplug definition (or other definition of action) applies. User could define any subset of it.
+For instance to define that all imsm arrays shall use hotplug mode2 user shall define:
+DOMAIN metadata=imsm hotplug=mode2
+
+In above example user need not define spare-group in his/her configuration file for each array.
+
+I also assume that each metadata handler can additionally sets its own rules of accepting the spare in the container. Rules can be derived from platform dependencies or metadata. Notice that user can disable platform specific constrains by defining IMSM_NO_PLATFORM environment variable. 
+
+
+>   If they use different metadata ... then what?
+>   I guess two different DOMAIN lines could identify the same devices and
+>   list different metadata types and given them different spare-group
+>   names.  However you cannot support hotplug of bare devices into both ...
 > 
->  The most significant thing I got from this was a complain in the comments
->  that managing md raid was too complex and hence error-prone.
+>   If it possible for multiple DOMAIN lines to identify the same device,
+>   e.g. by having more or less specific patterns. In this case the spare-
+> group
+>   names are ignored if they conflict, and the hotplug mode used is the
+> most
+>   permissive.
+Maybe use the most specific match?
+
 > 
->  I see the issue as breaking down in to two parts.
->   1/ When a device is hot plugged into the system, is md allowed to use it as
->      a spare for recovery?
->   2/ If md has a spare device, what set of arrays can it be used in if needed.
+>   hotplug modes are:
+>     none  - ignore any hotplugged device
+>     incr  - normal incremental assembly (the default).  If the device has
+>          metadata that matches an array, try to add it to the array
+>     replace - If above fails and a device was recently removed from this
+>          same path, add this device to the same array(s) that the old
+> devices
+>          was part of
+>     include - If the above fails and the device has not recognisable
+> metadata
+>          add it to any array/container that uses devices in this domain,
+>          partitioning first if necessary.
+>     force - as above but ignore any pre-existing metadata
 > 
->  A typical hot plug event will need to address both of these questions in
->  turn before recovery actually starts.
 > 
->  Part 1.
-> 
->   A newly hotplugged device may have metadata for RAID (0.90, 1.x, IMSM, DDF,
->   other vendor metadata) or LVM or a filesystem.  It might have a partition
->   table which could be subordinate to or super-ordinate to other metadata.
->   (i.e. RAID in partitions, or partitions in RAID).  The metadata may or may
->   not be stale.  It may or may not match - either strongly or weakly -
->   metadata on devices in currently active arrays.
+>   I'm not sure that all those are needed, or are the best names.  Names
+> like
+>     ignore, reattach, rebuild, rebuild_spare
+>   have also been suggested.
 
-Or indeed it may have no metadata at all - it may be a fresh disc. I 
-didn't see that you stated this specifically at any point, though it was 
-there by implication, so I will: you're going to have to pick up hotplug 
-events for bare drives, which presumably means you'll also get events 
-for CD-ROM drives, USB sticks, printers with media card slots in them etc.
+Please consider:
+      spare_add - add any spare device that matches the metadata container/volume in case of native metadata regardless of array state, so later such a spare can be used in rebuild process.
 
->   A newly hotplugged device also has a "path" which we can see
->   in /dev/disk/by-path.  This is somehow indicative of a physical location.
->   This path may be the same as the path of a device which was recently
->   removed.  It might be one of a set of paths which make up a "RAID chassis".
->   It might be one of a set of paths one which we happen to find other RAID
->   arrays.
+Can we assume for all external metadata that spares added any container can be potentially moved between all container the same metadata?
+I expect that this could be default behavior if no spare groups are defined for some metadata.
+More over each metadata handler could impose build-in rules on spares assignment to specific container.
 
-Indeed, I would like to be able to declare any 
-/dev/disk/by-path/pci-0000:00:1f.2-scsi-[0-4] to be suitable candidates 
-for hot-plugging, because those are the 5 motherboard SATA ports I've 
-hooked into my hot-swap chassis.
-
-As an aside, I just tried yanking and replugging one of my drives, on 
-CentOS 5.4, and it successfully went away and came back again, but 
-wasn't automatically re-added, even though the metadata etc was all there.
-
->   Some how from all of that information we need to decide if md can use the
->   device without asking, or possibly with a simple yes/no question, and we
->   need to decide what to actually do with the device.
-> 
->   Options for what to do with the device include:
->     - write an MBR and partition table, then do something as below with
->       each partition
-
-Definitely want this for bare drives. In my case I'd like the MBR and 
-first 62 sectors copied from one of the live drives, or a copy saved for 
-the purpose, so the disc can be bootable.
-
-My concern is that this is surely outwith the regular scope of 
-mdadm/mdmon, as is handling bare drives/CD-ROMs/USB sticks. Do we need 
-another mdadm companion rather than an addition?
-
->     - include the device (or partition) in an array that it was previously
->       part of, but from which it was removed
-
-Definitely, just so I can pull a drive and plug it in again and point 
-and say ooh, everything's up and running again, to demonstrate how cool 
-Linux md is. I imagine some distros' udev/hotplug rules do this already, 
-almost by default where they assemble arrays incrementally.
-
->     - include the device or partition as a spare in a native-metadata array.
-
-I think in my situation I'd quite like the first partition, type fd 
-metadata 0.90 RAID-1 mounted as /boot, added as an active mirror not a 
-spare, again so that if this new drive appears as sda at the next power 
-cycle, the system will boot.
-
-The second partition, a RAID-5 with LVM on it, could be added as a 
-spare, because it would then automatically be rebuilt onto if the array 
-was degraded.
-
->  Part 2.
-[...]
-
-I'm afraid I have nothing to add here, it all sounds good.
-
-Cheers,
-
-John.
-
+Thanks,
+Marcin Labun
