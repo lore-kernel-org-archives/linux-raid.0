@@ -1,102 +1,96 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Auto Rebuild on hot-plug
-Date: Thu, 25 Mar 2010 09:01:08 +0100
-Message-ID: <20100325080108.GB20583@maude.comedia.it>
-References: <20100325113543.0e2124c5@notabene.brown>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+From: Anshuman Aggarwal <anshuman@brillgene.com>
+Subject: 4 partition raid 5 with 2 disks active and 2 spare, how to force?
+Date: Thu, 25 Mar 2010 15:00:19 +0530
+Message-ID: <2E4545D6-8F4E-4779-9103-960C52983A72@brillgene.com>
+References: <S1753093Ab0CYHZE/20100325072504Z+37@vger.kernel.org>
+Mime-Version: 1.0 (Apple Message framework v1077)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100325113543.0e2124c5@notabene.brown>
+In-Reply-To: <S1753093Ab0CYHZE/20100325072504Z+37@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Mar 25, 2010 at 11:35:43AM +1100, Neil Brown wrote:
->
->       http://blogs.techrepublic.com.com/opensource/?p=1368
->
-> The most significant thing I got from this was a complain in the comments
-> that managing md raid was too complex and hence error-prone.
+All, thanks in advance...particularly Neil.
 
-well, i would not be upset by j. random jerk complaining in a blog
-comments, as soon as you make it one click you will find another one
-that complains because it is not is favorite colour :P
+My raid5 setup has 4 partitions, 2 of which are showing up as spare and 2 as active. The mdadm --assemble --force gives me the following error:
+2 active devices and 2 spare cannot start device
 
-> I see the issue as breaking down in to two parts.
->  1/ When a device is hot plugged into the system, is md allowed to use it as
->     a spare for recovery?
->  2/ If md has a spare device, what set of arrays can it be used in if needed.
->
-> A typical hot plug event will need to address both of these questions in
-> turn before recovery actually starts.
->
-> Part 1.
->
->  A newly hotplugged device may have metadata for RAID (0.90, 1.x, IMSM, DDF,
->  other vendor metadata) or LVM or a filesystem.  It might have a partition
->  table which could be subordinate to or super-ordinate to other metadata.
->  (i.e. RAID in partitions, or partitions in RAID).  The metadata may or may
->  not be stale.  It may or may not match - either strongly or weakly -
->  metadata on devices in currently active arrays.
-also the newly hotplugged device may have _data_ on it.
+it is a raid 5, with superblock 1.2, 4 devices in the order sda1, sdb5, sdc5, sdd5. I have lvm2 on top of this with other devices ...so as you all know data is irreplaceable blah blah.
 
->  Some how from all of that information we need to decide if md can use the
->  device without asking, or possibly with a simple yes/no question, and we
->  need to decide what to actually do with the device.
-how does the yes/no question part work?
+I know that this device has not been written to for a while, so the data can be considered intact (hopefully all) if I can get the device to start up...but I'm not sure of the best way to coax the kernel to assemble it. Relevant information follows:
 
->  Options for what to do with the device include:
->    - write an MBR and partition table, then do something as below with
->      each partition
->    - include the device (or partition) in an array that it was previously
->      part of, but from which it was removed
->    - include the device or partition as a spare in a native-metadata array.
->    - add the device as a spare to a vendor-metadata array
-I really feel there is much room for causing disasters with a similar
-approach.
+=== This device is working fine === 
+mdadm --examine  -e1.2 /dev/sdb5
+/dev/sdb5:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 42c56ea0:2484f566:387adc6c:b3f6a014
+           Name : GATEWAY:127  (local to host GATEWAY)
+  Creation Time : Sat Aug 22 09:44:21 2009
+     Raid Level : raid5
+   Raid Devices : 4
 
-The main difference from an hw raid controller is that the hw raid
-controller _requires_ full control on the individual disks.
-MD does not. Trying to do things automatically without full control is
-very dangerous.
-this may be different when using ddf or imsm since they are usually
-working on whole drives attached to a raid-like controller (even if one
-of the strenghts of md is being able to activate those arrays even
-without the original controller).
+ Avail Dev Size : 586099060 (279.47 GiB 300.08 GB)
+     Array Size : 1758296832 (838.42 GiB 900.25 GB)
+  Used Dev Size : 586098944 (279.47 GiB 300.08 GB)
+    Data Offset : 272 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : f8ebb9f8:b447f894:d8b0b59f:ca8e98eb
 
-If you want to be user-friendly just add a simple script
-/usr/bin/md-replace-drive
-It will take as input either an md array or a working drive as source,
-and the new drive as target.
-In the first case it has examine the components of the source md
-determine if they are partitions or a whole devices (sysfs), in the first
-case, find the whole drive and ensure they are partitioned in the same
-way.
-It will examine the source drive for partition and all md arrays it is
-part of. it will ensure that those arrays have a failed device,
-Check the size of the components and match them to the new drive (no
-sense replacing a 1T drive with a 750Gb one)
+Internal Bitmap : 2 sectors from superblock
+    Update Time : Fri Mar 19 00:56:15 2010
+       Checksum : 1005cfbc - correct
+         Events : 3796145
 
-ask the user for confirmation in big understandable letters
+         Layout : left-symmetric
+     Chunk Size : 64K
 
-replicate any mbr and partition table, and include the device (or all
-newly created partitions) in the relevant md device.
+   Device Role : Active device 2
+   Array State : .AA. ('A' == active, '.' == missing)
 
-an improvement would be not needing user to specify a source in the most
-simple of cases, by checking for all arrays with a failed device.
+=== This device is marked spare, can be marked active (IMHO) ===
+mdadm --examine  -e1.2 /dev/sdd5
+/dev/sdd5:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 42c56ea0:2484f566:387adc6c:b3f6a014
+           Name : GATEWAY:127  (local to host GATEWAY)
+  Creation Time : Sat Aug 22 09:44:21 2009
+     Raid Level : raid5
+   Raid Devices : 4
 
-we can also make /usr/bin/md-create-spare ...
+ Avail Dev Size : 586099060 (279.47 GiB 300.08 GB)
+     Array Size : 1758296832 (838.42 GiB 900.25 GB)
+  Used Dev Size : 586098944 (279.47 GiB 300.08 GB)
+    Data Offset : 272 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 763a832f:1a9a7ea8:ce90d4a3:32e8ae54
 
-> Part 2.
->
+Internal Bitmap : 2 sectors from superblock
+    Update Time : Fri Mar 19 00:56:15 2010
+       Checksum : c78aab46 - correct
+         Events : 3796145
 
-makes sense
+         Layout : left-symmetric
+     Chunk Size : 64K
 
--- 
-Luca Berra -- bluca@comedia.it
-         Communication Media & Services S.r.l.
-  /"\
-  \ /     ASCII RIBBON CAMPAIGN
-   X        AGAINST HTML MAIL
-  / \
+   Device Role : spare
+   Array State : .AA. ('A' == active, '.' == missing)
+
+
+=== This is the completely failed device (needs replacement)	=== 
+mdadm --examine  -e1.2 /dev/sda1
+[HANGS!!]
+
+
+
+I already have the replacement drive available as sde5 but want to be able to reconstruct as much as possible)
+
+Thanks again,
+Anshuman Aggarwal
