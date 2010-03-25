@@ -1,143 +1,115 @@
-From: Anshuman Aggarwal <anshuman@brillgene.com>
-Subject: Re: 4 partition raid 5 with 2 disks active and 2 spare, how to force?
-Date: Thu, 25 Mar 2010 19:39:38 +0530
-Message-ID: <DFC0232A-8DCD-4815-AA08-DA7065F01221@brillgene.com>
-References: <S1753093Ab0CYHZE/20100325072504Z+37@vger.kernel.org> <2E4545D6-8F4E-4779-9103-960C52983A72@brillgene.com> <4877c76c1003250437r346e18en8da0f6f804bef634@mail.gmail.com>
-Mime-Version: 1.0 (Apple Message framework v1077)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Auto Rebuild on hot-plug
+Date: Thu, 25 Mar 2010 14:10:05 +0000
+Message-ID: <4BAB6EBD.2030503@anonymous.org.uk>
+References: <20100325113543.0e2124c5@notabene.brown>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4877c76c1003250437r346e18en8da0f6f804bef634@mail.gmail.com>
+In-Reply-To: <20100325113543.0e2124c5@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Evans <mjevans1983@gmail.com>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Doug Ledford <dledford@redhat.com>, Dan Williams <dan.j.williams@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, linux-raid@vger.kernel.org, Bill Davidsen <davidsen@tmr.com>
 List-Id: linux-raid.ids
 
-Thanks Michael, I am clear about the problem of why the multiple failure would cause me to lose data. Which is why I wanted to consult this mailing list before proceeding. 
+On 25/03/2010 00:35, Neil Brown wrote:
+> Greetings.
+>  I find myself in the middle of two separate off-list conversations on the
+>  same topic and it has reached the point where I think the conversations
+>  really need to be unite and brought on-list.
+> 
+>  So here is my current understanding and thoughts.
+> 
+>  The topic is about making rebuild after a failure easier.  It strikes me as
+>  particularly relevant after the link  Bill Davidsen recently forwards to the
+>  list:
+> 
+>        http://blogs.techrepublic.com.com/opensource/?p=1368
+> 
+>  The most significant thing I got from this was a complain in the comments
+>  that managing md raid was too complex and hence error-prone.
+> 
+>  I see the issue as breaking down in to two parts.
+>   1/ When a device is hot plugged into the system, is md allowed to use it as
+>      a spare for recovery?
+>   2/ If md has a spare device, what set of arrays can it be used in if needed.
+> 
+>  A typical hot plug event will need to address both of these questions in
+>  turn before recovery actually starts.
+> 
+>  Part 1.
+> 
+>   A newly hotplugged device may have metadata for RAID (0.90, 1.x, IMSM, DDF,
+>   other vendor metadata) or LVM or a filesystem.  It might have a partition
+>   table which could be subordinate to or super-ordinate to other metadata.
+>   (i.e. RAID in partitions, or partitions in RAID).  The metadata may or may
+>   not be stale.  It may or may not match - either strongly or weakly -
+>   metadata on devices in currently active arrays.
 
-Could you tell me how to keep the array read-only?  and mark one or both of these spares as active forcibly? and Also, once I am able to use these spares as active and the data is not consistent in a particular stripe, how does the kernel resolve the inconsistency (as in what data does it use, the one based on the data stripes or the one based on the parity?) this one is just academic interest since it'll be difficult to figure out which is the right data anyways.
+Or indeed it may have no metadata at all - it may be a fresh disc. I 
+didn't see that you stated this specifically at any point, though it was 
+there by implication, so I will: you're going to have to pick up hotplug 
+events for bare drives, which presumably means you'll also get events 
+for CD-ROM drives, USB sticks, printers with media card slots in them etc.
 
-Thanks,
-Anshuman
+>   A newly hotplugged device also has a "path" which we can see
+>   in /dev/disk/by-path.  This is somehow indicative of a physical location.
+>   This path may be the same as the path of a device which was recently
+>   removed.  It might be one of a set of paths which make up a "RAID chassis".
+>   It might be one of a set of paths one which we happen to find other RAID
+>   arrays.
 
-On 25-Mar-2010, at 5:07 PM, Michael Evans wrote:
+Indeed, I would like to be able to declare any 
+/dev/disk/by-path/pci-0000:00:1f.2-scsi-[0-4] to be suitable candidates 
+for hot-plugging, because those are the 5 motherboard SATA ports I've 
+hooked into my hot-swap chassis.
 
-> On Thu, Mar 25, 2010 at 2:30 AM, Anshuman Aggarwal
-> <anshuman@brillgene.com> wrote:
->> All, thanks in advance...particularly Neil.
->> 
->> My raid5 setup has 4 partitions, 2 of which are showing up as spare and 2 as active. The mdadm --assemble --force gives me the following error:
->> 2 active devices and 2 spare cannot start device
->> 
->> it is a raid 5, with superblock 1.2, 4 devices in the order sda1, sdb5, sdc5, sdd5. I have lvm2 on top of this with other devices ...so as you all know data is irreplaceable blah blah.
->> 
->> I know that this device has not been written to for a while, so the data can be considered intact (hopefully all) if I can get the device to start up...but I'm not sure of the best way to coax the kernel to assemble it. Relevant information follows:
->> 
->> === This device is working fine ===
->> mdadm --examine  -e1.2 /dev/sdb5
->> /dev/sdb5:
->>          Magic : a92b4efc
->>        Version : 1.2
->>    Feature Map : 0x1
->>     Array UUID : 42c56ea0:2484f566:387adc6c:b3f6a014
->>           Name : GATEWAY:127  (local to host GATEWAY)
->>  Creation Time : Sat Aug 22 09:44:21 2009
->>     Raid Level : raid5
->>   Raid Devices : 4
->> 
->>  Avail Dev Size : 586099060 (279.47 GiB 300.08 GB)
->>     Array Size : 1758296832 (838.42 GiB 900.25 GB)
->>  Used Dev Size : 586098944 (279.47 GiB 300.08 GB)
->>    Data Offset : 272 sectors
->>   Super Offset : 8 sectors
->>          State : clean
->>    Device UUID : f8ebb9f8:b447f894:d8b0b59f:ca8e98eb
->> 
->> Internal Bitmap : 2 sectors from superblock
->>    Update Time : Fri Mar 19 00:56:15 2010
->>       Checksum : 1005cfbc - correct
->>         Events : 3796145
->> 
->>         Layout : left-symmetric
->>     Chunk Size : 64K
->> 
->>   Device Role : Active device 2
->>   Array State : .AA. ('A' == active, '.' == missing)
->> 
->> === This device is marked spare, can be marked active (IMHO) ===
->> mdadm --examine  -e1.2 /dev/sdd5
->> /dev/sdd5:
->>          Magic : a92b4efc
->>        Version : 1.2
->>    Feature Map : 0x1
->>     Array UUID : 42c56ea0:2484f566:387adc6c:b3f6a014
->>           Name : GATEWAY:127  (local to host GATEWAY)
->>  Creation Time : Sat Aug 22 09:44:21 2009
->>     Raid Level : raid5
->>   Raid Devices : 4
->> 
->>  Avail Dev Size : 586099060 (279.47 GiB 300.08 GB)
->>     Array Size : 1758296832 (838.42 GiB 900.25 GB)
->>  Used Dev Size : 586098944 (279.47 GiB 300.08 GB)
->>    Data Offset : 272 sectors
->>   Super Offset : 8 sectors
->>          State : clean
->>    Device UUID : 763a832f:1a9a7ea8:ce90d4a3:32e8ae54
->> 
->> Internal Bitmap : 2 sectors from superblock
->>    Update Time : Fri Mar 19 00:56:15 2010
->>       Checksum : c78aab46 - correct
->>         Events : 3796145
->> 
->>         Layout : left-symmetric
->>     Chunk Size : 64K
->> 
->>   Device Role : spare
->>   Array State : .AA. ('A' == active, '.' == missing)
->> 
->> 
->> === This is the completely failed device (needs replacement)    ===
->> mdadm --examine  -e1.2 /dev/sda1
->> [HANGS!!]
->> 
->> 
->> 
->> I already have the replacement drive available as sde5 but want to be able to reconstruct as much as possible)
->> 
->> Thanks again,
->> Anshuman Aggarwal--
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> 
+As an aside, I just tried yanking and replugging one of my drives, on 
+CentOS 5.4, and it successfully went away and came back again, but 
+wasn't automatically re-added, even though the metadata etc was all there.
+
+>   Some how from all of that information we need to decide if md can use the
+>   device without asking, or possibly with a simple yes/no question, and we
+>   need to decide what to actually do with the device.
 > 
-> You have a raid 5 array.
-> 
-> (drives then data+parity per drive as an example)
-> 1234
-> 
-> 123P
-> 45P6
-> 7P89
-> ...
-> 
-> You are missing two drives, meaning you lack parity and 1 data stripe
-> and have NO parity to recover it with.
-> 
-> It's like seeing:
-> 
-> .23.
-> .5P.
-> .P8.
-> 
-> and expecting to somehow recover the missing data when it is no longer
-> within the clean information.
-> 
-> Your only hope is to assemble the array in read only mode with the
-> other devices, if they can still even be read.  In that case you might
-> at least be able to recover nearly all of your data; hopefully any
-> missing areas are in unimportant files or non-allocated space.
-> 
-> At this point you should be EXTREMELY CAREFUL, and DO NOTHING, without
-> having a good solid plan in place.  Rushing /WILL/ cause you to loose
-> data that might still potentially be recovered.
+>   Options for what to do with the device include:
+>     - write an MBR and partition table, then do something as below with
+>       each partition
+
+Definitely want this for bare drives. In my case I'd like the MBR and 
+first 62 sectors copied from one of the live drives, or a copy saved for 
+the purpose, so the disc can be bootable.
+
+My concern is that this is surely outwith the regular scope of 
+mdadm/mdmon, as is handling bare drives/CD-ROMs/USB sticks. Do we need 
+another mdadm companion rather than an addition?
+
+>     - include the device (or partition) in an array that it was previously
+>       part of, but from which it was removed
+
+Definitely, just so I can pull a drive and plug it in again and point 
+and say ooh, everything's up and running again, to demonstrate how cool 
+Linux md is. I imagine some distros' udev/hotplug rules do this already, 
+almost by default where they assemble arrays incrementally.
+
+>     - include the device or partition as a spare in a native-metadata array.
+
+I think in my situation I'd quite like the first partition, type fd 
+metadata 0.90 RAID-1 mounted as /boot, added as an active mirror not a 
+spare, again so that if this new drive appears as sda at the next power 
+cycle, the system will boot.
+
+The second partition, a RAID-5 with LVM on it, could be added as a 
+spare, because it would then automatically be rebuilt onto if the array 
+was degraded.
+
+>  Part 2.
+[...]
+
+I'm afraid I have nothing to add here, it all sounds good.
+
+Cheers,
+
+John.
 
