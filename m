@@ -1,31 +1,43 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: metadata 1.2
-Date: Fri, 26 Mar 2010 20:43:52 +0100
-Message-ID: <20100326194352.GA2474@lazy.lzy>
+From: Peter Kieser <peter@kieser.ca>
+Subject: Re: Use of WD20EARS with MDADM
+Date: Fri, 26 Mar 2010 13:27:17 -0700
+Message-ID: <4BAD18A5.1080905@kieser.ca>
+References: <4BAB8D41.4010801@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <4BAB8D41.4010801@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andrew Dunn <andrew.g.dunn@gmail.com>
+Cc: Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi all,
+On 3/25/2010 9:20 AM, Andrew Dunn wrote:
+> Recently Dell is selling their WD20EARS (2TB) for 90$
+>
+> This being one of the best PPG (Price Per Gigabyte) snatches I have
+> seen, I was considering buying 8 of them for an mdadm array.
+>
+> Has anyone had experience with these drives?
+>
+> Note, they have 4K sectors.
+>
+> Thank you for your kind responses.
+>
+>    
+Hello,
 
-quick question: what's the use case for metadata 1.2?
+The 4096-byte sector drives work fine with mdadm. The main problem you 
+are going to run into with the WDC Green drives is their 8 second "idle" 
+setting. After 8 seconds, by default, the drive parks its heads. This 
+can lead to an amazingly high Load Cycle Count (LLC) after just a month 
+of operation due to the fact that most disk access happens around that 
+time causing the drive to park and unpark in repeated cycles.
 
-I read that the 4K offset is intended to leave space
-for the MBR and bootloader, I assume.
-The subtext here seems to be a partionless configuration
-with RAID, but I'm not aware of any bootloader which
-can boot from RAID and fit into 4K.
+To fix this, find a utility called wdidle3 (I have it, if you are unable 
+to locate it) and set the idle timeout on the drives to 300 seconds. 
+These drives do not support TLER, there is no ability to set it via 
+firmware anymore - WDC removed this ability sometime last year.
 
-Clarifications?
-
-Thanks a lot in advance,
-
-bye,
-
--- 
-
-piergiorgio
+-Peter
