@@ -1,136 +1,263 @@
-From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: An oddity: UNC error while re-adding/resyncing
-Date: Thu, 25 Mar 2010 20:50:41 -0700
-Message-ID: <4877c76c1003252050m17e28444nfea37065867e29b@mail.gmail.com>
-References: <4BAC0319.4010901@anonymous.org.uk>
+From: linbloke <linbloke@fastmail.fm>
+Subject: Re: Auto Rebuild on hot-plug
+Date: Fri, 26 Mar 2010 17:41:02 +1100
+Message-ID: <4BAC56FE.1000009@fastmail.fm>
+References: <20100325113543.0e2124c5@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BAC0319.4010901@anonymous.org.uk>
+In-Reply-To: <20100325113543.0e2124c5@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Mar 25, 2010 at 5:43 PM, John Robinson
-<john.robinson@anonymous.org.uk> wrote:
-> I did `mdadm --add /dev/md1 /dev/sdd2` and got the following in my ke=
-rnel
-> log:
+Neil Brown wrote:
+> Greetings.
+>  I find myself in the middle of two separate off-list conversations on the
+>  same topic and it has reached the point where I think the conversations
+>  really need to be unite and brought on-list.
 >
-> Mar 25 23:56:21 beast kernel: md: bind<sdd2>
-> Mar 25 23:56:21 beast kernel: RAID5 conf printout:
-> Mar 25 23:56:21 beast kernel: =A0--- rd:3 wd:2 fd:1
-> Mar 25 23:56:21 beast kernel: =A0disk 0, o:1, dev:sda2
-> Mar 25 23:56:21 beast kernel: =A0disk 1, o:1, dev:sdb2
-> Mar 25 23:56:21 beast kernel: =A0disk 2, o:1, dev:sdd2
-> Mar 25 23:56:21 beast kernel: md: syncing RAID array md1
-> Mar 25 23:56:21 beast kernel: md: minimum _guaranteed_ reconstruction=
- speed:
-> 1000 KB/sec/disc.
-> Mar 25 23:56:21 beast kernel: md: using maximum available idle IO ban=
-dwidth
-> (but not more than 2
-> 00000 KB/sec) for reconstruction.
-> Mar 25 23:56:21 beast kernel: md: using 128k window, over a total of
-> 976655360 blocks.
-> Mar 25 23:56:22 beast kernel: ata3.00: exception Emask 0x0 SAct 0x3 S=
-Err 0x0
-> action 0x0
-> Mar 25 23:56:22 beast kernel: ata3.00: irq_stat 0x40000008
-> Mar 25 23:56:22 beast kernel: ata3.00: cmd
-> 60/00:00:a5:3f:03/04:00:00:00:00/40 tag 0 ncq 524288
-> in
-> Mar 25 23:56:25 beast kernel: =A0 =A0 =A0 =A0 =A0res
-> 41/40:00:a0:41:03/8c:00:00:00:00/40 Emask 0x409 (medi
-> a error) <F>
-> Mar 25 23:56:25 beast kernel: ata3.00: status: { DRDY ERR }
-> Mar 25 23:56:26 beast kernel: ata3.00: error: { UNC }
-> Mar 25 23:56:26 beast kernel: ata3.00: configured for UDMA/133
-> Mar 25 23:56:26 beast kernel: ata3: EH complete
-> Mar 25 23:56:26 beast kernel: SCSI device sda: 1953525168 512-byte hd=
-wr
-> sectors (1000205 MB)
-> Mar 25 23:56:26 beast kernel: sda: Write Protect is off
-> Mar 25 23:56:27 beast kernel: SCSI device sda: drive cache: write bac=
-k
-> Mar 25 23:56:27 beast kernel: ata3.00: exception Emask 0x0 SAct 0x3 S=
-Err 0x0
-> action 0x0
-> Mar 25 23:56:28 beast kernel: ata3.00: irq_stat 0x40000008
-> Mar 25 23:56:28 beast kernel: ata3.00: cmd
-> 60/00:08:a5:3f:03/04:00:00:00:00/40 tag 1 ncq 524288
-> in
-> Mar 25 23:56:28 beast kernel: =A0 =A0 =A0 =A0 =A0res
-> 41/40:00:a2:41:03/8c:00:00:00:00/40 Emask 0x409 (medi
-> a error) <F>
-> Mar 25 23:56:28 beast kernel: ata3.00: status: { DRDY ERR }
-> Mar 25 23:56:28 beast kernel: ata3.00: error: { UNC }
-> Mar 25 23:56:29 beast kernel: ata3.00: configured for UDMA/133
-> Mar 25 23:56:29 beast kernel: ata3: EH complete
-> Mar 25 23:56:29 beast kernel: SCSI device sda: 1953525168 512-byte hd=
-wr
-> sectors (1000205 MB)
-> Mar 25 23:56:29 beast kernel: sda: Write Protect is off
-> Mar 25 23:56:29 beast kernel: SCSI device sda: drive cache: write bac=
-k
-> Mar 25 23:56:34 beast kernel: md: md1: sync done.
-> Mar 25 23:56:34 beast kernel: RAID5 conf printout:
-> Mar 25 23:56:34 beast kernel: =A0--- rd:3 wd:3 fd:0
-> Mar 25 23:56:34 beast kernel: =A0disk 0, o:1, dev:sda2
-> Mar 25 23:56:34 beast kernel: =A0disk 1, o:1, dev:sdb2
-> Mar 25 23:56:34 beast kernel: =A0disk 2, o:1, dev:sdd2
+>  So here is my current understanding and thoughts.
 >
-> i.e. a brief whinge about another of the discs in the RAID, while doi=
-ng the
-> resync. And this is repeatable. Now, is this simply a sign that I nee=
-d a new
-> disc, or is there something else funny going on? It's not as if eithe=
-r of
-> the discs (the one I was re-adding or the one that had the UNC during=
- the
-> resync) is getting dropped from the array. But the one with the UNC d=
-oes
-> have one offline uncorrectable and two current pending sectors, accor=
-ding to
-> smartctl.
+>  The topic is about making rebuild after a failure easier.  It strikes me as
+>  particularly relevant after the link  Bill Davidsen recently forwards to the
+>  list:
 >
-> NB CentOS 5, 2.6.18-128.4.1.el5 kernel, mdadm 2.6.4. Probably time I =
-updated
-> a few packages.
+>        http://blogs.techrepublic.com.com/opensource/?p=1368
 >
-> Cheers,
+>  The most significant thing I got from this was a complain in the comments
+>  that managing md raid was too complex and hence error-prone.
 >
-> John.
+>  I see the issue as breaking down in to two parts.
+>   1/ When a device is hot plugged into the system, is md allowed to use it as
+>      a spare for recovery?
+>   2/ If md has a spare device, what set of arrays can it be used in if needed.
+>
+>  A typical hot plug event will need to address both of these questions in
+>  turn before recovery actually starts.
+>
+>  Part 1.
+>
+>   A newly hotplugged device may have metadata for RAID (0.90, 1.x, IMSM, DDF,
+>   other vendor metadata) or LVM or a filesystem.  It might have a partition
+>   table which could be subordinate to or super-ordinate to other metadata.
+>   (i.e. RAID in partitions, or partitions in RAID).  The metadata may or may
+>   not be stale.  It may or may not match - either strongly or weakly -
+>   metadata on devices in currently active arrays.
+>
+>   A newly hotplugged device also has a "path" which we can see
+>   in /dev/disk/by-path.  This is somehow indicative of a physical location.
+>   This path may be the same as the path of a device which was recently
+>   removed.  It might be one of a set of paths which make up a "RAID chassis".
+>   It might be one of a set of paths one which we happen to find other RAID
+>   arrays.
+>
+>   Some how from all of that information we need to decide if md can use the
+>   device without asking, or possibly with a simple yes/no question, and we
+>   need to decide what to actually do with the device.
+>
+>   Options for what to do with the device include:
+>     - write an MBR and partition table, then do something as below with
+>       each partition
+>     - include the device (or partition) in an array that it was previously
+>       part of, but from which it was removed
+>     - include the device or partition as a spare in a native-metadata array.
+>     - add the device as a spare to a vendor-metadata array
+>
+>  Part 2.
+>
+>    If we have a spare device and a degraded array we need to know if it is OK
+>    to add the device as a hot-spare to that array.
+>    Currently this is handled (for native metadata) by 'mdadm --monitor' and
+>    the  spare-groups tag in mdadm.conf.
+>    For vendor metadata, if the spare is already in the container then mdmon
+>    should handle the spare assignment, but if the spare is in a different
+>    container, 'mdadm --monitor' should move it to the right container, but
+>    doesn't yet.
+>
+>    The "spare-group" functionality works but isn't necessarily the easiest
+>    way to express the configuration desires.  People are likely to want to
+>    specify how far a global spare can migrate using physical address: path.
+>
+>    So for example you might specify a group of paths with wildcards with the
+>    implication that all arrays which contain disks from this group of paths
+>    are automatically in the same spare-group.
+>
+>
+>  Configuration and State
+>
+>    I think it is clear that configuration for this should go in mdadm.conf.
+>    This would at least cover identifying groups of device by path and ways
+>    what is allowed to be done to those devices.
+>    It is possible that some configuration could be determined by inspecting
+>    the hardware directly.  e.g. the IMSM code currently looks for an Option
+>    ROM show confirms that the right Intel controller is present and so the
+>    system can boot from the IMSM device.  It is possible that other
+>    information could be gained this way so that the mdadm.conf configuration
+>    would not need to identify paths but alternately identify some
+>    platform-specific concept.
+>
+>    The configuration would have to say what is permitted for hot-plugged
+>    devices:  nothing, re-add, claim-bare-only, claim-any-unrecognised
+>    The configuration would also describe mobility of spares across
+>    different device sets.
+>
+>    This would add a new line type to mdadm.conf. e.g.
+>      DOMAIN or CHASSIS or DEDICATED or something else.
+>    The line would identify
+>          some devices by path or platform
+>          a metadata type that is expected here
+>          what hotplug is allows to do
+>          a spare-group that applies to all array which use devices from this
+>          group/domain/chassis/thing
+>          source for MBR?  template for partitioning?  or would this always
+>              be copied from some other device in the set if hotplug= allowed
+>              partitioning?
+>
+>    State required would include
+>        - where devices have been recently removed from, and what they were in
+>          use for
+>        - which arrays are currently using which device sets, though that can
+>          be determined dynamically from inspecting active arrays.
+>        - ?? partition tables off any devices that are in use so if they are
+>          removed and an new device added the partition table can be
+>          replaced.
+>
+>  Usability
+>
+>   The idea of being able to pull out a device and plug in a replacement and
+>   have it all "just work" is a good one.  However I don't want to be too
+>   dependent on state that might have been saved from the old device.
+>   I would like to also be able to point to a new device which didn't exist
+>   before and say "use this".   mdadm would use the path information to decide
+>   which contain or set of drives was most appropriate, extract
+>   MBR/partitioning from one of those, impose it on the new device and include
+>   the device or partitions in the appropriate array.
+>
+>   For RAID over partitions, this assumes a fairly regular configuration: all
+>   devices partitioned the same way, and each array build out of a set of 
+>   aligned partitions (e.g. /dev/sd[bcde]2 ).
+>   One of the strength of md is that you don't have to use such a restricted
+>   configuration, but I think it would be very hard to reliably "to the right
+>   thing" with an irregular set up (e.g. a raid1 over a 1T device and 2 500GB
+>   devices in a raid0).
+>
+>   So I think we should firmly limit the range of configurations for which
+>   auto-magic stuff is done.  Vendor metadata is already fairly strongly
+>   defined.  We just add a device to the vendor container and let it worry
+>   about the detail.  For native metadata we need to draw a firm line.
+>   I think that line should be "all devices partitioned the same" but I
+>   am open to discussion.
+>
+>   If we have "mdadm --use-this-device-however" without needing to know
+>   anything about pre-existing state, then a hot-remove would just need to
+>   record that the device was used by arrays X and Y. Then on hot plug we could
+>    - do nothing
+>    - do something if metadata on device allows
+>    - do use-this-device-however if there was a recent hot-remove of the device
+>    - always do use-this-device-however
+>   depending on configuration.
+>
+>  Implementation
+>
+>   I think we all agree that migrating spares between containers is best done
+>   by "mdadm --monitor".  It needs to be enhanced to intuit spare-group names
+>   from "DOMAIN" declarations, and to move spares between vendor containers.
+>
+>   For hot-plug, hot-unplug I prefer to use udev triggers.  plug runs
+>     mdadm --incremental /dev/whatever
+>   which would be extended to do other clever things if allowed
+>   Unplug would run
+>      mdadm --force-remove /dev/whatever
+>   which finds any arrays containing the device (or partitions?) and
+>   fail/removes them and records the fact with a timestamp.
+>
+>   However if someone has a convincing reason to build this functionality
+>   into  "mdadm --monitor" instead using libudev I am willing to listen.
+>
+>   Probably the most important first step is to determine a configuration
+>   syntax and be sure it is broad enough to cover all needs.
+>
+>   I'm thinking:
+>     DOMAIN path=glob-pattern metadata=type  hotplug=mode  spare-group=name
+>
+>   I explicitly have "path=" in case we find there is a need to identify
+>   devices some other way - maybe by control vendor:device or some other
+>   content-based approach
+>   The spare-group name is inherited by any array with devices in this
+>   domain as long as that doesn't result it in having two different
+>   spare-group names.
+>   I'm not sure if "metadata=" is really needed.  If all the arrays that use
+>   these devices have the same metadata, it would be redundant to list it here.
+>   If they use different metadata ... then what?
+>   I guess two different DOMAIN lines could identify the same devices and 
+>   list different metadata types and given them different spare-group
+>   names.  However you cannot support hotplug of bare devices into both ...
+>
+>   If it possible for multiple DOMAIN lines to identify the same device,
+>   e.g. by having more or less specific patterns. In this case the spare-group
+>   names are ignored if they conflict, and the hotplug mode used is the most
+>   permissive.
+>
+>   hotplug modes are:
+>     none  - ignore any hotplugged device
+>     incr  - normal incremental assembly (the default).  If the device has
+>          metadata that matches an array, try to add it to the array
+>     replace - If above fails and a device was recently removed from this
+>          same path, add this device to the same array(s) that the old devices
+>          was part of
+>     include - If the above fails and the device has not recognisable metadata
+>          add it to any array/container that uses devices in this domain,
+>          partitioning first if necessary.
+>     force - as above but ignore any pre-existing metadata
+>
+>
+>   I'm not sure that all those are needed, or are the best names.  Names like
+>     ignore, reattach, rebuild, rebuild_spare
+>   have also been suggested.
+>
+>   It might be useful to have a 'partition=type' flag to specify MBR or GPT ??
+>
+>
+> There, I think that just about covers everything relevant from the various
+> conversations.
+> Please feel free to disagree or suggest new use cases or explain why this
+> would not work or would not be ideal.
+> There was a suggestion that more state needed to be stored to support
+> auto-rebuild (detail of each device so they can be recovered exactly after a
+> device is pulled and a replacement added).  I'm not convinced of this but am
+> happy to hear more explanations.
+>
+> Thanks,
+> NeilBrown
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>   
+Hi Neil,
 
-Niel, I'm not sure if this is good advice or not, since the data is
-the same it may be cached.  However I propose:
+I look forward to being able to update my mdadm.conf with the paths to 
+devices that are important to my RAID so that if a fault were to develop 
+on an array, then I'd be really happy to fail and remove the faulty 
+device, insert a blank device  of sufficient size into the defined path 
+and have the RAID auto restore. If the disk is not blank or too small, 
+provide a useful error message (insert disk of larger capacity, delete 
+partitions, zero superblocks) and exit.  I think you do an amazing job 
+and it worries me that you and the other contributors to mdadm could 
+spend your valuable time trying to solve problems about how to cater for 
+every metadata, partition type etc when a simple blank device is easy to 
+achieve and could then "Auto Rebuild on hot-plug".
 
-1) resync the device (validate the reads are good)  -- scratch that
-it's raid 5 and doesn't know to assign lesser trust to slower drives.
+Perhaps as we nominate a spare disk, we could nominate a spare path. I'm 
+certainly no expert and my use case is simple (raid 1's and 10's) but it 
+seems to me a lot of complexity can be avoided for the sake of a blank disk.
 
-1) Unmount the filesystem in question (use a recover cd or usb drive wh=
-atever)
-2) Determine your DATA stripe size, In this case it appears to be
-(128K per drive? for 256K per stripe?) or 128K (per stripe)?
-3) badblocks -b $((256*1024)) -n /dev/whatever
+Cheers,
+Josh
 
--n is non-destructive read-write; which should cause the entire device
-contents to be read and safely re-written to the drives.  This should
-cause the replacement of any pending sectors.
 
-This is less optimal than just performing the desired operation on the
-segment in question, but a LOT safer since the tools in question take
-effort to make mistakes.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
