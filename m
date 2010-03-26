@@ -1,39 +1,35 @@
-From: Mark Knecht <markknecht@gmail.com>
+From: Peter Kieser <peter@kieser.ca>
 Subject: Re: Use of WD20EARS with MDADM
-Date: Fri, 26 Mar 2010 13:59:27 -0700
-Message-ID: <5bdc1c8b1003261359i2f6f1bdai3261aec30bb663bf@mail.gmail.com>
-References: <4BAB8D41.4010801@gmail.com> <4BAD18A5.1080905@kieser.ca>
+Date: Fri, 26 Mar 2010 14:01:22 -0700
+Message-ID: <4BAD20A2.20606@kieser.ca>
+References: <4BAB8D41.4010801@gmail.com> <4BAD18A5.1080905@kieser.ca> <5bdc1c8b1003261359i2f6f1bdai3261aec30bb663bf@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BAD18A5.1080905@kieser.ca>
+In-Reply-To: <5bdc1c8b1003261359i2f6f1bdai3261aec30bb663bf@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Peter Kieser <peter@kieser.ca>
+To: Mark Knecht <markknecht@gmail.com>
 Cc: Andrew Dunn <andrew.g.dunn@gmail.com>, Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Fri, Mar 26, 2010 at 1:27 PM, Peter Kieser <peter@kieser.ca> wrote:
-<SNIP>
-> Hello,
+On 3/26/2010 1:59 PM, Mark Knecht wrote:
+> On Fri, Mar 26, 2010 at 1:27 PM, Peter Kieser<peter@kieser.ca>  wrote:
+> <SNIP>
+>    
+>> <SNIP>
+>>      
+> This seems to be a windows program? I don't see a Linux version in
+> Gentoo portage.
 >
-> The 4096-byte sector drives work fine with mdadm. The main problem you are
-> going to run into with the WDC Green drives is their 8 second "idle"
-> setting. After 8 seconds, by default, the drive parks its heads. This can
-> lead to an amazingly high Load Cycle Count (LLC) after just a month of
-> operation due to the fact that most disk access happens around that time
-> causing the drive to park and unpark in repeated cycles.
+> I could run Windows once to set it if the settings are then
+> maintained, or do you have a Linux solution?
 >
-> To fix this, find a utility called wdidle3 (I have it, if you are unable to
-> locate it) and set the idle timeout on the drives to 300 seconds. These
-> drives do not support TLER, there is no ability to set it via firmware
-> anymore - WDC removed this ability sometime last year.
->
-> -Peter
+> - Mark
+>    
 
-This seems to be a windows program? I don't see a Linux version in
-Gentoo portage.
+It's a proprietary DOS application written by WDC that changes the 
+settings on the hard drives firmware. The changes are permanent. You can 
+boot off a USB key or floppy with DOS on it to run the application.
 
-I could run Windows once to set it if the settings are then
-maintained, or do you have a Linux solution?
-
-- Mark
+-Peter
