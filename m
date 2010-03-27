@@ -1,98 +1,64 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: Auto Rebuild on hot-plug
-Date: Fri, 26 Mar 2010 17:37:57 -0700
-Message-ID: <e9c3a7c21003261737k1e753b08xc6f8eb45d0320be9@mail.gmail.com>
-References: <20100325113543.0e2124c5@notabene.brown>
-	 <905EDD02F158D948B186911EB64DB3D11C510278@irsmsx503.ger.corp.intel.com>
+From: Michael Evans <mjevans1983@gmail.com>
+Subject: Re: metadata 1.2
+Date: Fri, 26 Mar 2010 18:49:25 -0700
+Message-ID: <4877c76c1003261849k9219c1eq7e8ebde088b619df@mail.gmail.com>
+References: <20100326194352.GA2474@lazy.lzy>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <905EDD02F158D948B186911EB64DB3D11C510278@irsmsx503.ger.corp.intel.com>
+In-Reply-To: <20100326194352.GA2474@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Labun, Marcin" <Marcin.Labun@intel.com>
-Cc: Neil Brown <neilb@suse.de>, Doug Ledford <dledford@redhat.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Bill Davidsen <davidsen@tmr.com>
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Mar 25, 2010 at 8:04 AM, Labun, Marcin <Marcin.Labun@intel.com>=
- wrote:
-> I think that metadata keyword can be used to identify scope of device=
-s to which the DOMAIN line applies.
-> For instance we could have:
-> DOMAIN path=3Dglob-pattern metadata=3Dimsm hotplug=3Dmode1 =A0spare-g=
-roup=3Dname1
-> DOMAIN path=3Dglob-pattern metadata=3D0.90 hotplug=3Dmode2 =A0spare-g=
-roup=3Dname2
+On Fri, Mar 26, 2010 at 12:43 PM, Piergiorgio Sartor
+<piergiorgio.sartor@nexgo.de> wrote:
+> Hi all,
 >
-> Keywords:
-> Path, metadata and spare-group shall define to which arrays the hotpl=
-ug definition (or other definition of action) applies. User could defin=
-e any subset of it.
-> For instance to define that all imsm arrays shall use hotplug mode2 u=
-ser shall define:
-> DOMAIN metadata=3Dimsm hotplug=3Dmode2
+> quick question: what's the use case for metadata 1.2?
 >
-> In above example user need not define spare-group in his/her configur=
-ation file for each array.
+> I read that the 4K offset is intended to leave space
+> for the MBR and bootloader, I assume.
+> The subtext here seems to be a partionless configuration
+> with RAID, but I'm not aware of any bootloader which
+> can boot from RAID and fit into 4K.
 >
-> I also assume that each metadata handler can additionally sets its ow=
-n rules of accepting the spare in the container. Rules can be derived f=
-rom platform dependencies or metadata. Notice that user can disable pla=
-tform specific constrains by defining IMSM_NO_PLATFORM environment vari=
-able.
+> Clarifications?
+>
+> Thanks a lot in advance,
+>
+> bye,
+>
+> --
+>
+> piergiorgio
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
 >
 
-=46or the 'platform' case we could automate some decisions, but I think
-I would rather extend the --detail-platform option to dump the
-recommended/compatible DOMAIN entries for the platform, perhaps via
-the --brief modifier.  This mirrors what can be done with --examine
---brief to generate an initial configuration file that can be modified
-to taste.
+Even grub 'legacy' 0.9x can perform in the following configuration:
 
->>
->> =A0 hotplug modes are:
->> =A0 =A0 none =A0- ignore any hotplugged device
->> =A0 =A0 incr =A0- normal incremental assembly (the default). =A0If t=
-he device has
->> =A0 =A0 =A0 =A0 =A0metadata that matches an array, try to add it to =
-the array
->> =A0 =A0 replace - If above fails and a device was recently removed f=
-rom this
->> =A0 =A0 =A0 =A0 =A0same path, add this device to the same array(s) t=
-hat the old
->> devices
->> =A0 =A0 =A0 =A0 =A0was part of
->> =A0 =A0 include - If the above fails and the device has not recognis=
-able
->> metadata
->> =A0 =A0 =A0 =A0 =A0add it to any array/container that uses devices i=
-n this domain,
->> =A0 =A0 =A0 =A0 =A0partitioning first if necessary.
->> =A0 =A0 force - as above but ignore any pre-existing metadata
->>
->>
->> =A0 I'm not sure that all those are needed, or are the best names. =A0=
-Names
->> like
->> =A0 =A0 ignore, reattach, rebuild, rebuild_spare
->> =A0 have also been suggested.
->
-> Please consider:
-> =A0 =A0 =A0spare_add - add any spare device that matches the metadata=
- container/volume in case of native metadata regardless of array state,=
- so later such a spare can be used in rebuild process.
+Several whole device in a RAID-1 units which are partitioned via some
+other means internally.  Grub can map the package it needs to load in
+to memory as a series of absolute block locations and embed that
+information within even the normal boot-loader area, or boot-loader
+area and 1/2 more sectors with ease.
 
-This is the same as 'incr' above.  If the device has metadata and
-hotplug is enabled, auto-incorporate the device.
+This may be more difficult with raid-10 or raid-0 sets, and
+considerably more difficult with raid-456 (grub would not have
+redundancy at it's level of operation, but you could use an external
+system and still effect data /recovery/ at which point it'd then
+work...); however I see no reason it would be technically impossible,
+though I don't expect it to have been a current usage consideration.
 
-> Can we assume for all external metadata that spares added any contain=
-er can be potentially moved between all container the same metadata?
-
-Yes, that can be the default action, and the spare-group keyword can
-be specified to override.
-
---
-Dan
+Oh, it's also possible to chainload, so the 1.2 format offers the same
+benefits on partitions if you need to operate within the constraints
+of other existing boot-loaders.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
