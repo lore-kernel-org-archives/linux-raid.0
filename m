@@ -1,52 +1,100 @@
-From: David Rees <drees76@gmail.com>
-Subject: Re: Use of WD20EARS with MDADM
-Date: Fri, 26 Mar 2010 16:01:30 -0700
-Message-ID: <72dbd3151003261601w55bbc103w431e9582f1f13cae@mail.gmail.com>
-References: <4BAB8D41.4010801@gmail.com> <4BAD18A5.1080905@kieser.ca>
-	<5bdc1c8b1003261359i2f6f1bdai3261aec30bb663bf@mail.gmail.com>
-	<4BAD20A2.20606@kieser.ca> <5bdc1c8b1003261406m2ae66154u55a70aada56a91c1@mail.gmail.com>
-	<5bdc1c8b1003261416xdc883a4qdba1cdf049cca437@mail.gmail.com>
-	<4BAD24EB.4020606@sauce.co.nz> <5bdc1c8b1003261538y751a3089p284bee0ee1b28b63@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: Auto Rebuild on hot-plug
+Date: Fri, 26 Mar 2010 17:37:57 -0700
+Message-ID: <e9c3a7c21003261737k1e753b08xc6f8eb45d0320be9@mail.gmail.com>
+References: <20100325113543.0e2124c5@notabene.brown>
+	 <905EDD02F158D948B186911EB64DB3D11C510278@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5bdc1c8b1003261538y751a3089p284bee0ee1b28b63@mail.gmail.com>
+In-Reply-To: <905EDD02F158D948B186911EB64DB3D11C510278@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mark Knecht <markknecht@gmail.com>
-Cc: Richard Scobie <richard@sauce.co.nz>, Peter Kieser <peter@kieser.ca>, Andrew Dunn <andrew.g.dunn@gmail.com>, Mdadm <linux-raid@vger.kernel.org>
+To: "Labun, Marcin" <Marcin.Labun@intel.com>
+Cc: Neil Brown <neilb@suse.de>, Doug Ledford <dledford@redhat.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Bill Davidsen <davidsen@tmr.com>
 List-Id: linux-raid.ids
 
-On Fri, Mar 26, 2010 at 3:38 PM, Mark Knecht <markknecht@gmail.com> wrote:
-> On Fri, Mar 26, 2010 at 2:19 PM, Richard Scobie <richard@sauce.co.nz> wrote:
->> No, its item 193 Load_Cycle_Count (LCC) and it's at 27557.
+On Thu, Mar 25, 2010 at 8:04 AM, Labun, Marcin <Marcin.Labun@intel.com>=
+ wrote:
+> I think that metadata keyword can be used to identify scope of device=
+s to which the DOMAIN line applies.
+> For instance we could have:
+> DOMAIN path=3Dglob-pattern metadata=3Dimsm hotplug=3Dmode1 =A0spare-g=
+roup=3Dname1
+> DOMAIN path=3Dglob-pattern metadata=3D0.90 hotplug=3Dmode2 =A0spare-g=
+roup=3Dname2
 >
-> Thanks. I don't know if that's high or low. To me it's just a number.
+> Keywords:
+> Path, metadata and spare-group shall define to which arrays the hotpl=
+ug definition (or other definition of action) applies. User could defin=
+e any subset of it.
+> For instance to define that all imsm arrays shall use hotplug mode2 u=
+ser shall define:
+> DOMAIN metadata=3Dimsm hotplug=3Dmode2
 >
-> Following along from Matt Garman's reply I went back and looked at
-> when I built this machine for my dad. (How many here have 85 year old
-> fathers who have run Linux for 7 years instead of windows? Give him a
-> cheer!) ;-) I agree with Matt about trying to save power.
+> In above example user need not define spare-group in his/her configur=
+ation file for each array.
 >
-> This machine is 40 days old today, at least counting since he first
-> booted it at home. It's been up and running since then.
+> I also assume that each metadata handler can additionally sets its ow=
+n rules of accepting the spare in the container. Rules can be derived f=
+rom platform dependencies or metadata. Notice that user can disable pla=
+tform specific constrains by defining IMSM_NO_PLATFORM environment vari=
+able.
 >
-> 40 Days is 3,456,000 seconds.
->
-> 3,456,000 / 27557 is 125 seconds/count increase on average. So about 2 minutes.
->
-> I wonder if I'm seeing something like Matt is seeing with the drive
-> continually being woken up. I know most of the time it just sits idle
-> from a user's perspective, but I've done nothing to stop daemons or
-> anything like that. It runs screen savers, gets used every day for an
-> hour or two, but is always powered up so that I can administer it from
-> 350 miles away.
 
-Why leave the thing on 24 hours a day if it's only used 1-2 of them?
-Save wear on your drive and the rest of the machine, save your dad a
-few bucks on his electricity bill and shut the thing down when it's
-not used.  Then use WoL to wake it up if you need to admin it, or
-heck, just use the BIOS/ACPI wakeup feature and put the thing to sleep
-at night and wake up automatically in the morning - at least then
-you'll cut it's run-time in half.
+=46or the 'platform' case we could automate some decisions, but I think
+I would rather extend the --detail-platform option to dump the
+recommended/compatible DOMAIN entries for the platform, perhaps via
+the --brief modifier.  This mirrors what can be done with --examine
+--brief to generate an initial configuration file that can be modified
+to taste.
 
--Dave
+>>
+>> =A0 hotplug modes are:
+>> =A0 =A0 none =A0- ignore any hotplugged device
+>> =A0 =A0 incr =A0- normal incremental assembly (the default). =A0If t=
+he device has
+>> =A0 =A0 =A0 =A0 =A0metadata that matches an array, try to add it to =
+the array
+>> =A0 =A0 replace - If above fails and a device was recently removed f=
+rom this
+>> =A0 =A0 =A0 =A0 =A0same path, add this device to the same array(s) t=
+hat the old
+>> devices
+>> =A0 =A0 =A0 =A0 =A0was part of
+>> =A0 =A0 include - If the above fails and the device has not recognis=
+able
+>> metadata
+>> =A0 =A0 =A0 =A0 =A0add it to any array/container that uses devices i=
+n this domain,
+>> =A0 =A0 =A0 =A0 =A0partitioning first if necessary.
+>> =A0 =A0 force - as above but ignore any pre-existing metadata
+>>
+>>
+>> =A0 I'm not sure that all those are needed, or are the best names. =A0=
+Names
+>> like
+>> =A0 =A0 ignore, reattach, rebuild, rebuild_spare
+>> =A0 have also been suggested.
+>
+> Please consider:
+> =A0 =A0 =A0spare_add - add any spare device that matches the metadata=
+ container/volume in case of native metadata regardless of array state,=
+ so later such a spare can be used in rebuild process.
+
+This is the same as 'incr' above.  If the device has metadata and
+hotplug is enabled, auto-incorporate the device.
+
+> Can we assume for all external metadata that spares added any contain=
+er can be potentially moved between all container the same metadata?
+
+Yes, that can be the default action, and the spare-group keyword can
+be specified to override.
+
+--
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
