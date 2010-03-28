@@ -1,90 +1,37 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: Use of WD20EARS with MDADM
-Date: Sat, 27 Mar 2010 16:31:42 -0700
-Message-ID: <5bdc1c8b1003271631w1446515egbf5a44dc69e514c7@mail.gmail.com>
-References: <4BAB8D41.4010801@gmail.com> <4BAD18A5.1080905@kieser.ca>
-	 <5bdc1c8b1003261359i2f6f1bdai3261aec30bb663bf@mail.gmail.com>
-	 <4BAD20A2.20606@kieser.ca>
-	 <5bdc1c8b1003261406m2ae66154u55a70aada56a91c1@mail.gmail.com>
-	 <5bdc1c8b1003261416xdc883a4qdba1cdf049cca437@mail.gmail.com>
-	 <4BAD24EB.4020606@sauce.co.nz>
-	 <5bdc1c8b1003261538y751a3089p284bee0ee1b28b63@mail.gmail.com>
-	 <72dbd3151003261601w55bbc103w431e9582f1f13cae@mail.gmail.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: metadata 1.2
+Date: Sun, 28 Mar 2010 08:58:31 +0200
+Message-ID: <20100328065831.GA13933@maude.comedia.it>
+References: <20100326194352.GA2474@lazy.lzy> <4877c76c1003261849k9219c1eq7e8ebde088b619df@mail.gmail.com> <20100327091658.GA2333@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <72dbd3151003261601w55bbc103w431e9582f1f13cae@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20100327091658.GA2333@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Rees <drees76@gmail.com>
-Cc: Richard Scobie <richard@sauce.co.nz>, Peter Kieser <peter@kieser.ca>, Andrew Dunn <andrew.g.dunn@gmail.com>, Mdadm <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Mar 26, 2010 at 4:01 PM, David Rees <drees76@gmail.com> wrote:
-> On Fri, Mar 26, 2010 at 3:38 PM, Mark Knecht <markknecht@gmail.com> w=
-rote:
->> On Fri, Mar 26, 2010 at 2:19 PM, Richard Scobie <richard@sauce.co.nz=
-> wrote:
->>> No, its item 193 Load_Cycle_Count (LCC) and it's at 27557.
->>
->> Thanks. I don't know if that's high or low. To me it's just a number=
-=2E
->>
->> Following along from Matt Garman's reply I went back and looked at
->> when I built this machine for my dad. (How many here have 85 year ol=
-d
->> fathers who have run Linux for 7 years instead of windows? Give him =
-a
->> cheer!) ;-) I agree with Matt about trying to save power.
->>
->> This machine is 40 days old today, at least counting since he first
->> booted it at home. It's been up and running since then.
->>
->> 40 Days is 3,456,000 seconds.
->>
->> 3,456,000 / 27557 is 125 seconds/count increase on average. So about=
- 2 minutes.
->>
->> I wonder if I'm seeing something like Matt is seeing with the drive
->> continually being woken up. I know most of the time it just sits idl=
-e
->> from a user's perspective, but I've done nothing to stop daemons or
->> anything like that. It runs screen savers, gets used every day for a=
-n
->> hour or two, but is always powered up so that I can administer it fr=
-om
->> 350 miles away.
->
-> Why leave the thing on 24 hours a day if it's only used 1-2 of them?
-> Save wear on your drive and the rest of the machine, save your dad a
-> few bucks on his electricity bill and shut the thing down when it's
-> not used. =C2=A0Then use WoL to wake it up if you need to admin it, o=
-r
-> heck, just use the BIOS/ACPI wakeup feature and put the thing to slee=
-p
-> at night and wake up automatically in the morning - at least then
-> you'll cut it's run-time in half.
->
-> -Dave
->
+On Sat, Mar 27, 2010 at 10:16:58AM +0100, Piergiorgio Sartor wrote:
+>So, would it be better to have a metadata 1.3 with a 32K
+>offset for the superblock, so there could be enough space
+>for something like grub2?
+this was discussed nearly one year ago.
+look for the thread "md extension to support booting from raid whole
+disks". Unfortunately that thread turned to an holy war. But before
+that, Neil said he planned on offering an option to reserve some space,
+i believe after the superblock, to host non-raid data.
 
-That's really up to him. He doesn't hear well and doesn't seem to care
-about his utility bill so it's easy for me, or has been in the past.
-His last machine ran 5 1/2 years powered up all the time. I think the
-alternate view is that keeping the drive at a relatively constant
-temperature is a good thing also. Who knows?
+>Actually, I would like to propose metadata 2.0, or
+>dual RAID, where the superblock is located somewhere
+the issue would be, how do you locate that piece of metadata?
 
-As for WoL I don't know much about it but his machine is main target
-logging in through his router and script kiddies are for every trying
-to log in with name after name after name. If it could be make to
-respond to my IP only that would be great but my IP moves around now
-and then so how do I make that work?
-(NOT a topic for this list...)
+L.
 
-Cheers,
-Mark
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
