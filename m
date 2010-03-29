@@ -1,123 +1,69 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Auto Rebuild on hot-plug
-Date: Mon, 29 Mar 2010 14:57:36 -0400
-Message-ID: <4BB0F820.4030707@redhat.com>
-References: <20100325113543.0e2124c5@notabene.brown>	 <905EDD02F158D948B186911EB64DB3D11C510278@irsmsx503.ger.corp.intel.com> <e9c3a7c21003261737k1e753b08xc6f8eb45d0320be9@mail.gmail.com> <4BB0ED13.6020507@redhat.com> <4BB0F32F.9030803@anonymous.org.uk>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: problem with mdadm --incremental on ubuntu from initramfs
+	(path choice related) on version 3.x
+Date: Mon, 29 Mar 2010 22:01:30 +0200
+Message-ID: <20100329200130.GA26734@maude.comedia.it>
+References: <1269844303.26247.23.camel@travelmate.workshop>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigC5958835D31BB89741829033"
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BB0F32F.9030803@anonymous.org.uk>
+Content-Disposition: inline
+In-Reply-To: <1269844303.26247.23.camel@travelmate.workshop>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Dan Williams <dan.j.williams@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, Neil Brown <neilb@suse.de>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Bill Davidsen <davidsen@tmr.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigC5958835D31BB89741829033
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On Mon, Mar 29, 2010 at 07:31:43AM +0100, Jools Wills wrote:
+>i notice in the mdadm git head this has been changed to
+>
+>        mapnames(VAR_RUN "/map"),
+>        mapnames("/var/run/mdadm.map"),
+>        mapnames(ALT_RUN "/" ALT_MAPFILE)
+>
+>and the description has been almost corrected (albeit some typos) to
+>
+> *   /var/run/mdadm/map  /var/run/mdadm.map  /lib/initrw/madam/map
+>
+>however, these paths are still not helpful for the ubuntu initramfs that
+>doesn't have these locations - and there is not an obvious fall back
+>location.
+i tought ubuntu had /lib/init/rw, being debian based, or is it only the
+mdadm subdire under that one missing? current git should create the
+latter.
 
-On 03/29/2010 02:36 PM, John Robinson wrote:
-> On 29/03/2010 19:10, Doug Ledford wrote:
-> [...]
->> All of the above actions are related to domains that are degraded.  Bu=
-t
->> what to do if the array isn't degraded?  We could add the device as a
->> spare, but if the array isn't degraded, adding a new hot spare doesn't=
+>Also changing the ALT_RUN location will also change where it stores the
+>PID for the monitor daemon, which is called much later once root is
+>mounted, so even if ALT_RUN is set to /dev/ so the map file could be
+>created. it wouldn't be the ideal location for the PID.
+not exactly, mdmon is spawned by mdadm in case an array with external
+metadata is assembled (imsm or ddf)
 
->> really *do* anything.  No rebuild will start, nothing immediate happen=
-s,
->> it just goes in and sits there.  And now that we have all these fancy
->> grow options, it's not entirely clear that a user would want that
->> anyway.  So, I would argue that if the array isn't degraded, then ther=
-e
->> is no sense of emergency in our actions, and there exists multiple
->> options for what to do with the device, some include being a hot spare=
+>Since things tend to fail if it cant make the mapfile how about it
+>tries /dev/ as a final location for the file (or another location that
+>is likely to exist) if the others fail? Another option that would work,
+>is to create a folder such as /var/run if it is missing, or allow the
+>map file path to be passed as a parameter, so the location guesswork
+>could be overridden by the caller.
+since ALT_RUN and VAR_RUN are settable at compile time, i believe every
+distro can chose a suitable path.
 
->> while others include using the device to grow the array, and the
->> possibilities and answers to what to do here are not at all clear.  Ev=
-en
->> if the user had previously configured us to treat the device as a spar=
-e,
->> they may change their mind and want to grow things.  Given that there'=
-s
->> no immediate need to do anything as there aren't any degraded arrays, =
-I
->> say let the user do whatever they want and don't try to do anything
->> automatically as it seems likely to me that the user's wants in this
->> area are likely to change from time to time based on circumstances and=
+>Also, some error reporting that the map file couldn't be created would
+>be most useful, instead of the "/dev/md0 is in use" error.
 
->> having them update the config file prior to inserting the device is mo=
-re
->> klunky than just telling them to do whatever they want themselves afte=
-r
->> inserting the device.
-> [...]
->=20
-> Yes, but do create the partition(s), boot sector, etc and set up the
-> spare(s).
+yes, this would be needed
 
-Really, we should never have to do this in the situation I listed: aka
-no degraded arrays exist.  This implies that if you had a raid1 /boot
-array, that it's still intact.  So partitioning and setting up boot
-loaders doesn't make sense as the new disk isn't going in to replace
-anything.  You *might* want to add it to the raid1 /boot, but we don't
-know that so doing things automatically doesn't make sense.
+>My final thought is, that to make this bug report, I had to come and
+>sign up here on this list, and then hope that the mdadm maintainer will
+>read it. The mdadm software really needs a bugtracker, or better
+>instructions on the site as to how to go about reporting issues.
+What's wrong about a mailing list?
 
-> The user installed the system with anaconda or whatever, and
-> may not know the incantations to partition his new disc or install a
-> boot loader, so if he's managed to configure a mdadm.conf which says th=
-e
-> spare slots in his RAID chassis should belong to mdadm, prepare them fo=
-r
-> him. Then all he needs to do is issue whatever grow command.
->=20
-> I think the exception to this is /boot on RAID-1, where I would prefer
-> to be able to have the system automatically add the new partition as an=
+L.
 
-> active mirror instead of a hot spare, in case this new drive is what we=
-
-> have to boot off next time.
-
-Again, I'm drawing a distinction here between a degraded array and a
-non-degraded array.  If the current array isn't degraded, then we won't
-be booting off the new drive next time unless the user goes into the
-BIOS and sets the new drive as the active boot device.  And if the user
-is going to do that, then they ought to be able to setup their new boot
-mirror member themselves.
-
-> I suppose there might be circumstances where you want to do something
-> else, like Netgear do on their ReadyNAS, but while it might be nice to
-> be able to configure that sort of automatic growing and reshaping, it
-> doesn't belong in the default config.
->=20
-> Cheers,
->=20
-> John.
-
-
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-	      http://people.redhat.com/dledford
-
-Infiniband specific RPMs available at
-	      http://people.redhat.com/dledford/Infiniband
-
-
---------------enigC5958835D31BB89741829033
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkuw+CAACgkQg6WylM+/8ZQw+ACcDP836p/LIRLo7iRJultffLqO
-x5sAoJt3GnpOKPDDR8iMcWSdIR12KsVP
-=qI6j
------END PGP SIGNATURE-----
-
---------------enigC5958835D31BB89741829033--
+-- 
+Luca Berra -- bluca@comedia.it
+          Communication Media & Services S.r.l.
+   /"\
+   \ /     ASCII RIBBON CAMPAIGN
+    X        AGAINST HTML MAIL
+   / \
