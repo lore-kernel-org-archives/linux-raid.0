@@ -1,121 +1,112 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: crash/dmesg - RAID locking up?
-Date: Sun, 28 Mar 2010 15:31:13 -0700
-Message-ID: <5bdc1c8b1003281531r2fe1e3e5q47212843bbaa0641@mail.gmail.com>
+From: Joachim Otahal <Jou@gmx.net>
+Subject: Swap on /dev/md1 always lost after reboot
+Date: Mon, 29 Mar 2010 04:21:20 +0200
+Message-ID: <4BB00EA0.8020907@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-So I'm giving up on mdadm/RAID1/WD10EARS Green Drive experiment for
-the next day or two. I've tried 4 times in the last two days to see if
-I can get this machine to boot using RAID. I keep running into crashes
-that look like the one below. I will try a non-RAID install and see if
-the hardware is stable and then come back to this later if
-appropriate.
+Machine is:
+Debian Lenny, Linux version 2.6.26-2-686 (Debian 2.6.26-21lenny4)
+mdadm - v2.6.7.2 - 14th November 2008
+2 HD's
+/dev/md1 = /, /dev/sda1 /dev/sdb1
+/dev/md0 = /home/data, /dev/sda3 /dev/sdb3
 
-I was running a March, 2010 Gentoo install CD when this happened. One
-terminal doing bash completion of all things was hung with 1 CPU stuck
-in a 100% wait condition. New terminals continued to work if I didn't
-try to access the hard drive. I can run things from the CD.
+They are numbered that way for "historical" reasons, I created /dev/md0 
+as data partition first and converted root/boot to RAID1 later.
 
-I have never seen a Gentoo install use nearly 2GB so something is
-really going wrong here.
+The problem is:
+/dev/md2 = swap, /dev/sda2, /dev/sdb2
 
-Cheers,
-Mark
+I set up md2 (/dev/md2 is already in fstab as swap, the partition type 
+is fd on both drives):
+mdadm --zero-superblock /dev/sda2
+mdadm --zero-superblock /dev/sdb2
+mdadm -C /dev/md2 -l 1 -n 2 /dev/sdb2 /dev/sda2
+mkswap /dev/md2
+swapon -a
+free says: swap active, mdstat says:
+md2 : active (auto-read-only) raid1 sda2[1] sdb2[0]
+       979840 blocks [2/2] [UU]
+(no resync=PENDING or other funny stuff)
+mdadm --examine --scan shows the md2, /etc/mdadm/mdadm.conf gets updated 
+by me.
+reboot, and the free says: no swap.
 
-livecd ~ # cat /proc/mdstat
-Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
-md3 : active raid1 sdc3[2] sdb3[1] sda3[0]
-      31463232 blocks [3/3] [UUU]
+cat /proc/mdstat says: no md2 !
+mdadm --examine --scan shows md2, exactely as written in 
+/etc/mdadm/mdadm.conf
 
-unused devices: <none>
-livecd ~ #
+the longer output:
+mdadm --examine /dev/sda2
+/dev/sda2:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : d97bc68d:a6bd724d:b66f1fce:677f10ed (local to host 
+nearyou)
+   Creation Time : Mon Mar 29 03:43:06 2010
+      Raid Level : raid1
+   Used Dev Size : 979840 (957.04 MiB 1003.36 MB)
+      Array Size : 979840 (957.04 MiB 1003.36 MB)
+    Raid Devices : 2
+   Total Devices : 2
+Preferred Minor : 2
+     Update Time : Mon Mar 29 03:45:06 2010
+           State : clean
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
+        Checksum : dec1b89a - correct
+          Events : 8
+       Number   Major   Minor   RaidDevice State
+this     1       8        2        1      active sync   /dev/sda2
+    0     0       8       18        0      active sync   /dev/sdb2
+    1     1       8        2        1      active sync   /dev/sda2
 
+mdadm --examine /dev/sda2
+/dev/sda2:
+           Magic : a92b4efc
+         Version : 00.90.00
+            UUID : d97bc68d:a6bd724d:b66f1fce:677f10ed (local to host 
+nearyou)
+   Creation Time : Mon Mar 29 03:43:06 2010
+      Raid Level : raid1
+   Used Dev Size : 979840 (957.04 MiB 1003.36 MB)
+      Array Size : 979840 (957.04 MiB 1003.36 MB)
+    Raid Devices : 2
+   Total Devices : 2
+Preferred Minor : 2
+     Update Time : Mon Mar 29 03:45:06 2010
+           State : clean
+  Active Devices : 2
+Working Devices : 2
+  Failed Devices : 0
+   Spare Devices : 0
+        Checksum : dec1b89a - correct
+          Events : 8
+       Number   Major   Minor   RaidDevice State
+this     1       8        2        1      active sync   /dev/sda2
+    0     0       8       18        0      active sync   /dev/sdb2
+    1     1       8        2        1      active sync   /dev/sda2
 
-livecd ~ # top
+So the raid is there, it is on the HD, it is consistent and clean, it 
+says it's preferred minor is 2 = md2.
+It is simply not autodetected at boot time, or not activated, I tried 
+that quite a few times now. I can recreate the raid with -C -f and issue 
+a --rebuild, swapon -a, everything fine. The other RAID1's on the drives 
+work as expected.
 
-top - 06:24:39 up  1:28,  3 users,  load average: 1.95, 2.52, 2.36
-Tasks: 182 total,   1 running, 181 sleeping,   0 stopped,   0 zombie
-Cpu0  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,  0.0%st
-Cpu1  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,  0.0%st
-Cpu2  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,  0.0%st
-Cpu3  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,  0.0%st
-Cpu4  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,  0.0%st
-Cpu5  :  0.0%us,  0.0%sy,  0.0%ni,  0.0%id,100.0%wa,  0.0%hi,  0.0%si,  0.0%st
-Cpu6  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,  0.0%st
-Cpu7  :  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,  0.0%st
-Mem:   6105068k total,  1822336k used,  4282732k free,   172016k buffers
-Swap: 12602964k total,        0k used, 12602964k free,  1326360k cached
+What is the trap I am running in here? I have other machines with 
+/dev/md1 as swap without such problems. It there some kind of kernel 
+option how high autodetect should count in md "Preferred Minor" devices?
 
+kind regards,
 
+Joachim Otahal
 
-livecd ~ # uname -a
-Linux livecd 2.6.31-gentoo-r6 #1 SMP Thu Mar 4 13:09:55 UTC 2010
-x86_64 Intel(R) Core(TM) i7 CPU 920 @ 2.67GHz GenuineIntel GNU/Linux
-livecd ~ #
-
-
-Adding 4200988k swap on /dev/sda2.  Priority:1 extents:1 across:4200988k
-Adding 4200988k swap on /dev/sdb2.  Priority:1 extents:1 across:4200988k
-Adding 4200988k swap on /dev/sdc2.  Priority:1 extents:1 across:4200988k
-kjournald starting.  Commit interval 5 seconds
-EXT3 FS on md3, internal journal
-EXT3-fs: mounted filesystem with writeback data mode.
-INFO: task bash:17348 blocked for more than 120 seconds.
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-bash          D ffff8800280d3e00     0 17348  17345 0x00000000
- ffff8801afb1a670 0000000000000082 0000000000000000 00000000000000ff
- ffff8801a788f038 0000000000004000 000000000000fe00 000000000000c878
- ffff8801af1e39b8 ffff8801af1e39d0 ffff8801af91c730 ffff8801afb1a8e8
-Call Trace:
- [<ffffffff81209a92>] ? generic_make_request+0x220/0x26a
- [<ffffffff8109c248>] ? sync_buffer+0x0/0x40
- [<ffffffff8137a4fc>] ? io_schedule+0x2d/0x3a
- [<ffffffff8109c283>] ? sync_buffer+0x3b/0x40
- [<ffffffff8137a879>] ? __wait_on_bit+0x41/0x70
- [<ffffffff8109c248>] ? sync_buffer+0x0/0x40
- [<ffffffff8137a913>] ? out_of_line_wait_on_bit+0x6b/0x77
- [<ffffffff810438b2>] ? wake_bit_function+0x0/0x23
- [<ffffffff81132dff>] ? log_do_checkpoint+0x366/0x429
- [<ffffffff81132f92>] ? __log_wait_for_space+0xd0/0x176
- [<ffffffff81130e8e>] ? start_this_handle+0x2b2/0x2fb
- [<ffffffff8108a698>] ? filldir+0x0/0xb7
- [<ffffffff8108a698>] ? filldir+0x0/0xb7
- [<ffffffff8113102d>] ? journal_start+0x9a/0xce
- [<ffffffff810f3ae2>] ? ext3_dirty_inode+0x28/0x7b
- [<ffffffff8109745d>] ? __mark_inode_dirty+0x26/0xf5
- [<ffffffff8108ebca>] ? touch_atime+0x10a/0x113
- [<ffffffff8108a85c>] ? vfs_readdir+0x7a/0x97
- [<ffffffff8108a9b1>] ? sys_getdents+0x7a/0xc1
- [<ffffffff8100adab>] ? system_call_fastpath+0x16/0x1b
-INFO: task kjournald:17466 blocked for more than 120 seconds.
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-kjournald     D ffff8800280bbe00     0 17466      2 0x00000000
- ffff8801adf9d890 0000000000000046 0000000000000000 0000000000000000
- ffff8801adcbde44 0000000000004000 000000000000fe00 000000000000c878
- 0000000800000050 ffff88017a99aa40 ffff8801af90a150 ffff8801adf9db08
-Call Trace:
- [<ffffffff812dd063>] ? md_make_request+0xb6/0xf1
- [<ffffffff8109c248>] ? sync_buffer+0x0/0x40
- [<ffffffff8137a4fc>] ? io_schedule+0x2d/0x3a
- [<ffffffff8109c283>] ? sync_buffer+0x3b/0x40
- [<ffffffff8137a879>] ? __wait_on_bit+0x41/0x70
- [<ffffffff8109c248>] ? sync_buffer+0x0/0x40
- [<ffffffff8137a913>] ? out_of_line_wait_on_bit+0x6b/0x77
- [<ffffffff810438b2>] ? wake_bit_function+0x0/0x23
- [<ffffffff8109c637>] ? sync_dirty_buffer+0x72/0xaa
- [<ffffffff81131b8e>] ? journal_commit_transaction+0xa74/0xde2
- [<ffffffff8103abcc>] ? lock_timer_base+0x26/0x4b
- [<ffffffff81043884>] ? autoremove_wake_function+0x0/0x2e
- [<ffffffff81134804>] ? kjournald+0xe3/0x206
- [<ffffffff81043884>] ? autoremove_wake_function+0x0/0x2e
- [<ffffffff81134721>] ? kjournald+0x0/0x206
- [<ffffffff81043591>] ? kthread+0x8b/0x93
- [<ffffffff8100bd3a>] ? child_rip+0xa/0x20
- [<ffffffff81043506>] ? kthread+0x0/0x93
- [<ffffffff8100bd30>] ? child_rip+0x0/0x20
-livecd ~ #
