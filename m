@@ -1,69 +1,60 @@
-From: Luca Berra <bluca@comedia.it>
+From: Jools Wills <jools@oxfordinspire.co.uk>
 Subject: Re: problem with mdadm --incremental on ubuntu from initramfs
-	(path choice related) on version 3.x
-Date: Mon, 29 Mar 2010 22:01:30 +0200
-Message-ID: <20100329200130.GA26734@maude.comedia.it>
+ (path choice related) on version 3.x
+Date: Mon, 29 Mar 2010 21:34:50 +0100
+Message-ID: <1269894890.26247.40.camel@travelmate.workshop>
 References: <1269844303.26247.23.camel@travelmate.workshop>
+	 <20100329200130.GA26734@maude.comedia.it>
+Reply-To: jools@oxfordinspire.co.uk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1269844303.26247.23.camel@travelmate.workshop>
+In-Reply-To: <20100329200130.GA26734@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Luca Berra <bluca@comedia.it>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Mar 29, 2010 at 07:31:43AM +0100, Jools Wills wrote:
->i notice in the mdadm git head this has been changed to
->
->        mapnames(VAR_RUN "/map"),
->        mapnames("/var/run/mdadm.map"),
->        mapnames(ALT_RUN "/" ALT_MAPFILE)
->
->and the description has been almost corrected (albeit some typos) to
->
-> *   /var/run/mdadm/map  /var/run/mdadm.map  /lib/initrw/madam/map
->
->however, these paths are still not helpful for the ubuntu initramfs that
->doesn't have these locations - and there is not an obvious fall back
->location.
-i tought ubuntu had /lib/init/rw, being debian based, or is it only the
-mdadm subdire under that one missing? current git should create the
-latter.
+On Mon, 2010-03-29 at 22:01 +0200, Luca Berra wrote:
 
->Also changing the ALT_RUN location will also change where it stores the
->PID for the monitor daemon, which is called much later once root is
->mounted, so even if ALT_RUN is set to /dev/ so the map file could be
->created. it wouldn't be the ideal location for the PID.
-not exactly, mdmon is spawned by mdadm in case an array with external
-metadata is assembled (imsm or ddf)
+> i tought ubuntu had /lib/init/rw, being debian based, or is it only the
+> mdadm subdire under that one missing? current git should create the
+> latter.
 
->Since things tend to fail if it cant make the mapfile how about it
->tries /dev/ as a final location for the file (or another location that
->is likely to exist) if the others fail? Another option that would work,
->is to create a folder such as /var/run if it is missing, or allow the
->map file path to be passed as a parameter, so the location guesswork
->could be overridden by the caller.
-since ALT_RUN and VAR_RUN are settable at compile time, i believe every
-distro can chose a suitable path.
+must have been the missing subdir underneath I think. I have found an
+ubuntu bug now that addresses the missing /var/run/ folder so I guess it
+will be fixed in a future release (Ubuntu has an outdated version of
+mdadm also - so I have now built my own package of 3.1.2 and fixed up
+the missing initramfs folder)
 
->Also, some error reporting that the map file couldn't be created would
->be most useful, instead of the "/dev/md0 is in use" error.
+> >My final thought is, that to make this bug report, I had to come and
+> >sign up here on this list, and then hope that the mdadm maintainer will
+> >read it. The mdadm software really needs a bugtracker, or better
+> >instructions on the site as to how to go about reporting issues
 
-yes, this would be needed
+> What's wrong about a mailing list?
 
->My final thought is, that to make this bug report, I had to come and
->sign up here on this list, and then hope that the mdadm maintainer will
->read it. The mdadm software really needs a bugtracker, or better
->instructions on the site as to how to go about reporting issues.
-What's wrong about a mailing list?
+Well, first of all it isn't immediately obvious where to report bugs at
+all.
 
-L.
+http://neil.brown.name/blog/mdadm you then need to surf to the "front"
+link then to contact, but it is a little vague.
 
+and as for what's wrong with a mailinglist? all the obvious things
+tracking bugs, priority, other people locating similar issues to
+comment, tracking patches and so on.
+
+Thanks for your response.
+
+Best Regards
+
+Jools
+
+Jools Wills
 -- 
-Luca Berra -- bluca@comedia.it
-          Communication Media & Services S.r.l.
-   /"\
-   \ /     ASCII RIBBON CAMPAIGN
-    X        AGAINST HTML MAIL
-   / \
+IT Consultant
+Oxford Inspire - http://www.oxfordinspire.co.uk - be inspired
+t: 01235 519446 m: 07966 577498
+jools@oxfordinspire.co.uk
+
