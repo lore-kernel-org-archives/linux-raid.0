@@ -1,115 +1,87 @@
-From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: 4 partition raid 5 with 2 disks active and 2 spare, how to force?
-Date: Sun, 28 Mar 2010 23:41:52 -0700
-Message-ID: <4877c76c1003282341s15f181b0m6a0327bc947dc456@mail.gmail.com>
-References: <S1753093Ab0CYHZE/20100325072504Z+37@vger.kernel.org>
-	 <2E4545D6-8F4E-4779-9103-960C52983A72@brillgene.com>
-	 <4877c76c1003250437r346e18en8da0f6f804bef634@mail.gmail.com>
-	 <DFC0232A-8DCD-4815-AA08-DA7065F01221@brillgene.com>
-	 <4877c76c1003252038o655b2a29p9d994df27b5d2afd@mail.gmail.com>
-	 <6093BE49-EE3B-41B5-9519-C6D5D0496C64@brillgene.com>
-	 <4877c76c1003261204h2777547dn67a8e692864ff26a@mail.gmail.com>
-	 <D332CDBC-0D5D-4BF7-8876-7A4B1B3ED45E@brillgene.com>
-	 <45872BBE-0957-43E4-8D31-54B28F5F5936@brillgene.com>
-	 <20100329053227.GA21664@maude.comedia.it>
+From: Jools Wills <jools@oxfordinspire.co.uk>
+Subject: problem with mdadm --incremental on ubuntu from initramfs (path
+ choice related) on version 3.x
+Date: Mon, 29 Mar 2010 07:31:43 +0100
+Message-ID: <1269844303.26247.23.camel@travelmate.workshop>
+Reply-To: jools@oxfordinspire.co.uk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100329053227.GA21664@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, Mar 28, 2010 at 10:32 PM, Luca Berra <bluca@comedia.it> wrote:
-> On Sun, Mar 28, 2010 at 10:05:58PM +0530, Anshuman Aggarwal wrote:
->>>
->>> Michael,
->>> I am running mdadm 3.1.2 (latest stable I think) compiled from sour=
-ce
->>> (FYI on Ubuntu Karmic, 2.6.31-20-generic)
->>>
->>> Here is what happened....the device /dev/sda1 has failed once, but =
-I was
->>> wondering if it was a freak accident so I tried adding it back..and=
- then it
->>> started resyncing ...somewhere in this process...the disk /dev/sda1=
- stalled
->>> and the server needed a reboot. After that boot, I got 2 spares (/d=
-ev/sda1,
->>> /dev/sdd5) and 2 active devices (/dev/sdb1, /dev/sdc1)
->>>
->>> Maybe I need to do a build with a --assume-clean with the devices i=
-n the
->>> right order (which I'm positive I can remember) ...be nice if you c=
-ould plz
->>> double check:
->>> mdadm --build -n 4 -l 5 -e1.2 --assume-clean /dev/md127 /dev/sda1
->>> /dev/sdb5 /dev/sdc5 /dev/sdd5
->>>
->>> Again, thanks for your time...
->>>
->>> John,
->>> I did try what you said without any luck(--assemble --force but it
->>> refuses to accept the spare as a valid device and 2 active on a 4 m=
-ember
->>> device isn't good enough)
->>>
->>>
->>>
->>
->> Some more info:
->>
->> I did try this command with the following result:
->>
->> mdadm --build -n 4 -l 5 -e1.2 --assume-clean /dev/md127 /dev/sda1
->> /dev/sdb5 /dev/sdc5 /dev/sdd5
->> mdadm: Raid level 5 not permitted with --build.
->>
->> Should I try this?
->> mdadm --create -n 4 -l 5 -e1.2 --assume-clean /dev/md127 /dev/sda1
->> /dev/sdb5 /dev/sdc5 /dev/sdd5
->
-> From your description above /dev/sda was the failed one, so you shoul=
-d
-> not add it to the array. use the word "missing" in its place.
->
-> L.
->
-> --
-> Luca Berra -- bluca@comedia.it
-> =A0 =A0 =A0 =A0Communication Media & Services S.r.l.
-> =A0/"\
-> =A0\ / =A0 =A0 ASCII RIBBON CAMPAIGN
-> =A0X =A0 =A0 =A0 =A0AGAINST HTML MAIL
-> =A0/ \
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+I was trying to get mdadm 3.1.2 to work on ubuntu. ubuntu calls mdadm
+with --incremental for all partitions that have the linux raid
+identifier. this is done via udev.
 
-Additionally to using missing for the device you know to be a failed
-one, VERY highly suggest running a check, or some read-only operation
-on the resulting raid device to make sure you can read all of the
-data.  Be sure to check the dmesg/system logs to make sure that there
-were no noted storage errors.  If there were not, it is /probably/
-safe to re-add the previously failed disk and resync it.
+I noticed  when doing mdadm --incremental /dev/sdx from the initramfs
+when run a second time, it would say the raid device is in use.
 
-While checking that your array data can be read, you should probably
-also run the SMART tests via smartctl (or a gui for it) on the
-'failed' disk to see if it was a sign of something worse.
+I debugged this and it was down to mdadm not being able to create a map
+file. the three choices of possible map file location not being
+available. on 3.1.2 it states in mapfile.c
 
-In any case, I do NOT recommend using anything within the raid
-container other than in read-only mode until the resync is complete.
-You may need to use portions of sda that are still good in more
-elaborate ways to recover data that is readable there, but not
-readable on sdd or other drives.  Read/write mode or even FSCK on the
-array contents will only increase the chances of data being out of
-sync.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ * The preferred location for the map file is /var/run/mdadm.map.
+ * However /var/run may not exist or be writable in early boot.  And if
+ * no-one has created /var/run/mdadm, we still want to survive.
+ * So possible locations are:
+ *   /var/run/mdadm/map  /var/run/mdadm.map  /dev/.mdadm.map
+
+however the default map locations are actually
+
+        mapnames(VAR_RUN "/map"), // (/var/run/map)
+        mapnames("/var/run/mdadm.map"),
+        mapnames(ALT_RUN "/map") // by default /lib/init/rw/mdadm/map
+
+i notice in the mdadm git head this has been changed to
+
+        mapnames(VAR_RUN "/map"),
+        mapnames("/var/run/mdadm.map"),
+        mapnames(ALT_RUN "/" ALT_MAPFILE)
+
+and the description has been almost corrected (albeit some typos) to
+
+ *   /var/run/mdadm/map  /var/run/mdadm.map  /lib/initrw/madam/map
+
+however, these paths are still not helpful for the ubuntu initramfs that
+doesn't have these locations - and there is not an obvious fall back
+location.
+
+Also changing the ALT_RUN location will also change where it stores the
+PID for the monitor daemon, which is called much later once root is
+mounted, so even if ALT_RUN is set to /dev/ so the map file could be
+created. it wouldn't be the ideal location for the PID.
+
+Since things tend to fail if it cant make the mapfile how about it
+tries /dev/ as a final location for the file (or another location that
+is likely to exist) if the others fail? Another option that would work,
+is to create a folder such as /var/run if it is missing, or allow the
+map file path to be passed as a parameter, so the location guesswork
+could be overridden by the caller.
+
+Also, some error reporting that the map file couldn't be created would
+be most useful, instead of the "/dev/md0 is in use" error.
+
+Thanks for listening.
+
+..
+
+My final thought is, that to make this bug report, I had to come and
+sign up here on this list, and then hope that the mdadm maintainer will
+read it. The mdadm software really needs a bugtracker, or better
+instructions on the site as to how to go about reporting issues.
+
+Best Regards
+
+Jools
+
+
+Jools Wills
+-- 
+IT Consultant
+Oxford Inspire - http://www.oxfordinspire.co.uk - be inspired
+t: 01235 519446 m: 07966 577498
+jools@oxfordinspire.co.uk
+
