@@ -1,7 +1,7 @@
 From: Joachim Otahal <Jou@gmx.net>
 Subject: Swap on /dev/md1 always lost after reboot
-Date: Mon, 29 Mar 2010 04:21:20 +0200
-Message-ID: <4BB00EA0.8020907@gmx.net>
+Date: Mon, 29 Mar 2010 04:21:51 +0200
+Message-ID: <4BB00EBF.7070304@gmx.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
