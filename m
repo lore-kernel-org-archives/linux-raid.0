@@ -1,137 +1,209 @@
-From: Markus Hochholdinger <Markus@hochholdinger.net>
-Subject: Re: [PATCH 018 of 29] md: Support changing rdev size on running arrays.
-Date: Tue, 30 Mar 2010 16:52:13 +0200
-Message-ID: <201003301652.16622.Markus@hochholdinger.net>
-References: <20080627164503.9671.patches@notabene> <200806271809.29768.Markus@hochholdinger.net> <18533.31375.280387.666514@notabene.brown>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: Auto Rebuild on hot-plug
+Date: Tue, 30 Mar 2010 11:23:08 -0400
+Message-ID: <4BB2175C.7070201@redhat.com>
+References: <20100325113543.0e2124c5@notabene.brown>	 <905EDD02F158D948B186911EB64DB3D11C510278@irsmsx503.ger.corp.intel.com>	 <e9c3a7c21003261737k1e753b08xc6f8eb45d0320be9@mail.gmail.com>	 <4BB0ED13.6020507@redhat.com>	 <e9c3a7c21003291436lb898278i21f988fd5f76bd53@mail.gmail.com>	 <4BB13830.8070709@redhat.com> <e9c3a7c21003291746o49191295r876c7fef50fe63a5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1610282.f1aqXJXLJE";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigEB9E72EC022B34A9583376F7"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <18533.31375.280387.666514@notabene.brown>
+In-Reply-To: <e9c3a7c21003291746o49191295r876c7fef50fe63a5@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, Chris Webb <chris@arachsys.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "Labun, Marcin" <Marcin.Labun@intel.com>, Neil Brown <neilb@suse.de>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Bill Davidsen <davidsen@tmr.com>
 List-Id: linux-raid.ids
 
---nextPart1610282.f1aqXJXLJE
-Content-Type: text/plain;
-  charset="iso-8859-1"
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigEB9E72EC022B34A9583376F7
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
 
-Hello,
+On 03/29/2010 08:46 PM, Dan Williams wrote:
+> I think the disconnect in the imsm case is that the container to
+> DOMAIN relationship is N:1, not 1:1.  The mdadm notion of an
+> imsm-container correlates directly with a 'family' in the imsm
+> metadata.  The rules of a family are:
+>=20
+> 1/ All family members must be a member of all defined volumes.  For
+> example with a 4-drive container you could not simultaneously have a
+> 4-drive (sd[abcd]) raid10 and a 2-drive (sd[ab]) raid1 volume because
+> any volume would need to incorporate all 4 disks.  Also, per the rules
+> if you create two raid1 volumes sd[ab] and sd[cd] those would show up
+> as two containers.
+>=20
+> 2/ A spare drive does not belong to any particular family
+> ('family_number' is undefined for a spare).  The Windows driver will
+> automatically use a spare to fix any degraded family in the system.
+> In the mdadm/mdmon case since we break families into containers we
+> need a mechanism to migrate spare devices between containers because
+> they are equally valid hot spare candidate for any imsm container in
+> the system.
 
-Am 28.06.2008 um 01:41 Uhr schrieb Neil Brown <neilb@suse.de>:
-> On Friday June 27, Markus@hochholdinger.net wrote:
-> > Am Freitag, 27. Juni 2008 08:51 schrieb NeilBrown:
-> > > From: Chris Webb <chris@arachsys.com>
-> > > Allow /sys/block/mdX/md/rdY/size to change on running arrays, moving
-> > > the superblock if necessary for this metadata version. We prevent the
-> > > available space from shrinking to less than the used size, and allow =
-it
-> > > to be set to zero to fill all the available space on the underlying
-> > > device.
-> > I'm very happy of this new feature. But I'm a little confused how to use
-> > it correctly.
-> > Can md now recognize the change by itself and I only have to run mdadm
-> > --grow? Or have I manually update /sys/block/mdX/md/rdY/size and
-> > afterwards run mdadm --grow?
-> No, md does not recognise the change by itself.
-> Currently you need to update ..../size yourself before using
->    "mdadm --grow"
-> This should probably be incorporated into mdadm at some stage, but it
-> hasn't yet.
+This explains the weird behavior I got when trying to create arrays on
+my IMSM box via the BIOS.  Thanks for the clear explanation of family
+delineation.
 
-it's some time ago but today i'm able to test this (because now i have a xe=
-n=20
-kernel which recognizes size changes).
-I tested with metadata version 0.9, 1.0 and 1.1 but didn't get it to work. =
-I=20
-create a raid1:
-mdadm --create /dev/md1 --level=3D1 --raid-disks=3D2 --metadata=3D1.0 /dev/=
-xvda1 /dev/xvdb1
+> This begs the question, why not change the definition of an imsm
+> container to incorporate anything with imsm metadata?  This definitely
+> would make spare management easier.  This was an early design decision
+> and had the nice side effect that it lined up naturally with the
+> failure and rebuild boundaries of a family.  I could give it more
+> thought, but right now I believe there is a lot riding on this 1:1
+> container-to-family relationship, and I would rather not go there.
 
-Then I change the size of xvda1 and get the following kernel message:
-[ 3281.905317] Setting capacity to 4194304
-[ 3281.905317] xvda1: detected capacity change from 1073741824 to 2147483648
+I'm fine with the container being family based and not domain based.  I
+just didn't realize that distinction existed.  It's all cleared up now ;-=
+)
 
-After this i do:
-echo "0" > /sys/block/md1/md/rd0/size
-No kernel message so far and
-  cat /sys/block/md1/md/rd0/size
-still shows 1048570.
+>> However, that just means (to me anyway) that I would treat all of the
+>> sata ports as one domain with multiple container arrays in that domain=
 
-Then the same for xvdb1.
+>> just like we can have multiple native md arrays in a domain.  If a dis=
+k
+>> dies and we hot plug a new one, then mdadm would look for the degraded=
 
-And then I tried to grow md1 in the hope it will somehow detect the new siz=
-e=20
-correct, but i only get a very little grow:
-[ 3345.133882] md1: detected capacity change from 1073729536 to 1073735680
-[ 3345.140087] md: resync of RAID array md1
-[ 3345.140098] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-[ 3345.140105] md: using maximum available idle IO bandwidth (but not more=
-=20
-than 200000 KB/sec) for resync.
-[ 3345.140121] md: using 128k window, over a total of 1048570 blocks.
-[ 3345.140129] md: resuming resync of md1 from checkpoint.
-[ 3345.140412] md: md1: resync done.
-[ 3345.160064] RAID1 conf printout:
-[ 3345.160071]  --- wd:2 rd:2
-[ 3345.160076]  disk 0, wo:0, o:1, dev:xvda1
-[ 3345.160081]  disk 1, wo:0, o:1, dev:xvdb1
+>> container present in the domain and add the spare to it.  It would the=
+n
+>> be up to mdmon to determine what logical volumes are currently degrade=
+d
+>> and slice up the new drive to work as spares for those degraded logica=
+l
+>> volumes.  Does this sound correct to you, and can mdmon do that alread=
+y
+>> or will this need to be added?
+>=20
+> This sounds correct, and no mdmon cannot do this today.  The current
+> discussions we (Marcin and I) had with Neil offlist was extending
+> mdadm --monitor to handle spare migration for containers since it
+> already handles spare migration for native md arrays.  It will need
+> some mdmon coordination since mdmon is the only agent that can
+> disambiguate a spare from a stale device at any given point in time.
 
-Especially "md1: detected capacity change from 1073729536 to 1073735680" ma=
-kes=20
-me wonder.
+So we'll need to coordinate on this aspect of things then.  I'll keep
+you updated as I get started implementing this if you want to think
+about how you would like to handle this interaction between mdadm/mdmon.
 
+As far as I can tell, we've reached a fairly decent consensus on things.
+ But, just to be clear, I'll reiterate that concensus here:
 
-I also tried to set values to /sys/block/md1/md/rd1/size, but all i got was
-  echo: write error: Invalid argument
+Add a new linetype: DOMAIN with options path=3D (must be specified at
+least once for any domain action other than none and incremental and
+must be something other than a global match for any action other than
+none and incremental) and metadata=3D (specifies the metadata type
+possible for this domain as one of imsm/ddf/md, and where for imsm or
+ddf types, we will verify that the path portions of the domain do not
+violate possible platform limitations) and action=3D (where action is
+none, incremental, readd, safe_use, force_use where action is specific
+to a hotplug when a degraded array in the domain exists and can possibly
+have slightly different meanings depending on whether the path specifies
+a whole disk device or specific partitions on a range of devices, and
+where there is the possibility of adding more options or a new option
+name for the case of adding a hotplug drive to a domain where no arrays
+are degraded, in which case issues such as boot sectors, partition
+tables, hot spare versus grow, etc. must be addressed).
 
-And the output of /sys/block/md1/md/rd1/size never changes.
-
-
-> > To be on the safe side I'd first lvresize one disk of the raid1, then do
-> > mdadm --grow to let md update/move the superblock of this disk. And aft=
-er
-> > this is successful, lvresize the other disk and do mdadm --grow. So in
-> > case of a failure i wouldn't loose the whole raid1!?
-> > Am I correct or am I missing something?
-> You don't want to "mdadm --grow" until everything has been resized.
-> First lvresize one disk, then write '0' to the .../size file.
-> Then do the same for the other disk.
-> Then "mdadm --grow /dev/mdX --size max".
-
-I tried mdadm version 3.0.3 and 3.1.1. Is it possible that something has=20
-changed inside mdadm?
-I used kernel 2.6.32-4-xen-amd64 (debian squeeze).
-
-Are am I doing something wrong? Has something changed so i'm on the wrong w=
-ay?=20
-Is there another way to do online grow of an raid1 without full resync?=20
-Anyone any ideas?
-
-Many thanks in advance.
+Modify udev rules files to cover the following scenarios (it's
+unfortunate that we have to split things up like this, but in order to
+deal with either bare drives or drives that have things like lvm data
+and we are using force_use, we must trigger on *all* drive hotplug
+events, we must trigger early, and we must override other subsystem's
+possible hotplug actions, otherwise the force_use option will be a noop):=
 
 
-=2D-=20
-greetings
+1) plugging in a device that already has md raid metadata present
+   a) if the device has metadata corresponding to one of our arrays,
+attempt to do normal incremental add
+   b) if the device has metadata corresponding to one of our arrays, and
+the normal add failed and the options readd, safe_use, or force_use are
+present in the mdadm.conf file, reattempt to add using readd
+   c) if the device has metadata corresponding to one of our arrays, and
+the readd failed, and the options safe_use or force_use are present,
+then do a regular add of the device to the array (possibly with doing a
+preemptive zero-superblock on the device we are adding).  This should
+never fail.
+   d) if the device has metadata that does not correspond to any array
+in the system, and there is a degraded array, and the option force_use
+is present, then quite possibly repartition the device to make the
+partitions match the degraded devices, zero any superblocks, and add the
+device to the arrays.  BIG FAT WARNING: the force_use option will cause
+you to loose data if you plug in an array disk for another machine while
+this machine has degraded arrays.
 
-eMHa
+2) plugging in a device that doesn't already have md raid metadata
+present but is part of an md domain
+   a) if the device is bare and the option safe_use is present and we
+have degraded arrays, partition the device (if needed) and then add
+partitions to degraded arrays
+   b) if the device is not bare, and the option force_use is present and
+we have degraded arrays, (re)partition the device (if needed) and then
+add partitions to degraded arrays.  BIG FAT WARNING: if you enable this
+mode, and you hotplug say an LVM volume into your domain when you have a
+degraded array, kiss your LVM volume goodbye.
 
---nextPart1610282.f1aqXJXLJE
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+Modify udev rules files to deal with device removal.  Specifically, we
+need to watch for removal of devices that are part of raid arrays and if
+they weren't failed when they were removed, fail them, and then remove
+them from the array.  This is necessary for readd to work.  It also
+releases our hold on the scsi device so it can be fully released and the
+new device can be added back using the same device name.
+
+Modify mdadm -I mode to read the mdadm.conf file for the DOMAIN lines on
+hotplug events and then modify the -I behavior to suit the situation.
+The majority of the hotplug changes mentioned above will actually be
+implemented as part of mdadm -I, we will simply add a few rules to call
+mdadm -I in a few new situations, then allow mdadm -I (which has
+unlimited smarts, where as udev rules get very convoluted very quickly
+if you try to make them smart) to actually make the decisions and do the
+right thing.  This means that effectively, we might just end up calling
+mdadm -I on every disk hot plug event whether there is md metadata or
+not, but only doing special things when the various conditions above are
+met.
+
+Modify mdadm and the spare-group concept of ARRAY lines to coordinate
+spare-group assignments and DOMAIN assignments.  We need to know what to
+do in the event of a conflict between the two.  My guess is that this is
+unlikely, but in the end, I think we need to phase out spare-group
+entirely in favor of domain.  Since we can't have a conflict without
+someone adding domain lines to the config file, I would suggest that the
+domain assignments override spare-group assignments and we complain
+about the conflict.  That way, even though the user obviously intended
+something specific with spare-group, he also must have intended
+something specific with domain assignments, and as the domain keyword is
+the newest and latest thing, honor the latest wishes and warn about it
+in case they misentered something.
+
+Modify mdadm/mdmon to enable spare migration between imsm containers in
+a domain.  Retain mdadm ability to move hot spares between native
+arrays, but make it based on domain now instead of spare-group, and in
+the config settings if someone has spare-group assignments and no domain
+assignments, then create internal domain entries that mimic the
+spare-group layout so that we can modify the core spare movement code to
+only be concerned with domain entries.
+
+I think that covers it.  Do we have a consensus on the general work?
+Your thoughts Neil?
+
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+	      http://people.redhat.com/dledford
+
+Infiniband specific RPMs available at
+	      http://people.redhat.com/dledford/Infiniband
+
+
+--------------enigEB9E72EC022B34A9583376F7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-iEYEABECAAYFAkuyEB0ACgkQXT3LE+AjWCu/EACgj4fLjUv6iLBWlXISzJSe+2Su
-xYwAn1B3lbUecfUq3TCNh+v8OMSSG0kY
-=8iVf
+iEYEARECAAYFAkuyF1wACgkQg6WylM+/8ZQd6gCffMTjrwiJ8M0xGZgv7/uEKtXs
+vgUAn2MQwz3iFrXNsQQipdqmqKNHvqnq
+=oN9K
 -----END PGP SIGNATURE-----
 
---nextPart1610282.f1aqXJXLJE--
+--------------enigEB9E72EC022B34A9583376F7--
