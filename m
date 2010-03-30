@@ -1,143 +1,121 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: Auto Rebuild on hot-plug
-Date: Mon, 29 Mar 2010 17:46:15 -0700
-Message-ID: <e9c3a7c21003291746o49191295r876c7fef50fe63a5@mail.gmail.com>
-References: <20100325113543.0e2124c5@notabene.brown>
-	 <905EDD02F158D948B186911EB64DB3D11C510278@irsmsx503.ger.corp.intel.com>
-	 <e9c3a7c21003261737k1e753b08xc6f8eb45d0320be9@mail.gmail.com>
-	 <4BB0ED13.6020507@redhat.com>
-	 <e9c3a7c21003291436lb898278i21f988fd5f76bd53@mail.gmail.com>
-	 <4BB13830.8070709@redhat.com>
+From: Simon Matthews <simon.d.matthews@gmail.com>
+Subject: Re: New RAID1 machine "No bootable media"
+Date: Mon, 29 Mar 2010 19:29:39 -0700
+Message-ID: <40b437201003291929h5fd760dcl7e19b18afd188f12@mail.gmail.com>
+References: <5bdc1c8b1003280812i7e785215xd44928c8d746a2b0@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BB13830.8070709@redhat.com>
+In-Reply-To: <5bdc1c8b1003280812i7e785215xd44928c8d746a2b0@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: "Labun, Marcin" <Marcin.Labun@intel.com>, Neil Brown <neilb@suse.de>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Bill Davidsen <davidsen@tmr.com>
+To: Mark Knecht <markknecht@gmail.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, Mar 29, 2010 at 4:30 PM, Doug Ledford <dledford@redhat.com> wro=
+Did you mark the partition as a bootable partition (using fdisk or
+cfdisk, etc)? I encountered this problem very recently. It seems to
+afflict 945G chipsets and it would not be unreasonable to think that
+other Intel chipsets could have the same issue. Another example of
+this:
+http://www.vyatta.org/forum/viewtopic.php?t=3D1976
+
+Can you boot off a livecd such as systemrescuecd and then use that to
+boot off the hard drive (using the "disk1" boot option)?
+
+Simon
+
+On Sun, Mar 28, 2010 at 8:12 AM, Mark Knecht <markknecht@gmail.com> wro=
 te:
-> On 03/29/2010 05:36 PM, Dan Williams wrote:
->> I agree once you have a DOMAIN you implicitly have a spare-group. =A0=
-So
->> DOMAIN would supersede the existing spare-group identifier in the
->> ARRAY line and cause mdadm --monitor to auto-migrate spares between
->> 0.90 and 1.x metadata arrays in the same DOMAIN. =A0For the imsm cas=
-e
->> the expectation is that spares migrate between containers regardless
->> of the DOMAIN line as that is what the implementation expects.
+> Hi,
+> =A0 I brought up new hardware yesterday for my first RAID install. I
+> followed this Gentoo page describing a software RAID1/LVM install:
 >
-> Give me some clearer explanation here because I think you and I are
-> using terms differently and so I want to make sure I have things righ=
-t.
-> =A0My understanding of imsm raid containers is that all the drives th=
-at
-> belong to a single option rom, as long as they aren't listed as jbod =
-in
-> the option rom setup, belong to the same container.
-
-I think the disconnect in the imsm case is that the container to
-DOMAIN relationship is N:1, not 1:1.  The mdadm notion of an
-imsm-container correlates directly with a 'family' in the imsm
-metadata.  The rules of a family are:
-
-1/ All family members must be a member of all defined volumes.  For
-example with a 4-drive container you could not simultaneously have a
-4-drive (sd[abcd]) raid10 and a 2-drive (sd[ab]) raid1 volume because
-any volume would need to incorporate all 4 disks.  Also, per the rules
-if you create two raid1 volumes sd[ab] and sd[cd] those would show up
-as two containers.
-
-2/ A spare drive does not belong to any particular family
-('family_number' is undefined for a spare).  The Windows driver will
-automatically use a spare to fix any degraded family in the system.
-In the mdadm/mdmon case since we break families into containers we
-need a mechanism to migrate spare devices between containers because
-they are equally valid hot spare candidate for any imsm container in
-the system.
-
-> That container is
-> then split up into various chunks and that's where you get logical
-> volumes. =A0I know there are odd rules for logical volumes inside a
-> container, but I think those are mostly irrelevant to this discussion=
-=2E
-> So, when I think of a domain for imsm, I think of all the sata ports =
-or
-> sas ports under a single option rom. =A0From that perspective, spares=
- can
-> *not* move between domains as a spare on a sas port can't be added to=
- a
-> sata option rom container array. =A0I was under the impression that i=
-f you
-> had, say, a 6 port sata controller option rom, you couldn't have the
-> first three ports be one container and the next three ports be anothe=
-r
-> container. =A0Is that impression wrong?
-
-Yes, we can have exactly this situation.
-
-This begs the question, why not change the definition of an imsm
-container to incorporate anything with imsm metadata?  This definitely
-would make spare management easier.  This was an early design decision
-and had the nice side effect that it lined up naturally with the
-failure and rebuild boundaries of a family.  I could give it more
-thought, but right now I believe there is a lot riding on this 1:1
-container-to-family relationship, and I would rather not go there.
-
-> However, that just means (to me anyway) that I would treat all of the
-> sata ports as one domain with multiple container arrays in that domai=
-n
-> just like we can have multiple native md arrays in a domain. =A0If a =
-disk
-> dies and we hot plug a new one, then mdadm would look for the degrade=
+> http://www.gentoo.org/doc/en/gentoo-x86+raid+lvm2-quickinstall.xml
+>
+> =A0 Note that I followed this page verbatim, even if it wasn't what I
+> wanted, with exceptions:
+>
+> a) My RAID1 is 3 drives instead of 2
+> b) I'm AMD64 Gentoo based.
+> c) I used grub-static
+>
+> =A0I did this install mostly just to get a first-hand feel for how to
+> do a RAID install and to try out some of the mdadm commands for real.
+> My intention was to blow away the install if I didn't like it and do
+> it again for real once I started to get a clearer picture about how
+> things worked. For instance, this set of instructions used RAID1 on
+> the /boot directory which I wasn't sure about.
+>
+> =A0 NOTE: THIS INSTALL PUTS EVERYTHING ON RAID1. (/, /boot, everythin=
+g)
+> I didn't start out thinking I wanted to do that.
+>
+> =A0 So, the first problem is that on the reboot to see if the install
+> worked the Intel BIOS reports 'no bootable media found'. I am very
+> unclear how any system boots software RAID1 before software is loaded=
+,
+> assuming I understand the Gentoo instructions. The instructions I use=
 d
-> container present in the domain and add the spare to it. =A0It would =
-then
-> be up to mdmon to determine what logical volumes are currently degrad=
-ed
-> and slice up the new drive to work as spares for those degraded logic=
-al
-> volumes. =A0Does this sound correct to you, and can mdmon do that alr=
-eady
-> or will this need to be added?
-
-This sounds correct, and no mdmon cannot do this today.  The current
-discussions we (Marcin and I) had with Neil offlist was extending
-mdadm --monitor to handle spare migration for containers since it
-already handles spare migration for native md arrays.  It will need
-some mdmon coordination since mdmon is the only agent that can
-disambiguate a spare from a stale device at any given point in time.
-
->> However this is where we get into questions of DOMAIN conflicting wi=
-th
->> 'platform' expectations, under what conditions, if any, should DOMAI=
-N
->> be allowed to conflict/override the platform constraint? =A0Currentl=
-y
->> there is an environment variable IMSM_NO_PLATFORM, do we also need a
->> configuration op
+> to install grub where
 >
-> I'm not sure I would ever allow breaking valid platform limitations. =
-=A0I
-> think if you want to break platform limitations, then you need to use
-> native md raid arrays and not imsm/ddf. =A0It seems to me that if you
-> allow the creation of an imsm/ddf array that the BIOS can't work with
-> then you've potentially opened an entire can of worms we don't want t=
-o
-> open about expectations that the BIOS will be able to work with thing=
-s
-> but can't. =A0If you force native arrays as the only type that can br=
-eak
-> platform limitations, then you are at least perfectly clear with the
-> user that the BIOS can't do what the user wants.
-
-Agreed.
-
---
-Dan
+> root (hd0,0)
+> setup (hd0)
+> root (hd1,0)
+> setup (hd1)
+> root (hd2,0)
+> setup (hd2)
+>
+> but the system finds nothing to boot from. to me this sounds like BIO=
+S
+> so looking around I'm currently set up for compatibility but would
+> think that switching to AHCI support would be a better long term
+> solution. Any chance this setting is the root cause?
+>
+> =A0 I can boot from CD and assemble the /boot RAID
+>
+> livecd ~ # cat /proc/mdstat
+> Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
+> unused devices: <none>
+> livecd ~ # mdadm --assemble /dev/md1 /dev/sda1 /dev/sdb1 /dev/sdc1
+> mdadm: /dev/md1 has been started with 3 drives.
+> livecd ~ # cat /proc/mdstat
+> Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
+> md1 : active raid1 sda1[0] sdc1[2] sdb1[1]
+> =A0 =A0 =A0112320 blocks [3/3] [UUU]
+>
+> unused devices: <none>
+> livecd ~ # mdadm --misc --stop /dev/md1
+> mdadm: stopped /dev/md1
+> livecd ~ # cat /proc/mdstat
+> Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
+> unused devices: <none>
+> livecd ~ #
+>
+>
+> Everything I expect to see on /boot seems to be there when using ls.
+>
+> =A0 Note that one possible clue - when the Intel BIOS screen first
+> comes up I see some hex digits flashing around in the lower right.
+> I've not seen this before on other machines and I beleive the
+> motherboard (DX58SO) does support some sort of RAID in hardware so
+> maybe there's confusion there? I've not selected RAID in BIOS but
+> possible it's trying to be too clever?
+>
+> =A0 Let me know what other info might be needed. I have concerns abou=
+t
+> this install and will likely blow it away today and do a new one but =
+I
+> figured maybe there's an opportunity to learn here before I do that.
+>
+> Cheers,
+> Mark
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
