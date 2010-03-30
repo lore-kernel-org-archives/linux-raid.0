@@ -1,148 +1,99 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: New RAID1 machine "No bootable media"
-Date: Mon, 29 Mar 2010 20:42:36 -0700
-Message-ID: <5bdc1c8b1003292042i37e48e97m4ffea2c7f37573da@mail.gmail.com>
-References: <5bdc1c8b1003280812i7e785215xd44928c8d746a2b0@mail.gmail.com>
-	 <40b437201003291929h5fd760dcl7e19b18afd188f12@mail.gmail.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Auto Rebuild on hot-plug
+Date: Tue, 30 Mar 2010 13:10:55 +0100
+Message-ID: <4BB1EA4F.5070803@anonymous.org.uk>
+References: <20100325113543.0e2124c5@notabene.brown>	 <905EDD02F158D948B186911EB64DB3D11C510278@irsmsx503.ger.corp.intel.com> <e9c3a7c21003261737k1e753b08xc6f8eb45d0320be9@mail.gmail.com> <4BB0ED13.6020507@redhat.com> <4BB0F32F.9030803@anonymous.org.uk> <4BB0F820.4030707@redhat.com> <4BB12B77.8030902@anonymous.org.uk> <4BB13942.3030400@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <40b437201003291929h5fd760dcl7e19b18afd188f12@mail.gmail.com>
+In-Reply-To: <4BB13942.3030400@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Simon Matthews <simon.d.matthews@gmail.com>
-Cc: Linux-RAID <linux-raid@vger.kernel.org>
+To: Doug Ledford <dledford@redhat.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, Neil Brown <neilb@suse.de>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, Bill Davidsen <davidsen@tmr.com>
 List-Id: linux-raid.ids
 
-Yeah, same thing here. This is the first machine I've owned in years
-that actually required that.
+On 30/03/2010 00:35, Doug Ledford wrote:
+> On 03/29/2010 06:36 PM, John Robinson wrote:
+>> On 29/03/2010 19:57, Doug Ledford wrote:
+>>> On 03/29/2010 02:36 PM, John Robinson wrote:
+>> [...]
+>>>> Yes, but do create the partition(s), boot sector, etc and set up the
+>>>> spare(s).
+>>> Really, we should never have to do this in the situation I listed: aka
+>>> no degraded arrays exist.  This implies that if you had a raid1 /boot
+>>> array, that it's still intact.  So partitioning and setting up boot
+>>> loaders doesn't make sense as the new disk isn't going in to replace
+>>> anything.  You *might* want to add it to the raid1 /boot, but we don't
+>>> know that so doing things automatically doesn't make sense.
+>> Actually I've just recently had the scenario where it would have made
+>> perfect sense. I hooked up the RAID chassis SATA[0-4] ports to the RAID
+>> chassis and put 3 drives in the first 3 slots. Actually it turned out
+>> I'd wired it up R-L not L-R so if I'd added a new drive in one of the
+>> two right-hand slots it would have turned up as sda on the next boot.
+> 
+> Yes, but how do you want to fix that situation?  Would you want to make
+> the new drives be new boot drives, or would you prefer to shut down,
+> move all the previous drives over two slots, and then put the new drive
+> into the fourth slot that you previously thought was the second slot?  I
+> understand your situation, but were I in that position I'd just shuffle
+> my drives to correct my original mistake and go on with things, I
+> wouldn't make the new drives be boot drives.  So I'm still not sure I
+> see the point to making a new drive that isn't replacing an existing
+> drive automatically get set up for boot duty.
 
-Basically it failed to boot as RAID so I blew the install away, did it
-as non-RAID and had the same problem. Guess that might be it and tried
-it non-RAID and it worked.
+I wouldn't want to take the server down to shuffle the drives or cables. 
+But my point really is that if I have decided that I would want all the 
+drives in my chassis to have identical partition tables and carry an 
+active mirror of an array - in my example /boot - I would like to be 
+able to configure the hotplug arrangement to make it so, rather than 
+leaving me to have to manually regenerate the partition table, install 
+grub, add the spare and perhaps even grow the array.
 
-I haven't gone back to a RAID install yet due to issues in my other
-thread. Until I solve those I think I'll stick with the current
-install.
+Of course this is a per-installation policy decision of what to do when 
+an extra drive is added to a non-degraded array, I'm certainly not 
+suggesting this should be the default action, though I think it would be 
+nice if it were possible to configure an action in this case.
 
-Thanks,
-Mark
+>> OK, to some extent that's me being stupid, but at the same time I
+>> correctly hooked up the first 5 SATA ports to the hot-swap chassis and
+>> would want them considered the same group etc.
+> 
+> I understand wanting them in the same group, but unless something is
+> degraded, just being in the same group doesn't tell us if you want to
+> keep it as a spare or use it to grow things.
 
-On Mon, Mar 29, 2010 at 7:29 PM, Simon Matthews
-<simon.d.matthews@gmail.com> wrote:
-> Did you mark the partition as a bootable partition (using fdisk or
-> cfdisk, etc)? I encountered this problem very recently. It seems to
-> afflict 945G chipsets and it would not be unreasonable to think that
-> other Intel chipsets could have the same issue. Another example of
-> this:
-> http://www.vyatta.org/forum/viewtopic.php?t=3D1976
->
-> Can you boot off a livecd such as systemrescuecd and then use that to
-> boot off the hard drive (using the "disk1" boot option)?
->
-> Simon
->
-> On Sun, Mar 28, 2010 at 8:12 AM, Mark Knecht <markknecht@gmail.com> w=
-rote:
->> Hi,
->> =C2=A0 I brought up new hardware yesterday for my first RAID install=
-=2E I
->> followed this Gentoo page describing a software RAID1/LVM install:
->>
->> http://www.gentoo.org/doc/en/gentoo-x86+raid+lvm2-quickinstall.xml
->>
->> =C2=A0 Note that I followed this page verbatim, even if it wasn't wh=
-at I
->> wanted, with exceptions:
->>
->> a) My RAID1 is 3 drives instead of 2
->> b) I'm AMD64 Gentoo based.
->> c) I used grub-static
->>
->> =C2=A0I did this install mostly just to get a first-hand feel for ho=
-w to
->> do a RAID install and to try out some of the mdadm commands for real=
-=2E
->> My intention was to blow away the install if I didn't like it and do
->> it again for real once I started to get a clearer picture about how
->> things worked. For instance, this set of instructions used RAID1 on
->> the /boot directory which I wasn't sure about.
->>
->> =C2=A0 NOTE: THIS INSTALL PUTS EVERYTHING ON RAID1. (/, /boot, every=
-thing)
->> I didn't start out thinking I wanted to do that.
->>
->> =C2=A0 So, the first problem is that on the reboot to see if the ins=
-tall
->> worked the Intel BIOS reports 'no bootable media found'. I am very
->> unclear how any system boots software RAID1 before software is loade=
-d,
->> assuming I understand the Gentoo instructions. The instructions I us=
-ed
->> to install grub where
->>
->> root (hd0,0)
->> setup (hd0)
->> root (hd1,0)
->> setup (hd1)
->> root (hd2,0)
->> setup (hd2)
->>
->> but the system finds nothing to boot from. to me this sounds like BI=
-OS
->> so looking around I'm currently set up for compatibility but would
->> think that switching to AHCI support would be a better long term
->> solution. Any chance this setting is the root cause?
->>
->> =C2=A0 I can boot from CD and assemble the /boot RAID
->>
->> livecd ~ # cat /proc/mdstat
->> Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
->> unused devices: <none>
->> livecd ~ # mdadm --assemble /dev/md1 /dev/sda1 /dev/sdb1 /dev/sdc1
->> mdadm: /dev/md1 has been started with 3 drives.
->> livecd ~ # cat /proc/mdstat
->> Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
->> md1 : active raid1 sda1[0] sdc1[2] sdb1[1]
->> =C2=A0 =C2=A0 =C2=A0112320 blocks [3/3] [UUU]
->>
->> unused devices: <none>
->> livecd ~ # mdadm --misc --stop /dev/md1
->> mdadm: stopped /dev/md1
->> livecd ~ # cat /proc/mdstat
->> Personalities : [raid0] [raid1] [raid6] [raid5] [raid4] [raid10]
->> unused devices: <none>
->> livecd ~ #
->>
->>
->> Everything I expect to see on /boot seems to be there when using ls.
->>
->> =C2=A0 Note that one possible clue - when the Intel BIOS screen firs=
-t
->> comes up I see some hex digits flashing around in the lower right.
->> I've not seen this before on other machines and I beleive the
->> motherboard (DX58SO) does support some sort of RAID in hardware so
->> maybe there's confusion there? I've not selected RAID in BIOS but
->> possible it's trying to be too clever?
->>
->> =C2=A0 Let me know what other info might be needed. I have concerns =
-about
->> this install and will likely blow it away today and do a new one but=
- I
->> figured maybe there's an opportunity to learn here before I do that.
->>
->> Cheers,
->> Mark
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.h=
-tml
->>
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I quite agree. All I'm getting at is that I'd like to be able to say 
+something in my mdadm.conf or wherever to say what I'd like done. This 
+might mean that I end up something like the following:
+DOMAIN path=pci-0000:00:1f.2-scsi-[0-4]:0:0:0       action=include
+DOMAIN path=pci-0000:00:1f.2-scsi-[0-4]:0:0:0-part1 action=grow
+DOMAIN path=pci-0000:00:1f.2-scsi-[0-4]:0:0:0-part2 action=replace
+DOMAIN path=pci-0000:00:1f.2-scsi-[0-4]:0:0:0-part3 action=include
+
+The first line gets the partition table and grub boot code regenerated 
+even when nothing's degraded. This in turn may trigger the other lines. 
+In the second line my action=grow means fix up my /boot if it's degraded 
+and both --add and --grow so it gets mirrored onto a fresh disc. The 
+third lines says fix up my swap array if it's degraded, but leave alone 
+otherwise. The fourth line says fix up my data array if it's degraded, 
+and add as a spare if it's a fresh disc. This last lets me decide later 
+what (if any) kind of --grow I want to do - make it larger or reshape 
+from RAID-5 to RAID-6.
+
+But as you say, the default should be
+DOMAIN path=* action=incremental
+
+and the installer (automated or human) probably wants to edit that to 
+include at least
+DOMAIN path=something action=replace
+to take advantage of this auto-rebuild on hot-plug feature.
+
+Sorry if I'm being long-winded, but hopefully you can see how I'd like 
+to be able to configure things. In the first instance, though, just 
+getting as far as the replace option would be great.
+
+Cheers,
+
+John.
+
