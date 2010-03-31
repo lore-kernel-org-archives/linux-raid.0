@@ -1,132 +1,103 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 018 of 29] md: Support changing rdev size on running
- arrays.
-Date: Wed, 31 Mar 2010 16:41:14 +1100
-Message-ID: <20100331164114.307a57aa@notabene.brown>
-References: <20080627164503.9671.patches@notabene>
-	<200806271809.29768.Markus@hochholdinger.net>
-	<18533.31375.280387.666514@notabene.brown>
-	<201003301652.16622.Markus@hochholdinger.net>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Auto Rebuild on hot-plug
+Date: Wed, 31 Mar 2010 08:10:54 +0200
+Message-ID: <20100331061054.GA2382@maude.comedia.it>
+References: <20100325113543.0e2124c5@notabene.brown> <20100325080108.GB20583@maude.comedia.it> <20100331122622.7c43ca88@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201003301652.16622.Markus@hochholdinger.net>
+Content-Disposition: inline
+In-Reply-To: <20100331122622.7c43ca88@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Markus Hochholdinger <Markus@hochholdinger.net>
-Cc: linux-raid@vger.kernel.org, Chris Webb <chris@arachsys.com>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 30 Mar 2010 16:52:13 +0200
-Markus Hochholdinger <Markus@hochholdinger.net> wrote:
+On Wed, Mar 31, 2010 at 12:26:22PM +1100, Neil Brown wrote:
+>On Thu, 25 Mar 2010 09:01:08 +0100
+>Luca Berra <bluca@comedia.it> wrote:
+>
+>> On Thu, Mar 25, 2010 at 11:35:43AM +1100, Neil Brown wrote:
+>> >
+>> >       http://blogs.techrepublic.com.com/opensource/?p=1368
+>> >
+>> > The most significant thing I got from this was a complain in the comments
+>> > that managing md raid was too complex and hence error-prone.
+>> 
+>> well, i would not be upset by j. random jerk complaining in a blog
+>> comments, as soon as you make it one click you will find another one
+>> that complains because it is not is favorite colour :P
+>
+>We can learn something from any opinion that different from our own.
 
-> Hello,
-> 
-> Am 28.06.2008 um 01:41 Uhr schrieb Neil Brown <neilb@suse.de>:
-> > On Friday June 27, Markus@hochholdinger.net wrote:
-> > > Am Freitag, 27. Juni 2008 08:51 schrieb NeilBrown:
-> > > > From: Chris Webb <chris@arachsys.com>
-> > > > Allow /sys/block/mdX/md/rdY/size to change on running arrays, moving
-> > > > the superblock if necessary for this metadata version. We prevent the
-> > > > available space from shrinking to less than the used size, and allow it
-> > > > to be set to zero to fill all the available space on the underlying
-> > > > device.
-> > > I'm very happy of this new feature. But I'm a little confused how to use
-> > > it correctly.
-> > > Can md now recognize the change by itself and I only have to run mdadm
-> > > --grow? Or have I manually update /sys/block/mdX/md/rdY/size and
-> > > afterwards run mdadm --grow?
-> > No, md does not recognise the change by itself.
-> > Currently you need to update ..../size yourself before using
-> >    "mdadm --grow"
-> > This should probably be incorporated into mdadm at some stage, but it
-> > hasn't yet.
-> 
-> it's some time ago but today i'm able to test this (because now i have a xen 
-> kernel which recognizes size changes).
-> I tested with metadata version 0.9, 1.0 and 1.1 but didn't get it to work. I 
-> create a raid1:
-> mdadm --create /dev/md1 --level=1 --raid-disks=2 --metadata=1.0 /dev/xvda1 /dev/xvdb1
-> 
-> Then I change the size of xvda1 and get the following kernel message:
-> [ 3281.905317] Setting capacity to 4194304
-> [ 3281.905317] xvda1: detected capacity change from 1073741824 to 2147483648
-> 
-> After this i do:
-> echo "0" > /sys/block/md1/md/rd0/size
-> No kernel message so far and
->   cat /sys/block/md1/md/rd0/size
-> still shows 1048570.
+yes, i realize my comment was rude, sorry for that, but that comment on
+the blog was imho just a troll.
 
-That is very odd.  The number printed out in the "detected capacity change"
-line is exactly the name that should be used when you write to "md/rd0/size".
+>It is clear to me that using mdadm requires a certain level of understanding
+>to be used effectively and safely.
+>I don't think that can be entirely address in mdadm: there is a place of a
+>higher level framework that encodes policies and gives advice.  But there is
+I fully agree.
+>still room to improve mdadm to make it more powerful, more informative, and
+>more forgiving.
+until it can read mail ;)
 
-You could try
-   strace echo 0 > /sys/block/md1/md/rd0/size
+>> 
+>> > I see the issue as breaking down in to two parts.
+>> >  1/ When a device is hot plugged into the system, is md allowed to use it as
+>> >     a spare for recovery?
+>> >  2/ If md has a spare device, what set of arrays can it be used in if needed.
+>> >
+>> > A typical hot plug event will need to address both of these questions in
+>> > turn before recovery actually starts.
+>> >
+>> > Part 1.
+>> >
+>> >  A newly hotplugged device may have metadata for RAID (0.90, 1.x, IMSM, DDF,
+>> >  other vendor metadata) or LVM or a filesystem.  It might have a partition
+>> >  table which could be subordinate to or super-ordinate to other metadata.
+>> >  (i.e. RAID in partitions, or partitions in RAID).  The metadata may or may
+>> >  not be stale.  It may or may not match - either strongly or weakly -
+>> >  metadata on devices in currently active arrays.
+>> also the newly hotplugged device may have _data_ on it.
+>>
+>
+>You mean completely raw data, no partitions, no filesystem structure etc?
+>Yes, that is possible.  People who are likely to handle devices like that
+>would choose more conservative configurations.
+I can think of two scenarios.
+1) an encrypted device (without LUKS header)
+2) a device where the metadata is corrupted, and we plugged it in an
+hurry to attempt data recovery (oh, we were in an hurry and forgot about
+the mdadm policy)
 
-to be sure there is no error return.
-And maybe
-   blockdev --getsz /dev/xvda1
-and
-   blockdev --getsz /dev/xvda
+What i am scared of are distributions thinking it would be cool and
+putting a non-strictly conservative policy as default.
 
-to double check that the block size looks right.
+>> >  Some how from all of that information we need to decide if md can use the
+>> >  device without asking, or possibly with a simple yes/no question, and we
+>> >  need to decide what to actually do with the device.
+>> how does the yes/no question part work?
+>
+>I imagine an Email to the admin "Hey boss, I just noticed you plugged in a
+>drive that looks like it used to be part of some array.  We need a spare on
+>this other array and the new device is big enough.  Shall I huh huh huh?  Go
+>on let me..."
+>
+>Then the admin can choose to run the command "make it so", or not.
+ah. ok, i tought you meant something real-time.
+thinking about it, maybe something could be done using dbus...
 
-Are you sure the message didn't say "xvda: detected capacity change...", and
-you still need to change the size of the partition?
+>> we can also make /usr/bin/md-create-spare ...
+>
+>Yes, there is a place for something like that certainly.
+>
+>NeilBrown
 
-NeilBrown
-
-
-> 
-> Then the same for xvdb1.
-> 
-> And then I tried to grow md1 in the hope it will somehow detect the new size 
-> correct, but i only get a very little grow:
-> [ 3345.133882] md1: detected capacity change from 1073729536 to 1073735680
-> [ 3345.140087] md: resync of RAID array md1
-> [ 3345.140098] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-> [ 3345.140105] md: using maximum available idle IO bandwidth (but not more 
-> than 200000 KB/sec) for resync.
-> [ 3345.140121] md: using 128k window, over a total of 1048570 blocks.
-> [ 3345.140129] md: resuming resync of md1 from checkpoint.
-> [ 3345.140412] md: md1: resync done.
-> [ 3345.160064] RAID1 conf printout:
-> [ 3345.160071]  --- wd:2 rd:2
-> [ 3345.160076]  disk 0, wo:0, o:1, dev:xvda1
-> [ 3345.160081]  disk 1, wo:0, o:1, dev:xvdb1
-> 
-> Especially "md1: detected capacity change from 1073729536 to 1073735680" makes 
-> me wonder.
-> 
-> 
-> I also tried to set values to /sys/block/md1/md/rd1/size, but all i got was
->   echo: write error: Invalid argument
-> 
-> And the output of /sys/block/md1/md/rd1/size never changes.
-
-That is very odd.
-> 
-> 
-> > > To be on the safe side I'd first lvresize one disk of the raid1, then do
-> > > mdadm --grow to let md update/move the superblock of this disk. And after
-> > > this is successful, lvresize the other disk and do mdadm --grow. So in
-> > > case of a failure i wouldn't loose the whole raid1!?
-> > > Am I correct or am I missing something?
-> > You don't want to "mdadm --grow" until everything has been resized.
-> > First lvresize one disk, then write '0' to the .../size file.
-> > Then do the same for the other disk.
-> > Then "mdadm --grow /dev/mdX --size max".
-> 
-> I tried mdadm version 3.0.3 and 3.1.1. Is it possible that something has 
-> changed inside mdadm?
-> I used kernel 2.6.32-4-xen-amd64 (debian squeeze).
-> 
-> Are am I doing something wrong? Has something changed so i'm on the wrong way? 
-> Is there another way to do online grow of an raid1 without full resync? 
-> Anyone any ideas?
-> 
-> Many thanks in advance.
-> 
-> 
-
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
