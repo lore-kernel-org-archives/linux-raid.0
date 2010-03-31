@@ -1,36 +1,35 @@
-From: Keld Simonsen <keld@keldix.com>
-Subject: Re: Linux Raid performance
-Date: Wed, 31 Mar 2010 22:15:39 +0200
-Message-ID: <20100331201539.GA19395@rap.rap.dk>
-References: <r2v7efa8a7d1003311242vfa92024ar93ad2123a7b49806@mail.gmail.com>
+From: Yuehai Xu <yuehaixu@gmail.com>
+Subject: Questions about RAID and I/O scheduler
+Date: Wed, 31 Mar 2010 16:24:09 -0400
+Message-ID: <m2v100eff551003311324tdc2e567atd2a48e35520e8601@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <r2v7efa8a7d1003311242vfa92024ar93ad2123a7b49806@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Learner Study <learner.study@gmail.com>
-Cc: linux-raid@vger.kernel.org, keld@dkuug.dk
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, yhxu@wayne.edu, czoccolo@gmail.com, neilb@suse.de, jens.axboe@oracle.com
 List-Id: linux-raid.ids
 
-On Wed, Mar 31, 2010 at 12:42:57PM -0700, Learner Study wrote:
-> Hi Linux Raid Experts:
-> 
-> I was looking at following wiki on raid perf on linux:
-> 
-> https://raid.wiki.kernel.org/index.php/Performance
-> 
-> and notice that the performance numbers are with 2.6.12 kernel.
-> 
-> Do we perf numbers for:
-> - latest kernel (something like 2.6.27 / 2.6.31)
-> - raid 5 and 6
-> 
-> Can someone please point me to appropriate link?
+Hi,
 
-The link mentioned above has a number of other performance reports, for other levels of the kernel.
-Anyway you should be able to get comparable results for newer kernels, the kernel has not become 
-slower since 2.6.12 on RAID.
+I noticed that some one said NOOP is usually the default I/O scheduler
+for hardware RAID. Why not CFQ? Suppose there are just several
+sequential read processes, as I know CFQ will keep all the disk heads
+of hard raid to serve a process for a while(a time slice), in that
+case, CFQ should be the best of all I/O schedulers. Am I right?
+Generally, hard raid should have its own I/O scheduler in their
+firmware, in that case, the I/O scheduler of OS should do nothing
+except dispatch the requests as soon as possible, it is the hard raid
+itself to decide how to schedule these requests. From this point of
+view, NOOP should be the default one. I am really confused here.
 
-best regards
-Keld
+The next question is about the maximal number of disks in disk array,
+the fault tolerance should be one limitation because the more the
+number of disks, the higher chance of failure. However, may throughput
+also be one limitation? Do you know anyone use disk array which
+contains large number of disks to handle small requests? Such as 256
+disks to handle 4K requests?
+
+Thanks!
+
+Yuehai
