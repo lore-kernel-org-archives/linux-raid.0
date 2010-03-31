@@ -1,161 +1,182 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: Problem with changing array_size
-Date: Wed, 31 Mar 2010 10:29:13 +0100
-Message-ID: <905EDD02F158D948B186911EB64DB3D11C5E2964@irsmsx503.ger.corp.intel.com>
-References: <905EDD02F158D948B186911EB64DB3D11C584B56@irsmsx503.ger.corp.intel.com>
- <e9c3a7c21003301513l48cb89d7g48c5e0a0742ef043@mail.gmail.com>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: Re: Array 'freezes' for some time after large writes?
+Date: Wed, 31 Mar 2010 09:12:13 -0700
+Message-ID: <p2m5bdc1c8b1003310912i7215b7abh88989839a76feb84@mail.gmail.com>
+References: <dead81ad1003301007h4015ac57x99f36d232bb705b6@mail.gmail.com>
+	 <4BB2A6E0.5010504@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <e9c3a7c21003301513l48cb89d7g48c5e0a0742ef043@mail.gmail.com>
-Content-Language: en-US
+In-Reply-To: <4BB2A6E0.5010504@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Williams, Dan J" <dan.j.williams@intel.com>
-Cc: Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: Roger Heflin <rogerheflin@gmail.com>
+Cc: Jim Duchek <jim.duchek@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-> -----Original Message-----
-> From: dan.j.williams@gmail.com [mailto:dan.j.williams@gmail.com] On
-> Behalf Of Dan Williams
-> Sent: Wednesday, March 31, 2010 12:14 AM
-> To: Kwolek, Adam
-> Cc: Neil Brown; linux-raid@vger.kernel.org; Ciechanowski, Ed
-> Subject: Re: Problem with changing array_size
->=20
-> On Tue, Mar 30, 2010 at 6:53 AM, Kwolek, Adam <adam.kwolek@intel.com>
-> wrote:
-> > I found that setting new raid volume size using array_size entry in
-> sysfs causes that inode references in vfs can be lost.
-> >
-> > Conditions:
-> > =A0SLES 11 (32bit) machine with
-> > =A0 =A0 =A0 =A0kernel: 2.6.33
-> > =A0 =A0 =A0 =A0mdadm : 3.1.2
-> > =A05 SATA hdds in system:
-> > =A0 =A0 =A0 =A0SLES 11 on =A0 /dev/sda
-> > =A0 =A0 =A0 =A04 test disks /dev/hdb - /dev/hde
-> >
-> > Reproduction:
-> > 1. Configure:
-> > =A0 =A0 =A0 =A0# create native raid5 volume, with specified size (r=
-elatively
-> small)
-> > =A0 =A0 =A0 =A0mdadm -C /dev/md/raid5vol_0 -amd -l 5 --chunk 64 --s=
-ize 104857
-> -n 3 /dev/sdb /dev/sdc /dev/sde -R
-> >
-> > =A0 =A0 =A0 =A0# Create file system
-> > =A0 =A0 =A0 =A0mkfs /dev/md/raid5vol_0
-> >
-> > =A0 =A0 =A0 =A0# mount it and copy some files there
-> > =A0 =A0 =A0 =A0mount /dev/md/raid5vol_0 /mnt/vol
-> > =A0 =A0 =A0 =A0cp * /mnt/vol
-> >
-> > 2. Try to change volume size. This should affect volume, but not vf=
-s
-> > =A0 =A0 =A0 =A0echo "157285" >/sys/block/md127/md/array_size
->=20
-> Of course this affects the filesystem.  You have reduced the size of
-> the volume from 209,664KB to 157,285KB.  Perhaps you are confusing th=
-e
-> --size parameter to mdadm (which is per member) and the md/array_size
-> attribute which is the total volume size??
->=20
->=20
-> > In the few tries (maybe at first shot) you would probably find that
-> when you are trying to execute ls command on mounted volume message i=
-n
-> user space appears:
-> > =A0 =A0 =A0 =A0ls: cannot access 'copied file name': Input/output e=
-rror
-> > In kernel space messages can be found:
-> > =A0In response to size change:
-> > =A0 =A0 =A0 =A0Mar 30 16:27:03 linux kernel: md127: detected capaci=
-ty change
-> from 214695936 to 161059840
-> > =A0 =A0 =A0 =A0Mar 30 16:27:03 linux kernel: VFS: busy inodes on ch=
-anged
-> media or resized disk md127
->=20
-> Yes, the filesystem is horribly confused at this point because 50MB o=
-f
-> space has disappeared.
->=20
+On Tue, Mar 30, 2010 at 6:35 PM, Roger Heflin <rogerheflin@gmail.com> w=
+rote:
+> Jim Duchek wrote:
+>>
+>> Hi all. =C2=A0Regularly after a large write to the disk (untarring a=
+ very
+>> large file, etc), my RAID5 will 'freeze' for a period of time --
+>> perhaps around a minute. =C2=A0My system is completely responsive ot=
+herwise
+>> during this time, with the exception of anything that is attempting =
+to
+>> read or write from the array -- it's as if any file descriptors simp=
+ly
+>> block.
+<SNIP>
+>
+> In /etc/sysctl.conf or with "sysctl -a|grep vm.dirty" check these two
+> settings:
+> vm.dirty_background_ratio 5
+> vm.dirty_ratio =3D 6
+>
+> Default will be something like 40 for the second one and 10 for the f=
+irst
+> on.
+>
+> 40% is how much memory the kernel lets get dirty with write data, 10%=
+ or
+> whatever the bottom number is, is once it starts cleaning it up how l=
+ow it
+> has to go before letting anyone else write again (ie freeze all write=
+s and
+> massively slow down reads)
+>
+> I set the values to the above, in older kernels 5 is the min value, n=
+ewer
+> ones may allow lower, I don't believe it is well documented what the =
+limits
+> are, and if you set it lower the older kernels silently set the value=
+ to the
+> min internally in the kernel, you won't see it on sysctl -a check. =C2=
+=A0 So on
+> my machine I could freeze for how long it takes to write 1% of memory=
+ out to
+> disk, which with 8GB is 81MB which takes at most a second or 2 at
+> 60mb/second or so. =C2=A0If you have 8G and have the difference betwe=
+en the two
+> set to 10% it can take 10+ seconds, I don't remember the default, but=
+ the
+> large it is the bigger the freeze will be.
+>
+> And these depends on the underlying disk speed, if the underlying dis=
+k is
+> slower the time it takes to write out that amount of data is larger a=
+nd
+> things are uglier, and file copies do a good job of causing this.
 > --
-> Dan
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+>
+
+Very interesting Roger. Thanks.
+
+I did some reading on a couple of web site and then did some testing.
+I found for the sort of jobs I do that create and write data, as an
+example compiling and installing MythTV, these settings have a big
+effect on the percentage of time my system drops into these 100%wa, 0%
+CPU type of states. The default setting on my system was 10/20 and
+that tended to create this state quite a lot. 3/40 reduced it by
+probably 50-75%, while 3/70 seemed to eliminate it until the end of
+the build where the kernel/compiler is presumably forcing it out to
+disk because the job is finishing.
+
+One page I read mentioned data centers using a very good UPS and
+internal power supply and then running it at 1/100. I think the basic
+idea is that if we lose power there should be enough time to flush all
+this stuff to disk before the power completely drops out but up until
+that time let the kernel take care of things completely.
+
+Experimentally what I see is that when I cross above the lower value
+it isn't that nothing gets written, but more that the kernel sort of
+opportunistically starts writing it to disk without letting it get too
+much in the way of running programs, and then when the higher value
+seems to get crossed the system goes 100% wait while it pushes the
+data out and is waiting for the disk. I used the command
+
+grep -A 1 dirty /proc/vmstat
+
+to watch a compile taking place and looked when it was 100%
+user/system and then also when it went to 100% wait.
+
+Some additional reading seems to suggest tuning things like
+
+vm.overcommit_ratio
+
+and possibly changing the I/O scheduler
+
+keeper ~ # cat /sys/block/sda/queue/scheduler
+noop deadline [cfq]
+
+or changing the number of requests
+
+keeper ~ # cat /sys/block/sda/queue/nr_requests
+128
+
+or read ahead values
+
+keeper ~ # blockdev --getra /dev/sda
+256
+
+I haven't played with any of those.
+
+Based on this info I think it's worth my time trying a new RAID
+install and see if I'm more successful.
+
+Thanks very much for your insights and help!
+
+Cheers,
+Mark
 
 
-OK, you are right. This was not the best example - my mistake, but I've=
- got another ;), I hope better.
-To real array size increase, grow has to be used (everything for native=
- meta case as previously).
 
-1. Configure (part 1 - the same as before):
-	#create volume
-	mdadm -C /dev/md/raid5vol_0 -amd -l 5 --chunk 64 --size 104857 -n 3 /d=
-ev/sdb /dev/sdc /dev/sde -R
+keeper ~ # vi /etc/sysctl.conf
 
-	#create filesystem
-	mkfs /dev/md/raid5vol_0
+vm.dirty_background_ratio =3D 10
+vm.dirty_ratio =3D 20
 
-	# mount it and copy some files there
-	mount /dev/md/raid5vol_0 /mnt/vol
-	cp * /mnt/vol
+keeper ~ # sysctl -p
 
-2. Configure (part 2 - additions)
-	#add spare to be ready for OLCE
-	mdadm --add /dev/md/raid5vol_0 /dev/sdd
-
-	#set the array_size  to value reported by mdstat,=20
-	#to switch to external array size management (in md.c mddev->external_=
-size variable is set)
-	#   if both size set are removed - result is the same
-	echo "209664" >/sys/block/md127/md/array_size
-
-	#start reshape to add spare to array (OLCE on native meta)
-	mdadm --grow /dev/md/raid5vol_0 --raid-devices 4 --backup-file=3D/back=
-up_file994.bak
-
-3. Size changes
-	#after reshape vfs is ok, but now ...
-	#set size to value that is set when md increases array size	itself
-	echo "314496" >/sys/block/md127/md/array_size
+real    8m50.667s
+user    30m6.995s
+sys     1m30.605s
+keeper ~ #
 
 
+keeper ~ # vi /etc/sysctl.conf
 
-mdstats output before and after reshape are:
+vm.dirty_background_ratio =3D 3
+vm.dirty_ratio =3D 40
 
-Before reshape:
-	Personalities : [raid6] [raid5] [raid4]=20
-	md127 : active raid5 sdd[4](S) sde[3] sdc[1] sdb[0]
-      	209664 blocks super 1.2 level 5, 64k chunk, algorithm 2 [3/3] [U=
-UU]
-     =20
-	unused devices: <none>
+keeper ~ # sysctl -p
+
+keeper ~ # time emerge -DuN mythtv
+<SNIP>
+real    8m59.401s
+user    30m9.980s
+sys     1m30.303s
+keeper ~ #
 
 
-After reshape:
-	Personalities : [raid6] [raid5] [raid4]=20
-	md127 : active raid5 sdd[4] sde[3] sdc[1] sdb[0]
-      	314496 blocks super 1.2 level 5, 64k chunk, algorithm 2 [4/4] [U=
-UUU]
-     =20
-	unused devices: <none>
+keeper ~ # vi /etc/sysctl.conf
 
-The result is the same as in previous example - file system is lost.
-The operations with array_size in example are only for demonstration wh=
-at operation is the problem cause.=20
-Without those 2 operation (mddev->external_size is not set in md), vfs =
-is corrupted also just after reshape (in md during setting size in raid=
-5_finish_reshape()).=20
-With both array_size set operations just after reshape vfs is ok, incre=
-asing size kills vfs.
+vm.dirty_background_ratio =3D 3
+vm.dirty_ratio =3D 70
 
-BR
-Adam
+keeper ~ # time emerge -DuN mythtv
+<SNIP>
+real    8m52.272s
+user    30m0.889s
+sys     1m30.609s
+keeper ~ #keeper ~ # vi /etc/sysctl.conf
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
