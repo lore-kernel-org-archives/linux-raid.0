@@ -1,35 +1,45 @@
-From: Yuehai Xu <yuehaixu@gmail.com>
-Subject: Questions about RAID and I/O scheduler
-Date: Wed, 31 Mar 2010 16:24:09 -0400
-Message-ID: <m2v100eff551003311324tdc2e567atd2a48e35520e8601@mail.gmail.com>
+From: "Hawrylewicz Czarnowski, Przemyslaw"
+	<przemyslaw.hawrylewicz.czarnowski@intel.com>
+Subject: [PATCH 0/2] imsm: new imsm metadata features
+Date: Wed, 31 Mar 2010 21:49:45 +0100
+Message-ID: <66C59AD0932712458090B447266D638CD3C7EAF1@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, yhxu@wayne.edu, czoccolo@gmail.com, neilb@suse.de, jens.axboe@oracle.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-Hi,
+The following series of patches adds two new functionalities to
+mdadm that makes linux raid implementation based on imsm metadata
+closer to the abilities of Intel(R) Rapid Storage Technology for
+Windows(R). Patches makes possible to remove one volume from
+container when the other one is still running. It is also possible
+to change internal serial ID of volume leaving remaining superblock
+data untouched.
 
-I noticed that some one said NOOP is usually the default I/O scheduler
-for hardware RAID. Why not CFQ? Suppose there are just several
-sequential read processes, as I know CFQ will keep all the disk heads
-of hard raid to serve a process for a while(a time slice), in that
-case, CFQ should be the best of all I/O schedulers. Am I right?
-Generally, hard raid should have its own I/O scheduler in their
-firmware, in that case, the I/O scheduler of OS should do nothing
-except dispatch the requests as soon as possible, it is the hard raid
-itself to decide how to schedule these requests. From this point of
-view, NOOP should be the default one. I am really confused here.
+Patch 1/2 provides the code of subarray delete
+Patch 2/2 provides the code of subarray rename.
 
-The next question is about the maximal number of disks in disk array,
-the fault tolerance should be one limitation because the more the
-number of disks, the higher chance of failure. However, may throughput
-also be one limitation? Do you know anyone use disk array which
-contains large number of disks to handle small requests? Such as 256
-disks to handle 4K requests?
+Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+---
+ Kill.c        |   58 +++++++++++
+ Makefile      |    4 +-
+ Manage.c      |   95 +++++++++++++++++++
+ ReadMe.c      |    1 +
+ mapfile.c     |   31 ++++--
+ mdadm.c       |   32 ++++++-
+ mdadm.h       |   36 +++++++
+ mdstat.c      |   86 ++++++++++++++++-
+ super-intel.c |  245 +++++++++++++++++++++++++++++++++++++++++++++++-
+ sysfs.c       |   21 ++++
+ util.c        |  293 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 11 files changed, 883 insertions(+), 19 deletions(-)
 
-Thanks!
+--
+Best Regards,
+Przemyslaw Hawrylewicz-Czarnowski
 
-Yuehai
