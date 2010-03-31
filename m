@@ -1,38 +1,27 @@
-From: Jools Wills <jools@oxfordinspire.co.uk>
-Subject: Re: Ubuntu's ReliableRaid document
-Date: Wed, 31 Mar 2010 19:38:40 +0100
-Message-ID: <1270060720.2500.20.camel@travelmate.workshop>
-References: <4BB040C4.4070506@computer.org>  <4BB39138.5040303@computer.org>
-Reply-To: jools@oxfordinspire.co.uk
+From: Learner Study <learner.study@gmail.com>
+Subject: Linux Raid performance
+Date: Wed, 31 Mar 2010 12:42:57 -0700
+Message-ID: <r2v7efa8a7d1003311242vfa92024ar93ad2123a7b49806@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BB39138.5040303@computer.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jan Ceuleers <jan.ceuleers@computer.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org, keld@dkuug.dk
+Cc: learner.study@gmail.com
 List-Id: linux-raid.ids
 
-On Wed, 2010-03-31 at 20:15 +0200, Jan Ceuleers wrote:
-> Jan Ceuleers wrote:
-> > I really hope that my concerns are unfounded, and I'd feel a lot
-> > better if I were told so on this list.
-> 
-> OK, I'll take the lack of discussion as the reassurance I was after.
+Hi Linux Raid Experts:
 
-Currently mdadm and raid stuff on ubuntu has a lot of problems. the
-version of mdadm shipped with the upcoming version of lucid is also
-around 18 month old.
+I was looking at following wiki on raid perf on linux:
 
-Best REgards
+https://raid.wiki.kernel.org/index.php/Performance
 
-Jools
+and notice that the performance numbers are with 2.6.12 kernel.
 
-Jools Wills
--- 
-IT Consultant
-Oxford Inspire - http://www.oxfordinspire.co.uk - be inspired
-t: 01235 519446 m: 07966 577498
-jools@oxfordinspire.co.uk
+Do we perf numbers for:
+- latest kernel (something like 2.6.27 / 2.6.31)
+- raid 5 and 6
 
+Can someone please point me to appropriate link?
+
+Thanks!
