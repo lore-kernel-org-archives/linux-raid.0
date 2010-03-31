@@ -1,7 +1,7 @@
-From: Mark Knecht <markknecht@gmail.com>
+From: Jim Duchek <jim.duchek@gmail.com>
 Subject: Re: Array 'freezes' for some time after large writes?
-Date: Tue, 30 Mar 2010 16:50:53 -0700
-Message-ID: <5bdc1c8b1003301650g26d7317cwb6254b4bb64596@mail.gmail.com>
+Date: Tue, 30 Mar 2010 18:22:19 -0600
+Message-ID: <m2hdead81ad1003301722g30c943ebo9e0552faa82c3c3d@mail.gmail.com>
 References: <dead81ad1003301007h4015ac57x99f36d232bb705b6@mail.gmail.com>
 	 <5bdc1c8b1003301018j73f2d928x3e2624bac9c1ee94@mail.gmail.com>
 	 <dead81ad1003301047t6be7b3b4r5bf70ad6317f9d1e@mail.gmail.com>
@@ -10,196 +10,179 @@ References: <dead81ad1003301007h4015ac57x99f36d232bb705b6@mail.gmail.com>
 	 <5bdc1c8b1003301345p46efdaddv5d420c30e75b013f@mail.gmail.com>
 	 <r2vdead81ad1003301359g73b5a6ady3a9bcc174d556579@mail.gmail.com>
 	 <5bdc1c8b1003301521s33c9b227s3a1f7434f78c4bc9@mail.gmail.com>
+	 <5bdc1c8b1003301650g26d7317cwb6254b4bb64596@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <5bdc1c8b1003301521s33c9b227s3a1f7434f78c4bc9@mail.gmail.com>
+In-Reply-To: <5bdc1c8b1003301650g26d7317cwb6254b4bb64596@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jim Duchek <jim.duchek@gmail.com>
+To: Mark Knecht <markknecht@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Mar 30, 2010 at 3:21 PM, Mark Knecht <markknecht@gmail.com> wro=
-te:
-> I just finished a long compile on my dad's i5-661/DH55HC machine whic=
-h
-> uses this same WD drive and I didn't spot any sign of this happening
-> there. That's a very recent Intel chipset also and probably more or
-> less the same SATA controller.
->
-> I'm going to turn on the kernel message into dmesg thing for a while
-> and see if anything pops up.
->
-> I can set up some additional partitions on my local drive to test
-> other file systems but since you're ext3 and I'm ext3 then it's not
-> that unless the problem moved forward with code over time.
->
-> I like the idea of using dd but I want to be careful about that sort
-> of thing. I've not used dd before, but if I could tell it to write a
-> gigabyte without messing up existing stuff then that could be helpful=
-=2E
->
-> Back later,
-> Mark
->
-> On Tue, Mar 30, 2010 at 1:59 PM, Jim Duchek <jim.duchek@gmail.com> wr=
-ote:
->> I'm using ext4 on everything, but it's hard to judge which ext3 bugs
->> might affect ext4 as well. =C2=A0I really don't have the ability to
->> destructively test the array, I need all the data that's on it and I
->> don't have enough spare space elsewhere to back it all up. =C2=A0You=
- might
->> see if you can trigger it with dd, writing to the drive directly w/n=
-o
->> filesystem?
->>
->> Jim
->>
-
-<SNIP>
-
-I know this isn't going to survive email very well but you might want
-to look at interrupts. I'm seeing the count on CPU #5 rising much more
-quickly than other CPU's, and in my case it's generally CPU #5 that
-stalls out with this 100% wait problem.
-
-I'm looking at another 4 processor machine that's been up for a few
-days. Its interrupt counts are fairly balanced, except for TLB
-Shootdowns, whatever that is.
-
-Wouldn't know how to tell if it's related...
-
-- Mark
-
-Using keyboard-interactive authentication.
-Password:
-Last login: Tue Mar 30 15:59:22 PDT 2010 from 192.168.1.65 on pts/0
-keeper ~ # cat /proc/interrupts
-           CPU0       CPU1       CPU2       CPU3       CPU4       CPU5
-      CPU6       CPU7
-  0:        232          0          0          1          0          0
-         0          0   IO-APIC-edge      timer
-  1:          0          0          0          2          0          0
-         0          0   IO-APIC-edge      i8042
-  3:          0          0          0          2          0          0
-         0          0   IO-APIC-edge
-  8:          0          0          0         91          0          0
-         0          0   IO-APIC-edge      rtc0
-  9:          0          0          0          0          0          0
-         0          0   IO-APIC-fasteoi   acpi
- 12:          0          0          0          4          0          0
-         0          0   IO-APIC-edge      i8042
- 14:          0          0          0          0          0          0
-         0          0   IO-APIC-edge      ide0
- 15:          0          0          0          0          0          0
-         0          0   IO-APIC-edge      ide1
- 16:          0          0          0          0         82          0
-         0          0   IO-APIC-fasteoi   ahci, uhci_hcd:usb1, nvidia
- 18:          0          0          0          0          0          0
-         0          0   IO-APIC-fasteoi   uhci_hcd:usb6, ehci_hcd:usb7
- 19:          0          0          0          0          0       3137
-         0          0   IO-APIC-fasteoi   ahci, firewire_ohci,
-uhci_hcd:usb3, uhci_hcd:usb5
- 20:          0          0          0          0          0          0
-       265          0   IO-APIC-fasteoi   eth0
- 21:          0          0          0          0          0          0
-         0          0   IO-APIC-fasteoi   uhci_hcd:usb2
- 22:        154          0          0          0          0          0
-         0          0   IO-APIC-fasteoi   hda_intel
- 23:          0          0          0          0          0          0
-         0          0   IO-APIC-fasteoi   uhci_hcd:usb4, ehci_hcd:usb8
-NMI:          0          0          0          0          0          0
-         0          0   Non-maskable interrupts
-LOC:       7048       6722       3577       3598       3491       8425
-      3756       3569   Local timer interrupts
-SPU:          0          0          0          0          0          0
-         0          0   Spurious interrupts
-PMI:          0          0          0          0          0          0
-         0          0   Performance monitoring interrupts
-PND:          0          0          0          0          0          0
-         0          0   Performance pending work
-RES:        335        332        353        259        176        173
-       251         82   Rescheduling interrupts
-CAL:        242        233        258        180        241        160
-       260        260   Function call interrupts
-TLB:        232        242        270        235        342        474
-       537        497   TLB shootdowns
-TRM:          0          0          0          0          0          0
-         0          0   Thermal event interrupts
-THR:          0          0          0          0          0          0
-         0          0   Threshold APIC interrupts
-MCE:          0          0          0          0          0          0
-         0          0   Machine check exceptions
-MCP:          2          2          2          2          2          2
-         2          2   Machine check polls
-ERR:          7
-MIS:          0
-keeper ~ # date
-Tue Mar 30 16:45:13 PDT 2010
-keeper ~ # cat /proc/interrupts
-           CPU0       CPU1       CPU2       CPU3       CPU4       CPU5
-      CPU6       CPU7
-  0:        232          0          0          9          0          0
-         0          0   IO-APIC-edge      timer
-  1:          0          0          0          2          0          0
-         0          0   IO-APIC-edge      i8042
-  3:          0          0          0          2          0          0
-         0          0   IO-APIC-edge
-  8:          0          0          0         91          0          0
-         0          0   IO-APIC-edge      rtc0
-  9:          0          0          0          0          0          0
-         0          0   IO-APIC-fasteoi   acpi
- 12:          0          0          0          4          0          0
-         0          0   IO-APIC-edge      i8042
- 14:          0          0          0          0          0          0
-         0          0   IO-APIC-edge      ide0
- 15:          0          0          0          0          0          0
-         0          0   IO-APIC-edge      ide1
- 16:          0          0          0          0       2660          0
-         0          0   IO-APIC-fasteoi   ahci, uhci_hcd:usb1, nvidia
- 18:          0          0          0          0          0          0
-         0          0   IO-APIC-fasteoi   uhci_hcd:usb6, ehci_hcd:usb7
- 19:          0          0          0          0          0      20762
-         0          0   IO-APIC-fasteoi   ahci, firewire_ohci,
-uhci_hcd:usb3, uhci_hcd:usb5
- 20:          0          0          0          0          0          0
-      1903          0   IO-APIC-fasteoi   eth0
- 21:          0          0          0          0          0          0
-         0          0   IO-APIC-fasteoi   uhci_hcd:usb2
- 22:        154          0          0          0          0          0
-         0          0   IO-APIC-fasteoi   hda_intel
- 23:          0          0          0          0          0          0
-         0          0   IO-APIC-fasteoi   uhci_hcd:usb4, ehci_hcd:usb8
-NMI:          0          0          0          0          0          0
-         0          0   Non-maskable interrupts
-LOC:      10618      11998       8756       6940       6484      22076
-      7456       6599   Local timer interrupts
-SPU:          0          0          0          0          0          0
-         0          0   Spurious interrupts
-PMI:          0          0          0          0          0          0
-         0          0   Performance monitoring interrupts
-PND:          0          0          0          0          0          0
-         0          0   Performance pending work
-RES:        335        332        353        259        176        173
-       251         82   Rescheduling interrupts
-CAL:        242        233        258        180        241        160
-       260        260   Function call interrupts
-TLB:        232        243        270        236        343        475
-       538        497   TLB shootdowns
-TRM:          0          0          0          0          0          0
-         0          0   Thermal event interrupts
-THR:          0          0          0          0          0          0
-         0          0   Threshold APIC interrupts
-MCE:          0          0          0          0          0          0
-         0          0   Machine check exceptions
-MCP:         10         10         10         10         10         10
-        10         10   Machine check polls
-ERR:          7
-MIS:          0
-keeper ~ #
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SW50ZXJlc3RpbmcuLi4gWW91J3JlIHVzaW5nIHRoZSBBSENJIFNBVEEgZHJpdmVyLi4uIEknbSB1
+c2luZwphdGFfcGlpeC4gICBJIGJlZ2luIHRvIHRoaW5rIGl0IG1pZ2h0IGJlIGEgaGFyZHdhcmUg
+aXNzdWUuCgpKaW0KCgpPbiAzMCBNYXJjaCAyMDEwIDE3OjUwLCBNYXJrIEtuZWNodCA8bWFya2tu
+ZWNodEBnbWFpbC5jb20+IHdyb3RlOgo+IE9uIFR1ZSwgTWFyIDMwLCAyMDEwIGF0IDM6MjEgUE0s
+IE1hcmsgS25lY2h0IDxtYXJra25lY2h0QGdtYWlsLmNvbT4gd3JvdGU6Cj4+IEkganVzdCBmaW5p
+c2hlZCBhIGxvbmcgY29tcGlsZSBvbiBteSBkYWQncyBpNS02NjEvREg1NUhDIG1hY2hpbmUgd2hp
+Y2gKPj4gdXNlcyB0aGlzIHNhbWUgV0QgZHJpdmUgYW5kIEkgZGlkbid0IHNwb3QgYW55IHNpZ24g
+b2YgdGhpcyBoYXBwZW5pbmcKPj4gdGhlcmUuIFRoYXQncyBhIHZlcnkgcmVjZW50IEludGVsIGNo
+aXBzZXQgYWxzbyBhbmQgcHJvYmFibHkgbW9yZSBvcgo+PiBsZXNzIHRoZSBzYW1lIFNBVEEgY29u
+dHJvbGxlci4KPj4KPj4gSSdtIGdvaW5nIHRvIHR1cm4gb24gdGhlIGtlcm5lbCBtZXNzYWdlIGlu
+dG8gZG1lc2cgdGhpbmcgZm9yIGEgd2hpbGUKPj4gYW5kIHNlZSBpZiBhbnl0aGluZyBwb3BzIHVw
+Lgo+Pgo+PiBJIGNhbiBzZXQgdXAgc29tZSBhZGRpdGlvbmFsIHBhcnRpdGlvbnMgb24gbXkgbG9j
+YWwgZHJpdmUgdG8gdGVzdAo+PiBvdGhlciBmaWxlIHN5c3RlbXMgYnV0IHNpbmNlIHlvdSdyZSBl
+eHQzIGFuZCBJJ20gZXh0MyB0aGVuIGl0J3Mgbm90Cj4+IHRoYXQgdW5sZXNzIHRoZSBwcm9ibGVt
+IG1vdmVkIGZvcndhcmQgd2l0aCBjb2RlIG92ZXIgdGltZS4KPj4KPj4gSSBsaWtlIHRoZSBpZGVh
+IG9mIHVzaW5nIGRkIGJ1dCBJIHdhbnQgdG8gYmUgY2FyZWZ1bCBhYm91dCB0aGF0IHNvcnQKPj4g
+b2YgdGhpbmcuIEkndmUgbm90IHVzZWQgZGQgYmVmb3JlLCBidXQgaWYgSSBjb3VsZCB0ZWxsIGl0
+IHRvIHdyaXRlIGEKPj4gZ2lnYWJ5dGUgd2l0aG91dCBtZXNzaW5nIHVwIGV4aXN0aW5nIHN0dWZm
+IHRoZW4gdGhhdCBjb3VsZCBiZSBoZWxwZnVsLgo+Pgo+PiBCYWNrIGxhdGVyLAo+PiBNYXJrCj4+
+Cj4+IE9uIFR1ZSwgTWFyIDMwLCAyMDEwIGF0IDE6NTkgUE0sIEppbSBEdWNoZWsgPGppbS5kdWNo
+ZWtAZ21haWwuY29tPiB3cm90ZToKPj4+IEknbSB1c2luZyBleHQ0IG9uIGV2ZXJ5dGhpbmcsIGJ1
+dCBpdCdzIGhhcmQgdG8ganVkZ2Ugd2hpY2ggZXh0MyBidWdzCj4+PiBtaWdodCBhZmZlY3QgZXh0
+NCBhcyB3ZWxsLiCgSSByZWFsbHkgZG9uJ3QgaGF2ZSB0aGUgYWJpbGl0eSB0bwo+Pj4gZGVzdHJ1
+Y3RpdmVseSB0ZXN0IHRoZSBhcnJheSwgSSBuZWVkIGFsbCB0aGUgZGF0YSB0aGF0J3Mgb24gaXQg
+YW5kIEkKPj4+IGRvbid0IGhhdmUgZW5vdWdoIHNwYXJlIHNwYWNlIGVsc2V3aGVyZSB0byBiYWNr
+IGl0IGFsbCB1cC4goFlvdSBtaWdodAo+Pj4gc2VlIGlmIHlvdSBjYW4gdHJpZ2dlciBpdCB3aXRo
+IGRkLCB3cml0aW5nIHRvIHRoZSBkcml2ZSBkaXJlY3RseSB3L25vCj4+PiBmaWxlc3lzdGVtPwo+
+Pj4KPj4+IEppbQo+Pj4KPgo+IDxTTklQPgo+Cj4gSSBrbm93IHRoaXMgaXNuJ3QgZ29pbmcgdG8g
+c3Vydml2ZSBlbWFpbCB2ZXJ5IHdlbGwgYnV0IHlvdSBtaWdodCB3YW50Cj4gdG8gbG9vayBhdCBp
+bnRlcnJ1cHRzLiBJJ20gc2VlaW5nIHRoZSBjb3VudCBvbiBDUFUgIzUgcmlzaW5nIG11Y2ggbW9y
+ZQo+IHF1aWNrbHkgdGhhbiBvdGhlciBDUFUncywgYW5kIGluIG15IGNhc2UgaXQncyBnZW5lcmFs
+bHkgQ1BVICM1IHRoYXQKPiBzdGFsbHMgb3V0IHdpdGggdGhpcyAxMDAlIHdhaXQgcHJvYmxlbS4K
+Pgo+IEknbSBsb29raW5nIGF0IGFub3RoZXIgNCBwcm9jZXNzb3IgbWFjaGluZSB0aGF0J3MgYmVl
+biB1cCBmb3IgYSBmZXcKPiBkYXlzLiBJdHMgaW50ZXJydXB0IGNvdW50cyBhcmUgZmFpcmx5IGJh
+bGFuY2VkLCBleGNlcHQgZm9yIFRMQgo+IFNob290ZG93bnMsIHdoYXRldmVyIHRoYXQgaXMuCj4K
+PiBXb3VsZG4ndCBrbm93IGhvdyB0byB0ZWxsIGlmIGl0J3MgcmVsYXRlZC4uLgo+Cj4gLSBNYXJr
+Cj4KPiBVc2luZyBrZXlib2FyZC1pbnRlcmFjdGl2ZSBhdXRoZW50aWNhdGlvbi4KPiBQYXNzd29y
+ZDoKPiBMYXN0IGxvZ2luOiBUdWUgTWFyIDMwIDE1OjU5OjIyIFBEVCAyMDEwIGZyb20gMTkyLjE2
+OC4xLjY1IG9uIHB0cy8wCj4ga2VlcGVyIH4gIyBjYXQgL3Byb2MvaW50ZXJydXB0cwo+IKAgoCCg
+IKAgoCBDUFUwIKAgoCCgIENQVTEgoCCgIKAgQ1BVMiCgIKAgoCBDUFUzIKAgoCCgIENQVTQgoCCg
+IKAgQ1BVNQo+IKAgoCCgQ1BVNiCgIKAgoCBDUFU3Cj4goDA6IKAgoCCgIKAyMzIgoCCgIKAgoCCg
+MCCgIKAgoCCgIKAwIKAgoCCgIKAgoDEgoCCgIKAgoCCgMCCgIKAgoCCgIKAwCj4goCCgIKAgoCAw
+IKAgoCCgIKAgoDAgoCBJTy1BUElDLWVkZ2UgoCCgIKB0aW1lcgo+IKAxOiCgIKAgoCCgIKAwIKAg
+oCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAyIKAgoCCgIKAgoDAgoCCgIKAgoCCgMAo+IKAg
+oCCgIKAgMCCgIKAgoCCgIKAwIKAgSU8tQVBJQy1lZGdlIKAgoCCgaTgwNDIKPiCgMzogoCCgIKAg
+oCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMiCgIKAgoCCgIKAwIKAgoCCgIKAg
+oDAKPiCgIKAgoCCgIDAgoCCgIKAgoCCgMCCgIElPLUFQSUMtZWRnZQo+IKA4OiCgIKAgoCCgIKAw
+IKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIDkxIKAgoCCgIKAgoDAgoCCgIKAgoCCgMAo+
+IKAgoCCgIKAgMCCgIKAgoCCgIKAwIKAgSU8tQVBJQy1lZGdlIKAgoCCgcnRjMAo+IKA5OiCgIKAg
+oCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAg
+oCCgMAo+IKAgoCCgIKAgMCCgIKAgoCCgIKAwIKAgSU8tQVBJQy1mYXN0ZW9pIKAgYWNwaQo+IKAx
+MjogoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgNCCgIKAgoCCgIKAw
+IKAgoCCgIKAgoDAKPiCgIKAgoCCgIDAgoCCgIKAgoCCgMCCgIElPLUFQSUMtZWRnZSCgIKAgoGk4
+MDQyCj4goDE0OiCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAg
+oCCgIKAgoDAgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMCCgIKAgoCCgIKAwIKAgSU8tQVBJQy1lZGdl
+IKAgoCCgaWRlMAo+IKAxNTogoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAg
+oCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAKPiCgIKAgoCCgIDAgoCCgIKAgoCCgMCCgIElPLUFQ
+SUMtZWRnZSCgIKAgoGlkZTEKPiCgMTY6IKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAw
+IKAgoCCgIKAgoDAgoCCgIKAgoCA4MiCgIKAgoCCgIKAwCj4goCCgIKAgoCAwIKAgoCCgIKAgoDAg
+oCBJTy1BUElDLWZhc3Rlb2kgoCBhaGNpLCB1aGNpX2hjZDp1c2IxLCBudmlkaWEKPiCgMTg6IKAg
+oCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAg
+oCCgIKAwCj4goCCgIKAgoCAwIKAgoCCgIKAgoDAgoCBJTy1BUElDLWZhc3Rlb2kgoCB1aGNpX2hj
+ZDp1c2I2LCBlaGNpX2hjZDp1c2I3Cj4goDE5OiCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAg
+oCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgMzEzNwo+IKAgoCCgIKAgMCCgIKAgoCCg
+IKAwIKAgSU8tQVBJQy1mYXN0ZW9pIKAgYWhjaSwgZmlyZXdpcmVfb2hjaSwKPiB1aGNpX2hjZDp1
+c2IzLCB1aGNpX2hjZDp1c2I1Cj4goDIwOiCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCg
+MCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMAo+IKAgoCCgIDI2NSCgIKAgoCCgIKAw
+IKAgSU8tQVBJQy1mYXN0ZW9pIKAgZXRoMAo+IKAyMTogoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAg
+oCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAKPiCgIKAgoCCgIDAgoCCg
+IKAgoCCgMCCgIElPLUFQSUMtZmFzdGVvaSCgIHVoY2lfaGNkOnVzYjIKPiCgMjI6IKAgoCCgIKAx
+NTQgoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAw
+Cj4goCCgIKAgoCAwIKAgoCCgIKAgoDAgoCBJTy1BUElDLWZhc3Rlb2kgoCBoZGFfaW50ZWwKPiCg
+MjM6IKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCg
+MCCgIKAgoCCgIKAwCj4goCCgIKAgoCAwIKAgoCCgIKAgoDAgoCBJTy1BUElDLWZhc3Rlb2kgoCB1
+aGNpX2hjZDp1c2I0LCBlaGNpX2hjZDp1c2I4Cj4gTk1JOiCgIKAgoCCgIKAwIKAgoCCgIKAgoDAg
+oCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMCCg
+IKAgoCCgIKAwIKAgTm9uLW1hc2thYmxlIGludGVycnVwdHMKPiBMT0M6IKAgoCCgIDcwNDggoCCg
+IKAgNjcyMiCgIKAgoCAzNTc3IKAgoCCgIDM1OTggoCCgIKAgMzQ5MSCgIKAgoCA4NDI1Cj4goCCg
+IKAzNzU2IKAgoCCgIDM1NjkgoCBMb2NhbCB0aW1lciBpbnRlcnJ1cHRzCj4gU1BVOiCgIKAgoCCg
+IKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCg
+MAo+IKAgoCCgIKAgMCCgIKAgoCCgIKAwIKAgU3B1cmlvdXMgaW50ZXJydXB0cwo+IFBNSTogoCCg
+IKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCg
+IKAgoDAKPiCgIKAgoCCgIDAgoCCgIKAgoCCgMCCgIFBlcmZvcm1hbmNlIG1vbml0b3JpbmcgaW50
+ZXJydXB0cwo+IFBORDogoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCg
+MCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAKPiCgIKAgoCCgIDAgoCCgIKAgoCCgMCCgIFBlcmZvcm1h
+bmNlIHBlbmRpbmcgd29yawo+IFJFUzogoCCgIKAgoDMzNSCgIKAgoCCgMzMyIKAgoCCgIKAzNTMg
+oCCgIKAgoDI1OSCgIKAgoCCgMTc2IKAgoCCgIKAxNzMKPiCgIKAgoCAyNTEgoCCgIKAgoCA4MiCg
+IFJlc2NoZWR1bGluZyBpbnRlcnJ1cHRzCj4gQ0FMOiCgIKAgoCCgMjQyIKAgoCCgIKAyMzMgoCCg
+IKAgoDI1OCCgIKAgoCCgMTgwIKAgoCCgIKAyNDEgoCCgIKAgoDE2MAo+IKAgoCCgIDI2MCCgIKAg
+oCCgMjYwIKAgRnVuY3Rpb24gY2FsbCBpbnRlcnJ1cHRzCj4gVExCOiCgIKAgoCCgMjMyIKAgoCCg
+IKAyNDIgoCCgIKAgoDI3MCCgIKAgoCCgMjM1IKAgoCCgIKAzNDIgoCCgIKAgoDQ3NAo+IKAgoCCg
+IDUzNyCgIKAgoCCgNDk3IKAgVExCIHNob290ZG93bnMKPiBUUk06IKAgoCCgIKAgoDAgoCCgIKAg
+oCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwCj4goCCgIKAg
+oCAwIKAgoCCgIKAgoDAgoCBUaGVybWFsIGV2ZW50IGludGVycnVwdHMKPiBUSFI6IKAgoCCgIKAg
+oDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAw
+Cj4goCCgIKAgoCAwIKAgoCCgIKAgoDAgoCBUaHJlc2hvbGQgQVBJQyBpbnRlcnJ1cHRzCj4gTUNF
+OiCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAg
+oCCgIKAgoCCgMAo+IKAgoCCgIKAgMCCgIKAgoCCgIKAwIKAgTWFjaGluZSBjaGVjayBleGNlcHRp
+b25zCj4gTUNQOiCgIKAgoCCgIKAyIKAgoCCgIKAgoDIgoCCgIKAgoCCgMiCgIKAgoCCgIKAyIKAg
+oCCgIKAgoDIgoCCgIKAgoCCgMgo+IKAgoCCgIKAgMiCgIKAgoCCgIKAyIKAgTWFjaGluZSBjaGVj
+ayBwb2xscwo+IEVSUjogoCCgIKAgoCCgNwo+IE1JUzogoCCgIKAgoCCgMAo+IGtlZXBlciB+ICMg
+ZGF0ZQo+IFR1ZSBNYXIgMzAgMTY6NDU6MTMgUERUIDIwMTAKPiBrZWVwZXIgfiAjIGNhdCAvcHJv
+Yy9pbnRlcnJ1cHRzCj4goCCgIKAgoCCgIENQVTAgoCCgIKAgQ1BVMSCgIKAgoCBDUFUyIKAgoCCg
+IENQVTMgoCCgIKAgQ1BVNCCgIKAgoCBDUFU1Cj4goCCgIKBDUFU2IKAgoCCgIENQVTcKPiCgMDog
+oCCgIKAgoDIzMiCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgOSCgIKAgoCCgIKAwIKAg
+oCCgIKAgoDAKPiCgIKAgoCCgIDAgoCCgIKAgoCCgMCCgIElPLUFQSUMtZWRnZSCgIKAgoHRpbWVy
+Cj4goDE6IKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDIgoCCgIKAg
+oCCgMCCgIKAgoCCgIKAwCj4goCCgIKAgoCAwIKAgoCCgIKAgoDAgoCBJTy1BUElDLWVkZ2UgoCCg
+IKBpODA0Mgo+IKAzOiCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAy
+IKAgoCCgIKAgoDAgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMCCgIKAgoCCgIKAwIKAgSU8tQVBJQy1l
+ZGdlCj4goDg6IKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgOTEgoCCg
+IKAgoCCgMCCgIKAgoCCgIKAwCj4goCCgIKAgoCAwIKAgoCCgIKAgoDAgoCBJTy1BUElDLWVkZ2Ug
+oCCgIKBydGMwCj4goDk6IKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAg
+oDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwCj4goCCgIKAgoCAwIKAgoCCgIKAgoDAgoCBJTy1BUElD
+LWZhc3Rlb2kgoCBhY3BpCj4goDEyOiCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCg
+IKAgoCCgIKA0IKAgoCCgIKAgoDAgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMCCgIKAgoCCgIKAwIKAg
+SU8tQVBJQy1lZGdlIKAgoCCgaTgwNDIKPiCgMTQ6IKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAg
+oCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwCj4goCCgIKAgoCAwIKAgoCCg
+IKAgoDAgoCBJTy1BUElDLWVkZ2UgoCCgIKBpZGUwCj4goDE1OiCgIKAgoCCgIKAwIKAgoCCgIKAg
+oDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMAo+IKAgoCCgIKAg
+MCCgIKAgoCCgIKAwIKAgSU8tQVBJQy1lZGdlIKAgoCCgaWRlMQo+IKAxNjogoCCgIKAgoCCgMCCg
+IKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCAyNjYwIKAgoCCgIKAgoDAKPiCg
+IKAgoCCgIDAgoCCgIKAgoCCgMCCgIElPLUFQSUMtZmFzdGVvaSCgIGFoY2ksIHVoY2lfaGNkOnVz
+YjEsIG52aWRpYQo+IKAxODogoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAg
+oCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAKPiCgIKAgoCCgIDAgoCCgIKAgoCCgMCCgIElPLUFQ
+SUMtZmFzdGVvaSCgIHVoY2lfaGNkOnVzYjYsIGVoY2lfaGNkOnVzYjcKPiCgMTk6IKAgoCCgIKAg
+oDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoDIwNzYy
+Cj4goCCgIKAgoCAwIKAgoCCgIKAgoDAgoCBJTy1BUElDLWZhc3Rlb2kgoCBhaGNpLCBmaXJld2ly
+ZV9vaGNpLAo+IHVoY2lfaGNkOnVzYjMsIHVoY2lfaGNkOnVzYjUKPiCgMjA6IKAgoCCgIKAgoDAg
+oCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwCj4g
+oCCgIKAxOTAzIKAgoCCgIKAgoDAgoCBJTy1BUElDLWZhc3Rlb2kgoCBldGgwCj4goDIxOiCgIKAg
+oCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAg
+oCCgMAo+IKAgoCCgIKAgMCCgIKAgoCCgIKAwIKAgSU8tQVBJQy1mYXN0ZW9pIKAgdWhjaV9oY2Q6
+dXNiMgo+IKAyMjogoCCgIKAgoDE1NCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCg
+IKAgoCCgIKAwIKAgoCCgIKAgoDAKPiCgIKAgoCCgIDAgoCCgIKAgoCCgMCCgIElPLUFQSUMtZmFz
+dGVvaSCgIGhkYV9pbnRlbAo+IKAyMzogoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAg
+oCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAKPiCgIKAgoCCgIDAgoCCgIKAgoCCgMCCg
+IElPLUFQSUMtZmFzdGVvaSCgIHVoY2lfaGNkOnVzYjQsIGVoY2lfaGNkOnVzYjgKPiBOTUk6IKAg
+oCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAg
+oCCgIKAwCj4goCCgIKAgoCAwIKAgoCCgIKAgoDAgoCBOb24tbWFza2FibGUgaW50ZXJydXB0cwo+
+IExPQzogoCCgIKAxMDYxOCCgIKAgoDExOTk4IKAgoCCgIDg3NTYgoCCgIKAgNjk0MCCgIKAgoCA2
+NDg0IKAgoCCgMjIwNzYKPiCgIKAgoDc0NTYgoCCgIKAgNjU5OSCgIExvY2FsIHRpbWVyIGludGVy
+cnVwdHMKPiBTUFU6IKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAg
+oCCgIKAgoCCgMCCgIKAgoCCgIKAwCj4goCCgIKAgoCAwIKAgoCCgIKAgoDAgoCBTcHVyaW91cyBp
+bnRlcnJ1cHRzCj4gUE1JOiCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCg
+IKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMCCgIKAgoCCgIKAwIKAgUGVyZm9y
+bWFuY2UgbW9uaXRvcmluZyBpbnRlcnJ1cHRzCj4gUE5EOiCgIKAgoCCgIKAwIKAgoCCgIKAgoDAg
+oCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMAo+IKAgoCCgIKAgMCCg
+IKAgoCCgIKAwIKAgUGVyZm9ybWFuY2UgcGVuZGluZyB3b3JrCj4gUkVTOiCgIKAgoCCgMzM1IKAg
+oCCgIKAzMzIgoCCgIKAgoDM1MyCgIKAgoCCgMjU5IKAgoCCgIKAxNzYgoCCgIKAgoDE3Mwo+IKAg
+oCCgIDI1MSCgIKAgoCCgIDgyIKAgUmVzY2hlZHVsaW5nIGludGVycnVwdHMKPiBDQUw6IKAgoCCg
+IKAyNDIgoCCgIKAgoDIzMyCgIKAgoCCgMjU4IKAgoCCgIKAxODAgoCCgIKAgoDI0MSCgIKAgoCCg
+MTYwCj4goCCgIKAgMjYwIKAgoCCgIKAyNjAgoCBGdW5jdGlvbiBjYWxsIGludGVycnVwdHMKPiBU
+TEI6IKAgoCCgIKAyMzIgoCCgIKAgoDI0MyCgIKAgoCCgMjcwIKAgoCCgIKAyMzYgoCCgIKAgoDM0
+MyCgIKAgoCCgNDc1Cj4goCCgIKAgNTM4IKAgoCCgIKA0OTcgoCBUTEIgc2hvb3Rkb3ducwo+IFRS
+TTogoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAw
+IKAgoCCgIKAgoDAKPiCgIKAgoCCgIDAgoCCgIKAgoCCgMCCgIFRoZXJtYWwgZXZlbnQgaW50ZXJy
+dXB0cwo+IFRIUjogoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCg
+IKAgoCCgIKAwIKAgoCCgIKAgoDAKPiCgIKAgoCCgIDAgoCCgIKAgoCCgMCCgIFRocmVzaG9sZCBB
+UElDIGludGVycnVwdHMKPiBNQ0U6IKAgoCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwIKAg
+oCCgIKAgoDAgoCCgIKAgoCCgMCCgIKAgoCCgIKAwCj4goCCgIKAgoCAwIKAgoCCgIKAgoDAgoCBN
+YWNoaW5lIGNoZWNrIGV4Y2VwdGlvbnMKPiBNQ1A6IKAgoCCgIKAgMTAgoCCgIKAgoCAxMCCgIKAg
+oCCgIDEwIKAgoCCgIKAgMTAgoCCgIKAgoCAxMCCgIKAgoCCgIDEwCj4goCCgIKAgoDEwIKAgoCCg
+IKAgMTAgoCBNYWNoaW5lIGNoZWNrIHBvbGxzCj4gRVJSOiCgIKAgoCCgIKA3Cj4gTUlTOiCgIKAg
+oCCgIKAwCj4ga2VlcGVyIH4gIwo+Cg==
