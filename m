@@ -1,88 +1,96 @@
-From: Max Eaves <max@maxeaves.co.uk>
-Subject: Re: Problems with RAID 6 across 15 disks
-Date: Thu, 01 Apr 2010 15:07:27 +0100
-Message-ID: <4BB4A89F.7030707@maxeaves.co.uk>
-References: <4BB49E4D.1090809@maxeaves.co.uk> <4BB4A461.5030704@redhat.com>
-Reply-To: max@maxeaves.co.uk
+From: Mark Knecht <markknecht@gmail.com>
+Subject: RAID1 on logical partitions?
+Date: Thu, 1 Apr 2010 07:31:53 -0700
+Message-ID: <y2h5bdc1c8b1004010731g6c696517s28d184d1a8cfdf93@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BB4A461.5030704@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
-Cc: Doug Ledford <dledford@redhat.com>
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Doug,
+Hi,
+   On this new machine that I've been playing with I'm interested in
+doing a chroot install of Gentoo onto RAID1. As partitions 1, 2 & 3
+are taken with the first install I created an extended partition and
+then a new logical partition intending /dev/sdX5 to be the new
+install. I do intend to boot this install later, but for now it's just
+chroot.
 
-Thank you very much for that; a great relief off my shoulders.
+   When I attempt to create the RAID I get the message shown below
+about "mdadm: Note: this array has metadata at the start..."
 
-You are right - there is a config file located in 
-/etc/sysconfig/raid-check.  I've changed ENABLED to no.
+QUESTIONS:
 
-Amazing - I've learnt something today.
+1) Is there anything special about RAID on logical partitions that I
+should be careful about? Do I need to move the partition start away
+from the beginning of the logical partition?
 
-Thanks once again.
+2) As I do intend to put / for the new install on this RAID does grub
+as a boot-loader understand md/v1.x metadata?
 
-Max
+3) My (multiple) boot partitions are not RAID so they will start and
+provide the grub menu choices, but do I need to do anything other than
+include RAID1 in the kernel to then boot /dev/md5 - the RAID built
+using /dev/sdX5?
 
-On 01/04/10 14:49, Doug Ledford wrote:
-> On 04/01/2010 09:23 AM, Max Eaves wrote:
->    
->> Hi there,
->>
->> I hope this gets through....my first posting on this dist.list.
->>
->> I am running Centos 5.4 with a 2.6.18-164.15.1.el5 kernel (x86_64)
->> kernel using a rather "homebrew" backblaze system
->> (http://blog.backblaze.com/) system.
->>
->> The mdadm version is: mdadm - v2.6.9 - 10th March 2009
->>
->> It uses a number of Silicon Image 3124 (sIL 3124) cards and a number of
->> multiplier port cards (sIL3132) to read a large number of disks.
->>
->> I have 45 disks arranged into 3 mdadm raid sets of 15 disks.  These 15
->> disks are raided using RAID6.
->>
->> The problem I have is this:
->>
->> At random times, the RAID decides that it needs to resynchronise
->> /dev/md10 /dev/md11 and /dev/md12.  There is no error or log event in
->> /var/log/messages, but the first thing I notice is that the performance
->> of the RAID array drops, and checking out "cat /proc/mdadm" shows all
->> three RAID re synchronising themselves.
->>
->> ARRAY /dev/md0 level=raid1 num-devices=2
->> uuid=7d7b19e6:56cc90cc:3cb166bd:b8086f29 (system boot) (not a problem)
->> ARRAY /dev/md1 level=raid1 num-devices=2
->> uuid=3782d93d:a491ffd4:f32c1014:94a2b3f7 (system LVM) (not a problem)
->> ARRAY /dev/md10 level=raid6 num-devices=15
->> uuid=5ca86e2a-3b86-4c0b-9a7a-59143bdcd0f1 (partition 1) (problem)
->> ARRAY /dev/md11 level=raid6 num-devices=15
->> uuid=61188c90-4825-44c5-8fac-9bc82a5799fe (partition 2) (problem)
->> ARRAY /dev/md12 level=raid6 num-devices=15
->> uuid=fa939816-1d0f-4eaa-98dd-c131449c3921 (partition 3) (problem)
->>
->> These re-synchronisation events take about a week to complete (the RAID
->> is 18TB a pop)
->>
->> I know that the performance of this system is not great, but I wonder if
->> this resynchronisation is occurring because of some I/O time-out.
->>
->> Oddly enough, a restart of the server fixes the problem for a couple of
->> days, and then problem occurs again (humm - not good).
->>
->> I'm happy to post logs etc....just let me know what you need.
->>      
-> Disable /etc/cron.weekly/99-raid-check.  They aren't resyncronizing,
-> they are actually just checking themselves for consistency, but because
-> the 2.6.18 kernel didn't have a different word for it in the output of
-> /proc/mdstat it just looks that way.  I can't remember if the version of
-> mdadm in centos 5.4 has the /etc/sysconfig/raid-check config file, but
-> if it does, it's easy to disable the weekly check there.
->
->
->    
+Thanks,
+Mark
 
+keeper ~ # fdisk -l /dev/sda /dev/sdb /dev/sdc
+
+Disk /dev/sda: 1000.2 GB, 1000204886016 bytes
+255 heads, 63 sectors/track, 121601 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x1d23ae47
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1   *           1          14      112423+  83  Linux
+/dev/sda2              16         538     4200997+  83  Linux
+/dev/sda3            2048        5964    31463302+  83  Linux
+/dev/sda4            6000      121601   928573065    5  Extended
+/dev/sda5            6000       19054   104864256   83  Linux
+
+Disk /dev/sdb: 1000.2 GB, 1000204886016 bytes
+255 heads, 63 sectors/track, 121601 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x85959094
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdb1   *           1          14      112423+  83  Linux
+/dev/sdb2              16         538     4200997+  83  Linux
+/dev/sdb4            6000      121601   928573065    5  Extended
+/dev/sdb5            6000       19054   104864256   83  Linux
+
+Disk /dev/sdc: 1000.2 GB, 1000204886016 bytes
+255 heads, 63 sectors/track, 121601 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x70d12429
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdc1               1          14      112423+  83  Linux
+/dev/sdc2              16         538     4200997+  83  Linux
+/dev/sdc4            6000      121601   928573065    5  Extended
+/dev/sdc5            6000       19054   104864256   83  Linux
+keeper ~ #
+
+keeper ~ # mdadm --create /dev/md5 --level=1 --raid-devices=3
+/dev/sda5 /dev/sdb5 /dev/sdc5
+mdadm: Note: this array has metadata at the start and
+    may not be suitable as a boot device.  If you plan to
+    store '/' or '/boot' on this device please ensure that
+    your boot-loader understands md/v1.x metadata, or use
+    --metadata=1.0
+mdadm: Note: this array has metadata at the start and
+    may not be suitable as a boot device.  If you plan to
+    store '/' or '/boot' on this device please ensure that
+    your boot-loader understands md/v1.x metadata, or use
+    --metadata=1.0
+mdadm: Note: this array has metadata at the start and
+    may not be suitable as a boot device.  If you plan to
+    store '/' or '/boot' on this device please ensure that
+    your boot-loader understands md/v1.x metadata, or use
+    --metadata=1.0
+Continue creating array? n
+mdadm: create aborted.
+keeper ~ #
