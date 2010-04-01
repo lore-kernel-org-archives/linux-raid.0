@@ -1,110 +1,174 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Problems with RAID 6 across 15 disks
-Date: Fri, 2 Apr 2010 07:43:25 +1100
-Message-ID: <20100402074325.3ce34e8f@notabene.brown>
-References: <4BB49E4D.1090809@maxeaves.co.uk>
-	<4BB4A461.5030704@redhat.com>
-	<4BB4A89F.7030707@maxeaves.co.uk>
+From: "Hawrylewicz Czarnowski, Przemyslaw"
+	<przemyslaw.hawrylewicz.czarnowski@intel.com>
+Subject: RE: [PATCH 1/2] imsm: delete subarray functionality
+Date: Thu, 1 Apr 2010 22:29:07 +0100
+Message-ID: <66C59AD0932712458090B447266D638CD3CE3014@irsmsx504.ger.corp.intel.com>
+References: <66C59AD0932712458090B447266D638CD3C7EAF4@irsmsx504.ger.corp.intel.com>
+ <20100401060922.GA15461@maude.comedia.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BB4A89F.7030707@maxeaves.co.uk>
+In-Reply-To: <20100401060922.GA15461@maude.comedia.it>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: max@maxeaves.co.uk
-Cc: linux-raid@vger.kernel.org, Doug Ledford <dledford@redhat.com>
+To: Luca Berra <bluca@comedia.it>
+Cc: Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-On Thu, 01 Apr 2010 15:07:27 +0100
-Max Eaves <max@maxeaves.co.uk> wrote:
+>-----Original Message-----
+>From: Luca Berra [mailto:bluca@comedia.it]
+>Sent: Thursday, April 01, 2010 8:09 AM
+>To: Hawrylewicz Czarnowski, Przemyslaw
+>Cc: Neil Brown; linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski,
+>Ed
+>Subject: Re: [PATCH 1/2] imsm: delete subarray functionality
+>
+>On Wed, Mar 31, 2010 at 09:50:40PM +0100, Hawrylewicz Czarnowski,
+>Przemyslaw wrote:
+>>Patch also adds some utilities to simple sysfs manipulation and
+>>to allow locking of map file during updates.
+>a 38k patch is very difficult to review, i would have split it. the
+>utilities would have been a candidate for a different patch
+>also there are some changes i would define either bug-fixes or cleanup
+>they should be in a different patch.
+my point was to put both function and application together. It is OK
+for me to split some utils to separate patch/es.
 
-> Doug,
-> 
-> Thank you very much for that; a great relief off my shoulders.
-> 
-> You are right - there is a config file located in 
-> /etc/sysconfig/raid-check.  I've changed ENABLED to no.
+>you forgot to update the man pages.
+yeah, you are absolutely right. It is a must.
 
-However there is real value in doing that check, at least occasionally.  It
-catches latent read errors.
+>
+>
+>>diff --git a/Kill.c b/Kill.c
+>>index e738978..e5d5dcb 100644
+>>--- a/Kill.c
+>>+++ b/Kill.c
+>>@@ -79,3 +79,61 @@ int Kill(char *dev, struct supertype *st, int force,
+>int quiet, int noexcl)
+>>        close(fd);
+>>        return rv;
+>> }
+>>+
+>>+
+>>+int Kill_Subarray(mddev_dev_t devlist, int force, int quiet, struct
+>mddev_ident_s *ident)
+>>+{
+>>+       int     rv;
+>>+       struct array_dev_list *dl = NULL;
+>>+       int i, found;
+>>+       struct mdinfo info;
+>>+
+>>+       if ((dl = check_devices(devlist, force, quiet, "imsm")) == NULL) {
+>>+               return 1;
+>>+       }
+>i dont know if other container types will ever support removing (or
+>renaming) subarrays. but i am not sure that forcing imsm here versus
+>checking the existance of ss->delete_subarray function is better.
+>....
+As far as I know, it is applicable only for imsm superblock.
 
-You might want to run it only every couple of months, and you might want to
-wind down one of both of the /proc/sys/dev/raid/speed_limit_* numbers so
-there is minimal impact on your system.
+>
+>>diff --git a/mapfile.c b/mapfile.c
+>>index 366ebe3..fe885c5 100644
+>>--- a/mapfile.c
+>>+++ b/mapfile.c
+>the above is a candidate for a separate patch
+>....
+>
+>>diff --git a/mdstat.c b/mdstat.c
+>>index 4a9f370..bb6179d 100644
+>>--- a/mdstat.c
+>>+++ b/mdstat.c
+>ditto
+>....
+>
+>>diff --git a/sysfs.c b/sysfs.c
+>>index ebf9d8a..a2353d9 100644
+>>--- a/sysfs.c
+>>+++ b/sysfs.c
+>ditto
+>....
+>
+>>diff --git a/util.c b/util.c
+>>index d292a66..f1d30f3 100644
+>>--- a/util.c
+>>+++ b/util.c
+>as above, but also:
+as mentioned I am OK to split it up.
+>
+>>+char *dev2devname(int maj, int min, char *buf)
+>what is this for, completeness? it is unused in your code
+>...
+to be removed, it is not used any more...
 
-But not scrubbing at all is not advisable.
+>
+>> int mdmon_pid(int devnum)
+>>@@ -1502,7 +1523,11 @@ int mdmon_pid(int devnum)
+>>        char pid[10];
+>>        int fd;
+>>        int n;
+>>-       sprintf(path, "%s/%s.pid", pid_dir, devnum2devname(devnum));
+>>+       char *devname = devnum2devname(devnum);
+>>+
+>>+       sprintf(path, "%s/%s.pid", pid_dir, devname);
+>>+       free(devname);
+>>+
+>>        fd = open(path, O_RDONLY | O_NOATIME, 0);
+>>
+>>        if (fd < 0)
+>why?
+devnum2devname returns strdup, so it allocates memory which needs 
+to be released.
 
-NeilBrown
+>
+>>+int validate_super(struct supertype *st, char *name, int quiet, char
+>*meta_type)
+>>+{
+>>+       if (st == NULL) {
+>>+               if (!quiet && name)
+>>+                       fprintf(stderr, Name ": Unrecognised md component
+>device - %s\n", name);
+>>+               return 1;
+>>+       }
+>>+
+>>+       if.  (meta_type && strcmp(st->ss->name, meta_type)) {
+>>+               if (!quiet)
+>>+                       fprintf(stderr, Name ": Subarray delete not
+>supported for '%s' superblock\n",
+>>+                               st->ss->name);
+>i believe this error message belongs to the caller actually even two
+>levels above, not to the utility function.
+Ok, needs to be changed to more generic message
 
+>
+>....
+>
+>>+struct array_dev_list *check_devices(mddev_dev_t devlist, int force, int
+>quiet, char *meta_type)
+><snip>
+>
+>>+               if (validate_super(st, dv->devname, quiet, "imsm")) {
+>i believe it should read:
+>                if (validate_super(st, dv->devname, quiet, meta_type)) {
+good catch. 
 
-> 
-> Amazing - I've learnt something today.
-> 
-> Thanks once again.
-> 
-> Max
-> 
-> On 01/04/10 14:49, Doug Ledford wrote:
-> > On 04/01/2010 09:23 AM, Max Eaves wrote:
-> >    
-> >> Hi there,
-> >>
-> >> I hope this gets through....my first posting on this dist.list.
-> >>
-> >> I am running Centos 5.4 with a 2.6.18-164.15.1.el5 kernel (x86_64)
-> >> kernel using a rather "homebrew" backblaze system
-> >> (http://blog.backblaze.com/) system.
-> >>
-> >> The mdadm version is: mdadm - v2.6.9 - 10th March 2009
-> >>
-> >> It uses a number of Silicon Image 3124 (sIL 3124) cards and a number of
-> >> multiplier port cards (sIL3132) to read a large number of disks.
-> >>
-> >> I have 45 disks arranged into 3 mdadm raid sets of 15 disks.  These 15
-> >> disks are raided using RAID6.
-> >>
-> >> The problem I have is this:
-> >>
-> >> At random times, the RAID decides that it needs to resynchronise
-> >> /dev/md10 /dev/md11 and /dev/md12.  There is no error or log event in
-> >> /var/log/messages, but the first thing I notice is that the performance
-> >> of the RAID array drops, and checking out "cat /proc/mdadm" shows all
-> >> three RAID re synchronising themselves.
-> >>
-> >> ARRAY /dev/md0 level=raid1 num-devices=2
-> >> uuid=7d7b19e6:56cc90cc:3cb166bd:b8086f29 (system boot) (not a problem)
-> >> ARRAY /dev/md1 level=raid1 num-devices=2
-> >> uuid=3782d93d:a491ffd4:f32c1014:94a2b3f7 (system LVM) (not a problem)
-> >> ARRAY /dev/md10 level=raid6 num-devices=15
-> >> uuid=5ca86e2a-3b86-4c0b-9a7a-59143bdcd0f1 (partition 1) (problem)
-> >> ARRAY /dev/md11 level=raid6 num-devices=15
-> >> uuid=61188c90-4825-44c5-8fac-9bc82a5799fe (partition 2) (problem)
-> >> ARRAY /dev/md12 level=raid6 num-devices=15
-> >> uuid=fa939816-1d0f-4eaa-98dd-c131449c3921 (partition 3) (problem)
-> >>
-> >> These re-synchronisation events take about a week to complete (the RAID
-> >> is 18TB a pop)
-> >>
-> >> I know that the performance of this system is not great, but I wonder if
-> >> this resynchronisation is occurring because of some I/O time-out.
-> >>
-> >> Oddly enough, a restart of the server fixes the problem for a couple of
-> >> days, and then problem occurs again (humm - not good).
-> >>
-> >> I'm happy to post logs etc....just let me know what you need.
-> >>      
-> > Disable /etc/cron.weekly/99-raid-check.  They aren't resyncronizing,
-> > they are actually just checking themselves for consistency, but because
-> > the 2.6.18 kernel didn't have a different word for it in the output of
-> > /proc/mdstat it just looks that way.  I can't remember if the version of
-> > mdadm in centos 5.4 has the /etc/sysconfig/raid-check config file, but
-> > if it does, it's easy to disable the weekly check there.
-> >
-> >
-> >    
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>regards,
+>L.
+>--
+>Luca Berra -- bluca@comedia.it
+>           Communication Media & Services S.r.l.
+>    /"\
+>    \ /     ASCII RIBBON CAMPAIGN
+>     X        AGAINST HTML MAIL
+>    / \
+
+Thank you for valuable input.
+
+--
+Best Regards,
+Przemyslaw Hawrylewicz-Czarnowski
+Software Development Engineer
 
