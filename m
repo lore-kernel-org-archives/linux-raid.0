@@ -1,67 +1,110 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: mounting component device of RAID1 with internal bitmap
-Date: Thu, 01 Apr 2010 14:39:29 -0400
-Message-ID: <4BB4E861.9020003@redhat.com>
-References: <q2zf19d625d1004011047gf9d48094p696ac38e669fb5e4@mail.gmail.com>	 <4BB4E291.5090304@redhat.com> <s2nf19d625d1004011126p80d579b7oaba81484dcad92ce@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Problems with RAID 6 across 15 disks
+Date: Fri, 2 Apr 2010 07:43:25 +1100
+Message-ID: <20100402074325.3ce34e8f@notabene.brown>
+References: <4BB49E4D.1090809@maxeaves.co.uk>
+	<4BB4A461.5030704@redhat.com>
+	<4BB4A89F.7030707@maxeaves.co.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig35ED6FD4E64F5BDEB3B8E5C7"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <s2nf19d625d1004011126p80d579b7oaba81484dcad92ce@mail.gmail.com>
+In-Reply-To: <4BB4A89F.7030707@maxeaves.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: CoolCold <coolthecold@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: max@maxeaves.co.uk
+Cc: linux-raid@vger.kernel.org, Doug Ledford <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig35ED6FD4E64F5BDEB3B8E5C7
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On Thu, 01 Apr 2010 15:07:27 +0100
+Max Eaves <max@maxeaves.co.uk> wrote:
 
-On 04/01/2010 02:26 PM, CoolCold wrote:
-> On Thu, Apr 1, 2010 at 10:14 PM, Doug Ledford <dledford@redhat.com> wro=
-te:
->> On 04/01/2010 01:47 PM, CoolCold wrote:
->>> Hello!
->>> For raid1 array with metadata 0.90 it is possible to mount component
->>> (let's say /dev/sda1) as usual FS, fix smth, /etc/fstab for example,
->>> unmount and then assamble arary.
->>
->> At which point you have just corrupted your array.
-> I've did such operation several times and it worked fine..I'll do some
-> checks and report later.
+> Doug,
+> 
+> Thank you very much for that; a great relief off my shoulders.
+> 
+> You are right - there is a config file located in 
+> /etc/sysconfig/raid-check.  I've changed ENABLED to no.
 
-Because you got lucky.  When you do this, you make the different members
-of the raid array disagree on the contents of whatever file you
-modified.  Depending on which disk the kernel reads from, you will get
-either the new or the old contents of the file.  Any time you mount a
-component device and modify it, you *must* force a resync from that
-component to all other components or you *will* have a corrupt array.
-When that corruption will crop up to bite you in the ass is up to random
-chance.
+However there is real value in doing that check, at least occasionally.  It
+catches latent read errors.
+
+You might want to run it only every couple of months, and you might want to
+wind down one of both of the /proc/sys/dev/raid/speed_limit_* numbers so
+there is minimal impact on your system.
+
+But not scrubbing at all is not advisable.
+
+NeilBrown
 
 
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-	      http://people.redhat.com/dledford
+> 
+> Amazing - I've learnt something today.
+> 
+> Thanks once again.
+> 
+> Max
+> 
+> On 01/04/10 14:49, Doug Ledford wrote:
+> > On 04/01/2010 09:23 AM, Max Eaves wrote:
+> >    
+> >> Hi there,
+> >>
+> >> I hope this gets through....my first posting on this dist.list.
+> >>
+> >> I am running Centos 5.4 with a 2.6.18-164.15.1.el5 kernel (x86_64)
+> >> kernel using a rather "homebrew" backblaze system
+> >> (http://blog.backblaze.com/) system.
+> >>
+> >> The mdadm version is: mdadm - v2.6.9 - 10th March 2009
+> >>
+> >> It uses a number of Silicon Image 3124 (sIL 3124) cards and a number of
+> >> multiplier port cards (sIL3132) to read a large number of disks.
+> >>
+> >> I have 45 disks arranged into 3 mdadm raid sets of 15 disks.  These 15
+> >> disks are raided using RAID6.
+> >>
+> >> The problem I have is this:
+> >>
+> >> At random times, the RAID decides that it needs to resynchronise
+> >> /dev/md10 /dev/md11 and /dev/md12.  There is no error or log event in
+> >> /var/log/messages, but the first thing I notice is that the performance
+> >> of the RAID array drops, and checking out "cat /proc/mdadm" shows all
+> >> three RAID re synchronising themselves.
+> >>
+> >> ARRAY /dev/md0 level=raid1 num-devices=2
+> >> uuid=7d7b19e6:56cc90cc:3cb166bd:b8086f29 (system boot) (not a problem)
+> >> ARRAY /dev/md1 level=raid1 num-devices=2
+> >> uuid=3782d93d:a491ffd4:f32c1014:94a2b3f7 (system LVM) (not a problem)
+> >> ARRAY /dev/md10 level=raid6 num-devices=15
+> >> uuid=5ca86e2a-3b86-4c0b-9a7a-59143bdcd0f1 (partition 1) (problem)
+> >> ARRAY /dev/md11 level=raid6 num-devices=15
+> >> uuid=61188c90-4825-44c5-8fac-9bc82a5799fe (partition 2) (problem)
+> >> ARRAY /dev/md12 level=raid6 num-devices=15
+> >> uuid=fa939816-1d0f-4eaa-98dd-c131449c3921 (partition 3) (problem)
+> >>
+> >> These re-synchronisation events take about a week to complete (the RAID
+> >> is 18TB a pop)
+> >>
+> >> I know that the performance of this system is not great, but I wonder if
+> >> this resynchronisation is occurring because of some I/O time-out.
+> >>
+> >> Oddly enough, a restart of the server fixes the problem for a couple of
+> >> days, and then problem occurs again (humm - not good).
+> >>
+> >> I'm happy to post logs etc....just let me know what you need.
+> >>      
+> > Disable /etc/cron.weekly/99-raid-check.  They aren't resyncronizing,
+> > they are actually just checking themselves for consistency, but because
+> > the 2.6.18 kernel didn't have a different word for it in the output of
+> > /proc/mdstat it just looks that way.  I can't remember if the version of
+> > mdadm in centos 5.4 has the /etc/sysconfig/raid-check config file, but
+> > if it does, it's easy to disable the weekly check there.
+> >
+> >
+> >    
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Infiniband specific RPMs available at
-	      http://people.redhat.com/dledford/Infiniband
-
-
---------------enig35ED6FD4E64F5BDEB3B8E5C7
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAku06GEACgkQg6WylM+/8ZSNxwCcD7H35uEA+lC72WKWSWrT9Lz4
-+AoAn1DKdWQ1T2etqYG8T2vCND6inmvA
-=idB6
------END PGP SIGNATURE-----
-
---------------enig35ED6FD4E64F5BDEB3B8E5C7--
