@@ -1,75 +1,49 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: RAID Class Drives`
-Date: Fri, 2 Apr 2010 00:43:15 -0500
-Message-ID: <79.85.28131.DE385BB4@cdptpa-omtalb.mail.rr.com>
-References: <hoaunl$uvk$2@dough.gmane.org>
+From: Luca Berra <bluca@comedia.it>
+Subject: responsiveness during raid check (Was: Problems with RAID 6 across
+	15 disks)
+Date: Fri, 2 Apr 2010 07:55:08 +0200
+Message-ID: <20100402055508.GA15102@maude.comedia.it>
+References: <4BB49E4D.1090809@maxeaves.co.uk> <4BB4A461.5030704@redhat.com> <4BB4A89F.7030707@maxeaves.co.uk> <20100402074325.3ce34e8f@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <hoaunl$uvk$2@dough.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20100402074325.3ce34e8f@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Eric Shubert' <ejs@shubes.net>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Fri, Apr 02, 2010 at 07:43:25AM +1100, Neil Brown wrote:
+>On Thu, 01 Apr 2010 15:07:27 +0100
+>Max Eaves <max@maxeaves.co.uk> wrote:
+>
+>> Doug,
+>> 
+>> Thank you very much for that; a great relief off my shoulders.
+>> 
+>> You are right - there is a config file located in 
+>> /etc/sysconfig/raid-check.  I've changed ENABLED to no.
+>
+>However there is real value in doing that check, at least occasionally.  It
+>catches latent read errors.
+>
+>You might want to run it only every couple of months, and you might want to
+>wind down one of both of the /proc/sys/dev/raid/speed_limit_* numbers so
+>there is minimal impact on your system.
+>
+sorry if i am hijacking, but i got a report from one user that the
+scheduled scrubbing is severely impacting responsiveness, lowering the
+speed_limits seems to help a bit, but he reports it is still sluggish, 
+i always believed the check should use idle time, and not impact
+performance that much. could it be scheduler related?
 
+regards,
+L.
 
-> -----Original Message-----
-> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
-> owner@vger.kernel.org] On Behalf Of Eric Shubert
-> Sent: Tuesday, March 23, 2010 12:45 PM
-> To: linux-raid@vger.kernel.org
-> Subject: Re: RAID Class Drives`
-> 
-> Brad Campbell wrote:
-> > Eric Shubert wrote:
-> >
-> >> I had a few drives running at about 55C for a couple years, with no
-> >> failures (knock wood). These were used drives before being put into
-> >> that environment, so they arguably had already survived the "infant
-> >> mortality syndrome" that the google study identified. Would I
-> >> recommend running drives at 55C? No, but I wouldn't be too concerned
-> >> about it either.
-> >
-> > I know of at least one manufacturer who voids the warranty if the drive
-> > exceeds 55 Degrees.
-> 
-> Care to name names? (Inquiring minds want to know!)
-> 
-> > I have a couple of drives here that have the
-> > "Exceeded 55 degrees" mark permanently recorded in their SMART data now.
-> > Having said that, I've not had issues with them yet (they only have
-> > about 14,000 hours on them).
-> >
-> > I'd wager that extended running at elevated temperatures has the
-> > potential to affect the bearing lubricant, but it's just an hunch. I've
-> > never killed a drive from overtemp (and in a couple of cases I actually
-> > tried).
-> 
-> That would be my guess as well, although I'm sure that there are high
-> temp lubes available. Just depends on what the mfr uses.
-
-	I would not expect a hard drive to use any fluid lubricant at all in
-its bearings, although it is possible.  Nonetheless, 55C is *NOT* a high
-temperature for any industrial lubricant, dry or fluid.  Most petroleum
-based and organic lubricants can easily withstand temperatures well in
-excess of 140C indefinitely.  The motor oil in your car's engine is
-subjected to much higher temperatures than that daily, and if it were not
-for the blow-by of hot gases laden with graphite particles and un-burned
-gasoline from the engine cylinders, the oil would last for many years.  I
-would expect the drives to use delron or teflon bearings, or possibly
-aluminum on brass, without any fluid lubricant at all.  Any of these can
-easily withstand close to or more than 200C.
-
-	The main source of failure of the drive is going to be its thin film
-metallic oxide coating, whose life will be significantly reduced as the
-temperature increases.  The next most heat-sensitive part of the drive is
-going to be the electronics.  This is especially true since some of the
-electronic components (which are generating most of the heat in the drive
-other than the head actuator servo) may not be very well thermally coupled
-with the aluminum housing.  This means their temperature is going to be much
-higher than the temperature of the aluminum case of the drive.  Most Silicon
-and Metal Oxide semiconductors will start to fail more rapidly over 80C, but
-below 80C, most semiconductors have lifetimes in the dozens of years.
-
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
