@@ -1,49 +1,85 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: responsiveness during raid check (Was: Problems with RAID 6 across
-	15 disks)
-Date: Fri, 2 Apr 2010 07:55:08 +0200
-Message-ID: <20100402055508.GA15102@maude.comedia.it>
-References: <4BB49E4D.1090809@maxeaves.co.uk> <4BB4A461.5030704@redhat.com> <4BB4A89F.7030707@maxeaves.co.uk> <20100402074325.3ce34e8f@notabene.brown>
+From: Corrado Zoccolo <czoccolo@gmail.com>
+Subject: Re: Questions about RAID and I/O scheduler
+Date: Fri, 2 Apr 2010 10:02:16 +0200
+Message-ID: <x2h4e5e476b1004020102gaf301a69oc4e0ffda85c2ce39@mail.gmail.com>
+References: <m2v100eff551003311324tdc2e567atd2a48e35520e8601@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100402074325.3ce34e8f@notabene.brown>
+In-Reply-To: <m2v100eff551003311324tdc2e567atd2a48e35520e8601@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Yuehai Xu <yuehaixu@gmail.com>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, yhxu@wayne.edu, neilb@suse.de, jens.axboe@oracle.com
 List-Id: linux-raid.ids
 
-On Fri, Apr 02, 2010 at 07:43:25AM +1100, Neil Brown wrote:
->On Thu, 01 Apr 2010 15:07:27 +0100
->Max Eaves <max@maxeaves.co.uk> wrote:
+On Wed, Mar 31, 2010 at 10:24 PM, Yuehai Xu <yuehaixu@gmail.com> wrote:
+> Hi,
 >
->> Doug,
->> 
->> Thank you very much for that; a great relief off my shoulders.
->> 
->> You are right - there is a config file located in 
->> /etc/sysconfig/raid-check.  I've changed ENABLED to no.
->
->However there is real value in doing that check, at least occasionally.  It
->catches latent read errors.
->
->You might want to run it only every couple of months, and you might want to
->wind down one of both of the /proc/sys/dev/raid/speed_limit_* numbers so
->there is minimal impact on your system.
->
-sorry if i am hijacking, but i got a report from one user that the
-scheduled scrubbing is severely impacting responsiveness, lowering the
-speed_limits seems to help a bit, but he reports it is still sluggish, 
-i always believed the check should use idle time, and not impact
-performance that much. could it be scheduler related?
+> I noticed that some one said NOOP is usually the default I/O scheduler
+> for hardware RAID. Why not CFQ? Suppose there are just several
+> sequential read processes, as I know CFQ will keep all the disk heads
+> of hard raid to serve a process for a while(a time slice), in that
+> case, CFQ should be the best of all I/O schedulers. Am I right?
+> Generally, hard raid should have its own I/O scheduler in their
+> firmware, in that case, the I/O scheduler of OS should do nothing
+> except dispatch the requests as soon as possible, it is the hard raid
+> itself to decide how to schedule these requests. From this point of
+> view, NOOP should be the default one. I am really confused here.
+Even single ncq disks have an I/O scheduler nowadays.
+To clear the confusion, we should make a distinction between
+work-conserving and non-work-conserving I/O schedulers.
+    * A work-conserving scheduler (e.g. deadline, noop) is idle only
+when there is no request pending
+    * A non-work-conserving scheduler (e.g. CFQ, AS) may be idle at
+any time, in an effort to improve request pattern locality or to
+provide fairness.
+A non-work-conserving scheduler in the host computer will generally
+perform bad if the RAID also has a non-work-conserving scheduler,
+because the decision to idle taken by the two schedulers could
+conflict, causing disk utilization to drop needlessly. In that case,
+NOOP or even better, deadline, could perform much better.
 
-regards,
-L.
+If the raid controller has a work-conserving I/O scheduler, instead
+(single NCQ disks and cheap RAID cards typically have this kind of
+schedulers), CFQ can effectively control the access pattern (by
+queuing only the requests pertinent to the pattern and delaying the
+others), and will take advantage when possible of the better
+understanding of disk geometry by the lower level scheduler for some
+kind of patterns (the ones for which we can submit multiple requests
+in parallel, namely random access patterns).
+In this case, we suggest to try CFQ and report if you see regressions
+w.r.t. NOOP or deadline on some workloads, so we can tune it better.
+>
+> The next question is about the maximal number of disks in disk array,
+> the fault tolerance should be one limitation because the more the
+> number of disks, the higher chance of failure. However, may throughput
+> also be one limitation? Do you know anyone use disk array which
+> contains large number of disks to handle small requests? Such as 256
+> disks to handle 4K requests?
+You can use multiple disks to handle many parallel random requests.
+You should check, though, the queue depth of your raid card, that
+limits the actual number of requests issued in parallel.
+If it is lower than the number of disks (e.g. it is 31 on SATA), then
+the additional disks are wasted for random access patterns.
+
+Thanks,
+Corrado
+>
+> Thanks!
+>
+> Yuehai
+>
+
+
 
 -- 
-Luca Berra -- bluca@comedia.it
-         Communication Media & Services S.r.l.
-  /"\
-  \ /     ASCII RIBBON CAMPAIGN
-   X        AGAINST HTML MAIL
-  / \
+__________________________________________________________________________
+
+dott. Corrado Zoccolo                          mailto:czoccolo@gmail.com
+PhD - Department of Computer Science - University of Pisa, Italy
+--------------------------------------------------------------------------
+The self-confidence of a warrior is not the self-confidence of the average
+man. The average man seeks certainty in the eyes of the onlooker and calls
+that self-confidence. The warrior seeks impeccability in his own eyes and
+calls that humbleness.
+                               Tales of Power - C. Castaneda
