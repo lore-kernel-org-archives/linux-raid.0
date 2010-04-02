@@ -1,92 +1,36 @@
-From: Keld Simonsen <keld@keldix.com>
-Subject: Re: Linux Raid performance
-Date: Fri, 2 Apr 2010 13:18:17 +0200
-Message-ID: <20100402111817.GB16294@rap.rap.dk>
-References: <r2v7efa8a7d1003311242vfa92024ar93ad2123a7b49806@mail.gmail.com>
- <20100331201539.GA19395@rap.rap.dk>
- <g2s7efa8a7d1004012007ibe8b42b6k28a6d2a531fb6103@mail.gmail.com>
- <20100402110506.GA16294@rap.rap.dk>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Check/repair RAID-5 with hints?
+Date: Fri, 02 Apr 2010 12:49:05 +0100
+Message-ID: <4BB5D9B1.8070000@anonymous.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100402110506.GA16294@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Learner Study <learner.study@gmail.com>
-Cc: linux-raid@vger.kernel.org, keld@dkuug.dk
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi!
+I have just replaced one of the drives in my RAID-5 array which was 
+showing offline uncorrectable and current pending sectors. I took the 
+system down into single-user mode, failed the disc out of the array, 
+dd_rescue'd the disc to a fresh one, and added the new disc back into 
+the array. During the dd_rescue, 68k of 1TB failed, about 1MB from the 
+end of the disc. My array has a write-intent bitmap so the resync was 
+very quick. So now I have an active, theoretically synchronised RAID-5, 
+and I know some 68k on one of the discs is likely rubbish. I would like 
+to run some kind of scrub/check/repair on the relevant area, including a 
+hint that it is one particular disc that is wrong. Is this possible? I 
+have CentOS 5.4, kernel 2.6.18-164.15.1, mdadm 2.6.9, 0.90 metadata.
 
-Furthermore, I am not sure how much multiple CPU helps you.
-It seems like each array are handled by a separate process.
-This process possibly has internal data for management of the array, and it may 
-be bound to run on a single processor, with no multithreading. 
+I wish we had the hot-replace feature that was discussed on this list a 
+wee while ago...
 
-Neil, could you explain if and how Linux MD takes advantage of
-multiple processors available, for a single array?
+I'm wondering if my best course of action is to fail the fresh disc out 
+of the array again, dd the data off the offending area (it will be 
+re-built from the good discs), write it again (so the write-intent 
+bitmap is updated), and re-add the fresh disc to get that area re-synced 
+onto the fresh disc.
 
-Best regards
-keld
+Cheers,
 
-
-On Fri, Apr 02, 2010 at 01:05:06PM +0200, Keld Simonsen wrote:
-> On Thu, Apr 01, 2010 at 08:07:25PM -0700, Learner Study wrote:
-> > Hi Keld:
-> > 
-> > Do we have raid5/6 numbers for linux on any multi-core CPU? Most of
-> > the benchmarks I have seen on wiki show raid5 perf to be ~150MB/s with
-> > single core CPUs. How does that scale with multiple cores? Something
-> > like intel's jasper forest???
-> 
-> I have not checked if the benchmarks were on multi core machines. 
-> It should not matter much if there were more than one CPU, but
-> of cause it helps a little. bonnie++ test reports cpu usage, and this
-> is not insignificant, say in the 20 -60 % range for some tests,
-> but nowhere near a bottleneck. There was one with a raid5 performance
-> seq read of about 500 MB/s with 36 % cpu utilization, so it is
-> definitely possible to come beyound 150 MB/s. The speed is largely
-> dependent on number of disk drives you employ.
-> 
-> 
-> > If available, can u pls point me to numbers with multi-core CPU?
-> 
-> I dont have such benchmarks AFAIK. But new benchmarks are always welcome,
-> so please feel free to submit your findings.
-> 
-> Best regards
-> keld
-> 
-> > Thanks!
-> > 
-> > On Wed, Mar 31, 2010 at 1:15 PM, Keld Simonsen <keld@keldix.com> wrote:
-> > > On Wed, Mar 31, 2010 at 12:42:57PM -0700, Learner Study wrote:
-> > >> Hi Linux Raid Experts:
-> > >>
-> > >> I was looking at following wiki on raid perf on linux:
-> > >>
-> > >> https://raid.wiki.kernel.org/index.php/Performance
-> > >>
-> > >> and notice that the performance numbers are with 2.6.12 kernel.
-> > >>
-> > >> Do we perf numbers for:
-> > >> - latest kernel (something like 2.6.27 / 2.6.31)
-> > >> - raid 5 and 6
-> > >>
-> > >> Can someone please point me to appropriate link?
-> > >
-> > > The link mentioned above has a number of other performance reports, for other levels of the kernel.
-> > > Anyway you should be able to get comparable results for newer kernels, the kernel has not become
-> > > slower since 2.6.12 on RAID.
-> > >
-> > > best regards
-> > > Keld
-> > >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+John.
