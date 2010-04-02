@@ -1,71 +1,91 @@
 From: Keld Simonsen <keld@keldix.com>
 Subject: Re: Linux Raid performance
-Date: Fri, 2 Apr 2010 13:05:06 +0200
-Message-ID: <20100402110506.GA16294@rap.rap.dk>
+Date: Fri, 2 Apr 2010 13:18:17 +0200
+Message-ID: <20100402111817.GB16294@rap.rap.dk>
 References: <r2v7efa8a7d1003311242vfa92024ar93ad2123a7b49806@mail.gmail.com>
  <20100331201539.GA19395@rap.rap.dk>
  <g2s7efa8a7d1004012007ibe8b42b6k28a6d2a531fb6103@mail.gmail.com>
+ <20100402110506.GA16294@rap.rap.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <g2s7efa8a7d1004012007ibe8b42b6k28a6d2a531fb6103@mail.gmail.com>
+In-Reply-To: <20100402110506.GA16294@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
 To: Learner Study <learner.study@gmail.com>
 Cc: linux-raid@vger.kernel.org, keld@dkuug.dk
 List-Id: linux-raid.ids
 
-On Thu, Apr 01, 2010 at 08:07:25PM -0700, Learner Study wrote:
-> Hi Keld:
-> 
-> Do we have raid5/6 numbers for linux on any multi-core CPU? Most of
-> the benchmarks I have seen on wiki show raid5 perf to be ~150MB/s with
-> single core CPUs. How does that scale with multiple cores? Something
-> like intel's jasper forest???
+Hi!
 
-I have not checked if the benchmarks were on multi core machines. 
-It should not matter much if there were more than one CPU, but
-of cause it helps a little. bonnie++ test reports cpu usage, and this
-is not insignificant, say in the 20 -60 % range for some tests,
-but nowhere near a bottleneck. There was one with a raid5 performance
-seq read of about 500 MB/s with 36 % cpu utilization, so it is
-definitely possible to come beyound 150 MB/s. The speed is largely
-dependent on number of disk drives you employ.
+Furthermore, I am not sure how much multiple CPU helps you.
+It seems like each array are handled by a separate process.
+This process possibly has internal data for management of the array, and it may 
+be bound to run on a single processor, with no multithreading. 
 
-
-> If available, can u pls point me to numbers with multi-core CPU?
-
-I dont have such benchmarks AFAIK. But new benchmarks are always welcome,
-so please feel free to submit your findings.
+Neil, could you explain if and how Linux MD takes advantage of
+multiple processors available, for a single array?
 
 Best regards
 keld
 
-> Thanks!
+
+On Fri, Apr 02, 2010 at 01:05:06PM +0200, Keld Simonsen wrote:
+> On Thu, Apr 01, 2010 at 08:07:25PM -0700, Learner Study wrote:
+> > Hi Keld:
+> > 
+> > Do we have raid5/6 numbers for linux on any multi-core CPU? Most of
+> > the benchmarks I have seen on wiki show raid5 perf to be ~150MB/s with
+> > single core CPUs. How does that scale with multiple cores? Something
+> > like intel's jasper forest???
 > 
-> On Wed, Mar 31, 2010 at 1:15 PM, Keld Simonsen <keld@keldix.com> wrote:
-> > On Wed, Mar 31, 2010 at 12:42:57PM -0700, Learner Study wrote:
-> >> Hi Linux Raid Experts:
-> >>
-> >> I was looking at following wiki on raid perf on linux:
-> >>
-> >> https://raid.wiki.kernel.org/index.php/Performance
-> >>
-> >> and notice that the performance numbers are with 2.6.12 kernel.
-> >>
-> >> Do we perf numbers for:
-> >> - latest kernel (something like 2.6.27 / 2.6.31)
-> >> - raid 5 and 6
-> >>
-> >> Can someone please point me to appropriate link?
-> >
-> > The link mentioned above has a number of other performance reports, for other levels of the kernel.
-> > Anyway you should be able to get comparable results for newer kernels, the kernel has not become
-> > slower since 2.6.12 on RAID.
-> >
-> > best regards
-> > Keld
-> >
+> I have not checked if the benchmarks were on multi core machines. 
+> It should not matter much if there were more than one CPU, but
+> of cause it helps a little. bonnie++ test reports cpu usage, and this
+> is not insignificant, say in the 20 -60 % range for some tests,
+> but nowhere near a bottleneck. There was one with a raid5 performance
+> seq read of about 500 MB/s with 36 % cpu utilization, so it is
+> definitely possible to come beyound 150 MB/s. The speed is largely
+> dependent on number of disk drives you employ.
+> 
+> 
+> > If available, can u pls point me to numbers with multi-core CPU?
+> 
+> I dont have such benchmarks AFAIK. But new benchmarks are always welcome,
+> so please feel free to submit your findings.
+> 
+> Best regards
+> keld
+> 
+> > Thanks!
+> > 
+> > On Wed, Mar 31, 2010 at 1:15 PM, Keld Simonsen <keld@keldix.com> wrote:
+> > > On Wed, Mar 31, 2010 at 12:42:57PM -0700, Learner Study wrote:
+> > >> Hi Linux Raid Experts:
+> > >>
+> > >> I was looking at following wiki on raid perf on linux:
+> > >>
+> > >> https://raid.wiki.kernel.org/index.php/Performance
+> > >>
+> > >> and notice that the performance numbers are with 2.6.12 kernel.
+> > >>
+> > >> Do we perf numbers for:
+> > >> - latest kernel (something like 2.6.27 / 2.6.31)
+> > >> - raid 5 and 6
+> > >>
+> > >> Can someone please point me to appropriate link?
+> > >
+> > > The link mentioned above has a number of other performance reports, for other levels of the kernel.
+> > > Anyway you should be able to get comparable results for newer kernels, the kernel has not become
+> > > slower since 2.6.12 on RAID.
+> > >
+> > > best regards
+> > > Keld
+> > >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
