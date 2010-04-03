@@ -1,58 +1,74 @@
-From: Learner Study <learner.study@gmail.com>
-Subject: Re: Linux Raid performance
-Date: Fri, 2 Apr 2010 20:06:14 -0700
-Message-ID: <p2n7efa8a7d1004022006v764c33b6p5a7760885c95b6db@mail.gmail.com>
-References: <r2v7efa8a7d1003311242vfa92024ar93ad2123a7b49806@mail.gmail.com>
-	<20100331201539.GA19395@rap.rap.dk> <g2s7efa8a7d1004012007ibe8b42b6k28a6d2a531fb6103@mail.gmail.com>
-	<20100402110506.GA16294@rap.rap.dk> <x2q7efa8a7d1004021055oe2e832ccl8877e9171b8f3442@mail.gmail.com>
-	<l2j5bdc1c8b1004021739z969b99v6011fcc6fddd470a@mail.gmail.com>
-	<4BB69670.3040303@sauce.co.nz> <y2i5bdc1c8b1004021832x283f72f7uea429f24d79b6fa2@mail.gmail.com>
-	<4BB69BE1.5090107@sauce.co.nz>
+From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
+Subject: Re: OT: sas controllers/expanders and "desktop" drives?
+Date: Fri, 2 Apr 2010 23:37:14 -0600
+Message-ID: <201004022337.14896.tfjellstrom@shaw.ca>
+References: <20100317143602.GA18298@septictank.raw-sewage.fake>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BB69BE1.5090107@sauce.co.nz>
+In-Reply-To: <20100317143602.GA18298@septictank.raw-sewage.fake>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
-Cc: Mark Knecht <markknecht@gmail.com>, linux-raid@vger.kernel.org, keld@dkuug.dk, learner.study@gmail.com
+To: Matt Garman <matthew.garman@gmail.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Thanks to everyone for sharing their experiences...this was helpful.
+On March 17, 2010, Matt Garman wrote:
+> Hello,
+> 
+> For building a Linux md system with many disks, I've been looking at
+> the LSI SAS 3081E-R controller card[1] with the SuperMicro
+> 846TQ-R900B chassis[2].  The SAS3018E card looks like it has a
+> mature open-source Linux driver.  The chassis has a SAS expander;
+> I'm not sure which one (but I have a question in to SuperMicro).
+> 
+> Anyway, my question is this: has anyone used this setup, or one
+> like it (sas controller + sas expander) with "desktop" class drives?
+> The web research I've done suggests that most SAS controllers and
+> expanders are targeted at the enterprise market, and therefore,
+> aren't guaranteed to work with the (significantly cheaper) desktop
+> drives.
+> 
+> For example, from the FAQ for that SuperMicro chassis[3]:
+> 
+>     Question: We want to use the new Seagate 1.5TB ST31500341AS
+>     drives in combination with a storage solution based on your
+>     846TQ chassis, is this compatible?
+> 
+>     Answer: This ST31500341AS hard drive is designed to be a Desktop
+>     type hard drive, not an Enterprise hard drive which is needed in
+>     this setup.  We don't recommend this combination, so please use
+>     the Seagate 1TB ST31000340NS drive instead. This drive is an
+>     Enterprise drive and validated for our 846TQ chassis.
+> 
+> In short, we want to build a server with 24 drives.  The desktop
+> drives are significantly cheaper than the enterprise drives.  But
+> getting 24 ports is cheapest with these SAS controllers + expanders.
 
-I don't have luxury to have 16 SAS/SATA drives...I guess it would be
-great if someone can share results with even higher number of
-disks...I would like to know what is the max performance that can be
-reached...I understand the theoretical is more like a couple of
-Terabytes...but won't we get into some sort of linux file system
-related or other kernel bottlenecks as we increase the # of disks?
+If it helps at all, I'm using an 8 port SAS card to run my 5 disk md RAID 5 
+array with plain old 1TB Seagate Baracuda's. Works fine. Its been running 
+for a good 6 months now. I can't say how well it'll work in the future, but 
+it works well enough for now.
 
-On Fri, Apr 2, 2010 at 6:37 PM, Richard Scobie <richard@sauce.co.nz> wr=
-ote:
-> Mark Knecht wrote:
->
->> Richard,
->> =A0 =A0Good point. I was limited in my thinking to the sorts of arra=
-ys I
->> might use at home being no wider than 3, 4 or 5 disks. However for o=
-ur
->> N-wide array as N approaches infinity so do the cycles required to r=
-un
->> it. I don think that applies to the OP but I don't know that.
->>
->
-> I said I thought the busiest CPU was the parity generation one, but i=
-n
-> hindsight this cannot be correct, as it was almost maxed out at half =
-the
-> write speed the array achieved when it was empty.
->
-> Regards,
->
-> Richard
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Thanks,
+> Matt
+> 
+> 
+> [1]
+> http://www.lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas
+> /lsisas3081er/index.html
+> 
+> [2] http://www.supermicro.com/products/chassis/4U/846/SC846TQ-R900.cfm
+> 
+> [3] http://www.supermicro.com/support/faqs/faq.cfm?faq=8230
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+-- 
+Thomas Fjellstrom
+tfjellstrom@shaw.ca
