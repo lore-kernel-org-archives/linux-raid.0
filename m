@@ -1,36 +1,47 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: Check/repair RAID-5 with hints?
-Date: Sat, 03 Apr 2010 02:06:38 +0100
-Message-ID: <4BB6949E.2020205@anonymous.org.uk>
-References: <4BB5D9B1.8070000@anonymous.org.uk>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: Linux Raid performance
+Date: Sat, 03 Apr 2010 14:14:24 +1300
+Message-ID: <4BB69670.3040303@sauce.co.nz>
+References: <r2v7efa8a7d1003311242vfa92024ar93ad2123a7b49806@mail.gmail.com>	 <20100331201539.GA19395@rap.rap.dk>	 <g2s7efa8a7d1004012007ibe8b42b6k28a6d2a531fb6103@mail.gmail.com>	 <20100402110506.GA16294@rap.rap.dk>	 <x2q7efa8a7d1004021055oe2e832ccl8877e9171b8f3442@mail.gmail.com> <l2j5bdc1c8b1004021739z969b99v6011fcc6fddd470a@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BB5D9B1.8070000@anonymous.org.uk>
+In-Reply-To: <l2j5bdc1c8b1004021739z969b99v6011fcc6fddd470a@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID <linux-raid@vger.kernel.org>
+To: Mark Knecht <markknecht@gmail.com>
+Cc: Learner Study <learner.study@gmail.com>, linux-raid@vger.kernel.org, keld@dkuug.dk
 List-Id: linux-raid.ids
 
-On 02/04/2010 12:49, John Robinson wrote:
-> I have just replaced one of the drives in my RAID-5 array which was 
-> showing offline uncorrectable and current pending sectors. I took the 
-> system down into single-user mode, failed the disc out of the array, 
-> dd_rescue'd the disc to a fresh one, and added the new disc back into 
-> the array. During the dd_rescue, 68k of 1TB failed, about 1MB from the 
-> end of the disc. My array has a write-intent bitmap so the resync was 
-> very quick. So now I have an active, theoretically synchronised RAID-5, 
-> and I know some 68k on one of the discs is likely rubbish.
+Mark Knecht wrote:
 
-Turns out not to be a problem. I ran a 
-check>/sys/block/md1/md/sync_action and got no mismatches, which I guess 
-means there isn't a problem. This probably means it was an unused 
-portion of the disc so 00 ^ 00 == 00 or whatever.
+> Once all of that is in place then possibly more cores will help, but I
+> suspect even then it probably hard to use 4 billion CPU cycles/second
+> doing nothing but disk I/O. SATA controllers are all doing DMA so CPU
+> overhead is relatively *very* low.
 
-I'd still be interested in a solution to this in case something similar 
-comes up again.
+There is the RAID5/6 parity calculations to be considered on writes and 
+this appears to be single threaded. There is an experimental multicore 
+kernel option I believe, but recent discussion indicates there may be 
+some problems with it.
 
-Cheers,
+A very quick test on a box here on a Xeon E5440 (4 x 2.8GHz) and a SAS 
+attached 16 x 750GB SATA md RAID6. The array is 72% full and probably 
+quite fragmented and currently the system is idle.
 
-John.
+dd if=/dev/zero of=/mnt/storage/dump bs=1M count=20000
+20000+0 records in
+20000+0 records out
+20971520000 bytes (21 GB) copied, 87.2374 s, 240 MB/s
+
+Looking at the outputs of vmstat 5 and mpstat -P ALL 5 during this, one 
+core (probably doing parity generation) was around 7.56% idle and the 
+other 3 were around 88.5, 67.5 and 51.8% idle.
+
+The same test run when the system was commissioned and the array was 
+empty, acheived 565MB/s writes.
+
+Regards,
+
+Richard
 
