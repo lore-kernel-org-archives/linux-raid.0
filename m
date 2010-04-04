@@ -1,40 +1,67 @@
 From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: Linux Raid performance
-Date: Sun, 4 Apr 2010 11:46:48 -0700
-Message-ID: <k2t5bdc1c8b1004041146uec5162b8x5c95bfda2153ebd@mail.gmail.com>
-References: <r2v7efa8a7d1003311242vfa92024ar93ad2123a7b49806@mail.gmail.com>
-	 <g2s7efa8a7d1004012007ibe8b42b6k28a6d2a531fb6103@mail.gmail.com>
-	 <20100402110506.GA16294@rap.rap.dk>
-	 <x2q7efa8a7d1004021055oe2e832ccl8877e9171b8f3442@mail.gmail.com>
-	 <l2j5bdc1c8b1004021739z969b99v6011fcc6fddd470a@mail.gmail.com>
-	 <4BB69670.3040303@sauce.co.nz> <4BB7856C.30808@shiftmail.org>
-	 <4BB79D76.7090206@sauce.co.nz> <4BB8A979.3020502@shiftmail.org>
-	 <w2j7efa8a7d1004041126id2b84d47k7bd275606712d0e3@mail.gmail.com>
+Subject: metadata and / and grub-static
+Date: Sun, 4 Apr 2010 12:34:52 -0700
+Message-ID: <j2u5bdc1c8b1004041234j715c0a3fi6bd89c2695f286ea@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <w2j7efa8a7d1004041126id2b84d47k7bd275606712d0e3@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Learner Study <learner.study@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sun, Apr 4, 2010 at 11:26 AM, Learner Study <learner.study@gmail.com> wrote:
-> Happy Easter!!!
->
-> So, 550-600MB/s is the best we have seen with Linux raid using 16-24 SAS drives.
->
-> Not sure if its appropriate to ask on this list - has someone seen
-> better numbers with non-linux raid stack? Perhaps freebsd/lustre..
->
-> Thanks for your time!
->
+Hi,
+   I'm trying to do my first RAID install that puts / on RAID1 but I'm
+having some trouble. Distro is Gentoo. I'm fairly certain the problem
+is in my kernel because grub finds my RAID enabled kernel and starts
+booting, but when it gets to the point where it is going to enable md0
+and mount / (or I think that's where it is) then it fails with a very
+standard message:
 
-Are you just trolling or something? Why are you asking about non-linux
-RAID on a Linux software RAID list?
+VFS - Unable to mount root fs on unknown-block(9,0)
 
-I cannot believe the name Learner Study is real, is it? Possibly it
-would make sense to first study, and from that hopefully learn, and
-then come ask some questions with some depth to them?
+   I know the machine works because I already have a non-RAID install
+on sda. The new RAID install is on sdb & sdc and I'm booting to it
+from sda. However so far I cannot get past the point where it figures
+out what to do with /dev/md0 and moves on.
 
-- Mark
+   I just wanted to check that the messages below, which occurred when
+I first built the RAID, aren't a real killer. I am not storing /boot
+on this device but I do want to store /. Is there any problem with
+recent versions of grub doing this? I chose metadata=1.0 as mdadm
+seemed happier with that choice, but I've been unable to mount this
+RAID either.
+
+   Again, if this is a kernel issue then I'll work it out. I've built
+RAID0 and RAID1 support into the kernel, as well as other things, but
+maybe I've missed something else. I just wanted to be doubly sure that
+it's not a problem with grub as a boot loader.
+
+Thanks,
+Mark
+
+keeper ~ # mdadm --create /dev/md0 --level=1 --raid-devices=2
+/dev/sdb3 /dev/sdc3
+mdadm: Note: this array has metadata at the start and
+    may not be suitable as a boot device.  If you plan to
+    store '/' or '/boot' on this device please ensure that
+    your boot-loader understands md/v1.x metadata, or use
+    --metadata=1.0
+mdadm: Note: this array has metadata at the start and
+    may not be suitable as a boot device.  If you plan to
+    store '/' or '/boot' on this device please ensure that
+    your boot-loader understands md/v1.x metadata, or use
+    --metadata=1.0
+Continue creating array? n
+mdadm: create aborted.
+keeper ~ #  mdadm --create /dev/md0 --level=1 --raid-devices=2
+--metadata=1.0 /dev/sdb3 /dev/sdc3
+mdadm: array /dev/md0 started.
+keeper ~ # cat /proc/mdstat
+Personalities : [raid1]
+md0 : active raid1 sdc3[1] sdb3[0]
+      31463228 blocks super 1.0 [2/2] [UU]
+      [>....................]  resync =  3.9% (1241664/31463228)
+finish=5.2min speed=95512K/sec
+
+unused devices: <none>
+keeper ~ #
