@@ -1,73 +1,63 @@
 From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: metadata and / and grub-static
-Date: Sun, 4 Apr 2010 21:26:51 -0500
-Message-ID: <2D.29.28131.56A49BB4@cdptpa-omtalb.mail.rr.com>
-References: <u2u5bdc1c8b1004041902l9edc298dg6fb4774aaf8c22a6@mail.gmail.com>
+Subject: RE: RAID Class Drives`
+Date: Sun, 4 Apr 2010 21:50:01 -0500
+Message-ID: <70.CA.28114.2DF49BB4@cdptpa-omtalb.mail.rr.com>
+References: <4BB64DBD.6090007@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <u2u5bdc1c8b1004041902l9edc298dg6fb4774aaf8c22a6@mail.gmail.com>
+In-Reply-To: <4BB64DBD.6090007@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Mark Knecht' <markknecht@gmail.com>, 'Linux-RAID' <linux-raid@vger.kernel.org>
+To: 'Richard Scobie' <richard@sauce.co.nz>
+Cc: 'Eric Shubert' <ejs@shubes.net>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > keeper ~ # mdadm --create /dev/md0 --level=3D1 --raid-devices=3D2
-> > /dev/sdb3 /dev/sdc3
-> > mdadm: Note: this array has metadata at the start and
-> > =A0 =A0may not be suitable as a boot device. =A0If you plan to
-> > =A0 =A0store '/' or '/boot' on this device please ensure that
-> > =A0 =A0your boot-loader understands md/v1.x metadata, or use
-> > =A0 =A0--metadata=3D1.0
-> > mdadm: Note: this array has metadata at the start and
-> > =A0 =A0may not be suitable as a boot device. =A0If you plan to
-> > =A0 =A0store '/' or '/boot' on this device please ensure that
-> > =A0 =A0your boot-loader understands md/v1.x metadata, or use
-> > =A0 =A0--metadata=3D1.0
+> -----Original Message-----
+> From: Richard Scobie [mailto:richard@sauce.co.nz]
+> Sent: Friday, April 02, 2010 3:04 PM
+> To: Leslie Rhorer
+> Cc: 'Eric Shubert'; linux-raid@vger.kernel.org
+> Subject: Re: RAID Class Drives`
+> 
+> Leslie Rhorer wrote:
+> 
+> > 	I would not expect a hard drive to use any fluid lubricant at all in
+> > its bearings, although it is possible.  Nonetheless, 55C is *NOT* a high
+> 
+> Google "disk drive fluid bearing". Many current drives use fluid rather
+> than the previously used precision ball bearings.
+> 
+> > temperature for any industrial lubricant, dry or fluid.  Most petroleum
+> > based and organic lubricants can easily withstand temperatures well in
+> > excess of 140C indefinitely.  The motor oil in your car's engine is
+> > subjected to much higher temperatures than that daily, and if it were
+> not
+> > for the blow-by of hot gases laden with graphite particles and un-burned
+> > gasoline from the engine cylinders, the oil would last for many years.
+> I
+> 
+> Off topic , but a significant cause of motor oil degradation is
+> increasing viscocity due to the lighter fractions evaporating over time
+> at high temerature.
 
-	As the utility warns you, anything other than 0.9 or 1.0 may have
-problems loading as / or /boot, because 1.1 and 1.2 both put the metada=
-ta at
-the start of the device, in your case a partition.
+	This is true.  The cylinder walls and head surfaces get *VERY* hot.
 
-> > Continue creating array? n
-> > mdadm: create aborted.
-> > keeper ~ # =A0mdadm --create /dev/md0 --level=3D1 --raid-devices=3D=
-2
-> > --metadata=3D1.0 /dev/sdb3 /dev/sdc3
-> > mdadm: array /dev/md0 started.
-> > keeper ~ # cat /proc/mdstat
-> > Personalities : [raid1]
-> > md0 : active raid1 sdc3[1] sdb3[0]
-> > =A0 =A0 =A031463228 blocks super 1.0 [2/2] [UU]
-> > =A0 =A0 =A0[>....................] =A0resync =3D =A03.9% (1241664/3=
-1463228)
-> > finish=3D5.2min speed=3D95512K/sec
-> >
-> > unused devices: <none>
-> > keeper ~ #
-> >
->=20
-> Answering self - putting / on RAID1 only seems to work using
-> --metadata=3D0.90. Tried it with higher versions and had no luck.
+> > would expect the drives to use delron or teflon bearings, or possibly
+> > aluminum on brass, without any fluid lubricant at all.  Any of these can
+> > easily withstand close to or more than 200C.
+> 
+> Prior to the relatively recent practice of disk drive heads being parked
+>   off the surface of the platter, it was not uncommon for drives that
+> had been run for extended periods, at high teperatures, to not restart
+> after having been shut down.
+> 
+> In many cases this was caused by stiction, brought on due to
+> vaporisation of bearing lubricant depositing back onto the platter
+> surface.
 
-	One may most certainly run a RAID1 / or /boot (or both) using other
-than 0.9 metadata.  I'm running two servers with / on a 1.02 superblock=
- and
-/boot on a 1.0 superblock, booting with grub 0.97.
+	I was aware of the "stiction" problem.  I was not aware it was due
+to bearing lubricant.  My impression was it was due to the platter
+lubricant.
 
-	That said, if the restrictions of a 0.9 superblock are not an issue
-for your system, then there is nothing particularly wrong with employin=
-g a
-0.9 superblock.
-
-> Anyway, the system is running well now.
-
-	Unless the restrictions of a 0.9 superblock will cause problems for
-you in the future, that's the important thing.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
