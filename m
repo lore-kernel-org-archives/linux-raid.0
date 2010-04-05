@@ -1,49 +1,55 @@
-From: Drew <drew.kay@gmail.com>
-Subject: Re: Linux Raid performance
-Date: Mon, 5 Apr 2010 06:49:22 -0700
-Message-ID: <u2jc268e4661004050649t90fa506cm9bd377218ffebc20@mail.gmail.com>
-References: <r2v7efa8a7d1003311242vfa92024ar93ad2123a7b49806@mail.gmail.com>
-	<x2q7efa8a7d1004021055oe2e832ccl8877e9171b8f3442@mail.gmail.com>
-	<l2j5bdc1c8b1004021739z969b99v6011fcc6fddd470a@mail.gmail.com>
-	<4BB69670.3040303@sauce.co.nz> <4BB7856C.30808@shiftmail.org>
-	<4BB79D76.7090206@sauce.co.nz> <4BB8A979.3020502@shiftmail.org>
-	<w2j7efa8a7d1004041126id2b84d47k7bd275606712d0e3@mail.gmail.com>
-	<k2t5bdc1c8b1004041146uec5162b8x5c95bfda2153ebd@mail.gmail.com>
-	<4F42B9A76007451DA63A90BA27FEFBDC@m5>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: Re: metadata and / and grub-static
+Date: Mon, 5 Apr 2010 07:15:29 -0700
+Message-ID: <r2m5bdc1c8b1004050715q6db273f9o8d1c291a43ebd308@mail.gmail.com>
+References: <u2u5bdc1c8b1004041902l9edc298dg6fb4774aaf8c22a6@mail.gmail.com>
+	 <2D.29.28131.56A49BB4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4F42B9A76007451DA63A90BA27FEFBDC@m5>
+In-Reply-To: <2D.29.28131.56A49BB4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Leslie Rhorer <lrhorer@satx.rr.com>
+Cc: Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> This seemed like a fair question to me. =C2=A0I just wonder why Winbl=
-ows was left
-> out. =C2=A0After all, if any OS, including Winblows can outperform Li=
-nux, we
-> should know about it.
+On Sun, Apr 4, 2010 at 7:26 PM, Leslie Rhorer <lrhorer@satx.rr.com> wro=
+te:
+<SNIP>
+>>
+>> Answering self - putting / on RAID1 only seems to work using
+>> --metadata=3D0.90. Tried it with higher versions and had no luck.
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0One may most certainly run a RAID1 / or /b=
+oot (or both) using other
+> than 0.9 metadata. =C2=A0I'm running two servers with / on a 1.02 sup=
+erblock and
+> /boot on a 1.0 superblock, booting with grub 0.97.
 
-Because M$ Windows implementation of software raid sucks?
+Are you using an initrd? I could not make it work above 0.90 without
+going that way which I didn't want to do.
 
-As part of my job I support windows servers and almost every 3rd party
-manual I've ever read says something along the lines of "If your data
-is mission critical, do not depend on windows built-in software raid.
-Get a real hardware raid card." Some then go on to explain all the
-pitfalls if a user is still inclined to use it, and some of the issues
-are scary.
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0That said, if the restrictions of a 0.9 su=
+perblock are not an issue
+> for your system, then there is nothing particularly wrong with employ=
+ing a
+> 0.9 superblock.
+>
+>> Anyway, the system is running well now.
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Unless the restrictions of a 0.9 superbloc=
+k will cause problems for
+> you in the future, that's the important thing.
+>
 
-Contrast that to the reports I see on here of people using 6+, 10+,
-12+ member raid arrays on mdadm (software) raid and having no issues
-other then perhaps some performance tweaking.
+I don't see that they will. I'm just building a home desktop/server
+machine using 3-drive RAID1. I suspect you are doing more
+sophisticated things than I.
 
-
---=20
-Drew
-
-"Nothing in life is to be feared. It is only to be understood."
---Marie Curie
+Cheers,
+Mark
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
