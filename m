@@ -1,62 +1,43 @@
-From: Keld Simonsen <keld@keldix.com>
-Subject: Re: slow - non-reponding linux raid wiki
-Date: Mon, 5 Apr 2010 21:09:57 +0200
-Message-ID: <20100405190957.GA8447@rap.rap.dk>
-References: <20100405181526.GA8644@rap.rap.dk>
- <j2p3013ad3b1004051120x9f14fa9wa3a044a89484eb0f@mail.gmail.com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: Linux Raid performance
+Date: Tue, 06 Apr 2010 07:49:45 +1200
+Message-ID: <4BBA3ED9.6040800@sauce.co.nz>
+References: <r2v7efa8a7d1003311242vfa92024ar93ad2123a7b49806@mail.gmail.com> <20100331201539.GA19395@rap.rap.dk> <g2s7efa8a7d1004012007ibe8b42b6k28a6d2a531fb6103@mail.gmail.com> <20100402110506.GA16294@rap.rap.dk> <x2q7efa8a7d1004021055oe2e832ccl8877e9171b8f3442@mail.gmail.com> <l2j5bdc1c8b1004021739z969b99v6011fcc6fddd470a@mail.gmail.com> <4BB69670.3040303@sauce.co.nz> <4BB7856C.30808@shiftmail.org> <4BB79D76.7090206@sauce.co.nz> <4BB8A979.3020502@shiftmail.org> <4BB91FBC.10504@sauce.co.nz> <4BB9C76E.7080607@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <j2p3013ad3b1004051120x9f14fa9wa3a044a89484eb0f@mail.gmail.com>
+In-Reply-To: <4BB9C76E.7080607@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Collin Hockey <hockeyc@umich.edu>
-Cc: linux-raid@vger.kernel.org
+To: MRK <mrk@shiftmail.org>
+Cc: Mark Knecht <markknecht@gmail.com>, Learner Study <learner.study@gmail.com>, linux-raid@vger.kernel.org, keld@dkuug.dk
 List-Id: linux-raid.ids
 
-On Mon, Apr 05, 2010 at 02:20:21PM -0400, Collin Hockey wrote:
-> It was working earlier today, I'm sure it'll be back up soon.
+MRK wrote:
 
-It seems like there is a problem with the mysql data base.
-Coud somebody advise the web administrators / sysadmins?
+> However, if really the total number of IOPS is the bottleneck in SATA
+> with the 3.0gbit/sec LSI cards, why they don't slow down a single SSD
+> doing 4k random I/O?
 
-Best regaeds
-keld
+We don't know, as we have no information for one of these SSDs attached 
+to an LSI SAS controller.
+
+I'm not sure this is an apples to apples comparison. The SSD is one 
+device probably connected  to a motherboard SATA controller channel.
+
+The RAID array is 16 devices attached to a port expander in turn 
+attached to a SAS controller. At a most simplistic level, surely the SAS 
+controller has overhead attached to which drive is being addressed.
 
 
-> On Mon, Apr 5, 2010 at 2:15 PM, Keld Simonsen <keld@keldix.com> wrote=
-:
-> > Hi
-> >
-> > our wiki at http://raid.wiki.kernel.org/ is slow or non-responsive.
-> > What is the problem?
-> >
-> > I also note that google nbr 1 for "linux raid" is
-> > http://www.linuxfoundation.org/collaborate/workgroups/linux-raid
-> > which in essence is a link to the new wiki.
-> > can people change their links to the new wiki?
-> >
-> > and should the linuxfoundation wiki not directly relink to the new =
-wiki?
-> > or could we do something else to improve the situation?
-> >
-> > best regards
-> > Keld
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-rai=
-d" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
-l
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I think if you use dd to read from the 16 underlying devices
+> simultaneously, independently, and not using MD, (output to /dev/null)
+> you should obtain the full disk speed of 1.4 GB/sec or so (aggregated).
+> I think I did this test in the past and I noticed this. Can you try? I
+> don't have our big disk array in my hands any more :-(
+
+I'll bear it in mind next time I am in a position to try it.
+
+Regards,
+
+Richard
