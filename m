@@ -1,21 +1,47 @@
-From: Brett King <king.br@gmail.com>
-Subject: Re: Update: mdadm 3.1.1 / 2.6.32 - trouble reducing active devices in
-	13TB RAID6
-Date: Tue, 6 Apr 2010 10:31:11 +1000
-Message-ID: <t2y8cf253381004051731mde442432g8be9d82657d2a290@mail.gmail.com>
-References: <n2j8cf253381004040015ga48536b2s204f3b622367b06a@mail.gmail.com>
-	 <m2i8cf253381004051610s9079ef8du63711ba580f0fed@mail.gmail.com>
-	 <j2p4877c76c1004051707z7c42502fr629d3e3156d7ea44@mail.gmail.com>
+From: Tim Burgess <ozburgess@gmail.com>
+Subject: misleading error message from raid1d
+Date: Tue, 6 Apr 2010 15:02:16 +0800
+Message-ID: <z2we17acde31004060002y71947818o9913a1a009d4e53@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <j2p4877c76c1004051707z7c42502fr629d3e3156d7ea44@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've actually since lost the dmesg output across a reboot .. trying to
-restart the array now with the same backup-file gives the below in
-dmesg:
+Hi All,
 
-[ 2009.365158] md: md0 stopped.
+We recently sent some a snippet of error logs to a vendor when
+returning a faulty drive, and received 2 replacement drives back
+(how's that for service!?) due to them misinterpreting the following
+message as an error on sdc (sdb was the drive that actually failed).
+
+Mar 13 01:02:26 mds001 kernel: raid1: sdc2: redirecting sector 3355736
+to another mirror
+
+This seems to originate from the following snippet of code:
+
+	if ((disk=read_balance(conf, r1_bio)) == -1) {
+        **************
+        } else {
+				const bool do_sync = bio_rw_flagged(r1_bio->master_bio, BIO_RW_SYNCIO);
+				r1_bio->bios[r1_bio->read_disk] =
+					mddev->ro ? IO_BLOCKED : NULL;
+				r1_bio->read_disk = disk;
+				bio_put(bio);
+				bio = bio_clone(r1_bio->master_bio, GFP_NOIO);
+				r1_bio->bios[r1_bio->read_disk] = bio;
+				rdev = conf->mirrors[disk].rdev;
+				if (printk_ratelimit())
+					printk(KERN_ERR "raid1: %s: redirecting sector %llu to"
+					       " another mirror\n",
+					       bdevname(rdev->bdev,b),
+					       (unsigned long long)r1_bio->sector);
+
+
+Which as far as I can tell prints the name of the device on which the
+request is retried, rather than the failed device.  Is that what we
+want?
+
+Cheers,
+Tim
