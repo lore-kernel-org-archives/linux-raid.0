@@ -1,117 +1,95 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: q: RAID1 with very unbalanced disk performance
-Date: Tue, 6 Apr 2010 09:31:29 -0700
-Message-ID: <o2n5bdc1c8b1004060931y29a1171ci45dd28cc735fdfb6@mail.gmail.com>
-References: <4BBB5303.1090001@artefact.nl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Anshuman Aggarwal <anshuman@brillgene.com>
+Subject: linux raid recreate
+Date: Tue, 6 Apr 2010 23:37:02 +0530
+Message-ID: <B3E0E48F-88C0-4D6F-8E23-B1344BC1C82C@brillgene.com>
+References: <S1753093Ab0CYHZE/20100325072504Z+37@vger.kernel.org> <2E4545D6-8F4E-4779-9103-960C52983A72@brillgene.com> <4877c76c1003250437r346e18en8da0f6f804bef634@mail.gmail.com> <DFC0232A-8DCD-4815-AA08-DA7065F01221@brillgene.com> <4877c76c1003252038o655b2a29p9d994df27b5d2afd@mail.gmail.com> <6093BE49-EE3B-41B5-9519-C6D5D0496C64@brillgene.com> <4877c76c1003261204h2777547dn67a8e692864ff26a@mail.gmail.com> <D332CDBC-0D5D-4BF7-8876-7A4B1B3ED45E@brillgene.com> <45872BBE-0957-43E4-8D31-54B28F5F5936@brillgene.com> <20100329053227.GA21664@maude.comedia.it> <4877c76c1003282341s15f181b0m6a0327bc947dc456@mail.gmail.com>
+Mime-Version: 1.0 (Apple Message framework v1078)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BBB5303.1090001@artefact.nl>
+In-Reply-To: <4877c76c1003282341s15f181b0m6a0327bc947dc456@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: olaf@artefact.nl
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Apr 6, 2010 at 8:28 AM, Olaf Zevenboom <olaf@artefact.nl> wrote=
-:
-> Dear List,
->
-> We have a setup with two SATA2 1.5 TB harddisks in MD/LVM2 RAID1 setu=
-p on
-> Debian Lenny stock kernel.
-> As it is suffering from performance troubles I did take a closer look=
- and
-> noticed that /dev/sda is way more intensively used than /dev/sdb. I
-> monitored the drives with various tools including atop.
-> /dev/sda is always a bit busier than /dev/sdb. This behavior can also=
- be
-> seen on other systems with a similar setup (Etch and Lenny), but on t=
-his
-> particular system /dev/sda is about 10% more intensively used. Althou=
-gh I
-> think that is quite a lot and not as it should be I can live with tha=
-t. What
-> worries me more is that /dev/sda can peek upto 100% disk-utilization =
-causing
-> the system to be temporary unresponsive whilest /dev/sdb does not see=
-m to
-> peek over 20% or so.
-> Any pointers on what is happening here and/or how I can resolve this =
-issue
-> are quite welcome.
->
-> Thanking you in advance,
-> Olaf Zevenboom
->
-> Details:
->
-> Running Debian Lenny with stock kernel 2.6.26-2-amd64 #1 SMP
-> LVM2 on top of MD
->
-> 2 SATA2 1.5tb disks: lsscsi
-> [0:0:0:0] =C2=A0 =C2=A0disk =C2=A0 =C2=A0ATA =C2=A0 =C2=A0 =C2=A0WDC =
-WD15EARS-00Z 80.0 =C2=A0/dev/sda
-> [1:0:0:0] =C2=A0 =C2=A0disk =C2=A0 =C2=A0ATA =C2=A0 =C2=A0 =C2=A0ST31=
-500541AS =C2=A0 =C2=A0 CC32 =C2=A0/dev/sdb
->
-> cat /proc/mdstat
-> Personalities : [raid1]
-> md1 : active raid1 sda2[0] sdb2[1]
-> =C2=A0 =C2=A0 1464886912 blocks [2/2] [UU]
-> =C2=A0 =C2=A0md0 : active raid1 sda1[0] sdb1[1]
-> =C2=A0 =C2=A0 248896 blocks [2/2] [UU]
-> =C2=A0 =C2=A0unused devices: <none>
->
-> hdparm -tT /dev/sda
->
-> /dev/sda:
-> Timing cached reads: =C2=A0 2890 MB in =C2=A02.00 seconds =3D 1445.36=
- MB/sec
-> Timing buffered disk reads: =C2=A0300 MB in =C2=A03.01 seconds =3D =C2=
-=A099.67 MB/sec
->
-> hdparm -tT /dev/sdb
->
-> /dev/sdb:
-> Timing cached reads: =C2=A0 7482 MB in =C2=A02.00 seconds =3D 3743.83=
- MB/sec
-> Timing buffered disk reads: =C2=A0302 MB in =C2=A03.02 seconds =3D 10=
-0.00 MB/sec
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
+I've just had to recreate my raid5 device by using 
+mdadm --create --assume-clean -n4 -l5 -e1.2 -c64 
 
-I suspect it's not 'sda' as much as it is the WD15EARS itself that's ma=
-king sda.
+in order to recover my data (because --assemble would not work with force etc.). 
+The problem:
+ *  Data Offset in the new array is much larger. 
+ * Internal Bitmap is starting at a different # sectors from superblock.
+ * Array Size is smaller though the disks are the same. 
 
-I purchased 6 WD10EARS drives and they simply didn't work for RAID,
-but even in single drive situations I see stuff going on with them I
-don't understand. One clue is that smartctl tells me the
-LOAD_CYCLE_COUNT is increasing at a rate of 30/hour and I haven't
-found out why. At that rate the drive is out of spec in 18 months, not
-3 years, and I've seen this on two different machines. I saw problems
-in dmesg and /var/log/messages about reads and writes being blocked
-and once in awhile a kernel warning with trace back about a drive
-timing out.
+How can I get these to be the same as what they were in the original array???
 
-On the other hand I replaced the 1TB WD10EARS with a Raid Edition
-500GB WD drive - WD5002ABYS - and I see none of these problems. My
-RAID1 setup is working great. I have no error or warning messages
-anywhere that I can find. Granted, half the storage for $10 more per
-drive, but it WORKS!
 
-Just my observations so far.
+I have tried to make sure that nothing gets written to the md device except the metadata during create. 
+All of these are important because the fs on top of the LVM on top of the md would need all the data it can to fsck properly and I don't want it starting on the wrong offset. 
 
-- Mark
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I am including the output from mdadm --examine from before and after the create
+
+Originally...
+
+>>> /dev/sdb5:
+>>>        Magic : a92b4efc
+>>>      Version : 1.2
+>>>  Feature Map : 0x1
+>>>   Array UUID : 42c56ea0:2484f566:387adc6c:b3f6a014
+>>>         Name : GATEWAY:127  (local to host GATEWAY)
+>>> Creation Time : Sat Aug 22 09:44:21 2009
+>>>   Raid Level : raid5
+>>> Raid Devices : 4
+>>> 
+>>> Avail Dev Size : 586099060 (279.47 GiB 300.08 GB)
+>>>   Array Size : 1758296832 (838.42 GiB 900.25 GB)
+>>> Used Dev Size : 586098944 (279.47 GiB 300.08 GB)
+>>>  Data Offset : 272 sectors
+>>> Super Offset : 8 sectors
+>>>        State : clean
+>>>  Device UUID : f8ebb9f8:b447f894:d8b0b59f:ca8e98eb
+>>> 
+>>> Internal Bitmap : 2 sectors from superblock
+>>>  Update Time : Fri Mar 19 00:56:15 2010
+>>>     Checksum : 1005cfbc - correct
+>>>       Events : 3796145
+>>> 
+>>>       Layout : left-symmetric
+>>>   Chunk Size : 64K
+>>> 
+>>> Device Role : Active device 2
+>>> Array State : .AA. ('A' == active, '.' == missing)
+
+New...
+
+/dev/sdb5:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 8588b69c:c0579680:8a63486a:cbcb0e7d
+           Name : GATEWAY:511  (local to host GATEWAY)
+  Creation Time : Tue Apr  6 01:53:25 2010
+     Raid Level : raid5
+   Raid Devices : 4
+
+ Avail Dev Size : 586097284 (279.47 GiB 300.08 GB)
+     Array Size : 1758290688 (838.42 GiB 900.24 GB)
+  Used Dev Size : 586096896 (279.47 GiB 300.08 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 13d6a075:c1cad6dc:c13c3d98:e4b980e9
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Tue Apr  6 23:23:07 2010
+       Checksum : df3cb34f - correct
+         Events : 4
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+   Device Role : Active device 2
+   Array State : .AAA ('A' == active, '.' == missing)
+
+
+
