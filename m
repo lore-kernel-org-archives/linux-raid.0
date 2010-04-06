@@ -1,125 +1,26 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: linux raid recreate
-Date: Wed, 7 Apr 2010 08:55:45 +1000
-Message-ID: <20100407085545.7673be70@notabene.brown>
-References: <S1753093Ab0CYHZE/20100325072504Z+37@vger.kernel.org>
-	<2E4545D6-8F4E-4779-9103-960C52983A72@brillgene.com>
-	<4877c76c1003250437r346e18en8da0f6f804bef634@mail.gmail.com>
-	<DFC0232A-8DCD-4815-AA08-DA7065F01221@brillgene.com>
-	<4877c76c1003252038o655b2a29p9d994df27b5d2afd@mail.gmail.com>
-	<6093BE49-EE3B-41B5-9519-C6D5D0496C64@brillgene.com>
-	<4877c76c1003261204h2777547dn67a8e692864ff26a@mail.gmail.com>
-	<D332CDBC-0D5D-4BF7-8876-7A4B1B3ED45E@brillgene.com>
-	<45872BBE-0957-43E4-8D31-54B28F5F5936@brillgene.com>
-	<20100329053227.GA21664@maude.comedia.it>
-	<4877c76c1003282341s15f181b0m6a0327bc947dc456@mail.gmail.com>
-	<B3E0E48F-88C0-4D6F-8E23-B1344BC1C82C@brillgene.com>
+Subject: Re: [Patch mdadm] Fix ppc compile error
+Date: Wed, 7 Apr 2010 09:22:37 +1000
+Message-ID: <20100407092237.5affe057@notabene.brown>
+References: <4BBB7962.7040403@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <B3E0E48F-88C0-4D6F-8E23-B1344BC1C82C@brillgene.com>
+In-Reply-To: <4BBB7962.7040403@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Anshuman Aggarwal <anshuman@brillgene.com>
-Cc: linux-raid@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-On Tue, 6 Apr 2010 23:37:02 +0530
-Anshuman Aggarwal <anshuman@brillgene.com> wrote:
+On Tue, 06 Apr 2010 14:11:46 -0400
+Doug Ledford <dledford@redhat.com> wrote:
 
-> I've just had to recreate my raid5 device by using 
-> mdadm --create --assume-clean -n4 -l5 -e1.2 -c64 
+> We use -Wall -Werror on our build machines, and this causes our build to
+> fail on super-intel.c due to a missing cast on ppc64 machines.  This
+> fixes the build.
 > 
-> in order to recover my data (because --assemble would not work with force etc.). 
-> The problem:
->  *  Data Offset in the new array is much larger. 
->  * Internal Bitmap is starting at a different # sectors from superblock.
->  * Array Size is smaller though the disks are the same. 
-> 
-> How can I get these to be the same as what they were in the original array???
 
-Use the same version of mdadm and you used to originally create the array.
-Probably 2.6.9 from the data, though 3.1.1 seems to create the same layout.
-So anything before 3.1.2
-
-I really should write a "--recreate" for mdadm which uses whatever parameters
-if it finds already on the devices.
+Thanks.  Applied.
 
 NeilBrown
-
-
-> 
-> I have tried to make sure that nothing gets written to the md device except the metadata during create. 
-> All of these are important because the fs on top of the LVM on top of the md would need all the data it can to fsck properly and I don't want it starting on the wrong offset. 
-> 
-> I am including the output from mdadm --examine from before and after the create
-> 
-> Originally...
-> 
-> >>> /dev/sdb5:
-> >>>        Magic : a92b4efc
-> >>>      Version : 1.2
-> >>>  Feature Map : 0x1
-> >>>   Array UUID : 42c56ea0:2484f566:387adc6c:b3f6a014
-> >>>         Name : GATEWAY:127  (local to host GATEWAY)
-> >>> Creation Time : Sat Aug 22 09:44:21 2009
-> >>>   Raid Level : raid5
-> >>> Raid Devices : 4
-> >>> 
-> >>> Avail Dev Size : 586099060 (279.47 GiB 300.08 GB)
-> >>>   Array Size : 1758296832 (838.42 GiB 900.25 GB)
-> >>> Used Dev Size : 586098944 (279.47 GiB 300.08 GB)
-> >>>  Data Offset : 272 sectors
-> >>> Super Offset : 8 sectors
-> >>>        State : clean
-> >>>  Device UUID : f8ebb9f8:b447f894:d8b0b59f:ca8e98eb
-> >>> 
-> >>> Internal Bitmap : 2 sectors from superblock
-> >>>  Update Time : Fri Mar 19 00:56:15 2010
-> >>>     Checksum : 1005cfbc - correct
-> >>>       Events : 3796145
-> >>> 
-> >>>       Layout : left-symmetric
-> >>>   Chunk Size : 64K
-> >>> 
-> >>> Device Role : Active device 2
-> >>> Array State : .AA. ('A' == active, '.' == missing)
-> 
-> New...
-> 
-> /dev/sdb5:
->           Magic : a92b4efc
->         Version : 1.2
->     Feature Map : 0x1
->      Array UUID : 8588b69c:c0579680:8a63486a:cbcb0e7d
->            Name : GATEWAY:511  (local to host GATEWAY)
->   Creation Time : Tue Apr  6 01:53:25 2010
->      Raid Level : raid5
->    Raid Devices : 4
-> 
->  Avail Dev Size : 586097284 (279.47 GiB 300.08 GB)
->      Array Size : 1758290688 (838.42 GiB 900.24 GB)
->   Used Dev Size : 586096896 (279.47 GiB 300.08 GB)
->     Data Offset : 2048 sectors
->    Super Offset : 8 sectors
->           State : clean
->     Device UUID : 13d6a075:c1cad6dc:c13c3d98:e4b980e9
-> 
-> Internal Bitmap : 8 sectors from superblock
->     Update Time : Tue Apr  6 23:23:07 2010
->        Checksum : df3cb34f - correct
->          Events : 4
-> 
->          Layout : left-symmetric
->      Chunk Size : 64K
-> 
->    Device Role : Active device 2
->    Array State : .AAA ('A' == active, '.' == missing)
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
