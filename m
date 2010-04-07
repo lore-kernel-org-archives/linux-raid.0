@@ -1,32 +1,45 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [Patch mdadm] Add hot-unplug support to mdadm
-Date: Tue, 06 Apr 2010 23:07:47 -0400
-Message-ID: <4BBBF703.6030508@redhat.com>
-References: <4BBA1289.4010705@redhat.com> <20100407113035.3ca437f2@notabene.brown> <4BBBE7D2.6090608@redhat.com> <4BBBECD5.6010903@redhat.com>
+Subject: mdadm udev rules file just for incremental assembly/disassembly
+Date: Tue, 06 Apr 2010 23:13:30 -0400
+Message-ID: <4BBBF85A.6030801@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
  protocol="application/pgp-signature";
- boundary="------------enigDF208B0DC6926AFF80BF8B48"
+ boundary="------------enigB4DE570DD52BC5C36C1F33F7"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BBBECD5.6010903@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
 This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigDF208B0DC6926AFF80BF8B48
+--------------enigB4DE570DD52BC5C36C1F33F7
 Content-Type: multipart/mixed;
- boundary="------------030409010005010104090707"
+ boundary="------------040001080607000707080506"
 
 This is a multi-part message in MIME format.
---------------030409010005010104090707
+--------------040001080607000707080506
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-Here's another minor incremental patch to the original.  This makes
-hot-remove of imsm devices work.  The sanity tests just needed to be
-updated to deal with an already missing device.
+I actually don't keep the rules all in one file in Fedora, I have the
+udev supplied 64-md-raid.rules file that I don't control and that has
+the majority of stuff in it, but none of the incremental assembly stuff.
+ Then I have a separate 65-md-incremental.rules file that is part of the
+mdadm package and I therefore have direct control over.  That allows me
+to turn incremental assembly on and off as I see fit without having to
+bother the udev package maintainer.  So, just so you can see how I'm
+doing things now that works with dracut, that honors whether or not the
+system is set up to use mdadm or dmraid to handle imsm devices, and see
+how both incremental assembly and disassembly of devices, and the rule
+to handle incremental assembly of containers in a post-initramfs
+environment looks like, here it is.
+
+I should note that this is all tested and working at this point, so on
+to the next step.  Although I will note that I had to turn down
+sync_speed_max on my imsm arrays or a resync would make the system
+completely unresponsive until it completed.  And I've got at least one
+bug to that effect open right now.  So, I suspect the kernel is not
+honoring the "only use idle time" part of the resync speed description.
 
 --=20
 Doug Ledford <dledford@redhat.com>
@@ -36,54 +49,49 @@ Doug Ledford <dledford@redhat.com>
 Infiniband specific RPMs available at
 	      http://people.redhat.com/dledford/Infiniband
 
---------------030409010005010104090707
+--------------040001080607000707080506
 Content-Type: text/plain;
- name="mdadm-3.1.2-decremental-3.patch"
+ name="mdadm.rules"
 Content-Transfer-Encoding: quoted-printable
 Content-Disposition: attachment;
- filename="mdadm-3.1.2-decremental-3.patch"
+ filename="mdadm.rules"
 
-commit 1934c67fe5bc25a79393ad78e29bf9ef778bc701
-Author: Doug Ledford <dledford@redhat.com>
-Date:   Tue Apr 6 23:02:47 2010 -0400
+# This file causes block devices with Linux RAID (mdadm) signatures to
+# automatically cause mdadm to be run.
+# See udev(8) for syntax
 
-    Only close lfd if we have an external metadata type since that's the =
-only
-    time we'll have it open.
-   =20
-    If we weren't able to open the device file, assume the device is gone=
+SUBSYSTEM=3D=3D"block", ACTION=3D=3D"add", ENV{ID_FS_TYPE}=3D=3D"linux_ra=
+id_member", \
+	RUN+=3D"/sbin/mdadm -I $tempnode"
+SUBSYSTEM=3D=3D"block", ACTION=3D=3D"remove", ENV{ID_FS_TYPE}=3D=3D"linux=
+_raid_member", \
+	RUN+=3D"/sbin/mdadm -If $env{DEVNAME}"
 
-    already and skip the sysfs_unique_holder test as it is guaranteed to
-    fail.
-   =20
-    Signed-off-by: Doug Ledford <dledford@redhat.com>
+ENV{rd_NO_MDIMSM}=3D=3D"?*", GOTO=3D"md_imsm_inc_end"
+# In case the initramfs only started some of the arrays in our container,=
 
-diff --git a/Manage.c b/Manage.c
-index b15586b..a690cfc 100644
---- a/Manage.c
-+++ b/Manage.c
-@@ -811,6 +811,7 @@ int Manage_subdevs(char *devname, int fd,
- 				 * rely on the 'detached' checks
- 				 */
- 				if (strcmp(dv->devname, "detached") =3D=3D 0 ||
-+				    tfd < 0 ||
- 				    sysfs_unique_holder(dnum, stb.st_rdev))
- 					/* pass */;
- 				else {
-@@ -878,8 +879,8 @@ int Manage_subdevs(char *devname, int fd,
-=20
- 				ping_manager(name);
- 				free(name);
-+				close(lfd);
- 			}
--			close(lfd);
- 			if (verbose >=3D 0)
- 				fprintf(stderr, Name ": hot removed %s\n",
- 					dnprintable);
+# run incremental assembly on the container itself.  Note: we ran mdadm
+# on the container in 64-md-raid.rules, and that's how the MD_LEVEL
+# environment variable is already set.  If that disappears from the other=
 
---------------030409010005010104090707--
+# file, we will need to add this line into the middle of the next rule:
+#	IMPORT{program}=3D"/sbin/mdadm -D --export $tempnode", \
 
---------------enigDF208B0DC6926AFF80BF8B48
+SUBSYSTEM=3D=3D"block", ACTION=3D=3D"add|change", KERNEL=3D=3D"md*", \
+	ENV{MD_LEVEL}=3D=3D"container", RUN+=3D"/sbin/mdadm -I $tempnode"
+
+SUBSYSTEM=3D=3D"block", ACTION=3D=3D"add", ENV{ID_FS_TYPE}=3D=3D"isw_raid=
+_member", \
+	RUN+=3D"/sbin/mdadm -I $tempnode"
+SUBSYSTEM=3D=3D"block", ACTION=3D=3D"remove", ENV{ID_FS_TYPE}=3D=3D"isw_r=
+aid_member", \
+	RUN+=3D"/sbin/mdadm -If $env{DEVNAME}"
+LABEL=3D"md_imsm_inc_end"
+
+
+--------------040001080607000707080506--
+
+--------------enigB4DE570DD52BC5C36C1F33F7
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: OpenPGP digital signature
 Content-Disposition: attachment; filename="signature.asc"
@@ -91,9 +99,9 @@ Content-Disposition: attachment; filename="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iEYEARECAAYFAku79wMACgkQg6WylM+/8ZSdhQCZAXrN2VkN+bj+LmGiiIEvdGde
-QD8An0Me0ISWbzSZIf63X8CJpHZgREKt
-=6BBz
+iEUEARECAAYFAku7+FoACgkQg6WylM+/8ZSgaACglcNfR6EnWp5JjOVVzZ3I7Kqm
+SGsAl2OZhXNA2pSEmCrsCLKhvY6g230=
+=u8Zm
 -----END PGP SIGNATURE-----
 
---------------enigDF208B0DC6926AFF80BF8B48--
+--------------enigB4DE570DD52BC5C36C1F33F7--
