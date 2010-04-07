@@ -1,61 +1,32 @@
 From: Doug Ledford <dledford@redhat.com>
 Subject: Re: [Patch mdadm] Add hot-unplug support to mdadm
-Date: Tue, 06 Apr 2010 22:24:21 -0400
-Message-ID: <4BBBECD5.6010903@redhat.com>
-References: <4BBA1289.4010705@redhat.com> <20100407113035.3ca437f2@notabene.brown> <4BBBE7D2.6090608@redhat.com>
+Date: Tue, 06 Apr 2010 23:07:47 -0400
+Message-ID: <4BBBF703.6030508@redhat.com>
+References: <4BBA1289.4010705@redhat.com> <20100407113035.3ca437f2@notabene.brown> <4BBBE7D2.6090608@redhat.com> <4BBBECD5.6010903@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
  protocol="application/pgp-signature";
- boundary="------------enigB2B184E3969FFB66DF0E1EF5"
+ boundary="------------enigDF208B0DC6926AFF80BF8B48"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BBBE7D2.6090608@redhat.com>
+In-Reply-To: <4BBBECD5.6010903@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
 Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
 This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigB2B184E3969FFB66DF0E1EF5
+--------------enigDF208B0DC6926AFF80BF8B48
+Content-Type: multipart/mixed;
+ boundary="------------030409010005010104090707"
+
+This is a multi-part message in MIME format.
+--------------030409010005010104090707
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On 04/06/2010 10:02 PM, Doug Ledford wrote:
-> On 04/06/2010 09:30 PM, Neil Brown wrote:
->> On Mon, 05 Apr 2010 12:40:41 -0400
->> Doug Ledford <dledford@redhat.com> wrote:
->>   would it help do you think to support e.g.
->>
->>     mdadm -If --devnum $major:$minor $name
->=20
-> As I recall, on a remove event the major minor is already gone too (but=
-
-> I could be wrong, the machine has since been blown away and reinstalled=
-
-> and the file I had the whole env during a remove event stored off in is=
-
-> gone with it).
->=20
-> And I would be careful about using $env{DEVNAME}, in fact I'm removing
-> usage of it in my local rules files right now because I've found it is
-> inconsistent (part of the time it includes /dev/ and part of the time i=
-t
-> doesn't, where as $tempnode is consistent).
-
-OK, so to expand on this a bit further.  $env{DEVNAME} sometimes refers
-to devices via a full path (aka, /dev/sda1), and sometimes by just the
-last part of the path (aka, md0).  I found this when creating a rule to
-do incremental assembly on containers during late udev startup (I need
-this because the initramfs created by dracut *only* starts necessary
-arrays, and if you have a additional arrays in a container, then the
-change event generated during udev startup can be used to trigger
-incremental assembly of those additional arrays, but $env{DEVNAME} will
-just be md0 or whatever, not a full path name).  So, I switched
-everything to $tempnode as it always points to a device special file.
-Except when doing removal events, in which case $tempnode doesn't exist
-because there is no node to point to.  So, long story short, you're best
-off to use $tempnode on any device add|change events, and $env{DEVNAME}
-on remove events.
-
+Here's another minor incremental patch to the original.  This makes
+hot-remove of imsm devices work.  The sanity tests just needed to be
+updated to deal with an already missing device.
 
 --=20
 Doug Ledford <dledford@redhat.com>
@@ -65,8 +36,54 @@ Doug Ledford <dledford@redhat.com>
 Infiniband specific RPMs available at
 	      http://people.redhat.com/dledford/Infiniband
 
+--------------030409010005010104090707
+Content-Type: text/plain;
+ name="mdadm-3.1.2-decremental-3.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+ filename="mdadm-3.1.2-decremental-3.patch"
 
---------------enigB2B184E3969FFB66DF0E1EF5
+commit 1934c67fe5bc25a79393ad78e29bf9ef778bc701
+Author: Doug Ledford <dledford@redhat.com>
+Date:   Tue Apr 6 23:02:47 2010 -0400
+
+    Only close lfd if we have an external metadata type since that's the =
+only
+    time we'll have it open.
+   =20
+    If we weren't able to open the device file, assume the device is gone=
+
+    already and skip the sysfs_unique_holder test as it is guaranteed to
+    fail.
+   =20
+    Signed-off-by: Doug Ledford <dledford@redhat.com>
+
+diff --git a/Manage.c b/Manage.c
+index b15586b..a690cfc 100644
+--- a/Manage.c
++++ b/Manage.c
+@@ -811,6 +811,7 @@ int Manage_subdevs(char *devname, int fd,
+ 				 * rely on the 'detached' checks
+ 				 */
+ 				if (strcmp(dv->devname, "detached") =3D=3D 0 ||
++				    tfd < 0 ||
+ 				    sysfs_unique_holder(dnum, stb.st_rdev))
+ 					/* pass */;
+ 				else {
+@@ -878,8 +879,8 @@ int Manage_subdevs(char *devname, int fd,
+=20
+ 				ping_manager(name);
+ 				free(name);
++				close(lfd);
+ 			}
+-			close(lfd);
+ 			if (verbose >=3D 0)
+ 				fprintf(stderr, Name ": hot removed %s\n",
+ 					dnprintable);
+
+--------------030409010005010104090707--
+
+--------------enigDF208B0DC6926AFF80BF8B48
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: OpenPGP digital signature
 Content-Disposition: attachment; filename="signature.asc"
@@ -74,9 +91,9 @@ Content-Disposition: attachment; filename="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iEYEARECAAYFAku77NUACgkQg6WylM+/8ZSxBACcDmR2pvasTM2gsfMNas37uLfW
-Dv0AnA+NEGdkZW2ZyGA8zJeTtk79prk3
-=oNfV
+iEYEARECAAYFAku79wMACgkQg6WylM+/8ZSdhQCZAXrN2VkN+bj+LmGiiIEvdGde
+QD8An0Me0ISWbzSZIf63X8CJpHZgREKt
+=6BBz
 -----END PGP SIGNATURE-----
 
---------------enigB2B184E3969FFB66DF0E1EF5--
+--------------enigDF208B0DC6926AFF80BF8B48--
