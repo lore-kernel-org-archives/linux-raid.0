@@ -1,78 +1,107 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: Two degraded mirror segments recombined out of sync for massive
- data loss
-Date: Thu, 8 Apr 2010 09:56:36 -0400
-Message-ID: <4BBDE094.2040308@cfl.rr.com>
-References: <4BBCEEEC.4030606@cfl.rr.com> <20100408094909.2339c330@notabene.brown>
+From: "Hawrylewicz Czarnowski, Przemyslaw"
+	<przemyslaw.hawrylewicz.czarnowski@intel.com>
+Subject: [PATCH] imsm: assign UUID  of spare device based on ARRAY *device*
+ keyword in mdadm configuration file.
+Date: Thu, 8 Apr 2010 15:48:18 +0100
+Message-ID: <66C59AD0932712458090B447266D638CD3DBE917@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100408094909.2339c330@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-On 4/7/2010 7:49 PM, Neil Brown wrote:
-> I can only imagine two circumstances in which this could happen.
-> 1/ You have a write-intent-bitmap configured.
-> 2/ The event count on the two devices incremented by exactly the same
->    about while they were in use separately.
-> 
-> The second seems very improbably, but is certainly possible.
-> 
-> Please confirm whether or not you had a bitmap configured.
+If config has list of devices associated with container and it comprises given spare drive, UUID is set apporopriately to this container.
+It allows to assign spare with proper container according
+to content in devices parameter in configuration file.
 
-No write intent bitmap configured, and yes, the event count appears to
-be the same on both legs.
+Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+---
+ super-intel.c |   48 +++++++++++++++++++++++++++++++++++++++++++-----
+ 1 files changed, 43 insertions(+), 5 deletions(-)
 
-> There is no important difference between "missing" and "faulty".  If md
-> cannot access a device there is no way for it to know whether you, the admin,
-> considers that device to have failed or to simply have been removed
-> temporarily (e.g. as part of some backup regime).
+diff --git a/super-intel.c b/super-intel.c
+index a196ca3..41a4cc6 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -1497,10 +1497,19 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info)
+ 	uuid_from_super_imsm(st, info->uuid);
+ }
+ 
++static int matchfd2devnum(int fd, int maj, int min)
++{
++	struct stat st;
++	if (fstat(fd, &st) != 0)
++		return 1;
++	return ((int)major(st.st_rdev) == maj && (int)minor(st.st_rdev) == min);
++}
++
++
+ /* check the config file to see if we can return a real uuid for this spare */
+-static void fixup_container_spare_uuid(struct mdinfo *inf)
++static void fixup_container_spare_uuid(struct mdinfo *inf, struct dl *disk)
+ {
+-	struct mddev_ident_s *array_list;
++	struct mddev_ident_s *array_list, *first_match = NULL;
+ 
+ 	if (inf->array.level != LEVEL_CONTAINER ||
+ 	    memcmp(inf->uuid, uuid_match_any, sizeof(int[4])) != 0)
+@@ -1520,12 +1529,41 @@ static void fixup_container_spare_uuid(struct mdinfo *inf)
+ 				_sst = NULL;
+ 
+ 			if (_sst) {
+-				memcpy(inf->uuid, array_list->uuid, sizeof(int[4]));
++				char *devices = array_list->devices;
++
++				if (!first_match)
++					first_match = array_list;
++
++				while (disk && devices && *devices) {
++					char path[PATH_MAX];
++					char *p = devices;
++					int fd;
++
++					devices = strchr(devices, ',');
++					if (!devices)
++						devices = p + strlen(p);
++					if (devices-p < PATH_MAX) {
++						strncpy(path, p, devices - p);
++						if ((fd = open(path, O_RDONLY)) >= 0) {
++							if (matchfd2devnum(fd, disk->major, disk->minor)) {
++								free(_sst);
++								close(fd);
++								goto match;
++							}
++							close(fd);
++						}
++						if (*devices == ',')
++							devices++;
++					}
++				}
+ 				free(_sst);
+-				break;
+ 			}
+ 		}
+ 	}
++match:;
++	if (!array_list)
++		array_list = first_match;
++	memcpy(inf->uuid, array_list->uuid, sizeof(int[4]));
+ }
+ 
+ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info)
+@@ -1584,7 +1622,7 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info)
+ 		uuid_from_super_imsm(st, info->uuid);
+ 	else {
+ 		memcpy(info->uuid, uuid_match_any, sizeof(int[4]));
+-		fixup_container_spare_uuid(info);
++		fixup_container_spare_uuid(info, super->disks);
+ 	}
+ }
+ 
+-- 
+1.6.4.2
 
-Yes, but if a disk is faulty,removed, then either you explicitly told
-mdadm to fail the disk and remove it, or it was failed and removed
-during degraded activation.  In this case, shouldn't it require an mdadm
---add to re-insert it into the array?
-
-If you had manually failed and removed the disk, then their metadata
-would both agree that the second disk was removed, and it would require
-an explicit --add to return it.  This problem seems to stem from the
-fact that their metadata disagree about which disk is removed.  In this
-case, shouldn't the data in the already active array taken from the
-first disk override the metadata in the second disk when it is
-incrementally added?
-
-In other words, mdadm --incremental should update the metadata on the
-second disk to agree with the first, showing the second disk is the one
-that is removed, and not activate the disk without an mdadm --add.
-
-> No.  Just because the device was removed from the array doesn't mean you
-> don't want to to be part of the array any more.  And seeing the device is
-> still plugged in...
-
-What?  Of course it does.  If you explicitly remove the device it means
-you don't want it being part of the array any more.
-
-> mdadm --incremental should only included both disks in the array if
-> 1/ their event counts are the same, or +/- 1, or
-> 2/ there is a write-intent bitmap and the older event count is within
->    the range recorded in the write-intent bitmap.
-
-I'm not familiar with the meaning of the event count.  Why should it
-matter?  And shouldn't the only effect the write-intent bitmap has is to
-speed up resyncing when you manually re-add the disk?
-
-> You should understand that what you have done is at least undefined.
-> If you break a mirror, change both halves, then put it together again there
-> is no clearly "right" answer as to what will appear.
-
-Yes, which version you get is undefined and I would think would come
-down to which disk was discovered first, but you certainly should get
-one version, or the other, not a mismash of both.  If the second disk
-were left as removed and required manual intervention to use, then the
-administrator could examine it and recover any data written to that disk
-but not the first, before manually re-inserting it into the array
-causing a resync.
