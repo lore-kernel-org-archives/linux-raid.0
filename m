@@ -1,107 +1,45 @@
-From: "Hawrylewicz Czarnowski, Przemyslaw"
-	<przemyslaw.hawrylewicz.czarnowski@intel.com>
-Subject: [PATCH] imsm: assign UUID  of spare device based on ARRAY *device*
- keyword in mdadm configuration file.
-Date: Thu, 8 Apr 2010 15:48:18 +0100
-Message-ID: <66C59AD0932712458090B447266D638CD3DBE917@irsmsx504.ger.corp.intel.com>
+From: Billy Crook <billycrook@gmail.com>
+Subject: Re: Two degraded mirror segments recombined out of sync for massive
+	data loss
+Date: Thu, 8 Apr 2010 09:58:10 -0500
+Message-ID: <z2za43edf1b1004080758mbf88eeecg64b174d740573be9@mail.gmail.com>
+References: <4BBCEEEC.4030606@cfl.rr.com> <r2v4877c76c1004071421o14e66ae5s35b0bf0914fb737c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <r2v4877c76c1004071421o14e66ae5s35b0bf0914fb737c@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: Michael Evans <mjevans1983@gmail.com>
+Cc: Phillip Susi <psusi@cfl.rr.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If config has list of devices associated with container and it comprises given spare drive, UUID is set apporopriately to this container.
-It allows to assign spare with proper container according
-to content in devices parameter in configuration file.
+On Wed, Apr 7, 2010 at 16:21, Michael Evans <mjevans1983@gmail.com> wrote:
+> It sounds like the last 'synced' time should be tracked, as well as
+> the last modification time. If the two differ then it can be known
+> that the contents has diverged since last sync.
 
-Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
----
- super-intel.c |   48 +++++++++++++++++++++++++++++++++++++++++++-----
- 1 files changed, 43 insertions(+), 5 deletions(-)
+I have perhaps a better solution:
+Every time an event happens that could affect the coherency of the
+components of an array (i.e. started, stopped, disk failed), a counter
+is incremented on all of the components.  Then a random number is
+written next to it (same number to all disks).
 
-diff --git a/super-intel.c b/super-intel.c
-index a196ca3..41a4cc6 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -1497,10 +1497,19 @@ static void getinfo_super_imsm_volume(struct supertype *st, struct mdinfo *info)
- 	uuid_from_super_imsm(st, info->uuid);
- }
- 
-+static int matchfd2devnum(int fd, int maj, int min)
-+{
-+	struct stat st;
-+	if (fstat(fd, &st) != 0)
-+		return 1;
-+	return ((int)major(st.st_rdev) == maj && (int)minor(st.st_rdev) == min);
-+}
-+
-+
- /* check the config file to see if we can return a real uuid for this spare */
--static void fixup_container_spare_uuid(struct mdinfo *inf)
-+static void fixup_container_spare_uuid(struct mdinfo *inf, struct dl *disk)
- {
--	struct mddev_ident_s *array_list;
-+	struct mddev_ident_s *array_list, *first_match = NULL;
- 
- 	if (inf->array.level != LEVEL_CONTAINER ||
- 	    memcmp(inf->uuid, uuid_match_any, sizeof(int[4])) != 0)
-@@ -1520,12 +1529,41 @@ static void fixup_container_spare_uuid(struct mdinfo *inf)
- 				_sst = NULL;
- 
- 			if (_sst) {
--				memcpy(inf->uuid, array_list->uuid, sizeof(int[4]));
-+				char *devices = array_list->devices;
-+
-+				if (!first_match)
-+					first_match = array_list;
-+
-+				while (disk && devices && *devices) {
-+					char path[PATH_MAX];
-+					char *p = devices;
-+					int fd;
-+
-+					devices = strchr(devices, ',');
-+					if (!devices)
-+						devices = p + strlen(p);
-+					if (devices-p < PATH_MAX) {
-+						strncpy(path, p, devices - p);
-+						if ((fd = open(path, O_RDONLY)) >= 0) {
-+							if (matchfd2devnum(fd, disk->major, disk->minor)) {
-+								free(_sst);
-+								close(fd);
-+								goto match;
-+							}
-+							close(fd);
-+						}
-+						if (*devices == ',')
-+							devices++;
-+					}
-+				}
- 				free(_sst);
--				break;
- 			}
- 		}
- 	}
-+match:;
-+	if (!array_list)
-+		array_list = first_match;
-+	memcpy(inf->uuid, array_list->uuid, sizeof(int[4]));
- }
- 
- static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info)
-@@ -1584,7 +1622,7 @@ static void getinfo_super_imsm(struct supertype *st, struct mdinfo *info)
- 		uuid_from_super_imsm(st, info->uuid);
- 	else {
- 		memcpy(info->uuid, uuid_match_any, sizeof(int[4]));
--		fixup_container_spare_uuid(info);
-+		fixup_container_spare_uuid(info, super->disks);
- 	}
- }
- 
--- 
-1.6.4.2
+On assembling an array:
+For all components in the array, find the highest counter.
 
+If enough disks with this counter are present and contain the same
+random number, the it starts the array, and if a rebuild is necessary
+to regain parity or the specified number of mirrors, the remaining
+components of the same array are consumed for this purpose.
+
+If there are multiple randoms present for this highest counter, then
+the last modification time can be used to choose the most up to date
+one.  It comes online, and overwrites the components with the older
+modification time, or maybe it just prompts the admin, and starts
+degraded.
+
+This would catch the problem originally reported by Phillip because
+the random numbers written to the components' headers would have been
+written at different times, and so they would be different.  mdadm
+would know by this that they had diverged regardless of any timestamp
+or counter.
