@@ -1,67 +1,86 @@
-From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: RAID scrubbing
-Date: Fri, 9 Apr 2010 19:01:50 -0700
-Message-ID: <h2m4877c76c1004091901k37443583h316eb0efacbcac80@mail.gmail.com>
-References: <q2s150c16851004091828t235d2derf36033d19e2f11ad@mail.gmail.com>
-	 <l2t4877c76c1004091841n40a6ad69gb9f73c9d1b68f4ae@mail.gmail.com>
-	 <s2y150c16851004091846t94347cf8u9ffd65133061d16b@mail.gmail.com>
+From: Michael McCallister <mike@mccllstr.com>
+Subject: raid10,f2 Add a Controller: Which drives to move?
+Date: Sun, 11 Apr 2010 17:08:30 +0000 (UTC)
+Message-ID: <loom.20100411T185315-118@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <s2y150c16851004091846t94347cf8u9ffd65133061d16b@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Justin Maggard <jmaggard10@gmail.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Apr 9, 2010 at 6:46 PM, Justin Maggard <jmaggard10@gmail.com> w=
-rote:
-> On Fri, Apr 9, 2010 at 6:41 PM, Michael Evans <mjevans1983@gmail.com>=
- wrote:
->> On Fri, Apr 9, 2010 at 6:28 PM, Justin Maggard <jmaggard10@gmail.com=
-> wrote:
->>> Hi all,
->>>
->>> I've got a system using two RAID5 arrays that share some physical
->>> devices, combined using LVM. =A0Oddly, when I "echo repair >
->>> /sys/block/md0/md/sync_action", once it finishes, it automatically
->>> starts a repair on md1 also, even though I haven't requested it.
->>> Also, if I try to stop it using "echo idle >
->>> /sys/block/md0/md/sync_action", a repair starts on md1 within a few
->>> seconds. =A0If I stop that md1 repair immediately, sometimes it wil=
-l
->>> respawn and start doing the repair again on md1. =A0What should I b=
-e
->>> expecting here? =A0If I start a repair on one array, is it supposed=
- to
->>> automatically go through and do it on all arrays sharing that
->>> personality?
->>>
->>> Thanks!
->>> -Justin
->>>
->>
->> Is md1 degraded with an active spare? =A0It might be delaying resync=
- on
->> it until the other devices are idle.
->
-> No, both arrays are redundant. =A0I'm just trying to do scrubbing
-> (repair) on md0; no resync is going on anywhere.
->
-> -Justin
->
+I have an existing raid10,f2 array with four drives, all running on a single
+SATA controller.  I have a second controller to add to the system and I'd like
+to split the existing drives between the two controllers.  I'm hoping to make
+the configuration more robust against the possibility of a single controller
+failure.  It would also be nice to get more performance out of the array, though
+I doubt having a single controller is a bottleneck with only 4 7200RPM drives.
 
-=46irst: Reply to all.
+So with four drives sda, sdb, sdc, and sdd and two controllers C1 and C2, should
+I go with
 
-Second, if you insist that things are not as I suspect:
+    C1: sda, sdb
+    C2: sdc, sdd
 
-cat /proc/mdstat
+or
 
-mdadm -Dvvs
+    C1: sda, sdc
+    C2: sdb, sdd
 
-mdadm -Evvs
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+or some other configuration?
+
+I've looked through the last six months of messages in the archives, and the
+md(4) and mdadm(8) manpages, and the wiki on https://raid.wiki.kernel.org/ and
+didn't see anything that quite answers this question at a level I can
+understand.  If there is a reference I can consult, I'm happy to keep digging.
+
+If it will help, the output of /proc/mdstat and "mdadm --detail" on the md
+device are included below.
+
+
+Mike McCallister
+
+
+# cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4]
+[raid10]
+md3 : active raid10 sda5[0] sdd5[3] sdc5[2] sdb5[1]
+      1445318656 blocks super 1.1 256K chunks 2 far-copies [4/4] [UUUU]
+      bitmap: 6/345 pages [24KB], 2048KB chunk
+
+# mdadm --detail /dev/md3
+/dev/md3:
+        Version : 01.01.03
+  Creation Time : Sun Nov  9 22:47:00 2008
+     Raid Level : raid10
+     Array Size : 1445318656 (1378.36 GiB 1480.01 GB)
+  Used Dev Size : 1445318656 (689.18 GiB 740.00 GB)
+   Raid Devices : 4
+  Total Devices : 4
+Preferred Minor : 3
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Sun Apr 11 11:47:09 2010
+          State : active
+ Active Devices : 4
+Working Devices : 4
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : near=1, far=2
+     Chunk Size : 256K
+
+           Name : ozark:3
+           UUID : e7705941:e81cfbe1:7bf6ab9f:2b979a89
+         Events : 84
+
+    Number   Major   Minor   RaidDevice State
+       0       8        5        0      active sync   /dev/sda5
+       1       8       21        1      active sync   /dev/sdb5
+       2       8       37        2      active sync   /dev/sdc5
+       3       8       53        3      active sync   /dev/sdd5
+
+
