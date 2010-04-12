@@ -1,34 +1,51 @@
-From: Michael McCallister <mike@mccllstr.com>
+From: =?ISO-8859-15?Q?Tom=E1=A8_Dul=EDk?= <dulik@unart.cz>
 Subject: Re: raid10,f2 Add a Controller: Which drives to move?
-Date: Mon, 12 Apr 2010 06:17:22 +0000 (UTC)
-Message-ID: <loom.20100412T080748-841@post.gmane.org>
-References: <loom.20100411T185315-118@post.gmane.org> <k2o4877c76c1004111431v147791a7weea96497f6d0431d@mail.gmail.com>
+Date: Mon, 12 Apr 2010 09:43:16 +0200
+Message-ID: <4BC2CF14.9000209@unart.cz>
+References: <loom.20100411T185315-118@post.gmane.org> <4BC29670.6020504@unart.cz> <4BC2B887.6020403@stud.tu-ilmenau.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-15;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4BC2B887.6020403@stud.tu-ilmenau.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: st0ff@npl.de
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Michael Evans <mjevans1983 <at> gmail.com> writes:
-> I'd use smartctl to get the drive serial numbers, then move what are
-> currently shown as sdb5 and sdd5 to your new controller during a
-> coldboot.
+Stefan /*St0fF*/ H=FCbner napsal(a):
+> I cannot quite understand your problem.  As every part of the array
+> contains it's own metadata, it doesn't matter to md which /dev/sdX a
+> drive is.  It might matter a bit for boot-time assembly, but actually
+> that's what UUIDs are for.
+>  =20
+I know how UUIDs work.
+My problem with device names is not a "critical", it's about "user=20
+friendliness" of the physical disk management.
+If a disk fails and I receive email "A Fail event had been detected on=20
+md device /dev/md2. It could be related to component device /dev/sdd3",=
+=20
+how will I know which disk should be replaced, if the device name is no=
+t=20
+fixed/persistent? Is it the disk in the first bay, or the second? Aside=
+=20
+of the solution documented on the wiki page, I could also use try a=20
+simpler one based on the idea here:
+http://www.outsidaz.org/blog/2009/11/05/identifying-failed-drives-via-u=
+dev-and-mdadm/
 
-Thanks.  I did this and was able to boot and reassemble successfully with a live
-CD.  However, the question in the back of my mind is "is there any way to tell
-whether this would have worked with one of the controllers down?"  In other
-words, if I just pulled the plug on sdb and sdd instead of moving them to a new
-controller, would the array have been able to be reassembled in a degraded mode
-with only sda and sdc?  Or would it actually need a different combination of
-drives (e.g., sda and sdb) to be able to reassemble?
+But for the disk management purposes, I prefer having the disk names=20
+fixed according the the disk bay position. So disk in bay nr. 1 is=20
+/dev/sda, bay nr. 2 is /dev/sdb, etc.
 
-Obviously I could try this, but if I am able to reassemble an array with two
-drives missing, won't I have to resync the other drives when I return them to
-the array?  I'd rather avoid experiments involving resyncs if possible.
+The wiki page I created is just about this. I haven't found any documen=
+t=20
+like this anywhere else, so if it helps someone, I'll be glad.
 
-
-Mike
-
-
+Tom
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
