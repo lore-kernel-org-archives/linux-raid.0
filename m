@@ -1,55 +1,77 @@
-From: Michael McCallister <mike@mccllstr.com>
+From: =?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?=
+	<stefan.huebner@stud.tu-ilmenau.de>
 Subject: Re: raid10,f2 Add a Controller: Which drives to move?
-Date: Mon, 12 Apr 2010 06:07:31 +0000 (UTC)
-Message-ID: <loom.20100412T075555-215@post.gmane.org>
+Date: Mon, 12 Apr 2010 08:07:03 +0200
+Message-ID: <4BC2B887.6020403@stud.tu-ilmenau.de>
 References: <loom.20100411T185315-118@post.gmane.org> <4BC29670.6020504@unart.cz>
+Reply-To: st0ff@npl.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4BC29670.6020504@unart.cz>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Tom=C3=A1=C5=A1 Dul=C3=ADk <dulik <at> unart.cz> writes:
+Am 12.04.2010 05:41, schrieb Tom=E1=A8 Dul=EDk:
+> Hi,
 > I am not sure if I understand your question, but I suppose you will h=
-it=20
-> the problem of udev naming of your disks, and if your disks are=20
-> hotswap-able, then also the problem of hotswap, which is currently=20
+it
+> the problem of udev naming of your disks, and if your disks are
+> hotswap-able, then also the problem of hotswap, which is currently
 > discussed here in this mailing list.
+>=20
+> I have spent too much time trying to solve both these problems with t=
+he
+> current linux SW RAID (mdadm v. 2.6) and here is the first part of my
+> solution:
+> http://wiki.debian.org/Persistent_disk_names
 
-Thanks for the heads up.  I did the swap while powered down and only br=
-ought the
-system up using an Ubuntu Live CD, so the udev on my current root parti=
-tion
-didn't come into play.  During that live-CD boot, I had no apparent pro=
-blems
-with the changing device names.  They had changed pretty significantly:=
- sdb
-became sdd, sdc became sdb, sdd became sde, and another device not part=
- of the
-array became sdc.  In spite of the shuffle and a new SATA controller, m=
-dadm was
-able to reassemble the RAID devices on those drive partitions with no i=
-nput from
-me.  I believe this is because mdadm scanned the partitions looking dev=
-ice for
-the appropriate UUIDs in the metadata, and with all the devices account=
-ed for,
-it was able to "do the right thing".  I was very impressed.
+I cannot quite understand your problem.  As every part of the array
+contains it's own metadata, it doesn't matter to md which /dev/sdX a
+drive is.  It might matter a bit for boot-time assembly, but actually
+that's what UUIDs are for.
 
-When I boot using the original root partition (running Ubuntu Hardy), m=
-aybe udev
-will shuffle the device names more severely.  But so long as mdadm is c=
-onfigured
-to scan all the available partitions, I expect it will locate all the p=
-ieces,
-whatever they may be named, and successfully reassemble the arrays.
+>=20
+> The page is still not really  finished, I am still playing with my
+> server so the documentation must wait.
+>=20
+>=20
+> Michael McCallister napsal(a):
+>=20
+>> So with four drives sda, sdb, sdc, and sdd and two controllers C1 an=
+d
+>> C2, should
+>> I go with
+>>
+>>     C1: sda, sdb
+>>     C2: sdc, sdd
+>>
+>> or
+>>
+>>     C1: sda, sdc
+>>     C2: sdb, sdd
+>>
+>> or some other configuration?
+>>  =20
 
+But I understand yours, Michael.  You would like to put those
+RAID0-pieces of your RAID10 each on a single controller.  I believe one
+must find out what "NEAR" and "FAR" is.
+I'd understand it as: "NEAR" is the closer disk - yeah.  Closer in the
+array-tree, or it's logical base-LBA is closer?  Neil, could you please
+clarify which is which?
 
-Mike
+>=20
+> --=20
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-
+All the best,
+Stefan
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
