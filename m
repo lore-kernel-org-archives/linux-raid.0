@@ -1,116 +1,100 @@
-From: =?windows-1252?Q?Tom=E1=9A_Dul=EDk?= <dulik@unart.cz>
-Subject: Re: [Patch mdadm] Add hot-unplug support to mdadm
-Date: Tue, 13 Apr 2010 11:28:24 +0200
-Message-ID: <4BC43938.2020109@unart.cz>
-References: <4BBA1289.4010705@redhat.com>	<20100407113035.3ca437f2@notabene.brown>	<4BBBE7D2.6090608@redhat.com>	<20100409093153.690ea963@notabene.brown> <20100409103330.37d9dff5@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: raid10,f2 Add a Controller: Which drives to move?
+Date: Tue, 13 Apr 2010 23:09:26 +1000
+Message-ID: <20100413230926.1273fc64@notabene.brown>
+References: <loom.20100411T185315-118@post.gmane.org>
+	<4BC29670.6020504@unart.cz>
+	<4BC2B887.6020403@stud.tu-ilmenau.de>
+	<4BC2CF14.9000209@unart.cz>
+	<j2t40b437201004122026zd43aa129nb501cfc83d5cdafd@mail.gmail.com>
+	<20100413092354.GA7581@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100409103330.37d9dff5@notabene.brown>
+In-Reply-To: <20100413092354.GA7581@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Keld Simonsen <keld@keldix.com>
+Cc: Simon Matthews <simon.d.matthews@gmail.com>, =?UTF-8?B?VG9tw6HFoSBE?= =?UTF-8?B?dWzDrWs=?= <dulik@unart.cz>, st0ff@npl.de, Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Doug,
+On Tue, 13 Apr 2010 11:23:54 +0200
+Keld Simonsen <keld@keldix.com> wrote:
 
-first of all: thanks for your work on hot-unplug!
-I am new to Linux RAID, have been using HW RAID before but after my LSI 
-controller burned to ashes I decided I don't want to see HW RAID ... ever.
+> I am not sure it has been said, but for a 4 disk raid10,f2 array
+> you should place the first and the second disk on one controller, and=
+ then the 3rd
+> and 4th on the second controller. Then you would have a copy of all b=
+locks even
+> if one controller fails.
 
-First thing I found weird on Linux RAID was the missing support for dead 
-device removal.
-I spent last 3 weeks trying to write various scripts for UDEV "remove" 
-and mdadm "Fail" events handling, but finally I found the same thing 
-like you - it is not possible to remove dead device from an array, 
-because the events are issued too late. The only way to remove dead 
-device is reboot, which is not what I would expect as solution in Linux 
-world.
+Uhmm... no.
 
-So I downloaded your code from Neil's git 
-(http://neil.brown.name/git?p=mdadm;a=shortlog;h=refs/heads/hotunplug)
-and also applied the "Minor incremental fixup" mentioned in your message 
-below.
+Disk:   1    2    3    4
+blocks  a    b    c    d
+        e    f    g    h
+         .........
+        d    a    b    c
+        h    e    f    g
 
-The compiled mdadm works OK for normal operations (--fail, --remove, 
---add), but crashes with Segmentation fault for the "--incremental 
---fail" operation if I use it for a disk that I have just disconnected.
-Here is what I've got:
-
-# gdb --args ./mdadm -If sda3
-GNU gdb 6.8-debian
-This GDB was configured as "x86_64-linux-gnu"...
-(gdb) run
-Starting program: /root/mdadm-git/mdadm/mdadm -If sda3
-Program received signal SIGSEGV, Segmentation fault.
-0x000000000040a796 in mdstat_by_component (name=0x7fff0d0aee83 "sda3") 
-at mdstat.c:351
-351                     if (ent->metadata_version &&
-(gdb) where
-#0  0x000000000040a796 in mdstat_by_component (name=0x7fff0d0aee83 
-"sda3") at mdstat.c:351
-#1  0x000000000042411c in IncrementalRemove (devname=0x7fff0d0aee83 
-"sda3", verbose=0) at Incremental.c:867
-#2  0x00000000004075a7 in main (argc=3, argv=0x7fff0d0ad698) at mdadm.c:1545
-
-It does not matter if I use sda3 or sda, the result is the same.
-What am I doing wrong?
-
-This is my environment:
-# uname -a
-Linux xeric 2.6.26-2-xen-amd64 #1 SMP Thu Nov 5 04:27:12 UTC 2009 x86_64 
-GNU/Linux
-
-# modinfo md_mod
-filename:       /lib/modules/2.6.26-2-xen-amd64/kernel/drivers/md/md-mod.ko
-alias:          block-major-9-*
-alias:          md
-license:        GPL
-depends:
-vermagic:       2.6.26-2-xen-amd64 SMP mod_unload modversions Xen
-parm:           start_dirty_degraded:int
-
-# cat /proc/mdstat
-Personalities : [raid1]
-md2 : active (auto-read-only) raid1 sda3[0] sdb3[1]
-      9767424 blocks [2/2] [UU]
-      bitmap: 0/150 pages [0KB], 32KB chunk
-
-md1 : active raid1 sda2[2](F) sdb2[1]
-      468752512 blocks [2/1] [_U]
-      bitmap: 18/224 pages [72KB], 1024KB chunk
-
-md0 : active raid1 sda1[0] sdb1[1]
-      497856 blocks [2/2] [UU]
-      bitmap: 0/61 pages [0KB], 4KB chunk
+If you only have first and second, then block c is missing.
+You want 1st and 3rd on one controller, 2nd and 4th on the other
+Then either controller can access all blocks.
 
 
-Thanks for your help!
+>=20
+> I believe the order is defined by the order the disks are specified i=
+n
+> on the mdadm --create line.
 
-Tomas Dulik,
-FAI TBU Zlin,
-Nad Stranemi 4511,
-CZECH REPUBLIC
-phone: +420 57 603 5187
+Correct.
 
-On 04/05/2010 12:40 PM, Doug Ledford wrote:
-> Minor incremental fixup: In the case of passing in faulty or
-> disconnected as the device name, since we now use the value of tfd to
-> determine if we should attempt ioctls or go straight to using sysfs
-> entries, we now need to make sure we init tdf and then set it properly
-> in both of the loops where we check for faulty and disconnected devices
-> (although I'm now highly suspicious of the faulty check code as I
-> suspect all the faulty devices will have the same problem that our hot
-> unplug code ran into and the faulty devices will not be openable and
-> that will mean that passing in faulty is probably just broken at this
-> point in time...but that's another patch for another day).
->
-> -- 
-> Doug Ledford <dledford@xxxxxxxxxx>
-> GPG KeyID: CFBFF194
-> http://people.redhat.com/dledford
->
-> Infiniband specific RPMs available at
-> http://people.redhat.com/dledford/Infiniband 
+NeilBrown
 
+
+>=20
+> best regards
+> keld
+>=20
+> On Mon, Apr 12, 2010 at 08:26:55PM -0700, Simon Matthews wrote:
+> > 2010/4/12 Tom=C3=A1=C5=A1 Dul=C3=ADk <dulik@unart.cz>:
+> > > Stefan /*St0fF*/ H=C3=BCbner napsal(a):
+> > >>
+> > >> I cannot quite understand your problem. =C2=A0As every part of t=
+he array
+> > >> contains it's own metadata, it doesn't matter to md which /dev/s=
+dX a
+> > >> drive is. =C2=A0It might matter a bit for boot-time assembly, bu=
+t actually
+> > >> that's what UUIDs are for.
+> > >>
+> > >
+> > > I know how UUIDs work.
+> > > My problem with device names is not a "critical", it's about "use=
+r
+> > > friendliness" of the physical disk management.
+> > > If a disk fails and I receive email "A Fail event had been detect=
+ed on md
+> > > device /dev/md2. It could be related to component device /dev/sdd=
+3", how
+> > > will I know which disk should be replaced, if the device name is =
+not
+> > > fixed/persistent? I
+> >=20
+> > Record the serial number of the disks and  which bay they are in.
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-rai=
+d" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
