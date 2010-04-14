@@ -1,281 +1,174 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: First experience with drive being kicked
-Date: Tue, 13 Apr 2010 19:24:22 -0700
-Message-ID: <p2z5bdc1c8b1004131924u1c4cd1ebj55f6ea59797fe1f6@mail.gmail.com>
-References: <n2t5bdc1c8b1004131554m1541784eve2987e7637723aeb@mail.gmail.com>
+From: Brett King <king.br@gmail.com>
+Subject: RAID6 reshape stalled 6 -> 7 disks, mdadm 3.1.2 / kernel 2.6.31
+Date: Wed, 14 Apr 2010 21:46:14 +1000
+Message-ID: <y2x8cf253381004140446s2cb82a5ao98b5817cad00009b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <n2t5bdc1c8b1004131554m1541784eve2987e7637723aeb@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux-RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Apr 13, 2010 at 3:54 PM, Mark Knecht <markknecht@gmail.com> wro=
-te:
-> OK, I was messing around in the box today adding two more drives and =
-I
-> probably hit a cable or something but maybe not. /dev/md3 was
-> effected, but md5 built on the same drives wasn't. Possibly this has
-> been there for a day or two and I didn't notice it. =C2=A0These drive=
-s are
-> only a few days old so I hope I'm not seeing some sort of early
-> problem. Supposedly good drives - WD 500GB RAID Edition.
->
-> Currently all my RAIDs are RAID1 assembled by the kernel at boot time=
-=2E
-> I have no mdadm.conf file. mdadm is a running daemon.
->
-> From dmesg:
->
-> md: considering sdb3 ...
-> md: =C2=A0adding sdb3 ...
-> md: =C2=A0adding sdc3 ...
-> md: =C2=A0adding sda3 ...
-> md: created md3
-> md: bind<sda3>
-> md: bind<sdc3>
-> md: bind<sdb3>
-> md: running: <sdb3><sdc3><sda3>
-> md: kicking non-fresh sdb3 from array!
-> md: unbind<sdb3>
-> md: export_rdev(sdb3)
-> raid1: raid set md3 active with 2 out of 3 mirrors
-> md3: detected capacity change from 0 to 53694562304
->
-> How do I go about trying to /dev/sdb3 back into the array and what
-> sort of checking is advised when this happens before I add it back?
-> The bad drive (sdb) doesn't look much different than the good drives.
-> (sda shown, sdc)
->
-> cruncher ~ # smartctl -A /dev/sdb
-> smartctl 5.39.1 2010-01-28 r3054 [x86_64-pc-linux-gnu] (local build)
-> Copyright (C) 2002-10 by Bruce Allen, http://smartmontools.sourceforg=
-e.net
->
-> =3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
-> SMART Attributes Data Structure revision number: 16
-> Vendor Specific SMART Attributes with Thresholds:
-> ID# ATTRIBUTE_NAME =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0FLAG =C2=A0 =C2=A0=
- VALUE WORST THRESH TYPE
-> UPDATED =C2=A0WHEN_FAILED RAW_VALUE
-> =C2=A01 Raw_Read_Error_Rate =C2=A0 =C2=A0 0x002f =C2=A0 200 =C2=A0 20=
-0 =C2=A0 051 =C2=A0 =C2=A0Pre-fail
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 0
-> =C2=A03 Spin_Up_Time =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A00x0027 =
-=C2=A0 239 =C2=A0 236 =C2=A0 021 =C2=A0 =C2=A0Pre-fail
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 1016
-> =C2=A04 Start_Stop_Count =C2=A0 =C2=A0 =C2=A0 =C2=A00x0032 =C2=A0 100=
- =C2=A0 100 =C2=A0 000 =C2=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 24
-> =C2=A05 Reallocated_Sector_Ct =C2=A0 0x0033 =C2=A0 200 =C2=A0 200 =C2=
-=A0 140 =C2=A0 =C2=A0Pre-fail
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 0
-> =C2=A07 Seek_Error_Rate =C2=A0 =C2=A0 =C2=A0 =C2=A0 0x002e =C2=A0 200=
- =C2=A0 200 =C2=A0 000 =C2=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 0
-> =C2=A09 Power_On_Hours =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A00x0032 =C2=A0=
- 100 =C2=A0 100 =C2=A0 000 =C2=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 87
-> =C2=A010 Spin_Retry_Count =C2=A0 =C2=A0 =C2=A0 =C2=A00x0032 =C2=A0 10=
-0 =C2=A0 253 =C2=A0 000 =C2=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 0
-> =C2=A011 Calibration_Retry_Count 0x0032 =C2=A0 100 =C2=A0 253 =C2=A0 =
-000 =C2=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 0
-> =C2=A012 Power_Cycle_Count =C2=A0 =C2=A0 =C2=A0 0x0032 =C2=A0 100 =C2=
-=A0 100 =C2=A0 000 =C2=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 22
-> 192 Power-Off_Retract_Count 0x0032 =C2=A0 200 =C2=A0 200 =C2=A0 000 =C2=
-=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 12
-> 193 Load_Cycle_Count =C2=A0 =C2=A0 =C2=A0 =C2=A00x0032 =C2=A0 200 =C2=
-=A0 200 =C2=A0 000 =C2=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 11
-> 194 Temperature_Celsius =C2=A0 =C2=A0 0x0022 =C2=A0 109 =C2=A0 105 =C2=
-=A0 000 =C2=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 38
-> 196 Reallocated_Event_Count 0x0032 =C2=A0 200 =C2=A0 200 =C2=A0 000 =C2=
-=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 0
-> 197 Current_Pending_Sector =C2=A00x0032 =C2=A0 200 =C2=A0 200 =C2=A0 =
-000 =C2=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 0
-> 198 Offline_Uncorrectable =C2=A0 0x0030 =C2=A0 100 =C2=A0 253 =C2=A0 =
-000 =C2=A0 =C2=A0Old_age
-> Offline =C2=A0 =C2=A0 =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
-> 199 UDMA_CRC_Error_Count =C2=A0 =C2=A00x0032 =C2=A0 200 =C2=A0 200 =C2=
-=A0 000 =C2=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 0
-> 200 Multi_Zone_Error_Rate =C2=A0 0x0008 =C2=A0 100 =C2=A0 253 =C2=A0 =
-000 =C2=A0 =C2=A0Old_age
-> Offline =C2=A0 =C2=A0 =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
->
-> cruncher ~ # smartctl -A /dev/sda
-> smartctl 5.39.1 2010-01-28 r3054 [x86_64-pc-linux-gnu] (local build)
-> Copyright (C) 2002-10 by Bruce Allen, http://smartmontools.sourceforg=
-e.net
->
-> =3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
-> SMART Attributes Data Structure revision number: 16
-> Vendor Specific SMART Attributes with Thresholds:
-> ID# ATTRIBUTE_NAME =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0FLAG =C2=A0 =C2=A0=
- VALUE WORST THRESH TYPE
-> UPDATED =C2=A0WHEN_FAILED RAW_VALUE
-> =C2=A01 Raw_Read_Error_Rate =C2=A0 =C2=A0 0x002f =C2=A0 200 =C2=A0 20=
-0 =C2=A0 051 =C2=A0 =C2=A0Pre-fail
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 0
-> =C2=A03 Spin_Up_Time =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A00x0027 =
-=C2=A0 239 =C2=A0 235 =C2=A0 021 =C2=A0 =C2=A0Pre-fail
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 1016
-> =C2=A04 Start_Stop_Count =C2=A0 =C2=A0 =C2=A0 =C2=A00x0032 =C2=A0 100=
- =C2=A0 100 =C2=A0 000 =C2=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 24
-> =C2=A05 Reallocated_Sector_Ct =C2=A0 0x0033 =C2=A0 200 =C2=A0 200 =C2=
-=A0 140 =C2=A0 =C2=A0Pre-fail
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 0
-> =C2=A07 Seek_Error_Rate =C2=A0 =C2=A0 =C2=A0 =C2=A0 0x002e =C2=A0 200=
- =C2=A0 200 =C2=A0 000 =C2=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 0
-> =C2=A09 Power_On_Hours =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A00x0032 =C2=A0=
- 100 =C2=A0 100 =C2=A0 000 =C2=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 87
-> =C2=A010 Spin_Retry_Count =C2=A0 =C2=A0 =C2=A0 =C2=A00x0032 =C2=A0 10=
-0 =C2=A0 253 =C2=A0 000 =C2=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 0
-> =C2=A011 Calibration_Retry_Count 0x0032 =C2=A0 100 =C2=A0 253 =C2=A0 =
-000 =C2=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 0
-> =C2=A012 Power_Cycle_Count =C2=A0 =C2=A0 =C2=A0 0x0032 =C2=A0 100 =C2=
-=A0 100 =C2=A0 000 =C2=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 22
-> 192 Power-Off_Retract_Count 0x0032 =C2=A0 200 =C2=A0 200 =C2=A0 000 =C2=
-=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 11
-> 193 Load_Cycle_Count =C2=A0 =C2=A0 =C2=A0 =C2=A00x0032 =C2=A0 200 =C2=
-=A0 200 =C2=A0 000 =C2=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 12
-> 194 Temperature_Celsius =C2=A0 =C2=A0 0x0022 =C2=A0 108 =C2=A0 106 =C2=
-=A0 000 =C2=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 39
-> 196 Reallocated_Event_Count 0x0032 =C2=A0 200 =C2=A0 200 =C2=A0 000 =C2=
-=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 0
-> 197 Current_Pending_Sector =C2=A00x0032 =C2=A0 200 =C2=A0 200 =C2=A0 =
-000 =C2=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 0
-> 198 Offline_Uncorrectable =C2=A0 0x0030 =C2=A0 100 =C2=A0 253 =C2=A0 =
-000 =C2=A0 =C2=A0Old_age
-> Offline =C2=A0 =C2=A0 =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
-> 199 UDMA_CRC_Error_Count =C2=A0 =C2=A00x0032 =C2=A0 200 =C2=A0 200 =C2=
-=A0 000 =C2=A0 =C2=A0Old_age
-> Always =C2=A0 =C2=A0 =C2=A0 - =C2=A0 =C2=A0 =C2=A0 0
-> 200 Multi_Zone_Error_Rate =C2=A0 0x0008 =C2=A0 100 =C2=A0 253 =C2=A0 =
-000 =C2=A0 =C2=A0Old_age
-> Offline =C2=A0 =C2=A0 =C2=A0- =C2=A0 =C2=A0 =C2=A0 0
->
-> cruncher ~ #
->
-> Thanks,
-> Mark
->
+Hi,
+I added another 2TB disk to grow a 6-disk RAID6 array as I have always
+done but this time it has failed to complete the reshape .. it always
+stalls at a particular block number and nothing I have tried can get
+it moving again.
 
-So hopefully the process used below is basically correct.
-
-- Mark
-
-cruncher ~ # man mdadm
-cruncher ~ # cat /proc/mdstat
-Personalities : [raid0] [raid1]
-md11 : active raid0 sde1[1] sdd1[0]
-      104871936 blocks super 1.1 512k chunks
-
-md3 : active raid1 sdc3[2] sda3[0]
-      52436096 blocks [3/2] [U_U]
-
-md5 : active raid1 sdb5[1] sdc5[2] sda5[0]
-      52436032 blocks [3/3] [UUU]
+array:~ # mdadm -V
+mdadm - v3.1.2 - 10th March 2010
+array:~ # uname -a
+Linux array 2.6.31.12-0.2-default #1 SMP 2010-03-16 21:25:39 +0100
+x86_64 x86_64 x86_64 GNU/Linux
+array:~ # cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md2000 : active raid6 sdl[0] sda[6] sdq[5] sdp[4] sdo[3] sdn[2] sdm[1]
+      7814057808 blocks super 1.1 level 6, 4k chunk, algorithm 18
+[7/7] [UUUUUUU]
+      [=================>...]  reshape = 87.9% (1717986916/1953514452)
+finish=224763.6min speed=17K/sec
 
 unused devices: <none>
-cruncher ~ # mdadm /dev/md3 -f /dev/sdb3
-mdadm: set device faulty failed for /dev/sdb3:  No such device
-cruncher ~ # mdadm /dev/md3 -r /dev/sdb3
-mdadm: hot remove failed for /dev/sdb3: No such device or address
-cruncher ~ # fdisk /dev/sdb
+array:~ # cat /sys/block/md2000/md/sync_speed_max
+200000 (system)
+array:~ # cat /sys/block/md2000/md/sync_speed_min
+1000 (system)
+array:~ # cat /sys/block/md2000/md/stripe_cache_size
+8192
+array:~ #
 
-WARNING: DOS-compatible mode is deprecated. It's strongly recommended t=
-o
-         switch off the mode (command 'c') and change display units to
-         sectors (command 'u').
+I've tried several other values for stripe_cache_size: 1024, 16384 &
+32768 without any effect.
+The host needs a hard reset after assembling the array as any
+subsequent 'mdadm -S' or 'reboot' commands hang.
+This is one of several arrays in an LVM volume group.
 
-Command (m for help): p
+Syslog messages:
 
-Disk /dev/sdb: 500.1 GB, 500107862016 bytes
-255 heads, 63 sectors/track, 60801 cylinders
-Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disk identifier: 0x703d11ba
+Apr 14 17:47:51 array kernel: [  630.433884] md: md2000 stopped.
+Apr 14 17:47:51 array kernel: [  630.435937] md: bind<sdm>
+Apr 14 17:47:51 array kernel: [  630.436132] md: bind<sdn>
+Apr 14 17:47:51 array kernel: [  630.436343] md: bind<sdo>
+Apr 14 17:47:51 array kernel: [  630.436444] md: bind<sdp>
+Apr 14 17:47:51 array kernel: [  630.436550] md: bind<sdq>
+Apr 14 17:47:51 array kernel: [  630.436648] md: bind<sda>
+Apr 14 17:47:51 array kernel: [  630.436802] md: bind<sdl>
+Apr 14 17:47:51 array kernel: [  630.442766] xor: automatically using
+best checksumming function: generic_sse
+Apr 14 17:47:51 array kernel: [  630.462854]    generic_sse:  6780.000
+MB/sec
+Apr 14 17:47:51 array kernel: [  630.462859] xor: using function:
+generic_sse (6780.000 MB/sec)
+Apr 14 17:47:51 array kernel: [  630.465450] async_tx: api initialized
+(async)
+Apr 14 17:47:51 array kernel: [  630.542715] raid6: int64x1   1453
+MB/s
+Apr 14 17:47:51 array kernel: [  630.610590] raid6: int64x2   1897
+MB/s
+Apr 14 17:47:51 array kernel: [  630.678522] raid6: int64x4   1274
+MB/s
+Apr 14 17:47:51 array kernel: [  630.746337] raid6: int64x8   1335
+MB/s
+Apr 14 17:47:51 array kernel: [  630.814238] raid6: sse2x1    3963
+MB/s
+Apr 14 17:47:52 array kernel: [  630.882120] raid6: sse2x2    4655
+MB/s
+Apr 14 17:47:52 array kernel: [  630.949976] raid6: sse2x4    5259
+MB/s
+Apr 14 17:47:52 array kernel: [  630.949982] raid6: using algorithm
+sse2x4 (5259 MB/s)
+Apr 14 17:47:52 array kernel: [  630.962615] md: raid6 personality
+registered for level 6
+Apr 14 17:47:52 array kernel: [  630.962622] md: raid5 personality
+registered for level 5
+Apr 14 17:47:52 array kernel: [  630.962627] md: raid4 personality
+registered for level 4
+Apr 14 17:47:52 array kernel: [  630.968504] raid5: md2000 is not
+clean -- starting background reconstruction
+Apr 14 17:47:52 array kernel: [  630.968512] raid5: reshape will
+continue
+Apr 14 17:47:52 array kernel: [  630.968521] raid5: device sdl
+operational as raid disk 0
+Apr 14 17:47:52 array kernel: [  630.968526] raid5: device sda
+operational as raid disk 6
+Apr 14 17:47:52 array kernel: [  630.968530] raid5: device sdq
+operational as raid disk 5
+Apr 14 17:47:52 array kernel: [  630.968535] raid5: device sdp
+operational as raid disk 4
+Apr 14 17:47:52 array kernel: [  630.968540] raid5: device sdo
+operational as raid disk 3
+Apr 14 17:47:52 array kernel: [  630.968545] raid5: device sdn
+operational as raid disk 2
+Apr 14 17:47:52 array kernel: [  630.968549] raid5: device sdm
+operational as raid disk 1
+Apr 14 17:47:52 array kernel: [  630.970550] raid5: allocated 7436kB
+for md2000
+Apr 14 17:47:52 array kernel: [  630.970724] raid5: raid level 6 set
+md2000 active with 7 out of 7 devices, algorithm 18
+Apr 14 17:47:52 array kernel: [  630.970731] RAID5 conf printout:
+Apr 14 17:47:52 array kernel: [  630.970734]  --- rd:7 wd:7
+Apr 14 17:47:52 array kernel: [  630.970738]  disk 0, o:1, dev:sdl
+Apr 14 17:47:52 array kernel: [  630.970742]  disk 1, o:1, dev:sdm
+Apr 14 17:47:52 array kernel: [  630.970745]  disk 2, o:1, dev:sdn
+Apr 14 17:47:52 array kernel: [  630.970749]  disk 3, o:1, dev:sdo
+Apr 14 17:47:52 array kernel: [  630.970753]  disk 4, o:1, dev:sdp
+Apr 14 17:47:52 array kernel: [  630.970757]  disk 5, o:1, dev:sdq
+Apr 14 17:47:52 array kernel: [  630.970761]  disk 6, o:1, dev:sda
+Apr 14 17:47:52 array kernel: [  630.970764] ...ok start reshape
+thread
+Apr 14 17:47:52 array kernel: [  630.970981] md2000: detected capacity
+change from 0 to 8001595195392
+Apr 14 17:47:52 array kernel: [  630.971035] md: reshape of RAID array
+md2000
+Apr 14 17:47:52 array kernel: [  630.971046] md: minimum _guaranteed_
+speed: 1000 KB/sec/disk.
+Apr 14 17:47:52 array kernel: [  630.971055] md: using maximum
+available idle IO bandwidth (but not more than 200000 KB/sec) for
+reshape.
+Apr 14 17:47:52 array kernel: [  630.971093] md: using 128k window,
+over a total of 1953514452 blocks.
+Apr 14 17:47:52 array kernel: [  631.740804]  md2000: unknown
+partition table
+Apr 14 17:48:00 array kernel: [  639.084194] compute_blocknr: map not
+correct
+Apr 14 17:48:00 array kernel: [  639.084206] compute_blocknr: map not
+correct
 
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sdb1   *           1           7       56196   83  Linux
-/dev/sdb2               8         530     4200997+  82  Linux swap / So=
-laris
-/dev/sdb3             536        7063    52436160   fd  Linux raid auto=
-detect
-/dev/sdb4            7064       60801   431650485    5  Extended
-/dev/sdb5            7064       13591    52436128+  fd  Linux raid auto=
-detect
+<output suppressed>
 
-Command (m for help): q
+Apr 14 17:48:00 array kernel: [  639.095681] compute_blocknr: map not
+correct
+Apr 14 17:50:06 array kernel: [  765.171809] INFO: task
+md2000_reshape:3216 blocked for more than 120 seconds.
+Apr 14 17:50:06 array kernel: [  765.171817] "echo 0 >
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Apr 14 17:50:06 array kernel: [  765.171824] md2000_reshap D
+0000000000000000     0  3216      2 0x00000000
+Apr 14 17:50:06 array kernel: [  765.171832]  ffff88046c963ac0
+0000000000000046 ffff88046c963a40 0000000000013a00
+Apr 14 17:50:06 array kernel: [  765.171841]  ffff88046d5ac8a8
+0000000000013a00 0000000000013a00 0000000000013a00
+Apr 14 17:50:06 array kernel: [  765.171849]  0000000000013a00
+ffff88046d5ac8a8 0000000000013a00 0000000000013a00
+Apr 14 17:50:06 array kernel: [  765.171857] Call Trace:
+Apr 14 17:50:06 array kernel: [  765.171874]  [<ffffffffa01490a0>]
+get_active_stripe+0x2b0/0x3d0 [raid456]
+Apr 14 17:50:06 array kernel: [  765.171894]  [<ffffffffa014b570>]
+reshape_request+0x350/0xa10 [raid456]
+Apr 14 17:50:06 array kernel: [  765.171910]  [<ffffffffa014bf82>]
+sync_request+0x352/0x3d0 [raid456]
+Apr 14 17:50:06 array kernel: [  765.171925]  [<ffffffff81416a68>]
+md_do_sync+0x668/0xc10
+Apr 14 17:50:06 array kernel: [  765.171934]  [<ffffffff81417894>]
+md_thread+0x54/0x150
+Apr 14 17:50:06 array kernel: [  765.171944]  [<ffffffff8108ea66>]
+kthread+0xb6/0xc0
+Apr 14 17:50:06 array kernel: [  765.171953]  [<ffffffff8100d70a>]
+child_rip+0xa/0x20
 
-cruncher ~ # mdadm /dev/md3 -a /dev/sdb3
-mdadm: re-added /dev/sdb3
-cruncher ~ # cat /proc/mdstat
-Personalities : [raid0] [raid1]
-md11 : active raid0 sde1[1] sdd1[0]
-      104871936 blocks super 1.1 512k chunks
+<repeats every 120 seconds>
 
-md3 : active raid1 sdb3[3] sdc3[2] sda3[0]
-      52436096 blocks [3/2] [U_U]
-      [>....................]  recovery =3D  1.3% (695488/52436096)
-finish=3D8.6min speed=3D99355K/sec
+Any ideas ? I've also had the same problem on 2.6.34-rc3 :(
 
-md5 : active raid1 sdb5[1] sdc5[2] sda5[0]
-      52436032 blocks [3/3] [UUU]
-
-unused devices: <none>
-cruncher ~ # cat /proc/mdstat
-Personalities : [raid0] [raid1]
-md11 : active raid0 sde1[1] sdd1[0]
-      104871936 blocks super 1.1 512k chunks
-
-md3 : active raid1 sdb3[3] sdc3[2] sda3[0]
-      52436096 blocks [3/2] [U_U]
-      [=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D>.........]  recovery =3D 56.3%=
- (29540736/52436096)
-finish=3D5.0min speed=3D75950K/sec
-
-md5 : active raid1 sdb5[1] sdc5[2] sda5[0]
-      52436032 blocks [3/3] [UUU]
-
-unused devices: <none>
-cruncher ~ # cat /proc/mdstat
-Personalities : [raid0] [raid1]
-md11 : active raid0 sde1[1] sdd1[0]
-      104871936 blocks super 1.1 512k chunks
-
-md3 : active raid1 sdb3[1] sdc3[2] sda3[0]
-      52436096 blocks [3/3] [UUU]
-
-md5 : active raid1 sdb5[1] sdc5[2] sda5[0]
-      52436032 blocks [3/3] [UUU]
-
-unused devices: <none>
-cruncher ~ #
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks in advance.
+Brett.
