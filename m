@@ -1,156 +1,89 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH] imsm: assign UUID of spare device based on ARRAY *device*
-	keyword in mdadm configuration file.
-Date: Wed, 14 Apr 2010 15:15:01 -0700
-Message-ID: <p2ke9c3a7c21004141515kd565d755z1a522de001b9722f@mail.gmail.com>
-References: <66C59AD0932712458090B447266D638CD3DBE917@irsmsx504.ger.corp.intel.com>
+From: James Braid <jamesb@loreland.org>
+Subject: grow fails with 2.6.34 git
+Date: Wed, 14 Apr 2010 23:10:06 +0100
+Message-ID: <hq5efu$mqb$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <66C59AD0932712458090B447266D638CD3DBE917@irsmsx504.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
-Cc: Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Apr 8, 2010 at 7:48 AM, Hawrylewicz Czarnowski, Przemyslaw
-<przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
-> If config has list of devices associated with container and it compri=
-ses given spare drive, UUID is set apporopriately to this container.
-> It allows to assign spare with proper container according
-> to content in devices parameter in configuration file.
->
+Trying to grow a 4 disk RAID 5 array to a 6 disk RAID 6 array - running 
+2.6.34-rc2 (also tried with latest git, same sysfs errors)
 
-I guess it would be nice if a user could direct spares via the
-configuration file, but what gets honored in the future when this
-value conflicts with a container group id in the metadata?  Especially
-when the actual device associated with a given name /dev/sda changes
-from one boot to the next, potentially even across controllers, or the
-admin moves the drive and forgets to update the configuration file.
-As much as possible I would like everything to be determined from the
-platform / metadata and discourage using the 'devices' line in the
-configuration file.
+Using mdadm from git.
 
-So, I'm on the fence with this one.
+Here's the error I get when I try to perform the grow:
 
-A couple technical comments below:
+# ./mdadm --grow --backup-file=/root/backup.md4 --level=6 
+--raid-devices=6 /dev/md4
+mdadm: Need to backup 768K of critical section..
+mdadm: /dev/md4: Cannot get array details from sysfs
 
-> Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnows=
-ki@intel.com>
-> ---
-> =A0super-intel.c | =A0 48 +++++++++++++++++++++++++++++++++++++++++++=
------
-> =A01 files changed, 43 insertions(+), 5 deletions(-)
->
-> diff --git a/super-intel.c b/super-intel.c
-> index a196ca3..41a4cc6 100644
-> --- a/super-intel.c
-> +++ b/super-intel.c
-> @@ -1497,10 +1497,19 @@ static void getinfo_super_imsm_volume(struct =
-supertype *st, struct mdinfo *info)
-> =A0 =A0 =A0 =A0uuid_from_super_imsm(st, info->uuid);
-> =A0}
->
-> +static int matchfd2devnum(int fd, int maj, int min)
-> +{
-> + =A0 =A0 =A0 struct stat st;
-> + =A0 =A0 =A0 if (fstat(fd, &st) !=3D 0)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 1;
-> + =A0 =A0 =A0 return ((int)major(st.st_rdev) =3D=3D maj && (int)minor=
-(st.st_rdev) =3D=3D min);
-> +}
-> +
-> +
-> =A0/* check the config file to see if we can return a real uuid for t=
-his spare */
-> -static void fixup_container_spare_uuid(struct mdinfo *inf)
-> +static void fixup_container_spare_uuid(struct mdinfo *inf, struct dl=
- *disk)
-> =A0{
-> - =A0 =A0 =A0 struct mddev_ident_s *array_list;
-> + =A0 =A0 =A0 struct mddev_ident_s *array_list, *first_match =3D NULL=
-;
->
-> =A0 =A0 =A0 =A0if (inf->array.level !=3D LEVEL_CONTAINER ||
-> =A0 =A0 =A0 =A0 =A0 =A0memcmp(inf->uuid, uuid_match_any, sizeof(int[4=
-])) !=3D 0)
-> @@ -1520,12 +1529,41 @@ static void fixup_container_spare_uuid(struct=
- mdinfo *inf)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0_sst =3D=
- NULL;
->
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (_sst) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 memcpy(=
-inf->uuid, array_list->uuid, sizeof(int[4]));
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 char *d=
-evices =3D array_list->devices;
-> +
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!fi=
-rst_match)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 first_match =3D array_list;
-> +
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 while (=
-disk && devices && *devices) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 char path[PATH_MAX];
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 char *p =3D devices;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 int fd;
-> +
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 devices =3D strchr(devices, ',');
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 if (!devices)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 devices =3D p + strlen(p);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 if (devices-p < PATH_MAX) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 strncpy(path, p, devices - p);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 if ((fd =3D open(path, O_RDONLY)) >=3D 0) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (matchfd2devnum(fd, disk->m=
-ajor, disk->minor)) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 free(_sst);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 close(fd);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto match;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 close(fd);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 }
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 if (*devices =3D=3D ',')
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 devices++;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 }
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md4 : active raid6 sde[0] sdg[5](S) sdh[6](S) sdc[3] sdd[2] sdf[1]
+       4395415488 blocks level 6, 64k chunk, algorithm 18 [5/4] [UUUU_]
 
-This routine is already available: match_oneof() in config.c
+unused devices: <none>
 
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0free(_=
-sst);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0}
-> =A0 =A0 =A0 =A0}
-> +match:;
+dmesg reports lots of sysfs errors:
 
-Don't need a semicolon after a label.
+[  922.249484] ------------[ cut here ]------------
+[  922.249549] WARNING: at fs/sysfs/dir.c:451 sysfs_add_one+0xcc/0xe3()
+[  922.249609] Hardware name: GA-MA785GT-UD3H
+[  922.249673] sysfs: cannot create duplicate filename 
+'/devices/virtual/block/md4/md/stripe_cache_size'
+[  922.249783] Modules linked in: ppdev lp parport sco bridge stp bnep 
+rfcomm l2cap crc16 dahdi_echocan_oslec echo powernow_k8 
+cpufreq_userspace cpufreq_stats cpufreq_powersave cpufreq_conservative 
+uinput fuse ext3 jbd mbcache it87 hwmon_vid raid456 async_raid6_recov 
+async_pq raid6_pq async_xor xor async_memcpy async_tx md_mod btusb 
+bluetooth pl2303 rfkill usbserial snd_hda_codec_nvhdmi 
+snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_pcm_oss snd_hwdep 
+snd_mixer_oss ata_generic snd_pcm snd_seq_midi ide_pci_generic 
+snd_rawmidi snd_seq_midi_event snd_seq snd_timer snd_seq_device r8169 
+firewire_ohci wcopenpci snd edac_core ahci i2c_piix4 ohci_hcd k10temp 
+soundcore mii atiixp firewire_core edac_mce_amd tpm_tis libata nvidia(P) 
+ide_core agpgart wctdm tpm dahdi snd_page_alloc tpm_bios i2c_core floppy 
+processor button crc_itu_t crc_ccitt evdev xfs exportfs sd_mod 
+crc_t10dif dm_mod thermal fan thermal_sys ehci_hcd usb_storage usbcore 
+nls_base scsi_mod
+[  922.254181] Pid: 10642, comm: mdadm Tainted: P        W 
+2.6.34-rc2-amd64 #2
+[  922.254241] Call Trace:
+[  922.254302]  [<ffffffff8104548d>] ? warn_slowpath_common+0x76/0x8c
+[  922.254366]  [<ffffffff810454f5>] ? warn_slowpath_fmt+0x40/0x45
+[  922.254427]  [<ffffffff811363d9>] ? sysfs_add_one+0xcc/0xe3
+[  922.254490]  [<ffffffff811355e6>] ? sysfs_add_file_mode+0x4b/0x7d
+[  922.254553]  [<ffffffff8113750c>] ? internal_create_group+0xdd/0x16b
+[  922.259781]  [<ffffffffa0d50f12>] ? run+0x4fa/0x685 [raid456]
+[  922.259853]  [<ffffffffa0d08b20>] ? level_store+0x3b7/0x42e [md_mod]
+[  922.259922]  [<ffffffffa0d05b1f>] ? md_attr_store+0x77/0x96 [md_mod]
+[  922.259988]  [<ffffffff811350ae>] ? sysfs_write_file+0xe3/0x11f
+[  922.260061]  [<ffffffff810e5e34>] ? vfs_write+0xa4/0x101
+[  922.260122]  [<ffffffff810e5f44>] ? sys_write+0x45/0x6b
+[  922.260183]  [<ffffffff810089c2>] ? system_call_fastpath+0x16/0x1b
+[  922.260243] ---[ end trace f9f1fcb8cad24d01 ]---
+[  922.260381] raid5: failed to create sysfs attributes for md4
 
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+After the grow failed, I stopped the array and restarted it. At that 
+point it appears to be continuing with the grow process? Is this correct?
+
+# mdadm --stop /dev/md4
+mdadm: stopped /dev/md4
+
+# mdadm --assemble /dev/md4
+mdadm: /dev/md4 has been started with 4 drives (out of 5) and 2 spares.
+
+# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4]
+md4 : active raid6 sde[0] sdh[5] sdg[6](S) sdc[3] sdd[2] sdf[1]
+       4395415488 blocks level 6, 64k chunk, algorithm 18 [5/4] [UUUU_]
+       [>....................]  recovery =  0.0% (147712/1465138496) 
+finish=661.1min speed=36928K/sec
+
+unused devices: <none>
+
