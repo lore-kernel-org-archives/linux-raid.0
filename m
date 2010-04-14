@@ -1,62 +1,37 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Swap on /dev/md1 always lost after reboot
-Date: Wed, 14 Apr 2010 16:13:47 -0400
-Message-ID: <4BC621FB.3060603@tmr.com>
-References: <4BB00EBF.7070304@gmx.net> <4BB01158.6050109@gmx.net> <4877c76c1003282333j7250a117y4dcff2aa12f75e9b@mail.gmail.com> <4BB0E42D.8030406@gmx.net>
+Subject: Re: Linux Raid performance
+Date: Wed, 14 Apr 2010 16:50:35 -0400
+Message-ID: <4BC62A9B.5030706@tmr.com>
+References: <r2v7efa8a7d1003311242vfa92024ar93ad2123a7b49806@mail.gmail.com>	 <20100331201539.GA19395@rap.rap.dk>	 <g2s7efa8a7d1004012007ibe8b42b6k28a6d2a531fb6103@mail.gmail.com>	 <20100402110506.GA16294@rap.rap.dk>	 <x2q7efa8a7d1004021055oe2e832ccl8877e9171b8f3442@mail.gmail.com> <l2j5bdc1c8b1004021739z969b99v6011fcc6fddd470a@mail.gmail.com> <4BB69670.3040303@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BB0E42D.8030406@gmx.net>
+In-Reply-To: <4BB69670.3040303@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Joachim Otahal <Jou@gmx.net>
-Cc: Michael Evans <mjevans1983@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
+To: Richard Scobie <richard@sauce.co.nz>
+Cc: Mark Knecht <markknecht@gmail.com>, Learner Study <learner.study@gmail.com>, linux-raid@vger.kernel.org, keld@dkuug.dk
 List-Id: linux-raid.ids
 
-Joachim Otahal wrote:
-> Michael Evans schrieb:
->> On Sun, Mar 28, 2010 at 7:32 PM, Joachim Otahal<Jou@gmx.net>  wrote:
->>   
->>> Joachim Otahal schrieb:
->>>     
->>>> free says: swap active, mdstat says:
->>>> md2 : active (auto-read-only) raid1 sda2[1] sdb2[0]
->>>>       979840 blocks [2/2] [UU]
->>>>        
->>> minor correction: the output right after creating the raid + issuing a
->>> mkswap is
->>> md2 : active raid1 sda2[1] sdb2[0]
->>>       979840 blocks [2/2] [UU]
->>>       [=======>.............]  resync = 37.9% (372480/979840) 
->>> finish=0.1min
->>> speed=93120K/sec
->>>
->>> and a few second later:
->>> md2 : active raid1 sda2[1] sdb2[0]
->>>       979840 blocks [2/2] [UU]
->>>
->>> mdadm.conf updated, but md2 still not there after reboot.
->>>
->>> Joachim
->>>
->>> -- 
->>> To unsubscribe from this list: send the line "unsubscribe 
->>> linux-raid" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>>      
->> Trigger the regeneration of your initrd/initramfs image.  It's
->> probably got an mdadm.conf that lacks your second device.
->>
->>    
-> Strike, thank you.
+Richard Scobie wrote:
+> Mark Knecht wrote:
 >
-> Joachim Otahal
+>> Once all of that is in place then possibly more cores will help, but I
+>> suspect even then it probably hard to use 4 billion CPU cycles/second
+>> doing nothing but disk I/O. SATA controllers are all doing DMA so CPU
+>> overhead is relatively *very* low.
+>
+> There is the RAID5/6 parity calculations to be considered on writes 
+> and this appears to be single threaded. There is an experimental 
+> multicore kernel option I believe, but recent discussion indicates 
+> there may be some problems with it.
 
-My thought was that you didn't change the partition type to 
-"raid-autostart" so the array got started by the kernel (0.90 meta 
-needed). I suspect that would have fixed it as well.
+That is being polite. With that option set just doing a 'check' on a 
+raid-5 will generate 100s of threads and max out all cores. I was trying 
+to run the experimental FC13 64 bit kernel, and all of a sudden the 
+machine came to a crawl and the cpu use went to 95%+ on all cores. Also 
+drove the CPU temp way up, so I have to regard this as unsuitable for 
+anything but light testing.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
