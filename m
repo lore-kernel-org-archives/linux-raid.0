@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 20/28] md: start to refactor do_md_stop
+Subject: [md PATCH 21/28] md: factor md_stop_writes out of do_md_stop.
 Date: Thu, 15 Apr 2010 16:21:08 +1000
-Message-ID: <20100415062108.5126.84679.stgit@notabene.brown>
+Message-ID: <20100415062108.5126.73731.stgit@notabene.brown>
 References: <20100415061516.5126.53068.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -12,141 +12,93 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-do_md_stop is large and clunky, so hard to understand.
+Further refactoring of do_md_stop.
+This one requires some explanation as it takes code from different
+places in do_md_stop, so some re-ordering happens.
 
-This is a first step of refactoring, pulling two simple
-sub-functions out.
+We only get into this part of do_md_stop if there are no active opens
+of the device, so no writes can be happening and the device must have
+been flushed.  In md_stop_writes we want to stop any internal sources
+of writes - i.e. resync - and flush out the metadata.
+
+The only code that was previously before some of this code is
+code to clean up the queue, the mddev, the gendisk, or sysfs, all
+of which is probably better after code that makes active changes (i.e.
+triggers writes).
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
- drivers/md/md.c |   98 +++++++++++++++++++++++++++++++------------------------
- 1 files changed, 55 insertions(+), 43 deletions(-)
+ drivers/md/md.c |   37 ++++++++++++++++++++++---------------
+ 1 files changed, 22 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 91333fe..3e9a96e 100644
+index 3e9a96e..15f533d 100644
 --- a/drivers/md/md.c
 +++ b/drivers/md/md.c
-@@ -4567,6 +4567,58 @@ void restore_bitmap_write_access(struct file *file)
- 	spin_unlock(&inode->i_lock);
+@@ -4609,6 +4609,27 @@ static void md_clean(mddev_t *mddev)
+ 	mddev->bitmap_info.max_write_behind = 0;
  }
  
-+static void md_clean(mddev_t *mddev)
++static void md_stop_writes(mddev_t *mddev)
 +{
-+	mddev->array_sectors = 0;
-+	mddev->external_size = 0;
-+	mddev->dev_sectors = 0;
-+	mddev->raid_disks = 0;
-+	mddev->recovery_cp = 0;
-+	mddev->resync_min = 0;
-+	mddev->resync_max = MaxSector;
-+	mddev->reshape_position = MaxSector;
-+	mddev->external = 0;
-+	mddev->persistent = 0;
-+	mddev->level = LEVEL_NONE;
-+	mddev->clevel[0] = 0;
-+	mddev->flags = 0;
-+	mddev->ro = 0;
-+	mddev->metadata_type[0] = 0;
-+	mddev->chunk_sectors = 0;
-+	mddev->ctime = mddev->utime = 0;
-+	mddev->layout = 0;
-+	mddev->max_disks = 0;
-+	mddev->events = 0;
-+	mddev->delta_disks = 0;
-+	mddev->new_level = LEVEL_NONE;
-+	mddev->new_layout = 0;
-+	mddev->new_chunk_sectors = 0;
-+	mddev->curr_resync = 0;
-+	mddev->resync_mismatches = 0;
-+	mddev->suspend_lo = mddev->suspend_hi = 0;
-+	mddev->sync_speed_min = mddev->sync_speed_max = 0;
-+	mddev->recovery = 0;
-+	mddev->in_sync = 0;
-+	mddev->degraded = 0;
-+	mddev->barriers_work = 0;
-+	mddev->safemode = 0;
-+	mddev->bitmap_info.offset = 0;
-+	mddev->bitmap_info.default_offset = 0;
-+	mddev->bitmap_info.chunksize = 0;
-+	mddev->bitmap_info.daemon_sleep = 0;
-+	mddev->bitmap_info.max_write_behind = 0;
++	if (mddev->sync_thread) {
++		set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
++		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
++		md_unregister_thread(mddev->sync_thread);
++		mddev->sync_thread = NULL;
++	}
++
++	del_timer_sync(&mddev->safemode_timer);
++
++	bitmap_flush(mddev);
++	md_super_wait(mddev);
++
++	if (!mddev->in_sync || mddev->flags) {
++		/* mark array as shutdown cleanly */
++		mddev->in_sync = 1;
++		md_update_sb(mddev, 1);
++	}
 +}
 +
-+static void md_stop(mddev_t *mddev)
-+{
-+	mddev->pers->stop(mddev);
-+	if (mddev->pers->sync_request && mddev->to_remove == NULL)
-+		mddev->to_remove = &md_redundancy_group;
-+	module_put(mddev->pers->owner);
-+	mddev->pers = NULL;
-+
-+}
-+
- /* mode:
-  *   0 - completely stop and dis-assemble array
-  *   1 - switch to readonly
-@@ -4607,14 +4659,11 @@ static int do_md_stop(mddev_t * mddev, int mode, int is_open)
+ static void md_stop(mddev_t *mddev)
+ {
+ 	mddev->pers->stop(mddev);
+@@ -4636,14 +4657,7 @@ static int do_md_stop(mddev_t * mddev, int mode, int is_open)
+ 		err = -EBUSY;
+ 	} else if (mddev->pers) {
+ 
+-		if (mddev->sync_thread) {
+-			set_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
+-			set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+-			md_unregister_thread(mddev->sync_thread);
+-			mddev->sync_thread = NULL;
+-		}
+-
+-		del_timer_sync(&mddev->safemode_timer);
++		md_stop_writes(mddev);
+ 
+ 		switch(mode) {
+ 		case 1: /* readonly */
+@@ -4654,8 +4668,6 @@ static int do_md_stop(mddev_t * mddev, int mode, int is_open)
+ 			break;
+ 		case 0: /* disassemble */
+ 		case 2: /* stop */
+-			bitmap_flush(mddev);
+-			md_super_wait(mddev);
  			if (mddev->ro)
  				set_disk_ro(disk, 0);
  
--			mddev->pers->stop(mddev);
-+			md_stop(mddev);
- 			mddev->queue->merge_bvec_fn = NULL;
- 			mddev->queue->unplug_fn = NULL;
- 			mddev->queue->backing_dev_info.congested_fn = NULL;
--			module_put(mddev->pers->owner);
--			if (mddev->pers->sync_request && mddev->to_remove == NULL)
--				mddev->to_remove = &md_redundancy_group;
--			mddev->pers = NULL;
-+
- 			/* tell userspace to handle 'inactive' */
- 			sysfs_notify_dirent(mddev->sysfs_state);
- 
-@@ -4662,44 +4711,7 @@ out:
- 
- 		export_array(mddev);
- 
--		mddev->array_sectors = 0;
--		mddev->external_size = 0;
--		mddev->dev_sectors = 0;
--		mddev->raid_disks = 0;
--		mddev->recovery_cp = 0;
--		mddev->resync_min = 0;
--		mddev->resync_max = MaxSector;
--		mddev->reshape_position = MaxSector;
--		mddev->external = 0;
--		mddev->persistent = 0;
--		mddev->level = LEVEL_NONE;
--		mddev->clevel[0] = 0;
--		mddev->flags = 0;
--		mddev->ro = 0;
--		mddev->metadata_type[0] = 0;
--		mddev->chunk_sectors = 0;
--		mddev->ctime = mddev->utime = 0;
--		mddev->layout = 0;
--		mddev->max_disks = 0;
--		mddev->events = 0;
--		mddev->delta_disks = 0;
--		mddev->new_level = LEVEL_NONE;
--		mddev->new_layout = 0;
--		mddev->new_chunk_sectors = 0;
--		mddev->curr_resync = 0;
--		mddev->resync_mismatches = 0;
--		mddev->suspend_lo = mddev->suspend_hi = 0;
--		mddev->sync_speed_min = mddev->sync_speed_max = 0;
--		mddev->recovery = 0;
--		mddev->in_sync = 0;
--		mddev->degraded = 0;
--		mddev->barriers_work = 0;
--		mddev->safemode = 0;
--		mddev->bitmap_info.offset = 0;
--		mddev->bitmap_info.default_offset = 0;
--		mddev->bitmap_info.chunksize = 0;
--		mddev->bitmap_info.daemon_sleep = 0;
--		mddev->bitmap_info.max_write_behind = 0;
-+		md_clean(mddev);
- 		kobject_uevent(&disk_to_dev(mddev->gendisk)->kobj, KOBJ_CHANGE);
- 		if (mddev->hold_active == UNTIL_STOP)
- 			mddev->hold_active = 0;
+@@ -4680,11 +4692,6 @@ static int do_md_stop(mddev_t * mddev, int mode, int is_open)
+ 			if (mddev->ro)
+ 				mddev->ro = 0;
+ 		}
+-		if (!mddev->in_sync || mddev->flags) {
+-			/* mark array as shutdown cleanly */
+-			mddev->in_sync = 1;
+-			md_update_sb(mddev, 1);
+-		}
+ 		if (mode == 1)
+ 			set_disk_ro(disk, 1);
+ 		clear_bit(MD_RECOVERY_FROZEN, &mddev->recovery);
 
 
