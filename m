@@ -1,52 +1,50 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [Patch mdadm] Add hot-unplug support to mdadm
-Date: Thu, 15 Apr 2010 15:24:16 +1000
-Message-ID: <20100415152416.4339c7e6@notabene.brown>
-References: <4BBA1289.4010705@redhat.com>
-	<20100407113035.3ca437f2@notabene.brown>
-	<4BBBE7D2.6090608@redhat.com>
-	<20100409093153.690ea963@notabene.brown>
-	<20100409103330.37d9dff5@notabene.brown>
-	<4BC43938.2020109@unart.cz>
-	<4BC4BCC2.7040605@redhat.com>
-	<4BC5ADB2.2060705@unart.cz>
+Subject: Re: [PATCH] Fixup default definitions of VAR_RUN and ALT_RUN
+Date: Thu, 15 Apr 2010 15:30:23 +1000
+Message-ID: <20100415153023.24c4dac3@notabene.brown>
+References: <20100414185356.29125.69103.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BC5ADB2.2060705@unart.cz>
+In-Reply-To: <20100414185356.29125.69103.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: =?UTF-8?B?VG9tw6HFoSBEdWzDrWs=?= <dulik@unart.cz>
-Cc: Doug Ledford <dledford@redhat.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid@vger.kernel.org, Luca Berra <bluca@comedia.it>
 List-Id: linux-raid.ids
 
-On Wed, 14 Apr 2010 13:57:38 +0200
-Tom=C3=A1=C5=A1 Dul=C3=ADk <dulik@unart.cz> wrote:
+On Wed, 14 Apr 2010 11:53:56 -0700
+Dan Williams <dan.j.williams@intel.com> wrote:
 
+> I suspect commit c132678b wanted VAR_RUN and ALT_RUN to be suffixed by
+> '/mdadm' to match the defaults in mdadm.h.
 
-> I have already started to write the documentation for this great feat=
-ure=20
-> here:
-> https://raid.wiki.kernel.org/index.php/Hotplug
-
-Great - thanks for taking the initiative with that.
-
-However:
-  All previous versions of mdadm were unable to remove disconnected or =
-dead
-devices from md arrays.
-
-This is not corrrect.  You can removed disconnected devices with:
-
-  mdadm /dev/mdx --fail detached --remove detached
-
-will fail, then remove, all component devices on /dev/mdx which
-have been detached from the system.
-This has been possible since about 2.6.2.
+Bother!  Yes, thanks, applied.
 
 NeilBrown
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+> 
+> Cc: Luca Berra <bluca@comedia.it>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+> 
+>  Makefile |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Makefile b/Makefile
+> index 1035ea8..74dafa4 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -62,8 +62,8 @@ CONFFILEFLAGS = -DCONFFILE=\"$(CONFFILE)\" -DCONFFILE2=\"$(CONFFILE2)\"
+>  # from early boot to late boot.
+>  # If you don't have /lib/init/rw you might want to use /dev/.something
+>  #  e.g. make ALT_RUN=/dev/.mdadm
+> -ALT_RUN = /lib/init/rw
+> -VAR_RUN = /var/run
+> +ALT_RUN = /lib/init/rw/mdadm
+> +VAR_RUN = /var/run/mdadm
+>  ALTFLAGS = -DALT_RUN=\"$(ALT_RUN)\"
+>  VARFLAGS = -DVAR_RUN=\"$(VAR_RUN)\"
+>  CFLAGS = $(CWFLAGS) $(CXFLAGS) -DSendmail=\""$(MAILCMD)"\" $(CONFFILEFLAGS) $(ALTFLAGS) $(VARFLAGS)
+
