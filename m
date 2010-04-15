@@ -1,63 +1,50 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: grow fails with 2.6.34 git
-Date: Thu, 15 Apr 2010 12:55:35 +1000
-Message-ID: <20100415125535.79519c0e@notabene.brown>
-References: <hq5efu$mqb$1@dough.gmane.org>
-	<20100415110401.22c7a6bf@notabene.brown>
-	<r2x4877c76c1004141922y7f8ef8d6h3ae35ce261a45735@mail.gmail.com>
+Subject: Re: [Patch mdadm] Add hot-unplug support to mdadm
+Date: Thu, 15 Apr 2010 15:24:16 +1000
+Message-ID: <20100415152416.4339c7e6@notabene.brown>
+References: <4BBA1289.4010705@redhat.com>
+	<20100407113035.3ca437f2@notabene.brown>
+	<4BBBE7D2.6090608@redhat.com>
+	<20100409093153.690ea963@notabene.brown>
+	<20100409103330.37d9dff5@notabene.brown>
+	<4BC43938.2020109@unart.cz>
+	<4BC4BCC2.7040605@redhat.com>
+	<4BC5ADB2.2060705@unart.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <r2x4877c76c1004141922y7f8ef8d6h3ae35ce261a45735@mail.gmail.com>
+In-Reply-To: <4BC5ADB2.2060705@unart.cz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Evans <mjevans1983@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: =?UTF-8?B?VG9tw6HFoSBEdWzDrWs=?= <dulik@unart.cz>
+Cc: Doug Ledford <dledford@redhat.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 14 Apr 2010 19:22:48 -0700
-Michael Evans <mjevans1983@gmail.com> wrote:
+On Wed, 14 Apr 2010 13:57:38 +0200
+Tom=C3=A1=C5=A1 Dul=C3=ADk <dulik@unart.cz> wrote:
 
-> On Wed, Apr 14, 2010 at 6:04 PM, Neil Brown <neilb@suse.de> wrote:
-> > What is happening here is that the spare (sdh) is getting the Q blo=
-cks
-> > written to it. =C2=A0When this completes you will have full 2-disk =
-redundancy but
-> > the layout will not be optimal and the array wont be any bigger.
-> > To fix this you would:
-> >
-> > =C2=A0mdadm --grow --backup-file=3D/root/backup.md4 --raid-devices=3D=
-6 \
-> > =C2=A0 =C2=A0 =C2=A0--layout=3Dnormalise /dev/md4
-> >
->=20
-> Is there some way of telling if the layout is proper, or is that what
-> 'level 6' indicates?
 
-mdadm -D  should list the layout.
-If it ends "-6" then it is a non-standard layout with Q on the last dev=
-ice
-and the remainder of the devices laid out like a RAID5.
+> I have already started to write the documentation for this great feat=
+ure=20
+> here:
+> https://raid.wiki.kernel.org/index.php/Hotplug
 
->=20
-> Also is it safe to run something like...
->=20
-> mdadm --grow --back-file=3D/some/never/used/file --layout=3Dnormalize=
- /dev/mdX
->=20
-> on any raid 5/6 device that isn't undergoing an active reshape? (woul=
-d
-> it be a null-op if not required)
+Great - thanks for taking the initiative with that.
 
-Yes.  It quite literally looks at the layout name to see if it ends wit=
-h "-6".
-If it is not needed it will actually report and error:
-mdadm: layout normalize not understood for raid6.
+However:
+  All previous versions of mdadm were unable to remove disconnected or =
+dead
+devices from md arrays.
 
-I should probably fix that.....  one day.
+This is not corrrect.  You can removed disconnected devices with:
+
+  mdadm /dev/mdx --fail detached --remove detached
+
+will fail, then remove, all component devices on /dev/mdx which
+have been detached from the system.
+This has been possible since about 2.6.2.
 
 NeilBrown
-
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
