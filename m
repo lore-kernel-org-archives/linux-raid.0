@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 25/28] md: factor out init code for an mddev
+Subject: [md PATCH 27/28] md/raid1: fix confusing 'redirect sector' message.
 Date: Thu, 15 Apr 2010 16:21:08 +1000
-Message-ID: <20100415062108.5126.82770.stgit@notabene.brown>
+Message-ID: <20100415062108.5126.68004.stgit@notabene.brown>
 References: <20100415061516.5126.53068.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,72 +10,38 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20100415061516.5126.53068.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
+Cc: Tim Burgess <ozburgess@gmail.com>
 List-Id: linux-raid.ids
 
-This is a simple factorisation that makes mddev_find easier to read.
+This message seems to suggest the named device is the one on which a
+read failed, however it is actually the device that the read will be
+redirected to.
+So make the message a little clearer.
 
-
+Reported-by: Tim Burgess <ozburgess@gmail.com>
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
- drivers/md/md.c |   39 ++++++++++++++++++++++-----------------
- 1 files changed, 22 insertions(+), 17 deletions(-)
+ drivers/md/raid1.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 967df62..59bf6aa 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -416,6 +416,27 @@ static void mddev_put(mddev_t *mddev)
- 	spin_unlock(&all_mddevs_lock);
- }
- 
-+static void mddev_init(mddev_t *mddev)
-+{
-+	mutex_init(&mddev->open_mutex);
-+	mutex_init(&mddev->reconfig_mutex);
-+	mutex_init(&mddev->bitmap_info.mutex);
-+	INIT_LIST_HEAD(&mddev->disks);
-+	INIT_LIST_HEAD(&mddev->all_mddevs);
-+	init_timer(&mddev->safemode_timer);
-+	atomic_set(&mddev->active, 1);
-+	atomic_set(&mddev->openers, 0);
-+	atomic_set(&mddev->active_io, 0);
-+	spin_lock_init(&mddev->write_lock);
-+	atomic_set(&mddev->flush_pending, 0);
-+	init_waitqueue_head(&mddev->sb_wait);
-+	init_waitqueue_head(&mddev->recovery_wait);
-+	mddev->reshape_position = MaxSector;
-+	mddev->resync_min = 0;
-+	mddev->resync_max = MaxSector;
-+	mddev->level = LEVEL_NONE;
-+}
-+
- static mddev_t * mddev_find(dev_t unit)
- {
- 	mddev_t *mddev, *new = NULL;
-@@ -482,23 +503,7 @@ static mddev_t * mddev_find(dev_t unit)
- 	else
- 		new->md_minor = MINOR(unit) >> MdpMinorShift;
- 
--	mutex_init(&new->open_mutex);
--	mutex_init(&new->reconfig_mutex);
--	mutex_init(&new->bitmap_info.mutex);
--	INIT_LIST_HEAD(&new->disks);
--	INIT_LIST_HEAD(&new->all_mddevs);
--	init_timer(&new->safemode_timer);
--	atomic_set(&new->active, 1);
--	atomic_set(&new->openers, 0);
--	atomic_set(&new->active_io, 0);
--	spin_lock_init(&new->write_lock);
--	atomic_set(&new->flush_pending, 0);
--	init_waitqueue_head(&new->sb_wait);
--	init_waitqueue_head(&new->recovery_wait);
--	new->reshape_position = MaxSector;
--	new->resync_min = 0;
--	new->resync_max = MaxSector;
--	new->level = LEVEL_NONE;
-+	mddev_init(new);
- 
- 	goto retry;
- }
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index dd0ef70..d0d32f0 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1688,10 +1688,10 @@ static void raid1d(mddev_t *mddev)
+ 				r1_bio->bios[r1_bio->read_disk] = bio;
+ 				rdev = conf->mirrors[disk].rdev;
+ 				if (printk_ratelimit())
+-					printk(KERN_ERR "raid1: %s: redirecting sector %llu to"
+-					       " another mirror\n",
+-					       bdevname(rdev->bdev,b),
+-					       (unsigned long long)r1_bio->sector);
++					printk(KERN_ERR "raid1: redirecting sector %llu to"
++					       " other mirror: %s\n",
++					       (unsigned long long)r1_bio->sector,
++					       bdevname(rdev->bdev,b));
+ 				bio->bi_sector = r1_bio->sector + rdev->data_offset;
+ 				bio->bi_bdev = rdev->bdev;
+ 				bio->bi_end_io = raid1_end_read_request;
 
 
