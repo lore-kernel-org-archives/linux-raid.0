@@ -1,7 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 02/28] md: expose max value of behind writes counter
+Subject: [md PATCH 04/28] md: discard StateChanged device flag.
 Date: Thu, 15 Apr 2010 16:21:07 +1000
-Message-ID: <20100415062107.5126.97018.stgit@notabene.brown>
+Message-ID: <20100415062107.5126.23159.stgit@notabene.brown>
 References: <20100415061516.5126.53068.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,93 +10,56 @@ Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20100415061516.5126.53068.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
-Cc: Paul Clements <paul.clements@steeleye.com>
 List-Id: linux-raid.ids
 
-From: Paul Clements <paul.clements@steeleye.com>
+This was needed when sysfs files could only be 'notified'
+from process context.  Now that we have sys_notify_direct,
+we can call it directly from an interrupt.
 
-Keep track of the maximum number of concurrent write-behind requests
-for an md array and exposed this number in sysfs at
-   md/bitmap/max_backlog_used
-
-Writing any value to this file will clear it.
-
-This allows userspace to be involved in tuning bitmap/backlog.
-
-Signed-off-by: Paul Clements <paul.clements@steeleye.com>
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
- drivers/md/bitmap.c |   29 ++++++++++++++++++++++++++++-
- drivers/md/bitmap.h |    1 +
- 2 files changed, 29 insertions(+), 1 deletions(-)
+ drivers/md/md.c |    7 +------
+ drivers/md/md.h |    3 ---
+ 2 files changed, 1 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/md/bitmap.c b/drivers/md/bitmap.c
-index 26ac8aa..6279393 100644
---- a/drivers/md/bitmap.c
-+++ b/drivers/md/bitmap.c
-@@ -1292,9 +1292,14 @@ int bitmap_startwrite(struct bitmap *bitmap, sector_t offset, unsigned long sect
- 	if (!bitmap) return 0;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index a20a71e..509a5e4 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -5899,7 +5899,7 @@ void md_error(mddev_t *mddev, mdk_rdev_t *rdev)
+ 	mddev->pers->error_handler(mddev,rdev);
+ 	if (mddev->degraded)
+ 		set_bit(MD_RECOVERY_RECOVER, &mddev->recovery);
+-	set_bit(StateChanged, &rdev->flags);
++	sysfs_notify_dirent(rdev->sysfs_state);
+ 	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 	md_wakeup_thread(mddev->thread);
+@@ -6891,11 +6891,6 @@ void md_check_recovery(mddev_t *mddev)
+ 		if (mddev->flags)
+ 			md_update_sb(mddev, 0);
  
- 	if (behind) {
-+		int bw;
- 		atomic_inc(&bitmap->behind_writes);
-+		bw = atomic_read(&bitmap->behind_writes);
-+		if (bw > bitmap->behind_writes_used)
-+			bitmap->behind_writes_used = bw;
-+
- 		PRINTK(KERN_DEBUG "inc write-behind count %d/%d\n",
--		  atomic_read(&bitmap->behind_writes), bitmap->max_write_behind);
-+		       bw, bitmap->max_write_behind);
- 	}
+-		list_for_each_entry(rdev, &mddev->disks, same_set)
+-			if (test_and_clear_bit(StateChanged, &rdev->flags))
+-				sysfs_notify_dirent(rdev->sysfs_state);
+-
+-
+ 		if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery) &&
+ 		    !test_bit(MD_RECOVERY_DONE, &mddev->recovery)) {
+ 			/* resync/recovery still happening */
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index 4dc6252..b9dc3ea 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -74,9 +74,6 @@ struct mdk_rdev_s
+ #define Blocked		8		/* An error occured on an externally
+ 					 * managed array, don't allow writes
+ 					 * until it is cleared */
+-#define StateChanged	9		/* Faulty or Blocked has changed during
+-					 * interrupt, so it needs to be
+-					 * notified by the thread */
+ 	wait_queue_head_t blocked_wait;
  
- 	while (sectors) {
-@@ -2006,6 +2011,27 @@ static ssize_t can_clear_store(mddev_t *mddev, const char *buf, size_t len)
- static struct md_sysfs_entry bitmap_can_clear =
- __ATTR(can_clear, S_IRUGO|S_IWUSR, can_clear_show, can_clear_store);
- 
-+static ssize_t
-+behind_writes_used_show(mddev_t *mddev, char *page)
-+{
-+	if (mddev->bitmap == NULL)
-+		return sprintf(page, "0\n");
-+	return sprintf(page, "%lu\n",
-+		       mddev->bitmap->behind_writes_used);
-+}
-+
-+static ssize_t
-+behind_writes_used_reset(mddev_t *mddev, const char *buf, size_t len)
-+{
-+	if (mddev->bitmap)
-+		mddev->bitmap->behind_writes_used = 0;
-+	return len;
-+}
-+
-+static struct md_sysfs_entry max_backlog_used =
-+__ATTR(max_backlog_used, S_IRUGO | S_IWUSR,
-+       behind_writes_used_show, behind_writes_used_reset);
-+
- static struct attribute *md_bitmap_attrs[] = {
- 	&bitmap_location.attr,
- 	&bitmap_timeout.attr,
-@@ -2013,6 +2039,7 @@ static struct attribute *md_bitmap_attrs[] = {
- 	&bitmap_chunksize.attr,
- 	&bitmap_metadata.attr,
- 	&bitmap_can_clear.attr,
-+	&max_backlog_used.attr,
- 	NULL
- };
- struct attribute_group md_bitmap_group = {
-diff --git a/drivers/md/bitmap.h b/drivers/md/bitmap.h
-index cb821d7..aa82b7c 100644
---- a/drivers/md/bitmap.h
-+++ b/drivers/md/bitmap.h
-@@ -227,6 +227,7 @@ struct bitmap {
- 	int allclean;
- 
- 	atomic_t behind_writes;
-+	unsigned long behind_writes_used; /* highest actual value at runtime */
- 
- 	/*
- 	 * the bitmap daemon - periodically wakes up and sweeps the bitmap
+ 	int desc_nr;			/* descriptor index in the superblock */
 
 
