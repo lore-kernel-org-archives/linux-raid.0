@@ -1,116 +1,178 @@
-From: Berkey B Walker <berk@panix.com>
-Subject: Re: RAID scrubbing
-Date: Fri, 16 Apr 2010 20:19:24 -0400
-Message-ID: <4BC8FE8C.7060600@panix.com>
-References: <q2s150c16851004091828t235d2derf36033d19e2f11ad@mail.gmail.com>	 <l2t4877c76c1004091841n40a6ad69gb9f73c9d1b68f4ae@mail.gmail.com>	 <s2y150c16851004091846t94347cf8u9ffd65133061d16b@mail.gmail.com>	 <h2m4877c76c1004091901k37443583h316eb0efacbcac80@mail.gmail.com>	 <w2h150c16851004141751w6d798c12k548527dab7420db4@mail.gmail.com>	 <20100415112206.6fcd3d3f@notabene.brown> <q2y150c16851004161703z1b9d2733vb216095225847f78@mail.gmail.com>
+From: Vlad Glagolev <stealth-L+UJwxqiw56VyaH7bEyXVA@public.gmane.org>
+Subject: NFS and /dev/mdXpY
+Date: Sat, 17 Apr 2010 19:57:47 +0400
+Message-ID: <20100417195747.5fae8834.stealth@sourcemage.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <q2y150c16851004161703z1b9d2733vb216095225847f78@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Justin Maggard <jmaggard10@gmail.com>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Sat__17_Apr_2010_19_57_47_+0400_XTMSWfUWGO99GZIR"
+Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-raid.ids
 
+--Signature=_Sat__17_Apr_2010_19_57_47_+0400_XTMSWfUWGO99GZIR
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+Well, hello there,
 
-Justin Maggard wrote:
-> On Wed, Apr 14, 2010 at 6:22 PM, Neil Brown<neilb@suse.de>  wrote:
->    
->> On Wed, 14 Apr 2010 17:51:11 -0700
->> Justin Maggard<jmaggard10@gmail.com>  wrote:
->>
->>      
->>> On Fri, Apr 9, 2010 at 7:01 PM, Michael Evans<mjevans1983@gmail.com>  wrote:
->>>        
->>>> On Fri, Apr 9, 2010 at 6:46 PM, Justin Maggard<jmaggard10@gmail.com>  wrote:
->>>>          
->>>>> On Fri, Apr 9, 2010 at 6:41 PM, Michael Evans<mjevans1983@gmail.com>  wrote:
->>>>>            
->>>>>> On Fri, Apr 9, 2010 at 6:28 PM, Justin Maggard<jmaggard10@gmail.com>  wrote:
->>>>>>              
->>>>>>> Hi all,
->>>>>>>
->>>>>>> I've got a system using two RAID5 arrays that share some physical
->>>>>>> devices, combined using LVM.  Oddly, when I "echo repair>
->>>>>>> /sys/block/md0/md/sync_action", once it finishes, it automatically
->>>>>>> starts a repair on md1 also, even though I haven't requested it.
->>>>>>> Also, if I try to stop it using "echo idle>
->>>>>>> /sys/block/md0/md/sync_action", a repair starts on md1 within a few
->>>>>>> seconds.  If I stop that md1 repair immediately, sometimes it will
->>>>>>> respawn and start doing the repair again on md1.  What should I be
->>>>>>> expecting here?  If I start a repair on one array, is it supposed to
->>>>>>> automatically go through and do it on all arrays sharing that
->>>>>>> personality?
->>>>>>>
->>>>>>> Thanks!
->>>>>>> -Justin
->>>>>>>
->>>>>>>                
->>>>>> Is md1 degraded with an active spare?  It might be delaying resync on
->>>>>> it until the other devices are idle.
->>>>>>              
->>>>> No, both arrays are redundant.  I'm just trying to do scrubbing
->>>>> (repair) on md0; no resync is going on anywhere.
->>>>>
->>>>> -Justin
->>>>>
->>>>>            
->>>> First: Reply to all.
->>>>
->>>> Second, if you insist that things are not as I suspect:
->>>>
->>>> cat /proc/mdstat
->>>>
->>>> mdadm -Dvvs
->>>>
->>>> mdadm -Evvs
->>>>
->>>>          
->>> I insist it's something different. :)  Just ran into it again on
->>> another system.  Here's the requested output:
->>>        
->> Thanks.  Very thorough!
->>
->>
->>      
->>> Apr 14 17:32:23 JMAGGARD kernel: md: requested-resync of RAID array md2
->>> Apr 14 17:32:23 JMAGGARD kernel: md: minimum _guaranteed_  speed: 1000
->>> KB/sec/disk.
->>> Apr 14 17:32:23 JMAGGARD kernel: md: using maximum available idle IO
->>> bandwidth (but not more than 200000 KB/sec) for requested-resync.
->>> Apr 14 17:32:23 JMAGGARD kernel: md: using 128k window, over a total
->>> of 972041296 blocks.
->>> Apr 14 17:32:51 JMAGGARD kernel: md: md_do_sync() got signal ... exiting
->>> Apr 14 17:33:35 JMAGGARD kernel: md: requested-resync of RAID array md3
->>>        
->> So we see the requested-resync (repair) of md2 started as you requested,
->> then finished at 17:32:51 when you write 'idle' to 'sync_action'.
->>
->> Then 44 seconds later a similar repair started on md3.
->> 44 seconds is too long for it to be a direct consequence of the md2 repair
->> stopping.  Something *must* have written to md3/md/sync_action.   But what?
->>
->> Maybe you have "mdadm --monitor" running and it notices when repair on one
->> array finished and has been told to run a script (--program or PROGRAM in
->> mdadm.conf) which would then start a repair on the next array???
->>
->> Seems a bit far-fetched, but I'm quite confident that some program must be
->> writing to md3/md/sync_action while you're not watching.
->>
->> NeilBrown
->>      
-> Well, this is embarrassing.  You're exactly right. :)  Looks like it
-> was a bug in the script run by mdadm --monitor.  Thanks for the
-> insight!
->
-> -Justin
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> This, I think, is a nice (and polite) ending.  Best wishes to all players.
-b-
+Posted it on linux-kernel ML also, and post it here, for more specific anal=
+ysis.
 
+I faced this problem today while trying to mount some NFS share on OpenBSD =
+box.
+I mounted it successfully without any visible errors, but I wasn't able to =
+cd there, the printed error was:
+
+ksh: cd: /storage - Stale NFS file handle
+
+Apropos, the partition is 5.5 TB. I tried another one on my box and it was =
+mounted successfully. It was possible to manage files there too. Its size i=
+s ~3GB.
+That's why the first time I thought about some size limitations of OpenBSD/=
+Linux/NFS.
+
+While talking on #openbsd @ freenode, I discovered this via tcpdump on both=
+ sides:
+
+http://pastebin.ca/1864713
+
+Googling for 3 hours didn't help at all, some posts had similiar issue but =
+either with no answer at all or without any full description.
+
+Then I started to experiment with another Linux box to kill the possible di=
+fferent variants.
+
+On another box I also have nfs-utils 1.1.6 and kernel 2.6.32. Mounting that=
+ big partition was unsuccessful, it got just stuck. On tcpdump I've seen th=
+is:
+
+--
+    172.17.2.5.884 > 172.17.2.2.2049: Flags [.], cksum 0x25e4 (correct), se=
+q 1, ack 1, win 92, options [nop,nop,TS val 1808029984 ecr 1618999], length=
+ 0
+    172.17.2.5.3565791363 > 172.17.2.2.2049: 40 null
+    172.17.2.2.2049 > 172.17.2.5.884: Flags [.], cksum 0x25e6 (correct), se=
+q 1, ack 45, win 46, options [nop,nop,TS val 1618999 ecr 1808029984], lengt=
+h 0
+    172.17.2.2.2049 > 172.17.2.5.3565791363: reply ok 24 null
+    172.17.2.5.884 > 172.17.2.2.2049: Flags [.], cksum 0x259b (correct), se=
+q 45, ack 29, win 92, options [nop,nop,TS val 1808029985 ecr 1618999], leng=
+th 0
+    172.17.2.5.3582568579 > 172.17.2.2.2049: 40 null
+    172.17.2.2.2049 > 172.17.2.5.3582568579: reply ok 24 null
+    172.17.2.5.3599345795 > 172.17.2.2.2049: 92 fsinfo fh Unknown/010003000=
+5030100000800000000000000000000000000000000000000000000
+    172.17.2.2.2049 > 172.17.2.5.3599345795: reply ok 32 fsinfo ERROR: Stal=
+e NFS file handle POST:
+    172.17.2.5.3616123011 > 172.17.2.2.2049: 92 fsinfo fh Unknown/010003000=
+5030100000800000000000000000000000000000000000000000000
+    172.17.2.2.2049 > 172.17.2.5.3616123011: reply ok 32 fsinfo ERROR: Stal=
+e NFS file handle POST:
+    172.17.2.5.884 > 172.17.2.2.2049: Flags [F.], cksum 0x2449 (correct), s=
+eq 281, ack 129, win 92, options [nop,nop,TS val 1808029986 ecr 1618999], l=
+ength 0
+    172.17.2.2.2049 > 172.17.2.5.884: Flags [F.], cksum 0x2476 (correct), s=
+eq 129, ack 282, win 46, options [nop,nop,TS val 1618999 ecr 1808029986], l=
+ength 0
+    172.17.2.5.884 > 172.17.2.2.2049: Flags [.], cksum 0x2448 (correct), se=
+q 282, ack 130, win 92, options [nop,nop,TS val 1808029986 ecr 1618999], le=
+ngth 0
+--
+
+familiar messages, eh?
+
+Since that time I've solved that's not OpenBSD problem. So only NFS and Lin=
+ux left as the reasons of this.
+It was possible to mount that small partition on Linux box too, the same as=
+ on OpenBSD.
+
+But afterthat I recongnized an interesting issue: I have different sw raid =
+setups on my storage server.
+I tried to mount a small partition on the same md device where 5.5TB partit=
+ion is located, and got the same
+error message! Now I'm sure it's about NFS <-> MDADM setup, that's why I ca=
+lled the topic like this.
+
+A bit about my setup:
+
+# cat /proc/mdstat=20
+Personalities : [linear] [raid0] [raid1] [raid6] [raid5] [raid4] [multipath=
+]=20
+md3 : active raid1 sdc1[0] sdd1[1]
+      61376 blocks [2/2] [UU]
+     =20
+md1 : active raid5 sdc2[2] sdd2[3] sdb2[1] sda2[0]
+      3153408 blocks level 5, 512k chunk, algorithm 2 [4/4] [UUUU]
+     =20
+md2 : active raid5 sdc3[2] sdd3[3] sdb3[1] sda3[0]
+      5857199616 blocks level 5, 512k chunk, algorithm 2 [4/4] [UUUU]
+     =20
+md0 : active raid1 sdb1[1] sda1[0]
+      61376 blocks [2/2] [UU]
+     =20
+unused devices: <none>
+
+md0, md1, and md3 aren't so interesting, since fs is created directly on th=
+em, and that's a _problem device_:
+
+# parted /dev/md2
+GNU Parted 2.2
+Using /dev/md2
+Welcome to GNU Parted! Type 'help' to view a list of commands.
+(parted) p free                                                          =20
+p free
+Model: Unknown (unknown)
+Disk /dev/md2: 5998GB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt
+
+Number  Start   End     Size    File system     Name   Flags
+        17.4kB  1049kB  1031kB  Free Space
+ 1      1049kB  2147MB  2146MB  linux-swap(v1)  swap
+ 2      2147MB  23.6GB  21.5GB  xfs             home
+ 3      23.6GB  24.7GB  1074MB  xfs             temp
+ 4      24.7GB  35.4GB  10.7GB  xfs             user
+ 5      35.4GB  51.5GB  16.1GB  xfs             var
+ 6      51.5GB  5998GB  5946GB  xfs             vault
+        5998GB  5998GB  507kB   Free Space
+
+# ls /dev/md?*
+/dev/md0  /dev/md1  /dev/md2  /dev/md2p1  /dev/md2p2  /dev/md2p3  /dev/md2p=
+4  /dev/md2p5  /dev/md2p6  /dev/md3
+
+It's very handy partitioning scheme where I can extend (grow 5th raid) with=
+ more hdds only /vault partition while "loosing" (a.k.a. not using for this=
+ partition) only ~1gb of space from every 2TB drive.
+
+System boots ok and xfs_check passes with no problems, etc.
+The only problem: it's not possible to use NFS shares on any partition of /=
+dev/md2 device.
+
+Finally, my question to NFS and MDADM developers: any idea?
+
+--=20
+Dont wait to die to find paradise...
+--
+Cheerz,
+Vlad "Stealth" Glagolev
+
+--Signature=_Sat__17_Apr_2010_19_57_47_+0400_XTMSWfUWGO99GZIR
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAkvJ2nsACgkQ8Hg3cBKtRUkdQwCglsgfEP11qexuKudeLqbkUGzi
+bzIAoK6wmJcaEoNFkLsA7jhbkOUz4YrU
+=OIiM
+-----END PGP SIGNATURE-----
+
+--Signature=_Sat__17_Apr_2010_19_57_47_+0400_XTMSWfUWGO99GZIR--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
