@@ -1,178 +1,167 @@
-From: Vlad Glagolev <stealth-L+UJwxqiw56VyaH7bEyXVA@public.gmane.org>
-Subject: NFS and /dev/mdXpY
-Date: Sat, 17 Apr 2010 19:57:47 +0400
-Message-ID: <20100417195747.5fae8834.stealth@sourcemage.org>
+From: CoolCold <coolthecold@gmail.com>
+Subject: Re: RAID Class Drives`
+Date: Sun, 18 Apr 2010 16:11:36 +0400
+Message-ID: <y2if19d625d1004180511m5f4032cp99f866024f76d93a@mail.gmail.com>
+References: <7db987b31003170648j19e3346bi1050e703ef8c811c@mail.gmail.com>
+	 <7db987b31003181243n159eb7e9re2b614295221eee@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Sat__17_Apr_2010_19_57_47_+0400_XTMSWfUWGO99GZIR"
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <7db987b31003181243n159eb7e9re2b614295221eee@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Randy Terbush <randy@terbush.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Signature=_Sat__17_Apr_2010_19_57_47_+0400_XTMSWfUWGO99GZIR
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Thu, Mar 18, 2010 at 11:43 PM, Randy Terbush <randy@terbush.org> wro=
+te:
+> Let me follow-up to share what I have learned and what I have managed
+> to do to get this array to re-assemble.
+>
+> I've received several responses from people telling me that they don'=
+t
+> have any problem with their "desktop class" drives being dropped from
+> the array. Congratulations to you all. I suspect that there may be a
+> theme in the drives that =A0you are using which may have different er=
+ror
+> correction, may be smaller than 500GB or may not support the SCT
+> command set.
+>
+> One of the first responses I received privately was from a gentlemen
+> that gave me the hint I needed regarding the SCT-ERC command. He
+> shared my frustration and actually presents a very compelling example
+> where this is a big problem. He works to support a commercial NAS
+> product which uses "desktop" class drives and fights this problem
+> continually.
+>
+> With this new knowledge gained I started digging a bit more and ran
+> across a set of patches to smarttools which allows editing the values
+> for SCT-ERC. You can find that source here:
+> http://www.csc.liv.ac.uk/~greg/projects/erc/
+> FWIW, the Seagate Barracudas that I am running have non-volatile
+> storage for this variable. Not that I am recommending Seagate. Far
+> from it....
+>
+> I can confirm that all of my drives had this value "disabled" which
+> means it allows the drive to go off and take as much time as it needs
+> to fix its own problem.
+>
+> I set the values to 7 seconds for the 4 drives in my array and
+> attempted to rebuild the array. Unfortunately, it failed again. So I
+> reset the values to 5 seconds and fired off the rebuild once again an=
+d
+> managed to get through the rebuild process.
+I don't really understand one point - why it failed? Did the
+controller dropped device because it wasn't responsible or md did
+this? Rephrasing my question - this is really "tuning" for controller
+not to drop device and report error or for md?
+And if drive has errors anyway, why it shouldn't be dropped, is it for
+just in case we have read error, we can try to rewrite it from the
+alive array part? If we have write error, we gonna drop drive from
+array anyway..
 
-Well, hello there,
+>
+> Now this solution does not satisfy the situation where you are
+> hot-plugging drives, but it at least gets me over my hurdle.
+>
+> Seems it would be a nice improvement to md to actually detect the
+> SCT-ERC setting, warn when it cannot change the value and offer to se=
+t
+> these to reasonable values for the RAID application.
+>
+> Here's to happy storage...
+>
+> On Wed, Mar 17, 2010 at 7:48 AM, Randy Terbush <randy@terbush.org> wr=
+ote:
+>> Greetings RAIDers,
+>>
+>> Apologies if this topic has been thrashed here before. Google is not
+>> showing me much love on the topic and that which I have found does n=
+ot
+>> convey consensus. So I am coming to the experts to get the verdict.
+>>
+>> Recent event: I spent a fair amount of time on the line with Seagate
+>> support yesterday who informed me that their desktop drives will not
+>> work in a RAID array. Now I may have been living in a cave for the
+>> past 20 years, but I always had a modem.
+>>
+>> As I started to dig into this a bit more looking for info on TLER,
+>> ERC, etc. from my understanding, these "RAID class" drives simply
+>> don't have the same level of error correction as the "desktop"
+>> alternative and instead report back to the RAID controller immediate=
+ly
+>> instead of dawdling with fixing the problem themselves.
+>>
+>> If this is true, then I can understand where this might cause a RAID
+>> system some problems. However, I do not understand why the RAID syst=
+em
+>> cannot detect the type of drive it is dealing with and either disabl=
+e
+>> the behavior on the drive or allow more time for the drive to respon=
+d
+>> before kicking it out of the array.
+>>
+>> Just to give some background on how I got to this point, but not to
+>> distract from the main question, here is where I have been...
+>>
+>> Over past 5 years, have been struggling with a 4 drive mdraid array
+>> configured for RAID5. This is not a busy system by any stretch. Just=
+ a
+>> media server for my own personal use. Started out using the SATA
+>> headers on the MB. Gave up and bought a cheapy hardware RAID
+>> controller. Thought better of that decision and went back to softwar=
+e
+>> RAID using the hardware RAID controller as a SATA expansion card. Ga=
+ve
+>> up on that and went back to the SATA headers on the MB (had replaced
+>> the MB along the way).
+>>
+>> Over that period, threw out original 4 drives and replaced them with
+>> newer bigger Seagate Barracudas. Bought snazzier and snazzier cables
+>> along the way. Discovered a firmware upgrade for the Barracudas that=
+ I
+>> thought had recently fixed the problem.
+>>
+>> After speaking with Seagate yesterday, I booted off of the SeaTools
+>> image and ran tests on all drives. The two suspect drives did have
+>> errors that were corrected by the test software. But alas, attemptin=
+g
+>> to reassemble this array fails, dropping one drive to failed spare
+>> status and another to spare which has been the behavior I have been
+>> fighting for years.
+>>
+>> So the question becomes, do I try it again with the replacement driv=
+es
+>> that Seagate is sending me, or do I hang them in my "desktop" and
+>> spend the money for RAID Class drives? (I've grown tired of this
+>> learning experience and would like to just have a dependable storage
+>> system)
+>>
+>> And to tag onto that question, is there any reason why mdraid cannot
+>> detect these "lesser" drives and behave differently?
+>>
+>> Why would these drives be developing errors as a result of their
+>> tortuous experience in a RAID array?
+>>
+>> Thanks for any light you can shed on this issue.
+>>
+>> -Randy
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-Posted it on linux-kernel ML also, and post it here, for more specific anal=
-ysis.
 
-I faced this problem today while trying to mount some NFS share on OpenBSD =
-box.
-I mounted it successfully without any visible errors, but I wasn't able to =
-cd there, the printed error was:
-
-ksh: cd: /storage - Stale NFS file handle
-
-Apropos, the partition is 5.5 TB. I tried another one on my box and it was =
-mounted successfully. It was possible to manage files there too. Its size i=
-s ~3GB.
-That's why the first time I thought about some size limitations of OpenBSD/=
-Linux/NFS.
-
-While talking on #openbsd @ freenode, I discovered this via tcpdump on both=
- sides:
-
-http://pastebin.ca/1864713
-
-Googling for 3 hours didn't help at all, some posts had similiar issue but =
-either with no answer at all or without any full description.
-
-Then I started to experiment with another Linux box to kill the possible di=
-fferent variants.
-
-On another box I also have nfs-utils 1.1.6 and kernel 2.6.32. Mounting that=
- big partition was unsuccessful, it got just stuck. On tcpdump I've seen th=
-is:
-
---
-    172.17.2.5.884 > 172.17.2.2.2049: Flags [.], cksum 0x25e4 (correct), se=
-q 1, ack 1, win 92, options [nop,nop,TS val 1808029984 ecr 1618999], length=
- 0
-    172.17.2.5.3565791363 > 172.17.2.2.2049: 40 null
-    172.17.2.2.2049 > 172.17.2.5.884: Flags [.], cksum 0x25e6 (correct), se=
-q 1, ack 45, win 46, options [nop,nop,TS val 1618999 ecr 1808029984], lengt=
-h 0
-    172.17.2.2.2049 > 172.17.2.5.3565791363: reply ok 24 null
-    172.17.2.5.884 > 172.17.2.2.2049: Flags [.], cksum 0x259b (correct), se=
-q 45, ack 29, win 92, options [nop,nop,TS val 1808029985 ecr 1618999], leng=
-th 0
-    172.17.2.5.3582568579 > 172.17.2.2.2049: 40 null
-    172.17.2.2.2049 > 172.17.2.5.3582568579: reply ok 24 null
-    172.17.2.5.3599345795 > 172.17.2.2.2049: 92 fsinfo fh Unknown/010003000=
-5030100000800000000000000000000000000000000000000000000
-    172.17.2.2.2049 > 172.17.2.5.3599345795: reply ok 32 fsinfo ERROR: Stal=
-e NFS file handle POST:
-    172.17.2.5.3616123011 > 172.17.2.2.2049: 92 fsinfo fh Unknown/010003000=
-5030100000800000000000000000000000000000000000000000000
-    172.17.2.2.2049 > 172.17.2.5.3616123011: reply ok 32 fsinfo ERROR: Stal=
-e NFS file handle POST:
-    172.17.2.5.884 > 172.17.2.2.2049: Flags [F.], cksum 0x2449 (correct), s=
-eq 281, ack 129, win 92, options [nop,nop,TS val 1808029986 ecr 1618999], l=
-ength 0
-    172.17.2.2.2049 > 172.17.2.5.884: Flags [F.], cksum 0x2476 (correct), s=
-eq 129, ack 282, win 46, options [nop,nop,TS val 1618999 ecr 1808029986], l=
-ength 0
-    172.17.2.5.884 > 172.17.2.2.2049: Flags [.], cksum 0x2448 (correct), se=
-q 282, ack 130, win 92, options [nop,nop,TS val 1808029986 ecr 1618999], le=
-ngth 0
---
-
-familiar messages, eh?
-
-Since that time I've solved that's not OpenBSD problem. So only NFS and Lin=
-ux left as the reasons of this.
-It was possible to mount that small partition on Linux box too, the same as=
- on OpenBSD.
-
-But afterthat I recongnized an interesting issue: I have different sw raid =
-setups on my storage server.
-I tried to mount a small partition on the same md device where 5.5TB partit=
-ion is located, and got the same
-error message! Now I'm sure it's about NFS <-> MDADM setup, that's why I ca=
-lled the topic like this.
-
-A bit about my setup:
-
-# cat /proc/mdstat=20
-Personalities : [linear] [raid0] [raid1] [raid6] [raid5] [raid4] [multipath=
-]=20
-md3 : active raid1 sdc1[0] sdd1[1]
-      61376 blocks [2/2] [UU]
-     =20
-md1 : active raid5 sdc2[2] sdd2[3] sdb2[1] sda2[0]
-      3153408 blocks level 5, 512k chunk, algorithm 2 [4/4] [UUUU]
-     =20
-md2 : active raid5 sdc3[2] sdd3[3] sdb3[1] sda3[0]
-      5857199616 blocks level 5, 512k chunk, algorithm 2 [4/4] [UUUU]
-     =20
-md0 : active raid1 sdb1[1] sda1[0]
-      61376 blocks [2/2] [UU]
-     =20
-unused devices: <none>
-
-md0, md1, and md3 aren't so interesting, since fs is created directly on th=
-em, and that's a _problem device_:
-
-# parted /dev/md2
-GNU Parted 2.2
-Using /dev/md2
-Welcome to GNU Parted! Type 'help' to view a list of commands.
-(parted) p free                                                          =20
-p free
-Model: Unknown (unknown)
-Disk /dev/md2: 5998GB
-Sector size (logical/physical): 512B/512B
-Partition Table: gpt
-
-Number  Start   End     Size    File system     Name   Flags
-        17.4kB  1049kB  1031kB  Free Space
- 1      1049kB  2147MB  2146MB  linux-swap(v1)  swap
- 2      2147MB  23.6GB  21.5GB  xfs             home
- 3      23.6GB  24.7GB  1074MB  xfs             temp
- 4      24.7GB  35.4GB  10.7GB  xfs             user
- 5      35.4GB  51.5GB  16.1GB  xfs             var
- 6      51.5GB  5998GB  5946GB  xfs             vault
-        5998GB  5998GB  507kB   Free Space
-
-# ls /dev/md?*
-/dev/md0  /dev/md1  /dev/md2  /dev/md2p1  /dev/md2p2  /dev/md2p3  /dev/md2p=
-4  /dev/md2p5  /dev/md2p6  /dev/md3
-
-It's very handy partitioning scheme where I can extend (grow 5th raid) with=
- more hdds only /vault partition while "loosing" (a.k.a. not using for this=
- partition) only ~1gb of space from every 2TB drive.
-
-System boots ok and xfs_check passes with no problems, etc.
-The only problem: it's not possible to use NFS shares on any partition of /=
-dev/md2 device.
-
-Finally, my question to NFS and MDADM developers: any idea?
 
 --=20
-Dont wait to die to find paradise...
+Best regards,
+[COOLCOLD-RIPN]
 --
-Cheerz,
-Vlad "Stealth" Glagolev
-
---Signature=_Sat__17_Apr_2010_19_57_47_+0400_XTMSWfUWGO99GZIR
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkvJ2nsACgkQ8Hg3cBKtRUkdQwCglsgfEP11qexuKudeLqbkUGzi
-bzIAoK6wmJcaEoNFkLsA7jhbkOUz4YrU
-=OIiM
------END PGP SIGNATURE-----
-
---Signature=_Sat__17_Apr_2010_19_57_47_+0400_XTMSWfUWGO99GZIR--
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
