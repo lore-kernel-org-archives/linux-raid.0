@@ -1,53 +1,45 @@
-From: "Tirumala Reddy Marri" <tmarri@amcc.com>
-Subject: RE: RAID-6 polynomial
-Date: Mon, 19 Apr 2010 20:14:57 -0700
-Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C09376090@SDCEXCHANGE01.ad.amcc.com>
-References: <AC5E1C3367E37D44970B81A6ADD1DA2C0937604B@SDCEXCHANGE01.ad.amcc.com> <v2h4877c76c1004191855xaea2f8bcv6c657d90b80843e9@mail.gmail.com>
+From: Brett King <king.br@gmail.com>
+Subject: Re: compute_blocknr: map not correct error during RAID6 reshape 6 ->
+	7 disks, mdadm 3.1.2 / kernel 2.6.34-rc3
+Date: Tue, 20 Apr 2010 13:43:08 +1000
+Message-ID: <z2q8cf253381004192043haf99536cvfb2bf6fcfb40fa4d@mail.gmail.com>
+References: <u2j8cf253381004151856l76b4e227mc6327534e0e304ad@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <v2h4877c76c1004191855xaea2f8bcv6c657d90b80843e9@mail.gmail.com>
+In-Reply-To: <u2j8cf253381004151856l76b4e227mc6327534e0e304ad@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Evans <mjevans1983@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I understand the RAID-6 or GF(2) math. There is a test code crypto/asyn=
-c_tx/raid6test.c which make calls to async_gen_syncdrome() in turn call=
-s raid6_int4_gen_syndrome(). I could not find which polynomial this cod=
-e is using.
--Marri
+Hello,
+It's been quiet on this issue to date and I assume everyone's working
+on important fixes and features etc - my apologies for the annoyance
+however at this point I'm looking for some collective guidance on my
+next move as I can't leave things in this state.
 
+To summarize, I am attempting to grow a RAID6 array from 6 to 7x 2TB
+disks however the reshape is stalling at 87.9% and throwing
+'compute_blocknr: map not correct' errors. The system still responds
+but needs a hard reset to do anything MD related.
 
------Original Message-----
-=46rom: Michael Evans [mailto:mjevans1983@gmail.com]=20
-Sent: Monday, April 19, 2010 6:55 PM
-To: Tirumala Reddy Marri
-Cc: linux-raid@vger.kernel.org
-Subject: Re: RAID-6 polynomial
+I've tried varying kernel and mdadm versions all with the same result:
+2.6.31, 2.6.33, 2.6.34-rc3 & rc4, each with mdadm 2.6.8, 3.0.2 &
+3.1.2.
 
-On Mon, Apr 19, 2010 at 4:44 PM, Tirumala Reddy Marri <tmarri@amcc.com>=
- wrote:
-> What is the default polynomial to calculate RAID-6 syndrome in
-> async_pq.c? Is it 0x11d ?
-> Thanks in Advance,
-> Marri
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+The only kernel source file containing this string is
+drivers/md/raid5.c so I'm in the right place.
 
-If you google "raid6 math" you'll get a result like this as the first r=
-esult:
+So I am asking you fellow linux-raid'ers, what can be done in this
+situation ? I've filed a bug on bugzilla and now would only like to
+know if this issue has been experienced by others, if perhaps a fix is
+in the pipeline and any tips, tricks etc that may get the reshape
+completed then the data accessible again.
 
-http://kernel.org/pub/linux/kernel/people/hpa/raid6.pdf The
-Mathematics of Raid 6
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I can see the only other non-destructuve option right now is to pull
+out the disks, restore from backup onto a new array & wait for a
+future kernel / mdadm version which will allow completion of the
+reshape.
+
+Cheers,
+Brett.
