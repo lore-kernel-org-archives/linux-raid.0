@@ -1,42 +1,28 @@
-From: Tim Small <tim@seoss.co.uk>
-Subject: Upgrading the firmware on the underlying drives of a RAID5 safely.
-Date: Tue, 20 Apr 2010 15:30:55 +0100
-Message-ID: <4BCDBA9F.7010903@seoss.co.uk>
+From: Justin Maggard <jmaggard10@gmail.com>
+Subject: Component size difference with mdadm
+Date: Tue, 20 Apr 2010 14:06:08 -0700
+Message-ID: <g2w150c16851004201406ie5b4b84dpbdd820142fcc4be8@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+I was working on recovering a damaged array today, and I used mdadm
+3.1.2 with --assume-clean to get it up and running.  I was surprised
+when I wasn't able to mount the filesystem on the array after starting
+it, so I did a closer comparison of a dump of the original array
+configuration vs. the new one.  I found that the main difference was
+that the component size was 1KB smaller now than it used to be.  The
+array was originally created with mdadm 2.6.8.  So I compiled the old
+2.6.8 version of mdadm and used the same mdadm --assume-clean command,
+and bingo, the component size matched the original array config and it
+mounted just fine.
 
-I have a RAID5 with 3x 1TB Seagate Barracuda ES.2 ST31000340NS SATA
-drives + 1 hot spare.  I'd like to upgrade the firmware on two of the
-member drives using hdparm (I've already done this on the spare).  The
-drives are on an ICH9, and the system uses Debian 5 (2.6.27) 64bit on an
-Intel "Core2" Xeon.  The drives keep locking up, and needing a reset by
-the kernel, and I'd like to fix that (the firmware changelog indicates
-that the firmware has fixes for similar behaviour).
+So, I suspect there is some new code in mdadm 3.1 that wasn't in 2.6.x
+to try to make I/O 4KB-aligned on non-aligned partitions.  Is that
+accurate?  If so, is there a way to tell mdadm to behave like older
+mdadm versions in these cases?
 
-The upgrade process takes about 40 seconds, so I'd prefer the drives to
-be "idle" during this time (blocking would also be all right, but if the
-kernel tries to access the drives, and then times out and resets them
-drives, then at the very least the firmware update will fail).
-
-So... an easy way to do this would be to fail one of the drives, and get
-it rebuilt onto the the spare, but of course, that puts the array into a
-non-redundant state for the duration of the operation.  Some sort of
-temporary write-behind would be nice, but I understand that this is only
-supported for RAID1.  Is migrating to RAID6, then failing out one drive
-at a time a reasonable option, or upping libata/md timeouts?
-
-Any other thoughts options?  As I seem to be doing drive firmware
-updates more and more frequently recently (maybe I'm just getting
-unlucky), some sort of infrastructure to support doing this on a live
-system/array would be cool!
-
-Cheers,
-
-Tim.
+-Justin
