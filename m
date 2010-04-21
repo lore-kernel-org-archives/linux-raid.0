@@ -1,76 +1,221 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Use of WD20EARS with MDADM
-Date: Wed, 21 Apr 2010 12:42:04 -0400
-Message-ID: <4BCF2ADC.1020600@tmr.com>
-References: <4BAB8D41.4010801@gmail.com> <F50E50EC-32CF-4FC4-949B-E8DA56B08D50@santools.com> <4BABA12D.6040605@shiftmail.org> <4BAF8185.9040307@gmx.net> <4BC61D47.6090403@tmr.com> <4BCC65EB.3080803@cfl.rr.com> <4BCEFB99.9080806@tmr.com> <4BCF163C.6040604@cfl.rr.com>
+From: Vlad Glagolev <stealth@sourcemage.org>
+Subject: Re: NFS and /dev/mdXpY
+Date: Wed, 21 Apr 2010 20:48:19 +0400
+Message-ID: <20100421204819.b86ee3f7.stealth@sourcemage.org>
+References: <20100417195747.5fae8834.stealth@sourcemage.org>
+	<4BCF2A2C.7070407@maine.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Wed__21_Apr_2010_20_48_19_+0400_z/oumZ/9jmvrIGX="
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BCF163C.6040604@cfl.rr.com>
+In-Reply-To: <4BCF2A2C.7070407@maine.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: st0ff@npl.de, linux-raid@vger.kernel.org
+To: Steve Cousins <steve.cousins@maine.edu>
+Cc: linux-nfs@vger.kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Phillip Susi wrote:
-> On 4/21/2010 9:20 AM, Bill Davidsen wrote:
->   
->> I hear this said, but I don't have any data to back it up. Drive vendors
->> aren't stupid, so if the parking feature is likely to cause premature
->> failures under warranty, I would expect that the feature would not be
->> there, or that the drive would be made more robust. Maybe I have too
->> much faith in greed as a design goal, but I have to wonder if load
->> cycles are as destructive as seems to be the assumption.
->>     
->
-> Indeed, I think you have too much faith in people doing sensible things.
->  Especially when their average customer isn't placing the drive in a
-> high use environment and they know it, and suggest against doing so.
->
->   
->> I'd love to find some real data, anecdotal stories about older drives
->> are not overly helpful. Clearly there is a trade-off between energy
->> saving, response, and durability, I just don't have any data from a
->> large population of new (green) drives.
->>     
->
-> I've not seen any anecdotal stories, but I have seen plenty of reports
-> with real data showing a large number of head unloads from the SMART
-> data after a relatively short period of use.  Personally mine has a few
-> hundred so far and I have not even used it for real storage yet, only
-> testing.  The specifications say it's good for 300,000 cycles, so do the
-> math... getting 5 unloads per minute would lead to probable failure
-> after 41 days.  Granted that is about worst case, but still something to
-> watch out for.  In order to make it the entire 3 year warranty period,
-> you need to stay under 11.4 unloads per hour.  If you have very little
-> IO activity, or VERY MUCH, then this is entirely possible, but more
-> moderate loads in the middle have been observed to cause hundreds of
-> unloads per hour.
->
-> Given that, and the fact that WD themselves have stated that you should
-> not use these drives in a raid array, I'd either stay away, or watch out
-> for this problem and try to take action to avoid and monitor it.
->   
+--Signature=_Wed__21_Apr_2010_20_48_19_+0400_z/oumZ/9jmvrIGX=
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Part of this is my feeling that no one really knows if the drive fails 
-after N loads, because even if WD could set the unload time down, the 
-cycle takes time to happen, so I would bet that they are taking an 
-educated guess. The other part is that there are lots of clerical tasks 
-which would hit the drive, under Windows, single drive, 3-5 times a 
-minute. Data entry comes to mind, customer support, print servers, etc. 
-Granted that these are probably 7x5 hours a week, but I'm think 2/min, 
-7hr/day, 200day/yr... 168k/yr, and that's not the worst case.
+Thanks for reply, Steve!
 
-Having run lots of drives (some TB of 73GB 15k rpm LVD320) MTTF is 
-interesting, because the curve has spikes at the front from infant 
-mortality, and at the end from old age, but it was damn quiet in the 
-middle. I'd love to see the data on these, not because I'm going to run 
-them but just to keep current, so when someone calls me and says they 
-got a great deal on green drives, I'll know what to tell them.
+parameters are pretty trivial, (rw,insecure) for exports, and defaults whil=
+e mounting via ``mount host:/path /path'' command.
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "We can't solve today's problems by using the same thinking we
-   used in creating them." - Einstein
+Yes. That sounds interesting, since XFS works fine with there partitions.
+Also, I must say it's WD20EARS drives (with 4kb sector size, though parted =
+says it's 512b).
 
+I also tried another NFS daemon implementation (cvs version, not .22) -- un=
+fsd (unfs3).
+It mounts ok, but when I try to write any file to the server -- I get the s=
+ame error (Stale NFS file handle).
+
+And on the server side in dmesg I see this:
+
+--
+NFS: server 172.17.2.2 error: fileid changed
+fsid 0:f: expected fileid 0x2033, got 0xb6d1e05fa150ce09
+NFS: server 172.17.2.2 error: fileid changed
+fsid 0:f: expected fileid 0x2033, got 0x26550b0132c0b1
+NFS: server 172.17.2.2 error: fileid changed
+fsid 0:f: expected fileid 0x2033, got 0x8202a60053000020
+NFS: server 172.17.2.2 error: fileid changed
+fsid 0:f: expected fileid 0x2033, got 0xe542f93ebc8fe157
+NFS: server 172.17.2.2 error: fileid changed
+fsid 0:f: expected fileid 0x2033, got 0xc00cd74ea904301
+--
+
+looks like NFS protocol doesn't like something in partitioned software RAID.
+
+On Wed, 21 Apr 2010 12:39:08 -0400
+Steve Cousins <steve.cousins@maine.edu> wrote:
+
+> Since md2 with XFS is acting fine locally, it seems to be an NFS issue.=20
+> What export and mounting parameters are you using?
+>=20
+>=20
+> Vlad Glagolev wrote:
+> > Well, hello there,
+> >
+> > Posted it on linux-kernel ML also, and post it here, for more specific =
+analysis.
+> >
+> > I faced this problem today while trying to mount some NFS share on Open=
+BSD box.
+> > I mounted it successfully without any visible errors, but I wasn't able=
+ to cd there, the printed error was:
+> >
+> > ksh: cd: /storage - Stale NFS file handle
+> >
+> > Apropos, the partition is 5.5 TB. I tried another one on my box and it =
+was mounted successfully. It was possible to manage files there too. Its si=
+ze is ~3GB.
+> > That's why the first time I thought about some size limitations of Open=
+BSD/Linux/NFS.
+> >
+> > While talking on #openbsd @ freenode, I discovered this via tcpdump on =
+both sides:
+> >
+> > http://pastebin.ca/1864713
+> >
+> > Googling for 3 hours didn't help at all, some posts had similiar issue =
+but either with no answer at all or without any full description.
+> >
+> > Then I started to experiment with another Linux box to kill the possibl=
+e different variants.
+> >
+> > On another box I also have nfs-utils 1.1.6 and kernel 2.6.32. Mounting =
+that big partition was unsuccessful, it got just stuck. On tcpdump I've see=
+n this:
+> >
+> > --
+> >     172.17.2.5.884 > 172.17.2.2.2049: Flags [.], cksum 0x25e4 (correct)=
+, seq 1, ack 1, win 92, options [nop,nop,TS val 1808029984 ecr 1618999], le=
+ngth 0
+> >     172.17.2.5.3565791363 > 172.17.2.2.2049: 40 null
+> >     172.17.2.2.2049 > 172.17.2.5.884: Flags [.], cksum 0x25e6 (correct)=
+, seq 1, ack 45, win 46, options [nop,nop,TS val 1618999 ecr 1808029984], l=
+ength 0
+> >     172.17.2.2.2049 > 172.17.2.5.3565791363: reply ok 24 null
+> >     172.17.2.5.884 > 172.17.2.2.2049: Flags [.], cksum 0x259b (correct)=
+, seq 45, ack 29, win 92, options [nop,nop,TS val 1808029985 ecr 1618999], =
+length 0
+> >     172.17.2.5.3582568579 > 172.17.2.2.2049: 40 null
+> >     172.17.2.2.2049 > 172.17.2.5.3582568579: reply ok 24 null
+> >     172.17.2.5.3599345795 > 172.17.2.2.2049: 92 fsinfo fh Unknown/01000=
+30005030100000800000000000000000000000000000000000000000000
+> >     172.17.2.2.2049 > 172.17.2.5.3599345795: reply ok 32 fsinfo ERROR: =
+Stale NFS file handle POST:
+> >     172.17.2.5.3616123011 > 172.17.2.2.2049: 92 fsinfo fh Unknown/01000=
+30005030100000800000000000000000000000000000000000000000000
+> >     172.17.2.2.2049 > 172.17.2.5.3616123011: reply ok 32 fsinfo ERROR: =
+Stale NFS file handle POST:
+> >     172.17.2.5.884 > 172.17.2.2.2049: Flags [F.], cksum 0x2449 (correct=
+), seq 281, ack 129, win 92, options [nop,nop,TS val 1808029986 ecr 1618999=
+], length 0
+> >     172.17.2.2.2049 > 172.17.2.5.884: Flags [F.], cksum 0x2476 (correct=
+), seq 129, ack 282, win 46, options [nop,nop,TS val 1618999 ecr 1808029986=
+], length 0
+> >     172.17.2.5.884 > 172.17.2.2.2049: Flags [.], cksum 0x2448 (correct)=
+, seq 282, ack 130, win 92, options [nop,nop,TS val 1808029986 ecr 1618999]=
+, length 0
+> > --
+> >
+> > familiar messages, eh?
+> >
+> > Since that time I've solved that's not OpenBSD problem. So only NFS and=
+ Linux left as the reasons of this.
+> > It was possible to mount that small partition on Linux box too, the sam=
+e as on OpenBSD.
+> >
+> > But afterthat I recongnized an interesting issue: I have different sw r=
+aid setups on my storage server.
+> > I tried to mount a small partition on the same md device where 5.5TB pa=
+rtition is located, and got the same
+> > error message! Now I'm sure it's about NFS <-> MDADM setup, that's why =
+I called the topic like this.
+> >
+> > A bit about my setup:
+> >
+> > # cat /proc/mdstat=20
+> > Personalities : [linear] [raid0] [raid1] [raid6] [raid5] [raid4] [multi=
+path]=20
+> > md3 : active raid1 sdc1[0] sdd1[1]
+> >       61376 blocks [2/2] [UU]
+> >      =20
+> > md1 : active raid5 sdc2[2] sdd2[3] sdb2[1] sda2[0]
+> >       3153408 blocks level 5, 512k chunk, algorithm 2 [4/4] [UUUU]
+> >      =20
+> > md2 : active raid5 sdc3[2] sdd3[3] sdb3[1] sda3[0]
+> >       5857199616 blocks level 5, 512k chunk, algorithm 2 [4/4] [UUUU]
+> >      =20
+> > md0 : active raid1 sdb1[1] sda1[0]
+> >       61376 blocks [2/2] [UU]
+> >      =20
+> > unused devices: <none>
+> >
+> > md0, md1, and md3 aren't so interesting, since fs is created directly o=
+n them, and that's a _problem device_:
+> >
+> > # parted /dev/md2
+> > GNU Parted 2.2
+> > Using /dev/md2
+> > Welcome to GNU Parted! Type 'help' to view a list of commands.
+> > (parted) p free                                                        =
+  =20
+> > p free
+> > Model: Unknown (unknown)
+> > Disk /dev/md2: 5998GB
+> > Sector size (logical/physical): 512B/512B
+> > Partition Table: gpt
+> >
+> > Number  Start   End     Size    File system     Name   Flags
+> >         17.4kB  1049kB  1031kB  Free Space
+> >  1      1049kB  2147MB  2146MB  linux-swap(v1)  swap
+> >  2      2147MB  23.6GB  21.5GB  xfs             home
+> >  3      23.6GB  24.7GB  1074MB  xfs             temp
+> >  4      24.7GB  35.4GB  10.7GB  xfs             user
+> >  5      35.4GB  51.5GB  16.1GB  xfs             var
+> >  6      51.5GB  5998GB  5946GB  xfs             vault
+> >         5998GB  5998GB  507kB   Free Space
+> >
+> > # ls /dev/md?*
+> > /dev/md0  /dev/md1  /dev/md2  /dev/md2p1  /dev/md2p2  /dev/md2p3  /dev/=
+md2p4  /dev/md2p5  /dev/md2p6  /dev/md3
+> >
+> > It's very handy partitioning scheme where I can extend (grow 5th raid) =
+with more hdds only /vault partition while "loosing" (a.k.a. not using for =
+this partition) only ~1gb of space from every 2TB drive.
+> >
+> > System boots ok and xfs_check passes with no problems, etc.
+> > The only problem: it's not possible to use NFS shares on any partition =
+of /dev/md2 device.
+> >
+> > Finally, my question to NFS and MDADM developers: any idea?
+> >
+> >  =20
+>=20
+
+
+--=20
+Dont wait to die to find paradise...
+--
+Cheerz,
+Vlad "Stealth" Glagolev
+
+--Signature=_Wed__21_Apr_2010_20_48_19_+0400_z/oumZ/9jmvrIGX=
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAkvPLFMACgkQ8Hg3cBKtRUm+PACgn76zbF+736Ut7EBpHiJbWCr3
+l2wAnA21iTswNekypOgbe9FGqvQDV0VY
+=OutK
+-----END PGP SIGNATURE-----
+
+--Signature=_Wed__21_Apr_2010_20_48_19_+0400_z/oumZ/9jmvrIGX=--
