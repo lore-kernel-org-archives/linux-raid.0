@@ -1,49 +1,58 @@
-From: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Subject: very strange raid10,f2 performance
-Date: Wed, 21 Apr 2010 12:02:46 -0500
-Message-ID: <k2mcccedfc61004211002p24f1bd21xdead3e501766553f@mail.gmail.com>
+From: Roger Heflin <rogerheflin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: NFS and /dev/mdXpY
+Date: Wed, 21 Apr 2010 12:09:20 -0500
+Message-ID: <q2zd3da20d01004211009jccd81479v83e2ef4b6d5db7bf@mail.gmail.com>
+References: <20100417195747.5fae8834.stealth@sourcemage.org>
+	 <4BCF2A2C.7070407@maine.edu>
+	 <20100421204819.b86ee3f7.stealth@sourcemage.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: LinuxRaid <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20100421204819.b86ee3f7.stealth-L+UJwxqiw56VyaH7bEyXVA@public.gmane.org>
+Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Vlad Glagolev <stealth-L+UJwxqiw56VyaH7bEyXVA@public.gmane.org>
+Cc: Steve Cousins <steve.cousins-e7X0jjDqjFGHXe+LvDLADg@public.gmane.org>, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-raid.ids
 
-I was helping somebody else diagnose some issues, and decided to run
-comparitive tests on my own raid (raid10,f2).
-
-The raid10,f2 (md0) is the only physical device backing a volume
-group, which is then carved into a bunch of (primarily) ext4
-filesystems.
-The kernel is 2.6.31.12 (openSUSE) on a Quad Processor AMD Phenom 9150e system.
-The raid is two Western Digital Caviar Blue drives (WDC WD5000AAKS-00V1A0).
-
-The problem: really, really bad I/O performance under certain circumstances.
-
-When using an internal bitmap and *synchronous* I/O, applications like
-dd report 700-800 kB/s.
-When not using a bitmap at all, and synchronous I/O, dd reports 2.5
-MB/s (but dstat shows 14MB/s?)
-Without a bitmap and async I/O (but with fdatasync) I get 65MB/s.
-*With* a bitmap and using async. I/O (but with fdatasync) I get more
-like 65MB/s.
-
-The system has 3GB of memory and I'm testing with dd if=/dev/zero
-of=somefile bs=4k count=524288.
-
-I'm trying to understand why the synchronous I/O is so bad, but even
-so I was hoping for more. 65MB/s seems *reasonable* given the
-raid10,f2 configuration and all of the seeking that such a
-configuration involves (when writing).
-
-The other very strange thing is that the I/O patterns seem very
-strange. I'll see 14MB/s very consistently as reported by dstat
-(14MB/s for each sda, sdb, and md0) for 10-15 seconds and then I'll
-see it drop, sometimes to just 3 or 4 MB/s, for another 10 seconds,
-and then the pattern repeats.  What's going on here? With absolutely
-no other load on the system, I would have expected to see something
-much more consistent.
+On Wed, Apr 21, 2010 at 11:48 AM, Vlad Glagolev <stealth-L+UJwxqiw56VyaH7bEyXVA@public.gmane.org> wrote:
+> Thanks for reply, Steve!
+>
+> parameters are pretty trivial, (rw,insecure) for exports, and defaults while mounting via ``mount host:/path /path'' command.
+>
+> Yes. That sounds interesting, since XFS works fine with there partitions.
+> Also, I must say it's WD20EARS drives (with 4kb sector size, though parted says it's 512b).
+>
+> I also tried another NFS daemon implementation (cvs version, not .22) -- unfsd (unfs3).
+> It mounts ok, but when I try to write any file to the server -- I get the same error (Stale NFS file handle).
+>
+> And on the server side in dmesg I see this:
+>
+> --
+> NFS: server 172.17.2.2 error: fileid changed
+> fsid 0:f: expected fileid 0x2033, got 0xb6d1e05fa150ce09
+> NFS: server 172.17.2.2 error: fileid changed
+> fsid 0:f: expected fileid 0x2033, got 0x26550b0132c0b1
+> NFS: server 172.17.2.2 error: fileid changed
+> fsid 0:f: expected fileid 0x2033, got 0x8202a60053000020
+> NFS: server 172.17.2.2 error: fileid changed
+> fsid 0:f: expected fileid 0x2033, got 0xe542f93ebc8fe157
+> NFS: server 172.17.2.2 error: fileid changed
+> fsid 0:f: expected fileid 0x2033, got 0xc00cd74ea904301
+> --
+>
+> looks like NFS protocol doesn't like something in partitioned software RAID.
+>
 
 
--- 
-Jon
+Try manually setting the fsid=something in the exports file and
+reexport and remount on the target system, if there was a fsid
+collision of some sort then nfs would be hitting the wrong fs...
+
+NFS generates the fsid automatically based on the devices major minor,
+and it is possible there is something odd about the major minor
+numbers that make them not unique...and collide with someone else
+major minor.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
