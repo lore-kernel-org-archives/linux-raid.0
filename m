@@ -1,28 +1,37 @@
-From: Justin Maggard <jmaggard10@gmail.com>
-Subject: Component size difference with mdadm
-Date: Tue, 20 Apr 2010 14:06:08 -0700
-Message-ID: <g2w150c16851004201406ie5b4b84dpbdd820142fcc4be8@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: [PULL REQUEST] fix for v.large RAID5 with v.small chunks
+Date: Wed, 21 Apr 2010 15:17:21 +1000
+Message-ID: <19406.35425.223934.477541@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I was working on recovering a damaged array today, and I used mdadm
-3.1.2 with --assume-clean to get it up and running.  I was surprised
-when I wasn't able to mount the filesystem on the array after starting
-it, so I did a closer comparison of a dump of the original array
-configuration vs. the new one.  I found that the main difference was
-that the component size was 1KB smaller now than it used to be.  The
-array was originally created with mdadm 2.6.8.  So I compiled the old
-2.6.8 version of mdadm and used the same mdadm --assume-clean command,
-and bingo, the component size matched the original array config and it
-mounted just fine.
 
-So, I suspect there is some new code in mdadm 3.1 that wasn't in 2.6.x
-to try to make I/O 4KB-aligned on non-aligned partitions.  Is that
-accurate?  If so, is there a way to tell mdadm to behave like older
-mdadm versions in these cases?
+Hi Linus,
+ I wonder if you would pull this fix for 2.6.33.
+ If you have a very large RAID5 - say 8TB, quite easy these days -
+ with very small chunks - say 4K, not common but quite possible -
+ then you can get more than 2^31 chunks so storing the number of
+ chunks in an 'int' doesn't really work.
 
--Justin
+Thanks,
+NeilBrown
+
+The following changes since commit 85341c61361cc45a9cc0e11c01e8f4479ef460ac:
+  Linus Torvalds (1):
+        Merge branch 'core-fixes-for-linus' of git://git.kernel.org/.../tip/linux-2.6-tip
+
+are available in the git repository at:
+
+  git://neil.brown.name/md/ for-linus
+
+NeilBrown (1):
+      md/raid5: allow for more than 2^31 chunks.
+
+ drivers/md/raid5.c |   19 +++++++------------
+ 1 files changed, 7 insertions(+), 12 deletions(-)
