@@ -1,133 +1,129 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: Use of WD20EARS with MDADM
-Date: Wed, 21 Apr 2010 10:36:07 -0700
-Message-ID: <y2x5bdc1c8b1004211036ra8e10a43kc1a13c2b374a5f7b@mail.gmail.com>
-References: <4BAB8D41.4010801@gmail.com>
-	 <F50E50EC-32CF-4FC4-949B-E8DA56B08D50@santools.com>
-	 <4BABA12D.6040605@shiftmail.org> <4BAF8185.9040307@gmx.net>
-	 <4BC61D47.6090403@tmr.com> <4BCC65EB.3080803@cfl.rr.com>
-	 <4BCEFB99.9080806@tmr.com> <4BCF163C.6040604@cfl.rr.com>
+From: Vlad Glagolev <stealth-L+UJwxqiw56VyaH7bEyXVA@public.gmane.org>
+Subject: Re: NFS and /dev/mdXpY
+Date: Wed, 21 Apr 2010 22:26:12 +0400
+Message-ID: <20100421222612.7aa4f21a.stealth@sourcemage.org>
+References: <20100417195747.5fae8834.stealth@sourcemage.org>
+	<4BCF2A2C.7070407@maine.edu>
+	<20100421204819.b86ee3f7.stealth@sourcemage.org>
+	<q2zd3da20d01004211009jccd81479v83e2ef4b6d5db7bf@mail.gmail.com>
+	<20100421213201.67a4a7a2.stealth@sourcemage.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BCF163C.6040604@cfl.rr.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, st0ff@npl.de, linux-raid@vger.kernel.org
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Wed__21_Apr_2010_22_26_12_+0400_NaI_gJQi+QuVsp8q"
+Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20100421213201.67a4a7a2.stealth-L+UJwxqiw56VyaH7bEyXVA@public.gmane.org>
+Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Roger Heflin <rogerheflin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Steve Cousins <steve.cousins-e7X0jjDqjFGHXe+LvDLADg@public.gmane.org>, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-raid.ids
 
-On Wed, Apr 21, 2010 at 8:14 AM, Phillip Susi <psusi@cfl.rr.com> wrote:
-<SNIP>
-> I've not seen any anecdotal stories, but I have seen plenty of report=
-s
-> with real data showing a large number of head unloads from the SMART
-> data after a relatively short period of use. =C2=A0Personally mine ha=
-s a few
-> hundred so far and I have not even used it for real storage yet, only
-> testing. =C2=A0The specifications say it's good for 300,000 cycles, s=
-o do the
-> math... getting 5 unloads per minute would lead to probable failure
-> after 41 days. =C2=A0Granted that is about worst case, but still some=
-thing to
-> watch out for. =C2=A0In order to make it the entire 3 year warranty p=
-eriod,
-> you need to stay under 11.4 unloads per hour. =C2=A0If you have very =
-little
-> IO activity, or VERY MUCH, then this is entirely possible, but more
-> moderate loads in the middle have been observed to cause hundreds of
-> unloads per hour.
->
-> Given that, and the fact that WD themselves have stated that you shou=
-ld
-> not use these drives in a raid array, I'd either stay away, or watch =
-out
-> for this problem and try to take action to avoid and monitor it.
+--Signature=_Wed__21_Apr_2010_22_26_12_+0400_NaI_gJQi+QuVsp8q
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I think I reported this earlier, but here is a WD10EARS drive in a
-standard Gentoo Linux desktop machine. The drive has 1661 hours
-powered up and 43508 load cycles. That's 26/hour and works out to
-about 14 months before it will be out of spec at 300K cycles.
+Hmm, more testing.. It works only with tiny files flawlessly on OpenBSD (cl=
+ient).
 
-This machine only gets a few hours of use a day but is generally
-powered up all the time. I don't know why Linux wakes this drive up
-roughly every two minutes, assuming it's Linux and not the drive
-itself or something on the motherboard, but it does.
+If a filesize is around 50 mibs, then it just freezes and eats cpu with nfs=
+rcvl call.
 
-I tried three of these drives in a RAID1 in another machine and they
-simply didn't work. Went off line over and over, with big wait times
-when they were working. I made no other changes expect changing to a
-WD 500GB RAID Edition drive and get almostno load cycle counts at all.
+On Linux I don't see such problem. Even big files are transfered with good =
+enough speed.
 
-- Mark
+On Wed, 21 Apr 2010 21:32:01 +0400
+Vlad Glagolev <stealth-L+UJwxqiw56VyaH7bEyXVA@public.gmane.org> wrote:
 
-gandalf ~ # smartctl -i /dev/sda
-smartctl 5.39.1 2010-01-28 r3054 [x86_64-pc-linux-gnu] (local build)
-Copyright (C) 2002-10 by Bruce Allen, http://smartmontools.sourceforge.=
-net
+> On Wed, 21 Apr 2010 12:09:20 -0500
+> Roger Heflin <rogerheflin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+>=20
+> > On Wed, Apr 21, 2010 at 11:48 AM, Vlad Glagolev <stealth-L+UJwxqiw56VyaH7bEyXVA@public.gmane.org=
+> wrote:
+> > > Thanks for reply, Steve!
+> > >
+> > > parameters are pretty trivial, (rw,insecure) for exports, and default=
+s while mounting via ``mount host:/path /path'' command.
+> > >
+> > > Yes. That sounds interesting, since XFS works fine with there partiti=
+ons.
+> > > Also, I must say it's WD20EARS drives (with 4kb sector size, though p=
+arted says it's 512b).
+> > >
+> > > I also tried another NFS daemon implementation (cvs version, not .22)=
+ -- unfsd (unfs3).
+> > > It mounts ok, but when I try to write any file to the server -- I get=
+ the same error (Stale NFS file handle).
+> > >
+> > > And on the server side in dmesg I see this:
+> > >
+> > > --
+> > > NFS: server 172.17.2.2 error: fileid changed
+> > > fsid 0:f: expected fileid 0x2033, got 0xb6d1e05fa150ce09
+> > > NFS: server 172.17.2.2 error: fileid changed
+> > > fsid 0:f: expected fileid 0x2033, got 0x26550b0132c0b1
+> > > NFS: server 172.17.2.2 error: fileid changed
+> > > fsid 0:f: expected fileid 0x2033, got 0x8202a60053000020
+> > > NFS: server 172.17.2.2 error: fileid changed
+> > > fsid 0:f: expected fileid 0x2033, got 0xe542f93ebc8fe157
+> > > NFS: server 172.17.2.2 error: fileid changed
+> > > fsid 0:f: expected fileid 0x2033, got 0xc00cd74ea904301
+> > > --
+> > >
+> > > looks like NFS protocol doesn't like something in partitioned softwar=
+e RAID.
+> > >
+> >=20
+> >=20
+> > Try manually setting the fsid=3Dsomething in the exports file and
+> > reexport and remount on the target system, if there was a fsid
+> > collision of some sort then nfs would be hitting the wrong fs...
+> >=20
+> > NFS generates the fsid automatically based on the devices major minor,
+> > and it is possible there is something odd about the major minor
+> > numbers that make them not unique...and collide with someone else
+> > major minor.
+>=20
+> BAH! How simple!
+>=20
+> Thank you very much, Roger!
+>=20
+> I've just added fsid=3D1 (yes, only these few chars) to exports, and it w=
+orked! Unbelievable, really :)
+> Of course I've checked it on OpenBSD and Linux under both nfsd and unfsd.=
+ Works flawlessly.
+>=20
+> Thanks a lot again.
+>=20
+> But it seems to be a bug, right? If so, patches welcome.. I'll test it wi=
+th great pleasure.
+>=20
+> --=20
+> Dont wait to die to find paradise...
+> --
+> Cheerz,
+> Vlad "Stealth" Glagolev
 
-=3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
-Device Model:     WDC WD10EARS-00Y5B1
-Serial Number:    WD-WCAV55464493
-=46irmware Version: 80.00A80
-User Capacity:    1,000,204,886,016 bytes
-Device is:        Not in smartctl database [for details use: -P showall=
-]
-ATA Version is:   8
-ATA Standard is:  Exact ATA specification draft version not indicated
-Local Time is:    Wed Apr 21 10:35:32 2010 PDT
-SMART support is: Available - device has SMART capability.
-SMART support is: Enabled
 
-gandalf ~ #
-gandalf ~ # smartctl -A /dev/sda
-smartctl 5.39.1 2010-01-28 r3054 [x86_64-pc-linux-gnu] (local build)
-Copyright (C) 2002-10 by Bruce Allen, http://smartmontools.sourceforge.=
-net
-
-=3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
-SMART Attributes Data Structure revision number: 16
-Vendor Specific SMART Attributes with Thresholds:
-ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE
-UPDATED  WHEN_FAILED RAW_VALUE
-  1 Raw_Read_Error_Rate     0x002f   200   200   051    Pre-fail
-Always       -       0
-  3 Spin_Up_Time            0x0027   129   128   021    Pre-fail
-Always       -       6525
-  4 Start_Stop_Count        0x0032   100   100   000    Old_age
-Always       -       21
-  5 Reallocated_Sector_Ct   0x0033   200   200   140    Pre-fail
-Always       -       0
-  7 Seek_Error_Rate         0x002e   200   200   000    Old_age
-Always       -       0
-  9 Power_On_Hours          0x0032   098   098   000    Old_age
-Always       -       1661
- 10 Spin_Retry_Count        0x0032   100   253   000    Old_age
-Always       -       0
- 11 Calibration_Retry_Count 0x0032   100   253   000    Old_age
-Always       -       0
- 12 Power_Cycle_Count       0x0032   100   100   000    Old_age
-Always       -       20
-192 Power-Off_Retract_Count 0x0032   200   200   000    Old_age
-Always       -       5
-193 Load_Cycle_Count        0x0032   186   186   000    Old_age
-Always       -       43508
-194 Temperature_Celsius     0x0022   121   116   000    Old_age
-Always       -       26
-196 Reallocated_Event_Count 0x0032   200   200   000    Old_age
-Always       -       0
-197 Current_Pending_Sector  0x0032   200   200   000    Old_age
-Always       -       0
-198 Offline_Uncorrectable   0x0030   200   200   000    Old_age
-Offline      -       0
-199 UDMA_CRC_Error_Count    0x0032   200   200   000    Old_age
-Always       -       0
-200 Multi_Zone_Error_Rate   0x0008   200   200   000    Old_age
-Offline      -       0
-
-gandalf ~ #
+--=20
+Dont wait to die to find paradise...
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
+Cheerz,
+Vlad "Stealth" Glagolev
+
+--Signature=_Wed__21_Apr_2010_22_26_12_+0400_NaI_gJQi+QuVsp8q
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAkvPQ0QACgkQ8Hg3cBKtRUlu0ACeLfOhs4Idi954pi7Rl8XkBnDv
+aeEAn2hdZnLoK5+n6D2bDSc6PiYTUEB/
+=NTrm
+-----END PGP SIGNATURE-----
+
+--Signature=_Wed__21_Apr_2010_22_26_12_+0400_NaI_gJQi+QuVsp8q--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
