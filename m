@@ -1,78 +1,46 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH] raid6: fix recovery performance regression
-Date: Thu, 22 Apr 2010 15:49:47 -0700
-Message-ID: <20100422224947.22653.97489.stgit@dwillia2-linux.jf.intel.com>
+From: Mark Knecht <markknecht@gmail.com>
+Subject: Re: Use of WD20EARS with MDADM
+Date: Thu, 22 Apr 2010 16:23:22 -0700
+Message-ID: <z2y5bdc1c8b1004221623l3d83165ek3e605d74132a2de3@mail.gmail.com>
+References: <4BAB8D41.4010801@gmail.com>
+	 <y2x5bdc1c8b1004211036ra8e10a43kc1a13c2b374a5f7b@mail.gmail.com>
+	 <4BCF4693.3020101@buttersideup.com>
+	 <201004221913.50692.eye.of.the.8eholder@gmail.com>
+	 <4BD0A716.4080909@cfl.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4BD0A716.4080909@cfl.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de
-Cc: linux-raid@vger.kernel.org, stable@kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: Phillip Susi <psusi@cfl.rr.com>
+Cc: Khelben Blackstaff <eye.of.the.8eholder@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The raid6 recovery code should immediately drop back to the optimized
-synchronous path when a p+q dma resource is not available.  Otherwise we
-run the non-optimized/multi-pass async code in sync mode.
+On Thu, Apr 22, 2010 at 12:44 PM, Phillip Susi <psusi@cfl.rr.com> wrote:
+> On 4/22/2010 12:13 PM, Khelben Blackstaff wrote:
+>> WD mentions in the customer help (Answer ID 5357) that these newer drives
+>> were validated to 1M load/unload cycles and not 300K.
+>
+> Weird, I wonder if they just forgot to update the spec sheet for the
+> drive then since it says 300k.
 
-Verified with raid6test (NDISKS=255)
+Validated doesn't mean spec'ed, right? So they spec it at 300K but
+they test and find that some units go to 1M, so they report that some
+units go to 1M but they keep the spec at 300K. We feel more
+comfortable with the operation but if the drive fails at 400K then
+they are within their rights to say the drive lived a useful life and
+replace or not replace it as they see fit.
 
-Applies to kernels >= 2.6.32.
+I have 7 of these WD10EARS green drives, one in the machine I reported
+on that's 350 miles away, but 6 sitting in boxes here. I think I'll
+look into using the WD program to modify one or two of them and then
+start some testing.
 
-Cc: <stable@kernel.org>
-Reported-by: H. Peter Anvin <hpa@zytor.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
+Keep in mind that just because we possibly solve the load cycle count
+problem doesn't mean that the drive will work for RAID. WD has also
+stated that these drives don't have any TLER features.
 
- crypto/async_tx/async_raid6_recov.c |   21 +++++++++++++--------
- 1 files changed, 13 insertions(+), 8 deletions(-)
+I'll report back how that goes, but I don't know exactly when.
 
-diff --git a/crypto/async_tx/async_raid6_recov.c b/crypto/async_tx/async_raid6_recov.c
-index 943f2ab..3df6746 100644
---- a/crypto/async_tx/async_raid6_recov.c
-+++ b/crypto/async_tx/async_raid6_recov.c
-@@ -324,6 +324,7 @@ struct dma_async_tx_descriptor *
- async_raid6_2data_recov(int disks, size_t bytes, int faila, int failb,
- 			struct page **blocks, struct async_submit_ctl *submit)
- {
-+	void *scribble = submit->scribble;
- 	int non_zero_srcs, i;
- 
- 	BUG_ON(faila == failb);
-@@ -332,11 +333,13 @@ async_raid6_2data_recov(int disks, size_t bytes, int faila, int failb,
- 
- 	pr_debug("%s: disks: %d len: %zu\n", __func__, disks, bytes);
- 
--	/* we need to preserve the contents of 'blocks' for the async
--	 * case, so punt to synchronous if a scribble buffer is not available
-+	/* if a dma resource is not available or a scribble buffer is not
-+	 * available punt to the synchronous path.  In the 'dma not
-+	 * available' case be sure to use the scribble buffer to
-+	 * preserve the content of 'blocks' as the caller intended.
- 	 */
--	if (!submit->scribble) {
--		void **ptrs = (void **) blocks;
-+	if (async_dma_find_channel(DMA_PQ) == NULL || !scribble) {
-+		void **ptrs = scribble ? scribble : (void **) blocks;
- 
- 		async_tx_quiesce(&submit->depend_tx);
- 		for (i = 0; i < disks; i++)
-@@ -406,11 +409,13 @@ async_raid6_datap_recov(int disks, size_t bytes, int faila,
- 
- 	pr_debug("%s: disks: %d len: %zu\n", __func__, disks, bytes);
- 
--	/* we need to preserve the contents of 'blocks' for the async
--	 * case, so punt to synchronous if a scribble buffer is not available
-+	/* if a dma resource is not available or a scribble buffer is not
-+	 * available punt to the synchronous path.  In the 'dma not
-+	 * available' case be sure to use the scribble buffer to
-+	 * preserve the content of 'blocks' as the caller intended.
- 	 */
--	if (!scribble) {
--		void **ptrs = (void **) blocks;
-+	if (async_dma_find_channel(DMA_PQ) == NULL || !scribble) {
-+		void **ptrs = scribble ? scribble : (void **) blocks;
- 
- 		async_tx_quiesce(&submit->depend_tx);
- 		for (i = 0; i < disks; i++)
-
+Cheers,
+Mark
