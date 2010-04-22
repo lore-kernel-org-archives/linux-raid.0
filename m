@@ -1,77 +1,45 @@
-From: "Hawrylewicz Czarnowski, Przemyslaw"
-	<przemyslaw.hawrylewicz.czarnowski@intel.com>
-Subject: [PATCH 13/13] manual update for subarray delete/rename
-Date: Thu, 22 Apr 2010 23:13:20 +0100
-Message-ID: <66C59AD0932712458090B447266D638CD405E3C1@irsmsx504.ger.corp.intel.com>
+From: Rich Rauenzahn <rrauenza@gmail.com>
+Subject: Re: reshape from raid5 to raid6 failed -- and backup file is gone?
+Date: Thu, 22 Apr 2010 15:26:13 -0700
+Message-ID: <l2k657cbef51004221526hcb002ac9pd8e464f50c5b1a70@mail.gmail.com>
+References: <n2j657cbef51004221132uf2d7f5cds1268f848fee1489e@mail.gmail.com>
+	 <q2u657cbef51004221446l41381e31hf26f96072b04983e@mail.gmail.com>
+	 <20100423080938.5ef90287@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <20100423080938.5ef90287@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Adds description for subarray delete and subarray rename switches.
+>
+>
+> It is very odd that the backup file disappeared. =A0What is
+> =A0 /.MEDIA/tmp
+> ?? Not a tmpfs filesystem I hope...
 
-Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
----
- mdadm.8 |   27 +++++++++++++++++++++++++++
- 1 files changed, 27 insertions(+), 0 deletions(-)
+No, a persistent filesystem on another disk -- with no autodelete
+scripts or anything.  Very very weird that it disappeared.   I saw it
+before I went to bed... was about 50MB if I recall.  Unless the fsck
+at boot removed it -- but I would imagine you make sure you fsync that
+file to disk before you proceed?   I think ./.MEDIA is ext4.
 
-diff --git a/mdadm.8 b/mdadm.8
-index 4edfc41..edc511c 100644
---- a/mdadm.8
-+++ b/mdadm.8
-@@ -1173,6 +1173,20 @@ the block where the superblock would be is overwritten even if it
- doesn't appear to be valid.
- 
- .TP
-+.B \-\-zero\-subarray
-+Removes references to IMSM subarray identified by member id, name
-+or UUID. When parent container is running either this container or
-+list of devices consistent with container devices needs to be given.
-+Otherwise any subset of devices can be passed, but result of future
-+assembly can be unpredictable. You may wish to pass an optional value
-+defining member index of array to be deleted. The identity can also
-+be selected with the
-+.B \-\-uuid
-+option, or the
-+.B \-\-name
-+option.
-+
-+.TP
- .BR \-t ", " \-\-test
- When used with
- .BR \-\-detail ,
-@@ -1204,6 +1218,19 @@ kernel handles both dirty-clean transitions and resync checkpointing in
- the kernel at shutdown.  No action is taken if safe-mode handling is
- disabled.
- 
-+.TP
-+.BR \-U=name ", " \-\-update=name
-+Changes serial id of IMSM subarray (renames subarray) identified by name
-+or UUID. Needs either container or list of devices consistent
-+with container devices to be given (see
-+.BR \-\-zero\-subarray )
-+. The identity can be selected
-+with the
-+.B \-\-uuid
-+option, or the
-+.B \-\-name
-+option.
-+
- .SH For Incremental Assembly mode:
- .TP
- .BR \-\-rebuild\-map ", " \-r
--- 
-1.6.4.2
+> You could hack mdadm to assemble the array even without a backup file=
+=2E
+> Get 'Grow_restart' to always return 0.
+>
+> Then most of your data should be assessible, but the could be a secti=
+on in
+> the middle which is currupt.
 
-
+As long as fsck can bring it back to a consistent state, I'm ok with
+that.   But I would guess some file contents could be silently
+corrupt?
 --
-Best Regards,
-Przemyslaw Hawrylewicz-Czarnowski
-Software Development Engineer
-
-
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
