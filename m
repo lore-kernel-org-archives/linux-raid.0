@@ -1,30 +1,42 @@
-From: Peter Rabbitson <rabbit+list@rabbit.us>
-Subject: Re: Suggestion needed for fixing RAID6
-Date: Thu, 22 Apr 2010 18:32:17 +0200
-Message-ID: <4BD07A11.5040300@rabbit.us>
-References: <626601cae203$dae35030$0400a8c0@dcccs> <alpine.DEB.1.10.1004221658040.6768@uplift.swm.pp.se> <64bd01cae22e$456461e0$0400a8c0@dcccs> <alpine.DEB.1.10.1004221713420.6768@uplift.swm.pp.se>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: tip: origin tree build failure (x86, 32-bit, allyesconfig)
+Date: Thu, 22 Apr 2010 11:12:41 -0700 (PDT)
+Message-ID: <alpine.LFD.2.00.1004221111220.26046@i5.linux-foundation.org>
+References: <19350.53522.385933.467438@notabene.brown> <20100422070610.GA18884@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.1.10.1004221713420.6768@uplift.swm.pp.se>
-Sender: linux-raid-owner@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Janos Haar <janos.haar@netcenter.hu>, linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20100422070610.GA18884@elte.hu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mikael Abrahamsson wrote:
-> On Thu, 22 Apr 2010, Janos Haar wrote:
-> 
-> I don't have a good idea that assures your data, unfortunately. One way
-> would be to dd the defective drives to working ones, but that will most
-> likely cause you to have data loss on the defective sectors (since md
-> has no idea that these sectors should be re-created from parity).
-> 
 
-There was a thread[1] some time ago, where HPA confirmed that the RAID6
-data is sufficient to write an algorithm which will be able to determine
-which sector is in fact the offending one. There wasn't any interest to
-incorporate this into the sync_action/repair function though :(
 
-[1] http://www.mail-archive.com/linux-raid@vger.kernel.org/msg07327.html
+On Thu, 22 Apr 2010, Ingo Molnar wrote:
+> 
+> All 32-bit x86 builds (x86, allyesconfig) that enable RAID are failing with 
+> this build failure:
+> 
+>  drivers/built-in.o: In function `raid5_compute_sector':
+>  raid5.c:(.text+0x2e42ac): undefined reference to `__umoddi3'
+>  raid5.c:(.text+0x2e42d8): undefined reference to `__umoddi3'
+>  raid5.c:(.text+0x2e42ff): undefined reference to `__umoddi3'
+>  raid5.c:(.text+0x2e4327): undefined reference to `__umoddi3'
+>  raid5.c:(.text+0x2e4385): undefined reference to `__umoddi3'
+>  drivers/built-in.o:raid5.c:(.text+0x2e43bc): more undefined references to `__umoddi3' follow
+> 
+> Caused by this commit:
+> 
+>   35f2a59: md/raid5: allow for more than 2^31 chunks.
+
+Gaah, yes.
+
+How about just making it "unsigned long" instead of sector_t, and telling 
+people that if they have more than 2**32 chunks in their RAID array, they 
+should damn well use a 64-bit CPU.
+
+The alternative, of course, is to use "sector_div()" everywhere. Neil?
+
+		Linus
