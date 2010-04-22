@@ -1,57 +1,64 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: reshape from raid5 to raid6 failed -- and backup file is gone?
-Date: Fri, 23 Apr 2010 08:09:38 +1000
-Message-ID: <20100423080938.5ef90287@notabene.brown>
-References: <n2j657cbef51004221132uf2d7f5cds1268f848fee1489e@mail.gmail.com>
-	<q2u657cbef51004221446l41381e31hf26f96072b04983e@mail.gmail.com>
+From: "Hawrylewicz Czarnowski, Przemyslaw"
+	<przemyslaw.hawrylewicz.czarnowski@intel.com>
+Subject: [PATCH 00/13] imsm: new imsm metadata features
+Date: Thu, 22 Apr 2010 23:10:21 +0100
+Message-ID: <66C59AD0932712458090B447266D638CD405E3B1@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <q2u657cbef51004221446l41381e31hf26f96072b04983e@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Rich Rauenzahn <rrauenza@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-On Thu, 22 Apr 2010 14:46:32 -0700
-Rich Rauenzahn <rrauenza@gmail.com> wrote:
+The following series of patches adds two new functionalities to mdadm for
+Intel metadata: Volume Delete and Volume Rename.
+The patches makes Linux SW RAID implementation based on imsm metadata closer
+to Intel(R) Rapid Storage Technology for Windows(TM). 
+Patches 1-6 contain fixes of bugs found during development and modifications
+of existing code making main features easier to implement.
+Patches 7-9 contain implementation of Volume Delete; ie. makes possible to
+remove only one volume from container while the other one keeps running.
+Patches 10-12 makes possible to change internal serial ID of volume leaving
+the rest of superblock data untouched.
+The last patch contains an update of manual page for above features.
 
-> On Thu, Apr 22, 2010 at 11:32 AM, Rich Rauenzahn <rrauenza@gmail.com>=
- wrote:
-> > The system froze sometime in the middle of the night, and oddly... =
-the
-> > --backup-file I specified last night is missing. =C2=A0Is there any=
- reason
-> > that mdadm would unlink it for a short span of time during the
-> > reshape?
->=20
-> I'm at the point now where I'm just looking for triage advice so I ca=
-n
-> work on it tonight. Most of the contents were backed up offsite, but =
-a
-> little bit out of date.  Nothing critical, but inconvenient, like
-> recovery images for relative's systems.
->=20
-> Do I kill it and start over, or is there any hope of recovering from
-> the reshape?
+[PATCH 01/13] fix: memory leak in mdmon_pid()
+[PATCH 02/13] map file: Extract record update routine from map_update
+[PATCH 03/13] Add mdstat_by_component
+[PATCH 04/13] fix: possible segfault if current_vol does not match subarray
+[PATCH 05/13] sysfs: simple write to sysfs file
+[PATCH 06/13] imsm: delete subarray metadata manipulation routine
+[PATCH 07/13] imsm: extension of delete subarray to handle active container
+[PATCH 08/13] mdmon: enable delete subarray for managed containers
+[PATCH 09/13] imsm: delete subarray: main procedure and command line support
+[PATCH 10/13] imsm: rename subarray functionality
+[PATCH 11/13] mdmon: enable rename subarray for managed containers
+[PATCH 12/13] imsm: rename subarray: main procedure and command line support
+[PATCH 13/13] manual: update for subarray delete/rename
 
+ps. It is reworked version of patches sent earlier.
 
-It is very odd that the backup file disappeared.  What is
-   /.MEDIA/tmp
-?? Not a tmpfs filesystem I hope...
-
-You could hack mdadm to assemble the array even without a backup file.
-Get 'Grow_restart' to always return 0.
-
-Then most of your data should be assessible, but the could be a section=
- in
-the middle which is currupt.
-
-NeilBrown
+Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+---
+ Kill.c        |   58 ++++++++++++
+ Makefile      |    4 +-
+ Manage.c      |   88 +++++++++++++++++++
+ ReadMe.c      |    1 +
+ mapfile.c     |   31 +++++--
+ mdadm.8       |   27 ++++++
+ mdadm.c       |   32 ++++++-
+ mdadm.h       |   35 ++++++++
+ mdstat.c      |   69 ++++++++++++++--
+ super-intel.c |  253 +++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ sysfs.c       |   21 +++++
+ util.c        |  268 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 12 files changed, 864 insertions(+), 23 deletions(-)
 
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Best Regards,
+Przemyslaw Hawrylewicz-Czarnowski
+Software Development Engineer
+
