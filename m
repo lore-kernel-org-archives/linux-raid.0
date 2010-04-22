@@ -1,38 +1,27 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Suggestion needed for fixing RAID6
-Date: Thu, 22 Apr 2010 17:18:50 +0200 (CEST)
-Message-ID: <alpine.DEB.1.10.1004221713420.6768@uplift.swm.pp.se>
-References: <626601cae203$dae35030$0400a8c0@dcccs> <alpine.DEB.1.10.1004221658040.6768@uplift.swm.pp.se> <64bd01cae22e$456461e0$0400a8c0@dcccs>
+From: Michael Guntsche <mike@it-loops.com>
+Subject: Re: Compile error with 2.6.34-rc5+
+Date: Thu, 22 Apr 2010 18:16:46 +0200
+Message-ID: <20100422161646.GA17781@trillian.comsick.at>
+References: <20100422134550.GA4886@gibson.comsick.at>
+ <201004221627.23600.s.L-H@gmx.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <64bd01cae22e$456461e0$0400a8c0@dcccs>
-Sender: linux-raid-owner@vger.kernel.org
-To: Janos Haar <janos.haar@netcenter.hu>
-Cc: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <201004221627.23600.s.L-H@gmx.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Stefan Lippers-Hollmann <s.L-H@gmx.de>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, 22 Apr 2010, Janos Haar wrote:
+On 2010.04.22 16:27:21 , Stefan Lippers-Hollmann wrote:
+> This seems to be the same problem as 
+> 	http://lkml.indiana.edu/hypermail/linux/kernel/1004.2/01814.html
+> fixed in
+> 	http://lkml.indiana.edu/hypermail/linux/kernel/1004.2/01816.html
+> 
+This indeed is the same problem. I checked the archives before sending
+the mail but apparently missed that one. Thank you for the information.
 
-> I am just tested one of the badblock-hdds, and the bad blocks comes 
-> periodicaly, like a little and short scratch, and the drive can't correct 
-> these by write.
-
-Oh, if you get write errors on the drive then you're in bigger trouble.
-
-> Maybe this is why the kernel kicsk it out...
-
-Yes, a write error to the drive is a kick:able offence. What does smartctl 
-say about the drives?
-
-> But anyway, the problem is still here, i want to rebuild the missing disk 
-> (prior to replace the badblocked drives one by one), but the kernel kicks out 
-> more 2 drive during the rebuild.
-
-I don't have a good idea that assures your data, unfortunately. One way 
-would be to dd the defective drives to working ones, but that will most 
-likely cause you to have data loss on the defective sectors (since md has 
-no idea that these sectors should be re-created from parity).
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+Kind regards,
+Michael Guntsche
