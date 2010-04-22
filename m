@@ -1,26 +1,46 @@
-From: Brett King <king.br@gmail.com>
-Subject: Re: compute_blocknr: map not correct error during RAID6 reshape 6 ->
-	7 disks, mdadm 3.1.2 / kernel 2.6.34-rc3
-Date: Thu, 22 Apr 2010 13:43:39 +1000
-Message-ID: <i2s8cf253381004212043ud8d89d56n8c2ddffc3b6fc47@mail.gmail.com>
-References: <u2j8cf253381004151856l76b4e227mc6327534e0e304ad@mail.gmail.com>
-	 <z2q8cf253381004192043haf99536cvfb2bf6fcfb40fa4d@mail.gmail.com>
-	 <20100420141442.2ca76b48@notabene.brown>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: tip: origin tree build failure (x86, 32-bit, allyesconfig)
+Date: Thu, 22 Apr 2010 09:06:10 +0200
+Message-ID: <20100422070610.GA18884@elte.hu>
+References: <19350.53522.385933.467438@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100420141442.2ca76b48@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <19350.53522.385933.467438@notabene.brown>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi All,
-Just a quick update to advise the below patch worked - the array
-finished its reshape and the filesystem mounted without error.
 
--    int chunk_number, dummy1, dd_idx = i;
-+    int dummy1, dd_idx = i;
-+    sector_t chunk_number;
+* Neil Brown <neilb@suse.de> wrote:
 
-I'll rebuild it with a larger chunk size to avoid similar issues in
-the future, thanks everyone !
+> are available in the git repository at:
+> 
+>   git://neil.brown.name/md/ for-linus
+
+( Note, i'm re-using this old MD pull request thread to report a bug in a pull 
+  request you sent to Linus in the past two days. I havent found the pull 
+  request nor the patch on lkml. )
+
+All 32-bit x86 builds (x86, allyesconfig) that enable RAID are failing with 
+this build failure:
+
+ drivers/built-in.o: In function `raid5_compute_sector':
+ raid5.c:(.text+0x2e42ac): undefined reference to `__umoddi3'
+ raid5.c:(.text+0x2e42d8): undefined reference to `__umoddi3'
+ raid5.c:(.text+0x2e42ff): undefined reference to `__umoddi3'
+ raid5.c:(.text+0x2e4327): undefined reference to `__umoddi3'
+ raid5.c:(.text+0x2e4385): undefined reference to `__umoddi3'
+ drivers/built-in.o:raid5.c:(.text+0x2e43bc): more undefined references to `__umoddi3' follow
+
+Caused by this commit:
+
+  35f2a59: md/raid5: allow for more than 2^31 chunks.
+
+I've reverted the commit from -tip for now.
+
+Thanks,
+
+	Ingo
