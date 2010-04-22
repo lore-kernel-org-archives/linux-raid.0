@@ -1,34 +1,44 @@
-From: "Janos Haar" <janos.haar@netcenter.hu>
-Subject: Suggestion needed for fixing RAID6
-Date: Thu, 22 Apr 2010 12:09:08 +0200
-Message-ID: <626601cae203$dae35030$0400a8c0@dcccs>
+From: Eric MSP Veith <eveith@wwweb-library.net>
+Subject: Status of Linux MD RAID 10? (Or: Why is it still marked
+ experimental?)
+Date: Thu, 22 Apr 2010 11:17:51 +0000
+Message-ID: <20100422111750.GB32053@hitomi.veith-m.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-2";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; x-action=pgp-signed
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello Neil, list,
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-I am trying to fix one RAID6 array wich have 12x1.5TB (samsung) drives.
-Actually the array have 1 missing drive, and 3 wich have some bad sectors!
-Genearlly because it is RAID6 there is no data lost, because the bad sectors 
-are not in one address line, but i can't rebuild the missing drive, because 
-the kernel drops out the bad sector-drives one by one during the rebuild 
-process.
+Hello list,
 
-My question is, there is any way, to force the array to keep the members in 
-even if have some reading errors?
-Or is there a way to re-add the bad sector drives after the kernel dropped 
-out without stopping the rebuild process?
-In normal way after 18 hour sync, @ 97.9% the 3rd drive is always dropped 
-out and the rebuild stops.
+I'm using Linux' MD feature with two RAID 1 arrays and am pretty happy with it.
+Since I'm planning to change my disk layout, I'd like to switch to RAID level
+10. But when configuring current 2.6.33 stable kernel, I found RAID 10 marked
+experimental.
 
-Thanks,
-Janos Haar 
+Why is this that case?
 
+I normally do not tend to ignore the "EXPERIMENTAL" warning; in fact, my
+current "home server" kernel does not include any single item marked as
+experimental.
+
+I've googled around before bugging the ML and found several others asking
+questions along the line "can I use MD RAID 10 right now?", with answers like
+"it works for me so far." I, on the contrary, would like to know what issues
+prevent RAID 10 from getting the "experimental" KConfig tag removed.
+
+TIA!
+
+            Eric
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.10 (GNU/Linux)
+
+iEYEARECAAYFAkvQMF4ACgkQhS0drJ3goJIOwQCffOtkGCs57p5dyYu6pcQdgpyp
+KcsAn0MRkm9ShMFNwGKgAY4fe2hFuB0c
+=08wl
+-----END PGP SIGNATURE-----
