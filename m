@@ -1,47 +1,77 @@
-From: Khelben Blackstaff <eye.of.the.8eholder@gmail.com>
-Subject: Re: Use of WD20EARS with MDADM
-Date: Thu, 22 Apr 2010 19:13:50 +0300
-Message-ID: <201004221913.50692.eye.of.the.8eholder@gmail.com>
-References: <4BAB8D41.4010801@gmail.com> <y2x5bdc1c8b1004211036ra8e10a43kc1a13c2b374a5f7b@mail.gmail.com> <4BCF4693.3020101@buttersideup.com>
+From: "Janos Haar" <janos.haar@netcenter.hu>
+Subject: Re: Suggestion needed for fixing RAID6
+Date: Thu, 22 Apr 2010 18:25:06 +0200
+Message-ID: <652301cae238$5faf2440$0400a8c0@dcccs>
+References: <626601cae203$dae35030$0400a8c0@dcccs> <alpine.DEB.1.10.1004221658040.6768@uplift.swm.pp.se> <64bd01cae22e$456461e0$0400a8c0@dcccs> <alpine.DEB.1.10.1004221713420.6768@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=response
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BCF4693.3020101@buttersideup.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> I believe that these disks only come in the "green" variety.  I recently
-> picked up a 1.5 tb version for testing and cheap bulk storage, and I
-> would not suggest using them in a raid array because the green drives
-> firmware automatically parks the head after 8 seconds of inactivity and
-> reduces the rpm of the disk.  The constant parking can quickly wear out
-> the head under high use and there is no way to disable this "feature".
 
-As previously mentioned wdidle utility can disable the head unloading.
+----- Original Message ----- 
+From: "Mikael Abrahamsson" <swmike@swm.pp.se>
+To: "Janos Haar" <janos.haar@netcenter.hu>
+Cc: <linux-raid@vger.kernel.org>
+Sent: Thursday, April 22, 2010 5:18 PM
+Subject: Re: Suggestion needed for fixing RAID6
 
-> The specifications say it's good for 300,000 cycles, so do the
-> math... getting 5 unloads per minute would lead to probable failure
-> after 41 days.  Granted that is about worst case, but still something to
-> watch out for.  In order to make it the entire 3 year warranty period,
-> you need to stay under 11.4 unloads per hour.  If you have very little
-> IO activity, or VERY MUCH, then this is entirely possible, but more
-> moderate loads in the middle have been observed to cause hundreds of
-> unloads per hour.
 
-WD mentions in the customer help (Answer ID 5357) that these newer drives
-were validated to 1M load/unload cycles and not 300K.
+> On Thu, 22 Apr 2010, Janos Haar wrote:
+>
+>> I am just tested one of the badblock-hdds, and the bad blocks comes 
+>> periodicaly, like a little and short scratch, and the drive can't correct 
+>> these by write.
+>
+> Oh, if you get write errors on the drive then you're in bigger trouble.
 
-> 
-> If you want to fix it, then wdidle3.exe worked for me.  Search for:
-> 
-> wdidle3_1_00.zip
-> 
-It worked fine for me too. I had a Load Cycle Count of 59, 15 mins
-after connecting the drive for the first time. After running wdidle
-the Count stopped at 104 and never increased again. I now have 11 hours
-With wdidle 1.00 disabling the timer did nothing. I had to set the timer to
-a large value. There is a newer version though (1.03) that supports
-these new drives better. 
+I am planning to replace all the defective drives, but first i need to 
+rebuild the missing part.
+I don't care about wich is the problem, the first drive have 123 unredable 
+sectors, and i have tried to rewrite one but not works.
+This will goes to RMA, but first i need to solve the problem.
+
+>
+>> Maybe this is why the kernel kicsk it out...
+>
+> Yes, a write error to the drive is a kick:able offence. What does smartctl 
+> say about the drives?
+
+The smart healt is good. (not wondering...)
+But the drive have some offline unc sectors and some pendings.
+
+>
+>> But anyway, the problem is still here, i want to rebuild the missing disk 
+>> (prior to replace the badblocked drives one by one), but the kernel kicks 
+>> out more 2 drive during the rebuild.
+>
+> I don't have a good idea that assures your data, unfortunately. One way 
+> would be to dd the defective drives to working ones, but that will most 
+> likely cause you to have data loss on the defective sectors (since md has 
+> no idea that these sectors should be re-created from parity).
+
+Exactly.
+This is why i ask here. :-)
+Because i don't want to make some KB errors on the array wich have all the 
+needed information.
+
+Any good idea?
+
+Thanks a lot,
+Janos
+
+>
+> -- 
+> Mikael Abrahamsson    email: swmike@swm.pp.se
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html 
+
