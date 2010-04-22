@@ -1,183 +1,95 @@
-From: Vlad Glagolev <stealth-L+UJwxqiw56VyaH7bEyXVA@public.gmane.org>
-Subject: Re: NFS and /dev/mdXpY
-Date: Fri, 23 Apr 2010 00:07:57 +0400
-Message-ID: <20100423000757.c58e3dbe.stealth@sourcemage.org>
-References: <20100417195747.5fae8834.stealth@sourcemage.org>
-	<20100422182543.GB8858@fieldses.org>
-	<20100422225310.38e37038.stealth@sourcemage.org>
-	<20100422193236.GA10302@fieldses.org>
-	<1271965650.593.21.camel@localhost.localdomain>
-	<20100422235100.0616ce1d.stealth@sourcemage.org>
-	<1271966181.593.23.camel@localhost.localdomain>
+From: "Janos Haar" <janos.haar@netcenter.hu>
+Subject: Re: Suggestion needed for fixing RAID6
+Date: Thu, 22 Apr 2010 22:48:37 +0200
+Message-ID: <66ba01cae25d$2fcd73b0$0400a8c0@dcccs>
+References: <626601cae203$dae35030$0400a8c0@dcccs> <4BD0AF2D.90207@stud.tu-ilmenau.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Fri__23_Apr_2010_00_07_57_+0400_USk16Gh5L/n9i9hK"
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1271966181.593.23.camel-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Trond Myklebust <trond.myklebust-41N18TsMXrtuMpJDpNschA@public.gmane.org>
-Cc: "J. Bruce Fields" <bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org>, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=ISO-8859-15;
+	format=flowed	reply-type=original
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: st0ff@npl.de
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Signature=_Fri__23_Apr_2010_00_07_57_+0400_USk16Gh5L/n9i9hK
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Thu, 22 Apr 2010 15:56:21 -0400
-Trond Myklebust <trond.myklebust-41N18TsMXrtuMpJDpNschA@public.gmane.org> wrote:
+----- Original Message -----=20
+=46rom: "Stefan /*St0fF*/ H=FCbner" <stefan.huebner@stud.tu-ilmenau.de>
+To: "Janos Haar" <janos.haar@netcenter.hu>
+Sent: Thursday, April 22, 2010 10:18 PM
+Subject: Re: Suggestion needed for fixing RAID6
 
-> On Thu, 2010-04-22 at 23:51 +0400, Vlad Glagolev wrote:=20
-> > On Thu, 22 Apr 2010 15:47:30 -0400
-> > Trond Myklebust <trond.myklebust-41N18TsMXrtuMpJDpNschA@public.gmane.org> wrote:
-> >=20
-> > > On Thu, 2010-04-22 at 15:32 -0400, J. Bruce Fields wrote:=20
-> > > > On Thu, Apr 22, 2010 at 10:53:10PM +0400, Vlad Glagolev wrote:
-> > > > > On Thu, 22 Apr 2010 14:25:43 -0400
-> > > > > "J. Bruce Fields" <bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org> wrote:
-> > > > >=20
-> > > > > > On Sat, Apr 17, 2010 at 07:57:47PM +0400, Vlad Glagolev wrote:
-> > > > > > > Well, hello there,
-> > > > > > >=20
-> > > > > > > Posted it on linux-kernel ML also, and post it here, for more=
- specific analysis.
-> > > > > > >=20
-> > > > > > > I faced this problem today while trying to mount some NFS sha=
-re on OpenBSD box.
-> > > > > > > I mounted it successfully without any visible errors, but I w=
-asn't able to cd there, the printed error was:
-> > > > > > >=20
-> > > > > > > ksh: cd: /storage - Stale NFS file handle
-> > > > > > >=20
-> > > > > > > Apropos, the partition is 5.5 TB. I tried another one on my b=
-ox and it was mounted successfully. It was possible to manage files there t=
-oo. Its size is ~3GB.
-> > > > > > > That's why the first time I thought about some size limitatio=
-ns of OpenBSD/Linux/NFS.
-> > > > > > >=20
-> > > > > > > While talking on #openbsd @ freenode, I discovered this via t=
-cpdump on both sides:
-> > > > > > >=20
-> > > > > > > http://pastebin.ca/1864713
-> > > > > > >=20
-> > > > > > > Googling for 3 hours didn't help at all, some posts had simil=
-iar issue but either with no answer at all or without any full description.
-> > > > > > >=20
-> > > > > > > Then I started to experiment with another Linux box to kill t=
-he possible different variants.
-> > > > > > >=20
-> > > > > > > On another box I also have nfs-utils 1.1.6 and kernel 2.6.32.=
- Mounting that big partition was unsuccessful, it got just stuck. On tcpdum=
-p I've seen this:
-> > > > > >=20
-> > > > > > I'm a bit confused.  What kernel and nfs-utils version is runni=
-ng on the
-> > > > > > problematic Linux server?
-> > > > >=20
-> > > > > same. nfs-utils 1.1.6 and kernel 2.6.32.
-> > > >=20
-> > > > Huh.  That should be new enough for it to be using uuid's.  I wonde=
-r why
-> > > > it isn't?
-> > >=20
-> > > What are the contents of /dev/disk/by-uuid?
-> > >=20
-> >=20
-> > $ ls -1 /dev/disk/by-uuid/
-> > 0e9742f6-44e3-431c-911f-4c914e4f81d5
-> > 31ae89c6-dba6-4351-b3a9-e8b08be07c3d
-> > 4429ba7a-afd2-4c61-83a0-900dae1bccdc
-> > 463bbc42-c19b-4b9e-bae7-838ac0e2e5c6
-> > 473b9320-88a4-44eb-b592-2ac98619bc9b
-> > 53d16b07-d496-4f8f-ad59-ea34aaf169f4
-> > 6adf1c55-405c-43cf-a84d-be5d2746d300
-> > b35a7bca-12ad-4738-a895-52f20b7cc5d9
-> > dc892f1f-0b83-41dd-bde7-0761295f33a3
-> > f7ac4165-320f-4235-a78a-5fe1bd0aac24
-> >=20
->=20
-> So, when you do 'ls -l' on the above, you do indeed see all the
-> partitions that are being exported via NFS?
 
-there's only one, and yes, you're right.. /dev/md2p6 isn't in the list.
+> Hi Janos,
+>
+> I'd ddrescue the failing drives one by one to replacement drives.  Se=
+t a
+> very high retry-count for this action.
 
-According to blkid:
+I know what am i doing, trust me. ;-)
+I have much more professional tools for this than the ddrescue, and i h=
+ave
+the list of defective sectors as well.
+Now i am imaging the second of the failing drives, and this one have >1=
+800
+failing sectors.
 
-# blkid
-/dev/sda1: UUID=3D"9a9beac0-d5fa-94d1-86df-b710391e5a7c" TYPE=3D"linux_raid=
-_member"=20
-/dev/sda2: UUID=3D"8327bc1c-3d13-ee78-86df-b710391e5a7c" TYPE=3D"linux_raid=
-_member"=20
-/dev/sda3: UUID=3D"01821f8d-da8e-fd6a-86df-b710391e5a7c" TYPE=3D"linux_raid=
-_member"=20
-/dev/sdb1: UUID=3D"9a9beac0-d5fa-94d1-86df-b710391e5a7c" TYPE=3D"linux_raid=
-_member"=20
-/dev/sdb2: UUID=3D"8327bc1c-3d13-ee78-86df-b710391e5a7c" TYPE=3D"linux_raid=
-_member"=20
-/dev/sdb3: UUID=3D"01821f8d-da8e-fd6a-86df-b710391e5a7c" TYPE=3D"linux_raid=
-_member"=20
-/dev/sdc1: UUID=3D"ed9c6039-5faf-d0ef-86df-b710391e5a7c" TYPE=3D"linux_raid=
-_member"=20
-/dev/sdc2: UUID=3D"8327bc1c-3d13-ee78-86df-b710391e5a7c" TYPE=3D"linux_raid=
-_member"=20
-/dev/sdc3: UUID=3D"01821f8d-da8e-fd6a-86df-b710391e5a7c" TYPE=3D"linux_raid=
-_member"=20
-/dev/sdd1: UUID=3D"ed9c6039-5faf-d0ef-86df-b710391e5a7c" TYPE=3D"linux_raid=
-_member"=20
-/dev/sdd2: UUID=3D"8327bc1c-3d13-ee78-86df-b710391e5a7c" TYPE=3D"linux_raid=
-_member"=20
-/dev/sdd3: UUID=3D"01821f8d-da8e-fd6a-86df-b710391e5a7c" TYPE=3D"linux_raid=
-_member"=20
-/dev/md0: UUID=3D"53d16b07-d496-4f8f-ad59-ea34aaf169f4" TYPE=3D"xfs"=20
-/dev/md2p1: UUID=3D"31ae89c6-dba6-4351-b3a9-e8b08be07c3d" TYPE=3D"swap"=20
-/dev/md2p2: UUID=3D"dc892f1f-0b83-41dd-bde7-0761295f33a3" TYPE=3D"xfs"=20
-/dev/md2p3: UUID=3D"f7ac4165-320f-4235-a78a-5fe1bd0aac24" TYPE=3D"xfs"=20
-/dev/md2p4: UUID=3D"4429ba7a-afd2-4c61-83a0-900dae1bccdc" TYPE=3D"xfs"=20
-/dev/md2p5: UUID=3D"b35a7bca-12ad-4738-a895-52f20b7cc5d9" TYPE=3D"xfs"=20
-/dev/md2p6: UUID=3D"9f8d66e8-4b11-4ae7-8f90-b00ee9d204b1" TYPE=3D"xfs"=20
-/dev/md1: UUID=3D"0e9742f6-44e3-431c-911f-4c914e4f81d5" TYPE=3D"xfs"=20
-/dev/md3: UUID=3D"463bbc42-c19b-4b9e-bae7-838ac0e2e5c6" TYPE=3D"xfs"=20
-/dev/sde1: UUID=3D"6adf1c55-405c-43cf-a84d-be5d2746d300" TYPE=3D"ext2"
+>
+> The logfile ddrescue creates shows the unreadable sectors afterwards.
+> The hard part would now be to incorporate the raid-algorithm into som=
+e
+> tool to just restore the missing sectors...
 
-and not all of them exist at /dev/disk/by-uuid:
+I can do that, but it is not a good game for 15TB array or even some hu=
+ndred
+of sectors to fix by hand....
+The linux md knows how to recalculate these errors, i want to find this
+way....somehow...
+I am thinking of making RAID1 from the defective drives, and if the ker=
+nel
+will re-write the sectors, the copy will get it.
+But i don't know how to prevent the copy to read it. :-/
 
-# ls -1 /dev/disk/by-uuid
-0e9742f6-44e3-431c-911f-4c914e4f81d5 <- /dev/md1
-31ae89c6-dba6-4351-b3a9-e8b08be07c3d <- /dev/md2p1
-4429ba7a-afd2-4c61-83a0-900dae1bccdc <- /dev/md2p4
-463bbc42-c19b-4b9e-bae7-838ac0e2e5c6 <- /dev/md3
-473b9320-88a4-44eb-b592-2ac98619bc9b <- ??
-53d16b07-d496-4f8f-ad59-ea34aaf169f4 <- /dev/md0
-6adf1c55-405c-43cf-a84d-be5d2746d300 <- /dev/sde1
-b35a7bca-12ad-4738-a895-52f20b7cc5d9 <- /dev/md2p5
-dc892f1f-0b83-41dd-bde7-0761295f33a3 <- /dev/md2p2
-f7ac4165-320f-4235-a78a-5fe1bd0aac24 <- /dev/md2p3
+Thanks for your suggestions,
 
-Interesting. so 9f8d66e8-4b11-4ae7-8f90-b00ee9d204b1 !=3D 473b9320-88a4-44e=
-b-b592-2ac98619bc9b.
+Janos
 
-Bug in udev?
+>
+> I hope this helps a bit.
+> Stefan
+>
+> Am 22.04.2010 12:09, schrieb Janos Haar:
+>> Hello Neil, list,
+>>
+>> I am trying to fix one RAID6 array wich have 12x1.5TB (samsung) driv=
+es.
+>> Actually the array have 1 missing drive, and 3 wich have some bad
+>> sectors!
+>> Genearlly because it is RAID6 there is no data lost, because the bad
+>> sectors are not in one address line, but i can't rebuild the missing
+>> drive, because the kernel drops out the bad sector-drives one by one
+>> during the rebuild process.
+>>
+>> My question is, there is any way, to force the array to keep the mem=
+bers
+>> in even if have some reading errors?
+>> Or is there a way to re-add the bad sector drives after the kernel
+>> dropped out without stopping the rebuild process?
+>> In normal way after 18 hour sync, @ 97.9% the 3rd drive is always
+>> dropped out and the rebuild stops.
+>>
+>> Thanks,
+>> Janos Haar
+>> --=20
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
---=20
-Dont wait to die to find paradise...
 --
-Cheerz,
-Vlad "Stealth" Glagolev
-
---Signature=_Fri__23_Apr_2010_00_07_57_+0400_USk16Gh5L/n9i9hK
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkvQrJ0ACgkQ8Hg3cBKtRUkeegCgwTe0Z9/kxHBly3ME8OpR1D+E
-1fkAoJEkaS6lVnTe083p9fKRc+nt0KHN
-=CRr/
------END PGP SIGNATURE-----
-
---Signature=_Fri__23_Apr_2010_00_07_57_+0400_USk16Gh5L/n9i9hK--
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
