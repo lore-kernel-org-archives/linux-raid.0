@@ -1,44 +1,53 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: "failed" vs "removed" or "locked-out" state and --incremental
- auto-re-adding
-Date: Fri, 23 Apr 2010 10:46:22 -0400
-Message-ID: <4BD1B2BE.3020306@cfl.rr.com>
-References: <loom.20100423T140059-877@post.gmane.org>
+From: MRK <mrk@shiftmail.org>
+Subject: Re: RAID5
+Date: Fri, 23 Apr 2010 16:57:35 +0200
+Message-ID: <4BD1B55F.30702@shiftmail.org>
+References: <s2q6b16fb4c1004182046x5464351m861ccaf9850f33df@mail.gmail.com>
+ <j2k4877c76c1004182121w3edcf996x2ee8ee0eca398985@mail.gmail.com>
+ <4BCEFE66.6010607@tmr.com>
+ <l2g4877c76c1004211243n6dfa55pfee322db20ba6f08@mail.gmail.com>
+ <4BD1AE0C.2040003@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <loom.20100423T140059-877@post.gmane.org>
+In-reply-to: <4BD1AE0C.2040003@msgid.tls.msk.ru>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christian Gatzemeier <c.gatzemeier@tu-bs.de>
-Cc: linux-raid@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Michael Evans <mjevans1983@gmail.com>, Bill Davidsen <davidsen@tmr.com>, Kaushal Shriyan <kaushalshriyan@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 4/23/2010 8:20 AM, Christian Gatzemeier wrote:
-> It seems we don't have an obvious way to manually
-> remove a member from an array so that it does not get auto-assembled
-> later on (i.e. by udev/--incremental) without completely zeroing the
-> superblock or moving it into an own array. Maybe a --lock-out
+On 04/23/2010 04:26 PM, Michael Tokarev wrote:
+>
+> This is most likely due to read-modify-write cycle which is present on
+> lvm-on-raid[456] if the number of data drives is not a power of two.
+> LVM requires the block size to be a power of two, so if you can't fit
+> some number of LVM blocks on whole raid stripe size your write speed
+> is expected to be ~3 times worse...
+>
+> Even creating partitions on such raid array is difficult.
+>
+>
+>
+>    
 
-mdadm --fail followed by mdadm --remove seems to be what you are looking
-for.  mdadm --incremental will not use a removed drive.
+Seriously?
+a number of data drives power of 2 would be an immense limitation.
+Why should that be? I understand that LVM blocks would not be aligned to 
+raid stripes, and this can worsen the problem for random writes, but if 
+the write is sequential, the raid stripe will still be filled at the 
+next block-output by LVM.
+Maybe the very first stripe you write will get an RMW but the next ones 
+will be filled in the wait, and also consider you have the 
+preread_bypass_threshold feature by MD which helps in this.
 
-Actually though, it looks like mdadm does not update the metadata on the
-disk when you --fail and --remove it, so it still thinks it is part of
-an array.  This appears to be a bug.
+Also if you really need to put an integer number of LVM blocks in an MD 
+stripe (which I doubt, as I wrote above), this still does not mean that 
+the number of drives needs to be a power of 2: e.g. you could put 10 LVM 
+blocks in 5 data disks, couldn't you?
 
-Even though the second disk says it is still part of the array, mdadm
---incremental tries to add it to the array, the state of the first disk
-takes over and the second disk remains removed.
 
-> Another thing is that trying to --remove without prior --failing gives a rather
-> unintuitive "device busy":
-> Is there a reason that --remove (and --lock-out)
-> shouldn't just automatically "fail" a device?
-> Or the other way around when would one want to
-> manually --fail a member without subsequently --removing it?
-
-Might be a nice feature though the man page is rather clear that you
-have to fail first, then remove.  You might want to fail it and not
-remove it so that you can remove the drive for now, and plug it back in
-later.
+I would think more to a barriers thing... I'd try to repeat the test 
+with nobarrier upon ext4 mount and see.
+But Bill says that he "knows" what's the problem so maybe he will tell 
+us earlier or later :-)
