@@ -1,73 +1,109 @@
-From: MRK <mrk@shiftmail.org>
-Subject: Re: Suggestion needed for fixing RAID6
-Date: Fri, 23 Apr 2010 14:34:24 +0200
-Message-ID: <4BD193D0.5080003@shiftmail.org>
-References: <626601cae203$dae35030$0400a8c0@dcccs>
- <20100423065143.GA17743@maude.comedia.it>
- <695a01cae2c1$a72907d0$0400a8c0@dcccs>
+From: Christian Gatzemeier <c.gatzemeier@tu-bs.de>
+Subject: safe segmenting of conflicting changes (was: Two degraded mirror segments recombined out of sync for massive data loss)
+Date: Fri, 23 Apr 2010 13:42:20 +0000 (UTC)
+Message-ID: <loom.20100423T152429-20@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <695a01cae2c1$a72907d0$0400a8c0@dcccs>
 Sender: linux-raid-owner@vger.kernel.org
-To: Janos Haar <janos.haar@netcenter.hu>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 04/23/2010 10:47 AM, Janos Haar wrote:
+Hi all,
+
+On 4/7/2010 7:49 PM, Neil Brown wrote:
 >
-> ----- Original Message ----- From: "Luca Berra" <bluca@comedia.it>
-> To: <linux-raid@vger.kernel.org>
-> Sent: Friday, April 23, 2010 8:51 AM
-> Subject: Re: Suggestion needed for fixing RAID6
+> mdadm --incremental should only included both disks in the array if
+> 1/ their event counts are the same, or +/- 1, or
+> 2/ there is a write-intent bitmap and the older event count is within
+>    the range recorded in the write-intent bitmap.
 >
->
->> another option could be using the device mapper snapshot-merge target
->> (writable snapshot), which iirc is a 2.6.33+ feature
->> look at
->> http://smorgasbord.gavagai.nl/2010/03/online-merging-of-cow-volumes-with-dm-snapshot/ 
->>
->> for hints.
->> btw i have no clue how the scsi error will travel thru the dm layer.
->> L.
->
-> ...or cowloop! :-)
-> This is a good idea! :-)
-> Thank you.
->
-> I have another one:
-> re-create the array (--assume-clean) with external bitmap, than drop 
-> the missing drive.
-> Than manually manipulate the bitmap file to re-sync only the last 10% 
-> wich is good enough for me...
+> I don't think there is anything practical that could be changed in md
+> or
+> mdadm to make it possible to catch this behaviour and refuse the
+> assemble the array... 
+
+Maybe the superblocks of members containing conflicting
+changes already provide that information. I.e. won't they claim each other
+to have failed, while a real failed superblock does not claim itself or
+others to have failed?
 
 
-Cowloop is kinda deprecated in favour of DM, says wikipedia, and messing 
-with the bitmap looks complicated to me.
-I think Luca's is a great suggestion. You can use 3 files with 
-loop-device so to store the COW devices for the 3 disks which are 
-faulty. So that writes go there and you can complete the resync.
-Then you would fail the cow devices one by one from mdadm and replicate 
-to spares.
+> Given that you have changed both halves, you have implicitly said that
+> both halves are still "good".  If they are different, you need to
+> explicitly tell md which one you want and which one you don't.
 
-But this will work ONLY if read errors are still be reported across the 
-DM-snapshot thingo. Otherwise (if it e.g. returns a block of zeroes 
-without error) you are eventually going to get data corruption when 
-replacing drives.
+Before doing dist-upgrades to your system (or larger refactoring changes
+to data-arrays), it is very handy to pull a member from a raid1 to be
+able to revert back (without much downtime) if something goes wrong, and
+being able to switch between versions/have both versions available
+for comparison/repair.
 
-You can check if read errors are reported, by looking at the dmesg 
-during the resync. If you see many  "read error corrected..." it works, 
-while if it's silent it means it hasn't received read errors which means 
-that it doesn't work. If it doesn't work DO NOT go ahead replacing 
-drives, or you will get data corruption.
+ 
+> If you break a mirror, change both halves, then put it together again
+> there is no clearly "right" answer as to what will appear.
 
-So you need an initial test which just performs a resync but *without* 
-replicating to a spare. So I suggest you first remove all the spares 
-from the array, then create the COW snapshots, then assemble the array, 
-perform a resync, look at the dmesg. If it works: add the spares back, 
-fail one drive, etc.
+If the members are --incremental(y) hot-plugged I think the first part
+(segment) should appear. Any further segments with conflicting changes
+should not be re-added automatically (because re-syncing is not a
+update action in this case, but implies changes will get lost.)
 
-If this technique works this would be useful for everybody, so pls keep 
-us informed!!
-Thank you
+Quite the same with --assemble, it should be OK to assemble the parts in the
+order given on the command line, but as soon as any conflicting changes
+are detected return:
+
+"mdadm: not re-adding /dev/<member> to /dev/<array> because it
+constitutes an alternative version containing conflicting changes"
+
+
+> The easiest way to do this is to use --zero-superblock on the "bad"
+> device.
+
+This actually isn't so good in an udev/hot-plugging environment, since
+blkid will then detect that device as containing the filesystem on the
+md device (same UUID), and it gets mounted directly instead of md device.
+
+Here is an idea to realize safe segmenting of conflicting changes with
+the resulting alternative versions manageable in a hot-plugging manner:
+
+* When assembling, check for conflicting "failed" states in the
+  superblocks to detect conflicting changes. On conflicts, i.e. if an
+  additional member claims an allready running member has failed:
+   + that member should not be added to the array
+   + report (console and --monitor event) that an alternative
+     version with conflicting changes has been detected "mdadm: not
+     re-adding /dev/<member> to /dev/<array> because constitutes an
+     alternative version containing conflicting changes"
+   + require and support --force with --add for manual re-syncing of
+     alternative versions (unlike with re-syncing outdated
+     devices/versions, in this case changes will get lost).
+
+Enhancement 1)
+  To facilitate easy inspection of alternative versions (i.e. for safe and
+  easy diffing, merging, etc.) --incremental could assemble array
+  components that contain alternative versions into temporary
+  auxiliary devices. 
+  (would require temporarily mangling the fs UUID to ensure there are no
+  duplicates in the system)
+
+Enhancement 2)
+  Those that want to be able to disable hot-plugging of
+  segments with conflicting changes/alternative versions, after an
+  incidence with multiple versions connected at the same time occured,
+  will need some additional enhancements:
+   + A way to mark some raid members (segments) as containing
+     known alternative versions, and to mark them as such when an
+     incident occurs in which they come up after another
+     segment of the array is already running degraded.
+   + An option like
+     "AUTO -SINGLE_SEGMENTS_WITH_KNOWN_ALTERNATIVE_VERSIONS"
+     to disable hotplug support for alternative versions once they came
+     up after some other version.
+
+
+Kind Regards,
+Christian
+
+
+
