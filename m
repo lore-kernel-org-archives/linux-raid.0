@@ -1,37 +1,43 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: Use of WD20EARS with MDADM
-Date: Thu, 22 Apr 2010 23:49:12 -0400
-Message-ID: <1271994552.2855.25.camel@faldara>
-References: <4BAB8D41.4010801@gmail.com>
-	 <y2x5bdc1c8b1004211036ra8e10a43kc1a13c2b374a5f7b@mail.gmail.com>
-	 <4BCF4693.3020101@buttersideup.com>
-	 <201004221913.50692.eye.of.the.8eholder@gmail.com>
-	 <4BD0A716.4080909@cfl.rr.com>
-	 <z2y5bdc1c8b1004221623l3d83165ek3e605d74132a2de3@mail.gmail.com>
-	 <4BD0E3B9.5090504@sauce.co.nz>
+From: "Tirumala Reddy Marri" <tmarri@amcc.com>
+Subject: RE: RAID-6 polynomial
+Date: Thu, 22 Apr 2010 21:14:15 -0700
+Message-ID: <AC5E1C3367E37D44970B81A6ADD1DA2C09439F92@SDCEXCHANGE01.ad.amcc.com>
+References: <AC5E1C3367E37D44970B81A6ADD1DA2C0937604B@SDCEXCHANGE01.ad.amcc.com> <4BCF9FB2.9060505@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BD0E3B9.5090504@sauce.co.nz>
+Content-class: urn:content-classes:message
+In-Reply-To: <4BCF9FB2.9060505@zytor.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Richard Scobie <richard@sauce.co.nz>
-Cc: Mark Knecht <markknecht@gmail.com>, Khelben Blackstaff <eye.of.the.8eholder@gmail.com>, linux-raid@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, 2010-04-23 at 12:03 +1200, Richard Scobie wrote:
-> "Each drive is put through extended burn-in testing with thermal cycling 
-> to ensure reliable operation."
-> 
-> Which presumably helps weed out infant mortality cases. It is also 
-> interesting to note that while all the RE series drives have a spindle 
-> support bearing at both ends, only the 2TB desktop drive does.
 
-Indeed.  Pretty standard manufacturing process to weed out the infant
-mortality.  Interesting to find out that they don't bother with these
-drives.  That might explain why my first one died after ~24 hours of
-operation.  What still pisses me off is that it died so hard my bios
-wouldn't even post with the thing plugged in, let alone let me read any
-SMART data from it.
 
+
+-----Original Message-----
+From: H. Peter Anvin [mailto:hpa@zytor.com] 
+Sent: Wednesday, April 21, 2010 6:01 PM
+To: Tirumala Reddy Marri
+Cc: linux-raid@vger.kernel.org
+Subject: Re: RAID-6 polynomial
+
+On 04/19/2010 04:44 PM, Tirumala Reddy Marri wrote:
+> What is the default polynomial to calculate RAID-6 syndrome in
+> async_pq.c? Is it 0x11d ?
+>
+>Yes.
+>
+>	-hpa
+>
+----
+
+Is there a reason for hard coding 0x11d as polynomial ? The problem I
+ran into was when  I was trying disk fail test there was issue in
+recovering the data. Then it turned out to be ADMA was using polynomial
+0x14d and SW algorithm was using 0x11d. This was because syndrome
+calculated using DMA engine and recovery done using SW api.
 
