@@ -1,47 +1,44 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: RAID5
-Date: Fri, 23 Apr 2010 18:26:20 +0400
-Message-ID: <4BD1AE0C.2040003@msgid.tls.msk.ru>
-References: <s2q6b16fb4c1004182046x5464351m861ccaf9850f33df@mail.gmail.com>	 <j2k4877c76c1004182121w3edcf996x2ee8ee0eca398985@mail.gmail.com>	 <4BCEFE66.6010607@tmr.com> <l2g4877c76c1004211243n6dfa55pfee322db20ba6f08@mail.gmail.com>
+From: Phillip Susi <psusi@cfl.rr.com>
+Subject: Re: "failed" vs "removed" or "locked-out" state and --incremental
+ auto-re-adding
+Date: Fri, 23 Apr 2010 10:46:22 -0400
+Message-ID: <4BD1B2BE.3020306@cfl.rr.com>
+References: <loom.20100423T140059-877@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <l2g4877c76c1004211243n6dfa55pfee322db20ba6f08@mail.gmail.com>
+In-Reply-To: <loom.20100423T140059-877@post.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Evans <mjevans1983@gmail.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, Kaushal Shriyan <kaushalshriyan@gmail.com>, linux-raid@vger.kernel.org
+To: Christian Gatzemeier <c.gatzemeier@tu-bs.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Evans wrote:
-> On Wed, Apr 21, 2010 at 6:32 AM, Bill Davidsen <davidsen@tmr.com> wrote:
-[]
->> I have some recent experience with this gained the hard way, by looking for
->> a problem rather than curiousity. My experience with LVM on RAID is that, at
->> least for RAID-5, write performance sucks. I created two partitions on each
->> of three drives, and two raid-5 arrays using those partitions. Same block
->> size, same tuning for stripe-cache, etc. I dropped an ext4 on on array, and
->> LVM on the other, put ext4 on the LVM drive, and copied 500GB to each. LVM
->> had a 50% performance penalty, took twice as long. Repeated with four drives
->> (all I could spare) and found that the speed right on an array was roughly
->> 3x slower with LVM.
->>
-> This issues sounds very likely to be write barrier related.  Were you
-> using an external journal on a write-barrier honoring device?
+On 4/23/2010 8:20 AM, Christian Gatzemeier wrote:
+> It seems we don't have an obvious way to manually
+> remove a member from an array so that it does not get auto-assembled
+> later on (i.e. by udev/--incremental) without completely zeroing the
+> superblock or moving it into an own array. Maybe a --lock-out
 
-This is most likely due to read-modify-write cycle which is present on
-lvm-on-raid[456] if the number of data drives is not a power of two.
-LVM requires the block size to be a power of two, so if you can't fit
-some number of LVM blocks on whole raid stripe size your write speed
-is expected to be ~3 times worse...
+mdadm --fail followed by mdadm --remove seems to be what you are looking
+for.  mdadm --incremental will not use a removed drive.
 
-Even creating partitions on such raid array is difficult.
+Actually though, it looks like mdadm does not update the metadata on the
+disk when you --fail and --remove it, so it still thinks it is part of
+an array.  This appears to be a bug.
 
-'Hwell.
+Even though the second disk says it is still part of the array, mdadm
+--incremental tries to add it to the array, the state of the first disk
+takes over and the second disk remains removed.
 
-Unfortunately very few people understand this.
+> Another thing is that trying to --remove without prior --failing gives a rather
+> unintuitive "device busy":
+> Is there a reason that --remove (and --lock-out)
+> shouldn't just automatically "fail" a device?
+> Or the other way around when would one want to
+> manually --fail a member without subsequently --removing it?
 
-As of write barriers, it looks like either they already work
-(in 2.6.33) or will be (in 2.6.34) for whole raid5-lvm stack.
-
-/mjt
+Might be a nice feature though the man page is rather clear that you
+have to fail first, then remove.  You might want to fail it and not
+remove it so that you can remove the drive for now, and plug it back in
+later.
