@@ -1,46 +1,47 @@
-From: Mark Knecht <markknecht@gmail.com>
+From: Richard Scobie <richard@sauce.co.nz>
 Subject: Re: Use of WD20EARS with MDADM
-Date: Thu, 22 Apr 2010 16:23:22 -0700
-Message-ID: <z2y5bdc1c8b1004221623l3d83165ek3e605d74132a2de3@mail.gmail.com>
-References: <4BAB8D41.4010801@gmail.com>
-	 <y2x5bdc1c8b1004211036ra8e10a43kc1a13c2b374a5f7b@mail.gmail.com>
-	 <4BCF4693.3020101@buttersideup.com>
-	 <201004221913.50692.eye.of.the.8eholder@gmail.com>
-	 <4BD0A716.4080909@cfl.rr.com>
+Date: Fri, 23 Apr 2010 12:03:05 +1200
+Message-ID: <4BD0E3B9.5090504@sauce.co.nz>
+References: <4BAB8D41.4010801@gmail.com>	 <y2x5bdc1c8b1004211036ra8e10a43kc1a13c2b374a5f7b@mail.gmail.com>	 <4BCF4693.3020101@buttersideup.com>	 <201004221913.50692.eye.of.the.8eholder@gmail.com>	 <4BD0A716.4080909@cfl.rr.com> <z2y5bdc1c8b1004221623l3d83165ek3e605d74132a2de3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BD0A716.4080909@cfl.rr.com>
+In-Reply-To: <z2y5bdc1c8b1004221623l3d83165ek3e605d74132a2de3@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: Khelben Blackstaff <eye.of.the.8eholder@gmail.com>, linux-raid@vger.kernel.org
+To: Mark Knecht <markknecht@gmail.com>
+Cc: Phillip Susi <psusi@cfl.rr.com>, Khelben Blackstaff <eye.of.the.8eholder@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Apr 22, 2010 at 12:44 PM, Phillip Susi <psusi@cfl.rr.com> wrote:
-> On 4/22/2010 12:13 PM, Khelben Blackstaff wrote:
->> WD mentions in the customer help (Answer ID 5357) that these newer drives
->> were validated to 1M load/unload cycles and not 300K.
->
-> Weird, I wonder if they just forgot to update the spec sheet for the
-> drive then since it says 300k.
+Mark Knecht wrote:
 
-Validated doesn't mean spec'ed, right? So they spec it at 300K but
-they test and find that some units go to 1M, so they report that some
-units go to 1M but they keep the spec at 300K. We feel more
-comfortable with the operation but if the drive fails at 400K then
-they are within their rights to say the drive lived a useful life and
-replace or not replace it as they see fit.
+> Keep in mind that just because we possibly solve the load cycle count
+> problem doesn't mean that the drive will work for RAID. WD has also
+> stated that these drives don't have any TLER features.
 
-I have 7 of these WD10EARS green drives, one in the machine I reported
-on that's 350 miles away, but 6 sitting in boxes here. I think I'll
-look into using the WD program to modify one or two of them and then
-start some testing.
+I completely agree and wonder if some have unrealistic expectations.
 
-Keep in mind that just because we possibly solve the load cycle count
-problem doesn't mean that the drive will work for RAID. WD has also
-stated that these drives don't have any TLER features.
+The WD20EARS is listed as a desktop drive and is cheap - $/GB.
 
-I'll report back how that goes, but I don't know exactly when.
+The RE-GP, (if you need the green features, otherwise RE series), 
+version WD2002FYPS cost more and has the following extra features over 
+the WD20EARS:
 
-Cheers,
-Mark
+RAFF - vibration handling
+TLER - RAID optimised error handling
+An MTBF spec and the comment
+
+"Each drive is put through extended burn-in testing with thermal cycling 
+to ensure reliable operation."
+
+Which presumably helps weed out infant mortality cases. It is also 
+interesting to note that while all the RE series drives have a spindle 
+support bearing at both ends, only the 2TB desktop drive does.
+
+In light of all the above, you get what you pay for and need to adjust 
+expectations accordingly.
+
+Regards,
+
+Richard
+
