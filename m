@@ -1,33 +1,49 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: RAID-6 polynomial
-Date: Thu, 22 Apr 2010 22:43:57 -0700
-Message-ID: <4BD1339D.3040506@zytor.com>
-References: <AC5E1C3367E37D44970B81A6ADD1DA2C0937604B@SDCEXCHANGE01.ad.amcc.com> <4BCF9FB2.9060505@zytor.com> <AC5E1C3367E37D44970B81A6ADD1DA2C09439F92@SDCEXCHANGE01.ad.amcc.com>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: Suggestion needed for fixing RAID6
+Date: Fri, 23 Apr 2010 08:51:43 +0200
+Message-ID: <20100423065143.GA17743@maude.comedia.it>
+References: <626601cae203$dae35030$0400a8c0@dcccs>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AC5E1C3367E37D44970B81A6ADD1DA2C09439F92@SDCEXCHANGE01.ad.amcc.com>
+Content-Disposition: inline
+In-Reply-To: <626601cae203$dae35030$0400a8c0@dcccs>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tirumala Reddy Marri <tmarri@amcc.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 04/22/2010 09:14 PM, Tirumala Reddy Marri wrote:
-> 
-> Is there a reason for hard coding 0x11d as polynomial ? The problem I
-> ran into was when  I was trying disk fail test there was issue in
-> recovering the data. Then it turned out to be ADMA was using polynomial
-> 0x14d and SW algorithm was using 0x11d. This was because syndrome
-> calculated using DMA engine and recovery done using SW api.
-> 
+On Thu, Apr 22, 2010 at 12:09:08PM +0200, Janos Haar wrote:
+> Hello Neil, list,
+>
+> I am trying to fix one RAID6 array wich have 12x1.5TB (samsung) drives.
+> Actually the array have 1 missing drive, and 3 wich have some bad sectors!
+> Genearlly because it is RAID6 there is no data lost, because the bad 
+> sectors are not in one address line, but i can't rebuild the missing drive, 
+> because the kernel drops out the bad sector-drives one by one during the 
+> rebuild process.
 
-Yes, it would mean the on-disk format would be incompatible otherwise.
-Everyone needs to use the same polynomial.
+I would seriously consider moving the data out of that array and dumping
+all drives from that batch, and this is gonna be painful because you
+must watch drives being dropped and add them back, and yes you need the
+resources to store the data.
 
-	-hpa
+ddrescue won't obviously work, since it will mask read errors and turn
+those into data corruption
+
+the raid 1 trick wont work, as you noted
+
+another option could be using the device mapper snapshot-merge target
+(writable snapshot), which iirc is a 2.6.33+ feature
+look at
+http://smorgasbord.gavagai.nl/2010/03/online-merging-of-cow-volumes-with-dm-snapshot/
+for hints.
+btw i have no clue how the scsi error will travel thru the dm layer.
+L.
 
 -- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
-
+Luca Berra -- bluca@comedia.it
+          Communication Media & Services S.r.l.
+   /"\
+   \ /     ASCII RIBBON CAMPAIGN
+    X        AGAINST HTML MAIL
+   / \
