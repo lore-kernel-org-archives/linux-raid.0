@@ -1,80 +1,41 @@
-From: "Janos Haar" <janos.haar@netcenter.hu>
-Subject: Re: Suggestion needed for fixing RAID6
-Date: Fri, 23 Apr 2010 10:47:47 +0200
-Message-ID: <695a01cae2c1$a72907d0$0400a8c0@dcccs>
-References: <626601cae203$dae35030$0400a8c0@dcccs> <20100423065143.GA17743@maude.comedia.it>
+From: Christian Gatzemeier <c.gatzemeier@tu-bs.de>
+Subject: "failed" vs "removed" or "locked-out" state and --incremental auto-re-adding
+Date: Fri, 23 Apr 2010 12:20:40 +0000 (UTC)
+Message-ID: <loom.20100423T140059-877@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=response
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Luca Berra <bluca@comedia.it>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 
------ Original Message ----- 
-From: "Luca Berra" <bluca@comedia.it>
-To: <linux-raid@vger.kernel.org>
-Sent: Friday, April 23, 2010 8:51 AM
-Subject: Re: Suggestion needed for fixing RAID6
+Hi all,
+
+I hope you can help in sorting out the different states unused
+devices can be in, and the commands used to change states.
+
+It seems we don't have an obvious way to manually
+remove a member from an array so that it does not get auto-assembled
+later on (i.e. by udev/--incremental) without completely zeroing the
+superblock or moving it into an own array. Maybe a --lock-out
+option would make sense here? (Recognizable maybe by a superblock marking itself
+as "removed"?)
+Locking-out members would be handy to keep snapshots without the need to unplug
+the drives to make sure they don't get re-added. And we would need such a
+lock-out possibility if someone would like to implement automatically locking
+out segments with conflicting changes/alternative versions (after incidences
+when they are both connected).
 
 
-> On Thu, Apr 22, 2010 at 12:09:08PM +0200, Janos Haar wrote:
->> Hello Neil, list,
->>
->> I am trying to fix one RAID6 array wich have 12x1.5TB (samsung) drives.
->> Actually the array have 1 missing drive, and 3 wich have some bad 
->> sectors!
->> Genearlly because it is RAID6 there is no data lost, because the bad 
->> sectors are not in one address line, but i can't rebuild the missing 
->> drive, because the kernel drops out the bad sector-drives one by one 
->> during the rebuild process.
->
-> I would seriously consider moving the data out of that array and dumping
-> all drives from that batch, and this is gonna be painful because you
-> must watch drives being dropped and add them back, and yes you need the
-> resources to store the data.
->
-> ddrescue won't obviously work, since it will mask read errors and turn
-> those into data corruption
->
-> the raid 1 trick wont work, as you noted
->
-> another option could be using the device mapper snapshot-merge target
-> (writable snapshot), which iirc is a 2.6.33+ feature
-> look at
-> http://smorgasbord.gavagai.nl/2010/03/online-merging-of-cow-volumes-with-dm-snapshot/
-> for hints.
-> btw i have no clue how the scsi error will travel thru the dm layer.
-> L.
+Another thing is that trying to --remove without prior --failing gives a rather
+unintuitive "device busy":
+Is there a reason that --remove (and --lock-out)
+shouldn't just automatically "fail" a device?
+Or the other way around when would one want to
+manually --fail a member without subsequently --removing it?
 
-...or cowloop! :-)
-This is a good idea! :-)
-Thank you.
-
-I have another one:
-re-create the array (--assume-clean) with external bitmap, than drop the 
-missing drive.
-Than manually manipulate the bitmap file to re-sync only the last 10% wich 
-is good enough for me...
-
-Thanks again,
-Janos
-
->
-> -- 
-> Luca Berra -- bluca@comedia.it
->          Communication Media & Services S.r.l.
->   /"\
->   \ /     ASCII RIBBON CAMPAIGN
->    X        AGAINST HTML MAIL
->   / \
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html 
+Kind Regards,
+Christian
 
