@@ -1,56 +1,33 @@
-From: Christian Gatzemeier <c.gatzemeier@tu-bs.de>
-Subject: Re: safe segmenting of conflicting changes, and hot-plugging between alternative versions
-Date: Fri, 23 Apr 2010 21:04:35 +0000 (UTC)
-Message-ID: <loom.20100423T213339-797@post.gmane.org>
-References: <loom.20100423T152429-20@post.gmane.org> <4BD1B7E8.9020602@cfl.rr.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: RAID5
+Date: Sat, 24 Apr 2010 03:47:27 +0200 (CEST)
+Message-ID: <alpine.DEB.1.10.1004240340510.6768@uplift.swm.pp.se>
+References: <s2q6b16fb4c1004182046x5464351m861ccaf9850f33df@mail.gmail.com>  <j2k4877c76c1004182121w3edcf996x2ee8ee0eca398985@mail.gmail.com>  <4BCEFE66.6010607@tmr.com>  <l2g4877c76c1004211243n6dfa55pfee322db20ba6f08@mail.gmail.com>  <4BD1AE0C.2040003@msgid.tls.msk.ru>
+ <o2u4877c76c1004231357x649c5979ncd3e10ea8e6060d1@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <o2u4877c76c1004231357x649c5979ncd3e10ea8e6060d1@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Michael Evans <mjevans1983@gmail.com>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, Bill Davidsen <davidsen@tmr.com>, Kaushal Shriyan <kaushalshriyan@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Phillip Susi <psusi <at> cfl.rr.com> writes:
+On Fri, 23 Apr 2010, Michael Evans wrote:
 
-> when mdadm
-> --incremental sees the second disk claims the first disk is failed, but
-> it is active and working fine in the running array, it should realize
-> that the superblock on the second disk is wrong, and correct it, which
-> would leave the second disk as failed, removed, and neither use the out
-> of sync data on the disk, nor overwrite it with a copy from the first.
+> devices, but now everyone is selling SDDs which are broken for such
+> needs.  Any ram drive units still being sold seem to be more along
+> data-center grade sizes.
 
-"Correcting the superblocks" of conflicting members, would translate into having
-a defined way to mark those members as composing a segment that contains a known
-alternative version of the array. The earliest an alternative version can be
-detected, and thus be known and marked as such, is on an incident when a
-conflicting segment comes up while another segment of the array is already
-running degraded. (To simply support segments consisting of single raid member
-devices it may be enough if a superblock marking itself as failed would mean it
-is contains conflicting changes. Multi member segments would require segment IDs)
+http://benchmarkreviews.com/index.php?option=com_content&task=view&id=308&Itemid=60
 
-IMHO all segments with alternative versions can be marked as known on such 
-incidences. However whether the segments containing alternative versions
-continue to be normally assembled when they come up after the incident like
-before, or if they get ignored in favor of the arbitrary first segment of the
-incidence, should be configurable.
+Basically it's DRAM with a battery backup and a CF slot where the data 
+goes in case of poewr failure. It's a bit big and so on, but it should be 
+perfect for journals... Or is this the kind of device you were referring 
+to as "data center grade size"?
 
-For users that don't need or want to be able to switch between versions of an
-array by simply switching disks in a hot-pluggable manner, and for those
-concerned about a failure mode that may exist and make disks available in an
-alternating manner and them not noticing it all the time until an incident, I
-suggested "AUTO -SINGLE_SEGMENTS_WITH_KNOWN_ALTERNATIVE_VERSIONS".
+Some of te SSDs sold today have a capacitor for power failure as well, so 
+all writes will complete, but they're not so common.
 
-In order to manage segments with alternative versions in a hot-plug manner
-however, all segments need to continue to show up under their real array ID, if
-they are connected first or one at a time. (KNOWN_ALTERNATIVE_VERSIONS need to
-be assembled if they come up.) If the segments would be transformed into
-separate arrays the system won't recognize the segment of the array as such and
-not boot or open it correctly any more. And you wouldn't be able to switch
-between versions by switching the disks that are connected.
- 
-Kind regards,
-Christian
-
-
-
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
