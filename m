@@ -1,45 +1,31 @@
-From: Andrew Klaassen <clawsoon@yahoo.com>
-Subject: RAID10 - Ensure mirrors aren't on same JBOD
-Date: Mon, 26 Apr 2010 09:15:53 -0700 (PDT)
-Message-ID: <535203.18346.qm@web65402.mail.ac4.yahoo.com>
+From: MRK <mrk@shiftmail.org>
+Subject: Re: Suggestion needed for fixing RAID6
+Date: Mon, 26 Apr 2010 18:53:50 +0200
+Message-ID: <4BD5C51E.9040207@shiftmail.org>
+References: <626601cae203$dae35030$0400a8c0@dcccs>
+ <20100423065143.GA17743@maude.comedia.it>
+ <695a01cae2c1$a72907d0$0400a8c0@dcccs> <4BD193D0.5080003@shiftmail.org>
+ <717901cae3e5$6a5fa730$0400a8c0@dcccs> <4BD3751A.5000403@shiftmail.org>
+ <756601cae45e$213d6190$0400a8c0@dcccs> <4BD569E2.7010409@shiftmail.org>
+ <7a3e01cae53f$684122c0$0400a8c0@dcccs>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-reply-to: <7a3e01cae53f$684122c0$0400a8c0@dcccs>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Janos Haar <janos.haar@netcenter.hu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I've got 4 fibre channel JBODs that I want to use with mdadm RAID 10.  They have 14 drives each, for a total of 56 drives.
+On 04/26/2010 02:52 PM, Janos Haar wrote:
+>
+> Oops, you are right!
+> It was my mistake.
+> Sorry, i will try it again, to support 2 drives with dm-cow.
+> I will try it.
 
-I'd like to create a RAID-10 device where no copies end up on the same JBOD.  IOW, if copy 1 goes to the first drive on the first JBOD, copy 2 should go to the first drive on the third JBOD.  If copy 1 goes to the second drive on the second JBOD, copy 2 should go to the second drive on the fourth JBOD.
-
-How should I order the drives on my mdadm --create command line?
-
-Here's more-or-less what I want in pictures, using 3 drives per JBOD for simplicity, with A,B,a,b,1,2 meaning the same thing they do in the RAID FAQ:
-
-jbod-1-1 Aa1 Ba1 Ca1
-jbod-1-2 Ab1 Bb1 Cb1
-jbod-1-3 Ac1 Bc1 Cc1
-
-jbod-2-1 Da1 Ea1 Fa1
-jbod-2-2 Db1 Eb1 Fb1
-jbod-2-3 Dc1 Ec1 Fc1
-
-jbod-3-1 Aa2 Ba2 Ca2
-jbod-3-2 Ab2 Bb2 Cb2
-jbod-3-3 Ac2 Bc2 Cc2
-
-jbod-4-1 Da2 Ea2 Fa2
-jbod-4-2 Db2 Eb2 Fb2
-jbod-4-3 Dc2 Ec2 Fc2
-
-The data doesn't have to look exactly like that, as long as the principle is maintained: The copies of the data should be on disks in separate JBODs.
-
-Thanks.
-
-Andrew
-
-
-
-
-
+Great! post here the results... the dmesg in particular.
+The dmesg should contain multiple lines like this "raid5:md3: read error 
+corrected ....."
+then you know it worked.
