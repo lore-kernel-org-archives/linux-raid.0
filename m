@@ -1,41 +1,51 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: safe segmenting of conflicting changes
-Date: Mon, 26 Apr 2010 14:43:58 -0400
-Message-ID: <4BD5DEEE.7020208@cfl.rr.com>
-References: <loom.20100423T152429-20@post.gmane.org> <4BD1B7E8.9020602@cfl.rr.com> <4BD1E491.3090603@cfl.rr.com> <4BD5C65B.7080707@redhat.com> <4BD5D20B.9020900@cfl.rr.com> <4BD5D5F7.208@redhat.com>
+From: Andrew Klaassen <clawsoon@yahoo.com>
+Subject: Re: RAID10 - Ensure mirrors aren't on same JBOD
+Date: Mon, 26 Apr 2010 11:57:09 -0700 (PDT)
+Message-ID: <406003.10607.qm@web65416.mail.ac4.yahoo.com>
+References: <m2h4877c76c1004261144h1019e9afkf05396996ea77a99@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BD5D5F7.208@redhat.com>
+In-Reply-To: <m2h4877c76c1004261144h1019e9afkf05396996ea77a99@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 4/26/2010 2:05 PM, Doug Ledford wrote:
-> So, the point of raid is to be as reliable as possible, if the disk that
-> was once gone is now back, we want to use it if possible.
+--- On Mon, 4/26/10, Michael Evans <mjevans1983@gmail.com> wrote:
 
-No, we don't.  I explicitly removed that disk from the array because I
-have no wish for it to be there any more.  Maybe I plan on using it in
-another array, or maybe I plan on shreding its contents.  Whatever I'm
-planning for that disk, it does not involve it being used in a raid
-array any more.
+> > --- On Mon, 4/26/10, Michael Evans <mjevans1983@gmail.com>
+> wrote:
+> > However, it doesn't say what happens with a larger
+> > number of drives. =A0I'm looking for the kind of control I
+> > can get with RAID 1+0, where I can specify which drives are
+> > mirrors of each other. =A0Is that possible with RAID10?
+>=20
+> No, not predictably; the only provided guarantee is that
+> the data will
+> /not/ be duplicated on the same block-device (usually
+> drive).=A0 In
+> practice you will quickly be able to determine where a
+> particular
+> version with a given range of input causes data to be
+> stored, but
+> there is no requirement that future versions produce the
+> precise same
+> alignment and offsets.
 
-> The problem is the cause of this thread, and it's a bug that should be
-> fixed, it should not cause us to require things to have an explicit
-> --add --force to use a previously failed drive.  This is a case of
+Ah.  So if I want this level of control, I have to sacrifice the advant=
+ages of RAID 10 and go with RAID 1+0.
 
-Then when the drive fails it should only be marked as failed, not also
-removed.  If I manually remove it, then it should stay removed until I
-decide to do something else with it.
+Good to know.  Thanks.
 
-> The md raid stack makes no distinction between explicit removal or a
-> device that disappeared because of a glitch in a USB cable or some such.
->  In both cases the drive is failed and removed.  So the fact that you
+Andrew
 
-Then that's the problem.  If it fails, it should be marked as failed.
-If it is removed, it should be marked as removed.  They are two
-different actions, that should have different results.  Why on earth the
-two flags seem to always be used together is beyond me.
+
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
