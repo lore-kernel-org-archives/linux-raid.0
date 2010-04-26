@@ -1,90 +1,120 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: &quot;failed&quot; vs &quot;removed&quot; or &quot;locked-out&quot;
- state and --incremental auto-re-adding
-Date: Mon, 26 Apr 2010 19:15:51 -0400
-Message-ID: <4BD61EA7.5060609@redhat.com>
-References: <loom.20100423T140059-877@post.gmane.org> <loom.20100427T002749-963@post.gmane.org>
+Subject: Re: safe segmenting of conflicting changes
+Date: Mon, 26 Apr 2010 19:33:48 -0400
+Message-ID: <4BD622DC.7030309@redhat.com>
+References: <loom.20100423T152429-20@post.gmane.org> <4BD1B7E8.9020602@cfl.rr.com> <4BD1E491.3090603@cfl.rr.com> <4BD5C65B.7080707@redhat.com> <4BD5D20B.9020900@cfl.rr.com> <4BD5D5F7.208@redhat.com> <4BD5DEEE.7020208@cfl.rr.com> <4BD5E477.2010201@redhat.com> <4BD5EBC0.9030801@cfl.rr.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
  protocol="application/pgp-signature";
- boundary="------------enig94128150541E07FE40E651D9"
+ boundary="------------enig99870FCA016E28C502934B03"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <loom.20100427T002749-963@post.gmane.org>
+In-Reply-To: <4BD5EBC0.9030801@cfl.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christian Gatzemeier <c.gatzemeier@tu-bs.de>
+To: Phillip Susi <psusi@cfl.rr.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig94128150541E07FE40E651D9
+--------------enig99870FCA016E28C502934B03
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On 04/26/2010 06:28 PM, Christian Gatzemeier wrote:
+On 04/26/2010 03:38 PM, Phillip Susi wrote:
+> On 4/26/2010 3:07 PM, Doug Ledford wrote:
+>> Then you need to remove the superblock from the device.
 >=20
-> As comming to "terms" working with mdadm took me a while, I'll add my c=
-urrent
-> "translations" of the actions to the discussion:
+> Why?  It has been removed.  In English removed means it is no longer
+> part of the array.
+
+And in English raid means a hostile or predatory incursion, it has
+nothing to do with disc drives.  And in English cat is an animal you
+pet.  So technical jargon and regular English don't always agree, what's
+your point?
+
+>  Elements which are not part of the array should not
+> be MADE part of the array just because they happen to be there.
+
+Sorry, but that's just not going to happen, ever.  There any number of
+valid reasons why someone might want to temporarily remove a drive from
+an array and then readd it back later, and when they readd it back they
+want it to come back, and they want it to know that it used to be part
+of the array and only resync the necessary bits (if you have a write
+intent bitmap, otherwise it resyncs the whole thing).
+
+> Having to zero the superblock after failing and removing the drive is a=
+
+> race condition with detecting the drive and automatically adding it bac=
+k
+> to the array.
+
+No, it's not.  The udev rules that add the drive don't race with
+manually removing it because they don't act on change events, only add
+events.
+
+>  To properly remove the disk from the array the superblock
+> needs to be updated before the kernel releases the underlying device.
+
+Not going to happen.  Doing what you request would undo a number of very
+useful features in the raid stack.  So you might as well save your
+breath, we aren't going to make a remove event equivalent to a zero
+superblock event because then the entire --readd option would be
+rendered useless.
+
+>> The problem here seems to be an issue of expectations.  You think that=
+
+>> "removed" is used as a flag to record intent, where as it actually is
+>> nothing more than a matter of state.
 >=20
-> 1) The "failed" state is the state a member that failed or is missing g=
-ets,
-> while it can stay listed in mdstat.
+> No, I don't think it has anything to do with intent.  I think that the
+> state of being removed means it is no longer part of the array.  It
+> sounds like your understanding of the state should be described in
+> English as detached or disconnected, rather than removed.
 
-Yes.  In particular failed simply means that the kernel no longer
-considers it a running member of the array.  However, the kernel still
-holds open the reference to the device (which means anything/anyone else
-is still locked out from attempting to access the device, which prevents
-anything bad from happening to the data that was on it when it failed).
+Depends on context.  Removed makes perfect sense from the point of view
+that the device has been removed from the list of devices currently held
+with an exclusive open by the md raid stack.
 
-> 2) To "unbind", "unlist" or "dismiss" a member from the md device stats=
- is
-> currently called to --remove it. In particular you can "unbind", "unlis=
-t" or
-> "dismiss" failed or detatched members with --remove failed/detached.
+>> Failed is also a matter of state.  It means the device has encountered=
 
-You can use --remove failed/detached/<devname>, they all work.  But yes,
-the underlying action here is to take an already failed device go ahead
-and release all references to the device from the raid stack.  In
-particular, this releases the exclusive open the raid stack holds on the
-device and now makes the device available for other things to
-open/modify.  At this point there is no longer any guarantee that the
-device will not be modified from the pristine state it was in when it
-failed.
+>> some sort of error and we should no longer attempt to send any
+>> read/write commands to the device.  It is not a statement of *why* it'=
+s
+>> in that state.  The removed state indicates that the device has been
+>> removed from the array and is no longer a slave to the array.  Again, =
+no
+>> indication of intent or cause, purely an issue of state.
+>=20
+> Yes, it does not indicate why, nor do we care.  What we care about is
+> that the drive failed or was removed, so we should not be using it.  Wh=
+y
+> bother recording that fact in the superblock if you're just going to
+> ignore it the next time you start the array?
 
-> 3) A safe way to "lock-out" or "really remove" members from udev/--incr=
-emental
-> assembly is not available yet AFAIK. (--zero-superblock on mirror membe=
-rs makes
-> the md device content detectable/available directly)
+Because there are both transient and permanent failures.  Experience
+caused us to switch from treating all failures as permanent to treating
+failures as transient and picking up where we left off if at all
+possible because too many people were having a single transient failure
+render their array degraded, only to have a real issue come up sometime
+later that then meant the array was no longer degraded, but entirely
+dead.  The job of the raid stack is to survive as much failure as
+possible before dying itself.  We can't do that if we allow a single,
+transient event to cause us to stop using something entirely.
 
-This is a shortcoming of version 0.90/1.0 superblocks and raid1 arrays.
- For all other superblock versions and raid types, this is not true.
-The default superblock version changed from 0.90 to 1.2 as of the mdadm
-3.1 series and so this won't be a problem in the future.
+Besides, what you seem to be forgetting is that those events that make
+us genuinely not want to use a device also make it so that at the next
+reboot the device generally isn't available or seen by the OS
+(controller failure, massive failure of the platter, etc).  Simply
+failing and removing a device using mdadm mimics a transient failure.
+If you fail, remove, then zero-superblock then you mimic a permanent
+failure.  There you go, you have a choice.
 
-> IMHO the ones mentioned first could seen as implied by those mentioned =
-later.
-
-No, and this is a safety feature.  We won't remove a good device in
-order to prevent a typo from rendering an array dead.  Imagine that
-/dev/sdd1 was already failed, and you typed mdadm /dev/md0 -r /dev/sdc1
-and we just blindly failed and then removed sdc1, and assume the array
-could only handle one failed member (aka, raid4 or raid5), you've just
-rendered the array dead in the water.  We could ask questions I suppose,
-but it's just as well off to require that a drive be failed before we
-remove it.
-
-> I am unclear why --incremental seems to require a device to be unbound =
-first
-> (--removed) in order to re-add it after it failed. IMHO it could do it =
-itself if
-> it is really necessary without bothering the user.
-
-It would be kind of useless to put that support into incremental.
-Incremental isn't really intended to be run from the command line
-(although you can), it's intended to be done on hotplug events.  Those
-hotplug events never happen when the device is failed but not removed
-from an array, so it's a condition we don't need to handle.
+If we were to do as you wish, then users would no longer have a choice,
+they would be forced into mimicking a hard failure only.  I prefer to
+give users a choice on how they want to do things.  So, just because you
+happen to think that the only way it *should* be done is like a hard
+failure doesn't mean we are going to change it to be that way.  Things
+are the way they are for a reason, best to just learn to use
+--zero-superblock if that's what you want.
 
 --=20
 Doug Ledford <dledford@redhat.com>
@@ -95,7 +125,7 @@ Infiniband specific RPMs available at
 	      http://people.redhat.com/dledford/Infiniband
 
 
---------------enig94128150541E07FE40E651D9
+--------------enig99870FCA016E28C502934B03
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: OpenPGP digital signature
 Content-Disposition: attachment; filename="signature.asc"
@@ -103,9 +133,9 @@ Content-Disposition: attachment; filename="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iEYEARECAAYFAkvWHqcACgkQg6WylM+/8ZS0zACdEOK0FgNVa0NKGUv/dWjakKpK
-GB0AnjyLTbOAih8jn0hxAiuHymjvp9cd
-=JP51
+iEYEARECAAYFAkvWItwACgkQg6WylM+/8ZTJDwCeJDbchjnxrFef825auA/3st5h
+e7YAn0wycdkYbQvKBKsByOVlmwNxM9un
+=osv/
 -----END PGP SIGNATURE-----
 
---------------enig94128150541E07FE40E651D9--
+--------------enig99870FCA016E28C502934B03--
