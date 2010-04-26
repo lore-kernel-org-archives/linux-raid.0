@@ -1,42 +1,76 @@
-From: Andrew Klaassen <clawsoon@yahoo.com>
-Subject: Re: RAID10 - Ensure mirrors aren't on same JBOD
-Date: Mon, 26 Apr 2010 13:20:20 -0700 (PDT)
-Message-ID: <444163.38039.qm@web65406.mail.ac4.yahoo.com>
-References: <u2r4877c76c1004261258t317657f7radd2d52f2fac3cdf@mail.gmail.com>
+From: Christian Gatzemeier <c.gatzemeier@tu-bs.de>
+Subject: Re: safe segmenting of conflicting changes, and hot-plugging between alternative versions
+Date: Mon, 26 Apr 2010 21:10:50 +0000 (UTC)
+Message-ID: <loom.20100426T214001-727@post.gmane.org>
+References: <loom.20100423T152429-20@post.gmane.org> <4BD1B7E8.9020602@cfl.rr.com> <loom.20100423T213339-797@post.gmane.org> <4BD5C927.6030608@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <u2r4877c76c1004261258t317657f7radd2d52f2fac3cdf@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---- On Mon, 4/26/10, Michael Evans <mjevans1983@gmail.com> wrote:
+Doug Ledford <dledford <at> redhat.com> writes:
+> 
+> Actually, I have a feature request that I haven't gotten around to yet
+> for something similar to this.  It's the ability pause a raid1 array,
+> causing a member of the array to stop all updates while the rest of the
+> array operates as normal.
 
-> Or write your own program to generate mdadm headers on
-> uninitialized devices.=A0 Or if it's just a one time thing,
-> write the headers, stop the array, make sure it says what
-> you want, and then force a resync before writing any data.
+Indeed that is quite similar. Related terms would be "paused segment" and
+"alternative version/segment", the latter probably "locked-out".
 
-So the headers determine which disks mirror which disks?
+The main differences being that cleanly pausing a segment would be done by
+issuing a command while segmenting can also happen due to failure modes or
+intentional hot/cold-plugging. And that a segment containing an alternative
+version would not necessarily have to be static. Though, by making use of some
+new "locking-out" functionality the pause command could make sure the
+alternative version is never auto-assembled and stays static from the start,
+while the proposed enhancement 2) thought only after incidents where conflicting
+versions appeared together. 
 
-Does that mean that if I ordered my disks correctly on the --create com=
-mandline, I could depend on all of the data being ordered the way that =
-some of the data is?  I.e. if I figured out which two disks were mirror=
-ing each other, I would know that they'd always mirror each other as lo=
-ng as I didn't update the array metadata in any way?
+So it looks, as if intentionally "pausing" could be implemented as ("alternative
+version" + "lock-out") and could at the same time allow safe segmenting in other
+circumstances.
 
-Thanks.
+Only a mark to "locked out" members may be enough to implement all this. So I'd
+suggest that "a superblock marking itself as removed" may be a mark for "locked
+out" rather than for "alternative version", and be exempt from auto-readding.
 
-Andrew
+If we can reliably detect alternative versions by checking for conflicts in
+failed claims of superblocks, we probably don't need another extra measure to
+mark superblocks as containing an alternative version. And pausing a segment 
+would (on shutdown) make the paused segment claim the rest of the array failed
+and the paused segments were removed, while rest claims the paused segment
+failed and was removed.
+
+Can someone find a flaw with the superblock marking itself as removed approach?
+
+
+
+
+> However, this is fairly orthogonal to the original problem you
+> mentioned, specifically that mounting to members of a raid1 array
+> independently can trick them into thinking they are in sync when they
+> aren't.
+
+Hm, more or less. In the case at hand detection of the conflicting changes
+failed, and thus auto-segmenting, or more explicitly keeping the alternative
+versions appart that were created by degrading different segments on different
+boots failed. I was seeing it as a test case for safe segmenting, in which the
+versions are not diverged much (+-1 same event count or bitmap range).
+
+> The simplest solution to solve that problem would be to add a
+> generation count to each device's data in each superblock
+
+Ah ok, I understand that may be easier to implement.
+
+Can you see some flaw in checking for superblocks that mark running superblocks
+as faulty, as a conflict detection algorithm? That may not be limited only to
+new superblocks.
 
 
 
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
