@@ -1,100 +1,105 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: safe segmenting of conflicting changes
-Date: Mon, 26 Apr 2010 14:05:43 -0400
-Message-ID: <4BD5D5F7.208@redhat.com>
-References: <loom.20100423T152429-20@post.gmane.org> <4BD1B7E8.9020602@cfl.rr.com> <4BD1E491.3090603@cfl.rr.com> <4BD5C65B.7080707@redhat.com> <4BD5D20B.9020900@cfl.rr.com>
+From: Michael Evans <mjevans1983@gmail.com>
+Subject: Re: RAID10 - Ensure mirrors aren't on same JBOD
+Date: Mon, 26 Apr 2010 11:18:50 -0700
+Message-ID: <t2k4877c76c1004261118m4991141en8b107872b802b237@mail.gmail.com>
+References: <535203.18346.qm@web65402.mail.ac4.yahoo.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig2228BF23F6BCD3728192CBBC"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BD5D20B.9020900@cfl.rr.com>
+In-Reply-To: <535203.18346.qm@web65402.mail.ac4.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
+To: Andrew Klaassen <clawsoon@yahoo.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig2228BF23F6BCD3728192CBBC
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On Mon, Apr 26, 2010 at 9:15 AM, Andrew Klaassen <clawsoon@yahoo.com> w=
+rote:
+> I've got 4 fibre channel JBODs that I want to use with mdadm RAID 10.=
+ =A0They have 14 drives each, for a total of 56 drives.
+>
+> I'd like to create a RAID-10 device where no copies end up on the sam=
+e JBOD. =A0IOW, if copy 1 goes to the first drive on the first JBOD, co=
+py 2 should go to the first drive on the third JBOD. =A0If copy 1 goes =
+to the second drive on the second JBOD, copy 2 should go to the second =
+drive on the fourth JBOD.
+>
+> How should I order the drives on my mdadm --create command line?
+>
+> Here's more-or-less what I want in pictures, using 3 drives per JBOD =
+for simplicity, with A,B,a,b,1,2 meaning the same thing they do in the =
+RAID FAQ:
+>
+> jbod-1-1 Aa1 Ba1 Ca1
+> jbod-1-2 Ab1 Bb1 Cb1
+> jbod-1-3 Ac1 Bc1 Cc1
+>
+> jbod-2-1 Da1 Ea1 Fa1
+> jbod-2-2 Db1 Eb1 Fb1
+> jbod-2-3 Dc1 Ec1 Fc1
+>
+> jbod-3-1 Aa2 Ba2 Ca2
+> jbod-3-2 Ab2 Bb2 Cb2
+> jbod-3-3 Ac2 Bc2 Cc2
+>
+> jbod-4-1 Da2 Ea2 Fa2
+> jbod-4-2 Db2 Eb2 Fb2
+> jbod-4-3 Dc2 Ec2 Fc2
+>
+> The data doesn't have to look exactly like that, as long as the princ=
+iple is maintained: The copies of the data should be on disks in separa=
+te JBODs.
+>
+> Thanks.
+>
+> Andrew
+>
+>
+>
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-On 04/26/2010 01:48 PM, Phillip Susi wrote:
-> On 4/26/2010 12:59 PM, Doug Ledford wrote:
->>> This goes ahead and adds the disk back to the array, despite the fact=
+I don't think I've read the RAID FAQ you speak of, a link would have
+been helpful.
 
->>> that it has been explicitly removed.
->>
->> Of course it does.  You've just explicitly readded it, which is no
->> different than your explicit removal.  Mdadm honors both.
->=20
-> No, --incremental is automatically invoked by udev to scan disks as the=
-y
-> are detected and try to assemble them.  It isn't an explicit --add
-> operation.
+However as long as you remember that currently raid10 cannot be grown
+(*may have very very recently changed) you can use any of the layouts
+you like (I tend to prefer the 'far' layout).
 
-So, the point of raid is to be as reliable as possible, if the disk that
-was once gone is now back, we want to use it if possible.
+mdadm --create ... --layout=3D(man mdadm) blockdev0 blockdev1 blockdev2=
+ blockdev3
 
->>> Whether or not the superblock on sdb is updated when it is removed,
->>> --incremental should NOT use it as long as mdadm -D /dev/md0 says tha=
-t
->>> disk is removed, at least not use it in /dev/md0.
->>
->> Why not?  It's not like it uses it without correcting the missing bits=
+n2 =3D=3D Creates almost the behavior you described; each stripe consis=
+ts
+of b0c0 b0c1 b1c0 b1c1 (blockXcopyY)
+o2 =3D=3D Data backup is in the next stripe: that is mirrored and rotat=
+ed
+stripes: b0c0 b1c0 b2c0 b3c0 // b3c1 b0c1 b1c1 b2c1
+f2 =3D=3D The first half is like raid0; the second half is like the o2
+above, but over the entire first half.
 
->> first.  My guess is that you've either A) got a write intent bitmap or=
+More info on far from man 4 md
+       When 'far' replicas are chosen, the multiple copies of a given
+chunk are laid out quite distant from each other.  The  first  copy
+of all  data  blocks  will  be striped across the early part of all
+drives in RAID0 fashion, and then the next copy of all blocks will be
+striped across a later section of all drives, always ensuring that all
+copies of any given block are on different drives.
 
->=20
-> Actually under the right circumstances it DOES use the second disk's
-> incorrect data without correcting it first,
+       The 'far' arrangement can give sequential read performance
+equal to that of a RAID0 array, but at the cost of  reduced  write
+performance.
 
-A problem for which I suggested a specific fix in another email.
-
-> and if it does overwrite it,
-> that causes data loss so should not be done without an explicit --add
-> --force.  The fact that this happens is the entire reason for this thre=
-ad.
-
-The problem is the cause of this thread, and it's a bug that should be
-fixed, it should not cause us to require things to have an explicit
---add --force to use a previously failed drive.  This is a case of
-reacting to a bug by disabling a useful aspect of the stack instead of
-simply fixing the bug IMO.  When the raid stack thinks that things are
-out of sync, it doesn't automatically do anything bad.  The real bug
-here is that there is a way to get things out of sync behind the raid
-stack's back.
-
-> Whether or not it can be added safely, the disk has been explicitly
-> removed so automatically adding it back is not acceptable.
-
-The md raid stack makes no distinction between explicit removal or a
-device that disappeared because of a glitch in a USB cable or some such.
- In both cases the drive is failed and removed.  So the fact that you
-draw a distinction is irrelevant until such time as the raid superblocks
-are changed to be able to encode the cause of a device being removed in
-addition to the fact that it simply was removed.
-
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-	      http://people.redhat.com/dledford
-
-Infiniband specific RPMs available at
-	      http://people.redhat.com/dledford/Infiniband
-
-
---------------enig2228BF23F6BCD3728192CBBC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkvV1fcACgkQg6WylM+/8ZT9SwCeNFSEirJg571P/jCbeZ8jEDMk
-s+oAn37o3sYCD/vm1wZtGeL4uUObNiog
-=K+T1
------END PGP SIGNATURE-----
-
---------------enig2228BF23F6BCD3728192CBBC--
+To elaborate: a 'drive' being a given block device you have specified
+via --create or --add.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
