@@ -1,139 +1,196 @@
-From: MRK <mrk@shiftmail.org>
-Subject: Re: Suggestion needed for fixing RAID6
-Date: Mon, 26 Apr 2010 12:24:34 +0200
-Message-ID: <4BD569E2.7010409@shiftmail.org>
-References: <626601cae203$dae35030$0400a8c0@dcccs>
- <20100423065143.GA17743@maude.comedia.it>
- <695a01cae2c1$a72907d0$0400a8c0@dcccs> <4BD193D0.5080003@shiftmail.org>
- <717901cae3e5$6a5fa730$0400a8c0@dcccs> <4BD3751A.5000403@shiftmail.org>
- <756601cae45e$213d6190$0400a8c0@dcccs>
+From: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>
+Subject: [PATCH] raid/multipath error handling for faulty drives
+Date: Mon, 26 Apr 2010 19:58:36 +0900
+Message-ID: <4BD571DC.9090103@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-2022-JP
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <756601cae45e$213d6190$0400a8c0@dcccs>
-Sender: linux-raid-owner@vger.kernel.org
-To: Janos Haar <janos.haar@netcenter.hu>
-Cc: linux-raid@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, neilb@suse.de, kusumi.tomohiro@jp.fujitsu.com
 List-Id: linux-raid.ids
 
-On 04/25/2010 12:00 PM, Janos Haar wrote:
->
-> ----- Original Message ----- From: "MRK" <mrk@shiftmail.org>
-> To: "Janos Haar" <janos.haar@netcenter.hu>
-> Cc: <linux-raid@vger.kernel.org>
-> Sent: Sunday, April 25, 2010 12:47 AM
-> Subject: Re: Suggestion needed for fixing RAID6
->
-> Just a little note:
->
-> The repair-sync action failed similar way too. :-(
->
->
->> On 04/24/2010 09:36 PM, Janos Haar wrote:
->>>
->>> Ok, i am doing it.
->>>
->>> I think i have found some interesting, what is unexpected:
->>> After 99.9% (and another 1800minute) the array is dropped the 
->>> dm-snapshot structure!
->>>
->>> ...[CUT]...
->>>
->>> raid5:md3: read error not correctable (sector 2923767944 on dm-0).
->>> raid5:md3: read error not correctable (sector 2923767952 on dm-0).
->>> raid5:md3: read error not correctable (sector 2923767960 on dm-0).
->>> raid5:md3: read error not correctable (sector 2923767968 on dm-0).
->>> raid5:md3: read error not correctable (sector 2923767976 on dm-0).
->>> raid5:md3: read error not correctable (sector 2923767984 on dm-0).
->>> raid5:md3: read error not correctable (sector 2923767992 on dm-0).
->>> raid5:md3: read error not correctable (sector 2923768000 on dm-0).
->>>
->>> ...[CUT]...
->>>
->
+Hi,
 
-Remember this exact error message: "read error not correctable"
+I've been looking for ways to minimize the impact of faulty drive in a multipath
+and raid array environment. Our major problem is that it takes long time before
+upper layer (dm-mpath, dm-raid or maybe other middleware kernel module by users)
+can handle timed out i/o because of huge recovery operation by scsi driver's error
+handler. Let me explain some details.
 
->
->>
->> This is strange because the write should have gone to the cow device. 
->> Are you sure you did everything correctly with DM? Could you post 
->> here how you created the dm-0 device?
->
-> echo 0 $(blockdev --getsize /dev/sde4) \
->        snapshot /dev/sde4 /dev/loop3 p 8 | \
->        dmsetup create cow
->
+The scsi error recovery can be regarded as something that essentialy conflicts
+with multipath or raid array environment, because in such an environment where the
+system itself provides redundant path or disks, it is usually designed to use
+alternative path or disks right after detecting faulty drive.
 
-Seems correct to me...
+As far as I know there has been couples of approaches done in scsi or md layer
+(eg. http://www.mail-archive.com/linux-raid@vger.kernel.org/msg09024.html) to
+minimize recovery time although neither of them have been mereged for some reason.
 
-> ]# losetup /dev/loop3
-> /dev/loop3: [0901]:55091517 (/snapshot.bin)
->
-This line comes BEFORE the other one, right?
+This patch is a simple aproach to omit error recovery phase. Each scsi device has
+no_recovery sysfs entry to select whether the device needs recovery (off course
+no_recovery is disabled on default). If it is enabled, then the scsi device that
+corresponds to the timed out command is rapidly offlined with DRIVER_TIMEOUT status.
+This enables upper layers have chance to take care of timed out commands without
+waiting for recovery to finish.
 
-> /snapshot.bin is a sparse file with 2000G seeked size.
-> I have 3.6GB free space in / so the out of space is not an option. :-)
->
->
-[...]
->
->>
->> We might ask to the DM people why it's not working maybe. Anyway 
->> there is one good news, and it's that the read error apparently does 
->> travel through the DM stack.
->
-> For me, this looks like md's bug not dm's problem.
-> The "uncorrectable read error" means exactly the drive can't correct 
-> the damaged sector with ECC, and this is an unreadable sector. 
-> (pending in smart table)
-> The auto read reallocation failed not meas the sector is not 
-> re-allocatable by rewriting it!
-> The most of the drives doesn't do read-reallocation only 
-> write-reallocation.
->
-> These drives wich does read reallocation, does it because the sector 
-> was hard to re-calculate (maybe needed more rotation, more 
-> repositioning, too much time) and moved automatically, BUT those 
-> sectors ARE NOT reported to the pc as read-error (UNC), so must NOT 
-> appear in the log...
->
+This is how it shows on /var/log/messages when no_recovery option is enabled with
+all the verbose logs for scsi mldd and lldd set. If no_recovery is disabled, it takes
+as much as 30 minutes or so depending on implementation of lldd and number of timed
+out commands.
 
-No the error message really comes from MD. Can you read C code? Go into 
-the kernel source and look this file:
+-----
+Apr 21 19:50:47 localhost kernel: lpfc 0000:03:04.0: 0:(0):0309 Mailbox cmd x31 issue Data: x20 x700 x2
+Apr 21 19:50:47 localhost kernel: lpfc 0000:03:04.0: 0:(0):0307 Mailbox cmd x31 (x0) Cmpl xf85fa862 Data: x123100 x0 x0 x0 x0 x0 x0 x0 x0
+Apr 21 19:50:57 localhost kernel: lpfc 0000:03:04.0: 0:(0):0309 Mailbox cmd x31 issue Data: x20 x700 x2
+Apr 21 19:50:57 localhost kernel: lpfc 0000:03:04.0: 0:(0):0307 Mailbox cmd x31 (x0) Cmpl xf85fa862 Data: x123100 x0 x0 x0 x0 x0 x0 x0 x0
+Apr 21 19:51:02 localhost kernel: lpfc 0000:03:04.0: 0:(0):0309 Mailbox cmd x31 issue Data: x20 x700 x2
+Apr 21 19:51:02 localhost kernel: lpfc 0000:03:04.0: 0:(0):0307 Mailbox cmd x31 (x0) Cmpl xf85fa862 Data: x123100 x0 x0 x0 x0 x0 x0 x0 x0
+Apr 21 19:51:07 localhost kernel: lpfc 0000:03:04.0: 0:(0):0309 Mailbox cmd x31 issue Data: x20 x700 x2
+Apr 21 19:51:07 localhost kernel: lpfc 0000:03:04.0: 0:(0):0307 Mailbox cmd x31 (x0) Cmpl xf85fa862 Data: x123100 x0 x0 x0 x0 x0 x0 x0 x0
+Apr 21 19:51:10 localhost kernel: sd 3:0:0:0: Device offlined - no recovery
+Apr 21 19:51:10 localhost kernel: scsi_work_offline_sdev scmd: c5bb7e00 result: 6000000
+Apr 21 19:51:10 localhost kernel: sd 3:0:0:0: [sdc] Unhandled error code
+Apr 21 19:51:10 localhost kernel: sd 3:0:0:0: [sdc] Result: hostbyte=DID_OK driverbyte=DRIVER_TIMEOUT
+Apr 21 19:51:10 localhost kernel: sd 3:0:0:0: [sdc] CDB: Read(10): 28 00 00 02 16 e8 00 00 08 00
+Apr 21 19:51:10 localhost kernel: end_request: I/O error, dev sdc, sector 136936
+Apr 21 19:51:10 localhost kernel: device-mapper: multipath: Failing path 8:32.
+Apr 21 19:51:10 localhost multipathd: 8:32: mark as failed
+Apr 21 19:51:10 localhost multipathd: mpatha: remaining active paths: 1
+Apr 21 19:51:11 localhost multipathd: dm-4: add map (uevent)
+Apr 21 19:51:11 localhost multipathd: dm-4: devmap already registered
+-----
 
-linux_source_dir/drivers/md/raid5.c
+If Linux's scsi driver provides lldd with eh_strategy_handler() interface to
+implement its own recovery code, then I think it is also natural to provide an
+interface to give up any recovery options for those who do not want it.
+Any comments would be helpful, thanks.
 
-(file raid5.c is also for raid6) search for "read error not correctable"
+By the way, this patch is based on the bug fix (http://lkml.org/lkml/2010/4/14/29)
+that I have submitted recently. This bug fix has been merged to -mm tree.
 
-What you see there is the reason for failure. You see the line "if 
-(conf->mddev->degraded)" just above? I think your mistake was that you 
-did the DM COW trick only on the last device, or anyway one device only, 
-instead you should have done it on all 3 devices which were failing.
-
-It did not work for you because at the moment you got the read error on 
-the last disk, two disks were already dropped from the array, the array 
-was doubly degraded, and it's not possible to correct a read error if 
-the array is degraded because you don't have enough parity information 
-to recover the data for that sector.
-
-You should have prevented also the first two disks from dropping. Do the 
-DM trick on all of them simultaneously, or at least on 2 of them (if you 
-are sure only 3 disks have problems), start the array making sure it 
-starts with all devices online i.e. nondegraded, then start the resync, 
-and I think it will work.
+Thanks,
+Tomohiro Kusumi
 
 
-> I am glad if i can help to fix this but, but please keep this in mind, 
-> this raid array is a productive system, and my customer gets more and 
-> more nervous day by day...
-> I need a good solution for fixing this array to safely replace the bad 
-> drives without any data lost!
->
-> Somebody have any good idea wich is not copy the entire (15TB) array?
 
-I don't think there is another way. You need to make this work.
+Signed-off-by: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>
+---
 
-Good luck
-
+diff -aNur linux-2.6.34-rc5.org/drivers/scsi/scsi_error.c linux-2.6.34-rc5/drivers/scsi/scsi_error.c
+--- linux-2.6.34-rc5.org/drivers/scsi/scsi_error.c	2010-04-20 08:29:56.000000000 +0900
++++ linux-2.6.34-rc5/drivers/scsi/scsi_error.c	2010-04-23 20:34:08.492478179 +0900
+@@ -129,6 +129,11 @@
+ 
+ 	scsi_log_completion(scmd, TIMEOUT_ERROR);
+ 
++	if (scmd->device->no_recovery) {
++		schedule_work(&scmd->tmo_work);
++		return rtn;
++	}
++
+ 	if (scmd->device->host->transportt->eh_timed_out)
+ 		rtn = scmd->device->host->transportt->eh_timed_out(scmd);
+ 	else if (scmd->device->host->hostt->eh_timed_out)
+@@ -2104,3 +2109,25 @@
+ 	}
+ }
+ EXPORT_SYMBOL(scsi_build_sense_buffer);
++
++/**
++ * scsi_work_offline_sdev - offline device and finish timed out command
++ * @work:	work_struct for scsi command to get rid of
++ **/
++void scsi_work_offline_sdev(struct work_struct *work)
++{
++	struct scsi_cmnd *scmd = container_of(work, struct scsi_cmnd, tmo_work);
++
++	if (scmd->device->sdev_state == SDEV_RUNNING) {
++		scsi_device_set_state(scmd->device, SDEV_OFFLINE);
++		sdev_printk(KERN_INFO, scmd->device,
++			    "Device offlined - no recovery\n");
++	}
++
++	if (!scmd->result)
++		scmd->result |= (DRIVER_TIMEOUT << 24);
++
++	SCSI_LOG_ERROR_RECOVERY(1, printk("%s scmd: %p result: %x\n",
++				__func__, scmd, scmd->result));
++	scsi_finish_command(scmd);
++}
+diff -aNur linux-2.6.34-rc5.org/drivers/scsi/scsi_lib.c linux-2.6.34-rc5/drivers/scsi/scsi_lib.c
+--- linux-2.6.34-rc5.org/drivers/scsi/scsi_lib.c	2010-04-20 08:29:56.000000000 +0900
++++ linux-2.6.34-rc5/drivers/scsi/scsi_lib.c	2010-04-23 20:34:08.493478584 +0900
+@@ -1038,6 +1038,7 @@
+ 	cmd->request = req;
+ 
+ 	cmd->cmnd = req->cmd;
++	INIT_WORK(&cmd->tmo_work, scsi_work_offline_sdev);
+ 
+ 	return cmd;
+ }
+diff -aNur linux-2.6.34-rc5.org/drivers/scsi/scsi_priv.h linux-2.6.34-rc5/drivers/scsi/scsi_priv.h
+--- linux-2.6.34-rc5.org/drivers/scsi/scsi_priv.h	2010-04-20 08:29:56.000000000 +0900
++++ linux-2.6.34-rc5/drivers/scsi/scsi_priv.h	2010-04-23 20:34:08.493478584 +0900
+@@ -73,6 +73,7 @@
+ int scsi_eh_get_sense(struct list_head *work_q,
+ 		      struct list_head *done_q);
+ int scsi_noretry_cmd(struct scsi_cmnd *scmd);
++void scsi_work_offline_sdev(struct work_struct*);
+ 
+ /* scsi_lib.c */
+ extern int scsi_maybe_unblock_host(struct scsi_device *sdev);
+diff -aNur linux-2.6.34-rc5.org/drivers/scsi/scsi_scan.c linux-2.6.34-rc5/drivers/scsi/scsi_scan.c
+--- linux-2.6.34-rc5.org/drivers/scsi/scsi_scan.c	2010-04-20 08:29:56.000000000 +0900
++++ linux-2.6.34-rc5/drivers/scsi/scsi_scan.c	2010-04-23 20:34:08.494477948 +0900
+@@ -257,6 +257,7 @@
+ 	sdev->lun = lun;
+ 	sdev->channel = starget->channel;
+ 	sdev->sdev_state = SDEV_CREATED;
++	sdev->no_recovery = 0;
+ 	INIT_LIST_HEAD(&sdev->siblings);
+ 	INIT_LIST_HEAD(&sdev->same_target_siblings);
+ 	INIT_LIST_HEAD(&sdev->cmd_list);
+diff -aNur linux-2.6.34-rc5.org/drivers/scsi/scsi_sysfs.c linux-2.6.34-rc5/drivers/scsi/scsi_sysfs.c
+--- linux-2.6.34-rc5.org/drivers/scsi/scsi_sysfs.c	2010-04-23 19:59:21.896228214 +0900
++++ linux-2.6.34-rc5/drivers/scsi/scsi_sysfs.c	2010-04-23 20:36:27.120227650 +0900
+@@ -544,6 +544,7 @@
+ sdev_rd_attr (vendor, "%.8s\n");
+ sdev_rd_attr (model, "%.16s\n");
+ sdev_rd_attr (rev, "%.4s\n");
++sdev_rw_attr (no_recovery, "%d\n");
+ 
+ /*
+  * TODO: can we make these symlinks to the block layer ones?
+@@ -738,6 +739,7 @@
+ 	&dev_attr_iodone_cnt.attr,
+ 	&dev_attr_ioerr_cnt.attr,
+ 	&dev_attr_modalias.attr,
++	&dev_attr_no_recovery.attr,
+ 	REF_EVT(media_change),
+ 	NULL
+ };
+diff -aNur linux-2.6.34-rc5.org/include/scsi/scsi_cmnd.h linux-2.6.34-rc5/include/scsi/scsi_cmnd.h
+--- linux-2.6.34-rc5.org/include/scsi/scsi_cmnd.h	2010-04-20 08:29:56.000000000 +0900
++++ linux-2.6.34-rc5/include/scsi/scsi_cmnd.h	2010-04-23 20:34:08.495478045 +0900
+@@ -129,6 +129,8 @@
+ 	int result;		/* Status code from lower level driver */
+ 
+ 	unsigned char tag;	/* SCSI-II queued command tag */
++
++	struct work_struct tmo_work;	/* work for no recovery on timeout */
+ };
+ 
+ extern struct scsi_cmnd *scsi_get_command(struct scsi_device *, gfp_t);
+diff -aNur linux-2.6.34-rc5.org/include/scsi/scsi_device.h linux-2.6.34-rc5/include/scsi/scsi_device.h
+--- linux-2.6.34-rc5.org/include/scsi/scsi_device.h	2010-04-20 08:29:56.000000000 +0900
++++ linux-2.6.34-rc5/include/scsi/scsi_device.h	2010-04-23 20:35:29.255569542 +0900
+@@ -163,6 +163,8 @@
+ 	atomic_t iodone_cnt;
+ 	atomic_t ioerr_cnt;
+ 
++	int no_recovery; /* no error recovery on timeout if set */
++
+ 	struct device		sdev_gendev,
+ 				sdev_dev;
