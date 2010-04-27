@@ -1,93 +1,126 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: safe segmenting of conflicting changes
-Date: Tue, 27 Apr 2010 12:20:30 -0400
-Message-ID: <4BD70ECE.3090200@cfl.rr.com>
-References: <loom.20100423T152429-20@post.gmane.org> <4BD1B7E8.9020602@cfl.rr.com> <4BD1E491.3090603@cfl.rr.com> <4BD5C65B.7080707@redhat.com> <4BD5D20B.9020900@cfl.rr.com> <4BD5D5F7.208@redhat.com> <4BD5DEEE.7020208@cfl.rr.com> <4BD5E477.2010201@redhat.com> <4BD5EBC0.9030801@cfl.rr.com> <4BD622DC.7030309@redhat.com>
+From: Doug Ledford <dledford@redhat.com>
+Subject: More Hot Unplug/Plug work
+Date: Tue, 27 Apr 2010 12:45:23 -0400
+Message-ID: <4BD714A3.9020801@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigDEFABFD3EF9B2ACC27B57B06"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BD622DC.7030309@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>, "Labun, Marcin" <Marcin.Labun@intel.com>, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-raid.ids
 
-On 4/26/2010 7:33 PM, Doug Ledford wrote:
-> And in English raid means a hostile or predatory incursion, it has
-> nothing to do with disc drives.  And in English cat is an animal you
-> pet.  So technical jargon and regular English don't always agree, what's
-> your point?
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigDEFABFD3EF9B2ACC27B57B06
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-RAID is an acronym that just happens to also spell an English word.
-Removed and Failed are not, and your cat example is a complete non
-sequitur.  My point is that when naming technical things you should do
-so sanely.  You wouldn't label the state a disk goes into when it keeps
-failing IO requests as "Iceland" would you?  Of course not.  The state
-is named failed because the disk has failed.
+So I pulled down Neil's git repo and started working from his hotunplug
+branch, which was his version of my hotunplug patch.  I had to do a
+couple minor fixes to it to make it work.  I then simply continued on
+from there.  I have a branch in my git repo that tracks his hotunplug
+branch and is also called hotunplug.  That's where my current work is at.=
 
->>  Elements which are not part of the array should not
->> be MADE part of the array just because they happen to be there.
-> 
-> Sorry, but that's just not going to happen, ever.  There any number of
-> valid reasons why someone might want to temporarily remove a drive from
-> an array and then readd it back later, and when they readd it back they
-> want it to come back, and they want it to know that it used to be part
-> of the array and only resync the necessary bits (if you have a write
-> intent bitmap, otherwise it resyncs the whole thing).
 
-I didn't say never allow it to be added back, I said don't go doing it
-automatically.  An explicit add should, of course, work as it does now,
-but it should not be added just because udev decided it has appeared and
-called mdadm --incremental on it.
+What I've done since then:
 
-> No, it's not.  The udev rules that add the drive don't race with
-> manually removing it because they don't act on change events, only add
-> events.
+1) I've implemented a new config file line type: DOMAIN
+   a) Each DOMAIN line must have at least one valid path=3D entry, but ma=
+y
+      have more than one path=3D entry.  path=3D entries are file globs a=
+nd
+      must match something in /dev/disk/by-path
+   b) Each DOMAIN line must have one and only one action=3D entry.  Valid=
 
-And who is to say that you won't get one of those?  A power failure
-after --remove and when the system comes back up, viola, the disk gets
-put back into the array.  Or maybe your hotplug environment has a loose
-cable that slips out and you put it back.  This clearly violates the
-principal of least surprise.
+      action items are: ignore, incremental, spare, grow, partition.
+      In addition, a word me be prefixed with force- to indicate that
+      we should skip certain safety checks and use the device even if it
+      isn't clean.
+   c) Each DOMAIN line may have a metadata entry, and may have a
+      spare-group entry.
+   d) For the partition action, a DOMAIN line must have a program=3D and
+      a table=3D entry.  Currently, the program=3D entry must be an item
+      out of a list of known partition programs (I'm working on getting
+      sfdisk up and running, but for arches other than x86, other
+      methods would be needed, and I'm planning on adding a method
+      that allows us to call out to a user supplied script/program
+      instead of a known internal method).  The table=3D entry points to
+      a file that contains a method specific table indicating the
+      necessary partition layout.  As mentioned in previous mails, we
+      only support identical partition tables at this point.  That
+      may never change, who knows.
 
-> Not going to happen.  Doing what you request would undo a number of very
-> useful features in the raid stack.  So you might as well save your
-> breath, we aren't going to make a remove event equivalent to a zero
-> superblock event because then the entire --readd option would be
-> rendered useless.
+2) Created a new udev rules file that gets installed as
+05-md-early.rules.  This rule file, combined with our existing rules
+file, is a key element to how this domain support works.  In particular,
+udev rules allow us to separate out devices that already have some sort
+of raid superblock from devices that don't.  We then add a new flag to
+our incremental mode to indicate that a device currently does not belong
+to us, and we perform a series of checks to see if it should, and if so,
+we "grab" it (I would have preferred a better name, but the short
+options for better names were already taken).  When called with the
+"grab" flag, we follow a different code path where we check the domain
+of the device against our DOMAIN entries and if we have a match, we
+perform the specified action.  There will need to be some additional
+work to catch certain corner cases, such as the case where we have
+force-partition and we insert a disk that currently has a raid
+superblock on the bare drive.  We will currently miss that situation and
+not grab the device.  So, this is a work in progress and not yet complete=
+=2E
 
-I didn't say that.  I said that a remove event 1) should actually bother
-recording the removed state on the disk being removed ( right now it
-only records it on the other disks ), and 2) the fact that the disk is
-in the removed state should prevent --incremental from automatically
-re-adding it.
+3) Add IncrementalNew, IncrementalNewPart, and IncrementalNewDisk to
+Incremental.c.  The IncrementalNew is called any time we are passed the
+"grab" flag to incremental mode.  In IncrementalNew we merely figure out
+if we match a domain entry, and if so then we check if that domain entry
+is a partition entry, if it is then we pass it off to
+IncrementalNewDisk, if not then we pass it off to IncrementalNewPart
+(hmmm...renaming of these functions might be in order...it makes sense
+to me, because I was thinking "this is what we do on a bare disk, this
+is what we do on a partition", but considering that we call NewDisk on
+partition domains and NewPart on everything else seems backwards).
+These functions are partial stubs at the moment.  They do some sanity
+checks, but not any real work.  However, they aren't intended to do a
+lot of work themselves.  They are intended to figure out if they should
+do work, then simply invoke Managedevs with the 'a' flag to do the
+actual work.  And if the method is grow, then we will call Managedevs
+with the 'a' disposition, then call Grow with the right options to do
+the right thing.  The point being that all the code necessary to
+automatically use a device already exists, we just have to invoke it
+automatically instead of requiring a user to invoke it from the command
+line.  I'm very big on reusing that existing code and not trying to
+duplicate it here.
 
-> Because there are both transient and permanent failures.  Experience
-> caused us to switch from treating all failures as permanent to treating
-> failures as transient and picking up where we left off if at all
-> possible because too many people were having a single transient failure
-> render their array degraded, only to have a real issue come up sometime
-> later that then meant the array was no longer degraded, but entirely
-> dead.  The job of the raid stack is to survive as much failure as
-> possible before dying itself.  We can't do that if we allow a single,
-> transient event to cause us to stop using something entirely.
+So, that's where things stand right now.  I'm going to keep working on
+this as it's incomplete and doesn't actually do any work at the moment
+(it's all sanity checks, config file parsing, and infrastructure, the
+actual actions are not yet implemented), but I wanted to get out what I
+have currently for people to see.  So, you can check it out here:
 
-That's a good thing and is why it is fine for --incremental to activate
-a disk in the failed state if it appears to have returned to being
-operational and it is safe to do so ( meaning hasn't also been activated
-degraded ).  It should not do this for the removed state however.
+git://git.fedorapeople.org/~dledford/mdadm.git hotunplug
 
-> Besides, what you seem to be forgetting is that those events that make
-> us genuinely not want to use a device also make it so that at the next
-> reboot the device generally isn't available or seen by the OS
-> (controller failure, massive failure of the platter, etc).  Simply
-> failing and removing a device using mdadm mimics a transient failure.
-> If you fail, remove, then zero-superblock then you mimic a permanent
-> failure.  There you go, you have a choice.
+Comments welcome.
 
-Failed and removed are two different states; they should have different
-behaviors.  Failed = temporary, removed = more permanent.
-zero-superblock is completely permanent.  Removed should be a good
-middle ground where you still CAN re-add the device, but it should not
-be done automatically.
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+	      http://people.redhat.com/dledford
+
+Infiniband specific RPMs available at
+	      http://people.redhat.com/dledford/Infiniband
+
+
+--------------enigDEFABFD3EF9B2ACC27B57B06
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAkvXFKMACgkQg6WylM+/8ZTXQQCgnWUkvuC3Mi4S2YHzMizPmmXy
+9v0An0UKULNRj0FCcf4anN+FDBsl+YNb
+=ja+4
+-----END PGP SIGNATURE-----
+
+--------------enigDEFABFD3EF9B2ACC27B57B06--
