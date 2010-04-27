@@ -1,96 +1,59 @@
-From: Christian Gatzemeier <c.gatzemeier@tu-bs.de>
-Subject: "failed" vs "released" and "locked-out" state and --incremental auto-re-adding
-Date: Tue, 27 Apr 2010 10:13:00 +0000 (UTC)
-Message-ID: <loom.20100427T113838-836@post.gmane.org>
-References: <loom.20100423T140059-877@post.gmane.org> <loom.20100427T002749-963@post.gmane.org> <4BD61EA7.5060609@redhat.com>
+From: Keld Simonsen <keld@keldix.com>
+Subject: Re: RAID10 - Ensure mirrors aren't on same JBOD
+Date: Tue, 27 Apr 2010 15:27:52 +0200
+Message-ID: <20100427132752.GA17950@rap.rap.dk>
+References: <m2h4877c76c1004261144h1019e9afkf05396996ea77a99@mail.gmail.com>
+ <406003.10607.qm@web65416.mail.ac4.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <406003.10607.qm@web65416.mail.ac4.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Andrew Klaassen <clawsoon@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-Thanks you for responding and adding insight.
-
-Doug Ledford <dledford <at> redhat.com> writes:
-> On 04/26/2010 06:28 PM, Christian Gatzemeier wrote:
-> > 2) To "unbind", "unlist" or "dismiss" a member from the md device s=
-tats is
-> > currently called to --remove it. In particular you can "unbind", "u=
-nlist"
-> > or "dismiss" failed or detatched members with --remove failed/detac=
-hed.
+On Mon, Apr 26, 2010 at 11:57:09AM -0700, Andrew Klaassen wrote:
+> --- On Mon, 4/26/10, Michael Evans <mjevans1983@gmail.com> wrote:
 >=20
-> You can use --remove failed/detached/=E2=89=A4devname>, they all work=
-=2E  But yes,
-> the underlying action here is to take an already failed device go ahe=
-ad
-> and release
-
-There we have a very good word to name --remove so that mdadm is easier=
- to
-understand (IMHO). "release"
-
-
-
-> > 3) A safe way to "lock-out" or "really remove" members from
-> > udev/--incremental assembly is not available yet AFAIK.
-> > (--zero-superblock on mirror members makes the md device content
-> >  detectable/available directly)
+> > > --- On Mon, 4/26/10, Michael Evans <mjevans1983@gmail.com>
+> > wrote:
+> > > However, it doesn't say what happens with a larger
+> > > number of drives. =A0I'm looking for the kind of control I
+> > > can get with RAID 1+0, where I can specify which drives are
+> > > mirrors of each other. =A0Is that possible with RAID10?
+> >=20
+> > No, not predictably; the only provided guarantee is that
+> > the data will
+> > /not/ be duplicated on the same block-device (usually
+> > drive).=A0 In
+> > practice you will quickly be able to determine where a
+> > particular
+> > version with a given range of input causes data to be
+> > stored, but
+> > there is no requirement that future versions produce the
+> > precise same
+> > alignment and offsets.
 >=20
-> This is a shortcoming of version 0.90/1.0 superblocks and raid1 array=
-s.
->  For all other superblock versions and raid types, this is not true.
-> The default superblock version changed from 0.90 to 1.2 as of the mda=
-dm
-> 3.1 series and so this won't be a problem in the future.
-
-Good, that'll fix the problem with --zero-superblock for the future.
-
-An explicit "locked-out" state without killing the superblock may still=
- be
-good. (Even if only for pausing or optionally auto-locking out detected
-alternative versions.)
-
-
-
-=20
-> > IMHO the ones mentioned first could seen as implied by those mentio=
-ned
-> > later.
+> Ah.  So if I want this level of control, I have to sacrifice the adva=
+ntages of RAID 10 and go with RAID 1+0.
 >=20
-> No, and this is a safety feature.  We won't remove a good device in
-> order to prevent a typo from rendering an array dead.
-
-I understand, makes sense to me.
-Ok, if mdadm --remove (release) could give a little hint to --fail firs=
-t, if
-"device is busy", it may be able save some head scratches. ;)
+> Good to know.  Thanks.
 
 
+I think you can control the exact layout of copies in raid10 at creatio=
+n time for
+the raid. How exactly it will play I am not sure - maybe Neil can tell =
+us.
 
-> > I am unclear why --incremental seems to require a device to be
-> >  --removed (released) first
->
-> It would be kind of useless to put that support into incremental.
-> Incremental isn't really intended to be run from the command line
-> (although you can), it's intended to be done on hotplug events.
+Anyway you should be able to use raid10 as one of the components in a r=
+aid 1+0 like scenario, eg as
+the raid1 part of the raid 1+0.
 
-That is exactly were I encountered this. Unplugging a failed disk, and
-plugging it back in again would fail, unless I manually --remove (relea=
-sed)
-the device before plugging it back in.
-
-But I think the hot-unplugging support you added will probably fix this=
- in
-the future even nicer. (Automatically releasing devices as soon as they=
- are
-detached.)
-
-
-
+best regards
+keld
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
