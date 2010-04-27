@@ -1,50 +1,103 @@
-From: Keld Simonsen <keld@keldix.com>
-Subject: Re: RAID10 - Ensure mirrors aren't on same JBOD
-Date: Tue, 27 Apr 2010 15:44:02 +0200
-Message-ID: <20100427134401.GB17950@rap.rap.dk>
-References: <535203.18346.qm@web65402.mail.ac4.yahoo.com>
- <t2k4877c76c1004261118m4991141en8b107872b802b237@mail.gmail.com>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: "failed" vs "released" and "locked-out" state and --incremental
+ auto-re-adding
+Date: Tue, 27 Apr 2010 11:45:46 -0400
+Message-ID: <4BD706AA.9090404@redhat.com>
+References: <loom.20100423T140059-877@post.gmane.org> <loom.20100427T002749-963@post.gmane.org> <4BD61EA7.5060609@redhat.com> <loom.20100427T113838-836@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigCCB98E1BB1C06720A6C95BB3"
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <t2k4877c76c1004261118m4991141en8b107872b802b237@mail.gmail.com>
+In-Reply-To: <loom.20100427T113838-836@post.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Evans <mjevans1983@gmail.com>
-Cc: Andrew Klaassen <clawsoon@yahoo.com>, linux-raid@vger.kernel.org
+To: Christian Gatzemeier <c.gatzemeier@tu-bs.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Apr 26, 2010 at 11:18:50AM -0700, Michael Evans wrote:
-> 
-> However as long as you remember that currently raid10 cannot be grown
-> (*may have very very recently changed) you can use any of the layouts
-> you like (I tend to prefer the 'far' layout).
-> 
-> mdadm --create ... --layout=(man mdadm) blockdev0 blockdev1 blockdev2 blockdev3
-> 
-> n2 == Creates almost the behavior you described; each stripe consists
-> of b0c0 b0c1 b1c0 b1c1 (blockXcopyY)
-> o2 == Data backup is in the next stripe: that is mirrored and rotated
-> stripes: b0c0 b1c0 b2c0 b3c0 // b3c1 b0c1 b1c1 b2c1
-> f2 == The first half is like raid0; the second half is like the o2
-> above, but over the entire first half.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigCCB98E1BB1C06720A6C95BB3
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-mnjae, the second part of a f2 layout is also laid out in a raid0 fashion.
+On 04/27/2010 06:13 AM, Christian Gatzemeier wrote:
+>=20
+> Thanks you for responding and adding insight.
+>=20
+> Doug Ledford <dledford <at> redhat.com> writes:
+>> On 04/26/2010 06:28 PM, Christian Gatzemeier wrote:
+>>> 2) To "unbind", "unlist" or "dismiss" a member from the md device sta=
+ts is
+>>> currently called to --remove it. In particular you can "unbind", "unl=
+ist"
+>>> or "dismiss" failed or detatched members with --remove failed/detache=
+d.
+>>
+>> You can use --remove failed/detached/=E2=89=A4devname>, they all work.=
+  But yes,
+>> the underlying action here is to take an already failed device go ahea=
+d
+>> and release
+>=20
+> There we have a very good word to name --remove so that mdadm is easier=
+ to
+> understand (IMHO). "release"
 
-> More info on far from man 4 md
->        When 'far' replicas are chosen, the multiple copies of a given
-> chunk are laid out quite distant from each other.  The  first  copy
-> of all  data  blocks  will  be striped across the early part of all
-> drives in RAID0 fashion, and then the next copy of all blocks will be
-> striped across a later section of all drives, always ensuring that all
-> copies of any given block are on different drives.
-> 
->        The 'far' arrangement can give sequential read performance
-> equal to that of a RAID0 array, but at the cost of  reduced  write
-> performance.
+You're probably right, but it's also too late to change it now :-(
+Remove has been in use for quite some time and there are untold numbers
+of programs and scripts that use it as it is so that it would be very
+difficult to change it.
 
-If you employ a file system (like ext3), then the elevator algorithm
-tends to eliminate the write performance hit.
+>> No, and this is a safety feature.  We won't remove a good device in
+>> order to prevent a typo from rendering an array dead.
+>=20
+> I understand, makes sense to me.
+> Ok, if mdadm --remove (release) could give a little hint to --fail firs=
+t, if
+> "device is busy", it may be able save some head scratches. ;)
 
-best regards
-keld
+Very valid request.
+
+>>> I am unclear why --incremental seems to require a device to be
+>>>  --removed (released) first
+>>
+>> It would be kind of useless to put that support into incremental.
+>> Incremental isn't really intended to be run from the command line
+>> (although you can), it's intended to be done on hotplug events.
+>=20
+> That is exactly were I encountered this. Unplugging a failed disk, and
+> plugging it back in again would fail, unless I manually --remove (relea=
+sed)
+> the device before plugging it back in.
+>=20
+> But I think the hot-unplugging support you added will probably fix this=
+ in
+> the future even nicer. (Automatically releasing devices as soon as they=
+ are
+> detached.)
+
+Yep, the hot unplug support solves this issue quite nicely.
+
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+	      http://people.redhat.com/dledford
+
+Infiniband specific RPMs available at
+	      http://people.redhat.com/dledford/Infiniband
+
+
+--------------enigCCB98E1BB1C06720A6C95BB3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEUEARECAAYFAkvXBqoACgkQg6WylM+/8ZRccQCgk3BtlujGdeC5OOzIjfcoS8Ht
+n/0AmNdwFs3j2TMHrBmqb8Kh6IGnlKc=
+=vZgo
+-----END PGP SIGNATURE-----
+
+--------------enigCCB98E1BB1C06720A6C95BB3--
