@@ -1,126 +1,101 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: More Hot Unplug/Plug work
-Date: Tue, 27 Apr 2010 12:45:23 -0400
-Message-ID: <4BD714A3.9020801@redhat.com>
+From: Joe Williams <jwilliams315@gmail.com>
+Subject: Re: increasing stripe_cache_size decreases RAID-6 read throughput
+Date: Tue, 27 Apr 2010 10:18:36 -0700
+Message-ID: <n2x11f0870e1004271018t742e933tba7e0d37428271f2@mail.gmail.com>
+References: <h2y11f0870e1004241636z1f3e302g913be494ec0aefa5@mail.gmail.com>
+	 <20100427164126.2765f9e0@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigDEFABFD3EF9B2ACC27B57B06"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100427164126.2765f9e0@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>, "Labun, Marcin" <Marcin.Labun@intel.com>, Dan Williams <dan.j.williams@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigDEFABFD3EF9B2ACC27B57B06
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On Mon, Apr 26, 2010 at 11:41 PM, Neil Brown <neilb@suse.de> wrote:
+> On Sat, 24 Apr 2010 16:36:20 -0700 Joe Williams <jwilliams315@gmail.c=
+om> wrote:
+>
+> The whole 'queue' directory really shouldn't appear for md devices bu=
+t for
+> some very boring reasons it does.
 
-So I pulled down Neil's git repo and started working from his hotunplug
-branch, which was his version of my hotunplug patch.  I had to do a
-couple minor fixes to it to make it work.  I then simply continued on
-from there.  I have a branch in my git repo that tracks his hotunplug
-branch and is also called hotunplug.  That's where my current work is at.=
+But read_ahead for md0 is in the queue directory:
 
+/sys/block/md0/queue/read_ahead_kb
 
-What I've done since then:
+I know you said read_ahead is irrelevant for the individual disk
+devices like sdb, but I thought it was implied the read_ahead for md0
+is significant.
 
-1) I've implemented a new config file line type: DOMAIN
-   a) Each DOMAIN line must have at least one valid path=3D entry, but ma=
-y
-      have more than one path=3D entry.  path=3D entries are file globs a=
-nd
-      must match something in /dev/disk/by-path
-   b) Each DOMAIN line must have one and only one action=3D entry.  Valid=
+>
+>
+>> Next question, is it normal for md0 to have no queue_depth setting?
+>
+> Yes. =A0The stripe_cache_size is conceptually a similar think, but on=
+ly
+> at a very abstract level.
+>
+>>
+>> Are there any other parameters that are important to performance tha=
+t
+>> I should be looking at?
+>
 
-      action items are: ignore, incremental, spare, grow, partition.
-      In addition, a word me be prefixed with force- to indicate that
-      we should skip certain safety checks and use the device even if it
-      isn't clean.
-   c) Each DOMAIN line may have a metadata entry, and may have a
-      spare-group entry.
-   d) For the partition action, a DOMAIN line must have a program=3D and
-      a table=3D entry.  Currently, the program=3D entry must be an item
-      out of a list of known partition programs (I'm working on getting
-      sfdisk up and running, but for arches other than x86, other
-      methods would be needed, and I'm planning on adding a method
-      that allows us to call out to a user supplied script/program
-      instead of a known internal method).  The table=3D entry points to
-      a file that contains a method specific table indicating the
-      necessary partition layout.  As mentioned in previous mails, we
-      only support identical partition tables at this point.  That
-      may never change, who knows.
+>> I was expecting a little faster sequential reads, but 191 MB/s is no=
+t
+>> too bad. I'm not sure why it decreases to 130-131 MB/s at larger
+>> record sizes.
+>
+> I don't know why it would decrease either. =A0For sequential reads, r=
+ead-ahead
+> should be scheduling all the read requests and that actual reads shou=
+ld just
+> be waiting for the read-ahead to complete. =A0So there shouldn't be a=
+ny
+> variability - clearly there is. =A0I wonder if it is an XFS thing....
+> care to try a different filesystem for comparison? =A0ext3?
 
-2) Created a new udev rules file that gets installed as
-05-md-early.rules.  This rule file, combined with our existing rules
-file, is a key element to how this domain support works.  In particular,
-udev rules allow us to separate out devices that already have some sort
-of raid superblock from devices that don't.  We then add a new flag to
-our incremental mode to indicate that a device currently does not belong
-to us, and we perform a series of checks to see if it should, and if so,
-we "grab" it (I would have preferred a better name, but the short
-options for better names were already taken).  When called with the
-"grab" flag, we follow a different code path where we check the domain
-of the device against our DOMAIN entries and if we have a match, we
-perform the specified action.  There will need to be some additional
-work to catch certain corner cases, such as the case where we have
-force-partition and we insert a disk that currently has a raid
-superblock on the bare drive.  We will currently miss that situation and
-not grab the device.  So, this is a work in progress and not yet complete=
-=2E
+I can try ext3. When I run mkfs.ext3, are there any parameters that I
+should set to other than the default values?
 
-3) Add IncrementalNew, IncrementalNewPart, and IncrementalNewDisk to
-Incremental.c.  The IncrementalNew is called any time we are passed the
-"grab" flag to incremental mode.  In IncrementalNew we merely figure out
-if we match a domain entry, and if so then we check if that domain entry
-is a partition entry, if it is then we pass it off to
-IncrementalNewDisk, if not then we pass it off to IncrementalNewPart
-(hmmm...renaming of these functions might be in order...it makes sense
-to me, because I was thinking "this is what we do on a bare disk, this
-is what we do on a partition", but considering that we call NewDisk on
-partition domains and NewPart on everything else seems backwards).
-These functions are partial stubs at the moment.  They do some sanity
-checks, but not any real work.  However, they aren't intended to do a
-lot of work themselves.  They are intended to figure out if they should
-do work, then simply invoke Managedevs with the 'a' flag to do the
-actual work.  And if the method is grow, then we will call Managedevs
-with the 'a' disposition, then call Grow with the right options to do
-the right thing.  The point being that all the code necessary to
-automatically use a device already exists, we just have to invoke it
-automatically instead of requiring a user to invoke it from the command
-line.  I'm very big on reusing that existing code and not trying to
-duplicate it here.
+>
 
-So, that's where things stand right now.  I'm going to keep working on
-this as it's incomplete and doesn't actually do any work at the moment
-(it's all sanity checks, config file parsing, and infrastructure, the
-actual actions are not yet implemented), but I wanted to get out what I
-have currently for people to see.  So, you can check it out here:
+> That is very weird, as reads don't use the stripe cache at all - when
+> the array is not degraded and no overlapping writes are happening.
+>
+> And the stripe_cache is measured in pages-per-device. =A0So 2560 mean=
+s
+> 2560*4k for each device. There are 3 data devices, so 30720K or 60 st=
+ripes.
+>
+> When you set stripe_cache_size to 16384, it would have consumed
+> =A016384*5*4K =3D=3D 320Meg
+> or 1/3 of your available RAM. =A0This might have affected throughput,
+> I'm not sure.
 
-git://git.fedorapeople.org/~dledford/mdadm.git hotunplug
+Ah, thanks for explaining that! I set the stripe cache much larger
+than I intended to. But I am a little confused about your
+calculations. FIrst you multiply 2560 x 4K x 3 data devices to get the
+total stripe_cache_size. But then you multiply 16384 x 4K x 5 devices
+to get the RAM usage. Why multiply time 3 in the first case, and 5 in
+the second? Does the stripe cache only cache data devices, or does it
+cache all the devices in the array?
 
-Comments welcome.
+What stripe_cache_size value or values would you suggest I try to
+optimize write throughput?
 
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-	      http://people.redhat.com/dledford
-
-Infiniband specific RPMs available at
-	      http://people.redhat.com/dledford/Infiniband
-
-
---------------enigDEFABFD3EF9B2ACC27B57B06
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkvXFKMACgkQg6WylM+/8ZTXQQCgnWUkvuC3Mi4S2YHzMizPmmXy
-9v0An0UKULNRj0FCcf4anN+FDBsl+YNb
-=ja+4
------END PGP SIGNATURE-----
-
---------------enigDEFABFD3EF9B2ACC27B57B06--
+The default setting for stripe_cache_size was 256. So 256 x 4K =3D 1024=
+K
+per device, which would be two stripes, I think (you commented to that
+effect earlier). But somehow the default setting was not optimal for
+sequential write throughput. When I increased stripe_cache_size, the
+sequential write throughput improved. Does that make sense? Why would
+it be necessary to cache more than 2 stripes to get optimal sequential
+write performance?
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
