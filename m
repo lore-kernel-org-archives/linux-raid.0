@@ -1,26 +1,47 @@
-From: Christian Gatzemeier <c.gatzemeier@tu-bs.de>
-Subject: Re: More Hot Unplug/Plug work
-Date: Tue, 27 Apr 2010 19:41:14 +0000 (UTC)
-Message-ID: <loom.20100427T212836-398@post.gmane.org>
-References: <4BD714A3.9020801@redhat.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: increasing stripe_cache_size decreases RAID-6 read throughput
+Date: Wed, 28 Apr 2010 07:24:19 +1000
+Message-ID: <20100428072419.22779335@notabene.brown>
+References: <h2y11f0870e1004241636z1f3e302g913be494ec0aefa5@mail.gmail.com>
+	<20100427164126.2765f9e0@notabene.brown>
+	<n2x11f0870e1004271018t742e933tba7e0d37428271f2@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <n2x11f0870e1004271018t742e933tba7e0d37428271f2@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Joe Williams <jwilliams315@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Doug Ledford <dledford <at> redhat.com> writes:
+On Tue, 27 Apr 2010 10:18:36 -0700
+Joe Williams <jwilliams315@gmail.com> wrote:
 
-> we "grab" it (I would have preferred a better name, but the short
-> options for better names were already taken).
+> On Mon, Apr 26, 2010 at 11:41 PM, Neil Brown <neilb@suse.de> wrote:
+> > On Sat, 24 Apr 2010 16:36:20 -0700 Joe Williams <jwilliams315@gmail.com> wrote:
+> >
+> > The whole 'queue' directory really shouldn't appear for md devices but for
+> > some very boring reasons it does.
+> 
+> But read_ahead for md0 is in the queue directory:
+> 
+> /sys/block/md0/queue/read_ahead_kb
 
-Ah well, I don't know what may be taken, a quick rundown of thoughts though:
+True - but it shouldn't be.  read_ahead has nothing to do with 
+the queue.  
+   /sys/block/md0/bdi/read_ahead_kb
+is (in my mind) the more natural way to access that information.
+Actually it should be
 
-incremental: prep, enlist, use, new <device>
+   /sys/class/block/md0/bdi/read_ahead_kb
 
+but that is a little off-topic.
 
+> 
+> I know you said read_ahead is irrelevant for the individual disk
+> devices like sdb, but I thought it was implied the read_ahead for md0
+> is significant.
+> 
 
-
-
+NeilBrown
