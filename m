@@ -1,56 +1,65 @@
-From: "Janos Haar" <janos.haar@netcenter.hu>
-Subject: Re: Suggestion needed for fixing RAID6
-Date: Wed, 28 Apr 2010 16:51:23 +0200
-Message-ID: <02a701cae6e2$474f7ef0$0400a8c0@dcccs>
-References: <626601cae203$dae35030$0400a8c0@dcccs> <20100423065143.GA17743@maude.comedia.it> <695a01cae2c1$a72907d0$0400a8c0@dcccs> <4BD193D0.5080003@shiftmail.org> <717901cae3e5$6a5fa730$0400a8c0@dcccs> <4BD3751A.5000403@shiftmail.org> <756601cae45e$213d6190$0400a8c0@dcccs> <4BD569E2.7010409@shiftmail.org> <7a3e01cae53f$684122c0$0400a8c0@dcccs> <4BD5C51E.9040207@shiftmail.org> <80a201cae621$684daa30$0400a8c0@dcccs> <4BD76CF6.5020804@shiftmail.org> <20100428113732.03486490@notabene.brown> <4BD830B0.1080406@shiftmail.org> <025e01cae6d7$30bb7870$0400a8c0@dcccs> <4BD843D4.7030700@shiftmail.org>
+From: "Labun, Marcin" <Marcin.Labun@intel.com>
+Subject: RE: More Hot Unplug/Plug work
+Date: Wed, 28 Apr 2010 17:08:09 +0100
+Message-ID: <905EDD02F158D948B186911EB64DB3D11C954788@irsmsx503.ger.corp.intel.com>
+References: <4BD714A3.9020801@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="ISO-8859-1";
-	reply-type=response
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4BD714A3.9020801@redhat.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: MRK <gabriele.trombetti@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>, Neil Brown <neilb@suse.de>
+Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
 List-Id: linux-raid.ids
 
 
------ Original Message ----- 
-From: "MRK" <gabriele.trombetti@gmail.com>
-To: "Janos Haar" <janos.haar@netcenter.hu>
-Cc: <linux-raid@vger.kernel.org>; "Neil Brown" <neilb@suse.de>
-Sent: Wednesday, April 28, 2010 4:19 PM
-Subject: Re: Suggestion needed for fixing RAID6
 
-
-> On 04/28/2010 03:32 PM, Janos Haar wrote:
->> MRK, Neil,
->>
->> Please let me have one wish:
->> Please write down my name to the kernel tree with a note i was who 
->> reported and helped to track down this. :-)
->>
->> Thanks.
->> Janos Haar
+> -----Original Message-----
+> From: Doug Ledford [mailto:dledford@redhat.com]
+> Sent: Tuesday, April 27, 2010 6:45 PM
+> To: Linux RAID Mailing List; Neil Brown; Labun, Marcin; Williams, Dan J
+> Subject: More Hot Unplug/Plug work
 > 
-> Ok I did
-> However it would be nice if you can actually test the patch and confirm 
-> that it solves your problem, starting with the raid6 array in 
-> singly-degraded mode like you did yesterday. Then I think we can add one 
-> further line on top:
+> So I pulled down Neil's git repo and started working from his hotunplug
+> branch, which was his version of my hotunplug patch.  I had to do a
+> couple minor fixes to it to make it work.  I then simply continued on
+> from there.  I have a branch in my git repo that tracks his hotunplug
+> branch and is also called hotunplug.  That's where my current work is
+> at.
 > 
-> Tested-by: Janos Haar <janos.haar@netcenter.hu>
+> What I've done since then:
 > 
-> before Neil (hopefully) acks it. Testing is needed anyway before pushing 
-> it to mainline, I think...
+> 1) I've implemented a new config file line type: DOMAIN
+>    a) Each DOMAIN line must have at least one valid path= entry, but
+> may
+>       have more than one path= entry.  path= entries are file globs and
+>       must match something in /dev/disk/by-path
 
-I am allready working on......
-Please give me some time....
+DOMAIN is defined per container or raid volume for native metadata.
+Each DOMAIN can have more than one path, so actually list of path define if a given disk belongs to domain or not. 
+Do you plan to allow for the same path to be assigned to different containers (so path is shared between domains)?
+If so the domains will have some or all paths overlapped, and some containers will share some paths.
+Going further, thus causes that a new disk can be potentially grabbed by more than one container (because of shared path).
+For example:
+DOMAIN1: path=a path=b path=c
+DOMAIN2: path=a path=d
+DOMAIN3: path=d path=c
+In this example disks from path c can appear in DOMAIN 1 and DOMAIN 3, but not in DOMAIN 2.
+So, in case of Monitor, sharing a spare device will be per path basis.
+The same for new disks in hot-plug feature.
 
-Janos
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+In your repo domain_ent is a struct that contains domain paths.
+The function arrays_in_domain returns a list of mdstat entries that are in the same domain as the constituent device name.
+(so it requires devname and domain as input parameter).
+In which case two containers will share the same DOMAIN?
+It seems that this function shall return a list of mdstat entries that share a path to which a devname device belongs.
+So, a given new device is tried to be grabbed by a list of a containers (or native volumes).
+
+
+Can you send a config file example?
+
+Marcin Labun
+
