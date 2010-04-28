@@ -1,43 +1,40 @@
-From: Joe Williams <jwilliams315@gmail.com>
-Subject: Re: increasing stripe_cache_size decreases RAID-6 read throughput
-Date: Wed, 28 Apr 2010 13:40:56 -0700
-Message-ID: <m2t11f0870e1004281340v21421e55r2af9a813c0320b6b@mail.gmail.com>
-References: <h2y11f0870e1004241636z1f3e302g913be494ec0aefa5@mail.gmail.com>
-	 <20100427164126.2765f9e0@notabene.brown>
-	 <n2x11f0870e1004271018t742e933tba7e0d37428271f2@mail.gmail.com>
-	 <20100428072419.22779335@notabene.brown>
+From: Luca Berra <bluca@comedia.it>
+Subject: Re: More Hot Unplug/Plug work
+Date: Wed, 28 Apr 2010 22:59:37 +0200
+Message-ID: <20100428205937.GB6065@maude.comedia.it>
+References: <4BD714A3.9020801@redhat.com> <905EDD02F158D948B186911EB64DB3D11C954788@irsmsx503.ger.corp.intel.com> <4BD874CB.5040803@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100428072419.22779335@notabene.brown>
+Content-Disposition: inline
+In-Reply-To: <4BD874CB.5040803@redhat.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I did some tests, starting with the default values of 256 for
-stripe_cache_size and 3072 for read_ahead_kb, and doubling them both
-until performance stopped improving. Here are the best results that I
-saw:
+On Wed, Apr 28, 2010 at 01:47:55PM -0400, Doug Ledford wrote:
+>DOMAIN path=pci-0000:00:1f.2-scsi-[2345]:0:0:0 action=partition
+>	table=/etc/mdadm.table program=sfdisk
+i admit i did not take the time to pull from your git, so tell me to
+rtfc if needed.
+it seems you are assuming program will take table as stdin.
+would not it be better to use somethink like
+action=initialize command="sfdisk %d < /etc/mdadm.table" ?
+where command is invoked via a shell and %d is replaced with the device
+node. (more escapes could also be useful, e.g. the sysfs node)
 
-# echo 2048 > /sys/block/md0/md/stripe_cache_size
-# echo 24576 > /sys/block/md0/queue/read_ahead_kb
-# iozone -a -y64K -q16M -s4G -e -f iotest -i0 -i1 -i2
+besides that is there any provisioning to check that the device really
+is empty before running action?
 
-                                                    random  random
-      KB  reclen   write rewrite    read    reread    read   write
- 4194304      64  241087  259892   243478   248102    7745   16161
- 4194304     128  259503  261886   244612   247157   13417   26812
- 4194304     256  260438  268077   240211   238916   21884   37527
- 4194304     512  243511  250004   252507   252276   34694   48868
- 4194304    1024  244744  253905   258920   250495   52351   76356
- 4194304    2048  240910  250500   253800   265361   79848  100131
- 4194304    4096  244283  253516   271940   272117  101737  137386
- 4194304    8192  239110  246370   262118   269687  103437  164715
- 4194304   16384  240698  249182   239378   253896  119437  198276
+Regards,
+L.
 
 
-250 MB/s reads and writes is quite nice for a 5 drive RAID-6.
 
-But I still do not understand why it is necessary to increase the
-stripe_cache_size to 16 full stripes in order to optimize sequential
-write speed.
+-- 
+Luca Berra -- bluca@comedia.it
+         Communication Media & Services S.r.l.
+  /"\
+  \ /     ASCII RIBBON CAMPAIGN
+   X        AGAINST HTML MAIL
+  / \
