@@ -1,202 +1,141 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: More Hot Unplug/Plug work
-Date: Fri, 30 Apr 2010 12:26:05 -0400
-Message-ID: <4BDB049D.3030604@redhat.com>
-References: <4BD714A3.9020801@redhat.com> <r2ve9c3a7c21004291422q2144eaffsd16c8fe3c5ff8784@mail.gmail.com>
+From: "Janos Haar" <janos.haar@netcenter.hu>
+Subject: Re: Suggestion needed for fixing RAID6
+Date: Thu, 29 Apr 2010 23:07:40 +0200
+Message-ID: <0c1201cae7e0$01f9a930$0400a8c0@dcccs>
+References: <626601cae203$dae35030$0400a8c0@dcccs> <20100423065143.GA17743@maude.comedia.it> <695a01cae2c1$a72907d0$0400a8c0@dcccs> <4BD193D0.5080003@shiftmail.org> <717901cae3e5$6a5fa730$0400a8c0@dcccs> <4BD3751A.5000403@shiftmail.org> <756601cae45e$213d6190$0400a8c0@dcccs> <4BD569E2.7010409@shiftmail.org> <7a3e01cae53f$684122c0$0400a8c0@dcccs> <4BD5C51E.9040207@shiftmail.org> <80a201cae621$684daa30$0400a8c0@dcccs> <4BD76CF6.5020804@shiftmail.org> <20100428113732.03486490@notabene.brown> <4BD830B0.1080406@shiftmail.org> <025e01cae6d7$30bb7870$0400a8c0@dcccs> <4BD843D4.7030700@shiftmail.org> <062001cae771$545e0910$0400a8c0@dcccs> <4BD9A41E.9050009@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig95578DF215E592F235589EE9"
+Content-Type: text/plain;
+	format=flowed;
+	charset="ISO-8859-1";
+	reply-type=response
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <r2ve9c3a7c21004291422q2144eaffsd16c8fe3c5ff8784@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Linux RAID Mailing List <linux-raid@vger.kernel.org>, Neil Brown <neilb@suse.de>, "Labun, Marcin" <Marcin.Labun@intel.com>
+To: MRK <mrk@shiftmail.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig95578DF215E592F235589EE9
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
 
-On 04/29/2010 05:22 PM, Dan Williams wrote:
-> On Tue, Apr 27, 2010 at 9:45 AM, Doug Ledford <dledford@redhat.com> wro=
-te:
->> So I pulled down Neil's git repo and started working from his hotunplu=
-g
->> branch, which was his version of my hotunplug patch.  I had to do a
->> couple minor fixes to it to make it work.  I then simply continued on
->> from there.  I have a branch in my git repo that tracks his hotunplug
->> branch and is also called hotunplug.  That's where my current work is =
-at.
+----- Original Message ----- 
+From: "MRK" <mrk@shiftmail.org>
+To: "Janos Haar" <janos.haar@netcenter.hu>
+Cc: <linux-raid@vger.kernel.org>
+Sent: Thursday, April 29, 2010 5:22 PM
+Subject: Re: Suggestion needed for fixing RAID6
+
+
+> On 04/29/2010 09:55 AM, Janos Haar wrote:
 >>
->> What I've done since then:
+>> md3 : active raid6 sdd4[12] sdl4[11] sdk4[10] sdj4[9] sdi4[8] dm-1[13](F) 
+>> sdg4[6
+>> ] sdf4[5] dm-0[4] sdc4[2] sdb4[1] sda4[0]
+>>      14626538880 blocks level 6, 16k chunk, algorithm 2 [12/10] 
+>> [UUU_UUU_UUUU]
+>>      [===========>.........]  recovery = 56.8% (831095108/1462653888) 
+>> finish=50
+>> 19.8min speed=2096K/sec
 >>
->> 1) I've implemented a new config file line type: DOMAIN
->>   a) Each DOMAIN line must have at least one valid path=3D entry, but =
-may
->>      have more than one path=3D entry.  path=3D entries are file globs=
- and
->>      must match something in /dev/disk/by-path
->>   b) Each DOMAIN line must have one and only one action=3D entry.  Val=
-id
->>      action items are: ignore, incremental, spare, grow, partition.
->>      In addition, a word me be prefixed with force- to indicate that
->>      we should skip certain safety checks and use the device even if i=
-t
->>      isn't clean.
->=20
-> Just to clarify that we are on the same page with these actions:
-> * incremental is the default action that "does the right thing" if the
-> drive already has metadata.  I assume we need checks here to reject
-> disks with ambiguous (multiple valid metadata records)
-> * spare: implies incremental, but if it is a 'bare' device write a spar=
-e record
-> * grow: implies incremental but if it is a 'bare' device write a spare
-> record, if there is a degraded array in the domain rebuild it
-> otherwise grow an(y?) array in the domain
-> * partition: if the device has a partition that matches the specified
-> table then add the partitions incrementally
-
-No, partition is an action, so a partition domain (which is limited to
-being a whole disk device) causes us to write out a partition table on
-the device.  This is only useful for native array types, not for imsm
-arrays.
-
-> A few comments:
-> 1/ Does 'partition' need to be split to 'partition-spare' and
-> 'partition-grow' to imply the action post partitioning?
-
-No, because once you write the partition table out and cause the kernel
-to reread the partition table, you will get separate incremental events
-for the partitions themselves and they will match different domains (you
-would have one domain line for the partition domain and as many domain
-lines as you need for the actual partitions themselves).
-
-> 2/ One of the safety checks for hot-inserting a spare is that it
-> occurs on a port that was recently unplugged.  Should that be a
-> default policy or do we need a different flavor spare action like
-> 'spare-same-port'.
-
-No, I canned this aspect.  The more I thought about it the more I
-disliked it.  I suppose it could be added in for paranoia's sake, but
-here's why I dropped it:
-
-1) We don't know that the user will necessarily plug the new spare
-device into the same port.  Maybe it was the port that went bad and not
-the drive and they are using a new port as a result.
-2) We specifically talked about this setup acting like a hardware raid
-chassis and in that situation the hardware chassis grabs a new drive
-regardless of whether it goes into the same slot as an old drive.
-3) What happens if the technician removes the dead drive and then gets a
-page they must answer before inserting the new drive and we time things
-out.  Then the technician is left wondering why the drive didn't get
-used like it should.
-4) Maybe they have only one drive carrier and once they remove the old
-drive they must unmount it from the carrier and mount the new drive to
-the carrier before inserting the new drive and we time things out.
-5) Maybe they are leaving the defunct drive in place and putting this
-drive into an empty slot and want it to be used for rebuild regardless.
-
-Really, the whole concept of a same-port action with a timeout is a nice
-way to cover our ass and not much more.  But our asses are already
-covered by the fact that we require a clean drive or the use of the
-force- option on the action.  So I just didn't see much real benefit or
-use for the same port stuff.
-
->>   c) Each DOMAIN line may have a metadata entry, and may have a
->>      spare-group entry.
->=20
-> What is the purpose of the spare group?  I thought we were assuming
-> that all DOMAIN members were automatically in the same spare group.
-> Is this to augment the policy to allow spares to float between
-> DOMAINs?  Something like the following where the different domains
-> allow spares to cross boundaries?
-> DOMAIN path=3DA spare-group=3DB action=3Dgrow
-> DOMAIN path=3DB spare-group=3DA action=3Dspare
-
-The above is possible, but also the use of different domains in the same
-spare group with different priorities as outlined in a previous mail
-would be useful too.
-
->>   d) For the partition action, a DOMAIN line must have a program=3D an=
-d
->>      a table=3D entry.  Currently, the program=3D entry must be an ite=
-m
->>      out of a list of known partition programs (I'm working on getting=
-
->>      sfdisk up and running, but for arches other than x86, other
->>      methods would be needed, and I'm planning on adding a method
->>      that allows us to call out to a user supplied script/program
->>      instead of a known internal method).  The table=3D entry points t=
-o
->>      a file that contains a method specific table indicating the
->>      necessary partition layout.  As mentioned in previous mails, we
->>      only support identical partition tables at this point.  That
->>      may never change, who knows.
+>> Drive dropped again with this patch!
+>> + the kernel freezed.
+>> (I will try to get more info...)
 >>
->> 2) Created a new udev rules file that gets installed as
->> 05-md-early.rules.  This rule file, combined with our existing rules
->> file, is a key element to how this domain support works.  In particula=
-r,
->> udev rules allow us to separate out devices that already have some sor=
-t
->> of raid superblock from devices that don't.  We then add a new flag to=
+>> Janos
+>
+> Hmm too bad :-( it seems it still doesn't work, sorry for that
+>
+> I suppose the kernel didn't freeze immediately after disabling the drive 
+> or you wouldn't have had the chance to cat /proc/mdstat...
 
->> our incremental mode to indicate that a device currently does not belo=
-ng
->> to us, and we perform a series of checks to see if it should, and if s=
-o,
->> we "grab" it (I would have preferred a better name, but the short
->> options for better names were already taken).  When called with the
->> "grab" flag, we follow a different code path where we check the domain=
+this was this command in putty.exe window:
+watch "cat /proc/mdstat ; du -h /snap*"
 
->> of the device against our DOMAIN entries and if we have a match, we
->> perform the specified action.  There will need to be some additional
->> work to catch certain corner cases, such as the case where we have
->> force-partition and we insert a disk that currently has a raid
->> superblock on the bare drive.  We will currently miss that situation a=
-nd
->> not grab the device.  So, this is a work in progress and not yet compl=
-ete.
->>
->=20
-> I notice this rules file grabs all events.  Did you see, or disagree,
-> with the suggestion to have a mdadm --activate-domains command to
-> generate udev rules for the paths we care about?
+I think it have crashed soon.
+I had no time to recognize what happened and exit from the watch.
 
-I saw it, and did it this way for the same list of reasons I listed
-above in regards to same-port and timeouts.  In addition,
---activate-domains means that changes to the config file would not be
-immediately active, and that would likely violate the principle of least
-surprise.  However, I am actively working on trying to make the checks
-we perform fast so that essentially the cost is a fork/exec of code most
-likely already in page cache and if there is nothing to do we want to
-exit quickly and with minimal touching of any physical media.
-Considering that udev already touches the physical media to populate the
-database for the device, our cost is incrementally negligible unless we
-pass all of our simple checks and end up needing to go to media.
+>
+> Hence dmesg messages might have gone to /var/log/messages or something. 
+> Can you look there to see if there is any interesting message to post 
+> here?
 
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-	      http://people.redhat.com/dledford
+Yes, i know that.
+The crash was not written up unfortunately.
+But there is some info:
 
-Infiniband specific RPMs available at
-	      http://people.redhat.com/dledford/Infiniband
+(some UNC reported from sdh)
+....
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel:          res 
+51/40:00:27:c0:5e/40:00:63:00:00/e0 Emask 0x9 (media error)
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: ata8.00: status: { DRDY ERR }
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: ata8.00: error: { UNC }
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: ata8.00: configured for UDMA/133
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: sd 7:0:0:0: [sdh] Result: 
+hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: sd 7:0:0:0: [sdh] Sense Key : Medium 
+Error [current] [descriptor]
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: Descriptor sense data with sense 
+descriptors (in hex):
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel:         72 03 11 04 00 00 00 0c 00 
+0a 80 00 00 00 00 00
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel:         63 5e c0 27
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: sd 7:0:0:0: [sdh] Add. Sense: 
+Unrecovered read error - auto reallocate failed
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: end_request: I/O error, dev sdh, 
+sector 1667153959
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
+correctable (sector 1662189872 on dm-1).
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
+correctable (sector 1662189880 on dm-1).
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
+correctable (sector 1662189888 on dm-1).
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
+correctable (sector 1662189896 on dm-1).
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
+correctable (sector 1662189904 on dm-1).
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
+correctable (sector 1662189912 on dm-1).
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
+correctable (sector 1662189920 on dm-1).
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
+correctable (sector 1662189928 on dm-1).
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
+correctable (sector 1662189936 on dm-1).
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
+correctable (sector 1662189944 on dm-1).
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: ata8: EH complete
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: sd 7:0:0:0: [sdh] Write Protect is 
+off
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: sd 7:0:0:0: [sdh] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: sd 7:0:0:0: [sdh] 2930277168 
+512-byte hardware sectors: (1.50 TB/1.36 TiB)
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: sd 7:0:0:0: [sdh] Write Protect is 
+off
+Apr 29 09:50:29 Clarus-gl2k10-2 kernel: sd 7:0:0:0: [sdh] Write cache: 
+enabled, read cache: enabled, doesn't support DPO or FUA
+Apr 29 13:07:39 Clarus-gl2k10-2 syslogd 1.4.1: restart.
 
 
---------------enig95578DF215E592F235589EE9
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+> Did the COW device fill up at least a bit?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+The initial size is 1.1MB, and what we wants to see is only some kbytes...
+I don't know exactly.
+Next time i will try to reduce the initial size to 16KByte.
 
-iEYEARECAAYFAkvbBJ0ACgkQg6WylM+/8ZS+GgCfTXqK1gmnhlZTLEgpEmODHTUY
-HpIAnRVhv4mJBtvXeZfhLiERGJRXJS3Q
-=8kJE
------END PGP SIGNATURE-----
+>
+> Also: you know that if you disable graphics on the server 
+> ("/etc/init.d/gdm stop" or something like that) you usually can see the 
+> stack trace of the kernel panic on screen when it hangs (unless terminal 
+> was blank for powersaving, which you can disable too). You can take a 
+> photo of that one (or write it down but it will be long) to so maybe 
+> somebody can understand why it hanged. You might be even obtain the stack 
+> trace through a serial port but that will take more effort.
 
---------------enig95578DF215E592F235589EE9--
+This pc based server have no graphic card at all. :-) (this is one of my 
+freak ideas)
+And the terminal is redirected to the com1.
+If i really want, i can catch this with serial cable, but i think the log 
+should be enough from the messages file.
+
+Thanks,
+Janos 
+
