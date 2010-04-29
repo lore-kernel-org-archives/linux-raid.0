@@ -1,127 +1,66 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: More Hot Unplug/Plug work
-Date: Fri, 30 Apr 2010 12:13:59 -0400
-Message-ID: <4BDB01C7.2000308@redhat.com>
-References: <4BD714A3.9020801@redhat.com>	<905EDD02F158D948B186911EB64DB3D11C954788@irsmsx503.ger.corp.intel.com>	<4BD874CB.5040803@redhat.com>	<905EDD02F158D948B186911EB64DB3D11C95485F@irsmsx503.ger.corp.intel.com>	<4BD8A336.7080309@redhat.com>	<20100429110153.7148bb9b@notabene.brown>	<4BD8DEB1.40801@intel.com> <20100429123717.2144a341@notabene.brown>
+From: "Janos Haar" <janos.haar@netcenter.hu>
+Subject: Re: Suggestion needed for fixing RAID6
+Date: Thu, 29 Apr 2010 09:55:23 +0200
+Message-ID: <062001cae771$545e0910$0400a8c0@dcccs>
+References: <626601cae203$dae35030$0400a8c0@dcccs> <20100423065143.GA17743@maude.comedia.it> <695a01cae2c1$a72907d0$0400a8c0@dcccs> <4BD193D0.5080003@shiftmail.org> <717901cae3e5$6a5fa730$0400a8c0@dcccs> <4BD3751A.5000403@shiftmail.org> <756601cae45e$213d6190$0400a8c0@dcccs> <4BD569E2.7010409@shiftmail.org> <7a3e01cae53f$684122c0$0400a8c0@dcccs> <4BD5C51E.9040207@shiftmail.org> <80a201cae621$684daa30$0400a8c0@dcccs> <4BD76CF6.5020804@shiftmail.org> <20100428113732.03486490@notabene.brown> <4BD830B0.1080406@shiftmail.org> <025e01cae6d7$30bb7870$0400a8c0@dcccs> <4BD843D4.7030700@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig62925A70BABA91E82846815C"
+Content-Type: text/plain;
+	format=flowed;
+	charset="ISO-8859-1";
+	reply-type=response
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100429123717.2144a341@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Dan Williams <dan.j.williams@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
+To: MRK <mrk@shiftmail.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig62925A70BABA91E82846815C
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
 
-On 04/28/2010 10:37 PM, Neil Brown wrote:
-> On Wed, 28 Apr 2010 18:19:45 -0700
-> Dan Williams <dan.j.williams@intel.com> wrote:
->=20
->> Neil Brown wrote:
->>> I'm not sure how this fits with imposing platform constraints.
->>> As platform constraints are closely tied to metadata types, it might =
-be OK
->>> to have a metadata-specific tags (imsm=3D???) and leave to details to=
- the
->>> metadata handler???
->>>
->>> Dan: help me understand these platform constraints: what is the most =
-complex
->>>   constraint that you can think of that you might want to impose?
+md3 : active raid6 sdd4[12] sdl4[11] sdk4[10] sdj4[9] sdi4[8] dm-1[13](F) 
+sdg4[6
+] sdf4[5] dm-0[4] sdc4[2] sdb4[1] sda4[0]
+      14626538880 blocks level 6, 16k chunk, algorithm 2 [12/10] 
+[UUU_UUU_UUUU]
+      [===========>.........]  recovery = 56.8% (831095108/1462653888) 
+finish=50
+19.8min speed=2096K/sec
+
+Drive dropped again with this patch!
++ the kernel freezed.
+(I will try to get more info...)
+
+Janos
+
+----- Original Message ----- 
+From: "MRK" <**************>
+To: "Janos Haar" <janos.haar@netcenter.hu>
+Cc: <linux-raid@vger.kernel.org>; "Neil Brown" <neilb@suse.de>
+Sent: Wednesday, April 28, 2010 4:19 PM
+Subject: Re: Suggestion needed for fixing RAID6
+
+
+> On 04/28/2010 03:32 PM, Janos Haar wrote:
+>> MRK, Neil,
 >>
->> At this point we really only need one constraint: prevent controller=20
->> spanning.  If for example I take an existing imsm member off of ahci a=
-nd=20
->> reattach it via a usb-to-sata enclosure mdadm needs a policy to preven=
-t=20
->> associating that drive with anything on ahci.
+>> Please let me have one wish:
+>> Please write down my name to the kernel tree with a note i was who 
+>> reported and helped to track down this. :-)
 >>
->> In a pinch this policy can be disabled, but you wouldn't want to rebui=
-ld=20
->> across usb or any other controller because the option-rom only talks=20
->> ahci and will mark the drive missing.
->>
->> So something like DOMAIN spanning=3Dimsm, to tell mdadm to follow imsm=
-=20
->> rules for this domain.  Where 'spanning' is policy tag??
->>
->=20
-> Thanks.
->=20
-> So we have two different ideas here.
->=20
-> 1/ A given set of devices (paths) are all attached to the one controlle=
-r.
-> 2/ A given array is not allowed to span controllers
->=20
-> The first statement is somewhat similar to a statement about sparegroup=
-s.
-> It groups devices together is some way.
->=20
-> The second is a policy statement, and is metadata specific to some exte=
-nt.
-> If I create a native-metadata array using the controller, then adding o=
-ther
-> devices from a different controller is a non-issue.  It is only when an=
+>> Thanks.
+>> Janos Haar
+>
+> Ok I did
+> However it would be nice if you can actually test the patch and confirm 
+> that it solves your problem, starting with the raid6 array in 
+> singly-degraded mode like you did yesterday. Then I think we can add one 
+> further line on top:
+>
+> Tested-by: Janos Haar <janos.haar@netcenter.hu>
+>
+> before Neil (hopefully) acks it. Testing is needed anyway before pushing 
+> it to mainline, I think...
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html 
 
-> IMSM array is created that it is an issue (and then - only if the array=
- is to
-> be used for boot for for multi-boot).
->=20
-> So the ARRAY line could have "exclusive-group=3Dfoo" where 'foo' is a g=
-roup
-> name similar to those used for 'spare-group=3D'
-> But that isn't much fun for auto-detect and auto-assembly.
->=20
-> Maybe we want to extend the 'auto' line.  It gives policy on a per-meta=
-data
-> basis. Maybe:
->=20
->   POLICY auto-assemble  +1.x -all
->   POLICY same-group  imsm
->=20
-> where 'same-group' means that all the devices in an array must be in th=
-e
-> same spare-group.  The 'domain' lines assign spare-groups to devices.
->=20
-> Maybe "same-group" could be "same-$tag" so we could have different tags=
-
-> for different metadatas....
->=20
-> Is this working for anyone else, or have I lost the plot??
->=20
-> NeilBrown
-
-I keep going back to the idea of just implement the no-spanning policy
-for imsm/ddf as the default with a force-override flag and don't bother
-putting it into the config anywhere, it simply is.
-
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-	      http://people.redhat.com/dledford
-
-Infiniband specific RPMs available at
-	      http://people.redhat.com/dledford/Infiniband
-
-
---------------enig62925A70BABA91E82846815C
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkvbAccACgkQg6WylM+/8ZTUJACgtkJfh3niTapHIXnz7ySA+NuN
-KXQAnjaMrs3Uji/9aO5UHHR3/c0jOlSb
-=zskW
------END PGP SIGNATURE-----
-
---------------enig62925A70BABA91E82846815C--
