@@ -1,71 +1,58 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: More Hot Unplug/Plug work
-Date: Fri, 30 Apr 2010 09:38:30 -0400
-Message-ID: <4BDADD56.1030208@redhat.com>
-References: <4BD714A3.9020801@redhat.com> <905EDD02F158D948B186911EB64DB3D11C954788@irsmsx503.ger.corp.intel.com> <4BD874CB.5040803@redhat.com> <905EDD02F158D948B186911EB64DB3D11C95485F@irsmsx503.ger.corp.intel.com> <4BD8A336.7080309@redhat.com> <4BD8A50F.1030904@intel.com>
+From: MRK <mrk@shiftmail.org>
+Subject: Re: Suggestion needed for fixing RAID6
+Date: Thu, 29 Apr 2010 17:22:06 +0200
+Message-ID: <4BD9A41E.9050009@shiftmail.org>
+References: <626601cae203$dae35030$0400a8c0@dcccs>
+ <20100423065143.GA17743@maude.comedia.it>
+ <695a01cae2c1$a72907d0$0400a8c0@dcccs> <4BD193D0.5080003@shiftmail.org>
+ <717901cae3e5$6a5fa730$0400a8c0@dcccs> <4BD3751A.5000403@shiftmail.org>
+ <756601cae45e$213d6190$0400a8c0@dcccs> <4BD569E2.7010409@shiftmail.org>
+ <7a3e01cae53f$684122c0$0400a8c0@dcccs> <4BD5C51E.9040207@shiftmail.org>
+ <80a201cae621$684daa30$0400a8c0@dcccs> <4BD76CF6.5020804@shiftmail.org>
+ <20100428113732.03486490@notabene.brown> <4BD830B0.1080406@shiftmail.org>
+ <025e01cae6d7$30bb7870$0400a8c0@dcccs> <4BD843D4.7030700@shiftmail.org>
+ <062001cae771$545e0910$0400a8c0@dcccs>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigF042B078607439FB5FB1CF34"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BD8A50F.1030904@intel.com>
+In-reply-to: <062001cae771$545e0910$0400a8c0@dcccs>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "Labun, Marcin" <Marcin.Labun@intel.com>, Neil Brown <neilb@suse.de>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
+To: Janos Haar <janos.haar@netcenter.hu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigF042B078607439FB5FB1CF34
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On 04/29/2010 09:55 AM, Janos Haar wrote:
+>
+> md3 : active raid6 sdd4[12] sdl4[11] sdk4[10] sdj4[9] sdi4[8] 
+> dm-1[13](F) sdg4[6
+> ] sdf4[5] dm-0[4] sdc4[2] sdb4[1] sda4[0]
+>      14626538880 blocks level 6, 16k chunk, algorithm 2 [12/10] 
+> [UUU_UUU_UUUU]
+>      [===========>.........]  recovery = 56.8% (831095108/1462653888) 
+> finish=50
+> 19.8min speed=2096K/sec
+>
+> Drive dropped again with this patch!
+> + the kernel freezed.
+> (I will try to get more info...)
+>
+> Janos
 
-On 04/28/2010 05:13 PM, Dan Williams wrote:
-> Doug Ledford wrote:
->> On 04/28/2010 02:34 PM, Labun, Marcin wrote:
->>> Should an array be split (not assembled) if a domain paths are
->>> dividing array into two separate DOMAIN?
->>
->> I don't think so.  Amongst other things, this would make it possible t=
-o
->> render a machine unbootable if you had a type in a domain path.  I thi=
-nk
->> I would prefer to allow established arrays to assemble regardless of
->> domain path entries.
->=20
-> This is what I was calling the 'enforce=3D' policy in previous mails.
-> Whether to block, warn, or ignore arrays that span a domain.  I can see=
+Hmm too bad :-( it seems it still doesn't work, sorry for that
 
-> someone wanting to have something like enforce=3Dplatform to make sure =
-we
-> Linux tries to assemble an array that the option-rom can't put together=
-=2E
+I suppose the kernel didn't freeze immediately after disabling the drive 
+or you wouldn't have had the chance to cat /proc/mdstat...
 
-I would suggest that the proper way to handle this is to warn on
-assembling an array that spans boundaries but proceed with the assembly
-(including incremental), warn and require a force flag on creating an
-array that spans boundaries, and warn and require the force flag to
-automatically use devices that span boundaries.
+Hence dmesg messages might have gone to /var/log/messages or something. 
+Can you look there to see if there is any interesting message to post here?
+Did the COW device fill up at least a bit?
 
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-	      http://people.redhat.com/dledford
+Also: you know that if you disable graphics on the server 
+("/etc/init.d/gdm stop" or something like that) you usually can see the 
+stack trace of the kernel panic on screen when it hangs (unless terminal 
+was blank for powersaving, which you can disable too). You can take a 
+photo of that one (or write it down but it will be long) to so maybe 
+somebody can understand why it hanged. You might be even obtain the 
+stack trace through a serial port but that will take more effort.
 
-Infiniband specific RPMs available at
-	      http://people.redhat.com/dledford/Infiniband
-
-
---------------enigF042B078607439FB5FB1CF34
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkva3VYACgkQg6WylM+/8ZTnVACeI89pvellHVtUo/j1d8S/vTs6
-8kwAniU6+9EIR6fCo54bYHizasqvRDeA
-=I2pP
------END PGP SIGNATURE-----
-
---------------enigF042B078607439FB5FB1CF34--
