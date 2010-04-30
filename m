@@ -1,102 +1,130 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 00/13] imsm: new imsm metadata features
-Date: Thu, 29 Apr 2010 17:57:09 -0700
-Message-ID: <t2se9c3a7c21004291757w49c4697dic28f49245c85ba7a@mail.gmail.com>
-References: <66C59AD0932712458090B447266D638CD405E3B1@irsmsx504.ger.corp.intel.com>
+From: "Timothy D. Lenz" <tlenz@vorgon.com>
+Subject: converting to raid - Error 2
+Date: Fri, 30 Apr 2010 13:41:26 -0700
+Message-ID: <4BDB4076.7010909@vorgon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <66C59AD0932712458090B447266D638CD405E3B1@irsmsx504.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
-Cc: Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-First, thanks for going back and breaking out these patches it makes
-it much easier to review.  Note that patch-9 never came through either
-on the list, or direct to my intel.com address.
+This is something I've been trying to do for some time and there are 2 
+older threads, but the last post got no responce, so starting a new 
+thread. The old ones are:
 
-On Thu, Apr 22, 2010 at 3:10 PM, Hawrylewicz Czarnowski, Przemyslaw
-<przemyslaw.hawrylewicz.czarnowski@intel.com> wrote:
-> The following series of patches adds two new functionalities to mdadm for
-> Intel metadata: Volume Delete and Volume Rename.
-> The patches makes Linux SW RAID implementation based on imsm metadata closer
-> to Intel(R) Rapid Storage Technology for Windows(TM).
-> Patches 1-6 contain fixes of bugs found during development and modifications
-> of existing code making main features easier to implement.
-> Patches 7-9 contain implementation of Volume Delete; ie. makes possible to
-> remove only one volume from container while the other one keeps running.
-> Patches 10-12 makes possible to change internal serial ID of volume leaving
-> the rest of superblock data untouched.
-> The last patch contains an update of manual page for above features.
->
-> [PATCH 01/13] fix: memory leak in mdmon_pid()
+Converting system to raid
+Removing drives
 
-Applied
+The computer with 2 sata drives switched over fine a long time ago, but 
+I have yet to get the one with 3 sata drives to boot with raid. Raid 
+support is built into the kernel, partitions are type fd.
 
-> [PATCH 02/13] map file: Extract record update routine from map_update
+fdisk -l shows:
+-----------------------------------------------------------------------
+Disk /dev/hda: 40.0 GB, 40020664320 bytes
+255 heads, 63 sectors/track, 4865 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x6b381dfe
 
-I don't understand the benefit over the standard map_update() routine?
+    Device Boot      Start         End      Blocks   Id  System
+/dev/hda1   *           1        4660    37431418+  83  Linux
+/dev/hda2            4661        4865     1646662+   5  Extended
+/dev/hda5            4661        4865     1646631   82  Linux swap / Solaris
 
-> [PATCH 03/13] Add mdstat_by_component
+Disk /dev/sda: 500.1 GB, 500107862016 bytes
+255 heads, 63 sectors/track, 60801 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x94140963
 
-...already applied to Neil's hotunplug branch
+    Device Boot      Start         End      Blocks   Id  System
+/dev/sda1   *           1        3040    24418768+  fd  Linux raid 
+autodetect
+/dev/sda2            3041        3649     4891792+  fd  Linux raid 
+autodetect
+/dev/sda3            3650       60801   459073440   fd  Linux raid 
+autodetect
 
-> [PATCH 04/13] fix: possible segfault if current_vol does not match subarray
+Disk /dev/sdb: 500.1 GB, 500107862016 bytes
+255 heads, 63 sectors/track, 60801 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0xf1814421
 
-Klockwork seems to be missing that ->current_vol is always initialized
-to a valid value.  If we ever call getinfo_super_imsm_volume() with an
-invalid current_vol that is a real bug.  We should not silently return
-invalid info.
+    Device Boot      Start         End      Blocks   Id  System
+/dev/sdb1   *           1        3040    24418768+  fd  Linux raid 
+autodetect
+/dev/sdb2            3041        3649     4891792+  fd  Linux raid 
+autodetect
+/dev/sdb3            3650       60801   459073440   fd  Linux raid 
+autodetect
 
-> [PATCH 05/13] sysfs: simple write to sysfs file
+Disk /dev/sdc: 500.1 GB, 500107862016 bytes
+255 heads, 63 sectors/track, 60801 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x371b6063
 
-I would prefer you just call sysfs_read(mdfd, 0, GET_VERSION); in the
-locations where you want to make simple updates
+    Device Boot      Start         End      Blocks   Id  System
+/dev/sdc3            3650       60801   459073440   fd  Linux raid 
+autodetect
 
-> [PATCH 06/13] imsm: delete subarray metadata manipulation routine
+Disk /dev/md0: 25.0 GB, 25004736512 bytes
+2 heads, 4 sectors/track, 6104672 cylinders
+Units = cylinders of 8 * 512 = 4096 bytes
+Disk identifier: 0x00000000
 
-For testing and future-proofing purposes this routine should handle N
-raid subarrays rather than assume 2 in the num_raid_devs > 1 case.
-This patch also says that delete active from an active container is
-not allowed but the code does nothing to prevent it.  I know this
-would require moving the command line changes up in the series, but I
-think it is important to fully understand the ramifications of this
-delete functionality before going forward with the rest of the series.
+Disk /dev/md0 doesn't contain a valid partition table
 
-I want to rehash the main points of the off-list discussion with Neil
-and bring up some other thoughts about the rename patches...
+Disk /dev/md2: 940.1 GB, 940182208512 bytes
+2 heads, 4 sectors/track, 229536672 cylinders
+Units = cylinders of 8 * 512 = 4096 bytes
+Disk identifier: 0x00000000
 
-Volume delete and volume rename are fairly innocuous features of the
-Windows driver, the primary issue with the Linux implementation is
-that volume-delete may change the array UUID and volume-rename
-definitely will.  Unlike name changes for native metadata which have
-no effect on the UUID.  My main concern is user's getting surprised by
-having an mdadm.conf file in the initrd that has an out of date UUID
-after doing a simple name change.  Ideally there would be some
-distribution notification infrastructure we could use to post an event
-like "invalidate/rebuild initrd", but nothing like that exists to my
-knowledge.
+Disk /dev/md2 doesn't contain a valid partition table
 
-The other concern with volume rename is that it cannot take effect
-until the next assembly, and may not even change the actual OS device
-name / symlink if a conflicting name is in the configuration file.  So
-at the very least we are violating the rule of least surprise by not
-actually changing the name of the array as the OS sees it, only as the
-metadata sees it... and invalidating all occurrences of the old UUID
-in the process.
+Disk /dev/md1: 5009 MB, 5009113088 bytes
+2 heads, 4 sectors/track, 1222928 cylinders
+Units = cylinders of 8 * 512 = 4096 bytes
+Disk identifier: 0x00000000
 
-Can we mitigate that pain?  We can't really go the alternate route of
-stop using volume-position and volume-name in the calculation of the
-UUID because there isn't any 'static' identification data left.  The
-status quo has the nice property of being robust, UUIDs never change
-unless you blow away the entire superblock at which point I'm not so
-concerned about the initrd and other references to the UUID because
-the previous array is gone.
+Disk /dev/md1 doesn't contain a valid partition table
+-----------------------------------------------------------------------
 
-Basically I am looking for a distro person to say "I guess we can live
-with this" or "no, this violates too many assumptions of our storage
-management code".
+Orginaly I had made both md0 and md1 2-way mirrors with a spare. But 
+when it wouldn't boot, I was told it might be because of the spare and 
+to grow them in. That also didn't work. I change md0 and md1 to 2-way 
+mirrors, and removed the boot flag for sdc1 and zeroed superblock And I 
+corrected the mdadm.conf file to reflect the changes to md0/1. Still 
+would not boot from raid. I removed the two partitions sdc1 and sdc2 
+leaving just sdc3 which is part of md2 raid5. Also re-ran grub on md0 
+using:
 
---
-Dan
+  sudo grub
+  grub>device (hd0) /dev/sda
+  grub>root (hd0,0)
+  grub>setup (hd0)
+
+  grub>device (hd0) /dev/sdb
+  grub>root (hd0,0)
+  grub>setup (hd0)
+
+To copy the current boot drive hda1 over to md0, I use a GRML boot disk, 
+mount /dev/md0 to /mnt/md0 and /dev/sdd1 (/dev/hda1) to /mnt/sdd1, then do:
+
+rsync -caHh --progress --delete /mnt/sdd1/ /mnt/md0.
+
+Then I reboot normally. I have 2 copies of /boot/grub/device.map, 
+/boot/grub/menu.lst and /etc/fstab. one for normal boot and one for 
+raid. On /mnt/md0 I swap the normal boot files for the raid files by 
+adding .old to the names of normal boot and removing .raid from the raid 
+versions. Then reboot again and in cmos move the pata drive to the 
+bottom of the list so cmos tries the sata drives first. That worked for 
+the 32bit linux 2 drive system. But on this 64bit 3 drive I get:
+
+Grub loading stage 1.5
+Grub loading, please wait
+Error 2
+
+I can't remove the 3rd drive because it has part of md2 and I shouldn't 
+need to anyway. Copies of the above mentioned files I put at: 
+http://24.255.17.209:2400/vdr/local/raid/
