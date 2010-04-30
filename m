@@ -1,240 +1,127 @@
-From: "Janos Haar" <janos.haar@netcenter.hu>
-Subject: Re: Suggestion needed for fixing RAID6
-Date: Fri, 30 Apr 2010 08:17:43 +0200
-Message-ID: <0d6401cae82c$da8b5590$0400a8c0@dcccs>
-References: <626601cae203$dae35030$0400a8c0@dcccs> <20100423065143.GA17743@maude.comedia.it> <695a01cae2c1$a72907d0$0400a8c0@dcccs> <4BD193D0.5080003@shiftmail.org> <717901cae3e5$6a5fa730$0400a8c0@dcccs> <4BD3751A.5000403@shiftmail.org> <756601cae45e$213d6190$0400a8c0@dcccs> <4BD569E2.7010409@shiftmail.org> <7a3e01cae53f$684122c0$0400a8c0@dcccs> <4BD5C51E.9040207@shiftmail.org> <80a201cae621$684daa30$0400a8c0@dcccs> <4BD76CF6.5020804@shiftmail.org> <20100428113732.03486490@notabene.brown> <4BD830B0.1080406@shiftmail.org> <025e01cae6d7$30bb7870$0400a8c0@dcccs> <4BD843D4.7030700@shiftmail.org> <062001cae771$545e0910$0400a8c0@dcccs> <4BD9A41E.9050009@shiftmail.org> <0c1201cae7e0$01f9a930$0400a8c0@dcccs> <4BDA0F88.70907@shiftmail.org>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: More Hot Unplug/Plug work
+Date: Fri, 30 Apr 2010 12:13:59 -0400
+Message-ID: <4BDB01C7.2000308@redhat.com>
+References: <4BD714A3.9020801@redhat.com>	<905EDD02F158D948B186911EB64DB3D11C954788@irsmsx503.ger.corp.intel.com>	<4BD874CB.5040803@redhat.com>	<905EDD02F158D948B186911EB64DB3D11C95485F@irsmsx503.ger.corp.intel.com>	<4BD8A336.7080309@redhat.com>	<20100429110153.7148bb9b@notabene.brown>	<4BD8DEB1.40801@intel.com> <20100429123717.2144a341@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="ISO-8859-1";
-	reply-type=response
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig62925A70BABA91E82846815C"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100429123717.2144a341@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: MRK <mrk@shiftmail.org>
-Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Dan Williams <dan.j.williams@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, Linux RAID Mailing List <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>
 List-Id: linux-raid.ids
 
-Hello,
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig62925A70BABA91E82846815C
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-OK, MRK you are right (again).
-There was some line in the messages wich avoids my attention.
-The entire log is here: 
-http://download.netcenter.hu/bughunt/20100430/messages
-
-The dm founds invalid my cow devices, but i don't know why at this time.
-
-My setup script looks like this: "create-cow":
-
-rm -f /snapshot.bin
-rm -f /snapshot2.bin
-
-dd_rescue -v /dev/zero /snapshot.bin -m 4k -S 2000G
-dd_rescue -v /dev/zero /snapshot2.bin -m 4k -S 2000G
-
-losetup /dev/loop3 /snapshot.bin
-losetup /dev/loop4 /snapshot2.bin
-
-dd if=/dev/zero of=/dev/loop3 bs=1M count=1
-dd if=/dev/zero of=/dev/loop4 bs=1M count=1
-
-echo 0 $(blockdev --getsize /dev/sde4) \
-        snapshot /dev/sde4 /dev/loop3 p 8 | \
-        dmsetup create cow
-
-echo 0 $(blockdev --getsize /dev/sdh4) \
-        snapshot /dev/sdh4 /dev/loop4 p 8 | \
-        dmsetup create cow2
-
-Now i have the last state, and there is more space left on the disk, and the 
-snapshots are smalls:
-du -h /snapshot*
-1.1M    /snapshot2.bin
-1.1M    /snapshot.bin
-
-My new kernel is the same like the old one, only diff is the md-patch.
-Additionally i need to note, my kernel have only one additional patch wich 
-differs from the normal tree, this patch is the pdflush-patch.
-(I can set the number of pdflushd's number in the proc.)
-
-I can try again, if there is any new idea, but it would be really good to do 
-some trick with bitmaps or set the recovery's start point or something 
-similar, because every time i need >16 hour to get the first poit where the 
-raid do something interesting....
-
-Neil,
-Can you say something useful about this?
-
-Thanks again,
-Janos
-
-
------ Original Message ----- 
-From: "MRK" <mrk@shiftmail.org>
-To: "Janos Haar" <janos.haar@netcenter.hu>
-Cc: <linux-raid@vger.kernel.org>
-Sent: Friday, April 30, 2010 1:00 AM
-Subject: Re: Suggestion needed for fixing RAID6
-
-
-> On 04/29/2010 11:07 PM, Janos Haar wrote:
->>
->> ----- Original Message ----- From: "MRK" <mrk@shiftmail.org>
->> To: "Janos Haar" <janos.haar@netcenter.hu>
->> Cc: <linux-raid@vger.kernel.org>
->> Sent: Thursday, April 29, 2010 5:22 PM
->> Subject: Re: Suggestion needed for fixing RAID6
->>
->>
->>> On 04/29/2010 09:55 AM, Janos Haar wrote:
->>>>
->>>> md3 : active raid6 sdd4[12] sdl4[11] sdk4[10] sdj4[9] sdi4[8] 
->>>> dm-1[13](F) sdg4[6
->>>> ] sdf4[5] dm-0[4] sdc4[2] sdb4[1] sda4[0]
->>>>      14626538880 blocks level 6, 16k chunk, algorithm 2 [12/10] 
->>>> [UUU_UUU_UUUU]
->>>>      [===========>.........]  recovery = 56.8% (831095108/1462653888) 
->>>> finish=50
->>>> 19.8min speed=2096K/sec
->>>>
->>>> Drive dropped again with this patch!
->>>> + the kernel freezed.
->>>> (I will try to get more info...)
->>>>
->>>> Janos
+On 04/28/2010 10:37 PM, Neil Brown wrote:
+> On Wed, 28 Apr 2010 18:19:45 -0700
+> Dan Williams <dan.j.williams@intel.com> wrote:
+>=20
+>> Neil Brown wrote:
+>>> I'm not sure how this fits with imposing platform constraints.
+>>> As platform constraints are closely tied to metadata types, it might =
+be OK
+>>> to have a metadata-specific tags (imsm=3D???) and leave to details to=
+ the
+>>> metadata handler???
 >>>
->>> Hmm too bad :-( it seems it still doesn't work, sorry for that
->>>
->>> I suppose the kernel didn't freeze immediately after disabling the drive 
->>> or you wouldn't have had the chance to cat /proc/mdstat...
+>>> Dan: help me understand these platform constraints: what is the most =
+complex
+>>>   constraint that you can think of that you might want to impose?
 >>
->> this was this command in putty.exe window:
->> watch "cat /proc/mdstat ; du -h /snap*"
+>> At this point we really only need one constraint: prevent controller=20
+>> spanning.  If for example I take an existing imsm member off of ahci a=
+nd=20
+>> reattach it via a usb-to-sata enclosure mdadm needs a policy to preven=
+t=20
+>> associating that drive with anything on ahci.
 >>
->
-> good idea...
->
->> I think it have crashed soon.
->> I had no time to recognize what happened and exit from the watch.
+>> In a pinch this policy can be disabled, but you wouldn't want to rebui=
+ld=20
+>> across usb or any other controller because the option-rom only talks=20
+>> ahci and will mark the drive missing.
 >>
->>>
->>> Hence dmesg messages might have gone to /var/log/messages or something. 
->>> Can you look there to see if there is any interesting message to post 
->>> here?
+>> So something like DOMAIN spanning=3Dimsm, to tell mdadm to follow imsm=
+=20
+>> rules for this domain.  Where 'spanning' is policy tag??
 >>
->> Yes, i know that.
->> The crash was not written up unfortunately.
->> But there is some info:
->>
->> (some UNC reported from sdh)
->> ....
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel:          res 
->> 51/40:00:27:c0:5e/40:00:63:00:00/e0 Emask 0x9 (media error)
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: ata8.00: status: { DRDY ERR }
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: ata8.00: error: { UNC }
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: ata8.00: configured for UDMA/133
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: sd 7:0:0:0: [sdh] Result: 
->> hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: sd 7:0:0:0: [sdh] Sense Key : 
->> Medium Error [current] [descriptor]
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: Descriptor sense data with sense 
->> descriptors (in hex):
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel:         72 03 11 04 00 00 00 0c 
->> 00 0a 80 00 00 00 00 00
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel:         63 5e c0 27
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: sd 7:0:0:0: [sdh] Add. Sense: 
->> Unrecovered read error - auto reallocate failed
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: end_request: I/O error, dev sdh, 
->> sector 1667153959
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
->> correctable (sector 1662189872 on dm-1).
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
->> correctable (sector 1662189880 on dm-1).
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
->> correctable (sector 1662189888 on dm-1).
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
->> correctable (sector 1662189896 on dm-1).
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
->> correctable (sector 1662189904 on dm-1).
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
->> correctable (sector 1662189912 on dm-1).
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
->> correctable (sector 1662189920 on dm-1).
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
->> correctable (sector 1662189928 on dm-1).
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
->> correctable (sector 1662189936 on dm-1).
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
->> correctable (sector 1662189944 on dm-1).
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: ata8: EH complete
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: sd 7:0:0:0: [sdh] Write Protect 
->> is off
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: sd 7:0:0:0: [sdh] Write cache: 
->> enabled, read cache: enabled, doesn't support DPO or FUA
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: sd 7:0:0:0: [sdh] 2930277168 
->> 512-byte hardware sectors: (1.50 TB/1.36 TiB)
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: sd 7:0:0:0: [sdh] Write Protect 
->> is off
->> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: sd 7:0:0:0: [sdh] Write cache: 
->> enabled, read cache: enabled, doesn't support DPO or FUA
->> Apr 29 13:07:39 Clarus-gl2k10-2 syslogd 1.4.1: restart.
->
-> Hmm what strange...
-> I don't see the message "Disk failure on %s, disabling device" \n 
-> "Operation continuing on %d devices" in your log.
->
-> In MD raid456 the ONLY place where a disk is set faulty is this (file 
-> raid5.c):
->
-> ----------------------
->                 set_bit(Faulty, &rdev->flags);
->                 printk(KERN_ALERT
->                        "raid5: Disk failure on %s, disabling device.\n"
->                        "raid5: Operation continuing on %d devices.\n",
->                        bdevname(rdev->bdev,b), conf->raid_disks - 
-> mddev->degraded);
-> ----------------------
-> ( which is called by md_error() )
->
-> As you can see, just after disabling the device it prints the dmesg 
-> message.
-> I don't understand how you could catch a cat /proc/mdstat already 
-> reporting the disk as failed, and still not seeing the message in the 
-> /var/log/messages .
->
-> But you do see messages that should come chronologically after that one. 
-> The errors like:
-> "Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
-> correctable (sector 1662189872 on dm-1)."
-> can now (after the patch) be generated only after raid-6 is in 
-> doubly-degraded state. I don't understand how those errors could become 
-> visible before the message telling that MD is disabling the device.
->
-> To make the thing more strange, if raid-6 is in doubly-degraded state it 
-> means dm-1/sdh is disabled, but if dm-1/sdh is disabled MD should not have 
-> read anything from there. I mean there shouldn't have been any read error 
-> because there shouldn't have been any read.
->
-> You are sure that
-> a) this dmesg you reported really is from your last run of the resync
-> b) above or below the messages you report there is no "Disk failure on 
-> ..., disabling device" string?
->
-> Last thing, your system might have crashed because of the sd / SATA driver 
-> (instead of that being a direct bug of MD). You see, those are the last 
-> messages before the reboot, and the message about write cache is repeated. 
-> The driver might have tried to reset the drive, maybe quickly more than 
-> once. I'm not sure... but that could be a reason.
->
-> Exactly what kernel version are you running now, after applying my patch?
->
-> At the moment I don't have more ideas, sorry. I hope somebody else 
-> replies.
-> In the meanwhile you might run it through the serial cable if you have 
-> some time. Maybe you can get more dmesg stuff that couldn't make it 
-> through /var/log/messages. And you would also get the kernel panic. 
-> Actually for the dmesg I think you can try with a "watch dmesg -c" via 
-> putty.
->
-> Good luck 
+>=20
+> Thanks.
+>=20
+> So we have two different ideas here.
+>=20
+> 1/ A given set of devices (paths) are all attached to the one controlle=
+r.
+> 2/ A given array is not allowed to span controllers
+>=20
+> The first statement is somewhat similar to a statement about sparegroup=
+s.
+> It groups devices together is some way.
+>=20
+> The second is a policy statement, and is metadata specific to some exte=
+nt.
+> If I create a native-metadata array using the controller, then adding o=
+ther
+> devices from a different controller is a non-issue.  It is only when an=
 
+> IMSM array is created that it is an issue (and then - only if the array=
+ is to
+> be used for boot for for multi-boot).
+>=20
+> So the ARRAY line could have "exclusive-group=3Dfoo" where 'foo' is a g=
+roup
+> name similar to those used for 'spare-group=3D'
+> But that isn't much fun for auto-detect and auto-assembly.
+>=20
+> Maybe we want to extend the 'auto' line.  It gives policy on a per-meta=
+data
+> basis. Maybe:
+>=20
+>   POLICY auto-assemble  +1.x -all
+>   POLICY same-group  imsm
+>=20
+> where 'same-group' means that all the devices in an array must be in th=
+e
+> same spare-group.  The 'domain' lines assign spare-groups to devices.
+>=20
+> Maybe "same-group" could be "same-$tag" so we could have different tags=
+
+> for different metadatas....
+>=20
+> Is this working for anyone else, or have I lost the plot??
+>=20
+> NeilBrown
+
+I keep going back to the idea of just implement the no-spanning policy
+for imsm/ddf as the default with a force-override flag and don't bother
+putting it into the config anywhere, it simply is.
+
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+	      http://people.redhat.com/dledford
+
+Infiniband specific RPMs available at
+	      http://people.redhat.com/dledford/Infiniband
+
+
+--------------enig62925A70BABA91E82846815C
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAkvbAccACgkQg6WylM+/8ZTUJACgtkJfh3niTapHIXnz7ySA+NuN
+KXQAnjaMrs3Uji/9aO5UHHR3/c0jOlSb
+=zskW
+-----END PGP SIGNATURE-----
+
+--------------enig62925A70BABA91E82846815C--
