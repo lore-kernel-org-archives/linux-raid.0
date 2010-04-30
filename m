@@ -1,80 +1,173 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [PATCH 00/13] imsm: new imsm metadata features
-Date: Fri, 30 Apr 2010 16:45:54 -0400
-Message-ID: <4BDB4182.5060805@redhat.com>
-References: <66C59AD0932712458090B447266D638CD405E3B1@irsmsx504.ger.corp.intel.com> <t2se9c3a7c21004291757w49c4697dic28f49245c85ba7a@mail.gmail.com>
+Subject: Re: converting to raid - Error 2
+Date: Fri, 30 Apr 2010 16:53:44 -0400
+Message-ID: <4BDB4358.80009@redhat.com>
+References: <4BDB4076.7010909@vorgon.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
  protocol="application/pgp-signature";
- boundary="------------enig2CCCF207C7F786AEF35A67B0"
+ boundary="------------enigA430FB77D6EED6953BDFE369"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <t2se9c3a7c21004291757w49c4697dic28f49245c85ba7a@mail.gmail.com>
+In-Reply-To: <4BDB4076.7010909@vorgon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, Neil Brown <neilb@suse.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: "Timothy D. Lenz" <tlenz@vorgon.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
 This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig2CCCF207C7F786AEF35A67B0
+--------------enigA430FB77D6EED6953BDFE369
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On 04/29/2010 08:57 PM, Dan Williams wrote:
-> Basically I am looking for a distro person to say "I guess we can live
-> with this" or "no, this violates too many assumptions of our storage
-> management code".
+On 04/30/2010 04:41 PM, Timothy D. Lenz wrote:
+> This is something I've been trying to do for some time and there are 2
+> older threads, but the last post got no responce, so starting a new
+> thread. The old ones are:
+>=20
+> Converting system to raid
+> Removing drives
+>=20
+> The computer with 2 sata drives switched over fine a long time ago, but=
 
-So here's the scoop on Fedora and Red Hat Enterprise Linux.
+> I have yet to get the one with 3 sata drives to boot with raid. Raid
+> support is built into the kernel, partitions are type fd.
+>=20
+> fdisk -l shows:
+> -----------------------------------------------------------------------=
 
-Starting with F12 we use dracut instead of mkinitrd to generate an
-initramfs instead of an initrd.  Starting with F13, dracut no longer
-needs to embed the mdadm.conf in the image and instead uses the grub
-command line to tell the image what arrays to start.  All current
-versions of Red Hat Enterprise Linux use mkinitrd/initrd and not dracut,
-but as of 6.0 that will change to dracut.
+> Disk /dev/hda: 40.0 GB, 40020664320 bytes
+> 255 heads, 63 sectors/track, 4865 cylinders
+> Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
+> Disk identifier: 0x6b381dfe
+>=20
+>    Device Boot      Start         End      Blocks   Id  System
+> /dev/hda1   *           1        4660    37431418+  83  Linux
+> /dev/hda2            4661        4865     1646662+   5  Extended
+> /dev/hda5            4661        4865     1646631   82  Linux swap /
+> Solaris
+>=20
+> Disk /dev/sda: 500.1 GB, 500107862016 bytes
+> 255 heads, 63 sectors/track, 60801 cylinders
+> Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
+> Disk identifier: 0x94140963
+>=20
+>    Device Boot      Start         End      Blocks   Id  System
+> /dev/sda1   *           1        3040    24418768+  fd  Linux raid
+> autodetect
+> /dev/sda2            3041        3649     4891792+  fd  Linux raid
+> autodetect
+> /dev/sda3            3650       60801   459073440   fd  Linux raid
+> autodetect
+>=20
+> Disk /dev/sdb: 500.1 GB, 500107862016 bytes
+> 255 heads, 63 sectors/track, 60801 cylinders
+> Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
+> Disk identifier: 0xf1814421
+>=20
+>    Device Boot      Start         End      Blocks   Id  System
+> /dev/sdb1   *           1        3040    24418768+  fd  Linux raid
+> autodetect
+> /dev/sdb2            3041        3649     4891792+  fd  Linux raid
+> autodetect
+> /dev/sdb3            3650       60801   459073440   fd  Linux raid
+> autodetect
+>=20
+> Disk /dev/sdc: 500.1 GB, 500107862016 bytes
+> 255 heads, 63 sectors/track, 60801 cylinders
+> Units =3D cylinders of 16065 * 512 =3D 8225280 bytes
+> Disk identifier: 0x371b6063
+>=20
+>    Device Boot      Start         End      Blocks   Id  System
+> /dev/sdc3            3650       60801   459073440   fd  Linux raid
+> autodetect
+>=20
+> Disk /dev/md0: 25.0 GB, 25004736512 bytes
+> 2 heads, 4 sectors/track, 6104672 cylinders
+> Units =3D cylinders of 8 * 512 =3D 4096 bytes
+> Disk identifier: 0x00000000
+>=20
+> Disk /dev/md0 doesn't contain a valid partition table
+>=20
+> Disk /dev/md2: 940.1 GB, 940182208512 bytes
+> 2 heads, 4 sectors/track, 229536672 cylinders
+> Units =3D cylinders of 8 * 512 =3D 4096 bytes
+> Disk identifier: 0x00000000
+>=20
+> Disk /dev/md2 doesn't contain a valid partition table
+>=20
+> Disk /dev/md1: 5009 MB, 5009113088 bytes
+> 2 heads, 4 sectors/track, 1222928 cylinders
+> Units =3D cylinders of 8 * 512 =3D 4096 bytes
+> Disk identifier: 0x00000000
+>=20
+> Disk /dev/md1 doesn't contain a valid partition table
+> -----------------------------------------------------------------------=
 
-mkinitrd (and maybe dracut in F12, I'm fuzzy on F12's version of
-dracut): copies mdadm.conf to initrd, uses name of / raid array *during*
-mkinitrd run to determine what to start in initrd on next boot.  So,
-your statement that the name is wrong until the next assembly totally
-blows this out of the water.  You could run mkinitrd to try and update
-things for the new mdadm.conf file and uuid, but the name of the array
-will be wrong as reported by the running block subsystem and so mkinitrd
-will pull out the old name, and mkinitrd will insert mdadm -A
-/dev/md/oldname into the initrd image.  Changing the name of the root
-raid array with mkinitrd almost always involves building the initrd
-using mkinitrd, then decompressing the image, un-cpioing the image back
-into a tree, modifying the linuxrc script from the image to have the
-proper mdadm commands, then re-cpioing and compressing the image back
-into place.
+>=20
+> Orginaly I had made both md0 and md1 2-way mirrors with a spare. But
+> when it wouldn't boot, I was told it might be because of the spare and
+> to grow them in. That also didn't work. I change md0 and md1 to 2-way
+> mirrors, and removed the boot flag for sdc1 and zeroed superblock And I=
 
-dracut in F13 or later: things are much simpler here...the dracut images
-are much larger, but intended to be generic and they only need to be
-built once per kernel version so that the right modules are on there,
-after that if you want to update the boot process to a different raid
-array all you have to do is change the boot command line.  But, that's
-where things are kind of ugly.  The dracut command line starts md raid
-arrays by passing the uuid of the array on the command line.  My current
-dracut boot command looks like this in grub.conf:
+> corrected the mdadm.conf file to reflect the changes to md0/1. Still
+> would not boot from raid. I removed the two partitions sdc1 and sdc2
+> leaving just sdc3 which is part of md2 raid5. Also re-ran grub on md0
+> using:
+>=20
+>  sudo grub
+>  grub>device (hd0) /dev/sda
+>  grub>root (hd0,0)
+>  grub>setup (hd0)
 
-title Fedora (2.6.33.1-19.fc13.x86_64)
-	root (hd0,0)
-	kernel /vmlinuz-2.6.33.1-19.fc13.x86_64 ro
-root=3D/dev/mapper/vg_matrix-root
-rd_MD_UUID=3D84c5c9ad:a88bff66:1b228240:bccae394
-rd_MD_UUID=3Dd6669b87:ee4c7baf:b196130c:ed87340b rd_LVM_LV=3Dvg_matrix/ro=
-ot
-rd_NO_LUKS rd_NO_DM LANG=3Den_US.UTF-8 SYSFONT=3Dlatarcyrheb-sun16 KEYTAB=
-LE=3Dus
-	initrd /initramfs-2.6.33.1-19.fc13.x86_64.img
+You can't use the setup macro (can't remember why, I just know it
+generally doesn't work) when putting grub on your raid1 array.  You need:=
 
-So, for F13 or later and for Enterprise Linux 6 or later, it would just
-mean modifying the uuid in grub.conf (and in mdadm.conf if there is an
-appropriate ARRAY line as well) to match the new uuid.  That's at least
-more doable than the hackish mkinitrd stuff.  But it's still not good
-and any failure to update the config file would result in a failed boot.
- And this is just for x86 arches of course, that doesn't begin to cover
-other arch boot mechanisms.  In general, changing uuids is just *bad*.
+
+install --stage2=3D/grub/stage2 /grub/stage1 (hd0) /grub/e2fs_stage1_5
+/grub/stage2 /grub/grub.conf
+
+and if that doesn't work in your particular configuration, you can add
+the d option after stage1 and before (hd0), but if you use it, then your
+boot disk must always be BIOS device 0x80, which means setting your BIOS
+to boot off of some disk other than the first disk found usually won't
+work and instead you just have to make whatever disk you want to boot
+off of the first disk found by the BIOS.  You can switch (hd0) to
+(hd0,0) if you want and if you have a normal DOS master boot record.
+
+>  grub>device (hd0) /dev/sdb
+>  grub>root (hd0,0)
+>  grub>setup (hd0)
+>=20
+> To copy the current boot drive hda1 over to md0, I use a GRML boot disk=
+,
+> mount /dev/md0 to /mnt/md0 and /dev/sdd1 (/dev/hda1) to /mnt/sdd1, then=
+ do:
+>=20
+> rsync -caHh --progress --delete /mnt/sdd1/ /mnt/md0.
+>=20
+> Then I reboot normally. I have 2 copies of /boot/grub/device.map,
+> /boot/grub/menu.lst and /etc/fstab. one for normal boot and one for
+> raid. On /mnt/md0 I swap the normal boot files for the raid files by
+> adding .old to the names of normal boot and removing .raid from the rai=
+d
+> versions. Then reboot again and in cmos move the pata drive to the
+> bottom of the list so cmos tries the sata drives first. That worked for=
+
+> the 32bit linux 2 drive system. But on this 64bit 3 drive I get:
+>=20
+> Grub loading stage 1.5
+> Grub loading, please wait
+> Error 2
+>=20
+> I can't remove the 3rd drive because it has part of md2 and I shouldn't=
+
+> need to anyway. Copies of the above mentioned files I put at:
+> http://24.255.17.209:2400/vdr/local/raid/
+> --=20
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
 --=20
@@ -86,7 +179,7 @@ Infiniband specific RPMs available at
 	      http://people.redhat.com/dledford/Infiniband
 
 
---------------enig2CCCF207C7F786AEF35A67B0
+--------------enigA430FB77D6EED6953BDFE369
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: OpenPGP digital signature
 Content-Disposition: attachment; filename="signature.asc"
@@ -94,9 +187,9 @@ Content-Disposition: attachment; filename="signature.asc"
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iEYEARECAAYFAkvbQYIACgkQg6WylM+/8ZSGuACfUE9lARH9KCJM9hzn0vE0LQUZ
-fcUAmwakoFeRB5Eqb6juI5e9+Zm13LKo
-=Twva
+iEYEARECAAYFAkvbQ1gACgkQg6WylM+/8ZT2cwCfd4q0iG+i7qBElEqFxqjBUgFf
+9AkAnR4JWwqXTc33bZC9J+QVfeAPNUMK
+=a/PU
 -----END PGP SIGNATURE-----
 
---------------enig2CCCF207C7F786AEF35A67B0--
+--------------enigA430FB77D6EED6953BDFE369--
