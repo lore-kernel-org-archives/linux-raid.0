@@ -1,118 +1,83 @@
-From: MRK <mrk@shiftmail.org>
-Subject: Re: Suggestion needed for fixing RAID6
-Date: Sat, 01 May 2010 01:54:30 +0200
-Message-ID: <4BDB6DB6.5020306@shiftmail.org>
-References: <626601cae203$dae35030$0400a8c0@dcccs>
- <20100423065143.GA17743@maude.comedia.it>
- <695a01cae2c1$a72907d0$0400a8c0@dcccs> <4BD193D0.5080003@shiftmail.org>
- <717901cae3e5$6a5fa730$0400a8c0@dcccs> <4BD3751A.5000403@shiftmail.org>
- <756601cae45e$213d6190$0400a8c0@dcccs> <4BD569E2.7010409@shiftmail.org>
- <7a3e01cae53f$684122c0$0400a8c0@dcccs> <4BD5C51E.9040207@shiftmail.org>
- <80a201cae621$684daa30$0400a8c0@dcccs> <4BD76CF6.5020804@shiftmail.org>
- <20100428113732.03486490@notabene.brown> <4BD830B0.1080406@shiftmail.org>
- <025e01cae6d7$30bb7870$0400a8c0@dcccs> <4BD843D4.7030700@shiftmail.org>
- <062001cae771$545e0910$0400a8c0@dcccs> <4BD9A41E.9050009@shiftmail.org>
- <0c1201cae7e0$01f9a930$0400a8c0@dcccs> <4BDA0F88.70907@shiftmail.org>
- <0d6401cae82c$da8b5590$0400a8c0@dcccs>
+From: Jon Nelson <jnelson-linux-raid@jamponi.net>
+Subject: Re: very strange raid10,f2 performance
+Date: Fri, 30 Apr 2010 20:35:50 -0500
+Message-ID: <n2lcccedfc61004301835ofb5285b2g4e73a5181a0d6f77@mail.gmail.com>
+References: <k2mcccedfc61004211002p24f1bd21xdead3e501766553f@mail.gmail.com>
+	<20100430224642.GB7127@rap.rap.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <0d6401cae82c$da8b5590$0400a8c0@dcccs>
+In-Reply-To: <20100430224642.GB7127@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Janos Haar <janos.haar@netcenter.hu>
-Cc: linux-raid@vger.kernel.org
+To: Keld Simonsen <keld@keldix.com>
+Cc: LinuxRaid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 04/30/2010 08:17 AM, Janos Haar wrote:
-> Hello,
+On Fri, Apr 30, 2010 at 5:46 PM, Keld Simonsen <keld@keldix.com> wrote:
+> On Wed, Apr 21, 2010 at 12:02:46PM -0500, Jon Nelson wrote:
+>> I was helping somebody else diagnose some issues, and decided to run
+>> comparitive tests on my own raid (raid10,f2).
+>>
+>> The raid10,f2 (md0) is the only physical device backing a volume
+>> group, which is then carved into a bunch of (primarily) ext4
+>> filesystems.
+>> The kernel is 2.6.31.12 (openSUSE) on a Quad Processor AMD Phenom 91=
+50e system.
+>> The raid is two Western Digital Caviar Blue drives (WDC WD5000AAKS-0=
+0V1A0).
+>>
+>> The problem: really, really bad I/O performance under certain circum=
+stances.
+>>
+>> When using an internal bitmap and *synchronous* I/O, applications li=
+ke
+>> dd report 700-800 kB/s.
+>> When not using a bitmap at all, and synchronous I/O, dd reports 2.5
+>> MB/s (but dstat shows 14MB/s?)
+>> Without a bitmap and async I/O (but with fdatasync) I get 65MB/s.
+>> *With* a bitmap and using async. I/O (but with fdatasync) I get more
+>> like 65MB/s.
+>>
+>> The system has 3GB of memory and I'm testing with dd if=3D/dev/zero
+>> of=3Dsomefile bs=3D4k count=3D524288.
+>>
+>> I'm trying to understand why the synchronous I/O is so bad, but even
+>> so I was hoping for more. 65MB/s seems *reasonable* given the
+>> raid10,f2 configuration and all of the seeking that such a
+>> configuration involves (when writing).
+>>
+>> The other very strange thing is that the I/O patterns seem very
+>> strange. I'll see 14MB/s very consistently as reported by dstat
+>> (14MB/s for each sda, sdb, and md0) for 10-15 seconds and then I'll
+>> see it drop, sometimes to just 3 or 4 MB/s, for another 10 seconds,
+>> and then the pattern repeats. =A0What's going on here? With absolute=
+ly
+>> no other load on the system, I would have expected to see something
+>> much more consistent.
 >
-> OK, MRK you are right (again).
-> There was some line in the messages wich avoids my attention.
-> The entire log is here: 
-> http://download.netcenter.hu/bughunt/20100430/messages
->
+> Hmm, not much response to this.
+> The only idea I have for now is misalignment between raid and LVM bou=
+ndaries.
 
-Ah here we go:
+These aren't 4K disks (as far as I know), so I'm not sure what you
+mean by alignment issues.
+Using 255 heads, 63 sectors per track:
 
-Apr 29 09:50:29 Clarus-gl2k10-2 kernel: device-mapper: snapshots: Invalidating snapshot: Error reading/writing.
-Apr 29 09:50:29 Clarus-gl2k10-2 kernel: ata8: EH complete
-Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5: Disk failure on dm-1, disabling device.
-Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5: Operation continuing on 10 devices.
-Apr 29 09:50:29 Clarus-gl2k10-2 kernel: md: md3: recovery done.
+/dev/sda1 starts on sector 63 and ends on sector 7807589
+/dev/sda2 starts on sector 11711385 and ends on sector 482528340
 
-Firstly I'm not totally sure of how DM passed the information of the 
-device failing to MD. There is no error message about this on MD. If it 
-was a read error, MD should have performed the rewrite but this 
-apparently did not happen (the error message for a failed rewrite by MD 
-I think is "read error NOT corrected!!"). But anyway...
+/dev/sdb is partitioned the same
+/dev/sda2 and /dev/sdb2 form the raid10,f2.
 
-> The dm founds invalid my cow devices, but i don't know why at this time.
->
+> Were your dd's done on the raw devices, or via a file system?
 
-I have just had a brief look ad DM code. I understand like 1% of it 
-right now, however I am thinking that in a not-perfectly-optimized way 
-of doing things, if you specified 8 sectors (8x512b = 4k, which you did) 
-granularity during the creation of your cow and cow2 devices, whenever 
-you write to the COW device, DM might do the thing in 2 steps:
+Raw (logical) devices carved out of the volume group.
 
-1- copy 8 (or multiple of 8) sectors from the HD to the cow device, 
-enough to cover the area to which you are writing
-2- overwrite such 8 sectors with the data coming from MD.
-
-Of course this is not optimal in case you are writing exactly 8 sectors 
-with MD, and these are aligned to the ones that DM uses (both things I 
-think are true in your case) because DM could have skipped #1 in this case.
-However supposing DM is not so smart and it indeed does not skip step 
-#1, then I think I understand why it disables the device: it's because 
-#1 fails with read error and DM does not know how to handle the 
-situation in that case in general. If you had written a smaller amount 
-with MD such as 512 bytes, if step #1 fails, what do you write in the 
-other 7 sectors around it? The right semantics is not obvious so they 
-disable the device.
-
-Firstly you could try with 1 sector granularity instead of 8, during the 
-creation of dm cow devices. This MIGHT work around the issue if DM is at 
-least a bit smart. Right now it's not obvious to me where in the is code 
-the logic for the COW copying. Maybe tomorrow I will understand this.
-
-If this doesn't work, the best thing is probably if you can write to the 
-DM mailing list asking why it behaves like this and if they can guess a 
-workaround. You can keep me in cc, I'm interested.
-
-
-> [CUT]
->
-> echo 0 $(blockdev --getsize /dev/sde4) \
->        snapshot /dev/sde4 /dev/loop3 p 8 | \
->        dmsetup create cow
->
-> echo 0 $(blockdev --getsize /dev/sdh4) \
->        snapshot /dev/sdh4 /dev/loop4 p 8 | \
->        dmsetup create cow2
-
-See, you are creating it with 8 sectors granularity... try with 1.
-
-> I can try again, if there is any new idea, but it would be really good 
-> to do some trick with bitmaps or set the recovery's start point or 
-> something similar, because every time i need >16 hour to get the first 
-> poit where the raid do something interesting....
->
-> Neil,
-> Can you say something useful about this?
->
-
-I just looked into this and it seems this feature is already there.
-See if you have these files:
-/sys/block/md3/md/sync_min and sync_max
-Those are the starting and ending sector.
-But keep in mind you have to enter them in multiples of the chunk size 
-so if your chunk is e.g. 1024k then you need to enter multiples of 2048 
-(sectors).
-Enter the value before starting the sync. Or stop the sync by entering 
-"idle" in sync_action, then change the sync_min value, then restart the 
-sync entering "check" in sync_action. It should work, I just tried it on 
-my comp.
-
-Good luck
-
+--=20
+Jon
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
