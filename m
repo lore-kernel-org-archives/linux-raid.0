@@ -1,8 +1,8 @@
 From: Michael Evans <mjevans1983@gmail.com>
 Subject: Re: corrupted UUID or superblock prohibits assemby of prior created
 	raid6
-Date: Sun, 2 May 2010 02:33:50 -0700
-Message-ID: <g2q4877c76c1005020233w5cd03f81i67484774dd3be7af@mail.gmail.com>
+Date: Sun, 2 May 2010 02:36:31 -0700
+Message-ID: <m2l4877c76c1005020236n3eda8eeciec5c852a340072ad@mail.gmail.com>
 References: <4BDD2AAF.9070800@gmx.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
@@ -239,22 +239,12 @@ s =A0 Id =A0System
 > More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
 >
 
-I don't know why you're doing something like that, but I think I know
-what your problem is.
+I forgot to add, the blkid issue is probably related to caching.
 
-=46irst make sure you've added all of your current devices to your
-/etc/mdadm.conf file.
+blkid -g might be sufficient
+blkid -p would bypass the cache entirely
 
-Second, trigger the regeneration of your initramfs/initrd images; most
-will include the new mdadm.conf file of arrays to assemble on boot.
-
-
-If you need help with the first step:
-mv /etc/mdadm.conf /etc/mdadm.conf~
-mdadm --examine --scan /dev/[sh]d* /dev/mapper/* > /etc/mdadm.conf
-
-You might need to edit it so that 0.90 version labels are given that
-format, and 1.X version labels lack that extra zero.
+man blkid for more info.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
