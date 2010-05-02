@@ -1,67 +1,55 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: RAID5
-Date: Sun, 02 May 2010 18:51:54 -0400
-Message-ID: <4BDE020A.9060602@tmr.com>
-References: <s2q6b16fb4c1004182046x5464351m861ccaf9850f33df@mail.gmail.com>	 <j2k4877c76c1004182121w3edcf996x2ee8ee0eca398985@mail.gmail.com>	 <4BCEFE66.6010607@tmr.com> <l2g4877c76c1004211243n6dfa55pfee322db20ba6f08@mail.gmail.com> <4BD1AE0C.2040003@msgid.tls.msk.ru>
+Subject: Re: Questions about 4k sector drives
+Date: Sun, 02 May 2010 19:04:50 -0400
+Message-ID: <4BDE0512.8070502@tmr.com>
+References: <4BD42B57.9000703@kusche.de> <1272206601.7734.4.camel@faldara>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BD1AE0C.2040003@msgid.tls.msk.ru>
+In-Reply-To: <1272206601.7734.4.camel@faldara>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Michael Evans <mjevans1983@gmail.com>, Kaushal Shriyan <kaushalshriyan@gmail.com>, linux-raid@vger.kernel.org
+To: Phillip Susi <psusi@cfl.rr.com>
+Cc: Florian Kusche <flox@kusche.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Michael Tokarev wrote:
-> Michael Evans wrote:
+Phillip Susi wrote:
+> On Sun, 2010-04-25 at 13:45 +0200, Florian Kusche wrote:
 >   
->> On Wed, Apr 21, 2010 at 6:32 AM, Bill Davidsen <davidsen@tmr.com> wrote:
->>     
-> []
->   
->>> I have some recent experience with this gained the hard way, by looking for
->>> a problem rather than curiousity. My experience with LVM on RAID is that, at
->>> least for RAID-5, write performance sucks. I created two partitions on each
->>> of three drives, and two raid-5 arrays using those partitions. Same block
->>> size, same tuning for stripe-cache, etc. I dropped an ext4 on on array, and
->>> LVM on the other, put ext4 on the LVM drive, and copied 500GB to each. LVM
->>> had a 50% performance penalty, took twice as long. Repeated with four drives
->>> (all I could spare) and found that the speed right on an array was roughly
->>> 3x slower with LVM.
->>>
->>>       
->> This issues sounds very likely to be write barrier related.  Were you
->> using an external journal on a write-barrier honoring device?
+>> Hello,
+>>
+>> I have a few questions about Software RAID and 4k-sector drives. I
+>>  already searched the web, but some questions are left.
+>>
+>> 1) (this one is not directly raid-related) I understand, that newer
+>>  kernels can determine whether a drive uses 4k physical sectors even if
+>>  it presents 512-byte logical sectors to the outside. (via the
+>>  sector_size_supported() patch by Matthew Wilcox)
+>>
+>> Is this only an information given to userland tools, or will the linux
+>>  kernel change its behavior (e.g. use 4k-blocks for such block
+>>  devices)? (I guess it's only an information for userland tools.)
 >>     
 >
-> This is most likely due to read-modify-write cycle which is present on
-> lvm-on-raid[456] if the number of data drives is not a power of two.
-> LVM requires the block size to be a power of two, so if you can't fit
-> some number of LVM blocks on whole raid stripe size your write speed
-> is expected to be ~3 times worse...
+> If the device reports it, then the kernel knows it and exports it to
+> user space.  The new 4k drives from WD unfortunately, lie and report
+> their physical sector size is 512 bytes.
 >
 >   
-Since I tried 3 and 4 drive setups, with several chunk sizes, I would 
-hope that no matter how lvm counts data drives (why does it care?) it 
-would find a power of two there.
-> Even creating partitions on such raid array is difficult.
+>> 2)
+>> Will Software RAID work with physical 4k-sector drives...
+>> - that simulate logical 512 byte sectors?
+>> - that also have logical 4k-sectors?
+>> (I'm pretty sure, the answer to both questions is yes.)
+>>     
 >
-> 'Hwell.
->
-> Unfortunately very few people understand this.
->
-> As of write barriers, it looks like either they already work
-> (in 2.6.33) or will be (in 2.6.34) for whole raid5-lvm stack.
->
-> /mjt
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> Yes.
 >   
 
+Is there any reason not to just align partitions for all drives on 32kB 
+sectors and expect that to work on 512b 4kB and SSD? Cautious testing 
+here says it works fine, no anomalies, no exciting performance data, 
+just works.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
