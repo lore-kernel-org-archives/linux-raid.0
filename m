@@ -1,156 +1,194 @@
-From: Jon Nelson <jnelson-linux-raid@jamponi.net>
-Subject: Re: very strange raid10,f2 performance
-Date: Sat, 1 May 2010 20:40:59 -0500
-Message-ID: <r2wcccedfc61005011840u26c6814cg7f317f5e710893ef@mail.gmail.com>
-References: <k2mcccedfc61004211002p24f1bd21xdead3e501766553f@mail.gmail.com>
-	<20100430224642.GB7127@rap.rap.dk> <n2lcccedfc61004301835ofb5285b2g4e73a5181a0d6f77@mail.gmail.com>
-	<20100501083608.GA28178@rap.rap.dk>
+From: "christian (private)" <chr.graf@gmx.de>
+Subject: corrupted UUID or superblock prohibits assemby of prior created raid6
+Date: Sun, 02 May 2010 09:33:03 +0200
+Message-ID: <4BDD2AAF.9070800@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100501083608.GA28178@rap.rap.dk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Keld Simonsen <keld@keldix.com>
-Cc: LinuxRaid <linux-raid@vger.kernel.org>
+To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Sat, May 1, 2010 at 3:36 AM, Keld Simonsen <keld@keldix.com> wrote:
-> On Fri, Apr 30, 2010 at 08:35:50PM -0500, Jon Nelson wrote:
->> On Fri, Apr 30, 2010 at 5:46 PM, Keld Simonsen <keld@keldix.com> wro=
-te:
->> > On Wed, Apr 21, 2010 at 12:02:46PM -0500, Jon Nelson wrote:
->> >> I was helping somebody else diagnose some issues, and decided to =
-run
->> >> comparitive tests on my own raid (raid10,f2).
->> >>
->> >> The raid10,f2 (md0) is the only physical device backing a volume
->> >> group, which is then carved into a bunch of (primarily) ext4
->> >> filesystems.
->> >> The kernel is 2.6.31.12 (openSUSE) on a Quad Processor AMD Phenom=
- 9150e system.
->> >> The raid is two Western Digital Caviar Blue drives (WDC WD5000AAK=
-S-00V1A0).
->> >>
->> >> The problem: really, really bad I/O performance under certain cir=
-cumstances.
->> >>
->> >> When using an internal bitmap and *synchronous* I/O, applications=
- like
->> >> dd report 700-800 kB/s.
->> >> When not using a bitmap at all, and synchronous I/O, dd reports 2=
-=2E5
->> >> MB/s (but dstat shows 14MB/s?)
->> >> Without a bitmap and async I/O (but with fdatasync) I get 65MB/s.
->> >> *With* a bitmap and using async. I/O (but with fdatasync) I get m=
-ore
->> >> like 65MB/s.
->> >>
->> >> The system has 3GB of memory and I'm testing with dd if=3D/dev/ze=
-ro
->> >> of=3Dsomefile bs=3D4k count=3D524288.
->> >>
->> >> I'm trying to understand why the synchronous I/O is so bad, but e=
-ven
->> >> so I was hoping for more. 65MB/s seems *reasonable* given the
->> >> raid10,f2 configuration and all of the seeking that such a
->> >> configuration involves (when writing).
->> >>
->> >> The other very strange thing is that the I/O patterns seem very
->> >> strange. I'll see 14MB/s very consistently as reported by dstat
->> >> (14MB/s for each sda, sdb, and md0) for 10-15 seconds and then I'=
-ll
->> >> see it drop, sometimes to just 3 or 4 MB/s, for another 10 second=
-s,
->> >> and then the pattern repeats. =A0What's going on here? With absol=
-utely
->> >> no other load on the system, I would have expected to see somethi=
-ng
->> >> much more consistent.
->> >
->> > Hmm, not much response to this.
->> > The only idea I have for now is misalignment between raid and LVM =
-boundaries.
->>
->> These aren't 4K disks (as far as I know), so I'm not sure what you
->> mean by alignment issues.
->> Using 255 heads, 63 sectors per track:
->>
->> /dev/sda1 starts on sector 63 and ends on sector 7807589
->> /dev/sda2 starts on sector 11711385 and ends on sector 482528340
->
-> I dont know much about this, and I have not tested it, but try to
-> make LVM and raid on sector numbers divisionable by the raid block si=
-ze.
->
->> /dev/sdb is partitioned the same
->> /dev/sda2 and /dev/sdb2 form the raid10,f2.
->>
->> > Were your dd's done on the raw devices, or via a file system?
+Dear all,
 
-Raw devices (actually, /dev/raid/test).
+I am kindly asking for help please.
 
->> Raw (logical) devices carved out of the volume group.
+The issue is the following:
+I am creating an mdadm raid6-array and after successful sync all looks 
+fine. However after rebooting the raid6 refuses to start due to missing 
+disks.
+To my understanding this is all related to incorrect UUID's, however I 
+am kindly asking the experts to have alook into it:
 
-I completely re-did the raid. Now both devices are partitioned thusly:
+The error-message (similiar for all my 1TB-drives /dev/sd[abi]1)
+======================================
+keeper:~# mdadm --assemble /dev/md10 /dev/sd[abi]1 /dev/md[1-3]
+mdadm: cannot open device /dev/sda1: Device or resource busy
+mdadm: /dev/sda1 has no superblock - assembly aborted
 
-/dev/sda1   *          63     9960299     4980118+  fd  Linux raid auto=
-detect
-/dev/sda2         9960300   976768064   483403882+  fd  Linux raid auto=
-detect
 
-The raid is using a 1MiB chunk size, metadata 1.0, and I noted that
-the physical volume I created was created with also a 1MB data
-alignment.  As far as I know, this should all be aligned properly, but
-I'm not really sure what I am doing with the partition alignment.
+systems basics
+==========
+keeper:~# uname -a
+Linux keeper 2.6.30-2-amd64 #1 SMP Fri Dec 4 03:31:05 UTC 2009 x86_64 
+GNU/Linux
 
-No matter how bad the alignment, however, 6.1MB/s synchronous writes
-is super bad.
+distro: debian testing
 
-Your test using 'cat' is, IMO, totally invalid as it is neither
-synchronous nor does it make use of fdatasync. I'm not looking to get
-into benchmarking here, however -- I just want to understand _why_ the
-performance is _so_ bad.  'dstat' reports 15MB/s (as consistent as the
-day is long) output to /dev/sda2, /dev/sdb2, and /dev/md2.  Writing to
-an ext4 filesystem (with synchronous I/O) I get *1.9* MiB/s.  When
-doing I/O that is non-synchronous, but still using fdatasync, I get
-I/O rates that I would expect -- 96MiB/s.
-
-When I use a block size of 1MiB and write synchronously, I see rates
-more like 45 MiB/s.
-
-I'm also rather surprised to see *read* rates that (per disk) are more
-like 60MB/s. I thought the point of raid10,f2 is to produce reads from
-the outermost portions of the disk. When I read from /dev/sda or
-/dev/sdb I get more like 130MiB/s (decreasing slowly as I get closer
-to the inner tracks).
-
-So I've verified the disks perform as expected but logical volumes
-carved from a volume group backed by the raid do not.  So I decide to
-check read speeds from the raid itself.  After dropping caches, I
-average about 220MiB/s reading from /dev/md2.  I feel, therefore, that
-the problem is LVM, but how?
-
-Summary:
-
-1. /dev/sd{a,b} both perform great (read speeds of 110MiB/s)
-2. /dev/md2 (a raid10,f2 made from /dev/sda2 and /dev/sdb2) has great
-*read* speeds.  I can't check the write speeds as /dev/md2 is used as
-the backing store for a volume group.
-3. logical volumes carved from the volume group have _ok_ performance
-in async. I/O (with fdatasync), but synchronous I/O is _really_ bad.
-Read speeds are also not nearly as good as they could be.
-
-I feel as though I've gathered sufficient evidence that the problem
-isn't the raid code or the disk but LVM.  Where do I go from here?
+ii  mdadm                                                   
+3.0.3-2                    tool to administer Linux MD arrays (software
+ii  e2fslibs                                                
+1.41.11-1                  ext2/ext3/ext4 file system libraries
+ii  e2fsprogs                                               
+1.41.11-1                  ext2/ext3/ext4 file system utilities
 
 
 
+creating the array (hint, after reboot its /dev/sd[abi]1 instead of 
+/dev/sdb1 /dev/sdc1 /dev/sdi1)
+===========================================================
+387  mdadm --create /dev/md10 --name=10 --metadata=1.0  --level=6 
+--raid-devices=6 /dev/sdb1 /dev/sdc1 /dev/sdi1 /dev/md[1-3]
 
---=20
-Jon
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+the array gets created  - verifying after resync without  rebooting
+=========================================
+/dev/md10:
+         Version : 1.00
+   Creation Time : Sat May  1 19:41:39 2010
+      Raid Level : raid6
+      Array Size : 3907039232 (3726.04 GiB 4000.81 GB)
+   Used Dev Size : 976759808 (931.51 GiB 1000.20 GB)
+    Raid Devices : 6
+   Total Devices : 6
+     Persistence : Superblock is persistent
+
+     Update Time : Sun May  2 03:44:29 2010
+           State : active
+  Active Devices : 6
+Working Devices : 6
+  Failed Devices : 0
+   Spare Devices : 0
+
+      Chunk Size : 64K
+
+            Name : keeper:10  (local to host keeper)
+*UUID : d9b9e76d:0113d173:39173474:7f43de08*
+          Events : 35
+
+     Number   Major   Minor   RaidDevice State
+        0       8       17        0      active sync   /dev/sdb1
+        1       8       33        1      active sync   /dev/sdc1
+        2       8      129        2      active sync   /dev/sdi1
+        3       9        1        3      active sync   /dev/md1
+        4       9        2        4      active sync   /dev/md2
+        5       9        3        5      active sync   /dev/md3
+
+
+keeper:~# cat /proc/mdstat
+This is looking fine as well
+==================
+Personalities : [raid6] [raid5] [raid4] [multipath] [faulty] [raid0]
+md10 : active raid6 md3[5] md2[4] md1[3] sdi1[2] sdc1[1] sdb1[0]
+       3907039232 blocks super 1.0 level 6, 64k chunk, algorithm 2 [6/6] 
+[UUUUUU]
+
+md1 : active raid0 sdf1[0] sdg1[1]
+       976767872 blocks 64k chunks
+
+md2 : active raid0 sdh1[1] sda1[0]
+       976767872 blocks 64k chunks
+
+md3 : active raid0 sdd1[1] sde1[0]
+       976767872 blocks 64k chunks
+
+
+To my understanding all member-drives of md10 should have the same UUID, 
+but after a reboot this is not any longer the case. Please notice that I 
+created the array with "/dev/sd[bci]1 /dev/md[1-3]" and after reboot its 
+/dev/sd[abi]1 and /dev/md[1-3].
+But as you can see, the UUID's are not identical anyhow:
+=============================================================
+keeper:~# blkid
+/dev/hda1: UUID="3A60F2845E1B3C0F" TYPE="ntfs"
+/dev/hda2: UUID="e9a9b276-0530-42eb-8317-cd3999ff8b90" TYPE="swap"
+/dev/hda3: UUID="738eeb2f-fae4-40a0-b0de-fc188837e44c" TYPE="ext3"
+/dev/sdb1: UUID="d9b9e76d-0113-d173-3917-34747f43de08" LABEL="keeper:10" 
+TYPE="linux_raid_member" << looks good
+/dev/sdc1: UUID="f45cfa44-1770-7e1c-3e3a-de9f30eaa984" 
+TYPE="linux_raid_member" LABEL="keeper:10"
+/dev/sdd1: UUID="f45cfa44-1770-7e1c-3e3a-de9f30eaa984" 
+TYPE="linux_raid_member" LABEL="keeper:11"
+/dev/sde1: UUID="0805c25a-cf77-4fb6-3e3a-de9f30eaa984" 
+TYPE="linux_raid_member"
+/dev/sdf1: UUID="0805c25a-cf77-4fb6-3e3a-de9f30eaa984" 
+TYPE="linux_raid_member"
+/dev/sdg1: UUID="13d13245-3c7d-8682-3e3a-de9f30eaa984" 
+TYPE="linux_raid_member"
+/dev/sdh1: UUID="13d13245-3c7d-8682-3e3a-de9f30eaa984" 
+TYPE="linux_raid_member"
+/dev/sdi1: UUID="d9b9e76d-0113-d173-3917-34747f43de08" 
+TYPE="linux_raid_member" LABEL="keeper:10" << looks good
+/dev/sda1: UUID="c6f73dbb-528d-aa64-3e3a-de9f30eaa984" 
+TYPE="linux_raid_member" << should be *d9b9e76d:0113d173:39173474:7f43de08*
+/dev/md1: UUID="058e47cd-e3ff-0fb9-3e3a-de9f30eaa984" 
+TYPE="linux_raid_member" << should be *d9b9e76d:0113d173:39173474:7f43de08*
+/dev/md2: UUID="058e47cd-e3ff-0fb9-3e3a-de9f30eaa984" 
+TYPE="linux_raid_member" << should be *d9b9e76d:0113d173:39173474:7f43de08*
+/dev/md3: UUID="058e47cd-e3ff-0fb9-3e3a-de9f30eaa984" 
+TYPE="linux_raid_member" << should be *d9b9e76d:0113d173:39173474:7f43de08*
+
+
+Can please anyone help me digging out whats going on here?
+
+What I can say, that if I create 2 * raid5 (/dev/sd[abi]1 and 
+/dev/md[1-3]) instead of combining them into a single raid6, then all is 
+perfect.
+Maybe I should say, that /dev/md[1-3] are 2* striped 500G disks and 
+/dev/sd[abi]1 are 1TB drives.
+
+
+any help is very much appreciated. The next step I am doing is manually 
+setting the UUID to have it matched...
+
+
+further more I thoughts setting the UUID manually could solve the issue
+
+keeper:~# tune2fs -U d9b9e76d-0113-d173-3917-34747f43de08 /dev/sda1
+tune2fs 1.41.11 (14-Mar-2010)
+tune2fs: Filesystem revision too high while trying to open /dev/sda1
+Couldn't find valid filesystem superblock. <<< does not look good to me
+
+
+keeper:~# fdisk -l /dev/sda
+
+Disk /dev/sda: 1000.2 GB, 1000204886016 bytes
+255 heads, 63 sectors/track, 121601 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x00000000
+
+    Device Boot      Start         End      Blocks   Id  System
+/dev/sda1               1      121601   976760001   83  Linux
+
+keeper:~# blkid /dev/sda
+keeper:~# blkid /dev/sda1
+/dev/sda1: UUID="c6f73dbb-528d-aa64-3e3a-de9f30eaa984" 
+TYPE="linux_raid_member"
+
+keeper:~# tune2fs -l /dev/sda1
+tune2fs 1.41.11 (14-Mar-2010)
+tune2fs: Filesystem revision too high while trying to open /dev/sda1
+Couldn't find valid filesystem superblock.
+
+
+Any idea why the superblock is giving me trouble here?
+
+
+many thanks
+
+christian
+
+
+
+
+
