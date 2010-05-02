@@ -1,107 +1,85 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Use of WD20EARS with MDADM
-Date: Sun, 02 May 2010 18:33:18 -0400
-Message-ID: <4BDDFDAE.5020204@tmr.com>
-References: <4BAB8D41.4010801@gmail.com> <F50E50EC-32CF-4FC4-949B-E8DA56B08D50@santools.com> <4BABA12D.6040605@shiftmail.org> <4BAF8185.9040307@gmx.net> <4BC61D47.6090403@tmr.com> <4BCC65EB.3080803@cfl.rr.com> <4BCEFB99.9080806@tmr.com> <alpine.DEB.1.10.1004211625580.6768@uplift.swm.pp.se> <4BCF74FF.9080909@panix.com>
+Subject: Re: RAID5
+Date: Sun, 02 May 2010 18:45:34 -0400
+Message-ID: <4BDE008E.8050105@tmr.com>
+References: <s2q6b16fb4c1004182046x5464351m861ccaf9850f33df@mail.gmail.com>	 <j2k4877c76c1004182121w3edcf996x2ee8ee0eca398985@mail.gmail.com>	 <4BCEFE66.6010607@tmr.com> <l2g4877c76c1004211243n6dfa55pfee322db20ba6f08@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BCF74FF.9080909@panix.com>
+In-Reply-To: <l2g4877c76c1004211243n6dfa55pfee322db20ba6f08@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Berkey B Walker <berk@panix.com>
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>, Phillip Susi <psusi@cfl.rr.com>, st0ff@npl.de, linux-raid@vger.kernel.org
+To: Michael Evans <mjevans1983@gmail.com>
+Cc: Kaushal Shriyan <kaushalshriyan@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Berkey B Walker wrote:
+Michael Evans wrote:
+> On Wed, Apr 21, 2010 at 6:32 AM, Bill Davidsen <davidsen@tmr.com> wrote:
+>   
+>> Michael Evans wrote:
+>>     
+>>> On Sun, Apr 18, 2010 at 8:46 PM, Kaushal Shriyan
+>>> <kaushalshriyan@gmail.com> wrote:
+>>>
+>>>       
+>>>> Hi
+>>>>
+>>>> I am a newbie to RAID. is strip size and block size same. How is it
+>>>> calculated. is it 64Kb by default. what should be the strip size ?
+>>>>
+>>>> I have referred to
+>>>> http://en.wikipedia.org/wiki/Raid5#RAID_5_parity_handling. How is
+>>>> parity handled in case of RAID 5.
+>>>>
+>>>> Please explain me with an example.
+>>>>
+>>>> Thanks and Regards,
+>>>>
+>>>> Kaushal
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>
+>>>>
+>>>>         
+>>> You already have one good resource.
+>>>
+>>> I wrote this a while ago, and the preface may answer some questions
+>>> you have about the terminology used.
+>>>
+>>> http://wiki.tldp.org/LVM-on-RAID
+>>>
+>>> However the question you're asking is more or less borderline
+>>> off-topic for this mailing list.  If the linked information is
+>>> insufficient I suggest using the Wikipedia article's links to learn
+>>> more.
+>>>
+>>>       
+>> I have some recent experience with this gained the hard way, by looking for
+>> a problem rather than curiousity. My experience with LVM on RAID is that, at
+>> least for RAID-5, write performance sucks. I created two partitions on each
+>> of three drives, and two raid-5 arrays using those partitions. Same block
+>> size, same tuning for stripe-cache, etc. I dropped an ext4 on on array, and
+>> LVM on the other, put ext4 on the LVM drive, and copied 500GB to each. LVM
+>> had a 50% performance penalty, took twice as long. Repeated with four drives
+>> (all I could spare) and found that the speed right on an array was roughly
+>> 3x slower with LVM.
+>>
+>> I did not look into it further, I know why the performance is bad, I don't
+>> have the hardware to change things right now, so I live with it. When I get
+>> back from a trip I will change that.
+>>
+>>
+>>     
 >
->
-> Mikael Abrahamsson wrote:
->> On Wed, 21 Apr 2010, Bill Davidsen wrote:
->>
->>> I hear this said, but I don't have any data to back it up. Drive 
->>> vendors aren't stupid, so if the parking feature is likely to cause 
->>> premature failures under warranty, I would expect that the feature 
->>> would not be there, or that the drive would be made more robust. 
->>> Maybe I have too much faith in greed as a design goal, but I have to 
->>> wonder if load cycles are as destructive as seems to be the assumption.
->>
->> What I think people are worried about is that a drive might have X 
->> load/unload cycles in the data sheet (300k or 600k seem to be normal 
->> figures) and reaching this in 1-2 years of "normal" (according to the 
->> user who is running it 24/7) might be worrying (and understandably so).
->>
->> Otoh these drives seem to be designed for desktop 8 hour per day use, 
->> so running them as a 24/7 fileserver under linux is not what they 
->> were designed for. I have no idea what will happen when the 
->> load/unload cycles goes over the data sheet number, but my guess is 
->> that it was put there for a reason.
->>
->>> I'd love to find some real data, anecdotal stories about older 
->>> drives are not overly helpful. Clearly there is a trade-off between 
->>> energy saving, response, and durability, I just don't have any data 
->>> from a large population of new (green) drives.
->>
->> My personal experience from the WD20EADS drives is that around 40% of 
->> them failed within the first year of operation. This is not from a 
->> large population of drives though and wasn't due to load/unload 
->> cycles. I had no problem getting them replaced under warranty, but 
->> I'm running RAID6 nowadays :P
->>
-> Sorry, you sound like a factory droid.  *I* see no reason for early 
-> failure besides cheap mat'ls in construction.  Were these assertations 
-> of short life to be true, I would campaign against the drive maker.  
-> (I think that they are just normalizing failure rate against warranty 
-> claims)  Buy good stuff.  I *wish* I could define the term by mfg. It 
-> seems Seagate, & WD don't hack it.  The Japanese drives did, but since 
-> the $ dropped -
->
-Let's see, first you put my name on something I was quoting (with 
-attribution), delete the correct name of the person you are quoting, and 
-then call me a "factory droid." So I have some idea of your attention to 
-detail. Second, the short term failure rates are influenced by 
-components delivered, assembly, and treatment in shipping. So assembly 
-is controlled by the vendor, parts are influenced by supplier selected, 
-and delivery treatment is usually selected by the retailer. A local 
-clone maker found that delicate parts delivered on Wednesday had a 
-higher infant mortality that other days. Regular driver had Wednesday 
-off, sub thought "drop ship" was an unloading method, perhaps.
+> This issues sounds very likely to be write barrier related.  Were you
+> using an external journal on a write-barrier honoring device?
+>   
 
-> One thing seemingly missed is the relationship between storage density 
-> and drive temp.variations..  Hard drive mfgs are going to be in deep 
-> doodoo when the SSD folks get price/perf in the lead lane.  This year, 
-> I predict.  And maybe another 2 for long term reliability to be in the 
-> lead..
->
-I think you're an optimist on cost equality, people are changing to 
-green drives which are generally slower due to spin down or lower rpm, 
-because the cost of power and cooling is important. It's not clear if 
-current SSD tech will be around in five years, because there are new 
-technologies coming which are inherently far more stable for multiple 
-writes. The spinning platter may be ending, but the replacement is not 
-in sight. In ten years I doubt current SSD tech will be in use, replaced 
-by phase change, optical isomers, electron spin, or something still in a 
-lab. And the deployment of user visible large sectors (write chunks, 
-whatever) is not clear, if the next tech will work just as well with 
-smaller sectors, this may become a moot point.
-
-> I believe that many [most?] RAID users are looking for results (long 
-> term archival) that are not intended in the design.We are about 2 
-> generations away from that being a reality - I think..  For other 
-> users, I would suggest a mirror machine. with both machines being 
-> scrubbed daily, and media being dissimilar in mfg and mfg date.
->
-It's not clear that date of manufacture is particularly critical, while 
-date of deployment (in-use hours), probably is. But looking at the 
-Google disk paper, a crate of drives from the same batch doesn't all 
-drop dead at once, or close to it, so age in service is a factor, but 
-not likely a critical factor.
-> I can't wait until Neil gets to (has to) play/work with the coming 
-> tech. Neat things are coming.
->
-I would rather see some of the many things on the "someday list" get 
-implemented. It's more fun to play with new stuff than polish off the 
-uglies in the old, but the uglies are still there.
+Not at all, just taking 60G of free space of the drives, creating two 
+partitions (on 64 sector boundaries) and using them for raid-5. Tried 
+various chunk sizes, better for some things, not so much for others.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
