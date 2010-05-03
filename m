@@ -1,36 +1,49 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: Questions about 4k sector drives
-Date: Mon, 3 May 2010 09:38:58 -0400
-Message-ID: <4BDED1F2.102@cfl.rr.com>
-References: <4BD42B57.9000703@kusche.de> <1272206601.7734.4.camel@faldara>	 <4BDE0512.8070502@tmr.com> <x2v87f94c371005030630idaaad1e9ue3faff470bd318e1@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [md PATCH 00/28] md patches destined for -next and the next merge
+	window
+Date: Mon, 3 May 2010 08:27:04 -0700
+Message-ID: <h2re9c3a7c21005030827xad33d108jede23a2036734f4d@mail.gmail.com>
+References: <20100415061516.5126.53068.stgit@notabene.brown>
+	 <s2se9c3a7c21005021059l5f708347u8d1b936440161b1a@mail.gmail.com>
+	 <20100503131116.459bdc7f@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <x2v87f94c371005030630idaaad1e9ue3faff470bd318e1@mail.gmail.com>
+In-Reply-To: <20100503131116.459bdc7f@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Bill Davidsen <davidsen@tmr.com>, Florian Kusche <flox@kusche.de>, linux-raid@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 5/3/2010 9:30 AM, Greg Freemyer wrote:
-> In theory 4K physical sector drives with XP alignment will eventually
-> ship and possibly have already.
-> 
-> The alignment maybe controlled via a jumper, or could be set in the
-> factory.  Its up to the manufacturer so there is no way to predict.
-> 
-> These drives will need partitions/stripes etc. aligned to 31.5K, not 1MB.
+On Sun, May 2, 2010 at 8:11 PM, Neil Brown <neilb@suse.de> wrote:
+> On Sun, 2 May 2010 10:59:02 -0700
+> Dan Williams <dan.j.williams@intel.com> wrote:
+>> A few fixes/enhancements while playing with the takeover code are av=
+ailable at:
+>>
+>> =A0 git://git.kernel.org/pub/scm/linux/kernel/git/djbw/md.git for-ne=
+il
+>
+> Thanks - they all make sense.
+> I've merged them with my queue and push them to my for-next branch.
 
-The WD drives have such a jumper, but it is not set by default and WD
-highly recommends NOT using it since it will only produce optimal
-results with XP.
+Ok, thanks, and this one below on the 'fixes' branch...?
 
-> I don't know it any those drives exist yet, or if they ever will.  But
-> the kernel topology info specifically supports providing the above
-> info and aiui parted uses it to choose the best partition layout.
-
-AFAICS the kernel has a means of providing that information to user
-space, and parted will use it if it is provided, but the kernel has no
-means of obtaining that informati9on from the drive, so it is always
-left as unknown, so parted defaults to 1 MB alignment like Windows 7.
+>> I'd like to get "raid6: fix recovery performance regression" in for
+>> 2.6.34. =A0I pushed it out to the url below, let me know if you just
+>> want me to send it directly.
+>>
+>> =A0 git://git.kernel.org/pub/scm/linux/kernel/git/djbw/md.git fixes
+>>
+>> Dan Williams (1):
+>> =A0 =A0 =A0 raid6: fix recovery performance regression
+>>
+>> =A0crypto/async_tx/async_raid6_recov.c | =A0 21 +++++++++++++-------=
+-
+>> =A01 files changed, 13 insertions(+), 8 deletions(-)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
