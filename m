@@ -1,48 +1,90 @@
-From: Berkey B Walker <berk@panix.com>
-Subject: Re: Use of WD20EARS with MDADM
-Date: Sun, 02 May 2010 20:08:59 -0400
-Message-ID: <4BDE141B.20600@panix.com>
-References: <4BAB8D41.4010801@gmail.com> <F50E50EC-32CF-4FC4-949B-E8DA56B08D50@santools.com> <4BABA12D.6040605@shiftmail.org> <4BAF8185.9040307@gmx.net> <4BC61D47.6090403@tmr.com> <4BCC65EB.3080803@cfl.rr.com> <4BCEFB99.9080806@tmr.com> <alpine.DEB.1.10.1004211625580.6768@uplift.swm.pp.se> <4BCF74FF.9080909@panix.com> <4BDDFDAE.5020204@tmr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Suggestion needed for fixing RAID6
+Date: Mon, 3 May 2010 12:17:47 +1000
+Message-ID: <20100503121747.7f2cc1f1@notabene.brown>
+References: <626601cae203$dae35030$0400a8c0@dcccs>
+	<20100423065143.GA17743@maude.comedia.it>
+	<695a01cae2c1$a72907d0$0400a8c0@dcccs>
+	<4BD193D0.5080003@shiftmail.org>
+	<717901cae3e5$6a5fa730$0400a8c0@dcccs>
+	<4BD3751A.5000403@shiftmail.org>
+	<756601cae45e$213d6190$0400a8c0@dcccs>
+	<4BD569E2.7010409@shiftmail.org>
+	<7a3e01cae53f$684122c0$0400a8c0@dcccs>
+	<4BD5C51E.9040207@shiftmail.org>
+	<80a201cae621$684daa30$0400a8c0@dcccs>
+	<4BD76CF6.5020804@shiftmail.org>
+	<20100428113732.03486490@notabene.brown>
+	<4BD830B0.1080406@shiftmail.org>
+	<025e01cae6d7$30bb7870$0400a8c0@dcccs>
+	<4BD843D4.7030700@shiftmail.org>
+	<062001cae771$545e0910$0400a8c0@dcccs>
+	<4BD9A41E.9050009@shiftmail.org>
+	<0c1201cae7e0$01f9a930$0400a8c0@dcccs>
+	<4BDA0F88.70907@shiftmail.org>
+	<0d6401cae82c$da8b5590$0400a8c0@dcccs>
+	<4BDB6DB6.5020306@shiftmail.org>
+	<12cf01cae911$f0d92940$0400a8c0@dcccs>
+	<4BDC6217.9000209@shiftmail.org>
+	<154b01cae977$6e09da80$0400a8c0@dcccs>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BDDFDAE.5020204@tmr.com>
+In-Reply-To: <154b01cae977$6e09da80$0400a8c0@dcccs>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>, Phillip Susi <psusi@cfl.rr.com>, st0ff@npl.de, linux-raid@vger.kernel.org
+To: Janos Haar <janos.haar@netcenter.hu>
+Cc: MRK <mrk@shiftmail.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Sat, 1 May 2010 23:44:04 +0200
+"Janos Haar" <janos.haar@netcenter.hu> wrote:
+
+> The general problem is, i have one single-degraded RAID6 + 2 badblock disk 
+> inside wich have bads in different location.
+> The big question is how to keep the integrity or how to do the rebuild by 2 
+> step instead of one continous?
+
+Once you have the fix that has already been discussed in this thread, the
+only other problem I can see with this situation is if attempts to write good
+data over the read-errors results in a write-error which causes the device to
+be evicted from the array.  And I think you have reported getting write
+errors.
+
+The following patch should address this issue for you.  It is *not* a
+general-purpose fix, but a specific fix to address an issue you are having.
+It might be appropriate to make this configurable via sysfs, or possibly even
+to try to auto-detect the situation and don't bother writing.
+
+Longer term I want to add support for storing a bad-block-list per device
+so that a write error just fails that block, not the whole device.  I just
+need to organise my time so that I make progress on that project.
+
+NeilBrown
 
 
-Bill Davidsen wrote:
-> Berkey B Walker wrote:
->> Snip...
-> Let's see, first you put my name on something I was quoting (with 
-> attribution), delete the correct name of the person you are quoting, 
-> and then call me a "factory droid." So I have some idea of your 
-> attention to detail.
-..snip
-> I would rather see some of the many things on the "someday list" get 
-> implemented. It's more fun to play with new stuff than polish off the 
-> uglies in the old, but the uglies are still there.
->
-Items snipped to reduce net bandwidth.
-
-Sir, I have had and have a high regard for your posts.  I will gladly 
-give you a pass for having a seemingly unpleasant weekend.  I have gone 
-through MY archives in this manner and have found absolutely NO 
-discrepancies between my copy of the posting to which I replied (which 
-was NOT addressed to you, but was a complete quote, my "sent" post, the 
-board's posting of that post, or..... your post to me (board copied).   
-I  should probably just take heat in general, for some of my postings 
-back in my drinking days.
-
-Sorry to have been a part of whatever was going on.
-
-Best to you,
-b-
-
-
-All of the quotes are properly done.  The post (read carefully) was 
-addresses to Mikael Abrahamsson
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index c181438..fd73929 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -3427,6 +3427,12 @@ static void handle_stripe6(struct stripe_head *sh)
+ 			    && !test_bit(R5_LOCKED, &dev->flags)
+ 			    && test_bit(R5_UPTODATE, &dev->flags)
+ 				) {
++#if 1
++				/* We have recovered the data, but don't
++				 * trust the device enough to write back
++				 */
++				clear_bit(R5_ReadError, &dev->flags);
++#else
+ 				if (!test_bit(R5_ReWrite, &dev->flags)) {
+ 					set_bit(R5_Wantwrite, &dev->flags);
+ 					set_bit(R5_ReWrite, &dev->flags);
+@@ -3438,6 +3444,7 @@ static void handle_stripe6(struct stripe_head *sh)
+ 					set_bit(R5_LOCKED, &dev->flags);
+ 					s.locked++;
+ 				}
++#endif
+ 			}
+ 		}
+ 
