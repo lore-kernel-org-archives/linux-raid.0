@@ -1,70 +1,88 @@
-From: MRK <mrk@shiftmail.org>
+From: "Janos Haar" <janos.haar@netcenter.hu>
 Subject: Re: Suggestion needed for fixing RAID6
-Date: Mon, 03 May 2010 12:04:38 +0200
-Message-ID: <4BDE9FB6.80309@shiftmail.org>
-References: <626601cae203$dae35030$0400a8c0@dcccs>
- <20100423065143.GA17743@maude.comedia.it>
- <695a01cae2c1$a72907d0$0400a8c0@dcccs> <4BD193D0.5080003@shiftmail.org>
- <717901cae3e5$6a5fa730$0400a8c0@dcccs> <4BD3751A.5000403@shiftmail.org>
- <756601cae45e$213d6190$0400a8c0@dcccs> <4BD569E2.7010409@shiftmail.org>
- <7a3e01cae53f$684122c0$0400a8c0@dcccs> <4BD5C51E.9040207@shiftmail.org>
- <80a201cae621$684daa30$0400a8c0@dcccs> <4BD76CF6.5020804@shiftmail.org>
- <20100428113732.03486490@notabene.brown> <4BD830B0.1080406@shiftmail.org>
- <025e01cae6d7$30bb7870$0400a8c0@dcccs> <4BD843D4.7030700@shiftmail.org>
- <062001cae771$545e0910$0400a8c0@dcccs> <4BD9A41E.9050009@shiftmail.org>
- <0c1201cae7e0$01f9a930$0400a8c0@dcccs> <4BDA0F88.70907@shiftmail.org>
- <0d6401cae82c$da8b5590$0400a8c0@dcccs> <4BDB6DB6.5020306@shiftmail.org>
- <12cf01cae911$f0d92940$0400a8c0@dcccs> <4BDC6217.9000209@shiftmail.org>
- <154b01cae977$6e09da80$0400a8c0@dcccs> <20100503121747.7f2cc1f1@notabene.brown>
+Date: Mon, 3 May 2010 12:20:02 +0200
+Message-ID: <1b7101caeaaa$3257b870$0400a8c0@dcccs>
+References: <626601cae203$dae35030$0400a8c0@dcccs> <20100423065143.GA17743@maude.comedia.it> <695a01cae2c1$a72907d0$0400a8c0@dcccs> <4BD193D0.5080003@shiftmail.org> <717901cae3e5$6a5fa730$0400a8c0@dcccs> <4BD3751A.5000403@shiftmail.org> <756601cae45e$213d6190$0400a8c0@dcccs> <4BD569E2.7010409@shiftmail.org> <7a3e01cae53f$684122c0$0400a8c0@dcccs> <4BD5C51E.9040207@shiftmail.org> <80a201cae621$684daa30$0400a8c0@dcccs> <4BD76CF6.5020804@shiftmail.org> <20100428113732.03486490@notabene.brown> <4BD830B0.1080406@shiftmail.org> <025e01cae6d7$30bb7870$0400a8c0@dcccs> <4BD843D4.7030700@shiftmail.org> <062001cae771$545e0910$0400a8c0@dcccs> <4BD9A41E.9050009@shiftmail.org> <0c1201cae7e0$01f9a930$0400a8c0@dcccs> <4BDA0F88.70907@shiftmail.org> <0d6401cae82c$da8b5590$0400a8c0@dcccs> <4BDB6DB6.5020306@sh
+ iftmail.org> <12cf01cae911$f0d92940$0400a8c0@dcccs> <4BDC6217.9000209@shiftmail.org> <154b01cae977$6e09da80$0400a8c0@dcccs> <20100503121747.7f2cc1f1@notabene.brown> <4BDE9FB6.80309@shiftmai!
+ l.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	format=flowed;
+	charset="ISO-8859-1";
+	reply-type=response
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <20100503121747.7f2cc1f1@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Janos Haar <janos.haar@netcenter.hu>, linux-raid@vger.kernel.org
+To: MRK <mrk@shiftmail.org>
+Cc: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 05/03/2010 04:17 AM, Neil Brown wrote:
-> On Sat, 1 May 2010 23:44:04 +0200
-> "Janos Haar"<janos.haar@netcenter.hu>  wrote:
+
+----- Original Message ----- 
+From: "MRK" <mrk@shiftmail.org>
+To: "Neil Brown" <neilb@suse.de>
+Cc: "Janos Haar" <janos.haar@netcenter.hu>; <linux-raid@vger.kernel.org>
+Sent: Monday, May 03, 2010 12:04 PM
+Subject: Re: Suggestion needed for fixing RAID6
+
+
+> On 05/03/2010 04:17 AM, Neil Brown wrote:
+>> On Sat, 1 May 2010 23:44:04 +0200
+>> "Janos Haar"<janos.haar@netcenter.hu>  wrote:
+>>
+>>
+>>> The general problem is, i have one single-degraded RAID6 + 2 badblock 
+>>> disk
+>>> inside wich have bads in different location.
+>>> The big question is how to keep the integrity or how to do the rebuild 
+>>> by 2
+>>> step instead of one continous?
+>>>
+>> Once you have the fix that has already been discussed in this thread, the
+>> only other problem I can see with this situation is if attempts to write 
+>> good
+>> data over the read-errors results in a write-error which causes the 
+>> device to
+>> be evicted from the array.
+>>
+>> And I think you have reported getting write
+>> errors.
+>>
 >
->    
->> The general problem is, i have one single-degraded RAID6 + 2 badblock disk
->> inside wich have bads in different location.
->> The big question is how to keep the integrity or how to do the rebuild by 2
->> step instead of one continous?
->>      
-> Once you have the fix that has already been discussed in this thread, the
-> only other problem I can see with this situation is if attempts to write good
-> data over the read-errors results in a write-error which causes the device to
-> be evicted from the array.
+> His dmesg AFAIR has never reported any error of the kind "raid5:%s: read 
+> error NOT corrected!! " (the error message you get on failed rewrite 
+> AFAIU)
+> Up to now (after my patch) he only tried with MD above DM-COW and DM was 
+> dropping the drive on read error so I think MD didn't get any opportunity 
+> to rewrite.
 >
-> And I think you have reported getting write
-> errors.
->    
+> It is not clear to me what kind of error MD got from DM:
+>
+> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: device-mapper: snapshots: 
+> Invalidating snapshot: Error reading/writing.
+> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: ata8: EH complete
+> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5: Disk failure on dm-1, 
+> disabling device.
+>
+> I don't understand from what place the md_error() is called...
+> but also in this case it doesn't look like a rewrite error...
+>
+> I think without DM COW it should probably work in his case.
+>
+> Your new patch skips the rewriting and keeps the unreadable sectors, 
+> right? So that the drive isn't dropped on rewrite...
+>
+>> The following patch should address this issue for you.
+>> It is*not*  a general-purpose fix, but a specific fix
+> [CUT]
 
-His dmesg AFAIR has never reported any error of the kind "raid5:%s: read 
-error NOT corrected!! " (the error message you get on failed rewrite AFAIU)
-Up to now (after my patch) he only tried with MD above DM-COW and DM was 
-dropping the drive on read error so I think MD didn't get any 
-opportunity to rewrite.
+Just a little note:
+I have 2 bad drives, one wich have bads at 54%, have >2500 UNC sectors, wich 
+is too much for trying it to repair, this drive is really failing....
+The other have only 123 bads at 99% wich is a very small scratch on the 
+platter, now i am trying to fix this drive instead.
+The repair-check sync process now runs, i will reply soon again...
 
-It is not clear to me what kind of error MD got from DM:
+Thanks,
+Janos 
 
-Apr 29 09:50:29 Clarus-gl2k10-2 kernel: device-mapper: snapshots: Invalidating snapshot: Error reading/writing.
-Apr 29 09:50:29 Clarus-gl2k10-2 kernel: ata8: EH complete
-Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5: Disk failure on dm-1, disabling device.
-
-I don't understand from what place the md_error() is called...
-but also in this case it doesn't look like a rewrite error...
-
-I think without DM COW it should probably work in his case.
-
-Your new patch skips the rewriting and keeps the unreadable sectors, 
-right? So that the drive isn't dropped on rewrite...
-
-> The following patch should address this issue for you.
-> It is*not*  a general-purpose fix, but a specific fix
-[CUT]
