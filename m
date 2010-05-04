@@ -1,116 +1,80 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: Suggestion needed for fixing RAID6
-Date: Tue, 4 May 2010 07:04:32 +1000
-Message-ID: <20100504070432.371a9df9@notabene.brown>
-References: <626601cae203$dae35030$0400a8c0@dcccs>
-	<4BD193D0.5080003@shiftmail.org>
-	<717901cae3e5$6a5fa730$0400a8c0@dcccs>
-	<4BD3751A.5000403@shiftmail.org>
-	<756601cae45e$213d6190$0400a8c0@dcccs>
-	<4BD569E2.7010409@shiftmail.org>
-	<7a3e01cae53f$684122c0$0400a8c0@dcccs>
-	<4BD5C51E.9040207@shiftmail.org>
-	<80a201cae621$684daa30$0400a8c0@dcccs>
-	<4BD76CF6.5020804@shiftmail.org>
-	<20100428113732.03486490@notabene.brown>
-	<4BD830B0.1080406@shiftmail.org>
-	<025e01cae6d7$30bb7870$0400a8c0@dcccs>
-	<4BD843D4.7030700@shiftmail.org>
-	<062001cae771$545e0910$0400a8c0@dcccs>
-	<4BD9A41E.9050009@shiftmail.org>
-	<0c1201cae7e0$01f9a930$0400a8c0@dcccs>
-	<4BDA0F88.70907@shiftmail.org>
-	<0d6401cae82c$da8b5590$0400a8c0@dcccs>
-	<4BDB6DB6.5020306@shiftmail.org>
-	<12cf01cae911$f0d92940$0400a8c0@dcccs>
-	<4BDC6217.9000209@shiftmail.org>
-	<154b01cae977$6e09da80$0400a8c0@dcccs>
-	<20100503121747.7f2cc1f1@notabene.brown>
-	<4BDE9FB6.80309@shiftmail.org>
-	<4BDEA394.6010502@shiftmail.org>
+From: Joe Williams <jwilliams315@gmail.com>
+Subject: Re: increasing stripe_cache_size decreases RAID-6 read throughput
+Date: Mon, 3 May 2010 17:06:17 -0700
+Message-ID: <k2k11f0870e1005031706id17d1b17q6e85485ab6e69b34@mail.gmail.com>
+References: <h2y11f0870e1004241636z1f3e302g913be494ec0aefa5@mail.gmail.com>
+	 <20100427164126.2765f9e0@notabene.brown>
+	 <n2x11f0870e1004271018t742e933tba7e0d37428271f2@mail.gmail.com>
+	 <20100429143403.44bef7a1@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BDEA394.6010502@shiftmail.org>
+In-Reply-To: <20100429143403.44bef7a1@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: MRK <mrk@shiftmail.org>
-Cc: Janos Haar <janos.haar@netcenter.hu>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 03 May 2010 12:21:08 +0200
-MRK <mrk@shiftmail.org> wrote:
+On Wed, Apr 28, 2010 at 9:34 PM, Neil Brown <neilb@suse.de> wrote:
+> On Tue, 27 Apr 2010 10:18:36 -0700
+> Joe Williams <jwilliams315@gmail.com> wrote:
 
-> On 05/03/2010 12:04 PM, MRK wrote:
-> > On 05/03/2010 04:17 AM, Neil Brown wrote:
-> >> On Sat, 1 May 2010 23:44:04 +0200
-> >> "Janos Haar"<janos.haar@netcenter.hu>  wrote:
-> >>
-> >>> The general problem is, i have one single-degraded RAID6 + 2 
-> >>> badblock disk
-> >>> inside wich have bads in different location.
-> >>> The big question is how to keep the integrity or how to do the 
-> >>> rebuild by 2
-> >>> step instead of one continous?
-> >> Once you have the fix that has already been discussed in this thread, 
-> >> the
-> >> only other problem I can see with this situation is if attempts to 
-> >> write good
-> >> data over the read-errors results in a write-error which causes the 
-> >> device to
-> >> be evicted from the array.
-> >>
-> >> And I think you have reported getting write
-> >> errors.
-> >
-> > His dmesg AFAIR has never reported any error of the kind "raid5:%s: 
-> > read error NOT corrected!! " (the error message you get on failed 
-> > rewrite AFAIU)
-> > Up to now (after my patch) he only tried with MD above DM-COW and DM 
-> > was dropping the drive on read error so I think MD didn't get any 
-> > opportunity to rewrite.
-> >
-> > It is not clear to me what kind of error MD got from DM:
-> >
-> > Apr 29 09:50:29 Clarus-gl2k10-2 kernel: device-mapper: snapshots: 
-> > Invalidating snapshot: Error reading/writing.
-> > Apr 29 09:50:29 Clarus-gl2k10-2 kernel: ata8: EH complete
-> > Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5: Disk failure on dm-1, 
-> > disabling device.
-> >
-> > I don't understand from what place the md_error() is called...
-> > [CUT]
-> 
-> Oh and there is another issue I wanted to expose:
-> 
-> His last dmesg:
-> http://download.netcenter.hu/bughunt/20100430/messages
-> 
-> Much after the line:
-> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5: Disk failure on dm-1, 
-> disabling device.
-> 
-> there are many lines like this:
-> Apr 29 09:50:29 Clarus-gl2k10-2 kernel: raid5:md3: read error not 
-> correctable (sector 1662189872 on dm-1).
-> 
-> How come MD still wants to read from a device it has disabled?
-> looks like a problem to me...
+>> The default setting for stripe_cache_size was 256. So 256 x 4K =3D 1=
+024K
+>> per device, which would be two stripes, I think (you commented to th=
+at
+>> effect earlier). But somehow the default setting was not optimal for
+>> sequential write throughput. When I increased stripe_cache_size, the
+>> sequential write throughput improved. Does that make sense? Why woul=
+d
+>> it be necessary to cache more than 2 stripes to get optimal sequenti=
+al
+>> write performance?
+>
+> The individual devices have some optimal write size - possible one
+> track or one cylinder (if we pretend those words mean something usefu=
+l these
+> days).
+> To be able to fill that you really need that much cache for each devi=
+ce.
+> Maybe your drives work best when they are sent 8M (16 stripes, as you=
+ say in
+> a subsequent email) before expecting the first write to complete..
+>
+> You say you get about 250MB/sec, so that is about 80MB/sec per drive
+> (3 drives worth of data).
+> Rotational speed is what? =A010K? =A0That is 166revs-per-second.
 
-There are often many IO requests in flight at the same time.  When one
-returns with an error we might fail the device but there are still lots more
-that have not yet completed.  As they complete we might write messages about
-them - even after we have reported the device as 'failed'.  But we never
-initiate an IO after the device has been marked 'faulty'.
+Actually, 5400rpm.
 
-NeilBrown
+> So about 500K per revolution.
 
+About twice that, about 1 MB per revolution.
 
+> I imagine you would need at least 3 revolutions worth of data in the =
+cache,
+> one that is currently being written, one that is ready to be written =
+next
+> (so the drive knows it can just keep writing) and one that you are in=
+ the
+> process of filling up.
+> You find that you need about 16 revolutions (it seems to be about one
+> revolution per stripe). =A0That is more than I would expect .... mayb=
+e there is
+> some extra latency somewhere.
 
-> MD also scrubs failed devices during check?
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So about 8 revolutions in the cache. 2 to 3 times what might be
+expected to be needed for optimal performance. Hmmm.
 
+16 stripes comes to 16*512KB per drive, or about 8MB per drive. At
+about 100MB/s, that is about 80 msec worth of writing. I don't see
+where 80 msec of latency might come from.
+
+Could it be a quirk of NCQ? I think each HDD has an NCQ of 31. But 31
+512 byte sectors is only 16KB. That does not seem relevant.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
