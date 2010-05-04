@@ -1,74 +1,58 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: Questions about 4k sector drives
-Date: Tue, 04 May 2010 11:29:47 -0400
-Message-ID: <yq1mxwfznv8.fsf@sermon.lab.mkp.net>
-References: <4BD42B57.9000703@kusche.de> <1272206601.7734.4.camel@faldara>
-	<4BDE0512.8070502@tmr.com>
-	<x2v87f94c371005030630idaaad1e9ue3faff470bd318e1@mail.gmail.com>
-	<4BDED1F2.102@cfl.rr.com> <yq17hnkpw7v.fsf@sermon.lab.mkp.net>
-	<4BE0201A.6080101@cfl.rr.com>
+From: Andrew Dunn <andrew.g.dunn.dod@gmail.com>
+Subject: Compatible Hardware Controllers (Smartctl, 8 port, SFF-8087)
+Date: Tue, 4 May 2010 14:45:29 -0400
+Message-ID: <g2mbfcaab951005041145y88e4b350le3e6e2a691160231@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BE0201A.6080101@cfl.rr.com> (Phillip Susi's message of "Tue, 4
-	May 2010 09:24:42 -0400")
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Freemyer <greg.freemyer@gmail.com>, Bill Davidsen <davidsen@tmr.com>, Florian Kusche <flox@kusche.de>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->>>>> "Phillip" == Phillip Susi <psusi@cfl.rr.com> writes:
+I am running two decent sized mdadm arrays:
 
->> We have means of obtaining alignment and physical sector size
->> information from both SCSI and ATA drives.  But only if the drive
->> firmware provides the information, of course.
+####################################################
 
-Phillip> How?  
+storrgie@MINERVA:~$ cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+[raid4] [raid10]
+md2 : active raid6 sdi1[4] sdl1[7] sdf1[1] sdk1[6] sdj1[5] sdh1[3]
+sdg1[2] sde1[0]
+      11721071616 blocks level 6, 512k chunk, algorithm 2 [8/8] [UUUUUUUU]
+      [===>.................]  check = 18.8% (368163248/1953511936)
+finish=504.2min speed=52401K/sec
 
-http://oss.oracle.com/~mkp/docs/linux-advanced-storage.pdf
+md0 : active raid6 sdn1[4] sdt1[6] sdm1[3] sdr1[7] sdq1[0] sds1[2]
+sdo1[1] sdd1[5]
+      5860558848 blocks level 6, 512k chunk, algorithm 2 [8/8] [UUUUUUUU]
+      [==============>......]  check = 71.2% (696254448/976759808)
+finish=87.8min speed=53242K/sec
 
+md1 : active raid0 sdc1[1] sdb1[0]
+      586067072 blocks 64k chunks
 
-Phillip> I don't see any such information in the output of hdparm -I for
-Phillip> instance.
+unused devices: <none>
 
-You need hdparm-9.27 or later.
+####################################################
 
+These two arrays are on this controller:
 
->> One currently shipping drive model on the market isn't reporting the
->> bigger physical block size.  But there are several other 4KB sector
->> products out there that are working just fine.
+http://www.supermicro.com/products/accessories/addon/AOC-USAS-L8i.cfm
+http://blog.agdunn.net/?p=391
 
-Phillip> The WD drive indeed reports a 512 byte sector size, but I also
-Phillip> have an SSD with a 512kb erase block size and it seems like
-Phillip> these knobs were intended to cover that as well, but again, the
-Phillip> values exported by the kernel in /sys are 0 and I don't see a
-Phillip> way for the drive to report this information to the kernel.
+The problem with this controller is that if you try to use smartctl or
+smartd to monitor your drives, the controller will become unresponsive
+and offline an arbitrary amount of drives. This causes a huge problem
+in raid because then the drives get marked as failed and I have to
+force add them back into the array.
 
-There are no means to report things like the erase block size.  A few
-years ago there was a push in the industry to define a set of parameters
-that would make sense for flash drives.  For a variety of reasons,
-however, this effort never really took off.  There are some things in
-the pipeline but it's mostly statistics and life expectancy stuff.
+My solution is basically to move from raid5 to raid6 so that I can
+afford a single drive failure, because I am not preempting a drive
+malfunction.
 
-On well-designed drives the erase block size and other physical
-characteristics do not matter because the firmware uses an approach akin
-to a log-structured filesystem.
+I would very much like to know if any of you are running budget
+($100-300) controller cards that work well with both mdadm and
+smartctl. I would very much like the card to support SFF-8087
+connectors but they don't have to.
 
-For low-end devices (where we could potentially benefit from knowing the
-physical characteristics) the problem is that this information is often
-considered part of the vendor's secret sauce.  Another common concern is
-that exporting a set of metrics squarely puts the drive in the "poorly
-designed" bucket and that's a marketing disaster.
-
-It is a lengthy process to get stuff pushed through the standards
-organizations.  Even if the industry had been successful in defining a
-set of SSD characteristics it would have taken quite a while for things
-to get ratified and show up in devices.  The expectation was that early
-SSD designs exhibiting side effects from being flash-based would be
-obsolete by then.
-
-And as it turns out you can get an SSD with a sane firmware for $100 and
-change these days...
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Thank you all in advance.
