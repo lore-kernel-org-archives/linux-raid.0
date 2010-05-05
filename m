@@ -1,66 +1,90 @@
-From: =?UTF-8?B?Q2zDoXVkaW8=?= Martins <ctpm@ist.utl.pt>
-Subject: Re: Compatible Hardware Controllers (Smartctl, 8 port, SFF-8087)
-Date: Tue, 4 May 2010 23:23:12 +0100
-Message-ID: <20100504232312.52ae8095.ctpm@ist.utl.pt>
-References: <g2mbfcaab951005041145y88e4b350le3e6e2a691160231@mail.gmail.com>
-	<z2yc268e4661005041209v95f82e8eo3b59cee8c5b43687@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH v2] raid6: fix recovery performance regression
+Date: Tue, 04 May 2010 20:41:56 -0700
+Message-ID: <1273030916.3046.16.camel@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <z2yc268e4661005041209v95f82e8eo3b59cee8c5b43687@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Drew <drew.kay@gmail.com>
-Cc: Andrew Dunn <andrew.g.dunn.dod@gmail.com>, linux-raid@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+The raid6 recovery code should immediately drop back to the optimized
+synchronous path when a p+q dma resource is not available.  Otherwise we
+run the non-optimized/multi-pass async code in sync mode.
 
-On Tue, 4 May 2010 12:09:41 -0700 Drew <drew.kay@gmail.com> wrote:
-> > The problem with this controller is that if you try to use smartctl=
- or
-> > smartd to monitor your drives, the controller will become unrespons=
-ive
-> > and offline an arbitrary amount of drives. This causes a huge probl=
-em
-> > in raid because then the drives get marked as failed and I have to
-> > force add them back into the array.
->=20
-> This is a known issue with the 1068 series which AFAIK there are some
-> patches floating around that resolve this issue. Refer to
-> https://bugzilla.kernel.org/show_bug.cgi?id=3D14831 for particulars.
->=20
+Verified with raid6test (NDISKS=255)
 
- Hi,
+Applies to kernels >= 2.6.32.
 
- Please take a look at
+Cc: <stable@kernel.org>
+Acked-by: NeilBrown <neilb@suse.de>
+Reported-by: H. Peter Anvin <hpa@zytor.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+Hi Linus,
 
- https://bugzilla.kernel.org/show_bug.cgi?id=3D13594
-
- As it seems to refer to the same issue.
-
- A patch is referred on the bottom of the bug page, but I haven't tried
-it yet.
-
-
-On Tue, 4 May 2010 14:45:29 -0400 Andrew Dunn <andrew.g.dunn.dod@gmail.=
-com> wrote:
-> My solution is basically to move from raid5 to raid6 so that I can
-> afford a single drive failure, because I am not preempting a drive
-> malfunction.
-
- Do note that this probably won't do you any good on the long run. I
-have this issue and I've seen it kick out several drives in a row, so
-you can end up with a dead array even it it's raid6.
-
- Please let me know if you have any luck with any of the pacthes, and
-I'll do so also.
-
- Best regards.
-
-Cl=C3=A1udio
+I'd like to get this in for 2.6.34, but it could just as soon wait for
+the merge window and go in for 2.6.34.1.  Note that 'scribble' is
+guaranteed to not be NULL given the current in-tree callers, so testing
+for an available offload resource is the only way to trigger this path.
 
 --
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dan
+
+ crypto/async_tx/async_raid6_recov.c |   21 +++++++++++++--------
+ 1 files changed, 13 insertions(+), 8 deletions(-)
+
+
+diff --git a/crypto/async_tx/async_raid6_recov.c b/crypto/async_tx/async_raid6_recov.c
+index 943f2ab..ce038d8 100644
+--- a/crypto/async_tx/async_raid6_recov.c
++++ b/crypto/async_tx/async_raid6_recov.c
+@@ -324,6 +324,7 @@ struct dma_async_tx_descriptor *
+ async_raid6_2data_recov(int disks, size_t bytes, int faila, int failb,
+ 			struct page **blocks, struct async_submit_ctl *submit)
+ {
++	void *scribble = submit->scribble;
+ 	int non_zero_srcs, i;
+ 
+ 	BUG_ON(faila == failb);
+@@ -332,11 +333,13 @@ async_raid6_2data_recov(int disks, size_t bytes, int faila, int failb,
+ 
+ 	pr_debug("%s: disks: %d len: %zu\n", __func__, disks, bytes);
+ 
+-	/* we need to preserve the contents of 'blocks' for the async
+-	 * case, so punt to synchronous if a scribble buffer is not available
++	/* if a dma resource is not available or a scribble buffer is not
++	 * available punt to the synchronous path.  In the 'dma not
++	 * available' case be sure to use the scribble buffer to
++	 * preserve the content of 'blocks' as the caller intended.
+ 	 */
+-	if (!submit->scribble) {
+-		void **ptrs = (void **) blocks;
++	if (!async_dma_find_channel(DMA_PQ) || !scribble) {
++		void **ptrs = scribble ? scribble : (void **) blocks;
+ 
+ 		async_tx_quiesce(&submit->depend_tx);
+ 		for (i = 0; i < disks; i++)
+@@ -406,11 +409,13 @@ async_raid6_datap_recov(int disks, size_t bytes, int faila,
+ 
+ 	pr_debug("%s: disks: %d len: %zu\n", __func__, disks, bytes);
+ 
+-	/* we need to preserve the contents of 'blocks' for the async
+-	 * case, so punt to synchronous if a scribble buffer is not available
++	/* if a dma resource is not available or a scribble buffer is not
++	 * available punt to the synchronous path.  In the 'dma not
++	 * available' case be sure to use the scribble buffer to
++	 * preserve the content of 'blocks' as the caller intended.
+ 	 */
+-	if (!scribble) {
+-		void **ptrs = (void **) blocks;
++	if (!async_dma_find_channel(DMA_PQ) || !scribble) {
++		void **ptrs = scribble ? scribble : (void **) blocks;
+ 
+ 		async_tx_quiesce(&submit->depend_tx);
+ 		for (i = 0; i < disks; i++)
+
+
