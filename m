@@ -1,117 +1,100 @@
-From: Tim Small <tim@seoss.co.uk>
-Subject: Re: Manually reconstructing a RAID5 array from a Dell PERC3/Di (Adaptec)
-Date: Wed, 05 May 2010 23:53:01 +0100
-Message-ID: <4BE1F6CD.1050202@seoss.co.uk>
-References: <4BE1F2C6.1070703@seoss.co.uk>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: converting to raid - Error 2
+Date: Wed, 05 May 2010 19:57:24 -0400
+Message-ID: <4BE205E4.8090308@redhat.com>
+References: <4BDB4076.7010909@vorgon.com> <4BDB4358.80009@redhat.com> <4BDB5268.8050102@vorgon.com> <4BE19BEB.1040009@redhat.com> <4BE1B489.1050906@vorgon.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010103070604040906020208"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig14C0EEB2E4A9847865D76F35"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BE1F2C6.1070703@seoss.co.uk>
+In-Reply-To: <4BE1B489.1050906@vorgon.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Timothy D. Lenz" <tlenz@vorgon.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is a multi-part message in MIME format.
---------------010103070604040906020208
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig14C0EEB2E4A9847865D76F35
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-Tim Small wrote:
-> Here's a diff between the hex-dump of the first 128 sectors of two of
-> the drives...
+On 05/05/2010 02:10 PM, Timothy D. Lenz wrote:
+
+>>> grub>  setup (hd0)
+>>>   Checking if "/boot/grub/stage1" exists... yes
+>>>   Checking if "/boot/grub/stage2" exists... yes
+>>>   Checking if "/boot/grub/e2fs_stage1_5" exists... yes
+>>>   Running "embed /boot/grub/e2fs_stage1_5 (hd0)"...  15 sectors are
+>>> embedded.
+>>> succeeded
+>>>   Running "install /boot/grub/stage1 (hd0) (hd0)1+15 p
+>>> (hd0,0)/boot/grub/stage2 /boot/grub/menu.l
+>>> st"... succeeded
+>>> Done.
+>>> ---------------------------------------
+
+>> Normally sda would be the one I would use, but sda1 would work as long=
+
+>> as you have a normal DOS master boot record on the drive.
+>>
+
+A normal DOS master boot record is one that resides in the master boot
+record of the drive and that knows to chain load the next boot sector
+from the first sector of the partition that's marked active.  So, if you
+install a boot loader on sda1, you have to have the normal DOS master
+boot record in the master boot record of the drive.  Once you install
+grub on the bare drive (aka, on sda instead of sda1), you wipe out any
+other boot loader in the master boot record and replace it with a grub
+master boot record.  So, at this point you probably don't have a normal
+DOS master boot record (unless the grub one suffices but I don't think
+it does) and will need to make sure to install whatever new boot loader
+you install to sda versus sda1 or else it won't overwrite the previous
+grub master boot record.
+
+> I was thinking making one more try, but ether using su instead of sudo
+> or just logging in as root as some stuff doesn't seem to work with sudo=
+=2E
+> Need to find the time when I'm home long enough with no interruptions t=
+o
+> try it:).
+
+Sudo versus su versus logging in as root shouldn't matter as long as
+whatever command you are running doesn't come back with some sort of
+error message.
+
+> Before I try the manual install, do you know what the "1+15 p" is in th=
+e
+> install line the auto system did?
+
+Prior to the install line that the setup macro does, it embedded the
+e2fs_stage1_5 on the disk between the partition table and the start of
+the first partition.  The (hd0)1+15 means to load sectors 1 through 15
+of (hd0) as the next stage in the boot loader.  The p is separate and
+merely means patch the block list for the next part of the boot loader
+into the previous part.  It can be omitted as grub does this anyway
+based upon the number of stages you specify.
+
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+	      http://people.redhat.com/dledford
+
+Infiniband specific RPMs available at
+	      http://people.redhat.com/dledford/Infiniband
 
 
+--------------enig14C0EEB2E4A9847865D76F35
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
---------------010103070604040906020208
-Content-Type: text/x-patch;
- name="perc3-metadata-hd.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="perc3-metadata-hd.diff"
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.14 (GNU/Linux)
 
---- /tmp/scsi-SSEAGATE_ST336607LC_3JA760WM.raw.hd	2010-05-05 22:18:02.000000000 +0000
-+++ /tmp/scsi-SSEAGATE_ST336607LC_3JA763SY.raw.hd	2010-05-05 22:18:02.000000000 +0000
-@@ -1,56 +1,54 @@
- 00000000  56 19 02 00 1e 00 00 00  10 00 00 00 f6 cd 3c 04  |V.............<.|
--00000010  00 00 02 00 7d d3 9e 6c  00 00 00 00 00 00 00 00  |....}..l........|
-+00000010  00 00 02 00 5a 96 f3 61  00 00 00 00 00 00 00 00  |....Z..a........|
- 00000020  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
- *
--000001f0  00 00 00 00 00 00 00 00  00 00 00 00 9e 55 f8 0a  |.............U..|
--00000200  c4 55 00 00 d3 30 04 bd  01 f0 fa fa 33 03 00 00  |.U...0......3...|
-+000001f0  00 00 00 00 00 00 00 00  00 00 00 00 14 8f e2 44  |...............D|
-+00000200  c4 55 00 00 d3 30 04 bd  01 f0 fa fa 2c 03 00 00  |.U...0......,...|
- 00000210  00 00 00 00 2c 00 00 00  00 00 00 00 2c 00 00 00  |....,.......,...|
--00000220  00 00 00 00 32 03 00 00  00 00 00 00 00 00 00 00  |....2...........|
-+00000220  00 00 00 00 2b 03 00 00  00 00 00 00 00 00 00 00  |....+...........|
- 00000230  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
- *
--000003f0  00 00 00 00 00 00 00 00  00 00 00 00 72 3c 4f d8  |............r<O.|
-+000003f0  00 00 00 00 00 00 00 00  00 00 00 00 72 3c 6f 23  |............r<o#|
- 00000400  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
- *
- 00000c00  98 19 13 04 00 00 01 00  d3 30 04 bd 01 f0 fa fa  |.........0......|
- 00000c10  ff ff ff ff ff ff ff ff  00 00 00 00 ff ff ff ff  |................|
- 00000c20  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  |................|
- 00000c30  ff ff ff ff ff ff ff ff  ff ff ff ff 00 00 00 00  |................|
- 00000c40  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
- *
- 00000df0  00 00 00 00 00 00 00 00  00 00 00 00 eb 72 03 35  |.............r.5|
- 00000e00  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
- *
- 00001200  99 25 03 00 d3 30 04 bd  01 f0 fa fa 2c 00 00 00  |.%...0......,...|
- 00001210  14 00 00 00 40 00 00 00  00 00 00 00 40 00 00 00  |....@.......@...|
--00001220  00 00 00 00 32 03 00 00  00 00 00 00 00 04 05 ff  |....2...........|
--00001230  d0 45 97 46 00 00 01 00  02 00 01 00 04 00 00 00  |.E.F............|
-+00001220  00 00 00 00 2b 03 00 00  00 00 00 00 00 04 05 ff  |....+...........|
-+00001230  d0 45 97 46 00 00 03 00  02 00 01 00 04 00 00 00  |.E.F............|
- 00001240  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
- *
--00001ff0  00 00 00 00 00 00 00 00  00 00 00 00 0b 02 09 e9  |................|
--00002000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-+00001ff0  00 00 00 00 00 00 00 00  00 00 00 00 0f 02 29 ea  |..............).|
-+00002000  00 00 00 00 01 96 01 6c  62 45 43 05 d3 30 04 bd  |.......lbEC..0..|
-+00002010  01 f0 fa fa 22 03 00 00  80 00 00 00 00 c5 3c 04  |....".........<.|
-+00002020  d3 30 04 bd 01 f0 fa fa  03 00 00 00 03 00 00 00  |.0..............|
-+00002030  04 00 00 00 00 00 00 00  05 00 00 00 01 00 00 00  |................|
-+00002040  1a 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-+00002050  00 00 00 00 00 00 00 00  01 00 00 00 80 00 00 00  |................|
-+00002060  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-+00002070  00 00 00 00 00 00 00 00  00 00 00 00 03 00 00 00  |................|
-+00002080  00 00 00 00 00 00 00 00  01 01 00 00 ff ff 00 00  |................|
-+00002090  52 35 20 53 79 73 74 65  6d 20 20 20 20 20 20 20  |R5 System       |
-+000020a0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
- *
--00002200  00 00 00 00 01 96 01 6c  62 45 43 05 d3 30 04 bd  |.......lbEC..0..|
--00002210  01 f0 fa fa 33 03 00 00  80 00 00 00 00 c5 3c 04  |....3.........<.|
--00002220  d3 30 04 bd 01 f0 fa fa  02 00 00 00 02 00 00 00  |.0..............|
--00002230  04 00 00 00 00 00 00 00  05 00 00 00 02 00 00 00  |................|
--00002240  1a 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
--00002250  00 00 00 00 10 00 00 00  01 00 00 00 80 00 00 00  |................|
--00002260  00 00 00 00 00 00 00 00  00 00 00 00 00 00 08 00  |................|
--00002270  01 00 00 00 01 00 00 00  00 a6 03 a0 02 00 00 00  |................|
--00002280  00 00 00 00 00 00 00 00  01 01 00 00 ff ff 00 00  |................|
--00002290  52 35 20 53 79 73 74 65  6d 20 20 20 20 20 20 20  |R5 System       |
--000022a0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
--*
--000023f0  00 00 00 00 00 00 00 00  00 00 00 00 0d d4 d2 4b  |...............K|
--00002400  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-+000021f0  00 00 00 00 00 00 00 00  00 00 00 00 0b d2 88 49  |...............I|
-+00002200  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
- *
- 00008000  99 19 01 00 00 00 00 00  05 00 00 00 e3 8c 81 53  |...............S|
--00008010  00 00 00 00 00 b9 1b 7f  01 00 00 00 7d d3 9e 6c  |............}..l|
--00008020  02 00 00 00 00 00 00 00  03 00 00 00 b5 ac e4 8f  |................|
-+00008010  00 00 00 00 5a 96 f3 61  01 00 00 00 7d d3 9e 6c  |....Z..a....}..l|
-+00008020  02 00 00 00 00 b9 1b 7f  03 00 00 00 b5 ac e4 8f  |................|
- 00008030  04 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
- 00008040  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
- *
--00008ff0  00 00 00 00 00 00 00 00  00 00 00 00 3f 4d d8 d0  |............?M..|
-+00008ff0  00 00 00 00 00 00 00 00  00 00 00 00 16 7e ea 44  |.............~.D|
- 00009000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
- *
- 00010000
+iEYEARECAAYFAkviBe0ACgkQg6WylM+/8ZSd+gCfV+xaZ7IWaciHtPLlCLliToT/
+TmYAoIKQCEBJ9QiutEwDs5MyfEN/jC5n
+=rNhP
+-----END PGP SIGNATURE-----
 
---------------010103070604040906020208--
+--------------enig14C0EEB2E4A9847865D76F35--
