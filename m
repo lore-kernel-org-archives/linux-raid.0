@@ -1,49 +1,57 @@
-From: MRK <mrk@shiftmail.org>
-Subject: Re: Suggestion needed for fixing RAID6 [SOLVED]
-Date: Wed, 05 May 2010 21:27:55 +0200
-Message-ID: <4BE1C6BB.8060408@shiftmail.org>
-References: <626601cae203$dae35030$0400a8c0@dcccs>
- <695a01cae2c1$a72907d0$0400a8c0@dcccs> <4BD193D0.5080003@shiftmail.org>
- <717901cae3e5$6a5fa730$0400a8c0@dcccs> <4BD3751A.5000403@shiftmail.org>
- <756601cae45e$213d6190$0400a8c0@dcccs> <4BD569E2.7010409@shiftmail.org>
- <7a3e01cae53f$684122c0$0400a8c0@dcccs> <4BD5C51E.9040207@shiftmail.org>
- <80a201cae621$684daa30$0400a8c0@dcccs> <4BD76CF6.5020804@shiftmail.org>
- <20100428113732.03486490@notabene.brown> <4BD830B0.1080406@shiftmail.org>
- <025e01cae6d7$30bb7870$0400a8c0@dcccs> <4BD843D4.7030700@shiftmail.org>
- <062001cae771$545e0910$0400a8c0@dcccs> <4BD9A41E.9050009@shiftmail.org>
- <0c1201cae7e0$01f9a930$0400a8c0@dcccs> <4BDA0F88.70907@shiftmail.org>
- <0d6401cae82c$da8b5590$0400a8c0@dcccs> <4BDB6DB6.5020306@shiftmail.org>
- <12cf01cae911$f0d92940$0400a8c0@dcccs> <4BDC6217.9000209@shiftmail.org>
- <154b01cae977$6e09da80$0400a8c0@dcccs>
- <20100503121747.7f2cc1f1@notabene.brown> <25a201caec67$15b26580$0400a8c0@dcccs>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH v2 1/1] md/raid6: Fix raid-6 read-error correction in
+ degraded state
+Date: Thu, 6 May 2010 07:02:56 +1000
+Message-ID: <20100506070256.11f2dcda@notabene.brown>
+References: <4BE1C461.6000503@logicschema.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <25a201caec67$15b26580$0400a8c0@dcccs>
+In-Reply-To: <4BE1C461.6000503@logicschema.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Janos Haar <janos.haar@netcenter.hu>
-Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
+To: "Gabriele A. Trombetti" <g.trombetti.lkrnl1213@logicschema.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>, Janos Haar <janos.haar@netcenter.hu>
 List-Id: linux-raid.ids
 
-On 05/05/2010 05:24 PM, Janos Haar wrote:
->> I think without DM COW it should probably work in his case.
->
-> First sorry for delay.
-> Without DM, the original behavior-fix patch worked very well.
 
-Great!
-Ok I have just resubmitted the patch (v2) which includes a "Tested-by: 
-Janos Haar <janos.haar@netcenter.hu>" line and a few fixes on the 
-description.
+Thanks.  This is now in my queue.
+I may even submit it for .34 as that doesn't seem as close as I thought.
 
-> [CUT]
-> Thanks a lot for all who helped me to solve this....
->
-> And MRK, please don't forget to write in my name. :-)
+NeilBrown
 
-I did it. Now it's in Neil's hands, hopefully he acks it and pushes it 
-to mainline.
 
-Thanks everybody,
-GAT
+On Wed, 05 May 2010 21:17:53 +0200
+"Gabriele A. Trombetti" <g.trombetti.lkrnl1213@logicschema.com> wrote:
+
+> Fix: md raid-6 was not trying to correct a read-error when in 
+> singly-degraded state and was instead dropping one more device, going to 
+> doubly-degraded state. This patch fixes this behaviour.
+> 
+> Tested-by: Janos Haar <janos.haar@netcenter.hu>
+> Signed-off-by: Gabriele A. Trombetti <g.trombetti.lkrnl1213@logicschema.com>
+> Reported-by: Janos Haar <janos.haar@netcenter.hu>
+> --------
+> --- linux-2.6.34-rc5-git8-vanilla/drivers/md/raid5.c    2010-04-28 
+> 13:05:03.000000000 +0200
+> +++ linux-2.6.34-rc5-git8/drivers/md/raid5.c    2010-04-28 
+> 13:08:15.000000000 +0200
+> @@ -1527,7 +1527,7 @@ static void raid5_end_read_request(struc
+> 
+>                  clear_bit(R5_UPTODATE, &sh->dev[i].flags);
+>                  atomic_inc(&rdev->read_errors);
+> -               if (conf->mddev->degraded)
+> +               if (conf->mddev->degraded >= conf->max_degraded)
+>                          printk_rl(KERN_WARNING
+>                                    "raid5:%s: read error not correctable "
+>                                    "(sector %llu on %s).\n",
+> 
+> ---------------------------------------------------------------
+> 
+> Resending patch:
+> v2: added "Tested-by" line, subsystem mentioned in summary line, body 
+> explanation mentions "md"
+> 
+> Thanks,
+> Gabriele A. Trombetti
+
