@@ -1,90 +1,28 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2] raid6: fix recovery performance regression
-Date: Tue, 04 May 2010 20:41:56 -0700
-Message-ID: <1273030916.3046.16.camel@dwillia2-linux.jf.intel.com>
+From: John Robinson <john.robinson@anonymous.org.uk>
+Subject: Re: Questions about 4k sector drives
+Date: Wed, 05 May 2010 08:44:48 +0100
+Message-ID: <4BE121F0.7000408@anonymous.org.uk>
+References: <4BD42B57.9000703@kusche.de> <1272206601.7734.4.camel@faldara>	<4BDE0512.8070502@tmr.com>	<x2v87f94c371005030630idaaad1e9ue3faff470bd318e1@mail.gmail.com>	<4BDED1F2.102@cfl.rr.com> <yq17hnkpw7v.fsf@sermon.lab.mkp.net>	<4BE0201A.6080101@cfl.rr.com> <yq1mxwfznv8.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <yq1mxwfznv8.fsf@sermon.lab.mkp.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "H. Peter Anvin" <hpa@zytor.com>, NeilBrown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-The raid6 recovery code should immediately drop back to the optimized
-synchronous path when a p+q dma resource is not available.  Otherwise we
-run the non-optimized/multi-pass async code in sync mode.
+Perhaps slightly o/t, but...
 
-Verified with raid6test (NDISKS=255)
+On 04/05/2010 16:29, Martin K. Petersen wrote:
+[...]
+> And as it turns out you can get an SSD with a sane firmware for $100 and
+> change these days...
 
-Applies to kernels >= 2.6.32.
+You can? Which one(s)? Would they be good for putting md bitmaps and 
+filesystem journals on?
 
-Cc: <stable@kernel.org>
-Acked-by: NeilBrown <neilb@suse.de>
-Reported-by: H. Peter Anvin <hpa@zytor.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
-Hi Linus,
+Cheers,
 
-I'd like to get this in for 2.6.34, but it could just as soon wait for
-the merge window and go in for 2.6.34.1.  Note that 'scribble' is
-guaranteed to not be NULL given the current in-tree callers, so testing
-for an available offload resource is the only way to trigger this path.
-
---
-Dan
-
- crypto/async_tx/async_raid6_recov.c |   21 +++++++++++++--------
- 1 files changed, 13 insertions(+), 8 deletions(-)
-
-
-diff --git a/crypto/async_tx/async_raid6_recov.c b/crypto/async_tx/async_raid6_recov.c
-index 943f2ab..ce038d8 100644
---- a/crypto/async_tx/async_raid6_recov.c
-+++ b/crypto/async_tx/async_raid6_recov.c
-@@ -324,6 +324,7 @@ struct dma_async_tx_descriptor *
- async_raid6_2data_recov(int disks, size_t bytes, int faila, int failb,
- 			struct page **blocks, struct async_submit_ctl *submit)
- {
-+	void *scribble = submit->scribble;
- 	int non_zero_srcs, i;
- 
- 	BUG_ON(faila == failb);
-@@ -332,11 +333,13 @@ async_raid6_2data_recov(int disks, size_t bytes, int faila, int failb,
- 
- 	pr_debug("%s: disks: %d len: %zu\n", __func__, disks, bytes);
- 
--	/* we need to preserve the contents of 'blocks' for the async
--	 * case, so punt to synchronous if a scribble buffer is not available
-+	/* if a dma resource is not available or a scribble buffer is not
-+	 * available punt to the synchronous path.  In the 'dma not
-+	 * available' case be sure to use the scribble buffer to
-+	 * preserve the content of 'blocks' as the caller intended.
- 	 */
--	if (!submit->scribble) {
--		void **ptrs = (void **) blocks;
-+	if (!async_dma_find_channel(DMA_PQ) || !scribble) {
-+		void **ptrs = scribble ? scribble : (void **) blocks;
- 
- 		async_tx_quiesce(&submit->depend_tx);
- 		for (i = 0; i < disks; i++)
-@@ -406,11 +409,13 @@ async_raid6_datap_recov(int disks, size_t bytes, int faila,
- 
- 	pr_debug("%s: disks: %d len: %zu\n", __func__, disks, bytes);
- 
--	/* we need to preserve the contents of 'blocks' for the async
--	 * case, so punt to synchronous if a scribble buffer is not available
-+	/* if a dma resource is not available or a scribble buffer is not
-+	 * available punt to the synchronous path.  In the 'dma not
-+	 * available' case be sure to use the scribble buffer to
-+	 * preserve the content of 'blocks' as the caller intended.
- 	 */
--	if (!scribble) {
--		void **ptrs = (void **) blocks;
-+	if (!async_dma_find_channel(DMA_PQ) || !scribble) {
-+		void **ptrs = scribble ? scribble : (void **) blocks;
- 
- 		async_tx_quiesce(&submit->depend_tx);
- 		for (i = 0; i < disks; i++)
-
+John.
 
