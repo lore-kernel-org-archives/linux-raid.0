@@ -1,41 +1,32 @@
-From: Neil Brown <neilb@suse.de>
-Subject: [PULL REQUEST] two small fixes for md for 2.6.34
-Date: Fri, 7 May 2010 21:13:07 +1000
-Message-ID: <19427.62915.600797.337003@notabene.brown>
+From: Jordan Russell <jr-list-2010@quo.to>
+Subject: Re: raid1.c read_balance() LBD issue?
+Date: Fri, 07 May 2010 12:37:12 -0500
+Message-ID: <4BE44FC8.4010508@quo.to>
+References: <4BD09399.4090901@quo.to>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, Joe Bryant <tenminjoe@yahoo.com>, "Gabriele A . Trombetti" <g.trombetti.lkrnl1213@logicschema.com>, Janos Haar <janos.haar@netcenter.hu>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4BD09399.4090901@quo.to>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 4/22/2010 1:21 PM, I wrote:
+> raid1.c's read_balance() function has:
+> 
+>         const unsigned long this_sector = r1_bio->sector;
+> 
+> Doesn't that need to be:
+> 
+>         const sector_t this_sector = r1_bio->sector;
+> 
+> for compatibility with LBD on 32-bit platforms?
 
-Hi Linus,
- please consider pulling these two bug fixes for md for 2.6.34.
- They are not very serious bugs but can lead to unexpected behaviour
- and in one case doesn't protect your data quite as much as you would
- like is certain cases.
+Any comments on this?
 
-Thanks,
-NeilBrown
+At very least it appears the truncation to 32 bits will break the "disk
+whose head is closest" logic.
 
-
-The following changes since commit 722154e4cacf015161efe60009ae9be23d492296:
-  Linus Torvalds (1):
-        Merge branch 'zerolen' of git://git.kernel.org/.../jgarzik/misc-2.6
-
-are available in the git repository at:
-
-  git://neil.brown.name/md/ for-linus
-
-Gabriele A. Trombetti (1):
-      md/raid6: Fix raid-6 read-error correction in degraded state
-
-NeilBrown (1):
-      md: restore ability of spare drives to spin down.
-
- drivers/md/md.c    |   10 ++++++++--
- drivers/md/raid5.c |    2 +-
- 2 files changed, 9 insertions(+), 3 deletions(-)
+-- 
+Jordan Russell
