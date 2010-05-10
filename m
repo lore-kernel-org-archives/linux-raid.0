@@ -1,74 +1,35 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Broken RAID1 boot arrays
-Date: Mon, 10 May 2010 13:06:48 -0400
-Message-ID: <4BE83D28.3000508@tmr.com>
-References: <03.5E.29689.68E67EB4@cdptpa-omtalb.mail.rr.com>
+Subject: Re: Questions about 4k sector drives
+Date: Mon, 10 May 2010 13:13:28 -0400
+Message-ID: <4BE83EB8.5060004@tmr.com>
+References: <4BD42B57.9000703@kusche.de> <1272206601.7734.4.camel@faldara> <4BDE0512.8070502@tmr.com> <x2v87f94c371005030630idaaad1e9ue3faff470bd318e1@mail.gmail.com> <4BDED1F2.102@cfl.rr.com> <yq17hnkpw7v.fsf@sermon.lab.mkp.net> <4BE0201A.6080101@cfl.rr.com> <yq1mxwfznv8.fsf@sermon.lab.mkp.net> <4BE121F0.7000408@anonymous.org.uk> <alpine.DEB.1.10.1005050945220.3685@uplift.swm.pp.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <03.5E.29689.68E67EB4@cdptpa-omtalb.mail.rr.com>
+In-Reply-To: <alpine.DEB.1.10.1005050945220.3685@uplift.swm.pp.se>
 Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lrhorer@satx.rr.com>
-Cc: linux-raid@vger.kernel.org
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: John Robinson <john.robinson@anonymous.org.uk>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Leslie Rhorer wrote:
-> 	I was running a system under kernel 2.6.26.2-amd64, and it was
-> having some problems that seemed possibly due to the kernel (or not), so I
-> undertook to upgrade the kernel to 2.6.33-2-amd64.  Now, there's a distro
-> upgrade "feature" which ordinarily prevents this upgrade, because udev won't
-> upgrade with the old kernel in place, and the kernel can't upgrade because
-> of unmet dependencies which require a newer udev version, among other
-> things. In any case, the work-around is to create the file
-> /etc/udev/kernel-upgrade, at which point udev can be upgraded and then the
-> kernel must be upgraded before rebooting.  Now, I've done this before, and
-> it worked, but I've never tried it on a system which boots from an array.
-> This time, it broke.
+Mikael Abrahamsson wrote:
+> On Wed, 5 May 2010, John Robinson wrote:
 >
-> 	As part of the upgrade, GRUB1 is supposed to chain load to GRUB2
-> which then continues to boot the system.  This does not seem to be
-> happening.  What's more, when linux begins to load, it doesn't seem to
-> recognize the arrays, so it can't find the root file system.  There are two
-> drives, /dev/hda and /dev/hdb, each divvied up into three partitions:
-> /dev/hdx1 is formatted as ext2 and (supposed to be) mounted as /boot, and
-> /dev/hdx2 formatted as ext3 and is (supposed to be) /, and /dev/hdx3 is
-> configured as swap.  In all three cases, the partitions are a pair of
-> members in a RAID1 array.  The /dev/hdx1 partitions have 1.0 superblocks and
-> are assigned /dev/md1.  The /dev/hdx2 partitions have 1.2 superblocks and
-> are assigned /dev/md2.  The /dev/hdx3 partitions have 1.2 superblocks and
-> are assigned /dev/md3.  All three have internal bitmaps.
+>> You can? Which one(s)? Would they be good for putting md bitmaps and 
+>> filesystem journals on?
 >
-> 	GRUB can initially read the /dev/hda1 partition, because it does
-> bring up the GRUB menu, which is on /dev/hdx1.  
+> Yes. The Intel X25-V 40G drive is the one I would recommend, I use it 
+> as a system drive in one box, it's not as fast (linear write speed) as 
+> the X25-M drives, but it's definitely a step up from the 5400rpm 2.5" 
+> drive I used in the system before :P
 >
-> 	If I boot to multiuser mode, I get a complaint about an address
-> space collision of a device.  It then recognizes the /dev/hda1 partition as
-> ext2 and starts to load the initrd, but then unceremoniously hangs.  After a
-> while, it aborts the boot sequence and informs the user it has given up
-> waiting for the root device.  It announces it cannot find /dev/md2 and drops
-> to busybox.  Busybox, however, complains about not being able to access tty,
-> and the system hangs for good.
->
-> 	If I boot to single user mode, then when raid1 and raid456 load
-> successfully, but then it complains that none of the arrays are assembled.
-> Afterwards, it waits for / to be available, and eventually times out with
-> the same errors as the multiuser mode.
->
-> 	I'm not sure where I should start looking.  I suppose if initrd
-> doesn't have the image of /etc, it might cause md to fail to load the
-> arrays, but it certainly should contain /etc.  What else could be causing
-> the failure?  I did happen to notice that under the old kernel, when md
-> first tried, the arrays would not load, but then a bit later in the boot
-> process, they did load.
->
->   
+2nd that, nice drive, cheap, many uses for it. In addition to bitmap and 
+journal (pick the right journal options and see a huge boost), putting 
+swap out there make hibernate one of those "wanna see it again" operations.
 
-I have zero experience with debian, but on several other distributions I 
-have noted that an upgrade to a very recent kernel from a fairly old 
-kernel (which you did) will make the LVM not work if you're using that. 
-If not, forget I said it, it's not related and I never chased it, I just 
-saw it a few times and muttered mighty oaths and moved on.
+I really want to use it for write cache, but I guess putting a big 
+journal there has a similar effect.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
