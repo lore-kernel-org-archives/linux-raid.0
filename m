@@ -1,41 +1,37 @@
-From: Tim Small <tim@seoss.co.uk>
-Subject: Re: Broken RAID1 boot arrays
-Date: Mon, 10 May 2010 10:47:37 +0100
-Message-ID: <4BE7D639.6080602@seoss.co.uk>
-References: <03.5E.29689.68E67EB4@cdptpa-omtalb.mail.rr.com> <4BE7CF2C.8030400@anonymous.org.uk>
+From: Matt Garman <matthew.garman@gmail.com>
+Subject: Re: What RAID type and why?
+Date: Mon, 10 May 2010 10:20:48 -0500
+Message-ID: <20100510152048.GA12411@septictank.raw-sewage.fake>
+References: <5bdc1c8b1003061402n1281b64es9fa597b8bc714bd5@mail.gmail.com> <87f94c371003061433x404a8c2fgcb61f817af6ecb1@mail.gmail.com> <5bdc1c8b1003061505g6b310f6ct6795b9180c2e6adf@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BE7CF2C.8030400@anonymous.org.uk>
+Content-Disposition: inline
+In-Reply-To: <5bdc1c8b1003061505g6b310f6ct6795b9180c2e6adf@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: Leslie Rhorer <lrhorer@satx.rr.com>, linux-raid@vger.kernel.org
+To: Mark Knecht <markknecht@gmail.com>
+Cc: Greg Freemyer <greg.freemyer@gmail.com>, Linux-RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 10/05/10 10:17, John Robinson wrote:
->
-> Secondly, the idea of grub1 chain-loading grub2 sounds iffy to me; use 
-> either grub1 or grub2 but not both.
+On Sat, Mar 06, 2010 at 03:05:46PM -0800, Mark Knecht wrote:
+> On Sat, Mar 6, 2010 at 2:33 PM, Greg Freemyer <greg.freemyer@gmail.com> wrote:
+> > You haven't said what kind of i/o rates you expect, nor how much
+> > storage you need.
+> 
+> Good points. I guess I was assuming I'd want 1TB storage and I'd
+> buy 3/5/6 1TB drives to get it. Honestly I probably don't need
+> anything close to that. My weekly backups of stock data run about
+> 1GB to 1TB should hold me for quite awhile I think.
 
-This is Debian's upgrade-mechanism for Grub.  It sets up grub1 to give 
-you the option of either:
+Where are you sourcing the stock data?  1GB/week seems awful low.
+You must be getting top of book only?
 
-1. Chainloading grub2, so that you can verify that it works correctly, 
-and then issue the command to remove grub1, an just-use grub2 if you're 
-happy with it, or in case there's some problem with grub2.
-2. Booting the kernel directly from grub1 (then you can remove grub2 
-once the system has booted).
+We get real-time full depth stock data.  NYSE and Nasdaq data are
+each about 100 GB/month, compressed.
 
-The OP should probably report this as a bug against the 
-linux-image-2.6.xx package which they are using in Debian.
+Just something to keep in mind if you ever start working with
+full-depth feeds.
 
-
-Tim.
-
--- 
-South East Open Source Solutions Limited
-Registered in England and Wales with company number 06134732.
-Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
-VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
-
+Also: for backups, you might want to consider par2.  You can use it
+to create a specified amount of parity data for each file or group
+of files.  Useful in the case of media errors.
