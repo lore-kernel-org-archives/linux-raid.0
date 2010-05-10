@@ -1,65 +1,35 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: Broken RAID1 boot arrays
-Date: Sun, 9 May 2010 21:25:11 -0500
-Message-ID: <03.5E.29689.68E67EB4@cdptpa-omtalb.mail.rr.com>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs and raid5 - "Structure needs cleaning for directory open"
+Date: Mon, 10 May 2010 12:20:33 +1000
+Message-ID: <20100510022033.GB7165@dastard>
+References: <1743435018.20100510013511@kaneda.iguw.tuwien.ac.at>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1743435018.20100510013511@kaneda.iguw.tuwien.ac.at>
+ <462402327.20100509210710@kaneda.iguw.tuwien.ac.at>
+ <1816344475.20100509204800@kaneda.iguw.tuwien.ac.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
+Cc: xfs@oss.sgi.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Sun, May 09, 2010 at 08:48:00PM +0200, Rainer Fuegenstein wrote:
+> 
+> today in the morning some daemon processes terminated because of
+> errors in the xfs file system on top of a software raid5, consisting
+> of 4*1.5TB WD caviar green SATA disks.
 
-	I was running a system under kernel 2.6.26.2-amd64, and it was
-having some problems that seemed possibly due to the kernel (or not), so I
-undertook to upgrade the kernel to 2.6.33-2-amd64.  Now, there's a distro
-upgrade "feature" which ordinarily prevents this upgrade, because udev won't
-upgrade with the old kernel in place, and the kernel can't upgrade because
-of unmet dependencies which require a newer udev version, among other
-things. In any case, the work-around is to create the file
-/etc/udev/kernel-upgrade, at which point udev can be upgraded and then the
-kernel must be upgraded before rebooting.  Now, I've done this before, and
-it worked, but I've never tried it on a system which boots from an array.
-This time, it broke.
+Reminds me of a recent(-ish) md/dm readahead cancellation fix - that
+would fit the symptoms of (btree corruption showing up under heavy IO
+load but no corruption on disk. However, I can't seem to find any
+references to it at the moment (can't remember the bug title), but
+perhaps your distro doesn't have the fix in it?
 
-	As part of the upgrade, GRUB1 is supposed to chain load to GRUB2
-which then continues to boot the system.  This does not seem to be
-happening.  What's more, when linux begins to load, it doesn't seem to
-recognize the arrays, so it can't find the root file system.  There are two
-drives, /dev/hda and /dev/hdb, each divvied up into three partitions:
-/dev/hdx1 is formatted as ext2 and (supposed to be) mounted as /boot, and
-/dev/hdx2 formatted as ext3 and is (supposed to be) /, and /dev/hdx3 is
-configured as swap.  In all three cases, the partitions are a pair of
-members in a RAID1 array.  The /dev/hdx1 partitions have 1.0 superblocks and
-are assigned /dev/md1.  The /dev/hdx2 partitions have 1.2 superblocks and
-are assigned /dev/md2.  The /dev/hdx3 partitions have 1.2 superblocks and
-are assigned /dev/md3.  All three have internal bitmaps.
+Cheers,
 
-	GRUB can initially read the /dev/hda1 partition, because it does
-bring up the GRUB menu, which is on /dev/hdx1.  
-
-	If I boot to multiuser mode, I get a complaint about an address
-space collision of a device.  It then recognizes the /dev/hda1 partition as
-ext2 and starts to load the initrd, but then unceremoniously hangs.  After a
-while, it aborts the boot sequence and informs the user it has given up
-waiting for the root device.  It announces it cannot find /dev/md2 and drops
-to busybox.  Busybox, however, complains about not being able to access tty,
-and the system hangs for good.
-
-	If I boot to single user mode, then when raid1 and raid456 load
-successfully, but then it complains that none of the arrays are assembled.
-Afterwards, it waits for / to be available, and eventually times out with
-the same errors as the multiuser mode.
-
-	I'm not sure where I should start looking.  I suppose if initrd
-doesn't have the image of /etc, it might cause md to fail to load the
-arrays, but it certainly should contain /etc.  What else could be causing
-the failure?  I did happen to notice that under the old kernel, when md
-first tried, the arrays would not load, but then a bit later in the boot
-process, they did load.
-
-	Has anyone else come across this problem?  The upgrade is from
-Debian "Lenny" to "Squeeze".   Where should I start looking?
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
