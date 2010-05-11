@@ -1,29 +1,29 @@
 From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: Broken RAID1 boot arrays
-Date: Tue, 11 May 2010 12:25:26 -0400
-Message-ID: <4BE984F6.1000603@tmr.com>
-References: <BE.8D.20763.249C8EB4@cdptpa-omtalb.mail.rr.com>
+Date: Tue, 11 May 2010 12:27:28 -0400
+Message-ID: <4BE98570.400@tmr.com>
+References: <4F.55.25297.BA4C8EB4@cdptpa-omtalb.mail.rr.com> <BE.8D.20763.249C8EB4@cdptpa-omtalb.mail.rr.com> <20100511075413.GA14000@maude.comedia.it>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BE.8D.20763.249C8EB4@cdptpa-omtalb.mail.rr.com>
+In-Reply-To: <20100511075413.GA14000@maude.comedia.it>
 Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lrhorer@satx.rr.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Leslie Rhorer wrote:
-> 	On a related note, does anyone know of a good Linux Live CD which
-> enables both network operations (especially telnetd and ftpd) along with
-> mdadm?  I have a couple of Live CDs on hand, but they don't support mdadm or
-> remote access.  This is a headless system, and I really can't effectively
-> work with a local console, plus I need to mount the /boot array in order to
-> properly edit the initrd.  I suppose I could mount the drive as a non-array
-> and then force a sync to the second drive, but I'd rather not. 
+Luca Berra wrote:
+> On Mon, May 10, 2010 at 10:04:32PM -0500, Leslie Rhorer wrote:
+>>
+>>     On a related note, does anyone know of a good Linux Live CD which
+>> enables both network operations (especially telnetd and ftpd) along with
+>> mdadm?  I have a couple of Live CDs on hand, but they don't support 
+>> mdadm or
+> http://www.sysresccd.org is nice, it has mdadm and ssh, no telnet and
+> ftp, but who needs those nowadays :P
 >
->   
-Fedora disks can be booted in rescue mode.
+What tool other than telnet do you use to open an interactive socket to 
+an arbitrary port?
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
