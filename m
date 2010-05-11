@@ -1,96 +1,99 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 1/2] ioat: convert to circ_buf
-Date: Tue, 11 May 2010 11:51:36 -0700
-Message-ID: <20100511185135.6139.67069.stgit@localhost.localdomain>
-References: <20100511184949.6139.96826.stgit@localhost.localdomain>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Spare drive won't spin down
+Date: Wed, 12 May 2010 06:53:18 +1000
+Message-ID: <20100512065318.44e934d4@notabene.brown>
+References: <922812.29139.qm@web31703.mail.mud.yahoo.com>
+	<20100507162034.1370d645@notabene.brown>
+	<717013.48748.qm@web31703.mail.mud.yahoo.com>
+	<20100507194704.3ffcf17e@notabene.brown>
+	<4BE83B75.8050709@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20100511184949.6139.96826.stgit@localhost.localdomain>
-Sender: netdev-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, netdev@vger.kernel.org
-Cc: Dan Williams <dan.j.williams@intel.com>
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4BE83B75.8050709@tmr.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Joe Bryant <tenminjoe@yahoo.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Use the common power-of-2 circular buffer macros.
+On Mon, 10 May 2010 12:59:33 -0400
+Bill Davidsen <davidsen@tmr.com> wrote:
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
+> Neil Brown wrote:
+> > On Fri, 7 May 2010 00:40:40 -0700 (PDT)
+> > Joe Bryant <tenminjoe@yahoo.com> wrote:
+> >
+> >   
+> >>> I'll see about fixing that.
+> >>>
+> >>> Recreate the array with "--metadata 1.0" or "--metadata 1.2" and it should work better.
+> >>>       
+> >> That's great, thanks very much.
+> >>
+> >>     
+> >
+> > It turns out it is a bit more subtle than that, though that approach may work
+> > for you.
+> > If you make an odd number of changes to the metadata, it will switch from
+> > doing what you want, to not.
+> > e.g. if /dev/foo is your spare device, then
+> >
+> >   mdadm /dev/md0 -f /dev/foo
+> >   mdadm /dev/md0 -r /dev/foo
+> >   mdadm /dev/md0 -a /dev/foo
+> >
+> > will switch between working and not working.  v0.90 metadata starts out not
+> > working.  v1.x start out working.
+> >   
+> 
+> So we can assume that the little dance steps above will make 1.x 
+> misbehave in the same way?
 
- drivers/dma/ioat/dma_v2.c |    2 +-
- drivers/dma/ioat/dma_v2.h |   18 +++++++-----------
- 2 files changed, 8 insertions(+), 12 deletions(-)
+Yes.
 
-diff --git a/drivers/dma/ioat/dma_v2.c b/drivers/dma/ioat/dma_v2.c
-index b5ae56c..b6699a3 100644
---- a/drivers/dma/ioat/dma_v2.c
-+++ b/drivers/dma/ioat/dma_v2.c
-@@ -553,7 +553,7 @@ bool reshape_ring(struct ioat2_dma_chan *ioat, int order)
- 	 */
- 	struct ioat_chan_common *chan = &ioat->base;
- 	struct dma_chan *c = &chan->common;
--	const u16 curr_size = ioat2_ring_mask(ioat) + 1;
-+	const u16 curr_size = ioat2_ring_size(ioat);
- 	const u16 active = ioat2_ring_active(ioat);
- 	const u16 new_size = 1 << order;
- 	struct ioat_ring_ent **ring;
-diff --git a/drivers/dma/ioat/dma_v2.h b/drivers/dma/ioat/dma_v2.h
-index ef2871f..d7b64f1 100644
---- a/drivers/dma/ioat/dma_v2.h
-+++ b/drivers/dma/ioat/dma_v2.h
-@@ -22,6 +22,7 @@
- #define IOATDMA_V2_H
- 
- #include <linux/dmaengine.h>
-+#include <linux/circ_buf.h>
- #include "dma.h"
- #include "hw.h"
- 
-@@ -71,31 +72,26 @@ static inline struct ioat2_dma_chan *to_ioat2_chan(struct dma_chan *c)
- 	return container_of(chan, struct ioat2_dma_chan, base);
- }
- 
--static inline u16 ioat2_ring_mask(struct ioat2_dma_chan *ioat)
-+static inline u16 ioat2_ring_size(struct ioat2_dma_chan *ioat)
- {
--	return (1 << ioat->alloc_order) - 1;
-+	return 1 << ioat->alloc_order;
- }
- 
- /* count of descriptors in flight with the engine */
- static inline u16 ioat2_ring_active(struct ioat2_dma_chan *ioat)
- {
--	return (ioat->head - ioat->tail) & ioat2_ring_mask(ioat);
-+	return CIRC_CNT(ioat->head, ioat->tail, ioat2_ring_size(ioat));
- }
- 
- /* count of descriptors pending submission to hardware */
- static inline u16 ioat2_ring_pending(struct ioat2_dma_chan *ioat)
- {
--	return (ioat->head - ioat->issued) & ioat2_ring_mask(ioat);
-+	return CIRC_CNT(ioat->head, ioat->issued, ioat2_ring_size(ioat));
- }
- 
- static inline u16 ioat2_ring_space(struct ioat2_dma_chan *ioat)
- {
--	u16 num_descs = ioat2_ring_mask(ioat) + 1;
--	u16 active = ioat2_ring_active(ioat);
--
--	BUG_ON(active > num_descs);
--
--	return num_descs - active;
-+	return ioat2_ring_size(ioat) - ioat2_ring_active(ioat);
- }
- 
- /* assumes caller already checked space */
-@@ -151,7 +147,7 @@ struct ioat_ring_ent {
- static inline struct ioat_ring_ent *
- ioat2_get_ring_ent(struct ioat2_dma_chan *ioat, u16 idx)
- {
--	return ioat->ring[idx & ioat2_ring_mask(ioat)];
-+	return ioat->ring[idx & (ioat2_ring_size(ioat) - 1)];
- }
- 
- static inline void ioat2_set_chainaddr(struct ioat2_dma_chan *ioat, u64 addr)
+> 
+> Could you explain (point to an explanation) why this whole odd/even 
+> thing exists?
+> 
 
+Maybe ....
+
+For backwards compatibility, the event counts in all the devices in an array
+must not differ by more than 1.  And if the information in the superblocks is
+different, then the event counts must be different to ensure that the current
+information is used when the array is restarted.
+
+Consequently, if the event counts are uniform across an array it is safe to
+just mark the superblocks on active drives as 'dirty' leaving spare drives
+alone.
+To then mark the array as 'clean' again we would need to either update the
+metadata on the spares (which we don't want to do) or decrease the event
+count on the active devices.
+However there are cases where decreasing the event count on active devices is
+not safe.
+If the array was dirty and we failed a device that would update the event
+count everywhere but on the failed device.
+When we then want to mark the array as 'clean' it is *not* safe to decrement
+the event count as then the failed drive could look like it is still a valid
+member of the array.
+
+I had the idea that I could encode this extra information in the odd/even
+status of the event count.  However it seems that now I explain it out loud
+it doesn't actually make a lot of sense.
+
+I should keep the "it is safe to decrement the event count" state in some
+internal state variable and assume it is 'false' when an array is started.
+That would be heaps cleaner and would actually do the right thing.
+
+Theoretically, when the spares are one behind the active array and we need to
+update them all, we should update the spares first, then the rest.  If we
+don't and there is a crash at the wrong time, some spares could be 2 events
+behind the most recent device.  However that is a fairly unlikely race to
+lose and the cost is only having a spare device fall out of the array, which
+is quite easy to put back it, that I might not worry to much about it.
+
+So if you haven't seen a patch to fix this in a week or two, please remind me.
+
+Thanks,
+NeilBrown
