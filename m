@@ -1,107 +1,50 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: layout of far blocks in raid10
-Date: Wed, 12 May 2010 08:54:14 +1000
-Message-ID: <20100512085414.3b137bfc@notabene.brown>
-References: <20100511151204.GA3781@rap.rap.dk>
-	<AANLkTimKPeTgUGLosNXJScE73agrlxL8NgO0W44OwlVh@mail.gmail.com>
-	<20100512075656.45257d16@notabene.brown>
-	<AANLkTikJte4n45uDZfKCXF1z-uuVmBhpN3qHPJz19pvV@mail.gmail.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Broken RAID1 boot arrays
+Date: Tue, 11 May 2010 18:59:11 -0500
+Message-ID: <3D.64.20763.25FE9EB4@cdptpa-omtalb.mail.rr.com>
+References: <1273616411.5140.25.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikJte4n45uDZfKCXF1z-uuVmBhpN3qHPJz19pvV@mail.gmail.com>
+In-Reply-To: <1273616411.5140.25.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Aryeh Gregor <Simetrical+list@gmail.com>
-Cc: Keld Simonsen <keld@keldix.com>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 11 May 2010 18:22:58 -0400
-Aryeh Gregor <Simetrical+list@gmail.com> wrote:
+> > remote access.  This is a headless system, and I really can't
+> effectively
+> > work with a local console, plus I need to mount the /boot array in order
+> to
+> > properly edit the initrd.  I suppose I could mount the drive as a non-
+> array
+> > and then force a sync to the second drive, but I'd rather not.
+> 
+> The debian install discs should do most of that,
 
-> On Tue, May 11, 2010 at 5:56 PM, Neil Brown <neilb@suse.de> wrote:
-> > I'm not quite sure how to respond to this... =C2=A0As a mathematici=
-an I would
-> > expect you to understand the important of precision in choosing wor=
-ds, yet
-> > you use the word "know" for something that is exactly wrong. =C2=A0=
-Either you mean
-> > "guess" or you have been seriously misinformed. =C2=A0If it is the =
-latter, then
-> > please let me know where this misinformation came from so I can see=
- about
-> > getting it corrected.
-> >
-> > md/raid10 uses a simple cyclic layout in all cases. =C2=A0It does s=
-o because this
-> > layout is completely general and works for all numbers of devices a=
-nd copies.
-> >
-> > So you can only survive multiple device failures where are most N-1=
- are
-> > adjacent where N is the number of copies, and the first and last de=
-vices are
-> > treated as adjacent.
->=20
-> Mathematicians are sometimes wrong too, sadly.  :)  (And I'm only a
-> grad student!)  I believe this is where I got my info:
+	Yeah, but ssh is a bit of a pain to work with from a live CD when
+one must repeatedly reboot the system.  I'm using an Ubuntu live CD right
+now, but I have to run `sudo apt-get install openssh-server` on the
+workstation every time I boot (and as I mentioned, any console access on the
+machine is rather difficult), and then I have to run `ssh -o
+UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@backup`
+from one of my workstations.  Once or twice isn't all that bad, but more
+than that gets old in a hurry.
 
-A grad student!  You must be over educated:
-         http://www.maa.org/devlin/devlin_02_10.html
-:-)
+> and lenny or later
+> allows you to setup a ssh server if you select expert mode.
 
->=20
-> http://git.debian.org/?p=3Dpkg-mdadm/mdadm.git;a=3Dblob_plain;f=3Ddeb=
-ian/FAQ;hb=3DHEAD
+	"Lenny" isn't really a good option.  I'd much rather have a later
+kernel.  By "Setup", do you mean install the OS, or enter recovery mode?  I
+don't want to try to install the OS: that could be a disaster.  BTW, the
+2.6.32 kernel is moving the IDE disks all the way from /hda and /hdb to /sdj
+and /sdk.  I think that's part of why it's breaking: the existing mdadm.conf
+doesn't scan that high.
 
-Thanks... I guess I should read through that and report errors...
+> If that's not complete enough then I believe http://www.sysresccd.org/
+> is what you are after.
 
->=20
-> The answer to question 20 of that suggests that if you have four
-> disks, 0 1 2 3, then 0 and 1 form one pair and 2 and 3 form the other=
-=2E
->  If 2 fails, then 0 or 1 could still fail without data loss, but a
-> failure of 3 will cause data loss.  Obviously, you know what you're
-> talking about better than a Debian FAQ, so unless I'm misunderstandin=
-g
-> the FAQ or you or both, maybe you should talk to the author of that.
+	Thanks.  I may check it out if I don't get this working in a couple
+of more boot cycles.
 
-The conclusion stated in question 20 is correct if you are considering =
-the
-'near' layout, though the reasoning is foggy and doesn't generalise to =
-the
-'far' or 'offset' layout.
-
-With a 'near 2' layout on 4 drives, the blocks are:
-
-  0  0  1  1
-  2  2  3  3
-
-which looks like striping across mirrored pairs, but that is really jus=
-t a
-coincidence.
-On 5 drives it would look like:
-
-  0  0  1  1  2
-  2  3  3  4  4
-
-The rule "OK as long as no two adjacent devices fail" still holds, thou=
-gh
-there are some cases where it is OK even if two adjacent devices fail, =
-for
-the even-number-of-devices case.
-
-NeilBrown
-
->=20
-> Testing with loopback files does seem to show that failing the second
-> and third drives in a four-drive RAID will cause the RAID to fail, as
-> I would predict from what you say and contrary to what I interpreted
-> that FAQ to mean, so hopefully now I understand correctly.
->=20
-> Thanks for the correction.  Next time I'll be more cautious.
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
