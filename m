@@ -1,63 +1,69 @@
-From: Aryeh Gregor <Simetrical+list@gmail.com>
-Subject: Re: layout of far blocks in raid10
-Date: Tue, 11 May 2010 18:22:58 -0400
-Message-ID: <AANLkTikJte4n45uDZfKCXF1z-uuVmBhpN3qHPJz19pvV@mail.gmail.com>
-References: <20100511151204.GA3781@rap.rap.dk>
-	 <AANLkTimKPeTgUGLosNXJScE73agrlxL8NgO0W44OwlVh@mail.gmail.com>
-	 <20100512075656.45257d16@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [RFC PATCH 0/2] a couple of readonly handling fixups
+Date: Wed, 12 May 2010 08:33:32 +1000
+Message-ID: <20100512083332.45e71edf@notabene.brown>
+References: <20090108072023.9577.3585.stgit@dwillia2-linux.ch.intel.com>
+	<18803.46655.134295.118861@nbeee.brown>
+	<AANLkTilViY9QWurh9QN07zShPt9rPlfCOVVtH7896yoz@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100512075656.45257d16@notabene.brown>
+In-Reply-To: <AANLkTilViY9QWurh9QN07zShPt9rPlfCOVVtH7896yoz@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Keld Simonsen <keld@keldix.com>, linux-raid@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, May 11, 2010 at 5:56 PM, Neil Brown <neilb@suse.de> wrote:
-> I'm not quite sure how to respond to this... =C2=A0As a mathematician=
- I would
-> expect you to understand the important of precision in choosing words=
-, yet
-> you use the word "know" for something that is exactly wrong. =C2=A0Ei=
-ther you mean
-> "guess" or you have been seriously misinformed. =C2=A0If it is the la=
-tter, then
-> please let me know where this misinformation came from so I can see a=
-bout
-> getting it corrected.
->
-> md/raid10 uses a simple cyclic layout in all cases. =C2=A0It does so =
-because this
-> layout is completely general and works for all numbers of devices and=
- copies.
->
-> So you can only survive multiple device failures where are most N-1 a=
-re
-> adjacent where N is the number of copies, and the first and last devi=
-ces are
-> treated as adjacent.
+On Tue, 11 May 2010 11:06:48 -0700
+Dan Williams <dan.j.williams@intel.com> wrote:
 
-Mathematicians are sometimes wrong too, sadly.  :)  (And I'm only a
-grad student!)  I believe this is where I got my info:
+> On Sun, Jan 18, 2009 at 4:07 PM, Neil Brown <neilb@suse.de> wrote:
+> > On Thursday January 8, dan.j.williams@intel.com wrote:
+> >> The BUG_ON(mddev->ro =3D=3D 1) in md_write_start can be triggered =
+under two
+> >> circumstances in recent kernels. =C2=A0One was reported by Justin =
+Maggard:
+> >
+> > Hi Dan,
+> > =C2=A0Thanks for following up with this.....
+> >
+> > (I meant to send this over a week ago, but I've been on vaction
+> > in Tasmania and my mobile has no coverage....)
+> >
+> [..]
+> >> =C2=A0 =C2=A0 =C2=A0 md: set mddev readonly flag on blkdev BLKROSE=
+T ioctl
+> >
+> > This one I'm happy with. =C2=A0I'll make sure it gets through.
+>=20
+> This slippery bugger seems to have evaded upstream, do you want me to=
+ resend?
 
-http://git.debian.org/?p=3Dpkg-mdadm/mdadm.git;a=3Dblob_plain;f=3Ddebia=
-n/FAQ;hb=3DHEAD
+No thanks, the link below is good enough.
+That patch is now in my for-next branch and will go for-linus in
+2.6.whatevercomesnext.
 
-The answer to question 20 of that suggests that if you have four
-disks, 0 1 2 3, then 0 and 1 form one pair and 2 and 3 form the other.
- If 2 fails, then 0 or 1 could still fail without data loss, but a
-failure of 3 will cause data loss.  Obviously, you know what you're
-talking about better than a Debian FAQ, so unless I'm misunderstanding
-the FAQ or you or both, maybe you should talk to the author of that.
+I normally stick that sort of thing somewhere in my stack before replyi=
+ng
+that "I will make it so".  I guess I failed that time.
 
-Testing with loopback files does seem to show that failing the second
-and third drives in a four-drive RAID will cause the RAID to fail, as
-I would predict from what you say and contrary to what I interpreted
-that FAQ to mean, so hopefully now I understand correctly.
 
-Thanks for the correction.  Next time I'll be more cautious.
+>=20
+> Here is a link for reference:
+> http://marc.info/?l=3Dlinux-raid&m=3D123139948817348&w=3D2
+>=20
+> I have seen another report of the md_write_start() BUG_ON triggering
+> so I'm wondering if there are other ways for mddev->ro and
+> bdev->bd_part->policy to get out of sync, or if they are just hitting
+> the bug that this patch fixes?
+
+Maybe we should just get rid of the BUG_ON??=20
+Let's set how it goes once this patch is really in.
+
+Thanks,
+NeilBrown
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
 n
