@@ -1,39 +1,37 @@
-From: Luca Berra <bluca@comedia.it>
-Subject: Re: Broken RAID1 boot arrays
-Date: Wed, 12 May 2010 08:28:34 +0200
-Message-ID: <20100512062834.GB30571@maude.comedia.it>
-References: <4F.55.25297.BA4C8EB4@cdptpa-omtalb.mail.rr.com> <BE.8D.20763.249C8EB4@cdptpa-omtalb.mail.rr.com> <20100511075413.GA14000@maude.comedia.it> <4BE98570.400@tmr.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4BE98570.400@tmr.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+From: David Howells <dhowells@redhat.com>
+Subject: Re: [PATCH 2/2] ioat2,3: convert to producer/consumer locking
+Date: Wed, 12 May 2010 09:36:05 +0100
+Message-ID: <31229.1273653365@redhat.com>
+References: <20100511185141.6139.98842.stgit@localhost.localdomain> <20100511184949.6139.96826.stgit@localhost.localdomain>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20100511185141.6139.98842.stgit@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: dhowells@redhat.com, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, netdev@vger.kernel.org, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Maciej Sosnowski <maciej.sosnowski@intel.com>
 List-Id: linux-raid.ids
 
-On Tue, May 11, 2010 at 12:27:28PM -0400, Bill Davidsen wrote:
-> Luca Berra wrote:
->> On Mon, May 10, 2010 at 10:04:32PM -0500, Leslie Rhorer wrote:
->>>
->>>     On a related note, does anyone know of a good Linux Live CD which
->>> enables both network operations (especially telnetd and ftpd) along with
->>> mdadm?  I have a couple of Live CDs on hand, but they don't support mdadm 
->>> or
->> http://www.sysresccd.org is nice, it has mdadm and ssh, no telnet and
->> ftp, but who needs those nowadays :P
->>
-> What tool other than telnet do you use to open an interactive socket to an 
-> arbitrary port?
-netcat or socat :)
-but Leslie and me were talking about daemons in the specific environment
-of a live cd, YMMV.
-L.
 
--- 
-Luca Berra -- bluca@comedia.it
-         Communication Media & Services S.r.l.
-  /"\
-  \ /     ASCII RIBBON CAMPAIGN
-   X        AGAINST HTML MAIL
-  / \
+Out of interest, does it make the code smaller if you mark
+ioat2_get_ring_ent() and ioat2_ring_mask() with __attribute_const__?
+
+I'm not sure whether it'll affect how long gcc is willing to cache these, but
+once computed, I would guess they won't change within the calling function.
+
+Also, is the device you're driving watching the ring and its indices?  If so,
+does it modify the indices?  If that is the case, you might need to use
+read_barrier_depends() rather than smp_read_barrier_depends().
+
+> +		prefetch(ioat2_get_ring_ent(ioat, idx + i + 1));
+> +		desc = ioat2_get_ring_ent(ioat, idx + i);
+>  		dump_desc_dbg(ioat, desc);
+>  		tx = &desc->txd;
+>  		if (tx->cookie) {
+
+Is this right, I wonder?  You're prefetching [i+1] before reading [i]?  Doesn't
+this mean that you might have to wait for [i+1] to be retrieved from RAM before
+[i] can be read?  Should you instead read tx->cookie before issuing the
+prefetch?  Admittedly, this is only likely to affect the reading of the head of
+the queue - subsequent reads in the same loop will, of course, have been
+prefetched.
+
+David
