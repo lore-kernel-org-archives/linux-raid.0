@@ -1,40 +1,71 @@
-From: Tim Small <tim@buttersideup.com>
-Subject: Re: Use of WD20EARS with MDADM
-Date: Wed, 12 May 2010 14:06:47 +0100
-Message-ID: <4BEAA7E7.9000604@buttersideup.com>
-References: <4BAB8D41.4010801@gmail.com>	 <F50E50EC-32CF-4FC4-949B-E8DA56B08D50@santools.com>	 <4BABA12D.6040605@shiftmail.org> <4BAF8185.9040307@gmx.net>	 <4BC61D47.6090403@tmr.com> <4BCC65EB.3080803@cfl.rr.com>	 <4BCEFB99.9080806@tmr.com> <4BCF163C.6040604@cfl.rr.com>	 <y2x5bdc1c8b1004211036ra8e10a43kc1a13c2b374a5f7b@mail.gmail.com>	 <4BCF4693.3020101@buttersideup.com> <m2x5bdc1c8b1004211201ob1ea0c67k67b03eb4627a1375@mail.gmail.com> <4BCF52ED.3000607@cfl.rr.com>
+From: Frank Corrao <fcorrao@temp555.com>
+Subject: reshaping raid6 in-place
+Date: Wed, 12 May 2010 19:10:35 -0400 (EDT)
+Message-ID: <alpine.LRH.2.00.1005121857150.2432@appaloosa.temp555.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BCF52ED.3000607@cfl.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: Mark Knecht <markknecht@gmail.com>, Bill Davidsen <davidsen@tmr.com>, st0ff@npl.de, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+I have a 5-disk raid5 array which I recently reshaped to raid6 while 
+simultaneously adding a 6th disk.  mdadm (3.1.1) reported that the 
+kernel I was running at the time (2.6.30) wasn't safe to perform the 
+in-place portion of the reshaping.  The array was partitionally 
+converted to raid6, but I believe the Q blocks are all on the last 
+device I added.  mdadm seems to report the algorithm as 
+left-symmetric-6 as opposed to left-symmetric.  Today I upgraded to 
+2.6.32 and mdadm 3.1.2 and attempted to complete the re-shaping but ran 
+into a snag:
+
+$ sudo ./mdadm -v --grow /dev/md2 -l 6 -n 6 -p left-symmetric
+mdadm: /dev/md2: Something wrong - reshape aborted
+
+Is my syntax correct?
+
+Frank
 
 
-On 21/04/10 20:33, Phillip Susi wrote:
-> On 4/21/2010 3:01 PM, Mark Knecht wrote:
->    
->> It's unfortunate that this drive doesn't respond to APM commands either.
->>      
-> Yes it is.... would be nice if they made it respond to the standard APM
-> command meant to configure this kind of behavior instead of creating a
-> proprietary command and dos utility to invoke it.  It's also a shame the
-> drive lies about its physical sector size and has no way to turn that
-> off.  Might be a nice project to reverse engineer this utility on
-> windows to figure out the command it sends down and add it to hdparm.
->    
 
-I did have a look at this a while ago (it seemed to be built with Watcom 
-(now open-source) and a public-domain DOS extended along with an 
-open-sourced binary-compressor - decompilation under Watcom on FreeDOS 
-seemed possible), and it seems that Mark Lord has done a chunk more 
-hacking on it, since there is a reference to initial support in the 
-latest hdparm changelog - which you might want to take a look at....
 
-Cheers,
 
-Tim.
+Relevant portion of /proc/mdstat:
+
+md2 : active raid6 sda3[0] sde3[5] sdd3[4] sdf3[3] sdc3[2] sdb3[1]
+       5721706496 blocks level 6, 1024k chunk, algorithm 18 [6/6] [UUUUUU]
+
+
+
+$ sudo ./mdadm --detail /dev/md2
+/dev/md2:
+         Version : 0.90
+   Creation Time : Mon Oct 19 14:15:33 2009
+      Raid Level : raid6
+      Array Size : 5721706496 (5456.64 GiB 5859.03 GB)
+   Used Dev Size : 1430426624 (1364.16 GiB 1464.76 GB)
+    Raid Devices : 6
+   Total Devices : 6
+Preferred Minor : 2
+     Persistence : Superblock is persistent
+
+     Update Time : Wed May 12 19:05:51 2010
+           State : clean
+  Active Devices : 6
+Working Devices : 6
+  Failed Devices : 0
+   Spare Devices : 0
+
+          Layout : left-symmetric-6
+      Chunk Size : 1024K
+
+            UUID : 677f0016:b447937b:afdaf140:4080c53a
+          Events : 0.16148
+
+     Number   Major   Minor   RaidDevice State
+        0       8        3        0      active sync   /dev/sda3
+        1       8       19        1      active sync   /dev/sdb3
+        2       8       35        2      active sync   /dev/sdc3
+        3       8       83        3      active sync   /dev/sdf3
+        4       8       51        4      active sync   /dev/sdd3
+        5       8       67        5      active sync   /dev/sde3
