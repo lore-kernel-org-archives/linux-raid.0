@@ -1,130 +1,136 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Broken RAID1 boot arrays
-Date: Tue, 11 May 2010 19:13:01 -0500
-Message-ID: <07.C9.20538.092F9EB4@cdptpa-omtalb.mail.rr.com>
-References: <3D.64.20763.25FE9EB4@cdptpa-omtalb.mail.rr.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Doubt about mdadm - v2.6.7.1 - 15th October 2008
+Date: Wed, 12 May 2010 11:03:35 +1000
+Message-ID: <20100512110335.166b79bc@notabene.brown>
+References: <AANLkTim3XpTGBR8n7gdcXSABvnQxFExWM2xNd8AarSa5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <3D.64.20763.25FE9EB4@cdptpa-omtalb.mail.rr.com>
+In-Reply-To: <AANLkTim3XpTGBR8n7gdcXSABvnQxFExWM2xNd8AarSa5@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Light King <thelightking@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> don't want to try to install the OS: that could be a disaster.  BTW, the
-> 2.6.32 kernel is moving the IDE disks all the way from /hda and /hdb to
-> /sdj
-> and /sdk.  I think that's part of why it's breaking: the existing
-> mdadm.conf
-> doesn't scan that high.
+On Tue, 11 May 2010 12:07:08 +0530
+Light King <thelightking@gmail.com> wrote:
 
-	OK, maybe not.  I re-arranged things so the boot drives are /dev/sda
-and /dev/sdb, but it still isn't working.  When I boot the Ubuntu live CD
-and install mdadm, it creates the following mdadm.conf:
+> hello  ,
+> 
+> i m using mdadm - v2.6.7.1 .  when I m creating a raid array of 4 disk
+> using command
+> 
+> mdadm --create --chunk=64 --level=0 --raid-devices=4 /dev/md99
+> /dev/sda /dev/sdb /dev/sdc /dev/sdd
+> 
+> 
+> in dev directory of my PC I m getting md99 device and along with this
+> md_d99 . So I m not able understand what is this md_d99 ? this thing
+> was not happening previously in previous versions of mdadm .
+> 
 
-ubuntu@ubuntu:~$ cat /etc/mdadm/mdadm.conf
-# mdadm.conf
-#
-# Please refer to mdadm.conf(5) for information about this file.
-#
+Does this extra "md_d99" appear when you create the array, or only when you
+assemble it, or only after reboot?
 
-# by default, scan all partitions (/proc/partitions) for MD superblocks.
-# alternatively, specify devices to scan, using wildcards if desired.
-DEVICE partitions
+What does
+  ls -l /dev/md* 
+show?
 
-# auto-create devices with Debian standard permissions
-CREATE owner=root group=disk mode=0660 auto=yes
+> 
+> another issue if i reboot the PC also it shd keep active the md99
+> array , but it is not happening . in cat /proc/mdstat only I can found
+> md_d99 .
 
-# automatically tag new arrays as belonging to the local system
-HOMEHOST <system>
+This sounds like the array is being assembled by udev issuing
+   mdadm -I devname
+commands, the somehow "mdadm -I" is getting confused about whether to create
+a partitioned array or not (/dev/md99 cannot have partitions, /dev/md_d99
+can).
 
-# instruct the monitoring daemon where to send mail alerts
-MAILADDR root
+Maybe try:
 
-# definitions of existing MD arrays
-ARRAY /dev/md/1 level=raid1 metadata=1.0 num-devices=2
-UUID=d6a2c60b:7345e957:05aefe0b:f8d1527f name='Backup':1
-ARRAY /dev/md/2 level=raid1 metadata=1.2 num-devices=2
-UUID=d45ff663:9e53774c:6fcf9968:21692025 name='Backup':2
-ARRAY /dev/md/3 level=raid1 metadata=1.2 num-devices=2
-UUID=3615c4a2:33786b6d:b13863d9:458cd054 name='Backup':3
-ARRAY /dev/md/0 level=raid5 metadata=1.2 num-devices=8
-UUID=940ae4e4:04057ffc:5e92d2fb:63e3efb7 name='Backup':0
+ mdadm -Ss
+ mdadm -Ivv /dev/sda
+ mdadm -Ivv /dev/sdb
+ mdadm -Ivv /dev/sdc
+ mdadm -Ivv /dev/sdd
+ cat /proc/mdstat
+then report the output of all of that.
 
-# This file was auto-generated on Tue, 11 May 2010 23:45:16 +0000
-# by mkconf $Id$
+All the config files you listed look OK.
 
-	If I try to auto-assemble the arrays, it fails:
-
-ubuntu@ubuntu:~$ sudo mdadm --assemble --scan
-mdadm: no devices found for /dev/md/1
-mdadm: no devices found for /dev/md/2
-mdadm: no devices found for /dev/md/3
-mdadm: no devices found for /dev/md/0
-
-	Yet I can manually assemble them with no issues:
-
-ubuntu@ubuntu:~$ sudo mdadm --assemble /dev/md2 /dev/sda2 /dev/sdb2
-mdadm: /dev/md2 has been started with 2 drives.
-
-	I think this failure to auto-assemble lies at the root of the reason
-the arrays are not coming up (and consequently the system is not booting),
-but why is this happening?  Below is the result of the --examine for
-/dev/md2:
-
-ubuntu@ubuntu:~$ sudo mdadm --examine /dev/sda2
-/dev/sda2:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : d45ff663:9e53774c:6fcf9968:21692025
-           Name : 'Backup':2
-  Creation Time : Sun Dec 20 04:59:43 2009
-     Raid Level : raid1
-   Raid Devices : 2
-
- Avail Dev Size : 554884828 (264.59 GiB 284.10 GB)
-     Array Size : 554884828 (264.59 GiB 284.10 GB)
-    Data Offset : 272 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : b77a6eb8:c07a50f5:3bff3afb:846652a2
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Tue May 11 06:27:13 2010
-       Checksum : 96af22ac - correct
-         Events : 14920
+NeilBrown
 
 
-    Array Slot : 2 (failed, 1, 0)
-   Array State : Uu 1 failed
-ubuntu@ubuntu:~$
-ubuntu@ubuntu:~$ sudo mdadm --examine /dev/sdb2
-/dev/sdb2:
-          Magic : a92b4efc
-        Version : 1.2
-    Feature Map : 0x1
-     Array UUID : d45ff663:9e53774c:6fcf9968:21692025
-           Name : 'Backup':2
-  Creation Time : Sun Dec 20 04:59:43 2009
-     Raid Level : raid1
-   Raid Devices : 2
 
- Avail Dev Size : 554884828 (264.59 GiB 284.10 GB)
-     Array Size : 554884828 (264.59 GiB 284.10 GB)
-    Data Offset : 272 sectors
-   Super Offset : 8 sectors
-          State : clean
-    Device UUID : bc74e25e:14e6562a:f136cf70:a2f6c6ac
-
-Internal Bitmap : 8 sectors from superblock
-    Update Time : Tue May 11 06:27:13 2010
-       Checksum : f2324fd6 - correct
-         Events : 14920
-
-
-    Array Slot : 1 (failed, 1, 0)
-   Array State : uU 1 failed
+> 
+> I created a array with the following command
+> mdadm --create --chunk=64 --level=0 --raid-devices=4 /dev/md99
+> /dev/sda /dev/sdb /dev/sdc /dev/sdd
+> 
+> before reboot the system in cat /proc/mdstat I used to get md99 but
+> after reboot following things are coming ~~~~~~~~
+> 
+> 
+> cat /proc/mdstat
+> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
+> [raid4] [raid10]
+> md_d99 : inactive sdb[0](S)
+>       15646592 blocks
+> 
+> unused devices: <none>
+> 
+> 
+> 
+> cat /proc/cmdline
+> BOOT_IMAGE=/boot/vmlinuz-2.6.31.9-scst
+> root=UUID=778e7d82-4733-4de5-977b-268cdba8bdda ro
+> 
+> 
+> 
+> root@dmachine:~# cat /etc/mdadm/mdadm.conf
+> # mdadm.conf
+> #
+> # Please refer to mdadm.conf(5) for information about this file.
+> #
+> 
+> # by default, scan all partitions (/proc/partitions) for MD superblocks.
+> # alternatively, specify devices to scan, using wildcards if desired.
+> DEVICE partitions
+> 
+> # auto-create devices with Debian standard permissions
+> CREATE owner=root group=disk mode=0660 auto=yes
+> 
+> # automatically tag new arrays as belonging to the local system
+> HOMEHOST <system>
+> 
+> # instruct the monitoring daemon where to send mail alerts
+> MAILADDR root
+> 
+> # definitions of existing MD arrays
+> 
+> # This file was auto-generated on Wed, 03 Feb 2010 10:47:50 -0500
+> # by mkconf $Id$
+> ARRAY /dev/md0 level=raid1 num-devices=2
+> UUID=602a804e:91caebca:9492a6f6:c7fe0f79
+> ARRAY /dev/md1 level=raid1 num-devices=2
+> UUID=09d42156:0a8b8429:9492a6f6:c7fe0f79
+> 
+> 
+> regds
+> 
+> Anshuman
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> the light king
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
