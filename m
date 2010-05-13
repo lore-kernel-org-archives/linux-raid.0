@@ -1,160 +1,135 @@
-From: Daniel Reurich <daniel@centurion.net.nz>
-Subject: RE: Broken RAID1 boot arrays
-Date: Thu, 13 May 2010 16:39:38 +1200
-Message-ID: <1273725578.5140.863.camel@localhost.localdomain>
-References: <1D.35.20763.7865BEB4@cdptpa-omtalb.mail.rr.com>
-	 <1273724133.5140.833.camel@localhost.localdomain>
+From: Andrew Lutomirski <luto@mit.edu>
+Subject: md lockdep warning
+Date: Thu, 13 May 2010 13:59:59 -0400
+Message-ID: <AANLkTinSyowa-i2QvQmxtoMJ7sCM6ps76YLEQ4fhjKF-@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1273724133.5140.833.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lrhorer@satx.rr.com>
-Cc: linux-raid@vger.kernel.org
+To: neilb@suse.de, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 2010-05-13 at 16:15 +1200, Daniel Reurich wrote:
-> On Wed, 2010-05-12 at 20:31 -0500, Leslie Rhorer wrote:
-> > 	Hello?  Anyone?  I'm flummoxed, here.  I tried to write in a manual
-> > assembly of the arrays in the initrd, but so far I haven't been able to get
-> > it to work.  One way or another, it just hangs when running
-> > /scripts/local-top/mdadm in the initrd.  Even `ls -1 /dev/sd*` returns an
-> > error.
-> > 
-> Ok.  
-> 
-> 1) Get business card image from the link provided and burn to CD and
-> boot of it.
-> 
-> http://www.debian.org/devel/debian-installer/
-> 
-> 2) Select Advanced Options then expert install.
-> 3) Set Language etc.
-> 4) When it asks to select installer components select "Network Console"
-> and continue.
-> 5) Configure the network (if you haven't already),
-> 6) In the menu select "Continue installation remotely using ssh and
-> follow the instructions to connect in via ssh from your desired
-> workstation and continue.
-> 7) Select exit to shell
-> 8) insert the appropriate raid modules: 'modprobe raidX' where X is the
-> raid levels you use for each raid level you use.
-> 9) use mdadm to manually assemble the necessary root, /boot and /var
-> arrays.
-> 10) If your root fs is in LVM do: "modprobe dm_mod" followed by 
-> "vgchange -ay" 
-> 11) make a target directory: "mkdir /target"
-> 12) mount the root filesystem on /target: mount /dev/<rootfs> /target
-> 13) bind mount the dev sys and proc virtual filesystems:
-> 	"mount -o bind /dev /target/dev"
-> 	"mount -o bind /sys /target/sys"
-> 	"mount -o bind /proc /target/proc"
-> 14) Chroot: chroot /target /bin/bash
-> 15) mount /boot /usr /var as needed.
-> 16) update your mdadm.conf and /etc/fstab etc (ideally use labels for
-> root and boot or fs UUID's), and any other stuff like installing the
-> latest mdadm (apt|aptitude should work fine if your internet connected).
-> ***See my notes below.
-> 17) update your grub config, and run update-grub.
-> 18) update your initrd image: "mkinitramfs -k all"
-> 19) unmount the fs's you mounted in the chroot
-> 20) umount /target/proc /target/sys and /target/dev.
-> 21) reboot and try it out.
-> 
-> *** You might want to post your real mdadm.conf at this point.  If your
-> not sure about what the issue is, then perhaps IRC (does linux-raid have
-> a channel?) might be the best bet.
-> 
-> 
-> 
-> > 	It's also really odd that I can assemble and mount the root and boot
-> > arrays, but under Ubuntu I can't even assemble the swap array.  It complains
-> > that the first member of the array is busy and refuses to start /dev/md3.
-> > The results of --examine look identical to those listed below, except of
-> > course for the partition specific entries (size, drive and array UUID,
-> > events, etc).
-> > 
-> This is because ubuntu probably picks up the first swap partition it
-> finds and uses it.
-> 
-> > 	I really need to get this machine back on line, and any suggestions
-> > are greatly appreciated.
-> > 
-> > > > don't want to try to install the OS: that could be a disaster.  BTW, the
-> > > > 2.6.32 kernel is moving the IDE disks all the way from /hda and /hdb to
-> > > > /sdj
-> > > > and /sdk.  I think that's part of why it's breaking: the existing
-> > > > mdadm.conf
-> > > > doesn't scan that high.
-> mdadm shouldn't care unless you've changed the "DEVICE partitions" line
-> to something else.
-> 
-> > > 	OK, maybe not.  I re-arranged things so the boot drives are /dev/sda
-> > > and /dev/sdb, but it still isn't working.  When I boot the Ubuntu live CD
-> > > and install mdadm, it creates the following mdadm.conf:
-> > > 
-> > > ubuntu@ubuntu:~$ cat /etc/mdadm/mdadm.conf
-> > > # mdadm.conf
-> > > #
-> > > # Please refer to mdadm.conf(5) for information about this file.
-> > > #
-> > > 
-> > > # by default, scan all partitions (/proc/partitions) for MD superblocks.
-> > > # alternatively, specify devices to scan, using wildcards if desired.
-> > > DEVICE partitions
-> > > 
-> > > # auto-create devices with Debian standard permissions
-> > > CREATE owner=root group=disk mode=0660 auto=yes
-> > > 
-> > > # automatically tag new arrays as belonging to the local system
-> > > HOMEHOST <system>
-> > > 
-> > > # instruct the monitoring daemon where to send mail alerts
-> > > MAILADDR root
-> > > 
-> > > # definitions of existing MD arrays
-> > > ARRAY /dev/md/1 level=raid1 metadata=1.0 num-devices=2
-> > > UUID=d6a2c60b:7345e957:05aefe0b:f8d1527f name='Backup':1
-> > > ARRAY /dev/md/2 level=raid1 metadata=1.2 num-devices=2
-> > > UUID=d45ff663:9e53774c:6fcf9968:21692025 name='Backup':2
-> > > ARRAY /dev/md/3 level=raid1 metadata=1.2 num-devices=2
-> > > UUID=3615c4a2:33786b6d:b13863d9:458cd054 name='Backup':3
-> > > ARRAY /dev/md/0 level=raid5 metadata=1.2 num-devices=8
-> > > UUID=940ae4e4:04057ffc:5e92d2fb:63e3efb7 name='Backup':0
-> > > 
-> > > # This file was auto-generated on Tue, 11 May 2010 23:45:16 +0000
-> > > # by mkconf $Id$
-> > > 
-> > > 	If I try to auto-assemble the arrays, it fails:
-> > > 
-> > > ubuntu@ubuntu:~$ sudo mdadm --assemble --scan
-> > > mdadm: no devices found for /dev/md/1
-> > > mdadm: no devices found for /dev/md/2
-> > > mdadm: no devices found for /dev/md/3
-> > > mdadm: no devices found for /dev/md/0
-> > > 
-> It seems odd to me that all the raid volumes are named "Backup".
-> Perhaps mdadm doesn't like the name collision.
-> 
-> Perhaps you need to recreate some of them with a different name.  I'd
-> suggest recreating the raid1 volumes with different names and the
-> --assume-clean flag (except the swap one which won't be 
-*clean* since the ubuntu live cd's been using one of those component
-partitions for it's swap ).
-
-> I hope this helps.
-> 
-> Regards,
-> 	
-> 
+I got this warning on 2.6.34-rc7 (actually cea0d767c2 in -linus)
+running mdadm --stop /dev/md0 when /dev/md0 was an improperly
+assembled imsm array.  See
+https://bugzilla.redhat.com/show_bug.cgi?id=592030 for how I got into
+this state in the first place.
 
 
--- 
-Daniel Reurich.
+md: md0 stopped.
+md: unbind<sda>
+md: export_rdev(sda)
 
-Centurion Computer Technology (2005) Ltd
-Mobile 021 797 722
+=======================================================
+[ INFO: possible circular locking dependency detected ]
+2.6.34-rc7 #1
+-------------------------------------------------------
+udisks-part-id/1152 is trying to acquire lock:
+ (events){+.+.+.}, at: [<ffffffff81059342>] flush_workqueue+0x0/0xb9
+
+but task is already holding lock:
+ (&bdev->bd_mutex){+.+.+.}, at: [<ffffffff81132f31>] __blkdev_get+0x91/0x3a8
+
+which lock already depends on the new lock.
 
 
+the existing dependency chain (in reverse order) is:
 
+-> #4 (&bdev->bd_mutex){+.+.+.}:
+       [<ffffffff8106fa76>] __lock_acquire+0xb74/0xd22
+       [<ffffffff8106fcf4>] lock_acquire+0xd0/0xf6
+       [<ffffffff81457feb>] __mutex_lock_common+0x4c/0x339
+       [<ffffffff8145839c>] mutex_lock_nested+0x3e/0x43
+       [<ffffffff81132f31>] __blkdev_get+0x91/0x3a8
+       [<ffffffff81133258>] blkdev_get+0x10/0x12
+       [<ffffffff811333ae>] open_by_devnum+0x2e/0x3f
+       [<ffffffff81367df7>] lock_rdev+0x39/0xe4
+       [<ffffffff8136d52a>] md_import_device+0xbe/0x27b
+       [<ffffffff8136d805>] new_dev_store+0x11e/0x173
+       [<ffffffff81367d9f>] md_attr_store+0x83/0xa2
+       [<ffffffff81163687>] sysfs_write_file+0x108/0x144
+       [<ffffffff8110c1db>] vfs_write+0xae/0x10b
+       [<ffffffff8110c2f8>] sys_write+0x4a/0x6e
+       [<ffffffff81002bdb>] system_call_fastpath+0x16/0x1b
+
+-> #3 (&new->reconfig_mutex){+.+.+.}:
+       [<ffffffff8106fa76>] __lock_acquire+0xb74/0xd22
+       [<ffffffff8106fcf4>] lock_acquire+0xd0/0xf6
+       [<ffffffff81457feb>] __mutex_lock_common+0x4c/0x339
+       [<ffffffff81458316>] mutex_lock_interruptible_nested+0x3e/0x43
+       [<ffffffff81367cd9>] rdev_attr_store+0x65/0xa8
+       [<ffffffff81163687>] sysfs_write_file+0x108/0x144
+       [<ffffffff8110c1db>] vfs_write+0xae/0x10b
+       [<ffffffff8110c2f8>] sys_write+0x4a/0x6e
+       [<ffffffff81002bdb>] system_call_fastpath+0x16/0x1b
+
+-> #2 (s_active#55){++++.+}:
+       [<ffffffff8106fa76>] __lock_acquire+0xb74/0xd22
+       [<ffffffff8106fcf4>] lock_acquire+0xd0/0xf6
+       [<ffffffff811642a2>] sysfs_deactivate+0xa0/0x109
+       [<ffffffff81164ab9>] sysfs_addrm_finish+0x36/0x55
+       [<ffffffff81164bbc>] sysfs_remove_dir+0x95/0xbe
+       [<ffffffff812138d5>] kobject_del+0x16/0x37
+       [<ffffffff813651eb>] md_delayed_delete+0x1d/0x29
+       [<ffffffff81058a83>] worker_thread+0x266/0x35f
+       [<ffffffff8105cb08>] kthread+0x9a/0xa2
+       [<ffffffff81003a14>] kernel_thread_helper+0x4/0x10
+
+-> #1 ((&rdev->del_work)){+.+...}:
+       [<ffffffff8106fa76>] __lock_acquire+0xb74/0xd22
+       [<ffffffff8106fcf4>] lock_acquire+0xd0/0xf6
+       [<ffffffff81058a7a>] worker_thread+0x25d/0x35f
+       [<ffffffff8105cb08>] kthread+0x9a/0xa2
+       [<ffffffff81003a14>] kernel_thread_helper+0x4/0x10
+
+-> #0 (events){+.+.+.}:
+       [<ffffffff8106f920>] __lock_acquire+0xa1e/0xd22
+       [<ffffffff8106fcf4>] lock_acquire+0xd0/0xf6
+       [<ffffffff810593a5>] flush_workqueue+0x63/0xb9
+       [<ffffffff81059410>] flush_scheduled_work+0x15/0x17
+       [<ffffffff8136c00a>] md_open+0x3e/0x88
+       [<ffffffff81132f85>] __blkdev_get+0xe5/0x3a8
+       [<ffffffff81133258>] blkdev_get+0x10/0x12
+       [<ffffffff811332d0>] blkdev_open+0x76/0xac
+       [<ffffffff8110a5a5>] __dentry_open+0x1bf/0x32f
+       [<ffffffff8110a7f9>] nameidata_to_filp+0x3f/0x50
+       [<ffffffff81116110>] do_last+0x444/0x5b5
+       [<ffffffff81117c3f>] do_filp_open+0x1e7/0x5da
+       [<ffffffff8110a2b7>] do_sys_open+0x63/0x10f
+       [<ffffffff8110a396>] sys_open+0x20/0x22
+       [<ffffffff81002bdb>] system_call_fastpath+0x16/0x1b
+
+other info that might help us debug this:
+
+1 lock held by udisks-part-id/1152:
+ #0:  (&bdev->bd_mutex){+.+.+.}, at: [<ffffffff81132f31>]
+__blkdev_get+0x91/0x3a8
+
+stack backtrace:
+Pid: 1152, comm: udisks-part-id Not tainted 2.6.34-rc7 #1
+Call Trace:
+ [<ffffffff8106ead9>] print_circular_bug+0xae/0xbd
+ [<ffffffff8106f920>] __lock_acquire+0xa1e/0xd22
+ [<ffffffff8106fcf4>] lock_acquire+0xd0/0xf6
+ [<ffffffff81059342>] ? flush_workqueue+0x0/0xb9
+ [<ffffffff8106d08d>] ? lock_release_holdtime+0x34/0xe3
+ [<ffffffff810593a5>] flush_workqueue+0x63/0xb9
+ [<ffffffff81059342>] ? flush_workqueue+0x0/0xb9
+ [<ffffffff81459d83>] ? _raw_spin_unlock+0x2b/0x2f
+ [<ffffffff81059410>] flush_scheduled_work+0x15/0x17
+ [<ffffffff8136c00a>] md_open+0x3e/0x88
+ [<ffffffff81132f85>] __blkdev_get+0xe5/0x3a8
+ [<ffffffff8113325a>] ? blkdev_open+0x0/0xac
+ [<ffffffff8113325a>] ? blkdev_open+0x0/0xac
+ [<ffffffff81133258>] blkdev_get+0x10/0x12
+ [<ffffffff811332d0>] blkdev_open+0x76/0xac
+ [<ffffffff8110a5a5>] __dentry_open+0x1bf/0x32f
+ [<ffffffff811d3387>] ? security_inode_permission+0x21/0x23
+ [<ffffffff8110a7f9>] nameidata_to_filp+0x3f/0x50
+ [<ffffffff81116110>] do_last+0x444/0x5b5
+ [<ffffffff81117c3f>] do_filp_open+0x1e7/0x5da
+ [<ffffffff81459d83>] ? _raw_spin_unlock+0x2b/0x2f
+ [<ffffffff8112112c>] ? alloc_fd+0x116/0x128
+ [<ffffffff8110a2b7>] do_sys_open+0x63/0x10f
+ [<ffffffff8110a396>] sys_open+0x20/0x22
+ [<ffffffff81002bdb>] system_call_fastpath+0x16/0x1b
