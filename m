@@ -1,135 +1,149 @@
-From: Andrew Lutomirski <luto@mit.edu>
-Subject: md lockdep warning
-Date: Thu, 13 May 2010 13:59:59 -0400
-Message-ID: <AANLkTinSyowa-i2QvQmxtoMJ7sCM6ps76YLEQ4fhjKF-@mail.gmail.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: Broken RAID1 boot arrays
+Date: Thu, 13 May 2010 18:30:37 -0500
+Message-ID: <CA.2D.20538.1AB8CEB4@cdptpa-omtalb.mail.rr.com>
+References: <1273724133.5140.833.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1273724133.5140.833.camel@localhost.localdomain>
 Sender: linux-raid-owner@vger.kernel.org
-To: neilb@suse.de, linux-raid@vger.kernel.org
+To: 'Daniel Reurich' <daniel@centurion.net.nz>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I got this warning on 2.6.34-rc7 (actually cea0d767c2 in -linus)
-running mdadm --stop /dev/md0 when /dev/md0 was an improperly
-assembled imsm array.  See
-https://bugzilla.redhat.com/show_bug.cgi?id=592030 for how I got into
-this state in the first place.
 
+	Thank you for your response.  My hat is off to you.  Few people
+return such thorough and detailed posts.
 
-md: md0 stopped.
-md: unbind<sda>
-md: export_rdev(sda)
+> > 	Hello?  Anyone?  I'm flummoxed, here.  I tried to write in a manual
+> > assembly of the arrays in the initrd, but so far I haven't been able to
+> get
+> > it to work.  One way or another, it just hangs when running
+> > /scripts/local-top/mdadm in the initrd.  Even `ls -1 /dev/sd*` returns
+> an
+> > error.
+> >
+> Ok.
+> 
+> 1) Get business card image from the link provided and burn to CD and
+> boot of it.
+> 
+> http://www.debian.org/devel/debian-installer/
+> 
+> 2) Select Advanced Options then expert install.
+> 3) Set Language etc.
+> 4) When it asks to select installer components select "Network Console"
+> and continue.
+> 5) Configure the network (if you haven't already),
+> 6) In the menu select "Continue installation remotely using ssh and
+> follow the instructions to connect in via ssh from your desired
+> workstation and continue.
+> 7) Select exit to shell
+> 8) insert the appropriate raid modules: 'modprobe raidX' where X is the
+> raid levels you use for each raid level you use.
+> 9) use mdadm to manually assemble the necessary root, /boot and /var
+> arrays.
 
-=======================================================
-[ INFO: possible circular locking dependency detected ]
-2.6.34-rc7 #1
--------------------------------------------------------
-udisks-part-id/1152 is trying to acquire lock:
- (events){+.+.+.}, at: [<ffffffff81059342>] flush_workqueue+0x0/0xb9
+	/var is just part of the main array.  Only /boot and the swap area
+have their own partitions.  Interestingly enough, the installer kernel shows
+the drives to be /dev/hda and /dev/hdb, again.  Apparently the installer
+uses an older kernel?  Oh, and it can assemble the third array (the swap
+area) just fine, or at least it says it can:
 
-but task is already holding lock:
- (&bdev->bd_mutex){+.+.+.}, at: [<ffffffff81132f31>] __blkdev_get+0x91/0x3a8
+~ # mdadm -Dt /dev/md3
+/dev/md3:
+        Version : 1.02
+  Creation Time : Sun Dec 20 05:05:08 2009
+     Raid Level : raid1
+     Array Size : 204796548 (195.31 GiB 209.71 GB)
+  Used Dev Size : 204796548 (195.31 GiB 209.71 GB)
+   Raid Devices : 2
+  Total Devices : 2
+    Persistence : Superblock is persistent
 
-which lock already depends on the new lock.
+  Intent Bitmap : Internal
 
+    Update Time : Mon May 10 01:08:00 2010
+          State : active
+ Active Devices : 2
+Working Devices : 2
+ Failed Devices : 0
+  Spare Devices : 0
 
-the existing dependency chain (in reverse order) is:
+           Name : 'Backup':3
+           UUID : 3615c4a2:33786b6d:b13863d9:458cd054
+         Events : 66
 
--> #4 (&bdev->bd_mutex){+.+.+.}:
-       [<ffffffff8106fa76>] __lock_acquire+0xb74/0xd22
-       [<ffffffff8106fcf4>] lock_acquire+0xd0/0xf6
-       [<ffffffff81457feb>] __mutex_lock_common+0x4c/0x339
-       [<ffffffff8145839c>] mutex_lock_nested+0x3e/0x43
-       [<ffffffff81132f31>] __blkdev_get+0x91/0x3a8
-       [<ffffffff81133258>] blkdev_get+0x10/0x12
-       [<ffffffff811333ae>] open_by_devnum+0x2e/0x3f
-       [<ffffffff81367df7>] lock_rdev+0x39/0xe4
-       [<ffffffff8136d52a>] md_import_device+0xbe/0x27b
-       [<ffffffff8136d805>] new_dev_store+0x11e/0x173
-       [<ffffffff81367d9f>] md_attr_store+0x83/0xa2
-       [<ffffffff81163687>] sysfs_write_file+0x108/0x144
-       [<ffffffff8110c1db>] vfs_write+0xae/0x10b
-       [<ffffffff8110c2f8>] sys_write+0x4a/0x6e
-       [<ffffffff81002bdb>] system_call_fastpath+0x16/0x1b
+    Number   Major   Minor   RaidDevice State
+       2       3        3        0      active sync   /dev/hda3
+       1       3       67        1      active sync   /dev/hdb3
 
--> #3 (&new->reconfig_mutex){+.+.+.}:
-       [<ffffffff8106fa76>] __lock_acquire+0xb74/0xd22
-       [<ffffffff8106fcf4>] lock_acquire+0xd0/0xf6
-       [<ffffffff81457feb>] __mutex_lock_common+0x4c/0x339
-       [<ffffffff81458316>] mutex_lock_interruptible_nested+0x3e/0x43
-       [<ffffffff81367cd9>] rdev_attr_store+0x65/0xa8
-       [<ffffffff81163687>] sysfs_write_file+0x108/0x144
-       [<ffffffff8110c1db>] vfs_write+0xae/0x10b
-       [<ffffffff8110c2f8>] sys_write+0x4a/0x6e
-       [<ffffffff81002bdb>] system_call_fastpath+0x16/0x1b
+> 10) If your root fs is in LVM do: "modprobe dm_mod" followed by
+> "vgchange -ay"
+> 11) make a target directory: "mkdir /target"
+> 12) mount the root filesystem on /target: mount /dev/<rootfs> /target
 
--> #2 (s_active#55){++++.+}:
-       [<ffffffff8106fa76>] __lock_acquire+0xb74/0xd22
-       [<ffffffff8106fcf4>] lock_acquire+0xd0/0xf6
-       [<ffffffff811642a2>] sysfs_deactivate+0xa0/0x109
-       [<ffffffff81164ab9>] sysfs_addrm_finish+0x36/0x55
-       [<ffffffff81164bbc>] sysfs_remove_dir+0x95/0xbe
-       [<ffffffff812138d5>] kobject_del+0x16/0x37
-       [<ffffffff813651eb>] md_delayed_delete+0x1d/0x29
-       [<ffffffff81058a83>] worker_thread+0x266/0x35f
-       [<ffffffff8105cb08>] kthread+0x9a/0xa2
-       [<ffffffff81003a14>] kernel_thread_helper+0x4/0x10
+	'No joy:
 
--> #1 ((&rdev->del_work)){+.+...}:
-       [<ffffffff8106fa76>] __lock_acquire+0xb74/0xd22
-       [<ffffffff8106fcf4>] lock_acquire+0xd0/0xf6
-       [<ffffffff81058a7a>] worker_thread+0x25d/0x35f
-       [<ffffffff8105cb08>] kthread+0x9a/0xa2
-       [<ffffffff81003a14>] kernel_thread_helper+0x4/0x10
+~ # mount -o -v  /dev/md1 /target
+mount: mounting /dev/md1 on /target failed: Invalid argument
 
--> #0 (events){+.+.+.}:
-       [<ffffffff8106f920>] __lock_acquire+0xa1e/0xd22
-       [<ffffffff8106fcf4>] lock_acquire+0xd0/0xf6
-       [<ffffffff810593a5>] flush_workqueue+0x63/0xb9
-       [<ffffffff81059410>] flush_scheduled_work+0x15/0x17
-       [<ffffffff8136c00a>] md_open+0x3e/0x88
-       [<ffffffff81132f85>] __blkdev_get+0xe5/0x3a8
-       [<ffffffff81133258>] blkdev_get+0x10/0x12
-       [<ffffffff811332d0>] blkdev_open+0x76/0xac
-       [<ffffffff8110a5a5>] __dentry_open+0x1bf/0x32f
-       [<ffffffff8110a7f9>] nameidata_to_filp+0x3f/0x50
-       [<ffffffff81116110>] do_last+0x444/0x5b5
-       [<ffffffff81117c3f>] do_filp_open+0x1e7/0x5da
-       [<ffffffff8110a2b7>] do_sys_open+0x63/0x10f
-       [<ffffffff8110a396>] sys_open+0x20/0x22
-       [<ffffffff81002bdb>] system_call_fastpath+0x16/0x1b
+	So now, what?  I can mount the arrays just fine under the Ubuntu
+live CD, but not this one.
 
-other info that might help us debug this:
+> 13) bind mount the dev sys and proc virtual filesystems:
+> 	"mount -o bind /dev /target/dev"
+> 	"mount -o bind /sys /target/sys"
+> 	"mount -o bind /proc /target/proc"
+> 14) Chroot: chroot /target /bin/bash
+> 15) mount /boot /usr /var as needed.
+> 16) update your mdadm.conf and /etc/fstab etc (ideally use labels for
+> root and boot or fs UUID's), and any other stuff like installing the
+> latest mdadm (apt|aptitude should work fine if your internet connected).
 
-1 lock held by udisks-part-id/1152:
- #0:  (&bdev->bd_mutex){+.+.+.}, at: [<ffffffff81132f31>]
-__blkdev_get+0x91/0x3a8
+	Uh-uh, again.  Neither apt-get nor aptitude seem to be on the CD, at
+least not when installing this way.
 
-stack backtrace:
-Pid: 1152, comm: udisks-part-id Not tainted 2.6.34-rc7 #1
-Call Trace:
- [<ffffffff8106ead9>] print_circular_bug+0xae/0xbd
- [<ffffffff8106f920>] __lock_acquire+0xa1e/0xd22
- [<ffffffff8106fcf4>] lock_acquire+0xd0/0xf6
- [<ffffffff81059342>] ? flush_workqueue+0x0/0xb9
- [<ffffffff8106d08d>] ? lock_release_holdtime+0x34/0xe3
- [<ffffffff810593a5>] flush_workqueue+0x63/0xb9
- [<ffffffff81059342>] ? flush_workqueue+0x0/0xb9
- [<ffffffff81459d83>] ? _raw_spin_unlock+0x2b/0x2f
- [<ffffffff81059410>] flush_scheduled_work+0x15/0x17
- [<ffffffff8136c00a>] md_open+0x3e/0x88
- [<ffffffff81132f85>] __blkdev_get+0xe5/0x3a8
- [<ffffffff8113325a>] ? blkdev_open+0x0/0xac
- [<ffffffff8113325a>] ? blkdev_open+0x0/0xac
- [<ffffffff81133258>] blkdev_get+0x10/0x12
- [<ffffffff811332d0>] blkdev_open+0x76/0xac
- [<ffffffff8110a5a5>] __dentry_open+0x1bf/0x32f
- [<ffffffff811d3387>] ? security_inode_permission+0x21/0x23
- [<ffffffff8110a7f9>] nameidata_to_filp+0x3f/0x50
- [<ffffffff81116110>] do_last+0x444/0x5b5
- [<ffffffff81117c3f>] do_filp_open+0x1e7/0x5da
- [<ffffffff81459d83>] ? _raw_spin_unlock+0x2b/0x2f
- [<ffffffff8112112c>] ? alloc_fd+0x116/0x128
- [<ffffffff8110a2b7>] do_sys_open+0x63/0x10f
- [<ffffffff8110a396>] sys_open+0x20/0x22
- [<ffffffff81002bdb>] system_call_fastpath+0x16/0x1b
+> > 	It's also really odd that I can assemble and mount the root and boot
+> > arrays, but under Ubuntu I can't even assemble the swap array.  It
+> complains
+> > that the first member of the array is busy and refuses to start
+> /dev/md3.
+> > The results of --examine look identical to those listed below, except of
+> > course for the partition specific entries (size, drive and array UUID,
+> > events, etc).
+> >
+> This is because ubuntu probably picks up the first swap partition it
+> finds and uses it.
+
+	It doesn't mention it when I issue `mount` or lsof.  What's more, it
+gives the same error for both partitions.  Also, as I mentioned, it doesn't
+show any errors when I issue `sudo mdadm --examine [sda3|sdb3]`.  Finally,
+it assembles without complaint under the Debian live CD.
+
+> It seems odd to me that all the raid volumes are named "Backup".
+> Perhaps mdadm doesn't like the name collision.
+
+	First of all, isn't that the homehost name?  If so, it is *SUPPOSED*
+to be the same for all three.  Secondly, it assembled just fine under the
+old kernel and mdadm, as I mentioned.  Thirdly, if it were the case, I would
+expect it to assemble at least the first target without complaint.  Finally,
+the names aren't the same.  They are 'Backup':1, 'Backup':2, and 'Backup':3
+
+> Perhaps you need to recreate some of them with a different name.  I'd
+> suggest recreating the raid1 volumes with different names and the
+> --assume-clean flag (except the swap one which won't be since the ubuntu
+> live cd's been messing with one of those component partitions).
+
+	I think before I try something like that, I would just trash one
+element of each array, assemble the arrays broken with just one element, and
+copy over the files to the "new" partitions, and go from there.
+
+> I hope this helps.
+
+	Well, I'm getting somewhere.  I'm just not sure where, if I can't
+get mount to work.
+
