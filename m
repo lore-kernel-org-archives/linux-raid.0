@@ -1,51 +1,57 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Broken RAID1 boot arrays
-Date: Fri, 14 May 2010 07:43:28 -0500
-Message-ID: <23.42.25297.5754DEB4@cdptpa-omtalb.mail.rr.com>
-References: <1273820935.5140.2770.camel@localhost.localdomain>
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 9/10] drivers/md: Use kstrdup
+Date: Fri, 14 May 2010 21:31:07 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.1005142130490.28935@ask.diku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1273820935.5140.2770.camel@localhost.localdomain>
-Sender: linux-raid-owner@vger.kernel.org
-To: 'Daniel Reurich' <daniel@centurion.net.nz>
-Cc: linux-raid@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > > What type of filesystem is it?
-> > >
-> > > Try "mount -v /dev/md1 /"
-> 
-> Sorry.  Should have been "mount -v /dev/md1 /target" - assuming /dev/md1
-> is your root filesystem.
+From: Julia Lawall <julia@diku.dk>
 
-	Actually, /dev/md2 is root, but no, it wouldn't mount, no matter
-what I tried.  What's more, now that I assembled the arrays under the Debian
-live CD, Ubuntu will no longer assemble any of them.  Note the Ubuntu live
-CD has an old version of mdadm (v2.6.7.1)
+Use kstrdup when the goal of an allocation is copy a string into the
+allocated region.
 
+The semantic patch that makes this change is as follows:
+(http://coccinelle.lip6.fr/)
 
-> > 	It doesn't matter what switches I try, it always gives me that
-> > error.  The md1 array (/boot) is ext2, and the md2 array (/) is ext3.
+// <smpl>
+@@
+expression from,to;
+expression flag,E1,E2;
+statement S;
+@@
+
+-  to = kmalloc(strlen(from) + 1,flag);
++  to = kstrdup(from, flag);
+   ... when != \(from = E1 \| to = E1 \)
+   if (to==NULL || ...) S
+   ... when != \(from = E2 \| to = E2 \)
+-  strcpy(to, from);
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ drivers/md/dm-crypt.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff -u -p a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
+--- a/drivers/md/dm-crypt.c
++++ b/drivers/md/dm-crypt.c
+@@ -1168,12 +1168,11 @@ static int crypt_ctr(struct dm_target *t
+ 	if (ivmode && cc->iv_gen_ops) {
+ 		if (ivopts)
+ 			*(ivopts - 1) = ':';
+-		cc->iv_mode = kmalloc(strlen(ivmode) + 1, GFP_KERNEL);
++		cc->iv_mode = kstrdup(ivmode, GFP_KERNEL);
+ 		if (!cc->iv_mode) {
+ 			ti->error = "Error kmallocing iv_mode string";
+ 			goto bad_ivmode_string;
+ 		}
+-		strcpy(cc->iv_mode, ivmode);
+ 	} else
+ 		cc->iv_mode = NULL;
  
-> you did "mkdir /target"  didn't you?  Can verify it is there?
-
-	Yes.
-
-> > 	No, I'm not.  Remember?  I can't mount /target (/dev/md2) so I can't
-> > chroot to it:
-> >
-> > ~ # chroot /target /bin/bash
-> > chroot: cannot execute /bin/bash: No such file or directory
-> >
-> > 	Everything in your method requires me to be able to mount the / and
-> > /boot file systems.  Hmm.  The only thing I can't do under the Ubuntu CD
-> is
-> > assemble and mount the swap, so this should work using the Ubuntu CD...
-
-	'So much for that effort.  I think I'll try one of the other
-suggested distros...
-
-
