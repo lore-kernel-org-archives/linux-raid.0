@@ -1,76 +1,69 @@
 From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Broken RAID1 boot arrays
-Date: Sat, 15 May 2010 15:03:39 -0500
-Message-ID: <64.72.08602.22EFEEB4@cdptpa-omtalb.mail.rr.com>
-References: <1273796172.5140.2068.camel@localhost.localdomain>
+Subject: RE: Continuing problems with RAID arrays starting at boot - devices not found
+Date: Sat, 15 May 2010 18:37:05 -0500
+Message-ID: <4D.90.20763.8203FEB4@cdptpa-omtalb.mail.rr.com>
+References: <AANLkTinUxy9cCTILXHASuCORhGO25gmgSwg-etV6JDBq@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1273796172.5140.2068.camel@localhost.localdomain>
+In-Reply-To: <AANLkTinUxy9cCTILXHASuCORhGO25gmgSwg-etV6JDBq@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Mark Knecht' <markknecht@gmail.com>, 'Linux-RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> > > It seems odd to me that all the raid volumes are named "Backup".
-> > > Perhaps mdadm doesn't like the name collision.
-> >
-> > 	First of all, isn't that the homehost name?  If so, it is *SUPPOSED*
-> > to be the same for all three.  Secondly, it assembled just fine under
-> the
-> > old kernel and mdadm, as I mentioned.  Thirdly, if it were the case, I
-> would
-> > expect it to assemble at least the first target without complaint.
-> Finally,
-> > the names aren't the same.  They are 'Backup':1, 'Backup':2, and
-> 'Backup':3
-> >
-> Nope.  I suspect you've mistaken the mdadm option -N or --name for
-> --hostname.
+> Hi,
+>    I have a continuing problem with all my my RAID arrays. I'm
+> moderately confident that it's not a mdadm problem but I hope I can
+> ask here for any tests or ideas to test it before I try reporting it
+> up to the LKML. Thanks in advance.
+
+	I was having a similar problem with one of my systems.  Because I
+thought it might be an issue with udev, I tried to update the kernel.
+Because of it, I am not in a situation where the system is unbootable.
+
+>   Every time I boot all 5 drives are recognized by system BIOS. There
+> is a BIOS device table printing on the screen and it __always__ shows
+> all 5 drives. If I enter BIOS and look at the storage page all drives
+> are shown. If I do nothing then the system waits 10 seconds, then
+> boots into grub. Grub boots the kernel, the boot process rolls along,
+> gets to where it starts mdadm, and then 50%-75% of the time one or
+> more of the partitions isn't found and mdadm doesn't start the RAID
+> correctly.
+
+	Except that the drives on the controller are not recognized by the
+BIOS (and never will be), I was have very much the same symptoms - at a high
+level, anyway - as you.
+
+>    Now, after booting and RAID not starting correctly, maybe half the
+> time I can look for the drive (ls /dev/sde1 for instance) find it and
+> add it back to the RAID array. Half the time the drive isn't found
+> until I reboot the machine. If I look in dmesg I don't see the missing
+> drive. It's just like it isn't there even though BIOS said it was
+> before booting Linux. The missing drive is not always found on a warm
+> reboot, but is often found on a cold reboot.
 > 
-> The name should be specific to the individual arrays and hostname is for
-> saying these arrays belong to this host.
+>    The problem has been consistent across all the kernels I've tried
+> over the last 2 months.
+> 
+>    My question is whether this is in any way related to mdadm? I
 
-	Here it is in the man page:
+	'Pretty unlikely.  Mdamd doesn't fiddle with block devices created
+by udev.  If the block device for the hard drive isn't there, then for
+whatever reason udev isn't creating it, and if udev doesn't create it, mdadm
+can't use it as a member in an array.  I think the udev problem went away
+when I upgraded to 2.6.32-3-amd64 (or at least every time I have looked,
+now, all 8 eSATA targets seem to be there), but now I have much bigger
+problems.
 
-[--homehost=
-              This will override any HOMEHOST setting in the config file and
-provides the identity of the host which should be considered the home for
-any arrays.  When  creating an array, the homehost will be recorded in the
-superblock.  For version-1 superblocks, it will be prefixed to the array
-name...]
+> suspect it isn't but thought I'd try to get some ideas on how to test
+> for the root cause of this problem. If it was purely a mdadm problem
+> then even if the RAID wasn't correctly started then wouldn't I still
+> find the drive partitions?
 
-	Thus, the array names are 0, 1, 2, and 3, each prepended in the
-superblock by 'Backup'.  Since I did not specify a name when I created the
-arrays, presumably mdadm simply used the minor number as the array name.
-Thus, /dev/md0 became 'Backup':0, /dev/md1 became 'Backup':1, etc.
+	Yes, you would.  Mdadm is failing because the block devices are not
+in /dev, not the other way around.  You might look at the boot logs for
+reports  concerning failing SATA devices.  Try `man udevadm`.
 
-	Also from the man page:
-
-[-N, --name=
-              Set  a  name for the array.  This is currently only effective
-when creating an array with a version-1 superblock, or an array in a DDF
-container.  The name is a simple textual string that can be used to identify
-array components when assembling.  If name is needed but not specified, it
-is taken  from the basename of the device that is being created.  e.g. when
-creating /dev/md/home the name will default to home.]
-
-	I cannot help but believe this persistent failure to assemble the
-arrays in the initrd is related to the fact mdadm will not auto-assemble the
-arrays from mdadm.conf when one issues the command:
-
-`mdadm --assemble --scan`
-
-	I have asked about this repeatedly in this forum, but have never
-received any answer at all.  After all, isn't this effectively what mdadm
-does when booting in order to attempt to bring up the arrays for mounting,
-in particular the / array, which must be present in order to transfer OS
-activity from the RAM disk to the hard drive?  I don't really know why it
-worked under the old kernel - although it did issue a warning during the
-boot process that it could not find any drives to assemble - but won't work
-under the newer kernel.
-
-	Neil, I know you are busy, but you have been awfully silent in all
-of this.  Do you have any insights?
 
