@@ -1,83 +1,131 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs and raid5 - "Structure needs cleaning for directory open"
-Date: Tue, 18 May 2010 09:04:53 +1000
-Message-ID: <20100517230453.GM8120@dastard>
-References: <20100510022033.GB7165@dastard>
- <4BF1B4FE.7020503@redhat.com>
- <20100517214532.GL8120@dastard>
- <4BF1C0B4.5090009@redhat.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Spare drive won't spin down
+Date: Tue, 18 May 2010 10:20:17 +1000
+Message-ID: <20100518102017.51fef799@notabene.brown>
+References: <922812.29139.qm@web31703.mail.mud.yahoo.com>
+	<20100507162034.1370d645@notabene.brown>
+	<717013.48748.qm@web31703.mail.mud.yahoo.com>
+	<20100507194704.3ffcf17e@notabene.brown>
+	<4BE83B75.8050709@tmr.com>
+	<20100512065318.44e934d4@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4BF1C0B4.5090009@redhat.com>
+In-Reply-To: <20100512065318.44e934d4@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>, xfs@oss.sgi.com, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Bill Davidsen <davidsen@tmr.com>, Joe Bryant <tenminjoe@yahoo.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, May 17, 2010 at 06:18:28PM -0400, Doug Ledford wrote:
-> On 05/17/2010 05:45 PM, Dave Chinner wrote:
-> > On Mon, May 17, 2010 at 05:28:30PM -0400, Doug Ledford wrote:
-> >> On 05/09/2010 10:20 PM, Dave Chinner wrote:
-> >>> On Sun, May 09, 2010 at 08:48:00PM +0200, Rainer Fuegenstein wrot=
-e:
-> >>>>
-> >>>> today in the morning some daemon processes terminated because of
-> >>>> errors in the xfs file system on top of a software raid5, consis=
-ting
-> >>>> of 4*1.5TB WD caviar green SATA disks.
-> >>>
-> >>> Reminds me of a recent(-ish) md/dm readahead cancellation fix - t=
-hat
-> >>> would fit the symptoms of (btree corruption showing up under heav=
-y IO
-> >>> load but no corruption on disk. However, I can't seem to find any
-> >>> references to it at the moment (can't remember the bug title), bu=
-t
-> >>> perhaps your distro doesn't have the fix in it?
-> >>>
-> >>> Cheers,
-> >>>
-> >>> Dave.
-> >>
-> >> That sounds plausible, as does hardware error.  A memory bit flip =
-under
-> >> heavy load would cause the in memory data to be corrupt while the =
-on
-> >> disk data is good.
-> >=20
-> > The data dumps from the bad blocks weren't wrong by a single bit -
-> > they were unrecogni=D1=95able garbage - so that it very unlikely to=
- be
-> > a memory erro causing the problem.
->=20
-> Not true.  It can still be a single bit error but a single bit error
-> higher up in the chain.  Aka a single bit error in the scsi command t=
-o
-> read various sectors, then you read in all sorts of wrong data and
-> everything from there is totally whacked.
+On Wed, 12 May 2010 06:53:18 +1000
+Neil Brown <neilb@suse.de> wrote:
 
-I didn't say it *couldn't be* a bit error, just it was _very
-unlikely_.  Hardware errors that result only in repeated XFS btree
-corruption in memory or causing other errors in the system is
-something I've never seen, even on machines with known bad memory,
-HBAs, interconnects, etc. Applying Occam's Razor to this case
-indicates that it is going to be caused by a software problem.
+> Theoretically, when the spares are one behind the active array and we need to
+> update them all, we should update the spares first, then the rest.  If we
+> don't and there is a crash at the wrong time, some spares could be 2 events
+> behind the most recent device.  However that is a fairly unlikely race to
+> lose and the cost is only having a spare device fall out of the array, which
+> is quite easy to put back it, that I might not worry to much about it.
+> 
+> So if you haven't seen a patch to fix this in a week or two, please remind me.
+> 
 
-Yes, it's still possible that it's a hardware issue, just very, very
-unlikely. And if it is hardware and you can prove that it was the
-cause, then I suggest we all buy a lottery ticket.... ;)
+This is the sort of thing I was thinking of.
+Comments?
 
-Cheers,
+Thanks,
+NeilBrown
 
-Dave.
---=20
-Dave Chinner
-david@fromorbit.com
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+From bf7399c0f1e95e8af30f93114f96fcc73cb0d7c6 Mon Sep 17 00:00:00 2001
+From: NeilBrown <neilb@suse.de>
+Date: Tue, 18 May 2010 09:28:43 +1000
+Subject: [PATCH] md: simplify updating of event count to sometimes avoid updating spares.
+
+When updating the event count for a simple clean <-> dirty transition,
+we try to avoid updating the spares so they can safely spin-down.
+As the event_counts across an array must be +/- 1, this means
+decrementing the event_count on a dirty->clean transition.
+This is not always safe and we have to avoid the unsafe time.
+We current do this with a misguided idea about it being safe or
+not depending on whether the event_count is odd or even.  This
+approach only works reliably in a few common instances, but easily
+falls down.
+
+So instead, simply keep internal state concerning whether it is safe
+or not, and always assume it is not safe when an array is first
+assembled.
+
+Signed-off-by: NeilBrown <neilb@suse.de>
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index fec4abc..9ef21d9 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -2088,7 +2088,6 @@ static void sync_sbs(mddev_t * mddev, int nospares)
+ 		if (rdev->sb_events == mddev->events ||
+ 		    (nospares &&
+ 		     rdev->raid_disk < 0 &&
+-		     (rdev->sb_events&1)==0 &&
+ 		     rdev->sb_events+1 == mddev->events)) {
+ 			/* Don't update this superblock */
+ 			rdev->sb_loaded = 2;
+@@ -2141,28 +2140,14 @@ repeat:
+ 	 * and 'events' is odd, we can roll back to the previous clean state */
+ 	if (nospares
+ 	    && (mddev->in_sync && mddev->recovery_cp == MaxSector)
+-	    && (mddev->events & 1)
+-	    && mddev->events != 1)
++	    && mddev->can_decrease_events
++	    && mddev->events != 1) {
+ 		mddev->events--;
+-	else {
++		mddev->can_decrease_events = 0;
++	} else {
+ 		/* otherwise we have to go forward and ... */
+ 		mddev->events ++;
+-		if (!mddev->in_sync || mddev->recovery_cp != MaxSector) { /* not clean */
+-			/* .. if the array isn't clean, an 'even' event must also go
+-			 * to spares. */
+-			if ((mddev->events&1)==0) {
+-				nospares = 0;
+-				sync_req = 2; /* force a second update to get the
+-					       * even/odd in sync */
+-			}
+-		} else {
+-			/* otherwise an 'odd' event must go to spares */
+-			if ((mddev->events&1)) {
+-				nospares = 0;
+-				sync_req = 2; /* force a second update to get the
+-					       * even/odd in sync */
+-			}
+-		}
++		mddev->can_decrease_events = nospares;
+ 	}
+ 
+ 	if (!mddev->events) {
+@@ -4606,6 +4591,7 @@ static void md_clean(mddev_t *mddev)
+ 	mddev->layout = 0;
+ 	mddev->max_disks = 0;
+ 	mddev->events = 0;
++	mddev->can_decrease_events = 0;
+ 	mddev->delta_disks = 0;
+ 	mddev->new_level = LEVEL_NONE;
+ 	mddev->new_layout = 0;
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index a536f54..7ab5ea1 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -150,6 +150,12 @@ struct mddev_s
+ 	int				external_size; /* size managed
+ 							* externally */
+ 	__u64				events;
++	/* If the last 'event' was simply a clean->dirty transition, and
++	 * we didn't write it to the spares, then it is safe and simple
++	 * to just decrement the event count on a dirty->clean transition.
++	 * So we record that possibility here.
++	 */
++	int				can_decrease_events;
+ 
+ 	char				uuid[16];
+ 
