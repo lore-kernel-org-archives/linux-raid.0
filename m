@@ -1,50 +1,86 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Spare drive won't spin down
-Date: Tue, 18 May 2010 10:50:49 +1000
-Message-ID: <20100518105049.490aa652@notabene.brown>
-References: <922812.29139.qm@web31703.mail.mud.yahoo.com>
-	<20100507162034.1370d645@notabene.brown>
-	<717013.48748.qm@web31703.mail.mud.yahoo.com>
-	<20100507194704.3ffcf17e@notabene.brown>
-	<4BE83B75.8050709@tmr.com>
-	<20100512065318.44e934d4@notabene.brown>
-	<4BF186DE.5050502@redhat.com>
-	<20100518102312.01c85274@notabene.brown>
-	<AANLkTiknwELDEgA2LKbhOkNJWlm-wxBozMZ4i0BUFtu2@mail.gmail.com>
+Subject: Re: mdadm: failed devices become spares!
+Date: Tue, 18 May 2010 11:30:16 +1000
+Message-ID: <20100518113016.1981a08c@notabene.brown>
+References: <9D.D3.23029.CDD40FB4@cdptpa-omtalb.mail.rr.com>
+	<201005172010.36157.pierre@vigneras.name>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTiknwELDEgA2LKbhOkNJWlm-wxBozMZ4i0BUFtu2@mail.gmail.com>
+In-Reply-To: <201005172010.36157.pierre@vigneras.name>
 Sender: linux-raid-owner@vger.kernel.org
-To: Michael Evans <mjevans1983@gmail.com>
-Cc: Doug Ledford <dledford@redhat.com>, Bill Davidsen <davidsen@tmr.com>, Joe Bryant <tenminjoe@yahoo.com>, linux-raid@vger.kernel.org
+To: Pierre =?UTF-8?B?VmlnbsOpcmFz?= <pierre@vigneras.name>
+Cc: Leslie Rhorer <lrhorer@satx.rr.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 17 May 2010 17:38:04 -0700
-Michael Evans <mjevans1983@gmail.com> wrote:
+On Mon, 17 May 2010 20:10:36 +0200
+Pierre Vign=C3=A9ras <pierre@vigneras.name> wrote:
 
-> You should make it a sysfs controllable option to keep the counter
-> updated on spare discs or not.  The default can be to keep it within
-> one as you currently are patching it to.  Then later you can change
-> the default to the higher performance setting.  Better, the presence
-> of that file can be used to test if the kernel supports it, and if it
-> doesn't initramfs scripts can react accordingly.
+> Did I miss something, or is there something really strange happening =
+there?
 
-There really isn't any need for user-space to know - this is an entirely
-in-kernel thing.  mdadm already supports assembling arrays with widely
-different event_counts.  It just gives them to the kernel and lets it make
-the final decision.
+Something strange...
+I cannot explain the 'SpareActive' messages.
+Most of the rest makes sense.
 
-And I think it is stretching things to call this a performance setting.  It
-only changes behaviour when add devices is added/removed/failed or when an
-array is started or reshaped.  None of those happen often enough that an
-extra spin-up is really going to be an issue.
+You had a RAID10 - 4 drives in near=3D2 mode.  So the first two disks c=
+ontain
+identical data, and the second two are also identical and contain the r=
+est.
+The second device failed due to a write error.
+Why it seemed to become a spare I'm not sure.  I'm not all sure it did
+become a spare immediately- your logs aren't conclusive on that point.
+It did eventually become a spare, but that could be because you "remove=
+d and
+added the devices" which would have changed them from 'fail' to 'spares=
+'.
 
-It is more an issue of simplicity and elegance.  I don't think a sysfs option
-is appropriate for that.
+Then the first device in the array reported an error and so was failed.
+After this you would not be able to read or write to the even chunks of=
+ the
+array, xfs noticed and complained.
 
-But thanks for the suggestion.
+By this time sdf1 seemed to be a spare so it gave recovery a try.  The
+recovery process discovered there was nowhere to read good data from an=
+d
+immediately gave up.
+
+However if the devices really are OK, then sdf1 and sdc1 should contain
+identical data (except the superblock would be slightly different.
+You could check this with "cmp -l", though that might not be very effic=
+ient.
+Also sdd1 and sde1 should be identical.
+
+I suggest that you try:
+
+ mdadm -S /dev/md2
+ mdadm -C /dev/md2 -l 10 -n 4 -c 64 -e 0.90 /dev/sdc1 missing /dev/sdd1=
+ missing  --assume-clean
+
+and then see what the data on md2 looks like.
+You could equally try sdf1 in place of sdc1, or sde1 in place of sdd1
+(make sure you double check the device names, don't assume I got then r=
+ight).
+
+Once you have a combination that look good, you can add the other two d=
+evices
+an they will recover and you should have your data back.
+
+BUT be warned.  Something cause some errors to be reported.  Unless you=
+ find
+out what that was and fix it, errors will occur again.  I have no idea =
+what
+might have caused those errors.  Bad media? bad controller ? bad usb
+controller? bad luck?
+
+I wouldn't write new data, or even perform a recovery until you are qui=
+te
+confident of the devices.
 
 NeilBrown
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
