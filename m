@@ -1,66 +1,33 @@
-From: MRK <mrk@shiftmail.org>
+From: Simon Matthews <simon.d.matthews@gmail.com>
 Subject: Re: mdadm: failed devices become spares!
-Date: Wed, 19 May 2010 00:25:16 +0200
-Message-ID: <4BF313CC.9030401@shiftmail.org>
+Date: Wed, 19 May 2010 12:56:41 -0700
+Message-ID: <AANLkTil4IPwCQejn6qU3_bRHALsxDVriH2edRcv6AyDm@mail.gmail.com>
 References: <9D.D3.23029.CDD40FB4@cdptpa-omtalb.mail.rr.com>
- <201005172010.36157.pierre@vigneras.name>
- <20100518113016.1981a08c@notabene.brown>
- <20100518120637.24d875c9@notabene.brown>
+	 <201005172010.36157.pierre@vigneras.name>
+	 <20100518113016.1981a08c@notabene.brown>
+	 <20100518120637.24d875c9@notabene.brown>
+	 <4BF313CC.9030401@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <20100518120637.24d875c9@notabene.brown>
+In-Reply-To: <4BF313CC.9030401@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
+To: MRK <mrk@shiftmail.org>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 05/18/2010 04:06 AM, Neil Brown wrote:
-> However if --monitor gets to check the array between the above to events, it
-> will first see that the working drive is now faulty, so it reports a failure,
-> and then see that the faulty device isn't faulty any more and in fact isn't
-> even there.  The "isn't event there" bit doesn't register and it treats it as
-> 'SpareActive'.
->
-> I should fix that.
->    
+On Tue, May 18, 2010 at 3:25 PM, MRK <mrk@shiftmail.org> wrote:
 
-However in one case the two events are not detected in the same round:
+> - USB is not good for RAID imho.
 
-Apr 12 20:10:02 phobos mdadm[3157]: Fail event detected on md device /dev/md2,
-component device /dev/sdf1
-Apr 12 20:11:02 phobos mdadm[3157]: SpareActive event detected on md device
-/dev/md2, component device /dev/sdf1
+I  can second that. At one time I had a USB backup drive that was
+configured as half a RAID 1 set. This was so that the drive could
+immediately be used in the event of a massive failure of the file
+server.
 
+Pulling this USB drive before stopping the RAID device caused the
+machine to become unresponsive. I think it was trying to do some kind
+of I/O, all I know was that a hard boot was the only way I could get
+the machine out of that condition.
 
-1 minute passes between the two entries. I suppose that's the mdadm 
-daemon polling time.
-
-In the other case all the entries are at the same time
-
-Apr 13 08:00:02 phobos mdadm[3157]: Fail event detected on md device /dev/md2,
-component device /dev/sdd1
-Apr 13 08:00:02 phobos mdadm[3157]: SpareActive event detected on md device
-/dev/md2, component device /dev/sdd1
-Apr 13 08:00:02 phobos last message repeated 7 times
-[...many times that messages..]
-
-
-...plus, in this second case the SpareActive triggers a lot of times 
-within that same second (Pierre you cut it short, but are all the "many 
-times that messages" all at the exact same time or they span a few seconds?)
-
-It looks to me like some kind of usb failure where the USB connection or 
-USB bridge momentarily fails then immediately gets re-detected and 
-re-added to the system. But since there are no usb entries in dmesg, 
-that would also be an issue of the usb driver. Could the problem also be 
-a mixture with some unwise udev triggers of Debian, maybe somehow 
-causing the auto-re-add of the drive to the RAID?
-
-Pierre:
-- can you post your mdadm.conf?
-- USB is not good for RAID imho. Many times in my life I saw problems 
-with USB/SATA bridges where the drive would get disconnected on high I/O 
-activity and then reconnected after a few seconds. Anyway, readding it 
-to the RAID shouldn't have happened. Also in my case there were "usb" 
-entries in dmesg.
+Simon
