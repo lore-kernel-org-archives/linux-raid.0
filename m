@@ -1,61 +1,90 @@
-From: Trey Scarborough <treys@locallinux.com>
-Subject: Re: raid 5 mismatch_cnt errors
-Date: Thu, 20 May 2010 17:29:37 -0500
-Message-ID: <4BF5B7D1.3070808@locallinux.com>
-References: <4BF56B1F.9080205@locallinux.com> <20100521071645.497cdcad@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Shrink mdadm RAID5 from 6 disks to 5?
+Date: Fri, 21 May 2010 08:32:41 +1000
+Message-ID: <20100521083241.43755d02@notabene.brown>
+References: <AANLkTimSxarJKmCxfOkJZJJULplm0z1pbVKyQpCG6nEw@mail.gmail.com>
+	<20100521073433.75a59a99@notabene.brown>
+	<AANLkTimn5ieodsVPsZY022b7VAnfFNARyb3sQn2LMp7u@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100521071645.497cdcad@notabene.brown>
+In-Reply-To: <AANLkTimn5ieodsVPsZY022b7VAnfFNARyb3sQn2LMp7u@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: "Keith ." <lukano@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Thu, 20 May 2010 12:02:23 -0500
-> Trey Scarborough <treys@locallinux.com> wrote:
->
->   
->> I have a raid 5 array with 9 disks and I have a mismatch_cnt that keeps 
->> growing. This is causing file corruption on the underlaying file systems 
->> as well.  I can copy a group of 100 100mb files and then do a md5sum on 
->> them and 1-3 will be corrupt. If this is a drive that is bad is there 
->> anyway to run a report on the count per drive that these mismatches 
->> occur. I have run smarttools test and do not see one drive that stands 
->> out to be causing errors. Could something else be causing these errors?
->>     
->
->
-> When RAID5 detects an inconsistency there is no way to know which device was
-> wrong.
-> SMART only detects some errors, not all.
-> I have had hard drives before which appears to have a single-bit error in
-> their internal buffer.  No error would be reported, but data you read would
-> sometimes be wrong.
-> RAID5 cannot help you with this sort of error.
->
-> I would suggest backing up all your data (if it isn't already to late),
-> breaking the array, and testing each device individually.
-> e.g. create a filesystem on the device and try copying data on and reading it
-> off.
->
-> NeilBrown
->   
-Thats what I was afraid of. The problem I have is if I back it up 
-knowing what data is bad. Luckily it appears to be a write error because 
-once written and correct I can do sums on all the files and I do not see 
-anymore errors. I was thinking that there might be a way of do a resync 
-and turning up the debug somehow so that it would log the mismatches 
-with both the drives that it was reading from at the time. I could then 
-take that information and considering there are 9 drives in the array 
-the one that comes out having the most should be the culprit. I could 
-then remove that drive from the array and test it leaving the rest in a 
-state that could be rebuilt and the data being consistant because the 
-drive with the bad write errors would be removed. Is this something that 
-might be possible?
+On Thu, 20 May 2010 15:42:23 -0600
+"Keith ." <lukano@gmail.com> wrote:
 
-Thanks,
-Trey
+> Thanks for the quick reply Neil,
+>=20
+> I tried the suggested syntax, excluding the array-size in order to
+> have mdadm give me the value - but it did not.  I also tried grabbing
+> the current array size from df, but I got an error about being unable
+> to change array size in the same operation.
+>=20
+> So just to confirm I'm understanding you correctly ;  mdadm -G
+> /dev/md127 --raid-devices 5 --backup=3D/root/backup  - should generat=
+e
+> an error that provides the array-size value?
 
+Yes.
+Actually, you do probably need to change the size first:
+
+  mdadm --grow /dev/md127 --array-size=3Dxxxxx
+then once you are sure you haven't lost you data, change the number of
+devices.
+
+It might help if you ran the commands with "-v" and reported all the
+messages generated, and any kernel log messages.
+And maybe
+  cat /proc/mdstat
+
+just to give us some more context..
+Maybe you have a write-intent-bitmap attached to the array.  You cannot
+reshape an array with one of those attached.
+
+NeilBron
+
+
+>=20
+> On Thu, May 20, 2010 at 3:34 PM, Neil Brown <neilb@suse.de> wrote:
+> > On Thu, 20 May 2010 07:45:23 -0600
+> > "Keith ." <lukano@gmail.com> wrote:
+> >
+> >> Does mdadm 3.1.x not support shrinking the number of disks in a RA=
+ID5 array?
+> >>
+> >> I have successfully converted my 6x1.5tb RAID6 array to a 6x1.5tb
+> >> RAID5 array. =C2=A0The issue that I now face is that one of those =
+6 drives
+> >> is failed / removed, and as a result - the new RAID5 array is down
+> >> it's parity drive.
+> >>
+> >> I knew I was short a disk when I started the process, but I was un=
+der
+> >> the assumption that mdadm now supported shrinking of RAID5/6 array=
+s.
+> >> Am I mistaken, or can anyone throw some suggestions at me so I can
+> >> give it a try?
+> >
+> > It should work.
+> >
+> > =C2=A0mdadm -G /dev/mdX --raid-devices 5 --array-size=3DXXXXX
+> > =C2=A0--backup=3D/root/backup-file
+> >
+> > If you don't give the 'array-size' value mdadm will tell you what i=
+t has to
+> > be. =C2=A0You need to be sure that all your data is already within =
+that space.
+> >
+> > NeilBrown
+> >
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
