@@ -1,7 +1,7 @@
-From: Trey Scarborough <trey@treyworld.com>
+From: Trey Scarborough <treys@locallinux.com>
 Subject: raid 5 mismatch_cnt errors
-Date: Thu, 20 May 2010 11:58:48 -0500
-Message-ID: <4BF56A48.4080507@treyworld.com>
+Date: Thu, 20 May 2010 12:02:23 -0500
+Message-ID: <4BF56B1F.9080205@locallinux.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
@@ -17,5 +17,3 @@ them and 1-3 will be corrupt. If this is a drive that is bad is there
 anyway to run a report on the count per drive that these mismatches 
 occur. I have run smarttools test and do not see one drive that stands 
 out to be causing errors. Could something else be causing these errors?
-
-
