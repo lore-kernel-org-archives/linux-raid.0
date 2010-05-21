@@ -1,94 +1,65 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: raid 5 mismatch_cnt errors
-Date: Fri, 21 May 2010 16:57:29 -0400
-Message-ID: <4BF6F3B9.5020405@redhat.com>
-References: <4BF56B1F.9080205@locallinux.com> <20100521071645.497cdcad@notabene.brown> <4BF5B7D1.3070808@locallinux.com> <20100521083819.54680dfb@notabene.brown> <4BF5ECE7.7020907@redhat.com> <4BF6B782.3060408@shiftmail.org>
+From: Pierre =?utf-8?q?Vign=C3=A9ras?= <pierre@vigneras.name>
+Subject: Re: mdadm: failed devices become spares! -> Solved !
+Date: Fri, 21 May 2010 23:27:49 +0200
+Message-ID: <201005212327.49734.pierre@vigneras.name>
+References: <9D.D3.23029.CDD40FB4@cdptpa-omtalb.mail.rr.com> <20100518113016.1981a08c@notabene.brown> <20100518120637.24d875c9@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig501CD30DB138E0F5F5A796AA"
+Content-Type: Text/Plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4BF6B782.3060408@shiftmail.org>
+In-Reply-To: <20100518120637.24d875c9@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: MRK <mrk@shiftmail.org>
-Cc: Neil Brown <neilb@suse.de>, Trey Scarborough <treys@locallinux.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig501CD30DB138E0F5F5A796AA
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Sorry for the delay of my reply...
 
-On 05/21/2010 12:40 PM, MRK wrote:
-> On 05/21/2010 04:16 AM, Doug Ledford wrote:
->> On 05/20/2010 06:38 PM, Neil Brown wrote:
->>  =20
->>> On Thu, 20 May 2010 17:29:37 -0500
->>> Trey Scarborough<treys@locallinux.com>  wrote:
->>>
->>>    =20
->>>> Neil Brown wrote:
->>>>      =20
->>>>> On Thu, 20 May 2010 12:02:23 -0500
->>>>> Trey Scarborough<treys@locallinux.com>  wrote:
->>>>>
->>>>>
->>>>>        =20
->>>>>> I have a raid 5 array with 9 disks and I have a mismatch_cnt that
->>>>>> keeps
->>>>>> growing. This is causing file corruption on the underlaying file
->>>>>> systems
->>>>>> as well.  I can copy a group of 100 100mb files and then do a
->>>>>> md5sum on
->>>>>> them and 1-3 will be corrupt. If this is a drive that is bad is th=
-ere
->>>>>> anyway to run a report on the count per drive that these mismatche=
-s
->>>>>> occur. I have run smarttools test and do not see one drive that
->>>>>> stands
->>>>>> out to be causing errors. Could something else be causing these
->>>>>> errors?
->>>>>>
->>>>>>           =20
->> While a bad drive is certainly a possibility here, this is precisely t=
-he
->> type of failure scenario that would make me suspect bad RAM,
->> motherboard, or CPU.  So I wouldn't rule those out as possibilities
->> either.
->>   =20
->=20
-> Could the cabling to the drive be causing this? (maybe failing or maybe=
+This small mail to let you know that my RAID array is currently recover=
+ing=20
+thanks to the valuable inputs of this mailing list users. You are great=
+!
 
-> it's partly disconnected)
-> I don't remember at what point Linux is at implementing the checksums
-> between the controller and the drive.
+=46or the curious, what I did is the following:
 
-I don't know.  I'm not up on the SATA signaling details so I don't know
-if it uses CRC on the signal, but I suspect it does and a bad cable
-would cause failed requests.  But I wouldn't bet my house on it, so I
-would ask some SATA gurus.
+# ##### Do not forget the '--assume-clean' as I almost did! ;-(
+# mdadm -C /dev/md2 -l 10 -n 4 -c 64 -e 0.90 --assume-clean /dev/sdd1 m=
+issing=20
+/dev/sdc1 missing              =20
+# vgchange -a y                                                        =
+                                      =20
+# xfs_repair -n -t 1 -v /dev/my-vg/my-lv
+# mount -o ro /dev/my-vg/my-lv /mnt/tmp
+# find /mnt/tmp
+# du -ks /mnt/tmp/
+# umount /mnt/tmp
+# #### Required: XFS asked the log to get replayed
+# mount /dev/my-vg/my-lv /mnt/tmp/
+# umount /mnt/tmp
+# xfs_repair  -t 1 -v /dev/my-vg/my-lv
+# mdadm --manage /dev/md2 --add /dev/sde1
+# mdadm --manage /dev/md2 --add /dev/sdf1
 
+The array is currently at 25 % of the recovery process. A bit too soon =
+to say=20
+that everything is fine... By the way, I am quite sure now that my USB=20
+controllers (or the use driver or whatever in the chain except all disk=
+s) are=20
+buggy: all the other RAIDs of my setup are gone!
 
+I will try to recover them using the same kind of process, to backup al=
+l data.=20
+Do you think that using BBR (since each time, the burden started due to=
+ a=20
+sector (write?) error), the problem will be "solved" (or at least postp=
+oned=20
+until BBR itself does not have enough free sectors)?
+
+Anyway, again, thanks a lot to all of you.=20
+Open Source rocks! ;-)
 --=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-	      http://people.redhat.com/dledford
-
-Infiniband specific RPMs available at
-	      http://people.redhat.com/dledford/Infiniband
-
-
---------------enig501CD30DB138E0F5F5A796AA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkv287kACgkQg6WylM+/8ZQmywCgg1zPfO0693Df+fK06SqtCg1X
-qLIAn23vV6ivCqwli4qibbiFqVNWb7Ge
-=JB4e
------END PGP SIGNATURE-----
-
---------------enig501CD30DB138E0F5F5A796AA--
+Pierre Vign=C3=A9ras
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
