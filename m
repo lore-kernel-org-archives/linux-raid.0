@@ -1,65 +1,116 @@
-From: Pierre =?utf-8?q?Vign=C3=A9ras?= <pierre@vigneras.name>
-Subject: Re: mdadm: failed devices become spares! -> Solved !
-Date: Fri, 21 May 2010 23:27:49 +0200
-Message-ID: <201005212327.49734.pierre@vigneras.name>
-References: <9D.D3.23029.CDD40FB4@cdptpa-omtalb.mail.rr.com> <20100518113016.1981a08c@notabene.brown> <20100518120637.24d875c9@notabene.brown>
+From: Neil Brown <neilb@suse.de>
+Subject: [PULL REQUEST] md updates for 2.6.35
+Date: Sat, 22 May 2010 08:47:49 +1000
+Message-ID: <19447.3477.501889.730865@notabene.brown>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100518120637.24d875c9@notabene.brown>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-raid@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-raid.ids
 
-Sorry for the delay of my reply...
 
-This small mail to let you know that my RAID array is currently recover=
-ing=20
-thanks to the valuable inputs of this mailing list users. You are great=
-!
+Hi Linus,
+ please pull the following updates for md for 2.6.35.
 
-=46or the curious, what I did is the following:
+ The head commit is a merge which fixes up a conflict between some
+ patches in here and other that went in late in 2.6.34,
+ and also resolves a compile-time conflict with sysfs patches (which
+ added an arg to sysfs_get_dirent (as discovered in -next).
 
-# ##### Do not forget the '--assume-clean' as I almost did! ;-(
-# mdadm -C /dev/md2 -l 10 -n 4 -c 64 -e 0.90 --assume-clean /dev/sdd1 m=
-issing=20
-/dev/sdc1 missing              =20
-# vgchange -a y                                                        =
-                                      =20
-# xfs_repair -n -t 1 -v /dev/my-vg/my-lv
-# mount -o ro /dev/my-vg/my-lv /mnt/tmp
-# find /mnt/tmp
-# du -ks /mnt/tmp/
-# umount /mnt/tmp
-# #### Required: XFS asked the log to get replayed
-# mount /dev/my-vg/my-lv /mnt/tmp/
-# umount /mnt/tmp
-# xfs_repair  -t 1 -v /dev/my-vg/my-lv
-# mdadm --manage /dev/md2 --add /dev/sde1
-# mdadm --manage /dev/md2 --add /dev/sdf1
+ All have been seen on linux-raid mailing list and have been in -next
+ for a while.
 
-The array is currently at 25 % of the recovery process. A bit too soon =
-to say=20
-that everything is fine... By the way, I am quite sure now that my USB=20
-controllers (or the use driver or whatever in the chain except all disk=
-s) are=20
-buggy: all the other RAIDs of my setup are gone!
+ The first few are tagged for -stable.
 
-I will try to recover them using the same kind of process, to backup al=
-l data.=20
-Do you think that using BBR (since each time, the burden started due to=
- a=20
-sector (write?) error), the problem will be "solved" (or at least postp=
-oned=20
-until BBR itself does not have enough free sectors)?
+Thanks,
+NeilBrown
 
-Anyway, again, thanks a lot to all of you.=20
-Open Source rocks! ;-)
---=20
-Pierre Vign=C3=A9ras
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+The following changes since commit d515e86e639890b33a09390d062b0831664f04a2:
+
+  Merge branch 'for_linus' of git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-udf-2.6 (2010-05-21 11:17:43 -0700)
+
+are available in the git repository at:
+
+  git://neil.brown.name/md/ for-linus
+
+Dan Williams (4):
+      md: set mddev readonly flag on blkdev BLKROSET ioctl
+      md/raid4: permit raid0 takeover
+      md: notify mdstat waiters of level change
+      md: allow integers to be passed to md/level
+
+Gabriele A. Trombetti (1):
+      md/raid6: Fix raid-6 read-error correction in degraded state
+
+H Hartley Sweeten (1):
+      drivers/md: Remove unnecessary casts of void *
+
+Maciej Trela (2):
+      md: Correctly handle device removal via sysfs
+      md: notify level changes through sysfs.
+
+NeilBrown (34):
+      md/linear: avoid possible oops and array stop
+      md: remove unneeded sysfs files more promptly
+      md: manage redundancy group in sysfs when changing level.
+      md/raid1: fix counting of write targets.
+      md: remove some dead fields from mddev_s
+      md: discard StateChanged device flag.
+      md: don't use mddev->raid_disks in raid0 or raid10 while array is active.
+      md: Relax checks on ->max_disks when external metadata handling is used.
+      md: add support for raid5 to raid4 conversion
+      md/raid5: small tidyup in raid5_align_endio
+      md: move io accounting out of personalities into md_make_request
+      md: don't reference gendisk in getgeo
+      md: remove ->changed and related code.
+      md: factor do_md_run to separate accesses to ->gendisk
+      md: start to refactor do_md_stop
+      md: factor md_stop_writes out of do_md_stop.
+      md: split md_set_readonly out of do_md_stop
+      md: call md_stop_writes from md_stop
+      md: pass mddev to make_request functions rather than request_queue
+      md: factor out init code for an mddev
+      md: don't unregister the thread in mddev_suspend
+      md/raid1: fix confusing 'redirect sector' message.
+      md/raid1: delay reads that could overtake behind-writes.
+      md: remove EXPERIMENTAL designation from RAID10
+      md/raid5: improve consistency of error messages.
+      md/raid1: improve printk messages
+      md/raid10: tidy up printk messages.
+      md/raid0: tidy up printk messages.
+      md/linear: standardise all printk messages
+      md: Fix read balancing in RAID1 and RAID10 on drives > 2TB
+      md: restore ability of spare drives to spin down.
+      md: simplify updating of event count to sometimes avoid updating spares.
+      md: don't insist on valid event count for spare devices.
+      Merge commit '3ff195b011d7decf501a4d55aeed312731094796' into for-linus
+
+Paul Clements (1):
+      md: expose max value of behind writes counter
+
+Trela Maciej (1):
+      md:Add support for Raid0->Raid5 takeover
+
+Trela, Maciej (2):
+      md: Add support for Raid5->Raid0 and Raid10->Raid0 takeover
+      md: Add support for Raid0->Raid10 takeover
+
+ drivers/md/Kconfig     |    4 +-
+ drivers/md/bitmap.c    |   41 +++-
+ drivers/md/bitmap.h    |    2 +
+ drivers/md/faulty.c    |    9 +-
+ drivers/md/linear.c    |   36 ++--
+ drivers/md/md.c        |  537 +++++++++++++++++++++++++++++-------------------
+ drivers/md/md.h        |   16 +-
+ drivers/md/multipath.c |   13 +-
+ drivers/md/raid0.c     |  251 +++++++++++++++++------
+ drivers/md/raid0.h     |    3 +
+ drivers/md/raid1.c     |  114 ++++++-----
+ drivers/md/raid10.c    |  300 ++++++++++++++++++---------
+ drivers/md/raid10.h    |   12 +
+ drivers/md/raid5.c     |  231 ++++++++++++----------
+ 14 files changed, 987 insertions(+), 582 deletions(-)
