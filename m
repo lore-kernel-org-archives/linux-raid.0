@@ -1,109 +1,35 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH] md: fix raid6test build error
-Date: Mon, 24 May 2010 22:05:27 +0900
-Message-ID: <1274706327-13581-1-git-send-email-akinobu.mita@gmail.com>
+From: Michael Evans <mjevans1983@gmail.com>
+Subject: Re: My Thecus RAID-0 filesystem unmountable with mdadm. Please help.
+Date: Mon, 24 May 2010 14:57:50 -0700
+Message-ID: <AANLkTimbLUcCxGwo81HJNFLlrXq9a28j8CNpUcSVlSOr@mail.gmail.com>
+References: <AANLkTinJ2gaVnrPIlJT8m9Ic11qevFNRQgQ-shZropEt@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <AANLkTinJ2gaVnrPIlJT8m9Ic11qevFNRQgQ-shZropEt@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, "H. Peter Anvin" <hpa@zytor.com>
+To: David Reniau <david.reniau@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Fix userspace raid6test build error.
+Way too big and spread out, I don't know if anyone will have the time
+to read that.
 
-Tested with:
-	make -C drivers/md/raid6test/
-	./drivers/md/raid6test/raid6test
+First, https://raid.wiki.kernel.org/index.php/RAID_Recovery
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
-Cc: "H. Peter Anvin" <hpa@zytor.com>
----
- drivers/md/raid6algos.c       |    2 +-
- drivers/md/raid6test/Makefile |   20 ++++++++++----------
- include/linux/raid/pq.h       |    2 ++
- 3 files changed, 13 insertions(+), 11 deletions(-)
+Second, what parameters do you remember about the original array?
 
-diff --git a/drivers/md/raid6algos.c b/drivers/md/raid6algos.c
-index 1f8784b..df7ff72 100644
---- a/drivers/md/raid6algos.c
-+++ b/drivers/md/raid6algos.c
-@@ -17,11 +17,11 @@
-  */
- 
- #include <linux/raid/pq.h>
--#include <linux/gfp.h>
- #ifndef __KERNEL__
- #include <sys/mman.h>
- #include <stdio.h>
- #else
-+#include <linux/gfp.h>
- #if !RAID6_USE_EMPTY_ZERO_PAGE
- /* In .bss so it's zeroed */
- const char raid6_empty_zero_page[PAGE_SIZE] __attribute__((aligned(256)));
-diff --git a/drivers/md/raid6test/Makefile b/drivers/md/raid6test/Makefile
-index 2874cbe..0674b29 100644
---- a/drivers/md/raid6test/Makefile
-+++ b/drivers/md/raid6test/Makefile
-@@ -36,34 +36,34 @@ raid6test: test.c raid6.a
- 	$(CC) $(CFLAGS) -o raid6test $^
- 
- raid6altivec1.c: raid6altivec.uc ../unroll.awk
--	$(AWK) ../unroll.awk -vN=1 < raid6altivec.uc > $@
-+	$(AWK) -f ../unroll.awk -vN=1 < raid6altivec.uc > $@
- 
- raid6altivec2.c: raid6altivec.uc ../unroll.awk
--	$(AWK) ../unroll.awk -vN=2 < raid6altivec.uc > $@
-+	$(AWK) -f ../unroll.awk -vN=2 < raid6altivec.uc > $@
- 
- raid6altivec4.c: raid6altivec.uc ../unroll.awk
--	$(AWK) ../unroll.awk -vN=4 < raid6altivec.uc > $@
-+	$(AWK) -f ../unroll.awk -vN=4 < raid6altivec.uc > $@
- 
- raid6altivec8.c: raid6altivec.uc ../unroll.awk
--	$(AWK) ../unroll.awk -vN=8 < raid6altivec.uc > $@
-+	$(AWK) -f ../unroll.awk -vN=8 < raid6altivec.uc > $@
- 
- raid6int1.c: raid6int.uc ../unroll.awk
--	$(AWK) ../unroll.awk -vN=1 < raid6int.uc > $@
-+	$(AWK) -f ../unroll.awk -vN=1 < raid6int.uc > $@
- 
- raid6int2.c: raid6int.uc ../unroll.awk
--	$(AWK) ../unroll.awk -vN=2 < raid6int.uc > $@
-+	$(AWK) -f ../unroll.awk -vN=2 < raid6int.uc > $@
- 
- raid6int4.c: raid6int.uc ../unroll.awk
--	$(AWK) ../unroll.awk -vN=4 < raid6int.uc > $@
-+	$(AWK) -f ../unroll.awk -vN=4 < raid6int.uc > $@
- 
- raid6int8.c: raid6int.uc ../unroll.awk
--	$(AWK) ../unroll.awk -vN=8 < raid6int.uc > $@
-+	$(AWK) -f ../unroll.awk -vN=8 < raid6int.uc > $@
- 
- raid6int16.c: raid6int.uc ../unroll.awk
--	$(AWK) ../unroll.awk -vN=16 < raid6int.uc > $@
-+	$(AWK) -f ../unroll.awk -vN=16 < raid6int.uc > $@
- 
- raid6int32.c: raid6int.uc ../unroll.awk
--	$(AWK) ../unroll.awk -vN=32 < raid6int.uc > $@
-+	$(AWK) -f ../unroll.awk -vN=32 < raid6int.uc > $@
- 
- raid6tables.c: mktables
- 	./mktables > raid6tables.c
-diff --git a/include/linux/raid/pq.h b/include/linux/raid/pq.h
-index 1cbbd2c..5be078f 100644
---- a/include/linux/raid/pq.h
-+++ b/include/linux/raid/pq.h
-@@ -62,7 +62,9 @@ extern const char raid6_empty_zero_page[PAGE_SIZE];
- #define disable_kernel_altivec()
- 
- #define EXPORT_SYMBOL(sym)
-+#define EXPORT_SYMBOL_GPL(sym)
- #define MODULE_LICENSE(licence)
-+#define MODULE_DESCRIPTION(_description)
- #define subsys_initcall(x)
- #define module_exit(x)
- #endif /* __KERNEL__ */
--- 
-1.6.0.6
+Third, you probably want to try hexdumping the first megabyte or two
+of each drive and looking for a superblock of your filesystem.
 
+(man hexdump)
+
+hexdump -Cn $((1024*1024)) /dev/whatever
+
+You may also want to use dd to get the end of the block device.
+
+Most importantly, knowing //where// the superblock is in your device
+will allow for a guess about where in to the block-dev the data is
+supposed to start.  That ///may/// allow for the creation of a
+superblock with the proper alignment (and hopefully chunk size) to
+read your data.
