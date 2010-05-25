@@ -1,70 +1,49 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: [patch] md/raid10: check for ERR_PTR returns from setup_conf()
-Date: Tue, 25 May 2010 16:56:13 +0200
-Message-ID: <20100525145613.GD1211@skl-net.de>
-References: <20100525094017.GD22515@bicker>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: raid 5 mismatch_cnt errors
+Date: Tue, 25 May 2010 13:09:43 -0600
+Message-ID: <4BFC2077.6070203@gmail.com>
+References: <4BF56B1F.9080205@locallinux.com> <20100521071645.497cdcad@notabene.brown> <4BF5B7D1.3070808@locallinux.com> <20100521083819.54680dfb@notabene.brown> <4BF5ECE7.7020907@redhat.com> <4BF6B782.3060408@shiftmail.org> <4BF6F3B9.5020405@redhat.com> <4BFA4824.10107@seoss.co.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="KdquIMZPjGJQvRdI"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100525094017.GD22515@bicker>
+In-Reply-To: <4BFA4824.10107@seoss.co.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Carpenter <error27@gmail.com>
-Cc: Neil Brown <neilb@suse.de>, Robert Becker <Rob.Becker@riverbed.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <jens.axboe@oracle.com>, linux-raid@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Tim Small <tim@seoss.co.uk>
+Cc: Doug Ledford <dledford@redhat.com>, MRK <mrk@shiftmail.org>, Neil Brown <neilb@suse.de>, Trey Scarborough <treys@locallinux.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
+On 05/24/2010 03:34 AM, Tim Small wrote:
+> On 21/05/10 21:57, Doug Ledford wrote:
+>> On 05/21/2010 12:40 PM, MRK wrote:
+>>> On 05/21/2010 04:16 AM, Doug Ledford wrote:
+>>> Could the cabling to the drive be causing this? (maybe failing or maybe
+>>> it's partly disconnected)
+>>> I don't remember at what point Linux is at implementing the checksums
+>>> between the controller and the drive.
+>> I don't know. I'm not up on the SATA signaling details so I don't know
+>> if it uses CRC on the signal, but I suspect it does and a bad cable
+>> would cause failed requests. But I wouldn't bet my house on it, so I
+>> would ask some SATA gurus.
+>
+> I wouldn't call myself that, but I believe PATA and SATA-level CRC
+> errors show up in the UDMA_CRC_Error_Count SMART variable - look for a
+> non-zero raw value in the smartctl output. This is presumably just the
+> error-count from the drive's point of view (bad data recd at drive end).
+> I don't know what happens with CRC errors detected at the Linux end -
+> and whether detection is controller-dependant. Better ask on linux-ide.
+>
+>
+>  From the SMART attribute name, presumably the earlier PATA transfer
+> modes don't support CRC error detection.
+>
+> An easy thing to check might be to reduce the libata transfer speed from
+> 3GBps to 1.5GBps. Similarly, try to test each drive and SATA port in
+> isolation if you can....
 
---KdquIMZPjGJQvRdI
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+ATA transfer errors should cause a bad CRC resulting in a failed 
+transfer which will cause complaints in the kernel log. For PATA, only 
+UDMA modes can detect CRC errors, PIO and MWDMA transfers can't.
 
-On 11:40, Dan Carpenter wrote:
-> setup_conf() can return error values so I added a check for that here.
->=20
-> Signed-off-by: Dan Carpenter <error27@gmail.com>
->=20
-> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-> index 0372499..8bd7da2 100644
-> --- a/drivers/md/raid10.c
-> +++ b/drivers/md/raid10.c
-> @@ -2454,6 +2454,8 @@ static void *raid10_takeover_raid0(mddev_t *mddev)
->  	mddev->recovery_cp =3D MaxSector;
-> =20
->  	conf =3D setup_conf(mddev);
-> +	if (IS_ERR(conf))
-> +		return conf;
->  	conf->scale_disks =3D 2;
->  	return conf;
->  }
-
-Looks good. Feel free to add my Acked-By.
-
-BTW: setup_conf() could use some cleanup: The "couldn't allocate
-memory" error message at the bottom is misleading, and the function
-returns ERR_PTR(-ENOMEM) also if md_register_thread() fails.
-
-Here's a question for Neil: raid10_takeover_raid0() sets
-mddev->new_layout, but setup_conf() uses the old values of the
-raid0. How is this supposed to work?
-
-Thanks
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---KdquIMZPjGJQvRdI
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFL++UNWto1QDEAkw8RArWLAJ0UzsayPZJS/D3WBP2UQdtFRdqu8wCgp8+J
-mbgWr/oXr+TiLuSThMTDQnU=
-=JMOm
------END PGP SIGNATURE-----
-
---KdquIMZPjGJQvRdI--
+There are other places where data corruption can occur however, like 
+inside the controller or the drive itself..
