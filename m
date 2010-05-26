@@ -1,107 +1,93 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: blkid and partition problem
-Date: Wed, 26 May 2010 11:16:37 -0400
-Message-ID: <4BFD3B55.5010008@tmr.com>
-References: <AANLkTilFZtEDC9au165SQSsj7U1B2f_XOA4kY_4hbE0j@mail.gmail.com>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: raid 5 mismatch_cnt errors
+Date: Wed, 26 May 2010 11:49:52 -0400
+Message-ID: <4BFD4320.6090606@redhat.com>
+References: <4BF56B1F.9080205@locallinux.com>	<20100521071645.497cdcad@notabene.brown>	<4BF5B7D1.3070808@locallinux.com> <20100521083819.54680dfb@notabene.brown> <4BF5ECE7.7020907@redhat.com> <4BFD392E.3030906@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigDF87B377FCCF121F6BC21B4E"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTilFZtEDC9au165SQSsj7U1B2f_XOA4kY_4hbE0j@mail.gmail.com>
+In-Reply-To: <4BFD392E.3030906@tmr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tim Bostrom <tbostrom@gmail.com>
-Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Neil Brown <neilb@suse.de>, Trey Scarborough <treys@locallinux.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Tim Bostrom wrote:
-> Looking for some help.  I'm trying to start my array but just noticed
-> that somehow my the UUID got assigned to my physical drive and not the
-> partition.  The partition doesn't show up in /dev/.  Drive sdm has a
-> valid partition, but blkid is set on the physical disk.
->
-> /dev/sdm is the drive causing issue.  The partition is there (see
-> fdisk output below).  It contains data so I'd like to not have to
-> completely wipe the drive.  Is there any option to fix this?
->
-> blkid output (see /dev/sdm):
-> ----------------------
-> /dev/sda1: UUID="dd8018e3-2939-4236-9a63-c36d6df9cf80" TYPE="ext3"
-> /dev/sda2: UUID="287f5ab6-d463-43a2-a3b2-7bf789dd8744" TYPE="ext3"
-> /dev/sda3: UUID="336a1681-af86-401d-946e-201ae37780fe" TYPE="swap"
-> /dev/sdb1: UUID="cdaba8bd-8094-3c6a-ab2f-edca3ef56cfb" TYPE="linux_raid_member"
-> /dev/sdc1: UUID="cdaba8bd-8094-3c6a-ab2f-edca3ef56cfb" TYPE="linux_raid_member"
-> /dev/sdd1: UUID="cdaba8bd-8094-3c6a-ab2f-edca3ef56cfb" TYPE="linux_raid_member"
-> /dev/sde1: UUID="cdaba8bd-8094-3c6a-ab2f-edca3ef56cfb" TYPE="linux_raid_member"
-> /dev/sdf1: UUID="649526d8-828a-57b4-ab2f-edca3ef56cfb" TYPE="linux_raid_member"
-> /dev/sdg1: UUID="649526d8-828a-57b4-ab2f-edca3ef56cfb" TYPE="linux_raid_member"
-> /dev/sdh: UUID="7ea182f5-0c31-3e24-adba-30185bcf511e" LABEL="1"
-> TYPE="linux_raid_member"
-> /dev/sdi: UUID="7ea182f5-0c31-3e24-adba-30185bcf511e" LABEL="1"
-> TYPE="linux_raid_member"
-> /dev/sdj1: UUID="f911d5fb-8cf2-0015-ab2f-edca3ef56cfb" TYPE="linux_raid_member"
-> /dev/sdk1: UUID="f911d5fb-8cf2-0015-ab2f-edca3ef56cfb" TYPE="linux_raid_member"
-> /dev/md0: LABEL="teradata" UUID="2e7624ad-f059-4e35-a18a-eb8ffa645d54"
-> TYPE="ext3"
-> /dev/sdm: UUID="db34c204-6c5a-7156-28d0-d68913f396a5" LABEL="0"
-> TYPE="linux_raid_member"
-> /dev/md1: UUID="eea5390f-8f24-4a82-b899-7924fb126a5b" TYPE="ext3"
->
->
-> fdisk -l /dev/sdm output:
-> ------------------
-> Disk /dev/sdm: 1000.2 GB, 1000204886016 bytes
-> 255 heads, 63 sectors/track, 121601 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
-> Disk identifier: 0x000f2387
->
->    Device Boot      Start         End      Blocks   Id  System
-> /dev/sdm1               1      121601   976760001   fd  Linux raid autodetect
->
->
->  ls -l /dev/sd*
-> brw-rw---- 1 root disk 8,   0 2010-05-21 16:32 /dev/sda
-> brw-rw---- 1 root disk 8,   1 2010-05-21 16:32 /dev/sda1
-> brw-rw---- 1 root disk 8,   2 2010-05-21 16:32 /dev/sda2
-> brw-rw---- 1 root disk 8,   3 2010-05-21 16:32 /dev/sda3
-> brw-rw---- 1 root disk 8,  16 2010-05-21 16:32 /dev/sdb
-> brw-rw---- 1 root disk 8,  17 2010-05-21 16:32 /dev/sdb1
-> brw-rw---- 1 root disk 8,  32 2010-05-21 16:32 /dev/sdc
-> brw-rw---- 1 root disk 8,  33 2010-05-21 16:32 /dev/sdc1
-> brw-rw---- 1 root disk 8,  48 2010-05-21 16:32 /dev/sdd
-> brw-rw---- 1 root disk 8,  49 2010-05-21 16:32 /dev/sdd1
-> brw-rw---- 1 root disk 8,  64 2010-05-21 16:32 /dev/sde
-> brw-rw---- 1 root disk 8,  65 2010-05-21 16:32 /dev/sde1
-> brw-rw---- 1 root disk 8,  80 2010-05-21 16:32 /dev/sdf
-> brw-rw---- 1 root disk 8,  81 2010-05-21 16:32 /dev/sdf1
-> brw-rw---- 1 root disk 8,  96 2010-05-21 16:32 /dev/sdg
-> brw-rw---- 1 root disk 8,  97 2010-05-21 16:32 /dev/sdg1
-> brw-rw---- 1 root disk 8, 112 2010-05-21 16:32 /dev/sdh
-> brw-rw---- 1 root disk 8, 128 2010-05-21 16:32 /dev/sdi
-> brw-rw---- 1 root disk 8, 144 2010-05-21 16:32 /dev/sdj
-> brw-rw---- 1 root disk 8, 145 2010-05-21 16:32 /dev/sdj1
-> brw-rw---- 1 root disk 8, 160 2010-05-21 16:32 /dev/sdk
-> brw-rw---- 1 root disk 8, 161 2010-05-21 16:32 /dev/sdk1
-> brw-rw---- 1 root disk 8, 176 2010-05-21 16:32 /dev/sdl
-> brw-rw---- 1 root disk 8, 192 2010-05-21 16:32 /dev/sdm
->
->
->
-> Any help is greatly appreciated.
->   
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigDF87B377FCCF121F6BC21B4E
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Let me propose a cause for this. Assume that after partitioning sdm you 
-created an array, and when giving the members you typed /dev/sdm rather 
-than /dev/sdm1. Sound possible? You might try assembling an array with 
-the members and give /dev/sdm instead of /dev/sdm1, specifying read-only 
-to prevent issues.
+On 05/26/2010 11:07 AM, Bill Davidsen wrote:
+> Doug Ledford wrote:
+>> On 05/20/2010 06:38 PM, Neil Brown wrote:
+>> =20
+>>> On Thu, 20 May 2010 17:29:37 -0500
+>>> Trey Scarborough <treys@locallinux.com> wrote:
+>>>
+>>>   =20
+>>>> Neil Brown wrote:
+>>>>     =20
+>>>>> On Thu, 20 May 2010 12:02:23 -0500
+>>>>> Trey Scarborough <treys@locallinux.com> wrote:
+>>>>>
+>>>>>         =20
+>>>>>> I have a raid 5 array with 9 disks and I have a mismatch_cnt that
+>>>>>> keeps growing. This is causing file corruption on the underlaying
+>>>>>> file systems as well.  I can copy a group of 100 100mb files and
+>>>>>> then do a md5sum on them and 1-3 will be corrupt. If this is a
+>>>>>> drive that is bad is there anyway to run a report on the count per=
 
-My reasoning is that using the whole disk you would write over the UUID 
-on the partition, but the partition table might be safe.
+>>>>>> drive that these mismatches occur. I have run smarttools test and
+>>>>>> do not see one drive that stands out to be causing errors. Could
+>>>>>> something else be causing these errors?
+>>>>>>              =20
+>>
+>> While a bad drive is certainly a possibility here, this is precisely t=
+he
+>> type of failure scenario that would make me suspect bad RAM,
+>> motherboard, or CPU.  So I wouldn't rule those out as possibilities
+>> either.
+>>  =20
+>=20
+> I have the same thought, I would remove half the RAM from the system an=
+d
+> test again, then swap to the "other" half and repeat. Of course running=
 
-Corrections welcome.
+> memtest first is a good idea, but I have seen failures which only happe=
+n
+> on disk access.
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "We can't solve today's problems by using the same thinking we
-   used in creating them." - Einstein
+Indeed, I've seen lots of failures that only happen with disk access and
+not with memory testers.  Hence why I have a shell script on my web page
+in my sig that uses disk access to test memory.
 
+> If the system is O/C obviously the first step is to cut the speed back.=
+=2E.
+>=20
+
+
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+	      http://people.redhat.com/dledford
+
+Infiniband specific RPMs available at
+	      http://people.redhat.com/dledford/Infiniband
+
+
+--------------enigDF87B377FCCF121F6BC21B4E
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAkv9QyAACgkQg6WylM+/8ZTpNwCgqCGc6lVzsS6l0gpy5wpZwKs8
+WeoAoKOyw5Sfs6fGGdSv13hHG9ATMUpl
+=ig/k
+-----END PGP SIGNATURE-----
+
+--------------enigDF87B377FCCF121F6BC21B4E--
