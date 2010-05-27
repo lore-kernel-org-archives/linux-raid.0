@@ -1,58 +1,54 @@
-From: Daniele Madama <d.madama@gmail.com>
-Subject: Re: Delivery Status Notification (Failure)
-Date: Thu, 27 May 2010 14:10:16 +0200
-Message-ID: <AANLkTin2vW2UImQx6qrrvZboxeHShPCM56P6QkoUjRi1@mail.gmail.com>
-References: <AANLkTilb4hhy3BYp6OvpyGAe7vCQQjaPEmi12NxDdP9i@mail.gmail.com>
-	<001485f795f4535fdd048790ecd6@google.com>
+From: "jose nuno neto" <jose.neto@liber4e.com>
+Subject: md strange sync?
+Date: Thu, 27 May 2010 12:31:57 -0000 (GMT)
+Message-ID: <609221b5db6a42062f7b353d66e424dd.squirrel@fela.liber4e.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <001485f795f4535fdd048790ecd6@google.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
-sorry if the question is already posted, but I googled a lot without succes.
-I'm in the following scenario:
-I have a CentOS 5.5 server with a single HD installation, I'd like to add a
-second disk and put them in a RAID 1. I followed two guide [1] [2] but when
-I reboot the system I get a error [3] that tell me
+Hi2all
 
-....
-Waiting for driver initialization.
-Scanning and configuring dmraid supported devices
-Creating root device.
-Mounting root filesystem.
-mount: could not find filesystem '/dev/root'
-Setting up other filesystems.
-Setting up new root fs
-setuproot: moving /dev failed: No such file or directory
-no fstab.sys, mounting internal defaults
-setuproot: error mounting /proc: No such file or directory
-setuproot: error mounting /sys: No such file or directory
-Switching to new root and running init.
-unmounting old /dev
-unmounting old /proc
-unmounting old /sys
-switchroot: mount failed: No such file or directory
-Kernel panic - not syncing: Attempted to kill init!
+I have RedHat 5.5 ( kernel  2.6.18-194.el5 ) and 2hard disk with raid1
+with md
 
-Can you give me a hint to proceed?
+I have this setup on several machines, and recently notice this messages
+in /var/log/messages
 
-TIA,
-Daniele
+Are this normal? Seems a re-sync but happened on several machines..
+
+May 23 04:22:01 <kern.info> dc2-x6250-a kernel: md: syncing RAID array md0
+May 23 04:22:01 <kern.info> dc2-x6250-a kernel: md: minimum _guaranteed_
+reconstruction speed: 1000 KB/sec/disc.
+May 23 04:22:01 <kern.info> dc2-x6250-a kernel: md: using maximum
+available idle IO bandwidth (but not more than 200000 KB/sec) for
+reconstruction.
+May 23 04:22:01 <kern.info> dc2-x6250-a kernel: md: using 128k window,
+over a total of 256896 blocks.
+May 23 04:22:01 <kern.info> dc2-x6250-a kernel: md: delaying resync of md1
+until md0 has finished resync (they share one or more physical units)
+May 23 04:22:04 <kern.info> dc2-x6250-a kernel: md: md0: sync done.
+May 23 04:22:04 <kern.info> dc2-x6250-a kernel: md: syncing RAID array md1
+May 23 04:22:04 <kern.info> dc2-x6250-a kernel: md: minimum _guaranteed_
+reconstruction speed: 1000 KB/sec/disc.
+May 23 04:22:04 <kern.info> dc2-x6250-a kernel: md: using maximum
+available idle IO bandwidth (but not more than 200000 KB/sec) for
+reconstruction.
+May 23 04:22:04 <kern.info> dc2-x6250-a kernel: md: using 128k window,
+over a total of 8193024 blocks.
+May 23 04:23:41 <kern.info> dc2-x6250-a kernel: md: md1: sync done.
 
 
-[1] http://www.howtoforge.org/how-to-set-up-software-raid1-on-a-running-system-incl-grub-configuration-centos-5.3
-[2] http://www.geroleo.com/?p=524
-[3] http://www.danysoft.org/img/raid-error.jpg
+thanks for any info
 
---
-The box said "Requires Windows XP or better" .... so I
-installed Linux !
--o=|=o-
+regards
+jose
 
-Daniele Madama
+-- 
+This message has been scanned for viruses and
+dangerous content by MailScanner, and is
+believed to be clean.
 
-http://www.danysoft.org
