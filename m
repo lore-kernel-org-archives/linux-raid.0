@@ -1,38 +1,58 @@
-From: John Robinson <john.robinson@anonymous.org.uk>
-Subject: Re: My Thecus RAID-0 filesystem unmountable with mdadm. Please help.
-Date: Thu, 27 May 2010 11:39:53 +0100
-Message-ID: <4BFE4BF9.9060708@anonymous.org.uk>
-References: <AANLkTimDAbGPqen2dW7wtpxMjSup0IK8kcdNEnskibw-@mail.gmail.com>
+From: Daniele Madama <d.madama@gmail.com>
+Subject: Re: Delivery Status Notification (Failure)
+Date: Thu, 27 May 2010 14:10:16 +0200
+Message-ID: <AANLkTin2vW2UImQx6qrrvZboxeHShPCM56P6QkoUjRi1@mail.gmail.com>
+References: <AANLkTilb4hhy3BYp6OvpyGAe7vCQQjaPEmi12NxDdP9i@mail.gmail.com>
+	<001485f795f4535fdd048790ecd6@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTimDAbGPqen2dW7wtpxMjSup0IK8kcdNEnskibw-@mail.gmail.com>
+In-Reply-To: <001485f795f4535fdd048790ecd6@google.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Reniau <david.reniau@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 27/05/2010 02:03, David Reniau wrote:
-> Dear Linux-RAID gurus,
+Hi,
+sorry if the question is already posted, but I googled a lot without succes.
+I'm in the following scenario:
+I have a CentOS 5.5 server with a single HD installation, I'd like to add a
+second disk and put them in a RAID 1. I followed two guide [1] [2] but when
+I reboot the system I get a error [3] that tell me
 
-That's very kind of you but I'm no guru, just a user like yourself, 
-though perhaps with a little more experience and I've hung around here a 
-while because I like to know what goes on inside the black box.
+....
+Waiting for driver initialization.
+Scanning and configuring dmraid supported devices
+Creating root device.
+Mounting root filesystem.
+mount: could not find filesystem '/dev/root'
+Setting up other filesystems.
+Setting up new root fs
+setuproot: moving /dev failed: No such file or directory
+no fstab.sys, mounting internal defaults
+setuproot: error mounting /proc: No such file or directory
+setuproot: error mounting /sys: No such file or directory
+Switching to new root and running init.
+unmounting old /dev
+unmounting old /proc
+unmounting old /sys
+switchroot: mount failed: No such file or directory
+Kernel panic - not syncing: Attempted to kill init!
 
-[...]
-> Similarly, IF the default chunk size (64K) i've been using so far with
-> mdadm happens to be different from the Thecus', would the above
-> tune2fs -l /dev/md0 command deliver results identical to the above
-> ones with the corrected Thecus chunk size applied via mdadm
-> --assemble? Could this parameter modification be sufficient to get my
-> RAID filesystem back and mountable?
+Can you give me a hint to proceed?
 
-I don't know if the tune2fs info will be identical but it would be 
-similar. You'll need to --create the array again with the corrected 
-chunk size, not just --assemble it, but yes this on its own might very 
-well be enough to get your filesystem back.
+TIA,
+Daniele
 
-Cheers,
 
-John.
+[1] http://www.howtoforge.org/how-to-set-up-software-raid1-on-a-running-system-incl-grub-configuration-centos-5.3
+[2] http://www.geroleo.com/?p=524
+[3] http://www.danysoft.org/img/raid-error.jpg
 
+--
+The box said "Requires Windows XP or better" .... so I
+installed Linux !
+-o=|=o-
+
+Daniele Madama
+
+http://www.danysoft.org
