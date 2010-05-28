@@ -1,45 +1,84 @@
 From: Michael Evans <mjevans1983@gmail.com>
-Subject: Re: My Thecus RAID-0 filesystem unmountable with mdadm. Please help.
-Date: Thu, 27 May 2010 18:32:11 -0700
-Message-ID: <AANLkTik-6jdBkYGE9z8i4lBgt2MERWz_N5CnTgAlmCcT@mail.gmail.com>
-References: <AANLkTimDAbGPqen2dW7wtpxMjSup0IK8kcdNEnskibw-@mail.gmail.com>
+Subject: Re: md strange sync?
+Date: Thu, 27 May 2010 18:35:22 -0700
+Message-ID: <AANLkTim1JHeU7j8GbXpsvVHr6DmbUlsXX5QFTmHIVbyP@mail.gmail.com>
+References: <609221b5db6a42062f7b353d66e424dd.squirrel@fela.liber4e.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTimDAbGPqen2dW7wtpxMjSup0IK8kcdNEnskibw-@mail.gmail.com>
+In-Reply-To: <609221b5db6a42062f7b353d66e424dd.squirrel@fela.liber4e.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: David Reniau <david.reniau@gmail.com>
+To: jose nuno neto <jose.neto@liber4e.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-I was suggesting the hexdump utility to determine several things:
+On Thu, May 27, 2010 at 5:31 AM, jose nuno neto <jose.neto@liber4e.com>=
+ wrote:
+> Hi2all
+>
+> I have RedHat 5.5 ( kernel =A02.6.18-194.el5 ) and 2hard disk with ra=
+id1
+> with md
+>
+> I have this setup on several machines, and recently notice this messa=
+ges
+> in /var/log/messages
+>
+> Are this normal? Seems a re-sync but happened on several machines..
+>
+> May 23 04:22:01 <kern.info> dc2-x6250-a kernel: md: syncing RAID arra=
+y md0
+> May 23 04:22:01 <kern.info> dc2-x6250-a kernel: md: minimum _guarante=
+ed_
+> reconstruction speed: 1000 KB/sec/disc.
+> May 23 04:22:01 <kern.info> dc2-x6250-a kernel: md: using maximum
+> available idle IO bandwidth (but not more than 200000 KB/sec) for
+> reconstruction.
+> May 23 04:22:01 <kern.info> dc2-x6250-a kernel: md: using 128k window=
+,
+> over a total of 256896 blocks.
+> May 23 04:22:01 <kern.info> dc2-x6250-a kernel: md: delaying resync o=
+f md1
+> until md0 has finished resync (they share one or more physical units)
+> May 23 04:22:04 <kern.info> dc2-x6250-a kernel: md: md0: sync done.
+> May 23 04:22:04 <kern.info> dc2-x6250-a kernel: md: syncing RAID arra=
+y md1
+> May 23 04:22:04 <kern.info> dc2-x6250-a kernel: md: minimum _guarante=
+ed_
+> reconstruction speed: 1000 KB/sec/disc.
+> May 23 04:22:04 <kern.info> dc2-x6250-a kernel: md: using maximum
+> available idle IO bandwidth (but not more than 200000 KB/sec) for
+> reconstruction.
+> May 23 04:22:04 <kern.info> dc2-x6250-a kernel: md: using 128k window=
+,
+> over a total of 8193024 blocks.
+> May 23 04:23:41 <kern.info> dc2-x6250-a kernel: md: md1: sync done.
+>
+>
+> thanks for any info
+>
+> regards
+> jose
+>
+> --
+> This message has been scanned for viruses and
+> dangerous content by MailScanner, and is
+> believed to be clean.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-1) Which disk contained the extfs magic header (thus the first disk in
-almost all cases)
-2) Where the start of that header was, which would /typically/ begin
-after 1kb of padding (it's there for other things to use in some
-cases).
-3) If created properly, the extfs header /may/ give you a suggested
-stripe/chunk size.
-
-As an example...
-
-http://www.virtualblueness.net/Ext2fs-overview/Ext2fs-overview-0.1-12.html
-http://www.monstrmoose.com/repository/Halo_Tools/Etc/WinHex_15.1/Ext%20Superblock.tpl
-
-(0x400 == 1024)
-
-Looking at the blocks, in the standard output the 'magic signature'
-should be in the 4th row, starting halfway across, which it is for
-even ext4 filesystems.  Typically, but not always, there is
-zero-filled padding around this area; as denoted by the line of 0s and
-then the * indicating that the last line repeats until the next
-address.
-
-hexdump -Cn2048 /dev/mapper/lin-lucid--root_crypt
-00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-*
-00000400  90 97 05 00 ff 56 16 00  f3 1d 01 00 a3 4b 04 00  |.....V.......K..|
-00000410  2f 95 02 00 00 00 00 00  02 00 00 00 02 00 00 00  |/...............|
-00000420  00 80 00 00 00 80 00 00  d0 1f 00 00 ec 1e e6 4b  |...............K|
-00000430  32 d3 e0 4b 11 00 1f 00  53 ef
+You probably have an automated scrubbing setup in a cronscript.  This
+is a good thing as it prevents silent write-errors from going
+un-detected until some other drive fails and you suddenly lack
+sufficient good devices for that stripe to recover it.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
