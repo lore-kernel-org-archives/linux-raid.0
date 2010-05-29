@@ -1,7 +1,7 @@
 From: Richard <richard@sauce.co.nz>
 Subject: Re: recovering from a controller failure
-Date: Sun, 30 May 2010 09:50:26 +1200
-Message-ID: <4C018C22.2090503@sauce.co.nz>
+Date: Sun, 30 May 2010 09:59:47 +1200
+Message-ID: <4C018E53.6000506@sauce.co.nz>
 References: <20100529190751.GM2167@flews.lairds.us> <4C01849D.8080101@sauce.co.nz> <20100529213610.GC7501@flews.lairds.us> <4C01896A.7030705@sauce.co.nz> <20100529214532.GD7501@flews.lairds.us>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
@@ -17,24 +17,11 @@ Kyler Laird wrote:
 > On Sun, May 30, 2010 at 09:38:50AM +1200, Richard wrote:
 > 
 >> mdadm -A -f /dev/mdX
-> 
-> 	root@00144ff2a334:/# mdadm -A -f /dev/md0
-> 	mdadm: /dev/md0 not identified in config file.
-> 
-> These are net-booted file servers.  They share a root file system so I
-> rely on auto-detection of the RAID partitions.
-> 
-> I appreciate the hand holding.
 
-How about adding entries to your mdadm.conf file containing the UUID of 
-/dev/md0, eg:
+You will probably need to stop the array first, if it's not already. 
+prior to doing this.
 
-ARRAY /dev/md8 level=raid6 num-devices=16 
-UUID=38a06a50:ce3fc204:728edfb7:4f4cdd43
-
-note this should be all one line.
-
-mdadm -D /dev/md0 should get you the UUID.
+mdadm -S /dev/md0
 
 Regards,
 
