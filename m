@@ -1,43 +1,39 @@
-From: Kyler Laird <kyler-keyword-linuxraid00.a7e7f0@lairds.com>
+From: Richard <richard@sauce.co.nz>
 Subject: Re: recovering from a controller failure
-Date: Sat, 29 May 2010 15:44:12 -0500
-Message-ID: <20100529204412.GA7501@flews.lairds.us>
+Date: Sun, 30 May 2010 09:18:21 +1200
+Message-ID: <4C01849D.8080101@sauce.co.nz>
 References: <20100529190751.GM2167@flews.lairds.us>
- <4C016F17.4050709@panix.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4C016F17.4050709@panix.com>
+In-Reply-To: <20100529190751.GM2167@flews.lairds.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Kyler Laird <kyler-keyword-linuxraid00.a7e7f0@lairds.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, May 29, 2010 at 03:46:31PM -0400, Berkey B Walker wrote:
+Kyler Laird wrote:
 
-> To me, things do not look good for a quick fix.  It kinda looks like
-> you killed it.  Any info about the details of how things died,
+> I'd like to know if this is something I can recover.  I do have backups
+> but it's a huge pain to recover this much data.
 
-I used smartctl multiple times on all drives in quick succession.
+This happened to me before I discovered that LSI SAS1068E no longer 
+reliably tolerate querying via smartd/smartctl.
 
-> and
-> exactly what you did after things atarted going south?
+Have a look at https://bugzilla.kernel.org/show_bug.cgi?id=14831
 
-I collected information.
-	http://lairds.us/temp/ucmeng_md/mdstat_0
+and there is a patch that seems to fix it here:
 
-> What are you
-> using for a controller? 
+http://lkml.org/lkml/2010/4/26/335
 
-	http://lairds.us/temp/ucmeng_md/lspci
-	03:00.0 SCSI storage controller: LSI Logic / Symbios Logic
-	SAS1068E PCI-Express Fusion-MPT SAS (rev 04)
+Use hdparm if you need serial numbers.
 
-> It sounds like it is ready for the dump.
-> Any messages from the controller, itself?
+In the the half dozen or so tests I have done, where more than 2 drives 
+have been thrown out of md RAID6 arrays due to these controller resets,
+reassembly using --force has worked with no data corruption, but this 
+may have been good luck.
 
-I didn't capture any before the reboot.
+Regards,
 
-Thank you.
-
---kyler
+Richard
