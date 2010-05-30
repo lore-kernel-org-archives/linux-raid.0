@@ -1,34 +1,54 @@
-From: Richard <richard@sauce.co.nz>
-Subject: Re: recovering from a controller failure
-Date: Sun, 30 May 2010 12:54:20 +1200
-Message-ID: <4C01B73C.2050304@sauce.co.nz>
-References: <20100529190751.GM2167@flews.lairds.us> <4C01849D.8080101@sauce.co.nz> <20100529213610.GC7501@flews.lairds.us> <4C01896A.7030705@sauce.co.nz> <20100529214532.GD7501@flews.lairds.us> <4C018C22.2090503@sauce.co.nz> <20100530001504.GE7501@flews.lairds.us> <4C01B11D.1040409@sauce.co.nz>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: recovering from a controller failure
+Date: Sat, 29 May 2010 22:33:34 -0500
+Message-ID: <12.2A.01646.B8CD10C4@cdptpa-omtalb.mail.rr.com>
+References: <20100530001504.GE7501@flews.lairds.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C01B11D.1040409@sauce.co.nz>
+In-Reply-To: <20100530001504.GE7501@flews.lairds.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: 'Kyler Laird' <kyler-keyword-linuxraid00.a7e7f0@lairds.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Richard wrote:
-> Kyler Laird wrote:
+> On Sun, May 30, 2010 at 09:50:26AM +1200, Richard wrote:
 > 
->> So...how do I get the UUIDs?  I tried blkid and got this.
->>     http://lairds.us/temp/ucmeng_md/uuids
->> Those UUIDs are far from unique.
+> > How about adding entries to your mdadm.conf file containing the UUID
+> > of /dev/md0, eg:
+> >
+> > ARRAY /dev/md8 level=raid6 num-devices=16
+> > UUID=38a06a50:ce3fc204:728edfb7:4f4cdd43
+> >
+> > note this should be all one line.
+> 
+> I'll be happy to do that.
+> 
+> > mdadm -D /dev/md0 should get you the UUID.
+> 
+> 	root@00144ff2a334:/# mdadm -D /dev/md0
+> 	mdadm: md device /dev/md0 does not appear to be active.
+> 
+> So...how do I get the UUIDs?  I tried blkid and got this.
+> 	http://lairds.us/temp/ucmeng_md/uuids
+> Those UUIDs are far from unique.
 
-Sorry, I just checked the link showing the blkid's.
+	After all your drives are visible, of course:
 
-These are almost certainly correct and they are onlu unique between arrays.
+`mdadm --examine /dev/sd* /dev/hd* > <filename>`
+`more <filename>`
 
-This is the whole point - all members of an array have the same UUID so 
-that mdadm knows which devices are part of the same array.
+Make note of the array UUID for each drive.  When done,
 
-UUID's should always be part of an mdadm.conf so that thewre can be no 
-ambiguity.
+`mdadm --assemble --assume-clean /dev/mdX /dev/<drive0> /dev/<drive1>
+/dev/<drive2> ...etc`
 
-Regards,
+where <drive0>, <drive1>, etc are all members of the same array UUID.
 
-Richard
+	Mount the file system, and fsck it.  Once everything is verified
+good,
+
+`echo repair > /sys/block/mdX/md/sync_action`
+`mdadm --examine --scan >> /etc/mdadm/mdadm.conf`
+
