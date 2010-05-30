@@ -1,28 +1,43 @@
-From: Richard <richard@sauce.co.nz>
+From: Kyler Laird <kyler-keyword-linuxraid00.a7e7f0@lairds.com>
 Subject: Re: recovering from a controller failure
-Date: Sun, 30 May 2010 09:59:47 +1200
-Message-ID: <4C018E53.6000506@sauce.co.nz>
-References: <20100529190751.GM2167@flews.lairds.us> <4C01849D.8080101@sauce.co.nz> <20100529213610.GC7501@flews.lairds.us> <4C01896A.7030705@sauce.co.nz> <20100529214532.GD7501@flews.lairds.us>
+Date: Sat, 29 May 2010 19:15:04 -0500
+Message-ID: <20100530001504.GE7501@flews.lairds.us>
+References: <20100529190751.GM2167@flews.lairds.us>
+ <4C01849D.8080101@sauce.co.nz>
+ <20100529213610.GC7501@flews.lairds.us>
+ <4C01896A.7030705@sauce.co.nz>
+ <20100529214532.GD7501@flews.lairds.us>
+ <4C018C22.2090503@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100529214532.GD7501@flews.lairds.us>
+Content-Disposition: inline
+In-Reply-To: <4C018C22.2090503@sauce.co.nz>
 Sender: linux-raid-owner@vger.kernel.org
-To: Kyler Laird <kyler-keyword-linuxraid00.a7e7f0@lairds.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Kyler Laird wrote:
-> On Sun, May 30, 2010 at 09:38:50AM +1200, Richard wrote:
+On Sun, May 30, 2010 at 09:50:26AM +1200, Richard wrote:
+
+> How about adding entries to your mdadm.conf file containing the UUID
+> of /dev/md0, eg:
 > 
->> mdadm -A -f /dev/mdX
+> ARRAY /dev/md8 level=raid6 num-devices=16
+> UUID=38a06a50:ce3fc204:728edfb7:4f4cdd43
+> 
+> note this should be all one line.
 
-You will probably need to stop the array first, if it's not already. 
-prior to doing this.
+I'll be happy to do that.
 
-mdadm -S /dev/md0
+> mdadm -D /dev/md0 should get you the UUID.
 
-Regards,
+	root@00144ff2a334:/# mdadm -D /dev/md0
+	mdadm: md device /dev/md0 does not appear to be active.
 
-Richard
+So...how do I get the UUIDs?  I tried blkid and got this.
+	http://lairds.us/temp/ucmeng_md/uuids
+Those UUIDs are far from unique.
+
+Thanks!
+
+--kyler
