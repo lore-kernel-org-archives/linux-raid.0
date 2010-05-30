@@ -1,346 +1,82 @@
-From: Dave Fisher <davef@davefisher.co.uk>
-Subject: Diagnosis of assembly failure and attempted recovery - help needed
-Date: Sun, 30 May 2010 10:20:41 +0100
-Message-ID: <AANLkTinWIekb9QHZB3sMrrvZE8CEFIcbHmMHE4eGzDIY@mail.gmail.com>
-Reply-To: davef@davefisher.co.uk
+From: CoolCold <coolthecold@gmail.com>
+Subject: Re: recovering from a controller failure
+Date: Sun, 30 May 2010 17:17:41 +0400
+Message-ID: <AANLkTim0Du0TYrTOQNajPG6IsDnj4aCvjZ3UJtZnweGW@mail.gmail.com>
+References: <20100530001504.GE7501@flews.lairds.us>
+	<12.2A.01646.B8CD10C4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=0023545bd3ec0eab140487cc41f9
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <12.2A.01646.B8CD10C4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Leslie Rhorer <lrhorer@satx.rr.com>
+Cc: Kyler Laird <kyler-keyword-linuxraid00.a7e7f0@lairds.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---0023545bd3ec0eab140487cc41f9
-Content-Type: text/plain; charset=UTF-8
+On Sun, May 30, 2010 at 7:33 AM, Leslie Rhorer <lrhorer@satx.rr.com> wr=
+ote:
+>> On Sun, May 30, 2010 at 09:50:26AM +1200, Richard wrote:
+>>
+>> > How about adding entries to your mdadm.conf file containing the UU=
+ID
+>> > of /dev/md0, eg:
+>> >
+>> > ARRAY /dev/md8 level=3Draid6 num-devices=3D16
+>> > UUID=3D38a06a50:ce3fc204:728edfb7:4f4cdd43
+>> >
+>> > note this should be all one line.
+>>
+>> I'll be happy to do that.
+>>
+>> > mdadm -D /dev/md0 should get you the UUID.
+>>
+>> =A0 =A0 =A0 root@00144ff2a334:/# mdadm -D /dev/md0
+>> =A0 =A0 =A0 mdadm: md device /dev/md0 does not appear to be active.
+>>
+>> So...how do I get the UUIDs? =A0I tried blkid and got this.
+>> =A0 =A0 =A0 http://lairds.us/temp/ucmeng_md/uuids
+>> Those UUIDs are far from unique.
+>
+> =A0 =A0 =A0 =A0After all your drives are visible, of course:
+>
+> `mdadm --examine /dev/sd* /dev/hd* > <filename>`
+> `more <filename>`
+>
+> Make note of the array UUID for each drive. =A0When done,
+>
+> `mdadm --assemble --assume-clean /dev/mdX /dev/<drive0> /dev/<drive1>
+> /dev/<drive2> ...etc`
+>
+> where <drive0>, <drive1>, etc are all members of the same array UUID.
+>
+> =A0 =A0 =A0 =A0Mount the file system, and fsck it. =A0Once everything=
+ is verified
+> good,
+>
+> `echo repair > /sys/block/mdX/md/sync_action`
+Taking in account "Events" fields are differing on disks from 1st &
+2nd controller, interesting question for me - what will happen on this
+"repair" ?
+And what this "Events" field really means? I didn't found description
+in man pages.
 
-Hi,
-
-My machine suffered a system crash, a couple of days ago. Although the
-OS appeared to be still running, there was no means of input by any
-external device (except the power switch), so I power cycled it. When
-it came back up, it was obvious that there was a problem with the RAID
-10 array containing my /home partition (c. 2TB). The crash was only
-the latest of a recent series.
-
-First, I ran some diagnostics, whose results are printed in the second
-text attachment to this email (the first attachment tells you what I
-know about the current state of the array, i.e. after my
-intervention).
-
-The results shown in the second attachment, together with the recent
-crashes and some previous experience, led me to believe that the four
-partitions in the array were not actually (or seriously) damaged, but
-simply out of synch.
-
-So I looked up the linux-raid mailing list thread in which I had
-reported my previous problem:
-http://www.spinics.net/lists/raid/msg22811.html
-
-Unfortunately, in a moment of reckless hope and blind panic I then did
-something very stupid ... I applied the 'solution' which Neil Brown
-had recommended for my previous RAID failures, without thinking
-through the differences in the new context.
-
-... I realised this stupidity, at almost exactly at the moment when
-the ENTER key sprang back up after sending the following command:
-
-$ sudo mdadm --assemble --force --verbose /dev/md1 /dev/sdf4 /dev/sdg4
-/dev/sdh4 /dev/sdi4
-
-Producing these results some time later:
-
-$ cat /proc/mdstat
-Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-[raid4] [raid10]
-md_d0 : inactive sdi2[0](S)
-      9767424 blocks
-
-md1 : active raid10 sdf4[4] sdg4[1] sdh4[2]
-      1931767808 blocks 64K chunks 2 near-copies [4/2] [_UU_]
-      [=====>...............]  recovery = 29.4% (284005568/965883904)
-finish=250.0min speed=45440K/sec
-
-unused devices: <none>
+> `mdadm --examine --scan >> /etc/mdadm/mdadm.conf`
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
 
-$ sudo mdadm --detail /dev/md1
-/dev/md1:
-        Version : 00.90
-  Creation Time : Tue May  6 02:06:45 2008
-     Raid Level : raid10
-     Array Size : 1931767808 (1842.28 GiB 1978.13 GB)
-  Used Dev Size : 965883904 (921.14 GiB 989.07 GB)
-   Raid Devices : 4
-  Total Devices : 3
-Preferred Minor : 1
-    Persistence : Superblock is persistent
 
-    Update Time : Sun May 30 00:25:19 2010
-          State : clean, degraded, recovering
- Active Devices : 2
-Working Devices : 3
- Failed Devices : 0
-  Spare Devices : 1
-
-         Layout : near=2, far=1
-     Chunk Size : 64K
-
- Rebuild Status : 25% complete
-
-           UUID : f4ddbd55:206c7f81:b855f41b:37d33d37
-         Events : 0.8079536
-
-    Number   Major   Minor   RaidDevice State
-       4       8       84        0      spare rebuilding   /dev/sdf4
-       1       8      100        1      active sync   /dev/sdg4
-       2       8      116        2      active sync   /dev/sdh4
-       3       0        0        3      removed
-
-This result temporally raised my hopes because it indicated recovery
-in a degraded state ... and I had read somewhere
-(http://www.aput.net/~jheiss/raid10/) that 'degraded' meant "lost one
-or more drives but has not lost the right combination of drives to
-completely fail"
-
-Unfortunately this result also raised my fears, because the
-"RaidDevice State" indicated that it was treating /dev/sdf4 as the
-spare and writing to it ... whereas I believed that /dev/sdf4 was
-supposed to be a full member of the array ... and that /dev/sdj4 was
-supposed to be the spare.
-
-I think this belief is confirmed by these data on /dev/sdj4 (from the
-second attachment):
-
-    Update Time : Tue Oct  6 18:01:45 2009
-    Events : 370
-
-It may be too late, but at this point I came to my senses and resolved
-to stop tinkering and to email the following questions instead.
-
-QUESTION 1: Have I now wrecked any chance of recovering the data, or
-have I been lucky enough to retain enough data to rebuild the entire
-array by employing /dev/sdi4 and/or /dev/sdj4?
-
-QUESTION 2: If I have had 'the luck of the stupid', how do I proceed
-safely with the recovery?
-
-QUESTION 3: If I have NOT been unfeasibly lucky, is there any way of
-recovering some of the data files from the raw partitions?
-
-N.B. I would be more than happy to recover data at the date shown by
-/dev/sdi4's update time. The non-backed-up, business critical data,
-has not been modified in several weeks.
-
-I hope you can help and I'd be desperately grateful for it.
-
-Best wishes,
-
-Dave Fisher
-
---0023545bd3ec0eab140487cc41f9
-Content-Type: text/plain; charset=US-ASCII; name="post-recovery-raid-diagnostics.txt"
-Content-Disposition: attachment;
-	filename="post-recovery-raid-diagnostics.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_g9tnmll40
-
-JCBjYXQgL3Byb2MvbWRzdGF0IApQZXJzb25hbGl0aWVzIDogW2xpbmVhcl0gW211bHRpcGF0aF0g
-W3JhaWQwXSBbcmFpZDFdIFtyYWlkNl0gW3JhaWQ1XSBbcmFpZDRdIFtyYWlkMTBdIAptZF9kMCA6
-IGluYWN0aXZlIHNkaTJbMF0oUykKICAgICAgOTc2NzQyNCBibG9ja3MKICAgICAgIAptZDEgOiBh
-Y3RpdmUgcmFpZDEwIHNkZjRbNF0oRikgc2RnNFs1XShGKSBzZGg0WzJdCiAgICAgIDE5MzE3Njc4
-MDggYmxvY2tzIDY0SyBjaHVua3MgMiBuZWFyLWNvcGllcyBbNC8xXSBbX19VX10KICAgICAgCnVu
-dXNlZCBkZXZpY2VzOiA8bm9uZT4KCiQgc3VkbyBtZGFkbSAtRSAvZGV2L3Nke2YsZyxoLGksan00
-IAovZGV2L3NkZjQ6CiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjCiAgICAgICAgVmVyc2lvbiA6
-IDAwLjkwLjAwCiAgICAgICAgICAgVVVJRCA6IGY0ZGRiZDU1OjIwNmM3ZjgxOmI4NTVmNDFiOjM3
-ZDMzZDM3CiAgQ3JlYXRpb24gVGltZSA6IFR1ZSBNYXkgIDYgMDI6MDY6NDUgMjAwOAogICAgIFJh
-aWQgTGV2ZWwgOiByYWlkMTAKICBVc2VkIERldiBTaXplIDogOTY1ODgzOTA0ICg5MjEuMTQgR2lC
-IDk4OS4wNyBHQikKICAgICBBcnJheSBTaXplIDogMTkzMTc2NzgwOCAoMTg0Mi4yOCBHaUIgMTk3
-OC4xMyBHQikKICAgUmFpZCBEZXZpY2VzIDogNAogIFRvdGFsIERldmljZXMgOiAzClByZWZlcnJl
-ZCBNaW5vciA6IDEKCiAgICBVcGRhdGUgVGltZSA6IFN1biBNYXkgMzAgMDQ6NDc6MjAgMjAxMAog
-ICAgICAgICAgU3RhdGUgOiBjbGVhbgogQWN0aXZlIERldmljZXMgOiAxCldvcmtpbmcgRGV2aWNl
-cyA6IDIKIEZhaWxlZCBEZXZpY2VzIDogMgogIFNwYXJlIERldmljZXMgOiAxCiAgICAgICBDaGVj
-a3N1bSA6IDdkNGExOGZjIC0gY29ycmVjdAogICAgICAgICBFdmVudHMgOiA4MDc5NTU4CgogICAg
-ICAgICBMYXlvdXQgOiBuZWFyPTIsIGZhcj0xCiAgICAgQ2h1bmsgU2l6ZSA6IDY0SwoKICAgICAg
-TnVtYmVyICAgTWFqb3IgICBNaW5vciAgIFJhaWREZXZpY2UgU3RhdGUKdGhpcyAgICAgNCAgICAg
-ICA4ICAgICAgIDg0ICAgICAgICA0ICAgICAgc3BhcmUgICAvZGV2L3NkZjQKCiAgIDAgICAgIDAg
-ICAgICAgMCAgICAgICAgMCAgICAgICAgMCAgICAgIHJlbW92ZWQKICAgMSAgICAgMSAgICAgICAw
-ICAgICAgICAwICAgICAgICAxICAgICAgZmF1bHR5IHJlbW92ZWQKICAgMiAgICAgMiAgICAgICA4
-ICAgICAgMTE2ICAgICAgICAyICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkaDQKICAgMyAgICAg
-MyAgICAgICAwICAgICAgICAwICAgICAgICAzICAgICAgZmF1bHR5IHJlbW92ZWQKICAgNCAgICAg
-NCAgICAgICA4ICAgICAgIDg0ICAgICAgICA0ICAgICAgc3BhcmUgICAvZGV2L3NkZjQKL2Rldi9z
-ZGc0OgogICAgICAgICAgTWFnaWMgOiBhOTJiNGVmYwogICAgICAgIFZlcnNpb24gOiAwMC45MC4w
-MAogICAgICAgICAgIFVVSUQgOiBmNGRkYmQ1NToyMDZjN2Y4MTpiODU1ZjQxYjozN2QzM2QzNwog
-IENyZWF0aW9uIFRpbWUgOiBUdWUgTWF5ICA2IDAyOjA2OjQ1IDIwMDgKICAgICBSYWlkIExldmVs
-IDogcmFpZDEwCiAgVXNlZCBEZXYgU2l6ZSA6IDk2NTg4MzkwNCAoOTIxLjE0IEdpQiA5ODkuMDcg
-R0IpCiAgICAgQXJyYXkgU2l6ZSA6IDE5MzE3Njc4MDggKDE4NDIuMjggR2lCIDE5NzguMTMgR0Ip
-CiAgIFJhaWQgRGV2aWNlcyA6IDQKICBUb3RhbCBEZXZpY2VzIDogMwpQcmVmZXJyZWQgTWlub3Ig
-OiAxCgogICAgVXBkYXRlIFRpbWUgOiBTdW4gTWF5IDMwIDA0OjI1OjI5IDIwMTAKICAgICAgICAg
-IFN0YXRlIDogY2xlYW4KIEFjdGl2ZSBEZXZpY2VzIDogMgpXb3JraW5nIERldmljZXMgOiAzCiBG
-YWlsZWQgRGV2aWNlcyA6IDEKICBTcGFyZSBEZXZpY2VzIDogMQogICAgICAgQ2hlY2tzdW0gOiA3
-ZDRhMTNkZSAtIGNvcnJlY3QKICAgICAgICAgRXZlbnRzIDogODA3OTU1NwoKICAgICAgICAgTGF5
-b3V0IDogbmVhcj0yLCBmYXI9MQogICAgIENodW5rIFNpemUgOiA2NEsKCiAgICAgIE51bWJlciAg
-IE1ham9yICAgTWlub3IgICBSYWlkRGV2aWNlIFN0YXRlCnRoaXMgICAgIDEgICAgICAgOCAgICAg
-IDEwMCAgICAgICAgMSAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGc0CgogICAwICAgICAwICAg
-ICAgIDAgICAgICAgIDAgICAgICAgIDAgICAgICByZW1vdmVkCiAgIDEgICAgIDEgICAgICAgOCAg
-ICAgIDEwMCAgICAgICAgMSAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGc0CiAgIDIgICAgIDIg
-ICAgICAgOCAgICAgIDExNiAgICAgICAgMiAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGg0CiAg
-IDMgICAgIDMgICAgICAgMCAgICAgICAgMCAgICAgICAgMyAgICAgIGZhdWx0eSByZW1vdmVkCiAg
-IDQgICAgIDQgICAgICAgOCAgICAgICA4NCAgICAgICAgNCAgICAgIHNwYXJlICAgL2Rldi9zZGY0
-Ci9kZXYvc2RoNDoKICAgICAgICAgIE1hZ2ljIDogYTkyYjRlZmMKICAgICAgICBWZXJzaW9uIDog
-MDAuOTAuMDAKICAgICAgICAgICBVVUlEIDogZjRkZGJkNTU6MjA2YzdmODE6Yjg1NWY0MWI6Mzdk
-MzNkMzcKICBDcmVhdGlvbiBUaW1lIDogVHVlIE1heSAgNiAwMjowNjo0NSAyMDA4CiAgICAgUmFp
-ZCBMZXZlbCA6IHJhaWQxMAogIFVzZWQgRGV2IFNpemUgOiA5NjU4ODM5MDQgKDkyMS4xNCBHaUIg
-OTg5LjA3IEdCKQogICAgIEFycmF5IFNpemUgOiAxOTMxNzY3ODA4ICgxODQyLjI4IEdpQiAxOTc4
-LjEzIEdCKQogICBSYWlkIERldmljZXMgOiA0CiAgVG90YWwgRGV2aWNlcyA6IDMKUHJlZmVycmVk
-IE1pbm9yIDogMQoKICAgIFVwZGF0ZSBUaW1lIDogU3VuIE1heSAzMCAwODo1MDozNyAyMDEwCiAg
-ICAgICAgICBTdGF0ZSA6IGNsZWFuCiBBY3RpdmUgRGV2aWNlcyA6IDEKV29ya2luZyBEZXZpY2Vz
-IDogMQogRmFpbGVkIERldmljZXMgOiAyCiAgU3BhcmUgRGV2aWNlcyA6IDAKICAgICAgIENoZWNr
-c3VtIDogN2Q0YTUyMzAgLSBjb3JyZWN0CiAgICAgICAgIEV2ZW50cyA6IDgwNzk1NjUKCiAgICAg
-ICAgIExheW91dCA6IG5lYXI9MiwgZmFyPTEKICAgICBDaHVuayBTaXplIDogNjRLCgogICAgICBO
-dW1iZXIgICBNYWpvciAgIE1pbm9yICAgUmFpZERldmljZSBTdGF0ZQp0aGlzICAgICAyICAgICAg
-IDggICAgICAxMTYgICAgICAgIDIgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RoNAoKICAgMCAg
-ICAgMCAgICAgICAwICAgICAgICAwICAgICAgICAwICAgICAgcmVtb3ZlZAogICAxICAgICAxICAg
-ICAgIDAgICAgICAgIDAgICAgICAgIDEgICAgICBmYXVsdHkgcmVtb3ZlZAogICAyICAgICAyICAg
-ICAgIDggICAgICAxMTYgICAgICAgIDIgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RoNAogICAz
-ICAgICAzICAgICAgIDAgICAgICAgIDAgICAgICAgIDMgICAgICBmYXVsdHkgcmVtb3ZlZAovZGV2
-L3NkaTQ6CiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjCiAgICAgICAgVmVyc2lvbiA6IDAwLjkw
-LjAwCiAgICAgICAgICAgVVVJRCA6IGY0ZGRiZDU1OjIwNmM3ZjgxOmI4NTVmNDFiOjM3ZDMzZDM3
-CiAgQ3JlYXRpb24gVGltZSA6IFR1ZSBNYXkgIDYgMDI6MDY6NDUgMjAwOAogICAgIFJhaWQgTGV2
-ZWwgOiByYWlkMTAKICBVc2VkIERldiBTaXplIDogOTY1ODgzOTA0ICg5MjEuMTQgR2lCIDk4OS4w
-NyBHQikKICAgICBBcnJheSBTaXplIDogMTkzMTc2NzgwOCAoMTg0Mi4yOCBHaUIgMTk3OC4xMyBH
-QikKICAgUmFpZCBEZXZpY2VzIDogNAogIFRvdGFsIERldmljZXMgOiA0ClByZWZlcnJlZCBNaW5v
-ciA6IDEKCiAgICBVcGRhdGUgVGltZSA6IE1vbiBNYXkgMjQgMDI6MTI6NTQgMjAxMAogICAgICAg
-ICAgU3RhdGUgOiBjbGVhbgogQWN0aXZlIERldmljZXMgOiA0CldvcmtpbmcgRGV2aWNlcyA6IDQK
-IEZhaWxlZCBEZXZpY2VzIDogMAogIFNwYXJlIERldmljZXMgOiAwCiAgICAgICBDaGVja3N1bSA6
-IDdkM2E2Mjc2IC0gY29ycmVjdAogICAgICAgICBFdmVudHMgOiA3ODI4NDI3CgogICAgICAgICBM
-YXlvdXQgOiBuZWFyPTIsIGZhcj0xCiAgICAgQ2h1bmsgU2l6ZSA6IDY0SwoKICAgICAgTnVtYmVy
-ICAgTWFqb3IgICBNaW5vciAgIFJhaWREZXZpY2UgU3RhdGUKdGhpcyAgICAgMCAgICAgICA4ICAg
-ICAgMTMyICAgICAgICAwICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkaTQKCiAgIDAgICAgIDAg
-ICAgICAgOCAgICAgIDEzMiAgICAgICAgMCAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGk0CiAg
-IDEgICAgIDEgICAgICAgOCAgICAgIDEwMCAgICAgICAgMSAgICAgIGFjdGl2ZSBzeW5jICAgL2Rl
-di9zZGc0CiAgIDIgICAgIDIgICAgICAgOCAgICAgIDExNiAgICAgICAgMiAgICAgIGFjdGl2ZSBz
-eW5jICAgL2Rldi9zZGg0CiAgIDMgICAgIDMgICAgICAgOCAgICAgICA4NCAgICAgICAgMyAgICAg
-IGFjdGl2ZSBzeW5jICAgL2Rldi9zZGY0Ci9kZXYvc2RqNDoKICAgICAgICAgIE1hZ2ljIDogYTky
-YjRlZmMKICAgICAgICBWZXJzaW9uIDogMDAuOTAuMDAKICAgICAgICAgICBVVUlEIDogZjRkZGJk
-NTU6MjA2YzdmODE6Yjg1NWY0MWI6MzdkMzNkMzcKICBDcmVhdGlvbiBUaW1lIDogVHVlIE1heSAg
-NiAwMjowNjo0NSAyMDA4CiAgICAgUmFpZCBMZXZlbCA6IHJhaWQxMAogIFVzZWQgRGV2IFNpemUg
-OiA5NjU4ODM5MDQgKDkyMS4xNCBHaUIgOTg5LjA3IEdCKQogICAgIEFycmF5IFNpemUgOiAxOTMx
-NzY3ODA4ICgxODQyLjI4IEdpQiAxOTc4LjEzIEdCKQogICBSYWlkIERldmljZXMgOiA0CiAgVG90
-YWwgRGV2aWNlcyA6IDUKUHJlZmVycmVkIE1pbm9yIDogMQoKICAgIFVwZGF0ZSBUaW1lIDogVHVl
-IE9jdCAgNiAxODowMTo0NSAyMDA5CiAgICAgICAgICBTdGF0ZSA6IGNsZWFuCiBBY3RpdmUgRGV2
-aWNlcyA6IDQKV29ya2luZyBEZXZpY2VzIDogNQogRmFpbGVkIERldmljZXMgOiAwCiAgU3BhcmUg
-RGV2aWNlcyA6IDEKICAgICAgIENoZWNrc3VtIDogN2IxZDIzZTQgLSBjb3JyZWN0CiAgICAgICAg
-IEV2ZW50cyA6IDM3MAoKICAgICAgICAgTGF5b3V0IDogbmVhcj0yLCBmYXI9MQogICAgIENodW5r
-IFNpemUgOiA2NEsKCiAgICAgIE51bWJlciAgIE1ham9yICAgTWlub3IgICBSYWlkRGV2aWNlIFN0
-YXRlCnRoaXMgICAgIDMgICAgICAgOCAgICAgIDE0OCAgICAgICAgMyAgICAgIGFjdGl2ZSBzeW5j
-ICAgL2Rldi9zZGo0CgogICAwICAgICAwICAgICAgIDggICAgICAxMzIgICAgICAgIDAgICAgICBh
-Y3RpdmUgc3luYyAgIC9kZXYvc2RpNAogICAxICAgICAxICAgICAgIDggICAgICAxMDAgICAgICAg
-IDEgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RnNAogICAyICAgICAyICAgICAgIDggICAgICAx
-MTYgICAgICAgIDIgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RoNAogICAzICAgICAzICAgICAg
-IDggICAgICAxNDggICAgICAgIDMgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RqNAogICA0ICAg
-ICA0ICAgICAgIDggICAgICAgODQgICAgICAgIDQgICAgICBzcGFyZSAgIC9kZXYvc2RmNAoK
---0023545bd3ec0eab140487cc41f9
-Content-Type: text/plain; charset=US-ASCII; name="pre-recovery-raid-diagnostics.txt"
-Content-Disposition: attachment;
-	filename="pre-recovery-raid-diagnostics.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_g9tnms8o1
-
-JCBjYXQgL3Byb2MvbWRzdGF0IApQZXJzb25hbGl0aWVzIDogW2xpbmVhcl0gW211bHRpcGF0aF0g
-W3JhaWQwXSBbcmFpZDFdIFtyYWlkNl0gW3JhaWQ1XSBbcmFpZDRdIFtyYWlkMTBdIAptZDEgOiBp
-bmFjdGl2ZSBzZGg0WzJdKFMpIHNkZjRbM10oUykgc2RnNFsxXShTKSBzZGk0WzBdKFMpCiAgICAg
-IDM4NjM1MzU2MTYgYmxvY2tzCnVudXNlZCBkZXZpY2VzOiA8bm9uZT4KCgoKc3VkbyBtZGFkbSAt
-LWV4YW1pbmUgL2Rldi9tZDEKbWRhZG06IE5vIG1kIHN1cGVyYmxvY2sgZGV0ZWN0ZWQgb24gL2Rl
-di9tZDEuCgoKJCBzdWRvIG1kYWRtIC0tZXhhbWluZSAvZGV2L3NkZjQKL2Rldi9zZGY0OgogICAg
-ICAgICAgTWFnaWMgOiBhOTJiNGVmYwogICAgICAgIFZlcnNpb24gOiAwMC45MC4wMAogICAgICAg
-ICAgIFVVSUQgOiBmNGRkYmQ1NToyMDZjN2Y4MTpiODU1ZjQxYjozN2QzM2QzNwogIENyZWF0aW9u
-IFRpbWUgOiBUdWUgTWF5ICA2IDAyOjA2OjQ1IDIwMDgKICAgICBSYWlkIExldmVsIDogcmFpZDEw
-CiAgVXNlZCBEZXYgU2l6ZSA6IDk2NTg4MzkwNCAoOTIxLjE0IEdpQiA5ODkuMDcgR0IpCiAgICAg
-QXJyYXkgU2l6ZSA6IDE5MzE3Njc4MDggKDE4NDIuMjggR2lCIDE5NzguMTMgR0IpCiAgIFJhaWQg
-RGV2aWNlcyA6IDQKICBUb3RhbCBEZXZpY2VzIDogNApQcmVmZXJyZWQgTWlub3IgOiAxCgogICAg
-VXBkYXRlIFRpbWUgOiBNb24gTWF5IDI0IDAyOjEyOjU0IDIwMTAKICAgICAgICAgIFN0YXRlIDog
-Y2xlYW4KIEFjdGl2ZSBEZXZpY2VzIDogNApXb3JraW5nIERldmljZXMgOiA0CiBGYWlsZWQgRGV2
-aWNlcyA6IDAKICBTcGFyZSBEZXZpY2VzIDogMAogICAgICAgQ2hlY2tzdW0gOiA3ZDNhNjI0YyAt
-IGNvcnJlY3QKICAgICAgICAgRXZlbnRzIDogNzgyODQyNwoKICAgICAgICAgTGF5b3V0IDogbmVh
-cj0yLCBmYXI9MQogICAgIENodW5rIFNpemUgOiA2NEsKCiAgICAgIE51bWJlciAgIE1ham9yICAg
-TWlub3IgICBSYWlkRGV2aWNlIFN0YXRlCnRoaXMgICAgIDMgICAgICAgOCAgICAgICA4NCAgICAg
-ICAgMyAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGY0CgogICAwICAgICAwICAgICAgIDggICAg
-ICAxMzIgICAgICAgIDAgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RpNAogICAxICAgICAxICAg
-ICAgIDggICAgICAxMDAgICAgICAgIDEgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RnNAogICAy
-ICAgICAyICAgICAgIDggICAgICAxMTYgICAgICAgIDIgICAgICBhY3RpdmUgc3luYyAgIC9kZXYv
-c2RoNAogICAzICAgICAzICAgICAgIDggICAgICAgODQgICAgICAgIDMgICAgICBhY3RpdmUgc3lu
-YyAgIC9kZXYvc2RmNAo8L3ByZT4KCgokIHN1ZG8gbWRhZG0gLS1leGFtaW5lIC9kZXYvc2RnNAov
-ZGV2L3NkZzQ6CiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjCiAgICAgICAgVmVyc2lvbiA6IDAw
-LjkwLjAwCiAgICAgICAgICAgVVVJRCA6IGY0ZGRiZDU1OjIwNmM3ZjgxOmI4NTVmNDFiOjM3ZDMz
-ZDM3CiAgQ3JlYXRpb24gVGltZSA6IFR1ZSBNYXkgIDYgMDI6MDY6NDUgMjAwOAogICAgIFJhaWQg
-TGV2ZWwgOiByYWlkMTAKICBVc2VkIERldiBTaXplIDogOTY1ODgzOTA0ICg5MjEuMTQgR2lCIDk4
-OS4wNyBHQikKICAgICBBcnJheSBTaXplIDogMTkzMTc2NzgwOCAoMTg0Mi4yOCBHaUIgMTk3OC4x
-MyBHQikKICAgUmFpZCBEZXZpY2VzIDogNAogIFRvdGFsIERldmljZXMgOiA0ClByZWZlcnJlZCBN
-aW5vciA6IDEKCiAgICBVcGRhdGUgVGltZSA6IFNhdCBNYXkgMjkgMDE6MTI6MzAgMjAxMAogICAg
-ICAgICAgU3RhdGUgOiBhY3RpdmUKIEFjdGl2ZSBEZXZpY2VzIDogMgpXb3JraW5nIERldmljZXMg
-OiAyCiBGYWlsZWQgRGV2aWNlcyA6IDEKICBTcGFyZSBEZXZpY2VzIDogMAogICAgICAgQ2hlY2tz
-dW0gOiA3Y2NkNGM5MiAtIGNvcnJlY3QKICAgICAgICAgRXZlbnRzIDogODA3OTQ1OQoKICAgICAg
-ICAgTGF5b3V0IDogbmVhcj0yLCBmYXI9MQogICAgIENodW5rIFNpemUgOiA2NEsKCiAgICAgIE51
-bWJlciAgIE1ham9yICAgTWlub3IgICBSYWlkRGV2aWNlIFN0YXRlCnRoaXMgICAgIDEgICAgICAg
-OCAgICAgIDEwMCAgICAgICAgMSAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGc0CgogICAwICAg
-ICAwICAgICAgIDAgICAgICAgIDAgICAgICAgIDAgICAgICByZW1vdmVkCiAgIDEgICAgIDEgICAg
-ICAgOCAgICAgIDEwMCAgICAgICAgMSAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGc0CiAgIDIg
-ICAgIDIgICAgICAgOCAgICAgIDExNiAgICAgICAgMiAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9z
-ZGg0CiAgIDMgICAgIDMgICAgICAgMCAgICAgICAgMCAgICAgICAgMyAgICAgIGZhdWx0eSByZW1v
-dmVkCgoKCiQgc3VkbyBtZGFkbSAtLWV4YW1pbmUgL2Rldi9zZGg0Ci9kZXYvc2RoNDoKICAgICAg
-ICAgIE1hZ2ljIDogYTkyYjRlZmMKICAgICAgICBWZXJzaW9uIDogMDAuOTAuMDAKICAgICAgICAg
-ICBVVUlEIDogZjRkZGJkNTU6MjA2YzdmODE6Yjg1NWY0MWI6MzdkMzNkMzcKICBDcmVhdGlvbiBU
-aW1lIDogVHVlIE1heSAgNiAwMjowNjo0NSAyMDA4CiAgICAgUmFpZCBMZXZlbCA6IHJhaWQxMAog
-IFVzZWQgRGV2IFNpemUgOiA5NjU4ODM5MDQgKDkyMS4xNCBHaUIgOTg5LjA3IEdCKQogICAgIEFy
-cmF5IFNpemUgOiAxOTMxNzY3ODA4ICgxODQyLjI4IEdpQiAxOTc4LjEzIEdCKQogICBSYWlkIERl
-dmljZXMgOiA0CiAgVG90YWwgRGV2aWNlcyA6IDQKUHJlZmVycmVkIE1pbm9yIDogMQoKICAgIFVw
-ZGF0ZSBUaW1lIDogU2F0IE1heSAyOSAwMToyNjozMCAyMDEwCiAgICAgICAgICBTdGF0ZSA6IGNs
-ZWFuCiBBY3RpdmUgRGV2aWNlcyA6IDEKV29ya2luZyBEZXZpY2VzIDogMQogRmFpbGVkIERldmlj
-ZXMgOiAyCiAgU3BhcmUgRGV2aWNlcyA6IDAKICAgICAgIENoZWNrc3VtIDogN2Q0ODk4YmIgLSBj
-b3JyZWN0CiAgICAgICAgIEV2ZW50cyA6IDgwNzk1MDUKCiAgICAgICAgIExheW91dCA6IG5lYXI9
-MiwgZmFyPTEKICAgICBDaHVuayBTaXplIDogNjRLCgogICAgICBOdW1iZXIgICBNYWpvciAgIE1p
-bm9yICAgUmFpZERldmljZSBTdGF0ZQp0aGlzICAgICAyICAgICAgIDggICAgICAxMTYgICAgICAg
-IDIgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RoNAoKICAgMCAgICAgMCAgICAgICAwICAgICAg
-ICAwICAgICAgICAwICAgICAgcmVtb3ZlZAogICAxICAgICAxICAgICAgIDAgICAgICAgIDAgICAg
-ICAgIDEgICAgICBmYXVsdHkgcmVtb3ZlZAogICAyICAgICAyICAgICAgIDggICAgICAxMTYgICAg
-ICAgIDIgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RoNAogICAzICAgICAzICAgICAgIDAgICAg
-ICAgIDAgICAgICAgIDMgICAgICBmYXVsdHkgcmVtb3ZlZAoKCgokIHN1ZG8gbWRhZG0gLS1leGFt
-aW5lIC9kZXYvc2RpNAovZGV2L3NkaTQ6CiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjCiAgICAg
-ICAgVmVyc2lvbiA6IDAwLjkwLjAwCiAgICAgICAgICAgVVVJRCA6IGY0ZGRiZDU1OjIwNmM3Zjgx
-OmI4NTVmNDFiOjM3ZDMzZDM3CiAgQ3JlYXRpb24gVGltZSA6IFR1ZSBNYXkgIDYgMDI6MDY6NDUg
-MjAwOAogICAgIFJhaWQgTGV2ZWwgOiByYWlkMTAKICBVc2VkIERldiBTaXplIDogOTY1ODgzOTA0
-ICg5MjEuMTQgR2lCIDk4OS4wNyBHQikKICAgICBBcnJheSBTaXplIDogMTkzMTc2NzgwOCAoMTg0
-Mi4yOCBHaUIgMTk3OC4xMyBHQikKICAgUmFpZCBEZXZpY2VzIDogNAogIFRvdGFsIERldmljZXMg
-OiA0ClByZWZlcnJlZCBNaW5vciA6IDEKCiAgICBVcGRhdGUgVGltZSA6IE1vbiBNYXkgMjQgMDI6
-MTI6NTQgMjAxMAogICAgICAgICAgU3RhdGUgOiBjbGVhbgogQWN0aXZlIERldmljZXMgOiA0Cldv
-cmtpbmcgRGV2aWNlcyA6IDQKIEZhaWxlZCBEZXZpY2VzIDogMAogIFNwYXJlIERldmljZXMgOiAw
-CiAgICAgICBDaGVja3N1bSA6IDdkM2E2Mjc2IC0gY29ycmVjdAogICAgICAgICBFdmVudHMgOiA3
-ODI4NDI3CgogICAgICAgICBMYXlvdXQgOiBuZWFyPTIsIGZhcj0xCiAgICAgQ2h1bmsgU2l6ZSA6
-IDY0SwoKICAgICAgTnVtYmVyICAgTWFqb3IgICBNaW5vciAgIFJhaWREZXZpY2UgU3RhdGUKdGhp
-cyAgICAgMCAgICAgICA4ICAgICAgMTMyICAgICAgICAwICAgICAgYWN0aXZlIHN5bmMgICAvZGV2
-L3NkaTQKCiAgIDAgICAgIDAgICAgICAgOCAgICAgIDEzMiAgICAgICAgMCAgICAgIGFjdGl2ZSBz
-eW5jICAgL2Rldi9zZGk0CiAgIDEgICAgIDEgICAgICAgOCAgICAgIDEwMCAgICAgICAgMSAgICAg
-IGFjdGl2ZSBzeW5jICAgL2Rldi9zZGc0CiAgIDIgICAgIDIgICAgICAgOCAgICAgIDExNiAgICAg
-ICAgMiAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGg0CiAgIDMgICAgIDMgICAgICAgOCAgICAg
-ICA4NCAgICAgICAgMyAgICAgIGFjdGl2ZSBzeW5jICAgL2Rldi9zZGY0CgoKCiQgc3VkbyBtZGFk
-bSAtLWV4YW1pbmUgL2Rldi9zZGo0CltzdWRvXSBwYXNzd29yZCBmb3IgZGF2ZWY6IAovZGV2L3Nk
-ajQ6CiAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjCiAgICAgICAgVmVyc2lvbiA6IDAwLjkwLjAw
-CiAgICAgICAgICAgVVVJRCA6IGY0ZGRiZDU1OjIwNmM3ZjgxOmI4NTVmNDFiOjM3ZDMzZDM3CiAg
-Q3JlYXRpb24gVGltZSA6IFR1ZSBNYXkgIDYgMDI6MDY6NDUgMjAwOAogICAgIFJhaWQgTGV2ZWwg
-OiByYWlkMTAKICBVc2VkIERldiBTaXplIDogOTY1ODgzOTA0ICg5MjEuMTQgR2lCIDk4OS4wNyBH
-QikKICAgICBBcnJheSBTaXplIDogMTkzMTc2NzgwOCAoMTg0Mi4yOCBHaUIgMTk3OC4xMyBHQikK
-ICAgUmFpZCBEZXZpY2VzIDogNAogIFRvdGFsIERldmljZXMgOiA1ClByZWZlcnJlZCBNaW5vciA6
-IDEKCiAgICBVcGRhdGUgVGltZSA6IFR1ZSBPY3QgIDYgMTg6MDE6NDUgMjAwOQogICAgICAgICAg
-U3RhdGUgOiBjbGVhbgogQWN0aXZlIERldmljZXMgOiA0CldvcmtpbmcgRGV2aWNlcyA6IDUKIEZh
-aWxlZCBEZXZpY2VzIDogMAogIFNwYXJlIERldmljZXMgOiAxCiAgICAgICBDaGVja3N1bSA6IDdi
-MWQyM2U0IC0gY29ycmVjdAogICAgICAgICBFdmVudHMgOiAzNzAKCiAgICAgICAgIExheW91dCA6
-IG5lYXI9MiwgZmFyPTEKICAgICBDaHVuayBTaXplIDogNjRLCgogICAgICBOdW1iZXIgICBNYWpv
-ciAgIE1pbm9yICAgUmFpZERldmljZSBTdGF0ZQp0aGlzICAgICAzICAgICAgIDggICAgICAxNDgg
-ICAgICAgIDMgICAgICBhY3RpdmUgc3luYyAgIC9kZXYvc2RqNAoKICAgMCAgICAgMCAgICAgICA4
-ICAgICAgMTMyICAgICAgICAwICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkaTQKICAgMSAgICAg
-MSAgICAgICA4ICAgICAgMTAwICAgICAgICAxICAgICAgYWN0aXZlIHN5bmMgICAvZGV2L3NkZzQK
-ICAgMiAgICAgMiAgICAgICA4ICAgICAgMTE2ICAgICAgICAyICAgICAgYWN0aXZlIHN5bmMgICAv
-ZGV2L3NkaDQKICAgMyAgICAgMyAgICAgICA4ICAgICAgMTQ4ICAgICAgICAzICAgICAgYWN0aXZl
-IHN5bmMgICAvZGV2L3NkajQKICAgNCAgICAgNCAgICAgICA4ICAgICAgIDg0ICAgICAgICA0ICAg
-ICAgc3BhcmUgICAvZGV2L3NkZjQK
---0023545bd3ec0eab140487cc41f9--
+--=20
+Best regards,
+[COOLCOLD-RIPN]
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
