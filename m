@@ -1,66 +1,93 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Confused about reshape?
-Date: Mon, 31 May 2010 04:12:46 -0500
-Message-ID: <5C.14.01646.D8D730C4@cdptpa-omtalb.mail.rr.com>
-References: <79.18.03062.D5D530C4@cdptpa-omtalb.mail.rr.com>
+From: Dave Fisher <davef@davefisher.co.uk>
+Subject: Re: Diagnosis of assembly failure and attempted recovery - help
+	needed
+Date: Mon, 31 May 2010 21:21:40 +0100
+Message-ID: <AANLkTikd4E9KUK2ZwSAL60x1MCO913jeEFtlZSvbRaxU@mail.gmail.com>
+References: <AANLkTinWIekb9QHZB3sMrrvZE8CEFIcbHmMHE4eGzDIY@mail.gmail.com>
+	<20100531135514.10de5901@notabene.brown>
+Reply-To: davef@davefisher.co.uk
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <79.18.03062.D5D530C4@cdptpa-omtalb.mail.rr.com>
+In-Reply-To: <20100531135514.10de5901@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Leslie Rhorer' <lrhorer@satx.rr.com>, 'Neil Brown' <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: neilb@suse.de
 List-Id: linux-raid.ids
 
-> > You'll probably need to remove the bitmap for --grow to work... I really
-> > should fix that.
-> 
-> 	OK.  That's pretty minor.  I'll do that.
-> 
-> > >     Update Time : Mon May 31 00:44:25 2010
-> > >           State : active
-> > >  Active Devices : 8
-> > > Working Devices : 9
-> > >  Failed Devices : 0
-> > >   Spare Devices : 1
-> > >
-> > >          Layout : left-symmetric
-> > >      Chunk Size : 256K
-> > >
-> > >            Name : Backup:0  (local to host Backup)
-> > >            UUID : 940ae4e4:04057ffc:5e92d2fb:63e3efb7
-> > >          Events : 987130
-> > >
-> > >     Number   Major   Minor   RaidDevice State
-> > >        0       8        0        0      active sync   /dev/sda
-> > >        1       8       16        1      active sync   /dev/sdb
-> > >        2       8       32        2      active sync   /dev/sdc
-> > >        8       8       48        3      active sync   /dev/sdd
-> > >        4       8       64        4      active sync   /dev/sde
-> > >        5       8       80        5      active sync   /dev/sdf
-> > >        6       8       96        6      active sync   /dev/sdg
-> > >        7       8      112        7      active sync   /dev/sdh
-> > >
-> > >        9       8      128        -      spare   /dev/sdi
-> > >
-> > > Backup:/tmp# mdadm -V >> temp
-> > > mdadm - v3.0.3 - 22nd October 2009
-> >
-> > I should have checked when you mention the mdadm version in the first
-> > email.
-> > You need at least 3.1.1 to convert RAID5 to RAID6.
-> 
-> 	OK.  3.1.2-2 is in "Sid".  I don't think it will give the system a
-> heart attack if I scarf it from there.
+Thank you Neil. I don't want to follow your suggestions, until I'm
+sure that I've properly understood them.
 
-	Or maybe it will...  The reshape had been going for about 2 hours
-when suddenly md tossed out a bunch of garbage and halted the system
-entirely.  I had to hit the Big Red Switch to bring it back up.  Of course
-the system complained about an unclean shutdown, yada, yada, yada, but now
-the main thing is the array won't assemble.  I'm afraid I did something in
-retrospect rather foolish.  I put the backup file in /tmp, and upon reboot,
-Linux wiped the /tmp directory, and mdadm refuses to restart the re-shape
-without the file.  What can I do to get the array re-shape to continue?
+See my responses and questions interleaved below.
 
+On 31 May 2010 04:55, Neil Brown <neilb@suse.de> wrote:
+> Everything in -pre looks good to me. =C2=A0The big question is, of co=
+urse, "Can you
+> see you data?".
+
+Not, not at present.
+
+Did I mention in my original post that the data is organised in three
+LVM2 logical volumes?
+
+I can't currently mount any of the LVM volumes.
+
+> sdj hasn't been a hot spare since October last year. =C2=A0It must ha=
+s dropped out
+> for some reason and you never noticed. =C2=A0For this reason it is go=
+od to put
+> e.g. "spare=3D1" in =C2=A0mdadm.conf and have "mdadm --monitor" runni=
+ng to warn you
+> about these things.
+
+Sorry to be such a dummy, but could you give an example of where and
+how to put these in mdadm.conf?
+
+The current mdadm.conf file (minus comments):
+
+DEVICE partitions
+CREATE owner=3Droot group=3Ddisk mode=3D0660 auto=3Dyes
+HOMEHOST <system>
+MAILADDR root
+ARRAY /dev/md1 level=3Draid10 num-devices=3D4
+UUID=3Df4ddbd55:206c7f81:b855f41b:37d33d37
+
+
+> Some odd has happened by "post-recovery-raid-diagnostics.txt". =C2=A0=
+sdh4 and sdg4
+> are no longer in sync. =C2=A0Did you have another crash on Sunday mor=
+ning?
+
+No. I don't think so.
+
+> I suspect your first priority is to make sure these crashes stop happ=
+ening.
+
+There have been none since /dev/md1 failed to mount ... suggesting
+that mdadm, the RAID array itself, or the LVM stuff on top of it
+is/are the source of the crashes.
+
+> Then try the "-Af" command again. =C2=A0That is (almost) never the wr=
+ong thing to
+> do. =C2=A0It only put things together in a way that looks like it was=
+ right
+> recently.
+>
+> So I suggest:
+> =C2=A01/ make sure that whatever caused the machine to crash has stop=
+ped. =C2=A0Replace
+> =C2=A0the machine if necessary.
+> =C2=A02/ use "-Af" to force-assemble the array again.
+> =C2=A03/ look in the array to see if your data is there.
+> =C2=A04/ report the results.
+
+Just tbe 100% sure. Should I include sdj4 in the assembly or merely
+sd{f,g,h,i}4?
+
+Dave
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
