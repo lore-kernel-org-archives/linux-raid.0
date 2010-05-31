@@ -1,68 +1,131 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Confused about reshape?
-Date: Mon, 31 May 2010 01:55:26 -0500
-Message-ID: <79.18.03062.D5D530C4@cdptpa-omtalb.mail.rr.com>
-References: <20100531164844.0f15838e@notabene.brown>
+From: CoolCold <coolthecold@gmail.com>
+Subject: Re: recovering from a controller failure
+Date: Mon, 31 May 2010 12:33:24 +0400
+Message-ID: <AANLkTike1slvwFahh4hkD2xiFngoBQrzxeoZ5Y8Fu6kK@mail.gmail.com>
+References: <AANLkTim0Du0TYrTOQNajPG6IsDnj4aCvjZ3UJtZnweGW@mail.gmail.com>
+	<F7.15.03062.2D8E20C4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100531164844.0f15838e@notabene.brown>
+In-Reply-To: <F7.15.03062.2D8E20C4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Neil Brown' <neilb@suse.de>
+To: Leslie Rhorer <lrhorer@satx.rr.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> >         Version : 1.02
-> >   Creation Time : Sun Jul 12 20:44:02 2009
-> >      Raid Level : raid5
-> >      Array Size : 10255969024 (9780.85 GiB 10502.11 GB)
-> >   Used Dev Size : 1465138432 (1397.26 GiB 1500.30 GB)
-> >    Raid Devices : 8
-> >   Total Devices : 9
-> >     Persistence : Superblock is persistent
-> >
-> >   Intent Bitmap : Internal
-> 
-> You'll probably need to remove the bitmap for --grow to work... I really
-> should fix that.
+On Mon, May 31, 2010 at 2:38 AM, Leslie Rhorer <lrhorer@satx.rr.com> wr=
+ote:
+>
+>
+>> -----Original Message-----
+>> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+>> owner@vger.kernel.org] On Behalf Of CoolCold
+>> Sent: Sunday, May 30, 2010 8:18 AM
+>> To: Leslie Rhorer
+>> Cc: Kyler Laird; linux-raid@vger.kernel.org
+>> Subject: Re: recovering from a controller failure
+>>
+>> On Sun, May 30, 2010 at 7:33 AM, Leslie Rhorer <lrhorer@satx.rr.com>
+>> wrote:
+>> >> On Sun, May 30, 2010 at 09:50:26AM +1200, Richard wrote:
+>> >>
+>> >> > How about adding entries to your mdadm.conf file containing the=
+ UUID
+>> >> > of /dev/md0, eg:
+>> >> >
+>> >> > ARRAY /dev/md8 level=3Draid6 num-devices=3D16
+>> >> > UUID=3D38a06a50:ce3fc204:728edfb7:4f4cdd43
+>> >> >
+>> >> > note this should be all one line.
+>> >>
+>> >> I'll be happy to do that.
+>> >>
+>> >> > mdadm -D /dev/md0 should get you the UUID.
+>> >>
+>> >> =A0 =A0 =A0 root@00144ff2a334:/# mdadm -D /dev/md0
+>> >> =A0 =A0 =A0 mdadm: md device /dev/md0 does not appear to be activ=
+e.
+>> >>
+>> >> So...how do I get the UUIDs? =A0I tried blkid and got this.
+>> >> =A0 =A0 =A0 http://lairds.us/temp/ucmeng_md/uuids
+>> >> Those UUIDs are far from unique.
+>> >
+>> > =A0 =A0 =A0 =A0After all your drives are visible, of course:
+>> >
+>> > `mdadm --examine /dev/sd* /dev/hd* > <filename>`
+>> > `more <filename>`
+>> >
+>> > Make note of the array UUID for each drive. =A0When done,
+>> >
+>> > `mdadm --assemble --assume-clean /dev/mdX /dev/<drive0> /dev/<driv=
+e1>
+>> > /dev/<drive2> ...etc`
+>> >
+>> > where <drive0>, <drive1>, etc are all members of the same array UU=
+ID.
+>> >
+>> > =A0 =A0 =A0 =A0Mount the file system, and fsck it. =A0Once everyth=
+ing is verified
+>> > good,
+>> >
+>> > `echo repair > /sys/block/mdX/md/sync_action`
+>> Taking in account "Events" fields are differing on disks from 1st &
+>> 2nd controller, interesting question for me - what will happen on th=
+is
+>> "repair" ?
+>
+> =A0 =A0 =A0 =A0Note that should be --force, not --assume-clean. =A0Th=
+e --assume-clean
+> switch would be used if you re-created the array, not just re-assembl=
+ed it.
+> Once the array is assembled, the repair function will re-establish th=
+e
+> redundancy within the array. =A0Any stripes whose data does not match=
+ the
+> calculated value required to produce the upper layer information are
+> re-written.
+That's it - as you can see there are 15 drives in raid6 array. Examine
+on disks from sda to sdh shows drives active and event count is 0.159,
+sdi to sdp events count is 0.168 and show that sd[a-i] are faulty. So
+I'm guessing there is no way to know which part of array is "right"
+and i guess they are desynced.
 
-	OK.  That's pretty minor.  I'll do that.
+>
+>> And what this "Events" field really means? I didn't found descriptio=
+n
+>> in man pages.
+>
+> =A0 =A0 =A0 =A0I believe a number of things. =A0For one thing, it is =
+used to keep
+> track of which version of data resides in each drive, whenever an arr=
+ay
+> event is encountered. =A0The value of the events counter in the membe=
+rs of an
+> array should not be different by more than 1, or mdadm kicks the driv=
+e out
+> of the array.
+I've thought similar, but interesting - in this situation drives has
+event count value like "0.168" and "0.159"...
+> I expect it may also be used during forced re-assembly and /
+> or during a resync of a RAID1 system to help determine which version =
+of a
+> stripe is correct.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-> >     Update Time : Mon May 31 00:44:25 2010
-> >           State : active
-> >  Active Devices : 8
-> > Working Devices : 9
-> >  Failed Devices : 0
-> >   Spare Devices : 1
-> >
-> >          Layout : left-symmetric
-> >      Chunk Size : 256K
-> >
-> >            Name : Backup:0  (local to host Backup)
-> >            UUID : 940ae4e4:04057ffc:5e92d2fb:63e3efb7
-> >          Events : 987130
-> >
-> >     Number   Major   Minor   RaidDevice State
-> >        0       8        0        0      active sync   /dev/sda
-> >        1       8       16        1      active sync   /dev/sdb
-> >        2       8       32        2      active sync   /dev/sdc
-> >        8       8       48        3      active sync   /dev/sdd
-> >        4       8       64        4      active sync   /dev/sde
-> >        5       8       80        5      active sync   /dev/sdf
-> >        6       8       96        6      active sync   /dev/sdg
-> >        7       8      112        7      active sync   /dev/sdh
-> >
-> >        9       8      128        -      spare   /dev/sdi
-> >
-> > Backup:/tmp# mdadm -V >> temp
-> > mdadm - v3.0.3 - 22nd October 2009
-> 
-> I should have checked when you mention the mdadm version in the first
-> email.
-> You need at least 3.1.1 to convert RAID5 to RAID6.
 
-	OK.  3.1.2-2 is in "Sid".  I don't think it will give the system a
-heart attack if I scarf it from there.
 
+--=20
+Best regards,
+[COOLCOLD-RIPN]
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
