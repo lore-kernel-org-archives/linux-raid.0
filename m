@@ -1,50 +1,66 @@
 From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: recovering from a controller failure
-Date: Mon, 31 May 2010 03:50:41 -0500
-Message-ID: <89.69.28437.068730C4@cdptpa-omtalb.mail.rr.com>
-References: <AANLkTike1slvwFahh4hkD2xiFngoBQrzxeoZ5Y8Fu6kK@mail.gmail.com>
+Subject: RE: Confused about reshape?
+Date: Mon, 31 May 2010 04:12:46 -0500
+Message-ID: <5C.14.01646.D8D730C4@cdptpa-omtalb.mail.rr.com>
+References: <79.18.03062.D5D530C4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTike1slvwFahh4hkD2xiFngoBQrzxeoZ5Y8Fu6kK@mail.gmail.com>
+In-Reply-To: <79.18.03062.D5D530C4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'CoolCold' <coolthecold@gmail.com>
+To: 'Leslie Rhorer' <lrhorer@satx.rr.com>, 'Neil Brown' <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> > Once the array is assembled, the repair function will re-establish =
-the
-> > redundancy within the array. =A0Any stripes whose data does not mat=
-ch the
-> > calculated value required to produce the upper layer information ar=
-e
-> > re-written.
-> That's it - as you can see there are 15 drives in raid6 array. Examin=
-e
-> on disks from sda to sdh shows drives active and event count is 0.159=
-,
-> sdi to sdp events count is 0.168 and show that sd[a-i] are faulty. So
-> I'm guessing there is no way to know which part of array is "right"
-> and i guess they are desynced.
+> > You'll probably need to remove the bitmap for --grow to work... I really
+> > should fix that.
+> 
+> 	OK.  That's pretty minor.  I'll do that.
+> 
+> > >     Update Time : Mon May 31 00:44:25 2010
+> > >           State : active
+> > >  Active Devices : 8
+> > > Working Devices : 9
+> > >  Failed Devices : 0
+> > >   Spare Devices : 1
+> > >
+> > >          Layout : left-symmetric
+> > >      Chunk Size : 256K
+> > >
+> > >            Name : Backup:0  (local to host Backup)
+> > >            UUID : 940ae4e4:04057ffc:5e92d2fb:63e3efb7
+> > >          Events : 987130
+> > >
+> > >     Number   Major   Minor   RaidDevice State
+> > >        0       8        0        0      active sync   /dev/sda
+> > >        1       8       16        1      active sync   /dev/sdb
+> > >        2       8       32        2      active sync   /dev/sdc
+> > >        8       8       48        3      active sync   /dev/sdd
+> > >        4       8       64        4      active sync   /dev/sde
+> > >        5       8       80        5      active sync   /dev/sdf
+> > >        6       8       96        6      active sync   /dev/sdg
+> > >        7       8      112        7      active sync   /dev/sdh
+> > >
+> > >        9       8      128        -      spare   /dev/sdi
+> > >
+> > > Backup:/tmp# mdadm -V >> temp
+> > > mdadm - v3.0.3 - 22nd October 2009
+> >
+> > I should have checked when you mention the mdadm version in the first
+> > email.
+> > You need at least 3.1.1 to convert RAID5 to RAID6.
+> 
+> 	OK.  3.1.2-2 is in "Sid".  I don't think it will give the system a
+> heart attack if I scarf it from there.
 
-	I deleted the original e-mails while cleaning out my in box a few
-hours ago, so I can't look at your original response, but I've never se=
-en
-fractional event counts.  Some of mine are in the millions.
+	Or maybe it will...  The reshape had been going for about 2 hours
+when suddenly md tossed out a bunch of garbage and halted the system
+entirely.  I had to hit the Big Red Switch to bring it back up.  Of course
+the system complained about an unclean shutdown, yada, yada, yada, but now
+the main thing is the array won't assemble.  I'm afraid I did something in
+retrospect rather foolish.  I put the backup file in /tmp, and upon reboot,
+Linux wiped the /tmp directory, and mdadm refuses to restart the re-shape
+without the file.  What can I do to get the array re-shape to continue?
 
-	In any case, if the corruption is bad enough, you may indeed lose
-some data.  Remember, however, that unless this was a brand new array, =
-or
-the data on the array was undergoing a truly phenomenal amount of thras=
-hing,
-most of the data on the drives is probably consistent, or at least
-consistent enough to allow recovery.  Some, however, possibly even a la=
-rge
-amount, may be toast.  That's on reason why you have backups.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
