@@ -1,40 +1,34 @@
-From: Mark Knecht <markknecht@gmail.com>
-Subject: Re: RAID Configuration For New Home Server
-Date: Tue, 1 Jun 2010 10:56:57 -0700
-Message-ID: <AANLkTikeEC7QrcWq7nw5HiKtITcnM4jxDzM1ohC2ux0Q@mail.gmail.com>
-References: <AANLkTilamRIEvggIh7LX6sNNKwMJJVNK4gPuBQkGmkOv@mail.gmail.com>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: recovering from a controller failure
+Date: Wed, 02 Jun 2010 07:15:59 +1200
+Message-ID: <4C055C6F.7080302@sauce.co.nz>
+References: <20100531182734.GB2980@flews.lairds.us> <20100601154904.GG2980@flews.lairds.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTilamRIEvggIh7LX6sNNKwMJJVNK4gPuBQkGmkOv@mail.gmail.com>
+In-Reply-To: <20100601154904.GG2980@flews.lairds.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: Carlos Mennens <carloswill@gmail.com>
-Cc: Mdadm <linux-raid@vger.kernel.org>
+To: Kyler Laird <kyler-keyword-linuxraid00.a7e7f0@lairds.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jun 1, 2010 at 10:08 AM, Carlos Mennens <carloswill@gmail.com> wrote:
-> I built a new home server this weekend & am ready to load my O.S.
-> (Arch Linux) on it today. It has 4 x 320 GB Seagate Barracuda's
-> (SATA). I don't really have a specific function of this server at home
-> beyond holding my data reliably and decent read / write performance.
-> My question to you experts is what do you recommend I configure for
-> this particular configuration? Should I run RAID 5 or RAID 10? To
-> spare or not to spare? I really appreciate any best suggestions for
-> general over all function on this matter.
+Kyler Laird wrote:
+> I decided to try simply using "--force" to assemble the array.  It seems
+> to have worked.
+>   	http://lairds.us/temp/ucmeng_md/suggested_recovery
+> As you can see, it didn't use /dev/sdah1, starting the RAID6 array with
+> one drive missing.
 >
-> -Carlos
+> I can safely --add this drive or was there a reason it wasn't used?  I
+> also plan to add the spare (/dev/sdp1).
 
-I'm not an expert so take my input with a grain of salt but you don't
-state how much space you need on the machine. Is 320GB enough? If so
-consider a 3-drive RAID1 and save the 4th drive as a spare. That's
-what I run using 3-drive 500GB WD drives. Works well over the last few
-months.
+It would be prudent to remove /dev/sdah1 and use smartctl on a non LSI 
+SAS controller or another machine, to check that it has not failed.
 
-Keep in mind that as a newbie, if you repeat any of my learning curve,
-booting from RAID is more difficult. I chose to not use RAID for the
-/boot sector and just duplicated the grub setup and kernel + grub
-files. If my Drive 0 goes down and I cannot I can reset the boot drive
-in BIOS and boot from the second or third drives.
+If not, prior to re adding it back, I would perform on fsck on the 
+filesystem to make sure there are no errors.
 
-Hope this helps,
-Mark
+Regards,
+
+Richard
