@@ -1,26 +1,21 @@
-From: Kyler Laird <kyler-keyword-linuxraid00.a7e7f0@lairds.com>
-Subject: Re: recovering from a controller failure
-Date: Tue, 1 Jun 2010 10:49:04 -0500
-Message-ID: <20100601154904.GG2980@flews.lairds.us>
-References: <20100531182734.GB2980@flews.lairds.us>
+From: Carlos Mennens <carloswill@gmail.com>
+Subject: RAID Configuration For New Home Server
+Date: Tue, 1 Jun 2010 13:08:10 -0400
+Message-ID: <AANLkTilamRIEvggIh7LX6sNNKwMJJVNK4gPuBQkGmkOv@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100531182734.GB2980@flews.lairds.us>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-I decided to try simply using "--force" to assemble the array.  It seems
-to have worked.
- 	http://lairds.us/temp/ucmeng_md/suggested_recovery
-As you can see, it didn't use /dev/sdah1, starting the RAID6 array with
-one drive missing.
+I built a new home server this weekend & am ready to load my O.S.
+(Arch Linux) on it today. It has 4 x 320 GB Seagate Barracuda's
+(SATA). I don't really have a specific function of this server at home
+beyond holding my data reliably and decent read / write performance.
+My question to you experts is what do you recommend I configure for
+this particular configuration? Should I run RAID 5 or RAID 10? To
+spare or not to spare? I really appreciate any best suggestions for
+general over all function on this matter.
 
-I can safely --add this drive or was there a reason it wasn't used?  I
-also plan to add the spare (/dev/sdp1).
-
-Thanks for all the help!
-
---kyler
+-Carlos
