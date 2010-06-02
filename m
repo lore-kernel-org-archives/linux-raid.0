@@ -1,69 +1,62 @@
-From: Ryan Wagoner <rswagoner@gmail.com>
-Subject: Re: RAID Configuration For New Home Server
-Date: Tue, 1 Jun 2010 18:59:02 -0400
-Message-ID: <AANLkTik9-CobthBnInKRvPF5lW5Vk4-vsLpCnksFjk-R@mail.gmail.com>
-References: <AANLkTilamRIEvggIh7LX6sNNKwMJJVNK4gPuBQkGmkOv@mail.gmail.com>
-	<AANLkTikeEC7QrcWq7nw5HiKtITcnM4jxDzM1ohC2ux0Q@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [GIT BISECT] kernel early crash in 2.6.34~2.6.35-rc1
+Date: Wed, 2 Jun 2010 11:29:21 +1000
+Message-ID: <20100602112921.2e6a51cd@notabene.brown>
+References: <4C05B081.2000904@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikeEC7QrcWq7nw5HiKtITcnM4jxDzM1ohC2ux0Q@mail.gmail.com>
+In-Reply-To: <4C05B081.2000904@users.sourceforge.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mdadm <linux-raid@vger.kernel.org>
+To: legolas558 <legolas558@users.sourceforge.net>
+Cc: stable@kernel.org, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, Jun 1, 2010 at 1:56 PM, Mark Knecht <markknecht@gmail.com> wrote:
-> On Tue, Jun 1, 2010 at 10:08 AM, Carlos Mennens <carloswill@gmail.com> wrote:
->> I built a new home server this weekend & am ready to load my O.S.
->> (Arch Linux) on it today. It has 4 x 320 GB Seagate Barracuda's
->> (SATA). I don't really have a specific function of this server at home
->> beyond holding my data reliably and decent read / write performance.
->> My question to you experts is what do you recommend I configure for
->> this particular configuration? Should I run RAID 5 or RAID 10? To
->> spare or not to spare? I really appreciate any best suggestions for
->> general over all function on this matter.
->>
->> -Carlos
->
-> I'm not an expert so take my input with a grain of salt but you don't
-> state how much space you need on the machine. Is 320GB enough? If so
-> consider a 3-drive RAID1 and save the 4th drive as a spare. That's
-> what I run using 3-drive 500GB WD drives. Works well over the last few
-> months.
->
-> Keep in mind that as a newbie, if you repeat any of my learning curve,
-> booting from RAID is more difficult. I chose to not use RAID for the
-> /boot sector and just duplicated the grub setup and kernel + grub
-> files. If my Drive 0 goes down and I cannot I can reset the boot drive
-> in BIOS and boot from the second or third drives.
->
-> Hope this helps,
-> Mark
-> --
+On Wed, 02 Jun 2010 03:14:41 +0200
+"Daniele C." <legolas558@users.sourceforge.net> wrote:
 
-Besides that you have these options
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+> 
+> Hello there,
+> 
+> I have individuated a bad commit which causes an early crash in some SSB/CPI routine; sorry can't be more precise right now, it would require serial debugging to get the dump.
+> 
+> Last good commit: 240ed68eb567d80dd6bab739341999a5ab0ad55d
+> First bad commit: 6e4513972a5ad28517477d21f301a02ac7a0df76
 
-RAID 5 with 3 drives and 1 spare - Gives you 640GB (320GB x 2) usable space
-RAID 5 with 4 drives - Gives you 960GB (320GB x 3) usable space
-RAID 6 with 4 drives - Gives you 640GB (320GB x 2) usable space
-RAID 10 with 4 drives - Gives you 640GB (320GB x 2) usable space
+% git log 240ed68..6e451397 | grep -c '^commit'
+6609
 
-If you need more than 640GB of space then RAID 5 across the 4 drives
-is the way to go. Otherwise it comes down to performance and risk.
-RAID 10 gives you the best performance and protects you from 1 disk
-failure, possibly 2 if the correct drives fail. RAID 6 will protect
-you from any 2 drive failures, but with more parity overhead than RAID
-5.
+There are over 6000 commits in there - are you sure you cannot narrow it
+down a bit more with git-bisect?
 
-I'm a big fan of RAID 10 if you can afford the space and need the
-speed. Otherwise for smaller drives and spindles RAID 5 is great. If
-you are using TB+ size drives across 5+ spindles RAID 6 is great for
-reliability.
+NeilBrown
 
-My home setup consists of 3 x 1TB drives in RAID 5. With hdparm I get
-around 85MB/s on the drive and 130MB/s on the RAID 5. The array
-resyncs at 85MB/s, which takes around 3 hours to complete. From my
-Windows desktop over SMB I am getting around 30-50MB/s. Gigabit
-Ethernet in a perfect world maxes out around 110MB/s.
 
-Ryan
+> 
+> Hardware: laptop Maxdata PRO 7000DX (apparently Fujitsu Amilo V2000 clone)
+> 
+> Crash is also present in HEAD (currently 67a3e12b05e055c0415c556a315a3d3eb637e29e).
+> 
+> I have given a look to the commitdiff but it looks too much complex for me to individuate where's the issue at first glance.
+> 
+> Can somebody please give a look and/or narrow it down to a patch?
+> 
+> Thanks,
+> - --
+>   Daniele C.
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v1.4.10 (GNU/Linux)
+> Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+> 
+> iQEcBAEBAgAGBQJMBbCBAAoJEON28As9epPATXIH/RbBVXobBPXhon529E5Cov2m
+> Rw9d3/VhY9pNLIk9UbtkuJslG6o96GQjTqqNK4M95RE43QYpzqx1Gw5r84H1j2NZ
+> qxEb+GmHYj8ltdsUmQJXc4b4iIrqJVSjfInbzftKrgKdFybxDJF1Byl1FpXXyFqC
+> TVEHsXhaTpnqylVTbQuweCPgv7MDWBO9MxMJoBQSvXNqefqlfyrgWeT5Eimg73mz
+> mgNQKE8aAOYF3d3ZxgIN43jun5VmFxMC8t4E8d68/yA0g9VFW04iSecY9ZeJgmZR
+> gHNrhwP/JzEja+FErRDGliQdyeFleV3rcsmWH7xwHecc2HcVt73BkpWR1qYwdwQ=
+> =Dtjt
+> -----END PGP SIGNATURE-----
+
