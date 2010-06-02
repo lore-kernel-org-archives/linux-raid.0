@@ -1,47 +1,66 @@
-From: "Daniele C." <legolas558@users.sourceforge.net>
-Subject: [GIT BISECT] kernel early crash in 2.6.34~2.6.35-rc1
-Date: Wed, 02 Jun 2010 03:14:41 +0200
-Message-ID: <4C05B081.2000904@users.sourceforge.net>
-Reply-To: legolas558 <legolas558@users.sourceforge.net>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: RAID Configuration For New Home Server
+Date: Tue, 1 Jun 2010 23:03:56 -0500
+Message-ID: <C3.C0.03062.D28D50C4@cdptpa-omtalb.mail.rr.com>
+References: <AANLkTilamRIEvggIh7LX6sNNKwMJJVNK4gPuBQkGmkOv@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <AANLkTilamRIEvggIh7LX6sNNKwMJJVNK4gPuBQkGmkOv@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: stable@kernel.org, neilb@suse.de
-Cc: linux-raid@vger.kernel.org
+To: 'Carlos Mennens' <carloswill@gmail.com>, 'Mdadm' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
 
-Hello there,
 
-I have individuated a bad commit which causes an early crash in some SSB/CPI routine; sorry can't be more precise right now, it would require serial debugging to get the dump.
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Carlos Mennens
+> Sent: Tuesday, June 01, 2010 12:08 PM
+> To: Mdadm
+> Subject: RAID Configuration For New Home Server
+> 
+> I built a new home server this weekend & am ready to load my O.S.
+> (Arch Linux) on it today. It has 4 x 320 GB Seagate Barracuda's
+> (SATA). I don't really have a specific function of this server at home
+> beyond holding my data reliably and decent read / write performance.
+> My question to you experts is what do you recommend I configure for
+> this particular configuration? Should I run RAID 5 or RAID 10? To
+> spare or not to spare? I really appreciate any best suggestions for
+> general over all function on this matter.
 
-Last good commit: 240ed68eb567d80dd6bab739341999a5ab0ad55d
-First bad commit: 6e4513972a5ad28517477d21f301a02ac7a0df76
+	Well, really, you need to define your needs more thoroughly and then
+configure the system accordingly.  What constitutes "decent" performance?
+How is the server attached to your LAN?  What sort of load is the server
+going to encounter?  How much down time can you tolerate in the event of a
+failure?  If your LAN is only 100Mbps or worse wireless, then any RAID
+system is going to deliver better performance than the LAN connection can
+handle.  If you have one or perhaps even multiple Gig-E links into the LAN,
+however, it's a  very different matter.  How many workstations do you have
+online simultaneously, and what horsepower?  What application mix?  My
+servers, for example, have Gig-E links into the LAN, and I have several
+moderately high power workstations attached, but usually only 1 or 2 are
+active at a time, and much of what is served is video with a maximum of 25
+Mbps or so.  The main server has a 12 x 1T RAID6 array and the backup has a
+9 x 1T RAID6 array.  The only time they are ever loaded anywhere near
+capacity is when backup up to or restoring from the backup server, and even
+then the bottleneck is often the 1Gbps Ethernet links.
 
-Hardware: laptop Maxdata PRO 7000DX (apparently Fujitsu Amilo V2000 clone)
+	Also, what many people fail to take into account is growth.  Your
+decision should include a growth strategy.  RAID10 is fine for 4 drives, but
+if the data is likely to eventually reach more than 6 drives in extent,
+RAID10 - with a minimum of 12 drives and counting, isn't so attractive.  In
+my case, for example, a pair of 9T RAID10 arrays would not only cost a great
+deal to build, but the power requirements would also be significant.
 
-Crash is also present in HEAD (currently 67a3e12b05e055c0415c556a315a3d3eb637e29e).
+	Your backup strategy is also a factor.  Having a backup server
+online as I do means the marginally greater risk of a RAID5 system over a
+RAID6 might be worth it for a relatively small number of member disks.
+Indeed, both servers were RAID5 until each respective system exceeded 6 data
+discs, at which point they were migrated to RAID6.
 
-I have given a look to the commitdiff but it looks too much complex for me to individuate where's the issue at first glance.
+	I suggest you think about your needs a little more carefully and
+detail them here concisely, and we can make better recommendations.
 
-Can somebody please give a look and/or narrow it down to a patch?
-
-Thanks,
-- --
-  Daniele C.
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iQEcBAEBAgAGBQJMBbCBAAoJEON28As9epPATXIH/RbBVXobBPXhon529E5Cov2m
-Rw9d3/VhY9pNLIk9UbtkuJslG6o96GQjTqqNK4M95RE43QYpzqx1Gw5r84H1j2NZ
-qxEb+GmHYj8ltdsUmQJXc4b4iIrqJVSjfInbzftKrgKdFybxDJF1Byl1FpXXyFqC
-TVEHsXhaTpnqylVTbQuweCPgv7MDWBO9MxMJoBQSvXNqefqlfyrgWeT5Eimg73mz
-mgNQKE8aAOYF3d3ZxgIN43jun5VmFxMC8t4E8d68/yA0g9VFW04iSecY9ZeJgmZR
-gHNrhwP/JzEja+FErRDGliQdyeFleV3rcsmWH7xwHecc2HcVt73BkpWR1qYwdwQ=
-=Dtjt
------END PGP SIGNATURE-----
