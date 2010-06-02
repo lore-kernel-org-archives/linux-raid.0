@@ -1,7 +1,7 @@
 From: tron@monkii.net
 Subject: RE: RAID Configuration For New Home Server
-Date: Wed, 2 Jun 2010 09:51:52 +0200
-Message-ID: <476c45239528b5580f83a826f1cbb766.squirrel@mail.monkii.net>
+Date: Wed, 2 Jun 2010 09:54:22 +0200
+Message-ID: <e35643473b05cc946fc35c0df2e85fcd.squirrel@mail.monkii.net>
 References: <C5.28.17309.03BF50C4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -57,15 +57,16 @@ setup so let's all agree that there's no "one way" of doing things.
 
 With that being said let me share a setup I recently configured for a
 slackbuild and slackbuild-storage server at home. I had 5x320gb SATA
-drives to spare since I upgraded my main fileserver, since mdadm works on
-partition level I started with creating my root (/) partition on one drive
-and setting it to 20gb (/dev/sda1), then a partition for storage
-(/dev/sda2 -> /var/storage) with the remaining diskspace. I preceded to
+drives to spare since I upgraded my main fileserver and since mdadm works
+on partition level I started with creating my root (/) partition on one
+drive and setting it to 20gb (/dev/sda1), then a partition for storage
+(/dev/sda2 -> /var/storage) with the remaining diskspace. I proceded to
 copy the partition table over to my other drives using sfdisk (sfdisk-d
 /dev/sda|sfdisk /dev/sdX). Next I created a raid1 using all the /dev/sdX1
 partitions (mdadm -C /dev/md0 -l 1 -n 5 /dev/sd[a,b,c,d,e]1) and after
-that created the raid5 (mdadm -C /dev/md1 -l 5 -n 5 -x 0
-/dev/sd[a,b,c,d,e]2) with no spares that's what the -x 0 is for.
+that created the raid5 with all the /dev/sdX2 partitions (mdadm -C
+/dev/md1 -l 5 -n 5 -x 0 /dev/sd[a,b,c,d,e]2) with no spares that's what
+the -x 0 is for.
 
 This has the benefit of having a rock solid raid1 configuration for your /
 and also benefiting from having a relatively safe storage using raid5.
