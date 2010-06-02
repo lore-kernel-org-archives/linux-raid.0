@@ -1,68 +1,45 @@
 From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: Upgrading to GRUB2 from GRUB Legacy on RAID1
-Date: Wed, 2 Jun 2010 01:20:29 -0500
-Message-ID: <AB.36.03062.F28F50C4@cdptpa-omtalb.mail.rr.com>
+Subject: RE: RAID Configuration For New Home Server
+Date: Wed, 2 Jun 2010 01:33:19 -0500
+Message-ID: <C5.28.17309.03BF50C4@cdptpa-omtalb.mail.rr.com>
+References: <AANLkTinjHWth9B79IimV3g-U9CNUu1tHRiyf6Ya-7Yys@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <AANLkTinjHWth9B79IimV3g-U9CNUu1tHRiyf6Ya-7Yys@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Mdadm' <linux-raid@vger.kernel.org>
+To: 'Simon Matthews' <simon.d.matthews@gmail.com>
+Cc: 'Mdadm' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
+> On Tue, Jun 1, 2010 at 10:08 AM, Carlos Mennens <carloswill@gmail.com>
+> wrote:
+> > I built a new home server this weekend & am ready to load my O.S.
+> > (Arch Linux) on it today. It has 4 x 320 GB Seagate Barracuda's
+> > (SATA). I don't really have a specific function of this server at home
+> > beyond holding my data reliably and decent read / write performance.
+> > My question to you experts is what do you recommend I configure for
+> > this particular configuration? Should I run RAID 5 or RAID 10? To
+> > spare or not to spare? I really appreciate any best suggestions for
+> > general over all function on this matter.
+> 
+> How about 2 drives in a RAID0 or LVM configuration and the other two
+> in another machine and used for backups?
 
-	Dilemma: GRUB legacy will not upgrade to GRUB2 on my machines.  The
-systems were originally built to "fake out" GRUB legacy by using a 1.0
-superblock on a pair of RAID1 members and pointing GRUB to one or the other
-of the disks so it can chain load from what it thinks is an ordinary primary
-partition.  Once initrd loads and md is active, it assembles the arrays and
-then the kernel mounts / and then /boot, and booting continues normally.
-
-	The cause: When dpkg instructs grub-pc to configure itself, it fails
-because it is unable to reconcile the information in /boot/grub/menu.lst
-with the hardware mounted by /etc/fstab.
-
-	The cure? : I was thinking I should be able to comment out the
-entries for /dev/md1 in /etc/fstab  and /etc/mdadm/mdadm.conf, and reboot
-the system.  Then I think I can
-
-1.  Mount /dev/hda1 to /boot.
-
-2.  Upgrade GRUB, which should now understand both /etc/fstab and
-/boot/grub/menu/lst.
-
-3.  Reboot to make sure it works.
-
-4.  Edit /boot/grub/grub.cfg and /boot/grub/device.map to let GRUB2 know it
-should be booting from an array and to make sure it is loading the RAID1
-module.
-
-5.  Umount /boot and create a new 1.0 superblock RAID1 array using only
-/dev/hda1 and a missing member.  Mount the new array as /boot.
-
-6.  Add the new array info into /etc/mdadm/mdadm.conf and change /etc/fstab
-back to mount /dev/md1.
-
-7.  Run update-initramfs to copy the new configuration into initrd.
-
-8.  Reboot and make sure GRUB2 can now boot into the new array.
-
-9.  Add /dev/hdb1 into the new array, and re-sync the array.
-
-10. Update /etc/mdadm/mdadm.conf with the full array info, getting rid of
-the missing member, and remove the reference to the old array altogether.
-
-11. Run the GRUB update routine to remove the chain-load from GRUB legacy.
-
-12. Run update-initramfs to copy the final configuration into the initrd (if
-GRUB update doesn't already do it.)
-
-	Is my thinking correct, here?  Have I missed a step?  Up until step
-9, I should be able to easily revert back to my original configuration by
-simply removing the comment for the old array, forcing an assembly of the
-old array using only /dev/hdb1, add back /dev/hda1, resync the array, remove
-the comment from /etc/fstab and run update-initramfs.
-
-
+	If down time is not an issue, and he is comfortable living with a
+single unprotected system in the event of a drive failure, that's not a bad
+solution, at all, especially given the small size of his arrays.  If it were
+me, I would invest in at least one more drive to make one of the arrays a
+RAID5 and the other a RAID0 (or LVM).  That way, in the event of a drive
+failure, he is still left with redundancy of one form or another.
+Additionally, if he makes the primary array the RAID5 array, the no single
+drive failure will take his server offline, and he can recover with no down
+time.  If performance is more important than zero down time, then he could
+make his backup the RAID5 array.  That way he doesn't have to worry so much
+about a second drive failure while he is restoring data to his failed
+primary array after it is repaired.  Indeed, a RAID5 array backed up by an
+LVM volume is precisely what I ran before my primary server exceeded 4T of
+data.
 
