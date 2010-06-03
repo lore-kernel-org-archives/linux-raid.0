@@ -1,76 +1,71 @@
-From: Andrew Dunn <andrew.g.dunn.dod@gmail.com>
-Subject: Re: Question about preferred minor.
-Date: Thu, 3 Jun 2010 07:15:29 -0400
-Message-ID: <AANLkTiml0UzRAPB2lHNDxe_6k_G17eAq8P_TtxqLYHmg@mail.gmail.com>
-References: <AANLkTimbMat99Su8F4FauQIa8mpeZJk6syJ0oXjHyygG@mail.gmail.com>
-	<loom.20100603T104147-488@post.gmane.org>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: devices get kicked from RAID about once a month
+Date: Thu, 03 Jun 2010 12:37:34 -0400
+Message-ID: <4C07DA4E.70501@tmr.com>
+References: <87k4qho723.fsf@uwo.ca>	<628039470-1275491015-cardhu_decombobulator_blackberry.rim.net-326486810-@bda837.bisx.prod.on.blackberry>	<876321o3lm.fsf@uwo.ca> <4C067AD6.7040700@anonymous.org.uk>	<871vcpo0n6.fsf@uwo.ca> <4C069813.3010308@tmr.com> <87sk55mijx.fsf@uwo.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <loom.20100603T104147-488@post.gmane.org>
+In-Reply-To: <87sk55mijx.fsf@uwo.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Christian Gatzemeier <c.gatzemeier@tu-bs.de>
+To: Dan Christensen <jdc@uwo.ca>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-In the past without knowing exactly why I have experienced failed
-assemblies upon a reboot. I have seen correction in this behavior by
-properly populating my /etc/mdadm/mdadm.conf file.
-
-I typically log in as root and do this:
-
-mdadm --examine --scan --config=3Dmdadm.conf >> /etc/mdadm/mdadm.conf
-
-Clean up is typically needed.
-
-So could this be an indication that my super-blocks on this particular
-array have some discrepancies? Notably the hostname?
-
-I tend to worry about my daters incessantly...
-
-On Thu, Jun 3, 2010 at 4:42 AM, Christian Gatzemeier
-<c.gatzemeier@tu-bs.de> wrote:
-> Andrew Dunn <andrew.g.dunn.dod <at> gmail.com> writes:
+Dan Christensen wrote:
+> Bill Davidsen <davidsen@tmr.com> writes:
 >
->> What is the meaning of Preferred Minor : 2 ?
+>   
+>> Presumably something shows in the logs, that's the next place to look.
+>>     
 >
-> Most of the time that array will get assembled as md2, but conflicts,
-> other numbers and errors stemming from differently assembled arrays c=
-an
-> occur.
+> I believe my drives simply don't support adjusting the time it takes to
+> try to recover a read (CCTL).  Or did you mean the logs at the time of
+> failure?  If so, I posted those in the original message.
 >
-> From https://wiki.ubuntu.com/ReliableRaid:
-> "Mdadm is setting up arrays according to unreliable superblock
-> information. (Device "minor" numbers, labels and hostnames in
-> superblocks are not sure to be unique and can be outdated.) This is
-> combined with the idea of fixing the unreliability by limiting array
-> assembly with information from mdadm.conf. (Defining PARTITIONS, ARRA=
-Y,
-> HOMEHOST lines.) Consequently this forces setup tools, admins and
-> installers to create mdadm.conf files and subjects them to the exact
-> same reliability problems."
+>   
+Those logs don't show any information useful to me which tells me how 
+long md waited, and I'm not able to parse any of the res: information to 
+gain clarity. It would be nice if someone can parse that, but I can't. 
+On timeout an elapsed time output would be nice to indicate what the 
+time limit is.
+
+But I do have desktop drives in raid arrays, and they do spin down when 
+not in use, and when I access the array after it's been unused I get a 
+multi-second delay before my ls info comes back, so clearly there are 
+some paths in the SATA handling which don't easily time out.
+
+> Have there been any kernel changes since 2.6.28 that might improve
+> reliability of my set-up?  It would be nice if md could be told to try
+> again before giving up on the drives.
 >
-> I guess this conflict prone behavior is mostly legacy behavior from t=
-he
-> past, or is there still an apparent reason to expose dynamic kernel
-> internals like the minor to userspace instead of basing device node n=
-ame on
-> "md-UUID"?
+>   
+Don't know, Neil might. I sure would like to see a timeout in ms in the 
+/sys for the device and a flag for the array to not kick a drive for 
+timeout until some number of consecutive timeouts have occurred. Note 
+that I'm not suggesting some particular implementation, just some 
+tunables. And if only one sector times out, a delayed reconstruct and 
+rewrite might fix it. Again, a topic for discussion, not a "do thus" 
+suggestion.
+
+I would hope that a drive with multiple partitions would get the 
+partitions kicked, not the whole drive at once. So one slow sector 
+wouldn't take out multiple arrays.
+> Thanks for all of the help so far!
 >
-> Regards,
-> Christian
->
+> Dan
 >
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>   
+
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "We can't solve today's problems by using the same thinking we
+   used in creating them." - Einstein
+
