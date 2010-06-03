@@ -1,61 +1,76 @@
-From: Bill Davidsen <davidsen@tmr.com>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: devices get kicked from RAID about once a month
-Date: Thu, 03 Jun 2010 13:00:33 -0400
-Message-ID: <4C07DFB1.4060006@tmr.com>
-References: <4C06A31A.4060907@gmx.net> <20100603101359.01f61d0d@notabene.brown>
+Date: Fri, 4 Jun 2010 07:33:04 +1000
+Message-ID: <20100604073304.1d669f45@notabene.brown>
+References: <87k4qho723.fsf@uwo.ca>
+	<628039470-1275491015-cardhu_decombobulator_blackberry.rim.net-326486810-@bda837.bisx.prod.on.blackberry>
+	<876321o3lm.fsf@uwo.ca>
+	<4C067AD6.7040700@anonymous.org.uk>
+	<871vcpo0n6.fsf@uwo.ca>
+	<4C069813.3010308@tmr.com>
+	<87sk55mijx.fsf@uwo.ca>
+	<4C07DA4E.70501@tmr.com>
+	<87eigom5as.fsf@uwo.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100603101359.01f61d0d@notabene.brown>
+In-Reply-To: <87eigom5as.fsf@uwo.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: st0ff@npl.de, st0ff@gmx.net, Linux RAID <linux-raid@vger.kernel.org>
+To: Dan Christensen <jdc@uwo.ca>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> On Wed, 02 Jun 2010 20:29:46 +0200
-> Stefan /*St0fF*/ H=C3=BCbner <st0ff@gmx.net> wrote:
->
->  =20
->>> Any other suggestions? =20
->>>      =20
->> Not really, it's up to Neil to export some sysfs-variable, where you
->> could tune how long a drive may take to respond to some command.
->>
->>    =20
->
-> Nope.  md doesn't do any timeouts.
->  =20
+On Thu, 03 Jun 2010 12:47:39 -0400
+Dan Christensen <jdc@uwo.ca> wrote:
 
-That's the problem. A timeout between getting the timeout status and=20
-trying the rewrite is really needed to have any hope of recovery.
+> Bill Davidsen <davidsen@tmr.com> writes:
+> 
+> > Those logs don't show any information useful to me which tells me how
+> > long md waited, and I'm not able to parse any of the res: information
+> > to gain clarity. It would be nice if someone can parse that, but I
+> > can't. On timeout an elapsed time output would be nice to indicate
+> > what the time limit is.
+> 
+> I agree.  It would also be nice to know whether there was in fact a read
+> error at that time (in which case I may just replace the drives to avoid
+> this problem) or whether it was some other communications glitch (in
+> which case I may suspect the power supply, try a newer kernel, etc).
+> With the information at hand, I'm not sure how to fix this, and since
+> it often is a month or more between occurrences, trial and error is
+> not likely to help.
+> 
+> > I sure would like to see a timeout in ms [md?] in
+> > the /sys for the device and a flag for the array to not kick a drive
+> > for timeout until some number of consecutive timeouts have
+> > occurred. 
+> 
+> That could be useful.  And, as Neil said, if the SATA driver could be
+> told to use longer timeouts, that might help.  Neil, if you think that's
+> a good idea, maybe you could put the request in with the SATA folks?
 
-If there were a write intent bitmap for the drive, perhaps the drive=20
-could enter some "may be recovering" state and writes, including the on=
-e=20
-to rewrite the sector, could be help off for some few minutes. I say=20
-that, knowing that there is at least some similar code working for=20
-network attached drives, which seem to survive a brief network issue.
+It might be a good idea.
+Seeing you have the error logs, you have the border-line drives, you are in
+the best position to test anything they suggest, and you have the strongest
+motivation to see a resolution, I recommend you put in the request.  Email
+details should be available in the MAINTAINERS file.
 
-Telling the user a write intent bitmap is needed and making use of it=20
-sound at all practical as a use for some existing code?
-
-> You need to look for, or ask for, such variables at the scsi/sata lay=
-er.
->
->  =20
-The need for a delay between timeout and rewrite
-
---=20
-Bill Davidsen <davidsen@tmr.com>
-  "We can't solve today's problems by using the same thinking we
-   used in creating them." - Einstein
+NeilBrown
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> > I would hope that a drive with multiple partitions would get the
+> > partitions kicked, not the whole drive at once. So one slow sector
+> > wouldn't take out multiple arrays.
+> 
+> Only the partition gets kicked out.  Yesterday, this saved me, since I
+> had timeouts on two drives in RAID5, but all the arrays stayed up because
+> the partitions didn't happen to be in the same array.
+> 
+> Dan
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
