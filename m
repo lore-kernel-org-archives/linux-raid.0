@@ -1,76 +1,29 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: devices get kicked from RAID about once a month
-Date: Fri, 4 Jun 2010 07:33:04 +1000
-Message-ID: <20100604073304.1d669f45@notabene.brown>
-References: <87k4qho723.fsf@uwo.ca>
-	<628039470-1275491015-cardhu_decombobulator_blackberry.rim.net-326486810-@bda837.bisx.prod.on.blackberry>
-	<876321o3lm.fsf@uwo.ca>
-	<4C067AD6.7040700@anonymous.org.uk>
-	<871vcpo0n6.fsf@uwo.ca>
-	<4C069813.3010308@tmr.com>
-	<87sk55mijx.fsf@uwo.ca>
-	<4C07DA4E.70501@tmr.com>
-	<87eigom5as.fsf@uwo.ca>
+From: hank peng <pengxihan@gmail.com>
+Subject: how to decrease raid5 write penalty in my case?
+Date: Fri, 4 Jun 2010 12:15:17 +0800
+Message-ID: <AANLkTin2zcAMc_grkvJ3rwz4BVtPt2Y0RE9mFyFyX6aW@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <87eigom5as.fsf@uwo.ca>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dan Christensen <jdc@uwo.ca>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Thu, 03 Jun 2010 12:47:39 -0400
-Dan Christensen <jdc@uwo.ca> wrote:
+I created a raid5 array which consists of 4 SATA disks, then I make a
+XFS on it. Now, I pre-allocate a file using posix_fallocate, its size
+is 512MB. So I think the file space allocated by file system is
+sequential. After that , I am filling data into this file from the
+start position, for example, every time I write 64KB data, but there
+are 1 seconds interval between two writes.
 
-> Bill Davidsen <davidsen@tmr.com> writes:
-> 
-> > Those logs don't show any information useful to me which tells me how
-> > long md waited, and I'm not able to parse any of the res: information
-> > to gain clarity. It would be nice if someone can parse that, but I
-> > can't. On timeout an elapsed time output would be nice to indicate
-> > what the time limit is.
-> 
-> I agree.  It would also be nice to know whether there was in fact a read
-> error at that time (in which case I may just replace the drives to avoid
-> this problem) or whether it was some other communications glitch (in
-> which case I may suspect the power supply, try a newer kernel, etc).
-> With the information at hand, I'm not sure how to fix this, and since
-> it often is a month or more between occurrences, trial and error is
-> not likely to help.
-> 
-> > I sure would like to see a timeout in ms [md?] in
-> > the /sys for the device and a flag for the array to not kick a drive
-> > for timeout until some number of consecutive timeouts have
-> > occurred. 
-> 
-> That could be useful.  And, as Neil said, if the SATA driver could be
-> told to use longer timeouts, that might help.  Neil, if you think that's
-> a good idea, maybe you could put the request in with the SATA folks?
-
-It might be a good idea.
-Seeing you have the error logs, you have the border-line drives, you are in
-the best position to test anything they suggest, and you have the strongest
-motivation to see a resolution, I recommend you put in the request.  Email
-details should be available in the MAINTAINERS file.
-
-NeilBrown
+As for RAID5 layer in kernel, due to the 1s interval between writes,
+extra read operation(write penalty) maybe caused although the
+following writes is sequential in this file's space.
+So, in my case, is there some parameters to adjust in order to
+decrease this kind of write penalty? Can we tell raid5 layer to delay
+the read operation for that stripe parity computation because we know
+that the following writes start at the previous writes's end point?
 
 
-> 
-> > I would hope that a drive with multiple partitions would get the
-> > partitions kicked, not the whole drive at once. So one slow sector
-> > wouldn't take out multiple arrays.
-> 
-> Only the partition gets kicked out.  Yesterday, this saved me, since I
-> had timeouts on two drives in RAID5, but all the arrays stayed up because
-> the partitions didn't happen to be in the same array.
-> 
-> Dan
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+-- 
+The simplest is not all best but the best is surely the simplest!
