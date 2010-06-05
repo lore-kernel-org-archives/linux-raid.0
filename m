@@ -1,96 +1,60 @@
-From: =?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?=
-	<stefan.huebner@stud.tu-ilmenau.de>
-Subject: Re: Device kicked from raid too easilly
-Date: Sat, 05 Jun 2010 09:22:38 +0200
-Message-ID: <4C09FB3E.1090302@stud.tu-ilmenau.de>
-References: <1275702714.3740.55.camel@sibyl.beware.dropbear.id.au>
-Reply-To: st0ff@npl.de
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: RAID Configuration For New Home Server
+Date: Sat, 5 Jun 2010 12:19:55 -0500
+Message-ID: <A8.CB.03181.F378A0C4@cdptpa-omtalb.mail.rr.com>
+References: <AANLkTilAzPKlOMecKpQLIEPOqAhFDglR5STq3_QP_caW@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1275702714.3740.55.camel@sibyl.beware.dropbear.id.au>
+In-Reply-To: <AANLkTilAzPKlOMecKpQLIEPOqAhFDglR5STq3_QP_caW@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Ian Dall <ian@beware.dropbear.id.au>
-Cc: Linux RAID <linux-raid@vger.kernel.org>
+To: 'Carlos Mennens' <carloswill@gmail.com>, 'Mdadm' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi Ian,
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Carlos Mennens
+> Sent: Wednesday, June 02, 2010 8:00 AM
+> To: Mdadm
+> Subject: Re: RAID Configuration For New Home Server
+> 
+> On Wed, Jun 2, 2010 at 3:54 AM,  <tron@monkii.net> wrote:
+> > There are about as many answers to this as there are people using your
+> > setup so let's all agree that there's no "one way" of doing things.
+> 
+> Thanks for all the suggestions and you guys are right. There will no
+> right or wrong answer here but I just want to make sure I am not doing
+> anything that will hinder / limit performance in my system. At most my
+> system will simply idle and do nothing more than store a few files for
+> me so I think RAID5 is going to be my selection for my / file system.
+> I have 4 identical drives and need to partition them all the same to
+> avoid any inconsistencies across the RAID array. Since Grub doesn't
+> support RAID5 for /boot, I will need to make a 4 disk RAID1 for /boot
+> & do the same for Swap. Does this look reasonable to you guys?
+> 
+> Partitioning the 1st disk below:
+> 
+> /dev/sda1 100 MB - RAID (bootable)
+> /dev/sda2     2 GB - RAID
+> /dev/sda3 320 GB - RAID
+> 
+> Do that same partition schema above for all 4 drives and then create my
+> RAID:
+> 
+> /
+> mdadm --create /dev/md0 --level=5 --raid-devices=4 /dev/sda3 /dev/sdb3
+> /dev/sdc3 /dev/sdd3
+> 
+> /boot
+> mdadm --create /dev/md1 --level=1 --raid-devices=4 /dev/sda1 /dev/sdb1
+> /dev/sdc1 /dev/sdd1
+> 
+> Swap
+> mdadm --create /dev/md2 --level=1 --raid-devices=4 /dev/sda2 /dev/sdb2
+> /dev/sdc2 /dev/sdd2
 
-I do not think this is md-related, nor related to the other dropout
-problem.  Here we have a write-error, which correctly makes the disk
-drop.  So if you say the error is kind of a soft error, then actually
-either the disks firmware or the scsi layer should be handling this.
-
-But as always on write errors: mostly there are more than one write
-request in the queue, so it's probably hard to find out which data
-couldn't be written, or the data has already been discarded.  Well,
-write errors are those that should be handled in Firmware...
-
-Stefan
-
-P.S.: maybe you should check for firmware updates of the disks?
-
-Am 05.06.2010 03:51, schrieb Ian Dall:
-> I think this is different to the similarly titled long thread on SATA
-> timeouts.
-> 
-> I have an array of U320 scsi disks with similar characteristics from two
-> different manufacturers.
-> 
-> On two disks I see occasional scsi parity errors. I don't think this is
-> a cabling or termination issue since I never see the parity errors on
-> the other brand disks. smartctl shows a number of "non-medium errors"
-> which I take to be the paroty errors.
-> 
-> Now, when I have a raid 10 of these disks, the scsi parity error causes
-> the first disk to be failed. The array then continues degraded with no
-> apparent problems. If I read-add the failed disk, it always fails before
-> the re-sync is complete. Eg:
-> 
-> Jun  3 23:35:02 fs kernel: md: recovery of RAID array md5
-> Jun  3 23:35:02 fs kernel: md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-> Jun  3 23:35:02 fs kernel: md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for recovery.
-> Jun  3 23:35:02 fs kernel: md: using 128k window, over a total of 29291904 blocks.
-> Jun  3 23:35:07 fs kernel: sd 6:0:0:0: [sde] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-> Jun  3 23:35:07 fs kernel: sd 6:0:0:0: [sde] Sense Key : Aborted Command [current] 
-> Jun  3 23:35:07 fs kernel: sd 6:0:0:0: [sde] Add. Sense: Scsi parity error
-> Jun  3 23:35:07 fs kernel: sd 6:0:0:0: [sde] CDB: Write(10): 2a 00 00 05 9e 00 00 01 00 00
-> Jun  3 23:35:07 fs kernel: end_request: I/O error, dev sde, sector 368128
-> Jun  3 23:35:07 fs kernel: raid10: Disk failure on sde, disabling device.
-> Jun  3 23:35:07 fs kernel: raid10: Operation continuing on 3 devices.
-> Jun  3 23:35:07 fs kernel: md: md5: recovery done.
-> 
-> Now I can test this disk in isolation (using iozone)  pretty heavily and
-> never see a problem. I can also use it in a raid0 and never see a
-> problem.
-> 
-> I think some of the strangeness is explained by the comment in the
-> raid10 error handler:  "else if it is the last working disks, ignore the
-> error".
-> 
-> Parity errors seem to me like they should be treated as transient
-> errors. Maybe if there are multiple consecutive parity errors it could
-> be assumed there is a hard fault in the transport layer. U320 uses
-> "information units" with (stronger than parity) CRC checking. Although
-> these errors are not reported as CRC errors that could just be a
-> reporting issue (the lack of an "additional sense code qualifier").
-> Given the complexity of the clock recovery de-skewing etc which goes on
-> for U320, it is not surprising some disks would do it better than
-> others, but a non zero error rate probably shouldn't be considered
-> fatal.
-> 
-> I don't really know where this should be fixed. Maybe the scsi layer
-> should be retrying the scsi command, since it knows most about what sort
-> of error it is. But equally it could be the responsibility of upper
-> layers to do any retrying (which gives upper layers the option to not
-> retry if they don't want to). But if the scsi layer is not responsible
-> for retrying these sorts of errors, then the md layer is over-reacting
-> by throwing disks out too easily. 
-> 
-> 
-> Regards,
-> Ian
-> 
-> 
+	It's certainly workable.  You might consider something other than
+RAID1 for your swap partition.
 
