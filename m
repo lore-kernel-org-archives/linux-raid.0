@@ -1,51 +1,101 @@
-From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
+From: Mark Knecht <markknecht@gmail.com>
 Subject: Re: RAID Configuration For New Home Server
-Date: Sat, 5 Jun 2010 17:45:29 +0000
-Message-ID: <AANLkTim1GIDahyG_Sx37SL0rmPa3J3W7nNfYEiMzsyu3@mail.gmail.com>
-References: <C5.28.17309.03BF50C4@cdptpa-omtalb.mail.rr.com>
-	<e35643473b05cc946fc35c0df2e85fcd.squirrel@mail.monkii.net>
-	<AANLkTilAzPKlOMecKpQLIEPOqAhFDglR5STq3_QP_caW@mail.gmail.com>
-	<4C06794F.8030908@anonymous.org.uk>
+Date: Sat, 5 Jun 2010 12:41:27 -0700
+Message-ID: <AANLkTinbN9-ne0ySKq-GRGLiIhHopH_a-vtysx7yjmob@mail.gmail.com>
+References: <AANLkTilAzPKlOMecKpQLIEPOqAhFDglR5STq3_QP_caW@mail.gmail.com>
+	<A8.CB.03181.F378A0C4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C06794F.8030908@anonymous.org.uk>
+In-Reply-To: <A8.CB.03181.F378A0C4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
+To: Leslie Rhorer <lrhorer@satx.rr.com>
 Cc: Carlos Mennens <carloswill@gmail.com>, Mdadm <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, Jun 2, 2010 at 3:31 PM, John Robinson
-<john.robinson@anonymous.org.uk> wrote:
+On Sat, Jun 5, 2010 at 10:19 AM, Leslie Rhorer <lrhorer@satx.rr.com> wr=
+ote:
+>> -----Original Message-----
+>> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+>> owner@vger.kernel.org] On Behalf Of Carlos Mennens
+>> Sent: Wednesday, June 02, 2010 8:00 AM
+>> To: Mdadm
+>> Subject: Re: RAID Configuration For New Home Server
+>>
+>> On Wed, Jun 2, 2010 at 3:54 AM, =C2=A0<tron@monkii.net> wrote:
+>> > There are about as many answers to this as there are people using =
+your
+>> > setup so let's all agree that there's no "one way" of doing things=
+=2E
+>>
+>> Thanks for all the suggestions and you guys are right. There will no
+>> right or wrong answer here but I just want to make sure I am not doi=
+ng
+>> anything that will hinder / limit performance in my system. At most =
+my
+>> system will simply idle and do nothing more than store a few files f=
+or
+>> me so I think RAID5 is going to be my selection for my / file system=
+=2E
+>> I have 4 identical drives and need to partition them all the same to
+>> avoid any inconsistencies across the RAID array. Since Grub doesn't
+>> support RAID5 for /boot, I will need to make a 4 disk RAID1 for /boo=
+t
+>> & do the same for Swap. Does this look reasonable to you guys?
+>>
+>> Partitioning the 1st disk below:
+>>
+>> /dev/sda1 100 MB - RAID (bootable)
+>> /dev/sda2 =C2=A0 =C2=A0 2 GB - RAID
+>> /dev/sda3 320 GB - RAID
+>>
+>> Do that same partition schema above for all 4 drives and then create=
+ my
+>> RAID:
+>>
+>> /
+>> mdadm --create /dev/md0 --level=3D5 --raid-devices=3D4 /dev/sda3 /de=
+v/sdb3
+>> /dev/sdc3 /dev/sdd3
+>>
+>> /boot
+>> mdadm --create /dev/md1 --level=3D1 --raid-devices=3D4 /dev/sda1 /de=
+v/sdb1
+>> /dev/sdc1 /dev/sdd1
+>>
+>> Swap
+>> mdadm --create /dev/md2 --level=3D1 --raid-devices=3D4 /dev/sda2 /de=
+v/sdb2
+>> /dev/sdc2 /dev/sdd2
 >
-> I'd consider a larger than default chunk size for the RAID-5.
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0It's certainly workable. =C2=A0You might c=
+onsider something other than
+> RAID1 for your swap partition.
 
-+1 absolutely
+Looks reasonable. Some comments:
 
-When building a server for storing mostly video files on RAID-6, the
-files being around 500MB to 4GB in size, I ended up with 256KB chunks.
-Gained quite a bit of speed compared to the default! (Also remember to
-play around with stripe cache after you're up and running.)
+1) I didn't bother using RAID on my /boot. I just installed grub on
+each of the 3 drives but only boot from the first one. If that
+partition goes bad I can boot from the second or third drive any time
+by just telling BIOS to use a different drive. This saves me from
+dealing with any mkinitrd stuff. I've never had a boot partition go
+bad because of the drive itself in 14 years running Linux. They go bad
+because I write the wrong stuff there. RAID doesn't solve that
+problem. This method does require that I update the two backups by
+hand once in awhile. That's OK by me.
 
-(I did some very basic benchmarking. I repeated some tests I found
-online, which indicated that RAID chunks around 256KB were fastest. My
-tests agreed.)
+2) I don't use RAID for swap. I let the kernel do that internally. I
+almost never swap out on my home server so trying to protect that with
+RAID for the few moments I might use it seems like overkill to me.
 
-I would consider not building a swap partition at all, but rather use
-a swap *file*, that you can put on any partition. Here's a howto:
-http://www.linux.com/archive/feature/113956 Alternately consider
-putting the swap file on a RAID0 for the most speed, which also costs
-you a smaller chunk of each disk for the same swap size. The safest
-swap is mirrored though, and I'd agree with RAID10,f2 in that case.
+3) Your main RAID is exactly what I use on my home server, albeit I
+use 3 drives, not 4.
 
-Hmm ... no conclusion ... I'm thinking out loud more than I intended
-to. To state something concrete: I think my conclusion du jour
-regarding swap RAID is probably that swap space isn't that important
-anyway for regular use - one should always have enough memory to begin
-with so relegating swap mostly to emergency use. Regarding swap as an
-emergency feature, it's probably best to have it mirrored - you
-wouldn't want your swap space to ever vanish in the middle of
-anything. And so I'd go with RAID10,f2, which is by far the fastest
-mirror.
-
--- Kristleifur
+HTH,
+Mark
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
