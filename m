@@ -1,98 +1,75 @@
 From: "Leslie Rhorer" <lrhorer@satx.rr.com>
 Subject: RE: RAID Configuration For New Home Server
-Date: Sun, 6 Jun 2010 15:35:19 -0500
-Message-ID: <45.52.03181.D860C0C4@cdptpa-omtalb.mail.rr.com>
-References: <AANLkTinmatSeQLUi23R4l7icicHYqdE8Ae6M4zSHjf7H@mail.gmail.com>
+Date: Sun, 6 Jun 2010 15:47:30 -0500
+Message-ID: <79.AC.26996.8690C0C4@cdptpa-omtalb.mail.rr.com>
+References: <AANLkTinh1WtkzAgS8cOC1idj-7tcS4OMv9s3qRGwdhrf@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinmatSeQLUi23R4l7icicHYqdE8Ae6M4zSHjf7H@mail.gmail.com>
+In-Reply-To: <AANLkTinh1WtkzAgS8cOC1idj-7tcS4OMv9s3qRGwdhrf@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: 'Mark Knecht' <markknecht@gmail.com>
 Cc: 'Mdadm' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: Mark Knecht [mailto:markknecht@gmail.com]
-> Sent: Sunday, June 06, 2010 9:51 AM
-> To: Leslie Rhorer
-> Cc: Mdadm
-> Subject: Re: RAID Configuration For New Home Server
->=20
-> On Sat, Jun 5, 2010 at 10:19 PM, Leslie Rhorer <lrhorer@satx.rr.com>
-> wrote:
-> >> >> problem. This method does require that I update the two backups=
- by
-> >> >> hand once in awhile. That's OK by me.
-> >> >
-> >> > =A0 =A0 =A0 =A0Define, "once in awhile [sic]".
-> >>
-> >> Every 2-3 months I make sure each drive is up to date.
+> > =A0 =A0 =A0 =A0Oh, I almost forgot. =A0It may be of notable mention=
+ an array with
+> a
+> > 1.0 superblock can be read as if it were an ordinary partition. =A0=
+This
+> means
+> > one can build a 1.0 superblock array containing a file system (ext2=
+ may
+> be
+> > the best choice in this case), but boot from the partition just as =
+if it
+> > were not an array. =A0Once the system is booted, the array can be
+> assembled
+> > and then /boot can be mounted. =A0This is because:
 > >
-> > =A0 =A0 =A0 =A0I was having to update one server or the other every=
- week or so,
-> > sometimes more than once a week. =A0I could have written scripts to=
- do it,
-> or
-> > used rsync, I suppose, but I opted for RAID1.
+> > 1. =A0The 1.0 superblock is at the *END* of the array.
+> >
+> > 2. =A0The file system when created only uses up the front part of t=
+he
+> > partition, leaving the superblock intact.
+> >
+> > 3. =A0GRUB does not require the file system to be mounted in order =
+to read
+> the
+> > kernel and the initrd. =A0(Actually, it could be made to work even =
+if it
+> did
+> > mount the partition, but since it does not, it makes it much easier=
+=2E)
+> >
+> > =A0 =A0 =A0 =A0Indeed, this is the only way of which I know to boot=
+ to an array
+> > using GRUB legacy.
+> >
 > >
 >=20
-> I can see that. My point of view was (I think) more in line with the
-> OP's title of this thread, being a home server. I have only 1 home
-> server. I suspect he does also as it's his first time doing RAID, as
-> it was for me.
+> Actually that is of interest. If there's a way to use a single RAID
+> boot partition by itself once in awhile then there's value there if
+> something has gone wrong and you're just trying to get the machine up
+> and running.
 
-	Mine are home servers.  I don't run Linux on any of my servers at
-work.  To be sure, there is always a first time for everything and ever=
-yone,
-and the novice may indeed (quite rightly) choose a different approach t=
-han a
-more seasoned individual.  Many times a choice may be between easier /
-simpler setup and more protracted maintenance.  Indeed, even though I w=
-as
-not new to *nix, when I first built my (personal) servers, I opted for =
-a
-non-RAID boot.  It's only over time - about 3 years - I grew tired of
-updating the contents of my offline drives.  That, and I had several un=
-used
-old 500G PATA drives laying around, so I figured I would create RAID sy=
-stems
-for booting, rather than simple partitions.
-
-	To be sure, I won't think any less of the OP should he decide to opt
-for a non-RAID boot solution.  I just think it is good he has the full
-perspective of all his options before he makes a choice.
-
-> Ah, OK. Well again, as I don't use an initrd or even know what it is =
-I
-> have a lot of learning to do in that area. I've just never bothered.
-
-	An initial RAM Disk boots the basic operating system very quickly
-and compactly.  Embedded systems and live CDs, as well as most installa=
-tion
-CDs employ a RAM disk permanently.  Most hard drive based systems overw=
-rite
-the RAM disk with a partition on the hard drive.
-
-> I've run Linux as a desktop system for about 13 or 14 years now. Mayb=
-e
-> some other distros used initrd by default but Gentoo, which I've run
-> since about 2000 or so, doesn't require it. For desktop systems based
-> on lowest common denominator PC hardware it's never seemed to provide
-> any real advantage. Certainly it does for bigger servers where you
-> guys buy fancy hard drive controllers and the like.
-
-	The initrd sees its greatest advantage on resource-thin systems.
-Since the image is compressed, it is small and loads very quickly even =
-from
-a slow drive.  Floppy based boots are really only practical using an in=
-itrd.
-They also have the advantage of not being directly editable, which redu=
-ces
-the goof factor, and since the image is read-only, limits the exposure =
-to
-boot failure after a dirty shut-down.
+	Well, of course a basic RAID1 array can be assembled with only one
+member present, but yes, a RAID1 member partition with a 1.0 superblock=
+ can
+be safely read (but not written!) as if it were an ordinary partition. =
+ If
+one has an unassembled RAID1 array comprised of 3 partitions, say /dev/=
+sda1,
+/dev/sdb1, and /dev/sdc1, one can simply mount /dev/sdb1 like any other
+formatted partition.  Neither the OS nor the file system will be aware =
+the
+mount point is anything but a partially filled partition.  Of course, o=
+ne
+does not ordinarily wish to write to the partition which is so mounted
+(mounting as read-only is a good idea), since doing so will de-sync the
+array, and chances are the data would be lost when the array is
+re-assembled, anyway.
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
