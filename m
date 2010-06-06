@@ -1,45 +1,59 @@
-From: "Graham Mitchell" <gmitch@woodlea.com>
-Subject: RE: device and partition alignment
-Date: Sat, 5 Jun 2010 20:19:41 -0400
-Message-ID: <000601cb050d$f655c140$e30143c0$@woodlea.com>
-References: <000001cb0504$e49c07b0$add41710$@woodlea.com> <15.FE.17309.236EA0C4@cdptpa-omtalb.mail.rr.com>
+From: Keld Simonsen <keld@keldix.com>
+Subject: Re: RAID Configuration For New Home Server
+Date: Sun, 6 Jun 2010 03:04:20 +0200
+Message-ID: <20100606010420.GA26325@rap.rap.dk>
+References: <AANLkTinbN9-ne0ySKq-GRGLiIhHopH_a-vtysx7yjmob@mail.gmail.com>
+ <6B.E5.17309.334EA0C4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <15.FE.17309.236EA0C4@cdptpa-omtalb.mail.rr.com>
-Content-Language: en-us
+Content-Disposition: inline
+In-Reply-To: <6B.E5.17309.334EA0C4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Leslie Rhorer' <lrhorer@satx.rr.com>, 'Mdadm' <linux-raid@vger.kernel.org>
+To: Leslie Rhorer <lrhorer@satx.rr.com>
+Cc: 'Mark Knecht' <markknecht@gmail.com>, 'Carlos Mennens' <carloswill@gmail.com>, 'Mdadm' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> > Then we come back to the physical disks that go to make up the RAID
-> > device.
-> > I guess the simplest way (or am I being too simplistic here) would be
-> > to use the raw device, which would (should?) guarantee that everything
-> > would be aligned? However, I want to be able to use partitions on the
-> > disk to create the array, so that doesn't really help.
-> 
-> 	Why?  I haven't seen anything in your message which suggests they
-> are necessary.  If you don't need partitions, then I suggest you don't use
-> them.  None of my data arrays have partitions either above or below the
-> RAID layer.  The md targets are raw disks and the filesystems are created
-> directly on top of the RAID block device.
+On Sat, Jun 05, 2010 at 06:56:31PM -0500, Leslie Rhorer wrote:
+> > > =A0 =A0 =A0 =A0It's certainly workable. =A0You might consider som=
+ething other than
+> > > RAID1 for your swap partition.
+> >=20
+> > Looks reasonable. Some comments:
+> >=20
+>=20
+> > 2) I don't use RAID for swap. I let the kernel do that internally. =
+I
+> > almost never swap out on my home server so trying to protect that w=
+ith
+> > RAID for the few moments I might use it seems like overkill to me.
+>=20
+> 	I halfway agree.  My servers almost never use any significant amount
+> of swap, and even my workstations only use it very occasionally.  The=
+re have
+> been instances, however, where the swap has grown to be quite large. =
+ With
+> that in mind, and given the very small amount he has allocated for sw=
+ap, one
+> might suggest a RAID0 array of the areas to be used for swap, or mayb=
+e an
+> LVM volume.
 
+If you use some mirrored RAID for swap, your system will continue to ru=
+n, if
+one of your disks go bad. Then you can replace the faulty disk at a lat=
+er,
+and possibly more convenient time.
 
+If you do not have RAID, your system will most likely go down, if the s=
+wap partiion
+is damaged.
 
-In the case of the media server, partitions aren't really needed, I'd agree.
-However, one of the other projects I have in mind is a storage server with
-differing requirements - I'd like to be able to make small partitions on the
-disks for fast access (basically short stroke them) as a RAID 10 for
-business hour use, and use the large rest of the drives as a RAID 5 array
-for backup storage, which would only be used during off hours.
-
-So I'd agree, in some cases using the raw devices makes sense, but in others
-it makes sense to partition - and I'd like to have the knowledge for both
-situations.
-
-
-Graham
-
+best regards
+keld
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
