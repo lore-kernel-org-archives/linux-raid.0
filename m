@@ -1,86 +1,101 @@
-From: Nicolas Jungers <nicolas@jungers.net>
-Subject: Re: trouble repairing raid10
-Date: Sun, 06 Jun 2010 18:28:53 +0200
-Message-ID: <4C0BCCC5.4000709@jungers.net>
-References: <4C068616.3070703@jungers.net> <20100603101913.3839c934@notabene.brown>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: RAID Configuration For New Home Server
+Date: Sun, 6 Jun 2010 15:35:19 -0500
+Message-ID: <45.52.03181.D860C0C4@cdptpa-omtalb.mail.rr.com>
+References: <AANLkTinmatSeQLUi23R4l7icicHYqdE8Ae6M4zSHjf7H@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100603101913.3839c934@notabene.brown>
+In-Reply-To: <AANLkTinmatSeQLUi23R4l7icicHYqdE8Ae6M4zSHjf7H@mail.gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: 'Mark Knecht' <markknecht@gmail.com>
+Cc: 'Mdadm' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 06/03/2010 02:19 AM, Neil Brown wrote:
-> On Wed, 02 Jun 2010 18:25:58 +0200
-> Nicolas Jungers<nicolas@jungers.net>  wrote:
->
->> I've a 4 HD raid10 with to failed drive.  Any attempt I made to add 2
->> replacement disks fail consistently.
+> -----Original Message-----
+> From: Mark Knecht [mailto:markknecht@gmail.com]
+> Sent: Sunday, June 06, 2010 9:51 AM
+> To: Leslie Rhorer
+> Cc: Mdadm
+> Subject: Re: RAID Configuration For New Home Server
+>=20
+> On Sat, Jun 5, 2010 at 10:19 PM, Leslie Rhorer <lrhorer@satx.rr.com>
+> wrote:
+> >> >> problem. This method does require that I update the two backups=
+ by
+> >> >> hand once in awhile. That's OK by me.
+> >> >
+> >> > =A0 =A0 =A0 =A0Define, "once in awhile [sic]".
+> >>
+> >> Every 2-3 months I make sure each drive is up to date.
+> >
+> > =A0 =A0 =A0 =A0I was having to update one server or the other every=
+ week or so,
+> > sometimes more than once a week. =A0I could have written scripts to=
+ do it,
+> or
+> > used rsync, I suppose, but I opted for RAID1.
+> >
+>=20
+> I can see that. My point of view was (I think) more in line with the
+> OP's title of this thread, being a home server. I have only 1 home
+> server. I suspect he does also as it's his first time doing RAID, as
+> it was for me.
 
-[snip]
->
-> If one of these is actually usable and just had a transient failure then you
-> could try re-creating the array with the drives, or 'missing' in the right
-> order and with the write layout/chunksize set.
-> You would need to be user the 'Data Offset' was the same, which unfortunately
-> can require using exactly the same version of mdadm as created the array in
-> the first place.
+	Mine are home servers.  I don't run Linux on any of my servers at
+work.  To be sure, there is always a first time for everything and ever=
+yone,
+and the novice may indeed (quite rightly) choose a different approach t=
+han a
+more seasoned individual.  Many times a choice may be between easier /
+simpler setup and more protracted maintenance.  Indeed, even though I w=
+as
+not new to *nix, when I first built my (personal) servers, I opted for =
+a
+non-RAID boot.  It's only over time - about 3 years - I grew tired of
+updating the contents of my offline drives.  That, and I had several un=
+used
+old 500G PATA drives laying around, so I figured I would create RAID sy=
+stems
+for booting, rather than simple partitions.
 
-I managed to copy the two failed disk on a new one (same brand/model) 
-with (gnu) ddrescue for a grand total of 512 B lost.  With that copy and 
-a copy of one of the non failed disk I recreated (mdadm -C) the array 
-over the disks with the same creation parameters and two missing drives. 
-  I'm not sure that the procedure was quicker than pulling the data back 
-from the backup, but nevertheless, the exercise was interesting.
+	To be sure, I won't think any less of the OP should he decide to opt
+for a non-RAID boot solution.  I just think it is good he has the full
+perspective of all his options before he makes a choice.
 
-When thinking about it, could it not be automated/detected in some way 
-by mdadm or a related utility?  Or documented in a FAQ?  I had the 
-feeling that the close to easy recovery state could be eased by mdadm 
-itself, or am I dreaming?
+> Ah, OK. Well again, as I don't use an initrd or even know what it is =
+I
+> have a lot of learning to do in that area. I've just never bothered.
 
-N.
+	An initial RAM Disk boots the basic operating system very quickly
+and compactly.  Embedded systems and live CDs, as well as most installa=
+tion
+CDs employ a RAM disk permanently.  Most hard drive based systems overw=
+rite
+the RAM disk with a partition on the hard drive.
 
+> I've run Linux as a desktop system for about 13 or 14 years now. Mayb=
+e
+> some other distros used initrd by default but Gentoo, which I've run
+> since about 2000 or so, doesn't require it. For desktop systems based
+> on lowest common denominator PC hardware it's never seemed to provide
+> any real advantage. Certainly it does for bigger servers where you
+> guys buy fancy hard drive controllers and the like.
 
->
-> NeilBrown
->
->>
->>
->>
->> mdadm --examine /dev/sdm2
->> /dev/sdm2:
->>             Magic : a92b4efc
->>           Version : 1.2
->>       Feature Map : 0x0
->>        Array UUID : d90ad6fe:1355134f:f83ffadc:a4fe7859
->>              Name : m1:1
->>     Creation Time : Thu Apr  1 21:28:58 2010
->>        Raid Level : raid10
->>      Raid Devices : 4
->>
->>    Avail Dev Size : 3907026909 (1863.02 GiB 2000.40 GB)
->>        Array Size : 7814049792 (3726.03 GiB 4000.79 GB)
->>     Used Dev Size : 3907024896 (1863.01 GiB 2000.40 GB)
->>       Data Offset : 272 sectors
->>      Super Offset : 8 sectors
->>             State : clean
->>       Device UUID : e217355e:632ac2f0:8120e55e:3878bd88
->>
->>       Update Time : Wed Jun  2 12:31:39 2010
->>          Checksum : feef2809 - correct
->>            Events : 1377156
->>
->>            Layout : near=2, far=1
->>        Chunk Size : 1024K
->>
->>       Array Slot : 3 (failed, failed, 2, 3)
->>      Array State : __uU 2 failed
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+	The initrd sees its greatest advantage on resource-thin systems.
+Since the image is compressed, it is small and loads very quickly even =
+from
+a slow drive.  Floppy based boots are really only practical using an in=
+itrd.
+They also have the advantage of not being directly editable, which redu=
+ces
+the goof factor, and since the image is read-only, limits the exposure =
+to
+boot failure after a dirty shut-down.
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
