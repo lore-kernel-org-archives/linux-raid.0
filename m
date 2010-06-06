@@ -1,140 +1,112 @@
-From: =?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?=
-	<stefan.huebner@stud.tu-ilmenau.de>
-Subject: Re: device and partition alignment
-Date: Sun, 06 Jun 2010 12:56:16 +0200
-Message-ID: <4C0B7ED0.5000104@stud.tu-ilmenau.de>
-References: <000b01cb04f0$dbcf7720$936e6560$@woodlea.com> <4C0AC6E4.4080408@stud.tu-ilmenau.de> <20100605221139.D066814E867@gemini.denx.de> <000001cb0504$e49c07b0$add41710$@woodlea.com>
-Reply-To: st0ff@npl.de
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: RE: RAID Configuration For New Home Server
+Date: Sun, 6 Jun 2010 06:23:05 -0500
+Message-ID: <BA.E9.03181.F158B0C4@cdptpa-omtalb.mail.rr.com>
+References: <3A.AD.03181.3FF2B0C4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <000001cb0504$e49c07b0$add41710$@woodlea.com>
+In-Reply-To: <3A.AD.03181.3FF2B0C4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Graham Mitchell <gmitch@woodlea.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: 'Mark Knecht' <markknecht@gmail.com>
+Cc: 'Mdadm' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hi again,
+> > >> problem. This method does require that I update the two backups =
+by
+> > >> hand once in awhile. That's OK by me.
+> > >
+> > > =A0 =A0 =A0 =A0Define, "once in awhile [sic]".
+> >
+> > Every 2-3 months I make sure each drive is up to date.
+>=20
+> 	I was having to update one server or the other every week or so,
+> sometimes more than once a week.  I could have written scripts to do =
+it,
+> or
+> used rsync, I suppose, but I opted for RAID1.
+>=20
+> > > It's certainly possible to do it,
+> > > but the very reason I went with boot arrays rather than boot
+> partitions
+> > was
+> > > it was getting to be a pain to update the backup drives all the t=
+ime.
+> >
+> > All the time vs once every 2-3 months.
+> >
+> > Even an out-of-date boot drive will allow me to boot the machine an=
+d
+> > get things fixed.
+> >
+> > > Almost every time a package is added or deleted, /etc gets update=
+d.
+> > =A0Keeping
+> > > different copies of the configuration files in /etc in the initrd=
+ and
+> > the
+> > > root partition is not the best of ideas, although if course it ca=
+n be
+> > done.
+> >
+> > As I said I don't using an initrd. I've never learned how to build =
+one
+> > and didn't need it if I didn't use RAID on /boot.
+>=20
+> 	Most distros these days employ an initrd.  One re-builds it by
+> running whatever application is included with the distro for that pur=
+pose.
+> In the case of Debian and Debian derivatives, it is currently
+> `update-initramfs`.  It's built the first time by installing a Linux
+> distro.
+> It's not that difficult to do by hand, however.  Most are built using=
+ cpio
+> and gzip.  Once one has the directory structure one wishes, one simpl=
+y
+> creates a compressed tarball (cpioball?) from the structure.  It incl=
+udes
+> a
+> copy of /etc, with some special scripts to allow the system to work p=
+rior
+> to
+> the existence of the "real" /.
+>=20
+> > I don't understand your comments about /etc as it's not kept in /bo=
+ot.
+> > /etc, /, /home, and all other directories are on RAID. Only /boot
+> > isn't, so it needs only a kernel and grub.
+>=20
+> 	The initrd has a copy of /etc - especially the boot configuration
+> files such as mdadm.conf, fstab, etc.
 
-Am 06.06.2010 01:14, schrieb Graham Mitchell:
->> Dear Stefan,
->>
->> In message <4C0AC6E4.4080408@stud.tu-ilmenau.de> you wrote:
->>>
->>> I guess you couldn't find much about this as it has more to do with
->>> common sense than magic formulae.  If you have 4k-sector drives, align
->>> everything at multiples of 4k, use filesystem-units of multiples of 4k.
->>>  As I read and it also seems very logical from the ATA / SCSI point of
->>> view, a stripe size of 256k seems most straight forward.  This is the
->>> largest amount of data (a.t.m.) that can be read or written with a
->>> single command to a disk.
->>
->> And why would that be optimal, in general?
+	Oh, I almost forgot.  It may be of notable mention an array with a
+1.0 superblock can be read as if it were an ordinary partition.  This m=
+eans
+one can build a 1.0 superblock array containing a file system (ext2 may=
+ be
+the best choice in this case), but boot from the partition just as if i=
+t
+were not an array.  Once the system is booted, the array can be assembl=
+ed
+and then /boot can be mounted.  This is because:
 
-Not really in general, and after reviewing the ATA8-ACS draft I'll have
-to take it back.  The maximum number of bytes that can be transferred
-with a single READ FPDMA command seem to be 32MB (on 512byte sector size
-disks - which the recent WDXXEARS simulate to be, also), but I guess
-kernel memory management does it differently.  I read a few days ago in
-this list, that after benchmarking a lot 256k chunks seemed to give best
-performance on large files.  Which must be related to how the kernel
-manages it all.
->>
->> For example, in a file system I have here (with some 15 millions
->> files) we see the following distribution of file sizes:
->>
->> 	65%   are smaller than  4 kB
->> 	80%   are smaller than  8 kB
->> 	90%   are smaller than 16 kB
->> 	96%   are smaller than 32 kB
->> 	98.4% are smaller than 64 kB
->>
->> With many write accesses going on, a stripe size of 16 KiB gives much
-> better
->> performance.
+1.  The 1.0 superblock is at the *END* of the array.
 
-Nobody talked about a small file raid, so I guessed that larger files
-were the most common planned content, as this is what most of my
-customers want.
->>
->> I think you cannot recommend a stripe size or other specific tuning
-> measures
->> without exactly knowing the characteristics of the load.
-> 
-2nd that!
-> 
-> To give you a bit more of the background in this particular case (but I'm
-> not really looking for a case specific answer here).
-> 
-> This particular array is for a media server, so for practical purposes, the
-> minimum file size is about 600MB (there are smaller, but very exceptional),
-> file sizes average 1GB to 2GB, with some as large as 8GB.
+2.  The file system when created only uses up the front part of the
+partition, leaving the superblock intact.
 
-so my guess was right...
-> 
-> So, starting backwards....
-> 
-> When I built the file system (ext4), I did some calculations for the stride
-> (chunk size / fs block size), so in my case 512k / 4k, which came to 128k.
+3.  GRUB does not require the file system to be mounted in order to rea=
+d the
+kernel and the initrd.  (Actually, it could be made to work even if it =
+did
+mount the partition, but since it does not, it makes it much easier.)
 
-I'm generally recommending xfs before ext3 and just at the end ext4.
-There were too many discussions going on about the internals of ext4 and
-if the implementation is the right way to go.
-> 
-> The strip width is stride * No of data disks (for RAID5 and RAID6 - I am
-> using RAID 6), so in my case it's 128k * 15, so 1664k.
-> 
-> Passed these to mkfs.ext4 with the -T largefile4 option, and that should
-> mean that everything was aligned properly on the RAID device md0.
-> 
-> Except that it probably isn't....
-> 
-> Even if md0 were perfectly aligned to the underlying disks, it probably
-> isn't aligned because the raid superblock starts at the start of md0 (or in
-> my case, it's offset by 4k). We don't even know what size the superblock is
-> - there's a fixed 256 byte section, then a variable section that defines the
-> device roles in the array. So even if the md device itself is perfectly
-> aligned, we can almost guarantee(?) that the data section of the device
-> isn't going to be.
-> 
-> So, I'm looking for some way to do the file system alignment properly
-> 
-> 
-> Then we come back to the physical disks that go to make up the RAID device.
-> I guess the simplest way (or am I being too simplistic here) would be to use
-> the raw device, which would (should?) guarantee that everything would be
-> aligned? However, I want to be able to use partitions on the disk to create
-> the array, so that doesn't really help. One suggestion I've read is to start
-> each partition on a 2k boundary, with the first partition starting at sector
-> 2048 - I didn't manage to find out why 2k was suggested and not 4k.
-> 
-> I'm also not finding where the 256k limit on a disk write comes from - the
-> Hitachi drive I'm looking at shows a logical/physical sector size of 512
-> bytes, though I've not pulled the data sheet to check if it's one of the new
-> 4k sector drives (and I suspect that this one isn't) - is it some kernel
-> limit?
+	Indeed, this is the only way of which I know to boot to an array
+using GRUB legacy.
 
-Talking HDS722020ALA330?  It's 512bytes/sector.
-> 
-> So, I'm also looking for some way to do the partition alignment properly. Do
-> I use 2048, as was suggested somewhere, or do I make each partition align to
-> 4096, just in case?
-> 
-> A lot of what I've read is 'just common sense', or 'obvious', when it isn't
-> really. Some things you need to need to make some number based on (say) the
-> type of files on the final file system, where a smaller chunk size would
-> make sense, in other cases, a larger chunk size would make sense. But once
-> you've made those design decisions, there should be some set of formulae you
-> can use to work out the optimal settings for partitions, alignment etc. (it
-> may not be a simple formula, but them's the breaks sometimes).
-> 
-From everything that is common sense you can create a formula.  That's
-how physics work ;)  But as in physics, the formula gets as complicated,
-as many aspects of the problem you want to take care of.  I wouldn't
-want to create a formula where 20 people say: "sounds great" and another
-50 moan "you didn't think of this, you didn't think of that".
-> 
-> Graham
-> 
-
-Stefan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
