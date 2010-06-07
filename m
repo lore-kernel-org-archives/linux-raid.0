@@ -1,7 +1,8 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 10/16] md: add 'write_error' flag to component devices.
+Subject: [md PATCH 11/16] md/multipath: discard ->working_disks in favour of
+	->degraded
 Date: Mon, 07 Jun 2010 10:07:55 +1000
-Message-ID: <20100607000755.13302.4029.stgit@notabene.brown>
+Message-ID: <20100607000755.13302.54033.stgit@notabene.brown>
 References: <20100606235833.13302.60932.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -12,66 +13,133 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If a device has ever seen a write error, we will want to handle
-known-bad-blocks differently.
-So create an appropriate state flag and export it via sysfs.
+conf->working_disks duplicates information already available
+in mddev->degraded.
+So remove working_disks.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
- drivers/md/md.c |   12 ++++++++++++
- drivers/md/md.h |    3 +++
- 2 files changed, 15 insertions(+), 0 deletions(-)
+ drivers/md/multipath.c |   22 +++++++++++-----------
+ drivers/md/multipath.h |    1 -
+ 2 files changed, 11 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index 8a888d5..20c6792 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -2430,6 +2430,10 @@ state_show(mdk_rdev_t *rdev, char *page)
- 		len += sprintf(page+len, "%sspare", sep);
- 		sep = ",";
+diff --git a/drivers/md/multipath.c b/drivers/md/multipath.c
+index 410fb60..da3654a 100644
+--- a/drivers/md/multipath.c
++++ b/drivers/md/multipath.c
+@@ -176,7 +176,7 @@ static void multipath_status (struct seq_file *seq, mddev_t *mddev)
+ 	int i;
+ 	
+ 	seq_printf (seq, " [%d/%d] [", conf->raid_disks,
+-						 conf->working_disks);
++		    conf->raid_disks - mddev->degraded);
+ 	for (i = 0; i < conf->raid_disks; i++)
+ 		seq_printf (seq, "%s",
+ 			       conf->multipaths[i].rdev && 
+@@ -217,7 +217,7 @@ static void multipath_error (mddev_t *mddev, mdk_rdev_t *rdev)
+ {
+ 	multipath_conf_t *conf = mddev->private;
+ 
+-	if (conf->working_disks <= 1) {
++	if (conf->raid_disks - mddev->degraded <= 1) {
+ 		/*
+ 		 * Uh oh, we can do nothing if this is our last path, but
+ 		 * first check if this is a queued request for a device
+@@ -235,14 +235,13 @@ static void multipath_error (mddev_t *mddev, mdk_rdev_t *rdev)
+ 			clear_bit(In_sync, &rdev->flags);
+ 			set_bit(Faulty, &rdev->flags);
+ 			set_bit(MD_CHANGE_DEVS, &mddev->flags);
+-			conf->working_disks--;
+ 			mddev->degraded++;
+ 			printk(KERN_ALERT "multipath: IO failure on %s,"
+ 				" disabling IO path.\n"
+ 				"multipath: Operation continuing"
+ 				" on %d IO paths.\n",
+ 				bdevname (rdev->bdev,b),
+-				conf->working_disks);
++				conf->raid_disks - mddev->degraded);
+ 		}
  	}
-+	if (test_bit(WriteErrorSeen, &rdev->flags)) {
-+		len += sprintf(page+len, "%swrite_error", sep);
-+		sep = ",";
-+	}
- 	return len+sprintf(page+len, "\n");
  }
- 
-@@ -2444,6 +2448,8 @@ state_store(mdk_rdev_t *rdev, const char *buf, size_t len)
- 	 *  blocked - sets the Blocked flag
- 	 *  -blocked - clears the Blocked flag
- 	 *  insync - sets Insync providing device isn't active
-+	 *  write_error - sets WriteErrorSeen
-+	 *  -write_error - clears WriteErrorSeen
- 	 */
- 	int err = -EINVAL;
- 	if (cmd_match(buf, "faulty") && rdev->mddev->pers) {
-@@ -2479,6 +2485,12 @@ state_store(mdk_rdev_t *rdev, const char *buf, size_t len)
- 	} else if (cmd_match(buf, "insync") && rdev->raid_disk == -1) {
- 		set_bit(In_sync, &rdev->flags);
- 		err = 0;
-+	} else if (cmd_match(buf, "write_error")) {
-+		set_bit(WriteErrorSeen, &rdev->flags);
-+		err = 0;
-+	} else if (cmd_match(buf, "-write_error")) {
-+		clear_bit(WriteErrorSeen, &rdev->flags);
-+		err = 0;
+@@ -257,7 +256,7 @@ static void print_multipath_conf (multipath_conf_t *conf)
+ 		printk("(conf==NULL)\n");
+ 		return;
  	}
- 	if (!err)
- 		sysfs_notify_dirent_safe(rdev->sysfs_state);
-diff --git a/drivers/md/md.h b/drivers/md/md.h
-index 087764b..a085df5 100644
---- a/drivers/md/md.h
-+++ b/drivers/md/md.h
-@@ -100,6 +100,9 @@ struct mdk_rdev_s
- #define Blocked		8		/* An error occured on an externally
- 					 * managed array, don't allow writes
- 					 * until it is cleared */
-+#define WriteErrorSeen	9		/* A write error has been seen on this
-+					 * device
-+					 */
- 	wait_queue_head_t blocked_wait;
+-	printk(" --- wd:%d rd:%d\n", conf->working_disks,
++	printk(" --- wd:%d rd:%d\n", conf->raid_disks - conf->mddev->degraded,
+ 			 conf->raid_disks);
  
- 	int desc_nr;			/* descriptor index in the superblock */
+ 	for (i = 0; i < conf->raid_disks; i++) {
+@@ -304,7 +303,6 @@ static int multipath_add_disk(mddev_t *mddev, mdk_rdev_t *rdev)
+ 							   PAGE_CACHE_SIZE - 1);
+ 			}
+ 
+-			conf->working_disks++;
+ 			mddev->degraded--;
+ 			rdev->raid_disk = path;
+ 			set_bit(In_sync, &rdev->flags);
+@@ -421,6 +419,7 @@ static int multipath_run (mddev_t *mddev)
+ 	int disk_idx;
+ 	struct multipath_info *disk;
+ 	mdk_rdev_t *rdev;
++	int working_disks;
+ 
+ 	if (md_check_no_bitmap(mddev))
+ 		return -EINVAL;
+@@ -455,7 +454,7 @@ static int multipath_run (mddev_t *mddev)
+ 		goto out_free_conf;
+ 	}
+ 
+-	conf->working_disks = 0;
++	working_disks = 0;
+ 	list_for_each_entry(rdev, &mddev->disks, same_set) {
+ 		disk_idx = rdev->raid_disk;
+ 		if (disk_idx < 0 ||
+@@ -477,7 +476,7 @@ static int multipath_run (mddev_t *mddev)
+ 		}
+ 
+ 		if (!test_bit(Faulty, &rdev->flags))
+-			conf->working_disks++;
++			working_disks++;
+ 	}
+ 
+ 	conf->raid_disks = mddev->raid_disks;
+@@ -485,12 +484,12 @@ static int multipath_run (mddev_t *mddev)
+ 	spin_lock_init(&conf->device_lock);
+ 	INIT_LIST_HEAD(&conf->retry_list);
+ 
+-	if (!conf->working_disks) {
++	if (!working_disks) {
+ 		printk(KERN_ERR "multipath: no operational IO paths for %s\n",
+ 			mdname(mddev));
+ 		goto out_free_conf;
+ 	}
+-	mddev->degraded = conf->raid_disks - conf->working_disks;
++	mddev->degraded = conf->raid_disks - working_disks;
+ 
+ 	conf->pool = mempool_create_kmalloc_pool(NR_RESERVED_BUFS,
+ 						 sizeof(struct multipath_bh));
+@@ -512,7 +511,8 @@ static int multipath_run (mddev_t *mddev)
+ 
+ 	printk(KERN_INFO 
+ 		"multipath: array %s active with %d out of %d IO paths\n",
+-		mdname(mddev), conf->working_disks, mddev->raid_disks);
++		mdname(mddev), conf->raid_disks - mddev->degraded,
++	       mddev->raid_disks);
+ 	/*
+ 	 * Ok, everything is just fine now
+ 	 */
+diff --git a/drivers/md/multipath.h b/drivers/md/multipath.h
+index d1c2a8d..3c5a45e 100644
+--- a/drivers/md/multipath.h
++++ b/drivers/md/multipath.h
+@@ -9,7 +9,6 @@ struct multipath_private_data {
+ 	mddev_t			*mddev;
+ 	struct multipath_info	*multipaths;
+ 	int			raid_disks;
+-	int			working_disks;
+ 	spinlock_t		device_lock;
+ 	struct list_head	retry_list;
+ 
 
 
