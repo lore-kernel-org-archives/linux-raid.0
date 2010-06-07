@@ -1,8 +1,7 @@
 From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 14/16] md/raid1: avoid writing to known-bad blocks on
-	known-bad drives.
+Subject: [md PATCH 15/16] md/raid1: clear bad-block record when write succeeds.
 Date: Mon, 07 Jun 2010 10:07:56 +1000
-Message-ID: <20100607000756.13302.74584.stgit@notabene.brown>
+Message-ID: <20100607000756.13302.33760.stgit@notabene.brown>
 References: <20100606235833.13302.60932.stgit@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,260 +12,158 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-If we have seen any write error on a drive, then don't write to
-any known-bad blocks on that drive.
-If necessary, we divide the write request up into pieces just
-like we do for reads, so each piece is either all written or
-all not written to any given drive.
+If we succeed in writing to a block that was recorded as
+being bad, we clear the bad-block record.
+
+This requires some delayed handling as the bad-block-list update has
+to happen in process-context.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
- drivers/md/raid1.c |  147 ++++++++++++++++++++++++++++++++++++++++------------
- 1 files changed, 112 insertions(+), 35 deletions(-)
+ drivers/md/raid1.c |   58 ++++++++++++++++++++++++++++++++++++++++++++++------
+ drivers/md/raid1.h |   13 +++++++++++-
+ 2 files changed, 63 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index bb81681..d240d58 100644
+index d240d58..e23ec40 100644
 --- a/drivers/md/raid1.c
 +++ b/drivers/md/raid1.c
-@@ -838,11 +838,14 @@ static int make_request(mddev_t *mddev, struct bio * bio)
- 	struct bitmap *bitmap;
- 	unsigned long flags;
- 	struct bio_list bl;
--	struct page **behind_pages = NULL;
-+	struct page **behind_pages;
- 	const int rw = bio_data_dir(bio);
- 	const bool do_sync = bio_rw_flagged(bio, BIO_RW_SYNCIO);
- 	bool do_barriers;
- 	mdk_rdev_t *blocked_rdev;
-+	int first_clone;
-+	int sectors_handled;
-+	int max_sectors;
+@@ -175,7 +175,7 @@ static void put_all_bios(conf_t *conf, r1bio_t *r1_bio)
  
- 	/*
- 	 * Register the new request and wait if the reconstruction
-@@ -914,7 +917,6 @@ static int make_request(mddev_t *mddev, struct bio * bio)
- 		/*
- 		 * read balancing logic:
- 		 */
--		int max_sectors;
- 		int rdisk;
- 
- 	read_again:
-@@ -954,7 +956,6 @@ static int make_request(mddev_t *mddev, struct bio * bio)
- 			/* could not read all from this device, so we will
- 			 * need another r1_bio.
- 			 */
--			int sectors_handled;
- 
- 			sectors_handled = (r1_bio->sector + max_sectors
- 					   - bio->bi_sector);
-@@ -983,9 +984,15 @@ static int make_request(mddev_t *mddev, struct bio * bio)
- 	/*
- 	 * WRITE:
- 	 */
--	/* first select target devices under spinlock and
-+	/* first select target devices under rcu_lock and
- 	 * inc refcount on their rdev.  Record them by setting
- 	 * bios[x] to bio
-+	 * If there are known/acknowledged bad blocks on any device on
-+	 * which we have seen a write error, we want to avoid writing those
-+	 * blocks.
-+	 * This potentially requires several writes to write around
-+	 * the bad blocks.  We do those serially using the same
-+	 * bio which we repeatedly trim to size.
- 	 */
- 	disks = conf->raid_disks;
- #if 0
-@@ -998,6 +1005,7 @@ static int make_request(mddev_t *mddev, struct bio * bio)
-  retry_write:
- 	blocked_rdev = NULL;
- 	rcu_read_lock();
-+	max_sectors = r1_bio->sectors;
- 	for (i = 0;  i < disks; i++) {
- 		mdk_rdev_t *rdev = rcu_dereference(conf->mirrors[i].rdev);
- 		if (rdev && unlikely(test_bit(Blocked, &rdev->flags))) {
-@@ -1005,17 +1013,55 @@ static int make_request(mddev_t *mddev, struct bio * bio)
- 			blocked_rdev = rdev;
- 			break;
- 		}
--		if (rdev && !test_bit(Faulty, &rdev->flags)) {
--			atomic_inc(&rdev->nr_pending);
--			if (test_bit(Faulty, &rdev->flags)) {
-+		r1_bio->bios[i] = NULL;
-+		if (!rdev || test_bit(Faulty, &rdev->flags)) {
-+			set_bit(R1BIO_Degraded, &r1_bio->state);
-+			continue;
-+		}
-+
-+		atomic_inc(&rdev->nr_pending);
-+		if (test_bit(Faulty, &rdev->flags)) {
-+			rdev_dec_pending(rdev, mddev);
-+			set_bit(R1BIO_Degraded, &r1_bio->state);
-+			continue;
-+		}
-+		if (test_bit(WriteErrorSeen, &rdev->flags)) {
-+			sector_t first_bad;
-+			int bad_sectors, good_sectors;
-+
-+			if (is_badblock(rdev, r1_bio->sector,
-+					max_sectors,
-+					&first_bad, &bad_sectors) < 0) {
-+
-+				/* mustn't write here until the bad block is
-+				 * acknowledged*/
-+				blocked_rdev = rdev;
-+				break;
-+			}
-+			if (first_bad <= r1_bio->sector) {
-+				/* Cannot write here at all */
-+				bad_sectors -= (r1_bio->sector - first_bad);
-+				if (bad_sectors < max_sectors)
-+					/* mustn't write more than bad_sectors
-+					 * to other devices yet
-+					 */
-+					max_sectors = bad_sectors;
- 				rdev_dec_pending(rdev, mddev);
--				r1_bio->bios[i] = NULL;
--			} else {
--				r1_bio->bios[i] = bio;
--				targets++;
-+				/* We don't set R1BIO_Degraded as that only applies
-+				 * if the disk is missing, so it might be re-added,
-+				 * and we want to know to recovery this chunk.
-+				 * In this case the device is here, and the fact that
-+				 * this chunk is no in-sync is recorded in the
-+				 * bad block log
-+				 */
-+				continue;
- 			}
+ 	for (i = 0; i < conf->raid_disks; i++) {
+ 		struct bio **bio = r1_bio->bios + i;
+-		if (*bio && *bio != IO_BLOCKED)
++		if (!BIO_SPECIAL(*bio))
+ 			bio_put(*bio);
+ 		*bio = NULL;
+ 	}
+@@ -348,7 +348,7 @@ static void raid1_end_write_request(struct bio *bio, int error)
+ 			md_error(r1_bio->mddev, conf->mirrors[mirror].rdev);
+ 			/* an I/O failed, we can't clear the bitmap */
+ 			set_bit(R1BIO_Degraded, &r1_bio->state);
 -		} else
--			r1_bio->bios[i] = NULL;
-+			good_sectors = first_bad - r1_bio->sector;
-+			if (good_sectors < max_sectors)
-+				max_sectors = good_sectors;
++		} else {
+ 			/*
+ 			 * Set R1BIO_Uptodate in our master bio, so that
+ 			 * we will return a good error code for to the higher
+@@ -360,6 +360,15 @@ static void raid1_end_write_request(struct bio *bio, int error)
+ 			 */
+ 			set_bit(R1BIO_Uptodate, &r1_bio->state);
+ 
++			/* Maybe we can clear some bad blocks. */
++			if (is_badblock(conf->mirrors[mirror].rdev,
++					r1_bio->sector, r1_bio->sectors,
++					NULL, NULL)) {
++				r1_bio->bios[mirror] = IO_MADE_GOOD;
++				set_bit(R1BIO_MadeGood, &r1_bio->state);
++			}
 +		}
-+		r1_bio->bios[i] = bio;
-+		targets++;
- 	}
- 	rcu_read_unlock();
- 
-@@ -1035,22 +1081,26 @@ static int make_request(mddev_t *mddev, struct bio * bio)
- 
- 	BUG_ON(targets == 0); /* we never fail the last device */
- 
-+	if (max_sectors < r1_bio->sectors) {
-+		/* We are splitting this write into multiple parts, so
-+		 * we need to prepare for allocating another r1_bio.
-+		 */
-+		r1_bio->sectors = max_sectors;
-+		spin_lock_irq(&conf->device_lock);
-+		if (bio->bi_phys_segments == 0)
-+			bio->bi_phys_segments = 2;
-+		else
-+			bio->bi_phys_segments++;
-+		spin_unlock_irq(&conf->device_lock);
-+	}
-+	sectors_handled = r1_bio->sector + max_sectors - bio->bi_sector;
 +
- 	if (targets < conf->raid_disks) {
- 		/* array is degraded, we will not clear the bitmap
- 		 * on I/O completion (see raid1_end_write_request) */
- 		set_bit(R1BIO_Degraded, &r1_bio->state);
- 	}
+ 		update_head_pos(mirror, r1_bio);
  
--	/* do behind I/O ?
--	 * Not if there are too many, or cannot allocate memory,
--	 * or a reader on WriteMostly is waiting for behind writes 
--	 * to flush */
--	if (bitmap &&
--	    (atomic_read(&bitmap->behind_writes)
--	     < mddev->bitmap_info.max_write_behind) &&
--	    !waitqueue_active(&bitmap->behind_wait) &&
--	    (behind_pages = alloc_behind_pages(bio)) != NULL)
--		set_bit(R1BIO_BehindIO, &r1_bio->state);
- 
- 	atomic_set(&r1_bio->remaining, 0);
- 	atomic_set(&r1_bio->behind_remaining, 0);
-@@ -1060,21 +1110,28 @@ static int make_request(mddev_t *mddev, struct bio * bio)
- 		set_bit(R1BIO_Barrier, &r1_bio->state);
- 
- 	bio_list_init(&bl);
-+	first_clone = 1;
-+	behind_pages = NULL;
- 	for (i = 0; i < disks; i++) {
- 		struct bio *mbio;
- 		if (!r1_bio->bios[i])
- 			continue;
- 
- 		mbio = bio_clone(bio, GFP_NOIO);
--		r1_bio->bios[i] = mbio;
--
--		mbio->bi_sector	= r1_bio->sector + conf->mirrors[i].rdev->data_offset;
--		mbio->bi_bdev = conf->mirrors[i].rdev->bdev;
--		mbio->bi_end_io	= raid1_end_write_request;
--		mbio->bi_rw = WRITE | (do_barriers << BIO_RW_BARRIER) |
--			(do_sync << BIO_RW_SYNCIO);
--		mbio->bi_private = r1_bio;
- 
-+		if (first_clone) {
-+			/* do behind I/O ?
-+			 * Not if there are too many, or cannot
-+			 * allocate memory, or a reader on WriteMostly
-+			 * is waiting for behind writes to flush */
-+			if (bitmap &&
-+			    (atomic_read(&bitmap->behind_writes)
-+			     < mddev->bitmap_info.max_write_behind) &&
-+			    !waitqueue_active(&bitmap->behind_wait) &&
-+			    (behind_pages = alloc_behind_pages(mbio)) != NULL)
-+				set_bit(R1BIO_BehindIO, &r1_bio->state);
-+			first_clone = 0;
-+		}
- 		if (behind_pages) {
- 			struct bio_vec *bvec;
- 			int j;
-@@ -1092,6 +1149,17 @@ static int make_request(mddev_t *mddev, struct bio * bio)
- 				atomic_inc(&r1_bio->behind_remaining);
+ 		if (behind) {
+@@ -384,7 +393,9 @@ static void raid1_end_write_request(struct bio *bio, int error)
+ 				}
+ 			}
  		}
+-		rdev_dec_pending(conf->mirrors[mirror].rdev, conf->mddev);
++		if (r1_bio->bios[mirror] == NULL)
++			rdev_dec_pending(conf->mirrors[mirror].rdev,
++					 conf->mddev);
+ 	}
+ 	/*
+ 	 *
+@@ -408,7 +419,10 @@ static void raid1_end_write_request(struct bio *bio, int error)
+ 					!test_bit(R1BIO_Degraded, &r1_bio->state),
+ 					behind);
+ 			md_write_end(r1_bio->mddev);
+-			raid_end_bio_io(r1_bio);
++			if (test_bit(R1BIO_MadeGood, &r1_bio->state))
++				reschedule_retry(r1_bio);
++			else
++				raid_end_bio_io(r1_bio);
+ 		}
+ 	}
  
-+		trim_bio(mbio, r1_bio->sector - bio->bi_sector, max_sectors);
-+		r1_bio->bios[i] = mbio;
+@@ -1451,7 +1465,11 @@ static void end_sync_write(struct bio *bio, int error)
+ 			sectors_to_go -= sync_blocks;
+ 		} while (sectors_to_go > 0);
+ 		md_error(mddev, conf->mirrors[mirror].rdev);
+-	}
++	} else if (is_badblock(conf->mirrors[mirror].rdev,
++			       r1_bio->sector,
++			       r1_bio->sectors,
++			       NULL, NULL))
++		set_bit(R1BIO_MadeGood, &r1_bio->state);
+ 
+ 	update_head_pos(mirror, r1_bio);
+ 
+@@ -1812,8 +1830,34 @@ static void raid1d(mddev_t *mddev)
+ 		mddev = r1_bio->mddev;
+ 		conf = mddev->private;
+ 		if (test_bit(R1BIO_IsSync, &r1_bio->state)) {
+-			sync_request_write(mddev, r1_bio);
+-			unplug = 1;
++			if (test_bit(R1BIO_MadeGood, &r1_bio->state)) {
++				int m;
++				for (m = 0; m < conf->raid_disks ; m++)
++					if (!BIO_SPECIAL(r1_bio->bios[m]) &&
++					    test_bit(BIO_UPTODATE,
++						     &r1_bio->bios[m]->bi_flags)) {
++						md_clear_badblocks(
++							&conf->mirrors[m].rdev->badblocks,
++							r1_bio->sector,
++							r1_bio->sectors);
++					}
++				put_buf(r1_bio);
++			} else {
++				sync_request_write(mddev, r1_bio);
++				unplug = 1;
++			}
++		} else if (test_bit(R1BIO_MadeGood, &r1_bio->state)) {
++			int m;
++			for (m = 0; m < conf->raid_disks ; m++)
++				if (r1_bio->bios[m] == IO_MADE_GOOD) {
++					md_clear_badblocks(
++						&conf->mirrors[m].rdev->badblocks,
++						r1_bio->sector,
++						r1_bio->sectors);
++					rdev_dec_pending(conf->mirrors[m].rdev,
++							 mddev);
++				}
++			raid_end_bio_io(r1_bio);
+ 		} else if (test_bit(R1BIO_BarrierRetry, &r1_bio->state)) {
+ 			/* some requests in the r1bio were BIO_RW_BARRIER
+ 			 * requests which failed with -EOPNOTSUPP.  Hohumm..
+diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+index 5f2d443..c91c736 100644
+--- a/drivers/md/raid1.h
++++ b/drivers/md/raid1.h
+@@ -110,7 +110,14 @@ struct r1bio_s {
+  * correct the read error.  To keep track of bad blocks on a per-bio
+  * level, we store IO_BLOCKED in the appropriate 'bios' pointer
+  */
+-#define IO_BLOCKED ((struct bio*)1)
++#define IO_BLOCKED ((struct bio *)1)
++/* When we successfully write to a known bad-block, we need to remove the
++ * bad-block marking which must be done from process context.  So we record
++ * the success by setting bios[n] to IO_MADE_GOOD
++ */
++#define IO_MADE_GOOD ((struct bio *)2)
 +
-+		mbio->bi_sector	= (r1_bio->sector +
-+				   conf->mirrors[i].rdev->data_offset);
-+		mbio->bi_bdev = conf->mirrors[i].rdev->bdev;
-+		mbio->bi_end_io	= raid1_end_write_request;
-+		mbio->bi_rw = WRITE | (do_barriers << BIO_RW_BARRIER) |
-+			(do_sync << BIO_RW_SYNCIO);
-+		mbio->bi_private = r1_bio;
-+
- 		atomic_inc(&r1_bio->remaining);
++#define BIO_SPECIAL(bio) ((unsigned long)bio <= 2)
  
- 		bio_list_add(&bl, mbio);
-@@ -1110,12 +1178,21 @@ static int make_request(mddev_t *mddev, struct bio * bio)
- 	/* In case raid1d snuck into freeze_array */
- 	wake_up(&conf->wait_barrier);
+ /* bits for r1bio.state */
+ #define	R1BIO_Uptodate	0
+@@ -127,5 +134,9 @@ struct r1bio_s {
+  * Record that bi_end_io was called with this flag...
+  */
+ #define	R1BIO_Returned 6
++/* If a write for this request means we can clear some
++ * known-bad-block records, we set this flag
++ */
++#define R1BIO_MadeGood 7
  
-+	if (sectors_handled < (bio->bi_size >> 9)) {
-+		/* We need another r1_bio.  It has already been counted
-+		 * in bio->bi_phys_segments
-+		 */
-+		r1_bio = mempool_alloc(conf->r1bio_pool, GFP_NOIO);
-+		r1_bio->master_bio = bio;
-+		r1_bio->sectors = (bio->bi_size >> 9) - sectors_handled;
-+		r1_bio->state = 0;
-+		r1_bio->mddev = mddev;
-+		r1_bio->sector = bio->bi_sector + sectors_handled;
-+		goto retry_write;
-+	}
-+
- 	if (do_sync)
- 		md_wakeup_thread(mddev->thread);
--#if 0
--	while ((bio = bio_list_pop(&bl)) != NULL)
--		generic_make_request(bio);
--#endif
- 
- 	return 0;
- }
+ #endif
 
 
