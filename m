@@ -1,56 +1,101 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: It is possible to put write cache on ssd?
-Date: Mon, 07 Jun 2010 15:14:04 -0400
-Message-ID: <4C0D44FC.8020908@tmr.com>
-References: <loom.20100604T102522-67@post.gmane.org>
+From: =?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?=
+	<stefan.huebner@stud.tu-ilmenau.de>
+Subject: Re: [md PATCH 00/16] bad block list management for md and RAID1
+Date: Tue, 08 Jun 2010 00:18:28 +0200
+Message-ID: <4C0D7034.1020200@stud.tu-ilmenau.de>
+References: <20100606235833.13302.60932.stgit@notabene.brown> <4C0C3D14.6020206@panix.com>
+Reply-To: st0ff@npl.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <loom.20100604T102522-67@post.gmane.org>
+In-Reply-To: <4C0C3D14.6020206@panix.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Mario <mgiammarco@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: Berkey B Walker <berk@panix.com>
+Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Mario wrote:
-> Hello,
-> I have seen that the only hardware raid controllers that can go faster than
-> linux md raid are the controllers with BBU unit.
->
-> Infact thanks to the battery the controllers can have a more aggressive write
-> caching without the risk of losing data.
->
-> Obviously in a standard pc there is not BBU to use with linux software raid.
->
-> Now I see that latest hardware raid controllers exchange battery AND ram with a
-> little flash disk.
->
-> So I ask: if I add a fast (with little size) ssd to a linux server is there a
-> way for linux md raid to use it as a cache to have safer writes and faster raid?
->
-> Thanks in advance for interest.
->
->   
-Actually playing with that now. I got an Intel SATA 40GB SSD, and I am 
-trying various combinations of things to put on it. One thing which I 
-hoped would benefit was to put a f/s journal on SSD and then use the 
-option to push all through the journal (data=journal) in hopes that it 
-would then free the RAM needed for cache and thus speed operation.
+I 2nd that!
 
-Since none of that has generated the performance I hoped, I'm now 
-looking at a kernel patch to overflow the cache in RAM into the SSD, 
-stealing code from the mmap to make some address space on the SSD. At 
-the moment that works poorly (ok, doesn't work) and I'm going to have to 
-rethink the way I do things and probably write a whole bunch of code to 
-do it. Not sure if I want to do that, it's unlikely to be a candidate 
-for mainline unless I put a ton of time into learning the corner cases.
+Stefan
 
-I also played with mirroring and write mostly, etc. Does provide a 
-general solution, at least in my tests.
-
--- 
-Bill Davidsen <davidsen@tmr.com>
-  "We can't solve today's problems by using the same thinking we
-   used in creating them." - Einstein
+Am 07.06.2010 02:28, schrieb Berkey B Walker:
+> Excellent start Neil.  This will be much appreciated.
+> b-
+> 
+> NeilBrown wrote:
+>> In the spirit of "release early" I thought I would post some patches
+>> that I have been working on lately.
+>>
+>> Please don't try these on a system with valuable data - they are very
+>> early code and will probably do the wrong thing.
+>>
+>> The goal of these patches is to add a 'bad block list' to each device
+>> and use it to allow us to fail single blocks rather than whole
+>> devices.
+>>
+>> This is particularly useful in arrays will multiple redundancy
+>> (e.g. RAID6 or 3-device RAID1).  In such cases, bad blocks in
+>> different places on different devices can leave an array that still
+>> has at-least single redundancy on all stripes.  Without this support,
+>> such arrays could become non-fuinctional.
+>>
+>> This is also a necessary preparation to being able to support
+>> 'hot-replace' where we build a new device while the old device is
+>> still in service.  Such a process is only really needed if the old
+>> device is potentially faulty, and having the bad-block-list in place
+>> allows it to continue to provide the best service it can even when it
+>> cannot provide 100% service.
+>>
+>> These patches have only seen limited testing, and are posted primarily
+>> for review rather than testing, though testing is always valuable,
+>> especially if you use the md/faulty module to simulate errors, or have
+>> a drive that provides you with real errors...
+>>
+>> This series provides infrastructure and integration into raid1.c only.
+>> raid5.c and raid10.c support are still to be written.
+>>
+>> NeilBrown
+>>
+>>
+>> ---
+>>
+>> NeilBrown (16):
+>>        md: beginnings of bad block management.
+>>        md/bad-block-log: add sysfs interface for accessing bad-block-log.
+>>        md: don't allow arrays to contain devices with bad blocks.
+>>        md: load/store badblock list from v1.x metadata
+>>        md: reject devices with bad blocks and v0.90 metadata.
+>>        md/raid1: clean up read_balance.
+>>        md: simplify raid10 read_balance
+>>        md/raid1: avoid reading from known bad blocks.
+>>        md/raid1: avoid reading known bad blocks during resync
+>>        md: add 'write_error' flag to component devices.
+>>        md/multipath: discard ->working_disks in favour of ->degraded
+>>        md: make error_handler functions more uniform and correct.
+>>        md: make it easier to wait for bad blocks to be acknowledged.
+>>        md/raid1: avoid writing to known-bad blocks on known-bad drives.
+>>        md/raid1: clear bad-block record when write succeeds.
+>>        md/raid1:  Handle write errors by updating badblock log.
+>>
+>>
+>>   drivers/md/dm-raid456.c   |    6
+>>   drivers/md/md.c           |  725
+>> +++++++++++++++++++++++++++++++++++++++++++--
+>>   drivers/md/md.h           |   76 ++++-
+>>   drivers/md/multipath.c    |   60 ++--
+>>   drivers/md/multipath.h    |    1
+>>   drivers/md/raid1.c        |  714
+>> +++++++++++++++++++++++++++++++++++---------
+>>   drivers/md/raid1.h        |   14 +
+>>   drivers/md/raid10.c       |  123 ++++----
+>>   drivers/md/raid5.c        |   48 ++-
+>>   include/linux/raid/md_p.h |   13 +
+>>   10 files changed, 1475 insertions(+), 305 deletions(-)
+>>
+>>    
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
