@@ -1,85 +1,56 @@
-From: "Trela, Maciej" <Maciej.Trela@intel.com>
-Subject: [PATCH 2/2] mdadm: Disk removal support for Raid10->Raid0 takeover
-Date: Mon, 7 Jun 2010 15:52:32 +0100
-Message-ID: <BE2BFE91933D1B4089447C64486040801D7BAAAF@irsmsx503.ger.corp.intel.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: It is possible to put write cache on ssd?
+Date: Mon, 07 Jun 2010 15:14:04 -0400
+Message-ID: <4C0D44FC.8020908@tmr.com>
+References: <loom.20100604T102522-67@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Language: en-US
+In-Reply-To: <loom.20100604T102522-67@post.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "Williams, Dan J" <dan.j.williams@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Kwolek, Adam" <adam.kwolek@intel.com>
+To: Mario <mgiammarco@gmail.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-VW50aWwgbm93IFJhaWQxMC0+UmFpZDAgdGFrZW92ZXIgd2FzIHBvc3NpYmxlIG9ubHkgaWYgYWxs
-IHRoZSBtaXJyb3JzDQp3aGVyZSByZW1vdmVkIGJlZm9yZSBtZCBzdGFydHMgdGhlIHRha292ZXIu
-DQpOb3cgbWRhZG0sIHdoZW4gcGVyZm9ybWluZyBSYWlkMTAtPnJhaWQwIHRha2VvdmVyLCB3aWxs
-IHJlbW92ZSBhbGwNCnVud2FudGVkIG1pcnJvcnMgZnJvbSB0aGUgYXJyYXkgYmVmb3JlIGFjdHVh
-bCBtZCB0YWtlb3ZlciBpcyBjYWxsZWQuDQoNClNpZ25lZC1vZmYtYnk6IE1hY2llaiBUcmVsYSA8
-bWFjaWVqLnRyZWxhQGludGVsLmNvbT4NCi0tLQ0KIEdyb3cuYyB8ICAgOTggKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLQ0KIDEg
-ZmlsZXMgY2hhbmdlZCwgOTcgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbnMoLSkNCg0KZGlmZiAt
-LWdpdCBhL0dyb3cuYyBiL0dyb3cuYw0KaW5kZXggZmYwNGZjMC4uMjg0ZDMxZCAxMDA2NDQNCi0t
-LSBhL0dyb3cuYw0KKysrIGIvR3Jvdy5jDQpAQCAtNTQwLDcgKzU0MCw3IEBAIGludCBHcm93X3Jl
-c2hhcGUoY2hhciAqZGV2bmFtZSwgaW50IGZkLCBpbnQgcXVpZXQsIGNoYXIgKmJhY2t1cF9maWxl
-LA0KIAkJCSIgICAgICAgUGxlYXNlIHVzZSBhIG5ld2VyIGtlcm5lbFxuIik7DQogCQlyZXR1cm4g
-MTsNCiAJfQ0KLQlzcmEgPSBzeXNmc19yZWFkKGZkLCAwLCBHRVRfVkVSU0lPTiB8IEdFVF9MRVZF
-TCk7DQorCXNyYSA9IHN5c2ZzX3JlYWQoZmQsIDAsIEdFVF9WRVJTSU9OIHwgR0VUX0xFVkVMIHwg
-R0VUX0RFVlMgfCBHRVRfU1RBVEUpOw0KIAlmcm96ZW4gPSBmcmVlemVfYXJyYXkoc3JhKTsNCiAJ
-aWYgKGZyb3plbiA8IDApIHsNCiAJCWZwcmludGYoc3RkZXJyLCBOYW1lICI6ICVzIGlzIHBlcmZv
-cm1pbmcgcmVzeW5jL3JlY292ZXJ5IGFuZCBjYW5ub3QiDQpAQCAtNTg2LDYgKzU4NiwxMDIgQEAg
-aW50IEdyb3dfcmVzaGFwZShjaGFyICpkZXZuYW1lLCBpbnQgZmQsIGludCBxdWlldCwgY2hhciAq
-YmFja3VwX2ZpbGUsDQogCQkJc2l6ZSA9IGFycmF5LnNpemU7DQogCX0NCiANCisJLyogPT09PT09
-PT09IGNoZWNrIGZvciBSYWlkMTAgLT4gUmFpZDAgY29udmVyc2lvbiA9PT09PT09PT09PT09PT0N
-CisJICogY3VycmVudCBpbXBsZW1lbmF0aW9uIGFzc3VtZXMgdGhhdCBmb2xsb3dpbmcgY29uZGl0
-aW9ucyBtdXN0IGJlIG1ldDoNCisJICogLSBmYXJfY29waWVzID09IDENCisJICogLSBuZWFyX2Nv
-cGllcyA9PSAyDQorCSAqIC0gZGlza3MgbnVtYmVyIG11c3QgYmUgZXZlbg0KKwkgKi8NCisJaWYg
-KGxldmVsID09IDAgJiYgYXJyYXkubGV2ZWwgPT0gMTAgJiYNCisJICAgIGFycmF5LmxheW91dCA9
-PSAoKDEgPDwgOCkgKyAyKSAmJiAhKGFycmF5LnJhaWRfZGlza3MgJiAxKSkgew0KKwkJbWR1X2Rp
-c2tfaW5mb190ICpkaXNrczsNCisJCWludCBtYXhfZGlza3MgPSBNRF9TQl9ESVNLUzsNCisJCWlu
-dCBucl9vZl9jb3BpZXMsIGluX3N5bmMsIGNvcGllczsNCisJCQ0KKwkJc3QgPSBzdXBlcl9ieV9m
-ZChmZCk7DQorCQlpZiAoc3QgIT0gTlVMTCkNCisJCQltYXhfZGlza3MgPSBzdC0+bWF4X2RldnM7
-DQorDQorCQkvKiBQcmVwYXJlIHRlbXBvcmFyeSBkaXNrIHRhYmxlICovDQorCQlkaXNrcyA9IG1h
-bGxvYyhtYXhfZGlza3MgKiBzaXplb2YobWR1X2Rpc2tfaW5mb190KSk7DQorCQlpZiAoIWRpc2tz
-KSB7DQorCQkJZnByaW50ZihzdGRlcnIsIE5hbWUgIjogbWFsbG9jIGZhaWxlZDogZ3JvdyBhYm9y
-dGVkXG4iKTsNCisJCQlydiA9IDE7DQorCQkJZ290byByZWxlYXNlOw0KKwkJfQ0KKwkJZm9yIChk
-ID0gMDsgZCA8IG1heF9kaXNrczsgZCsrKSB7DQorCQkJZGlza3NbZF0uc3RhdGUgPSAoMTw8TURf
-RElTS19SRU1PVkVEKTsNCisJCQlkaXNrc1tkXS5tYWpvciA9IGRpc2tzW2RdLm1pbm9yID0gMDsN
-CisJCQlkaXNrc1tkXS5udW1iZXIgPSBkaXNrc1tkXS5yYWlkX2Rpc2sgPSBkOw0KKwkJfQ0KKw0K
-KwkJLyogaW5pdGlhbGl6ZSB0ZW1wb3JhcnkgZGlzayB0YWJsZSB3aXRoIGN1cnJlbnQgZGV2aWNl
-cyovDQorCQlmb3IgKHNkID0gc3JhLT5kZXZzOyBzZDsgc2QgPSBzZC0+bmV4dCkNCisJCQlpZiAo
-KHNkLT5kaXNrLnJhaWRfZGlzayA+PSAwKSAmJg0KKwkJCSAgICAoc2QtPmRpc2sucmFpZF9kaXNr
-IDwgYXJyYXkucmFpZF9kaXNrcykpDQorCQkJCWRpc2tzW3NkLT5kaXNrLnJhaWRfZGlza10gPSBz
-ZC0+ZGlzazsNCisNCisJCW5yX29mX2NvcGllcyA9IGFycmF5LmxheW91dCAmIDB4ZmY7DQorCQlp
-bl9zeW5jID0gbnJfb2ZfY29waWVzOw0KKwkJY29waWVzID0gbnJfb2ZfY29waWVzOw0KKw0KKwkJ
-LyogRmluZCBkZXZpY2VzIHRoYXQgd2lsbCBiZSByZW1vdmVkIGZyb20gdGhlIGFycmF5ICovDQor
-CQlmb3IgKGQgPSAwOyBkIDwgbWF4X2Rpc2tzOyBkKyspIHsNCisJCQlpbnQgaSwgcmVtb3ZlX2Fs
-bCA9IDA7DQorDQorCQkJaWYgKGRpc2tzW2RdLnN0YXRlICYgKDE8PE1EX0RJU0tfUkVNT1ZFRCkp
-DQorCQkJCWNvbnRpbnVlOw0KKwkJCWlmICghKGRpc2tzW2RdLnN0YXRlICYgKDE8PE1EX0RJU0tf
-U1lOQykpKQ0KKwkJCQlpbl9zeW5jLS07DQorDQorCQkJY29waWVzLS07DQorCQkJaWYgKCFjb3Bp
-ZXMpIHsNCisJCQkJLyogV2UgcmVhY2hlZCBlbmQgb2YgIm1pcnJvcmVkIiBzZXQgb2YgZGV2aWNl
-cyAqLw0KKwkJCQlpZiAoIWluX3N5bmMpIHsNCisJCQkJCS8qIFRoZSBhcnJheSBpcyBmYWlsZWQg
-YW5kIGNhbm5vdCBiZSByZXNoYXBlZCAqLw0KKwkJCQkJZnJlZShkaXNrcyk7DQorCQkJCQlyZXR1
-cm4gMTsNCisJCQkJfQ0KKw0KKwkJCQkvKiBOb3cgbWFyayBhbGwgZGlza3MgdG8gYmUgcmVtb3Zl
-ZCBhcyBmYXVsdHkNCisJCQkJICogKGxlYXZlIG9ubHkgb25lIGluX3N5bmMgZGlzaykgKi8NCisJ
-CQkJZm9yIChpID0gKGQtbnJfb2ZfY29waWVzKzEpOyBpIDw9IGQ7IGkrKykgew0KKwkJCQkJaWYg
-KHJlbW92ZV9hbGwpIHsNCisJCQkJCQlkaXNrc1tpXS5zdGF0ZSB8PSAoMTw8TURfRElTS19GQVVM
-VFkpOw0KKwkJCQkJCWNvbnRpbnVlOw0KKwkJCQkJfQ0KKwkJCQkJaWYgKGRpc2tzW2ldLnN0YXRl
-ICYgKDE8PE1EX0RJU0tfU1lOQykpIHsNCisJCQkJCQkvKiB0aGlzIHdpbGwgYmUgdGhlIGNhbmRp
-ZGF0ZSBmb3IgUmFpZCAwLA0KKwkJCQkJCSAqIGxlYXZlIGl0ICovDQorCQkJCQkJcmVtb3ZlX2Fs
-bCA9IDE7DQorCQkJCQkJY29udGludWU7DQorCQkJCQl9IGVsc2Ugew0KKwkJCQkJCS8qIHRoaXMg
-b25lIHdpbGwgYmUgcmVtb3ZlZCAqLw0KKwkJCQkJCWRpc2tzW2ldLnN0YXRlIHw9ICgxPDxNRF9E
-SVNLX0ZBVUxUWSk7DQorCQkJCQl9DQorCQkJCX0NCisJCQkJLyogdXBkYXRlIGluX3N5bmMgYW5k
-IGNvcGllcyBmb3IgdGhlIG5leHQgc2V0IG9mIGRldmljZXMgKi8NCisJCQkJaW5fc3luYyA9ICBu
-cl9vZl9jb3BpZXM7DQorCQkJCWNvcGllcyA9IG5yX29mX2NvcGllczsNCisJCQl9DQorCQl9DQor
-DQorCQkvKiBSZW1vdmUgdW53YW50ZWQgZGV2aWNlcyBmcm9tIHRoZSBhcnJheSAqLw0KKwkJZm9y
-IChzZCA9IHNyYS0+ZGV2czsgc2Q7IHNkID0gc2QtPm5leHQpIHsNCisJCQlkID0gc2QtPmRpc2su
-cmFpZF9kaXNrOw0KKwkJCWlmIChkaXNrc1tkXS5zdGF0ZSAmICgxPDxNRF9ESVNLX0ZBVUxUWSkp
-IHsNCisJCQkJc3lzZnNfc2V0X3N0cihzcmEsIHNkLCAic3RhdGUiLCAiZmF1bHR5Iik7DQorCQkJ
-CXN5c2ZzX3NldF9zdHIoc3JhLCBzZCwgInNsb3QiLCAibm9uZSIpOw0KKwkJCQlzeXNmc19zZXRf
-c3RyKHNyYSwgc2QsICJzdGF0ZSIsICJyZW1vdmUiKTsNCisJCQl9DQorCQl9DQorDQorCQlpZiAo
-ZGlza3MpIHsNCisJCQlmcmVlKGRpc2tzKTsNCisJCQlkaXNrcyA9IE5VTEw7DQorCQl9DQorCX0N
-CisNCiAJLyogPT09PT09PSBzZXQgbGV2ZWwgPT09PT09PT09PT0gKi8NCiAJaWYgKGxldmVsICE9
-IFVuU2V0ICYmIGxldmVsICE9IGFycmF5LmxldmVsKSB7DQogCQkvKiBUcnlpbmcgdG8gY2hhbmdl
-IHRoZSBsZXZlbC4NCg0K
+Mario wrote:
+> Hello,
+> I have seen that the only hardware raid controllers that can go faster than
+> linux md raid are the controllers with BBU unit.
+>
+> Infact thanks to the battery the controllers can have a more aggressive write
+> caching without the risk of losing data.
+>
+> Obviously in a standard pc there is not BBU to use with linux software raid.
+>
+> Now I see that latest hardware raid controllers exchange battery AND ram with a
+> little flash disk.
+>
+> So I ask: if I add a fast (with little size) ssd to a linux server is there a
+> way for linux md raid to use it as a cache to have safer writes and faster raid?
+>
+> Thanks in advance for interest.
+>
+>   
+Actually playing with that now. I got an Intel SATA 40GB SSD, and I am 
+trying various combinations of things to put on it. One thing which I 
+hoped would benefit was to put a f/s journal on SSD and then use the 
+option to push all through the journal (data=journal) in hopes that it 
+would then free the RAM needed for cache and thus speed operation.
+
+Since none of that has generated the performance I hoped, I'm now 
+looking at a kernel patch to overflow the cache in RAM into the SSD, 
+stealing code from the mmap to make some address space on the SSD. At 
+the moment that works poorly (ok, doesn't work) and I'm going to have to 
+rethink the way I do things and probably write a whole bunch of code to 
+do it. Not sure if I want to do that, it's unlikely to be a candidate 
+for mainline unless I put a ton of time into learning the corner cases.
+
+I also played with mirroring and write mostly, etc. Does provide a 
+general solution, at least in my tests.
+
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "We can't solve today's problems by using the same thinking we
+   used in creating them." - Einstein
+
