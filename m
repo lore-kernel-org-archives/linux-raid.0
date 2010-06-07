@@ -1,186 +1,87 @@
-From: NeilBrown <neilb@suse.de>
-Subject: [md PATCH 16/16] md/raid1: Handle write errors by updating badblock
-	log.
-Date: Mon, 07 Jun 2010 10:07:56 +1000
-Message-ID: <20100607000756.13302.25283.stgit@notabene.brown>
+From: Berkey B Walker <berk@panix.com>
+Subject: Re: [md PATCH 00/16] bad block list management for md and RAID1
+Date: Sun, 06 Jun 2010 20:28:04 -0400
+Message-ID: <4C0C3D14.6020206@panix.com>
 References: <20100606235833.13302.60932.stgit@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <20100606235833.13302.60932.stgit@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: NeilBrown <neilb@suse.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-When we get a write error (in the data area, not in metadata),
-update the badblock log rather than failing the whole device.
+Excellent start Neil.  This will be much appreciated.
+b-
 
-As the write may well be many blocks, we trying writing each
-block individually and only log the ones which fail.
-
-Signed-off-by: NeilBrown <neilb@suse.de>
----
- drivers/md/raid1.c |  104 +++++++++++++++++++++++++++++++++++++++++++++++++---
- drivers/md/raid1.h |    3 +-
- 2 files changed, 100 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index e23ec40..a6cc50c 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -342,12 +342,10 @@ static void raid1_end_write_request(struct bio *bio, int error)
- 		/*
- 		 * this branch is our 'one mirror IO has finished' event handler:
- 		 */
--		r1_bio->bios[mirror] = NULL;
--		to_put = bio;
- 		if (!uptodate) {
--			md_error(r1_bio->mddev, conf->mirrors[mirror].rdev);
--			/* an I/O failed, we can't clear the bitmap */
--			set_bit(R1BIO_Degraded, &r1_bio->state);
-+			set_bit(WriteErrorSeen,
-+				&conf->mirrors[mirror].rdev->flags);
-+			set_bit(R1BIO_WriteError, &r1_bio->state);
- 		} else {
- 			/*
- 			 * Set R1BIO_Uptodate in our master bio, so that
-@@ -359,6 +357,8 @@ static void raid1_end_write_request(struct bio *bio, int error)
- 			 * wait for the 'master' bio.
- 			 */
- 			set_bit(R1BIO_Uptodate, &r1_bio->state);
-+			r1_bio->bios[mirror] = NULL;
-+			to_put = bio;
- 
- 			/* Maybe we can clear some bad blocks. */
- 			if (is_badblock(conf->mirrors[mirror].rdev,
-@@ -403,7 +403,8 @@ static void raid1_end_write_request(struct bio *bio, int error)
- 	 * already.
- 	 */
- 	if (atomic_dec_and_test(&r1_bio->remaining)) {
--		if (test_bit(R1BIO_BarrierRetry, &r1_bio->state))
-+		if (test_bit(R1BIO_BarrierRetry, &r1_bio->state) ||
-+		    test_bit(R1BIO_WriteError, &r1_bio->state))
- 			reschedule_retry(r1_bio);
- 		else {
- 			/* it really is the end of this request */
-@@ -1800,6 +1801,75 @@ static void fix_read_error(conf_t *conf, int read_disk,
- 	}
- }
- 
-+
-+static void bi_complete(struct bio *bio, int error)
-+{
-+	complete((struct completion *)bio->bi_private);
-+}
-+
-+static int submit_bio_wait(int rw, struct bio *bio)
-+{
-+	struct completion event;
-+	rw |= (1 << BIO_RW_SYNCIO) | (1 << BIO_RW_UNPLUG);
-+
-+	init_completion(&event);
-+	bio->bi_private = &event;
-+	bio->bi_end_io = bi_complete;
-+	submit_bio(rw, bio);
-+	wait_for_completion(&event);
-+
-+	return test_bit(BIO_UPTODATE, &bio->bi_flags);
-+}
-+
-+static int narrow_write_error(r1bio_t *r1_bio, int i)
-+{
-+	struct bio *bio = r1_bio->bios[i];
-+	mddev_t *mddev = r1_bio->mddev;
-+	conf_t *conf = mddev->private;
-+	mdk_rdev_t *rdev = conf->mirrors[i].rdev;
-+	/* bio has the data to be written to device 'i' where
-+	 * we just recently had a write error.
-+	 * We repeatedly clone the bio and trim down to one block,
-+	 * when try the write.  Where the write fails we record
-+	 * a bad block.
-+	 * It is conceivable that the bio doesn't exactly align with
-+	 * blocks.  We must handle this somehow.
-+	 *
-+	 * We currently own a reference on the rdev.
-+	 */
-+
-+	int block_sectors = 1 << rdev->badblocks.shift;
-+	sector_t sector = ((r1_bio->sector + block_sectors)
-+			   & (block_sectors - 1));
-+	int sectors = sector - r1_bio->sector;
-+	int sect_to_write = r1_bio->sectors;
-+	int ok = 1;
-+
-+	sector = r1_bio->sector;
-+
-+	while (sect_to_write) {
-+		struct bio *wbio;
-+		if (sectors > sect_to_write)
-+			sectors = sect_to_write;
-+		/* Write at 'sector' for 'sectors'*/
-+		wbio = bio_clone(bio, GFP_NOIO);
-+		trim_bio(wbio, sector - bio->bi_sector, sectors);
-+		wbio->bi_bdev = rdev->bdev;
-+		if (submit_bio_wait(1, wbio) == 0)
-+			/* failure! */
-+			ok = md_set_badblocks(&rdev->badblocks,
-+					      sector + rdev->data_offset,
-+					      sectors, 0)
-+				&& ok;
-+
-+		bio_put(wbio);
-+		sect_to_write -= sectors;
-+		sector += sectors;
-+		sectors = block_sectors;
-+	}
-+	return ok;
-+}
-+
- static void raid1d(mddev_t *mddev)
- {
- 	r1bio_t *r1_bio;
-@@ -1894,6 +1964,28 @@ static void raid1d(mddev_t *mddev)
- 					r1_bio->bios[i] = bio;
- 					generic_make_request(bio);
- 				}
-+		} else if (test_bit(R1BIO_WriteError, &r1_bio->state)) {
-+			/* At least one drive got a write error.  We
-+			 * need to narrow down and record precise write
-+			 * errors.
-+			 */
-+			int i;
-+			for (i = 0; i < conf->raid_disks; i++) {
-+				struct bio *bio = r1_bio->bios[i];
-+				if (!bio)
-+					continue;
-+				BUG_ON(test_bit(BIO_UPTODATE, &bio->bi_flags));
-+				if (!narrow_write_error(r1_bio, i)) {
-+					md_error(mddev, conf->mirrors[i].rdev);
-+					/* an I/O failed, we can't clear
-+					 * the bitmap */
-+					set_bit(R1BIO_Degraded, &r1_bio->state);
-+				}
-+				bio_put(bio);
-+				r1_bio->bios[i] = NULL;
-+				rdev_dec_pending(conf->mirrors[i].rdev, mddev);
-+			}
-+			raid_end_bio_io(r1_bio);
- 		} else {
- 			int disk;
- 			int max_sectors;
-diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
-index c91c736..532fca4 100644
---- a/drivers/md/raid1.h
-+++ b/drivers/md/raid1.h
-@@ -137,6 +137,7 @@ struct r1bio_s {
- /* If a write for this request means we can clear some
-  * known-bad-block records, we set this flag
-  */
--#define R1BIO_MadeGood 7
-+#define	R1BIO_MadeGood 7
-+#define	R1BIO_WriteError 8
- 
- #endif
-
-
+NeilBrown wrote:
+> In the spirit of "release early" I thought I would post some patches
+> that I have been working on lately.
+>
+> Please don't try these on a system with valuable data - they are very
+> early code and will probably do the wrong thing.
+>
+> The goal of these patches is to add a 'bad block list' to each device
+> and use it to allow us to fail single blocks rather than whole
+> devices.
+>
+> This is particularly useful in arrays will multiple redundancy
+> (e.g. RAID6 or 3-device RAID1).  In such cases, bad blocks in
+> different places on different devices can leave an array that still
+> has at-least single redundancy on all stripes.  Without this support,
+> such arrays could become non-fuinctional.
+>
+> This is also a necessary preparation to being able to support
+> 'hot-replace' where we build a new device while the old device is
+> still in service.  Such a process is only really needed if the old
+> device is potentially faulty, and having the bad-block-list in place
+> allows it to continue to provide the best service it can even when it
+> cannot provide 100% service.
+>
+> These patches have only seen limited testing, and are posted primarily
+> for review rather than testing, though testing is always valuable,
+> especially if you use the md/faulty module to simulate errors, or have
+> a drive that provides you with real errors...
+>
+> This series provides infrastructure and integration into raid1.c only.
+> raid5.c and raid10.c support are still to be written.
+>
+> NeilBrown
+>
+>
+> ---
+>
+> NeilBrown (16):
+>        md: beginnings of bad block management.
+>        md/bad-block-log: add sysfs interface for accessing bad-block-log.
+>        md: don't allow arrays to contain devices with bad blocks.
+>        md: load/store badblock list from v1.x metadata
+>        md: reject devices with bad blocks and v0.90 metadata.
+>        md/raid1: clean up read_balance.
+>        md: simplify raid10 read_balance
+>        md/raid1: avoid reading from known bad blocks.
+>        md/raid1: avoid reading known bad blocks during resync
+>        md: add 'write_error' flag to component devices.
+>        md/multipath: discard ->working_disks in favour of ->degraded
+>        md: make error_handler functions more uniform and correct.
+>        md: make it easier to wait for bad blocks to be acknowledged.
+>        md/raid1: avoid writing to known-bad blocks on known-bad drives.
+>        md/raid1: clear bad-block record when write succeeds.
+>        md/raid1:  Handle write errors by updating badblock log.
+>
+>
+>   drivers/md/dm-raid456.c   |    6
+>   drivers/md/md.c           |  725 +++++++++++++++++++++++++++++++++++++++++++--
+>   drivers/md/md.h           |   76 ++++-
+>   drivers/md/multipath.c    |   60 ++--
+>   drivers/md/multipath.h    |    1
+>   drivers/md/raid1.c        |  714 +++++++++++++++++++++++++++++++++++---------
+>   drivers/md/raid1.h        |   14 +
+>   drivers/md/raid10.c       |  123 ++++----
+>   drivers/md/raid5.c        |   48 ++-
+>   include/linux/raid/md_p.h |   13 +
+>   10 files changed, 1475 insertions(+), 305 deletions(-)
+>
+>    
