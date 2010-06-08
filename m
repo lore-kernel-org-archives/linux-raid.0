@@ -1,69 +1,163 @@
 From: Ian Dall <ian@beware.dropbear.id.au>
-Subject: Re: It is possible to put write cache on ssd?
-Date: Tue, 08 Jun 2010 14:24:55 +0930
-Message-ID: <1275972895.4313.51.camel@sibyl.beware.dropbear.id.au>
-References: <loom.20100604T102522-67@post.gmane.org>
-	 <4C0D44FC.8020908@tmr.com>
+Subject: Re: Device kicked from raid too easilly
+Date: Tue, 08 Jun 2010 14:45:54 +0930
+Message-ID: <1275974154.4313.72.camel@sibyl.beware.dropbear.id.au>
+References: <1275702714.3740.55.camel@sibyl.beware.dropbear.id.au>
+	 <4C09FB3E.1090302@stud.tu-ilmenau.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C0D44FC.8020908@tmr.com>
+In-Reply-To: <4C09FB3E.1090302@stud.tu-ilmenau.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: Mario <mgiammarco@gmail.com>, linux-raid@vger.kernel.org
+To: st0ff@npl.de
+Cc: Linux RAID <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Mon, 2010-06-07 at 15:14 -0400, Bill Davidsen wrote:
-> Mario wrote:
-> > [...]
-> > So I ask: if I add a fast (with little size) ssd to a linux server is there a
-> > way for linux md raid to use it as a cache to have safer writes and faster raid?
-> >
-> > Thanks in advance for interest.
-> >
-> Actually playing with that now. I got an Intel SATA 40GB SSD, and I am 
-> trying various combinations of things to put on it. One thing which I 
-> hoped would benefit was to put a f/s journal on SSD and then use the 
-> option to push all through the journal (data=journal) in hopes that it 
-> would then free the RAM needed for cache and thus speed operation.
-> 
-> Since none of that has generated the performance I hoped, 
+On Sat, 2010-06-05 at 09:22 +0200, Stefan /*St0fF*/ H=FCbner wrote:
+> Hi Ian,
+>=20
+> I do not think this is md-related, nor related to the other dropout
+> problem.  Here we have a write-error, which correctly makes the disk
+> drop.  So if you say the error is kind of a soft error, then actually
+> either the disks firmware or the scsi layer should be handling this.
+>=20
+> But as always on write errors: mostly there are more than one write
+> request in the queue, so it's probably hard to find out which data
+> couldn't be written, or the data has already been discarded.  Well,
+> write errors are those that should be handled in Firmware...
 
-Interesting. If its the X25-V that you have, write performance is
-nothing to write home about even compared to a single hard drive, let
-alone a raid. By journaling data as well (as metadata), you just add
-extra write overhead, possibly even a new bottleneck. 
+Hmm. Well that is fair enough. I have struggled a bit in trying and
+follow the path up and down all the various layers. I tried modifying
+the scsi io completion to retry these errors but it wasn't a huge
+success! It sometimes took a lot of retries (with the system seeming to
+freeze for a few seconds), so it looks like it is a "firm" error!
 
-What happens if you journal only the metadata? The hoped for advantage
-would be to avoid seeks between the areas used for the journal and the
-data.
+Puzzlingly, swapping the disks around in the backplane works so long as
+it is brand "A" in the first slot and not brand "B"! My current theory
+is that there are transmission line effects (or maybe RFI) which make
+some slots fall outside the range of the brand "B" disks to compensate!
 
-The characteristics of these SSD devices seems to be that they get
-faster as they get bigger (like the chips are effectively in a kind of
-raid).
+One might think that sata would be better, but I am simultaneously
+looking for a problem in another raid array which gives me sata CRC
+errors which I assume to be cable related. Interestingly the sata
+transport layer treats these CRC errors as soft (at least, there is no
+corresponding action from md).
 
-> I'm now 
-> looking at a kernel patch to overflow the cache in RAM into the SSD, 
-> stealing code from the mmap to make some address space on the SSD.
+> P.S.: maybe you should check for firmware updates of the disks?
 
-Again, I wonder if write performance is good enough for this to pay off.
-How does that compare with just using the ssd for swap and possibly
-tweaking some parameters to encourage the kernel to use swap more? This
-would effectively free up more ram for buffers.
+No such luck. These (brand "B") are "Worldisk" (which I believe to be
+re-manufactured Fujitsu). The less troublesome disks (brand "A") are
+Hitachi.
 
->  At 
-> the moment that works poorly (ok, doesn't work) and I'm going to have to 
-> rethink the way I do things and probably write a whole bunch of code to 
-> do it. Not sure if I want to do that, it's unlikely to be a candidate 
-> for mainline unless I put a ton of time into learning the corner cases.
-> 
-> I also played with mirroring and write mostly, etc. Does provide a 
-> general solution, at least in my tests.
+Thanks for your thoughts.
 
-Do you mean "does NOT"?
+Regards,
+Ian
 
 
--- 
+> Am 05.06.2010 03:51, schrieb Ian Dall:
+> > I think this is different to the similarly titled long thread on SA=
+TA
+> > timeouts.
+> >=20
+> > I have an array of U320 scsi disks with similar characteristics fro=
+m two
+> > different manufacturers.
+> >=20
+> > On two disks I see occasional scsi parity errors. I don't think thi=
+s is
+> > a cabling or termination issue since I never see the parity errors =
+on
+> > the other brand disks. smartctl shows a number of "non-medium error=
+s"
+> > which I take to be the paroty errors.
+> >=20
+> > Now, when I have a raid 10 of these disks, the scsi parity error ca=
+uses
+> > the first disk to be failed. The array then continues degraded with=
+ no
+> > apparent problems. If I read-add the failed disk, it always fails b=
+efore
+> > the re-sync is complete. Eg:
+> >=20
+> > Jun  3 23:35:02 fs kernel: md: recovery of RAID array md5
+> > Jun  3 23:35:02 fs kernel: md: minimum _guaranteed_  speed: 1000 KB=
+/sec/disk.
+> > Jun  3 23:35:02 fs kernel: md: using maximum available idle IO band=
+width (but not more than 200000 KB/sec) for recovery.
+> > Jun  3 23:35:02 fs kernel: md: using 128k window, over a total of 2=
+9291904 blocks.
+> > Jun  3 23:35:07 fs kernel: sd 6:0:0:0: [sde] Result: hostbyte=3DDID=
+_OK driverbyte=3DDRIVER_SENSE
+> > Jun  3 23:35:07 fs kernel: sd 6:0:0:0: [sde] Sense Key : Aborted Co=
+mmand [current]=20
+> > Jun  3 23:35:07 fs kernel: sd 6:0:0:0: [sde] Add. Sense: Scsi parit=
+y error
+> > Jun  3 23:35:07 fs kernel: sd 6:0:0:0: [sde] CDB: Write(10): 2a 00 =
+00 05 9e 00 00 01 00 00
+> > Jun  3 23:35:07 fs kernel: end_request: I/O error, dev sde, sector =
+368128
+> > Jun  3 23:35:07 fs kernel: raid10: Disk failure on sde, disabling d=
+evice.
+> > Jun  3 23:35:07 fs kernel: raid10: Operation continuing on 3 device=
+s.
+> > Jun  3 23:35:07 fs kernel: md: md5: recovery done.
+> >=20
+> > Now I can test this disk in isolation (using iozone)  pretty heavil=
+y and
+> > never see a problem. I can also use it in a raid0 and never see a
+> > problem.
+> >=20
+> > I think some of the strangeness is explained by the comment in the
+> > raid10 error handler:  "else if it is the last working disks, ignor=
+e the
+> > error".
+> >=20
+> > Parity errors seem to me like they should be treated as transient
+> > errors. Maybe if there are multiple consecutive parity errors it co=
+uld
+> > be assumed there is a hard fault in the transport layer. U320 uses
+> > "information units" with (stronger than parity) CRC checking. Altho=
+ugh
+> > these errors are not reported as CRC errors that could just be a
+> > reporting issue (the lack of an "additional sense code qualifier").
+> > Given the complexity of the clock recovery de-skewing etc which goe=
+s on
+> > for U320, it is not surprising some disks would do it better than
+> > others, but a non zero error rate probably shouldn't be considered
+> > fatal.
+> >=20
+> > I don't really know where this should be fixed. Maybe the scsi laye=
+r
+> > should be retrying the scsi command, since it knows most about what=
+ sort
+> > of error it is. But equally it could be the responsibility of upper
+> > layers to do any retrying (which gives upper layers the option to n=
+ot
+> > retry if they don't want to). But if the scsi layer is not responsi=
+ble
+> > for retrying these sorts of errors, then the md layer is over-react=
+ing
+> > by throwing disks out too easily.=20
+> >=20
+> >=20
+> > Regards,
+> > Ian
+> >=20
+> >=20
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--=20
 Ian Dall <ian@beware.dropbear.id.au>
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
