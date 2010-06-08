@@ -1,47 +1,34 @@
-From: Tim Small <tim@seoss.co.uk>
-Subject: Re: Device kicked from raid too easilly
-Date: Tue, 08 Jun 2010 07:59:54 +0100
-Message-ID: <4C0DEA6A.8070107@seoss.co.uk>
-References: <1275702714.3740.55.camel@sibyl.beware.dropbear.id.au>	 <4C09FB3E.1090302@stud.tu-ilmenau.de> <1275974154.4313.72.camel@sibyl.beware.dropbear.id.au> <4C0DDB77.1070907@stud.tu-ilmenau.de>
+From: Mario <mgiammarco@gmail.com>
+Subject: Re: It is possible to put write cache on ssd?
+Date: Tue, 8 Jun 2010 07:31:21 +0000 (UTC)
+Message-ID: <loom.20100608T092726-796@post.gmane.org>
+References: <loom.20100604T102522-67@post.gmane.org> <4C0D44FC.8020908@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C0DDB77.1070907@stud.tu-ilmenau.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: st0ff@npl.de
-Cc: =?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?= <stefan.huebner@stud.tu-ilmenau.de>, Ian Dall <ian@beware.dropbear.id.au>, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 08/06/10 06:56, Stefan /*St0fF*/ H=FCbner wrote:
-> But I wouldn't want to subject it to the cabling, because (well, I'm =
-not
-> 100% sure if that's right) slot #1's cable is the shortest.
->   =20
+Bill Davidsen <davidsen <at> tmr.com> writes:
 
-There are some scenarios where a shorter cable could show up a design=20
-fault, when a longer cable wouldn't.  I'm not an expert by any means,=20
-and just off the top of my head, perhaps:
 
-Over-saturated inputs
-Stronger signal reflections
-Auto-termination problems
+> Actually playing with that now. I got an Intel SATA 40GB SSD, and I am 
+> trying various combinations of things to put on it. One thing which I 
+> hoped would benefit was to put a f/s journal on SSD and then use the 
+> option to push all through the journal (data=journal) in hopes that it 
+> would then free the RAM needed for cache and thus speed operation.
+> 
+>
 
-I've certainly heard of badly designed Ethernet devices not working wit=
-h=20
-very short cable lengths....
+Probably it is due to two things:
 
-Tim.
+1) to see advantages you have to test in a server situation where a 
+lot of thread are writing AND others are reading. So in this case
+ writes to hard disk can be delayed a lot to give less latency to reads.
+2) A lot of tuning is due to force linux to keep data on journal
+ as long as it can.
 
---=20
-South East Open Source Solutions Limited
-Registered in England and Wales with company number 06134732.
-Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
-VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
