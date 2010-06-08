@@ -1,101 +1,98 @@
-From: =?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?=
-	<stefan.huebner@stud.tu-ilmenau.de>
-Subject: Re: [md PATCH 00/16] bad block list management for md and RAID1
-Date: Tue, 08 Jun 2010 00:18:28 +0200
-Message-ID: <4C0D7034.1020200@stud.tu-ilmenau.de>
-References: <20100606235833.13302.60932.stgit@notabene.brown> <4C0C3D14.6020206@panix.com>
-Reply-To: st0ff@npl.de
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+From: Will Drewry <wad@chromium.org>
+Subject: [PATCH v4 2/3] dm: export a table+mapped device to the ioctl interface
+Date: Mon,  7 Jun 2010 22:25:23 -0500
+Message-ID: <1275967524-24166-2-git-send-email-wad@chromium.org>
+References: <1274294304-30606-1-git-send-email-wad@chromium.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C0C3D14.6020206@panix.com>
+In-Reply-To: <1274294304-30606-1-git-send-email-wad@chromium.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Berkey B Walker <berk@panix.com>
-Cc: NeilBrown <neilb@suse.de>, linux-raid@vger.kernel.org
+To: dm-devel@redhat.com
+Cc: Randy Dunlap <rdunlap@xenotime.net>, Ingo Molnar <mingo@elte.hu>, Len Brown <len.brown@intel.com>, Neil Brown <neilb@suse.de>, Alasdair G Kergon <agk@redhat.com>, Greg Kroah-Hartman <gregkh@suse.de>, Mike Snitzer <snitzer@redhat.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Mikulas Patocka <mpatocka@redhat.com>, Nikanth Karthikesan <knikanth@suse.de>, Sam Ravnborg <sam@ravnborg.org>, Michal Marek <mmarek@suse.cz>, Tejun Heo <tj@kernel.org>, Jan Blunck <jblunck@suse.de>, Vegard Nossum <vegard.nossum@gmail.com>, Kay Sievers <kay.sievers@vrfy.org>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-raid@vger.kernel.org, Will Drewry <wad@chromium.org>
 List-Id: linux-raid.ids
 
-I 2nd that!
+If a mapped device and table is configured without traversing
+the dm-ioctl interface (dm-fs-style), then it will not be bound
+to a name or uuid.  This means that it will be inaccessible for
+userspace management and udev will be unhappy with the lack of
+a name or uuid.
 
-Stefan
+The function added in this change performs the required association
+to transition to being managed by the ioctl interface.
 
-Am 07.06.2010 02:28, schrieb Berkey B Walker:
-> Excellent start Neil.  This will be much appreciated.
-> b-
-> 
-> NeilBrown wrote:
->> In the spirit of "release early" I thought I would post some patches
->> that I have been working on lately.
->>
->> Please don't try these on a system with valuable data - they are very
->> early code and will probably do the wrong thing.
->>
->> The goal of these patches is to add a 'bad block list' to each device
->> and use it to allow us to fail single blocks rather than whole
->> devices.
->>
->> This is particularly useful in arrays will multiple redundancy
->> (e.g. RAID6 or 3-device RAID1).  In such cases, bad blocks in
->> different places on different devices can leave an array that still
->> has at-least single redundancy on all stripes.  Without this support,
->> such arrays could become non-fuinctional.
->>
->> This is also a necessary preparation to being able to support
->> 'hot-replace' where we build a new device while the old device is
->> still in service.  Such a process is only really needed if the old
->> device is potentially faulty, and having the bad-block-list in place
->> allows it to continue to provide the best service it can even when it
->> cannot provide 100% service.
->>
->> These patches have only seen limited testing, and are posted primarily
->> for review rather than testing, though testing is always valuable,
->> especially if you use the md/faulty module to simulate errors, or have
->> a drive that provides you with real errors...
->>
->> This series provides infrastructure and integration into raid1.c only.
->> raid5.c and raid10.c support are still to be written.
->>
->> NeilBrown
->>
->>
->> ---
->>
->> NeilBrown (16):
->>        md: beginnings of bad block management.
->>        md/bad-block-log: add sysfs interface for accessing bad-block-log.
->>        md: don't allow arrays to contain devices with bad blocks.
->>        md: load/store badblock list from v1.x metadata
->>        md: reject devices with bad blocks and v0.90 metadata.
->>        md/raid1: clean up read_balance.
->>        md: simplify raid10 read_balance
->>        md/raid1: avoid reading from known bad blocks.
->>        md/raid1: avoid reading known bad blocks during resync
->>        md: add 'write_error' flag to component devices.
->>        md/multipath: discard ->working_disks in favour of ->degraded
->>        md: make error_handler functions more uniform and correct.
->>        md: make it easier to wait for bad blocks to be acknowledged.
->>        md/raid1: avoid writing to known-bad blocks on known-bad drives.
->>        md/raid1: clear bad-block record when write succeeds.
->>        md/raid1:  Handle write errors by updating badblock log.
->>
->>
->>   drivers/md/dm-raid456.c   |    6
->>   drivers/md/md.c           |  725
->> +++++++++++++++++++++++++++++++++++++++++++--
->>   drivers/md/md.h           |   76 ++++-
->>   drivers/md/multipath.c    |   60 ++--
->>   drivers/md/multipath.h    |    1
->>   drivers/md/raid1.c        |  714
->> +++++++++++++++++++++++++++++++++++---------
->>   drivers/md/raid1.h        |   14 +
->>   drivers/md/raid10.c       |  123 ++++----
->>   drivers/md/raid5.c        |   48 ++-
->>   include/linux/raid/md_p.h |   13 +
->>   10 files changed, 1475 insertions(+), 305 deletions(-)
->>
->>    
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+v4: same as v3 but keeping bundled
+
+Signed-off-by: Will Drewry <wad@chromium.org>
+---
+ drivers/md/dm-ioctl.c         |   38 ++++++++++++++++++++++++++++++++++++++
+ include/linux/device-mapper.h |    6 ++++++
+ 2 files changed, 44 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/md/dm-ioctl.c b/drivers/md/dm-ioctl.c
+index dfde391..8c73b20 100644
+--- a/drivers/md/dm-ioctl.c
++++ b/drivers/md/dm-ioctl.c
+@@ -1604,6 +1604,44 @@ void dm_interface_exit(void)
+ }
+ 
+ /**
++ * dm_ioctl_export - Permanently export a mapped device via the ioctl interface
++ * @md: Pointer to mapped_device
++ * @name: Buffer (size DM_NAME_LEN) for name
++ * @uuid: Buffer (size DM_UUID_LEN) for uuid or NULL if not desired
++ */
++int dm_ioctl_export(struct mapped_device *md, const char *name, const char *uuid)
++{
++	int r = 0;
++	struct hash_cell *hc;
++
++	if (!md) {
++		r = -ENXIO;
++		goto out;
++	}
++
++	/* The name and uuid can only be set once. */
++	mutex_lock(&dm_hash_cells_mutex);
++	hc = dm_get_mdptr(md);
++	mutex_unlock(&dm_hash_cells_mutex);
++	if (hc) {
++		DMERR("%s: already exported", dm_device_name(md));
++		r = -ENXIO;
++		goto out;
++	}
++
++	r = dm_hash_insert(name, uuid, md);
++	if (r) {
++		DMERR("%s: could not bind to '%s'", dm_device_name(md), name);
++		goto out;
++	}
++
++	/* Let udev know we've changed. */
++	dm_kobject_uevent(md, KOBJ_CHANGE, dm_get_event_nr(md));
++out:
++	return r;
++}
++
++/**
+  * dm_copy_name_and_uuid - Copy mapped device name & uuid into supplied buffers
+  * @md: Pointer to mapped_device
+  * @name: Buffer (size DM_NAME_LEN) for name
+diff --git a/include/linux/device-mapper.h b/include/linux/device-mapper.h
+index 1381cd9..0792cf3 100644
+--- a/include/linux/device-mapper.h
++++ b/include/linux/device-mapper.h
+@@ -215,6 +215,12 @@ void dm_set_mdptr(struct mapped_device *md, void *ptr);
+ void *dm_get_mdptr(struct mapped_device *md);
+ 
+ /*
++ * Export the device via the ioctl interface (uses mdptr).
++ */
++int dm_ioctl_export(struct mapped_device *md, const char *name,
++		    const char *uuid);
++
++/*
+  * A device can still be used while suspended, but I/O is deferred.
+  */
+ int dm_suspend(struct mapped_device *md, unsigned suspend_flags);
+-- 
+1.7.0.4
 
