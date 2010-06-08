@@ -1,71 +1,38 @@
-From: Roman Mamedov <roman@rm.pp.ru>
-Subject: Re: mdadm freezes the system
-Date: Tue, 8 Jun 2010 22:24:34 +0600
-Message-ID: <20100608222434.3f0fb637@natsu>
-References: <20100608145913.187a69ca@natsu>
+From: Iordan Iordanov <iordan@cdf.toronto.edu>
+Subject: write barriers on raid0 and raid10
+Date: Tue, 08 Jun 2010 14:23:04 -0400
+Message-ID: <4C0E8A88.8010906@cdf.toronto.edu>
+References: <S1751539Ab0FHSI6/20100608180858Z+3813@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Gm3GRtiww4m1Y4osy7yNPh1"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100608145913.187a69ca@natsu>
+In-Reply-To: <S1751539Ab0FHSI6/20100608180858Z+3813@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <roman@rm.pp.ru>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/Gm3GRtiww4m1Y4osy7yNPh1
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Tue, 8 Jun 2010 14:59:13 +0600
-Roman Mamedov <roman@rm.pp.ru> wrote:
+We are designing a rather involved file server with an ext3 formatted 
+stripe (raid0) sitting on top of raid10 devices. Each raid10 device sits 
+on top of 3 iscsi targets, and has layout n3 (so it is effectively a 3 
+way mirror). We chose raid10 over raid1 due to an apparent read 
+performance benefit of raid10.
 
-> Today, I have decided to convert a three-member RAID5 into a four-member
-> RAID6. mdadm segfaulted(!) right after the --grow command, and dmesg had
-> an error about md being unable to overwrite the /sys/.....stripe_cache_si=
-ze
-> file. (As I understand, this is already fixed in the latest kernel).
->=20
-> The array then started rebuilding as 4-member RAID6 seemingly fine, but
-> shortly after, the system locked up in the same manner as described above.
+We are trying to decide whether to upgrade to a kernel newer than 
+2.6.34, where write barriers are ostensibly supported by all possible 
+raid types, because we are worried about ext3 corruption with no write 
+barrier support.
 
-Interestingly though, when I attempted that reshape in 2.6.34 (complete with
-the described segfault), the array _instantly_ became a 4-disk RAID6 with a
-rebuilding spare, and the process was running at about 50 MB/sec. And I was
-able to then remove that spare and shrink the array back to --level=3D5 and
---raid-devices=3D3, instantly too.
+However, we are also worried about whether write barriers really "make 
+sense" in a multi-disk environment and are wondering whether they will 
+actually make a difference in our setup. For argument's sake, let's 
+assume that our drives honor write cache flushes.
 
-But when I rebooted to 2.6.35-rc2, the same --grow command I used initially
-(--level=3D6 --raid-devices=3D4) while did not produce a segfault, failed, =
-asking
-for the "backup file" to be specified. And after I added the --backup-file
-switch, it started a slow "Reshape" process, going at about 6 MBytes per
-second. (And this too, caused a lockup in a way which I described earlier.)
-Apparently, there is no way to abort this process now, so I paused it using
-echo idle > /sys/.....sync_action, and copying data away from the array, to
-recreate it from scratch.
+Can somebody shed some light on how write barriers are implemented in 
+raid0 and raid10? Also, any critical comments on the validity of our 
+setup and/or assumptions is also welcome.
 
-So why the same RAID5 to RAID6 conversion started so differently in these t=
-wo
-cases? And is it even possible to reshape RAID5 to RAID6 while simultaneous=
-ly
-adding a disk, without overwriting all the other disks' contents (it surely
-looked like this is what was happening in the first case)?
-
---=20
-With respect,
-Roman
-
---Sig_/Gm3GRtiww4m1Y4osy7yNPh1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkwObsMACgkQTLKSvz+PZwguywCfT85ml2DDLWkPaDVcRBhvZ0Xu
-f4kAoJBrJAVSrCKhmGH3/bt3jTJpNeDx
-=YKBm
------END PGP SIGNATURE-----
-
---Sig_/Gm3GRtiww4m1Y4osy7yNPh1--
+Many thanks!
+Iordan Iordanov
