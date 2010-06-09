@@ -1,7 +1,7 @@
 From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: [PATCH 15/23] imsm: Set new array size in update_grow_array
-Date: Wed, 9 Jun 2010 15:37:33 +0100
-Message-ID: <905EDD02F158D948B186911EB64DB3D11EECE8E3@irsmsx503.ger.corp.intel.com>
+Subject: [PATCH 16/23] Set size on reshape finish by mdadm
+Date: Wed, 9 Jun 2010 15:38:52 +0100
+Message-ID: <905EDD02F158D948B186911EB64DB3D11EECE8E7@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -13,61 +13,94 @@ Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J"
 List-Id: linux-raid.ids
 
 (Online Capacity Expansion for IMSM)
-Online capacity expansion has a goal that at the process end, increasing disks number increases array size.
-To expand array size, new array size has to be calculated based on new disks number. This value is stored in metadata.
-
-When reshape finishes mdadm will read this value from metadata and will update md (md will not update it automatically as array size is managed externally for external metadata).
+When Online capacity expansion/reshape is finished, md doesn't set new array size for external meta (it is managed externally), so mdadm has to wait until reshape finish, read new array size from metadata and then set it in md.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- super-intel.c |   36 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 36 insertions(+), 0 deletions(-)
+ Grow.c |   67 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 67 insertions(+), 0 deletions(-)
 
-diff --git a/super-intel.c b/super-intel.c index 6af79a8..b92a787 100644
---- a/super-intel.c
-+++ b/super-intel.c
-@@ -5490,6 +5490,42 @@ static void imsm_process_update(struct supertype *st,
- 		migr_map_src = get_imsm_map(dev_new, 1);
- 		memcpy(migr_map, migr_map_src, sizeof_imsm_map(migr_map_src));
- 
-+		/* manage size, if active array is known
-+		 * to in line with md access active array
-+		 * (Initialize pointer to the proper active array)
-+		 */
-+		if ((map->raid_level == 5) ||
-+		    (map->raid_level == 0)) {
-+			unsigned long long array_blocks;
-+			unsigned long long array_blocks_current;
-+			int used_disks;
+diff --git a/Grow.c b/Grow.c
+index ab83e31..4431b64 100644
+--- a/Grow.c
++++ b/Grow.c
+@@ -472,6 +472,70 @@ void wait_reshape(struct mdinfo *sra)  }
+ 			
+ 		
++int grow_manage_size_ext_meta(char *devname) {
++	int ret_val = 0;
++	struct supertype *st = NULL;
++	struct mdinfo *sra = NULL;
++	struct mdinfo info;
++	int fd = -1;
++	unsigned long long size;
++	int container_fd;
++	int dn;
 +
-+			switch (map->raid_level) {
-+			case 5:
-+				used_disks = map->num_members - 1;
-+			break;
-+			case 0:
-+				used_disks = map->num_members;
-+			break;
-+			}
++	/* finalize current volume reshape
++	 * for external meta size has to be managed by mdadm
++	 * read size set in meta and put it to md when
++	 * reshape is finished.
++	 *
++	 * for takeovered array, return to original raid level
++	 */
 +
-+			array_blocks = map->blocks_per_member * used_disks;
-+			/* round array size down to closest MB
-+			 */
-+			array_blocks = (array_blocks >> SECT_PER_MB_SHIFT)
-+					<< SECT_PER_MB_SHIFT;
-+			array_blocks_current
-+				= (((unsigned long long)dev->size_high) << 32)
-+					+ dev->size_low;
++	if (devname == NULL)
++		goto exit_grow_manage_size_ext_meta;
 +
-+			/* grow only
-+			 */
-+			if (array_blocks_current < array_blocks) {
-+				dev->size_low = __cpu_to_le32((__u32)array_blocks);
-+				dev->size_high
-+					= __cpu_to_le32((__u32)(array_blocks >> 32));
-+			}
-+		}
- 		super->updates_pending++;
- 
- 		/* operatio succed - no exit with error
++	fd = open(devname, O_RDONLY | O_DIRECT);
++
++	if (fd < 0)
++		goto exit_grow_manage_size_ext_meta;
++	st = super_by_fd(fd);
++	if (st == NULL)
++		goto exit_grow_manage_size_ext_meta;
++
++	if (st->ss->external == 0)
++		goto exit_grow_manage_size_ext_meta;
++
++	sra = sysfs_read(fd, 0, GET_VERSION);
++	if (sra == NULL)
++		goto exit_grow_manage_size_ext_meta;
++	wait_reshape(sra);
++
++	/* reshape has finished, update md size
++	 * get per-device size and multiply by data disks
++	 */
++	dn = devname2devnum(sra->text_version + 1);
++	container_fd = open_dev_excl(dn);
++	if (container_fd < 0)
++		goto exit_grow_manage_size_ext_meta;
++	st->ss->load_super(st, container_fd, NULL);
++	st->ss->getinfo_super(st, &info);
++	close(container_fd);
++
++	size = info.custom_array_size/2;
++	sysfs_set_num(sra, NULL, "array_size", size);
++
++	/* for takeovered array return to original raid level */
++	ret_val = 1;
++
++exit_grow_manage_size_ext_meta:
++	if (st)
++		st->ss->free_super(st);
++	sysfs_free(sra);
++	if (fd > -1)
++		close(fd);
++	return ret_val;
++}
++
+ #define	EXTERNAL_META_STATUS_OK		1
+ #define	EXTERNAL_META_STATUS_ERROR	2
+ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file, @@ -1411,6 +1475,9 @@ ext_array_configured:
+ 						       d - odisks, fdlist+odisks, offsets+odisks);
+ 			if (backup_file && done)
+ 				unlink(backup_file);
++			if ((done >= 0) && (odata < ndata))
++				grow_manage_size_ext_meta(devname);
++
+ 			if (level != UnSet && level != array.level) {
+ 				/* We need to wait for the reshape to finish
+ 				 * (which will have happened unless odata < ndata)
 
