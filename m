@@ -1,56 +1,31 @@
-From: Gilad Arnold <arnold@cs.berkeley.edu>
-Subject: migrating from RAID5 to RAID10
-Date: Wed, 9 Jun 2010 08:11:33 -0700
-Message-ID: <20100609151132.GA10082@libra.CS.Berkeley.EDU>
+From: Aryeh Gregor <Simetrical+list@gmail.com>
+Subject: Re: It is possible to put write cache on ssd?
+Date: Wed, 9 Jun 2010 12:21:29 -0400
+Message-ID: <AANLkTimMBOtusTb2GQjziBEt5XoFEBEmZmQfhWsB6Xig@mail.gmail.com>
+References: <loom.20100604T102522-67@post.gmane.org>
+	<4C0D44FC.8020908@tmr.com>
+	<loom.20100608T092726-796@post.gmane.org>
+	<AANLkTikfDks6aTLal8dJLXhMlGxHtMtZ-L_r0r8IQQ4U@mail.gmail.com>
+	<4C0F75B8.7020306@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <4C0F75B8.7020306@shiftmail.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: MRK <mrk@shiftmail.org>
+Cc: CoolCold <coolthecold@gmail.com>, Mario <mgiammarco@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Dear all,
+On Wed, Jun 9, 2010 at 7:06 AM, MRK <mrk@shiftmail.org> wrote:
+> Same problem with write-mostly/write-behind I think. I don't know how long
+> is the queue that holds data already committed to the SSD and not yet
+> committed to the HDD but it can't be too long. I'm reading the "man md"
+> right now and it's not extremely clear on this. I have the impression the
+> queue between the two it's either the /sys/block/hdddevice/queue/nr_requests
+> or it uses the write-intent bitmap (if set). In case of the nr_requests,
+> it's gonna be very short so the SSD can give you quick bursts but continuous
+> performance will be that of the HDD.
 
-I have been using RAID5 on a desktop machine using a couple of 500 GB
-drives.  My original intent was to grow the array by adding more drives,
-as the need arises.  I am now looking to expand the capacity (by adding
-one more drive, for simplicity assume it's an identical one) but I'd
-also like to switch to RAID10, which (I understand) has much better read
-and write performance compared to RAID5 with more than two drives.  It
-is my understanding that growing a RAID10 array is not yet supported,
-but my hope is that by the time I need to expand again it will already
-be supported ;-)  Finally, I'd like to do the migration on a "live"
-machine, to the extent possible (I will use a remote backup, at least
-for some of the data).
+I tried this once and posted some bonnie++ results:
 
-I'd like to hear your thoughts about whether or not the following is
-a good way to perform the migration:
-
-1. Backup data.
-
-2. Remove one of the drives from the current array, causing it to work
-   in degraded mode.
-
-3. Start a new RAID10 array with two actual drives (the one removed from
-   the existing array and the new one) and one "missing" drive.  I know
-   that other RAID levels (e.g. 1 and 5) can be created with a missing
-   drive, not sure about RAID10 though.  If this actually works, I'll
-   get a 750 GB array working in degraded mode.
-
-4. Copy the data from the old array to the new array.
-
-5. Kill the old array entirely; add the remaining drive to the new array
-   and watch it rebuild.
-
-My main doubts are about step 3 above, and of course the fact that
-a drive failure at any point between 2-5 (except when 4 has fully
-completed and before going to 5) means losing data and having to resort
-to backup.
-
-A separate question concerns which layout I should be using for RAID10,
-it sounds like f2 is the way to go, isn't it?
-
-Your advice is much appreciated. Thanks!
-
-Gilad
+https://kerneltrap.org/mailarchive/linux-raid/2010/1/31/6742263
