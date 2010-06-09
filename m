@@ -1,72 +1,71 @@
-From: MRK <mrk@shiftmail.org>
-Subject: Re: It is possible to put write cache on ssd?
-Date: Wed, 09 Jun 2010 13:06:32 +0200
-Message-ID: <4C0F75B8.7020306@shiftmail.org>
-References: <loom.20100604T102522-67@post.gmane.org> <4C0D44FC.8020908@tmr.com>
- <loom.20100608T092726-796@post.gmane.org>
- <AANLkTikfDks6aTLal8dJLXhMlGxHtMtZ-L_r0r8IQQ4U@mail.gmail.com>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: [md PATCH 0/5] md: Online Capacity Expansion for IMSM
+Date: Wed, 9 Jun 2010 15:19:57 +0100
+Message-ID: <905EDD02F158D948B186911EB64DB3D11EECE89A@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-reply-to: <AANLkTikfDks6aTLal8dJLXhMlGxHtMtZ-L_r0r8IQQ4U@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: CoolCold <coolthecold@gmail.com>
-Cc: Mario <mgiammarco@gmail.com>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-On 06/08/2010 02:23 PM, CoolCold wrote:
-> May be something like
-> http://github.com/facebook/flashcache/blob/master/doc/flashcache-doc.txt
-> will be interesting for you.
-
-There is another one: bcache
-
-http://lkml.indiana.edu/hypermail//linux/kernel/1004.0/01051.html
-http://lkml.org/lkml/2010/4/23/376
-
-seems beta stage but nearing completion.
-I have not yet investigated all the differences to flashcache. At first 
-sight, bcache seems to cache reads, flashcache seems to cache writes.
-
-But be warned that if you use a flash disk as a cache for a big RAID I 
-believe it's gonna wear out very quickly.
-
-Consider e.g. bcache caches reads, so on every cache miss it reads 
-through the RAID and writes to the flash. If you have indexing programs 
-that scrub the whole array (which is clearly larger than the SSD) they 
-are going to transform all reads to writes to the flash disk. This is 
-going to burn it quickly. I am not sure an SSD is a good medium for 
-caching purposes. Try to buy RAM for this.
-
-OTOH caching writes has another big problem:
-http://www.legitreviews.com/news/7225/
-read the grey box:
-There is written that, due to the internal workings of SSDs, without a 
-supercapacitor it is not possible to guarantee data integrity upon power 
-loss. This is true EVEN if you are running it with cache off (so I 
-suppose it is true even if you are using cache flushes or barriers).
-Do you really want to lose data upon power loss? Caching writes on an 
-SSD is risky...
-At least bcache caches only reads, this should be safe I think.
-
-Using a SSD for filesystem journal when the filesystem is on a HDD I 
-suppose would not yield big improvements because the bottleneck will 
-always be the HDD writes, which won't stay much behind journal commits. 
-At most you are going to get the speed you have without a journal (like 
-ext2).
-
-Same problem with write-mostly/write-behind I think. I don't know how 
-long is the queue that holds data already committed to the SSD and not 
-yet committed to the HDD but it can't be too long. I'm reading the "man 
-md" right now and it's not extremely clear on this. I have the 
-impression the queue between the two it's either the 
-/sys/block/hdddevice/queue/nr_requests or it uses the write-intent 
-bitmap (if set). In case of the nr_requests, it's gonna be very short so 
-the SSD can give you quick bursts but continuous performance will be 
-that of the HDD. In case of write-intent bitmap, the delay between the 
-two can probably be unbounded, but be warned that if the HDD is even 
-just a bit behind the SSD, it's like not having the RAID: if the SSD 
-fails, you lose data (might be a lot of data; will also probably need fsck).
-
-What do you think?
+KG1kOiBPbmxpbmUgQ2FwYWNpdHkgRXhwYW5zaW9uIGZvciBJTVNNKQ0KVGhlIGZvbGxvd2luZyBz
+ZXJpZXMgaW1wbGVtZW50cyBPbmxpbmUgQ2FwYWNpdHkgRXhwYW5zaW9uICBpbiBtZCBmb3IgUmFp
+ZDAgb3IgUmFpZDUgYXJyYXlzIGJ1aWxkIG9uIElNU00ncyBtZXRhZGF0YS4NCkl0IGFsbG93cyBm
+b3IgYWRkaW5nIG5ldyBoYXJkIGRyaXZlKHMpIHRvIGV4aXN0aW5nIElNU00gUmFpZDAgb3IgUmFp
+ZDUgYXJyYXkuDQoNCk9ubGluZSBDYXBhY2l0eSBFeHBhbnNpb24gZm9yIEV4dGVybmFsIE1ldGFk
+YXRhIHJlcXVpcmVzIFRha2VvdmVyIGZ1bmN0aW9uYWxpdHkgaW4gbWQgYW5kIG1kYWRtLg0KDQpB
+bGdvcml0aG0gbG9va3MgYXMgZm9sbG93czoNCg0KMS4gbWRhZG06IEZvciBSYWlkMCBhcnJheSwg
+ZXhlY3V0ZSB0YWtlb3ZlciB0byBSYWlkNQ0KMi4gbWRhZG06IHNldCBuZXcgcmFpZCBkaXNrcyBu
+dW1iZXIgdG8gbWQgdXNpbmcgcmFpZF9kaXNrcyBlbnRyeSBpbiBzeXNmcw0KMy4gbWRhZG06IGNh
+bGwgdXBkYXRlX3N1cGVyKCkgdG8gY29uZmlndXJlIGFkZGVkIGRpc2tzIGZyb20gc3BhcmVzIHBv
+b2wgKGFkZCB0aGVtIHRvIG1kIGNvbmZpZ3VyYXRpb24pIGFuZCBwcmVwYXJlIG1ldGFkYXRhIHVw
+ZGF0ZQ0KNC4gbWRhZG06IHJ1biByZXNoYXBlIHVzaW5nIHN5bmNfYWN0aW9uIGVudHJ5IGluIHN5
+c2ZzDQo1LiBtZCAgIDogc3RhcnRzIHJlc2hhcGUNCjYuIG1kbW9uOiBkZXRlY3RzIGNoYW5nZSBp
+biBtZCBjb25maWd1cmF0aW9uIChpbmNyZWFzZXMgbnVtYmVyIG9mIGRpc2tzKSANCjcuIG1kbW9u
+OiByZWFsbG9jYXRlcyBhY3RpdmVfYXJyYXkgc3RydWN0dXJlIGFuZCBleHRlcm5hbCBtZXRhZGF0
+YSBzcGVjaWZpYyBzdHJ1Y3R1cmVzIHVzaW5nIGdyb3dfYXJyYXkoKSB2ZWN0b3IgdG8gYXZvaWQg
+bWVtb3J5IGNvcnJ1cHRpb24gZHVyaW5nIG1ldGFkYXRhIHVwZGF0ZSBwcm9jZXNzaW5nLg0KOC4g
+bWRhZG06IHBvc3QgbWV0YWRhdGEgdXBkYXRlIHRvIG1kbW9uIChtZG1vbiBpcyByZWFkeSB0byBy
+ZWNlaXZlIGl0KSANCjkuIG1kbW9uOiBwcm9jZXNzIG1ldGFkYXRhIHVwZGF0ZSBhbmQgY2FsY3Vs
+YXRlIG5ldyBhcnJheSBzaXplLiBTdG9yZSBuZXcgYXJyYXkgc2l6ZSB3aXRoIG1ldGFkYXRhIHVw
+ZGF0ZSBvbiBkaXNrcy4NCgkJLi4uIHJlc2hhcGUgLi4uDQoxMC4gbWQgIDogZmluaXNoZXMgcmVz
+aGFwZSwgYXJyYXkgc2l6ZSBpcyBub3QgaW5jcmVhc2VkIGJ5IG1kIGFzIGl0IGlzIG1hbmFnZWQg
+ZXh0ZXJuYWxseQ0KMTEubWRtb246IGZpbmlzaGVzIG1pZ3JhdGlvbiBpbiBtZXRhZGF0YQ0KMTIu
+bWRhZG06IHJlYWRzIGFycmF5IHNpemUgZnJvbSBtZXRhZGF0YSBhbmQgc2V0cyBpdCB0byBtZA0K
+MTMubWRhZG06IEZvciBSYWlkMCBhcnJheSwgZXhlY3V0ZSB0YWtlb3ZlciBmcm9tIFJhaWQ1IHRv
+IFJhaWQwDQoNCkZvciBJTVNNLCBpdCBpcyByZXF1aXJlZCB0byBleHBhbmQgYWxsIGFycmF5cyBp
+biBjb250YWluZXIgYXQgdGltZSwgc28gcmVzaGFwZSBoYXMgdG8gYmUgcnVuIG9uIGNvbnRhaW5l
+ciBhbmQgaXQgaXMgY2hhbmdlZCB0byBzZXJpYWwgZXhlY3V0aW9uIGZvciBldmVyeSBhcnJheSBp
+biBjb250YWluZXIgKGltcGxlbWVudGVkIGluIG1kYWRtKS4gRmVhdHVyZSBpcyB0cmVhdGVkIGFz
+IGV4cGVyaW1lbnRhbCBkdWUgdG8gV2luZG93cyBjb21wYXRpYmlsaXR5IGR1cmluZyByZXNoYXBl
+IHByb2Nlc3MsIHNvIGxhc3QgcGF0Y2ggaW4gbWRhZG0gcGF0Y2ggc2VyaWVzIHB1dHMgY2hlY2sg
+dG8gdGhlIGNvZGUgZm9yIEVYUEVSSU1FTlRBTCBjb21waWxhdGlvbiBmbGFnIHVzYWdlIGR1cmlu
+ZyBtZGFkbSBjb21waWxhdGlvbi4NCg0KbWQgZm9yIHRoaXMgZmVhdHVyZSB3b3JrcyBmb3IgUmFp
+ZDUgYXJyYXlzIG9ubHkgKHJhaWQwIGFycmF5cyBhcmUgYWZ0ZXIgdGFrZW92ZXIgdG8gcmFpZDUp
+LiBSYWlkNSByZXNoYXBlIGVuZ2luZSBmb3IgbmF0aXZlIG1ldGFkYXRhIGlzIHVuY2hhbmdlZC4N
+ClBhdGNoZXMgbWFrZXMgdGhlIGZvbGxvd2luZyBjb2RlIGNoYW5nZXM6DQoxLiBVc2UgZGlza3Mg
+YWRkZWQgYnkgbWRhZG0gaW4gcmVzaGFwZSBwcm9jZXNzIGZvciBleHRlcm5hbCBtZXRhZGF0YToN
+CiAgICAgIG1kOiBGaXg6ICdkZWdyYWRlZCcgY2FsY3VsYXRpb24gd2hlbiBzdGFydGluZyByZXNo
+YXBlIGZvciBleHRlcm5hbCBtZXRhDQogICAgICBtZDogVXNlIGFkZGVkIGRpc2tzIGZvciBleHRl
+cm5hbCBtZXRhZGF0YSBjYXNlIGluIHN0YXJ0X3Jlc2hhcGUoKQ0KICAgICAgbWQ6IEZpeDogbWF4
+X2Rpc2tzIGxpbWl0IHNldCBmb3IgZXh0ZXJuYWwgbWV0YWRhdGENCjIuIENvbmZpZ3VyZSBhZGRl
+ZCBieSBtZGFkbSBkaXNrcyB0byBhdm9pZCBpL28gZXJyb3JzIGZvciBleHRlcm5hbCBtZXRhZGF0
+YQ0KICAgICAgbWQ6IEZpeDogQklPIEkvTyBFcnJvciBkdXJpbmcgcmVzaGFwZSBmb3IgZXh0ZXJu
+YWwgbWV0YQ0KMy4gU2V0IGZsYWdzIG1haW50YWluZWQgd2hpbGUgbmF0aXZlIG1ldGFkYXRhIGlz
+IHJlYWQgYW5kIHdyaXR0ZW4gdG8gdGhlIGFycmF5IGZvciBleHRlcm5hbCBtZXRhZGF0YSB0byBh
+bGxvdyByZXNoYXBlIHRvIHdvcmsuDQogICAgICBtZDogRW5hYmxlIHJlc2hhcGUgZm9yIGV4dGVy
+bmFsIG1ldGFkYXRhDQogICAgICBtZDogRml4OiBtYXhfZGlza3MgbGltaXQgc2V0IGZvciBleHRl
+cm5hbCBtZXRhZGF0YQ0KDQotLS0NCg0KQWRhbSBLd29sZWsgKDUpOg0KICAgICAgbWQ6IEZpeDog
+J2RlZ3JhZGVkJyBjYWxjdWxhdGlvbiB3aGVuIHN0YXJ0aW5nIHJlc2hhcGUgZm9yIGV4dGVybmFs
+IG1ldGENCiAgICAgIG1kOiBGaXg6IEJJTyBJL08gRXJyb3IgZHVyaW5nIHJlc2hhcGUgZm9yIGV4
+dGVybmFsIG1ldGENCiAgICAgIG1kOiBVc2UgYWRkZWQgZGlza3MgZm9yIGV4dGVybmFsIG1ldGFk
+YXRhIGNhc2UgaW4gc3RhcnRfcmVzaGFwZSgpDQogICAgICBtZDogRW5hYmxlIHJlc2hhcGUgZm9y
+IGV4dGVybmFsIG1ldGFkYXRhDQogICAgICBtZDogRml4OiBtYXhfZGlza3MgbGltaXQgc2V0IGZv
+ciBleHRlcm5hbCBtZXRhZGF0YQ0KDQoNCiBkcml2ZXJzL21kL21kLmMgICAgfCAgIDI2ICsrKysr
+KysrKysrKysrKysrKystLS0tLS0tDQogZHJpdmVycy9tZC9yYWlkNS5jIHwgICAzMSArKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKy0tDQogMiBmaWxlcyBjaGFuZ2VkLCA0OCBpbnNlcnRpb25z
+KCspLCA5IGRlbGV0aW9ucygtKQ0KDQotLSANClNpZ25hdHVyZQ0K
