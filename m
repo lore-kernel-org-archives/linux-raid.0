@@ -1,7 +1,7 @@
 From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: mdadm 3.1.x and bitmap chunk
-Date: Wed, 9 Jun 2010 23:05:41 +0200
-Message-ID: <20100609210541.GA12153@lazy.lzy>
+Subject: Detecting array parameters
+Date: Wed, 9 Jun 2010 23:13:40 +0200
+Message-ID: <20100609211340.GA12172@lazy.lzy>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
@@ -10,20 +10,23 @@ Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi folks,
+Hi,
 
-I just noticed that mdadm 3.1.x sets the default
-bitmap chunk to 64MB.
+if I understood it correctly, in order to detect
+the several array parameters (number of disks, for
+example), it is possible to use "mdadm -D /dev/mdX"
+or to check the files in the corresponding /sys/block/...
+/mdX/... files.
 
-Searching around, I found the reason should be
-related with write performances, which seem to
-be less compromised with large bitmap chunks.
+Now, assuming something needs to be done in scripts,
+what would be the best way? Using "mdadm -D ... | grep"
+(or "mdadm ... | gawk ...."), or to read the proper
+files in /sys/block/md...?
 
-I've no problem with that, but is it possible
-to set the bitmap chunk to the minimum size,
-without trying all the possible dimensions?
+Assuming the wanted information is available on both
+sides, which does not seem always the case.
 
-Thanks a lot in advance,
+Thanks,
 
 bye,
 
