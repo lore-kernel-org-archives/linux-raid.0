@@ -1,7 +1,7 @@
 From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: [PATCH 21/23] imsm: Run Online Capacity Expansion on container
-Date: Wed, 9 Jun 2010 15:43:22 +0100
-Message-ID: <905EDD02F158D948B186911EB64DB3D11EECE8FB@irsmsx503.ger.corp.intel.com>
+Subject: [PATCH 22/23] imsm: Add start limitation for container
+Date: Wed, 9 Jun 2010 15:44:09 +0100
+Message-ID: <905EDD02F158D948B186911EB64DB3D11EECE8FD@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -13,377 +13,331 @@ Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J"
 List-Id: linux-raid.ids
 
 (Online Capacity Expansion for IMSM)
-For IMSM, Online Capacity Expansion has to be run for whole container due to compatibility reasons.
-When container is passed during expansion, mdadm searches for first volume in container. For this volume grow operation is started.
-When firs volume is reshaped process is run for every next volume that is left in container.
+For IMSM, it is not allowed that in reshaped container exists other raid volume than raid5 or raid0 type. If container has any other raid volume type, grow operation has to be rejected.
+To implement metadata specific limitation is_allowed() function was introduced. Implementation for imsm lets mdadm to know if grow operation is allowed on passed device in particular configuration.
+For imsm it checks if operation is run on container. For container it checks if operation is permitted based on volumes raid levels limitation.
 
 Signed-off-by: Adam Kwolek <adam.kwolek@intel.com>
 ---
 
- Grow.c  |  295 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- mdadm.c |    2 
- mdadm.h |    6 +
- 3 files changed, 296 insertions(+), 7 deletions(-)
+ Grow.c        |   58 ++++++++++++++++++++++++++
+ mdadm.h       |   27 ++++++++++++
+ super-intel.c |  125 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ util.c        |   33 +++++++++++++++
+ 4 files changed, 243 insertions(+), 0 deletions(-)
 
 diff --git a/Grow.c b/Grow.c
-index 5e84c2a..5046e56 100644
+index 5046e56..2a2234d 100644
 --- a/Grow.c
 +++ b/Grow.c
-@@ -35,6 +35,178 @@
- #define offsetof(t,f) ((size_t)&(((t*)0)->f))  #endif
+@@ -88,6 +88,9 @@ char *get_first_device_from_container(char *devname, int fd, int raid_disks, cha
+ 	char *ret_val = NULL;
+ 	struct supertype *st = NULL;
+ 	struct mdinfo *sra = NULL;
++	int operation = OPERATION_CHECK_NOT_IMPLEMENTED;
++	int status;
++	struct is_allowed_params params;
  
-+#define GROW_RESHAPE_BUFFER_SIZE	1024
-+char *get_first_volume(int fd, int raid_disks, char *retBuf) {
-+	char *ret_val = NULL;
-+	struct supertype *st = NULL;
-+	struct mdinfo *sra = NULL;
-+	struct mdinfo info;
-+
-+	if ((retBuf == NULL) || (fd < 0))
-+		goto exit_get_first_volume;
-+
-+	st = super_by_fd(fd);
-+	if (st == NULL)
-+		goto exit_get_first_volume;
-+
-+	if (st->ss->external == 0)
-+		goto exit_get_first_volume;
-+
-+	sra = sysfs_read(fd, 0, GET_VERSION);
-+	if (sra == NULL)
-+		goto exit_get_first_volume;
-+
-+	/* check if we have got something
-+	 * nad it starts form '/', means points somewhere
+ 	if ((devname == NULL) ||
+ 	    (fd < 0) ||
+@@ -110,7 +113,62 @@ char *get_first_device_from_container(char *devname, int fd, int raid_disks, cha
+ 	if (sra == NULL)
+ 		goto exit_get_first_device_from_container;
+ 
++	/* if personality is not prepared for is_allowed()
++	 * we cannot modify input parametes,
++	 * return NULL to indicate this
 +	 */
-+	if ((strlen(sra->text_version) > 1) &&
-+	    (*(sra->text_version) == '/'))
-+		goto exit_get_first_volume;
-+	dprintf("Container detected.\n");
-+
-+	sprintf(st->subarray, "0");
-+	st->ss->load_super(st, fd, NULL);
-+	if (st->sb == NULL)
-+		goto exit_get_first_volume;
-+
-+	st->ss->getinfo_super(st, &info);
-+	snprintf(retBuf, GROW_RESHAPE_BUFFER_SIZE,
-+		"/dev/md/%s",  info.name);
-+	ret_val = retBuf;
-+
-+exit_get_first_volume:
-+	sysfs_free(sra);
-+	if (st)
-+		st->ss->free_super(st);
-+
-+	return ret_val;
-+}
-+
-+char *get_first_device_from_container(char *devname, int fd, int 
-+raid_disks, char *first_volume_buf) {
-+	char *ret_val = NULL;
-+	struct supertype *st = NULL;
-+	struct mdinfo *sra = NULL;
-+
-+	if ((devname == NULL) ||
-+	    (fd < 0) ||
-+	    (first_volume_buf == NULL))
++	if (st->ss->is_allowed == NULL)
 +		goto exit_get_first_device_from_container;
 +
-+	st = super_by_fd(fd);
-+	if (st == NULL)
-+		goto exit_get_first_device_from_container;
-+
-+	if (st->ss->external == 0) {
-+		/* rerurn input, as it has to be array
-+		 * if not this is Grow_reshape() problem
++	memset(&params, 0, sizeof(struct is_allowed_params));
+ 	ret_val = get_first_volume(fd, raid_disks, first_volume_buf);
++	if (ret_val == NULL) {
++		/* cannot get first volume,
++		 * so passed name should be volume name.
 +		 */
++		dprintf("We are running on Volume (return what was passed in)\n");
 +		ret_val = devname;
++		operation = OPERATION_GROW_VOLUME;
++	} else {
++		dprintf("We are running on Container\n");
++		operation = OPERATION_GROW_CONTAINER;
++		params.sra = sra;
++	}
++
++	/* when is_allowed() returns success - keep selection
++	 */
++	params.fd = fd;
++	params.name = devname;
++	params.raid_disks = raid_disks;
++	status = st->ss->is_allowed(operation, &params);
++	if (status == operation)
++		goto exit_get_first_device_from_container;
++
++	/* error and not implemented cases,
++	 * do not modify parameters
++	 */
++	ret_val = NULL;
++	if (status == OPERATION_WRONG_PARAMETERS) {
++		fprintf(stderr,
++			Name ": %s cannot be reshaped due to"\
++			" wrong input parameters.\n",
++			devname);
 +		goto exit_get_first_device_from_container;
 +	}
 +
-+	sra = sysfs_read(fd, 0, GET_VERSION);
-+	if (sra == NULL)
-+		goto exit_get_first_device_from_container;
++	switch (operation) {
++	case OPERATION_GROW_VOLUME:
++		fprintf(stderr,
++		Name": This command has to be executed on container "\
++		"for this array type.\n");
++	break;
++	case OPERATION_GROW_CONTAINER:
++		fprintf(stderr,
++			Name ": %s cannot be reshaped due to"\
++			" Online Capacity Expansion limitations.\n",
++			devname);
++	break;
++	}
+ 
+ exit_get_first_device_from_container:
+ 	if (st)
+diff --git a/mdadm.h b/mdadm.h
+index a01c8cd..9889c60 100644
+--- a/mdadm.h
++++ b/mdadm.h
+@@ -457,6 +457,7 @@ extern char *map_dev(int major, int minor, int create);
+ 
+ struct active_array;
+ struct metadata_update;
++struct is_allowed_params;
+ 
+ /* A superswitch provides entry point the a metadata handler.
+  *
+@@ -649,6 +650,24 @@ extern struct superswitch {
+ 	struct mdinfo *(*activate_spare)(struct active_array *a,
+ 					 struct metadata_update **updates);
+ 
 +
-+	ret_val = get_first_volume(fd, raid_disks, first_volume_buf);
++#define OPERATION_NOT_ALLOWED                  -1
++#define OPERATION_CHECK_NOT_IMPLEMENTED         0
++#define OPERATION_GROW_VOLUME                   1
++#define OPERATION_GROW_CONTAINER                2
++#define OPERATION_WRONG_PARAMETERS              3
++	/* is_allowed will check if operation is allowed for external meta
++	 * parameters usage depends of operation passed in to the function
++	 * function can return:
++	 *     OPERATION_NOT_ALLOWED
++	 *           passed operation is not allowed
++	 *     OPERATION_CHECK_NOT_IMPLEMENTED
++	 *          [assed operation status cannot be evaluated
++	 * when operation is allowed function returns requested check operation id
++	 * i.e.: OPERATION_GROW_VOLUME
++	 */
++	int (*is_allowed)(int operation, struct is_allowed_params *params);
 +
-+exit_get_first_device_from_container:
-+	if (st)
-+		st->ss->free_super(st);
-+	sysfs_free(sra);
+ 	int (*grow_array)(struct active_array *a, int new_raid_disks);
+ 
+ 	int swapuuid; /* true if uuid is bigending rather than hostendian */ @@ -665,6 +684,13 @@ struct metadata_update {
+ 	struct metadata_update *next;
+ };
+ 
++struct is_allowed_params {
++	int		fd;
++	int		raid_disks;
++	char		*name;
++	struct mdinfo	*sra;
++};
 +
-+	return ret_val;
-+}
-+
-+char *get_next_volume(int fd, int raid_disks, char *retBuf) {
-+	char *ret_val = NULL;
-+	struct supertype *st = NULL;
-+	int container_fd = -1;
-+	int dn = -1;
-+	struct mdinfo *sra = NULL;
+ /* A supertype holds a particular collection of metadata.
+  * It identifies the metadata type by the superswitch, and the particular
+  * sub-version of that metadata type.
+@@ -861,6 +887,7 @@ extern int conf_name_is_free(char *name);  extern int devname_matches(char *name, char *match);  extern struct mddev_ident_s *conf_match(struct mdinfo *info, struct supertype *st);  extern void sleep2(unsigned int sec, unsigned int usec);
++extern int find_array_minor(char *text_version, int external, int 
++*minor);
+ extern int read_attr(char *buf, int len, int fd);  extern int read_dev_state(int fd);
+ 
+diff --git a/super-intel.c b/super-intel.c index b92a787..db4055d 100644
+--- a/super-intel.c
++++ b/super-intel.c
+@@ -5954,6 +5954,130 @@ static void imsm_delete(struct intel_super *super, struct dl **dlp, int index)
+ 	}
+ }
+ 
++int imsm_reshape_is_allowed_on_container(struct is_allowed_params 
++*params) {
++	int ret_val = OPERATION_NOT_ALLOWED;
 +	struct mdinfo info;
-+	struct mdu_array_info_s test_array;
++	char buf[1024];
++	struct supertype *st = NULL;
 +	int device_num;
 +
-+	if ((retBuf == NULL) || (fd < 0))
-+		goto exit_get_next_volume;
++	if ((params->sra == NULL) || (params->fd < 0))
++		goto exit_imsm_reshape_is_allowed_on_container;
 +
-+	st = super_by_fd(fd);
++	st = super_by_fd(params->fd);
 +	if (st == NULL)
-+		goto exit_get_next_volume;
++		goto exit_imsm_reshape_is_allowed_on_container;
 +
-+	if (st->ss->external == 0)
-+		goto exit_get_next_volume;
-+
-+	sra = sysfs_read(fd, 0, GET_VERSION);
-+	if (sra == NULL)
-+		goto exit_get_next_volume;
-+
-+	dn = devname2devnum(sra->text_version + 1);
-+	sysfs_free(sra);
-+	sra = NULL;
-+	container_fd = open_dev_excl(dn);
-+	if (container_fd < 0)
-+		goto exit_get_next_volume;
-+
-+	sra = sysfs_read(container_fd, 0, GET_VERSION);
-+	if (sra == NULL)
-+		goto exit_get_next_volume;
-+
-+	device_num = 1;
-+	while (device_num > 0) {
++	device_num = 0;
++	ret_val = OPERATION_GROW_CONTAINER;
++	while (device_num > -1) {
++		int result;
++		int minor;
 +		sprintf(st->subarray, "%i", device_num);
-+		st->ss->load_super(st, container_fd, NULL);
-+		if (st->sb == NULL)
++		load_super_imsm(st, params->fd, NULL);
++		if (st->sb == NULL) {
++			if (device_num == 0)
++				ret_val = OPERATION_WRONG_PARAMETERS;
 +			break;
-+
++		}
 +		st->ss->getinfo_super(st, &info);
-+		if ((info.array.level == 0) ||
-+		    (info.array.level == 5)) {
-+			int delta_disks = raid_disks - info.array.raid_disks;
-+			if (delta_disks > 0) {
-+				int fd2;
-+				snprintf(retBuf, GROW_RESHAPE_BUFFER_SIZE,
-+					"/dev/md/%s",  info.name);
-+				/* in case raid0 "degradation" -> takeovered raid0
-+				 * we have to correct delta_disks
-+				 */
-+				fd2 = open_mddev(retBuf, 1);
-+				if (ioctl(fd2, GET_ARRAY_INFO, &test_array) >= 0) {
-+					int degradation;
 +
-+					degradation = test_array.raid_disks - test_array.working_disks;
++		if (params->raid_disks <= info.array.raid_disks) {
++			/* we work on container for
++			 * Online Capacity Expansion
++			 * only
++			 * so raid_disks has to grow
++			 */
++			ret_val = OPERATION_WRONG_PARAMETERS;
++			break;
++		}
 +
-+					if ((degradation == 1) && (info.array.level == 0))
-+						delta_disks--;
-+
-+					if (delta_disks == 0) {
-+						close(fd2);
-+						continue;
-+					}
-+				}
-+				close(fd2);
-+				ret_val = retBuf;
-+				device_num = -1;
++		if ((info.array.level != 0) &&
++		    (info.array.level != 5)) {
++			/* we cannot use this container
++			 * other raid level
++			 */
++			ret_val = OPERATION_NOT_ALLOWED;
++			break;
++		}
++		/* all raid5 and raid0 volumes in container
++		 * has to be ready for Online Capacity Expansion
++		 */
++		result = find_array_minor(info.text_version,
++					  st->ss->external,
++					   &minor);
++		if (result > -1) {
++			sprintf(info.sys_name, "md%i", minor);
++			if (sysfs_get_str(&info, NULL, "array_state",
++					  buf, 20) <= 0) {
++				ret_val = OPERATION_NOT_ALLOWED;
 +				break;
 +			}
++			if (strcmp(buf, "clean\n") != 0 &&
++			    strcmp(buf, "active\n") != 0) {
++				ret_val = OPERATION_NOT_ALLOWED;
++				break;
++			}
++			if (info.array.level == 5) {
++				if (sysfs_get_str(&info, NULL, "sync_action",
++						  buf, 20) <= 0) {
++					ret_val = OPERATION_NOT_ALLOWED;
++					break;
++				}
++				if (strcmp(buf, "idle\n") != 0 &&
++				    strcmp(buf, "active\n") != 0 &&
++				    strcmp(buf, "frozen\n") != 0) {
++					ret_val = OPERATION_NOT_ALLOWED;
++					break;
++				}
++			}
++		} else {
++			ret_val = OPERATION_NOT_ALLOWED;
++			break;
 +		}
 +		device_num++;
 +	}
 +
-+exit_get_next_volume:
-+	sysfs_free(sra);
++exit_imsm_reshape_is_allowed_on_container:
 +	if (st)
-+		st->ss->free_super(st);
-+	if (container_fd > -1)
-+		close(container_fd);
++		free_super_imsm(st);
 +
 +	return ret_val;
 +}
 +
- void ping_container(char *devname)
- {
- 	struct supertype *st = NULL;
-@@ -586,9 +758,16 @@ exit_grow_manage_size_ext_meta:
- 
- #define	EXTERNAL_META_STATUS_OK		1
- #define	EXTERNAL_META_STATUS_ERROR	2
-+int grow_reshape_process_next_volume(char *devname,
-+			   int quiet,
-+			   char *backup_file,
-+			   long long size, int level, char *layout_str,
-+			   int chunksize,
-+			   int raid_disks);
++int  imsm_is_allowed(int operation, struct is_allowed_params *params) {
++	int ret_val = OPERATION_CHECK_NOT_IMPLEMENTED;
 +
- int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
--		 long long size,
--		 int level, char *layout_str, int chunksize, int raid_disks)
-+		 long long size, int level, char *layout_str,
-+		 int chunksize, int raid_disks, int do_it_for_container)
- {
- 	/* Make some changes in the shape of an array.
- 	 * The kernel must support the change.
-@@ -632,6 +811,9 @@ int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
- 
- 	struct mdinfo *sra, ext_sra;
- 	struct mdinfo *sd;
-+	int raid_disks2 = raid_disks;
-+	long long size2 = size;
++	if ((params == NULL) || (params->name == NULL))
++		goto exit_imsm_is_allowed;
 +
- 
- 	if (ioctl(fd, GET_ARRAY_INFO, &array) < 0) {
- 		fprintf(stderr, Name ": %s is not an active md array - aborting\n", @@ -1525,7 +1707,6 @@ ext_array_configured:
- 			else
- 				fd = -1;
- 			mlockall(MCL_FUTURE);
--
- 			if (odata < ndata)
- 				done = child_grow(st, fd, sra, stripes,
- 						  fdlist, offsets,
-@@ -1571,6 +1752,17 @@ ext_array_configured:
- 				 */
- 				ping_container(devname);
- 			}
++	switch (operation) {
++	case OPERATION_GROW_VOLUME: {
++		struct mdinfo *sra;
 +
-+			/* external metadata can continue growing
-+			 * for next array in container
-+			 * when previous grow is finished
-+			 */
-+			if ((odata < ndata) && (done >= 0) && do_it_for_container) {
-+				done = grow_reshape_process_next_volume(devname, quiet, backup_file,
-+						size2, UnSet, layout_str, chunksize,
-+						raid_disks2);
++		ret_val = OPERATION_NOT_ALLOWED;
++		if (params->fd > -1) {
++			sra = sysfs_read(params->fd, 0, GET_VERSION | GET_DISKS);
++			if (sra) {
++				if (params->raid_disks <= sra->array.raid_disks)
++					ret_val = OPERATION_GROW_VOLUME;
++				sysfs_free(sra);
 +			}
++		}
++	break;
++	}
++	case OPERATION_GROW_CONTAINER: {
++		ret_val = imsm_reshape_is_allowed_on_container(params);
++		break;
++	}
++	}
 +
- 			exit(0);
- 		case -1:
- 			fprintf(stderr, Name ": Cannot run child to monitor reshape: %s\n", @@ -1597,6 +1789,103 @@ ext_array_configured:
- 	return rv;
++exit_imsm_is_allowed:
++	return ret_val;
++}
++
+ struct mdinfo *get_spares_imsm(int devnum)  {
+ 	int fd = -1;
+@@ -6047,6 +6171,7 @@ struct superswitch super_imsm = {
+ 	.match_metadata_desc = match_metadata_desc_imsm,
+ 	.container_content = container_content_imsm,
+ 	.default_layout = imsm_level_to_layout,
++	.is_allowed	= imsm_is_allowed,
+ 	.grow_array	= imsm_grow_array,
+ 	.external	= 1,
+ 	.name = "imsm",
+diff --git a/util.c b/util.c
+index 7f5e20a..46e8785 100644
+--- a/util.c
++++ b/util.c
+@@ -1657,6 +1657,39 @@ void sleep2(unsigned int sec, unsigned int usec)
+ 	select(0, NULL, NULL, NULL, &tv);
  }
  
-+int grow_reshape_process_next_volume(char *devname,
-+			   int quiet,
-+			   char *backup_file,
-+			   long long size, int level, char *layout_str,
-+			   int chunksize,
-+			   int raid_disks)
-+{
-+	int fd;
-+	char next_volume_buf[GROW_RESHAPE_BUFFER_SIZE];
-+	char *next_volume;
-+	int ret_val = 1;
++int find_array_minor(char *text_version, int external, int *minor) {
++	int i;
++	char path[PATH_MAX];
++	struct stat s;
 +
-+	fd = open(devname, O_RDONLY | O_DIRECT);
-+	if (fd < 0)
-+		goto exit_grow_reshape_process_next_volume;
++	if (minor == NULL)
++		return -2;
 +
++	for (i = 127; i >= 0; i--) {
++		char buf[1024];
 +
-+	next_volume = get_next_volume(fd, raid_disks, next_volume_buf);
-+	close(fd);
-+
-+	if (next_volume == NULL)
-+		goto exit_grow_reshape_process_next_volume;
-+
-+	fd = open_mddev(next_volume, 1);
-+	if (fd > -1) {
-+		/* work for next volume
-+		 */
-+		ret_val = Grow_reshape(next_volume, fd, quiet, backup_file, size,
-+				level, layout_str, chunksize, raid_disks, 1);
-+		close(fd);
-+	}
-+
-+exit_grow_reshape_process_next_volume:
-+	return ret_val;
-+}
-+
-+int Grow_reshape_container(char *devname, int fd, int quiet,
-+			   char *backup_file, long long size,
-+			   int level, char *layout_str,
-+			   int chunksize, int raid_disks)
-+{
-+	/* Some external metadada supports Online Capacity Expansion
-+	 * for whole array only.
-+	 * For those case:
-+	 *   1. check if mdadm was executed on container
-+	 *   2. get first volume from container
-+	 *   3. Execute Grow_reshape()
-+	 *
-+	 * On the end of Grow_reshape() next volume reshape will be triggered
-+	 * if particular metadata requires this.
-+	 */
-+	int rv = 0;
-+	char first_volume_buf[GROW_RESHAPE_BUFFER_SIZE];
-+	char *devname2;
-+	int do_it_for_container = 0;
-+
-+	devname2 = get_first_device_from_container(devname, fd,
-+				    raid_disks, first_volume_buf);
-+	if (devname2 == NULL) {
-+		rv = 1;
-+		fprintf(stderr, Name ": Cannot continue for specified device : %s\n", devname);
-+		goto exit_Grow_reshape_container;
-+	}
-+
-+	if (devname != devname2) {
-+		int fd2;
-+
-+		/* it seams that passed device is container
-+		 * switch to first volume in container now
-+		 * as it is checked and allowed
-+		 */
-+		devname = devname2;
-+		do_it_for_container = 1;
-+
-+		fd2 = open_mddev(devname, 1);
-+		if (fd2 < 0) {
-+			rv = 1;
-+			fprintf(stderr, Name ": Cannot open device : %s\n", devname);
-+			goto exit_Grow_reshape_container;
++		snprintf(path, PATH_MAX, "/sys/block/md%d/md/", i);
++		if (stat(path, &s) != -1) {
++			strcat(path, "metadata_version");
++			if (load_sys(path, buf))
++				continue;
++			if (external) {
++				char *version = strchr(buf, ':');
++				if (version && strcmp(version + 1,
++							text_version))
++					continue;
++			} else {
++				if (strcmp(buf, text_version))
++					continue;
++			}
++			*minor = i;
++			return 0;
 +		}
-+		close(fd);
-+		fd = fd2;
 +	}
-+
-+	rv = Grow_reshape(devname, fd, quiet, backup_file,
-+			  size, level, layout_str,
-+			  chunksize, raid_disks,
-+			  do_it_for_container);
-+
-+	/* work for next array in container will be executed
-+	 * in fork-ed part of Grow
-+	 */
-+
-+exit_Grow_reshape_container:
-+	return rv;
++	return -1;
 +}
 +
- /*
-  * We run a child process in the background which performs the following
-  * steps:
-diff --git a/mdadm.c b/mdadm.c
-index d5e34c0..7216870 100644
---- a/mdadm.c
-+++ b/mdadm.c
-@@ -1502,7 +1502,7 @@ int main(int argc, char *argv[])
- 					    bitmap_chunk, delay, write_behind, force);
- 		} else if (size >= 0 || raiddisks != 0 || layout_str != NULL
- 			   || chunk != 0 || level != UnSet) {
--			rv = Grow_reshape(devlist->devname, mdfd, quiet, backup_file,
-+			rv = Grow_reshape_container(devlist->devname, mdfd, quiet, 
-+backup_file,
- 					  size, level, layout_str, chunk, raiddisks);
- 		} else if (array_size < 0)
- 			fprintf(stderr, Name ": no changes to --grow\n"); diff --git a/mdadm.h b/mdadm.h index ecef25c..a01c8cd 100644
---- a/mdadm.h
-+++ b/mdadm.h
-@@ -766,9 +766,9 @@ extern int Manage_subdevs(char *devname, int fd,  extern int autodetect(void);  extern int Grow_Add_device(char *devname, int fd, char *newdev);  extern int Grow_addbitmap(char *devname, int fd, char *file, int chunk, int delay, int write_behind, int force); -extern int Grow_reshape(char *devname, int fd, int quiet, char *backup_file,
--			long long size,
--			int level, char *layout_str, int chunksize, int raid_disks);
-+extern int Grow_reshape_container(char *devname, int fd, int quiet, char *backup_file,
-+				  long long size,
-+				  int level, char *layout_str, int chunksize, int raid_disks);
- extern int Grow_restart(struct supertype *st, struct mdinfo *info,
- 			int *fdlist, int cnt, char *backup_file, int verbose);  extern int Grow_continue(int mdfd, struct supertype *st,
+ int read_attr(char *buf, int len, int fd)  {
+ 	int n;
 
