@@ -1,48 +1,47 @@
 From: Roman Mamedov <roman@rm.pp.ru>
-Subject: Re: migrating from RAID5 to RAID10
-Date: Fri, 11 Jun 2010 00:52:30 +0600
-Message-ID: <20100611005231.401529c0@natsu>
-References: <20100609151132.GA10082@libra.CS.Berkeley.EDU>
+Subject: Re: RAID6 and crashes
+Date: Fri, 11 Jun 2010 00:57:43 +0600
+Message-ID: <20100611005743.43664e5b@natsu>
+References: <4C1128C2.4020105@meetinghouse.net>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/chTWs32vOwE2MND+.VYHtuG"; protocol="application/pgp-signature"
+ boundary="Sig_//CsN40REJv38Xdty5W8aUbc"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100609151132.GA10082@libra.CS.Berkeley.EDU>
+In-Reply-To: <4C1128C2.4020105@meetinghouse.net>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/chTWs32vOwE2MND+.VYHtuG
+--Sig_//CsN40REJv38Xdty5W8aUbc
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-Hello!
+On Thu, 10 Jun 2010 14:02:42 -0400
+Miles Fidelman <mfidelman@meetinghouse.net> wrote:
+=20
+> 2.  Are there any settings that can reduce the likelihood of a RAID=20
+> volume being dirty after a crash?  (The crash/reboot isn't that much of=20
+> a problem - the several hours of degraded performance ARE a problem.)
 
-On Wed, 9 Jun 2010 08:11:33 -0700
-Gilad Arnold <arnold@cs.berkeley.edu> wrote:
-
-> I have been using RAID5 on a desktop machine using a couple of 500 GB
-> drives.  My original intent was to grow the array by adding more drives,
-> as the need arises.
-
-Do you currently run RAID5 with just 2 drives, in degraded mode, or maybe y=
-ou
-meant something else?
+Do you currently have a write intent bitmap in the array? I think it can
+reduce the need for recovery by an order of magnitude in some cases. Check =
+man
+mdadm for --bitmap if you don't use it yet.
 
 --=20
 With respect,
 Roman
 
---Sig_/chTWs32vOwE2MND+.VYHtuG
+--Sig_//CsN40REJv38Xdty5W8aUbc
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iEYEARECAAYFAkwRNG8ACgkQTLKSvz+PZwjhQACffwymdajamwTQCcmM40PWmOP8
-KGwAn341ZlAnTQD6w9Vv2qojLD+5Wsxa
-=sQbZ
+iEYEARECAAYFAkwRNagACgkQTLKSvz+PZwh1/gCcD/SuGnf3heTzMc9AEe/ZxN3A
+EAoAoJWEf6FrdIpHYN1rTVeGcP+2Nolh
+=P86t
 -----END PGP SIGNATURE-----
 
---Sig_/chTWs32vOwE2MND+.VYHtuG--
+--Sig_//CsN40REJv38Xdty5W8aUbc--
