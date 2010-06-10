@@ -1,32 +1,41 @@
-From: Gilad Arnold <arnold@cs.berkeley.edu>
-Subject: Re: migrating from RAID5 to RAID10
-Date: Thu, 10 Jun 2010 12:58:52 -0700
-Message-ID: <20100610195851.GA8408@libra.CS.Berkeley.EDU>
-References: <20100609151132.GA10082@libra.CS.Berkeley.EDU>
- <20100611005231.401529c0@natsu>
+From: Miles Fidelman <mfidelman@meetinghouse.net>
+Subject: Re: RAID6 and crashes (reporting back re. --bitmap)
+Date: Thu, 10 Jun 2010 17:22:19 -0400
+Message-ID: <4C11578B.8010202@meetinghouse.net>
+References: <4C1128C2.4020105@meetinghouse.net> <20100611005743.43664e5b@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100611005231.401529c0@natsu>
+In-Reply-To: <20100611005743.43664e5b@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <roman@rm.pp.ru>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Thanks for your response, Roman.
+Roman Mamedov wrote:
+> On Thu, 10 Jun 2010 14:02:42 -0400
+> Miles Fidelman<mfidelman@meetinghouse.net>  wrote:
+>
+>    
+>> 2.  Are there any settings that can reduce the likelihood of a RAID
+>> volume being dirty after a crash?  (The crash/reboot isn't that much of
+>> a problem - the several hours of degraded performance ARE a problem.)
+>>      
+> Do you currently have a write intent bitmap in the array? I think it can
+> reduce the need for recovery by an order of magnitude in some cases. Check man
+> mdadm for --bitmap if you don't use it yet.
+>    
+Just went through the process of turning it on for all my arrays.  
+Incredibly painless and quick.  Now I get to wait and see if it helps 
+the next time I have a crash/reboot event.
 
-On Fri, Jun 11, 2010 at 12:52:30AM +0600, Roman Mamedov wrote:
-> > I have been using RAID5 on a desktop machine using a couple of 500
-> > GB drives.  My original intent was to grow the array by adding more
-> > drives, as the need arises.
-> 
-> Do you currently run RAID5 with just 2 drives, in degraded mode, or
-> maybe you meant something else?
+Thanks very much!
 
-No, it is not degraded, it's a clean 2-drive RAID5. I know it doesn't
-make much sense as it is ;-)  the intent was to grow the array later,
-relying on mdadm's grow feature. Right now, I'm guessing that it
-operates like a RAID1 for all practical purposes.
+Miles
 
-Gilad
+
+-- 
+In theory, there is no difference between theory and practice.
+In<fnord>  practice, there is.   .... Yogi Berra
+
+
