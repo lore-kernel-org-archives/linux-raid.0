@@ -1,53 +1,63 @@
-From: Miles Fidelman <mfidelman@meetinghouse.net>
-Subject: RAID6 and crashes
-Date: Thu, 10 Jun 2010 14:02:42 -0400
-Message-ID: <4C1128C2.4020105@meetinghouse.net>
+From: Roman Mamedov <roman@rm.pp.ru>
+Subject: Re: mdadm freezes the system
+Date: Fri, 11 Jun 2010 00:43:16 +0600
+Message-ID: <20100611004316.7d8ad74d@natsu>
+References: <20100608145913.187a69ca@natsu>
+	<20100608222434.3f0fb637@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/F6+jfYrz=WSttb4ht3cmES6"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100608222434.3f0fb637@natsu>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi Folks,
+--Sig_/F6+jfYrz=WSttb4ht3cmES6
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I just recently converted a server from a basic Debian Lenny 
-installation to a virtualized platform (Debian Lenny, Xen 3, Debian 
-Lenny DomUs).
+Hello.
 
-I also converted my underlying disk environment from RAID1 to a mix of 
-RAID1 (for Dom0) and RAID6/LVM/DRBD for the domUs.  All the RAID is 
-implemented using md.  (Yes I realize there's a performance hit - but it 
-seemed like a good idea at the time, and with volumes mounted with 
-"noatime" the performance is acceptable, though I'm sort of thinking now 
-of moving to RAID10).
+To provide some updates on my earlier questions (for future generations
+googling through the archives).
 
-Anyway, I'm still working out some instabilities in my virtualized 
-environment, and I seem to have a crash/reboot event maybe once a day 
-(still trying to track that down).
+> So, my question is, does anyone have an idea on what could cause this, and
+> what would be the best way to diagnose/fix the lockup problem?  Thanks in
+> advance.
 
-In some, but not all cases, I find the machine comes up with the RAID6 
-volume marked dirty, and an automatic resync gets initiated - which 
-takes several hours to complete, and drags performance way down while 
-it's going on.
+Since then I have re-created the original 3-device RAID5, it synced without
+lockups. Perhaps I should write them off as some hardware bug, especially
+considering that the nForce chipsets aren't exactly known as the gold stand=
+ard
+of bug-free design.
 
-Which leads to two questions:
+> So why the same RAID5 to RAID6 conversion started so differently in these=
+ two
+> cases? And is it even possible to reshape RAID5 to RAID6 while simultaneo=
+usly
+> adding a disk, without overwriting all the other disks' contents (it sure=
+ly
+> looked like this is what was happening in the first case)?
 
-1. Are there any known problems with md-based RAID6 that might, 
-themselves, lead to a crash/reboot? (I always suspect complicated, 
-low-level functions that are critical to everything).
+Yes it is possible; I should have read about the --layout=3Dpreserve option=
+ in
+the mdadm man page.
 
-2.  Are there any settings that can reduce the likelihood of a RAID 
-volume being dirty after a crash?  (The crash/reboot isn't that much of 
-a problem - the several hours of degraded performance ARE a problem.)
+--=20
+With respect,
+Roman
 
-Thanks Very Much,
+--Sig_/F6+jfYrz=WSttb4ht3cmES6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-Miles Fidelman
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
--- 
-In theory, there is no difference between theory and practice.
-In<fnord>  practice, there is.   .... Yogi Berra
+iEYEARECAAYFAkwRMkYACgkQTLKSvz+PZwj6DwCgjroKe55/EaYEtciKvef4Z5ox
+GjMAoJNumq8u98YzBha90dlAFmVIEeco
+=RxsS
+-----END PGP SIGNATURE-----
 
-
+--Sig_/F6+jfYrz=WSttb4ht3cmES6--
