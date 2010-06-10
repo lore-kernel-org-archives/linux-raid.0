@@ -1,34 +1,58 @@
-From: Gilad Arnold <arnold@cs.berkeley.edu>
-Subject: Re: migrating from RAID5 to RAID10
-Date: Thu, 10 Jun 2010 15:30:48 -0700
-Message-ID: <20100610223047.GB14165@libra.CS.Berkeley.EDU>
-References: <20100609151132.GA10082@libra.CS.Berkeley.EDU>
- <20100611005231.401529c0@natsu>
- <20100610195851.GA8408@libra.CS.Berkeley.EDU>
- <AANLkTim3vrtAfgzY87IAmP6mY9PNiYiQZ1LyuqWHisiD@mail.gmail.com>
- <AANLkTimW4IMO55vL-icTcpkcg9d10dK13yIGu4XZbrQQ@mail.gmail.com>
+From: Miles Fidelman <mfidelman@meetinghouse.net>
+Subject: Re: RAID6 and crashes (reporting back re. --bitmap)
+Date: Thu, 10 Jun 2010 18:40:11 -0400
+Message-ID: <4C1169CB.1030903@meetinghouse.net>
+References: <4C1128C2.4020105@meetinghouse.net>	<20100611005743.43664e5b@natsu>	<4C11578B.8010202@meetinghouse.net> <20100611034108.6a2cdbc4@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <AANLkTimW4IMO55vL-icTcpkcg9d10dK13yIGu4XZbrQQ@mail.gmail.com>
+In-Reply-To: <20100611034108.6a2cdbc4@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Drew <drew.kay@gmail.com>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, Jun 10, 2010 at 03:21:27PM -0700, Drew wrote:
-> In this case, you're parity blocks will actually be identical to your
-> non-parity blocks. This is because P1 is calculated as P1 = A1 XOR ??
-> Since there is no other block to XOR your bits with, md falls back to
-> ?? = 0, and we all know that the XOR of 0 is the identity. That is, P1
-> = A1 XOR 0 == A1
+Roman Mamedov wrote:
+> On Thu, 10 Jun 2010 17:22:19 -0400
+> Miles Fidelman<mfidelman@meetinghouse.net>  wrote:
+>
+>    
+>>> Do you currently have a write intent bitmap in the array? I think it can
+>>> reduce the need for recovery by an order of magnitude in some cases. Check
+>>> man mdadm for --bitmap if you don't use it yet.
+>>>
+>>>        
+>> Just went through the process of turning it on for all my arrays.
+>> Incredibly painless and quick.  Now I get to wait and see if it helps
+>> the next time I have a crash/reboot event.
+>>      
+> I assume you went with "internal" bitmap, in which case if you notice that
+> write speed on the arrays became significantly lower, the first thing you
+> should look at is increasing the --bitmap-chunk size (I use 131072).
+>    
+Now you tell me :-)
 
-I'm curious whether md actually computes the XOR or has a shortcut path
-for the case where n=2.
+Yes... went with internal.
 
-> I stand corrected. :-)
+I'll keep an eye on write performance.  Do you happen to know, off hand, 
+a magic incantation to change the bitmap-chunk size? (Do I need to 
+remove the bitmap I just set up and reinstall one with the larger chunk 
+size?)
+> It is possible to use an external bitmap on an independent device (which has
+> almost zero performance impact), but in this case it could be non-trivial to
+> 100% ensure that such a device is mounted and accessible at the moment during
+> boot-up when md arrays are being started, especially if one of those arrays
+> also hosts the root FS.
+>    
+I think I'll stick with internal.
 
-No problem ;-)
+Thanks again,
 
-Gilad
+Miles
+
+
+-- 
+In theory, there is no difference between theory and practice.
+In<fnord>  practice, there is.   .... Yogi Berra
+
+
