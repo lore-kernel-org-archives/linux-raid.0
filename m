@@ -1,146 +1,81 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [mdadm GIT PULL] rebuild checkpoints, incremental assembly,
-	volume delete/rename, and fixes
-Date: Thu, 10 Jun 2010 23:42:16 -0700
-Message-ID: <AANLkTimgVuEIkB2s9rra5QS11YMUSpvSkBOcbzza44LX@mail.gmail.com>
-References: <1274921452.17973.253.camel@dwillia2-linux>
-	<20100531113710.29e12d97@notabene.brown>
+From: Dave W <dave+gmane@wuertele.com>
+Subject: Re: How does kernel decide that a drive is &quot;spare&quot;?
+Date: Fri, 11 Jun 2010 06:51:00 +0000 (UTC)
+Message-ID: <loom.20100611T083659-954@post.gmane.org>
+References: <loom.20100611T070945-23@post.gmane.org> <C2.E9.26996.922D11C4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100531113710.29e12d97@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, Doug Ledford <dledford@redhat.com>, Ed Ciechanowski <ed.ciechanowski@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, marcin.labun@intel.com, linux-raid <linux-raid@vger.kernel.org>, dave.jiang@intel.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, May 30, 2010 at 6:37 PM, Neil Brown <neilb@suse.de> wrote:
-> On Wed, 26 May 2010 17:50:52 -0700
-> Dan Williams <dan.j.williams@intel.com> wrote:
->
->> Hi Neil,
->>
->> A collection of updates that have been separated onto individual top=
-ic
->> branches. =A0I provide a url, summary, and full diff for each topic =
-if you
->> want to do piecemeal pulls, otherwise the merged set is available he=
-re:
->>
->> =A0 =A0 =A0 git://github.com/djbw/mdadm.git master
->>
->> Dan Williams (10):
->> =A0 =A0 =A0 mdmon: fix missing open of md/<dev>/recovery_start
->> =A0 =A0 =A0 mdmon: periodically checkpoint recovery
->
-> I don't understand why you write 'idle' to 'sync_action' here.
-> It should not be needed.
-> Shouldn't we just be listening for events on sync_completed, and writ=
-e
-> them to the metadata??
+Leslie Rhorer <lrhorer <at> satx.rr.com> writes:
 
-This was an attempt to re-use the same mechanism for intermediate
-checkpointing as array-shutdown checkpointing.
+> 	Any failed drives are moved to spare status.  Issue the `mdadm -D
+> /dev/mdX` command, and it will probably show 3 failed drives.
 
-We currently checkpoint from md/resync_start and md/dev/recovery_start
-at sync_action =3D=3D idle, but I will append a fix up patch to use
-->last_checkpoint whenever is_resync_complete() is false.
+You are correct.
 
-By the way... listening for sync_completed events will fix a bug with
-handling the write-pending event.  I have hit occasions, and others
-have too [1], where the system locks up while resyncing.  I believe it
-is because the wakeup of the blocked thread in md_write_start() races
-with the sync thread doing a notification for a checkpoint.  I'll try
-to verify that the lockup goes away when polling sync_completed, but
-I'm fairly certain that is the bug.
+> > Why are three drives assumed to be spares?
+> 
+> 	It's not assumed.  If was almost surely forced by md / mdadm.
 
->
->> =A0 =A0 =A0 imsm: dump each disk's view of the slot state
->> =A0 =A0 =A0 Kill subarray
->
-> I assume that this is only allowed on an idle container because the
-> volume index number of subsequent volumes will change, and as that is=
- used in
-> the uuid the uuid will change, and that is bad.
+Is there any way to get md or mdadm to tell me how it is making this decision? 
+If I run "mdadm -Afv /dev/md0 /dev/sd[bcdef]1" I see this in messages:
 
-Yes.
+Jun 11 07:22:10 fileserver kernel: md: md0 stopped.
+Jun 11 07:22:10 fileserver kernel: md: unbind<sdd1>
+Jun 11 07:22:10 fileserver kernel: md: export_rdev(sdd1)
+Jun 11 07:22:10 fileserver kernel: md: unbind<sdb1>
+Jun 11 07:22:10 fileserver kernel: md: export_rdev(sdb1)
+Jun 11 07:22:10 fileserver kernel: md: unbind<sdc1>
+Jun 11 07:22:10 fileserver kernel: md: export_rdev(sdc1)
+Jun 11 07:22:10 fileserver kernel: md: unbind<sdf1>
+Jun 11 07:22:10 fileserver kernel: md: export_rdev(sdf1)
+Jun 11 07:22:10 fileserver kernel: md: unbind<sde1>
+Jun 11 07:22:10 fileserver kernel: md: export_rdev(sde1)
+Jun 11 07:22:27 fileserver kernel: md: md0 stopped.
+Jun 11 07:22:27 fileserver kernel: md: bind<sde1>
+Jun 11 07:22:27 fileserver kernel: md: bind<sdf1>
+Jun 11 07:22:27 fileserver kernel: md: bind<sdc1>
+Jun 11 07:22:27 fileserver kernel: md: bind<sdb1>
+Jun 11 07:22:27 fileserver kernel: md: bind<sdd1>
 
-> 1/ Can you leave a 'place-holder' empty volume in the list, that a su=
-bsequent
-> =A0 create can use?
+All the ATA and SCSI messages in the log appear normal -- there are no warnings
+or errors that I can see.
 
-No, this would confuse the option-rom.
+> No doubt at least one of the drives probably has enough
+> info on hand to be able to recover most if not all of the information.  You
+> should be able to force assemble (-A -f) the array using at least 4 drives,
+> or perhaps all six.
 
-> 2/ As ddf doesn't suffer from this issue, the test for 'active volume=
- that
-> =A0 will get a new uuid' should be in the super-intel code. =A0And it=
- should
-> =A0 be exactly that test - if earlier volumes are active, that should=
- not be a
-> =A0 problem.
+I tried all combinations of three out of the five drives, but at most two
+drives ever get used:
 
-Ok, this also needs communication with mdmon for the active case, I'll =
-add that.
+# mdadm -Af /dev/md0 /dev/sd[de]1
+mdadm: /dev/md0 assembled from 2 drives - not enough to start the array.
+# mdadm -Af /dev/md0 /dev/sd[bcd]1
+mdadm: /dev/md0 assembled from 1 drive and 2 spares - not enough to start the \
+array.
+# mdadm -Af /dev/md0 /dev/sd[bce]1
+mdadm: /dev/md0 assembled from 1 drive and 2 spares - not enough to start the \
+array.
+# mdadm -Af /dev/md0 /dev/sd[bcf]1
+mdadm: No suitable drives found for /dev/md0
+# mdadm -Af /dev/md0 /dev/sd[cde]1
+mdadm: /dev/md0 assembled from 2 drives and 1 spare - not enough to start the \
+array.
+# mdadm -Af /dev/md0 /dev/sd[cdf]1
+mdadm: /dev/md0 assembled from 1 drive and 2 spares - not enough to start the \
+array.
+# mdadm -Af /dev/md0 /dev/sd[def]1
+mdadm: /dev/md0 assembled from 2 drives and 1 spare - not enough to start the \
+array.
 
-> =A0 Maybe a new method "safe_to_delete_volume".... or something.
 
-I think we can just fail the delete in the handler.  It also appears
-like we will be getting a unique identifier in a future update to the
-metadata.  It will have a flag so that we can safely decide "use old
-synthesized value" versus "use new stable/recorded value".
+Thanks for the advice,
+Dave
 
-> Also: =A0-ENODOC.
 
-Yeah, this was a rewrite of an earlier attempt so wanted to make sure
-it was going in the right direction.  Will add.
-
->
->> =A0 =A0 =A0 Rename subarray
->
-> Rename will change the uuid of the renamed array, but not the uuid of
-> anything else, so it should be allowed if just the volume is inactive=
-=2E
-
-Like above need to close the loop with mdmon.
-
->
-> Also it would be nicer if you factored out open_subarray in the previ=
-ous
-> patch, but that isn't a big issue (I would still accept if that was t=
-he only
-> issue).
-
-Ok, I'll keep that in mind for next time.
-
->
->
->> =A0 =A0 =A0 Incremental: honor an 'enough' flag from external handle=
-rs
->> =A0 =A0 =A0 Revert "Incremental: honor --no-degraded to delay assemb=
-ly"
->> =A0 =A0 =A0 Merge branch 'subarray' into for-neil
->> =A0 =A0 =A0 imsm: robustify recovery-start detection
->
-> "robistify" !! Is that a neologism ??
-
-;-) right up there with "borkage".
-
-> I've merged and pushed out the other bits which all seem OK.
-
-Ok, there was one more you didn't comment on and didn't cherry-pick [2]
-
-Dave Jiang (1):
-      create: Check with OROM limit before setting default chunk size
-
-Thanks,
-Dan
-
-[1]: https://bugzilla.redhat.com/show_bug.cgi?id=3D602457
-[2]: http://git.kernel.org/?p=3Dlinux/kernel/git/djbw/mdadm.git;a=3Dcom=
-mitdiff;h=3Df8cde132
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
