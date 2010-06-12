@@ -1,144 +1,112 @@
-From: Dave W <dave+gmane@wuertele.com>
-Subject: md/mdadm makes some drives spare even though there appears to be nothing wrong with them!
-Date: Sat, 12 Jun 2010 05:02:11 +0000 (UTC)
-Message-ID: <loom.20100612T065449-444@post.gmane.org>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: Detecting array parameters
+Date: Sat, 12 Jun 2010 11:58:21 +0200
+Message-ID: <20100612095821.GA14727@lazy.lzy>
+References: <20100609211340.GA12172@lazy.lzy>
+ <20100610083112.47aa2200@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20100610083112.47aa2200@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-After a reboot recently, my 5-disk RAID6 array wouldn't come up:
+Hi,
 
-[root@fileserver log]# mdadm --stop /dev/md0
-mdadm: stopped /dev/md0
-[root@fileserver log]# mdadm -Af /dev/md0 /dev/sd[bcdef]1
-mdadm: /dev/md0 assembled from 2 drives and 3 spares - not enough to start the \
-array.
+thanks for the answer.
 
-I never configured spare drives.  I'm trying to determine why md/mdadm has
-decided that three of  my drives should be spare.
+The "--export" option is a good advice, unfortunately
+it seems to be quite "conservative" in the amount of
+information, probably it is following some "udev"
+requirements, I guess.
 
-There is nothing in the logs that indicates a problem with the drives.  smartctl
-reports that all the drives are healthy.  I suspected the eSATA cable so I
-swapped it for a new one.  I suspected the enclosure's backplane so I swapped it
-for a new one of the same model.  What else can I try?
+I'll try to explain what I'm trying to do, so, maybe,
+there will be some other good advices.
 
-When I powered up the new enclosure, here is what I saw in my /var/log/messages.
- It looks normal to me.  Are there any hints here?
+I've a bunch (10) of different (in size too) HDDs.
+These HDDs are partitioned in a way so that equal
+partitions can compose several RAID-6 arrays.
+So, for example, there are 5x 120GB and 5x 80GB HDDs.
+The firsts are partitioned in 80+40, and there are 2
+RAID-6, one made of 10 80GB "segments" and another
+made of 5 40GB "segments".
+So far, so good.
 
-Jun 12 05:31:52 fileserver kernel: ata3.00: ATA-8: WDC WD20EADS-00R6B0,
-01.00A01, max UDMA/133
-Jun 12 05:31:52 fileserver kernel: ata3.00: 3907029168 sectors, multi 0: LBA48
-NCQ (depth 31/32)
-Jun 12 05:31:52 fileserver kernel: ata3.00: configured for UDMA/100
-Jun 12 05:31:53 fileserver kernel: ata3.01: ATA-8: WDC WD20EADS-00R6B0,
-01.00A01, max UDMA/133
-Jun 12 05:31:53 fileserver kernel: ata3.01: 3907029168 sectors, multi 0: LBA48
-NCQ (depth 31/32)
-Jun 12 05:31:53 fileserver kernel: ata3.01: configured for UDMA/100
-Jun 12 05:31:53 fileserver kernel: ata3.02: ATA-8: WDC WD20EADS-00R6B0,
-01.00A01, max UDMA/133
-Jun 12 05:31:53 fileserver kernel: ata3.02: 3907029168 sectors, multi 0: LBA48
-NCQ (depth 31/32)
-Jun 12 05:31:53 fileserver kernel: ata3.02: configured for UDMA/100
-Jun 12 05:31:53 fileserver kernel: ata3.03: ATA-8: WDC WD20EADS-00R6B0,
-01.00A01, max UDMA/133
-Jun 12 05:31:53 fileserver kernel: ata3.03: 3907029168 sectors, multi 0: LBA48
-NCQ (depth 31/32)
-Jun 12 05:31:53 fileserver kernel: ata3.03: configured for UDMA/100
-Jun 12 05:31:53 fileserver kernel: ata3.04: ATA-8: WDC WD20EADS-00R6B0,
-01.00A01, max UDMA/133
-Jun 12 05:31:53 fileserver kernel: ata3.04: 3907029168 sectors, multi 0: LBA48
-NCQ (depth 31/32)
-Jun 12 05:31:53 fileserver kernel: ata3.04: configured for UDMA/100
-Jun 12 05:31:53 fileserver kernel: ata3: EH complete
-Jun 12 05:31:53 fileserver kernel: scsi 2:0:0:0: Direct-Access     ATA      WDC
-WD20EADS-00R 01.0 PQ: 0 ANSI: 5
-Jun 12 05:31:53 fileserver kernel: sd 2:0:0:0: [sdb] 3907029168 512-byte
-hardware sectors (2000399 MB)
-Jun 12 05:31:53 fileserver kernel: sd 2:0:0:0: [sdb] Write Protect is off
-Jun 12 05:31:53 fileserver kernel: sd 2:0:0:0: [sdb] Write cache: enabled, read
-cache: enabled, doesn't support DPO or FUA
-Jun 12 05:31:53 fileserver kernel: sd 2:0:0:0: [sdb] 3907029168 512-byte
-hardware sectors (2000399 MB)
-Jun 12 05:31:53 fileserver kernel: sd 2:0:0:0: [sdb] Write Protect is off
-Jun 12 05:31:53 fileserver kernel: sd 2:0:0:0: [sdb] Write cache: enabled, read
-cache: enabled, doesn't support DPO or FUA
-Jun 12 05:31:53 fileserver kernel: sdb: sdb1
-Jun 12 05:31:53 fileserver kernel: sd 2:0:0:0: [sdb] Attached SCSI disk
-Jun 12 05:31:53 fileserver kernel: sd 2:0:0:0: Attached scsi generic sg1 type 0
-Jun 12 05:31:53 fileserver kernel: scsi 2:1:0:0: Direct-Access     ATA      WDC
-WD20EADS-00R 01.0 PQ: 0 ANSI: 5
-Jun 12 05:31:53 fileserver kernel: sd 2:1:0:0: [sdc] 3907029168 512-byte
-hardware sectors (2000399 MB)
-Jun 12 05:31:53 fileserver kernel: sd 2:1:0:0: [sdc] Write Protect is off
-Jun 12 05:31:53 fileserver kernel: sd 2:1:0:0: [sdc] Write cache: enabled, read
-cache: enabled, doesn't support DPO or FUA
-Jun 12 05:31:53 fileserver kernel: sd 2:1:0:0: [sdc] 3907029168 512-byte
-hardware sectors (2000399 MB)
-Jun 12 05:31:53 fileserver kernel: sd 2:1:0:0: [sdc] Write Protect is off
-Jun 12 05:31:53 fileserver kernel: sd 2:1:0:0: [sdc] Write cache: enabled, read
-cache: enabled, doesn't support DPO or FUA
-Jun 12 05:31:53 fileserver kernel: sdc: sdc1
-Jun 12 05:31:53 fileserver kernel: sd 2:1:0:0: [sdc] Attached SCSI disk
-Jun 12 05:31:53 fileserver kernel: sd 2:1:0:0: Attached scsi generic sg2 type 0
-Jun 12 05:31:53 fileserver kernel: scsi 2:2:0:0: Direct-Access     ATA      WDC
-WD20EADS-00R 01.0 PQ: 0 ANSI: 5
-Jun 12 05:31:53 fileserver kernel: sd 2:2:0:0: [sdd] 3907029168 512-byte
-hardware sectors (2000399 MB)
-Jun 12 05:31:53 fileserver kernel: sd 2:2:0:0: [sdd] Write Protect is off
-Jun 12 05:31:53 fileserver kernel: sd 2:2:0:0: [sdd] Write cache: enabled, read
-cache: enabled, doesn't support DPO or FUA
-Jun 12 05:31:53 fileserver kernel: sd 2:2:0:0: [sdd] 3907029168 512-byte
-hardware sectors (2000399 MB)
-Jun 12 05:31:53 fileserver kernel: sd 2:2:0:0: [sdd] Write Protect is off
-Jun 12 05:31:53 fileserver kernel: sd 2:2:0:0: [sdd] Write cache: enabled, read
-cache: enabled, doesn't support DPO or FUA
-Jun 12 05:31:53 fileserver kernel: sdd: sdd1
-Jun 12 05:31:53 fileserver kernel: sd 2:2:0:0: [sdd] Attached SCSI disk
-Jun 12 05:31:53 fileserver kernel: sd 2:2:0:0: Attached scsi generic sg3 type 0
-Jun 12 05:31:53 fileserver kernel: scsi 2:3:0:0: Direct-Access     ATA      WDC
-WD20EADS-00R 01.0 PQ: 0 ANSI: 5
-Jun 12 05:31:53 fileserver kernel: sd 2:3:0:0: [sde] 3907029168 512-byte
-hardware sectors (2000399 MB)
-Jun 12 05:31:53 fileserver kernel: sd 2:3:0:0: [sde] Write Protect is off
-Jun 12 05:31:53 fileserver kernel: sd 2:3:0:0: [sde] Write cache: enabled, read
-cache: enabled, doesn't support DPO or FUA
-Jun 12 05:31:53 fileserver kernel: sd 2:3:0:0: [sde] 3907029168 512-byte
-hardware sectors (2000399 MB)
-Jun 12 05:31:53 fileserver kernel: sd 2:3:0:0: [sde] Write Protect is off
-Jun 12 05:31:53 fileserver kernel: sd 2:3:0:0: [sde] Write cache: enabled, read
-cache: enabled, doesn't support DPO or FUA
-Jun 12 05:31:53 fileserver kernel: sde: sde1
-Jun 12 05:31:53 fileserver kernel: sd 2:3:0:0: [sde] Attached SCSI disk
-Jun 12 05:31:53 fileserver kernel: sd 2:3:0:0: Attached scsi generic sg4 type 0
-Jun 12 05:31:53 fileserver kernel: scsi 2:4:0:0: Direct-Access     ATA      WDC
-WD20EADS-00R 01.0 PQ: 0 ANSI: 5
-Jun 12 05:31:53 fileserver kernel: sd 2:4:0:0: [sdf] 3907029168 512-byte
-hardware sectors (2000399 MB)
-Jun 12 05:31:53 fileserver kernel: sd 2:4:0:0: [sdf] Write Protect is off
-Jun 12 05:31:53 fileserver kernel: sd 2:4:0:0: [sdf] Write cache: enabled, read
-cache: enabled, doesn't support DPO or FUA
-Jun 12 05:31:53 fileserver kernel: sd 2:4:0:0: [sdf] 3907029168 512-byte
-hardware sectors (2000399 MB)
-Jun 12 05:31:53 fileserver kernel: sd 2:4:0:0: [sdf] Write Protect is off
-Jun 12 05:31:53 fileserver kernel: sd 2:4:0:0: [sdf] Write cache: enabled, read
-cache: enabled, doesn't support DPO or FUA
-Jun 12 05:31:53 fileserver kernel: sdf: sdf1
-Jun 12 05:31:53 fileserver kernel: sd 2:4:0:0: [sdf] Attached SCSI disk
-Jun 12 05:31:53 fileserver kernel: sd 2:4:0:0: Attached scsi generic sg5 type 0
-Jun 12 05:32:42 fileserver kernel: md: md0 stopped.
-Jun 12 05:32:56 fileserver kernel: md: md0 stopped.
-Jun 12 05:32:58 fileserver kernel: md: bind<sde1>
-Jun 12 05:32:58 fileserver kernel: md: bind<sdf1>
-Jun 12 05:32:58 fileserver kernel: md: bind<sdc1>
-Jun 12 05:32:58 fileserver kernel: md: bind<sdb1>
-Jun 12 05:32:58 fileserver kernel: md: bind<sdd1>
+What I would like to do is a script, which, given an
+HDD as parameter will *properly* add it to the array.
+Where *properly* means, it will partition it properly,
+add the partitions to the respectively arrays, and
+perform, if necessary (non-degraded case) a grow.
 
-Thanks for any advice you might have.
-Dave
+My idea would be to go over the several arrays, check
+the partition size, create a partition on the new HDD,
+if possible, then add it and grow the array (if required).
 
+The first step would be to find out the partition size,
+which does seem to be avaialable in:
 
+/sys/class/block/mdX/md/rdX/block/size
+
+I was wondering if this would be the best option to get
+this information, or there are better solutions.
+
+Trying "mdadm -E /dev/sdX" returns also similar information,
+namely the available device size and the offset, which sum
+up to the partition size.
+
+In /sys/class/block/mdX/md/rdX there are also two files,
+carrying similar information: "size" and "offset".
+In this case, strangely, the size is in KiB while the
+offset in sectors (seems a bug to me).
+
+Any suggestions on how to do this in a *correct* way?
+
+Thanks a lot in advance for any advice and, please,
+feel free to ask if you need more information.
+
+bye,
+
+pg
+
+On Thu, Jun 10, 2010 at 08:31:12AM +1000, Neil Brown wrote:
+> On Wed, 9 Jun 2010 23:13:40 +0200
+> Piergiorgio Sartor <piergiorgio.sartor@nexgo.de> wrote:
+> 
+> > Hi,
+> > 
+> > if I understood it correctly, in order to detect
+> > the several array parameters (number of disks, for
+> > example), it is possible to use "mdadm -D /dev/mdX"
+> > or to check the files in the corresponding /sys/block/...
+> > /mdX/... files.
+> > 
+> > Now, assuming something needs to be done in scripts,
+> > what would be the best way? Using "mdadm -D ... | grep"
+> > (or "mdadm ... | gawk ...."), or to read the proper
+> > files in /sys/block/md...?
+> > 
+> > Assuming the wanted information is available on both
+> > sides, which does not seem always the case.
+> 
+> If it is available in 
+>    mdadm --detail --export
+> 
+> I would use that.
+> Otherwise probably go for
+>    /sys/class/block/mdX/md/...
+> 
+> I say /sys/class/block rather than /sys/block as there are rumours of
+> deprecating /sys/block.  Don't know if that will ever happen though.
+> 
+> NeilBrown
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+
+piergiorgio
