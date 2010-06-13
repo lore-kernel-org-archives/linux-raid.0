@@ -1,66 +1,33 @@
-From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Subject: Re: Detecting array parameters
-Date: Sat, 12 Jun 2010 11:59:53 +0200
-Message-ID: <20100612095953.GB14727@lazy.lzy>
-References: <20100609211340.GA12172@lazy.lzy>
- <A4.C2.03943.B9F611C4@cdptpa-omtalb.mail.rr.com>
+From: Bernd Schubert <bernd.schubert@fastmail.fm>
+Subject: Re: RAID6 and crashes (reporting back re. --bitmap)
+Date: Sun, 13 Jun 2010 16:28:34 +0200
+Message-ID: <201006131628.35037.bernd.schubert@fastmail.fm>
+References: <4C1128C2.4020105@meetinghouse.net> <001501cb091f$07ac4e40$1704eac0$@woodlea.com> <20100611145019.6f1a5e7d@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <A4.C2.03943.B9F611C4@cdptpa-omtalb.mail.rr.com>
+In-Reply-To: <20100611145019.6f1a5e7d@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lrhorer@satx.rr.com>
-Cc: 'Piergiorgio Sartor' <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi,
-
-thanks for the answer.
-
-By "both sides" I mean the "mdadm -D/-E" (one) and the
-/sys/class/block/mdX/md (the other).
-
-Some information is available with "mdadm -D", some other
-is available in the sysfs.
-
-bye,
-
-pg
-
-On Thu, Jun 10, 2010 at 06:04:48PM -0500, Leslie Rhorer wrote:
-> > Hi,
-> > 
-> > if I understood it correctly, in order to detect
-> > the several array parameters (number of disks, for
-> > example), it is possible to use "mdadm -D /dev/mdX"
-> > or to check the files in the corresponding /sys/block/...
-> > /mdX/... files.
+On Friday 11 June 2010, Neil Brown wrote:
+> On Fri, 11 Jun 2010 00:31:57 -0400
 > 
-> 	Yes, but only if the array is assembled.  If not, it's "-E", not
-> "-D", and the target is a member device, not the array.
+> "Graham Mitchell" <gmitch@woodlea.com> wrote:
+> > Can you do this on a live array, or can it only be done (as the docs seem
+> > to suggest), with the create, build and grow options?
 > 
-> > Now, assuming something needs to be done in scripts,
-> > what would be the best way? Using "mdadm -D ... | grep"
-> > (or "mdadm ... | gawk ...."), or to read the proper
-> > files in /sys/block/md...?
-> 
-> 	That depends on what you need to do.  If you need to obtain in depth
-> information about the array and / or act only upon specific contents of a
-> line in  the output, then you need to use gawk.  If your script merely takes
-> action based upon the existence of some meta-content of the output, then
-> grep or even grep -q may be the better choice.
-> 
-> > Assuming the wanted information is available on both
-> > sides, which does not seem always the case.
-> 
-> 	I don't know what you mean by "both sides".
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> As 'grow' can (and must) be used on a live array you're question doesn't
+> exactly make sense.
+> Yes: it can be done on a live array.
 
--- 
+While I have done this myself a couple of times, I still do not understand 
+where it takes the disk space for the bitmap journal from? Is this space mdadm 
+reserved for this purpose?
 
-piergiorgio
+
+Thanks,
+Bernd
