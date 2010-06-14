@@ -1,72 +1,64 @@
-From: Nagilum <nagilum@nagilum.org>
-Subject: Re: Problem re-shaping RAID6
-Date: Mon, 14 Jun 2010 12:47:23 +0200
-Message-ID: <20100614124723.84152dz5al8096f4@cakebox.homeunix.net>
-References: <AANLkTikv3JPbto1F2YYmRx0HNP7cgFh3gj6dHekCt1SE@mail.gmail.com>
- <20100614091518.2492a9db@notabene.brown>
+From: Roman Mamedov <roman@rm.pp.ru>
+Subject: Re: RAID6 and crashes (reporting back re. --bitmap)
+Date: Mon, 14 Jun 2010 17:53:27 +0600
+Message-ID: <20100614175327.57f05bb1@natsu>
+References: <4C1128C2.4020105@meetinghouse.net>
+	<001501cb091f$07ac4e40$1704eac0$@woodlea.com>
+	<20100611145019.6f1a5e7d@notabene.brown>
+	<201006131628.35037.bernd.schubert@fastmail.fm>
+	<20100614090520.2ae5a961@notabene.brown>
+	<20100614151425.11f91562@natsu>
+	<20100614194742.4a383a3f@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2;
-	DelSp=Yes	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/s4oJ5R+_7SakiPr2KRr/8wD"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100614091518.2492a9db@notabene.brown>
-Content-Disposition: inline
+In-Reply-To: <20100614194742.4a383a3f@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+Cc: Bernd Schubert <bernd.schubert@fastmail.fm>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+--Sig_/s4oJ5R+_7SakiPr2KRr/8wD
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
------ Message from neilb@suse.de ---------
-     Date: Mon, 14 Jun 2010 09:15:18 +1000
-     From: Neil Brown <neilb@suse.de>
-  Subject: Re: Problem re-shaping RAID6
-       To: J=E9r=F4me Poulin <jeromepoulin@gmail.com>
-       Cc: linux-raid <linux-raid@vger.kernel.org>
+On Mon, 14 Jun 2010 19:47:42 +1000
+Neil Brown <neilb@suse.de> wrote:
 
+> When you create an array an specify that a bitmap be added at the same ti=
+me,
+> there is more flexibility for size and location of the bitmap.  It can ea=
+sily
+> be more that 3K in that case.
+>=20
+> So presumably this array was created with a bitmap, rather than created
+> without a bitmap and had a bitmap added later with --grow.  Correct?
 
-> Thanks.
-> I fixed this bug a slightly different way
->
-> -               blocks =3D ochunk/512 * nchunk/512 * odata * ndata / =
-a;
-> +               blocks =3D (ochunk/512) * (nchunk/512) * odata * ndat=
-a / a;
->
->
-> See
-> http://neil.brown.name/git?p=3Dmdadm;a=3Dcommitdiff;h=3D200871adf9e15=
-d5ad985f28c349fd89c386ef48a
+Yes, as far as I remember. However, it seems a bit unfortunate to have any
+significant difference between adding the bitmap right when creating the
+array, and adding it later. For that reason, I'd suggest reserving more spa=
+ce
+in the metadata than 3K, even if the bitmap isn't requested - and even if it
+won't be added later, then that space could prove useful for something else
+that might require it later. Maybe 64, 128 or 256K - still miniscule compar=
+ed
+to the array size, and could provide some nice flexibility for the future.
 
-Those static numbers always make my nose wrinkle.
-Don't we have the blocksize somewhere already? I'm also concerned what =
-=20
-happens when true 4k sectors are used..
+--=20
+With respect,
+Roman
 
+--Sig_/s4oJ5R+_7SakiPr2KRr/8wD
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-#    _  __          _ __     http://www.nagilum.org/ \n icq://69646724 =
-#
-#   / |/ /__ ____ _(_) /_ ____ _  nagilum@nagilum.org \n +491776461165 =
-#
-#  /    / _ `/ _ `/ / / // /  ' \  Amiga (68k/PPC): AOS/NetBSD/Linux   =
-#
-# /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/   Mac (PPC): MacOS-X / NetBSD /Linux =
-#
-#           /___/     x86: FreeBSD/Linux/Solaris/Win2k  ARM9: EPOC EV6 =
-#
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+iEYEARECAAYFAkwWGDcACgkQTLKSvz+PZwjfVQCeKW+CXHM3ukhAxcI0jFM13nOC
+7LAAnRxgLOcIkqmX4ro3cJUM01/64nDF
+=SrkB
+-----END PGP SIGNATURE-----
 
-
-----------------------------------------------------------------
-cakebox.homeunix.net - all the machine one needs..
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--Sig_/s4oJ5R+_7SakiPr2KRr/8wD--
