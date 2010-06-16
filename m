@@ -1,35 +1,39 @@
-From: wiebittewas <wiebittewas@googlemail.com>
-Subject: powersaving of disks fails with activated raid...
-Date: Wed, 16 Jun 2010 11:36:53 +0000
-Message-ID: <4C18B755.1080606@gmail.com>
+From: Billy Crook <billycrook@gmail.com>
+Subject: Re: mdadm freezes the system
+Date: Wed, 16 Jun 2010 06:47:00 -0500
+Message-ID: <AANLkTin9w6CCjNXuZ60g3ncdD82mqgKXf5StGMOIiZzL@mail.gmail.com>
+References: <20100608145913.187a69ca@natsu> <20100608222434.3f0fb637@natsu>
+	<20100611004316.7d8ad74d@natsu> <AANLkTikdknJnRpHrMybjFTFDRHTH9ad4Rne_wyQ_-84s@mail.gmail.com>
+	<20100616131609.477fcca8@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100616131609.477fcca8@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Roman Mamedov <roman@rm.pp.ru>
+Cc: Michael Evans <mjevans1983@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi!
+On Wed, Jun 16, 2010 at 02:16, Roman Mamedov <roman@rm.pp.ru> wrote:
+> On Wed, 16 Jun 2010 00:03:54 -0700
+> Michael Evans <mjevans1983@gmail.com> wrote:
+>
+>> Have you exhaustively tested your drives as well?
+>>
+>> The smartctl -t long test is a good one to start with.
 
-after I used a while single disks for storage and had no problems to
-suspend idle disks to save power-consumption, I switched soon to use
-raid5, but even the fs on it is not mounted and no md-monitoring in
-user-space is active, suspending fails due to activity on the disks
-below the raid5.
+smartctl -t short /dev/sdX ; sleep 120; smartctl -t conveyance
 
-it seems, that the kthread of the raid is working on the disks even,
-there's no user-activity at all.
+Most smart failures I've seen fail the short test, and it only takes
+two minutes.  Conveyance isn't much longer.  If either test actually
+fails (not just gets interrupted), RMA it.
 
-so my questions:
+> I run that the first thing after buying every new disk. The drives are okay,
+> even if they weren't, they should absolutely not cause the system lock-up in
+> the manner I was experiencing.
 
-- what is the md-kthread doing there?
-- is there any possibilty to prevent this behaviour?
-
-if nobody knows an answer to that, maybe to this:
-
-- is there a possibilty, how I can trace the raw disk-io of the
-sata-devices to see what is happening?
-
-
-wiebittewas
+Slightly off topic, but I wrote a script I thought I'd share, which I
+use on all new drives.  It takes its time depending on how fast a
+sustained read/write speed the drive has, but it only takes a couple
+seconds to begin.
+http://www.kclug.org/wiki/index.php/Hard_Drive_Hell
