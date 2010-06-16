@@ -1,180 +1,125 @@
-From: aragonx@dcsnow.com
-Subject: How to boost performance
-Date: Wed, 16 Jun 2010 18:23:36 -0400
-Message-ID: <ea83c7a1ddca01e0a1535f130502a0f2.squirrel@www.dcsnow.com>
+From: Michael Evans <mjevans1983@gmail.com>
+Subject: Re: Upgrading to GRUB2 from GRUB Legacy on RAID1
+Date: Wed, 16 Jun 2010 15:41:54 -0700
+Message-ID: <AANLkTinYXblLrapwCWtWhlqa9H0hbCV7PUaOjNLONZUj@mail.gmail.com>
+References: <4D.41.26996.506811C4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4D.41.26996.506811C4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello all,
+On Thu, Jun 10, 2010 at 5:40 PM,  <lrhorer@satx.rr.com> wrote:
+>
+> =A0 =A0 =A0 =A0I thought I had sent this previously, but I don't see =
+a reflection
+> copy in my in-box. =A0Pardon me if this is a duplicate, but OTOH, if =
+it is,
+> doesn't anyone have any comments or advice? =A0I'm especially a littl=
+e fuzzy
+> around step 4 below. =A0I think I need to run `grub-setup` or somethi=
+ng, but
+> I'm not clear on the details.
+>
+> =A0 =A0 =A0 =A0Dilemma: GRUB legacy will not upgrade to GRUB2 on my m=
+achines. =A0The
+> systems were originally built to "fake out" GRUB legacy by using a 1.=
+0
+> superblock on a pair of RAID1 members and pointing GRUB to one or the=
+ other
+> of the disks so it can chain load from what it thinks is an ordinary =
+primary
+> partition. =A0Once initrd loads and md is active, it assembles the ar=
+rays and
+> then the kernel mounts / and then /boot, and booting continues normal=
+ly.
+>
+> =A0 =A0 =A0 =A0The cause: When dpkg instructs grub-pc to configure it=
+self, it fails
+> because it is unable to reconcile the information in /boot/grub/menu.=
+lst
+> with the hardware mounted by /etc/fstab.
+>
+> =A0 =A0 =A0 =A0The cure? : I was thinking I should be able to comment=
+ out the
+> entries for /dev/md1 in /etc/fstab =A0and /etc/mdadm/mdadm.conf, and =
+reboot
+> the system. =A0Then I think I can
+>
+> 1. =A0Mount /dev/hda1 to /boot.
+>
+> 2. =A0Upgrade GRUB, which should now understand both /etc/fstab and
+> /boot/grub/menu/lst.
+>
+> 3. =A0Reboot to make sure it works.
+>
+> 4. =A0Edit /boot/grub/grub.cfg and /boot/grub/device.map to let GRUB2=
+ know it
+> should be booting from an array and to make sure it is loading the RA=
+ID1
+> module.
+>
+> 5. =A0Umount /boot and create a new 1.0 superblock RAID1 array using =
+only
+> /dev/hda1 and a missing member. =A0Mount the new array as /boot.
+>
+> 6. =A0Add the new array info into /etc/mdadm/mdadm.conf and change /e=
+tc/fstab
+> back to mount /dev/md1.
+>
+> 7. =A0Run update-initramfs to copy the new configuration into initrd.
+>
+> 8. =A0Reboot and make sure GRUB2 can now boot into the new array.
+>
+> 9. =A0Add /dev/hdb1 into the new array, and re-sync the array.
+>
+> 10. Update /etc/mdadm/mdadm.conf with the full array info, getting ri=
+d of
+> the missing member, and remove the reference to the old array altoget=
+her.
+>
+> 11. Run the GRUB update routine to remove the chain-load from GRUB le=
+gacy.
+>
+> 12. Run update-initramfs to copy the final configuration into the ini=
+trd (if
+> GRUB update doesn't already do it.)
+>
+> =A0 =A0 =A0 =A0Is my thinking correct, here? =A0Have I missed a step?=
+ =A0Up until step
+> 9, I should be able to easily revert back to my original configuratio=
+n by
+> simply removing the comment for the old array, forcing an assembly of=
+ the
+> old array using only /dev/hdb1, add back /dev/hda1, resync the array,=
+ remove
+> the comment from /etc/fstab and run update-initramfs.
+>
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-I have a software RAID on my server that I would like to get better
-performance out of.  I routinely copy large files and/or groups of files
-to and from this array over the network.  When I start, I get a reasonable
-xfer rate of about 50MB/sec.  It gradually drops to around 20MB/sec after
-say 1GB of data.  When looking on the server, the CPU usage is usually at
-100% with md0_raid5 usually at the top of the hit list with flush being
-right behind it.  Perhaps 30 - 40% of CPU time is spent on waits (this is
-from memory though.  If is the critical piece of information, I'll get a
-real number).
+IIRC Grub 1.97 ('2') supports the 0.90 metablock format but not the
+1.0 metablock format.  You might just backup the contents of /boot and
+make that small pair of partitions use the older format (re-create
+that array).  For /boot 0.90 should be sufficient in most cases.
 
-Before I start spewing server information, my question is this.  Is there
-anything I can tweak to improve my performance?  It seems that the server
-is CPU bound when I am transferring large amounts of data to or from it. 
-Any suggestions will be considered.  Faster processor, switching to RAID
-0, etc.  I'm hoping there is something I can do with the RAID software
-though.  Maybe a different chunk size or different algorithm?
+However, I've not tested grub 2 with mdadm. Only my ubuntu laptop uses
+grub2; both gentoo and arch (as of the last time I looked) were still
+using grub legacy.
 
-Now to the information:
-
-# hdparm -t /dev/md0
-
-/dev/md0:
- Timing buffered disk reads:  954 MB in  3.00 seconds = 317.83 MB/sec
-
-# uname -a
-Linux homeserv.local 2.6.32.11-99.fc12.x86_64 #1 SMP Mon Apr 5 19:59:38
-UTC 2010 x86_64 x86_64 x86_64 GNU/Linux
-
-# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md0 : active raid5 sdf1[0] sdg1[4] sdd1[3] sdc1[2] sdb1[1]
-      2930287616 blocks level 5, 64k chunk, algorithm 2 [5/5] [UUUUU]
-
-# df -h /dev/md0
-Filesystem            Size  Used Avail Use% Mounted on
-/dev/md0              2.7T  724G  1.9T  28% /home/data
-
-# free
-             total       used       free     shared    buffers     cached
-Mem:       8194940    5483640    2711300          0     171392    3131220
--/+ buffers/cache:    2181028    6013912
-Swap:      4096532      50108    4046424
-
-# mdadm -D /dev/md0
-/dev/md0:
-        Version : 0.90
-  Creation Time : Mon Jan 25 16:14:08 2010
-     Raid Level : raid5
-     Array Size : 2930287616 (2794.54 GiB 3000.61 GB)
-  Used Dev Size : 732571904 (698.64 GiB 750.15 GB)
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 0
-    Persistence : Superblock is persistent
-
-    Update Time : Wed Jun 16 17:55:14 2010
-          State : clean
- Active Devices : 5
-Working Devices : 5
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-           UUID : 18928390:76024ba7:d9fdb3bf:6408b6d2 (local to host
-homeserv.local)
-         Events : 0.54506
-
-    Number   Major   Minor   RaidDevice State
-       0       8       81        0      active sync   /dev/sdf1
-       1       8       17        1      active sync   /dev/sdb1
-       2       8       33        2      active sync   /dev/sdc1
-       3       8       49        3      active sync   /dev/sdd1
-       4       8       97        4      active sync   /dev/sdg1
-
-
-# cat /proc/cpuinfo
-processor       : 0
-vendor_id       : AuthenticAMD
-cpu family      : 15
-model           : 67
-model name      : AMD Athlon(tm) 64 X2 Dual Core Processor 6000+
-stepping        : 3
-cpu MHz         : 3000.000
-cache size      : 1024 KB
-physical id     : 0
-siblings        : 2
-core id         : 0
-cpu cores       : 2
-apicid          : 0
-initial apicid  : 0
-fpu             : yes
-fpu_exception   : yes
-cpuid level     : 1
-wp              : yes
-flags           : fpu vme de pse tsc msr pae mce cx8 apic mtrr pge mca
-cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt
-rdtscp lm 3dnowext 3dnow rep_good extd_apicid pni cx16 lahf_lm cmp_legacy
-svm extapic cr8_legacy
-bogomips        : 5999.16
-TLB size        : 1024 4K pages
-clflush size    : 64
-cache_alignment : 64
-address sizes   : 40 bits physical, 48 bits virtual
-power management: ts fid vid ttp tm stc
-
-processor       : 1
-vendor_id       : AuthenticAMD
-cpu family      : 15
-model           : 67
-model name      : AMD Athlon(tm) 64 X2 Dual Core Processor 6000+
-stepping        : 3
-cpu MHz         : 3000.000
-cache size      : 1024 KB
-physical id     : 0
-siblings        : 2
-core id         : 1
-cpu cores       : 2
-apicid          : 1
-initial apicid  : 1
-fpu             : yes
-fpu_exception   : yes
-cpuid level     : 1
-wp              : yes
-flags           : fpu vme de pse tsc msr pae mce cx8 apic mtrr pge mca
-cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt
-rdtscp lm 3dnowext 3dnow rep_good extd_apicid pni cx16 lahf_lm cmp_legacy
-svm extapic cr8_legacy
-bogomips        : 5999.62
-TLB size        : 1024 4K pages
-clflush size    : 64
-cache_alignment : 64
-address sizes   : 40 bits physical, 48 bits virtual
-power management: ts fid vid ttp tm stc
-
-# dmidecode
-Handle 0x003C, DMI type 17, 27 bytes
-Memory Device
-        Array Handle: 0x003A
-        Error Information Handle: Not Provided
-        Total Width: 64 bits
-        Data Width: 72 bits
-        Size: 2048 MB
-        Form Factor: DIMM
-        Set: None
-        Locator: DIMM0
-        Bank Locator: BANK0
-        Type: DDR2
-        Type Detail: Synchronous
-        Speed: 400 MHz
-        Manufacturer: Manufacturer00
-        Serial Number: SerNum00
-        Asset Tag: AssetTagNum0
-        Part Number: ModulePartNumber00
-
----
-Will Y.
-
-
-
--- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
-
+In fact, if grub supports the older metablock format but not the newer
+maybe you should file/attach to a bug about it.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
