@@ -1,59 +1,32 @@
-From: "Stefan G. Weichinger" <lists@xunil.at>
-Subject: RAID5: two disks dropping out
-Date: Wed, 16 Jun 2010 21:32:05 +0200
-Message-ID: <4C1926B5.3060106@xunil.at>
-Reply-To: lists@xunil.at
+From: Gilad Arnold <arnold@cs.berkeley.edu>
+Subject: Re: migrating from RAID5 to RAID10
+Date: Wed, 16 Jun 2010 13:15:23 -0700
+Message-ID: <20100616201523.GA24349@libra.CS.Berkeley.EDU>
+References: <20100609151132.GA10082@libra.CS.Berkeley.EDU>
+ <20100611005231.401529c0@natsu>
+ <20100610195851.GA8408@libra.CS.Berkeley.EDU>
+ <4C18F39E.8010600@tmr.com>
+ <20100616183031.GB2513@scorpio.mgarnold.homelinux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20100616183031.GB2513@scorpio.mgarnold.homelinux.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: Roman Mamedov <roman@rm.pp.ru>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Wed, Jun 16, 2010 at 11:30:31AM -0700, Gilad Arnold wrote:
+> Thanks for the thorough evaluation and thoughtful advice! Much
+> appreciated.  I agree it makes a lot more sense and I will follow your
+> suggested procedure (when I get to purchase the extra drive ;-) )
 
-Greets, linux-raid-users,
+PS, a related question: some measurements posted on the web suggest that
+RAID10 in f2 mode is far superior to n2 (the default?) when it comes to
+reading performance, and only mildly inferior when writing.  I tend to
+go with f2, unless someone tells me it's a bad idea.
 
-at a customers/friends site we have a failing RAID5.
+Thanks again for everyone's input.
 
-/dev/sda4 and /dev/sdc4 get kicked out of the raid5-array md3 over and
-over again.
-
-md3 consists of 6 partitions /dev/sd[a-f]4 and builds the only PV in a
-LVM-based volume group, containing data.
-
-md2 consists of 6 partitions /dev/sd[a-f]3 and is the root-fs.
-
-I was able to boot via grml and re-add the kicked partitions and force
-the activation of the arrays, I got the root-fs copied aside already.
-
-Tomorrow I will be at place to see how to get the most important things
-up and running again.
-
-New hard-disks are ordered already.
-
-I want to have RAID6 there in the end to get "n-2" fault tolerance.
-
-Aside from having backups from a day ago:
-
-What would you recommend me to do at first (without having the new
-hard-disks in the morning)?
-
-Boot via grml (or from the copied root-fs) and force the activation of
-md3, then try to pull of the latest data out of the LVM-LVs ?
-
-I want to get up the most important features up asap, imap-data is in
-one LV ...
-
-Currently I only have 2x250GB and 1x500GB SATA there, the new and
-fitting 1xTB-drives will arrive there tomorrow afternoon.
-
-Sorry, I can't provide any logs right now, the server is far away and
-turned down right now.
-
-If there are any clever tips on how to do that safe, or otoh to avoid
-pitfalls, I would be happy to hear ...
-
-Otherwise please excuse my potential faq ...
-
-Thank you, Stefan
+Gilad
