@@ -1,42 +1,58 @@
 From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: write barriers on raid0 and raid10
-Date: Wed, 16 Jun 2010 11:37:52 -0400
-Message-ID: <4C18EFD0.1030707@tmr.com>
-References: <S1751539Ab0FHSI6/20100608180858Z+3813@vger.kernel.org> <4C0E8A88.8010906@cdf.toronto.edu>
+Subject: Re: migrating from RAID5 to RAID10
+Date: Wed, 16 Jun 2010 11:54:06 -0400
+Message-ID: <4C18F39E.8010600@tmr.com>
+References: <20100609151132.GA10082@libra.CS.Berkeley.EDU> <20100611005231.401529c0@natsu> <20100610195851.GA8408@libra.CS.Berkeley.EDU>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C0E8A88.8010906@cdf.toronto.edu>
+In-Reply-To: <20100610195851.GA8408@libra.CS.Berkeley.EDU>
 Sender: linux-raid-owner@vger.kernel.org
-To: Iordan Iordanov <iordan@cdf.toronto.edu>
-Cc: linux-raid@vger.kernel.org
+To: Gilad Arnold <arnold@cs.berkeley.edu>
+Cc: Roman Mamedov <roman@rm.pp.ru>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Iordan Iordanov wrote:
-> Hi,
+Gilad Arnold wrote:
+> Thanks for your response, Roman.
 >
-> We are designing a rather involved file server with an ext3 formatted 
-> stripe (raid0) sitting on top of raid10 devices. Each raid10 device 
-> sits on top of 3 iscsi targets, and has layout n3 (so it is 
-> effectively a 3 way mirror). We chose raid10 over raid1 due to an 
-> apparent read performance benefit of raid10.
+> On Fri, Jun 11, 2010 at 12:52:30AM +0600, Roman Mamedov wrote:
+>   
+>>> I have been using RAID5 on a desktop machine using a couple of 500
+>>> GB drives.  My original intent was to grow the array by adding more
+>>> drives, as the need arises.
+>>>       
+>> Do you currently run RAID5 with just 2 drives, in degraded mode, or
+>> maybe you meant something else?
+>>     
 >
-> We are trying to decide whether to upgrade to a kernel newer than 
-> 2.6.34, where write barriers are ostensibly supported by all possible 
-> raid types, because we are worried about ext3 corruption with no write 
-> barrier support.
+> No, it is not degraded, it's a clean 2-drive RAID5. I know it doesn't
+> make much sense as it is ;-)  the intent was to grow the array later,
+> relying on mdadm's grow feature. Right now, I'm guessing that it
+> operates like a RAID1 for all practical purposes.
 >
-> However, we are also worried about whether write barriers really "make 
-> sense" in a multi-disk environment and are wondering whether they will 
-> actually make a difference in our setup. For argument's sake, let's 
-> assume that our drives honor write cache flushes.
->
-> Can somebody shed some light on how write barriers are implemented in 
-> raid0 and raid10? Also, any critical comments on the validity of our 
-> setup and/or assumptions is also welcome.
->
-I'm sorry not to see an answer here, I'm interested as well.
+>   
+I have the feeling that you will then get a lot of read, alter, rewrite 
+(RAW) operations on the parity chuck, where you would just get writes of 
+a copy for raid{1,10} configuration. The performance of raid5 is poor, 
+but with 4-5 drives it gives you some fault tolerance. With even three 
+drives the write performance is poor by algorithm, and the read 
+performance is poor by implementation (I see no reason for reading at 
+the speed of just one drive).
+
+I think your upgrade will fail, but feel free to see if a two drive 
+raid5 will start with only one drive, I could be wrong.
+
+If it were me, I would leave the raid up, install the new drive, and 
+just copy the data to it. That way you have error tolerance on the 
+original data, while your method doesn't. After doing that and reading 
+the entire new drive to be sure it's valid, configure the two original 
+drives as a degraded three drive raid10. After that's done AND TESTED to 
+see that the data are still all valid, then you add the new drive to the 
+raid10 and get full operation.
+
+Actually, if it were me I'd have a backup, too. And be damn sure to run 
+on a UPS.
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
