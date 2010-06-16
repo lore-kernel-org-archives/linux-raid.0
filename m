@@ -1,7 +1,7 @@
 From: "Trela, Maciej" <Maciej.Trela@intel.com>
-Subject: [PATCH 2/3] md: clear layout after ->raid0 takeover
-Date: Wed, 16 Jun 2010 11:55:14 +0100
-Message-ID: <BE2BFE91933D1B4089447C64486040801E873F03@irsmsx503.ger.corp.intel.com>
+Subject: [PATCH 3/3] md: enable raid4->raid0 takeover
+Date: Wed, 16 Jun 2010 11:56:12 +0100
+Message-ID: <BE2BFE91933D1B4089447C64486040801E873F07@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -14,30 +14,36 @@ List-Id: linux-raid.ids
 
 From: Maciej Trela <maciej.trela@intel.com>
 
-After takeover from raid5/10 -> raid0 mddev->layout is not cleared.
+Only level 5 with layout=PARITY_N can be taken over to raid0 now.
+Lets allow level 4 either.
 
 Signed-off-by: Maciej Trela <maciej.trela@intel.com>
 ---
- drivers/md/raid0.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/md/raid0.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c index 7c7c380..ac09b7d 100644
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c index ac09b7d..0b45759 100644
 --- a/drivers/md/raid0.c
 +++ b/drivers/md/raid0.c
-@@ -592,6 +592,7 @@ static void *raid0_takeover_raid5(mddev_t *mddev)
+@@ -569,7 +569,7 @@ static void raid0_status(struct seq_file *seq, mddev_t *mddev)
+ 	return;
+ }
  
- 	/* Set new parameters */
- 	mddev->new_level = 0;
-+	mddev->new_layout = 0;
- 	mddev->new_chunk_sectors = mddev->chunk_sectors;
- 	mddev->raid_disks--;
- 	mddev->delta_disks = -1;
-@@ -631,6 +632,7 @@ static void *raid0_takeover_raid10(mddev_t *mddev)
+-static void *raid0_takeover_raid5(mddev_t *mddev)
++static void *raid0_takeover_raid45(mddev_t *mddev)
+ {
+ 	mdk_rdev_t *rdev;
+ 	raid0_conf_t *priv_conf;
+@@ -650,9 +650,9 @@ static void *raid0_takeover(mddev_t *mddev)
+ 	 *  raid5 - providing it is Raid4 layout and one disk is faulty
+ 	 *  raid10 - assuming we have all necessary active disks
+ 	 */
+-	if (mddev->level == 5) {
++	if (mddev->level == 5 || mddev->level == 4){
+ 		if (mddev->layout == ALGORITHM_PARITY_N)
+-			return raid0_takeover_raid5(mddev);
++			return raid0_takeover_raid45(mddev);
  
- 	/* Set new parameters */
- 	mddev->new_level = 0;
-+	mddev->new_layout = 0;
- 	mddev->new_chunk_sectors = mddev->chunk_sectors;
- 	mddev->delta_disks = - mddev->raid_disks / 2;
- 	mddev->raid_disks += mddev->delta_disks;
+ 		printk(KERN_ERR "md/raid0:%s: Raid can only takeover Raid5 with layout: %d\n",
+ 		       mdname(mddev), ALGORITHM_PARITY_N);
 
