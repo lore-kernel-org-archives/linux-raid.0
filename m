@@ -1,57 +1,46 @@
 From: "Trela, Maciej" <Maciej.Trela@intel.com>
-Subject: RE: [PATCH 3/3] md: fix invalid dev slots after takeover
-Date: Wed, 16 Jun 2010 11:33:34 +0100
-Message-ID: <BE2BFE91933D1B4089447C64486040801E873EBC@irsmsx503.ger.corp.intel.com>
-References: <BE2BFE91933D1B4089447C64486040801E8734B6@irsmsx503.ger.corp.intel.com>
- <20100616144008.5b404e54@notabene.brown>
+Subject: [PATCH 1/3] md: fix raid10 takeover: use new_layout for setup_conf
+Date: Wed, 16 Jun 2010 11:46:29 +0100
+Message-ID: <BE2BFE91933D1B4089447C64486040801E873EE6@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100616144008.5b404e54@notabene.brown>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
+From: Maciej Trela <maciej.trela@intel.com>
 
+Use mddev->new_layout in setup_conf.
 
-> -----Original Message-----
-> From: Neil Brown [mailto:neilb@suse.de]
-> Sent: Wednesday, June 16, 2010 6:40 AM
-> To: Trela, Maciej
-> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed
-> Subject: Re: [PATCH 3/3] md: fix invalid dev slots after takeover
-> 
-> On Tue, 15 Jun 2010 09:36:36 +0100
-> "Trela, Maciej" <Maciej.Trela@intel.com> wrote:
-> 
-> > From: Maciej Trela <maciej.trela@intel.com>
-> >
-> > While raid10->raid0 takeover incorrect slot numbers are set for
-> raid0. This was caused by invalidating dev slot numbers before calling
-> pers->run(). We are invalidating all devs that has (rdev->raid_disk >=
-> mddev->raid_disks) but rdev->raid_disk numbers are scaled in pers-
-> >run().
-> >
-> > Another option to fix the problem:
-> > If invalidating devs should rather be performed before run() we could
-> use devlist[index] for invalidating - devlist is already updated after
-> calling takeover...
-> 
-> Thanks.  I see the problem but don't really like the fix.
-> 
-> I propose the following (Which includes the 2/3 patch - all part of the
-> same
-> big problem really).
-> 
+Signed-off-by: Maciej Trela <maciej.trela@intel.com>
+---
+ drivers/md/raid10.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
-
-It looks good to me. ports and sysfs links are updating correctly now.
-
-While testing the patch I've found two minor issues/enhancements for takeover.
-I'll sent them in a minute along with reworked 1/3 "new_layout" fix.
-
-Maciek.
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c index 9f65dc5..7b47639 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -2169,14 +2169,14 @@ static conf_t *setup_conf(mddev_t *mddev)
+ 		goto out;
+ 	}
+ 
+-	nc = mddev->layout & 255;
+-	fc = (mddev->layout >> 8) & 255;
+-	fo = mddev->layout & (1<<16);
++	nc = mddev->new_layout & 255;
++	fc = (mddev->new_layout >> 8) & 255;
++	fo = mddev->new_layout & (1<<16);
+ 
+ 	if ((nc*fc) <2 || (nc*fc) > mddev->raid_disks ||
+-	    (mddev->layout >> 17)) {
++	    (mddev->new_layout >> 17)) {
+ 		printk(KERN_ERR "md/raid10:%s: unsupported raid10 layout: 0x%8x\n",
+-		       mdname(mddev), mddev->layout);
++		       mdname(mddev), mddev->new_layout);
+ 		goto out;
+ 	}
 
