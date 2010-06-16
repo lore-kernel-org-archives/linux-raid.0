@@ -1,49 +1,67 @@
-From: "Trela, Maciej" <Maciej.Trela@intel.com>
-Subject: [PATCH 3/3] md: enable raid4->raid0 takeover
-Date: Wed, 16 Jun 2010 11:56:12 +0100
-Message-ID: <BE2BFE91933D1B4089447C64486040801E873F07@irsmsx503.ger.corp.intel.com>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: RE: [md PATCH 1/5] md: Fix: max_disks limit set for external
+ metadata
+Date: Wed, 16 Jun 2010 12:25:21 +0100
+Message-ID: <905EDD02F158D948B186911EB64DB3D11F295EC9@irsmsx503.ger.corp.intel.com>
+References: <905EDD02F158D948B186911EB64DB3D11EECE89E@irsmsx503.ger.corp.intel.com>
+ <20100616145030.4ed80d70@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100616145030.4ed80d70@notabene.brown>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-From: Maciej Trela <maciej.trela@intel.com>
+> -----Original Message-----
+> From: Neil Brown [mailto:neilb@suse.de]
+> Sent: Wednesday, June 16, 2010 6:51 AM
+> To: Kwolek, Adam
+> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed
+> Subject: Re: [md PATCH 1/5] md: Fix: max_disks limit set for external
+> metadata
+> 
+> On Wed, 9 Jun 2010 15:20:37 +0100
+> "Kwolek, Adam" <adam.kwolek@intel.com> wrote:
+> 
+> > (md: Online Capacity Expansion for IMSM) If max_disks limit is not
+> > set, md doesn't allow for reconfiguration and starting reshape. For
+> external metadata this limit is not set.
+> > It is set for native meta during metadata reading.
+> > Limit max_disks is not used for external meta, so we can set it to
+> value (MD_SB_DISKS) that will not block reshape.
+> > ---
+> >
+> >  drivers/md/md.c |    2 ++
+> >  1 files changed, 2 insertions(+), 0 deletions(-)
+> >
+> > diff --git a/drivers/md/md.c b/drivers/md/md.c index dfbba92..9cec771
+> > 100644
+> > --- a/drivers/md/md.c
+> > +++ b/drivers/md/md.c
+> > @@ -5380,6 +5380,8 @@ static int update_raid_disks(mddev_t *mddev,
+> int raid_disks)
+> >  	/* change the number of raid disks */
+> >  	if (mddev->pers->check_reshape == NULL)
+> >  		return -EINVAL;
+> > +	if (mddev->external)
+> > +		mddev->max_disks = MD_SB_DISKS;
+> >  	if (raid_disks <= 0 ||
+> >  	    raid_disks >= mddev->max_disks)
+> >  		return -EINVAL;
+> >
+> 
+> 
+> commit 233fca36bb439eadcad28500b5139fed7c64a0ae
+> should make this unnecessary.
+> 
+> NeilBrown
 
-Only level 5 with layout=PARITY_N can be taken over to raid0 now.
-Lets allow level 4 either.
+Yes, you are right.
+Commit you pointed makes this patch unnecessary.
 
-Signed-off-by: Maciej Trela <maciej.trela@intel.com>
----
- drivers/md/raid0.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c index ac09b7d..0b45759 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -569,7 +569,7 @@ static void raid0_status(struct seq_file *seq, mddev_t *mddev)
- 	return;
- }
- 
--static void *raid0_takeover_raid5(mddev_t *mddev)
-+static void *raid0_takeover_raid45(mddev_t *mddev)
- {
- 	mdk_rdev_t *rdev;
- 	raid0_conf_t *priv_conf;
-@@ -650,9 +650,9 @@ static void *raid0_takeover(mddev_t *mddev)
- 	 *  raid5 - providing it is Raid4 layout and one disk is faulty
- 	 *  raid10 - assuming we have all necessary active disks
- 	 */
--	if (mddev->level == 5) {
-+	if (mddev->level == 5 || mddev->level == 4){
- 		if (mddev->layout == ALGORITHM_PARITY_N)
--			return raid0_takeover_raid5(mddev);
-+			return raid0_takeover_raid45(mddev);
- 
- 		printk(KERN_ERR "md/raid0:%s: Raid can only takeover Raid5 with layout: %d\n",
- 		       mdname(mddev), ALGORITHM_PARITY_N);
-
+BR
+Adam
