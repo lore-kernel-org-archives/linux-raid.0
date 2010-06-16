@@ -1,117 +1,45 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [md PATCH 2/5]  md: Enable reshape for external metadata
-Date: Wed, 16 Jun 2010 15:52:06 +0100
-Message-ID: <905EDD02F158D948B186911EB64DB3D11F2FF471@irsmsx503.ger.corp.intel.com>
-References: <905EDD02F158D948B186911EB64DB3D11EECE8A2@irsmsx503.ger.corp.intel.com>
- <20100616145343.1fc13b4c@notabene.brown>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: write barriers on raid0 and raid10
+Date: Wed, 16 Jun 2010 11:37:52 -0400
+Message-ID: <4C18EFD0.1030707@tmr.com>
+References: <S1751539Ab0FHSI6/20100608180858Z+3813@vger.kernel.org> <4C0E8A88.8010906@cdf.toronto.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100616145343.1fc13b4c@notabene.brown>
-Content-Language: en-US
+In-Reply-To: <4C0E8A88.8010906@cdf.toronto.edu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: Iordan Iordanov <iordan@cdf.toronto.edu>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> -----Original Message-----
-> From: Neil Brown [mailto:neilb@suse.de]
-> Sent: Wednesday, June 16, 2010 6:54 AM
-> To: Kwolek, Adam
-> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed
-> Subject: Re: [md PATCH 2/5] md: Enable reshape for external metadata
-> 
-> On Wed, 9 Jun 2010 15:21:05 +0100
-> "Kwolek, Adam" <adam.kwolek@intel.com> wrote:
-> 
-> > (md: Online Capacity Expansion for IMSM)
-> > Reshape can't go forward for external metadatas due to fact, that
-> internal md flags are updated during native meta writing. For external
-> metadatas
-> > md_update_sb() is not called (reshape process is blocked).
-> > To take carry about md flags in external metadata array case and
-> allow reshape to roll over, md_update_sb() is called in similar way to
-> native metadata. The difference is that metadata is not stored to disks
-> by md, but externally by mdmon.
-> 
-> I agree there is a problem here but I think you are approaching it the
-> wrong
-> way.  We need to make sure the problem flag doesn't get set when
-> external
-> metadata is used.
-> 
-> I found something similar (maybe the same thing) when writing the dm-
-> raid456
-> module.  Does that patch:
-> 
-> http://neil.brown.name/git?p=md;a=commitdiff;h=3b930b37e50702f97f8fad6d
-> 7f5ee6d3f268394e
-> 
-> solve the problem for you?
-> 
-> Thanks,
-> NeilBrown
+Iordan Iordanov wrote:
+> Hi,
+>
+> We are designing a rather involved file server with an ext3 formatted 
+> stripe (raid0) sitting on top of raid10 devices. Each raid10 device 
+> sits on top of 3 iscsi targets, and has layout n3 (so it is 
+> effectively a 3 way mirror). We chose raid10 over raid1 due to an 
+> apparent read performance benefit of raid10.
+>
+> We are trying to decide whether to upgrade to a kernel newer than 
+> 2.6.34, where write barriers are ostensibly supported by all possible 
+> raid types, because we are worried about ext3 corruption with no write 
+> barrier support.
+>
+> However, we are also worried about whether write barriers really "make 
+> sense" in a multi-disk environment and are wondering whether they will 
+> actually make a difference in our setup. For argument's sake, let's 
+> assume that our drives honor write cache flushes.
+>
+> Can somebody shed some light on how write barriers are implemented in 
+> raid0 and raid10? Also, any critical comments on the validity of our 
+> setup and/or assumptions is also welcome.
+>
+I'm sorry not to see an answer here, I'm interested as well.
 
-It almost solves problem.
-To make it solved the following change I have to add:
-
-md/md.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/md/md.c b/md/md.c
-index e9b5d67..01e88cd 100644
---- a/md/md.c
-+++ b/md/md.c
-@@ -6437,7 +6437,8 @@ int md_allow_write(mddev_t *mddev)
- 	spin_lock_irq(&mddev->write_lock);
- 	if (mddev->in_sync) {
- 		mddev->in_sync = 0;
--		set_bit(MD_CHANGE_CLEAN, &mddev->flags);
-+		if (mddev->persistent)
-+			set_bit(MD_CHANGE_CLEAN, &mddev->flags);
- 		if (mddev->safemode_delay &&
- 		    mddev->safemode == 0)
- 			mddev->safemode = 1;
-
-This closes MD_CHANGE_CLEAN flag management for me.
-What do you think about this?
-
-Another thing is waiting during reshape for metadata update on MD_CHANGE_DEVS flag. 
-To roll reshape I've added the following code (instead calling md_ubdate_sb()):
-
-
-diff --git a/md/md.c b/md/md.c
-index 01e88cd..539b323 100644
---- a/md/md.c
-+++ b/md/md.c
-@@ -6896,8 +6896,17 @@ void md_check_recovery(mddev_t *mddev)
- 		(mddev->external == 0 && mddev->safemode == 1) ||
- 		(mddev->safemode == 2 && ! atomic_read(&mddev->writes_pending)
- 		 && !mddev->in_sync && mddev->recovery_cp == MaxSector)
--		))
-+		)) {
-+			if ((mddev->external) && (mddev->flags)) {
-+				/* FIXME: 
-+				 * for external metadata checkpointing purposes
-+				 * put communication with userspace here
-+				 */
-+				clear_bit(MD_CHANGE_DEVS, &mddev->flags);
-+				wake_up(&mddev->sb_wait);
-+			}
- 			return;
-+		}
- 
- 	if (mddev_trylock(mddev)) {
- 		int spares = 0;
-
-
-This change we can reuse for checkpointing purposes.
-External metadata updates can be triggered in the same moments as native one (reuse internal md communication mechanisms).
-
-What is your opinion about this?
-
-BR
-Adam
-
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "We can't solve today's problems by using the same thinking we
+   used in creating them." - Einstein
 
