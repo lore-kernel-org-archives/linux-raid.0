@@ -1,67 +1,68 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 3/3] md: enable raid4->raid0 takeover
-Date: Thu, 17 Jun 2010 15:25:01 +1000
-Message-ID: <20100617152501.596c9574@notabene.brown>
-References: <BE2BFE91933D1B4089447C64486040801E873F07@irsmsx503.ger.corp.intel.com>
+Subject: Re: Problem re-shaping RAID6
+Date: Thu, 17 Jun 2010 15:47:08 +1000
+Message-ID: <20100617154708.227cd303@notabene.brown>
+References: <AANLkTikv3JPbto1F2YYmRx0HNP7cgFh3gj6dHekCt1SE@mail.gmail.com>
+	<20100614091518.2492a9db@notabene.brown>
+	<20100614124723.84152dz5al8096f4@cakebox.homeunix.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BE2BFE91933D1B4089447C64486040801E873F07@irsmsx503.ger.corp.intel.com>
+In-Reply-To: <20100614124723.84152dz5al8096f4@cakebox.homeunix.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Trela, Maciej" <Maciej.Trela@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: Nagilum <nagilum@nagilum.org>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 16 Jun 2010 11:56:12 +0100
-"Trela, Maciej" <Maciej.Trela@intel.com> wrote:
+On Mon, 14 Jun 2010 12:47:23 +0200
+Nagilum <nagilum@nagilum.org> wrote:
 
-> From: Maciej Trela <maciej.trela@intel.com>
-> 
-> Only level 5 with layout=PARITY_N can be taken over to raid0 now.
-> Lets allow level 4 either.
+>=20
+> ----- Message from neilb@suse.de ---------
+>      Date: Mon, 14 Jun 2010 09:15:18 +1000
+>      From: Neil Brown <neilb@suse.de>
+>   Subject: Re: Problem re-shaping RAID6
+>        To: J=C3=A9r=C3=B4me Poulin <jeromepoulin@gmail.com>
+>        Cc: linux-raid <linux-raid@vger.kernel.org>
+>=20
+>=20
+> > Thanks.
+> > I fixed this bug a slightly different way
+> >
+> > -               blocks =3D ochunk/512 * nchunk/512 * odata * ndata =
+/ a;
+> > +               blocks =3D (ochunk/512) * (nchunk/512) * odata * nd=
+ata / a;
+> >
+> >
+> > See
+> > http://neil.brown.name/git?p=3Dmdadm;a=3Dcommitdiff;h=3D200871adf9e=
+15d5ad985f28c349fd89c386ef48a
+>=20
+> Those static numbers always make my nose wrinkle.
+> Don't we have the blocksize somewhere already? I'm also concerned wha=
+t =20
+> happens when true 4k sectors are used..
+>=20
 
-Thanks.
-->layout isn't set for level==4 so we really need separate code branches for
-'4' and '5'.  I made this change.
+A sector will always be 512 bytes to Linux, even when we have drives th=
+at can
+only do IO in multiples of 8 sectors.  Changing that would cause way to=
+ many
+headaches.
 
-Applied.
+Yes,  I could possibly use a define for '512'.  Some times that is
+appropriate, but I thing 512 is so clearly "bytes_per_sector" it would =
+just
+add an unnecessary level of indirection.
+It is a question of taste really - no right answers.
+
 Thanks,
 NeilBrown
 
-> 
-> Signed-off-by: Maciej Trela <maciej.trela@intel.com>
-> ---
->  drivers/md/raid0.c |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c index ac09b7d..0b45759 100644
-> --- a/drivers/md/raid0.c
-> +++ b/drivers/md/raid0.c
-> @@ -569,7 +569,7 @@ static void raid0_status(struct seq_file *seq, mddev_t *mddev)
->  	return;
->  }
->  
-> -static void *raid0_takeover_raid5(mddev_t *mddev)
-> +static void *raid0_takeover_raid45(mddev_t *mddev)
->  {
->  	mdk_rdev_t *rdev;
->  	raid0_conf_t *priv_conf;
-> @@ -650,9 +650,9 @@ static void *raid0_takeover(mddev_t *mddev)
->  	 *  raid5 - providing it is Raid4 layout and one disk is faulty
->  	 *  raid10 - assuming we have all necessary active disks
->  	 */
-> -	if (mddev->level == 5) {
-> +	if (mddev->level == 5 || mddev->level == 4){
->  		if (mddev->layout == ALGORITHM_PARITY_N)
-> -			return raid0_takeover_raid5(mddev);
-> +			return raid0_takeover_raid45(mddev);
->  
->  		printk(KERN_ERR "md/raid0:%s: Raid can only takeover Raid5 with layout: %d\n",
->  		       mdname(mddev), ALGORITHM_PARITY_N);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
