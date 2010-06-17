@@ -1,61 +1,28 @@
-From: aragonx@dcsnow.com
-Subject: Re: How to boost performance
-Date: Thu, 17 Jun 2010 09:49:42 -0400
-Message-ID: <d98b7022efc6988e47f7e4114aa83f62.squirrel@www.dcsnow.com>
-References: <ea83c7a1ddca01e0a1535f130502a0f2.squirrel@www.dcsnow.com>
-    <20100617100109.32a20ffa@natsu>
+From: "Graham Mitchell" <gmitch@woodlea.com>
+Subject: RE: [md PATCH 00/16] bad block list management for md and RAID1
+Date: Thu, 17 Jun 2010 11:53:40 -0400
+Message-ID: <003901cb0e35$422f9020$c68eb060$@woodlea.com>
+References: <20100606235833.13302.60932.stgit@notabene.brown> <hvd5iq$u83$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100617100109.32a20ffa@natsu>
+In-Reply-To: <hvd5iq$u83$1@dough.gmane.org>
+Content-language: en-us
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <roman@rm.pp.ru>
-Cc: aragonx@dcsnow.com, linux-raid@vger.kernel.org
+To: 'Brett Russ' <bruss@netezza.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> On Wed, 16 Jun 2010 18:23:36 -0400
-> Increasing stripe cache size from the default of 256 should help
-> immensely.
->
-> echo 16384 > /sys/block/md0/md/stripe_cache_size
->
-> Be warned that this consumes (^that amount * 4096 * number of disks) bytes
-> of
-> RAM. Some benchmarks:
+> This is a worthwhile addition, I think.  However, one concern we have is there
+> appears to be no distinction between media errors (i.e. bad
+> blocks) and other SCSI errors.
 
-Hello.  Thank you for the quick suggestions!
+One thing I'd like to see would be being able to import a list of bad blocks from badblocks, and also have the ability for mdadm to be able to run a 'destructive' badblocks on the drives in the array, either at create/grow time, or on demand.
 
-First I need to correct myself.  I only have the slowdown when writing to
-the server.  Reads from the server are usually in the 60-70MB/sec range
-regardless of file size.
-
-Prior to the change above, on a 2GB file, I would start off the write (to
-the server) at 70MB/sec and end at about 35MB/sec.  CPU usage was at 100%
-with the md0 using about 70% CPU and smb using 30% with flush sometimes
-jumping in at 30%.  Wait states remained below 10%.  After the change, on
-a 2GB file I would start the write at 70MB/sec and end about 55MB/sec
-(nice improvement!).
-
-Switched to a 5GB file and the write ended around 35MB/sec.  At the
-beginning smbd would star with 50% CPU but gradually go down to 30% with
-md0 ramping up to 70% and flush jumping in from time to time at 30%.
-
-This information is all coming from top.  If I should use something else
-that will get more accurate readings, please let me know.
-
-With one change my performance greatly increased but I would like to see
-more.  Is there anything else I can do?  I'm hoping to get sustainable
-60MB/sec writes.  Is that possible?
-
-Thank you if you have read this far!  :)
-
----
-Will Y.
+I say 'destructive' since it would be a bad thing (tm) if it truly were destructive on a live array, but it would be nice for mdadm to do the full destructive aa/55/ff/00 write/read/compare cycle on each disk, without actually being destructive to the data that's there. I am slightly paranoid (having been bitten in the bum in the past), so I do a full destructive badblocks on every disk BEFORE I add It to an array (and yes, it can take days when I have 3 or 4 1TB drives to add). It would be nice to be able to add the disks to the server untested, and let mdadm do the testing when it was doing the grow.
 
 
--- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
+Graham
+
 
