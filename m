@@ -1,93 +1,178 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [md PATCH 2/5]  md: Enable reshape for external metadata
-Date: Thu, 17 Jun 2010 20:35:19 +1000
-Message-ID: <20100617203519.681a7586@notabene.brown>
-References: <905EDD02F158D948B186911EB64DB3D11EECE8A2@irsmsx503.ger.corp.intel.com>
-	<20100616145343.1fc13b4c@notabene.brown>
-	<905EDD02F158D948B186911EB64DB3D11F2FF471@irsmsx503.ger.corp.intel.com>
-	<20100617161135.73a377a0@notabene.brown>
-	<BE2BFE91933D1B4089447C64486040801E8E686C@irsmsx503.ger.corp.intel.com>
+From: David Watson <David.Watson@team17.com>
+Subject: Raid 1 array degrades on reboot
+Date: Thu, 17 Jun 2010 11:15:11 +0100
+Message-ID: <4C19F5AF.5060300@team17.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <BE2BFE91933D1B4089447C64486040801E8E686C@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Trela, Maciej" <Maciej.Trela@intel.com>
-Cc: "Kwolek, Adam" <adam.kwolek@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 17 Jun 2010 10:40:36 +0100
-"Trela, Maciej" <Maciej.Trela@intel.com> wrote:
+Hello,
 
-> > 
-> > >
-> > > Another thing is waiting during reshape for metadata update on
-> > MD_CHANGE_DEVS flag.
-> > > To roll reshape I've added the following code (instead calling
-> > md_ubdate_sb()):
-> > 
-> > Yes, there is a real issue there...
-> > 
-> > I don't think we ever need the kernel to wait for an external metadata
-> > handler
-> > to respond to device changes (apart from failure which is handled
-> > separately).
-> > So maybe the best thing is to guard all settings of MD_CHANGE_DEVS with
-> > if (mddev->persistent)
-> > 
-> > I think that would be best, but I've make a note to review that later.
-> > 
-> 
-> Neil,
-> from what I see in the raid5.c/md.c "native" code uses MD_CHANGE_DEVS
-> during the reshape if it reaches special points when metadata
-> write is really needed to update the reshape checkpoint.
-> In reshape_request():
-> 	/* Cannot proceed until we've updated the superblock */
-> 	..
-> 	set_bit(MD_CHANGE_DEVS, mddev->flags)
-> 
-> In md_check_recovery() we have:
-> 	if (mddev->flags) 
-> 		md_update_sb()
-> 
-> Couldn't we follow this logic with MD_CHANGE_DEVS for external metadata?
-> If not, how to detect the need for migration checkpoint update?
+Recently I upgraded to 2Tb disks on one of my servers, I built a new
+degraded raid1 array:
+mdadm --create /dev/md7 -level 1 --raid-devices=2 missing /dev/sdd1
 
-Good question.
-The first question to ask is
-  How does mdmon know when a metadata update is required, and how does
-  it tell md that the metadata update is complete.
+added its entry to /etc/mdadm/mdadm.conf then I rebooted to add the
+second disk and added it to the array:
+mdadm --manage /dev/md7  --add /dev/sdb1
 
-OK, 2 first questions...
+I updated /etc/mdadm/mdadm.conf, although I noticed no difference in the
+output of:
+mdadm --detail --scan
 
-For the first I suspect it should watch 'md/reshape_position' (which need to
-use sysfs_notify for).
-For the second .... I don't know.
-- Maybe sync_action could change to 'paused' and mdmon writes 'continue'....
-  but that is possibly overloading that file too much.
-- We could have a new sysfs file which just shows paused/active ??
-- We could require that mdmon sets 'sync_max' appropriately so that reshape
-  will stop at the right place, and then when mdmon has updated the metadata,
-  it sets a new sync_max value.
-- As above, but if sync_max is set too high, it is automatically reduced
-  to the place when raid5 finds that it has to stop
 
-I think the last one is probably best.
-Before updating ->reshape_position, raid5 checks ->resync_max and if it is
-too high for safety it set is lower to a safer value.
-Then it changes ->reshape_position and calls sysfs_notify.
+I use a monolithic kernel so there is no ramdisk to regenerate. This is
+my first 1.00 array, and the existing 0.9 arrays have never shown this
+issue. I have attempted the same process on a test server with no
+issues, and I can't really think of what to look at next.
 
-mdmon watches for 'reshape_postion' to change.  when it does it updates the
-metadata and then writes a larger value to ->resync_max.
+apologies for the long post.
 
-Things can get a little confusing when reshaping to fewer devices as
-reshape_position decreases, but sync_completed always increases and sync_max
-is still an 'upper' limit.
 
-But it should work OK.
 
-Does that seem reasonable?
+The array I'm having trouble with is md7, I'm on debian lenny
 
-NeilBrown
+# mdadm -V
+mdadm - v2.6.7.2 - 14th November 2008
+
+
+
+
+After boot and a resync:
+
+# cat /proc/mdstat
+Personalities : [linear] [raid0] [raid1] [raid10] [multipath] [faulty]
+md7 : active raid1 sdb1[2] sdd1[1]
+      1953511864 blocks super 1.0 [2/2] [UU]
+
+md1 : active raid1 sdc2[1] sda2[0]
+      497920 blocks [2/2] [UU]
+
+md2 : active raid1 sdc5[1] sda5[0]
+      3911680 blocks [2/2] [UU]
+
+md3 : active raid1 sdc6[1] sda6[0]
+      4891648 blocks [2/2] [UU]
+
+md4 : active raid1 sdc7[1] sda7[0]
+      3911680 blocks [2/2] [UU]
+
+md5 : active raid1 sdc8[1] sda8[0]
+      276872128 blocks [2/2] [UU]
+
+md0 : active raid1 sdc1[1] sda1[0]
+      1959808 blocks [2/2] [UU]
+
+unused devices: <none>
+
+
+# mdadm --detail --scan
+ARRAY /dev/md0 level=raid1 num-devices=2 metadata=00.90
+UUID=b43f6098:06acab7b:580ff883:3ab60d5b
+ARRAY /dev/md5 level=raid1 num-devices=2 metadata=00.90
+UUID=eaa425c7:502672ee:dabc9034:1a71332c
+ARRAY /dev/md4 level=raid1 num-devices=2 metadata=00.90
+UUID=2b48f938:99b2b0e3:519fddc6:1290322f
+ARRAY /dev/md3 level=raid1 num-devices=2 metadata=00.90
+UUID=ccad63d9:d0b7c626:8348c59b:766a05a5
+ARRAY /dev/md2 level=raid1 num-devices=2 metadata=00.90
+UUID=bc9c8e72:de7eb7fb:231484db:a9ec47c7
+ARRAY /dev/md1 level=raid1 num-devices=2 metadata=00.90
+UUID=e047f745:4ba432d8:26e9533e:8c2555b4
+ARRAY /dev/md7 level=raid1 num-devices=2 metadata=01.00 name=7
+UUID=0ed787fb:7d7c6b5c:82113c0c:b30493e3
+
+# cat /etc/mdadm/mdadm.conf
+DEVICE /dev/sda* /deb/sdb* /dev/sdc* /dev/sdd*
+CREATE owner=root group=disk mode=0660 auto=yes metadata=1
+MAILADDR root
+ARRAY /dev/md0 level=raid1 num-devices=2
+UUID=b43f6098:06acab7b:580ff883:3ab60d5b
+ARRAY /dev/md5 level=raid1 num-devices=2
+UUID=eaa425c7:502672ee:dabc9034:1a71332c
+ARRAY /dev/md4 level=raid1 num-devices=2
+UUID=2b48f938:99b2b0e3:519fddc6:1290322f
+ARRAY /dev/md3 level=raid1 num-devices=2
+UUID=ccad63d9:d0b7c626:8348c59b:766a05a5
+ARRAY /dev/md2 level=raid1 num-devices=2
+UUID=bc9c8e72:de7eb7fb:231484db:a9ec47c7
+ARRAY /dev/md1 level=raid1 num-devices=2
+UUID=e047f745:4ba432d8:26e9533e:8c2555b4
+ARRAY /dev/md7 level=raid1 num-devices=2 metadata=1.0 name=7
+UUID=0ed787fb:7d7c6b5c:82113c0c:b30493e3
+
+# mdadm -E /dev/sdb1
+/dev/sdb1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x0
+     Array UUID : 0ed787fb:7d7c6b5c:82113c0c:b30493e3
+           Name : 7
+  Creation Time : Fri Jun  4 12:19:54 2010
+     Raid Level : raid1
+   Raid Devices : 2
+
+ Avail Dev Size : 3907023728 (1863.01 GiB 2000.40 GB)
+     Array Size : 3907023728 (1863.01 GiB 2000.40 GB)
+   Super Offset : 3907023984 sectors
+          State : clean
+    Device UUID : 99055997:7584cb3c:12f75ae1:dbbc5dfa
+
+    Update Time : Thu Jun 17 10:52:58 2010
+       Checksum : f3904db3 - correct
+         Events : 10260
+
+
+    Array Slot : 2 (failed, 1, 0)
+   Array State : Uu 1 failed
+
+
+# mdadm -E /dev/sdd1
+/dev/sdd1:
+          Magic : a92b4efc
+        Version : 1.0
+    Feature Map : 0x0
+     Array UUID : 0ed787fb:7d7c6b5c:82113c0c:b30493e3
+           Name : 7
+  Creation Time : Fri Jun  4 12:19:54 2010
+     Raid Level : raid1
+   Raid Devices : 2
+
+ Avail Dev Size : 3907023728 (1863.01 GiB 2000.40 GB)
+     Array Size : 3907023728 (1863.01 GiB 2000.40 GB)
+   Super Offset : 3907023984 sectors
+          State : clean
+    Device UUID : b5defada:b9882124:28febea7:7775802f
+
+    Update Time : Thu Jun 17 10:52:58 2010
+       Checksum : 1a0eeac4 - correct
+         Events : 10260
+
+
+    Array Slot : 1 (failed, 1, 0)
+   Array State : uU 1 failed
+
+# fdisk -l /dev/sdb
+
+Disk /dev/sdb: 2000.3 GB, 2000398934016 bytes
+255 heads, 63 sectors/track, 243201 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x4bf7ec5a
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdb1               1      243201  1953512001   da  Non-FS data
+
+# fdisk -l /dev/sdd
+
+Disk /dev/sdd: 2000.3 GB, 2000398934016 bytes
+255 heads, 63 sectors/track, 243201 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Disk identifier: 0x81e47a11
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdd1               1      243201  1953512001   da  Non-FS data
+buildstore:~#
