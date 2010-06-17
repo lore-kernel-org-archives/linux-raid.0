@@ -1,68 +1,82 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Problem re-shaping RAID6
-Date: Thu, 17 Jun 2010 15:47:08 +1000
-Message-ID: <20100617154708.227cd303@notabene.brown>
-References: <AANLkTikv3JPbto1F2YYmRx0HNP7cgFh3gj6dHekCt1SE@mail.gmail.com>
-	<20100614091518.2492a9db@notabene.brown>
-	<20100614124723.84152dz5al8096f4@cakebox.homeunix.net>
+Subject: Re: Detecting array parameters
+Date: Thu, 17 Jun 2010 15:52:03 +1000
+Message-ID: <20100617155203.0512f6c5@notabene.brown>
+References: <20100609211340.GA12172@lazy.lzy>
+	<20100610083112.47aa2200@notabene.brown>
+	<20100612095821.GA14727@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100614124723.84152dz5al8096f4@cakebox.homeunix.net>
+In-Reply-To: <20100612095821.GA14727@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Nagilum <nagilum@nagilum.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, 14 Jun 2010 12:47:23 +0200
-Nagilum <nagilum@nagilum.org> wrote:
+On Sat, 12 Jun 2010 11:58:21 +0200
+Piergiorgio Sartor <piergiorgio.sartor@nexgo.de> wrote:
 
->=20
-> ----- Message from neilb@suse.de ---------
->      Date: Mon, 14 Jun 2010 09:15:18 +1000
->      From: Neil Brown <neilb@suse.de>
->   Subject: Re: Problem re-shaping RAID6
->        To: J=C3=A9r=C3=B4me Poulin <jeromepoulin@gmail.com>
->        Cc: linux-raid <linux-raid@vger.kernel.org>
->=20
->=20
-> > Thanks.
-> > I fixed this bug a slightly different way
-> >
-> > -               blocks =3D ochunk/512 * nchunk/512 * odata * ndata =
-/ a;
-> > +               blocks =3D (ochunk/512) * (nchunk/512) * odata * nd=
-ata / a;
-> >
-> >
-> > See
-> > http://neil.brown.name/git?p=3Dmdadm;a=3Dcommitdiff;h=3D200871adf9e=
-15d5ad985f28c349fd89c386ef48a
->=20
-> Those static numbers always make my nose wrinkle.
-> Don't we have the blocksize somewhere already? I'm also concerned wha=
-t =20
-> happens when true 4k sectors are used..
->=20
+> Hi,
+> 
+> thanks for the answer.
+> 
+> The "--export" option is a good advice, unfortunately
+> it seems to be quite "conservative" in the amount of
+> information, probably it is following some "udev"
+> requirements, I guess.
+> 
+> I'll try to explain what I'm trying to do, so, maybe,
+> there will be some other good advices.
+> 
+> I've a bunch (10) of different (in size too) HDDs.
+> These HDDs are partitioned in a way so that equal
+> partitions can compose several RAID-6 arrays.
+> So, for example, there are 5x 120GB and 5x 80GB HDDs.
+> The firsts are partitioned in 80+40, and there are 2
+> RAID-6, one made of 10 80GB "segments" and another
+> made of 5 40GB "segments".
+> So far, so good.
+> 
+> What I would like to do is a script, which, given an
+> HDD as parameter will *properly* add it to the array.
+> Where *properly* means, it will partition it properly,
+> add the partitions to the respectively arrays, and
+> perform, if necessary (non-degraded case) a grow.
+> 
+> My idea would be to go over the several arrays, check
+> the partition size, create a partition on the new HDD,
+> if possible, then add it and grow the array (if required).
+> 
+> The first step would be to find out the partition size,
+> which does seem to be avaialable in:
+> 
+> /sys/class/block/mdX/md/rdX/block/size
+> 
+> I was wondering if this would be the best option to get
+> this information, or there are better solutions.
+> 
+> Trying "mdadm -E /dev/sdX" returns also similar information,
+> namely the available device size and the offset, which sum
+> up to the partition size.
+> 
+> In /sys/class/block/mdX/md/rdX there are also two files,
+> carrying similar information: "size" and "offset".
+> In this case, strangely, the size is in KiB while the
+> offset in sectors (seems a bug to me).
+> 
+> Any suggestions on how to do this in a *correct* way?
+> 
+> Thanks a lot in advance for any advice and, please,
+> feel free to ask if you need more information.
 
-A sector will always be 512 bytes to Linux, even when we have drives th=
-at can
-only do IO in multiples of 8 sectors.  Changing that would cause way to=
- many
-headaches.
+I'm not sure there is a "correct" way.  Your requirements seem fairly
+specific to your system and so you just need to code to match those.
 
-Yes,  I could possibly use a define for '512'.  Some times that is
-appropriate, but I thing 512 is so clearly "bytes_per_sector" it would =
-just
-add an unnecessary level of indirection.
-It is a question of taste really - no right answers.
+One thought: when deciding how to partition a new device it might make more
+sense to look at the partitioning of other devices and try to match that,
+rather than to look at md arrays and try to match them.
+Maybe. ??
 
-Thanks,
 NeilBrown
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
