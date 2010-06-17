@@ -1,44 +1,49 @@
-From: Keld Simonsen <keld@keldix.com>
-Subject: Re: How to boost performance
-Date: Thu, 17 Jun 2010 22:43:27 +0200
-Message-ID: <20100617204327.GA21864@rap.rap.dk>
-References: <ea83c7a1ddca01e0a1535f130502a0f2.squirrel@www.dcsnow.com>
- <20100617100109.32a20ffa@natsu>
- <d98b7022efc6988e47f7e4114aa83f62.squirrel@www.dcsnow.com>
- <20100617221300.3e30afe0@natsu>
- <db120b2f917a2de03cbb3834ef56be7f.squirrel@www.dcsnow.com>
- <20100618020220.161c54b2@natsu>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Raid 1 array degrades on reboot
+Date: Fri, 18 Jun 2010 07:34:40 +1000
+Message-ID: <20100618073440.373d8aa6@notabene.brown>
+References: <4C19F5AF.5060300@team17.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100618020220.161c54b2@natsu>
+In-Reply-To: <4C19F5AF.5060300@team17.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <roman@rm.pp.ru>
-Cc: aragonx@dcsnow.com, linux-raid@vger.kernel.org
+To: David Watson <David.Watson@team17.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Fri, Jun 18, 2010 at 02:02:20AM +0600, Roman Mamedov wrote:
-> On Thu, 17 Jun 2010 15:46:05 -0400
-> aragonx@dcsnow.com wrote:
+On Thu, 17 Jun 2010 11:15:11 +0100
+David Watson <David.Watson@team17.com> wrote:
+
+> Hello,
 > 
-> > While I would agree with you if the performance was the same for reads as
-> > it was writes, that is not the case here.
+> Recently I upgraded to 2Tb disks on one of my servers, I built a new
+> degraded raid1 array:
+> mdadm --create /dev/md7 -level 1 --raid-devices=2 missing /dev/sdd1
 > 
-> Reads are a massively faster operation on RAID5 than writes, in my experience
-> an array easily reads at close to the theoretical limit, i.e. the speed of its
-> slowest member multiplied by the member count minus one.
+> added its entry to /etc/mdadm/mdadm.conf then I rebooted to add the
+> second disk and added it to the array:
+> mdadm --manage /dev/md7  --add /dev/sdb1
+> 
+> I updated /etc/mdadm/mdadm.conf, although I noticed no difference in the
+> output of:
+> mdadm --detail --scan
+> 
+> 
+> I use a monolithic kernel so there is no ramdisk to regenerate. This is
+> my first 1.00 array, and the existing 0.9 arrays have never shown this
+> issue. I have attempted the same process on a test server with no
+> issues, and I can't really think of what to look at next.
+> 
+> apologies for the long post.
+> 
 
-actually raid5 sequential reads can be faster than n-1 times the slowest disk,
-as it may skip the parity blocks faster than it could read them. Not much,
-probably.
+Long posts are good....
+However I cannot see in your long post what the actual problem is.
+You have given no evidence that anything degrades on boot.
+No kernel logs, no "/proc/mdstat immediately after boot"...
 
-raid10,f2 is theoretically the fastest of the redundancy raids for sequential reads 
-as it approaches the speed of raid0, with at theoretical performance of the
-number of drives times the slowest of the disks.
+More info please.
 
-For more on raid performance, see https://raid.wiki.kernel.org/index.php/Performance
-and for bottlenecks, see eg https://raid.wiki.kernel.org/index.php/Performance#Bottlenecks
-
-Best regards
-keld
+NeilBrown
