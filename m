@@ -1,59 +1,206 @@
-From: =?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?=
-	<stefan.huebner@stud.tu-ilmenau.de>
-Subject: Re: How to boost performance
-Date: Thu, 17 Jun 2010 18:44:42 +0200
-Message-ID: <4C1A50FA.50504@stud.tu-ilmenau.de>
-References: <ea83c7a1ddca01e0a1535f130502a0f2.squirrel@www.dcsnow.com>	<20100617100109.32a20ffa@natsu>	<d98b7022efc6988e47f7e4114aa83f62.squirrel@www.dcsnow.com> <20100617221300.3e30afe0@natsu>
-Reply-To: st0ff@npl.de
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: RE: [md PATCH 2/5]  md: Enable reshape for external metadata
+Date: Thu, 17 Jun 2010 17:49:57 +0100
+Message-ID: <905EDD02F158D948B186911EB64DB3D11F2FFF2F@irsmsx503.ger.corp.intel.com>
+References: <905EDD02F158D948B186911EB64DB3D11EECE8A2@irsmsx503.ger.corp.intel.com>
+	<20100616145343.1fc13b4c@notabene.brown>
+	<905EDD02F158D948B186911EB64DB3D11F2FF471@irsmsx503.ger.corp.intel.com>
+ <20100617161135.73a377a0@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100617221300.3e30afe0@natsu>
+In-Reply-To: <20100617161135.73a377a0@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <roman@rm.pp.ru>
-Cc: aragonx@dcsnow.com, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-Actually, you have not said a word about which controllers you use (for
-the drives).  Using the wrong controller can drain speed a lot.  As from
-the kernel benchmarks it seems like neither RAM nor computing power are
-the bottlenecks.
 
-Some SATA-controllers handle "nearly parallel" writes to multiple drives
-better than others.  SiI products for example have a noticeable drop-off
-for each disk you add.  Pretty late Intels nearly show no impact of many
-disks in parallel.  So maybe that could be the topic you should be
-after.  (And maybe a lspci could help :)
 
-Stefan
+> -----Original Message-----
+> From: Neil Brown [mailto:neilb@suse.de]
+> Sent: Thursday, June 17, 2010 8:12 AM
+> To: Kwolek, Adam
+> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed
+> Subject: Re: [md PATCH 2/5] md: Enable reshape for external metadata
+> 
+> On Wed, 16 Jun 2010 15:52:06 +0100
+> "Kwolek, Adam" <adam.kwolek@intel.com> wrote:
+> 
+> > > -----Original Message-----
+> > > From: Neil Brown [mailto:neilb@suse.de]
+> > > Sent: Wednesday, June 16, 2010 6:54 AM
+> > > To: Kwolek, Adam
+> > > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed
+> > > Subject: Re: [md PATCH 2/5] md: Enable reshape for external
+> metadata
+> > >
+> > > On Wed, 9 Jun 2010 15:21:05 +0100
+> > > "Kwolek, Adam" <adam.kwolek@intel.com> wrote:
+> > >
+> > > > (md: Online Capacity Expansion for IMSM)
+> > > > Reshape can't go forward for external metadatas due to fact, that
+> > > internal md flags are updated during native meta writing. For
+> external
+> > > metadatas
+> > > > md_update_sb() is not called (reshape process is blocked).
+> > > > To take carry about md flags in external metadata array case and
+> > > allow reshape to roll over, md_update_sb() is called in similar way
+> to
+> > > native metadata. The difference is that metadata is not stored to
+> disks
+> > > by md, but externally by mdmon.
+> > >
+> > > I agree there is a problem here but I think you are approaching it
+> the
+> > > wrong
+> > > way.  We need to make sure the problem flag doesn't get set when
+> > > external
+> > > metadata is used.
+> > >
+> > > I found something similar (maybe the same thing) when writing the
+> dm-
+> > > raid456
+> > > module.  Does that patch:
+> > >
+> > >
+> http://neil.brown.name/git?p=md;a=commitdiff;h=3b930b37e50702f97f8fad6d
+> > > 7f5ee6d3f268394e
+> > >
+> > > solve the problem for you?
+> > >
+> > > Thanks,
+> > > NeilBrown
+> >
+> > It almost solves problem.
+> > To make it solved the following change I have to add:
+> >
+> > md/md.c |    5 +++--
+> >  1 files changed, 3 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/md/md.c b/md/md.c
+> > index e9b5d67..01e88cd 100644
+> > --- a/md/md.c
+> > +++ b/md/md.c
+> > @@ -6437,7 +6437,8 @@ int md_allow_write(mddev_t *mddev)
+> >  	spin_lock_irq(&mddev->write_lock);
+> >  	if (mddev->in_sync) {
+> >  		mddev->in_sync = 0;
+> > -		set_bit(MD_CHANGE_CLEAN, &mddev->flags);
+> > +		if (mddev->persistent)
+> > +			set_bit(MD_CHANGE_CLEAN, &mddev->flags);
+> >  		if (mddev->safemode_delay &&
+> >  		    mddev->safemode == 0)
+> >  			mddev->safemode = 1;
+> >
+> > This closes MD_CHANGE_CLEAN flag management for me.
+> > What do you think about this?
+> 
+> 
+> >
+> > Another thing is waiting during reshape for metadata update on
+> MD_CHANGE_DEVS flag.
+> > To roll reshape I've added the following code (instead calling
+> md_ubdate_sb()):
+> 
+> Yes, there is a real issue there...
+> 
+> I don't think we ever need the kernel to wait for an external metadata
+> handler
+> to respond to device changes (apart from failure which is handled
+> separately).
+> So maybe the best thing is to guard all settings of MD_CHANGE_DEVS with
+> if (mddev->persistent)
+> 
+> I think that would be best, but I've make a note to review that later.
+> 
+> Thanks,
+> NeilBrown
+> 
+> 
+> >
+> >
+> > diff --git a/md/md.c b/md/md.c
+> > index 01e88cd..539b323 100644
+> > --- a/md/md.c
+> > +++ b/md/md.c
+> > @@ -6896,8 +6896,17 @@ void md_check_recovery(mddev_t *mddev)
+> >  		(mddev->external == 0 && mddev->safemode == 1) ||
+> >  		(mddev->safemode == 2 && ! atomic_read(&mddev-
+> >writes_pending)
+> >  		 && !mddev->in_sync && mddev->recovery_cp == MaxSector)
+> > -		))
+> > +		)) {
+> > +			if ((mddev->external) && (mddev->flags)) {
+> > +				/* FIXME:
+> > +				 * for external metadata checkpointing purposes
+> > +				 * put communication with userspace here
+> > +				 */
+> > +				clear_bit(MD_CHANGE_DEVS, &mddev->flags);
+> > +				wake_up(&mddev->sb_wait);
+> > +			}
+> >  			return;
+> > +		}
+> >
+> >  	if (mddev_trylock(mddev)) {
+> >  		int spares = 0;
+> >
+> >
+> > This change we can reuse for checkpointing purposes.
+> > External metadata updates can be triggered in the same moments as
+> native one (reuse internal md communication mechanisms).
+> >
+> > What is your opinion about this?
+> >
+> > BR
+> > Adam
+> >
 
-Am 17.06.2010 18:13, schrieb Roman Mamedov:
-> On Thu, 17 Jun 2010 09:49:42 -0400
-> aragonx@dcsnow.com wrote:
+
+> No, that would be wrong.
 > 
->> Prior to the change above, on a 2GB file, I would start off the write (to
->> the server) at 70MB/sec and end at about 35MB/sec.  CPU usage was at 100%
->> with the md0 using about 70% CPU and smb using 30% with flush sometimes
->> jumping in at 30%.  Wait states remained below 10%.  After the change, on
->> a 2GB file I would start the write at 70MB/sec and end about 55MB/sec
->> (nice improvement!).
+> If the array is 'clean' and a write happens, the array_state changes to
+> "write_pending" and the write blocks until mdmon updates the metadata
+> and
+> then writes "active" to "array_state".
 > 
-> A more consistent way to test would be to cd into a directory on the array,
-> and repeatedly run something like:
-> 
-> dd if=/dev/zero of=zerofile bs=1M count=2048 conv=fdatasync,notrunc
-> 
-> ...and implement various tweaks you are trying out between the runs, to see
-> their effect.
-> 
-> Also, the reason you see the write speed dropping off in the end, is because
-> your server first fills up its write cache almost at the maximum
-> attainable sender's (and network) speed, then, as the space in RAM for that
-> cache runs out, starts flushing it to disk, reducing the rate at which it
-> receives new data from the network. So you see that the 70 MB/sec figure is
-> totally unrelated to the RAID's performance. The dd test described above,
-> thanks to these "conv" flags (see the dd man page) will have much more sense
-> as a benchmark.
-> 
+> Setting MD_CHANGE_CLEAN is important for this handshake to work
+> properly.
+
+
+The problem is during setting new raid_disks value for external meta when md doesn't update metadata.
+When in resize_stripe() md_allow_write() is called it returns an error (due to this handshake mechanism), so user space
+has no opportunity to answer in such case (before function call result is checked in md) even for notification that is present there. 
+In such case, I can clear mddev->in_sync, before md_allow_write(). This leaves md_allow_write()
+unattached (for use in other places). I think the best place for this is chechk_reshape(). 
+This allows to set new raid_disks value.
+
+diff --git a/md/raid5.c b/md/raid5.c
+index cbd5c14..f5c42c9 100644
+--- a/md/raid5.c
++++ b/md/raid5.c
+@@ -5404,6 +5403,10 @@ static int check_reshape(mddev_t *mddev)
+ 	if (!check_stripe_cache(mddev))
+ 		return -ENOSPC;
+ 
++	if (mddev->external && mddev->delta_disks > 0)
++		mddev->in_sync = 0;
++
++
+ 	return resize_stripes(conf, conf->raid_disks + mddev->delta_disks);
+ }
+
+
+In fact in_sync == 0 at this moment shows real situation, not just trick.
+
+This is my proposition as I see no possibility to interact with user space during this call 
+to manage MD_CHANGE_CLEAN flag.
+
+Can you have a look at this problem?
+
+Thanks 
+Adam
+
 
