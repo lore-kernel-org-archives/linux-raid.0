@@ -1,206 +1,48 @@
-From: "Kwolek, Adam" <adam.kwolek@intel.com>
-Subject: RE: [md PATCH 2/5]  md: Enable reshape for external metadata
-Date: Thu, 17 Jun 2010 17:49:57 +0100
-Message-ID: <905EDD02F158D948B186911EB64DB3D11F2FFF2F@irsmsx503.ger.corp.intel.com>
-References: <905EDD02F158D948B186911EB64DB3D11EECE8A2@irsmsx503.ger.corp.intel.com>
-	<20100616145343.1fc13b4c@notabene.brown>
-	<905EDD02F158D948B186911EB64DB3D11F2FF471@irsmsx503.ger.corp.intel.com>
- <20100617161135.73a377a0@notabene.brown>
+From: Gilad Arnold <arnold@cs.berkeley.edu>
+Subject: Re: migrating from RAID5 to RAID10
+Date: Thu, 17 Jun 2010 10:44:46 -0700
+Message-ID: <20100617174445.GB8450@libra.CS.Berkeley.EDU>
+References: <20100609151132.GA10082@libra.CS.Berkeley.EDU>
+ <20100611005231.401529c0@natsu>
+ <20100610195851.GA8408@libra.CS.Berkeley.EDU>
+ <4C18F39E.8010600@tmr.com>
+ <20100617072631.09641f48@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100617161135.73a377a0@notabene.brown>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <20100617072631.09641f48@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+Cc: Bill Davidsen <davidsen@tmr.com>, Roman Mamedov <roman@rm.pp.ru>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-
-
-> -----Original Message-----
-> From: Neil Brown [mailto:neilb@suse.de]
-> Sent: Thursday, June 17, 2010 8:12 AM
-> To: Kwolek, Adam
-> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed
-> Subject: Re: [md PATCH 2/5] md: Enable reshape for external metadata
+On Thu, Jun 17, 2010 at 07:26:31AM +1000, Neil Brown wrote:
+> A RAID5 on 2 devices would be a little slower than RAID1 on two
+> devices as there is more copying of data around in memory, and there
+> is no read balancing, but it shouldn't be much slower.
 > 
-> On Wed, 16 Jun 2010 15:52:06 +0100
-> "Kwolek, Adam" <adam.kwolek@intel.com> wrote:
-> 
-> > > -----Original Message-----
-> > > From: Neil Brown [mailto:neilb@suse.de]
-> > > Sent: Wednesday, June 16, 2010 6:54 AM
-> > > To: Kwolek, Adam
-> > > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed
-> > > Subject: Re: [md PATCH 2/5] md: Enable reshape for external
-> metadata
-> > >
-> > > On Wed, 9 Jun 2010 15:21:05 +0100
-> > > "Kwolek, Adam" <adam.kwolek@intel.com> wrote:
-> > >
-> > > > (md: Online Capacity Expansion for IMSM)
-> > > > Reshape can't go forward for external metadatas due to fact, that
-> > > internal md flags are updated during native meta writing. For
-> external
-> > > metadatas
-> > > > md_update_sb() is not called (reshape process is blocked).
-> > > > To take carry about md flags in external metadata array case and
-> > > allow reshape to roll over, md_update_sb() is called in similar way
-> to
-> > > native metadata. The difference is that metadata is not stored to
-> disks
-> > > by md, but externally by mdmon.
-> > >
-> > > I agree there is a problem here but I think you are approaching it
-> the
-> > > wrong
-> > > way.  We need to make sure the problem flag doesn't get set when
-> > > external
-> > > metadata is used.
-> > >
-> > > I found something similar (maybe the same thing) when writing the
-> dm-
-> > > raid456
-> > > module.  Does that patch:
-> > >
-> > >
-> http://neil.brown.name/git?p=md;a=commitdiff;h=3b930b37e50702f97f8fad6d
-> > > 7f5ee6d3f268394e
-> > >
-> > > solve the problem for you?
-> > >
-> > > Thanks,
-> > > NeilBrown
-> >
-> > It almost solves problem.
-> > To make it solved the following change I have to add:
-> >
-> > md/md.c |    5 +++--
-> >  1 files changed, 3 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/md/md.c b/md/md.c
-> > index e9b5d67..01e88cd 100644
-> > --- a/md/md.c
-> > +++ b/md/md.c
-> > @@ -6437,7 +6437,8 @@ int md_allow_write(mddev_t *mddev)
-> >  	spin_lock_irq(&mddev->write_lock);
-> >  	if (mddev->in_sync) {
-> >  		mddev->in_sync = 0;
-> > -		set_bit(MD_CHANGE_CLEAN, &mddev->flags);
-> > +		if (mddev->persistent)
-> > +			set_bit(MD_CHANGE_CLEAN, &mddev->flags);
-> >  		if (mddev->safemode_delay &&
-> >  		    mddev->safemode == 0)
-> >  			mddev->safemode = 1;
-> >
-> > This closes MD_CHANGE_CLEAN flag management for me.
-> > What do you think about this?
-> 
-> 
-> >
-> > Another thing is waiting during reshape for metadata update on
-> MD_CHANGE_DEVS flag.
-> > To roll reshape I've added the following code (instead calling
-> md_ubdate_sb()):
-> 
-> Yes, there is a real issue there...
-> 
-> I don't think we ever need the kernel to wait for an external metadata
-> handler
-> to respond to device changes (apart from failure which is handled
-> separately).
-> So maybe the best thing is to guard all settings of MD_CHANGE_DEVS with
-> if (mddev->persistent)
-> 
-> I think that would be best, but I've make a note to review that later.
-> 
-> Thanks,
-> NeilBrown
-> 
-> 
-> >
-> >
-> > diff --git a/md/md.c b/md/md.c
-> > index 01e88cd..539b323 100644
-> > --- a/md/md.c
-> > +++ b/md/md.c
-> > @@ -6896,8 +6896,17 @@ void md_check_recovery(mddev_t *mddev)
-> >  		(mddev->external == 0 && mddev->safemode == 1) ||
-> >  		(mddev->safemode == 2 && ! atomic_read(&mddev-
-> >writes_pending)
-> >  		 && !mddev->in_sync && mddev->recovery_cp == MaxSector)
-> > -		))
-> > +		)) {
-> > +			if ((mddev->external) && (mddev->flags)) {
-> > +				/* FIXME:
-> > +				 * for external metadata checkpointing purposes
-> > +				 * put communication with userspace here
-> > +				 */
-> > +				clear_bit(MD_CHANGE_DEVS, &mddev->flags);
-> > +				wake_up(&mddev->sb_wait);
-> > +			}
-> >  			return;
-> > +		}
-> >
-> >  	if (mddev_trylock(mddev)) {
-> >  		int spares = 0;
-> >
-> >
-> > This change we can reuse for checkpointing purposes.
-> > External metadata updates can be triggered in the same moments as
-> native one (reuse internal md communication mechanisms).
-> >
-> > What is your opinion about this?
-> >
-> > BR
-> > Adam
-> >
+> However with recent mdadm and kernel you can trivially convert a 2 drive
+> RAID1 to a 2 drive RAID5 while the array is online, so it should be easy to
+> experiment and change you mind about how you want it configured.
 
+Thanks for the interesting comments, Neil.
 
-> No, that would be wrong.
-> 
-> If the array is 'clean' and a write happens, the array_state changes to
-> "write_pending" and the write blocks until mdmon updates the metadata
-> and
-> then writes "active" to "array_state".
-> 
-> Setting MD_CHANGE_CLEAN is important for this handshake to work
-> properly.
+Preparing for the upgrade I've been cleaning up data and ended up
+realizing that I won't need to add another drive in the near future ;-)
+I would like to change my RAID level, though, to improve performance,
+and the idea of online layout conversion is very appealing.
 
+I understand that a 2-drive RAID5 can be converted to a RAID1 already,
+but it is also my understanding that RAID1 currently does not benefit
+from striped reading performance, either entirely (due to
+implementation) or partly (compared to RAID10 in f2 mode).  This leads
+me to think that even with 2 drives, RAID10/f2 is a better choice than
+RAID1. Is this a fair assessment?  And, if it is the case, can RAID5 be
+converted to RAID10/f2 on-the-fly, or would I have to take the longer
+path?  (i.e.  degrade RAID5, start RAID10 in degraded mode, copy data,
+kill RAID5 and rebuild RAID10)
 
-The problem is during setting new raid_disks value for external meta when md doesn't update metadata.
-When in resize_stripe() md_allow_write() is called it returns an error (due to this handshake mechanism), so user space
-has no opportunity to answer in such case (before function call result is checked in md) even for notification that is present there. 
-In such case, I can clear mddev->in_sync, before md_allow_write(). This leaves md_allow_write()
-unattached (for use in other places). I think the best place for this is chechk_reshape(). 
-This allows to set new raid_disks value.
+Many thanks for all your help. I finally seem to be converging ;-)
 
-diff --git a/md/raid5.c b/md/raid5.c
-index cbd5c14..f5c42c9 100644
---- a/md/raid5.c
-+++ b/md/raid5.c
-@@ -5404,6 +5403,10 @@ static int check_reshape(mddev_t *mddev)
- 	if (!check_stripe_cache(mddev))
- 		return -ENOSPC;
- 
-+	if (mddev->external && mddev->delta_disks > 0)
-+		mddev->in_sync = 0;
-+
-+
- 	return resize_stripes(conf, conf->raid_disks + mddev->delta_disks);
- }
-
-
-In fact in_sync == 0 at this moment shows real situation, not just trick.
-
-This is my proposition as I see no possibility to interact with user space during this call 
-to manage MD_CHANGE_CLEAN flag.
-
-Can you have a look at this problem?
-
-Thanks 
-Adam
-
-
+Gilad
