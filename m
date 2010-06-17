@@ -1,87 +1,62 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re: How to boost performance
-Date: Thu, 17 Jun 2010 17:25:03 -0500
-Message-ID: <4C1AA0BF.6030300@gmail.com>
-References: <ea83c7a1ddca01e0a1535f130502a0f2.squirrel@www.dcsnow.com>    <20100617100109.32a20ffa@natsu>    <d98b7022efc6988e47f7e4114aa83f62.squirrel@www.dcsnow.com>    <20100617221300.3e30afe0@natsu> <4C1A50FA.50504@stud.tu-ilmenau.de> <38599704579ec5d844bada876838dda7.squirrel@www.dcsnow.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: migrating from RAID5 to RAID10
+Date: Fri, 18 Jun 2010 08:30:53 +1000
+Message-ID: <20100618083053.7df5248b@notabene.brown>
+References: <20100609151132.GA10082@libra.CS.Berkeley.EDU>
+	<20100611005231.401529c0@natsu>
+	<20100610195851.GA8408@libra.CS.Berkeley.EDU>
+	<4C18F39E.8010600@tmr.com>
+	<20100617072631.09641f48@notabene.brown>
+	<20100617174445.GB8450@libra.CS.Berkeley.EDU>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <38599704579ec5d844bada876838dda7.squirrel@www.dcsnow.com>
+In-Reply-To: <20100617174445.GB8450@libra.CS.Berkeley.EDU>
 Sender: linux-raid-owner@vger.kernel.org
-To: aragonx@dcsnow.com
-Cc: st0ff@npl.de, linux-raid@vger.kernel.org
+To: Gilad Arnold <arnold@cs.berkeley.edu>
+Cc: Bill Davidsen <davidsen@tmr.com>, Roman Mamedov <roman@rm.pp.ru>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 06/17/2010 02:51 PM, aragonx@dcsnow.com wrote:
->> Actually, you have not said a word about which controllers you use (for
->> the drives).  Using the wrong controller can drain speed a lot.  As from
->> the kernel benchmarks it seems like neither RAM nor computing power are
->> the bottlenecks.
->>
->> Some SATA-controllers handle "nearly parallel" writes to multiple drives
->> better than others.  SiI products for example have a noticeable drop-off
->> for each disk you add.  Pretty late Intels nearly show no impact of many
->> disks in parallel.  So maybe that could be the topic you should be
->> after.  (And maybe a lspci could help :)
->>
->> Stefan
->
-> Hi Stefan,
->
-> Here is the output of lspci.  There are 5 disks on the ATI controller.
-> Four of them are part of the RAID.  The last disk is on the JMicron
-> controller which is a PCIE-1x card.  I can move one more disk to the
-> JMicron controller if you think that would help.  Or just purchase a new 4
-> port controller?
->
-> lspci|grep SATA
-> 00:11.0 SATA controller: ATI Technologies Inc SB700/SB800 SATA Controller
-> [IDE mode]
-> 02:00.0 SATA controller: JMicron Technologies, Inc. 20360/20363 Serial ATA
-> Controller (rev 03)
->
-> ---
-> Will Y.
->
->
+On Thu, 17 Jun 2010 10:44:46 -0700
+Gilad Arnold <arnold@cs.berkeley.edu> wrote:
 
-[IDE mode] is probably a bad idea...a bios setting will change that.
-
-Mine shows this:
-
-00:11.0 SATA controller: ATI Technologies Inc SB700/SB800 SATA 
-Controller [AHCI mode]
-
-And my results on similar test show this (3x500gb raid5), single disk 
-shows this speed, so raid write speed breaks down to about 60-70% of 
-single disk speed:
-dd if=/dev/sdb of=/dev/null bs=1M count=2048
-2048+0 records in
-2048+0 records out
-2147483648 bytes (2.1 GB) copied, 28.8118 s, 74.5 MB/s
+> On Thu, Jun 17, 2010 at 07:26:31AM +1000, Neil Brown wrote:
+> > A RAID5 on 2 devices would be a little slower than RAID1 on two
+> > devices as there is more copying of data around in memory, and there
+> > is no read balancing, but it shouldn't be much slower.
+> > 
+> > However with recent mdadm and kernel you can trivially convert a 2 drive
+> > RAID1 to a 2 drive RAID5 while the array is online, so it should be easy to
+> > experiment and change you mind about how you want it configured.
+> 
+> Thanks for the interesting comments, Neil.
+> 
+> Preparing for the upgrade I've been cleaning up data and ended up
+> realizing that I won't need to add another drive in the near future ;-)
+> I would like to change my RAID level, though, to improve performance,
+> and the idea of online layout conversion is very appealing.
+> 
+> I understand that a 2-drive RAID5 can be converted to a RAID1 already,
+> but it is also my understanding that RAID1 currently does not benefit
+> from striped reading performance, either entirely (due to
+> implementation) or partly (compared to RAID10 in f2 mode).  This leads
+> me to think that even with 2 drives, RAID10/f2 is a better choice than
+> RAID1. Is this a fair assessment?  And, if it is the case, can RAID5 be
+> converted to RAID10/f2 on-the-fly, or would I have to take the longer
+> path?  (i.e.  degrade RAID5, start RAID10 in degraded mode, copy data,
+> kill RAID5 and rebuild RAID10)
 
 
-dd if=/dev/zero of=zerofile bs=1M count=2048 conv=fdatasync,notrunc
-2048+0 records in
-2048+0 records out
-2147483648 bytes (2.1 GB) copied, 36.6523 s, 58.6 MB/s
+2-drive RAID10 f2  would be expected to provide better read throughput
+(possibly twice as fast) at some cost to write throughput.  For many people
+this is a worthwhile trade-off.  So it might be better for you.
+Read throughput would degraded down to write throughput (i.e. slower than
+RAID1) if the RAID10 were degraded.
 
-dd if=/dev/zero of=zerofile bs=1M count=6144 conv=fdatasync,notrunc
-6144+0 records in
-6144+0 records out
-6442450944 bytes (6.4 GB) copied, 113.893 s, 56.6 MB/s
+There is currently no support for converting RAID10 arrays in any way.  You
+have to copy the data.
+With 2 drives, you could make a degraded RAID1 and a degraded RAID10 and copy
+the data across.  Then add the RAID1 device into the RAID10 array.
 
-dd if=/dev/zero of=zerofile bs=1M count=16384 conv=fdatasync,notrunc
-^C15006+0 records in
-15006+0 records out
-15734931456 bytes (16 GB) copied, 277.814 s, 56.6 MB/s
-
-And this for reads:
-dd if=zerofile of=/dev/null bs=1M count=6144 conv=fdatasync,notrunc
-6144+0 records in
-6144+0 records out
-6442450944 bytes (6.4 GB) copied, 53.8029 s, 120 MB/s
-
-
-
+NeilBrown
