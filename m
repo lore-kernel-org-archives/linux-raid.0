@@ -1,55 +1,147 @@
-From: Brett Russ <bruss@netezza.com>
-Subject: Re: [md PATCH 00/16] bad block list management for md and RAID1
-Date: Thu, 17 Jun 2010 08:48:07 -0400
-Message-ID: <hvd5iq$u83$1@dough.gmane.org>
-References: <20100606235833.13302.60932.stgit@notabene.brown>
+From: "Trela, Maciej" <Maciej.Trela@intel.com>
+Subject: RE: [md PATCH 2/5]  md: Enable reshape for external metadata
+Date: Thu, 17 Jun 2010 14:19:22 +0100
+Message-ID: <BE2BFE91933D1B4089447C64486040801E8E6AA3@irsmsx503.ger.corp.intel.com>
+References: <905EDD02F158D948B186911EB64DB3D11EECE8A2@irsmsx503.ger.corp.intel.com>
+	<20100616145343.1fc13b4c@notabene.brown>
+	<905EDD02F158D948B186911EB64DB3D11F2FF471@irsmsx503.ger.corp.intel.com>
+	<20100617161135.73a377a0@notabene.brown>
+	<BE2BFE91933D1B4089447C64486040801E8E686C@irsmsx503.ger.corp.intel.com>
+ <20100617203519.681a7586@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100606235833.13302.60932.stgit@notabene.brown>
+In-Reply-To: <20100617203519.681a7586@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "Kwolek, Adam" <adam.kwolek@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-On 06/06/2010 08:07 PM, NeilBrown wrote:
-> The goal of these patches is to add a 'bad block list' to each device
-> and use it to allow us to fail single blocks rather than whole
-> devices.
 
-Hi Neil,
 
-This is a worthwhile addition, I think.  However, one concern we have is 
-there appears to be no distinction between media errors (i.e. bad 
-blocks) and other SCSI errors.  One situation we commonly see in the 
-enterprise is non-media SCSI errors due to i.e. path failure.  We've 
-tested dm multipath as a solution for that but it has its own problems, 
-primarily performance due to its apparent decomposition of large 
-contiguous I/Os into smaller I/Os and we're investigating that.  Until 
-that is fixed, we have patched md to retry failed writes (md already has 
-a mechanism for failed reads).  Commonly these retries will succeed as 
-many of the path failures we've seen have been transient (i.e. a SAS 
-expander undergoes a reset).  Today in the vanilla md code that would 
-cause a drive failure.  In this patch, it would identify a range of 
-blocks as bad.  Presumably later they might be revalidated and removed 
-from the bad block list if the original error(s) were in fact transient, 
-but in the meantime we lose that member from any reads.
+> -----Original Message-----
+> From: Neil Brown [mailto:neilb@suse.de]
+> Sent: Thursday, June 17, 2010 12:35 PM
+> To: Trela, Maciej
+> Cc: Kwolek, Adam; linux-raid@vger.kernel.org; Williams, Dan J;
+> Ciechanowski, Ed
+> Subject: Re: [md PATCH 2/5] md: Enable reshape for external metadata
+> 
+> On Thu, 17 Jun 2010 10:40:36 +0100
+> "Trela, Maciej" <Maciej.Trela@intel.com> wrote:
+> 
+> > >
+> > > >
+> > > > Another thing is waiting during reshape for metadata update on
+> > > MD_CHANGE_DEVS flag.
+> > > > To roll reshape I've added the following code (instead calling
+> > > md_ubdate_sb()):
+> > >
+> > > Yes, there is a real issue there...
+> > >
+> > > I don't think we ever need the kernel to wait for an external
+> metadata
+> > > handler
+> > > to respond to device changes (apart from failure which is handled
+> > > separately).
+> > > So maybe the best thing is to guard all settings of MD_CHANGE_DEVS
+> with
+> > > if (mddev->persistent)
+> > >
+> > > I think that would be best, but I've make a note to review that
+> later.
+> > >
+> >
+> > Neil,
+> > from what I see in the raid5.c/md.c "native" code uses MD_CHANGE_DEVS
+> > during the reshape if it reaches special points when metadata
+> > write is really needed to update the reshape checkpoint.
+> > In reshape_request():
+> > 	/* Cannot proceed until we've updated the superblock */
+> > 	..
+> > 	set_bit(MD_CHANGE_DEVS, mddev->flags)
+> >
+> > In md_check_recovery() we have:
+> > 	if (mddev->flags)
+> > 		md_update_sb()
+> >
+> > Couldn't we follow this logic with MD_CHANGE_DEVS for external
+> metadata?
+> > If not, how to detect the need for migration checkpoint update?
+> 
+> Good question.
+> The first question to ask is
+>   How does mdmon know when a metadata update is required, and how does
+>   it tell md that the metadata update is complete.
+> 
+> OK, 2 first questions...
+> 
+> For the first I suspect it should watch 'md/reshape_position' (which
+> need to
+> use sysfs_notify for).
 
-As an aside, it would be handy to have mechanisms exposed to userspace 
-(via mdadm) to display, test, and possibly override the memory of these 
-bad blocks such that in these instances where md has (possibly 
-incorrectly) forced a range of blocks unavailable on a member that we 
-can recover data if the automated recovery doesn't succeed.
+Yes, I agree here.
 
-Do you have thoughts or plans to behave differently based on the type of 
-error?  I believe today the SCSI layer only provides pass/fail, is that 
-correct?  If so, plumbing would need to be added to make the upper layer 
-aware of the nature of the failure.  It seems that the bad block 
-management in md should only take effect for media errors and that there 
-should be more intelligent handling of other types of errors.  We would 
-be happy to help in this area if it aligns with your/the community's 
-longer term view of things.
+> For the second .... I don't know.
+> - Maybe sync_action could change to 'paused' and mdmon writes
+> 'continue'....
+>   but that is possibly overloading that file too much.
+> - We could have a new sysfs file which just shows paused/active ??
+> - We could require that mdmon sets 'sync_max' appropriately so that
+> reshape
+>   will stop at the right place, and then when mdmon has updated the
+> metadata,
+>   it sets a new sync_max value.
+> - As above, but if sync_max is set too high, it is automatically
+> reduced
+>   to the place when raid5 finds that it has to stop
+> 
+> I think the last one is probably best.
+> Before updating ->reshape_position, raid5 checks ->resync_max and if it
+> is
+> too high for safety it set is lower to a safer value.
+> Then it changes ->reshape_position and calls sysfs_notify.
+> 
+> mdmon watches for 'reshape_postion' to change.  when it does it updates
+> the
+> metadata and then writes a larger value to ->resync_max.
+> 
+> Things can get a little confusing when reshaping to fewer devices as
+> reshape_position decreases, but sync_completed always increases and
+> sync_max
+> is still an 'upper' limit.
+> 
+> But it should work OK.
+> 
+> Does that seem reasonable?
+> 
 
-Thanks,
-Brett
+Yes, it looks ok to me.
+However, I have one doubt:
+Let's assume we have child_grow() reshape type:
 
+1. child_grow() performs backup for N stripes and sets 
+	resync_max = N * stripe_size
+
+2. md start reshaping
+
+3. For one of the first stripes = M (where M < N) md decides to
+   update metadata and notifies mdmon with the new reshape_position = M
+   However, before that, it changes resync_max = M so md_do_sync main
+   loop will wait for a new resync_max value.
+
+4. mdmon wakes on reshape_position, updates meta and it should
+   set the new value for resync_max to confirm the checkpoint.
+   I think that resync_max should be set to N at this moment but mdmon
+   is not able to do that... 
+   it does not know the original resync_max value (set in Grow.c)
+
+what do you think?
+
+Maybe using other sysfs file would be better?
+I would vote for "resync_start" = "continue" or something like that.. :)
+
+
+Maciek.
