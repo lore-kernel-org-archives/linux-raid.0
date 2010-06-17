@@ -1,58 +1,52 @@
-From: aragonx@dcsnow.com
+From: Roman Mamedov <roman@rm.pp.ru>
 Subject: Re: How to boost performance
-Date: Thu, 17 Jun 2010 15:56:26 -0400
-Message-ID: <cdd34437de763739fce9bce4297300da.squirrel@www.dcsnow.com>
+Date: Fri, 18 Jun 2010 02:02:20 +0600
+Message-ID: <20100618020220.161c54b2@natsu>
 References: <ea83c7a1ddca01e0a1535f130502a0f2.squirrel@www.dcsnow.com>
-    <20100617100109.32a20ffa@natsu>
-    <d98b7022efc6988e47f7e4114aa83f62.squirrel@www.dcsnow.com>
-    <20100617221300.3e30afe0@natsu>
-    <db120b2f917a2de03cbb3834ef56be7f.squirrel@www.dcsnow.com>
+	<20100617100109.32a20ffa@natsu>
+	<d98b7022efc6988e47f7e4114aa83f62.squirrel@www.dcsnow.com>
+	<20100617221300.3e30afe0@natsu>
+	<db120b2f917a2de03cbb3834ef56be7f.squirrel@www.dcsnow.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/R=RvtIdunUqnMY_=+7eo_mK"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
 In-Reply-To: <db120b2f917a2de03cbb3834ef56be7f.squirrel@www.dcsnow.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <roman@rm.pp.ru>
+To: aragonx@dcsnow.com
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-> time dd if=/dev/zero of=zerofile bs=1M count=2048 conv=fdatasync,notrunc
-> 2048+0 records in
-> 2048+0 records out
-> 2147483648 bytes (2.1 GB) copied, 28.728 s, 74.8 MB/s
->
-> real    0m28.732s
-> user    0m0.004s
-> sys     0m23.600s
->
-> time dd if=/dev/zero of=zerofile bs=1M count=6144 conv=fdatasync,notrunc
-> 6144+0 records in
-> 6144+0 records out
-> 6442450944 bytes (6.4 GB) copied, 196.618 s, 32.8 MB/s
->
-> real    3m16.622s
-> user    0m0.012s
-> sys     0m27.726s
+--Sig_/R=RvtIdunUqnMY_=+7eo_mK
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Bleh, sorry for so many posts.  I ran the same DD test on my OS disk that
-is on the same controller as 4 of the RAID disks above.  It did much
-better although that drive is slower than the ones that belong to the
-RAID.
+On Thu, 17 Jun 2010 15:46:05 -0400
+aragonx@dcsnow.com wrote:
 
-time dd if=/dev/zero of=zerofile bs=1M count=6144 conv=fdatasync,notrunc
-6144+0 records in
-6144+0 records out
-6442450944 bytes (6.4 GB) copied, 109.823 s, 58.7 MB/s
+> While I would agree with you if the performance was the same for reads as
+> it was writes, that is not the case here.
 
-real    1m49.827s
-user    0m0.014s
-sys     0m20.965s
+Reads are a massively faster operation on RAID5 than writes, in my experien=
+ce
+an array easily reads at close to the theoretical limit, i.e. the speed of =
+its
+slowest member multiplied by the member count minus one.
 
+--=20
+With respect,
+Roman
 
+--Sig_/R=RvtIdunUqnMY_=+7eo_mK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
--- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
+iEYEARECAAYFAkwaf00ACgkQTLKSvz+PZwimtACeNRNX4b5u1LY4YGinFnBxV3/J
+E/oAnAkEWrjlPD8zfEtX6HMrvCQ9+UZU
+=TZLn
+-----END PGP SIGNATURE-----
+
+--Sig_/R=RvtIdunUqnMY_=+7eo_mK--
