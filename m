@@ -1,147 +1,61 @@
-From: "Trela, Maciej" <Maciej.Trela@intel.com>
-Subject: RE: [md PATCH 2/5]  md: Enable reshape for external metadata
-Date: Thu, 17 Jun 2010 14:19:22 +0100
-Message-ID: <BE2BFE91933D1B4089447C64486040801E8E6AA3@irsmsx503.ger.corp.intel.com>
-References: <905EDD02F158D948B186911EB64DB3D11EECE8A2@irsmsx503.ger.corp.intel.com>
-	<20100616145343.1fc13b4c@notabene.brown>
-	<905EDD02F158D948B186911EB64DB3D11F2FF471@irsmsx503.ger.corp.intel.com>
-	<20100617161135.73a377a0@notabene.brown>
-	<BE2BFE91933D1B4089447C64486040801E8E686C@irsmsx503.ger.corp.intel.com>
- <20100617203519.681a7586@notabene.brown>
+From: aragonx@dcsnow.com
+Subject: Re: How to boost performance
+Date: Thu, 17 Jun 2010 09:49:42 -0400
+Message-ID: <d98b7022efc6988e47f7e4114aa83f62.squirrel@www.dcsnow.com>
+References: <ea83c7a1ddca01e0a1535f130502a0f2.squirrel@www.dcsnow.com>
+    <20100617100109.32a20ffa@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100617203519.681a7586@notabene.brown>
-Content-Language: en-US
+In-Reply-To: <20100617100109.32a20ffa@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "Kwolek, Adam" <adam.kwolek@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: Roman Mamedov <roman@rm.pp.ru>
+Cc: aragonx@dcsnow.com, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+> On Wed, 16 Jun 2010 18:23:36 -0400
+> Increasing stripe cache size from the default of 256 should help
+> immensely.
+>
+> echo 16384 > /sys/block/md0/md/stripe_cache_size
+>
+> Be warned that this consumes (^that amount * 4096 * number of disks) bytes
+> of
+> RAM. Some benchmarks:
+
+Hello.  Thank you for the quick suggestions!
+
+First I need to correct myself.  I only have the slowdown when writing to
+the server.  Reads from the server are usually in the 60-70MB/sec range
+regardless of file size.
+
+Prior to the change above, on a 2GB file, I would start off the write (to
+the server) at 70MB/sec and end at about 35MB/sec.  CPU usage was at 100%
+with the md0 using about 70% CPU and smb using 30% with flush sometimes
+jumping in at 30%.  Wait states remained below 10%.  After the change, on
+a 2GB file I would start the write at 70MB/sec and end about 55MB/sec
+(nice improvement!).
+
+Switched to a 5GB file and the write ended around 35MB/sec.  At the
+beginning smbd would star with 50% CPU but gradually go down to 30% with
+md0 ramping up to 70% and flush jumping in from time to time at 30%.
+
+This information is all coming from top.  If I should use something else
+that will get more accurate readings, please let me know.
+
+With one change my performance greatly increased but I would like to see
+more.  Is there anything else I can do?  I'm hoping to get sustainable
+60MB/sec writes.  Is that possible?
+
+Thank you if you have read this far!  :)
+
+---
+Will Y.
 
 
-> -----Original Message-----
-> From: Neil Brown [mailto:neilb@suse.de]
-> Sent: Thursday, June 17, 2010 12:35 PM
-> To: Trela, Maciej
-> Cc: Kwolek, Adam; linux-raid@vger.kernel.org; Williams, Dan J;
-> Ciechanowski, Ed
-> Subject: Re: [md PATCH 2/5] md: Enable reshape for external metadata
-> 
-> On Thu, 17 Jun 2010 10:40:36 +0100
-> "Trela, Maciej" <Maciej.Trela@intel.com> wrote:
-> 
-> > >
-> > > >
-> > > > Another thing is waiting during reshape for metadata update on
-> > > MD_CHANGE_DEVS flag.
-> > > > To roll reshape I've added the following code (instead calling
-> > > md_ubdate_sb()):
-> > >
-> > > Yes, there is a real issue there...
-> > >
-> > > I don't think we ever need the kernel to wait for an external
-> metadata
-> > > handler
-> > > to respond to device changes (apart from failure which is handled
-> > > separately).
-> > > So maybe the best thing is to guard all settings of MD_CHANGE_DEVS
-> with
-> > > if (mddev->persistent)
-> > >
-> > > I think that would be best, but I've make a note to review that
-> later.
-> > >
-> >
-> > Neil,
-> > from what I see in the raid5.c/md.c "native" code uses MD_CHANGE_DEVS
-> > during the reshape if it reaches special points when metadata
-> > write is really needed to update the reshape checkpoint.
-> > In reshape_request():
-> > 	/* Cannot proceed until we've updated the superblock */
-> > 	..
-> > 	set_bit(MD_CHANGE_DEVS, mddev->flags)
-> >
-> > In md_check_recovery() we have:
-> > 	if (mddev->flags)
-> > 		md_update_sb()
-> >
-> > Couldn't we follow this logic with MD_CHANGE_DEVS for external
-> metadata?
-> > If not, how to detect the need for migration checkpoint update?
-> 
-> Good question.
-> The first question to ask is
->   How does mdmon know when a metadata update is required, and how does
->   it tell md that the metadata update is complete.
-> 
-> OK, 2 first questions...
-> 
-> For the first I suspect it should watch 'md/reshape_position' (which
-> need to
-> use sysfs_notify for).
+-- 
+This message has been scanned for viruses and
+dangerous content by MailScanner, and is
+believed to be clean.
 
-Yes, I agree here.
-
-> For the second .... I don't know.
-> - Maybe sync_action could change to 'paused' and mdmon writes
-> 'continue'....
->   but that is possibly overloading that file too much.
-> - We could have a new sysfs file which just shows paused/active ??
-> - We could require that mdmon sets 'sync_max' appropriately so that
-> reshape
->   will stop at the right place, and then when mdmon has updated the
-> metadata,
->   it sets a new sync_max value.
-> - As above, but if sync_max is set too high, it is automatically
-> reduced
->   to the place when raid5 finds that it has to stop
-> 
-> I think the last one is probably best.
-> Before updating ->reshape_position, raid5 checks ->resync_max and if it
-> is
-> too high for safety it set is lower to a safer value.
-> Then it changes ->reshape_position and calls sysfs_notify.
-> 
-> mdmon watches for 'reshape_postion' to change.  when it does it updates
-> the
-> metadata and then writes a larger value to ->resync_max.
-> 
-> Things can get a little confusing when reshaping to fewer devices as
-> reshape_position decreases, but sync_completed always increases and
-> sync_max
-> is still an 'upper' limit.
-> 
-> But it should work OK.
-> 
-> Does that seem reasonable?
-> 
-
-Yes, it looks ok to me.
-However, I have one doubt:
-Let's assume we have child_grow() reshape type:
-
-1. child_grow() performs backup for N stripes and sets 
-	resync_max = N * stripe_size
-
-2. md start reshaping
-
-3. For one of the first stripes = M (where M < N) md decides to
-   update metadata and notifies mdmon with the new reshape_position = M
-   However, before that, it changes resync_max = M so md_do_sync main
-   loop will wait for a new resync_max value.
-
-4. mdmon wakes on reshape_position, updates meta and it should
-   set the new value for resync_max to confirm the checkpoint.
-   I think that resync_max should be set to N at this moment but mdmon
-   is not able to do that... 
-   it does not know the original resync_max value (set in Grow.c)
-
-what do you think?
-
-Maybe using other sysfs file would be better?
-I would vote for "resync_start" = "continue" or something like that.. :)
-
-
-Maciek.
