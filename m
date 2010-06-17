@@ -1,144 +1,81 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [md PATCH 2/5]  md: Enable reshape for external metadata
-Date: Thu, 17 Jun 2010 16:11:35 +1000
-Message-ID: <20100617161135.73a377a0@notabene.brown>
-References: <905EDD02F158D948B186911EB64DB3D11EECE8A2@irsmsx503.ger.corp.intel.com>
-	<20100616145343.1fc13b4c@notabene.brown>
-	<905EDD02F158D948B186911EB64DB3D11F2FF471@irsmsx503.ger.corp.intel.com>
+From: Michael Evans <mjevans1983@gmail.com>
+Subject: Re: Problem re-shaping RAID6
+Date: Thu, 17 Jun 2010 01:20:50 -0700
+Message-ID: <AANLkTinX2XFJvZ3Uml3jCypcv674-5tfUeXdBT8vmrQy@mail.gmail.com>
+References: <AANLkTikv3JPbto1F2YYmRx0HNP7cgFh3gj6dHekCt1SE@mail.gmail.com>
+	<20100614091518.2492a9db@notabene.brown> <20100614124723.84152dz5al8096f4@cakebox.homeunix.net>
+	<20100617154708.227cd303@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <905EDD02F158D948B186911EB64DB3D11F2FF471@irsmsx503.ger.corp.intel.com>
+In-Reply-To: <20100617154708.227cd303@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: "Kwolek, Adam" <adam.kwolek@intel.com>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
+To: Neil Brown <neilb@suse.de>
+Cc: Nagilum <nagilum@nagilum.org>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Wed, 16 Jun 2010 15:52:06 +0100
-"Kwolek, Adam" <adam.kwolek@intel.com> wrote:
+On Wed, Jun 16, 2010 at 10:47 PM, Neil Brown <neilb@suse.de> wrote:
+> On Mon, 14 Jun 2010 12:47:23 +0200
+> Nagilum <nagilum@nagilum.org> wrote:
+>
+>>
+>> ----- Message from neilb@suse.de ---------
+>> =A0 =A0 =A0Date: Mon, 14 Jun 2010 09:15:18 +1000
+>> =A0 =A0 =A0From: Neil Brown <neilb@suse.de>
+>> =A0 Subject: Re: Problem re-shaping RAID6
+>> =A0 =A0 =A0 =A0To: J=E9r=F4me Poulin <jeromepoulin@gmail.com>
+>> =A0 =A0 =A0 =A0Cc: linux-raid <linux-raid@vger.kernel.org>
+>>
+>>
+>> > Thanks.
+>> > I fixed this bug a slightly different way
+>> >
+>> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 blocks =3D ochunk/512 * nchunk/512 *=
+ odata * ndata / a;
+>> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 blocks =3D (ochunk/512) * (nchunk/51=
+2) * odata * ndata / a;
+>> >
+>> >
+>> > See
+>> > http://neil.brown.name/git?p=3Dmdadm;a=3Dcommitdiff;h=3D200871adf9=
+e15d5ad985f28c349fd89c386ef48a
+>>
+>> Those static numbers always make my nose wrinkle.
+>> Don't we have the blocksize somewhere already? I'm also concerned wh=
+at
+>> happens when true 4k sectors are used..
+>>
+>
+> A sector will always be 512 bytes to Linux, even when we have drives =
+that can
+> only do IO in multiples of 8 sectors. =A0Changing that would cause wa=
+y to many
+> headaches.
+>
+> Yes, =A0I could possibly use a define for '512'. =A0Some times that i=
+s
+> appropriate, but I thing 512 is so clearly "bytes_per_sector" it woul=
+d just
+> add an unnecessary level of indirection.
+> It is a question of taste really - no right answers.
+>
+> Thanks,
+> NeilBrown
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
-> > -----Original Message-----
-> > From: Neil Brown [mailto:neilb@suse.de]
-> > Sent: Wednesday, June 16, 2010 6:54 AM
-> > To: Kwolek, Adam
-> > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed
-> > Subject: Re: [md PATCH 2/5] md: Enable reshape for external metadata
-> > 
-> > On Wed, 9 Jun 2010 15:21:05 +0100
-> > "Kwolek, Adam" <adam.kwolek@intel.com> wrote:
-> > 
-> > > (md: Online Capacity Expansion for IMSM)
-> > > Reshape can't go forward for external metadatas due to fact, that
-> > internal md flags are updated during native meta writing. For external
-> > metadatas
-> > > md_update_sb() is not called (reshape process is blocked).
-> > > To take carry about md flags in external metadata array case and
-> > allow reshape to roll over, md_update_sb() is called in similar way to
-> > native metadata. The difference is that metadata is not stored to disks
-> > by md, but externally by mdmon.
-> > 
-> > I agree there is a problem here but I think you are approaching it the
-> > wrong
-> > way.  We need to make sure the problem flag doesn't get set when
-> > external
-> > metadata is used.
-> > 
-> > I found something similar (maybe the same thing) when writing the dm-
-> > raid456
-> > module.  Does that patch:
-> > 
-> > http://neil.brown.name/git?p=md;a=commitdiff;h=3b930b37e50702f97f8fad6d
-> > 7f5ee6d3f268394e
-> > 
-> > solve the problem for you?
-> > 
-> > Thanks,
-> > NeilBrown
-> 
-> It almost solves problem.
-> To make it solved the following change I have to add:
-> 
-> md/md.c |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/md/md.c b/md/md.c
-> index e9b5d67..01e88cd 100644
-> --- a/md/md.c
-> +++ b/md/md.c
-> @@ -6437,7 +6437,8 @@ int md_allow_write(mddev_t *mddev)
->  	spin_lock_irq(&mddev->write_lock);
->  	if (mddev->in_sync) {
->  		mddev->in_sync = 0;
-> -		set_bit(MD_CHANGE_CLEAN, &mddev->flags);
-> +		if (mddev->persistent)
-> +			set_bit(MD_CHANGE_CLEAN, &mddev->flags);
->  		if (mddev->safemode_delay &&
->  		    mddev->safemode == 0)
->  			mddev->safemode = 1;
-> 
-> This closes MD_CHANGE_CLEAN flag management for me.
-> What do you think about this?
-
-No, that would be wrong.
-
-If the array is 'clean' and a write happens, the array_state changes to
-"write_pending" and the write blocks until mdmon updates the metadata and
-then writes "active" to "array_state".
-
-Setting MD_CHANGE_CLEAN is important for this handshake to work properly.
-
-
-> 
-> Another thing is waiting during reshape for metadata update on MD_CHANGE_DEVS flag. 
-> To roll reshape I've added the following code (instead calling md_ubdate_sb()):
-
-Yes, there is a real issue there...
-
-I don't think we ever need the kernel to wait for an external metadata handler
-to respond to device changes (apart from failure which is handled separately).
-So maybe the best thing is to guard all settings of MD_CHANGE_DEVS with
-if (mddev->persistent)
-
-I think that would be best, but I've make a note to review that later.
-
-Thanks,
-NeilBrown
-
-
-> 
-> 
-> diff --git a/md/md.c b/md/md.c
-> index 01e88cd..539b323 100644
-> --- a/md/md.c
-> +++ b/md/md.c
-> @@ -6896,8 +6896,17 @@ void md_check_recovery(mddev_t *mddev)
->  		(mddev->external == 0 && mddev->safemode == 1) ||
->  		(mddev->safemode == 2 && ! atomic_read(&mddev->writes_pending)
->  		 && !mddev->in_sync && mddev->recovery_cp == MaxSector)
-> -		))
-> +		)) {
-> +			if ((mddev->external) && (mddev->flags)) {
-> +				/* FIXME: 
-> +				 * for external metadata checkpointing purposes
-> +				 * put communication with userspace here
-> +				 */
-> +				clear_bit(MD_CHANGE_DEVS, &mddev->flags);
-> +				wake_up(&mddev->sb_wait);
-> +			}
->  			return;
-> +		}
->  
->  	if (mddev_trylock(mddev)) {
->  		int spares = 0;
-> 
-> 
-> This change we can reuse for checkpointing purposes.
-> External metadata updates can be triggered in the same moments as native one (reuse internal md communication mechanisms).
-> 
-> What is your opinion about this?
-> 
-> BR
-> Adam
-> 
-
+Slightly off topic, but wouldn't an 'always' like that be a valid
+reason for starting a 2.7 or 3.0 branch; that is something where major
+sections of code would /have/ to be changed even if interfaces for
+other sections might remain static?
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
