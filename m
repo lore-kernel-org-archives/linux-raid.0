@@ -1,67 +1,60 @@
-From: Roman Mamedov <roman@rm.pp.ru>
-Subject: Re: How to boost performance
-Date: Thu, 17 Jun 2010 10:01:09 +0600
-Message-ID: <20100617100109.32a20ffa@natsu>
-References: <ea83c7a1ddca01e0a1535f130502a0f2.squirrel@www.dcsnow.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 1/3] md: fix raid10 takeover: use new_layout for
+ setup_conf
+Date: Thu, 17 Jun 2010 15:23:49 +1000
+Message-ID: <20100617152349.053a49e1@notabene.brown>
+References: <BE2BFE91933D1B4089447C64486040801E873EE6@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/vwK7yVKQoJVqCO62lcqunNZ"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <ea83c7a1ddca01e0a1535f130502a0f2.squirrel@www.dcsnow.com>
+In-Reply-To: <BE2BFE91933D1B4089447C64486040801E873EE6@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: aragonx@dcsnow.com
-Cc: linux-raid@vger.kernel.org
+To: "Trela, Maciej" <Maciej.Trela@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
---Sig_/vwK7yVKQoJVqCO62lcqunNZ
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Wed, 16 Jun 2010 11:46:29 +0100
+"Trela, Maciej" <Maciej.Trela@intel.com> wrote:
 
-On Wed, 16 Jun 2010 18:23:36 -0400
-aragonx@dcsnow.com wrote:
+> From: Maciej Trela <maciej.trela@intel.com>
+> 
+> Use mddev->new_layout in setup_conf.
 
-> Before I start spewing server information, my question is this.  Is there
-> anything I can tweak to improve my performance?  It seems that the server
-> is CPU bound when I am transferring large amounts of data to or from it.=
-=20
-> Any suggestions will be considered.  Faster processor, switching to RAID
-> 0, etc.  I'm hoping there is something I can do with the RAID software
-> though.  Maybe a different chunk size or different algorithm?
+Thanks.
+I added changed for ->chunk_sectors to ->new_chunk_sectors
+and removed the setting of ->degraded in takeover().
 
-Increasing stripe cache size from the default of 256 should help immensely.
+Applied.
 
-echo 16384 > /sys/block/md0/md/stripe_cache_size
+NeilBrown
 
-Be warned that this consumes (^that amount * 4096 * number of disks) bytes =
-of
-RAM. Some benchmarks:=20
+> 
+> Signed-off-by: Maciej Trela <maciej.trela@intel.com>
+> ---
+>  drivers/md/raid10.c |   10 +++++-----
+>  1 files changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c index 9f65dc5..7b47639 100644
+> --- a/drivers/md/raid10.c
+> +++ b/drivers/md/raid10.c
+> @@ -2169,14 +2169,14 @@ static conf_t *setup_conf(mddev_t *mddev)
+>  		goto out;
+>  	}
+>  
+> -	nc = mddev->layout & 255;
+> -	fc = (mddev->layout >> 8) & 255;
+> -	fo = mddev->layout & (1<<16);
+> +	nc = mddev->new_layout & 255;
+> +	fc = (mddev->new_layout >> 8) & 255;
+> +	fo = mddev->new_layout & (1<<16);
+>  
+>  	if ((nc*fc) <2 || (nc*fc) > mddev->raid_disks ||
+> -	    (mddev->layout >> 17)) {
+> +	    (mddev->new_layout >> 17)) {
+>  		printk(KERN_ERR "md/raid10:%s: unsupported raid10 layout: 0x%8x\n",
+> -		       mdname(mddev), mddev->layout);
+> +		       mdname(mddev), mddev->new_layout);
+>  		goto out;
+>  	}
 
-http://peterkieser.com/2009/11/29/raid-mdraid-stripe_cache_size-vs-write-tr=
-ansfer/
-
-On a related note -- Neil, are there plans to implement a stripe cache which
-would be shared between all RAID devices? I have two RAID5s in my system, a=
-nd
-when one has a lot of writes, the other is often idle (or vice versa), so t=
-hat
-array's stripe cache is just sitting there wasting memory. Would be nice to
-be able to have a shared pool of RAM for stripe-caching all the arrays and
-the active one(s) using it to the fullest.
-
---=20
-With respect,
-Roman
-
---Sig_/vwK7yVKQoJVqCO62lcqunNZ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkwZngUACgkQTLKSvz+PZwhzhQCglMmq/t7jmKkry/6/YE2iCdDd
-PFEAnA2pt8ZgXDSgoVLO4oGRfOnbpPaW
-=u/ut
------END PGP SIGNATURE-----
-
---Sig_/vwK7yVKQoJVqCO62lcqunNZ--
