@@ -1,51 +1,68 @@
-From: Nagilum <nagilum@nagilum.org>
-Subject: Re: Problem re-shaping RAID6
-Date: Fri, 18 Jun 2010 12:53:48 +0200
-Message-ID: <20100618125348.50065jeinmy70vsw@cakebox.homeunix.net>
-References: <AANLkTikv3JPbto1F2YYmRx0HNP7cgFh3gj6dHekCt1SE@mail.gmail.com>
- <20100614091518.2492a9db@notabene.brown>
- <20100614124723.84152dz5al8096f4@cakebox.homeunix.net>
- <20100617154708.227cd303@notabene.brown>
+From: David Watson <David.Watson@team17.com>
+Subject: Re: Raid 1 array degrades on reboot [resolved]
+Date: Fri, 18 Jun 2010 17:14:23 +0100
+Message-ID: <4C1B9B5F.1050007@team17.com>
+References: <4C19F5AF.5060300@team17.com> <20100618073440.373d8aa6@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-2;
- DelSp="Yes";
- format="flowed"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100617154708.227cd303@notabene.brown>
-Content-Disposition: inline
+In-Reply-To: <20100618073440.373d8aa6@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Neil Brown wrote:
+> On Thu, 17 Jun 2010 11:15:11 +0100
+> David Watson <David.Watson@team17.com> wrote:
+> 
+>> Hello,
+>>
+>> Recently I upgraded to 2Tb disks on one of my servers, I built a new
+>> degraded raid1 array:
+>> mdadm --create /dev/md7 -level 1 --raid-devices=2 missing /dev/sdd1
+>>
+>> added its entry to /etc/mdadm/mdadm.conf then I rebooted to add the
+>> second disk and added it to the array:
+>> mdadm --manage /dev/md7  --add /dev/sdb1
+>>
+>> I updated /etc/mdadm/mdadm.conf, although I noticed no difference in the
+>> output of:
+>> mdadm --detail --scan
+>>
+>>
+>> I use a monolithic kernel so there is no ramdisk to regenerate. This is
+>> my first 1.00 array, and the existing 0.9 arrays have never shown this
+>> issue. I have attempted the same process on a test server with no
+>> issues, and I can't really think of what to look at next.
+>>
+>> apologies for the long post.
+>>
+> 
+> Long posts are good....
+> However I cannot see in your long post what the actual problem is.
+> You have given no evidence that anything degrades on boot.
+> No kernel logs, no "/proc/mdstat immediately after boot"...
+> 
+> More info please.
+> 
+> NeilBrown
+> --
 
------ Message from neilb@suse.de ---------
+Trivial error:
 
-> A sector will always be 512 bytes to Linux, even when we have drives that can
-> only do IO in multiples of 8 sectors.
+/etc/mdadm/mdadm.conf
+DEVICE /dev/sda* /deb/sdb* /dev/sdc* /dev/sdd*
 
-Oh, I didn't know that.
+Typo: /deb/sdb* should have been /dev/sdb*
 
-> Yes,  I could possibly use a define for '512'.  Some times that is
-> appropriate, but I thing 512 is so clearly "bytes_per_sector" it would just
-> add an unnecessary level of indirection.
-> It is a question of taste really - no right answers.
+Apologies, its taken a week for me to spot this.
 
-Yep, thanks for the explanation!
+Array now remains synchronised through a reboot.
 
 
+Thanks
+
+David Watson
 
 
-========================================================================
-#    _  __          _ __     http://www.nagilum.org/ \n icq://69646724 #
-#   / |/ /__ ____ _(_) /_ ____ _  nagilum@nagilum.org \n +491776461165 #
-#  /    / _ `/ _ `/ / / // /  ' \  Amiga (68k/PPC): AOS/NetBSD/Linux   #
-# /_/|_/\_,_/\_, /_/_/\_,_/_/_/_/   Mac (PPC): MacOS-X / NetBSD /Linux #
-#           /___/     x86: FreeBSD/Linux/Solaris/Win2k  ARM9: EPOC EV6 #
-========================================================================
-
-
-----------------------------------------------------------------
-cakebox.homeunix.net - all the machine one needs..
