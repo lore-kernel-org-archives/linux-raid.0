@@ -1,52 +1,117 @@
-From: "Graham Mitchell" <gmitch@woodlea.com>
-Subject: RE: [md PATCH 00/16] bad block list management for md and RAID1
-Date: Fri, 18 Jun 2010 00:30:08 -0400
-Message-ID: <002c01cb0e9e$f4ba41e0$de2ec5a0$@woodlea.com>
-References: <20100606235833.13302.60932.stgit@notabene.brown>	<hvd5iq$u83$1@dough.gmane.org>	<003901cb0e35$422f9020$c68eb060$@woodlea.com> <20100618135818.79967b83@notabene.brown>
+From: "Kwolek, Adam" <adam.kwolek@intel.com>
+Subject: RE: [md PATCH 3/5] md: Use added disks for external metadata case
+ in start_reshape()
+Date: Fri, 18 Jun 2010 09:35:10 +0100
+Message-ID: <905EDD02F158D948B186911EB64DB3D11F300151@irsmsx503.ger.corp.intel.com>
+References: <905EDD02F158D948B186911EB64DB3D11EECE8A3@irsmsx503.ger.corp.intel.com>
+ <20100616145818.75bf0720@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100618135818.79967b83@notabene.brown>
-Content-Language: en-us
+In-Reply-To: <20100616145818.75bf0720@notabene.brown>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Neil Brown' <neilb@suse.de>
-Cc: 'Brett Russ' <bruss@netezza.com>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-> I think it would be a mistake to incorporate bad-block detection
-functionality
-> into md or mdadm.  We already have a program which does that and
-> probably does it better than I could code.  Best to try to leverage what
-> already exists.
-
-I agree - I was thinking along the lines of maintenance type cases, where we
-currently run an array check once a week - we could also schedule a full
-'non-destructive badblocks -w' type test once a month (say), to catch disks
-which are starting to go bad. Since mdadm understands the RAID layout, it
-could migrate/redirect a stripe or block to another area, run badblocks on
-each of the disks specifying the start and end sectors, and if the area on
-one of the disks was bad, mark the area as bad - and since the data has been
-redirected, we don't lose anything. If the area is good, then the data gets
-moved back to its original location, and mdadm moves on to the next
-stripe/block. I really think you'd need to do a fully destructive write test
-on the drive though - I've actually just finished testing a Spinpoint F3
-this evening, which has shown up 5 bad sectors, all on the 4th write pass
-(0x00), so a quick read test probably wouldn't have shown them up.
 
 
-> I'm not sure I see the logic though.  Surely if a drive has any errors
-when new,
-> then you don't want to trust it at all and cascading failure is likely and
-> tomorrow there will be more errors.  So t would be best to do the badblock
-> scan first and only add it to the array if it were completely successful.
+> -----Original Message-----
+> From: Neil Brown [mailto:neilb@suse.de]
+> Sent: Wednesday, June 16, 2010 6:58 AM
+> To: Kwolek, Adam
+> Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed
+> Subject: Re: [md PATCH 3/5] md: Use added disks for external metadata
+> case in start_reshape()
+> 
+> On Wed, 9 Jun 2010 15:21:44 +0100
+> "Kwolek, Adam" <adam.kwolek@intel.com> wrote:
+> 
+> > (md: Online Capacity Expansion for IMSM)
+> > Disks added by mdadm for external metadata are not taken for
+> configuration check before reshape.
+> > This causes configuration check fail.
+> >
+> > For reshape, we should check if added disks to volume by mdadm, will
+> satisfy degradation condition after operation (comparing difference of
+> target disk number and available disks number to mddev->max_degraded
+> field).
+> > ---
+> 
+> I'm sorry but I don't understand what you are saying, and I think the
+> required check is already in place.
+> Could you please describe a specific circumstance where the current
+> code
+> fails?
+> 
+> Thanks,
+> NeilBrown
+> 
+> 
+> >
+> >  drivers/md/raid5.c |   11 ++++++++++-
+> >  1 files changed, 10 insertions(+), 1 deletions(-)
+> >
+> > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c index
+> 546e23e..dc25a32 100644
+> > --- a/drivers/md/raid5.c
+> > +++ b/drivers/md/raid5.c
+> > @@ -5411,6 +5411,7 @@ static int raid5_start_reshape(mddev_t *mddev)
+> >  	int spares = 0;
+> >  	int added_devices = 0;
+> >  	unsigned long flags;
+> > +	int disk_count = 0;
+> >
+> >  	if (test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))
+> >  		return -EBUSY;
+> > @@ -5422,12 +5423,20 @@ static int raid5_start_reshape(mddev_t
+> *mddev)
+> >  		if (rdev->raid_disk < 0 &&
+> >  		    !test_bit(Faulty, &rdev->flags))
+> >  			spares++;
+> > +		else
+> > +			/* check reshape condition/spares are added already
+> > +			 */
+> > +			disk_count++;
+> >
+> >  	if (spares - mddev->degraded < mddev->delta_disks - conf-
+> >max_degraded)
+> >  		/* Not enough devices even to make a degraded array
+> >  		 * of that size
+> > +		 * but check first if this is not reshape case
+> > +		 * if not reshape on degraded array /takeover/ than exit
+> >  		 */
+> > -		return -EINVAL;
+> > +		if ((conf->raid_disks + mddev->delta_disks)
+> > +		    > (disk_count + conf->max_degraded))
+> > +			return -EINVAL;
+> >
+> >  	/* Refuse to reduce size of the array.  Any reductions in
+> >  	 * array size must be through explicit setting of array_size
+> >
 
-Agreed Neil - I guess I am thinking more of the maintenance type cases, but
-it would be nice to have mdadm check the drive when it's added to the array.
-You could just blindly add the drive, and immediately schedule a full
-badblocks test - but I guess I would still be paranoid, and still check the
-disk before adding it.
 
+First, all disks are counted that are not spares. This is total number of disks in volume.
+Disks added by mdadm for external metadata to volume before reshape are not longer in spares pool,
+so md in current condition:
 
+if (spares - mddev->degraded < mddev->delta_disks - conf->max_degraded)
 
+has less spares disks and more in delta_disks. This causes that condition value is true, but this is not true for our case.
+This is the reason of the second check:
+if ((conf->raid_disks + mddev->delta_disks) > (disk_count + conf->max_degraded))
+
+It tells if currently raid_disks configured in array (before reshape reconfiguration value) and currently degraded disks
+(degradation can happen i.e. after raid0 takeover) is greater than counted_disks (that will be present after reshape)
+and maximum of degraded disks number. If so, this is real problem and error is returned.
+
+As I wrote above spares in first condition for external configuration shows number of available spares, so disks already used for reshape configuration 
+are not counted there.
+
+I think that condition for external metadata has to be added to this patch additionally, to not affect native metadata code logic.
+
+BR
+Adam
+ 
