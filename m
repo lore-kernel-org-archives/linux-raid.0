@@ -1,67 +1,73 @@
-From: Robin Hill <robin@robinhill.me.uk>
-Subject: Re: Building new RAID5 results in removed and failed devices
-Date: Thu, 24 Jun 2010 22:38:48 +0100
-Message-ID: <20100624213848.GA17419@cthulhu.home.robinhill.me.uk>
-References: <4C23BF79.2070009@gmx.at>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: RAID grow and disk failure
+Date: Fri, 25 Jun 2010 07:57:51 +1000
+Message-ID: <20100625075751.4429f224@notabene.brown>
+References: <20100624181213.GB9038@lazy.lzy>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="45Z9DzgjV8m4Oswq"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4C23BF79.2070009@gmx.at>
+In-Reply-To: <20100624181213.GB9038@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thu, 24 Jun 2010 20:12:13 +0200
+Piergiorgio Sartor <piergiorgio.sartor@nexgo.de> wrote:
 
---45Z9DzgjV8m4Oswq
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> Hi all,
+> 
+> I was wondering, let's say a RAID-6 has an HDD
+> added and a grow is performed.
+> 
+> What will happen if one of the HDD of the RAID,
+> possibly the newly added, will faili, i.e. die?
+> 
+> Will the RAID continue the grow using all the
+> available parity or it will result in a
+> catastrophic failure for the array?
 
-On Thu Jun 24, 2010 at 10:26:33PM +0200, Markus Krainz wrote:
+Assuming the code doesn't have any bugs, the reshape will stop, then
+immediately restart picking up where it left off.
+You will of course end up with a degraded array.
 
-> 1. I delete my old array md0
-> 2. Then I create a new one as md1
-> 3. The new md1 is not ok and shows removed, faulty and spare devices.
-> 5. I tried this serveral times now, but i always get the same issue.
->=20
-> I am at my wits end and would very much appreciate your advice. Thank=20
-> you in advance.
->=20
-<--snip-->
->      Number   Major   Minor   RaidDevice State
->         0       8       49        0      active sync   /dev/sdd1
->         2       8       17        1      spare rebuilding   /dev/sdb1
->=20
-<--snip-->
->         2       8       17        -      spare   /dev/sdb1
->         3       8       49        -      faulty spare   /dev/sdd1
->=20
-Looks like it started doing the initial synchronisation as normal, but
-hid a read error on sdd1 which caused the array to fail.  sdd1 is left
-as faulty, and sdb1 is spare as the rebuild didn't complete.  I'd
-recommend testing sdd1 (SMART tests, read tests, write tests) before
-trying to use it any further.
+I have tested this so I think the code is fine.
+It is fairly easy to set up a free smallish /dev/loop devices and experiment
+yourself.  Not only will this give you confidence that it works, but it will
+also give you familiarity with with the mdadm commands so there will be less
+room for surprises once you do it for-real.
 
-Cheers,
-    Robin
---=20
-     ___       =20
-    ( ' }     |       Robin Hill        <robin@robinhill.me.uk> |
-   / / )      | Little Jim says ....                            |
-  // !!       |      "He fallen in de water !!"                 |
+It might be nice in these circumstances to abort the reshape and revert back
+the the previous number of devices - particularly if it was the new device
+that failed.  However that currently isn't supported.
 
---45Z9DzgjV8m4Oswq
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+> 
+> As side question, assuming the above RAID volume
+> is a PV (LVM physical volume), what would be the
+> correct procedure to grow it and extend the PV:
+> 
+> 1)
+> mdadm --grow ...
+> mdadm --wait
+> pvresize
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
+Yes.
 
-iEYEARECAAYFAkwj0GgACgkQShxCyD40xBKOFACfe0od5/mV2kPnfyPOGRT6G7tD
-RJoAoKEjNhWKTzSAcg55hClnRK3z/Si6
-=cEfm
------END PGP SIGNATURE-----
+> 
+> 2)
+> mdadm --grow
+> pvresize
 
---45Z9DzgjV8m4Oswq--
+No.
+Until the reshape has completed, the extra space is not available.
+
+NeilBrown
+
+
+> 
+> Thanks,
+> 
+> bye,
+> 
+
