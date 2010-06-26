@@ -1,91 +1,51 @@
-From: CoolCold <coolthecold@gmail.com>
-Subject: Re: md lock issue, I suppose
-Date: Fri, 25 Jun 2010 16:39:05 +0400
-Message-ID: <AANLkTilD8V_NSMrRCcpYFIt_AfXhqjNP6PWxd-JdK_h_@mail.gmail.com>
-References: <20100621204208.GA29830@lazy.lzy>
-	<4C1FD4CF.20109@stud.tu-ilmenau.de>
-	<20100621212521.GA31833@lazy.lzy>
-	<20100622082233.2015caee@notabene.brown>
-	<20100624180727.GA9038@lazy.lzy>
+From: Dave W <dave+gmane@wuertele.com>
+Subject: How do I determine which drive should be in which slot?
+Date: Sat, 26 Jun 2010 05:32:08 +0000 (UTC)
+Message-ID: <loom.20100626T070913-497@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100624180727.GA9038@lazy.lzy>
 Sender: linux-raid-owner@vger.kernel.org
-To: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
-Cc: Neil Brown <neilb@suse.de>, st0ff@npl.de, Linux RAID <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-"partprobe" command helps me in cases i'm adding partitions on device
-which is already partitions which are mounted
+After making some changes in the bios to my boot order, my 5-drive RAID6
+stopped assembling.  Three of the five known-good drives suddenly stopped
+getting added to the right slots.  There are no disk errors in the logs and
+I can read from the drives with no problems.
 
-On Thu, Jun 24, 2010 at 10:07 PM, Piergiorgio Sartor
-<piergiorgio.sartor@nexgo.de> wrote:
-> Hi,
->
-> thanks for the hint, basically that exactly
-> what was needed, i.e. informing the kernel
-> about the new partition.
->
-> The only different with your suggestion was
-> to use "addpart", instead of "partx".
->
-> Thanks again,
->
-> bye,
->
-> pg
->
-> On Tue, Jun 22, 2010 at 08:22:33AM +1000, Neil Brown wrote:
->> On Mon, 21 Jun 2010 23:25:21 +0200
->> Piergiorgio Sartor <piergiorgio.sartor@nexgo.de> wrote:
->>
->> > Any other suggestions or ideas?
->> >
->>
->> You cannot use the BLKRRPART ioctl while any partition of the device=
- is open.
->> However you can use BLKPG_ADD_PARTITION to add a new partition provi=
-ding it
->> doesn't overlap any existing partition.
->> Unfortunately parted doesn't use this ioctl, nor am I aware of anyth=
-ing which
->> does. (Google suggests something called DeviceKit does, but I know n=
-othing
->> about that).
->> You could write a program which reads the the partition table and tr=
-ies to
->> add each partition individually. =A0Some might fail but others might=
- succeed.
->> ... or maybe you don't need to- 'partx' in util-linux-ng seems to do=
- what you
->> want.
->>
->> NeilBrown
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
-> --
->
-> piergiorgio
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
+# mdadm --stop /dev/md0
+mdadm: stopped /dev/md0
+# mdadm -v -Af /dev/md0 /dev/sd[bcdef]1
+mdadm: looking for devices for /dev/md0
+mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 7.
+mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 6.
+mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 2.
+mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 3.
+mdadm: /dev/sdf1 is identified as a member of /dev/md0, slot 5.
+mdadm: no uptodate device for slot 0 of /dev/md0
+mdadm: no uptodate device for slot 1 of /dev/md0
+mdadm: added /dev/sde1 to /dev/md0 as 3
+mdadm: no uptodate device for slot 4 of /dev/md0
+mdadm: added /dev/sdf1 to /dev/md0 as 5
+mdadm: added /dev/sdc1 to /dev/md0 as 6
+mdadm: added /dev/sdb1 to /dev/md0 as 7
+mdadm: added /dev/sdd1 to /dev/md0 as 2
+mdadm: /dev/md0 assembled from 2 drives and 3 spares - not enough to start the
+array.
+# 
 
+Reading the thread at http://thread.gmane.org/gmane.linux.raid/17774, I think
+that a command like this:
 
+   mdadm -C /dev/md0 -l6 -n5 /dev/sd[bcdef]1
 
---=20
-Best regards,
-[COOLCOLD-RIPN]
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+would tell mdadm to rewrite the superblock with the disks in the right slots.
+Does the order on the command line determine the slot allocations?  How can I
+tell that my disks will get put in the right slots?  Is it safe to just try
+this order?
+
+Thanks,
+Dave
+
