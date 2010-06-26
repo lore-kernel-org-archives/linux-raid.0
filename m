@@ -1,51 +1,84 @@
-From: Dave W <dave+gmane@wuertele.com>
-Subject: How do I determine which drive should be in which slot?
-Date: Sat, 26 Jun 2010 05:32:08 +0000 (UTC)
-Message-ID: <loom.20100626T070913-497@post.gmane.org>
+From: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>
+Subject: Re: RAID grow and disk failure
+Date: Sat, 26 Jun 2010 15:12:35 +0200
+Message-ID: <20100626131235.GA12127@lazy.lzy>
+References: <20100624181213.GB9038@lazy.lzy>
+ <20100625075751.4429f224@notabene.brown>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20100625075751.4429f224@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Piergiorgio Sartor <piergiorgio.sartor@nexgo.de>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-After making some changes in the bios to my boot order, my 5-drive RAID6
-stopped assembling.  Three of the five known-good drives suddenly stopped
-getting added to the right slots.  There are no disk errors in the logs and
-I can read from the drives with no problems.
+Hi,
 
-# mdadm --stop /dev/md0
-mdadm: stopped /dev/md0
-# mdadm -v -Af /dev/md0 /dev/sd[bcdef]1
-mdadm: looking for devices for /dev/md0
-mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 7.
-mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 6.
-mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 2.
-mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 3.
-mdadm: /dev/sdf1 is identified as a member of /dev/md0, slot 5.
-mdadm: no uptodate device for slot 0 of /dev/md0
-mdadm: no uptodate device for slot 1 of /dev/md0
-mdadm: added /dev/sde1 to /dev/md0 as 3
-mdadm: no uptodate device for slot 4 of /dev/md0
-mdadm: added /dev/sdf1 to /dev/md0 as 5
-mdadm: added /dev/sdc1 to /dev/md0 as 6
-mdadm: added /dev/sdb1 to /dev/md0 as 7
-mdadm: added /dev/sdd1 to /dev/md0 as 2
-mdadm: /dev/md0 assembled from 2 drives and 3 spares - not enough to start the
-array.
-# 
+> Assuming the code doesn't have any bugs, the reshape will stop, then
+> immediately restart picking up where it left off.
 
-Reading the thread at http://thread.gmane.org/gmane.linux.raid/17774, I think
-that a command like this:
+thanks, that's what I wanted to know.
 
-   mdadm -C /dev/md0 -l6 -n5 /dev/sd[bcdef]1
+> You will of course end up with a degraded array
 
-would tell mdadm to rewrite the superblock with the disks in the right slots.
-Does the order on the command line determine the slot allocations?  How can I
-tell that my disks will get put in the right slots?  Is it safe to just try
-this order?
+Yes, that was clear.
+
+> It might be nice in these circumstances to abort the reshape and revert back
+> the the previous number of devices - particularly if it was the new device
+> that failed.  However that currently isn't supported.
+
+Well, probably as an option, it could be interesting.
+
+Actually, I would be still interested, we already
+discussed the topic, on a RAID-5/6 with HDDs of
+different size.
+This would simplify many things...
+
+> > 1)
+> > mdadm --grow ...
+> > mdadm --wait
+> > pvresize
+> 
+> Yes.
+> 
+> > 
+> > 2)
+> > mdadm --grow
+> > pvresize
+> 
+> No.
+> Until the reshape has completed, the extra space is not available.
+
+There seem to be an issue, here, maybe.
+
+Using the command line:
+
+mdadm --grow /dev/md/vol02 --bitmap=none; mdadm --grow /dev/md/vol02 -n 9 --backup-file=/var/tmp/md125.backup; mdadm --wait /dev/md/vol02; mdadm --grow /dev/md/vol02 --bitmap=internal --bitmap-chunk=128
+
+Note that /dev/md/vol02 is the usual link to /dev/md125,
+which should be the same for this scope, I guess.
+
+I got (in two independent tests):
+
+mdadm: Need to backup 2688K of critical section..
+mdadm: failed to set internal bitmap.
+
+Re-issuing:
+
+mdadm --wait /dev/md/vol02; mdadm --grow /dev/md/vol02 --bitmap=internal --bitmap-chunk=128
+
+Does wait.
+
+Could it be the devices (being USB) are so slow
+that some race condition is uncovered and the
+immediate "--wait" after the "--grow" does not work?
 
 Thanks,
-Dave
 
+bye,
+
+-- 
+
+piergiorgio
