@@ -1,41 +1,29 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: RAID5 write hole?
-Date: Sat, 26 Jun 2010 17:42:56 +0200 (CEST)
-Message-ID: <alpine.DEB.1.10.1006261737430.8623@uplift.swm.pp.se>
-References: <20100626143125.GA1010@localhost>
+From: koti <satha_koti@yahoo.co.in>
+Subject: Request on RAID10
+Date: Sat, 26 Jun 2010 16:56:33 +0000 (UTC)
+Message-ID: <loom.20100626T184818-212@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100626143125.GA1010@localhost>
 Sender: linux-raid-owner@vger.kernel.org
-To: Shaochun Wang <scwang@ios.ac.cn>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sat, 26 Jun 2010, Shaochun Wang wrote:
+Hi Everyone,
 
-> Hi:
->
-> Recently I heard of the so called "write hole" problem of raid5 in
-> Linux software raid. I use ext4 filesystem on my NAS, which assembles
-> data disks using Linux software raid. So I wonder how safe my such
-> system!
+We created RAID10 array on 4 disks (physically we had 3 1TB disks as test case
+we created 350GB partitions). We got a hang while we are doing the following:
+1) remove the disk and add this again. Doing this in while loop.
+2) While doing the above, simultaneously read and write on the same array.
 
-RAID is never a replacement for backups, corruption can happen at multiple 
-levels in your system for different reasons. Non-ECC memory can have bit 
-flips which corrupts your data, write hole can cause data corruption, etc.
+At some point of time the recovery going to hang, then the array was not
+operational, we are using kernel 2.6.27.
 
-Generally, unless you have really really high demands on data integrity, 
-this is not a major problem.
+I am new to use the RAID 10 array. Is this scenario was correct? if it is then
+what might be the problem, can any body suggest me and direct in proper way. It
+is very much useful for proceed further on this.
 
-Ext4 has other potential software/fs interactions when it comes to data 
-integrity, in that it write buffers for quite some time, so even if you 
-think your file is saved, it might take many seconds before it's actually 
-on disk if your software doesn't fsync() it. Most don't, because Ext3 took 
-so long to do it.
+Thanks,
+Koti.
 
-So generally, don't worry too much, but make sure you have backups for 
-your important data.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
