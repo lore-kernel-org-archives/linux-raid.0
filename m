@@ -1,90 +1,69 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: RAID5 write hole?
-Date: Sun, 27 Jun 2010 22:16:13 +1000
-Message-ID: <20100627221613.0c34c812@notabene.brown>
-References: <20100626143125.GA1010@localhost>
-	<4C27290D.6000609@xs4all.nl>
+From: Miles Fidelman <mfidelman@meetinghouse.net>
+Subject: impact of one slow drive?
+Date: Sun, 27 Jun 2010 21:31:17 -0400
+Message-ID: <4C27FB65.90705@meetinghouse.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C27290D.6000609@xs4all.nl>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Hendrikx <hjohn@xs4all.nl>
-Cc: Shaochun Wang <scwang@ios.ac.cn>, linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 27 Jun 2010 12:33:49 +0200
-John Hendrikx <hjohn@xs4all.nl> wrote:
+Hi Folks,
 
-> Shaochun Wang wrote:
-> > Hi:
-> >
-> > Recently I heard of the so called "write hole" problem of raid5 in
-> > Linux software raid. I use ext4 filesystem on my NAS, which assembles
-> > data disks using Linux software raid. So I wonder how safe my such
-> > system!
-> >
-> > If the "write hole" is inevitable, will it result in the corruption of
-> > ext4 filesystem? 
-> The write hole occurs if your system crashes during a write operation, 
-> where one stripe gets updated but the other corresponding stripe does 
-> not.  This could lead to parity information not matching the 
-> corresponding data.
+I've been slowly tracking down a problem on one of my servers - after 
+prolonged periods of high disk activity, iowait goes to 100% and things 
+slow down to a crawl.
 
-Correct.
+The server has 4 drives, with various software RAID (md) built on top of 
+them.  After a LOT of digging, I've come to the conclusion that one of 
+the drives gets flaky under prolonged stress.
 
-> 
-> If the raid 5 system atleast ensures that the data stripe is always 
-> written before parity, then the montly resync check that mdadm does 
-> should be able to detect this and write new parity information.
+I'll find out for sure, when I plug in a replacement (in the mail) - but 
+meanwhile....
 
-This bit isn't so correct.
-When the RAID5 is next assembled after the crash, if all devices are present
-(i.e. the array is not degraded) then it will check and correct all the
-parity blocks immediately.  If you have a write-intent-bitmap configured,
-this will be quite quick.  If not it could take hours.
+What seems to be weird about this is that the drive passes all kinds of 
+normal tests:
+- the SMART long test comes back fine, way within tolerances
+- hdparm -tT comes back with values comparable to other drives
+- badblocks reports nothing wrong (but seems to take a LONG time to 
+complete)
+- the only diagnostic that indicates anything odd is atop - under 
+sustained load, the one drive reports a higher percentage of busy time, 
+and seems to have a longer avio
 
-Once the resync has completed you are safe again, any risk from the "write
-hole" will have disappeared.
+I recall from previous experience, with a failing drive, that the drive 
+also tested fine - but seemed to have very high access delays as 
+compared to other drives (I can't remember what tool I used to measure 
+it) -- which led me to surmise that something, between the disk platter, 
+and higher level software, was exhibiting one of two failure modes:
+a) very high delay, or,
+b) required multiple retries, but ultimately came back with a proper 
+response
+Either way, the performance of one drive dragged down the entire system.
 
-If your array was degraded when the system crashed, or is degraded on
-restart, or degrades before the resync completes, then you could suffer from
-the "Write hole" ... if a write was interrupted by the crash.
+Which leads to a few questions:
 
-In the first two cases (which are effectively the same case), mdadm will
-refuse to assemble the array because it knows it could be suffering from a
-write-hole problem.  You need to reassemble with "--force" which means you
-acknowledge that there could be corruption due to the write hole.
+- what tools are there for detailed diagnostics (timing, failure rates, 
+etc.) - I can't seem to find anything other than hdparm and smartctl - 
+which aren't showing anything
 
-If you lose a device during the resync you could still suffer from the write
-hole, but md doesn't alert you to this.  That could be seen as a
-short-coming, but I'm not sure how it might be fixed.  I wouldn't want the
-array to suddenly stop working because there is suddenly a risk of write-hold
-based corruption....
+- shouldn't something in hardware/software chain detect long delays, 
+mark a disk as failing, and take it out of a RAID array?
 
-> 
-> Atleast this way the bad parity does not lurk around forever on your 
-> raid system causing numerous problems when a disk finally fails.
+- are there some metrics that md tracks that might be relevant, and if 
+so, how does one get at them?
 
-Yes, it certainly does not lurk forever - the resync fixes it.
+- are there some relevant tuning parameters for md?
 
-> 
-> The write hole is not inevitable, but would require some special 
-> measures at the raid level which could affect performance.  And as with 
-> any corruption, it could definitely corrupt your filesystem.
+Thanks very much,
 
-The write hole can be "fixed" in two ways that I am aware of.
-1/ log all writes (including parity updates) to some stable storage before
-   writing them to the RAID5.  This is typically done in "hardware RAID" cards
-   using NVRAM for the stable storage.
-   Once NVRAM is widely available on commodity server hardware I suspect
-   md/raid5 will be enhanced to support this.  I have thought about doing
-   this using a RAID1 as the alternate stable storage, but the performance
-   cost is unlikely to acceptable.
-2/ use a filesystem which understands the layout of the RAID5 and which
-   somehow "knows" which stripes were written "recently" so that it can
-   invalidate them (if it cannot verify them) after a crash.  This would
-   almost certainly require a copy-on-write disciple in the filesystem.
+Miles Fidelman
 
-NeilBrown
+
+-- 
+In theory, there is no difference between theory and practice.
+In<fnord>  practice, there is.   .... Yogi Berra
+
+
