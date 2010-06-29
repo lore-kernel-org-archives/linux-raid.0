@@ -1,236 +1,55 @@
-From: Dave W <dave+gmane@wuertele.com>
-Subject: Re: How do I determine which drive should be in which slot?
-Date: Tue, 29 Jun 2010 16:00:57 +0000 (UTC)
-Message-ID: <loom.20100629T175538-430@post.gmane.org>
-References: <loom.20100626T070913-497@post.gmane.org> <loom.20100629T082214-677@post.gmane.org> <20100629170209.126e6336@notabene.brown>
+From: Adrian Sandor <aditsu@yahoo.com>
+Subject: "mdadm -Dsv" output
+Date: Tue, 29 Jun 2010 09:37:30 -0700 (PDT)
+Message-ID: <117090.97039.qm@web32408.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown <neilb <at> suse.de> writes:
+Hi, this is not a big issue, but I'm unsatisfied with the output of mdadm -Dsv. I'm using mdadm 3.0.
+Here's the output on one machine:
 
-> > How can I tell mdadm to put them in the right slots?
-> 
-> This is very odd.... that should not happen.  I think I've seen a few reports
-> of something like that happening and I'm beginning to wonder if I broke
-> something subtle....
-> What kernel/mdadm version are you using.
+ARRAY /dev/md/0level=raid1 num-devices=2 metadata=0.90 UUID=91407351:9059f7b0:38ae7154:38049e4e
+   devices=/dev/sdb1,/dev/sda1
+ARRAY /dev/md/1level=raid1 num-devices=2 metadata=0.90 UUID=d1776dd8:db91f423:99830b25:d3f7cedd
+   devices=/dev/sdc1,/dev/sdb3
 
-# uname -a
-Linux fileserver.whome 2.6.27.24-170.2.68.fc10.i686 #1 SMP Wed May 20 23:10:16
-EDT 2009 i686 i686 i386 GNU/Linux
-# mdadm --version
-mdadm - v2.6.7.1 - 15th October 2008
+The devices are shown as "/dev/md/n" instead of "/dev/mdn", and there's no space before "level".
 
+On another machine I got:
 
-> You should use "mdadm --examine" to see the configuration of the array, and
-> make sure that configuration is copied exactly when you creat a new array -
-> same chunk size, same layout, same metadata version etc.
+ARRAY /dev/md1level=raid1 num-devices=2 metadata=0.90 UUID=88c8442e:4f17f837:bde095a2:d13819de
+   devices=/dev/sdc1,/dev/sdd1
+ARRAY /dev/md0level=raid10 num-devices=4 metadata=0.90 UUID=95e59d50:2eae3beb:bde095a2:d13819de
+   devices=/dev/sda3,/dev/sdb1,/dev/sdc2,/dev/sdd2
 
-I don't know what metadata version refers to.  I don't see it in the
-"mdadm --examine" output.
+Here it's showing "/dev/mdn", but again there's no space before "level", and the devices are not in order.
 
+Third machine:
 
-> Keep a copy of the "mdadm --examine" output and compare it with the output
-> after runing the --create and make sure everything is still the same (e.g.
-> Data Offset could be changed - that would be awkward).
+ARRAY /dev/md/0_0level=raid1 num-devices=2 metadata=0.90 UUID=24302b7f:d959dadb:5af0b895:7edd2b0f
+   devices=/dev/sdb1,/dev/sda1
+ARRAY /dev/md/3_0level=raid10 num-devices=4 metadata=0.90 UUID=19f4b34c:0ec56553:6bb0b7af:9ec1922b
+   devices=/dev/sda3,/dev/sdb3,/dev/sdc3,/dev/sdd3
+ARRAY /dev/md/2_0level=raid1 num-devices=2 metadata=0.90 UUID=d232d5b6:7d276c52:b7fe7b09:538f0c09
+   devices=/dev/sdc2,/dev/sdd2
+ARRAY /dev/md/1_0level=raid1 num-devices=2 metadata=0.90 UUID=2337ad91:997bfcc0:53f8cadc:1d167f18
+   devices=/dev/sdc1,/dev/sdd1
 
-I also don't see Data Offset in the --examine output.  I wonder if I should
-upgrade to a newer mdadm?  Or is that something that I can only see if I
-run --examine on a running array?
-at the data looks OK.
+Back to "/dev/md/n", but now there's an extra "_0" ?! Where did that come from?
+Again, no space and not in order.
+And on a 4th machine, the output is similar to the 3rd one.
 
-> If 'fsck' fails, you might like to try again, re-arranging the devices that
-> you aren't sure of.
+All machines are running Gentoo Linux amd64 and the same mdadm version (3.0)
 
-OK, it sounds like you're saying that the --create command won't hurt anything
-that I can't fix by running it again.  It is truly safe that way?
+Another question is whether there's another way to output this information, that's more consistent, and more suitable for parsing by a program.
 
-Here is the /proc/mdstat and the --examine output:
-
-
-# cat /proc/mdstat 
-Personalities : [raid6] [raid5] [raid4] 
-md0 : inactive sdd1[2](S) sdb1[7](S) sdc1[6](S) sdf1[5](S) sde1[3](S)
-      9767559680 blocks
-       
-unused devices: <none>
-# mdadm --examine /dev/sd[bcdef]1
-/dev/sdb1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : ddebe2dc:9c023128:eb301463:823c4aa0
-  Creation Time : Sun May  2 01:30:10 2010
-     Raid Level : raid6
-  Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
-     Array Size : 5860535808 (5589.04 GiB 6001.19 GB)
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 0
-
-    Update Time : Fri Jun 11 05:18:13 2010
-          State : clean
- Active Devices : 2
-Working Devices : 5
- Failed Devices : 2
-  Spare Devices : 3
-       Checksum : 9ce7de69 - correct
-         Events : 48984
-
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     7       8       17        7      spare   /dev/sdb1
-
-   0     0       0        0        0      removed
-   1     1       0        0        1      faulty removed
-   2     2       8       49        2      active sync   /dev/sdd1
-   3     3       8       65        3      active sync   /dev/sde1
-   4     4       0        0        4      faulty removed
-   5     5       8       81        5      spare   /dev/sdf1
-   6     6       8       33        6      spare   /dev/sdc1
-   7     7       8       17        7      spare   /dev/sdb1
-/dev/sdc1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : ddebe2dc:9c023128:eb301463:823c4aa0
-  Creation Time : Sun May  2 01:30:10 2010
-     Raid Level : raid6
-  Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
-     Array Size : 5860535808 (5589.04 GiB 6001.19 GB)
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 0
-
-    Update Time : Fri Jun 11 05:18:13 2010
-          State : clean
- Active Devices : 2
-Working Devices : 5
- Failed Devices : 2
-  Spare Devices : 3
-       Checksum : 9ce7de77 - correct
-         Events : 48984
-
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     6       8       33        6      spare   /dev/sdc1
-
-   0     0       0        0        0      removed
-   1     1       0        0        1      faulty removed
-   2     2       8       49        2      active sync   /dev/sdd1
-   3     3       8       65        3      active sync   /dev/sde1
-   4     4       0        0        4      faulty removed
-   5     5       8       81        5      spare   /dev/sdf1
-   6     6       8       33        6      spare   /dev/sdc1
-   7     7       8       17        7      spare   /dev/sdb1
-/dev/sdd1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : ddebe2dc:9c023128:eb301463:823c4aa0
-  Creation Time : Sun May  2 01:30:10 2010
-     Raid Level : raid6
-  Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
-     Array Size : 5860535808 (5589.04 GiB 6001.19 GB)
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 0
-
-    Update Time : Fri Jun 11 05:18:13 2010
-          State : clean
- Active Devices : 2
-Working Devices : 5
- Failed Devices : 2
-  Spare Devices : 3
-       Checksum : 9ce7de85 - correct
-         Events : 48984
-
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     2       8       49        2      active sync   /dev/sdd1
-
-   0     0       0        0        0      removed
-   1     1       0        0        1      faulty removed
-   2     2       8       49        2      active sync   /dev/sdd1
-   3     3       8       65        3      active sync   /dev/sde1
-   4     4       0        0        4      faulty removed
-   5     5       8       81        5      spare   /dev/sdf1
-   6     6       8       33        6      spare   /dev/sdc1
-   7     7       8       17        7      spare   /dev/sdb1
-/dev/sde1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : ddebe2dc:9c023128:eb301463:823c4aa0
-  Creation Time : Sun May  2 01:30:10 2010
-     Raid Level : raid6
-  Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
-     Array Size : 5860535808 (5589.04 GiB 6001.19 GB)
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 0
-
-    Update Time : Fri Jun 11 05:18:13 2010
-          State : clean
- Active Devices : 2
-Working Devices : 5
- Failed Devices : 2
-  Spare Devices : 3
-       Checksum : 9ce7de97 - correct
-         Events : 48984
-
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     3       8       65        3      active sync   /dev/sde1
-
-   0     0       0        0        0      removed
-   1     1       0        0        1      faulty removed
-   2     2       8       49        2      active sync   /dev/sdd1
-   3     3       8       65        3      active sync   /dev/sde1
-   4     4       0        0        4      faulty removed
-   5     5       8       81        5      spare   /dev/sdf1
-   6     6       8       33        6      spare   /dev/sdc1
-   7     7       8       17        7      spare   /dev/sdb1
-/dev/sdf1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : ddebe2dc:9c023128:eb301463:823c4aa0
-  Creation Time : Sun May  2 01:30:10 2010
-     Raid Level : raid6
-  Used Dev Size : 1953511936 (1863.01 GiB 2000.40 GB)
-     Array Size : 5860535808 (5589.04 GiB 6001.19 GB)
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 0
-
-    Update Time : Fri Jun 11 05:18:13 2010
-          State : clean
- Active Devices : 2
-Working Devices : 5
- Failed Devices : 2
-  Spare Devices : 3
-       Checksum : 9ce7dea5 - correct
-         Events : 48984
-
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     5       8       81        5      spare   /dev/sdf1
-
-   0     0       0        0        0      removed
-   1     1       0        0        1      faulty removed
-   2     2       8       49        2      active sync   /dev/sdd1
-   3     3       8       65        3      active sync   /dev/sde1
-   4     4       0        0        4      faulty removed
-   5     5       8       81        5      spare   /dev/sdf1
-   6     6       8       33        6      spare   /dev/sdc1
-   7     7       8       17        7      spare   /dev/sdb1
-# 
+Thanks
+Adrian
 
 
 
+      
