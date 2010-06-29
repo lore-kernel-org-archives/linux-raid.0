@@ -1,161 +1,149 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Problem re-shaping RAID6
-Date: Tue, 29 Jun 2010 11:11:35 +1000
-Message-ID: <20100629111135.1b7cc50b@notabene.brown>
-References: <AANLkTikv3JPbto1F2YYmRx0HNP7cgFh3gj6dHekCt1SE@mail.gmail.com>
-	<20100614091518.2492a9db@notabene.brown>
-	<4C1BBE6E.5090802@tmr.com>
+Subject: Re: [md PATCH 4/5] md: Fix: BIO I/O Error during reshape for
+ external metadata
+Date: Tue, 29 Jun 2010 12:09:50 +1000
+Message-ID: <20100629120950.1c5d1142@notabene.brown>
+References: <905EDD02F158D948B186911EB64DB3D11EECE8A6@irsmsx503.ger.corp.intel.com>
+	<20100616150237.0009d6d1@notabene.brown>
+	<905EDD02F158D948B186911EB64DB3D11F300178@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C1BBE6E.5090802@tmr.com>
+In-Reply-To: <905EDD02F158D948B186911EB64DB3D11F300178@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: =?UTF-8?B?SsOpcsO0bWU=?= Poulin <jeromepoulin@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: "Kwolek, Adam" <adam.kwolek@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-On Fri, 18 Jun 2010 14:43:58 -0400
-Bill Davidsen <davidsen@tmr.com> wrote:
+On Fri, 18 Jun 2010 09:48:34 +0100
+"Kwolek, Adam" <adam.kwolek@intel.com> wrote:
 
-> Neil Brown wrote:
-> > On Sun, 13 Jun 2010 15:15:08 -0400
-> > J=C3=A9r=C3=B4me Poulin <jeromepoulin@gmail.com> wrote:
-> >
-> >  =20
-> >> I had problems reshaping my RAID6 down 1 disk today and found a
-> >> problem in Grow.c:
-> >>
-> >> diff -udpr mdadm-3.1.2/Grow.c mdadm-3.1.2-critical-section/Grow.c
-> >> --- mdadm-3.1.2/Grow.c  2010-03-09 23:31:39.000000000 -0500
-> >> +++ mdadm-3.1.2-critical-section/Grow.c 2010-06-13 14:57:44.000000=
-000 -0400
-> >> @@ -497,7 +497,7 @@ int Grow_reshape(char *devname, int fd,
-> >>         int rv =3D 0;
-> >>         struct supertype *st;
-> >>
-> >> -       int nchunk, ochunk;
-> >> +       unsigned long nchunk, ochunk;
-> >>         int nlayout, olayout;
-> >>         int ndisks, odisks;
-> >>         int ndata, odata;
-> >>
-> >>
-> >> After changing this I was able to re-shape the array, it seems it =
-was
-> >> overflowing and I had a message saying:
-> >> root@billsshack:~/mdadm-3.1.2/ > ./mdadm --grow /dev/md0
-> >> --raid-devices=3D6 --backup-file=3D/mnt/data1/md-raid6-grow-backup=
-=2Ebak
-> >> mdadm: Need to backup 4503599627350016K of critical section..
-> >> mdadm: /dev/md0: Something wrong - reshape aborted
-> >>
-> >> Now it works:
-> >> root@billsshack:~/mdadm-3.1.2/ > ./mdadm --grow /dev/md0
-> >> --raid-devices=3D6 --backup-file=3D/mnt/data1/md-raid6-grow-backup=
-=2Ebak
-> >> mdadm: Need to backup 20480K of critical section..
-> >> root@billsshack:~/mdadm-3.1.2/ > cat /proc/mdstat
-> >> Personalities : [raid0] [raid1] [raid10] [raid6] [raid5] [raid4]
-> >> [faulty] [linear]
-> >> md0 : active raid6 dm-6[0] dm-8[5] dm-5[4] dm-3[3] dm-4[2] dm-7[1]
-> >>       7814041600 blocks super 0.91 level 6, 1024k chunk, algorithm=
- 2
-> >> [6/5] [UUUUUU]
-> >>       [>....................]  reshape =3D  0.0% (33792/1953510400=
-)
-> >> finish=3D1926.0min speed=3D16896K/sec
-> >>
-> >>
-> >> Here's a nice output of GDB:
-> >>       Breakpoint 1, Grow_reshape (devname=3D0x7fffffffe390 "/dev/m=
-d0",
-> >> fd=3D5, quiet=3D0,
-> >>           backup_file=3D0x7fffffffe3b8
-> >> "/mnt/data1/md-raid6-grow-backup.bak", size=3D1953510400, level=3D=
-65534,
-> >>           layout_str=3D0x0, chunksize=3D0, raid_disks=3D6) at Grow=
-=2Ec:939
-> >>       939                     blocks =3D ochunk/512 * nchunk/512 *=
- odata
-> >> * ndata / a;
-> >>       (gdb) p ochunk/512
-> >>       $9 =3D 2048
-> >>       (gdb) p ochunk/512 * nchunk/512
-> >>       $10 =3D -4194304
-> >>    =20
-> >
-> >
-> > Thanks.
-> > I fixed this bug a slightly different way
-> >
-> > -               blocks =3D ochunk/512 * nchunk/512 * odata * ndata =
-/ a;
-> > +               blocks =3D (ochunk/512) * (nchunk/512) * odata * nd=
-ata / a;
-> >
-> >
-> >  =20
-> I don't have a current C standard handy, but I was on the original X3=
-J11=20
-> committee, and I'm fairly sure that even with that grouping, which ma=
-y=20
-> work fine for gcc, the standard allows the compiler to ignore what yo=
-u=20
-> did and do the optimization as long as the result "is the same as" do=
-ing=20
-> what you said, in math terms rather than real world. And since other=20
-> compilers (such as Intel C) are used to compile the kernel and may be=
- in=20
-> the future, and since disks are getting larger and faster, I do prefe=
-r=20
-> the future proofing of the original solution.
+> 
+> 
+> > -----Original Message-----
+> > From: Neil Brown [mailto:neilb@suse.de]
+> > Sent: Wednesday, June 16, 2010 7:03 AM
+> > To: Kwolek, Adam
+> > Cc: linux-raid@vger.kernel.org; Williams, Dan J; Ciechanowski, Ed
+> > Subject: Re: [md PATCH 4/5] md: Fix: BIO I/O Error during reshape for
+> > external metadata
+> > 
+> > On Wed, 9 Jun 2010 15:22:27 +0100
+> > "Kwolek, Adam" <adam.kwolek@intel.com> wrote:
+> > 
+> > > (md: Online Capacity Expansion for IMSM)
+> > > When sum of added disks and degraded disks is greater than
+> > max_degraded number, reshape decides that stripe is broken, so bio i/o
+> > error is a result.
+> > > Added disks without data has no impact on volume degradation
+> > (contains no data so far), so we have to be sure that all disks used to
+> > reshape has In_sync flag set.
+> > > We have to do this for disks without data.
+> > 
+> > Again, I'm not really following you.
+> > I agree that devices that are added to make up numbers for a shape
+> > should be
+> > marked In_sync, but that is already happening, roughly in the middle of
+> > raid5_start_reshape.
+> > 
+> > Again, can you give me a specific situation where the current code does
+> > the
+> > wrong thing?
+> > 
+> > Thanks,
+> > NeilBrown
+> > 
+> > 
+> > > ---
+> > >
+> > >  drivers/md/raid5.c |   17 ++++++++++++++++-
+> > >  1 files changed, 16 insertions(+), 1 deletions(-)
+> > >
+> > > diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c index
+> > dc25a32..cb74045 100644
+> > > --- a/drivers/md/raid5.c
+> > > +++ b/drivers/md/raid5.c
+> > > @@ -5468,7 +5468,7 @@ static int raid5_start_reshape(mddev_t *mddev)
+> > >  	/* Add some new drives, as many as will fit.
+> > >  	 * We know there are enough to make the newly sized array work.
+> > >  	 */
+> > > -	list_for_each_entry(rdev, &mddev->disks, same_set)
+> > > +	list_for_each_entry(rdev, &mddev->disks, same_set) {
+> > >  		if (rdev->raid_disk < 0 &&
+> > >  		    !test_bit(Faulty, &rdev->flags)) {
+> > >  			if (raid5_add_disk(mddev, rdev) == 0) { @@ -5488,6
+> > +5488,21 @@ static int raid5_start_reshape(mddev_t *mddev)
+> > >  			} else
+> > >  				break;
+> > >  		}
+> > > +		/* if there is Online Capacity Expansion
+> > > +		 * on degraded array for external meta
+> > > +		 */
+> > > +		if (mddev->external &&
+> > > +		    (conf->raid_disks <= (disk_count + conf-
+> > >max_degraded))) {
+> > > +			/* check if not spare */
+> > > +			if (!(rdev->raid_disk < 0 &&
+> > > +			      !test_bit(Faulty, &rdev->flags)))
+> > > +				/* make sure that all disks,
+> > > +				 * even added previously have
+> > > +				 * in sync flag set
+> > > +				 */
+> > > +				set_bit(In_sync, &rdev->flags);
+> > > +		}
+> > > +	}
+> > >
+> > >  	/* When a reshape changes the number of devices, ->degraded
+> > >  	 * is measured against the large of the pre and post number of
+> > >
+> 
+> 
+> When disks are added to md for reshape for external metadata they have cleared in_sync flag (they are not used so far).
 
-Seriously?  It sounds pretty broken to allow any transformation on fixe=
-d-size
-integers that would valid on real numbers... (You did say "real world".=
-=2E.)
-Even anything valid on integers is quite possibly not valid on fixed-si=
-zed
-numbers.
+Actually In_sync is set for these devices.  The code to do that is just above
+where you have added some code.
 
-But if I were to change it I don't think I would make the variables big=
-ger.
-I would do something like
+> If the number of added disks is smaller than maximum degraded disks number, there is no problem.
+> If (i.e.) 2 or more disks are added to raid5 during reshape, stripes looks as degraded and bio error occurs.
+> For takeovered raid0 (it is changed to degraded raid5), if single disk only is added
+> we have problem, because we exceeded allowed degradation factor. Checking stripes degradation code during reshape
+> generates bio error as well.
 
-  ochunk_sectors =3D ochunk / 512;
-  nchunk_sectors =3D nchunk / 512;
+Surely all the devices in the RAID0 will be marked In_sync, so when it is
+converted to a RAID5 (in RAID4 layout) it will have N-1 In_sync devices and
+one missing device.
+raid5_start_reshape will then add a spare but *not* mark it in_sync as 
+  if (rdev->raid_disk >= conf->previous_raid_disks) {
 
-  blocks =3D ochunk_sectors * nchunk_sectors * odata * ndata / a;
+will fail.  This is correct, you end up with 4 in-sync devices and one which
+is not in_sync.  The reshape process will rearrange the data and at the end
+of the process, the new device will be in_sync.
 
-but that just makes it clearer to me that if the guarantees there are
-different to the guarantees for what I originally proposed, then there =
-is
-something seriously wrong with the language.
+During the reshape, IO to the section that has already been reshaped will see
+a degraded array (but not overly degraded) and might reconstruct using parity
+rather than reading directly, but it should work.
+IO to the section that has not been reshaped yet will just be normal RAID0
+style IO.
 
-Do you have any reference to any standard that I could look at and try =
-to
-understand?
+There might be some issues here when converting e.g. a 3 drive RAID0 to 5
+drive RAID5, and not all new devices are available.
+I came across something similar recently and I think those issues are fixed
+by the patches that are in -next and that I submitted to Linus yesterday. 
+Maybe try applying those and see if they fix your problem.
 
-Thanks.
+
+Thanks,
 NeilBrown
 
 
->=20
-> > See
-> > http://neil.brown.name/git?p=3Dmdadm;a=3Dcommitdiff;h=3D200871adf9e=
-15d5ad985f28c349fd89c386ef48a
-> >
-> > I guess it is time to release a 3.1.3...
-> >
-> > Thanks,
-> > NeilBrown
-> >  =20
->=20
->=20
+> 
+> To avoid this in_sync flag has to be set for all disks that are taken in to reshape/grow before process is executed.
+> 
+> For native metadata, in_sync flag is maintained during metadata writing/validating ...
+> 
+> BR
+> Adam
+> 
+> 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
