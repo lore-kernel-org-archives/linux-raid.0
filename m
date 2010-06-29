@@ -1,62 +1,66 @@
-From: Shaochun Wang <scwang@ios.ac.cn>
-Subject: Write-intent bitmap decreases or increase performance of RAID5?
-Date: Wed, 30 Jun 2010 04:11:54 +0800
-Message-ID: <20100629201153.GA13018@localhost>
+From: Adrian Sandor <aditsu@yahoo.com>
+Subject: Re: "mdadm -Dsv" output
+Date: Tue, 29 Jun 2010 16:39:47 -0700 (PDT)
+Message-ID: <221904.67920.qm@web32407.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-From what I read from the internet, write-intent bitmap decreases raid
-performance and provides more stability. But in my situation, it also
-increases raid performance dramatically!
+Well, I figured out a few things after spending some time with the mdadm man page:
+- the "_0" suffix is possibly related to the "homehost" (I guess the computer's hostname was modified) and auto-assembly; I have both "n" and "n_0" symlinks in /dev/md on those machines, pointing to the same "/dev/mdn" devices
+- I can use /proc/mdstat for info instead; it looks decent, uses "mdn" names, can be accessed as a normal user, and doesn't require mdadm
+- there's also /proc/partitions - very nifty
 
-My RAID5 write speed without write-intent bitmap is 90MB/s, and is
-increased to 200MB/s after enabling internal write-intent bitmap. I
-use ext4 filesystem on this raid array. The following is my RAID5
-array information:
+Still, I would like the output of mdadm -Dsv to be improved (regarding formatting and consistency).
 
-# mdadm --detail /dev/md0
-/dev/md0:
-        Version : 1.0
-  Creation Time : Mon Nov 16 02:46:50 2009
-     Raid Level : raid5
-     Array Size : 10255968576 (9780.85 GiB 10502.11 GB)
-  Used Dev Size : 1465138368 (1397.26 GiB 1500.30 GB)
-   Raid Devices : 8
-  Total Devices : 8
-    Persistence : Superblock is persistent
+Adrian
 
-  Intent Bitmap : Internal
 
-    Update Time : Wed Jun 30 03:51:56 2010
-          State : active
- Active Devices : 8
-Working Devices : 8
- Failed Devices : 0
-  Spare Devices : 0
+________________________________
 
-         Layout : left-symmetric
-     Chunk Size : 64K
+Hi, this is not a big issue, but I'm unsatisfied with the output of mdadm -Dsv. I'm using mdadm 3.0.
+Here's the output on one machine:
 
-           Name : AOpen:00
-           UUID : abb2242c:6a250d29:df65e52b:426f4ed9
-         Events : 405636
+ARRAY /dev/md/0level=raid1 num-devices=2 metadata=0.90 UUID=91407351:9059f7b0:38ae7154:38049e4e
+   devices=/dev/sdb1,/dev/sda1
+ARRAY /dev/md/1level=raid1 num-devices=2 metadata=0.90 UUID=d1776dd8:db91f423:99830b25:d3f7cedd
+   devices=/dev/sdc1,/dev/sdb3
 
-    Number   Major   Minor   RaidDevice State
-       4       8       17        0      active sync   /dev/sdb1
-       1       8       33        1      active sync   /dev/sdc1
-       2       8       49        2      active sync   /dev/sdd1
-       3       8       65        3      active sync   /dev/sde1
-       5       8       81        4      active sync   /dev/sdf1
-       6       8       97        5      active sync   /dev/sdg1
-       7       8      113        6      active sync   /dev/sdh1
-       8       8      129        7      active sync   /dev/sdi1
+The devices are shown as "/dev/md/n" instead of "/dev/mdn", and there's no space before "level".
 
--- 
-Shaochun Wang <scwang@ios.ac.cn>
+On another machine I got:
 
-Jabber: fungusw@jabber.org
+ARRAY /dev/md1level=raid1 num-devices=2 metadata=0.90 UUID=88c8442e:4f17f837:bde095a2:d13819de
+   devices=/dev/sdc1,/dev/sdd1
+ARRAY /dev/md0level=raid10 num-devices=4 metadata=0.90 UUID=95e59d50:2eae3beb:bde095a2:d13819de
+   devices=/dev/sda3,/dev/sdb1,/dev/sdc2,/dev/sdd2
+
+Here it's showing "/dev/mdn", but again there's no space before "level", and the devices are not in order.
+
+Third machine:
+
+ARRAY /dev/md/0_0level=raid1 num-devices=2 metadata=0.90 UUID=24302b7f:d959dadb:5af0b895:7edd2b0f
+   devices=/dev/sdb1,/dev/sda1
+ARRAY /dev/md/3_0level=raid10 num-devices=4 metadata=0.90 UUID=19f4b34c:0ec56553:6bb0b7af:9ec1922b
+   devices=/dev/sda3,/dev/sdb3,/dev/sdc3,/dev/sdd3
+ARRAY /dev/md/2_0level=raid1 num-devices=2 metadata=0.90 UUID=d232d5b6:7d276c52:b7fe7b09:538f0c09
+   devices=/dev/sdc2,/dev/sdd2
+ARRAY /dev/md/1_0level=raid1 num-devices=2 metadata=0.90 UUID=2337ad91:997bfcc0:53f8cadc:1d167f18
+   devices=/dev/sdc1,/dev/sdd1
+
+Back to "/dev/md/n", but now there's an extra "_0" ?! Where did that come from?
+Again, no space and not in order.
+And on a 4th machine, the output is similar to the 3rd one.
+
+All machines are running Gentoo Linux amd64 and the same mdadm version (3.0)
+
+Another question is whether there's another way to output this information, that's more consistent, and more suitable for parsing by a program.
+
+Thanks
+Adrian
+
+
+      
