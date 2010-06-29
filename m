@@ -1,51 +1,62 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [md PATCH 00/16] bad block list management for md and RAID1
-Date: Tue, 29 Jun 2010 12:54:58 -0400
-Message-ID: <4C2A2562.5080704@tmr.com>
-References: <20100606235833.13302.60932.stgit@notabene.brown>	<hvd5iq$u83$1@dough.gmane.org>	<20100618132313.040cd303@notabene.brown>	<4C1BABC4.3020008@tmr.com> <20100629150635.7b1629a2@notabene.brown>
+From: Shaochun Wang <scwang@ios.ac.cn>
+Subject: Write-intent bitmap decreases or increase performance of RAID5?
+Date: Wed, 30 Jun 2010 04:11:54 +0800
+Message-ID: <20100629201153.GA13018@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100629150635.7b1629a2@notabene.brown>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Brett Russ <bruss@netezza.com>, linux-raid@vger.kernel.org
+To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Neil Brown wrote:
-> The read balancing in RAID1 assumes that co-located reads are likely to be
-> more efficient than widely disparate reads, but it isn't a very crucial
-> assumption.  RAID10 assumes that if there is a systematic performance
-> difference across the address space, performance is likely to be better
-> nearer the start.
->
-> Resync/recovery makes some very vague assumption about overall throughput in
-> the default resync-max/min speeds, but they are very vague and easily tuned.
->   
+From what I read from the internet, write-intent bitmap decreases raid
+performance and provides more stability. But in my situation, it also
+increases raid performance dramatically!
 
-Permit me to be inspired by these two paragraphs, and to suggest that 
-the positional performance and rebuild speed relate to some issues in 
-another thread about rebuild killing performance. Would it be possible 
-(and not overly complex) to tune the rebuild/check speed to the other 
-system load, such that instead of a max rebuild speed the limit would be 
-the delay in servicing external (user generated) i/o? I don't have a 
-metric in mind, but it seems as though both position on the drive and 
-load on the system are important, and if a admin tunes the system to 
-allow very low rates, under heavy system load or on slow parts of the 
-drive(s).
+My RAID5 write speed without write-intent bitmap is 90MB/s, and is
+increased to 200MB/s after enabling internal write-intent bitmap. I
+use ext4 filesystem on this raid array. The following is my RAID5
+array information:
 
-I know there is a concept of "idle" involved, but the issue is not just 
-if the array is being used, but rather how much the background activity 
-is allowed to impact performance. Perhaps a count of the average number 
-of user i/o behind a system i/o would be useful, if actual clock time 
-isn't easy to use.
+# mdadm --detail /dev/md0
+/dev/md0:
+        Version : 1.0
+  Creation Time : Mon Nov 16 02:46:50 2009
+     Raid Level : raid5
+     Array Size : 10255968576 (9780.85 GiB 10502.11 GB)
+  Used Dev Size : 1465138368 (1397.26 GiB 1500.30 GB)
+   Raid Devices : 8
+  Total Devices : 8
+    Persistence : Superblock is persistent
 
-Does any of this sound as though some perceived performance issues might 
-be addressed differently?
+  Intent Bitmap : Internal
+
+    Update Time : Wed Jun 30 03:51:56 2010
+          State : active
+ Active Devices : 8
+Working Devices : 8
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+           Name : AOpen:00
+           UUID : abb2242c:6a250d29:df65e52b:426f4ed9
+         Events : 405636
+
+    Number   Major   Minor   RaidDevice State
+       4       8       17        0      active sync   /dev/sdb1
+       1       8       33        1      active sync   /dev/sdc1
+       2       8       49        2      active sync   /dev/sdd1
+       3       8       65        3      active sync   /dev/sde1
+       5       8       81        4      active sync   /dev/sdf1
+       6       8       97        5      active sync   /dev/sdg1
+       7       8      113        6      active sync   /dev/sdh1
+       8       8      129        7      active sync   /dev/sdi1
 
 -- 
-Bill Davidsen <davidsen@tmr.com>
-  "We can't solve today's problems by using the same thinking we
-   used in creating them." - Einstein
+Shaochun Wang <scwang@ios.ac.cn>
 
+Jabber: fungusw@jabber.org
