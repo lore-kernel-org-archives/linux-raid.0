@@ -1,98 +1,61 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: How do I determine which drive should be in which slot?
-Date: Tue, 29 Jun 2010 17:02:09 +1000
-Message-ID: <20100629170209.126e6336@notabene.brown>
-References: <loom.20100626T070913-497@post.gmane.org>
-	<loom.20100629T082214-677@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: How to reclaim device slots on v1 superblock?
+Date: Tue, 29 Jun 2010 15:02:09 +0200
+Message-ID: <slrni2jrmi.n7r.Mario.Holbe@darkside.dyn.samba-tng.org>
+References: <4AB37978.5030403@Calva.COM>
+ <slrnhb7mt1.dbe.Mario.Holbe@darkside.dyn.samba-tng.org>
+ <slrnhbcnjv.eul.Mario.Holbe@darkside.dyn.samba-tng.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <loom.20100629T082214-677@post.gmane.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dave W <dave+gmane@wuertele.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Tue, 29 Jun 2010 06:26:17 +0000 (UTC)
-Dave W <dave+gmane@wuertele.com> wrote:
+Hello,
 
-> Previously, I wrote:
-> 
-> > After making some changes in the bios to my boot order, my 5-drive RAID6
-> > stopped assembling.  Three of the five known-good drives suddenly stopped
-> > getting added to the right slots.  There are no disk errors in the logs and
-> > I can read from the drives with no problems.
-> 
-> Any help with this one?  My disks are fine but mdadm seems confused about which
-> slots they're supposed to be in.  How can I tell mdadm to put them in the right
-> slots?
+md with v1 superblocks seem to somehow associate device slots with
+specific devices and doesn't re-use them with others (this was already
+reported by John Hughes a while ago, btw.).
 
-This is very odd.... that should not happen.  I think I've seen a few reports
-of something like that happening and I'm beginning to wonder if I broke
-something subtle....
-What kernel/mdadm version are you using.
+So, my question is: how can I force md to finally give up a specific
+slot or re-use it with another device?
 
-You should use "mdadm --examine" to see the configuration of the array, and
-make sure that configuration is copied exactly when you creat a new array -
-same chunk size, same layout, same metadata version etc.
+For example, creating a degraded array reserves slot 1 for the "missing"
+device and never re-uses it, but uses slot 2 instead:
+	# mdadm -C -n 2 -l raid1 -a md /dev/md9 /dev/loop0 missing
+	# mdadm -a /dev/md9 /dev/loop1
+	md9 : active raid1 loop1[2] loop0[0]
 
-You need to list the 5 drives in the correct order, from slot 0 to slot 4.
-Clearly d1 is2 and e1 is 3.
-Presumably b1 is 0, c1 is 1, f1 is 4.
+Creating the array fully developed uses slot 0 and 1 as expected:
+	# mdadm -C -n 2 -l raid1 -a md /dev/md9 /dev/loop0 /dev/loop1  
+	md9 : active raid1 loop1[1] loop0[0]
 
-So a command like:
- mdadm --create /dev/md0 --assume-clean --metadata=XX --chunk=XX --level=6
- --raid-devices=5 /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1
+The only way I found to enforce using slot 0 and 1 while creating a
+degraded array is to grow the number of active devices later:
+	# mdadm -C -n 1 --force -l raid1 -a md /dev/md9 /dev/loop0  
+	# mdadm -a /dev/md9 /dev/loop1
+	# mdadm -G -n 2 /dev/md9
+	md9 : active raid1 loop1[1] loop0[0]
 
-is likely to work (if you get all the 'xx' right).
-Keep a copy of the "mdadm --examine" output and compare it with the output
-after runing the --create and make sure everything is still the same (e.g.
-Data Offset could be changed - that would be awkward).
+Unfortunately, the reverse assumption: reduce the number of active
+devices to re-claim unused slots doesn't appear to work:
+	# mdadm -C -n 2 -l raid1 -a md /dev/md9 /dev/loop0 missing
+	# mdadm -a /dev/md9 /dev/loop1
+	md9 : active raid1 loop1[2] loop0[0]
+	# mdadm --fail /dev/md9 /dev/loop1
+	# mdadm --remove /dev/md9 /dev/loop1
+	# mdadm -G -n 1 --force /dev/md9 
+	# mdadm -a /dev/md9 /dev/loop1
+	# mdadm -G -n 2 /dev/md9
+	md9 : active raid1 loop1[2] loop0[0]
 
-Then try "fsck -n -f /dev/md0" to see if fsck thinks it is OK.
-If it is, try mounting "-o ro" and check that the data looks OK.
-
-If it passed all that you should be fine - you might like to 
-   echo repair > /sys/block/md0/md/sync_action
-to make sure all the parity blocks are correct.
-
-If 'fsck' fails, you might like to try again, re-arranging the devices that
-you aren't sure of.
-
-Good luck.
-
-NeilBrown
+I'm using Debians mdadm 3.1.2-2 which defaults to v1.2 superblocks.
 
 
-> 
-> Thanks,
-> Dave
-> 
-> # mdadm --stop /dev/md0
-> mdadm: stopped /dev/md0
-> # mdadm -v -Af /dev/md0 /dev/sd[bcdef]1
-> mdadm: looking for devices for /dev/md0
-> mdadm: /dev/sdb1 is identified as a member of /dev/md0, slot 7.
-> mdadm: /dev/sdc1 is identified as a member of /dev/md0, slot 6.
-> mdadm: /dev/sdd1 is identified as a member of /dev/md0, slot 2.
-> mdadm: /dev/sde1 is identified as a member of /dev/md0, slot 3.
-> mdadm: /dev/sdf1 is identified as a member of /dev/md0, slot 5.
-> mdadm: no uptodate device for slot 0 of /dev/md0
-> mdadm: no uptodate device for slot 1 of /dev/md0
-> mdadm: added /dev/sde1 to /dev/md0 as 3
-> mdadm: no uptodate device for slot 4 of /dev/md0
-> mdadm: added /dev/sdf1 to /dev/md0 as 5
-> mdadm: added /dev/sdc1 to /dev/md0 as 6
-> mdadm: added /dev/sdb1 to /dev/md0 as 7
-> mdadm: added /dev/sdd1 to /dev/md0 as 2
-> mdadm: /dev/md0 assembled from 2 drives and 3 spares - not enough to start the
-> array.
-> #
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+regards
+   Mario
+-- 
+Tower: "Say fuelstate." Pilot: "Fuelstate."
+Tower: "Say again." Pilot: "Again."
+Tower: "Arghl, give me your fuel!" Pilot: "Sorry, need it by myself..."
 
