@@ -1,95 +1,62 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: How do I determine which drive should be in which slot?
-Date: Wed, 30 Jun 2010 11:02:28 +1000
-Message-ID: <20100630110228.3091ebf6@notabene.brown>
-References: <loom.20100626T070913-497@post.gmane.org>
-	<loom.20100629T082214-677@post.gmane.org>
-	<20100629170209.126e6336@notabene.brown>
-	<loom.20100629T175538-430@post.gmane.org>
+From: Roman Mamedov <roman@rm.pp.ru>
+Subject: Re: Write-intent bitmap decreases or increase performance of RAID5?
+Date: Wed, 30 Jun 2010 11:18:54 +0600
+Message-ID: <20100630111854.006ec4d0@natsu>
+References: <20100629201153.GA13018@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/uxjx5Lkgrq5fB/Ew8zUUmpt"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <loom.20100629T175538-430@post.gmane.org>
+In-Reply-To: <20100629201153.GA13018@localhost>
 Sender: linux-raid-owner@vger.kernel.org
-To: Dave W <dave+gmane@wuertele.com>
-Cc: linux-raid@vger.kernel.org
+To: Shaochun Wang <scwang@ios.ac.cn>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On Tue, 29 Jun 2010 16:00:57 +0000 (UTC)
-Dave W <dave+gmane@wuertele.com> wrote:
+--Sig_/uxjx5Lkgrq5fB/Ew8zUUmpt
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> Neil Brown <neilb <at> suse.de> writes:
-> 
-> > > How can I tell mdadm to put them in the right slots?
-> > 
-> > This is very odd.... that should not happen.  I think I've seen a few reports
-> > of something like that happening and I'm beginning to wonder if I broke
-> > something subtle....
-> > What kernel/mdadm version are you using.
-> 
-> # uname -a
-> Linux fileserver.whome 2.6.27.24-170.2.68.fc10.i686 #1 SMP Wed May 20 23:10:16
-> EDT 2009 i686 i686 i386 GNU/Linux
-> # mdadm --version
-> mdadm - v2.6.7.1 - 15th October 2008
+On Wed, 30 Jun 2010 04:11:54 +0800
+Shaochun Wang <scwang@ios.ac.cn> wrote:
 
-Hmmm... I obviously didn't introduce it recently then.  That is a little bit
-encouraging.
+> From what I read from the internet, write-intent bitmap decreases raid
+> performance and provides more stability. But in my situation, it also
+> increases raid performance dramatically!
+>=20
+> My RAID5 write speed without write-intent bitmap is 90MB/s, and is
+> increased to 200MB/s after enabling internal write-intent bitmap. I
+> use ext4 filesystem on this raid array.
 
-> 
-> 
-> > You should use "mdadm --examine" to see the configuration of the array, and
-> > make sure that configuration is copied exactly when you creat a new array -
-> > same chunk size, same layout, same metadata version etc.
-> 
-> I don't know what metadata version refers to.  I don't see it in the
-> "mdadm --examine" output.
+How do you measure that speed exactly? The proper (and also quite simple) w=
+ay
+to do it is to run the following test several times (assuming that current =
+dir
+is some directory on the array):
 
-It is the "Version : " field.  0.90 in your case.
+  dd if=3D/dev/zero of=3Dzerofile bs=3D1M count=3D2048 conv=3Dfdatasync,not=
+runc
 
-> 
-> 
-> > Keep a copy of the "mdadm --examine" output and compare it with the output
-> > after runing the --create and make sure everything is still the same (e.g.
-> > Data Offset could be changed - that would be awkward).
-> 
-> I also don't see Data Offset in the --examine output.  I wonder if I should
-> upgrade to a newer mdadm?  Or is that something that I can only see if I
-> run --examine on a running array?
-> at the data looks OK.
+Also, I see you run an 8-drive RAID5 on 1.5TB drives, so make sure you are
+aware of the issues described in:
+  http://hardware.slashdot.org/article.pl?sid=3D08/10/21/2126252
+  http://louwrentius.blogspot.com/2008/08/why-raid-1-and-5-will-kill-you-so=
+me-day.html
 
-"Data Offset" is only present in 1.x metadata.  As you have 0.90 you won't
-see it and it cannot change. so you are safe from that.
+--=20
+With respect,
+Roman
 
---examine reports the same info whether the array is running or not.
+--Sig_/uxjx5Lkgrq5fB/Ew8zUUmpt
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-> 
-> > If 'fsck' fails, you might like to try again, re-arranging the devices that
-> > you aren't sure of.
-> 
-> OK, it sounds like you're saying that the --create command won't hurt anything
-> that I can't fix by running it again.  It is truly safe that way?
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-Almost.
-If you run 
-    --create --metadata=1.1
-on devices what were part of a 0.90 array, then as the 1.1 superblock is
-written at the start of the device, and 0.90 puts data at the start of the
-device, you would get corruption.
+iEYEARECAAYFAkwq074ACgkQTLKSvz+PZwg1WQCggKK+5E6T4AmOMMkXL6As1/1G
+6F0An0iOsP4sI/sh+xGuXrszTIifG+OX
+=otQq
+-----END PGP SIGNATURE-----
 
-But if you use the same --metadata= and use --assume-clean and don't specify
-a bitmap, then --create will over-write the metadata but not touch the data
-at all.
-
-
-> 
-> Here is the /proc/mdstat and the --examine output:
-
-So you probably want
-
- mdadm --create /dev/md -l6 -n5 --chunk 64 --assume-clean --metadata=0.90 \
-  /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1 /dev/sdf1
-
-NeilBrown
-
+--Sig_/uxjx5Lkgrq5fB/Ew8zUUmpt--
