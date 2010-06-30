@@ -1,66 +1,47 @@
-From: Adrian Sandor <aditsu@yahoo.com>
+From: Neil Brown <neilb@suse.de>
 Subject: Re: "mdadm -Dsv" output
-Date: Tue, 29 Jun 2010 16:39:47 -0700 (PDT)
-Message-ID: <221904.67920.qm@web32407.mail.mud.yahoo.com>
+Date: Wed, 30 Jun 2010 10:50:56 +1000
+Message-ID: <20100630105056.70dbc97a@notabene.brown>
+References: <221904.67920.qm@web32407.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <221904.67920.qm@web32407.mail.mud.yahoo.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Adrian Sandor <aditsu@yahoo.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Well, I figured out a few things after spending some time with the mdadm man page:
-- the "_0" suffix is possibly related to the "homehost" (I guess the computer's hostname was modified) and auto-assembly; I have both "n" and "n_0" symlinks in /dev/md on those machines, pointing to the same "/dev/mdn" devices
-- I can use /proc/mdstat for info instead; it looks decent, uses "mdn" names, can be accessed as a normal user, and doesn't require mdadm
-- there's also /proc/partitions - very nifty
+On Tue, 29 Jun 2010 16:39:47 -0700 (PDT)
+Adrian Sandor <aditsu@yahoo.com> wrote:
 
-Still, I would like the output of mdadm -Dsv to be improved (regarding formatting and consistency).
+> Well, I figured out a few things after spending some time with the mdadm man page:
+> - the "_0" suffix is possibly related to the "homehost" (I guess the computer's hostname was modified) and auto-assembly; I have both "n" and "n_0" symlinks in /dev/md on those machines, pointing to the same "/dev/mdn" devices
+> - I can use /proc/mdstat for info instead; it looks decent, uses "mdn" names, can be accessed as a normal user, and doesn't require mdadm
+> - there's also /proc/partitions - very nifty
+> 
+> Still, I would like the output of mdadm -Dsv to be improved (regarding formatting and consistency).
+> 
 
-Adrian
+Thanks for your comments.
 
+The missing space before "level" is fixed in newer versions of mdadm.
 
-________________________________
+The variability in the array name (/dev/md0 vs /dev/md/0 vs /dev/md/0_0) does
+appear clumsy I agree.
+The name should be the name that was used to assemble the array.  If mdadm
+was asked to choose a name automatically it will do the best it case, which
+is different depending on the style of metadata used.
 
-Hi, this is not a big issue, but I'm unsatisfied with the output of mdadm -Dsv. I'm using mdadm 3.0.
-Here's the output on one machine:
+With the original 0.90 metadata, the array only knows a number that can
+identify it, so you get /dev/mdNN - e.g. /dev/md0
+With 1.x metadata, the array knows a name, so you get /dev/md/XXXX, e.g.
+  /dev/md/0 or /dev/md/home
+depending on what name was used to create it.
 
-ARRAY /dev/md/0level=raid1 num-devices=2 metadata=0.90 UUID=91407351:9059f7b0:38ae7154:38049e4e
-   devices=/dev/sdb1,/dev/sda1
-ARRAY /dev/md/1level=raid1 num-devices=2 metadata=0.90 UUID=d1776dd8:db91f423:99830b25:d3f7cedd
-   devices=/dev/sdc1,/dev/sdb3
+If the array appears to come from a different host, then mdadm appends a _NN
+suffix to ensure the name doesn't conflict with the name of a local array.
 
-The devices are shown as "/dev/md/n" instead of "/dev/mdn", and there's no space before "level".
+NeilBrown
 
-On another machine I got:
-
-ARRAY /dev/md1level=raid1 num-devices=2 metadata=0.90 UUID=88c8442e:4f17f837:bde095a2:d13819de
-   devices=/dev/sdc1,/dev/sdd1
-ARRAY /dev/md0level=raid10 num-devices=4 metadata=0.90 UUID=95e59d50:2eae3beb:bde095a2:d13819de
-   devices=/dev/sda3,/dev/sdb1,/dev/sdc2,/dev/sdd2
-
-Here it's showing "/dev/mdn", but again there's no space before "level", and the devices are not in order.
-
-Third machine:
-
-ARRAY /dev/md/0_0level=raid1 num-devices=2 metadata=0.90 UUID=24302b7f:d959dadb:5af0b895:7edd2b0f
-   devices=/dev/sdb1,/dev/sda1
-ARRAY /dev/md/3_0level=raid10 num-devices=4 metadata=0.90 UUID=19f4b34c:0ec56553:6bb0b7af:9ec1922b
-   devices=/dev/sda3,/dev/sdb3,/dev/sdc3,/dev/sdd3
-ARRAY /dev/md/2_0level=raid1 num-devices=2 metadata=0.90 UUID=d232d5b6:7d276c52:b7fe7b09:538f0c09
-   devices=/dev/sdc2,/dev/sdd2
-ARRAY /dev/md/1_0level=raid1 num-devices=2 metadata=0.90 UUID=2337ad91:997bfcc0:53f8cadc:1d167f18
-   devices=/dev/sdc1,/dev/sdd1
-
-Back to "/dev/md/n", but now there's an extra "_0" ?! Where did that come from?
-Again, no space and not in order.
-And on a 4th machine, the output is similar to the 3rd one.
-
-All machines are running Gentoo Linux amd64 and the same mdadm version (3.0)
-
-Another question is whether there's another way to output this information, that's more consistent, and more suitable for parsing by a program.
-
-Thanks
-Adrian
-
-
-      
