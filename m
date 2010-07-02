@@ -1,346 +1,161 @@
-From: Janek Kozicki <janek_listy@wp.pl>
-Subject: raid5 failed while rebuiling - classical problem
-Date: Fri, 2 Jul 2010 16:31:55 +0200
-Message-ID: <20100702163155.511919c1@atak.bl.pg.gda.pl>
+From: "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Subject: [PATCH 0/33] Autorebuild and hot-plug
+Date: Fri, 2 Jul 2010 18:11:20 +0100
+Message-ID: <A9DE54D0CD747C4CB06DCE5B6FA2246FDA893878@irsmsx504.ger.corp.intel.com>
+References: <905EDD02F158D948B186911EB64DB3D11F56FADD@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <905EDD02F158D948B186911EB64DB3D11F56FADD@irsmsx503.ger.corp.intel.com>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Czarnowska, Anna" <anna.czarnowska@intel.com>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "dledford@redhat.com" <dledford@redhat.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-Hello,
+This series of patches contains changes related to:
+1. Array auto-rebuild based on spare sharing between RAID devices of the 
+same metadata type 
+2. Policy definition for hot-plug events handling and areas of spare sharing
+3. Handling hot-plug and unplug events in mdadm, so devices can be automatically
+incorporated into mdadm arrays
+
+1. Auto-Rebuild Monitoring application
+Auto-rebuild monitor is part of monitor application (mdadm -F). In the current
+code of mdadm monitor auto-rebuild feature was based on spare group assignment
+in mdadm.conf file and worked only for native metadata. 
+The new auto-rebuild implementation works for all metadata types. It introduces
+the concept of domains that define the space of spare sharing for each metadata
+type. By default all devices belong the same domain with regard to metadata 
+specific constrains.
+
+Monitoring application shall periodically check the state of MD active arrays 
+and trigger a rebuild if there are eligible spare disks in other containers.
+Degraded arrays are checked one by one. For each array to rebuild a potential
+spare disk is searched. When it is found the monitor moves the spare to the 
+degraded array using existing Manage_subdevs function. If the addition fails,
+the spare device is moved back to the original container and next potential
+spare is tried. The process is repeated until all arrays are checked and
+the process is put into a sleep state for a configured period.
+
+2.  Policy definition
+Array auto rebuild configuration is based on DOMAIN lines in /etc/mdadm.conf
+config file. Only this standard config file is supported.
+The DOMAIN line defines a set of devices determined by path and platform.
+Mdadm will take the same actions for all devices in the same domain and subset.
+Subsets are parts of domain specific for hardware controllers and metadata
+spare groups (such as storage pool id to be implemented at a later stage).
+An array cannot include members and spares from more than one domain and subset.
+Spare migration happens only within a subset.
+It is possible to ignore subsets by using -force option.
+Domains are matched from top down i.e. first line from config file that matches
+given device is taken. Therefore the order of domains in config file is
+important. With no DOMAIN lines in config file four default domains are assumed,
+one for each metadata type: 0.90, 1.x, ddf, imsm.
+
+The purpose of a domain is to guide:
+ - Incremental mode - by specifying actions for hot-plug devices other than 
+incremental (default).
+ - Create and Manage modes - by identifying configurations that breach policy.
+   E.g. to create an array with devices from two different domains, or to add a
+   device from a given domain to an array which doesn't contain any devices from
+   the domain, force- prefix in action item is required.
+ - Monitor mode - by allowing spare sharing within the same domain and subset.
+  Spare-groups for native arrays become obsolete.
+
+The available options in domain line are:
+* path=  Each domain line must have at least one valid  path=  entry.
+path=  entries are file globs and are matched against devices
+in /dev/disk/by-path. Each domain line can have more than one path.  The list
+of paths and the platform determine whether a device belongs to given domain.
+* platform= This is metadata type for all devices in domain.
+If platform= item is missing then the same line describes four domains using
+the same paths, one for each metadata type: 0.90, 1.x, ddf, imsm.
+* action=The  action line indicates what kind of behavior is allowed on
+hot-plug.  Each domain line must have one and only one action= entry.
+In addition, each action may be prefixed with force- to indicate that 
+we should skip certain safety checks. Valid action items are:
+* ignore - Means that any hot-plugged device should be ignored. Specifying 
+ignore as action effectively disables auto-rebuild on hot-plug for arrays 
+in that domain
+* incremental - Means normal incremental assembly (the default).
+If the device has metadata that matches an array then it is added to the array.
+* spare  - As incremental, additionally a spare record is written if it is 
+a 'bare' device.
+* same_port_bare - If a bare device is connected to the same port as 
+previously removed device it is added as a spare to the array that the other 
+device belonged to.
+
+3.  Hot-plug action depends on DOMAIN classification which in turn depends 
+on the configuration file and built-in sub-domains. Built-in sub-domains 
+are defined for each metadata type and are metadata/hardware specific.
+For instance IMSM metadata is controller dependent.  Based on DOMAIN line
+action policy is taken on MD device that a new device matches. It can be:
+  * Incremental - array member or spare device is added to matching array or 
+  container.
+  * same_port_bare
+
+Hot-unplug event removes the device from array and container and stores the 
+information about port location and array/volume identity of the removed 
+device. The information is stored in /var/run/failed_slots directory. 
+Based on the information, same_port_bare action can be taken on a bare device 
+that has been plugged-in to the same port that was previously occupied 
+by some MD device member.
+
+Anna Czarnowska
+Marcin Labun
+Przemyslaw Hawrylewicz-Czarnowski
 
 
-Following is a lengthy and full explanation of my problem. A short
-summary is at the end. It is possible that you already know the
-answer without reading this, then please just scroll down and help
-me ;-)
+0001-hotunplug-we-are-testing-mdstat-not-ent-which-is-und.patch
+0002-Few-fixes-and-sample-udev-rules-file-to-capture-bloc.patch
+0003-Config-option-parsing-for-new-DOMAIN-line-support.patch
+0004-Support-for-new-disk-hot-plug-actions-with-DOMAINs.patch
+0005-Partition-action-support-in-DOMAIN-line.patch
+0006-Updates-to-udev-rules-and-ReadMe.c-for-incremental-g.patch
+0007-add-general-domain-subset-lists-manipulation-routine.patch
+0008-imsm-platform-dependent-domain-boundaries.patch
+0009-processing-of-domain-entries-made-after-config-is-lo.patch
+0010-update-domain-search-to-new-structures-added-subset-.patch
+0011-fix-IncrementalRemove-leaves-open-handle.patch
+0012-assembly-user-domain-subset-from-configuration-file-.patch
+0013-create-respect-domains-subsets-during-create-process.patch
+0014-manage-domains-support-in-Manage_subdev.patch
+0015-incremental-add-domain-subset-support.patch
+0016-additional-environment-dependent-code-for-platform-s.patch
+0017-test-code-for-loop-device-support-added.patch
+0018-Removed-uuid-setting-for-imsm-spares.patch
+0019-Assemble-assembly-with-domains-two-runs-for-imsm-spa.patch
+0020-Added-disk-util-functions.patch
+0021-Monitor-link-containers-and-volumes-in-statelist.patch
+0022-Monitor-added-function-to-get-domain-and-subset-of-a.patch
+0023-Monitor-Spare-sharing-with-domain-subset-support.patch
+0024-Monitor-Removed-spare-group-based-spare-sharing-code.patch
+0025-Man-pages-update-with-DOMAIN-line-description.patch
+0026-added-path-path_id-to-give-the-information-on-the-pa.patch
+0027-extension-of-IncrementalRemove-to-store-location-por.patch
+0028-update-udev-rules-to-support-path-parameter-with-rem.patch
+0029-update-for-early-rules-to-support-grab.patch
+0030-Incremental-for-bare-disks-checking-routine-integrat.patch
+0031-Fix-problem-in-mdmon-monitor-of-using-removed-disk-f.patch
+0032-Fix-the-count-of-member-devices-in-mdstat_read-funct.patch
+0033-Try-exclusive-open-on-a-spare-device-before-it-is-ad.patch
+---------------------------------------------------------------------
+Intel Technology Poland sp. z o.o.
+z siedziba w Gdansku
+ul. Slowackiego 173
+80-298 Gdansk
 
+Sad Rejonowy Gdansk Polnoc w Gdansku, 
+VII Wydzial Gospodarczy Krajowego Rejestru Sadowego, 
+numer KRS 101882
 
-I saw smartmontools reporting that sdc has 
+NIP 957-07-52-316
+Kapital zakladowy 200.000 zl
 
-Jul  1 10:19:52 backup_ smartd[2793]: Device: /dev/sdc, 1 Currently unreadable (pending) sectors  
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
-My md1 layout was at that time following:
-
-/dev/md1: 
-        Version : 01.01.03
-  Creation Time : Fri Nov  2 23:35:37 2007
-     Raid Level : raid5
-     Array Size : 1933614592 (1844.04 GiB 1980.02 GB)
-    Device Size : 966807296 (461.01 GiB 495.01 GB)
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 1
-    Persistence : Superblock is persistent
-
-  Intent Bitmap : Internal
-
-    Update Time : Thu Jul  1 11:14:03 2010
-          State : active
- Active Devices : 5
-Working Devices : 5
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-           Name : backup:1  (local to host backup)
-           UUID : 22f22c35:99613d52:31d407a6:55bdeb84
-         Events : 718999
-
-    Number   Major   Minor   RaidDevice State
-       5       8        3        0      active sync   /dev/sda3
-       1       8       19        1      active sync   /dev/sdb3
-       3       3        3        2      active sync   /dev/hda3
-       4       8       51        3      active sync   /dev/sdd3
-       6       8       35        4      active sync   /dev/sdc3
-
-I wanted to get this corrected, so I ran following command, but it
-didn't help:
-
- /usr/share/mdadm/checkarray -a
-
-So I wanted to test sdc more thoroughly, to get this fixed:
-
-$ mdmadm --fail /dev/md1 /dev/sdc3
-mdadm: set /dev/sdc3 faulty in /dev/md1
-
-$ mdmadm --remove /dev/md1 /dev/sdc3
-mdadm: hot removed /dev/sdc3
-
-$ badblocks -c 10240 -s -w -t random -v /dev/sdc3
-Checking for bad blocks in read-write mode
-From block 0 to 483403882
-Testing with random pattern: done
-Reading and comparing: done
-Pass completed, 0 bad blocks found.
-
-$ mdmadm --add /dev/md1 /dev/sdc3
-mdadm: added /dev/sdc3
-
-$ mdadm -D /dev/md1
-/dev/md1: 
-        Version : 01.01.03
-  Creation Time : Fri Nov  2 23:35:37 2007
-     Raid Level : raid5
-     Array Size : 1933614592 (1844.04 GiB 1980.02 GB)
-    Device Size : 966807296 (461.01 GiB 495.01 GB)
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 1
-    Persistence : Superblock is persistent
-
-  Intent Bitmap : Internal
-
-    Update Time : Thu Jul  1 18:19:47 2010
-          State : active, degraded, recovering
- Active Devices : 4
-Working Devices : 5
- Failed Devices : 0
-  Spare Devices : 1
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
- Rebuild Status : 0% complete
-
-           Name : backup:1  (local to host backup)
-           UUID : 22f22c35:99613d52:31d407a6:55bdeb84
-         Events : 733802
-
-    Number   Major   Minor   RaidDevice State
-       5       8        3        0      active sync   /dev/sda3
-       1       8       19        1      active sync   /dev/sdb3
-       3       3        3        2      active sync   /dev/hda3
-       4       8       51        3      active sync   /dev/sdd3
-       6       8       35        4      spare rebuilding   /dev/sdc3
-
-Ok, so I left it to rebuild. But then... hda3 failed.
-
-I wasn't there when it happened. But this what I see in syslog:
-
-Jul  1 22:34:49 backup_ mdadm: Rebuild60 event detected on md device /dev/md1 
-Jul  1 22:49:51 backup_ smartd[2793]: Device: /dev/hda, SMART Usage Attribute: 194 Temperature_Celsius changed from 122 to 121  
-Jul  1 22:49:51 backup_ smartd[2793]: Device: /dev/sda, SMART Usage Attribute: 194 Temperature_Celsius changed from 214 to 222  
-Jul  1 22:49:52 backup_ smartd[2793]: Device: /dev/sdd, SMART Prefailure Attribute: 1 Raw_Read_Error_Rate changed from 118 to 108  
-Jul  1 22:49:52 backup_ smartd[2793]: Device: /dev/sdd, SMART Usage Attribute: 195 Hardware_ECC_Recovered changed from 47 to 48  
-Jul  1 23:42:25 backup_ uptimed: moving up to position 33: 8 days, 05:23:01 
-Jul  1 23:49:51 backup_ smartd[2793]: Device: /dev/sda, SMART Usage Attribute: 194 Temperature_Celsius changed from 214 to 222  
-Jul  1 23:49:53 backup_ smartd[2793]: Device: /dev/sdd, SMART Prefailure Attribute: 1 Raw_Read_Error_Rate changed from 115 to 117  
-Jul  1 23:49:53 backup_ smartd[2793]: Device: /dev/sdd, SMART Usage Attribute: 190 Airflow_Temperature_Cel changed from 68 to 69  
-Jul  1 23:49:53 backup_ smartd[2793]: Device: /dev/sdd, SMART Usage Attribute: 194 Temperature_Celsius changed from 32 to 31  
-Jul  1 23:49:53 backup_ smartd[2793]: Device: /dev/sdd, SMART Usage Attribute: 195 Hardware_ECC_Recovered changed from 47 to 48  
-Jul  1 23:55:25 backup_ uptimed: moving up to position 32: 8 days, 05:36:01 
-Jul  1 23:58:07 backup_ kernel: hda: dma_intr: status=0x51 { DriveReady SeekComplete Error } 
-Jul  1 23:58:07 backup_ kernel: hda: dma_intr: error=0x40 { UncorrectableError }, LBAsect=773056484, high=46, low=1304548, sector=773055468 
-Jul  1 23:58:07 backup_ kernel: ide: failed opcode was: unknown 
-Jul  1 23:58:07 backup_ kernel: end_request: I/O error, dev hda, sector 773055468 
-Jul  1 23:58:07 backup_ kernel: raid5:md1: read error not correctable (sector 763095168 on hda3). 
-Jul  1 23:58:07 backup_ kernel: raid5: Disk failure on hda3, disabling device. Operation continuing on 3 devices 
-Jul  1 23:58:10 backup_ kernel: Buffer I/O error on device md1, logical block 26544335 
-Jul  1 23:58:10 backup_ kernel: lost page write due to I/O error on md1 
-Jul  1 23:58:10 backup_ kernel: Buffer I/O error on device md1, logical block 26544336 
-Jul  1 23:58:10 backup_ kernel: lost page write due to I/O error on md1 
-Jul  1 23:58:10 backup_ kernel: Buffer I/O error on device md1, logical block 26544337 
-Jul  1 23:58:10 backup_ kernel: lost page write due to I/O error on md1 
-Jul  1 23:58:10 backup_ kernel: Buffer I/O error on device md1, logical block 26544338 
-Jul  1 23:58:10 backup_ kernel: lost page write due to I/O error on md1 
-Jul  1 23:58:10 backup_ kernel: Buffer I/O error on device md1, logical block 26544339 
-Jul  1 23:58:10 backup_ kernel: lost page write due to I/O error on md1 
-Jul  1 23:58:10 backup_ kernel: Buffer I/O error on device md1, logical block 26544340 
-Jul  1 23:58:10 backup_ kernel: lost page write due to I/O error on md1 
-Jul  1 23:58:10 backup_ kernel: Buffer I/O error on device md1, logical block 26544341 
-Jul  1 23:58:10 backup_ kernel: lost page write due to I/O error on md1 
-Jul  1 23:58:10 backup_ kernel: Buffer I/O error on device md1, logical block 26544342 
-Jul  1 23:58:10 backup_ kernel: lost page write due to I/O error on md1 
-Jul  1 23:58:10 backup_ kernel: Buffer I/O error on device md1, logical block 26544343 
-Jul  1 23:58:10 backup_ kernel: lost page write due to I/O error on md1 
-Jul  1 23:58:10 backup_ kernel: Buffer I/O error on device md1, logical block 26544344 
-Jul  1 23:58:10 backup_ kernel: lost page write due to I/O error on md1 
-Jul  1 23:58:10 backup_ kernel: Aborting journal on device md1. 
-Jul  1 23:58:10 backup_ kernel: md: md1: recovery done. 
-Jul  1 23:58:10 backup_ mdadm: Fail event detected on md device /dev/md1, component device /dev/hda3 
-Jul  1 23:58:10 backup_ kernel: ext3_abort called. 
-Jul  1 23:58:10 backup_ kernel: EXT3-fs error (device md1): ext3_journal_start_sb: Detected aborted journal 
-Jul  1 23:58:10 backup_ kernel: Remounting filesystem read-only 
-Jul  1 23:58:10 backup_ kernel: RAID5 conf printout: 
-Jul  1 23:58:10 backup_ kernel:  --- rd:5 wd:3 
-Jul  1 23:58:10 backup_ kernel:  disk 0, o:1, dev:sda3 
-Jul  1 23:58:10 backup_ kernel:  disk 1, o:1, dev:sdb3 
-Jul  1 23:58:10 backup_ kernel:  disk 2, o:0, dev:hda3 
-Jul  1 23:58:10 backup_ kernel:  disk 3, o:1, dev:sdd3 
-Jul  1 23:58:10 backup_ kernel:  disk 4, o:1, dev:sdc3 
-Jul  1 23:58:10 backup_ kernel: RAID5 conf printout: 
-Jul  1 23:58:10 backup_ kernel:  --- rd:5 wd:3 
-Jul  1 23:58:10 backup_ kernel:  disk 0, o:1, dev:sda3 
-Jul  1 23:58:10 backup_ kernel:  disk 1, o:1, dev:sdb3 
-Jul  1 23:58:10 backup_ kernel:  disk 2, o:0, dev:hda3 
-Jul  1 23:58:10 backup_ kernel:  disk 3, o:1, dev:sdd3 
-Jul  1 23:58:10 backup_ kernel: RAID5 conf printout: 
-Jul  1 23:58:10 backup_ kernel:  --- rd:5 wd:3 
-Jul  1 23:58:10 backup_ kernel:  disk 0, o:1, dev:sda3 
-Jul  1 23:58:10 backup_ kernel:  disk 1, o:1, dev:sdb3 
-Jul  1 23:58:10 backup_ kernel:  disk 2, o:0, dev:hda3 
-Jul  1 23:58:10 backup_ kernel:  disk 3, o:1, dev:sdd3 
-Jul  1 23:58:10 backup_ kernel: RAID5 conf printout: 
-Jul  1 23:58:10 backup_ kernel:  --- rd:5 wd:3 
-Jul  1 23:58:10 backup_ kernel:  disk 0, o:1, dev:sda3 
-Jul  1 23:58:10 backup_ kernel:  disk 1, o:1, dev:sdb3 
-Jul  1 23:58:10 backup_ kernel:  disk 3, o:1, dev:sdd3 
-Jul  1 23:58:10 backup_ mdadm: RebuildFinished event detected on md device /dev/md1 
-Jul  2 00:19:50 backup_ smartd[2793]: Device: /dev/hda, 1 Currently unreadable (pending) sectors  
-Jul  2 00:19:50 backup_ smartd[2793]: Sending warning via /usr/share/smartmontools/smartd-runner to root ...  
-Jul  2 00:19:50 backup_ smartd[2793]: Warning via /usr/share/smartmontools/smartd-runner to root: successful  
-Jul  2 00:19:50 backup_ smartd[2793]: Device: /dev/hda, SMART Usage Attribute: 194 Temperature_Celsius changed from 121 to 122  
-Jul  2 00:19:50 backup_ smartd[2793]: Device: /dev/hda, ATA error count increased from 0 to 1  
-Jul  2 00:19:50 backup_ smartd[2793]: Sending warning via /usr/share/smartmontools/smartd-runner to root ...  
-Jul  2 00:19:50 backup_ smartd[2793]: Warning via /usr/share/smartmontools/smartd-runner to root: successful  
-Jul  2 00:19:50 backup_ smartd[2793]: Device: /dev/sda, SMART Prefailure Attribute: 1 Raw_Read_Error_Rate changed from 100 to 94  
-Jul  2 00:19:51 backup_ smartd[2793]: Device: /dev/sdb, SMART Usage Attribute: 190 Airflow_Temperature_Cel changed from 69 to 70  
-Jul  2 00:19:51 backup_ smartd[2793]: Device: /dev/sdb, SMART Usage Attribute: 194 Temperature_Celsius changed from 31 to 30  
-Jul  2 00:19:51 backup_ smartd[2793]: Device: /dev/sdb, SMART Usage Attribute: 195 Hardware_ECC_Recovered changed from 66 to 64  
-Jul  2 00:19:51 backup_ smartd[2793]: Device: /dev/sdc, SMART Usage Attribute: 194 Temperature_Celsius changed from 115 to 116  
-Jul  2 00:19:51 backup_ smartd[2793]: Device: /dev/sdd, SMART Prefailure Attribute: 1 Raw_Read_Error_Rate changed from 117 to 118  
-Jul  2 00:19:51 backup_ smartd[2793]: Device: /dev/sdd, SMART Usage Attribute: 195 Hardware_ECC_Recovered changed from 48 to 49  
-
-
-And so in the end I have /dev/hda, 1 Currently unreadable (pending)
-sectors, whereas in the beginning that was the error that got me
-worried about sdc. Except that this time my raid5 is down:
-
-$ mdadm -D /dev/md1
-/dev/md1: 
-        Version : 01.01.03
-  Creation Time : Fri Nov  2 23:35:37 2007
-     Raid Level : raid5
-     Array Size : 1933614592 (1844.04 GiB 1980.02 GB)
-    Device Size : 966807296 (461.01 GiB 495.01 GB)
-   Raid Devices : 5
-  Total Devices : 5
-Preferred Minor : 1
-    Persistence : Superblock is persistent
-
-  Intent Bitmap : Internal
-
-    Update Time : Fri Jul  2 15:25:45 2010
-          State : active, degraded
- Active Devices : 3
-Working Devices : 4
- Failed Devices : 1
-  Spare Devices : 1
-
-         Layout : left-symmetric
-     Chunk Size : 128K
-
-           Name : backup:1  (local to host backup)
-           UUID : 22f22c35:99613d52:31d407a6:55bdeb84
-         Events : 742938
-
-    Number   Major   Minor   RaidDevice State
-       5       8        3        0      active sync   /dev/sda3
-       1       8       19        1      active sync   /dev/sdb3
-       2       0        0        2      removed
-       4       8       51        3      active sync   /dev/sdd3
-       4       0        0        4      removed
-
-       3       3        3        -      faulty spare   /dev/hda3
-       6       8       35        -      spare   /dev/sdc3
-
-The filesystem /backup is still mounted, albeit readonly:
-
-backup:~$ pydf
-Filesystem             Size   Used  Avail  Use%           Mounted on
-/dev/md/0              942M   836M    77M  88.8 [###### ] /
-/dev/md/1             1815G  1736G    24G  95.6 [#######] /backup
-udev                    10M   128k    10M   1.3 [       ] /dev
-tmpfs                  379M      0   379M   0.0 [       ] /dev/shm
-tmpfs                  379M      0   379M   0.0 [       ] /lib/init/rw
-
-backup:~$ ls -la /backup/
-total 80
-drwxr-xr-x 29 root    root    4096 Jul  1 16:20 .
-drwxr-xr-x 24 root    root    4096 Mar  4 14:15 ..
-drwxr-xr-x 11 salomea salomea 4096 Jul  1 23:46 .mldonkey
-drwxr-xr-x 10 root    root    4096 Jul  1 14:59 .sync
-?---------  ? ?       ?          ?            ? /backup/1_daily.4
-?---------  ? ?       ?          ?            ? /backup/1_daily.5
-?---------  ? ?       ?          ?            ? /backup/1_daily.6
-?---------  ? ?       ?          ?            ? /backup/2_weekly.0
-?---------  ? ?       ?          ?            ? /backup/3_monthly.3
-?---------  ? ?       ?          ?            ? /backup/3_monthly.5
-?---------  ? ?       ?          ?            ? /backup/lost+found
-drwxr-xr-x 10 root    root    4096 Jul  1 14:59 0_hourly.0
-drwxr-xr-x 10 root    root    4096 Jul  1 02:23 0_hourly.1
-drwxr-xr-x 10 root    root    4096 Jun 30 18:31 0_hourly.2
-drwxr-xr-x 10 root    root    4096 Jun 30 14:54 1_daily.0
-drwxr-xr-x 10 root    root    4096 Jun 29 14:50 1_daily.1
-drwxr-xr-x 10 root    root    4096 Jun 28 14:21 1_daily.2
-drwxr-xr-x 10 root    root    4096 Jun 26 14:34 1_daily.3
-drwxr-xr-x 10 root    root    4096 Jun 16 15:00 2_weekly.1
-drwxr-xr-x 10 root    root    4096 Jun  8 14:33 2_weekly.2
-drwxr-xr-x 10 root    root    4096 Jun  1 14:40 2_weekly.3
-drwxr-xr-x 10 root    root    4096 May 24 14:32 3_monthly.0
-drwxr-xr-x 10 root    root    4096 Apr 17 14:59 3_monthly.1
-drwxr-xr-x 10 root    root    4096 Mar 24 02:19 3_monthly.2
-drwxr-xr-x 10 root    root    4096 Jan 23 10:50 3_monthly.4
-
-I suppose that this is a classic situation. I decided to wait for
-your help before making it worse. sdc is irrecoverable, because I
-tested it in read-write mode. But hda has been just removed, only due
-to 1 damaged sector. I would much prefer to have all 2 TB intact with
-just several kilobytes lost, than losing whole partition.
-
-Please help me to assemble this array back, and I will instantly
-replace hda with another 500GB drive that I have just
-bought: /dev/hdc3 is ready, fresh from the shop and waiting. I just
-don't know how to add it to the array now.
-
-To summarize:
-
-- /dev/md1 had following layout beforehand:
-
-    Number   Major   Minor   RaidDevice State
-       5       8        3        0      active sync   /dev/sda3
-       1       8       19        1      active sync   /dev/sdb3
-       3       3        3        2      active sync   /dev/hda3
-       4       8       51        3      active sync   /dev/sdd3
-       6       8       35        4      active sync   /dev/sdc3
-
-- now it has following layout:
-
-    Number   Major   Minor   RaidDevice State
-       5       8        3        0      active sync   /dev/sda3
-       1       8       19        1      active sync   /dev/sdb3
-       2       0        0        2      removed
-       4       8       51        3      active sync   /dev/sdd3
-       4       0        0        4      removed
-
-       3       3        3        -      faulty spare   /dev/hda3
-       6       8       35        -      spare   /dev/sdc3
-
-- now /dev/sdc3 is after read-write test, thus unusable, although in good condition
-- now /dev/hda3 contains valid filesystem data, except for one
-  damaged sector, which kicked it out of the array.
-
-1. I would like to reassamble the array using (a little damaged) /dev/hda3
-2. then add a newly purchased /dev/hdc3, remove /dev/hda3 and add /dev/sdc3 too
-
-Next I plan to migrate all that into a raid6 configuration. But let's first fix this.
-
-If you need any more information please let me know. I have /proc/mdstat
-output also, from before the problem, and after the problem.
-
-I am sorry, that I didn't upgrade my backup server yet:
-
-backup:~# uname -a
-Linux backup 2.6.24-etchnhalf.1-686 #1 SMP Sat Aug 15 16:51:49 UTC 2009 i686 GNU/Linux
-
-After we fix this I plan to upgrade to debian squeeze and use latest kernel.
-
-best regards
--- 
-Janek Kozicki                               http://janek.kozicki.pl/  |
