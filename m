@@ -1,55 +1,58 @@
-From: Roman Mamedov <roman@rm.pp.ru>
+From: Janek Kozicki <janek_listy@wp.pl>
 Subject: Re: raid5 failed while rebuiling - classical problem
-Date: Sat, 3 Jul 2010 17:47:27 +0600
-Message-ID: <20100703174727.26a8965a@natsu>
+Date: Sat, 3 Jul 2010 15:51:40 +0200
+Message-ID: <20100703155140.01250825@atak.bl.pg.gda.pl>
 References: <20100702163155.511919c1@atak.bl.pg.gda.pl>
 	<20100702231854.105b8612@atak.bl.pg.gda.pl>
 	<20100703033659.0cffc6ad@natsu>
+	<20100703174727.26a8965a@natsu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/.HNXGQ0n+YZYjEyrb+Aux00"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100703033659.0cffc6ad@natsu>
+In-Reply-To: <20100703174727.26a8965a@natsu>
 Sender: linux-raid-owner@vger.kernel.org
 To: Roman Mamedov <roman@rm.pp.ru>
-Cc: Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/.HNXGQ0n+YZYjEyrb+Aux00
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Roman Mamedov said:     (by the date of Sat, 3 Jul 2010 17:47:27 +0600)
 
-On Sat, 3 Jul 2010 03:36:59 +0600
-Roman Mamedov <roman@rm.pp.ru> wrote:
+> On Sat, 3 Jul 2010 03:36:59 +0600
+> Roman Mamedov <roman@rm.pp.ru> wrote:
+> 
+> > > Then I will have an almost exact copy of bad hda3 on hdc3. 
+> > > <...> maybe I could just --add hdc3 in place of hda3 ?
+> > 
+> > Yes, you could, and that would be the most logical thing to do (as hda might
+> > continue failing and developing more bad sectors).
+> 
+> To clarify: you should not literally add it using the "--add" switch (that'd
+> make mdadm think it's a new device needed to be filled up via resync), but
+> instead make mdadm see this device instead hda. I'd try stopping the array,
+> listing only the devices you want in mdadm.conf "DEVICES" lines (and ensuring
+> hda3 is not there), then just doing mdadm --assemble.
 
-> > Then I will have an almost exact copy of bad hda3 on hdc3.=20
-> > <...> maybe I could just --add hdc3 in place of hda3 ?
->=20
-> Yes, you could, and that would be the most logical thing to do (as hda mi=
-ght
-> continue failing and developing more bad sectors).
+Thank you very much for your help. Following command worked, or at
+least seems to work:
 
-To clarify: you should not literally add it using the "--add" switch (that'd
-make mdadm think it's a new device needed to be filled up via resync), but
-instead make mdadm see this device instead hda. I'd try stopping the array,
-listing only the devices you want in mdadm.conf "DEVICES" lines (and ensuri=
-ng
-hda3 is not there), then just doing mdadm --assemble.
+$ mdadm -S /dev/md1
+$ mdadm -Af /dev/md1 /dev/sda3 /dev/sdb3 /dev/hdc3 /dev/sdd3
 
---=20
-With respect,
-Roman
+I have simply put hdc3 instead of (broken) hda3.
 
---Sig_/.HNXGQ0n+YZYjEyrb+Aux00
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Then I did:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+$ mdadm --add /dev/md1 /dev/sdc3
 
-iEYEARECAAYFAkwvI08ACgkQTLKSvz+PZwhxFACeLqbz8DbxDoaGM3bytvED783A
-EjMAnRkCNxTpkc01AfqgXZfFKE8yd6Kp
-=z68i
------END PGP SIGNATURE-----
+and it is rebuilding now. I can mount the filesystem, and it seems
+rather intact. So I unmount it again, to let it "rebuild in peace".
+When rebuild is complete I will do fsck.
 
---Sig_/.HNXGQ0n+YZYjEyrb+Aux00--
+Thank you for pointing out dd_rescue, I had a feeling that such a
+tool  existed, but I couldn't remember what it was. So I used dd.
+I hope that this time I will remember dd_rescue, that it exists :)
+
+best regards
+-- 
+Janek Kozicki                               http://janek.kozicki.pl/  |
