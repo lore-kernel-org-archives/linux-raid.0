@@ -1,49 +1,87 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: List of mismatched blocks?
-Date: Sun, 4 Jul 2010 20:29:00 +0200
-Message-ID: <slrni31knc.mgo.Mario.Holbe@darkside.dyn.samba-tng.org>
-References: <i0nr7l$jge$1@dough.gmane.org>
- <slrni2vate.mgo.Mario.Holbe@darkside.dyn.samba-tng.org>
- <i0pn2r$nir$1@dough.gmane.org>
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: md and sd out of sync
+Date: Mon, 05 Jul 2010 10:25:37 +1200
+Message-ID: <4C310A61.1020209@sauce.co.nz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: 'Linux RAID' <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Niobos <niobos@dest-unreach.be> wrote:
-> I found out about cmp -l, but that gives me roughly 9 million differing
-> bytes. They are nicely grouped in ranges, but I was hoping for a way
-> that would output "sectors 517-523 and 4554-4559" or similar.
+I have 16 x 2TB drives that each partitioned into 3 equal sized partitions.
 
-Well, a little awk (or whatever scripting language you prefer) script
-afterwards? :)
+Three md RAID6 arrays have then been built, each utilising one partition 
+on each drive.
 
-> For the few mismatches that I calculated manually, the mismatching file
-> seems to be the ext3-journal itself.
+Over the weekend, one member of one array was failed out:
 
-Yes, also a good bet.
+end_request: I/O error, dev sdz, sector 1302228737
+md: super_written gets error=-5, uptodate=0
+raid5: Disk failure on sdz1, disabling device.
+raid5: Operation continuing on 15 devices.
 
-On high-frequent changes this can unfortunately happen with RAID1 due to
-the handling of dirty pages (there's a thread back in 2k6 here on the
-list where Heinz Mauelshagen explained this quite nice - somewhere below
-the Subject: No syncing after crash. Is this a software raid bug?).
-I didn't notice it anymore since >2.6.26, so I thought it was fixed, but
-this could also be because the probability shrunk due to new hardware.
+Checking with smartctl is not an option as the controller (LSI SAS) 
+reacts badly. On the basis of it possibly being a transitory error or a 
+sector that could be remapped on resync I re-added it to the array.
 
-> I'm running cmp on an active RAID. My guess is that this cause a large
-> number of false positives: cmp reading both members at a different time,
-> and hence reading a different version. That was the main reason to ask
+This failed part way through and cased enough disruption to the 
+controller that the whole drive was taken offline:
 
-Not very likely unless your filesystem is under very high load. To be
-more specific: I did cmp -l my mirrors regularly before the "check"
-sync_action had been developed (and still do it from time to time -
-never trust... :)) and never experienced such things.
+sd 8:0:24:0: [sdz] <6>sd 8:0:24:0: [sdz] Result: hostbyte=DID_NO_CONNECT 
+driverb
+yte=DRIVER_OK,SUGGEST_OK
+end_request: I/O error, dev sdz, sector 569772337
+Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK,SUGGEST_OK
+end_request: I/O error, dev sdz, sector 569769777
+sd 8:0:24:0: [sdz] <6>mptsas: ioc0: removing sata device, channel 0, id 
+32, phy
+11
+Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK,SUGGEST_OK
+end_request: I/O error, dev sdz, sector 569770097
+  port-8:1:8: mptsas: ioc0: delete port (8)
 
 
-regards
-   Mario
--- 
-If you think technology can solve your problems you don't understand
-technology and you don't understand your problems.
-                                -- Bruce Schneier
+I would have thought at this point for mdadm to be reporting that the 
+remaining 2 complete arrays had each lost their /dev/sdz components, but 
+this is not the case - it shows healthy arrays.
 
+Is this expected behaviour?
+
+To complicate things further, without any intervention, the disconnected 
+drive was then recognised again as a new device and reconnected as 
+/dev/sdai:
+
+mptsas: ioc0: attaching sata device, channel 0, id 32, phy 11
+scsi 8:0:34:0: Direct-Access     ATA      WDC WD2003FYYS-0 0D02 PQ: 0 
+ANSI: 5
+sd 8:0:34:0: [sdai] 3907029168 512-byte hardware sectors (2000399 MB)
+sd 8:0:34:0: [sdai] Write Protect is off
+sd 8:0:34:0: [sdai] Mode Sense: 73 00 00 08
+sd 8:0:34:0: [sdai] Write cache: enabled, read cache: enabled, doesn't 
+support DPO or FUA
+sd 8:0:34:0: [sdai] 3907029168 512-byte hardware sectors (2000399 MB)
+sd 8:0:34:0: [sdai] Write Protect is off
+sd 8:0:34:0: [sdai] Mode Sense: 73 00 00 08
+sd 8:0:34:0: [sdai] Write cache: enabled, read cache: enabled, doesn't 
+support DPO or FUA
+  sdai: sdai1 sdai2 sdai3
+sd 8:0:34:0: [sdai] Attached SCSI disk
+sd 8:0:34:0: Attached scsi generic sg26 type 0
+
+
+Because sdz no longer exists, I cannot fail and remove /dev/sdz2 and 
+/dev/sdz3 from the other 2 md arrays.
+
+I will proceed by just replacing the drive and rebooting, at which point 
+I should just be able to re-add it to all arrays, but I just wanted to 
+draw attention to how ignorant md seems to be to all the changes that 
+have occurred. Maybe things have changed in later versions:
+
+Kernel 2.6.27.19-78.2.30.fc9.x86_64
+mdadm 2.6.4
+
+Regards,
+
+Richard
