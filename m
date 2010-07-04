@@ -1,49 +1,59 @@
-From: Niobos <niobos@dest-unreach.be>
-Subject: Re: List of mismatched blocks?
-Date: Sun, 04 Jul 2010 12:16:57 +0200
-Message-ID: <i0pn2r$nir$1@dough.gmane.org>
-References: <i0nr7l$jge$1@dough.gmane.org> <slrni2vate.mgo.Mario.Holbe@darkside.dyn.samba-tng.org>
+From: Daniel Pittman <daniel@rimspace.net>
+Subject: Re: raid5 failed while rebuiling - classical problem
+Date: Sun, 04 Jul 2010 22:36:10 +1000
+Message-ID: <87aaq7e85h.fsf@rimspace.net>
+References: <20100702163155.511919c1@atak.bl.pg.gda.pl>
+	<20100702231854.105b8612@atak.bl.pg.gda.pl>
+	<20100703033659.0cffc6ad@natsu> <20100703174727.26a8965a@natsu>
+	<20100703155140.01250825@atak.bl.pg.gda.pl>
+	<20100704101834.42976337@atak.bl.pg.gda.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <slrni2vate.mgo.Mario.Holbe@darkside.dyn.samba-tng.org>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 2010-07-03 23:29, Mario 'BitKoenig' Holbe wrote:
-> Niobos <niobos@dest-unreach.be> wrote:
->> Weekly, I'm checking my RAID1 array using:
->> Every few weeks, I get a mismatch count (which are easily solved with a
-> 
-> Which kernel version and which filesystem on top of the RAID1?
+Janek Kozicki <janek_listy@wp.pl> writes:
 
-Linux serv02.<omitted> 2.6.31-15-server #50-Ubuntu SMP Tue Nov 10
-15:50:36 UTC 2009 x86_64 GNU/Linux
+> fsck finished, fixed a heft of bad inodes, and now everything seems t=
+o be
+> fine. So now I'm going to upgrade all that, use latest kernel, then s=
+witch
+> to raid6.
+>
+> I tested /dev/hda with badblocks read-write tests, and now it works f=
+ine,
+> which is kind of disappointing, because it caused to me so much troub=
+le.
 
-/dev/md1 on / type ext3 (rw,errors=remount-ro)
+If that wrote to the failed block it might cause the bad space to be
+reallocated, which is by design what modern disks do.
 
+> Its warranty is going to expire in 3 months, but since it works fine =
+now I
+> don't think that I could get it replaced. I guess that it will "reall=
+y die"
+> after its warranty will expire...
 
->> "sync"). Is there an easy way to get a list of blocknumbers that
->> mismatch? I'd like to figure out what may be causing this mismatch.
-> 
-> You can just cmp -l your component devices and get a list of addresses
-> and mismatches - easy to convert to block numbers. For ext2/3 I'd bet
-> the mismatches are in inode blocks.
-I found out about cmp -l, but that gives me roughly 9 million differing
-bytes. They are nicely grouped in ranges, but I was hoping for a way
-that would output "sectors 517-523 and 4554-4559" or similar.
+Depends entirely on your vendor; I have never had any refusal to replac=
+e a
+disk after the first bad block, reallocated on write on not.  Those err=
+ors are
+tracked and can be reported by the drive, incidentally, so it has not j=
+ust
+vanished away.
 
-For the few mismatches that I calculated manually, the mismatching file
-seems to be the ext3-journal itself.
+        Daniel
 
-I'm running cmp on an active RAID. My guess is that this cause a large
-number of false positives: cmp reading both members at a different time,
-and hence reading a different version. That was the main reason to ask
-for another way to get the mismatching blocks through the raid-layer.
+--=20
+=E2=9C=A3 Daniel Pittman            =E2=9C=89 daniel@rimspace.net      =
+      =E2=98=8E +61 401 155 707
+               =E2=99=BD made with 100 percent post-consumer electrons
 
-Niobos
-
-PS: Both disks report "rellocated sector count = 0" via SMART.
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
