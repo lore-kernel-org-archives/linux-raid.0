@@ -1,34 +1,154 @@
-From: richard <richard@sauce.co.nz>
-Subject: Re: md and sd out of sync
-Date: Mon, 05 Jul 2010 11:17:54 +1200
-Message-ID: <4C3116A2.7040507@sauce.co.nz>
-References: <4C310A61.1020209@sauce.co.nz>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: very odd iowait problem
+Date: Sun, 04 Jul 2010 20:02:56 -0400
+Message-ID: <4C312130.5040505@tmr.com>
+References: <4C1C7F2F.3040604@meetinghouse.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C310A61.1020209@sauce.co.nz>
+In-Reply-To: <4C1C7F2F.3040604@meetinghouse.net>
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Linux RAID' <linux-raid@vger.kernel.org>
+To: Miles Fidelman <mfidelman@meetinghouse.net>
+Cc: "xen-users@lists.xensource.com" <xen-users@lists.xensource.com>, General Linux-HA mailing list <linux-ha@lists.linux-ha.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Richard Scobie wrote:
-> I have 16 x 2TB drives that each partitioned into 3 equal sized partitions.
+Miles Fidelman wrote:
+> Hi Folks,
 >
-> Three md RAID6 arrays have then been built, each utilising one partition
-> on each drive.
+> I'm experiencing a very odd, daily, high-load situation - that seems 
+> to localize in my disk stack.  I direct this to the xen-users, 
+> linux-raid and linux-ha lists as I expect there's a pretty high degree 
+> of experience on these lists with complicated disk driver stacks.
 >
-> Over the weekend, one member of one array was failed out:
+> I recently virtualized a production system, and have been slowly 
+> wringing out the bugs that have shown up.  This seems to be the last 
+> one, and it's a doozie.
+>
+> Basic setup:  Two identical machines except for the DomUs they're 
+> running.
+>
+> Two machines, slightly older Pentium 4 processors, 4meg RAM each 
+> (max), 2 CPUs each, 4 SATA Drives each.
+> Debian Lenny Install for Dom0 and DomUs (2.6.26-2-xen-686)
+>
+> Disk setup on each:
+> - 4 partitions on each drive
+> - 3 RAID-1s set up across the 4 drives (4 drives in each - yes it's 
+> silly, but easy) - for Dom0 /boot / swap
+> - 1 RAID-6 set up across the 4 drives - set up as a LVM PV - underlies 
+> all my DomUs
+> note: all the RAIDs are set up with internal metadata, chunk size of 
+> 131072KB - per advice here - works like a charm
+> - pairs of LVs - / and swap per VM
+> - each LV is linked with it's counterpart on the other machine, using 
+> DRBD
+> - LVs are specified as drbd: devices in DomU .cfg files
+> - LVs are mounted with noatime option inside production DomU - makes a 
+> big difference
+>
+> A few DomUs - currently started and stopped either via links in 
+> /etc/xen/auto or manually - I've temporarily turned off heartbeat and 
+> pacemaker until I get the underlying stuff stable.
+>
+> ------
+> now to the problem:
+>
+> for several days in a row, at 2:05am, iowait on the production DomU 
+> went from averaging 10% or to 100% (I've been running vmstat 1 in a 
+> window and watching the iowait column)
+>
+> the past two days, this has happened at 2:26am instead of 2:05
+>
+> rebooting the VM fixes the problem, though it has occured again within 
+> 20 minutes of the reboot, and then another reboot fixes the problem 
+> until 2am the next day
+>
+> killing a bunch of processes also fixed things, but at that point so 
+> little was running that I just rebooted the DomU - unfortunately, one 
+> night it looked like lwresd was eating up resources, the next night it 
+> was something else.
+>
+> ------
+> ok... so I'm thinking there'a cron job that's doing something that 
+> eats up all my i/o - I traced a couple of other issues back to cron 
+> jobs - I can't seem to find either a cron job that runs around this 
+> time, or anything in my logs
+>
+> so, now I set up a bunch of things to watch what's going - copies of 
+> atop running in Dom0 on both servers, and in the production DomU 
+> (note: I caught a couple of more bugs by running top in a window, and 
+> seeing what was frozen in the window, after the machine crashed)
+>
+> ok - so I'm up at 2am for the 4th day in a row (along with a couple of 
+> proposals I'm writing during the day, and a couple of fires with my 
+> kids' computers - I've discovered that Mozy is perhaps the world's 
+> worst backup service - it's impossible to restore things) - anyway.... 
+> 2:26 rolls around, the iowait goes to 100%, and I start looking using 
+> ps, and iostat, and lsof and such to try to locate whatever process is 
+> locking up my DomU, when I notice:
+>
+> --- on one server, atop is showing one drive (/dev/sdb) maxing out at 
+> 98% busy - sort of suggestive of a drive failure, and something that 
+> would certainly ripple through all the layers of RAID, LVM, DRBD to 
+> slow down everything on top of it (which is everything)
+>
+> Now this is pretty weird - given the way my system is set up, I'd 
+> expect a dying disk  that to show up as very high iowaits, but....
+> - it's a relatively new drive
+> - I've been running smartd, and smartctl doesn't yield any results 
+> suggesting a drive problem
+> - the problem goes away when I reboot the DomU
+>
+> One more symptom:  I migrated the DomU to my other server, and there's 
+> still a correlation between seeing the 98% busy on /dev/sdb, and 
+> seeing iowait of 100% on the DomU - even though we're now talking a 
+> disk on one machine dragging down a VM on the other machine.  
+> (Presumeably it's impacting DRBD replication.)
+>
+> So....
+> - on the one hand, the 98% busy on /dev/sdb is rippling up through md, 
+> lvm, drbd, dom0 - and causing 100% iowait in the production DomU - 
+> which is to be expected in a raided, drbd'd environment - a low level 
+> delay ripples all the way up
+> - on the other hand, it's only effecting the one DomU, and it's not 
+> effecting the Dom0 on that machine
+> - there seems to be something going on at 2:25am, give or take a few, 
+> that kicks everything into the high iowait state (but I can't find a 
+> job running at that time - though I guess someone could be hitting me 
+> with some spam that's kicking amavisd or clam into a high-resource mode)
+>
+> All of which leads to two questions:
+> - if it's a disk going bad, why does this manifest nightly, at roughly 
+> the same time, and effect only one DomU?
+> - if it's something in the DomU, by what mechanism is that rippling 
+> all they way down to a component of a raid array, hidden below several 
+> layers of stuff that's supposed to isolate virtual volumes from hardware?
+>
+> The only thought that occurs to me is that perhaps there's a bad 
+> record or block on that one drive, that only gets exercised when on 
+> particular process runs.
+> - is that a possibility?
+> - if yes, why isn't drbd or md or something catching it and fixing it 
+> (or adding the block to the bad block table)?
+> - any suggestions on diagnostic or drive rebuilding steps to take 
+> next?  (includings that I can do before staying up until 2am tomorrow!)
+>
+> If it weren't hitting me, I'd be intrigued by this one.  
+> Unfortunately, it IS hitting me, and I'm getting tireder and crankier 
+> by the minute, hour, and day.  And it's now 4:26am.  Sigh...
+>
+> Thanks very much for any ideas or suggestions.
 
-As a followup to this, when I hot removed the failed drive out, mdadm 
-notified me of a failure of /dev/sdz2 (despite /dev/sdz2 no longer 
-existing).
+Get some sleep, for one.
 
-Then, some 20 minutes later, upon hot inserting the new drive, I got an 
-mdadm notification of  /dev/sdz3 failing.
+I would install and enable process accounting, turn it on at midnight 
+and let it run until morning (unless you feel like staying up to 
+reboot). That's at a low enough level that I would expect it to have 
+information as to what's running, at least.
 
-So it got there in the end.
+-- 
+Bill Davidsen <davidsen@tmr.com>
+  "We can't solve today's problems by using the same thinking we
+   used in creating them." - Einstein
 
-Regards,
-
-Richard
