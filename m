@@ -1,429 +1,377 @@
 From: "Hawrylewicz Czarnowski, Przemyslaw"
 	<przemyslaw.hawrylewicz.czarnowski@intel.com>
-Subject: [PATCH 03/33] Config option parsing for new DOMAIN line support.
-Date: Mon, 5 Jul 2010 11:43:09 +0100
-Message-ID: <66C59AD0932712458090B447266D638CD8CEC3DE@irsmsx504.ger.corp.intel.com>
-References: <A9DE54D0CD747C4CB06DCE5B6FA2246FDA893C01@irsmsx504.ger.corp.intel.com>
+Subject: [PATCH 05/33] Partition action support in DOMAIN line
+Date: Mon, 5 Jul 2010 11:43:59 +0100
+Message-ID: <66C59AD0932712458090B447266D638CD8CEC3E8@irsmsx504.ger.corp.intel.com>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246FDA893C05@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246FDA893C01@irsmsx504.ger.corp.intel.com>
+In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246FDA893C05@irsmsx504.ger.corp.intel.com>
 Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
 To: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-From: Czarnowska, Anna
+=46rom: Czarnowska, Anna=20
 Sent: Monday, July 05, 2010 11:23 AM
 To: Neil Brown
-Cc: linux-raid@vger.kernel.org; Czarnowska, Anna; Hawrylewicz Czarnowski, Przemyslaw; Labun, Marcin; Neubauer, Wojciech; Williams, Dan J; Ciechanowski, Ed; dledford@redhat.com
-Subject: [PATCH 03/33] Config option parsing for new DOMAIN line support.
+Cc: linux-raid@vger.kernel.org; Czarnowska, Anna; Hawrylewicz Czarnowsk=
+i, Przemyslaw; Labun, Marcin; Neubauer, Wojciech; Williams, Dan J; Ciec=
+hanowski, Ed; dledford@redhat.com
+Subject: [PATCH 05/33] Partition action support in DOMAIN line
 
-From: Doug Ledford <dledford@redhat.com>
+=46rom: Doug Ledford <dledford@redhat.com>
 
-Signed-off-by: Doug Ledford <dledford@redhat.com>
+Add the table and program options for partition action and make them a =
+requirement.
+Stub entries for making partition handling be done via an indirection l=
+ayer so we can easily support different partitioning methods required f=
+or different platforms.
+Modify config parsing and domain struct to use a partition handler entr=
+y instead of just a program name.
+
+=A0=A0=A0 Signed-off-by: Doug Ledford <dledford@redhat.com>
 ---
- config.c |  260 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- mdadm.h  |   35 +++++++++
- util.c   |   43 ++++++++++
- 3 files changed, 337 insertions(+), 1 deletions(-)
+=A0Incremental.c |=A0=A0 17 ++++++++++++---
+=A0config.c=A0=A0=A0=A0=A0 |=A0=A0 59 +++++++++++++++++++++++++++++++++=
++++++++++++++++++++++++-
+=A0mdadm.h=A0=A0=A0=A0=A0=A0 |=A0=A0 20 +++++++++++++++++++
+=A0util.c=A0=A0=A0=A0=A0=A0=A0 |=A0=A0 59 +++++++++++++++++++++++++++++=
+++++++++++++++++++++++++++++
+=A04 files changed, 150 insertions(+), 5 deletions(-)
 
+diff --git a/Incremental.c b/Incremental.c index d1d9ee1..ca70a35 10064=
+4
+--- a/Incremental.c
++++ b/Incremental.c
+@@ -947,7 +947,7 @@ static int IncrementalNewDisk(char *devname, int ve=
+rbose, int export,
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0 str=
+uct domain_ent *domain)
+=A0{
+=A0=A0=A0=A0=A0 struct stat stb;
+-=A0=A0=A0=A0 int dfd;
++=A0=A0=A0=A0 int dfd, rv;
+=A0
+=A0=A0=A0=A0=A0 dfd =3D dev_open_check(devname, O_RDONLY|O_EXCL, &stb);
+=A0=A0=A0=A0=A0 if (dfd < 0)
+@@ -960,16 +960,25 @@ static int IncrementalNewDisk(char *devname, int =
+verbose, int export,
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 close(dfd);
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 return 1;
+=A0=A0=A0=A0=A0 }
++
++=A0=A0=A0=A0 if (domain->handler->check_table(dfd, verbose, export, do=
+main) =3D=3D 0) {
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 close(dfd);
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 return 0;
++=A0=A0=A0=A0 }
+=A0=A0=A0=A0=A0 /*
+=A0=A0=A0=A0=A0 =A0* OK, at this point we have a valid block device wit=
+hout a
+-=A0=A0=A0=A0 * superblock.=A0 If we aren't in force mode, then don't u=
+se the
++=A0=A0=A0=A0 * superblock, the partition table doesn't match, and we a=
+re a
++=A0=A0=A0=A0 * partition domain.=A0 If we aren't in force mode, then d=
+on't use the
+=A0=A0=A0=A0=A0 =A0* device unless it's "clean", meaning no filesystems=
+, no lvm,
+=A0=A0=A0=A0=A0 =A0* no anything.=A0 The requirement here is that both =
+the first and
+=A0=A0=A0=A0=A0 =A0* last 4k of the device must be one of three pattern=
+s: 0x00, 0x5a,
+=A0=A0=A0=A0=A0 =A0* or 0xff.
+=A0=A0=A0=A0=A0 =A0*/
+-
+-=A0=A0=A0=A0 return 0;
++=A0=A0=A0=A0 if (check_clean(dfd) || force(domain)) {
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 rv =3D domain->handler->write_table(dfd=
+, verbose, export, domain);
++=A0=A0=A0=A0 }
++=A0=A0=A0=A0 close(dfd);
++=A0=A0=A0=A0 return rv;
+=A0}
+=A0
+=A0/*
 diff --git a/config.c b/config.c
-index 20c46e9..10c10e2 100644
+index bd80cd6..b429968 100644
 --- a/config.c
 +++ b/config.c
-@@ -75,7 +75,7 @@ char DefaultConfFile[] = CONFFILE;  char DefaultAltConfFile[] = CONFFILE2;
-
- enum linetype { Devices, Array, Mailaddr, Mailfrom, Program, CreateDev,
--           Homehost, AutoMode, LTEnd };
-+           Homehost, AutoMode, Domain, LTEnd };
- char *keywords[] = {
-      [Devices]  = "devices",
-      [Array]    = "array",
-@@ -85,6 +85,7 @@ char *keywords[] = {
-      [CreateDev]= "create",
-      [Homehost] = "homehost",
-      [AutoMode] = "auto",
-+     [Domain]   = "domain",
-      [LTEnd]    = NULL
- };
-
-@@ -694,6 +695,182 @@ void autoline(char *line)
-      }
- }
-
-+static struct domain_ent *domain_list = NULL;
-+
-+void free_domain(struct domain_ent *de) {
-+     struct domain_path *dp;
-+
-+     while (de->paths) {
-+           dp = de->paths;
-+           de->paths = dp->next;
-+           free(dp->path);
-+           free(dp);
-+     }
-+     free(de);
-+}
-+
-+void domainline(char *line)
-+{
-+     char *w;
-+     struct domain_ent *de;
-+     struct domain_path *path, *prev_path;
-+     int offset, a_seen=0, m_seen=0, sg_seen=0;
-+
-+     de = malloc(sizeof(struct domain_ent));
-+     if (!de) {
-+           fprintf(stderr, Name ": unable to allocate memory for domain "
-+                 "entry\n");
-+           return;
-+     }
-+     de->paths = NULL;
-+     de->spare_group = NULL;
-+     de->action = incremental;
-+     de->st = NULL;
-+     de->next = NULL;
-+
-+     for (w=dl_next(line); w!=line; w=dl_next(w)) {
-+           if (strncasecmp("path=", w, 5) == 0) {
-+                 path = malloc(sizeof(struct domain_path));
-+                 if (!path) {
-+                       fprintf(stderr, Name ": unable to allocate "
-+                             "memory for domain path\n");
-+                       free_domain(de);
-+                       return;
-+                 }
-+                 path->path = strdup(w+5);
-+                 if (!path->path) {
-+                       fprintf(stderr, Name ": unable to allocate "
-+                             "memory for domain path\n");
-+                       free_domain(de);
-+                       return;
-+                 }
-+                 path->next = de->paths;
-+                 de->paths = path;
-+           } else if (strncasecmp("action=", w, 7) == 0) {
-+                 if (!a_seen)
-+                       a_seen = 1;
-+                 else {
-+                       fprintf(stderr, Name ": only one action= entry "
-+                             "allowed per domain line, ignoring\n");
-+                       continue;
-+                 }
-+                 offset = 7;
-+                 if (strncasecmp("force-", w+offset, 6) == 0)
-+                       offset = 13;
-+                 if (strncasecmp("ign", w+offset, 3) == 0)
-+                       de->action = ignore;
-+                 else if (strncasecmp("inc", w+offset, 3) == 0)
-+                       de->action = incremental;
-+                 else if (strncasecmp("spa", w+offset, 3) == 0)
-+                       de->action = spare;
-+                 else if (strncasecmp("gro", w+offset, 3) == 0)
-+                       de->action = grow;
-+                 else if (strncasecmp("par", w+offset, 3) == 0)
-+                       de->action = partition;
-+                 if (offset == 13)
-+                       de->action |= force;
-+           } else if (strncasecmp("metadata=", w, 9) == 0) {
-+                 int i;
-+                 if (!m_seen)
-+                       m_seen = 1;
-+                 else {
-+                       fprintf(stderr, Name ": only one metadata= "
-+                             "entry allowed per domain line, "
-+                             "ignoring\n");
-+                       continue;
-+                 }
-+                 /* style of metadata on the devices. */
-+
-+                 for(i=0; superlist[i] && !de->st; i++)
-+                       de->st = superlist[i]->match_metadata_desc(w+9);
-+
-+                 if (!de->st)
-+                       fprintf(stderr, Name ": metadata format %s "
-+                             "unknown, ignored.\n", w+9);
-+           } else if (strncasecmp("spare-group=", w, 12) == 0) {
-+                 if (!sg_seen)
-+                       sg_seen = 1;
-+                 else {
-+                       fprintf(stderr, Name ": only one spare-group= "
-+                             "entry allowed per domain line, "
-+                             "ignoring\n");
-+                       continue;
-+                 }
-+                 de->spare_group = strdup(w+12);
-+                 if (!de->spare_group) {
-+                       fprintf(stderr, Name ": failed to allocate "
-+                             "memory for spare_group\n");
-+                       free_domain(de);
-+                       return;
-+                 }
-+           } else {
-+                 fprintf(stderr, Name ": unrecognized option %s on "
-+                       "domain line\n", w);
-+           }
-+     }
-+     /* Some sanity checks now that all the options are parsed */
-+     if ((de->action & force) &&
-+         ((de->action & action_mask) <= incremental)) {
-+           fprintf(stderr, Name ": force makes no sense with ignore or "
-+                 "incremental, removing.\n");
-+           de->action &= action_mask;
-+     }
-+     if (de->spare_group && de->action <= incremental) {
-+           fprintf(stderr, Name ": defined a spare group when we aren't "
-+                 "allowed to add any spares, removing spare group.\n");
-+           free(de->spare_group);
-+           de->spare_group = NULL;
-+     }
-+     if ((de->action & action_mask) == partition) {
-+           for (prev_path = NULL, path = de->paths; path; )
-+                 if ((strstr(path->path, "part") != NULL) ||
-+                     (path->path[strlen(path->path) - 1] == '*')) {
-+                       fprintf(stderr, Name ": partition method only "
-+                             "allowed on whole disks, not on "
-+                             "partitions\n");
-+                       fprintf(stderr, Name ": bad path=%s\n",
-+                             path->path);
-+                       if (prev_path) {
-+                             prev_path->next = path->next;
-+                             free(path->path);
-+                             free(path);
-+                             path = prev_path->next;
-+                       } else {
-+                             de->paths = path->next;
-+                             free(path->path);
-+                             free(path);
-+                             path = de->paths;
-+                       }
-+                 } else {
-+                       prev_path = path;
-+                       path = path->next;
-+                 }
-+           if (de->paths == NULL) {
-+                 /* We freed all the paths, kill this domain */
-+                 fprintf(stderr, Name ": no valid paths in domain, "
-+                       "freeing.\n");
-+                 free_domain(de);
-+                 return;
-+           }
-+     }
-+     de->next = domain_list;
-+     domain_list = de;
-+}
-+
-+struct domain_ent *get_domain_from_devpath(char *devpath) {
-+     struct domain_ent *de;
-+     struct domain_path *path;
-+
-+     for (de = domain_list; de; de = de->next)
-+           for (path = de->paths; path; path = path->next)
-+                 if (fnmatch(path->path, devpath, 0) == 0)
-+                       return de;
-+     return NULL;
-+}
-+
-+
- int loaded = 0;
-
- static char *conffile = NULL;
-@@ -766,6 +943,9 @@ void load_conffile(void)
-            case AutoMode:
-                  autoline(line);
-                  break;
-+           case Domain:
-+                 domainline(line);
-+                 break;
-            default:
-                  fprintf(stderr, Name ": Unknown keyword %s\n", line);
-            }
-@@ -1101,3 +1281,81 @@ struct mddev_ident_s *conf_match(struct mdinfo *info, struct supertype *st)
-      }
-      return match;
- }
-+
-+struct domain_ent *conf_get_domain(char *devname) {
-+     char *name = strrchr(devname, '/');
-+     char *path;
-+     struct domain_ent *domain;
-+
-+     load_conffile();
-+     if (!domain_list)
-+           return NULL;
-+     if (!name++)
-+           name = devname;
-+     path = get_devpath_from_devname(name);
-+     if (!path)
-+           return NULL;
-+     domain = get_domain_from_devpath(path);
-+     free(path);
-+     return domain;
-+}
-+
-+/*
-+ * Return a linked list of arrays that are in the same domain as the
-+ * constituent device devname.  So, if we have a domain that lists
-+ports 2
-+ * through 6 on the main SATA controller in a machine, and we plug in a
-+ * new drive on port 6, we want to know what actual up and running
-+arrays,
-+ * as listed via /proc/mdstat, are also in the same domain.  We will
-+use
-+ * this information to determine what array we might add our new device
-+ * to either as a replacement drive or as a hot spare.
-+ */
-+struct mdstat_ent *arrays_in_domain(char *devname, struct domain_ent
-+*domain) {
-+     struct mdstat_ent *me, *mdstat, *array_list = NULL;
-+     struct dev_member *m;
-+     struct domain_ent *de;
-+     char *devpath, *mempath, *devpart, *mempart;
-+
-+     devpath = get_devpath_from_devname(devname);
-+     devpart = strrchr(devpath, ':');
-+     mdstat = mdstat_read(0, 0);
-+     while (mdstat) {
-+           if (mdstat->metadata_version &&
-+               strncmp(mdstat->metadata_version, "external:", 9) == 0 &&
-+               is_subarray(mdstat->metadata_version+9))
-+                 /* don't return subarrays, only containers */
-+                 m = NULL;
-+           else for (m = mdstat->members; m; m = m->next) {
-+                 mempath = get_devpath_from_devname(m->name);
-+                 mempart = strrchr(mempath, ':');
-+                 de = conf_get_domain(m->name);
-+                 if (de == domain && strcmp(mempart, devpart) == 0)
-+                       /* array has at least one member in our domain*/
-+                       break;
-+                 free(mempath);
-+           }
-+           if (m) {
-+                 free(mempath);
-+                 me = mdstat;
-+                 mdstat = mdstat->next;
-+                 me->next = array_list;
-+                 array_list = me;
-+           } else {
-+                 me = mdstat;
-+                 mdstat = mdstat->next;
-+                 me->next = NULL;
-+                 free_mdstat(me);
-+           }
-+     }
-+     free(devpath);
-+     return array_list;
-+}
-+
-+int conf_get_domain_action(char *devname) {
-+     struct domain_ent *domain = conf_get_domain(devname);
-+     if (!domain)
-+           return incremental;
-+     return domain->action;
-+}
+@@ -707,6 +707,10 @@ void free_domain(struct domain_ent *de)
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 free(dp->path);
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 free(dp);
+=A0=A0=A0=A0=A0 }
++=A0=A0=A0=A0 if (de->spare_group)
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 free(de->spare_group);
++=A0=A0=A0=A0 if (de->table)
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 free(de->table);
+=A0=A0=A0=A0=A0 free(de);
+=A0}
+=A0
+@@ -715,7 +719,7 @@ void domainline(char *line)
+=A0=A0=A0=A0=A0 char *w;
+=A0=A0=A0=A0=A0 struct domain_ent *de;
+=A0=A0=A0=A0=A0 struct domain_path *path, *prev_path;
+-=A0=A0=A0=A0 int offset, a_seen=3D0, m_seen=3D0, sg_seen=3D0;
++=A0=A0=A0=A0 int offset, a_seen=3D0, m_seen=3D0, sg_seen=3D0, p_seen=3D=
+0, t_seen=3D0;
+=A0
+=A0=A0=A0=A0=A0 de =3D malloc(sizeof(struct domain_ent));
+=A0=A0=A0=A0=A0 if (!de) {
+@@ -725,6 +729,8 @@ void domainline(char *line)
+=A0=A0=A0=A0=A0 }
+=A0=A0=A0=A0=A0 de->paths =3D NULL;
+=A0=A0=A0=A0=A0 de->spare_group =3D NULL;
++=A0=A0=A0=A0 de->handler =3D NULL;
++=A0=A0=A0=A0 de->table =3D NULL;
+=A0=A0=A0=A0=A0 de->action =3D incremental;
+=A0=A0=A0=A0=A0 de->st =3D NULL;
+=A0=A0=A0=A0=A0 de->next =3D NULL;
+@@ -804,6 +810,45 @@ void domainline(char *line)
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 f=
+ree_domain(de);
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 r=
+eturn;
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 }
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 } else if (strncasecmp("program=3D", w,=
+ 8) =3D=3D 0) {
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 int i =3D 0;
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 struct partition_hand=
+ler *h =3D partition_list[i];
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 if (!p_seen)
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 p_s=
+een =3D 1;
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 else {
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 fpr=
+intf(stderr, Name ": only one program=3D "
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0 "entry allowed per domain line, "
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0 "ignoring\n");
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 con=
+tinue;
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 }
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 while(h) {
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 if =
+(strncasecmp(w+8, h->match, strlen(h->match)) =3D=3D 0)
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0 break;
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 h =3D=
+ partition_list[++i];
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 }
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 if (!h) {
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 fpr=
+intf(stderr, Name ": failed to recognize "
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0 "program %s\n", w+8);
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 fre=
+e_domain(de);
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 ret=
+urn;
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 }
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 de->handler =3D h;
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 } else if (strncasecmp("table=3D", w, 6=
+) =3D=3D 0) {
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 if (!t_seen)
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 t_s=
+een =3D 1;
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 else {
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 fpr=
+intf(stderr, Name ": only one table=3D "
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0 "entry allowed per domain line, "
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0 "ignoring\n");
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 con=
+tinue;
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 }
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 de->table =3D strdup(=
+w+6);
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 if (!de->table) {
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 fpr=
+intf(stderr, Name ": failed to allocate "
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0 "memory for table\n");
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 fre=
+e_domain(de);
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 ret=
+urn;
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 }
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 } else {
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 fprintf(stderr, Nam=
+e ": unrecognized option %s on "
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 "=
+domain line\n", w);
+@@ -852,6 +897,18 @@ void domainline(char *line)
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 free_domain(de);
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 return;
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 }
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 if (!de->table || !de->handler) {
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 fprintf(stderr, Name =
+": partition action requires "
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 "bo=
+th a table and program setting.\n");
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 free_domain(de);
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 return;
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 }
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 if (de->handler->validate(de)) {
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 fprintf(stderr, Name =
+": partition table file failed "
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 "va=
+lidation.\n");
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 free_domain(de);
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 return;
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 }
+=A0=A0=A0=A0=A0 }
+=A0=A0=A0=A0=A0 de->next =3D domain_list;
+=A0=A0=A0=A0=A0 domain_list =3D de;
 diff --git a/mdadm.h b/mdadm.h
-index d15e73e..4d5a630 100644
+index 3862853..509ee9f 100644
 --- a/mdadm.h
 +++ b/mdadm.h
-@@ -277,6 +277,36 @@ enum special_options {
-      DetailPlatform,
- };
-
-+enum domain_actions {
-+     ignore,
-+     incremental,
-+     partition, /* only use on whole devices in order to put a standard
-+                 partition table on them, which will invoke new udev
-+                 calls for the partitions, and then we will do other
-+                 appropriate things with the partitions */
-+     spare,
-+     grow,
-+     action_mask=511,
-+     force=512, /* so we can bitwise & this with actions to signify we
-+                 should forcibly take over drives even if they have
-+                 other metadata on them */
-+};
+@@ -295,6 +295,17 @@ enum domain_actions {=A0 #define action(domain) ((=
+domain)->action & action_mask)=A0 #define force(domain) ((domain)->acti=
+on & force)
+=A0
++struct domain_ent;
 +
-+struct domain_ent {
-+     char              *spare_group; /* only set this in monitor mode
-+                                   when we know what arrays we
-+                                   are watching and can reconcile
-+                                   them to domains by checking
-+                                   constituent device paths */
-+     struct domain_path {
-+           char              *path;
-+           struct domain_path      *next;
-+     }                 *paths;
-+     int               action;
-+     struct supertype  *st;
-+     struct domain_ent *next;
-+};
++extern struct partition_handler {
++=A0=A0=A0=A0 char=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 *match; /* st=
+ring we match in mdadm.conf */
++=A0=A0=A0=A0 int =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 (*validate)(s=
+truct domain_ent *domain);
++=A0=A0=A0=A0 int =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 (*check_table=
+)(int dfd, int verbose, int export,
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0 struct domain_ent *domain);
++=A0=A0=A0=A0 int=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 (*write_tab=
+le)(int dfd, int verbose, int export,
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0 struct domain_ent *domain); } *partitio=
+n_list[];
 +
- /* structures read from config file */
- /* List of mddevice names and identifiers
-  * Identifiers can be:
-@@ -854,6 +884,10 @@ extern int same_dev(char *one, char *two);  extern int parse_auto(char *str, char *msg, int config);  extern mddev_ident_t conf_get_ident(char *dev);  extern mddev_dev_t conf_get_devs(void);
-+extern struct domain_ent *conf_get_domain(char *devname); extern int
-+conf_get_domain_action(char *devname); extern struct mdstat_ent
-+*arrays_in_domain(char *devname,
-+                                struct domain_ent *domain);
- extern int conf_test_dev(char *devname);  extern int conf_test_metadata(const char *version, int is_homehost);  extern struct createinfo *conf_get_create_info(void); @@ -930,6 +964,7 @@ extern char *devnum2devname(int num);  extern int devname2devnum(char *name);  extern int stat2devnum(struct stat *st);  extern int fd2devnum(int fd);
-+extern char *get_devpath_from_devname(char *devname);
-
- static inline int dev2major(int d)
- {
+=A0struct domain_ent {
+=A0=A0=A0=A0=A0 char=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 *spare_grou=
+p; /* only set this in monitor mode
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 =A0when we know what arrays we
+@@ -308,6 +319,14 @@ struct domain_ent {
+=A0=A0=A0=A0=A0 int=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 action;
+=A0=A0=A0=A0=A0 struct supertype=A0 *st;
+=A0=A0=A0=A0=A0 struct domain_ent *next;
++=A0=A0=A0=A0 struct partition_handler=A0=A0=A0=A0=A0 *handler; /* only=
+ used when action is
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0 =A0=A0=A0=A0 partition, this is the program
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0 =A0=A0=A0=A0 to call to actually partition
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0 =A0=A0=A0=A0 the drive */
++=A0=A0=A0=A0 char=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 *table; /* Th=
+is is the location of a file to
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0 =A0=A0 pass to the partition program,
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0 =A0=A0 used both for setting and checking
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0 =A0=A0 the partitions on drives */
+=A0};
+=A0
+=A0/* structures read from config file */
+@@ -876,6 +895,7 @@ extern int parse_layout_faulty(char *layout);=A0 ex=
+tern int check_ext2(int fd, char *name);=A0 extern int check_reiser(int=
+ fd, char *name);=A0 extern int check_raid(int fd, char *name);
++extern int check_clean(int fd);
+=A0extern int check_partitions(int fd, char *dname, unsigned long long =
+freesize);
+=A0
+=A0extern int get_mdp_major(void);
 diff --git a/util.c b/util.c
-index 8315200..1793b68 100644
+index b93e21d..169f804 100644
 --- a/util.c
 +++ b/util.c
-@@ -1679,3 +1679,46 @@ void append_metadata_update(struct supertype *st, void *buf, int len)  unsigned int __invalid_size_argument_for_IOC = 0;  #endif
-
-+/*
-+ * Resolve from a device name, such as /dev/sdb2, to a device path,
-+such
-+ * as pci-0000:00:1f.2-scsi-1:0:0:0-part2 which can then be used to
-+match
-+ * against paths in DOMAIN lines from the config file  */ char
-+*get_devpath_from_devname(char *devname) {
-+     char *name = strrchr(devname, '/'), *link;
-+     DIR *by_path;
-+     struct dirent *ent;
-+     char symlink[PATH_MAX] = "/dev/disk/by-path/";
-+     char *symlinkp, target[PATH_MAX];
-+     int read;
+@@ -536,6 +536,35 @@ int check_raid(int fd, char *name)
+=A0=A0=A0=A0=A0 return 1;
+=A0}
+=A0
++int check_clean(int dfd)
++{
++=A0=A0=A0=A0 void *head, *tail, *pattern;
++=A0=A0=A0=A0 int i=3D0, head_clean=3D0, tail_clean=3D0;
++=A0=A0=A0=A0 unsigned char patterns[]=3D{0x00,0x5a,0xff};
 +
-+     if (!name++)
-+           name = devname;
-+     if ((by_path = opendir("/dev/disk/by-path")) == NULL) {
-+           fprintf(stderr, Name ": unable to open /dev/disk/by-path, "
-+                 "domain lookups not possible\n");
-+           return NULL;
-+     }
-+     symlinkp = &symlink[0] + strlen(symlink);
-+     while ((ent = readdir(by_path)) != NULL) {
-+           if (ent->d_type != DT_LNK)
-+                 continue;
-+           strncpy(symlinkp, ent->d_name,
-+                 sizeof(symlink) - (symlinkp - &symlink[0]));
-+           read = readlink(symlink, target, sizeof(target));
-+           if (read < 0)
-+                 continue;
-+           /* Have to null terminate the return */
-+           target[read] = 0;
-+           link = strrchr(target, '/');
-+           if (!link++)
-+                 link = target;
-+           if (strcmp(name, link) == 0) {
-+                 closedir(by_path);
-+                 return strdup(ent->d_name);
-+           }
-+     }
-+     closedir(by_path);
-+     return NULL;
++=A0=A0=A0=A0 head =3D malloc(4096);
++=A0=A0=A0=A0 tail =3D malloc(4096);
++=A0=A0=A0=A0 pattern =3D malloc(4096);
++=A0=A0=A0=A0 if (!head || !tail || !pattern)
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 return 0;
++=A0=A0=A0=A0 if (lseek(dfd, 0, SEEK_SET) =3D=3D -1)
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 return 0;
++=A0=A0=A0=A0 if (read(dfd, head, 4096) !=3D 4096)
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 return 0;
++=A0=A0=A0=A0 if (lseek(dfd, -4096, SEEK_END) =3D=3D -1)
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 return 0;
++=A0=A0=A0=A0 if (read(dfd, tail, 4096) !=3D 4096)
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 return 0;
++=A0=A0=A0=A0 while (i < 3) {
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 memset(pattern, patterns[i++], 4096);
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 if (memcmp(head, pattern, 4096) =3D=3D =
+0)
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 head_clean++;
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 if (memcmp(tail, pattern, 4096) =3D=3D =
+0)
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 tail_clean++;
++=A0=A0=A0=A0 }
++=A0=A0=A0=A0 return (head_clean && tail_clean);
 +}
++
+=A0int ask(char *mesg)
+=A0{
+=A0=A0=A0=A0=A0 char *add =3D "";
+@@ -1746,3 +1775,33 @@ char *get_devpath_from_devname(char *devname)
+=A0=A0=A0=A0=A0 closedir(by_path);
+=A0=A0=A0=A0=A0 return NULL;
+=A0}
++
++static int sfdisk_validate(struct domain_ent *domain) {
++=A0=A0=A0=A0 return 0;
++}
++
++static int sfdisk_check_table(int dfd, int verbose, int export,
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0 struc=
+t domain_ent *domain)
++{
++=A0=A0=A0=A0 return 0;
++}
++
++static int sfdisk_write_table(int dfd, int verbose, int export,
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0 struc=
+t domain_ent *domain)
++{
++=A0=A0=A0=A0 return 0;
++}
++
++static struct partition_handler sfdisk_handler =3D {
++=A0=A0=A0=A0 .match=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 =3D "sfdisk",
++=A0=A0=A0=A0 .validate=A0=A0 =3D sfdisk_validate,
++=A0=A0=A0=A0 .check_table=A0=A0=A0=A0=A0 =3D sfdisk_check_table,
++=A0=A0=A0=A0 .write_table=A0=A0=A0=A0=A0 =3D sfdisk_write_table,
++};
++
++struct partition_handler *partition_list[] =3D {
++=A0=A0=A0=A0 &sfdisk_handler,
++=A0=A0=A0=A0 NULL
++};
++
 --
 1.6.4.2
 
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
