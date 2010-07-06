@@ -1,99 +1,181 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 20/33] Added disk util functions
-Date: Tue, 6 Jul 2010 16:55:10 +1000
-Message-ID: <20100706165510.34483a05@notabene.brown>
-References: <A9DE54D0CD747C4CB06DCE5B6FA2246FDA893C3E@irsmsx504.ger.corp.intel.com>
+Subject: Re: [PATCH 21/33] Monitor: link containers and volumes in statelist
+Date: Tue, 6 Jul 2010 17:11:17 +1000
+Message-ID: <20100706171117.6116b595@notabene.brown>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246FDA893C42@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246FDA893C3E@irsmsx504.ger.corp.intel.com>
+In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246FDA893C42@irsmsx504.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "dledford@redhat.com" <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-On Mon, 5 Jul 2010 10:34:29 +0100
+On Mon, 5 Jul 2010 10:35:26 +0100
 "Czarnowska, Anna" <anna.czarnowska@intel.com> wrote:
 
-> Needed for checking suitability of a disk to use for rebuild.
+> To avoid repeated retrieving of parent container or volumes list.
+> 
+> Simplifies finding unused disk in a container.
+> 
+> Function check_disk_is_free will be used for spare sharing.
 > 
 > 
 > 
-> Signed-off-by: Anna Czarnowska <anna.czarnowska@intel.com<mailto:anna.czarnowska@intel.com>>
+> Signed-off-by: Marcin Labun <marcin.labun@intel.com<mailto:marcin.labun@intel.com>>
 > 
 > ---
 > 
->  mdadm.h       |   11 +++++++++++
+>  Monitor.c |  123 ++++++++++++++++++++++++++++++++++++++++++++++++++----------
 > 
->  super-ddf.c   |   36 ++++++++++++++++++++++++++++++++++++
-> 
->  super-intel.c |   31 +++++++++++++++++++++++++++++++
-> 
->  util.c        |   55 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> 
->  4 files changed, 133 insertions(+), 0 deletions(-)
+>  1 files changed, 102 insertions(+), 21 deletions(-)
 > 
 > 
 > 
-> diff --git a/mdadm.h b/mdadm.h
+> diff --git a/Monitor.c b/Monitor.c
 > 
-> index b6d7933..86f5370 100644
+> index 8e82797..e16af2d 100644
 > 
-> --- a/mdadm.h
+> --- a/Monitor.c
 > 
-> +++ b/mdadm.h
+> +++ b/Monitor.c
 > 
-> @@ -277,6 +277,12 @@ enum special_options {
+> @@ -38,6 +38,24 @@ static void alert(char *event, char *dev, char *disc, char *mailaddr, char *mail
 > 
->       DetailPlatform,
+>   * At least it isn't MD_SB_DISKS.
 > 
->  };
+>   */
 > 
+>  #define MaxDisks 384
 > 
+> +struct state {
 > 
-> +enum disk_status {
+> +     char *devname;
 > 
-> +     unknown,
+> +     int devnum; /* to sync with mdstat info */
 > 
-> +     spare_disk,
+> +     long utime;
 > 
-> +     failed_disk,
+> +     int err;
 > 
-> +};
+> +     char *spare_group;
 > 
-> +
+> +     int active, working, failed, spare, raid, total;
 > 
->  enum domain_actions {
+> +     int expected_spares;
 > 
->       ignore,
+> +     int devstate[MaxDisks];
 > 
->       incremental,
+> +     int devid[MaxDisks];
 > 
-> @@ -656,6 +662,8 @@ extern struct superswitch {
+> +     int percent;
 > 
->       int (*load_super)(struct supertype *st, int fd, char *devname);
+> +     char *metadata_version;
 > 
->       struct supertype * (*match_metadata_desc)(char *arg);
+> +     struct state *next;
 > 
->       __u64 (*avail_size)(struct supertype *st, __u64 size);
+> +     struct state *volumes;
 > 
-> +
+> +     struct state *parent;
 > 
-> +     enum disk_status (*get_disk_status)(struct supertype *st, int major,
-> 
-> +int minor);
+> +     struct state *missing;
+
+I'm having trouble figuring out what next/volumes/parent/missing are meant to
+mean exactly, and there is a lack of any comments explaining it.
+I suspect that is probably makes sense, but I need some help understanding
+exactly what you are doing here....
 
 
-I don't like the idea of identifying a device by major/minor in this context.
+> > @@ -281,11 +298,9 @@ int Monitor(mddev_dev_t devlist,
+> 
+>                       st->spare == array.spare_disks &&
+> 
+>                       (mse == NULL  || (
+> 
+>                             mse->percent == st->percent
+> 
+> -                           ))) {
+> 
+> -                       close(fd);
+> 
+> +                           )))
+> 
+>                         st->err = 0;
+> 
+> -                       continue;
+> 
+> -                 }
+> 
 
-This disk_status information should all be loaded by 'load_super'.
 
-i.e. we call 'load_super' giving an 'fd' for the container, and it loads all
-the relevant details.  Then Monitor just looks through the mdinfo that was
-loaded to find out the status of each device.
-If the required status isn't currently available in mdinfo, we should change
-load_super to put it there.
+That if statement no just sets st->err=0, which happens again a few lines
+later, so it seems the if statement is now pointless....
+But it was there for a reason - I think to short-circuit a collections of
+tests that won't be needed if the 'if' succeeds.  Maybe you could explain
+why you want to remove the 'if' now.
+
+
+
+> 
+> +                             if (missing_parent_list)
+> 
+> +                                   st->missing = missing_parent_list;
+> 
+> +                             else
+> 
+> +                                   st->missing = NULL;
+
+This 'if' is exactly equivalent to
+      st->missing = missing_parent_list;
+!
+
+
+>                   struct mdstat_ent *mse;
+> 
+>                   for (mse=mdstat; mse; mse=mse->next)
+> 
+>                         if (mse->devnum != INT_MAX &&
+> 
+> -                           mse->level &&
+> 
+> -                           (strcmp(mse->level, "raid0")!=0 &&
+> 
+> -                            strcmp(mse->level, "linear")!=0)
+> 
+> -                             ) {
+> 
+> +                       (!mse->level  || /* retrieve containers */
+> 
+> +                       (strcmp(mse->level, "raid0") != 0 &&
+> 
+> +                       strcmp(mse->level, "linear") != 0))) {
+
+You are messing up the indenting rather badly.  Please preserve the
+formatting style of the original code.
+
+> 
+> +                                   if (st->metadata_version)
+> 
+> +                                         free(st->metadata_version);
+
+
+You don't need the test, as free(NULL) is defined to do noting.
+
+
+> 
+> 
+> 
+> +/* check if disk is used in donor array (native) or any volume in donor
+> 
+> +container (external)*/ int check_disk_is_free(struct state *donor, int
+> 
+> +disk_idx, int ext) {
+
+Some how the comment and the function declaration got wrapped together.  Not
+nice.
+
 
 Thanks,
 NeilBrown
