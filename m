@@ -1,37 +1,43 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 32/33] Fix the count of member devices in mdstat_read
- function.
-Date: Tue, 6 Jul 2010 17:51:09 +1000
-Message-ID: <20100706175109.447fa94b@notabene.brown>
-References: <A9DE54D0CD747C4CB06DCE5B6FA2246FDA893C67@irsmsx504.ger.corp.intel.com>
+Subject: Re: [PATCH 33/33] Try exclusive open on a spare device before it is
+ added to another container.
+Date: Tue, 6 Jul 2010 17:57:12 +1000
+Message-ID: <20100706175712.7f881425@notabene.brown>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246FDA893C6B@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246FDA893C67@irsmsx504.ger.corp.intel.com>
+In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246FDA893C6B@irsmsx504.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "dledford@redhat.com" <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-On Mon, 5 Jul 2010 10:45:05 +0100
-"Czarnowska, Anna" <anna.czarnowska@intel.com> wrote:
 
-> From: Marcin Labun <marcin.labun@intel.com>
-> 
-> 
-> 
-> Correction of the number of container or volume member devices (devcnt in struct mdstat_ent). The number after the last devices was counted towards member of devices.
+There is no explanation of why you try an exclusive open.
+I can only imagine that you are trying to close some sort of race.
 
-Thanks.
-I have applied this fix, though I inverted the value returned by
-add_member_devname so it is 0 for failure and 1 for success.
-(if 0 is used for success, then it is best to use negative numbers for
-failure I find).
+I don't think that getting an exclusive open on a member device actually
+closes the race, though it might make it harder to hit.
+
+I think the protocol that we want is that before we add or remove a device to
+a container, or reassign a device within a container we take an exclusive
+open on the container.
+mdadm can do this to add/remove devices.
+managemon can do this to assign a spare to an array.
+
+This is the protocol that Manage_subdevs uses I think.
 
 NeilBrown
 
 
+
+
+On Mon, 5 Jul 2010 10:45:26 +0100
+"Czarnowska, Anna" <anna.czarnowska@intel.com> wrote:
+
+> From: Marcin Labun <marcin.labun@intel.com>
 > 
 > 
 > 
@@ -39,87 +45,149 @@ NeilBrown
 > 
 > ---
 > 
->  mdstat.c |   10 ++++++----
+>  Monitor.c |   48 +++++++++++++++++++++++++++++++++++-------------
 > 
->  1 files changed, 6 insertions(+), 4 deletions(-)
+>  1 files changed, 35 insertions(+), 13 deletions(-)
 > 
 > 
 > 
-> diff --git a/mdstat.c b/mdstat.c
+> diff --git a/Monitor.c b/Monitor.c
 > 
-> index 01a126b..5b9d997 100644
+> index 932a2bc..a1ae67f 100644
 > 
-> --- a/mdstat.c
+> --- a/Monitor.c
 > 
-> +++ b/mdstat.c
+> +++ b/Monitor.c
 > 
-> @@ -94,19 +94,20 @@ static void free_member_devnames(struct dev_member *m)
+> @@ -534,8 +534,9 @@ int Monitor(mddev_dev_t devlist,
 > 
->       }
+>       return 0;
 > 
 >  }
 > 
 > 
 > 
-> -static void add_member_devname(struct dev_member **m, char *name)
+> -static int move_spare(struct state *st2, struct state *st1, int i, char *mailaddr,
 > 
-> +static int add_member_devname(struct dev_member **m, char *name)
+> -                 char *mailfrom, char *alert_cmd, int dosyslog)
+> 
+> +static int move_spare(struct state *st2, struct state *st1, int i,
+> 
+> +                 char *mailaddr, char *mailfrom, char *alert_cmd,
+> 
+> +                 int dosyslog)
+> 
+> 
 > 
 >  {
 > 
->       struct dev_member *new;
+>       struct mddev_dev_s devlist;
 > 
->       char *t;
-> 
-> 
-> 
->       if ((t = strchr(name, '[')) == NULL)
-> 
->             /* not a device */
-> 
-> -           return;
-> 
-> +           return 1;
+> @@ -570,20 +571,41 @@ static int move_spare(struct state *st2, struct state *st1, int i, char *mailadd
 > 
 > 
 > 
->       new = malloc(sizeof(*new));
+>       devlist.disposition = 'r';
 > 
->       new->name = strndup(name, t - name);
+>       if (Manage_subdevs(st2->devname, from_fd, &devlist, -1) == 0) {
 > 
->       new->next = *m;
+> -           devlist.disposition = 'a';
 > 
->       *m = new;
+> -           if (Manage_subdevs(st1->devname, to_fd, &devlist, -1) == 0) {
 > 
-> +     return 0;
+> -                 st2->devid[i] = 0;
 > 
->  }
+> -                 ping_manager(st2->devname);
 > 
+> -                 ping_manager(st1->devname);
 > 
+> -                 alert("MoveSpare", st1->devname, st2->devname, mailaddr,
 > 
->  void free_mdstat(struct mdstat_ent *ms) @@ -207,8 +208,9 @@ struct mdstat_ent *mdstat_read(int hold, int start)
+> -                       mailfrom, alert_cmd, dosyslog);
 > 
->                   } else if (in_devs && strcmp(w, "blocks")==0)
+> -                 close(from_fd);
 > 
->                         in_devs = 0;
+> -                 close(to_fd);
 > 
->                   else if (in_devs) {
+> -                 return 1;
 > 
-> -                       ent->devcnt++;
+> +           int dfd;
 > 
-> -                       add_member_devname(&ent->members, w);
+> +           dfd = open(dv, O_RDWR|O_EXCL);
 > 
-> +
+> +           if (dfd < 0) {
 > 
-> +                       if (add_member_devname(&ent->members, w) == 0)
+> +                 fprintf(stderr,
 > 
-> +                             ent->devcnt++;
+> +                       "Error: Exclusive open on device %s failed\n",
 > 
->                         if (strncmp(w, "md", 2)==0) {
+> +                       dv);
 > 
->                               /* This has an md device as a component.
+> +                 devlist.disposition = 'a';
 > 
->                                * If that device is already in the
+> +                 if (Manage_subdevs(st2->devname, from_fd, &devlist,
+> 
+> +                                -1) != 0)
+> 
+> +                       fprintf(stderr,
+> 
+> +                             "Error: Adding back spare device %s"
+> 
+> +                             "to container %s failed!\n",
+> 
+> +                             st2->devname, dv);
+> 
+>             } else {
+> 
+> -                 Manage_subdevs(st2->devname, from_fd, &devlist, -1);
+> 
+> +                 close(dfd);
+> 
+> +                 devlist.disposition = 'a';
+> 
+> +                 if (Manage_subdevs(st1->devname, to_fd, &devlist,
+> 
+> +                                -1) == 0) {
+> 
+> +                       st2->devid[i] = 0;
+> 
+> +                       ping_manager(st2->devname);
+> 
+> +                       ping_manager(st1->devname);
+> 
+> +                       alert("MoveSpare", st1->devname, st2->devname,
+> 
+> +                             mailaddr, mailfrom, alert_cmd, dosyslog);
+> 
+> +                       close(from_fd);
+> 
+> +                       close(to_fd);
+> 
+> +                       return 1;
+> 
+> +                 } else if (Manage_subdevs(st2->devname, from_fd,
+> 
+> +                                     &devlist, -1) != 0)
+> 
+> +                       fprintf(stderr,
+> 
+> +                             "Error: Adding back spare device"
+> 
+> +                             "%s to container %s failed!\n",
+> 
+> +                             st2->devname, dv);
+> 
+>             }
+> 
+>       }
+> 
+> +     /* Failed to add spare to new container */
+> 
+>       close(from_fd);
+> 
+>       close(to_fd);
+> 
+>       return 0;
 > 
 > --
 > 
