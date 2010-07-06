@@ -1,197 +1,759 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH 27/33] extension of IncrementalRemove to store location
- (port) of removed device
-Date: Tue, 6 Jul 2010 17:32:30 +1000
-Message-ID: <20100706173230.4f98a118@notabene.brown>
-References: <A9DE54D0CD747C4CB06DCE5B6FA2246FDA893C55@irsmsx504.ger.corp.intel.com>
+Subject: Re: [PATCH 31/33] Fix problem in mdmon monitor of using removed
+ disk from in imsm container.
+Date: Tue, 6 Jul 2010 17:45:24 +1000
+Message-ID: <20100706174524.088b6385@notabene.brown>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246FDA893C64@irsmsx504.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246FDA893C55@irsmsx504.ger.corp.intel.com>
+In-Reply-To: <A9DE54D0CD747C4CB06DCE5B6FA2246FDA893C64@irsmsx504.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: "Czarnowska, Anna" <anna.czarnowska@intel.com>
 Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Hawrylewicz Czarnowski, Przemyslaw" <przemyslaw.hawrylewicz.czarnowski@intel.com>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "dledford@redhat.com" <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-On Mon, 5 Jul 2010 10:40:54 +0100
+On Mon, 5 Jul 2010 10:44:32 +0100
 "Czarnowska, Anna" <anna.czarnowska@intel.com> wrote:
 
-> From: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com>
+> From: Marcin Labun <marcin.labun@intel.com>
 > 
 > 
 > 
-> If the disk is taken out from its port this port information is lost. Only udev rule can provide us with this information, and then we have to store it somehow. This patch adds writing 'cookie' file in /var/run/mdadm directory in form of file named with value of <path-id>, containing the names of arrays holding this device before it was removed.
-> 
-> FAILED_SLOTS constant has been added to hold the location of cookie files.
+> Manager thread shall pass the information to monitor thread (mdmon) that some devices are removed from container. Otherwise, monitor (mdmon) migth use such devices (spares) to rebuild the array that has gone degraded.
 > 
 > 
 > 
-> Signed-off-by: Przemyslaw Czarnowski <przemyslaw.hawrylewicz.czarnowski@intel.com<mailto:przemyslaw.hawrylewicz.czarnowski@intel.com>>
+> This problem happens for imsm containers, since a list of the container disks is maintained in intel_super structure. When array goes degraded, the list is searched to find eligable spare disks to start rebuild.
+> 
+> Without this fix the rebuild could be stared on the spare device that was a member of the contaiter, but has been removed from it.
+> 
+
+This patch seems to make sense and I can certainly see the value in a
+'remove_from_super' method. 
+Unfortunately I haven't reviewed it more than that due to the poor
+formatting.  Maybe next time :-)
+
+NeilBrown
+
+
+
+> 
+> 
+> New super type function handler has been introduced to prepare metadata format specific information about removed devices.
+> 
+> int (*remove_from_super)(struct supertype *st, mdu_disk_info_t *dinfo,
+> 
+>                          int fd);
+> 
+> The message prepared in remove_from_super is later procecessed by proceess_update handler in monitor thread.
+> 
+> 
+> 
+> Signed-off-by: Marcin Labun <marcin.labun@intel.com<mailto:marcin.labun@intel.com>>
 > 
 > ---
 > 
->  Incremental.c |   63 ++++++++++++++++++++++++++++++++++++++++++++++++++++----
+>  managemon.c   |   38 ++++++++++++++++
 > 
->  Makefile      |    6 +++-
+>  mdadm.h       |    7 +++-
 > 
->  mdadm.h       |    8 +++++++
+>  super-intel.c |  138 ++++++++++++++++++++++++++++++++++++++++++++++-----------
 > 
->  3 files changed, 70 insertions(+), 7 deletions(-)
+>  3 files changed, 156 insertions(+), 27 deletions(-)
 > 
 > 
 > 
-> diff --git a/Incremental.c b/Incremental.c index 20e3445..adaefb9 100644
+> diff --git a/managemon.c b/managemon.c
 > 
-> --- a/Incremental.c
+> index 454c39d..d1de78e 100644
 > 
-> +++ b/Incremental.c
+> --- a/managemon.c
 > 
-> @@ -937,19 +937,22 @@ int Incremental_container(struct supertype *st, char *devname, int verbose,
+> +++ b/managemon.c
 > 
->   * raid arrays, and if so first fail (if needed) and then remove the device.
+> @@ -297,6 +297,43 @@ static void add_disk_to_container(struct supertype *st, struct mdinfo *sd)
 > 
->   *
+>       st->update_tail = NULL;
 > 
->   * @devname - The device we want to remove
+>  }
 > 
-> + * @id_path - name as found in /dev/disk/by-path for this device
 > 
->   *
 > 
->   * Note: the device name must be a kernel name like "sda", so
+> +/*
 > 
->   * that we can find it in /proc/mdstat
+> + * Create and queue update structure about the removed disks.
 > 
->   */
+> + * The update is prepared by super type handler and passed to the
 > 
-> -int IncrementalRemove(char *devname, char *path, int verbose)
+> +monitor
 > 
-> +int IncrementalRemove(char *devname, char *id_path, int verbose)
+> + * thread.
+> 
+> + */
+> 
+> +static void remove_disk_from_container(struct supertype *st, struct
+> 
+> +mdinfo *sd) {
+> 
+> +     int dfd;
+> 
+> +     char nm[20];
+> 
+> +     struct metadata_update *update = NULL;
+> 
+> +     mdu_disk_info_t dk = {
+> 
+> +           .number = -1,
+> 
+> +           .major = sd->disk.major,
+> 
+> +           .minor = sd->disk.minor,
+> 
+> +           .raid_disk = -1,
+> 
+> +           .state = 0,
+> 
+> +     };
+> 
+> +     /* nothing to do if super type handler does not support
+> 
+> +     * remove disk primitive
+> 
+> +     */
+> 
+> +     if (!st->ss->remove_from_super)
+> 
+> +           return;
+> 
+> +     dprintf("%s: remove %d:%d to container\n",
+> 
+> +           __func__, sd->disk.major, sd->disk.minor);
+> 
+> +
+> 
+> +     sprintf(nm, "%d:%d", sd->disk.major, sd->disk.minor);
+> 
+> +     dfd = dev_open(nm, O_RDWR);
+> 
+> +     if (dfd < 0)
+> 
+> +           return;
+> 
+> +
+> 
+> +     st->update_tail = &update;
+> 
+> +     st->ss->remove_from_super(st, &dk, dfd);
+> 
+> +     st->ss->write_init_super(st);
+> 
+> +     queue_metadata_update(update);
+> 
+> +     st->update_tail = NULL;
+> 
+> +}
+> 
+> +
+> 
+>  static void manage_container(struct mdstat_ent *mdstat,
+> 
+>                        struct supertype *container)
 > 
 >  {
 > 
->       int mdfd;
+> @@ -334,6 +371,7 @@ static void manage_container(struct mdstat_ent *mdstat,
 > 
->       int rv;
+>                   if (!found) {
 > 
-> -     struct mdstat_ent *ent;
+>                         cd = *cdp;
 > 
-> +     struct mdstat_ent *ent, *mds, *mi;
+>                         *cdp = (*cdp)->next;
 > 
->       struct mddev_dev_s devlist;
+> +                       remove_disk_from_container(container, cd);
 > 
-> +     char path[PATH_MAX];
+>                         free(cd);
 > 
-> +     FILE *id_fd;
+>                   } else
+> 
+>                         cdp = &(*cdp)->next;
+> 
+> diff --git a/mdadm.h b/mdadm.h
+> 
+> index a1ec751..47ad852 100644
+> 
+> --- a/mdadm.h
+> 
+> +++ b/mdadm.h
+> 
+> @@ -660,7 +660,12 @@ extern struct superswitch {
+> 
+>        * when hot-adding a spare.
+> 
+>        */
+> 
+>       int (*add_to_super)(struct supertype *st, mdu_disk_info_t *dinfo,
+> 
+> -                      int fd, char *devname);
+> 
+> +                     int fd, char *devname);
+> 
+> +     /* update the metadata to delete a device,
+> 
+> +     * when hot-removing a spare.
+> 
+> +     */
+> 
+> +     int (*remove_from_super)(struct supertype *st, mdu_disk_info_t *dinfo,
+> 
+> +                       int fd);
 > 
 > 
 > 
-> -     if (!path) {
+>       /* Write metadata to one device when fixing problems or adding
 > 
-> -           fprintf(stderr, Name ": incremental removal without --path <path_id> lacks "
+>        * a new device.
 > 
-> +     if (!id_path) {
+> diff --git a/super-intel.c b/super-intel.c index 6762129..b1529d4 100644
 > 
-> +           fprintf(stderr, Name ": incremental removal without --path <id_path> lacks "
+> --- a/super-intel.c
 > 
->                   "the possibility to re-add new device in this port\n");
+> +++ b/super-intel.c
 > 
->             return 1;
+> @@ -233,6 +233,10 @@ struct intel_dev {
 > 
->       }
+>       int index;
 > 
-> @@ -965,15 +968,65 @@ int IncrementalRemove(char *devname, char *path, int verbose)
+>  };
 > 
->                   "of any array\n", devname);
 > 
->             return 1;
 > 
->       }
+> +enum action {
 > 
-> +     strncpy(path, FAILED_SLOTS, PATH_MAX);
+> +  DISK_REMOVE=0,
 > 
-> +     if (mkdir(path, O_CREAT) < 0 && errno != EEXIST) {
-
-It is incorrect to path O_CREAT to mkdir.
-It should be permission bits such as '0700' or S_IRWXU.
-
-Also, the strncpy is pointless, just use
-    mkdir(FAILED_SLOTS, 0700)
-
-
+> +  DISK_ADD
 > 
-> +           fprintf(stderr, Name ": can't create file to save path to old disk\n");
+> +};
+> 
+>  /* internal representation of IMSM metadata */  struct intel_super {
+> 
+>       union {
+> 
+> @@ -258,8 +262,9 @@ struct intel_super {
+> 
+>             int extent_cnt;
+> 
+>             struct extent *e; /* for determining freespace @ create */
+> 
+>             int raiddisk; /* slot to fill in autolayout */
+> 
+> +           enum action action;
+> 
+>       } *disks;
+> 
+> -     struct dl *add; /* list of disks to add while mdmon active */
+> 
+> +     struct dl *disk_mgmt_list; /* list of disks to add/remove while mdmon
+> 
+> +active */
+> 
+>       struct dl *missing; /* disks removed while we weren't looking */
+> 
+>       struct bbm_log *bbm_log;
+> 
+>       const char *hba; /* device path of the raid controller for this metadata */ @@ -282,7 +287,7 @@ struct extent {  enum imsm_update_type {
+> 
+>       update_activate_spare,
+> 
+>       update_create_array,
+> 
+> -     update_add_disk,
+> 
+> +     update_add_remove_disk,
+> 
+>  };
+> 
+> 
+> 
+>  struct imsm_update_activate_spare {
+> 
+> @@ -303,7 +308,7 @@ struct imsm_update_create_array {
+> 
+>       struct imsm_dev dev;
+> 
+>  };
+> 
+> 
+> 
+> -struct imsm_update_add_disk {
+> 
+> +struct imsm_update_add_remove_disk {
+> 
+>       enum imsm_update_type type;
+> 
+>  };
+> 
+> 
+> 
+> @@ -2303,6 +2308,7 @@ static void __free_imsm_disk(struct dl *d)
+> 
+>       free(d);
+> 
+> 
+> 
+>  }
+> 
+> +
+> 
+>  static void free_imsm_disks(struct intel_super *super)  {
+> 
+>       struct dl *d;
+> 
+> @@ -3278,6 +3284,7 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+> 
+>       dd->devname = devname ? strdup(devname) : NULL;
+> 
+>       dd->fd = fd;
+> 
+>       dd->e = NULL;
+> 
+> +     dd->action = DISK_ADD;
+> 
+>       rv = imsm_read_serial(fd, devname, dd->serial);
+> 
+>       if (rv) {
+> 
+>             fprintf(stderr,
+> 
+> @@ -3297,8 +3304,8 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+> 
+>             dd->disk.scsi_id = __cpu_to_le32(0);
+> 
+> 
+> 
+>       if (st->update_tail) {
+> 
+> -           dd->next = super->add;
+> 
+> -           super->add = dd;
+> 
+> +           dd->next = super->disk_mgmt_list;
+> 
+> +           super->disk_mgmt_list = dd;
+> 
+>       } else {
+> 
+>             dd->next = super->disks;
+> 
+>             super->disks = dd;
+> 
+> @@ -3307,6 +3314,44 @@ static int add_to_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+> 
+>       return 0;
+> 
+>  }
+> 
+> 
+> 
+> +
+> 
+> +static int remove_from_super_imsm(struct supertype *st, mdu_disk_info_t *dk,
+> 
+> +                         int fd)
+> 
+> +{
+> 
+> +     struct intel_super *super = st->sb;
+> 
+> +     struct dl *dd;
+> 
+> +
+> 
+> +     /* remove from super works only in mdmon - for communication
+> 
+> +     * manager - monitor. Check if communication memory buffer
+> 
+> +     * is prepared.
+> 
+> +     */
+> 
+> +     if (!st->update_tail) {
+> 
+> +           fprintf(stderr,
+> 
+> +                 Name ": %s shall be used in mdmon context only (line %d).\n", __func__, __LINE__);
 > 
 > +           return 1;
 > 
 > +     }
 > 
-> +     snprintf(path, PATH_MAX, FAILED_SLOTS "/%s", id_path);
+> +     dd = malloc(sizeof(*dd));
 > 
-> +
+> +     if (!dd) {
 > 
-> +     if ((id_fd = fopen(path, "w")) == NULL) {
+> +           fprintf(stderr,
 > 
-> +           fprintf(stderr, Name ": can't create file to save path to old disk\n");
+> +                 Name ": malloc failed %s:%d.\n", __func__, __LINE__);
 > 
 > +           return 1;
 > 
 > +     }
-
-Again, I don't think it is reasonably to failed the "-If" just because you
-cannot record the removal.
-
-
 > 
-> -     Manage_subdevs(ent->dev, mdfd, &devlist, verbose);
+> +     memset(dd, 0, sizeof(*dd));
+> 
+> +     dd->major = dk->major;
+> 
+> +     dd->minor = dk->minor;
+> 
+> +     dd->index = -1;
+> 
+> +     dd->fd = fd;
+> 
+> +     dd->disk.status = SPARE_DISK;
+> 
+> +     dd->action = DISK_REMOVE;
 > 
 > +
 > 
-> +     /* slightly different behavior for native and external */
+> +     if (st->update_tail) {
 > 
-> +     if (!is_external(ent->metadata_version)) {
+> +           dd->next = super->disk_mgmt_list;
 > 
-> +           /* just write array device */
+> +           super->disk_mgmt_list = dd;
 > 
-> +           if (fprintf(id_fd, "%s\n", ent->dev) < 0) {
+> +     }
 > 
-> +                 fprintf(stderr, Name ": Failed to write to <id_path> cookie\n");
+> +
 > 
-> +                 fclose(id_fd);
+> +     return 0;
 > 
-> +                 unlink(path);
+> +}
+> 
+> +
+> 
+>  static int store_imsm_mpb(int fd, struct imsm_super *mpb);
+> 
+> 
+> 
+>  static union {
+> 
+> @@ -3459,13 +3504,13 @@ static int create_array(struct supertype *st, int dev_idx)
+> 
+>       return 0;
+> 
+>  }
+> 
+> 
+> 
+> -static int _add_disk(struct supertype *st)
+> 
+> +static int mgmt_disk(struct supertype *st)
+> 
+>  {
+> 
+>       struct intel_super *super = st->sb;
+> 
+>       size_t len;
+> 
+> -     struct imsm_update_add_disk *u;
+> 
+> +     struct imsm_update_add_remove_disk *u;
+> 
+> 
+> 
+> -     if (!super->add)
+> 
+> +     if (!super->disk_mgmt_list)
+> 
+>             return 0;
+> 
+> 
+> 
+>       len = sizeof(*u);
+> 
+> @@ -3476,7 +3521,7 @@ static int _add_disk(struct supertype *st)
+> 
+>             return 1;
+> 
+>       }
+> 
+> 
+> 
+> -     u->type = update_add_disk;
+> 
+> +     u->type = update_add_remove_disk;
+> 
+>       append_metadata_update(st, u, len);
+> 
+> 
+> 
+>       return 0;
+> 
+> @@ -3498,10 +3543,10 @@ static int write_init_super_imsm(struct supertype *st)
+> 
+> 
+> 
+>             /* determine if we are creating a volume or adding a disk */
+> 
+>             if (current_vol < 0) {
+> 
+> -                 /* in the add disk case we are running in mdmon
+> 
+> +                 /* in the mgmt (add/remove) disk case we are running in mdmon
+> 
+>                    * context, so don't close fd's
+> 
+>                    */
+> 
+> -                 return _add_disk(st);
+> 
+> +                 return mgmt_disk(st);
+> 
+>             } else
+> 
+>                   rv = create_array(st, current_vol);
+> 
+> 
+> 
+> @@ -4594,10 +4639,9 @@ static int store_imsm_mpb(int fd, struct imsm_super *mpb)  static void imsm_sync_metadata(struct supertype *container)  {
+> 
+>       struct intel_super *super = container->sb;
+> 
+> -
+> 
+> +     dprintf("sync metadata: %d\n", super->updates_pending);
+> 
+>       if (!super->updates_pending)
+> 
+>             return;
+> 
+> -
+> 
+>       write_super_imsm(super, 0);
+> 
+> 
+> 
+>       super->updates_pending = 0;
+> 
+> @@ -4886,6 +4930,31 @@ static int disks_overlap(struct intel_super *super, int idx, struct imsm_update_
+> 
+>       return 0;
+> 
+>  }
+> 
+> 
+> 
+> +static int remove_disk_super(struct intel_super *super,  int major, int
+> 
+> +minor) {
+> 
+> +     struct dl *prev = NULL;
+> 
+> +     struct dl *dl;
+> 
+> +
+> 
+> +     prev = NULL;
+> 
+> +     for (dl = super->disks; dl; dl = dl->next) {
+> 
+> +           if ((dl->major == major) &&
+> 
+> +               (dl->minor == minor)) {
+> 
+> +                 /* remove */
+> 
+> +                 if (prev)
+> 
+> +                       prev->next = dl->next;
+> 
+> +                 else
+> 
+> +                       super->disks = dl->next;
+> 
+> +                 dl->next = NULL;
+> 
+> +                 __free_imsm_disk(dl);
+> 
+> +                 dprintf("%s: removed %x:%x\n",
+> 
+> +                       __func__, major, minor);
+> 
+> +                 break;
 > 
 > +           }
-
-Do we really want to record the array as "md0" or "md127" ??
-
-I would have thought we would record the uuid, probably together with the
-metadata type to ensure no ambiguity if some time passes before plugging a
-new device in.
-We may even want to let the metadata handler provide a string to save and
-later restore.
-
-Or on the other hand, do we need to record anything other than "this device
-was using in an md array" which tells is that it is appropriate for md to
-grab any device that is plugged in.
-Once a device has been taken for use by md, it should surely be put to the
-best use based on what the various policies allow, should it not?
-i.e. exactly the same slot in the same array is not necessary is it?
-(and if it is, then we would need to record the slot number, and I don't
-think you do).
-
-
 > 
-> +#ifndef FAILED_SLOTS
+> +           prev = dl;
 > 
-> +#define FAILED_SLOTS "/var/run/failed-slots"
+> +     }
 > 
-> +#endif /* FAILED_SLOTS */
+> +     return 0;
 > 
-
-This should be in /var/run/mdadm/ somewhere.
-e.g. /var/run/mdadm/failed-slots.
-
-NeilBrown
+> +}
+> 
+> +
+> 
+>  static void imsm_delete(struct intel_super *super, struct dl **dlp, int index);
+> 
+> 
+> 
+>  static void imsm_process_update(struct supertype *st, @@ -5133,31 +5202,47 @@ static void imsm_process_update(struct supertype *st,
+> 
+>             }
+> 
+>             break;
+> 
+>       }
+> 
+> -     case update_add_disk:
+> 
+> +     case update_add_remove_disk: {
+> 
+> 
+> 
+>             /* we may be able to repair some arrays if disks are
+> 
+>              * being added */
+> 
+> -           if (super->add) {
+> 
+> +
+> 
+> +           /* add/remove some spares to/from the metadata/contrainer */
+> 
+> +           int check_degraded = 0;
+> 
+> +           while (super->disk_mgmt_list) {
+> 
+> +                 struct dl *disk_cfg;
+> 
+> +
+> 
+> +                 disk_cfg = super->disk_mgmt_list;
+> 
+> +                 super->disk_mgmt_list = disk_cfg->next;
+> 
+> +                 disk_cfg->next = NULL;
+> 
+> +
+> 
+> +                 if (disk_cfg->action == DISK_ADD) {
+> 
+> +                       disk_cfg->next = super->disks;
+> 
+> +                       super->disks = disk_cfg;
+> 
+> +                       check_degraded = 1;
+> 
+> +                       dprintf("%s: added %x:%x\n",
+> 
+> +                             __func__, disk_cfg->major, disk_cfg->minor);
+> 
+> +                 } else if (disk_cfg->action == DISK_REMOVE) {
+> 
+> +                       dprintf("Disk remove action processed: %x.%x\n",
+> 
+> +                             disk_cfg->major, disk_cfg->minor);
+> 
+> +                       remove_disk_super(super,  disk_cfg->major, disk_cfg->minor);
+> 
+> +                       __free_imsm_disk(disk_cfg);
+> 
+> +                 }
+> 
+> +           }
+> 
+> +           if (check_degraded) {
+> 
+>                   struct active_array *a;
+> 
+> 
+> 
+>                   super->updates_pending++;
+> 
+>                   for (a = st->arrays; a; a = a->next)
+> 
+>                         a->check_degraded = 1;
+> 
+>             }
+> 
+> -           /* add some spares to the metadata */
+> 
+> -           while (super->add) {
+> 
+> -                 struct dl *al;
+> 
+> -
+> 
+> -                 al = super->add;
+> 
+> -                 super->add = al->next;
+> 
+> -                 al->next = super->disks;
+> 
+> -                 super->disks = al;
+> 
+> -                 dprintf("%s: added %x:%x\n",
+> 
+> -                       __func__, al->major, al->minor);
+> 
+> -           }
+> 
+> 
+> 
+>             break;
+> 
+>       }
+> 
+> +     default:
+> 
+> +           fprintf(stderr, "error: unsuported process update type: (type: %d)\n",
+> 
+> +                 type);
+> 
+> +     }
+> 
+>  }
+> 
+> 
+> 
+>  static void imsm_prepare_update(struct supertype *st, @@ -5358,6 +5443,7 @@ struct superswitch super_imsm = {
+> 
+>       .write_init_super = write_init_super_imsm,
+> 
+>       .validate_geometry = validate_geometry_imsm,
+> 
+>       .add_to_super     = add_to_super_imsm,
+> 
+> +     .remove_from_super      = remove_from_super_imsm,
+> 
+>       .detail_platform = detail_platform_imsm,  #endif
+> 
+>       .match_home = match_home_imsm,
+> 
+> --
+> 
+> 1.6.4.2
+> 
+> 
+> 
+> ---------------------------------------------------------------------
+> Intel Technology Poland sp. z o.o.
+> z siedziba w Gdansku
+> ul. Slowackiego 173
+> 80-298 Gdansk
+> 
+> Sad Rejonowy Gdansk Polnoc w Gdansku, 
+> VII Wydzial Gospodarczy Krajowego Rejestru Sadowego, 
+> numer KRS 101882
+> 
+> NIP 957-07-52-316
+> Kapital zakladowy 200.000 zl
+> 
+> This e-mail and any attachments may contain confidential material for
+> the sole use of the intended recipient(s). Any review or distribution
+> by others is strictly prohibited. If you are not the intended
+> recipient, please contact the sender and delete all copies.
 
