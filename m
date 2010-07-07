@@ -1,102 +1,133 @@
-From: =?UTF-8?B?VMOzdGggQ3NhYmE=?= <csaba.toth@i3rendszerhaz.hu>
-Subject: convert raid10 to raid0
-Date: Wed, 07 Jul 2010 21:29:49 +0200
-Message-ID: <4C34D5AD.5020305@i3rendszerhaz.hu>
+From: Sebastian Reichel <elektranox@gmail.com>
+Subject: power outage while raid5->raid6 was in progress
+Date: Wed, 7 Jul 2010 22:41:10 +0200
+Message-ID: <20100707204110.GB1207@earth.universe>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="J2SCkAp4GZ/dPZZf"
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hey List,
 
-i have a serious problem: have a file server with 4 disk (4x750GB),
-using them in a software RAID10 array. One of the HDDs have a bad sector
-(because some administration problems, i cannot replace them), and the
-motherboard sometimes drops the connection with two HDDs. Not with the
-same as the bad sector has, but with a resync i always managed the
-problem. But now 3 drive form the RAID10 array dropped.
+--J2SCkAp4GZ/dPZZf
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-In the past the sdc6 and the sdd6 partitions were the partitions i
-resynced the others, so i know exactly where to look for the proper
-datas. Can i use them as a RAID0 array somehow?
-In past mdadm warning letters i saw the config:
+Hi,
 
-Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
-[raid4] [multipath] [faulty]
-md5 : active raid10 sdc6[0] sdd6[3] sdb6[1](F) sda6[2](F)
-      1434619904 blocks super 1.1 512K chunks 2 near-copies [4/2] [U__U]
+I have some problems with my raid. I tried updating from 5 disks raid5 to 8=
+ disks
+raid6 as described on http://neil.brown.name/blog/20090817000931#2. The com=
+mand I
+used was: mdadm --grow /dev/md0 --level=3D6 --raid-disk=3D8
 
-md1 : active raid1 sdb5[0] sdc5[1]
-      14763635 blocks super 1.1 [2/2] [UU]
+While the rebuild was in progress my system hung, so I had to force power d=
+own it.
+After rebooting the system I reassembled the raid. You can see the resultin=
+g mess
+below. How can I recover from this state?
 
-md0 : active raid1 sdd5[0] sda5[2](F)
-      14659200 blocks [2/1] [U_]
-
+root@mars ~ # mdadm -Af /dev/md0
+mdadm: failed to RUN_ARRAY /dev/md0: Input/output error
+root@mars ~ # cat /proc/mdstat=20
+Personalities : [raid6] [raid5] [raid4]=20
+md0 : inactive sdk1[0] sdh1[8](S) sdg1[7](S) sdf1[6](S) sdi1[4] sdj1[3] sdl=
+1[2] sde1[1]
+      11721087488 blocks
+      =20
+md1 : active raid5 sdb1[0] sdd1[2] sdc1[1]
+      1953519872 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+     =20
 unused devices: <none>
-
-
-Now i have:
-
-minerva ~ # cat /proc/mdstat
-Personalities : [linear] [raid0] [raid1] [raid10] [raid6] [raid5]
-[raid4] [multipath] [faulty]
-md5 : inactive sdd6[3]
-      717310119 blocks super 1.1
-
-md1 : active raid1 sdc5[0] sdb5[1]
-      14763635 blocks super 1.1 [2/2] [UU]
-
-md0 : active raid1 sda5[1] sdd5[0]
-      14659200 blocks [2/2] [UU]
-
-unused devices: <none>
-minerva ~ # mdadm --detail /dev/md5
-/dev/md5:
-        Version : 1.1
-  Creation Time : Thu Nov 26 14:50:07 2009
-     Raid Level : raid10
-  Used Dev Size : 717309952 (684.08 GiB 734.53 GB)
-   Raid Devices : 4
-  Total Devices : 1
+root@mars ~ # mdadm -D /dev/md0
+/dev/md0:
+        Version : 0.90
+  Creation Time : Fri Apr  9 19:24:51 2010
+     Raid Level : raid6
+  Used Dev Size : 1465135936 (1397.26 GiB 1500.30 GB)
+   Raid Devices : 6
+  Total Devices : 8
+Preferred Minor : 0
     Persistence : Superblock is persistent
 
-    Update Time : Wed Jul  7 10:34:32 2010
-          State : active, FAILED, Not Started
- Active Devices : 1
-Working Devices : 1
+    Update Time : Wed Jul  7 00:21:00 2010
+          State : active, degraded, Not Started
+ Active Devices : 5
+Working Devices : 8
  Failed Devices : 0
-  Spare Devices : 0
+  Spare Devices : 3
 
-         Layout : near=2
-     Chunk Size : 512K
+         Layout : left-symmetric-6
+     Chunk Size : 64K
 
-           Name : minerva:5  (local to host minerva)
-           UUID : a73f5902:accc2488:aecfdc14:05a6e2f4
-         Events : 3981420
+           UUID : a1eb26ff:0d33b804:1c7aa044:e01dc78c (local to host mars)
+         Events : 0.991518
 
     Number   Major   Minor   RaidDevice State
-       0       0        0        0      removed
-       1       0        0        1      removed
-       2       0        0        2      removed
-       3       8       54        3      active sync   /dev/sdd6
+       0       8      161        0      active sync   /dev/sdk1
+       1       8       65        1      active sync   /dev/sde1
+       2       8      177        2      active sync   /dev/sdl1
+       3       8      145        3      active sync   /dev/sdj1
+       4       8      129        4      active sync   /dev/sdi1
+       5       0        0        5      removed
 
+       6       8       81        -      spare   /dev/sdf1
+       7       8       97        -      spare   /dev/sdg1
+       8       8      113        -      spare   /dev/sdh1
+root@mars ~ # dmesg | tail -n 30
+[ 7896.306100] md: bind<sde1>
+[ 7896.306240] md: bind<sdl1>
+[ 7896.306368] md: bind<sdj1>
+[ 7896.306495] md: bind<sdi1>
+[ 7896.306666] md: bind<sdf1>
+[ 7896.306795] md: bind<sdg1>
+[ 7896.306921] md: bind<sdh1>
+[ 7896.307048] md: bind<sdk1>
+[ 7896.308745] raid5: md0 is not clean -- starting background reconstruction
+[ 7896.308763] raid5: device sdk1 operational as raid disk 0
+[ 7896.308765] raid5: device sdi1 operational as raid disk 4
+[ 7896.308768] raid5: device sdj1 operational as raid disk 3
+[ 7896.308770] raid5: device sdl1 operational as raid disk 2
+[ 7896.308772] raid5: device sde1 operational as raid disk 1
+[ 7896.309420] raid5: allocated 6386kB for md0
+[ 7896.309465] 0: w=3D1 pa=3D0 pr=3D6 m=3D2 a=3D18 r=3D6 op1=3D0 op2=3D0
+[ 7896.309468] 4: w=3D2 pa=3D0 pr=3D6 m=3D2 a=3D18 r=3D6 op1=3D0 op2=3D0
+[ 7896.309471] 3: w=3D3 pa=3D0 pr=3D6 m=3D2 a=3D18 r=3D6 op1=3D0 op2=3D0
+[ 7896.309473] 2: w=3D4 pa=3D0 pr=3D6 m=3D2 a=3D18 r=3D6 op1=3D0 op2=3D0
+[ 7896.309476] 1: w=3D5 pa=3D0 pr=3D6 m=3D2 a=3D18 r=3D6 op1=3D0 op2=3D0
+[ 7896.309478] raid5: cannot start dirty degraded array for md0
+[ 7896.309503] RAID5 conf printout:
+[ 7896.309504]  --- rd:6 wd:5
+[ 7896.309506]  disk 0, o:1, dev:sdk1
+[ 7896.309508]  disk 1, o:1, dev:sde1
+[ 7896.309510]  disk 2, o:1, dev:sdl1
+[ 7896.309512]  disk 3, o:1, dev:sdj1
+[ 7896.309514]  disk 4, o:1, dev:sdi1
+[ 7896.309956] raid5: failed to run raid set md0
+[ 7896.309970] md: pers->run() failed ...
+root@mars ~ # uname -a
+Linux mars 2.6.34-1-amd64 #1 SMP Sun Jun 6 22:29:25 UTC 2010 x86_64 GNU/Lin=
+ux
+root@mars ~ # mdadm --version
+mdadm - v3.1.2 - 10th March 2010
 
+-- Sebastian
 
+--J2SCkAp4GZ/dPZZf
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
-If i try to add sdc6 to the md5 array it fails, because it tries to add
-as a fifth device:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-minerva ~ # mdadm /dev/md5 -a /dev/sdc6
-mdadm: add new device failed for /dev/sdc6 as 4: Invalid argument
+iEYEARECAAYFAkw05mYACgkQH0JwilpTmKgJswCcD/ahHX2gBENEo+mh736YWm+/
+CUoAn2CmoukXmSSN6Zmhb4y9JHAins86
+=HwtY
+-----END PGP SIGNATURE-----
 
-
-
-Please help, i don't want to destroy the datas, and i have never job
-with RAID10 under linux.
-
-thanks in advance,
-regards,
-Csaba
+--J2SCkAp4GZ/dPZZf--
