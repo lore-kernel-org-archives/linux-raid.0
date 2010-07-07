@@ -1,353 +1,116 @@
-From: Sebastian Reichel <elektranox@gmail.com>
-Subject: Re: power outage while raid5->raid6 was in progress
-Date: Thu, 8 Jul 2010 01:13:16 +0200
-Message-ID: <20100707231316.GA6496@earth.universe>
-References: <20100707204110.GB1207@earth.universe>
- <20100708084450.7abb19d8@notabene.brown>
+From: =?UTF-8?B?VMOzdGggQ3NhYmE=?= <csaba.toth@i3rendszerhaz.hu>
+Subject: Re: convert raid10 to raid0
+Date: Thu, 08 Jul 2010 01:34:03 +0200
+Message-ID: <4C350EEB.1060302@i3rendszerhaz.hu>
+References: <4C34D5AD.5020305@i3rendszerhaz.hu> <20100708085034.2bc8272e@notabene.brown>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="EVF5PPMfhYS0aIcm"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100708084450.7abb19d8@notabene.brown>
+In-Reply-To: <20100708085034.2bc8272e@notabene.brown>
 Sender: linux-raid-owner@vger.kernel.org
 To: Neil Brown <neilb@suse.de>
 Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+Hi,
 
---EVF5PPMfhYS0aIcm
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, Jul 08, 2010 at 08:44:50AM +1000, Neil Brown wrote:
-> On Wed, 7 Jul 2010 22:41:10 +0200
-> Sebastian Reichel <elektranox@gmail.com> wrote:
+2010.07.08. 0:50 keltez=C3=A9ssel, Neil Brown =C3=ADrta:
+> On Wed, 07 Jul 2010 21:29:49 +0200
+> T=C3=B3th Csaba <csaba.toth@i3rendszerhaz.hu> wrote:
 >=20
-> > Hi,
-> >=20
-> > I have some problems with my raid. I tried updating from 5 disks raid5 =
-to 8 disks
-> > raid6 as described on http://neil.brown.name/blog/20090817000931#2. The=
- command I
-> > used was: mdadm --grow /dev/md0 --level=3D6 --raid-disk=3D8
-> >=20
-> > While the rebuild was in progress my system hung, so I had to force pow=
-er down it.
-> > After rebooting the system I reassembled the raid. You can see the resu=
-lting mess
-> > below. How can I recover from this state?
+>> Hey List,
+>>
+>> i have a serious problem: have a file server with 4 disk (4x750GB),
+>> using them in a software RAID10 array. One of the HDDs have a bad se=
+ctor
+>> (because some administration problems, i cannot replace them), and t=
+he
+>> motherboard sometimes drops the connection with two HDDs. Not with t=
+he
+>> same as the bad sector has, but with a resync i always managed the
+>> problem. But now 3 drive form the RAID10 array dropped.
+>>
+>> In the past the sdc6 and the sdd6 partitions were the partitions i
+>> resynced the others, so i know exactly where to look for the proper
+>> datas. Can i use them as a RAID0 array somehow?
 >=20
-> Please report the output of
+> It should be sufficient to:
+>   mdadm -S /dev/md5
+>   mdadm -C /dev/md5 --level raid0 --raid-devices 2 --chunk 512 \
+>       --metadata=3D1.1 /dev/sdc6 /dev/sdd6
 >=20
->   mdadm -E /dev/sd[efghijkl]1
+> to get your data available.
+> There is a possible small complication though.  If you use a differen=
+t
+> version of mdadm to the one you used to create the array at first, it=
+ might
+> choose a different 'data offset'.
+> To be sure this doesn't happen, use
 >=20
-> then I'll see what can be done.
+>  mdadm -E /dev/sdc6
+>=20
+> and take note of the "Data Offset".  It would probably be a good idea=
+ to keep
+> a copy of "mdadm -E" of all of the devices, just to be on the same si=
+de.
+>=20
+> Then after you create the raid0, use the same command
+>    mdadm -E /dev/sdc6
+> to check the Data Offset again and make sure it is the same.
+> I suspect it will be, so everything will be fine.
+> However if it isn't don't try to access the array.   Post the details=
+ and I'll
+> figure out what to do next.
+>=20
 
-thank you for having a look at it :)
+i have made a small test case:
 
-root@mars ~ # mdadm -E /dev/sd[efghijkl]1
-/dev/sde1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : a1eb26ff:0d33b804:1c7aa044:e01dc78c (local to host mars)
-  Creation Time : Fri Apr  9 19:24:51 2010
-     Raid Level : raid6
-  Used Dev Size : 1465135936 (1397.26 GiB 1500.30 GB)
-     Array Size : 5860543744 (5589.05 GiB 6001.20 GB)
-   Raid Devices : 6
-  Total Devices : 8
-Preferred Minor : 0
+DTADIR=3D/mnt/data
+MDF=3D/dev/md8
 
-    Update Time : Wed Jul  7 00:21:00 2010
-          State : active
- Active Devices : 5
-Working Devices : 8
- Failed Devices : 1
-  Spare Devices : 3
-       Checksum : 4439feb9 - correct
-         Events : 991519
+dd bs=3D512 count=3D180000 if=3D/dev/zero of=3D${DTADIR}/a
+dd bs=3D512 count=3D180000 if=3D/dev/zero of=3D${DTADIR}/b
+dd bs=3D512 count=3D180000 if=3D/dev/zero of=3D${DTADIR}/c
+dd bs=3D512 count=3D180000 if=3D/dev/zero of=3D${DTADIR}/d
 
-         Layout : left-symmetric-6
-     Chunk Size : 64K
+losetup /dev/loop0 ${DTADIR}/a
+losetup /dev/loop1 ${DTADIR}/b
+losetup /dev/loop2 ${DTADIR}/c
+losetup /dev/loop3 ${DTADIR}/d
 
-      Number   Major   Minor   RaidDevice State
-this     1       8       65        1      active sync   /dev/sde1
+mdadm --create ${MDF} --level=3D10 --metadata=3D1.1 \
+ --raid-devices=3D4 /dev/loop0 /dev/loop1 /dev/loop2 /dev/loop3
+mkfs.ext4 ${MDF}
 
-   0     0       8      161        0      active sync   /dev/sdk1
-   1     1       8       65        1      active sync   /dev/sde1
-   2     2       8      177        2      active sync   /dev/sdl1
-   3     3       8      145        3      active sync   /dev/sdj1
-   4     4       8      129        4      active sync   /dev/sdi1
-   5     5       0        0        5      faulty removed
-   6     6       8       81        6      spare   /dev/sdf1
-   7     7       8       97        7      spare   /dev/sdg1
-   8     8       8      113        8      spare   /dev/sdh1
-/dev/sdf1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : a1eb26ff:0d33b804:1c7aa044:e01dc78c (local to host mars)
-  Creation Time : Fri Apr  9 19:24:51 2010
-     Raid Level : raid6
-  Used Dev Size : 1465135936 (1397.26 GiB 1500.30 GB)
-     Array Size : 5860543744 (5589.05 GiB 6001.20 GB)
-   Raid Devices : 6
-  Total Devices : 8
-Preferred Minor : 0
+mkdir ${DTADIR}/tmp
+mount ${MDF} ${DTADIR}/tmp
+cp -a /etc ${DTADIR}/tmp
+umount ${MDF}
 
-    Update Time : Wed Jul  7 00:21:00 2010
-          State : active
- Active Devices : 5
-Working Devices : 8
- Failed Devices : 1
-  Spare Devices : 3
-       Checksum : 4439fecd - correct
-         Events : 991519
+mdadm -S ${MDF}
+mdadm -C /dev/md5 --level raid0 --raid-devices 2 --chunk 512 \
+--metadata=3D1.1 /dev/loop0 /dev/loop3
 
-         Layout : left-symmetric-6
-     Chunk Size : 64K
+mount ${MDF} ${DTADIR}/tmp
+ls -al ${DTADIR}/tmp
 
-      Number   Major   Minor   RaidDevice State
-this     6       8       81        6      spare   /dev/sdf1
+umount ${MDF}
+mdadm -S ${MDF}
+losetup --detach /dev/loop0 /dev/loop1 /dev/loop2 /dev/loop3
 
-   0     0       8      161        0      active sync   /dev/sdk1
-   1     1       8       65        1      active sync   /dev/sde1
-   2     2       8      177        2      active sync   /dev/sdl1
-   3     3       8      145        3      active sync   /dev/sdj1
-   4     4       8      129        4      active sync   /dev/sdi1
-   5     5       0        0        5      faulty removed
-   6     6       8       81        6      spare   /dev/sdf1
-   7     7       8       97        7      spare   /dev/sdg1
-   8     8       8      113        8      spare   /dev/sdh1
-/dev/sdg1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : a1eb26ff:0d33b804:1c7aa044:e01dc78c (local to host mars)
-  Creation Time : Fri Apr  9 19:24:51 2010
-     Raid Level : raid6
-  Used Dev Size : 1465135936 (1397.26 GiB 1500.30 GB)
-     Array Size : 5860543744 (5589.05 GiB 6001.20 GB)
-   Raid Devices : 6
-  Total Devices : 8
-Preferred Minor : 0
 
-    Update Time : Wed Jul  7 00:21:00 2010
-          State : active
- Active Devices : 5
-Working Devices : 8
- Failed Devices : 1
-  Spare Devices : 3
-       Checksum : 4439fedf - correct
-         Events : 991519
 
-         Layout : left-symmetric-6
-     Chunk Size : 64K
+i used loop0 and loop3 to construct the raid0 array, because they were
+at the same (0 and 3) position than the devices i had in my real raid10
+array. so this should work, but not :(
+but after i made a raid0 array, and than recreate the raid10 array it
+worked well. can't i create a raid10 array with two drives?
 
-      Number   Major   Minor   RaidDevice State
-this     7       8       97        7      spare   /dev/sdg1
-
-   0     0       8      161        0      active sync   /dev/sdk1
-   1     1       8       65        1      active sync   /dev/sde1
-   2     2       8      177        2      active sync   /dev/sdl1
-   3     3       8      145        3      active sync   /dev/sdj1
-   4     4       8      129        4      active sync   /dev/sdi1
-   5     5       0        0        5      faulty removed
-   6     6       8       81        6      spare   /dev/sdf1
-   7     7       8       97        7      spare   /dev/sdg1
-   8     8       8      113        8      spare   /dev/sdh1
-/dev/sdh1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : a1eb26ff:0d33b804:1c7aa044:e01dc78c (local to host mars)
-  Creation Time : Fri Apr  9 19:24:51 2010
-     Raid Level : raid6
-  Used Dev Size : 1465135936 (1397.26 GiB 1500.30 GB)
-     Array Size : 5860543744 (5589.05 GiB 6001.20 GB)
-   Raid Devices : 6
-  Total Devices : 8
-Preferred Minor : 0
-
-    Update Time : Wed Jul  7 00:21:00 2010
-          State : active
- Active Devices : 5
-Working Devices : 8
- Failed Devices : 1
-  Spare Devices : 3
-       Checksum : 4439fef1 - correct
-         Events : 991519
-
-         Layout : left-symmetric-6
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     8       8      113        8      spare   /dev/sdh1
-
-   0     0       8      161        0      active sync   /dev/sdk1
-   1     1       8       65        1      active sync   /dev/sde1
-   2     2       8      177        2      active sync   /dev/sdl1
-   3     3       8      145        3      active sync   /dev/sdj1
-   4     4       8      129        4      active sync   /dev/sdi1
-   5     5       0        0        5      faulty removed
-   6     6       8       81        6      spare   /dev/sdf1
-   7     7       8       97        7      spare   /dev/sdg1
-   8     8       8      113        8      spare   /dev/sdh1
-/dev/sdi1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : a1eb26ff:0d33b804:1c7aa044:e01dc78c (local to host mars)
-  Creation Time : Fri Apr  9 19:24:51 2010
-     Raid Level : raid6
-  Used Dev Size : 1465135936 (1397.26 GiB 1500.30 GB)
-     Array Size : 5860543744 (5589.05 GiB 6001.20 GB)
-   Raid Devices : 6
-  Total Devices : 8
-Preferred Minor : 0
-
-    Update Time : Wed Jul  7 00:21:00 2010
-          State : active
- Active Devices : 5
-Working Devices : 8
- Failed Devices : 1
-  Spare Devices : 3
-       Checksum : 4439feff - correct
-         Events : 991519
-
-         Layout : left-symmetric-6
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     4       8      129        4      active sync   /dev/sdi1
-
-   0     0       8      161        0      active sync   /dev/sdk1
-   1     1       8       65        1      active sync   /dev/sde1
-   2     2       8      177        2      active sync   /dev/sdl1
-   3     3       8      145        3      active sync   /dev/sdj1
-   4     4       8      129        4      active sync   /dev/sdi1
-   5     5       0        0        5      faulty removed
-   6     6       8       81        6      spare   /dev/sdf1
-   7     7       8       97        7      spare   /dev/sdg1
-   8     8       8      113        8      spare   /dev/sdh1
-/dev/sdj1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : a1eb26ff:0d33b804:1c7aa044:e01dc78c (local to host mars)
-  Creation Time : Fri Apr  9 19:24:51 2010
-     Raid Level : raid6
-  Used Dev Size : 1465135936 (1397.26 GiB 1500.30 GB)
-     Array Size : 5860543744 (5589.05 GiB 6001.20 GB)
-   Raid Devices : 6
-  Total Devices : 8
-Preferred Minor : 0
-
-    Update Time : Wed Jul  7 00:21:00 2010
-          State : active
- Active Devices : 5
-Working Devices : 8
- Failed Devices : 1
-  Spare Devices : 3
-       Checksum : 4439ff0d - correct
-         Events : 991519
-
-         Layout : left-symmetric-6
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     3       8      145        3      active sync   /dev/sdj1
-
-   0     0       8      161        0      active sync   /dev/sdk1
-   1     1       8       65        1      active sync   /dev/sde1
-   2     2       8      177        2      active sync   /dev/sdl1
-   3     3       8      145        3      active sync   /dev/sdj1
-   4     4       8      129        4      active sync   /dev/sdi1
-   5     5       0        0        5      faulty removed
-   6     6       8       81        6      spare   /dev/sdf1
-   7     7       8       97        7      spare   /dev/sdg1
-   8     8       8      113        8      spare   /dev/sdh1
-/dev/sdk1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : a1eb26ff:0d33b804:1c7aa044:e01dc78c (local to host mars)
-  Creation Time : Fri Apr  9 19:24:51 2010
-     Raid Level : raid6
-  Used Dev Size : 1465135936 (1397.26 GiB 1500.30 GB)
-     Array Size : 5860543744 (5589.05 GiB 6001.20 GB)
-   Raid Devices : 6
-  Total Devices : 8
-Preferred Minor : 0
-
-    Update Time : Tue Jul  6 23:37:42 2010
-          State : clean
- Active Devices : 5
-Working Devices : 8
- Failed Devices : 1
-  Spare Devices : 3
-       Checksum : 4449160f - correct
-         Events : 991518
-
-         Layout : left-symmetric-6
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     0       8      161        0      active sync   /dev/sdk1
-
-   0     0       8      161        0      active sync   /dev/sdk1
-   1     1       8       65        1      active sync   /dev/sde1
-   2     2       8      177        2      active sync   /dev/sdl1
-   3     3       8      145        3      active sync   /dev/sdj1
-   4     4       8      129        4      active sync   /dev/sdi1
-   5     5       0        0        5      faulty removed
-   6     6       8       81        6      spare   /dev/sdf1
-   7     7       8       97        7      spare   /dev/sdg1
-   8     8       8      113        8      spare   /dev/sdh1
-/dev/sdl1:
-          Magic : a92b4efc
-        Version : 0.90.00
-           UUID : a1eb26ff:0d33b804:1c7aa044:e01dc78c (local to host mars)
-  Creation Time : Fri Apr  9 19:24:51 2010
-     Raid Level : raid6
-  Used Dev Size : 1465135936 (1397.26 GiB 1500.30 GB)
-     Array Size : 5860543744 (5589.05 GiB 6001.20 GB)
-   Raid Devices : 6
-  Total Devices : 8
-Preferred Minor : 0
-
-    Update Time : Wed Jul  7 00:21:00 2010
-          State : active
- Active Devices : 5
-Working Devices : 8
- Failed Devices : 1
-  Spare Devices : 3
-       Checksum : 4439ff2b - correct
-         Events : 991519
-
-         Layout : left-symmetric-6
-     Chunk Size : 64K
-
-      Number   Major   Minor   RaidDevice State
-this     2       8      177        2      active sync   /dev/sdl1
-
-   0     0       8      161        0      active sync   /dev/sdk1
-   1     1       8       65        1      active sync   /dev/sde1
-   2     2       8      177        2      active sync   /dev/sdl1
-   3     3       8      145        3      active sync   /dev/sdj1
-   4     4       8      129        4      active sync   /dev/sdi1
-   5     5       0        0        5      faulty removed
-   6     6       8       81        6      spare   /dev/sdf1
-   7     7       8       97        7      spare   /dev/sdg1
-   8     8       8      113        8      spare   /dev/sdh1
-
---EVF5PPMfhYS0aIcm
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEUEARECAAYFAkw1CgwACgkQH0JwilpTmKh5nwCfcDKXRTBpOp/to36+A9VSBe2b
-o5wAl3apO3ayoSfbduqPUUgHvnbvI6g=
-=nf9z
------END PGP SIGNATURE-----
-
---EVF5PPMfhYS0aIcm--
+regards,
+Csaba
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
