@@ -1,27 +1,152 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: mapping ataXX.YY to a /dev/sdX
-Date: Thu, 8 Jul 2010 13:05:06 +0200 (CEST)
-Message-ID: <alpine.DEB.1.10.1007081259560.23489@uplift.swm.pp.se>
-References: <alpine.DEB.1.10.1007070810540.23489@uplift.swm.pp.se> <87wrt7ijp3.fsf@rimspace.net> <alpine.DEB.1.10.1007071749320.23489@uplift.swm.pp.se> <4C35A2FC.5080402@buttersideup.com> <alpine.DEB.1.10.1007081214590.23489@uplift.swm.pp.se>
- <20100708104422.GA32564@cthulhu.home.robinhill.me.uk>
+From: "Hawrylewicz Czarnowski, Przemyslaw"
+	<przemyslaw.hawrylewicz.czarnowski@intel.com>
+Subject: RE: [PATCH 26/33] added --path <path_id> to give the information on
+ the 'path-id' of removed device
+Date: Thu, 8 Jul 2010 16:58:16 +0100
+Message-ID: <66C59AD0932712458090B447266D638CD8D84FBE@irsmsx504.ger.corp.intel.com>
+References: <A9DE54D0CD747C4CB06DCE5B6FA2246FDA893C4F@irsmsx504.ger.corp.intel.com>
+ <20100706171502.0737635a@notabene.brown>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20100708104422.GA32564@cthulhu.home.robinhill.me.uk>
-Sender: linux-ide-owner@vger.kernel.org
-To: Robin Hill <robin@robinhill.me.uk>
-Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100706171502.0737635a@notabene.brown>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>, "Czarnowska, Anna" <anna.czarnowska@intel.com>
+Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "Labun, Marcin" <Marcin.Labun@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "dledford@redhat.com" <dledford@redhat.com>
 List-Id: linux-raid.ids
 
-On Thu, 8 Jul 2010, Robin Hill wrote:
+> -----Original Message-----
+> From: linux-raid-owner@vger.kernel.org [mailto:linux-raid-
+> owner@vger.kernel.org] On Behalf Of Neil Brown
+> Sent: Tuesday, July 06, 2010 9:15 AM
+> To: Czarnowska, Anna
+> Cc: linux-raid@vger.kernel.org; Hawrylewicz Czarnowski, Przemyslaw;
+> Labun, Marcin; Neubauer, Wojciech; Williams, Dan J; Ciechanowski, Ed;
+> dledford@redhat.com
+> Subject: Re: [PATCH 26/33] added --path <path_id> to give the
+> information on the 'path-id' of removed device
+> 
+> On Mon, 5 Jul 2010 10:40:13 +0100
+> "Czarnowska, Anna" <anna.czarnowska@intel.com> wrote:
+> 
+> > From: Przemyslaw Czarnowski
+> <przemyslaw.hawrylewicz.czarnowski@intel.com>
+> >
+> >
+> >
+> > <path-id> allows to identify the port to which given device is
+> plugged in. In case of hot-removal, udev can pass this information for
+> future use (eg. write this name as 'cookie' allowing to detect the fact
+> of reinserting device to the same port).
+> >
+> > --path <path-id> parameter has been added to device removal handle
+> (and char *path has been added to IncrementalRemove() to pass this
+> value) in order to pass path-id to this handler.
+> >
+> >
+> >
+> > Signed-off-by: Przemyslaw Czarnowski
+> <przemyslaw.hawrylewicz.czarnowski@intel.com<mailto:przemyslaw.hawrylew
+> icz.czarnowski@intel.com>>
+> >
+> > ---
+> >
+> >  Incremental.c |    8 +++++++-
+> >
+> >  ReadMe.c      |    2 ++
+> >
+> >  mdadm.c       |   15 ++++++++++++---
+> >
+> >  mdadm.h       |    6 +++++-
+> >
+> >  4 files changed, 26 insertions(+), 5 deletions(-)
+> >
+> >
+> >
+> > diff --git a/Incremental.c b/Incremental.c index 4f52e3b..20e3445
+> 100644
+> >
+> > --- a/Incremental.c
+> >
+> > +++ b/Incremental.c
+> >
+> > @@ -941,13 +941,19 @@ int Incremental_container(struct supertype *st,
+> char *devname, int verbose,
+> >
+> >   * Note: the device name must be a kernel name like "sda", so
+> >
+> >   * that we can find it in /proc/mdstat
+> >
+> >   */
+> >
+> > -int IncrementalRemove(char *devname, int verbose)
+> >
+> > +int IncrementalRemove(char *devname, char *path, int verbose)
+> >
+> >  {
+> >
+> >       int mdfd;
+> >
+> >       int rv;
+> >
+> >       struct mdstat_ent *ent;
+> >
+> >       struct mddev_dev_s devlist;
+> >
+> >
+> >
+> > +     if (!path) {
+> >
+> > +           fprintf(stderr, Name ": incremental removal without --
+> path <path_id> lacks "
+> >
+> > +                 "the possibility to re-add new device in this
+> port\n");
+> >
+> > +           return 1;
+> >
+> > +     }
+> >
+> > +
+> 
+> 
+> It may be appropriate to give a warning here (though I doubt it).  It
+> is
+> certainly no appropriate to fail IncrementalRemove just because no path
+> was
+> specified.
+Ok, seems reasonable, thanks
+> 
+> 
+> > +++ b/mdadm.h
+> >
+> > @@ -275,6 +275,9 @@ enum special_options {
+> >
+> >       AutoDetect,
+> >
+> >       Waitclean,
+> >
+> >       DetailPlatform,
+> >
+> > +     HotPlug,
+> >
+> > +     HotUnplug,
+> >
+> > +     IncrementalPath
+> >
+> >  };
+> 
+> Please only add options here as you actually use them.
+> Hotplug and HotUnplug are not used, so should not be here.
+Good catch. I'll remove it. It's a part of an old code...
 
-> It would look like ata14 is the equivalent of scsi13 then - lsscsi or 
-> "cat /proc/scsi" should show you the drives connected on controller 13 
-> (or look in /sys/class/scsi_disk/13*/device/block).
-
-Oki, yes, that's true, but the mapping from scsi13 to sdj isn't really my 
-problem, I can find that out in quite a few ways. It's the mapping of 
-ata14.00 to scsi13 that I can say is likely (from dmesg), but not certain.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+> 
+> NeilBrown
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
