@@ -1,81 +1,37 @@
-From: Marek <mlf.conv@gmail.com>
-Subject: Re: Linux/MacOSX RAID5 dual boot
-Date: Fri, 9 Jul 2010 13:57:43 +0200
-Message-ID: <76C57574-FBB3-4035-BA7B-ADA3342387A4@gmail.com>
-Mime-Version: 1.0 (iPhone Mail 7E18)
-Content-Type: text/plain;
-	charset=us-ascii;
-	format=flowed;
-	delsp=yes
+From: Brad Campbell <brad@wasp.net.au>
+Subject: Re: mapping ataXX.YY to a /dev/sdX
+Date: Sat, 10 Jul 2010 12:42:26 +0800
+Message-ID: <4C37FA32.8020008@wasp.net.au>
+References: <alpine.DEB.1.10.1007070810540.23489@uplift.swm.pp.se> <87wrt7ijp3.fsf@rimspace.net> <alpine.DEB.1.10.1007071749320.23489@uplift.swm.pp.se> <4C35A2FC.5080402@buttersideup.com> <alpine.DEB.1.10.1007081214590.23489@uplift.swm.pp.se> <20100708104422.GA32564@cthulhu.home.robinhill.me.uk> <alpine.DEB.1.10.1007081259560.23489@uplift.swm.pp.se> <20100708232631.014a5ade@atak.bl.pg.gda.pl> <alpine.DEB.1.10.1007082348190.23489@uplift.swm.pp.se>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.1.10.1007082348190.23489@uplift.swm.pp.se>
+Sender: linux-ide-owner@vger.kernel.org
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-raid.ids
 
-On 9.7.2010, at 13:29, Neil Brown <neilb@suse.de> wrote:
+On 09/07/10 05:53, Mikael Abrahamsson wrote:
 
-> On Fri, 9 Jul 2010 13:15:00 +0200
-> Marek <mlf.conv@gmail.com> wrote:
->
->> Hi Neil,
->>
->> thanks for your answer. Do I understand it correctly that porting the
->> md driver wouldn't be an option either?
->
-> No, not really an option.
-> Darwin is sufficiently different from Linux that it would really  
-> mean writing
-> a RAID5 driver for Darwin using md as a guide.  You could probably  
-> borrow
-> some code (if the license allowed it which I doubt) but a very large  
-> amount
-> would need to be written from scratch.
+> I never really had a huge problem figuring out with high probability
+> which drive it was, but I wanted to know if there was a 100% certain way
+> of doing it. Seems there is not, am I the only one who is looking for
+> this functionality? I would think this is a fairly common problem?
 
-thanks for the information. It seems that a software RAID solution 
-(other than RAID1 or RAID0) for OSX doesn't exist. I was only able to  
-find SoftRAID which has some interesting features that are probably  
-outside the scope of mdadm, but they don't even support RAID5 yet.
+Certainty would be nice, but in practice here I've always found that ataX = sdX+1 and I've relied on 
+that mapping to always be constant. I've not yet found it otherwise, but I guess it's possible. I'd 
+assume the libata guys should be able to provide a definite comment on that.
 
-Marek
->
->
->>
->> Marek
->>
->> On 9.7.2010, at 12:22, Neil Brown <neilb@suse.de> wrote:
->>
->>> On Fri, 9 Jul 2010 12:07:56 +0200
->>> Marek <mlf.conv@gmail.com> wrote:
->>>
->>>> Hi,
->>>>
->>>> it seems that my email has hit top 5 ranking on google when  
->>>> searching
->>>> for "mdadm macosx", but it seems that due to some heavy  
->>>> discussion on
->>>> this mailing list it probably went unnoticed.
->>>> I would like to ask if someone would be able to elaborate whether
->>>> there is a possibility that mdadm would run on Darwin and if so,
->>>> whether a port would require a substantial rewrite.
->>>
->>> mdadm would not run on Darwin.  It only works with the 'md' driver
->>> which is
->>> only in Linux.
->>>
->>> If you want both Linux and Darwin to be able to access the same
->>> software RAID
->>> array, you would need to find a format that both understand.
->>> Probably the easiest way would be do discover how MAC OSX formats
->>> RAID array
->>> and write support for that in mdadm.  Far from trivial, but probably
->>> possible.
->>>
->>> A quick google suggest that RAID5 is not supported in OSX, so that
->>> would not
->>> be an option.
->>>
->>> NeilBrown
->
+I've got no lights on my arrays, so it's even harder to identify which drive is which when you need 
+to swap one out live. I've resorted to keeping a log of which serial number is in which physical 
+slot, so I can look up the serial number of the failing drive with hdparm and I know I've got the 
+right one. Again, it still hinges on the ata-sd mapping being constant. (it also relies on me 
+updating the log when I swap a disk)
 
+Brad
+-- 
+Dolphins are so intelligent that within a few weeks they can
+train Americans to stand at the edge of the pool and throw them
+fish.
