@@ -1,58 +1,44 @@
-From: Roman Mamedov <roman@rm.pp.ru>
-Subject: Re: RAID5 crashed for unknown reason on old 2.6.16 kernel
-Date: Thu, 15 Jul 2010 19:09:24 +0600
-Message-ID: <20100715190924.0f62890a@natsu>
-References: <AANLkTimTAvYM7p4sk8S5He4WOWT3FW6IRPQ0AfpFnIVR@mail.gmail.com>
-	<AANLkTik3OIS0AKHZaBHEuqi9NNFKYQ7sWh_iZecirJgS@mail.gmail.com>
-	<20100629165031.6c96a635@notabene.brown>
-	<AANLkTilC9tPAVS2UWcJDykDyvkCDZbZjFD-R-h6OxRxi@mail.gmail.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: Need help with recovery
+Date: Thu, 15 Jul 2010 23:40:58 +1000
+Message-ID: <20100715234058.0f580546@nbeee.brown>
+References: <4C3DCB95.9010104@computer.org>
+	<20100715073729.06c4f11a@notabene>
+	<BCD693DB5C9A3349A6F7694398FA08E21D46103209@FRMRSSXCHMBSD2.dc-m.alcatel-lucent.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/8SRzd8k+Z74Yrg8KRVvlxQj"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <AANLkTilC9tPAVS2UWcJDykDyvkCDZbZjFD-R-h6OxRxi@mail.gmail.com>
+In-Reply-To: <BCD693DB5C9A3349A6F7694398FA08E21D46103209@FRMRSSXCHMBSD2.dc-m.alcatel-lucent.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Markus Hennig <mhennig@gmail.com>
-Cc: linux-raid@vger.kernel.org, Neil Brown <neilb@suse.de>
+To: "Ceuleers, Jan (Jan)" <jan.ceuleers@alcatel-lucent.com>
+Cc: linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
---Sig_/8SRzd8k+Z74Yrg8KRVvlxQj
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Thu, 15 Jul 2010 11:50:56 +0200
+"Ceuleers, Jan (Jan)" <jan.ceuleers@alcatel-lucent.com> wrote:
 
-On Thu, 15 Jul 2010 13:53:50 +0200
-Markus Hennig <mhennig@gmail.com> wrote:
+> Neil,
+> 
+> > mdadm -A /dev/md2 --force /dev/sd[ade]2
+> 
+> Many thanks for your feedback. I will try this when I get home.
+> 
+> So if I boil this down to the principles, your advice is to assemble
+> the array in degraded mode using the components that have the most
+> recent update timestamps. Degraded, because this prevents
+> resynchronisation.
+>
+It is more a case of "degraded because that uses fewer devices, and
+so fewer old devices which could introduce errors."  though avoiding
+resync is a good thing too.
 
-> I got all my data back from a degraded RAID5 array with 3 disks.
-> The only point which is worth to mention: XFS as underlying file
-> system is ineligible for small/cheap NAS because it is not edian safe.
-> I bought a powerpc driven MAC to replay the XFS journal...
+The key bit is "--force" which tell mdadm to assemble it anyway
+even if something looks out of data.  mdadm will only include just
+enough devices to make the array work.
+You don't really need to be selective about the devices you
+choose. If you give "mdadm -Af" all of the devices, it will just
+pick the ones that are best.  I just listed them for you to
+make it more clear what was happening.
 
-QEMU can emulate almost every modern architecture while running on almost a=
-ny
-different one, with various degrees of (understandable) slowness.
-
-> That leads to my question to the list: does somebody know if BTRFS is
-> endian safe or what is an endian-safe alternative to ext3/ext ?
-
-I'd suggest to use Ext4 for now. You can always convert it to BTRFS at a la=
-ter
-time: https://btrfs.wiki.kernel.org/index.php/Conversion_from_Ext3
-
---=20
-With respect,
-Roman
-
---Sig_/8SRzd8k+Z74Yrg8KRVvlxQj
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkw/CIQACgkQTLKSvz+PZwgh3gCfe1VGqjR2rCiyCuqSWjiz50Hr
-pZcAn1IGB4oeJwIxwC5O23avQXWWhY1K
-=cBd0
------END PGP SIGNATURE-----
-
---Sig_/8SRzd8k+Z74Yrg8KRVvlxQj--
+NeilBrown
