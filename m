@@ -1,46 +1,63 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: Need help with recovery
-Date: Thu, 15 Jul 2010 07:37:29 +0200
-Message-ID: <20100715073729.06c4f11a@notabene>
-References: <4C3DCB95.9010104@computer.org>
+Subject: Re: creating RAID-1 - in which direction will the sync be made?
+Date: Thu, 15 Jul 2010 07:40:11 +0200
+Message-ID: <20100715074011.51c11d50@notabene>
+References: <4C3D8BA7.2020500@wpkg.org>
+	<4C3DC037.1000802@wpkg.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C3DCB95.9010104@computer.org>
+In-Reply-To: <4C3DC037.1000802@wpkg.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Jan Ceuleers <jan.ceuleers@computer.org>
-Cc: linux-raid <linux-raid@vger.kernel.org>
+To: Tomasz Chmielewski <mangoo@wpkg.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, 14 Jul 2010 16:37:09 +0200
-Jan Ceuleers <jan.ceuleers@computer.org> wrote:
+On Wed, 14 Jul 2010 15:48:39 +0200
+Tomasz Chmielewski <mangoo@wpkg.org> wrote:
 
-> Hi guys.
+> On 14.07.2010 12:04, Tomasz Chmielewski wrote:
+> > In which direction will the devices be synchronized, if I create a new RAID-1 array with an external bitmap?
+> >
+> >
+> > Assuming I use this command line:
+> >
+> > mdadm --create /dev/md11 --level=1 --bitmap=/mnt/src/bitmap --raid-devices 2 /dev/storage/origin /dev/esata/copy
+> >
+> >
+> >
+> > Should I expect /dev/storage/origin being written to /dev/esata/copy?
+> >
+> > Or perhaps, /dev/esata/copy will be written onto /dev/storage/origin?
+> >
+> >
+> > I couldn't find it explained in the fine manual, so perhaps creating an array with a missing device:
+> >
+> > mdadm --create /dev/md11 --level=1 --bitmap=/mnt/src/bitmap --raid-devices 2 /dev/storage/origin missing
+> >
+> > and adding a second device later will be safer...
 > 
-> I've been having trouble with a four-disk raid5 array, which I now believe were caused by a flaky eSATA cable. The cable has been replaced, and the controller now seems to reliably see all four disks.
+> Looks like the first device in the command line will be synced onto the 
+> second.
+> However, I'd like someone to confirm this.
+
+If it matter to you, then you are doing the wrong thing.
+
+If you have data on one device and want to copy it to the other device, then
+you should - as you suggest - create the array with the 'origin' device and
+'missing', then add the 'copy' device as a spare - it will rebuild
 > 
-> In fact I have five disks, and so a partition on the fifth disk acts as a spare. Over the past several days I've been connecting and disconnecting drives in ways that I didn't realise were unreliable (due to the faulty cable).
 > 
-> This has resulted in the md metadata being out of sync on the different partitions. Please could someone provide advice as to how to recover this array (which contains an ext3 filesystem)?
+> And that I should use "build" to sync the devices, otherwise, I'll write 
+> a superblock on each of them ;)
 > 
-> 
-> Many thanks!
-> 
-> Jan
 
+Possibly.  But you then need to keep track of which devices is up-to-date,
+and md has no metadata area to record this information in.
 
-mdadm -A /dev/md2 --force /dev/sd[ade]2
-
-sdc2 this it is a spare, so you don't want it just now.
-sdb2 and sde2 both think that are 'device 0', but sde2 is clearly newer.
-
-So run the above mdadm comment (assuming none of the devices have been
-renamed again since you created the --examine output), then 
-  fsck -n /dev/md2
-
-and make sure it is happy.
-
-If it is you can added sdb2 and sde2 as spares.
+If you were to explain the big picture of what you were trying to do, I/we
+might be able to be more specific in answers.
 
 NeilBrown
+
