@@ -1,923 +1,1393 @@
-From: Karl Hiramoto <karl@hiramoto.org>
-Subject: regression:  hung boot upgrading to 2.6.34.1 from 2.6.32.11
-Date: Fri, 16 Jul 2010 11:26:56 +0200
-Message-ID: <4C4025E0.8060701@hiramoto.org>
+From: Konstantinos Skarlatos <k.skarlatos@gmail.com>
+Subject: Re: mvsas still has problems with 2.6.34
+Date: Fri, 16 Jul 2010 12:34:28 +0300
+Message-ID: <4C4027A4.9050204@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------000602040006000104040101"
 Return-path: <linux-raid-owner@vger.kernel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Thomas Fjellstrom <tfjellstrom@strangesoft.net>
+Cc: linux-kernel@vger.kernel.org, Caspar Smit <c.smit@truebit.nl>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, ayan@marvell.com, andy yan <andyysj@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
- Hi,
+This is a multi-part message in MIME format.
+--------------000602040006000104040101
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-I just upgraded my kernel from 2.6.32.11 to 2.6.34.1   There were some kconfig changes, but i left most stuff to the default values.
-I'm willing to try any patches or ideas anyone has.     It looks like two  md kthreads are stuck calling  _raw_spin_unlock_irqrestore,
+  I am another user of mvsas,  attached you can find two recent emails 
+with kernel logs that i have sent to the linux-scsi list regarding my 
+problems with that driver
 
-I can still boot 2.6.32.11
+Kind regards
+
+On 16/7/2010 12:26 μμ, Thomas Fjellstrom wrote:
+> On July 16, 2010, Caspar Smit wrote:
+>>> On July 16, 2010, Caspar Smit wrote:
+>>>> Thomas,
+>>>>
+>>>> The patches you are using are the ones from november '09 i presume?
+>>>> Those
+>>>> patches still had a lot of SATA issues so I think they didn't make the
+>>>> kernel. The patches seemed to handle SAS disks just fine though. SATA
+>>>> disks was a whole different story.
+>>> I'm actually using some that Andy Yan sent me privately, I'm not sure
+>>> if they are the same exact ones he sent to linux-scsi. Probably are
+>>> though.
+>> The november patches were a set of 7 patches where only the first 6
+>> needed to be applied.
+> Yeah, I was given a zip of the driver a little while before he posted the
+> patches to the list.
+>
+>>>> Srinivas Naga Venkatasatya Pasagadugula created a patch instead of
+>>>> Andy Yan's patches which seemed to handle SATA disks a lot better but
+>>>> still after some tests it had alot of problems. Srinivas Naga
+>>>> Venkatasatya Pasagadugula is now in the process of creating a new
+>>>> patch to fix the remaining issues. He told me it would take a long
+>>>> time to create those and
+>>>> it is now a few months ago since. I and others submitted extensive
+>>>> logging
+>>>> for him to check.
+>>>>
+>>>> As for production I could only advise this:
+>>>>
+>>>> Using SAS disks: Use stock 2.6.34 kernel + Andy Yan's patches
+>>>> Using SATA disks: DO NOT GO INTO PRODCUTION.
+>>> I've been using the code Andy Yan sent me for 7 months now with 5 SATA
+>>> disks
+>>> on a md raid5 array. I haven't noticed anything serious in that time.
+>>> Prior
+>>> to tonight I had been using 2.6.32 for quite some time.
+>>>
+>>> Maybe the issues only show up with serious load? My raid array doesn't
+>>> get hammered, at least not often.
+>> The main problem was hotplugging a SATA disk. This results in a kernel
+>> panic almost all of the time. There were more issues like the
+>> HDIO_GET_IDENTITY failed messages during boot for SATA disks and VERY
+>> SLOW xfs creation times.
+> I don't recall xfs taking /that/ long for a 4TB fs. With 2.6.34 I don't see
+> any HDIO_GET_IDENTITY messages in dmesg. But I'll bet it freaks out if I try
+> and hot remove one of the drives. I remember seeing the card lockup, and/or
+> the kernel oopsing the last time I tried (2.6.30-2.6.32 time frame).
+> Thankfully its not something I often do. While I Can, since I have a hot
+> swap unit, its just not something I've had to do yet.
+>
+> This array has been pretty solid for the past 6 months. Not sure it helps
+> but I've been very careful with this machine, it gets shut down
+> automatically and safely when the UPS battery gets low, so there hasn't been
+> any abrupt shutdowns, except today when a forkbomb hit, and I had to
+> SYSRQ+S+U+B the box.
+>
+> At any rate I can help test whatever new patches might come along.
+>
+>> Kind regards,
+>> Caspar Smit
+>>
+>>> Thanks
+>>>
+>>>> Kind regards,
+>>>> Caspar Smit
+>>>>
+>>>>> On July 16, 2010, Thomas Fjellstrom wrote:
+>>>>>> On July 16, 2010, Thomas Fjellstrom wrote:
+>>>>>>> I've recently updated my server, and the mvsas driver included in
+>>>> 2.6.34.1 still causes my AOC-SASLP-MV8 card to completely lock up
+>>>>
+>>>>>> after
+>>>>>>
+>>>>>>> mdraid starts up on the devices. The machine is essentially in
+>>>> "production" so I can't do a heck of a lot of testing on it anymore.
+>>>> The mvsas driver I got from Andy Yan seems to be a little outdated,
+>>>> it
+>>>>
+>>>>>>> fails to compile due to a missing argument to
+>>>> sas_change_queue_depth,
+>>>> which I managed to fix, and I will try testing. I hope it works.
+>>>>
+>>>>>> It seems to work with the change I made.
+>>>>> Sorry for the noise, I forgot to post the following in my last
+>>>>> couple
+>>>> messages:
+>>>>> It works, but I do get a kernel warning:
+>>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104295] ------------[ cut here
+>>>> ]------------
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104315] WARNING: at
+>>>>> drivers/ata/libata-core.c:5216 ata_qc_issue+0x31b/0x330 [libata]()
+>>>>> Jul
+>>>> 16 00:38:05 boris kernel: [   20.104323] Hardware name:
+>>>>> GA-MA790FXT-UD5P
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104327] Modules linked in:
+>>>>> snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep
+>>>> snd_pcm_oss
+>>>> snd_mixer_oss nouveau ttm snd_pcm drm_kms_helper snd_seq_midi k10temp
+>>>> drm
+>>>>
+>>>>> agpgart i2c_algo_bit snd_rawmidi snd_seq_midi_event i2c_piix4
+>>>>> i2c_core
+>>>> evdev edac_core edac_mce_amd tpm_tis snd_seq pcspkr tpm button
+>>>> tpm_bios wmi snd_timer snd_seq_device processor snd soundcore
+>>>> snd_page_alloc ext3 jbd mbcache dm_mod raid1 md_mod sg sr_mod sd_mod
+>>>> crc_t10dif cdrom ata_generic ohci_hcd ide_pci_generic ahci mvsas
+>>>> libsas libata atiixp scsi_transport_sas firewire_ohci firewire_core
+>>>> crc_itu_t thermal skge thermal_sys ide_core ehci_hcd r8169 mii
+>>>> usbcore scsi_mod nls_base [last unloaded: scsi_wait_scan]
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104448] Pid: 6091, comm: ata_id
+>>>> Not
+>>>> tainted 2.6.34.1 #2
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104453] Call Trace:
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104462]  [<ffffffff81049bb3>] ?
+>>>> warn_slowpath_common+0x73/0xb0
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104472]  [<ffffffffa011686b>] ?
+>>>> ata_qc_issue+0x31b/0x330 [libata]
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104482]  [<ffffffffa000ef7f>] ?
+>>>> scsi_init_io+0x2f/0x190 [scsi_mod]
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104492]  [<ffffffffa011e020>] ?
+>>>> ata_scsi_pass_thru+0x0/0x2e0 [libata]
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104500]  [<ffffffffa0007990>] ?
+>>>> scsi_done+0x0/0x20 [scsi_mod]
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104509]  [<ffffffffa011bfae>] ?
+>>>> ata_scsi_translate+0x9e/0x180 [libata]
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104517]  [<ffffffffa0007990>] ?
+>>>> scsi_done+0x0/0x20 [scsi_mod]
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104525]  [<ffffffffa015522b>] ?
+>>>> sas_queuecommand+0x9b/0x330 [libsas]
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104533]  [<ffffffffa0007c7e>] ?
+>>>> scsi_dispatch_cmd+0x17e/0x2b0 [scsi_mod]
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104542]  [<ffffffffa000e830>] ?
+>>>> scsi_request_fn+0x3e0/0x570 [scsi_mod]
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104549]  [<ffffffff81058161>] ?
+>>>> del_timer+0x71/0xd0
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104556]  [<ffffffff811baed3>] ?
+>>>> __blk_run_queue+0x63/0x130
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104563]  [<ffffffff811b43a2>] ?
+>>>> elv_insert+0x132/0x1f0
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104570]  [<ffffffff811bf1c9>] ?
+>>>> blk_execute_rq_nowait+0x59/0xb0
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104576]  [<ffffffff811bf292>] ?
+>>>> blk_execute_rq+0x72/0xe0
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104582]  [<ffffffff811bf05b>] ?
+>>>> blk_rq_map_user+0x1ab/0x290
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104588]  [<ffffffff811c32f1>] ?
+>>>> sg_io+0x241/0x3f0
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104594]  [<ffffffff811c38fc>] ?
+>>>> scsi_cmd_ioctl+0x45c/0x4b0
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104601]  [<ffffffff8110e02f>] ?
+>>>> __dentry_open+0x22f/0x340
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104607]  [<ffffffff811195b3>] ?
+>>>> inode_permission+0x93/0xd0
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.104614]  [<ffffffffa013cdc4>] ?
+>>>> sd_ioctl+0xa4/0x120 [sd_mod]
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.105009]  [<ffffffff811c0798>] ?
+>>>> __blkdev_driver_ioctl+0x98/0xe0
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.105410]  [<ffffffff811c0c75>] ?
+>>>> blkdev_ioctl+0x1f5/0x7b0
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.105815]  [<ffffffff81113d30>] ?
+>>>> cp_new_stat+0xe0/0x100
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.106230]  [<ffffffff8113b4f7>] ?
+>>>> block_ioctl+0x37/0x40
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.106647]  [<ffffffff8111e985>] ?
+>>>> vfs_ioctl+0x35/0xd0
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.107064]  [<ffffffff8111ef08>] ?
+>>>> do_vfs_ioctl+0x88/0x560
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.107490]  [<ffffffff8111402e>] ?
+>>>> sys_newfstat+0x2e/0x50
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.107919]  [<ffffffff8111f460>] ?
+>>>> sys_ioctl+0x80/0xa0
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.108003]  [<ffffffff81002e2b>] ?
+>>>> system_call_fastpath+0x16/0x1b
+>>>>
+>>>>> Jul 16 00:38:05 boris kernel: [   20.108003] ---[ end trace
+>>>>> e8ea9c22d6b28439 ]---
+>>>>>
+>>>>> Other than this stack trace, it seems to work fine.
+>>>>>
+>>>>>>> At some point though I really hope this gets fixed. I'm still
+>>>> willing
+>>>> to help test any new versions, just that I can't keep my box down for
+>>>> an extended period.
+>>>>
+>>>>>>> Thanks.
+>>>>> I forgot to post, but here are the kernel messages I get when trying
+>>>> to
+>>>>
+>>>> use the kernel's included mvsas driver:
+>>>>> Jul 15 22:42:41 boris kernel: [  208.816129] sd 0:0:3:0: [sdf]
+>>>> Unhandled
+>>>> error code
+>>>>
+>>>>> Jul 15 22:42:41 boris kernel: [  208.816809] sd 0:0:3:0: [sdf]
+> Result:
+>>>> hostbyte=DID_OK driverbyte=DRIVER_TIMEOUT
+>>>>
+>>>>> Jul 15 22:42:41 boris kernel: [  208.817470] sd 0:0:3:0: [sdf] CDB:
+>>>> Read(10): 28 00 3a 45 c1 08 00 04 00 00
+>>>>
+>>>>> Jul 15 22:42:41 boris kernel: [  208.818853] sd 0:0:1:0: [sdd]
+>>>> Unhandled
+>>>> error code
+>>>>
+>>>>> Jul 15 22:42:41 boris kernel: [  208.819508] sd 0:0:1:0: [sdd]
+> Result:
+>>>> hostbyte=DID_OK driverbyte=DRIVER_TIMEOUT
+>>>>
+>>>>> Jul 15 22:42:41 boris kernel: [  208.820179] sd 0:0:1:0: [sdd] CDB:
+>>>> Read(10): 28 00 3a 45 be 58 00 02 b0 00
+>>>>
+>>>>> Jul 15 22:42:41 boris kernel: [  208.821558] sd 0:0:2:0: [sde]
+>>>> Unhandled
+>>>> error code
+>>>>
+>>>>> Jul 15 22:42:41 boris kernel: [  208.822201] sd 0:0:2:0: [sde]
+> Result:
+>>>> hostbyte=DID_OK driverbyte=DRIVER_TIMEOUT
+>>>>
+>>>>> Jul 15 22:42:41 boris kernel: [  208.822836] sd 0:0:2:0: [sde] CDB:
+>>>> Read(10): 28 00 3a 45 c1 08 00 04 00 00
+>>>>
+>>>>> Jul 15 22:42:41 boris kernel: [  208.824157] sd 0:0:4:0: [sdg]
+>>>> Unhandled
+>>>> error code
+>>>>
+>>>>> Jul 15 22:42:41 boris kernel: [  208.824784] sd 0:0:4:0: [sdg]
+> Result:
+>>>> hostbyte=DID_OK driverbyte=DRIVER_TIMEOUT
+>>>>
+>>>>> Jul 15 22:42:41 boris kernel: [  208.825407] sd 0:0:4:0: [sdg] CDB:
+>>>> Read(10): 28 00 3a 45 c1 08 00 04 00 00
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.737334] md1_raid5     D
+>>>>> 0000000000000001     0  6120      2 0x00000000
+>>>>> Jul 15 22:43:13 boris kernel: [  240.737948]  ffff88012c94c420
+>>>>> 0000000000000046 ffff880100000000 ffff88012f65b680
+>>>>> Jul 15 22:43:13 boris kernel: [  240.738570]  00000000000134c0
+>>>>> ffff88012e6effd8 00000000000134c0 ffff88012c94c420
+>>>>> Jul 15 22:43:13 boris kernel: [  240.739196]  ffff88012e6effd8
+>>>>> ffff88012e6effd8 00000000000134c0 00000000000134c0
+>>>>> Jul 15 22:43:13 boris kernel: [  240.739821] Call Trace:
+>>>>> Jul 15 22:43:13 boris kernel: [  240.740458]  [<ffffffffa018d17e>] ?
+>>>> md_super_wait+0xae/0xd0 [md_mod]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.741100]  [<ffffffff810671b0>] ?
+>>>> autoremove_wake_function+0x0/0x30
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.741729]  [<ffffffffa018d748>] ?
+>>>> md_update_sb+0x268/0x3d0 [md_mod]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.742361]  [<ffffffffa018fcd2>] ?
+>>>> md_check_recovery+0x232/0x520 [md_mod]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.742982]  [<ffffffffa0421833>] ?
+>>>> raid5d+0x23/0x4f0 [raid456]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.743602]  [<ffffffff8137883d>] ?
+>>>> schedule_timeout+0x23d/0x310
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.744221]  [<ffffffff8103aee4>] ?
+>>>> finish_task_switch+0x34/0xb0
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.744861]  [<ffffffffa018ce43>] ?
+>>>> md_thread+0x53/0x120 [md_mod]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.745489]  [<ffffffff810671b0>] ?
+>>>> autoremove_wake_function+0x0/0x30
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.746121]  [<ffffffffa018cdf0>] ?
+>>>> md_thread+0x0/0x120 [md_mod]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.746743]  [<ffffffff81066c9e>] ?
+>>>> kthread+0x8e/0xa0
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.747367]  [<ffffffff81003bd4>] ?
+>>>> kernel_thread_helper+0x4/0x10
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.748000]  [<ffffffff81066c10>] ?
+>>>> kthread+0x0/0xa0
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.748639]  [<ffffffff81003bd0>] ?
+>>>> kernel_thread_helper+0x0/0x10
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.750521] mount         D
+>>>>> 0000000000000001     0  6405   6403 0x00000000
+>>>>> Jul 15 22:43:13 boris kernel: [  240.751158]  ffff88012eb8f3d0
+>>>>> 0000000000000082 ffff88012e50c600 ffff88012f65d1c0
+>>>>> Jul 15 22:43:13 boris kernel: [  240.751805]  00000000000134c0
+>>>>> ffff88012dc0bfd8 00000000000134c0 ffff88012eb8f3d0
+>>>>> Jul 15 22:43:13 boris kernel: [  240.752452]  ffff88012dc0bfd8
+>>>>> ffff88012dc0bfd8 00000000000134c0 00000000000134c0
+>>>>> Jul 15 22:43:13 boris kernel: [  240.753108] Call Trace:
+>>>>> Jul 15 22:43:13 boris kernel: [  240.753761]  [<ffffffffa0020990>] ?
+>>>> scsi_done+0x0/0x20 [scsi_mod]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.754409]  [<ffffffff8137883d>] ?
+>>>> schedule_timeout+0x23d/0x310
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.755053]  [<ffffffff811ba097>] ?
+>>>> blk_peek_request+0x127/0x1e0
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.755708]  [<ffffffffa0020c8d>] ?
+>>>> scsi_dispatch_cmd+0x18d/0x2b0 [scsi_mod]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.756358]  [<ffffffff81377af2>] ?
+>>>> wait_for_common+0xd2/0x180
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.757023]  [<ffffffff8103da50>] ?
+>>>> default_wake_function+0x0/0x20
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.757672]  [<ffffffffa041f486>] ?
+>>>> unplug_slaves+0x86/0xc0 [raid456]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.758363]  [<ffffffffa048ed8d>] ?
+>>>> xlog_bread_noalign+0xbd/0xf0 [xfs]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.759046]  [<ffffffffa04a38c0>] ?
+>>>> xfs_buf_iowait+0x40/0xf0 [xfs]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.759730]  [<ffffffffa048ed8d>] ?
+>>>> xlog_bread_noalign+0xbd/0xf0 [xfs]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.760423]  [<ffffffffa048edf5>] ?
+>>>> xlog_bread+0x35/0x80 [xfs]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.761124]  [<ffffffffa0491b9f>] ?
+>>>> xlog_find_verify_cycle+0xbf/0x170 [xfs]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.761813]  [<ffffffffa0492558>] ?
+>>>> xlog_find_head+0x168/0x3a0 [xfs]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.762495]  [<ffffffffa04927b7>] ?
+>>>> xlog_find_tail+0x27/0x3d0 [xfs]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.763178]  [<ffffffffa0492b75>] ?
+>>>> xlog_recover+0x15/0x90 [xfs]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.763858]  [<ffffffffa048b9c4>] ?
+>>>> xfs_log_mount+0x134/0x170 [xfs]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.764528]  [<ffffffffa0495b8f>] ?
+>>>> xfs_mountfs+0x38f/0x720 [xfs]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.765214]  [<ffffffffa04a090b>] ?
+>>>> kmem_alloc+0x7b/0xc0 [xfs]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.765888]  [<ffffffffa04a09fb>] ?
+>>>> kmem_zalloc+0x2b/0x40 [xfs]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.766559]  [<ffffffffa04ad985>] ?
+>>>> xfs_fs_fill_super+0x225/0x3b0 [xfs]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.767203]  [<ffffffff81112c03>] ?
+>>>> get_sb_bdev+0x1a3/0x1e0
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.767877]  [<ffffffffa04ad760>] ?
+>>>> xfs_fs_fill_super+0x0/0x3b0 [xfs]
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.768533]  [<ffffffff81112633>] ?
+>>>> vfs_kern_mount+0x83/0x1f0
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.769174]  [<ffffffff81112813>] ?
+>>>> do_kern_mount+0x53/0x120
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.769806]  [<ffffffff8112abfa>] ?
+>>>> do_mount+0x28a/0x8a0
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.770441]  [<ffffffff81128960>] ?
+>>>> copy_mount_options+0xe0/0x180
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.771073]  [<ffffffff8112b2aa>] ?
+>>>> sys_mount+0x9a/0xf0
+>>>>
+>>>>> Jul 15 22:43:13 boris kernel: [  240.771695]  [<ffffffff81002e2b>] ?
+>>>> system_call_fastpath+0x16/0x1b
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.769363] md1_raid5     D
+>>>>> 0000000000000001     0  6120      2 0x00000000
+>>>>> Jul 15 22:45:13 boris kernel: [  360.770006]  ffff88012c94c420
+>>>>> 0000000000000046 ffff880100000000 ffff88012f65b680
+>>>>> Jul 15 22:45:13 boris kernel: [  360.770648]  00000000000134c0
+>>>>> ffff88012e6effd8 00000000000134c0 ffff88012c94c420
+>>>>> Jul 15 22:45:13 boris kernel: [  360.771298]  ffff88012e6effd8
+>>>>> ffff88012e6effd8 00000000000134c0 00000000000134c0
+>>>>> Jul 15 22:45:13 boris kernel: [  360.771946] Call Trace:
+>>>>> Jul 15 22:45:13 boris kernel: [  360.772620]  [<ffffffffa018d17e>] ?
+>>>> md_super_wait+0xae/0xd0 [md_mod]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.773265]  [<ffffffff810671b0>] ?
+>>>> autoremove_wake_function+0x0/0x30
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.773911]  [<ffffffffa018d748>] ?
+>>>> md_update_sb+0x268/0x3d0 [md_mod]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.774550]  [<ffffffffa018fcd2>] ?
+>>>> md_check_recovery+0x232/0x520 [md_mod]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.775180]  [<ffffffffa0421833>] ?
+>>>> raid5d+0x23/0x4f0 [raid456]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.775804]  [<ffffffff8137883d>] ?
+>>>> schedule_timeout+0x23d/0x310
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.776424]  [<ffffffff8103aee4>] ?
+>>>> finish_task_switch+0x34/0xb0
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.777064]  [<ffffffffa018ce43>] ?
+>>>> md_thread+0x53/0x120 [md_mod]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.777679]  [<ffffffff810671b0>] ?
+>>>> autoremove_wake_function+0x0/0x30
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.778302]  [<ffffffffa018cdf0>] ?
+>>>> md_thread+0x0/0x120 [md_mod]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.778919]  [<ffffffff81066c9e>] ?
+>>>> kthread+0x8e/0xa0
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.779534]  [<ffffffff81003bd4>] ?
+>>>> kernel_thread_helper+0x4/0x10
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.780148]  [<ffffffff81066c10>] ?
+>>>> kthread+0x0/0xa0
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.780776]  [<ffffffff81003bd0>] ?
+>>>> kernel_thread_helper+0x0/0x10
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.782623] mount         D
+>>>>> 0000000000000001     0  6405   6403 0x00000000
+>>>>> Jul 15 22:45:13 boris kernel: [  360.783248]  ffff88012eb8f3d0
+>>>>> 0000000000000082 ffff88012e50c600 ffff88012f65d1c0
+>>>>> Jul 15 22:45:13 boris kernel: [  360.783883]  00000000000134c0
+>>>>> ffff88012dc0bfd8 00000000000134c0 ffff88012eb8f3d0
+>>>>> Jul 15 22:45:13 boris kernel: [  360.784536]  ffff88012dc0bfd8
+>>>>> ffff88012dc0bfd8 00000000000134c0 00000000000134c0
+>>>>> Jul 15 22:45:13 boris kernel: [  360.785184] Call Trace:
+>>>>> Jul 15 22:45:13 boris kernel: [  360.785829]  [<ffffffffa0020990>] ?
+>>>> scsi_done+0x0/0x20 [scsi_mod]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.786465]  [<ffffffff8137883d>] ?
+>>>> schedule_timeout+0x23d/0x310
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.787098]  [<ffffffff811ba097>] ?
+>>>> blk_peek_request+0x127/0x1e0
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.787740]  [<ffffffffa0020c8d>] ?
+>>>> scsi_dispatch_cmd+0x18d/0x2b0 [scsi_mod]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.788361]  [<ffffffff81377af2>] ?
+>>>> wait_for_common+0xd2/0x180
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.788988]  [<ffffffff8103da50>] ?
+>>>> default_wake_function+0x0/0x20
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.789612]  [<ffffffffa041f486>] ?
+>>>> unplug_slaves+0x86/0xc0 [raid456]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.790277]  [<ffffffffa048ed8d>] ?
+>>>> xlog_bread_noalign+0xbd/0xf0 [xfs]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.790933]  [<ffffffffa04a38c0>] ?
+>>>> xfs_buf_iowait+0x40/0xf0 [xfs]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.791597]  [<ffffffffa048ed8d>] ?
+>>>> xlog_bread_noalign+0xbd/0xf0 [xfs]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.792258]  [<ffffffffa048edf5>] ?
+>>>> xlog_bread+0x35/0x80 [xfs]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.792935]  [<ffffffffa0491b9f>] ?
+>>>> xlog_find_verify_cycle+0xbf/0x170 [xfs]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.793598]  [<ffffffffa0492558>] ?
+>>>> xlog_find_head+0x168/0x3a0 [xfs]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.794258]  [<ffffffffa04927b7>] ?
+>>>> xlog_find_tail+0x27/0x3d0 [xfs]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.794910]  [<ffffffffa0492b75>] ?
+>>>> xlog_recover+0x15/0x90 [xfs]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.795565]  [<ffffffffa048b9c4>] ?
+>>>> xfs_log_mount+0x134/0x170 [xfs]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.796216]  [<ffffffffa0495b8f>] ?
+>>>> xfs_mountfs+0x38f/0x720 [xfs]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.796879]  [<ffffffffa04a090b>] ?
+>>>> kmem_alloc+0x7b/0xc0 [xfs]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.797527]  [<ffffffffa04a09fb>] ?
+>>>> kmem_zalloc+0x2b/0x40 [xfs]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.798171]  [<ffffffffa04ad985>] ?
+>>>> xfs_fs_fill_super+0x225/0x3b0 [xfs]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.798785]  [<ffffffff81112c03>] ?
+>>>> get_sb_bdev+0x1a3/0x1e0
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.799429]  [<ffffffffa04ad760>] ?
+>>>> xfs_fs_fill_super+0x0/0x3b0 [xfs]
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.800046]  [<ffffffff81112633>] ?
+>>>> vfs_kern_mount+0x83/0x1f0
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.800678]  [<ffffffff81112813>] ?
+>>>> do_kern_mount+0x53/0x120
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.801292]  [<ffffffff8112abfa>] ?
+>>>> do_mount+0x28a/0x8a0
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.801910]  [<ffffffff81128960>] ?
+>>>> copy_mount_options+0xe0/0x180
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.802531]  [<ffffffff8112b2aa>] ?
+>>>> sys_mount+0x9a/0xf0
+>>>>
+>>>>> Jul 15 22:45:13 boris kernel: [  360.803152]  [<ffffffff81002e2b>] ?
+>>>> system_call_fastpath+0x16/0x1b
+>>>>
+>>>>> I'm pretty sure most of that is due to the driver not responding for
+>>>>> 4
+>>>> of
+>>>>
+>>>>> the drives (the first few messages)
+>>>>>
+>>>>> Thanks again.
+>>>>>
+>>>>> --
+>>>>> Thomas Fjellstrom
+>>>>> tfjellstrom@strangesoft.net
+>>>>> --
+>>>>> To unsubscribe from this list: send the line "unsubscribe
+>>>>> linux-scsi"
+>>>> in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>>
+>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe
+>>>> linux-kernel" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>> Please read the FAQ at  http://www.tux.org/lkml/
+>>> --
+>>> Thomas Fjellstrom
+>>> tfjellstrom@strangesoft.net
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+>>> in the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel"
+>> in the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
+>
 
 
-I'll start compiling a git bisect to see if i can find the commit.
+--------------000602040006000104040101
+Content-Type: message/rfc822;
+ name="Re: Still havind major MVSAS issues_.eml"
+Content-Transfer-Encoding: 8bit
+Content-Disposition: attachment;
+ filename="Re: Still havind major MVSAS issues_.eml"
+
+Return-Path: <k.skarlatos@gmail.com>
+Received: from [192.168.1.121] (ppp-94-69-230-175.home.otenet.gr [94.69.230.175])
+        by mx.google.com with ESMTPS id q6sm3149063wbc.23.2010.06.06.06.35.10
+        (version=TLSv1/SSLv3 cipher=RC4-MD5);
+        Sun, 06 Jun 2010 06:35:11 -0700 (PDT)
+Message-ID: <4C0BA407.9030503@gmail.com>
+Date: Sun, 06 Jun 2010 16:35:03 +0300
+From: Konstantinos Skarlatos <k.skarlatos@gmail.com>
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2.4) Gecko/20100526 Thunderbird/3.1
+MIME-Version: 1.0
+To: Jelle de Jong <jelledejong@powercraft.nl>
+CC: "Srinivas Naga Venkatasatya Pasagadugula - ERS, HCL Tech" <satyasrinivasp@hcl.in>,
+ Caspar Smit <c.smit@truebit.nl>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "Yugendranath R Singh - ERS, HCL Tech" <yugendranath.s@hcl.in>,
+ "Geetha Gopalan, ERS-HCLTech" <geethagp@hcl.in>,
+ "Mohan Kumar TG, ERS,HCLTech" <mohankumartg@hcl.in>
+Subject: Re: Still havind major MVSAS issues.
+References: <53271.87.210.74.220.1270040583.squirrel@ketsers.dhs.org>       <7BF8FE1BFB7440B29ECD3D15FB0A4E8C@usish.com.cn>       <1068.77.248.79.78.1270102668.squirrel@ketsers.dhs.org>       <CDBC7B5488B245E689B39330542DC434@usish.com.cn>       <1543.77.248.79.78.1270108509.squirrel@ketsers.dhs.org>       <4BB50A92.3030205@gmx.net> <4BB53983.5050309@cisco.com>       <43193.87.210.74.220.1270217681.squirrel@ketsers.dhs.org> <1228.77.248.79.78.1270828327.squirrel@ketsers.dhs.org> <6B62480106F2B34D8404CF2FDAA4D9EF7F36EFEE0C@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN> <4C0B90DC.6070800@powercraft.nl>
+In-Reply-To: <4C0B90DC.6070800@powercraft.nl>
+Content-Type: multipart/mixed;
+ boundary="------------080505060305080102060100"
+
+This is a multi-part message in MIME format.
+--------------080505060305080102060100
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+
+  Hello all,
+
+I have also got severe problems with mvsas, but have managed to at least 
+make it usable. My config is a AOC-SASLP-MV8 with an HP SAS expander, 
+with WD and Seagate sata disks connected to the expander using a norco 
+4020 case that does not have any on board expanders. Kernel version is 
+2.6.33 with latest srinivas patch. I also dont raid, the 13 disks have 
+their own filesystem.
+
+My experiences are:
+The only filesystem that works is JFS. XFS and btrfs crash the 
+controller making all the disks unreadable and that can only be solved 
+by rebooting. (mkfs succeeds, crashes happen only after mounting or when 
+fscking)
+JFS works ok as long as i access it via samba or make copies and moves 
+with cp and mv. If I try file operations with Thunar file manager, the 
+controller crashes. Smartctl has not caused any problems so far, and 
+works ok.
+
+Attached are some kernel logs captured from those crashes.
+
+Kind regards,
+Konstantinos Skarlatos
 
 
 
-Jul 16 10:54:33 smoke    0.000000] Linux version 2.6.34.1 (root@smoke) (gcc version 4.4.3 (Gentoo 4.4.3-r2 p1.2) ) #7 SMP PREEMPT Fri Jul 16 10:05:44 CEST 2010
-Jul 16 10:54:33 smoke    0.000000] Command line: netconsole=4444@192.168.69.3/eth0,514@192.168.69.51/ root=/dev/md2 panic=30 raid=noautodetect md=0,/dev/sda1,/dev/sdb1,/dev/sdc1,/dev/sdd1 md=1,/dev/sda3,/dev/sdb3 md=2,/dev/sdc3,/dev/sdd3,/dev/md1 rootwait
-Jul 16 10:54:33 smoke    0.000000] BIOS-provided physical RAM map:
-Jul 16 10:54:33 smoke    0.000000]  BIOS-e820: 0000000000000000 - 000000000009fc00 (usable)
-Jul 16 10:54:33 smoke    0.000000]  BIOS-e820: 000000000009fc00 - 00000000000a0000 (reserved)
-Jul 16 10:54:33 smoke    0.000000]  BIOS-e820: 00000000000e4000 - 0000000000100000 (reserved)
-Jul 16 10:54:33 smoke    0.000000]  BIOS-e820: 0000000000100000 - 000000007ff90000 (usable)
-Jul 16 10:54:33 smoke    0.000000]  BIOS-e820: 000000007ff90000 - 000000007ff9e000 (ACPI data)
-Jul 16 10:54:33 smoke    0.000000]  BIOS-e820: 000000007ff9e000 - 000000007ffe0000 (ACPI NVS)
-Jul 16 10:54:33 smoke    0.000000]  BIOS-e820: 000000007ffe0000 - 0000000080000000 (reserved)
-Jul 16 10:54:33 smoke    0.000000]  BIOS-e820: 00000000fee00000 - 00000000fee01000 (reserved)
-Jul 16 10:54:33 smoke    0.000000]  BIOS-e820: 00000000ffb00000 - 0000000100000000 (reserved)
-Jul 16 10:54:33 smoke    0.000000]  BIOS-e820: 0000000100000000 - 0000000180000000 (usable)
-Jul 16 10:54:33 smoke    0.000000] NX (Execute Disable) protection: active
-Jul 16 10:54:33 smoke    0.000000] DMI 2.4 present.
-Jul 16 10:54:33 smoke    0.000000] AMI BIOS detected: BIOS may corrupt low RAM, working around it.
-Jul 16 10:54:33 smoke    0.000000] No AGP bridge found
-Jul 16 10:54:33 smoke    0.000000] last_pfn = 0x180000 max_arch_pfn = 0x400000000
-Jul 16 10:54:33 smoke    0.000000] x86 PAT enabled: cpu 0, old 0x7040600070406, new 0x7010600070106
-Jul 16 10:54:33 smoke    0.000000] last_pfn = 0x7ff90 max_arch_pfn = 0x400000000
-Jul 16 10:54:33 smoke    0.000000] found SMP MP-table at [ffff8800000ff780] ff780
-Jul 16 10:54:33 smoke    0.000000] init_memory_mapping: 0000000000000000-000000007ff90000
-Jul 16 10:54:33 smoke    0.000000] init_memory_mapping: 0000000100000000-0000000180000000
-Jul 16 10:54:33 smoke    0.000000] ACPI: RSDP 00000000000fa9b0 00024 (v02 ACPIAM)
-Jul 16 10:54:33 smoke    0.000000] ACPI: XSDT 000000007ff90100 0004C (v01 MSTEST OEMXSDT  11000726 MSFT 00000097)
-Jul 16 10:54:33 smoke    0.000000] ACPI: FACP 000000007ff90290 000F4 (v03 MSTEST OEMFACP  11000726 MSFT 00000097)
-Jul 16 10:54:33 smoke    0.000000] ACPI: DSDT 000000007ff905c0 0928C (v01  A0545 A0545000 00000000 INTL 20060113)
-Jul 16 10:54:33 smoke    0.000000] ACPI: FACS 000000007ff9e000 00040
-Jul 16 10:54:33 smoke    0.000000] ACPI: APIC 000000007ff90390 0006C (v01 MSTEST OEMAPIC  11000726 MSFT 00000097)
-Jul 16 10:54:33 smoke    0.000000] ACPI: MCFG 000000007ff90400 0003C (v01 MSTEST OEMMCFG  11000726 MSFT 00000097)
-Jul 16 10:54:33 smoke    0.000000] ACPI: OEMB 000000007ff9e040 0007B (v01 MSTEST AMI_OEM  11000726 MSFT 00000097)
-Jul 16 10:54:33 smoke    0.000000] ACPI: HPET 000000007ff99850 00038 (v01 MSTEST OEMHPET  11000726 MSFT 00000097)
-Jul 16 10:54:33 smoke    0.000000] No NUMA configuration found
-Jul 16 10:54:33 smoke    0.000000] Faking a node at 0000000000000000-0000000180000000
-Jul 16 10:54:33 smoke    0.000000] Initmem setup node 0 0000000000000000-0000000180000000
-Jul 16 10:54:33 smoke    0.000000]   NODE_DATA [0000000100000000 - 0000000100004fff]
-Jul 16 10:54:33 smoke    0.000000] Zone PFN ranges:
-Jul 16 10:54:33 smoke    0.000000]   DMA      0x00000010 -> 0x00001000
-Jul 16 10:54:33 smoke    0.000000]   DMA32    0x00001000 -> 0x00100000
-Jul 16 10:54:33 smoke    0.000000]   Normal   0x00100000 -> 0x00180000
-Jul 16 10:54:33 smoke    0.000000] Movable zone start PFN for each node
-Jul 16 10:54:33 smoke    0.000000] early_node_map[3] active PFN ranges
-Jul 16 10:54:33 smoke    0.000000]     0: 0x00000010 -> 0x0000009f
-Jul 16 10:54:33 smoke    0.000000]     0: 0x00000100 -> 0x0007ff90
-Jul 16 10:54:33 smoke    0.000000]     0: 0x00100000 -> 0x00180000
-Jul 16 10:54:33 smoke    0.000000] ACPI: PM-Timer IO Port: 0x808
-Jul 16 10:54:33 smoke    0.000000] ACPI: LAPIC (acpi_id[0x01] lapic_id[0x00] enabled)
-Jul 16 10:54:33 smoke    0.000000] ACPI: LAPIC (acpi_id[0x02] lapic_id[0x01] enabled)
-Jul 16 10:54:33 smoke    0.000000] ACPI: LAPIC (acpi_id[0x03] lapic_id[0x82] disabled)
-Jul 16 10:54:33 smoke    0.000000] ACPI: LAPIC (acpi_id[0x04] lapic_id[0x83] disabled)
-Jul 16 10:54:33 smoke    0.000000] ACPI: IOAPIC (id[0x02] address[0xfec00000] gsi_base[0])
-Jul 16 10:54:33 smoke    0.000000] IOAPIC[0]: apic_id 2, version 32, address 0xfec00000, GSI 0-23
-Jul 16 10:54:33 smoke    0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
-Jul 16 10:54:33 smoke    0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 9 high level)
-Jul 16 10:54:33 smoke    0.000000] Using ACPI (MADT) for SMP configuration information
-Jul 16 10:54:33 smoke    0.000000] ACPI: HPET id: 0x8086a202 base: 0xfed00000
-Jul 16 10:54:33 smoke    0.000000] SMP: Allowing 4 CPUs, 2 hotplug CPUs
-Jul 16 10:54:33 smoke    0.000000] PM: Registered nosave memory: 000000000009f000 - 00000000000a0000
-Jul 16 10:54:33 smoke    0.000000] PM: Registered nosave memory: 00000000000a0000 - 00000000000e4000
-Jul 16 10:54:33 smoke    0.000000] PM: Registered nosave memory: 00000000000e4000 - 0000000000100000
-Jul 16 10:54:33 smoke    0.000000] PM: Registered nosave memory: 000000007ff90000 - 000000007ff9e000
-Jul 16 10:54:33 smoke    0.000000] PM: Registered nosave memory: 000000007ff9e000 - 000000007ffe0000
-Jul 16 10:54:33 smoke    0.000000] PM: Registered nosave memory: 000000007ffe0000 - 0000000080000000
-Jul 16 10:54:33 smoke    0.000000] PM: Registered nosave memory: 0000000080000000 - 00000000fee00000
-Jul 16 10:54:33 smoke    0.000000] PM: Registered nosave memory: 00000000fee00000 - 00000000fee01000
-Jul 16 10:54:33 smoke    0.000000] PM: Registered nosave memory: 00000000fee01000 - 00000000ffb00000
-Jul 16 10:54:33 smoke    0.000000] PM: Registered nosave memory: 00000000ffb00000 - 0000000100000000
-Jul 16 10:54:33 smoke    0.000000] Allocating PCI resources starting at 80000000 (gap: 80000000:7ee00000)
-Jul 16 10:54:33 smoke    0.000000] setup_percpu: NR_CPUS:4 nr_cpumask_bits:4 nr_cpu_ids:4 nr_node_ids:1
-Jul 16 10:54:33 smoke    0.000000] PERCPU: Embedded 27 pages/cpu @ffff880001a00000 s81896 r8192 d20504 u524288
-Jul 16 10:54:33 smoke    0.000000] pcpu-alloc: s81896 r8192 d20504 u524288 alloc=1*2097152
-Jul 16 10:54:33 smoke    0.000000] pcpu-alloc: [0] 0 1 2 3
-Jul 16 10:54:33 smoke    0.000000] Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 1026847
-Jul 16 10:54:33 smoke    0.000000] Policy zone: Normal
-Jul 16 10:54:33 smoke    0.000000] Kernel command line: netconsole=4444@192.168.69.3/eth0,514@192.168.69.51/ root=/dev/md2 panic=30 raid=noautodetect md=0,/dev/sda1,/dev/sdb1,/dev/sdc1,/dev/sdd1 md=1,/dev/sda3,/dev/sdb3 md=2,/dev/sdc3,/dev/sdd3,/dev/md1 rootwait
-Jul 16 10:54:33 smoke    0.000000] md: Will configure md0 (super-block) from /dev/sda1,/dev/sdb1,/dev/sdc1,/dev/sdd1, below.
-Jul 16 10:54:33 smoke    0.000000] md: Will configure md1 (super-block) from /dev/sda3,/dev/sdb3, below.
-Jul 16 10:54:33 smoke    0.000000] md: Will configure md2 (super-block) from /dev/sdc3,/dev/sdd3,/dev/md1, below.
-Jul 16 10:54:33 smoke    0.000000] PID hash table entries: 4096 (order: 3, 32768 bytes)
-Jul 16 10:54:33 smoke    0.000000] Checking aperture...
-Jul 16 10:54:33 smoke    0.000000] No AGP bridge found
-Jul 16 10:54:33 smoke    0.000000] Subtract (55 early reservations)
-Jul 16 10:54:33 smoke    0.000000]   #1 [0001000000 - 0001882274]   TEXT DATA BSS
-Jul 16 10:54:33 smoke    0.000000]   #2 [0001883000 - 0001883288]             BRK
-Jul 16 10:54:33 smoke    0.000000]   #3 [00000ff790 - 0000100000]   BIOS reserved
-Jul 16 10:54:33 smoke    0.000000]   #4 [00000ff780 - 00000ff790]    MP-table mpf
-Jul 16 10:54:33 smoke    0.000000]   #5 [000009fc00 - 00000e3bb0]   BIOS reserved
-Jul 16 10:54:33 smoke    0.000000]   #6 [00000e3d34 - 00000ff780]   BIOS reserved
-Jul 16 10:54:33 smoke    0.000000]   #7 [00000e3bb0 - 00000e3d34]    MP-table mpc
-Jul 16 10:54:33 smoke    0.000000]   #8 [0000010000 - 0000012000]      TRAMPOLINE
-Jul 16 10:54:33 smoke    0.000000]   #9 [0000012000 - 0000016000]     ACPI WAKEUP
-Jul 16 10:54:33 smoke    0.000000]   #10 [0000016000 - 0000018000]         PGTABLE
-Jul 16 10:54:33 smoke    0.000000]   #11 [0000018000 - 000001a000]         PGTABLE
-Jul 16 10:54:33 smoke    0.000000]   #12 [0100000000 - 0100005000]       NODE_DATA
-Jul 16 10:54:33 smoke    0.000000]   #13 [00018832c0 - 00018842c0]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #14 [0001882280 - 0001882580]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #15 [0100005000 - 0100006000]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #16 [0100006000 - 0100007000]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #17 [0100200000 - 0103a00000]        MEMMAP 0
-Jul 16 10:54:33 smoke    0.000000]   #18 [0001882580 - 0001882700]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #19 [00018842c0 - 000189c2c0]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #20 [000189c2c0 - 00018a82c0]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #21 [00018a9000 - 00018aa000]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #22 [0001882700 - 0001882741]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #23 [0001882780 - 00018827c3]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #24 [0001882800 - 0001882a68]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #25 [0001882a80 - 0001882ae8]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #26 [0001882b00 - 0001882b68]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #27 [0001882b80 - 0001882be8]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #28 [0001882c00 - 0001882c68]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #29 [0001882c80 - 0001882ce8]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #30 [0001882d00 - 0001882d68]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #31 [0001882d80 - 0001882de8]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #32 [0001882e00 - 0001882e68]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #33 [0001882e80 - 0001882ee8]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #34 [0001882f00 - 0001882f68]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #35 [0001882f80 - 0001882fa0]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #36 [0001882fc0 - 0001882fe0]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #37 [00018a82c0 - 00018a838f]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #38 [00018a83c0 - 00018a848f]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #39 [0001a00000 - 0001a1b000]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #40 [0001a80000 - 0001a9b000]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #41 [0001b00000 - 0001b1b000]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #42 [0001b80000 - 0001b9b000]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #43 [00018a84c0 - 00018a84c8]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #44 [00018a8500 - 00018a8508]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #45 [00018a8540 - 00018a8550]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #46 [00018a8580 - 00018a85a0]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #47 [00018a85c0 - 00018a86f0]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #48 [00018a8700 - 00018a8750]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #49 [00018a8780 - 00018a87d0]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #50 [00018aa000 - 00018b2000]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #51 [0001b9b000 - 0005b9b000]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #52 [00018b2000 - 00018d2000]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #53 [00018d2000 - 0001912000]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000]   #54 [000001a800 - 0000022800]         BOOTMEM
-Jul 16 10:54:33 smoke    0.000000] Memory: 4060700k/6291456k available (4599k kernel code, 2098052k absent, 132704k reserved, 2699k data, 556k init)
-Jul 16 10:54:33 smoke    0.000000] Hierarchical RCU implementation.
-Jul 16 10:54:33 smoke    0.000000] NR_IRQS:384
-Jul 16 10:54:33 smoke    0.000000] Extended CMOS year: 2000
-Jul 16 10:54:33 smoke    0.000000] Console: colour VGA+ 80x25
-Jul 16 10:54:33 smoke    0.000000] console [tty0] enabled
-Jul 16 10:54:33 smoke    0.000000] Fast TSC calibration using PIT
-Jul 16 10:54:33 smoke    0.000000] Detected 2329.646 MHz processor.
-Jul 16 10:54:33 smoke    0.001005] Calibrating delay loop (skipped), value calculated using timer frequency.. 4659.29 BogoMIPS (lpj=2329646)
-Jul 16 10:54:33 smoke    0.002208] Dentry cache hash table entries: 524288 (order: 10, 4194304 bytes)
-Jul 16 10:54:33 smoke    0.004668] Inode-cache hash table entries: 262144 (order: 9, 2097152 bytes)
-Jul 16 10:54:33 smoke    0.005939] Mount-cache hash table entries: 256
-Jul 16 10:54:33 smoke    0.006145] CPU: Physical Processor ID: 0
-Jul 16 10:54:33 smoke    0.006370] CPU: Processor Core ID: 0
-Jul 16 10:54:33 smoke    0.006596] mce: CPU supports 6 MCE banks
-Jul 16 10:54:33 smoke    0.007008] CPU0: Thermal monitoring enabled (TM2)
-Jul 16 10:54:33 smoke    0.007236] using mwait in idle threads.
-Jul 16 10:54:33 smoke    0.007460] Performance Events: Core2 events, Intel PMU driver.
-Jul 16 10:54:33 smoke    0.007743] ... version:                2
-Jul 16 10:54:33 smoke    0.007968] ... bit width:              40
-Jul 16 10:54:33 smoke    0.008002] ... generic registers:      2
-Jul 16 10:54:33 smoke    0.008228] ... value mask:             000000ffffffffff
-Jul 16 10:54:33 smoke    0.008454] ... max period:             000000007fffffff
-Jul 16 10:54:33 smoke    0.008681] ... fixed-purpose events:   3
-Jul 16 10:54:33 smoke    0.009002] ... event mask:             0000000700000003
-Jul 16 10:54:33 smoke    0.009266] ACPI: Core revision 20100121
-Jul 16 10:54:33 smoke    0.021062] Setting APIC routing to flat
-Jul 16 10:54:33 smoke    0.021605] ..TIMER: vector=0x30 apic1=0 pin1=2 apic2=-1 pin2=-1
-Jul 16 10:54:33 smoke    0.032128] CPU0: Intel(R) Core(TM)2 Duo CPU     E6550  @ 2.33GHz stepping 0b
-Jul 16 10:54:33 smoke    0.038027] Booting Node   0, Processors  #1
-Jul 16 10:54:33 smoke    0.110018] Brought up 2 CPUs
-Jul 16 10:54:33 smoke    0.110463] Total of 2 processors activated (9318.30 BogoMIPS).
-Jul 16 10:54:33 smoke    0.112448] xor: automatically using best checksumming function: generic_sse
-Jul 16 10:54:33 smoke    0.117002]    generic_sse:  8228.000 MB/sec
-Jul 16 10:54:33 smoke    0.117227] xor: using function: generic_sse (8228.000 MB/sec)
-Jul 16 10:54:33 smoke    0.117456] regulator: core version 0.5
-Jul 16 10:54:33 smoke    0.117749] NET: Registered protocol family 16
-Jul 16 10:54:33 smoke    0.118348] ACPI: bus type pci registered
-Jul 16 10:54:33 smoke    0.118669] PCI: MMCONFIG for domain 0000 [bus 00-ff] at [mem 0xe0000000-0xefffffff] (base 0xe0000000)
-Jul 16 10:54:33 smoke    0.119005] PCI: not using MMCONFIG
-Jul 16 10:54:33 smoke    0.119230] PCI: Using configuration type 1 for base access
-Jul 16 10:54:33 smoke    0.122601] bio: create slab <bio-0> at 0
-Jul 16 10:54:33 smoke    0.126060] ACPI: Executed 1 blocks of module-level executable AML code
-Jul 16 10:54:33 smoke    0.135890] ACPI: SSDT 000000007ff9e0c0 001C6 (v01    AMI   CPU1PM 00000001 INTL 20060113)
-Jul 16 10:54:33 smoke    0.137033] ACPI: SSDT 000000007ff9e290 0013A (v01    AMI   CPU2PM 00000001 INTL 20060113)
-Jul 16 10:54:33 smoke    0.137922] ACPI: Interpreter enabled
-Jul 16 10:54:33 smoke    0.138004] ACPI: (supports S0 S1 S4 S5)
-Jul 16 10:54:33 smoke    0.138351] ACPI: Using IOAPIC for interrupt routing
-Jul 16 10:54:33 smoke    0.138623] PCI: MMCONFIG for domain 0000 [bus 00-ff] at [mem 0xe0000000-0xefffffff] (base 0xe0000000)
-Jul 16 10:54:33 smoke    0.140464] PCI: MMCONFIG at [mem 0xe0000000-0xefffffff] reserved in ACPI motherboard resources
-Jul 16 10:54:33 smoke    0.177044] ACPI: No dock devices found.
-Jul 16 10:54:33 smoke    0.177271] PCI: Ignoring host bridge windows from ACPI; if necessary, use "pci=use_crs" and report a bug
-Jul 16 10:54:33 smoke    0.177805] ACPI: PCI Root Bridge [PCI0] (0000:00)
-Jul 16 10:54:33 smoke    0.179109] pci 0000:00:1f.0: quirk: [io  0x0800-0x087f] claimed by ICH6 ACPI/GPIO/TCO
-Jul 16 10:54:33 smoke    0.179533] pci 0000:00:1f.0: quirk: [io  0x0480-0x04bf] claimed by ICH6 GPIO
-Jul 16 10:54:33 smoke    0.179763] pci 0000:00:1f.0: ICH7 LPC Generic IO decode 1 PIO at 0294 (mask 0003)
-Jul 16 10:54:33 smoke    0.180287] pci 0000:00:01.0: PCI bridge to [bus 01-01]
-Jul 16 10:54:33 smoke    0.180557] pci 0000:00:1c.0: PCI bridge to [bus 04-04]
-Jul 16 10:54:33 smoke    0.181162] pci 0000:00:1c.3: PCI bridge to [bus 03-03]
-Jul 16 10:54:33 smoke    0.181678] pci 0000:00:1c.4: PCI bridge to [bus 02-02]
-Jul 16 10:54:33 smoke    0.182106] pci 0000:00:1e.0: PCI bridge to [bus 05-05] (subtractive decode)
-Jul 16 10:54:33 smoke    0.188378] ACPI: PCI Interrupt Link [LNKA] (IRQs 3 4 5 6 7 10 *11 12 14 15)
-Jul 16 10:54:33 smoke    0.189031] ACPI: PCI Interrupt Link [LNKB] (IRQs 3 4 *5 6 7 10 11 12 14 15)
-Jul 16 10:54:33 smoke    0.189678] ACPI: PCI Interrupt Link [LNKC] (IRQs 3 4 5 6 7 10 11 12 14 *15)
-Jul 16 10:54:33 smoke    0.190324] ACPI: PCI Interrupt Link [LNKD] (IRQs 3 4 5 6 7 *10 11 12 14 15)
-Jul 16 10:54:33 smoke    0.190969] ACPI: PCI Interrupt Link [LNKE] (IRQs 3 4 5 6 7 10 11 12 14 15) *0, disabled.
-Jul 16 10:54:33 smoke    0.191860] ACPI: PCI Interrupt Link [LNKF] (IRQs 3 4 5 6 7 10 11 12 14 15) *0, disabled.
-Jul 16 10:54:33 smoke    0.192754] ACPI: PCI Interrupt Link [LNKG] (IRQs *3 4 5 6 7 10 11 12 14 15)
-Jul 16 10:54:33 smoke    0.193401] ACPI: PCI Interrupt Link [LNKH] (IRQs 3 4 5 6 7 10 11 12 *14 15)
-Jul 16 10:54:33 smoke    0.194172] vgaarb: device added: PCI:0000:01:00.0,decodes=io+mem,owns=io+mem,locks=none
-Jul 16 10:54:33 smoke    0.194548] vgaarb: loaded
-Jul 16 10:54:33 smoke    0.195006] SCSI subsystem initialized
-Jul 16 10:54:33 smoke    0.197161] usbcore: registered new interface driver usbfs
-Jul 16 10:54:33 smoke    0.197426] usbcore: registered new interface driver hub
-Jul 16 10:54:33 smoke    0.197690] usbcore: registered new device driver usb
-Jul 16 10:54:33 smoke    0.214937] raid6: int64x1   1960 MB/s
-Jul 16 10:54:33 smoke    0.231932] raid6: int64x2   2113 MB/s
-Jul 16 10:54:33 smoke    0.248932] raid6: int64x4   1843 MB/s
-Jul 16 10:54:33 smoke    0.265954] raid6: int64x8   1417 MB/s
-Jul 16 10:54:33 smoke    0.282941] raid6: sse2x1    4328 MB/s
-Jul 16 10:54:33 smoke    0.299935] raid6: sse2x2    4753 MB/s
-Jul 16 10:54:33 smoke    0.316935] raid6: sse2x4    6953 MB/s
-Jul 16 10:54:33 smoke    0.317001] raid6: using algorithm sse2x4 (6953 MB/s)
-Jul 16 10:54:33 smoke    0.317488] Advanced Linux Sound Architecture Driver Version 1.0.22.1.
-Jul 16 10:54:33 smoke    0.317503] PCI: Using ACPI for IRQ routing
-Jul 16 10:54:33 smoke    0.317774] pci 0000:05:01.0: address space collision: [mem 0xfe2ffc00-0xfe2ffc7f] conflicts with PCI Bus 0000:01 [mem 0xfa700000-0xfe7fffff]
-Jul 16 10:54:33 smoke    0.318571] HPET: 3 timers in total, 0 timers will be used for per-cpu timer
-Jul 16 10:54:33 smoke    0.318571] hpet0: at MMIO 0xfed00000, IRQs 2, 8, 0
-Jul 16 10:54:33 smoke    0.319002] hpet0: 3 comparators, 64-bit 14.318180 MHz counter
-Jul 16 10:54:33 smoke    0.322026] Switching to clocksource tsc
-Jul 16 10:54:33 smoke    0.328618] pnp: PnP ACPI init
-Jul 16 10:54:33 smoke    0.328852] ACPI: bus type pnp registered
-Jul 16 10:54:33 smoke    0.333115] pnp: PnP ACPI: found 14 devices
-Jul 16 10:54:33 smoke    0.333340] ACPI: ACPI bus type pnp unregistered
-Jul 16 10:54:33 smoke    0.333575] system 00:01: [mem 0xfed14000-0xfed19fff] has been reserved
-Jul 16 10:54:33 smoke    0.333808] system 00:07: [io  0x0290-0x0297] has been reserved
-Jul 16 10:54:33 smoke    0.334043] system 00:08: [io  0x04d0-0x04d1] has been reserved
-Jul 16 10:54:33 smoke    0.334271] system 00:08: [io  0x0800-0x087f] has been reserved
-Jul 16 10:54:33 smoke    0.334498] system 00:08: [io  0x0480-0x04bf] has been reserved
-Jul 16 10:54:33 smoke    0.334726] system 00:08: [mem 0xffafe000-0xffb0cbff] could not be reserved
-Jul 16 10:54:33 smoke    0.334955] system 00:08: [mem 0xffb00000-0xffbfffff] has been reserved
-Jul 16 10:54:33 smoke    0.335187] system 00:08: [mem 0xfed1c000-0xfed1ffff] has been reserved
-Jul 16 10:54:33 smoke    0.335415] system 00:08: [mem 0xfed20000-0xfed8ffff] has been reserved
-Jul 16 10:54:33 smoke    0.335645] system 00:08: [mem 0xfff00000-0xfffffffe] has been reserved
-Jul 16 10:54:33 smoke    0.335873] system 00:08: [mem 0xfebfe000-0xfebfec00] has been reserved
-Jul 16 10:54:33 smoke    0.336109] system 00:0b: [mem 0xfec00000-0xfec00fff] could not be reserved
-Jul 16 10:54:33 smoke    0.336338] system 00:0b: [mem 0xfee00000-0xfee00fff] has been reserved
-Jul 16 10:54:33 smoke    0.336570] system 00:0c: [mem 0xe0000000-0xefffffff] has been reserved
-Jul 16 10:54:33 smoke    0.336800] system 00:0d: [mem 0x00000000-0x0009ffff] could not be reserved
-Jul 16 10:54:33 smoke    0.337034] system 00:0d: [mem 0x000c0000-0x000cffff] has been reserved
-Jul 16 10:54:33 smoke    0.337263] system 00:0d: [mem 0x000e0000-0x000fffff] could not be reserved
-Jul 16 10:54:33 smoke    0.337492] system 00:0d: [mem 0x00100000-0x7fffffff] could not be reserved
-Jul 16 10:54:33 smoke    0.344584] pci 0000:00:1c.0: BAR 8: assigned [mem 0x80000000-0x803fffff]
-Jul 16 10:54:33 smoke    0.344814] pci 0000:00:1c.3: BAR 9: assigned [mem 0x80400000-0x805fffff 64bit pref]
-Jul 16 10:54:33 smoke    0.345241] pci 0000:00:1c.4: BAR 9: assigned [mem 0x80600000-0x807fffff 64bit pref]
-Jul 16 10:54:33 smoke    0.345664] pci 0000:00:1c.0: BAR 7: assigned [io  0x1000-0x1fff]
-Jul 16 10:54:33 smoke    0.345892] pci 0000:00:1f.3: BAR 0: assigned [mem 0x80800000-0x808000ff]
-Jul 16 10:54:33 smoke    0.346125] pci 0000:00:1f.3: BAR 0: set to [mem 0x80800000-0x808000ff] (PCI address [0x80800000-0x808000ff]
-Jul 16 10:54:33 smoke    0.346551] pci 0000:00:01.0: PCI bridge to [bus 01-01]
-Jul 16 10:54:33 smoke    0.346777] pci 0000:00:01.0:   bridge window [io  disabled]
-Jul 16 10:54:33 smoke    0.347005] pci 0000:00:01.0:   bridge window [mem 0xfa700000-0xfe7fffff]
-Jul 16 10:54:33 smoke    0.347238] pci 0000:00:01.0:   bridge window [mem 0xbfe00000-0xdfdfffff 64bit pref]
-Jul 16 10:54:33 smoke    0.347662] pci 0000:00:1c.0: PCI bridge to [bus 04-04]
-Jul 16 10:54:33 smoke    0.347889] pci 0000:00:1c.0:   bridge window [io  0x1000-0x1fff]
-Jul 16 10:54:33 smoke    0.348121] pci 0000:00:1c.0:   bridge window [mem 0x80000000-0x803fffff]
-Jul 16 10:54:33 smoke    0.348351] pci 0000:00:1c.0:   bridge window [mem 0xdfe00000-0xdfefffff 64bit pref]
-Jul 16 10:54:33 smoke    0.348776] pci 0000:00:1c.3: PCI bridge to [bus 03-03]
-Jul 16 10:54:33 smoke    0.349003] pci 0000:00:1c.3:   bridge window [io  0xa000-0xafff]
-Jul 16 10:54:33 smoke    0.349235] pci 0000:00:1c.3:   bridge window [mem 0xfe900000-0xfe9fffff]
-Jul 16 10:54:33 smoke    0.349465] pci 0000:00:1c.3:   bridge window [mem 0x80400000-0x805fffff 64bit pref]
-Jul 16 10:54:33 smoke    0.349891] pci 0000:00:1c.4: PCI bridge to [bus 02-02]
-Jul 16 10:54:33 smoke    0.350121] pci 0000:00:1c.4:   bridge window [io  0x9000-0x9fff]
-Jul 16 10:54:33 smoke    0.350352] pci 0000:00:1c.4:   bridge window [mem 0xfe800000-0xfe8fffff]
-Jul 16 10:54:33 smoke    0.350581] pci 0000:00:1c.4:   bridge window [mem 0x80600000-0x807fffff 64bit pref]
-Jul 16 10:54:33 smoke    0.351008] pci 0000:05:01.0: BAR 0: assigned [mem 0xfea00000-0xfea0007f]
-Jul 16 10:54:33 smoke    0.351242] pci 0000:05:01.0: BAR 0: error updating (0xfea00000 != 0xffffffff)
-Jul 16 10:54:33 smoke    0.351664] pci 0000:05:01.0: BAR 0: set to [mem 0xfea00000-0xfea0007f] (PCI address [0xfea00000-0xfea0007f]
-Jul 16 10:54:33 smoke    0.352092] pci 0000:00:1e.0: PCI bridge to [bus 05-05]
-Jul 16 10:54:33 smoke    0.352319] pci 0000:00:1e.0:   bridge window [io  0xb000-0xbfff]
-Jul 16 10:54:33 smoke    0.352549] pci 0000:00:1e.0:   bridge window [mem 0xfea00000-0xfeafffff]
-Jul 16 10:54:33 smoke    0.352779] pci 0000:00:1e.0:   bridge window [mem pref disabled]
-Jul 16 10:54:33 smoke    0.353021] pci 0000:00:01.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
-Jul 16 10:54:33 smoke    0.353256] pci 0000:00:1c.0: enabling device (0106 -> 0107)
-Jul 16 10:54:33 smoke    0.353485] pci 0000:00:1c.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
-Jul 16 10:54:33 smoke    0.353723] pci 0000:00:1c.3: PCI INT D -> GSI 19 (level, low) -> IRQ 19
-Jul 16 10:54:33 smoke    0.353961] pci 0000:00:1c.4: PCI INT A -> GSI 16 (level, low) -> IRQ 16
-Jul 16 10:54:33 smoke    0.354286] NET: Registered protocol family 2
-Jul 16 10:54:33 smoke    0.354664] IP route cache hash table entries: 131072 (order: 8, 1048576 bytes)
-Jul 16 10:54:33 smoke    0.356186] TCP established hash table entries: 524288 (order: 11, 8388608 bytes)
-Jul 16 10:54:33 smoke    0.360401] TCP bind hash table entries: 65536 (order: 8, 1048576 bytes)
-Jul 16 10:54:33 smoke    0.361170] TCP: Hash tables configured (established 524288 bind 65536)
-Jul 16 10:54:33 smoke    0.361399] TCP reno registered
-Jul 16 10:54:33 smoke    0.361632] UDP hash table entries: 2048 (order: 4, 65536 bytes)
-Jul 16 10:54:33 smoke    0.361898] UDP-Lite hash table entries: 2048 (order: 4, 65536 bytes)
-Jul 16 10:54:33 smoke    0.362295] NET: Registered protocol family 1
-Jul 16 10:54:33 smoke    0.363078] RPC: Registered udp transport module.
-Jul 16 10:54:33 smoke    0.363310] RPC: Registered tcp transport module.
-Jul 16 10:54:33 smoke    0.363536] RPC: Registered tcp NFSv4.1 backchannel transport module.
-Jul 16 10:54:33 smoke    1.455306] PCI-DMA: Using software bounce buffering for IO (SWIOTLB)
-Jul 16 10:54:33 smoke    1.455542] Placing 64MB software IO TLB between ffff880001b9b000 - ffff880005b9b000
-Jul 16 10:54:33 smoke    1.455964] software IO TLB at phys 0x1b9b000 - 0x5b9b000
-Jul 16 10:54:33 smoke    1.475715] HugeTLB registered 2 MB page size, pre-allocated 0 pages
-Jul 16 10:54:33 smoke    1.477532] Installing knfsd (copyright (C) 1996 okir@monad.swb.de).
-Jul 16 10:54:33 smoke    1.477947] Slow work thread pool: Starting up
-Jul 16 10:54:33 smoke    1.478194] Slow work thread pool: Ready
-Jul 16 10:54:33 smoke    1.478419] NTFS driver 2.1.29 [Flags: R/W].
-Jul 16 10:54:33 smoke    1.478719] fuse init (API version 7.13)
-Jul 16 10:54:33 smoke    1.478995] SGI XFS with security attributes, large block/inode numbers, no debug enabled
-Jul 16 10:54:33 smoke    1.485278] msgmni has been set to 7931
-Jul 16 10:54:33 smoke    1.485560] io scheduler noop registered
-Jul 16 10:54:33 smoke    1.485799] io scheduler cfq registered (default)
-Jul 16 10:54:33 smoke    1.513728] Linux agpgart interface v0.103
-Jul 16 10:54:33 smoke    1.514040] Serial: 8250/16550 driver, 4 ports, IRQ sharing disabled
-Jul 16 10:54:33 smoke    1.514374] serial8250: ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
-Jul 16 10:54:33 smoke    1.515114] 00:06: ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
-Jul 16 10:54:33 smoke    3.555145] floppy0: no floppy controllers found
-Jul 16 10:54:33 smoke    3.556851] brd: module loaded
-Jul 16 10:54:33 smoke    3.557800] loop: module loaded
-Jul 16 10:54:33 smoke    3.560454] ata_piix 0000:00:1f.2: PCI INT B -> GSI 19 (level, low) -> IRQ 19
-Jul 16 10:54:33 smoke    3.560684] ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
-Jul 16 10:54:33 smoke    3.712203] scsi0 : ata_piix
-Jul 16 10:54:33 smoke    3.712534] scsi1 : ata_piix
-Jul 16 10:54:33 smoke    3.715034] ata1: SATA max UDMA/133 cmd 0xec00 ctl 0xe880 bmdma 0xe400 irq 19
-Jul 16 10:54:33 smoke    3.715271] ata2: SATA max UDMA/133 cmd 0xe800 ctl 0xe480 bmdma 0xe408 irq 19
-Jul 16 10:54:33 smoke    3.715514] ata_piix 0000:00:1f.5: PCI INT B -> GSI 19 (level, low) -> IRQ 19
-Jul 16 10:54:33 smoke    3.715745] ata_piix 0000:00:1f.5: MAP [ P0 -- P1 -- ]
-Jul 16 10:54:33 smoke    3.716160] scsi2 : ata_piix
-Jul 16 10:54:33 smoke    3.721564] scsi3 : ata_piix
-Jul 16 10:54:33 smoke    3.723432] ata3: SATA max UDMA/133 cmd 0xd400 ctl 0xd080 bmdma 0xc880 irq 19
-Jul 16 10:54:33 smoke    3.723662] ata4: SATA max UDMA/133 cmd 0xd000 ctl 0xcc00 bmdma 0xc888 irq 19
-Jul 16 10:54:33 smoke    3.723959] pata_jmicron 0000:02:00.1: PCI INT B -> GSI 17 (level, low) -> IRQ 17
-Jul 16 10:54:33 smoke    3.724451] scsi4 : pata_jmicron
-Jul 16 10:54:33 smoke    3.724773] scsi5 : pata_jmicron
-Jul 16 10:54:33 smoke    3.725835] ata5: PATA max UDMA/100 cmd 0x9c00 ctl 0x9880 bmdma 0x9400 irq 17
-Jul 16 10:54:33 smoke    3.726075] ata6: PATA max UDMA/100 cmd 0x9800 ctl 0x9480 bmdma 0x9408 irq 17
-Jul 16 10:54:33 smoke    3.726512] r8169 Gigabit Ethernet driver 2.3LK-NAPI loaded
-Jul 16 10:54:33 smoke    3.726751] r8169 0000:03:00.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
-Jul 16 10:54:33 smoke    3.727300] r8169 0000:03:00.0: eth0: RTL8168b/8111b at 0xffffc90000674000, 00:1b:fc:f5:78:1a, XID 18000000 IRQ 28
-Jul 16 10:54:33 smoke    3.729181] netconsole: local port 4444
-Jul 16 10:54:33 smoke    3.729407] netconsole: local IP 192.168.69.3
-Jul 16 10:54:33 smoke    3.729632] netconsole: interface 'eth0'
-Jul 16 10:54:33 smoke    3.729856] netconsole: remote port 514
-Jul 16 10:54:33 smoke    3.730087] netconsole: remote IP 192.168.69.51
-Jul 16 10:54:33 smoke    3.730312] netconsole: remote ethernet address ff:ff:ff:ff:ff:ff
-Jul 16 10:54:33 smoke    3.730540] netconsole: device eth0 not up yet, forcing it
-Jul 16 10:54:33 smoke    3.731105] r8169 0000:03:00.0: eth0: link down
-Jul 16 10:54:33 smoke    3.731335] r8169 0000:03:00.0: eth0: link down
-Jul 16 10:54:33 smoke    3.880676] ata5.00: ATAPI: MAD DOG MD-16XDVD9A2, 1.F0, max UDMA/33
-Jul 16 10:54:33 smoke    3.887692] ata5.00: configured for UDMA/33
-Jul 16 10:54:33 smoke    4.179048] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-Jul 16 10:54:33 smoke    4.180172] ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-Jul 16 10:54:33 smoke    4.209555] ata3.00: HPA detected: current 2930275055, native 2930277168
-Jul 16 10:54:33 smoke    4.209788] ata3.00: ATA-8: ST31500341AS, CC1H, max UDMA/133
-Jul 16 10:54:33 smoke    4.210021] ata3.00: 2930275055 sectors, multi 16: LBA48 NCQ (depth 0/32)
-Jul 16 10:54:33 smoke    4.210718] ata4.00: ATA-8: ST31500341AS, CC1H, max UDMA/133
-Jul 16 10:54:33 smoke    4.210950] ata4.00: 2930277168 sectors, multi 16: LBA48 NCQ (depth 0/32)
-Jul 16 10:54:33 smoke    4.259545] ata3.00: configured for UDMA/133
-Jul 16 10:54:33 smoke    4.260709] ata4.00: configured for UDMA/133
-Jul 16 10:54:33 smoke    4.477063] ata2.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-Jul 16 10:54:33 smoke    4.477247] ata1.00: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-Jul 16 10:54:33 smoke    4.477269] ata1.01: SATA link down (SStatus 4 SControl 300)
-Jul 16 10:54:33 smoke    4.477800] ata2.01: SATA link down (SStatus 4 SControl 300)
-Jul 16 10:54:33 smoke    4.491264] ata2.00: ATA-7: WDC WD7500AAKS-00RBA0, 30.04G30, max UDMA/133
-Jul 16 10:54:33 smoke    4.491494] ata2.00: 1465149168 sectors, multi 16: LBA48 NCQ (depth 0/32)
-Jul 16 10:54:33 smoke    4.497994] ata2.00: configured for UDMA/133
-Jul 16 10:54:33 smoke    4.526583] ata1.00: ATA-7: ST3750640AS, 3.AAE, max UDMA/133
-Jul 16 10:54:33 smoke    4.526818] ata1.00: 1465149168 sectors, multi 16: LBA48 NCQ (depth 0/32)
-Jul 16 10:54:33 smoke    4.601556] ata1.00: configured for UDMA/133
-Jul 16 10:54:33 smoke    4.601880] scsi 0:0:0:0: Direct-Access     ATA      ST3750640AS      3.AA PQ: 0 ANSI: 5
-Jul 16 10:54:33 smoke    4.602521] sd 0:0:0:0: [sda] 1465149168 512-byte logical blocks: (750 GB/698 GiB)
-Jul 16 10:54:33 smoke    4.602967] sd 0:0:0:0: Attached scsi generic sg0 type 0
-Jul 16 10:54:33 smoke    4.603009] sd 0:0:0:0: [sda] Write Protect is off
-Jul 16 10:54:33 smoke    4.603032] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-Jul 16 10:54:33 smoke    4.603158]  sda:
-Jul 16 10:54:33 smoke    4.603955] scsi 1:0:0:0: Direct-Access     ATA      WDC WD7500AAKS-0 30.0 PQ: 0 ANSI: 5
-Jul 16 10:54:33 smoke    4.604764] sd 1:0:0:0: [sdb] 1465149168 512-byte logical blocks: (750 GB/698 GiB)
-Jul 16 10:54:33 smoke    4.605269] sd 1:0:0:0: Attached scsi generic sg1 type 0
-Jul 16 10:54:33 smoke    4.605527] sd 1:0:0:0: [sdb] Write Protect is off
-Jul 16 10:54:33 smoke    4.605558] scsi 2:0:0:0: Direct-Access     ATA      ST31500341AS     CC1H PQ: 0 ANSI: 5
-Jul 16 10:54:33 smoke    4.605777] sd 2:0:0:0: Attached scsi generic sg2 type 0
-Jul 16 10:54:33 smoke    4.605833] sd 2:0:0:0: [sdc] 2930275055 512-byte logical blocks: (1.50 TB/1.36 TiB)
-Jul 16 10:54:33 smoke    4.605880] scsi 3:0:0:0: Direct-Access     ATA      ST31500341AS     CC1H PQ: 0 ANSI: 5
-Jul 16 10:54:33 smoke    4.605934] sd 2:0:0:0: [sdc] Write Protect is off
-Jul 16 10:54:33 smoke    4.605957] sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-Jul 16 10:54:33 smoke    4.606076]  sdc:
-Jul 16 10:54:33 smoke    4.606360] sd 3:0:0:0: Attached scsi generic sg3 type 0
-Jul 16 10:54:33 smoke    4.606387] sd 3:0:0:0: [sdd] 2930277168 512-byte logical blocks: (1.50 TB/1.36 TiB)
-Jul 16 10:54:33 smoke    4.606436] sd 3:0:0:0: [sdd] Write Protect is off
-Jul 16 10:54:33 smoke    4.606459] sd 3:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-Jul 16 10:54:33 smoke    4.606569]  sdd:
-Jul 16 10:54:33 smoke    4.609381] scsi 4:0:0:0: CD-ROM            MAD DOG  MD-16XDVD9A2     1.F0 PQ: 0 ANSI: 5
-Jul 16 10:54:33 smoke    4.610453] sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-Jul 16 10:54:33 smoke    4.611094]  sdb: sdc1 sdc2 sdc3
-Jul 16 10:54:33 smoke    4.612177] sd 2:0:0:0: [sdc] Attached SCSI disk
-Jul 16 10:54:33 smoke    4.612515] sr0: scsi3-mmc drive: 48x/48x writer cd/rw xa/form2 cdda tray
-Jul 16 10:54:33 smoke    4.612746] Uniform CD-ROM driver Revision: 3.20
-Jul 16 10:54:33 smoke    4.613194] sr 4:0:0:0: Attached scsi generic sg4 type 5
-Jul 16 10:54:33 smoke    4.613436]  sdb1 sdb2 sdb3
-Jul 16 10:54:33 smoke    4.614105] sd 1:0:0:0: [sdb] Attached SCSI disk
-Jul 16 10:54:33 smoke    4.624099]  sdd1 sdd2 sdd3
-Jul 16 10:54:33 smoke    4.624688] sd 3:0:0:0: [sdd] Attached SCSI disk
-Jul 16 10:54:33 smoke    4.649509]  sda1 sda2 sda3
-Jul 16 10:54:33 smoke    4.650103] sd 0:0:0:0: [sda] Attached SCSI disk
-Jul 16 10:54:33 smoke    5.427356] r8169 0000:03:00.0: eth0: link up
-Jul 16 10:54:33 smoke    5.548554] console [netcon0] enabled
-Jul 16 10:54:33 smoke    5.548780] netconsole: network logging started
-Jul 16 10:54:33 smoke    5.549014] Fusion MPT base driver 3.04.14
-Jul 16 10:54:33 smoke    5.549240] Copyright (c) 1999-2008 LSI Corporation
-Jul 16 10:54:33 smoke    5.549483] Fusion MPT SPI Host driver 3.04.14
-Jul 16 10:54:33 smoke    5.549984] PNP: No PS/2 controller found. Probing ports directly.
-Jul 16 10:54:33 smoke    5.552767] serio: i8042 KBD port at 0x60,0x64 irq 1
-Jul 16 10:54:33 smoke    5.552999] serio: i8042 AUX port at 0x60,0x64 irq 12
-Jul 16 10:54:33 smoke    5.553360] mice: PS/2 mouse device common for all mice
-Jul 16 10:54:33 smoke    5.553694] rtc_cmos 00:03: RTC can wake from S4
-Jul 16 10:54:33 smoke    5.553984] rtc_cmos 00:03: rtc core: registered rtc_cmos as rtc0
-Jul 16 10:54:33 smoke    5.554242] rtc0: alarms up to one month, y3k, 114 bytes nvram, hpet irqs
-Jul 16 10:54:33 smoke    5.554506] i2c /dev entries driver
-Jul 16 10:54:33 smoke    5.554790] iTCO_wdt: Intel TCO WatchDog Timer Driver v1.05
-Jul 16 10:54:33 smoke    5.555123] iTCO_wdt: Found a ICH8 or ICH8R TCO device (Version=2, TCOBASE=0x0860)
-Jul 16 10:54:33 smoke    5.555607] iTCO_wdt: initialized. heartbeat=30 sec (nowayout=0)
-Jul 16 10:54:33 smoke    5.555836] iTCO_vendor_support: vendor-support=0
-Jul 16 10:54:33 smoke    5.556072] md: raid0 personality registered for level 0
-Jul 16 10:54:33 smoke    5.556299] md: raid1 personality registered for level 1
-Jul 16 10:54:33 smoke    5.556531] md: raid10 personality registered for level 10
-Jul 16 10:54:33 smoke    5.556763] md: raid6 personality registered for level 6
-Jul 16 10:54:33 smoke    5.556995] md: raid5 personality registered for level 5
-Jul 16 10:54:33 smoke    5.557239] md: raid4 personality registered for level 4
-Jul 16 10:54:33 smoke    5.557582] device-mapper: ioctl: 4.17.0-ioctl (2010-03-05) initialised: dm-devel@redhat.com
-Jul 16 10:54:33 smoke    5.558024] cpuidle: using governor ladder
-Jul 16 10:54:33 smoke    5.559096] usbcore: registered new interface driver usbhid
-Jul 16 10:54:33 smoke    5.559324] usbhid: USB HID core driver
-Jul 16 10:54:33 smoke    5.559555] ALSA device list:
-Jul 16 10:54:33 smoke    5.559783]   No soundcards found.
-Jul 16 10:54:33 smoke    5.560279] TCP cubic registered
-Jul 16 10:54:33 smoke    5.560506] NET: Registered protocol family 17
-Jul 16 10:54:33 smoke    5.568622] registered taskstats version 1
-Jul 16 10:54:33 smoke    5.568896] raid6test: testing the 4-disk case...
-Jul 16 10:54:33 smoke    5.569189] raid6test: test_disks(0, 1): faila=  0(D)  failb=  1(D)  OK
-Jul 16 10:54:33 smoke    5.569469] raid6test: test_disks(0, 2): faila=  0(D)  failb=  2(P)  OK
-Jul 16 10:54:33 smoke    5.569734] raid6test: test_disks(0, 3): faila=  0(D)  failb=  3(Q)  OK
-Jul 16 10:54:33 smoke    5.570019] raid6test: test_disks(1, 2): faila=  1(D)  failb=  2(P)  OK
-Jul 16 10:54:33 smoke    5.570282] raid6test: test_disks(1, 3): faila=  1(D)  failb=  3(Q)  OK
-Jul 16 10:54:33 smoke    5.570544] raid6test: test_disks(2, 3): faila=  2(P)  failb=  3(Q)  OK
-Jul 16 10:54:33 smoke    5.570811] raid6test: testing the 5-disk case...
-Jul 16 10:54:33 smoke    5.571096] raid6test: test_disks(0, 1): faila=  0(D)  failb=  1(D)  OK
-Jul 16 10:54:33 smoke    5.571380] raid6test: test_disks(0, 2): faila=  0(D)  failb=  2(D)  OK
-Jul 16 10:54:33 smoke    5.571660] raid6test: test_disks(0, 3): faila=  0(D)  failb=  3(P)  OK
-Jul 16 10:54:33 smoke    5.571922] raid6test: test_disks(0, 4): faila=  0(D)  failb=  4(Q)  OK
-Jul 16 10:54:33 smoke    5.572211] raid6test: test_disks(1, 2): faila=  1(D)  failb=  2(D)  OK
-Jul 16 10:54:33 smoke    5.572491] raid6test: test_disks(1, 3): faila=  1(D)  failb=  3(P)  OK
-Jul 16 10:54:33 smoke    5.572755] raid6test: test_disks(1, 4): faila=  1(D)  failb=  4(Q)  OK
-Jul 16 10:54:33 smoke    5.573040] raid6test: test_disks(2, 3): faila=  2(D)  failb=  3(P)  OK
-Jul 16 10:54:33 smoke    5.573304] raid6test: test_disks(2, 4): faila=  2(D)  failb=  4(Q)  OK
-Jul 16 10:54:33 smoke    5.573566] raid6test: test_disks(3, 4): faila=  3(P)  failb=  4(Q)  OK
-Jul 16 10:54:33 smoke    5.573879] raid6test: testing the 11-disk case...
-Jul 16 10:54:33 smoke    5.574172] raid6test: test_disks(0, 1): faila=  0(D)  failb=  1(D)  OK
-Jul 16 10:54:33 smoke    5.574463] raid6test: test_disks(0, 2): faila=  0(D)  failb=  2(D)  OK
-Jul 16 10:54:33 smoke    5.574753] raid6test: test_disks(0, 3): faila=  0(D)  failb=  3(D)  OK
-Jul 16 10:54:33 smoke    5.575055] raid6test: test_disks(0, 4): faila=  0(D)  failb=  4(D)  OK
-Jul 16 10:54:33 smoke    5.575355] raid6test: test_disks(0, 5): faila=  0(D)  failb=  5(D)  OK
-Jul 16 10:54:33 smoke    5.575653] raid6test: test_disks(0, 6): faila=  0(D)  failb=  6(D)  OK
-Jul 16 10:54:33 smoke    5.575943] raid6test: test_disks(0, 7): faila=  0(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.576238] raid6test: test_disks(0, 8): faila=  0(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.576524] raid6test: test_disks(0, 9): faila=  0(D)  failb=  9(P)  OK
-Jul 16 10:54:33 smoke    5.576796] raid6test: test_disks(0, 10): faila=  0(D)  failb= 10(Q)  OK
-Jul 16 10:54:33 smoke    5.577090] raid6test: test_disks(1, 2): faila=  1(D)  failb=  2(D)  OK
-Jul 16 10:54:33 smoke    5.577382] raid6test: test_disks(1, 3): faila=  1(D)  failb=  3(D)  OK
-Jul 16 10:54:33 smoke    5.577672] raid6test: test_disks(1, 4): faila=  1(D)  failb=  4(D)  OK
-Jul 16 10:54:33 smoke    5.577962] raid6test: test_disks(1, 5): faila=  1(D)  failb=  5(D)  OK
-Jul 16 10:54:33 smoke    5.578257] raid6test: test_disks(1, 6): faila=  1(D)  failb=  6(D)  OK
-Jul 16 10:54:33 smoke    5.578548] raid6test: test_disks(1, 7): faila=  1(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.578838] raid6test: test_disks(1, 8): faila=  1(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.579128] raid6test: test_disks(1, 9): faila=  1(D)  failb=  9(P)  OK
-Jul 16 10:54:33 smoke    5.579401] raid6test: test_disks(1, 10): faila=  1(D)  failb= 10(Q)  OK
-Jul 16 10:54:33 smoke    5.579691] raid6test: test_disks(2, 3): faila=  2(D)  failb=  3(D)  OK
-Jul 16 10:54:33 smoke    5.579981] raid6test: test_disks(2, 4): faila=  2(D)  failb=  4(D)  OK
-Jul 16 10:54:33 smoke    5.580276] raid6test: test_disks(2, 5): faila=  2(D)  failb=  5(D)  OK
-Jul 16 10:54:33 smoke    5.580567] raid6test: test_disks(2, 6): faila=  2(D)  failb=  6(D)  OK
-Jul 16 10:54:33 smoke    5.580857] raid6test: test_disks(2, 7): faila=  2(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.581151] raid6test: test_disks(2, 8): faila=  2(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.581439] raid6test: test_disks(2, 9): faila=  2(D)  failb=  9(P)  OK
-Jul 16 10:54:33 smoke    5.581711] raid6test: test_disks(2, 10): faila=  2(D)  failb= 10(Q)  OK
-Jul 16 10:54:33 smoke    5.582006] raid6test: test_disks(3, 4): faila=  3(D)  failb=  4(D)  OK
-Jul 16 10:54:33 smoke    5.582296] raid6test: test_disks(3, 5): faila=  3(D)  failb=  5(D)  OK
-Jul 16 10:54:33 smoke    5.582588] raid6test: test_disks(3, 6): faila=  3(D)  failb=  6(D)  OK
-Jul 16 10:54:33 smoke    5.582878] raid6test: test_disks(3, 7): faila=  3(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.583172] raid6test: test_disks(3, 8): faila=  3(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.583458] raid6test: test_disks(3, 9): faila=  3(D)  failb=  9(P)  OK
-Jul 16 10:54:33 smoke    5.583731] raid6test: test_disks(3, 10): faila=  3(D)  failb= 10(Q)  OK
-Jul 16 10:54:33 smoke    5.584026] raid6test: test_disks(4, 5): faila=  4(D)  failb=  5(D)  OK
-Jul 16 10:54:33 smoke    5.584316] raid6test: test_disks(4, 6): faila=  4(D)  failb=  6(D)  OK
-Jul 16 10:54:33 smoke    5.584608] raid6test: test_disks(4, 7): faila=  4(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.584897] raid6test: test_disks(4, 8): faila=  4(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.585188] raid6test: test_disks(4, 9): faila=  4(D)  failb=  9(P)  OK
-Jul 16 10:54:33 smoke    5.585460] raid6test: test_disks(4, 10): faila=  4(D)  failb= 10(Q)  OK
-Jul 16 10:54:33 smoke    5.585751] raid6test: test_disks(5, 6): faila=  5(D)  failb=  6(D)  OK
-Jul 16 10:54:33 smoke    5.586052] raid6test: test_disks(5, 7): faila=  5(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.586345] raid6test: test_disks(5, 8): faila=  5(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.586632] raid6test: test_disks(5, 9): faila=  5(D)  failb=  9(P)  OK
-Jul 16 10:54:33 smoke    5.586904] raid6test: test_disks(5, 10): faila=  5(D)  failb= 10(Q)  OK
-Jul 16 10:54:33 smoke    5.587199] raid6test: test_disks(6, 7): faila=  6(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.587489] raid6test: test_disks(6, 8): faila=  6(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.587775] raid6test: test_disks(6, 9): faila=  6(D)  failb=  9(P)  OK
-Jul 16 10:54:33 smoke    5.588052] raid6test: test_disks(6, 10): faila=  6(D)  failb= 10(Q)  OK
-Jul 16 10:54:33 smoke    5.588343] raid6test: test_disks(7, 8): faila=  7(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.588630] raid6test: test_disks(7, 9): faila=  7(D)  failb=  9(P)  OK
-Jul 16 10:54:33 smoke    5.588901] raid6test: test_disks(7, 10): faila=  7(D)  failb= 10(Q)  OK
-Jul 16 10:54:33 smoke    5.589193] raid6test: test_disks(8, 9): faila=  8(D)  failb=  9(P)  OK
-Jul 16 10:54:33 smoke    5.589464] raid6test: test_disks(8, 10): faila=  8(D)  failb= 10(Q)  OK
-Jul 16 10:54:33 smoke    5.589734] raid6test: test_disks(9, 10): faila=  9(P)  failb= 10(Q)  OK
-Jul 16 10:54:33 smoke    5.590057] raid6test: testing the 12-disk case...
-Jul 16 10:54:33 smoke    5.590346] raid6test: test_disks(0, 1): faila=  0(D)  failb=  1(D)  OK
-Jul 16 10:54:33 smoke    5.590638] raid6test: test_disks(0, 2): faila=  0(D)  failb=  2(D)  OK
-Jul 16 10:54:33 smoke    5.590929] raid6test: test_disks(0, 3): faila=  0(D)  failb=  3(D)  OK
-Jul 16 10:54:33 smoke    5.591226] raid6test: test_disks(0, 4): faila=  0(D)  failb=  4(D)  OK
-Jul 16 10:54:33 smoke    5.591517] raid6test: test_disks(0, 5): faila=  0(D)  failb=  5(D)  OK
-Jul 16 10:54:33 smoke    5.591808] raid6test: test_disks(0, 6): faila=  0(D)  failb=  6(D)  OK
-Jul 16 10:54:33 smoke    5.592103] raid6test: test_disks(0, 7): faila=  0(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.592394] raid6test: test_disks(0, 8): faila=  0(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.592686] raid6test: test_disks(0, 9): faila=  0(D)  failb=  9(D)  OK
-Jul 16 10:54:33 smoke    5.592974] raid6test: test_disks(0, 10): faila=  0(D)  failb= 10(P)  OK
-Jul 16 10:54:33 smoke    5.593252] raid6test: test_disks(0, 11): faila=  0(D)  failb= 11(Q)  OK
-Jul 16 10:54:33 smoke    5.593544] raid6test: test_disks(1, 2): faila=  1(D)  failb=  2(D)  OK
-Jul 16 10:54:33 smoke    5.593835] raid6test: test_disks(1, 3): faila=  1(D)  failb=  3(D)  OK
-Jul 16 10:54:33 smoke    5.594129] raid6test: test_disks(1, 4): faila=  1(D)  failb=  4(D)  OK
-Jul 16 10:54:33 smoke    5.594420] raid6test: test_disks(1, 5): faila=  1(D)  failb=  5(D)  OK
-Jul 16 10:54:33 smoke    5.594711] raid6test: test_disks(1, 6): faila=  1(D)  failb=  6(D)  OK
-Jul 16 10:54:33 smoke    5.595006] raid6test: test_disks(1, 7): faila=  1(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.595300] raid6test: test_disks(1, 8): faila=  1(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.595591] raid6test: test_disks(1, 9): faila=  1(D)  failb=  9(D)  OK
-Jul 16 10:54:33 smoke    5.595881] raid6test: test_disks(1, 10): faila=  1(D)  failb= 10(P)  OK
-Jul 16 10:54:33 smoke    5.596159] raid6test: test_disks(1, 11): faila=  1(D)  failb= 11(Q)  OK
-Jul 16 10:54:33 smoke    5.596450] raid6test: test_disks(2, 3): faila=  2(D)  failb=  3(D)  OK
-Jul 16 10:54:33 smoke    5.596750] raid6test: test_disks(2, 4): faila=  2(D)  failb=  4(D)  OK
-Jul 16 10:54:33 smoke    5.597059] raid6test: test_disks(2, 5): faila=  2(D)  failb=  5(D)  OK
-Jul 16 10:54:33 smoke    5.597352] raid6test: test_disks(2, 6): faila=  2(D)  failb=  6(D)  OK
-Jul 16 10:54:33 smoke    5.597643] raid6test: test_disks(2, 7): faila=  2(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.597934] raid6test: test_disks(2, 8): faila=  2(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.598231] raid6test: test_disks(2, 9): faila=  2(D)  failb=  9(D)  OK
-Jul 16 10:54:33 smoke    5.598519] raid6test: test_disks(2, 10): faila=  2(D)  failb= 10(P)  OK
-Jul 16 10:54:33 smoke    5.598793] raid6test: test_disks(2, 11): faila=  2(D)  failb= 11(Q)  OK
-Jul 16 10:54:33 smoke    5.599088] raid6test: test_disks(3, 4): faila=  3(D)  failb=  4(D)  OK
-Jul 16 10:54:33 smoke    5.599380] raid6test: test_disks(3, 5): faila=  3(D)  failb=  5(D)  OK
-Jul 16 10:54:33 smoke    5.599671] raid6test: test_disks(3, 6): faila=  3(D)  failb=  6(D)  OK
-Jul 16 10:54:33 smoke    5.599962] raid6test: test_disks(3, 7): faila=  3(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.600259] raid6test: test_disks(3, 8): faila=  3(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.600551] raid6test: test_disks(3, 9): faila=  3(D)  failb=  9(D)  OK
-Jul 16 10:54:33 smoke    5.600839] raid6test: test_disks(3, 10): faila=  3(D)  failb= 10(P)  OK
-Jul 16 10:54:33 smoke    5.601117] raid6test: test_disks(3, 11): faila=  3(D)  failb= 11(Q)  OK
-Jul 16 10:54:33 smoke    5.601410] raid6test: test_disks(4, 5): faila=  4(D)  failb=  5(D)  OK
-Jul 16 10:54:33 smoke    5.601701] raid6test: test_disks(4, 6): faila=  4(D)  failb=  6(D)  OK
-Jul 16 10:54:33 smoke    5.601992] raid6test: test_disks(4, 7): faila=  4(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.602287] raid6test: test_disks(4, 8): faila=  4(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.602579] raid6test: test_disks(4, 9): faila=  4(D)  failb=  9(D)  OK
-Jul 16 10:54:33 smoke    5.602867] raid6test: test_disks(4, 10): faila=  4(D)  failb= 10(P)  OK
-Jul 16 10:54:33 smoke    5.603145] raid6test: test_disks(4, 11): faila=  4(D)  failb= 11(Q)  OK
-Jul 16 10:54:33 smoke    5.603437] raid6test: test_disks(5, 6): faila=  5(D)  failb=  6(D)  OK
-Jul 16 10:54:33 smoke    5.603728] raid6test: test_disks(5, 7): faila=  5(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.604024] raid6test: test_disks(5, 8): faila=  5(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.604315] raid6test: test_disks(5, 9): faila=  5(D)  failb=  9(D)  OK
-Jul 16 10:54:33 smoke    5.604603] raid6test: test_disks(5, 10): faila=  5(D)  failb= 10(P)  OK
-Jul 16 10:54:33 smoke    5.604878] raid6test: test_disks(5, 11): faila=  5(D)  failb= 11(Q)  OK
-Jul 16 10:54:33 smoke    5.605173] raid6test: test_disks(6, 7): faila=  6(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.605465] raid6test: test_disks(6, 8): faila=  6(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.605756] raid6test: test_disks(6, 9): faila=  6(D)  failb=  9(D)  OK
-Jul 16 10:54:33 smoke    5.606048] raid6test: test_disks(6, 10): faila=  6(D)  failb= 10(P)  OK
-Jul 16 10:54:33 smoke    5.606323] raid6test: test_disks(6, 11): faila=  6(D)  failb= 11(Q)  OK
-Jul 16 10:54:33 smoke    5.611694] raid6test: test_disks(7, 8): faila=  7(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.611996] raid6test: test_disks(7, 9): faila=  7(D)  failb=  9(D)  OK
-Jul 16 10:54:33 smoke    5.612289] raid6test: test_disks(7, 10): faila=  7(D)  failb= 10(P)  OK
-Jul 16 10:54:33 smoke    5.612563] raid6test: test_disks(7, 11): faila=  7(D)  failb= 11(Q)  OK
-Jul 16 10:54:33 smoke    5.612855] raid6test: test_disks(8, 9): faila=  8(D)  failb=  9(D)  OK
-Jul 16 10:54:33 smoke    5.613149] raid6test: test_disks(8, 10): faila=  8(D)  failb= 10(P)  OK
-Jul 16 10:54:33 smoke    5.613423] raid6test: test_disks(8, 11): faila=  8(D)  failb= 11(Q)  OK
-Jul 16 10:54:33 smoke    5.613711] raid6test: test_disks(9, 10): faila=  9(D)  failb= 10(P)  OK
-Jul 16 10:54:33 smoke    5.613986] raid6test: test_disks(9, 11): faila=  9(D)  failb= 11(Q)  OK
-Jul 16 10:54:33 smoke    5.614261] raid6test: test_disks(10, 11): faila= 10(P)  failb= 11(Q)  OK
-Jul 16 10:54:33 smoke    5.614610] raid6test: testing the 16-disk case...
-Jul 16 10:54:33 smoke    5.614907] raid6test: test_disks(0, 1): faila=  0(D)  failb=  1(D)  OK
-Jul 16 10:54:33 smoke    5.615212] raid6test: test_disks(0, 2): faila=  0(D)  failb=  2(D)  OK
-Jul 16 10:54:33 smoke    5.615509] raid6test: test_disks(0, 3): faila=  0(D)  failb=  3(D)  OK
-Jul 16 10:54:33 smoke    5.615806] raid6test: test_disks(0, 4): faila=  0(D)  failb=  4(D)  OK
-Jul 16 10:54:33 smoke    5.616108] raid6test: test_disks(0, 5): faila=  0(D)  failb=  5(D)  OK
-Jul 16 10:54:33 smoke    5.616406] raid6test: test_disks(0, 6): faila=  0(D)  failb=  6(D)  OK
-Jul 16 10:54:33 smoke    5.616704] raid6test: test_disks(0, 7): faila=  0(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.617005] raid6test: test_disks(0, 8): faila=  0(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.617302] raid6test: test_disks(0, 9): faila=  0(D)  failb=  9(D)  OK
-Jul 16 10:54:33 smoke    5.617599] raid6test: test_disks(0, 10): faila=  0(D)  failb= 10(D)  OK
-Jul 16 10:54:33 smoke    5.617896] raid6test: test_disks(0, 11): faila=  0(D)  failb= 11(D)  OK
-Jul 16 10:54:33 smoke    5.618197] raid6test: test_disks(0, 12): faila=  0(D)  failb= 12(D)  OK
-Jul 16 10:54:33 smoke    5.618495] raid6test: test_disks(0, 13): faila=  0(D)  failb= 13(D)  OK
-Jul 16 10:54:33 smoke    5.618789] raid6test: test_disks(0, 14): faila=  0(D)  failb= 14(P)  OK
-Jul 16 10:54:33 smoke    5.619075] raid6test: test_disks(0, 15): faila=  0(D)  failb= 15(Q)  OK
-Jul 16 10:54:33 smoke    5.619373] raid6test: test_disks(1, 2): faila=  1(D)  failb=  2(D)  OK
-Jul 16 10:54:33 smoke    5.619671] raid6test: test_disks(1, 3): faila=  1(D)  failb=  3(D)  OK
-Jul 16 10:54:33 smoke    5.619968] raid6test: test_disks(1, 4): faila=  1(D)  failb=  4(D)  OK
-Jul 16 10:54:33 smoke    5.620270] raid6test: test_disks(1, 5): faila=  1(D)  failb=  5(D)  OK
-Jul 16 10:54:33 smoke    5.620568] raid6test: test_disks(1, 6): faila=  1(D)  failb=  6(D)  OK
-Jul 16 10:54:33 smoke    5.620866] raid6test: test_disks(1, 7): faila=  1(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.621168] raid6test: test_disks(1, 8): faila=  1(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.621466] raid6test: test_disks(1, 9): faila=  1(D)  failb=  9(D)  OK
-Jul 16 10:54:33 smoke    5.621764] raid6test: test_disks(1, 10): faila=  1(D)  failb= 10(D)  OK
-Jul 16 10:54:33 smoke    5.622065] raid6test: test_disks(1, 11): faila=  1(D)  failb= 11(D)  OK
-Jul 16 10:54:33 smoke    5.622364] raid6test: test_disks(1, 12): faila=  1(D)  failb= 12(D)  OK
-Jul 16 10:54:33 smoke    5.622662] raid6test: test_disks(1, 13): faila=  1(D)  failb= 13(D)  OK
-Jul 16 10:54:33 smoke    5.622956] raid6test: test_disks(1, 14): faila=  1(D)  failb= 14(P)  OK
-Jul 16 10:54:33 smoke    5.623242] raid6test: test_disks(1, 15): faila=  1(D)  failb= 15(Q)  OK
-Jul 16 10:54:33 smoke    5.623540] raid6test: test_disks(2, 3): faila=  2(D)  failb=  3(D)  OK
-Jul 16 10:54:33 smoke    5.623839] raid6test: test_disks(2, 4): faila=  2(D)  failb=  4(D)  OK
-Jul 16 10:54:33 smoke    5.624142] raid6test: test_disks(2, 5): faila=  2(D)  failb=  5(D)  OK
-Jul 16 10:54:33 smoke    5.624440] raid6test: test_disks(2, 6): faila=  2(D)  failb=  6(D)  OK
-Jul 16 10:54:33 smoke    5.624738] raid6test: test_disks(2, 7): faila=  2(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.625040] raid6test: test_disks(2, 8): faila=  2(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.625338] raid6test: test_disks(2, 9): faila=  2(D)  failb=  9(D)  OK
-Jul 16 10:54:33 smoke    5.625636] raid6test: test_disks(2, 10): faila=  2(D)  failb= 10(D)  OK
-Jul 16 10:54:33 smoke    5.625934] raid6test: test_disks(2, 11): faila=  2(D)  failb= 11(D)  OK
-Jul 16 10:54:33 smoke    5.626237] raid6test: test_disks(2, 12): faila=  2(D)  failb= 12(D)  OK
-Jul 16 10:54:33 smoke    5.626535] raid6test: test_disks(2, 13): faila=  2(D)  failb= 13(D)  OK
-Jul 16 10:54:33 smoke    5.626830] raid6test: test_disks(2, 14): faila=  2(D)  failb= 14(P)  OK
-Jul 16 10:54:33 smoke    5.627116] raid6test: test_disks(2, 15): faila=  2(D)  failb= 15(Q)  OK
-Jul 16 10:54:33 smoke    5.627414] raid6test: test_disks(3, 4): faila=  3(D)  failb=  4(D)  OK
-Jul 16 10:54:33 smoke    5.627713] raid6test: test_disks(3, 5): faila=  3(D)  failb=  5(D)  OK
-Jul 16 10:54:33 smoke    5.628014] raid6test: test_disks(3, 6): faila=  3(D)  failb=  6(D)  OK
-Jul 16 10:54:33 smoke    5.628313] raid6test: test_disks(3, 7): faila=  3(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.628611] raid6test: test_disks(3, 8): faila=  3(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.628910] raid6test: test_disks(3, 9): faila=  3(D)  failb=  9(D)  OK
-Jul 16 10:54:33 smoke    5.629211] raid6test: test_disks(3, 10): faila=  3(D)  failb= 10(D)  OK
-Jul 16 10:54:33 smoke    5.629509] raid6test: test_disks(3, 11): faila=  3(D)  failb= 11(D)  OK
-Jul 16 10:54:33 smoke    5.629808] raid6test: test_disks(3, 12): faila=  3(D)  failb= 12(D)  OK
-Jul 16 10:54:33 smoke    5.630109] raid6test: test_disks(3, 13): faila=  3(D)  failb= 13(D)  OK
-Jul 16 10:54:33 smoke    5.630403] raid6test: test_disks(3, 14): faila=  3(D)  failb= 14(P)  OK
-Jul 16 10:54:33 smoke    5.630684] raid6test: test_disks(3, 15): faila=  3(D)  failb= 15(Q)  OK
-Jul 16 10:54:33 smoke    5.630983] raid6test: test_disks(4, 5): faila=  4(D)  failb=  5(D)  OK
-Jul 16 10:54:33 smoke    5.631285] raid6test: test_disks(4, 6): faila=  4(D)  failb=  6(D)  OK
-Jul 16 10:54:33 smoke    5.631582] raid6test: test_disks(4, 7): faila=  4(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.631881] raid6test: test_disks(4, 8): faila=  4(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.632182] raid6test: test_disks(4, 9): faila=  4(D)  failb=  9(D)  OK
-Jul 16 10:54:33 smoke    5.632479] raid6test: test_disks(4, 10): faila=  4(D)  failb= 10(D)  OK
-Jul 16 10:54:33 smoke    5.632776] raid6test: test_disks(4, 11): faila=  4(D)  failb= 11(D)  OK
-Jul 16 10:54:33 smoke    5.633077] raid6test: test_disks(4, 12): faila=  4(D)  failb= 12(D)  OK
-Jul 16 10:54:33 smoke    5.633375] raid6test: test_disks(4, 13): faila=  4(D)  failb= 13(D)  OK
-Jul 16 10:54:33 smoke    5.633669] raid6test: test_disks(4, 14): faila=  4(D)  failb= 14(P)  OK
-Jul 16 10:54:33 smoke    5.633951] raid6test: test_disks(4, 15): faila=  4(D)  failb= 15(Q)  OK
-Jul 16 10:54:33 smoke    5.634252] raid6test: test_disks(5, 6): faila=  5(D)  failb=  6(D)  OK
-Jul 16 10:54:33 smoke    5.634550] raid6test: test_disks(5, 7): faila=  5(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.634848] raid6test: test_disks(5, 8): faila=  5(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.635149] raid6test: test_disks(5, 9): faila=  5(D)  failb=  9(D)  OK
-Jul 16 10:54:33 smoke    5.635447] raid6test: test_disks(5, 10): faila=  5(D)  failb= 10(D)  OK
-Jul 16 10:54:33 smoke    5.635744] raid6test: test_disks(5, 11): faila=  5(D)  failb= 11(D)  OK
-Jul 16 10:54:33 smoke    5.636045] raid6test: test_disks(5, 12): faila=  5(D)  failb= 12(D)  OK
-Jul 16 10:54:33 smoke    5.636342] raid6test: test_disks(5, 13): faila=  5(D)  failb= 13(D)  OK
-Jul 16 10:54:33 smoke    5.636636] raid6test: test_disks(5, 14): faila=  5(D)  failb= 14(P)  OK
-Jul 16 10:54:33 smoke    5.636917] raid6test: test_disks(5, 15): faila=  5(D)  failb= 15(Q)  OK
-Jul 16 10:54:33 smoke    5.637220] raid6test: test_disks(6, 7): faila=  6(D)  failb=  7(D)  OK
-Jul 16 10:54:33 smoke    5.637517] raid6test: test_disks(6, 8): faila=  6(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.637814] raid6test: test_disks(6, 9): faila=  6(D)  failb=  9(D)  OK
-Jul 16 10:54:33 smoke    5.638118] raid6test: test_disks(6, 10): faila=  6(D)  failb= 10(D)  OK
-Jul 16 10:54:33 smoke    5.638415] raid6test: test_disks(6, 11): faila=  6(D)  failb= 11(D)  OK
-Jul 16 10:54:33 smoke    5.638712] raid6test: test_disks(6, 12): faila=  6(D)  failb= 12(D)  OK
-Jul 16 10:54:33 smoke    5.639014] raid6test: test_disks(6, 13): faila=  6(D)  failb= 13(D)  OK
-Jul 16 10:54:33 smoke    5.639308] raid6test: test_disks(6, 14): faila=  6(D)  failb= 14(P)  OK
-Jul 16 10:54:33 smoke    5.639591] raid6test: test_disks(6, 15): faila=  6(D)  failb= 15(Q)  OK
-Jul 16 10:54:33 smoke    5.639889] raid6test: test_disks(7, 8): faila=  7(D)  failb=  8(D)  OK
-Jul 16 10:54:33 smoke    5.640190] raid6test: test_disks(7, 9): faila=  7(D)  failb=  9(D)  OK
-Jul 16 10:54:33 smoke    5.640489] raid6test: test_disks(7, 10): faila=  7(D)  failb= 10(D)  OK
-Jul 16 10:54:33 smoke    5.640786] raid6test: test_disks(7, 11): faila=  7(D)  failb= 11(D)  OK
-Jul 16 10:54:33 smoke    5.641088] raid6test: test_disks(7, 12): faila=  7(D)  failb= 12(D)  OK
-Jul 16 10:54:33 smoke    5.641385] raid6test: test_disks(7, 13): faila=  7(D)  failb= 13(D)  OK
-Jul 16 10:54:33 smoke    5.641680] raid6test: test_disks(7, 14): faila=  7(D)  failb= 14(P)  OK
-Jul 16 10:54:33 smoke    5.641962] raid6test: test_disks(7, 15): faila=  7(D)  failb= 15(Q)  OK
-Jul 16 10:54:33 smoke    5.642264] raid6test: test_disks(8, 9): faila=  8(D)  failb=  9(D)  OK
-Jul 16 10:54:33 smoke    5.642562] raid6test: test_disks(8, 10): faila=  8(D)  failb= 10(D)  OK
-Jul 16 10:54:33 smoke    5.642859] raid6test: test_disks(8, 11): faila=  8(D)  failb= 11(D)  OK
-Jul 16 10:54:33 smoke    5.643162] raid6test: test_disks(8, 12): faila=  8(D)  failb= 12(D)  OK
-Jul 16 10:54:33 smoke    5.643459] raid6test: test_disks(8, 13): faila=  8(D)  failb= 13(D)  OK
-Jul 16 10:54:33 smoke    5.643753] raid6test: test_disks(8, 14): faila=  8(D)  failb= 14(P)  OK
-Jul 16 10:54:33 smoke    5.644039] raid6test: test_disks(8, 15): faila=  8(D)  failb= 15(Q)  OK
-Jul 16 10:54:33 smoke    5.644336] raid6test: test_disks(9, 10): faila=  9(D)  failb= 10(D)  OK
-Jul 16 10:54:33 smoke    5.644635] raid6test: test_disks(9, 11): faila=  9(D)  failb= 11(D)  OK
-Jul 16 10:54:33 smoke    5.644932] raid6test: test_disks(9, 12): faila=  9(D)  failb= 12(D)  OK
-Jul 16 10:54:33 smoke    5.645235] raid6test: test_disks(9, 13): faila=  9(D)  failb= 13(D)  OK
-Jul 16 10:54:33 smoke    5.645529] raid6test: test_disks(9, 14): faila=  9(D)  failb= 14(P)  OK
-Jul 16 10:54:33 smoke    5.645811] raid6test: test_disks(9, 15): faila=  9(D)  failb= 15(Q)  OK
-Jul 16 10:54:33 smoke    5.646113] raid6test: test_disks(10, 11): faila= 10(D)  failb= 11(D)  OK
-Jul 16 10:54:33 smoke    5.646411] raid6test: test_disks(10, 12): faila= 10(D)  failb= 12(D)  OK
-Jul 16 10:54:33 smoke    5.646709] raid6test: test_disks(10, 13): faila= 10(D)  failb= 13(D)  OK
-Jul 16 10:54:33 smoke    5.647008] raid6test: test_disks(10, 14): faila= 10(D)  failb= 14(P)  OK
-Jul 16 10:54:33 smoke    5.647290] raid6test: test_disks(10, 15): faila= 10(D)  failb= 15(Q)  OK
-Jul 16 10:54:33 smoke    5.647587] raid6test: test_disks(11, 12): faila= 11(D)  failb= 12(D)  OK
-Jul 16 10:54:33 smoke    5.647884] raid6test: test_disks(11, 13): faila= 11(D)  failb= 13(D)  OK
-Jul 16 10:54:33 smoke    5.648184] raid6test: test_disks(11, 14): faila= 11(D)  failb= 14(P)  OK
-Jul 16 10:54:33 smoke    5.648466] raid6test: test_disks(11, 15): faila= 11(D)  failb= 15(Q)  OK
-Jul 16 10:54:33 smoke    5.648764] raid6test: test_disks(12, 13): faila= 12(D)  failb= 13(D)  OK
-Jul 16 10:54:33 smoke    5.649062] raid6test: test_disks(12, 14): faila= 12(D)  failb= 14(P)  OK
-Jul 16 10:54:33 smoke    5.649344] raid6test: test_disks(12, 15): faila= 12(D)  failb= 15(Q)  OK
-Jul 16 10:54:33 smoke    5.649639] raid6test: test_disks(13, 14): faila= 13(D)  failb= 14(P)  OK
-Jul 16 10:54:33 smoke    5.649920] raid6test: test_disks(13, 15): faila= 13(D)  failb= 15(Q)  OK
-Jul 16 10:54:33 smoke    5.650203] raid6test: test_disks(14, 15): faila= 14(P)  failb= 15(Q)  OK
-Jul 16 10:54:33 smoke    5.650432] raid6test:
-Jul 16 10:54:33 smoke    5.650660] raid6test: complete (257 tests, 0 failures)
-Jul 16 10:54:33 smoke    5.651191] rtc_cmos 00:03: setting system clock to 2010-07-16 10:53:46 UTC (1279277626)
-Jul 16 10:54:33 smoke    5.651678] md: Skipping autodetection of RAID arrays. (raid=autodetect will force)
-Jul 16 10:54:33 smoke    5.652156] md: Loading md0: /dev/sda1
-Jul 16 10:54:33 smoke    5.659468] md: bind<sda1>
-Jul 16 10:54:33 smoke    5.665738] md: bind<sdb1>
-Jul 16 10:54:33 smoke    5.672715] md: bind<sdc1>
-Jul 16 10:54:33 smoke    5.682976] md: bind<sdd1>
-Jul 16 10:54:33 smoke    5.683330] raid1: raid set md0 active with 4 out of 4 mirrors
-Jul 16 10:54:33 smoke    5.684892] md0: bitmap initialized from disk: read 2/2 pages, set 2 bits
-Jul 16 10:54:33 smoke    5.685136] created bitmap (17 pages) for device md0
-Jul 16 10:54:33 smoke    5.701247] md0: detected capacity change from 0 to 139722752
-Jul 16 10:54:33 smoke    5.701515]  md0:
-Jul 16 10:54:33 smoke unknown: partition table
-Jul 16 10:54:33 smoke    5.701979]  md0:
-Jul 16 10:54:33 smoke unknown: partition table
-Jul 16 10:54:33 smoke    5.702284] md: Loading md1: /dev/sda3
-Jul 16 10:54:33 smoke    5.727158] md: bind<sda3>
-Jul 16 10:54:33 smoke    5.747680] md: bind<sdb3>
-Jul 16 10:54:33 smoke    5.747962] raid0: looking at sdb3
-Jul 16 10:54:33 smoke    5.748193] raid0:   comparing sdb3(1462894720)
-Jul 16 10:54:33 smoke
-Jul 16 10:54:33 smoke    5.748232]  with sdb3(1462894720)
-Jul 16 10:54:33 smoke    5.748681] raid0:   END
-Jul 16 10:54:33 smoke    5.748909] raid0:   ==> UNIQUE
-Jul 16 10:54:33 smoke    5.749142] raid0: 1 zones
-Jul 16 10:54:33 smoke    5.749367] raid0: looking at sda3
-Jul 16 10:54:33 smoke    5.749595] raid0:   comparing sda3(1462894720)
-Jul 16 10:54:33 smoke
-Jul 16 10:54:33 smoke    5.749633]  with sdb3(1462894720)
-Jul 16 10:54:33 smoke    5.750085] raid0:   EQUAL
-Jul 16 10:54:33 smoke    5.750309] raid0: FINAL 1 zones
-Jul 16 10:54:33 smoke    5.750538] raid0: done.
-Jul 16 10:54:33 smoke    5.750765] raid0 : md_size is 2925789440 sectors.
-Jul 16 10:54:33 smoke    5.750995] ******* md1 configuration *********
-Jul 16 10:54:33 smoke    5.751230] zone0=[
-Jul 16 10:54:33 smoke sda3/:
-Jul 16 10:54:33 smoke sdb3/:
-Jul 16 10:54:33 smoke ]:
-Jul 16 10:54:33 smoke    5.751549]         zone offset=0kb device offset=0kb size=1462894720kb
-Jul 16 10:54:33 smoke    5.751781] **********************************
-Jul 16 10:54:33 smoke    5.751782]
-Jul 16 10:54:33 smoke    5.752243] md1: detected capacity change from 0 to 1498004193280
-Jul 16 10:54:33 smoke    5.752507]  md1:
-Jul 16 10:54:33 smoke unknown: partition table
-Jul 16 10:54:33 smoke    5.772125]  md1:
-Jul 16 10:54:33 smoke unknown: partition table
-Jul 16 10:54:33 smoke    5.772423] md: Loading md2: /dev/sdc3
-Jul 16 10:54:33 smoke    5.804405] md: bind<sdc3>
-Jul 16 10:54:33 smoke    5.826223] md: bind<sdd3>
-Jul 16 10:54:33 smoke    5.829411] md: bind<md1>
-Jul 16 10:54:33 smoke    5.829702] raid5: device md1 operational as raid disk 0
-Jul 16 10:54:33 smoke    5.829936] raid5: device sdd3 operational as raid disk 2
-Jul 16 10:54:33 smoke    5.830173] raid5: device sdc3 operational as raid disk 1
-Jul 16 10:54:33 smoke    5.830740] raid5: allocated 3222kB for md2
-Jul 16 10:54:33 smoke    5.836064] 0: w=1 pa=0 pr=3 m=1 a=2 r=3 op1=0 op2=0
-Jul 16 10:54:33 smoke    5.836292] 2: w=2 pa=0 pr=3 m=1 a=2 r=3 op1=0 op2=0
-Jul 16 10:54:33 smoke    5.836523] 1: w=3 pa=0 pr=3 m=1 a=2 r=3 op1=0 op2=0
-Jul 16 10:54:33 smoke    5.836754] raid5: raid level 5 set md2 active with 3 out of 3 devices, algorithm 2
-Jul 16 10:54:33 smoke    5.837186] RAID5 conf printout:
-Jul 16 10:54:33 smoke    5.837413]  --- rd:3 wd:3
-Jul 16 10:54:33 smoke    5.837641]  disk 0, o:1, dev:md1
-Jul 16 10:54:33 smoke    5.837869]  disk 1, o:1, dev:sdc3
-Jul 16 10:54:33 smoke    5.838104]  disk 2, o:1, dev:sdd3
-Jul 16 10:54:33 smoke    5.847551] md2: bitmap initialized from disk: read 11/11 pages, set 124 bits
-Jul 16 10:54:33 smoke    5.847782] created bitmap (175 pages) for device md2
-Jul 16 10:54:33 smoke    5.901557] md2: detected capacity change from 0 to 2991715123200
-Jul 16 10:54:33 smoke    5.901837]  md2:
-Jul 16 10:54:33 smoke unknown: partition table
-Jul 16 10:54:33 smoke    5.905401]  md2:
-Jul 16 10:54:33 smoke unknown: partition table
-Jul 16 10:58:28 smoke  240.504141] INFO: task swapper:1 blocked for more than 120 seconds.
-Jul 16 10:58:28 smoke  240.504381] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.                                                              
-Jul 16 10:58:28 smoke  240.504808] swapper       D                                                                                                                        
-Jul 16 10:58:28 smoke ffff88017fac6040:
-Jul 16 10:58:28 smoke 0:     1      0 0x00000000
-Jul 16 10:58:28 smoke  240.505101]  ffff88017fac9a50
-Jul 16 10:58:28 smoke 0000000000000046:
-Jul 16 10:58:28 smoke ffff88017fac99e0:
-Jul 16 10:58:28 smoke ffffffff8102eae0:
-Jul 16 10:58:28 smoke
-Jul 16 10:58:28 smoke  240.505653]  ffff88017fac9fd8
-Jul 16 10:58:28 smoke ffff88017fac6040:
-Jul 16 10:58:28 smoke ffff88017fac9fd8:
-Jul 16 10:58:28 smoke ffff88017fac8000:
-Jul 16 10:58:28 smoke
-Jul 16 10:58:28 smoke  240.506202]  ffff88017fac8000
-Jul 16 10:58:28 smoke ffff88017fac9fd8:
-Jul 16 10:58:28 smoke 0000000000004000:
-Jul 16 10:58:28 smoke 00000000000135c0:
-Jul 16 10:58:28 smoke
-Jul 16 10:58:28 smoke  240.506748] Call Trace:
-Jul 16 10:58:28 smoke  240.506981]  [<ffffffff8102eae0>] ? check_preempt_wakeup+0x11e/0x197
-Jul 16 10:58:28 smoke  240.507217]  [<ffffffff8147486b>] schedule_timeout+0x28/0x27a
-Jul 16 10:58:28 smoke  240.507447]  [<ffffffff8138e0e3>] ? raid0_unplug+0x41/0x53
-Jul 16 10:58:28 smoke  240.507678]  [<ffffffff8126760e>] ? blk_unplug+0x71/0x76
-Jul 16 10:58:28 smoke  240.507909]  [<ffffffff8139a4be>] ? unplug_slaves+0x100/0x128
-Jul 16 10:58:28 smoke  240.508145]  [<ffffffff81473bce>] wait_for_common+0xc2/0x13c
-Jul 16 10:58:28 smoke  240.508377]  [<ffffffff8102d66d>] ? default_wake_function+0x0/0xf
-Jul 16 10:58:28 smoke  240.508609]  [<ffffffff81251e52>] ? xfs_barrier_test+0x43/0x7d
-Jul 16 10:58:28 smoke  240.508840]  [<ffffffff81251e52>] ? xfs_barrier_test+0x43/0x7d
-Jul 16 10:58:28 smoke  240.509072]  [<ffffffff81473cd2>] wait_for_completion+0x18/0x1a
-Jul 16 10:58:28 smoke  240.509309]  [<ffffffff81249cca>] xfs_buf_iowait+0xa5/0x110
-Jul 16 10:58:28 smoke  240.509539]  [<ffffffff81251e52>] xfs_barrier_test+0x43/0x7d
-Jul 16 10:58:28 smoke  240.509771]  [<ffffffff81251ecb>] xfs_mountfs_check_barriers+0x3f/0x69
-Jul 16 10:58:28 smoke  240.510003]  [<ffffffff812520fa>] xfs_fs_fill_super+0x205/0x38f
-Jul 16 10:58:28 smoke  240.510239]  [<ffffffff810cb03d>] get_sb_bdev+0x125/0x174
-Jul 16 10:58:28 smoke  240.510469]  [<ffffffff81251ef5>] ? xfs_fs_fill_super+0x0/0x38f
-Jul 16 10:58:28 smoke  240.510701]  [<ffffffff81250538>] xfs_fs_get_sb+0x13/0x15
-Jul 16 10:58:28 smoke  240.510932]  [<ffffffff810c9e00>] vfs_kern_mount+0x6a/0xf8
-Jul 16 10:58:28 smoke  240.511168]  [<ffffffff810c9eec>] do_kern_mount+0x48/0xe8
-Jul 16 10:58:28 smoke  240.511399]  [<ffffffff810e028d>] do_mount+0x761/0x7d8
-Jul 16 10:58:28 smoke  240.511631]  [<ffffffff810a31ae>] ? strndup_user+0x58/0x80
-Jul 16 10:58:28 smoke  240.511862]  [<ffffffff810e038b>] sys_mount+0x87/0xc8
-Jul 16 10:58:28 smoke  240.512095]  [<ffffffff81736f4d>] mount_block_root+0xe0/0x275
-Jul 16 10:58:28 smoke  240.512329]  [<ffffffff81737182>] mount_root+0xa0/0xa4
-Jul 16 10:58:28 smoke  240.512560]  [<ffffffff817372eb>] prepare_namespace+0x165/0x192
-Jul 16 10:58:28 smoke  240.512792]  [<ffffffff817366d7>] kernel_init+0x1c7/0x1d7
-Jul 16 10:58:28 smoke  240.513024]  [<ffffffff81002cd4>] kernel_thread_helper+0x4/0x10
-Jul 16 10:58:28 smoke  240.513259]  [<ffffffff81736510>] ? kernel_init+0x0/0x1d7
-Jul 16 10:58:28 smoke  240.513489]  [<ffffffff81002cd0>] ? kernel_thread_helper+0x0/0x10
-Jul 16 10:58:28 smoke  240.513721] INFO: task events/0:9 blocked for more than 120 seconds.
-Jul 16 10:58:28 smoke  240.513952] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-Jul 16 10:58:28 smoke  240.514382] events/0      D
-Jul 16 10:58:28 smoke ffff88017fb18000:
-Jul 16 10:58:28 smoke 0:     9      2 0x00000000
-Jul 16 10:58:28 smoke  240.514675]  ffff88017fb19cd0
-Jul 16 10:58:28 smoke 0000000000000046:
-Jul 16 10:58:28 smoke 0000000057545194:
-Jul 16 10:58:28 smoke 0000000000000001:
-Jul 16 10:58:28 smoke
-Jul 16 10:58:28 smoke  240.515222]  ffff88017fb19fd8
-Jul 16 10:58:28 smoke ffff88017fb16280:
-Jul 16 10:58:28 smoke ffff88017fb19fd8:
-Jul 16 10:58:28 smoke ffff88017fb18000:
-Jul 16 10:58:28 smoke
-Jul 16 10:58:28 smoke  240.515768]  ffff88017fb18000
-Jul 16 10:58:28 smoke ffff88017fb19fd8:
-Jul 16 10:58:28 smoke 0000000000004000:
-Jul 16 10:58:28 smoke 00000000000135c0:
-Jul 16 10:58:28 smoke
-Jul 16 10:58:28 smoke  240.516317] Call Trace:
-Jul 16 10:58:28 smoke  240.516546]  [<ffffffff8147641f>] ? _raw_spin_unlock_irqrestore+0x12/0x2d
-Jul 16 10:58:28 smoke  240.516780]  [<ffffffff81050f39>] ? prepare_to_wait+0x71/0x7c
-Jul 16 10:58:28 smoke  240.517012]  [<ffffffff813a406a>] md_write_start+0x133/0x14b
-Jul 16 10:58:28 smoke  240.517247]  [<ffffffff81050cf7>] ? autoremove_wake_function+0x0/0x34
-Jul 16 10:58:28 smoke  240.517480]  [<ffffffff8139edb6>] make_request+0x6b/0x53c
-Jul 16 10:58:28 smoke  240.517712]  [<ffffffff81092edb>] ? mempool_free_slab+0x12/0x14
-Jul 16 10:58:28 smoke  240.517943]  [<ffffffff81092f60>] ? mempool_free+0x71/0x76
-Jul 16 10:58:28 smoke  240.518178]  [<ffffffff8147641f>] ? _raw_spin_unlock_irqrestore+0x12/0x2d
-Jul 16 10:58:28 smoke  240.518410]  [<ffffffff81027752>] ? __wake_up+0x3f/0x48
-Jul 16 10:58:28 smoke  240.518640]  [<ffffffff813a8a6d>] md_submit_barrier+0x58/0xad
-Jul 16 10:58:28 smoke  240.518872]  [<ffffffff8104cb89>] worker_thread+0x1f8/0x29f
-Jul 16 10:58:28 smoke  240.519103]  [<ffffffff813a8a15>] ? md_submit_barrier+0x0/0xad
-Jul 16 10:58:28 smoke  240.519338]  [<ffffffff81050cf7>] ? autoremove_wake_function+0x0/0x34
-Jul 16 10:58:28 smoke  240.519570]  [<ffffffff8104c991>] ? worker_thread+0x0/0x29f
-Jul 16 10:58:28 smoke  240.519802]  [<ffffffff8105085b>] kthread+0x7a/0x82
-Jul 16 10:58:28 smoke  240.520032]  [<ffffffff81002cd4>] kernel_thread_helper+0x4/0x10
-Jul 16 10:58:28 smoke  240.520267]  [<ffffffff810507e1>] ? kthread+0x0/0x82
-Jul 16 10:58:28 smoke  240.520497]  [<ffffffff81002cd0>] ? kernel_thread_helper+0x0/0x10
-Jul 16 10:58:28 smoke  240.520730] INFO: task md2_raid5:1203 blocked for more than 120 seconds.
-Jul 16 10:58:28 smoke  240.520961] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-Jul 16 10:58:28 smoke  240.521392] md2_raid5     D
-Jul 16 10:58:28 smoke 00000000fffb8359:
-Jul 16 10:58:28 smoke 0:  1203      2 0x00000000
-Jul 16 10:58:28 smoke  240.521683]  ffff88017db1dbe0
-Jul 16 10:58:28 smoke 0000000000000046:
-Jul 16 10:58:28 smoke ffff88017db1c000:
-Jul 16 10:58:28 smoke 0000000800000000:
-Jul 16 10:58:28 smoke
-Jul 16 10:58:28 smoke  240.522230]  ffff88017db1dfd8
-Jul 16 10:58:28 smoke ffff88017e65c040:
-Jul 16 10:58:28 smoke ffff88017db1dfd8:
-Jul 16 10:58:28 smoke ffff88017db1c000:
-Jul 16 10:58:28 smoke
-Jul 16 10:58:28 smoke  240.522773]  ffff88017db1c000
-Jul 16 10:58:28 smoke ffff88017db1dfd8:
-Jul 16 10:58:28 smoke 0000000000004000:
-Jul 16 10:58:28 smoke 00000000000135c0:
-Jul 16 10:58:28 smoke
-Jul 16 10:58:28 smoke  240.523319] Call Trace:
-Jul 16 10:58:28 smoke  240.523548]  [<ffffffff8147641f>] ? _raw_spin_unlock_irqrestore+0x12/0x2d
-Jul 16 10:58:28 smoke  240.523780]  [<ffffffff813a6359>] md_super_wait+0xb5/0xd1
-Jul 16 10:58:28 smoke  240.524011]  [<ffffffff81050cf7>] ? autoremove_wake_function+0x0/0x34
-Jul 16 10:58:28 smoke  240.524247]  [<ffffffff813ac3e2>] write_page+0x24c/0x33c
-Jul 16 10:58:28 smoke  240.524478]  [<ffffffff8108b44f>] ? perf_event_task_sched_in+0x16/0x86
-Jul 16 10:58:28 smoke  240.524710]  [<ffffffff814763f2>] ? _raw_spin_unlock_irq+0x11/0x2c
-Jul 16 10:58:28 smoke  240.524943]  [<ffffffff813ac5eb>] bitmap_update_sb+0x119/0x11e
-Jul 16 10:58:28 smoke  240.525178]  [<ffffffff813a68e0>] md_update_sb+0x237/0x306
-Jul 16 10:58:28 smoke  240.525409]  [<ffffffff813a828a>] md_check_recovery+0x1d1/0x472
-Jul 16 10:58:28 smoke  240.525640]  [<ffffffff8139c43b>] raid5d+0x1f/0x400
-Jul 16 10:58:28 smoke  240.525872]  [<ffffffff81474a9b>] ? schedule_timeout+0x258/0x27a
-Jul 16 10:58:28 smoke  240.526104]  [<ffffffff8104324d>] ? process_timeout+0x0/0xb
-Jul 16 10:58:28 smoke  240.526341]  [<ffffffff814766f6>] ? _raw_spin_lock_irqsave+0x18/0x34
-Jul 16 10:58:28 smoke  240.526572]  [<ffffffff814766f6>] ? _raw_spin_lock_irqsave+0x18/0x34
-Jul 16 10:58:28 smoke  240.526804]  [<ffffffff8147641f>] ? _raw_spin_unlock_irqrestore+0x12/0x2d
-Jul 16 10:58:28 smoke  240.527036]  [<ffffffff813a6286>] md_thread+0xf1/0x10f
-Jul 16 10:58:28 smoke  240.527271]  [<ffffffff81050cf7>] ? autoremove_wake_function+0x0/0x34
-Jul 16 10:58:28 smoke  240.527503]  [<ffffffff81476438>] ? _raw_spin_unlock_irqrestore+0x2b/0x2d
-Jul 16 10:58:28 smoke  240.527734]  [<ffffffff813a6195>] ? md_thread+0x0/0x10f
-Jul 16 10:58:28 smoke  240.527966]  [<ffffffff8105085b>] kthread+0x7a/0x82
-Jul 16 10:58:28 smoke  240.528200]  [<ffffffff81002cd4>] kernel_thread_helper+0x4/0x10
-Jul 16 10:58:28 smoke  240.528432]  [<ffffffff810507e1>] ? kthread+0x0/0x82
-Jul 16 10:58:28 smoke  240.528662]  [<ffffffff81002cd0>] ? kernel_thread_helper+0x0/0x10
+
+
+On 6/6/2010 3:13 μμ, Jelle de Jong wrote:
+> Dear Srini,
+>
+> I spent a few weeks catering information and did some intensive
+> testing the last few days.
+>
+> Srinivas Naga Venkatasatya Pasagadugula wrote, on 06-05-10 08:01:
+>> 1. Is this is the problem with only WD SATA drives? (I don't have WD SATA drives to reproduce this issue.)
+>> 2. Whether the problem is with direct attached SATA drives or drives connected in expanders also?
+>> 3. Could you please provide me the "dmesg" log or "/var/log/messages" log.
+>> 4. How much the capacity of SATA drives connected to controller?
+>> 5. Your HBA is having 6440 chipset?
+> With a few tricks I managed to boot my OS from the mvsas controller. I
+> got eleven different sata disks attached from a 4-port mini-sas
+> backplate without expander to the two Marvel 88SE63xx/64xx mvsas
+> controllers in my system.
+>
+> I managed to add five mdadm raid1 arrays without added the actual
+> active sync device (so one disk for each array) I build my lvm systems
+> on top of this and did a lot of file transfers for testing.
+>
+> This worked stable enough, there are HDIO_GET_IDENTITY errors during
+> boot and operation, but the hard disks seem to be working.
+>
+> So to debug if issues are related to some brand of harddisk, I started
+> to add WDC, Hitachi, SAMSUNG, Maxtor and Seagate disks to the
+> respected raid1 array, the disks are of different sizes (320GB, 500GB,
+> 1TB.)
+>
+> The sync starts and will fail directly or a while later on failures in
+> the mvsas driver. I attached an failure example as attachment.
+>
+> The failures are of grave severity, I have lost complete lvm2 volumes
+> and raid arrays during testing.
+>
+> Do you also have a SuperMicro AOC-SASLP-MV8 controller for testing?
+>
+> I would love to use the controllers for production, but they are
+> currently unstable. I hope this information helps to solve the mvsas
+> issues?
+>
+> With kind regards,
+>
+> Jelle de Jong
+
+
+--------------080505060305080102060100
+Content-Type: text/plain;
+ name="mvsas errors.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="mvsas errors.txt"
+
+LS0tLS0tLS0tLS0tWyBjdXQgaGVyZSBdLS0tLS0tLS0tLS0tDQpXQVJOSU5HOiBhdCBkcml2
+ZXJzL2F0YS9saWJhdGEtY29yZS5jOjUxODYgYXRhX3FjX2lzc3VlKzB4MzFmLzB4MzMwIFts
+aWJhdGFdKCkNCkhhcmR3YXJlIG5hbWU6DQpNb2R1bGVzIGxpbmtlZCBpbjogaXB2NiBod21v
+bl92aWQgamZzIGNwdWZyZXFfcG93ZXJzYXZlIGZhbiBjcHVmcmVxX29uZGVtYW5kIGVkYWNf
+Y29yZSBwb3dlcm5vd19rOCBmaXJld2lyZV9vaGNpIHBzbW91c2UgZmlyZXdpcmVfY29yZSBm
+cmVxX3RhYmxlIHNlcmlvX3JhdyBwY3Nwa3Igazh0ZW1wIHRoZXJtYWwgY3JjX2l0dV90IGV2
+ZGV2IGVkYWNfbWNlX2FtZCBza2dlIHByb2Nlc3NvciBidXR0b24gaTJjX25mb3JjZTIgc2cg
+Zm9yY2VkZXRoIGkyY19jb3JlIGZ1c2UgcnRjX2Ntb3MgcnRjX2NvcmUgcnRjX2xpYiBleHQy
+IG1iY2FjaGUgZG1fY3J5cHQgZG1fbW9kIHNlcyBlbmNsb3N1cmUgc2RfbW9kIHVzYl9zdG9y
+YWdlIG9oY2lfaGNkIG12c2FzIGxpYnNhcyBzYXRhX3NpbCBlaGNpX2hjZCBzY3NpX3RyYW5z
+cG9ydF9zYXMgc2F0YV9udiB1c2Jjb3JlIHBhdGFfYW1kIHNhdGFfdmlhIGF0YV9nZW5lcmlj
+IHBhdGFfdmlhIHBhdGFfYWNwaSBsaWJhdGEgc2NzaV9tb2QNClBpZDogMzMwOCwgY29tbTog
+c21hcnRjdGwgTm90IHRhaW50ZWQgMi42LjMzLUFSQ0ggIzENCkNhbGwgVHJhY2U6DQogWzxm
+ZmZmZmZmZjgxMDUyOGM4Pl0gd2Fybl9zbG93cGF0aF9jb21tb24rMHg3OC8weGIwDQogWzxm
+ZmZmZmZmZjgxMDUyOTBmPl0gd2Fybl9zbG93cGF0aF9udWxsKzB4Zi8weDIwDQogWzxmZmZm
+ZmZmZmEwMDJjMTRmPl0gYXRhX3FjX2lzc3VlKzB4MzFmLzB4MzMwIFtsaWJhdGFdDQogWzxm
+ZmZmZmZmZmEwMDA2ZmFlPl0gPyBzY3NpX2luaXRfc2d0YWJsZSsweDRlLzB4OTAgW3Njc2lf
+bW9kXQ0KIFs8ZmZmZmZmZmZhMDAzM2NkMD5dID8gYXRhX3Njc2lfcGFzc190aHJ1KzB4MC8w
+eDJmMCBbbGliYXRhXQ0KIFs8ZmZmZmZmZmZhMDAzMTBjNj5dIGF0YV9zY3NpX3RyYW5zbGF0
+ZSsweGE2LzB4MTgwIFtsaWJhdGFdDQogWzxmZmZmZmZmZmEwMDAwYjEwPl0gPyBzY3NpX2Rv
+bmUrMHgwLzB4MjAgW3Njc2lfbW9kXQ0KIFs8ZmZmZmZmZmZhMDAwMGIxMD5dID8gc2NzaV9k
+b25lKzB4MC8weDIwIFtzY3NpX21vZF0NCiBbPGZmZmZmZmZmYTAwMzQzNjk+XSBhdGFfc2Fz
+X3F1ZXVlY21kKzB4MTM5LzB4MmIwIFtsaWJhdGFdDQogWzxmZmZmZmZmZmEwMGYzMDk4Pl0g
+c2FzX3F1ZXVlY29tbWFuZCsweDk4LzB4MzAwIFtsaWJzYXNdDQogWzxmZmZmZmZmZmEwMDAw
+YzI1Pl0gc2NzaV9kaXNwYXRjaF9jbWQrMHhmNS8weDIzMCBbc2NzaV9tb2RdDQogWzxmZmZm
+ZmZmZmEwMDA2YmEyPl0gc2NzaV9yZXF1ZXN0X2ZuKzB4MzIyLzB4M2UwIFtzY3NpX21vZF0N
+CiBbPGZmZmZmZmZmODExYjcyYmQ+XSBfX2dlbmVyaWNfdW5wbHVnX2RldmljZSsweDJkLzB4
+NDANCiBbPGZmZmZmZmZmODExYmNiZjg+XSBibGtfZXhlY3V0ZV9ycV9ub3dhaXQrMHg2OC8w
+eGIwDQogWzxmZmZmZmZmZjgxMWJjY2MxPl0gYmxrX2V4ZWN1dGVfcnErMHg4MS8weGYwDQog
+WzxmZmZmZmZmZjgxMWI0ZDBiPl0gPyBibGtfcnFfYmlvX3ByZXArMHgyYi8weGQwDQogWzxm
+ZmZmZmZmZjgxMWJjODY2Pl0gPyBibGtfcnFfbWFwX2tlcm4rMHhkNi8weDE1MA0KIFs8ZmZm
+ZmZmZmZhMDAwN2VlNz5dIHNjc2lfZXhlY3V0ZSsweGY3LzB4MTYwIFtzY3NpX21vZF0NCiBb
+PGZmZmZmZmZmYTAwMzMxNjc+XSBhdGFfY21kX2lvY3RsKzB4MTc3LzB4MzIwIFtsaWJhdGFd
+DQogWzxmZmZmZmZmZmEwMDMzNDY3Pl0gYXRhX3Nhc19zY3NpX2lvY3RsKzB4MTU3LzB4MmIw
+IFtsaWJhdGFdDQogWzxmZmZmZmZmZmEwMGYyNWY3Pl0gc2FzX2lvY3RsKzB4NDcvMHg1MCBb
+bGlic2FzXQ0KIFs8ZmZmZmZmZmZhMDAwMjIyNT5dIHNjc2lfaW9jdGwrMHhkNS8weDM5MCBb
+c2NzaV9tb2RdDQogWzxmZmZmZmZmZmEwMTM0ZDNlPl0gc2RfaW9jdGwrMHhjZS8weGUwIFtz
+ZF9tb2RdDQogWzxmZmZmZmZmZjgxMWJlMzVmPl0gX19ibGtkZXZfZHJpdmVyX2lvY3RsKzB4
+OGYvMHhiMA0KIFs8ZmZmZmZmZmY4MTFiZTgyZT5dIGJsa2Rldl9pb2N0bCsweDIyZS8weDgy
+MA0KIFs8ZmZmZmZmZmY4MTE0ZmRmNz5dIGJsb2NrX2lvY3RsKzB4MzcvMHg0MA0KIFs8ZmZm
+ZmZmZmY4MTEzMWFjOD5dIHZmc19pb2N0bCsweDM4LzB4ZDANCiBbPGZmZmZmZmZmODExMzFj
+NzA+XSBkb192ZnNfaW9jdGwrMHg4MC8weDU2MA0KIFs8ZmZmZmZmZmY4MTFjZmY0Nj5dID8g
+X191cF9yZWFkKzB4YTYvMHhkMA0KIFs8ZmZmZmZmZmY4MTA3N2MyOT5dID8gdXBfcmVhZCsw
+eDkvMHgxMA0KIFs8ZmZmZmZmZmY4MTEzMjFkMT5dIHN5c19pb2N0bCsweDgxLzB4YTANCiBb
+PGZmZmZmZmZmODEwMGEwMDI+XSBzeXN0ZW1fY2FsbF9mYXN0cGF0aCsweDE2LzB4MWINCi0t
+LVsgZW5kIHRyYWNlIDExNWFkNmJmMzQ3NjU0ZTcgXS0tLQ0KIHNkbTogc2RtMQ0KIHNkbjog
+c2RuMQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2Njk6bXZzX2Fib3J0X3Rhc2s6
+cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjA4Om12c19xdWVyeV90YXNr
+OnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTY2OTptdnNfYWJvcnRfdGFz
+azpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2MDg6bXZzX3F1ZXJ5X3Rh
+c2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjY5Om12c19hYm9ydF90
+YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTYwODptdnNfcXVlcnlf
+dGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2Njk6bXZzX2Fib3J0
+X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjA4Om12c19xdWVy
+eV90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTY2OTptdnNfYWJv
+cnRfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2MDg6bXZzX3F1
+ZXJ5X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjY5Om12c19h
+Ym9ydF90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTYwODptdnNf
+cXVlcnlfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2Njk6bXZz
+X2Fib3J0X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjA4Om12
+c19xdWVyeV90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTY2OTpt
+dnNfYWJvcnRfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2MDg6
+bXZzX3F1ZXJ5X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjY5
+Om12c19hYm9ydF90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTYw
+ODptdnNfcXVlcnlfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2
+Njk6bXZzX2Fib3J0X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAx
+NjA4Om12c19xdWVyeV90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMg
+MTY2OTptdnNfYWJvcnRfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5j
+IDE2MDg6bXZzX3F1ZXJ5X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMu
+YyAxNjY5Om12c19hYm9ydF90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2Fz
+LmMgMTYwODptdnNfcXVlcnlfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nh
+cy5jIDE2Njk6bXZzX2Fib3J0X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9z
+YXMuYyAxNjA4Om12c19xdWVyeV90YXNrOnJjPSA1DQpJTkZPOiB0YXNrIHNtYmQ6MzM0OCBi
+bG9ja2VkIGZvciBtb3JlIHRoYW4gMTIwIHNlY29uZHMuDQoiZWNobyAwID4gL3Byb2Mvc3lz
+L2tlcm5lbC9odW5nX3Rhc2tfdGltZW91dF9zZWNzIiBkaXNhYmxlcyB0aGlzIG1lc3NhZ2Uu
+DQpzbWJkICAgICAgICAgIEQgZmZmZjg4MDAwMTgwZjk0OCAgICAgMCAgMzM0OCAgIDI5NDkg
+MHgwMDAwMDAwMA0KIGZmZmY4ODAwMmRmZTM4YjggMDAwMDAwMDAwMDAwMDA4NiAwMDAwMDAw
+MDAwMDAwMDAwIGZmZmZmZmZmYTAwMDY5MmINCiAwMDAwMDAwMTNkMTI0YmQwIDAwMDAwMDAw
+MDAwMTEyNTAgZmZmZjg4MDAzY2FmZjkzOCBmZmZmODgwMDNjZjM2NjkwDQogMDAwMDAwMDEw
+MDYxNTIyYiBmZmZmODgwMDJkZmUzZmQ4IGZmZmY4ODAwMmRmZTIwMDAgZmZmZjg4MDAyZGZl
+MjAwMA0KQ2FsbCBUcmFjZToNCiBbPGZmZmZmZmZmYTAwMDY5MmI+XSA/IHNjc2lfcmVxdWVz
+dF9mbisweGFiLzB4M2UwIFtzY3NpX21vZF0NCiBbPGZmZmZmZmZmODEwZGJkMDA+XSA/IHN5
+bmNfcGFnZSsweDAvMHg1MA0KIFs8ZmZmZmZmZmY4MTM1OTcwZT5dIGlvX3NjaGVkdWxlKzB4
+NmUvMHhiMA0KIFs8ZmZmZmZmZmY4MTBkYmQzZD5dIHN5bmNfcGFnZSsweDNkLzB4NTANCiBb
+PGZmZmZmZmZmODEzNTlkMzI+XSBfX3dhaXRfb25fYml0X2xvY2srMHg1Mi8weGIwDQogWzxm
+ZmZmZmZmZjgxMGRiY2UyPl0gX19sb2NrX3BhZ2UrMHg2Mi8weDcwDQogWzxmZmZmZmZmZjgx
+MDczMDkwPl0gPyB3YWtlX2JpdF9mdW5jdGlvbisweDAvMHg0MA0KIFs8ZmZmZmZmZmY4MTBk
+YzNkOT5dIGRvX3JlYWRfY2FjaGVfcGFnZSsweDE1OS8weDE4MA0KIFs8ZmZmZmZmZmZhMDJl
+MTFlMD5dID8gbWV0YXBhZ2VfcmVhZHBhZ2UrMHgwLzB4MTgwIFtqZnNdDQogWzxmZmZmZmZm
+ZjgxMGRjNDM0Pl0gcmVhZF9jYWNoZV9wYWdlX2FzeW5jKzB4MTQvMHgyMA0KIFs8ZmZmZmZm
+ZmY4MTBkYzQ0OT5dIHJlYWRfY2FjaGVfcGFnZSsweDkvMHgyMA0KIFs8ZmZmZmZmZmZhMDJl
+MWQ4NT5dIF9fZ2V0X21ldGFwYWdlKzB4OTUvMHg1YTAgW2pmc10NCiBbPGZmZmZmZmZmYTAy
+ZDRmYjU+XSBkaVJlYWQrMHgxNTUvMHgyMDAgW2pmc10NCiBbPGZmZmZmZmZmYTAyYzhkMDg+
+XSBqZnNfaWdldCsweDM4LzB4MTYwIFtqZnNdDQogWzxmZmZmZmZmZmEwMmNiNDYxPl0gamZz
+X2xvb2t1cCsweDcxLzB4MTQwIFtqZnNdDQogWzxmZmZmZmZmZjgxMTEwMDAwPl0gPyBjYWxj
+dWxhdGVfc2l6ZXMrMHgyMjAvMHg0YTANCiBbPGZmZmZmZmZmODEzNTlkNTM+XSA/IF9fd2Fp
+dF9vbl9iaXRfbG9jaysweDczLzB4YjANCiBbPGZmZmZmZmZmODEzNWE0NWQ+XSA/IF9fbXV0
+ZXhfbG9ja19zbG93cGF0aCsweDI2ZC8weDM3MA0KIFs8ZmZmZmZmZmY4MTEyYmFmYj5dIGRv
+X2xvb2t1cCsweDFkYi8weDI3MA0KIFs8ZmZmZmZmZmY4MTEyZTEyNz5dIGxpbmtfcGF0aF93
+YWxrKzB4NmI3LzB4ZjEwDQogWzxmZmZmZmZmZjgxMGUxYjI4Pl0gPyBmcmVlX2hvdF9wYWdl
+KzB4MjgvMHg5MA0KIFs8ZmZmZmZmZmY4MTEyZWIxYz5dIHBhdGhfd2FsaysweDVjLzB4YzAN
+CiBbPGZmZmZmZmZmODExMmVjYjM+XSBkb19wYXRoX2xvb2t1cCsweDUzLzB4YTANCiBbPGZm
+ZmZmZmZmODExMmY4ZjI+XSB1c2VyX3BhdGhfYXQrMHg1Mi8weGEwDQogWzxmZmZmZmZmZjgx
+MTVmMDFlPl0gPyBsb2Nrc19mcmVlX2xvY2srMHgzZS8weDYwDQogWzxmZmZmZmZmZjgxMTVm
+Yjc0Pl0gPyBmY250bF9zZXRsaysweDY0LzB4MzUwDQogWzxmZmZmZmZmZjgxMTI2MGE3Pl0g
+dmZzX2ZzdGF0YXQrMHgzNy8weDcwDQogWzxmZmZmZmZmZjgxMTI2MjA2Pl0gdmZzX3N0YXQr
+MHgxNi8weDIwDQogWzxmZmZmZmZmZjgxMTI2MjJmPl0gc3lzX25ld3N0YXQrMHgxZi8weDUw
+DQogWzxmZmZmZmZmZjgxMTMxMzcwPl0gPyBzeXNfZmNudGwrMHgxNjAvMHg1ZDANCiBbPGZm
+ZmZmZmZmODEwMGEwMDI+XSBzeXN0ZW1fY2FsbF9mYXN0cGF0aCsweDE2LzB4MWINCmRyaXZl
+cnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjY5Om12c19hYm9ydF90YXNrOnJjPSA1DQpkcml2
+ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTYwODptdnNfcXVlcnlfdGFzazpyYz0gNQ0KZHJp
+dmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2Njk6bXZzX2Fib3J0X3Rhc2s6cmM9IDUNCmRy
+aXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjA4Om12c19xdWVyeV90YXNrOnJjPSA1DQpk
+cml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTY2OTptdnNfYWJvcnRfdGFzazpyYz0gNQ0K
+ZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2MDg6bXZzX3F1ZXJ5X3Rhc2s6cmM9IDUN
+CmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjY5Om12c19hYm9ydF90YXNrOnJjPSA1
+DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTYwODptdnNfcXVlcnlfdGFzazpyYz0g
+NQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2Njk6bXZzX2Fib3J0X3Rhc2s6cmM9
+IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjA4Om12c19xdWVyeV90YXNrOnJj
+PSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTY2OTptdnNfYWJvcnRfdGFzazpy
+Yz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2MDg6bXZzX3F1ZXJ5X3Rhc2s6
+cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjY5Om12c19hYm9ydF90YXNr
+OnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTYwODptdnNfcXVlcnlfdGFz
+azpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2Njk6bXZzX2Fib3J0X3Rh
+c2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjA4Om12c19xdWVyeV90
+YXNrOnJjPSA1DQpzZCAxMDowOjE6MDogW3NkY10gVW5oYW5kbGVkIGVycm9yIGNvZGUNCnNk
+IDEwOjA6MTowOiBbc2RjXSBSZXN1bHQ6IGhvc3RieXRlPTB4MDAgZHJpdmVyYnl0ZT0weDA2
+DQpzZCAxMDowOjE6MDogW3NkY10gQ0RCOiBjZGJbMF09MHgyODogMjggMDAgMzAgYjQgY2Ig
+ZmYgMDAgMDQgMDAgMDANCmVuZF9yZXF1ZXN0OiBJL08gZXJyb3IsIGRldiBzZGMsIHNlY3Rv
+ciA4MTcxNTUwNzENCnNkIDEwOjA6MTI6MDogW3NkbV0gVW5oYW5kbGVkIGVycm9yIGNvZGUN
+CnNkIDEwOjA6MTI6MDogW3NkbV0gUmVzdWx0OiBob3N0Ynl0ZT0weDAwIGRyaXZlcmJ5dGU9
+MHgwNg0Kc2QgMTA6MDoxMjowOiBbc2RtXSBDREI6IGNkYlswXT0weDJhOiAyYSAwMCA2ZSAw
+NCA2NiBjOCAwMCAwNCAwMCAwMA0KZW5kX3JlcXVlc3Q6IEkvTyBlcnJvciwgZGV2IHNkbSwg
+c2VjdG9yIDE4NDU3ODIyMTYNCnNkIDEwOjA6MjowOiBbc2RkXSBVbmhhbmRsZWQgZXJyb3Ig
+Y29kZQ0Kc2QgMTA6MDoyOjA6IFtzZGRdIFJlc3VsdDogaG9zdGJ5dGU9MHgwMCBkcml2ZXJi
+eXRlPTB4MDYNCnNkIDEwOjA6MjowOiBbc2RkXSBDREI6IGNkYlswXT0weDJhOiAyYSAwMCBh
+ZSA5NyAzOCBmZiAwMCAwMCAwOCAwMA0KZW5kX3JlcXVlc3Q6IEkvTyBlcnJvciwgZGV2IHNk
+ZCwgc2VjdG9yIDI5MjkxNDYxMTENCnNkIDEwOjA6MjowOiBbc2RkXSBVbmhhbmRsZWQgZXJy
+b3IgY29kZQ0Kc2QgMTA6MDoyOjA6IFtzZGRdIFJlc3VsdDogaG9zdGJ5dGU9MHgwMCBkcml2
+ZXJieXRlPTB4MDYNCnNkIDEwOjA6MjowOiBbc2RkXSBDREI6IGNkYlswXT0weDI4OiAyOCAw
+MCA2OCA2YSA0ZCA1NyAwMCAwMCA0MCAwMA0KZW5kX3JlcXVlc3Q6IEkvTyBlcnJvciwgZGV2
+IHNkZCwgc2VjdG9yIDE3NTE3OTcwNzkNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAx
+NjY5Om12c19hYm9ydF90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMg
+MTYwODptdnNfcXVlcnlfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5j
+IDE2Njk6bXZzX2Fib3J0X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMu
+YyAxNjA4Om12c19xdWVyeV90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2Fz
+LmMgMTY2OTptdnNfYWJvcnRfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nh
+cy5jIDE2MDg6bXZzX3F1ZXJ5X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9z
+YXMuYyAxNjY5Om12c19hYm9ydF90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZf
+c2FzLmMgMTYwODptdnNfcXVlcnlfdGFzazpyYz0gNQ0K
+--------------080505060305080102060100--
+
+--------------000602040006000104040101
+Content-Type: message/rfc822;
+ name="Re: Still havind major MVSAS issues_.eml"
+Content-Transfer-Encoding: 8bit
+Content-Disposition: attachment;
+ filename="Re: Still havind major MVSAS issues_.eml"
+
+Return-Path: <k.skarlatos@gmail.com>
+Received: from [192.168.1.121] (ppp-94-69-230-175.home.otenet.gr [94.69.230.175])
+        by mx.google.com with ESMTPS id n31sm28837877wba.3.2010.06.06.06.43.54
+        (version=TLSv1/SSLv3 cipher=RC4-MD5);
+        Sun, 06 Jun 2010 06:43:55 -0700 (PDT)
+Message-ID: <4C0BA613.4090506@gmail.com>
+Date: Sun, 06 Jun 2010 16:43:47 +0300
+From: Konstantinos Skarlatos <k.skarlatos@gmail.com>
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2.4) Gecko/20100526 Thunderbird/3.1
+MIME-Version: 1.0
+To: Jelle de Jong <jelledejong@powercraft.nl>
+CC: "Srinivas Naga Venkatasatya Pasagadugula - ERS, HCL Tech" <satyasrinivasp@hcl.in>,
+ Caspar Smit <c.smit@truebit.nl>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "Yugendranath R Singh - ERS, HCL Tech" <yugendranath.s@hcl.in>,
+ "Geetha Gopalan, ERS-HCLTech" <geethagp@hcl.in>,
+ "Mohan Kumar TG, ERS,HCLTech" <mohankumartg@hcl.in>
+Subject: Re: Still havind major MVSAS issues.
+References: <53271.87.210.74.220.1270040583.squirrel@ketsers.dhs.org>       <7BF8FE1BFB7440B29ECD3D15FB0A4E8C@usish.com.cn>       <1068.77.248.79.78.1270102668.squirrel@ketsers.dhs.org>       <CDBC7B5488B245E689B39330542DC434@usish.com.cn>       <1543.77.248.79.78.1270108509.squirrel@ketsers.dhs.org>       <4BB50A92.3030205@gmx.net> <4BB53983.5050309@cisco.com>       <43193.87.210.74.220.1270217681.squirrel@ketsers.dhs.org> <1228.77.248.79.78.1270828327.squirrel@ketsers.dhs.org> <6B62480106F2B34D8404CF2FDAA4D9EF7F36EFEE0C@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN> <4C0B90DC.6070800@powercraft.nl>
+In-Reply-To: <4C0B90DC.6070800@powercraft.nl>
+Content-Type: multipart/mixed;
+ boundary="------------050806020304070609030809"
+
+This is a multi-part message in MIME format.
+--------------050806020304070609030809
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+
+  Here is one more log with crash information. All of my disks are 
+1.5TB, Seagates and WD. The expander did not affect the crashes, i had 
+the same issues with direct attached drives.
+
+
+On 6/6/2010 3:13 μμ, Jelle de Jong wrote:
+> Dear Srini,
+>
+> I spent a few weeks catering information and did some intensive
+> testing the last few days.
+>
+> Srinivas Naga Venkatasatya Pasagadugula wrote, on 06-05-10 08:01:
+>> 1. Is this is the problem with only WD SATA drives? (I don't have WD SATA drives to reproduce this issue.)
+>> 2. Whether the problem is with direct attached SATA drives or drives connected in expanders also?
+>> 3. Could you please provide me the "dmesg" log or "/var/log/messages" log.
+>> 4. How much the capacity of SATA drives connected to controller?
+>> 5. Your HBA is having 6440 chipset?
+> With a few tricks I managed to boot my OS from the mvsas controller. I
+> got eleven different sata disks attached from a 4-port mini-sas
+> backplate without expander to the two Marvel 88SE63xx/64xx mvsas
+> controllers in my system.
+>
+> I managed to add five mdadm raid1 arrays without added the actual
+> active sync device (so one disk for each array) I build my lvm systems
+> on top of this and did a lot of file transfers for testing.
+>
+> This worked stable enough, there are HDIO_GET_IDENTITY errors during
+> boot and operation, but the hard disks seem to be working.
+>
+> So to debug if issues are related to some brand of harddisk, I started
+> to add WDC, Hitachi, SAMSUNG, Maxtor and Seagate disks to the
+> respected raid1 array, the disks are of different sizes (320GB, 500GB,
+> 1TB.)
+>
+> The sync starts and will fail directly or a while later on failures in
+> the mvsas driver. I attached an failure example as attachment.
+>
+> The failures are of grave severity, I have lost complete lvm2 volumes
+> and raid arrays during testing.
+>
+> Do you also have a SuperMicro AOC-SASLP-MV8 controller for testing?
+>
+> I would love to use the controllers for production, but they are
+> currently unstable. I hope this information helps to solve the mvsas
+> issues?
+>
+> With kind regards,
+>
+> Jelle de Jong
+
+
+--------------050806020304070609030809
+Content-Type: text/plain;
+ name="mvsas errors2.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="mvsas errors2.txt"
+
+DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTY2OTptdnNfYWJvcnRfdGFzazpyYz0g
+NQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2MDg6bXZzX3F1ZXJ5X3Rhc2s6cmM9
+IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjY5Om12c19hYm9ydF90YXNrOnJj
+PSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTYwODptdnNfcXVlcnlfdGFzazpy
+Yz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2Njk6bXZzX2Fib3J0X3Rhc2s6
+cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjA4Om12c19xdWVyeV90YXNr
+OnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTY2OTptdnNfYWJvcnRfdGFz
+azpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2MDg6bXZzX3F1ZXJ5X3Rh
+c2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjY5Om12c19hYm9ydF90
+YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTYwODptdnNfcXVlcnlf
+dGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2Njk6bXZzX2Fib3J0
+X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjA4Om12c19xdWVy
+eV90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTY2OTptdnNfYWJv
+cnRfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2MDg6bXZzX3F1
+ZXJ5X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjY5Om12c19h
+Ym9ydF90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTYwODptdnNf
+cXVlcnlfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2Njk6bXZz
+X2Fib3J0X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjA4Om12
+c19xdWVyeV90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTY2OTpt
+dnNfYWJvcnRfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2MDg6
+bXZzX3F1ZXJ5X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjY5
+Om12c19hYm9ydF90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTYw
+ODptdnNfcXVlcnlfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2
+Njk6bXZzX2Fib3J0X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAx
+NjA4Om12c19xdWVyeV90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMg
+MTY2OTptdnNfYWJvcnRfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5j
+IDE2MDg6bXZzX3F1ZXJ5X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMu
+YyAxNjY5Om12c19hYm9ydF90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2Fz
+LmMgMTYwODptdnNfcXVlcnlfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nh
+cy5jIDE2Njk6bXZzX2Fib3J0X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9z
+YXMuYyAxNjA4Om12c19xdWVyeV90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZf
+c2FzLmMgMTY2OTptdnNfYWJvcnRfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212
+X3Nhcy5jIDE2MDg6bXZzX3F1ZXJ5X3Rhc2s6cmM9IDUNCnNkIDEwOjA6MTowOiBbc2RjXSBV
+bmhhbmRsZWQgZXJyb3IgY29kZQ0Kc2QgMTA6MDoxOjA6IFtzZGNdIFJlc3VsdDogaG9zdGJ5
+dGU9MHgwMCBkcml2ZXJieXRlPTB4MDYNCnNkIDEwOjA6MTowOiBbc2RjXSBDREI6IGNkYlsw
+XT0weDI4OiAyOCAwMCAxYyBiMiA4NiA2ZiAwMCAwMyAwMCAwMA0KZW5kX3JlcXVlc3Q6IEkv
+TyBlcnJvciwgZGV2IHNkYywgc2VjdG9yIDQ4MTQ2MTg3MQ0Kc2QgMTA6MDo0OjA6IFtzZGZd
+IFVuaGFuZGxlZCBlcnJvciBjb2RlDQpzZCAxMDowOjQ6MDogW3NkZl0gUmVzdWx0OiBob3N0
+Ynl0ZT0weDAwIGRyaXZlcmJ5dGU9MHgwNg0Kc2QgMTA6MDo0OjA6IFtzZGZdIENEQjogY2Ri
+WzBdPTB4MmE6IDJhIDAwIDFhIDYyIDAzIDAwIDAwIDA0IDAwIDAwDQplbmRfcmVxdWVzdDog
+SS9PIGVycm9yLCBkZXYgc2RmLCBzZWN0b3IgNDQyNjMwOTEyDQpzZCAxMDowOjQ6MDogW3Nk
+Zl0gVW5oYW5kbGVkIGVycm9yIGNvZGUNCnNkIDEwOjA6NDowOiBbc2RmXSBSZXN1bHQ6IGhv
+c3RieXRlPTB4MDAgZHJpdmVyYnl0ZT0weDA2DQpzZCAxMDowOjQ6MDogW3NkZl0gQ0RCOiBj
+ZGJbMF09MHgyYTogMmEgMDAgMWEgNjEgZmYgMDAgMDAgMDQgMDAgMDANCmVuZF9yZXF1ZXN0
+OiBJL08gZXJyb3IsIGRldiBzZGYsIHNlY3RvciA0NDI2Mjk4ODgNCnNkIDEwOjA6NDowOiBb
+c2RmXSBVbmhhbmRsZWQgZXJyb3IgY29kZQ0Kc2QgMTA6MDo0OjA6IFtzZGZdIFJlc3VsdDog
+aG9zdGJ5dGU9MHgwMCBkcml2ZXJieXRlPTB4MDYNCnNkIDEwOjA6NDowOiBbc2RmXSBDREI6
+IGNkYlswXT0weDJhOiAyYSAwMCAxYSA2MSBmYiAwMCAwMCAwNCAwMCAwMA0KZW5kX3JlcXVl
+c3Q6IEkvTyBlcnJvciwgZGV2IHNkZiwgc2VjdG9yIDQ0MjYyODg2NA0Kc2QgMTA6MDo0OjA6
+IFtzZGZdIFVuaGFuZGxlZCBlcnJvciBjb2RlDQpzZCAxMDowOjQ6MDogW3NkZl0gUmVzdWx0
+OiBob3N0Ynl0ZT0weDAwIGRyaXZlcmJ5dGU9MHgwNg0Kc2QgMTA6MDo0OjA6IFtzZGZdIENE
+QjogY2RiWzBdPTB4MmE6IDJhIDAwIDFhIDYxIGY3IDAwIDAwIDA0IDAwIDAwDQplbmRfcmVx
+dWVzdDogSS9PIGVycm9yLCBkZXYgc2RmLCBzZWN0b3IgNDQyNjI3ODQwDQpzZCAxMDowOjQ6
+MDogW3NkZl0gVW5oYW5kbGVkIGVycm9yIGNvZGUNCnNkIDEwOjA6NDowOiBbc2RmXSBSZXN1
+bHQ6IGhvc3RieXRlPTB4MDAgZHJpdmVyYnl0ZT0weDA2DQpzZCAxMDowOjQ6MDogW3NkZl0g
+Q0RCOiBjZGJbMF09MHgyYTogMmEgMDAgMWEgNjEgZjMgMDAgMDAgMDQgMDAgMDANCmVuZF9y
+ZXF1ZXN0OiBJL08gZXJyb3IsIGRldiBzZGYsIHNlY3RvciA0NDI2MjY4MTYNCnNkIDEwOjA6
+NDowOiBbc2RmXSBVbmhhbmRsZWQgZXJyb3IgY29kZQ0Kc2QgMTA6MDo0OjA6IFtzZGZdIFJl
+c3VsdDogaG9zdGJ5dGU9MHgwMCBkcml2ZXJieXRlPTB4MDYNCnNkIDEwOjA6NDowOiBbc2Rm
+XSBDREI6IGNkYlswXT0weDJhOiAyYSAwMCAxYSA2MSBlZiAwMCAwMCAwNCAwMCAwMA0KZW5k
+X3JlcXVlc3Q6IEkvTyBlcnJvciwgZGV2IHNkZiwgc2VjdG9yIDQ0MjYyNTc5Mg0Kc2QgMTA6
+MDo0OjA6IFtzZGZdIFVuaGFuZGxlZCBlcnJvciBjb2RlDQpzZCAxMDowOjQ6MDogW3NkZl0g
+UmVzdWx0OiBob3N0Ynl0ZT0weDAwIGRyaXZlcmJ5dGU9MHgwNg0Kc2QgMTA6MDo0OjA6IFtz
+ZGZdIENEQjogY2RiWzBdPTB4MmE6IDJhIDAwIDAwIDAwIGM4IGM4IDAwIDAwIDA4IDAwDQpl
+bmRfcmVxdWVzdDogSS9PIGVycm9yLCBkZXYgc2RmLCBzZWN0b3IgNTE0MDANCm1ldGFwYWdl
+X3dyaXRlX2VuZF9pbzogSS9PIGVycm9yDQpzZCAxMDowOjQ6MDogW3NkZl0gVW5oYW5kbGVk
+IGVycm9yIGNvZGUNCnNkIDEwOjA6NDowOiBbc2RmXSBSZXN1bHQ6IGhvc3RieXRlPTB4MDAg
+ZHJpdmVyYnl0ZT0weDA2DQpzZCAxMDowOjQ6MDogW3NkZl0gQ0RCOiBjZGJbMF09MHgyYTog
+MmEgMDAgMDAgMDAgZGIgOTAgMDAgMDAgNTggMDANCmVuZF9yZXF1ZXN0OiBJL08gZXJyb3Is
+IGRldiBzZGYsIHNlY3RvciA1NjIwOA0KbWV0YXBhZ2Vfd3JpdGVfZW5kX2lvOiBJL08gZXJy
+b3INCm1ldGFwYWdlX3dyaXRlX2VuZF9pbzogSS9PIGVycm9yDQptZXRhcGFnZV93cml0ZV9l
+bmRfaW86IEkvTyBlcnJvcg0KbWV0YXBhZ2Vfd3JpdGVfZW5kX2lvOiBJL08gZXJyb3INCm1l
+dGFwYWdlX3dyaXRlX2VuZF9pbzogSS9PIGVycm9yDQptZXRhcGFnZV93cml0ZV9lbmRfaW86
+IEkvTyBlcnJvcg0KbWV0YXBhZ2Vfd3JpdGVfZW5kX2lvOiBJL08gZXJyb3INCm1ldGFwYWdl
+X3dyaXRlX2VuZF9pbzogSS9PIGVycm9yDQptZXRhcGFnZV93cml0ZV9lbmRfaW86IEkvTyBl
+cnJvcg0KbWV0YXBhZ2Vfd3JpdGVfZW5kX2lvOiBJL08gZXJyb3INCm1ldGFwYWdlX3dyaXRl
+X2VuZF9pbzogSS9PIGVycm9yDQpJTkZPOiB0YXNrIGZpbGV6aWxsYToxODU3MiBibG9ja2Vk
+IGZvciBtb3JlIHRoYW4gMTIwIHNlY29uZHMuDQoiZWNobyAwID4gL3Byb2Mvc3lzL2tlcm5l
+bC9odW5nX3Rhc2tfdGltZW91dF9zZWNzIiBkaXNhYmxlcyB0aGlzIG1lc3NhZ2UuDQpmaWxl
+emlsbGEgICAgIEQgZmZmZmZmZmY4MTBkYzJkMCAgICAgMCAxODU3MiAgIDIwNjMgMHgwMDAw
+MDAwMA0KIGZmZmY4ODAwMTc1YjM3NjggMDAwMDAwMDAwMDAwMDA4MiAwMDAwMDAwMDAwMDUz
+MGQ3IDAwMDAwMDAwMDAwMDAwMDgNCiAwMDAwMDAwMDAwODAwMDIwIGZmZmY4ODAwM2NhNTJj
+YjAgZmZmZjg4MDAxNzViMzc5OCBmZmZmZmZmZjgxMWI2ZmE0DQogZmZmZjg4MDAxNzViMzc0
+MCBmZmZmODgwMDE3NWIzZmQ4IGZmZmY4ODAwMTc1YjIwMDAgZmZmZjg4MDAxNzViMjAwMA0K
+Q2FsbCBUcmFjZToNCiBbPGZmZmZmZmZmODExYjZmYTQ+XSA/IGdlbmVyaWNfbWFrZV9yZXF1
+ZXN0KzB4MTg0LzB4NGYwDQogWzxmZmZmZmZmZjgxMDdkNzM5Pl0gPyBrdGltZV9nZXRfdHMr
+MHhhOS8weGUwDQogWzxmZmZmZmZmZjgxMGRjMmQwPl0gPyBzeW5jX3BhZ2UrMHgwLzB4NTAN
+CiBbPGZmZmZmZmZmODEzNWFkNWU+XSBpb19zY2hlZHVsZSsweDZlLzB4YjANCiBbPGZmZmZm
+ZmZmODEwZGMzMGQ+XSBzeW5jX3BhZ2UrMHgzZC8weDUwDQogWzxmZmZmZmZmZjgxMzViMzgy
+Pl0gX193YWl0X29uX2JpdF9sb2NrKzB4NTIvMHhiMA0KIFs8ZmZmZmZmZmY4MTBkYzJiMj5d
+IF9fbG9ja19wYWdlKzB4NjIvMHg3MA0KIFs8ZmZmZmZmZmY4MTA3MzJiMD5dID8gd2FrZV9i
+aXRfZnVuY3Rpb24rMHgwLzB4NDANCiBbPGZmZmZmZmZmODEwZGM5YTk+XSBkb19yZWFkX2Nh
+Y2hlX3BhZ2UrMHgxNTkvMHgxODANCiBbPGZmZmZmZmZmYTAzMGQyMTA+XSA/IG1ldGFwYWdl
+X3JlYWRwYWdlKzB4MC8weDE4MCBbamZzXQ0KIFs8ZmZmZmZmZmY4MTBkY2EwND5dIHJlYWRf
+Y2FjaGVfcGFnZV9hc3luYysweDE0LzB4MjANCiBbPGZmZmZmZmZmODEwZGNhMTk+XSByZWFk
+X2NhY2hlX3BhZ2UrMHg5LzB4MjANCiBbPGZmZmZmZmZmYTAzMGRkYjU+XSBfX2dldF9tZXRh
+cGFnZSsweDk1LzB4NWEwIFtqZnNdDQogWzxmZmZmZmZmZjgxMzVkMWI0Pl0gPyBfX2Rvd25f
+cmVhZCsweGQ0LzB4ZDYNCiBbPGZmZmZmZmZmYTAyZjg3ZWI+XSA/IHh0TG9va3VwKzB4MThi
+LzB4MWEwIFtqZnNdDQogWzxmZmZmZmZmZmEwMzA0MjI3Pl0gZGJBbGxvYysweDE0Ny8weDQ4
+MCBbamZzXQ0KIFs8ZmZmZmZmZmZhMDMwY2I5Mj5dIGV4dEFsbG9jKzB4MTYyLzB4NGQwIFtq
+ZnNdDQogWzxmZmZmZmZmZjgxMTFkNzQwPl0gPyBtZW1fY2dyb3VwX2NhY2hlX2NoYXJnZSsw
+eDE0MC8weDFlMA0KIFs8ZmZmZmZmZmZhMDJmNGIyMT5dIGpmc19nZXRfYmxvY2srMHgxYzEv
+MHgyMjAgW2pmc10NCiBbPGZmZmZmZmZmODExNGRkMGE+XSBub2JoX3dyaXRlX2JlZ2luKzB4
+MWVhLzB4NGIwDQogWzxmZmZmZmZmZjgxMTRhZTE2Pl0gPyBfX3NldF9wYWdlX2RpcnR5KzB4
+NzYvMHhkMA0KIFs8ZmZmZmZmZmZhMDJmNDYxZT5dIGpmc193cml0ZV9iZWdpbisweDFlLzB4
+MjAgW2pmc10NCiBbPGZmZmZmZmZmYTAyZjQ5NjA+XSA/IGpmc19nZXRfYmxvY2srMHgwLzB4
+MjIwIFtqZnNdDQogWzxmZmZmZmZmZjgxMGRiNzBkPl0gZ2VuZXJpY19maWxlX2J1ZmZlcmVk
+X3dyaXRlKzB4MTBkLzB4MjgwDQogWzxmZmZmZmZmZjgxMDU4MWYyPl0gPyBjdXJyZW50X2Zz
+X3RpbWUrMHgyMi8weDMwDQogWzxmZmZmZmZmZjgxMGRkNjU4Pl0gX19nZW5lcmljX2ZpbGVf
+YWlvX3dyaXRlKzB4MjM4LzB4NDUwDQogWzxmZmZmZmZmZjgxMzViYWFkPl0gPyBfX211dGV4
+X2xvY2tfc2xvd3BhdGgrMHgyNmQvMHgzNzANCiBbPGZmZmZmZmZmODEwZGQ4ZDQ+XSBnZW5l
+cmljX2ZpbGVfYWlvX3dyaXRlKzB4NjQvMHhkMA0KIFs8ZmZmZmZmZmY4MTEyMjAwMj5dIGRv
+X3N5bmNfd3JpdGUrMHhkMi8weDExMA0KIFs8ZmZmZmZmZmY4MTM1ZGM4ZT5dID8gY29tbW9u
+X2ludGVycnVwdCsweGUvMHgxMw0KIFs8ZmZmZmZmZmY4MTE5ZmNiMT5dID8gc2VjdXJpdHlf
+ZmlsZV9wZXJtaXNzaW9uKzB4MTEvMHgyMA0KIFs8ZmZmZmZmZmY4MTEyMmI0OD5dIHZmc193
+cml0ZSsweGI4LzB4MWEwDQogWzxmZmZmZmZmZjgxMTIyZDBjPl0gc3lzX3dyaXRlKzB4NGMv
+MHg4MA0KIFs8ZmZmZmZmZmY4MTAwOWZjMj5dIHN5c3RlbV9jYWxsX2Zhc3RwYXRoKzB4MTYv
+MHgxYg0KSU5GTzogdGFzayBmaWxlemlsbGE6MTg1NzQgYmxvY2tlZCBmb3IgbW9yZSB0aGFu
+IDEyMCBzZWNvbmRzLg0KImVjaG8gMCA+IC9wcm9jL3N5cy9rZXJuZWwvaHVuZ190YXNrX3Rp
+bWVvdXRfc2VjcyIgZGlzYWJsZXMgdGhpcyBtZXNzYWdlLg0KZmlsZXppbGxhICAgICBEIGZm
+ZmZmZmZmODEwZGMyZDAgICAgIDAgMTg1NzQgICAyMDYzIDB4MDAwMDAwMDANCiBmZmZmODgw
+MDNjOTY3NzY4IDAwMDAwMDAwMDAwMDAwODIgMDAwMDAwMDAwMDA0NWNhNyAwMDAwMDAwMDAw
+MDAwMDA4DQogMDAwMDAwMDAwMDgwMDAyMCBmZmZmODgwMDNjYTUyY2IwIGZmZmY4ODAwM2M5
+Njc3OTggZmZmZmZmZmY4MTFiNmZhNA0KIGZmZmY4ODAwM2M5Njc3NDAgZmZmZjg4MDAzYzk2
+N2ZkOCBmZmZmODgwMDNjOTY2MDAwIGZmZmY4ODAwM2M5NjYwMDANCkNhbGwgVHJhY2U6DQog
+WzxmZmZmZmZmZjgxMWI2ZmE0Pl0gPyBnZW5lcmljX21ha2VfcmVxdWVzdCsweDE4NC8weDRm
+MA0KIFs8ZmZmZmZmZmY4MTA3ZDczOT5dID8ga3RpbWVfZ2V0X3RzKzB4YTkvMHhlMA0KIFs8
+ZmZmZmZmZmY4MTBkYzJkMD5dID8gc3luY19wYWdlKzB4MC8weDUwDQogWzxmZmZmZmZmZjgx
+MzVhZDVlPl0gaW9fc2NoZWR1bGUrMHg2ZS8weGIwDQogWzxmZmZmZmZmZjgxMGRjMzBkPl0g
+c3luY19wYWdlKzB4M2QvMHg1MA0KIFs8ZmZmZmZmZmY4MTM1YjM4Mj5dIF9fd2FpdF9vbl9i
+aXRfbG9jaysweDUyLzB4YjANCiBbPGZmZmZmZmZmODEwZGMyYjI+XSBfX2xvY2tfcGFnZSsw
+eDYyLzB4NzANCiBbPGZmZmZmZmZmODEwNzMyYjA+XSA/IHdha2VfYml0X2Z1bmN0aW9uKzB4
+MC8weDQwDQogWzxmZmZmZmZmZjgxMGRjOWE5Pl0gZG9fcmVhZF9jYWNoZV9wYWdlKzB4MTU5
+LzB4MTgwDQogWzxmZmZmZmZmZmEwMzBkMjEwPl0gPyBtZXRhcGFnZV9yZWFkcGFnZSsweDAv
+MHgxODAgW2pmc10NCiBbPGZmZmZmZmZmODEwZGNhMDQ+XSByZWFkX2NhY2hlX3BhZ2VfYXN5
+bmMrMHgxNC8weDIwDQogWzxmZmZmZmZmZjgxMGRjYTE5Pl0gcmVhZF9jYWNoZV9wYWdlKzB4
+OS8weDIwDQogWzxmZmZmZmZmZmEwMzBkZGI1Pl0gX19nZXRfbWV0YXBhZ2UrMHg5NS8weDVh
+MCBbamZzXQ0KIFs8ZmZmZmZmZmY4MTM1ZDFiND5dID8gX19kb3duX3JlYWQrMHhkNC8weGQ2
+DQogWzxmZmZmZmZmZmEwMmY4NmVkPl0gPyB4dExvb2t1cCsweDhkLzB4MWEwIFtqZnNdDQog
+WzxmZmZmZmZmZmEwMzA0MjI3Pl0gZGJBbGxvYysweDE0Ny8weDQ4MCBbamZzXQ0KIFs8ZmZm
+ZmZmZmZhMDMwY2I5Mj5dIGV4dEFsbG9jKzB4MTYyLzB4NGQwIFtqZnNdDQogWzxmZmZmZmZm
+ZjgxMTFkNzQwPl0gPyBtZW1fY2dyb3VwX2NhY2hlX2NoYXJnZSsweDE0MC8weDFlMA0KIFs8
+ZmZmZmZmZmZhMDJmNGIyMT5dIGpmc19nZXRfYmxvY2srMHgxYzEvMHgyMjAgW2pmc10NCiBb
+PGZmZmZmZmZmODExNGRkMGE+XSBub2JoX3dyaXRlX2JlZ2luKzB4MWVhLzB4NGIwDQogWzxm
+ZmZmZmZmZjgxMTRhZTE2Pl0gPyBfX3NldF9wYWdlX2RpcnR5KzB4NzYvMHhkMA0KIFs8ZmZm
+ZmZmZmZhMDJmNDYxZT5dIGpmc193cml0ZV9iZWdpbisweDFlLzB4MjAgW2pmc10NCiBbPGZm
+ZmZmZmZmYTAyZjQ5NjA+XSA/IGpmc19nZXRfYmxvY2srMHgwLzB4MjIwIFtqZnNdDQogWzxm
+ZmZmZmZmZjgxMGRiNzBkPl0gZ2VuZXJpY19maWxlX2J1ZmZlcmVkX3dyaXRlKzB4MTBkLzB4
+MjgwDQogWzxmZmZmZmZmZjgxMDU4MWYyPl0gPyBjdXJyZW50X2ZzX3RpbWUrMHgyMi8weDMw
+DQogWzxmZmZmZmZmZjgxMGRkNjU4Pl0gX19nZW5lcmljX2ZpbGVfYWlvX3dyaXRlKzB4MjM4
+LzB4NDUwDQogWzxmZmZmZmZmZjgxMzViYWFkPl0gPyBfX211dGV4X2xvY2tfc2xvd3BhdGgr
+MHgyNmQvMHgzNzANCiBbPGZmZmZmZmZmODEwZGQ4ZDQ+XSBnZW5lcmljX2ZpbGVfYWlvX3dy
+aXRlKzB4NjQvMHhkMA0KIFs8ZmZmZmZmZmY4MTEyMjAwMj5dIGRvX3N5bmNfd3JpdGUrMHhk
+Mi8weDExMA0KIFs8ZmZmZmZmZmY4MTM1ZGM4ZT5dID8gY29tbW9uX2ludGVycnVwdCsweGUv
+MHgxMw0KIFs8ZmZmZmZmZmY4MTM1ZGM4ZT5dID8gY29tbW9uX2ludGVycnVwdCsweGUvMHgx
+Mw0KIFs8ZmZmZmZmZmY4MTE5ZmNiMT5dID8gc2VjdXJpdHlfZmlsZV9wZXJtaXNzaW9uKzB4
+MTEvMHgyMA0KIFs8ZmZmZmZmZmY4MTEyMmI0OD5dIHZmc193cml0ZSsweGI4LzB4MWEwDQog
+WzxmZmZmZmZmZjgxMTIyZDBjPl0gc3lzX3dyaXRlKzB4NGMvMHg4MA0KIFs8ZmZmZmZmZmY4
+MTAwOWZjMj5dIHN5c3RlbV9jYWxsX2Zhc3RwYXRoKzB4MTYvMHgxYg0KSU5GTzogdGFzayBz
+bWJkOjE4NjU4IGJsb2NrZWQgZm9yIG1vcmUgdGhhbiAxMjAgc2Vjb25kcy4NCiJlY2hvIDAg
+PiAvcHJvYy9zeXMva2VybmVsL2h1bmdfdGFza190aW1lb3V0X3NlY3MiIGRpc2FibGVzIHRo
+aXMgbWVzc2FnZS4NCnNtYmQgICAgICAgICAgRCBmZmZmODgwMDAxOTBmOTQ4ICAgICAwIDE4
+NjU4ICAxNjc4MiAweDAwMDAwMDAwDQogZmZmZjg4MDAzMjhjZDYwOCAwMDAwMDAwMDAwMDAw
+MDg2IDAwMDAwMDAwMDAwMDAwMDAgZmZmZmZmZmY4MTI3NzJiMg0KIGZmZmY4ODAwMzI4Y2Q1
+YTggZmZmZmZmZmZhMDAwNjk0YSBmZmZmODgwMDAwMDAwMDAwIGZmZmY4ODAwM2M5MjE4MzAN
+CiAwMDAwMDAwMTA2MTk1OGQwIGZmZmY4ODAwMzI4Y2RmZDggZmZmZjg4MDAzMjhjYzAwMCBm
+ZmZmODgwMDMyOGNjMDAwDQpDYWxsIFRyYWNlOg0KIFs8ZmZmZmZmZmY4MTI3NzJiMj5dID8g
+cHV0X2RldmljZSsweDEyLzB4MjANCiBbPGZmZmZmZmZmYTAwMDY5NGE+XSA/IHNjc2lfcmVx
+dWVzdF9mbisweGFhLzB4NGQwIFtzY3NpX21vZF0NCiBbPGZmZmZmZmZmODEwZGMyZDA+XSA/
+IHN5bmNfcGFnZSsweDAvMHg1MA0KIFs8ZmZmZmZmZmY4MTM1YWQ1ZT5dIGlvX3NjaGVkdWxl
+KzB4NmUvMHhiMA0KIFs8ZmZmZmZmZmY4MTBkYzMwZD5dIHN5bmNfcGFnZSsweDNkLzB4NTAN
+CiBbPGZmZmZmZmZmODEzNWIzODI+XSBfX3dhaXRfb25fYml0X2xvY2srMHg1Mi8weGIwDQog
+WzxmZmZmZmZmZjgxMGRjMmIyPl0gX19sb2NrX3BhZ2UrMHg2Mi8weDcwDQogWzxmZmZmZmZm
+ZjgxMDczMmIwPl0gPyB3YWtlX2JpdF9mdW5jdGlvbisweDAvMHg0MA0KIFs8ZmZmZmZmZmY4
+MTBkYzlhOT5dIGRvX3JlYWRfY2FjaGVfcGFnZSsweDE1OS8weDE4MA0KIFs8ZmZmZmZmZmZh
+MDMwZDIxMD5dID8gbWV0YXBhZ2VfcmVhZHBhZ2UrMHgwLzB4MTgwIFtqZnNdDQogWzxmZmZm
+ZmZmZjgxMGRjYTA0Pl0gcmVhZF9jYWNoZV9wYWdlX2FzeW5jKzB4MTQvMHgyMA0KIFs8ZmZm
+ZmZmZmY4MTBkY2ExOT5dIHJlYWRfY2FjaGVfcGFnZSsweDkvMHgyMA0KIFs8ZmZmZmZmZmZh
+MDMwZGRiNT5dIF9fZ2V0X21ldGFwYWdlKzB4OTUvMHg1YTAgW2pmc10NCiBbPGZmZmZmZmZm
+YTAzMDk4NTE+XSBkdFNlYXJjaCsweDc4MS8weGIwMCBbamZzXQ0KIFs8ZmZmZmZmZmZhMDJm
+NzUwMz5dIGpmc19sb29rdXArMHgxMDMvMHgxNTAgW2pmc10NCiBbPGZmZmZmZmZmODExMzc2
+NDg+XSA/IGRfYWxsb2MrMHgxNTgvMHgxYzANCiBbPGZmZmZmZmZmODExMmM2NGQ+XSBfX2xv
+b2t1cF9oYXNoKzB4ZWQvMHgxNTANCiBbPGZmZmZmZmZmODExMmNiOTU+XSBsb29rdXBfb25l
+X2xlbisweDc1LzB4YjANCiBbPGZmZmZmZmZmYTAzYTExNGQ+XSB2ZnN1Yl9sb29rdXBfb25l
+X2xlbisweDFkLzB4NTAgW2F1ZnNdDQogWzxmZmZmZmZmZmEwM2E3YWUyPl0gYXVfbGt1cF9v
+bmUrMHgzMi8weGYwIFthdWZzXQ0KIFs8ZmZmZmZmZmY4MTBmOTYxOT5dID8gaGFuZGxlX21t
+X2ZhdWx0KzB4NmQ5LzB4YTMwDQogWzxmZmZmZmZmZjgxMzViYWFkPl0gPyBfX211dGV4X2xv
+Y2tfc2xvd3BhdGgrMHgyNmQvMHgzNzANCiBbPGZmZmZmZmZmODEzNWQwYzU+XSA/IF9fZG93
+bl93cml0ZV9uZXN0ZWQrMHhkNS8weGUwDQogWzxmZmZmZmZmZmEwM2E1MjZmPl0gYXVfd2hf
+dGVzdCsweDFmLzB4ZDAgW2F1ZnNdDQogWzxmZmZmZmZmZjgxMzViYmMxPl0gPyBtdXRleF9s
+b2NrKzB4MTEvMHgzMA0KIFs8ZmZmZmZmZmZhMDNhODI4Nj5dIGF1X2xrdXBfZGVudHJ5KzB4
+MzM2LzB4NTMwIFthdWZzXQ0KIFs8ZmZmZmZmZmZhMDNhZjNjZj5dIGF1ZnNfbG9va3VwKzB4
+ZWYvMHgyMzAgW2F1ZnNdDQogWzxmZmZmZmZmZjgxMTJjNGNiPl0gZG9fbG9va3VwKzB4MWRi
+LzB4MjcwDQogWzxmZmZmZmZmZjgxMTJlYjU5Pl0gbGlua19wYXRoX3dhbGsrMHg2NzkvMHhl
+NTANCiBbPGZmZmZmZmZmODExMmY1MDI+XSBwYXRoX3dhbGsrMHg2Mi8weGUwDQogWzxmZmZm
+ZmZmZjgxMTJmNmMzPl0gZG9fcGF0aF9sb29rdXArMHg1My8weGEwDQogWzxmZmZmZmZmZjgx
+MTJmNzM1Pl0ga2Vybl9wYXRoKzB4MjUvMHg1MA0KIFs8ZmZmZmZmZmY4MTFjYjMwYj5dID8g
+Y3B1bWFza19hbnlfYnV0KzB4MmIvMHg0MA0KIFs8ZmZmZmZmZmY4MTBmZGJiMD5dID8gdW5t
+YXBfcmVnaW9uKzB4MTcwLzB4MWEwDQogWzxmZmZmZmZmZjgxMTUxNjI5Pl0gbG9va3VwX2Jk
+ZXYrMHgzOS8weGIwDQogWzxmZmZmZmZmZjgxMTJlMjZlPl0gPyBnZXRuYW1lKzB4MWNlLzB4
+MjMwDQogWzxmZmZmZmZmZjgxMTc0YjAzPl0gc3lzX3F1b3RhY3RsKzB4YjMvMHgzZDANCiBb
+PGZmZmZmZmZmODEwNzdkZjk+XSA/IHVwX3dyaXRlKzB4OS8weDEwDQogWzxmZmZmZmZmZjgx
+MDA5ZmMyPl0gc3lzdGVtX2NhbGxfZmFzdHBhdGgrMHgxNi8weDFiDQpkcml2ZXJzL3Njc2kv
+bXZzYXMvbXZfc2FzLmMgMTY2OTptdnNfYWJvcnRfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3Np
+L212c2FzL212X3Nhcy5jIDE2MDg6bXZzX3F1ZXJ5X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2Nz
+aS9tdnNhcy9tdl9zYXMuYyAxNjY5Om12c19hYm9ydF90YXNrOnJjPSA1DQpkcml2ZXJzL3Nj
+c2kvbXZzYXMvbXZfc2FzLmMgMTYwODptdnNfcXVlcnlfdGFzazpyYz0gNQ0KZHJpdmVycy9z
+Y3NpL212c2FzL212X3Nhcy5jIDE2Njk6bXZzX2Fib3J0X3Rhc2s6cmM9IDUNCmRyaXZlcnMv
+c2NzaS9tdnNhcy9tdl9zYXMuYyAxNjA4Om12c19xdWVyeV90YXNrOnJjPSA1DQpkcml2ZXJz
+L3Njc2kvbXZzYXMvbXZfc2FzLmMgMTY2OTptdnNfYWJvcnRfdGFzazpyYz0gNQ0KZHJpdmVy
+cy9zY3NpL212c2FzL212X3Nhcy5jIDE2MDg6bXZzX3F1ZXJ5X3Rhc2s6cmM9IDUNCmRyaXZl
+cnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjY5Om12c19hYm9ydF90YXNrOnJjPSA1DQpkcml2
+ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTYwODptdnNfcXVlcnlfdGFzazpyYz0gNQ0KZHJp
+dmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2Njk6bXZzX2Fib3J0X3Rhc2s6cmM9IDUNCmRy
+aXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjA4Om12c19xdWVyeV90YXNrOnJjPSA1DQpz
+ZCAxMDowOjY6MDogW3NkaF0gVW5oYW5kbGVkIGVycm9yIGNvZGUNCnNkIDEwOjA6NjowOiBb
+c2RoXSBSZXN1bHQ6IGhvc3RieXRlPTB4MDAgZHJpdmVyYnl0ZT0weDA2DQpzZCAxMDowOjY6
+MDogW3NkaF0gQ0RCOiBjZGJbMF09MHgyODogMjggMDAgMjcgNjMgNWQgNmYgMDAgMDAgMDgg
+MDANCmVuZF9yZXF1ZXN0OiBJL08gZXJyb3IsIGRldiBzZGgsIHNlY3RvciA2NjA4MjM0MDcN
+Cm1ldGFwYWdlX3JlYWRfZW5kX2lvOiBJL08gZXJyb3INCmRyaXZlcnMvc2NzaS9tdnNhcy9t
+dl9zYXMuYyAxNjY5Om12c19hYm9ydF90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMv
+bXZfc2FzLmMgMTYwODptdnNfcXVlcnlfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2Fz
+L212X3Nhcy5jIDE2Njk6bXZzX2Fib3J0X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNh
+cy9tdl9zYXMuYyAxNjA4Om12c19xdWVyeV90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZz
+YXMvbXZfc2FzLmMgMTY2OTptdnNfYWJvcnRfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212
+c2FzL212X3Nhcy5jIDE2MDg6bXZzX3F1ZXJ5X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9t
+dnNhcy9tdl9zYXMuYyAxNjY5Om12c19hYm9ydF90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kv
+bXZzYXMvbXZfc2FzLmMgMTYwODptdnNfcXVlcnlfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3Np
+L212c2FzL212X3Nhcy5jIDE2Njk6bXZzX2Fib3J0X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2Nz
+aS9tdnNhcy9tdl9zYXMuYyAxNjA4Om12c19xdWVyeV90YXNrOnJjPSA1DQpkcml2ZXJzL3Nj
+c2kvbXZzYXMvbXZfc2FzLmMgMTY2OTptdnNfYWJvcnRfdGFzazpyYz0gNQ0KZHJpdmVycy9z
+Y3NpL212c2FzL212X3Nhcy5jIDE2MDg6bXZzX3F1ZXJ5X3Rhc2s6cmM9IDUNCklORk86IHRh
+c2sgZmlsZXppbGxhOjE4NTcyIGJsb2NrZWQgZm9yIG1vcmUgdGhhbiAxMjAgc2Vjb25kcy4N
+CiJlY2hvIDAgPiAvcHJvYy9zeXMva2VybmVsL2h1bmdfdGFza190aW1lb3V0X3NlY3MiIGRp
+c2FibGVzIHRoaXMgbWVzc2FnZS4NCmZpbGV6aWxsYSAgICAgRCBmZmZmZmZmZjgxMGRjMmQw
+ICAgICAwIDE4NTcyICAgMjA2MyAweDAwMDAwMDAwDQogZmZmZjg4MDAxNzViMzc2OCAwMDAw
+MDAwMDAwMDAwMDgyIDAwMDAwMDAwMDAwNTMwZDcgMDAwMDAwMDAwMDAwMDAwOA0KIDAwMDAw
+MDAwMDA4MDAwMjAgZmZmZjg4MDAzY2E1MmNiMCBmZmZmODgwMDE3NWIzNzk4IGZmZmZmZmZm
+ODExYjZmYTQNCiBmZmZmODgwMDE3NWIzNzQwIGZmZmY4ODAwMTc1YjNmZDggZmZmZjg4MDAx
+NzViMjAwMCBmZmZmODgwMDE3NWIyMDAwDQpDYWxsIFRyYWNlOg0KIFs8ZmZmZmZmZmY4MTFi
+NmZhND5dID8gZ2VuZXJpY19tYWtlX3JlcXVlc3QrMHgxODQvMHg0ZjANCiBbPGZmZmZmZmZm
+ODEwN2Q3Mzk+XSA/IGt0aW1lX2dldF90cysweGE5LzB4ZTANCiBbPGZmZmZmZmZmODEwZGMy
+ZDA+XSA/IHN5bmNfcGFnZSsweDAvMHg1MA0KIFs8ZmZmZmZmZmY4MTM1YWQ1ZT5dIGlvX3Nj
+aGVkdWxlKzB4NmUvMHhiMA0KIFs8ZmZmZmZmZmY4MTBkYzMwZD5dIHN5bmNfcGFnZSsweDNk
+LzB4NTANCiBbPGZmZmZmZmZmODEzNWIzODI+XSBfX3dhaXRfb25fYml0X2xvY2srMHg1Mi8w
+eGIwDQogWzxmZmZmZmZmZjgxMGRjMmIyPl0gX19sb2NrX3BhZ2UrMHg2Mi8weDcwDQogWzxm
+ZmZmZmZmZjgxMDczMmIwPl0gPyB3YWtlX2JpdF9mdW5jdGlvbisweDAvMHg0MA0KIFs8ZmZm
+ZmZmZmY4MTBkYzlhOT5dIGRvX3JlYWRfY2FjaGVfcGFnZSsweDE1OS8weDE4MA0KIFs8ZmZm
+ZmZmZmZhMDMwZDIxMD5dID8gbWV0YXBhZ2VfcmVhZHBhZ2UrMHgwLzB4MTgwIFtqZnNdDQog
+WzxmZmZmZmZmZjgxMGRjYTA0Pl0gcmVhZF9jYWNoZV9wYWdlX2FzeW5jKzB4MTQvMHgyMA0K
+IFs8ZmZmZmZmZmY4MTBkY2ExOT5dIHJlYWRfY2FjaGVfcGFnZSsweDkvMHgyMA0KIFs8ZmZm
+ZmZmZmZhMDMwZGRiNT5dIF9fZ2V0X21ldGFwYWdlKzB4OTUvMHg1YTAgW2pmc10NCiBbPGZm
+ZmZmZmZmODEzNWQxYjQ+XSA/IF9fZG93bl9yZWFkKzB4ZDQvMHhkNg0KIFs8ZmZmZmZmZmZh
+MDJmODdlYj5dID8geHRMb29rdXArMHgxOGIvMHgxYTAgW2pmc10NCiBbPGZmZmZmZmZmYTAz
+MDQyMjc+XSBkYkFsbG9jKzB4MTQ3LzB4NDgwIFtqZnNdDQogWzxmZmZmZmZmZmEwMzBjYjky
+Pl0gZXh0QWxsb2MrMHgxNjIvMHg0ZDAgW2pmc10NCiBbPGZmZmZmZmZmODExMWQ3NDA+XSA/
+IG1lbV9jZ3JvdXBfY2FjaGVfY2hhcmdlKzB4MTQwLzB4MWUwDQogWzxmZmZmZmZmZmEwMmY0
+YjIxPl0gamZzX2dldF9ibG9jaysweDFjMS8weDIyMCBbamZzXQ0KIFs8ZmZmZmZmZmY4MTE0
+ZGQwYT5dIG5vYmhfd3JpdGVfYmVnaW4rMHgxZWEvMHg0YjANCiBbPGZmZmZmZmZmODExNGFl
+MTY+XSA/IF9fc2V0X3BhZ2VfZGlydHkrMHg3Ni8weGQwDQogWzxmZmZmZmZmZmEwMmY0NjFl
+Pl0gamZzX3dyaXRlX2JlZ2luKzB4MWUvMHgyMCBbamZzXQ0KIFs8ZmZmZmZmZmZhMDJmNDk2
+MD5dID8gamZzX2dldF9ibG9jaysweDAvMHgyMjAgW2pmc10NCiBbPGZmZmZmZmZmODEwZGI3
+MGQ+XSBnZW5lcmljX2ZpbGVfYnVmZmVyZWRfd3JpdGUrMHgxMGQvMHgyODANCiBbPGZmZmZm
+ZmZmODEwNTgxZjI+XSA/IGN1cnJlbnRfZnNfdGltZSsweDIyLzB4MzANCiBbPGZmZmZmZmZm
+ODEwZGQ2NTg+XSBfX2dlbmVyaWNfZmlsZV9haW9fd3JpdGUrMHgyMzgvMHg0NTANCiBbPGZm
+ZmZmZmZmODEzNWJhYWQ+XSA/IF9fbXV0ZXhfbG9ja19zbG93cGF0aCsweDI2ZC8weDM3MA0K
+IFs8ZmZmZmZmZmY4MTBkZDhkND5dIGdlbmVyaWNfZmlsZV9haW9fd3JpdGUrMHg2NC8weGQw
+DQogWzxmZmZmZmZmZjgxMTIyMDAyPl0gZG9fc3luY193cml0ZSsweGQyLzB4MTEwDQogWzxm
+ZmZmZmZmZjgxMzVkYzhlPl0gPyBjb21tb25faW50ZXJydXB0KzB4ZS8weDEzDQogWzxmZmZm
+ZmZmZjgxMTlmY2IxPl0gPyBzZWN1cml0eV9maWxlX3Blcm1pc3Npb24rMHgxMS8weDIwDQog
+WzxmZmZmZmZmZjgxMTIyYjQ4Pl0gdmZzX3dyaXRlKzB4YjgvMHgxYTANCiBbPGZmZmZmZmZm
+ODExMjJkMGM+XSBzeXNfd3JpdGUrMHg0Yy8weDgwDQogWzxmZmZmZmZmZjgxMDA5ZmMyPl0g
+c3lzdGVtX2NhbGxfZmFzdHBhdGgrMHgxNi8weDFiDQpJTkZPOiB0YXNrIGZpbGV6aWxsYTox
+ODU3NCBibG9ja2VkIGZvciBtb3JlIHRoYW4gMTIwIHNlY29uZHMuDQoiZWNobyAwID4gL3By
+b2Mvc3lzL2tlcm5lbC9odW5nX3Rhc2tfdGltZW91dF9zZWNzIiBkaXNhYmxlcyB0aGlzIG1l
+c3NhZ2UuDQpmaWxlemlsbGEgICAgIEQgZmZmZmZmZmY4MTBkYzJkMCAgICAgMCAxODU3NCAg
+IDIwNjMgMHgwMDAwMDAwMA0KIGZmZmY4ODAwM2M5Njc3NjggMDAwMDAwMDAwMDAwMDA4MiAw
+MDAwMDAwMDAwMDQ1Y2E3IDAwMDAwMDAwMDAwMDAwMDgNCiAwMDAwMDAwMDAwODAwMDIwIGZm
+ZmY4ODAwM2NhNTJjYjAgZmZmZjg4MDAzYzk2Nzc5OCBmZmZmZmZmZjgxMWI2ZmE0DQogZmZm
+Zjg4MDAzYzk2Nzc0MCBmZmZmODgwMDNjOTY3ZmQ4IGZmZmY4ODAwM2M5NjYwMDAgZmZmZjg4
+MDAzYzk2NjAwMA0KQ2FsbCBUcmFjZToNCiBbPGZmZmZmZmZmODExYjZmYTQ+XSA/IGdlbmVy
+aWNfbWFrZV9yZXF1ZXN0KzB4MTg0LzB4NGYwDQogWzxmZmZmZmZmZjgxMDdkNzM5Pl0gPyBr
+dGltZV9nZXRfdHMrMHhhOS8weGUwDQogWzxmZmZmZmZmZjgxMGRjMmQwPl0gPyBzeW5jX3Bh
+Z2UrMHgwLzB4NTANCiBbPGZmZmZmZmZmODEzNWFkNWU+XSBpb19zY2hlZHVsZSsweDZlLzB4
+YjANCiBbPGZmZmZmZmZmODEwZGMzMGQ+XSBzeW5jX3BhZ2UrMHgzZC8weDUwDQogWzxmZmZm
+ZmZmZjgxMzViMzgyPl0gX193YWl0X29uX2JpdF9sb2NrKzB4NTIvMHhiMA0KIFs8ZmZmZmZm
+ZmY4MTBkYzJiMj5dIF9fbG9ja19wYWdlKzB4NjIvMHg3MA0KIFs8ZmZmZmZmZmY4MTA3MzJi
+MD5dID8gd2FrZV9iaXRfZnVuY3Rpb24rMHgwLzB4NDANCiBbPGZmZmZmZmZmODEwZGM5YTk+
+XSBkb19yZWFkX2NhY2hlX3BhZ2UrMHgxNTkvMHgxODANCiBbPGZmZmZmZmZmYTAzMGQyMTA+
+XSA/IG1ldGFwYWdlX3JlYWRwYWdlKzB4MC8weDE4MCBbamZzXQ0KIFs8ZmZmZmZmZmY4MTBk
+Y2EwND5dIHJlYWRfY2FjaGVfcGFnZV9hc3luYysweDE0LzB4MjANCiBbPGZmZmZmZmZmODEw
+ZGNhMTk+XSByZWFkX2NhY2hlX3BhZ2UrMHg5LzB4MjANCiBbPGZmZmZmZmZmYTAzMGRkYjU+
+XSBfX2dldF9tZXRhcGFnZSsweDk1LzB4NWEwIFtqZnNdDQogWzxmZmZmZmZmZjgxMzVkMWI0
+Pl0gPyBfX2Rvd25fcmVhZCsweGQ0LzB4ZDYNCiBbPGZmZmZmZmZmYTAyZjg2ZWQ+XSA/IHh0
+TG9va3VwKzB4OGQvMHgxYTAgW2pmc10NCiBbPGZmZmZmZmZmYTAzMDQyMjc+XSBkYkFsbG9j
+KzB4MTQ3LzB4NDgwIFtqZnNdDQogWzxmZmZmZmZmZmEwMzBjYjkyPl0gZXh0QWxsb2MrMHgx
+NjIvMHg0ZDAgW2pmc10NCiBbPGZmZmZmZmZmODExMWQ3NDA+XSA/IG1lbV9jZ3JvdXBfY2Fj
+aGVfY2hhcmdlKzB4MTQwLzB4MWUwDQogWzxmZmZmZmZmZmEwMmY0YjIxPl0gamZzX2dldF9i
+bG9jaysweDFjMS8weDIyMCBbamZzXQ0KIFs8ZmZmZmZmZmY4MTE0ZGQwYT5dIG5vYmhfd3Jp
+dGVfYmVnaW4rMHgxZWEvMHg0YjANCiBbPGZmZmZmZmZmODExNGFlMTY+XSA/IF9fc2V0X3Bh
+Z2VfZGlydHkrMHg3Ni8weGQwDQogWzxmZmZmZmZmZmEwMmY0NjFlPl0gamZzX3dyaXRlX2Jl
+Z2luKzB4MWUvMHgyMCBbamZzXQ0KIFs8ZmZmZmZmZmZhMDJmNDk2MD5dID8gamZzX2dldF9i
+bG9jaysweDAvMHgyMjAgW2pmc10NCiBbPGZmZmZmZmZmODEwZGI3MGQ+XSBnZW5lcmljX2Zp
+bGVfYnVmZmVyZWRfd3JpdGUrMHgxMGQvMHgyODANCiBbPGZmZmZmZmZmODEwNTgxZjI+XSA/
+IGN1cnJlbnRfZnNfdGltZSsweDIyLzB4MzANCiBbPGZmZmZmZmZmODEwZGQ2NTg+XSBfX2dl
+bmVyaWNfZmlsZV9haW9fd3JpdGUrMHgyMzgvMHg0NTANCiBbPGZmZmZmZmZmODEzNWJhYWQ+
+XSA/IF9fbXV0ZXhfbG9ja19zbG93cGF0aCsweDI2ZC8weDM3MA0KIFs8ZmZmZmZmZmY4MTBk
+ZDhkND5dIGdlbmVyaWNfZmlsZV9haW9fd3JpdGUrMHg2NC8weGQwDQogWzxmZmZmZmZmZjgx
+MTIyMDAyPl0gZG9fc3luY193cml0ZSsweGQyLzB4MTEwDQogWzxmZmZmZmZmZjgxMzVkYzhl
+Pl0gPyBjb21tb25faW50ZXJydXB0KzB4ZS8weDEzDQogWzxmZmZmZmZmZjgxMzVkYzhlPl0g
+PyBjb21tb25faW50ZXJydXB0KzB4ZS8weDEzDQogWzxmZmZmZmZmZjgxMTlmY2IxPl0gPyBz
+ZWN1cml0eV9maWxlX3Blcm1pc3Npb24rMHgxMS8weDIwDQogWzxmZmZmZmZmZjgxMTIyYjQ4
+Pl0gdmZzX3dyaXRlKzB4YjgvMHgxYTANCiBbPGZmZmZmZmZmODExMjJkMGM+XSBzeXNfd3Jp
+dGUrMHg0Yy8weDgwDQogWzxmZmZmZmZmZjgxMDA5ZmMyPl0gc3lzdGVtX2NhbGxfZmFzdHBh
+dGgrMHgxNi8weDFiDQpJTkZPOiB0YXNrIHNtYmQ6MTg2NTkgYmxvY2tlZCBmb3IgbW9yZSB0
+aGFuIDEyMCBzZWNvbmRzLg0KImVjaG8gMCA+IC9wcm9jL3N5cy9rZXJuZWwvaHVuZ190YXNr
+X3RpbWVvdXRfc2VjcyIgZGlzYWJsZXMgdGhpcyBtZXNzYWdlLg0Kc21iZCAgICAgICAgICBE
+IGZmZmY4ODAwMDE4MGY5NDggICAgIDAgMTg2NTkgIDE2NzgyIDB4MDAwMDAwMDANCiBmZmZm
+ODgwMDMyOGU5YjE4IDAwMDAwMDAwMDAwMDAwODYgMDAwMDAwMDAwMDAwMDAwMCBmZmZmODgw
+MDMyOGU5ZGI4DQogMDAwMDAwMDAyMDAwMDAwMCAwMDAwMDAwMDAwMDAwMDAwIDAwMDAwMDAw
+MDAwMDAwMDAgZmZmZjg4MDAzYzkyMDlmMA0KIDAwMDAwMDAxMDYxOWE4NmUgZmZmZjg4MDAz
+MjhlOWZkOCBmZmZmODgwMDMyOGU4MDAwIGZmZmY4ODAwMzI4ZTgwMDANCkNhbGwgVHJhY2U6
+DQogWzxmZmZmZmZmZjgxMzVkMDg1Pl0gX19kb3duX3dyaXRlX25lc3RlZCsweDk1LzB4ZTAN
+CiBbPGZmZmZmZmZmODEzNWQwZGI+XSBfX2Rvd25fd3JpdGUrMHhiLzB4MTANCiBbPGZmZmZm
+ZmZmODEzNWM2ZDk+XSBkb3duX3dyaXRlKzB4OS8weDEwDQogWzxmZmZmZmZmZmEwM2E3NGM3
+Pl0gZGlfd3JpdGVfbG9jaysweDI3LzB4NTAgW2F1ZnNdDQogWzxmZmZmZmZmZmEwMzk4M2Y2
+Pl0gYXVmc19yZWFkX2xvY2srMHgxMDYvMHgxMTAgW2F1ZnNdDQogWzxmZmZmZmZmZjgxMDc3
+ZTA5Pl0gPyB1cF9yZWFkKzB4OS8weDEwDQogWzxmZmZmZmZmZmEwM2FmZGQzPl0gPyBhdWZz
+X3Blcm1pc3Npb24rMHgzMTMvMHgzZDAgW2F1ZnNdDQogWzxmZmZmZmZmZmEwM2E4YWUxPl0g
+YXVmc19kX3JldmFsaWRhdGUrMHgzMS8weDQ1MCBbYXVmc10NCiBbPGZmZmZmZmZmODExMmVh
+YjI+XSBsaW5rX3BhdGhfd2FsaysweDVkMi8weGU1MA0KIFs8ZmZmZmZmZmY4MTEyZjUwMj5d
+IHBhdGhfd2FsaysweDYyLzB4ZTANCiBbPGZmZmZmZmZmODExMmY2YzM+XSBkb19wYXRoX2xv
+b2t1cCsweDUzLzB4YTANCiBbPGZmZmZmZmZmODExMzAzMDI+XSB1c2VyX3BhdGhfYXQrMHg1
+Mi8weGEwDQogWzxmZmZmZmZmZjgxMTNkYjE0Pl0gPyBtbnRwdXRfbm9fZXhwaXJlKzB4MjQv
+MHgxMDANCiBbPGZmZmZmZmZmODExZDEyNzY+XSA/IF9fdXBfcmVhZCsweGE2LzB4ZDANCiBb
+PGZmZmZmZmZmODEwNzdlMDk+XSA/IHVwX3JlYWQrMHg5LzB4MTANCiBbPGZmZmZmZmZmODEx
+MjY5Mjc+XSB2ZnNfZnN0YXRhdCsweDM3LzB4NzANCiBbPGZmZmZmZmZmODExM2RiMTQ+XSA/
+IG1udHB1dF9ub19leHBpcmUrMHgyNC8weDEwMA0KIFs8ZmZmZmZmZmY4MTEyNmE4Nj5dIHZm
+c19zdGF0KzB4MTYvMHgyMA0KIFs8ZmZmZmZmZmY4MTEyNmFhZj5dIHN5c19uZXdzdGF0KzB4
+MWYvMHg1MA0KIFs8ZmZmZmZmZmY4MTEyYzBlYz5dID8gcGF0aF9wdXQrMHgyYy8weDQwDQog
+WzxmZmZmZmZmZjgxMTIwZWUxPl0gPyBzeXNfY2hkaXIrMHg1MS8weDgwDQogWzxmZmZmZmZm
+ZjgxMDA5ZmMyPl0gc3lzdGVtX2NhbGxfZmFzdHBhdGgrMHgxNi8weDFiDQpJTkZPOiB0YXNr
+IHNtYmQ6MTg2NjAgYmxvY2tlZCBmb3IgbW9yZSB0aGFuIDEyMCBzZWNvbmRzLg0KImVjaG8g
+MCA+IC9wcm9jL3N5cy9rZXJuZWwvaHVuZ190YXNrX3RpbWVvdXRfc2VjcyIgZGlzYWJsZXMg
+dGhpcyBtZXNzYWdlLg0Kc21iZCAgICAgICAgICBEIGZmZmY4ODAwMDE5MGY5NDggICAgIDAg
+MTg2NjAgIDE2NzgyIDB4MDAwMDAwMDANCiBmZmZmODgwMDNhNzY3ZDE4IDAwMDAwMDAwMDAw
+MDAwODYgMDAwMDAwMDAwMDAwMDAwMCBmZmZmODgwMDNhNzY3ZDA4DQogMDAwMDAxYzczYTc2
+N2NiOCAwMDAwMDFjODAwMDAwMWM4IDAwMDAwMDA4M2E3NjdkZDggZmZmZjg4MDAzYzkyMmQ5
+MA0KIDAwMDAwMDAxMDYxOWZjY2YgZmZmZjg4MDAzYTc2N2ZkOCBmZmZmODgwMDNhNzY2MDAw
+IGZmZmY4ODAwM2E3NjYwMDANCkNhbGwgVHJhY2U6DQogWzxmZmZmZmZmZjgxMzVkMTc1Pl0g
+X19kb3duX3JlYWQrMHg5NS8weGQ2DQogWzxmZmZmZmZmZjgxMzVjNmU5Pl0gZG93bl9yZWFk
+KzB4OS8weDEwDQogWzxmZmZmZmZmZmEwM2E3NmI2Pl0gZGlfcmVhZF9sb2NrKzB4MjYvMHg5
+MCBbYXVmc10NCiBbPGZmZmZmZmZmYTAzYWY1ZjI+XSBhdWZzX2dldGF0dHIrMHhlMi8weDRh
+MCBbYXVmc10NCiBbPGZmZmZmZmZmODExMzAzMGQ+XSA/IHVzZXJfcGF0aF9hdCsweDVkLzB4
+YTANCiBbPGZmZmZmZmZmODExMjY4YmM+XSB2ZnNfZ2V0YXR0cisweDRjLzB4ODANCiBbPGZm
+ZmZmZmZmODExMjY5NDg+XSB2ZnNfZnN0YXRhdCsweDU4LzB4NzANCiBbPGZmZmZmZmZmODEx
+MjY5Yzk+XSB2ZnNfbHN0YXQrMHgxOS8weDIwDQogWzxmZmZmZmZmZjgxMTI2OWVmPl0gc3lz
+X25ld2xzdGF0KzB4MWYvMHg1MA0KIFs8ZmZmZmZmZmY4MTAwOWZjMj5dIHN5c3RlbV9jYWxs
+X2Zhc3RwYXRoKzB4MTYvMHgxYg0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2Njk6
+bXZzX2Fib3J0X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAxNjA4
+Om12c19xdWVyeV90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgMTY2
+OTptdnNfYWJvcnRfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5jIDE2
+MDg6bXZzX3F1ZXJ5X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMuYyAx
+NjY5Om12c19hYm9ydF90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMg
+MTYwODptdnNfcXVlcnlfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nhcy5j
+IDE2Njk6bXZzX2Fib3J0X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9zYXMu
+YyAxNjA4Om12c19xdWVyeV90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZfc2Fz
+LmMgMTY2OTptdnNfYWJvcnRfdGFzazpyYz0gNQ0KZHJpdmVycy9zY3NpL212c2FzL212X3Nh
+cy5jIDE2MDg6bXZzX3F1ZXJ5X3Rhc2s6cmM9IDUNCmRyaXZlcnMvc2NzaS9tdnNhcy9tdl9z
+YXMuYyAxNjY5Om12c19hYm9ydF90YXNrOnJjPSA1DQpkcml2ZXJzL3Njc2kvbXZzYXMvbXZf
+c2FzLmMgMTYwODptdnNfcXVlcnlfdGFzazpyYz0gNQ0Kc2QgMTA6MDo0OjA6IFtzZGZdIFVu
+aGFuZGxlZCBlcnJvciBjb2RlDQpzZCAxMDowOjQ6MDogW3NkZl0gUmVzdWx0OiBob3N0Ynl0
+ZT0weDAwIGRyaXZlcmJ5dGU9MHgwNg0Kc2QgMTA6MDo0OjA6IFtzZGZdIENEQjogY2RiWzBd
+PTB4MmE6IDJhIDAwIDFhIDYyIDEyIGEwIDAwIDA0IDAwIDAwDQplbmRfcmVxdWVzdDogSS9P
+IGVycm9yLCBkZXYgc2RmLCBzZWN0b3IgNDQyNjM0OTEyDQpzZCAxMDowOjQ6MDogW3NkZl0g
+VW5oYW5kbGVkIGVycm9yIGNvZGUNCnNkIDEwOjA6NDowOiBbc2RmXSBSZXN1bHQ6IGhvc3Ri
+eXRlPTB4MDAgZHJpdmVyYnl0ZT0weDA2DQpzZCAxMDowOjQ6MDogW3NkZl0gQ0RCOiBjZGJb
+MF09MHgyYTogMmEgMDAgMWEgNjIgMGUgYTAgMDAgMDQgMDAgMDANCmVuZF9yZXF1ZXN0OiBJ
+L08gZXJyb3IsIGRldiBzZGYsIHNlY3RvciA0NDI2MzM4ODgNCnNkIDEwOjA6NDowOiBbc2Rm
+XSBVbmhhbmRsZWQgZXJyb3IgY29kZQ0Kc2QgMTA6MDo0OjA6IFtzZGZdIFJlc3VsdDogaG9z
+dGJ5dGU9MHgwMCBkcml2ZXJieXRlPTB4MDYNCnNkIDEwOjA6NDowOiBbc2RmXSBDREI6IGNk
+YlswXT0weDJhOiAyYSAwMCAxYSA2MiAwYiAwMCAwMCAwMyBhMCAwMA0KZW5kX3JlcXVlc3Q6
+IEkvTyBlcnJvciwgZGV2IHNkZiwgc2VjdG9yIDQ0MjYzMjk2MA0Kc2QgMTA6MDo0OjA6IFtz
+ZGZdIFVuaGFuZGxlZCBlcnJvciBjb2RlDQpzZCAxMDowOjQ6MDogW3NkZl0gUmVzdWx0OiBo
+b3N0Ynl0ZT0weDAwIGRyaXZlcmJ5dGU9MHgwNg0Kc2QgMTA6MDo0OjA6IFtzZGZdIENEQjog
+Y2RiWzBdPTB4MmE6IDJhIDAwIDFhIDYyIDA3IDAwIDAwIDA0IDAwIDAwDQplbmRfcmVxdWVz
+dDogSS9PIGVycm9yLCBkZXYgc2RmLCBzZWN0b3IgNDQyNjMxOTM2DQpzZCAxMDowOjE6MDog
+W3NkY10gVW5oYW5kbGVkIGVycm9yIGNvZGUNCnNkIDEwOjA6MTowOiBbc2RjXSBSZXN1bHQ6
+IGhvc3RieXRlPTB4MDAgZHJpdmVyYnl0ZT0weDA2DQpzZCAxMDowOjE6MDogW3NkY10gQ0RC
+OiBjZGJbMF09MHgyODogMjggMDAgMWMgYjIgODcgNmYgMDAgMDAgMDggMDANCmVuZF9yZXF1
+ZXN0OiBJL08gZXJyb3IsIGRldiBzZGMsIHNlY3RvciA0ODE0NjIxMjcNCmRyaXZlcnMvc2Nz
+aS9tdnNhcy9tdl9zYXMuYyAxNjY5Om12c19hYm9ydF90YXNrOnJjPSA1DQpkcml2ZXJzL3Nj
+c2kvbXZzYXMvbXZfc2FzLmMgMTYwODptdnNfcXVlcnlfdGFzazpyYz0gNQ0KZHJpdmVycy9z
+Y3NpL212c2FzL212X3Nhcy5jIDE2Njk6bXZzX2Fib3J0X3Rhc2s6cmM9IDUNCmRyaXZlcnMv
+c2NzaS9tdnNhcy9tdl9zYXMuYyAxNjA4Om12c19xdWVyeV90YXNrOnJjPSA1DQpkcml2ZXJz
+L3Njc2kvbXZzYXMvbXZfc2FzLmMgMTY2OTptdnNfYWJvcnRfdGFzazpyYz0gNQ0KZHJpdmVy
+cy9zY3NpL212c2FzL212X3Nhcy5jIDE2MDg6bXZzX3F1ZXJ5X3Rhc2s6cmM9IDUNCnNkIDEw
+OjA6MTowOiBbc2RjXSBVbmhhbmRsZWQgZXJyb3IgY29kZQ0Kc2QgMTA6MDoxOjA6IFtzZGNd
+IFJlc3VsdDogaG9zdGJ5dGU9MHgwMCBkcml2ZXJieXRlPTB4MDYNCnNkIDEwOjA6MTowOiBb
+c2RjXSBDREI6IGNkYlswXT0weDI4OiAyOCAwMCAwMCAwNCA1YyBhNyAwMCAwMCAwOCAwMA0K
+ZW5kX3JlcXVlc3Q6IEkvTyBlcnJvciwgZGV2IHNkYywgc2VjdG9yIDI4NTg2Mw0KbWV0YXBh
+Z2VfcmVhZF9lbmRfaW86IEkvTyBlcnJvcg0Kc2QgMTA6MDoxOjA6IFtzZGNdIFVuaGFuZGxl
+ZCBlcnJvciBjb2RlDQpzZCAxMDowOjE6MDogW3NkY10gUmVzdWx0OiBob3N0Ynl0ZT0weDAw
+IGRyaXZlcmJ5dGU9MHgwNg0Kc2QgMTA6MDoxOjA6IFtzZGNdIENEQjogY2RiWzBdPTB4Mjg6
+IDI4IDAwIDAwIDA1IDMwIGQ3IDAwIDAwIDA4IDAwDQplbmRfcmVxdWVzdDogSS9PIGVycm9y
+LCBkZXYgc2RjLCBzZWN0b3IgMzQwMTgzDQptZXRhcGFnZV9yZWFkX2VuZF9pbzogSS9PIGVy
+cm9yDQpzZCAxMDowOjE6MDogW3NkY10gVW5oYW5kbGVkIGVycm9yIGNvZGUNCnNkIDEwOjA6
+MTowOiBbc2RjXSBSZXN1bHQ6IGhvc3RieXRlPTB4MDAgZHJpdmVyYnl0ZT0weDA2DQpzZCAx
+MDowOjE6MDogW3NkY10gQ0RCOiBjZGJbMF09MHgyYTogMmEgMDAgYWUgYTYgM2QgNjcgMDAg
+MDAgMDggMDANCmVuZF9yZXF1ZXN0OiBJL08gZXJyb3IsIGRldiBzZGMsIHNlY3RvciAyOTMw
+MTMwMjc5DQo=
+--------------050806020304070609030809--
+
+--------------000602040006000104040101--
