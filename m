@@ -1,28 +1,24 @@
-From: Richard <richard@sauce.co.nz>
-Subject: Re: mdadm --add Device or resource busy error and multiple drives
-   "failing" on RAID 6 at once
-Date: Sat, 17 Jul 2010 08:26:54 +1200
-Message-ID: <4C40C08E.7070309@sauce.co.nz>
-References: <AANLkTikx_L6R0839o-MWu2CscFEdhlSf65a2cGTPl1Ex@mail.gmail.com> <4C4056C6.6090501@anonymous.org.uk>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: Changing Chunk Size on Array
+Date: Sat, 17 Jul 2010 16:15:55 -0500
+Message-ID: <CC.8D.04655.49D124C4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C4056C6.6090501@anonymous.org.uk>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Robinson <john.robinson@anonymous.org.uk>
-Cc: "fibreraid@gmail.com" <fibreraid@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-John Robinson wrote:
 
-> I recognise these symptoms from earlier postings, relating to problems 
-> with the driver for a controller card/chip (I forget which one) and 
-> S.M.A.R.T. - you might grep the list archives for references to your 
-> controller.
+	I'm thinking about changing the chunk size on one of my arrays in
+order to potentially improve performance.  The man page rather suggests -c
+is a vlaid option under Grow mode, although it doesn't specifically say
+mdadm supports it under --grow.  Is it indeed supported under mdadm 2.6.7.2
+and kernel 2.6.26-2?  Assuming so, I would like to know a bit more about the
+change before issuing the command.  Speficialy, what are the details of the
+process?  Does the entire (RAID 6) array have to be re-written, such as is
+the case with adding a drive to the array?  Does the recovery start
+immediately?  Can it be interrupted and then continue at a later time?
 
-LSI 1068 based controllers.
-
-Regards,
-
-Richard
