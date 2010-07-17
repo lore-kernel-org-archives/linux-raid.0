@@ -1,56 +1,97 @@
-From: Roman Mamedov <roman@rm.pp.ru>
-Subject: Re: Changing Chunk Size on Array
-Date: Sun, 18 Jul 2010 03:30:47 +0600
-Message-ID: <20100718033047.2ee80eac@natsu>
-References: <CC.8D.04655.49D124C4@cdptpa-omtalb.mail.rr.com>
+From: "Leslie Rhorer" <lrhorer@satx.rr.com>
+Subject: Grow error - WTF!?
+Date: Sat, 17 Jul 2010 16:38:36 -0500
+Message-ID: <38.F8.07625.5E2224C4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/iifDTYWMwn/eJW0ZAieZi6x"; protocol="application/pgp-signature"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <CC.8D.04655.49D124C4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Leslie Rhorer <lrhorer@satx.rr.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/iifDTYWMwn/eJW0ZAieZi6x
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
 
-On Sat, 17 Jul 2010 16:15:55 -0500
-"Leslie Rhorer" <lrhorer@satx.rr.com> wrote:
+OK, this is bizarre:
 
->=20
-> 	I'm thinking about changing the chunk size on one of my arrays in
-> order to potentially improve performance.  The man page rather suggests -c
-> is a vlaid option under Grow mode, although it doesn't specifically say
-> mdadm supports it under --grow.  Is it indeed supported under mdadm 2.6.7=
-.2
-> and kernel 2.6.26-2?  Assuming so, I would like to know a bit more about =
-the
-> change before issuing the command.  Speficialy, what are the details of t=
-he
-> process?  Does the entire (RAID 6) array have to be re-written, such as is
-> the case with adding a drive to the array?  Does the recovery start
-> immediately?  Can it be interrupted and then continue at a later time?
+Backup:/# mdadm -G -v -n 10 --backup-file=/GrowRAID.fil /dev/md0
+mdadm: Need to backup 4503599627313152K of critical section..
+mdadm: /dev/md0: Something wrong - reshape aborted
 
-Out of curiosity, which chunk size do you have, and which you want to change
-it to, and do you expect the new size to be faster based on any tests?
+A 4 Million Terabyte critical section?  I don't think so.  This isn't the
+first time the array have been grown - indeed it has been grown quite a few
+times.  It is, however, the first time the array has been grown since
+upgrading to mdadm 3.1.2 and kernel 2.6.32-3 on this machine.  Did I forget
+something on the command line?  The CV:
 
---=20
-With respect,
-Roman
+Backup:~# mdadm -D /dev/md0
+/dev/md0:
+        Version : 1.2
+  Creation Time : Mon May 31 16:23:10 2010
+     Raid Level : raid6
+     Array Size : 10255960064 (9780.85 GiB 10502.10 GB)
+  Used Dev Size : 1465137152 (1397.26 GiB 1500.30 GB)
+   Raid Devices : 9
+  Total Devices : 10
+    Persistence : Superblock is persistent
 
---Sig_/iifDTYWMwn/eJW0ZAieZi6x
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+  Intent Bitmap : Internal
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+    Update Time : Sat Jul 17 16:34:57 2010
+          State : active
+ Active Devices : 9
+Working Devices : 10
+ Failed Devices : 0
+  Spare Devices : 1
 
-iEYEARECAAYFAkxCIQcACgkQTLKSvz+PZwgXiACfbolpTWI4xyfUzVF03TKfNvcQ
-5LkAmgL7dkddiU1zC7mlclrCX1ax3LDN
-=Vjq5
------END PGP SIGNATURE-----
+         Layout : left-symmetric
+     Chunk Size : 1024K
 
---Sig_/iifDTYWMwn/eJW0ZAieZi6x--
+           Name : Backup:0  (local to host Backup)
+           UUID : 431244d6:45d9635a:e88b3de5:92f30255
+         Events : 132701
+
+    Number   Major   Minor   RaidDevice State
+       0       8        0        0      active sync   /dev/sda
+       1       8       16        1      active sync   /dev/sdb
+       2       8       32        2      active sync   /dev/sdc
+       3       8       48        3      active sync   /dev/sdd
+       4       8       64        4      active sync   /dev/sde
+       5       8       80        5      active sync   /dev/sdf
+       6       8       96        6      active sync   /dev/sdg
+       7       8      112        7      active sync   /dev/sdh
+       8       8      128        8      active sync   /dev/sdi
+
+       9       8      144        -      spare   /dev/sdj
+
+
+Backup:~# mdadm --examine /dev/sdj
+/dev/sdj:
+          Magic : a92b4efc
+        Version : 1.2
+    Feature Map : 0x1
+     Array UUID : 431244d6:45d9635a:e88b3de5:92f30255
+           Name : Backup:0  (local to host Backup)
+  Creation Time : Mon May 31 16:23:10 2010
+     Raid Level : raid6
+   Raid Devices : 9
+
+ Avail Dev Size : 2930275120 (1397.26 GiB 1500.30 GB)
+     Array Size : 20511920128 (9780.85 GiB 10502.10 GB)
+  Used Dev Size : 2930274304 (1397.26 GiB 1500.30 GB)
+    Data Offset : 2048 sectors
+   Super Offset : 8 sectors
+          State : clean
+    Device UUID : 70ebdc42:491186dc:0e72e7ef:504363af
+
+Internal Bitmap : 8 sectors from superblock
+    Update Time : Sat Jul 17 16:35:06 2010
+       Checksum : 640783ec - correct
+         Events : 132703
+
+         Layout : left-symmetric
+     Chunk Size : 1024K
+
+   Device Role : spare
+   Array State : AAAAAAAAA ('A' == active, '.' == missing)
+
