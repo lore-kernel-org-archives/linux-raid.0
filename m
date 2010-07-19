@@ -1,88 +1,40 @@
 From: Neil Brown <neilb@suse.de>
-Subject: Re: mdadm "hang", 100% CPU usage when trying to create RAID-1 array
- with external bitmap
-Date: Tue, 20 Jul 2010 01:26:23 +0200
-Message-ID: <20100720012623.0341401e@notabene>
-References: <4C3D9739.7030703@wpkg.org>
-	<20100715074544.3172df47@notabene>
-	<19523.20850.346094.160876@stoffel.org>
+Subject: Re: Changing Chunk Size on Array
+Date: Tue, 20 Jul 2010 01:49:55 +0200
+Message-ID: <20100720014955.529eb9ca@notabene>
+References: <CC.8D.04655.49D124C4@cdptpa-omtalb.mail.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <19523.20850.346094.160876@stoffel.org>
+In-Reply-To: <CC.8D.04655.49D124C4@cdptpa-omtalb.mail.rr.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: Tomasz Chmielewski <mangoo@wpkg.org>, linux-raid@vger.kernel.org
+To: Leslie Rhorer <lrhorer@satx.rr.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Sun, 18 Jul 2010 15:09:38 -0400
-"John Stoffel" <john@stoffel.org> wrote:
+On Sat, 17 Jul 2010 16:15:55 -0500
+"Leslie Rhorer" <lrhorer@satx.rr.com> wrote:
 
-> >>>>> "Neil" == Neil Brown <neilb@suse.de> writes:
 > 
-> Neil> On Wed, 14 Jul 2010 12:53:45 +0200
-> Neil> Tomasz Chmielewski <mangoo@wpkg.org> wrote:
-> 
-> >> I'm trying to create RAID-1 with external bitmap with this command:
-> >> 
-> >> mdadm --create /dev/md11 --level=1 --bitmap=/mnt/src/bitmap --raid-devices 2 /dev/storage/origin missing
-> >> 
-> >> 
-> >> /dev/storage/origin is 1.2 TB; is placed on "stacked" block devices like this:
-> >> 
-> >> RAID-5 -> dm-crypt -> LVM-2 -> /dev/storage/origin
-> >> 
-> >> 
-> >> /mnt/src/bitmap is technically the same stacked device, except the last LVM volume:
-> >> 
-> >> RAID-5 -> dm-crypt -> LVM-2 -> /dev/storage/src -> /mnt/src/bitmap
-> >> 
-> >> (although I tried to keep bitmap outside of this RAID-5 device, and it was still hanging).
-> >> 
-> >> 
-> >> When started with "strace", mdadm hangs with 100% CPU usage after opening /mnt/src/bitmap:
-> >> 
-> >> (...)
-> >> rename("/var/run/map.new", "/var/run/map") = 0
-> >> flock(3, LOCK_UN)                       = 0
-> >> close(3)                                = 0
-> >> munmap(0x6ff40000, 4096)                = 0
-> >> unlink("/var/run/map.lock")             = 0
-> >> ioctl(4, 0x800c0910, 0x77f5f89c)        = 0
-> >> fstat64(4, {st_mode=S_IFBLK|0600, st_rdev=makedev(9, 1), ...}) = 0
-> >> fstat64(4, {st_mode=S_IFBLK|0600, st_rdev=makedev(9, 1), ...}) = 0
-> >> ioctl(4, 0x800c0910, 0x77f5f7cc)        = 0
-> >> ioctl(4, 0x40480923, 0x77f5f854)        = 0
-> >> access("/mnt/src/bitmap", F_OK)         = -1 ENOENT (No such file or directory)
-> >> open("/mnt/src/bitmap", O_WRONLY|O_CREAT|O_TRUNC|O_LARGEFILE, 0666) = 3
-> >> 
-> >> 
-> 
-> Neil> Hmm... that's rather embarrassing.
-> Neil> This patch should fit it.  Or you can explicitly set a bitmap chunk size -
-> Neil> aim for several megabyte.
-> 
-> Neil> diff --git a/bitmap.c b/bitmap.c
-> Neil> index beef2dc..44a8677 100644
-> Neil> --- a/bitmap.c
-> Neil> +++ b/bitmap.c
-> Neil> @@ -373,7 +373,7 @@ int CreateBitmap(char *filename, int force, char uuid[16],
-> Neil>  		 */
-> Neil>  		chunksize = DEFAULT_BITMAP_CHUNK;
-> Neil>  		/* <<20 for 2^20 chunks, >>9 to convert bytes to sectors */
-> Neil> -		while (array_size > (chunksize << (20-9)))
-> Neil> +		while (array_size > ((unsigned long long)chunksize << (20-9)))
-> Neil>  			chunksize <<= 1;
-> Neil>  	}
->  
-> How about also replacing the magic numbers 20 and 9 with usefully
-> named constants as well?   I realize the comment tells you what's
-> going on here, but I just boggle a bit when I see 20-9 in the source.
-> :-)
+> 	I'm thinking about changing the chunk size on one of my arrays in
+> order to potentially improve performance.  The man page rather suggests -c
+> is a vlaid option under Grow mode, although it doesn't specifically say
+> mdadm supports it under --grow.  Is it indeed supported under mdadm 2.6.7.2
+> and kernel 2.6.26-2?  Assuming so, I would like to know a bit more about the
+> change before issuing the command.  Speficialy, what are the details of the
+> process?  Does the entire (RAID 6) array have to be re-written, such as is
+> the case with adding a drive to the array?  Does the recovery start
+> immediately?  Can it be interrupted and then continue at a later time?
 
-If you sent that suggestion as a patch it would be much more likely to be
-applied (it might anyway, but still...)
-:-)
+Yes, you can change chunksize with --grow.
+I think you need mdadm-3.1.2 and kernel 2.6.32 though (version numbers might
+not be accurate, but are close).
+
+Yes, the entire array gets re-written just like adding an extra device.
+The reshape does start immediately.
+If you shutdown or crash, then on restart the reshape will pick up where it
+left off.
 
 NeilBrown
+
