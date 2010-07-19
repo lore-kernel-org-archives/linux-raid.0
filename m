@@ -1,93 +1,44 @@
-From: Konstantin Svist <fry.kun@gmail.com>
+From: Keld Simonsen <keld@keldix.com>
 Subject: Re: messed up changing chunk size
-Date: Mon, 19 Jul 2010 11:04:10 -0700
-Message-ID: <4C44939A.1060200@gmail.com>
+Date: Mon, 19 Jul 2010 21:02:46 +0200
+Message-ID: <20100719190246.GA11519@rap.rap.dk>
 References: <4C439D19.4070906@gmail.com>
+ <20100719095351.4536a252@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C439D19.4070906@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20100719095351.4536a252@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Roman Mamedov <roman@rm.pp.ru>
+Cc: Konstantin Svist <fry.kun@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  On 07/18/2010 05:32 PM, Konstantin Svist wrote:
->  I've been playing around with RAID config and may have finally messed 
-> it up.
->
-> Initially, I created the array with 3 300G drives:
-> # mdadm --create --verbose /dev/md0 --level=5 --raid-devices=3 
-> /dev/sda4 /dev/sdb1 /dev/sdc1
-> # mkfs.ext4 -v -m 0.01 -E stride=16,stripe-width=32 /dev/md0
->
-> It's been working nicely so far, and I decided to add a 4th 300G drive:
-> # mdadm --grow --raid-devices=4 --backup-file=/root/grow_md0.bak /dev/md0
->
-> That finished overnight, while I looked around and found that chunk 
-> size of 512 should work better. I unmounted the FS and ran
-> # mdadm --grow -c 512 --backup-file=/root/grow_md0_rechunk.bak /dev/md0
-> mdadm: component size 293033536K is not a multiple of chunksize 512K
->
-> so I sized it down a bit:
-> # mdadm --grow -z 293033472 --backup-file=/root/grow_md0_size.bak 
-> /dev/md0
->
-> and then back to resizing chunks:
-> mdadm --grow -c 512 --backup-file=/root/grow_md0_rechunk.bak /dev/md0
->
-> It's running right now:
-> # cat /proc/mdstat
-> Personalities : [raid6] [raid5] [raid4]
-> md0 : active raid5 sdd1[3] sda4[0] sdc1[2] sdb1[1]
->       293033472 blocks super 0.91 level 5, 64k chunk, algorithm 2 
-> [4/4] [UUUU]
->       [====>................]  reshape = 22.7% (66540032/293033472) 
-> finish=947.3min speed=3984K/sec
->
->
-> But just now I tried to mount the filesystem and it's failing:
-> EXT4-fs (md0): bad geometry: block count 146516768 exceeds size of 
-> device (73258368 blocks)
->
-> Here's the question, then: am I royally screwed or is my data still 
-> there? How do I recover?
->
->
->
-> Yes, in retrospect I should've probably checked around whether this 
-> process has been successful for others.. but that's why they say 
-> hindsight is 20/20
->
+On Mon, Jul 19, 2010 at 09:53:51AM +0600, Roman Mamedov wrote:
+> On Sun, 18 Jul 2010 17:32:25 -0700
+> Konstantin Svist <fry.kun@gmail.com> wrote:
+> 
+> > I looked around and found that chunk size 
+> > of 512 should work better.
+> 
+> Not true, at least with RAID5/6 a chunk size of 64K performs faster, see
+> http://louwrentius.blogspot.com/2010/05/raid-level-and-chunk-size-benchmarks.html
+> http://alephnull.com/benchmarks/sata2009/chunksize.html
 
+Thanks for these benchmarks, I added them to our benchmarks page
+on the wiki. 
 
-Just noticed that I got this in /var/log/messages when I sized it down:
-Jul 18 12:00:44 slon kernel: md0: detected capacity change from 
-900199022592 to 300066275328
-Jul 18 12:00:44 slon kernel: md0: unknown partition table
+It seems odd to me to use sata controllers on a 32-bit PCI bus,
+this should limit performance to about 130 MB/s - which is also seen tin the graphs.
+I think people would be better off using the on-board SATA controller, this would
+give normally something like 4 SATA ports connected to the southbridge, which
+normally is much faster than a 32-bit PCI bus, and also faster than many
+PCI-E busses.  So I think using all the on-board SATA ports first, and the
+using the SATA ports on a bus-connceted controller would give better
+performance.
 
-And scraped from command line session:
+In the louwrentius page, I miss info on which layout of RAID10 that is used.
+The 3 layouts (near, far, offset) has very different characteristics.
 
-[root@slon ~]# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md0 : active raid5 sdd1[3] sda4[0] sdc1[2] sdb1[1]
-       879100608 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
-[root@slon ~]# mdadm --grow -z 293033472 
---backup-file=/root/grow_md0_size.bak /dev/md0
-mdadm: component size of /dev/md0 has been set to 293033472K
-[root@slon ~]# cat /proc/mdstat
-Personalities : [raid6] [raid5] [raid4]
-md0 : active raid5 sdd1[3] sda4[0] sdc1[2] sdb1[1]
-       293033472 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
-
-Looks like instead of setting the number of blocks per-drive (as per the 
-man page), the -z option set the number of total blocks for the array, 
-instead. Which means I'm very thoroughly screwed.
-
-Right now I'm trying to reshape back to the old chunk size and will then 
-try to resize the array back to the previous size. If the chunk size 
-change and array resize are both fully reversible -- and I don't think 
-I'm THAT lucky -- then I might be able to get some stuff back.
-Will see, I guess.
-
-
+best regards
+keld
