@@ -1,47 +1,31 @@
-From: Roman Mamedov <roman@rm.pp.ru>
-Subject: Re: messed up changing chunk size
-Date: Mon, 19 Jul 2010 09:53:51 +0600
-Message-ID: <20100719095351.4536a252@natsu>
-References: <4C439D19.4070906@gmail.com>
+From: Marco <jjletho67-diar@yahoo.it>
+Subject: raid1 performance
+Date: Mon, 19 Jul 2010 12:14:54 +0000 (GMT)
+Message-ID: <759982.41771.qm@web28508.mail.ukl.yahoo.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/_emPz57YQbqzixbXDzAkxDy"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C439D19.4070906@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: Konstantin Svist <fry.kun@gmail.com>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
---Sig_/_emPz57YQbqzixbXDzAkxDy
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi all,
+doing a simple performance tests i obtained some very unexpected results: if i 
+issue hdparm -t /dev/md2 i obtain 61 - 65 MB/s while issuing the same test 
+directly on the partitions which compose md2 (/dev/sda3 and /dev/sdb3) i obtain 
+84 - 87 MB/s. I didn't expect a so big difference between md2 and one of its 
+member. What can cause  this difference ? 
 
-On Sun, 18 Jul 2010 17:32:25 -0700
-Konstantin Svist <fry.kun@gmail.com> wrote:
+I'm running the test on a Centos 5.4, /dev/md2 is a mounted and used block 
+device (lvm on top of md2 and the root partion on the lvm volume group), but the 
+machine was quite idle during the tests. The controller is an Intel ICH9 with 
+AHCI enabled.
 
-> I looked around and found that chunk size=20
-> of 512 should work better.
+thank you in advance!
 
-Not true, at least with RAID5/6 a chunk size of 64K performs faster, see
-http://louwrentius.blogspot.com/2010/05/raid-level-and-chunk-size-benchmark=
-s.html
-http://alephnull.com/benchmarks/sata2009/chunksize.html
 
---=20
-With respect,
-Roman
+ Marco
 
---Sig_/_emPz57YQbqzixbXDzAkxDy
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkxDzE8ACgkQTLKSvz+PZwhEFQCeKDDjM9nqDBs2YYcHhIMF8r5z
-CQ0An1s7OsYUDCufwCSWHgz5aaFL9eU1
-=C54o
------END PGP SIGNATURE-----
-
---Sig_/_emPz57YQbqzixbXDzAkxDy--
+      
