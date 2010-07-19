@@ -1,44 +1,88 @@
-From: Keld Simonsen <keld@keldix.com>
-Subject: Re: messed up changing chunk size
-Date: Mon, 19 Jul 2010 21:02:46 +0200
-Message-ID: <20100719190246.GA11519@rap.rap.dk>
-References: <4C439D19.4070906@gmail.com>
- <20100719095351.4536a252@natsu>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: mdadm "hang", 100% CPU usage when trying to create RAID-1 array
+ with external bitmap
+Date: Tue, 20 Jul 2010 01:26:23 +0200
+Message-ID: <20100720012623.0341401e@notabene>
+References: <4C3D9739.7030703@wpkg.org>
+	<20100715074544.3172df47@notabene>
+	<19523.20850.346094.160876@stoffel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100719095351.4536a252@natsu>
+In-Reply-To: <19523.20850.346094.160876@stoffel.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: Roman Mamedov <roman@rm.pp.ru>
-Cc: Konstantin Svist <fry.kun@gmail.com>, linux-raid@vger.kernel.org
+To: John Stoffel <john@stoffel.org>
+Cc: Tomasz Chmielewski <mangoo@wpkg.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Mon, Jul 19, 2010 at 09:53:51AM +0600, Roman Mamedov wrote:
-> On Sun, 18 Jul 2010 17:32:25 -0700
-> Konstantin Svist <fry.kun@gmail.com> wrote:
+On Sun, 18 Jul 2010 15:09:38 -0400
+"John Stoffel" <john@stoffel.org> wrote:
+
+> >>>>> "Neil" == Neil Brown <neilb@suse.de> writes:
 > 
-> > I looked around and found that chunk size 
-> > of 512 should work better.
+> Neil> On Wed, 14 Jul 2010 12:53:45 +0200
+> Neil> Tomasz Chmielewski <mangoo@wpkg.org> wrote:
 > 
-> Not true, at least with RAID5/6 a chunk size of 64K performs faster, see
-> http://louwrentius.blogspot.com/2010/05/raid-level-and-chunk-size-benchmarks.html
-> http://alephnull.com/benchmarks/sata2009/chunksize.html
+> >> I'm trying to create RAID-1 with external bitmap with this command:
+> >> 
+> >> mdadm --create /dev/md11 --level=1 --bitmap=/mnt/src/bitmap --raid-devices 2 /dev/storage/origin missing
+> >> 
+> >> 
+> >> /dev/storage/origin is 1.2 TB; is placed on "stacked" block devices like this:
+> >> 
+> >> RAID-5 -> dm-crypt -> LVM-2 -> /dev/storage/origin
+> >> 
+> >> 
+> >> /mnt/src/bitmap is technically the same stacked device, except the last LVM volume:
+> >> 
+> >> RAID-5 -> dm-crypt -> LVM-2 -> /dev/storage/src -> /mnt/src/bitmap
+> >> 
+> >> (although I tried to keep bitmap outside of this RAID-5 device, and it was still hanging).
+> >> 
+> >> 
+> >> When started with "strace", mdadm hangs with 100% CPU usage after opening /mnt/src/bitmap:
+> >> 
+> >> (...)
+> >> rename("/var/run/map.new", "/var/run/map") = 0
+> >> flock(3, LOCK_UN)                       = 0
+> >> close(3)                                = 0
+> >> munmap(0x6ff40000, 4096)                = 0
+> >> unlink("/var/run/map.lock")             = 0
+> >> ioctl(4, 0x800c0910, 0x77f5f89c)        = 0
+> >> fstat64(4, {st_mode=S_IFBLK|0600, st_rdev=makedev(9, 1), ...}) = 0
+> >> fstat64(4, {st_mode=S_IFBLK|0600, st_rdev=makedev(9, 1), ...}) = 0
+> >> ioctl(4, 0x800c0910, 0x77f5f7cc)        = 0
+> >> ioctl(4, 0x40480923, 0x77f5f854)        = 0
+> >> access("/mnt/src/bitmap", F_OK)         = -1 ENOENT (No such file or directory)
+> >> open("/mnt/src/bitmap", O_WRONLY|O_CREAT|O_TRUNC|O_LARGEFILE, 0666) = 3
+> >> 
+> >> 
+> 
+> Neil> Hmm... that's rather embarrassing.
+> Neil> This patch should fit it.  Or you can explicitly set a bitmap chunk size -
+> Neil> aim for several megabyte.
+> 
+> Neil> diff --git a/bitmap.c b/bitmap.c
+> Neil> index beef2dc..44a8677 100644
+> Neil> --- a/bitmap.c
+> Neil> +++ b/bitmap.c
+> Neil> @@ -373,7 +373,7 @@ int CreateBitmap(char *filename, int force, char uuid[16],
+> Neil>  		 */
+> Neil>  		chunksize = DEFAULT_BITMAP_CHUNK;
+> Neil>  		/* <<20 for 2^20 chunks, >>9 to convert bytes to sectors */
+> Neil> -		while (array_size > (chunksize << (20-9)))
+> Neil> +		while (array_size > ((unsigned long long)chunksize << (20-9)))
+> Neil>  			chunksize <<= 1;
+> Neil>  	}
+>  
+> How about also replacing the magic numbers 20 and 9 with usefully
+> named constants as well?   I realize the comment tells you what's
+> going on here, but I just boggle a bit when I see 20-9 in the source.
+> :-)
 
-Thanks for these benchmarks, I added them to our benchmarks page
-on the wiki. 
+If you sent that suggestion as a patch it would be much more likely to be
+applied (it might anyway, but still...)
+:-)
 
-It seems odd to me to use sata controllers on a 32-bit PCI bus,
-this should limit performance to about 130 MB/s - which is also seen tin the graphs.
-I think people would be better off using the on-board SATA controller, this would
-give normally something like 4 SATA ports connected to the southbridge, which
-normally is much faster than a 32-bit PCI bus, and also faster than many
-PCI-E busses.  So I think using all the on-board SATA ports first, and the
-using the SATA ports on a bus-connceted controller would give better
-performance.
-
-In the louwrentius page, I miss info on which layout of RAID10 that is used.
-The 3 layouts (near, far, offset) has very different characteristics.
-
-best regards
-keld
+NeilBrown
