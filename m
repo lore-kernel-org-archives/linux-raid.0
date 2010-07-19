@@ -1,31 +1,33 @@
-From: Marco <jjletho67-diar@yahoo.it>
-Subject: raid1 performance
-Date: Mon, 19 Jul 2010 12:14:54 +0000 (GMT)
-Message-ID: <759982.41771.qm@web28508.mail.ukl.yahoo.com>
+From: Jools Wills <jools@oxfordinspire.co.uk>
+Subject: Re: messed up changing chunk size
+Date: Mon, 19 Jul 2010 14:24:12 +0100
+Message-ID: <4C4451FC.30505@oxfordinspire.co.uk>
+References: <4C439D19.4070906@gmail.com> <20100719095351.4536a252@natsu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100719095351.4536a252@natsu>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Roman Mamedov <roman@rm.pp.ru>
+Cc: Konstantin Svist <fry.kun@gmail.com>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hi all,
-doing a simple performance tests i obtained some very unexpected results: if i 
-issue hdparm -t /dev/md2 i obtain 61 - 65 MB/s while issuing the same test 
-directly on the partitions which compose md2 (/dev/sda3 and /dev/sdb3) i obtain 
-84 - 87 MB/s. I didn't expect a so big difference between md2 and one of its 
-member. What can cause  this difference ? 
+On 19/07/10 04:53, Roman Mamedov wrote:
+> On Sun, 18 Jul 2010 17:32:25 -0700
+> Konstantin Svist<fry.kun@gmail.com>  wrote:
+>
+>> I looked around and found that chunk size
+>> of 512 should work better.
+>
+> Not true, at least with RAID5/6 a chunk size of 64K performs faster, see
+> http://louwrentius.blogspot.com/2010/05/raid-level-and-chunk-size-benchmarks.html
+> http://alephnull.com/benchmarks/sata2009/chunksize.html
 
-I'm running the test on a Centos 5.4, /dev/md2 is a mounted and used block 
-device (lvm on top of md2 and the root partion on the lvm volume group), but the 
-machine was quite idle during the tests. The controller is an Intel ICH9 with 
-AHCI enabled.
+There is no mention in this benchmark tests if he modified the stripe 
+cache. With an increased stripe size a larger stripe cache would be 
+needed for good performance (at least from my experience)
 
-thank you in advance!
+Best Regards
 
-
- Marco
-
-
-      
+Jools
