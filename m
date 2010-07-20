@@ -1,40 +1,50 @@
-From: Konstantin Svist <fry.kun@gmail.com>
-Subject: Re: Changing Chunk Size on Array
-Date: Mon, 19 Jul 2010 17:17:14 -0700
-Message-ID: <4C44EB0A.2060604@gmail.com>
-References: <CC.8D.04655.49D124C4@cdptpa-omtalb.mail.rr.com> <20100720014955.529eb9ca@notabene>
+From: Konstantin Svist <kostya@relevad.com>
+Subject: Re: messed up changing chunk size
+Date: Mon, 19 Jul 2010 21:28:24 -0700
+Message-ID: <4C4525E8.2010702@relevad.com>
+References: <4C439D19.4070906@gmail.com> <4C44939A.1060200@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100720014955.529eb9ca@notabene>
+In-Reply-To: <4C44939A.1060200@gmail.com>
 Sender: linux-raid-owner@vger.kernel.org
 To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-  On 07/19/2010 04:49 PM, Neil Brown wrote:
-> On Sat, 17 Jul 2010 16:15:55 -0500
-> "Leslie Rhorer"<lrhorer@satx.rr.com>  wrote:
->
->> 	I'm thinking about changing the chunk size on one of my arrays in
->> order to potentially improve performance.  The man page rather suggests -c
->> is a vlaid option under Grow mode, although it doesn't specifically say
->> mdadm supports it under --grow.  Is it indeed supported under mdadm 2.6.7.2
->> and kernel 2.6.26-2?  Assuming so, I would like to know a bit more about the
->> change before issuing the command.  Speficialy, what are the details of the
->> process?  Does the entire (RAID 6) array have to be re-written, such as is
->> the case with adding a drive to the array?  Does the recovery start
->> immediately?  Can it be interrupted and then continue at a later time?
-> Yes, you can change chunksize with --grow.
-> I think you need mdadm-3.1.2 and kernel 2.6.32 though (version numbers might
-> not be accurate, but are close).
->
-> Yes, the entire array gets re-written just like adding an extra device.
-> The reshape does start immediately.
-> If you shutdown or crash, then on restart the reshape will pick up where it
-> left off.
 
-I ran mine with mdadm v3.1.2 on 2.6.33.6-147.fc13.x86_64 (Fedora)
-Too bad I screwed up the FS by shrinking the array too much beforehand - 
-now I have no idea whether it would've worked or not.
+
+On 07/19/2010 11:04 AM, Konstantin Svist wrote:
+> Just noticed that I got this in /var/log/messages when I sized it down:
+> Jul 18 12:00:44 slon kernel: md0: detected capacity change from 
+> 900199022592 to 300066275328
+> Jul 18 12:00:44 slon kernel: md0: unknown partition table
+>
+> And scraped from command line session:
+>
+> [root@slon ~]# cat /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> md0 : active raid5 sdd1[3] sda4[0] sdc1[2] sdb1[1]
+>       879100608 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
+> [root@slon ~]# mdadm --grow -z 293033472 
+> --backup-file=/root/grow_md0_size.bak /dev/md0
+> mdadm: component size of /dev/md0 has been set to 293033472K
+> [root@slon ~]# cat /proc/mdstat
+> Personalities : [raid6] [raid5] [raid4]
+> md0 : active raid5 sdd1[3] sda4[0] sdc1[2] sdb1[1]
+>       293033472 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
+>
+> Looks like instead of setting the number of blocks per-drive (as per 
+> the man page), the -z option set the number of total blocks for the 
+> array, instead. Which means I'm very thoroughly screwed.
+>
+> Right now I'm trying to reshape back to the old chunk size and will 
+> then try to resize the array back to the previous size. If the chunk 
+> size change and array resize are both fully reversible -- and I don't 
+> think I'm THAT lucky -- then I might be able to get some stuff back.
+> Will see, I guess.
+
+Can someone confirm that this command should work to revert the size?
+mdadm --grow -z 879100608 --backup-file=/root/grow_md0_size_revert.bak 
+/dev/md0
 
