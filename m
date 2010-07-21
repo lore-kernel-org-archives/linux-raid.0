@@ -1,7 +1,7 @@
 From: "Trela, Maciej" <Maciej.Trela@intel.com>
-Subject: [PATCH 0/2] md: migrations for external metadata
-Date: Wed, 21 Jul 2010 12:03:07 +0100
-Message-ID: <BE2BFE91933D1B4089447C64486040804E2A498E@irsmsx503.ger.corp.intel.com>
+Subject: [PATCH 2/2] md: raid5: update suspend_hi during the reshape
+Date: Wed, 21 Jul 2010 12:04:29 +0100
+Message-ID: <BE2BFE91933D1B4089447C64486040804E2A4996@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
@@ -12,30 +12,27 @@ To: Neil Brown <neilb@suse.de>
 Cc: "Williams, Dan J" <dan.j.williams@intel.com>, "Kwolek, Adam" <adam.kwolek@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello Neil,
-I'm sending the patches for external metadata migrations.
-Both md/mdadm patches are based on OLCE patches sent by 
-Adam Kwolek some time ago.
+From: Maciej Trela <maciej.trela@intel.com>
 
-The most important issues that are implemented:
-1. support for non-grow reshape (OLCE patches were focused on 
-   grow-reshape with new devices added)
-2. mdadm critical data backup mechanism for external metadata.
-   This includes:
-	- new external API for handling backups
-	- IMSM specific implementation for backups and checkpointing
-		that uses IMSM migration record
-3. compatibility issues with IMSM metadata
+When performing external reshape it is needed to move suspend_hi forward to keep up with the current reshape_position.
 
+Signed-off-by: Maciej Trela <maciej.trela@intel.com>
 ---
+ drivers/md/raid5.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-Maciej Trela (2):
-      md: raid5 return new layout in mdstat while reshaping
-      md: raid5: update suspend_hi during the reshape
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c index b7c6561..1828284 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -4340,6 +4340,11 @@ static sector_t reshape_request(mddev_t *mddev, sector_t sector_nr, int *skipped
+ 		wake_up(&conf->wait_for_overlap);
+ 		sysfs_notify(&mddev->kobj, NULL, "sync_completed");
+ 	}
++	if (mddev->external && mddev->reshape_position > mddev->suspend_hi) {
++		mddev->suspend_hi = mddev->reshape_position;
++		mddev->pers->quiesce(mddev, 1);
++		mddev->pers->quiesce(mddev, 0);
++	}
+ 	return reshape_sectors;
+ }
 
-
- drivers/md/raid5.c |   13 +++++++++++--
- 1 files changed, 11 insertions(+), 2 deletions(-)
-
--- 
-Maciek Trela
