@@ -1,46 +1,28 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Why is sb->size set to 0 with raid0?
-Date: Wed, 21 Jul 2010 18:16:46 +0200
-Message-ID: <slrni4e7bi.ced.Mario.Holbe@darkside.dyn.samba-tng.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 0/2] md: migrations for external metadata
+Date: Wed, 21 Jul 2010 09:37:13 -0700
+Message-ID: <AANLkTikYzfhHb2eWenDurV9_NueHSTquJuspeUx8A-fi@mail.gmail.com>
+References: <AcsoxEzgiDLRi6q6TBaV0DSWmACMtg==>
+	<BE2BFE91933D1B4089447C64486040804E2A498E@irsmsx503.ger.corp.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <BE2BFE91933D1B4089447C64486040804E2A498E@irsmsx503.ger.corp.intel.com>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: "Trela, Maciej" <Maciej.Trela@intel.com>
+Cc: Neil Brown <neilb@suse.de>, "Kwolek, Adam" <adam.kwolek@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-Hello,
+Hi Maciej,
 
-while examining a raid0 v1.2 superblock I found "Used Dev Size" seems
-not to be set there, mdadm -E on a component device shows:
-	          Magic : a92b4efc
-	        Version : 1.2
-	    Feature Map : 0x0
-	...
-	 Avail Dev Size : 2930274824 (1397.26 GiB 1500.30 GB)
-	  Used Dev Size : 0
-	    Data Offset : 16 sectors
-	   Super Offset : 8 sectors
-	          State : clean
+On Wed, Jul 21, 2010 at 4:03 AM, Trela, Maciej <Maciej.Trela@intel.com> wrote:
+> Hello Neil,
+> I'm sending the patches for external metadata migrations.
+> Both md/mdadm patches are based on OLCE patches sent by
+> Adam Kwolek some time ago.
 
-Is this intentional?
-This is just to let you know and for my curiosity. I don't know whether
-this has negative side-effects or not. I found none until now.
+...which Adam and I are still in the process of reworking.  I'll take
+a look at these but just note that the baseline may yet change.
 
-Don't get me wrong, I like the (IMHO positive) side-effect of this: it
-makes totally sense to me, not to reserve bitmap-space for raid0 - I
-even downgraded to mdadm 3.1.1 for raid creation to get rid of the 1M
-alignment, and I was short thinking about patching super1.c for this
-array to get rid of the bitmap-space reservation as well.
-Thus, I was just positively surprised to see that in fact there *is* no
-bitmap-space reserved for raid0, wondered how and where this was
-managed, and tracked it down to sb->size being set to 0.
-
-
-regards
-   Mario
--- 
-You know, people think mathematics is complicated. Mathematics is the simple
-bit. Its the stuff we can understand. Its cats that are complicated. I mean,
-what is it in those little molecules and stuff that make one cat behave
-differently than another, or that make a cat? And how do you define a cat?
-I have no idea.                                 -- John Conway
-
+--
+Dan
