@@ -1,39 +1,46 @@
-From: Keld Simonsen <keld@keldix.com>
-Subject: Re: help needed - 4 disk raid4 with two missing disks
-Date: Wed, 21 Jul 2010 17:18:55 +0200
-Message-ID: <20100721151855.GA26511@rap.rap.dk>
-References: <969879935.20100721134526@kaneda.iguw.tuwien.ac.at>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
+Subject: Why is sb->size set to 0 with raid0?
+Date: Wed, 21 Jul 2010 18:16:46 +0200
+Message-ID: <slrni4e7bi.ced.Mario.Holbe@darkside.dyn.samba-tng.org>
 Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <969879935.20100721134526@kaneda.iguw.tuwien.ac.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: Rainer Fuegenstein <rfu@kaneda.iguw.tuwien.ac.at>
-Cc: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Wed, Jul 21, 2010 at 01:45:26PM +0200, Rainer Fuegenstein wrote:
-> hi,
-> 
-> I don't seem to have any luck with this server :-(
-> 
-> configuration: intel atom D510 mainboard, promise SATA300 TX4
-> controller (4*SATA), 4 WD caviar green 1.5TB disks (sdb, sdc, sdd,
-> sde)
+Hello,
 
-Hmm, on most newer mainboards there are 4 sata ports. For
-better performance I would suggest you use that instead of a  separate
-osata controller.
+while examining a raid0 v1.2 superblock I found "Used Dev Size" seems
+not to be set there, mdadm -E on a component device shows:
+	          Magic : a92b4efc
+	        Version : 1.2
+	    Feature Map : 0x0
+	...
+	 Avail Dev Size : 2930274824 (1397.26 GiB 1500.30 GB)
+	  Used Dev Size : 0
+	    Data Offset : 16 sectors
+	   Super Offset : 8 sectors
+	          State : clean
 
-> system on sda, connected to first onboard-SATA port
+Is this intentional?
+This is just to let you know and for my curiosity. I don't know whether
+this has negative side-effects or not. I found none until now.
 
-I would suggest you put a little (say 10 GB in total of your big disks)
-for your system, in a raid setup - to provide against crashes.
-Also put your swap on raid to prevent crashes if a single disk 
-breaks down.
+Don't get me wrong, I like the (IMHO positive) side-effect of this: it
+makes totally sense to me, not to reserve bitmap-space for raid0 - I
+even downgraded to mdadm 3.1.1 for raid creation to get rid of the 1M
+alignment, and I was short thinking about patching super1.c for this
+array to get rid of the bitmap-space reservation as well.
+Thus, I was just positively surprised to see that in fact there *is* no
+bitmap-space reserved for raid0, wondered how and where this was
+managed, and tracked it down to sb->size being set to 0.
 
-more on: https://raid.wiki.kernel.org/index.php/Preventing_against_a_failing_disk
 
-best regards
-keld
+regards
+   Mario
+-- 
+You know, people think mathematics is complicated. Mathematics is the simple
+bit. Its the stuff we can understand. Its cats that are complicated. I mean,
+what is it in those little molecules and stuff that make one cat behave
+differently than another, or that make a cat? And how do you define a cat?
+I have no idea.                                 -- John Conway
+
