@@ -1,47 +1,41 @@
-From: "Leslie Rhorer" <lrhorer@satx.rr.com>
-Subject: RE: Changing Chunk Size on Array
-Date: Wed, 21 Jul 2010 00:52:51 -0500
-Message-ID: <9C.59.23536.52B864C4@cdptpa-omtalb.mail.rr.com>
-References: <20100720014955.529eb9ca@notabene>
+From: "Trela, Maciej" <Maciej.Trela@intel.com>
+Subject: [PATCH 0/2] md: migrations for external metadata
+Date: Wed, 21 Jul 2010 12:03:07 +0100
+Message-ID: <BE2BFE91933D1B4089447C64486040804E2A498E@irsmsx503.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100720014955.529eb9ca@notabene>
+Content-Language: en-US
 Sender: linux-raid-owner@vger.kernel.org
-To: 'Neil Brown' <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: "Williams, Dan J" <dan.j.williams@intel.com>, "Kwolek, Adam" <adam.kwolek@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-> > 	I'm thinking about changing the chunk size on one of my arrays in
-> > order to potentially improve performance.  The man page rather suggests
-> -c
-> > is a vlaid option under Grow mode, although it doesn't specifically say
-> > mdadm supports it under --grow.  Is it indeed supported under mdadm
-> 2.6.7.2
-> > and kernel 2.6.26-2?  Assuming so, I would like to know a bit more about
-> the
-> > change before issuing the command.  Speficialy, what are the details of
-> the
-> > process?  Does the entire (RAID 6) array have to be re-written, such as
-> is
-> > the case with adding a drive to the array?  Does the recovery start
-> > immediately?  Can it be interrupted and then continue at a later time?
-> 
-> Yes, you can change chunksize with --grow.
-> I think you need mdadm-3.1.2 and kernel 2.6.32 though (version numbers
-> might
-> not be accurate, but are close).
+Hello Neil,
+I'm sending the patches for external metadata migrations.
+Both md/mdadm patches are based on OLCE patches sent by 
+Adam Kwolek some time ago.
 
-	Oh, well.  I'll have to upgrade that system one of these days, but
-definitely not right now.  'Possibly soon after "Squeeze" goes gold, but
-definitely not before.
+The most important issues that are implemented:
+1. support for non-grow reshape (OLCE patches were focused on 
+   grow-reshape with new devices added)
+2. mdadm critical data backup mechanism for external metadata.
+   This includes:
+	- new external API for handling backups
+	- IMSM specific implementation for backups and checkpointing
+		that uses IMSM migration record
+3. compatibility issues with IMSM metadata
 
-> Yes, the entire array gets re-written just like adding an extra device.
-> The reshape does start immediately.
-> If you shutdown or crash, then on restart the reshape will pick up where
-> it
+---
 
-	Thanks.
+Maciej Trela (2):
+      md: raid5 return new layout in mdstat while reshaping
+      md: raid5: update suspend_hi during the reshape
 
+
+ drivers/md/raid5.c |   13 +++++++++++--
+ 1 files changed, 11 insertions(+), 2 deletions(-)
+
+-- 
+Maciek Trela
