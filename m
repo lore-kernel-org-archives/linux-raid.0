@@ -1,43 +1,54 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: BUG at drivers/scsi/scsi_lib.c:1113
-Date: Thu, 22 Jul 2010 10:06:02 +0200
-Message-ID: <4C47FBEA.2000704@gmail.com>
-References: <4C47ED7B.1050709@gmail.com> <20100722173716.66264bef@notabene>
+From: "Trela, Maciej" <Maciej.Trela@intel.com>
+Subject: RE: [PATCH 0/2] md: migrations for external metadata
+Date: Thu, 22 Jul 2010 09:30:22 +0100
+Message-ID: <BE2BFE91933D1B4089447C64486040804E2A4F50@irsmsx503.ger.corp.intel.com>
+References: <AcsoxEzgiDLRi6q6TBaV0DSWmACMtg==>
+	<BE2BFE91933D1B4089447C64486040804E2A498E@irsmsx503.ger.corp.intel.com>
+ <AANLkTikYzfhHb2eWenDurV9_NueHSTquJuspeUx8A-fi@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20100722173716.66264bef@notabene>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, hch@lst.de, jaxboe@fusionio.com, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <AANLkTikYzfhHb2eWenDurV9_NueHSTquJuspeUx8A-fi@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-raid-owner@vger.kernel.org
+To: "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: Neil Brown <neilb@suse.de>, "Kwolek, Adam" <adam.kwolek@intel.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
 List-Id: linux-raid.ids
 
-On 07/22/2010 09:37 AM, Neil Brown wrote:
-> I suspect that problem is that "do_sync" and "do_barriers" in
-> drivers/md/raid1.c are still 'bool' and should now be 'unsigned long'.
+
+> -----Original Message-----
+> From: dan.j.williams@gmail.com [mailto:dan.j.williams@gmail.com] On
+> Behalf Of Dan Williams
+> Sent: Wednesday, July 21, 2010 6:37 PM
+> To: Trela, Maciej
+> Cc: Neil Brown; Kwolek, Adam; linux-raid@vger.kernel.org
+> Subject: Re: [PATCH 0/2] md: migrations for external metadata
 > 
-> I'm not sure how wide '_Bool' is, but I'm guess it isn't wide enough.
+> Hi Maciej,
+> 
+> On Wed, Jul 21, 2010 at 4:03 AM, Trela, Maciej <Maciej.Trela@intel.com>
+> wrote:
+> > Hello Neil,
+> > I'm sending the patches for external metadata migrations.
+> > Both md/mdadm patches are based on OLCE patches sent by
+> > Adam Kwolek some time ago.
+> 
+> ...which Adam and I are still in the process of reworking.  I'll take
+> a look at these but just note that the baseline may yet change.
+> 
 
-ANSI says:
-An object declared as type _Bool is large enough to store the values 0
-and 1.
+Hello Dan,
 
-gcc spec doesn't say anything, but:
-$ gcc -S -x c -o - -
-unsigned long x = sizeof(_Bool);
-^D
-...
-x:
-        .quad   1
+Yes, I'm aware of that but I hope those changes in takeover and OLCE
+will not cause any dramatic changes to checkpointing patches.
 
-I.e. sizeof(_Bool) = 1 byte.
+I wanted to make sure that the code is heading in the right direction
+and will not require serious architectural changes in the future.
+(especially mdadm-mdmon-md communication for backups)
 
-> Could you please try changing ever 'bool' in that file to 'unsigned long'
-> and see if that fixes it?
+I appreciate any feedback as usual! :))
 
-Will do that.
+Thanks,
+Maciek.
 
-thanks,
--- 
-js
