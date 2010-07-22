@@ -1,42 +1,71 @@
-From: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>
-Subject: Re: Why is sb->size set to 0 with raid0?
-Date: Thu, 22 Jul 2010 13:36:07 +0200
-Message-ID: <slrni4gb97.jpi.Mario.Holbe@darkside.dyn.samba-tng.org>
-References: <slrni4e7bi.ced.Mario.Holbe@darkside.dyn.samba-tng.org>
- <20100722153456.04f751e7@notabene>
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH] md: bitwise operations might not fit in a "bool"
+Date: Thu, 22 Jul 2010 14:44:53 +0300
+Message-ID: <4C482F35.6000004@panasas.com>
+References: <4C47ED7B.1050709@gmail.com> <20100722173716.66264bef@notabene> <4C481FD5.4070509@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4C481FD5.4070509@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Neil Brown <neilb@suse.de>, Christoph Hellwig <hch@infradead.org>
+Cc: Jiri Slaby <jirislaby@gmail.com>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, hch@lst.de, jaxboe@fusionio.com, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Neil Brown <neilb@suse.de> wrote:
-> The 'Used Dev Size' is the amount of each device that is used in the array.
-> For RAID0 (and linear), there is no such number.  The devices can be of
-> different sizes and in each case "all" of the available space is used.
 
-Hmm, RAID0 has a chunk size - but I guess this is what you meant with
-the quotes around "all" :)
+when taking a resolute of a bit-wise AND as true false. Better / faster
+to make it a boolean operation.
 
-> This has nothing to do with the bitmap.  Space reserved for the bitmap is
-> out side of the 'Avail Dev Size'.
+This fixes a bug and a crash because the flags field did not fit into
+the bool operands.
 
-Sure, it has: having a zero 'Used Dev Size' (i.e. sb->size = 0) results
-in not reserving space for a bitmap - at least for v1 superblocks:
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+git diff --stat -p -M drivers/md/raid1.c
+ drivers/md/raid1.c |   11 +++++++----
+ 1 files changed, 7 insertions(+), 4 deletions(-)
 
-		array_size = __le64_to_cpu(sb->size);
-		/* work out how much space we left for a bitmap */
-		bm_space = choose_bm_space(array_size);
-
-... which I like in case of RAID0 (as I said), but of which I don't know
-if you do like it as well ;) - for example, because it also prevents a
-bitmap when the RAID0 is later converted to RAID5.
-
-
-regards
-   Mario
--- 
-Jene, die grundlegende Freiheit aufgeben wuerden, um eine geringe
-voruebergehende Sicherheit zu erwerben, verdienen weder Freiheit noch
-Sicherheit.
-                                     -- Benjamin Franklin (1706-1790)
-
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 73cc74f..67a9159 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -787,7 +787,7 @@ static int make_request(mddev_t *mddev, struct bio * bio)
+ 	struct bio_list bl;
+ 	struct page **behind_pages = NULL;
+ 	const int rw = bio_data_dir(bio);
+-	const bool do_sync = (bio->bi_rw & REQ_SYNC);
++	const bool do_sync = (bio->bi_rw & REQ_SYNC) != 0;
+ 	bool do_barriers;
+ 	mdk_rdev_t *blocked_rdev;
+ 
+@@ -959,7 +959,7 @@ static int make_request(mddev_t *mddev, struct bio * bio)
+ 	atomic_set(&r1_bio->remaining, 0);
+ 	atomic_set(&r1_bio->behind_remaining, 0);
+ 
+-	do_barriers = bio->bi_rw & REQ_HARDBARRIER;
++	do_barriers = (bio->bi_rw & REQ_HARDBARRIER) != 0;
+ 	if (do_barriers)
+ 		set_bit(R1BIO_Barrier, &r1_bio->state);
+ 
+@@ -1640,7 +1640,8 @@ static void raid1d(mddev_t *mddev)
+ 			 * We already have a nr_pending reference on these rdevs.
+ 			 */
+ 			int i;
+-			const bool do_sync = (r1_bio->master_bio->bi_rw & REQ_SYNC);
++			const bool do_sync =
++				(r1_bio->master_bio->bi_rw & REQ_SYNC) != 0;
+ 			clear_bit(R1BIO_BarrierRetry, &r1_bio->state);
+ 			clear_bit(R1BIO_Barrier, &r1_bio->state);
+ 			for (i=0; i < conf->raid_disks; i++)
+@@ -1696,7 +1697,9 @@ static void raid1d(mddev_t *mddev)
+ 				       (unsigned long long)r1_bio->sector);
+ 				raid_end_bio_io(r1_bio);
+ 			} else {
+-				const bool do_sync = r1_bio->master_bio->bi_rw & REQ_SYNC;
++				const bool do_sync =
++					(r1_bio->master_bio->bi_rw & REQ_SYNC)
++					!= 0;
+ 				r1_bio->bios[r1_bio->read_disk] =
+ 					mddev->ro ? IO_BLOCKED : NULL;
+ 				r1_bio->read_disk = disk;
