@@ -1,53 +1,47 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: [PATCH] md: bitwise operations might not fit in a "bool"
-Date: Thu, 22 Jul 2010 22:37:40 +1000
-Message-ID: <20100722223740.7baa68a1@notabene>
-References: <4C47ED7B.1050709@gmail.com>
-	<20100722173716.66264bef@notabene>
-	<4C481FD5.4070509@gmail.com>
-	<4C482F35.6000004@panasas.com>
-	<20100722215555.7ab2b1ee@notabene>
-	<4C4837A5.6040209@panasas.com>
+From: Roman Mamedov <roman@rm.pp.ru>
+Subject: Re: Why is sb->size set to 0 with raid0?
+Date: Thu, 22 Jul 2010 18:50:54 +0600
+Message-ID: <20100722185054.51930d15@natsu>
+References: <slrni4e7bi.ced.Mario.Holbe@darkside.dyn.samba-tng.org>
+	<20100722153456.04f751e7@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/vduoJ+NHGHGOHXVo1FNAd20"; protocol="application/pgp-signature"
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C4837A5.6040209@panasas.com>
+In-Reply-To: <20100722153456.04f751e7@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jiri Slaby <jirislaby@gmail.com>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, hch@lst.de, jaxboe@fusionio.com, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+To: Neil Brown <neilb@suse.de>
+Cc: Mario 'BitKoenig' Holbe <Mario.Holbe@TU-Ilmenau.DE>, linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-On Thu, 22 Jul 2010 15:20:53 +0300
-Boaz Harrosh <bharrosh@panasas.com> wrote:
+--Sig_/vduoJ+NHGHGOHXVo1FNAd20
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> On 07/22/2010 02:55 PM, Neil Brown wrote:
-> > On Thu, 22 Jul 2010 14:44:53 +0300
-> > Boaz Harrosh <bharrosh@panasas.com> wrote:
-> > 
-> >>
-> >> when taking a resolute of a bit-wise AND as true false. Better / faster
-> >> to make it a boolean operation.
-> >>
-> >> This fixes a bug and a crash because the flags field did not fit into
-> >> the bool operands.
-> > 
-> > No, that won't work.
-> > Read the rest of the code and see where 'do_sync' and 'do_barriers' are used.
-> > 
-> > NeilBrown
-> > 
-> 
-> You are right! (I didn't look)
-> 
-> the use of "bool" was wrong from the get go. it was never a bool operation.
-> What was the guy thinking? What is that do_XXX name? that name should change
-> as well. Perhaps flg_sync, flg_barriers.
+On Thu, 22 Jul 2010 15:34:56 +1000
+Neil Brown <neilb@suse.de> wrote:
 
-Check the git history - 'bool' was originally appropriate.  But when the
-value was recently changed, the type and name were not.
-I would actually prefer "sync_flg" and "barrier_flg", but your suggestion
-that we change the name as well as the type is a good one.
+> For RAID0 (and linear), there is no such number.  The devices can be of
+> different sizes and in each case "all" of the available space is used.
 
-Thanks,
-NeilBrown
+That sounds a bit surprising, excuse my ignorance, but how a RAID0 of
+differently-sized devices is laid out? Is the "tail" of the larger device
+simply used in linear mode, adding space to the striped "heads"?
+
+--=20
+With respect,
+Roman
+
+--Sig_/vduoJ+NHGHGOHXVo1FNAd20
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAkxIPq4ACgkQTLKSvz+PZwiZugCfZmB2z98z9Nx2LmG+e0eFLU/9
+2FUAn3JdELwKATwxFpJLetEoSzoATGx2
+=EHgR
+-----END PGP SIGNATURE-----
+
+--Sig_/vduoJ+NHGHGOHXVo1FNAd20--
