@@ -1,34 +1,36 @@
-From: Tirumala Marri <tmarri@apm.com>
-Subject: RE: [PATCH] Adding ADMA support for PPC460EX DMA engine.
-Date: Fri, 23 Jul 2010 14:39:24 -0700
-Message-ID: <8c2fc4da25db867b7daa7c4f618230b0@mail.gmail.com>
-References: <1279846638-22323-1-git-send-email-tmarri@amcc.com>
-	<201007230815.14464.sr@denx.de>
+From: Marco <jjletho67-diar@yahoo.it>
+Subject: raid1 performance
+Date: Sun, 25 Jul 2010 14:58:37 +0000 (GMT)
+Message-ID: <443220.14357.qm@web28508.mail.ukl.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <201007230815.14464.sr@denx.de>
 Sender: linux-raid-owner@vger.kernel.org
-To: Stefan Roese <sr@denx.de>, linuxppc-dev@lists.ozlabs.org
-Cc: tmarri@amcc.com, linux-crypto@vger.kernel.org, linux-raid@vger.kernel.org, dan.j.williams@intel.com
+To: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
->As you describe above, a lot of the code seems to be copied from
->drivers/dma/ppc4xx/adma.c/h. Wouldn't it make more sense to factor out
-the
->common code instead of duplicating it?
+Hi all,
+I'm posting again the same message because I have had some problem subscribing 
+the list so i'm not sure it has been received:
+
+doing a simple performance tests i obtained some very unexpected results: if i 
+issue hdparm -t /dev/md2 i obtain 61 - 65 MB/s while issuing the same test 
+directly on the partitions which compose md2 (/dev/sda3 and /dev/sdb3) i obtain 
+84 - 87 MB/s. I didn't expect a so big difference between md2 and one of its 
+member. What can cause  this difference ? 
+
+I'm running the test on a Centos 5.4, /dev/md2 is a mounted and used block 
+device (lvm on top of md2 and the root partion on the lvm volume group), but the 
+
+machine was quite idle during the tests. The controller is an Intel ICH9 with 
+AHCI enabled.
+
+thank you in advance!
+
+
+Marco
 
 
 
-  Hi Stefan,
-     Thanks for the review. There are definitely some functions can be
-moved to a common file.
-
-  Hi Dan,
- Could you also please review and see if there are any changes needed, so
-I can include some changes as
-Well in the modified patch.
-
-
-Regards,
-Marri
+      
