@@ -1,27 +1,37 @@
-From: wiebittewas <wiebittewas@googlemail.com>
-Subject: rw-mount necessary while assemble?
-Date: Mon, 26 Jul 2010 18:58:04 +0000
-Message-ID: <4C4DDABC.7090202@gmail.com>
+From: Adrian Drzewiecki <adriand@vmware.com>
+Subject: [PATCH] Notify sysfs when RAID1 disk is In_sync.
+Date: Mon, 26 Jul 2010 15:49:44 -0400
+Message-ID: <20100726194943.GD6720@adriand-dev3.eng.vmware.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-raid@vger.kernel.org, neilb@suse.de
+Cc: egoggin@vmware.com
 List-Id: linux-raid.ids
 
-Hi!
+When RAID1 is done syncing disks, it'll update the state
+of synced rdevs to In_sync. But it neglected to notify
+sysfs that the attribute changed. So any programs that
+are waiting for an rdev's state to change will not be
+woken.
 
-is it really necessary to have /dev writeable when running mdadm
---assemble --scan?
+Signed-off-by: Adrian Drzewiecki <adriand@vmware.com>
+---
+ drivers/md/raid1.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-seems, that mdadm creates temporary nodes for the devices, even if
-there're already usable nodes...
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index a948da8..fe241fc 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1136,6 +1136,7 @@ static int raid1_spare_active(mddev_t *mddev)
+                        spin_lock_irqsave(&conf->device_lock, flags);
+                        mddev->degraded--;
+                        spin_unlock_irqrestore(&conf->device_lock, flags);
++                       sysfs_notify_dirent(rdev->sysfs_state);
+                }
+        }
+ 
 
-any option that disables this need?
-
-(want to call fsck -a during boot, but this needs ro-mount of root,
-where /dev is on, but this make only sense, if the md-devices are up
-and running)
-
-w.
