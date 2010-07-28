@@ -1,63 +1,68 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: RAID/block regression starting from 2.6.32, bisected
-Date: Wed, 28 Jul 2010 22:16:19 +0400
-Message-ID: <4C5073F3.1060406@vlnb.net>
-References: <20100628010346.GA2376@atlantis.cc.ndsu.nodak.edu>	<4C28EFD6.2070203@vlnb.net>	<20100714190325.GA25148@atlantis.cc.ndsu.nodak.edu>	<4C3EF3AD.5070509@vlnb.net>	<20100723191844.GB31152@atlantis.cc.ndsu.nodak.edu>	<4C4D7DF5.9060909@vlnb.net> <20100727220110.GF31152@atlantis.cc.ndsu.nodak.edu>
+From: Tim Small <tim@seoss.co.uk>
+Subject: Re: Pending sectors in valid array - how to proceed?
+Date: Wed, 28 Jul 2010 19:41:08 +0100
+Message-ID: <4C5079C4.2050308@seoss.co.uk>
+References: <4C506CF5.2080307@xunil.at>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100727220110.GF31152@atlantis.cc.ndsu.nodak.edu>
+In-Reply-To: <4C506CF5.2080307@xunil.at>
 Sender: linux-raid-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Bryan Mesich <bryan.mesich@ndsu.edu>, scst-devel@lists.sourceforge.net, Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com
+To: lists@xunil.at
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+Stefan G. Weichinger wrote:
+> md3 : active raid5 sdd3[3](S) sdc3[2] sdb3[1] sda3[0]
+>       15647104 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
+>   
 
-In recent kernels we are experiencing a problem that in our setup using SCST BLOCKIO backend some BIOs are finished, i.e. the finish callback called for them, with error -EIO. It happens quite often, much more often than one would expect to have an actual IO error. (BLOCKIO backend just converts all incoming SCSI commands to the corresponding block requests.)
+...
 
-After some investigation, we figured out, that, most likely, raid5.c::make_request() for some reason sometimes calls bio_endio() with not BIO_UPTODATE bios.
+> smartctl shows for /dev/sdb:
+>
+>   5 Reallocated_Sector_Ct   0x0033   100   100   036    Pre-fail  Always
+>       -       0
+> 195 Hardware_ECC_Recovered  0x001a   058   039   000    Old_age   Always
+>       -       146754005
+> 197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always
+>       -       13
+> 198 Offline_Uncorrectable   0x0010   100   100   000    Old_age
+> Offline      -       13
+>
+> (relevant lines as far as I understand ...)
+>   
 
-We bisected it to commit: 
+Do you have any high-fly writes?  Are there lots of
+Hardware_ECC_Recovered on all the drives?  Is vibration likely to be an
+issue?  What's the drive/chassis?
+> I also read of a way of removing and re-adding a drive to get rid of
+> these sectors?
+>
+> Is this a recommended thing to do?
+> What would you recommend me to do?
+>   
 
-commit a82afdfcb8c0df09776b6458af6b68fc58b2e87b
-Author: Tejun Heo <tj@kernel.org>
-Date:   Fri Jul 3 17:48:16 2009 +0900
+I think you should trigger a check, this should attempt to read these
+pending sectors (assuming they are within the boundaries of the array),
+along with every other sector in the array, and scrub them when the read
+fails (i.e. reconstruct the data from the other array members, and write
+them to the pending sectors on sdb - thus triggering reallocation of
+those sectors).
 
-    block: use the same failfast bits for bio and request
-    
-    bio and request use the same set of failfast bits.  This patch makes
-    the following changes to simplify things.
-    
-    * enumify BIO_RW* bits and reorder bits such that BIOS_RW_FAILFAST_*
-      bits coincide with __REQ_FAILFAST_* bits.
-    
-    * The above pushes BIO_RW_AHEAD out of sync with __REQ_FAILFAST_DEV
-      but the matching is useless anyway.  init_request_from_bio() is
-      responsible for setting FAILFAST bits on FS requests and non-FS
-      requests never use BIO_RW_AHEAD.  Drop the code and comment from
-      blk_rq_bio_prep().
-    
-    * Define REQ_FAILFAST_MASK which is OR of all FAILFAST bits and
-      simplify FAILFAST flags handling in init_request_from_bio().
-    
-    Signed-off-by: Tejun Heo <tj@kernel.org>
-    Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+echo check > /sys/block/md1/md/sync_action
 
-After looking at it I can't see how it can lead to the effect we are experiencing. Could anybody comment on this, please? Is it a known problem?
+etc.
 
-The error can be only reproduced when running RAID 5. The general layout is:
+Personally, I'd then wait to see if/how the reallocated count goes up -
+if the sectors are the result of a one-off event, then no-problem, but
+if they steadily climb, then the drive is probably on its way out -
+those ECC_Recovered counts look a bit naff to me.  If you're nervous of
+losing a drive during resync, the the check is a good thing to do first,
+but you could also consider migrating the array to RAID6, to give you
+double redundancy...
 
-Disks --> RAID5 --> LVM --> BLOCKIO VDISK
+Cheers,
 
-The problem is easy to reproduce by forcing the RAID 5 array to re-sync its members, eg just fail out one member and add it back into the array and then generate some IO using dd. In fact, just writing out to the partition table on the exported block device is usually enough to provoke the error.
-
-The complete thread about the topic you can find in http://sourceforge.net/mailarchive/forum.php?thread_name=20100727220110.GF31152%40atlantis.cc.ndsu.nodak.edu&forum_name=scst-devel
-
-If any additional information is needed we would be glad to provide it.
-
-Thanks,
-Vlad
-
-
+Tim.
