@@ -1,68 +1,44 @@
-From: Tim Small <tim@seoss.co.uk>
-Subject: Re: Pending sectors in valid array - how to proceed?
-Date: Wed, 28 Jul 2010 19:41:08 +0100
-Message-ID: <4C5079C4.2050308@seoss.co.uk>
-References: <4C506CF5.2080307@xunil.at>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: md versus partition scanning (bd_invalidated)
+Date: Wed, 28 Jul 2010 12:23:11 -0700
+Message-ID: <AANLkTinNOo1_-KJ2CC_-ACBaDtmWjGX3+Vy60ND17guH@mail.gmail.com>
+References: <1279741966.25713.31.camel@dwillia2-linux>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C506CF5.2080307@xunil.at>
-Sender: linux-raid-owner@vger.kernel.org
-To: lists@xunil.at
-Cc: linux-raid@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1279741966.25713.31.camel@dwillia2-linux>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, NeilBrown <neilb@suse.de>, Tejun Heo <htejun@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, Ed Ciechanowski <ed.ciechanowski@intel.com>
 List-Id: linux-raid.ids
 
-Stefan G. Weichinger wrote:
-> md3 : active raid5 sdd3[3](S) sdc3[2] sdb3[1] sda3[0]
->       15647104 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
->   
-
-...
-
-> smartctl shows for /dev/sdb:
+On Wed, Jul 21, 2010 at 12:52 PM, Dan Williams <dan.j.williams@intel.co=
+m> wrote:
+> Hi,
 >
->   5 Reallocated_Sector_Ct   0x0033   100   100   036    Pre-fail  Always
->       -       0
-> 195 Hardware_ECC_Recovered  0x001a   058   039   000    Old_age   Always
->       -       146754005
-> 197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always
->       -       13
-> 198 Offline_Uncorrectable   0x0010   100   100   000    Old_age
-> Offline      -       13
->
-> (relevant lines as far as I understand ...)
->   
+> We (Intel software raid devs) are seeing a problem with the detection=
+ of
+> partitions on md devices. =A0The trace below shows that the block dev=
+ice
+> inode is dropped in-between when the array comes up and when it is fi=
+rst
+> opened (timestamp 655.498875). =A0When this happens bdev->bd_invalida=
+ted
+> is cleared by bdget() and we never detect partitions. =A0(Seen on a 2=
+=2E6.32
+> based kernel, but I presume it is still present)
 
-Do you have any high-fly writes?  Are there lots of
-Hardware_ECC_Recovered on all the drives?  Is vibration likely to be an
-issue?  What's the drive/chassis?
-> I also read of a way of removing and re-adding a drive to get rid of
-> these sectors?
->
-> Is this a recommended thing to do?
-> What would you recommend me to do?
->   
+The kernel in question was missing commit f3b99be1 "Restore partition
+detection of newly created md arrays" [1].  With that in place the
+problem goes away.  I haven't fully convinced myself that there isn't
+a small race that could be triggered by changing the array size via
+sysfs, to get the the gendisk size updated and then dropping all inode
+references prior to the first open... but I'll put that investigation
+on the back burner.
 
-I think you should trigger a check, this should attempt to read these
-pending sectors (assuming they are within the boundaries of the array),
-along with every other sector in the array, and scrub them when the read
-fails (i.e. reconstruct the data from the other array members, and write
-them to the pending sectors on sdb - thus triggering reallocation of
-those sectors).
+--
+Dan
 
-echo check > /sys/block/md1/md/sync_action
-
-etc.
-
-Personally, I'd then wait to see if/how the reallocated count goes up -
-if the sectors are the result of a one-off event, then no-problem, but
-if they steadily climb, then the drive is probably on its way out -
-those ECC_Recovered counts look a bit naff to me.  If you're nervous of
-losing a drive during resync, the the check is a good thing to do first,
-but you could also consider migrating the array to RAID6, to give you
-double redundancy...
-
-Cheers,
-
-Tim.
+[1]: http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git=
+;a=3Dcommitdiff;h=3Df3b99be1
