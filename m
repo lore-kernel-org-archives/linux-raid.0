@@ -1,37 +1,28 @@
-From: Fabio Muzzi <liste@kurgan.org>
-Subject: MD raid and different  elevators  (disk i/o schedulers)
-Date: Thu, 29 Jul 2010 12:12:30 +0200
-Message-ID: <4C51540E.9050005@kurgan.org>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: MD raid and different  elevators  (disk i/o schedulers)
+Date: Thu, 29 Jul 2010 12:53:35 +0200 (CEST)
+Message-ID: <alpine.DEB.1.10.1007291251250.9875@uplift.swm.pp.se>
+References: <4C51540E.9050005@kurgan.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4C51540E.9050005@kurgan.org>
 Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Fabio Muzzi <liste@kurgan.org>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
+On Thu, 29 Jul 2010, Fabio Muzzi wrote:
 
-I have tried to find information about this question in google, but 
-found nothing.
+> Is this true? Are there compatibility issues using different i/o 
+> schedulers with software raid?
 
-The question is: are there issues using different disk i/o schedulers 
-(by appending elevator=xxx to the kernel boot command line) when using 
-md RAID1 or RAID5?
+I'd actually like to raise this one level further:
 
-I seem to remember that someone told me that using elevator=deadline can 
-cause perfectly good disks to be kicked from the RAID because of some 
-latency issues that make the disk seem unresponsive (and dead) to the 
-raid software.
-
-Is this true? Are there compatibility issues using different i/o 
-schedulers with software raid?
-
-
-Thanks
+In the case of (drives)->md->dm(crypto)->lvm->fs, how do the schedulers, 
+readahead settings, blocksizes, barriers etc interact thru all these 
+layers? Is block caching done on all layers? Is readahead done on all 
+layers?
 
 -- 
-
-Fabio "Kurgan" Muzzi
-
-(worried Linux sysadmin)
-
+Mikael Abrahamsson    email: swmike@swm.pp.se
