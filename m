@@ -1,50 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: RAID/block regression starting from 2.6.32, bisected
-Date: Fri, 30 Jul 2010 12:29:30 +0200
-Message-ID: <4C52A98A.7060507@kernel.org>
-References: <20100628010346.GA2376@atlantis.cc.ndsu.nodak.edu>	<4C28EFD6.2070203@vlnb.net>	<20100714190325.GA25148@atlantis.cc.ndsu.nodak.edu>	<4C3EF3AD.5070509@vlnb.net>	<20100723191844.GB31152@atlantis.cc.ndsu.nodak.edu>	<4C4D7DF5.9060909@vlnb.net> <20100727220110.GF31152@atlantis.cc.ndsu.nodak.edu> <4C5073F3.1060406@vlnb.net>
+From: Marco <jjletho67-diar@yahoo.it>
+Subject: Re: raid1 performance
+Date: Sat, 31 Jul 2010 15:21:40 +0000 (GMT)
+Message-ID: <13942.81514.qm@web28516.mail.ukl.yahoo.com>
+References: <443220.14357.qm@web28508.mail.ukl.yahoo.com> <20100725211926.7547c12e@natsu> <23123.42111.qm@web28503.mail.ukl.yahoo.com> <20100726210324.6a4077e6@notabene> <379853.84515.qm@web28502.mail.ukl.yahoo.com> <20100728082358.4abc6868@notabene>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C5073F3.1060406@vlnb.net>
+In-Reply-To: <20100728082358.4abc6868@notabene>
 Sender: linux-raid-owner@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Bryan Mesich <bryan.mesich@ndsu.edu>, scst-devel@lists.sourceforge.net, Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com
+To: Neil Brown <nfbrown@novell.com>
+Cc: linux-raid@vger.kernel.org
 List-Id: linux-raid.ids
 
-Hello,
+>> sda 84.02 
+>> sdb 113,69
+>> md2 8,01
+>> 
+>> md2 and his meber have a very different ratio....
+>
+>Strange isn't it.  And the ratios are the other-way-around to what I get.
+>I don't currently understand why ... but it might not be at all relevant to
+>the speed difference.
 
-On 07/28/2010 08:16 PM, Vladislav Bolkhovitin wrote:
-> In recent kernels we are experiencing a problem that in our setup
-> using SCST BLOCKIO backend some BIOs are finished, i.e. the finish
-> callback called for them, with error -EIO. It happens quite often,
-> much more often than one would expect to have an actual IO
-> error. (BLOCKIO backend just converts all incoming SCSI commands to
-> the corresponding block requests.)
-> 
-> After some investigation, we figured out, that, most likely,
-> raid5.c::make_request() for some reason sometimes calls bio_endio()
-> with not BIO_UPTODATE bios.
-> 
-> We bisected it to commit: 
-> 
-> commit a82afdfcb8c0df09776b6458af6b68fc58b2e87b
-> Author: Tejun Heo <tj@kernel.org>
-> Date:   Fri Jul 3 17:48:16 2009 +0900
-> 
->     block: use the same failfast bits for bio and request
+Hi,
+i did some test on a different machine with centos 5.5 and ICH10 disk 
+controller. On this machine i have no performance issue: hdparm -t return the 
+same value (about 107 MB/s) on both /dev/md0 and its members
 
-That commit doesn't (or at least isn't supposed to) make any behavior
-difference.  It's just repositioning flag bits.  If the commit is
-actually causing the problem, I think one possibility is that whatever
-code could be using hard coded constants which now are mapped to
-different flags.  The mixed merge changes have been in mainline for
-quite some time and shipping in all major distros too and this is the
-first time this is reported, so I don't think it could be a widespread
-problem.
+I measured the "ratio" and i obtained 8.02 for md0 and 505 for meber disk. I it 
+seems that the "raito" is not so relevant for this issue. What do you think ?
+In this case the md device was not mounted.
+I also tried several different io scheduler whithout noting any effect on 
+sequential read eprformance.
 
-Thanks.
+Marco
 
--- 
-tejun
+
+      
+
